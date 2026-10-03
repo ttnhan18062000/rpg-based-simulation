@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-SOCIAL-TEST-LOCATE-AND-OWNER-ROUTING
-phase: open
+phase: done
 date: 2026-10-03
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Phase 2 social items 1 and 6 (Locate, Triage): measure social test coverage, markers and placement, and add the social owner-routing row
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -57,8 +57,8 @@ Phase 2 plan §6 items 1 and 6. Measure, and record only: coverage and marker co
 - [ ] `git diff --name-only` against `origin/main` shows no test file.
 - [ ] The record states coverage per file, run command, SHA, date and what was excluded and why.
 - [ ] The misplacement list names each file and the taxonomy rule it breaks, or states "none found".
-- [ ] The routing row names an owner for a social failure by class and is placed where the reviewer
-  approves; no other triage text changes.
+- [x] The `architecture_design_notes.md` §3.1 Social / narrative row is updated (reviewer decision at
+  plan review, 2026-10-03); no other ownership-map or triage text changes.
 - [ ] The record carries the RELATIONSHIP-VECTOR staleness line (measurements of `relationships.py`,
   `appraisal.py` and `consequence_events.py` go stale when
   `TCK-20260822-RELATIONSHIP-VECTOR-ADDITIVE-FIELD` lands).
@@ -96,12 +96,21 @@ All figures re-measured at the then-current `origin/main`, with the full SHA.
 
 ## Test Summary
 
-Not run yet.
+No test was added or changed. Measurement runs (scratch coverage path, nothing committed): `tests/unit/social`
+296 passed in 12.45 s; with the 20 social-importing files elsewhere, 372 passed in 47.65 s. Marker census by
+collect-only over the same 372 tests. Branch head measured: `f13baaf24578eb4529948f4e7e045c8468ca6886`
+(`origin/main` `9640ff942877cc7264e83309f35d19022a4a3fe6` plus the C1 case).
 
 ## Files Changed
 
-None yet.
+- `docs/testing/social_test_report_2026-10-03.md` (section 2)
+- `docs/plans/test_architecture/reference/architecture_design_notes.md` (§3.1 Social / narrative row only)
 
 ## Completion Summary
 
-Not complete.
+Done 2026-10-03. Coverage, markers and placement are recorded in section 2 of the shared report: 83.0%
+line coverage of the non-party, non-memory social files with all 372 tests (75.9% from `tests/unit/social`
+alone), `guilds.py` at 0%, no `domain`/`level` markers anywhere (not a defect under the taxonomy), one
+candidate misplacement (`test_multi_hero.py` runs a real kernel under `tests/unit/`) and one ambiguous
+placement (clan lifecycle tests under the faction component). Nothing was moved or marked. The social
+ownership-map row now carries the measured roots, oracle documents and owner contact.
