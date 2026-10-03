@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Protocol
 
 from src.core.enums import EntityRole
 from src.core.state import AuthoritativeState
-from src.core.updates import StateUpdate
+from src.core.updates import StateUpdate, decode_owner_faction_id_set
 from src.observability.config import ObservabilityMode
 from src.observability.entity_kind_constants import BOSS_ENTITY_KINDS, SPAWN_CADENCE_EXCLUDED_KINDS
 from src.domains.world_emergence.schema import WorldEventCategory
@@ -1258,7 +1258,10 @@ class WorldDynamicsShaper:
                     event_type="region_ownership_changed", event_category="region",
                     tick=tick, entity_id=None, severity="WARNING",
                     source_system="event_shapers", message="",
-                    payload={"region_id": rid, "new_owner": str(w_upd.owner_faction_id_set)},
+                    # TCK-20261003-REGION-OWNER-NONE-SENTINEL-PERSISTED-RAW: decode the
+                    # unowned sentinel so a liberation reports "None", not a literal "-1".
+                    payload={"region_id": rid,
+                             "new_owner": str(decode_owner_faction_id_set(w_upd.owner_faction_id_set))},
                 ))
             if getattr(w_upd, "kind_set", None) is not None:
                 events.append(SimulationEvent(
