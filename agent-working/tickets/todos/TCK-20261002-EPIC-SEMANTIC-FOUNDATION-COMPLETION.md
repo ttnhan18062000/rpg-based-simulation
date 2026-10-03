@@ -50,10 +50,18 @@ evidence**, so the 14 rows rest on 8 distinct derivations. 18 rule→mechanism e
 mechanisms, and the 14 edge-bearing Rules are exactly the 14 classified ones.
 
 ## Scope
-1. **Child A — world-definition split, FIRST.** `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`,
-   with `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` merged **toward the older ticket**.
+1. **Child A — world-definition split, FIRST.** `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`.
    It goes first because every later probe and rule-map slice gathers evidence by running worlds, and a
    world id that resolves to different module sets by entry point makes that evidence incomparable.
+
+   **Merge done, 2026-10-03.** `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` is folded into the
+   older ticket and its file removed from `agent-working/tickets/todos/`; the surviving ticket carries
+   its measurement-validity framing and three new ACs (6, 7, 8). Child A is now **one ticket, raised
+   P2 → P1**, and is ready to dispatch. Three further gaps were found while merging and are in its
+   Scope: live code **writes** into the directory being retired
+   (`src/worldgeneration/generator.py:536`), `docs/guides/content_authoring.md` §4 still **teaches**
+   that path, and an attribution both tickets carried was wrong — the ADR does not name the catalog
+   path as the anomaly, so AC-8 **amends** the ADR rather than citing it.
 2. **Child B — registry bindings (row 7 (b)), BEFORE the rule map.** Each of the 25 core-tier modules
    `mechanism_registry_completeness_check` reports unbound is either bound via `implemented_by` or
    recorded as an exclusion with a reason. Includes registering `PerceptionGate`
@@ -121,7 +129,8 @@ mechanisms, and the 14 edge-bearing Rules are exactly the 14 classified ones.
 
 ## Related Tickets
 - `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION` — child A (the older, owning ticket)
-- `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` — to be merged into child A, not run separately
+- `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` — **merged into child A 2026-10-03 and removed
+  from `todos/`;** git history holds it. Do not re-file
 - `TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP` — **child B2**, moved into this scope by
   the owner 2026-10-03; sequenced alongside child B, before any rule-map slice
 - `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN` — **not a child.** A fourth measured

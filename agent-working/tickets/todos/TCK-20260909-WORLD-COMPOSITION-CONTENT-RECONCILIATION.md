@@ -30,7 +30,7 @@ standard
 chore
 
 ## Priority
-P2
+P1
 
 ## Request Summary
 `docs/architecture/world_repository_layout.md`'s own ADR (`ACCEPTED` status) is explicit:
@@ -104,6 +104,105 @@ beyond the `dungeon_crawl` example above (peer review confirmed the list-plus-sh
 to route later; a full dump can be regenerated cheaply when this is picked up, via the same diff
 loop over `data/content/world_compositions/*.yaml` vs. `data/worlds/<id>/world.yaml`).
 
+## Merged in from `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` (2026-10-03)
+
+That ticket was filed 2026-09-30, found to duplicate this one the same day, and is **folded in here
+per `TCK-20261002-EPIC-SEMANTIC-FOUNDATION-COMPLETION`'s Child A** ("merged toward the older ticket,
+not run separately"). Its file is removed from `agent-working/tickets/todos/`; git history holds it.
+Everything below is what it added that this ticket did not already have.
+
+**1. This is a measurement-validity problem before it is a content problem — the reason it now goes
+first.** This ticket framed the split as ADR compliance plus content consolidation, and concluded
+"production is unaffected either way". That is true of *production* and false of *measurement*. A probe
+run through `WorldAssemblyResolver.assemble()` describes a world that **never runs**, while production
+loads via `WorldRepository.load_world_with_context` (`src/worldbuilding/repository.py:89-114`). Any
+investigation that compiles a world through the catalog path is measuring a different world than the
+simulation executes. This is why the owner's work order puts it ahead of every rule-map slice: each
+slice gathers evidence by running worlds.
+
+- How it was found: a region-count disagreement between two runtime probes of `dungeon_crawl` — 2
+  regions / 12 population vs 4 regions / 32. Not a stale cache; two definitions.
+- Production callers of the running path: `src/cli/entry.py:226`,
+  `src/domains/campaigns/orchestrator.py:746`, `tools/execution_census.py`, the calibrate tools.
+- **A known-affected artifact:**
+  `agent-working/stored_artifacts/TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED/investigation.md`
+  compiled via the catalog path (`data/content/world_compositions/frontier_living_world.yaml`). It is
+  the one confirmed instance; the general case is AC-7 below.
+- **17 `world_id`s exist only in `data/worlds/`** with no catalog composition at all (including
+  `generated_frontier_3_42`, `crowded_frontier`, `quest_dense_frontier`, `simq_scale_stress_seed42`).
+  **Zero exist only in the catalog.** That asymmetry is itself evidence for which side is authoritative.
+- Two of its conclusions were checked and **survive** this defect, so do not reopen them: the
+  demographic-cohort truncation finding (its decisive probe used `load_world_with_context` across 21
+  worlds) and the camp `STALE-PREMISE` closure (both its modules are present in *both* definitions of
+  `frontier_living_world`).
+
+**2. Re-confirmed still unfixed at 2026-09-30, and again at 2026-10-03** (`origin/main` `1a40d22d1`):
+`data/content/world_compositions/` still holds the same 7 top-level + 2 `generated/` files as the
+2026-09-12 inventory, and a crude list-item count still differs for 6 of the 7 top-level pairs. **That
+count is an indicator, not the module-set diff** — it does not distinguish `modules:` shorthand from
+`module_refs:`, and `wilderness_survival` reads equal (7/7) while 2026-09-12 recorded it as divergent.
+Regenerate the real per-world diff at pickup, as this ticket already instructs; do not treat these
+numbers as the inventory.
+
+## Three gaps found 2026-10-03 that neither ticket recorded
+
+Each verified directly in the working tree at `1a40d22d1`, not inferred.
+
+**Gap 1 — live code *writes* to the directory this ticket retires, so "retire once nothing reads from
+it" is not sufficient.** `src/worldgeneration/generator.py:536` does
+`Path("data/content/world_compositions/generated").mkdir(parents=True, exist_ok=True)` and then writes
+`{world_id}.yaml` into it. This is the generator's declared output contract, stated in its own docstring
+at `:383`. **A world-generation run recreates the retired directory**, so the split regrows silently and
+the AC-6 check below would start failing on worlds nobody hand-authored. This ticket's final "retire
+once nothing reads from it" step must become "once nothing reads *or writes* it", and the generator
+needs a decided output location — almost certainly `data/worlds/<id>/world.yaml`, but that is a real
+decision because it changes where generated worlds land.
+
+**Gap 2 — `docs/guides/content_authoring.md` §4 instructs authors to create compositions at exactly the
+path being retired.** It says, as a numbered how-to: *"A composition assembles a set of modules into a
+named world. File location: `data/content/world_compositions/<world_id>.yaml`"*, with a full YAML
+template and a `make world-validate`/`world-compile` workflow. **Neither ticket mentioned this doc.**
+Retiring the directory while the authoring guide still teaches it guarantees the divergence is
+re-created by the next person who follows the documented process. Updating this guide is part of the
+work, not a docs-follow-up.
+
+**Gap 3 — a stale citation that will send a reader hunting for a ticket that does not exist.**
+`src/domains/campaigns/orchestrator.py:186` points at
+`TCK-20260909-WORLD-COMPOSITION-DIRECTORY-CONSOLIDATION` for "the repo-wide migration this ADR still
+calls for". That is **this ticket's own pre-retitle name** — retitled in `24920f912` (PR #174), the file
+deleted at the old path. No such ticket exists anywhere in the tree. Update the comment to this ticket's
+current ID while touching that file (which this ticket does anyway, to revert the override).
+
+## Correction to an attribution both tickets carried (2026-10-03)
+
+**The ADR does not say what both tickets claim it says.** This ticket's Request Summary and the merged
+ticket's duplicate banner both assert that `docs/architecture/world_repository_layout.md` names
+`data/content/world_compositions/` as the anomaly to retire. **It does not mention that path at all** —
+verified by grep over all 54 lines. What the ADR actually establishes is narrower: `data/worlds/<id>/
+world.yaml` is the unified source root and `worldcomposition.v1` is one of the schema versions indexed
+there. The "`world_compositions/` is the anomaly, not `data/worlds/`" wording is an **interpretation**,
+and it originates in the code comment at `src/domains/campaigns/orchestrator.py:178`, not in the ADR.
+
+**The conclusion still holds and is well-grounded** — the ADR's unified-root decision, every production
+caller reading `data/worlds/`, and the 17-to-0 asymmetry all point the same way. Only the *citation* was
+wrong. It is corrected here because AC-3 requires evidenced per-world decisions, and an authority
+argument that cites a document which does not contain it would not survive review. **Note the genuine
+tension this leaves:** the ADR (`ACCEPTED`) and `content_authoring.md` §4 (a live how-to) point at
+different locations, and neither references the other. That conflict, not a missing decision, is what
+AC-8 resolves.
+
+## Why this is now first, and why it is now P1
+
+**Raised P2 → P1, 2026-10-03.** `TCK-20261002-EPIC-SEMANTIC-FOUNDATION-COMPLETION` makes this ticket
+**Child A, first**, per the owner's work order (`roadmap.md` §8 item 5). P2 was correct while this was
+ADR hygiene; it is wrong now that the whole foundation programme is sequenced behind it.
+
+Not tidiness. Every later probe and rule-map slice in
+`TCK-20261002-EPIC-SEMANTIC-FOUNDATION-COMPLETION` gathers evidence by running worlds. While one
+`world_id` resolves to different module sets by entry point, two measurements of "the same world" are
+not comparable and a slice's verdicts inherit that ambiguity. Fixing it afterwards would invalidate the
+slices already taken.
+
 ## Scope
 - **For each of the 8 diverged pairs (list in the 2026-09-12 findings block above), decide per-
   world which content is authoritative.** Confirmed 2026-09-12: NOT a mechanical "prefer the
@@ -131,6 +230,19 @@ loop over `data/content/world_compositions/*.yaml` vs. `data/worlds/<id>/world.y
   flat-second — added by `TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING` specifically to make
   the Campaign-only override safe) should be simplified back to nested-only once every caller is
   migrated, or kept as permanent back-compat.
+- **Decide the generator's output location** (Gap 1). `src/worldgeneration/generator.py:536` writes
+  into the retired directory and recreates it; its docstring at `:383` declares that path as its
+  contract. Both must change together, and the chosen location is a real decision, not a path swap.
+- **Update `docs/guides/content_authoring.md` §4** (Gap 2) so the documented authoring path is the
+  authoritative one. Without this the split regrows by design.
+- **Fix the stale ticket citation at `src/domains/campaigns/orchestrator.py:186`** (Gap 3) while
+  reverting that file's `compositions_dir` override.
+- **Add the "one `world_id`, one module set" check** (merged AC-6) so this cannot silently reappear —
+  the structural guard, separate from reconciling today's content.
+- **Assess which prior measurements used the non-running definition** (merged AC-7). One confirmed
+  instance is named above; the general case is unknown. State plainly which recorded conclusions were
+  re-checked and whether any changes — a conclusion that survives is a result worth recording, not
+  silence.
 - Retire `data/content/world_compositions/` once nothing reads from it — this step alone (given
   production already never reads the default) is the "different and much smaller task" it could
   reduce to if the 8 content decisions are instead resolved by deferring/documenting rather than
@@ -156,23 +268,66 @@ loop over `data/content/world_compositions/*.yaml` vs. `data/worlds/<id>/world.y
       on, confirmed passing.
 - [ ] Full scoped regression across every consumer of `ScenarioSetupResolver`/
       `CatalogScenarioStateBuilder`/`WorldAssemblyResolver` passes.
+- [ ] **AC-6 (merged):** a check fails when one `world_id` resolves to two different module sets. It
+      must fail on today's content before the reconciliation lands, or it is not testing anything.
+- [ ] **AC-7 (merged):** a written assessment of which prior measurements used the non-running
+      definition, and whether any recorded conclusion changes. Conclusions that survive are stated as
+      survivals, with what was re-checked.
+- [ ] **AC-8 (merged, amended):** `docs/mechanics/06_worldbuilding_foundation.md` **and**
+      `docs/architecture/world_repository_layout.md` state which location is authoritative. The ADR is
+      amended rather than merely cited, because it does not currently say this (see the attribution
+      correction above), and `docs/guides/content_authoring.md` §4 currently points the other way. All
+      three must agree when this closes.
+- [ ] **AC-9 (from Gap 1):** no code path writes into a retired `data/content/world_compositions/`. A
+      world-generation run does not recreate it.
 
 ## Related Tickets
+- `TCK-20261002-EPIC-SEMANTIC-FOUNDATION-COMPLETION` — **this ticket is its Child A, first.** The epic
+  is sequenced behind this one landing
+- `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` — **folded into this ticket 2026-10-03**, file
+  removed from `agent-working/tickets/todos/`; its unique content is in the merge block above and in
+  AC-6/7/8. Do not re-file it
+- `TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE` — a runtime instrument for absence
+  verdicts must also load the world the way production does, or it measures a different world
+- `TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP` — the epic's child B2. Related but
+  distinct: that one asks whether a mechanism has an *effect*; this one asks whether the *world* being
+  measured is the one that runs. Both are measurement-validity, neither subsumes the other
+- `TCK-20260915-WORLDBUILDING-DUPLICATE-REGION-ID-ACROSS-MODULES` — same family (one id, two meanings)
+  one level down, at region rather than world scope
 - `TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING` (found and worked around this split; this
   ticket is the real fix the ADR already called for)
 - `TCK-20260607-STRICT-MODE-PRODUCTION` (documents the same split as a known irritant from a
   different angle — `CatalogRepository`'s own strict-mode content validation)
 
 ## Related Docs
-- `docs/architecture/world_repository_layout.md` (the ADR this ticket implements)
+- `docs/architecture/world_repository_layout.md` — the ADR this ticket implements, **and which AC-8
+  amends.** Read the attribution correction above first: it does not currently name the catalog path
+- `docs/guides/content_authoring.md` §4 — **actively teaches the path being retired** (Gap 2)
+- `docs/mechanics/06_worldbuilding_foundation.md` — declarative topology and integrity validation; the
+  natural home for a "one id, one definition" law
+- `docs/plans/systemic_world/roadmap.md` §8 item 5 — the owner's work order placing this first
+- `docs/plans/world_composition_precondition_gap_finding.md` — retired 2026-09-30, but its §3 discussed
+  `frontier_living_world` composing `merchant_league` via `trading_company_hub`. That module is present
+  only in the **running** definition, so §3 was describing `data/worlds/`
 
 ## Related Stored Artifacts
 None yet — created when this ticket is picked up.
 
 ## Related Code Areas
-- `src/scenarios/resolver.py` (`ScenarioSetupResolver`, `_compositions_dir`)
-- `src/domains/campaigns/orchestrator.py` (the Campaign-only override to revert once unified)
-- `data/content/world_compositions/`, `data/worlds/`
+- `src/scenarios/resolver.py` (`ScenarioSetupResolver`, `_compositions_dir`; default at `:34`)
+- `src/domains/campaigns/orchestrator.py:173-200` (the Campaign-only override to revert once unified,
+  and the stale citation at `:186` — Gap 3)
+- `src/worldbuilding/repository.py:89-114` (`load_world_with_context`, **the production path**)
+- `src/worldassembly/resolver.py` (`WorldAssemblyResolver.assemble`, the catalog path)
+- `src/worldgeneration/generator.py:383,536` — **writes into the retired directory** (Gap 1)
+- `src/content/paths.py:8` (`world_compositions_dir` default), `src/content/validator.py:38`
+  (`load_all_compositions`), `src/content/repository.py:150` (`NON_CATALOG_DIRS`)
+- `src/cli/entry.py:226`, `tools/execution_census.py` — production callers of the running path
+- `tests/integration/scenarios/test_scenario_catalog_matrix.py:49`,
+  `tests/integration/scenarios/test_scenario_setup_resolver.py:37` — **re-verified 2026-10-03**: both
+  still construct `ScenarioSetupResolver(catalog, module_repo)` with no `compositions_dir`, so both
+  still ride the default. This is the trap the 2026-09-12 block flagged, still live
+- `data/content/world_compositions/` (7 top-level + `generated/`), `data/worlds/`
 
 ## Assumptions / Open Questions
 - ~~Whether every `data/content/world_compositions/*.yaml` file has a `data/worlds/<id>/`
