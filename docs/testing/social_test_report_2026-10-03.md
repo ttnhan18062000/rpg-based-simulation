@@ -137,8 +137,11 @@ over `docs/parity_ledger/social_narrative.yaml`.
 ### 3.1 Ledger shape
 
 294 entries: 246 `verified`, 44 `legacy_verified`, 3 `divergent`, 1 `missing`. By priority: 227 P0, 53 P1,
-14 P2. The plan's figures (227 P0, 211 without `test_path`) hold at this SHA. All 23 test-file references
-that the existing `test_path` values contain resolve to files that exist.
+14 P2. The plan's figures (227 P0, 211 without `test_path`) hold at this SHA. 83 entries carry a `test_path`.
+Each value can hold several paths (separated by commas, semicolons, backticks or spaces), so paths were
+extracted with the pattern `tests/[A-Za-z0-9_./-]+?\.py` over every value: they cite **63 distinct test
+files** (P0 entries 14, P1 entries 39, P2 entries 16, with overlaps between priorities), and all 63 exist.
+An earlier count of 23 came from a first-path-only parse and was wrong.
 
 ### 3.2 P0 entries with no `test_path`: 211 of 227
 
@@ -182,3 +185,77 @@ it is listed because the ledger marks it divergent.
 Sections 1 and 3 are routed to `rpg-feature-planning` by one cross-session message. Sent 2026-10-03 (the send
 succeeded and was queued to that session; no reply had been received when this was written, so this records
 that it was sent, not that anyone agreed).
+
+## 4 · Mutation baseline on `appraisal.py` (`TCK-20261003-SOCIAL-APPRAISAL-MUTATION-BASELINE`)
+
+Record: `tests/mutation/baselines/src_systems_social_appraisal_v1.json` (the full survivor diffs, the
+selection, the tool and the provenance are there; this section only summarises). The staleness line at the top of this
+report applies to it.
+
+| Field | Value |
+|---|---|
+| Target | `src/systems/social_systems/appraisal.py`, 542 lines, sha256 `d921245aaab745c724f5e1ef1011b8b5ef2eb3f2df1d48b6eb9891e12b78eceb` |
+| Source SHA | `origin/main` `9640ff942877cc7264e83309f35d19022a4a3fe6` (scratch copy by `git archive`, outside the repo) |
+| Tool | `mutmut` 2.5.1 (`pip --target`, not a project dependency; 3.x rejects `src.` module paths) |
+| Selection | `import-based-one-hop`, target `src.systems.social_systems.appraisal`, excluding `tests/mutation/`: 46 files, 313 tests, hash `41fc8fd6…`, no curated additions. Green before mutation (313 passed, about 5 s) |
+| Run | 2026-10-03T09:17:20Z to 09:47:11Z, 1,791 s |
+| Result | 345 mutants: **188 killed, 157 survived**, 0 timeout, 0 suspicious; equivalent mutants not classified (mutmut does not) |
+| Positive control | fresh: `(public_trust * 0.7)` to `(public_trust * 0.6)` by hand in the scratch copy is killed by the selection (original 313 passed); target restored, hash equal |
+| `stale_after` | target sha256 changes, selection changes, 30 days, or `TCK-20260822-RELATIONSHIP-VECTOR-ADDITIVE-FIELD` landing |
+
+**G3 (determinism).** The kernel runs in this selection: a read-only probe (kept outside the repo) saw 5
+`Kernel.tick_once` calls, in `tests/mechanic_scenarios/test_action_pacing_readiness_gate.py` (2),
+`tests/mechanic_scenarios/test_combat_judgement_withdrawal.py` (2) and
+`tests/simulation_quality/test_clan_reputation_witnessed_betrayal.py` (1), all as found with `audit_mode`
+False and `max_tick_budget_ms` 100. The mutation run forced `audit_mode=True` and a relaxed tick budget
+through that scratch plugin, and the selection is still 313 passed under that forcing. No test or source
+file in the repo was changed. `tests/unit/social/test_multi_hero.py`, which the plan expected to be
+selected, is not in the selection (it does not import `appraisal`).
+
+**Where the survivors are** (by enclosing function, from the mutmut cache; counts, not judgements):
+
+| Function | Killed | Survived | Mutants |
+|---|---|---|---|
+| `_appraise_recruitment` | 59 | 38 | 97 |
+| `_appraise_position_swap` | 0 | 38 | 38 |
+| module level (constants, imports) | 1 | 17 | 18 |
+| `_appraise_loan` | 7 | 15 | 22 |
+| `recalibrate_trust` | 0 | 13 | 13 |
+| `_appraise_trade` | 19 | 10 | 29 |
+| `process_betrayal` | 13 | 9 | 22 |
+| `calculate_recruitment_cost` | 12 | 6 | 18 |
+| `appraise_contract` | 46 | 5 | 51 |
+| `_appraise_team_up` | 7 | 5 | 12 |
+| `update_familiarity` | 6 | 1 | 7 |
+| `recalibrate_source_trust` | 18 | 0 | 18 |
+
+No mutant on `_appraise_position_swap` or `recalibrate_trust` is killed by the selected tests. That is
+what the selection catches today, not a statement that either function is wrong, and not an equivalent-mutant
+classification: some survivors may be equivalent. Survivors are findings, not fixes, and no test is changed
+or suggested.
+
+**Current behaviour, catalog-CONFLICTING (kept as a separate list).** The reads on lines 46
+(`public_reputation`) and 64 (`clan_reputation`) have 3 and 4 mutants. All 7 were **killed**, so there are no
+survivors in the CONFLICTING list: the existing tests pin that current behaviour. The label is the G4 answer,
+not re-derived here, and this is an observation, not a recommendation.
+
+## 5 · Batch review (written after C4)
+
+Recorded against the roadmap §2 measures. Every sample size is stated and none is a trend. One domain, one
+batch, one target.
+
+| Measure | What the batch showed | Sample |
+|---|---|---|
+| Locate | The social test surface was found by import (372 tests in 53 files; 20 files outside `tests/unit/social`) and measured (83.0% line coverage excluding party and `memory.py`). The same coverage run read `guilds.py` as 0% while a test elsewhere covers it at 92%, so a single selection can give a **false zero** for live code. Placement: 1 candidate misplacement, 1 ambiguous. The impact report was not exercised, so no selection misses were recorded or counted | 1 domain, 372 tests, 53 files, 2 selections |
+| Run | One rule-level routing case pins that a social-only change goes to the `Scenario lane` job. No PR touching only `src/systems/social_systems/**` has been observed in CI, and no social mechanic scenario exists for that job to run | 1 rule-level case, 0 CI-observed social-only PRs, 0 social scenarios |
+| Report honestly | Coverage, marker and mutation figures each carry a SHA, a command and an exclusion list. The core-RPG report tool was not extended for social (it lists party modules only). The oracle map found 211 of 227 P0 ledger entries with no `test_path` (section 3.2) | 294 ledger entries, 227 P0 |
+| Detect faults | A baseline now exists for one social target: 188 of 345 mutants killed (54.5%), 157 survived. There is no earlier run, so "non-decreasing" cannot be tested yet. The fresh positive control was killed | 1 target, 1 run, 345 mutants, 1 control |
+| Escape less | Not measured: this batch tagged no `escaped-defect` and found none | 0 |
+| Route failures | The social row of the ownership map was updated, and one findings message was sent to `rpg-feature-planning` (no reply received when written). No failure was triaged in this batch | 1 row, 1 message, 0 failures |
+| Stay proportionate | The mutation selection is cheap (about 5 s per run, 1,791 s for 345 mutants). `tool_call_count` per phase was not analysed here. Process slip: the C2 ticket was first closed without its staging set, which the done-checker caught; it was repaired and disclosed, and C3 and C4 created the set first | 4 tickets, 1 slip |
+
+**Workflow observation (plan item 5).** No social-domain ticket other than this batch's four children was
+observed running the Epic C steps during the batch. This is what this session saw, not a census of other
+sessions.
+
+**Owner decision (next domain, or stop):** _pending: to be recorded by the owner after review._

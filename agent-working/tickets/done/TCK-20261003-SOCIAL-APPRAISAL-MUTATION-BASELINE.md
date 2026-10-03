@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-SOCIAL-APPRAISAL-MUTATION-BASELINE
-phase: open
+phase: done
 date: 2026-10-03
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Phase 2 social item 4 (Effectiveness): one mutation baseline on `src/systems/social_systems/appraisal.py`
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -100,12 +100,25 @@ All figures re-measured at the then-current `origin/main`, with the full SHA.
 
 ## Test Summary
 
-Not run yet.
+No test added or changed. Selection (46 files, 313 tests) green before mutation, unforced and under the
+G3 forcing (313 passed, about 5 s each). Fresh positive control killed. `mutmut` 2.5.1 run: 345 mutants,
+188 killed, 157 survived, 0 timeout, 0 suspicious, 1,791 s. `tests/unit/tools/test_mutation_baseline_records.py`:
+9 passed with the new record. All at `origin/main` `9640ff942877cc7264e83309f35d19022a4a3fe6`.
 
 ## Files Changed
 
-None yet.
+- `tests/mutation/baselines/src_systems_social_appraisal_v1.json` (new data file, not a test)
+- `docs/testing/social_test_report_2026-10-03.md` (sections 4 and 5, plus the section 3.1 path-count correction)
 
 ## Completion Summary
 
-Not complete.
+Done 2026-10-03. Baseline recorded for `appraisal.py`: 188 of 345 mutants killed (54.5%), 157 survived,
+nothing classified equivalent. G3: the kernel runs in 3 selected files (5 `tick_once` calls, `audit_mode`
+False and a 100 ms budget as found), so the scratch run forced `audit_mode=True` and a relaxed budget through
+a plugin kept outside the repo; the repo is unchanged. `test_multi_hero.py` is not in the selection. The
+reputation-read lines (46 and 64) had 7 mutants, all killed, so the CONFLICTING survivor list is empty and
+the existing tests pin that current behaviour. Survivors cluster in `_appraise_recruitment` (38),
+`_appraise_position_swap` (38 of 38, none killed), module-level constants (17), `_appraise_loan` (15) and
+`recalibrate_trust` (13, none killed); recorded as findings, none called a defect. Also folded in from the C3
+review: the section 3.1 path count is corrected to 63 distinct cited test files. Batch review (section 5)
+written with an empty owner-decision slot.
