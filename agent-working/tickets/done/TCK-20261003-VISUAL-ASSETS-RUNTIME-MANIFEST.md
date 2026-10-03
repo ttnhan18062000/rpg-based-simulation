@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-VISUAL-ASSETS-RUNTIME-MANIFEST
-phase: open
+phase: done
 date: 2026-10-03
 tags: [architecture, rendering, determinism, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, rendering, determinism, testing]
 Minimal runtime manifest (proposal 9.3) exported from one release candidate, and a synthetic fixture export the frontend rehearsal consumes
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -72,13 +72,13 @@ ticket adds that contract and its export, plus a committed synthetic export for 
   you find that a registry field is needed, stop and tell the planner.
 
 ## Acceptance Criteria
-- [ ] `RuntimeManifest` rejects unknown fields, a non-derived `file`, duplicate keys, oversize dimensions, and an unsupported version (each tested).
-- [ ] The exported manifest contains no field from the provenance records (test lists the allowed field names exactly).
-- [ ] `export_runtime` refuses `verify_failed`, `unknown_release`, `artifact_mismatch`, `out_exists`, `out_inside_catalog`, each leaving no output and no change to the catalog (snapshot test, like `test_release.py`).
-- [ ] Two exports of the same release are byte-identical.
-- [ ] The committed frontend fixture equals a fresh regeneration (test), and its three images differ in shape, not only colour (test compares alpha masks).
-- [ ] Boundary test green with the new row; the drawing server cannot import `runtime_export`.
-- [ ] `tests/visual_assets` passes without Aseprite.
+- [x] `RuntimeManifest` rejects unknown fields, a non-derived `file`, duplicate keys, oversize dimensions, and an unsupported version (each tested).
+- [x] The exported manifest contains no field from the provenance records (test lists the allowed field names exactly).
+- [x] `export_runtime` refuses `verify_failed`, `unknown_release`, `artifact_mismatch`, `out_exists`, `out_inside_catalog`, each leaving no output and no change to the catalog (snapshot test, like `test_release.py`).
+- [x] Two exports of the same release are byte-identical.
+- [x] The committed frontend fixture equals a fresh regeneration (test), and its three images differ in shape, not only colour (test compares alpha masks).
+- [x] Boundary test green with the new row; the drawing server cannot import `runtime_export`.
+- [x] `tests/visual_assets` passes without Aseprite.
 
 ## Related Tickets
 - TCK-20261003-EPIC-VISUAL-ASSET-HARDENING-AND-REHEARSAL (parent)
@@ -90,7 +90,7 @@ ticket adds that contract and its export, plus a committed synthetic export for 
 - docs/assets/store_contract.md, docs/architecture/visual_asset_foundation_adr.md (D3, D4, D8, D9)
 
 ## Related Stored Artifacts
-- None yet; staging artifacts go to `agent-working/staging_artifacts/TCK-20261003-VISUAL-ASSETS-RUNTIME-MANIFEST/`.
+- `agent-working/stored_artifacts/TCK-20261003-VISUAL-ASSETS-RUNTIME-MANIFEST/` (plan, investigation, test_plan)
 
 ## Related Code Areas
 - visual_assets/store/contracts/, visual_assets/store/release.py, verify.py, pixels.py, cli.py; tests/visual_assets/store/; tests/visual_assets/test_boundaries.py; frontend/src/visualAssets/__fixtures__/ (new)
@@ -100,9 +100,23 @@ ticket adds that contract and its export, plus a committed synthetic export for 
 - The frontend fixture PNGs are tiny (16 x 16); committing them is consistent with D3 because they are synthetic fixtures, not adopted assets, and live in a `__fixtures__` directory that cannot be mistaken for production.
 
 ## Implementation Notes
+- **Re-check against what landed:** the CLI spelling follows `release` (`--catalog-id`, `--release-id`, plus `--out`), not the ticket's `--catalog`/`--release`; no registry field was needed.
+- `MAX_MANIFEST_BYTES` raised 327680 -> 393216: the guard test (maximum legal instance of every record type, ticket 2) caught that the runtime manifest at 1024 entries is 359764 B (family, file, width, height per entry) against the candidate manifest's 292081 B. `docs/assets/budgets.md` row updated; still `PROPOSED`.
+- `RuntimeManifest` has `size_bound = "MAX_MANIFEST_BYTES"`, joins `RECORD_TYPES` (so the generic strictness tests run on it) and has a contract fixture.
+- Extra refusal `registry_mismatch` (the candidate's registry hash no longer matches the registry); also `out_parent_missing`.
+- The output is checked before `verify` runs (tests prove the order); the export stages in a `.tmp-*` sibling and renames, so a failure or a racing creator of the output leaves nothing and replaces nothing.
+- Fixture PNGs are encoded with zlib level 0 so the committed bytes do not depend on the zlib build; the three shapes (diamond, disc, hollow frame) differ in alpha mask by well over 20 pixels pairwise.
+- No MCP exposure: `runtime_export` is not in `SERVER_STORE_ALLOWED`; the planted-server-import test now lists it.
+- `test_docs_commands.py`: the command-name regex accepted only `[a-z_]`, so `export-runtime` was undocumented to it; it now accepts a hyphen. `test_record_bounds.py`: `runtime_export.py` is a new PNG read site and is in the expected set.
 
 ## Test Summary
+- `tests/visual_assets` without Aseprite: 979 passed, 202 skipped. `make visual-assets-aseprite-local`: 202 passed, 0 skipped. `tests/static tests/architecture tests/docs`: 240 passed.
+- New: `test_runtime_contract.py` (14), `test_runtime_export.py` (17), `test_runtime_fixture.py` (3); the maximal runtime manifest in `test_record_bounds.py`.
+- Mutants, each killed by its named test: verify not run (`test_a_store_that_fails_verify_is_refused`); inside-catalog check removed (two tests); symlink-blind `exists()` (survived at first, because `rename` onto a symlink also refuses; the tests now assert the output is refused before `verify` runs, and it dies); pixel hash unchecked; no cleanup on failure (two tests); file derivation unchecked; registry hash unchecked; generator changed without refreshing the fixture (byte-identical test); two identical shapes (alpha-mask test).
 
 ## Files Changed
+- New: `visual_assets/store/contracts/runtime.py`, `visual_assets/store/runtime_export.py`, `visual_assets/catalog/fixtures/contracts/runtime_manifest.json`, `tests/visual_assets/store/runtime_fixture.py`, `tests/visual_assets/store/unit/test_runtime_{contract,export,fixture}.py`, `frontend/src/visualAssets/__fixtures__/rehearsal/` (manifest + 3 PNGs)
+- Changed: `visual_assets/store/{cli,config}.py`, `store/contracts/__init__.py`, `tests/visual_assets/test_boundaries.py`, `tests/visual_assets/store/unit/{conftest,test_record_bounds,test_docs_commands}.py`, `docs/assets/{store_contract,budgets}.md`
 
 ## Completion Summary
+`export-runtime` writes the client's small runtime manifest and PNGs for one release candidate into a new directory, deterministically and all-or-nothing, with no MCP exposure; a committed synthetic export of three differently shaped images is ready for the surface rehearsal.

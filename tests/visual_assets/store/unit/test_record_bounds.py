@@ -22,7 +22,7 @@ from tests.visual_assets.store.builders import png_chunk
 from tests.visual_assets.store.unit.conftest import FIXTURES, RECORD_FILES
 from visual_assets.store import config, pixels, records
 from visual_assets.store.catalog.registry import load_registry
-from visual_assets.store.contracts import RECORD_TYPES, ReleaseCandidateManifest, VisualKeyRegistry, canonical_json, parse_record, record_bound
+from visual_assets.store.contracts import RECORD_TYPES, ReleaseCandidateManifest, RuntimeManifest, VisualKeyRegistry, canonical_json, parse_record, record_bound
 from visual_assets.store.contracts.handoff import MAX_LIMITATIONS
 from visual_assets.store.contracts.intake import MAX_FINDINGS, IntakeFindingCode
 
@@ -87,6 +87,17 @@ def _maximal_manifest(cls) -> dict:
     return data
 
 
+def _maximal_runtime(cls) -> dict:
+    """MAX_VISUAL_KEYS entries of maximum-length keys and families, 128 px images: the widest legal runtime manifest."""
+    data = _fixture(cls)
+    data["entries"] = [
+        {"visual_key": f"a{i:05d}" + "x" * 26 + ".b" + "y" * 31 + ".c" + "z" * 29, "family": "f" * 32, "pixel_hash": "pixels-v1:" + f"{i:064x}",
+         "file": f"{i:064x}.png", "width": config.MAX_DIM, "height": config.MAX_DIM}
+        for i in range(config.MAX_VISUAL_KEYS)
+    ]
+    return data
+
+
 def _maximal_registry(cls) -> dict:
     """MAX_VISUAL_KEYS keys of the realistic shape (2 axes x 4 values) and MAX_ALIASES aliases: the count bound is for this shape;
     wider keys are bounded by MAX_REGISTRY_BYTES first (the registry is a hand-edited file), see docs/assets/budgets.md."""
@@ -100,7 +111,7 @@ def _maximal_registry(cls) -> dict:
     return data
 
 
-MAXIMAL = {"IntakeResult": _maximal_intake_result, "CandidateHandoffPackage": _maximal_package, "ReleaseCandidateManifest": _maximal_manifest, "VisualKeyRegistry": _maximal_registry}
+MAXIMAL = {"IntakeResult": _maximal_intake_result, "CandidateHandoffPackage": _maximal_package, "ReleaseCandidateManifest": _maximal_manifest, "RuntimeManifest": _maximal_runtime, "VisualKeyRegistry": _maximal_registry}
 
 
 def maximal_instance(cls):
@@ -123,9 +134,9 @@ def test_the_maximum_legal_record_is_written_and_read_back(cls, tmp_path):
 
 
 def test_every_record_type_has_a_bound_and_the_big_ones_have_their_own():
-    assert record_bound(ReleaseCandidateManifest) == config.MAX_MANIFEST_BYTES
+    assert record_bound(ReleaseCandidateManifest) == record_bound(RuntimeManifest) == config.MAX_MANIFEST_BYTES
     assert record_bound(VisualKeyRegistry) == config.MAX_REGISTRY_BYTES
-    assert all(record_bound(cls) == config.MAX_RECORD_BYTES for cls in RECORD_TYPES if cls not in (ReleaseCandidateManifest, VisualKeyRegistry))
+    assert all(record_bound(cls) == config.MAX_RECORD_BYTES for cls in RECORD_TYPES if cls not in (ReleaseCandidateManifest, RuntimeManifest, VisualKeyRegistry))
 
 
 def test_the_maximal_registry_loads_through_the_real_read_path(tmp_path):
@@ -172,4 +183,4 @@ def test_the_decoded_size_bound_is_used_only_for_decoded_size():
 
 
 def test_every_png_file_read_site_uses_the_file_size_bound():
-    assert set(_attribute_uses("MAX_PNG_FILE_BYTES")) == {"adoption.py", "build/exporter.py", "intake/service.py", "release.py", "verify.py"}
+    assert set(_attribute_uses("MAX_PNG_FILE_BYTES")) == {"adoption.py", "build/exporter.py", "intake/service.py", "release.py", "runtime_export.py", "verify.py"}

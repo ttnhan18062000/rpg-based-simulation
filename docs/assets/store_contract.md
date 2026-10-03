@@ -93,6 +93,24 @@ release candidates are assembled but never activated (the last arrow is out of s
 - `tests/visual_assets/test_boundaries.py`: `drawing` has no write path into `catalog/` (it may not even reference the path),
   `store` does not import `drawing`, nothing imports `src/` and `src/` never imports `visual_assets`.
 
+## The runtime manifest and `export-runtime`
+
+Under Profile A (ADR D8) the frontend build consumes the assets of one release candidate. The candidate manifest is an internal record; what ships is the smaller
+`RuntimeManifest` (`contracts/runtime.py`, proposal 9.3): `catalog_id`, `release_id`, `candidate_manifest_hash` (the `sha256:` file hash of the exact candidate
+manifest bytes it was exported from), `registry_hash`, `fallback_contract_version` (1) and `entries`, each `visual_key`, `family` (from the registry), `pixel_hash`,
+`file`, `width`, `height`. `file` is exactly `<64 hex>.png`, derived from the pixel hash and never a path; entries are unique and sorted by key, at most `MAX_VISUAL_KEYS`;
+the record's size bound is `MAX_MANIFEST_BYTES`. It **excludes** everything protected: approver, licence record, source path or revision, review note, intake, artifact id.
+Same strictness as every record (unknown fields, wrong versions, oversize dimensions rejected).
+
+`python -m visual_assets.store export-runtime --catalog-id C --release-id rc-NNNN --out DIR` (library: `runtime_export.export_runtime`) runs `verify` first, reads the
+candidate strictly, re-decodes every artifact PNG and checks its pixel hash, and writes `runtime_manifest.json` (canonical JSON) plus the PNGs named by their pixel hash into
+`DIR`, staged in a `.tmp-*` sibling and renamed, so the result is all-or-nothing and byte-identical for the same release. It never writes into the catalog and has no MCP tool
+(the drawing server may not import it). Refusals, each leaving no output and the catalog unchanged (exit code 2): `verify_failed`, `unknown_release`, `registry_mismatch` (the registry
+changed since the candidate was assembled), `artifact_mismatch`, `out_exists` (also a symlink, and an output that appears while exporting), `out_inside_catalog`,
+`out_parent_missing`, `invalid_catalog_id`, `invalid_release_id`, `registry_invalid`, `catalog_unreadable`. A committed synthetic export (three `fixture.rehearsal.*` images in
+different shapes) lives at `frontend/src/visualAssets/__fixtures__/rehearsal/`; `tests/visual_assets/store/runtime_fixture.py --write` refreshes it and a test checks it equals a fresh
+regeneration. Wiring the export into the real frontend build is `AM-M6` (dormant).
+
 ## Commands (`python -m visual_assets.store <command>`)
 
 | Command | Gate | Writes | Tracked |
@@ -105,6 +123,7 @@ release candidates are assembled but never activated (the last arrow is out of s
 | `verify` | none | nothing | n/a |
 | `build` | none; needs Aseprite and bwrap | `generated/<source_asset_id>--x1/<pixel hash>.png` and `<hash>.<revision>.artifact.json` | yes |
 | `release` | none | `manifests/candidates/<catalog_id>/rc-NNNN.json` (a CANDIDATE, never active) | yes |
+| `export-runtime` | none (reads committed candidates; writes outside the catalog) | a NEW directory given by `--out`: `runtime_manifest.json` and `<64 hex>.png` files (all-or-nothing, never into the catalog) | n/a |
 | `gc` | none; deletes only with `--delete` | removes only what it lists, under the quarantine, the review area and `generated/` | no (never `sources/`, `provenance/`, `manifests/`) |
 | `adopt` | **human only**: terminal on stdin and the typed id | `sources/<id>/rNNNN.aseprite` + `.source.json`, `provenance/adoptions/`, `provenance/intake/<in>.json` and `.review.json` | yes |
 | `revoke` | **human only**: terminal on stdin and the typed id | `provenance/revocations/<id>.json` for a source revision; `revocation.json` in the quarantine for an un-adopted intake | revision: yes; intake: no |
