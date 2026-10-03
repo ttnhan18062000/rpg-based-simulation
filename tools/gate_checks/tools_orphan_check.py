@@ -5,7 +5,7 @@ user's stated decision that checks over agent tooling should stay proportionate 
 
 **Disambiguation**: this is NOT `tools/agent-monitoring/epic_scope_orphan_check.py`, which
 detects a completely different "orphan" meaning — an epic-tier ticket present in both
-`tickets/inprogress/` and `tickets/todos/**` simultaneously. This module finds `tools/` *files*
+`agent-working/tickets/inprogress/` and `agent-working/tickets/todos/**` simultaneously. This module finds `tools/` *files*
 with no live cross-reference anywhere in the repo — the same population-level method
 `TCK-20260820-SCRIPTS-TOOLS-GOVERNANCE-EPIC`'s investigation used by hand to find the `scripts/`
 and `tools/` orphans `TCK-20260929-RETIRE-SCRIPTS-DIR` then disposed of, made permanent and
@@ -38,7 +38,7 @@ land only in `excluded`):
   documented hand-run tool) — the report must present it as "review", not "delete".
 - `NO_REFERENCES`: no referencing file found anywhere in the tracked corpus.
 
-Reference hits inside `tickets/done/`, `docs/archive/`, or `stored_artifacts/` never count as
+Reference hits inside `agent-working/tickets/done/`, `docs/archive/`, or `agent-working/stored_artifacts/` never count as
 evidence of liveness for any bucket (historical record, not current wiring) — those paths are
 excluded from the token index entirely, so a file referenced *only* there is `NO_REFERENCES`.
 Excludes a file's own self-mentions (a file's own content is never counted as its own evidence).

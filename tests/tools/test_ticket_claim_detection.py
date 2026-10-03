@@ -9,7 +9,7 @@ within `CLAIM_DETECTION_WINDOW_SECONDS` (900s) of now.
 
 Imports the module directly (it is a plain function module, unlike post_tool_hook.py which
 executes on import) and drives it against `tmp_path` fixtures — never the real `.claude/` or
-`agent-monitoring/data/` directories. `claude_dir`/`data_dir`/`window_seconds`/`own_session_id`
+`agent-working/agent-monitoring/data/` directories. `claude_dir`/`data_dir`/`window_seconds`/`own_session_id`
 are all injectable parameters for exactly this reason.
 """
 from __future__ import annotations

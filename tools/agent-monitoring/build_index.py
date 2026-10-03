@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Build a derived, read-only SQLite index over agent-monitoring/{runs,events,tools}.jsonl.
+Build a derived, read-only SQLite index over agent-working/agent-monitoring/{runs,events,tools}.jsonl.
 
 Reads all 3 source JSONL files exactly once each (strictly read-only — never
 writes back to them) and writes runs/events/tools tables into a gitignored
-SQLite database at agent-monitoring-index/monitoring.db. Full-rebuild-only,
+SQLite database at agent-working/.index/agent-monitoring-index/monitoring.db. Full-rebuild-only,
 on-demand only: mirrors tools/knowledge_search.py::cmd_build()'s unconditional
 "delete existing db, recreate from scratch" shape, not its cmd_build_incremental()
 counterpart — no incremental-build mode exists here, ever.
@@ -51,7 +51,7 @@ DEFAULT_DB_PATH = AGENT_MONITORING_INDEX / "monitoring.db"
 
 
 def _load_source(path: Path, source: str) -> list:
-    """path is either the agent-monitoring/data root (production default, a directory) or a
+    """path is either the agent-working/agent-monitoring/data root (production default, a directory) or a
     literal single JSONL file (explicit --runs-file/--events-file/--tools-file override, or a
     test's SimpleNamespace injection) — dispatch accordingly. `source` ("runs"/"events"/"tools")
     is resolved statically by the caller, never inferred from the directory's own contents."""

@@ -3,8 +3,8 @@ resolution (TCK-20260903-MONITORING-DATA-CODEX-REMIGRATION).
 
 proofs.py's private _lines() helper is the exact unit this ticket's AC #5 names: it must resolve
 every monitoring source correctly whether the captured tree came from the real repo
-(agent-monitoring/data/<week>/<source>.jsonl keys) or from a synthetic scratch tree these
-packages' own fixtures still build directly (a single literal agent-monitoring/<source>.jsonl
+(agent-working/agent-monitoring/data/<week>/<source>.jsonl keys) or from a synthetic scratch tree these
+packages' own fixtures still build directly (a single literal agent-working/agent-monitoring/<source>.jsonl
 key, e.g. tests/agent_codex_realrepo_pilot_harness/test_harness_context.py's _write_shape()).
 Tested directly rather than only indirectly through assert_post_run_proof() because it is this
 defect's exact root cause.

@@ -435,8 +435,8 @@ class TestDirectoryScan:
 #
 # `check_ticket_location_consistency` is a cross-field rule independent of _validate_ticket's
 # per-field enums: a file can have an individually-valid status and an individually-valid phase
-# while still being wrong for the tickets/ subdirectory it sits in (e.g. status: active,
-# phase: open sitting in tickets/done/ — both enum-valid, both wrong for that location). It is not
+# while still being wrong for the agent-working/tickets/ subdirectory it sits in (e.g. status: active,
+# phase: open sitting in agent-working/tickets/done/ — both enum-valid, both wrong for that location). It is not
 # wired into validate_file/_validate_ticket (see the function's own docstring/comment in
 # validate_frontmatter.py) so these tests call it directly rather than through validate_file.
 # ---------------------------------------------------------------------------
@@ -484,7 +484,7 @@ class TestTicketLocationConsistency:
         assert check_ticket_location_consistency(path, fm) == []
 
     def test_todos_location_not_enforced(self, tmp_path):
-        # Deliberately deferred (plan.md Step 1) — tickets/todos/ has no rule yet.
+        # Deliberately deferred (plan.md Step 1) — agent-working/tickets/todos/ has no rule yet.
         path = tmp_path / TICKETS / "todos" / "some-folder" / "TCK-X.md"
         fm = {"status": "active", "phase": "open"}
         assert check_ticket_location_consistency(path, fm) == []
@@ -496,10 +496,10 @@ class TestTicketLocationConsistency:
 
 
 # ---------------------------------------------------------------------------
-# Group 6a2 — Corpus enforcement over the real tickets/done/ tree
+# Group 6a2 — Corpus enforcement over the real agent-working/tickets/done/ tree
 #
 # Path-independent enforcement (plan.md Step 4): unlike the fixture-based tests above, this runs
-# the location rule over every real file under tickets/done/, regardless of what closed it
+# the location rule over every real file under agent-working/tickets/done/, regardless of what closed it
 # (pipeline, hand-orchestrated, or unrecorded) — this is what actually fixes the drift, since the
 # per-ticket done_checker check above only ever runs for the one ticket being closed. This test
 # fails before the Step 3 bulk remediation lands and passes after — that failing-then-passing
@@ -513,9 +513,9 @@ _REAL_TCK_ID = re.compile(r"^TCK-\d{8}-")
 def _corpus_location_errors(root: Path) -> list[str]:
     """Location errors for every real ticket file under `root` (recursive). Skips files with no
     frontmatter block (folder-level SEQUENCE.md files) and files whose ticket_id does not match
-    the TCK-YYYYMMDD- shape (e.g. tickets/done/README.md, ticket_id: INDEX — a docs-site index
+    the TCK-YYYYMMDD- shape (e.g. agent-working/tickets/done/README.md, ticket_id: INDEX — a docs-site index
     page, not a ticket instance; and a handful of pre-ticket-schema legacy files like
-    tickets/done/bug-01-diagonal-hunt-move-conflict.md that predate the TCK- convention entirely
+    agent-working/tickets/done/bug-01-diagonal-hunt-move-conflict.md that predate the TCK- convention entirely
     and were never in scope for this ticket's remediation)."""
     errors = []
     for md_file in sorted(root.rglob("*.md")):
@@ -533,12 +533,12 @@ class TestTicketLocationConsistencyCorpus:
     def test_real_tickets_done_corpus_is_fully_canonical(self):
         errors = _corpus_location_errors(_REPO_ROOT / TICKETS / "done")
         assert errors == [], (
-            f"{len(errors)} non-canonical ticket file(s) under tickets/done/: {errors[:10]}"
+            f"{len(errors)} non-canonical ticket file(s) under agent-working/tickets/done/: {errors[:10]}"
         )
 
     def test_corpus_check_catches_a_reverted_file(self, tmp_path):
         # Negative-path proof (plan.md Step 4): a synthetic tmp_path corpus, not the real tree —
-        # never mutate the real tickets/done/ corpus to prove a check can fail.
+        # never mutate the real agent-working/tickets/done/ corpus to prove a check can fail.
         done_dir = tmp_path / TICKETS / "done"
         done_dir.mkdir(parents=True)
         _write(
@@ -557,11 +557,11 @@ class TestTicketLocationConsistencyCorpus:
 # ---------------------------------------------------------------------------
 # Group 6a3 — Closed-ticket resurrection guard (TCK-20260928-CLOSED-TICKETS-RESURRECTED-INTO-TODOS)
 #
-# A closed ticket's pre-close snapshot has twice been re-added to tickets/todos/ by an unrelated
+# A closed ticket's pre-close snapshot has twice been re-added to agent-working/tickets/todos/ by an unrelated
 # PR (the mechanism-registry epic folder via #241; TCK-20260914-VENV-NAMING-CI-PARITY-SWAP via
 # #231 and #241), which then fires the epic-staleness hook on an already-finished epic. This
-# corpus test fails when any real ticket basename exists both under tickets/done/** and under
-# tickets/todos/** or tickets/inprogress/**. Deliberately not wired into done_checker_static in
+# corpus test fails when any real ticket basename exists both under agent-working/tickets/done/** and under
+# agent-working/tickets/todos/** or agent-working/tickets/inprogress/**. Deliberately not wired into done_checker_static in
 # this ticket -- find_closed_ticket_resurrections lives in validate_frontmatter.py so that can
 # happen later without relocating the function.
 # ---------------------------------------------------------------------------
@@ -570,11 +570,11 @@ class TestClosedTicketResurrectionCorpus:
     def test_real_tickets_tree_has_no_closed_ticket_resurrected_into_active_dirs(self):
         errors = find_closed_ticket_resurrections(_REPO_ROOT / TICKETS)
         assert errors == [], (
-            f"{len(errors)} ticket basename(s) resurrected into an active tickets/ dir: {errors}"
+            f"{len(errors)} ticket basename(s) resurrected into an active agent-working/tickets/ dir: {errors}"
         )
 
     def test_corpus_check_catches_a_resurrected_file(self, tmp_path):
-        # Negative-path proof, synthetic tmp_path corpus only -- never mutate the real tickets/
+        # Negative-path proof, synthetic tmp_path corpus only -- never mutate the real agent-working/tickets/
         # tree to prove the check can fail.
         tickets_root = tmp_path / TICKETS
         done_dir = tickets_root / "done"

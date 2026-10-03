@@ -133,4 +133,4 @@ again — if you do it, do it in the same commit as 1c so the two movements are 
   behaviour, with rationale class `Bug Fix` or `Unified`. Decide per group and record the verification
   path.
 - Close `TCK-20260915-SENSORY-FILTER-SALIENCY-USES-LEGACY-FACTION-ENUM` as folded into this ticket; do
-  not leave it open in `tickets/todos/`.
+  not leave it open in `agent-working/tickets/todos/`.

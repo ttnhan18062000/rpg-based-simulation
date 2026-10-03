@@ -6,7 +6,7 @@
 # versioning note, a new sibling file needs no `workflow_version` bump.
 #
 # Source: exhaustive line-by-line re-read of .claude/workflows/implement-ticket.js as of
-# 2026-07-22 (staging_artifacts/TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER/investigation.md), 13
+# 2026-07-22 (agent-working/staging_artifacts/TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER/investigation.md), 13
 # literal `writeMonitoring('STRING')` call sites (12 distinct values — FINALIZE_INCOMPLETE appears
 # at two call sites, :1380 and :1392), 2 verdict-derived call sites (`writeMonitoring(review.verdict)`
 # at :708 and `writeMonitoring(archVerify.verdict)` at :903, shared NEEDS_CHANGES/BLOCKED value

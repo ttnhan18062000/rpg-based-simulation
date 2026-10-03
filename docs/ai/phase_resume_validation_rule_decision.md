@@ -20,10 +20,10 @@ mechanics"):
 > "checkpoint exists, so skip."
 
 This document **decides and evidences**. It implements nothing — no phase-level checkpoint
-mechanism, no skip-if-done logic, and no new `agent-monitoring/` field is added or written as part
+mechanism, no skip-if-done logic, and no new `agent-working/agent-monitoring/` field is added or written as part
 of landing it. Every claim below is either (a) a direct reading of the real, current source of
 `.claude/workflows/implement-ticket.js`, `.claude/skills/implement-ticket/SKILL.md`,
-`agent-orchestration/workflows/implement-ticket.yaml`, `tools/agent_codex_runtime_shadow/matrix.py`,
+`agent-working/agent-orchestration/workflows/implement-ticket.yaml`, `tools/agent_codex_runtime_shadow/matrix.py`,
 or `docs/agent-monitoring/schema.md`, re-checked on 2026-09-07 for this document, or (b) an explicit,
 labeled policy choice made in the deliberate absence of an existing mechanism — never an
 unattributed assumption about what "probably" already exists.
@@ -51,8 +51,8 @@ creation)."
 
 Concretely, passing `ticket_id`:
 
-- Makes the Scope phase look the ticket up in `tickets/inprogress/`, `tickets/done/`, or
-  `tickets/todos/**/` instead of dispatching `ticket-scoper` to create a new one.
+- Makes the Scope phase look the ticket up in `agent-working/tickets/inprogress/`, `agent-working/tickets/done/`, or
+  `agent-working/tickets/todos/**/` instead of dispatching `ticket-scoper` to create a new one.
 - Computes a monitoring-attribution `seqOffset` (via `tools/agent-monitoring/seq_offset.py`, added
   by `TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION`) so a resumed session's own `events` array
   — which restarts at 0 in the new session — does not collide with the pre-pause session's
@@ -106,7 +106,7 @@ snapshot plus RNG state, hashed deterministically (`CanonicalStateHasher`) on a 
 It has no relationship — architectural, code-level, or conceptual — to resuming a crashed
 `implement-ticket.js` **agent-orchestration** pipeline run. The graph traversal confirms zero edges
 connecting the two: no node under `src/engine/` or `src/certification/` references
-`.claude/workflows/implement-ticket.js`, `agent-monitoring/`, or any ticket-workflow phase name, and
+`.claude/workflows/implement-ticket.js`, `agent-working/agent-monitoring/`, or any ticket-workflow phase name, and
 no node discovered in §1's investigation references `src/engine/checkpoint.py` or any of its
 classes. This document does not touch, reference as a design template, or conflate with
 `src/engine/checkpoint.py`, `CanonicalStateHasher`, `CanonicalHashScheduler`, `BudgetedCanonicalHasher`,
@@ -122,7 +122,7 @@ added only if this design work finds them materially necessary.
 
 ### 3.1 `workflow_version`: real precedent exists, and it can be reused as-is
 
-`agent-orchestration/workflows/implement-ticket.yaml` already carries a top-level
+`agent-working/agent-orchestration/workflows/implement-ticket.yaml` already carries a top-level
 `workflow_version: 2` field. It is not hypothetical or newly proposed — it has exactly one real
 consumer today, `tools/agent_codex_runtime_shadow/matrix.py`:
 
@@ -149,7 +149,7 @@ live contract still match what I was built against," not a per-artifact or per-p
 validation rule's `workflow_version` check needs exactly the same semantics `matrix.py` already
 uses it for: "was the workflow contract that produced this checkpoint the same contract version
 running now." Both are whole-workflow-level staleness checks against the same single source of
-truth (`agent-orchestration/workflows/implement-ticket.yaml`'s `workflow_version` field), read the
+truth (`agent-working/agent-orchestration/workflows/implement-ticket.yaml`'s `workflow_version` field), read the
 same way (`yaml.safe_load` + top-level int field), and both are deliberately coarse rather than
 per-phase — forking a second field with identical semantics would create two numbers a maintainer
 must remember to bump in lockstep for the same underlying event (a phase/gate/tier structural
@@ -244,7 +244,7 @@ Per-validation-field assessment of whether the needed data already has a home in
 | Which phase a prior (possibly crashed) run reached | Yes — `events.jsonl`'s `phase` field, one record per agent call, `status` ∈ `ok`\|`failed`\|`blocked`\|`skipped`. A crashed run is detectable today via `runs.jsonl`'s own `CRASHED` synthetic status (`start_ts` present, no `end_ts`, per `validate.py`), combined with the highest-`seq` `events.jsonl` row for that `run_id` to identify the last phase that actually completed. | Already has a home — no new field needed to determine "how far did the last attempt get." |
 | `workflow_version` at the time a phase's artifact was produced | **No.** Neither `runs.jsonl` nor `events.jsonl` records `workflow_version` (or any `implement-ticket.yaml`-derived field) per run or per event today — schema.md's full field tables for both files (reproduced above in this document's investigation) contain no such column. | **Needs a new field.** A future implementation would need to add `workflow_version` (read from `implement-ticket.yaml` at run start, per §3.1) to either the `runs.jsonl` record (one value per whole run) or each phase's `events.jsonl` record (if a long-paused run could span a `workflow_version` bump mid-run, which is possible in principle for a very long pause). |
 | `input_hash` per phase | **No.** No hash-of-consumed-input field exists on any `events.jsonl` record. The closest existing precedent, `cited_source_hashes` (an array of source-content hashes), belongs to the wholly separate, additive **retrieval-event field family** (`RETRIEVAL_EVENT_FIELDS`, gated behind `SHADOW_CONTEXT_PACKET_ENABLED`) — it hashes retrieved *context-packet* sources for a shadow-logging purpose, not a phase's actual consumed input for resume-validity purposes, and is emitted only for the advisory shadow-packet call site, not for every real phase. | **Needs a new field**, and it needs to be its own field on the real per-phase `events.jsonl` record (not a reuse of `cited_source_hashes`, whose schema and gating are purpose-built for a different, opt-in advisory mechanism). |
-| Per-phase-artifact-existence | **No.** `events.jsonl` records that a phase ran and its outcome `status`, but never enumerates the artifact path(s) it produced (`investigation.md`, `plan.md`, etc.) as a structured field — those paths are implicit, derivable only from the tier-and-phase pairing documented in `SKILL.md`, not recorded per-run. | **Needs no new *recorded* field** — this check does not need a durable record at all; it is a direct filesystem existence check (`staging_artifacts/{ticket_id}/investigation.md` etc.) performed live at resume time against the well-known, tier-determined artifact-path convention already documented in `SKILL.md`. The one thing that *would* benefit from a recorded field is which artifact paths a given phase actually wrote this run (in case a future phase's artifact-producing behavior itself changes) — deferred to the audit-trail requirement in §6, not required for the validation check itself. |
+| Per-phase-artifact-existence | **No.** `events.jsonl` records that a phase ran and its outcome `status`, but never enumerates the artifact path(s) it produced (`investigation.md`, `plan.md`, etc.) as a structured field — those paths are implicit, derivable only from the tier-and-phase pairing documented in `SKILL.md`, not recorded per-run. | **Needs no new *recorded* field** — this check does not need a durable record at all; it is a direct filesystem existence check (`agent-working/staging_artifacts/{ticket_id}/investigation.md` etc.) performed live at resume time against the well-known, tier-determined artifact-path convention already documented in `SKILL.md`. The one thing that *would* benefit from a recorded field is which artifact paths a given phase actually wrote this run (in case a future phase's artifact-producing behavior itself changes) — deferred to the audit-trail requirement in §6, not required for the validation check itself. |
 
 **Summary:** of the three validation-rule inputs, one (`workflow_version`) already exists as a
 field, but not yet *recorded per run/event* — that plumbing gap is real and would need a new
@@ -283,12 +283,12 @@ downstream phase *N+1, N+2, ...* regardless of their own individual checkpoint s
 ## 6. Audit-trail requirement for the future implementation ticket
 
 Per §76's own governance-table framing ("Auto-with-audit, gated by the validation rule"), a resume
-decision must leave enough behind in `agent-monitoring/` to be inspected after the fact — this
+decision must leave enough behind in `agent-working/agent-monitoring/` to be inspected after the fact — this
 section states that requirement; it does not build it.
 
 A future implementation ticket must ensure that whenever a resumed run makes a checkpoint-reuse
 decision (whether it reuses a checkpoint, or invalidates one and restarts from an earlier phase),
-that decision is recorded as an inspectable `agent-monitoring/events.jsonl` record, following this
+that decision is recorded as an inspectable `agent-working/agent-monitoring/events.jsonl` record, following this
 repo's own established convention for collapsed-cause statuses (§ schema.md's `reason_code` design,
 `docs/agent-monitoring/schema.md`): a new, closed-vocabulary `reason_code` value (or an equivalent
 new field, if `reason_code`'s existing `Scope`/`Verify`-only scope turns out not to fit) —
@@ -321,7 +321,7 @@ for `.claude/workflows/implement-ticket.js` is resolved as follows:**
    `source_revision` and `phase_version` are **not** materially necessary (§3.3) — both are either
    subsumed by a correctly-scoped `input_hash` or lack real evidence of a gap `workflow_version`
    leaves open today.
-2. **`workflow_version` reuse confirmed:** `agent-orchestration/workflows/implement-ticket.yaml`'s
+2. **`workflow_version` reuse confirmed:** `agent-working/agent-orchestration/workflows/implement-ticket.yaml`'s
    existing top-level `workflow_version` field (currently `2`) can and should be reused as-is for
    the resume validation rule — same source of truth, same coarse whole-workflow semantics
    `tools/agent_codex_runtime_shadow/matrix.py` already relies on for an analogous staleness check.
@@ -337,7 +337,7 @@ for `.claude/workflows/implement-ticket.js` is resolved as follows:**
    depend on upstream artifacts.
 6. **Audit-trail requirement stated** (§6) for the future implementation ticket: checkpoint-reuse
    and checkpoint-invalidation decisions must be recorded as a typed, closed-vocabulary field in
-   `agent-monitoring/events.jsonl` (a new `reason_code`-family value or equivalent), never only in
+   `agent-working/agent-monitoring/events.jsonl` (a new `reason_code`-family value or equivalent), never only in
    free text.
 
 `docs/plans/agent_infrastructure/ai_first_hardening_epics/workflow_reliability_epic.md`'s M3 section

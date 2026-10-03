@@ -4,7 +4,7 @@
 Reuses tools.agent_replay_codex.{containment,provenance_check,codex_config_guard}'s real,
 already-tested primitives unmodified (imported, not reimplemented) around a real
 run_shadow_comparison() call against a synthetic, disposable git repo — never the real project
-repo's tickets/ or agent-monitoring/.
+repo's agent-working/tickets/ or agent-working/agent-monitoring/.
 """
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ _FIXTURE_YAML_TEMPLATE = """\
 version: 1
 source:
   ticket_id: {ticket_id}
-  ticket_path: tickets/inprogress/{ticket_id}.md
+  ticket_path: agent-working/tickets/inprogress/{ticket_id}.md
   events_run_id: {ticket_id}
   stored_artifacts_dir: {stored_artifacts_dir}
   tier: standard
@@ -140,7 +140,7 @@ def test_shadow_run_writes_no_codex_provider_record():
 
 def test_negative_control_detects_a_synthetic_codex_provider_record(tmp_path):
     monitoring_dir = tmp_path / AGENT_MONITORING
-    monitoring_dir.mkdir()
+    monitoring_dir.mkdir(parents=True)
     (monitoring_dir / "runs.jsonl").write_text(
         json.dumps({"run_id": "FAKE", "provider": "codex"}) + "\n", encoding="utf-8"
     )

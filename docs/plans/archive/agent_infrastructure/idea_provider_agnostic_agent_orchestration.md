@@ -59,7 +59,7 @@ The desired outcome is **semantic parity**, not superficial file parity:
 | Earlier cross-provider scaffolding | `.agents/` | Existing but stale; must be disposed of before new Codex work |
 | Monitoring writers | `tools/agent-monitoring/*.py` | Mostly portable; sidecar payload is coupled |
 | Gates | `tools/gate_checks/*.py` | Already portable Python checks |
-| Project artifacts | `tickets/`, `staging_artifacts/`, `stored_artifacts/`, `docs/` | Provider-neutral |
+| Project artifacts | `agent-working/tickets/`, `agent-working/staging_artifacts/`, `agent-working/stored_artifacts/`, `docs/` | Provider-neutral |
 
 ### Existing `.agents/` precedent — mandatory disposition gate
 
@@ -159,11 +159,11 @@ it to `docs/guidelines/` and the global workflow rules before reuse.
 ### 1. Shared contract first
 
 Add a provider-neutral contract under a new repository-owned location, proposed
-as `agent-orchestration/`. This directory is a source specification, not a
+as `agent-working/agent-orchestration/`. This directory is a source specification, not a
 second implementation:
 
 ```text
-agent-orchestration/
+agent-working/agent-orchestration/
   README.md                         # ownership and compatibility policy
   contract.yaml                     # version, providers, global invariants
   agents/<role>.yaml                # role inputs, outputs, gates, tool intent
@@ -226,9 +226,9 @@ This keeps platform API differences at the edge.
 Continue using the existing append-only files:
 
 ```text
-agent-monitoring/runs.jsonl
-agent-monitoring/events.jsonl
-agent-monitoring/tools.jsonl
+agent-working/agent-monitoring/runs.jsonl
+agent-working/agent-monitoring/events.jsonl
+agent-working/agent-monitoring/tools.jsonl
 ```
 
 Do **not** create Claude-only and Codex-only primary stores. Both providers

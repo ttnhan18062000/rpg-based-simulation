@@ -17,7 +17,7 @@ _SPEC.loader.exec_module(_MANIFEST)
 
 def _monitoring_dir(tmp_path: Path) -> Path:
     directory = tmp_path / AGENT_MONITORING
-    directory.mkdir()
+    directory.mkdir(parents=True)
     for filename in ("runs.jsonl", "events.jsonl", "tools.jsonl"):
         (directory / filename).write_text("one\ntwo\n", encoding="utf-8")
     return directory

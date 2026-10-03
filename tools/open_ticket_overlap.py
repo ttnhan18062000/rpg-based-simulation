@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Reports open tickets (`tickets/todos/**/TCK-*.md`, `tickets/inprogress/TCK-*.md`) that overlap a
+Reports open tickets (`agent-working/tickets/todos/**/TCK-*.md`, `agent-working/tickets/inprogress/TCK-*.md`) that overlap a
 given ticket or concern, for TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER.
 
-Every automated duplicate check before this tool looked only at closed work (`tickets/working_log.csv`,
-`docs/REGISTRY.yaml`) or, on the ticket-scoper's own new-ticket path, at `tickets/` without
+Every automated duplicate check before this tool looked only at closed work (`agent-working/tickets/working_log.csv`,
+`docs/REGISTRY.yaml`) or, on the ticket-scoper's own new-ticket path, at `agent-working/tickets/` without
 `todos/`. A real miss: rpg-feature-planning's hand-authored wave ticket overlapped the already-open
 `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED` and nothing flagged it (see this ticket's
 own investigation.md for the fixture that reproduces the pair, since the real wave ticket isn't on
 this branch or main).
 
-Reads `tickets/todos/`/`tickets/inprogress/` live from disk on every call -- no index, so a ticket
+Reads `agent-working/tickets/todos/`/`agent-working/tickets/inprogress/` live from disk on every call -- no index, so a ticket
 written a minute ago is included (Out of Scope: adding open tickets to the `search_docs` index,
 which is rebuilt only on doc changes and would reintroduce the same staleness this tool exists to
 remove).
@@ -36,7 +36,7 @@ real pair. Replaced with a weighted, ranked score:**
     excluding literal zero-overlap entries).
 
 `tests/tools/test_open_ticket_overlap_real_corpus.py` measures this against the *real*
-`tickets/todos/`+`tickets/inprogress/` tree (not just synthetic fixtures): median hit count per
+`agent-working/tickets/todos/`+`agent-working/tickets/inprogress/` tree (not just synthetic fixtures): median hit count per
 real ticket stays small, and the B0 fixture ranks the real
 `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED` #1 both with and without code areas
 (the latter is the concern-investigator call shape, which never has code areas to give).
@@ -53,7 +53,7 @@ a hit is a real duplicate. Callers must route hits to an informational field
 (`related_context`/`related_ticket`), never `conflicts`/`is_duplicate`.
 
 Usage:
-  python3 tools/open_ticket_overlap.py --ticket-path tickets/todos/TCK-EXAMPLE.md
+  python3 tools/open_ticket_overlap.py --ticket-path agent-working/tickets/todos/TCK-EXAMPLE.md
   python3 tools/open_ticket_overlap.py --title "..." --summary "..." --code-area src/foo.py [--code-area ...]
   python3 tools/open_ticket_overlap.py --ticket-path PATH --todos-root PATH --inprogress-root PATH  # tests
 """
@@ -170,7 +170,7 @@ def find_overlapping_open_tickets(
 ) -> list:
     """Returns up to `top_n` `{ticket_id, path, score, has_code_area_match, matched_code_areas,
     matched_terms}` dicts, ranked by `score` descending, for open tickets under
-    `todos_root`/`inprogress_root` (recursive -- covers `tickets/todos/<folder>/` epics) that
+    `todos_root`/`inprogress_root` (recursive -- covers `agent-working/tickets/todos/<folder>/` epics) that
     score above `min_score`. `has_code_area_match` (peer review round 3: raw scores aren't
     comparable across different queries -- a query with no real overlap can still return `top_n`
     low-score hits, and a long, term-rich unrelated ticket's own top hit can outscore a short

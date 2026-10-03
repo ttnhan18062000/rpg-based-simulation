@@ -63,7 +63,7 @@ than edit anchors in the fix's PR.
 - `docs/guidelines/intentional_divergences.md` section 2.60
 
 ## Related Stored Artifacts
-- `stored_artifacts/TCK-20260930-RESOURCE-NODE-YIELDS-ITEM-COLLIDES-WITH-RESOURCE-KIND/investigation.md`
+- `agent-working/stored_artifacts/TCK-20260930-RESOURCE-NODE-YIELDS-ITEM-COLLIDES-WITH-RESOURCE-KIND/investigation.md`
 
 ## Related Code Areas
 - `tests/unit/worldassembly/test_corpus_diversity.py`

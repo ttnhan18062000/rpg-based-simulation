@@ -237,7 +237,7 @@ def test_ticket_file_without_frontmatter_returns_none(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Non-ticket markdown in tickets/todos/{folder}/ must not crash the walk
+# Non-ticket markdown in agent-working/tickets/todos/{folder}/ must not crash the walk
 # ---------------------------------------------------------------------------
 
 

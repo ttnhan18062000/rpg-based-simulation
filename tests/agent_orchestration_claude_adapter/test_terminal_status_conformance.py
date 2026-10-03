@@ -1,16 +1,16 @@
 """Terminal-status conformance test: LIVE `.claude/workflows/implement-ticket.js` extraction vs.
-`agent-orchestration/terminal-statuses.yaml` contract data (TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER,
+`agent-working/agent-orchestration/terminal-statuses.yaml` contract data (TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER,
 AC #3).
 
 Asserts full match as a set of (value, kind) pairs — order-independent, since terminal statuses
 are an unordered set, not a sequence like phase order. Because
-agent-orchestration/terminal-statuses.yaml was authored directly from this same live extraction
+agent-working/agent-orchestration/terminal-statuses.yaml was authored directly from this same live extraction
 (TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER Step 1), this test is expected to pass with zero
 divergence entries needed.
 
 Any per-value mismatch is checked against `divergence_log.is_approved()` (axis="terminal_status",
 value=<the status value>) before hard-failing — see
-`agent-orchestration/intentional-divergences.md` for the human-approval mechanism.
+`agent-working/agent-orchestration/intentional-divergences.md` for the human-approval mechanism.
 """
 from __future__ import annotations
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bulk-apply minimal frontmatter to tickets/done/ and stored_artifacts/.
+"""Bulk-apply minimal frontmatter to agent-working/tickets/done/ and agent-working/stored_artifacts/.
 
 Run from repo root:
     python3 tools/add_frontmatter_tickets.py
@@ -9,7 +9,7 @@ Idempotency:
   (i.e. already has the correct schema frontmatter). Replace if it starts with '---'
   but has an incomplete/non-conformant frontmatter (e.g. only 'ticket:' / 'phase:' keys).
 - Artifact files: same logic — replace non-conformant frontmatter, skip conformant ones.
-- All .md files under stored_artifacts/ subdirs receive artifact frontmatter
+- All .md files under agent-working/stored_artifacts/ subdirs receive artifact frontmatter
   (validator scans them all; non-standard filenames get artifact_type: misc).
 """
 
@@ -207,7 +207,7 @@ def process_ticket_file(path: Path) -> str:
 def process_artifact_file(path: Path, ticket_id: str) -> str:
     """Apply artifact frontmatter to path. Returns 'modified' or 'skipped'.
 
-    All .md files under stored_artifacts/ receive frontmatter.
+    All .md files under agent-working/stored_artifacts/ receive frontmatter.
     Files whose stem is in ARTIFACT_TYPED_NAMES get the full artifact schema with
     a typed artifact_type field.  All other files (legacy walkthroughs, task specs,
     etc.) get content_type: doc frontmatter so the validator routes them correctly.

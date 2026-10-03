@@ -17,7 +17,7 @@ workflow_id: implement-ticket
 # Deliberately does NOT re-derive any static_check module's own internal pass/fail predicate (e.g.
 # done_checker_static.py's ~13 named DoD sub-conditions) — records only which module/function backs
 # the gate and which terminal-status value(s) result on failure. See
-# staging_artifacts/TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST/investigation.md's
+# agent-working/staging_artifacts/TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST/investigation.md's
 # Anti-Drift Hazards for why.
 gates:
   - phase: Scope

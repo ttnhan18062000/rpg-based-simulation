@@ -30,7 +30,7 @@ All observed 2026-09 to 2026-10-02 in this repo.
 | Role ambiguity after context loss | a shared memory note ("planner never implements") was read by `rpg-implementer` after compaction and surfaced a false rule; the user had to be asked | memory is shared by every session in the directory, a role is not |
 | The hook cannot tell a session who it is | `session_start_handover_hook.py` lists **all** handover notes and says "read the one matching your role" | the harness gave it no role to match |
 | Git cannot settle ownership | every agent commit is authored by the user | authorship carries no role |
-| Batch discipline lives in the implementer's head | PR #276 merged its `src/` change while all four tickets stayed in `tickets/inprogress/` (Finalize never ran), found only by a peer reading it | no role-level "a batch is not done until..." contract |
+| Batch discipline lives in the implementer's head | PR #276 merged its `src/` change while all four tickets stayed in `agent-working/tickets/inprogress/` (Finalize never ran), found only by a peer reading it | no role-level "a batch is not done until..." contract |
 | Worktree and branch sprawl | 307 local and 273 remote branches, ~7.6 GB of worktrees, disk hit 100% on 2026-10-02 and blocked a push; cleaned by hand (240 local, 161 remote deleted) | no owner, no inventory, no retirement rule for worktrees or branches |
 | Role name leaks into data | closure events carrying the session name as `agent` tripped the `vocabulary_drift` ratchet (174 vs 162) | no separate field for session role |
 | The user is the router and the clock | idle sessions need a typed prompt to start (observed repeatedly; see 9.5 for the unresolved platform question) | no routing table, no wake convention |
@@ -127,12 +127,12 @@ directory, and unversioned. A role is per-session and must survive a machine cha
 a diff. Memory files keep pointers only ("see `session_roles.yaml`"); the define-once rule applies.
 
 **Canonical location and the existing orchestration contract.** There is exactly one source of truth:
-`registries/session_roles.yaml` plus `registries/session_authority.yaml`. `agent-orchestration/` was
+`registries/session_roles.yaml` plus `registries/session_authority.yaml`. `agent-working/agent-orchestration/` was
 considered as the home and **rejected on repo evidence**: its README scopes it to "the provider-neutral
 semantic contract for the `implement-ticket` workflow", states it has zero consumers today, and marks
 its authority direction as future ("one-way future-authority"). A session roster is neither
 implement-ticket-specific nor yet consumed, so it does not belong in that contract. The session layer
-only **references** agent roles (`agent-orchestration/roles/*.yaml`, delegated subagent roles) by id and
+only **references** agent roles (`agent-working/agent-orchestration/roles/*.yaml`, delegated subagent roles) by id and
 never redefines them. Name the two apart everywhere: **agent role** (delegated subagent) versus
 **session role** (long-lived interactive peer). If a provider-neutral rendering of the roster is wanted
 later (for a Codex session), it is *generated* from the registry, never a second definition.
@@ -360,7 +360,7 @@ The plan makes them role obligations so they are not re-taught.
   unless dependent. After a green PR the implementer may start the next batch without waiting for
   merge (stack when dependent). Merge is the user's call.
 - **A batch is not done until its Finalize ran** (the PR #276 lesson): done-checker static pass,
-  ticket in `tickets/done/`, working-log row via the closure tool, monitoring written, docs index
+  ticket in `agent-working/tickets/done/`, working-log row via the closure tool, monitoring written, docs index
   updated if `docs/` changed. The post-merge integrity report's `inprogress` check (drafted
   2026-10-02) is the backstop, not the rule.
 - **Batch card**: the PR body (rendered by `pr_render.py`) is the durable record; the role's
@@ -736,9 +736,9 @@ registry separate from PR bodies; expanded retro analytics (M6b); any change to 
 - `docs/guides/agent_session_reset_boundaries.md` (handover format, HARD/SOFT/NEVER)
 - `docs/guides/delivery_process.md` (worktree and branch contract, PR lifecycle, `pr_render`)
 - `tools/agent-monitoring/session_start_handover_hook.py` (the hook this replaces the listing of)
-- Epics: `tickets/todos/session-layer/INDEX.md` (A foundation, B communication and authority, C operations,
+- Epics: `agent-working/tickets/todos/session-layer/INDEX.md` (A foundation, B communication and authority, C operations,
   D measurement and review)
-- External review record: `stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/`
+- External review record: `agent-working/stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/`
 - Evidence tickets: `TCK-20260921-SESSION-CONTEXT-RESET-TRIAL`, `TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE`,
   `TCK-20260920-MECHANISM-REGISTRY-CHANGED-CODE-ADVISORY-AT-CLOSE` (content-vs-tooling split),
   `TCK-20261001-POST-MERGE-MAIN-INTEGRITY-REPORT`
@@ -769,9 +769,9 @@ This plan concerns that coordination, not the simulation itself.
 ## B. How work is organised today
 
 **Tickets.** Every unit of work is a markdown ticket (`TCK-YYYYMMDD-SHORT-SCOPE`) that moves
-`tickets/todos/` -> `tickets/inprogress/` -> `tickets/done/`, with required sections (scope, out of
+`agent-working/tickets/todos/` -> `agent-working/tickets/inprogress/` -> `agent-working/tickets/done/`, with required sections (scope, out of
 scope, acceptance criteria, related docs, test summary, files changed, completion summary). Closed
-tickets append one row to a working log (`tickets/working_log.csv`) through a single sanctioned
+tickets append one row to a working log (`agent-working/tickets/working_log.csv`) through a single sanctioned
 writer.
 
 **Tiers.** `hotfix` (self-evident, minimal): Scope -> Implement -> Test -> Parity -> Verify ->
@@ -794,7 +794,7 @@ subagents deterministically and cost real tokens, so they require the owner's ex
 sessions*, which has no equivalent today.
 
 **Monitoring.** Per-run, per-event and per-tool-call records are written as JSONL shards under
-`agent-monitoring/data/YYYY-Www/`, a retro report summarises them, and ratchet checks guard data
+`agent-working/agent-monitoring/data/YYYY-Www/`, a retro report summarises them, and ratchet checks guard data
 quality. A `vocabulary` registry constrains the `agent` field. A shared sidecar file
 (`.claude/current_run`) once cross-contaminated attribution between concurrent sessions; a
 per-session variant (`current_run.<session_id>`) now exists.
@@ -848,7 +848,7 @@ role it is.
    ("never implements") was read by the implementation session after compaction and applied to it;
    the owner had to be asked.
 3. **A batch merged without finalising.** One PR changed `src/` while all four of its tickets stayed
-   in `tickets/inprogress/` (their Finalize never ran). Found only because a peer read the PR.
+   in `agent-working/tickets/inprogress/` (their Finalize never ran). Found only because a peer read the PR.
 4. **Disk exhaustion.** The volume reached 100% (worktrees about 7.6 GB; 307 local and 273 remote
    branches), which blocked a `git push`. Cleaned by hand: 240 local and 161 remote branches
    deleted with a name-to-SHA backup.
@@ -952,7 +952,7 @@ replacing Claude Code; cross-machine sessions; automatic dispatch without a plan
 # Appendix I - disposition of the external review (2026-10-02)
 
 An external AI reviewed the plan from the document alone (no repo, no live harness). Its review is in
-`stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/round1_review.md`. Each point was checked against the repo's own records before
+`agent-working/stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/round1_review.md`. Each point was checked against the repo's own records before
 being accepted. "Adopted" means the plan text above changed.
 
 | # | Review point | Disposition | Reason |
@@ -977,7 +977,7 @@ being accepted. "Adopted" means the plan text above changed.
 | 18 | Smaller v1 scope | **Adopted** | "Recommended v1 scope" in 12.2 |
 | 19 | State "control plane, not workflow engine" as an invariant | **Adopted** | section 1 |
 
-**Superseded in round 2** (see `stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/round2_summary.md`): row 3 (the pinned
+**Superseded in round 2** (see `agent-working/stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/round2_summary.md`): row 3 (the pinned
 digest is deferred; v1 uses the governing-file class plus deny/ask), row 5 (the writer slot moved from
 the role to the worktree), row 6 (the session name is a signal resolved at `SessionStart`, not the
 identity key; the session id changes at `/clear` and the role is re-resolved). The rows above are kept
@@ -1021,7 +1021,7 @@ claims are load-bearing for the design.
 **Net effect.** The plan's direction matches the documented first-party grain (subagent-definition
 roles, named sessions, inbox, hooks as gates). The research changed five things in the text above: a
 name-collision rule (section 5), a stated topology (9.0), a corrected wake analysis with real levers
-(9.5), alignment with the existing `agent-orchestration/` contract (section 4), and more M0 cases
+(9.5), alignment with the existing `agent-working/agent-orchestration/` contract (section 4), and more M0 cases
 (12.1 l and m). It did not change the milestone structure. The two papers added supporting framing; the one mechanism
 they suggested (a pinned authority digest) was deferred in round 2.
 
@@ -1029,15 +1029,15 @@ they suggested (a pinned authority digest) was deferred in round 2.
 
 # Appendix K - brief for a second review round
 
-*(Round-two brief, answered in `stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/round2_summary.md` (the brief itself is `round2_review_brief.md` beside it); kept for provenance. The "changed since round one" list and items 2 to 4 below describe round one; round 2 then revised sections 4, 5, 6, 7, 9, 10, 11 and 12.)*
+*(Round-two brief, answered in `agent-working/stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/round2_summary.md` (the brief itself is `round2_review_brief.md` beside it); kept for provenance. The "changed since round one" list and items 2 to 4 below describe round one; round 2 then revised sections 4, 5, 6, 7, 9, 10, 11 and 12.)*
 
-This is the second external review. The first review (`stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/round1_review.md`) is
+This is the second external review. The first review (`agent-working/stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/round1_review.md`) is
 summarised and answered in **Appendix I**. Prior art that changed the text is in **Appendix J**. Please
 do not re-raise the points Appendix I marks "Adopted" unless you think the adoption is wrong; spend the
 review on what is new or contested.
 
 **Changed since round one (sections to re-read):** 1 (control-plane invariant); 4 (five-kind manifest,
-separate authority file, relation to the existing `agent-orchestration/` contract); 5 (binding by name,
+separate authority file, relation to the existing `agent-working/agent-orchestration/` contract); 5 (binding by name,
 binding record, manifest digest, name-collision rule, launcher bypass); 9.0 (topology), 9.2/9.3
 (`bounce_if` dropped, dispute vs availability), 9.5 (inbound controls, inbox gate, auto-wake levers);
 10 (hard/advisory split, pinned authority digest, fail-closed authority); 11 (headline metric); 12.1
@@ -1054,7 +1054,7 @@ binding record, manifest digest, name-collision rule, launcher bypass); 9.0 (top
    `crossSessionInbound` = `accept`. What does that open up, and is a narrower setting possible?
 5. **Topology** (section 9.0): hub-and-spoke per domain with the user above. Where does it fail (a
    planner that is offline for a day, a cross-domain emergency, two planners disagreeing)?
-6. **The agent-role vs session-role split** and placing the roster under `agent-orchestration/`: right
+6. **The agent-role vs session-role split** and placing the roster under `agent-working/agent-orchestration/`: right
    home, or a source of confusion?
 7. **Scope**: with the v1 slice in 12.2, what would you still cut?
 

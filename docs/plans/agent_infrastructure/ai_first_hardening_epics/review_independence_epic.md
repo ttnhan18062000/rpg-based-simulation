@@ -41,12 +41,12 @@ model's; the candidate's verdict is recorded for comparison, not acted on.
 Concretely: add a `model:` override on a shadow invocation path (implementation detail — either a
 second agent-spawn using the same prompt with a different `model:` frontmatter, or an explicit
 dual-call inside the Architecture-Verify/Security-Review phase — resolved during implementation,
-not prescribed here) and log both verdicts to a comparable location (e.g. an `agent-monitoring/`
+not prescribed here) and log both verdicts to a comparable location (e.g. an `agent-working/agent-monitoring/`
 event field) so M2 below has real data to compare.
 
 **Bounded and attributable, added during planning discussion**: shadow mode roughly doubles model
 calls for these two phases, and given the platform's own token-forwarding gap (no real cost data
-reaches `agent-monitoring/`), that cost would otherwise be structurally invisible — showing up
+reaches `agent-working/agent-monitoring/`), that cost would otherwise be structurally invisible — showing up
 nowhere except as an unexplained phase-duration increase in retro reports. Two concrete
 requirements, not just a caution:
 - **Attributable**: log candidate-reviewer call count, review-phase wall time, workflow wall time,
@@ -68,7 +68,7 @@ not assumes.
 This becomes an Experiment Specification (Hypothesis/Baseline/Method/Metrics/Exit/Kill Criteria)
 before any cutover ticket is written — not sketched further here; see the freeze verdict's
 Bucket-B handoff boundary. Baseline for the comparison: the current model's existing finding rate
-on historical diffs, where recoverable from `agent-monitoring/` records.
+on historical diffs, where recoverable from `agent-working/agent-monitoring/` records.
 
 ## Out of scope
 

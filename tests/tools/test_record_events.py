@@ -4,7 +4,7 @@ vocabulary check (TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT).
 
 All subprocess-level tests here use only rejected (null-field) or non-writing
 inputs, or run against tmp-cwd copies, so none of them write to the repo's real
-agent-monitoring/data/<ISO-week>/events.jsonl.
+agent-working/agent-monitoring/data/<ISO-week>/events.jsonl.
 """
 import json
 import subprocess
@@ -176,7 +176,7 @@ class TestVocabularyWarning:
     def test_vocabulary_warning_never_raises_or_exits(self, tmp_path):
         # Exercises the full CLI path: an unrecognized phase must still exit 0
         # and still write the record — warn, never reject. Runs with cwd=tmp_path
-        # so the relative "agent-monitoring/events.jsonl" write target lands in a
+        # so the relative "agent-working/agent-monitoring/events.jsonl" write target lands in a
         # throwaway directory, never touching the repo's real events.jsonl.
         _init_git_repo_on_test_branch(tmp_path)
         result = subprocess.run(
@@ -246,7 +246,7 @@ def test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not
 
 
 def test_cost_proxy_score_absent_when_no_tools_jsonl_exists(tmp_path):
-    # No agent-monitoring/tools.jsonl at all in this cwd — compute_tool_stats must not crash,
+    # No agent-working/agent-monitoring/tools.jsonl at all in this cwd — compute_tool_stats must not crash,
     # and an implement-ticket record with genuinely zero recorded tool calls gets 0, not a stale
     # caller-supplied value.
     record = {**_VALID_EVENT, "run_id": "TCK-NO-TOOLS-FILE", "seq": 1}
@@ -340,7 +340,7 @@ def test_compute_tool_stats_targets_implement_ticket_implement_epic_and_create_t
 
 def test_batch_top_level_negative_seq_and_child_ticket_positive_seq_do_not_cross_contaminate(tmp_path, monkeypatch):
     # Reproduces and pins the Step 1 collision fix from
-    # staging_artifacts/TCK-20260904-COST-PROXY-EPIC-TICKETS/plan.md: implement-epic.js's 4
+    # agent-working/staging_artifacts/TCK-20260904-COST-PROXY-EPIC-TICKETS/plan.md: implement-epic.js's 4
     # top-level sidecar sites (Discover, batch-monitoring-write, folder-cleanup,
     # tracking-doc-update) share one run_id (batchRunId) with the pre-existing batchEvents array,
     # which already uses seq=1..N under that identical run_id. This test proves, at the Python

@@ -3,7 +3,7 @@
 
 Mirrors tests/tools/test_retrieval_baseline_metrics.py's design: synthetic-fixture unit tests for
 the counting logic itself, plus a frozen-fixture corpus test with literal expected counts (so the result never depends on
-which shards a branch carries), and smoke tests against the REAL agent-monitoring/ corpus.
+which shards a branch carries), and smoke tests against the REAL agent-working/agent-monitoring/ corpus.
 """
 import ast
 import json
@@ -129,7 +129,7 @@ def test_derivation_string_present_and_non_fabricated():
 
 # ---------------------------------------------------------------------------
 # Frozen-fixture corpus test (TCK-20260930-SKILL-USAGE-METRIC-LIVE-CORPUS-TEST-FROZEN-FIXTURE).
-# The previous version counted Skill rows in the live agent-monitoring/data/ shards, so any branch
+# The previous version counted Skill rows in the live agent-working/agent-monitoring/data/ shards, so any branch
 # that carried its own shard with a Skill row changed the expected count. The fixture below is a
 # hand-written tree covering both shard shapes; the expected counts are literals, not derived from
 # the production glob, so file discovery is checked independently of the code under test.
@@ -205,7 +205,7 @@ def test_causes_zero_diff_on_real_corpus():
     tools = load_data_glob(DEFAULT_TOOLS_FILE, "tools")
     build_skill_usage_section(tools)
     post = _porcelain()
-    assert pre == post, f"skill_usage_metric mutated agent-monitoring/: pre={pre!r} post={post!r}"
+    assert pre == post, f"skill_usage_metric mutated agent-working/agent-monitoring/: pre={pre!r} post={post!r}"
 
 
 # ---------------------------------------------------------------------------

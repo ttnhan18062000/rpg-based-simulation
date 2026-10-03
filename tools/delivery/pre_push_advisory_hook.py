@@ -9,7 +9,7 @@ Lives under `tools/delivery/`, not `tools/agent-monitoring/`, despite following 
 shape — the epic's own ordering constraint forbids touching `tools/agent-monitoring/` ahead of
 `TCK-20260924-DELIVERY-COST-MEASUREMENT`.
 
-**Matcher**: `git push` is measured (over `agent-monitoring/data/2026-W*/tools.jsonl`, 322 real
+**Matcher**: `git push` is measured (over `agent-working/agent-monitoring/data/2026-W*/tools.jsonl`, 322 real
 invocations) to appear overwhelmingly as the *whole* command (77.6%) or the *last* statement in a
 chain (newline 19.9%, `&&` 1.6%, `;` 0.9%) — the mirror image of the `cd`-prefix hook's own target
 shape, which is why the matcher fires on `git push` at a statement-start position (command start,
@@ -23,10 +23,10 @@ hook cannot itself become a source of the Fortiguard TLS-block failure mode this
 defends against):
 
 - **A — commit subjects name a real ticket.** Every commit on the branch ahead of `origin/main`
-  should reference a `TCK-` ID that resolves to a real file somewhere under `tickets/` (a ticket
+  should reference a `TCK-` ID that resolves to a real file somewhere under `agent-working/tickets/` (a ticket
   legitimately moves `inprogress/` -> `done/` during its own branch's life, so the search is
   recursive, not directory-specific).
-- **B — the current week's `agent-monitoring/data/YYYY-Www/*.jsonl` shard is staged.** The
+- **B — the current week's `agent-working/agent-monitoring/data/YYYY-Www/*.jsonl` shard is staged.** The
   monitoring hooks rewrite it on nearly every tool call, so an unstaged shard at push time is the
   default failure mode, not an unusual one.
 - **C — the branch is not a finished, squash-merged one.** Detects the specific shape from

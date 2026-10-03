@@ -4,7 +4,7 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 **Last updated:** 2026-08-20 — reconciliation pass. This table had gone stale since 2026-06-12:
 several epics below were reclassified after direct verification against live `src/` and
-`tickets/working_log.csv` found real feature work had landed under unrelated internal
+`agent-working/tickets/working_log.csv` found real feature work had landed under unrelated internal
 `Epic 4.x`/`5.x` (E41/E43/E52/E53) and `TCK-` naming since 2026-06-19, never reconciled back
 into this file. See the updated Completed/Partially Completed tables below for exact evidence
 citations.

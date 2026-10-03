@@ -121,7 +121,7 @@ conquest and liberation.
 
 ## Related Stored Artifacts
 
-- `stored_artifacts/TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT/`
+- `agent-working/stored_artifacts/TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT/`
 
 ## Related Code Areas
 

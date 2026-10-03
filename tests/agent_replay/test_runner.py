@@ -2,7 +2,7 @@
 
 Proves the replay runner actually re-executes the Scope -> Investigate -> Plan -> Review slice
 against the real fixture and completes, reproducing the real recorded outcome
-(agent-monitoring/events.jsonl seq 1-4 for run_id TCK-20260721-ORCHESTRATION-CONTRACT-ADR are all
+(agent-working/agent-monitoring/events.jsonl seq 1-4 for run_id TCK-20260721-ORCHESTRATION-CONTRACT-ADR are all
 status="ok").
 """
 import sys

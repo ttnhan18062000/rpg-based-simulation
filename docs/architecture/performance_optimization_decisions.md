@@ -100,7 +100,7 @@ Source of every disposition: `design_enhancement_roadmap.md` Section A, "C-01..C
 (recorded 2026-09-13, per review)", which adopts the proposed dispositions in
 `performance_optimization_conflict_approval_review.md` §4 with two corrections, plus the updates
 this ticket was told to make from `TCK-20260913-PERF-M0-SOURCE-AUDIT`
-(`stored_artifacts/TCK-20260913-PERF-M0-SOURCE-AUDIT/source_inventory.md`, "T01"). Nothing was
+(`agent-working/stored_artifacts/TCK-20260913-PERF-M0-SOURCE-AUDIT/source_inventory.md`, "T01"). Nothing was
 re-derived.
 
 Evidence-status vocabulary: **re-verified here** (checked against the repository on 2026-10-02 by

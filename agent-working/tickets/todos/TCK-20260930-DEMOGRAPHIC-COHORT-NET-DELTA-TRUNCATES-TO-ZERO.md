@@ -243,7 +243,7 @@ set of worlds depending on which loader you ask.
   and the fix direction should be chosen knowing which writer is actually active.
 - The two candidate directions in Scope are unchanged.
 
-Raw probe + script: `stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE/
+Raw probe + script: `agent-working/stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE/
 runtime_probe.py` and `runtime_probe_output.jsonl`, committed at `0a96cdd9d` on branch
 `retro-hardening-and-mechanism-verdict-evidence` (local, readable via the shared object store).
 

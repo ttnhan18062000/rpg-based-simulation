@@ -10,9 +10,9 @@ proven property plus a widened snapshot-diff check instead of standing up a real
 Locally reimplements the porcelain-if-clean/content-hash-if-dirty zero-diff technique — mirroring
 `tools/agent_replay_codex/containment.py`'s own pattern — parameterized by a watch set sourced
 from `tools/agent_replay_codex/monitoring_shards.py::source_paths()` (sharding-aware) plus
-`tickets/`, rather than calling `containment.py`'s own `capture_snapshot`/`assert_no_diff`
+`agent-working/tickets/`, rather than calling `containment.py`'s own `capture_snapshot`/`assert_no_diff`
 directly: those two functions accept no path-list parameter and hardcode the retired 3-file
-`agent-monitoring/{runs,events,tools}.jsonl` pathspec internally (investigation.md Risks #3,
+`agent-working/agent-monitoring/{runs,events,tools}.jsonl` pathspec internally (investigation.md Risks #3,
 corrected during plan Review Round 1 — see plan.md).
 
 `snapshot_monitoring_lines`/`assert_monitoring_prefix_preserved` ARE imported and reused as-is
@@ -148,7 +148,7 @@ def assert_isolation_held(
     both unchanged), nothing happened during the window — pass. Otherwise ambient concurrent-
     session activity is the expected common case in this routinely-dirty repo (per
     investigation.md Current Behavior §7): fall back to asserting append-only prefix-preservation
-    on every `agent-monitoring/*.jsonl` shard (no pre-existing line was rewritten/reordered/
+    on every `agent-working/agent-monitoring/*.jsonl` shard (no pre-existing line was rewritten/reordered/
     deleted) AND that none of the newly-appended lines carry the pilot's own `run_id` — the
     concrete distinguishing check between "grew because another concurrent session wrote its own
     attributed lines" (tolerated) and "grew because the pilot's own execution wrote something"

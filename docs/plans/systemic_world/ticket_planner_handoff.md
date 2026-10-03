@@ -35,8 +35,8 @@ granularity, technical investigation, acceptance tests and assignment are yours.
 Each ends with one exit claim. No fourth mechanism.
 
 **Existing tickets to adopt, not duplicate:**
-- J1 `calamity_intensity`: `tickets/todos/TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES.md`.
-- J2 `regional_trauma`: `tickets/todos/TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES.md`. This
+- J1 `calamity_intensity`: `agent-working/tickets/todos/TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES.md`.
+- J2 `regional_trauma`: `agent-working/tickets/todos/TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES.md`. This
   ticket already frames the problem as a region that records zero deaths, not a wrong threshold.
   That is a trigger-reachability question, and it may be legitimately conditional.
 - J3 `aging_death`/`succession`: no ticket. J3 **assesses reachability and classifies the finding
@@ -231,7 +231,7 @@ The diplomacy and reputation authority checks and region ownership (FAC-010) are
 ## Appendix — M1 ticket draft (background only, unreviewed, not binding)
 
 An earlier session drafted an implementation ticket for the natural-aging defect,
-`TCK-20260927-NATURAL-AGING-OLD-AGE-DISPATCH-RACE`. It was withdrawn from `tickets/todos/` because
+`TCK-20260927-NATURAL-AGING-OLD-AGE-DISPATCH-RACE`. It was withdrawn from `agent-working/tickets/todos/` because
 ticket creation belongs to the ticket planner; it remains in this branch's git history. In summary:
 - **Title:** "An entity that dies of natural aging is deactivated with no recorded cause and no
   succession."

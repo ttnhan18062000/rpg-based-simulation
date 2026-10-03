@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Query the agent-monitoring SQLite index (agent-monitoring-index/monitoring.db),
-built from agent-monitoring/{runs,events}.jsonl by build_index.py.
+Query the agent-monitoring SQLite index (agent-working/.index/agent-monitoring-index/monitoring.db),
+built from agent-working/agent-monitoring/{runs,events}.jsonl by build_index.py.
 
 Usage:
   python3 tools/agent-monitoring/query.py [filters]

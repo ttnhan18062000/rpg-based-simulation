@@ -7,7 +7,7 @@ acceptance criteria unchanged.
 ## Order
 
 1. `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` (P0, **done** — closed to
-   `tickets/done/`; status corrected here 2026-09-29, this file previously said "open") — asked why
+   `agent-working/tickets/done/`; status corrected here 2026-09-29, this file previously said "open") — asked why
    the decision-driven `ATTACK` path fires 0-2 times per 1000-2000 ticks while the incidental
    opportunity-attack mechanic fires 181-2177. All four candidates confirmed or ruled out by direct
    per-world measurement through a real `Kernel.tick_once()` loop.
@@ -60,10 +60,10 @@ system (the world-boss maturity trigger), not whether the gate is wrong. It can 
 (1)/(2) without blocking or being blocked by them, but is sequenced after because P2 is genuinely
 lower priority than P0/P1.
 
-**(4) needs no further sequencing — it is done.** It stays in `tickets/done/` root rather than
+**(4) needs no further sequencing — it is done.** It stays in `agent-working/tickets/done/` root rather than
 moving into this epic's own folder, matching this repo's own established epic-folder precedent (see
-`tickets/done/mechanism-registry/`, where a closed epic's own folder holds only the epic ticket and
-`SEQUENCE.md`, and every real child closes individually to `tickets/done/` root, never nested inside
+`agent-working/tickets/done/mechanism-registry/`, where a closed epic's own folder holds only the epic ticket and
+`SEQUENCE.md`, and every real child closes individually to `agent-working/tickets/done/` root, never nested inside
 the epic's folder). It is listed in this sequence purely so the chain's own narrative is complete
 without having to open a separate epic-closure record to find it.
 

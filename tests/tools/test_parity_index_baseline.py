@@ -289,7 +289,7 @@ def test_no_database_or_gitignore_or_make_target_created():
     # state. A live-state assertion ("parity-index" not in the current .gitignore/Makefile)
     # would break by design the moment TCK-20260731-PARITY-INDEX-IMPORTER (Phase 1) ships,
     # since that ticket's own scope -- per v1_decisions_phase0.md's atomic-lifecycle decision
-    # -- requires adding a `parity-index/` .gitignore entry. This BASELINE (Phase 0) ticket's
+    # -- requires adding a `agent-working/.index/parity-index/` .gitignore entry. This BASELINE (Phase 0) ticket's
     # real AC #5 ("No DB, workflow/config/context integration, source rewrite, or mutation
     # command is introduced") is a claim about what THIS ticket's own commit did, so it is
     # checked against that commit's actual diff -- a fact that stays true forever, unlike a

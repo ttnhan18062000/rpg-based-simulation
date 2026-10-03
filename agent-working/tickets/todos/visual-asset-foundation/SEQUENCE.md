@@ -6,7 +6,7 @@ and layering rules: `docs/plans/visual-asset-foundation/README.md`. All children
 
 ## Order
 
-1. `TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT` (P1, **in progress**, ticket in `tickets/inprogress/`) — move and
+1. `TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT` (P1, **in progress**, ticket in `agent-working/tickets/inprogress/`) — move and
    restructure the drawing tools into `visual_assets/drawing/`, tests into `tests/visual_assets/drawing/`, with no
    behaviour change; boundary test; CI step; `.mcp.json` + launcher; `store/` and `catalog/` skeletons (no logic);
    docs and ADR; plan-package status updates. Everything else depends on this.

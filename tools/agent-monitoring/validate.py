@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Cross-check agent-monitoring integrity against tickets/working_log.csv.
+Cross-check agent-monitoring integrity against agent-working/tickets/working_log.csv.
 
 Checks:
   1. Every run record has at least one event record (ERROR -- gates the exit code).
@@ -99,7 +99,7 @@ def load_tools_from_index(conn: sqlite3.Connection) -> list:
 
 LEGACY_COMPLETION_FIELDS = ("end_ts", "finished_at", "completed_at", "ts_end")
 # The full union of distinct final_status AND status values actually observed in
-# agent-monitoring/runs.jsonl (12 total), minus "INPROGRESS" (the one genuinely
+# agent-working/agent-monitoring/runs.jsonl (12 total), minus "INPROGRESS" (the one genuinely
 # non-terminal value found) — enumerated by reading BOTH fields' value sets
 # independently and unioning them, not inferred, so a future value this list has
 # never seen is NOT silently treated as terminal.
@@ -286,7 +286,7 @@ def load_jsonl_with_line_count(path) -> "tuple[list, int]":
     SAME single `path.read_text()` call -- lets a caller compare "rows produced" against "raw
     lines present" without a second, independent read of a live, concurrently-written file
     (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 3: two tests in
-    test_agent_tool_usage_baseline.py each read agent-monitoring/data/*/tools.jsonl twice --
+    test_agent_tool_usage_baseline.py each read agent-working/agent-monitoring/data/*/tools.jsonl twice --
     once via their own ad-hoc `path.read_text().splitlines()` count, once via load_data_glob's
     own separate read -- racing any concurrent session's PostToolUse hook append in between)."""
     if not path.exists():
@@ -343,7 +343,7 @@ def load_data_glob(data_dir: Path, source: str) -> list:
 
 def build_parser():
     parser = argparse.ArgumentParser(
-        description="Cross-check agent-monitoring integrity against tickets/working_log.csv"
+        description="Cross-check agent-monitoring integrity against agent-working/tickets/working_log.csv"
     )
     parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH), help="Path to the agent-monitoring SQLite index")
     return parser

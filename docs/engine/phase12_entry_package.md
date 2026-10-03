@@ -19,7 +19,7 @@ The following conditions must all be true before Phase 12 entry is approved:
 
 1. All P0 parity ledger entries have status `verified`.
 2. The `class_b` certification suite passes with zero FAILED_* outcomes.
-3. No open P0 or P1 tickets remain in `tickets/inprogress/`.
+3. No open P0 or P1 tickets remain in `agent-working/tickets/inprogress/`.
 4. The authoritative pipeline contract (`authoritative_mutation_pipeline_contract.md`) has been reviewed and signed off.
 5. The `release_report.md` is present and references the Phase 12 commit SHA.
 

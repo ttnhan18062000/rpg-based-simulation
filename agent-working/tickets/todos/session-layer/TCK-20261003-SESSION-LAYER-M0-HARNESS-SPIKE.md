@@ -38,7 +38,7 @@ drafting: Claude Code 2.1.286; the record states the version actually used.
 ## Scope
 
 One investigation record (`investigation.md`, plus `.jsonl` raw evidence; **never `.json`**, which `.gitignore`
-drops from `stored_artifacts/`) with a result for **every** item below. Each item states: the question, the
+drops from `agent-working/stored_artifacts/`) with a result for **every** item below. Each item states: the question, the
 exact procedure, the observed result, the **positive control** (a case that must show the effect, proving the
 probe can see it), the harness version, and whether documentation and observation agree (a disagreement is
 listed, and the plan is updated from the observation).

@@ -50,7 +50,7 @@ Three related run-state reliability gaps, all touching the same mechanism — th
    migrated the same day by `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE`, closing this gap
    entirely.
 2. **No repo-level protection exists against two sessions claiming the same ticket.**
-   `tickets/inprogress/` is a plain directory with no claim/reservation record. 5 worktrees were
+   `agent-working/tickets/inprogress/` is a plain directory with no claim/reservation record. 5 worktrees were
    live at review time, all coordinated by convention only (CLAUDE.md's Worktree & Branch
    Isolation section), not by any mechanism that would actually stop a double-claim.
 3. **A crash mid-phase has no automatic resume — a human must manually re-diagnose.**
@@ -96,7 +96,7 @@ converted that spec directly into a ticket that both wrote the spec and shipped 
 log-only instrumentation (`tools/agent-monitoring/ticket_claim_detection.py`, wired into
 `implement-ticket.js`'s Scope phase): reading the real
 `.claude/current_run.<CLAUDE_CODE_SESSION_ID>` sidecar signal named above, writing detections to
-`agent-monitoring/data/YYYY-Www/claim_detections.jsonl`, never blocking. Only the 30-day/quarter
+`agent-working/agent-monitoring/data/YYYY-Www/claim_detections.jsonl`, never blocking. Only the 30-day/quarter
 observation window and the resulting lock-vs-convention decision remain open — that decision is
 explicitly out of scope for the shipping ticket itself.
 
@@ -121,7 +121,7 @@ ticket-ID re-invocation from Scope with no phase-level checkpoint anywhere (dire
 `implement-ticket.js`/`SKILL.md`); confirms the epic's proposed minimum field set
 (`workflow_version` + `input_hash` + per-phase-artifact-existence) is sufficient and that
 `source_revision`/`phase_version` are **not** materially necessary; confirms
-`agent-orchestration/workflows/implement-ticket.yaml`'s existing `workflow_version` field can be
+`agent-working/agent-orchestration/workflows/implement-ticket.yaml`'s existing `workflow_version` field can be
 reused as-is (same consumer pattern as `tools/agent_codex_runtime_shadow/matrix.py`'s own
 staleness check) rather than forking a distinct field; identifies that `workflow_version` and
 `input_hash` both need new `runs.jsonl`/`events.jsonl` fields (neither is recorded today, per
@@ -172,7 +172,7 @@ itself is still future work, not scoped by this resolution.
 - `.claude/settings.json:88` — the one remaining straggler consumer (inline hook).
 - `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE` — the ticket this milestone was scoped into during
   the 2026-09-04 `create-tickets` pass, reflecting the single-consumer correction above.
-- `tickets/inprogress/` — the plain directory M2's detection logging instruments.
+- `agent-working/tickets/inprogress/` — the plain directory M2's detection logging instruments.
 - `docs/ai/phase_resume_validation_rule_decision.md` — M3's resolved design/validation-rule
   decision doc (`TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN`, 2026-09-07).
 - `ticket_claim_detection_experiment.md` — M2's Experiment Specification, and

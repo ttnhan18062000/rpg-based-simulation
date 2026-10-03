@@ -15,7 +15,7 @@ before any other M1 ticket that adds new flag-gated behavior."
 
 This is the durable, discoverable decision artifact `TCK-20260824-ROLLOUT-FLAG-DECISIONS`'s own
 Scope calls for — the full evidence trail lives in
-`staging_artifacts/TCK-20260824-ROLLOUT-FLAG-DECISIONS/investigation.md`; this document states the
+`agent-working/staging_artifacts/TCK-20260824-ROLLOUT-FLAG-DECISIONS/investigation.md`; this document states the
 decisions and their rationale for future reference, including for the 38 more M2+ flagged ideas
 this precedent governs.
 
@@ -38,8 +38,8 @@ this precedent governs.
 `ENABLE_COMBAT_ENGAGEMENT` row named. Its job was to produce the standing evidence this row's
 prior "Kept OFF, deferred" verdict was missing — a real corpus-profile trial, not another one-off
 synthetic test. Full raw tally:
-`staging_artifacts/TCK-20260826-COMBAT-ENGAGEMENT-FLAG-VALIDATION/trial_evidence.md` (moved to
-`stored_artifacts/` at ticket close).
+`agent-working/staging_artifacts/TCK-20260826-COMBAT-ENGAGEMENT-FLAG-VALIDATION/trial_evidence.md` (moved to
+`agent-working/stored_artifacts/` at ticket close).
 
 **Worlds tested**: `dungeon_crawl` (32 entities, `monster_only_gauntlet` archetype, `COMBAT: 2.0`
 pillar weight — the same world/seed TCK-20260809 used to find and fix the original bug) and
@@ -127,8 +127,8 @@ Two permanent grade-anchor probe profiles formalize this: `urban_political_selfm
 (materialization-only) and `urban_political_selfmodel_execution_probe.yaml` (full-stack, adds
 `ENABLE_BELIEF_ASSIMILATION` + `ENABLE_INFORMATION_INTENT_EXECUTION`). This ticket's job was to
 run a genuinely fresh trial on top of that prior evidence, not just cite it. Full raw tally:
-`staging_artifacts/TCK-20260826-SELF-MODEL-COGNITION-FLAG-VALIDATION/trial_evidence.md` (moved to
-`stored_artifacts/` at ticket close).
+`agent-working/staging_artifacts/TCK-20260826-SELF-MODEL-COGNITION-FLAG-VALIDATION/trial_evidence.md` (moved to
+`agent-working/stored_artifacts/` at ticket close).
 
 **World tested**: `urban_political` (real compiled state, `entities=10`, confirmed via each run's
 successful load — `--name urban_political` failing to resolve raises `FileNotFoundError` rather
@@ -180,8 +180,8 @@ known to also affect both `urban_political_selfmodel*_probe` run keys. This is *
 `SelfModelUpdatePhase`/`ENABLE_SELF_MODEL_COGNITION` at all — a structurally independent mechanism
 from `INFORMATION`'s drift. `SOCIAL` has deliberately **not** been re-anchored (the coordinator's
 Option A decision, recorded in
-`staging_artifacts/TCK-20260829-SELFMODEL-PROBE-GRADE-ANCHOR-DRIFT-INVESTIGATION/plan.md`'s
-Unresolved Questions section, moved to `stored_artifacts/` at that ticket's close), pending either
+`agent-working/staging_artifacts/TCK-20260829-SELFMODEL-PROBE-GRADE-ANCHOR-DRIFT-INVESTIGATION/plan.md`'s
+Unresolved Questions section, moved to `agent-working/stored_artifacts/` at that ticket's close), pending either
 the cooperation-domain retry-cooldown fix landing and `SOCIAL` being re-measured post-fix, or a
 future deliberate, disclosed pre-fix re-anchor decision — it is root-caused, not fixed. This does
 not itself change the recommendation below, since the DEV-003 bar was already unmet independent of
@@ -231,8 +231,8 @@ re-anchored, pending that cooperation-domain fix landing and a post-fix re-measu
 **zero** prior real-world evidence of any kind before this ticket — no shipped-ON profile, no bug-
 fix history, no prior generalization trial. This ticket's own trial is that flag's first and only
 standing real-corpus evidence. Full raw tally:
-`staging_artifacts/TCK-20260826-WORLD-EMERGENCE-FLAG-VALIDATION/trial_evidence.md` (moved to
-`stored_artifacts/` at ticket close).
+`agent-working/staging_artifacts/TCK-20260826-WORLD-EMERGENCE-FLAG-VALIDATION/trial_evidence.md` (moved to
+`agent-working/stored_artifacts/` at ticket close).
 
 **Worlds tested**: `dungeon_crawl` (32 entities, `monster_only_gauntlet` archetype, seed 42, 2000
 ticks) and `resource_dense_basin` (23 entities, `civilian_settlement` archetype, highest shipped
@@ -333,8 +333,8 @@ activity closes the Honest Gap above.
 `ENABLE_PROGRESSION_EVOLUTION` row named. Like `ENABLE_WORLD_EMERGENCE` above, this flag had zero
 prior real-world evidence before this ticket. Unlike any of the 3 prior siblings, this ticket's
 trial did **not** produce a clean pass — it surfaced a real, deterministic pipeline crash. Full
-raw tally: `staging_artifacts/TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION/trial_evidence.md`
-(moved to `stored_artifacts/` at ticket close).
+raw tally: `agent-working/staging_artifacts/TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION/trial_evidence.md`
+(moved to `agent-working/stored_artifacts/` at ticket close).
 
 **Test coverage depth assessed first (per this ticket's own Scope, ahead of trusting the
 trial)**: domain-logic coverage is deep — 10 dedicated `test_phase6_*.py` files exercise every
@@ -469,8 +469,8 @@ flag's default therefore stays OFF pending (b).
 originally deferred by `TCK-20260824-ROLLOUT-FLAG-DECISIONS`** (`ENABLE_COMBAT_ENGAGEMENT`,
 `ENABLE_SELF_MODEL_COGNITION`, `ENABLE_WORLD_EMERGENCE`, `ENABLE_PROGRESSION_EVOLUTION`, and now
 this flag) — all 5 now carry real trial evidence on file. Full raw tally:
-`staging_artifacts/TCK-20260826-INFORMATION-INTENT-EXECUTION-FLAG-VALIDATION/trial_evidence.md`
-(moved to `stored_artifacts/` at ticket close).
+`agent-working/staging_artifacts/TCK-20260826-INFORMATION-INTENT-EXECUTION-FLAG-VALIDATION/trial_evidence.md`
+(moved to `agent-working/stored_artifacts/` at ticket close).
 
 **The distinction from `ENABLE_BELIEF_ASSIMILATION` — confirmed by direct code read, not
 assumed.** Both flags live in the `information`/belief domain but gate different phases:
@@ -591,7 +591,7 @@ ticket, not fixed here since it is outside this ticket's own scope.
 
 ## Related
 
-- `staging_artifacts/TCK-20260824-ROLLOUT-FLAG-DECISIONS/` (investigation.md, plan.md, test_plan.md)
+- `agent-working/staging_artifacts/TCK-20260824-ROLLOUT-FLAG-DECISIONS/` (investigation.md, plan.md, test_plan.md)
 - `docs/guidelines/intentional_divergences.md` (DEV-002, DEV-003)
 - `docs/plans/rpg_design_roadmap/rpg_m1_quick_wins_epic.md` (idea 9, the source scope)
 - The 5 named follow-up tickets (see table above)

@@ -537,7 +537,7 @@ _Fill in after reviewing the report above. What patterns stand out? What to impr
 ### Deep review — 2026-09-15 (`agent-working-design`)
 
 Written after the 2026-09-11→15 agent-infrastructure batch closed (PRs #194, #197, #199, #201 all
-merged). Numbers below were derived directly from the sharded `agent-monitoring/data/*/` JSONL
+merged). Numbers below were derived directly from the sharded `agent-working/agent-monitoring/data/*/` JSONL
 corpus, **not** from `monitoring.db` (last built 2026-09-13 and documented as going stale), and
 cross-checked against this report's own generated sections.
 
@@ -605,7 +605,7 @@ including a 171-event day.
   Cause is unescaped commas in the *title* field ("Clan lifecycle -- joining, leaving, and
   succession-on-death"), shifting every later column. Any status-based query silently misreads
   them; this review hit exactly that.
-- **55 events and 66 runs carry an unusable `ts`**; `agent-monitoring/data/unknown-week/` holds 34
+- **55 events and 66 runs carry an unusable `ts`**; `agent-working/agent-monitoring/data/unknown-week/` holds 34
   rows. The runs are entirely W24–W27 (June), so the 14-day window is **not** deflated by them.
 - Three non-canonical agent values persist: `orchestrator` (144 events, first seen 2026-06-22 —
   long-lived, and the registered literal is `implement-ticket-orchestrator`), `concern-investigator`
@@ -670,7 +670,7 @@ intermediate figures were wrong and are corrected above: a ticket count derived 
 Found while writing this review, and it is the same shape as everything else catalogued above, so
 it belongs here rather than in a session transcript.
 
-`agent-monitoring/retro/index.md` currently shows:
+`agent-working/agent-monitoring/retro/index.md` currently shows:
 
 | Row | Index claims | The linked report itself says |
 |---|---|---|

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Export a ticket-corpus statistics report over completed tickets (tickets/done/).
+Export a ticket-corpus statistics report over completed tickets (agent-working/tickets/done/).
 
 Built for TCK-20260718-TICKET-CORPUS-REPORT, closing four pillars docs/guides/ticket_reporting.md
 named as known-wanted but never scoped ("Other candidate pillars (not built)"): ticket
@@ -9,7 +9,7 @@ Mirrors tools/tag_report.py's exact shape (computation/rendering split, --json f
 test file, `make` target) — that module is the direct precedent, read it first if this one is
 unclear.
 
-Scoped to tickets/done/ only, matching tag_report.py's own scope choice — velocity/distribution
+Scoped to agent-working/tickets/done/ only, matching tag_report.py's own scope choice — velocity/distribution
 over *completed* work is the natural reading of "reporting," and this keeps the scope convention
 consistent with its precedent rather than inventing a new one.
 
@@ -61,7 +61,7 @@ _REQUIRED_ARTIFACT_FILES = ("investigation.md", "plan.md", "test_plan.md")
 
 
 def collect_done_tickets(root: Path):
-    """Walk tickets/done/ recursively for ticket markdown files.
+    """Walk agent-working/tickets/done/ recursively for ticket markdown files.
 
     Returns (included, skip_reasons) — included is a list of dicts with ticket_id/layer/tier/
     ticket_type/priority/date; skip_reasons is a Counter keyed by skip reason. No tag-taxonomy
@@ -111,7 +111,7 @@ def collect_done_tickets(root: Path):
 
 
 def compute_velocity(root: Path) -> dict:
-    """Ticket closures per day and per ISO week, from tickets/working_log.csv's timestamp
+    """Ticket closures per day and per ISO week, from agent-working/tickets/working_log.csv's timestamp
     column. Malformed/unparseable timestamp rows are counted separately, never silently dropped
     or crashed on (mirrors this project's tolerant-legacy-data convention elsewhere)."""
     log_path = root / TICKETS / "working_log.csv"
@@ -188,7 +188,7 @@ def compute_distribution(included: list) -> dict:
 
 def compute_artifact_completeness(included: list, root: Path) -> dict:
     """For standard/epic tickets only (hotfix tickets have no staging-artifact requirement per
-    CLAUDE.md's Workflow Rule): whether stored_artifacts/{ticket_id}/ exists with all 3 required
+    CLAUDE.md's Workflow Rule): whether agent-working/stored_artifacts/{ticket_id}/ exists with all 3 required
     files, non-empty."""
     complete = []
     incomplete = []
@@ -223,7 +223,7 @@ def compute_artifact_completeness(included: list, root: Path) -> dict:
 
 def print_report(included, skip_reasons, velocity, distribution, artifact_completeness) -> None:
     scanned = len(included) + sum(skip_reasons.values())
-    print(f"Ticket stats report: {scanned} ticket file(s) scanned under tickets/done/")
+    print(f"Ticket stats report: {scanned} ticket file(s) scanned under agent-working/tickets/done/")
     print(f"  included: {len(included)}")
     if skip_reasons:
         print("  skipped:")
@@ -280,7 +280,7 @@ def build_json_report(included, skip_reasons, velocity, distribution, artifact_c
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Export a ticket-corpus statistics report over completed tickets (tickets/done/)."
+        description="Export a ticket-corpus statistics report over completed tickets (agent-working/tickets/done/)."
     )
     parser.add_argument("--root", default=".", help="Project root directory (default: current directory)")
     parser.add_argument("--json", default=None, help="Optional path to write a structured JSON report")

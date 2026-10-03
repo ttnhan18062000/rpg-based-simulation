@@ -17,7 +17,7 @@ const [proposals, gateCheck] = await parallel([
   () => agent(
     `Load enhancement proposals for knowledge store update.
 
-${sessionId ? `Session ID: ${sessionId} — read enhancement/enhancement_proposals.md` : 'Find the most recent enhancement proposals under enhancement/ or stored_artifacts/.'}
+${sessionId ? `Session ID: ${sessionId} — read enhancement/enhancement_proposals.md` : 'Find the most recent enhancement proposals under enhancement/ or agent-working/stored_artifacts/.'}
 
 Also read:
 - knowledge_update/ folder for any prior knowledge contributions
@@ -33,7 +33,7 @@ ${sessionId ? `Session ID: ${sessionId}` : 'Check the most recent proposals.'}
 
 Approval gate checks:
 1. Enhancement proposals document exists and is not a draft
-2. Each RECOMMENDED proposal has been reviewed (check for review comments or approval markers in the doc or tickets/)
+2. Each RECOMMENDED proposal has been reviewed (check for review comments or approval markers in the doc or agent-working/tickets/)
 3. No CRITICAL-severity open tickets block the contribution
 4. Proposed patches do not contradict the Mechanics Bible (docs/mechanics/)
 5. No HIGH_RISK proposals are included without explicit approval marker

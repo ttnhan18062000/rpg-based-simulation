@@ -4,17 +4,17 @@ activity evidence that has since gone idle past a staleness window.
 
 Discovers candidate epics the same way `.claude/workflows/implement-epic.js`
 discovers them — `epic_id` mode (a single `## Tier` -> `epic` ticket file in
-`tickets/inprogress/`, children parsed from its `## Related Tickets` section)
-and `folder` mode (`tickets/todos/{folder}/` containing a `SEQUENCE.md` and/or
+`agent-working/tickets/inprogress/`, children parsed from its `## Related Tickets` section)
+and `folder` mode (`agent-working/tickets/todos/{folder}/` containing a `SEQUENCE.md` and/or
 an epic-tier ticket file, children parsed from `SEQUENCE.md` or sibling
-`TCK-*.md` files) — then cross-references `tickets/working_log.csv` and
-`agent-monitoring/data/*/runs.jsonl` (the weekly-sharded layout; see below)
+`TCK-*.md` files) — then cross-references `agent-working/tickets/working_log.csv` and
+`agent-working/agent-monitoring/data/*/runs.jsonl` (the weekly-sharded layout; see below)
 for the most recent child-ticket activity.
 
 **Shard-awareness fix (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item
-5)**: this module previously read a hardcoded flat `agent-monitoring/runs.jsonl`
+5)**: this module previously read a hardcoded flat `agent-working/agent-monitoring/runs.jsonl`
 path, retired by `TCK-20260902-MONITORING-WEEKLY-SHARDING-EPIC` in favor of
-per-week `agent-monitoring/data/<ISO-week>/runs.jsonl` shards -- the same class
+per-week `agent-working/agent-monitoring/data/<ISO-week>/runs.jsonl` shards -- the same class
 of defect `TCK-20260904-HOTFIX-WORKFLOW-META-CONFORMANCE-SHARD-AWARENESS`
 fixed in a different consumer, surviving here because nobody checked whether
 the retirement broke every reader. `_read_runs_records` now globs the sharded
@@ -25,7 +25,7 @@ of a single hardcoded path.
 **What this actually changes, established before fixing it, not assumed**:
 the dead flat path meant `_read_runs_records` always returned `[]`, so
 `resolve_child_activity`'s `most_recent` was supplied ENTIRELY by
-`tickets/working_log.csv` -- runs.jsonl data has been fully decorative in this
+`agent-working/tickets/working_log.csv` -- runs.jsonl data has been fully decorative in this
 check since the sharding epic landed. Since `working_log.csv` only gains a row
 when a ticket CLOSES, an epic whose children are all still genuinely in
 progress (real Scope/Investigate/Plan activity recorded in runs.jsonl, but not
@@ -40,7 +40,7 @@ separately, in a lower-priority "never started" informational list that only
 the human-invoked report includes — never the hook nudge. Only an epic with
 at least one child showing real activity evidence, followed by silence past
 the window, is flagged stale. See
-staging_artifacts/TCK-20260710-EPIC-STALENESS-CHECK/plan.md Decision 5.
+agent-working/staging_artifacts/TCK-20260710-EPIC-STALENESS-CHECK/plan.md Decision 5.
 
 An epic ticket whose own body `## Status` field reads `BLOCKED` is a
 deliberately governed pause, not neglect — e.g. TCK-20260730-CODEX-RUNTIME-
@@ -170,12 +170,12 @@ def _child_ids_from_text(text: str, exclude_id: str) -> list:
 
 
 def _find_governing_epic_status(inprogress_dir: Path, child_ids: list) -> Optional[str]:
-    """Cross-references tickets/inprogress/ for an epic-tier ticket whose own
+    """Cross-references agent-working/tickets/inprogress/ for an epic-tier ticket whose own
     '## Related Tickets' body references at least one of a todos_dir
     subfolder's child ticket IDs. Used when the subfolder itself has no
-    epic-tier ticket file (the motivating real case, tickets/todos/codex-
-    runtime-activation/'s own governing epic living in tickets/inprogress/
-    instead of the subfolder itself, has since moved to tickets/backlogs/ as
+    epic-tier ticket file (the motivating real case, agent-working/tickets/todos/codex-
+    runtime-activation/'s own governing epic living in agent-working/tickets/inprogress/
+    instead of the subfolder itself, has since moved to agent-working/tickets/backlogs/ as
     deliberate housekeeping -- TCK-20260922-CODEX-TICKETS-TO-BACKLOG -- but
     the shape this cross-reference exists for is general, not specific to
     that one folder), so the folder candidate's status (e.g. BLOCKED) is
@@ -377,7 +377,7 @@ def _read_working_log_rows(working_log_path: Path) -> list:
 
 
 def _read_runs_records(runs_data_root: Path) -> list:
-    """Reads every agent-monitoring/data/<week>/runs.jsonl shard (TCK-20260914-MONITORING-
+    """Reads every agent-working/agent-monitoring/data/<week>/runs.jsonl shard (TCK-20260914-MONITORING-
     SURFACE-DEAD-MECHANISMS item 5) via the shared bulk multi-shard reader -- `runs_data_root`
     is a directory (the sharded data root), not a single flat runs.jsonl file. Never raises:
     load_data_glob tolerates a missing/empty data_dir."""

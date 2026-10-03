@@ -11,7 +11,7 @@ never hardcodes or echoes those numbers; every value below is recomputed from
 `git ls-files`/`git log` and the live filesystem each time it runs.
 
 **Churn exclusion (the one non-negotiable requirement this tool exists to
-satisfy)**: `agent-monitoring/*.jsonl`, `tickets/working_log.csv`, and
+satisfy)**: `agent-working/agent-monitoring/*.jsonl`, `agent-working/tickets/working_log.csv`, and
 `docs/REGISTRY.yaml` are append-only bookkeeping files touched on nearly every
 ticket close (405/263/248/248/198 raw commit-touches respectively per D24 §D) —
 a naive churn/hotspot measurement is dominated by this expected process noise,
@@ -27,7 +27,7 @@ row in the table, matching D24 §C's own inclusion) — the exclusion is specifi
 to the churn dimension only, per investigation.md's explicit clarification.
 
 "Docs (.md)" counts only `docs/**/*.md` (not the whole repo) — a repo-wide `*.md`
-count is dominated by `stored_artifacts/`/`tickets/` process-doc corpora (6,230
+count is dominated by `agent-working/stored_artifacts/`/`agent-working/tickets/` process-doc corpora (6,230
 repo-wide vs. 806 under `docs/` alone at the time this was written), which is not
 what D24 §C's own ~776 figure was measuring.
 
@@ -279,7 +279,7 @@ def format_report(report: dict) -> str:
         f"{'Declared-but-unused core dependencies':<50} {unused_deps}",
         f"{'Churn (lines changed, excl. bookkeeping)':<50} {report['churn_lines_changed_excl_bookkeeping']:,}",
         "=" * 74,
-        "Churn excludes agent-monitoring/*.jsonl, tickets/working_log.csv, and",
+        "Churn excludes agent-working/agent-monitoring/*.jsonl, agent-working/tickets/working_log.csv, and",
         "docs/REGISTRY.yaml via a git pathspec exclusion (append-only bookkeeping",
         "files, not architectural instability signal).",
     ]

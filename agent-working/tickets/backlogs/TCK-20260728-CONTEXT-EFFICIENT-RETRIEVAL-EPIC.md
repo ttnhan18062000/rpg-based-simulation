@@ -77,9 +77,9 @@ Create a single epic-tier tracking ticket for the whole context-efficient agent 
 
 ## Related Docs
 - docs/plans/agent_infrastructure/context_efficient_agent_retrieval/idea_context_efficient_agent_retrieval_observability.md
-- tickets/done/TCK-20260721-PROVIDER-AGNOSTIC-EPIC.md
-- tickets/done/TCK-20260721-PROVIDER-AGNOSTIC-IMPLEMENTATION-EPIC.md
-- tickets/todos/obs-isolation/TCK-20260702-OBSISO-EPIC.md
+- agent-working/tickets/done/TCK-20260721-PROVIDER-AGNOSTIC-EPIC.md
+- agent-working/tickets/done/TCK-20260721-PROVIDER-AGNOSTIC-IMPLEMENTATION-EPIC.md
+- agent-working/tickets/todos/obs-isolation/TCK-20260702-OBSISO-EPIC.md
 
 ## Related Stored Artifacts
 None.
@@ -117,9 +117,9 @@ None.
   active documents be represented? Answer: packet `authority`/`freshness` map directly onto
   `docs/REGISTRY.yaml`'s existing `authority` (`P0`/`P1`/`P2`) and `status`
   (`authoritative`/`active`/`historical`/`archive`) enums for REGISTRY-backed sources (docs
-  outside `_SKIP_DOC_SUBDIRS`, `tickets/done/` entries) — no new independent vocabulary. Two
+  outside `_SKIP_DOC_SUBDIRS`, `agent-working/tickets/done/` entries) — no new independent vocabulary. Two
   extensions cover what the idea doc's field list didn't specify: non-registry-backed `kind`
-  values (`code_symbol`, `test`, `graphify_node`, `tickets/inprogress/` bodies) get
+  values (`code_symbol`, `test`, `graphify_node`, `agent-working/tickets/inprogress/` bodies) get
   `authority`/`freshness: unrated`, a doc-only sentinel distinct from REGISTRY's enums;
   `parity_ledger_entry` sources use the parity ledger's own differently-shaped `priority`/`status`
   proxy instead. Conflicting active documents are resolved by an advisory, doc-only tie-break:
@@ -129,7 +129,7 @@ None.
   `docs/engine/contracts/context_packet_contract.md`.
 - OPEN DECISION 4 — **RESOLVED** (2026-07-29, `TCK-20260728-RETRIEVAL-RETENTION-REDACTION`): What
   retention and redaction policy applies to retrieval events and cache entries? Answer: retrieval
-  events (landing in `agent-monitoring/*.jsonl`) inherit that system's existing retain-forever/
+  events (landing in `agent-working/agent-monitoring/*.jsonl`) inherit that system's existing retain-forever/
   append-only convention — "retention" for events means redaction-only (hashes/IDs/counts/reason
   codes/scores; never raw prompt or retrieved-content text), not a deletion duration. Caches
   (embedding/index, query-result, context-packet) are ephemeral/rebuildable and DO get
@@ -168,7 +168,7 @@ None.
   existing `search_docs`/`search_health` precedent and Codex's confirmed hook-matcher awareness of
   MCP tool names). Explicitly directional, not final: two of the ADR's three relevant sub-decisions
   remain `Proposed-pending-implementation-evidence`, and Codex has zero live runtime presence in this
-  repo as of this decision (`tickets/todos/codex-runtime-activation/` not started, no `.codex/`
+  repo as of this decision (`agent-working/tickets/todos/codex-runtime-activation/` not started, no `.codex/`
   directory exists) — provider parity is exactly as unverifiable here as it was for Open Decision 5.
   Full evidence and reasoning: `docs/ai/context_packet_exposure_mechanism_decision.md`.
 - OPEN DECISION 7 — **RESOLVED** (2026-08-02/03, `TCK-20260802-CONTEXT-KIND-PRIORITY`): Open
@@ -188,16 +188,16 @@ None.
   than settled by self-chosen ordering. Full resolution and code citations:
   `docs/engine/contracts/context_packet_contract.md` §5.
 - OPEN DECISION 8 — **RESOLVED** (2026-08-02/03, `TCK-20260802-STORED-ARTIFACT-KIND`): should
-  `stored_artifacts/{ticket_id}/*.md` become its own registry-indexed `kind` (its rationale/decision
+  `agent-working/stored_artifacts/{ticket_id}/*.md` become its own registry-indexed `kind` (its rationale/decision
   content is currently invisible to retrieval except via the parent ticket's `artifact_files` path
-  list), and should `staging_artifacts/`'s current total exclusion from `generate_registry.py` be
+  list), and should `agent-working/staging_artifacts/`'s current total exclusion from `generate_registry.py` be
   recorded as an explicit permanent decision rather than an implicit gap? Answer: resolved as a
-  documentation-only change. Yes — `stored_artifacts/*.md` (the canonical
+  documentation-only change. Yes — `agent-working/stored_artifacts/*.md` (the canonical
   `investigation.md`/`plan.md`/`test_plan.md` triplet) warrants a new `stored_artifact`
   registry-indexed kind, classified under Open Decision 3's Branch 1 (REGISTRY-backed direct
   mapping), since its frontmatter carries the same `status`/`authority` enums REGISTRY.yaml's own
   `doc`/`ticket` entries use and the only reason it isn't already indexed is `collect_docs()`'s
-  `docs/`-only walk, a directory-scope gap rather than a schema mismatch. `staging_artifacts/`'s
+  `docs/`-only walk, a directory-scope gap rather than a schema mismatch. `agent-working/staging_artifacts/`'s
   exclusion is confirmed intentional permanent design, not an accidental gap. Corpus heterogeneity
   (412 `index.md` files, legacy non-`TCK-*` directories, dozens of non-canonical filenames) is
   flagged as a scope boundary for a future scanner-building ticket, not resolved here. Full
@@ -223,8 +223,8 @@ None.
 
 **2026-07-28 — Phase 0-1 batch complete.** All 3 child tickets from this batch
 (`TCK-20260728-PHASE0-PREREQ-CONFIRMATION`, `TCK-20260728-RETRIEVAL-BASELINE-METRICS`,
-`TCK-20260728-EVAL-FIXTURE-REPAIR`) are `DONE` — see `tickets/done/` and
-`tickets/working_log.csv`. Phase 0's own prerequisite (provider-neutral execution
+`TCK-20260728-EVAL-FIXTURE-REPAIR`) are `DONE` — see `agent-working/tickets/done/` and
+`agent-working/tickets/working_log.csv`. Phase 0's own prerequisite (provider-neutral execution
 identity, shared monitoring writer, stable replay/live boundary) was directly
 confirmed satisfied by `TCK-20260728-PHASE0-PREREQ-CONFIRMATION`.
 
@@ -284,7 +284,7 @@ was enabled permanently in this development machine's shell environment (user de
 outside any ticket's scope) and the placement-legality mini-epic
 (`TCK-20260716-PLACELEGAL-HARDLAW`, `TCK-20260716-PLACELEGAL-SIMQ-SIGNAL`, both `DONE`) was
 run as a real vehicle to exercise it. Result: 2 real shadow-packet events now exist in
-`agent-monitoring/events.jsonl` (`agent: context-packet-wrapper`, real `TCK-...` `run_id`s),
+`agent-working/agent-monitoring/events.jsonl` (`agent: context-packet-wrapper`, real `TCK-...` `run_id`s),
 up from the 0 recorded at the time `TCK-20260730-SHADOW-PROMOTION-GATE-THRESHOLDS` set the
 sample-size floors. This is a genuine first data point, not a threshold crossing — the
 per-scenario floors resolved for Open Decision 5 (56 / 122 / 6 shadow-enabled runs, or one
@@ -299,7 +299,7 @@ progress has begun, not to imply the gate can be evaluated yet.
 Run as a second real vehicle (user-chosen, after the placement-legality batch) purely for
 its side effect of exercising `SHADOW_CONTEXT_PACKET_ENABLED=1` during each ticket's
 Investigate phase. Result: 4 additional real shadow-packet events, bringing the running
-total to **6** (`agent-monitoring/events.jsonl`, `agent: context-packet-wrapper`, all real
+total to **6** (`agent-working/agent-monitoring/events.jsonl`, `agent: context-packet-wrapper`, all real
 `TCK-...` `run_id`s). Still far short of the 56/122/6 per-scenario floors from Open
 Decision 5 — 6 samples is meaningful *progress*, not close to sufficiency for any
 promotion-gate evaluation. No change to this epic's own scope or the Phase 6 blocker below.
@@ -319,10 +319,10 @@ actual Phase 6 implementation (selective workflow adoption — enabling the shad
 phase only for scenarios that pass the approval gate using the thresholds resolved above)
 could not be scoped without real, non-fixture shadow-packet evidence.
 
-**2026-08-04 — Moved to `tickets/backlogs/` (deliberate deprioritization, not
+**2026-08-04 — Moved to `agent-working/tickets/backlogs/` (deliberate deprioritization, not
 abandonment).** All 6 Open Decisions are resolved (see above); Phase 6 itself is the only
 remaining scope item, and it remains genuinely un-scopable: real shadow-packet evidence
-volume was re-checked directly (`agent-monitoring/events.jsonl`, `agent: context-packet-wrapper`)
+volume was re-checked directly (`agent-working/agent-monitoring/events.jsonl`, `agent: context-packet-wrapper`)
 and stands at **12 events across 11 distinct run_ids** — real progress from the 6 recorded
 at the epic's last update, but nowhere near the two larger per-scenario floors Open
 Decision 5 set (56 for Small bugfix, 122 for Ticket implementation), and the smallest

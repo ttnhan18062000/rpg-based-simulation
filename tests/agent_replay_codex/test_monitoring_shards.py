@@ -27,7 +27,7 @@ _SOURCES = ("runs.jsonl", "events.jsonl", "tools.jsonl")
 @pytest.mark.parametrize("source", _SOURCES)
 def test_source_paths_resolves_scratch_shape(tmp_path, source):
     monitoring_dir = tmp_path / AGENT_MONITORING
-    monitoring_dir.mkdir()
+    monitoring_dir.mkdir(parents=True)
     single = monitoring_dir / source
     single.write_text('{"a": 1}\n', encoding="utf-8")
 
@@ -37,7 +37,7 @@ def test_source_paths_resolves_scratch_shape(tmp_path, source):
 @pytest.mark.parametrize("source", _SOURCES)
 def test_source_paths_returns_empty_when_scratch_file_absent(tmp_path, source):
     monitoring_dir = tmp_path / AGENT_MONITORING
-    monitoring_dir.mkdir()
+    monitoring_dir.mkdir(parents=True)
 
     assert source_paths(monitoring_dir, source) == []
 

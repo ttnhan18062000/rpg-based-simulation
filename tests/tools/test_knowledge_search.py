@@ -56,7 +56,7 @@ _hr = sys.modules["hybrid_retrieval"]
 
 def _make_minimal_corpus(tmp_path: Path) -> None:
     """Create a minimal but valid corpus tree under tmp_path."""
-    # tickets/done/
+    # agent-working/tickets/done/
     done_dir = tmp_path / TICKETS / "done"
     done_dir.mkdir(parents=True)
     (done_dir / "TCK-20260101-ALPHA.md").write_text(
@@ -68,7 +68,7 @@ def _make_minimal_corpus(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    # stored_artifacts/*/investigation.md
+    # agent-working/stored_artifacts/*/investigation.md
     art_dir = tmp_path / STORED_ARTIFACTS / "TCK-20260101-ALPHA"
     art_dir.mkdir(parents=True)
     (art_dir / "investigation.md").write_text(
@@ -76,7 +76,7 @@ def _make_minimal_corpus(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    # tickets/working_log.csv
+    # agent-working/tickets/working_log.csv
     wl_path = tmp_path / TICKETS / "working_log.csv"
     wl_path.write_text(
         "ticket_id,title,summary,date\n"
@@ -125,7 +125,7 @@ class TestBuildHappyPath:
 
     @pytest.mark.slow
     def test_build_produces_db(self, tmp_path):
-        """AC1: build command completes and produces knowledge-index/knowledge.db."""
+        """AC1: build command completes and produces agent-working/.index/knowledge-index/knowledge.db."""
         if not _deps_available():
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
@@ -372,7 +372,7 @@ class TestQueryHappyPath:
 class TestGracefulDegradation:
 
     def test_missing_index_warning_and_exit_0(self, tmp_path):
-        """AC4: If knowledge-index/ does not exist, query prints warning and exits 0."""
+        """AC4: If agent-working/.index/knowledge-index/ does not exist, query prints warning and exits 0."""
         nonexistent_db = tmp_path / "no-such-dir" / "knowledge.db"
 
         result = subprocess.run(
@@ -512,24 +512,24 @@ class TestMakeTarget:
 class TestGitignore:
 
     def test_knowledge_index_in_gitignore(self):
-        """AC8: knowledge-index/ is listed in .gitignore."""
+        """AC8: agent-working/.index/knowledge-index/ is listed in .gitignore."""
         gitignore = _REPO_ROOT / ".gitignore"
         assert gitignore.exists(), ".gitignore not found"
         content = gitignore.read_text(encoding="utf-8")
-        assert "knowledge-index/" in content, \
-            "knowledge-index/ is not listed in .gitignore"
+        assert "agent-working/.index/knowledge-index/" in content, \
+            "agent-working/.index/knowledge-index/ is not listed in .gitignore"
 
     def test_git_check_ignore(self, tmp_path):
-        """AC8: git check-ignore confirms knowledge-index/ is ignored."""
+        """AC8: git check-ignore confirms agent-working/.index/knowledge-index/ is ignored."""
         result = subprocess.run(
-            ["git", "check-ignore", "-v", "knowledge-index/knowledge.db"],
+            ["git", "check-ignore", "-v", "agent-working/.index/knowledge-index/knowledge.db"],
             capture_output=True,
             text=True,
             cwd=str(_REPO_ROOT),
         )
         # git check-ignore returns 0 if the path is ignored, 1 if not ignored
         assert result.returncode == 0, \
-            "git check-ignore reports knowledge-index/knowledge.db is NOT ignored"
+            "git check-ignore reports agent-working/.index/knowledge-index/knowledge.db is NOT ignored"
 
 
 # ---------------------------------------------------------------------------
@@ -539,7 +539,7 @@ class TestGitignore:
 class TestCorpusScopeGuard:
 
     def test_collect_corpus_only_reads_defined_roots(self, tmp_path):
-        """Corpus collection must only read tickets/done, stored_artifacts, working_log.csv, and docs/.
+        """Corpus collection must only read agent-working/tickets/done, stored_artifacts, working_log.csv, and docs/.
 
         docs/ is a valid corpus source (added by TCK-20260612-LOCAL-CTX-DOCS-CORPUS).
         src/ and other non-corpus paths must remain excluded.
@@ -713,7 +713,7 @@ class TestExtractWorkingLogRows:
         self, tmp_path, capsys, monkeypatch
     ):
         """TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP: a squash-merge whole-block
-        duplication (e.g. tickets/working_log.csv's confirmed ~1586-row incident) must not
+        duplication (e.g. agent-working/tickets/working_log.csv's confirmed ~1586-row incident) must not
         produce one corpus document per duplicate physical line -- only the first occurrence
         of each distinct (ticket_id, title, summary) tuple is kept. This must never open the
         source file in a non-read mode."""
@@ -1185,7 +1185,7 @@ class TestDocsBuildSummary:
 
 
 # ---------------------------------------------------------------------------
-# Group 10 — Slow live-query tests (require knowledge-index/knowledge.db)
+# Group 10 — Slow live-query tests (require agent-working/.index/knowledge-index/knowledge.db)
 # ---------------------------------------------------------------------------
 
 _LIVE_DB = _REPO_ROOT / KNOWLEDGE_INDEX / "knowledge.db"
@@ -1382,7 +1382,7 @@ class TestLiveQueryDocsMechanics:
         assert result.returncode == 0
         lines = [l for l in result.stdout.strip().split("\n") if l]
         assert len(lines) >= 1, "No results returned for existing ticket query"
-        # At least one result should come from tickets/done/ or stored_artifacts/
+        # At least one result should come from agent-working/tickets/done/ or agent-working/stored_artifacts/
         paths = [line.split("\t")[1] for line in lines if "\t" in line]
         has_ticket_result = any(
             f"{posix(TICKETS)}/done" in p.replace("\\", "/") or posix(STORED_ARTIFACTS) in p.replace("\\", "/")
@@ -1578,7 +1578,7 @@ class TestBuildProducesBm25:
 
     @pytest.mark.slow
     def test_build_produces_bm25_pkl(self, tmp_path):
-        """AC1: build also produces knowledge-index/bm25.pkl."""
+        """AC1: build also produces agent-working/.index/knowledge-index/bm25.pkl."""
         if not _deps_available():
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 

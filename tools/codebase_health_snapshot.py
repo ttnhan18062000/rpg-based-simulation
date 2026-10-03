@@ -8,13 +8,13 @@ Built for TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD, item 3 of
 `docs/plans/codebase_health_observatory_tooling_epic.md`). This module never
 recomputes or re-derives any individual metric — it imports `build_report`
 directly and only adds persistence (an append-only JSONL history file,
-mirroring `agent-monitoring/runs.jsonl`'s own pattern) and a read-side
+mirroring `agent-working/agent-monitoring/runs.jsonl`'s own pattern) and a read-side
 per-dimension trend view on top of it.
 
 **Snapshot write path**: `write_snapshot` reuses
 `tools/agent-monitoring/writer.py::write_line` — the same hardened,
 lock-protected, never-raising append primitive `record_run.py`/
-`record_events.py`/`post_tool_hook.py` already use for `agent-monitoring/*.jsonl`
+`record_events.py`/`post_tool_hook.py` already use for `agent-working/agent-monitoring/*.jsonl`
 — rather than a plain unlocked `open(path, "a")`. `tools/agent-monitoring/`'s
 hyphen makes it unimportable as a dotted package name (no `__init__.py`-based
 package name can contain a hyphen), so its directory is added to `sys.path`
@@ -62,7 +62,7 @@ test isolation: `write_line`'s own real signature has no default for its
 target path either, which is exactly why `tests/tools/test_monitoring_writer.py`'s
 literal-source-scan guard can catch a hardcoded real-corpus path — a default
 on `write_snapshot` would let a test that simply omits the keyword argument
-silently target the real `agent-monitoring/codebase_health_history.jsonl` with
+silently target the real `agent-working/agent-monitoring/codebase_health_history.jsonl` with
 nothing textually present in that test's source for such a scan to catch.
 """
 

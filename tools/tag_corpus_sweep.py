@@ -3,25 +3,25 @@
 Report-only tag/category violation sweep across the full ticket/artifact corpus.
 
 Built for TCK-20260720-TAG-CORPUS-REPAIR-SWEEP. `tools/tag_report.py`'s `main()` only ever
-reports on `tickets/done/`, and only on tickets whose `ticket_id` embeds a date on or after the
+reports on `agent-working/tickets/done/`, and only on tickets whose `ticket_id` embeds a date on or after the
 tag taxonomy's effective date (`TAG_TAXONOMY_EFFECTIVE_DATE`, 2026-07-04) — enforcement there is
 deliberately forward-only, per the taxonomy's own "no backfill of history" decision. That leaves
-the entire pre-cutoff corpus, plus `tickets/inprogress/`, `tickets/todos/`, and
-`stored_artifacts/`, never checked by anything.
+the entire pre-cutoff corpus, plus `agent-working/tickets/inprogress/`, `agent-working/tickets/todos/`, and
+`agent-working/stored_artifacts/`, never checked by anything.
 
 This module is a separate, report-only sweep over all four corpus roots with no date cutoff at
 all — it walks every file `tag_report.py`'s narrower pass would skip as "too old," and flags every
 tag issue (`unregistered`, `invalid_category`, `non_canonical_form`) it finds. It emits
 `(file, tag, issue)` rows; deciding what to do with a finding (retag, re-register, etc.) is left
 to a human or a follow-up ticket — there is no `--fix` flag, and this module never writes to any
-file under `tickets/` or `stored_artifacts/`.
+file under `agent-working/tickets/` or `agent-working/stored_artifacts/`.
 
 The corpus-walk and per-file classification live in `tools/tag_report.py`
 (`collect_sweep_files`, `tag_issues`, `sweep_file_rows`) so they can reuse `extract_frontmatter()`
 and the `SEQUENCE.md`-skip convention already established there. This module is only the
 orchestration and CLI layer — it does not import, call, or modify `tag_report.py`'s own `main()`,
 `print_report()`, `build_json_report()`, or CLI wiring, which stay scoped to their original
-`tickets/done/`-only report.
+`agent-working/tickets/done/`-only report.
 
 Usage:
   python3 tools/tag_corpus_sweep.py

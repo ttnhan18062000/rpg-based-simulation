@@ -1,7 +1,7 @@
 """Tests for tools/agent-monitoring/epic_scope_orphan_check.py (TCK-20260711-EPIC-SCOPE-ORPHAN-FIX).
 
 The check flags the actual orphan signature — an epic-tier ticket present in both
-tickets/inprogress/ and tickets/todos/** simultaneously — not merely "epic ticket resting in
+agent-working/tickets/inprogress/ and agent-working/tickets/todos/** simultaneously — not merely "epic ticket resting in
 inprogress/" (legitimate, per docs/ai/ticket-lifecycle.md:440) and not non-epic dual presence
 (the normal, expected mid-workflow state pending Finalize reconciliation).
 """

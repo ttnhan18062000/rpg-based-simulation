@@ -35,7 +35,7 @@ def _build_scratch_area(tmp_path: Path) -> Path:
     scratch_area.mkdir()
     (scratch_area / "config.toml").write_text('# scratch config\nfoo = "bar"\n', encoding="utf-8")
     monitoring_dir = scratch_area / AGENT_MONITORING
-    monitoring_dir.mkdir()
+    monitoring_dir.mkdir(parents=True)
     for filename in ("runs.jsonl", "events.jsonl", "tools.jsonl"):
         (monitoring_dir / filename).write_text('{"a": 1}\n', encoding="utf-8")
     (scratch_area / "TCK-SCRATCH-PILOT.md").write_text("# scratch pilot ticket\n", encoding="utf-8")
@@ -81,7 +81,7 @@ def test_disable_refuses_to_target_the_real_committed_config():
 
 def test_rollback_scope_tools_hash_changes_with_any_shard_and_is_stable_otherwise(tmp_path):
     """TCK-20260903-MONITORING-DATA-CODEX-REMIGRATION: snapshot_rollback_scope's tools.jsonl
-    entry must track the real agent-monitoring/data/<week>/tools.jsonl shard family, not a
+    entry must track the real agent-working/agent-monitoring/data/<week>/tools.jsonl shard family, not a
     single hardcoded (now nonexistent in the real repo) tools.jsonl file."""
     monitoring_dir = tmp_path / AGENT_MONITORING
     data_dir = monitoring_dir / "data"
@@ -110,7 +110,7 @@ def test_rollback_scope_tools_hash_changes_with_any_shard_and_is_stable_otherwis
 
 def test_snapshot_rollback_scope_runs_and_events_hash_changes_with_any_week_and_is_stable_otherwise(tmp_path):
     """Acceptance Criterion #4: snapshot_rollback_scope's runs.jsonl/events.jsonl entries must
-    track the real agent-monitoring/data/<week>/{runs,events}.jsonl shard families, generalizing
+    track the real agent-working/agent-monitoring/data/<week>/{runs,events}.jsonl shard families, generalizing
     the tools-only precedent above to the other 2 sources."""
     monitoring_dir = tmp_path / AGENT_MONITORING
     data_dir = monitoring_dir / "data"

@@ -59,7 +59,7 @@ AUTHORITY_VALUES = {"P0", "P1", "P2"}
 AUDIENCE_VALUES = {"developer", "agent", "designer", "historical"}
 PHASE_VALUES = {"open", "inprogress", "blocked", "done", "backlog"}
 ARTIFACT_TYPE_VALUES = {"investigation", "plan", "test_plan", "report"}
-# "report" added TCK-20260821-LIVE-MAP-PERF-VALIDATION -- first staging_artifacts/ deliverable for a
+# "report" added TCK-20260821-LIVE-MAP-PERF-VALIDATION -- first agent-working/staging_artifacts/ deliverable for a
 # measurement-and-reporting-only ticket (no investigation/plan/test_plan file is itself the final
 # output; the report is). Distinct from the three existing values, which are all pre-implementation
 # planning artifacts -- report.md is a post-implementation findings/measurement deliverable.
@@ -290,26 +290,26 @@ _VALIDATORS = {
 # Ticket location consistency (TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT)
 #
 # A ticket's status/phase can each be individually enum-valid (e.g. status: active, phase: open)
-# while still being wrong for the tickets/ subdirectory the file physically sits in -- that class
+# while still being wrong for the agent-working/tickets/ subdirectory the file physically sits in -- that class
 # of drift is invisible to _validate_ticket's per-field enum checks above, which is why this is a
 # separate function rather than another _check_enum call. Deliberately NOT called from
 # _validate_ticket/validate_file: callers that want it (done_checker_static.check_frontmatter_valid,
 # the corpus test) call it explicitly, so a plain validate_file/validate_directory sweep over
-# tickets/ (e.g. from an unrelated tool) does not silently start enforcing directory placement too.
+# agent-working/tickets/ (e.g. from an unrelated tool) does not silently start enforcing directory placement too.
 # ---------------------------------------------------------------------------
 
 TICKET_LOCATION_RULES = {
     "done": {"status": "historical", "phase": "done"},
     "inprogress": {"phase_not": "done"},
 }
-# Only tickets/done/ and tickets/inprogress/ are enforced -- the evidence for this rule covers
-# only those two directories. tickets/todos/ is left for a future ticket: add one more key here,
+# Only agent-working/tickets/done/ and agent-working/tickets/inprogress/ are enforced -- the evidence for this rule covers
+# only those two directories. agent-working/tickets/todos/ is left for a future ticket: add one more key here,
 # not a rewrite, when that's ready.
 
 
 def _ticket_directory(path) -> str | None:
-    """Return the tickets/<x> path segment immediately below `tickets/`, or None if `path` is
-    not under a `tickets/` directory at all."""
+    """Return the agent-working/tickets/<x> path segment immediately below `agent-working/tickets/`, or None if `path` is
+    not under a `agent-working/tickets/` directory at all."""
     parts = Path(path).parts
     root_idx = _root_index(parts, TICKETS)
     if root_idx is None:
@@ -319,9 +319,9 @@ def _ticket_directory(path) -> str | None:
 
 
 def check_ticket_location_consistency(path, fm: dict) -> list[str]:
-    """A ticket's `status`/`phase` frontmatter must agree with which `tickets/` subdirectory it
+    """A ticket's `status`/`phase` frontmatter must agree with which `agent-working/tickets/` subdirectory it
     physically sits in, per TICKET_LOCATION_RULES. Returns [] for a directory not covered by the
-    rule (including any file not under `tickets/` at all)."""
+    rule (including any file not under `agent-working/tickets/` at all)."""
     filepath = str(path)
     rule = TICKET_LOCATION_RULES.get(_ticket_directory(path))
     if rule is None:
@@ -350,7 +350,7 @@ _DUPLICATE_BASENAME_ACTIVE_DIRS = ("todos", "inprogress")
 
 def find_closed_ticket_resurrections(tickets_root: Path) -> list[str]:
     """Flag any real ticket basename (`TCK-YYYYMMDD-*.md`) that exists under both
-    `tickets/done/` and `tickets/todos/` or `tickets/inprogress/` (recursively) -- a closed
+    `agent-working/tickets/done/` and `agent-working/tickets/todos/` or `agent-working/tickets/inprogress/` (recursively) -- a closed
     ticket's pre-close snapshot re-added into an active directory by an unrelated PR (see
     TCK-20260928-CLOSED-TICKETS-RESURRECTED-INTO-TODOS). Only done-vs-{todos,inprogress} is a
     conflict; todos-vs-inprogress is not checked here. Returns [] if `tickets_root/done` is

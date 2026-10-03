@@ -5,8 +5,8 @@ merge=union only engages when git's own merge machinery runs (see
 tests/integrity/test_merge_union_gitattributes.py::
 test_squash_style_single_parent_commit_is_not_a_merge_and_bypasses_drivers). This repo's
 PRs land almost exclusively via GitHub squash-merge, which never invokes a merge driver,
-so a whole-block content duplication (like the confirmed ~1586-row tickets/working_log.csv
-incident and the 79-line agent-monitoring/data/2026-W36/tools.jsonl incident) can land
+so a whole-block content duplication (like the confirmed ~1586-row agent-working/tickets/working_log.csv
+incident and the 79-line agent-working/agent-monitoring/data/2026-W36/tools.jsonl incident) can land
 silently. This test is the ongoing, automatic sweep mechanism: it scans every file matching
 .gitattributes' own merge=union glob patterns for a *new* contiguous exact-duplicate line
 block, and fails the moment one appears that isn't already accounted for in
@@ -30,14 +30,14 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 # Keyed by (relative_file_path, block_length, sha256_of_block_content) -- never by absolute
 # line number, since every covered file grows via legitimate ongoing appends. Each entry is
 # one confirmed real incident, evidenced in
-# staging_artifacts/TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP/investigation.md.
+# agent-working/staging_artifacts/TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP/investigation.md.
 KNOWN_DUPLICATE_BLOCKS = {
-    # tickets/working_log.csv's confirmed ~1586-row duplicate block (header row at physical
+    # agent-working/tickets/working_log.csv's confirmed ~1586-row duplicate block (header row at physical
     # line 1 plus 1586 already-committed data rows, byte-identical to the embedded duplicate
     # header at line 1594 through line 3180, produced by PR #90's squash-merge / commit
     # 5993cac3) was remediated by this ticket's Step 6 one-time cleanup commit. This entry
     # is intentionally absent -- the block no longer exists in the live file.
-    # agent-monitoring/data/2026-W36/tools.jsonl: physical lines 22831-22909 byte-identical
+    # agent-working/agent-monitoring/data/2026-W36/tools.jsonl: physical lines 22831-22909 byte-identical
     # to lines 23240-23318 (79 lines), same squash-merge defect class as the working_log.csv
     # incident below. Deliberately NOT remediated by this ticket -- see this ticket's
     # Implementation Notes for the rationale (monitoring shards have a materially more
@@ -45,7 +45,7 @@ KNOWN_DUPLICATE_BLOCKS = {
     # cleanup edit there carries a higher, less-understood concurrent-write collision risk
     # than this ticket's evidence base justifies taking on). Tracked here, not ignored.
     (
-        "agent-monitoring/data/2026-W36/tools.jsonl",
+        "agent-working/agent-monitoring/data/2026-W36/tools.jsonl",
         79,
         "4c6792452731db52493cedf0314ced1ddeb943dd3d52481efd96ea5b4164c403",
     ),

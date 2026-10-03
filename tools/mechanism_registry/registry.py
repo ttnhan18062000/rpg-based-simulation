@@ -578,7 +578,7 @@ def verification_records_from_registry(data: dict) -> Dict[str, List[dict]]:
 # transitive over direct against real data: the real 75-mechanism graph has the same 26 hubs
 # either way, but the RANKING differs meaningfully -- e.g. combat_engagement (1 direct dependent /
 # 13 transitive) would rank the project's single most-verified, most-central mechanism near the
-# bottom under direct-count alone. See staging_artifacts/TCK-20260915-MECHANISM-PRIORITY-
+# bottom under direct-count alone. See agent-working/staging_artifacts/TCK-20260915-MECHANISM-PRIORITY-
 # DERIVATION/investigation.md for the full real-data comparison. (`weight`, not `rank`, per
 # TCK-20260916-MECHANISM-PRIORITY-LAYER-WEIGHT-INVERTED -- `rank * dependents` was a shipped
 # defect that rewarded the rarest layers.)

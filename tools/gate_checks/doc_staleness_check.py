@@ -1,7 +1,7 @@
 """Flag a behavior-changing diff that touches no `docs/` path.
 
 Built for TCK-20260711-DOC-STALENESS-GATE-CHECK: the 2026-W28 agent-monitoring retro
-(`agent-monitoring/retro/RETRO-2026-W28.md`) found done-checker's Verify phase failing its first
+(`agent-working/agent-monitoring/retro/RETRO-2026-W28.md`) found done-checker's Verify phase failing its first
 attempt on 22/61 calls (36%) in one week, every failure tagged `reason_code=dod_condition_failed`,
 and traced (Notes items 1 and 3) to one recurring root cause: a behavior-changing Implement phase
 touching `src/` or a `.claude/workflows/*.js` file without a corresponding `docs/` update, caught

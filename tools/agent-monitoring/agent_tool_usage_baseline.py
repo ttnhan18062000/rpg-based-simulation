@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only per-agent tool-usage baseline audit over agent-monitoring/data/*/tools.jsonl
+"""Read-only per-agent tool-usage baseline audit over agent-working/agent-monitoring/data/*/tools.jsonl
 (TCK-20260904-AGENT-TOOL-USAGE-BASELINE).
 
 Mines every currently-registered `.claude/agents/*.md` agent's real historical tool-call pattern
@@ -13,7 +13,7 @@ within that bucket is out of this ticket's scope.
 
 Reuses `load_data_glob` (tools/agent-monitoring/validate.py:238), imported the same way
 tools/agent-monitoring/retrieval_baseline_metrics.py does, rather than reimplementing a 4th
-independent shard-glob loader. Read-only: never opens agent-monitoring/data/ for writing.
+independent shard-glob loader. Read-only: never opens agent-working/agent-monitoring/data/ for writing.
 """
 import argparse
 import json

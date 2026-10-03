@@ -62,7 +62,7 @@ def test_authority_requires_both_exact_consent_values():
 
 def test_policy_is_bound_to_its_captured_bytes(tmp_path):
     policy_path = tmp_path / "pilot-policy.json"
-    policy_path.write_text('{"version":1,"candidate_ticket_id":"TCK-001","request_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","baseline_sha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","target_path":"tickets/done/x.md","target_transitions":{"status":["active","historical"],"phase":["open","done"],"body_status":["OPEN","DONE"]},"allowed_paths":["tickets/done/x.md"],"monitoring_suffixes":{"runs.jsonl":[],"events.jsonl":[],"tools.jsonl":[]}}')
+    policy_path.write_text('{"version":1,"candidate_ticket_id":"TCK-001","request_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","baseline_sha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","target_path":"agent-working/tickets/done/x.md","target_transitions":{"status":["active","historical"],"phase":["open","done"],"body_status":["OPEN","DONE"]},"allowed_paths":["agent-working/tickets/done/x.md"],"monitoring_suffixes":{"runs.jsonl":[],"events.jsonl":[],"tools.jsonl":[]}}')
     policy = load_policy_file(policy_path, "TCK-001")
     policy_path.write_text(policy_path.read_text() + " ")
 
@@ -150,7 +150,7 @@ def test_policy_refuses_unsafe_target_paths_before_a_harness_can_use_them(tmp_pa
 def test_policy_refuses_non_string_transition_entries(tmp_path):
     policy_path = tmp_path / "pilot-policy.json"
     policy_path.write_text(
-        '{"version":1,"candidate_ticket_id":"TCK-001","target_path":"tickets/done/x.md","transitions":[3]}'
+        '{"version":1,"candidate_ticket_id":"TCK-001","target_path":"agent-working/tickets/done/x.md","transitions":[3]}'
     )
     with pytest.raises(ValueError, match="transitions"):
         load_policy_file(policy_path, "TCK-001")

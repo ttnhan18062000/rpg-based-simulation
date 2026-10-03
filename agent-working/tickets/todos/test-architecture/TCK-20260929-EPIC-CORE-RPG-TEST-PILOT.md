@@ -110,7 +110,7 @@ step, quarantine policy.
 - `docs/plans/test_architecture/reference/milestone_design_notes.md` (MP; non-binding)
 
 ## Related Stored Artifacts
-- `stored_artifacts/TCK-20260930-CORE-RPG-PILOT-NODE-CHARGE-ACCOUNTING/pilot/` (evidence)
+- `agent-working/stored_artifacts/TCK-20260930-CORE-RPG-PILOT-NODE-CHARGE-ACCOUNTING/pilot/` (evidence)
 - `docs/testing/core_rpg_test_pilot_2026-09-30.md` (pilot report)
 
 ## Related Code Areas

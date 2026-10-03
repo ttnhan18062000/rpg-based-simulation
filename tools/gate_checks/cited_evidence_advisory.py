@@ -1,16 +1,16 @@
 """Advisory check: a path a closing ticket cites must be in git, not silently gitignored
 (TCK-20260930-CITED-EVIDENCE-PATH-GITIGNORE-CHECK).
 
-`.gitignore` drops `stored_artifacts/**/*.json` (only `manifest.json` is excepted), so evidence
+`.gitignore` drops `agent-working/stored_artifacts/**/*.json` (only `manifest.json` is excepted), so evidence
 written as `.json` passes locally and is missing from a clean checkout: PR #270's first CI run failed
 that way. Report-only, in the style of `proof_plan_advisory.py`: `check_cited_evidence_paths()`
 returns `(status, evidence)` with status `OK` / `WARN` / `NA`, never raises, never blocks.
 
-Citations are the backticked tokens of the ticket body that start with `stored_artifacts/`,
-`staging_artifacts/` or `tickets/` and end in a file extension. Wildcards and `{placeholder}` forms
+Citations are the backticked tokens of the ticket body that start with `agent-working/stored_artifacts/`,
+`agent-working/staging_artifacts/` or `agent-working/tickets/` and end in a file extension. Wildcards and `{placeholder}` forms
 are skipped. A path written in plain prose or a markdown link is never checked. A cited path that does not exist on disk is skipped (a ticket cites its own
-`tickets/inprogress/` path, which is skipped outright, and `staging_artifacts/` paths that migrate
-to `stored_artifacts/` at close); a `staging_artifacts/X` citation is checked at `stored_artifacts/X` once migrated.
+`agent-working/tickets/inprogress/` path, which is skipped outright, and `agent-working/staging_artifacts/` paths that migrate
+to `agent-working/stored_artifacts/` at close); a `agent-working/staging_artifacts/X` citation is checked at `agent-working/stored_artifacts/X` once migrated.
 """
 
 import re

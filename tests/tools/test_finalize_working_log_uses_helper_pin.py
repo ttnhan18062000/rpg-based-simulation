@@ -49,7 +49,7 @@ def test_finalize_prompt_instructs_the_working_log_writer_helper():
 
 def test_finalize_step_4_precedes_step_5():
     prompt = _finalize_prompt()
-    step4_idx = prompt.find("4. Append to tickets/working_log.csv")
+    step4_idx = prompt.find("4. Append to agent-working/tickets/working_log.csv")
     step5_idx = prompt.find("5. ${tier")
     assert step4_idx != -1, "step 4's leading anchor text not found"
     assert step5_idx != -1, "step 5's leading anchor text not found"

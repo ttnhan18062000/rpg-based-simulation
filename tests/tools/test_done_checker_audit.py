@@ -90,10 +90,10 @@ def _scaffold(tmp_path):
     # plan.md intentionally missing
 
     _write_ticket_with_tier(done_dir / "TCK-MISSING.md", "TCK-MISSING", "standard")
-    # no stored_artifacts/TCK-MISSING/ at all
+    # no agent-working/stored_artifacts/TCK-MISSING/ at all
 
     _write_ticket_with_tier(done_dir / "TCK-HOTFIX.md", "TCK-HOTFIX", "hotfix")
-    # no stored_artifacts/TCK-HOTFIX/ — correct, not expected
+    # no agent-working/stored_artifacts/TCK-HOTFIX/ — correct, not expected
 
     _write_legacy_ticket_no_tier(done_dir / "METRICS-01.md", "METRICS-01")
 

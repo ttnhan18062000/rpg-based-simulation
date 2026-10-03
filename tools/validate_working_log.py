@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Validate tickets/working_log.csv for consistency with tickets/done/.
+Validate agent-working/tickets/working_log.csv for consistency with agent-working/tickets/done/.
 
 Checks:
   1. No duplicate ticket IDs in the log.
-  2. All tickets in tickets/done/ have a log entry.
+  2. All tickets in agent-working/tickets/done/ have a log entry.
   3. No empty fields in any row.
 
 Row loading is tolerant (see tools/working_log_parser.py): malformed rows are

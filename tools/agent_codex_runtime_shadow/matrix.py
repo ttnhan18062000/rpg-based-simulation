@@ -1,6 +1,6 @@
 """Phase/tier support matrix for tools/agent_codex_runtime_shadow/.
 
-Reads `workflow_version` from the real `agent-orchestration/workflows/implement-ticket.yaml`
+Reads `workflow_version` from the real `agent-working/agent-orchestration/workflows/implement-ticket.yaml`
 (read-only — never written by this package) but does NOT auto-derive "the smallest useful slice"
 of supported phases/tiers from that file's own `tiers`/`condition` fields. Per
 investigation.md's Resolved Open Question 1, the supported slice is hardcoded to this ticket's own

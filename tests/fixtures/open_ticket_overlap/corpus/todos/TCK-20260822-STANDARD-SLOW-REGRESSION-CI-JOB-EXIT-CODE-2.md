@@ -274,7 +274,7 @@ downstream consequence (`TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVAT
 two `RuntimeMode.DEGRADED`-forcing code sites (which now carry matching in-code cross-references
 back to this ticket). Also corrected the two now-stale session-memory records of this finding to
 point here instead of repeating their own snapshots. No code changed by this update. The user's
-own "let it sit" instruction stands — this ticket remains `OPEN` in `tickets/todos/`, not
+own "let it sit" instruction stands — this ticket remains `OPEN` in `agent-working/tickets/todos/`, not
 implemented, not closed.
 
 ## Test Summary

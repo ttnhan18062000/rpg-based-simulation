@@ -1,5 +1,5 @@
 """TCK-20261001-MONITORING-WEEK-CLOSE-COMMAND: explicit week close, one section per acceptance criterion.
-All fixtures live in tmp_path; nothing under the real agent-monitoring/data or tickets/ is touched."""
+All fixtures live in tmp_path; nothing under the real agent-working/agent-monitoring/data or agent-working/tickets/ is touched."""
 import json
 import subprocess
 import sys

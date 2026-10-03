@@ -1,6 +1,6 @@
 """Tests for tools/delivery/pr_render.py (TCK-20260924-DELIVERY-PR-RENDERER).
 
-One section per Acceptance Criterion, per staging_artifacts/TCK-20260924-DELIVERY-PR-RENDERER/
+One section per Acceptance Criterion, per agent-working/staging_artifacts/TCK-20260924-DELIVERY-PR-RENDERER/
 test_plan.md. Fixture tickets are small throwaway .md files under tmp_path; git calls are faked.
 """
 import json
@@ -95,11 +95,11 @@ REAL_LAYER_REGISTRY = Path("registries/layer_registry.jsonl")
 
 def test_single_ticket_title_and_scope_in_registry(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-EXAMPLE-ONE", "ai", "Do the example thing")
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-EXAMPLE-ONE: do the thing"]),
-        _git_diff_rule(["tickets/TCK-20260924-EXAMPLE-ONE.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-EXAMPLE-ONE.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert result["title"] == "ai: Do the example thing (1 ticket)"
@@ -109,11 +109,11 @@ def test_single_ticket_title_and_scope_in_registry(tmp_path):
 
 def test_unregistered_layer_reported_not_defaulted(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-EXAMPLE-TWO", "totally-not-a-real-layer", "Thing")
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-EXAMPLE-TWO: do it"]),
-        _git_diff_rule(["tickets/TCK-20260924-EXAMPLE-TWO.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-EXAMPLE-TWO.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert any("not in" in w and "totally-not-a-real-layer" in w for w in result["warnings"])
@@ -121,12 +121,12 @@ def test_unregistered_layer_reported_not_defaulted(tmp_path):
 
 def test_two_tickets_title_and_table_rows(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "First thing")
     _write_ticket(tickets_root, "TCK-20260924-B", "ai", "Second thing")
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x", "TCK-20260924-B: y"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md", "tickets/TCK-20260924-B.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md", "agent-working/tickets/TCK-20260924-B.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert "(2 tickets)" in result["title"]
@@ -140,11 +140,11 @@ def test_two_tickets_title_and_table_rows(tmp_path):
 
 def test_body_contains_all_spec_sections_in_order_and_closes(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     body = result["body"]
@@ -157,11 +157,11 @@ def test_body_contains_all_spec_sections_in_order_and_closes(tmp_path):
 
 def test_no_attribution_trailer_in_rendered_body(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     for marker in ("Co-Authored-By", "claude.ai/code", "Generated with"):
@@ -171,11 +171,11 @@ def test_no_attribution_trailer_in_rendered_body(tmp_path):
 
 def test_review_notes_is_a_distinguishable_placeholder(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert pr_render._REVIEW_NOTES_PLACEHOLDER in result["body"]
@@ -188,14 +188,14 @@ def test_review_notes_is_a_distinguishable_placeholder(tmp_path):
 
 def test_known_gap_from_test_summary_renders_into_verification(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(
         tickets_root, "TCK-20260924-A", "ai", "Thing",
         test_summary="`data_runs_clean` FAIL — shared-worktree data, not this ticket's own output.",
     )
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert "data_runs_clean" in result["body"]
@@ -204,11 +204,11 @@ def test_known_gap_from_test_summary_renders_into_verification(tmp_path):
 
 def test_no_gap_states_none_stated(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert "none stated" in result["body"]
@@ -220,11 +220,11 @@ def test_no_gap_states_none_stated(tmp_path):
 
 def test_commit_and_changed_file_mismatch_is_reported(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x", "TCK-20260924-GHOST: y"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert any("mismatch" in w and "TCK-20260924-GHOST" in w for w in result["warnings"])
@@ -237,20 +237,20 @@ def test_commit_and_changed_file_mismatch_is_reported(tmp_path):
 
 def test_check_reports_no_difference_when_identical(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
     rendered = pr_render.render(
         tickets_root=tickets_root,
         run_command=FakeRunner([
             _git_log_rule(["TCK-20260924-A: x"]),
-            _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+            _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
         ]),
     )
     runner = FakeRunner([
         (lambda cmd: cmd[:2] == ["gh", "pr"],
          CommandResult(0, json.dumps({"title": rendered["title"], "body": rendered["body"]}), "")),
         _git_log_rule(["TCK-20260924-A: x"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
     ])
     result = pr_render.check_against_live(run_command=runner, tickets_root=tickets_root)
     assert result["matches"] is True
@@ -258,13 +258,13 @@ def test_check_reports_no_difference_when_identical(tmp_path):
 
 def test_check_reports_difference_when_changed(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
     runner = FakeRunner([
         (lambda cmd: cmd[:2] == ["gh", "pr"],
          CommandResult(0, json.dumps({"title": "totally different", "body": "totally different"}), "")),
         _git_log_rule(["TCK-20260924-A: x"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
     ])
     result = pr_render.check_against_live(run_command=runner, tickets_root=tickets_root)
     assert result["matches"] is False
@@ -272,13 +272,13 @@ def test_check_reports_difference_when_changed(tmp_path):
 
 def test_check_exits_zero_via_cli(tmp_path, monkeypatch):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
     runner = FakeRunner([
         (lambda cmd: cmd[:2] == ["gh", "pr"],
          CommandResult(0, json.dumps({"title": "different", "body": "different"}), "")),
         _git_log_rule(["TCK-20260924-A: x"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
     ])
     monkeypatch.setattr(pr_render, "default_run_command", runner)
     monkeypatch.setattr(pr_render, "_DEFAULT_TICKETS_ROOT", tickets_root)
@@ -292,7 +292,7 @@ def test_check_exits_zero_via_cli(tmp_path, monkeypatch):
 
 def test_rendered_output_follows_altered_spec_fixture(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
     spec_path = tmp_path / "spec.json"
     spec_path.write_text(json.dumps({
@@ -305,7 +305,7 @@ def test_rendered_output_follows_altered_spec_fixture(tmp_path):
     }))
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, spec_path=spec_path, run_command=runner)
     assert "## Tickets" not in result["body"]
@@ -337,12 +337,12 @@ def test_ticket_found_across_directories(tmp_path):
 
 def test_scope_tie_break_deterministic_and_reported(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "First")
     _write_ticket(tickets_root, "TCK-20260924-B", "observability", "Second")
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x", "TCK-20260924-B: y"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md", "tickets/TCK-20260924-B.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md", "agent-working/tickets/TCK-20260924-B.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert result["title"].startswith("ai:")
@@ -351,14 +351,14 @@ def test_scope_tie_break_deterministic_and_reported(tmp_path):
 
 def test_why_section_uses_first_paragraph_only(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(
         tickets_root, "TCK-20260924-A", "ai", "Thing",
         request_summary="Only the first paragraph should appear.\n\nThis second paragraph must not.",
     )
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert "Only the first paragraph should appear." in result["body"]
@@ -371,13 +371,13 @@ def test_why_section_uses_first_paragraph_only(tmp_path):
 
 def test_multiline_title_with_pipe_collapses_to_one_row(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     multiline_title = "Report `gh`-calls-per-PR and subject traceability over a week range in one\ncommand, so this | epic's before/after is measured rather than asserted"
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", multiline_title)
     _write_ticket(tickets_root, "TCK-20260924-B", "ai", "Second thing")
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x", "TCK-20260924-B: y"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md", "tickets/TCK-20260924-B.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md", "agent-working/tickets/TCK-20260924-B.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     body = result["body"]
@@ -405,12 +405,12 @@ def test_multiline_title_with_pipe_collapses_to_one_row(tmp_path):
 
 def _two_ticket_runner(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "First thing")
     _write_ticket(tickets_root, "TCK-20260924-B", "ai", "Second thing")
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x", "TCK-20260924-B: y"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md", "tickets/TCK-20260924-B.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md", "agent-working/tickets/TCK-20260924-B.md"]),
     ])
     return tickets_root, runner
 
@@ -436,11 +436,11 @@ def test_multi_ticket_with_theme_has_no_hint(tmp_path):
 
 def test_single_ticket_has_no_hint(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-EXAMPLE-ONE", "ai", "Do the example thing")
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-EXAMPLE-ONE: do the thing"]),
-        _git_diff_rule(["tickets/TCK-20260924-EXAMPLE-ONE.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-EXAMPLE-ONE.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert result["hints"] == []
@@ -478,12 +478,12 @@ def test_render_title_collapses_multiline_title_whitespace():
 
 def test_no_write_side_effect(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
     before = subprocess.run(["git", "status", "--short"], capture_output=True, text=True).stdout
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
     ])
     pr_render.render(tickets_root=tickets_root, run_command=runner)
     after = subprocess.run(["git", "status", "--short"], capture_output=True, text=True).stdout
@@ -498,7 +498,7 @@ def _rendered_and_hand_filled_live(tmp_path, run_command_rules):
     """Renders once, then returns a live body with `## Review notes` hand-filled -- the shape
     every real PR has (AC1's premise)."""
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
     runner = FakeRunner(run_command_rules)
     rendered = pr_render.render(tickets_root=tickets_root, run_command=runner)
@@ -510,7 +510,7 @@ def _rendered_and_hand_filled_live(tmp_path, run_command_rules):
 
 
 def test_check_ac1_matches_despite_hand_filled_review_notes(tmp_path):
-    rules = [_git_log_rule(["TCK-20260924-A: x"]), _git_diff_rule(["tickets/TCK-20260924-A.md"])]
+    rules = [_git_log_rule(["TCK-20260924-A: x"]), _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"])]
     tickets_root, rendered, live_body = _rendered_and_hand_filled_live(tmp_path, rules)
     assert live_body != rendered["body"]  # sanity: genuinely different strings
 
@@ -526,7 +526,7 @@ def test_check_ac1_matches_despite_hand_filled_review_notes(tmp_path):
 
 
 def test_check_ac2_names_the_differing_section(tmp_path):
-    rules = [_git_log_rule(["TCK-20260924-A: x"]), _git_diff_rule(["tickets/TCK-20260924-A.md"])]
+    rules = [_git_log_rule(["TCK-20260924-A: x"]), _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"])]
     tickets_root, rendered, live_body = _rendered_and_hand_filled_live(tmp_path, rules)
     # Simulate drift: a ticket closed since the live body's ## Tickets table was written.
     drifted_live_body = live_body.replace("| standard |", "| hotfix |")
@@ -555,7 +555,7 @@ def test_check_ac3_result_shape_distinguishes_pass_from_real_drift():
 
 
 def test_check_unexpected_live_section_not_a_failure(tmp_path):
-    rules = [_git_log_rule(["TCK-20260924-A: x"]), _git_diff_rule(["tickets/TCK-20260924-A.md"])]
+    rules = [_git_log_rule(["TCK-20260924-A: x"]), _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"])]
     tickets_root, rendered, live_body = _rendered_and_hand_filled_live(tmp_path, rules)
     live_body_with_extra = live_body + "\n\n## Extra thoughts\nSomething the author added by hand.\n"
 
@@ -570,7 +570,7 @@ def test_check_unexpected_live_section_not_a_failure(tmp_path):
 
 
 def test_check_missing_live_section_reported_not_crashed(tmp_path):
-    rules = [_git_log_rule(["TCK-20260924-A: x"]), _git_diff_rule(["tickets/TCK-20260924-A.md"])]
+    rules = [_git_log_rule(["TCK-20260924-A: x"]), _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"])]
     tickets_root, rendered, live_body = _rendered_and_hand_filled_live(tmp_path, rules)
     lines = live_body.splitlines()
     why_start = next(i for i, l in enumerate(lines) if l.strip() == "## Why")
@@ -589,13 +589,13 @@ def test_check_missing_live_section_reported_not_crashed(tmp_path):
 
 def test_check_still_exits_zero_and_writes_nothing_on_a_real_difference(tmp_path, monkeypatch):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
     runner = FakeRunner([
         (lambda cmd: cmd[:2] == ["gh", "pr"],
          CommandResult(0, json.dumps({"title": "different", "body": "different"}), "")),
         _git_log_rule(["TCK-20260924-A: x"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
     ])
     monkeypatch.setattr(pr_render, "default_run_command", runner)
     monkeypatch.setattr(pr_render, "_DEFAULT_TICKETS_ROOT", tickets_root)
@@ -608,7 +608,7 @@ def test_check_still_exits_zero_and_writes_nothing_on_a_real_difference(tmp_path
 
 def test_known_gap_two_tickets_render_as_separate_tagged_entries_not_run_on(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(
         tickets_root, "TCK-20260924-A", "ai", "First thing",
         test_summary="`scan_a` FAIL — narrow reason for ticket A.",
@@ -619,7 +619,7 @@ def test_known_gap_two_tickets_render_as_separate_tagged_entries_not_run_on(tmp_
     )
     runner = FakeRunner([
         _git_log_rule(["TCK-20260924-A: x", "TCK-20260924-B: y"]),
-        _git_diff_rule(["tickets/TCK-20260924-A.md", "tickets/TCK-20260924-B.md"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md", "agent-working/tickets/TCK-20260924-B.md"]),
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     body = result["body"]
@@ -653,9 +653,9 @@ def _three_ticket_fixture(tmp_path, subdir="tickets", b_changed=False):
         # B's file exists (found by find_ticket_file) but was never actually changed on this
         # branch -- the real PR #251 shape.
         _git_diff_rule(
-            ["tickets/TCK-20260924-A.md"]
-            + (["tickets/TCK-20260924-B.md"] if b_changed else [])
-            + ["tickets/TCK-20260924-C.md"]
+            ["agent-working/tickets/TCK-20260924-A.md"]
+            + (["agent-working/tickets/TCK-20260924-B.md"] if b_changed else [])
+            + ["agent-working/tickets/TCK-20260924-C.md"]
         ),
     ])
     return tickets_root, runner
@@ -900,9 +900,9 @@ def test_a_pr_whose_every_ticket_is_still_open_renders_nothing_and_says_why(tmp_
 
 def test_a_ticket_directly_under_the_root_stays_listed(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-FLAT", "ai", "Flat")
-    runner = FakeRunner([_git_log_rule(["TCK-20260924-FLAT: x"]), _git_diff_rule(["tickets/TCK-20260924-FLAT.md"])])
+    runner = FakeRunner([_git_log_rule(["TCK-20260924-FLAT: x"]), _git_diff_rule(["agent-working/tickets/TCK-20260924-FLAT.md"])])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert "TCK-20260924-FLAT" in result["body"] and result["warnings"] == []
 
@@ -922,7 +922,7 @@ def test_a_ticket_cited_but_not_changed_is_left_out_of_closes_automatically(tmp_
 def _docs_only_runner(subjects):
     return FakeRunner([
         _git_log_rule(subjects),
-        _git_diff_rule(["docs/world_rules/foundations/state-ownership.md", "stored_artifacts/X/evidence.jsonl"]),
+        _git_diff_rule(["docs/world_rules/foundations/state-ownership.md", "agent-working/stored_artifacts/X/evidence.jsonl"]),
     ])
 
 
@@ -938,13 +938,13 @@ def test_a_docs_only_branch_citing_a_closed_ticket_renders_a_ticketless_body(tmp
     body = result["body"]
     assert body.rstrip().endswith("Closes: (none)")
     assert "TCK-20260924-A" not in body.split("Closes:")[-1]
-    assert "- docs/world_rules/foundations/ (1 file)" in body and "- stored_artifacts/X/ (1 file)" in body
+    assert "- docs/world_rules/foundations/ (1 file)" in body and "- agent-working/stored_artifacts/X/ (1 file)" in body
     assert "Evidence for a closed ticket." in body
 
 
 def test_a_ticketless_branch_without_theme_scope_and_why_says_what_to_pass(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     result = pr_render.render(tickets_root=tickets_root, run_command=_docs_only_runner([]))
     assert result["title"] is None and result["body"] is None
     assert any("--theme" in w and "--scope" in w and "--why" in w for w in result["warnings"])
@@ -952,7 +952,7 @@ def test_a_ticketless_branch_without_theme_scope_and_why_says_what_to_pass(tmp_p
 
 def test_a_ticketless_branch_with_an_unregistered_scope_is_reported_not_defaulted(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     result = pr_render.render(
         tickets_root=tickets_root, run_command=_docs_only_runner([]),
         theme="t", scope="not-a-layer", why="w",
@@ -963,13 +963,13 @@ def test_a_ticketless_branch_with_an_unregistered_scope_is_reported_not_defaulte
 
 def test_check_matches_a_ticketless_body_when_given_the_same_flags(tmp_path):
     tickets_root = tmp_path / TICKETS
-    tickets_root.mkdir()
+    tickets_root.mkdir(parents=True)
     kw = dict(theme="Record evidence", scope="ai", why="Because.")
     rendered = pr_render.render(tickets_root=tickets_root, run_command=_docs_only_runner([]), **kw)
     runner = FakeRunner([
         (lambda cmd: cmd[:2] == ["gh", "pr"],
          CommandResult(0, json.dumps({"title": rendered["title"], "body": rendered["body"]}), "")),
         _git_log_rule([]),
-        _git_diff_rule(["docs/world_rules/foundations/state-ownership.md", "stored_artifacts/X/evidence.jsonl"]),
+        _git_diff_rule(["docs/world_rules/foundations/state-ownership.md", "agent-working/stored_artifacts/X/evidence.jsonl"]),
     ])
     assert pr_render.check_against_live(run_command=runner, tickets_root=tickets_root, **kw)["matches"] is True

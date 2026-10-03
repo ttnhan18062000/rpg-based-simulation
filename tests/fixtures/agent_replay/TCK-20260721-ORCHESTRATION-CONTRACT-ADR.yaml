@@ -2,13 +2,13 @@
 #
 # Sourced from (all read-only, none of these files are written by this fixture or by the
 # replay runner that consumes it):
-#   - tickets/done/TCK-20260721-ORCHESTRATION-CONTRACT-ADR.md (frontmatter tags, ticket path)
-#   - stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/{investigation,plan}.md (paths only —
+#   - agent-working/tickets/done/TCK-20260721-ORCHESTRATION-CONTRACT-ADR.md (frontmatter tags, ticket path)
+#   - agent-working/stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/{investigation,plan}.md (paths only —
 #     the runner reads the real permanent files at replay time, not a copy embedded here)
-#   - agent-monitoring/events.jsonl, run_id=TCK-20260721-ORCHESTRATION-CONTRACT-ADR, seq 1-4
-#   - agent-monitoring/runs.jsonl, matching run_id row (final_status, tier)
+#   - agent-working/agent-monitoring/events.jsonl, run_id=TCK-20260721-ORCHESTRATION-CONTRACT-ADR, seq 1-4
+#   - agent-working/agent-monitoring/runs.jsonl, matching run_id row (final_status, tier)
 #
-# Review phase note: agent-monitoring/events.jsonl does not persist the full REVIEW_SCHEMA JSON
+# Review phase note: agent-working/agent-monitoring/events.jsonl does not persist the full REVIEW_SCHEMA JSON
 # (verdict/violations) — only status/summary. This fixture's Review phase.output.verdict and
 # .violations are RECONSTRUCTED from the real seq=4 event's status="ok" and its summary text
 # ("APPROVED - execution identity consumed verbatim, no runtime/contract files created"), not
@@ -16,8 +16,8 @@
 version: 1
 source:
   ticket_id: TCK-20260721-ORCHESTRATION-CONTRACT-ADR
-  ticket_path: tickets/done/TCK-20260721-ORCHESTRATION-CONTRACT-ADR.md
-  stored_artifacts_dir: stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/
+  ticket_path: agent-working/tickets/done/TCK-20260721-ORCHESTRATION-CONTRACT-ADR.md
+  stored_artifacts_dir: agent-working/stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/
   events_run_id: TCK-20260721-ORCHESTRATION-CONTRACT-ADR
   events_seq_range: [1, 4]
   final_status: DONE
@@ -46,7 +46,7 @@ phases:
   - phase: Plan
     agent: planner
     input:
-      plan_path: stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/plan.md
+      plan_path: agent-working/stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/plan.md
     output:
       status: ok
       summary: "5-step plan: author ADR with 5 labeled decisions + consumed execution-identity subsection, register, link"
@@ -56,8 +56,8 @@ phases:
   - phase: Review
     agent: architecture-reviewer
     input:
-      plan_path: stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/plan.md
-      investigation_path: stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/investigation.md
+      plan_path: agent-working/stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/plan.md
+      investigation_path: agent-working/stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/investigation.md
     output:
       # verdict/violations reconstructed from real events.jsonl seq=4 status=ok + summary text;
       # full REVIEW_SCHEMA JSON was never persisted — see replay_fixture_spec.md.

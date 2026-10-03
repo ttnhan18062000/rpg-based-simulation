@@ -1,7 +1,7 @@
 """Tests for tools/agent-monitoring/retro_nudge_hook.py
 (TCK-20260903-MONITORING-DATA-CONSUMERS-CORE).
 
-Before this ticket, RUNS_FILE pointed at the dead `agent-monitoring/runs.jsonl` path (retired by
+Before this ticket, RUNS_FILE pointed at the dead `agent-working/agent-monitoring/runs.jsonl` path (retired by
 TCK-20260903-MONITORING-DATA-MIGRATION), so `_count_done_since()` always returned 0 and this hook
 could never fire — a permanent silent no-op. This file is genuinely new coverage (no test file for
 this script existed before this ticket, confirmed by grep).
@@ -69,7 +69,7 @@ def test_retro_nudge_hook_counts_done_runs_across_multiple_week_folders(tmp_path
 
     module = _import_hook_module(monkeypatch, tmp_path, {"session_id": "sess-test"})
 
-    # No agent-monitoring/retro/RETRO-*.md exists in this fixture -> _last_dated_retro_mtime()
+    # No agent-working/agent-monitoring/retro/RETRO-*.md exists in this fixture -> _last_dated_retro_mtime()
     # returns 0.0 (threshold already crossed), so every seeded record's start_ts (all in 2026,
     # well after epoch) counts.
     assert module._count_done_since(0.0) == 5, (
@@ -79,7 +79,7 @@ def test_retro_nudge_hook_counts_done_runs_across_multiple_week_folders(tmp_path
 
 
 def test_retro_nudge_hook_fail_silent_on_malformed_data_dir(tmp_path):
-    # Case 1: agent-monitoring/data/ entirely absent.
+    # Case 1: agent-working/agent-monitoring/data/ entirely absent.
     result_missing = _run_hook(tmp_path, {"session_id": "sess-missing-dir"})
     assert result_missing.returncode == 0
     assert "Traceback" not in result_missing.stderr

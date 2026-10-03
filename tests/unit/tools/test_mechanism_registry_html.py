@@ -68,7 +68,7 @@ def test_render_repo_target_keeps_working_relative_links(registry_data):
     content = render(registry_data, target="repo")
     assert '<a href="mechanism_priority_view.md">' in content
     assert '<a href="mechanism_verification_view.md">' in content
-    assert '<a href="../../tickets/done/mechanism-registry/TCK-20260915-EPIC-MECHANISM-REGISTRY.md">' in content
+    assert '<a href="../../agent-working/tickets/done/mechanism-registry/TCK-20260915-EPIC-MECHANISM-REGISTRY.md">' in content
 
 
 def test_render_artifact_target_drops_unresolvable_links(registry_data):
@@ -81,7 +81,7 @@ def test_render_artifact_target_drops_unresolvable_links(registry_data):
     assert "TCK-20260915-EPIC-MECHANISM-REGISTRY" in content
     assert '<a href="mechanism_priority_view.md">' not in content
     assert '<a href="mechanism_verification_view.md">' not in content
-    assert "../../tickets/done" not in content
+    assert "../../agent-working/tickets/done" not in content
 
 
 def test_render_rejects_unknown_target(registry_data):

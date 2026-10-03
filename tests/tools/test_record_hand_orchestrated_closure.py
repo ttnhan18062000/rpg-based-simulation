@@ -160,7 +160,7 @@ class TestCLIWritesRealRecords:
 
     def test_regenerates_registry_with_the_closed_tickets_done_entry(self, tmp_path):
         """TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES (Scope 3 addendum): a hand closure
-        leaves docs/REGISTRY.yaml regenerated, carrying the ticket's tickets/done/ entry."""
+        leaves docs/REGISTRY.yaml regenerated, carrying the ticket's agent-working/tickets/done/ entry."""
         _init_git_repo_on_test_branch(tmp_path)
         done = tmp_path / TICKETS / "done"
         done.mkdir(parents=True)
@@ -176,7 +176,7 @@ class TestCLIWritesRealRecords:
         )
         assert result.returncode == 0, result.stderr
         registry = (tmp_path / "docs" / "REGISTRY.yaml").read_text(encoding="utf-8")
-        assert "TCK-FAKE-REG" in registry and "tickets/done/TCK-FAKE-REG.md" in registry
+        assert "TCK-FAKE-REG" in registry and "agent-working/tickets/done/TCK-FAKE-REG.md" in registry
 
     def test_writes_one_run_and_n_event_records(self, tmp_path):
         _init_git_repo_on_test_branch(tmp_path)
@@ -298,7 +298,7 @@ class TestUnattributedStatsAreOmittedNotZero:
 
 class TestWorkingLogCsvAppended:
     """TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP: the wrapper must append its own
-    tickets/working_log.csv row -- previously never written at all for this call path."""
+    agent-working/tickets/working_log.csv row -- previously never written at all for this call path."""
 
     def _run(self, args, tmp_path):
         return subprocess.run(
@@ -341,7 +341,7 @@ class TestWorkingLogCsvAppended:
         assert result.returncode == 0, result.stderr
         _consolidate(tmp_path, log_path)
         rows = list(csv.reader(log_path.read_text().splitlines()))
-        assert rows[1][5] == "stored_artifacts/TCK-LOG-STANDARD"
+        assert rows[1][5] == "agent-working/stored_artifacts/TCK-LOG-STANDARD"
 
     def test_explicit_artifacts_path_overrides_default(self, tmp_path):
         log_path = self._seed_working_log(tmp_path)
@@ -379,11 +379,11 @@ class TestWorkingLogCsvAppended:
 
     def test_missing_working_log_parent_dir_no_longer_warns_since_the_write_no_longer_touches_it(self, tmp_path):
         """TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET: append_working_log_row() now stages
-        to agent-monitoring/data/, not tickets/working_log.csv directly, and creates its own
+        to agent-working/agent-monitoring/data/, not agent-working/tickets/working_log.csv directly, and creates its own
         parent dirs -- the missing-tickets/-dir OSError this test originally exercised can no
         longer happen at all, a strictly stronger guarantee than "warns but doesn't fail" (which
         still holds too, per CLAUDE.md's Hard Rule, just via a different mechanism now)."""
-        # No tickets/ dir at all in this isolated cwd.
+        # No agent-working/tickets/ dir at all in this isolated cwd.
         _init_git_repo_on_test_branch(tmp_path)
         result = self._run(
             ["--ticket-id", "TCK-LOG-NODIR", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS),
@@ -423,7 +423,7 @@ class TestDuplicateWorkingLogRowRefused:
         log_path = self._seed_working_log(tmp_path)
         append_working_log_row(
             "2026-09-14T00:00:00Z", "TCK-DUP-TEST", "Same title", "DONE", "First write.",
-            "stored_artifacts/TCK-DUP-TEST", path=log_path,
+            "agent-working/stored_artifacts/TCK-DUP-TEST", path=log_path,
         )
 
         result = self._run(
@@ -449,7 +449,7 @@ class TestDuplicateWorkingLogRowRefused:
         log_path = self._seed_working_log(tmp_path)
         append_working_log_row(
             "2026-09-14T00:00:00Z", "TCK-DUP-MONITORING", "Same title", "DONE", "First write.",
-            "stored_artifacts/TCK-DUP-MONITORING", path=log_path,
+            "agent-working/stored_artifacts/TCK-DUP-MONITORING", path=log_path,
         )
 
         result = self._run(
@@ -472,7 +472,7 @@ class TestDuplicateWorkingLogRowRefused:
         log_path = self._seed_working_log(tmp_path)
         append_working_log_row(
             "2026-09-14T00:00:00Z", "TCK-REOPEN-TEST", "Original title", "BLOCKED", "First write.",
-            "stored_artifacts/TCK-REOPEN-TEST", path=log_path,
+            "agent-working/stored_artifacts/TCK-REOPEN-TEST", path=log_path,
         )
 
         result = self._run(

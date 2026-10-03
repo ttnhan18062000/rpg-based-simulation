@@ -7,7 +7,7 @@ This is the mirror-opposite design choice from OccupationChangeGoalScorer
 zero variance by construction -- reusing that pattern here would collapse every same-tick,
 same-region child to the identical occupation, which is the exact convergence bug this
 mechanism's metamorphic test (tests/unit/strategic/test_coming_of_age_archetype_choice.py)
-exists to prevent. See staging_artifacts/TCK-20260902-COMING-OF-AGE-ARCHETYPE-CHOICE/plan.md
+exists to prevent. See agent-working/staging_artifacts/TCK-20260902-COMING-OF-AGE-ARCHETYPE-CHOICE/plan.md
 Decisions 1-5 for the full design rationale.
 """
 from __future__ import annotations

@@ -40,7 +40,7 @@ def _write_log(tmp_path: Path, body: str) -> Path:
 def test_clean_row_parses_with_expected_fields(tmp_path):
     log = _write_log(
         tmp_path,
-        '2026-07-06T00:00:00Z,TCK-A,A,DONE,"Did a thing, with a comma",stored_artifacts/TCK-A\n',
+        '2026-07-06T00:00:00Z,TCK-A,A,DONE,"Did a thing, with a comma",agent-working/stored_artifacts/TCK-A\n',
     )
     result = parse_working_log(log)
 
@@ -53,14 +53,14 @@ def test_clean_row_parses_with_expected_fields(tmp_path):
         "title": "A",
         "status": "DONE",
         "summary": "Did a thing, with a comma",
-        "artifacts_path": "stored_artifacts/TCK-A",
+        "artifacts_path": "agent-working/stored_artifacts/TCK-A",
     }
 
 
 _QUOTE_DESYNC_MISMATCH_ROW = (
     '2026-08-21T08:33:52Z,TCK-D,"Title text","DONE",'
     '"summary one, exposed as result["mode_sequence"], summary two",'
-    '"stored_artifacts/TCK-D/"\n'
+    '"agent-working/stored_artifacts/TCK-D/"\n'
 )
 
 
@@ -259,7 +259,7 @@ def test_run_validation_reports_ambiguous_row_count(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Step 3 — integration tests against the real committed tickets/working_log.csv
+# Step 3 — integration tests against the real committed agent-working/tickets/working_log.csv
 # ---------------------------------------------------------------------------
 
 

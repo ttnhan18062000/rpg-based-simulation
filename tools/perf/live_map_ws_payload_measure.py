@@ -12,7 +12,7 @@ encodings, over two buckets:
   NOT a live WS capture).
 
 One known gap this script routes around without touching production code
-(see staging_artifacts/TCK-20260821-LIVE-MAP-PERF-VALIDATION/investigation.md):
+(see agent-working/staging_artifacts/TCK-20260821-LIVE-MAP-PERF-VALIDATION/investigation.md):
 `python3 -m src serve --entities N` silently ignores `--entities`
 (`src/cli/entry.py::_run_serve` never reads `args.entities`). This script
 never shells out to `-m src serve`; its own `--internal-serve` mode
@@ -60,7 +60,7 @@ simplification given this sandbox's tight memory budget.
 
 Auth: reuses the exact `RPG_API_KEY_HASHES` env var + `X-API-Key` header
 pattern already proven end-to-end in tests/api/test_ws_protocol.py and
-tickets/done/TCK-20260823-LIVE-TEST-API-KEY-AUTH.md.
+agent-working/tickets/done/TCK-20260823-LIVE-TEST-API-KEY-AUTH.md.
 
 Must run under the repo's pydantic-capable interpreter:
     .venv/bin/python3 tools/perf/live_map_ws_payload_measure.py --entities 500

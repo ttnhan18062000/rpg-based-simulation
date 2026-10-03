@@ -4,7 +4,7 @@ around tools/hybrid_retrieval.py, tools/retrieval_cache.py, tools/context_packet
 
 Built for TCK-20260729-RETRIEVAL-EVENT-SCHEMA-EMIT. Every test that exercises
 emit_retrieval_event() or any wrap_*() function passes an explicit tmp_path-scoped events_file —
-never the real agent-monitoring/events.jsonl (test_plan.md's "No-real-run_id-pollution guard").
+never the real agent-working/agent-monitoring/events.jsonl (test_plan.md's "No-real-run_id-pollution guard").
 """
 from __future__ import annotations
 
@@ -227,7 +227,7 @@ class TestEmitRetrievalEvent:
         (TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY removed it, replacing it with a
         write-time-computed local inside record_events.py::main()) — this default must
         reproduce that same current-ISO-week target, not the old flat
-        agent-monitoring/events.jsonl path (TCK-20260904-HOTFIX-RETRIEVAL-TOOLS-CONSUMERS-
+        agent-working/agent-monitoring/events.jsonl path (TCK-20260904-HOTFIX-RETRIEVAL-TOOLS-CONSUMERS-
         DEAD-CONSTANTS). TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX further extended that
         target to a per-batch (git branch) file, superseding the prior per-run_id key -- both
         calls below now happen on the SAME real git branch, so this test still proves the two

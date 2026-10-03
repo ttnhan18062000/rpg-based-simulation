@@ -2,11 +2,11 @@
 # tools/agent-monitoring/vocabulary.py's WORKFLOW_PHASES["implement-ticket"] /
 # WORKFLOW_AGENTS["implement-ticket"], per docs/architecture/agent_orchestration_contract.md's
 # Source Ownership decision. See tests/agent_orchestration/test_bootstrap_vocabulary_equality.py
-# for the one-time bootstrap-correctness check and agent-orchestration/README.md for why this is
+# for the one-time bootstrap-correctness check and agent-working/agent-orchestration/README.md for why this is
 # one-time, not an ongoing sync.
 #
 # tier_behavior per phase (verified against .claude/workflows/implement-ticket.js's real branch
-# structure, see staging_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-CORE/investigation.md):
+# structure, see agent-working/staging_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-CORE/investigation.md):
 #   full              — phase runs its full agent call and writes an 'ok'/'failed' event.
 #   skipped_event     — phase is not executed, but an event with status 'skipped' is still
 #                        written to events.jsonl (the phase is not literally absent from the log).
@@ -22,7 +22,7 @@ continuation_policy:
     invocation: DONE and EPIC_SCOPED are completion outcomes; all others are stop
     outcomes. Continuation never grants scope, ticket-selection, gate-bypass, or
     live/destructive/provider-activation authority. In Finalize, preserve the
-    canonical order: update ticket status, move ticket to tickets/done, append
+    canonical order: update ticket status, move ticket to agent-working/tickets/done, append
     exactly one working_log row, then migrate staging artifacts and regenerate
     the registry; never pre-write a completion row before the ticket move.
   non_gates:

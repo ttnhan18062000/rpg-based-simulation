@@ -12,7 +12,7 @@ tags: [cognition, self-model]
 # TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY
 
 > **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
-> **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
+> **lifecycle correction only** — the ticket had sat in `agent-working/tickets/inprogress/` with no further
 > content change since 2026-09-14 (verified via `git log --follow`, not file mtime), and its
 > presence there was firing this repo's sidecar-check hook on every `Edit`/`Write` in every
 > concurrent session on this machine. **Nothing about the ticket's own substance was
@@ -268,7 +268,7 @@ in `generator.py`/`service.py` (`SCOUT_LOCATION` confirmed absent from all of th
 
 ## Files Changed
 None — investigation and disposition only, both passes; no `src/` or `tests/` changes.
-`tickets/todos/TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER.md` — new, filed.
+`agent-working/tickets/todos/TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER.md` — new, filed.
 
 ## Completion Summary
 Checked for a real belief source before building, per instruction, rather than wiring against an

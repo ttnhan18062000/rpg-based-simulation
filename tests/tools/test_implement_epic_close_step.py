@@ -3,7 +3,7 @@
 
 Before this ticket, `epic_id` mode had no equivalent of the folder-mode cleanup block: an epic
 ticket's own frontmatter/body status/location were never touched by any workflow, so every epic
-ticket reached `tickets/done/` by hand or in a batch commit (confirmed in this ticket's own
+ticket reached `agent-working/tickets/done/` by hand or in a batch commit (confirmed in this ticket's own
 investigation.md, citing TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT's 91.7% drift
 finding for `implement-epic`-run epics). The first 7 tests are raw-source-text-parsing pins,
 following tests/tools/test_finalize_phase_status_instruction_pin.py's established pattern for this
@@ -39,7 +39,7 @@ def test_epic_close_step_sets_phase_done_and_status_historical():
     # (`\`phase: done\`` on disk), so the raw text search must match that literal escaping.
     assert r"set \`phase: done\` and \`status: historical\`" in text, (
         "the epic-close step must set the same canonical frontmatter values "
-        "check_ticket_location_consistency() requires for tickets/done/"
+        "check_ticket_location_consistency() requires for agent-working/tickets/done/"
     )
 
 
@@ -60,13 +60,13 @@ def test_epic_close_step_sets_body_status_done_not_epic_scoped():
 
 def test_epic_close_step_moves_file_to_tickets_done():
     # TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT: this pin moved from the literal
-    # 'mv "${discovery.epic_ticket_path}" "tickets/done/${epicId}.md"' (the caller-side variable
+    # 'mv "${discovery.epic_ticket_path}" "agent-working/tickets/done/${epicId}.md"' (the caller-side variable
     # names) to the shared buildEpicCloseInstructions() function's OWN parameter names, now that
     # both the epic_id-mode block and folder mode's own epic-parent handling call one shared
     # function instead of each hand-writing this mv. A function body's own template literal
     # necessarily uses its own parameter names, not a caller's expression text, so this rename is
     # a mechanical, unavoidable consequence of that extraction — not a change to what the check
-    # proves (a `mv` into a `tickets/done/...` destination still literally exists in the source).
+    # proves (a `mv` into a `agent-working/tickets/done/...` destination still literally exists in the source).
     # The two tests below independently confirm each call site still feeds the shared function the
     # right values, closing the gap this rename alone would otherwise leave.
     text = _read()
@@ -78,22 +78,22 @@ def test_epic_close_step_moves_file_to_tickets_done():
 def test_epic_id_mode_call_site_passes_a_real_move_destination():
     # Unlike folder mode (see test_folder_mode_call_site_passes_no_move_destination below),
     # epic_id mode's epic ticket has no surrounding folder of its own — this call site is the
-    # only thing that ever archives it, so it must pass a real tickets/done/<epicId>.md
+    # only thing that ever archives it, so it must pass a real agent-working/tickets/done/<epicId>.md
     # destination, not the falsy value folder mode uses to skip an individual mv.
     text = _read()
     assert (
         "buildEpicCloseInstructions(epicId, discovery.epic_ticket_path, ticketIds.length, "
-        "`tickets/done/${epicId}.md`)"
-    ) in text, "epic_id-mode call site must pass a real tickets/done/<epicId>.md moveDestination"
+        "`agent-working/tickets/done/${epicId}.md`)"
+    ) in text, "epic_id-mode call site must pass a real agent-working/tickets/done/<epicId>.md moveDestination"
 
 
 def test_folder_mode_call_site_passes_no_move_destination():
     # TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT (agent-working-design review): if
     # folder mode passed a real destination here the way epic_id mode does, the epic parent would
-    # land FLAT under tickets/done/ instead of staying inside the folder the very next step
+    # land FLAT under agent-working/tickets/done/ instead of staying inside the folder the very next step
     # archives — stranding it outside both existing precedents
-    # (tickets/done/mechanism-registry/TCK-20260915-EPIC-MECHANISM-REGISTRY.md,
-    # tickets/done/world-rendering-core/TCK-20260820-EPIC-WORLD-RENDERING-CORE.md) and CLAUDE.md's
+    # (agent-working/tickets/done/mechanism-registry/TCK-20260915-EPIC-MECHANISM-REGISTRY.md,
+    # agent-working/tickets/done/world-rendering-core/TCK-20260820-EPIC-WORLD-RENDERING-CORE.md) and CLAUDE.md's
     # own "move the entire folder" rule. Passing a falsy 4th argument is what makes
     # buildEpicCloseInstructions emit its "do NOT move this file by itself" branch instead.
     text = _read()
@@ -116,11 +116,11 @@ def test_folder_cleanup_closes_epic_parent_before_moving_the_whole_folder():
     # the disclosed limit of these pins): the epic-parent close instructions must be textually
     # positioned, and thus dispatched, before the folder-level mv, since the parent's frontmatter
     # (phase: done/status: historical) must already be correct by the time the surrounding mv
-    # carries it into tickets/done/<folder>/ — a real agent executing "Step 3... Step 4..." in
+    # carries it into agent-working/tickets/done/<folder>/ — a real agent executing "Step 3... Step 4..." in
     # order satisfies this; this test cannot itself execute the .js file (no JS runtime here).
     text = _read()
     close_call_idx = text.find('Step 3 — if "epic_parent" is not null')
-    folder_mv_idx = text.find('"tickets/done/${folderName}"')
+    folder_mv_idx = text.find('"agent-working/tickets/done/${folderName}"')
     assert close_call_idx != -1
     assert folder_mv_idx != -1
     assert close_call_idx < folder_mv_idx, (
@@ -137,7 +137,7 @@ def test_epic_close_step_is_guarded_on_epic_id_mode():
         "the epic-close step must be guarded on epicId, not folder -- folder mode's own "
         "epic_ticket_path is always '' because folder mode never looked for its epic parent, not "
         "because the folder can't contain one (TCK-20260915-EPIC-MECHANISM-REGISTRY.md sat inside "
-        "tickets/todos/mechanism-registry/ until #209 archived it by hand). Folder mode now closes "
+        "agent-working/tickets/todos/mechanism-registry/ until #209 archived it by hand). Folder mode now closes "
         "its own epic parent via the folder-cleanup block below instead "
         "(TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT) -- this guard staying on "
         "epicId only means epic_id mode's file-known-ahead-of-time close path is a separate one"
@@ -186,7 +186,7 @@ def test_epic_close_step_uses_a_fresh_negative_sidecar_seq():
 # real epic ticket ends up correctly transformed; they'd pass even if the dispatched agent
 # ignored the prompt entirely. This test closes that gap for the one part of the transformation
 # that IS pure, factorable logic: given the exact target values the prompt specifies (`phase:
-# done`, `status: historical`, body `## Status: DONE`, moved to tickets/done/), does the result
+# done`, `status: historical`, body `## Status: DONE`, moved to agent-working/tickets/done/), does the result
 # actually satisfy this repo's own real validator? It does NOT prove the dispatched agent
 # performs this transformation correctly at runtime -- that remains unverified, disclosed
 # honestly in the ticket's own Test Summary. TCK-20260907's `check_ticket_location_consistency()`
@@ -231,7 +231,7 @@ def test_epic_close_step_target_values_satisfy_the_real_location_validator(tmp_p
     epic-close block) against a synthetic epic ticket starting from each observed real-corpus
     drift shape (EPIC_SCOPED, OPEN, and already-DONE as a no-op control), then asserts the
     result satisfies validate_frontmatter.py's real check_ticket_location_consistency() -- the
-    same function TCK-20260907's own corpus test runs over all of tickets/done/ at CI.
+    same function TCK-20260907's own corpus test runs over all of agent-working/tickets/done/ at CI.
     """
     from validate_frontmatter import check_ticket_location_consistency, extract_frontmatter
 
@@ -246,7 +246,7 @@ def test_epic_close_step_target_values_satisfy_the_real_location_validator(tmp_p
     )
 
     # Apply exactly what Step 2/Step 3 of the close-step prompt specifies: frontmatter ->
-    # historical/done, body ## Status -> DONE (unconditionally), then move to tickets/done/.
+    # historical/done, body ## Status -> DONE (unconditionally), then move to agent-working/tickets/done/.
     text = source.read_text()
     text = re.sub(r"^status:.*$", "status: historical", text, count=1, flags=re.MULTILINE)
     text = re.sub(r"^phase:.*$", "phase: done", text, count=1, flags=re.MULTILINE)
@@ -275,14 +275,14 @@ def test_epic_close_step_target_values_satisfy_the_real_location_validator(tmp_p
 
 def test_folder_mode_epic_parent_target_values_satisfy_the_real_location_validator(tmp_path):
     """AC1 (TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT): folder mode's own variant
-    of the fixture-level check above -- the epic parent starts INSIDE a tickets/todos/<folder>/,
+    of the fixture-level check above -- the epic parent starts INSIDE a agent-working/tickets/todos/<folder>/,
     gets closed in place (frontmatter/body only, no individual mv -- Step 3's "do NOT move this
     file by itself" branch when moveDestination is falsy), then the surrounding folder move
-    (a real `mv <folder> tickets/done/<folder>/`, simulated here) carries it to
-    tickets/done/<folder>/<EPIC-ID>.md. Confirms check_ticket_location_consistency() still passes
-    for that NESTED done/ path, not just the flat tickets/done/<EPIC-ID>.md path the other test
+    (a real `mv <folder> agent-working/tickets/done/<folder>/`, simulated here) carries it to
+    agent-working/tickets/done/<folder>/<EPIC-ID>.md. Confirms check_ticket_location_consistency() still passes
+    for that NESTED done/ path, not just the flat agent-working/tickets/done/<EPIC-ID>.md path the other test
     above covers -- `_ticket_directory()` only looks at the path segment immediately below
-    `tickets/`, so nesting one level deeper inside an archived folder must not matter, but this is
+    `agent-working/tickets/`, so nesting one level deeper inside an archived folder must not matter, but this is
     the one test that actually proves it rather than assuming it.
     """
     from validate_frontmatter import check_ticket_location_consistency, extract_frontmatter
@@ -316,6 +316,6 @@ def test_folder_mode_epic_parent_target_values_satisfy_the_real_location_validat
     assert fm.get("status") == "historical" and fm.get("phase") == "done"
     errors = check_ticket_location_consistency(str(dest), fm)
     assert errors == [], (
-        f"a nested tickets/done/<folder>/<EPIC>.md path must satisfy the real validator just like "
-        f"the flat tickets/done/<EPIC>.md path does, got: {errors}"
+        f"a nested agent-working/tickets/done/<folder>/<EPIC>.md path must satisfy the real validator just like "
+        f"the flat agent-working/tickets/done/<EPIC>.md path does, got: {errors}"
     )

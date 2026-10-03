@@ -48,7 +48,7 @@ from gate_checks.done_checker_static import (  # noqa: E402
 )
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
-_PROTECTED_PATHS = ["docs/REGISTRY.yaml", "tickets/working_log.csv", "agent-monitoring/data"]
+_PROTECTED_PATHS = ["docs/REGISTRY.yaml", "agent-working/tickets/working_log.csv", "agent-working/agent-monitoring/data"]
 
 
 def _protected_paths_git_status() -> str:
@@ -485,7 +485,7 @@ def _write_csv(path: Path, rows):
 
 def test_working_log_no_row_yet_passes_when_absent(tmp_path):
     csv_path = tmp_path / "working_log.csv"
-    _write_csv(csv_path, [["2026-07-01T00:00:00Z", "TCK-OTHER", "Other", "DONE", "x", "stored_artifacts/TCK-OTHER"]])
+    _write_csv(csv_path, [["2026-07-01T00:00:00Z", "TCK-OTHER", "Other", "DONE", "x", "agent-working/stored_artifacts/TCK-OTHER"]])
 
     status, _ = check_working_log_no_row_yet("TCK-FAKE", csv_path=csv_path)
     assert status == "PASS"
@@ -493,7 +493,7 @@ def test_working_log_no_row_yet_passes_when_absent(tmp_path):
 
 def test_working_log_no_row_yet_fails_with_duplicate_wording(tmp_path):
     csv_path = tmp_path / "working_log.csv"
-    _write_csv(csv_path, [["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "stored_artifacts/TCK-FAKE"]])
+    _write_csv(csv_path, [["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "agent-working/stored_artifacts/TCK-FAKE"]])
 
     status, evidence = check_working_log_no_row_yet("TCK-FAKE", csv_path=csv_path)
     assert status == "FAIL"
@@ -505,7 +505,7 @@ def test_working_log_no_row_yet_detects_malformed_column_order(tmp_path):
     csv_path = tmp_path / "working_log.csv"
     # Malformed row: ticket_id shifted into column 1 (timestamp's slot), per
     # TCK-20260705-WORKING-LOG-BACKFILL's Reason A finding.
-    _write_csv(csv_path, [["TCK-FAKE", "2026-07-01", "standard", "bug", "x", "stored_artifacts/TCK-FAKE"]])
+    _write_csv(csv_path, [["TCK-FAKE", "2026-07-01", "standard", "bug", "x", "agent-working/stored_artifacts/TCK-FAKE"]])
 
     status, _ = check_working_log_no_row_yet("TCK-FAKE", csv_path=csv_path)
     assert status == "FAIL"
@@ -523,8 +523,8 @@ def test_working_log_exactly_one_row_zero_case_fails(tmp_path):
 def test_working_log_exactly_one_row_duplicate_case_fails_distinct_wording(tmp_path):
     csv_path = tmp_path / "working_log.csv"
     _write_csv(csv_path, [
-        ["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "stored_artifacts/TCK-FAKE"],
-        ["2026-07-02T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "stored_artifacts/TCK-FAKE"],
+        ["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "agent-working/stored_artifacts/TCK-FAKE"],
+        ["2026-07-02T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "agent-working/stored_artifacts/TCK-FAKE"],
     ])
 
     status, evidence = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path)
@@ -535,7 +535,7 @@ def test_working_log_exactly_one_row_duplicate_case_fails_distinct_wording(tmp_p
 
 def test_working_log_exactly_one_row_passes(tmp_path):
     csv_path = tmp_path / "working_log.csv"
-    _write_csv(csv_path, [["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "stored_artifacts/TCK-FAKE"]])
+    _write_csv(csv_path, [["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "agent-working/stored_artifacts/TCK-FAKE"]])
 
     status, _ = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path)
     assert status == "PASS"
@@ -548,7 +548,7 @@ def test_working_log_exactly_one_row_legitimate_reopen_passes(tmp_path):
     csv_path = tmp_path / "working_log.csv"
     _write_csv(csv_path, [
         ["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "BLOCKED", "investigation complete, pending review", "none"],
-        ["2026-07-05T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "reopened and resolved", "stored_artifacts/TCK-FAKE"],
+        ["2026-07-05T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "reopened and resolved", "agent-working/stored_artifacts/TCK-FAKE"],
     ])
 
     status, evidence = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path)
@@ -577,7 +577,7 @@ def test_working_log_exactly_one_row_three_statuses_no_duplicate_passes(tmp_path
     _write_csv(csv_path, [
         ["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "BLOCKED", "x", "none"],
         ["2026-07-03T00:00:00Z", "TCK-FAKE", "Fake", "INPROGRESS", "y", "none"],
-        ["2026-07-05T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "z", "stored_artifacts/TCK-FAKE"],
+        ["2026-07-05T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "z", "agent-working/stored_artifacts/TCK-FAKE"],
     ])
 
     status, _ = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path)
@@ -618,7 +618,7 @@ def test_working_log_exactly_one_row_passes_via_pending_shard_only(tmp_path):
     data_root = tmp_path / AGENT_MONITORING / "data"
     _write_working_log_shard(data_root, "some-branch", "2026-W27", {
         "timestamp": "2026-07-01T00:00:00Z", "ticket_id": "TCK-FAKE", "title": "Fake",
-        "status": "DONE", "summary": "x", "artifacts_path": "stored_artifacts/TCK-FAKE",
+        "status": "DONE", "summary": "x", "artifacts_path": "agent-working/stored_artifacts/TCK-FAKE",
     })
 
     status, _ = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path, data_root=data_root)
@@ -636,7 +636,7 @@ def test_working_log_exactly_one_row_reopen_across_csv_and_pending_shard_passes(
     data_root = tmp_path / AGENT_MONITORING / "data"
     _write_working_log_shard(data_root, "some-branch", "2026-W27", {
         "timestamp": "2026-07-05T00:00:00Z", "ticket_id": "TCK-FAKE", "title": "Fake",
-        "status": "DONE", "summary": "reopened and resolved", "artifacts_path": "stored_artifacts/TCK-FAKE",
+        "status": "DONE", "summary": "reopened and resolved", "artifacts_path": "agent-working/stored_artifacts/TCK-FAKE",
     })
 
     status, evidence = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path, data_root=data_root)
@@ -650,12 +650,12 @@ def test_working_log_exactly_one_row_duplicate_across_csv_and_pending_shard_fail
     pending in a shard -- must still FAIL, exactly as if both were in the same CSV."""
     csv_path = tmp_path / "working_log.csv"
     _write_csv(csv_path, [
-        ["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "First write.", "stored_artifacts/TCK-FAKE"],
+        ["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "First write.", "agent-working/stored_artifacts/TCK-FAKE"],
     ])
     data_root = tmp_path / AGENT_MONITORING / "data"
     _write_working_log_shard(data_root, "some-branch", "2026-W27", {
         "timestamp": "2026-07-01T00:05:00Z", "ticket_id": "TCK-FAKE", "title": "Fake",
-        "status": "DONE", "summary": "Second write.", "artifacts_path": "stored_artifacts/TCK-FAKE",
+        "status": "DONE", "summary": "Second write.", "artifacts_path": "agent-working/stored_artifacts/TCK-FAKE",
     })
 
     status, evidence = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path, data_root=data_root)
@@ -884,7 +884,7 @@ def test_run_static_precheck_surfaces_fail_not_masked(tmp_path, monkeypatch):
     _scaffold_precheck_repo(tmp_path)
     # Break one check: pre-existing working_log row for this ticket.
     csv_path = tmp_path / TICKETS / "working_log.csv"
-    _write_csv(csv_path, [["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "stored_artifacts/TCK-FAKE"]])
+    _write_csv(csv_path, [["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "agent-working/stored_artifacts/TCK-FAKE"]])
     monkeypatch.chdir(tmp_path)
 
     results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
@@ -933,7 +933,7 @@ def test_done_checker_new_check_wired_and_returns_pass_with_evidence(tmp_path, m
     # TCK-20260904-MONITORING-TEMPORAL-WEEK-CONSISTENCY-CHECK: the new 8th Part A
     # check must be present, must always PASS (report-only, never blocks a ticket
     # close), and must degrade gracefully against a fixture repo that creates no
-    # agent-monitoring/data/ directory at all — mirroring
+    # agent-working/agent-monitoring/data/ directory at all — mirroring
     # verify_referential_integrity.py's own load_all_weeks() precedent (an empty
     # glob, not an exception, for a missing data_dir).
     _scaffold_precheck_repo(tmp_path)
@@ -986,7 +986,7 @@ def test_classify_checklist_failure_tag_registry_rejection(tmp_path, monkeypatch
         {
             "condition": "frontmatter_valid",
             "status": "FAIL",
-            "evidence": "tickets/inprogress/TCK-FAKE.md: tags: 'totally-unregistered-test-tag-xyz' "
+            "evidence": "agent-working/tickets/inprogress/TCK-FAKE.md: tags: 'totally-unregistered-test-tag-xyz' "
             "is not in the tag registry — register it first",
         },
     ]
@@ -1105,7 +1105,7 @@ def test_migration_complete_staging_not_cleaned_fails(tmp_path):
 def test_migration_complete_epic_is_na(tmp_path):
     """TCK-20260921-NESTED-EPIC-FOLDER-REGISTRY-VISIBILITY-GAP: epic tier gets the same NA
     treatment as hotfix -- no real epic ticket, flat or folder-closed, has ever had its own
-    stored_artifacts/{ticket_id}/; an epic's investigation/plan/test_plan work belongs to its
+    agent-working/stored_artifacts/{ticket_id}/; an epic's investigation/plan/test_plan work belongs to its
     child tickets, not the epic ticket itself."""
     status, _ = check_migration_complete(
         "TCK-FAKE", "epic",
@@ -1154,7 +1154,7 @@ def test_ticket_finalized_fails_when_not_moved_to_done(tmp_path, monkeypatch):
 
 def test_ticket_finalized_passes_for_folder_closed_epic(tmp_path, monkeypatch):
     """TCK-20260921-NESTED-EPIC-FOLDER-REGISTRY-VISIBILITY-GAP: an epic ticket closed via
-    CLAUDE.md's own folder-move rule lives at tickets/done/{folder}/{ticket_id}.md, one level
+    CLAUDE.md's own folder-move rule lives at agent-working/tickets/done/{folder}/{ticket_id}.md, one level
     deep -- must PASS, not FAIL on a flat-path-only check."""
     (tmp_path / TICKETS / "done" / "some-epic").mkdir(parents=True)
     (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
@@ -1177,7 +1177,7 @@ def test_ticket_finalized_prefers_flat_path_over_nested_if_both_exist(tmp_path, 
 
     status, evidence = check_ticket_finalized("TCK-FAKE")
     assert status == "PASS"
-    assert evidence.startswith("tickets/done/TCK-FAKE.md")
+    assert evidence.startswith("agent-working/tickets/done/TCK-FAKE.md")
 
 
 def test_ticket_finalized_still_fails_when_folder_nested_but_also_in_inprogress(tmp_path, monkeypatch):
@@ -1206,7 +1206,7 @@ def _scaffold_finalize_repo(tmp_path, ticket_id="TCK-FAKE"):
     _write_artifact_dir(stored_dir, ticket_id)
 
     csv_path = tmp_path / TICKETS / "working_log.csv"
-    _write_csv(csv_path, [["2026-07-05T00:00:00Z", ticket_id, "Fake", "DONE", "x", f"stored_artifacts/{ticket_id}"]])
+    _write_csv(csv_path, [["2026-07-05T00:00:00Z", ticket_id, "Fake", "DONE", "x", f"agent-working/stored_artifacts/{ticket_id}"]])
 
 
 def test_run_finalize_selfcheck_leaves_a_pending_shard_and_canonical_file_untouched(tmp_path, monkeypatch):
@@ -1284,8 +1284,8 @@ def test_run_finalize_selfcheck_zero_rows_fails(tmp_path, monkeypatch):
 def test_run_finalize_selfcheck_duplicate_rows_fails(tmp_path, monkeypatch):
     _scaffold_finalize_repo(tmp_path)
     _write_csv(tmp_path / TICKETS / "working_log.csv", [
-        ["2026-07-05T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "stored_artifacts/TCK-FAKE"],
-        ["2026-07-05T01:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "stored_artifacts/TCK-FAKE"],
+        ["2026-07-05T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "agent-working/stored_artifacts/TCK-FAKE"],
+        ["2026-07-05T01:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "agent-working/stored_artifacts/TCK-FAKE"],
     ])
     monkeypatch.chdir(tmp_path)
 
@@ -1536,8 +1536,8 @@ def test_check_registry_entry_regenerated_applies_under_hotfix_tier(tmp_path, mo
 
 
 def test_registry_entry_check_ordering_guard_fails_if_ticket_still_inprogress(tmp_path, monkeypatch):
-    # collect_tickets() only walks tickets/done/*.md — a ticket still sitting in
-    # tickets/inprogress/ must not be found, guarding against a future regression where this check
+    # collect_tickets() only walks agent-working/tickets/done/*.md — a ticket still sitting in
+    # agent-working/tickets/inprogress/ must not be found, guarding against a future regression where this check
     # is accidentally moved to run before the Finalize agent's own move-to-done step.
     (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
     _write_ticket(tmp_path / TICKETS / "inprogress" / "TCK-FAKE.md", "TCK-FAKE")
@@ -2134,7 +2134,7 @@ Fixture ticket
 
 def _write_reverse_ticket(
     tmp_path, ticket_id, files_changed="None.", related_docs="None.", tier="standard",
-    location="tickets/inprogress",
+    location="agent-working/tickets/inprogress",
 ) -> Path:
     directory = tmp_path / location
     directory.mkdir(parents=True, exist_ok=True)
@@ -2390,7 +2390,7 @@ def test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident(tmp_pat
     # docs/mechanics/02_combat_laws.md coverage for the is_hostile_compat extension, but the
     # ticket's own Files Changed/Related Docs never recorded it (RETRO-2026-W36's "What to
     # change?" note). This is a deliberately-incomplete fixture reconstruction, not a copy of the
-    # real post-patch tickets/done/TCK-20260831-RACE-RELATIONS-MATRIX.md file.
+    # real post-patch agent-working/tickets/done/TCK-20260831-RACE-RELATIONS-MATRIX.md file.
     # TCK-20260929-DONE-CHECKER-POST-CLOSURE-FALSE-FAILS: the reverse half now calls
     # _git_status_touched_paths()/_git_ticket_commits_touched_paths() directly (so sibling-
     # attribution and the REGISTRY.yaml exclusion can apply to only the reverse check) instead of
@@ -2475,13 +2475,13 @@ def test_sibling_attribution_unclaimed_doc_still_fails_both(tmp_path, monkeypatc
 
 
 def test_sibling_attribution_only_applies_to_done_tickets_also_in_uncommitted_status(tmp_path, monkeypatch):
-    """A ticket in tickets/done/ that is NOT itself part of the uncommitted git status (an
+    """A ticket in agent-working/tickets/done/ that is NOT itself part of the uncommitted git status (an
     already-committed prior closure) is not treated as a same-batch sibling — its declared docs
     must not excuse an otherwise-undeclared path for the ticket being checked."""
     _write_investigation(tmp_path / STAGING_ARTIFACTS, "TCK-CHECKED", "None.")
     _write_reverse_ticket(tmp_path, "TCK-CHECKED", files_changed="None.")
     # TCK-PRIOR is a done ticket, but NOT in the mocked uncommitted status below.
-    _write_reverse_ticket(tmp_path, "TCK-PRIOR", files_changed="- `docs/a.md`: prior work", location="tickets/done")
+    _write_reverse_ticket(tmp_path, "TCK-PRIOR", files_changed="- `docs/a.md`: prior work", location="agent-working/tickets/done")
     monkeypatch.chdir(tmp_path)
     _mock_uncommitted(monkeypatch, {"docs/a.md"})
 
@@ -2647,9 +2647,9 @@ def test_cli_exits_zero_and_prints_pass_when_all_precheck_conditions_pass(tmp_pa
 
 def test_cli_bare_default_skips_precheck_for_an_already_closed_ticket(tmp_path):
     """AC1 (TCK-20260929-DONE-CHECKER-POST-CLOSURE-FALSE-FAILS): a ticket already in
-    tickets/done/ with a clean finalize state gives RESULT: PASS under the bare CLI (no --part),
+    agent-working/tickets/done/ with a clean finalize state gives RESULT: PASS under the bare CLI (no --part),
     with a note explaining precheck was skipped — precheck's own conditions (ticket_location,
-    working_log_no_row_yet, etc.) assume the ticket is still in tickets/inprogress/ and would
+    working_log_no_row_yet, etc.) assume the ticket is still in agent-working/tickets/inprogress/ and would
     false-FAIL here otherwise.
     """
     _scaffold_finalize_repo(tmp_path, ticket_id="TCK-CLOSED-FAKE")
@@ -2667,7 +2667,7 @@ def test_cli_bare_default_skips_precheck_for_an_already_closed_ticket(tmp_path):
 def test_cli_explicit_part_both_still_runs_precheck_on_a_closed_ticket(tmp_path):
     """AC2: --part both set explicitly forces precheck to run even post-closure, so behavior is
     unchanged when asked for — precheck is expected to report real FAILs here (the ticket is no
-    longer in tickets/inprogress/), which is correct: the point is that precheck RAN, not that it
+    longer in agent-working/tickets/inprogress/), which is correct: the point is that precheck RAN, not that it
     passed.
     """
     _scaffold_finalize_repo(tmp_path, ticket_id="TCK-CLOSED-FAKE-2")

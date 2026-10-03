@@ -341,7 +341,7 @@ serializes every field on `WorldCompositionSpec` (including the new one, default
 onto `NormalizedWorldComposition` raises `pydantic.ValidationError` on every call to
 `normalize()`, for every world composition, not just the target one.** This is the exact omission
 the FACTION ticket's architecture review caught before it shipped (see
-`stored_artifacts/TCK-20260702-SIMQ-UPLIFT2-FACTION/plan.md`, "Review Fix Log"). Treat the
+`agent-working/stored_artifacts/TCK-20260702-SIMQ-UPLIFT2-FACTION/plan.md`, "Review Fix Log"). Treat the
 `WorldCompositionSpec` field and its `NormalizedWorldComposition` mirror as one atomic change —
 never land one without the other.
 

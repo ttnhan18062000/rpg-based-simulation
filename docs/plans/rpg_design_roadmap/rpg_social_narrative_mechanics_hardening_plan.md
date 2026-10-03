@@ -101,7 +101,7 @@ epic doc's own citation for idea 22's test design (`grudge ≥ 3.0`) — not a d
    `tests/unit/domains/faction/test_betrayal_ledger.py`) run directly and confirmed passing (17/17).
    Unlike `SUB-327`, no correction was needed here — this batch of citations was accurate as recorded.
 5. **`CanonicalStateHasher` social-field-coverage question — RESOLVED and FIXED, confirmed 2026-09-05.**
-   `TCK-20260902-SOCIAL-CANONICAL-HASH-GAP` (`tickets/done/`) added all 5 missing fields
+   `TCK-20260902-SOCIAL-CANONICAL-HASH-GAP` (`agent-working/tickets/done/`) added all 5 missing fields
    (`debt_history`, `salience_history`, `nemesis_ids`, `place_attachment`, `betrayal_records`) to
    `EntityState.to_canonical_dict()` — confirmed directly present in `src/core/state.py` today, not
    just a recorded finding. Original finding text preserved below for context.

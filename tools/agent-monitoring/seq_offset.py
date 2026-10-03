@@ -9,7 +9,7 @@ session's `seq` values collide with the pre-pause session's, silently aliasing t
 tool-call attribution onto the prior session's `(run_id, seq)` buckets in `tools.jsonl`.
 
 `compute_seq_offset(run_id, events)` looks up the max `seq` this `run_id` already has in
-`agent-monitoring/events.jsonl` (the authoritative 1:1 per-call record — see this ticket's
+`agent-working/agent-monitoring/events.jsonl` (the authoritative 1:1 per-call record — see this ticket's
 investigation.md for why `events.jsonl`, not `tools.jsonl`, is the correct source) so the
 resumed session's numbering can continue past it instead of restarting at 1.
 

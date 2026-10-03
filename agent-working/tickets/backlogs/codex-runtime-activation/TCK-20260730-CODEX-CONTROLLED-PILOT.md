@@ -11,17 +11,17 @@ tags: [ai, workflows, hooks, agent-monitoring, observability, rollback, testing]
 
 # TCK-20260730-CODEX-CONTROLLED-PILOT
 
-> **Physically moved to `tickets/backlogs/codex-runtime-activation/`, 2026-09-22** — this is the
-> newer of two duplicate copies that existed (the older `tickets/todos/codex-runtime-activation/`
+> **Physically moved to `agent-working/tickets/backlogs/codex-runtime-activation/`, 2026-09-22** — this is the
+> newer of two duplicate copies that existed (the older `agent-working/tickets/todos/codex-runtime-activation/`
 > folder copy, missing this section and the 2026-09-20/2026-08-02 notes below, was deleted rather
 > than moved).
 
 > **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
-> **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
+> **lifecycle correction only** — the ticket had sat in `agent-working/tickets/inprogress/` with no further
 > activity since at least 2026-08-14 (its own last recorded content change, per `git log`; its
 > own body's last dated note is 2026-08-02), and its presence there (along with several other
 > stale
-> `tickets/inprogress/` entries) was firing this repo's sidecar-check hook on every `Edit`/`Write`
+> `agent-working/tickets/inprogress/` entries) was firing this repo's sidecar-check hook on every `Edit`/`Write`
 > in every concurrent session on this machine. **Nothing about the ticket's own substance was
 > investigated, debugged, or re-scoped as part of this move** — its Scope, Acceptance Criteria,
 > and Assumptions below are exactly as they were. Anyone picking this up should treat it as
@@ -51,7 +51,7 @@ Use the completed guardrails and the prior activation tickets to conduct at most
 ## Scope
 - Reuse the existing pilot request, sign-off, candidate-selection, enabled-surface, baseline-manifest, and scratch rollback guardrails; do not rebuild or weaken them.
 - Require all predecessor tickets to be DONE with reviewed shadow evidence, a real identity-bearing writer route, a hook policy, and a clean baseline before a candidate is eligible.
-- Require a specific low-risk `pilot_requests/<ticket_id>.yaml` with human owner and rollback plan, no concurrent provider claim, and a fresh independent sign-off.
+- Require a specific low-risk `agent-working/pilot_requests/<ticket_id>.yaml` with human owner and rollback plan, no concurrent provider claim, and a fresh independent sign-off.
 - Permit only the policy-approved enabled surface: `PostToolUse` and shared writer functions `write_line`/`write_lines`.
 - Treat actual live invocation/config enablement as a named final operation requiring contemporaneous user approval; the ordinary implementation workflow must stop before it if approval is absent.
 - Before and after that operation, prove monitoring prefix preservation, provider-attributed visibility in readers/dashboard, and a tested one-action rollback restoring hook-free config with no unintended ticket or monitoring changes.
@@ -81,17 +81,17 @@ Use the completed guardrails and the prior activation tickets to conduct at most
 ## Related Docs
 - docs/plans/archive/agent_infrastructure/current_codex_runtime_status_and_activation_plan.md
 - docs/ai/monitoring_writer_decision.md
-- agent-orchestration/monitoring-schema.yaml
+- agent-working/agent-orchestration/monitoring-schema.yaml
 
 ## Related Stored Artifacts
 None yet.
 
 ## Related Code Areas
-- pilot_requests/
+- agent-working/pilot_requests/
 - tools/agent_codex_pilot_guardrails/
 - tools/agent_replay_codex/
 - tools/agent-monitoring/writer.py
-- agent-monitoring/*.jsonl
+- agent-working/agent-monitoring/*.jsonl
 - .codex/config.toml
 - tests/agent_codex_pilot_guardrails/
 - tests/agent_replay_codex/

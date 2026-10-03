@@ -88,13 +88,13 @@ def _synthetic_snapshot(**overrides):
 
 
 # ---------------------------------------------------------------------------
-# Guard: no test in this file may target the real agent-monitoring/ directory
+# Guard: no test in this file may target the real agent-working/agent-monitoring/ directory
 # ---------------------------------------------------------------------------
 
 
 def test_no_test_target_path_resolves_under_real_agent_monitoring_dir():
     """Guard: no test in this file may hardcode a path under the real repo's
-    agent-monitoring/ directory — every target below must be tmp_path-rooted.
+    agent-working/agent-monitoring/ directory — every target below must be tmp_path-rooted.
 
     Mirrors tests/tools/test_monitoring_writer.py:31-51's literal-source-scan
     pattern exactly (same style forbidden-string list, same
@@ -331,7 +331,7 @@ def test_make_target_runs_successfully_end_to_end(tmp_path):
 
     # The Makefile targets have no built-in path override, so pass one via
     # ARGS (mirroring codebase-health-impact's own ARGS="..." precedent) — the
-    # real agent-monitoring/ directory must never be written to by this test.
+    # real agent-working/agent-monitoring/ directory must never be written to by this test.
     make_history_path = tmp_path / "make_history.jsonl"
     make_result = subprocess.run(
         ["make", "codebase-health-snapshot", f'ARGS=--history-path {make_history_path}'],

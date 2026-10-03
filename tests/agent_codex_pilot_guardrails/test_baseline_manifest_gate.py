@@ -18,7 +18,7 @@ _FILES = ("runs.jsonl", "events.jsonl", "tools.jsonl")
 
 def _build_synthetic_monitoring_dir(tmp_path: Path) -> Path:
     directory = tmp_path / AGENT_MONITORING
-    directory.mkdir()
+    directory.mkdir(parents=True)
     for filename in _FILES:
         (directory / filename).write_text('{"a": 1}\n{"a": 2}\n{"a": 3}\n', encoding="utf-8")
     return directory

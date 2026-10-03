@@ -51,7 +51,7 @@ def test_churn_exclusion_ignores_synthetic_bookkeeping_noise(tmp_path):
     baseline_churn = chb.compute_churn_lines_changed(tmp_path)
     assert baseline_churn > 0
 
-    (tmp_path / AGENT_MONITORING).mkdir()
+    (tmp_path / AGENT_MONITORING).mkdir(parents=True)
     (tmp_path / AGENT_MONITORING / "events.jsonl").write_text(
         "\n".join(f'{{"n": {i}}}' for i in range(5000)), encoding="utf-8"
     )

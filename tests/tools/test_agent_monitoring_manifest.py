@@ -1,6 +1,6 @@
 """Tests for tools/agent-monitoring/manifest.py (TCK-20260721-BASELINE-MONITORING-MANIFEST).
 
-Runs against the REAL agent-monitoring/ directory — never a tmp_path copy, which
+Runs against the REAL agent-working/agent-monitoring/ directory — never a tmp_path copy, which
 would make the zero-mutation and streaming-guard assertions vacuous (nothing real
 to prove wasn't loaded wholesale or mutated). Mirrors
 tests/agent_replay/test_no_mutation_snapshot.py's dirty-tree-aware two-branch
@@ -64,7 +64,7 @@ def test_build_manifest_shape_against_real_corpus():
 def test_manifest_cli_reproducible_byte_identical_across_two_runs(tmp_path):
     # Frozen snapshot of the real corpus (TCK-20260919-AGENT-MONITORING-MANIFEST-
     # REPRODUCIBILITY-CI-FAILURE): this test asserts the CLI is deterministic for a
-    # given input, not that the live agent-monitoring/ directory never changes between
+    # given input, not that the live agent-working/agent-monitoring/ directory never changes between
     # two subprocess calls a couple seconds apart — the latter is a race the test was
     # never meant to depend on. Copying real content into tmp_path here is unlike the
     # module docstring's "never a tmp_path copy" rule above, which guards the
@@ -252,7 +252,7 @@ def test_manifest_run_against_real_corpus_produces_zero_diff():
         build_manifest(_REAL_AGENT_MONITORING_DIR)
         post_porcelain = _porcelain_snapshot()
         assert post_porcelain == "", (
-            "build_manifest mutated agent-monitoring/ (tree was clean before, dirty after): "
+            "build_manifest mutated agent-working/agent-monitoring/ (tree was clean before, dirty after): "
             f"{post_porcelain!r}"
         )
         return
@@ -261,7 +261,7 @@ def test_manifest_run_against_real_corpus_produces_zero_diff():
     build_manifest(_REAL_AGENT_MONITORING_DIR)
     post_hash = _content_hash_snapshot()
     assert pre_hash == post_hash, (
-        "build_manifest changed the content of one or more agent-monitoring/*.jsonl files "
+        "build_manifest changed the content of one or more agent-working/agent-monitoring/*.jsonl files "
         "(ambient dirty state existed before the run, but its content hash must be unchanged after)"
     )
 

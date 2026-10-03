@@ -68,7 +68,7 @@ that's a gap in the safety net itself, not a one-off null result.
   profile that runs at population sizes comparable to `build_metropolis_state` (1000 entities),
   even if it must run less frequently than the standard corpus given cost.
 - Cross-check whether other prior SimQ investigations already ran into this same wall without
-  naming it as a corpus-scale limitation — `stored_artifacts/TCK-20260808-SIMQ-LARGE-SCALE-WORLD-
+  naming it as a corpus-scale limitation — `agent-working/stored_artifacts/TCK-20260808-SIMQ-LARGE-SCALE-WORLD-
   VALIDATION/` looks directly relevant by name and should be read before concluding this is a new
   finding rather than a rediscovery.
 
@@ -102,7 +102,7 @@ that's a gap in the safety net itself, not a one-off null result.
   concrete instance of exactly that gap, found independently while closing the sibling gate ticket.
 
 ## Related Stored Artifacts
-- `stored_artifacts/TCK-20260808-SIMQ-LARGE-SCALE-WORLD-VALIDATION/` (check first)
+- `agent-working/stored_artifacts/TCK-20260808-SIMQ-LARGE-SCALE-WORLD-VALIDATION/` (check first)
 
 ## Related Code Areas
 - `tools/calibrate_simq.py` (world-building path, `--entities` handling)

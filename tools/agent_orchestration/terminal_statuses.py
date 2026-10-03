@@ -1,4 +1,4 @@
-"""Provider-neutral validation for agent-orchestration/terminal-statuses.yaml."""
+"""Provider-neutral validation for agent-working/agent-orchestration/terminal-statuses.yaml."""
 from __future__ import annotations
 
 from pathlib import Path

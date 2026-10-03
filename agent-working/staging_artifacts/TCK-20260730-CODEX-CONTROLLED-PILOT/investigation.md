@@ -13,11 +13,11 @@ artifact_type: investigation
 
 - The ticket permits at most one live operation, and only after a named candidate, rollback
   plan, fresh sign-off, and preflight evidence. It forbids live invocation/config enablement in
-  ordinary implementation (`tickets/inprogress/TCK-20260730-CODEX-CONTROLLED-PILOT.md`).
+  ordinary implementation (`agent-working/tickets/inprogress/TCK-20260730-CODEX-CONTROLLED-PILOT.md`).
 - Codex has no enabled events. The policy designates only `PostToolUse` with
-  `write_line`/`write_lines` as a future candidate (`agent-orchestration/hook-surface-policy.yaml`).
+  `write_line`/`write_lines` as a future candidate (`agent-working/agent-orchestration/hook-surface-policy.yaml`).
   The committed `.codex/config.toml` is hook-free.
-- `pilot_requests/` contains only its README: no candidate is registered. Candidate parsing,
+- `agent-working/pilot_requests/` contains only its README: no candidate is registered. Candidate parsing,
   concurrent-provider detection, sign-off, baseline, enabled-surface, and rollback functions are
   separately implemented in `tools/agent_codex_pilot_guardrails/`, but no production preflight
   orchestration composes them.

@@ -1,7 +1,7 @@
 """Tests for tools/agent-monitoring/monitoring_consolidation.py
 (TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE).
 
-One section per Acceptance Criterion, per staging_artifacts/TCK-20260924-MONITORING-SHARD-
+One section per Acceptance Criterion, per agent-working/staging_artifacts/TCK-20260924-MONITORING-SHARD-
 SQUASH-MERGE-CONFLICT-AVOIDANCE/test_plan.md. AC1 uses a real throwaway git repo, since a
 faked-output fixture cannot prove two disjoint file paths are genuinely conflict-free under a real
 squash-merge -- the exact standard `test_delivery_pre_push_advisory.py`'s own Check C test set.
@@ -22,7 +22,7 @@ import monitoring_consolidation as mc  # noqa: E402
 import writer  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
-_PROTECTED_PATHS = ["docs/REGISTRY.yaml", "tickets/working_log.csv", "agent-monitoring/data"]
+_PROTECTED_PATHS = ["docs/REGISTRY.yaml", "agent-working/tickets/working_log.csv", "agent-working/agent-monitoring/data"]
 
 
 def _protected_paths_git_status() -> str:
@@ -228,7 +228,7 @@ _CSV_HEADER = "timestamp,ticket_id,title,status,summary,artifacts_path\n"
 
 def test_consolidate_all_derives_csv_path_from_data_dir_not_foreign_cwd(tmp_path, monkeypatch):
     """Pre-fix, `consolidate_all()` passed no `csv_path` to `consolidate_pending_rows()`, which
-    defaulted to a cwd-relative `tickets/working_log.csv` -- so a run with cwd pointed at a
+    defaulted to a cwd-relative `agent-working/tickets/working_log.csv` -- so a run with cwd pointed at a
     *different* checkout (the exact shape that lost 3 real rows off `origin/main`) wrote the
     pending row into that foreign checkout's CSV instead of the CSV next to `data_dir` (the
     checkout that actually owns the pending shard). Must fail on the pre-fix code: pre-fix, the
@@ -321,7 +321,7 @@ def test_writer_py_source_unchanged():
 
 
 def test_working_log_writer_untouched_by_this_ticket():
-    # Disclosed scope reduction (investigation.md): tickets/working_log.csv's write path is not
+    # Disclosed scope reduction (investigation.md): agent-working/tickets/working_log.csv's write path is not
     # changed by this ticket. Confirm append_working_log_row's signature is exactly as before.
     from tools import working_log_writer
     source = Path(working_log_writer.__file__).read_text(encoding="utf-8")

@@ -68,9 +68,9 @@ def test_looks_like_path_false_for_bare_symbol():
 def test_load_open_ticket_entries_filters_by_path_prefix(tmp_path):
     registry = tmp_path / "REGISTRY.yaml"
     registry.write_text(
-        "- type: ticket\n  path: tickets/done/TCK-A.md\n  ticket_id: TCK-A\n"
-        "- type: ticket\n  path: tickets/todos/TCK-B.md\n  ticket_id: TCK-B\n"
-        "- type: ticket\n  path: tickets/inprogress/TCK-C.md\n  ticket_id: TCK-C\n"
+        "- type: ticket\n  path: agent-working/tickets/done/TCK-A.md\n  ticket_id: TCK-A\n"
+        "- type: ticket\n  path: agent-working/tickets/todos/TCK-B.md\n  ticket_id: TCK-B\n"
+        "- type: ticket\n  path: agent-working/tickets/inprogress/TCK-C.md\n  ticket_id: TCK-C\n"
         "- type: doc\n  path: docs/foo.md\n",
         encoding="utf-8",
     )
@@ -89,13 +89,13 @@ def test_load_open_ticket_entries_missing_file_returns_empty(tmp_path):
 def test_resolution_rate_100_when_all_citations_exist(tmp_path):
     (tmp_path / "src").mkdir()
     (tmp_path / "src" / "foo.py").write_text("", encoding="utf-8")
-    entries = [_entry("tickets/todos/TCK-A.md", ["src/foo.py"])]
+    entries = [_entry("agent-working/tickets/todos/TCK-A.md", ["src/foo.py"])]
     rate, resolved, total = compute_open_ticket_citation_resolution_rate(entries, root=tmp_path)
     assert (rate, resolved, total) == (100.0, 1, 1)
 
 
 def test_resolution_rate_drops_when_citation_missing(tmp_path):
-    entries = [_entry("tickets/todos/TCK-A.md", ["src/does_not_exist.py"])]
+    entries = [_entry("agent-working/tickets/todos/TCK-A.md", ["src/does_not_exist.py"])]
     rate, resolved, total = compute_open_ticket_citation_resolution_rate(entries, root=tmp_path)
     assert (rate, resolved, total) == (0.0, 0, 1)
 
@@ -103,20 +103,20 @@ def test_resolution_rate_drops_when_citation_missing(tmp_path):
 def test_resolution_rate_ignores_non_path_shaped_citations(tmp_path):
     # Bare inline code-symbol references (no slash, no known extension) must not count against
     # the denominator at all -- they were never meant to be file citations.
-    entries = [_entry("tickets/todos/TCK-A.md", ["SocialBondUpdate", "DECAY_INTERVAL"])]
+    entries = [_entry("agent-working/tickets/todos/TCK-A.md", ["SocialBondUpdate", "DECAY_INTERVAL"])]
     rate, resolved, total = compute_open_ticket_citation_resolution_rate(entries, root=tmp_path)
     assert total == 0
     assert rate == 100.0
 
 
 def test_resolution_rate_ignores_glob_placeholders(tmp_path):
-    entries = [_entry("tickets/todos/TCK-A.md", ["agent-monitoring/data/*/runs.jsonl"])]
+    entries = [_entry("agent-working/tickets/todos/TCK-A.md", ["agent-working/agent-monitoring/data/*/runs.jsonl"])]
     rate, resolved, total = compute_open_ticket_citation_resolution_rate(entries, root=tmp_path)
     assert total == 0
 
 
 def test_resolution_rate_with_no_citations_at_all_is_100(tmp_path):
-    entries = [_entry("tickets/todos/TCK-A.md", [])]
+    entries = [_entry("agent-working/tickets/todos/TCK-A.md", [])]
     rate, resolved, total = compute_open_ticket_citation_resolution_rate(entries, root=tmp_path)
     assert (rate, resolved, total) == (100.0, 0, 0)
 
@@ -128,8 +128,8 @@ def test_closing_a_ticket_moves_the_rate_but_cannot_fail_ci(tmp_path):
     (tmp_path / "src").mkdir()
     (tmp_path / "src" / "foo.py").write_text("", encoding="utf-8")
     open_population = [
-        _entry("tickets/todos/TCK-A.md", ["src/foo.py"]),
-        _entry("tickets/todos/TCK-B.md", ["src/does_not_exist.py"]),
+        _entry("agent-working/tickets/todos/TCK-A.md", ["src/foo.py"]),
+        _entry("agent-working/tickets/todos/TCK-B.md", ["src/does_not_exist.py"]),
     ]
     population_after_tck_b_closes = open_population[:1]
 
@@ -155,7 +155,7 @@ def test_closing_a_ticket_moves_the_rate_but_cannot_fail_ci(tmp_path):
 
 def test_sweep_finds_overlapping_open_ticket():
     entries = [_entry(
-        "tickets/todos/TCK-A.md", ["src/foo.py", "src/bar.py"], ticket_id="TCK-A", title="A",
+        "agent-working/tickets/todos/TCK-A.md", ["src/foo.py", "src/bar.py"], ticket_id="TCK-A", title="A",
     )]
     candidates = find_potentially_stale_open_tickets(["src/foo.py"], entries)
     assert len(candidates) == 1
@@ -164,36 +164,36 @@ def test_sweep_finds_overlapping_open_ticket():
 
 
 def test_sweep_no_overlap_returns_empty():
-    entries = [_entry("tickets/todos/TCK-A.md", ["src/foo.py"], ticket_id="TCK-A")]
+    entries = [_entry("agent-working/tickets/todos/TCK-A.md", ["src/foo.py"], ticket_id="TCK-A")]
     candidates = find_potentially_stale_open_tickets(["src/unrelated.py"], entries)
     assert candidates == []
 
 
 def test_sweep_matches_across_symbol_suffix():
     # A citation with a trailing ::Symbol reference still matches a touched bare path.
-    entries = [_entry("tickets/todos/TCK-A.md", ["src/foo.py::Bar.method"], ticket_id="TCK-A")]
+    entries = [_entry("agent-working/tickets/todos/TCK-A.md", ["src/foo.py::Bar.method"], ticket_id="TCK-A")]
     candidates = find_potentially_stale_open_tickets(["src/foo.py"], entries)
     assert len(candidates) == 1
 
 
 def test_sweep_multiple_tickets_only_overlapping_ones_returned():
     entries = [
-        _entry("tickets/todos/TCK-A.md", ["src/foo.py"], ticket_id="TCK-A"),
-        _entry("tickets/todos/TCK-B.md", ["src/unrelated.py"], ticket_id="TCK-B"),
+        _entry("agent-working/tickets/todos/TCK-A.md", ["src/foo.py"], ticket_id="TCK-A"),
+        _entry("agent-working/tickets/todos/TCK-B.md", ["src/unrelated.py"], ticket_id="TCK-B"),
     ]
     candidates = find_potentially_stale_open_tickets(["src/foo.py"], entries)
     assert [c["ticket_id"] for c in candidates] == ["TCK-A"]
 
 
 def test_sweep_is_advisory_never_raises_on_large_overlap():
-    entries = [_entry("tickets/todos/TCK-A.md", [f"src/f{i}.py" for i in range(50)], ticket_id="TCK-A")]
+    entries = [_entry("agent-working/tickets/todos/TCK-A.md", [f"src/f{i}.py" for i in range(50)], ticket_id="TCK-A")]
     candidates = find_potentially_stale_open_tickets([f"src/f{i}.py" for i in range(50)], entries)
     assert len(candidates) == 1  # one ticket, however many overlapping paths -- never an exception
 
 
 def test_real_corpus_sweep_finds_a_match_when_touching_a_live_open_tickets_own_citation():
     # Deliberately does not hardcode which ticket_id must appear -- the open-ticket corpus churns
-    # constantly (a ticket this test once hardcoded moved to tickets/done/ the same session that
+    # constantly (a ticket this test once hardcoded moved to agent-working/tickets/done/ the same session that
     # wrote it, breaking the test on its very first real regression run). Instead: pick a real,
     # currently-open ticket's own first real citation at test-run time, touch exactly that path,
     # and confirm the sweep finds that same ticket -- proves real end-to-end integration against

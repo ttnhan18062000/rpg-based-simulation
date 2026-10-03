@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """One-time migration: consolidate the 3 legacy agent-monitoring physical shapes
-(`agent-monitoring/runs.jsonl`, `agent-monitoring/events.jsonl`,
-`agent-monitoring/tools/tools-YYYY-Www.jsonl`) into the unified
-`agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` layout.
+(`agent-working/agent-monitoring/runs.jsonl`, `agent-working/agent-monitoring/events.jsonl`,
+`agent-working/agent-monitoring/tools/tools-YYYY-Www.jsonl`) into the unified
+`agent-working/agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` layout.
 
 TCK-20260903-MONITORING-DATA-MIGRATION (child 2 of the monitoring unified-weekly-data
 epic). Generalizes `migrate_tools_shards.py` (TCK-20260902-MONITORING-SHARD-MIGRATION)
@@ -41,8 +41,8 @@ Cross-worktree `git rm` merge-conflict runbook (extends TCK-20260902-MONITORING-
 MIGRATION decision 5 to all 3 retired paths, per this ticket's own ratified Assumptions
 decision): this script's own `git rm` step (run separately, once this script's
 verification passes) is a one-time, irreversible-from-the-working-tree removal of
-`agent-monitoring/runs.jsonl`, `agent-monitoring/events.jsonl`, and the entire
-`agent-monitoring/tools/` directory. Any other worktree/branch that has not yet merged
+`agent-working/agent-monitoring/runs.jsonl`, `agent-working/agent-monitoring/events.jsonl`, and the entire
+`agent-working/agent-monitoring/tools/` directory. Any other worktree/branch that has not yet merged
 past this ticket's commit and is still appending to its own local copy of any of these
 3 paths will produce a `CONFLICT (modify/delete)` when it later merges past this point.
 `merge=union` does NOT apply to modify/delete conflicts. Resolution: take the deletion
@@ -266,7 +266,7 @@ def _migrate_rebucketed_source(
         if not ok:
             reason = (
                 f"write_week_bucket reported failure for {source}/{week_key} "
-                "(see agent-monitoring/data/.writer_health.jsonl for diagnostics)."
+                "(see agent-working/agent-monitoring/data/.writer_health.jsonl for diagnostics)."
             )
             print(f"ABORT: {reason}", file=sys.stderr)
             return {"verification_passed": False, "abort_reason": reason}
@@ -307,7 +307,7 @@ def _migrate_tools_relocation(tools_dir: Path, data_dir: Path) -> dict:
         if not ok:
             reason = (
                 f"write_week_bucket reported failure for {source}/{week_key} "
-                "(see agent-monitoring/data/.writer_health.jsonl for diagnostics)."
+                "(see agent-working/agent-monitoring/data/.writer_health.jsonl for diagnostics)."
             )
             print(f"ABORT: {reason}", file=sys.stderr)
             return {"verification_passed": False, "abort_reason": reason}

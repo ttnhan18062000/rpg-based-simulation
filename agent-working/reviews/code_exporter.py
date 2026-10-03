@@ -172,7 +172,7 @@ def main() -> None:
     print(f"Workspace Root: {workspace_root}")
     print(f"Output Directory: {reviews_dir}")
 
-    # 0. Export epic ticket folders — one output file per subfolder in tickets/todos/
+    # 0. Export epic ticket folders — one output file per subfolder in agent-working/tickets/todos/
     # Temporarily disabled — re-enable when per-ticket/epic export is needed again.
     # if tickets_todos_dir.exists():
     #     for epic_dir in sorted(tickets_todos_dir.iterdir()):

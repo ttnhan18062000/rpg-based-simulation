@@ -1,5 +1,5 @@
 """Ratchet-based content check for duplicate `(ticket_id, title)` rows in
-`tickets/working_log.csv` (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 6).
+`agent-working/tickets/working_log.csv` (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 6).
 
 **The defect this catches**: `tools/agent-monitoring/record_hand_orchestrated_closure.py`
 internally calls `append_working_log_row()` (`TCK-20260912-WORKING-LOG-APPEND-HELPER`'s

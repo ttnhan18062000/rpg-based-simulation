@@ -1,6 +1,6 @@
 """
 tools/retrieval_events.py — Additive, versioned retrieval-event field set appended to the
-existing `agent-monitoring/events.jsonl` file, plus one thin instrumentation wrapper per Phase 3
+existing `agent-working/agent-monitoring/events.jsonl` file, plus one thin instrumentation wrapper per Phase 3
 module (`tools/hybrid_retrieval.py`, `tools/retrieval_cache.py`,
 `tools/context_packet_assembler.py`).
 

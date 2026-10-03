@@ -22,8 +22,8 @@ def _init_synthetic_repo(tmp_path):
 
     (tmp_path / TICKETS / "inprogress" / "FAKE.md").write_text("line one\n", encoding="utf-8")
     # TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: the real corpus shape is now
-    # agent-monitoring/data/<week>/<id>.<kind>.jsonl (per-PR/branch), not the flat
-    # agent-monitoring/{runs,events,tools}.jsonl this fixture previously built directly --
+    # agent-working/agent-monitoring/data/<week>/<id>.<kind>.jsonl (per-PR/branch), not the flat
+    # agent-working/agent-monitoring/{runs,events,tools}.jsonl this fixture previously built directly --
     # those flat files have not existed since TCK-20260902-MONITORING-SHARD-WRITE-PATH.
     for filename in ("some-branch.runs.jsonl", "some-branch.events.jsonl", "some-branch.tools.jsonl"):
         (week_dir / filename).write_text('{"a": 1}\n{"a": 2}\n', encoding="utf-8")
@@ -66,7 +66,7 @@ def test_assert_no_diff_does_not_raise_when_nothing_changed(tmp_path):
 def test_assert_no_diff_raises_when_a_real_sharded_monitoring_file_is_mutated(tmp_path):
     """TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: this containment mechanism's own
     `_WATCHED_GIT_PATHSPECS`/`_watched_files()` previously named the retired flat
-    `agent-monitoring/{runs,events,tools}.jsonl` paths, which have not existed since
+    `agent-working/agent-monitoring/{runs,events,tools}.jsonl` paths, which have not existed since
     TCK-20260902-MONITORING-SHARD-WRITE-PATH -- meaning this exact mutation was silently
     undetected before this fix (git status on a nonexistent pathspec is empty, not an error).
     Proves detection now actually fires on the real sharded per-branch path, not just asserts

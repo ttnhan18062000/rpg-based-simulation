@@ -2,7 +2,7 @@
 (TCK-20260904-ARTIFACT-RETENTION-CLASSIFICATION).
 
 This is the M2 deliverable of `telemetry_retention_epic.md`: a committed doc classifying every
-repo artifact class outside the already-resolved `agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl`
+repo artifact class outside the already-resolved `agent-working/agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl`
 weekly shards. These tests assert doc *structure* (required section headings, required phrases
 present as distinct, individually matchable text) — never runtime behavior — mirroring the
 static-assertion pattern `tests/docs/test_redaction_retention_policy_doc.py` uses for the
@@ -16,13 +16,13 @@ _REPO_ROOT = Path(__file__).parent.parent.parent
 _DOC = _REPO_ROOT / "docs" / "guidelines" / "artifact_retention_classification.md"
 
 _ARTIFACT_CLASS_STRINGS = [
-    "agent-monitoring/data/",
-    "stored_artifacts/",
-    "tickets/done/",
+    "agent-working/agent-monitoring/data/",
+    "agent-working/stored_artifacts/",
+    "agent-working/tickets/done/",
     "retro/RETRO-*.md",
     "working_log.csv",
     "graphify-out/",
-    "knowledge-index/",
+    "agent-working/.index/knowledge-index/",
     ".claude/current_run",
 ]
 
@@ -53,7 +53,7 @@ def test_artifact_retention_classification_doc_resolves_both_open_questions():
     text = _read_doc()
 
     graphify_start = text.index("### `graphify-out/` resolution")
-    knowledge_index_start = text.index("### `knowledge-index/` resolution")
+    knowledge_index_start = text.index("### `agent-working/.index/knowledge-index/` resolution")
     related_docs_start = text.index("## Related Docs")
 
     graphify_section = text[graphify_start:knowledge_index_start]
@@ -69,10 +69,10 @@ def test_artifact_retention_classification_doc_resolves_both_open_questions():
 
     knowledge_index_evidence_tokens = [".gitignore:264", "Makefile:331"]
     assert any(token in knowledge_index_section for token in knowledge_index_evidence_tokens), (
-        "knowledge-index/ resolution section is missing concrete evidence tokens"
+        "agent-working/.index/knowledge-index/ resolution section is missing concrete evidence tokens"
     )
     assert "open question" not in knowledge_index_section.lower(), (
-        "knowledge-index/ resolution section must not read as a still-open question"
+        "agent-working/.index/knowledge-index/ resolution section must not read as a still-open question"
     )
 
 

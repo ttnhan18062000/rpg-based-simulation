@@ -61,7 +61,7 @@ def test_preflight_reports_gate_specific_request_refusal_without_side_effects(
 ):
     if request_text is not None:
         request = tmp_path / PILOT_REQUESTS / f"{TICKET_ID}.yaml"
-        request.parent.mkdir()
+        request.parent.mkdir(parents=True)
         request.write_text(request_text, encoding="utf-8")
     result = simulate_pilot(_context(tmp_path))
     assert result.success is False
@@ -93,7 +93,7 @@ def test_preflight_identity_and_surface_refusals_are_specific_and_do_not_call_de
     monkeypatch.setattr(preflight_module, "select_pilot_candidate", original_select)
 
     request = tmp_path / PILOT_REQUESTS / f"{TICKET_ID}.yaml"
-    request.parent.mkdir()
+    request.parent.mkdir(parents=True)
     request.write_text(
         f"ticket_id: {TICKET_ID}\nhuman_owner: x\nrollback_plan_summary: x\n", encoding="utf-8"
     )

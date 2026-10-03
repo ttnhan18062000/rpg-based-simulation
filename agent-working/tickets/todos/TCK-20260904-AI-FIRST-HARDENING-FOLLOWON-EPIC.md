@@ -12,7 +12,7 @@ tags: [governance, ai, agent-monitoring]
 # TCK-20260904-AI-FIRST-HARDENING-FOLLOWON-EPIC
 
 > **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
-> **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
+> **lifecycle correction only** — the ticket had sat in `agent-working/tickets/inprogress/` with no further
 > content change since 2026-09-07 (verified via `git log --follow`, not file mtime), and its
 > presence there was the last remaining reason this repo's sidecar-check hook was firing on
 > every `Edit`/`Write` in every concurrent session on this machine. **Nothing about the ticket's
@@ -26,7 +26,7 @@ tags: [governance, ai, agent-monitoring]
 > (last real commit 2026-09-04) — and it was genuinely dormant when this ticket was moved, not
 > merely quiet: it has no `2026-W38` monitoring shard at all, meaning no session has worked in it
 > this entire week. If a session later returns claiming ownership of this ticket's work, moving
-> it back to `tickets/inprogress/` is a single, one-commit reversal — this note exists so that
+> it back to `agent-working/tickets/inprogress/` is a single, one-commit reversal — this note exists so that
 > person isn't confused about why it moved in the meantime.
 
 ## Title
@@ -48,9 +48,9 @@ P2
 The `AI_FIRST_ENGINEERING_NEXT_EVOLUTION_PROPOSAL` (Rev.3, READY TO FREEZE, 2026-09-04) and its
 detail plans under `docs/plans/agent_infrastructure/ai_first_hardening_epics/` name 21 inventory
 items across 3 output buckets. All 12 Bucket-A (Committed) items have now been either ticketed
-(`tickets/todos/ai-first-hardening-governance-guardrail-batch/`, 12 tickets) or accounted for
+(`agent-working/tickets/todos/ai-first-hardening-governance-guardrail-batch/`, 12 tickets) or accounted for
 (1 already shipped before ticketing began, 1 initially skipped pending a governance
-re-ratification — `TCK-20260904-BASH-SECRET-SCAN-HOOK`, since ratified and shipped, `tickets/done/`
+re-ratification — `TCK-20260904-BASH-SECRET-SCAN-HOOK`, since ratified and shipped, `agent-working/tickets/done/`
 as of 2026-09-23). What remains genuinely un-scoped is Bucket B (5 items —
 Experiments) and Bucket C (4 items — blocked Future Options, plus explicitly-rejected directions).
 Per the freeze verdict's own handoff boundary, Bucket B items become **Experiment Specifications**
@@ -77,8 +77,8 @@ investigation/scoping work is future, out-of-session work.
   named prerequisite (see below), not ready regardless of this epic's existence.
 - Re-litigating or re-evaluating the Bucket A/B/C split itself — that classification was already
   made in the frozen proposal and `roadmap.md`; this epic inherits it as given.
-- Anything already covered by `tickets/todos/ai-first-hardening-governance-guardrail-batch/`'s 12
-  tickets, or by `TCK-20260904-BASH-SECRET-SCAN-HOOK` (blocked, in `tickets/inprogress/`) — this
+- Anything already covered by `agent-working/tickets/todos/ai-first-hardening-governance-guardrail-batch/`'s 12
+  tickets, or by `TCK-20260904-BASH-SECRET-SCAN-HOOK` (blocked, in `agent-working/tickets/inprogress/`) — this
   epic tracks only the un-ticketed remainder.
 
 ## Acceptance Criteria
@@ -91,35 +91,35 @@ investigation/scoping work is future, out-of-session work.
       cross-reference), so the roadmap's Bucket B/C scope stays traceable to one place.
 
 ## Related Tickets
-- `TCK-20260907-FILTERED-REPLAY-EVAL-PILOT` (`tickets/done/`, closed 2026-09-07) — item 13's
+- `TCK-20260907-FILTERED-REPLAY-EVAL-PILOT` (`agent-working/tickets/done/`, closed 2026-09-07) — item 13's
   Experiment Specification was scoped into a real ticket, executing
   `agent_evaluation_foundation_experiment.md`'s Method against the now-shipped M1 sidecar
   prerequisite, and has now completed: all 3 Exit Criteria MET, no Kill Criterion fired (see
-  `stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md` and the frozen spec doc's
+  `agent-working/stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md` and the frozen spec doc's
   own appended `## Results`/`## Decision` section). This unblocks Bucket-C items 18-20's own
   downstream scoping per the roadmap's Eval-pilot exit gate — those items' own scoping/execution
   remains separate follow-on work, not automatically started by this closure. Per this epic's own
   acceptance criteria, this is the backward link recorded once item 13 became real work, path
-  updated once implementation moved the ticket from `tickets/todos/` through `tickets/inprogress/`
-  to `tickets/done/`.
-- `TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING` (`tickets/done/` as of 2026-09-23, was
-  `tickets/todos/`) — item 14's Experiment Specification (`workflow_reliability_epic.md` M2) was
+  updated once implementation moved the ticket from `agent-working/tickets/todos/` through `agent-working/tickets/inprogress/`
+  to `agent-working/tickets/done/`.
+- `TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING` (`agent-working/tickets/done/` as of 2026-09-23, was
+  `agent-working/tickets/todos/`) — item 14's Experiment Specification (`workflow_reliability_epic.md` M2) was
   scoped into a real ticket covering both the spec document and the log-only detection
   instrumentation it describes, and has since closed. Per this epic's own acceptance criteria, this
   is the backward link recorded once item 14 became real work.
-- `TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN` (`tickets/done/` as of 2026-09-23, was
-  `tickets/inprogress/`) — item 15's design/validation-rule resolution
+- `TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN` (`agent-working/tickets/done/` as of 2026-09-23, was
+  `agent-working/tickets/inprogress/`) — item 15's design/validation-rule resolution
   (`workflow_reliability_epic.md` M3) was scoped into a real ticket producing the written decision
   document `implement-ticket.js` would need for phase-level resume, not the resume code itself:
   `docs/ai/phase_resume_validation_rule_decision.md`. Per this epic's own acceptance criteria, this
   is the backward link recorded once item 15 became real work. (This bullet was lost to a
   concurrent-edit race between the 3 parallel ticket-scoper dispatches that scoped items 13/14/15
   simultaneously — added after the fact once the race was noticed; path updated as the ticket moved
-  through `tickets/todos/` → `tickets/inprogress/` → `tickets/done/`.)
+  through `agent-working/tickets/todos/` → `agent-working/tickets/inprogress/` → `agent-working/tickets/done/`.)
 - Bucket A (already handled, not part of this epic's remaining scope):
-  `tickets/todos/ai-first-hardening-governance-guardrail-batch/` (12 tickets),
-  `TCK-20260904-BASH-SECRET-SCAN-HOOK` (`tickets/done/` as of 2026-09-23, was blocked in
-  `tickets/inprogress/` — ratified and shipped).
+  `agent-working/tickets/todos/ai-first-hardening-governance-guardrail-batch/` (12 tickets),
+  `TCK-20260904-BASH-SECRET-SCAN-HOOK` (`agent-working/tickets/done/` as of 2026-09-23, was blocked in
+  `agent-working/tickets/inprogress/` — ratified and shipped).
 - `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` — the ratified decision `TCK-20260904-BASH-SECRET-SCAN-HOOK`
   and the knowledge-gateway removal item were both blocked on; not itself part of this epic's Bucket
   B/C scope, referenced for traceability.
@@ -128,12 +128,12 @@ investigation/scoping work is future, out-of-session work.
   `TCK-20260907-FILTERED-REPLAY-EVAL-PILOT`, `TCK-20260904-SHADOW-REVIEWER-LOGGING`,
   `TCK-20260904-BASH-SECRET-SCAN-HOOK`, `TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST`,
   `TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING`, `TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN`
-  — are now in `tickets/done/`. Item 13's own exit-criteria-MET result already unblocked Bucket-C
+  — are now in `agent-working/tickets/done/`. Item 13's own exit-criteria-MET result already unblocked Bucket-C
   items 18-20 (recorded above); this refresh corrects the stale path annotations left behind for
   items 14/15/Bucket-A and updates the Bucket-B item 16/17 status below. Items 18 and 19 were
   further scoped into Experiment Specifications by this same batch:
   `TCK-20260923-MODEL-ROUTING-MECHANICAL-AGENTS-EXPERIMENT-SPEC`,
-  `TCK-20260923-TASK-SUCCESS-RATE-METRIC-EXPERIMENT-SPEC` (both `tickets/todos/`).
+  `TCK-20260923-TASK-SUCCESS-RATE-METRIC-EXPERIMENT-SPEC` (both `agent-working/tickets/todos/`).
 
 ## Related Docs
 - docs/plans/agent_infrastructure/ai_first_hardening_epics/roadmap.md (the master inventory this
@@ -166,10 +166,10 @@ None yet — no code investigation performed for this epic's remaining scope.
      — planning may proceed in parallel regardless.
   2. Item 14 — Ticket-claim detection logging (`workflow_reliability_epic.md` M2). Log-only,
      no lock; decision gate at 30 days of real data to decide build-vs-convention-only. Scoped and
-     closed: `TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING` (`tickets/done/`).
+     closed: `TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING` (`agent-working/tickets/done/`).
   3. Item 15 — Phase-level workflow resume: design/validation-rule resolution
      (`workflow_reliability_epic.md` M3). Design-resolution work, not implementation. Scoped and
-     closed: `TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN` (`tickets/done/`).
+     closed: `TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN` (`agent-working/tickets/done/`).
   4. Item 16 — Model-diverse reviewer shadow comparison & cutover decision
      (`review_independence_epic.md` M2). Was gated on `TCK-20260904-SHADOW-REVIEWER-LOGGING` (M1,
      done) running long enough to produce comparison data — that gate is now further addressed by
@@ -182,7 +182,7 @@ None yet — no code investigation performed for this epic's remaining scope.
      sample data exists.
   5. Item 17 — Bash secret-exposure hook blocking-escalation decision (governance epic's post-M5
      follow-on). Was doubly gated: first on the knowledge-gateway re-ratification, now cleared
-     (`TCK-20260904-BASH-SECRET-SCAN-HOOK`, `tickets/done/`); then on a real false-positive-rate
+     (`TCK-20260904-BASH-SECRET-SCAN-HOOK`, `agent-working/tickets/done/`); then on a real false-positive-rate
      measurement, which still does not exist — the hook remains advisory-only with no recorded
      false-positive data, so item 17 stays genuinely un-gated. Confirmed as of 2026-09-23: not part
      of this batch for exactly that reason.
@@ -190,11 +190,11 @@ None yet — no code investigation performed for this epic's remaining scope.
   1. Item 18 — Model-based routing for mechanical agents. Hard prerequisite: item 13's eval pilot
      produces a trusted baseline — MET (`TCK-20260907-FILTERED-REPLAY-EVAL-PILOT`, done). Scoped
      into an Experiment Specification by this batch:
-     `TCK-20260923-MODEL-ROUTING-MECHANICAL-AGENTS-EXPERIMENT-SPEC` (`tickets/todos/`).
+     `TCK-20260923-MODEL-ROUTING-MECHANICAL-AGENTS-EXPERIMENT-SPEC` (`agent-working/tickets/todos/`).
   2. Item 19 — Task-success-rate metric closing the improvement loop. Hard prerequisite: item 13
      establishes a repeatable scoring approach — MET (`TCK-20260907-FILTERED-REPLAY-EVAL-PILOT`,
      done). Scoped into an Experiment Specification by this batch:
-     `TCK-20260923-TASK-SUCCESS-RATE-METRIC-EXPERIMENT-SPEC` (`tickets/todos/`).
+     `TCK-20260923-TASK-SUCCESS-RATE-METRIC-EXPERIMENT-SPEC` (`agent-working/tickets/todos/`).
   3. Item 20 — Full agent-behavior eval platform. Evidence prerequisite: item 13 proves the signal
      is useful and repeatable.
   4. Item 21 — Live Codex provider pilot. Hard prerequisite: item 12 (provider-portability

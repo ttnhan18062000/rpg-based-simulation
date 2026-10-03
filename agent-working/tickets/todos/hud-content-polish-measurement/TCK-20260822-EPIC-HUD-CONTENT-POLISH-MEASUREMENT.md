@@ -112,7 +112,7 @@ None.
 - **Hard gate, not an assumption**: this epic must not begin — including its own child-ticket breakdown —
   until M3 is DONE. Revisit scope-item detail once the actual wired HUD exists to measure; the
   measurement/consistency details here are necessarily provisional until then.
-- Where the measurement result gets stored durably (a new `docs/` doc, a `stored_artifacts/` entry,
+- Where the measurement result gets stored durably (a new `docs/` doc, a `agent-working/stored_artifacts/` entry,
   something else) is not decided here — worth resolving at this epic's own Scope phase once child tickets
   are broken out, not assumed now.
 

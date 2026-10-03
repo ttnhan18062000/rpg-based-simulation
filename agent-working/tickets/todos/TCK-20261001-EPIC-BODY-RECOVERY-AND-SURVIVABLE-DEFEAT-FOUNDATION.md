@@ -120,8 +120,8 @@ epic.** Within it:
   sequencing additions for user approval and will not edit the roadmap unilaterally.
 
 ## Related Stored Artifacts
-- `staging_artifacts/TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION/`
-- `stored_artifacts/TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK/`
+- `agent-working/staging_artifacts/TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION/`
+- `agent-working/stored_artifacts/TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK/`
 
 ## Related Code Areas
 - `src/cognition/need_interpretation.py` — perceives a healing need nothing fulfils.

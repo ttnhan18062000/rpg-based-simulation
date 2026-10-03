@@ -21,7 +21,7 @@ advisory-only row-count signal) and already covered for `runs.jsonl`/`events.jso
 existing `duplicate_run_record_check.py`/`event_seq_integrity_check.py` anomaly detectors, which
 exist precisely to surface this class of issue rather than let it corrupt silently.
 
-**Update (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET): `tickets/working_log.csv` IS now
+**Update (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET): `agent-working/tickets/working_log.csv` IS now
 consolidated here too**, closing the scope reduction above. The synchronous done-checker
 dependency that motivated leaving it out is solved on the *read* side instead — the two callers
 that need a just-closed ticket's row without waiting for consolidation
@@ -29,7 +29,7 @@ that need a just-closed ticket's row without waiting for consolidation
 and `record_hand_orchestrated_closure.py`'s own double-write guard) now also read the pending
 per-batch shards directly (`working_log_parser.parse_pending_working_log_shards()`), so
 consolidation timing never blocks or races either check. `consolidate_pending_rows()` (the
-function that actually opens `tickets/working_log.csv`) lives in `tools/working_log_writer.py`
+function that actually opens `agent-working/tickets/working_log.csv`) lives in `tools/working_log_writer.py`
 itself, not here — `working_log_writer.py`'s own AST guard
 (`tests/tools/test_working_log_writer.py::test_working_log_csv_has_exactly_one_writer`) asserts it
 is the *only* file that ever opens that CSV in write mode, and this module calling into it rather
@@ -95,7 +95,7 @@ def consolidate_week(week_dir: Path) -> dict:
 
 
 def _default_csv_path_for(data_dir: Path) -> Path:
-    """Derive `tickets/working_log.csv`'s path from `data_dir`'s own root, so a `--data-dir`
+    """Derive `agent-working/tickets/working_log.csv`'s path from `data_dir`'s own root, so a `--data-dir`
     override (the real `__file__`-anchored default, or a test's own scratch tree) never writes to
     a checkout other than the one that owns `data_dir`
     (TCK-20260928-WORKING-LOG-CONSOLIDATION-CROSS-CHECKOUT-ROW-LOSS). `data_dir`'s real-shape
@@ -143,7 +143,7 @@ def main(argv=None) -> int:
         "runs.jsonl/events.jsonl/tools.jsonl. Read-only for the working tree except appending to "
         "and deleting already-folded-in per-ticket files; never touches consumer read contracts."
     )
-    parser.add_argument("--data-dir", default=None, help="Override agent-monitoring/data/ (mainly for testing).")
+    parser.add_argument("--data-dir", default=None, help="Override agent-working/agent-monitoring/data/ (mainly for testing).")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
@@ -163,7 +163,7 @@ def main(argv=None) -> int:
             if week == "working_log":
                 print(
                     f"working_log: folded {counts['shard_files']} shard file(s) "
-                    f"({counts['consolidated_rows']} row(s)) into tickets/working_log.csv"
+                    f"({counts['consolidated_rows']} row(s)) into agent-working/tickets/working_log.csv"
                 )
                 continue
             total = sum(counts.values())

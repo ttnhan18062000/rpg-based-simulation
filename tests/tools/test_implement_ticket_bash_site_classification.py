@@ -1,7 +1,7 @@
 """TCK-20260930-IMPLEMENT-TICKET-GATE-VS-BOOKKEEPING-CLASSIFICATION: the stored classification of
 implement-ticket.js's `bash(` call sites stays in step with the file.
 
-The classification itself is a decision record (stored_artifacts/<ticket>/classification.jsonl); this
+The classification itself is a decision record (agent-working/stored_artifacts/<ticket>/classification.jsonl); this
 test only guards that it covers every real call site and that every row is complete, so a new
 `bash(` added to the script without a classification fails here.
 """

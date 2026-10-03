@@ -120,7 +120,7 @@ under `tests/` before falling back to `tests/tools/`. This fallback does NOT app
   called out separately below. Cherry-picking files within an otherwise-correctly-identified
   directory is the single most common `test_scope_coverage_static` failure across this project's
   history (recurred 8+ times in the single 2026-08-24→2026-08-31 window alone —
-  `agent-monitoring/retro/RETRO-2026-W35.md` § "What to change?" item 3), always caught and
+  `agent-working/agent-monitoring/retro/RETRO-2026-W35.md` § "What to change?" item 3), always caught and
   re-scoped correctly, but always after a wasted round-trip. Do not try to guess which files
   "actually matter" within a directory by filename — the whole directory runs well within the
   resource budget, and the cost of guessing wrong is a real blocked gate.

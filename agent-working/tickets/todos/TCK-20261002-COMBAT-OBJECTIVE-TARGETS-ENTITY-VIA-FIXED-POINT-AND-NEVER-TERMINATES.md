@@ -121,7 +121,7 @@ point the enemy has left.
 - `docs/mechanics/04_strategic_cognition.md` — goal hierarchy and objective lifecycle
 
 ## Related Stored Artifacts
-- `stored_artifacts/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION/`
+- `agent-working/stored_artifacts/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION/`
 
 ## Related Code Areas
 - `src/engine/tactical.py:796+` (`_resolve_target_position`), `:262-299` (the `reach_location` inline

@@ -29,7 +29,7 @@ def assert_evidenced_events_are_schema_valid(
     hook_events_yaml_path: Path = _HOOK_EVENTS_YAML_PATH,
 ) -> None:
     """Cross-check EVIDENCED_HOOK_EVENTS against the broader schema-declared vocabulary in
-    agent-orchestration/hook-events.yaml (which also includes PreToolUse, never fixture-captured
+    agent-working/agent-orchestration/hook-events.yaml (which also includes PreToolUse, never fixture-captured
     for Codex) — without conflating "schema-valid" with "evidenced."
     """
     with open(hook_events_yaml_path, "r", encoding="utf-8") as f:

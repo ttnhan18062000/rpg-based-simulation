@@ -11,17 +11,17 @@ tags: [ai, workflows, hooks, agent-monitoring, process-improvement]
 
 # TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC
 
-> **Physically moved to `tickets/backlogs/codex-runtime-activation/`, 2026-09-22** — this epic and
-> `SEQUENCE.md` moved from `tickets/todos/` unchanged, alongside the real, current
+> **Physically moved to `agent-working/tickets/backlogs/codex-runtime-activation/`, 2026-09-22** — this epic and
+> `SEQUENCE.md` moved from `agent-working/tickets/todos/` unchanged, alongside the real, current
 > `TCK-20260730-CODEX-CONTROLLED-PILOT.md` (also moved); a separate, older, stale duplicate of that
-> pilot ticket that had sat inside `tickets/todos/codex-runtime-activation/` was deleted, not
+> pilot ticket that had sat inside `agent-working/tickets/todos/codex-runtime-activation/` was deleted, not
 > moved, matching the 2026-09-20 lifecycle decision below.
 
 > **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
-> **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
+> **lifecycle correction only** — the ticket had sat in `agent-working/tickets/inprogress/` with no further
 > activity since at least 2026-08-14 (its own last recorded content change, per `git log`; its
 > own body's last dated note is 2026-08-02), and its presence there (along with several other
-> stale `tickets/inprogress/` entries) was firing this repo's sidecar-check hook on every
+> stale `agent-working/tickets/inprogress/` entries) was firing this repo's sidecar-check hook on every
 > `Edit`/`Write` in every concurrent session on this machine. **Nothing about the ticket's own
 > substance was investigated, debugged, or re-scoped as part of this move** — its Scope,
 > Acceptance Criteria, and Assumptions below are exactly as they were. Anyone picking this up
@@ -49,9 +49,9 @@ Turn the completed provider-agnostic foundation into a deliberately limited, aud
 
 ## Scope
 - Scope-only epic: track and sequence the five child tickets in this folder; do not implement provider runtime behavior in the parent.
-- Carry forward the canonical `agent-orchestration/` contract as the semantic authority. Provider-local behavior must extend the contract before it becomes active.
+- Carry forward the canonical `agent-working/agent-orchestration/` contract as the semantic authority. Provider-local behavior must extend the contract before it becomes active.
 - Preserve the committed `.codex/config.toml` as hook-free until the final, explicitly human-authorized pilot operation.
-- Preserve historical `agent-monitoring/*.jsonl` bytes and ordering; identity fields are additive for new records only.
+- Preserve historical `agent-working/agent-monitoring/*.jsonl` bytes and ordering; identity fields are additive for new records only.
 - Retain Claude as the default production executor until the runtime/shadow ticket has passed its contained parity evidence and the pilot has been reviewed.
 - Require a distinct human decision before any paid/live Codex invocation, production hook registration, or `provider=codex` monitoring write.
 
@@ -79,20 +79,20 @@ Turn the completed provider-agnostic foundation into a deliberately limited, aud
 
 ## Related Docs
 - docs/plans/archive/agent_infrastructure/current_codex_runtime_status_and_activation_plan.md
-- agent-orchestration/README.md
-- agent-orchestration/intentional-divergences.md
+- agent-working/agent-orchestration/README.md
+- agent-working/agent-orchestration/intentional-divergences.md
 - docs/ai/codex_capability_matrix.md
 
 ## Related Stored Artifacts
 None yet.
 
 ## Related Code Areas
-- agent-orchestration/
+- agent-working/agent-orchestration/
 - .claude/workflows/implement-ticket.js
 - .codex/config.toml
 - tools/agent_replay_codex/
 - tools/agent_codex_pilot_guardrails/
-- agent-monitoring/*.jsonl
+- agent-working/agent-monitoring/*.jsonl
 
 ## Assumptions / Open Questions
 - A future live pilot remains an operational decision, not an automatic consequence of completing readiness code.

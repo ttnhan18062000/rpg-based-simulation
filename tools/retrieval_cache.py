@@ -16,10 +16,10 @@ to src/observability/reporting/retention.py or src/core/retention.py (both out o
 subsystem — this module is genuinely new code, not an extension of either), no relationship to
 src/engine/world_index.py::CacheInvalidationPolicy (an unrelated, tick-scoped, in-memory spatial
 index class — this module deliberately never reuses that name), no .claude/workflows/*.js wiring,
-no new agent-monitoring/*.jsonl event type.
+no new agent-working/agent-monitoring/*.jsonl event type.
 
-Owns its own SQLite file, knowledge-index/retrieval_cache.db, distinct from
-knowledge-index/knowledge.db: tools/knowledge_search.py's cmd_build() and
+Owns its own SQLite file, agent-working/.index/knowledge-index/retrieval_cache.db, distinct from
+agent-working/.index/knowledge-index/knowledge.db: tools/knowledge_search.py's cmd_build() and
 cmd_build_incremental() unconditionally db_path.unlink() and rewrite knowledge.db on every
 rebuild — sharing that file would silently destroy every cached row on every index rebuild. This
 module never opens, imports, or references knowledge.db.
@@ -475,7 +475,7 @@ def migration_005_add_cache_access_log_table(conn: sqlite3.Connection) -> None:
     `.claude/current_run` sidecar mechanism tools/agent-monitoring/post_tool_hook.py:46-63 still
     uses for tools.jsonl attribution. `sidecar_stale` was a real, file-existence-based staleness
     flag — TRUE when the sidecar's own ticket pointed at a ticket that had already moved to
-    tickets/done/, so a reader could distinguish "no attribution recorded" from "attribution
+    agent-working/tickets/done/, so a reader could distinguish "no attribution recorded" from "attribution
     recorded but known-untrustworthy" instead of silently trusting stale data. Every column here
     stayed within the MAY-list vocabulary (docs/observability/retrieval_retention_redaction_policy.md)
     — IDs, hashes (by reference, never raw content), counts via aggregation, timestamps; no

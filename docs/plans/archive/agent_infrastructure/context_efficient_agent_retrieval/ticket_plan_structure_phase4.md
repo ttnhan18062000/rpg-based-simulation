@@ -40,7 +40,7 @@ re-derive or silently contradict them:**
   `tools/context_packet_assembler.py`. None are wired into any workflow — any new
   retrieval event this phase adds is recorded by *test/manual invocation call sites
   within this phase's own tickets*, not by intercepting real agent workflow runs.
-- `tickets/done/TCK-20260728-PHASE0-PREREQ-CONFIRMATION.md` — confirms the Phase 0
+- `agent-working/tickets/done/TCK-20260728-PHASE0-PREREQ-CONFIRMATION.md` — confirms the Phase 0
   prerequisite (provider-neutral execution identity, shared monitoring writer, stable
   replay/live boundary) is satisfied, but **only for `tools/agent-monitoring/tools.jsonl`**:
   `execution_id`/`provider`/`ticket_id` are written into every `tools.jsonl` record via
@@ -53,7 +53,7 @@ re-derive or silently contradict them:**
 - `docs/agent-monitoring/schema.md` — the authoritative two-file (`runs.jsonl`/
   `events.jsonl`) append-only schema, `tools/agent-monitoring/writer.py`'s
   `write_line()`/`write_lines()` as the sole verified append path (per Phase 0's AC2),
-  and the derived, gitignored, rebuild-only `agent-monitoring-index/monitoring.db`
+  and the derived, gitignored, rebuild-only `agent-working/.index/agent-monitoring-index/monitoring.db`
   (`build_index.py`) as the read path — never write to the index directly.
 - `tools/agent-monitoring/generate_retro.py`, `tools/agent-monitoring/query.py`, and the
   existing dashboard surface (`dashboard-frontend/`) — the "dashboard/retro queries" this phase's

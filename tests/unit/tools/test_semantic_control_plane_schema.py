@@ -506,7 +506,7 @@ def test_no_function_derives_classification_from_edges():
     # Cheap early-warning grep, not a hard static-analysis guard: no function in either module
     # has a name suggesting it derives a classification from edge data. The primary proof is the
     # human confirmation recorded in the ticket's own Implementation Notes -- see
-    # staging_artifacts/TCK-20260923-M0-SCHEMA-VALIDATOR-FOUNDATION/plan.md Step 4.
+    # agent-working/staging_artifacts/TCK-20260923-M0-SCHEMA-VALIDATOR-FOUNDATION/plan.md Step 4.
     for module in (_registry_module, _rule_catalog_module):
         for name in dir(module):
             obj = getattr(module, name)

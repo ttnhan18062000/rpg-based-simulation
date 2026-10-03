@@ -7,7 +7,7 @@ Path.read_text()-only technique tests/tools/test_shadow_packet_call_site.py alre
 uses (the workflow file is never executed — no JS test runner exists in this repo for
 .claude/workflows/*.js). Behavioral sub-tests exercise the new Python modules
 (shadow_reviewer_events, shadow_reviewer_window) directly, in-process, against tmp_path
-fixtures — never the real agent-monitoring/data corpus.
+fixtures — never the real agent-working/agent-monitoring/data corpus.
 """
 from __future__ import annotations
 

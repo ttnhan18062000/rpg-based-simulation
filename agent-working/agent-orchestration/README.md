@@ -1,4 +1,4 @@
-# agent-orchestration/
+# agent-working/agent-orchestration/
 
 The provider-neutral semantic contract for the `implement-ticket` workflow: phases, per-tier
 applicability, roles, skills, monitoring identity fields, and hook-event vocabulary, as the one
@@ -90,16 +90,16 @@ file and field on any missing required field, malformed value, or non-mapping YA
 from pathlib import Path
 from agent_orchestration.generator import generate
 
-# Writes inside agent-orchestration/ — no flag needed.
+# Writes inside agent-working/agent-orchestration/ — no flag needed.
 generate(repo_root, repo_root / "agent-orchestration")
 
-# Writes outside agent-orchestration/ — requires the explicit flag.
+# Writes outside agent-working/agent-orchestration/ — requires the explicit flag.
 generate(repo_root, some_other_dir, allow_outside_contract=True)
 ```
 
 Without `allow_outside_contract=True`, `generate()` refuses (raises
 `agent_orchestration.errors.GeneratorWriteGuardError`) any write whose resolved target path falls
-outside `agent-orchestration/` — a structural path-containment check performed before every
+outside `agent-working/agent-orchestration/` — a structural path-containment check performed before every
 write, not a docstring convention.
 
 ## Upstream authorities
@@ -112,4 +112,4 @@ write, not a docstring convention.
 
 This directory and its tooling do not build the Claude conformance/diff tooling or any
 `.codex/` provider adapter/hook code — both are owned by separate, already-scoped tickets. See
-`tickets/inprogress/TCK-20260721-ORCHESTRATION-CONTRACT-CORE.md`'s Related Tickets section.
+`agent-working/tickets/inprogress/TCK-20260721-ORCHESTRATION-CONTRACT-CORE.md`'s Related Tickets section.

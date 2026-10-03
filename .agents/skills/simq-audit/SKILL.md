@@ -68,7 +68,7 @@ does not create one.
 7. **Report** — deterministic branch on `classifyResult.verdict` (no `agent()` call for the branch
    itself):
    - `no_regression` → suggests a `chore: SimQ audit <date> — <N> anchors refreshed, no regressions`
-     commit message. Does **not** touch `tickets/`. Returns `DONE_NO_TICKET`.
+     commit message. Does **not** touch `agent-working/tickets/`. Returns `DONE_NO_TICKET`.
    - `regression` or `needs_da_decision` → spawns one ticket via the `ticket-scoper` role (same
      `TICKET_SCHEMA` as `implement-ticket.js`'s Scope phase), pre-seeded with the specific
      regression/DA items from Classify Drift. Returns `NEEDS_TICKET` with the new ticket ID and a
@@ -78,7 +78,7 @@ does not create one.
 ## Notes
 
 - `writeMonitoring` is called at every exit path: `DONE_NO_TICKET`, `NEEDS_TICKET`,
-  `ANCHORS_STILL_FAILING`, `BLOCKED`. Never write to `agent-monitoring/runs.jsonl` or `events.jsonl`
+  `ANCHORS_STILL_FAILING`, `BLOCKED`. Never write to `agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl` or `events.jsonl`
   directly — always go through `record_run.py` / `record_events.py`.
 - The governance branch is deliberate: routine no-regression passes land as a lightweight chore commit
   with no ticket ceremony, mirroring the historical precedent of doc-sync commits with no ticket ID.
@@ -88,3 +88,4 @@ does not create one.
   they never write to `grade_anchors.json`, `test_grade_regression.py`, or any `docs/parity_ledger/*.yaml`
   file. Only the Update Anchors and Parity Check `agent()` phases make durable edits.
 - See `docs/simulation_quality/audit_workflow.md` for the full usage doc and governance rationale.
+- After the exit path resolves: evaluate reset boundary per `docs/guides/agent_session_reset_boundaries.md`

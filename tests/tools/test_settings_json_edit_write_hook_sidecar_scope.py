@@ -94,7 +94,7 @@ def test_run_id_resolution_empty_when_both_absent(tmp_path):
 
     assert result.returncode == 0
     assert (
-        "sidecar-check: tickets/inprogress/ has an active ticket but .claude/current_run has no run_id."
+        "sidecar-check: agent-working/tickets/inprogress/ has an active ticket but .claude/current_run has no run_id."
         in result.stdout
     )
 

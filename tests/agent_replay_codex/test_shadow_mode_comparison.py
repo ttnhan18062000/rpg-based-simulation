@@ -38,7 +38,7 @@ def test_n1_comparison_against_existing_fixture(real_codex_replay):
     post = _porcelain()
     assert pre == post, (
         "compare_claude_and_codex is a pure in-memory function — it must never write to "
-        "tickets/, agent-orchestration/, or .claude/"
+        "agent-working/tickets/, agent-working/agent-orchestration/, or .claude/"
     )
 
     if not comparison.match:

@@ -175,9 +175,9 @@ it and no dormancy protects it.
 - `docs/parity_ledger/strategic_cognition.yaml` — the parity entries for goal dispatch
 
 ## Related Stored Artifacts
-- `stored_artifacts/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION/` — the measurement
+- `agent-working/stored_artifacts/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION/` — the measurement
   that produced the verdict this ticket acts on
-- Staging artifacts for this ticket: `staging_artifacts/TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND/`
+- Staging artifacts for this ticket: `agent-working/staging_artifacts/TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND/`
 
 ## Related Code Areas
 - `src/systems/strategic_systems/intelligence.py:1707-1714` — the generic `else` branch, the defect

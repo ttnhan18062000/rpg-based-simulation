@@ -1,7 +1,7 @@
 """Tests for tools/open_ticket_overlap.py (TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER).
 
 Mirrors tests/tools/test_epic_folder_status.py's fixture-directory-per-test style: real
-tickets/todos/tickets/inprogress-shaped subtrees under tmp_path, no mocking of the parser.
+agent-working/tickets/todos/tickets/inprogress-shaped subtrees under tmp_path, no mocking of the parser.
 """
 from __future__ import annotations
 

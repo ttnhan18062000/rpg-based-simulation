@@ -35,7 +35,7 @@ decision 7 parks.
 **Why not DONE** (recorded so a later reader does not mistake this for an oversight): this is a
 standard-tier ticket with no staging artifacts, because no implementation pass ever ran. `done_checker`'s
 `migration_complete` condition requires `plan.md`/`investigation.md`/`test_plan.md` in
-`stored_artifacts/`, so a close would fail that gate. Manufacturing three artifacts for a ticket whose
+`agent-working/stored_artifacts/`, so a close would fail that gate. Manufacturing three artifacts for a ticket whose
 outcome is "the question is answered, no code changes" would be editing artifacts to satisfy a gate
 rather than to record real work, which this project forbids. BLOCKED is the accurate schema-valid state:
 the question is settled, the residual work is real, and it is owned elsewhere and parked.

@@ -4,11 +4,11 @@ Mirrors tests/agent_replay/test_no_mutation_snapshot.py's clean-vs-dirty porcela
 fallback pattern exactly, watched pathspec swapped to `[".claude/"]`. This is the one test in the
 ticket that legitimately runs the generator against the real repo root (Review-phase Fix B moved
 the schema-shape check off the real tree onto `tmp_path` in test_generator_containment.py — only
-this containment proof still touches the committed `agent-orchestration/rendered/` output).
+this containment proof still touches the committed `agent-working/agent-orchestration/rendered/` output).
 
 Also asserts docs/guidelines/intentional_divergences.md's content is unchanged after running every
 tool built in this ticket — proves no accidental path collision between the new
-agent-orchestration/intentional-divergences.md and the pre-existing mechanics-bible log.
+agent-working/agent-orchestration/intentional-divergences.md and the pre-existing mechanics-bible log.
 """
 from __future__ import annotations
 

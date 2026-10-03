@@ -31,7 +31,7 @@ def _env() -> dict[str, str]:
 
 def test_hook_entry_appends_a_redacted_identity_bound_scratch_record(tmp_path):
     payload = json.loads(_FIXTURE.read_text())["raw_stdin_payload"]
-    (tmp_path / AGENT_MONITORING).mkdir()
+    (tmp_path / AGENT_MONITORING).mkdir(parents=True)
     assert main(StringIO(json.dumps(payload)), _env(), tmp_path) == 0
     target = tmp_path / AGENT_MONITORING / "tools.jsonl"
     [record] = [json.loads(line) for line in target.read_text().splitlines()]

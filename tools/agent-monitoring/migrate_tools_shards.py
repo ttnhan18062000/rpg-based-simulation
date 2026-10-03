@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""One-time migration: split agent-monitoring/tools.jsonl into weekly ISO-week shard files.
+"""One-time migration: split agent-working/agent-monitoring/tools.jsonl into weekly ISO-week shard files.
 
 TCK-20260902-MONITORING-SHARD-MIGRATION (child 2 of the monitoring weekly-sharding epic).
 Buckets every historical line by its own `ts` field's ISO week (`%G-W%V`), appends each
-bucket into `agent-monitoring/tools/tools-YYYY-Www.jsonl` via writer.py::write_lines()
+bucket into `agent-working/agent-monitoring/tools/tools-YYYY-Www.jsonl` via writer.py::write_lines()
 (one locked batch per week), and runs a strict full-corpus zero-data-loss verification
-BEFORE this ticket's implementer runs `git rm agent-monitoring/tools.jsonl` as a separate,
+BEFORE this ticket's implementer runs `git rm agent-working/agent-monitoring/tools.jsonl` as a separate,
 explicit, human-reviewed step. This script never calls `git rm` itself.
 
 Genuinely one-time: no Make target, no cron/scheduled re-run mechanism. Re-running it after
-`agent-monitoring/tools.jsonl` has been retired is a no-op failure (source file absent).
+`agent-working/agent-monitoring/tools.jsonl` has been retired is a no-op failure (source file absent).
 
 Route-only, content-preserving: this script never repairs or normalizes malformed/off-schema
 historical lines (a documented handful missing `tool`/`run_id`/`seq` per
@@ -21,14 +21,14 @@ position within its `ts`-derived week bucket.
 
 Cross-worktree `git rm` merge-conflict runbook (TCK-20260902-MONITORING-SHARD-MIGRATION
 decision 5): this script performs a one-time, irreversible-from-the-working-tree `git rm` of
-agent-monitoring/tools.jsonl (in a separate step, gated on this script's verification
+agent-working/agent-monitoring/tools.jsonl (in a separate step, gated on this script's verification
 passing). Any other worktree/branch that has not yet merged past this ticket's commit and is
-still appending to its own local copy of agent-monitoring/tools.jsonl will produce a
+still appending to its own local copy of agent-working/agent-monitoring/tools.jsonl will produce a
 `CONFLICT (modify/delete)` when it later merges past this point — confirmed via
 `git merge-base --is-ancestor` against every other live worktree at investigation time.
 `merge=union` does NOT apply to modify/delete conflicts (it is a content-merge driver, only
 invoked when a path exists on both sides of a 3-way merge). Resolution: take the deletion
-side (`git rm agent-monitoring/tools.jsonl` at the conflict), and if that other branch's
+side (`git rm agent-working/agent-monitoring/tools.jsonl` at the conflict), and if that other branch's
 interim rows need to be preserved, re-run this same script against that branch's pre-merge
 copy of tools.jsonl (or a targeted subset of its new lines) before finalizing the merge,
 rather than resurrecting the monolithic file.
@@ -244,7 +244,7 @@ def main() -> int:
         if not ok:
             print(
                 f"ABORT: write_week_bucket reported failure for {week_key} "
-                "(see agent-monitoring/tools/.writer_health.jsonl for diagnostics).",
+                "(see agent-working/agent-monitoring/tools/.writer_health.jsonl for diagnostics).",
                 file=sys.stderr,
             )
             return 1
@@ -259,14 +259,14 @@ def main() -> int:
 
     if not report["verification_passed"]:
         print(
-            "VERIFICATION FAILED — DO NOT run `git rm agent-monitoring/tools.jsonl`. "
+            "VERIFICATION FAILED — DO NOT run `git rm agent-working/agent-monitoring/tools.jsonl`. "
             "Investigate the mismatches above before proceeding.",
             file=sys.stderr,
         )
         return 1
 
     print(
-        "VERIFICATION PASSED. agent-monitoring/tools.jsonl has NOT been touched by this script — "
+        "VERIFICATION PASSED. agent-working/agent-monitoring/tools.jsonl has NOT been touched by this script — "
         "retirement (git rm) is a separate, explicit step to run only now that this report is "
         "captured in the ticket's Test Summary."
     )

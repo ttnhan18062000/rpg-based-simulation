@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Report-only sweep: planning docs whose claimed status ("idea" / "ready, schedule later") is
-stale against `tickets/done/` (TCK-20260930-PLANNING-DOC-STALENESS-DETECTOR).
+stale against `agent-working/tickets/done/` (TCK-20260930-PLANNING-DOC-STALENESS-DETECTOR).
 
 Same shape as `doc_staleness_check.py` / `epic_staleness_check.py`: `find_stale_planning_docs()`
 returns a list of `Finding`s, never raises a verdict, never edits a doc, and the CLI always exits 0
@@ -13,7 +13,7 @@ What it looks at, under `docs/plans/` (the `archive/` subtree is skipped):
   `standalone_items.md`). The identity text is that heading. A heading that already says
   SHIPPED / CLOSED / "was:" is treated as resolved and skipped.
 
-What it matches against: `tickets/done/**/TCK-*.md`. A done ticket matches an item when the ticket
+What it matches against: `agent-working/tickets/done/**/TCK-*.md`. A done ticket matches an item when the ticket
 id's slug (the part after the date), minus generic words, has >= 3 tokens and at least 75% of them
 appear in the item's identity text, and the ticket is dated on or after the doc (a ticket closed before
 the doc was written cannot be the work the doc describes). That is a title/keyword match, deliberately conservative and

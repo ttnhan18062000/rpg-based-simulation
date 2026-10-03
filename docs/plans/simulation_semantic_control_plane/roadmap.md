@@ -134,7 +134,7 @@ condition, not the presence of `UNKNOWN`.
   consciously descoped as its own detector code: no lineage field exists anywhere in the schema,
   and the one real precedent case is undetectable short of duplicating the changed-code check's own
   whole-entry-diff approach on a new axis, for a scenario that has not occurred once among M1's
-  five mapped mechanisms. See `stored_artifacts/TCK-20260924-M2-MAPPING-DRIFT-DETECTION/
+  five mapped mechanisms. See `agent-working/stored_artifacts/TCK-20260924-M2-MAPPING-DRIFT-DETECTION/
   investigation.md`'s "Risks and Open Questions" for the full reasoning. (Plain rename/removal is
   already a hard validator failure today via `registry.py::validate_rule_mechanism_edges()`'s
   unresolved-id check, independent of this milestone.)
@@ -426,6 +426,6 @@ plug into. Brief summary, since M0–M4 reference specific stages by letter:
 
 ### E. One project convention referenced without explanation
 
-This repository requires opening a formal ticket (`tickets/inprogress/{ticket_id}.md`) before
+This repository requires opening a formal ticket (`agent-working/tickets/inprogress/{ticket_id}.md`) before
 starting most units of work, including M0. This roadmap does not open that ticket itself — it is
 scoping the work, not starting it.

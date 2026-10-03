@@ -241,7 +241,7 @@ class TestNonStandardArtifactHandled:
 
 class TestInprogressNotTouched:
     def test_script_does_not_walk_inprogress(self, tmp_path, monkeypatch):
-        """Script uses TICKET_DIR = tickets/done, never tickets/inprogress."""
+        """Script uses TICKET_DIR = agent-working/tickets/done, never agent-working/tickets/inprogress."""
         import add_frontmatter_tickets as aft
 
         # Verify TICKET_DIR constant

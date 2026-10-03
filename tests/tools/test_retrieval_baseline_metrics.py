@@ -4,7 +4,7 @@
 Mirrors tests/tools/test_agent_monitoring_manifest.py's design: inline-dict unit tests for each
 section function (no file I/O), ast/source-text reuse guards proving this module composes
 existing generate_retro.py/legacy_reader.py/manifest.py functions rather than reimplementing
-them, and a dirty-tree-aware zero-mutation integration test against the REAL agent-monitoring/
+them, and a dirty-tree-aware zero-mutation integration test against the REAL agent-working/agent-monitoring/
 corpus — never a tmp_path copy, which would make that assertion vacuous.
 """
 import ast
@@ -369,7 +369,7 @@ def test_baseline_report_review_rework_proxy_ignores_reason_code_alone():
 
 
 # ---------------------------------------------------------------------------
-# AC5 — zero mutation of agent-monitoring/*.jsonl
+# AC5 — zero mutation of agent-working/agent-monitoring/*.jsonl
 # ---------------------------------------------------------------------------
 
 def _porcelain_snapshot() -> str:
@@ -391,7 +391,7 @@ def test_baseline_report_tool_causes_zero_diff_on_real_corpus():
 
     post_porcelain = _porcelain_snapshot()
     assert pre_porcelain == post_porcelain, (
-        "retrieval_baseline_metrics mutated agent-monitoring/: "
+        "retrieval_baseline_metrics mutated agent-working/agent-monitoring/: "
         f"pre={pre_porcelain!r} post={post_porcelain!r}"
     )
 

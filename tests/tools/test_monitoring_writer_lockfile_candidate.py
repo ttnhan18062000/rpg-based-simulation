@@ -9,7 +9,7 @@ Windows equivalent).
 This module is evidence-gathering only. It is deliberately self-contained
 and test-local: `_acquire_lock`/`_release_lock`/`_write_record_lockfile`
 below are NOT imported from or added to `tools/agent-monitoring/`, and
-this file never opens any path under the real `agent-monitoring/`
+this file never opens any path under the real `agent-working/agent-monitoring/`
 directory — every write goes through a `tmp_path` fixture. Wiring this
 design into the production hook is explicitly out of scope for this
 ticket (follow-on, epic-gated implementation work); see

@@ -59,7 +59,7 @@ state through the real `make dev` golden path, confirmed by an actual headless-C
 | F4 | **Root cause, most severe**: `V2EngineManager._build()` constructed `AuthoritativeState` with no `terrain` argument at all (defaulting to an empty dict) — `GET /api/v1/map` has always returned `width=0/height=0/grid=[]` through the real running server, predating and independent of F1-F3. Every earlier tool used to inspect rendering/world data in this project's history bypassed `V2EngineManager` entirely by calling `WorldCompiler.compile()` directly, which is exactly why this was never caught | Critical | **CLOSED** — `TCK-20260825-V2-ENGINE-MANAGER-MISSING-TERRAIN` wires `WorldCompiler`/`WorldRepository` into `_build()`, preserving the existing hero+goblin-diagonal entity-spawn logic unchanged |
 | F5 | No repeatable, agent-invokable way existed to verify the live map actually renders in a real browser — every prior verification in this feature's history stopped at the backend/component-test boundary, explicitly disclosed as a caveat each time | Medium | **CLOSED** — `frontend/e2e/live_map.spec.ts` (Playwright, headless Chromium, real `make dev` golden path) added, `TCK-20260825-LIVE-VERIFICATION-TOOLING`. Re-run any time via `npm run test:e2e` in `frontend/` |
 | F6 | 500-entity tick throughput measured at ~7.8-7.9 ticks/sec against a 20 TPS nominal target, roughly 2.6x over the `cli_default` profile's 50ms tick budget | Unconfirmed | **OPEN, DISCLOSED** — re-measured twice (`TCK-20260821-LIVE-MAP-PERF-VALIDATION`, `TCK-20260825-LIVE-MAP-TPS-BUDGET-RECHECK`); this agent could not obtain a genuinely uncontended host to confirm whether this is real engine cost or sandbox swap-pressure noise. Explicitly out of this dimension's own scope — no fix attempted |
-| F7 | The dirty-rect/layered rendering-performance rewrite and broadcast-filtering interest-management scaling work (roadmap milestones M2/M3) are entirely unbuilt | Known, planned | **OPEN, DISCLOSED, NOT STARTED** — tracked as their own separate epics (`live-map-rendering-performance`, `live-map-interest-management`), both still `tickets/todos/`, deliberately out of this epic's own scope from the start |
+| F7 | The dirty-rect/layered rendering-performance rewrite and broadcast-filtering interest-management scaling work (roadmap milestones M2/M3) are entirely unbuilt | Known, planned | **OPEN, DISCLOSED, NOT STARTED** — tracked as their own separate epics (`live-map-rendering-performance`, `live-map-interest-management`), both still `agent-working/tickets/todos/`, deliberately out of this epic's own scope from the start |
 
 ---
 
@@ -92,10 +92,10 @@ not one-off, addition to this project's verification surface.
 | `docs/audits/D26_visual_quality_integration.md` | Sibling audit — server-side batch/QA renderer, not the live canvas |
 | `docs/audits/D27_frontend_hud_visual_design_quality.md` | Sibling audit — HUD chrome design quality, not functional correctness |
 | `docs/architecture/http_api_key_authentication.md` | Section 6 documents the dev-key convention F2's fix introduced |
-| `tickets/done/TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX.md` | F1, F2, F3 |
-| `tickets/done/TCK-20260825-METADATA-PROVIDER-NONBLOCKING-FALLBACK.md` | F3 |
-| `tickets/todos/TCK-20260825-METADATA-API-BACKEND-MISSING.md` | The real, still-open fix behind F3, deliberately not built as part of this dimension |
-| `tickets/done/TCK-20260825-V2-ENGINE-MANAGER-MISSING-TERRAIN.md` | F4 |
-| `tickets/done/TCK-20260825-LIVE-VERIFICATION-TOOLING.md` | F5 |
-| `tickets/done/TCK-20260825-LIVE-MAP-TPS-BUDGET-RECHECK.md` | F6 |
+| `agent-working/tickets/done/TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX.md` | F1, F2, F3 |
+| `agent-working/tickets/done/TCK-20260825-METADATA-PROVIDER-NONBLOCKING-FALLBACK.md` | F3 |
+| `agent-working/tickets/todos/TCK-20260825-METADATA-API-BACKEND-MISSING.md` | The real, still-open fix behind F3, deliberately not built as part of this dimension |
+| `agent-working/tickets/done/TCK-20260825-V2-ENGINE-MANAGER-MISSING-TERRAIN.md` | F4 |
+| `agent-working/tickets/done/TCK-20260825-LIVE-VERIFICATION-TOOLING.md` | F5 |
+| `agent-working/tickets/done/TCK-20260825-LIVE-MAP-TPS-BUDGET-RECHECK.md` | F6 |
 | `docs/audits/audit_dimensions.md` | The original 18-dimension audit programme's master index — this file intentionally does not add an entry there, matching the precedent D19-D27 already set |

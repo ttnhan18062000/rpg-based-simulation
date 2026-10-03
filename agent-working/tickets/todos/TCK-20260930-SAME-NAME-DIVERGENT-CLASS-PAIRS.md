@@ -48,7 +48,7 @@ Runtime probe (positive-controlled per-method counters, `Kernel.tick_once()` ove
 (planning's own instrumented run measured zero `get_effective_stats` firings as well, so the
 surviving class may itself be partly dead on that path), `strategy.cognition_capacity.CapacityService`
 0 calls. Probe output:
-`stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/`.
+`agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/`.
 
 **Fifth instance, at the concept level (found by rpg-feature-planning, 2026-09-30):** two things are
 called "social memory": `campaign_state.faction_social_memories` (read by
@@ -106,7 +106,7 @@ minting a mechanism for dead code is the failure the completeness checker exists
 None.
 
 ## Related Stored Artifacts
-`stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/` (runtime probe output).
+`agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/` (runtime probe output).
 
 ## Related Code Areas
 `src/core/items.py`, `src/core/recipes.py`, `src/core/registries.py`, `src/progression/skills.py`,

@@ -100,7 +100,7 @@ how `TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE` was split
 - `docs/testing/test_taxonomy.md` — what `@slow` is meant to signify.
 
 ## Related Stored Artifacts
-- `stored_artifacts/TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED/` (once migrated) — carries
+- `agent-working/stored_artifacts/TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED/` (once migrated) — carries
   the measurement and the family-level classification this ticket was split from.
 
 ## Related Code Areas

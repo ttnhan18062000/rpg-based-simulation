@@ -121,10 +121,10 @@ mechanisms, and the 14 edge-bearing Rules are exactly the 14 classified ones.
   partly supersedes
 
 ## Related Stored Artifacts
-- `stored_artifacts/TCK-20260923-M1-TERRITORY-CONTROL-MAPPING-SLICE/` — the one slice with usable cost
+- `agent-working/stored_artifacts/TCK-20260923-M1-TERRITORY-CONTROL-MAPPING-SLICE/` — the one slice with usable cost
   telemetry (12 agents, 3169 s, ≥458 tool calls for 4 Rules; a floor, since 3 of 12 agents logged no
   tool rows)
-- `stored_artifacts/TCK-20260924-M4-COMBAT-SLICE-CROSS-DOMAIN-VIEW/` — 10 Rules, **no usable cost
+- `agent-working/stored_artifacts/TCK-20260924-M4-COMBAT-SLICE-CROSS-DOMAIN-VIEW/` — 10 Rules, **no usable cost
   telemetry** (hand-closed, so `duration_s: 0` and zero tool rows, by design)
 
 ## Related Code Areas
@@ -153,7 +153,7 @@ mechanisms, and the 14 edge-bearing Rules are exactly the 14 classified ones.
   bindings, by an amount nobody has measured.
 - Whether a "classified, no code needed" child can reach `DONE` is **an open process question, not
   rhetorical**: `done_checker`'s `migration_complete` requires `plan.md`/`investigation.md`/
-  `test_plan.md` in `stored_artifacts/`, and `## Status` offers no superseded-style value. It already
+  `test_plan.md` in `agent-working/stored_artifacts/`, and `## Status` offers no superseded-style value. It already
   blocked `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED` from closing. Children that
   classify Rules without changing code may hit it. Owned by `agent-working-design`, not filed yet —
   waiting for a second instance so it arrives with evidence rather than one anecdote.

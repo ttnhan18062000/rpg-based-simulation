@@ -12,7 +12,7 @@ Every constant is a *relative* ``Path`` (relative to the repository root). ``too
 tool scripts) is a different folder from ``AGENT_MONITORING`` (the data) and is not covered here.
 
 Prefix-only layout: each moved path is its old path with ``AGENT_WORKING_ROOT`` in front. Before the move
-``AGENT_WORKING_ROOT`` is ``.`` and every constant equals its pre-move value.
+(history, older commits) ``AGENT_WORKING_ROOT`` was ``.`` and every constant equalled its old value.
 
 Closed history is frozen and keeps citing pre-move paths; ``resolve_legacy_citation`` maps such a citation to
 the live location.
@@ -22,8 +22,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-#: Folder that holds all agent-working state. ``Path(".")`` before the move.
-AGENT_WORKING_ROOT = Path(".")
+#: Folder that holds all agent-working state (``Path(".")`` before the move).
+AGENT_WORKING_ROOT = Path("agent-working")
 
 TICKETS = AGENT_WORKING_ROOT / "tickets"
 STORED_ARTIFACTS = AGENT_WORKING_ROOT / "stored_artifacts"
@@ -34,7 +34,7 @@ PILOT_REQUESTS = AGENT_WORKING_ROOT / "pilot_requests"
 REVIEWS = AGENT_WORKING_ROOT / "reviews"
 
 #: Generated, untracked index folders.
-INDEX_ROOT = AGENT_WORKING_ROOT
+INDEX_ROOT = AGENT_WORKING_ROOT / ".index"
 AGENT_MONITORING_INDEX = INDEX_ROOT / "agent-monitoring-index"
 KNOWLEDGE_INDEX = INDEX_ROOT / "knowledge-index"
 PARITY_INDEX = INDEX_ROOT / "parity-index"

@@ -1,4 +1,4 @@
-"""Tests for agent-orchestration/skills.yaml (TCK-20260721-ORCHESTRATION-CONTRACT-CORE).
+"""Tests for agent-working/agent-orchestration/skills.yaml (TCK-20260721-ORCHESTRATION-CONTRACT-CORE).
 
 Verifies the skill catalog validates, has stable/unique/identifier-safe ids traceable to
 .claude/skills/*/SKILL.md directories, and that its schema stays structurally distinct from

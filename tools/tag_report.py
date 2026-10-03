@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Export a tag-usage report over completed tickets (tickets/done/).
+Export a tag-usage report over completed tickets (agent-working/tickets/done/).
 
 Built for TCK-20260706-TAG-REPORT-TOOL, updated for TCK-20260706-TAG-REGISTRY-DATA. Counts how many
-times each `tags` value appears across `tickets/done/` (recursing into the small number of
-`tickets/done/{folder}/` subfolders), skipping tickets that predate the tag taxonomy or carry no
+times each `tags` value appears across `agent-working/tickets/done/` (recursing into the small number of
+`agent-working/tickets/done/{folder}/` subfolders), skipping tickets that predate the tag taxonomy or carry no
 tags at all — so the count reflects the current controlled vocabulary
 (docs/guidelines/tag_taxonomy.md), not the ~1273-distinct-tag pre-taxonomy corpus that document
 describes.
@@ -138,7 +138,7 @@ def sweep_file_rows(rel_path: str, text: str, registry: dict, valid_categories: 
 
 
 def collect_completed_tickets(root: Path):
-    """Walk tickets/done/ recursively for ticket markdown files.
+    """Walk agent-working/tickets/done/ recursively for ticket markdown files.
 
     Returns (included, skip_reasons) where:
       - included is a list of (ticket_id, tags, relative_path) tuples for tickets that pass all
@@ -194,7 +194,7 @@ def collect_completed_tickets(root: Path):
 
 
 def collect_sweep_files(root: Path):
-    """Walk all four corpus roots (`tickets/done`, `tickets/inprogress`, `tickets/todos`,
+    """Walk all four corpus roots (`agent-working/tickets/done`, `agent-working/tickets/inprogress`, `agent-working/tickets/todos`,
     `stored_artifacts`) recursively for markdown files, for the full-corpus repair sweep
     (TCK-20260720-TAG-CORPUS-REPAIR-SWEEP).
 
@@ -277,7 +277,7 @@ def build_tag_rows(included, registry: dict):
 
 def print_report(included, skip_reasons, rows, non_canonical_hits, show_tickets: bool) -> None:
     scanned = len(included) + sum(skip_reasons.values())
-    print(f"Tag report: {scanned} ticket file(s) scanned under tickets/done/")
+    print(f"Tag report: {scanned} ticket file(s) scanned under agent-working/tickets/done/")
     print(f"  included (tagged, post-taxonomy): {len(included)}")
     if skip_reasons:
         print("  skipped:")
@@ -320,7 +320,7 @@ def build_json_report(included, skip_reasons, rows, non_canonical_hits) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Export a tag-usage report over completed tickets (tickets/done/)."
+        description="Export a tag-usage report over completed tickets (agent-working/tickets/done/)."
     )
     parser.add_argument("--root", default=".", help="Project root directory (default: current directory)")
     parser.add_argument("--json", default=None, help="Optional path to write a structured JSON report")

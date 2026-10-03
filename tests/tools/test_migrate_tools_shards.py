@@ -3,7 +3,7 @@
 
 Unit tests use synthetic fixtures (deterministic, isolated). Integration tests that exercise
 the full pipeline against the real historical corpus operate on a copy of it under tmp_path —
-never against the real agent-monitoring/tools.jsonl or agent-monitoring/tools/ directly, so
+never against the real agent-working/agent-monitoring/tools.jsonl or agent-working/agent-monitoring/tools/ directly, so
 running this test file never mutates the real repo or interferes with the one-time real
 migration run performed separately for this ticket's Test Summary evidence.
 """
@@ -186,9 +186,9 @@ def test_migration_uses_write_lines_one_lock_per_week_batch(tmp_path, monkeypatc
 def _run_migration_against_copy(tmp_path):
     """Copies the real historical file (and, if present, the real currently-live shard) into
     tmp_path and runs the full bucket -> write -> verify pipeline there. Never touches the
-    real agent-monitoring/ directory.
+    real agent-working/agent-monitoring/ directory.
 
-    Skips (does not fail) once agent-monitoring/tools.jsonl no longer exists: that absence is
+    Skips (does not fail) once agent-working/agent-monitoring/tools.jsonl no longer exists: that absence is
     this ticket's own intended end state (TCK-20260902-MONITORING-SHARD-MIGRATION retires the
     file via `git rm` once its own real, one-time run's verification report — pasted into the
     ticket's Test Summary — already passed for real against the real corpus). These two tests
@@ -200,7 +200,7 @@ def _run_migration_against_copy(tmp_path):
     """
     if not _REAL_SOURCE.exists():
         pytest.skip(
-            "agent-monitoring/tools.jsonl has been retired by this ticket's own migration run "
+            "agent-working/agent-monitoring/tools.jsonl has been retired by this ticket's own migration run "
             "(intended end state, not a regression) -- nothing left to copy for this real-corpus "
             "integration test."
         )
@@ -275,17 +275,17 @@ def test_full_corpus_verification_reports_exact_not_approximate_counts(tmp_path)
 
 def test_tools_jsonl_removed_from_working_tree_after_migration():
     assert not _REAL_SOURCE.exists(), (
-        "agent-monitoring/tools.jsonl must no longer exist in the working tree after this "
+        "agent-working/agent-monitoring/tools.jsonl must no longer exist in the working tree after this "
         "ticket's retirement step (git rm) — its full history remains recoverable via "
-        "`git log --follow -- agent-monitoring/tools.jsonl`"
+        "`git log --follow -- agent-working/agent-monitoring/tools.jsonl`"
     )
 
 
 def test_gitattributes_no_longer_references_retired_tools_jsonl_path():
     """TCK-20260903-MONITORING-DATA-MIGRATION has since retired the entire
-    agent-monitoring/tools/ directory (not just the monolithic tools.jsonl this ticket
-    itself retired) into agent-monitoring/data/YYYY-Www/tools.jsonl -- the shard-glob
+    agent-working/agent-monitoring/tools/ directory (not just the monolithic tools.jsonl this ticket
+    itself retired) into agent-working/agent-monitoring/data/YYYY-Www/tools.jsonl -- the shard-glob
     line is now gone too, not merely the monolithic-file line."""
     content = (_REPO_ROOT / ".gitattributes").read_text()
-    assert "agent-monitoring/tools.jsonl merge=union" not in content
-    assert "agent-monitoring/tools/*.jsonl merge=union" not in content
+    assert "agent-working/agent-monitoring/tools.jsonl merge=union" not in content
+    assert "agent-working/agent-monitoring/tools/*.jsonl merge=union" not in content

@@ -3,7 +3,7 @@
 
 Independent of Step 2's live-extraction comparison tests: exercises
 `validate_terminal_statuses` directly against (a) the real committed
-agent-orchestration/terminal-statuses.yaml, which must pass cleanly, and (b) a table of synthetic
+agent-working/agent-orchestration/terminal-statuses.yaml, which must pass cleanly, and (b) a table of synthetic
 malformed fixtures, each asserted to raise `TerminalStatusValidationError` naming the specific
 field/entry at fault.
 """

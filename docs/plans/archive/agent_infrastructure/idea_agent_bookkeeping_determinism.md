@@ -18,7 +18,7 @@ document); this document is the historical design reference.
 > **Maturity: SHIPPED.** Raised 2026-07-10 during a review of the `implement-ticket` pipeline and
 > agent-monitoring process, reproduced live in the same session (see Problem below) while running
 > `TCK-20260710-SECURITY-REVIEWER-AGENT-DOC`. Scheduled 2026-07-10 under
-> [`TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`](../../../../tickets/done/agent-bookkeeping-determinism/TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC.md),
+> [`TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`](../../../../agent-working/tickets/done/agent-bookkeeping-determinism/TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC.md),
 > which tracked three child tickets covering only the concrete core of this doc (the "Where this
 > pattern already shows up" table) — all three are now DONE: `TCK-20260710-CURRENT-RUN-SIDECAR-BASH`
 > (sidecar registration), `TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH` (per-phase `ts` capture), and
@@ -65,7 +65,7 @@ the orchestrator and therefore even less reliable.
 **General principle:** any monitoring/bookkeeping field whose correctness depends on an agent's
 prompt text including a specific mechanical instruction — and the agent actually executing it,
 literally, before doing anything else — is the same anti-pattern `TCK-20260709-AGENT-MONITORING-DURATION`
-already rejected for one field. Treat it as a systemic property of the whole `agent-monitoring/`
+already rejected for one field. Treat it as a systemic property of the whole `agent-working/agent-monitoring/`
 write path, not a queue of field-by-field fixes discovered one retro at a time.
 
 **Concrete fix for the reproduced instance:** move `.claude/current_run` sidecar registration out
@@ -147,7 +147,7 @@ Named here for traceability; each would need its own investigation before becomi
 
 ---
 
-*Raised: 2026-07-10, during a review of the agent-monitoring/implement-ticket process
+*Raised: 2026-07-10, during a review of the agent-working/agent-monitoring/implement-ticket process
 (`docs/guides/agent_monitoring.md`, `docs/agent-monitoring/schema.md`, `docs/ai/ticket-lifecycle.md`,
 `docs/ai/agents.md`) and confirmed live while manually executing
 `TCK-20260710-SECURITY-REVIEWER-AGENT-DOC` in the same session. Not yet scoped as a ticket.*
@@ -156,7 +156,7 @@ Named here for traceability; each would need its own investigation before becomi
 
 ## Amendment (2026-07-12) — the "Fixed" sidecar mechanism itself had two more gaps
 
-`TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION` (`tickets/done/`) found, via a direct
+`TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION` (`agent-working/tickets/done/`) found, via a direct
 empirical cross-check of `events.jsonl`'s `tool_call_count` against `tools.jsonl` ground truth, that
 **433 of 1,247 events (~35%) had a wrong count** — meaning `TCK-20260710-CURRENT-RUN-SIDECAR-BASH`'s
 "Fixed" claim above (the child ticket covering this table's `tool_call_count`/`cost_proxy_score`

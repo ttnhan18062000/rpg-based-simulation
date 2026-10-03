@@ -29,7 +29,7 @@ def test_codex_execution_path_matches_python_runner_output(real_codex_replay):
         divergences = load_divergences(_DIVERGENCE_LOG_PATH)
         assert is_approved(divergences, "codex_parity", "TCK-20260721-ORCHESTRATION-CONTRACT-ADR"), (
             f"Codex-side execution ({codex_outcome}) diverges from Python runner ({python_outcome}) "
-            "with no matching RATIFIED entry in agent-orchestration/intentional-divergences.md"
+            "with no matching RATIFIED entry in agent-working/agent-orchestration/intentional-divergences.md"
         )
     else:
         assert python_outcome.final_status == codex_outcome.final_status

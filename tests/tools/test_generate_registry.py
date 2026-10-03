@@ -51,7 +51,7 @@ def _make_ticket(tmp_path: Path, name: str, frontmatter: str, body: str = "") ->
 
 
 def _make_ticket_at(tmp_path: Path, rel: str, frontmatter: str, body: str = "") -> Path:
-    """Create a ticket file at tmp_path/<rel> (any location, not just tickets/done/) with given
+    """Create a ticket file at tmp_path/<rel> (any location, not just agent-working/tickets/done/) with given
     frontmatter and body -- for testing the todos/inprogress walk extension
     (TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE, Option A)."""
     p = tmp_path / rel
@@ -207,8 +207,8 @@ class TestArtifactJoin:
         (art_dir / "plan.md").write_text("---\n---\n# Plan\n")
         files = join_artifact_files(tmp_path, "TCK-20260601-FOO")
         assert sorted(files) == [
-            "stored_artifacts/TCK-20260601-FOO/investigation.md",
-            "stored_artifacts/TCK-20260601-FOO/plan.md",
+            "agent-working/stored_artifacts/TCK-20260601-FOO/investigation.md",
+            "agent-working/stored_artifacts/TCK-20260601-FOO/plan.md",
         ]
 
     def test_artifact_files_empty_when_no_folder(self, tmp_path):
@@ -221,7 +221,7 @@ class TestArtifactJoin:
         (art_dir / "plan.md").write_text("---\n---\n# Plan\n")
         (art_dir / "notes.txt").write_text("not markdown")
         files = join_artifact_files(tmp_path, "TCK-20260601-FOO")
-        assert files == ["stored_artifacts/TCK-20260601-FOO/plan.md"]
+        assert files == ["agent-working/stored_artifacts/TCK-20260601-FOO/plan.md"]
 
     def test_artifact_files_joined_into_ticket_entry(self, tmp_path):
         _make_ticket(tmp_path, "TCK-20260601-FOO.md",
@@ -232,7 +232,7 @@ class TestArtifactJoin:
         art_dir.mkdir(parents=True)
         (art_dir / "plan.md").write_text("---\n---\n# Plan\n")
         entries = collect_tickets(tmp_path)
-        assert entries[0]["artifact_files"] == ["stored_artifacts/TCK-20260601-FOO/plan.md"]
+        assert entries[0]["artifact_files"] == ["agent-working/stored_artifacts/TCK-20260601-FOO/plan.md"]
 
 
 # ---------------------------------------------------------------------------
@@ -243,7 +243,7 @@ class TestArtifactJoin:
 class TestSortOrder:
     def test_docs_before_tickets(self, tmp_path):
         doc_entry = {"type": "doc", "path": "docs/a.md", "authority": "P2"}
-        ticket_entry = {"type": "ticket", "path": "tickets/done/t.md", "date": "2026-06-01"}
+        ticket_entry = {"type": "ticket", "path": "agent-working/tickets/done/t.md", "date": "2026-06-01"}
         sorted_entries = sort_entries([ticket_entry, doc_entry])
         assert sorted_entries[0]["type"] == "doc"
         assert sorted_entries[1]["type"] == "ticket"
@@ -263,16 +263,16 @@ class TestSortOrder:
         assert result[1]["path"] == "docs/z.md"
 
     def test_tickets_sorted_by_date_descending(self, tmp_path):
-        t1 = {"type": "ticket", "path": "tickets/done/a.md", "date": "2026-01-01"}
-        t2 = {"type": "ticket", "path": "tickets/done/b.md", "date": "2026-06-01"}
-        t3 = {"type": "ticket", "path": "tickets/done/c.md", "date": "2025-12-01"}
+        t1 = {"type": "ticket", "path": "agent-working/tickets/done/a.md", "date": "2026-01-01"}
+        t2 = {"type": "ticket", "path": "agent-working/tickets/done/b.md", "date": "2026-06-01"}
+        t3 = {"type": "ticket", "path": "agent-working/tickets/done/c.md", "date": "2025-12-01"}
         result = sort_entries([t1, t2, t3])
         dates = [e["date"] for e in result]
         assert dates == ["2026-06-01", "2026-01-01", "2025-12-01"]
 
     def test_tickets_empty_date_sorts_last(self, tmp_path):
-        t_no_date = {"type": "ticket", "path": "tickets/done/old.md", "date": ""}
-        t_with_date = {"type": "ticket", "path": "tickets/done/new.md", "date": "2026-06-01"}
+        t_no_date = {"type": "ticket", "path": "agent-working/tickets/done/old.md", "date": ""}
+        t_with_date = {"type": "ticket", "path": "agent-working/tickets/done/new.md", "date": "2026-06-01"}
         result = sort_entries([t_no_date, t_with_date])
         assert result[0]["date"] == "2026-06-01"
         assert result[1]["date"] == ""
@@ -398,7 +398,7 @@ class TestNonBacktickPathFallback:
 
 
 # ---------------------------------------------------------------------------
-# Group 6c: ticket walk covers tickets/todos/ and tickets/inprogress/, not just tickets/done/
+# Group 6c: ticket walk covers agent-working/tickets/todos/ and agent-working/tickets/inprogress/, not just agent-working/tickets/done/
 # (TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE, Option A)
 # ---------------------------------------------------------------------------
 
@@ -411,30 +411,30 @@ class TestOpenTicketWalk:
 
     def test_inprogress_ticket_is_indexed(self, tmp_path):
         _make_ticket_at(
-            tmp_path, "tickets/inprogress/TCK-20260915-INPROG.md",
+            tmp_path, "agent-working/tickets/inprogress/TCK-20260915-INPROG.md",
             self._FM.format(tid="TCK-20260915-INPROG"),
             "## Title\nIn progress\n",
         )
         entries = collect_tickets(tmp_path)
-        assert [e["path"] for e in entries] == ["tickets/inprogress/TCK-20260915-INPROG.md"]
+        assert [e["path"] for e in entries] == ["agent-working/tickets/inprogress/TCK-20260915-INPROG.md"]
 
     def test_flat_todos_ticket_is_indexed(self, tmp_path):
         _make_ticket_at(
-            tmp_path, "tickets/todos/TCK-20260915-FLAT-TODO.md",
+            tmp_path, "agent-working/tickets/todos/TCK-20260915-FLAT-TODO.md",
             self._FM.format(tid="TCK-20260915-FLAT-TODO"),
             "## Title\nFlat todo\n",
         )
         entries = collect_tickets(tmp_path)
-        assert [e["path"] for e in entries] == ["tickets/todos/TCK-20260915-FLAT-TODO.md"]
+        assert [e["path"] for e in entries] == ["agent-working/tickets/todos/TCK-20260915-FLAT-TODO.md"]
 
     def test_nested_epic_folder_todos_ticket_is_indexed(self, tmp_path):
         _make_ticket_at(
-            tmp_path, "tickets/todos/some-epic/TCK-20260915-NESTED.md",
+            tmp_path, "agent-working/tickets/todos/some-epic/TCK-20260915-NESTED.md",
             self._FM.format(tid="TCK-20260915-NESTED"),
             "## Title\nNested\n",
         )
         entries = collect_tickets(tmp_path)
-        assert [e["path"] for e in entries] == ["tickets/todos/some-epic/TCK-20260915-NESTED.md"]
+        assert [e["path"] for e in entries] == ["agent-working/tickets/todos/some-epic/TCK-20260915-NESTED.md"]
 
     def test_sequence_md_excluded_from_todos_walk(self, tmp_path):
         (tmp_path / TICKETS / "todos" / "some-epic").mkdir(parents=True)
@@ -449,19 +449,19 @@ class TestOpenTicketWalk:
                      self._FM.format(tid="TCK-20260601-DONE").replace("phase: open", "phase: done"),
                      "## Title\nDone\n")
         _make_ticket_at(
-            tmp_path, "tickets/todos/TCK-20260915-TODO.md",
+            tmp_path, "agent-working/tickets/todos/TCK-20260915-TODO.md",
             self._FM.format(tid="TCK-20260915-TODO"), "## Title\nTodo\n",
         )
         _make_ticket_at(
-            tmp_path, "tickets/inprogress/TCK-20260915-INPROG.md",
+            tmp_path, "agent-working/tickets/inprogress/TCK-20260915-INPROG.md",
             self._FM.format(tid="TCK-20260915-INPROG"), "## Title\nInprog\n",
         )
         entries = collect_tickets(tmp_path)
         paths = {e["path"] for e in entries}
         assert paths == {
-            "tickets/done/TCK-20260601-DONE.md",
-            "tickets/todos/TCK-20260915-TODO.md",
-            "tickets/inprogress/TCK-20260915-INPROG.md",
+            "agent-working/tickets/done/TCK-20260601-DONE.md",
+            "agent-working/tickets/todos/TCK-20260915-TODO.md",
+            "agent-working/tickets/inprogress/TCK-20260915-INPROG.md",
         }
 
     def test_missing_todos_or_inprogress_dir_does_not_raise(self, tmp_path):
@@ -472,7 +472,7 @@ class TestOpenTicketWalk:
 
 class TestFolderClosedDoneWalk:
     """TCK-20260921-NESTED-EPIC-FOLDER-REGISTRY-VISIBILITY-GAP: an epic ticket closed via
-    CLAUDE.md's own folder-move rule (`tickets/done/{folder}/{epic}.md` + `SEQUENCE.md`) must be
+    CLAUDE.md's own folder-move rule (`agent-working/tickets/done/{folder}/{epic}.md` + `SEQUENCE.md`) must be
     indexed the same way a folder-nested todos/ ticket already was."""
 
     _FM = (
@@ -482,12 +482,12 @@ class TestFolderClosedDoneWalk:
 
     def test_folder_closed_epic_ticket_is_indexed(self, tmp_path):
         _make_ticket_at(
-            tmp_path, "tickets/done/some-epic/TCK-20260915-EPIC.md",
+            tmp_path, "agent-working/tickets/done/some-epic/TCK-20260915-EPIC.md",
             self._FM.format(tid="TCK-20260915-EPIC"),
             "## Title\nFolder-closed epic\n",
         )
         entries = collect_tickets(tmp_path)
-        assert [e["path"] for e in entries] == ["tickets/done/some-epic/TCK-20260915-EPIC.md"]
+        assert [e["path"] for e in entries] == ["agent-working/tickets/done/some-epic/TCK-20260915-EPIC.md"]
         assert entries[0]["ticket_id"] == "TCK-20260915-EPIC"
 
     def test_sequence_md_excluded_from_done_folder_walk(self, tmp_path):
@@ -499,11 +499,11 @@ class TestFolderClosedDoneWalk:
         assert entries == []
 
     def test_done_folder_walk_is_one_level_only_not_recursive(self, tmp_path):
-        # A ticket two levels deep under tickets/done/ must NOT be indexed -- CLAUDE.md's own
+        # A ticket two levels deep under agent-working/tickets/done/ must NOT be indexed -- CLAUDE.md's own
         # folder-move rule never nests a folder inside a folder, and collect_tickets() is
         # deliberately glob("*/*.md"), not rglob, to match that real shape exactly.
         _make_ticket_at(
-            tmp_path, "tickets/done/some-epic/nested-too-deep/TCK-20260915-TOO-DEEP.md",
+            tmp_path, "agent-working/tickets/done/some-epic/nested-too-deep/TCK-20260915-TOO-DEEP.md",
             self._FM.format(tid="TCK-20260915-TOO-DEEP"),
             "## Title\nToo deep\n",
         )
@@ -514,14 +514,14 @@ class TestFolderClosedDoneWalk:
         _make_ticket(tmp_path, "TCK-20260601-FLAT.md",
                      self._FM.format(tid="TCK-20260601-FLAT"), "## Title\nFlat\n")
         _make_ticket_at(
-            tmp_path, "tickets/done/some-epic/TCK-20260915-EPIC.md",
+            tmp_path, "agent-working/tickets/done/some-epic/TCK-20260915-EPIC.md",
             self._FM.format(tid="TCK-20260915-EPIC"), "## Title\nFolder-closed epic\n",
         )
         entries = collect_tickets(tmp_path)
         paths = {e["path"] for e in entries}
         assert paths == {
-            "tickets/done/TCK-20260601-FLAT.md",
-            "tickets/done/some-epic/TCK-20260915-EPIC.md",
+            "agent-working/tickets/done/TCK-20260601-FLAT.md",
+            "agent-working/tickets/done/some-epic/TCK-20260915-EPIC.md",
         }
 
 

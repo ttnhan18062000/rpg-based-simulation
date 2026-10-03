@@ -53,7 +53,7 @@ tracking the Dormant Mechanism Closure epic before any implementation step is wr
 - Do not build a full Perception-phase/Motivation-bias revival as a side effect of "finishing" this
   ticket.
 - Do not touch the epic ticket or the other 5 sibling ticket files in
-  `tickets/todos/dormant-mechanism-closure/`.
+  `agent-working/tickets/todos/dormant-mechanism-closure/`.
 
 ## Deviations
 None from the plan itself — idea 57 was never planned in detail here, precisely because it required

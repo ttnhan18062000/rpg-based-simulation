@@ -36,8 +36,8 @@ to port and pilot-run `.claude/workflows/create-tickets.js` for real — the fir
 `.claude/workflows/*.js` files to actually execute as code instead of being LLM-narrated. Full
 measurement (tokens, main-session context, tool-call attribution, step fidelity, a go/no-go for
 `implement-epic.js` next, and the specific decision `implement-ticket.js` needs) is in
-`stored_artifacts/TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT/pilot_measurement.md`. This
-ticket **stays in `tickets/backlogs/` / Status: BACKLOG** — the pilot answers this ticket's first
+`agent-working/stored_artifacts/TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT/pilot_measurement.md`. This
+ticket **stays in `agent-working/tickets/backlogs/` / Status: BACKLOG** — the pilot answers this ticket's first
 Acceptance Criterion (the surface exists) but does not itself decide whether/when to port the
 remaining 10 files; that remains a future pickup decision, now informed by real measurement instead
 of "unknown, re-check empirically." The Claude Agent SDK standalone-program alternative path
@@ -57,8 +57,8 @@ independently re-confirming the blocking condition still holds, with zero drift 
   exact-name lookup (`select:Workflow`) — found **no matching tool**. There is no `Workflow` tool or
   `tool_runner`-equivalent construct available inside this Claude Code CLI session.
 
-**Decision (2026-07-11): moved from `tickets/inprogress/` (Status: BLOCKED) to
-`tickets/backlogs/` (Status: BACKLOG).** This is a deliberate reframing, not a downgrade of intent:
+**Decision (2026-07-11): moved from `agent-working/tickets/inprogress/` (Status: BLOCKED) to
+`agent-working/tickets/backlogs/` (Status: BACKLOG).** This is a deliberate reframing, not a downgrade of intent:
 "BLOCKED" implied active work waiting on an external event; in practice nobody can schedule or
 predict that event, so the ticket was sitting idle rather than genuinely paused. "BACKLOG" more
 accurately reflects: a real, well-understood future improvement, deliberately not competing for
@@ -121,11 +121,11 @@ If/when this is picked up from the backlog:
   actually invoking the native `Workflow` tool and porting/piloting `create-tickets.js` on it —
   see the Request Summary update above)
 - TCK-20260710-WORKFLOW-EXECUTION-DETERMINISM-EPIC (parent — DONE, archived to
-  `tickets/done/workflow-execution-determinism/`)
-- TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK (sibling — DONE, `tickets/done/TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK.md`)
+  `agent-working/tickets/done/workflow-execution-determinism/`)
+- TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK (sibling — DONE, `agent-working/tickets/done/TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK.md`)
 - TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC (related but distinct layer — sub-agent
   mechanical-step reliability, not orchestrator-narration; DONE, archived to
-  `tickets/done/agent-bookkeeping-determinism/`)
+  `agent-working/tickets/done/agent-bookkeeping-determinism/`)
 - TCK-20260710-EPIC-SCOPE-ORPHAN-FIX / TCK-20260711-EPIC-STALENESS-DEDUPE-CHECK (DONE — both
   surfaced during this session's reflection as evidence the current narrate+gate strategy is working:
   each ticket's own Verify gate caught the narrating LLM omitting a required `docs/` update before
@@ -140,7 +140,7 @@ If/when this is picked up from the backlog:
   statement, still accurate as of the second 2026-07-11 confirmation)
 
 ## Related Stored Artifacts
-- `stored_artifacts/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME/` — investigation.md (includes both the
+- `agent-working/stored_artifacts/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME/` — investigation.md (includes both the
   first-pass and "Second Independent Confirmation" sections), plan.md (documents why no ordered
   implementation steps could be given while blocked), test_plan.md.
 

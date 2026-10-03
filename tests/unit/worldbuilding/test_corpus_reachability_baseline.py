@@ -3,7 +3,7 @@ ParticipantReachabilityRule) against the full real world corpus (data/worlds/*/r
 world.resolved.yaml).
 
 The baseline is expected to be non-empty: `RoleDefinition.compatible_traits` (the chosen
-matching field, see staging_artifacts/TCK-20260822-WORLD-GRAMMAR-REACHABILITY-VALIDATOR/
+matching field, see agent-working/staging_artifacts/TCK-20260822-WORLD-GRAMMAR-REACHABILITY-VALIDATOR/
 plan.md) does not cover the `opportunistic` (goblin/bandit quests) or `beast` (wolf quests)
 vocabulary used by real authored quest content, and a small number of `spiritual`/`undead`
 quests reference archetypes whose actual role trait doesn't match the tag the quest author

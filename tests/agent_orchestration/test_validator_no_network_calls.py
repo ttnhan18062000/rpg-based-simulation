@@ -88,7 +88,7 @@ def test_no_forbidden_network_dotted_calls():
 
 
 def _fake_repo_with_real_contract(tmp_path: Path) -> Path:
-    """Builds a throwaway repo root under tmp_path with a copy of the real agent-orchestration/
+    """Builds a throwaway repo root under tmp_path with a copy of the real agent-working/agent-orchestration/
     contract — keeps generator tests from ever writing into the real repo tree."""
     fake_repo = tmp_path / "fake_repo"
     shutil.copytree(_REPO_ROOT / AGENT_ORCHESTRATION, fake_repo / AGENT_ORCHESTRATION)
@@ -113,8 +113,8 @@ def test_generator_write_guard_allows_writes_outside_with_explicit_flag(tmp_path
 
 
 def test_generator_allows_writes_inside_agent_orchestration_without_flag(tmp_path):
-    # Regenerating in-place (or into a subdirectory of agent-orchestration/) is always allowed
-    # without the flag — the guard only restricts writes OUTSIDE agent-orchestration/.
+    # Regenerating in-place (or into a subdirectory of agent-working/agent-orchestration/) is always allowed
+    # without the flag — the guard only restricts writes OUTSIDE agent-working/agent-orchestration/.
     fake_repo = _fake_repo_with_real_contract(tmp_path)
     inside_dir = fake_repo / AGENT_ORCHESTRATION / "_generated_test_scratch"
     written = generate(fake_repo, inside_dir)
@@ -128,7 +128,7 @@ def test_generated_output_round_trips_through_load_contract(tmp_path):
     outside_dir = tmp_path / "roundtrip_target"
     generate(fake_repo, outside_dir, allow_outside_contract=True)
 
-    # load_contract expects a repo-root-shaped layout with an agent-orchestration/ child —
+    # load_contract expects a repo-root-shaped layout with an agent-working/agent-orchestration/ child —
     # confirm the generated files are themselves valid, loadable contract data.
     wrapper_root = tmp_path / "wrapper_root"
     shutil.copytree(outside_dir, wrapper_root / AGENT_ORCHESTRATION)

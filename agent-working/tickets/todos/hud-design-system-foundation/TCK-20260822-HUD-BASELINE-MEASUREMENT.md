@@ -64,7 +64,7 @@ change). The observer tasks measured exercise, but do not touch, App.tsx, Entity
 InspectPanel.tsx, and EventLog.tsx.
 
 ## Assumptions / Open Questions
-- Where the baseline artifact durably lives (a registered docs/ file vs. stored_artifacts/-only) is explicitly unresolved in both epic tickets; the closest project convention (measurement_baseline_contract.md) suggests a registered docs/ file since M4 must reference and re-run against it later. Recommend: docs/hud/baseline_usability_measurement.md, or similar — final path decision belongs to this ticket's own Investigate phase.
+- Where the baseline artifact durably lives (a registered docs/ file vs. agent-working/stored_artifacts/-only) is explicitly unresolved in both epic tickets; the closest project convention (measurement_baseline_contract.md) suggests a registered docs/ file since M4 must reference and re-run against it later. Recommend: docs/hud/baseline_usability_measurement.md, or similar — final path decision belongs to this ticket's own Investigate phase.
 - Task "representativeness" is inherently subjective; no automated check can verify it, so the AC compensates by requiring each task cite a real simulation-surfaced concept.
 - No UX measurement tooling/template exists in this repo; measurement is necessarily manual/human-recorded, so the AC must accept prose/timing evidence rather than a script exit code.
 

@@ -1,4 +1,4 @@
-"""Ratchet-based check for genuinely-accidental duplicate `agent-monitoring/data/*/runs.jsonl`
+"""Ratchet-based check for genuinely-accidental duplicate `agent-working/agent-monitoring/data/*/runs.jsonl`
 records (TCK-20260915-DUPLICATE-RUN-RECORDS, child of
 TCK-20260915-MONITORING-ANOMALY-DETECTION-EPIC).
 
@@ -58,7 +58,7 @@ def check_duplicate_run_records(
     run-record groups is at or below `ceiling`, FAIL if it has grown.
 
     `runs` defaults to the real corpus (loaded via `_load_runs_and_events()`) when not supplied --
-    tests inject a synthetic list instead of touching the real `agent-monitoring/data/` shards."""
+    tests inject a synthetic list instead of touching the real `agent-working/agent-monitoring/data/` shards."""
     if runs is None:
         runs, _ = _load_runs_and_events()
     classification = classify_duplicate_groups(runs)

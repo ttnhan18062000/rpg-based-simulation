@@ -1,5 +1,5 @@
 """Gate-policy conformance test: LIVE `.claude/workflows/implement-ticket.js` extraction vs.
-`agent-orchestration/gate-policy.yaml` contract data
+`agent-working/agent-orchestration/gate-policy.yaml` contract data
 (TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST, AC #1).
 
 Mirrors `test_terminal_status_conformance.py`'s exact structure: diffs live -> contract (never the

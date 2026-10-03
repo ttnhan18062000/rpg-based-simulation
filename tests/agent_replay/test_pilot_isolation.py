@@ -41,7 +41,7 @@ def test_isolation_produces_zero_diff_across_agent_monitoring_shards():
 
 def test_isolation_watch_set_actually_detects_a_deliberate_mutation():
     """Regression guard mirroring test_no_mutation_snapshot.py's own precedent — proves the
-    watch set actually fires on a real mutation under the sharded agent-monitoring/data/ layout,
+    watch set actually fires on a real mutation under the sharded agent-working/agent-monitoring/data/ layout,
     not merely that the snapshot helpers run without error (the exact vacuous-pass failure mode
     a naive 'assert no diff' implementation could silently have)."""
     probe_path = (
@@ -57,7 +57,7 @@ def test_isolation_watch_set_actually_detects_a_deliberate_mutation():
         post = capture(_REPO_ROOT)
 
         assert pre.content_hash != post.content_hash or pre.porcelain != post.porcelain, (
-            "watch set did not detect a deliberate mutation under agent-monitoring/data/"
+            "watch set did not detect a deliberate mutation under agent-working/agent-monitoring/data/"
         )
         # a mutation NOT attributed to the pilot's own run_id must not raise
         assert_isolation_held(pre, post, pilot_run_id="TCK-20260907-FILTERED-REPLAY-EVAL-PILOT")

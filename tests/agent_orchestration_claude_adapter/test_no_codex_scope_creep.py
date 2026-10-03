@@ -8,7 +8,7 @@ shipped `.py`/`.yaml`/`.md` files — catches this ticket's tooling accidentally
 out-of-scope Codex-side adapter work (owned by a different ticket).
 
 Scoped to the shipped code/contract tree only, mirroring the predecessor guard's own scope
-exactly (`_TOOL_DIR` + `agent-orchestration/`, never its own tests/ directory) — this ticket's own
+exactly (`_TOOL_DIR` + `agent-working/agent-orchestration/`, never its own tests/ directory) — this ticket's own
 test modules (this file included) legitimately discuss ".codex/" as a concept when describing what
 is explicitly NOT being built here, which is not the same as the shipped tree actually containing
 adapter code; the tests/ directory is not scanned.

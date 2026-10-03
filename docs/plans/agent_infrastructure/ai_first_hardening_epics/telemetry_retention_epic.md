@@ -11,7 +11,7 @@ tags: [ai, agent-monitoring, data-quality]
 
 **Tracking ticket**: not yet created (planning stage — detail plan and milestones only).
 **Source**: `AI_FIRST_ENGINEERING_NEXT_EVOLUTION_PROPOSAL` Rev.3, Bucket A / Horizon 1 item
-"agent-monitoring/tools.jsonl rotation — coherent hot→archive→index lifecycle", grouped with the
+"agent-working/agent-monitoring/tools.jsonl rotation — coherent hot→archive→index lifecycle", grouped with the
 broader artifact-retention and subsystem-ownership work the same epic covers.
 **Roadmap**: `roadmap.md` — Horizon 1, no hard dependency on the Horizon-0 gate.
 **Priority**: P1 for the still-open scope (M2/M3 below). M1 is **superseded — already shipped**,
@@ -27,7 +27,7 @@ PR #112 (confirmed `MERGED` via `gh pr view 112`, and confirmed present on `main
 session pulled). This is not a partial or superficial overlap — it solves the same problem more
 thoroughly than this session's own M1 design did:
 
-- **Final shipped layout**: `agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` — one
+- **Final shipped layout**: `agent-working/agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` — one
   folder per UTC ISO week, covering all three monitoring sources (this session's M1 only covered
   `tools.jsonl`/`events.jsonl`; the shipped work also unified `runs.jsonl`).
 - **Real reconciliation, already exact**: the migration verified `179243 + 190 live = 179433`
@@ -59,8 +59,8 @@ re-derived, not as a competing proposal to still build.
 ## Problem (remaining scope only)
 
 The shipped epics above cover `runs.jsonl`/`events.jsonl`/`tools.jsonl` exclusively. They do **not**
-touch the rest of this repo's artifact classes — `stored_artifacts/`, `tickets/done/`,
-`working_log.csv`, `graphify-out/`, `knowledge-index/` all still have real, uncoordinated
+touch the rest of this repo's artifact classes — `agent-working/stored_artifacts/`, `agent-working/tickets/done/`,
+`working_log.csv`, `graphify-out/`, `agent-working/.index/knowledge-index/` all still have real, uncoordinated
 lifecycles that have never been classified together. That gap is this epic's remaining scope.
 
 ## Scope
@@ -69,7 +69,7 @@ lifecycles that have never been classified together. That gap is this epic's rem
 
 **M2 is shipped — see `TCK-20260904-ARTIFACT-RETENTION-CLASSIFICATION`.** The table below reflects
 this milestone's original planning-time draft; the committed, evidence-verified version — including
-both the `graphify-out/` and `knowledge-index/` questions resolved with concrete citations rather
+both the `graphify-out/` and `agent-working/.index/knowledge-index/` questions resolved with concrete citations rather
 than carried forward — now lives at `docs/guidelines/artifact_retention_classification.md`. Treat
 that doc as authoritative; this table is retained here for historical context only.
 
@@ -78,13 +78,13 @@ established (Ephemeral / Run-scoped / Ticket-scoped / Long-lived / Institutional
 
 | Artifact class | Classification | Recommended treatment |
 |---|---|---|
-| `agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` | Operational telemetry | **Already resolved** — see M1 note above; referenced here only for completeness of this table |
-| `stored_artifacts/{id}/` | Ticket-scoped → institutional knowledge | Keep permanent |
-| `tickets/done/*.md` | Institutional knowledge | Keep permanent |
-| `agent-monitoring/retro/RETRO-*.md` | Aggregated retrospective / institutional knowledge | Keep permanent |
+| `agent-working/agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` | Operational telemetry | **Already resolved** — see M1 note above; referenced here only for completeness of this table |
+| `agent-working/stored_artifacts/{id}/` | Ticket-scoped → institutional knowledge | Keep permanent |
+| `agent-working/tickets/done/*.md` | Institutional knowledge | Keep permanent |
+| `agent-working/agent-monitoring/retro/RETRO-*.md` | Aggregated retrospective / institutional knowledge | Keep permanent |
 | `working_log.csv` | Aggregated retrospective (currently data-quality-broken) | Keep permanent once its parser is fixed — see `standalone_items.md` |
 | `graphify-out/` | Derived operational index (rebuildable) | **Open question** — insufficient evidence on CI/dev workflow needs to recommend build-output vs. tracked treatment; this milestone's output should resolve it with real evidence, not carry the "open question" forward a second time |
-| `knowledge-index/` | Derived operational index (rebuildable) | Same open question as `graphify-out/` |
+| `agent-working/.index/knowledge-index/` | Derived operational index (rebuildable) | Same open question as `graphify-out/` |
 | `.claude/current_run` sidecar(s) | Ephemeral / run-scoped | Already correctly ephemeral — no change needed |
 
 This milestone's deliverable is a committed doc recording this table as reviewed fact, with the
@@ -109,7 +109,7 @@ here for historical context only.
 | Capability-envelope baseline (from `governance_capability_policy_epic.md`) | Agent Configuration Maintainer | Any new legitimate permission need | Baseline diverges from a working local file |
 | Ticket-claim detection log (from `workflow_reliability_epic.md`) | Workflow Runtime Maintainer | Continuous | Zero incidents after 30 days |
 
-The `agent-monitoring/data/` weekly-shard layout's own ownership is a matter for whoever maintains
+The `agent-working/agent-monitoring/data/` weekly-shard layout's own ownership is a matter for whoever maintains
 the already-shipped `TCK-20260902/903-MONITORING-*` epics' code — not re-assigned here.
 
 This milestone documents ownership for this epic's own remaining subsystems and cross-references
@@ -122,7 +122,7 @@ from every epic doc, not restated in each.
 - Rewriting `.git` history to shrink what the already-shipped migration retired — not this epic's
   concern, and the shipped work's own design already chose recoverable-via-`git log --follow`
   over history rewriting, consistent with this repo's general practice.
-- Resolving the `graphify-out/`/`knowledge-index/` git-tracking question by assertion — M2 either
+- Resolving the `graphify-out/`/`agent-working/.index/knowledge-index/` git-tracking question by assertion — M2 either
   resolves it with real evidence or leaves it open with a named owner, never guesses.
 
 ## Acceptance signal for this epic
@@ -131,7 +131,7 @@ from every epic doc, not restated in each.
 - M2: **met** — a committed retention-classification table
   (`docs/guidelines/artifact_retention_classification.md`, shipped by
   `TCK-20260904-ARTIFACT-RETENTION-CLASSIFICATION`) covers every remaining artifact class, with both
-  `graphify-out/`/`knowledge-index/` questions resolved with concrete evidence citations, not
+  `graphify-out/`/`agent-working/.index/knowledge-index/` questions resolved with concrete evidence citations, not
   deferred.
 - M3: an ownership table exists for the remaining subsystems and is cross-referenced from this
   epic's sibling docs rather than duplicated.
@@ -141,8 +141,8 @@ from every epic doc, not restated in each.
 - `roadmap.md` — Horizon-1 placement.
 - `AI_FIRST_ENGINEERING_NEXT_EVOLUTION_PROPOSAL` — §"Telemetry & artifact lifecycle" (the source
   of M2's table; its M1-equivalent content is now superseded by the shipped work above).
-- `tickets/done/agent-monitoring-weekly-sharding/TCK-20260902-MONITORING-WEEKLY-SHARDING-EPIC.md`,
-  `tickets/done/agent-monitoring-unified-weekly-data/TCK-20260903-MONITORING-UNIFIED-WEEKLY-EPIC.md`
+- `agent-working/tickets/done/agent-monitoring-weekly-sharding/TCK-20260902-MONITORING-WEEKLY-SHARDING-EPIC.md`,
+  `agent-working/tickets/done/agent-monitoring-unified-weekly-data/TCK-20260903-MONITORING-UNIFIED-WEEKLY-EPIC.md`
   — the shipped epics that supersede this doc's original M1 (present on `main` as of this
   session's pull; PR #112).
 - `tools/agent-monitoring/verify_referential_integrity.py` — the already-shipped
@@ -150,4 +150,4 @@ from every epic doc, not restated in each.
 - `docs/guidelines/artifact_retention_classification.md` — the M2 deliverable (shipped, see
   `TCK-20260904-ARTIFACT-RETENTION-CLASSIFICATION`).
 - `docs/agent-monitoring/schema.md` — schema documentation, already updated by the shipped epics
-  to describe the current `agent-monitoring/data/YYYY-Www/` layout.
+  to describe the current `agent-working/agent-monitoring/data/YYYY-Www/` layout.

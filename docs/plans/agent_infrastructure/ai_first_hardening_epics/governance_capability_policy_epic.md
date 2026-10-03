@@ -56,7 +56,7 @@ evolution proposal work, none previously flagged by the original 30-pattern revi
 
 ### M1 — Per-agent tool-usage baseline audit (gated on nothing)
 
-Mine `agent-monitoring/tools.jsonl` for each of the 16 agents' real historical tool-call pattern:
+Mine `agent-working/agent-monitoring/tools.jsonl` for each of the 16 agents' real historical tool-call pattern:
 which tools each agent actually invoked, how often, and — where visible from `tool_input` —
 against what scope (file paths touched, command classes run). Output: one usage table, one row per
 agent, columns at minimum `tool name → call count → representative examples`.
@@ -157,7 +157,7 @@ assumed clean: `mechanics-auditor` made 3 `Agent` calls at `2026-09-06T04:13Z`, 
 landing. Its own subagent transcript's parent session (`8553c310-aa3d-4e2b-ad90-19452165200a`)
 started `2026-08-29T03:44:08Z` — 8 days before landing — confirming (not assuming) this is the
 known pre-restart-session case the no-hot-reload constraint describes, not an enforcement gap.
-Full evidence: `stored_artifacts/TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2/`.
+Full evidence: `agent-working/stored_artifacts/TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2/`.
 
 **Offline candidate-policy replay (per agent, before that agent's wave enforces anything):** for
 every historical tool call the agent made (from M1's usage table), evaluate whether a candidate
@@ -301,4 +301,4 @@ advisory hook is live and stable, tracked as a follow-on to this epic rather tha
 - `.claude/settings.local.json` — the git-ignored file M2's baseline/diff check targets.
 - `tools/write_path_guard.py` — source of `scan_for_secrets()` (line 149) for M4 (relocated from
   `tools/knowledge_gateway_redaction.py` by `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`).
-- `agent-monitoring/tools.jsonl` — the real usage data M1 mines.
+- `agent-working/agent-monitoring/tools.jsonl` — the real usage data M1 mines.

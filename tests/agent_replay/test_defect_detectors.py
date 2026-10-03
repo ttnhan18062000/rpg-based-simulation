@@ -4,7 +4,7 @@ M2's known-positive input is reconstructed from TCK-20260831-RACE-RELATIONS-MATR
 commit and its own ticket text. That ticket's final (post-fix) `## Files Changed` prose itself
 discloses the real historical gap: `docs/mechanics/02_combat_laws.md` "was not updated by the
 original Implement pass" and was "added by Document-Update after" the gap was caught at Verify
-(see staging_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/investigation.md Current Behavior
+(see agent-working/staging_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/investigation.md Current Behavior
 §5). Since the gap was caught and fixed before the ticket's single closing commit, the ticket's
 *current* committed state has no live gap — this test reconstructs the pre-fix self-report moment
 by using the real touched-docs set (from `git show`) against a declared-text excerpt that omits

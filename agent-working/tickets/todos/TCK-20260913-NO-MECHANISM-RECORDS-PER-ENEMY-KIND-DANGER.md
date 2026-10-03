@@ -12,7 +12,7 @@ tags: [cognition, combat]
 # TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER
 
 > **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
-> **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
+> **lifecycle correction only** — the ticket had sat in `agent-working/tickets/inprogress/` with no further
 > content change since 2026-09-14 (verified via `git log --follow`, not file mtime), and its
 > presence there was firing this repo's sidecar-check hook on every `Edit`/`Write` in every
 > concurrent session on this machine. **Nothing about the ticket's own substance was
@@ -150,7 +150,7 @@ None yet — standard tier, staging artifacts created when picked up.
 
 ## Implementation Notes
 Ran the declared-intent check before writing any code, per explicit instruction. Full evidence in
-`staging_artifacts/.../investigation.md`; summarized here:
+`agent-working/staging_artifacts/.../investigation.md`; summarized here:
 
 - **Mechanics Bible**: `02_combat_laws.md` has zero mentions of per-enemy-kind danger/learning.
   `04_strategic_cognition.md` §6.12 is the Bible's own section for `CapabilityEstimateService`, but

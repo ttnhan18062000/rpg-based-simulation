@@ -24,7 +24,7 @@ standard
 refactor
 
 ## Priority
-P2
+P1
 
 ## Request Summary
 
@@ -174,7 +174,11 @@ citation. Validators that follow citations must accept a frozen pre-move path an
 - The quiet window needs the owner's go and the implementer idle; no open PRs at that time.
 
 ## Implementation Notes
-Stages 1 and 3-prep merge independently; Stage 2 is one PR. The implementer commits (design hands drafts).
+Owner decision 2026-10-03: **Stages 1 to 3 land together in PR #289** (not Stage 1 alone, not a separate Stage 2 PR);
+priority and effort are raised accordingly (P1; about 7,600 renamed files and about 3,200 rewritten references). Commit order
+inside the PR keeps the rename commit pure: (1) Stage 1 paths module + guard test; (2) Stage 2a `git mv` only (every
+file R100); (3) Stage 2b constants flip + live-reference rewrite + governing-file diffs (each owner-confirmed) + regenerated
+`AGENTS.md` / `docs/REGISTRY.yaml`; (4) Stage 3 validators and index rebuilds. The implementer commits (design hands drafts).
 
 ## Test Summary
 Defined at planning.

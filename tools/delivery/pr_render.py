@@ -25,7 +25,7 @@ scan for the substring `FAIL` in those two sections, surfacing the containing li
 convention this repo's own tickets already use by hand.
 
 **Ticket discovery**: commit-subject `TCK-` IDs (`git log <base>..HEAD --format=%s`) are the
-*primary* signal (Scope item 2); ticket IDs implied by changed paths under `tickets/` are a
+*primary* signal (Scope item 2); ticket IDs implied by changed paths under `agent-working/tickets/` are a
 secondary, reconciling signal. A mismatch between the two is reported as a warning, never resolved
 silently — the render still uses the commit-subject set.
 
@@ -129,7 +129,7 @@ _NOT_CLOSED_DIRS = ("todos", "inprogress")
 
 
 def _not_closed_dir(path: Path, tickets_root: Path) -> Optional[str]:
-    """The `tickets/` subdirectory a ticket file sits in when that location says the work is not
+    """The `agent-working/tickets/` subdirectory a ticket file sits in when that location says the work is not
     closed (`todos/` = filed, `inprogress/` = still open), else None. A path outside `tickets_root`
     or directly under it is unknown, not "open", so it stays listed."""
     try:

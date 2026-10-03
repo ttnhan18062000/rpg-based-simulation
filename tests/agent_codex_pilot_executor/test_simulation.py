@@ -35,7 +35,7 @@ def _context(root: Path) -> PilotSimulationContext:
 
 def _write_request(root: Path) -> None:
     request = root / PILOT_REQUESTS / f"{TICKET_ID}.yaml"
-    request.parent.mkdir(exist_ok=True)
+    request.parent.mkdir(parents=True, exist_ok=True)
     request.write_text(
         f"ticket_id: {TICKET_ID}\nhuman_owner: test\nrollback_plan_summary: delete scratch\n",
         encoding="utf-8",
@@ -138,7 +138,7 @@ def test_simulation_failure_after_claim_retains_failed_marker(tmp_path: Path, mo
 
 def test_dashboard_does_not_treat_an_old_tool_only_row_as_completed_pilot(tmp_path: Path):
     monitoring = tmp_path / AGENT_MONITORING
-    monitoring.mkdir()
+    monitoring.mkdir(parents=True)
     for filename in ("runs.jsonl", "events.jsonl"):
         (monitoring / filename).touch()
     (monitoring / "tools.jsonl").write_text(

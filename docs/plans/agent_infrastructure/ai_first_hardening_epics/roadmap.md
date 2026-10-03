@@ -102,7 +102,7 @@ overall (1, 3, 7, 9, plus item 1's remaining waves)**.
 
 **Items 3, 6, 9, 11, 12, 14, 15 — shipped; item 7 count corrected (2026-09-10)**: a routine
 inventory re-check (`TCK-20260910-AI-FIRST-ROADMAP-INVENTORY-SYNC`) found this table had drifted —
-`tickets/done/` was cross-checked item by item rather than trusted from a prior snapshot. Item 6's
+`agent-working/tickets/done/` was cross-checked item by item rather than trusted from a prior snapshot. Item 6's
 own row (above) is fixed in this same pass: it read "execution (M2) in progress" even after
 `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` (M2 steps 3-4, completing the milestone) merged —
 `TCK-20260907-KGMCP-DEPRECATION-EPIC` is now fully executed, all four M2 steps done. This does not
@@ -282,7 +282,7 @@ roadmap, not assumed.
 Not yet exercised (no tickets exist), but stated now so the milestone breakdown above and the
 eventual `create-tickets`/`implement-ticket` pass agree on how the work actually lands. The general
 delivery-lane rules (worktree granularity, branch naming, commit convention, PR lifecycle,
-`agent-monitoring/` staging) are the same defaults every ticket in this repo follows — see
+`agent-working/agent-monitoring/` staging) are the same defaults every ticket in this repo follows — see
 `docs/guides/delivery_process.md`, the single authoritative source, rather than restating them
 here. Nothing about this roadmap changes that default flow.
 

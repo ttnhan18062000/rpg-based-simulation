@@ -1,6 +1,6 @@
 """Unit tests for EconomyHealthMonitor and EconomyHealthSnapshot.
 
-Test plan reference: staging_artifacts/TCK-20260619-E33A-HEALTH-MONITOR/test_plan.md
+Test plan reference: agent-working/staging_artifacts/TCK-20260619-E33A-HEALTH-MONITOR/test_plan.md
 Ticket: TCK-20260619-E33A-HEALTH-MONITOR
 """
 from __future__ import annotations

@@ -84,7 +84,7 @@ def check_and_log(
     own_session_id: str | None = None,
 ) -> dict | None:
     """Checks for other concurrent sessions on the same ticket ID; writes exactly one detection
-    record (if any match found) to agent-monitoring/data/<iso-week>/claim_detections.jsonl. Never
+    record (if any match found) to agent-working/agent-monitoring/data/<iso-week>/claim_detections.jsonl. Never
     raises. Returns the written record dict for tests, or None if nothing was detected/written."""
     try:
         if not tid:

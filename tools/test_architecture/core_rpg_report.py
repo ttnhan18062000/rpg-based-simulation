@@ -91,7 +91,7 @@ V0_LIMITS = (
     "oracle or owner (decision D-P, deferred), so files that only import it are `unowned-domain`, outside the "
     "core-RPG candidate set.",
     "The manifest hashes the supplied artifacts, the workflow, the tag registry and the mutation records; the "
-    "scanned tests/, tickets/ and parity ledger are covered only by the `scanned_inputs_dirty` flag, which needs a git checkout. "
+    "scanned tests/, agent-working/tickets/ and parity ledger are covered only by the `scanned_inputs_dirty` flag, which needs a git checkout. "
     "That flag covers only those scanned inputs, not the whole repository (renamed from `worktree_dirty` in schema_version 2).",
     "`not-in-supplied-runs` means a candidate file has no testcase in any supplied JUnit run. It does not mean the file "
     "was never executed anywhere; with no run supplied at all the state is `no-junit-artifact`.",

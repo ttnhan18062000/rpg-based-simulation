@@ -1,4 +1,4 @@
-"""Structural tests for the agent-orchestration/ contract (TCK-20260721-ORCHESTRATION-CONTRACT-CORE).
+"""Structural tests for the agent-working/agent-orchestration/ contract (TCK-20260721-ORCHESTRATION-CONTRACT-CORE).
 
 Covers file existence/parseability, the per-phase tier-applicability matrix, the `version` field's
 documented versioning scheme, and the two anti-drift guards (no orchestrator pseudo-agent role

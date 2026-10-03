@@ -271,4 +271,4 @@ technically correct and unreadable, which is how most architecture diagrams die.
 - `docs/plans/mechanic_verification_scenarios_proposal.md` — per-mechanism scenario verdicts, the
   primary producer for the verification axis
 - `docs/plans/world_composition_precondition_gap_finding.md` — the scenario-does-not-arise pattern
-- `tickets/done/TCK-20260831-BRAINSTORM-IDEA-CROSS-INDEX.md` — the generated-index precedent
+- `agent-working/tickets/done/TCK-20260831-BRAINSTORM-IDEA-CROSS-INDEX.md` — the generated-index precedent

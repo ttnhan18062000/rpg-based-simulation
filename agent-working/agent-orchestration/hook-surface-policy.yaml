@@ -1,5 +1,5 @@
 # Declares, per provider, the distinction between a hook event being available (the provider
-# documents it), normalized (agent-orchestration/hook-events.yaml's shared vocabulary), and
+# documents it), normalized (agent-working/agent-orchestration/hook-events.yaml's shared vocabulary), and
 # enabled (actually wired in a committed project configuration). Recording this policy is not
 # authorization to enable a hook, write monitoring data, invoke paid Codex work, or run a live
 # pilot — every activation_prerequisites entry below is a requirement still to be satisfied by a

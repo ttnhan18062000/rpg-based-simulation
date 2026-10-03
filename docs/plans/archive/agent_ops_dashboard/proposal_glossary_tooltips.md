@@ -12,7 +12,7 @@ tags: [dashboard, observability, reporting, agent-monitoring]
 # Proposal: Backend-driven glossary metadata + hover tooltips across the Agent Ops Dashboard
 
 **Archived:** 2026-07-19 — shipped by `TCK-20260718-GLOSSARY-TOOLTIPS-EPIC` and its four child
-tickets (all `tickets/done/`): `TCK-20260718-GLOSSARY-REGISTRY` (concern 1, new
+tickets (all `agent-working/tickets/done/`): `TCK-20260718-GLOSSARY-REGISTRY` (concern 1, new
 `docs/guidelines/glossary_registry.jsonl` + `tools/glossary_registry.py`, categorized entries seeded
 from `docs/agent-monitoring/schema.md`'s existing status/reason-code tables), `TCK-20260718-GLOSSARY-API`
 (concern 2, `GET /api/glossary` merging the registry with `layer_registry.jsonl`'s existing `note`
@@ -62,7 +62,7 @@ this list is complete during Investigate, don't just copy it blindly):
   `SECURITY_BLOCKED`, `STOPPED_BY_USER`, `EPIC_SCOPED`, `GATE_FAIL`,
   `ALL_SCOPED`, `DONE_NO_TICKET`, `IN_PROGRESS`/`INPROGRESS` — confirmed via
   the same `Counter` scan technique used earlier today
-  (`agent-monitoring/runs.jsonl`'s distinct `final_status` values); re-run
+  (`agent-working/agent-monitoring/runs.jsonl`'s distinct `final_status` values); re-run
   it fresh during Investigate, this list will have grown since this
   proposal was written.
 - **`reason_code` values** — already fully enumerated and described in
@@ -118,7 +118,7 @@ this list is complete during Investigate, don't just copy it blindly):
   neutral "no description" state) — never a broken/empty popover, never a
   console error, and never block rendering the label itself while the
   glossary is still loading.
-- This dashboard is read-only over `tickets/**` and `agent-monitoring/
+- This dashboard is read-only over `agent-working/tickets/**` and `agent-working/agent-monitoring/
   *.jsonl` — the new registry file lives under `docs/guidelines/` (matching
   `tag_registry.jsonl`/`layer_registry.jsonl`'s location), and the dashboard
   only ever reads it, never writes.

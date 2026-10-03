@@ -10,15 +10,15 @@ as a snapshot of that ref and SHA: a closed week can still receive late shards, 
 as of that commit, not final.
 
 Checks (each finding names its ticket or path):
-  working_log      every closed ticket (tickets/done/**/TCK-*.md) has at least one DONE working-log row
-                   (epic-tier: at least one row of any status, since an epic closes as EPIC_SCOPED) and no identical duplicate rows, over `tickets/working_log.csv` plus any pending
+  working_log      every closed ticket (agent-working/tickets/done/**/TCK-*.md) has at least one DONE working-log row
+                   (epic-tier: at least one row of any status, since an epic closes as EPIC_SCOPED) and no identical duplicate rows, over `agent-working/tickets/working_log.csv` plus any pending
                    `*.working_log.jsonl` shard. BLOCKED progress rows and later DONE rows with a different
                    title (post-merge fix rounds) are legitimate. Narrower than `done_checker_static`'s
                    per-ticket rule on purpose; a ticket with no row at all (some epics) is reported
-  inprogress       no ticket still under `tickets/inprogress/` at the ref (merged work whose Finalize never ran,
+  inprogress       no ticket still under `agent-working/tickets/inprogress/` at the ref (merged work whose Finalize never ran,
                    or work in flight on main); a PR-time render cannot see this, only the ref can
   shards           no per-batch `<id>.{runs,events,tools,working_log}.jsonl` shard left for a finished ISO week
-  cited_evidence   every backticked `stored_artifacts/...` file path a closed ticket cites exists at the ref
+  cited_evidence   every backticked `agent-working/stored_artifacts/...` file path a closed ticket cites exists at the ref
                    (a trailing `:LINE` is stripped; a directory citation ending in `/` is skipped)
   duplicate_runs   `duplicate_run_record_check.check_duplicate_run_records` over the ref's run rows
   event_seq        `event_seq_integrity_check.find_seq_duplicates_and_gaps` over the ref's event rows
@@ -126,7 +126,7 @@ def check_working_log(reader: RefReader, since_date: str | None) -> list[str]:
 
 
 def check_inprogress_on_ref(reader: RefReader, since_date: str | None) -> list[str]:
-    """A ticket still under `tickets/inprogress/` on the merged ref is either work that merged without its
+    """A ticket still under `agent-working/tickets/inprogress/` on the merged ref is either work that merged without its
     Finalize ever running (the src change is on main, the ticket never closed) or work deliberately in
     flight. No per-PR render-time check can see the first case, since nothing in the PR changed after the
     merge; only a look at the ref can. Reported for a person to judge, never inferred from commit subjects
@@ -135,7 +135,7 @@ def check_inprogress_on_ref(reader: RefReader, since_date: str | None) -> list[s
     for p in sorted(reader.paths):
         m = _INPROGRESS_RE.match(p)
         if m and (not since_date or m.group(2) >= since_date):
-            findings.append(f"{m.group(1)}: still under tickets/inprogress/ at the ref ({p})")
+            findings.append(f"{m.group(1)}: still under agent-working/tickets/inprogress/ at the ref ({p})")
     return findings
 
 

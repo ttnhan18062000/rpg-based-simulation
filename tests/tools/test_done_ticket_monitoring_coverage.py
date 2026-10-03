@@ -2,7 +2,7 @@
 (TCK-20260805-DONE-TICKET-MONITORING-COVERAGE-AUDIT).
 
 Mirrors tests/tools/test_security_gate_firing_check.py's design: synthetic-fixture unit tests for
-the classification logic (mocking load_jsonl and a tmp_path tickets/done/ tree), plus a live-corpus
+the classification logic (mocking load_jsonl and a tmp_path agent-working/tickets/done/ tree), plus a live-corpus
 integration test asserting today's known-correct finding — never a tmp_path copy for that
 assertion, which would make it vacuous.
 """

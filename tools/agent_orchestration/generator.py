@@ -1,4 +1,4 @@
-"""Generation command for the agent-orchestration/ contract.
+"""Generation command for the agent-working/agent-orchestration/ contract.
 
 Materializes a validated ContractBundle (see loader.py) as YAML files under a target directory.
 Kept as a separate module from loader.py so the "read/validate" and "write" concerns stay
@@ -6,7 +6,7 @@ physically separated — this also keeps the write-guard's AST scan simple (only
 performs filesystem writes).
 
 Structural write-guard: `generate()` refuses to write to any resolved path outside
-`agent-orchestration/` unless the caller explicitly passes `allow_outside_contract=True`. This is
+`agent-working/agent-orchestration/` unless the caller explicitly passes `allow_outside_contract=True`. This is
 a real path-containment check performed before every write, not a docstring convention and not a
 generic --output-dir flag with no default restriction.
 

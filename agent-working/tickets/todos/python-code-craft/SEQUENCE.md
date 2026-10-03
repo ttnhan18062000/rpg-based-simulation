@@ -9,7 +9,7 @@ Tickets" entry as a dependency. This order follows the dependency table in
 `TCK-20261002-PYTHON-CODE-CRAFT-EPIC` and each ticket's own "Depends on" statement.
 
 `TCK-20261002-PYTHON-CODE-CRAFT-EPIC` is scope-only and is not in the order. It closes when the seven
-tickets below are in `tickets/done/`.
+tickets below are in `agent-working/tickets/done/`.
 
 ## Order
 

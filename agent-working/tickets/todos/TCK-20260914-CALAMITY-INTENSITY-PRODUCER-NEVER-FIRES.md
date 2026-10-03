@@ -202,7 +202,7 @@ discipline already applied to this cluster.
 ### 2026-09-30 — verdict recorded via `TCK-20260929-UNREACHABLE-CLASSIFY-WAVE-CONFIRM` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T04`): `DEFECT`, from PR #258 — recorded, not re-investigated
 
 **Source of the verdict.** `TCK-20260928-MECHANISM-REACHABILITY-CALAMITY-TRAUMA-AGING` (`J1`), merged in PR #258
-(`35806b1ed`); exit claim `DEFECT` at `stored_artifacts/TCK-20260928-MECHANISM-REACHABILITY-CALAMITY-TRAUMA-AGING/investigation.md`
+(`35806b1ed`); exit claim `DEFECT` at `agent-working/stored_artifacts/TCK-20260928-MECHANISM-REACHABILITY-CALAMITY-TRAUMA-AGING/investigation.md`
 (line 55) and that ticket's Completion Summary: `CalamityService.apply_calamity_consequences()` has zero real
 callers, so the producer of `calamity_intensity` can never run. The wave recorded the exit claim as a
 **recommendation only**; the registry-side write is routed to

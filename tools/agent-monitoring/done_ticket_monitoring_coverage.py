@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only audit: does every tickets/done/ ticket have at least one agent-monitoring
+"""Read-only audit: does every agent-working/tickets/done/ ticket have at least one agent-monitoring
 runs.jsonl record? (TCK-20260805-DONE-TICKET-MONITORING-COVERAGE-AUDIT)
 
 Built after TCK-20260805-CODEX-EVENT-TRACE-GAP-INVESTIGATION found 2 DONE tickets
@@ -10,7 +10,7 @@ whether that's isolated to those 2 tickets or reflects a broader gap.
 
 Deliberately does NOT reuse tag_report.py's collect_completed_tickets() — that function filters to
 tag-taxonomy-cutoff-dated, non-empty-tags tickets for its own retro-reporting purpose, which would
-silently exclude older/untagged real tickets from this audit. Walks tickets/done/ directly instead,
+silently exclude older/untagged real tickets from this audit. Walks agent-working/tickets/done/ directly instead,
 reusing only the genuinely-shared primitives (extract_frontmatter, _load_runs_and_events).
 """
 import argparse
@@ -32,7 +32,7 @@ from tools.agent_working_paths import TICKETS  # noqa: E402
 
 
 def _collect_done_ticket_ids(done_dir: Path) -> tuple:
-    """Returns (ticket_ids, unparseable) — every real ticket_id found under tickets/done/
+    """Returns (ticket_ids, unparseable) — every real ticket_id found under agent-working/tickets/done/
     (recursive), and a list of (rel_path, reason) for files that couldn't be resolved to a
     ticket_id at all (never silently dropped from the audit)."""
     ticket_ids = []
@@ -92,11 +92,11 @@ def build_coverage_section(done_dir: Path = TICKETS / "done") -> dict:
         "unparseable": [{"path": p, "reason": r} for p, r in unparseable],
         "unparseable_count": len(unparseable),
         "derivation": (
-            "Walks tickets/done/ recursively (excluding SEQUENCE.md/README.md index files), "
+            "Walks agent-working/tickets/done/ recursively (excluding SEQUENCE.md/README.md index files), "
             "extracts ticket_id from each file's frontmatter via extract_frontmatter() "
             "(falling back to the filename stem for legacy/no-frontmatter tickets, never a "
             "silent skip), and checks whether that ticket_id appears as a run_id in any real "
-            "agent-monitoring/runs.jsonl record (via generate_retro._load_runs_and_events()). "
+            "agent-working/agent-monitoring/runs.jsonl record (via generate_retro._load_runs_and_events()). "
             "A ticket with zero matching run_id records is reported in `missing`, regardless of "
             "tier — confirmed via real corpus inspection that epic-tier tickets' runs.jsonl "
             "records also use run_id == ticket_id, no special-casing needed. Does not check "

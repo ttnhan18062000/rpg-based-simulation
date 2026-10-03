@@ -164,7 +164,7 @@ chain.
 - `docs/parity_ledger/combat_movement.yaml` (`COMB-318`) — the original, narrower related finding.
 
 ## Related Stored Artifacts
-- `stored_artifacts/TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS/investigation.md`
+- `agent-working/stored_artifacts/TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS/investigation.md`
   — the full measurement and root-cause trace, including a false wiring-gap lead caught and
   corrected before being reported.
 

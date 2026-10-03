@@ -123,7 +123,7 @@ waiting to be fixed, it is a latent defect whose *dormancy is load-bearing*.
 - `docs/guidelines/intentional_divergences.md` — where any declared value change lands
 
 ## Related Stored Artifacts
-`stored_artifacts/TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS/investigation.md`
+`agent-working/stored_artifacts/TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS/investigation.md`
 (§§2, 7) once that ticket closes.
 
 ## Related Code Areas
@@ -155,7 +155,7 @@ does not run), and AC6's tripwire requirement is what makes waiting safe rather 
 
 **AC1 is nonetheless discharged** — do not redo it on resume. Full record with every citation
 verified at `origin/main` in
-`staging_artifacts/TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS/investigation.md`
+`agent-working/staging_artifacts/TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS/investigation.md`
 (retained deliberately while the ticket sits in `todos/`; other parked tickets carry staging artifacts
 the same way). Seven of the eight fields turned out to be **already decided** — by the Mechanics Bible
 or by `TCK-20260921`'s shipped code — and only `atk_range` was genuinely open:

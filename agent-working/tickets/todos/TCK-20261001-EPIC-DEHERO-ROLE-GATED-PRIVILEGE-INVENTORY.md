@@ -105,7 +105,7 @@ conclusion:
 - `docs/mechanics/02_combat_laws.md` — the reward table and the retired Hero's Journey law.
 
 ## Related Stored Artifacts
-- `staging_artifacts/TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION/` — the worked example of
+- `agent-working/staging_artifacts/TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION/` — the worked example of
   the analysis this epic generalises.
 
 ## Related Code Areas

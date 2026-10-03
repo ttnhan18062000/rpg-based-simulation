@@ -20,7 +20,7 @@ ticket's narrative.
 Script lived in the session scratchpad only, never in the repo. `git status --porcelain src/` was clean
 after every run.
 
-Reused `stored_artifacts/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION/investigation.md`'s
+Reused `agent-working/stored_artifacts/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION/investigation.md`'s
 own method, deliberately, so the numbers are comparable to the chain's earlier measurement:
 
 - real `Kernel.tick_once()` loop — **not** direct object construction; the defect is in the wiring, so

@@ -120,7 +120,7 @@ def test_vacancy_remains_detectable_across_subsequent_tick_if_unfilled():
 
 
 def test_single_production_entity_town_regression_vacancy_detection_delta():
-    """AC4 (revised, see tickets/inprogress/TCK-20260903-ECONOMIC-VACANCY-SIGNAL.md and
+    """AC4 (revised, see agent-working/tickets/inprogress/TCK-20260903-ECONOMIC-VACANCY-SIGNAL.md and
     plan.md's AC4 revision rationale): single-production-entity town, same seed, control vs.
     treatment across N ticks. This measures the vacancy-DETECTION-SIGNAL delta (Step 2 emission
     at PP-33 + Step 3 consumption at PP-20), NOT blacksmith crafting throughput --

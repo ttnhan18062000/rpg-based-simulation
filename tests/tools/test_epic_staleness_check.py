@@ -4,21 +4,21 @@ TCK-20260710-EPIC-STALENESS-CHECK.
 Mirrors test_validate_agent_monitoring.py's import style (sys.path insert into
 tools/agent-monitoring, then plain module import — no package boundary).
 
-Per Decision 5 (staging_artifacts/TCK-20260710-EPIC-STALENESS-CHECK/plan.md):
+Per Decision 5 (agent-working/staging_artifacts/TCK-20260710-EPIC-STALENESS-CHECK/plan.md):
 an epic whose children have zero activity ever is never flagged stale — it is
 "never started" (informational only). Only an epic with at least one child
 showing real activity evidence, followed by silence past the window, is
 flagged stale. TCK-20260702-OBSISO-EPIC was originally the repo's real live
-proof of the never-started case, but its folder (tickets/todos/obs-isolation)
-completed and moved to tickets/done/obs-isolation/ per the standard Finalize
+proof of the never-started case, but its folder (agent-working/tickets/todos/obs-isolation)
+completed and moved to agent-working/tickets/done/obs-isolation/ per the standard Finalize
 convention — no live repo path is genuinely "zero child activity ever" as of
 2026-08-17 (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP investigation).
 The never-started case is therefore proven via a synthetic tmp_path fixture
 instead — same reasoning independently applies to the folder-mode cross-
 reference regression below (TCK-20260922-CODEX-TICKETS-TO-BACKLOG: the
-tickets/todos/codex-runtime-activation/ folder this file once referenced here
-moved to tickets/backlogs/codex-runtime-activation/ as deliberate backlog
-housekeeping, so it is no longer a live tickets/todos/ path at all).
+agent-working/tickets/todos/codex-runtime-activation/ folder this file once referenced here
+moved to agent-working/tickets/backlogs/codex-runtime-activation/ as deliberate backlog
+housekeeping, so it is no longer a live agent-working/tickets/todos/ path at all).
 """
 import sys
 from datetime import date, datetime, timezone
@@ -65,8 +65,8 @@ def _write_ticket(path: Path, ticket_id: str, tier: str, date_str: str, related_
 #
 # Replaces the original real-repo-backed test_does_not_flag_never_started_
 # real_obsiso_epic (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP): the
-# real tickets/todos/obs-isolation fixture completed and moved to
-# tickets/done/, so no live repo path is genuinely "zero child activity ever"
+# real agent-working/tickets/todos/obs-isolation fixture completed and moved to
+# agent-working/tickets/done/, so no live repo path is genuinely "zero child activity ever"
 # any more. This synthetic tmp_path fixture exercises the same full
 # find_stale_epics/compute_stale_epics_report real-file-reading pipeline
 # (not just is_epic_stale()/is_epic_never_started() directly, which
@@ -590,8 +590,8 @@ def test_folder_mode_no_epic_ticket_file_leaves_status_none_not_crash(tmp_path):
 #
 # Replaces the original real-repo-backed test_real_codex_runtime_activation_
 # folder_is_status_aware (TCK-20260922-CODEX-TICKETS-TO-BACKLOG): the real
-# tickets/todos/codex-runtime-activation/ folder and its real governing epic
-# both moved to tickets/backlogs/codex-runtime-activation/ as deliberate
+# agent-working/tickets/todos/codex-runtime-activation/ folder and its real governing epic
+# both moved to agent-working/tickets/backlogs/codex-runtime-activation/ as deliberate
 # backlog housekeeping, so no live repo path reproduces "a todos/ subfolder
 # with no epic-tier ticket file of its own, whose governing epic is
 # discoverable only via cross-reference" any more. This synthetic tmp_path
@@ -608,7 +608,7 @@ def test_folder_mode_no_epic_ticket_file_leaves_status_none_not_crash(tmp_path):
 def test_synthetic_folder_mode_cross_reference_is_status_aware_full_pipeline(tmp_path):
     """TCK-20260819-HOTFIX-EPIC-STALENESS-FOLDER-BLOCKED-GAP: a folder-mode
     candidate with no epic-tier ticket file of its own, whose governing epic
-    lives in tickets/inprogress/ instead. Before that fix, this left the
+    lives in agent-working/tickets/inprogress/ instead. Before that fix, this left the
     folder candidate's status=None, so it could never be classified BLOCKED
     and fell through to the genuinely-stale bucket despite the governing
     epic being deliberately parked. Proves the cross-reference finds the
@@ -670,7 +670,7 @@ def test_folder_mode_cross_reference_finds_governing_epic_status(tmp_path):
     """Unit-level, synthetic version of the codex-runtime-activation shape:
     a todos_dir subfolder with a SEQUENCE.md but no epic-tier ticket file of
     its own, whose child IDs are referenced by an epic-tier ticket's own
-    '## Related Tickets' section living in tickets/inprogress/. Proves the
+    '## Related Tickets' section living in agent-working/tickets/inprogress/. Proves the
     cross-reference mechanism generically, not just against the one real
     repo fixture above."""
     inprogress_dir = tmp_path / "inprogress"
@@ -748,7 +748,7 @@ def test_real_codex_runtime_activation_epic_is_status_aware(tmp_path):
     """Integration-style confirmation against the real repo ticket that
     motivated this fix, TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC — read-only,
     copies the real file into a synthetic inprogress_dir rather than pointing
-    the check at the live tickets/ tree (which would be sensitive to
+    the check at the live agent-working/tickets/ tree (which would be sensitive to
     unrelated repo state changing over time)."""
     real_ticket_path = (
         Path(__file__).parent.parent.parent
@@ -885,8 +885,8 @@ def test_two_branches_both_writing_the_state_file_produce_no_merge_conflict(tmp_
 
 # ---------------------------------------------------------------------------
 # TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 5 -- the hook must read the sharded
-# agent-monitoring/data/<week>/runs.jsonl layout, not the retired flat agent-monitoring/runs.jsonl
-# path. Established first (not assumed): tickets/working_log.csv alone supplied `most_recent`
+# agent-working/agent-monitoring/data/<week>/runs.jsonl layout, not the retired flat agent-working/agent-monitoring/runs.jsonl
+# path. Established first (not assumed): agent-working/tickets/working_log.csv alone supplied `most_recent`
 # while the flat path was dead, since a missing file always yielded zero runs records -- these
 # tests prove runs.jsonl activity ALONE (with zero working_log.csv rows) now also supplies it,
 # which the dead-path version could never do.
@@ -933,7 +933,7 @@ def test_runs_jsonl_shard_activity_alone_prevents_never_started_classification(t
 
 def test_runs_jsonl_activity_split_across_multiple_weekly_shards_all_contribute(tmp_path):
     """resolve_child_activity must see activity from every weekly shard, not just one -- proves
-    the glob (via validate.py::load_data_glob) genuinely spans multiple agent-monitoring/data/
+    the glob (via validate.py::load_data_glob) genuinely spans multiple agent-working/agent-monitoring/data/
     week folders, matching record_events.py's own write-side sharding."""
     runs_data_root = tmp_path / "data"
     week1 = runs_data_root / "2026-W27"
@@ -958,10 +958,10 @@ def test_runs_jsonl_activity_split_across_multiple_weekly_shards_all_contribute(
 
 
 def test_dead_flat_runs_jsonl_path_is_no_longer_referenced():
-    """Static guard: the module must not reference the retired flat agent-monitoring/runs.jsonl
+    """Static guard: the module must not reference the retired flat agent-working/agent-monitoring/runs.jsonl
     path anywhere in its source (the exact defect class TCK-20260904-HOTFIX-WORKFLOW-META-
     CONFORMANCE-SHARD-AWARENESS fixed in a different consumer)."""
     module_path = _MONITORING_TOOLS_DIR / "epic_staleness_check.py"
     source = module_path.read_text()
-    assert 'Path("agent-monitoring/runs.jsonl")' not in source
-    assert "agent-monitoring/data" in source
+    assert 'Path("agent-working/agent-monitoring/runs.jsonl")' not in source
+    assert "agent-working/agent-monitoring/data" in source

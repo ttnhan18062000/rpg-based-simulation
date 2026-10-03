@@ -26,7 +26,7 @@ Scan the following locations in the rpg-based-simulation repo and summarize what
   - docs/mechanics/ chapters identified by search_docs above (do not read all chapters blindly)
   - generation/ folder (existing draft specs, indexes, validators)
   - config/ folder (world configs, scenario configs)
-  - tickets/ (any in-progress or recent simulation-related tickets)
+  - agent-working/tickets/ (any in-progress or recent simulation-related tickets)
 
   User goal: ${userGoal || '(none specified - produce a balanced generic setup)'}
   Mode: ${mode}

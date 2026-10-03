@@ -21,7 +21,7 @@ def test_real_monitoring_corpus_has_zero_codex_provider_records():
 
 def test_negative_control_raises_on_a_codex_provider_record(tmp_path):
     monitoring_dir = tmp_path / AGENT_MONITORING
-    monitoring_dir.mkdir()
+    monitoring_dir.mkdir(parents=True)
     (monitoring_dir / "runs.jsonl").write_text(
         json.dumps({"run_id": "FAKE", "provider": "codex"}) + "\n", encoding="utf-8"
     )
@@ -34,7 +34,7 @@ def test_negative_control_raises_on_a_codex_provider_record(tmp_path):
 
 def test_negative_control_raises_on_a_codex_provider_record_in_a_sharded_tools_file(tmp_path):
     """TCK-20260903-MONITORING-DATA-CODEX-REMIGRATION: proves the fix restores real detection
-    inside agent-monitoring/data/<week>/tools.jsonl shards, not merely that the .exists() guard
+    inside agent-working/agent-monitoring/data/<week>/tools.jsonl shards, not merely that the .exists() guard
     no longer silently skips the 'tools' source entirely."""
     monitoring_dir = tmp_path / AGENT_MONITORING
     data_dir = monitoring_dir / "data"
@@ -75,7 +75,7 @@ def test_sharded_tools_directory_with_no_codex_rows_passes(tmp_path):
 
 def test_assert_no_codex_provider_writes_detects_a_codex_row_in_a_sharded_runs_or_events_file(tmp_path):
     """Acceptance Criterion #3: a provider=='codex' row must be detected inside
-    agent-monitoring/data/<week>/runs.jsonl and agent-monitoring/data/<week>/events.jsonl, not
+    agent-working/agent-monitoring/data/<week>/runs.jsonl and agent-working/agent-monitoring/data/<week>/events.jsonl, not
     just tools.jsonl."""
     for source, match in (("runs.jsonl", "runs.jsonl"), ("events.jsonl", "events.jsonl")):
         monitoring_dir = tmp_path / f"agent-monitoring-{source}"

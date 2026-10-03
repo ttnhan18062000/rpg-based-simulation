@@ -253,7 +253,7 @@ _(none yet — filed as a sweep finding, not yet investigated per-site)_
 Resumed under owner decision 7's approved work order (`docs/plans/systemic_world/roadmap.md` §8, item
 2), which classes this as a hard bug. Site inventory re-verified against `origin/main` **`4c133297b`**
 by shape (`identity.faction [!=]= *.identity.faction`), not by name, the same way the original sweep was
-done. Full record in `staging_artifacts/TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP/investigation.md`.
+done. Full record in `agent-working/staging_artifacts/TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP/investigation.md`.
 
 **The inventory holds — 9 real sites, no new ones, none disappeared.** Three corrections:
 

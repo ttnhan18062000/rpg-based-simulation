@@ -3,7 +3,7 @@
 
 Mirrors tests/tools/test_migrate_tools_shards.py's own structure: synthetic-fixture
 unit tests, then integration tests against a copy of the real historical corpus (never
-the real agent-monitoring/ directory directly), then architecture guards that only run
+the real agent-working/agent-monitoring/ directory directly), then architecture guards that only run
 meaningfully once retirement (git rm + .gitattributes edit) has actually happened.
 """
 import collections
@@ -202,8 +202,8 @@ def test_migration_uses_one_write_lines_call_per_week_per_source(tmp_path, monke
 def _copy_real_corpus_into(tmp_path):
     """Copies whatever of the real runs.jsonl/events.jsonl/tools/ still exist (each
     source independently — post-retirement some or all may be gone, which is this
-    ticket's own intended end state) plus any real agent-monitoring/data/*/ week
-    folders, into tmp_path. Never touches the real agent-monitoring/ directory.
+    ticket's own intended end state) plus any real agent-working/agent-monitoring/data/*/ week
+    folders, into tmp_path. Never touches the real agent-working/agent-monitoring/ directory.
 
     Returns a dict of per-source availability so tests can skip a source's own checks
     once that source has already been retired, without failing the whole test.
@@ -323,7 +323,7 @@ def test_tools_relocation_is_route_only_not_re_bucketed(tmp_path):
     repo_copy, data_dir, available = _copy_real_corpus_into(tmp_path)
     if not available["tools"]:
         pytest.skip(
-            "agent-monitoring/tools/ has already been retired by this ticket's own migration "
+            "agent-working/agent-monitoring/tools/ has already been retired by this ticket's own migration "
             "run -- nothing left to copy for this real-corpus integration test."
         )
 
@@ -345,19 +345,19 @@ def test_tools_relocation_is_route_only_not_re_bucketed(tmp_path):
 
 def test_legacy_paths_removed_after_migration():
     assert not _REAL_RUNS.exists(), (
-        "agent-monitoring/runs.jsonl must no longer exist in the working tree after this "
+        "agent-working/agent-monitoring/runs.jsonl must no longer exist in the working tree after this "
         "ticket's retirement step (git rm) -- full history recoverable via "
-        "`git log --follow -- agent-monitoring/runs.jsonl`"
+        "`git log --follow -- agent-working/agent-monitoring/runs.jsonl`"
     )
     assert not _REAL_EVENTS.exists(), (
-        "agent-monitoring/events.jsonl must no longer exist in the working tree after this "
+        "agent-working/agent-monitoring/events.jsonl must no longer exist in the working tree after this "
         "ticket's retirement step (git rm) -- full history recoverable via "
-        "`git log --follow -- agent-monitoring/events.jsonl`"
+        "`git log --follow -- agent-working/agent-monitoring/events.jsonl`"
     )
     assert not _REAL_TOOLS_DIR.exists(), (
-        "agent-monitoring/tools/ must no longer exist in the working tree after this ticket's "
+        "agent-working/agent-monitoring/tools/ must no longer exist in the working tree after this ticket's "
         "retirement step (git rm -r) -- full history recoverable via "
-        "`git log --follow -- agent-monitoring/tools/`"
+        "`git log --follow -- agent-working/agent-monitoring/tools/`"
     )
 
 
@@ -368,7 +368,7 @@ def test_gitattributes_no_longer_references_any_of_the_3_retired_paths():
     from tests.integrity.test_no_duplicate_content_blocks import _merge_union_glob_patterns
 
     content = (_REPO_ROOT / ".gitattributes").read_text()
-    assert "agent-monitoring/runs.jsonl merge=union" not in content
-    assert "agent-monitoring/events.jsonl merge=union" not in content
-    assert "agent-monitoring/tools/*.jsonl merge=union" not in content
-    assert "agent-monitoring/data/*/*.jsonl" in _merge_union_glob_patterns()
+    assert "agent-working/agent-monitoring/runs.jsonl merge=union" not in content
+    assert "agent-working/agent-monitoring/events.jsonl merge=union" not in content
+    assert "agent-working/agent-monitoring/tools/*.jsonl merge=union" not in content
+    assert "agent-working/agent-monitoring/data/*/*.jsonl" in _merge_union_glob_patterns()

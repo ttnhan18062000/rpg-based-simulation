@@ -72,11 +72,11 @@ def test_one_open_child_reports_all_children_done_false(tmp_path):
 def test_child_present_in_folder_and_already_in_done_is_a_stale_copy_not_open(tmp_path):
     # TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT (agent-working-design review): a
     # non-epic child file that is BOTH still physically in the folder AND already closed flat
-    # into tickets/done/ is a resurrected pre-close copy (the exact shape #241 re-added to
-    # tickets/todos/mechanism-registry/ after #209 had already archived the real files) -- it must
+    # into agent-working/tickets/done/ is a resurrected pre-close copy (the exact shape #241 re-added to
+    # agent-working/tickets/todos/mechanism-registry/ after #209 had already archived the real files) -- it must
     # be reported as a distinct anomaly, not silently counted as "done" (which would let a caller
-    # move the whole folder and carry the stale copy into tickets/done/<folder>/, duplicating the
-    # basename against the flat tickets/done/<id>.md that is actually authoritative).
+    # move the whole folder and carry the stale copy into agent-working/tickets/done/<folder>/, duplicating the
+    # basename against the flat agent-working/tickets/done/<id>.md that is actually authoritative).
     folder = tmp_path / TICKETS / "todos" / "myepic"
     done_dir = tmp_path / TICKETS / "done"
     folder.mkdir(parents=True)
@@ -185,8 +185,8 @@ def test_cli_real_subprocess_invocation(tmp_path):
 
 
 def test_default_done_dir_is_sibling_tickets_done(tmp_path):
-    # No --done-dir override: default resolves to <folder>/../../done (tickets/done/ as a sibling
-    # of tickets/todos/), matching the real repo layout.
+    # No --done-dir override: default resolves to <folder>/../../done (agent-working/tickets/done/ as a sibling
+    # of agent-working/tickets/todos/), matching the real repo layout.
     folder = tmp_path / TICKETS / "todos" / "myepic"
     done_dir = tmp_path / TICKETS / "done"
     folder.mkdir(parents=True)

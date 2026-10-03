@@ -4,7 +4,7 @@
 That ticket's own Decision (2026-09-15) chose to repair `docs/REGISTRY.yaml` rather than build a
 second full-text scanner: widen `generate_registry.py::parse_related_code_areas()` to recognize
 plain, non-backtick-quoted path bullets (done separately in that file), and extend the registry's
-own ticket walk to index `tickets/todos/`/`tickets/inprogress/`, not only `tickets/done/` (also
+own ticket walk to index `agent-working/tickets/todos/`/`agent-working/tickets/inprogress/`, not only `agent-working/tickets/done/` (also
 done there). This module is the "mechanism that consumes the index" the Decision explicitly left
 open as the implementer's own design call -- built as a sibling `tools/gate_checks/*.py` module
 per this batch's own established convention, not wired into `.claude/workflows/implement-ticket.js`
@@ -89,7 +89,7 @@ def _strip_symbol_line_suffix(citation: str) -> str:
 
 def load_open_ticket_entries(registry_path: Path = None) -> List[dict]:
     """Load docs/REGISTRY.yaml (or a supplied path -- tests inject a synthetic file instead) and
-    return only the ticket entries whose own path is under tickets/todos/ or tickets/inprogress/."""
+    return only the ticket entries whose own path is under agent-working/tickets/todos/ or agent-working/tickets/inprogress/."""
     import yaml as _yaml
 
     path = registry_path if registry_path is not None else _REGISTRY_PATH
@@ -108,7 +108,7 @@ def compute_open_ticket_citation_resolution_rate(
 ) -> "tuple[float, int, int]":
     """Returns (rate_pct, resolved_count, total_count) -- what fraction of open-ticket Related
     Code Areas citations resolve to a real path on disk today. A citation containing a glob/brace-
-    expansion placeholder (e.g. `agent-monitoring/data/*/runs.jsonl`) is excluded from both the
+    expansion placeholder (e.g. `agent-working/agent-monitoring/data/*/runs.jsonl`) is excluded from both the
     numerator and denominator -- it was never meant to resolve to one literal path."""
     if entries is None:
         entries = load_open_ticket_entries()

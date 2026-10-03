@@ -34,7 +34,7 @@ A scope-only epic-tier ticket that tracks the three foundation milestones of the
 - List the child tickets under Related Tickets: M1 TCK-20261002-PYTHON-CODE-STANDARD-DOC; M2 TCK-20261002-UV-DECLARE-AND-LOCK and TCK-20261002-UV-FIRST-CI-JOB; M3 TCK-20261002-CODE-HEALTH-TOOL-CONFIG, TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY and TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS
 - State the dependency order: M3 tickets depend on M2 (uv) for installing the tools; UV-FIRST-CI-JOB depends on UV-DECLARE-AND-LOCK; the snapshot ticket comes last in M3
 - Record the shared constraints every child must carry: git diff --stat shows no src/ path; no autofix, reformat or inline suppression comments; no simulation behaviour change; tests/ changes limited to tests for new tooling; CLAUDE.md, .claude/settings.json, hooks, .claude/agents/, .claude/workflows/ and .claude/skills/ not edited; new tooling in tools/code_health/ per docs/guidelines/repo_tooling_layout.md; reuse rules from roadmap Section 4
-- State the closing condition as 'all M1, M2 and M3 child tickets are in tickets/done/'
+- State the closing condition as 'all M1, M2 and M3 child tickets are in agent-working/tickets/done/'
 
 ### Child tickets and dependency order
 
@@ -60,7 +60,7 @@ A scope-only epic-tier ticket that tracks the three foundation milestones of the
 
 ### Closing condition
 
-All M1, M2 and M3 child tickets are in tickets/done/.
+All M1, M2 and M3 child tickets are in agent-working/tickets/done/.
 
 ## Out of Scope
 - Roadmap milestone M4: CI gates, mypy blocking, prek (the mypy gate stays as pinned by INFRA-TYPE-001 and tests/static/test_typecheck_gate_configured.py)
@@ -73,10 +73,10 @@ All M1, M2 and M3 child tickets are in tickets/done/.
 
 ## Acceptance Criteria
 - [ ] The epic ticket has '## Tier' = epic, cites docs/plans/codebase_health/python_code_craft_roadmap.md (rev 2, approved 2026-10-02) under Related Docs, and lists every M1, M2 and M3 child ticket ID under Related Tickets; python3 tools/validate_frontmatter.py and tools/ticket_field_values.py accept it
-- [ ] The epic's Out of Scope section names roadmap milestones M4 (CI gates, mypy blocking, prek), M5 (package registry, ast-grep, import-linter), M6 (agent integration) and M7 (refactor lane), and no child ticket in tickets/todos/python-code-craft/ delivers any of them
-- [ ] The epic's own commits change no file outside tickets/ (plus the auto-generated docs/REGISTRY.yaml and agent-monitoring/ shards): git diff --stat against the branch point shows no src/, tests/, tools/, .claude/ or CLAUDE.md path
+- [ ] The epic's Out of Scope section names roadmap milestones M4 (CI gates, mypy blocking, prek), M5 (package registry, ast-grep, import-linter), M6 (agent integration) and M7 (refactor lane), and no child ticket in agent-working/tickets/todos/python-code-craft/ delivers any of them
+- [ ] The epic's own commits change no file outside agent-working/tickets/ (plus the auto-generated docs/REGISTRY.yaml and agent-working/agent-monitoring/ shards): git diff --stat against the branch point shows no src/, tests/, tools/, .claude/ or CLAUDE.md path
 - [ ] Each child ticket listed by the epic carries an acceptance criterion that git diff --stat shows no src/ path, and a statement that CLAUDE.md, .claude/settings.json, hooks, .claude/agents/, .claude/workflows/ and .claude/skills/ are not edited
-- [ ] The epic's closing condition is stated as 'all M1, M2 and M3 child tickets are in tickets/done/', and at close these deliverables exist: docs/guidelines/python_code_standard.md, a refreshed uv.lock with at least one CI job on uv sync, and tools/code_health/ plus registries/code_health_exceptions.jsonl
+- [ ] The epic's closing condition is stated as 'all M1, M2 and M3 child tickets are in agent-working/tickets/done/', and at close these deliverables exist: docs/guidelines/python_code_standard.md, a refreshed uv.lock with at least one CI job on uv sync, and tools/code_health/ plus registries/code_health_exceptions.jsonl
 - [ ] docs/plans/codebase_health/python_code_craft_roadmap.md and python_code_craft_foundation_ticket_brief.md are tracked in git (committed with or before the epic ticket), so the cited binding plan resolves
 
 ## Related Tickets
@@ -135,7 +135,7 @@ None.
 - Roadmap Section 5.1 says only the implementer seat runs git; who commits these tickets follows that convention
 - Search tooling was degraded during investigation (graphify graph and local knowledge index absent); no duplicate was found via search_docs, REGISTRY.yaml, working_log.csv and the open-ticket scanner
 - Tag fit: `planning` is registered for plan/roadmap-tracking doc artifacts and `tracking` for index/tracking docs; both are used here for an epic ticket that tracks a roadmap and its child tickets, a near but not exact fit
-- Post-merge step (from `TCK-20261002-PYTHON-CODE-STANDARD-DOC`): after this branch merges, run `make knowledge-index-update` in the main checkout. It was not run in the `rpg-code-craft` worktree, which has no `knowledge-index/`; the served index lives in the main checkout.
+- Post-merge step (from `TCK-20261002-PYTHON-CODE-STANDARD-DOC`): after this branch merges, run `make knowledge-index-update` in the main checkout. It was not run in the `rpg-code-craft` worktree, which has no `agent-working/.index/knowledge-index/`; the served index lives in the main checkout.
 - Roadmap M4 note (from the review of `TCK-20261002-CODE-HEALTH-TOOL-CONFIG`): jscpd runs through `npx --yes` with the version pinned but its transitive dependencies unpinned, so it must not become a blocking CI gate in that form. Before gating, give it a lockfile (a small `package.json` plus `package-lock.json` under `tools/code_health/`) or replace it.
 
 ## Implementation Notes

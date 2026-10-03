@@ -346,5 +346,5 @@ foundation (`VITALS`, `EXPLORATION`, `COMBAT`, baseline `STRATEGY_COGNITION`,
 - `docs/simulation_quality/quality_scoring_contract.md` §7 (COMBAT), §7.6 (PROGRESSION life-arc)
 - `docs/guidelines/intentional_divergences.md` §2.33 (opportunity-attack reward fix), §2.34
   (rebirth reachability fix)
-- `tickets/done/TCK-20260808-ENTITY-LIFECYCLE-IMPROVEMENT-EPIC.md` (the epic this audit
+- `agent-working/tickets/done/TCK-20260808-ENTITY-LIFECYCLE-IMPROVEMENT-EPIC.md` (the epic this audit
   synthesizes)

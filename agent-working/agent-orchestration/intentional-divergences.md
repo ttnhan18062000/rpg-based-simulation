@@ -1,8 +1,8 @@
-# Intentional Divergences — agent-orchestration/ Claude Adapter Conformance
+# Intentional Divergences — agent-working/agent-orchestration/ Claude Adapter Conformance
 
 Distinct from `docs/guidelines/intentional_divergences.md` (the mechanics-bible/Mechanics Bible
 divergence log — a different subsystem, different field format, out of scope for this file). This
-log records divergences between the `agent-orchestration/` contract (phases, terminal statuses,
+log records divergences between the `agent-working/agent-orchestration/` contract (phases, terminal statuses,
 gate policy, artifact requirements) and the LIVE `.claude/workflows/implement-ticket.js` behavior,
 as surfaced by `tests/agent_orchestration_claude_adapter/`'s conformance tests
 (TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER).
@@ -32,7 +32,7 @@ not yet approved — does not suppress).
 ## Entries
 
 None. This ticket's own contract data
-(`agent-orchestration/terminal-statuses.yaml`) was authored directly from the same live extraction
+(`agent-working/agent-orchestration/terminal-statuses.yaml`) was authored directly from the same live extraction
 its conformance tests check against, and the phase-order conformance test found no divergence — so
 this log ships with the format defined and zero divergence entries.
 
@@ -46,7 +46,7 @@ parity audit) so these gaps are explicit and discoverable rather than silently a
 `final_configuration_parity_verification_response_codex.md`, both under
 `docs/plans/agent_infrastructure/provider_agnostic_orchestration/`.
 
-**Hook-surface policy.** `agent-orchestration/hook-events.yaml` normalizes only `PreToolUse` and
+**Hook-surface policy.** `agent-working/agent-orchestration/hook-events.yaml` normalizes only `PreToolUse` and
 `PostToolUse` — the two hooks actually wired in `.claude/settings.json`. `docs/ai/codex_capability_matrix.md`
 verifies Codex has 10 real lifecycle hooks available (`PermissionRequest`, `PreCompact`, `PostCompact`,
 `UserPromptSubmit`, `SubagentStop`, `Stop`, `SessionStart`, `SubagentStart` are the 8 not in the

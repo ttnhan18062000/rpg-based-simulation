@@ -23,8 +23,8 @@ tags: [world, architecture]
 > anomaly to retire.
 >
 > **Why this was filed anyway:** the context scan for it checked `docs/` and code but never
-> grepped `tickets/todos/` for existing coverage — CLAUDE.md's Context Scan step 4. A single
-> `grep -l "world_composition" tickets/todos/` would have found it.
+> grepped `agent-working/tickets/todos/` for existing coverage — CLAUDE.md's Context Scan step 4. A single
+> `grep -l "world_composition" agent-working/tickets/todos/` would have found it.
 >
 > **The one thing here that is not in the 2026-09-09 ticket, and should be folded into it rather
 > than lost:** the *measurement-validity* framing. That ticket scopes this as ADR compliance and
@@ -134,7 +134,7 @@ catalog copies were forked and then not kept up.
   module is present only in the **running** definition, so §3 was describing `data/worlds/`.
 
 ## Related Stored Artifacts
-- `stored_artifacts/TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED/investigation.md` — used the
+- `agent-working/stored_artifacts/TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED/investigation.md` — used the
   catalog path (`data/content/world_compositions/frontier_living_world.yaml`) for its compile.
 
 ## Related Code Areas

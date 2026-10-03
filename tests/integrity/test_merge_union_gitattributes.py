@@ -1,7 +1,7 @@
 """Regression test for the merge=union .gitattributes entries (TCK-20260826-REGISTRY-PARITY-
 CONFLICT-GUARDS). Verifies existing, already-shipped behavior -- not new implementation.
 
-agent-monitoring/{tools,runs,events}.jsonl and tickets/working_log.csv are append-only logs
+agent-working/agent-monitoring/{tools,runs,events}.jsonl and agent-working/tickets/working_log.csv are append-only logs
 carrying `merge=union` in this repo's .gitattributes, a stock git built-in merge driver (no
 custom script/registration needed). This test proves that attribute actually resolves a real,
 concurrent two-branch append to the same file without manual conflict markers -- git-level
@@ -45,11 +45,11 @@ def _init_repo_with_union_attribute(tmp_path: Path, tracked_filename: str) -> Pa
 @pytest.mark.parametrize(
     "tracked_filename",
     [
-        "agent-monitoring/tools.jsonl",
-        "agent-monitoring/runs.jsonl",
-        "agent-monitoring/events.jsonl",
+        "agent-working/agent-monitoring/tools.jsonl",
+        "agent-working/agent-monitoring/runs.jsonl",
+        "agent-working/agent-monitoring/events.jsonl",
         f"{posix(TICKETS)}/working_log.csv",
-        "agent-monitoring/tools/tools-2026-W36.jsonl",
+        "agent-working/agent-monitoring/tools/tools-2026-W36.jsonl",
     ],
 )
 def test_concurrent_branch_appends_merge_without_conflict_markers(tmp_path, tracked_filename):
@@ -136,13 +136,13 @@ def test_squash_style_single_parent_commit_is_not_a_merge_and_bypasses_drivers(t
 
 def test_gitattributes_line_present_for_working_log_csv():
     """Sanity guard: the real repo's own .gitattributes must still carry the
-    tickets/working_log.csv append-only-file entry -- catches an accidental removal even
+    agent-working/tickets/working_log.csv append-only-file entry -- catches an accidental removal even
     though the git-level test above uses a throwaway repo, not the real .gitattributes
     file. All 3 monitoring-source legacy lines this function used to also assert
-    (`agent-monitoring/runs.jsonl`, `agent-monitoring/events.jsonl`,
-    `agent-monitoring/tools/*.jsonl`) were removed from .gitattributes by
+    (`agent-working/agent-monitoring/runs.jsonl`, `agent-working/agent-monitoring/events.jsonl`,
+    `agent-working/agent-monitoring/tools/*.jsonl`) were removed from .gitattributes by
     TCK-20260903-MONITORING-DATA-MIGRATION, which retired all 3 legacy physical shapes
-    from the working tree in favor of the unified agent-monitoring/data/YYYY-Www/
+    from the working tree in favor of the unified agent-working/agent-monitoring/data/YYYY-Www/
     {runs,events,tools}.jsonl layout (see test_gitattributes_lines_absent_for_retired_
     monitoring_paths below). TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION added
     `text eol=lf` ahead of `merge=union` on this line, so this checks token membership via
@@ -158,18 +158,18 @@ def test_gitattributes_line_present_for_working_log_csv():
 
 
 def test_gitattributes_lines_absent_for_retired_monitoring_paths():
-    """TCK-20260902-MONITORING-SHARD-MIGRATION retired the legacy agent-monitoring/
+    """TCK-20260902-MONITORING-SHARD-MIGRATION retired the legacy agent-working/agent-monitoring/
     tools.jsonl file. TCK-20260903-MONITORING-DATA-MIGRATION has since retired the other
-    2 legacy monolithic files (agent-monitoring/runs.jsonl, agent-monitoring/
+    2 legacy monolithic files (agent-working/agent-monitoring/runs.jsonl, agent-working/agent-monitoring/
     events.jsonl) and the shard directory this ticket's own migration produced
-    (agent-monitoring/tools/) -- none of the 3 monitoring-source legacy merge=union
+    (agent-working/agent-monitoring/tools/) -- none of the 3 monitoring-source legacy merge=union
     lines remain; only the unified glob added by TCK-20260903-MONITORING-DATA-WRITE-
     PATH-UNIFY does (now carrying `text eol=lf` too, per TCK-20260911-WORKING-LOG-LINE-
     ENDING-UNION-DUPLICATION -- checked via the shared parser, not an exact substring)."""
     repo_root = Path(__file__).parent.parent.parent
     content = (repo_root / ".gitattributes").read_text()
-    assert "agent-monitoring/tools.jsonl merge=union" not in content
-    assert "agent-monitoring/runs.jsonl merge=union" not in content
-    assert "agent-monitoring/events.jsonl merge=union" not in content
-    assert "agent-monitoring/tools/*.jsonl merge=union" not in content
-    assert "agent-monitoring/data/*/*.jsonl" in _merge_union_glob_patterns()
+    assert "agent-working/agent-monitoring/tools.jsonl merge=union" not in content
+    assert "agent-working/agent-monitoring/runs.jsonl merge=union" not in content
+    assert "agent-working/agent-monitoring/events.jsonl merge=union" not in content
+    assert "agent-working/agent-monitoring/tools/*.jsonl merge=union" not in content
+    assert "agent-working/agent-monitoring/data/*/*.jsonl" in _merge_union_glob_patterns()

@@ -12,7 +12,7 @@ tags: [idea, agent-monitoring, observability, data-quality, root-cause, bug]
 # Idea: Pause/Resume Seq-Counter Collision Silently Corrupts `tool_call_count`/`cost_proxy_score`
 
 **Archived:** 2026-07-28 — fully shipped same-day by `TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION`
-(`tickets/done/`); this document is the historical design reference.
+(`agent-working/tickets/done/`); this document is the historical design reference.
 
 > **Maturity: SHIPPED.** `tools/agent-monitoring/seq_offset.py::compute_seq_offset(run_id, events)` —
 > a pure read-only lookup of the max prior `seq` already recorded for a `run_id` in `events.jsonl` —
@@ -40,7 +40,7 @@ tags: [idea, agent-monitoring, observability, data-quality, root-cause, bug]
 
 ## Problem
 
-`agent-monitoring/tools.jsonl` groups tool calls by `(run_id, seq)` only. `seq` is a per-*session*
+`agent-working/agent-monitoring/tools.jsonl` groups tool calls by `(run_id, seq)` only. `seq` is a per-*session*
 phase counter maintained inside `.claude/workflows/implement-ticket.js` — it starts at 1 every time
 the workflow is invoked. When a ticket's run is paused mid-pipeline (user request, gate failure the
 user walks away from, etc.) and later resumed in a **separate session** under the same `run_id`,
@@ -50,7 +50,7 @@ the new session's phase counter also starts at 1 — so its phases silently alia
 **Confirmed on real data** — `TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION` was paused mid-Implement
 (`"PAUSED by user request mid-Step-7"`) and resumed in a later session
 (`"resuming mid-implementation at Step 7"`), both under the same `run_id`. Comparing
-`agent-monitoring/events.jsonl`'s reported `tool_call_count` against `tools.jsonl` ground truth:
+`agent-working/agent-monitoring/events.jsonl`'s reported `tool_call_count` against `tools.jsonl` ground truth:
 
 | seq | `tools.jsonl` ground truth | 1st-session phase (reported) | 2nd-session phase (reported) |
 |---|---|---|---|

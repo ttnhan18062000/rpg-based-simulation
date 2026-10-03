@@ -22,6 +22,6 @@ def test_assert_monitoring_writer_landed_passes_against_real_repo():
 
 
 def test_assert_monitoring_writer_landed_raises_when_writer_missing(tmp_path):
-    (tmp_path / AGENT_MONITORING).mkdir()
+    (tmp_path / AGENT_MONITORING).mkdir(parents=True)
     with pytest.raises(EntryCriterionNotMetError):
         assert_monitoring_writer_landed(tmp_path)

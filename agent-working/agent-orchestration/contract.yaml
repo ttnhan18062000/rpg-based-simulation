@@ -1,5 +1,5 @@
 # Top-level manifest for the provider-neutral implement-ticket agent orchestration contract.
-# See agent-orchestration/README.md for the versioning scheme and the one-way future-authority
+# See agent-working/agent-orchestration/README.md for the versioning scheme and the one-way future-authority
 # direction, and docs/architecture/agent_orchestration_contract.md (the ADR) for the design
 # decisions this directory implements.
 version: 1

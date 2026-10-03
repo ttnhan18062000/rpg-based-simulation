@@ -12,7 +12,7 @@ this ticket).
 Covers:
 - One execution's records share one `execution_id`; a second execution gets a different one (AC1,
   AC2).
-- Pre-existing `agent-monitoring/{runs,events,tools}.jsonl` lines are never rewritten, only
+- Pre-existing `agent-working/agent-monitoring/{runs,events,tools}.jsonl` lines are never rewritten, only
   appended to (AC6, Part A).
 - The newly appended lines themselves are well-formed: no duplicate/colliding identity keys, and
   `run_id`/`execution_id`/`provider`/`ticket_id` are each singular and correctly valued (AC6, Part
@@ -59,7 +59,7 @@ def _init_git_repo_on_test_branch(path: Path) -> None:
 
 
 def _current_week_dir(agent_monitoring_dir: Path) -> Path:
-    """Resolves `agent-monitoring/data/<ISO-week>/`, mirroring each writer's own
+    """Resolves `agent-working/agent-monitoring/data/<ISO-week>/`, mirroring each writer's own
     `iso_week = datetime.now(timezone.utc).strftime("%G-W%V")` construction. Keep this in sync if
     that format ever changes."""
     return agent_monitoring_dir / "data" / _current_iso_week()

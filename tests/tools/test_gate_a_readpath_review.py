@@ -7,7 +7,7 @@ GO/NO-GO/INCONCLUSIVE decision at docs/ai/parity_readpath_gate_a_decision.md
 script or a prose-only transcript). It:
 
   1. Re-verifies every real corpus case's pinned git blob content and
-     canonical_fragment_hash against staging_artifacts/TCK-20260731-PARITY-READPATH-GATE/
+     canonical_fragment_hash against agent-working/staging_artifacts/TCK-20260731-PARITY-READPATH-GATE/
      gate_a_corpus.json (TestCorpusIntegrity).
   2. Runs the two legacy comparison surfaces -- tools/parity_ledger_scan.find_p0_intersection
      and tools/gate_checks/parity_updater_static.derive_mapping -- and the Phase-2 index read
@@ -59,7 +59,7 @@ _SKIP_REASON = (
     "gate_a_corpus.json and gate_a_results.json were never committed to this repository at any "
     "point in its history — confirmed via exhaustive `git log --all` search on 2026-08-17 "
     "(TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP): no date-ranged history search, no "
-    "grep-by-name search, and no diff-filter=A search against staging_artifacts/"
+    "grep-by-name search, and no diff-filter=A search against agent-working/staging_artifacts/"
     "TCK-20260731-PARITY-READPATH-GATE/ found any trace of either file. The raw corpus/results "
     "JSON is unrecoverable. This does NOT invalidate the Gate A GO decision itself — "
     "docs/ai/parity_readpath_gate_a_decision.md narrates its own real findings (including the "

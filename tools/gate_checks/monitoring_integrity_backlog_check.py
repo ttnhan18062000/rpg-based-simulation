@@ -35,7 +35,7 @@ shard, which item 5 covers separately) carry `ts`/`start_ts: None` -- all June-e
 predating a fix to whatever writer omitted the field. Unusable for any time-windowed query but not
 retroactively reconstructable.
 
-**Item 5**: `agent-monitoring/data/unknown-week/` holds 34 rows total (5 runs, 28 events, 1 tool
+**Item 5**: `agent-working/agent-monitoring/data/unknown-week/` holds 34 rows total (5 runs, 28 events, 1 tool
 call) -- the shard `iso_week()`/week-sharding falls into when a record's `ts` can't be parsed into
 an ISO week at all. Directly related to item 4 (an unparseable `ts` is exactly what routes a
 record here), tracked separately since it is a distinct artifact (a whole shard directory, not a
@@ -149,7 +149,7 @@ def find_unusable_ts_records(runs: List[dict] = None, events: List[dict] = None)
 
 def count_unknown_week_rows(data_dir: Path = DATA_DIR) -> int:
     """Item 5: total row count across every `*.jsonl` file directly under
-    `agent-monitoring/data/unknown-week/`."""
+    `agent-working/agent-monitoring/data/unknown-week/`."""
     unknown_week_dir = data_dir / "unknown-week"
     if not unknown_week_dir.exists():
         return 0

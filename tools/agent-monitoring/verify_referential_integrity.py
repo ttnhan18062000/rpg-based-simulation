@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Verify the 2 documented foreign-key relationships across the multi-week
-agent-monitoring/data/<ISO-week>/{runs,events,tools}.jsonl corpus
+agent-working/agent-monitoring/data/<ISO-week>/{runs,events,tools}.jsonl corpus
 (TCK-20260903-MONITORING-DATA-REFERENTIAL-INTEGRITY):
 
   1. events.run_id -> runs.run_id           (schema.md lines 141/172)
   2. tools.(run_id, seq) -> events.(run_id, seq)   (schema.md lines 370/407-408)
 
-Both checks read the UNION of every agent-monitoring/data/<week>/ folder (including
+Both checks read the UNION of every agent-working/agent-monitoring/data/<week>/ folder (including
 the unknown-week fallback bucket) before searching for a match — never scoped to a
 single week folder. A run's events/tools rows can legitimately land in a different
 week folder than its own runs.jsonl row, or than each other, whenever a session
@@ -23,7 +23,7 @@ Documented, schema-sanctioned exceptions this checker does NOT flag:
     excluded from Check 2's checked population.
 
 This tool is report-only: it never gates, never writes, never exits non-zero on
-violation volume, and never depends on the SQLite index (agent-monitoring-index/
+violation volume, and never depends on the SQLite index (agent-working/.index/agent-monitoring-index/
 monitoring.db) or build_index.py, both confirmed stale against the current weekly-
 folder layout. main() always exits 0 — this mirrors validate.py's own
 compute_drift_report()/compute_tool_count_drift_report() precedent ("never gates
@@ -54,7 +54,7 @@ RETRIEVAL_EVENT_PREFIX = "RETRIEVAL-EVENT-"
 
 
 def load_all_weeks(data_dir: Path, source: str) -> list[tuple[dict, str]]:
-    """Read every agent-monitoring/data/<week>/<source>.jsonl file (every ISO-week
+    """Read every agent-working/agent-monitoring/data/<week>/<source>.jsonl file (every ISO-week
     folder plus unknown-week, unconditionally — no filename filtering), returning a
     list of (record, week_folder_name) tuples so every downstream violation example
     can cite the week folder it was found in.
@@ -213,7 +213,7 @@ def compute_referential_integrity_report(data_dir: Path = DEFAULT_DATA_DIR) -> R
 
 def build_parser():
     parser = argparse.ArgumentParser(
-        description="Verify referential integrity across agent-monitoring/data/<week>/{runs,events,tools}.jsonl"
+        description="Verify referential integrity across agent-working/agent-monitoring/data/<week>/{runs,events,tools}.jsonl"
     )
     parser.add_argument(
         "--data-dir",

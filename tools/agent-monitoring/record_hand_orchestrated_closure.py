@@ -42,14 +42,14 @@ carries `"execution_mode": "hand"` (TCK-20260929-RUN-EXECUTION-MODE-FIELD) -- a 
 never inferred, so `generate_retro.py`'s Run Summary can split real pipeline runs from hand
 closures without changing what `workflow` means to anyone already reading it.
 
-This call also appends one row to `tickets/working_log.csv` (`--title`/`--log-summary` plus
-`--artifacts-path`, which defaults to `stored_artifacts/<ticket-id>` for standard/epic tier or
+This call also appends one row to `agent-working/tickets/working_log.csv` (`--title`/`--log-summary` plus
+`--artifacts-path`, which defaults to `agent-working/stored_artifacts/<ticket-id>` for standard/epic tier or
 "none (hotfix — no staging artifacts)" for hotfix) -- do not append that row by hand separately
 when using this wrapper, or the ticket will get a duplicate working_log entry.
 
 As of `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`, that warning is also
 enforced, not just documented: before appending, this script checks whether
-`tickets/working_log.csv` already has a row for this exact `(ticket_id, title)` pair (via the
+`agent-working/tickets/working_log.csv` already has a row for this exact `(ticket_id, title)` pair (via the
 tolerant parser, `working_log_parser.parse_working_log`) and refuses -- prints an `ERROR:` to
 stderr naming the existing row and exits non-zero -- rather than silently writing a duplicate. The
 run/event monitoring writes above still happen either way; only the working-log append is
@@ -59,8 +59,8 @@ ticket's Implementation Notes for the reasoning.
 It also regenerates `docs/REGISTRY.yaml` (TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES, Scope 3
 addendum) via `generate_registry()`, the same function the pipeline's Finalize step uses, so a hand
 closure needs no separate `make docs-registry` step. Fail-open like the log write: a failure only
-warns. Precondition: the ticket must already be in `tickets/done/` when this runs (the documented
-closing order), or the regenerated registry will not carry its `tickets/done/` entry.
+warns. Precondition: the ticket must already be in `agent-working/tickets/done/` when this runs (the documented
+closing order), or the regenerated registry will not carry its `agent-working/tickets/done/` entry.
 """
 from __future__ import annotations
 
@@ -118,7 +118,7 @@ def _existing_row_for(
 
     Does not open csv_path in a write/append mode, so it is invisible to
     tests/tools/test_working_log_writer.py's sole-writer AST guard -- that guard scans for
-    write-mode opens against tickets/working_log.csv, and this function only reads.
+    write-mode opens against agent-working/tickets/working_log.csv, and this function only reads.
     """
     if csv_path.exists():
         result = parse_working_log(csv_path)
@@ -303,12 +303,12 @@ def main() -> None:
     parser.add_argument("--workflow", default="implement-ticket")
     parser.add_argument("--provider", default="claude")
     parser.add_argument("--agent", default="claude", help="Default agent value for events that don't override it")
-    parser.add_argument("--title", required=True, help="Ticket title, for tickets/working_log.csv")
-    parser.add_argument("--log-summary", required=True, help="One-sentence summary for tickets/working_log.csv")
+    parser.add_argument("--title", required=True, help="Ticket title, for agent-working/tickets/working_log.csv")
+    parser.add_argument("--log-summary", required=True, help="One-sentence summary for agent-working/tickets/working_log.csv")
     parser.add_argument(
         "--artifacts-path",
         default=None,
-        help="Defaults to stored_artifacts/<ticket-id> for standard/epic tier, "
+        help="Defaults to agent-working/stored_artifacts/<ticket-id> for standard/epic tier, "
         "'none (hotfix — no staging artifacts)' for hotfix",
     )
     args = parser.parse_args()

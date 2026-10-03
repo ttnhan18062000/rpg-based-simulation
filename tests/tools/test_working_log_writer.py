@@ -11,7 +11,7 @@ Two independent concerns are covered:
    literal string (through a module-level constant, and a single hop of function-local
    parameter-default-to-module-constant resolution -- exactly the shape
    `tools/working_log_writer.py`'s own `_WORKING_LOG_PATH` / `path` parameter default uses) and
-   asserts exactly one write-mode call resolves to "tickets/working_log.csv", and it lives in
+   asserts exactly one write-mode call resolves to "agent-working/tickets/working_log.csv", and it lives in
    working_log_writer.py. A grep-based version of this guard was rejected during planning: the
    literal path string never appears on the same line as the `open(` call it protects (it lives
    only in `_WORKING_LOG_PATH`'s own assignment), so a literal-text grep would find zero matches
@@ -231,7 +231,7 @@ def test_resolver_positive_single_hop_parameter_default_to_module_constant():
     source = '''
 from pathlib import Path
 
-_WORKING_LOG_PATH = Path("tickets/working_log.csv")
+_WORKING_LOG_PATH = Path("agent-working/tickets/working_log.csv")
 
 
 def append_working_log_row(row, path=_WORKING_LOG_PATH):
@@ -248,7 +248,7 @@ def test_resolver_no_hit_on_read_only_open():
     source = '''
 from pathlib import Path
 
-_WORKING_LOG_PATH = Path("tickets/working_log.csv")
+_WORKING_LOG_PATH = Path("agent-working/tickets/working_log.csv")
 
 
 def read_it(path=_WORKING_LOG_PATH):
@@ -272,8 +272,8 @@ def write_other(path="some/other/file.txt"):
 def test_resolver_no_hit_on_plain_text_mention_with_no_open_call():
     source = '''
 def documented_only():
-    """This function talks about tickets/working_log.csv in its docstring only."""
-    return "tickets/working_log.csv"
+    """This function talks about agent-working/tickets/working_log.csv in its docstring only."""
+    return "agent-working/tickets/working_log.csv"
 '''
     assert find_write_mode_open_calls(source, _TARGET) == []
 
@@ -284,7 +284,7 @@ def test_resolver_detects_method_call_open_style():
     source = '''
 from pathlib import Path
 
-_WORKING_LOG_PATH = Path("tickets/working_log.csv")
+_WORKING_LOG_PATH = Path("agent-working/tickets/working_log.csv")
 
 
 def write_it(path=_WORKING_LOG_PATH):
@@ -300,14 +300,14 @@ def test_guard_fires_on_a_second_writer(tmp_path):
     append mode."""
     (tmp_path / "good_writer.py").write_text(
         'from pathlib import Path\n'
-        '_WORKING_LOG_PATH = Path("tickets/working_log.csv")\n'
+        '_WORKING_LOG_PATH = Path("agent-working/tickets/working_log.csv")\n'
         'def append_row(path=_WORKING_LOG_PATH):\n'
         '    with open(path, "a") as f:\n'
         '        f.write("x")\n'
     )
     (tmp_path / "evil_writer.py").write_text(
         'def sneaky_append():\n'
-        '    target = "tickets/working_log.csv"\n'
+        '    target = "agent-working/tickets/working_log.csv"\n'
         '    with open(target, "a") as f:\n'
         '        f.write("y")\n'
     )
@@ -363,7 +363,7 @@ def test_comma_bearing_title_round_trips(tmp_path):
 def test_tricky_field_round_trips_through_the_parser(tmp_path):
     log_path = _seed(tmp_path)
     append_working_log_row(
-        "2026-09-12T00:00:00Z", "TCK-FAKE", "A title", "DONE", _TRICKY_SUMMARY, "stored_artifacts/TCK-FAKE",
+        "2026-09-12T00:00:00Z", "TCK-FAKE", "A title", "DONE", _TRICKY_SUMMARY, "agent-working/stored_artifacts/TCK-FAKE",
         path=log_path,
     )
     result = parse_working_log(log_path)
@@ -377,7 +377,7 @@ def test_tricky_field_round_trips_through_the_parser(tmp_path):
 def test_output_ends_in_bare_lf_with_no_cr_bytes(tmp_path):
     log_path = _seed(tmp_path)
     append_working_log_row(
-        "2026-09-12T00:00:00Z", "TCK-FAKE", "A title", "DONE", _TRICKY_SUMMARY, "stored_artifacts/TCK-FAKE",
+        "2026-09-12T00:00:00Z", "TCK-FAKE", "A title", "DONE", _TRICKY_SUMMARY, "agent-working/stored_artifacts/TCK-FAKE",
         path=log_path,
     )
     raw = log_path.read_bytes()
@@ -421,7 +421,7 @@ def test_cli_reads_data_file_and_appends(tmp_path):
         "title": 'A "quoted", tricky title',
         "status": "DONE",
         "summary": _TRICKY_SUMMARY,
-        "artifacts_path": "stored_artifacts/TCK-CLI",
+        "artifacts_path": "agent-working/stored_artifacts/TCK-CLI",
     }
     data_file = tmp_path / "data.json"
     data_file.write_text(json.dumps(data), encoding="utf-8")
@@ -452,7 +452,7 @@ def test_cli_reads_data_file_and_appends(tmp_path):
 
 def test_append_working_log_row_stages_without_touching_canonical_csv(tmp_path, monkeypatch):
     """No `path` given (the only way a real caller invokes it) -- stages to a per-batch shard
-    under agent-monitoring/data/, never touches tickets/working_log.csv directly."""
+    under agent-working/agent-monitoring/data/, never touches agent-working/tickets/working_log.csv directly."""
     monkeypatch.chdir(tmp_path)
     append_working_log_row(
         "2026-09-25T00:00:00Z", "TCK-STAGE", "A title", "DONE", "A summary.", "none"
@@ -590,12 +590,12 @@ def test_two_working_log_shards_never_conflict_under_sequential_squash_merges(tm
     (week_dir / "ticket-a.working_log.jsonl").write_text(
         json.dumps({"timestamp": "t", "ticket_id": "TCK-A", "title": "A", "status": "DONE", "summary": "s", "artifacts_path": "none"}) + "\n"
     )
-    _git(repo, "add", "agent-monitoring")
+    _git(repo, "add", posix(AGENT_MONITORING))
     _git(repo, "commit", "-q", "-m", "TCK-A: add working_log shard")
 
     _git(repo, "checkout", "-q", "main")
-    _git(repo, "checkout", "-q", "ticket-a", "--", "agent-monitoring")
-    _git(repo, "add", "agent-monitoring")
+    _git(repo, "checkout", "-q", "ticket-a", "--", posix(AGENT_MONITORING))
+    _git(repo, "add", posix(AGENT_MONITORING))
     _git(repo, "commit", "-q", "-m", "TCK-A: add working_log shard (squashed) (#1)")
 
     _git(repo, "checkout", "-q", "-b", "ticket-b", "main~1")
@@ -604,7 +604,7 @@ def test_two_working_log_shards_never_conflict_under_sequential_squash_merges(tm
     (week_dir_b / "ticket-b.working_log.jsonl").write_text(
         json.dumps({"timestamp": "t", "ticket_id": "TCK-B", "title": "B", "status": "DONE", "summary": "s", "artifacts_path": "none"}) + "\n"
     )
-    _git(repo, "add", "agent-monitoring")
+    _git(repo, "add", posix(AGENT_MONITORING))
     _git(repo, "commit", "-q", "-m", "TCK-B: add working_log shard")
 
     _git(repo, "checkout", "-q", "main")

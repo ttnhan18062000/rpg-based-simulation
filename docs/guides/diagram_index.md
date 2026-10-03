@@ -16,7 +16,7 @@ chunking from splitting a diagram from the explanation of what it means.
 If you're building a new diagram for a doc not listed here, add a row when you're done — this list
 is only as good as it stays current, and there's no automated check keeping it in sync with the
 corpus (deliberately: the diagram count is small enough today that automation would be
-premature — see `stored_artifacts/TCK-20260706-DIAGRAM-COVERAGE/plan.md`).
+premature — see `agent-working/stored_artifacts/TCK-20260706-DIAGRAM-COVERAGE/plan.md`).
 
 ## Engine & Simulation
 
@@ -53,4 +53,4 @@ premature — see `stored_artifacts/TCK-20260706-DIAGRAM-COVERAGE/plan.md`).
 ## Related docs
 
 - [`docs/guides/ticket_reporting.md`](ticket_reporting.md) — a sibling "index of reporting angles over the ticket corpus," same organizing instinct applied to a different kind of artifact
-- `stored_artifacts/TCK-20260706-DIAGRAM-COVERAGE/investigation.md` — the corpus scan this index was built from, plus the reasoning for indexing in place rather than relocating diagrams into a `docs/diagrams/` folder
+- `agent-working/stored_artifacts/TCK-20260706-DIAGRAM-COVERAGE/investigation.md` — the corpus scan this index was built from, plus the reasoning for indexing in place rather than relocating diagrams into a `docs/diagrams/` folder

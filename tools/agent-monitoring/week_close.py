@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Explicit week close: fold a *finished* ISO week's monitoring shards into the three canonical
 `runs.jsonl` / `events.jsonl` / `tools.jsonl` files, plus that week's pending working_log shards into
-`tickets/working_log.csv` (TCK-20261001-MONITORING-WEEK-CLOSE-COMMAND).
+`agent-working/tickets/working_log.csv` (TCK-20261001-MONITORING-WEEK-CLOSE-COMMAND).
 
 Why it exists: `generate_retro.py` calling `monitoring_consolidation.consolidate_all()` was the only
 automatic consolidation trigger. The retro is becoming read-only, so closing a week is now a
@@ -21,7 +21,7 @@ Rules:
 - Late-shard policy: a shard for an already-closed week that arrives later (a branch merging after its
   week ended) is folded by the next close of that week, like any other shard.
 - working_log rows go through `working_log_writer.consolidate_pending_rows(week=...)`, the CSV's single
-  writer; this module never opens `tickets/working_log.csv` itself.
+  writer; this module never opens `agent-working/tickets/working_log.csv` itself.
 """
 from __future__ import annotations
 
@@ -133,7 +133,7 @@ def close_week(week: str, data_dir: Path = DEFAULT_DATA_DIR, today: date | None 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Fold a finished ISO week's monitoring shards into canonical files.")
     ap.add_argument("--week", required=True, help="ISO week id, e.g. 2026-W40")
-    ap.add_argument("--data-dir", default=None, help="Override agent-monitoring/data/ (testing).")
+    ap.add_argument("--data-dir", default=None, help="Override agent-working/agent-monitoring/data/ (testing).")
     ap.add_argument("--today", default=None, help="Override today's date, YYYY-MM-DD (testing).")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)

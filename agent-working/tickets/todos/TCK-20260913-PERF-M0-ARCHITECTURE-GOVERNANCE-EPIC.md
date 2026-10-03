@@ -12,7 +12,7 @@ tags: [architecture, performance, determinism]
 # TCK-20260913-PERF-M0-ARCHITECTURE-GOVERNANCE-EPIC
 
 > **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
-> **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
+> **lifecycle correction only** — the ticket had sat in `agent-working/tickets/inprogress/` with no further
 > content change since 2026-09-14 (verified via `git log --follow`, not file mtime), and its
 > presence there was firing this repo's sidecar-check hook on every `Edit`/`Write` in every
 > concurrent session on this machine. **Nothing about the ticket's own substance was
@@ -89,7 +89,7 @@ semantic-deferred-work pattern anywhere in `src/`, matching the proposal's own d
       epic's Related Tickets section.
 - [x] Neither child ticket changes runtime behavior, governors, schedulers, hashing, pipeline
       execution, or client-facing behavior.
-- [ ] This epic ticket is not moved to `tickets/done/` until `PERF-M0-T01`-`T09` all have a
+- [ ] This epic ticket is not moved to `agent-working/tickets/done/` until `PERF-M0-T01`-`T09` all have a
       disposition (done, blocked, or explicitly deferred) — per the source epic doc's own Exit
       Criteria.
 
@@ -122,7 +122,7 @@ None.
 - 2026-10-02: `PERF-M0-T01` (`TCK-20260913-PERF-M0-SOURCE-AUDIT`, commit `26be9ed0`) and
   `PERF-M0-T02` (`TCK-20260913-PERF-M0-OWNER-TRIAGE`, commit `3b30b52f`) are done; both commits
   touch only docs, tickets, stored artifacts, the registry, and monitoring shards. Their folder
-  moved to `tickets/done/perf-m0-architecture-governance/`.
+  moved to `agent-working/tickets/done/perf-m0-architecture-governance/`.
 - `PERF-M0-T05` (PERF-D3) is recorded closed in
   `docs/architecture/performance_optimization_decisions.md` §3.2 and needs no ticket.
 - Next: the planner session drafts PERF-D1, D2, D4, D5, and D6 in that file. `PERF-M0-T07`

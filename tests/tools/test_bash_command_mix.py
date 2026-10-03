@@ -268,7 +268,7 @@ def _file_size_snapshot() -> dict:
 
 def test_script_is_read_only_against_real_agent_monitoring_data():
     """Same rationale as test_agent_tool_usage_baseline.py's sibling test: proves this script
-    never truncates or deletes existing content under agent-monitoring/data/, without racing a
+    never truncates or deletes existing content under agent-working/agent-monitoring/data/, without racing a
     concurrent session's own append-only PostToolUse hook writes during the test's wall-clock
     window (growth and new files are expected and not attributable to this script)."""
     assert _REAL_DATA_DIR.is_dir()
@@ -378,7 +378,7 @@ def test_cli_ref_mode_prints_measured_ref_and_sha_in_json():
 
 
 def test_cli_ref_mode_never_touches_working_tree():
-    """Read-only guard, ref-mode variant: --ref must never write to agent-monitoring/data/, same
+    """Read-only guard, ref-mode variant: --ref must never write to agent-working/agent-monitoring/data/, same
     property the filesystem-mode test proves for the default path."""
     pre_sizes = _file_size_snapshot()
     subprocess.run(

@@ -2,7 +2,7 @@
 (TCK-20260805-SECURITY-GATE-FIRING-MONITOR).
 
 Mirrors tests/tools/test_retrieval_baseline_metrics.py's design: synthetic-fixture unit tests for
-the classification logic itself, plus an integration test against the REAL agent-monitoring/
+the classification logic itself, plus an integration test against the REAL agent-working/agent-monitoring/
 corpus asserting today's known-correct classification — never a tmp_path copy for the live-corpus
 assertion, which would make it vacuous.
 """
@@ -211,4 +211,4 @@ def test_causes_zero_diff_on_real_corpus():
         ["git", "status", "--porcelain", "--", f"{posix(AGENT_MONITORING)}/"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     ).stdout
-    assert pre == post, f"security_gate_firing_check mutated agent-monitoring/: pre={pre!r} post={post!r}"
+    assert pre == post, f"security_gate_firing_check mutated agent-working/agent-monitoring/: pre={pre!r} post={post!r}"

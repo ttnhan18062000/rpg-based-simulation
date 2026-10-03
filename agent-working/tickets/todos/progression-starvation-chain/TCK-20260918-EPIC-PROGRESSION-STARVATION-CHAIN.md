@@ -87,14 +87,14 @@ individual tickets but weren't visible from outside them.
 
 ### Order (see `SEQUENCE.md`)
 1. `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` (P0, **done** — closed to
-   `tickets/done/`; verdict: the decision layer chooses combat and the choice is discarded at
+   `agent-working/tickets/done/`; verdict: the decision layer chooses combat and the choice is discarded at
    dispatch. Status corrected 2026-09-29, previously recorded here as "open".)
 2. `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (P1, **unblocked** — (1) has landed;
    re-read against its verdict before fresh measurement)
 3. `TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE` (P2, open — boss-gate half
    only; faction-chain half already resolved)
 4. `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` (done — referenced for
-   context, not reopened; stays in `tickets/done/` root per this repo's own epic-folder precedent)
+   context, not reopened; stays in `agent-working/tickets/done/` root per this repo's own epic-folder precedent)
 5. `TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME` (P1, blocked — must run last)
 
 ## Out of Scope
@@ -120,7 +120,7 @@ individual tickets but weren't visible from outside them.
 
 ## Related Tickets
 - `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` — child, P0, **done**
-  (`tickets/done/`). Answered the chain's root question; see `SEQUENCE.md` item 1 for the verdict.
+  (`agent-working/tickets/done/`). Answered the chain's root question; see `SEQUENCE.md` item 1 for the verdict.
 - `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` — child, P1, **unblocked** (not closed —
   the investigation that started this chain and produced the path-split measurement child 1
   continued; child 1 has now landed, so this one's blocking dependency is satisfied)
@@ -171,7 +171,7 @@ individual tickets but weren't visible from outside them.
   child 5 both match (correct, wired code defeated by real-world data/volume, not a code defect)
 
 ## Related Stored Artifacts
-- `stored_artifacts/TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS/` — child
+- `agent-working/stored_artifacts/TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS/` — child
   4's own full trace
 
 ## Related Code Areas

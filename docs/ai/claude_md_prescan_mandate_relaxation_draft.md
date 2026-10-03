@@ -28,7 +28,7 @@ window must show the fix holding.
 
 As of this ticket (`TCK-20260814-KGMCP-PRESCAN-MANDATE-INSTRUCTION-DRAFT`), that precondition is
 **currently pending, not satisfied**. This is not an assumption; it is the freshly regenerated
-`agent-monitoring/retro/RETRO-LAST14D.md`'s own finding (`## Notes` section, 2026-08-15T02:24
+`agent-working/agent-monitoring/retro/RETRO-LAST14D.md`'s own finding (`## Notes` section, 2026-08-15T02:24
 regeneration): the most recent `agent=claude` Investigate-phase event in the entire corpus predates
 the fix landing, so "no hand-orchestrated Investigate-phase run has occurred since the fix shipped,
 so there is no real data yet confirming compliance improved for the specific gap this ticket
@@ -92,7 +92,7 @@ future ticket's use and does **not** edit any of them now:
 
 - **`CLAUDE.md`'s `## Context Scan (Mandatory)` section** (currently at `CLAUDE.md:29-40`): the
   numbered 4-step order (`search_docs` → `graphify query` → `knowledge_search.py` fallback →
-  check tickets/docs/stored_artifacts), with "Raw grep and direct file reads are follow-up steps
+  check agent-working/tickets/docs/stored_artifacts), with "Raw grep and direct file reads are follow-up steps
   only — they narrow down what the semantic tools already surfaced. Never start with grep." Not
   edited by this draft.
 - **`CLAUDE.md`'s `## Proactive Tool Use` table, "Any investigation" row** (currently at

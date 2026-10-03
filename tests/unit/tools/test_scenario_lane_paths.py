@@ -26,7 +26,7 @@ def test_trigger_paths_run_the_lane(path):
     assert r["run"] is True and r["matched"] == [path] and r["unknown"] == []
 
 
-@pytest.mark.parametrize("path", ["docs/testing/x.md", "tickets/done/T.md", "agent-monitoring/data/a.jsonl",
+@pytest.mark.parametrize("path", ["docs/testing/x.md", "agent-working/tickets/done/T.md", "agent-working/agent-monitoring/data/a.jsonl",
                                   "frontend/src/App.tsx", "README.md", "tools/test_architecture/core_rpg_report.py"])
 def test_known_irrelevant_paths_alone_skip_the_lane(path):
     r = slp.classify([path])
@@ -114,7 +114,7 @@ def test_mixed_change_is_routed_once_via_perf():
 
 
 def test_docs_only_change_is_skipped_and_says_so():
-    run, perf = _route(["docs/testing/x.md", "tickets/done/T.md"])
+    run, perf = _route(["docs/testing/x.md", "agent-working/tickets/done/T.md"])
     assert run is False and perf is False
     assert "skipped" in slp.render_summary(slp.classify(["docs/testing/x.md"]), perf_covers=False)
 

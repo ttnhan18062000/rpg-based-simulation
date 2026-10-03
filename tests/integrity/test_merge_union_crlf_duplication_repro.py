@@ -48,7 +48,7 @@ def _init_repo(tmp_path: Path, gitattributes_content: str) -> Path:
     _run_git(["config", "user.name", "Test"], cwd=repo)
     _run_git(["config", "core.autocrlf", "false"], cwd=repo)
     (repo / ".gitattributes").write_text(gitattributes_content)
-    (repo / TICKETS).mkdir()
+    (repo / TICKETS).mkdir(parents=True)
     (repo / TICKETS / "working_log.csv").write_text(_CSV_HEADER + _BASE_ROW)
     _run_git(["add", "."], cwd=repo)
     _run_git(["commit", "-q", "-m", "base"], cwd=repo)
@@ -95,7 +95,7 @@ def test_merge_union_alone_duplicates_rows_shared_across_branches_with_different
     """Proof step: without `eol=lf`, the same rows appended on both branches with different
     line endings land twice after the merge -- this is the real defect, reproduced at the git
     level, not assumed."""
-    repo = _init_repo(tmp_path, "tickets/working_log.csv merge=union\n")
+    repo = _init_repo(tmp_path, "agent-working/tickets/working_log.csv merge=union\n")
     target = _merge_branch_b_into_a(repo)
 
     merged_lines = target.read_text(errors="replace").splitlines()
@@ -113,7 +113,7 @@ def test_merge_union_alone_duplicates_rows_shared_across_branches_with_different
 def test_text_eol_lf_prevents_the_duplication_and_leaves_no_cr(tmp_path):
     """Fix step: the same two-branch scenario, with `text eol=lf` added ahead of `merge=union`
     on the same .gitattributes line -- no duplicate, no CR byte anywhere in the merged file."""
-    repo = _init_repo(tmp_path, "tickets/working_log.csv text eol=lf merge=union\n")
+    repo = _init_repo(tmp_path, "agent-working/tickets/working_log.csv text eol=lf merge=union\n")
     target = _merge_branch_b_into_a(repo)
 
     merged_bytes = target.read_bytes()

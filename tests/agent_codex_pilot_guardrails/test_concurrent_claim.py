@@ -56,7 +56,7 @@ def test_provider_field_coverage_against_real_corpus_is_populated():
 
 def test_provider_field_coverage_resolves_sharded_real_repo_runs_source(tmp_path):
     """TCK-20260903-MONITORING-DATA-CODEX-REMIGRATION: provider_field_coverage must stream
-    every agent-monitoring/data/<week>/runs.jsonl shard, not a single hardcoded top-level
+    every agent-working/agent-monitoring/data/<week>/runs.jsonl shard, not a single hardcoded top-level
     runs.jsonl path."""
     monitoring_dir = tmp_path / AGENT_MONITORING
     data_dir = monitoring_dir / "data"

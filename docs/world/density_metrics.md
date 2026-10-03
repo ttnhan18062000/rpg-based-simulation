@@ -24,7 +24,7 @@ this map" needs a different answer than one asking "does this world have enough 
 entity to sustain progression." Collapsing these into a single composite score would hide which
 specific dimension is unusual about a given world. Each metric below computes one real ratio,
 answers one real question, and none was added without a stated purpose — see
-`stored_artifacts/TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE/investigation.md` for the
+`agent-working/stored_artifacts/TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE/investigation.md` for the
 selection reasoning.
 
 ## The 6 metrics

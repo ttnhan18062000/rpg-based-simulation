@@ -93,7 +93,7 @@ excluded — matching `tools/generate_registry.py`'s own `_SKIP_DOC_SUBDIRS` set
 |---|---|
 | **doc-updater** (new) | `docs/` minus the four rows below |
 | **parity-updater** (existing, unchanged) | `docs/parity_ledger/*.yaml` — still runs in its own Parity phase after Test |
-| **finalizer** (existing, unchanged) | The ticket file, `tickets/working_log.csv`, `docs/REGISTRY.yaml` regeneration, `make knowledge-index-update` — still in Finalize |
+| **finalizer** (existing, unchanged) | The ticket file, `agent-working/tickets/working_log.csv`, `docs/REGISTRY.yaml` regeneration, `make knowledge-index-update` — still in Finalize |
 | **Out of scope for everyone** | `docs/archive/`, `docs/scenarios/`, `docs/entity/` — not live prose (matches `_SKIP_DOC_SUBDIRS`), no agent in this pipeline edits them |
 | **Cite-only, never edited** | `docs/audits/` — see How table below; distinct from the four rows above because it *is* live prose, just not one this pipeline mutates |
 
@@ -131,7 +131,7 @@ not its "Entry Schema" section, which is a YAML field-shape block, not a table:
 
 **Why** always travels with the what — the reason text from Investigate's bullet (standard/epic)
 or doc-updater's own stated judgment against ticket Scope (hotfix). The agent's output echoes
-this back per doc touched, so `agent-monitoring/data/YYYY-Www/events.jsonl`'s summary is self-explanatory
+this back per doc touched, so `agent-working/agent-monitoring/data/YYYY-Www/events.jsonl`'s summary is self-explanatory
 without re-reading `investigation.md`.
 
 **Output contract** (mirrors `parity-updater.md`'s Output section): one-sentence summary

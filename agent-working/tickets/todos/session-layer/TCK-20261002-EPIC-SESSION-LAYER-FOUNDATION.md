@@ -84,7 +84,7 @@ Binding plan: `docs/plans/agent_infrastructure/session_layer_working_process.md`
 - Metrics, roster-check analytics, the first-month review (Epic D).
 - Staffing the two unstaffed seats and the practice changes in plan section 3 (owner decisions).
 - Auto-wake and a message inbox (Epic B decides the inbox from M0's wake result).
-- Any change to `.claude/agents/` agent roles, `agent-orchestration/` contents, or `Workflow` scripts, other than
+- Any change to `.claude/agents/` agent roles, `agent-working/agent-orchestration/` contents, or `Workflow` scripts, other than
   the path updates M-1 makes.
 - The home-directory authority digest pin (deferred by plan section 10).
 
@@ -131,10 +131,10 @@ Binding plan: `docs/plans/agent_infrastructure/session_layer_working_process.md`
 - `docs/plans/agent_infrastructure/agent_working_direction.md`
 - `docs/guides/agent_session_reset_boundaries.md`
 - `docs/guides/delivery_process.md` ("Worktree & Branch Isolation")
-- `agent-orchestration/README.md` (reference only: agent roles are referenced by id, never redefined)
+- `agent-working/agent-orchestration/README.md` (reference only: agent roles are referenced by id, never redefined)
 
 ## Related Stored Artifacts
-- `stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/` (the two external AI review rounds and the round-2 summary that shaped the plan)
+- `agent-working/stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/` (the two external AI review rounds and the round-2 summary that shaped the plan)
 
 ## Related Code Areas
 `tools/agent-monitoring/session_start_handover_hook.py`; `.claude/settings.json` (the `SessionStart` hook;
@@ -150,7 +150,7 @@ a governing file); `.claude/agents/` (generated `session-*.md`); `.claude/handov
   confirmation of the practice changes in plan section 3 (detail tickets move to the planner); whether a new
   domain may start with an unstaffed seat. The recovery default (suggest resume when the transcript is newer
   than the handover, else replace; the owner chooses) was approved 2026-10-02.
-- A session-layer role is not an `agent-orchestration/roles/*.yaml` agent role; the two are named apart.
+- A session-layer role is not an `agent-working/agent-orchestration/roles/*.yaml` agent role; the two are named apart.
 
 ## Implementation Notes
 

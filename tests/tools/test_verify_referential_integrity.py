@@ -3,7 +3,7 @@
 
 Mirrors tests/tools/test_migrate_monitoring_data.py's own structure: synthetic-
 fixture unit tests against a hand-built tmp_path multi-week directory tree (never
-the real agent-monitoring/data/ directory for these), then one real-corpus smoke
+the real agent-working/agent-monitoring/data/ directory for these), then one real-corpus smoke
 test at the end.
 
 The cross-week test (test_cross_week_run_id_not_flagged) is the single most

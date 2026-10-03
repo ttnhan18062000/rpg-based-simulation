@@ -3,7 +3,7 @@
 
 The reviewer's `test_quality_findings` is only evidence if it actually read the changed test
 files; an empty list from a reviewer that never opened them looks identical to a clean read.
-This reads the tools monitoring shards (`agent-monitoring/data/**/tools.jsonl`) and prints, for
+This reads the tools monitoring shards (`agent-working/agent-monitoring/data/**/tools.jsonl`) and prints, for
 each test file the branch changed, whether a `Read` row attributed to the Architecture-Verify
 phase of this ticket's run names it.
 
@@ -40,7 +40,7 @@ Limits (do not over-read the output)
 
 Usage:
     python3 tools/agent-monitoring/arch_verify_read_check.py --ticket-id TCK-... [--base-ref origin/main]
-        [--data-root agent-monitoring/data] [--json]
+        [--data-root agent-working/agent-monitoring/data] [--json]
 """
 from __future__ import annotations
 

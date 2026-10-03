@@ -101,7 +101,7 @@ def test_real_fixture_set_loads_and_validates():
     # Anti-drift guard: the fixture's ticket_id must correspond to a real, permanent record — not
     # invented example data.
     done_ticket_path = _REPO_ROOT / TICKETS / "done" / "TCK-20260721-ORCHESTRATION-CONTRACT-ADR.md"
-    assert done_ticket_path.exists(), "fixture's source ticket_id has no matching tickets/done/ file"
+    assert done_ticket_path.exists(), "fixture's source ticket_id has no matching agent-working/tickets/done/ file"
 
     runs_jsonl_shards = sorted((_REPO_ROOT / AGENT_MONITORING / "data").glob("*/runs.jsonl"))
     matching_run_ids = set()
@@ -112,7 +112,7 @@ def test_real_fixture_set_loads_and_validates():
             row = json.loads(line)
             matching_run_ids.add(row.get("run_id"))
     assert envelope.source["ticket_id"] in matching_run_ids, (
-        "fixture's source ticket_id has no matching row in any agent-monitoring/data/*/runs.jsonl shard"
+        "fixture's source ticket_id has no matching row in any agent-working/agent-monitoring/data/*/runs.jsonl shard"
     )
 
 

@@ -53,7 +53,7 @@ likely be run by an agent with no session memory) re-derives already-settled gro
 starting from "here is the known gap, dig into whether personality/disposition is the missing
 front-end cause."
 
-**Gap 2 — missing a second, closer piece of prior art.** `tickets/done/TCK-20260809-COMBAT-
+**Gap 2 — missing a second, closer piece of prior art.** `agent-working/tickets/done/TCK-20260809-COMBAT-
 OUTCOME-FLEE-VS-FIGHT-PERSONALITY.md` already confirmed real, live personality data
 (`data/content/entities/entity_archetypes.yaml`'s `bravery` field) causally dampening a real
 decision (flee-vs-fight, via `EngagementRiskEvaluator`) — the same mechanism `conflict-combat.md`'s

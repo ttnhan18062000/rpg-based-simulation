@@ -2,7 +2,7 @@
 # §2 "Execution Identity Model" — already decided there and consumed as an input by
 # docs/architecture/agent_orchestration_contract.md's "Execution Identity (Consumed Input)"
 # subsection. This ticket does not re-derive or alter these fields' shape, and this file does
-# not itself write to any real agent-monitoring/*.jsonl file.
+# not itself write to any real agent-working/agent-monitoring/*.jsonl file.
 schema_version: 1
 fields:
   execution_id:

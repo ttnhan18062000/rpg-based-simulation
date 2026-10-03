@@ -1,7 +1,7 @@
 """Tests for TCK-20260716-MONITORING-TOOLS-JSONL-WRITE-LOCK.
 
 `post_tool_hook.py` appends one JSON record per tool call to
-`agent-monitoring/data/<ISO-week>/tools.jsonl` (unified layout since
+`agent-working/agent-monitoring/data/<ISO-week>/tools.jsonl` (unified layout since
 TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY). Before the original write-lock ticket, the append
 (`with open(tools_file, "a") as f: f.write(...)`) had no synchronization across processes, and a
 real two-session race produced one corrupted, unparseable line in production (see the ticket's
@@ -11,7 +11,7 @@ Request Summary). The fix wraps the write in `fcntl.flock(f, fcntl.LOCK_EX)` /
 The hook is a top-level script (not importable as a module of functions — reading `sys.stdin`
 executes immediately on import), so every test here drives it the way Claude Code itself does:
 as a subprocess fed a JSON payload on stdin, with `cwd` pointed at a temp dir so
-`agent-monitoring/tools.jsonl` is created fresh per test.
+`agent-working/agent-monitoring/tools.jsonl` is created fresh per test.
 """
 import json
 import subprocess
@@ -512,8 +512,8 @@ def test_locking_failure_does_not_propagate(tmp_path):
 
     # TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY: the diagnostic sidecar path is derived from
     # target_path.parent (writer.py::_diagnostic_path_for), which is now
-    # agent-monitoring/data/<ISO-week>/ (the unified week folder) rather than
-    # agent-monitoring/tools/ (the prior epic's shard directory).
+    # agent-working/agent-monitoring/data/<ISO-week>/ (the unified week folder) rather than
+    # agent-working/agent-monitoring/tools/ (the prior epic's shard directory).
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
     diagnostic_path = tmp_path / AGENT_MONITORING / "data" / iso_week / ".writer_health.jsonl"
     diagnostic_lines = diagnostic_path.read_text().splitlines()
