@@ -2157,6 +2157,66 @@ untouched by §2.57's fix (out of that ticket's scope).
 - **Status**: RATIFIED
 ---
 
+### 2.64 The Global Tick-Cadence Raid Is Retired (TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION)
+- **Subsystem**: World / Calamity-Raid
+- **Old Behavior**: `RaidService.check_for_raid`, called from `world_dynamics` step 3.5, fired on a
+  `tick % 500` cadence and passed `origin=(0, 0), target=(0, 0)` as literals, so `spawn_raid` placed
+  every raider on the radius-25 ring (`SANCTUARY_RADIUS + 10`) around world coordinate `(0,0)` with
+  `navigation.target = (0,0)`. The hardcode encoded a single-settlement-at-origin world.
+  `TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX` fixed the camp caller, deliberately left this one, and
+  recorded the open question of whether it should keep the `(0,0)` assumption.
+- **New Behavior**: `check_for_raid` is **removed**, along with its call site. Step 3.5 contributes an
+  empty update. **Camp-triggered raids are unaffected** and are now the only raid mechanic;
+  `spawn_raid` survives as their composition logic.
+- **Measured basis — it had never once produced a raid.** Instrumented runs at `958aa103d`
+  (`audit_mode=True`, raised tick budget, `dropped_work_total == 0`, repeat-stable) over
+  `frontier_marches`/42 and `crowded_frontier`/7, 4 raid events: **12/12 raiders spawned outside every
+  region** with `region_id=None`; in `frontier_marches` they never drifted into one, producing **zero
+  raider combat, zero deaths and bit-identical regional influence and ownership** against a
+  same-harness control arm. The mechanic consumed entity ids and produced durable, unreachable debris.
+- **Why retirement and not re-anchoring.** Re-anchoring on a real settlement **was** implemented,
+  measured and then withdrawn. It worked as a placement change — raids spawned on the real city's
+  outskirts and aimed at it — but it also **activated a behaviour the world has never had**, which is
+  a gameplay change with a balance footprint, the class `owner_decision_memo.md` row 7 parks. Two
+  further measured facts settled it: (i) a radius-25 ring around a city centred in a 30-wide region
+  *necessarily* lands outside that region, so **11 of 12 re-anchored spawns were still off-region**;
+  and (ii) `src/engine/tactical.py:141` `PANIC_RETREAT` overwrites a raider's target with the same
+  hardcoded `(0.0, 0.0)` within 15–38 ticks of spawn, so 10 of 12 raiders walked **past** the city to
+  the world origin and idled there — the raid is swallowed on the flight path even once the spawn path
+  is correct (`TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN`). Re-anchoring would have
+  shipped a feature that still did not function.
+- **Rule-layer basis** (`world-rule-catalog-design`, both users ruling): no Rule governs raid
+  provenance specifically, but **PLACE-01** (a Place is a declared subject "rather than remaining mere
+  terrain or a bare coordinate") rules out a geometric region centre as a raid destination;
+  **CAUSE-01** requires a real causal path; **ID-04** requires created entities to have declared
+  identity and origin; **ORG-03** requires an organizationally attributed world change to have a valid
+  organizational process — and a world clock is not the raiders' faction's process. The camp path
+  satisfies all four; the world-clock path satisfied none.
+- **Not behavior-neutral**: no raiders are created on the 500-tick cadence any more. Nothing
+  observable is lost, because they never raided — but entity ids are no longer consumed, and
+  `tests/integration/world/test_phase9_stability.py::test_1000_tick_stability` had its monster floor
+  lowered from 2 to 1. That floor was being met by the retired raid's inert off-map raiders: its
+  fixture declares no places, so no camp can raid and no boss can spawn, making the global raid its
+  only monster source. Pinning the count of a non-event is not a world semantic.
+- **If world-clock raids are ever wanted back**, they return as a **declared feature** with a
+  settlement-Place target and no coordinate fallback, and `PANIC_RETREAT` must be fixed first or the
+  feature cannot work.
+- **Rationale**: **Bug Fix** — this stops the creation of regionless, inert entities. (Recorded
+  explicitly because the withdrawn re-anchoring version of this entry carried the same class
+  wrongly: *activating* a never-functional mechanic would have been an **Intentional Gameplay
+  Change**. Retiring it is the bug fix.)
+- **Verification**: `tests/unit/world/test_global_raid_retired.py`
+  (`test_global_world_clock_raid_surface_is_absent`,
+  `test_no_raiders_spawn_on_the_former_cadence_tick`,
+  `test_no_entity_is_created_at_the_world_origin_ring_on_the_cadence_tick`,
+  `test_camp_triggered_spawn_raid_still_works` — the positive control proving raid composition
+  survives), `tests/unit/world/test_world_dynamics.py::test_world_dynamics_no_longer_spawns_a_global_raid_on_the_cadence_tick`,
+  `tests/unit/world/test_calamity_raid.py` (rebased onto `spawn_raid`). Scope:
+  `tests/unit/world/` + `tests/integration/world/` + `tests/unit/engine` + `tests/unit/ai` = 638
+  passed, 1 skipped.
+- **Status**: RATIFIED
+---
+
 ## 3. Unsupported / Retired Behavior
 
 The following legacy behaviors have been intentionally omitted or retired.

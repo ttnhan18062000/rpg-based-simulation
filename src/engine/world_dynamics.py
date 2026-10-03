@@ -183,9 +183,14 @@ class WorldDynamicsSystem:
                 from src.core.updates import StateUpdate as NewStateUpdate
                 lair_spawn_update = NewStateUpdate()
 
-            # 3.5 Process Raids
-            from src.world.raid import RaidService
-            raid_update = RaidService.check_for_raid(state, generator)
+            # 3.5 Process Raids -- RETIRED
+            # TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION: the global
+            # world-clock raid (RaidService.check_for_raid) is retired. It spawned every raider on
+            # the radius-25 ring around world coordinate (0,0) -- outside every region -- where they
+            # sat inert; measured over 2 corpus worlds it had never once produced a raid. Camp-
+            # triggered raids, which have real provenance, still fire from 3.6 below.
+            from src.core.updates import StateUpdate as _EmptyStateUpdate
+            raid_update = _EmptyStateUpdate()
 
             # 3.6 Process Camps (Persistent Encampments)
             from src.world.camp import CampService

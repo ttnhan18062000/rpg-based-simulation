@@ -34,7 +34,9 @@ def find_ticket(ticket_id, repo=REPO):
         p = repo / TICKETS / sub / f"{ticket_id}.md"
         if p.exists():
             return p
-    return None
+    # A closed epic folder is moved to done/<folder>/ (CLAUDE.md "After Work"), one level deep.
+    nested = sorted((repo / TICKETS / "done").glob(f"*/{ticket_id}.md"))
+    return nested[0] if nested else None
 
 
 def build_checks(ticket_id, ticket_path, repo=REPO):
@@ -50,7 +52,7 @@ def build_checks(ticket_id, ticket_path, repo=REPO):
 def run(ticket_id, repo=REPO, out=print):
     ticket = find_ticket(ticket_id, repo)
     if ticket is None:
-        out(f"FAIL ticket_location: no agent-working/tickets/inprogress|done/{ticket_id}.md")
+        out(f"FAIL ticket_location: no agent-working/tickets/inprogress|done[/<folder>]/{ticket_id}.md")
         return 1
     failed = []
     for name, cmd in build_checks(ticket_id, ticket, repo):
