@@ -101,6 +101,13 @@ def test_src_progression_only_routes_to_the_dedicated_job():
     assert "scenario-lane job" in slp.render_summary(slp.classify(["src/progression/xp.py"]), perf_covers=perf)
 
 
+def test_src_systems_social_only_routes_to_the_dedicated_job():
+    paths = ["src/systems/social_systems/appraisal.py"]
+    run, perf = _route(paths)
+    assert run is True and perf is False  # PERF_RE omits src/systems/, so only the dedicated job covers it
+    assert "scenario-lane job" in slp.render_summary(slp.classify(paths), perf_covers=perf)
+
+
 def test_src_domains_progression_only_routes_to_perf_cert_arena():
     run, perf = _route(["src/domains/progression/service.py"])
     assert run is True and perf is True

@@ -96,7 +96,7 @@ dated evidence* (§9), not commitments.
 | Party / group | `src/systems/party.py`, `src/systems/social_systems/party*.py` | **none**: no Bible chapter covers party/group composition (ch04 is goal hierarchy) → **escalate to the user** [D] | none |
 | *Strategic cognition* (mapped, outside the first program) | `src/cognition/`, `src/strategy/`, `src/ai/goals/`, `src/systems/strategic_systems/` | Bible ch04 | `strategic_cognition.yaml` |
 | *World dynamics* (mapped, outside the first program) | world-evolution / calamity / ecology code (roots to be confirmed by the impact-model work) | Bible ch05–06 | `world_dynamics.yaml` |
-| *Social / narrative* (mapped, outside the first program) | social systems (roots to be confirmed by the impact-model work) | social/narrative contracts | `social_narrative.yaml` |
+| *Social / narrative* (Phase 2 batch, 2026-10-03; owner contact `rpg-feature-planning`) | `src/systems/social_systems/` (`party*.py` stays in the Party row; `memory.py` is excluded as dormant, see `TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS`) | `docs/mechanics/07_social_political_dynamics.md`, `docs/simulation/social_systems_contract.md`, `docs/simulation/domains/social_memory_contract.md`; `docs/world_rules/social-lineage/` upstream | `social_narrative.yaml` |
 
 **Oracle authority (per `rpg-feature-planning` consultation, 2026-09-29, and CLAUDE.md's
 Authoritative Mechanics Rule):**
