@@ -90,6 +90,13 @@ must not be written up as if the general case were measured.
 1. The firing rate of all three branches is measured per entity kind, with `audit_mode=True` and a
    raised `max_tick_budget_ms`, **before** any behaviour change. Without that the blast radius is
    unknown.
+   **BLOCKED CAVEAT, added 2026-10-03:** that protocol may not be sufficient on this very path.
+   `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` records a measured
+   combat/tactical-path divergence (780 vs 1609 opportunity attacks) that **survives `audit_mode=True`
+   and a raised budget**, unlike the `INFRA-273` throttle. If that is confirmed, a firing-rate count
+   taken here is unreliable no matter how carefully it is configured. **Settle that ticket first, or
+   establish a different instrument for this one.** Do not take a count on this path and treat it as
+   solid until then.
 2. A decision is recorded for what a retreat target should be, with reasoning, not silently adopting
    the first plausible option.
 3. A retreating entity's target is inside some region. Asserted by a test that fails on today's code.
@@ -107,6 +114,8 @@ must not be written up as if the general case were measured.
 - `TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP` (open, moved into decision-7
   foundation scope) — "proves a mechanism executes, not that it matters" is exactly the shape of this
   defect class.
+- `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` (open) — **blocks AC-1 of this
+  ticket.** Same code path; its divergence defeats the measurement protocol AC-1 prescribes.
 
 ## Related Docs
 
