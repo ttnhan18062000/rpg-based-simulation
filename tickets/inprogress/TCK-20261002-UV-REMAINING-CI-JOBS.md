@@ -15,7 +15,7 @@ tags: [delivery]
 M2c: Migrate the remaining CI jobs and the Makefile install recipe to uv sync
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -122,9 +122,25 @@ None.
   - The testing planner (`test-architecture-reviewer`) still has to be told about the edits to tests in its domain before this lands; it was not reachable for the previous batch
 
 ## Implementation Notes
+- `lint` dependency group (`ruff==0.16.10`, `complexipy==8.0.1`) split out of `dev`; `[tool.uv] default-groups = ["dev", "lint"]` keeps plain `uv sync` and the `uv export` output unchanged. `uv.lock` diff is the group move only (no package version changed); the export reproduces `requirements.txt` byte-for-byte (only the header comment's output path differed in a scratch export).
+- All 15 pip jobs now use the `simulation-quality` setup (setup-uv@v10.2.0, uv 0.11.2, `uv sync --locked --no-install-project`). Only `tools-a-e` syncs `lint`; every other job, including the already-migrated `simulation-quality`, passes `--no-group lint`. Only `tests/tools/test_code_health_*.py` and `test_codebase_health_snapshot*.py` need the tools; none is marked `slow`, so `slow` does not collect them.
+- `typecheck`: `pip install mypy` step deleted (mypy is in `dev`); the `mypy` step is untouched.
+- `PERF_RE` and `MIG_RE` gain `pyproject.toml` and `uv.lock`. Consequence accepted by the planner: any `pyproject.toml` edit, including ruff configuration, now runs `perf-cert-arena` and `migration-lanes` (stated in `docs/testing/migration_ci_lanes.md`). `tests/static/test_ci_narrow_path_filtered_jobs.py` does not pin the expressions' literal text, only derived coverage; a test was added, no existing assertion edited.
+- `make install-py` and `make.bat` run plain `uv sync` (no `--system-certs`; `UV_SYSTEM_CERTS=1` documented for TLS-intercepted machines). It now also installs the project editable, which pip did not; documented.
+- Negative control (scratch env built with `uv sync --locked --no-install-project --no-group lint`; neither tool installed): the 9 code-health tests that scan **fail** with `ToolUnavailableError: complexipy not found: install the project environment (uv sync)`; none skips. So a misplaced `--no-group lint` cannot pass silently.
 
 ## Test Summary
 
 ## Files Changed
+Config and CI: `pyproject.toml`, `uv.lock`, `.github/workflows/test.yml` (15 install steps; `simulation-quality` is an edit to the already-migrated job, flag `--no-group lint` only; mypy step; PERF_RE/MIG_RE; comment), `Makefile` (`install-py`), `make.bat`. `requirements.txt` unchanged (regenerated, identical).
+
+Edits to existing tests (for forwarding to `test-architecture-reviewer`; install and cache lines only, no assertion weakened):
+- `tests/static/test_ci_step_summary_reporting.py`: `_EXPECTED_MIGRATION_LANES_YAML` and `_EXPECTED_SLOW_YAML` setup-python/pip lines replaced by the setup-uv/`uv sync --locked --no-install-project --no-group lint` lines, because those two jobs moved to uv.
+- `tests/tools/test_ci_split_tools_jobs.py`: `test_every_new_job_still_installs_with_pip_until_the_uv_migration` renamed `test_every_new_job_installs_with_uv_from_the_lockfile`; pins the uv sync line (with or without `--no-group lint`), the setup-uv step and absence of pip, because the three split jobs moved to uv.
+- `tests/tools/test_dashboard_makefile_targets.py`: `install-py` recipe snapshot `pip install -r requirements.txt` -> `uv sync`, because the recipe changed.
+
+Additive tests: `tests/static/test_ci_uv_install.py` (new), one test appended to each of `tests/static/test_ci_narrow_path_filtered_jobs.py` (PERF_RE/MIG_RE match pyproject.toml, uv.lock) and `tests/static/test_typecheck_gate_configured.py` (no `pip install mypy`).
+
+Docs: `docs/guidelines/agent_working_environment.md`, `docs/guides/delivery_process.md`, `docs/testing/migration_ci_lanes.md`.
 
 ## Completion Summary
