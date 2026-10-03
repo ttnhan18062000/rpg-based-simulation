@@ -149,6 +149,34 @@ Documents, tickets, and read-only tooling only — no `src/` edit, no baseline:
 
 Items 3–6 follow item 2. Everything else in M1–M6 waits for the entry gate.
 
+### Performance management loop (added 2026-10-03)
+
+The package treats performance mostly as gating: tests and baselines that say whether a number
+got worse. That answers "did it regress" and not "where does the time go, and why did it move".
+The owner asked on 2026-10-03 whether performance needs managing beyond testing, with profiling.
+It does. The pieces exist but are separate and manual: `tools/perf/profile_engine.py` and
+`profile_sweep.py` (`cProfile`), `profile_memory.py` and `memory_probe.py` (optional `memray`),
+`PhaseProfiler` in `src/observability/performance/`, and a last-tick per-phase gauge on
+`/metrics`. Nothing stores a profile, compares two, or assigns a phase a budget, and the one
+attribution study the plan cites (2026-09-14) was done by hand.
+
+The program therefore runs four practices, not one:
+
+| Practice | Question it answers | Mechanism | Milestone |
+|---|---|---|---|
+| Regression gating | Did a change make a number worse? | Tripwire and capacity projections (PERF-D4) | M2, M4 |
+| Attribution | Which phase, at what work volume, spent the time this tick? | Per-phase timing and work counts as traces and histograms (OpenTelemetry), always on and bounded | M3 |
+| Profiling | Which functions inside that phase, and what changed between two commits? | Sampling profiles (`py-spy`) and allocation profiles (`memray`) stored as artifacts; differential flame graphs; scheduled runs, with a continuous-profiling store as the later step | Tooling now; scheduled runs with M4 |
+| Budgeting | Is each phase within its share, and who answers when it is not? | A per-phase cost budget per size tier in the phase catalog (PERF-D6), reviewed on trend, and declared by every new RPG phase | M3, after the catalog |
+
+Two rules keep these honest. A profile explains a cost; it is never a capacity claim, and under
+the entry gate every profile is labeled provisional. And when a feature flag is turned on by
+default, its change ticket carries an on/off phase-attribution table produced by the tooling, so
+the 2026-09-14 study becomes routine instead of an investigation.
+
+The profiling tooling is added to the foundation slice as item 7: it lives under `tools/perf/`,
+edits nothing in `src/`, and takes no baseline.
+
 ## Stable structure across every milestone
 
 Performance work may change representations, derived indexes, scheduling efficiency, execution
