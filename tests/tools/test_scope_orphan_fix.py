@@ -152,7 +152,7 @@ def test_ticket_scoper_prompt_no_longer_unconditionally_copies():
     source = _IMPLEMENT_TICKET_JS.read_text(encoding="utf-8")
 
     assert (
-        'Copy it to tickets/inprogress/${ticketId}.md so it enters the standard workflow location'
+        'Copy it to agent-working/tickets/inprogress/${ticketId}.md so it enters the standard workflow location'
         not in source
     )
     assert "scopeOrphanInfo.ticket_path" in source
@@ -162,7 +162,7 @@ def test_ticket_scoper_prompt_no_longer_unconditionally_copies():
 
 # ---------------------------------------------------------------------------
 # 5. TCK-20260930-SCOPE-RELOCATE-RESUME-LOSES-TODOS-SOURCE-PATH: a resumed run (ticket already in
-#    inprogress/) must still report a surviving tickets/todos/ copy, derived from the filesystem.
+#    inprogress/) must still report a surviving agent-working/tickets/todos/ copy, derived from the filesystem.
 # ---------------------------------------------------------------------------
 
 

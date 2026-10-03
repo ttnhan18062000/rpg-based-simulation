@@ -27,8 +27,8 @@ unreliable"): each check function's docstring states plainly what it cannot see.
   prefix test, and does not attempt to resolve which object a `.items`/`.global_resources`-shaped
   attribute chain actually belongs to (no type inference available in plain `ast`).
 - The reason/metadata check has **zero confirmed historical incidents** behind it in this repo
-  (investigation.md searched `git log`, `tickets/done/`, `docs/archive/`, and all 31 recorded
-  `NEEDS_CHANGES`/`BLOCKED` architecture-review verdicts in `agent-monitoring/events.jsonl` and
+  (investigation.md searched `git log`, `agent-working/tickets/done/`, `docs/archive/`, and all 31 recorded
+  `NEEDS_CHANGES`/`BLOCKED` architecture-review verdicts in `agent-working/agent-monitoring/events.jsonl` and
   found none) — its patterns are derived from CLAUDE.md's Durable State Rule prose, not mined from
   a real corpus of past violations.
 
@@ -381,8 +381,8 @@ def check_reason_metadata_smuggling(file_path: str, source: str) -> "tuple[str, 
     Text/regex-based (not AST), per the ticket Scope's own "regex check" framing.
 
     DISCLOSURE — this check has ZERO confirmed historical incidents behind it in this repo.
-    investigation.md searched `git log --all --grep`, `tickets/done/`, `docs/archive/`, and all 31
-    recorded `NEEDS_CHANGES`/`BLOCKED` architecture-review verdicts in `agent-monitoring/events.jsonl`
+    investigation.md searched `git log --all --grep`, `agent-working/tickets/done/`, `docs/archive/`, and all 31
+    recorded `NEEDS_CHANGES`/`BLOCKED` architecture-review verdicts in `agent-working/agent-monitoring/events.jsonl`
     (the actual historical corpus of confirmed findings) and found no real instance of this exact
     pattern. Its regex patterns are derived from CLAUDE.md's Durable State Rule prose alone, not
     mined from any confirmed violation — this is the weakest-evidenced of the three checks in this

@@ -174,7 +174,7 @@ Recalibrate phase raw output:
 ${recalText}
 
 Steps:
-1. Run \`git log --oneline -20\` and check tickets/done/ for recent SimQ tickets to correlate causes
+1. Run \`git log --oneline -20\` and check agent-working/tickets/done/ for recent SimQ tickets to correlate causes
    (mirrors historical practice for classifying grade drift).
 2. For every REGRESS row, UNCOVERED anchor key, and PARITY LEDGER CANDIDATE in the Recalibrate output,
    classify it as EXPECTED_DRIFT (attributable to an already-landed, named change — cite the specific
@@ -436,7 +436,7 @@ const TICKET_SCHEMA = {
   properties: {
     ticket_id: { type: 'string' },
     ticket_path: { type: 'string' },
-    todos_source_path: { type: 'string', description: 'Path of the original file under tickets/todos/ if the ticket originated there; empty string otherwise.' },
+    todos_source_path: { type: 'string', description: 'Path of the original file under agent-working/tickets/todos/ if the ticket originated there; empty string otherwise.' },
     status: { type: 'string', enum: ['CREATED', 'EXISTING'] },
     conflicts: { type: 'array', items: { type: 'string' } },
     tier: { type: 'string', enum: ['hotfix', 'standard', 'epic'] },
@@ -463,12 +463,12 @@ Step 0b (context warm-start — REQUIRED before any file reads):
 Request: ${ticketRequest}
 
 Steps:
-1. Scan tickets/ (inprogress/, done/, and backlogs/) for overlapping scope or prior attempts. A hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned — flag it as a conflict/duplicate candidate rather than re-scoping from scratch.
+1. Scan agent-working/tickets/ (inprogress/, done/, and backlogs/) for overlapping scope or prior attempts. A hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned — flag it as a conflict/duplicate candidate rather than re-scoping from scratch.
 2. Scan docs/ (mechanics Bible chapters, engine contracts) for constraints on the request.
-3. Scan stored_artifacts/ for prior investigations in the same area.
+3. Scan agent-working/stored_artifacts/ for prior investigations in the same area.
 4. Read relevant source files to understand current state.
 5. Check docs/parity_ledger/ for entries that overlap with the proposed scope.
-6. Draft the ticket at tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md.
+6. Draft the ticket at agent-working/tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md.
    The file MUST begin with a YAML frontmatter block (before the # heading):
    ---
    status: active
@@ -488,7 +488,7 @@ Steps:
    Files Changed (blank), Completion Summary (blank).
    Seed the Request Summary and Scope directly from the specific run_key/pillar/cause items listed above —
    this is a pre-scoped hand-off from a SimQ audit run, not a free-text request.
-7. Create the staging directory: staging_artifacts/{ticket_id}/
+7. Create the staging directory: agent-working/staging_artifacts/{ticket_id}/
 
 Return: ticket_id (the full TCK-... ID), ticket_path, status="CREATED",
 conflicts (list of any duplicates or conflicts found — empty array if none),

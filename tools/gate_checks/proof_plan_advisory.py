@@ -15,6 +15,11 @@ when the document is silent).
 
 import re
 from pathlib import Path
+import sys
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STAGING_ARTIFACTS, STORED_ARTIFACTS, TICKETS  # noqa: E402
 
 # Single list of the mandatory per-criterion fields, mirrored from the investigator prose. A test
 # asserts every name here still appears in `.claude/agents/investigator.md`'s Proof Plan section, so
@@ -93,9 +98,9 @@ def _closed_by_disposition(ticket_id: str, tickets_dir: Path) -> bool:
 def check_proof_plan_fields(
     ticket_id: str,
     tier: str,
-    staging_dir: Path = Path("staging_artifacts"),
-    stored_dir: Path = Path("stored_artifacts"),
-    tickets_dir: Path = Path("tickets"),
+    staging_dir: Path = STAGING_ARTIFACTS,
+    stored_dir: Path = STORED_ARTIFACTS,
+    tickets_dir: Path = TICKETS,
 ) -> tuple[str, str]:
     """Return `(status, evidence)`; status is `OK`, `WARN` or `NA`. Never raises."""
     if tier not in _TIERS_CHECKED:

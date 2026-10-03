@@ -11,13 +11,14 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from tools.agent_working_paths import KNOWLEDGE_INDEX
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _MCP_PATH = _REPO_ROOT / "tools" / "search_mcp.py"
 
 # Stub knowledge_search before loading search_mcp to avoid heavy deps at import time
 _KS_STUB = MagicMock()
-_KS_STUB._DEFAULT_DB = _REPO_ROOT / "knowledge-index" / "knowledge.db"
+_KS_STUB._DEFAULT_DB = _REPO_ROOT / KNOWLEDGE_INDEX / "knowledge.db"
 _KS_STUB._MODEL_NAME = "all-MiniLM-L6-v2"
 _KS_STUB._tokenize = lambda text: text.lower().split()
 _KS_STUB._serialize_f32 = lambda v: b""

@@ -11,6 +11,7 @@ from tools.agent_codex_runtime_shadow.shadow_comparison import compare_to_canoni
 from tools.agent_codex_runtime_shadow.shadow_runner import CodexShadowOutcome
 from tools.agent_replay.fixture_envelope import FixtureEnvelope, load_fixture
 from tools.agent_replay.runner import ReplayOutcome, replay_slice
+from tools.agent_working_paths import STAGING_ARTIFACTS  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REAL_FIXTURE_PATH = (
@@ -20,7 +21,7 @@ _EMPTY_DIVERGENCE_LOG = "# no entries\n"
 
 
 def _write_scratch_artifacts(tmp_path: Path, ticket_id: str) -> Path:
-    artifacts_dir = tmp_path / "staging_artifacts"
+    artifacts_dir = tmp_path / STAGING_ARTIFACTS
     ticket_dir = artifacts_dir / ticket_id
     ticket_dir.mkdir(parents=True)
     (ticket_dir / "investigation.md").write_text("x", encoding="utf-8")

@@ -1,7 +1,7 @@
 """Tests for tools/code_test_index.py.
 
 Fixtures are small, hand-built graphs -- never the live 41.9MB graphify-out/graph.json --
-per staging_artifacts/TCK-20260729-DETERMINISTIC-CODE-INDEX/test_plan.md's Anti-Drift Test
+per agent-working/staging_artifacts/TCK-20260729-DETERMINISTIC-CODE-INDEX/test_plan.md's Anti-Drift Test
 Guards ("No test in this suite should assert on live graph.json's exact edge counts").
 """
 

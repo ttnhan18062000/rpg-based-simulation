@@ -6,7 +6,7 @@ calibration world corpus:
 1. ``test_entity_count_band`` — the 5 newly-anchored worlds keep the entity-count
    shape they were chosen to fill (docs/simulation_quality/eval_matrix_results.md).
 2. ``test_population_stability`` — permanent regression guard for the early-tick
-   population-collapse bug (Finding 3, stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-
+   population-collapse bug (Finding 3, agent-working/stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-
    WORLD-CORPUS/investigation.md): every world must keep >=60% of its starting
    entity count alive at every 50-tick checkpoint through 300 ticks.
 3. ``test_hazard_kind_completeness`` — every non-zero-hazard region must either
@@ -121,7 +121,7 @@ ALL_CORPUS_WORLDS = sorted(p.name for p in WORLDS_ROOT.iterdir() if p.is_dir())
 
 # The 5 worlds this ticket anchored, and the entity-count band each was chosen to
 # fill (docs/simulation_quality/eval_matrix_results.md /
-# stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/plan.md Step 4 table).
+# agent-working/stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/plan.md Step 4 table).
 # (low, high) inclusive; high=None means open-ended (">50").
 ANCHORED_WORLD_BANDS: dict[str, tuple[int, int | None]] = {
     "frontier_extended": (51, None),
@@ -159,7 +159,7 @@ POPULATION_STABILITY_WORLDS = list(ANCHORED_WORLD_BANDS.keys()) + [
 ]
 
 # All 10 worlds' distinct-populated-faction counts, verified against
-# staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md §2 and re-confirmed by
+# agent-working/staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md §2 and re-confirmed by
 # TCK-20260704-SIMQ-CORPUS-SCALE-METRIC's own recompile cross-check (investigation.md §3).
 EXPECTED_DISTINCT_POPULATED_FACTIONS: dict[str, int] = {
     "wilderness_survival": 2,
@@ -307,7 +307,7 @@ def test_distinct_populated_factions(world_id: str, expected: int) -> None:
     )
     assert report["distinct_populated_factions"] == expected, (
         f"{world_id}: distinct_populated_factions={report['distinct_populated_factions']} "
-        f"!= expected {expected} (staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/"
+        f"!= expected {expected} (agent-working/staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/"
         "investigation.md §2)"
     )
 
@@ -408,7 +408,7 @@ def test_generated_frontier_3_42_extended_population_stability() -> None:
     This drives the real, throttled ``Kernel`` (no ``audit_mode``) — the same code
     path a real/CI run exercises — for 1000 ticks, 3 independent same-seed(42)
     trials. It is intentionally NOT a tight per-tick assertion past tick 800: the
-    investigation (stored_artifacts/TCK-20260708-GENERATED-FRONTIER-LATE-TICK-
+    investigation (agent-working/stored_artifacts/TCK-20260708-GENERATED-FRONTIER-LATE-TICK-
     POPULATION-COLLAPSE/investigation.md, Root cause 3) ran this exact harness
     twice, back-to-back, same seed/code/machine, and observed the tick-budget
     watchdog/emergency-throttle (docs/engine/kernel.md §"Emergency Throttling")
@@ -611,7 +611,7 @@ def test_urban_political_seed123_500t_cognition_grade_stability() -> None:
 # 2d. TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP — 14 anchors carved out of
 # TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION's Step 7 recalibration sweep. Every one of
 # the 14 was found genuinely load/timing-sensitive by its own independent idle-vs-load
-# repro (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
+# repro (agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
 # — none were bit-identical, so all 14 use the tolerance-based guard shape (2b), unlike
 # urban_political_seed123_500t above. See each test's own docstring for its specific
 # repro evidence and the section of repro_sweep.md it cites.
@@ -957,7 +957,7 @@ def test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_sta
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
 
     Section 2's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
+    (agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
     drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     COGNITION event_count climbs ~20% under load (14390-14530 idle vs 17242-17244 load);
@@ -1060,7 +1060,7 @@ def test_urban_political_seed42_1000t_social_grade_stability() -> None:
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
 
     Section 3's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
+    (agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
     drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     SOCIAL event_count ranged 7819-11026 across trials (~40% spread); delta-gated contract_expired_offer transitions cascade differently once the mid-tick throttle drops one entity's resolution work, not a simple single-event tick-shift.
@@ -1172,7 +1172,7 @@ def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
 
     Section 3's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
+    (agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
     drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     SOCIAL event_count ranged 7974-9168; ECONOMY event_count ranged 49-59 with one trial (2x load) crossing the A/B grade band. Same cascading-divergence mechanism as urban_political_seed42_1000t.
@@ -1291,7 +1291,7 @@ def test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stabilit
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
 
     Section 4's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
+    (agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
     drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     SOCIAL event_count ranged 639-770 across trials, genuinely load-sensitive at 200t (below F6's documented ~tick 300-320 onset -- this is evidence sharpening that onset's hedge, not contradicting it). WORLD (demographic_birth/demographic_mortality) was bit-identical (event_count=14) within this repro's own 4-trial batch, but the independent Step-1 baseline sample (evaluate_simq.py, same session) recorded event_count=12/score=0.15 -- WORLD is therefore also genuinely variable across runs; folded into this anchor's tolerance guard rather than asserted bit-identical, since a bit-identical claim would be falsified by the baseline sample this batch did not happen to reproduce.
@@ -1381,7 +1381,7 @@ def test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability()
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
 
     Section 4/5's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
+    (agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
     drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     COMBAT event_count ranged 4-5 (small-sample pillar, score moves 0.071->0.16, >2x); NARRATIVE event_count ranged 31-39. Both are constructed in event_extractor.py (CombatDamageEvent/CombatKillEvent, Section 5's correction to investigation.md's stated gap) via the same this-tick-delta gating as the SOCIAL/PROGRESSION/NARRATIVE events already characterized -- not a distinct, unlocated emission path. Confirmed genuinely load-sensitive at 200t, same as the SOCIAL probe anchor above.
@@ -1487,7 +1487,7 @@ def test_urban_political_seed42_200t_social_grade_stability() -> None:
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
 
     Section 6's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
+    (agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
     drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     SOCIAL event_count ranged 710-770 across trials -- contrary to plan.md's expectation that this anchor (which passed the Step-1 isolated re-run) would prove bit-identical under a single-scenario repro, it did not; the original sustained-session drift is reproducible even in this smaller repro shape.
@@ -1576,7 +1576,7 @@ def test_frontier_extended_seed42_200t_narrative_grade_stability() -> None:
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
 
     Section 6's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
+    (agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
     drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     NARRATIVE event_count ranged 15-24, with one trial (2x load) crossing into grade B (idle/other trials grade A) -- genuinely variable, not a sustained-session-only effect as plan.md hypothesized.
@@ -1688,7 +1688,7 @@ def test_frontier_extended_seed123_200t_combat_progression_narrative_grade_stabi
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
 
     Section 6's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
+    (agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
     drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     COMBAT event_count 8 (both idle) vs 10-13 (load); PROGRESSION event_count 5 (idle, grade A) vs 6-7 (load, grade B); NARRATIVE event_count ranged 32-53. All three drifted pillars are genuinely variable.
@@ -1780,7 +1780,7 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
 
     Section 6's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
+    (agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
     drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     SOCIAL event_count ranged 344-476 (idle-1 alone was the low outlier); genuinely variable even in this single-scenario repro shape.
@@ -1892,7 +1892,7 @@ def test_frontier_living_world_seed123_200t_combat_narrative_grade_stability() -
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
 
     Section 6's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
+    (agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
     drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     COMBAT event_count 12-13; NARRATIVE event_count ranged 23-40 with idle trials both at 23 and load trials climbing to 31/40 -- monotonic-with-load pattern, genuinely variable.
@@ -1983,7 +1983,7 @@ def test_frontier_marches_seed42_200t_narrative_grade_stability() -> None:
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
 
     Section 6's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
+    (agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
     drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     NARRATIVE event_count ranged 18-27, with idle-2 alone dropping to grade B (idle-1 and both load trials grade A) -- variance is not purely load-correlated, confirming genuine run-to-run timing sensitivity rather than a load-only effect. This historical variance (and the extended

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _RECOMMENDATION_DOC = (
@@ -48,7 +49,7 @@ _REAL_CITED_PATHS = {
         / "phase3_pilot_acceptance_measurement.md"
     ),
     "RETRO-2026-W33.md": (
-        _REPO_ROOT / "agent-monitoring" / "retro" / "RETRO-2026-W33.md"
+        _REPO_ROOT / AGENT_MONITORING / "retro" / "RETRO-2026-W33.md"
     ),
 }
 

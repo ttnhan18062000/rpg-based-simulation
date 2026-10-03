@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Append a batch of event records to agent-monitoring/data/<ISO-week>/events.jsonl."""
+"""Append a batch of event records to agent-working/agent-monitoring/data/<ISO-week>/events.jsonl."""
 import argparse
 import json
 import sys
@@ -13,6 +13,10 @@ from vocabulary import WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: 
 from writer import write_lines  # noqa: E402
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 from monitoring_shard_paths import shard_paths  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 REQUIRED = {"run_id", "seq", "ts", "phase", "agent", "summary", "status"}
 VALID_STATUS = {"ok", "failed", "blocked", "skipped"}
@@ -47,7 +51,7 @@ def compute_tool_stats(
     records: list[dict], *, omit_when_unattributed: bool = False
 ) -> dict[tuple, tuple[int, float]]:
     """Deterministically compute {(run_id, seq): (tool_call_count, cost_proxy_score)}
-    from real agent-monitoring/data/*/tools.jsonl rows (every ISO-week folder,
+    from real agent-working/agent-monitoring/data/*/tools.jsonl rows (every ISO-week folder,
     sorted, concatenated before grouping), for every (run_id, seq) pair in
     `records` whose run_id belongs to one of the 3 workflows with real sidecar
     coverage: 'implement-ticket', 'implement-epic', 'create-tickets'.
@@ -112,7 +116,7 @@ def compute_tool_stats(
     # until a future retro consolidation folds them into the canonical file.
     # TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION: path discovery delegates to the shared
     # monitoring_shard_paths.shard_paths() resolver. Root stays CWD-relative
-    # (Path("agent-monitoring/data"), the same shape as done_checker_static.py's/
+    # (Path("agent-working/agent-monitoring/data"), the same shape as done_checker_static.py's/
     # check_monitoring_write_recorded's own defaults) -- this is a spelling simplification of the
     # old Path(".")-prefixed glob, NOT a CWD-independence fix; a first version of this migration
     # claimed it was a fix and it wasn't (caught in review), and a follow-up attempt to make it
@@ -120,7 +124,7 @@ def compute_tool_stats(
     # tests, which rely on `monkeypatch.chdir(tmp_path)` for isolation -- confirming CWD-relative
     # is this function's actual, tested design (every real caller already runs with CWD=repo root,
     # matching this project's own established convention), not an oversight to fix.
-    tools_paths = shard_paths(Path("agent-monitoring/data"), "tools")
+    tools_paths = shard_paths(AGENT_MONITORING / "data", "tools")
     rows_by_key: dict[tuple, list[dict]] = defaultdict(list)
     for tools_path in tools_paths:
         for line in tools_path.read_text().splitlines():
@@ -170,7 +174,7 @@ def warn_vocabulary_drift(record: dict) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Append event records to agent-monitoring/data/<ISO-week>/events.jsonl")
+    parser = argparse.ArgumentParser(description="Append event records to agent-working/agent-monitoring/data/<ISO-week>/events.jsonl")
     parser.add_argument("--data", required=True, help="JSON array of event records (or single object)")
     parser.add_argument(
         "--default-ts", default=None,

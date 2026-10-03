@@ -64,7 +64,7 @@ For each anomaly found, record: what it is, severity (CRITICAL/HIGH/MEDIUM/LOW),
 Run data summary:
 ${runData}
 
-Look in registration/ and stored_artifacts/ for prior run summaries, lab_summary.json files, and diagnostic scorecards. Compare:
+Look in registration/ and agent-working/stored_artifacts/ for prior run summaries, lab_summary.json files, and diagnostic scorecards. Compare:
 - Key metrics against the rolling average
 - Whether this run regressed or improved
 - Which specific subsystems changed most

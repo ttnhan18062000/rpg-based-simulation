@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Report a tickets/todos/<folder>/'s epic-tier parent (if any) and which non-epic children are
+Report a agent-working/tickets/todos/<folder>/'s epic-tier parent (if any) and which non-epic children are
 still open, for TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT.
 
 Both `.claude/workflows/implement-epic.js`'s folder-cleanup block and
@@ -50,8 +50,8 @@ def get_epic_folder_status(folder: Path, done_dir: Path) -> dict:
     design review) lists the frontmatter `ticket_id` of every non-epic `TCK-*.md` file that is
     BOTH still physically present in `folder` AND already found as `<done_dir>/<ticket_id>.md` —
     a resurrected pre-close copy (the exact shape this ticket's own batch started with:
-    `tickets/todos/mechanism-registry/`'s 5 child files re-added by an unrelated PR after #209
-    had already archived the real ones flat into `tickets/done/`). Every archived folder on this
+    `agent-working/tickets/todos/mechanism-registry/`'s 5 child files re-added by an unrelated PR after #209
+    had already archived the real ones flat into `agent-working/tickets/done/`). Every archived folder on this
     branch holds at most one `TCK-*.md` (the epic parent) — a physically-present non-epic child
     is always anomalous, never a legitimate "child closed in place" state, so this is reported
     separately from `open_children` rather than folded into it: an `open_children` entry means
@@ -106,15 +106,15 @@ def get_epic_folder_status(folder: Path, done_dir: Path) -> dict:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
-        description="Report a tickets/todos/<folder>/'s epic-tier parent and open non-epic "
+        description="Report a agent-working/tickets/todos/<folder>/'s epic-tier parent and open non-epic "
         "children as one JSON object. Always exits 0 — this is a status report, not a gate."
     )
-    parser.add_argument("folder", type=Path, help="Path to the tickets/todos/<folder>/ directory.")
+    parser.add_argument("folder", type=Path, help="Path to the agent-working/tickets/todos/<folder>/ directory.")
     parser.add_argument(
         "--done-dir", type=Path, default=None,
-        help="Override the tickets/done/ directory to check children against (default: "
-        "<folder>/../../done, i.e. tickets/done/ as a sibling of tickets/todos/). Tests use this "
-        "to avoid touching the real tickets/done/ corpus.",
+        help="Override the agent-working/tickets/done/ directory to check children against (default: "
+        "<folder>/../../done, i.e. agent-working/tickets/done/ as a sibling of agent-working/tickets/todos/). Tests use this "
+        "to avoid touching the real agent-working/tickets/done/ corpus.",
     )
     args = parser.parse_args(argv)
 

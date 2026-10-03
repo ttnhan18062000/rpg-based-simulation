@@ -132,7 +132,7 @@
               "score": 0.0161,
               "section": "",
               "semantic_score": 0.5584,
-              "source_path": "tickets/working_log.csv",
+              "source_path": "agent-working/tickets/working_log.csv",
               "title": "Tck-20260425-Ph8-M3"
             },
             {
@@ -234,8 +234,8 @@
             {
               "evidence_hash": "db503c4e1aa281ecd8e1c394ae16f1b78e1e572fd72d8d53bee7d91f6d384ab3",
               "kind": "context_search",
-              "path": "tickets/working_log.csv",
-              "source_id": "file:tickets/working_log.csv",
+              "path": "agent-working/tickets/working_log.csv",
+              "source_id": "file:agent-working/tickets/working_log.csv",
               "summary": "Implemented authoritative auto-leveling and stat growth Implemented authoritative auto-leveling and stat growth."
             },
             {
@@ -285,9 +285,9 @@
             },
             {
               "evidence_hash": "db503c4e1aa281ecd8e1c394ae16f1b78e1e572fd72d8d53bee7d91f6d384ab3",
-              "evidence_id": "file:tickets/working_log.csv",
-              "path": "tickets/working_log.csv",
-              "source_id": "file:tickets/working_log.csv"
+              "evidence_id": "file:agent-working/tickets/working_log.csv",
+              "path": "agent-working/tickets/working_log.csv",
+              "source_id": "file:agent-working/tickets/working_log.csv"
             },
             {
               "evidence_hash": "85568c72ddc6e12335bc4a714ddeed30febb96c5972f98f6d459170adbce6cab",
@@ -363,7 +363,7 @@
             {
               "classification": "FACT",
               "evidence_ids": [
-                "file:tickets/working_log.csv"
+                "file:agent-working/tickets/working_log.csv"
               ],
               "statement_id": "stmt-007",
               "text": "Implemented authoritative auto-leveling and stat growth Implemented authoritative auto-leveling and stat growth.",
@@ -393,7 +393,7 @@
       "quality": {
         "reviewer_judgment": {
           "basis": "reviewer_judgment_not_a_computed_metric",
-          "rationale": "source_completeness's context_search_half recorded TCK-20260425-PH8-M3 as missing from the gateway's own context (direct's raw_results confirm its source_path is tickets/working_log.csv, ranked 7th of 8). This did matter somewhat: the gateway's evidence-id builder only disambiguates duplicate anchors for docs/-prefixed paths, so a second working_log.csv chunk collapses into the single 'file:tickets/working_log.csv' context item the gateway already kept -- the specific log line naming TCK-20260425-PH8-M3 is genuinely dropped from the assembled context/evidence, even though the file itself is still cited. Combined with the worst latency ratio in the whole corpus (gateway 5361ms vs direct's combined 1427ms, roughly 3.8x), direct tool use is equal-or-better here.",
+          "rationale": "source_completeness's context_search_half recorded TCK-20260425-PH8-M3 as missing from the gateway's own context (direct's raw_results confirm its source_path is agent-working/tickets/working_log.csv, ranked 7th of 8). This did matter somewhat: the gateway's evidence-id builder only disambiguates duplicate anchors for docs/-prefixed paths, so a second working_log.csv chunk collapses into the single 'file:agent-working/tickets/working_log.csv' context item the gateway already kept -- the specific log line naming TCK-20260425-PH8-M3 is genuinely dropped from the assembled context/evidence, even though the file itself is still cited. Combined with the worst latency ratio in the whole corpus (gateway 5361ms vs direct's combined 1427ms, roughly 3.8x), direct tool use is equal-or-better here.",
           "verdict": "direct_equal_or_better"
         },
         "source_completeness": {
@@ -417,7 +417,7 @@
               "simulation/belief_and_detour_contract#mutation-rules",
               "engine/contracts/simulation_kernel_contract#3-authoritative-state",
               "plans/knowledge-gateway-mcp-proposal#22-representative-use-cases",
-              "tickets/working_log.csv",
+              "agent-working/tickets/working_log.csv",
               "simulation/domains/motivation_contract#what-it-may-mutate"
             ],
             "graphify_half_status": "N/A",
@@ -455,7 +455,7 @@
               "score": 0.0309,
               "section": "",
               "semantic_score": 0.4724,
-              "source_path": "tickets/working_log.csv",
+              "source_path": "agent-working/tickets/working_log.csv",
               "title": "Tck-20260810-Context-Tooling-Effectiveness-Tracking"
             },
             {
@@ -466,7 +466,7 @@
               "score": 0.0298,
               "section": "",
               "semantic_score": 0.4662,
-              "source_path": "tickets/done/TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC.md",
+              "source_path": "agent-working/tickets/done/TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC.md",
               "title": "Tck-20260804-Retrieval-Raw-Investigation-Metric"
             },
             {
@@ -481,7 +481,7 @@
               "title": "Measurement Baseline Contract#21-Lookup-Latency-003"
             },
             {
-              "doc_id": "agent-monitoring/README#what-it-captures-001",
+              "doc_id": "agent-working/agent-monitoring/README#what-it-captures-001",
               "excerpt": "## What It Captures   - Which workflow ran and what its outcome was (`runs.jsonl`) - Which agents were called, in which phase, and what each did in one sentence (`events.jsonl`) - Every individual too",
               "heading": "What It Captures",
               "keyword_score": 0.9021,
@@ -521,7 +521,7 @@
               "score": 0.0156,
               "section": "",
               "semantic_score": 0.0,
-              "source_path": "tickets/done/TCK-20260605-PHASE27-WORLD-MODULE-COMPOSITION.md",
+              "source_path": "agent-working/tickets/done/TCK-20260605-PHASE27-WORLD-MODULE-COMPOSITION.md",
               "title": "Tck-20260605-Phase27-World-Module-Composition"
             },
             {
@@ -532,7 +532,7 @@
               "score": 0.0156,
               "section": "",
               "semantic_score": 0.4797,
-              "source_path": "stored_artifacts/TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING/investigation.md",
+              "source_path": "agent-working/stored_artifacts/TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING/investigation.md",
               "title": "Tck-20260816-Kgmcp-P3-Packet-Cache-Read-Write-Wiring"
             }
           ],
@@ -541,7 +541,7 @@
             "TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING",
             "TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC",
             "engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract#21-lookup-latency-003",
-            "agent-monitoring/README#what-it-captures-001",
+            "agent-working/agent-monitoring/README#what-it-captures-001",
             "audits/audit_dimensions#group-b-codebase-architecture-006",
             "guides/agent_monitoring#investigate-step-search-before-grep-call-011",
             "TCK-20260605-PHASE27-WORLD-MODULE-COMPOSITION",
@@ -626,7 +626,7 @@
       "quality": {
         "reviewer_judgment": {
           "basis": "reviewer_judgment_not_a_computed_metric",
-          "rationale": "source_completeness's graphify_half recorded zero missing/extra paths -- an exact match between the gateway's independent match_symbol_name() call and this ticket's own direct graphify call -- so no difference there. The context_search_half recorded all 8 of direct's context_search results as missing, including TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING and agent-monitoring/README#what-it-captures-001; this is a structural routing-shape effect (Q2 routes to graphify only), not a content bug. Reading both sides' answers: the excluded context_search hits are triggered by loose keyword overlap on 'search'/'investigation'/'trend', not the actual compute_search_investigation_trend() symbol's real callers or definition, so their exclusion did not cost real answer quality -- but the gateway still pays roughly 1.9x the tokens (4980 vs 2622) and 2.1x the latency (2742ms vs 1316ms) for identical graphify content, so direct tool use is equal-or-better.",
+          "rationale": "source_completeness's graphify_half recorded zero missing/extra paths -- an exact match between the gateway's independent match_symbol_name() call and this ticket's own direct graphify call -- so no difference there. The context_search_half recorded all 8 of direct's context_search results as missing, including TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING and agent-working/agent-monitoring/README#what-it-captures-001; this is a structural routing-shape effect (Q2 routes to graphify only), not a content bug. Reading both sides' answers: the excluded context_search hits are triggered by loose keyword overlap on 'search'/'investigation'/'trend', not the actual compute_search_investigation_trend() symbol's real callers or definition, so their exclusion did not cost real answer quality -- but the gateway still pays roughly 1.9x the tokens (4980 vs 2622) and 2.1x the latency (2742ms vs 1316ms) for identical graphify content, so direct tool use is equal-or-better.",
           "verdict": "direct_equal_or_better"
         },
         "source_completeness": {
@@ -636,7 +636,7 @@
               "TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING",
               "TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC",
               "engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract#21-lookup-latency-003",
-              "agent-monitoring/README#what-it-captures-001",
+              "agent-working/agent-monitoring/README#what-it-captures-001",
               "audits/audit_dimensions#group-b-codebase-architecture-006",
               "guides/agent_monitoring#investigate-step-search-before-grep-call-011",
               "TCK-20260605-PHASE27-WORLD-MODULE-COMPOSITION",
@@ -651,7 +651,7 @@
               "TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING",
               "TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC",
               "engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract#21-lookup-latency-003",
-              "agent-monitoring/README#what-it-captures-001",
+              "agent-working/agent-monitoring/README#what-it-captures-001",
               "audits/audit_dimensions#group-b-codebase-architecture-006",
               "guides/agent_monitoring#investigate-step-search-before-grep-call-011",
               "TCK-20260605-PHASE27-WORLD-MODULE-COMPOSITION",
@@ -710,7 +710,7 @@
               "score": 0.032,
               "section": "",
               "semantic_score": 0.4352,
-              "source_path": "tickets/working_log.csv",
+              "source_path": "agent-working/tickets/working_log.csv",
               "title": "Tck-20260804-Retrieval-Raw-Investigation-Metric"
             },
             {
@@ -721,7 +721,7 @@
               "score": 0.0308,
               "section": "",
               "semantic_score": 0.4314,
-              "source_path": "tickets/done/TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE.md",
+              "source_path": "agent-working/tickets/done/TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE.md",
               "title": "Tck-20260808-Corpus-Density-Metrics-And-Guide"
             },
             {
@@ -732,7 +732,7 @@
               "score": 0.0237,
               "section": "",
               "semantic_score": 0.417,
-              "source_path": "tickets/done/TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION.md",
+              "source_path": "agent-working/tickets/done/TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION.md",
               "title": "Tck-20260805-Simq-Cross-Pillar-Correlation-Investigation"
             },
             {
@@ -743,7 +743,7 @@
               "score": 0.0164,
               "section": "",
               "semantic_score": 0.0,
-              "source_path": "tickets/done/TCK-20260628-E-NARRATIVE-CONSEQUENCE.md",
+              "source_path": "agent-working/tickets/done/TCK-20260628-E-NARRATIVE-CONSEQUENCE.md",
               "title": "Tck-20260628-E-Narrative-Consequence"
             },
             {
@@ -822,7 +822,7 @@
           "staleness": {
             "built_at": "2026-08-16T13:07:24.656324+00:00",
             "db_hash": "044217fbf8aa08c8b9a6065ef507eca9d90636a2fc9cb54fb8a76214546c7c97",
-            "db_path": "parity-index/parity.db",
+            "db_path": "agent-working/.index/parity-index/parity.db",
             "ledger_dir": "docs/parity_ledger",
             "live_hash": "044217fbf8aa08c8b9a6065ef507eca9d90636a2fc9cb54fb8a76214546c7c97",
             "status": "FRESH"
@@ -854,28 +854,28 @@
             {
               "evidence_hash": "d677b0c8a1212474927dae5b5805086feb747dc313f1a787ef36462e2dbb3235",
               "kind": "context_search",
-              "path": "tickets/working_log.csv",
-              "source_id": "file:tickets/working_log.csv",
+              "path": "agent-working/tickets/working_log.csv",
+              "source_id": "file:agent-working/tickets/working_log.csv",
               "summary": "Add a raw-investigation (Read) call-count metric to retrieval_baseline_metrics.py Added build_raw_investigation_count_section() as the Read-call-count proxy for raw investigation effort, after finding"
             },
             {
               "evidence_hash": "f8286b0b193d4aa9072d381998ae0738b0acf7fd9ee01c6e283847924b1879d6",
               "kind": "context_search",
-              "path": "tickets/done/TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE.md",
+              "path": "agent-working/tickets/done/TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE.md",
               "source_id": "ticket:TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE",
               "summary": "A 2026-08-08 investigation into world density/pacing found real, working density mechanisms already exist in this codebase (`src/world/spawn.py`'s area-aware formula, `HighEntityDensityWarningRule`'s"
             },
             {
               "evidence_hash": "7883f069070f66d202e10b59c11b10464c05775a48c55508b12c4b151e50df8a",
               "kind": "context_search",
-              "path": "tickets/done/TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION.md",
+              "path": "agent-working/tickets/done/TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION.md",
               "source_id": "ticket:TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION",
               "summary": "Every SimQ pillar currently scores fully independently \u2014 confirmed via direct check (2026-08-05): the only cross-pillar reasoning anywhere in the system is one hand-written instance in the Scenario Re"
             },
             {
               "evidence_hash": "dccd5cc262758912a51e1b6577f3e638baa53cf8a446ccc87b5b48ed9305b3d6",
               "kind": "context_search",
-              "path": "tickets/done/TCK-20260628-E-NARRATIVE-CONSEQUENCE.md",
+              "path": "agent-working/tickets/done/TCK-20260628-E-NARRATIVE-CONSEQUENCE.md",
               "source_id": "ticket:TCK-20260628-E-NARRATIVE-CONSEQUENCE",
               "summary": "Chronicle (`ChronicleCompiler`) and social memory (`SocialMemoryRecord`) exist and are fully implemented. The missing link: chronicle milestone events (death, betrayal, rescue, conquest) are not fed b"
             },
@@ -911,26 +911,26 @@
           "evidence": [
             {
               "evidence_hash": "d677b0c8a1212474927dae5b5805086feb747dc313f1a787ef36462e2dbb3235",
-              "evidence_id": "file:tickets/working_log.csv",
-              "path": "tickets/working_log.csv",
-              "source_id": "file:tickets/working_log.csv"
+              "evidence_id": "file:agent-working/tickets/working_log.csv",
+              "path": "agent-working/tickets/working_log.csv",
+              "source_id": "file:agent-working/tickets/working_log.csv"
             },
             {
               "evidence_hash": "f8286b0b193d4aa9072d381998ae0738b0acf7fd9ee01c6e283847924b1879d6",
               "evidence_id": "ticket:TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE",
-              "path": "tickets/done/TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE.md",
+              "path": "agent-working/tickets/done/TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE.md",
               "source_id": "ticket:TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE"
             },
             {
               "evidence_hash": "7883f069070f66d202e10b59c11b10464c05775a48c55508b12c4b151e50df8a",
               "evidence_id": "ticket:TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION",
-              "path": "tickets/done/TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION.md",
+              "path": "agent-working/tickets/done/TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION.md",
               "source_id": "ticket:TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION"
             },
             {
               "evidence_hash": "dccd5cc262758912a51e1b6577f3e638baa53cf8a446ccc87b5b48ed9305b3d6",
               "evidence_id": "ticket:TCK-20260628-E-NARRATIVE-CONSEQUENCE",
-              "path": "tickets/done/TCK-20260628-E-NARRATIVE-CONSEQUENCE.md",
+              "path": "agent-working/tickets/done/TCK-20260628-E-NARRATIVE-CONSEQUENCE.md",
               "source_id": "ticket:TCK-20260628-E-NARRATIVE-CONSEQUENCE"
             },
             {
@@ -972,7 +972,7 @@
             {
               "classification": "FACT",
               "evidence_ids": [
-                "file:tickets/working_log.csv"
+                "file:agent-working/tickets/working_log.csv"
               ],
               "statement_id": "stmt-001",
               "text": "Add a raw-investigation (Read) call-count metric to retrieval_baseline_metrics.py Added build_raw_investigation_count_section() as the Read-call-count proxy for raw investigation effort, after finding",
@@ -1056,7 +1056,7 @@
       "quality": {
         "reviewer_judgment": {
           "basis": "reviewer_judgment_not_a_computed_metric",
-          "rationale": "source_completeness's context_search_half recorded TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC as missing -- direct's own raw_results place it as the single top-ranked hit (source_path tickets/working_log.csv), but the gateway's context already retains a different working_log.csv chunk under the identical 'file:tickets/working_log.csv' id, so this specific top-ranked log line is genuinely dropped by the same anchor-dedup gap Q1 shows, mattering slightly more here since it was direct's single highest-relevance hit. Reading the direct parity_ledger call's own retained output: entry(query_text) returned found: False (the free-text query treated as a literal entry_id, exactly matching the gateway's own real _run_parity_provider() convention) with check_staleness() reporting status: FRESH -- the same honest non-match either side would produce, so the parity_ledger half adds no unique content advantage to either side. Given real, if narrow, content loss and materially higher gateway cost (3251ms vs 1138ms combined; 2869 vs 2680 tokens), but genuine new workflow convenience -- one gateway call now returns the same context_search excerpts plus a live parity check in a single round trip where the direct route needs two separate tool calls -- this is judged mixed.",
+          "rationale": "source_completeness's context_search_half recorded TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC as missing -- direct's own raw_results place it as the single top-ranked hit (source_path agent-working/tickets/working_log.csv), but the gateway's context already retains a different working_log.csv chunk under the identical 'file:agent-working/tickets/working_log.csv' id, so this specific top-ranked log line is genuinely dropped by the same anchor-dedup gap Q1 shows, mattering slightly more here since it was direct's single highest-relevance hit. Reading the direct parity_ledger call's own retained output: entry(query_text) returned found: False (the free-text query treated as a literal entry_id, exactly matching the gateway's own real _run_parity_provider() convention) with check_staleness() reporting status: FRESH -- the same honest non-match either side would produce, so the parity_ledger half adds no unique content advantage to either side. Given real, if narrow, content loss and materially higher gateway cost (3251ms vs 1138ms combined; 2869 vs 2680 tokens), but genuine new workflow convenience -- one gateway call now returns the same context_search excerpts plus a live parity check in a single round trip where the direct route needs two separate tool calls -- this is judged mixed.",
           "verdict": "mixed"
         },
         "source_completeness": {
@@ -1078,7 +1078,7 @@
             ],
             "derivation": "baseline_sources = THIS TICKET's own freshly-run _run_direct_context_search() call for this entry (not a Phase 0/1 fixture \u2014 see TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON Step 1's full-fresh-run decision), compared via the unmodified, reused _compute_threshold_4_3() matching logic.",
             "gateway_sources": [
-              "tickets/working_log.csv",
+              "agent-working/tickets/working_log.csv",
               "TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE",
               "TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION",
               "TCK-20260628-E-NARRATIVE-CONSEQUENCE",
@@ -1122,7 +1122,7 @@
               "score": 0.0479,
               "section": "",
               "semantic_score": 0.514,
-              "source_path": "tickets/done/TCK-20260701-WORLDTEMPLATE-REMOVE.md",
+              "source_path": "agent-working/tickets/done/TCK-20260701-WORLDTEMPLATE-REMOVE.md",
               "title": "Tck-20260701-Worldtemplate-Remove"
             },
             {
@@ -1133,7 +1133,7 @@
               "score": 0.0425,
               "section": "",
               "semantic_score": 0.4481,
-              "source_path": "stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md",
+              "source_path": "agent-working/stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md",
               "title": "Tck-20260523-World-Templates"
             },
             {
@@ -1177,7 +1177,7 @@
               "score": 0.0159,
               "section": "",
               "semantic_score": 0.5175,
-              "source_path": "tickets/done/TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE.md",
+              "source_path": "agent-working/tickets/done/TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE.md",
               "title": "Tck-20260701-Sandbox-Worldcomp-Migrate"
             },
             {
@@ -1219,7 +1219,7 @@
         "graphify": {
           "derivation": "subprocess.run(['graphify', 'query', query_text]), CLI-shelled per docs/engine/contracts/knowledge_gateway_mcp_contract.md Design Decision D1 (no in-process adapter exists), timed with time.perf_counter(), mirroring kgmcp_baseline_runner.py::_run_graphify exactly, except raw_stdout is retained in the persisted output (this ticket's own new instrumentation requirement).",
           "latency_ms": 1045.7756738178432,
-          "raw_stdout": "Traversal: BFS depth=2 | Start: ['Why Order Matters', 'Why Order Matters', 'Why this directory exists'] | 37 nodes found\n\nNODE Test-Driven Development (TDD) [src=.claude/skills/test-driven-development/SKILL.md loc=L6 community=388]\nNODE Test-Driven Development (TDD) [src=.agents/skills/test-driven-development/SKILL.md loc=L6 community=386]\nNODE Red-Green-Refactor [src=.claude/skills/test-driven-development/SKILL.md loc=L47 community=388]\nNODE Red-Green-Refactor [src=.agents/skills/test-driven-development/SKILL.md loc=L47 community=386]\nNODE pilot_requests/ [src=pilot_requests/README.md loc=L1 community=715]\nNODE Verification Checklist [src=.agents/skills/test-driven-development/SKILL.md loc=L327 community=386]\nNODE Example: Bug Fix [src=.claude/skills/test-driven-development/SKILL.md loc=L290 community=388]\nNODE Red Flags - STOP and Start Over [src=.claude/skills/test-driven-development/SKILL.md loc=L272 community=388]\nNODE Testing Anti-Patterns [src=.claude/skills/test-driven-development/SKILL.md loc=L357 community=388]\nNODE Schema [src=pilot_requests/README.md loc=L18 community=715]\nNODE Common Rationalizations [src=.claude/skills/test-driven-development/SKILL.md loc=L256 community=388]\nNODE Debugging Integration [src=.agents/skills/test-driven-development/SKILL.md loc=L351 community=386]\nNODE Common Rationalizations [src=.agents/skills/test-driven-development/SKILL.md loc=L256 community=386]\nNODE Final Rule [src=.claude/skills/test-driven-development/SKILL.md loc=L364 community=388]\nNODE Good Tests [src=.claude/skills/test-driven-development/SKILL.md loc=L198 community=388]\nNODE Overview [src=.agents/skills/test-driven-development/SKILL.md loc=L8 community=386]\nNODE No real candidate is registered here [src=pilot_requests/README.md loc=L34 community=715]\nNODE Why this directory exists [src=pilot_requests/README.md loc=L8 community=715]\nNODE README.md [src=pilot_requests/README.md loc=L1 community=715]\nNODE The Iron Law [src=.claude/skills/test-driven-development/SKILL.md loc=L31 community=388]\nNODE Testing Anti-Patterns [src=.agents/skills/test-driven-development/SKILL.md loc=L357 community=386]\nNODE When Stuck [src=.claude/skills/test-driven-development/SKILL.md loc=L342 community=388]\nNODE When to Use [src=.agents/skills/test-driven-development/SKILL.md loc=L16 community=386]\nNODE Debugging Integration [src=.claude/skills/test-driven-development/SKILL.md loc=L351 community=388]\nNODE Red Flags - STOP and Start Over [src=.agents/skills/test-driven-development/SKILL.md loc=L272 community=386]\nNODE Final Rule [src=.agents/skills/test-driven-development/SKILL.md loc=L364 community=386]\nNODE Overview [src=.claude/skills/test-driven-development/SKILL.md loc=L8 community=388]\nNODE SKILL.md [src=.agents/skills/test-driven-development/SKILL.md loc=L1 community=386]\nNODE Good Tests [src=.agents/skills/test-driven-development/SKILL.md loc=L198 community=386]\nNODE The Iron Law [src=.agents/skills/test-driven-development/SKILL.md loc=L31 community=386]\nNODE Example: Bug Fix [src=.agents/skills/test-driven-development/SKILL.md loc=L290 community=386]\nNODE Why Order Matters [src=.claude/skills/test-driven-development/SKILL.md loc=L206 community=388]\nNODE SKILL.md [src=.claude/skills/test-driven-development/SKILL.md loc=L1 community=388]\nNODE When to Use [src=.claude/skills/test-driven-development/SKILL.md loc=L16 community=388]\nNODE Verification Checklist [src=.claude/skills/test-driven-development/SKILL.md loc=L327 community=388]\nNODE Why Order Matters [src=.agents/skills/test-driven-development/SKILL.md loc=L206 community=386]\nNODE When Stuck [src=.agents/skills/test-driven-development/SKILL.md loc=L342 community=386]\nEDGE Why Order Matters --contains [EXTRACTED]--> Test-Driven Development (TDD)\nEDGE Why this directory exists --contains [EXTRACTED]--> pilot_requests/\nEDGE Why Order Matters --contains [EXTRACTED]--> Test-Driven Development (TDD)\nEDGE pilot_requests/ --contains [EXTRACTED]--> README.md\nEDGE pilot_requests/ --contains [EXTRACTED]--> No real candidate is registered here\nEDGE pilot_requests/ --contains [EXTRACTED]--> Schema\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> SKILL.md\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Common Rationalizations\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Debugging Integration\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Example: Bug Fix\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Final Rule\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Good Tests\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Overview\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Red Flags - STOP and Start Over\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Red-Green-Refactor\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Testing Anti-Patterns\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> The Iron Law\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Verification Checklist\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> When Stuck\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> When to Use\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> SKILL.md\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Common Rationalizations\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Debugging Integration\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Example: Bug Fix\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Final Rule\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Good Tests\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Overview\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Red Flags - STOP and Start Over\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Red-Green-Refactor\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Testing Anti-Patterns\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> The Iron Law\n... (truncated \u2014 0 more nodes cut by ~2000-token budget. Narrow with context_filter=['call'] or use get_node for a specific symbol)\n",
+          "raw_stdout": "Traversal: BFS depth=2 | Start: ['Why Order Matters', 'Why Order Matters', 'Why this directory exists'] | 37 nodes found\n\nNODE Test-Driven Development (TDD) [src=.claude/skills/test-driven-development/SKILL.md loc=L6 community=388]\nNODE Test-Driven Development (TDD) [src=.agents/skills/test-driven-development/SKILL.md loc=L6 community=386]\nNODE Red-Green-Refactor [src=.claude/skills/test-driven-development/SKILL.md loc=L47 community=388]\nNODE Red-Green-Refactor [src=.agents/skills/test-driven-development/SKILL.md loc=L47 community=386]\nNODE agent-working/pilot_requests/ [src=agent-working/pilot_requests/README.md loc=L1 community=715]\nNODE Verification Checklist [src=.agents/skills/test-driven-development/SKILL.md loc=L327 community=386]\nNODE Example: Bug Fix [src=.claude/skills/test-driven-development/SKILL.md loc=L290 community=388]\nNODE Red Flags - STOP and Start Over [src=.claude/skills/test-driven-development/SKILL.md loc=L272 community=388]\nNODE Testing Anti-Patterns [src=.claude/skills/test-driven-development/SKILL.md loc=L357 community=388]\nNODE Schema [src=agent-working/pilot_requests/README.md loc=L18 community=715]\nNODE Common Rationalizations [src=.claude/skills/test-driven-development/SKILL.md loc=L256 community=388]\nNODE Debugging Integration [src=.agents/skills/test-driven-development/SKILL.md loc=L351 community=386]\nNODE Common Rationalizations [src=.agents/skills/test-driven-development/SKILL.md loc=L256 community=386]\nNODE Final Rule [src=.claude/skills/test-driven-development/SKILL.md loc=L364 community=388]\nNODE Good Tests [src=.claude/skills/test-driven-development/SKILL.md loc=L198 community=388]\nNODE Overview [src=.agents/skills/test-driven-development/SKILL.md loc=L8 community=386]\nNODE No real candidate is registered here [src=agent-working/pilot_requests/README.md loc=L34 community=715]\nNODE Why this directory exists [src=agent-working/pilot_requests/README.md loc=L8 community=715]\nNODE README.md [src=agent-working/pilot_requests/README.md loc=L1 community=715]\nNODE The Iron Law [src=.claude/skills/test-driven-development/SKILL.md loc=L31 community=388]\nNODE Testing Anti-Patterns [src=.agents/skills/test-driven-development/SKILL.md loc=L357 community=386]\nNODE When Stuck [src=.claude/skills/test-driven-development/SKILL.md loc=L342 community=388]\nNODE When to Use [src=.agents/skills/test-driven-development/SKILL.md loc=L16 community=386]\nNODE Debugging Integration [src=.claude/skills/test-driven-development/SKILL.md loc=L351 community=388]\nNODE Red Flags - STOP and Start Over [src=.agents/skills/test-driven-development/SKILL.md loc=L272 community=386]\nNODE Final Rule [src=.agents/skills/test-driven-development/SKILL.md loc=L364 community=386]\nNODE Overview [src=.claude/skills/test-driven-development/SKILL.md loc=L8 community=388]\nNODE SKILL.md [src=.agents/skills/test-driven-development/SKILL.md loc=L1 community=386]\nNODE Good Tests [src=.agents/skills/test-driven-development/SKILL.md loc=L198 community=386]\nNODE The Iron Law [src=.agents/skills/test-driven-development/SKILL.md loc=L31 community=386]\nNODE Example: Bug Fix [src=.agents/skills/test-driven-development/SKILL.md loc=L290 community=386]\nNODE Why Order Matters [src=.claude/skills/test-driven-development/SKILL.md loc=L206 community=388]\nNODE SKILL.md [src=.claude/skills/test-driven-development/SKILL.md loc=L1 community=388]\nNODE When to Use [src=.claude/skills/test-driven-development/SKILL.md loc=L16 community=388]\nNODE Verification Checklist [src=.claude/skills/test-driven-development/SKILL.md loc=L327 community=388]\nNODE Why Order Matters [src=.agents/skills/test-driven-development/SKILL.md loc=L206 community=386]\nNODE When Stuck [src=.agents/skills/test-driven-development/SKILL.md loc=L342 community=386]\nEDGE Why Order Matters --contains [EXTRACTED]--> Test-Driven Development (TDD)\nEDGE Why this directory exists --contains [EXTRACTED]--> agent-working/pilot_requests/\nEDGE Why Order Matters --contains [EXTRACTED]--> Test-Driven Development (TDD)\nEDGE agent-working/pilot_requests/ --contains [EXTRACTED]--> README.md\nEDGE agent-working/pilot_requests/ --contains [EXTRACTED]--> No real candidate is registered here\nEDGE agent-working/pilot_requests/ --contains [EXTRACTED]--> Schema\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> SKILL.md\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Common Rationalizations\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Debugging Integration\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Example: Bug Fix\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Final Rule\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Good Tests\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Overview\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Red Flags - STOP and Start Over\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Red-Green-Refactor\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Testing Anti-Patterns\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> The Iron Law\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Verification Checklist\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> When Stuck\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> When to Use\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> SKILL.md\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Common Rationalizations\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Debugging Integration\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Example: Bug Fix\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Final Rule\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Good Tests\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Overview\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Red Flags - STOP and Start Over\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Red-Green-Refactor\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> Testing Anti-Patterns\nEDGE Test-Driven Development (TDD) --contains [EXTRACTED]--> The Iron Law\n... (truncated \u2014 0 more nodes cut by ~2000-token budget. Narrow with context_filter=['call'] or use get_node for a specific symbol)\n",
           "raw_stdout_bytes": 6186,
           "returncode": 0,
           "tool_call_count": 1
@@ -1248,15 +1248,15 @@
             {
               "evidence_hash": "39aa2f1866426f05a090c5fc973bdd25ca1340d42fa0bceffada285e37f652fb",
               "kind": "context_search",
-              "path": "tickets/done/TCK-20260701-WORLDTEMPLATE-REMOVE.md",
+              "path": "agent-working/tickets/done/TCK-20260701-WORLDTEMPLATE-REMOVE.md",
               "source_id": "ticket:TCK-20260701-WORLDTEMPLATE-REMOVE",
               "summary": "`worldtemplate.v1` is a legacy world-authoring schema, superseded by `worldcomposition.v1` for every world in the repo once `TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE` completes (that ticket migrates the"
             },
             {
               "evidence_hash": "b88e5b790a192090727c3b5253672698189c023ce4813ac75a1fec4b5fbcdb3c",
               "kind": "context_search",
-              "path": "stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md",
-              "source_id": "file:stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md",
+              "path": "agent-working/stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md",
+              "source_id": "file:agent-working/stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md",
               "summary": "--- status: historical layer: world authority: P2 audience: agent ticket_id: TCK-20260523-WORLD-TEMPLATES artifact_type: investigation tags: [world, templates] ---  # Investigation: World Template and"
             },
             {
@@ -1283,7 +1283,7 @@
             {
               "evidence_hash": "f02ed16ba8e03b0ff0711dad7a70e58af9e58658a51d6e73e6dadcbb9188cef2",
               "kind": "context_search",
-              "path": "tickets/done/TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE.md",
+              "path": "agent-working/tickets/done/TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE.md",
               "source_id": "ticket:TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE",
               "summary": "`sandbox_world` is the only compiled world still using the legacy `worldtemplate.v1` schema (verified: all 9 other worlds under `data/worlds/` use `worldcomposition.v1`). This schema's compile path ne"
             },
@@ -1306,14 +1306,14 @@
             {
               "evidence_hash": "39aa2f1866426f05a090c5fc973bdd25ca1340d42fa0bceffada285e37f652fb",
               "evidence_id": "ticket:TCK-20260701-WORLDTEMPLATE-REMOVE",
-              "path": "tickets/done/TCK-20260701-WORLDTEMPLATE-REMOVE.md",
+              "path": "agent-working/tickets/done/TCK-20260701-WORLDTEMPLATE-REMOVE.md",
               "source_id": "ticket:TCK-20260701-WORLDTEMPLATE-REMOVE"
             },
             {
               "evidence_hash": "b88e5b790a192090727c3b5253672698189c023ce4813ac75a1fec4b5fbcdb3c",
-              "evidence_id": "file:stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md",
-              "path": "stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md",
-              "source_id": "file:stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md"
+              "evidence_id": "file:agent-working/stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md",
+              "path": "agent-working/stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md",
+              "source_id": "file:agent-working/stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md"
             },
             {
               "evidence_hash": "2be3447dbb2be964ae886b8702eca82286f1f3f1a6fd2ee7c0b8f17320b3396e",
@@ -1336,7 +1336,7 @@
             {
               "evidence_hash": "f02ed16ba8e03b0ff0711dad7a70e58af9e58658a51d6e73e6dadcbb9188cef2",
               "evidence_id": "ticket:TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE",
-              "path": "tickets/done/TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE.md",
+              "path": "agent-working/tickets/done/TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE.md",
               "source_id": "ticket:TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE"
             },
             {
@@ -1374,7 +1374,7 @@
             {
               "classification": "FACT",
               "evidence_ids": [
-                "file:stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md"
+                "file:agent-working/stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md"
               ],
               "statement_id": "stmt-002",
               "text": "--- status: historical layer: world authority: P2 audience: agent ticket_id: TCK-20260523-WORLD-TEMPLATES artifact_type: investigation tags: [world, templates] ---  # Investigation: World Template and",
@@ -1449,7 +1449,7 @@
       "quality": {
         "reviewer_judgment": {
           "basis": "reviewer_judgment_not_a_computed_metric",
-          "rationale": "source_completeness's context_search_half recorded TCK-20260523-WORLD-TEMPLATES as missing, but reading the gateway's own response['context'] directly shows 'file:stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md' already present -- the same document, normalized under its file: path prefix rather than the bare ticket-id shape _run_direct_context_search()'s doc_id carries for stored_artifacts files. This is a measurement-methodology artifact of the imported, frozen _normalize_phase1_source_id()/_path_only() (which reconciles doc:/ticket:/file:/ symbol: prefixes but never a bare ticket-id doc_id against a file:-prefixed stored_artifacts path), not a real content loss -- the gateway genuinely retained this content. With content equal and the gateway still costing more (1654ms vs 1107ms; 2753 vs 2566 tokens) for the same result, direct tool use is equal-or-better here on cost alone.",
+          "rationale": "source_completeness's context_search_half recorded TCK-20260523-WORLD-TEMPLATES as missing, but reading the gateway's own response['context'] directly shows 'file:agent-working/stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md' already present -- the same document, normalized under its file: path prefix rather than the bare ticket-id shape _run_direct_context_search()'s doc_id carries for stored_artifacts files. This is a measurement-methodology artifact of the imported, frozen _normalize_phase1_source_id()/_path_only() (which reconciles doc:/ticket:/file:/ symbol: prefixes but never a bare ticket-id doc_id against a file:-prefixed stored_artifacts path), not a real content loss -- the gateway genuinely retained this content. With content equal and the gateway still costing more (1654ms vs 1107ms; 2753 vs 2566 tokens) for the same result, direct tool use is equal-or-better here on cost alone.",
           "verdict": "direct_equal_or_better"
         },
         "source_completeness": {
@@ -1471,7 +1471,7 @@
             "derivation": "baseline_sources = THIS TICKET's own freshly-run _run_direct_context_search() call for this entry (not a Phase 0/1 fixture \u2014 see TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON Step 1's full-fresh-run decision), compared via the unmodified, reused _compute_threshold_4_3() matching logic.",
             "gateway_sources": [
               "TCK-20260701-WORLDTEMPLATE-REMOVE",
-              "stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md",
+              "agent-working/stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md",
               "guidelines/intentional_divergences#2-21-worldtemplate-v1-schema-removal-tck-20260701-worldtemplate-remove",
               "architecture/world_repository_layout#proposed-strategy-layout",
               "plans/knowledge-gateway-mcp-proposal#22-representative-use-cases",
@@ -1514,7 +1514,7 @@
               "score": 0.046,
               "section": "",
               "semantic_score": 0.5568,
-              "source_path": "tickets/done/TCK-20260607-MON-RETRO.md",
+              "source_path": "agent-working/tickets/done/TCK-20260607-MON-RETRO.md",
               "title": "Tck-20260607-Mon-Retro"
             },
             {
@@ -1525,7 +1525,7 @@
               "score": 0.039,
               "section": "",
               "semantic_score": 0.5145,
-              "source_path": "tickets/done/TCK-20260803-RETRO-TOOL-SAFETY-AUDIT.md",
+              "source_path": "agent-working/tickets/done/TCK-20260803-RETRO-TOOL-SAFETY-AUDIT.md",
               "title": "Tck-20260803-Retro-Tool-Safety-Audit"
             },
             {
@@ -1536,18 +1536,18 @@
               "score": 0.0385,
               "section": "",
               "semantic_score": 0.0,
-              "source_path": "tickets/done/TCK-20260805-SKILL-USAGE-METRIC.md",
+              "source_path": "agent-working/tickets/done/TCK-20260805-SKILL-USAGE-METRIC.md",
               "title": "Tck-20260805-Skill-Usage-Metric"
             },
             {
               "doc_id": "TCK-20260728-RETRIEVAL-BASELINE-METRICS",
-              "excerpt": "Baseline Measurement of Current Retrieval and Context-Loading Behavior Implemented a strictly read-only baseline-metrics report over agent-monitoring/*.jsonl satisfying all 5 acceptance criteria (cont",
+              "excerpt": "Baseline Measurement of Current Retrieval and Context-Loading Behavior Implemented a strictly read-only baseline-metrics report over agent-working/agent-monitoring/*.jsonl satisfying all 5 acceptance criteria (cont",
               "heading": "",
               "keyword_score": 0.6246,
               "score": 0.0374,
               "section": "",
               "semantic_score": 0.5195,
-              "source_path": "tickets/working_log.csv",
+              "source_path": "agent-working/tickets/working_log.csv",
               "title": "Tck-20260728-Retrieval-Baseline-Metrics"
             },
             {
@@ -1569,7 +1569,7 @@
               "score": 0.0272,
               "section": "",
               "semantic_score": 0.5293,
-              "source_path": "tickets/done/TCK-20260705-MONITORING-RUNID-JOIN.md",
+              "source_path": "agent-working/tickets/done/TCK-20260705-MONITORING-RUNID-JOIN.md",
               "title": "Tck-20260705-Monitoring-Runid-Join"
             },
             {
@@ -1580,7 +1580,7 @@
               "score": 0.0269,
               "section": "",
               "semantic_score": 0.5512,
-              "source_path": "tickets/working_log.csv",
+              "source_path": "agent-working/tickets/working_log.csv",
               "title": "Tck-20260720-Monitoring-Pipeline-Bugfixes"
             },
             {
@@ -1591,7 +1591,7 @@
               "score": 0.0265,
               "section": "",
               "semantic_score": 0.5488,
-              "source_path": "stored_artifacts/TCK-20260705-RETRO-METRIC-ACCURACY/investigation.md",
+              "source_path": "agent-working/stored_artifacts/TCK-20260705-RETRO-METRIC-ACCURACY/investigation.md",
               "title": "Tck-20260705-Retro-Metric-Accuracy"
             }
           ],
@@ -1611,7 +1611,7 @@
         "graphify": {
           "derivation": "subprocess.run(['graphify', 'query', query_text]), CLI-shelled per docs/engine/contracts/knowledge_gateway_mcp_contract.md Design Decision D1 (no in-process adapter exists), timed with time.perf_counter(), mirroring kgmcp_baseline_runner.py::_run_graphify exactly, except raw_stdout is retained in the persisted output (this ticket's own new instrumentation requirement).",
           "latency_ms": 1122.0993269234896,
-          "raw_stdout": "Traversal: BFS depth=2 | Start: ['Monitoring', 'Monitoring', 'Tools'] | 37 nodes found\n\nNODE Pre-Implementation Review [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=314]\nNODE Pre-Implementation Review [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=319]\nNODE Agent Monitoring [src=agent-monitoring/README.md loc=L1 community=1727]\nNODE Schema [src=agent-monitoring/README.md loc=L16 community=1727]\nNODE API Design Checklist [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=319]\nNODE API Design Checklist [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=314]\nNODE Resource Design [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=319]\nNODE Testing [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=314]\nNODE Documentation [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=319]\nNODE Pagination [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=319]\nNODE Pagination [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=314]\nNODE Error Handling [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=314]\nNODE Monitoring [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=319]\nNODE Filtering & Sorting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=319]\nNODE Performance [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=314]\nNODE Authentication & Authorization [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=314]\nNODE Documentation [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=314]\nNODE HTTP Methods [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=319]\nNODE Status Codes [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=314]\nNODE Rate Limiting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=314]\nNODE Resource Design [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=314]\nNODE README.md [src=agent-monitoring/README.md loc=L1 community=1727]\nNODE Monitoring [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=314]\nNODE Security [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=314]\nNODE Performance [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=319]\nNODE Authentication & Authorization [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=319]\nNODE Rate Limiting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=319]\nNODE Filtering & Sorting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=314]\nNODE Security [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=319]\nNODE Versioning [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=319]\nNODE HTTP Methods [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=314]\nNODE Error Handling [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=319]\nNODE Files [src=agent-monitoring/README.md loc=L7 community=1727]\nNODE Status Codes [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=319]\nNODE Testing [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=319]\nNODE Tools [src=agent-monitoring/README.md loc=L59 community=1727]\nNODE Versioning [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=314]\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Tools --contains [EXTRACTED]--> Agent Monitoring\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Agent Monitoring --contains [EXTRACTED]--> README.md\nEDGE Agent Monitoring --contains [EXTRACTED]--> Files\nEDGE Agent Monitoring --contains [EXTRACTED]--> Schema\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Resource Design\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Security\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Status Codes\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Testing\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Versioning\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\n... (truncated \u2014 0 more nodes cut by ~2000-token budget. Narrow with context_filter=['call'] or use get_node for a specific symbol)\n",
+          "raw_stdout": "Traversal: BFS depth=2 | Start: ['Monitoring', 'Monitoring', 'Tools'] | 37 nodes found\n\nNODE Pre-Implementation Review [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=314]\nNODE Pre-Implementation Review [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=319]\nNODE Agent Monitoring [src=agent-working/agent-monitoring/README.md loc=L1 community=1727]\nNODE Schema [src=agent-working/agent-monitoring/README.md loc=L16 community=1727]\nNODE API Design Checklist [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=319]\nNODE API Design Checklist [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=314]\nNODE Resource Design [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=319]\nNODE Testing [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=314]\nNODE Documentation [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=319]\nNODE Pagination [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=319]\nNODE Pagination [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=314]\nNODE Error Handling [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=314]\nNODE Monitoring [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=319]\nNODE Filtering & Sorting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=319]\nNODE Performance [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=314]\nNODE Authentication & Authorization [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=314]\nNODE Documentation [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=314]\nNODE HTTP Methods [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=319]\nNODE Status Codes [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=314]\nNODE Rate Limiting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=314]\nNODE Resource Design [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=314]\nNODE README.md [src=agent-working/agent-monitoring/README.md loc=L1 community=1727]\nNODE Monitoring [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=314]\nNODE Security [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=314]\nNODE Performance [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=319]\nNODE Authentication & Authorization [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=319]\nNODE Rate Limiting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=319]\nNODE Filtering & Sorting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=314]\nNODE Security [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=319]\nNODE Versioning [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=319]\nNODE HTTP Methods [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=314]\nNODE Error Handling [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=319]\nNODE Files [src=agent-working/agent-monitoring/README.md loc=L7 community=1727]\nNODE Status Codes [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=319]\nNODE Testing [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=319]\nNODE Tools [src=agent-working/agent-monitoring/README.md loc=L59 community=1727]\nNODE Versioning [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=314]\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Tools --contains [EXTRACTED]--> Agent Monitoring\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Agent Monitoring --contains [EXTRACTED]--> README.md\nEDGE Agent Monitoring --contains [EXTRACTED]--> Files\nEDGE Agent Monitoring --contains [EXTRACTED]--> Schema\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Resource Design\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Security\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Status Codes\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Testing\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Versioning\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\n... (truncated \u2014 0 more nodes cut by ~2000-token budget. Narrow with context_filter=['call'] or use get_node for a specific symbol)\n",
           "raw_stdout_bytes": 6177,
           "returncode": 0,
           "tool_call_count": 1
@@ -1630,7 +1630,7 @@
           "graphify"
         ],
         "response": {
-          "answer": "Traversal: BFS depth=2 | Start: ['Monitoring', 'Monitoring', 'Tools'] | 37 nodes found\n\nNODE Pre-Implementation Review [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=319]\nNODE Pre-Implementation Review [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=314]\nNODE Schema [src=agent-monitoring/README.md loc=L16 community=1727]\nNODE Agent Monitoring [src=agent-monitoring/README.md loc=L1 community=1727]\nNODE API Design Checklist [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=314]\nNODE API Design Checklist [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=319]\nNODE Performance [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=314]\nNODE Documentation [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=314]\nNODE README.md [src=agent-monitoring/README.md loc=L1 community=1727]\nNODE Monitoring [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=314]\nNODE HTTP Methods [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=319]\nNODE Security [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=319]\nNODE Versioning [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=319]\nNODE Filtering & Sorting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=319]\nNODE Error Handling [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=319]\nNODE Rate Limiting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=314]\nNODE Resource Design [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=319]\nNODE Performance [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=319]\nNODE Documentation [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=319]\nNODE Pagination [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=314]\nNODE Status Codes [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=319]\nNODE Filtering & Sorting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=314]\nNODE HTTP Methods [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=314]\nNODE Monitoring [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=319]\nNODE Security [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=314]\nNODE Testing [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=314]\nNODE Testing [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=319]\nNODE Error Handling [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=314]\nNODE Rate Limiting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=319]\nNODE Files [src=agent-monitoring/README.md loc=L7 community=1727]\nNODE Versioning [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=314]\nNODE Tools [src=agent-monitoring/README.md loc=L59 community=1727]\nNODE Authentication & Authorization [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=314]\nNODE Pagination [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=319]\nNODE Resource Design [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=314]\nNODE Authentication & Authorization [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=319]\nNODE Status Codes [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=314]\nEDGE Tools --contains [EXTRACTED]--> Agent Monitoring\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Resource Design\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Security\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Status Codes\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Testing\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Versioning\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\n... (truncated \u2014 0 more nodes cut by ~2000-token budget. Narrow with context_filter=['call'] or use get_node for a specific symbol)",
+          "answer": "Traversal: BFS depth=2 | Start: ['Monitoring', 'Monitoring', 'Tools'] | 37 nodes found\n\nNODE Pre-Implementation Review [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=319]\nNODE Pre-Implementation Review [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=314]\nNODE Schema [src=agent-working/agent-monitoring/README.md loc=L16 community=1727]\nNODE Agent Monitoring [src=agent-working/agent-monitoring/README.md loc=L1 community=1727]\nNODE API Design Checklist [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=314]\nNODE API Design Checklist [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=319]\nNODE Performance [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=314]\nNODE Documentation [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=314]\nNODE README.md [src=agent-working/agent-monitoring/README.md loc=L1 community=1727]\nNODE Monitoring [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=314]\nNODE HTTP Methods [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=319]\nNODE Security [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=319]\nNODE Versioning [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=319]\nNODE Filtering & Sorting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=319]\nNODE Error Handling [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=319]\nNODE Rate Limiting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=314]\nNODE Resource Design [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=319]\nNODE Performance [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=319]\nNODE Documentation [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=319]\nNODE Pagination [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=314]\nNODE Status Codes [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=319]\nNODE Filtering & Sorting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=314]\nNODE HTTP Methods [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=314]\nNODE Monitoring [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=319]\nNODE Security [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=314]\nNODE Testing [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=314]\nNODE Testing [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=319]\nNODE Error Handling [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=314]\nNODE Rate Limiting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=319]\nNODE Files [src=agent-working/agent-monitoring/README.md loc=L7 community=1727]\nNODE Versioning [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=314]\nNODE Tools [src=agent-working/agent-monitoring/README.md loc=L59 community=1727]\nNODE Authentication & Authorization [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=314]\nNODE Pagination [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=319]\nNODE Resource Design [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=314]\nNODE Authentication & Authorization [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=319]\nNODE Status Codes [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=314]\nEDGE Tools --contains [EXTRACTED]--> Agent Monitoring\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Resource Design\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Security\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Status Codes\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Testing\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Versioning\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\n... (truncated \u2014 0 more nodes cut by ~2000-token budget. Narrow with context_filter=['call'] or use get_node for a specific symbol)",
           "budget_requested": 4000,
           "budget_returned": 1538,
           "budget_truncated": false,
@@ -1641,7 +1641,7 @@
               "evidence_hash": "ab2a802df9956eeec3f32a479349545607488ffbaa9fa4cf22aed2272b4bc21a",
               "kind": "graphify",
               "source_id": "symbol:What tests must run if tools/agent-monitoring/generate_retro.py changes?",
-              "summary": "Traversal: BFS depth=2 | Start: ['Monitoring', 'Monitoring', 'Tools'] | 37 nodes found\n\nNODE Pre-Implementation Review [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=319]\nNODE Pre-Implementation Review [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=314]\nNODE Schema [src=agent-monitoring/README.md loc=L16 community=1727]\nNODE Agent Monitoring [src=agent-monitoring/README.md loc=L1 community=1727]\nNODE API Design Checklist [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=314]\nNODE API Design Checklist [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=319]\nNODE Performance [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=314]\nNODE Documentation [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=314]\nNODE README.md [src=agent-monitoring/README.md loc=L1 community=1727]\nNODE Monitoring [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=314]\nNODE HTTP Methods [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=319]\nNODE Security [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=319]\nNODE Versioning [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=319]\nNODE Filtering & Sorting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=319]\nNODE Error Handling [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=319]\nNODE Rate Limiting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=314]\nNODE Resource Design [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=319]\nNODE Performance [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=319]\nNODE Documentation [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=319]\nNODE Pagination [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=314]\nNODE Status Codes [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=319]\nNODE Filtering & Sorting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=314]\nNODE HTTP Methods [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=314]\nNODE Monitoring [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=319]\nNODE Security [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=314]\nNODE Testing [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=314]\nNODE Testing [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=319]\nNODE Error Handling [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=314]\nNODE Rate Limiting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=319]\nNODE Files [src=agent-monitoring/README.md loc=L7 community=1727]\nNODE Versioning [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=314]\nNODE Tools [src=agent-monitoring/README.md loc=L59 community=1727]\nNODE Authentication & Authorization [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=314]\nNODE Pagination [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=319]\nNODE Resource Design [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=314]\nNODE Authentication & Authorization [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=319]\nNODE Status Codes [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=314]\nEDGE Tools --contains [EXTRACTED]--> Agent Monitoring\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Resource Design\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Security\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Status Codes\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Testing\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Versioning\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\n... (truncated \u2014 0 more nodes cut by ~2000-token budget. Narrow with context_filter=['call'] or use get_node for a specific symbol)"
+              "summary": "Traversal: BFS depth=2 | Start: ['Monitoring', 'Monitoring', 'Tools'] | 37 nodes found\n\nNODE Pre-Implementation Review [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=319]\nNODE Pre-Implementation Review [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=314]\nNODE Schema [src=agent-working/agent-monitoring/README.md loc=L16 community=1727]\nNODE Agent Monitoring [src=agent-working/agent-monitoring/README.md loc=L1 community=1727]\nNODE API Design Checklist [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=314]\nNODE API Design Checklist [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=319]\nNODE Performance [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=314]\nNODE Documentation [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=314]\nNODE README.md [src=agent-working/agent-monitoring/README.md loc=L1 community=1727]\nNODE Monitoring [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=314]\nNODE HTTP Methods [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=319]\nNODE Security [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=319]\nNODE Versioning [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=319]\nNODE Filtering & Sorting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=319]\nNODE Error Handling [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=319]\nNODE Rate Limiting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=314]\nNODE Resource Design [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=319]\nNODE Performance [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=319]\nNODE Documentation [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=319]\nNODE Pagination [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=314]\nNODE Status Codes [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=319]\nNODE Filtering & Sorting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=314]\nNODE HTTP Methods [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=314]\nNODE Monitoring [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=319]\nNODE Security [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=314]\nNODE Testing [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=314]\nNODE Testing [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=319]\nNODE Error Handling [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=314]\nNODE Rate Limiting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=319]\nNODE Files [src=agent-working/agent-monitoring/README.md loc=L7 community=1727]\nNODE Versioning [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=314]\nNODE Tools [src=agent-working/agent-monitoring/README.md loc=L59 community=1727]\nNODE Authentication & Authorization [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=314]\nNODE Pagination [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=319]\nNODE Resource Design [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=314]\nNODE Authentication & Authorization [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=319]\nNODE Status Codes [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=314]\nEDGE Tools --contains [EXTRACTED]--> Agent Monitoring\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Resource Design\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Security\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Status Codes\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Testing\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Versioning\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\n... (truncated \u2014 0 more nodes cut by ~2000-token budget. Narrow with context_filter=['call'] or use get_node for a specific symbol)"
             }
           ],
           "evidence": [
@@ -1667,7 +1667,7 @@
                 "symbol:What tests must run if tools/agent-monitoring/generate_retro.py changes?"
               ],
               "statement_id": "stmt-001",
-              "text": "Traversal: BFS depth=2 | Start: ['Monitoring', 'Monitoring', 'Tools'] | 37 nodes found\n\nNODE Pre-Implementation Review [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=319]\nNODE Pre-Implementation Review [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=314]\nNODE Schema [src=agent-monitoring/README.md loc=L16 community=1727]\nNODE Agent Monitoring [src=agent-monitoring/README.md loc=L1 community=1727]\nNODE API Design Checklist [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=314]\nNODE API Design Checklist [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=319]\nNODE Performance [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=314]\nNODE Documentation [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=314]\nNODE README.md [src=agent-monitoring/README.md loc=L1 community=1727]\nNODE Monitoring [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=314]\nNODE HTTP Methods [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=319]\nNODE Security [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=319]\nNODE Versioning [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=319]\nNODE Filtering & Sorting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=319]\nNODE Error Handling [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=319]\nNODE Rate Limiting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=314]\nNODE Resource Design [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=319]\nNODE Performance [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=319]\nNODE Documentation [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=319]\nNODE Pagination [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=314]\nNODE Status Codes [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=319]\nNODE Filtering & Sorting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=314]\nNODE HTTP Methods [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=314]\nNODE Monitoring [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=319]\nNODE Security [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=314]\nNODE Testing [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=314]\nNODE Testing [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=319]\nNODE Error Handling [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=314]\nNODE Rate Limiting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=319]\nNODE Files [src=agent-monitoring/README.md loc=L7 community=1727]\nNODE Versioning [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=314]\nNODE Tools [src=agent-monitoring/README.md loc=L59 community=1727]\nNODE Authentication & Authorization [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=314]\nNODE Pagination [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=319]\nNODE Resource Design [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=314]\nNODE Authentication & Authorization [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=319]\nNODE Status Codes [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=314]\nEDGE Tools --contains [EXTRACTED]--> Agent Monitoring\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Resource Design\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Security\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Status Codes\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Testing\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Versioning\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\n... (truncated \u2014 0 more nodes cut by ~2000-token budget. Narrow with context_filter=['call'] or use get_node for a specific symbol)",
+              "text": "Traversal: BFS depth=2 | Start: ['Monitoring', 'Monitoring', 'Tools'] | 37 nodes found\n\nNODE Pre-Implementation Review [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=319]\nNODE Pre-Implementation Review [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L3 community=314]\nNODE Schema [src=agent-working/agent-monitoring/README.md loc=L16 community=1727]\nNODE Agent Monitoring [src=agent-working/agent-monitoring/README.md loc=L1 community=1727]\nNODE API Design Checklist [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=314]\nNODE API Design Checklist [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L1 community=319]\nNODE Performance [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=314]\nNODE Documentation [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=314]\nNODE README.md [src=agent-working/agent-monitoring/README.md loc=L1 community=1727]\nNODE Monitoring [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=314]\nNODE HTTP Methods [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=319]\nNODE Security [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=319]\nNODE Versioning [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=319]\nNODE Filtering & Sorting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=319]\nNODE Error Handling [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=319]\nNODE Rate Limiting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=314]\nNODE Resource Design [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=319]\nNODE Performance [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L103 community=319]\nNODE Documentation [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L77 community=319]\nNODE Pagination [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=314]\nNODE Status Codes [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=319]\nNODE Filtering & Sorting [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L42 community=314]\nNODE HTTP Methods [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L13 community=314]\nNODE Monitoring [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L111 community=319]\nNODE Security [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L93 community=314]\nNODE Testing [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=314]\nNODE Testing [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L85 community=319]\nNODE Error Handling [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L55 community=314]\nNODE Rate Limiting [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L70 community=319]\nNODE Files [src=agent-working/agent-monitoring/README.md loc=L7 community=1727]\nNODE Versioning [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L49 community=314]\nNODE Tools [src=agent-working/agent-monitoring/README.md loc=L59 community=1727]\nNODE Authentication & Authorization [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=314]\nNODE Pagination [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L34 community=319]\nNODE Resource Design [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L5 community=314]\nNODE Authentication & Authorization [src=.claude/skills/api-design-principles/assets/api-design-checklist.md loc=L63 community=319]\nNODE Status Codes [src=.agents/skills/api-design-principles/assets/api-design-checklist.md loc=L21 community=314]\nEDGE Tools --contains [EXTRACTED]--> Agent Monitoring\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Monitoring --contains [EXTRACTED]--> Pre-Implementation Review\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Resource Design\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Security\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Status Codes\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Testing\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Versioning\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> API Design Checklist\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Authentication & Authorization\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Documentation\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Error Handling\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Filtering & Sorting\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> HTTP Methods\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Pagination\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Performance\nEDGE Pre-Implementation Review --contains [EXTRACTED]--> Rate Limiting\n... (truncated \u2014 0 more nodes cut by ~2000-token budget. Narrow with context_filter=['call'] or use get_node for a specific symbol)",
               "verification": "SUPPORTED"
             }
           ],
@@ -1723,12 +1723,12 @@
             "direct_side_graphify_source_paths": [
               ".agents/skills/api-design-principles/assets/api-design-checklist.md",
               ".claude/skills/api-design-principles/assets/api-design-checklist.md",
-              "agent-monitoring/README.md"
+              "agent-working/agent-monitoring/README.md"
             ],
             "gateway_side_graphify_source_paths": [
               ".agents/skills/api-design-principles/assets/api-design-checklist.md",
               ".claude/skills/api-design-principles/assets/api-design-checklist.md",
-              "agent-monitoring/README.md"
+              "agent-working/agent-monitoring/README.md"
             ],
             "graphify_extra_sources": [],
             "graphify_half_status": "measured",
@@ -1759,7 +1759,7 @@
               "score": 0.0626,
               "section": "",
               "semantic_score": 0.5342,
-              "source_path": "tickets/done/TCK-20260814-KGMCP-MEASUREMENT-BASELINE.md",
+              "source_path": "agent-working/tickets/done/TCK-20260814-KGMCP-MEASUREMENT-BASELINE.md",
               "title": "Tck-20260814-Kgmcp-Measurement-Baseline"
             },
             {
@@ -1770,7 +1770,7 @@
               "score": 0.046,
               "section": "",
               "semantic_score": 0.5613,
-              "source_path": "tickets/done/TCK-20260810-SKILL-USAGE-RETRO-TRACKING.md",
+              "source_path": "agent-working/tickets/done/TCK-20260810-SKILL-USAGE-RETRO-TRACKING.md",
               "title": "Tck-20260810-Skill-Usage-Retro-Tracking"
             },
             {
@@ -1781,7 +1781,7 @@
               "score": 0.0328,
               "section": "",
               "semantic_score": 0.5898,
-              "source_path": "stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md",
+              "source_path": "agent-working/stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md",
               "title": "Tck-20260810-Context-Tooling-Effectiveness-Tracking"
             },
             {
@@ -1792,7 +1792,7 @@
               "score": 0.0291,
               "section": "",
               "semantic_score": 0.5401,
-              "source_path": "stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md",
+              "source_path": "agent-working/stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md",
               "title": "Tck-20260728-Context-Packet-Schema"
             },
             {
@@ -1803,11 +1803,11 @@
               "score": 0.0235,
               "section": "",
               "semantic_score": 0.0,
-              "source_path": "tickets/done/TCK-20260810-STATUS-DRIFT-CHECK-WIRING.md",
+              "source_path": "agent-working/tickets/done/TCK-20260810-STATUS-DRIFT-CHECK-WIRING.md",
               "title": "Tck-20260810-Status-Drift-Check-Wiring"
             },
             {
-              "doc_id": "agent-monitoring/schema#detecting-a-specific-scripts-subcommand--023",
+              "doc_id": "agent-working/agent-monitoring/schema#detecting-a-specific-scripts-subcommand--023",
               "excerpt": "### Detecting a specific script's subcommand in `Bash` rows   Several `generate_retro.py` predicates (`_is_parity_index_build_call`, and, as of `TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`, `",
               "heading": "Detecting a specific script's subcommand in `Bash` rows",
               "keyword_score": 0.5677,
@@ -1847,7 +1847,7 @@
             "TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING",
             "TCK-20260728-CONTEXT-PACKET-SCHEMA",
             "TCK-20260810-STATUS-DRIFT-CHECK-WIRING",
-            "agent-monitoring/schema#detecting-a-specific-scripts-subcommand--023",
+            "agent-working/agent-monitoring/schema#detecting-a-specific-scripts-subcommand--023",
             "ai/default_packet_scenarios_decision#body-000",
             "guides/agent_monitoring#report-sections-004"
           ],
@@ -1856,7 +1856,7 @@
         "graphify": {
           "derivation": "subprocess.run(['graphify', 'query', query_text]), CLI-shelled per docs/engine/contracts/knowledge_gateway_mcp_contract.md Design Decision D1 (no in-process adapter exists), timed with time.perf_counter(), mirroring kgmcp_baseline_runner.py::_run_graphify exactly, except raw_stdout is retained in the persisted output (this ticket's own new instrumentation requirement).",
           "latency_ms": 1113.7126632966101,
-          "raw_stdout": "Traversal: BFS depth=2 | Start: ['Context', 'status', 'Status'] | 34 nodes found\n\nNODE TCK-20260330-CORE-STABILIZATION [src=.agents/rules/ticket.md loc=L42 community=403]\nNODE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT [src=staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L11 community=868]\nNODE manifest.json [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L1 community=517]\nNODE metrics [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L21 community=517]\nNODE ticket.md [src=.agents/rules/ticket.md loc=L1 community=403]\nNODE New Tests Required [src=staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L58 community=868]\nNODE Test Summary [src=.agents/rules/ticket.md loc=L92 community=403]\nNODE Already-Passing Coverage (spot-verified this session) [src=staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L22 community=868]\nNODE start_time [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L4 community=517]\nNODE chunks [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L5 community=517]\nNODE Regression Surface [src=staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L27 community=868]\nNODE Request Summary [src=.agents/rules/ticket.md loc=L52 community=403]\nNODE mode [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L3 community=517]\nNODE Title [src=.agents/rules/ticket.md loc=L44 community=403]\nNODE Conditional: If the Routing-Integration Open Question Is Resolved as \"Build (b)\" [src=staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L101 community=868]\nNODE Files Changed [src=.agents/rules/ticket.md loc=L98 community=403]\nNODE Related Tickets [src=.agents/rules/ticket.md loc=L68 community=403]\nNODE Assumptions / Open Questions [src=.agents/rules/ticket.md loc=L84 community=403]\nNODE Acceptance Criteria [src=.agents/rules/ticket.md loc=L64 community=403]\nNODE Related Code Areas [src=.agents/rules/ticket.md loc=L80 community=403]\nNODE Related Stored Artifacts [src=.agents/rules/ticket.md loc=L76 community=403]\nNODE Out of Scope [src=.agents/rules/ticket.md loc=L60 community=403]\nNODE Anti-Drift Test Guards [src=staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L131 community=868]\nNODE Context [src=staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L13 community=868]\nNODE Completion Summary [src=.agents/rules/ticket.md loc=L102 community=403]\nNODE profile [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L2 community=517]\nNODE test_plan.md [src=staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L1 community=868]\nNODE status [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L19 community=517]\nNODE Scoped Pytest Commands [src=staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L113 community=868]\nNODE Implementation Notes [src=.agents/rules/ticket.md loc=L88 community=403]\nNODE Status [src=.agents/rules/ticket.md loc=L48 community=403]\nNODE end_time [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L20 community=517]\nNODE Related Docs [src=.agents/rules/ticket.md loc=L72 community=403]\nNODE Scope [src=.agents/rules/ticket.md loc=L56 community=403]\nEDGE Context --contains [EXTRACTED]--> Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT\nEDGE Status --contains [EXTRACTED]--> TCK-20260330-CORE-STABILIZATION\nEDGE status --contains [EXTRACTED]--> manifest.json\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> test_plan.md\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> Already-Passing Coverage (spot-verified this session)\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> Anti-Drift Test Guards\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> Conditional: If the Routing-Integration Open Question Is Resolved as \"Build (b)\"\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> New Tests Required\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> Regression Surface\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> Scoped Pytest Commands\nEDGE manifest.json --contains [EXTRACTED]--> chunks\nEDGE manifest.json --contains [EXTRACTED]--> end_time\nEDGE manifest.json --contains [EXTRACTED]--> metrics\nEDGE manifest.json --contains [EXTRACTED]--> mode\nEDGE manifest.json --contains [EXTRACTED]--> profile\nEDGE manifest.json --contains [EXTRACTED]--> start_time\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> ticket.md\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Acceptance Criteria\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Assumptions / Open Questions\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Completion Summary\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Files Changed\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Implementation Notes\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Out of Scope\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Related Code Areas\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Related Docs\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Related Stored Artifacts\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Related Tickets\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Request Summary\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Scope\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Test Summary\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Title\n",
+          "raw_stdout": "Traversal: BFS depth=2 | Start: ['Context', 'status', 'Status'] | 34 nodes found\n\nNODE TCK-20260330-CORE-STABILIZATION [src=.agents/rules/ticket.md loc=L42 community=403]\nNODE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT [src=agent-working/staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L11 community=868]\nNODE manifest.json [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L1 community=517]\nNODE metrics [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L21 community=517]\nNODE ticket.md [src=.agents/rules/ticket.md loc=L1 community=403]\nNODE New Tests Required [src=agent-working/staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L58 community=868]\nNODE Test Summary [src=.agents/rules/ticket.md loc=L92 community=403]\nNODE Already-Passing Coverage (spot-verified this session) [src=agent-working/staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L22 community=868]\nNODE start_time [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L4 community=517]\nNODE chunks [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L5 community=517]\nNODE Regression Surface [src=agent-working/staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L27 community=868]\nNODE Request Summary [src=.agents/rules/ticket.md loc=L52 community=403]\nNODE mode [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L3 community=517]\nNODE Title [src=.agents/rules/ticket.md loc=L44 community=403]\nNODE Conditional: If the Routing-Integration Open Question Is Resolved as \"Build (b)\" [src=agent-working/staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L101 community=868]\nNODE Files Changed [src=.agents/rules/ticket.md loc=L98 community=403]\nNODE Related Tickets [src=.agents/rules/ticket.md loc=L68 community=403]\nNODE Assumptions / Open Questions [src=.agents/rules/ticket.md loc=L84 community=403]\nNODE Acceptance Criteria [src=.agents/rules/ticket.md loc=L64 community=403]\nNODE Related Code Areas [src=.agents/rules/ticket.md loc=L80 community=403]\nNODE Related Stored Artifacts [src=.agents/rules/ticket.md loc=L76 community=403]\nNODE Out of Scope [src=.agents/rules/ticket.md loc=L60 community=403]\nNODE Anti-Drift Test Guards [src=agent-working/staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L131 community=868]\nNODE Context [src=agent-working/staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L13 community=868]\nNODE Completion Summary [src=.agents/rules/ticket.md loc=L102 community=403]\nNODE profile [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L2 community=517]\nNODE test_plan.md [src=agent-working/staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L1 community=868]\nNODE status [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L19 community=517]\nNODE Scoped Pytest Commands [src=agent-working/staging_artifacts/TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT/test_plan.md loc=L113 community=868]\nNODE Implementation Notes [src=.agents/rules/ticket.md loc=L88 community=403]\nNODE Status [src=.agents/rules/ticket.md loc=L48 community=403]\nNODE end_time [src=tmp/evaluate_simq_bug_evidence/manifest.json loc=L20 community=517]\nNODE Related Docs [src=.agents/rules/ticket.md loc=L72 community=403]\nNODE Scope [src=.agents/rules/ticket.md loc=L56 community=403]\nEDGE Context --contains [EXTRACTED]--> Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT\nEDGE Status --contains [EXTRACTED]--> TCK-20260330-CORE-STABILIZATION\nEDGE status --contains [EXTRACTED]--> manifest.json\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> test_plan.md\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> Already-Passing Coverage (spot-verified this session)\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> Anti-Drift Test Guards\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> Conditional: If the Routing-Integration Open Question Is Resolved as \"Build (b)\"\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> New Tests Required\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> Regression Surface\nEDGE Test Plan \u2014 TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT --contains [EXTRACTED]--> Scoped Pytest Commands\nEDGE manifest.json --contains [EXTRACTED]--> chunks\nEDGE manifest.json --contains [EXTRACTED]--> end_time\nEDGE manifest.json --contains [EXTRACTED]--> metrics\nEDGE manifest.json --contains [EXTRACTED]--> mode\nEDGE manifest.json --contains [EXTRACTED]--> profile\nEDGE manifest.json --contains [EXTRACTED]--> start_time\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> ticket.md\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Acceptance Criteria\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Assumptions / Open Questions\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Completion Summary\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Files Changed\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Implementation Notes\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Out of Scope\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Related Code Areas\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Related Docs\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Related Stored Artifacts\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Related Tickets\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Request Summary\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Scope\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Test Summary\nEDGE TCK-20260330-CORE-STABILIZATION --contains [EXTRACTED]--> Title\n",
           "raw_stdout_bytes": 5849,
           "returncode": 0,
           "tool_call_count": 1
@@ -1885,35 +1885,35 @@
             {
               "evidence_hash": "050e0ee61ee36f6f7cf5de852259db28d74df6c5a7490574a071afd365491076",
               "kind": "context_search",
-              "path": "tickets/done/TCK-20260814-KGMCP-MEASUREMENT-BASELINE.md",
+              "path": "agent-working/tickets/done/TCK-20260814-KGMCP-MEASUREMENT-BASELINE.md",
               "source_id": "ticket:TCK-20260814-KGMCP-MEASUREMENT-BASELINE",
               "summary": "`docs/plans/knowledge-gateway-mcp-proposal.md` \u00a720 Phase 0 requires recording a direct-tool baseline (latency, tool-call counts, repeated-demand signals, returned-token estimates) for a fixed represen"
             },
             {
               "evidence_hash": "c3ccdf0697a7ac92fac1b90b2aaa40d0c5845324163b4a392b450952f86965e8",
               "kind": "context_search",
-              "path": "tickets/done/TCK-20260810-SKILL-USAGE-RETRO-TRACKING.md",
+              "path": "agent-working/tickets/done/TCK-20260810-SKILL-USAGE-RETRO-TRACKING.md",
               "source_id": "ticket:TCK-20260810-SKILL-USAGE-RETRO-TRACKING",
               "summary": "`TCK-20260805-SKILL-USAGE-METRIC` (child of `TCK-20260804-SKILL-CATALOG-MODERNIZATION-EPIC`) built a real, tested per-skill invocation-count tool (`tools/agent-monitoring/skill_usage_metric.py`), deli"
             },
             {
               "evidence_hash": "b650f1332b412e980aea7ae628a16b7ebf55ce0a6a655598a0e51d5dbf0ae33b",
               "kind": "context_search",
-              "path": "stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md",
-              "source_id": "file:stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md",
+              "path": "agent-working/stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md",
+              "source_id": "file:agent-working/stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md",
               "summary": "--- status: historical layer: observability authority: P2 audience: agent ticket_id: TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING artifact_type: investigation tags: [agent-monitoring, observabi"
             },
             {
               "evidence_hash": "284d740fff39e686e9dc96ae72df97ef223125ceb146e22276b3e1151dc923e0",
               "kind": "context_search",
-              "path": "stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md",
-              "source_id": "file:stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md",
+              "path": "agent-working/stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md",
+              "source_id": "file:agent-working/stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md",
               "summary": "--- status: historical layer: ai authority: P2 audience: agent ticket_id: TCK-20260728-CONTEXT-PACKET-SCHEMA artifact_type: investigation tags: [ai, registry, schema] ---  # Investigation \u2014 TCK-202607"
             },
             {
               "evidence_hash": "10b8e7bcd8f393dddc96a8232d5177b8f47741151a8d06ed34fd3497fc4fc478",
               "kind": "context_search",
-              "path": "tickets/done/TCK-20260810-STATUS-DRIFT-CHECK-WIRING.md",
+              "path": "agent-working/tickets/done/TCK-20260810-STATUS-DRIFT-CHECK-WIRING.md",
               "source_id": "ticket:TCK-20260810-STATUS-DRIFT-CHECK-WIRING",
               "summary": "`tools/ticket_field_values.py` hard-blocks `## Tier`/`## Priority` at ticket-close time (`done_checker_static.py::run_static_precheck`), but `## Status`'s equivalent checker, `tools/gate_checks/status"
             },
@@ -1943,31 +1943,31 @@
             {
               "evidence_hash": "050e0ee61ee36f6f7cf5de852259db28d74df6c5a7490574a071afd365491076",
               "evidence_id": "ticket:TCK-20260814-KGMCP-MEASUREMENT-BASELINE",
-              "path": "tickets/done/TCK-20260814-KGMCP-MEASUREMENT-BASELINE.md",
+              "path": "agent-working/tickets/done/TCK-20260814-KGMCP-MEASUREMENT-BASELINE.md",
               "source_id": "ticket:TCK-20260814-KGMCP-MEASUREMENT-BASELINE"
             },
             {
               "evidence_hash": "c3ccdf0697a7ac92fac1b90b2aaa40d0c5845324163b4a392b450952f86965e8",
               "evidence_id": "ticket:TCK-20260810-SKILL-USAGE-RETRO-TRACKING",
-              "path": "tickets/done/TCK-20260810-SKILL-USAGE-RETRO-TRACKING.md",
+              "path": "agent-working/tickets/done/TCK-20260810-SKILL-USAGE-RETRO-TRACKING.md",
               "source_id": "ticket:TCK-20260810-SKILL-USAGE-RETRO-TRACKING"
             },
             {
               "evidence_hash": "b650f1332b412e980aea7ae628a16b7ebf55ce0a6a655598a0e51d5dbf0ae33b",
-              "evidence_id": "file:stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md",
-              "path": "stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md",
-              "source_id": "file:stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md"
+              "evidence_id": "file:agent-working/stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md",
+              "path": "agent-working/stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md",
+              "source_id": "file:agent-working/stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md"
             },
             {
               "evidence_hash": "284d740fff39e686e9dc96ae72df97ef223125ceb146e22276b3e1151dc923e0",
-              "evidence_id": "file:stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md",
-              "path": "stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md",
-              "source_id": "file:stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md"
+              "evidence_id": "file:agent-working/stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md",
+              "path": "agent-working/stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md",
+              "source_id": "file:agent-working/stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md"
             },
             {
               "evidence_hash": "10b8e7bcd8f393dddc96a8232d5177b8f47741151a8d06ed34fd3497fc4fc478",
               "evidence_id": "ticket:TCK-20260810-STATUS-DRIFT-CHECK-WIRING",
-              "path": "tickets/done/TCK-20260810-STATUS-DRIFT-CHECK-WIRING.md",
+              "path": "agent-working/tickets/done/TCK-20260810-STATUS-DRIFT-CHECK-WIRING.md",
               "source_id": "ticket:TCK-20260810-STATUS-DRIFT-CHECK-WIRING"
             },
             {
@@ -2020,7 +2020,7 @@
             {
               "classification": "FACT",
               "evidence_ids": [
-                "file:stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md"
+                "file:agent-working/stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md"
               ],
               "statement_id": "stmt-003",
               "text": "--- status: historical layer: observability authority: P2 audience: agent ticket_id: TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING artifact_type: investigation tags: [agent-monitoring, observabi",
@@ -2029,7 +2029,7 @@
             {
               "classification": "FACT",
               "evidence_ids": [
-                "file:stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md"
+                "file:agent-working/stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md"
               ],
               "statement_id": "stmt-004",
               "text": "--- status: historical layer: ai authority: P2 audience: agent ticket_id: TCK-20260728-CONTEXT-PACKET-SCHEMA artifact_type: investigation tags: [ai, registry, schema] ---  # Investigation \u2014 TCK-202607",
@@ -2086,7 +2086,7 @@
       "quality": {
         "reviewer_judgment": {
           "basis": "reviewer_judgment_not_a_computed_metric",
-          "rationale": "source_completeness's context_search_half recorded two misses: TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING (the very ticket the query asks the status of) and TCK-20260728-CONTEXT-PACKET-SCHEMA. Reading the gateway's own response['context'] directly, both are genuinely present as 'file:stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md' and 'file:stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md' -- the identical normalization-shape mismatch Q4 shows (direct's doc_id is the bare ticket id for a stored_artifacts file; the gateway's normalized id keeps the file: path), so despite being the most alarming-looking finding in the whole corpus (the queried ticket itself flagged 'missing'), it is a false positive, not a real drop -- the gateway's real answer text does draw on this investigation's content. With content confirmed equal and the gateway still costing modestly more (1538ms vs 1175ms; 2836 vs 2487 tokens) for the same result, direct tool use is equal-or-better.",
+          "rationale": "source_completeness's context_search_half recorded two misses: TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING (the very ticket the query asks the status of) and TCK-20260728-CONTEXT-PACKET-SCHEMA. Reading the gateway's own response['context'] directly, both are genuinely present as 'file:agent-working/stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md' and 'file:agent-working/stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md' -- the identical normalization-shape mismatch Q4 shows (direct's doc_id is the bare ticket id for a stored_artifacts file; the gateway's normalized id keeps the file: path), so despite being the most alarming-looking finding in the whole corpus (the queried ticket itself flagged 'missing'), it is a false positive, not a real drop -- the gateway's real answer text does draw on this investigation's content. With content confirmed equal and the gateway still costing modestly more (1538ms vs 1175ms; 2836 vs 2487 tokens) for the same result, direct tool use is equal-or-better.",
           "verdict": "direct_equal_or_better"
         },
         "source_completeness": {
@@ -2102,7 +2102,7 @@
               "TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING",
               "TCK-20260728-CONTEXT-PACKET-SCHEMA",
               "TCK-20260810-STATUS-DRIFT-CHECK-WIRING",
-              "agent-monitoring/schema#detecting-a-specific-scripts-subcommand--023",
+              "agent-working/agent-monitoring/schema#detecting-a-specific-scripts-subcommand--023",
               "ai/default_packet_scenarios_decision#body-000",
               "guides/agent_monitoring#report-sections-004"
             ],
@@ -2110,10 +2110,10 @@
             "gateway_sources": [
               "TCK-20260814-KGMCP-MEASUREMENT-BASELINE",
               "TCK-20260810-SKILL-USAGE-RETRO-TRACKING",
-              "stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md",
-              "stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md",
+              "agent-working/stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md",
+              "agent-working/stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md",
               "TCK-20260810-STATUS-DRIFT-CHECK-WIRING",
-              "agent-monitoring/schema#detecting-a-specific-script-s-subcommand-in-bash-rows",
+              "agent-working/agent-monitoring/schema#detecting-a-specific-script-s-subcommand-in-bash-rows",
               "ai/default_packet_scenarios_decision#ai",
               "guides/agent_monitoring#report-sections"
             ],
@@ -2153,7 +2153,7 @@
               "score": 0.0427,
               "section": "",
               "semantic_score": 0.4075,
-              "source_path": "tickets/working_log.csv",
+              "source_path": "agent-working/tickets/working_log.csv",
               "title": "Tck-20260405-Logfix"
             },
             {
@@ -2219,7 +2219,7 @@
               "score": 0.0258,
               "section": "",
               "semantic_score": 0.4319,
-              "source_path": "tickets/done/TCK-20260406-RPG-CORE-STABILIZE.md",
+              "source_path": "agent-working/tickets/done/TCK-20260406-RPG-CORE-STABILIZE.md",
               "title": "Tck-20260406-Rpg-Core-Stabilize"
             },
             {
@@ -2280,8 +2280,8 @@
             {
               "evidence_hash": "4879441e913595797a347e40385b60fe87fdea1f37d725154adcb5e757ae6938",
               "kind": "context_search",
-              "path": "tickets/working_log.csv",
-              "source_id": "file:tickets/working_log.csv",
+              "path": "agent-working/tickets/working_log.csv",
+              "source_id": "file:agent-working/tickets/working_log.csv",
               "summary": "Fix E2E Logging Timeouts Disabled Kafka and added CLI grid scaling to resolve timeouts in test_logging_structure.py."
             },
             {
@@ -2322,7 +2322,7 @@
             {
               "evidence_hash": "0ebc6621777335403623c60eb08b25910b7b162a1b377196edd2090a78c5de5d",
               "kind": "context_search",
-              "path": "tickets/done/TCK-20260406-RPG-CORE-STABILIZE.md",
+              "path": "agent-working/tickets/done/TCK-20260406-RPG-CORE-STABILIZE.md",
               "source_id": "ticket:TCK-20260406-RPG-CORE-STABILIZE",
               "summary": "# TCK-20260406-RPG-CORE-STABILIZE: RPG Core Stabilization & Introspection  ## Description Resolve \"split-brain\" mutations (AOA Pillar 1 violation), standardize Kafka persistence on the `ActionBatch` s"
             },
@@ -2343,9 +2343,9 @@
           "evidence": [
             {
               "evidence_hash": "4879441e913595797a347e40385b60fe87fdea1f37d725154adcb5e757ae6938",
-              "evidence_id": "file:tickets/working_log.csv",
-              "path": "tickets/working_log.csv",
-              "source_id": "file:tickets/working_log.csv"
+              "evidence_id": "file:agent-working/tickets/working_log.csv",
+              "path": "agent-working/tickets/working_log.csv",
+              "source_id": "file:agent-working/tickets/working_log.csv"
             },
             {
               "evidence_hash": "038380c724c9597d4f2d944354cf17d44499ed79da02f2a14bae62a1f991bfb5",
@@ -2380,7 +2380,7 @@
             {
               "evidence_hash": "0ebc6621777335403623c60eb08b25910b7b162a1b377196edd2090a78c5de5d",
               "evidence_id": "ticket:TCK-20260406-RPG-CORE-STABILIZE",
-              "path": "tickets/done/TCK-20260406-RPG-CORE-STABILIZE.md",
+              "path": "agent-working/tickets/done/TCK-20260406-RPG-CORE-STABILIZE.md",
               "source_id": "ticket:TCK-20260406-RPG-CORE-STABILIZE"
             },
             {
@@ -2410,7 +2410,7 @@
             {
               "classification": "FACT",
               "evidence_ids": [
-                "file:tickets/working_log.csv"
+                "file:agent-working/tickets/working_log.csv"
               ],
               "statement_id": "stmt-001",
               "text": "Fix E2E Logging Timeouts Disabled Kafka and added CLI grid scaling to resolve timeouts in test_logging_structure.py.",
@@ -2503,7 +2503,7 @@
       "quality": {
         "reviewer_judgment": {
           "basis": "reviewer_judgment_not_a_computed_metric",
-          "rationale": "source_completeness's context_search_half recorded TCK-20260405-LOGFIX as missing (direct's own raw_results show its source_path is tickets/working_log.csv), while the graphify_half recorded zero missing/extra paths for this entry's dual-provider routing. This is the same file:-shape dedup gap Q1 and Q3 show -- the gateway already retains a different working_log.csv chunk under the shared 'file:tickets/working_log.csv' id, so the specific log line naming the Kafka logging fix is genuinely dropped, mattering modestly for a negative-knowledge query whose whole point is enumerating every real Kafka touchpoint. Combined with the heaviest token overhead of any entry in the corpus (7655 vs 2609 direct combined, roughly 2.9x) for a real, if narrow, completeness gap, direct tool use is equal-or-better.",
+          "rationale": "source_completeness's context_search_half recorded TCK-20260405-LOGFIX as missing (direct's own raw_results show its source_path is agent-working/tickets/working_log.csv), while the graphify_half recorded zero missing/extra paths for this entry's dual-provider routing. This is the same file:-shape dedup gap Q1 and Q3 show -- the gateway already retains a different working_log.csv chunk under the shared 'file:agent-working/tickets/working_log.csv' id, so the specific log line naming the Kafka logging fix is genuinely dropped, mattering modestly for a negative-knowledge query whose whole point is enumerating every real Kafka touchpoint. Combined with the heaviest token overhead of any entry in the corpus (7655 vs 2609 direct combined, roughly 2.9x) for a real, if narrow, completeness gap, direct tool use is equal-or-better.",
           "verdict": "direct_equal_or_better"
         },
         "source_completeness": {
@@ -2523,7 +2523,7 @@
             ],
             "derivation": "baseline_sources = THIS TICKET's own freshly-run _run_direct_context_search() call for this entry (not a Phase 0/1 fixture \u2014 see TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON Step 1's full-fresh-run decision), compared via the unmodified, reused _compute_threshold_4_3() matching logic.",
             "gateway_sources": [
-              "tickets/working_log.csv",
+              "agent-working/tickets/working_log.csv",
               "compliance/checklist#kafka-disabled-mode-behavior",
               "engine/contracts/infrastructure_compat_contract#4-divergences-exclusions",
               "logic_checklist_exhaustive#kafka-disabled-mode-behavior",

@@ -10,7 +10,7 @@ tags: [testing, architecture, planning]
 
 **Status: owner decisions recorded 2026-09-30 (§11): D-R2, D-MF and D-M2 approved with changes; D-P deferred; D-PERF assigned when its trigger fires; D-PR resolved.** Approval lifts a HOLD; it does not mean the epic is complete. See each epic's own status.
 
-This roadmap and the four epic tickets in `tickets/todos/test-architecture/` are the **binding** plan.
+This roadmap and the four epic tickets in `agent-working/tickets/todos/test-architecture/` are the **binding** plan.
 Everything in [`reference/`](reference/) is non-binding investigation and design material for the
 detail planner and implementer agents. Child tickets are **not** created here; they are the detail
 planner's job.

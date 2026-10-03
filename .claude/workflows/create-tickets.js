@@ -17,7 +17,7 @@ export const meta = {
 //               Date.now()/new Date() (TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT).
 //   structure — path to a ticket plan structure / template doc (optional)
 //               Guides concern granularity and scope conventions.
-//   output    — output folder override (optional, e.g. "tickets/todos/phase29-repair/")
+//   output    — output folder override (optional, e.g. "agent-working/tickets/todos/phase29-repair/")
 //               Inferred from proposal content if omitted.
 //   epic_id   — existing epic ticket ID to link created tickets to (optional)
 
@@ -148,7 +148,7 @@ const startTs = startTsArg
 // a real trade-off, not a neutral swap: gate-style checks in this codebase run orchestrator-side
 // ON PURPOSE so an agent can never itself report "gate passed" (see implement-ticket.js's gate
 // layer). The exposure here is small — sidecar bookkeeping and one tag check, not a gate — but
-// the pilot's own recommendation (stored_artifacts/TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-
+// the pilot's own recommendation (agent-working/stored_artifacts/TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-
 // PILOT/pilot_measurement.md) must treat this as the central decision for implement-ticket.js,
 // not assume this file's small exposure generalizes there.
 const RUN_COMMAND_SCHEMA = {
@@ -562,7 +562,7 @@ const STRUCTURE_SCHEMA = {
     date: { type: 'string', description: 'Today in YYYYMMDD format from `date +%Y%m%d`' },
     folder_name: {
       type: 'string',
-      description: 'Short kebab-case name for the output folder under tickets/todos/, inferred from proposal topic',
+      description: 'Short kebab-case name for the output folder under agent-working/tickets/todos/, inferred from proposal topic',
     },
     tasks: { type: 'array', items: TASK_SCHEMA },
     skipped: {
@@ -653,7 +653,7 @@ Step 4 — produce ticket tasks using these strict rules:
   - Canonical form only: lowercase, hyphen-separated. Never emit p0/p1/p2 as tags.
   - Follow docs/guidelines/tag_taxonomy.md's full 5-category model (Subsystem/Topic, Phase/Milestone, Process/Skill-signal, Quality-attribute, Meta-Process) — the same policy ticket-scoper.md uses for single-ticket scoping.
   - Include a Process/Skill-signal tag from this closed list ONLY when it applies: api-design, debugging, performance, security
-  - Assign a Subsystem/Topic (or Phase/Milestone, Quality-attribute, Meta-Process) tag only when this concern's investigated files_found or domain clearly indicates one — e.g. files_found under dashboard-frontend/ or src/api/agent_ops_dashboard/ -> dashboard; files_found touching agent-monitoring/*.jsonl -> observability. Do not guess a tag from the title alone if files_found doesn't support it.
+  - Assign a Subsystem/Topic (or Phase/Milestone, Quality-attribute, Meta-Process) tag only when this concern's investigated files_found or domain clearly indicates one — e.g. files_found under dashboard-frontend/ or src/api/agent_ops_dashboard/ -> dashboard; files_found touching agent-working/agent-monitoring/*.jsonl -> observability. Do not guess a tag from the title alone if files_found doesn't support it.
   - If nothing clearly applies, tags may be an empty array.
 
   tag_relevance_flags:
@@ -773,7 +773,7 @@ if (tasksWithRelevanceFlags.length > 0) {
 
 const outputFolder = outputOverride
   ? (outputOverride.endsWith('/') ? outputOverride : outputOverride + '/')
-  : `tickets/todos/${structured.folder_name}/`
+  : `agent-working/tickets/todos/${structured.folder_name}/`
 
 const dateStr = structured.date
 
@@ -809,7 +809,7 @@ const written = await pipeline(
     return agent(
       `Create a ticket file from pre-investigated task data.
 
-IMPORTANT: Investigation and structuring are complete — do NOT scan tickets/, docs/, stored_artifacts/,
+IMPORTANT: Investigation and structuring are complete — do NOT scan agent-working/tickets/, docs/, agent-working/stored_artifacts/,
 or source code. Your role is ticket formatting and file creation only.
 
 Ticket ID: ${ticketId}
@@ -987,9 +987,9 @@ if (epicId && ticketIds.length > 0) {
 
 Step 1 — find the epic ticket:
   Check in order:
-    tickets/inprogress/${epicId}.md
-    tickets/done/${epicId}.md
-    find tickets/todos/ -name "${epicId}.md"
+    agent-working/tickets/inprogress/${epicId}.md
+    agent-working/tickets/done/${epicId}.md
+    find agent-working/tickets/todos/ -name "${epicId}.md"
 
 Step 2 — append to ## Related Tickets (do not remove or reorder existing entries):
 ${ticketIds.map(id => `- ${id}`).join('\n')}

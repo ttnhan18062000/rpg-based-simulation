@@ -17,7 +17,7 @@ This is primarily a documentation-consistency request. It does not authorize imp
 
 The brainstorm corpus remains useful and unusually well grounded, but promotion into plans has left several layers describing different states of the same program:
 
-1. The roadmap and M1 epic still say M1 is scope-only and not ticketed, while 21 ordered M1 child tickets now exist under `tickets/todos/m1-quick-wins/`.
+1. The roadmap and M1 epic still say M1 is scope-only and not ticketed, while 21 ordered M1 child tickets now exist under `agent-working/tickets/todos/m1-quick-wins/`.
 2. Idea 66 is recognized as the Region/Place foundation, but its formal ownership and exact gate boundary remain inconsistent.
 3. M3 lists Coming of Age before the birth record it explicitly requires.
 4. M6 describes Drifting Loyalty both before/alongside and after the affiliation mutation path.
@@ -64,7 +64,7 @@ Requested changes, subject to the classification above:
 - Rename the title and introduction so they describe the full M1-M9 roadmap rather than “Six Epics.”
 - Reconcile M1's status with the committed 21-ticket sequence.
 - State that 19 M1 ideas produced implementation tickets, Idea 16 was resolved by investigation without a behavior-change ticket, and Ideas 7 and 17 were split by responsibility.
-- Link `tickets/todos/m1-quick-wins/SEQUENCE.md` as M1's executable ordering authority.
+- Link `agent-working/tickets/todos/m1-quick-wins/SEQUENCE.md` as M1's executable ordering authority.
 - Add final permadeath repair to the M1 correctness lane or give it another explicit roadmap owner.
 - Replace “M2 ideas have no dependencies on each other” with the more precise branch model described below.
 - Keep M3 and M4 parallel after shared M2 prerequisites, while also allowing the Place and family/social branches to advance independently once their own prerequisites clear.

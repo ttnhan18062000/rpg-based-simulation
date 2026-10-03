@@ -20,7 +20,7 @@ This is the master index for the engine audit programme. The audit answers:
 Each audit dimension produces a detail file with findings, feature lists, and ratings.
 This index tracks state, priority, and method across all 18 dimensions.
 
-Related epic: `tickets/inprogress/TCK-20260618-AUDIT-EPIC.md`
+Related epic: `agent-working/tickets/inprogress/TCK-20260618-AUDIT-EPIC.md`
 
 ---
 
@@ -314,6 +314,6 @@ integrated, and its findings define the risk surface for D10, D12, and D14.
 |---|---|
 | `docs/plans/engine_future_epics_roadmap.md` | Authoritative gap analysis and epic backlog |
 | `foundation_feature_framework.md` | Scoring framework used by D02 |
-| `tickets/inprogress/TCK-20260618-AUDIT-EPIC.md` | Epic ticket tracking all audit work |
-| `staging_artifacts/TCK-20260618-AUDIT-EPIC/plan.md` | Audit sequencing plan |
-| `staging_artifacts/TCK-20260618-AUDIT-EPIC/investigation.md` | Investigation that defined the 18 dimensions |
+| `agent-working/tickets/inprogress/TCK-20260618-AUDIT-EPIC.md` | Epic ticket tracking all audit work |
+| `agent-working/staging_artifacts/TCK-20260618-AUDIT-EPIC/plan.md` | Audit sequencing plan |
+| `agent-working/staging_artifacts/TCK-20260618-AUDIT-EPIC/investigation.md` | Investigation that defined the 18 dimensions |

@@ -80,7 +80,7 @@ The other 2 have no prior investigation trail at all — genuinely fresh work:
    2026-09-20. Zero literal `"affection"` matches anywhere in `src/` (a concept-name-not-a-symbol
    case). Three candidates checked and rejected as not-confident-enough
    (`RelationshipModel.private_trust`/`shared_quest_count`; `MarriageState`/`MarriageStatus`;
-   `FactionSocialMemory`, faction- not entity-level). No `stored_artifacts/` citation trail exists
+   `FactionSocialMemory`, faction- not entity-level). No `agent-working/stored_artifacts/` citation trail exists
    for this id at all — the original seeding citation, if any, is unrecoverable.
 5. **`social_memory`** (`state: skeleton`) — **no `verified` block exists at all.** Never
    investigated by any prior batch. The only registry-native starting point is `systems: [faction]`

@@ -1208,7 +1208,7 @@ Profiles are defined in `src/simulation_quality/profiles.py` — not in world.ya
 
 Per the user's request during `TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC` scoping ("consideration of
 new pillars if warranted"), four candidate dimensions were checked against the §7.1 bar for a new
-top-level pillar. Source: `staging_artifacts/TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC/investigation.md`
+top-level pillar. Source: `agent-working/staging_artifacts/TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC/investigation.md`
 §2. Each candidate below was re-verified against current repo state rather than trusted from that
 investigation snapshot.
 
@@ -1310,7 +1310,7 @@ list's count must match the raw `N/10` the axis still records.
 
 No real gap was found, so per this ticket's own Acceptance Criteria ("any real gap... fixed or
 ticketed"), no fix and no follow-up ticket were needed. Script:
-`stored_artifacts/TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS/completeness_check.py`.
+`agent-working/stored_artifacts/TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS/completeness_check.py`.
 
 **Conclusion: M7's own Scope item 5 is satisfied — every one of the 65 ideas is either backed by a
 real, traceable signal rule, or has an explicit, already-written reason it isn't.**
@@ -1548,7 +1548,7 @@ the sole exception, activated via a hardcoded `ROUTING_KEYS` set and env-var inj
 Closed out 2026-07-11 (`TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT`, hotfix tier — verification and
 citation only, no engine/scorer logic changed) — every item below was re-verified against current
 `src/`/`tests/` state in that ticket's own session, not assumed unchanged since authoring. See
-`tickets/done/TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT.md`'s Implementation Notes for the full
+`agent-working/tickets/done/TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT.md`'s Implementation Notes for the full
 verification trail (test commands run, live code reads performed).
 
 ### Functional
@@ -1598,7 +1598,7 @@ verification trail (test commands run, live code reads performed).
 
 ## 13. Implementation Epics & Child Tickets
 
-Parent epic: `tickets/inprogress/TCK-20260628-SIMQ-EPIC.md`
+Parent epic: `agent-working/tickets/inprogress/TCK-20260628-SIMQ-EPIC.md`
 
 | Ticket | Title | Delivers |
 |---|---|---|

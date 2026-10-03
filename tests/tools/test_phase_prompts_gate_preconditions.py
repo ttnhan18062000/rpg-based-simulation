@@ -109,7 +109,7 @@ def test_injected_dirs_alone_satisfy_the_post_agent_gate():
 
 
 def test_injected_dirs_empty_for_files_with_no_known_mapping():
-    files_changed = ["docs/guides/delivery_process.md", "tickets/done/TCK-1.md"]
+    files_changed = ["docs/guides/delivery_process.md", "agent-working/tickets/done/TCK-1.md"]
     computed_dirs = sorted({d for d in (expected_test_dirs_for(p) for p in files_changed) if d})
     assert computed_dirs == []
 
@@ -146,11 +146,11 @@ def test_done_checker_md_states_declared_vs_undeclared_rule():
     assert "not declare it" in text
     assert "todos_source_path" in text
     # Stated once, under condition 9 -- not duplicated as a second standalone rule elsewhere.
-    assert text.count("A `tickets/todos/` copy of the ticket under check") == 1
+    assert text.count("A `agent-working/tickets/todos/` copy of the ticket under check") == 1
 
 
 def test_done_checker_md_still_reports_an_undeclared_duplicate():
     text = _DONE_CHECKER_MD.read_text(encoding="utf-8")
-    assert "any other `tickets/todos/` duplicate is still a real finding" in text.lower() or (
+    assert "any other `agent-working/tickets/todos/` duplicate is still a real finding" in text.lower() or (
         "duplicate is still a real finding" in text
     )

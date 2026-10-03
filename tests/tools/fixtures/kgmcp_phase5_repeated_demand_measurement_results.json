@@ -381,9 +381,9 @@
       },
       {
         "a": "TCK-20260424-PH11-M1-READINESS",
-        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "b": "TCK-20260424-PH11-M2-PROOF",
-        "b_text": "Phase 11 Milestone 2 Preserved Proof complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b_text": "Phase 11 Milestone 2 Preserved Proof complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "intent": "completeness_verification",
         "shared_camel_or_path": [],
         "shared_identifiers": [
@@ -395,9 +395,9 @@
       },
       {
         "a": "TCK-20260424-PH11-M1-READINESS",
-        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "b": "TCK-20260424-PH11-M3-RATIFICATION",
-        "b_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "intent": "completeness_verification",
         "shared_camel_or_path": [],
         "shared_identifiers": [
@@ -409,9 +409,9 @@
       },
       {
         "a": "TCK-20260424-PH11-M1-READINESS",
-        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "b": "TCK-20260424-PH11-M4-GOVERNANCE",
-        "b_text": "Phase 11 Milestone 4 Governance Reconciliation complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b_text": "Phase 11 Milestone 4 Governance Reconciliation complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "intent": "completeness_verification",
         "shared_camel_or_path": [],
         "shared_identifiers": [
@@ -423,9 +423,9 @@
       },
       {
         "a": "TCK-20260424-PH11-M1-READINESS",
-        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "b": "TCK-20260424-PH11-M5-VERDICT",
-        "b_text": "Phase 11 Milestone 5 Final Verdict complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b_text": "Phase 11 Milestone 5 Final Verdict complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "intent": "completeness_verification",
         "shared_camel_or_path": [],
         "shared_identifiers": [
@@ -437,9 +437,9 @@
       },
       {
         "a": "TCK-20260424-PH11-M1-READINESS",
-        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "b": "TCK-20260424-PH11-M6-EXIT",
-        "b_text": "Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b_text": "Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "intent": "completeness_verification",
         "shared_camel_or_path": [],
         "shared_identifiers": [
@@ -451,9 +451,9 @@
       },
       {
         "a": "TCK-20260424-PH11-M2-PROOF",
-        "a_text": "Phase 11 Milestone 2 Preserved Proof complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "a_text": "Phase 11 Milestone 2 Preserved Proof complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "b": "TCK-20260424-PH11-M3-RATIFICATION",
-        "b_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "intent": "completeness_verification",
         "shared_camel_or_path": [],
         "shared_identifiers": [
@@ -465,9 +465,9 @@
       },
       {
         "a": "TCK-20260424-PH11-M2-PROOF",
-        "a_text": "Phase 11 Milestone 2 Preserved Proof complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "a_text": "Phase 11 Milestone 2 Preserved Proof complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "b": "TCK-20260424-PH11-M4-GOVERNANCE",
-        "b_text": "Phase 11 Milestone 4 Governance Reconciliation complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b_text": "Phase 11 Milestone 4 Governance Reconciliation complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "intent": "completeness_verification",
         "shared_camel_or_path": [],
         "shared_identifiers": [
@@ -479,9 +479,9 @@
       },
       {
         "a": "TCK-20260424-PH11-M2-PROOF",
-        "a_text": "Phase 11 Milestone 2 Preserved Proof complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "a_text": "Phase 11 Milestone 2 Preserved Proof complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "b": "TCK-20260424-PH11-M5-VERDICT",
-        "b_text": "Phase 11 Milestone 5 Final Verdict complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b_text": "Phase 11 Milestone 5 Final Verdict complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "intent": "completeness_verification",
         "shared_camel_or_path": [],
         "shared_identifiers": [
@@ -493,9 +493,9 @@
       },
       {
         "a": "TCK-20260424-PH11-M2-PROOF",
-        "a_text": "Phase 11 Milestone 2 Preserved Proof complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "a_text": "Phase 11 Milestone 2 Preserved Proof complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "b": "TCK-20260424-PH11-M6-EXIT",
-        "b_text": "Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b_text": "Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "intent": "completeness_verification",
         "shared_camel_or_path": [],
         "shared_identifiers": [
@@ -507,9 +507,9 @@
       },
       {
         "a": "TCK-20260424-PH11-M3-RATIFICATION",
-        "a_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "a_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "b": "TCK-20260424-PH11-M4-GOVERNANCE",
-        "b_text": "Phase 11 Milestone 4 Governance Reconciliation complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b_text": "Phase 11 Milestone 4 Governance Reconciliation complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "intent": "completeness_verification",
         "shared_camel_or_path": [],
         "shared_identifiers": [
@@ -521,9 +521,9 @@
       },
       {
         "a": "TCK-20260424-PH11-M3-RATIFICATION",
-        "a_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "a_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "b": "TCK-20260424-PH11-M5-VERDICT",
-        "b_text": "Phase 11 Milestone 5 Final Verdict complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b_text": "Phase 11 Milestone 5 Final Verdict complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "intent": "completeness_verification",
         "shared_camel_or_path": [],
         "shared_identifiers": [
@@ -535,9 +535,9 @@
       },
       {
         "a": "TCK-20260424-PH11-M3-RATIFICATION",
-        "a_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "a_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "b": "TCK-20260424-PH11-M6-EXIT",
-        "b_text": "Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b_text": "Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED; agent-working/stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
         "intent": "completeness_verification",
         "shared_camel_or_path": [],
         "shared_identifiers": [

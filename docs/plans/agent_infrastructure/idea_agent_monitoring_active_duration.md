@@ -17,7 +17,7 @@ from it) is naive wall-clock: `end_ts - start_ts`, with no awareness of gaps whe
 session was paused (overnight break, quota exhaustion, human away) rather than actually working.
 This makes duration-based signals actively misleading, not just noisy.
 
-**Confirmed on real data**, not speculative — `agent-monitoring/events.jsonl` timestamps for the
+**Confirmed on real data**, not speculative — `agent-working/agent-monitoring/events.jsonl` timestamps for the
 28-day retro's top "Slow Runs" outliers:
 
 | run_id | reported total duration | single largest inter-event gap | gap as % of total |
@@ -92,7 +92,7 @@ both `generate_retro.py`'s Slow Runs/outliers sections and the dashboard's durat
 | `tools/agent-monitoring/generate_retro.py` — "Slow Runs" / "Duration outliers" sections | Primary consumer; report active/idle breakdown alongside raw duration instead of raw duration alone |
 | Agent-ops dashboard (`src/api/agent_ops_dashboard/`) | Secondary consumer if/where it surfaces run duration directly from `runs.jsonl` |
 | `docs/agent-monitoring/schema.md` | Should document `duration_s`'s known limitation (naive wall-clock, no gap-awareness) once this ships, mirroring how the doc already discloses "Token counts are not recorded" |
-| `agent-monitoring/retro/RETRO-*.md` historical reports | Not retroactively rewritten — but future reports should carry a visible note distinguishing active vs. idle time so a reader doesn't re-derive the SIMQ-DEPTH-SOCIAL-style misread by hand |
+| `agent-working/agent-monitoring/retro/RETRO-*.md` historical reports | Not retroactively rewritten — but future reports should carry a visible note distinguishing active vs. idle time so a reader doesn't re-derive the SIMQ-DEPTH-SOCIAL-style misread by hand |
 | [`idea_agent_monitoring_pause_resume_seq_collision.md`](../archive/agent_infrastructure/idea_agent_monitoring_pause_resume_seq_collision.md) (archived — shipped 2026-07-28 by `TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION`) | Sibling finding from the same investigation session — that idea covered `tool_call_count`/`cost_proxy_score` corruption from pause/resume `seq` collisions and is now fixed; this one covers wall-clock duration contamination from the same underlying pause/resume behavior and remains open. Independent bugs, independent fixes, but both touch resume handling. |
 
 ## Open Questions

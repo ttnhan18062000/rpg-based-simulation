@@ -123,5 +123,5 @@ human-reviewer call — not decided here.
   comparison.
 - `docs/plans/knowledge-gateway-mcp-proposal.md` §18, §20, §21 — the requirements this document
   and its siblings answer.
-- `staging_artifacts/TCK-20260818-KGMCP-POST-CAP-FIX-RECOMPARISON/` — this ticket's own
+- `agent-working/staging_artifacts/TCK-20260818-KGMCP-POST-CAP-FIX-RECOMPARISON/` — this ticket's own
   investigation/plan/test_plan.

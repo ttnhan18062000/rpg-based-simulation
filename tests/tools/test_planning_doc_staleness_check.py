@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import TICKETS
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "tools"))
@@ -60,7 +61,7 @@ def repo(tmp_path):
     (plans / "archive").mkdir()
     (plans / "agent_infrastructure" / "idea_agent_monitoring_active_duration.md").write_text(IDEA_DOC)
     (plans / "agent_infrastructure" / "ai_first_hardening_epics" / "standalone_items.md").write_text(STANDALONE)
-    done = tmp_path / "tickets" / "done"
+    done = tmp_path / TICKETS / "done"
     (done / "agent-monitoring-active-duration").mkdir(parents=True)
     _ticket(done / "agent-monitoring-active-duration", "TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT")
     _ticket(done, "TCK-20260904-WORKING-LOG-CSV-PARSER")

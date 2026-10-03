@@ -1,8 +1,8 @@
-"""Parser and approval-check for agent-orchestration/intentional-divergences.md.
+"""Parser and approval-check for agent-working/agent-orchestration/intentional-divergences.md.
 
 Distinct from docs/guidelines/intentional_divergences.md (the mechanics-bible log, out of scope
 for this ticket) — this module only ever reads
-`agent-orchestration/intentional-divergences.md`, never that other file. This module is read-only
+`agent-working/agent-orchestration/intentional-divergences.md`, never that other file. This module is read-only
 (`Path.read_text()` only).
 
 Entry format — one `##`-level markdown section per divergence, plain `Key: value` lines (no

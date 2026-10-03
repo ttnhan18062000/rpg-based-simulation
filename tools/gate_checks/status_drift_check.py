@@ -1,7 +1,7 @@
-r"""Detect stale `## Status` body text in `tickets/done/*.md` and lowercase `final_status` values
-in the `agent-monitoring/data/<week>/*runs.jsonl` corpus.
+r"""Detect stale `## Status` body text in `agent-working/tickets/done/*.md` and lowercase `final_status` values
+in the `agent-working/agent-monitoring/data/<week>/*runs.jsonl` corpus.
 
-Built for TCK-20260718-STATUS-DRIFT-REPAIR: 71 files in `tickets/done/` had a body `## Status`
+Built for TCK-20260718-STATUS-DRIFT-REPAIR: 71 files in `agent-working/tickets/done/` had a body `## Status`
 section reading something other than `DONE` (mostly `OPEN`/`INPROGRESS`) despite frontmatter
 already correctly showing `status: historical, phase: done` — predating `implement-ticket.js`'s
 current Finalize phase, which now reliably sets `## Status` to `DONE` on every close. 7 records in
@@ -57,9 +57,13 @@ import re
 import sys
 from pathlib import Path
 from typing import List
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
-DEFAULT_DONE_DIR = Path("tickets/done")
-DEFAULT_DATA_DIR = Path("agent-monitoring/data")
+DEFAULT_DONE_DIR = TICKETS / "done"
+DEFAULT_DATA_DIR = AGENT_MONITORING / "data"
 
 _TOOLS_DIR = Path(__file__).parent.parent
 _MONITORING_TOOLS_DIR = _TOOLS_DIR / "agent-monitoring"
@@ -106,7 +110,7 @@ EPIC_TIER_VALUES = {"EPIC_SCOPED"}
 
 
 def check_ticket_status_drift(done_dir: Path = DEFAULT_DONE_DIR) -> List[dict]:
-    """Flag `tickets/done/*.md` files whose body `## Status` value is not `DONE`.
+    """Flag `agent-working/tickets/done/*.md` files whose body `## Status` value is not `DONE`.
 
     Extracts via `_extract_status_value`, which tries `parse_body_section` first — the same
     function `ingest.py` uses for the dashboard's `workflow_status` field — then falls back to a
@@ -155,7 +159,7 @@ def check_runs_jsonl_final_status_drift(data_dir: Path = DEFAULT_DATA_DIR) -> Li
     design, not a parsing failure.
 
     TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: previously read a single hardcoded
-    `agent-monitoring/runs.jsonl` — a flat file that has not existed since
+    `agent-working/agent-monitoring/runs.jsonl` — a flat file that has not existed since
     TCK-20260902-MONITORING-SHARD-WRITE-PATH's sharding migration, confirmed by direct execution
     to crash with `FileNotFoundError` when invoked with no override (its only real wiring, via
     `make status-drift-check`). Now reads the real corpus-wide, multi-week, multi-identifier-shape

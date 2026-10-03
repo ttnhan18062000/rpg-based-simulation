@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Tolerant parser for tickets/working_log.csv.
+Tolerant parser for agent-working/tickets/working_log.csv.
 
 The file is manually/LLM-appended (no programmatic writer exists anywhere in the
 codebase), so a visible subset of historical rows carry unescaped commas or stray
@@ -25,7 +25,7 @@ Two independent, evidenced corruption classes are detected today:
      recovered only against a closed, evidence-only 3-string vocabulary; anything outside
      that vocabulary degrades to unrecoverable rather than being guessed.
 
-See staging_artifacts/TCK-20260904-WORKING-LOG-CSV-PARSER/investigation.md for the full
+See agent-working/staging_artifacts/TCK-20260904-WORKING-LOG-CSV-PARSER/investigation.md for the full
 evidence trail (exact line numbers, root causes, false-positive sweeps) behind both.
 """
 
@@ -43,10 +43,14 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from ticket_field_values import WORKFLOW_STATUS_VALUES  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
 # Two historical status-column values that appear as real rows in the live file but
 # predate WORKFLOW_STATUS_VALUES' canonicalization as a ticket-body enum (confirmed via
-# direct csv.reader tally against tickets/working_log.csv, 2026-09-06: AMENDED x2, BACKLOG x2).
+# direct csv.reader tally against agent-working/tickets/working_log.csv, 2026-09-06: AMENDED x2, BACKLOG x2).
 STATUS_VOCAB: FrozenSet[str] = WORKFLOW_STATUS_VALUES | {"AMENDED", "BACKLOG"}
 
 HEADER_FIELDS = ("timestamp", "ticket_id", "title", "status", "summary", "artifacts_path")
@@ -59,7 +63,7 @@ QUOTE_DESYNC_SUMMARY_FRAGMENTS = ("N/A (hotfix", "none (hotfix", "none (scope-on
 
 @dataclass
 class ParsedRow:
-    """One physical data row from tickets/working_log.csv, classified but never rewritten."""
+    """One physical data row from agent-working/tickets/working_log.csv, classified but never rewritten."""
 
     line_no: int
     raw_fields: list
@@ -134,7 +138,7 @@ def _classify_field_count_mismatch(line_no: int, raw_line: str, raw_fields: list
     the two irreducibly-ambiguous rows (1511, 3104 — a stray quote not immediately
     followed by the delimiter desyncs csv.reader's quote-tracking state badly enough that
     no rejoin can be trusted) from the 9 mechanically-recoverable rows. Empirically
-    verified against all 11 real rows (staging_artifacts/.../plan.md, Step 1) — do not
+    verified against all 11 real rows (agent-working/staging_artifacts/.../plan.md, Step 1) — do not
     substitute a hand-rolled quote-counting heuristic; two such heuristics were tried
     during planning and both misclassified at least one of the 11 real rows."""
     try:
@@ -257,7 +261,7 @@ def _classify_quote_desync(line_no: int, raw_fields: list) -> ParsedRow:
 
 
 def parse_working_log(path: Path) -> ParseResult:
-    """Round-trip parse tickets/working_log.csv (or any file of the same shape). Returns
+    """Round-trip parse agent-working/tickets/working_log.csv (or any file of the same shape). Returns
     exactly one ParsedRow per physical data row, in file order, never dropped or merged.
     Opens the file read-only; never writes to it."""
     rows = []
@@ -333,7 +337,7 @@ def parse_working_log(path: Path) -> ParseResult:
     )
 
 
-def parse_pending_working_log_shards(data_root: Path = Path("agent-monitoring/data")) -> list:
+def parse_pending_working_log_shards(data_root: Path = AGENT_MONITORING / "data") -> list:
     """Read-only: every row still staged in a `<batch-id>.working_log.jsonl` shard under
     `data_root`, not yet folded into the canonical CSV by
     `working_log_writer.consolidate_pending_rows()` (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-
@@ -359,7 +363,7 @@ def parse_pending_working_log_shards(data_root: Path = Path("agent-monitoring/da
 
 
 if __name__ == "__main__":
-    result = parse_working_log(Path("tickets/working_log.csv"))
+    result = parse_working_log(TICKETS / "working_log.csv")
     print(f"rows={len(result.rows)}")
     print(f"ambiguous_row_count={result.ambiguous_row_count}")
     print(f"quote_desync_count={result.quote_desync_count}")

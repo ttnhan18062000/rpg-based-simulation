@@ -20,7 +20,7 @@ Most of what a "codebase health observatory" needs already exists in some form i
 gap is wiring it together and adding two genuinely missing pieces, not building from scratch:
 `graphify-out/` already provides dependency-graph data (though its corpus mixes code, docs, and
 tickets rather than being pure code); a churn script is cheap to make permanent but must exclude
-known append-only bookkeeping files (`agent-monitoring/*.jsonl`, `tickets/working_log.csv`,
+known append-only bookkeeping files (`agent-working/agent-monitoring/*.jsonl`, `agent-working/tickets/working_log.csv`,
 `docs/REGISTRY.yaml`) or every report drowns in expected noise; and no mechanism persists metrics
 over time today.
 
@@ -32,7 +32,7 @@ over time today.
   (`TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`, 2026-08-19): built
   `tools/codebase_health_baseline.py` + `make codebase-health-baseline`, computing the LoC/churn/
   dependency table fresh from `git ls-files`/`git log`/the live filesystem on every run, with the
-  `agent-monitoring/*.jsonl`/`tickets/working_log.csv`/`docs/REGISTRY.yaml` churn exclusion
+  `agent-working/agent-monitoring/*.jsonl`/`agent-working/tickets/working_log.csv`/`docs/REGISTRY.yaml` churn exclusion
   implemented as a real git pathspec (not a post-hoc filter) and verified by a synthetic-noise
   fixture test. On-demand only, not CI-wired, matching the `status-drift-check`/
   `agent-monitoring-epic-staleness` precedent this epic's Problem section already cites. Extracted
@@ -73,12 +73,12 @@ over time today.
   worked example was updated to `engine/scenario_checkpoint.py`, the current real second
   dependent, in `tests/tools/test_code_health_impact.py`.
 - ~~Historical metric snapshots: an append-only file following the same pattern
-  `agent-monitoring/runs.jsonl` already uses, plus a multi-dimension scorecard (trend arrows, not
+  `agent-working/agent-monitoring/runs.jsonl` already uses, plus a multi-dimension scorecard (trend arrows, not
   a single aggregate score, per the source audit's own explicit guidance against turning this
   into a single number).~~ **Resolved** (`TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD`,
   2026-08-23): built `tools/codebase_health_snapshot.py` + two new on-demand Makefile targets,
   `codebase-health-snapshot` (appends one `build_report()` snapshot to the new append-only
-  `agent-monitoring/codebase_health_history.jsonl`, reusing `tools/agent-monitoring/writer.py::write_line`
+  `agent-working/agent-monitoring/codebase_health_history.jsonl`, reusing `tools/agent-monitoring/writer.py::write_line`
   rather than a plain unlocked append) and `codebase-health-scorecard` (reads the history file and
   renders a per-dimension trend view). A frozen `EXPECTED_SNAPSHOT_KEYS` allowlist plus a
   `snapshot_schema_version` field (`build_snapshot_record`) make any future `build_report()` shape
@@ -118,7 +118,7 @@ over time today.
   multiple dimensions instead.
 
 **(2026-08-19)** Epic G's boundary-test hardening is confirmed done
-(`tickets/done/TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC.md`) — the prerequisite that
+(`agent-working/tickets/done/TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC.md`) — the prerequisite that
 previously gated this epic's remaining scope is cleared.
 
 ## Acceptance signal for this epic (not yet broken into child tickets)

@@ -839,5 +839,5 @@ Resolved since this was written (kept here for the record, not as active questio
   - `src/systems/social_systems/{clan_lifecycle,guilds,contracts}.py`
   - `src/world/{displacement,boss,creature_territory,camp}.py`
   - `src/engine/{faction_decision,town_resolution}.py`
-- `tickets/todos/progression-starvation-chain/SEQUENCE.md`
-- `tickets/done/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION.md` (#219), `tickets/done/TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS.md` (#222), `tickets/todos/TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP.md`
+- `agent-working/tickets/todos/progression-starvation-chain/SEQUENCE.md`
+- `agent-working/tickets/done/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION.md` (#219), `agent-working/tickets/done/TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS.md` (#222), `agent-working/tickets/todos/TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP.md`

@@ -35,7 +35,7 @@ shard, which item 5 covers separately) carry `ts`/`start_ts: None` -- all June-e
 predating a fix to whatever writer omitted the field. Unusable for any time-windowed query but not
 retroactively reconstructable.
 
-**Item 5**: `agent-monitoring/data/unknown-week/` holds 34 rows total (5 runs, 28 events, 1 tool
+**Item 5**: `agent-working/agent-monitoring/data/unknown-week/` holds 34 rows total (5 runs, 28 events, 1 tool
 call) -- the shard `iso_week()`/week-sharding falls into when a record's `ts` can't be parsed into
 an ISO week at all. Directly related to item 4 (an unparseable `ts` is exactly what routes a
 record here), tracked separately since it is a distinct artifact (a whole shard directory, not a
@@ -64,6 +64,10 @@ for _dir in (str(_TOOLS_DIR), str(_MONITORING_TOOLS_DIR)):
         sys.path.insert(0, _dir)
 
 from generate_retro import _load_runs_and_events  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
 # Ratchet ceilings: the real corpus's own measured counts. May only decrease. Raising any of them
 # to paper over a newly-introduced instance defeats the point of this check.
@@ -89,8 +93,8 @@ MONITORING_START = "2026-06-07"
 # REGRESSION). Rows before this are frozen historical debt; rows on/after are live, zero-tolerance
 # coverage. Never move this backward to reclassify a live miss as historical debt.
 FREEZE_DATE = "2026-09-16"
-WORKING_LOG_PATH = _REPO_ROOT / "tickets" / "working_log.csv"
-DATA_DIR = _REPO_ROOT / "agent-monitoring" / "data"
+WORKING_LOG_PATH = _REPO_ROOT / TICKETS / "working_log.csv"
+DATA_DIR = _REPO_ROOT / AGENT_MONITORING / "data"
 
 
 def find_working_log_rows_missing_run_record(
@@ -145,7 +149,7 @@ def find_unusable_ts_records(runs: List[dict] = None, events: List[dict] = None)
 
 def count_unknown_week_rows(data_dir: Path = DATA_DIR) -> int:
     """Item 5: total row count across every `*.jsonl` file directly under
-    `agent-monitoring/data/unknown-week/`."""
+    `agent-working/agent-monitoring/data/unknown-week/`."""
     unknown_week_dir = data_dir / "unknown-week"
     if not unknown_week_dir.exists():
         return 0

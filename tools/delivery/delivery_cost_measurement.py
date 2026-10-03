@@ -15,7 +15,7 @@ this epic's plan):
    reading — the output is unmistakably labeled a working-tree snapshot.
 2. **A "closed" calendar week keeps growing.** Every report carries a snapshot caveat: any weekly
    total from this corpus is a snapshot as of the ref measured, not a final count, because every PR
-   merge stages `agent-monitoring/` and can append past-week-stamped rows long after that week
+   merge stages `agent-working/agent-monitoring/` and can append past-week-stamped rows long after that week
    "ends."
 
 **This module measures a baseline only — it never computes or presents an "after" number.** The
@@ -67,7 +67,7 @@ import bash_command_mix as bcm  # noqa: E402
 TICKET_ID = "TCK-20260924-DELIVERY-COST-MEASUREMENT"
 SNAPSHOT_CAVEAT = (
     "Snapshot, not a final count: a 'closed' calendar week keeps growing, because every PR merge "
-    "stages agent-monitoring/ and can append past-week-stamped rows long after that week ends."
+    "stages agent-working/agent-monitoring/ and can append past-week-stamped rows long after that week ends."
 )
 WORKING_TREE_SNAPSHOT_LABEL = (
     "measured from the local working tree (no --ref given) -- may be behind origin/main and is "
@@ -361,7 +361,7 @@ def build_report(
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
         description="Report gh-calls-per-PR and subject traceability over a week range. "
-        "Read-only, advisory: never opens agent-monitoring/data/ for writing."
+        "Read-only, advisory: never opens agent-working/agent-monitoring/data/ for writing."
     )
     parser.add_argument("--ref", default=None, help="Git ref/SHA to measure from (recommended for any before/after datapoint).")
     parser.add_argument("--since-week", default=None)

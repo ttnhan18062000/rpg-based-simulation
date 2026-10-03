@@ -22,11 +22,12 @@ import re
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import TICKETS
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _CONTRACT_PATH = _REPO_ROOT / "docs" / "engine" / "contracts" / "context_packet_contract.md"
 _EPIC_TICKET_PATH = (
-    _REPO_ROOT / "tickets" / "backlogs" / "TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md"
+    _REPO_ROOT / TICKETS / "backlogs" / "TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md"
 )
 
 # Recorded at the time this ticket authored §7 — TCK-20260802-EXACT-LOOKUP-CONVENTION made zero
@@ -52,7 +53,7 @@ _EPIC_TICKET_PATH = (
 # Implementation start (2026-08-02).
 _EXPECTED_TOOLS_HASHES = {
     "tools/hybrid_retrieval.py": (
-        "da65a5d08c14fc562110786f84d810990b7ecf2d907b6661e00692633489b71e"
+        "706b9b4b6a4b01ec08e46d6f9b485087cf586bd98e2d141537495dba9a8b761d"
     ),
     "tools/context_packet_assembler.py": (
         "003565a6757a929b9560285364b0a6b58569acba783a806a4a56add1cd31fcde"

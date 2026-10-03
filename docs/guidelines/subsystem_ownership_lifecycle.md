@@ -48,7 +48,7 @@ stated explicitly rather than left implicit:
 - **AST import-boundary enforcement** — excluded — ownership is a matter for whoever maintains the
   already-shipped `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`'s code, not re-assigned here;
   this subsystem predates the AI-First Hardening batch entirely and was only discovered
-  already-shipped during this batch's own investigation pass, mirroring the `agent-monitoring/data/`
+  already-shipped during this batch's own investigation pass, mirroring the `agent-working/agent-monitoring/data/`
   weekly-shard layout's own exclusion precedent in `telemetry_retention_epic.md`'s M3 section.
 
 ## Related Docs (disambiguation, cross-link only)

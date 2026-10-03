@@ -1,12 +1,12 @@
 """Typed pilot-request manifest + loader (TCK-20260721-LIVE-CODEX-PILOT-GUARDRAILS, Step 1).
 
-Storage convention: one YAML file per candidate at pilot_requests/<ticket_id>.yaml — a new,
-dedicated top-level directory, not stored_artifacts/{ticket_id}/ (that is the *pilot* ticket's own
-build artifacts, migrated only after *that* ticket closes) or staging_artifacts/{ticket_id}/
+Storage convention: one YAML file per candidate at agent-working/pilot_requests/<ticket_id>.yaml — a new,
+dedicated top-level directory, not agent-working/stored_artifacts/{ticket_id}/ (that is the *pilot* ticket's own
+build artifacts, migrated only after *that* ticket closes) or agent-working/staging_artifacts/{ticket_id}/
 (this ticket's own in-flight artifacts). A pilot request is a human's standing authorization
 record about a candidate ticket, authored before pilot selection ever runs, independent of that
 ticket's own phase — it needs its own stable location, lifecycle, and inspection visibility
-(`ls pilot_requests/`). See pilot_requests/README.md for the schema.
+(`ls agent-working/pilot_requests/`). See agent-working/pilot_requests/README.md for the schema.
 
 Deliberately does not extend the universal ticket template/frontmatter schema (CLAUDE.md's Ticket
 Format, tools/ticket_field_values.py) — that is a repo-wide change affecting every ticket and is

@@ -4,11 +4,11 @@
 Reuses `tools.gate_checks.workflow_meta_conformance.extract_meta_phases` directly — no
 reimplementation of its bracket-depth-scan/regex technique. Runs `render_claude_adapter()` against
 a `tmp_path` target (not the committed file), so this test is self-contained and does not depend
-on the committed `agent-orchestration/rendered/claude-adapter.yaml` being fresh — freshness is
+on the committed `agent-working/agent-orchestration/rendered/claude-adapter.yaml` being fresh — freshness is
 Step 8's (test_claude_containment.py's) concern.
 
 Any mismatch is checked against `divergence_log.is_approved()` before the test hard-fails — see
-`agent-orchestration/intentional-divergences.md` for the human-approval mechanism. As of this
+`agent-working/agent-orchestration/intentional-divergences.md` for the human-approval mechanism. As of this
 ticket's own build, phase order matches exactly, so nothing needs approval.
 """
 from __future__ import annotations
@@ -20,10 +20,11 @@ import yaml
 from tools.agent_orchestration_claude_adapter.divergence_log import is_approved, load_divergences
 from tools.agent_orchestration_claude_adapter.generator import render_claude_adapter
 from tools.gate_checks.workflow_meta_conformance import extract_meta_phases
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _WORKFLOW_JS_PATH = _REPO_ROOT / ".claude" / "workflows" / "implement-ticket.js"
-_DIVERGENCE_LOG_PATH = _REPO_ROOT / "agent-orchestration" / "intentional-divergences.md"
+_DIVERGENCE_LOG_PATH = _REPO_ROOT / AGENT_ORCHESTRATION / "intentional-divergences.md"
 
 
 def test_phase_order_conformance_byte_identical_to_live_meta_phases(tmp_path):

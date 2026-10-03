@@ -18,7 +18,7 @@ _MONITORING_SOURCES = ("runs.jsonl", "events.jsonl", "tools.jsonl")
 
 def assert_no_codex_provider_writes(agent_monitoring_dir: Path, provider_value: str = "codex") -> None:
     """Reads every file making up all 3 monitoring sources (a single legacy <source>.jsonl, or
-    the weekly agent-monitoring/data/<week>/<source>.jsonl shards) and raises
+    the weekly agent-working/agent-monitoring/data/<week>/<source>.jsonl shards) and raises
     ContainmentViolationError if any record's 'provider' field equals provider_value. Read-only —
     never writes."""
     paths: list[Path] = []

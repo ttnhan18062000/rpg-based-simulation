@@ -58,7 +58,7 @@ architecture's own correctness.
   tokens 1.05x-1.98x heavier.
 - **Phase 5** (`TCK-20260816-KGMCP-P5-REPEATED-DEMAND-MEASUREMENT`): real repeated-question demand
   in this repository's own history is real but small and mostly non-literal — 17/521 conservative
-  pairs in `agent-monitoring/events.jsonl` (3.3%), 372/1411 in `tickets/working_log.csv` (26.4%,
+  pairs in `agent-working/agent-monitoring/events.jsonl` (3.3%), 372/1411 in `agent-working/tickets/working_log.csv` (26.4%,
   mostly incremental investigation not literal repeats); commonly summarized as a 5.8%-18.5% range
   depending on which conservative-pair definition is used.
 - **Efficiency-remediation epic** (`TCK-20260818-KGMCP-EFFICIENCY-REMEDIATION-EPIC`): its own net,
@@ -88,7 +88,7 @@ brought back to the repository owner as new evidence Option A's own reviewer nev
 - **Usage gap widened, not narrowed.** Exactly 1 real `knowledge_gateway__knowledge_context`
   content-retrieval call exists in the project's entire recorded monitoring history (2026-08-17,
   predating this ratification) against 3,375 real calls to the direct `search_docs` tool it sits
-  alongside (re-counted live against `agent-monitoring/data/*/tools.jsonl` at re-ratification
+  alongside (re-counted live against `agent-working/agent-monitoring/data/*/tools.jsonl` at re-ratification
   time — it was 2,259 when the epic that re-opened this question was first scoped days earlier).
 - **The `done-checker`/`test-scoper` tool-allowlist grant was an accident**, not a deliberate
   design choice — sourced from `TCK-20260904-AGENT-TOOLS-FRONTMATTER-WAVE`'s historical-usage-

@@ -2,7 +2,7 @@
 Discover phases.
 
 Built for TCK-20260904-EPIC-SKIP-BLOCKED-TICKETS: implement-epic.js's Discover phase determined
-"already done" purely by checking `tickets/done/` for a matching file, with no equivalent read of
+"already done" purely by checking `agent-working/tickets/done/` for a matching file, with no equivalent read of
 a candidate ticket's own `## Status` body field -- a `BLOCKED` ticket left in a batch would be
 attempted in normal sequence instead of being excluded and reported separately. This repo already
 shipped the identical fix for a sibling tool
@@ -49,7 +49,7 @@ def read_ticket_status(ticket_path: str | Path) -> str:
 def find_ticket_path(ticket_id: str, search_roots: list[str]) -> str | None:
     """Resolves a ticket_id to its real file path, checking each root directly
     (`{root}/{ticket_id}.md`) and one level of subdirectories (`{root}/*/{ticket_id}.md}`, for
-    folder-batch subfolders like `tickets/todos/some-batch/`). Returns None if not found under any
+    folder-batch subfolders like `agent-working/tickets/todos/some-batch/`). Returns None if not found under any
     root -- the caller treats an unresolved ticket_id as not-blocked (status "") rather than
     erroring, since a missing file is a separate, pre-existing concern this module doesn't own."""
     for root in search_roots:
@@ -64,8 +64,8 @@ def find_ticket_path(ticket_id: str, search_roots: list[str]) -> str | None:
 
 def find_blocked_ticket_ids(ticket_ids: list[str], search_roots: list[str]) -> list[str]:
     """Given a candidate `ticket_ids` list and the directories to search for each one's real file
-    (folder mode: just that one folder; epic_id mode: `tickets/inprogress`, `tickets/todos`,
-    `tickets/done`, matching Discover's own existing epic-ticket search precedent), returns the
+    (folder mode: just that one folder; epic_id mode: `agent-working/tickets/inprogress`, `agent-working/tickets/todos`,
+    `agent-working/tickets/done`, matching Discover's own existing epic-ticket search precedent), returns the
     subset whose `## Status` reads `BLOCKED`. Order matches `ticket_ids`' own order."""
     blocked = []
     for ticket_id in ticket_ids:

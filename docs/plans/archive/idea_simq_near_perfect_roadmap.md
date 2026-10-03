@@ -179,7 +179,7 @@ current source, including both explicit safety invariants (re-confirmed by direc
 `feed.py::build_feed_from_env` and `quality_hub.py::QualityHub.on_envelope`, plus a live passing
 test run — not a pointer to the old MVP parity entries). 1 genuine gap surfaced (Traceability item
 3, no end-to-end §9 integration test) and filed as a linked follow-up:
-`tickets/todos/TCK-20260711-SIMQ-TRACEABILITY-PATH-INTEGRATION-TEST.md`. A stale parity-ledger
+`agent-working/tickets/todos/TCK-20260711-SIMQ-TRACEABILITY-PATH-INTEGRATION-TEST.md`. A stale parity-ledger
 citation (`infrastructure.yaml` INFRA-233) was also found and corrected in the same session.
 
 ---
@@ -358,12 +358,12 @@ threads above.
   the "current state snapshot" above
 - `docs/plans/audit_fix_plan.md` P2-O, P2-P, P2-Q — the three threads with existing backlog entries
   (added 2026-07-09, same session this doc's underlying investigation happened in)
-- `stored_artifacts/TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE/investigation.md`,
-  `stored_artifacts/TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE/investigation.md` —
+- `agent-working/stored_artifacts/TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE/investigation.md`,
+  `agent-working/stored_artifacts/TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE/investigation.md` —
   primary evidence sources for Threads 1, 4, and 5
 - `docs/simulation_quality/corpus_tier_taxonomy.md`, `docs/simulation_quality/eval_matrix_results.md`
   — evidence base for Thread 3
-- `tickets/done/simq-deep-coverage/TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC.md` — most recent epic
+- `agent-working/tickets/done/simq-deep-coverage/TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC.md` — most recent epic
   closure; its own Completion Summary already flags the two population-collapse tickets as
   byproduct-discovered work, the same discovery pattern this doc generalizes from
 

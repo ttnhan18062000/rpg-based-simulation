@@ -7,6 +7,7 @@ own test ever invoked it.
 """
 import sys
 from pathlib import Path
+from tools.agent_working_paths import TICKETS
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _TOOLS_DIR = _REPO_ROOT / "tools"
@@ -22,7 +23,7 @@ from working_log_duplicate_check import (  # noqa: E402
 
 
 def _write_log(tmp_path: Path, rows: list) -> tuple:
-    tickets_dir = tmp_path / "tickets"
+    tickets_dir = tmp_path / TICKETS
     done_dir = tickets_dir / "done"
     done_dir.mkdir(parents=True)
     log = tickets_dir / "working_log.csv"

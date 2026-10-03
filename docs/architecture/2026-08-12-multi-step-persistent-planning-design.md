@@ -23,7 +23,7 @@ proposal and explicitly scoped it out of that document (lines 449-453, read dire
 This document is that conversation. It picks up after both prerequisite tickets from the
 `adventure-cognition-merge` epic — `TCK-20260811-ADVENTURE-GOAL-SCORER` and
 `TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION` — landed and stabilized, per
-`tickets/todos/adventure-cognition-merge/SEQUENCE.md:17`'s own recommendation to wait for exactly
+`agent-working/tickets/todos/adventure-cognition-merge/SEQUENCE.md:17`'s own recommendation to wait for exactly
 that. Every claim below about the current single-slot arbiter (`evaluate_project_switch()`,
 `evaluate_strategic_intent()`) reflects the post-epic state of `src/systems/strategic_systems/
 intelligence.py`, not the pre-epic behavior those two tickets replaced.
@@ -419,7 +419,7 @@ by construction.
 - **Related Docs**: this design doc, `docs/mechanics/04_strategic_cognition.md`,
   `docs/parity_ledger/strategic_cognition.yaml`.
 
-The follow-up ticket has been filed: `tickets/todos/TCK-20260812-COMMITTED-INTENTION-SEQUENCE.md`,
+The follow-up ticket has been filed: `agent-working/tickets/todos/TCK-20260812-COMMITTED-INTENTION-SEQUENCE.md`,
 using the stub above verbatim as its scope.
 
 > **Post-landing note (2026-08-13, `TCK-20260812-COMMITTED-INTENTION-SEQUENCE`):** the follow-up

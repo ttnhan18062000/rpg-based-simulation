@@ -3202,7 +3202,7 @@
     \ hostility exists between them \u2014 this is the intended \"encounter variety\"\
     \ outcome, not a regression. Conversely, forest_wardens<->merchant_league and\
     \ neutral->town_council gain Friendly-Fire protection (legal -> illegal) as newly-declared\
-    \ non-hostile allies. Full per-pair delta table (both consumers) is in tickets/done/TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS.md's\
+    \ non-hostile allies. Full per-pair delta table (both consumers) is in agent-working/tickets/done/TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS.md's\
     \ Implementation Notes.\n"
   support_boundary: null
 - id: COMB-295
@@ -4234,7 +4234,7 @@
     new_com.readiness_speed)). Unit/regression evidence is strong (formula direction+exact-value
     asserted, backward-compat asserted, PH8 apply-path drop-prevention asserted --
     see test_path). Corpus validation was attempted per plan Step 6 (hand-orchestrated
-    pre/post-code MetamorphicRuleEngine.evaluate_rules() check, staging_artifacts/TCK-20260831-READINESS-SPEED-FORMULA/corpus_validation.py,
+    pre/post-code MetamorphicRuleEngine.evaluate_rules() check, agent-working/staging_artifacts/TCK-20260831-READINESS-SPEED-FORMULA/corpus_validation.py,
     monotonic_non_increasing on elder_window_damage_rate = count(combat_damage, tick>=7000)/2500,
     9500 ticks, 3 seeds, observability.mode pinned to STANDARD/NORMAL, confirmed inline)
     but produced a degenerate baseline=0.0/compared=0.0 result. Per the escalation

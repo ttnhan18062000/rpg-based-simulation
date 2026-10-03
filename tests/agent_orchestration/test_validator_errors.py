@@ -14,13 +14,14 @@ import yaml
 
 from agent_orchestration.errors import ContractValidationError
 from agent_orchestration.loader import load_contract
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
-_REAL_CONTRACT_DIR = _REPO_ROOT / "agent-orchestration"
+_REAL_CONTRACT_DIR = _REPO_ROOT / AGENT_ORCHESTRATION
 
 
 def _copy_contract_to(tmp_path: Path) -> Path:
-    dest = tmp_path / "agent-orchestration"
+    dest = tmp_path / AGENT_ORCHESTRATION
     shutil.copytree(_REAL_CONTRACT_DIR, dest)
     return dest
 

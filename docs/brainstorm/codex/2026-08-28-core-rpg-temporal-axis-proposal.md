@@ -948,7 +948,7 @@ The authoritative [World Evolution Mechanics](../../mechanics/05_world_evolution
 
 Required direction: choose one calendar authority and express feature timing through named units or centralized duration data. Existing raw constants must be classified before conversion; their current gameplay behavior should not automatically be interpreted as intended fictional duration.
 
-**Verified, 2026-08-29** (`tickets/done/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY.md`): the real count is **four** incompatible tick conventions, not two — `src/world/raid.py`'s `TICKS_PER_DAY=100` and a previously-unnamed `src/domains/demographics/cohort.py`'s `COHORT_INTERVAL=200` cycle, alongside the Bible's 2,400 ticks/day. Decided: the World Evolution Bible's 2,400 ticks/day (36s/tick) is the sole calendar authority; the raid and cohort constants are named sub-cadences under it, not rival calendars. Not yet implemented — awaits a dedicated migration ticket, most likely under M3.
+**Verified, 2026-08-29** (`agent-working/tickets/done/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY.md`): the real count is **four** incompatible tick conventions, not two — `src/world/raid.py`'s `TICKS_PER_DAY=100` and a previously-unnamed `src/domains/demographics/cohort.py`'s `COHORT_INTERVAL=200` cycle, alongside the Bible's 2,400 ticks/day. Decided: the World Evolution Bible's 2,400 ticks/day (36s/tick) is the sole calendar authority; the raid and cohort constants are named sub-cadences under it, not rival calendars. Not yet implemented — awaits a dedicated migration ticket, most likely under M3.
 
 ### 9.2 Aging conflict
 

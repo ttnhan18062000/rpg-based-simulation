@@ -1,28 +1,36 @@
 """Advisory check: a path a closing ticket cites must be in git, not silently gitignored
 (TCK-20260930-CITED-EVIDENCE-PATH-GITIGNORE-CHECK).
 
-`.gitignore` drops `stored_artifacts/**/*.json` (only `manifest.json` is excepted), so evidence
+`.gitignore` drops `agent-working/stored_artifacts/**/*.json` (only `manifest.json` is excepted), so evidence
 written as `.json` passes locally and is missing from a clean checkout: PR #270's first CI run failed
 that way. Report-only, in the style of `proof_plan_advisory.py`: `check_cited_evidence_paths()`
 returns `(status, evidence)` with status `OK` / `WARN` / `NA`, never raises, never blocks.
 
-Citations are the backticked tokens of the ticket body that start with `stored_artifacts/`,
-`staging_artifacts/` or `tickets/` and end in a file extension. Wildcards and `{placeholder}` forms
+Citations are the backticked tokens of the ticket body that start with `agent-working/stored_artifacts/`,
+`agent-working/staging_artifacts/` or `agent-working/tickets/` and end in a file extension. Wildcards and `{placeholder}` forms
 are skipped. A path written in plain prose or a markdown link is never checked. A cited path that does not exist on disk is skipped (a ticket cites its own
-`tickets/inprogress/` path, which is skipped outright, and `staging_artifacts/` paths that migrate
-to `stored_artifacts/` at close); a `staging_artifacts/X` citation is checked at `stored_artifacts/X` once migrated.
+`agent-working/tickets/inprogress/` path, which is skipped outright, and `agent-working/staging_artifacts/` paths that migrate
+to `agent-working/stored_artifacts/` at close); a `agent-working/staging_artifacts/X` citation is checked at `agent-working/stored_artifacts/X` once migrated.
 """
 
 import re
 import subprocess
 from pathlib import Path
+import sys
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STAGING_ARTIFACTS, STORED_ARTIFACTS, TICKETS, posix  # noqa: E402
 
-_PREFIXES = ("stored_artifacts/", "staging_artifacts/", "tickets/")
+_TICKETS_PREFIX = posix(TICKETS) + "/"
+_STAGING_PREFIX = posix(STAGING_ARTIFACTS) + "/"
+_STORED_PREFIX = posix(STORED_ARTIFACTS) + "/"
+_PREFIXES = (_STORED_PREFIX, _STAGING_PREFIX, _TICKETS_PREFIX)
 _TICKS = re.compile(r"`([^`\n]+)`")
 
 
 def _ticket_text(ticket_id: str, root: Path) -> str | None:
-    tickets = root / "tickets"
+    tickets = root / TICKETS
     candidates = [tickets / "inprogress" / f"{ticket_id}.md", *sorted((tickets / "done").rglob(f"{ticket_id}.md"))]
     for path in candidates:
         try:
@@ -48,8 +56,8 @@ def cited_paths(text: str) -> list[str]:
 def _resolve_on_disk(rel: str, root: Path) -> str | None:
     if (root / rel).is_file():
         return rel
-    if rel.startswith("staging_artifacts/"):
-        migrated = "stored_artifacts/" + rel[len("staging_artifacts/"):]
+    if rel.startswith(_STAGING_PREFIX):
+        migrated = _STORED_PREFIX + rel[len(_STAGING_PREFIX):]
         if (root / migrated).is_file():
             return migrated
     return None
@@ -67,7 +75,7 @@ def check_cited_evidence_paths(ticket_id: str, tier: str = "", root: Path = Path
         if text is None:
             return ("NA", f"no ticket file found for {ticket_id}")
         own = f"{ticket_id}.md"
-        cited = [c for c in cited_paths(text) if not (c.startswith("tickets/") and c.endswith("/" + own))]
+        cited = [c for c in cited_paths(text) if not (c.startswith(_TICKETS_PREFIX) and c.endswith("/" + own))]
         paths = [p for p in (_resolve_on_disk(c, root) for c in cited) if p]
         if not paths:
             return ("NA", "no cited evidence path exists on disk")

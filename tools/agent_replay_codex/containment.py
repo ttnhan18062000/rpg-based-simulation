@@ -8,7 +8,7 @@ it at a disposable tmp_path git repo instead of the real one.
 
 `snapshot_monitoring_lines`/`assert_monitoring_prefix_preserved` are thin wrappers around
 tools/agent-monitoring/manifest.py's existing `capture_lines`/`assert_prefix_preserved` — imported
-and reused unmodified, not reimplemented, for the narrower agent-monitoring/data/*.jsonl-only
+and reused unmodified, not reimplemented, for the narrower agent-working/agent-monitoring/data/*.jsonl-only
 append-only check.
 """
 from __future__ import annotations
@@ -20,10 +20,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .errors import ContainmentViolationError
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix  # noqa: E402
 
 _WATCHED_GIT_PATHSPECS = [
-    "tickets/",
-    "agent-monitoring/data/",
+    f"{posix(TICKETS)}/",
+    f"{posix(AGENT_MONITORING)}/data/",
 ]
 # TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: the three flat filenames this list previously
 # named have not existed since TCK-20260902-MONITORING-SHARD-WRITE-PATH's sharding migration --
@@ -52,8 +53,8 @@ def _porcelain_snapshot(repo_root: Path) -> str:
 
 
 def _watched_files(repo_root: Path) -> list[Path]:
-    files = [f for f in sorted((repo_root / "tickets").rglob("*")) if f.is_file()]
-    files += sorted((repo_root / "agent-monitoring" / "data").rglob("*.jsonl"))
+    files = [f for f in sorted((repo_root / TICKETS).rglob("*")) if f.is_file()]
+    files += sorted((repo_root / AGENT_MONITORING / "data").rglob("*.jsonl"))
     return files
 
 
@@ -78,15 +79,15 @@ def assert_no_diff(pre: ContainmentSnapshot, post: ContainmentSnapshot) -> None:
     if pre.porcelain == "":
         if post.porcelain != "":
             raise ContainmentViolationError(
-                "containment violation: tickets/ or agent-monitoring/data/ was clean before "
+                "containment violation: agent-working/tickets/ or agent-working/agent-monitoring/data/ was clean before "
                 f"and dirty after: {post.porcelain!r}"
             )
         return
 
     if pre.content_hash != post.content_hash:
         raise ContainmentViolationError(
-            "containment violation: content of one or more watched files under tickets/ or "
-            "agent-monitoring/data/ changed (pre-existing dirty state's content hash differs "
+            "containment violation: content of one or more watched files under agent-working/tickets/ or "
+            "agent-working/agent-monitoring/data/ changed (pre-existing dirty state's content hash differs "
             "before vs. after)"
         )
 

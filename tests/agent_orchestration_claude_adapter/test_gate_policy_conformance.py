@@ -1,5 +1,5 @@
 """Gate-policy conformance test: LIVE `.claude/workflows/implement-ticket.js` extraction vs.
-`agent-orchestration/gate-policy.yaml` contract data
+`agent-working/agent-orchestration/gate-policy.yaml` contract data
 (TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST, AC #1).
 
 Mirrors `test_terminal_status_conformance.py`'s exact structure: diffs live -> contract (never the
@@ -21,10 +21,11 @@ from tools.agent_orchestration.loader import (
 from tools.agent_orchestration_claude_adapter.divergence_log import is_approved, load_divergences
 from tools.agent_orchestration_claude_adapter.gate_policy_extractor import extract_gate_policy
 from tools.gate_checks.workflow_meta_conformance import extract_meta_phases
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _WORKFLOW_JS_PATH = _REPO_ROOT / ".claude" / "workflows" / "implement-ticket.js"
-_DIVERGENCE_LOG_PATH = _REPO_ROOT / "agent-orchestration" / "intentional-divergences.md"
+_DIVERGENCE_LOG_PATH = _REPO_ROOT / AGENT_ORCHESTRATION / "intentional-divergences.md"
 
 
 def _gate_triples(gates: list[dict]) -> set[tuple[str, str, tuple[str, ...]]]:

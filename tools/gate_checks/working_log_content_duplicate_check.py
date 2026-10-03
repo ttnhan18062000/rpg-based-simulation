@@ -1,5 +1,5 @@
 """Ratchet-based content check for duplicate `(ticket_id, title)` rows in
-`tickets/working_log.csv` (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 6).
+`agent-working/tickets/working_log.csv` (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 6).
 
 **The defect this catches**: `tools/agent-monitoring/record_hand_orchestrated_closure.py`
 internally calls `append_working_log_row()` (`TCK-20260912-WORKING-LOG-APPEND-HELPER`'s
@@ -47,8 +47,12 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from working_log_parser import parse_working_log  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS  # noqa: E402
 
-DEFAULT_LOG_PATH = Path("tickets/working_log.csv")
+DEFAULT_LOG_PATH = TICKETS / "working_log.csv"
 
 # Ratchet ceiling: the real corpus's own duplicate-(ticket_id, title)-pair count as of 2026-09-14.
 # May only decrease. Raising it to paper over a newly-introduced duplicate defeats the entire

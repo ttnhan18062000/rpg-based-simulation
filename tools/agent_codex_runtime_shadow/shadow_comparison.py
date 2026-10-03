@@ -3,7 +3,7 @@ hatch, for tools/agent_codex_runtime_shadow/.
 
 `ReplayOutcome` (tools/agent_replay/runner.py) stays a 2-field dataclass — `ShadowComparisonResult`
 is the new, additive comparison type this ticket introduces rather than extending that shared
-type. Compares on exactly the 4 axes `agent-orchestration/intentional-divergences.md`'s own
+type. Compares on exactly the 4 axes `agent-working/agent-orchestration/intentional-divergences.md`'s own
 `## Entry Format` section documents (`terminal_status`, `phase_order`, `gate_policy`,
 `artifact_requirements`) — not the predecessor's undocumented `"codex_parity"` catch-all.
 

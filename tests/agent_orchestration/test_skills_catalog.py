@@ -1,4 +1,4 @@
-"""Tests for agent-orchestration/skills.yaml (TCK-20260721-ORCHESTRATION-CONTRACT-CORE).
+"""Tests for agent-working/agent-orchestration/skills.yaml (TCK-20260721-ORCHESTRATION-CONTRACT-CORE).
 
 Verifies the skill catalog validates, has stable/unique/identifier-safe ids traceable to
 .claude/skills/*/SKILL.md directories, and that its schema stays structurally distinct from
@@ -15,9 +15,10 @@ import yaml
 
 from agent_orchestration.errors import ContractValidationError
 from agent_orchestration.loader import load_contract
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
-_SKILLS_PATH = _REPO_ROOT / "agent-orchestration" / "skills.yaml"
+_SKILLS_PATH = _REPO_ROOT / AGENT_ORCHESTRATION / "skills.yaml"
 
 _ROLE_ONLY_FIELDS = {"role_version", "role_id", "phases", "has_agent_file", "inline_prompt_exception", "obligations", "gates"}
 
@@ -49,8 +50,8 @@ _FOUR_CONFIRMED_SKILLS_COMPANION_ASSETS = {
 
 
 def _copy_contract_to(tmp_path: Path) -> Path:
-    dest = tmp_path / "agent-orchestration"
-    shutil.copytree(_REPO_ROOT / "agent-orchestration", dest)
+    dest = tmp_path / AGENT_ORCHESTRATION
+    shutil.copytree(_REPO_ROOT / AGENT_ORCHESTRATION, dest)
     return dest
 
 

@@ -49,7 +49,7 @@ misattribution shape already caught once this session (the `trauma` incident, `d
 mechanism_claims_as_tests_initiative.md` §3.2).
 
 The original 2026-09-16 investigator's own working notes (whatever code they actually read) were
-not found anywhere in `stored_artifacts/` — there is no trail to recover what "code read confirms"
+not found anywhere in `agent-working/stored_artifacts/` — there is no trail to recover what "code read confirms"
 was actually pointing at.
 
 ## Scope

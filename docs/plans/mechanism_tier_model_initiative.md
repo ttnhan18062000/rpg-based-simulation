@@ -217,7 +217,7 @@ and is done — node boundaries are no longer accidental. `TCK-20260917-MECHANIS
 the derived-tier design it unblocked, is closed as superseded by the feasibility investigation's own
 "do not build" finding.
 
-**Current, under `TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP`** (`tickets/todos/mechanism-system-membership/SEQUENCE.md`):
+**Current, under `TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP`** (`agent-working/tickets/todos/mechanism-system-membership/SEQUENCE.md`):
 
 1. **`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION`** — first, no dependencies. Feasibility
    isn't the question this time (a declared-by-intent set is sensible by construction); the question
@@ -317,5 +317,5 @@ this was already true and stays true.
 - `TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP`,
   `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION`,
   `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION`
-  (`tickets/todos/mechanism-system-membership/`) — the current, live implementation detail for the
+  (`agent-working/tickets/todos/mechanism-system-membership/`) — the current, live implementation detail for the
   revived tier

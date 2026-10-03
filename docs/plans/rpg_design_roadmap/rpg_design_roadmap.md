@@ -29,7 +29,7 @@ before them actually ship.
 (a new temporal-axis dimension, added beside the existing spatial/containment model — see "Temporal axis"
 below). Plan-owner decisions made in this pass: Idea 66 promoted with a narrow gate; M3's Marriage decoupled
 from Reproduction; M6's Idea 39 stays one contract; `CultureDeriver`/`CulturalBiasApplicator` activation is
-owned by M4. M1's 21-ticket implementation batch (already in flight under `tickets/todos/m1-quick-wins/`)
+owned by M4. M1's 21-ticket implementation batch (already in flight under `agent-working/tickets/todos/m1-quick-wins/`)
 was deliberately left untouched by this review — see M1's section below.
 
 ## Source of truth
@@ -53,8 +53,8 @@ Each milestone epic below cites specific idea numbers; look them up in the atlas
 ### M1 — Quick Wins & Housekeeping (DONE)
 
 **Tracking**: no separate `TCK-...-EPIC-RPG-M1-QUICK-WINS` ticket was created — the batch is tracked
-directly via the ticket folder `tickets/todos/m1-quick-wins/` (`SEQUENCE.md` sets implementation order),
-draining into `tickets/done/` one ticket at a time as each clears its own full standard-tier pipeline
+directly via the ticket folder `agent-working/tickets/todos/m1-quick-wins/` (`SEQUENCE.md` sets implementation order),
+draining into `agent-working/tickets/done/` one ticket at a time as each clears its own full standard-tier pipeline
 (`docs/plans/rpg_design_roadmap/rpg_m1_quick_wins_epic.md` remains the scope source, 20 ideas / 21
 tickets, and now also carries the full Implementation Summary). All work landed on a single branch,
 `m1-quick-wins`, one commit per ticket, PR'd as
@@ -62,14 +62,14 @@ tickets, and now also carries the full Implementation Summary). All work landed 
 2026-08-31; merge is a human call, not yet landed.
 
 <!-- IMPLEMENT-EPIC-STATUS:BEGIN -->
-**Live progress** (auto-updated by implement-epic, last run: 2026-08-29T07:48:23Z): 22/22 tickets done, 0 remaining. Tracking: m1-quick-wins batch COMPLETE -- folder archived to tickets/done/m1-quick-wins/ (SEQUENCE.md preserved).
+**Live progress** (auto-updated by implement-epic, last run: 2026-08-29T07:48:23Z): 22/22 tickets done, 0 remaining. Tracking: m1-quick-wins batch COMPLETE -- folder archived to agent-working/tickets/done/m1-quick-wins/ (SEQUENCE.md preserved).
 <!-- IMPLEMENT-EPIC-STATUS:END -->
 
-`tickets/working_log.csv`'s bottom rows have the one-paragraph summary of each ticket actually landed,
+`agent-working/tickets/working_log.csv`'s bottom rows have the one-paragraph summary of each ticket actually landed,
 in order.
 
 No dependencies on anything else in this roadmap, and nothing in M1 blocks on anything else. **This batch
-completed all 22 tickets** (2026-08-29/30, see `tickets/done/m1-quick-wins/` and this section's own
+completed all 22 tickets** (2026-08-29/30, see `agent-working/tickets/done/m1-quick-wins/` and this section's own
 live-progress block above) — the temporal-axis proposal's own integration plan (§13) assigns temporal-contract
 responsibility starting at M2, never at M1, and the update-request's plan-owner review found M1's ticket
 content sound as-is (only the surrounding documentation was stale, since fixed). The confirmed final-permadeath
@@ -91,7 +91,7 @@ This is also the work that produced PR #90's first-ever green CI run.
 **Shipped, 2026-09-02:** PR #101 ("M2 Foundational Systems: implementation batch (15 tickets)"),
 merged. Landed as a flat batch of individually-closed tickets, not under a single named epic
 ticket (the `TCK-20260823-EPIC-RPG-M2-FOUNDATIONAL-SYSTEMS` id this section originally guessed was
-never created); `tickets/done/m2-foundational-systems/` (folder, `SEQUENCE.md` preserved) is the
+never created); `agent-working/tickets/done/m2-foundational-systems/` (folder, `SEQUENCE.md` preserved) is the
 real completion record.
 
 16 ideas, the highest-leverage tier in the whole set — Species Classification (14), City ownership (35),
@@ -116,10 +116,10 @@ of the Place migration.
 ### M3 — Family, Species & the Adult Life (DONE)
 
 **Shipped, 2026-09-03:** PR #107 ("M3 Family & Species: Reproduction epic + flat batch (complete)"),
-merged. `TCK-20260902-EPIC-RPG-M3-REPRODUCTION` (`tickets/done/m3-reproduction-epic/`) is the real
+merged. `TCK-20260902-EPIC-RPG-M3-REPRODUCTION` (`agent-working/tickets/done/m3-reproduction-epic/`) is the real
 epic ticket ID — not `TCK-20260823-EPIC-RPG-M3-FAMILY-SPECIES`, this section's original guess, which
 was never created; the remaining 4 ideas landed as a flat batch
-(`tickets/done/m3-family-species/`, folder, `SEQUENCE.md` preserved).
+(`agent-working/tickets/done/m3-family-species/`, folder, `SEQUENCE.md` preserved).
 
 5 ideas — reproduction, marriage, coming of age, dependents, closing the population-pressure loop. Hard
 dependency on M2's Species Classification (14) and population seeding (43) landing first, confirmed
@@ -160,8 +160,8 @@ prerequisite.
 ### M5 — Memory, Reputation & Legacy (DONE)
 
 **Shipped, 2026-09-05:** PR #128 ("M5 Memory, Reputation & Legacy: all 8 ideas shipped (7 tickets)"),
-merged. `TCK-20260823-EPIC-RPG-M5-MEMORY-REPUTATION` (`tickets/done/`) and
-`TCK-20260905-EPIC-RPG-M5-HISTORY-BELIEF` (`tickets/done/`) are the two real epic tickets — landed in
+merged. `TCK-20260823-EPIC-RPG-M5-MEMORY-REPUTATION` (`agent-working/tickets/done/`) and
+`TCK-20260905-EPIC-RPG-M5-HISTORY-BELIEF` (`agent-working/tickets/done/`) are the two real epic tickets — landed in
 two waves (death-and-lineage/reputation first, history-and-belief second, once the Legacy/Memory axis
 and Knowledge/Belief blockers cleared via a concurrent session's work).
 
@@ -181,7 +181,7 @@ or as an unowned bug.
 ### M6 — Political Identity & Belonging (DONE)
 
 **Shipped, 2026-09-06:** PR #133 ("M6 Political Identity & Belonging: all 4 ideas shipped (3 tickets
-+ hotfix)"), merged. `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`tickets/done/`) is the real epic
++ hotfix)"), merged. `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`agent-working/tickets/done/`) is the real epic
 ticket. Externally reviewed before merge (architecture/determinism, mechanics/parity, ticket
 hygiene) — 4 real findings (a call-site undercount, a false PR-body claim, an under-documented
 P0-law interaction, a guard-test regex gap), all independently fixed and re-verified
@@ -253,7 +253,7 @@ now-complete batches (see those sections above).
 ### M9 — World Corpus Test Coverage for New Features (follow-up, informs M1-M8, doesn't block them) (DONE)
 
 **Shipped, 2026-09-06:** PR #139 ("M9 World Corpus Test Coverage: all 8 tickets shipped"), merged.
-`TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (`tickets/done/`) is the real epic ticket. Externally
+`TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (`agent-working/tickets/done/`) is the real epic ticket. Externally
 reviewed before merge (architecture, mechanics/citation accuracy, ticket hygiene) — no findings
 required a fix; every spot-checked claim in the implementation's own unusually detailed self-report
 (several real premise corrections to the original scoping pass — e.g. ideas 50/64 never actually
@@ -332,8 +332,8 @@ apprenticeship; modifier-stacking rules; which processes first qualify for safe 
 require their own dedicated balance/design-authority review before any M3+ ticket bakes in a specific
 number.
 
-**Calendar authority — decided, 2026-08-29** (`tickets/done/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY.md`,
-plan-owner sign-off recorded in that ticket's `plan.md`, `stored_artifacts/`):
+**Calendar authority — decided, 2026-08-29** (`agent-working/tickets/done/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY.md`,
+plan-owner sign-off recorded in that ticket's `plan.md`, `agent-working/stored_artifacts/`):
 confirmed the proposal's §9.1/§9.2 conflicts with exact numbers — four incompatible tick conventions live in
 code (not two: `docs/mechanics/05_world_evolution.md`'s 2,400 ticks/day, `src/world/raid.py`'s
 `TICKS_PER_DAY=100`, and a previously-unnamed `src/domains/demographics/cohort.py`'s `COHORT_INTERVAL=200`
@@ -415,7 +415,7 @@ for the full investigation (mirrors the temporal proposal's own structure and ri
 - Idea 37 (Species Relations) and idea 68 (Inter-Clan Relations) are confirmed structurally parallel to this
   axis, not part of it — no merge or reconciliation is proposed between the two systems.
 
-**Determinism gap — resolved, 2026-09-03** (`tickets/done/TCK-20260902-SOCIAL-CANONICAL-HASH-GAP.md`,
+**Determinism gap — resolved, 2026-09-03** (`agent-working/tickets/done/TCK-20260902-SOCIAL-CANONICAL-HASH-GAP.md`,
 parity ledger `SOC-263`): the real gap on pickup was 7 fields, not 5 — `debt_history`,
 `salience_history`, `nemesis_ids`, `place_attachment`, `betrayal_records` (detail, not just count),
 plus `last_offer_tick` and `rejection_count`, which this brainstorm pass's own investigation missed.
@@ -423,7 +423,7 @@ All 7 are now included in `EntityState.to_canonical_dict()`'s `"social"` sub-dic
 divergence in any of them is now caught by the canonical determinism hash.
 
 **`RelationshipRole`/`nemesis_ids` precedence — resolved, 2026-09-04**
-(`tickets/done/TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE.md`, parity ledger `SOC-265`): this was **not**
+(`agent-working/tickets/done/TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE.md`, parity ledger `SOC-265`): this was **not**
 just an unreconciled seam — direct investigation confirmed a real, live bug. `nemesis_ids` (promoted only
 from sustained real `grudge_history >= 3.0`) and `bond.role` (written on a fully independent path) could
 genuinely diverge for the same pair, and neither `PartyCompositionScorer._candidate_role_value()` nor
@@ -455,7 +455,7 @@ directly in this pass:
   exist yet as a real doc; moving the content ahead of it would leave a dangling reference) rather than
   moved now.
 - **`town_resource.yaml`'s stale-citation gap — fully resolved, 2026-09-04**
-  (`tickets/done/TCK-20260904-TOWN-RESOURCE-PARITY-CITATION-HARDENING.md`). The same stale-citation class
+  (`agent-working/tickets/done/TCK-20260904-TOWN-RESOURCE-PARITY-CITATION-HARDENING.md`). The same stale-citation class
   hardening item 2 found in `substrate.yaml`, systemic not isolated: 15 of 190 entries cited a `tests_v2/`
   path that doesn't exist anywhere in this repo. 2 entries (`TOWN-005`, `TOWN-006`) were fixed directly in
   the original 2026-09-02 pass. The remaining 13 (`TOWN-001, 004, 007, 008, 009, 010, 013, 014, 015, 016,
@@ -467,7 +467,7 @@ directly in this pass:
   `tools/parity_ledger_writer.py` and independently run to confirm they pass before citing. No entry was
   marked `missing`/`unsupported` — real coverage existed for all 13, it just wasn't cited correctly.
 - **Idea 13's atlas badge was stale** — shipped in M1's batch (`TCK-20260824-AFFECTION-CONTRACT-GATE`,
-  confirmed via `tickets/working_log.csv`) but still carried pre-implementation framing, the same pattern
+  confirmed via `agent-working/tickets/working_log.csv`) but still carried pre-implementation framing, the same pattern
   idea 14's badge had before this session's earlier pass fixed it. Corrected directly.
 - No undocumented Social→Economic or Space→Economic interaction was found (population seeding is a pure
   headcount field with no resource interaction; idea 66's `PlaceState` schema reuses Region-level storage,
@@ -498,7 +498,7 @@ unlike Social's two. The gap here is structural, not documentation debt.
 - Chronicle is confirmed downstream of this axis (a stateless compression/rendering pipeline over real
   recorded events), not part of it — no reconciliation proposed.
 
-**Determinism gap — resolved, 2026-09-03** (`tickets/done/TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP.md`,
+**Determinism gap — resolved, 2026-09-03** (`agent-working/tickets/done/TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP.md`,
 parity ledger `STRAT-268`): the real gap on pickup was 9 fields, not 6 — `home_region_id`,
 `candidate_zones`, `hypotheses`, `source_trust`, `contracts`, `turning_points`,
 `committed_intentions`, `primary_overload_source`, `last_overload_tick` — `beliefs`/`marriages` had
@@ -509,7 +509,7 @@ pass flagged. `profile: CognitionProfile` is the one deliberate exclusion (deriv
 `attributes`).
 
 **`BeliefEntry`/`KnowledgeFact` reconciliation — decided, 2026-09-04**
-(`tickets/done/TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION.md`): investigated and closed
+(`agent-working/tickets/done/TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION.md`): investigated and closed
 as a **deliberate split, not accidental duplication** — unlike the Social axis's `RelationshipRole`/
 `nemesis_ids` finding, which turned out to be a real bug. `src/domains/information/phase.py` is the
 single dispatch site: structured query responses become `KnowledgeFact` (capacity-bounded, no decay,
@@ -643,7 +643,7 @@ files, two content catalogs (`data/content/living/races.yaml`,
 idea, not just an internal identifier.
 
 Scoped as `TCK-20260904-EPIC-RACE-TO-SPECIES-TERMINOLOGY` (epic, scope-only, 4 sequenced child
-tickets in `tickets/todos/race-to-species-migration/`: core schema/entity plumbing, the race-relations
+tickets in `agent-working/tickets/todos/race-to-species-migration/`: core schema/entity plumbing, the race-relations
 subsystem, remaining cross-cutting consumers, and a docs/mechanics/parity sweep). **No implementation
 has landed yet** — this section only records the decision and scope, per this roadmap's own established
 pattern (see Temporal axis/Social-Relationship axis/Knowledge-Belief axis above) of reconciling
@@ -806,7 +806,7 @@ with the new terminology is a separate decision, not bundled into this rename.
   representation. Only the underlying numeric age boundaries (3000/7000 ticks) are aligned:
   `LifeStageService.get_stage_for_age()` (`src/ai/life_stage.py`) duplicates those literals rather
   than importing `cohort.py`. See `docs/parity_ledger/combat_movement.yaml::COMB-313` and
-  `stored_artifacts/TCK-20260824-LIFE-STAGE-TRANSITIONS/investigation.md` (Design Decision 1) for
+  `agent-working/stored_artifacts/TCK-20260824-LIFE-STAGE-TRANSITIONS/investigation.md` (Design Decision 1) for
   the full rationale.
 - **Four incompatible tick/calendar conventions confirmed live in code, not two — and the current age math is
   broken by 2-3 orders of magnitude, quantified.** (2026-08-29, `TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY`.)
@@ -822,7 +822,7 @@ with the new terminology is a separate decision, not bundled into this rename.
   from. `src/lab/metamorphic.py` (the balance-testing tool) has zero recorded real sessions. **Decided by the
   plan owner, 2026-08-29** — see "Temporal axis" above for the four resolved decisions (calendar authority,
   age-migration approach, duration-formula shape, metamorphic-pilot sequencing); the ticket is closed
-  (`tickets/done/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY.md`) as a decision record only — implementing the
+  (`agent-working/tickets/done/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY.md`) as a decision record only — implementing the
   migration is still open, future work.
 
 ## References

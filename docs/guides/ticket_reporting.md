@@ -8,8 +8,8 @@ tags: [tagging, reporting, guide]
 
 # Ticket Reporting — Getting Started Guide
 
-This guide covers reporting tools that read `tickets/`, `docs/REGISTRY.yaml`, and
-`tickets/working_log.csv` to answer questions about the ticket corpus itself (not about a
+This guide covers reporting tools that read `agent-working/tickets/`, `docs/REGISTRY.yaml`, and
+`agent-working/tickets/working_log.csv` to answer questions about the ticket corpus itself (not about a
 simulation run — see [`simulation_quality.md`](simulation_quality.md) for that). Like SimQ's
 scoring surface, this is organized as **pillars** — independent reporting angles over the same
 underlying ticket data. Today there are three pillars built: tag-usage reporting, ticket-corpus
@@ -25,7 +25,7 @@ structure below leaves room for more.
 
 ### What it does
 
-Counts how many completed tickets (`tickets/done/`) use each tag, and classifies each tag into
+Counts how many completed tickets (`agent-working/tickets/done/`) use each tag, and classifies each tag into
 one of the 5 categories defined in
 [`docs/guidelines/tag_taxonomy.md`](../guidelines/tag_taxonomy.md) (Subsystem/Topic,
 Phase/Milestone, Process/Skill-signal, Quality-attribute, Meta-Process) by looking it up in
@@ -50,8 +50,8 @@ make tag-report ARGS="--json reports/tag_report.json"
 
 ### Technical detail
 
-The tool walks `tickets/done/` recursively (it does pick up the small number of ticket files that
-live directly under `tickets/done/{folder}/` subfolders, not just the flat top level) and applies
+The tool walks `agent-working/tickets/done/` recursively (it does pick up the small number of ticket files that
+live directly under `agent-working/tickets/done/{folder}/` subfolders, not just the flat top level) and applies
 3 skip rules, in order, before a ticket's tags are counted:
 
 | Order | Skip reason | Condition |
@@ -76,14 +76,14 @@ Tag classification (`categorize_tag(tag, registry)`):
 ### Legacy / historical context
 
 The taxonomy is very young — it did not exist before 2026-07-04, and the registry is younger still
-(`TCK-20260706-TAG-REGISTRY-DATA`) — so on any given day, most `tickets/done/` files will be
+(`TCK-20260706-TAG-REGISTRY-DATA`) — so on any given day, most `agent-working/tickets/done/` files will be
 skipped as pre-taxonomy. That is not a script bug; it reflects how recently the controlled
 vocabulary was introduced. Numbers to keep in mind, all **dated snapshots that will shift** as more
 post-cutoff tickets accumulate:
 
 - **Pre-taxonomy corpus** (from `tag_taxonomy.md`'s original review, ticket `TCK-20260704-TAG-TAXONOMY`): 1001 tickets, 1273 distinct tags, 57.3% used exactly once, at least 19 confirmed format-duplicate groups (e.g. `p0`/`P0`, `phase-5`/`phase5`).
-- **Live snapshot as of 2026-07-06** (`python3 tools/tag_report.py`): 1046 `.md` files scanned under `tickets/done/` → 1002 skipped as pre-taxonomy/legacy `ticket_id`, 12 skipped as `SEQUENCE.md`, 3 skipped as no-frontmatter → **29 tickets included**, spanning **37 unique tags**, all 37 now registered and classified (0 `unclassified`) after the registry was seeded from this exact live tag list. At the time, the tool's non-canonical diagnostic still caught 2 real historical-leakage cases the registry didn't fix by itself — `simulation_quality` (underscore form) — with retagging explicitly deferred as out of scope for the registry ticket.
-- **`TCK-20260719-TAG-COLLISION-DEDUP`** (2026-07-19) closed that gap and 7 siblings found via a fresh full-corpus scan (`tickets/{done,inprogress,todos}/` + `stored_artifacts/`, not just `tickets/done/`): every literal-spelling duplicate of an already-meaningful tag — `simulation_quality`→`simulation-quality` (223 occurrences total once fully consolidated), `grand_strategy`→`grand-strategy`, `feature_flag`/`feature-flag`→`feature-flags`, `dungeon_crawl`→`dungeon-crawl`, `grade_thresholds`→`grade-thresholds` — was renamed to its canonical form (registering 3 previously-unregistered canonical forms in the process), and every forbidden `p0`/`p1`/`p2`-as-a-tag occurrence (duplicating the ticket's own dedicated `## Priority` field) was removed outright, per `docs/guidelines/tag_taxonomy.md`'s own "Forbidden Tags" policy. Fixed regardless of ticket date — a one-line `tags:` edit carries none of the structural-retrofit risk that otherwise motivates leaving pre-taxonomy tickets untouched. A fresh corpus-wide re-scan post-fix confirms zero remaining collision groups.
+- **Live snapshot as of 2026-07-06** (`python3 tools/tag_report.py`): 1046 `.md` files scanned under `agent-working/tickets/done/` → 1002 skipped as pre-taxonomy/legacy `ticket_id`, 12 skipped as `SEQUENCE.md`, 3 skipped as no-frontmatter → **29 tickets included**, spanning **37 unique tags**, all 37 now registered and classified (0 `unclassified`) after the registry was seeded from this exact live tag list. At the time, the tool's non-canonical diagnostic still caught 2 real historical-leakage cases the registry didn't fix by itself — `simulation_quality` (underscore form) — with retagging explicitly deferred as out of scope for the registry ticket.
+- **`TCK-20260719-TAG-COLLISION-DEDUP`** (2026-07-19) closed that gap and 7 siblings found via a fresh full-corpus scan (`agent-working/tickets/{done,inprogress,todos}/` + `agent-working/stored_artifacts/`, not just `agent-working/tickets/done/`): every literal-spelling duplicate of an already-meaningful tag — `simulation_quality`→`simulation-quality` (223 occurrences total once fully consolidated), `grand_strategy`→`grand-strategy`, `feature_flag`/`feature-flag`→`feature-flags`, `dungeon_crawl`→`dungeon-crawl`, `grade_thresholds`→`grade-thresholds` — was renamed to its canonical form (registering 3 previously-unregistered canonical forms in the process), and every forbidden `p0`/`p1`/`p2`-as-a-tag occurrence (duplicating the ticket's own dedicated `## Priority` field) was removed outright, per `docs/guidelines/tag_taxonomy.md`'s own "Forbidden Tags" policy. Fixed regardless of ticket date — a one-line `tags:` edit carries none of the structural-retrofit risk that otherwise motivates leaving pre-taxonomy tickets untouched. A fresh corpus-wide re-scan post-fix confirms zero remaining collision groups.
 
 Use `python3 tools/tag_report.py --list-skipped` to see the actual skipped file paths if you need
 to inspect the pre-taxonomy corpus directly (e.g. to spot more duplicate-group candidates for a
@@ -98,13 +98,13 @@ since that corpus was never governed by any vocabulary to begin with.
 
 ### What it does
 
-Covers four reporting angles over `tickets/done/` in one tool: ticket velocity/throughput (closed
-tickets per day and per ISO-week, from `tickets/working_log.csv`), tier/type/priority distribution
+Covers four reporting angles over `agent-working/tickets/done/` in one tool: ticket velocity/throughput (closed
+tickets per day and per ISO-week, from `agent-working/tickets/working_log.csv`), tier/type/priority distribution
 (counts per canonical value, plus a non-canonical marker for anything outside
 `tools/ticket_field_values.py`'s `TIER_VALUES`/`PRIORITY_VALUES`), layer distribution (counts per
 value in `registries/layer_registry.jsonl`, same non-canonical marker), and artifact
 completeness (for `standard`/`epic` tickets only, per this project's own hotfix-exemption: does
-`stored_artifacts/{ticket_id}/` exist with all 3 required files — `investigation.md`, `plan.md`,
+`agent-working/stored_artifacts/{ticket_id}/` exist with all 3 required files — `investigation.md`, `plan.md`,
 `test_plan.md`). Built by `TCK-20260718-TICKET-CORPUS-REPORT`, mirroring `tools/tag_report.py`'s
 own shape (computation/rendering split, `--json` flag, dedicated test file, `make` target) —
 that module is the direct precedent.
@@ -135,16 +135,16 @@ make ticket-stats-report ARGS="--json reports/ticket_stats_report.json"
 ```
 
 **Live snapshot as of 2026-07-18** (dated, will shift as the corpus grows): 1179 files scanned
-under `tickets/done/`, 24 skipped as `SEQUENCE.md` → **1155 tickets included**. Tier: 931
+under `agent-working/tickets/done/`, 24 skipped as `SEQUENCE.md` → **1155 tickets included**. Tier: 931
 `standard`, 103 `hotfix`, 81 non-canonical `unknown`, 40 `epic`. Priority: 798 `P1`, 237 `P2`, 71
 non-canonical `unknown`, 25 `P0`, 24 `P3`. Layer: 19 distinct values, topped by `misc` (321) and
 `engine` (206). Artifact completeness (`standard`/`epic` only): 624/971 complete.
 
 ### Technical detail
 
-Scoped to `tickets/done/` only, matching `tag_report.py`'s own scope choice — the same
+Scoped to `agent-working/tickets/done/` only, matching `tag_report.py`'s own scope choice — the same
 `SEQUENCE.md`-skip rule applies (folder index files are never counted as tickets). Velocity groups
-`tickets/working_log.csv` rows by calendar day and by ISO-week (via
+`agent-working/tickets/working_log.csv` rows by calendar day and by ISO-week (via
 `tools/agent-monitoring/generate_retro.py::iso_week`, reused not reimplemented), tolerating
 unparseable rows by counting and skipping them rather than crashing. Distribution counts use
 `Counter`s over the three body-section fields (tier, ticket_type, priority) plus the frontmatter
@@ -161,16 +161,16 @@ this project's own workflow rule (`CLAUDE.md`'s "Hotfix: No staging artifacts re
 
 ### What it does
 
-Both pillars above only ever look at `tickets/done/`, and Pillar 1's tag-usage report is further
+Both pillars above only ever look at `agent-working/tickets/done/`, and Pillar 1's tag-usage report is further
 narrowed to tickets whose `ticket_id` embeds a date on or after the tag taxonomy's effective date
 (`TAG_TAXONOMY_EFFECTIVE_DATE`, 2026-07-04) — enforcement of the controlled vocabulary is
 deliberately forward-only, per the taxonomy's own "no backfill of history" decision. That leaves a
 large historic gap never checked by anything: everything predating the cutoff, plus
-`tickets/inprogress/`, `tickets/todos/`, and `stored_artifacts/`, none of which Pillar 1 or 2 ever
+`agent-working/tickets/inprogress/`, `agent-working/tickets/todos/`, and `agent-working/stored_artifacts/`, none of which Pillar 1 or 2 ever
 walks.
 
 This is a **report-only, no-date-cutoff** sweep across all four corpus roots —
-`tickets/done/**`, `tickets/inprogress/**`, `tickets/todos/**`, and `stored_artifacts/**/*.md` —
+`agent-working/tickets/done/**`, `agent-working/tickets/inprogress/**`, `agent-working/tickets/todos/**`, and `agent-working/stored_artifacts/**/*.md` —
 built for `TCK-20260720-TAG-CORPUS-REPAIR-SWEEP`. Contrast this explicitly with Pillar 1: Pillar
 1's `tag_report.py` skips any ticket whose `ticket_id` predates the taxonomy cutoff; this sweep
 applies no such date gate anywhere — a 2026-01-01 ticket is checked exactly the same as one from
@@ -190,7 +190,7 @@ all" (which also covers phase-N tags that have no registry entry to check a cate
 with multiple issues produces multiple rows for the same `(file, tag)` pair.
 
 It never writes to any file it scans — there is no `--fix` flag, and no code path in this tool
-ever calls `Path.write_text` against anything under `tickets/` or `stored_artifacts/`. Deciding
+ever calls `Path.write_text` against anything under `agent-working/tickets/` or `agent-working/stored_artifacts/`. Deciding
 what to do with a finding (retag, register, or fix a legacy file) is left to a human or a
 follow-up ticket.
 
@@ -213,7 +213,7 @@ returning zero rows rather than crashing or skipping-and-counting. `tools/tag_co
 itself is a separate module holding only the orchestration (`run_sweep`) and CLI/output layer
 (`print_report`, `build_json_report`, `main`) — it does not import, call, or modify Pillar 1's own
 `main()`/`--json`/`--show-tickets`/`--list-skipped` CLI wiring, which stays scoped to its
-narrower, already-shipped `tickets/done/`-only report.
+narrower, already-shipped `agent-working/tickets/done/`-only report.
 
 **Live snapshot as of 2026-07-31** (dated, will shift as the corpus grows and as findings are
 addressed): 4145 files scanned across all four roots, 37 skipped as `SEQUENCE.md`. 7832 violation

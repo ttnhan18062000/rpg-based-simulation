@@ -74,7 +74,7 @@ def test_concern_investigator_encodes_context_scan_ordering():
         "search_docs",
         "graphify query",
         "docs/REGISTRY.yaml",
-        "tickets/working_log.csv",
+        "agent-working/tickets/working_log.csv",
     ]
     positions = [text.index(m) for m in markers]
 

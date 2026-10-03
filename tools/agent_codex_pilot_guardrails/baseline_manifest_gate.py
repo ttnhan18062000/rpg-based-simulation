@@ -7,7 +7,7 @@ hyphen in its directory name and cannot be imported via a dotted path.
 
 assert_prefix_preserved, not a naive whole-file hash-diff, is the correct interpretation of AC #4's
 "fails closed if any pre-existing line's hash changes": a legitimate pilot run appends new lines to
-agent-monitoring/*.jsonl between the pre- and post-snapshot, which necessarily changes any naive
+agent-working/agent-monitoring/*.jsonl between the pre- and post-snapshot, which necessarily changes any naive
 whole-file SHA-256 (manifest.py's build_manifest() hash field) even when nothing pre-existing was
 touched — a literal whole-file-hash-equality gate would falsely reject every successful pilot run.
 assert_prefix_preserved is therefore not a looser substitute for "hash changes" but the stricter,

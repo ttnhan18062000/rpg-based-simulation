@@ -6,7 +6,7 @@ world generation module epic.
 Runtime strategy
 ----------------
 Full 10-tick simulation runs are executed as Bash smoke tests during the
-ticket implementation phase (see staging_artifacts/TCK-20260614-WORLDGEN-E2E-SMOKE/
+ticket implementation phase (see agent-working/staging_artifacts/TCK-20260614-WORLDGEN-E2E-SMOKE/
 test_plan.md). These pytest tests cover the compile + assemble + AuthoritativeState
 validation layer — confirming that each composition produces a valid, non-empty
 AuthoritativeState before the engine loop is even entered. This is the minimum

@@ -9,7 +9,7 @@ The proposal can be written by anyone — developer, BA, tester — in any natur
 ```
 /create-tickets source=docs/plans/proposal.md
 /create-tickets source=docs/plans/proposal.md structure=docs/plans/ticket_plan_structure.md
-/create-tickets source=docs/plans/proposal.md output=tickets/todos/phase29-repair/
+/create-tickets source=docs/plans/proposal.md output=agent-working/tickets/todos/phase29-repair/
 /create-tickets source=docs/plans/proposal.md epic_id=TCK-20260608-PHASE29-EPIC
 ```
 
@@ -82,8 +82,8 @@ slower or more familiar — the native path is primary.
    - Read highest-authority matching docs (P0 first).
 
    **Step 3 — Prior ticket history:**
-   - `grep -i "<keyword>" tickets/working_log.csv` for domain keywords.
-   - Read `stored_artifacts/<ticket_id>/investigation.md` for up to 3 matching prior tickets.
+   - `grep -i "<keyword>" agent-working/tickets/working_log.csv` for domain keywords.
+   - Read `agent-working/stored_artifacts/<ticket_id>/investigation.md` for up to 3 matching prior tickets.
 
    **Step 4 — Code files (follow-up only):**
    - Use node names and paths from Step 1 as primary targets. Read up to 3 relevant files.
@@ -103,7 +103,7 @@ slower or more familiar — the native path is primary.
 ## Notes
 
 - The proposal author does NOT need to provide file paths or acceptance criteria — the Investigate phase derives them from the codebase
-- Output folder defaults to `tickets/todos/<inferred-name>/` — inferred from the proposal topic
+- Output folder defaults to `agent-working/tickets/todos/<inferred-name>/` — inferred from the proposal topic
 - Concerns already fully covered by existing tickets are detected in Investigate and skipped (reported as duplicates)
 - Concerns are split or merged based on what investigation reveals about the actual code structure
 - If intra-batch ticket dependencies are detected, a `SEQUENCE.md` is written to enforce implementation order

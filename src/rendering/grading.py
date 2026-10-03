@@ -14,7 +14,7 @@ exact threshold values and exact strict-`>` ladder semantics (copied by value, n
 imported, from config/simulation_quality/grade_thresholds.yaml -- see
 config/rendering/grade_thresholds.toml's header for the architectural-independence
 rationale); and multi-seed averaging via a plain arithmetic mean, not special-cased for
-N=1 (staging_artifacts/TCK-20260821-VISUAL-GRADE-SCORER/plan.md Decision 4).
+N=1 (agent-working/staging_artifacts/TCK-20260821-VISUAL-GRADE-SCORER/plan.md Decision 4).
 
 This module is architecturally independent from src.simulation_quality: it does not
 import src.simulation_quality.* or src.observability.events, does not subclass

@@ -54,7 +54,7 @@ unverified inherited claim, and means nobody needs to re-open this specific ques
 `input_tokens`/`output_tokens`/cache-token data, per turn, for the orchestrating conversation itself —
 21 files, spanning real work on this exact project. `cost_proxy_score`'s own module docstring
 (`tools/agent-monitoring/cost_proxy.py:8-10`) states its weights (`W_BASH=0.001`, `W_AGENT=50`,
-`W_EDIT=1`) were "sized from the real aggregate distribution of `agent-monitoring/tools.jsonl` (543
+`W_EDIT=1`) were "sized from the real aggregate distribution of `agent-working/agent-monitoring/tools.jsonl` (543
 sampled event-groups)" — i.e., calibrated against **tool-call volume**, never against any real cost
 ground truth, because none was thought to be available. That premise is now falsifiable: real cost
 ground truth exists locally for at least one execution context (the main session), even though it

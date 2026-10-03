@@ -30,7 +30,7 @@ command = "true"
 proposed pilot fragment. It registers only the `PostToolUse` hook event; no other event is
 proposed by this ticket.
 
-## Activation prerequisites (per `agent-orchestration/hook-surface-policy.yaml`)
+## Activation prerequisites (per `agent-working/agent-orchestration/hook-surface-policy.yaml`)
 
 All nine of the policy's `activation_prerequisites` remain unmet by this ticket. None of the
 boxes below may be checked by this document or by any code in
@@ -66,6 +66,6 @@ entirely for a future activation ticket to satisfy and record.
 ## Related
 
 - `tools/agent_codex_posttool_adapter/activation_fragment.py` — the code this document quotes.
-- `agent-orchestration/hook-surface-policy.yaml` — the source of the prerequisite checklist above.
+- `agent-working/agent-orchestration/hook-surface-policy.yaml` — the source of the prerequisite checklist above.
 - `tools/agent_codex_pilot_guardrails/config_toggle.py` — the closest sibling precedent for a
   scratch-only, never-applied config toggle mechanism.

@@ -13,7 +13,7 @@ The proposal can be written by anyone — developer, BA, tester — in any natur
 ```
 /create-tickets source=docs/plans/proposal.md
 /create-tickets source=docs/plans/proposal.md structure=docs/plans/ticket_plan_structure.md
-/create-tickets source=docs/plans/proposal.md output=tickets/todos/phase29-repair/
+/create-tickets source=docs/plans/proposal.md output=agent-working/tickets/todos/phase29-repair/
 /create-tickets source=docs/plans/proposal.md epic_id=TCK-20260608-PHASE29-EPIC
 ```
 
@@ -22,13 +22,32 @@ The proposal can be written by anyone — developer, BA, tester — in any natur
 Parse the user's input to extract:
 
 - `source` — path to the source markdown document (required). If the user provides a bare file path with no `source=` prefix, treat it as `source`.
+- `start_ts` — ISO timestamp marking run start (required by the workflow script). Get it yourself first: `date -u +%Y-%m-%dT%H:%M:%SZ`. The Workflow runtime cannot capture this itself (no `Date.now()`/`new Date()`).
 - `structure` — path to a ticket plan structure / template doc (optional). Guides concern granularity and scope conventions.
 - `output` — output folder override (optional). Inferred from the proposal content if omitted.
 - `epic_id` — existing epic ticket ID to link the created tickets to (optional).
 
 ## Action
 
-**Do not call the Workflow tool — it is not available.** Execute the workflow directly:
+**Primary path — call the native `Workflow` tool** (`TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT`, 2026-09-29):
+
+1. Run `date -u +%Y-%m-%dT%H:%M:%SZ` yourself first and use the result as `start_ts` below.
+2. Invoke:
+   ```
+   Workflow({
+     scriptPath: '.claude/workflows/create-tickets.js',
+     args: { source, structure, output, epic_id, start_ts },
+   })
+   ```
+   Use `scriptPath`, **never** `name` — `Workflow({name:'create-tickets'})` resolves against the
+   **main checkout's** copy of the script, not the current worktree's, so from a worktree it would
+   silently run a stale version. `scriptPath` always resolves relative to the current working
+   directory instead.
+3. Report the tool's returned `status` and relevant fields to the user, same as any other workflow result.
+
+**Fallback — hand-translation.** Use this only if the `Workflow` tool call itself errors (e.g. a
+future syntax regression, or a runtime restriction violation). Do not use it just because it feels
+slower or more familiar — the native path is primary.
 
 1. Read `.claude/workflows/create-tickets.js` in full before doing anything else — it is the authoritative source; this file is a translation aid and can drift from it (see TCK-20260804-CREATE-TICKETS-SKILL-SYNC, which corrected exactly that). If the two ever disagree, the JS wins.
 2. Execute each phase block in order, translating JS constructs to tool calls as follows:
@@ -39,8 +58,8 @@ Parse the user's input to extract:
 | `log(msg)` | Output the message to the user |
 | `await agent(prompt, { agentType: 'name', schema: S })` | Spawn `Agent(subagent_type: "name", prompt: prompt)`; parse its JSON response and validate it matches schema S |
 | `await agent(prompt, { label: 'L' })` | Spawn `Agent(prompt: prompt)` — no specific agent type; label is for monitoring context only |
-| Orchestrator-run `await bash(...)` (no `agent()` wrapper) | Run the exact command yourself via Bash — never delegate to a sub-agent prompt, never skip it |
-| `await writeMonitoring(finalStatus)` | Execute the monitoring write block defined in that function in the JS — mandatory at every exit point; use `python3 tools/agent-monitoring/record_run.py` and `record_events.py`, never write to those files directly |
+| `runCommand(cmd, label)` (used by `writeSidecar`/`clearSidecar`/the tag-registry check) | Run the exact command yourself via Bash — never delegate to a sub-agent prompt, never skip it. (This is the orchestrator-side equivalent of what the native runtime does through a low-effort agent — see the comment above `runCommand`'s definition in the JS for why.) |
+| `await writeMonitoring(finalStatus)` | Execute the monitoring write block defined in that function in the JS — mandatory at every exit point; use `python3 tools/agent-monitoring/record_run.py` and `record_events.py`, never write to those files directly. **Use `"execution_mode":"pipeline"` here, not the JS literal's `"workflow"`** — that literal is only accurate when the native `Workflow` tool actually executes the script, which this fallback path does not do. |
 | `return { status, ... }` | Report the final status and relevant fields to the user |
 
 3. Carry all variables (`comprehension`, `validInvestigations`, `structured`, `outputFolder`, etc.) across phases exactly as the JS does.
@@ -67,8 +86,8 @@ Parse the user's input to extract:
    - Read highest-authority matching docs (P0 first).
 
    **Step 3 — Prior ticket history:**
-   - `grep -i "<keyword>" tickets/working_log.csv` for domain keywords.
-   - Read `stored_artifacts/<ticket_id>/investigation.md` for up to 3 matching prior tickets.
+   - `grep -i "<keyword>" agent-working/tickets/working_log.csv` for domain keywords.
+   - Read `agent-working/stored_artifacts/<ticket_id>/investigation.md` for up to 3 matching prior tickets.
 
    **Step 4 — Code files (follow-up only):**
    - Use node names and paths from Step 1 as primary targets. Read up to 3 relevant files.
@@ -88,8 +107,9 @@ Parse the user's input to extract:
 ## Notes
 
 - The proposal author does NOT need to provide file paths or acceptance criteria — the Investigate phase derives them from the codebase
-- Output folder defaults to `tickets/todos/<inferred-name>/` — inferred from the proposal topic
+- Output folder defaults to `agent-working/tickets/todos/<inferred-name>/` — inferred from the proposal topic
 - Concerns already fully covered by existing tickets are detected in Investigate and skipped (reported as duplicates)
 - Concerns are split or merged based on what investigation reveals about the actual code structure
 - If intra-batch ticket dependencies are detected, a `SEQUENCE.md` is written to enforce implementation order
 - After creation, run `/implement-epic folder=<output_folder>` to implement the tickets
+- After Link: evaluate reset boundary per `docs/guides/agent_session_reset_boundaries.md`

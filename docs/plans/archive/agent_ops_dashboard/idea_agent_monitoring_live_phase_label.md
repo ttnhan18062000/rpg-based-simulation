@@ -12,7 +12,7 @@ tags: [idea, agent-infrastructure, observability, agent-monitoring, data-quality
 # Idea: Live phase/agent labeling for in-progress `tools.jsonl` rows
 
 **Archived:** 2026-07-19 — **partially shipped**, not fully. `TCK-20260719-LIVE-PHASE-AGENT-LABEL`
-(`tickets/done/`) shipped exactly the data-producing prerequisite this doc scoped: `writeSidecar`
+(`agent-working/tickets/done/`) shipped exactly the data-producing prerequisite this doc scoped: `writeSidecar`
 now threads `phase`/`agent` through all 10 call sites plus the Scope-phase resume branch, and
 `tools/agent-monitoring/post_tool_hook.py` persists both as new nullable, additive `tools.jsonl`
 fields (no backfill — historical rows still lack them). **What remains unshipped is this doc's own
@@ -37,7 +37,7 @@ This document is the historical design reference for the shipped half.
 
 ## Problem
 
-**During a live/in-progress workflow run, `agent-monitoring/tools.jsonl` rows carry a bare `seq`
+**During a live/in-progress workflow run, `agent-working/agent-monitoring/tools.jsonl` rows carry a bare `seq`
 integer — no `phase`, no `agent` name — anywhere on disk**, confirmed by direct read, not assumed:
 
 1. `.claude/workflows/implement-ticket.js:202` — `writeSidecar(seq)` writes only
@@ -108,7 +108,7 @@ of scope for this idea.
 
 ## Relationship to Planned Tickets
 
-Shipped (data half only) by `TCK-20260719-LIVE-PHASE-AGENT-LABEL` (`tickets/done/`), created via
+Shipped (data half only) by `TCK-20260719-LIVE-PHASE-AGENT-LABEL` (`agent-working/tickets/done/`), created via
 `/create-tickets` on 2026-07-19 and implemented the same day. Ran as its own independent sibling
 ticket, not blocking or blocked by
 [`idea_agent_ops_dashboard.md`](idea_agent_ops_dashboard.md) (archived — shipped), exactly as

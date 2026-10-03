@@ -50,8 +50,8 @@ The repository already has a useful local foundation:
 | `tools/knowledge_search.py` | Local embeddings, SQLite vector index, BM25, incremental document index | Its intended corpus excludes `src/` and `tests/`; it cannot assemble implementation/test context by itself. |
 | `tools/search_mcp.py` | Agent-facing `search_docs` and health tools | It returns ranked document chunks, not a bounded, task-aware context packet. |
 | `graphify-out/` and `graphify query` | Code/doc relationship discovery and community overview | Valuable for dependency/path questions, but too broad as a default context source. |
-| `docs/REGISTRY.yaml` and `tickets/working_log.csv` | Authority and prior-work discovery | They are consulted separately instead of being ranked/filterable packet inputs. |
-| `agent-monitoring/*.jsonl` and dashboard | Workflow and tool activity observability | They do not yet record retrieval selection, context budget, cache use, or adequacy. |
+| `docs/REGISTRY.yaml` and `agent-working/tickets/working_log.csv` | Authority and prior-work discovery | They are consulted separately instead of being ranked/filterable packet inputs. |
+| `agent-working/agent-monitoring/*.jsonl` and dashboard | Workflow and tool activity observability | They do not yet record retrieval selection, context budget, cache use, or adequacy. |
 
 The retrieval path also needs measured calibration. Dense and lexical retrieval
 must both contribute candidates before ranking; a lexical-only exact match must
@@ -338,16 +338,16 @@ provider-agnostic implementation has a stable shared monitoring path:
    existing `doc`/`ticket`/`code_symbol`/etc. kinds with no decided precedence between
    them — `tools/context_packet_assembler.py::assemble_context_packet()` takes an
    already-decided `included_candidates` list and never re-sorts/weights by `kind`.)
-8. Should `stored_artifacts/{ticket_id}/*.md` (`investigation.md`/`plan.md`/`test_plan.md`,
+8. Should `agent-working/stored_artifacts/{ticket_id}/*.md` (`investigation.md`/`plan.md`/`test_plan.md`,
    each carrying real frontmatter — `artifact_type`, `status`, `authority`) become its own
    registry-indexed `kind` (e.g. `stored_artifact`), so the rationale/decision content
    inside a closed ticket's artifacts is retrievable on its own terms rather than only
    visible via the parent ticket's `artifact_files` path list (`tools/generate_registry.py`
-   ::`join_artifact_files()`)? Relatedly: confirm whether `staging_artifacts/`'s current
+   ::`join_artifact_files()`)? Relatedly: confirm whether `agent-working/staging_artifacts/`'s current
    total exclusion from `generate_registry.py`'s scan (correct today, since it holds
    in-progress/scratch content for open tickets) should be recorded as an explicit,
    permanent design decision rather than an implicit gap, once/if Decision 8 gives
-   `stored_artifacts/` its own retrieval treatment. (Raised 2026-08-02.)
+   `agent-working/stored_artifacts/` its own retrieval treatment. (Raised 2026-08-02.)
 9. `tools/parity_index.py`'s `entry()`/`impact()`/`health()` functions establish a
    deterministic, exact-structural-lookup query pattern (never similarity-ranked, always
    gate-safe, explicitly distinct from the fuzzy RRF-fused `search`/`tools/hybrid_retrieval.py`

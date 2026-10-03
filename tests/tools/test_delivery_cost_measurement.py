@@ -1,6 +1,6 @@
 """Tests for tools/delivery/delivery_cost_measurement.py (TCK-20260924-DELIVERY-COST-MEASUREMENT).
 
-One section per Acceptance Criterion, per staging_artifacts/TCK-20260924-DELIVERY-COST-
+One section per Acceptance Criterion, per agent-working/staging_artifacts/TCK-20260924-DELIVERY-COST-
 MEASUREMENT/test_plan.md.
 """
 import inspect
