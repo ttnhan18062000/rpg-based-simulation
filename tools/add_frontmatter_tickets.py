@@ -16,9 +16,13 @@ Idempotency:
 import re
 import sys
 from pathlib import Path
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS  # noqa: E402
 
-TICKET_DIR = Path("tickets/done")
-ARTIFACT_DIR = Path("stored_artifacts")
+TICKET_DIR = TICKETS / "done"
+ARTIFACT_DIR = STORED_ARTIFACTS
 
 # Only these stems get a typed artifact_type; everything else gets artifact_type: misc
 ARTIFACT_TYPED_NAMES = {"investigation", "plan", "test_plan"}

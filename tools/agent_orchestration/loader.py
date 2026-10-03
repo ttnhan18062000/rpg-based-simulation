@@ -19,6 +19,7 @@ import yaml
 
 from .errors import ContractValidationError
 from .terminal_statuses import TerminalStatusValidationError, load_terminal_statuses
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REQUIRED_CONTRACT_KEYS = ("version", "name")
 _REQUIRED_WORKFLOW_KEYS = ("workflow_version", "workflow_id", "phases", "agents")
@@ -397,7 +398,7 @@ def load_contract(root: Path) -> ContractBundle:
 
     `root` is the repository root — the contract directory itself is `root / "agent-orchestration"`.
     """
-    contract_dir = root / "agent-orchestration"
+    contract_dir = root / AGENT_ORCHESTRATION
 
     contract = _load_contract_yaml(contract_dir / "contract.yaml")
     try:

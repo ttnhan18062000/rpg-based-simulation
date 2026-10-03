@@ -64,6 +64,10 @@ for _dir in (str(_TOOLS_DIR), str(_MONITORING_TOOLS_DIR)):
         sys.path.insert(0, _dir)
 
 from generate_retro import _load_runs_and_events  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
 # Ratchet ceilings: the real corpus's own measured counts. May only decrease. Raising any of them
 # to paper over a newly-introduced instance defeats the point of this check.
@@ -89,8 +93,8 @@ MONITORING_START = "2026-06-07"
 # REGRESSION). Rows before this are frozen historical debt; rows on/after are live, zero-tolerance
 # coverage. Never move this backward to reclassify a live miss as historical debt.
 FREEZE_DATE = "2026-09-16"
-WORKING_LOG_PATH = _REPO_ROOT / "tickets" / "working_log.csv"
-DATA_DIR = _REPO_ROOT / "agent-monitoring" / "data"
+WORKING_LOG_PATH = _REPO_ROOT / TICKETS / "working_log.csv"
+DATA_DIR = _REPO_ROOT / AGENT_MONITORING / "data"
 
 
 def find_working_log_rows_missing_run_record(

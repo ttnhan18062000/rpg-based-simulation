@@ -20,9 +20,10 @@ from tools.agent_orchestration_claude_adapter.terminal_status_loader import (
     load_terminal_statuses,
     validate_terminal_statuses,
 )
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
-_REAL_TERMINAL_STATUSES_PATH = _REPO_ROOT / "agent-orchestration" / "terminal-statuses.yaml"
+_REAL_TERMINAL_STATUSES_PATH = _REPO_ROOT / AGENT_ORCHESTRATION / "terminal-statuses.yaml"
 
 
 def _load_real_data() -> dict:

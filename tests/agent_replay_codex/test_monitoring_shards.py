@@ -19,13 +19,14 @@ from tools.agent_replay_codex.monitoring_shards import (
     read_source_bytes,
     source_paths,
 )
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _SOURCES = ("runs.jsonl", "events.jsonl", "tools.jsonl")
 
 
 @pytest.mark.parametrize("source", _SOURCES)
 def test_source_paths_resolves_scratch_shape(tmp_path, source):
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     monitoring_dir.mkdir()
     single = monitoring_dir / source
     single.write_text('{"a": 1}\n', encoding="utf-8")
@@ -35,7 +36,7 @@ def test_source_paths_resolves_scratch_shape(tmp_path, source):
 
 @pytest.mark.parametrize("source", _SOURCES)
 def test_source_paths_returns_empty_when_scratch_file_absent(tmp_path, source):
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     monitoring_dir.mkdir()
 
     assert source_paths(monitoring_dir, source) == []
@@ -43,7 +44,7 @@ def test_source_paths_returns_empty_when_scratch_file_absent(tmp_path, source):
 
 @pytest.mark.parametrize("source", _SOURCES)
 def test_source_paths_resolves_real_shape_sorted_including_unknown_week(tmp_path, source):
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     data_dir = monitoring_dir / "data"
     for week in ("2026-W02", "2026-W01", "unknown-week"):
         week_dir = data_dir / week
@@ -63,7 +64,7 @@ def test_source_paths_resolves_real_shape_sorted_including_unknown_week(tmp_path
 def test_source_paths_picks_up_per_identifier_shaped_shards_too(tmp_path, source):
     """TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: a per-ticket/per-branch shaped shard
     (e.g. `some-branch.runs.jsonl`) must be found too, not just the bare name."""
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     week_dir = monitoring_dir / "data" / "2026-W01"
     week_dir.mkdir(parents=True)
     bare = week_dir / source
@@ -79,7 +80,7 @@ def test_source_paths_picks_up_per_identifier_shaped_shards_too(tmp_path, source
 
 @pytest.mark.parametrize("source", _SOURCES)
 def test_source_paths_prefers_real_shape_over_a_stray_scratch_file(tmp_path, source):
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     (monitoring_dir / source).parent.mkdir(parents=True, exist_ok=True)
     (monitoring_dir / source).write_text('{"legacy": true}\n', encoding="utf-8")
     week_dir = monitoring_dir / "data" / "2026-W01"
@@ -90,7 +91,7 @@ def test_source_paths_prefers_real_shape_over_a_stray_scratch_file(tmp_path, sou
 
 
 def test_read_source_bytes_concatenates_in_sorted_path_order(tmp_path):
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     for week in ("2026-W02", "2026-W01", "unknown-week"):
         week_dir = monitoring_dir / "data" / week
         week_dir.mkdir(parents=True)
@@ -104,7 +105,7 @@ def test_read_source_bytes_concatenates_in_sorted_path_order(tmp_path):
 
 
 def test_hash_source_changes_with_any_source_file_and_is_stable_otherwise(tmp_path):
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     week_dir = monitoring_dir / "data" / "2026-W01"
     week_dir.mkdir(parents=True)
     (week_dir / "runs.jsonl").write_text('{"a": 1}\n', encoding="utf-8")

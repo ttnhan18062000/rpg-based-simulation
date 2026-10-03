@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "tools" / "agent-monitoring"))
 
@@ -27,10 +28,10 @@ from migrate_monitoring_data import (  # noqa: E402
 )
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REAL_RUNS = _REPO_ROOT / "agent-monitoring" / "runs.jsonl"
-_REAL_EVENTS = _REPO_ROOT / "agent-monitoring" / "events.jsonl"
-_REAL_TOOLS_DIR = _REPO_ROOT / "agent-monitoring" / "tools"
-_REAL_DATA_DIR = _REPO_ROOT / "agent-monitoring" / "data"
+_REAL_RUNS = _REPO_ROOT / AGENT_MONITORING / "runs.jsonl"
+_REAL_EVENTS = _REPO_ROOT / AGENT_MONITORING / "events.jsonl"
+_REAL_TOOLS_DIR = _REPO_ROOT / AGENT_MONITORING / "tools"
+_REAL_DATA_DIR = _REPO_ROOT / AGENT_MONITORING / "data"
 
 
 def _line(**fields) -> str:
@@ -208,19 +209,19 @@ def _copy_real_corpus_into(tmp_path):
     once that source has already been retired, without failing the whole test.
     """
     repo_copy = tmp_path / "repo"
-    (repo_copy / "agent-monitoring").mkdir(parents=True)
-    data_dir = repo_copy / "agent-monitoring" / "data"
+    (repo_copy / AGENT_MONITORING).mkdir(parents=True)
+    data_dir = repo_copy / AGENT_MONITORING / "data"
 
     available = {"runs": False, "events": False, "tools": False}
 
     if _REAL_RUNS.exists():
-        (repo_copy / "agent-monitoring" / "runs.jsonl").write_text(_REAL_RUNS.read_text())
+        (repo_copy / AGENT_MONITORING / "runs.jsonl").write_text(_REAL_RUNS.read_text())
         available["runs"] = True
     if _REAL_EVENTS.exists():
-        (repo_copy / "agent-monitoring" / "events.jsonl").write_text(_REAL_EVENTS.read_text())
+        (repo_copy / AGENT_MONITORING / "events.jsonl").write_text(_REAL_EVENTS.read_text())
         available["events"] = True
     if _REAL_TOOLS_DIR.is_dir():
-        copy_tools_dir = repo_copy / "agent-monitoring" / "tools"
+        copy_tools_dir = repo_copy / AGENT_MONITORING / "tools"
         copy_tools_dir.mkdir()
         for shard_path in sorted(_REAL_TOOLS_DIR.glob("tools-*.jsonl")):
             (copy_tools_dir / shard_path.name).write_text(shard_path.read_text())
@@ -240,13 +241,13 @@ def _copy_real_corpus_into(tmp_path):
 
 def _run_one_source(repo_copy, data_dir, source):
     if source == "tools":
-        tools_dir = repo_copy / "agent-monitoring" / "tools"
+        tools_dir = repo_copy / AGENT_MONITORING / "tools"
         buckets = relocate_tools_shards(tools_dir)
         source_lines = []
         for week_key in sorted(buckets.keys()):
             source_lines.extend(buckets[week_key])
     else:
-        source_path = repo_copy / "agent-monitoring" / f"{source}.jsonl"
+        source_path = repo_copy / AGENT_MONITORING / f"{source}.jsonl"
         source_lines = source_path.read_text().splitlines()
         field_priority = RUNS_FIELD_PRIORITY if source == "runs" else EVENTS_FIELD_PRIORITY
         buckets = bucket_lines_by_week_multi_field(source_lines, field_priority)
@@ -326,7 +327,7 @@ def test_tools_relocation_is_route_only_not_re_bucketed(tmp_path):
             "run -- nothing left to copy for this real-corpus integration test."
         )
 
-    tools_dir = repo_copy / "agent-monitoring" / "tools"
+    tools_dir = repo_copy / AGENT_MONITORING / "tools"
     for shard_path in sorted(tools_dir.glob("tools-*.jsonl")):
         week_key = shard_path.stem[len("tools-"):]
         shard_lines = shard_path.read_text().splitlines()

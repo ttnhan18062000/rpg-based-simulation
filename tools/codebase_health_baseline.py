@@ -64,13 +64,17 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix  # noqa: E402
 
 _TOOLS_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TOOLS_DIR.parent
 
 CHURN_EXCLUDE_PATHSPECS = [
-    ":!agent-monitoring/*.jsonl",
-    ":!tickets/working_log.csv",
+    f":!{posix(AGENT_MONITORING)}/*.jsonl",
+    f":!{posix(TICKETS)}/working_log.csv",
     ":!docs/REGISTRY.yaml",
 ]
 

@@ -75,6 +75,10 @@ import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _REFLOG_CHECKOUT_RE = re.compile(r"checkout: moving from \S+ to (\S+)$")
 
@@ -279,4 +283,4 @@ def resolve_write_target(kind: str, iso_week: str | None = None, cwd: Path | Non
     week = iso_week if iso_week is not None else datetime.now(timezone.utc).strftime("%G-W%V")
     identifier = resolve_batch_identifier(identifier_cwd)
     base = cwd if cwd is not None else Path(".")
-    return base / "agent-monitoring" / "data" / week / f"{identifier}.{kind}.jsonl"
+    return base / AGENT_MONITORING / "data" / week / f"{identifier}.{kind}.jsonl"

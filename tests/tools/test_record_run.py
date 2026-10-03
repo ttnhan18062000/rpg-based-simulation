@@ -11,6 +11,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
@@ -195,7 +196,7 @@ class TestDurationWrittenToRecord:
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
         # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: keys by the current git branch now, not
         # run_id.
-        runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
+        runs_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
         written = json.loads(runs_file.read_text().strip())
         return written
 
@@ -245,7 +246,7 @@ def test_execution_identity_fields_pass_through_unchanged(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
+    runs_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
     written = json.loads(runs_file.read_text().strip())
     assert written["execution_id"] == "claude-TCK-FAKE-RUN-1234567890-abcd1234"
     assert written["provider"] == "claude"
@@ -266,7 +267,7 @@ def test_execution_mode_pipeline_passes_through_unchanged(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
+    runs_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
     written = json.loads(runs_file.read_text().strip())
     assert written["execution_mode"] == "pipeline"
 
@@ -316,12 +317,12 @@ def test_writes_to_unified_week_folder(tmp_path, monkeypatch):
 
     record_run.main()
 
-    written_path = tmp_path / "agent-monitoring" / "data" / "2026-W36" / f"{_TEST_BRANCH}.runs.jsonl"
+    written_path = tmp_path / AGENT_MONITORING / "data" / "2026-W36" / f"{_TEST_BRANCH}.runs.jsonl"
     assert written_path.exists()
     written = json.loads(written_path.read_text().strip())
     assert written["run_id"] == "TCK-FAKE-RUN"
-    assert not (tmp_path / "agent-monitoring" / "runs.jsonl").exists()
-    assert not (tmp_path / "agent-monitoring" / "data" / "2026-W36" / "runs.jsonl").exists()
+    assert not (tmp_path / AGENT_MONITORING / "runs.jsonl").exists()
+    assert not (tmp_path / AGENT_MONITORING / "data" / "2026-W36" / "runs.jsonl").exists()
 
 
 def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path, monkeypatch):
@@ -342,8 +343,8 @@ def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path, mo
     )
     record_run.main()
 
-    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / f"{_TEST_BRANCH}.runs.jsonl"
-    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / f"{_TEST_BRANCH}.runs.jsonl"
+    week_36 = tmp_path / AGENT_MONITORING / "data" / "2026-W36" / f"{_TEST_BRANCH}.runs.jsonl"
+    week_37 = tmp_path / AGENT_MONITORING / "data" / "2026-W37" / f"{_TEST_BRANCH}.runs.jsonl"
     assert week_36.exists()
     assert week_37.exists()
     assert json.loads(week_36.read_text().strip())["run_id"] == "TCK-WEEK-36"

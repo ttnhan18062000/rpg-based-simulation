@@ -65,6 +65,10 @@ for _dir in (str(_TOOLS_DIR), str(_MONITORING_TOOLS_DIR)):
 
 from generate_retro import _load_runs_and_events  # noqa: E402
 from validate import load_data_glob  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 VALID_WORKFLOWS = {"implement-ticket", "implement-epic", "create-tickets"}
 FIX_DATE = "2026-07-19"
@@ -83,7 +87,7 @@ def find_tool_call_count_mismatches(
         runs = runs if runs is not None else loaded_runs
         events = events if events is not None else loaded_events
     if tools is None:
-        tools = load_data_glob(Path("agent-monitoring/data"), "tools")
+        tools = load_data_glob(AGENT_MONITORING / "data", "tools")
 
     workflow_by_run = {r["run_id"]: r.get("workflow") for r in runs if r.get("run_id")}
     start_ts_by_run = {r["run_id"]: r.get("start_ts") for r in runs if r.get("run_id")}

@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING
 
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
@@ -30,7 +31,7 @@ from gate_checks.workflow_meta_conformance import (  # noqa: E402
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _WORKFLOWS_DIR = _REPO_ROOT / ".claude" / "workflows"
 _SKILLS_DIR = _REPO_ROOT / ".claude" / "skills"
-_REAL_EVENTS_ROOT = _REPO_ROOT / "agent-monitoring" / "data"
+_REAL_EVENTS_ROOT = _REPO_ROOT / AGENT_MONITORING / "data"
 
 
 def _write_workflow_js(tmp_path, workflow_name, titles):

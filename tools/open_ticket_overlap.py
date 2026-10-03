@@ -77,10 +77,14 @@ from generate_registry import (  # noqa: E402
     _strip_frontmatter,
 )
 from validate_frontmatter import extract_frontmatter  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS  # noqa: E402
 
 _REPO_ROOT = _TOOLS_DIR.parent
-_DEFAULT_TODOS_ROOT = _REPO_ROOT / "tickets" / "todos"
-_DEFAULT_INPROGRESS_ROOT = _REPO_ROOT / "tickets" / "inprogress"
+_DEFAULT_TODOS_ROOT = _REPO_ROOT / TICKETS / "todos"
+_DEFAULT_INPROGRESS_ROOT = _REPO_ROOT / TICKETS / "inprogress"
 
 _MIN_TERM_LEN = 5
 _TOKEN_RE = re.compile(r"[a-z0-9]+")

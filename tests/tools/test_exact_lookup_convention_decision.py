@@ -22,11 +22,12 @@ import re
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import TICKETS
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _CONTRACT_PATH = _REPO_ROOT / "docs" / "engine" / "contracts" / "context_packet_contract.md"
 _EPIC_TICKET_PATH = (
-    _REPO_ROOT / "tickets" / "backlogs" / "TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md"
+    _REPO_ROOT / TICKETS / "backlogs" / "TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md"
 )
 
 # Recorded at the time this ticket authored §7 — TCK-20260802-EXACT-LOOKUP-CONVENTION made zero

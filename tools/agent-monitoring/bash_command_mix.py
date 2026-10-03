@@ -52,9 +52,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate import load_jsonl_with_line_count  # noqa: E402
 from monitoring_shard_paths import shard_paths  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, posix  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-DEFAULT_DATA_DIR = REPO_ROOT / "agent-monitoring" / "data"
+DEFAULT_DATA_DIR = REPO_ROOT / AGENT_MONITORING / "data"
 
 TICKET_ID = "TCK-20260923-BASH-COMMAND-MIX-BASELINE"
 SEARCH_DOCS_TOOL_NAME = "mcp__knowledge-search__search_docs"
@@ -129,7 +133,7 @@ def load_tools_rows_from_ref(
     sha = resolve_ref_sha(ref, repo_root)
 
     listing = subprocess.run(
-        ["git", "ls-tree", "-r", "--name-only", sha, "--", "agent-monitoring/data/"],
+        ["git", "ls-tree", "-r", "--name-only", sha, "--", f"{posix(AGENT_MONITORING)}/data/"],
         capture_output=True, text=True, check=True, cwd=str(repo_root),
     ).stdout
 

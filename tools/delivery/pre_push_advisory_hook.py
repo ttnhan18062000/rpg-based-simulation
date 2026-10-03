@@ -56,10 +56,14 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, NamedTuple
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix  # noqa: E402
 
 _GIT_PUSH_RE = re.compile(r"(?:^|&&|;)\s*git\s+push\b", re.MULTILINE)
 _TICKET_ID_RE = re.compile(r"TCK-[0-9]{8}-[A-Z0-9-]+")
-_DEFAULT_TICKETS_ROOT = Path("tickets")
+_DEFAULT_TICKETS_ROOT = TICKETS
 
 
 class CommandResult(NamedTuple):
@@ -118,7 +122,7 @@ def _current_iso_week() -> str:
 
 def check_monitoring_shard_staged(run_command=default_run_command) -> List[str]:
     week = _current_iso_week()
-    shard_dir = f"agent-monitoring/data/{week}/"
+    shard_dir = f"{posix(AGENT_MONITORING)}/data/{week}/"
     result = run_command(["git", "status", "--porcelain", "--", shard_dir])
     if result.returncode != 0:
         return []

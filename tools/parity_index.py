@@ -63,12 +63,16 @@ if str(_TOOLS_DIR) not in sys.path:
 
 from parity_index_baseline import _sha256_hex, serialize_manifest  # noqa: E402
 from parity_test_path import parse_test_path_citations  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import PARITY_INDEX  # noqa: E402
 
 SCHEMA_VERSION = 1
 IMPORTER_VERSION = "1.0.0"
 
 DEFAULT_LEDGER_DIR = Path("docs/parity_ledger")
-DEFAULT_DB_PATH = Path("parity-index/parity.db")
+DEFAULT_DB_PATH = PARITY_INDEX / "parity.db"
 
 _PATH_REF_RE = re.compile(r"\b(?:src|tools|tests|docs)/[\w./-]+\.\w+\b")
 _TICKET_REF_RE = re.compile(r"\bTCK-\d{8}-[A-Z0-9-]+\b")

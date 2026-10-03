@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _VALID_KINDS = {"literal", "verdict_derived", "bypass"}
 
@@ -40,7 +41,7 @@ def validate_terminal_statuses(data: dict[str, Any]) -> None:
 
 
 def load_terminal_statuses(repo_root: Path) -> list[dict[str, Any]]:
-    path = repo_root / "agent-orchestration" / "terminal-statuses.yaml"
+    path = repo_root / AGENT_ORCHESTRATION / "terminal-statuses.yaml"
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     validate_terminal_statuses(data)
     return data["statuses"]

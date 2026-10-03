@@ -23,8 +23,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate import load_data_glob  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
-EVENTS_FILE = Path("agent-monitoring/data")
+EVENTS_FILE = AGENT_MONITORING / "data"
 
 
 def compute_seq_offset(run_id: str, events: list) -> int:

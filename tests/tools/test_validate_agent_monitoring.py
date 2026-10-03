@@ -16,6 +16,7 @@ import json
 import sqlite3
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
@@ -157,7 +158,7 @@ def test_drift_report_is_read_only(tmp_path, monkeypatch):
     events = [{"run_id": "TCK-FAKE", "seq": 1, "ts": "t", "phase": "weird", "agent": "weird", "status": "ok", "summary": "ok"}]
     compute_drift_report(runs, events)
 
-    assert not (tmp_path / "agent-monitoring").exists()
+    assert not (tmp_path / AGENT_MONITORING).exists()
 
 
 # ---------------------------------------------------------------------------
@@ -234,7 +235,7 @@ def test_tool_count_drift_report_is_read_only(tmp_path, monkeypatch):
     tools = [_tool_row("TCK-F", 1)]
     compute_tool_count_drift_report(events, tools)
 
-    assert not (tmp_path / "agent-monitoring").exists()
+    assert not (tmp_path / AGENT_MONITORING).exists()
 
 
 # ---------------------------------------------------------------------------
@@ -263,7 +264,7 @@ def test_multi_invocation_collision_report_is_read_only(tmp_path, monkeypatch):
     events = [_scope_seq1("TCK-G"), _scope_seq1("TCK-G")]
     compute_multi_invocation_collision_report(events)
 
-    assert not (tmp_path / "agent-monitoring").exists()
+    assert not (tmp_path / AGENT_MONITORING).exists()
 
 
 # ---------------------------------------------------------------------------
@@ -338,7 +339,7 @@ class TestMainUsesIndex:
         out = capsys.readouterr().out
 
         assert "OK: 1 runs, 1 events" in out
-        assert not (tmp_path / "agent-monitoring" / "runs.jsonl").exists()
+        assert not (tmp_path / AGENT_MONITORING / "runs.jsonl").exists()
 
     def test_main_loads_events_from_index_not_direct_jsonl(self, tmp_path, monkeypatch, capsys):
         monkeypatch.chdir(tmp_path)
@@ -351,7 +352,7 @@ class TestMainUsesIndex:
         out = capsys.readouterr().out
 
         assert "'weird-phase': 1" in out
-        assert not (tmp_path / "agent-monitoring" / "events.jsonl").exists()
+        assert not (tmp_path / AGENT_MONITORING / "events.jsonl").exists()
 
     def test_main_loads_tools_from_index_not_direct_jsonl(self, tmp_path, monkeypatch, capsys):
         monkeypatch.chdir(tmp_path)
@@ -365,7 +366,7 @@ class TestMainUsesIndex:
         out = capsys.readouterr().out
 
         assert "TCK-IDX-C seq=1: recorded=5 actual=2" in out
-        assert not (tmp_path / "agent-monitoring" / "tools.jsonl").exists()
+        assert not (tmp_path / AGENT_MONITORING / "tools.jsonl").exists()
 
 
 class TestArchitectureGuards:

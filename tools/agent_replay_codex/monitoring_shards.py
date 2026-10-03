@@ -23,6 +23,7 @@ from __future__ import annotations
 import hashlib
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING, posix  # noqa: E402
 
 _MONITORING_TOOLS_DIR = Path(__file__).resolve().parent.parent / "agent-monitoring"
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
@@ -30,7 +31,7 @@ if str(_MONITORING_TOOLS_DIR) not in sys.path:
 from monitoring_shard_paths import shard_paths  # noqa: E402
 
 _DATA_DIR_NAME = "data"
-_TREE_DATA_DIR_PREFIX = "agent-monitoring/data/"
+_TREE_DATA_DIR_PREFIX = f"{posix(AGENT_MONITORING)}/data/"
 
 
 def source_paths(agent_monitoring_dir: Path, source: str) -> list[Path]:
@@ -80,4 +81,4 @@ def resolve_tree_lines(tree: dict[str, bytes], name: str) -> list[bytes]:
     if shard_keys:
         content = b"".join(tree[key] for key in shard_keys)
         return content.splitlines(keepends=True)
-    return tree.get(f"agent-monitoring/{name}", b"").splitlines(keepends=True)
+    return tree.get(f"{posix(AGENT_MONITORING)}/{name}", b"").splitlines(keepends=True)

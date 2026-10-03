@@ -20,6 +20,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import TICKETS
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _IMPLEMENT_EPIC_PATH = _REPO_ROOT / ".claude" / "workflows" / "implement-epic.js"
@@ -234,8 +235,8 @@ def test_epic_close_step_target_values_satisfy_the_real_location_validator(tmp_p
     """
     from validate_frontmatter import check_ticket_location_consistency, extract_frontmatter
 
-    inprogress_dir = tmp_path / "tickets" / "inprogress"
-    done_dir = tmp_path / "tickets" / "done"
+    inprogress_dir = tmp_path / TICKETS / "inprogress"
+    done_dir = tmp_path / TICKETS / "done"
     inprogress_dir.mkdir(parents=True)
     done_dir.mkdir(parents=True)
 
@@ -286,8 +287,8 @@ def test_folder_mode_epic_parent_target_values_satisfy_the_real_location_validat
     """
     from validate_frontmatter import check_ticket_location_consistency, extract_frontmatter
 
-    todos_folder = tmp_path / "tickets" / "todos" / "synthetic-epic-folder"
-    done_folder = tmp_path / "tickets" / "done" / "synthetic-epic-folder"
+    todos_folder = tmp_path / TICKETS / "todos" / "synthetic-epic-folder"
+    done_folder = tmp_path / TICKETS / "done" / "synthetic-epic-folder"
     todos_folder.mkdir(parents=True)
 
     epic_path = todos_folder / "TCK-20260101-SYNTHETIC-EPIC.md"

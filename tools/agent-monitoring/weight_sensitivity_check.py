@@ -26,9 +26,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cost_proxy import W_AGENT, W_BASH, W_EDIT  # noqa: E402
 from validate import load_data_glob  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
-TOOLS_FILE = Path("agent-monitoring/data")
-EVENTS_FILE = Path("agent-monitoring/data")
+TOOLS_FILE = AGENT_MONITORING / "data"
+EVENTS_FILE = AGENT_MONITORING / "data"
 
 _EDIT_TOOLS = {"Read", "Edit", "Write", "MultiEdit"}
 

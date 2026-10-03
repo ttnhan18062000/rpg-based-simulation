@@ -24,6 +24,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING
 
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
@@ -101,7 +102,7 @@ def test_no_test_target_path_resolves_under_real_agent_monitoring_dir():
     """
     module = sys.modules[__name__]
     this_function_name = "test_no_test_target_path_resolves_under_real_agent_monitoring_dir"
-    real_dir = str((_REPO_ROOT / "agent-monitoring").resolve())
+    real_dir = str((_REPO_ROOT / AGENT_MONITORING).resolve())
     forbidden = [real_dir, "Path(" + '"agent-monitoring"' + ")", "Path(" + "'agent-monitoring'" + ")"]
 
     for name, obj in inspect.getmembers(module, inspect.isfunction):

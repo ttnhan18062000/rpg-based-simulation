@@ -16,13 +16,14 @@ synthetic guess.
 import json
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "tools" / "agent-monitoring"))
 
 from verify_referential_integrity import compute_referential_integrity_report, load_all_weeks  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REAL_DATA_DIR = _REPO_ROOT / "agent-monitoring" / "data"
+_REAL_DATA_DIR = _REPO_ROOT / AGENT_MONITORING / "data"
 
 
 def _write_jsonl(path: Path, records: list[dict]) -> None:

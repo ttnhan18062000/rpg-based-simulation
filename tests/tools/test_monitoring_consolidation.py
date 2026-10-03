@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS
 
 _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
@@ -85,28 +86,28 @@ def _init_repo(repo):
 def test_two_per_ticket_files_never_conflict_under_sequential_squash_merges(tmp_path):
     repo = tmp_path / "repo"
     _init_repo(repo)
-    week_dir = repo / "agent-monitoring" / "data" / "2026-W01"
+    week_dir = repo / AGENT_MONITORING / "data" / "2026-W01"
     week_dir.mkdir(parents=True)
 
     # Branch A adds its own per-ticket file.
     _git(repo, "checkout", "-q", "-b", "ticket-a")
     (week_dir / "TCK-A.tools.jsonl").write_text('{"run_id": "TCK-A"}\n')
-    _git(repo, "add", "agent-monitoring")
+    _git(repo, "add", str(AGENT_MONITORING))
     _git(repo, "commit", "-q", "-m", "TCK-A: add shard")
 
     # Squash-merge branch A into main (a new commit whose parent is main's own prior tip).
     _git(repo, "checkout", "-q", "main")
-    _git(repo, "checkout", "-q", "ticket-a", "--", "agent-monitoring")
-    _git(repo, "add", "agent-monitoring")
+    _git(repo, "checkout", "-q", "ticket-a", "--", str(AGENT_MONITORING))
+    _git(repo, "add", str(AGENT_MONITORING))
     _git(repo, "commit", "-q", "-m", "TCK-A: add shard (squashed) (#1)")
 
     # Branch B, diverged from the ORIGINAL base (before A's squash landed), adds a DIFFERENT
     # per-ticket file.
     _git(repo, "checkout", "-q", "-b", "ticket-b", "main~1")
-    week_dir_b = repo / "agent-monitoring" / "data" / "2026-W01"
+    week_dir_b = repo / AGENT_MONITORING / "data" / "2026-W01"
     week_dir_b.mkdir(parents=True)
     (week_dir_b / "TCK-B.tools.jsonl").write_text('{"run_id": "TCK-B"}\n')
-    _git(repo, "add", "agent-monitoring")
+    _git(repo, "add", str(AGENT_MONITORING))
     _git(repo, "commit", "-q", "-m", "TCK-B: add shard")
 
     # Squash-merge branch B onto the NEW main tip (post-A) -- this is exactly the sequential-
@@ -233,10 +234,10 @@ def test_consolidate_all_derives_csv_path_from_data_dir_not_foreign_cwd(tmp_path
     checkout that actually owns the pending shard). Must fail on the pre-fix code: pre-fix, the
     row lands in `foreign_csv` and `owning_csv` is left with only its header."""
     owning = tmp_path / "owning-checkout"
-    week_dir = owning / "agent-monitoring" / "data" / "2026-W01"
+    week_dir = owning / AGENT_MONITORING / "data" / "2026-W01"
     week_dir.mkdir(parents=True)
-    (owning / "tickets").mkdir(parents=True)
-    owning_csv = owning / "tickets" / "working_log.csv"
+    (owning / TICKETS).mkdir(parents=True)
+    owning_csv = owning / TICKETS / "working_log.csv"
     owning_csv.write_text(_CSV_HEADER, encoding="utf-8")
     _write_jsonl(week_dir / "TCK-A.working_log.jsonl", [{
         "timestamp": "2026-09-28T00:00:00Z", "ticket_id": "TCK-FOREIGN-CWD",
@@ -244,12 +245,12 @@ def test_consolidate_all_derives_csv_path_from_data_dir_not_foreign_cwd(tmp_path
     }])
 
     foreign_cwd = tmp_path / "foreign-checkout"
-    (foreign_cwd / "tickets").mkdir(parents=True)
-    foreign_csv = foreign_cwd / "tickets" / "working_log.csv"
+    (foreign_cwd / TICKETS).mkdir(parents=True)
+    foreign_csv = foreign_cwd / TICKETS / "working_log.csv"
     foreign_csv.write_text(_CSV_HEADER, encoding="utf-8")
     monkeypatch.chdir(foreign_cwd)
 
-    result = mc.consolidate_all(owning / "agent-monitoring" / "data")
+    result = mc.consolidate_all(owning / AGENT_MONITORING / "data")
 
     assert result["working_log"] == {"consolidated_rows": 1, "shard_files": 1}
     assert "TCK-FOREIGN-CWD" in owning_csv.read_text(encoding="utf-8")
@@ -270,9 +271,9 @@ def test_consolidate_pending_rows_default_path_resolves_against_module_not_forei
     from tools import working_log_writer as wlw
 
     owning = tmp_path / "owning-checkout"
-    week_dir = owning / "agent-monitoring" / "data" / "2026-W01"
+    week_dir = owning / AGENT_MONITORING / "data" / "2026-W01"
     week_dir.mkdir(parents=True)
-    owning_csv = owning / "tickets" / "working_log.csv"
+    owning_csv = owning / TICKETS / "working_log.csv"
     owning_csv.parent.mkdir(parents=True)
     owning_csv.write_text(_CSV_HEADER, encoding="utf-8")
     _write_jsonl(week_dir / "TCK-B.working_log.jsonl", [{
@@ -281,8 +282,8 @@ def test_consolidate_pending_rows_default_path_resolves_against_module_not_forei
     }])
 
     foreign_cwd = tmp_path / "foreign-checkout"
-    (foreign_cwd / "tickets").mkdir(parents=True)
-    foreign_csv = foreign_cwd / "tickets" / "working_log.csv"
+    (foreign_cwd / TICKETS).mkdir(parents=True)
+    foreign_csv = foreign_cwd / TICKETS / "working_log.csv"
     foreign_csv.write_text(_CSV_HEADER, encoding="utf-8")
 
     monkeypatch.setattr(wlw, "_REPO_ROOT", owning)

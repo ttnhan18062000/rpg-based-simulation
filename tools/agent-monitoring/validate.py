@@ -29,8 +29,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from vocabulary import CANONICAL_TIERS, WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: E402
 from monitoring_shard_paths import shard_paths  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING_INDEX, TICKETS  # noqa: E402
 
-LOG_FILE = Path("tickets/working_log.csv")
+LOG_FILE = TICKETS / "working_log.csv"
 # Only validate working_log entries on or after this date (ISO prefix match)
 MONITORING_START = "2026-06-07"
 
@@ -55,7 +59,7 @@ EVENTS_REQUIRED_START = "2026-07-08"
 # this order since `start_ts` is the current, canonical field name.
 LEGACY_START_TS_FIELDS = ("start_ts", "ts", "started_at")
 
-DEFAULT_DB_PATH = Path("agent-monitoring-index/monitoring.db")
+DEFAULT_DB_PATH = AGENT_MONITORING_INDEX / "monitoring.db"
 
 
 def _run_effective_start_ts(run: dict):

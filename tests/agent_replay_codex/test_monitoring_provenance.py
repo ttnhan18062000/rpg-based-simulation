@@ -10,16 +10,17 @@ import pytest
 
 from tools.agent_replay_codex.errors import ContainmentViolationError
 from tools.agent_replay_codex.provenance_check import assert_no_codex_provider_writes
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def test_real_monitoring_corpus_has_zero_codex_provider_records():
-    assert_no_codex_provider_writes(_REPO_ROOT / "agent-monitoring")
+    assert_no_codex_provider_writes(_REPO_ROOT / AGENT_MONITORING)
 
 
 def test_negative_control_raises_on_a_codex_provider_record(tmp_path):
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     monitoring_dir.mkdir()
     (monitoring_dir / "runs.jsonl").write_text(
         json.dumps({"run_id": "FAKE", "provider": "codex"}) + "\n", encoding="utf-8"
@@ -35,7 +36,7 @@ def test_negative_control_raises_on_a_codex_provider_record_in_a_sharded_tools_f
     """TCK-20260903-MONITORING-DATA-CODEX-REMIGRATION: proves the fix restores real detection
     inside agent-monitoring/data/<week>/tools.jsonl shards, not merely that the .exists() guard
     no longer silently skips the 'tools' source entirely."""
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     data_dir = monitoring_dir / "data"
     for week in ("2026-W01", "2026-W02", "unknown-week"):
         (data_dir / week).mkdir(parents=True)
@@ -56,7 +57,7 @@ def test_negative_control_raises_on_a_codex_provider_record_in_a_sharded_tools_f
 
 
 def test_sharded_tools_directory_with_no_codex_rows_passes(tmp_path):
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     data_dir = monitoring_dir / "data"
     for week in ("2026-W01", "unknown-week"):
         (data_dir / week).mkdir(parents=True)

@@ -61,6 +61,10 @@ except ImportError:
     from validate_frontmatter import extract_frontmatter  # noqa: E402
     from generate_registry import parse_body_section, _strip_frontmatter  # noqa: E402
     from pr_status import CommandResult, default_run_command  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS, posix  # noqa: E402
 
 _TICKET_ID_RE = re.compile(r"TCK-[0-9]{8}-[A-Z0-9-]+")
 _REVIEW_NOTES_PLACEHOLDER = "<!-- UNFILLED: write review notes by hand before opening the PR -->"
@@ -75,7 +79,7 @@ _EXCLUSION_COMMENT_RE = re.compile(
     r'<!--\s*pr-render:exclude\s+(TCK-[0-9]{8}-[A-Z0-9-]+)\s+reason="([^"]*)"\s*-->'
 )
 _DEFAULT_SPEC_PATH = Path("tools/delivery/pr_template_spec.json")
-_DEFAULT_TICKETS_ROOT = Path("tickets")
+_DEFAULT_TICKETS_ROOT = TICKETS
 _DEFAULT_LAYER_REGISTRY = Path("registries/layer_registry.jsonl")
 
 
@@ -100,7 +104,7 @@ def discover_commit_ticket_ids(run_command=default_run_command, base_ref: str = 
 
 
 def discover_changed_ticket_ids(run_command=default_run_command, base_ref: str = "origin/main") -> list:
-    result = run_command(["git", "diff", "--name-only", f"{base_ref}..HEAD", "--", "tickets/"])
+    result = run_command(["git", "diff", "--name-only", f"{base_ref}..HEAD", "--", posix(TICKETS) + "/"])
     if result.returncode != 0:
         return []
     ids = []

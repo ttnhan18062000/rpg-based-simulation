@@ -36,6 +36,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from tools.agent_working_paths import STAGING_ARTIFACTS
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _TOOLS_DIR = _REPO_ROOT / "tools"
@@ -48,7 +49,7 @@ import parity_index as pi  # noqa: E402
 from parity_ledger_scan import find_p0_intersection, ShardParseError  # noqa: E402
 from gate_checks.parity_updater_static import derive_mapping  # noqa: E402
 
-_ARTIFACT_DIR = _REPO_ROOT / "staging_artifacts" / "TCK-20260731-PARITY-READPATH-GATE"
+_ARTIFACT_DIR = _REPO_ROOT / STAGING_ARTIFACTS / "TCK-20260731-PARITY-READPATH-GATE"
 _CORPUS_PATH = _ARTIFACT_DIR / "gate_a_corpus.json"
 _RESULTS_PATH = _ARTIFACT_DIR / "gate_a_results.json"
 _DECISION_DOC_PATH = _REPO_ROOT / "docs" / "ai" / "parity_readpath_gate_a_decision.md"

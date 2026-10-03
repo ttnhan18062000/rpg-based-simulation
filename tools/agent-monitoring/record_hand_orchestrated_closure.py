@@ -82,10 +82,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import append_working_log_row  # noqa: E402
 from working_log_parser import parse_working_log, parse_pending_working_log_shards  # noqa: E402
 from generate_registry import generate_registry  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, STORED_ARTIFACTS, TICKETS, posix  # noqa: E402
 
 
 def _existing_row_for(
-    csv_path: Path, ticket_id: str, title: str, data_root: Path = Path("agent-monitoring/data")
+    csv_path: Path, ticket_id: str, title: str, data_root: Path = AGENT_MONITORING / "data"
 ) -> dict | None:
     """Read-only lookup: the first kept (non-ambiguous) row matching (ticket_id, title) in
     csv_path OR still-pending in a per-batch working_log shard under data_root, else None.
@@ -389,12 +393,12 @@ def main() -> None:
         artifacts_path = (
             "none (hotfix — no staging artifacts)"
             if args.tier == "hotfix"
-            else f"stored_artifacts/{args.ticket_id}"
+            else f"{posix(STORED_ARTIFACTS)}/{args.ticket_id}"
         )
 
     # Cwd-relative by design -- see _existing_row_for()'s docstring
     # (TCK-20260928-WORKING-LOG-CONSOLIDATION-CROSS-CHECKOUT-ROW-LOSS) for why this is safe here.
-    working_log_path = Path("tickets/working_log.csv")
+    working_log_path = TICKETS / "working_log.csv"
     existing = _existing_row_for(working_log_path, args.ticket_id, args.title)
     if existing is not None:
         print(

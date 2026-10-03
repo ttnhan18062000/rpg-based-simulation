@@ -36,6 +36,10 @@ from tag_registry import (  # noqa: E402,F401
     load_registry,
 )
 from layer_registry import layer_values as _layer_values  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Enum constants — single source of truth for all valid field values.
@@ -117,12 +121,21 @@ def extract_frontmatter(text: str) -> dict | None:
 # Content type detection
 # ---------------------------------------------------------------------------
 
+def _root_index(parts: tuple, root: Path) -> int | None:
+    """Index in `parts` where the consecutive segments of `root` start, or None if absent."""
+    width = len(root.parts)
+    for i in range(len(parts) - width + 1):
+        if parts[i : i + width] == root.parts:
+            return i
+    return None
+
+
 def detect_content_type(path: Path) -> str:
     """Infer content type from file path."""
     parts = path.parts
-    if "tickets" in parts:
+    if _root_index(parts, TICKETS) is not None:
         return "ticket"
-    if "stored_artifacts" in parts:
+    if _root_index(parts, STORED_ARTIFACTS) is not None:
         return "artifact"
     # docs/archive/, docs/superpowers/, docs/specs/ → archive
     if "docs" in parts:
@@ -298,9 +311,10 @@ def _ticket_directory(path) -> str | None:
     """Return the tickets/<x> path segment immediately below `tickets/`, or None if `path` is
     not under a `tickets/` directory at all."""
     parts = Path(path).parts
-    if "tickets" not in parts:
+    root_idx = _root_index(parts, TICKETS)
+    if root_idx is None:
         return None
-    idx = parts.index("tickets")
+    idx = root_idx + len(TICKETS.parts) - 1
     return parts[idx + 1] if idx + 1 < len(parts) else None
 
 

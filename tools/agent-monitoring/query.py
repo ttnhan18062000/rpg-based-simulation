@@ -20,9 +20,13 @@ import sqlite3
 import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING_INDEX  # noqa: E402
 
 
-DEFAULT_DB_PATH = Path("agent-monitoring-index/monitoring.db")
+DEFAULT_DB_PATH = AGENT_MONITORING_INDEX / "monitoring.db"
 COL_WIDTH = 22
 
 

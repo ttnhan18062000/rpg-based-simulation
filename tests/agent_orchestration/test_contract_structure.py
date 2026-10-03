@@ -13,9 +13,10 @@ import yaml
 
 from agent_orchestration.loader import load_contract
 from tools.agent_codex_pilot_guardrails.enabled_surface import EVIDENCED_WRITER_FUNCTIONS
+from tools.agent_working_paths import AGENT_ORCHESTRATION, STORED_ARTIFACTS  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
-_CONTRACT_DIR = _REPO_ROOT / "agent-orchestration"
+_CONTRACT_DIR = _REPO_ROOT / AGENT_ORCHESTRATION
 _HOOK_SURFACE_POLICY_PATH = _CONTRACT_DIR / "hook-surface-policy.yaml"
 
 _CODEX_CAPABILITY_MATRIX_EVENTS = {
@@ -116,7 +117,7 @@ def test_contract_yaml_has_versioning_field_and_documented_scheme():
 
     plan_path = (
         _REPO_ROOT
-        / "stored_artifacts"
+        / STORED_ARTIFACTS
         / "TCK-20260721-ORCHESTRATION-CONTRACT-CORE"
         / "plan.md"
     )

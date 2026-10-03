@@ -91,6 +91,10 @@ from tools.code_health.metrics import (  # noqa: E402
 
 sys.path.insert(0, str(_REPO_ROOT / "tools" / "agent-monitoring"))
 from writer import write_line  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 # Hand-copied once from the real `build_report()` return statement
 # (`tools/codebase_health_baseline.py:238-253`) — the single source of truth
@@ -106,7 +110,7 @@ EXPECTED_BASELINE_KEYS = frozenset({
 # build_report()'s keys plus the second metric source's (tools/code_health/metrics.py).
 EXPECTED_SNAPSHOT_KEYS = EXPECTED_BASELINE_KEYS | frozenset(CRAFT_METRIC_KEYS)
 SNAPSHOT_SCHEMA_VERSION = 2
-DEFAULT_HISTORY_PATH = _REPO_ROOT / "agent-monitoring" / "codebase_health_history.jsonl"
+DEFAULT_HISTORY_PATH = _REPO_ROOT / AGENT_MONITORING / "codebase_health_history.jsonl"
 
 # The 11 scalar dimensions that get a Δ + arrow trend row.
 SCALAR_DIMENSIONS = (

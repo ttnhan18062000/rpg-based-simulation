@@ -37,12 +37,13 @@ from agent_replay import metrics as metrics_module  # noqa: E402
 from agent_replay import pilot_isolation  # noqa: E402
 from agent_replay.fixture_envelope import load_fixture  # noqa: E402
 from agent_replay_codex.monitoring_shards import source_paths  # noqa: E402
+from tools.agent_working_paths import AGENT_MONITORING, STORED_ARTIFACTS, TICKETS  # noqa: E402
 
 TICKET_ID = "TCK-20260907-FILTERED-REPLAY-EVAL-PILOT"
-DONE_DIR = _REPO_ROOT / "tickets" / "done"
-STORED_ARTIFACTS_ROOT = _REPO_ROOT / "stored_artifacts"
+DONE_DIR = _REPO_ROOT / TICKETS / "done"
+STORED_ARTIFACTS_ROOT = _REPO_ROOT / STORED_ARTIFACTS
 STORED_ARTIFACTS_DIR = STORED_ARTIFACTS_ROOT / TICKET_ID
-MONITORING_ROOT = _REPO_ROOT / "agent-monitoring"
+MONITORING_ROOT = _REPO_ROOT / AGENT_MONITORING
 FIXTURES_OUT_DIR = _REPO_ROOT / "tests" / "fixtures" / "agent_replay" / "pilot" / "sample"
 M3_SYNTHETIC_PATH = (
     _REPO_ROOT / "tests" / "fixtures" / "agent_replay" / "pilot" / "m3_synthetic_known_positive.yaml"

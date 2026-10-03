@@ -8,6 +8,7 @@ import pytest
 from src.api.agent_ops_dashboard.ingest import DashboardCache
 from tools.agent_codex_pilot_executor.models import PilotSimulationContext
 from tools.agent_codex_pilot_executor.simulation import simulate_pilot
+from tools.agent_working_paths import AGENT_MONITORING, PILOT_REQUESTS  # noqa: E402
 
 
 TICKET_ID = "TCK-20260731-CODEX-PILOT-EXECUTOR"
@@ -33,7 +34,7 @@ def _context(root: Path) -> PilotSimulationContext:
 
 
 def _write_request(root: Path) -> None:
-    request = root / "pilot_requests" / f"{TICKET_ID}.yaml"
+    request = root / PILOT_REQUESTS / f"{TICKET_ID}.yaml"
     request.parent.mkdir(exist_ok=True)
     request.write_text(
         f"ticket_id: {TICKET_ID}\nhuman_owner: test\nrollback_plan_summary: delete scratch\n",
@@ -48,9 +49,9 @@ def test_simulation_writes_coherent_disposable_lifecycle_and_terminalizes_claim(
 
     assert result.success is True
     assert result.claim is not None and result.claim.state == "completed"
-    runs = [json.loads(line) for line in (tmp_path / "agent-monitoring" / "runs.jsonl").read_text().splitlines()]
-    events = [json.loads(line) for line in (tmp_path / "agent-monitoring" / "events.jsonl").read_text().splitlines()]
-    tools = [json.loads(line) for line in (tmp_path / "agent-monitoring" / "tools.jsonl").read_text().splitlines()]
+    runs = [json.loads(line) for line in (tmp_path / AGENT_MONITORING / "runs.jsonl").read_text().splitlines()]
+    events = [json.loads(line) for line in (tmp_path / AGENT_MONITORING / "events.jsonl").read_text().splitlines()]
+    tools = [json.loads(line) for line in (tmp_path / AGENT_MONITORING / "tools.jsonl").read_text().splitlines()]
     assert len(runs) == 1 and len(events) == 2 and len(tools) == 1
     assert {row["execution_id"] for row in [*runs, *events, *tools]} == {EXECUTION_ID}
     assert tools[0]["seq"] == events[-1]["seq"]
@@ -136,7 +137,7 @@ def test_simulation_failure_after_claim_retains_failed_marker(tmp_path: Path, mo
 
 
 def test_dashboard_does_not_treat_an_old_tool_only_row_as_completed_pilot(tmp_path: Path):
-    monitoring = tmp_path / "agent-monitoring"
+    monitoring = tmp_path / AGENT_MONITORING
     monitoring.mkdir()
     for filename in ("runs.jsonl", "events.jsonl"):
         (monitoring / filename).touch()

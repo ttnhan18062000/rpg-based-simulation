@@ -7,6 +7,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS
 
 _TOOLS = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
 sys.path.insert(0, str(_TOOLS))
@@ -25,7 +26,7 @@ def _w(path, rows):
 
 
 def _fixture(tmp_path, with_working_log=False):
-    data = tmp_path / "agent-monitoring" / "data"
+    data = tmp_path / AGENT_MONITORING / "data"
     wk = data / WEEK
     _w(wk / "runs.jsonl", [{"run_id": "A", "start_ts": "2026-09-22T10:00:00Z"}])
     _w(wk / "events.jsonl", [{"run_id": "A", "seq": 2, "ts": "2026-09-22T10:05:00Z"}])
@@ -38,8 +39,8 @@ def _fixture(tmp_path, with_working_log=False):
     if with_working_log:
         _w(wk / "b1.working_log.jsonl", [{"timestamp": "2026-09-21T09:00:00Z", "ticket_id": "TCK-X", "title": "t",
                                            "status": "DONE", "summary": "s", "artifacts_path": ""}])
-        (tmp_path / "tickets").mkdir()
-        (tmp_path / "tickets" / "working_log.csv").write_text(
+        (tmp_path / TICKETS).mkdir()
+        (tmp_path / TICKETS / "working_log.csv").write_text(
             "timestamp,ticket_id,title,status,summary,artifacts_path\r\n", encoding="utf-8")
     return data
 
@@ -112,12 +113,12 @@ def test_working_log_rows_land_once_in_the_csv_and_only_for_that_week(tmp_path):
     _w(other / "b3.working_log.jsonl", [{"timestamp": "2026-10-01T00:00:00Z", "ticket_id": "TCK-Y", "title": "t",
                                          "status": "DONE", "summary": "s", "artifacts_path": ""}])
     result = wc.close_week(WEEK, data, AFTER)
-    csv_text = (tmp_path / "tickets" / "working_log.csv").read_text(encoding="utf-8")
+    csv_text = (tmp_path / TICKETS / "working_log.csv").read_text(encoding="utf-8")
     assert csv_text.count("TCK-X") == 1 and "TCK-Y" not in csv_text
     assert result["working_log"]["consolidated_rows"] == 1
     assert (other / "b3.working_log.jsonl").exists()  # another week's shard untouched
     wc.close_week(WEEK, data, AFTER)
-    assert (tmp_path / "tickets" / "working_log.csv").read_text(encoding="utf-8").count("TCK-X") == 1
+    assert (tmp_path / TICKETS / "working_log.csv").read_text(encoding="utf-8").count("TCK-X") == 1
 
 
 # AC4
@@ -157,7 +158,7 @@ def test_nudge_fires_for_finished_week_with_shards_and_is_silent_otherwise(tmp_p
 
 
 def test_retro_nudge_hook_also_emits_the_close_week_nudge_even_below_the_retro_threshold(tmp_path):
-    data = tmp_path / "agent-monitoring" / "data"
+    data = tmp_path / AGENT_MONITORING / "data"
     _w(data / "2026-W01" / "b1.runs.jsonl", [{"run_id": "A"}])  # long finished, still has a shard
     proc = subprocess.run([sys.executable, str(_TOOLS / "retro_nudge_hook.py")], input=json.dumps({"session_id": "s1"}),
                           capture_output=True, text=True, cwd=tmp_path)
@@ -168,7 +169,7 @@ def test_retro_nudge_hook_also_emits_the_close_week_nudge_even_below_the_retro_t
 
 def test_week_with_no_shards_leaves_an_out_of_order_canonical_file_byte_identical(tmp_path):
     # Real canonical files are not in ts order today; closing an already-consolidated week must not reorder them.
-    data = tmp_path / "agent-monitoring" / "data"
+    data = tmp_path / AGENT_MONITORING / "data"
     wk = data / WEEK
     _w(wk / "runs.jsonl", [{"run_id": "LATER", "start_ts": "2026-09-25T00:00:00Z"}, {"run_id": "EARLIER", "start_ts": "2026-09-21T00:00:00Z"}])
     _w(wk / "events.jsonl", [{"run_id": "X", "seq": 5, "ts": "2026-09-25T00:00:00Z"}, {"run_id": "X", "seq": 1, "ts": "2026-09-21T00:00:00Z"}])
@@ -180,7 +181,7 @@ def test_week_with_no_shards_leaves_an_out_of_order_canonical_file_byte_identica
 
 
 def test_week_with_a_shard_keeps_existing_lines_in_place_and_appends_sorted_new_lines(tmp_path):
-    data = tmp_path / "agent-monitoring" / "data"
+    data = tmp_path / AGENT_MONITORING / "data"
     wk = data / WEEK
     existing = [{"run_id": "LATER", "start_ts": "2026-09-25T00:00:00Z"}, {"run_id": "EARLIER", "start_ts": "2026-09-21T00:00:00Z"}]
     _w(wk / "runs.jsonl", existing)

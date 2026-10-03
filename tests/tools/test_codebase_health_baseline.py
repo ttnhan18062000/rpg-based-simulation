@@ -10,6 +10,7 @@ not just that it runs without error.
 import subprocess
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS
 
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
@@ -50,12 +51,12 @@ def test_churn_exclusion_ignores_synthetic_bookkeeping_noise(tmp_path):
     baseline_churn = chb.compute_churn_lines_changed(tmp_path)
     assert baseline_churn > 0
 
-    (tmp_path / "agent-monitoring").mkdir()
-    (tmp_path / "agent-monitoring" / "events.jsonl").write_text(
+    (tmp_path / AGENT_MONITORING).mkdir()
+    (tmp_path / AGENT_MONITORING / "events.jsonl").write_text(
         "\n".join(f'{{"n": {i}}}' for i in range(5000)), encoding="utf-8"
     )
-    (tmp_path / "tickets").mkdir()
-    (tmp_path / "tickets" / "working_log.csv").write_text(
+    (tmp_path / TICKETS).mkdir()
+    (tmp_path / TICKETS / "working_log.csv").write_text(
         "\n".join(f"row{i},value{i}" for i in range(5000)), encoding="utf-8"
     )
     (tmp_path / "docs").mkdir()

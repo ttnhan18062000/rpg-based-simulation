@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 import yaml
+from tools.agent_working_paths import STAGING_ARTIFACTS
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _TOOLS_DIR = _REPO_ROOT / "tools"
@@ -280,7 +281,7 @@ def test_v1_decision_artifact_covers_all_scope_boundaries():
 
 
 def test_no_database_or_gitignore_or_make_target_created():
-    staging_dir = _REPO_ROOT / "staging_artifacts" / "TCK-20260731-PARITY-INDEX-BASELINE"
+    staging_dir = _REPO_ROOT / STAGING_ARTIFACTS / "TCK-20260731-PARITY-INDEX-BASELINE"
     for pattern in ("*.db", "*.sqlite", "*.sqlite3"):
         assert list(staging_dir.glob(pattern)) == []
 

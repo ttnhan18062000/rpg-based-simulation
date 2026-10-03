@@ -15,11 +15,12 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING, posix
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _MANIFEST_PATH = _MONITORING_TOOLS_DIR / "manifest.py"
-_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
+_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / AGENT_MONITORING
 
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
@@ -70,7 +71,7 @@ def test_manifest_cli_reproducible_byte_identical_across_two_runs(tmp_path):
     # zero-mutation and streaming-guard tests specifically (they need a real, live path
     # to prove something wasn't silently swapped out from under them); this test's own
     # assertion is unaffected by the source being frozen.
-    snapshot_dir = tmp_path / "agent-monitoring"
+    snapshot_dir = tmp_path / AGENT_MONITORING
     shutil.copytree(_REAL_AGENT_MONITORING_DIR / "data", snapshot_dir / "data")
 
     result_1 = subprocess.run(
@@ -224,7 +225,7 @@ def test_manifest_source_never_calls_full_file_read_methods():
 
 def _porcelain_snapshot() -> str:
     result = subprocess.run(
-        ["git", "status", "--porcelain", "--", "agent-monitoring/"],
+        ["git", "status", "--porcelain", "--", f"{posix(AGENT_MONITORING)}/"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     )
     return result.stdout

@@ -43,8 +43,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from monitoring_shard_paths import shard_paths  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
-DEFAULT_DATA_DIR = Path("agent-monitoring/data")
+DEFAULT_DATA_DIR = AGENT_MONITORING / "data"
 
 RETRIEVAL_EVENT_PREFIX = "RETRIEVAL-EVENT-"
 

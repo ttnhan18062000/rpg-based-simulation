@@ -6,6 +6,7 @@ import subprocess
 import sys
 from datetime import date
 from pathlib import Path
+from tools.agent_working_paths import STORED_ARTIFACTS
 
 _TOOLS = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
 sys.path.insert(0, str(_TOOLS))
@@ -90,7 +91,7 @@ def test_working_tree_is_never_read_a_dirty_tree_does_not_change_a_clean_ref_rep
     repo = _clean_repo(tmp_path)
     before = _report(repo)
     # dirty the tree: delete a tracked file, edit the CSV, add an untracked closed ticket and a shard
-    (repo / "stored_artifacts/TCK-20260920-GOOD/plan.md").unlink()
+    (repo / STORED_ARTIFACTS / "TCK-20260920-GOOD" / "plan.md").unlink()
     _w(repo, "tickets/working_log.csv", CSV_HEADER)
     _w(repo, "tickets/done/TCK-20260925-UNTRACKED.md", "# t\n")
     _w(repo, "agent-monitoring/data/2026-W39/dirty.runs.jsonl", "{}\n")

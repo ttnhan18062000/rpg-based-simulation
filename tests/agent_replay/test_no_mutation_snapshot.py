@@ -27,11 +27,12 @@ if str(_TOOLS_DIR) not in sys.path:
 
 from agent_replay.fixture_envelope import load_fixture  # noqa: E402
 from agent_replay.runner import replay_slice  # noqa: E402
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix  # noqa: E402
 
 _REAL_FIXTURE_PATH = (
     _REPO_ROOT / "tests" / "fixtures" / "agent_replay" / "TCK-20260721-ORCHESTRATION-CONTRACT-ADR.yaml"
 )
-_WATCHED_GIT_PATHSPECS = ["tickets/", "agent-monitoring/data/"]
+_WATCHED_GIT_PATHSPECS = [f"{posix(TICKETS)}/", f"{posix(AGENT_MONITORING)}/data/"]
 
 
 def _porcelain_snapshot() -> str:
@@ -46,8 +47,8 @@ def _porcelain_snapshot() -> str:
 
 
 def _watched_files() -> list[Path]:
-    files = [f for f in sorted((_REPO_ROOT / "tickets").rglob("*")) if f.is_file()]
-    files += [f for f in sorted((_REPO_ROOT / "agent-monitoring" / "data").rglob("*")) if f.is_file()]
+    files = [f for f in sorted((_REPO_ROOT / TICKETS).rglob("*")) if f.is_file()]
+    files += [f for f in sorted((_REPO_ROOT / AGENT_MONITORING / "data").rglob("*")) if f.is_file()]
     return files
 
 
@@ -60,8 +61,8 @@ def _content_hash_snapshot() -> str:
 
 
 def test_snapshot_targets_are_the_real_repo_directories_not_a_tmp_copy():
-    tickets_dir = _REPO_ROOT / "tickets"
-    monitoring_dir = _REPO_ROOT / "agent-monitoring"
+    tickets_dir = _REPO_ROOT / TICKETS
+    monitoring_dir = _REPO_ROOT / AGENT_MONITORING
     assert tickets_dir.is_dir()
     assert monitoring_dir.is_dir()
     assert tickets_dir.parent == _REPO_ROOT
@@ -108,7 +109,7 @@ def test_watch_set_actually_detects_a_deliberate_mutation_under_agent_monitoring
     deliberate mutation to a file in the real shard layout, not just that the snapshot helpers run
     without error.
     """
-    probe_path = _REPO_ROOT / "agent-monitoring" / "data" / "unknown-week" / "_no_mutation_snapshot_probe.jsonl"
+    probe_path = _REPO_ROOT / AGENT_MONITORING / "data" / "unknown-week" / "_no_mutation_snapshot_probe.jsonl"
     assert not probe_path.exists(), "stale probe file from a previous failed run — clean it up first"
 
     pre_content_hash = _content_hash_snapshot()

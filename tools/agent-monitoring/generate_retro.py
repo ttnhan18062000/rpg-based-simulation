@@ -53,6 +53,10 @@ from retrieval_cache import (  # noqa: E402
     QUERY_CACHE_CATEGORY,
     PACKET_CACHE_CATEGORY,
 )
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, AGENT_MONITORING_INDEX, PARITY_INDEX, TICKETS, posix  # noqa: E402
 
 # Repo root — two levels above tools/agent-monitoring/, matching this file's actual depth.
 # Anchored (not cwd-relative) so every constant below resolves to THIS checkout's own data
@@ -64,11 +68,11 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DEFAULT_TICKETS_ROOT = _REPO_ROOT
 _DEFAULT_SKILLS_DIR = _DEFAULT_TICKETS_ROOT / ".claude" / "skills"
 
-RUNS_FILE = _REPO_ROOT / "agent-monitoring" / "data"
-EVENTS_FILE = _REPO_ROOT / "agent-monitoring" / "data"
-RETRO_DIR = _REPO_ROOT / "agent-monitoring" / "retro"
-DEFAULT_DB_PATH = _REPO_ROOT / "agent-monitoring-index" / "monitoring.db"
-DEFAULT_TOOLS_FILE = _REPO_ROOT / "agent-monitoring" / "data"
+RUNS_FILE = _REPO_ROOT / AGENT_MONITORING / "data"
+EVENTS_FILE = _REPO_ROOT / AGENT_MONITORING / "data"
+RETRO_DIR = _REPO_ROOT / AGENT_MONITORING / "retro"
+DEFAULT_DB_PATH = _REPO_ROOT / AGENT_MONITORING_INDEX / "monitoring.db"
+DEFAULT_TOOLS_FILE = _REPO_ROOT / AGENT_MONITORING / "data"
 
 
 def load_jsonl(path):
@@ -310,7 +314,7 @@ def _is_unsafe_parity_build_call(tool_row):
     summary = tool_row.get("input_summary") or ""
     if "--db-path" not in summary:
         return True  # no override -> defaults to the real repo parity-index/parity.db path
-    return "parity-index/parity.db" in summary
+    return f"{posix(PARITY_INDEX)}/parity.db" in summary
 
 
 # Path-anchored so a bare filename match (e.g. tests/tools/test_parity_index.py, whose character
@@ -666,7 +670,7 @@ def _collect_inprogress_tagged_tickets(root):
     (hardcoded to tickets/done/), so this is a small parallel implementation
     built from the same reusable primitives, not a duplicate of that function.
     """
-    inprogress_dir = root / "tickets" / "inprogress"
+    inprogress_dir = root / TICKETS / "inprogress"
     included = []
 
     if not inprogress_dir.is_dir():

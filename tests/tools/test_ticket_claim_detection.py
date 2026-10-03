@@ -19,6 +19,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _WORKFLOW_PATH = _REPO_ROOT / ".claude" / "workflows" / "implement-ticket.js"
@@ -53,7 +54,7 @@ def _iso_week_dir(data_dir: Path) -> Path:
 
 def test_two_concurrent_session_sidecars_for_same_ticket_produce_one_detection(tmp_path):
     claude_dir = tmp_path / ".claude"
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     _write_sidecar(claude_dir, "sess-other", _TID)
 
     record = check_and_log(
@@ -74,7 +75,7 @@ def test_two_concurrent_session_sidecars_for_same_ticket_produce_one_detection(t
 
 def test_single_session_sidecar_produces_zero_detections(tmp_path):
     claude_dir = tmp_path / ".claude"
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     _write_sidecar(claude_dir, "sess-self", _TID)
 
     record = check_and_log(
@@ -88,7 +89,7 @@ def test_single_session_sidecar_produces_zero_detections(tmp_path):
 
 def test_instrumentation_never_raises_on_malformed_sidecar(tmp_path):
     claude_dir = tmp_path / ".claude"
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     claude_dir.mkdir(parents=True, exist_ok=True)
 
     (claude_dir / "current_run.sess-bad-json").write_text("{not valid json")
@@ -119,7 +120,7 @@ def test_instrumentation_never_blocks_or_raises_regardless_of_detection_outcome(
 
 def test_stale_sidecar_outside_short_window_does_not_false_positive(tmp_path):
     claude_dir = tmp_path / ".claude"
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     # 30 minutes stale — well past the 15-minute detection window, well short of the unrelated
     # 24-hour post_tool_hook.py prune threshold, so this test is unambiguous about which
     # mechanism it exercises.
@@ -135,7 +136,7 @@ def test_stale_sidecar_outside_short_window_does_not_false_positive(tmp_path):
 
 def test_own_session_sidecar_excluded_from_detection(tmp_path):
     claude_dir = tmp_path / ".claude"
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     _write_sidecar(claude_dir, "sess-self", _TID)
 
     record = check_and_log(
@@ -148,7 +149,7 @@ def test_own_session_sidecar_excluded_from_detection(tmp_path):
 
 def test_ad_hoc_null_sentinel_sidecar_never_counted_as_a_claim(tmp_path):
     claude_dir = tmp_path / ".claude"
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     # TCK-20260824-SIDECAR-ADHOC-NULL-ATTRIBUTION sentinel shape.
     _write_sidecar(claude_dir, "sess-sentinel", None)
 
@@ -162,7 +163,7 @@ def test_ad_hoc_null_sentinel_sidecar_never_counted_as_a_claim(tmp_path):
 
 def test_detection_record_written_to_dedicated_jsonl_not_runs_or_events(tmp_path):
     claude_dir = tmp_path / ".claude"
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     _write_sidecar(claude_dir, "sess-other", _TID)
 
     check_and_log(_TID, claude_dir=claude_dir, data_dir=data_dir, own_session_id="sess-self")
@@ -193,7 +194,7 @@ def test_find_concurrent_claimants_requires_both_run_id_and_window_match(tmp_pat
 
 def test_empty_tid_produces_no_detection_and_no_write(tmp_path):
     claude_dir = tmp_path / ".claude"
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     _write_sidecar(claude_dir, "sess-other", "")
 
     record = check_and_log("", claude_dir=claude_dir, data_dir=data_dir, own_session_id="sess-self")

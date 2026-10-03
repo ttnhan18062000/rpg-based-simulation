@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from tools.agent_replay_codex.monitoring_shards import resolve_tree_lines
+from tools.agent_working_paths import AGENT_MONITORING, posix
 
 if TYPE_CHECKING:
     from .preflight import PreflightResult
@@ -161,7 +162,7 @@ def assert_post_run_proof(
     """Verify against policy captured in preflight, never a caller allowlist/re-read."""
     if not result.policy.verify_unchanged():
         raise ValueError("captured expected-write policy was modified")
-    monitoring = {f"agent-monitoring/{name}" for name in result.policy.monitoring_suffixes}
+    monitoring = {f"{posix(AGENT_MONITORING)}/{name}" for name in result.policy.monitoring_suffixes}
     policy_relative = result.policy.path.relative_to(result.root).as_posix()
     after = {path: value for path, value in after.items() if path != policy_relative}
     assert_expected_changes(result.baseline_tree, after, set(result.policy.allowed_paths) | monitoring)

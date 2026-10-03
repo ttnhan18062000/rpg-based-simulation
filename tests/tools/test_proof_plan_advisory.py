@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import STAGING_ARTIFACTS, STORED_ARTIFACTS, TICKETS
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "tools"))
@@ -29,10 +30,10 @@ x
 
 
 def _plan(tmp_path, text, where="staging"):
-    root = tmp_path / ("staging_artifacts" if where == "staging" else "stored_artifacts") / TID
+    root = tmp_path / (STAGING_ARTIFACTS if where == "staging" else STORED_ARTIFACTS) / TID
     root.mkdir(parents=True)
     (root / "test_plan.md").write_text(text, encoding="utf-8")
-    return dict(staging_dir=tmp_path / "staging_artifacts", stored_dir=tmp_path / "stored_artifacts")
+    return dict(staging_dir=tmp_path / STAGING_ARTIFACTS, stored_dir=tmp_path / STORED_ARTIFACTS)
 
 
 def test_complete_table_is_ok_including_oracle_unresolved(tmp_path):
@@ -96,28 +97,28 @@ def test_non_standard_tiers_are_not_applicable(tmp_path, tier):
 
 
 def test_disposition_closure_is_not_applicable(tmp_path):
-    done = tmp_path / "tickets" / "done"
+    done = tmp_path / TICKETS / "done"
     done.mkdir(parents=True)
     (done / f"{TID}.md").write_text("# t\n\n## Disposition\nSUPERSEDED\n", encoding="utf-8")
     status, ev = check_proof_plan_fields(
-        TID, "standard", staging_dir=tmp_path / "s", stored_dir=tmp_path / "t", tickets_dir=tmp_path / "tickets"
+        TID, "standard", staging_dir=tmp_path / "s", stored_dir=tmp_path / "t", tickets_dir=tmp_path / TICKETS
     )
     assert status == "NA" and "Disposition" in ev
 
 
 def test_check_is_read_only(tmp_path):
     kw = _plan(tmp_path, FULL_TABLE.replace("| ch03 §1; TOWN-122 |", "|  |"))
-    path = tmp_path / "staging_artifacts" / TID / "test_plan.md"
+    path = tmp_path / STAGING_ARTIFACTS / TID / "test_plan.md"
     before = (path.read_bytes(), path.stat().st_mtime_ns)
     check_proof_plan_fields(TID, "standard", **kw)
     assert (path.read_bytes(), path.stat().st_mtime_ns) == before
 
 
 def test_unreadable_plan_degrades_to_warn(tmp_path):
-    root = tmp_path / "staging_artifacts" / TID
+    root = tmp_path / STAGING_ARTIFACTS / TID
     root.mkdir(parents=True)
     (root / "test_plan.md").write_bytes(b"\xff\xfe\x00bad")
-    status, ev = check_proof_plan_fields(TID, "standard", staging_dir=tmp_path / "staging_artifacts", stored_dir=tmp_path / "x")
+    status, ev = check_proof_plan_fields(TID, "standard", staging_dir=tmp_path / STAGING_ARTIFACTS, stored_dir=tmp_path / "x")
     assert status == "WARN" and "could not evaluate" in ev
 
 

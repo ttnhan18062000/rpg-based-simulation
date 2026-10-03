@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from tools.delivery import pre_push_advisory_hook as hook
+from tools.agent_working_paths import TICKETS
 
 
 def _write_ticket(root: Path, ticket_id: str) -> Path:
@@ -90,7 +91,7 @@ def test_matcher_regex_against_measured_corpus_shapes():
 # ---------------------------------------------------------------------------
 
 def test_all_clear_yields_no_findings(tmp_path):
-    tickets_root = tmp_path / "tickets"
+    tickets_root = tmp_path / TICKETS
     tickets_root.mkdir()
     _write_ticket(tickets_root, "TCK-20260924-EXAMPLE")
     runner = FakeRunner([
@@ -107,7 +108,7 @@ def test_all_clear_yields_no_findings(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_commit_with_no_ticket_id_is_reported(tmp_path):
-    tickets_root = tmp_path / "tickets"
+    tickets_root = tmp_path / TICKETS
     tickets_root.mkdir()
     runner = FakeRunner([_log_rule(["abc1234\tjust a fix, no ticket"])])
     findings = hook.check_commit_subjects(run_command=runner, tickets_root=tickets_root)
@@ -117,7 +118,7 @@ def test_commit_with_no_ticket_id_is_reported(tmp_path):
 
 
 def test_commit_with_ticket_id_but_no_file_is_a_distinct_finding(tmp_path):
-    tickets_root = tmp_path / "tickets"
+    tickets_root = tmp_path / TICKETS
     tickets_root.mkdir()
     runner = FakeRunner([_log_rule(["def5678\tTCK-20260924-GHOST: does not exist"])])
     findings = hook.check_commit_subjects(run_command=runner, tickets_root=tickets_root)
@@ -128,7 +129,7 @@ def test_commit_with_ticket_id_but_no_file_is_a_distinct_finding(tmp_path):
 
 
 def test_ticket_moved_to_done_mid_branch_not_reported_missing(tmp_path):
-    tickets_root = tmp_path / "tickets"
+    tickets_root = tmp_path / TICKETS
     done_dir = tickets_root / "done"
     done_dir.mkdir(parents=True)
     _write_ticket(done_dir, "TCK-20260924-MOVED")
@@ -232,7 +233,7 @@ def test_branch_merely_behind_main_is_not_flagged(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_exit_code_zero_for_every_check_combination(tmp_path, monkeypatch):
-    tickets_root = tmp_path / "tickets"
+    tickets_root = tmp_path / TICKETS
     tickets_root.mkdir()
     runner = FakeRunner([
         _log_rule(["abc1234\tno ticket here"]),

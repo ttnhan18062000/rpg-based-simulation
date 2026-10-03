@@ -16,9 +16,10 @@ from tools.agent_orchestration_claude_adapter.artifact_requirements_extractor im
     extract_live_artifact_requirements,
 )
 from tools.agent_orchestration_claude_adapter.divergence_log import is_approved, load_divergences
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
-_DIVERGENCE_LOG_PATH = _REPO_ROOT / "agent-orchestration" / "intentional-divergences.md"
+_DIVERGENCE_LOG_PATH = _REPO_ROOT / AGENT_ORCHESTRATION / "intentional-divergences.md"
 
 
 def test_artifact_requirements_conformance_full_match():

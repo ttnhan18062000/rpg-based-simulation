@@ -15,6 +15,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
+from tools.agent_working_paths import TICKETS
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _SETTINGS_PATH = _REPO_ROOT / ".claude" / "settings.json"
@@ -76,7 +77,7 @@ def test_run_id_resolution_empty_when_both_absent(tmp_path):
     settings = _load_settings()
     full_command = settings["hooks"]["PreToolUse"][3]["hooks"][0]["command"]
 
-    tickets_dir = tmp_path / "tickets" / "inprogress"
+    tickets_dir = tmp_path / TICKETS / "inprogress"
     tickets_dir.mkdir(parents=True)
     (tickets_dir / "fake.md").write_text("placeholder", encoding="utf-8")
 
@@ -126,7 +127,7 @@ def test_malformed_or_missing_sidecar_json_degrades_to_empty_not_traceback(tmp_p
     settings = _load_settings()
     full_command = settings["hooks"]["PreToolUse"][3]["hooks"][0]["command"]
 
-    tickets_dir = tmp_path / "tickets" / "inprogress"
+    tickets_dir = tmp_path / TICKETS / "inprogress"
     tickets_dir.mkdir(parents=True)
     (tickets_dir / "fake.md").write_text("placeholder", encoding="utf-8")
 

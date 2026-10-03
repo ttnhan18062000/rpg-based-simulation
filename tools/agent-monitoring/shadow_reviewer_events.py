@@ -23,6 +23,10 @@ from cost_proxy import compute_cost_proxy_score  # noqa: E402
 from validate import load_data_glob  # noqa: E402
 from writer import write_lines  # noqa: E402
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 shadow_reviewer_event_schema_version: int = 1
 
@@ -47,7 +51,7 @@ def _compute_candidate_tool_stats(run_id: str, seq: int) -> tuple[int, float]:
     same shape as record_events.py::compute_tool_stats(), scoped to one key instead of a batch."""
     rows = [
         r
-        for r in load_data_glob(Path("agent-monitoring/data"), "tools")
+        for r in load_data_glob(AGENT_MONITORING / "data", "tools")
         if r.get("run_id") == run_id and r.get("seq") == seq
     ]
     return len(rows), compute_cost_proxy_score(rows)

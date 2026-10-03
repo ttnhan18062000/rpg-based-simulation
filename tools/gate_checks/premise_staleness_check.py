@@ -47,6 +47,10 @@ import re
 import sys
 from pathlib import Path
 from typing import Iterable, List
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS, posix  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REGISTRY_PATH = _REPO_ROOT / "docs" / "REGISTRY.yaml"
@@ -95,7 +99,7 @@ def load_open_ticket_entries(registry_path: Path = None) -> List[dict]:
     return [
         e for e in entries
         if e.get("type") == "ticket"
-        and (e.get("path", "").startswith("tickets/todos/") or e.get("path", "").startswith("tickets/inprogress/"))
+        and e.get("path", "").startswith((posix(TICKETS / "todos") + "/", posix(TICKETS / "inprogress") + "/"))
     ]
 
 

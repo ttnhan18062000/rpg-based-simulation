@@ -42,10 +42,14 @@ _TOOLS_DIR = Path(__file__).resolve().parent
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 from hybrid_retrieval import hybrid_fuse_and_filter  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import KNOWLEDGE_INDEX, STORED_ARTIFACTS, TICKETS  # noqa: E402
 
-_DEFAULT_DB = Path("knowledge-index/knowledge.db")
-_MANIFEST_PATH = Path("knowledge-index/manifest.json")
-_CACHE_PATH = Path("knowledge-index/embeddings_cache.pkl")
+_DEFAULT_DB = KNOWLEDGE_INDEX / "knowledge.db"
+_MANIFEST_PATH = KNOWLEDGE_INDEX / "manifest.json"
+_CACHE_PATH = KNOWLEDGE_INDEX / "embeddings_cache.pkl"
 _MODEL_NAME = "all-MiniLM-L6-v2"
 
 
@@ -180,7 +184,7 @@ def _collect_corpus(corpus_root: Path) -> list[dict]:
     docs: list[dict] = []
 
     # 1. tickets/done/TCK-*.md — Request Summary section only
-    done_dir = corpus_root / "tickets" / "done"
+    done_dir = corpus_root / TICKETS / "done"
     if done_dir.exists():
         for md_file in sorted(done_dir.glob("TCK-*.md")):
             try:
@@ -202,7 +206,7 @@ def _collect_corpus(corpus_root: Path) -> list[dict]:
                 print(f"Warning: skipping {md_file}: {exc}", file=sys.stderr)
 
     # 2. stored_artifacts/*/investigation.md — first 500 characters
-    artifacts_root = corpus_root / "stored_artifacts"
+    artifacts_root = corpus_root / STORED_ARTIFACTS
     if artifacts_root.exists():
         for inv_file in sorted(artifacts_root.glob("*/investigation.md")):
             try:
@@ -224,7 +228,7 @@ def _collect_corpus(corpus_root: Path) -> list[dict]:
                 print(f"Warning: skipping {inv_file}: {exc}", file=sys.stderr)
 
     # 3. tickets/working_log.csv — title + summary per row
-    wl_path = corpus_root / "tickets" / "working_log.csv"
+    wl_path = corpus_root / TICKETS / "working_log.csv"
     rows = _extract_working_log_rows(wl_path)
     for row in rows:
         combined = f"{row['title']} {row['summary']}".strip()

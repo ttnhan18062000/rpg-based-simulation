@@ -9,12 +9,13 @@ from pathlib import Path
 from tools.agent_orchestration_claude_adapter.divergence_log import is_approved, load_divergences
 from tools.agent_replay.fixture_envelope import load_fixture
 from tools.agent_replay.runner import replay_slice
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REAL_FIXTURE_PATH = (
     _REPO_ROOT / "tests" / "fixtures" / "agent_replay" / "TCK-20260721-ORCHESTRATION-CONTRACT-ADR.yaml"
 )
-_DIVERGENCE_LOG_PATH = _REPO_ROOT / "agent-orchestration" / "intentional-divergences.md"
+_DIVERGENCE_LOG_PATH = _REPO_ROOT / AGENT_ORCHESTRATION / "intentional-divergences.md"
 
 
 def test_codex_execution_path_matches_python_runner_output(real_codex_replay):

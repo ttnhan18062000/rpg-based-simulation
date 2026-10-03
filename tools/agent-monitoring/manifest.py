@@ -17,9 +17,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from legacy_reader import classify_provenance  # noqa: E402
 from monitoring_shard_paths import shard_paths  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
+_AGENT_MONITORING_DIR = _REPO_ROOT / AGENT_MONITORING
 
 _FILES_BY_SOURCE = {
     "events.jsonl": "events",

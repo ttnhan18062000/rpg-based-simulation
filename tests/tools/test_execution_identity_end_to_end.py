@@ -29,6 +29,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
@@ -284,7 +285,7 @@ def test_controlled_claude_execution_produces_coherent_identity_across_jsonl_sou
     ticket_id = "TCK-EXEC-IDENTITY-ONE"
     identity_1 = _perform_one_simulated_execution(tmp_path, ticket_id=ticket_id)
 
-    agent_monitoring_dir = tmp_path / "agent-monitoring"
+    agent_monitoring_dir = tmp_path / AGENT_MONITORING
     events_file = _current_week_events_file(agent_monitoring_dir)
     runs_file = _current_week_runs_file(agent_monitoring_dir)
     tools_file = _current_week_tools_file(agent_monitoring_dir)
@@ -329,7 +330,7 @@ def test_baseline_prefix_unchanged_after_new_identity_writes(tmp_path):
     # carries a seeded legacy line), while the bare per-week file and the fully-legacy monolithic
     # files are checked as still-untouched, inert paths.
     _init_git_repo_on_test_branch(tmp_path)
-    agent_monitoring_dir = tmp_path / "agent-monitoring"
+    agent_monitoring_dir = tmp_path / AGENT_MONITORING
     agent_monitoring_dir.mkdir(parents=True)
     _seed_one_legacy_line_per_file(agent_monitoring_dir)
 
@@ -384,7 +385,7 @@ def test_baseline_prefix_unchanged_after_new_identity_writes(tmp_path):
 
 def test_newly_appended_lines_have_no_duplicate_identity_keys_and_correct_values(tmp_path):
     _init_git_repo_on_test_branch(tmp_path)
-    agent_monitoring_dir = tmp_path / "agent-monitoring"
+    agent_monitoring_dir = tmp_path / AGENT_MONITORING
     agent_monitoring_dir.mkdir(parents=True)
     _seed_one_legacy_line_per_file(agent_monitoring_dir)
 

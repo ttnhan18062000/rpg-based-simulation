@@ -45,6 +45,10 @@ for _dir in (str(_TOOLS_DIR), str(_GATE_CHECKS_DIR), str(_AGENT_MONITORING_DIR))
 
 from done_checker_static import _jsonl_rows_for_run_id_across_weeks  # noqa: E402
 from vocabulary import infer_workflow  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 DEFAULT_WORKFLOWS_DIR = Path(".claude/workflows")
 # Shard root, not a single file (TCK-20260904-HOTFIX-WORKFLOW-META-CONFORMANCE-SHARD-AWARENESS):
@@ -52,7 +56,7 @@ DEFAULT_WORKFLOWS_DIR = Path(".claude/workflows")
 # favor of agent-monitoring/data/<ISO-week>/events.jsonl shards. Named DEFAULT_EVENTS_ROOT (not
 # _PATH) to make the directory-root semantics explicit at the call site, matching
 # done_checker_static.py's own `data_root` convention for the same underlying helper.
-DEFAULT_EVENTS_ROOT = Path("agent-monitoring/data")
+DEFAULT_EVENTS_ROOT = AGENT_MONITORING / "data"
 DEFAULT_SKILLS_DIR = Path(".claude/skills")
 
 _PHASES_BLOCK_START_RE = re.compile(r"phases:\s*\[")

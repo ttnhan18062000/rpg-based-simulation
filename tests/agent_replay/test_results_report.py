@@ -4,11 +4,12 @@ Structural completeness check only (all 5 statements present) — never a check 
 of them resolved, per test_plan.md test #13's own scope.
 """
 from pathlib import Path
+from tools.agent_working_paths import STORED_ARTIFACTS  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _RESULTS_PATH = (
     _REPO_ROOT
-    / "stored_artifacts"
+    / STORED_ARTIFACTS
     / "TCK-20260907-FILTERED-REPLAY-EVAL-PILOT"
     / "results.md"
 )

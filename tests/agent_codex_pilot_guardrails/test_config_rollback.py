@@ -21,6 +21,7 @@ from tools.agent_replay_codex.codex_config_guard import (
     assert_config_bytes_unchanged,
     snapshot_config_bytes,
 )
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REAL_CONFIG_BYTES_AT_COLLECTION = snapshot_config_bytes(_REPO_ROOT)
@@ -33,7 +34,7 @@ def _build_scratch_area(tmp_path: Path) -> Path:
     scratch_area = tmp_path / "scratch"
     scratch_area.mkdir()
     (scratch_area / "config.toml").write_text('# scratch config\nfoo = "bar"\n', encoding="utf-8")
-    monitoring_dir = scratch_area / "agent-monitoring"
+    monitoring_dir = scratch_area / AGENT_MONITORING
     monitoring_dir.mkdir()
     for filename in ("runs.jsonl", "events.jsonl", "tools.jsonl"):
         (monitoring_dir / filename).write_text('{"a": 1}\n', encoding="utf-8")
@@ -44,7 +45,7 @@ def _build_scratch_area(tmp_path: Path) -> Path:
 def test_enable_disable_round_trip_leaves_zero_byte_diff_in_rollback_scope(tmp_path):
     scratch_area = _build_scratch_area(tmp_path)
     scratch_config_path = scratch_area / "config.toml"
-    agent_monitoring_dir = scratch_area / "agent-monitoring"
+    agent_monitoring_dir = scratch_area / AGENT_MONITORING
     ticket_path = scratch_area / "TCK-SCRATCH-PILOT.md"
 
     baseline_bytes = scratch_config_path.read_bytes()
@@ -82,7 +83,7 @@ def test_rollback_scope_tools_hash_changes_with_any_shard_and_is_stable_otherwis
     """TCK-20260903-MONITORING-DATA-CODEX-REMIGRATION: snapshot_rollback_scope's tools.jsonl
     entry must track the real agent-monitoring/data/<week>/tools.jsonl shard family, not a
     single hardcoded (now nonexistent in the real repo) tools.jsonl file."""
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     data_dir = monitoring_dir / "data"
     for week in ("2026-W01", "unknown-week"):
         (data_dir / week).mkdir(parents=True)
@@ -111,7 +112,7 @@ def test_snapshot_rollback_scope_runs_and_events_hash_changes_with_any_week_and_
     """Acceptance Criterion #4: snapshot_rollback_scope's runs.jsonl/events.jsonl entries must
     track the real agent-monitoring/data/<week>/{runs,events}.jsonl shard families, generalizing
     the tools-only precedent above to the other 2 sources."""
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     data_dir = monitoring_dir / "data"
     for week in ("2026-W01", "unknown-week"):
         (data_dir / week).mkdir(parents=True)

@@ -26,8 +26,9 @@ import yaml
 
 from tools.agent_orchestration.loader import load_contract
 from tools.agent_orchestration_claude_adapter.terminal_status_loader import load_terminal_statuses
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
-_RENDERED_SUBDIR = Path("agent-orchestration") / "rendered"
+_RENDERED_SUBDIR = AGENT_ORCHESTRATION / "rendered"
 _CLAUDE_ADAPTER_SCHEMA_VERSION = 1
 
 

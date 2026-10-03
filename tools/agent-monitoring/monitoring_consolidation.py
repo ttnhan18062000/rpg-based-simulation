@@ -52,8 +52,12 @@ from writer import write_lines  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import consolidate_pending_rows  # noqa: E402
 from monitoring_shard_paths import per_identifier_shard_paths  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
-DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "agent-monitoring" / "data"
+DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / AGENT_MONITORING / "data"
 JSONL_KINDS = ("runs", "events", "tools")
 
 
@@ -99,11 +103,12 @@ def _default_csv_path_for(data_dir: Path) -> Path:
     `<root>` is two levels up (matching `DEFAULT_DATA_DIR`'s own construction below); a shallower
     test-fixture shape (e.g. `tmp_path / "data"`, no `agent-monitoring` parent) falls back to one
     level up, still fully contained in that fixture's own sandbox rather than escaping it."""
-    if data_dir.parent.name == "agent-monitoring" and data_dir.name == "data":
-        root = data_dir.parent.parent
+    monitoring_parts = AGENT_MONITORING.parts
+    if data_dir.name == "data" and data_dir.parent.parts[-len(monitoring_parts) :] == monitoring_parts:
+        root = data_dir.parent.parents[len(monitoring_parts) - 1]
     else:
         root = data_dir.parent
-    return root / "tickets" / "working_log.csv"
+    return root / TICKETS / "working_log.csv"
 
 
 def consolidate_all(data_dir: Path = DEFAULT_DATA_DIR) -> dict:

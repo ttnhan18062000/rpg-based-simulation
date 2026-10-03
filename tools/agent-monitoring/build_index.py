@@ -39,11 +39,15 @@ from validate import (  # noqa: E402
 )
 from generate_retro import _resolve_status  # noqa: E402
 from vocabulary import CANONICAL_TIERS, infer_workflow  # noqa: E402, F401
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, AGENT_MONITORING_INDEX  # noqa: E402
 
-DEFAULT_RUNS_FILE = Path("agent-monitoring/data")
-DEFAULT_EVENTS_FILE = Path("agent-monitoring/data")
-DEFAULT_TOOLS_FILE = Path("agent-monitoring/data")
-DEFAULT_DB_PATH = Path("agent-monitoring-index/monitoring.db")
+DEFAULT_RUNS_FILE = AGENT_MONITORING / "data"
+DEFAULT_EVENTS_FILE = AGENT_MONITORING / "data"
+DEFAULT_TOOLS_FILE = AGENT_MONITORING / "data"
+DEFAULT_DB_PATH = AGENT_MONITORING_INDEX / "monitoring.db"
 
 
 def _load_source(path: Path, source: str) -> list:

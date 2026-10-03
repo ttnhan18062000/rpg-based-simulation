@@ -15,12 +15,13 @@ from pathlib import Path
 import yaml
 
 from .errors import EnabledSurfaceExceedsEvidenceError
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 EVIDENCED_HOOK_EVENTS: frozenset[str] = frozenset({"PostToolUse"})
 EVIDENCED_WRITER_FUNCTIONS: frozenset[str] = frozenset({"write_line", "write_lines"})
 
 _HOOK_EVENTS_YAML_PATH = (
-    Path(__file__).resolve().parent.parent.parent / "agent-orchestration" / "hook-events.yaml"
+    Path(__file__).resolve().parent.parent.parent / AGENT_ORCHESTRATION / "hook-events.yaml"
 )
 
 

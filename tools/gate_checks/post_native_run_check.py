@@ -20,6 +20,10 @@ import argparse
 import subprocess
 import sys
 from pathlib import Path
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 TICKET_DIRS = ("inprogress", "done")
@@ -27,7 +31,7 @@ TICKET_DIRS = ("inprogress", "done")
 
 def find_ticket(ticket_id, repo=REPO):
     for sub in TICKET_DIRS:
-        p = repo / "tickets" / sub / f"{ticket_id}.md"
+        p = repo / TICKETS / sub / f"{ticket_id}.md"
         if p.exists():
             return p
     return None

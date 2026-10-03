@@ -16,6 +16,7 @@ import re
 import sys
 import tempfile
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _WORKFLOW_PATH = _REPO_ROOT / ".claude" / "workflows" / "implement-ticket.js"
@@ -277,8 +278,8 @@ def test_candidate_call_cost_and_timing_labeled_separately_from_production(tmp_p
     )
 
     monkeypatch.chdir(tmp_path)
-    (tmp_path / "agent-monitoring" / "data" / "2026-W99").mkdir(parents=True)
-    (tmp_path / "agent-monitoring" / "data" / "2026-W99" / "tools.jsonl").write_text(
+    (tmp_path / AGENT_MONITORING / "data" / "2026-W99").mkdir(parents=True)
+    (tmp_path / AGENT_MONITORING / "data" / "2026-W99" / "tools.jsonl").write_text(
         "\n".join(json.dumps(r) for r in production_rows + shadow_rows) + "\n"
     )
 

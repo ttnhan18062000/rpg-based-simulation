@@ -17,11 +17,15 @@ import argparse
 import os
 import sys
 from pathlib import Path
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STORED_ARTIFACTS as _STORED_ARTIFACTS_REL  # noqa: E402
 
 ARTIFACT_FILES = ["investigation.md", "plan.md", "test_plan.md"]
 
 REPO_ROOT = Path(__file__).parent.parent
-STORED_ARTIFACTS = REPO_ROOT / "stored_artifacts"
+STORED_ARTIFACTS = REPO_ROOT / _STORED_ARTIFACTS_REL
 
 INDEX_TEMPLATE = """\
 ---

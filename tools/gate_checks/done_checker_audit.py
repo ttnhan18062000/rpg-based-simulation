@@ -26,12 +26,16 @@ for _dir in (str(_TOOLS_DIR), str(_GATE_CHECKS_DIR)):
 
 from generate_registry import parse_body_section  # noqa: E402
 from done_checker_static import REQUIRED_ARTIFACT_FILES, _files_complete  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS  # noqa: E402
 
 _EXCLUDED_FILENAMES = {"README.md", "SEQUENCE.md"}
 _RECOGNISED_TIERS = {"standard", "epic", "hotfix"}
 
 
-def scan_done_tickets(done_dir: Path = Path("tickets/done")) -> list[dict]:
+def scan_done_tickets(done_dir: Path = TICKETS / "done") -> list[dict]:
     """Walk tickets/done/*.md and tickets/done/{folder}/*.md (excluding README.md/SEQUENCE.md).
 
     Returns a list of {"ticket_id", "path", "tier"} dicts. `tier` is the lowercased, stripped
@@ -54,8 +58,8 @@ def scan_done_tickets(done_dir: Path = Path("tickets/done")) -> list[dict]:
 
 
 def audit_stored_artifacts_migration(
-    done_dir: Path = Path("tickets/done"),
-    stored_base: Path = Path("stored_artifacts"),
+    done_dir: Path = TICKETS / "done",
+    stored_base: Path = STORED_ARTIFACTS,
 ) -> dict:
     """Read-only audit: for every standard/epic done ticket, check stored_artifacts/{id}/
     completeness. Never mutates any file. hotfix tickets are skipped (no stored_artifacts/

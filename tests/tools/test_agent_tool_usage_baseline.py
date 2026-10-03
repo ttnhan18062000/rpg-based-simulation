@@ -13,11 +13,12 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _MODULE_PATH = _MONITORING_TOOLS_DIR / "agent_tool_usage_baseline.py"
-_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
+_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / AGENT_MONITORING
 _AGENTS_DIR = _REPO_ROOT / ".claude" / "agents"
 
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
@@ -106,7 +107,7 @@ def test_null_and_non_matching_agent_values_bucket_to_unattributed():
 # ---------------------------------------------------------------------------
 
 def test_glob_matches_all_dated_week_shards_and_unknown_week(tmp_path):
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     (data_dir / "2026-W01").mkdir(parents=True)
     (data_dir / "2026-W02").mkdir(parents=True)
     (data_dir / "unknown-week").mkdir(parents=True)

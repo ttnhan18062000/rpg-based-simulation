@@ -23,6 +23,7 @@ from tools.agent_replay_codex.containment import assert_no_diff, capture_snapsho
 from tools.agent_replay_codex.errors import ContainmentViolationError
 from tools.agent_replay_codex.provenance_check import assert_no_codex_provider_writes
 from tools.agent_codex_runtime_shadow.shadow_comparison import run_shadow_comparison
+from tools.agent_working_paths import AGENT_MONITORING, STAGING_ARTIFACTS, STORED_ARTIFACTS, TICKETS  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _TICKET_ID = "FAKE-CODEX-RUNTIME-SHADOW-TICKET"
@@ -69,24 +70,24 @@ phases:
 
 
 def _init_synthetic_repo(tmp_path):
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    (tmp_path / "agent-monitoring").mkdir(parents=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    (tmp_path / AGENT_MONITORING).mkdir(parents=True)
     (tmp_path / ".codex").mkdir(parents=True)
 
-    (tmp_path / "tickets" / "inprogress" / "FAKE.md").write_text("line one\n", encoding="utf-8")
+    (tmp_path / TICKETS / "inprogress" / "FAKE.md").write_text("line one\n", encoding="utf-8")
     for filename in ("runs.jsonl", "events.jsonl", "tools.jsonl"):
-        (tmp_path / "agent-monitoring" / filename).write_text('{"a": 1}\n{"a": 2}\n', encoding="utf-8")
+        (tmp_path / AGENT_MONITORING / filename).write_text('{"a": 1}\n{"a": 2}\n', encoding="utf-8")
     (tmp_path / ".codex" / "config.toml").write_text("# hook-free synthetic config\n", encoding="utf-8")
 
-    for root_name in ("stored_artifacts", "staging_artifacts"):
+    for root_name in (STORED_ARTIFACTS, STAGING_ARTIFACTS):
         ticket_dir = tmp_path / root_name / _TICKET_ID
         ticket_dir.mkdir(parents=True)
         (ticket_dir / "investigation.md").write_text("x", encoding="utf-8")
         (ticket_dir / "test_plan.md").write_text("x", encoding="utf-8")
         (ticket_dir / "plan.md").write_text(_PLAN_MD, encoding="utf-8")
 
-    plan_path = tmp_path / "stored_artifacts" / _TICKET_ID / "plan.md"
-    stored_artifacts_dir = tmp_path / "stored_artifacts" / _TICKET_ID
+    plan_path = tmp_path / STORED_ARTIFACTS / _TICKET_ID / "plan.md"
+    stored_artifacts_dir = tmp_path / STORED_ARTIFACTS / _TICKET_ID
     fixture_path = tmp_path / "fixture.yaml"
     fixture_path.write_text(
         _FIXTURE_YAML_TEMPLATE.format(
@@ -121,7 +122,7 @@ def test_shadow_run_produces_zero_diff_in_tickets_and_monitoring(tmp_path):
     pre = capture_snapshot(tmp_path)
     result = run_shadow_comparison(
         fixture_path,
-        tmp_path / "staging_artifacts",
+        tmp_path / STAGING_ARTIFACTS,
         tmp_path / "intentional-divergences.md",
     )
     post = capture_snapshot(tmp_path)
@@ -134,11 +135,11 @@ def test_shadow_run_produces_zero_diff_in_tickets_and_monitoring(tmp_path):
 
 
 def test_shadow_run_writes_no_codex_provider_record():
-    assert_no_codex_provider_writes(_REPO_ROOT / "agent-monitoring")
+    assert_no_codex_provider_writes(_REPO_ROOT / AGENT_MONITORING)
 
 
 def test_negative_control_detects_a_synthetic_codex_provider_record(tmp_path):
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     monitoring_dir.mkdir()
     (monitoring_dir / "runs.jsonl").write_text(
         json.dumps({"run_id": "FAKE", "provider": "codex"}) + "\n", encoding="utf-8"
@@ -156,7 +157,7 @@ def test_committed_codex_config_remains_hook_free_and_byte_identical(tmp_path):
     pre_config = snapshot_config_bytes(_REPO_ROOT)
     run_shadow_comparison(
         fixture_path,
-        tmp_path / "staging_artifacts",
+        tmp_path / STAGING_ARTIFACTS,
         tmp_path / "intentional-divergences.md",
     )
     post_config = snapshot_config_bytes(_REPO_ROOT)

@@ -21,6 +21,7 @@ import os
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 
@@ -30,7 +31,7 @@ def _assert_not_real_corpus(path):
     repo_root = str(_REPO_ROOT.resolve())
     if resolved.startswith(repo_root):
         relative = Path(resolved).relative_to(repo_root)
-        assert "agent-monitoring" not in relative.parts, (
+        assert AGENT_MONITORING.parts != relative.parts[: len(AGENT_MONITORING.parts)], (
             f"refusing to write to real corpus-shaped path: {resolved}"
         )
 
@@ -74,7 +75,7 @@ def _write_record_lockfile(target_path, record, lock_path):
 
 
 def test_lockfile_guard_rejects_real_agent_monitoring_path():
-    real_corpus_path = _REPO_ROOT / "agent-monitoring" / "tools.jsonl"
+    real_corpus_path = _REPO_ROOT / AGENT_MONITORING / "tools.jsonl"
     try:
         _assert_not_real_corpus(real_corpus_path)
     except AssertionError:

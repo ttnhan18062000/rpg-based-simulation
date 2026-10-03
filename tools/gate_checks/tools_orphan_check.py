@@ -62,6 +62,10 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Set
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS, posix  # noqa: E402
 
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
@@ -79,9 +83,9 @@ CODEX_SUBTREE_PREFIXES = (
 # record, not current wiring. Files under these prefixes are excluded from the token index
 # entirely (not merely down-weighted), so a tools/ file referenced only there is NO_REFERENCES.
 IGNORED_REFERENCE_PREFIXES = (
-    "tickets/done/",
+    posix(TICKETS / "done") + "/",
     "docs/archive/",
-    "stored_artifacts/",
+    posix(STORED_ARTIFACTS) + "/",
 )
 
 # Extensions read as text for the token index. Everything else (images, fonts, compiled

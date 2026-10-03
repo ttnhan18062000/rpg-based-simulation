@@ -16,6 +16,7 @@ from src.api.agent_ops_dashboard import ingest
 import validate  # tools/agent-monitoring/validate.py — importable once ingest.py has run
 import validate_frontmatter  # tools/validate_frontmatter.py — same
 from ticket_field_values import LAYER_VALUES  # tools/ticket_field_values.py — same
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -32,7 +33,7 @@ def _write_ticket_raw(
     subfolder: str | None = None,
     body: str | None = None,
 ) -> Path:
-    rel_dir = tmp_path / "tickets" / lifecycle
+    rel_dir = tmp_path / TICKETS / lifecycle
     if subfolder:
         rel_dir = rel_dir / subfolder
     rel_dir.mkdir(parents=True, exist_ok=True)
@@ -51,10 +52,10 @@ def _write_ticket_raw(
 
 
 def _init_repo_skeleton(tmp_path: Path) -> None:
-    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
+    (tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "done").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "todos").mkdir(parents=True, exist_ok=True)
 
 
 def _write_tag_registry_fixture(tmp_path: Path, tags: list[str]) -> None:
@@ -83,7 +84,7 @@ def _write_runs_events_tools(
     tools: list[dict] | None = None,
 ) -> None:
     _init_repo_skeleton(tmp_path)
-    week_dir = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK
+    week_dir = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK
     week_dir.mkdir(parents=True, exist_ok=True)
     runs_file = week_dir / "runs.jsonl"
     runs_file.write_text("\n".join(json.dumps(r) for r in runs) + "\n")
@@ -228,7 +229,7 @@ def test_ticket_missing_body_sections_surfaces_null_not_error(tmp_path):
 
 
 def test_ticket_file_without_frontmatter_returns_none(tmp_path):
-    p = tmp_path / "tickets" / "todos" / "x"
+    p = tmp_path / TICKETS / "todos" / "x"
     p.mkdir(parents=True)
     f = p / "TCK-20260101-NOFRONTMATTER.md"
     f.write_text("# No frontmatter here\n", encoding="utf-8")
@@ -241,12 +242,12 @@ def test_ticket_file_without_frontmatter_returns_none(tmp_path):
 
 
 def test_non_ticket_markdown_in_tickets_dirs_does_not_crash_ingest(tmp_path):
-    todos_dir = tmp_path / "tickets" / "todos" / "some-folder"
+    todos_dir = tmp_path / TICKETS / "todos" / "some-folder"
     todos_dir.mkdir(parents=True)
     (todos_dir / "SEQUENCE.md").write_text("# Sequence\n\nNot a ticket.\n", encoding="utf-8")
     _write_ticket_raw(tmp_path, "todos", "TCK-20260101-REAL", subfolder="some-folder")
 
-    files = ingest.walk_ticket_dirs(tmp_path / "tickets")
+    files = ingest.walk_ticket_dirs(tmp_path / TICKETS)
     names = {f.name for f in files}
     assert "SEQUENCE.md" not in names
     assert "TCK-20260101-REAL.md" in names
@@ -257,7 +258,7 @@ def test_walk_ticket_dirs_covers_all_three_lifecycle_states(tmp_path):
     _write_ticket_raw(tmp_path, "done", "TCK-20260101-B", subfolder="some-epic")
     _write_ticket_raw(tmp_path, "todos", "TCK-20260101-C", subfolder="some-folder")
 
-    files = ingest.walk_ticket_dirs(tmp_path / "tickets")
+    files = ingest.walk_ticket_dirs(tmp_path / TICKETS)
     stems = {f.stem for f in files}
     assert stems == {"TCK-20260101-A", "TCK-20260101-B", "TCK-20260101-C"}
 
@@ -311,7 +312,7 @@ def test_active_run_completion_flips_inferred_flag_and_timestamps(tmp_path):
     now = datetime.now(timezone.utc)
     live_ts = (now - timedelta(minutes=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    tools_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "tools.jsonl"
+    tools_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "tools.jsonl"
     tools_file.write_text(
         json.dumps(
             {
@@ -333,7 +334,7 @@ def test_active_run_completion_flips_inferred_flag_and_timestamps(tmp_path):
     assert run.is_inferred_active is True
     assert run.end_ts is None
 
-    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
+    runs_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "runs.jsonl"
     end_ts = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     runs_file.write_text(
         json.dumps(
@@ -403,7 +404,7 @@ def test_files_touched_dedup_by_path_restricted_to_edit_tools():
 
 def test_legacy_runs_jsonl_schema_generations_do_not_crash_ingest(tmp_path):
     _init_repo_skeleton(tmp_path)
-    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
+    runs_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "runs.jsonl"
     rows = [
         {"run_id": "TCK-LEGACY-A", "started_at": "2026-07-01T00:00:00Z", "finished_at": "2026-07-01T01:00:00Z", "status": "done"},
         {"run_id": "TCK-LEGACY-B", "ts_start": "2026-07-02T00:00:00Z", "ts_end": "2026-07-02T01:00:00Z", "result": "success"},
@@ -428,7 +429,7 @@ def test_legacy_runs_jsonl_schema_generations_do_not_crash_ingest(tmp_path):
 
 def test_run_summary_carries_provider_execution_id_ticket_id_when_present(tmp_path):
     _init_repo_skeleton(tmp_path)
-    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
+    runs_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "runs.jsonl"
     row = {
         "run_id": "TCK-NATIVE-IDENTITY",
         "start_ts": "2026-07-22T00:00:00Z",
@@ -453,7 +454,7 @@ def test_run_summary_carries_provider_execution_id_ticket_id_when_present(tmp_pa
 
 def test_run_summary_labels_legacy_record_as_legacy_not_none_silently(tmp_path):
     _init_repo_skeleton(tmp_path)
-    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
+    runs_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "runs.jsonl"
     legacy_line = (_FIXTURES_DIR / "shape2_final_status_no_end_ts.jsonl").read_text().strip()
     runs_file.write_text(legacy_line + "\n")
 
@@ -468,7 +469,7 @@ def test_run_summary_labels_legacy_record_as_legacy_not_none_silently(tmp_path):
 
 def test_get_runs_filters_by_provider_and_execution_id(tmp_path):
     _init_repo_skeleton(tmp_path)
-    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
+    runs_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "runs.jsonl"
     legacy_line = (_FIXTURES_DIR / "shape2_final_status_no_end_ts.jsonl").read_text().strip()
     native_row = {
         "run_id": "TCK-NATIVE-FILTER-TEST",
@@ -504,7 +505,7 @@ def test_provider_claude_code_legacy_value_tolerated_not_normalized_as_new_write
     # normalization/aliasing is performed: the value passes through unchanged, exactly like every
     # other pass-through field.
     _init_repo_skeleton(tmp_path)
-    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
+    runs_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "runs.jsonl"
     legacy_shaped_row = {
         "run_id": "TCK-LEGACY-TOKEN-TEST",
         "start_ts": "2026-07-22T00:00:00Z",
@@ -535,7 +536,7 @@ def test_provider_claude_code_legacy_value_tolerated_not_normalized_as_new_write
 def _write_filter_fixture_tickets(tmp_path: Path) -> None:
     _init_repo_skeleton(tmp_path)
 
-    _matched_path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-MATCH.md"
+    _matched_path = tmp_path / TICKETS / "inprogress" / "TCK-20260101-MATCH.md"
     frontmatter_matched = (
         "status: active\nlayer: observability\nauthority: P1\naudience: agent\n"
         "ticket_id: TCK-20260101-MATCH\nphase: open\ndate: 2026-07-16\n"
@@ -548,7 +549,7 @@ def _write_filter_fixture_tickets(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    other_layer_path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-OTHERLAYER.md"
+    other_layer_path = tmp_path / TICKETS / "inprogress" / "TCK-20260101-OTHERLAYER.md"
     frontmatter_other_layer = (
         "status: active\nlayer: combat\nauthority: P1\naudience: agent\n"
         "ticket_id: TCK-20260101-OTHERLAYER\nphase: open\ndate: 2026-07-16\n"
@@ -561,7 +562,7 @@ def _write_filter_fixture_tickets(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    other_tier_path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-OTHERTIER.md"
+    other_tier_path = tmp_path / TICKETS / "inprogress" / "TCK-20260101-OTHERTIER.md"
     frontmatter_other_tier = (
         "status: active\nlayer: observability\nauthority: P1\naudience: agent\n"
         "ticket_id: TCK-20260101-OTHERTIER\nphase: open\ndate: 2026-07-16\n"
@@ -574,7 +575,7 @@ def _write_filter_fixture_tickets(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    no_tag_path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-NOTAGMATCH.md"
+    no_tag_path = tmp_path / TICKETS / "inprogress" / "TCK-20260101-NOTAGMATCH.md"
     frontmatter_no_tag = (
         "status: active\nlayer: observability\nauthority: P1\naudience: agent\n"
         "ticket_id: TCK-20260101-NOTAGMATCH\nphase: open\ndate: 2026-07-16\n"
@@ -646,7 +647,7 @@ def _write_pagination_fixture_tickets(tmp_path: Path) -> None:
         ("TCK-20260101-PAGE5", "2026-07-11", "standard", "world", "OPEN", "P2", ["world"]),
     ]
     for ticket_id, date, tier, layer, status, priority, tags in fixtures:
-        path = tmp_path / "tickets" / "inprogress" / f"{ticket_id}.md"
+        path = tmp_path / TICKETS / "inprogress" / f"{ticket_id}.md"
         tags_yaml = "[" + ", ".join(tags) + "]"
         frontmatter = (
             f"status: active\nlayer: {layer}\nauthority: P1\naudience: agent\n"
@@ -717,7 +718,7 @@ def test_tags_facet_is_canonical_registry_derived_regardless_of_corpus_content(t
     # is the registry, not the corpus — the inverse of the old corpus-derived contract).
     _init_repo_skeleton(tmp_path)
     _write_tag_registry_fixture(tmp_path, ["onpage", "registry-only"])
-    path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-ONLY-ONE.md"
+    path = tmp_path / TICKETS / "inprogress" / "TCK-20260101-ONLY-ONE.md"
     path.write_text(
         "---\nstatus: active\nlayer: engine\nauthority: P1\naudience: agent\n"
         "ticket_id: TCK-20260101-ONLY-ONE\nphase: open\ndate: 2026-07-15\ntags: [onpage, unregistered-corpus-tag]\n---\n\n"
@@ -755,7 +756,7 @@ def test_tiers_layers_priorities_facets_are_canonical_full_sets_regardless_of_co
     # own pattern, extended to the three facets TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL
     # just made canonical.
     _init_repo_skeleton(tmp_path)
-    path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-ONLY-ONE.md"
+    path = tmp_path / TICKETS / "inprogress" / "TCK-20260101-ONLY-ONE.md"
     path.write_text(
         "---\nstatus: active\nlayer: engine\nauthority: P1\naudience: agent\n"
         "ticket_id: TCK-20260101-ONLY-ONE\nphase: open\ndate: 2026-07-15\ntags: []\n---\n\n"
@@ -796,7 +797,7 @@ def test_statuses_facet_is_canonical_full_set_regardless_of_corpus_content(tmp_p
     # only tags remains genuinely corpus-derived.
     _init_repo_skeleton(tmp_path)
     for ticket_id, status in [("TCK-20260101-ONLY-OPEN", "OPEN"), ("TCK-20260101-ONLY-DONE", "DONE")]:
-        path = tmp_path / "tickets" / "inprogress" / f"{ticket_id}.md"
+        path = tmp_path / TICKETS / "inprogress" / f"{ticket_id}.md"
         path.write_text(
             f"---\nstatus: active\nlayer: engine\nauthority: P1\naudience: agent\n"
             f"ticket_id: {ticket_id}\nphase: open\ndate: 2026-07-15\ntags: []\n---\n\n"
@@ -978,7 +979,7 @@ def test_bulk_timeline_until_excludes_none_start_ts_runs_consistent_with_since(t
     _init_repo_skeleton(tmp_path)
     now = datetime.now(timezone.utc)
     live_ts = (now - timedelta(minutes=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    tools_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "tools.jsonl"
+    tools_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "tools.jsonl"
     tools_file.write_text(
         json.dumps(
             {
@@ -1065,8 +1066,8 @@ _NEW_FIXTURE_WEEK = "2026-W36"
 
 def test_dashboard_cache_rebuild_aggregates_across_multiple_weeks(tmp_path):
     _init_repo_skeleton(tmp_path)
-    old_dir = tmp_path / "agent-monitoring" / "data" / _OLD_FIXTURE_WEEK
-    new_dir = tmp_path / "agent-monitoring" / "data" / _NEW_FIXTURE_WEEK
+    old_dir = tmp_path / AGENT_MONITORING / "data" / _OLD_FIXTURE_WEEK
+    new_dir = tmp_path / AGENT_MONITORING / "data" / _NEW_FIXTURE_WEEK
     old_dir.mkdir(parents=True, exist_ok=True)
     new_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1100,8 +1101,8 @@ def test_dashboard_cache_rebuild_aggregates_across_multiple_weeks(tmp_path):
 
 def test_dashboard_cache_maybe_rebuild_detects_staleness_from_non_newest_week_write(tmp_path):
     _init_repo_skeleton(tmp_path)
-    old_dir = tmp_path / "agent-monitoring" / "data" / _OLD_FIXTURE_WEEK
-    new_dir = tmp_path / "agent-monitoring" / "data" / _NEW_FIXTURE_WEEK
+    old_dir = tmp_path / AGENT_MONITORING / "data" / _OLD_FIXTURE_WEEK
+    new_dir = tmp_path / AGENT_MONITORING / "data" / _NEW_FIXTURE_WEEK
     old_dir.mkdir(parents=True, exist_ok=True)
     new_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1146,7 +1147,7 @@ def test_dashboard_cache_maybe_rebuild_detects_staleness_from_non_newest_week_wr
 
 def test_dashboard_cache_tools_all_nonempty_against_real_sharded_layout(tmp_path):
     _init_repo_skeleton(tmp_path)
-    week_dir = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK
+    week_dir = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK
     week_dir.mkdir(parents=True, exist_ok=True)
     (week_dir / "tools.jsonl").write_text(
         "\n".join(
@@ -1168,9 +1169,9 @@ def test_dashboard_cache_tools_all_nonempty_against_real_sharded_layout(tmp_path
 
 
 def test_current_source_state_empty_data_dir_returns_zero_not_crash(tmp_path):
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "done").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "todos").mkdir(parents=True, exist_ok=True)
 
     cache = ingest.DashboardCache(repo_root=tmp_path)
     state = cache._current_source_state()

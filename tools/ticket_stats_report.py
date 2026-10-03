@@ -47,6 +47,10 @@ from generate_registry import parse_body_section, _strip_frontmatter  # noqa: E4
 from ticket_field_values import TIER_VALUES, PRIORITY_VALUES  # noqa: E402
 from layer_registry import layer_values  # noqa: E402
 from generate_retro import iso_week  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS  # noqa: E402
 
 _REQUIRED_ARTIFACT_FILES = ("investigation.md", "plan.md", "test_plan.md")
 
@@ -64,7 +68,7 @@ def collect_done_tickets(root: Path):
     date gate (unlike tag_report.py's collect_completed_tickets) — Tier/Type/Priority/Layer
     distribution is not tag-taxonomy-gated, every ticket with parseable frontmatter counts.
     """
-    done_dir = root / "tickets" / "done"
+    done_dir = root / TICKETS / "done"
     included = []
     skip_reasons: Counter = Counter()
 
@@ -110,7 +114,7 @@ def compute_velocity(root: Path) -> dict:
     """Ticket closures per day and per ISO week, from tickets/working_log.csv's timestamp
     column. Malformed/unparseable timestamp rows are counted separately, never silently dropped
     or crashed on (mirrors this project's tolerant-legacy-data convention elsewhere)."""
-    log_path = root / "tickets" / "working_log.csv"
+    log_path = root / TICKETS / "working_log.csv"
     by_day: Counter = Counter()
     by_week: Counter = Counter()
     unparseable = 0
@@ -192,7 +196,7 @@ def compute_artifact_completeness(included: list, root: Path) -> dict:
     for t in included:
         if t["tier"] not in ("standard", "epic"):
             continue
-        artifacts_dir = root / "stored_artifacts" / t["ticket_id"]
+        artifacts_dir = root / STORED_ARTIFACTS / t["ticket_id"]
         missing = []
         for fname in _REQUIRED_ARTIFACT_FILES:
             fpath = artifacts_dir / fname

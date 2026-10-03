@@ -12,6 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 from unittest.mock import patch
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
@@ -71,7 +72,7 @@ def test_never_imports_the_stale_sqlite_index_path():
 # ---------------------------------------------------------------------------
 
 def test_covered_and_missing_classification(tmp_path):
-    done_dir = tmp_path / "tickets" / "done"
+    done_dir = tmp_path / TICKETS / "done"
     _write_ticket(done_dir, "TCK-A.md", "TCK-A")
     _write_ticket(done_dir, "TCK-B.md", "TCK-B")
 
@@ -86,7 +87,7 @@ def test_covered_and_missing_classification(tmp_path):
 
 
 def test_legacy_no_frontmatter_ticket_falls_back_to_filename_stem(tmp_path):
-    done_dir = tmp_path / "tickets" / "done"
+    done_dir = tmp_path / TICKETS / "done"
     _write_ticket(done_dir, "METRICS-01.md", None)
 
     with patch.object(dtmc, "load_data_glob", return_value=[]):
@@ -98,7 +99,7 @@ def test_legacy_no_frontmatter_ticket_falls_back_to_filename_stem(tmp_path):
 
 
 def test_sequence_and_readme_index_files_excluded(tmp_path):
-    done_dir = tmp_path / "tickets" / "done"
+    done_dir = tmp_path / TICKETS / "done"
     folder = done_dir / "some-epic-folder"
     folder.mkdir(parents=True)
     (folder / "SEQUENCE.md").write_text("# not a ticket\n", encoding="utf-8")
@@ -112,7 +113,7 @@ def test_sequence_and_readme_index_files_excluded(tmp_path):
 
 
 def test_empty_done_dir_produces_empty_report_not_error(tmp_path):
-    done_dir = tmp_path / "tickets" / "done"
+    done_dir = tmp_path / TICKETS / "done"
     done_dir.mkdir(parents=True)
     with patch.object(dtmc, "load_data_glob", return_value=[]):
         report = build_coverage_section(done_dir=done_dir)
@@ -121,14 +122,14 @@ def test_empty_done_dir_produces_empty_report_not_error(tmp_path):
 
 
 def test_missing_done_dir_produces_empty_report_not_error(tmp_path):
-    done_dir = tmp_path / "tickets" / "does_not_exist"
+    done_dir = tmp_path / TICKETS / "does_not_exist"
     with patch.object(dtmc, "load_data_glob", return_value=[]):
         report = build_coverage_section(done_dir=done_dir)
     assert report["total_done_tickets_checked"] == 0
 
 
 def test_run_id_with_none_value_never_counts_as_covered(tmp_path):
-    done_dir = tmp_path / "tickets" / "done"
+    done_dir = tmp_path / TICKETS / "done"
     _write_ticket(done_dir, "TCK-D.md", "TCK-D")
     # A malformed run record with run_id=None must not accidentally satisfy any ticket lookup.
     with patch.object(dtmc, "load_data_glob", return_value=[{"run_id": None}]):
@@ -144,11 +145,11 @@ def test_derivation_string_present_and_explains_freshness_choice():
 
 
 def test_done_ticket_monitoring_coverage_reads_runs_across_multiple_week_folders(tmp_path, monkeypatch):
-    done_dir = tmp_path / "tickets" / "done"
+    done_dir = tmp_path / TICKETS / "done"
     _write_ticket(done_dir, "TCK-WEEK1.md", "TCK-WEEK1")
     _write_ticket(done_dir, "TCK-WEEK2.md", "TCK-WEEK2")
 
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     week1 = data_dir / "2026-W01"
     week1.mkdir(parents=True)
     (week1 / "runs.jsonl").write_text(
@@ -208,7 +209,7 @@ def test_cli_runs_against_real_corpus_and_prints_json():
 def test_causes_zero_diff_on_real_corpus():
     def _porcelain():
         return subprocess.run(
-            ["git", "status", "--porcelain", "--", "agent-monitoring/", "tickets/done/"],
+            ["git", "status", "--porcelain", "--", f"{posix(AGENT_MONITORING)}/", f"{posix(TICKETS)}/done/"],
             cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
         ).stdout
 

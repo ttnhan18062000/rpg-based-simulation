@@ -7,6 +7,7 @@ import pytest
 from tools.agent_codex_pilot_executor.models import PilotSimulationContext
 from tools.agent_codex_pilot_executor.preflight import preflight
 from tools.agent_codex_pilot_executor.simulation import simulate_pilot
+from tools.agent_working_paths import AGENT_MONITORING, PILOT_REQUESTS  # noqa: E402
 
 
 TICKET_ID = "TCK-20260731-CODEX-PILOT-EXECUTOR"
@@ -37,7 +38,7 @@ def test_traversal_ticket_refuses_before_creating_scratch_paths(tmp_path: Path):
     with pytest.raises(Exception):
         preflight(context)
     assert not (tmp_path / "claims").exists()
-    assert not (tmp_path / "agent-monitoring").exists()
+    assert not (tmp_path / AGENT_MONITORING).exists()
 
 
 def test_repository_root_is_not_a_valid_scratch_root():
@@ -59,14 +60,14 @@ def test_preflight_reports_gate_specific_request_refusal_without_side_effects(
     tmp_path: Path, request_text: str | None, expected_reason: str
 ):
     if request_text is not None:
-        request = tmp_path / "pilot_requests" / f"{TICKET_ID}.yaml"
+        request = tmp_path / PILOT_REQUESTS / f"{TICKET_ID}.yaml"
         request.parent.mkdir()
         request.write_text(request_text, encoding="utf-8")
     result = simulate_pilot(_context(tmp_path))
     assert result.success is False
     assert result.boundary == f"preflight:{expected_reason}"
     assert not (tmp_path / "claims").exists()
-    assert not (tmp_path / "agent-monitoring").exists()
+    assert not (tmp_path / AGENT_MONITORING).exists()
 
 
 def test_preflight_identity_and_surface_refusals_are_specific_and_do_not_call_dependencies(
@@ -91,7 +92,7 @@ def test_preflight_identity_and_surface_refusals_are_specific_and_do_not_call_de
     assert calls == []
     monkeypatch.setattr(preflight_module, "select_pilot_candidate", original_select)
 
-    request = tmp_path / "pilot_requests" / f"{TICKET_ID}.yaml"
+    request = tmp_path / PILOT_REQUESTS / f"{TICKET_ID}.yaml"
     request.parent.mkdir()
     request.write_text(
         f"ticket_id: {TICKET_ID}\nhuman_owner: x\nrollback_plan_summary: x\n", encoding="utf-8"
@@ -100,7 +101,7 @@ def test_preflight_identity_and_surface_refusals_are_specific_and_do_not_call_de
     result = simulate_pilot(surface)
     assert result.boundary == "preflight:surface_not_evidenced"
     assert not (tmp_path / "claims").exists()
-    assert not (tmp_path / "agent-monitoring").exists()
+    assert not (tmp_path / AGENT_MONITORING).exists()
 
 
 def test_symlinked_scratch_root_is_refused_before_request_or_claim_io(tmp_path: Path):

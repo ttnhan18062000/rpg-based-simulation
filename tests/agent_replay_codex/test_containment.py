@@ -12,14 +12,15 @@ import pytest
 
 from tools.agent_replay_codex.containment import assert_no_diff, capture_snapshot
 from tools.agent_replay_codex.errors import ContainmentViolationError
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
 
 def _init_synthetic_repo(tmp_path):
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    week_dir = tmp_path / "agent-monitoring" / "data" / "2026-W01"
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    week_dir = tmp_path / AGENT_MONITORING / "data" / "2026-W01"
     week_dir.mkdir(parents=True)
 
-    (tmp_path / "tickets" / "inprogress" / "FAKE.md").write_text("line one\n", encoding="utf-8")
+    (tmp_path / TICKETS / "inprogress" / "FAKE.md").write_text("line one\n", encoding="utf-8")
     # TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: the real corpus shape is now
     # agent-monitoring/data/<week>/<id>.<kind>.jsonl (per-PR/branch), not the flat
     # agent-monitoring/{runs,events,tools}.jsonl this fixture previously built directly --
@@ -46,7 +47,7 @@ def test_assert_no_diff_raises_when_a_watched_file_is_mutated(tmp_path):
     _init_synthetic_repo(tmp_path)
 
     pre = capture_snapshot(tmp_path)
-    (tmp_path / "tickets" / "inprogress" / "FAKE.md").write_text("mutated content\n", encoding="utf-8")
+    (tmp_path / TICKETS / "inprogress" / "FAKE.md").write_text("mutated content\n", encoding="utf-8")
     post = capture_snapshot(tmp_path)
 
     with pytest.raises(ContainmentViolationError):
@@ -73,7 +74,7 @@ def test_assert_no_diff_raises_when_a_real_sharded_monitoring_file_is_mutated(tm
     _init_synthetic_repo(tmp_path)
 
     pre = capture_snapshot(tmp_path)
-    mutated = tmp_path / "agent-monitoring" / "data" / "2026-W01" / "some-branch.runs.jsonl"
+    mutated = tmp_path / AGENT_MONITORING / "data" / "2026-W01" / "some-branch.runs.jsonl"
     mutated.write_text('{"a": 1}\n{"a": 2}\n{"a": 3}\n', encoding="utf-8")
     post = capture_snapshot(tmp_path)
 

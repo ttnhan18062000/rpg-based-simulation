@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "tools" / "agent-monitoring"))
 
@@ -25,8 +26,8 @@ from migrate_tools_shards import (  # noqa: E402
 )
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REAL_SOURCE = _REPO_ROOT / "agent-monitoring" / "tools.jsonl"
-_REAL_SHARD_DIR = _REPO_ROOT / "agent-monitoring" / "tools"
+_REAL_SOURCE = _REPO_ROOT / AGENT_MONITORING / "tools.jsonl"
+_REAL_SHARD_DIR = _REPO_ROOT / AGENT_MONITORING / "tools"
 
 
 def _line(**fields) -> str:

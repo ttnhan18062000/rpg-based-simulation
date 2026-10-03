@@ -16,13 +16,21 @@ to `stored_artifacts/` at close); a `staging_artifacts/X` citation is checked at
 import re
 import subprocess
 from pathlib import Path
+import sys
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STAGING_ARTIFACTS, STORED_ARTIFACTS, TICKETS, posix  # noqa: E402
 
-_PREFIXES = ("stored_artifacts/", "staging_artifacts/", "tickets/")
+_TICKETS_PREFIX = posix(TICKETS) + "/"
+_STAGING_PREFIX = posix(STAGING_ARTIFACTS) + "/"
+_STORED_PREFIX = posix(STORED_ARTIFACTS) + "/"
+_PREFIXES = (_STORED_PREFIX, _STAGING_PREFIX, _TICKETS_PREFIX)
 _TICKS = re.compile(r"`([^`\n]+)`")
 
 
 def _ticket_text(ticket_id: str, root: Path) -> str | None:
-    tickets = root / "tickets"
+    tickets = root / TICKETS
     candidates = [tickets / "inprogress" / f"{ticket_id}.md", *sorted((tickets / "done").rglob(f"{ticket_id}.md"))]
     for path in candidates:
         try:
@@ -48,8 +56,8 @@ def cited_paths(text: str) -> list[str]:
 def _resolve_on_disk(rel: str, root: Path) -> str | None:
     if (root / rel).is_file():
         return rel
-    if rel.startswith("staging_artifacts/"):
-        migrated = "stored_artifacts/" + rel[len("staging_artifacts/"):]
+    if rel.startswith(_STAGING_PREFIX):
+        migrated = _STORED_PREFIX + rel[len(_STAGING_PREFIX):]
         if (root / migrated).is_file():
             return migrated
     return None
@@ -67,7 +75,7 @@ def check_cited_evidence_paths(ticket_id: str, tier: str = "", root: Path = Path
         if text is None:
             return ("NA", f"no ticket file found for {ticket_id}")
         own = f"{ticket_id}.md"
-        cited = [c for c in cited_paths(text) if not (c.startswith("tickets/") and c.endswith("/" + own))]
+        cited = [c for c in cited_paths(text) if not (c.startswith(_TICKETS_PREFIX) and c.endswith("/" + own))]
         paths = [p for p in (_resolve_on_disk(c, root) for c in cited) if p]
         if not paths:
             return ("NA", "no cited evidence path exists on disk")

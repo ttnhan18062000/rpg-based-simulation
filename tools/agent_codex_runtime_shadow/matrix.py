@@ -16,9 +16,10 @@ from pathlib import Path
 import yaml
 
 from .errors import ContractVersionMismatchError, UnsupportedPhaseError, UnsupportedTierError
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_DEFAULT_WORKFLOW_YAML_PATH = _REPO_ROOT / "agent-orchestration" / "workflows" / "implement-ticket.yaml"
+_DEFAULT_WORKFLOW_YAML_PATH = _REPO_ROOT / AGENT_ORCHESTRATION / "workflows" / "implement-ticket.yaml"
 
 _SUPPORTED_TIER = "standard"
 _SUPPORTED_PHASES = ["Scope", "Investigate", "Plan", "Review"]

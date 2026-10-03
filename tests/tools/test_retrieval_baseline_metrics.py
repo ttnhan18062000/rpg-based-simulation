@@ -12,11 +12,12 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING, posix
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _MODULE_PATH = _MONITORING_TOOLS_DIR / "retrieval_baseline_metrics.py"
-_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
+_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / AGENT_MONITORING
 
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
@@ -105,7 +106,7 @@ def test_baseline_report_tool_never_imports_writer_module():
 # ---------------------------------------------------------------------------
 
 def test_load_all_sources_tools_reads_across_multiple_week_folders(tmp_path, monkeypatch):
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     (data_dir / "2026-W01").mkdir(parents=True)
     (data_dir / "2026-W02").mkdir(parents=True)
     (data_dir / "2026-W01" / "tools.jsonl").write_text(
@@ -132,7 +133,7 @@ def test_load_all_sources_tools_reads_across_multiple_week_folders(tmp_path, mon
 
 
 def test_load_all_sources_uses_load_data_glob_directly_on_directory_valued_default(tmp_path):
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     (data_dir / "2026-W10").mkdir(parents=True)
     (data_dir / "2026-W11").mkdir(parents=True)
     (data_dir / "2026-W10" / "tools.jsonl").write_text(
@@ -373,7 +374,7 @@ def test_baseline_report_review_rework_proxy_ignores_reason_code_alone():
 
 def _porcelain_snapshot() -> str:
     result = subprocess.run(
-        ["git", "status", "--porcelain", "--", "agent-monitoring/"],
+        ["git", "status", "--porcelain", "--", f"{posix(AGENT_MONITORING)}/"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     )
     return result.stdout

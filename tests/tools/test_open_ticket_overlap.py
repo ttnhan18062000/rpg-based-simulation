@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from tools.agent_working_paths import TICKETS
 
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
@@ -18,7 +19,7 @@ from open_ticket_overlap import find_overlapping_open_tickets, main  # noqa: E40
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _FIXTURE_DIR = _REPO_ROOT / "tests" / "fixtures" / "open_ticket_overlap"
 _REAL_TARGET_TICKET = (
-    _REPO_ROOT / "tickets" / "todos" / "TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED.md"
+    _REPO_ROOT / TICKETS / "todos" / "TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED.md"
 )
 
 
@@ -51,7 +52,7 @@ def _write_ticket(
 
 
 def test_finds_overlap_with_real_target_ticket_via_fixture(tmp_path):
-    todos = tmp_path / "tickets" / "todos"
+    todos = tmp_path / TICKETS / "todos"
     todos.mkdir(parents=True)
     (todos / _REAL_TARGET_TICKET.name).write_text(
         _REAL_TARGET_TICKET.read_text(encoding="utf-8"), encoding="utf-8"
@@ -75,7 +76,7 @@ def test_finds_overlap_with_real_target_ticket_via_fixture(tmp_path):
         ],
         query_ticket_id="TCK-FIXTURE-B0-PERCEPTION-WAVE",
         todos_root=todos,
-        inprogress_root=tmp_path / "tickets" / "inprogress",
+        inprogress_root=tmp_path / TICKETS / "inprogress",
     )
 
     hit_ids = {h["ticket_id"] for h in hits}
@@ -94,7 +95,7 @@ def test_finds_overlap_with_real_target_ticket_via_fixture(tmp_path):
 
 
 def test_has_code_area_match_true_when_a_code_area_matched(tmp_path):
-    todos = tmp_path / "tickets" / "todos"
+    todos = tmp_path / TICKETS / "todos"
     _write_ticket(
         todos / "TCK-CODEAREA-ONLY.md",
         "TCK-CODEAREA-ONLY",
@@ -108,14 +109,14 @@ def test_has_code_area_match_true_when_a_code_area_matched(tmp_path):
         query_code_areas=["src/domains/perception/phase.py"],
         query_ticket_id=None,
         todos_root=todos,
-        inprogress_root=tmp_path / "tickets" / "inprogress",
+        inprogress_root=tmp_path / TICKETS / "inprogress",
     )
     assert len(hits) == 1
     assert hits[0]["has_code_area_match"] is True
 
 
 def test_has_code_area_match_false_when_only_terms_matched(tmp_path):
-    todos = tmp_path / "tickets" / "todos"
+    todos = tmp_path / TICKETS / "todos"
     for i in range(4):
         _write_ticket(
             todos / f"TCK-FILLER-{i}.md",
@@ -137,7 +138,7 @@ def test_has_code_area_match_false_when_only_terms_matched(tmp_path):
         query_code_areas=["src/domains/perception/phase.py"],
         query_ticket_id=None,
         todos_root=todos,
-        inprogress_root=tmp_path / "tickets" / "inprogress",
+        inprogress_root=tmp_path / TICKETS / "inprogress",
     )
     assert {h["ticket_id"] for h in hits} == {"TCK-TERMS-ONLY"}
     assert hits[0]["has_code_area_match"] is False
@@ -149,7 +150,7 @@ def test_has_code_area_match_false_when_only_terms_matched(tmp_path):
 
 
 def test_unrelated_ticket_gets_no_hits(tmp_path):
-    todos = tmp_path / "tickets" / "todos"
+    todos = tmp_path / TICKETS / "todos"
     _write_ticket(
         todos / "TCK-COMBAT-UNRELATED.md",
         "TCK-COMBAT-UNRELATED",
@@ -164,13 +165,13 @@ def test_unrelated_ticket_gets_no_hits(tmp_path):
         query_code_areas=["src/domains/perception/phase.py"],
         query_ticket_id="TCK-QUERY-EXAMPLE",
         todos_root=todos,
-        inprogress_root=tmp_path / "tickets" / "inprogress",
+        inprogress_root=tmp_path / TICKETS / "inprogress",
     )
     assert hits == []
 
 
 def test_ticket_never_matches_itself(tmp_path):
-    todos = tmp_path / "tickets" / "todos"
+    todos = tmp_path / TICKETS / "todos"
     _write_ticket(
         todos / "TCK-SELF.md",
         "TCK-SELF",
@@ -185,7 +186,7 @@ def test_ticket_never_matches_itself(tmp_path):
         query_code_areas=["src/domains/perception/phase.py"],
         query_ticket_id="TCK-SELF",
         todos_root=todos,
-        inprogress_root=tmp_path / "tickets" / "inprogress",
+        inprogress_root=tmp_path / TICKETS / "inprogress",
     )
     assert hits == []
 
@@ -196,14 +197,14 @@ def test_ticket_never_matches_itself(tmp_path):
 
 
 def test_sees_a_ticket_created_during_the_test(tmp_path):
-    todos = tmp_path / "tickets" / "todos"
+    todos = tmp_path / TICKETS / "todos"
     hits_before = find_overlapping_open_tickets(
         query_title="Perception pipeline never instantiated",
         query_summary="PerceptionUpdatePhase wiring gap.",
         query_code_areas=["src/domains/perception/phase.py"],
         query_ticket_id=None,
         todos_root=todos,
-        inprogress_root=tmp_path / "tickets" / "inprogress",
+        inprogress_root=tmp_path / TICKETS / "inprogress",
     )
     assert hits_before == []
 
@@ -221,7 +222,7 @@ def test_sees_a_ticket_created_during_the_test(tmp_path):
         query_code_areas=["src/domains/perception/phase.py"],
         query_ticket_id=None,
         todos_root=todos,
-        inprogress_root=tmp_path / "tickets" / "inprogress",
+        inprogress_root=tmp_path / TICKETS / "inprogress",
     )
     assert {h["ticket_id"] for h in hits_after} == {"TCK-JUST-WRITTEN"}
 
@@ -232,7 +233,7 @@ def test_sees_a_ticket_created_during_the_test(tmp_path):
 
 
 def test_code_area_signal_alone_triggers_a_hit(tmp_path):
-    todos = tmp_path / "tickets" / "todos"
+    todos = tmp_path / TICKETS / "todos"
     _write_ticket(
         todos / "TCK-CODEAREA-ONLY.md",
         "TCK-CODEAREA-ONLY",
@@ -247,7 +248,7 @@ def test_code_area_signal_alone_triggers_a_hit(tmp_path):
         query_code_areas=["src/domains/perception/phase.py"],
         query_ticket_id=None,
         todos_root=todos,
-        inprogress_root=tmp_path / "tickets" / "inprogress",
+        inprogress_root=tmp_path / TICKETS / "inprogress",
     )
     assert {h["ticket_id"] for h in hits} == {"TCK-CODEAREA-ONLY"}
 
@@ -259,7 +260,7 @@ def test_term_overlap_signal_alone_triggers_a_hit(tmp_path):
     # test_common_corpus_word_alone_scores_too_low_to_surface below for that same fact used
     # deliberately, and this ticket's own peer review round 2 for why a raw shared-term COUNT
     # (with no corpus-size-aware weighting at all) was replaced.
-    todos = tmp_path / "tickets" / "todos"
+    todos = tmp_path / TICKETS / "todos"
     for i in range(4):
         _write_ticket(
             todos / f"TCK-FILLER-{i}.md",
@@ -282,7 +283,7 @@ def test_term_overlap_signal_alone_triggers_a_hit(tmp_path):
         query_code_areas=["src/domains/perception/phase.py"],
         query_ticket_id=None,
         todos_root=todos,
-        inprogress_root=tmp_path / "tickets" / "inprogress",
+        inprogress_root=tmp_path / TICKETS / "inprogress",
     )
     assert {h["ticket_id"] for h in hits} == {"TCK-TERMS-ONLY"}
     assert hits[0]["score"] > 0
@@ -294,7 +295,7 @@ def test_common_corpus_word_alone_scores_too_low_to_surface(tmp_path):
     # the exact class of noise this ticket's peer review round 2 found against the real corpus: a
     # plain shared-term-count check couldn't tell "combat" (in 26/82 real open tickets) apart from
     # a genuinely rare term.
-    todos = tmp_path / "tickets" / "todos"
+    todos = tmp_path / TICKETS / "todos"
     for i in range(5):
         _write_ticket(
             todos / f"TCK-COMBAT-FILLER-{i}.md",
@@ -317,7 +318,7 @@ def test_common_corpus_word_alone_scores_too_low_to_surface(tmp_path):
         query_code_areas=["src/domains/perception/phase.py"],
         query_ticket_id=None,
         todos_root=todos,
-        inprogress_root=tmp_path / "tickets" / "inprogress",
+        inprogress_root=tmp_path / TICKETS / "inprogress",
     )
     assert hits == []
 
@@ -328,7 +329,7 @@ def test_common_corpus_word_alone_scores_too_low_to_surface(tmp_path):
 
 
 def test_recurses_into_todos_subfolders(tmp_path):
-    todos = tmp_path / "tickets" / "todos"
+    todos = tmp_path / TICKETS / "todos"
     _write_ticket(
         todos / "myepic" / "TCK-NESTED.md",
         "TCK-NESTED",
@@ -343,13 +344,13 @@ def test_recurses_into_todos_subfolders(tmp_path):
         query_code_areas=["src/domains/perception/phase.py"],
         query_ticket_id=None,
         todos_root=todos,
-        inprogress_root=tmp_path / "tickets" / "inprogress",
+        inprogress_root=tmp_path / TICKETS / "inprogress",
     )
     assert {h["ticket_id"] for h in hits} == {"TCK-NESTED"}
 
 
 def test_scans_inprogress_too(tmp_path):
-    inprogress = tmp_path / "tickets" / "inprogress"
+    inprogress = tmp_path / TICKETS / "inprogress"
     _write_ticket(
         inprogress / "TCK-INPROGRESS.md",
         "TCK-INPROGRESS",
@@ -363,7 +364,7 @@ def test_scans_inprogress_too(tmp_path):
         query_summary="PerceptionUpdatePhase wiring gap.",
         query_code_areas=["src/domains/perception/phase.py"],
         query_ticket_id=None,
-        todos_root=tmp_path / "tickets" / "todos",
+        todos_root=tmp_path / TICKETS / "todos",
         inprogress_root=inprogress,
     )
     assert {h["ticket_id"] for h in hits} == {"TCK-INPROGRESS"}

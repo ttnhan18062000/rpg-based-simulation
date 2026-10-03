@@ -86,6 +86,10 @@ import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STAGING_ARTIFACTS  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -402,7 +406,7 @@ def main() -> int:
     parser.add_argument("--entities", type=int, default=500)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--out-dir", type=str,
-                         default=str(REPO_ROOT / "staging_artifacts" / "TCK-20260821-LIVE-MAP-PERF-VALIDATION" / "raw"))
+                         default=str(REPO_ROOT / STAGING_ARTIFACTS / "TCK-20260821-LIVE-MAP-PERF-VALIDATION" / "raw"))
     parser.add_argument("--port", type=int, default=8100)
     parser.add_argument("--warmup-ticks", type=int, default=100)
     parser.add_argument("--sample-ticks", type=int, default=1000)

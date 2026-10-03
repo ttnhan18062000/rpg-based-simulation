@@ -57,9 +57,13 @@ import re
 import sys
 from pathlib import Path
 from typing import List
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
-DEFAULT_DONE_DIR = Path("tickets/done")
-DEFAULT_DATA_DIR = Path("agent-monitoring/data")
+DEFAULT_DONE_DIR = TICKETS / "done"
+DEFAULT_DATA_DIR = AGENT_MONITORING / "data"
 
 _TOOLS_DIR = Path(__file__).parent.parent
 _MONITORING_TOOLS_DIR = _TOOLS_DIR / "agent-monitoring"

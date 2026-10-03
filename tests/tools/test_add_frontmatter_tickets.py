@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS
 
 # ---------------------------------------------------------------------------
 # Import helpers — adjust sys.path so tools/ is importable
@@ -244,20 +245,20 @@ class TestInprogressNotTouched:
         import add_frontmatter_tickets as aft
 
         # Verify TICKET_DIR constant
-        assert str(aft.TICKET_DIR) == "tickets/done"
+        assert str(aft.TICKET_DIR) == str(TICKETS / "done")
 
         # Verify ARTIFACT_DIR constant
-        assert str(aft.ARTIFACT_DIR) == "stored_artifacts"
+        assert str(aft.ARTIFACT_DIR) == str(STORED_ARTIFACTS)
 
     def test_main_only_modifies_done_and_artifacts(self, tmp_path, monkeypatch):
         """main() touches only TICKET_DIR and ARTIFACT_DIR, not inprogress."""
         import add_frontmatter_tickets as aft
 
-        done_dir = tmp_path / "tickets" / "done"
+        done_dir = tmp_path / TICKETS / "done"
         done_dir.mkdir(parents=True)
-        inprogress_dir = tmp_path / "tickets" / "inprogress"
+        inprogress_dir = tmp_path / TICKETS / "inprogress"
         inprogress_dir.mkdir(parents=True)
-        artifacts_dir = tmp_path / "stored_artifacts"
+        artifacts_dir = tmp_path / STORED_ARTIFACTS
         artifacts_dir.mkdir(parents=True)
 
         # Create one ticket in done and one in inprogress
@@ -337,7 +338,7 @@ class TestLayerInference:
 class TestValidateFrontmatterAcceptsOutput:
     def test_end_to_end_ticket(self, tmp_path):
         """Generated ticket frontmatter passes validate_frontmatter.py."""
-        ticket_dir = tmp_path / "tickets" / "done"
+        ticket_dir = tmp_path / TICKETS / "done"
         ticket_dir.mkdir(parents=True)
         ticket = ticket_dir / "TCK-20260606-DOCSITE-FM-TICKETS.md"
         ticket.write_text("# TCK-20260606-DOCSITE-FM-TICKETS\n\nBody.\n")
@@ -355,7 +356,7 @@ class TestValidateFrontmatterAcceptsOutput:
 
     def test_end_to_end_artifact(self, tmp_path):
         """Generated artifact frontmatter passes validate_frontmatter.py."""
-        artifacts_dir = tmp_path / "stored_artifacts"
+        artifacts_dir = tmp_path / STORED_ARTIFACTS
         subdir = artifacts_dir / "TCK-20260606-DOCSITE-FM-TICKETS"
         subdir.mkdir(parents=True)
         plan = subdir / "plan.md"
@@ -377,7 +378,7 @@ class TestValidateFrontmatterAcceptsOutput:
 
     def test_end_to_end_investigation(self, tmp_path):
         """Generated investigation frontmatter passes validate_frontmatter.py."""
-        artifacts_dir = tmp_path / "stored_artifacts"
+        artifacts_dir = tmp_path / STORED_ARTIFACTS
         subdir = artifacts_dir / "TCK-20260606-DOCSITE-FM-TICKETS"
         subdir.mkdir(parents=True)
         inv = subdir / "investigation.md"
@@ -397,7 +398,7 @@ class TestValidateFrontmatterAcceptsOutput:
 
     def test_end_to_end_non_standard_artifact(self, tmp_path):
         """Non-standard artifact (content_type: doc) passes validate_frontmatter.py."""
-        artifacts_dir = tmp_path / "stored_artifacts"
+        artifacts_dir = tmp_path / STORED_ARTIFACTS
         subdir = artifacts_dir / "TCK-20260606-DOCSITE-FM-TICKETS"
         subdir.mkdir(parents=True)
         guide = subdir / "guide.md"

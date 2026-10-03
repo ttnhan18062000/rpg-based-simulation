@@ -26,7 +26,10 @@ import ast
 import json
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+
+import tools.agent_working_paths as _awp
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _TOOLS_DIR = str(_REPO_ROOT / "tools")
@@ -40,7 +43,7 @@ from working_log_parser import (  # noqa: E402
     parse_pending_working_log_shards,
 )
 
-_TARGET = "tickets/working_log.csv"
+_TARGET = f"{posix(TICKETS)}/working_log.csv"
 _WRITE_MODES = {"a", "w", "a+", "w+", "x"}
 
 
@@ -48,11 +51,20 @@ _WRITE_MODES = {"a", "w", "a+", "w+", "x"}
 
 
 def _literal_value(node):
-    """Return the literal string a node denotes: a plain string constant, or a `Path("literal")`
+    """Return the literal string a node denotes: a plain string constant, a root constant from
+    `tools.agent_working_paths`, a `/` join of two such operands, or a `Path("literal")`
     call (`Path` bound either as a bare name or via attribute access, e.g. `pathlib.Path`).
     Returns None for anything else -- callers must not guess."""
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
+    if isinstance(node, ast.Name) and isinstance(getattr(_awp, node.id, None), Path):
+        # A root constant imported from tools.agent_working_paths (e.g. TICKETS).
+        return posix(getattr(_awp, node.id))
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        left, right = _literal_value(node.left), _literal_value(node.right)
+        if left is not None and right is not None:
+            return (PurePosixPath(left) / right).as_posix()
+        return None
     if isinstance(node, ast.Call):
         func = node.func
         is_path_call = (isinstance(func, ast.Name) and func.id == "Path") or (
@@ -445,8 +457,8 @@ def test_append_working_log_row_stages_without_touching_canonical_csv(tmp_path, 
     append_working_log_row(
         "2026-09-25T00:00:00Z", "TCK-STAGE", "A title", "DONE", "A summary.", "none"
     )
-    assert not (tmp_path / "tickets" / "working_log.csv").exists()
-    pending = parse_pending_working_log_shards(tmp_path / "agent-monitoring" / "data")
+    assert not (tmp_path / TICKETS / "working_log.csv").exists()
+    pending = parse_pending_working_log_shards(tmp_path / AGENT_MONITORING / "data")
     assert len(pending) == 1
     assert pending[0]["ticket_id"] == "TCK-STAGE"
 
@@ -454,7 +466,7 @@ def test_append_working_log_row_stages_without_touching_canonical_csv(tmp_path, 
 def test_consolidate_pending_rows_orders_by_timestamp_across_multiple_shards(tmp_path):
     """AC4: a consolidation run that sees several different batches' shards at once reconstructs
     true chronological order from each row's own timestamp, not file-glob order."""
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     csv_path = tmp_path / "working_log.csv"
     csv_path.write_text(",".join(HEADER_FIELDS) + "\n", encoding="utf-8")
 
@@ -485,7 +497,7 @@ def test_consolidate_pending_rows_orders_by_timestamp_across_multiple_shards(tmp
 
 
 def test_consolidate_pending_rows_is_idempotent(tmp_path):
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     csv_path = tmp_path / "working_log.csv"
     csv_path.write_text(",".join(HEADER_FIELDS) + "\n", encoding="utf-8")
     (data_root / "2026-W01").mkdir(parents=True)
@@ -507,7 +519,7 @@ def test_consolidate_pending_rows_is_idempotent(tmp_path):
 
 
 def test_consolidate_pending_rows_merges_with_pre_existing_canonical_content(tmp_path):
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     csv_path = tmp_path / "working_log.csv"
     csv_path.write_text(
         ",".join(HEADER_FIELDS) + "\n2026-09-01T00:00:00Z,TCK-OLD,Old,DONE,s,none\n",
@@ -530,7 +542,7 @@ def test_consolidate_pending_rows_merges_with_pre_existing_canonical_content(tmp
 
 
 def test_consolidate_pending_rows_no_shards_is_a_no_op(tmp_path):
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     csv_path = tmp_path / "working_log.csv"
     csv_path.write_text(",".join(HEADER_FIELDS) + "\n", encoding="utf-8")
     result = consolidate_pending_rows(data_root=data_root, csv_path=csv_path)
@@ -571,7 +583,7 @@ def _init_repo(repo):
 def test_two_working_log_shards_never_conflict_under_sequential_squash_merges(tmp_path):
     repo = tmp_path / "repo"
     _init_repo(repo)
-    week_dir = repo / "agent-monitoring" / "data" / "2026-W01"
+    week_dir = repo / AGENT_MONITORING / "data" / "2026-W01"
     week_dir.mkdir(parents=True)
 
     _git(repo, "checkout", "-q", "-b", "ticket-a")
@@ -587,7 +599,7 @@ def test_two_working_log_shards_never_conflict_under_sequential_squash_merges(tm
     _git(repo, "commit", "-q", "-m", "TCK-A: add working_log shard (squashed) (#1)")
 
     _git(repo, "checkout", "-q", "-b", "ticket-b", "main~1")
-    week_dir_b = repo / "agent-monitoring" / "data" / "2026-W01"
+    week_dir_b = repo / AGENT_MONITORING / "data" / "2026-W01"
     week_dir_b.mkdir(parents=True)
     (week_dir_b / "ticket-b.working_log.jsonl").write_text(
         json.dumps({"timestamp": "t", "ticket_id": "TCK-B", "title": "B", "status": "DONE", "summary": "s", "artifacts_path": "none"}) + "\n"

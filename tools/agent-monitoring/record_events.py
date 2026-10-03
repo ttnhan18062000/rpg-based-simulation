@@ -13,6 +13,10 @@ from vocabulary import WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: 
 from writer import write_lines  # noqa: E402
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 from monitoring_shard_paths import shard_paths  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 REQUIRED = {"run_id", "seq", "ts", "phase", "agent", "summary", "status"}
 VALID_STATUS = {"ok", "failed", "blocked", "skipped"}
@@ -120,7 +124,7 @@ def compute_tool_stats(
     # tests, which rely on `monkeypatch.chdir(tmp_path)` for isolation -- confirming CWD-relative
     # is this function's actual, tested design (every real caller already runs with CWD=repo root,
     # matching this project's own established convention), not an oversight to fix.
-    tools_paths = shard_paths(Path("agent-monitoring/data"), "tools")
+    tools_paths = shard_paths(AGENT_MONITORING / "data", "tools")
     rows_by_key: dict[tuple, list[dict]] = defaultdict(list)
     for tools_path in tools_paths:
         for line in tools_path.read_text().splitlines():

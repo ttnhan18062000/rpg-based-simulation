@@ -25,9 +25,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from epic_staleness_check import _section_body  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS  # noqa: E402
 
-DEFAULT_INPROGRESS_DIR = Path("tickets/inprogress")
-DEFAULT_TODOS_DIR = Path("tickets/todos")
+DEFAULT_INPROGRESS_DIR = TICKETS / "inprogress"
+DEFAULT_TODOS_DIR = TICKETS / "todos"
 
 
 def check_single_epic_orphan(

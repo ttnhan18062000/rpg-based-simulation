@@ -11,6 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 from unittest.mock import patch
+from tools.agent_working_paths import AGENT_MONITORING, posix
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
@@ -202,12 +203,12 @@ def test_cli_runs_against_real_corpus_and_prints_json():
 
 def test_causes_zero_diff_on_real_corpus():
     pre = subprocess.run(
-        ["git", "status", "--porcelain", "--", "agent-monitoring/"],
+        ["git", "status", "--porcelain", "--", f"{posix(AGENT_MONITORING)}/"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     ).stdout
     check_security_gate_firing()
     post = subprocess.run(
-        ["git", "status", "--porcelain", "--", "agent-monitoring/"],
+        ["git", "status", "--porcelain", "--", f"{posix(AGENT_MONITORING)}/"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     ).stdout
     assert pre == post, f"security_gate_firing_check mutated agent-monitoring/: pre={pre!r} post={post!r}"

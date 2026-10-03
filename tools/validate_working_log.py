@@ -24,6 +24,10 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from working_log_parser import parse_working_log  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS  # noqa: E402
 
 
 def run_validation(log_path: Path, done_dir: Path) -> dict:
@@ -93,8 +97,8 @@ def run_validation(log_path: Path, done_dir: Path) -> dict:
 
 
 def main():
-    log_path = Path("tickets/working_log.csv")
-    done_dir = Path("tickets/done")
+    log_path = TICKETS / "working_log.csv"
+    done_dir = TICKETS / "done"
 
     if not log_path.exists():
         print(f"ERROR: {log_path} not found", file=sys.stderr)

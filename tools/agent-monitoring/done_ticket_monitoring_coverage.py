@@ -25,6 +25,10 @@ from validate import load_data_glob  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from validate_frontmatter import extract_frontmatter  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS  # noqa: E402
 
 
 def _collect_done_ticket_ids(done_dir: Path) -> tuple:
@@ -58,7 +62,7 @@ def _collect_done_ticket_ids(done_dir: Path) -> tuple:
     return ticket_ids, unparseable
 
 
-def build_coverage_section(done_dir: Path = Path("tickets/done")) -> dict:
+def build_coverage_section(done_dir: Path = TICKETS / "done") -> dict:
     ticket_entries, unparseable = _collect_done_ticket_ids(done_dir)
     # Deliberately reads runs.jsonl directly rather than through generate_retro's
     # _load_runs_and_events() SQLite-index path: even after TCK-20260811-AGENT-MONITORING-

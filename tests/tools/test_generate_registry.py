@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS
 
 # Ensure tools/ is importable.
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
@@ -43,7 +44,7 @@ def _make_doc(tmp_path: Path, rel: str, frontmatter: str, body: str = "") -> Pat
 
 def _make_ticket(tmp_path: Path, name: str, frontmatter: str, body: str = "") -> Path:
     """Create a ticket file under tmp_path/tickets/done/<name> with given frontmatter and body."""
-    p = tmp_path / "tickets" / "done" / name
+    p = tmp_path / TICKETS / "done" / name
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(f"---\n{frontmatter}\n---\n\n{body}", encoding="utf-8")
     return p
@@ -160,7 +161,7 @@ class TestTicketEntryGeneration:
         assert entries[0]["ticket_id"] == "TCK-20260601-FOO"
 
     def test_ticket_entry_ticket_id_fallback_to_stem(self, tmp_path):
-        p = tmp_path / "tickets" / "done" / "OLD-TICKET.md"
+        p = tmp_path / TICKETS / "done" / "OLD-TICKET.md"
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text("# No frontmatter\n\n## Title\nOld\n", encoding="utf-8")
         entries = collect_tickets(tmp_path)
@@ -184,7 +185,7 @@ class TestTicketEntryGeneration:
         assert entries[0]["tags"] == ["foo", "bar"]
 
     def test_ticket_missing_frontmatter_emits_warning_not_error(self, tmp_path, capsys):
-        p = tmp_path / "tickets" / "done" / "OLD.md"
+        p = tmp_path / TICKETS / "done" / "OLD.md"
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text("# No frontmatter\n", encoding="utf-8")
         entries = collect_tickets(tmp_path)
@@ -200,7 +201,7 @@ class TestTicketEntryGeneration:
 
 class TestArtifactJoin:
     def test_artifact_files_present(self, tmp_path):
-        art_dir = tmp_path / "stored_artifacts" / "TCK-20260601-FOO"
+        art_dir = tmp_path / STORED_ARTIFACTS / "TCK-20260601-FOO"
         art_dir.mkdir(parents=True)
         (art_dir / "investigation.md").write_text("---\n---\n# Investigation\n")
         (art_dir / "plan.md").write_text("---\n---\n# Plan\n")
@@ -215,7 +216,7 @@ class TestArtifactJoin:
         assert files == []
 
     def test_artifact_files_only_md(self, tmp_path):
-        art_dir = tmp_path / "stored_artifacts" / "TCK-20260601-FOO"
+        art_dir = tmp_path / STORED_ARTIFACTS / "TCK-20260601-FOO"
         art_dir.mkdir(parents=True)
         (art_dir / "plan.md").write_text("---\n---\n# Plan\n")
         (art_dir / "notes.txt").write_text("not markdown")
@@ -227,7 +228,7 @@ class TestArtifactJoin:
                      "status: historical\nlayer: engine\nauthority: P1\naudience: agent\n"
                      "ticket_id: TCK-20260601-FOO\nphase: done\ndate: 2026-06-01\ntags: []",
                      "## Title\nFoo\n")
-        art_dir = tmp_path / "stored_artifacts" / "TCK-20260601-FOO"
+        art_dir = tmp_path / STORED_ARTIFACTS / "TCK-20260601-FOO"
         art_dir.mkdir(parents=True)
         (art_dir / "plan.md").write_text("---\n---\n# Plan\n")
         entries = collect_tickets(tmp_path)
@@ -436,8 +437,8 @@ class TestOpenTicketWalk:
         assert [e["path"] for e in entries] == ["tickets/todos/some-epic/TCK-20260915-NESTED.md"]
 
     def test_sequence_md_excluded_from_todos_walk(self, tmp_path):
-        (tmp_path / "tickets" / "todos" / "some-epic").mkdir(parents=True)
-        (tmp_path / "tickets" / "todos" / "some-epic" / "SEQUENCE.md").write_text(
+        (tmp_path / TICKETS / "todos" / "some-epic").mkdir(parents=True)
+        (tmp_path / TICKETS / "todos" / "some-epic" / "SEQUENCE.md").write_text(
             "# Sequence\n\nNot a ticket.\n", encoding="utf-8",
         )
         entries = collect_tickets(tmp_path)
@@ -490,8 +491,8 @@ class TestFolderClosedDoneWalk:
         assert entries[0]["ticket_id"] == "TCK-20260915-EPIC"
 
     def test_sequence_md_excluded_from_done_folder_walk(self, tmp_path):
-        (tmp_path / "tickets" / "done" / "some-epic").mkdir(parents=True)
-        (tmp_path / "tickets" / "done" / "some-epic" / "SEQUENCE.md").write_text(
+        (tmp_path / TICKETS / "done" / "some-epic").mkdir(parents=True)
+        (tmp_path / TICKETS / "done" / "some-epic" / "SEQUENCE.md").write_text(
             "# Sequence\n\nNot a ticket.\n", encoding="utf-8",
         )
         entries = collect_tickets(tmp_path)

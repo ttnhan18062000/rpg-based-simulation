@@ -21,9 +21,10 @@ from tools.agent_replay_codex.codex_config_guard import (
 )
 from tools.agent_replay_codex.containment import assert_no_diff, capture_snapshot
 from tools.agent_replay_codex.monitoring_shards import hash_source
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
+_AGENT_MONITORING_DIR = _REPO_ROOT / AGENT_MONITORING
 _MONITORING_SOURCES = ("runs.jsonl", "events.jsonl", "tools.jsonl")
 
 

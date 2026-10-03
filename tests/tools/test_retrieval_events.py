@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 if str(_REPO_ROOT) not in sys.path:
@@ -138,7 +139,7 @@ _ALL_RETRIEVAL_FIELDS_SAMPLE = {
 
 class TestEmitRetrievalEvent:
     def test_record_contains_all_base_and_retrieval_fields_and_round_trips(self, tmp_path):
-        events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+        events_file = tmp_path / AGENT_MONITORING / "events.jsonl"
         ok = re_mod.emit_retrieval_event(
             run_id="RETRIEVAL-EVENT-test",
             seq=1,
@@ -170,7 +171,7 @@ class TestEmitRetrievalEvent:
             assert written[field] == expected
 
     def test_missing_base_field_still_rejected_with_new_fields_present(self, tmp_path):
-        events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+        events_file = tmp_path / AGENT_MONITORING / "events.jsonl"
         with pytest.raises(ValueError) as exc_info:
             re_mod.emit_retrieval_event(
                 run_id="RETRIEVAL-EVENT-test",
@@ -186,7 +187,7 @@ class TestEmitRetrievalEvent:
         assert not events_file.exists()
 
     def test_unknown_retrieval_field_rejected_loudly(self, tmp_path):
-        events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+        events_file = tmp_path / AGENT_MONITORING / "events.jsonl"
         with pytest.raises(ValueError):
             re_mod.emit_retrieval_event(
                 run_id="RETRIEVAL-EVENT-test",
@@ -206,7 +207,7 @@ class TestEmitRetrievalEvent:
         }
 
     def test_new_run_id_prefix_produces_no_vocabulary_warning(self, tmp_path, capsys):
-        events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+        events_file = tmp_path / AGENT_MONITORING / "events.jsonl"
         re_mod.emit_retrieval_event(
             run_id=re_mod.RUN_ID_HYBRID,
             seq=1,
@@ -249,7 +250,7 @@ class TestEmitRetrievalEvent:
         )
 
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        expected_path = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
+        expected_path = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
         assert expected_path.exists()
         assert "default events_file test" in expected_path.read_text()
 
@@ -278,7 +279,7 @@ class TestEmitRetrievalEvent:
         assert "record_events main() cross-check" in expected_path.read_text()
 
     def test_ts_override_is_used_verbatim(self, tmp_path):
-        events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+        events_file = tmp_path / AGENT_MONITORING / "events.jsonl"
         re_mod.emit_retrieval_event(
             run_id="RETRIEVAL-EVENT-test",
             seq=1,
@@ -293,7 +294,7 @@ class TestEmitRetrievalEvent:
         assert written["ts"] == "2026-08-03T02:26:02Z"
 
     def test_ts_default_none_produces_fresh_utc_now_timestamp(self, tmp_path):
-        events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+        events_file = tmp_path / AGENT_MONITORING / "events.jsonl"
         before = datetime.now(timezone.utc)
         re_mod.emit_retrieval_event(
             run_id="RETRIEVAL-EVENT-test",

@@ -11,6 +11,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
@@ -192,7 +193,7 @@ class TestVocabularyWarning:
         assert "WARNING" in result.stderr
         assert "TotallyMadeUpPhase" in result.stderr
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        written = (tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl").read_text()
+        written = (tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl").read_text()
         assert "TCK-VOCAB-WARN-TEST" in written
 
 
@@ -202,7 +203,7 @@ class TestVocabularyWarning:
 # ---------------------------------------------------------------------------
 
 def _write_tools_jsonl(tmp_path, rows, week="2026-W01"):
-    week_dir = tmp_path / "agent-monitoring" / "data" / week
+    week_dir = tmp_path / AGENT_MONITORING / "data" / week
     week_dir.mkdir(parents=True, exist_ok=True)
     with open(week_dir / "tools.jsonl", "w") as f:
         for row in rows:
@@ -238,7 +239,7 @@ def test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not
     )
     assert result.returncode == 0
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
+    events_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["cost_proxy_score"] == 3.0
     assert written["tool_call_count"] == 3
@@ -258,7 +259,7 @@ def test_cost_proxy_score_absent_when_no_tools_jsonl_exists(tmp_path):
     )
     assert result.returncode == 0
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
+    events_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["cost_proxy_score"] == 0.0
     assert written["tool_call_count"] == 0
@@ -455,12 +456,12 @@ def test_writes_to_unified_week_folder(tmp_path, monkeypatch):
 
     record_events.main()
 
-    written_path = tmp_path / "agent-monitoring" / "data" / "2026-W36" / f"{_TEST_BRANCH}.events.jsonl"
+    written_path = tmp_path / AGENT_MONITORING / "data" / "2026-W36" / f"{_TEST_BRANCH}.events.jsonl"
     assert written_path.exists()
     written = json.loads(written_path.read_text().strip())
     assert written["run_id"] == "TCK-FAKE-RUN"
-    assert not (tmp_path / "agent-monitoring" / "events.jsonl").exists()
-    assert not (tmp_path / "agent-monitoring" / "data" / "2026-W36" / "events.jsonl").exists()
+    assert not (tmp_path / AGENT_MONITORING / "events.jsonl").exists()
+    assert not (tmp_path / AGENT_MONITORING / "data" / "2026-W36" / "events.jsonl").exists()
 
 
 def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path, monkeypatch):
@@ -481,8 +482,8 @@ def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path, mo
     )
     record_events.main()
 
-    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / f"{_TEST_BRANCH}.events.jsonl"
-    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / f"{_TEST_BRANCH}.events.jsonl"
+    week_36 = tmp_path / AGENT_MONITORING / "data" / "2026-W36" / f"{_TEST_BRANCH}.events.jsonl"
+    week_37 = tmp_path / AGENT_MONITORING / "data" / "2026-W37" / f"{_TEST_BRANCH}.events.jsonl"
     assert week_36.exists()
     assert week_37.exists()
     assert json.loads(week_36.read_text().strip())["run_id"] == "TCK-WEEK-36"
@@ -513,7 +514,7 @@ def test_tool_call_count_correct_for_tool_rows_in_a_non_current_week_folder(tmp_
     )
     assert result.returncode == 0, result.stderr
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
+    events_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["tool_call_count"] == 2
     assert written["cost_proxy_score"] > 0.0
@@ -539,7 +540,7 @@ def test_tool_call_count_sums_rows_across_multiple_weeks_for_same_key(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
+    events_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["tool_call_count"] == 2
 
@@ -565,7 +566,7 @@ def test_execution_identity_fields_pass_through_unchanged(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
+    events_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["execution_id"] == "claude-TCK-FAKE-RUN-1234567890-abcd1234"
     assert written["provider"] == "claude"
@@ -599,7 +600,7 @@ def test_batch_write_holds_contiguous_lines_under_concurrent_writer(tmp_path):
     # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: the subprocess batch below now writes to the
     # per-branch file (superseding the prior per-run_id key) -- the concurrent single-line writer
     # below must race against that same actual target.
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
+    events_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
     events_file.parent.mkdir(parents=True, exist_ok=True)
 
     batch_size = 5
@@ -657,7 +658,7 @@ def _run_events(tmp_path, batch, *extra):
 
 def _written_events(tmp_path):
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    f = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
+    f = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
     return [json.loads(l) for l in f.read_text().splitlines()] if f.exists() else []
 
 

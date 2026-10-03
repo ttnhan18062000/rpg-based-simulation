@@ -48,6 +48,10 @@ from tag_registry import (  # noqa: E402,F401
     is_tag_registered,
     load_registry,
 )
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Categorization
@@ -142,7 +146,7 @@ def collect_completed_tickets(root: Path):
         tags).
       - skip_reasons is a Counter keyed by skip reason.
     """
-    done_dir = root / "tickets" / "done"
+    done_dir = root / TICKETS / "done"
     included = []
     skip_reasons: Counter = Counter()
     skipped_paths = defaultdict(list)
@@ -204,10 +208,10 @@ def collect_sweep_files(root: Path):
     `sequence_index_file`), and `skipped_paths` maps each reason to its list of relative paths.
     """
     roots = [
-        root / "tickets" / "done",
-        root / "tickets" / "inprogress",
-        root / "tickets" / "todos",
-        root / "stored_artifacts",
+        root / TICKETS / "done",
+        root / TICKETS / "inprogress",
+        root / TICKETS / "todos",
+        root / STORED_ARTIFACTS,
     ]
     skip_reasons: Counter = Counter()
     skipped_paths = defaultdict(list)

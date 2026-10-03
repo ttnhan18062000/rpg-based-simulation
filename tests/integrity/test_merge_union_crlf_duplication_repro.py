@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+from tools.agent_working_paths import TICKETS
 
 _CSV_HEADER = "timestamp,ticket_id,title,status,summary,artifacts_path\n"
 _BASE_ROW = "2026-09-01T00:00:00Z,TCK-BASE,Base row,DONE,Seed row already on both sides.,none\n"
@@ -47,8 +48,8 @@ def _init_repo(tmp_path: Path, gitattributes_content: str) -> Path:
     _run_git(["config", "user.name", "Test"], cwd=repo)
     _run_git(["config", "core.autocrlf", "false"], cwd=repo)
     (repo / ".gitattributes").write_text(gitattributes_content)
-    (repo / "tickets").mkdir()
-    (repo / "tickets" / "working_log.csv").write_text(_CSV_HEADER + _BASE_ROW)
+    (repo / TICKETS).mkdir()
+    (repo / TICKETS / "working_log.csv").write_text(_CSV_HEADER + _BASE_ROW)
     _run_git(["add", "."], cwd=repo)
     _run_git(["commit", "-q", "-m", "base"], cwd=repo)
     return repo
@@ -67,7 +68,7 @@ def _append_lf(path: Path, lines: list[str]) -> None:
 
 
 def _merge_branch_b_into_a(repo: Path) -> Path:
-    target = repo / "tickets" / "working_log.csv"
+    target = repo / TICKETS / "working_log.csv"
 
     _run_git(["checkout", "-q", "-b", "branch-a"], cwd=repo)
     _append_crlf(target, _SHARED_ROWS)

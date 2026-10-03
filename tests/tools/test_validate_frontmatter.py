@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS
 
 # ---------------------------------------------------------------------------
 # Module import — tools/ is not a package; add repo root to sys.path.
@@ -268,7 +269,7 @@ class TestDocContentType:
 
 class TestTicketContentType:
     def _ticket_file(self, tmp_path: Path, content: str) -> Path:
-        d = tmp_path / "tickets" / "done"
+        d = tmp_path / TICKETS / "done"
         d.mkdir(parents=True, exist_ok=True)
         return _write(d / "TCK-TEST.md", content)
 
@@ -303,7 +304,7 @@ class TestTicketContentType:
 
 class TestArtifactContentType:
     def _artifact_file(self, tmp_path: Path, content: str) -> Path:
-        d = tmp_path / "stored_artifacts" / "TCK-TEST"
+        d = tmp_path / STORED_ARTIFACTS / "TCK-TEST"
         d.mkdir(parents=True, exist_ok=True)
         return _write(d / "plan.md", content)
 
@@ -376,11 +377,11 @@ class TestDirectoryScan:
         docs_dir.mkdir(parents=True)
         _write(docs_dir / "a.md", _doc_fm())
 
-        tickets_dir = tmp_path / "tickets" / "done"
+        tickets_dir = tmp_path / TICKETS / "done"
         tickets_dir.mkdir(parents=True)
         _write(tickets_dir / "b.md", _ticket_fm())
 
-        artifacts_dir = tmp_path / "stored_artifacts" / "TCK-X"
+        artifacts_dir = tmp_path / STORED_ARTIFACTS / "TCK-X"
         artifacts_dir.mkdir(parents=True)
         _write(artifacts_dir / "c.md", _artifact_fm())
 
@@ -442,14 +443,14 @@ class TestDirectoryScan:
 
 class TestTicketLocationConsistency:
     def test_done_historical_done_passes(self, tmp_path):
-        path = tmp_path / "tickets" / "done" / "TCK-X.md"
+        path = tmp_path / TICKETS / "done" / "TCK-X.md"
         fm = {"status": "historical", "phase": "done"}
         assert check_ticket_location_consistency(path, fm) == []
 
     def test_done_active_open_fails(self, tmp_path):
         # Both fields are individually enum-valid — this is exactly the class the existing
         # per-field enum checks in _validate_ticket cannot catch on their own.
-        path = tmp_path / "tickets" / "done" / "TCK-X.md"
+        path = tmp_path / TICKETS / "done" / "TCK-X.md"
         fm = {"status": "active", "phase": "open"}
         errors = check_ticket_location_consistency(path, fm)
         assert errors != []
@@ -457,7 +458,7 @@ class TestTicketLocationConsistency:
         assert any("phase" in e for e in errors)
 
     def test_done_active_done_fails(self, tmp_path):
-        path = tmp_path / "tickets" / "done" / "TCK-X.md"
+        path = tmp_path / TICKETS / "done" / "TCK-X.md"
         fm = {"status": "active", "phase": "done"}
         errors = check_ticket_location_consistency(path, fm)
         assert any("status" in e for e in errors)
@@ -466,25 +467,25 @@ class TestTicketLocationConsistency:
     def test_done_done_done_fails(self, tmp_path):
         # status: done is invalid per STATUS_VALUES too — the location rule still independently
         # flags it, so the corpus test doesn't depend on the enum check having run first.
-        path = tmp_path / "tickets" / "done" / "TCK-X.md"
+        path = tmp_path / TICKETS / "done" / "TCK-X.md"
         fm = {"status": "done", "phase": "done"}
         errors = check_ticket_location_consistency(path, fm)
         assert any("status" in e for e in errors)
 
     def test_inprogress_phase_done_fails(self, tmp_path):
-        path = tmp_path / "tickets" / "inprogress" / "TCK-X.md"
+        path = tmp_path / TICKETS / "inprogress" / "TCK-X.md"
         fm = {"status": "active", "phase": "done"}
         errors = check_ticket_location_consistency(path, fm)
         assert any("phase" in e for e in errors)
 
     def test_inprogress_active_inprogress_passes(self, tmp_path):
-        path = tmp_path / "tickets" / "inprogress" / "TCK-X.md"
+        path = tmp_path / TICKETS / "inprogress" / "TCK-X.md"
         fm = {"status": "active", "phase": "inprogress"}
         assert check_ticket_location_consistency(path, fm) == []
 
     def test_todos_location_not_enforced(self, tmp_path):
         # Deliberately deferred (plan.md Step 1) — tickets/todos/ has no rule yet.
-        path = tmp_path / "tickets" / "todos" / "some-folder" / "TCK-X.md"
+        path = tmp_path / TICKETS / "todos" / "some-folder" / "TCK-X.md"
         fm = {"status": "active", "phase": "open"}
         assert check_ticket_location_consistency(path, fm) == []
 
@@ -530,7 +531,7 @@ def _corpus_location_errors(root: Path) -> list[str]:
 
 class TestTicketLocationConsistencyCorpus:
     def test_real_tickets_done_corpus_is_fully_canonical(self):
-        errors = _corpus_location_errors(_REPO_ROOT / "tickets" / "done")
+        errors = _corpus_location_errors(_REPO_ROOT / TICKETS / "done")
         assert errors == [], (
             f"{len(errors)} non-canonical ticket file(s) under tickets/done/: {errors[:10]}"
         )
@@ -538,7 +539,7 @@ class TestTicketLocationConsistencyCorpus:
     def test_corpus_check_catches_a_reverted_file(self, tmp_path):
         # Negative-path proof (plan.md Step 4): a synthetic tmp_path corpus, not the real tree —
         # never mutate the real tickets/done/ corpus to prove a check can fail.
-        done_dir = tmp_path / "tickets" / "done"
+        done_dir = tmp_path / TICKETS / "done"
         done_dir.mkdir(parents=True)
         _write(
             done_dir / "TCK-20260101-OK.md",
@@ -549,7 +550,7 @@ class TestTicketLocationConsistencyCorpus:
             _ticket_fm(ticket_id="TCK-20260102-DRIFTED", status="active", phase="open"),
         )
 
-        errors = _corpus_location_errors(tmp_path / "tickets")
+        errors = _corpus_location_errors(tmp_path / TICKETS)
         assert any(str(drifted) in e for e in errors), errors
 
 
@@ -567,7 +568,7 @@ class TestTicketLocationConsistencyCorpus:
 
 class TestClosedTicketResurrectionCorpus:
     def test_real_tickets_tree_has_no_closed_ticket_resurrected_into_active_dirs(self):
-        errors = find_closed_ticket_resurrections(_REPO_ROOT / "tickets")
+        errors = find_closed_ticket_resurrections(_REPO_ROOT / TICKETS)
         assert errors == [], (
             f"{len(errors)} ticket basename(s) resurrected into an active tickets/ dir: {errors}"
         )
@@ -575,7 +576,7 @@ class TestClosedTicketResurrectionCorpus:
     def test_corpus_check_catches_a_resurrected_file(self, tmp_path):
         # Negative-path proof, synthetic tmp_path corpus only -- never mutate the real tickets/
         # tree to prove the check can fail.
-        tickets_root = tmp_path / "tickets"
+        tickets_root = tmp_path / TICKETS
         done_dir = tickets_root / "done"
         todos_dir = tickets_root / "todos"
         done_dir.mkdir(parents=True)
@@ -593,7 +594,7 @@ class TestClosedTicketResurrectionCorpus:
         assert any(str(resurrected) in e for e in errors), errors
 
     def test_no_collision_when_basenames_differ(self, tmp_path):
-        tickets_root = tmp_path / "tickets"
+        tickets_root = tmp_path / TICKETS
         done_dir = tickets_root / "done"
         todos_dir = tickets_root / "todos"
         done_dir.mkdir(parents=True)
@@ -616,7 +617,7 @@ class TestClosedTicketResurrectionCorpus:
 
 class TestForbiddenPriorityTags:
     def _ticket_file(self, tmp_path: Path, content: str) -> Path:
-        d = tmp_path / "tickets" / "done"
+        d = tmp_path / TICKETS / "done"
         d.mkdir(parents=True, exist_ok=True)
         return _write(d / "TCK-TEST.md", content)
 
@@ -663,12 +664,12 @@ class TestForbiddenPriorityTags:
 
 class TestTagCanonicalization:
     def _ticket_file(self, tmp_path: Path, content: str) -> Path:
-        d = tmp_path / "tickets" / "done"
+        d = tmp_path / TICKETS / "done"
         d.mkdir(parents=True, exist_ok=True)
         return _write(d / "TCK-TEST.md", content)
 
     def _artifact_file(self, tmp_path: Path, content: str) -> Path:
-        d = tmp_path / "stored_artifacts" / "TCK-TEST"
+        d = tmp_path / STORED_ARTIFACTS / "TCK-TEST"
         d.mkdir(parents=True, exist_ok=True)
         return _write(d / "plan.md", content)
 
@@ -732,7 +733,7 @@ class TestTagCanonicalization:
         assert any("cog" in e and "cognition" in e for e in errors)
 
     def test_ticket_tag_historical_exemption(self):
-        f = _REPO_ROOT / "tickets" / "done" / "TCK-20260520-SIM-OBS-PHASE5-M24.md"
+        f = _REPO_ROOT / TICKETS / "done" / "TCK-20260520-SIM-OBS-PHASE5-M24.md"
         errors = validate_file(f)
         assert not any("tags:" in e for e in errors)
 
@@ -756,12 +757,12 @@ class TestTagCanonicalization:
 
 class TestTagRegistryEnforcement:
     def _ticket_file(self, tmp_path: Path, content: str) -> Path:
-        d = tmp_path / "tickets" / "done"
+        d = tmp_path / TICKETS / "done"
         d.mkdir(parents=True, exist_ok=True)
         return _write(d / "TCK-TEST.md", content)
 
     def _artifact_file(self, tmp_path: Path, content: str) -> Path:
-        d = tmp_path / "stored_artifacts" / "TCK-TEST"
+        d = tmp_path / STORED_ARTIFACTS / "TCK-TEST"
         d.mkdir(parents=True, exist_ok=True)
         return _write(d / "plan.md", content)
 
@@ -911,7 +912,7 @@ class TestDocTagEnforcement:
         a registered-tag-accepted and an unregistered-tag-rejected scenario against the ticket
         content type, mirroring TestTagRegistryEnforcement's own coverage as an explicit guard
         co-located with the doc-side generalization that motivated it."""
-        ticket_dir = tmp_path / "tickets" / "done"
+        ticket_dir = tmp_path / TICKETS / "done"
         ticket_dir.mkdir(parents=True, exist_ok=True)
 
         registered = _write(

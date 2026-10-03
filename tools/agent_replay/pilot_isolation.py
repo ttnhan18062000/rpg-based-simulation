@@ -47,8 +47,9 @@ from agent_replay_codex.monitoring_shards import source_paths  # noqa: E402
 
 from .fixture_envelope import FixtureEnvelope
 from .runner import ReplayOutcome, replay_slice
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix  # noqa: E402
 
-_WATCHED_GIT_PATHSPECS = ["tickets/", "agent-monitoring/data/"]
+_WATCHED_GIT_PATHSPECS = [f"{posix(TICKETS)}/", f"{posix(AGENT_MONITORING)}/data/"]
 _UNSCOPED_SIDECAR_RELPATH = ".claude/current_run"
 
 PILOT_RUN_ID = "TCK-20260907-FILTERED-REPLAY-EVAL-PILOT"
@@ -83,8 +84,8 @@ def _porcelain_snapshot(repo_root: Path) -> str:
 
 
 def _watched_files(repo_root: Path) -> list:
-    files = [f for f in sorted((repo_root / "tickets").rglob("*")) if f.is_file()]
-    monitoring_data_dir = repo_root / "agent-monitoring" / "data"
+    files = [f for f in sorted((repo_root / TICKETS).rglob("*")) if f.is_file()]
+    monitoring_data_dir = repo_root / AGENT_MONITORING / "data"
     if monitoring_data_dir.is_dir():
         files += [f for f in sorted(monitoring_data_dir.rglob("*")) if f.is_file()]
     return files
@@ -108,7 +109,7 @@ def _sidecar_snapshot(repo_root: Path) -> tuple:
 def capture(repo_root: Path) -> IsolationSnapshot:
     porcelain = _porcelain_snapshot(repo_root)
     content_hash = _content_hash_snapshot(repo_root) if porcelain != "" else None
-    monitoring_lines = snapshot_monitoring_lines(repo_root / "agent-monitoring")
+    monitoring_lines = snapshot_monitoring_lines(repo_root / AGENT_MONITORING)
     sidecar_mtime, sidecar_content = _sidecar_snapshot(repo_root)
     return IsolationSnapshot(porcelain, content_hash, monitoring_lines, sidecar_mtime, sidecar_content)
 

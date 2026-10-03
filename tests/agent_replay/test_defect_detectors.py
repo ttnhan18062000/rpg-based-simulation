@@ -30,6 +30,7 @@ from agent_replay.defect_detectors import (  # noqa: E402
     detect_m3_background_hang,
     extract_ticket_section,
 )
+from tools.agent_working_paths import TICKETS  # noqa: E402
 
 _RACE_RELATIONS_TICKET_ID = "TCK-20260831-RACE-RELATIONS-MATRIX"
 _RACE_RELATIONS_REAL_TOUCHED_DOCS = [
@@ -53,7 +54,7 @@ _M3_SYNTHETIC_FIXTURE_PATH = (
 
 
 def _real_ticket_files_changed_and_related_docs_text() -> tuple:
-    ticket_path = _REPO_ROOT / "tickets" / "done" / f"{_RACE_RELATIONS_TICKET_ID}.md"
+    ticket_path = _REPO_ROOT / TICKETS / "done" / f"{_RACE_RELATIONS_TICKET_ID}.md"
     text = ticket_path.read_text(encoding="utf-8")
     return (
         extract_ticket_section(text, "Files Changed"),

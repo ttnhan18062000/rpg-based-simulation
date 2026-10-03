@@ -33,6 +33,10 @@ from pathlib import Path
 _TOOLS_DIR = Path(__file__).parent
 sys.path.insert(0, str(_TOOLS_DIR))
 from validate_frontmatter import extract_frontmatter  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -157,7 +161,7 @@ def _strip_frontmatter(text: str) -> str:
 def join_artifact_files(root: Path, ticket_id: str) -> list:
     """Return sorted list of relative paths (from root) for files under
     stored_artifacts/{ticket_id}/*.md. Returns [] if folder absent."""
-    artifact_dir = root / "stored_artifacts" / ticket_id
+    artifact_dir = root / STORED_ARTIFACTS / ticket_id
     if not artifact_dir.is_dir():
         return []
     files = sorted(artifact_dir.glob("*.md"))
@@ -377,7 +381,7 @@ def collect_tickets(root: Path) -> list:
     """
     entries = []
 
-    done_dir = root / "tickets" / "done"
+    done_dir = root / TICKETS / "done"
     if done_dir.is_dir():
         for md_file in sorted(done_dir.glob("*.md")):
             entries.append(_build_ticket_entry(root, md_file))
@@ -386,12 +390,12 @@ def collect_tickets(root: Path) -> list:
                 continue
             entries.append(_build_ticket_entry(root, md_file))
 
-    inprogress_dir = root / "tickets" / "inprogress"
+    inprogress_dir = root / TICKETS / "inprogress"
     if inprogress_dir.is_dir():
         for md_file in sorted(inprogress_dir.glob("*.md")):
             entries.append(_build_ticket_entry(root, md_file))
 
-    todos_dir = root / "tickets" / "todos"
+    todos_dir = root / TICKETS / "todos"
     if todos_dir.is_dir():
         for md_file in sorted(todos_dir.rglob("*.md")):
             if md_file.name == "SEQUENCE.md":

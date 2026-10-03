@@ -11,6 +11,7 @@ import subprocess
 import sys
 from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
+from tools.agent_working_paths import TICKETS
 
 import pytest
 
@@ -184,7 +185,7 @@ def _write_ticket(root, subdir, ticket_id, tags, date="20260710"):
     """Write a minimal ticket markdown file with a parseable frontmatter block under
     root/tickets/{subdir}/{ticket_id}.md. `date` controls the embedded ticket_id date used by
     _ticket_id_effective_date; defaults to a post-taxonomy date."""
-    tickets_dir = root / "tickets" / subdir
+    tickets_dir = root / TICKETS / subdir
     tickets_dir.mkdir(parents=True, exist_ok=True)
     tags_inline = "[" + ", ".join(tags) + "]"
     (tickets_dir / f"{ticket_id}.md").write_text(
@@ -317,8 +318,8 @@ def test_tag_breakdown_excludes_pre_taxonomy_and_untagged_tickets(tmp_path):
     # is readable.
     _write_ticket(tmp_path, "done", "TCK-20260601-OLD-TICKET", ["observability"], date="20260601")
     # Post-taxonomy ticket with no tags — excluded, must not crash.
-    (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "done" / "TCK-20260710-NO-TAGS.md").write_text(
+    (tmp_path / TICKETS / "done").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "done" / "TCK-20260710-NO-TAGS.md").write_text(
         "---\n"
         "status: active\n"
         "layer: observability\n"

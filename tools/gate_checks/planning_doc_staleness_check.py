@@ -38,6 +38,10 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from validate_frontmatter import extract_frontmatter  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS, posix  # noqa: E402
 
 _SCHEDULE_LATER = re.compile(r"ready[\s,—\-]*schedule\s+later", re.IGNORECASE)
 _RESOLVED_HEADING = re.compile(r"\b(shipped|closed|was:)", re.IGNORECASE)
@@ -122,7 +126,7 @@ def _candidates(plans_dir: Path):
 
 
 def find_stale_planning_docs(
-    plans_dir: Path = Path("docs/plans"), done_dir: Path = Path("tickets/done")
+    plans_dir: Path = Path("docs/plans"), done_dir: Path = TICKETS / "done"
 ) -> list[Finding]:
     """Read-only. Returns findings sorted by doc path then ticket id; never raises for missing
     directories (returns [])."""
@@ -139,7 +143,7 @@ def find_stale_planning_docs(
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--plans-dir", default="docs/plans")
-    parser.add_argument("--done-dir", default="tickets/done")
+    parser.add_argument("--done-dir", default=posix(TICKETS / "done"))
     args = parser.parse_args(argv)
     findings = find_stale_planning_docs(Path(args.plans_dir), Path(args.done_dir))
     if not findings:

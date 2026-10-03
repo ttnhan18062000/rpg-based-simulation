@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from tests.integrity.test_no_duplicate_content_blocks import _merge_union_glob_patterns
+from tools.agent_working_paths import TICKETS, posix
 
 
 def _run_git(args, cwd):
@@ -47,7 +48,7 @@ def _init_repo_with_union_attribute(tmp_path: Path, tracked_filename: str) -> Pa
         "agent-monitoring/tools.jsonl",
         "agent-monitoring/runs.jsonl",
         "agent-monitoring/events.jsonl",
-        "tickets/working_log.csv",
+        f"{posix(TICKETS)}/working_log.csv",
         "agent-monitoring/tools/tools-2026-W36.jsonl",
     ],
 )
@@ -98,8 +99,8 @@ def test_squash_style_single_parent_commit_is_not_a_merge_and_bypasses_drivers(t
     single-parent commit directly on top -- reproducing content already on main as a
     synthetic "addition," the same mechanism that produced the real ~1586-row duplication.
     """
-    repo = _init_repo_with_union_attribute(tmp_path, "tickets/working_log.csv")
-    target = repo / "tickets/working_log.csv"
+    repo = _init_repo_with_union_attribute(tmp_path, f"{posix(TICKETS)}/working_log.csv")
+    target = repo / f"{posix(TICKETS)}/working_log.csv"
     base_content = target.read_text()
 
     _run_git(["checkout", "-q", "-b", "branch-a"], cwd=repo)
@@ -149,9 +150,9 @@ def test_gitattributes_line_present_for_working_log_csv():
     one specific attribute ordering."""
     repo_root = Path(__file__).parent.parent.parent
     content = (repo_root / ".gitattributes").read_text()
-    assert "tickets/working_log.csv" in _merge_union_glob_patterns()
+    assert f"{posix(TICKETS)}/working_log.csv" in _merge_union_glob_patterns()
     assert any(
-        line.split()[0] == "tickets/working_log.csv" and "merge=union" in line.split()[1:]
+        line.split()[0] == f"{posix(TICKETS)}/working_log.csv" and "merge=union" in line.split()[1:]
         for line in content.splitlines()
     )
 

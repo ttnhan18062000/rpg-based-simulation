@@ -20,10 +20,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .errors import ContainmentViolationError
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix  # noqa: E402
 
 _WATCHED_GIT_PATHSPECS = [
-    "tickets/",
-    "agent-monitoring/data/",
+    f"{posix(TICKETS)}/",
+    f"{posix(AGENT_MONITORING)}/data/",
 ]
 # TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: the three flat filenames this list previously
 # named have not existed since TCK-20260902-MONITORING-SHARD-WRITE-PATH's sharding migration --
@@ -52,8 +53,8 @@ def _porcelain_snapshot(repo_root: Path) -> str:
 
 
 def _watched_files(repo_root: Path) -> list[Path]:
-    files = [f for f in sorted((repo_root / "tickets").rglob("*")) if f.is_file()]
-    files += sorted((repo_root / "agent-monitoring" / "data").rglob("*.jsonl"))
+    files = [f for f in sorted((repo_root / TICKETS).rglob("*")) if f.is_file()]
+    files += sorted((repo_root / AGENT_MONITORING / "data").rglob("*.jsonl"))
     return files
 
 

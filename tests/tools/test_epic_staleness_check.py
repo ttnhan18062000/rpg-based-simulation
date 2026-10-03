@@ -23,6 +23,7 @@ housekeeping, so it is no longer a live tickets/todos/ path at all).
 import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
+from tools.agent_working_paths import TICKETS
 
 _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
@@ -751,7 +752,7 @@ def test_real_codex_runtime_activation_epic_is_status_aware(tmp_path):
     unrelated repo state changing over time)."""
     real_ticket_path = (
         Path(__file__).parent.parent.parent
-        / "tickets" / "inprogress" / "TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC.md"
+        / TICKETS / "inprogress" / "TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC.md"
     )
     if not real_ticket_path.exists():
         return

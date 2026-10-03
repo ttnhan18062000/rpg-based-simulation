@@ -52,6 +52,10 @@ if str(_REPO_ROOT) not in sys.path:
 # knowledge_gateway_redaction.py by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE once the Knowledge
 # Gateway MCP package that module belonged to was archived.
 from tools import write_path_guard as _write_path_guard  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import KNOWLEDGE_INDEX  # noqa: E402
 
 # Manually bumped on breaking changes to this module's own key-derivation or invalidation logic —
 # no existing "version of retrieval logic" concept exists anywhere in the repo to derive this from.
@@ -73,8 +77,8 @@ retrieval_cache_schema_version: int = 3
 # timestamp.
 _NO_MANIFEST = "no_manifest"
 
-CACHE_DB_PATH: Path = Path("knowledge-index/retrieval_cache.db")
-_MANIFEST_PATH: Path = Path("knowledge-index/manifest.json")
+CACHE_DB_PATH: Path = KNOWLEDGE_INDEX / "retrieval_cache.db"
+_MANIFEST_PATH: Path = KNOWLEDGE_INDEX / "manifest.json"
 
 INDEX_CACHE_CATEGORY = "retrieval_index_cache"
 QUERY_CACHE_CATEGORY = "retrieval_query_cache"

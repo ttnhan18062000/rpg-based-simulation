@@ -12,6 +12,7 @@ import pytest
 
 from tools.agent_replay_codex.entry_criterion import assert_monitoring_writer_landed
 from tools.agent_replay_codex.errors import EntryCriterionNotMetError
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -21,6 +22,6 @@ def test_assert_monitoring_writer_landed_passes_against_real_repo():
 
 
 def test_assert_monitoring_writer_landed_raises_when_writer_missing(tmp_path):
-    (tmp_path / "agent-monitoring").mkdir()
+    (tmp_path / AGENT_MONITORING).mkdir()
     with pytest.raises(EntryCriterionNotMetError):
         assert_monitoring_writer_landed(tmp_path)

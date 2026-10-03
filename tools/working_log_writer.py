@@ -66,10 +66,14 @@ if str(_TOOLS_DIR / "agent-monitoring") not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR / "agent-monitoring"))
 
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
 _REPO_ROOT = _TOOLS_DIR.parent
-_WORKING_LOG_PATH = Path("tickets/working_log.csv")
-_DEFAULT_DATA_ROOT = Path("agent-monitoring/data")
+_WORKING_LOG_PATH = TICKETS / "working_log.csv"
+_DEFAULT_DATA_ROOT = AGENT_MONITORING / "data"
 
 
 def _anchored(path: Path) -> Path:

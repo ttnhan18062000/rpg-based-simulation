@@ -10,6 +10,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from tools.agent_working_paths import TICKETS
 
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
@@ -33,8 +34,8 @@ def test_epic_parent_only_case_reports_all_children_done_and_no_open_children(tm
     # in the folder. A child file that is BOTH still physically present AND already in done_dir is
     # a different, anomalous case (see test_child_present_in_folder_and_already_in_done_is_a_
     # stale_copy_not_open below) -- this test must not conflate the two.
-    folder = tmp_path / "tickets" / "todos" / "myepic"
-    done_dir = tmp_path / "tickets" / "done"
+    folder = tmp_path / TICKETS / "todos" / "myepic"
+    done_dir = tmp_path / TICKETS / "done"
     folder.mkdir(parents=True)
     done_dir.mkdir(parents=True)
 
@@ -51,8 +52,8 @@ def test_epic_parent_only_case_reports_all_children_done_and_no_open_children(tm
 
 
 def test_one_open_child_reports_all_children_done_false(tmp_path):
-    folder = tmp_path / "tickets" / "todos" / "myepic"
-    done_dir = tmp_path / "tickets" / "done"
+    folder = tmp_path / TICKETS / "todos" / "myepic"
+    done_dir = tmp_path / TICKETS / "done"
     folder.mkdir(parents=True)
     done_dir.mkdir(parents=True)
 
@@ -76,8 +77,8 @@ def test_child_present_in_folder_and_already_in_done_is_a_stale_copy_not_open(tm
     # be reported as a distinct anomaly, not silently counted as "done" (which would let a caller
     # move the whole folder and carry the stale copy into tickets/done/<folder>/, duplicating the
     # basename against the flat tickets/done/<id>.md that is actually authoritative).
-    folder = tmp_path / "tickets" / "todos" / "myepic"
-    done_dir = tmp_path / "tickets" / "done"
+    folder = tmp_path / TICKETS / "todos" / "myepic"
+    done_dir = tmp_path / TICKETS / "done"
     folder.mkdir(parents=True)
     done_dir.mkdir(parents=True)
 
@@ -101,8 +102,8 @@ def test_child_present_in_folder_and_already_in_done_is_a_stale_copy_not_open(tm
 
 
 def test_non_epic_folder_with_no_parent(tmp_path):
-    folder = tmp_path / "tickets" / "todos" / "plainbatch"
-    done_dir = tmp_path / "tickets" / "done"
+    folder = tmp_path / TICKETS / "todos" / "plainbatch"
+    done_dir = tmp_path / TICKETS / "done"
     folder.mkdir(parents=True)
     done_dir.mkdir(parents=True)
 
@@ -118,8 +119,8 @@ def test_non_epic_folder_with_no_parent(tmp_path):
 
 
 def test_epic_identified_by_tier_body_field_not_filename_no_epic_string_in_epic_filename(tmp_path):
-    folder = tmp_path / "tickets" / "todos" / "myepic"
-    done_dir = tmp_path / "tickets" / "done"
+    folder = tmp_path / TICKETS / "todos" / "myepic"
+    done_dir = tmp_path / TICKETS / "done"
     folder.mkdir(parents=True)
     done_dir.mkdir(parents=True)
 
@@ -132,8 +133,8 @@ def test_epic_identified_by_tier_body_field_not_filename_no_epic_string_in_epic_
 
 
 def test_epic_identified_by_tier_body_field_not_filename_false_positive_filename(tmp_path):
-    folder = tmp_path / "tickets" / "todos" / "myfolder"
-    done_dir = tmp_path / "tickets" / "done"
+    folder = tmp_path / TICKETS / "todos" / "myfolder"
+    done_dir = tmp_path / TICKETS / "done"
     folder.mkdir(parents=True)
     done_dir.mkdir(parents=True)
 
@@ -148,8 +149,8 @@ def test_epic_identified_by_tier_body_field_not_filename_false_positive_filename
 
 
 def test_cli_prints_json_to_stdout_and_exits_zero(tmp_path, capsys):
-    folder = tmp_path / "tickets" / "todos" / "myepic"
-    done_dir = tmp_path / "tickets" / "done"
+    folder = tmp_path / TICKETS / "todos" / "myepic"
+    done_dir = tmp_path / TICKETS / "done"
     folder.mkdir(parents=True)
     done_dir.mkdir(parents=True)
     _write_ticket(folder / "TCK-1-EPIC.md", "TCK-1-EPIC", "epic", "EPIC_SCOPED")
@@ -165,8 +166,8 @@ def test_cli_prints_json_to_stdout_and_exits_zero(tmp_path, capsys):
 def test_cli_real_subprocess_invocation(tmp_path):
     # At least one real subprocess invocation, matching how the workflow prompts actually call
     # this script (`python3 tools/epic_folder_status.py <folder>`), not just an in-process main().
-    folder = tmp_path / "tickets" / "todos" / "myepic"
-    done_dir = tmp_path / "tickets" / "done"
+    folder = tmp_path / TICKETS / "todos" / "myepic"
+    done_dir = tmp_path / TICKETS / "done"
     folder.mkdir(parents=True)
     done_dir.mkdir(parents=True)
     _write_ticket(folder / "TCK-1-EPIC.md", "TCK-1-EPIC", "epic", "EPIC_SCOPED")
@@ -186,8 +187,8 @@ def test_cli_real_subprocess_invocation(tmp_path):
 def test_default_done_dir_is_sibling_tickets_done(tmp_path):
     # No --done-dir override: default resolves to <folder>/../../done (tickets/done/ as a sibling
     # of tickets/todos/), matching the real repo layout.
-    folder = tmp_path / "tickets" / "todos" / "myepic"
-    done_dir = tmp_path / "tickets" / "done"
+    folder = tmp_path / TICKETS / "todos" / "myepic"
+    done_dir = tmp_path / TICKETS / "done"
     folder.mkdir(parents=True)
     done_dir.mkdir(parents=True)
     _write_ticket(folder / "TCK-1-EPIC.md", "TCK-1-EPIC", "epic", "EPIC_SCOPED")

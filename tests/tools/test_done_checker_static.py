@@ -14,6 +14,7 @@ import time
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING, STAGING_ARTIFACTS, STORED_ARTIFACTS, TICKETS
 
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
@@ -135,7 +136,7 @@ def _write_artifact_dir(directory: Path, ticket_id: str, filenames=("plan.md", "
 
 
 def test_staging_artifacts_missing_file_fails_naming_it(tmp_path):
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     directory = base / "TCK-FAKE"
     directory.mkdir(parents=True)
     (directory / "plan.md").write_text("plan content", encoding="utf-8")
@@ -148,7 +149,7 @@ def test_staging_artifacts_missing_file_fails_naming_it(tmp_path):
 
 
 def test_staging_artifacts_empty_file_fails(tmp_path):
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     directory = base / "TCK-FAKE"
     directory.mkdir(parents=True)
     (directory / "plan.md").write_text("plan content", encoding="utf-8")
@@ -161,7 +162,7 @@ def test_staging_artifacts_empty_file_fails(tmp_path):
 
 
 def test_staging_artifacts_all_present_passes(tmp_path):
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     directory = base / "TCK-FAKE"
     _write_artifact_dir(directory, "TCK-FAKE")
 
@@ -170,7 +171,7 @@ def test_staging_artifacts_all_present_passes(tmp_path):
 
 
 def test_staging_artifacts_hotfix_is_na_regardless_of_missing_directory(tmp_path):
-    base = tmp_path / "staging_artifacts"  # directory does not even exist
+    base = tmp_path / STAGING_ARTIFACTS  # directory does not even exist
 
     status, evidence = check_staging_artifacts_complete("TCK-FAKE", "hotfix", base_dir=base)
     assert status == "NA"
@@ -263,7 +264,7 @@ def test_data_runs_clean_present_garbage_start_ts_still_flags_any_file(tmp_path)
 def test_data_runs_clean_resolves_start_ts_from_own_run_record_pass(tmp_path):
     runs_dir = tmp_path / "data" / "runs"
     proof_dir = tmp_path / "reports" / "release_proof"
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     runs_dir.mkdir(parents=True)
     proof_dir.mkdir(parents=True)
 
@@ -287,7 +288,7 @@ def test_data_runs_clean_resolves_start_ts_from_own_run_record_pass(tmp_path):
 def test_data_runs_clean_resolves_start_ts_from_own_run_record_fail(tmp_path):
     runs_dir = tmp_path / "data" / "runs"
     proof_dir = tmp_path / "reports" / "release_proof"
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     runs_dir.mkdir(parents=True)
     proof_dir.mkdir(parents=True)
 
@@ -311,7 +312,7 @@ def test_data_runs_clean_resolves_start_ts_from_own_run_record_fail(tmp_path):
 def test_data_runs_clean_ticket_id_with_no_matching_run_record_is_indeterminate(tmp_path):
     runs_dir = tmp_path / "data" / "runs"
     proof_dir = tmp_path / "reports" / "release_proof"
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     runs_dir.mkdir(parents=True)
     proof_dir.mkdir(parents=True)
     _write_jsonl(data_root / "2026-W27" / "runs.jsonl", [{"run_id": "TCK-OTHER", "start_ts": "2026-07-05T00:00:00Z"}])
@@ -452,7 +453,7 @@ def test_data_runs_clean_pre_verify_sweep_documented_in_done_checker_prompt():
 
 
 def test_ticket_location_present_passes(tmp_path):
-    inprogress = tmp_path / "tickets" / "inprogress"
+    inprogress = tmp_path / TICKETS / "inprogress"
     inprogress.mkdir(parents=True)
     _write_ticket(inprogress / "TCK-FAKE.md", "TCK-FAKE")
 
@@ -461,7 +462,7 @@ def test_ticket_location_present_passes(tmp_path):
 
 
 def test_ticket_location_absent_fails(tmp_path):
-    inprogress = tmp_path / "tickets" / "inprogress"
+    inprogress = tmp_path / TICKETS / "inprogress"
     inprogress.mkdir(parents=True)
 
     status, evidence = check_ticket_location("TCK-FAKE", inprogress_dir=inprogress)
@@ -600,7 +601,7 @@ def _write_working_log_shard(data_root: Path, batch: str, week: str, row: dict) 
 def test_working_log_no_row_yet_fails_when_row_only_pending_in_shard(tmp_path):
     csv_path = tmp_path / "working_log.csv"
     _write_csv(csv_path, [])
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     _write_working_log_shard(data_root, "some-branch", "2026-W27", {
         "timestamp": "2026-07-01T00:00:00Z", "ticket_id": "TCK-FAKE", "title": "Fake",
         "status": "DONE", "summary": "x", "artifacts_path": "none",
@@ -614,7 +615,7 @@ def test_working_log_no_row_yet_fails_when_row_only_pending_in_shard(tmp_path):
 def test_working_log_exactly_one_row_passes_via_pending_shard_only(tmp_path):
     csv_path = tmp_path / "working_log.csv"
     _write_csv(csv_path, [])
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     _write_working_log_shard(data_root, "some-branch", "2026-W27", {
         "timestamp": "2026-07-01T00:00:00Z", "ticket_id": "TCK-FAKE", "title": "Fake",
         "status": "DONE", "summary": "x", "artifacts_path": "stored_artifacts/TCK-FAKE",
@@ -632,7 +633,7 @@ def test_working_log_exactly_one_row_reopen_across_csv_and_pending_shard_passes(
     _write_csv(csv_path, [
         ["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "BLOCKED", "investigation complete", "none"],
     ])
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     _write_working_log_shard(data_root, "some-branch", "2026-W27", {
         "timestamp": "2026-07-05T00:00:00Z", "ticket_id": "TCK-FAKE", "title": "Fake",
         "status": "DONE", "summary": "reopened and resolved", "artifacts_path": "stored_artifacts/TCK-FAKE",
@@ -651,7 +652,7 @@ def test_working_log_exactly_one_row_duplicate_across_csv_and_pending_shard_fail
     _write_csv(csv_path, [
         ["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "First write.", "stored_artifacts/TCK-FAKE"],
     ])
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     _write_working_log_shard(data_root, "some-branch", "2026-W27", {
         "timestamp": "2026-07-01T00:05:00Z", "ticket_id": "TCK-FAKE", "title": "Fake",
         "status": "DONE", "summary": "Second write.", "artifacts_path": "stored_artifacts/TCK-FAKE",
@@ -665,7 +666,7 @@ def test_working_log_exactly_one_row_duplicate_across_csv_and_pending_shard_fail
 def test_working_log_no_row_yet_ignores_pending_shard_for_a_different_ticket(tmp_path):
     csv_path = tmp_path / "working_log.csv"
     _write_csv(csv_path, [])
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     _write_working_log_shard(data_root, "some-branch", "2026-W27", {
         "timestamp": "2026-07-01T00:00:00Z", "ticket_id": "TCK-OTHER", "title": "Other",
         "status": "DONE", "summary": "x", "artifacts_path": "none",
@@ -684,7 +685,7 @@ def test_frontmatter_valid_ticket_and_artifacts_pass(tmp_path):
     ticket_path = tmp_path / "TCK-FAKE.md"
     _write_ticket(ticket_path, "TCK-FAKE")
 
-    staging_dir = tmp_path / "staging_artifacts" / "TCK-FAKE"
+    staging_dir = tmp_path / STAGING_ARTIFACTS / "TCK-FAKE"
     _write_artifact_dir(staging_dir, "TCK-FAKE")
 
     status, _ = check_frontmatter_valid("TCK-FAKE", "standard", ticket_path=ticket_path, staging_dir=staging_dir)
@@ -695,7 +696,7 @@ def test_frontmatter_valid_fails_when_artifact_missing_required_field(tmp_path):
     ticket_path = tmp_path / "TCK-FAKE.md"
     _write_ticket(ticket_path, "TCK-FAKE")
 
-    staging_dir = tmp_path / "staging_artifacts" / "TCK-FAKE"
+    staging_dir = tmp_path / STAGING_ARTIFACTS / "TCK-FAKE"
     staging_dir.mkdir(parents=True)
     (staging_dir / "plan.md").write_text(
         ARTIFACT_FM.format(ticket_id="TCK-FAKE", artifact_type="plan"), encoding="utf-8"
@@ -742,7 +743,7 @@ def test_check_frontmatter_valid_fails_on_unregistered_tag(tmp_path):
     # check_frontmatter_valid fixture in this file places ticket_path directly under tmp_path,
     # which resolves to "doc" instead and never exercises tag validation at all.
     ticket_id = "TCK-20260731-FAKE"
-    ticket_path = tmp_path / "tickets" / "inprogress" / f"{ticket_id}.md"
+    ticket_path = tmp_path / TICKETS / "inprogress" / f"{ticket_id}.md"
     ticket_path.parent.mkdir(parents=True)
     ticket_path.write_text(
         TICKET_FM.format(ticket_id=ticket_id, tier="standard").replace(
@@ -750,7 +751,7 @@ def test_check_frontmatter_valid_fails_on_unregistered_tag(tmp_path):
         ),
         encoding="utf-8",
     )
-    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+    staging_dir = tmp_path / STAGING_ARTIFACTS / ticket_id
     _write_artifact_dir(staging_dir, ticket_id)
 
     status, evidence = check_frontmatter_valid(
@@ -781,7 +782,7 @@ def test_frontmatter_has_unregistered_tags_detects_real_violation(tmp_path):
         ),
         encoding="utf-8",
     )
-    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+    staging_dir = tmp_path / STAGING_ARTIFACTS / ticket_id
 
     assert _frontmatter_has_unregistered_tags(
         ticket_id, "standard", ticket_path=ticket_path, staging_dir=staging_dir
@@ -797,7 +798,7 @@ def test_frontmatter_has_unregistered_tags_false_when_all_registered(tmp_path):
         ),
         encoding="utf-8",
     )
-    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+    staging_dir = tmp_path / STAGING_ARTIFACTS / ticket_id
 
     assert _frontmatter_has_unregistered_tags(
         ticket_id, "standard", ticket_path=ticket_path, staging_dir=staging_dir
@@ -813,7 +814,7 @@ def test_frontmatter_has_unregistered_tags_checks_staging_artifacts_too(tmp_path
         ),
         encoding="utf-8",
     )
-    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+    staging_dir = tmp_path / STAGING_ARTIFACTS / ticket_id
     staging_dir.mkdir(parents=True)
     (staging_dir / "plan.md").write_text(
         ARTIFACT_FM.format(ticket_id=ticket_id, artifact_type="plan").replace(
@@ -839,7 +840,7 @@ def test_frontmatter_has_unregistered_tags_hotfix_skips_staging_dir(tmp_path):
     # staging_dir deliberately not created — a hotfix ticket has none. If the helper didn't skip
     # it correctly, `.rglob()` on a nonexistent dir would either error or (if implemented wrong)
     # silently miss the branch guard; asserting False here proves the hotfix-skip path runs.
-    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+    staging_dir = tmp_path / STAGING_ARTIFACTS / ticket_id
 
     assert _frontmatter_has_unregistered_tags(
         ticket_id, "hotfix", ticket_path=ticket_path, staging_dir=staging_dir
@@ -852,16 +853,16 @@ def test_frontmatter_has_unregistered_tags_hotfix_skips_staging_dir(tmp_path):
 
 
 def _scaffold_precheck_repo(tmp_path, ticket_id="TCK-FAKE", tier="standard"):
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    _write_ticket(tmp_path / "tickets" / "inprogress" / f"{ticket_id}.md", ticket_id, tier=tier)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "inprogress" / f"{ticket_id}.md", ticket_id, tier=tier)
 
-    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+    staging_dir = tmp_path / STAGING_ARTIFACTS / ticket_id
     _write_artifact_dir(staging_dir, ticket_id)
 
     (tmp_path / "data" / "runs").mkdir(parents=True)
     (tmp_path / "reports" / "release_proof").mkdir(parents=True)
 
-    csv_path = tmp_path / "tickets" / "working_log.csv"
+    csv_path = tmp_path / TICKETS / "working_log.csv"
     _write_csv(csv_path, [])
 
 
@@ -882,7 +883,7 @@ def test_run_static_precheck_all_pass_eligible(tmp_path, monkeypatch):
 def test_run_static_precheck_surfaces_fail_not_masked(tmp_path, monkeypatch):
     _scaffold_precheck_repo(tmp_path)
     # Break one check: pre-existing working_log row for this ticket.
-    csv_path = tmp_path / "tickets" / "working_log.csv"
+    csv_path = tmp_path / TICKETS / "working_log.csv"
     _write_csv(csv_path, [["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "stored_artifacts/TCK-FAKE"]])
     monkeypatch.chdir(tmp_path)
 
@@ -899,7 +900,7 @@ def test_run_static_precheck_blocks_on_bad_priority(tmp_path, monkeypatch):
     # Verify-phase gate reads from, mirroring test_run_static_precheck_surfaces_fail_not_masked's
     # own pattern for a different condition.
     _scaffold_precheck_repo(tmp_path)
-    ticket_path = tmp_path / "tickets" / "inprogress" / "TCK-FAKE.md"
+    ticket_path = tmp_path / TICKETS / "inprogress" / "TCK-FAKE.md"
     ticket_path.write_text(
         ticket_path.read_text().rstrip() + "\n\n## Priority\nP1: High\n",
         encoding="utf-8",
@@ -916,7 +917,7 @@ def test_run_static_precheck_blocks_on_bad_priority(tmp_path, monkeypatch):
 
 def test_run_static_precheck_passes_valid_priority(tmp_path, monkeypatch):
     _scaffold_precheck_repo(tmp_path)
-    ticket_path = tmp_path / "tickets" / "inprogress" / "TCK-FAKE.md"
+    ticket_path = tmp_path / TICKETS / "inprogress" / "TCK-FAKE.md"
     ticket_path.write_text(
         ticket_path.read_text().rstrip() + "\n\n## Priority\nP1\n",
         encoding="utf-8",
@@ -964,7 +965,7 @@ def _write_tag_rejection_fixture(tmp_path, ticket_id="TCK-FAKE", tier="standard"
     includes an unregistered tag — the fixture `classify_checklist_failure`'s independent
     `_frontmatter_has_unregistered_tags` re-check now reads, replacing the old evidence-text
     marker match."""
-    ticket_dir = tmp_path / "tickets" / "inprogress"
+    ticket_dir = tmp_path / TICKETS / "inprogress"
     ticket_dir.mkdir(parents=True)
     (ticket_dir / f"{ticket_id}.md").write_text(
         TICKET_FM.format(ticket_id=ticket_id, tier=tier).replace(
@@ -972,7 +973,7 @@ def _write_tag_rejection_fixture(tmp_path, ticket_id="TCK-FAKE", tier="standard"
         ),
         encoding="utf-8",
     )
-    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+    staging_dir = tmp_path / STAGING_ARTIFACTS / ticket_id
     _write_artifact_dir(staging_dir, ticket_id)
 
 
@@ -1035,7 +1036,7 @@ def test_classify_checklist_failure_condition_key_used_not_evidence_text(tmp_pat
     # NOT trigger tag_registry_rejection. Proves classification keys off `condition` + an
     # independent registry re-check, never off evidence text content.
     ticket_id = "TCK-FAKE"
-    ticket_dir = tmp_path / "tickets" / "inprogress"
+    ticket_dir = tmp_path / TICKETS / "inprogress"
     ticket_dir.mkdir(parents=True)
     (ticket_dir / f"{ticket_id}.md").write_text(
         TICKET_FM.format(ticket_id=ticket_id, tier="standard").replace(
@@ -1043,7 +1044,7 @@ def test_classify_checklist_failure_condition_key_used_not_evidence_text(tmp_pat
         ),
         encoding="utf-8",
     )
-    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+    staging_dir = tmp_path / STAGING_ARTIFACTS / ticket_id
     _write_artifact_dir(staging_dir, ticket_id)
     monkeypatch.chdir(tmp_path)
 
@@ -1065,25 +1066,25 @@ def test_classify_checklist_failure_condition_key_used_not_evidence_text(tmp_pat
 def test_migration_complete_hotfix_is_na(tmp_path):
     status, _ = check_migration_complete(
         "TCK-FAKE", "hotfix",
-        staging_dir=tmp_path / "staging_artifacts" / "TCK-FAKE",
-        stored_dir=tmp_path / "stored_artifacts" / "TCK-FAKE",
+        staging_dir=tmp_path / STAGING_ARTIFACTS / "TCK-FAKE",
+        stored_dir=tmp_path / STORED_ARTIFACTS / "TCK-FAKE",
     )
     assert status == "NA"
 
 
 def test_migration_complete_all_pass(tmp_path):
-    stored_dir = tmp_path / "stored_artifacts" / "TCK-FAKE"
+    stored_dir = tmp_path / STORED_ARTIFACTS / "TCK-FAKE"
     _write_artifact_dir(stored_dir, "TCK-FAKE")
-    staging_dir = tmp_path / "staging_artifacts" / "TCK-FAKE"  # absent
+    staging_dir = tmp_path / STAGING_ARTIFACTS / "TCK-FAKE"  # absent
 
     status, _ = check_migration_complete("TCK-FAKE", "standard", staging_dir=staging_dir, stored_dir=stored_dir)
     assert status == "PASS"
 
 
 def test_migration_complete_missing_file_fails_naming_it(tmp_path):
-    stored_dir = tmp_path / "stored_artifacts" / "TCK-FAKE"
+    stored_dir = tmp_path / STORED_ARTIFACTS / "TCK-FAKE"
     _write_artifact_dir(stored_dir, "TCK-FAKE", filenames=("investigation.md", "test_plan.md"))
-    staging_dir = tmp_path / "staging_artifacts" / "TCK-FAKE"
+    staging_dir = tmp_path / STAGING_ARTIFACTS / "TCK-FAKE"
 
     status, evidence = check_migration_complete("TCK-FAKE", "standard", staging_dir=staging_dir, stored_dir=stored_dir)
     assert status == "FAIL"
@@ -1091,9 +1092,9 @@ def test_migration_complete_missing_file_fails_naming_it(tmp_path):
 
 
 def test_migration_complete_staging_not_cleaned_fails(tmp_path):
-    stored_dir = tmp_path / "stored_artifacts" / "TCK-FAKE"
+    stored_dir = tmp_path / STORED_ARTIFACTS / "TCK-FAKE"
     _write_artifact_dir(stored_dir, "TCK-FAKE")
-    staging_dir = tmp_path / "staging_artifacts" / "TCK-FAKE"
+    staging_dir = tmp_path / STAGING_ARTIFACTS / "TCK-FAKE"
     _write_artifact_dir(staging_dir, "TCK-FAKE")  # still present alongside complete stored_dir
 
     status, evidence = check_migration_complete("TCK-FAKE", "standard", staging_dir=staging_dir, stored_dir=stored_dir)
@@ -1108,8 +1109,8 @@ def test_migration_complete_epic_is_na(tmp_path):
     child tickets, not the epic ticket itself."""
     status, _ = check_migration_complete(
         "TCK-FAKE", "epic",
-        staging_dir=tmp_path / "staging_artifacts" / "TCK-FAKE",
-        stored_dir=tmp_path / "stored_artifacts" / "TCK-FAKE",
+        staging_dir=tmp_path / STAGING_ARTIFACTS / "TCK-FAKE",
+        stored_dir=tmp_path / STORED_ARTIFACTS / "TCK-FAKE",
     )
     assert status == "NA"
 
@@ -1120,9 +1121,9 @@ def test_migration_complete_epic_is_na(tmp_path):
 
 
 def test_ticket_finalized_passes(tmp_path, monkeypatch):
-    (tmp_path / "tickets" / "done").mkdir(parents=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    _write_ticket(tmp_path / "tickets" / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "done" / "TCK-FAKE.md", "TCK-FAKE")
     monkeypatch.chdir(tmp_path)
 
     status, _ = check_ticket_finalized("TCK-FAKE")
@@ -1130,10 +1131,10 @@ def test_ticket_finalized_passes(tmp_path, monkeypatch):
 
 
 def test_ticket_finalized_fails_when_still_in_inprogress(tmp_path, monkeypatch):
-    (tmp_path / "tickets" / "done").mkdir(parents=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    _write_ticket(tmp_path / "tickets" / "done" / "TCK-FAKE.md", "TCK-FAKE")
-    _write_ticket(tmp_path / "tickets" / "inprogress" / "TCK-FAKE.md", "TCK-FAKE")
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    _write_ticket(tmp_path / TICKETS / "inprogress" / "TCK-FAKE.md", "TCK-FAKE")
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_ticket_finalized("TCK-FAKE")
@@ -1142,8 +1143,8 @@ def test_ticket_finalized_fails_when_still_in_inprogress(tmp_path, monkeypatch):
 
 
 def test_ticket_finalized_fails_when_not_moved_to_done(tmp_path, monkeypatch):
-    (tmp_path / "tickets" / "done").mkdir(parents=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_ticket_finalized("TCK-FAKE")
@@ -1155,9 +1156,9 @@ def test_ticket_finalized_passes_for_folder_closed_epic(tmp_path, monkeypatch):
     """TCK-20260921-NESTED-EPIC-FOLDER-REGISTRY-VISIBILITY-GAP: an epic ticket closed via
     CLAUDE.md's own folder-move rule lives at tickets/done/{folder}/{ticket_id}.md, one level
     deep -- must PASS, not FAIL on a flat-path-only check."""
-    (tmp_path / "tickets" / "done" / "some-epic").mkdir(parents=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    _write_ticket(tmp_path / "tickets" / "done" / "some-epic" / "TCK-FAKE.md", "TCK-FAKE")
+    (tmp_path / TICKETS / "done" / "some-epic").mkdir(parents=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "done" / "some-epic" / "TCK-FAKE.md", "TCK-FAKE")
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_ticket_finalized("TCK-FAKE")
@@ -1168,10 +1169,10 @@ def test_ticket_finalized_passes_for_folder_closed_epic(tmp_path, monkeypatch):
 def test_ticket_finalized_prefers_flat_path_over_nested_if_both_exist(tmp_path, monkeypatch):
     # Should never happen in practice (a ticket can't close at two locations at once), but the
     # flat path is the common case and should win deterministically if it somehow does.
-    (tmp_path / "tickets" / "done" / "some-epic").mkdir(parents=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    _write_ticket(tmp_path / "tickets" / "done" / "TCK-FAKE.md", "TCK-FAKE")
-    _write_ticket(tmp_path / "tickets" / "done" / "some-epic" / "TCK-FAKE.md", "TCK-FAKE")
+    (tmp_path / TICKETS / "done" / "some-epic").mkdir(parents=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    _write_ticket(tmp_path / TICKETS / "done" / "some-epic" / "TCK-FAKE.md", "TCK-FAKE")
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_ticket_finalized("TCK-FAKE")
@@ -1180,10 +1181,10 @@ def test_ticket_finalized_prefers_flat_path_over_nested_if_both_exist(tmp_path, 
 
 
 def test_ticket_finalized_still_fails_when_folder_nested_but_also_in_inprogress(tmp_path, monkeypatch):
-    (tmp_path / "tickets" / "done" / "some-epic").mkdir(parents=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    _write_ticket(tmp_path / "tickets" / "done" / "some-epic" / "TCK-FAKE.md", "TCK-FAKE")
-    _write_ticket(tmp_path / "tickets" / "inprogress" / "TCK-FAKE.md", "TCK-FAKE")
+    (tmp_path / TICKETS / "done" / "some-epic").mkdir(parents=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "done" / "some-epic" / "TCK-FAKE.md", "TCK-FAKE")
+    _write_ticket(tmp_path / TICKETS / "inprogress" / "TCK-FAKE.md", "TCK-FAKE")
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_ticket_finalized("TCK-FAKE")
@@ -1197,14 +1198,14 @@ def test_ticket_finalized_still_fails_when_folder_nested_but_also_in_inprogress(
 
 
 def _scaffold_finalize_repo(tmp_path, ticket_id="TCK-FAKE"):
-    (tmp_path / "tickets" / "done").mkdir(parents=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    _write_ticket(tmp_path / "tickets" / "done" / f"{ticket_id}.md", ticket_id)
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "done" / f"{ticket_id}.md", ticket_id)
 
-    stored_dir = tmp_path / "stored_artifacts" / ticket_id
+    stored_dir = tmp_path / STORED_ARTIFACTS / ticket_id
     _write_artifact_dir(stored_dir, ticket_id)
 
-    csv_path = tmp_path / "tickets" / "working_log.csv"
+    csv_path = tmp_path / TICKETS / "working_log.csv"
     _write_csv(csv_path, [["2026-07-05T00:00:00Z", ticket_id, "Fake", "DONE", "x", f"stored_artifacts/{ticket_id}"]])
 
 
@@ -1224,7 +1225,7 @@ def test_run_finalize_selfcheck_leaves_a_pending_shard_and_canonical_file_untouc
     _scaffold_finalize_repo(tmp_path)
     monkeypatch.chdir(tmp_path)
 
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     canonical_tools = data_dir / "tools.jsonl"
     canonical_tools.parent.mkdir(parents=True, exist_ok=True)
     canonical_tools.write_text('{"session_id":"real","tool":"Bash"}\n', encoding="utf-8")
@@ -1251,7 +1252,7 @@ def test_run_finalize_selfcheck_all_pass(tmp_path, monkeypatch):
 
 def test_run_finalize_selfcheck_surfaces_missing_registry_entry(tmp_path, monkeypatch):
     _scaffold_finalize_repo(tmp_path)
-    (tmp_path / "tickets" / "done" / "TCK-FAKE.md").unlink()
+    (tmp_path / TICKETS / "done" / "TCK-FAKE.md").unlink()
     monkeypatch.chdir(tmp_path)
 
     results = run_finalize_selfcheck("TCK-FAKE", "standard")
@@ -1262,7 +1263,7 @@ def test_run_finalize_selfcheck_surfaces_missing_registry_entry(tmp_path, monkey
 def test_run_finalize_selfcheck_surfaces_incomplete_stored_artifacts(tmp_path, monkeypatch):
     _scaffold_finalize_repo(tmp_path)
     # Remove plan.md from stored_artifacts to simulate the 101-case "incomplete" class.
-    (tmp_path / "stored_artifacts" / "TCK-FAKE" / "plan.md").unlink()
+    (tmp_path / STORED_ARTIFACTS / "TCK-FAKE" / "plan.md").unlink()
     monkeypatch.chdir(tmp_path)
 
     results = run_finalize_selfcheck("TCK-FAKE", "standard")
@@ -1272,7 +1273,7 @@ def test_run_finalize_selfcheck_surfaces_incomplete_stored_artifacts(tmp_path, m
 
 def test_run_finalize_selfcheck_zero_rows_fails(tmp_path, monkeypatch):
     _scaffold_finalize_repo(tmp_path)
-    _write_csv(tmp_path / "tickets" / "working_log.csv", [])
+    _write_csv(tmp_path / TICKETS / "working_log.csv", [])
     monkeypatch.chdir(tmp_path)
 
     results = run_finalize_selfcheck("TCK-FAKE", "standard")
@@ -1282,7 +1283,7 @@ def test_run_finalize_selfcheck_zero_rows_fails(tmp_path, monkeypatch):
 
 def test_run_finalize_selfcheck_duplicate_rows_fails(tmp_path, monkeypatch):
     _scaffold_finalize_repo(tmp_path)
-    _write_csv(tmp_path / "tickets" / "working_log.csv", [
+    _write_csv(tmp_path / TICKETS / "working_log.csv", [
         ["2026-07-05T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "stored_artifacts/TCK-FAKE"],
         ["2026-07-05T01:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "stored_artifacts/TCK-FAKE"],
     ])
@@ -1486,8 +1487,8 @@ def test_check_tag_drift_not_in_run_finalize_selfcheck_checks_tuple(tmp_path, mo
 
 
 def test_check_registry_entry_regenerated_passes_when_entry_present(tmp_path, monkeypatch):
-    (tmp_path / "tickets" / "done").mkdir(parents=True)
-    _write_ticket(tmp_path / "tickets" / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "done" / "TCK-FAKE.md", "TCK-FAKE")
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_registry_entry_regenerated("TCK-FAKE")
@@ -1496,7 +1497,7 @@ def test_check_registry_entry_regenerated_passes_when_entry_present(tmp_path, mo
 
 
 def test_check_registry_entry_regenerated_fails_when_entry_absent(tmp_path, monkeypatch):
-    (tmp_path / "tickets" / "done").mkdir(parents=True)
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_registry_entry_regenerated("TCK-FAKE")
@@ -1508,8 +1509,8 @@ def test_check_registry_entry_regenerated_nonzero_tool_exit_does_not_fail(tmp_pa
     # A doc missing frontmatter anywhere in docs/ drives generate_registry()'s own exit code to
     # nonzero — unrelated to the closing ticket's own entry, which is present here. Proves AC #2:
     # this must not turn into a FAIL, and the call must not raise.
-    (tmp_path / "tickets" / "done").mkdir(parents=True)
-    _write_ticket(tmp_path / "tickets" / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "done" / "TCK-FAKE.md", "TCK-FAKE")
     nofm = tmp_path / "docs" / "engine" / "nofm.md"
     nofm.parent.mkdir(parents=True, exist_ok=True)
     nofm.write_text("# No frontmatter\n\nBody.\n", encoding="utf-8")
@@ -1523,13 +1524,13 @@ def test_check_registry_entry_regenerated_nonzero_tool_exit_does_not_fail(tmp_pa
 def test_check_registry_entry_regenerated_applies_under_hotfix_tier(tmp_path, monkeypatch):
     # The function takes no `tier` argument at all — mirrors check_monitoring_write_recorded's
     # precedent: applies identically regardless of tier context.
-    (tmp_path / "tickets" / "done").mkdir(parents=True)
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
     monkeypatch.chdir(tmp_path)
 
     status, _ = check_registry_entry_regenerated("TCK-HOTFIX-FAKE")
     assert status == "FAIL"
 
-    _write_ticket(tmp_path / "tickets" / "done" / "TCK-HOTFIX-FAKE.md", "TCK-HOTFIX-FAKE")
+    _write_ticket(tmp_path / TICKETS / "done" / "TCK-HOTFIX-FAKE.md", "TCK-HOTFIX-FAKE")
     status, _ = check_registry_entry_regenerated("TCK-HOTFIX-FAKE")
     assert status == "PASS"
 
@@ -1538,8 +1539,8 @@ def test_registry_entry_check_ordering_guard_fails_if_ticket_still_inprogress(tm
     # collect_tickets() only walks tickets/done/*.md — a ticket still sitting in
     # tickets/inprogress/ must not be found, guarding against a future regression where this check
     # is accidentally moved to run before the Finalize agent's own move-to-done step.
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    _write_ticket(tmp_path / "tickets" / "inprogress" / "TCK-FAKE.md", "TCK-FAKE")
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "inprogress" / "TCK-FAKE.md", "TCK-FAKE")
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_registry_entry_regenerated("TCK-FAKE")
@@ -1848,7 +1849,7 @@ def test_docs_coverage_hotfix_forward_half_still_skips(tmp_path, monkeypatch):
     # _git_touched_paths() fails open to {}, so there is no docs/ path to check reverse coverage
     # against). Replaces the old test_docs_coverage_hotfix_is_na, which asserted a bare
     # unconditional NA that Decision 3 deliberately removes.
-    base = tmp_path / "staging_artifacts"  # directory does not even exist
+    base = tmp_path / STAGING_ARTIFACTS  # directory does not even exist
     monkeypatch.chdir(tmp_path)
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "hotfix", base_dir=base)
     assert status == "PASS"
@@ -1856,7 +1857,7 @@ def test_docs_coverage_hotfix_forward_half_still_skips(tmp_path, monkeypatch):
 
 
 def test_docs_coverage_missing_investigation_file_fails(tmp_path):
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     (base / "TCK-FAKE").mkdir(parents=True)
     # investigation.md intentionally absent
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=base)
@@ -1880,7 +1881,7 @@ def test_docs_coverage_no_section_heading_passes(tmp_path, monkeypatch):
     # monkeypatch.chdir isolates _git_touched_paths() from the real repo's own working-tree
     # state — the reverse check (TCK-20260904-DOC-COVERAGE-REVERSE-CHECK) now always calls it,
     # unlike the old forward-only logic, which never did for an empty-required-docs fixture.
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     directory = base / "TCK-FAKE"
     directory.mkdir(parents=True)
     (directory / "investigation.md").write_text(
@@ -1893,7 +1894,7 @@ def test_docs_coverage_no_section_heading_passes(tmp_path, monkeypatch):
 
 
 def test_docs_coverage_explicit_none_passes(tmp_path, monkeypatch):
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(base, "TCK-FAKE", "None.")
     monkeypatch.chdir(tmp_path)
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=base)
@@ -1904,7 +1905,7 @@ def test_docs_coverage_none_with_trailing_rationale_passes(tmp_path, monkeypatch
     # End-to-end regression test for the actual observed FAIL, at the exact call site
     # (check_docs_to_update_coverage) that produced it for TCK-20260803-DOCS-STRUCTURE-AUDIT,
     # TCK-20260803-DOC-UPDATER-DASHBOARD-PALETTE, TCK-20260803-DOC-UPDATER-VOCAB-REGISTRATION.
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(
         base,
         "TCK-FAKE",
@@ -1922,7 +1923,7 @@ def test_docs_coverage_none_prefix_but_real_bullet_still_required(tmp_path, monk
     subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
     subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(
         base,
         "TCK-FAKE",
@@ -1932,14 +1933,14 @@ def test_docs_coverage_none_prefix_but_real_bullet_still_required(tmp_path, monk
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_docs_to_update_coverage(
-        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+        "TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS
     )
     assert status == "FAIL"
     assert "docs/mechanics/x.md" in evidence
 
 
 def test_docs_coverage_unparseable_non_none_section_fails(tmp_path):
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(base, "TCK-FAKE", "Probably docs/mechanics/x.md but not sure yet.")
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=base)
     assert status == "FAIL"
@@ -1953,7 +1954,7 @@ def test_docs_coverage_all_flagged_paths_touched_passes(tmp_path, monkeypatch):
     (tmp_path / "docs" / "mechanics").mkdir(parents=True)
     (tmp_path / "docs" / "mechanics" / "x.md").write_text("content", encoding="utf-8")
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(base, "TCK-FAKE", "- `docs/mechanics/x.md`: reason")
     # Reverse-check needs a resolvable ticket file declaring the same touched docs/ path
     # (TCK-20260904-DOC-COVERAGE-REVERSE-CHECK) — real Verify-time calls always have one; this
@@ -1962,7 +1963,7 @@ def test_docs_coverage_all_flagged_paths_touched_passes(tmp_path, monkeypatch):
     _write_reverse_ticket(tmp_path, "TCK-FAKE", files_changed="- `docs/mechanics/x.md`: reason")
     monkeypatch.chdir(tmp_path)
 
-    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS)
     assert status == "PASS"
     assert "docs/mechanics/x.md" in evidence
 
@@ -1978,7 +1979,7 @@ def test_docs_coverage_line_suffix_bullet_matches_bare_git_path(tmp_path, monkey
     (tmp_path / "docs" / "agent-monitoring").mkdir(parents=True)
     (tmp_path / "docs" / "agent-monitoring" / "schema.md").write_text("content", encoding="utf-8")
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(base, "TCK-FAKE", "- `docs/agent-monitoring/schema.md:287`: reason")
     # Reverse-check needs a resolvable ticket file declaring the same touched docs/ path
     # (TCK-20260904-DOC-COVERAGE-REVERSE-CHECK) — see note on the sibling test above.
@@ -1987,7 +1988,7 @@ def test_docs_coverage_line_suffix_bullet_matches_bare_git_path(tmp_path, monkey
     )
     monkeypatch.chdir(tmp_path)
 
-    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS)
     assert status == "PASS"
     assert "docs/agent-monitoring/schema.md" in evidence
 
@@ -1998,11 +1999,11 @@ def test_docs_coverage_missing_flagged_path_fails(tmp_path, monkeypatch):
     subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
     # No docs/mechanics/x.md ever created — nothing for git to show as touched.
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(base, "TCK-FAKE", "- `docs/mechanics/x.md`: reason")
     monkeypatch.chdir(tmp_path)
 
-    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS)
     assert status == "FAIL"
     assert "docs/mechanics/x.md" in evidence
 
@@ -2017,7 +2018,7 @@ def test_docs_coverage_resolved_conditional_bullet_untouched_passes(tmp_path, mo
     subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
     # docs/mechanics/04_strategic_cognition.md deliberately never created — nothing touches it.
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(
         base,
         "TCK-FAKE",
@@ -2027,7 +2028,7 @@ def test_docs_coverage_resolved_conditional_bullet_untouched_passes(tmp_path, mo
     )
     monkeypatch.chdir(tmp_path)
 
-    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS)
     assert status == "PASS"
     assert "docs/mechanics/04_strategic_cognition.md" in evidence
 
@@ -2042,7 +2043,7 @@ def test_docs_coverage_resolved_conditional_bullet_touched_anyway_still_passes(t
         "content", encoding="utf-8"
     )
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(
         base,
         "TCK-FAKE",
@@ -2057,7 +2058,7 @@ def test_docs_coverage_resolved_conditional_bullet_touched_anyway_still_passes(t
     )
     monkeypatch.chdir(tmp_path)
 
-    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS)
     assert status == "PASS"
 
 
@@ -2072,7 +2073,7 @@ def test_docs_coverage_resolved_marker_does_not_exempt_sibling_unconditional_bul
     subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
     # docs/mechanics/x.md (unconditional) deliberately never created.
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(
         base,
         "TCK-FAKE",
@@ -2082,7 +2083,7 @@ def test_docs_coverage_resolved_marker_does_not_exempt_sibling_unconditional_bul
     )
     monkeypatch.chdir(tmp_path)
 
-    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS)
     assert status == "FAIL"
     assert "docs/mechanics/x.md" in evidence
     assert "docs/mechanics/04_strategic_cognition.md" not in evidence
@@ -2172,13 +2173,13 @@ def test_reverse_docs_coverage_fails_when_touched_doc_not_in_files_changed_or_re
     _git_commit_baseline(tmp_path, "docs/mechanics")
     (tmp_path / "docs" / "mechanics" / "combat.md").write_text("content", encoding="utf-8")
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(base, "TCK-FAKE", "None.")
     _write_reverse_ticket(tmp_path, "TCK-FAKE", files_changed="- src/combat/engine.py")
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_docs_to_update_coverage(
-        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+        "TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS
     )
     assert status == "FAIL"
     assert "docs/mechanics/combat.md" in evidence
@@ -2189,7 +2190,7 @@ def test_reverse_docs_coverage_passes_when_touched_doc_appears_in_files_changed(
     _git_commit_baseline(tmp_path, "docs/mechanics")
     (tmp_path / "docs" / "mechanics" / "combat.md").write_text("content", encoding="utf-8")
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(base, "TCK-FAKE", "None.")
     _write_reverse_ticket(
         tmp_path, "TCK-FAKE",
@@ -2198,7 +2199,7 @@ def test_reverse_docs_coverage_passes_when_touched_doc_appears_in_files_changed(
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_docs_to_update_coverage(
-        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+        "TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS
     )
     assert status == "PASS"
 
@@ -2210,7 +2211,7 @@ def test_reverse_docs_coverage_passes_when_touched_doc_appears_in_related_docs_o
     _git_commit_baseline(tmp_path, "docs/mechanics")
     (tmp_path / "docs" / "mechanics" / "combat.md").write_text("content", encoding="utf-8")
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(base, "TCK-FAKE", "None.")
     _write_reverse_ticket(
         tmp_path, "TCK-FAKE",
@@ -2220,7 +2221,7 @@ def test_reverse_docs_coverage_passes_when_touched_doc_appears_in_related_docs_o
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_docs_to_update_coverage(
-        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+        "TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS
     )
     assert status == "PASS"
 
@@ -2234,7 +2235,7 @@ def test_reverse_docs_coverage_directory_collapse_tolerance(tmp_path, monkeypatc
     (tmp_path / "docs" / "newsubsystem").mkdir(parents=True)
     (tmp_path / "docs" / "newsubsystem" / "foo.md").write_text("content", encoding="utf-8")
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(base, "TCK-FAKE", "None.")
     _write_reverse_ticket(
         tmp_path, "TCK-FAKE",
@@ -2243,7 +2244,7 @@ def test_reverse_docs_coverage_directory_collapse_tolerance(tmp_path, monkeypatc
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_docs_to_update_coverage(
-        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+        "TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS
     )
     assert status == "PASS"
 
@@ -2258,13 +2259,13 @@ def test_reverse_docs_coverage_ITEM_INSTANCE_HISTORY_style_non_docs_path_is_out_
     (tmp_path / "src" / "core").mkdir(parents=True)
     (tmp_path / "src" / "core" / "state.py").write_text("content", encoding="utf-8")
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(base, "TCK-FAKE", "None.")
     _write_reverse_ticket(tmp_path, "TCK-FAKE")
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_docs_to_update_coverage(
-        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+        "TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS
     )
     assert status == "PASS"
 
@@ -2280,7 +2281,7 @@ def test_reverse_docs_coverage_hotfix_tier_behavior(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_docs_to_update_coverage(
-        "TCK-FAKE", "hotfix", base_dir=Path("staging_artifacts")
+        "TCK-FAKE", "hotfix", base_dir=STAGING_ARTIFACTS
     )
     assert status == "FAIL"
     assert "docs/mechanics/combat.md" in evidence
@@ -2290,7 +2291,7 @@ def test_reverse_docs_coverage_hotfix_tier_behavior(tmp_path, monkeypatch):
         files_changed="- `docs/mechanics/combat.md` — hotfix update",
     )
     status, evidence = check_docs_to_update_coverage(
-        "TCK-FAKE", "hotfix", base_dir=Path("staging_artifacts")
+        "TCK-FAKE", "hotfix", base_dir=STAGING_ARTIFACTS
     )
     assert status == "PASS"
 
@@ -2317,13 +2318,13 @@ def test_reverse_docs_coverage_catches_a_doc_committed_mid_session_with_clean_tr
     ).stdout
     assert status.strip() == "", "fixture setup bug: working tree must be clean for this test"
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(base, "TCK-FAKE", "None.")
     _write_reverse_ticket(tmp_path, "TCK-FAKE", files_changed="None.")
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_docs_to_update_coverage(
-        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+        "TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS
     )
     assert status == "FAIL"
     assert "docs/mechanics/combat.md" in evidence
@@ -2334,7 +2335,7 @@ def test_reverse_docs_coverage_catches_a_doc_committed_mid_session_with_clean_tr
         files_changed="- `docs/mechanics/combat.md` — committed mid-session",
     )
     status, evidence = check_docs_to_update_coverage(
-        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+        "TCK-FAKE", "standard", base_dir=STAGING_ARTIFACTS
     )
     assert status == "PASS"
 
@@ -2360,7 +2361,7 @@ def test_reverse_docs_coverage_multi_ticket_batch_branch_does_not_cross_attribut
     ).stdout
     assert status.strip() == "", "fixture setup bug: working tree must be clean for this test"
 
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     monkeypatch.chdir(tmp_path)
 
     # Closing TCK-BBBB: docs/a.md is real, on the branch, but belongs to a different ticket's own
@@ -2368,7 +2369,7 @@ def test_reverse_docs_coverage_multi_ticket_batch_branch_does_not_cross_attribut
     _write_investigation(base, "TCK-BBBB", "None.")
     _write_reverse_ticket(tmp_path, "TCK-BBBB", files_changed="None.")
     status, evidence = check_docs_to_update_coverage(
-        "TCK-BBBB", "standard", base_dir=Path("staging_artifacts")
+        "TCK-BBBB", "standard", base_dir=STAGING_ARTIFACTS
     )
     assert status == "PASS", f"TCK-BBBB must not be blamed for TCK-AAAA's own doc: {evidence}"
 
@@ -2377,7 +2378,7 @@ def test_reverse_docs_coverage_multi_ticket_batch_branch_does_not_cross_attribut
     _write_investigation(base, "TCK-AAAA", "None.")
     _write_reverse_ticket(tmp_path, "TCK-AAAA", files_changed="None.")
     status, evidence = check_docs_to_update_coverage(
-        "TCK-AAAA", "standard", base_dir=Path("staging_artifacts")
+        "TCK-AAAA", "standard", base_dir=STAGING_ARTIFACTS
     )
     assert status == "FAIL"
     assert "docs/a.md" in evidence
@@ -2404,7 +2405,7 @@ def test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident(tmp_pat
         "gate_checks.done_checker_static._git_status_touched_paths",
         lambda root=Path("."): {"docs/mechanics/02_combat_laws.md"},
     )
-    base = tmp_path / "staging_artifacts"
+    base = tmp_path / STAGING_ARTIFACTS
     _write_investigation(base, "TCK-20260831-RACE-RELATIONS-MATRIX", "None.")
     _write_reverse_ticket(
         tmp_path,
@@ -2414,7 +2415,7 @@ def test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident(tmp_pat
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_docs_to_update_coverage(
-        "TCK-20260831-RACE-RELATIONS-MATRIX", "standard", base_dir=Path("staging_artifacts")
+        "TCK-20260831-RACE-RELATIONS-MATRIX", "standard", base_dir=STAGING_ARTIFACTS
     )
     assert status == "FAIL"
     assert "docs/mechanics/02_combat_laws.md" in evidence
@@ -2441,16 +2442,16 @@ def test_sibling_attribution_each_ticket_claims_its_own_uncommitted_doc(tmp_path
     """AC3: two in-progress tickets A and B, uncommitted docs/a.md (claimed by A) and docs/b.md
     (claimed by B) — checking A passes (docs/b.md is B's, not A's problem) and checking B passes
     (docs/a.md is A's, not B's problem)."""
-    _write_investigation(tmp_path / "staging_artifacts", "TCK-A", "None.")
-    _write_investigation(tmp_path / "staging_artifacts", "TCK-B", "None.")
+    _write_investigation(tmp_path / STAGING_ARTIFACTS, "TCK-A", "None.")
+    _write_investigation(tmp_path / STAGING_ARTIFACTS, "TCK-B", "None.")
     _write_reverse_ticket(tmp_path, "TCK-A", files_changed="- `docs/a.md`: A's own doc")
     _write_reverse_ticket(tmp_path, "TCK-B", files_changed="- `docs/b.md`: B's own doc")
     monkeypatch.chdir(tmp_path)
     _mock_uncommitted(monkeypatch, {"docs/a.md", "docs/b.md"})
 
-    status_a, evidence_a = check_docs_to_update_coverage("TCK-A", "standard", base_dir=Path("staging_artifacts"))
+    status_a, evidence_a = check_docs_to_update_coverage("TCK-A", "standard", base_dir=STAGING_ARTIFACTS)
     assert status_a == "PASS", evidence_a
-    status_b, evidence_b = check_docs_to_update_coverage("TCK-B", "standard", base_dir=Path("staging_artifacts"))
+    status_b, evidence_b = check_docs_to_update_coverage("TCK-B", "standard", base_dir=STAGING_ARTIFACTS)
     assert status_b == "PASS", evidence_b
 
 
@@ -2458,17 +2459,17 @@ def test_sibling_attribution_unclaimed_doc_still_fails_both(tmp_path, monkeypatc
     """AC3 continued: an uncommitted docs/c.md claimed by neither A nor B still FAILs for both —
     sibling attribution narrows blame, it does not create a blind spot for a genuinely undeclared
     doc."""
-    _write_investigation(tmp_path / "staging_artifacts", "TCK-A", "None.")
-    _write_investigation(tmp_path / "staging_artifacts", "TCK-B", "None.")
+    _write_investigation(tmp_path / STAGING_ARTIFACTS, "TCK-A", "None.")
+    _write_investigation(tmp_path / STAGING_ARTIFACTS, "TCK-B", "None.")
     _write_reverse_ticket(tmp_path, "TCK-A", files_changed="- `docs/a.md`: A's own doc")
     _write_reverse_ticket(tmp_path, "TCK-B", files_changed="- `docs/b.md`: B's own doc")
     monkeypatch.chdir(tmp_path)
     _mock_uncommitted(monkeypatch, {"docs/a.md", "docs/b.md", "docs/c.md"})
 
-    status_a, evidence_a = check_docs_to_update_coverage("TCK-A", "standard", base_dir=Path("staging_artifacts"))
+    status_a, evidence_a = check_docs_to_update_coverage("TCK-A", "standard", base_dir=STAGING_ARTIFACTS)
     assert status_a == "FAIL"
     assert "docs/c.md" in evidence_a
-    status_b, evidence_b = check_docs_to_update_coverage("TCK-B", "standard", base_dir=Path("staging_artifacts"))
+    status_b, evidence_b = check_docs_to_update_coverage("TCK-B", "standard", base_dir=STAGING_ARTIFACTS)
     assert status_b == "FAIL"
     assert "docs/c.md" in evidence_b
 
@@ -2477,14 +2478,14 @@ def test_sibling_attribution_only_applies_to_done_tickets_also_in_uncommitted_st
     """A ticket in tickets/done/ that is NOT itself part of the uncommitted git status (an
     already-committed prior closure) is not treated as a same-batch sibling — its declared docs
     must not excuse an otherwise-undeclared path for the ticket being checked."""
-    _write_investigation(tmp_path / "staging_artifacts", "TCK-CHECKED", "None.")
+    _write_investigation(tmp_path / STAGING_ARTIFACTS, "TCK-CHECKED", "None.")
     _write_reverse_ticket(tmp_path, "TCK-CHECKED", files_changed="None.")
     # TCK-PRIOR is a done ticket, but NOT in the mocked uncommitted status below.
     _write_reverse_ticket(tmp_path, "TCK-PRIOR", files_changed="- `docs/a.md`: prior work", location="tickets/done")
     monkeypatch.chdir(tmp_path)
     _mock_uncommitted(monkeypatch, {"docs/a.md"})
 
-    status, evidence = check_docs_to_update_coverage("TCK-CHECKED", "standard", base_dir=Path("staging_artifacts"))
+    status, evidence = check_docs_to_update_coverage("TCK-CHECKED", "standard", base_dir=STAGING_ARTIFACTS)
     assert status == "FAIL"
     assert "docs/a.md" in evidence
 
@@ -2492,12 +2493,12 @@ def test_sibling_attribution_only_applies_to_done_tickets_also_in_uncommitted_st
 def test_registry_yaml_alone_never_fails_reverse_check(tmp_path, monkeypatch):
     """AC4: an uncommitted change to docs/REGISTRY.yaml alone never FAILs the reverse check — it's
     regenerated unconditionally at every close, not evidence of an undeclared doc edit."""
-    _write_investigation(tmp_path / "staging_artifacts", "TCK-REG", "None.")
+    _write_investigation(tmp_path / STAGING_ARTIFACTS, "TCK-REG", "None.")
     _write_reverse_ticket(tmp_path, "TCK-REG", files_changed="None.")
     monkeypatch.chdir(tmp_path)
     _mock_uncommitted(monkeypatch, {"docs/REGISTRY.yaml"})
 
-    status, evidence = check_docs_to_update_coverage("TCK-REG", "standard", base_dir=Path("staging_artifacts"))
+    status, evidence = check_docs_to_update_coverage("TCK-REG", "standard", base_dir=STAGING_ARTIFACTS)
     assert status == "PASS", evidence
     assert "no docs/ path(s) touched" in evidence
 
@@ -2505,12 +2506,12 @@ def test_registry_yaml_alone_never_fails_reverse_check(tmp_path, monkeypatch):
 def test_registry_yaml_excluded_alongside_a_real_undeclared_doc(tmp_path, monkeypatch):
     """REGISTRY.yaml's exclusion must not mask a genuinely undeclared doc touched at the same
     time — only REGISTRY.yaml itself is dropped from the touched set."""
-    _write_investigation(tmp_path / "staging_artifacts", "TCK-REG2", "None.")
+    _write_investigation(tmp_path / STAGING_ARTIFACTS, "TCK-REG2", "None.")
     _write_reverse_ticket(tmp_path, "TCK-REG2", files_changed="None.")
     monkeypatch.chdir(tmp_path)
     _mock_uncommitted(monkeypatch, {"docs/REGISTRY.yaml", "docs/undeclared.md"})
 
-    status, evidence = check_docs_to_update_coverage("TCK-REG2", "standard", base_dir=Path("staging_artifacts"))
+    status, evidence = check_docs_to_update_coverage("TCK-REG2", "standard", base_dir=STAGING_ARTIFACTS)
     assert status == "FAIL"
     assert "docs/undeclared.md" in evidence
     assert "docs/REGISTRY.yaml" not in evidence
@@ -2609,7 +2610,7 @@ def _run_cli(args, cwd):
 
 
 def _seed_ticket(tmp_path, ticket_id, tier="hotfix"):
-    ticket_dir = tmp_path / "tickets" / "inprogress"
+    ticket_dir = tmp_path / TICKETS / "inprogress"
     ticket_dir.mkdir(parents=True, exist_ok=True)
     (ticket_dir / f"{ticket_id}.md").write_text(
         "---\nstatus: active\nlayer: misc\nauthority: P1\naudience: agent\n"
@@ -2635,7 +2636,7 @@ def test_cli_prints_readable_output_and_exits_nonzero_on_known_failure(tmp_path)
 def test_cli_exits_zero_and_prints_pass_when_all_precheck_conditions_pass(tmp_path):
     ticket_id = "TCK-CLI-PASS-TEST"
     _seed_ticket(tmp_path, ticket_id, tier="hotfix")
-    (tmp_path / "tickets" / "working_log.csv").write_text(
+    (tmp_path / TICKETS / "working_log.csv").write_text(
         "timestamp,ticket_id,title,status,summary,artifacts_path\n", encoding="utf-8"
     )
     result = _run_cli(["--ticket-id", ticket_id, "--part", "precheck"], tmp_path)
@@ -2705,8 +2706,8 @@ def test_cli_still_importable_and_callable_as_plain_functions(tmp_path, monkeypa
     reverting this isolation reproduces a real docs/REGISTRY.yaml diff and is caught by this
     module's own _fail_if_this_module_touches_tracked_monitoring_files guard fixture.
     """
-    (tmp_path / "tickets" / "done").mkdir(parents=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
     monkeypatch.chdir(tmp_path)
 
     assert callable(run_static_precheck)
@@ -2740,7 +2741,7 @@ _DISPOSITION_TICKET_TAIL = (
 
 def _write_disposition_ticket(tmp_path, ticket_id="TCK-DISP", value="STALE-PREMISE",
                               rationale="Premise false since 791e6bf6b.", with_rationale=True):
-    done = tmp_path / "tickets" / "done"
+    done = tmp_path / TICKETS / "done"
     done.mkdir(parents=True, exist_ok=True)
     text = TICKET_FM.format(ticket_id=ticket_id, tier="standard")
     if with_rationale:
@@ -2775,7 +2776,7 @@ def test_disposition_closure_with_evidence_passes_without_staging_artifacts(tmp_
 def test_disposition_closure_passes_full_finalize_selfcheck(tmp_path, monkeypatch):
     _init_repo_with_origin_main(tmp_path)
     _write_disposition_ticket(tmp_path)
-    _write_csv(tmp_path / "tickets" / "working_log.csv",
+    _write_csv(tmp_path / TICKETS / "working_log.csv",
                [["2026-09-30T00:00:00Z", "TCK-DISP", "Disposition", "DONE", "x", ""]])
     monkeypatch.chdir(tmp_path)
     results = run_finalize_selfcheck("TCK-DISP", "standard")
@@ -2839,16 +2840,16 @@ def test_disposition_ignores_src_change_from_another_tickets_commit(tmp_path, mo
 
 def test_ticket_without_disposition_still_fails_migration_when_artifacts_missing(tmp_path, monkeypatch):
     _init_repo_with_origin_main(tmp_path)
-    (tmp_path / "tickets" / "done").mkdir(parents=True)
-    _write_ticket(tmp_path / "tickets" / "done" / "TCK-PLAIN.md", "TCK-PLAIN")
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "done" / "TCK-PLAIN.md", "TCK-PLAIN")
     monkeypatch.chdir(tmp_path)
     status, evidence = check_migration_complete("TCK-PLAIN", "standard")
     assert status == "FAIL" and "Missing or empty" in evidence
 
 
 def test_registry_check_is_read_only_by_default_and_reports_stale_file(tmp_path, monkeypatch):
-    (tmp_path / "tickets" / "done").mkdir(parents=True)
-    _write_ticket(tmp_path / "tickets" / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "done" / "TCK-FAKE.md", "TCK-FAKE")
     registry = tmp_path / "docs" / "REGISTRY.yaml"
     registry.parent.mkdir(parents=True)
     registry.write_text("# Generated: 2000-01-01\n[]\n", encoding="utf-8")
@@ -2860,8 +2861,8 @@ def test_registry_check_is_read_only_by_default_and_reports_stale_file(tmp_path,
 
 
 def test_registry_check_read_only_passes_when_disk_file_has_entry(tmp_path, monkeypatch):
-    (tmp_path / "tickets" / "done").mkdir(parents=True)
-    _write_ticket(tmp_path / "tickets" / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "done" / "TCK-FAKE.md", "TCK-FAKE")
     monkeypatch.chdir(tmp_path)
     check_registry_entry_regenerated("TCK-FAKE")  # default: regenerates, writes the file
     before = (tmp_path / "docs" / "REGISTRY.yaml").read_bytes()

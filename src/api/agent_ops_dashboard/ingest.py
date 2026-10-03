@@ -83,6 +83,10 @@ from src.api.agent_ops_dashboard.models import (
     TierDistributionStats,
     TimelineEntry,
 )
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[3])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
 ACTIVE_WINDOW_MINUTES = 10
 _EDIT_TOOLS = {"Read", "Edit", "Write", "MultiEdit"}
@@ -512,8 +516,8 @@ class DashboardCache:
 
     def __init__(self, repo_root: Path = _REPO_ROOT):
         self._repo_root = repo_root
-        self._data_root = repo_root / "agent-monitoring" / "data"
-        self._tickets_root = repo_root / "tickets"
+        self._data_root = repo_root / AGENT_MONITORING / "data"
+        self._tickets_root = repo_root / TICKETS
         self._lock = threading.RLock()
 
         self._runs_all: list[dict] = []

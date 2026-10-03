@@ -7,6 +7,7 @@ inprogress/" (legitimate, per docs/ai/ticket-lifecycle.md:440) and not non-epic 
 """
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS
 
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 _MONITORING_TOOLS_DIR = _TOOLS_DIR / "agent-monitoring"
@@ -25,8 +26,8 @@ from gate_checks.done_checker_static import (  # noqa: E402
 )
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
-REAL_INPROGRESS_DIR = _REPO_ROOT / "tickets" / "inprogress"
-REAL_TODOS_DIR = _REPO_ROOT / "tickets" / "todos"
+REAL_INPROGRESS_DIR = _REPO_ROOT / TICKETS / "inprogress"
+REAL_TODOS_DIR = _REPO_ROOT / TICKETS / "todos"
 
 
 def _write_ticket(path: Path, ticket_id: str, tier: str):

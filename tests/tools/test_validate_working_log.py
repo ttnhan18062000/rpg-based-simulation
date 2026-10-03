@@ -9,6 +9,7 @@ import csv
 import shutil
 import sys
 from pathlib import Path
+from tools.agent_working_paths import TICKETS
 
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
@@ -20,7 +21,7 @@ from working_log_parser import (  # noqa: E402
 )
 from validate_working_log import run_validation  # noqa: E402
 
-REAL_LOG_PATH = Path(__file__).parent.parent.parent / "tickets" / "working_log.csv"
+REAL_LOG_PATH = Path(__file__).parent.parent.parent / TICKETS / "working_log.csv"
 
 HEADER = "timestamp,ticket_id,title,status,summary,artifacts_path\n"
 
@@ -187,7 +188,7 @@ def test_quote_desync_row_with_unmatched_fragment_degrades_to_unrecoverable(tmp_
 
 
 def test_run_validation_preserves_existing_duplicate_id_and_missing_entry_checks(tmp_path):
-    tickets_dir = tmp_path / "tickets"
+    tickets_dir = tmp_path / TICKETS
     done_dir = tickets_dir / "done"
     done_dir.mkdir(parents=True)
     (done_dir / "TCK-ORPHAN.md").write_text("# orphan\n", encoding="utf-8")
@@ -213,7 +214,7 @@ def test_duplicate_ticket_ids_check_no_longer_excludes_flagged_duplicate_rows(tm
     silently excluded from it -- the prior exclusion meant this check could never see the exact
     defect class it exists to catch. A genuine same-ticket-ID, different-content second row (an
     actual reopened ticket / a real double-paste) is still reported too, same as before."""
-    tickets_dir = tmp_path / "tickets"
+    tickets_dir = tmp_path / TICKETS
     done_dir = tickets_dir / "done"
     done_dir.mkdir(parents=True)
 
@@ -237,7 +238,7 @@ def test_duplicate_ticket_ids_check_no_longer_excludes_flagged_duplicate_rows(tm
 
 
 def test_run_validation_reports_ambiguous_row_count(tmp_path):
-    tickets_dir = tmp_path / "tickets"
+    tickets_dir = tmp_path / TICKETS
     done_dir = tickets_dir / "done"
     done_dir.mkdir(parents=True)
 

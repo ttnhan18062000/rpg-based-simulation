@@ -21,8 +21,9 @@ import yaml
 
 from .errors import GeneratorWriteGuardError
 from .loader import ContractBundle, RoleEntry, load_contract
+from tools.agent_working_paths import AGENT_ORCHESTRATION
 
-_CONTRACT_SUBDIR = "agent-orchestration"
+_CONTRACT_SUBDIR = AGENT_ORCHESTRATION
 
 
 def _assert_write_allowed(repo_root: Path, target_path: Path, allow_outside_contract: bool) -> None:

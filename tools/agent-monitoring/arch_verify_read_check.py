@@ -54,6 +54,10 @@ _HERE = Path(__file__).resolve().parent
 if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 from monitoring_shard_paths import shard_paths  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, posix  # noqa: E402
 
 PHASE = "Architecture-Verify"
 PRODUCTION_AGENT = "architecture-reviewer"
@@ -157,7 +161,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--ticket-id", required=True)
     parser.add_argument("--base-ref", default="origin/main")
-    parser.add_argument("--data-root", default="agent-monitoring/data")
+    parser.add_argument("--data-root", default=f"{posix(AGENT_MONITORING)}/data")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     try:

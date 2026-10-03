@@ -21,10 +21,11 @@ from tools.agent_orchestration_claude_adapter.terminal_status_extractor import (
     extract_all_terminal_statuses,
 )
 from tools.agent_orchestration_claude_adapter.terminal_status_loader import load_terminal_statuses
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _WORKFLOW_JS_PATH = _REPO_ROOT / ".claude" / "workflows" / "implement-ticket.js"
-_DIVERGENCE_LOG_PATH = _REPO_ROOT / "agent-orchestration" / "intentional-divergences.md"
+_DIVERGENCE_LOG_PATH = _REPO_ROOT / AGENT_ORCHESTRATION / "intentional-divergences.md"
 
 
 def _as_value_kind_pairs(statuses: list[dict]) -> set[tuple[str, str]]:

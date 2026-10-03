@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "tools"))
@@ -27,13 +28,13 @@ def repo(tmp_path):
     (tmp_path / ".gitignore").write_text(
         "stored_artifacts/**/*.json\n!stored_artifacts/**/manifest.json\n", encoding="utf-8"
     )
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    (tmp_path / "stored_artifacts" / "T").mkdir(parents=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    (tmp_path / STORED_ARTIFACTS / "T").mkdir(parents=True)
     return tmp_path
 
 
 def _ticket(root, body):
-    (root / "tickets" / "inprogress" / f"{TID}.md").write_text(f"# {TID}\n\n{body}\n", encoding="utf-8")
+    (root / TICKETS / "inprogress" / f"{TID}.md").write_text(f"# {TID}\n\n{body}\n", encoding="utf-8")
 
 
 def _file(root, rel, tracked):
@@ -93,9 +94,9 @@ def test_missing_wildcard_and_placeholder_citations_are_skipped(repo):
 
 def test_missing_ticket_is_na_and_git_failure_degrades_to_warn(tmp_path):
     assert check_cited_evidence_paths(TID, root=tmp_path)[0] == "NA"
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    (tmp_path / "stored_artifacts" / "T").mkdir(parents=True)
-    (tmp_path / "stored_artifacts" / "T" / "a.md").write_text("x")
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    (tmp_path / STORED_ARTIFACTS / "T").mkdir(parents=True)
+    (tmp_path / STORED_ARTIFACTS / "T" / "a.md").write_text("x")
     _ticket(tmp_path, "`stored_artifacts/T/a.md`")  # not a git repo: git exits 128
     status, ev = check_cited_evidence_paths(TID, root=tmp_path)
     assert status == "WARN" and "could not run git" in ev

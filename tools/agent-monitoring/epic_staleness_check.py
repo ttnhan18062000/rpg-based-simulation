@@ -75,9 +75,13 @@ if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
 
 from validate import load_data_glob  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
 DEFAULT_STALENESS_WINDOW_DAYS = 5
-DEFAULT_RUNS_DATA_ROOT = Path("agent-monitoring/data")
+DEFAULT_RUNS_DATA_ROOT = AGENT_MONITORING / "data"
 
 CHILD_ID_PATTERN = re.compile(r"TCK-\d{8}-[A-Z0-9-]+")
 
@@ -503,9 +507,9 @@ if __name__ == "__main__":
                 sys.exit(0)
 
             stale = find_stale_epics(
-                Path("tickets/inprogress"),
-                Path("tickets/todos"),
-                Path("tickets/working_log.csv"),
+                TICKETS / "inprogress",
+                TICKETS / "todos",
+                TICKETS / "working_log.csv",
                 DEFAULT_RUNS_DATA_ROOT,
             )
 
@@ -528,8 +532,8 @@ if __name__ == "__main__":
             pass
     else:
         print(compute_stale_epics_report(
-            Path("tickets/inprogress"),
-            Path("tickets/todos"),
-            Path("tickets/working_log.csv"),
+            TICKETS / "inprogress",
+            TICKETS / "todos",
+            TICKETS / "working_log.csv",
             DEFAULT_RUNS_DATA_ROOT,
         ))

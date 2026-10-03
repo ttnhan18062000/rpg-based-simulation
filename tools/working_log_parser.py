@@ -43,6 +43,10 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from ticket_field_values import WORKFLOW_STATUS_VALUES  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
 # Two historical status-column values that appear as real rows in the live file but
 # predate WORKFLOW_STATUS_VALUES' canonicalization as a ticket-body enum (confirmed via
@@ -333,7 +337,7 @@ def parse_working_log(path: Path) -> ParseResult:
     )
 
 
-def parse_pending_working_log_shards(data_root: Path = Path("agent-monitoring/data")) -> list:
+def parse_pending_working_log_shards(data_root: Path = AGENT_MONITORING / "data") -> list:
     """Read-only: every row still staged in a `<batch-id>.working_log.jsonl` shard under
     `data_root`, not yet folded into the canonical CSV by
     `working_log_writer.consolidate_pending_rows()` (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-
@@ -359,7 +363,7 @@ def parse_pending_working_log_shards(data_root: Path = Path("agent-monitoring/da
 
 
 if __name__ == "__main__":
-    result = parse_working_log(Path("tickets/working_log.csv"))
+    result = parse_working_log(TICKETS / "working_log.csv")
     print(f"rows={len(result.rows)}")
     print(f"ambiguous_row_count={result.ambiguous_row_count}")
     print(f"quote_desync_count={result.quote_desync_count}")

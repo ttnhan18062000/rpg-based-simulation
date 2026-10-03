@@ -41,6 +41,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from writer import write_lines  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 UNKNOWN_WEEK_KEY = "unknown-week"
 
@@ -216,8 +220,8 @@ def verify_migration(
 
 def main() -> int:
     repo_root = Path(__file__).resolve().parent.parent.parent
-    source_path = repo_root / "agent-monitoring" / "tools.jsonl"
-    shard_dir = repo_root / "agent-monitoring" / "tools"
+    source_path = repo_root / AGENT_MONITORING / "tools.jsonl"
+    shard_dir = repo_root / AGENT_MONITORING / "tools"
 
     if not source_path.exists():
         print(f"ABORT: source file {source_path} does not exist (already migrated?).", file=sys.stderr)

@@ -22,6 +22,7 @@ import pytest
 from agent_orchestration.errors import GeneratorWriteGuardError
 from agent_orchestration.generator import generate
 from agent_orchestration.loader import load_contract
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _TOOL_DIR = _REPO_ROOT / "tools" / "agent_orchestration"
@@ -90,7 +91,7 @@ def _fake_repo_with_real_contract(tmp_path: Path) -> Path:
     """Builds a throwaway repo root under tmp_path with a copy of the real agent-orchestration/
     contract — keeps generator tests from ever writing into the real repo tree."""
     fake_repo = tmp_path / "fake_repo"
-    shutil.copytree(_REPO_ROOT / "agent-orchestration", fake_repo / "agent-orchestration")
+    shutil.copytree(_REPO_ROOT / AGENT_ORCHESTRATION, fake_repo / AGENT_ORCHESTRATION)
     return fake_repo
 
 
@@ -115,7 +116,7 @@ def test_generator_allows_writes_inside_agent_orchestration_without_flag(tmp_pat
     # Regenerating in-place (or into a subdirectory of agent-orchestration/) is always allowed
     # without the flag — the guard only restricts writes OUTSIDE agent-orchestration/.
     fake_repo = _fake_repo_with_real_contract(tmp_path)
-    inside_dir = fake_repo / "agent-orchestration" / "_generated_test_scratch"
+    inside_dir = fake_repo / AGENT_ORCHESTRATION / "_generated_test_scratch"
     written = generate(fake_repo, inside_dir)
     assert written
     for path in written:
@@ -130,7 +131,7 @@ def test_generated_output_round_trips_through_load_contract(tmp_path):
     # load_contract expects a repo-root-shaped layout with an agent-orchestration/ child —
     # confirm the generated files are themselves valid, loadable contract data.
     wrapper_root = tmp_path / "wrapper_root"
-    shutil.copytree(outside_dir, wrapper_root / "agent-orchestration")
+    shutil.copytree(outside_dir, wrapper_root / AGENT_ORCHESTRATION)
     bundle = load_contract(wrapper_root)
     assert bundle.contract["version"] == 1
 
@@ -139,7 +140,7 @@ def test_no_conformance_or_provider_adapter_code_in_this_tickets_tree():
     # Scoped to .py/.yaml (functional contract/tooling content) — README.md prose legitimately
     # names ".codex/" as a concept when describing what this directory does NOT build, which
     # is not the same as this tree actually containing adapter code.
-    search_dirs = [_TOOL_DIR, _REPO_ROOT / "agent-orchestration"]
+    search_dirs = [_TOOL_DIR, _REPO_ROOT / AGENT_ORCHESTRATION]
     for directory in search_dirs:
         for pattern in ("**/*.py", "**/*.yaml", "**/*.yml"):
             for path in directory.glob(pattern):

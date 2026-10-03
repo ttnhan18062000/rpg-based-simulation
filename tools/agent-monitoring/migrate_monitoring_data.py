@@ -59,6 +59,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from migrate_tools_shards import _parse_ts_to_week, UNKNOWN_WEEK_KEY  # noqa: E402
 from writer import write_lines  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 RUNS_FIELD_PRIORITY = [
     "start_ts", "ts", "ts_start", "started_at", "completed_at", "ts_end", "finished_at", "timestamp",
@@ -318,16 +322,16 @@ def _migrate_tools_relocation(tools_dir: Path, data_dir: Path) -> dict:
 
 def main() -> int:
     repo_root = Path(__file__).resolve().parent.parent.parent
-    data_dir = repo_root / "agent-monitoring" / "data"
+    data_dir = repo_root / AGENT_MONITORING / "data"
     reports = {}
 
-    runs_path = repo_root / "agent-monitoring" / "runs.jsonl"
+    runs_path = repo_root / AGENT_MONITORING / "runs.jsonl"
     reports["runs"] = _migrate_rebucketed_source(runs_path, "runs", RUNS_FIELD_PRIORITY, data_dir)
 
-    events_path = repo_root / "agent-monitoring" / "events.jsonl"
+    events_path = repo_root / AGENT_MONITORING / "events.jsonl"
     reports["events"] = _migrate_rebucketed_source(events_path, "events", EVENTS_FIELD_PRIORITY, data_dir)
 
-    tools_dir = repo_root / "agent-monitoring" / "tools"
+    tools_dir = repo_root / AGENT_MONITORING / "tools"
     reports["tools"] = _migrate_tools_relocation(tools_dir, data_dir)
 
     print(json.dumps(reports, indent=2, sort_keys=True))
