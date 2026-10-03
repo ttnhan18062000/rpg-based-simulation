@@ -146,6 +146,70 @@ waiting to be fixed, it is a latent defect whose *dormancy is load-bearing*.
 
 ## Implementation Notes
 
+### 2026-10-02 — PARKED by user direction, with AC1 already discharged
+
+**Parked**, per the user's 2026-10-02 direction to fix only hard RPG bugs, defer balance and feature
+work, and complete the registry/rule map/foundation before planning RPG feature implementation. This
+is a dormant-path parity gap, not a hard bug (no wrong world truth in corpus play — the derivation
+does not run), and AC6's tripwire requirement is what makes waiting safe rather than lucky.
+
+**AC1 is nonetheless discharged** — do not redo it on resume. Full record with every citation
+verified at `origin/main` in
+`staging_artifacts/TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS/investigation.md`
+(retained deliberately while the ticket sits in `todos/`; other parked tickets carry staging artifacts
+the same way). Seven of the eight fields turned out to be **already decided** — by the Mechanics Bible
+or by `TCK-20260921`'s shipped code — and only `atk_range` was genuinely open:
+
+| field | authority | basis | status |
+|---|---|---|---|
+| `max_hp` / `atk` / `evasion` | content (profile), via residual base | Bible `01:36,41,43,49-53`; `PROG-127` | settled by #279 |
+| `def_stat` | content, via **unclamped** residual | Bible `01:51-53`; `src/core/derived_stats.py:28-33` | settled by #279 |
+| `move_cost` | **derivation** — spawn's `10.0` default is the divergence | Bible `01:47` | settled by the Bible |
+| `readiness_speed` | **derivation** | Bible `02_combat_laws.md:139-140` | settled by the Bible |
+| `tactical_role` | **derivation** | Bible `01:61` | settled by the Bible |
+| `atk_range` | **profile is the archetype factor; weapon is an independent factor** | user decision 2026-10-02; CAP-05 | decided |
+
+Three corrections to this ticket's own framing, which the resume should start from:
+
+1. **The `def_stat` drift row is hypothetical — strike it.** `residual_base_terms()` is deliberately
+   unclamped and its docstring names this exact `worker def 0 / vitality 5` case; Bible `01:51-53` says
+   the residual "may be negative". The `0 → 1` figure describes a clamp-at-zero that **does not exist
+   in the code**. The `worker` round-trips exactly today. A future proposal to clamp a residual would
+   itself break the round trip `PROG-127` asserts.
+2. **`move_cost` is a parity-ledger item, not an `intentional_divergences.md` entry.** Bible `01:47`
+   declares the formula, so the derivation is the Bible-conformant path and spawn's default is the
+   divergence — activating it moves code *into* parity. A `DEV-` entry would be needed only to keep
+   `10.0` *against* the Bible. This resolves the first Assumptions bullet below: the derivation is the
+   intended owner.
+3. **`readiness_speed` is declared, just not in chapter 01.** The formula
+   `max(1.0, 10.0 + (agility - 5) * 1.0)` lives at `02_combat_laws.md:139-140` and
+   `attribute_progression_contract.md:141`. Chapter 01 §2's formula block omits `readiness_speed`,
+   `atk_range` and `tactical_role` entirely while line 57-58 names three of them as fields spawn and
+   derivation must agree on — so §2 cannot currently be read as a statement of the derived set.
+   Consolidating it is part of the AC1 record.
+
+**`atk_range` decision (user, 2026-10-02):** the profile's `attack_range` is the archetype factor and
+the weapon property is an independent factor, with the combination rule to be written into Bible 01 §2
+next to `Move_Cost`. No entity loses declared range. Re-measured independently: **5 of 23 profiles**
+(22%) declare non-melee range — `goblin_archer_base` 3, `apprentice_mage_base` 3, `ranger_base` 3,
+`spirit_guardian_base` 2, `dragon_champion_base` 3. The plan must still choose between
+`max(profile, weapon)` and "weapon overrides when present"; they differ for an archer holding a melee
+weapon, and the Bible text must say which.
+
+**AC5 is mostly pre-written:** Bible `01:57-58` already states the activation exit condition. AC5
+becomes making that text agree with the table above, not writing a new condition.
+
+**One caution for AC6 on resume:** the tripwire's condition must be "the derivation is reachable **and**
+the content-authoritative fields do not round-trip", **not** "AC1 is open". AC1 is now closed on paper
+while the drift is still live in code, so an AC1-keyed tripwire would disarm itself at the moment it is
+most needed.
+
+Rule-owner positions behind the table (no catalog Rule picks per-field authority, and none should be
+written; the ordering is Bible formula → content declaration → derivation, constrained by
+PROG-01/CAUSE-01 that a `stats_dirty` trigger is not a cause) are recorded in §2 of the investigation.
+`data/content/entities/stat_profiles.yaml` is content data, not the Rule Catalog — "the profile is
+wrong" is never a catalog fix.
+
 ### 2026-10-01 — Provenance narrowing introduced by the parent ticket's residual base (rule owner)
 
 Recorded here at `world-rule-catalog-design`'s request, because it is a consequence of the parent
