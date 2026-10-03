@@ -2,7 +2,7 @@
 
 from visual_assets.store.contracts.adoption import AdoptionRecord, RevocationRecord
 from visual_assets.store.contracts.artifact import ArtifactRecord
-from visual_assets.store.contracts.base import canonical_json, parse_record
+from visual_assets.store.contracts.base import canonical_json, parse_record, record_bound
 from visual_assets.store.contracts.definitions import VisualKeyRegistry
 from visual_assets.store.contracts.handoff import CandidateHandoffPackage
 from visual_assets.store.contracts.intake import IntakeResult
@@ -23,4 +23,4 @@ RECORD_TYPES = (
     VisualKeyRegistry,
 )
 
-__all__ = ["RECORD_TYPES", "ContractError", "canonical_json", "parse_record", *(c.__name__ for c in RECORD_TYPES)]
+__all__ = ["RECORD_TYPES", "ContractError", "canonical_json", "parse_record", "record_bound", *(c.__name__ for c in RECORD_TYPES)]

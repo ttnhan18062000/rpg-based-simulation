@@ -99,20 +99,25 @@ measurements and the budget record, and makes the record and the code impossible
 
 ## Implementation Notes
 - Inventory found three bounds beyond the ticket's list (`readmodel.DEFAULT_LIMIT`/`MAX_LIMIT`, `intake.aseprite.MAX_PALETTE_ENTRIES`); they have rows (R0, NOT MEASURED).
-- Two values changed in code: `MAX_SOURCE_BYTES` 102400 -> 114688 (R2 + R4, reopens D2: owner decision) and `MAX_DECODED_BYTES` 25165824 -> 4195328 (R3). Every other value is kept.
-- Six flags (F1-F6) where the rule gives a silly or conflicting answer; the value is kept and the planner/owner must rule. The most important: **F1, the registry's real capacity is about 207 keys** because `parse_record` applies `MAX_RECORD_BYTES` (64 KiB) to the registry, so `MAX_REGISTRY_BYTES` and `MAX_VISUAL_KEYS` are unreachable.
+- First pass (cec87de13) proposed `MAX_SOURCE_BYTES` 114688 and kept six flagged rows. **Planner rulings (2026-10-03), applied in the follow-up commit:**
+  - F1 + F5 are a defect, wider than the registry: every reader and writer capped every record at `MAX_RECORD_BYTES`, so a legal registry (about 207 keys), release manifest (about 400 entries) or `IntakeResult` with 4-byte text (68483 B) could not be read or written. Invariant: every record any writer can produce under the contract bounds is readable by every reader. Fix: `StoreRecord.size_bound` + `record_bound(cls)` (one lookup used by `canonical_json`, `parse_record` and every read site); registry uses `MAX_REGISTRY_BYTES` (1 MiB -> 458752, R3), new `MAX_MANIFEST_BYTES` 327680, `MAX_RECORD_BYTES` 65536 -> 131072, `MAX_VISUAL_KEYS` 4096 -> 1024 (R3: 1024 realistic keys load in 1.04 s, 2048 in 2.29 s). Guard: `tests/visual_assets/store/unit/test_record_bounds.py`.
+  - F2: `MAX_SOURCE_BYTES` stays 102400 (R1 waived; the 16-frame dense case is a known limit, D2's trigger working as designed).
+  - F3: kept; finding recorded (the pure-Python decoder limits the dimension bounds; optimize before raising them).
+  - F4: name split: `MAX_DECODED_BYTES` (decoded size, `pixels.py` only) stays 4195328; new `MAX_PNG_FILE_BYTES` 4259840 for the five PNG file reads (worst legal PNG: 1024 px RGBA noise, 4196671 B at zlib 9, rounded up to 64 KiB).
+  - F6: kept.
 - The measurement tool lives in `tools/` (outside the boundary guard) and uses the test builders for synthetic PNGs.
 - Strict-mode wording fix from the ticket 1 review folded in (`drawing_tools.md`, ticket 1 Test Summary).
 
 ## Test Summary
+- Follow-up commit: `test_record_bounds.py` (15) builds the maximum legal instance of all 9 record types and reads each back through the real path; mutants killed: manifest bound shrunk to 200000 ("record exceeds 200000 bytes"), `MAX_RECORD_BYTES` back to 64 KiB (IntakeResult), the registry `size_bound` override removed (3 failures incl. `load_registry`), a PNG read site reverted to `MAX_DECODED_BYTES` (AST guard, 2 failures), `MAX_PNG_FILE_BYTES` shrunk to 4 MiB (worst PNG over it, 2 failures). Three existing tests were updated for per-type bounds (`test_records.py` oversize, `test_registry.py::test_size_bound` padded so the compact-JSON body cannot exceed the file). After the follow-up: `tests/visual_assets` without Aseprite 918 passed, 201 skipped; strict real run 201 passed, 0 skipped; static/architecture/docs 240 passed. One run hit `No space left on device` on `/tmp` (tmpfs, 3 GB of pytest directories at that moment, other sessions also write there); a rerun passed.
 - `test_budgets_parity.py`: 6 pass. Mutants (each failed naming the row): `MAX_PREVIEW_DIM` 1024 -> 2048 ("code has 2048, budgets.md proposes 1024"); a new `MAX_NEW_THING` bound ("a bound in the code with no row"); `JOB_TIMEOUT_S` row deleted (same); row renamed `MAX_REFZ` ("the row names a missing module or attribute", plus `MAX_REFS` with no row); a restored "provisional (U-05)" comment (names `store/config.py:21`).
 - `tests/visual_assets` without Aseprite: 903 passed, 201 skipped. `make visual-assets-aseprite-local`: 201 passed, 0 skipped (after the value changes). `tests/static tests/architecture tests/docs`: 240 passed, 2 skipped, 1 xfailed.
 - Measurements: quoted in `investigation.md` (stored artifacts).
 
 ## Files Changed
 - `tools/visual_assets_measure_budgets.py` (new), `tests/visual_assets/test_budgets_parity.py` (new), `docs/assets/budgets.md` (new)
-- Code values/comments: `visual_assets/store/{config,rendering}.py`, `store/contracts/{handoff,intake,definitions}.py`, `store/intake/validator.py`
+- Code values/comments: `visual_assets/store/{config,rendering,records,audit,verify,release,readmodel,adoption}.py`, `store/build/exporter.py`, `store/catalog/registry.py`, `store/intake/service.py`, `store/contracts/{base,__init__,release,handoff,intake,definitions}.py`, `store/intake/validator.py`; tests `store/unit/test_record_bounds.py` (new), `test_records.py`, `test_registry.py`
 - Docs: `docs/assets/store_contract.md`, `docs/assets/drawing_tools.md`, `docs/plans/aseprite-mcp-pixel-art/README.md`
 
 ## Completion Summary
-Every bound in `visual_assets/` is measured, recorded as a `PROPOSED` row in `docs/assets/budgets.md`, and pinned to the code by a parity test. Two values changed; six rows are flagged for a ruling; the owner approves the numbers in PR review.
+Every bound in `visual_assets/` is measured, recorded as a `PROPOSED` row in `docs/assets/budgets.md`, and pinned to the code by a parity test. Record size bounds are now per type with a guard test (a defect found by the first pass and fixed here); `MAX_RECORD_BYTES`, `MAX_REGISTRY_BYTES`, `MAX_VISUAL_KEYS` changed, `MAX_MANIFEST_BYTES` and `MAX_PNG_FILE_BYTES` are new; the owner approves the numbers in PR review.

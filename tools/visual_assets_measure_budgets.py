@@ -106,6 +106,78 @@ def decode_at_decoded_bytes_bound() -> dict:
     }
 
 
+def registry_scaling() -> dict:
+    """Real `load_registry` path (no bound lifted) at growing key counts, realistic keys (2 axes x 4 values) and no-axis keys."""
+    import yaml
+
+    from visual_assets.store import config
+    from visual_assets.store.catalog.registry import load_registry
+
+    def build(keys: int, aliases: int, axes: int) -> bytes:
+        entries = [
+            {"key": f"ui.family{i % 40}.entry{i}", "family": f"family{i % 40}", "description": "A realistic one-line description of what this visual key is for",
+             "variant_axes": [{"name": f"axis{a}", "values": [f"value{v}" for v in range(4)]} for a in range(axes)], "optional": False}
+            for i in range(keys)
+        ]
+        links = [{"alias": f"ui.old{i}.entry{i}", "target": f"ui.family{i % 40}.entry{i}"} for i in range(aliases)]
+        return yaml.safe_dump({"record_type": "visual_key_registry", "schema_version": 1, "keys": entries, "aliases": links}).encode()
+
+    rows = []
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "registry.yaml"
+        for axes in (2, 0):
+            for keys in (256, 512, 1024):  # MAX_VISUAL_KEYS is 1024: the count at which cost was measured under 2 s
+                data = build(keys, min(keys, config.MAX_ALIASES), axes)
+                path.write_bytes(data)
+                row = {"axes": axes, "keys": keys, "file_bytes": len(data)}
+                if len(data) > config.MAX_REGISTRY_BYTES:
+                    row["status"] = "over MAX_REGISTRY_BYTES (refused by the byte bound)"
+                else:
+                    run = lambda: load_registry(path, allow_fixture_namespace=True)  # noqa: E731
+                    row["seconds"] = round(_timed(run, repeats=3), 3)
+                    row["peak_python_mib"] = round(_peak_bytes(run) / MIB, 1)
+                rows.append(row)
+    return {"rows": rows, "limits": {"MAX_REGISTRY_BYTES": config.MAX_REGISTRY_BYTES, "MAX_VISUAL_KEYS": config.MAX_VISUAL_KEYS}}
+
+
+def manifest_scaling() -> dict:
+    """Size and parse time of a ReleaseCandidateManifest with N entries of maximum-length ids (the widest legal entry)."""
+    from visual_assets.store import config
+    from visual_assets.store.contracts import ReleaseCandidateManifest, parse_record
+    from visual_assets.store.contracts.base import canonical_json
+
+    config.MAX_MANIFEST_BYTES = 1 << 30  # measure what the contract allows
+    rows = []
+    for n in (1024, 2048, 3072, 4096):
+        entries = [
+            {"visual_key": f"a{i:05d}" + "x" * 26 + ".b" + "y" * 31 + ".c" + "z" * 29, "artifact_id": "x" * 62 + f"{i % 100:02d}", "pixel_hash": "pixels-v1:" + f"{i:064x}"}
+            for i in range(n)
+        ]
+        data = json.dumps({"record_type": "release_candidate_manifest", "schema_version": 1, "catalog_id": "catalog", "release_id": "rc-0001", "registry_hash": "sha256:" + "0" * 64, "entries": entries, "status": "CANDIDATE"}).encode()
+        record = parse_record(ReleaseCandidateManifest, data)
+        size = len(canonical_json(record))
+        rows.append({"entries": n, "bytes": size, "parse_seconds": round(_timed(lambda d=data: parse_record(ReleaseCandidateManifest, d), repeats=3), 3)})
+    return {"rows": rows}
+
+
+def worst_png() -> dict:
+    """File size of the worst legal store PNG: a 1024 px RGBA noise square written without compression (zlib 0) and at zlib 9."""
+    import os as _os
+
+    dim = 1024
+    samples = _os.urandom(dim * dim * 4)
+    sizes = {}
+    for level in (0, 9):
+        raw = b"".join(b"\x00" + samples[y * dim * 4 : (y + 1) * dim * 4] for y in range(dim))
+        ihdr = struct.pack(">IIBBBBB", dim, dim, 8, 6, 0, 0, 0)
+        from tests.visual_assets.store import builders as b
+
+        png = b"\x89PNG\r\n\x1a\n" + b.png_chunk(b"IHDR", ihdr) + b.png_chunk(b"IDAT", zlib.compress(raw, level)) + b.png_chunk(b"IEND", b"")
+        sizes[f"zlib_level_{level}_bytes"] = len(png)
+    sizes["decoded_bytes"] = dim * (dim * 4 + 1)
+    return sizes
+
+
 def record_sizes() -> dict:
     """Serialized sizes of every fixture record and of the largest record the contracts allow."""
     from tests.visual_assets.store import builders as b
@@ -161,71 +233,31 @@ def record_sizes() -> dict:
     }
 
 
-def registry_load() -> dict:
-    """Load time and file size of a registry at MAX_VISUAL_KEYS keys and MAX_ALIASES aliases, for a realistic and the widest key."""
+def registry_at_byte_bound() -> dict:
+    """Load time of a realistic registry (2 axes x 4 values per key) grown to just under MAX_REGISTRY_BYTES, best of 3."""
     import yaml
 
     from visual_assets.store import config
     from visual_assets.store.catalog.registry import load_registry
 
-    def build(keys: int, aliases: int, axes: int, values: int) -> bytes:
+    def build(keys: int) -> bytes:
         entries = [
-            {
-                "key": f"ui.family{i % 40}.entry{i}",
-                "family": f"family{i % 40}",
-                "description": "A realistic one-line description of what this visual key is for",
-                "variant_axes": [{"name": f"axis{a}", "values": [f"value{v}" for v in range(values)]} for a in range(axes)],
-                "optional": False,
-            }
+            {"key": f"ui.family{i % 40}.entry{i}", "family": f"family{i % 40}", "description": "A realistic one-line description of what this visual key is for",
+             "variant_axes": [{"name": f"axis{a}", "values": [f"value{v}" for v in range(4)]} for a in range(2)], "optional": False}
             for i in range(keys)
         ]
-        links = [{"alias": f"ui.old{i}.entry{i}", "target": f"ui.family{i % 40}.entry{i}"} for i in range(aliases)]
-        return yaml.safe_dump({"record_type": "visual_key_registry", "schema_version": 1, "keys": entries, "aliases": links}).encode()
+        return yaml.safe_dump({"record_type": "visual_key_registry", "schema_version": 1, "keys": entries, "aliases": []}).encode()
 
-    rows = []
+    config.MAX_VISUAL_KEYS = 1 << 20  # the byte bound is what is measured here, not the key count
+    keys = 1
+    while len(build(keys + 64)) <= config.MAX_REGISTRY_BYTES:
+        keys += 64
+    data = build(keys)
     with tempfile.TemporaryDirectory() as tmp:
-        probe = Path(tmp) / "probe.yaml"
-
-        def accepted(keys: int, axes: int, values: int) -> bool:
-            probe.write_bytes(build(keys, 0, axes, values))
-            try:
-                load_registry(probe, allow_fixture_namespace=True)
-            except Exception:  # noqa: BLE001
-                return False
-            return True
-
-        effective = {}
-        for label, axes, values in (("realistic: 2 axes x 4 values", 2, 4), ("no axes", 0, 0)):
-            low, high = 1, config.MAX_VISUAL_KEYS
-            while low < high:  # the registry goes through parse_record, so MAX_RECORD_BYTES bounds it too
-                mid = (low + high + 1) // 2
-                low, high = (mid, high) if accepted(mid, axes, values) else (low, mid - 1)
-            effective[label] = low
-        real_limit = config.MAX_RECORD_BYTES
-        config.MAX_RECORD_BYTES = 1 << 30  # time the load at the registry's own bounds
-        for label, keys, aliases, axes, values in (
-            ("realistic: 2 axes x 4 values", config.MAX_VISUAL_KEYS, config.MAX_ALIASES, 2, 4),
-            ("no axes", config.MAX_VISUAL_KEYS, config.MAX_ALIASES, 0, 0),
-            ("widest key: 8 axes x 64 values, 100 keys", 100, 0, 8, 64),
-        ):
-            data = build(keys, aliases, axes, values)
-            path = Path(tmp) / "registry.yaml"
-            path.write_bytes(data)
-            row = {"case": label, "keys": keys, "aliases": aliases, "file_bytes": len(data), "over_MAX_REGISTRY_BYTES": len(data) > config.MAX_REGISTRY_BYTES}
-            if len(data) <= config.MAX_REGISTRY_BYTES:
-                row["seconds"] = round(_timed(lambda p=path: load_registry(p, allow_fixture_namespace=True)), 3)
-                row["peak_python_mib"] = round(_peak_bytes(lambda p=path: load_registry(p, allow_fixture_namespace=True)) / MIB, 1)
-            rows.append(row)
-        # the largest registry that fits the byte bound, per case: how many keys a MAX_REGISTRY_BYTES file really holds
-        per_key = {}
-        for label, axes, values in (("realistic: 2 axes x 4 values", 2, 4), ("no axes", 0, 0)):
-            per_key[label] = round(len(build(1000, 0, axes, values)) / 1000, 1)
-    return {
-        "rows": rows,
-        "bytes_per_key": per_key,
-        "keys_accepted_with_real_MAX_RECORD_BYTES": effective,
-        "limits": {"MAX_REGISTRY_BYTES": config.MAX_REGISTRY_BYTES, "MAX_RECORD_BYTES": real_limit},
-    }
+        path = Path(tmp) / "registry.yaml"
+        path.write_bytes(data)
+        run = lambda: load_registry(path, allow_fixture_namespace=True)  # noqa: E731
+        return {"keys": keys, "file_bytes": len(data), "MAX_REGISTRY_BYTES": config.MAX_REGISTRY_BYTES, "seconds": round(_timed(run, repeats=3), 3), "peak_python_mib": round(_peak_bytes(run) / MIB, 1)}
 
 
 # ---------------------------------------------------------------- real-Aseprite measurements (local only, ADR D10)
@@ -353,7 +385,10 @@ def aseprite_timing() -> dict:
 
 MEASUREMENTS = {
     "record_sizes": record_sizes,
-    "registry_load": registry_load,
+    "registry_at_byte_bound": registry_at_byte_bound,
+    "registry_scaling": registry_scaling,
+    "manifest_scaling": manifest_scaling,
+    "worst_png": worst_png,
     "decode_scaling": decode_scaling,
     "decode_at_decoded_bytes_bound": decode_at_decoded_bytes_bound,
     "aseprite_source_bytes": aseprite_source_bytes,

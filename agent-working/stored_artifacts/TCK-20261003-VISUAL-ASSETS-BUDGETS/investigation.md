@@ -57,3 +57,11 @@ Bytes per key: 319.5 (2 axes x 4 values), 162.5 (no axes). **With the real `MAX_
 
 ## Findings for the planner
 F1-F6 in `docs/assets/budgets.md`. Not fixed here (out of scope): the registry bound conflict (F1), `MAX_DECODED_BYTES` double role (F4), the decoder cost (F3).
+
+## Follow-up measurements (after the planner's rulings)
+
+- `worst_png`: 1024 px RGBA random noise: 4195716 B at zlib 0, 4196671 B at zlib 9 (decoded 4195328 B). `MAX_PNG_FILE_BYTES` = 65 x 64 KiB = 4259840.
+- `manifest_scaling` (maximum-length ids): 1024 entries 292073 B (292081 B in the guard test), parse 0.003 s; 2048: 583913 B, 0.008 s; 3072: 875753 B, 0.015 s; 4096: 1167593 B, 0.015 s. `MAX_MANIFEST_BYTES` = 5 x 64 KiB = 327680.
+- `registry_scaling` (real `load_registry`, best of 3, 2 axes x 4 values): 256 keys 96440 B 0.235 s; 512 keys 193284 B 0.598 s; 1024 keys 387038 B 1.044 s (22.4 MiB). No axes: 0.113 / 0.228 / 0.526 s. An earlier best-of-2 pass (4096 allowed then): 2048 keys 715226 B 2.294 s, 3072 keys 1043426 B 2.218 s (noisy: other sessions share this machine), 4096 no-axis keys 728538 B 1.68 s. 4096 two-axis keys (1371610 B) were over any byte bound.
+- `registry_at_byte_bound`: 1409 realistic keys, 450530 B (bound 458752): 1.115 s, 26.0 MiB.
+- Guard test sizes of the maximum legal instance (4-byte text, `MAX_VISUAL_KEYS` = 1024): `IntakeResult` 70540 B, `CandidateHandoffPackage` 25534 B, `ReleaseCandidateManifest` 292081 B, `VisualKeyRegistry` 363498 B (compact JSON), the rest <= 2950 B.

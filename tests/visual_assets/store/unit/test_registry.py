@@ -125,7 +125,8 @@ def test_count_bounds(tmp_path, monkeypatch):
 
 
 def test_size_bound(tmp_path, monkeypatch):
-    path = write(tmp_path, HEAD + "keys: []\naliases: []\n")
+    # padded with a comment: the bound applies to the file and, as compact JSON, to the parsed body, which must not exceed it
+    path = write(tmp_path, HEAD + "keys: []\naliases: []\n# " + "x" * 200 + "\n")
     size = path.stat().st_size
     monkeypatch.setattr(config, "MAX_REGISTRY_BYTES", size)
     load_registry(path)

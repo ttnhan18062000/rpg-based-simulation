@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import Annotated, ClassVar, Literal
 
 from pydantic import Field, StringConstraints, model_validator
 
@@ -53,3 +53,4 @@ class VisualKeyRegistry(StoreRecord):
     schema_version: Literal[1]
     keys: tuple[VisualKeyDefinition, ...]
     aliases: tuple[AliasEntry, ...]
+    size_bound: ClassVar[str] = "MAX_REGISTRY_BYTES"  # the registry is a hand-edited file of up to MAX_VISUAL_KEYS keys
