@@ -759,8 +759,8 @@ A deterministic, tick-based RPG world simulation in Python (about 740 source fil
 about 90 tool scripts, roughly 2,300 closed tickets, about 320 squash-merged commits on `main`).
 Entities (heroes, enemies, factions) act inside a world governed by written "laws": a Mechanics
 Bible (6 chapters: entity anatomy, combat, economy, strategic cognition, world evolution,
-worldbuilding) and engine contracts (a 7-phase kernel loop; a 39-phase authoritative mutation
-pipeline). Determinism is a hard requirement. Documentation and code must stay in semantic parity,
+worldbuilding) and engine contracts (a 7-phase kernel loop; an authoritative mutation
+pipeline of refinement phases). Determinism is a hard requirement. Documentation and code must stay in semantic parity,
 tracked by a machine-readable parity ledger.
 
 Most of the *engineering effort* is done by AI agents (Claude Code), coordinated by a human owner.

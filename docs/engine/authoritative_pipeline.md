@@ -8,13 +8,22 @@ audience: developer
 # Authoritative Refinement Pipeline
 
 > [!IMPORTANT]
-> **The Singular Bottleneck Law**: All state transitions must pass through this pipeline. No system, worker, or external process may mutate the `AuthoritativeState` directly. All changes must be represented as a `StateUpdate` and refined through these 39 phases.
+> **The Singular Bottleneck Law**: All state transitions must pass through this pipeline. No system, worker, or external process may mutate the `AuthoritativeState` directly. All changes must be represented as a `StateUpdate` and refined through these refinement phases.
 
 The `AuthoritativeApplyPipeline` ensures that concurrent "intents" from workers are resolved into a deterministic, causally-consistent state update.
 
-## The 39 Phases of Refinement
+## The Phases of Refinement
 
-Phase names match the `run_phase()` call identifiers in `src/engine/pipeline.py:refine()`. Phases may be skipped if their associated feature flag is disabled.
+### Counted units (PERF-D6, approved 2026-10-03)
+
+- A **refinement phase** is one `run_phase()` call in `AuthoritativeApplyPipeline.refine` (`src/engine/pipeline.py`), identified by its name literal. This document's table is about refinement phases.
+- A **kernel phase** is a `TickPhase` member of the kernel loop (`docs/engine/kernel.md`). `src/engine/phase_domain_permissions.py` is keyed by kernel phases; it is a different unit with no name overlap.
+
+Prose says which unit it means and does not state a refinement-phase count as a literal number: the count changes with RPG-core work (one phase was added between 2026-09-08 and 2026-10-02), so counts are generated, not handwritten. The generated list, with its differences from this table, is `docs/performance/phase_inventory.md` (`python3 tools/perf/phase_inventory.py --check docs/performance/phase_inventory.json` reports drift).
+
+**This table has not been checked against the code.** The generated inventory shows that it lacks six executable refinement phases and lists one name (`active_contracts`) that matches no `run_phase()` call. Table rows are not hand-added or renamed to close that gap. When the typed phase catalog lands (`PERF-M3-T01`), `PhaseDependencyGraph.PHASES` in `src/engine/phase_graph.py` becomes the normative source: one typed entry per refinement phase in execution order, with a conformance test against the `run_phase()` calls, and this table is then generated from or checked against it. Today that catalog is partial (it declares fewer names than `refine` runs, and `should_run_phase()` returns `True` for a name it does not list).
+
+Phase names in the table match `run_phase()` call identifiers in `src/engine/pipeline.py:refine()` only as far as the inventory above confirms. Phases may be skipped if their associated feature flag is disabled.
 
 | # | Phase Name | Primary Responsibility |
 | :--- | :--- | :--- |

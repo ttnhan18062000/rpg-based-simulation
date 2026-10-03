@@ -22,17 +22,19 @@ The Certification Contract defines the formal proof requirements for an engine r
 ## 2. Conformance Proof Taxonomy
 A run is marked as `FAILED` if any of the following are observed:
 - `FAILED_ENVELOPE`: Exceeded RAM/CPU/Queue ceilings defined in the profile.
-- `FAILED_DEGRADATION_ORDER`: The governor failed to shed load in the correct priority order.
-- `FAILED_RECOVERY`: The engine failed to return to NORMAL mode within the declared timeout after pressure was removed.
-- `FAILED_SEMANTIC_DRIFT`: The final authoritative hash differs from the deterministic baseline run.
+- `FAILED_DEGRADATION_SEQUENCE`: The governor failed to shed load in the correct priority order. (An earlier version of this document called it `FAILED_DEGRADATION_ORDER`; the code's name is the reference.)
+- `FAILED_RECOVERY_TIMEOUT`: The engine failed to return to NORMAL mode within the declared timeout after pressure was removed. (Earlier name `FAILED_RECOVERY`.)
+- `FAILED_SEMANTIC_DRIFT`: The final authoritative hash (the proof digest, `docs/engine/deterministic_execution.md`) differs from the deterministic baseline run.
 - `FAILED_REPORTING_INCOMPLETE`: Measurements were missing or corrupt.
 
 ## 3. Hardware Classification Rules (Proof-Stable)
+**This section is the single definition of hardware class** (PERF-D4, approved 2026-10-03). Other documents refer here and do not restate the thresholds. `src/certification/hardware.py` (`HardwareClassifier.detect_class`) implements it.
+
 Classification is binary and deterministic based on host resources at startup:
 - **CLASS_A**: $\ge$ 16 Logical Cores AND $\ge$ 32GB Total RAM.
 - **CLASS_B**: $\ge$ 4 Logical Cores AND $\ge$ 8GB Total RAM.
 - **CLASS_C**: All other systems.
-- **Override Rule**: Overriding hardware class is permitted for testing but MUST be recorded with `hardware_class_override_applied: true`.
+- **Override Rule**: Overriding hardware class is permitted for testing but MUST be recorded. The recorded field is `override_applied` in the evidence environment record (an earlier version of this document named it `hardware_class_override_applied`; the code's name is the reference).
 
 ## 4. Measurement & Sampling
 - **Sampling Cadence**: Defined per scenario (e.g., sample every 10 ticks).

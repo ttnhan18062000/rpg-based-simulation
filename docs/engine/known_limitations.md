@@ -90,7 +90,7 @@ Decision recorded in `docs/guidelines/intentional_divergences.md` § DEV-002
 
 **Isolation breaches in non-audit phases are only fully caught in `audit_mode=True`.**
 
-The Kernel's `_guard_stability()` method fingerprints the full `AuthoritativeState` (SHA-256 over all fields) before read-only phases (Scheduling, Collection) and raises `ProtocolViolationError` on any mutation. This full check is **only active when `Kernel` is initialized with `audit_mode=True`** (used in certification scenarios — see `src/certification/harness.py`).
+The Kernel's `_guard_stability()` method computes the MD5 fingerprint (`AuthoritativeState.fingerprint()`, over selected state domains, not all fields; see §2.4) before read-only phases (Scheduling, Collection) and raises `ProtocolViolationError` on any mutation. This full check is **only active when `Kernel` is initialized with `audit_mode=True`** (used in certification scenarios — see `src/certification/harness.py`).
 
 A **lightweight gross isolation guard** (`_guard_gross_isolation()`) runs unconditionally in standard (non-audit) mode. It checks only `len(state.entities)` and `state.tick` — two O(1) integer reads with negligible overhead on all hardware classes. This detects:
 - Entity creation or deletion mid-phase (gross lifecycle violation)
@@ -110,15 +110,16 @@ Source: D09 Finding 5 (Risk 11/15). Ticket: TCK-20260627-P1G-STABILITY-GUARD.
 
 ### 2.4 Canonical State Hash Availability by Runtime Mode
 
-`_phase_persistence()` in `src/engine/kernel.py` records a `tick_hash` value in the
-`TICK_END` replay event. Whether that value is a real SHA-256 or the sentinel string
-`"SKIPPED"` depends on the active `GovernorPolicy`:
+`_phase_persistence()` in `src/engine/kernel.py` records a per-tick digest value under the payload
+key `"hash"` of the `TICK_END` replay event. Whether that value is a real SHA-256 (the proof
+digest, `flat-sha256-v1`; see `docs/engine/deterministic_execution.md`) or the sentinel string
+`"SKIPPED"` depends on the active `GovernorPolicy`, and on `audit_mode`:
 
 | RuntimeMode | `replay_richness` | `replay_allowed` | TICK_END `hash` value |
 |---|---|---|---|
 | NORMAL | "FULL" | True | SHA-256 canonical hash |
 | CONSTRAINED | "FULL" | True | SHA-256 canonical hash |
-| DEGRADED | "MINIMAL" | True | `"SKIPPED"` |
+| DEGRADED | "MINIMAL" | True | `"SKIPPED"`, unless `audit_mode` is on (audit mode forces the SHA-256 hash in every mode that allows replay) |
 | SURVIVAL | "OFF" | False | no TICK_END event emitted |
 
 In **NORMAL** and **CONSTRAINED** modes — the two most common runtime configurations —
