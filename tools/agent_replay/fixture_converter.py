@@ -252,6 +252,8 @@ def convert_sample(
 ) -> list[ConversionResult]:
     results = []
     for ticket_id in ticket_ids:
+        # Flat only, on purpose: the sampler selects top-level done/*.md tickets only (its docstring), so a nested
+        # epic-folder ticket is never sampled; an ID passed by hand fails loudly as "missing ticket file".
         ticket_path = done_dir / f"{ticket_id}.md"
         stored_artifacts_dir = stored_artifacts_root / ticket_id
         results.append(

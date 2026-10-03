@@ -20,18 +20,25 @@ def test_calamity_raid_maturity_advancement():
     assert update.maturity_set == 1
 
 def test_calamity_raid_spawning():
+    # TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION: the global
+    # world-clock raid (check_for_raid) is RETIRED -- measured over 2 corpus worlds, it had never
+    # produced a raid. What this test really exercises is raid composition, which survives as
+    # spawn_raid on the camp path, so it now drives that with an explicit origin/target. The
+    # retirement itself is asserted in tests/unit/world/test_global_raid_retired.py.
     generator = EntityGenerator(seed=42)
-    # Raid occurs every 5 days (500 ticks)
     state = AuthoritativeState(tick=500, seed=42, maturity=2)
-    
-    update = RaidService.check_for_raid(state, generator)
+
+    raid_size = RaidService.RAID_BASE_SIZE + state.maturity
+    update = RaidService.spawn_raid(
+        state, generator, origin=(120.0, 120.0), target=(130.0, 130.0), raid_size=raid_size,
+    )
 
     # Raid size = Base (3) + Maturity (2) = 5
     assert len(update.entities_add) == 5
     for mob in update.entities_add:
         assert mob.kind == "goblin_raider"
-        # Navigation target should be town (0,0)
-        assert mob.navigation.target == (0, 0)
+        # Navigation target is whatever the caller passed -- spawn_raid has no opinion of its own.
+        assert mob.navigation.target == (130.0, 130.0)
         # TCK-20260913-HOTFIX-GUILDNEEDSCORER-HIJACKS-HOSTILE-ENTITY-NAVIGATION: a raid mob's
         # navigation.target is a raw assignment with no accompanying strategic project, so any
         # capacity-gated goal scorer (confirmed real: GuildNeedScorer, once its own flag actually
@@ -42,24 +49,36 @@ def test_calamity_raid_spawning():
         assert mob.strategic.profile.max_active_projects == 0
 
 
-def test_calamity_raid_spawn_positions_unchanged_by_spawn_raid_extraction():
+def test_calamity_raid_spawn_positions_are_the_ring_around_the_given_origin():
     """
-    TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX: check_for_raid() was refactored to delegate to a
-    new RaidService.spawn_raid(origin, target, raid_size) so the camp-triggered path could reuse
-    the composition logic with a real origin/target. This proves the global (non-camp) caller's
-    output is byte-identical to before the extraction -- not just kind/target (already covered
-    above) but the exact spawn positions, independently recomputed from the same RNG call the
-    pre-refactor code made directly.
+    Spawn positions are the deterministic ring around the origin the caller passed, independently
+    recomputed from the same RNG call the service makes.
+
+    Originally TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX asserted byte-identical positions against a
+    hardcoded (0,0) origin, because the only caller then passed (0,0).
+    TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION retired that caller,
+    so the expectation is recomputed from an explicit origin instead of from zero. The ring geometry
+    this test was really guarding is unchanged and still asserted.
+
+    The explicit non-empty assertion matters: an earlier revision of this test went *vacuously
+    green* -- its fixture produced no raiders, so the loop body never ran and it asserted nothing.
     """
     generator = EntityGenerator(seed=42)
     state = AuthoritativeState(tick=500, seed=42, maturity=2)
+    anchor = (120.0, 120.0)
 
-    update = RaidService.check_for_raid(state, generator)
+    update = RaidService.spawn_raid(
+        state, generator, origin=anchor, target=(130.0, 130.0), raid_size=5,
+    )
+    assert update.entities_add, "no raiders spawned -- this test would otherwise pass vacuously"
 
     rng = DeterministicRNG(state.seed)
     angle = rng.get_float(Domain.CALAMITY, state.tick, 0) * 2 * math.pi
     dist = RaidService.SANCTUARY_RADIUS + 10
-    expected_spawn_pos = (int(math.cos(angle) * dist), int(math.sin(angle) * dist))
+    expected_spawn_pos = (
+        anchor[0] + int(math.cos(angle) * dist),
+        anchor[1] + int(math.sin(angle) * dist),
+    )
 
     for i, mob in enumerate(update.entities_add):
         expected_pos = (

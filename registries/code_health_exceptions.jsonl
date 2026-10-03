@@ -54,7 +54,7 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/api/admission_control.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/api/admission_control.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/api/agent_ops_dashboard/__init__.py", "retiring_ticket": null, "reviewed": false, "rule": "D104", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 1022, "file": "src/api/agent_ops_dashboard/ingest.py", "retiring_ticket": null, "reviewed": false, "rule": "module-length", "symbol": null, "tool": "line_count", "value": 1022}
+{"added_date": "2026-10-02", "ceiling": 1026, "file": "src/api/agent_ops_dashboard/ingest.py", "retiring_ticket": null, "reviewed": false, "rule": "module-length", "symbol": null, "tool": "line_count", "value": 1026}
 {"added_date": "2026-10-02", "ceiling": 2, "file": "src/api/agent_ops_dashboard/ingest.py", "retiring_ticket": null, "reviewed": false, "rule": "ANN001", "symbol": null, "tool": "ruff", "value": 2}
 {"added_date": "2026-10-02", "ceiling": 2, "file": "src/api/agent_ops_dashboard/ingest.py", "retiring_ticket": null, "reviewed": false, "rule": "ANN204", "symbol": null, "tool": "ruff", "value": 2}
 {"added_date": "2026-10-02", "ceiling": 5, "file": "src/api/agent_ops_dashboard/ingest.py", "retiring_ticket": null, "reviewed": false, "rule": "D102", "symbol": null, "tool": "ruff", "value": 5}
@@ -619,7 +619,7 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/core/update_models/resources.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/core/update_models/resources.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 2, "file": "src/core/update_models/resources.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 2}
-{"added_date": "2026-10-02", "ceiling": 1300, "file": "src/core/updates.py", "retiring_ticket": null, "reviewed": false, "rule": "module-length", "symbol": null, "tool": "line_count", "value": 1300}
+{"added_date": "2026-10-02", "ceiling": 1322, "file": "src/core/updates.py", "retiring_ticket": null, "reviewed": false, "rule": "module-length", "symbol": null, "tool": "line_count", "value": 1322}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/core/updates.py", "retiring_ticket": null, "reviewed": false, "rule": "ANN003", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 7, "file": "src/core/updates.py", "retiring_ticket": null, "reviewed": false, "rule": "C901", "symbol": null, "tool": "ruff", "value": 7}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/core/updates.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
@@ -1100,7 +1100,7 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/apply_plan.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0915", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/apply_plan.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR1702", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 301, "file": "src/engine/apply_plan.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "ApplyPlanBuilder.build_plan", "tool": "complexipy", "value": 301}
-{"added_date": "2026-10-02", "ceiling": 310, "file": "src/engine/apply_plan.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "ApplyPlanBuilder.build_plan", "tool": "line_count", "value": 310}
+{"added_date": "2026-10-02", "ceiling": 314, "file": "src/engine/apply_plan.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "ApplyPlanBuilder.build_plan", "tool": "line_count", "value": 314}
 {"added_date": "2026-10-02", "ceiling": 4, "file": "src/engine/behavior_consumers.py", "retiring_ticket": null, "reviewed": false, "rule": "ANN201", "symbol": null, "tool": "ruff", "value": 4}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/behavior_consumers.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 3, "file": "src/engine/behavior_consumers.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 3}
@@ -1703,7 +1703,7 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/world_dynamics.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0912", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/world_dynamics.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0915", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 119, "file": "src/engine/world_dynamics.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "WorldDynamicsSystem.resolve_dynamics", "tool": "complexipy", "value": 119}
-{"added_date": "2026-10-02", "ceiling": 276, "file": "src/engine/world_dynamics.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "WorldDynamicsSystem.resolve_dynamics", "tool": "line_count", "value": 276}
+{"added_date": "2026-10-02", "ceiling": 281, "file": "src/engine/world_dynamics.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "WorldDynamicsSystem.resolve_dynamics", "tool": "line_count", "value": 281}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/world_index.py", "retiring_ticket": null, "reviewed": false, "rule": "C901", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/world_index.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 3, "file": "src/engine/world_index.py", "retiring_ticket": null, "reviewed": false, "rule": "D102", "symbol": null, "tool": "ruff", "value": 3}
@@ -2162,7 +2162,7 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/entity_timeline.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/entity_timeline.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/entity_timeline.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 1741, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "module-length", "symbol": null, "tool": "line_count", "value": 1741}
+{"added_date": "2026-10-02", "ceiling": 1744, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "module-length", "symbol": null, "tool": "line_count", "value": 1744}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "C901", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 3, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 3}
@@ -2171,10 +2171,10 @@
 {"added_date": "2026-10-02", "ceiling": 2, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "PLC0415", "symbol": null, "tool": "ruff", "value": 2}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0912", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0915", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 1668, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "class-length", "symbol": "EventExtractor", "tool": "line_count", "value": 1668}
+{"added_date": "2026-10-02", "ceiling": 1671, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "class-length", "symbol": "EventExtractor", "tool": "line_count", "value": 1671}
 {"added_date": "2026-10-02", "ceiling": 789, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "EventExtractor.extract", "tool": "complexipy", "value": 789}
-{"added_date": "2026-10-02", "ceiling": 1586, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "EventExtractor.extract", "tool": "line_count", "value": 1586}
-{"added_date": "2026-10-02", "ceiling": 17, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "duplicate-block", "symbol": "dup:src/observability/event_shapers.py", "tool": "jscpd", "value": 17}
+{"added_date": "2026-10-02", "ceiling": 1589, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "EventExtractor.extract", "tool": "line_count", "value": 1589}
+{"added_date": "2026-10-02", "ceiling": 28, "file": "src/observability/event_extractor.py", "retiring_ticket": null, "reviewed": false, "rule": "duplicate-block", "symbol": "dup:src/observability/event_shapers.py", "tool": "jscpd", "value": 28}
 {"added_date": "2026-10-02", "ceiling": 5, "file": "src/observability/event_recorder.py", "retiring_ticket": null, "reviewed": false, "rule": "BLE001", "symbol": null, "tool": "ruff", "value": 5}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/event_recorder.py", "retiring_ticket": null, "reviewed": false, "rule": "C901", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/event_recorder.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
@@ -2186,7 +2186,7 @@
 {"added_date": "2026-10-02", "ceiling": 5, "file": "src/observability/event_recorder.py", "retiring_ticket": null, "reviewed": false, "rule": "PLC0415", "symbol": null, "tool": "ruff", "value": 5}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/event_recorder.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0912", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 24, "file": "src/observability/event_recorder.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "EventRecorder.record", "tool": "complexipy", "value": 24}
-{"added_date": "2026-10-02", "ceiling": 2014, "file": "src/observability/event_shapers.py", "retiring_ticket": null, "reviewed": false, "rule": "module-length", "symbol": null, "tool": "line_count", "value": 2014}
+{"added_date": "2026-10-02", "ceiling": 2017, "file": "src/observability/event_shapers.py", "retiring_ticket": null, "reviewed": false, "rule": "module-length", "symbol": null, "tool": "line_count", "value": 2017}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/event_shapers.py", "retiring_ticket": null, "reviewed": false, "rule": "BLE001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 10, "file": "src/observability/event_shapers.py", "retiring_ticket": null, "reviewed": false, "rule": "C901", "symbol": null, "tool": "ruff", "value": 10}
 {"added_date": "2026-10-02", "ceiling": 11, "file": "src/observability/event_shapers.py", "retiring_ticket": null, "reviewed": false, "rule": "D102", "symbol": null, "tool": "ruff", "value": 11}
@@ -2213,7 +2213,7 @@
 {"added_date": "2026-10-02", "ceiling": 84, "file": "src/observability/event_shapers.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "StrategyShaper.shape", "tool": "complexipy", "value": 84}
 {"added_date": "2026-10-02", "ceiling": 212, "file": "src/observability/event_shapers.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "StrategyShaper.shape", "tool": "line_count", "value": 212}
 {"added_date": "2026-10-02", "ceiling": 56, "file": "src/observability/event_shapers.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "WorldDynamicsShaper.shape", "tool": "complexipy", "value": 56}
-{"added_date": "2026-10-02", "ceiling": 178, "file": "src/observability/event_shapers.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "WorldDynamicsShaper.shape", "tool": "line_count", "value": 178}
+{"added_date": "2026-10-02", "ceiling": 181, "file": "src/observability/event_shapers.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "WorldDynamicsShaper.shape", "tool": "line_count", "value": 181}
 {"added_date": "2026-10-02", "ceiling": 13, "file": "src/observability/event_shapers.py", "retiring_ticket": null, "reviewed": false, "rule": "duplicate-block", "symbol": "dup:src/observability/event_shapers.py", "tool": "jscpd", "value": 13}
 {"added_date": "2026-10-02", "ceiling": 33, "file": "src/observability/event_shapers.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "run_shadow_shapers", "tool": "complexipy", "value": 33}
 {"added_date": "2026-10-02", "ceiling": 110, "file": "src/observability/event_shapers.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "run_shadow_shapers", "tool": "line_count", "value": 110}
@@ -3433,7 +3433,7 @@
 {"added_date": "2026-10-02", "ceiling": 48, "file": "src/world/providers/services.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "ServiceOpportunityProvider.get_opportunities", "tool": "complexipy", "value": 48}
 {"added_date": "2026-10-02", "ceiling": 116, "file": "src/world/providers/services.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "ServiceOpportunityProvider.get_opportunities", "tool": "line_count", "value": 116}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/world/raid.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 4, "file": "src/world/raid.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 4}
+{"added_date": "2026-10-02", "ceiling": 5, "file": "src/world/raid.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 5}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/world/raid.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/world/region_threat_classifier.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 2, "file": "src/world/region_threat_classifier.py", "retiring_ticket": null, "reviewed": false, "rule": "PLC0415", "symbol": null, "tool": "ruff", "value": 2}

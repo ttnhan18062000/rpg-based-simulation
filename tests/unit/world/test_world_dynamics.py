@@ -59,17 +59,20 @@ def test_regional_transformation():
     
     assert refined.world_updates["f1"].kind_set == "BURNT_FOREST"
 
-def test_world_dynamics_raid_spawning():
-    # RAID_INTERVAL_DAYS=5, TICKS_PER_DAY=100 -> 500 ticks
+def test_world_dynamics_no_longer_spawns_a_global_raid_on_the_cadence_tick():
+    # RAID_INTERVAL_DAYS=5, TICKS_PER_DAY=100 -> 500 ticks was the global raid's cadence tick.
+    # TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION retired that path:
+    # it spawned raiders on the radius-25 ring around world coordinate (0,0), outside every region,
+    # where they sat inert, and measurement over 2 corpus worlds showed it had never produced a
+    # raid. Camp-triggered raids, which have real provenance, are unaffected.
     state = AuthoritativeState(tick=500, seed=42)
     generator = EntityGenerator(42)
     update = StateUpdate()
-    
+
     refined = WorldDynamicsSystem.resolve_dynamics(state, update, generator)
-    
-    # Raiders should be added (default 3 + maturity 0 = 3)
+
     raiders = [e for e in refined.entities_add if e.kind == "goblin_raider"]
-    assert len(raiders) == 3
+    assert raiders == [], f"{len(raiders)} raider(s) spawned from the retired global path"
 
 
 def test_boss_spawn_is_idempotent_even_if_existing_boss_left_region():

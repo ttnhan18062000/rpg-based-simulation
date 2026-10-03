@@ -86,7 +86,12 @@ class TestRealRaidMobNeverScoresGuild:
 
         generator = EntityGenerator(seed=42)
         state = AuthoritativeState(tick=500, seed=42, maturity=0)
-        update = RaidService.check_for_raid(state, generator)
+        # TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION: the global
+        # world-clock raid (check_for_raid) is retired. spawn_raid is the surviving composition
+        # entry point -- the camp path's -- and is what actually produces the mob this test needs.
+        update = RaidService.spawn_raid(
+            state, generator, origin=(120.0, 120.0), target=(130.0, 130.0), raid_size=3,
+        )
         assert update.entities_add, "sanity: raid must actually spawn mobs for this test to mean anything"
 
         raider = update.entities_add[0]

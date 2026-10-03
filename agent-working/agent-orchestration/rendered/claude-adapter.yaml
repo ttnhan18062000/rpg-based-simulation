@@ -133,3 +133,18 @@ terminal_statuses:
   kind: literal
   phases:
   - Finalize
+- value: WORKFLOW_ERROR
+  kind: literal
+  phases:
+  - Scope
+  - Investigate
+  - Plan
+  - Review
+  - Implement
+  - Document-Update
+  - Architecture-Verify
+  - Test
+  - Parity
+  - Security-Review
+  - Verify
+  - Finalize

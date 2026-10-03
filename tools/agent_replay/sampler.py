@@ -47,6 +47,13 @@ _GATE_FAILURE_STATUSES = frozenset(
         "GATE_FAIL",
         "PARITY_INCOMPLETE",
         "ANCHORS_STILL_FAILING",
+        "WORKFLOW_ERROR",
+        "SCOPE_AGENT_FAILED",
+        "TEST_SCOPE_COVERAGE_FAILED",
+        "DATA_RUNS_CLEAN_FAILED",
+        "SECURITY_BLOCKED",
+        "FINALIZE_INCOMPLETE",
+        "BLOCKED",
     }
 )
 

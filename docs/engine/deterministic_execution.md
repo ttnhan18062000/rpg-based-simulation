@@ -3,7 +3,7 @@ status: active
 layer: engine
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-10-03
 ---
 
 # Deterministic Execution Contract
@@ -23,22 +23,79 @@ This guarantee is the foundation for replay fidelity, regression testing, and pa
 
 ## Scope of the guarantee
 
-**In scope:** Sequential execution mode. Every tick in a single-threaded simulation run is bit-identical given the same seed.
+Approved decision: PERF-D2 (`docs/architecture/performance_optimization_decisions.md`). The guarantee is stated in tiers, and only what a passing test matrix proves is claimed.
 
-**Out of scope:** Concurrent execution mode. When multiple worker threads run in parallel, message delivery order is non-deterministic at the OS level. Known-limitations.md documents that bit-identical parity is ratified for sequential mode only. Concurrent mode is designed for throughput, not bit-exact determinism.
+| Tier | Scope | Claim |
+|---|---|---|
+| DET-PORT-0 | Same build, same interpreter minor version, same OS and CPU architecture, sequential executor, Canonical contract | Guaranteed. This is the certification reference. |
+| DET-PORT-1 | The DET-PORT-0 environment with a different executor backend (thread, process) or worker count, and any `PYTHONHASHSEED` | Guaranteed only for backends and worker counts in a passing parity matrix; otherwise unclaimed. |
+| DET-PORT-2 | A different OS, CPU architecture, interpreter minor version, or native-extension build | Not guaranteed. A combination is promoted to a claim only after it passes the same matrix. |
+
+The reference runtime is the one CI runs: CPython 3.13 on Linux x86-64. Every benchmark result, baseline, and hash proof records its tier and its runtime identity (interpreter version and build flavor, OS, architecture, and the versions of any native kernels). A proof is comparable only within its tier.
+
+**Current state.** The tiers are the approved contract. Recording a tier on results is pending (`PERF-M2-T02` defines the benchmark identity schema), and which executor backends and worker counts pass parity today has not been measured. The only claim that stands on evidence is the one this document made before: sequential execution on one machine, subject to the wall-clock inputs listed under "What runs today". Concurrent execution mode is outside DET-PORT-0. `docs/engine/known_limitations.md` records that bit-identical parity is ratified for sequential mode only. DET-PORT-1 replaces that statement only for the backend and worker-count combinations that pass the matrix (the matrix is not yet run; implementation is pending, tracked under `PERF-M1`).
+
+---
+
+## The two contracts: Canonical and Live bounded
+
+Approved decision: PERF-D1, with amendment A1. Two contracts exist for two uses; a run states which one it ran under.
+
+- **Canonical contract.** No wall-clock or host-resource reading may influence authoritative state. Pressure signals are deterministic proxies (work-unit counts, queue depth against a fixed ceiling, work debt). The mid-tick cutoff and the end-of-tick drop are driven by a work-unit budget or are off. Guarantee: the same build, configuration, seed, and initial state give the same proof digest at every tick, whatever the host load. Required for certification, determinism and replay tests, Simulation Quality calibration, and any benchmark that claims hash parity.
+- **Live bounded contract.** Real wall-clock and resource signals are allowed. Every decision that changes what is computed is either written to a versioned, bounded control trace or is derivable from one that is. Guarantee: a Live run is reproducible **given its trace**: a Canonical-mode replay that consumes the trace reaches the same hashes. The trace is not predictable in advance, and that is accepted.
+- **Rule A1, part of both contracts.** A game-facing signal (any value that systems read from `AuthoritativeState` to change gameplay: prices, salience, and anything derived from them) is computed from deterministic inputs only. Host timing and resources may choose how much work the engine does (mode, budgets, cadence). They never change what the world's rules produce.
+
+### Control-input classification
+
+| Decision | Treatment |
+|---|---|
+| `RuntimeMode` transition (tick, from, to) | Recorded |
+| Mid-tick cutoff: how many sorted results were applied before the drop | Recorded (the mode alone does not say which results were lost) |
+| End-of-tick dropped-work marker | Recorded |
+| Phase budgets emitted from measured sub-phase cost | Recorded as emitted values; the costs that produced them are not |
+| Scan policy, cadence, LOD, sweep interval | Derived from the recorded mode and budgets; a test proves the derivation |
+| Worker completion order | Not recorded; results are canonically sorted before resolution |
+| Frame pacing, GC timing | Not recorded; no effect on authoritative state |
+
+### What runs today
+
+**Today's runs satisfy neither contract fully.** Four wall-clock inputs change what is computed, in every execution mode unless `audit_mode` is on:
+
+1. `ResourceGovernor._get_indicated_mode()` (`src/engine/governor.py`) chooses `RuntimeMode` from `tick_compute_ms`, resident memory, and worker and queue utilization; the mode then sets cadence, LOD, scan policy, and phase budgets.
+2. `Kernel._phase_resolution()` (`src/engine/kernel.py`) compares elapsed wall-clock time with `profile.max_tick_budget_ms` while processing results; when exceeded and `audit_mode` is off, it drops the remaining results, records dropped work, and forces `DEGRADED`.
+3. An end-of-tick check in `Kernel._tick_once_inner` records dropped work when the final compute time exceeds the budget after tick 5.
+4. **World-pressure salience.** The previous tick's measured `tick_compute_ms` becomes `compute_ratio` and `global_salience` in `Kernel._phase_resolution`, is applied to `AuthoritativeState.pressure_signals` (`src/engine/apply.py`), and multiplies shop buy prices (`DynamicPriceService.calculate_buy_price`, used by `ShopService.buy_item` for the gold check and cost). A slower or busier host makes items cost more, and no `RuntimeMode` change is involved. This violates rule A1; the fix removes `compute_ratio` from `global_salience` and is pending in `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING` (it edits `src/` and waits for the RPG-core entry gate). Until then, salience still includes `compute_ratio`.
+
+`audit_mode` zeroes the timing and resource signals, so it suppresses the first, third, and fourth inputs, and it disables the cutoff in the second (`flags["audit_mode"]`, `src/engine/kernel.py`). It is the current way to get a deterministic run; it is not the Canonical contract, which has no implementation yet (`PERF-M1`).
+
+`verification_level = REDUCED` stays the label for a run that reached `DEGRADED` or `SURVIVAL` and has no verified control trace. It discloses the problem per run and does not make the run reproducible.
+
+**Inputs the Canonical proxy set must replace.** In addition to the four above, two inputs reach control decisions and are classified by the table above: the replay-buffer backlog, which is one of the governor's `DEGRADED` triggers and depends on a background flush thread (recorded as a mode transition); and `PhaseBudgetGovernor` (`src/engine/phase_governor.py`), which reads per-phase wall-clock costs and `tick_compute_ms` directly in every mode (the "phase budgets" row). The evidence for all of this is `docs/performance/wall_clock_inventory.md`; its §6 lists what the scan could not see.
+
+`docs/engine/runtime_profiles.md` §4 (the same profile gives identical semantics on different hardware classes) holds under the Canonical contract only.
 
 ---
 
 ## The canonical hash
 
-`CanonicalStateHasher.get_hash()` produces a SHA-256 of the world state after each tick. The hash input is a canonical sorted JSON representation:
+Approved decision: PERF-D5. Two digest families exist, with two roles.
+
+- **Proof digest.** `CanonicalStateHasher.get_hash()` is a flat SHA-256 over compact canonical JSON of the whole state (the scheme named `flat-sha256-v1`). It is the only value that may back a determinism, replay, certification, or parity claim.
+- **Stability check.** `AuthoritativeState.fingerprint()` (`StateFingerprinter.get_fingerprint`) is an MD5 over a hand-built string of selected state domains. It does not cover all state (Place data is outside it). It is a cheap in-tick diagnostic, and it is never cited as proof that two runs are equal.
+
+The proof digest's input is a canonical sorted JSON representation:
 - All dict keys sorted lexicographically
 - All entity collections sorted by entity ID
-- All floating-point values rounded to a fixed precision
 
-This means the hash is independent of Python dict insertion order or object identity. Two `AuthoritativeState` objects that are semantically identical produce the same hash.
+This means the digest is independent of Python dict insertion order or object identity. Two `AuthoritativeState` objects that are semantically identical produce the same digest. Floating-point values are **not** rounded before hashing: an earlier version of this document said they were, and no rounding exists in `to_canonical_data` or the component `to_canonical_dict` methods. PERF-D5 removes the claim rather than implementing it, because rounding hides small divergences and can flip at rounding boundaries; portability is handled by the DET-PORT tiers above.
 
-The hash is emitted in the `TICK_END` event in the warehouse (field: `tick_hash`). Replay divergence is detected by comparing `tick_hash` sequences.
+**When it is computed.** The kernel computes the per-tick digest in `Kernel._phase_persistence` only when replay is allowed and (`audit_mode` is on or `replay_richness == "FULL"`); otherwise the per-tick value is the string `"SKIPPED"`. The policy gives full replay richness in `NORMAL` and `CONSTRAINED`, minimal richness in `DEGRADED` (the value is `"SKIPPED"` unless `audit_mode` forces the digest), and no replay in `SURVIVAL` (`src/engine/policy.py`), where nothing is computed or emitted per tick. The final digest at shutdown is always computed. No scheduling mechanism governs this: `CanonicalHashScheduler` is called only by the certification harness, in `FULL` mode, and `BudgetedCanonicalHasher` has no production caller (`docs/performance/hash_callsite_inventory.md`).
+
+**Where it goes.** The per-tick value is the payload key `"hash"` of a `TICK_END` `TraceEvent` in the replay stream. There is no warehouse field named `tick_hash`, and nothing in `src/` reads the `TICK_END` hash.
+
+**Coverage gap.** `AuthoritativeState.pressure_signals` is outside the proof digest (`CanonicalStateHasher`'s `to_canonical_data` has no such key), so a difference in salience is invisible to the flat hash until a purchase changes gold or inventory. This is a known gap, recorded here; no fix is decided.
+
+**Approved, not built (PERF-D5, implementation pending `PERF-M1-T03`):** every stored or emitted digest carries its scheme, the tick of the state it describes, and a typed status in place of `"SKIPPED"`; one scheduling entry point serves every production proof digest; `BudgetedCanonicalHasher` and `HashMode.LIGHT` are retired; and when the digest is computed becomes a declared field of the runtime profile and the contract in force. None of this exists today.
 
 ---
 
@@ -65,7 +122,7 @@ Other forbidden operations in tick-path code:
 
 ### Rule 2: Deterministic worker result ordering
 
-**Location:** `src/engine/kernel.py:449`
+**Location:** `Kernel._phase_resolution` in `src/engine/kernel.py`
 
 After all workers complete, their results are sorted before resolution:
 
@@ -95,9 +152,9 @@ When `kernel.audit_mode = True`, the engine fires `ProtocolViolationError` if `C
 
 Enables `DirtySetLeakError` — raised when a phase marks a dirty flag that it should not have access to. See [dirty_state_and_dependency.md](../core/dirty_state_and_dependency.md) for the 9-entity / 8-world-object flag taxonomy and which flags each phase may set.
 
-### Replay tick_hash comparison
+### Per-tick digest comparison
 
-A reference run stores the `tick_hash` sequence from the `TICK_END` warehouse events. A regression run replays the same seed and compares tick_hash at each step. First hash mismatch identifies the exact tick where divergence began.
+The replay stream carries the per-tick digest (or `"SKIPPED"`) in the `"hash"` payload key of each `TICK_END` `TraceEvent`. No code in `src/` reads it, so there is no built-in divergence detector. Regression tests compare digests themselves: a reference run and a second run from the same seed are compared tick by tick, and the first mismatch identifies the tick where divergence began. Such a comparison is a proof only when it compares proof digests (see "The canonical hash").
 
 ### Checkpoint files
 
@@ -107,17 +164,27 @@ A reference run stores the `tick_hash` sequence from the `TICK_END` warehouse ev
 
 ## Known non-determinism sources (pre-existing, out of scope to fix)
 
-1. **Concurrent execution mode** — OS thread scheduling is non-deterministic. Only sequential mode is guaranteed.
+1. **Concurrent execution mode** — OS thread scheduling is non-deterministic. Only sequential mode is guaranteed; concurrent combinations are claimed only when they pass the DET-PORT-1 matrix (not yet run).
 2. **External I/O during live simulation** — if a campaign reads from a live file or socket during tick resolution, the read is non-deterministic (pre-existing: campaigns are analysis-only and run in isolation).
-3. **Python float precision edge cases** — `CanonicalStateHasher` rounds floats to a fixed precision to mitigate this, but edge cases near rounding boundaries remain a known risk area.
+3. **Python float precision edge cases** — `CanonicalStateHasher` does not round floats (see "The canonical hash"). Float behavior across interpreter minor versions, operating systems, and CPU architectures is a known risk, handled by the DET-PORT tiers: a combination is unclaimed until it passes the matrix.
+4. **Wall-clock and host-resource inputs** — the four inputs listed under "What runs today". `audit_mode` suppresses all four (and, because it also zeroes the replay backlog and the per-phase costs in the signals, `src/engine/kernel.py`, it neutralizes the replay-backlog trigger and `PhaseBudgetGovernor` as well); the Canonical contract replaces them with deterministic proxies (pending `PERF-M1`).
 
 ---
 
 ## Regression tests
 
-- `tests/integration/kernel/test_determinism_suite.py` — same seed → same tick_hash for N ticks
+- `tests/integration/kernel/test_determinism_suite.py` — same seed → same per-tick digest for N ticks
 - `tests/integration/kernel/test_replay_fidelity.py` — checkpoint load → resume → same hash sequence
 - `tests/certification/test_world_compile_determinism.py` — P0 hard gate; must pass for release
+
+**Stability checks, not proofs.** These tests compare the fingerprint (MD5 over selected domains), not the proof digest, so they show equality only for the domains the fingerprint covers. They are valid stability checks and must not be cited as determinism proofs (PERF-D5):
+
+- `tests/integration/kernel/test_executor_determinism.py`
+- `tests/integration/kernel/test_seed_stability.py`
+- `tests/perf/test_concurrency_parity.py`
+- `tests/perf/test_dirty_parity.py`
+
+PERF-D5 relabels them as stability checks or moves them to the proof digest (implementation pending `PERF-M1-T03`).
 
 ---
 
