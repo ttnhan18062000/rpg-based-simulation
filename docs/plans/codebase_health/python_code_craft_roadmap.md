@@ -249,8 +249,18 @@ Recorded 2026-10-02:
     tests belong to the `testing` domain, whose planner is told before the change lands.
 12. **Python version:** keep the `>=3.11` floor and document 3.13 as the CI-tested version; raising
     the floor would break the 3.12 knowledge-search venv.
+13. **mypy soaks with the ratchet** (2026-10-03): `mypy-baseline` runs advisory for the same two
+    weeks and flips to blocking in the same follow-up ticket.
+14. **Changed-line PR feedback through SARIF upload to GitHub code scanning** (2026-10-03), not
+    reviewdog comments; findings already in the registry are filtered out.
+15. **prek is installed opt-in only** (2026-10-03), because `.git/hooks` is shared by every worktree
+    on the machine; the install keeps the existing post-commit reindex hook.
+16. **jscpd stays report-only** (2026-10-03) and is excluded from the blocking set until its
+    dependencies are locked.
 
-Tickets: `agent-working/tickets/todos/python-code-craft/` (epic plus seven children, order in `SEQUENCE.md`).
+Tickets: M1 to M3 in `agent-working/tickets/done/python-code-craft/` (closed 2026-10-03, PRs #288,
+#297, #298). M4 in `agent-working/tickets/todos/python-code-craft-gates/` (epic plus six children,
+order in `SEQUENCE.md`; brief `python_code_craft_m4_gates_ticket_brief.md`).
 
 ## 9. Risks
 
