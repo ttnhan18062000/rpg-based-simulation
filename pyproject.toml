@@ -69,6 +69,9 @@ lint = [
 ]
 profiling = [
     "memray>=1.0.0",
+    # Sampling profiler for tools/perf/profile_tick.py (TCK-20261003-PERF-PROFILING-TOOLKIT). Opt-in
+    # with the rest of this group, so it is not in `dev` and not in the requirements.txt export.
+    "py-spy>=0.3.14",
 ]
 
 [project.scripts]

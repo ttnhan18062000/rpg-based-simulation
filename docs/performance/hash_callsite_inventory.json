@@ -1,0 +1,1145 @@
+{
+  "tool": "tools/perf/hash_callsite_inventory.py",
+  "ticket": "TCK-20261003-PERF-HASH-CALLSITE-INVENTORY",
+  "scanned": {
+    "source_root": "src",
+    "test_root": "tests",
+    "unparsed_files": []
+  },
+  "schemes": {
+    "CanonicalStateHasher.get_hash": "flat SHA-256 over compact canonical JSON of the whole state",
+    "BudgetedCanonicalHasher.get_hash": "same flat SHA-256, rate limited; returns a stale value when over budget",
+    "CanonicalHashScheduler.compute_hash": "FULL: same flat SHA-256 at a sanctioned boundary; LIGHT: MD5 of tick/seed/entity and region counts",
+    "StateFingerprinter.get_fingerprint": "dict whose 'state_hash' is an MD5 over a hand-built string of selected state domains",
+    "AuthoritativeState.fingerprint": "delegates to StateFingerprinter.get_fingerprint (same dict, MD5 state_hash)",
+    "hashlib digest of canonical state data": "hashlib digest computed by the caller itself, not through CanonicalStateHasher.get_hash"
+  },
+  "call_sites": [
+    {
+      "kind": "caller",
+      "file": "src/certification/harness.py",
+      "line": 186,
+      "enclosing_function": "CertificationHarness.run_scenario",
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "call": "CanonicalHashScheduler().compute_hash",
+      "receiver_resolved_by_name": true,
+      "guards": [
+        "try",
+        "if expectations.reproducibility_required"
+      ],
+      "guarded": true,
+      "ordinal": 1
+    },
+    {
+      "kind": "caller",
+      "file": "src/certification/harness.py",
+      "line": 257,
+      "enclosing_function": "CertificationHarness._write_full_evidence",
+      "mechanism": "hashlib digest of canonical state data",
+      "call": "hashlib.sha256",
+      "receiver_resolved_by_name": true,
+      "guards": [
+        "try"
+      ],
+      "guarded": true,
+      "ordinal": 2
+    },
+    {
+      "kind": "caller",
+      "file": "src/certification/harness.py",
+      "line": 311,
+      "enclosing_function": "CertificationHarness._get_baseline_hash",
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "call": "CanonicalHashScheduler().compute_hash",
+      "receiver_resolved_by_name": true,
+      "guards": [
+        "try"
+      ],
+      "guarded": true,
+      "ordinal": 3
+    },
+    {
+      "kind": "delegation inside a mechanism",
+      "file": "src/core/state.py",
+      "line": 1641,
+      "enclosing_function": "AuthoritativeState.fingerprint",
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "call": "StateFingerprinter.get_fingerprint",
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "ordinal": 4
+    },
+    {
+      "kind": "delegation inside a mechanism",
+      "file": "src/engine/checkpoint.py",
+      "line": 188,
+      "enclosing_function": "BudgetedCanonicalHasher.get_hash",
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "call": "CanonicalStateHasher.get_hash",
+      "receiver_resolved_by_name": true,
+      "guards": [
+        "unless: self._last_known_hash",
+        "if max_h is not None and self._call_count >= max_h"
+      ],
+      "guarded": true,
+      "ordinal": 5
+    },
+    {
+      "kind": "delegation inside a mechanism",
+      "file": "src/engine/checkpoint.py",
+      "line": 191,
+      "enclosing_function": "BudgetedCanonicalHasher.get_hash",
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "call": "CanonicalStateHasher.get_hash",
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "ordinal": 6
+    },
+    {
+      "kind": "delegation inside a mechanism",
+      "file": "src/engine/checkpoint.py",
+      "line": 280,
+      "enclosing_function": "CanonicalHashScheduler.compute_hash",
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "call": "CanonicalStateHasher.get_hash",
+      "receiver_resolved_by_name": true,
+      "guards": [
+        "if mode is HashMode.FULL"
+      ],
+      "guarded": true,
+      "ordinal": 7
+    },
+    {
+      "kind": "caller",
+      "file": "src/engine/kernel.py",
+      "line": 397,
+      "enclosing_function": "Kernel._tick_once_inner",
+      "mechanism": "AuthoritativeState.fingerprint",
+      "call": "self._state.fingerprint",
+      "receiver_resolved_by_name": false,
+      "guards": [
+        "if self._audit_mode"
+      ],
+      "guarded": true,
+      "ordinal": 8
+    },
+    {
+      "kind": "caller",
+      "file": "src/engine/kernel.py",
+      "line": 710,
+      "enclosing_function": "Kernel._phase_resolution",
+      "mechanism": "AuthoritativeState.fingerprint",
+      "call": "self._state.fingerprint",
+      "receiver_resolved_by_name": false,
+      "guards": [
+        "if self._current_policy.replay_allowed"
+      ],
+      "guarded": true,
+      "ordinal": 9
+    },
+    {
+      "kind": "caller",
+      "file": "src/engine/kernel.py",
+      "line": 1151,
+      "enclosing_function": "Kernel._guard_stability",
+      "mechanism": "AuthoritativeState.fingerprint",
+      "call": "self._state.fingerprint",
+      "receiver_resolved_by_name": false,
+      "guards": [],
+      "guarded": false,
+      "ordinal": 10
+    },
+    {
+      "kind": "caller",
+      "file": "src/engine/kernel.py",
+      "line": 1186,
+      "enclosing_function": "Kernel._phase_persistence",
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "call": "CanonicalStateHasher.get_hash",
+      "receiver_resolved_by_name": true,
+      "guards": [
+        "if self._current_policy.replay_allowed and (self._audit_mode or self._current_policy.replay_richness == 'FULL')"
+      ],
+      "guarded": true,
+      "ordinal": 11
+    },
+    {
+      "kind": "caller",
+      "file": "src/engine/kernel.py",
+      "line": 1255,
+      "enclosing_function": "Kernel.shutdown",
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "call": "CanonicalStateHasher.get_hash",
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "ordinal": 12
+    },
+    {
+      "kind": "caller",
+      "file": "src/worldbuilding/compiler.py",
+      "line": 792,
+      "enclosing_function": "WorldCompiler.compile",
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "call": "StateFingerprinter.get_fingerprint",
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "ordinal": 13
+    },
+    {
+      "kind": "caller",
+      "file": "src/worldbuilding/compiler.py",
+      "line": 803,
+      "enclosing_function": "WorldCompiler.compile",
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "call": "CanonicalStateHasher.get_hash",
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "ordinal": 14
+    }
+  ],
+  "unresolved_candidates": [],
+  "digest_producers": [
+    {
+      "file": "src/core/state.py",
+      "line": 1635,
+      "function": "AuthoritativeState.fingerprint",
+      "hashlib_algorithms": [],
+      "delegates_to": [
+        "StateFingerprinter.get_fingerprint"
+      ]
+    },
+    {
+      "file": "src/engine/checkpoint.py",
+      "line": 45,
+      "function": "CanonicalStateHasher.get_hash",
+      "hashlib_algorithms": [
+        "sha256"
+      ],
+      "delegates_to": []
+    },
+    {
+      "file": "src/engine/checkpoint.py",
+      "line": 165,
+      "function": "BudgetedCanonicalHasher.get_hash",
+      "hashlib_algorithms": [],
+      "delegates_to": [
+        "CanonicalStateHasher.get_hash"
+      ]
+    },
+    {
+      "file": "src/engine/checkpoint.py",
+      "line": 259,
+      "function": "CanonicalHashScheduler.compute_hash",
+      "hashlib_algorithms": [
+        "md5"
+      ],
+      "delegates_to": [
+        "CanonicalStateHasher.get_hash"
+      ]
+    },
+    {
+      "file": "src/replay/fingerprint.py",
+      "line": 33,
+      "function": "StateFingerprinter.get_fingerprint",
+      "hashlib_algorithms": [
+        "md5"
+      ],
+      "delegates_to": []
+    }
+  ],
+  "test_references": [
+    {
+      "file": "tests/certification/test_event_observability_parity.py",
+      "line": 55,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_state_hash_parity_across_observability_modes"
+    },
+    {
+      "file": "tests/certification/test_evidence_levels.py",
+      "line": 397,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_full_evidence_final_state_hash_in_artifact"
+    },
+    {
+      "file": "tests/helpers/replay_diff.py",
+      "line": 85,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "replay_diff"
+    },
+    {
+      "file": "tests/helpers/scenario.py",
+      "line": 81,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "run_scenario"
+    },
+    {
+      "file": "tests/integration/campaigns/test_phase9_campaign_runner.py",
+      "line": 81,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_campaign_runner_is_deterministic_for_same_seed"
+    },
+    {
+      "file": "tests/integration/campaigns/test_phase9_campaign_runner.py",
+      "line": 81,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_campaign_runner_is_deterministic_for_same_seed"
+    },
+    {
+      "file": "tests/integration/kernel/test_checkpoint_reproducibility.py",
+      "line": 20,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_hash_construction_order_invariance"
+    },
+    {
+      "file": "tests/integration/kernel/test_checkpoint_reproducibility.py",
+      "line": 21,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_hash_construction_order_invariance"
+    },
+    {
+      "file": "tests/integration/kernel/test_checkpoint_reproducibility.py",
+      "line": 41,
+      "mechanism": "hashlib digest of canonical state data",
+      "enclosing_function": "test_hash_compact_vs_pretty"
+    },
+    {
+      "file": "tests/integration/kernel/test_checkpoint_reproducibility.py",
+      "line": 42,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_hash_compact_vs_pretty"
+    },
+    {
+      "file": "tests/integration/kernel/test_checkpoint_reproducibility.py",
+      "line": 53,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_property_sorting_in_hash"
+    },
+    {
+      "file": "tests/integration/kernel/test_checkpoint_reproducibility.py",
+      "line": 53,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_property_sorting_in_hash"
+    },
+    {
+      "file": "tests/integration/kernel/test_checkpoint_reproducibility.py",
+      "line": 94,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_deep_property_sorting"
+    },
+    {
+      "file": "tests/integration/kernel/test_checkpoint_reproducibility.py",
+      "line": 94,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_deep_property_sorting"
+    },
+    {
+      "file": "tests/integration/kernel/test_checkpoint_reproducibility.py",
+      "line": 100,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_hash_isolation"
+    },
+    {
+      "file": "tests/integration/kernel/test_checkpoint_reproducibility.py",
+      "line": 107,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_hash_isolation"
+    },
+    {
+      "file": "tests/integration/kernel/test_checkpoint_reproducibility.py",
+      "line": 123,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_rng_hash_reproducibility"
+    },
+    {
+      "file": "tests/integration/kernel/test_checkpoint_reproducibility.py",
+      "line": 130,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_rng_hash_reproducibility"
+    },
+    {
+      "file": "tests/integration/kernel/test_checkpoint_reproducibility.py",
+      "line": 141,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_rng_hash_reproducibility"
+    },
+    {
+      "file": "tests/integration/kernel/test_determinism_suite.py",
+      "line": 46,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_reproducibility"
+    },
+    {
+      "file": "tests/integration/kernel/test_determinism_suite.py",
+      "line": 60,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_seed_divergence"
+    },
+    {
+      "file": "tests/integration/kernel/test_determinism_suite.py",
+      "line": 61,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_seed_divergence"
+    },
+    {
+      "file": "tests/integration/kernel/test_determinism_suite.py",
+      "line": 82,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_canonical_sorting_stability"
+    },
+    {
+      "file": "tests/integration/kernel/test_determinism_suite.py",
+      "line": 83,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_canonical_sorting_stability"
+    },
+    {
+      "file": "tests/integration/kernel/test_determinism_suite.py",
+      "line": 120,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_local_vs_concurrent_equivalence"
+    },
+    {
+      "file": "tests/integration/kernel/test_determinism_suite.py",
+      "line": 129,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_local_vs_concurrent_equivalence"
+    },
+    {
+      "file": "tests/integration/kernel/test_executor_determinism.py",
+      "line": 60,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_sequential_vs_concurrent_determinism"
+    },
+    {
+      "file": "tests/integration/kernel/test_executor_determinism.py",
+      "line": 71,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_sequential_vs_concurrent_determinism"
+    },
+    {
+      "file": "tests/integration/kernel/test_executor_determinism.py",
+      "line": 89,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_concurrency_limit_stability"
+    },
+    {
+      "file": "tests/integration/kernel/test_executor_determinism.py",
+      "line": 99,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_concurrency_limit_stability"
+    },
+    {
+      "file": "tests/integration/kernel/test_kernel_boundaries.py",
+      "line": 85,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_authoritative_hash_purity"
+    },
+    {
+      "file": "tests/integration/kernel/test_kernel_boundaries.py",
+      "line": 92,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_authoritative_hash_purity"
+    },
+    {
+      "file": "tests/integration/kernel/test_long_run_determinism.py",
+      "line": 51,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_1000_tick_determinism"
+    },
+    {
+      "file": "tests/integration/kernel/test_long_run_determinism.py",
+      "line": 61,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_1000_tick_determinism"
+    },
+    {
+      "file": "tests/integration/kernel/test_p1_replay_fidelity.py",
+      "line": 503,
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "enclosing_function": "test_committed_intentions_included_in_replay_fingerprint"
+    },
+    {
+      "file": "tests/integration/kernel/test_p1_replay_fidelity.py",
+      "line": 504,
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "enclosing_function": "test_committed_intentions_included_in_replay_fingerprint"
+    },
+    {
+      "file": "tests/integration/kernel/test_replay_fidelity.py",
+      "line": 16,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_fingerprint_captures_inventory_changes"
+    },
+    {
+      "file": "tests/integration/kernel/test_replay_fidelity.py",
+      "line": 24,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_fingerprint_captures_inventory_changes"
+    },
+    {
+      "file": "tests/integration/kernel/test_replay_fidelity.py",
+      "line": 37,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_fingerprint_captures_strategic_changes"
+    },
+    {
+      "file": "tests/integration/kernel/test_replay_fidelity.py",
+      "line": 45,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_fingerprint_captures_strategic_changes"
+    },
+    {
+      "file": "tests/integration/kernel/test_replay_fidelity.py",
+      "line": 101,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_fingerprint_captures_project_id_changes"
+    },
+    {
+      "file": "tests/integration/kernel/test_replay_fidelity.py",
+      "line": 101,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_fingerprint_captures_project_id_changes"
+    },
+    {
+      "file": "tests/integration/kernel/test_replay_fidelity.py",
+      "line": 108,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_fingerprint_captures_world_dynamics"
+    },
+    {
+      "file": "tests/integration/kernel/test_replay_fidelity.py",
+      "line": 116,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_fingerprint_captures_world_dynamics"
+    },
+    {
+      "file": "tests/integration/kernel/test_replay_fidelity.py",
+      "line": 133,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_determinism_same_seed_same_hash"
+    },
+    {
+      "file": "tests/integration/kernel/test_replay_fidelity.py",
+      "line": 134,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_determinism_same_seed_same_hash"
+    },
+    {
+      "file": "tests/integration/kernel/test_replay_fidelity.py",
+      "line": 140,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_determinism_same_seed_same_hash"
+    },
+    {
+      "file": "tests/integration/kernel/test_seed_stability.py",
+      "line": 67,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_simulation_seed_stability"
+    },
+    {
+      "file": "tests/integration/kernel/test_seed_stability.py",
+      "line": 78,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_simulation_seed_stability"
+    },
+    {
+      "file": "tests/integration/kernel/test_seed_stability.py",
+      "line": 96,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_simulation_seed_divergence"
+    },
+    {
+      "file": "tests/integration/kernel/test_seed_stability.py",
+      "line": 104,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_simulation_seed_divergence"
+    },
+    {
+      "file": "tests/integration/kernel/test_snapshot_integrity.py",
+      "line": 19,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_hash_stability_with_dict_order"
+    },
+    {
+      "file": "tests/integration/kernel/test_snapshot_integrity.py",
+      "line": 20,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_hash_stability_with_dict_order"
+    },
+    {
+      "file": "tests/integration/observability/test_cognition_snapshot_artifact.py",
+      "line": 172,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "TestCognitionSnapshotArtifact.test_state_hash_determinism_preserved"
+    },
+    {
+      "file": "tests/integration/observability/test_cognition_snapshot_artifact.py",
+      "line": 178,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "TestCognitionSnapshotArtifact.test_state_hash_determinism_preserved"
+    },
+    {
+      "file": "tests/integration/pipeline/test_governance_isolation.py",
+      "line": 13,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_hash_invariance_to_governance_state"
+    },
+    {
+      "file": "tests/integration/pipeline/test_governance_isolation.py",
+      "line": 23,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_hash_invariance_to_governance_state"
+    },
+    {
+      "file": "tests/integration/pipeline/test_no_hidden_mutation.py",
+      "line": 81,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_apply_determinism_sorting"
+    },
+    {
+      "file": "tests/integration/pipeline/test_no_hidden_mutation.py",
+      "line": 82,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_apply_determinism_sorting"
+    },
+    {
+      "file": "tests/integration/scenarios/test_scenario_runtime_service.py",
+      "line": 354,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "TestCheckpointRestore.test_checkpoint_restore_determinism"
+    },
+    {
+      "file": "tests/integration/scenarios/test_scenario_runtime_service.py",
+      "line": 369,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "TestCheckpointRestore.test_checkpoint_restore_determinism"
+    },
+    {
+      "file": "tests/integration/world/test_long_run_stability.py",
+      "line": 90,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_long_run_stability.run_sim"
+    },
+    {
+      "file": "tests/integrity/test_logic_guards.py",
+      "line": 137,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_world_init_determinism"
+    },
+    {
+      "file": "tests/integrity/test_logic_guards.py",
+      "line": 138,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_world_init_determinism"
+    },
+    {
+      "file": "tests/integrity/test_logic_guards.py",
+      "line": 139,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_world_init_determinism"
+    },
+    {
+      "file": "tests/integrity/test_logic_guards.py",
+      "line": 247,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_full_tick_determinism.run_one_tick"
+    },
+    {
+      "file": "tests/perf/test_apply_compaction_perf.py",
+      "line": 76,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_apply_compaction_performance_gain"
+    },
+    {
+      "file": "tests/perf/test_apply_compaction_perf.py",
+      "line": 76,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_apply_compaction_performance_gain"
+    },
+    {
+      "file": "tests/perf/test_concurrency_parity.py",
+      "line": 32,
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "enclosing_function": "run_parity_check"
+    },
+    {
+      "file": "tests/perf/test_concurrency_parity.py",
+      "line": 49,
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "enclosing_function": "run_parity_check"
+    },
+    {
+      "file": "tests/perf/test_dirty_parity.py",
+      "line": 77,
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "enclosing_function": "test_dirty_set_vs_full_scan_parity"
+    },
+    {
+      "file": "tests/perf/test_dirty_parity.py",
+      "line": 84,
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "enclosing_function": "test_dirty_set_vs_full_scan_parity"
+    },
+    {
+      "file": "tests/unit/core/test_engine_integrity.py",
+      "line": 86,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_bit_identical_determinism"
+    },
+    {
+      "file": "tests/unit/core/test_engine_integrity.py",
+      "line": 87,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_bit_identical_determinism"
+    },
+    {
+      "file": "tests/unit/core/test_engine_integrity.py",
+      "line": 159,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_isolation_guard_trigger"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 93,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_self_model_participates_in_canonical_hash"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 93,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_self_model_participates_in_canonical_hash"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 153,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_self_model_fix_preserves_existing_baseline_hashes_when_flag_off"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 154,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_self_model_fix_preserves_existing_baseline_hashes_when_flag_off"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 189,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_strategic_source_trust_participates_in_canonical_hash"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 189,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_strategic_source_trust_participates_in_canonical_hash"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 337,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_social_public_reputation_locality_participates_in_canonical_hash"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 337,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_social_public_reputation_locality_participates_in_canonical_hash"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 359,
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "enclosing_function": "test_social_public_reputation_locality_participates_in_fingerprint"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 360,
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "enclosing_function": "test_social_public_reputation_locality_participates_in_fingerprint"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 387,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_social_nemesis_ids_participates_in_canonical_hash_end_to_end"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 387,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_social_nemesis_ids_participates_in_canonical_hash_end_to_end"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 460,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_navigation_region_id_participates_in_canonical_hash_end_to_end"
+    },
+    {
+      "file": "tests/unit/core/test_entity_integrity.py",
+      "line": 460,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_navigation_region_id_participates_in_canonical_hash_end_to_end"
+    },
+    {
+      "file": "tests/unit/core/test_operational_flags.py",
+      "line": 78,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_flags_cannot_alter_authoritative_semantics"
+    },
+    {
+      "file": "tests/unit/core/test_operational_flags.py",
+      "line": 81,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_flags_cannot_alter_authoritative_semantics"
+    },
+    {
+      "file": "tests/unit/core/test_place_state.py",
+      "line": 91,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_place_state_participates_in_canonical_hash"
+    },
+    {
+      "file": "tests/unit/core/test_place_state.py",
+      "line": 92,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_place_state_participates_in_canonical_hash"
+    },
+    {
+      "file": "tests/unit/core/test_place_state.py",
+      "line": 146,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_navigation_place_id_participates_in_canonical_hash_end_to_end"
+    },
+    {
+      "file": "tests/unit/core/test_place_state.py",
+      "line": 147,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_navigation_place_id_participates_in_canonical_hash_end_to_end"
+    },
+    {
+      "file": "tests/unit/domains/optimization/test_semantic_entity_index.py",
+      "line": 224,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_semantic_index_excluded_from_canonical_state_hash"
+    },
+    {
+      "file": "tests/unit/domains/optimization/test_semantic_entity_index.py",
+      "line": 228,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_semantic_index_excluded_from_canonical_state_hash"
+    },
+    {
+      "file": "tests/unit/domains/optimization/test_state_update_compactor.py",
+      "line": 89,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_compacted_update_applies_same_as_uncompacted_update"
+    },
+    {
+      "file": "tests/unit/domains/optimization/test_state_update_compactor.py",
+      "line": 89,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_compacted_update_applies_same_as_uncompacted_update"
+    },
+    {
+      "file": "tests/unit/domains/progression/test_progression_decision_canonical_hash.py",
+      "line": 64,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_progression_decision_get_hash_does_not_raise"
+    },
+    {
+      "file": "tests/unit/economy/test_economy_health_monitor.py",
+      "line": 188,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_snapshot_is_not_mutating_state"
+    },
+    {
+      "file": "tests/unit/economy/test_economy_health_monitor.py",
+      "line": 190,
+      "mechanism": "AuthoritativeState.fingerprint",
+      "enclosing_function": "test_snapshot_is_not_mutating_state"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 33,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_identical_states_still_hash_identically"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 34,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_identical_states_still_hash_identically"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 39,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_region_loyalty_pressure_difference_changes_hash"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 40,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_region_loyalty_pressure_difference_changes_hash"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 47,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_region_culture_states_difference_changes_hash"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 48,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_region_culture_states_difference_changes_hash"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 58,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_entity_legend_facts_difference_changes_hash"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 59,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_entity_legend_facts_difference_changes_hash"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 69,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_information_source_profiles_difference_changes_hash"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 70,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_information_source_profiles_difference_changes_hash"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 103,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_information_source_profiles_hash_is_insertion_order_independent"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 103,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_information_source_profiles_hash_is_insertion_order_independent"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 107,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_entity_belief_institutions_difference_changes_hash"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 108,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_entity_belief_institutions_difference_changes_hash"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 125,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_event_fidelity_difference_changes_hash"
+    },
+    {
+      "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
+      "line": 126,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_event_fidelity_difference_changes_hash"
+    },
+    {
+      "file": "tests/unit/engine/test_hash_scheduler.py",
+      "line": 44,
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_at_tick_zero"
+    },
+    {
+      "file": "tests/unit/engine/test_hash_scheduler.py",
+      "line": 54,
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_at_run_end_tick"
+    },
+    {
+      "file": "tests/unit/engine/test_hash_scheduler.py",
+      "line": 64,
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_with_certification_reason"
+    },
+    {
+      "file": "tests/unit/engine/test_hash_scheduler.py",
+      "line": 74,
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_with_audit_reason"
+    },
+    {
+      "file": "tests/unit/engine/test_hash_scheduler.py",
+      "line": 84,
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_with_replay_reason"
+    },
+    {
+      "file": "tests/unit/engine/test_hash_scheduler.py",
+      "line": 94,
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_raises_outside_sanctioned_boundary"
+    },
+    {
+      "file": "tests/unit/engine/test_hash_scheduler.py",
+      "line": 103,
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_raises_with_unknown_reason"
+    },
+    {
+      "file": "tests/unit/engine/test_hash_scheduler.py",
+      "line": 113,
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "enclosing_function": "TestCanonicalHashSchedulerLightMode.test_light_hash_always_allowed"
+    },
+    {
+      "file": "tests/unit/engine/test_hash_scheduler.py",
+      "line": 121,
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "enclosing_function": "TestCanonicalHashSchedulerLightMode.test_light_hash_default_mode"
+    },
+    {
+      "file": "tests/unit/engine/test_hash_scheduler.py",
+      "line": 132,
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "enclosing_function": "TestCanonicalHashSchedulerLightMode.test_light_hash_is_fast"
+    },
+    {
+      "file": "tests/unit/engine/test_hash_scheduler.py",
+      "line": 143,
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "enclosing_function": "TestCanonicalHashSchedulerLightMode.test_light_hash_changes_on_tick"
+    },
+    {
+      "file": "tests/unit/engine/test_hash_scheduler.py",
+      "line": 144,
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "enclosing_function": "TestCanonicalHashSchedulerLightMode.test_light_hash_changes_on_tick"
+    },
+    {
+      "file": "tests/unit/engine/test_hash_scheduler.py",
+      "line": 157,
+      "mechanism": "CanonicalHashScheduler.compute_hash",
+      "enclosing_function": "TestCanonicalHashSchedulerLightMode.test_light_hash_no_json_serialization"
+    },
+    {
+      "file": "tests/unit/kernel/test_worker_equivalence.py",
+      "line": 60,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_authoritative_equivalence"
+    },
+    {
+      "file": "tests/unit/kernel/test_worker_equivalence.py",
+      "line": 61,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_authoritative_equivalence"
+    },
+    {
+      "file": "tests/unit/kernel/test_worker_equivalence.py",
+      "line": 85,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_zero_worker_fallback_equivalence"
+    },
+    {
+      "file": "tests/unit/kernel/test_worker_equivalence.py",
+      "line": 85,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_zero_worker_fallback_equivalence"
+    },
+    {
+      "file": "tests/unit/progression/test_species_base_stats_preserved.py",
+      "line": 261,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_new_fields_in_canonical_dict_and_hash_stable"
+    },
+    {
+      "file": "tests/unit/progression/test_species_base_stats_preserved.py",
+      "line": 262,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_new_fields_in_canonical_dict_and_hash_stable"
+    },
+    {
+      "file": "tests/unit/replay/test_fingerprint_identity_coverage.py",
+      "line": 39,
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "enclosing_function": "test_fingerprint_changes_when_faction_changes"
+    },
+    {
+      "file": "tests/unit/replay/test_fingerprint_identity_coverage.py",
+      "line": 40,
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "enclosing_function": "test_fingerprint_changes_when_faction_changes"
+    },
+    {
+      "file": "tests/unit/replay/test_fingerprint_identity_coverage.py",
+      "line": 53,
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "enclosing_function": "test_fingerprint_changes_when_role_changes"
+    },
+    {
+      "file": "tests/unit/replay/test_fingerprint_identity_coverage.py",
+      "line": 54,
+      "mechanism": "StateFingerprinter.get_fingerprint",
+      "enclosing_function": "test_fingerprint_changes_when_role_changes"
+    },
+    {
+      "file": "tests/unit/worldbuilding/test_place_wiring.py",
+      "line": 118,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_place_participates_in_canonical_hash"
+    },
+    {
+      "file": "tests/unit/worldbuilding/test_place_wiring.py",
+      "line": 119,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_place_participates_in_canonical_hash"
+    },
+    {
+      "file": "tests/unit/worldbuilding/test_place_wiring.py",
+      "line": 322,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_campstate_place_bridge_participates_in_canonical_hash"
+    },
+    {
+      "file": "tests/unit/worldbuilding/test_place_wiring.py",
+      "line": 323,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_campstate_place_bridge_participates_in_canonical_hash"
+    },
+    {
+      "file": "tests/unit/worldbuilding/test_world_compiler.py",
+      "line": 166,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_compile_report_includes_canonical_state_hash_and_place_count"
+    },
+    {
+      "file": "tests/unit/worldbuilding/test_world_compiler.py",
+      "line": 1151,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_canonical_state_hasher_serializes_seeded_population_cohorts"
+    },
+    {
+      "file": "tests/unit/worldbuilding/test_world_compiler.py",
+      "line": 1152,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_canonical_state_hasher_serializes_seeded_population_cohorts"
+    }
+  ]
+}

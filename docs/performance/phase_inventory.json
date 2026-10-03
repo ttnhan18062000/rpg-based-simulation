@@ -1,0 +1,737 @@
+{
+  "tool": "tools/perf/phase_inventory.py",
+  "ticket": "TCK-20261003-PERF-PHASE-INVENTORY-SCRIPT",
+  "pipeline_source": "src/engine/pipeline.py::AuthoritativeApplyPipeline.refine",
+  "pipeline": {
+    "found": true,
+    "class": "AuthoritativeApplyPipeline",
+    "method": "refine",
+    "run_phase_calls": [
+      {
+        "ordinal": 1,
+        "name": "trust_boundary",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 135,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._strip_untrusted_world_effects",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 2,
+        "name": "actor_validity",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 136,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._resolve_actor_validity",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 3,
+        "name": "memory_update",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 154,
+        "feature_flag": "ENABLE_MEMORY_UPDATE",
+        "dispatch": "MemoryUpdatePhase.apply",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 4,
+        "name": "habit_bias_action_style",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 169,
+        "feature_flag": "ENABLE_HABIT_BIAS_ACTION_STYLE",
+        "dispatch": "HabitBiasUpdatePhase.apply",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 5,
+        "name": "role_model_selection",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 182,
+        "feature_flag": "ENABLE_ROLE_MODEL_IMITATION",
+        "dispatch": "RoleModelSelectionPhase.apply",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 6,
+        "name": "self_model",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 192,
+        "feature_flag": "ENABLE_SELF_MODEL_COGNITION",
+        "dispatch": "SelfModelUpdatePhase.apply",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 7,
+        "name": "information_belief",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 201,
+        "feature_flag": "ENABLE_BELIEF_ASSIMILATION",
+        "dispatch": "InformationBeliefPhase.apply",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 8,
+        "name": "information_intent_execution",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 207,
+        "feature_flag": "ENABLE_INFORMATION_INTENT_EXECUTION",
+        "dispatch": "InformationIntentExecutionPhase.execute",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 9,
+        "name": "cooperation",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 217,
+        "feature_flag": "ENABLE_SOCIAL_COOPERATION",
+        "dispatch": "CooperationPhase.execute",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 10,
+        "name": "contracts",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 222,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._resolve_contract_expirations",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 11,
+        "name": "blacksmith",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 223,
+        "feature_flag": null,
+        "dispatch": "BlacksmithSystem.enforce",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 12,
+        "name": "faction_awareness",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 238,
+        "feature_flag": null,
+        "dispatch": "_SU_fa",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 13,
+        "name": "information_propagation",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 248,
+        "feature_flag": "ENABLE_INFORMATION_HUB_ACCUMULATION",
+        "dispatch": "_SU_ip",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 14,
+        "name": "diplomatic_transitions",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 279,
+        "feature_flag": null,
+        "dispatch": "_SU_dt",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 15,
+        "name": "military_conflict",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 289,
+        "feature_flag": null,
+        "dispatch": "MilitaryConflictPhase.execute",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 16,
+        "name": "action_routing",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 297,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._route_action_intent",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 17,
+        "name": "position_swaps",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 298,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._resolve_position_swaps",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 18,
+        "name": "movement_routing",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 299,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._route_movement_intent",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 19,
+        "name": "combat_engagement",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 320,
+        "feature_flag": "ENABLE_COMBAT_ENGAGEMENT",
+        "dispatch": "CombatEngagementPhase.apply",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 20,
+        "name": "interaction_routing",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 332,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._route_interaction_intent",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 21,
+        "name": "interaction_enforcement",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 333,
+        "feature_flag": null,
+        "dispatch": "InteractionSystem.enforce",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 22,
+        "name": "building_sabotage",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 334,
+        "feature_flag": null,
+        "dispatch": "BuildingSabotageSystem.resolve",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 23,
+        "name": "town_resolution",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 339,
+        "feature_flag": null,
+        "dispatch": "TownResolutionSystem.resolve",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 24,
+        "name": "gold_sink",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 344,
+        "feature_flag": null,
+        "dispatch": "GoldSinkSystem.apply",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 25,
+        "name": "world_dynamics",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 348,
+        "feature_flag": null,
+        "dispatch": "WorldDynamicsSystem.resolve_dynamics",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 26,
+        "name": "world_emergence",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 355,
+        "feature_flag": "ENABLE_WORLD_EMERGENCE",
+        "dispatch": "WorldEmergencePhase.execute",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 27,
+        "name": "quest_rewards",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 363,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._resolve_quest_rewards",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 28,
+        "name": "guild_visit",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 369,
+        "feature_flag": "ENABLE_GUILD_QUEST_GENERATION",
+        "dispatch": "GuildVisitPhase.resolve",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 29,
+        "name": "shop",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 371,
+        "feature_flag": null,
+        "dispatch": "ShopSystem.enforce",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 30,
+        "name": "paid_information",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 375,
+        "feature_flag": null,
+        "dispatch": "PaidInformationTransactionSystem.enforce",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 31,
+        "name": "resource_transactions",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 377,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._resolve_resource_transactions",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 32,
+        "name": "evolution",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 381,
+        "feature_flag": null,
+        "dispatch": "EvolutionSystem.evaluate",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 33,
+        "name": "progression_conversion",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 387,
+        "feature_flag": "ENABLE_PROGRESSION_EVOLUTION",
+        "dispatch": "ProgressionConversionPhase.execute",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 34,
+        "name": "strategic_intelligence",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 398,
+        "feature_flag": null,
+        "dispatch": "StrategicIntelligenceSystem.fused_strategic_pass",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 35,
+        "name": "belief_staleness_decay",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 408,
+        "feature_flag": null,
+        "dispatch": "BeliefCycleSystem.resolve_lead_staleness",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 36,
+        "name": "lead_contradiction",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 409,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._enforce_lead_contradiction",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 37,
+        "name": "near_death_hardening",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 410,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._apply_near_death_hardening",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 38,
+        "name": "occupancy_resolution",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 412,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._resolve_occupancy_conflicts",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 39,
+        "name": "lifecycle",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 414,
+        "feature_flag": null,
+        "dispatch": "LifecycleSystem.resolve_lifecycle",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 40,
+        "name": "groups",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 416,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._resolve_groups",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 41,
+        "name": "clan_lifecycle",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 418,
+        "feature_flag": null,
+        "dispatch": "AuthoritativeApplyPipeline._resolve_clan_lifecycle",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 42,
+        "name": "expired_offers",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 425,
+        "feature_flag": null,
+        "dispatch": "ContractService.reap_expired_offers",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 43,
+        "name": "capacity_enforcement",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 427,
+        "feature_flag": null,
+        "dispatch": "CapacityEnforcementPhase.enforce",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 44,
+        "name": "faction_sentiment",
+        "name_dynamic": false,
+        "name_expression": null,
+        "line": 441,
+        "feature_flag": null,
+        "dispatch": "_SU_fs",
+        "conditional_or_loop": false,
+        "context": []
+      }
+    ],
+    "direct_operations": [
+      {
+        "ordinal": 1,
+        "line": 49,
+        "statement": "assign",
+        "operation": "replace",
+        "conditional_or_loop": true,
+        "context": [
+          "if@L48"
+        ]
+      },
+      {
+        "ordinal": 2,
+        "line": 51,
+        "statement": "assign",
+        "operation": "replace",
+        "conditional_or_loop": true,
+        "context": [
+          "if@L50"
+        ]
+      },
+      {
+        "ordinal": 3,
+        "line": 100,
+        "statement": "assign",
+        "operation": "replace",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 4,
+        "line": 328,
+        "statement": "assign",
+        "operation": "update.replace",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 5,
+        "line": 362,
+        "statement": "assign",
+        "operation": "update.replace",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 6,
+        "line": 380,
+        "statement": "assign",
+        "operation": "update.replace",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 7,
+        "line": 395,
+        "statement": "assign",
+        "operation": "update.replace",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 8,
+        "line": 449,
+        "statement": "assign",
+        "operation": "update.replace",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 9,
+        "line": 452,
+        "statement": "assign",
+        "operation": "update.replace",
+        "conditional_or_loop": true,
+        "context": [
+          "if@L450"
+        ]
+      }
+    ],
+    "direct_calls": [
+      {
+        "ordinal": 1,
+        "line": 64,
+        "call": "OccupancySnapshot.from_state",
+        "conditional_or_loop": true,
+        "context": [
+          "if@L63"
+        ]
+      },
+      {
+        "ordinal": 2,
+        "line": 96,
+        "call": "StateUpdateCompactor.compact_with_metrics",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 3,
+        "line": 230,
+        "call": "FactionDecisionPhase.execute",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 4,
+        "line": 439,
+        "call": "FactionSentimentService.derive_from_bond_updates",
+        "conditional_or_loop": false,
+        "context": []
+      },
+      {
+        "ordinal": 5,
+        "line": 440,
+        "call": "FactionSentimentService.decay_stale_sentiments",
+        "conditional_or_loop": false,
+        "context": []
+      }
+    ],
+    "summary": {
+      "run_phase_calls": 44,
+      "distinct_literal_names": 44,
+      "duplicate_names": [],
+      "dynamic_name_calls": 0,
+      "conditional_or_loop_calls": 0,
+      "feature_flagged_calls": 12,
+      "direct_operations": 9,
+      "direct_calls": 5
+    }
+  },
+  "documented_sources": [
+    {
+      "id": "authoritative_pipeline_md",
+      "path": "docs/engine/authoritative_pipeline.md",
+      "readable": true,
+      "stated_count": 39,
+      "stated_in": "heading 'The N Phases of Refinement'",
+      "names_listed": 39,
+      "duplicate_entries": [],
+      "executable_phases_without_entry": [
+        "habit_bias_action_style",
+        "role_model_selection",
+        "information_propagation",
+        "belief_staleness_decay",
+        "clan_lifecycle",
+        "faction_sentiment"
+      ],
+      "entries_matching_no_executable_phase": [
+        "active_contracts"
+      ],
+      "order_differs_from_executable": false
+    },
+    {
+      "id": "d19_domain_phase_inventory",
+      "path": "docs/audits/D19_domain_phase_inventory.md",
+      "readable": true,
+      "stated_count": 38,
+      "stated_in": "summary table row 'pipeline.py:refine()'",
+      "names_listed": 36,
+      "duplicate_entries": [],
+      "executable_phases_without_entry": [
+        "memory_update",
+        "habit_bias_action_style",
+        "role_model_selection",
+        "information_intent_execution",
+        "information_propagation",
+        "guild_visit",
+        "belief_staleness_decay",
+        "lead_contradiction",
+        "clan_lifecycle",
+        "faction_sentiment"
+      ],
+      "entries_matching_no_executable_phase": [
+        "adventure_decision",
+        "active_contracts"
+      ],
+      "order_differs_from_executable": false
+    },
+    {
+      "id": "codex_generator_note",
+      "path": "tools/agent_orchestration_codex_adapter/generator.py",
+      "readable": true,
+      "stated_count": 39,
+      "stated_in": "_AUTHORITATIVE_PIPELINE_NOTE",
+      "names_listed": 0,
+      "duplicate_entries": [],
+      "note": "states a count only; no phase names to compare"
+    },
+    {
+      "id": "subphase_domain_contracts_epic",
+      "path": "docs/plans/design_enhancement/subphase_domain_contracts_epic.md",
+      "readable": true,
+      "stated_count": 37,
+      "stated_in": "prose ('N sub-phases' / 'N Resolution phases')",
+      "names_listed": 0,
+      "duplicate_entries": [],
+      "stated_counts_seen": [
+        37
+      ],
+      "note": "states a count only; no phase names to compare"
+    }
+  ],
+  "declarations": {
+    "dependency_graph": {
+      "path": "src/engine/phase_graph.py::PhaseDependencyGraph.PHASES",
+      "names": 31,
+      "in_pipeline_not_in_graph": [
+        "habit_bias_action_style",
+        "role_model_selection",
+        "faction_awareness",
+        "information_propagation",
+        "diplomatic_transitions",
+        "military_conflict",
+        "gold_sink",
+        "guild_visit",
+        "paid_information",
+        "belief_staleness_decay",
+        "lead_contradiction",
+        "clan_lifecycle",
+        "expired_offers",
+        "faction_sentiment"
+      ],
+      "in_graph_not_in_pipeline": [
+        "compactor"
+      ]
+    },
+    "domain_permissions": {
+      "path": "src/engine/phase_domain_permissions.py",
+      "granularity": "TickPhase members (kernel phases), not refine() phases",
+      "keys": [
+        "INIT",
+        "SCHEDULING",
+        "COLLECTION",
+        "RESOLUTION",
+        "CLEANUP",
+        "ADVANCEMENT",
+        "PERSISTENCE"
+      ],
+      "pipeline_names_matching_a_key": [],
+      "note": "keys are kernel TickPhase members, a different counted unit from refine() phase names"
+    }
+  }
+}
