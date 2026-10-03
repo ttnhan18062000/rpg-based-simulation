@@ -25,7 +25,7 @@ controlled scheduled runs. A passing smoke gate must not be mistaken for a capac
 | Candidate ID | Ticket scope | Depends on | Deliverable |
 |---|---|---|---|
 | PERF-M2-T01 | Clause-level source inventory | PERF-D4 | Matrix across engine contract, certification contract, baseline policy, gate code, tests, and CI selectors |
-| PERF-M2-T02 | Benchmark identity and result schema | T01 + PERF-D2 | Versioned schema for scenario/config/content/checkpoint/runtime/hardware/executor/mode/cardinality/observer identity |
+| PERF-M2-T02 | Benchmark identity and result schema | T01 + PERF-D2 | Versioned schema for scenario/config/content/checkpoint/runtime/hardware/executor/mode/cardinality/observer identity (provisional design draft: [`docs/performance/benchmark_identity_schema.md`](../../../performance/benchmark_identity_schema.md), `TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA`) |
 | PERF-M2-T03 | CI-fast tripwire projection | T02 | Cheap deterministic change detector, relative/absolute thresholds, failure states, and explicit non-capacity claim |
 | PERF-M2-T04 | Controlled capacity/confirmation projection | T02 | Warmup/sample/repetition, paired base/head option, and p50/p95/p99/max/variance/memory contract on approved runners |
 | PERF-M2-T05 | Baseline and known-debt lifecycle | T02, M1-T05 | Create/promote/invalidate/migrate/reject rules plus owner/expiry quarantine; missing or incompatible evidence cannot silently pass |
