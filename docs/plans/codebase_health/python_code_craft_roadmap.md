@@ -181,7 +181,11 @@ The home-grown part, needed because ruff and ast-grep have no baseline.
   complexipy was planned the same way but goes through an adapter into the registry instead
   (`TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY`, accepted in review 2026-10-02): its JSON already
   names the function, so one ratchet covers it with symbol-level keys. Reverting means dropping
-  `adapt_complexipy` and recording complexipy's snapshot file in the registry.
+  `adapt_complexipy` and recording complexipy's snapshot file in the registry. mypy-baseline is also
+  not recorded in the registry (`TCK-20261003-MYPY-BASELINE-ADVISORY`, accepted in review 2026-10-03):
+  its file path and entry count are recorded in `docs/guidelines/python_code_standard.md`, and the
+  mypy gate's job summary prints the current baseline size on every run, so the trend stays visible
+  without a registry or snapshot schema change.
 - The registry is seeded from one snapshot of `src/`, which other sessions keep changing. Before
   the ratchet gates anything (M4), it is reseeded on `main` at the start of the soak, and a reseed
   must carry over `reviewed`, `retiring_ticket` and `added_date` for rows whose key persists.
@@ -223,6 +227,8 @@ Each is separately closable. None before M6 modifies `src/`.
 | M6 | Agent integration | Skill, edit hook, implementer pointer, review rubric | request to agent-working |
 | M7 | Refactor lane | **Deferred until the owner reopens `src/`.** Standing batch folder, one file per batch, fed by the registry; first targets `api/server.py` and `observability/event_extractor.py` | codebase, with rpg-planner for engine files |
 
+**M4 soak:** start = date of batch PR merge (the PR that adds the advisory `Code health (advisory)` CI job; the closure commit writes the real date), end = start + 14 days. The flip ticket `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING` carries the same dates.
+
 Order: M1, M2, M3, M4. M5 and M6 can start after M3. M7 is a lane, not an epic, and never closes.
 
 ## 8. Owner decisions
@@ -249,8 +255,18 @@ Recorded 2026-10-02:
     tests belong to the `testing` domain, whose planner is told before the change lands.
 12. **Python version:** keep the `>=3.11` floor and document 3.13 as the CI-tested version; raising
     the floor would break the 3.12 knowledge-search venv.
+13. **mypy soaks with the ratchet** (2026-10-03): `mypy-baseline` runs advisory for the same two
+    weeks and flips to blocking in the same follow-up ticket.
+14. **Changed-line PR feedback through SARIF upload to GitHub code scanning** (2026-10-03), not
+    reviewdog comments; findings already in the registry are filtered out.
+15. **prek is installed opt-in only** (2026-10-03), because `.git/hooks` is shared by every worktree
+    on the machine; the install keeps the existing post-commit reindex hook.
+16. **jscpd stays report-only** (2026-10-03) and is excluded from the blocking set until its
+    dependencies are locked.
 
-Tickets: `agent-working/tickets/todos/python-code-craft/` (epic plus seven children, order in `SEQUENCE.md`).
+Tickets: M1 to M3 in `agent-working/tickets/done/python-code-craft/` (closed 2026-10-03, PRs #288,
+#297, #298). M4 in `agent-working/tickets/todos/python-code-craft-gates/` (epic plus six children,
+order in `SEQUENCE.md`; brief `python_code_craft_m4_gates_ticket_brief.md`).
 
 ## 9. Risks
 

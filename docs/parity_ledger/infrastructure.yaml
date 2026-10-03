@@ -2746,7 +2746,10 @@
 - id: INFRA-TYPE-001
   text: 'mypy type checking gate is configured for src/ (excluding V1 modules: src/ai/,
     src/town/, src/quests/, src/entities/, src/progression/). The gate runs on every
-    PR via CI (continue-on-error on first pass). Response model annotations are present
+    PR via CI, advisory: it reports only errors that are not in the committed mypy-baseline
+    file (registries/mypy_baseline.txt, 1569 entries at TCK-20261003-MYPY-BASELINE-ADVISORY)
+    and its step is continue-on-error until the soak ends (TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING).
+    Response model annotations are present
     on all actionable inline routes in server.py (13 of 18; 5 excluded due to raw
     Response/Redirect/HTML types). src/api/schemas.py created with typed TypedDict
     response schemas for the 4 highest-risk engine_manager routes.
@@ -2756,15 +2759,21 @@
   priority: P1
   legacy_evidence: null
   v2_evidence: '[tool.mypy] section in pyproject.toml; make typecheck-py target in
-    Makefile; mypy step in .github/workflows/test.yml (continue-on-error first pass);
-    response_model= on 13 inline routes in src/api/server.py; src/api/schemas.py created
+    Makefile (filters through mypy_baseline; typecheck-baseline-sync rewrites the baseline);
+    [tool.mypy_baseline] and registries/mypy_baseline.txt; tools/code_health/mypy_gate.py
+    (job summary with the new-error count and baseline size); mypy step in .github/workflows/test.yml
+    (runs the gate, continue-on-error during the soak); response_model= on 13 inline routes in src/api/server.py; src/api/schemas.py created
     with WorldStateResponse, EntityPageResponse, EntityDetailResponse TypedDict schemas.
 
     '
   proof_type: null
   test_path: tests/static/test_typecheck_gate_configured.py::test_pyproject_declares_tool_mypy_section,
     tests/static/test_typecheck_gate_configured.py::test_makefile_typecheck_py_target_runs_mypy_on_src,
-    tests/static/test_typecheck_gate_configured.py::test_ci_workflow_has_a_mypy_step
+    tests/static/test_typecheck_gate_configured.py::test_ci_workflow_has_a_mypy_step,
+    tests/static/test_typecheck_gate_configured.py::test_pyproject_configures_mypy_baseline_with_the_committed_baseline_and_tolerant_syncing,
+    tests/static/test_typecheck_gate_configured.py::test_makefile_typecheck_py_filters_through_the_baseline_and_stays_advisory,
+    tests/static/test_typecheck_gate_configured.py::test_ci_mypy_step_runs_the_advisory_gate_and_is_not_blocking,
+    tests/tools/test_mypy_gate.py::test_the_whole_gate_runs_real_mypy_on_a_tiny_project
   divergence_note: null
   support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
     ("make typecheck-py") was not a pytest citation at all -- the real evidence is
