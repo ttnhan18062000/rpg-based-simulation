@@ -115,6 +115,13 @@ class HashRenderer(FakeRenderer):
         return b.png_encode(width, height, pixels, filters=[0, 1, 2, 3, 4])
 
 
+class ConstantRenderer(FakeRenderer):
+    """Renders the same 16x16 image whatever the source: two revisions then have identical pixels."""
+
+    def render(self, source: bytes, *, scale: int) -> bytes:
+        return b.png(16 * scale, 16 * scale)
+
+
 def write_export_config(catalog: Path) -> Path:
     """The committed export rules, copied into an isolated catalog root."""
     from visual_assets.store import config
@@ -144,7 +151,7 @@ def write_store_format(catalog: Path) -> None:
     (catalog / "STORE_FORMAT").write_text("store_format_version: 1\nstatus: test\n")
 
 
-def adopted_tree(env, widths=(16, 17), *, renderer=None):
+def adopted_tree(env, widths=(16, 17), *, renderer=None, build=True):
     """Adopt one asset per width (hero, rock) and build their artifacts with `renderer` (default HashRenderer). Returns (adoptions, built)."""
     from visual_assets.store.build import exporter
 
@@ -154,5 +161,5 @@ def adopted_tree(env, widths=(16, 17), *, renderer=None):
     adoptions = []
     for sid, width in zip(names, widths):
         adoptions.append(do_adopt(make_intake(env.tmp, width).intake_id, source_asset_id=sid))
-    built = exporter.build(renderer=renderer or HashRenderer())
+    built = exporter.build(renderer=renderer or HashRenderer()) if build else []
     return adoptions, built

@@ -247,7 +247,7 @@ store.*                     ->  contracts, config, errors; build -> drawing.back
 2. **Store contracts and identities** (`visual_assets/store/contracts`, `identities`, `catalog/registry`), pure, fully CI-tested. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS`).
 3. **Intake**: handoff package builder in the drawing tools, quarantine, validator, `IntakeResult`. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-INTAKE`): quarantine, validator, review, the `intake` / `review` / `list` / `show` CLI, and the drawing-side `export_handoff` (16 tools).
 4. **Adoption and provenance**: human-gated `adopt`, `revoke`, records, audit reconstruction test. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-ADOPTION`).
-5. **Build and release candidate**: sandboxed export, canonical hash, manifest, `verify`, `gc`.
+5. **Build and release candidate**: sandboxed export, canonical hash, manifest, `verify`, `gc`. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-BUILD-RELEASE`), together with the store's own render check at review and adoption.
 6. **Store docs and MCP read-only store tools**: `docs/assets/store_contract.md` completed, `store_list` / `store_show` / `submit_candidate` on the server.
 
 Tickets 2-5 each land with synthetic fixtures only. Order matters: 1 before everything; 2 before 3-5.

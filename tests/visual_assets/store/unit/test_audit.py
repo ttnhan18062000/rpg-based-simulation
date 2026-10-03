@@ -193,3 +193,29 @@ def test_an_unreadable_symlinked_record_is_reported_not_followed(tree):
 
 def test_the_default_root_is_the_configured_catalog(tree):
     assert audit_chain().ok and config.CATALOG_ROOT == tree.catalog and records.list_source_ids() == ["hero", "rock"]
+
+
+# --------------------------------------------------------------------------- the store's render check is part of the chain
+
+
+def test_a_deleted_render_check_copy_is_reported(tree):
+    p(tree, "provenance", "intake", f"{tree.ids[0].intake_id}.review.json").unlink()
+    assert codes(audit_chain()) == ["REVIEW_MISSING"]
+
+
+def test_an_edited_render_check_copy_is_reported(tree):
+    edit_json(p(tree, "provenance", "intake", f"{tree.ids[0].intake_id}.review.json"), tool_version="edited")
+    assert codes(audit_chain()) == ["REVIEW_HASH_MISMATCH"]
+
+
+def test_a_render_check_that_did_not_match_or_describes_other_bytes_is_reported(tree):
+    path = p(tree, "provenance", "intake", f"{tree.ids[0].intake_id}.review.json")
+    data = json.loads(path.read_bytes())
+    data["source_hash"] = "sha256:" + "4" * 64
+    path.write_bytes(json.dumps(data, sort_keys=True, separators=(",", ":")).encode() + b"\n")
+    assert "REVIEW_MISMATCH" in codes(audit_chain())
+
+
+def test_an_unreferenced_render_check_copy_is_an_orphan(tree):
+    shutil.copyfile(p(tree, "provenance", "intake", f"{tree.ids[0].intake_id}.review.json"), p(tree, "provenance", "intake", "in-ffffffffffffffff.review.json"))
+    assert codes(audit_chain()) == ["ORPHAN_FILE"]

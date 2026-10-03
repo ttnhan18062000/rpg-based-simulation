@@ -86,3 +86,55 @@ def test_the_module_runs_as_a_script_and_only_adopt_and_revoke_are_human_only():
         assert command in commands, command
     assert commands.count("HUMAN ONLY") == 2  # adopt and revoke say so in their own help
     assert "activate" not in commands and "publish" not in commands  # nothing in this foundation activates anything (D6)
+
+
+# --------------------------------------------------------------------------- review with the store's render, and build / release / verify / gc
+
+
+def test_review_exits_1_when_the_preview_does_not_match_the_source(env, monkeypatch, capsys):
+    from tests.visual_assets.store.adoption_support import MismatchRenderer, make_intake
+
+    result = make_intake(env.tmp, reviewed=False)
+    monkeypatch.setattr(cli, "_renderer", lambda: MismatchRenderer())
+    assert cli.main(["review", result.intake_id]) == 1
+    out = capsys.readouterr().out
+    assert "DOES NOT MATCH" in out and str(env.review / result.intake_id) in out
+
+
+def test_review_without_a_renderer_exits_0_and_says_nothing_was_verified(env, monkeypatch, capsys):
+    from tests.visual_assets.store.adoption_support import make_intake
+
+    result = make_intake(env.tmp, reviewed=False)
+    monkeypatch.setattr(cli, "_renderer", lambda: None)
+    assert cli.main(["review", result.intake_id]) == 0
+    assert "UNVERIFIED" in capsys.readouterr().out
+
+
+def test_build_release_verify_and_gc_at_the_command_line(env, monkeypatch, capsys):
+    from tests.visual_assets.store import adoption_support as s
+
+    s.adopted_tree(env, build=False)
+    s.write_registry(env.catalog, [s.key_for("hero"), s.key_for("rock")])
+    monkeypatch.setattr(cli, "_renderer", lambda: s.HashRenderer())
+    assert cli.main(["build"]) == 0
+    out = capsys.readouterr().out
+    assert "hero--x1 r0001" in out and "built" in out
+    assert cli.main(["build", "hero"]) == 0 and "unchanged" in capsys.readouterr().out
+    assert cli.main(["release", "--catalog-id", "main"]) == 2  # the committed registry rules: fixture keys are refused by the CLI
+    assert "registry_invalid" in capsys.readouterr().err
+    assert cli.main(["verify"]) == 1  # the same fixture registry fails verification without the opt-in
+    assert "REGISTRY_INVALID" in capsys.readouterr().out
+    assert cli.main(["gc"]) == 0 and "generated" not in capsys.readouterr().out  # only review exports of adopted intakes are listed
+    (env.catalog / "generated" / "hero--x1" / ("d" * 64 + ".png")).write_bytes(b"orphan")
+    assert cli.main(["gc"]) == 0 and "would delete generated" in capsys.readouterr().out
+    assert (env.catalog / "generated" / "hero--x1" / ("d" * 64 + ".png")).exists()
+    assert cli.main(["gc", "--delete"]) == 0 and "deleted generated" in capsys.readouterr().out
+    assert not (env.catalog / "generated" / "hero--x1" / ("d" * 64 + ".png")).exists()
+
+
+def test_build_without_aseprite_exits_2_with_its_own_code(env, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "_renderer", lambda: None)
+    from visual_assets.store.build import exporter
+
+    monkeypatch.setattr(exporter, "default_renderer", lambda: None)
+    assert cli.main(["build"]) == 2 and "renderer_unavailable" in capsys.readouterr().err

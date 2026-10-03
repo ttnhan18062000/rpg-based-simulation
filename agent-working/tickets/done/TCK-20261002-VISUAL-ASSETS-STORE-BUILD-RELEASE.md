@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261002-VISUAL-ASSETS-STORE-BUILD-RELEASE
-phase: inprogress
+phase: done
 date: 2026-10-02
 tags: [architecture, testing, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing, documentation]
 Sandboxed build, canonical pixel hash, release-candidate manifest, `verify` and `gc`
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -89,33 +89,33 @@ integrity in pure Python (so CI can do it without Aseprite), and list unreachabl
 - MCP store tools (child 6).
 
 ## Acceptance Criteria
-- [ ] Two PNG fixtures with identical pixels but different encodings (different filter choice, compression
+- [x] Two PNG fixtures with identical pixels but different encodings (different filter choice, compression
       level, colour type RGBA vs indexed, an extra ancillary text chunk, different RGB under alpha 0) have the
       same `pixel_hash`; changing one visible pixel, the width, or swapping width and height changes it.
-- [ ] `pixel_hash` of one fixture equals a value computed by hand in the test from the documented definition
+- [x] `pixel_hash` of one fixture equals a value computed by hand in the test from the documented definition
       (not by calling the same function twice).
-- [ ] The PNG reader rejects each of: bad signature, bad CRC, 16-bit, interlaced, over-`MAX_DIM`, truncated
+- [x] The PNG reader rejects each of: bad signature, bad CRC, 16-bit, interlaced, over-`MAX_DIM`, truncated
       `IDAT`, decompressed size above the bound, data after `IEND`.
-- [ ] Integration: building one adopted synthetic source twice gives the same `PixelHash` and one artifact file;
+- [x] Integration: building one adopted synthetic source twice gives the same `PixelHash` and one artifact file;
       a revoked source is refused.
-- [ ] `assemble_release` writes a manifest that parses strictly, refuses each case in scope item 4, never
+- [x] `assemble_release` writes a manifest that parses strictly, refuses each case in scope item 4, never
       overwrites, and the tree contains no file or field naming an active release.
-- [ ] `verify` passes on a clean synthetic store and reports the specific finding for each planted fault: edited
+- [x] `verify` passes on a clean synthetic store and reports the specific finding for each planted fault: edited
       PNG pixel, PNG renamed to another hash, deleted artifact record, orphan file in `generated/`, manifest
       pointing at a missing artifact, manifest pointing at a revoked source, stray file in `sources/`.
-- [ ] `verify` passes on the committed catalog in CI (`test_catalog_integrity.py`).
-- [ ] `gc` without `--delete` changes nothing; with it, it removes only listed files and never anything under
+- [x] `verify` passes on the committed catalog in CI (`test_catalog_integrity.py`).
+- [x] `gc` without `--delete` changes nothing; with it, it removes only listed files and never anything under
       `sources/`, `provenance/`, `manifests/`.
-- [ ] Boundary test: only `store/build` imports `drawing.backend.sandbox`; no other store module imports
+- [x] Boundary test: only `store/build` imports `drawing.backend.sandbox`; no other store module imports
       `drawing`.
-- [ ] (added by asset-planner 2026-10-03) The PNG reader lives in a layer `intake` may import; intake fully validates
+- [x] (added by asset-planner 2026-10-03) The PNG reader lives in a layer `intake` may import; intake fully validates
       preview structure (not just signature, IHDR and scale), each defect with its own finding code.
-- [ ] (added by asset-planner 2026-10-03) With Aseprite, `review` renders the staged source into the review area and
+- [x] (added by asset-planner 2026-10-03) With Aseprite, `review` renders the staged source into the review area and
       compares pixel hashes with the producer's preview at the same scale; a mismatch is shown prominently in
       `summary.txt` and recorded; without Aseprite it says the preview is producer-supplied and unverified.
-- [ ] (added by asset-planner 2026-10-03) `adopt` refuses an intake whose store-rendered review is missing or whose
+- [x] (added by asset-planner 2026-10-03) `adopt` refuses an intake whose store-rendered review is missing or whose
       preview did not match, with its own error code.
-- [ ] `pytest tests/visual_assets -m "not slow and not extra_slow"` green without Aseprite; integration green
+- [x] `pytest tests/visual_assets -m "not slow and not extra_slow"` green without Aseprite; integration green
       with it.
 
 ## Related Tickets
@@ -146,13 +146,39 @@ integrity in pure Python (so CI can do it without Aseprite), and list unreachabl
   `VisualKeyDefinition`; if it is needed, add the field with `schema_version` handling and tell the planner.
 
 ## Implementation Notes
-(to be filled)
+Staging artifacts: `agent-working/stored_artifacts/TCK-20261002-VISUAL-ASSETS-STORE-BUILD-RELEASE/`. Done as asset-planner decided after the re-check:
+
+- **Pure pixels layer** (`store/pixels.py`): bounded stdlib PNG decoder and the `pixels-v1` hash; intake now fully decodes the producer's preview with it (finer finding codes), build uses it for artifact identity.
+- **Store's own render** (`rendering.py` with an injected `RenderTool`, `review.py`): `review` records a typed `ReviewRenderCheck` and shows `store_render.png` with a prominent mismatch warning; `adopt` re-renders at adoption time and never
+  trusts the stored file (it can be forged by any local process), refuses `preview_mismatch` / `review_render_missing` / `review_render_stale` / `renderer_unavailable`, copies the check into tracked provenance and binds its hash in the `AdoptionRecord`.
+- **Build / release / verify / gc**: `store/build/{exportconfig,fingerprint,exporter}.py` (the one store layer importing the shared sandbox), `store/release.py` (ordered `rc-NNNN`, no active pointer), `store/verify.py` (non-blocking findings for
+  revoked history), `store/gc.py` (dry run by default); CLI `build`, `release`, `verify`, `gc`; `visual_assets/catalog/build-config/export.toml` committed (rules, not an asset).
+- **Contract additions** (additive, schema_version 1): `ArtifactRecord.source_record_hash` (chain anchoring), ordered `ReleaseId`, `VisualKeyDefinition.optional`, `ReviewRenderCheck`, `AdoptionRecord.review_hash`; `visual_key_taken`.
+
+### Where ticket and reality differed (reported to asset-planner, who decided)
+1. Ordered release ids, an `optional` marker and the chain-anchoring hash were missing from the contracts; the preview-to-source binding and `visual_key_taken` were added to this ticket by the planner.
+2. `release` is `store/release.py` (not `store/catalog/release.py`): it needs records and eligibility. The PNG reader is a new pure layer so intake may import it. `review` is its own layer so intake never imports `drawing`.
+3. The PNG is named by pixel hash and each revision has its own record (`<hex>.<revision>.artifact.json`): two revisions that render identically share the PNG, which the ticket's one-record-per-hash naming could not express.
+4. Plain export runs no Lua, so the fingerprint's "Lua pin hash" is the pin of the template mounted in the sandbox; the docs say so.
+5. A visual key maps to its asset through the adoption record of the asset's latest eligible revision; one key maps to one artifact (stated limit).
+6. Two existing tests changed for legitimate reasons: the unknown-layer planted test uses a made-up layer name, and the boundary assertion for `store/build/exporter.py` is restored to the strict `== []` (planner item 7). The committed-catalog test now allows exactly `export.toml` in `build-config/`.
+
+Process notes: while testing, an integration test without the isolating fixture wrote a sprite into the real `~/.cache/rpg-aseprite-mcp`; I removed exactly that directory (`sprites/hero`) and fixed the test. `origin/main` was merged into the branch mid-ticket (agent-working/ path move); the merge commit is `d239424e`.
 
 ## Test Summary
-(to be filled)
+Every suite run separately under `systemd-run --user --scope -p MemoryMax=2G` (per the machine's OOM note). `tests/visual_assets`: 971 passed with Aseprite; 771 passed, 200 skipped with the Aseprite binary unavailable (what CI sees: all new unit tests,
+the committed-catalog `verify`, and the pure PNG/hash tests run there); store unit + boundary + catalog integrity pass under the system python (707). Static + architecture + docs: 234 passed, 2 skipped, 1 xfailed. Main's path guards: 13 passed.
+- `pixels-v1` equals a hand-computed value; 12 encodings of one image hash identically; one pixel, the width, or swapped width/height changes it; the RGB under alpha 0 is ignored; every refusal in the ticket (and APNG, colour-key tRNS, unknown critical chunk) has its own test; a decompression bomb is refused without inflating it.
+- Real Aseprite (integration): the store's render equals the drawing tools' preview at scale 1 and 8; a real candidate goes review (MATCH) -> adopt (real re-render) -> build twice (same PixelHash, one artifact file); a revoked source is refused; a producer preview of a different sprite is caught as MISMATCH and adopt refuses.
+- Mutation: 32 hand-applied mutants of the new guards plus 22 of the PNG reader; four survived at first (the whole-number-scale check, release's artifact-source-revoked check, and two earlier ones) and each led to a stronger test; all are now caught.
 
 ## Files Changed
-(to be filled)
+Added: `visual_assets/store/{pixels,rendering,review,release,verify,gc}.py`, `visual_assets/store/build/{__init__,exportconfig,fingerprint,exporter}.py`, `visual_assets/store/contracts/review.py`, `visual_assets/catalog/build-config/export.toml`,
+`visual_assets/catalog/fixtures/contracts/review_render_check.json`, `tests/visual_assets/test_catalog_integrity.py`, `tests/visual_assets/store/unit/test_{pixels,review_render,exportconfig,build,release,verify,gc}.py`,
+`tests/visual_assets/store/integration/test_build_real.py`.
+Changed: `adoption.py` (render checks, `visual_key_taken`, review copy), `audit.py` (review link), `records.py`, `revoke.py` (single eligibility test), `cli.py`, `identities.py` (`rc-NNNN`), contracts (`artifact`, `definitions`, `adoption`, `intake`, `__init__`), `errors.py`, `config.py`,
+`intake/{validator,service,quarantine,__init__}.py` (full PNG validation, `prepare_review`/`export_review`), removed `intake/png.py`, the test support and the boundary test, docs (`store_contract.md`, ADR, plan README, READMEs), tickets 4 and 6.
+No `src/`, `frontend/`, requirements or pyproject change.
 
 ## Completion Summary
-(open)
+Adopted sources export to PNG artifacts identified by their decoded pixels (`pixels-v1`), release candidates are immutable with ordered ids and no active pointer, `verify` checks the whole store in pure Python and passes on the committed catalog in CI, and `gc` lists before it deletes. The store now renders the source itself so the human's preview is checked against the bytes being adopted, and `adopt` re-does that check instead of trusting a stored file. The committed catalog still holds zero keys, sources, adoptions and artifacts.

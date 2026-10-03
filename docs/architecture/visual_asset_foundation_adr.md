@@ -33,7 +33,7 @@ paths were deliberately left open. Full structure, layering rules and command ta
 | D7 | One CI step `Run: tests/visual_assets` in the `api-tools` job | **decided** | CI lists test directories explicitly, so a new test root runs nowhere until added | never |
 | D2 | Commit adopted `.aseprite` sources directly, no Git LFS | **decided (user, 2026-10-02)** | 16-32 px sources are about 1-5 KB each | sources exceed about 100 KB or history grows past an agreed size |
 | D3 | Commit generated PNGs only for adopted assets; candidates and anything under review stay local in gitignored `visual_assets/catalog/.review/`; verify the committed ones in CI by canonical pixel hash | **decided (user, 2026-10-02)** | assets are chosen carefully and not always used, so nothing unaccepted enters git history; CI has no Aseprite, so it cannot rebuild | CI gains Aseprite, or the frontend build takes over generation |
-| D4 | Hash artifacts by decoded pixels, not file bytes | **decided (user, 2026-10-02)** | PNG byte determinism across Aseprite versions is unproven | byte-exact reproducibility is demonstrated |
+| D4 | Hash artifacts by decoded pixels, not file bytes | **decided (user, 2026-10-02)**; algorithm `pixels-v1` recorded in `docs/assets/store_contract.md` (sha256 over a magic, width and height as u32 big-endian, then non-premultiplied RGBA rows with alpha-0 pixels zeroed) | PNG byte determinism across Aseprite versions is unproven | byte-exact reproducibility is demonstrated |
 
 ## Decisions taken while implementing the move (no behaviour change)
 
@@ -51,6 +51,10 @@ paths were deliberately left open. Full structure, layering rules and command ta
   human gate, and D3 says nothing unaccepted enters git history; `adopt` (ticket 4) copies the result into `provenance/intake/`.
 - Adoption binds its records by hash (`AdoptionRecord.intake_hash`, `SourceRecord.adoption_hash`) because `adoption_id` alone cannot show an edited approver; the remaining limit (a consistent
   edit of both records) is stated in `docs/assets/store_contract.md`. `source_asset_id` is never defaulted: naming an asset is a deliberate human act.
+- Store layers `pixels` (pure PNG decoding and the hash, shared by intake and build), `rendering` (the injected-renderer comparison shared by review and adopt), `review`, `build` (the one layer that imports the shared sandbox from
+  `drawing`), `release`, `verify`, `gc` have rows too; the human-gated or tracked-catalog writers `adoption`, `revoke`, `catalogwrite`, `release`, `gc` are never importable from the drawing code. `assemble_release` is
+  `store/release.py`, not `store/catalog/release.py`, because it needs records and eligibility.
+- `adopt` re-renders the source itself and never trusts a stored render check (the quarantine is writable by any local process); see the store contract.
 - Store layers `records`, `catalogwrite`, `adoption`, `revoke`, `audit` have rows too; `adoption`, `revoke` and `catalogwrite` are the human-gated writers the drawing code may never import.
 - Store layers `intake`, `cli`, `__main__` have their own `STORE_ALLOWED` rows; `intake` does file I/O, only `cli` reads the clock.
 - Aseprite file facts used by intake were verified against the pinned Aseprite 1.3.18.6 by round-tripping files through the real binary (integration tests).

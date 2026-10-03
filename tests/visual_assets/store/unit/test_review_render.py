@@ -268,3 +268,18 @@ def test_an_asset_keeps_its_own_key_across_revisions_but_cannot_move_onto_anothe
     with pytest.raises(GateError) as err:  # a new hero revision tries to take rock's key
         s.do_adopt(d.intake_id, new=False, parent="r0002", visual_key=s.key_for("rock"))
     assert err.value.code == "visual_key_taken" and "rock" in err.value.message
+
+
+def test_a_preview_that_is_not_a_whole_number_scale_of_the_source_is_refused_by_the_comparison_itself(env):
+    """Intake already refuses such a preview, but the comparison must not depend on that: it checks the scale on its own."""
+    _, source, _ = b.good_files()  # a 16-wide source
+    for width in (17, 47, 130):  # not multiples of 16
+        with pytest.raises(RenderError) as err:
+            rendering.preview_scale(b.png(width, width), source)
+        assert err.value.code == "scale_unsupported", width
+    assert rendering.preview_scale(b.png(16 * 3, 16 * 3), source) == 3
+    with pytest.raises(RenderError) as err:
+        rendering.preview_scale(b"not a png", source)
+    assert err.value.code == "preview_undecodable"
+    with pytest.raises(RenderError):
+        rendering.preview_scale(b.png(16, 16), b"not an aseprite file")

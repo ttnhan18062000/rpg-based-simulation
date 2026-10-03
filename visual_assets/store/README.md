@@ -1,7 +1,7 @@
-# visual_assets/store — asset store logic (contracts built, writers not yet)
+# visual_assets/store — asset store logic (everything but the MCP store tools)
 
-**Status: the pure contract layer and candidate intake exist. No tracked-catalog writer exists yet (adoption, build, release, verify, gc);
-see `agent-working/tickets/todos/visual-asset-foundation/SEQUENCE.md` for the tickets that build them, in order.**
+**Status: built through ticket 5: contracts, intake, human-gated adoption and revocation, sandboxed build, release candidates, verify and gc. Only the MCP store tools (ticket 6) are still to come; see
+`agent-working/tickets/todos/visual-asset-foundation/SEQUENCE.md`.**
 
 ## What exists
 
@@ -13,6 +13,9 @@ see `agent-working/tickets/todos/visual-asset-foundation/SEQUENCE.md` for the ti
 | `contracts/` | strict, frozen, versioned records and `canonical_json` / `parse_record`; pure (no file, clock or path access) |
 | `catalog/registry.py` | read-only loader for `catalog/definitions/visual_keys.yaml`; `Registry.resolve` follows at most one alias |
 | `intake/` | `quarantine.py` (safe read, exclusive write), `aseprite.py` / `png.py` (bounded pure readers), `validator.py` (one policy, no producer branch), `service.py` (`intake`, `review`, `list_results`, `show`) |
+| `pixels.py` | pure bounded PNG decoder and the `pixels-v1` hash (stdlib only); used by intake and build |
+| `rendering.py`, `review.py` | injected-renderer comparison of the store's own render with the producer's preview; `review` records the typed check |
+| `build/`, `release.py`, `verify.py`, `gc.py` | sandboxed export to artifacts (the only store code that imports `drawing`, and only the sandbox), release candidate manifests (`rc-NNNN`, no active pointer), pure-Python whole-store integrity, dry-run-by-default gc |
 | `records.py`, `catalogwrite.py`, `adoption.py`, `revoke.py`, `audit.py` | catalog record reads; all-or-nothing tracked publish; **human-gated** `adopt` and `revoke` (+ `is_build_eligible`, fails closed); read-only `audit_chain` |
 | `cli.py`, `__main__.py` | `python -m visual_assets.store intake <dir> | review <id> | list | show <id> | audit | adopt ... | revoke ...` (adopt and revoke: HUMAN ONLY, terminal plus typed id); exit 0 passed, 1 quarantined, 2 refused/error; the only code that reads the clock |
 

@@ -1,2 +1,2 @@
 store_format_version: 1
-status: contracts and candidate intake built (intake writes only the gitignored quarantine and review areas); no tracked-catalog writer, record or asset exists yet; see agent-working/tickets/todos/visual-asset-foundation/SEQUENCE.md
+status: store built through ticket 5 (contracts, intake, human-gated adoption and revocation, sandboxed build, release candidates, verify, gc); the committed catalog still holds zero keys, sources and artifacts; see agent-working/tickets/todos/visual-asset-foundation/SEQUENCE.md

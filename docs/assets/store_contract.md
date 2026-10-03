@@ -59,6 +59,27 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
   latest UNREVOKED revision as its parent; an asset whose every revision is revoked is closed.
 - `audit_chain` rebuilds intake result -> adoption record -> SourceRecord -> source bytes from the tree alone using the hashes the records carry (`AdoptionRecord.intake_hash`,
   `SourceRecord.adoption_hash`) and reports every break by code; leftover `.tmp-*` directories are notes.
+- **`pixels-v1` (decision D4), the identity of an artifact.** `sha256` over `b"pixels-v1\0"`, then width and height as unsigned 32-bit big-endian integers, then the image as
+  8-bit NON-premultiplied RGBA rows from top to bottom, where every pixel with alpha 0 is written as `00 00 00 00`; the string is `pixels-v1:` + hex. Two PNGs with the same visible
+  pixels have the same hash whatever their filter choice, compression level, colour type or ancillary chunks, and whatever RGB sits under a transparent pixel. The reader that
+  computes it (`store/pixels.py`, stdlib only, no I/O) accepts only non-interlaced 8-bit greyscale, greyscale+alpha, RGB, RGBA and indexed (with `tRNS`) PNGs, checks every chunk CRC,
+  bounds the dimensions and the decompressed size before inflating, and refuses 16-bit, interlaced, APNG, colour-key `tRNS`, unknown critical chunks, truncated or surplus data and
+  anything after `IEND`. Intake uses the same reader to fully validate the producer's preview.
+- **The store's own render of the source.** `review` renders the staged source itself (sandboxed Aseprite, frame 1, all visible layers) at the preview's scale, compares decoded
+  pixels with the producer's preview, writes a typed `ReviewRenderCheck` into the candidate's quarantine directory and shows `store_render.png` plus a prominent mismatch warning in the
+  review area. Without Aseprite it says plainly that the preview is producer-supplied and unverified and records nothing. `adopt` never trusts that stored file (any local process can write
+  the gitignored quarantine): it re-renders at adoption time, refuses `preview_mismatch`, `review_render_missing`, `review_render_stale` or `renderer_unavailable`, then copies the check into the
+  tracked provenance and binds its hash in the `AdoptionRecord`; `audit_chain` covers it.
+- **Build, release candidate, verify, gc.** `build` exports the latest build-eligible revision of each adopted source (fixed allowlisted command through the shared sandbox, rules pinned in
+  `build-config/export.toml`, one scale class `x1`) to `generated/<source_asset_id>--x1/<pixel hash hex>.png` plus `<hex>.<revision>.artifact.json` (the PNG is named by its pixels and shared by
+  revisions that render identically; each revision has its own record). Building twice gives the same hash and one file; a render that is not reproducible is refused. `ArtifactRecord` carries the hash
+  of the exact `SourceRecord` bytes it was built from, so a release manifest anchors the whole chain intake -> adoption -> source record -> artifact. The build fingerprint's "Lua pin hash" is the pin of the
+  template mounted in the sandbox; plain PNG export does not run Lua. `assemble_release` writes `manifests/candidates/<catalog_id>/rc-NNNN.json` (ordered ids, exclusive create, never overwritten, no active pointer:
+  D6) from the registry and the current artifacts; eligibility is decided by `is_build_eligible` alone, and a registry key with no artifact is refused unless marked `optional`. `verify` (pure Python, run
+  on the committed catalog in CI) rebuilds the chain, re-hashes every artifact and checks every record against its bytes and name, follows every manifest entry, and flags anything unexpected;
+  an artifact of a revoked revision is visible non-blocking history, a manifest entry for one is a blocking finding. `gc` lists, and only with `--delete` removes, quarantine directories with no
+  adoption and no pending review, review exports of adopted/revoked/gone intakes and unreferenced PNGs; deleting a locally revoked intake also deletes its local revocation record; it never touches
+  `sources/`, `provenance/` or `manifests/`.
 - Handoff builder (drawing side): `export_handoff` writes a candidate directory inside the experiment workspace (see `docs/assets/drawing_tools.md`); it never writes the store.
 - Intake (store side; `python -m visual_assets.store intake|review|list|show`): the package directory is opened without following symlinks and read
   into memory first (refused before any byte is copied, leaving no quarantine directory, for a symlink, extra file or sub-directory, oversize file,
@@ -75,8 +96,6 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 | Piece | Designed behaviour | Child ticket |
 |---|---|---|
 | Intake | bounded copy into quarantine, claims checked against staged bytes (hashes, format, bounds, symlinks, traversal, licence state), immutable `IntakeResult` | 3 |
-| Build / release candidate | sandboxed allowlisted export, canonical pixel hash, immutable candidate manifests, no "active" pointer | 5 |
-| `verify` / `gc` | whole-store integrity in pure Python (runs in CI); reachability-based dry-run gc | 5 |
 | MCP store tools | read-only `store_list` / `store_show` and `submit_candidate`; never adopt, build, release, revoke or gc | 6 |
 
 ## Known gaps (stated, not hidden)
@@ -88,9 +107,10 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
   on this machine only; another checkout does not see it. A revoked SOURCE REVISION is tracked and covers its bytes everywhere: `adopt` refuses the same bytes through any
   other intake (`source_bytes_revoked`) and refuses identical bytes already live under any asset (`duplicate_source`).
 - **Agents never run `adopt` or `revoke`.** They are absent from the MCP server and a boundary test forbids the drawing code from importing them.
-- **The preview is producer-supplied and unproven.** A human reviews `preview.png` but adopts `source.aseprite`; intake checks only the PNG signature, IHDR and scale, so a
-  producer could hand off a good-looking preview with a different source. Until `TCK-20261002-VISUAL-ASSETS-STORE-BUILD-RELEASE` lands (store-rendered review with a
-  pixel-hash comparison, and `adopt` refusing a mismatch), treat the preview as unverified.
+- **The preview is proven only where Aseprite is available.** Intake alone cannot prove a preview depicts its source, so adoption requires the store's own render (see above) and therefore refuses on a machine
+  without Aseprite and bwrap. The comparison is by decoded pixels at the preview's scale, so it is exact for what the sandboxed Aseprite renders; it is not a statement about artistic intent.
+- **One visual key maps to one artifact** (the single `x1` scale class): a key cannot carry two variants. A release candidate lists one artifact per key. A second asset cannot take a key a live asset holds (`visual_key_taken`);
+  replacing an asset under the same key means revoking the old asset's revisions first.
 - Animation metadata beyond `frame_count` and `tag_count` (per-frame durations, tag ranges, loop modes) is not part of the handoff package or checked by intake
   (proposal 9.6 lists "animation metadata"; ticket 3 adds only the producer state).
 - **Palette size is unverifiable for an all-opaque-black stored palette.** Aseprite 1.3.18.6 rebuilds such a palette from the image when it loads a file
