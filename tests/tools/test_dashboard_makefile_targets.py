@@ -94,7 +94,7 @@ def test_knowledge_index_targets_use_python_knowledge_variable():
     recipe body — that resolves empty from any git worktree, since worktrees have no venv of their
     own) as updated by TCK-20260914-VENV-NAMING-CI-PARITY-SWAP: after that ticket's rename, `.venv`
     is the CI-matching env and no longer has the knowledge stack (torch/sentence-transformers), so
-    knowledge-index/knowledge-index-update/eval-search/mcp-server-test must consume the dedicated
+    agent-working/.index/knowledge-index/knowledge-index-update/eval-search/mcp-server-test must consume the dedicated
     top-level $(PYTHON_KNOWLEDGE) variable instead of $(PYTHON3) — same "resolved once at the top,
     not inlined per-recipe" shape TCK-20260826 established, just pointed at the renamed env.
     """
@@ -112,7 +112,7 @@ def test_knowledge_index_targets_use_python_knowledge_variable():
 
 
 def test_knowledge_index_targets_set_hf_hub_etag_timeout():
-    """Guards TCK-20260831-KNOWLEDGE-INDEX-HF-HUB-TIMEOUT: knowledge-index/knowledge-index-update
+    """Guards TCK-20260831-KNOWLEDGE-INDEX-HF-HUB-TIMEOUT: agent-working/.index/knowledge-index/knowledge-index-update
     must export HF_HUB_ETAG_TIMEOUT=120 alongside SSL_CERT_FILE/SSL_CERT_DIR, so a fresh
     environment's first cold model download survives this network's per-request latency instead of
     huggingface_hub giving up on its own default 10s timeout (previously mis-filed as a hard

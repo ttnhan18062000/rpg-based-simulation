@@ -11,6 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from tools.agent_orchestration_claude_adapter.divergence_log import is_approved, load_divergences
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _WELL_FORMED_ENTRY = """\
 ## terminal_status:SOME_STATUS
@@ -125,7 +126,7 @@ def test_empty_divergence_log_has_no_entries_and_approves_nothing(tmp_path):
 
 def test_real_committed_divergence_log_has_zero_entries():
     repo_root = Path(__file__).parent.parent.parent
-    real_path = repo_root / "agent-orchestration" / "intentional-divergences.md"
+    real_path = repo_root / AGENT_ORCHESTRATION / "intentional-divergences.md"
     divergences = load_divergences(real_path)
     assert divergences == [], (
         "this ticket's own build must ship with zero divergence entries (AC #5) — "

@@ -1,7 +1,7 @@
 """Tests for tools/gate_checks/working_log_content_duplicate_check.py
 (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 6).
 
-Content check on tickets/working_log.csv catching duplicate (ticket_id, title) rows -- the shape
+Content check on agent-working/tickets/working_log.csv catching duplicate (ticket_id, title) rows -- the shape
 two sanctioned writers (append_working_log_row() called directly, then again internally by
 record_hand_orchestrated_closure.py) can produce, which no writer-scan guard can catch since both
 call sites are the one legitimate writer.

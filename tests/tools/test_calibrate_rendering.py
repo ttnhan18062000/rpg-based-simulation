@@ -4,7 +4,7 @@ Mirrors tools/calibrate_simq.py's own test file's discipline (tests/simulation_q
 test_calibrate_simq.py): tests the script's own logic and guard behavior, never asserts
 against a specific calibrated numeric healthy-band value -- those are empirical outputs
 of running real worlds, not a regression anchor (see
-staging_artifacts/TCK-20260821-VISUAL-QUALITY-CALIBRATION/test_plan.md).
+agent-working/staging_artifacts/TCK-20260821-VISUAL-QUALITY-CALIBRATION/test_plan.md).
 
 All written artifacts use tmp_path -- never the real data/calibration/rendering/ tree.
 """

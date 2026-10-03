@@ -246,7 +246,7 @@ the 13-run corpus table below for `frontier_extended`/`frontier_living_world`/
 `wilderness_survival` were NOT caused by spawn cadence (P2-B is a *late*-run, tick 500+ mechanism;
 the collapse there happens by tick 50) — they were a stale-compile / missing `hazard_kind` content
 gap, separately root-caused and fixed under this ticket. See
-`stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/investigation.md` Findings 1-4.
+`agent-working/stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/investigation.md` Findings 1-4.
 
 **2026-07-09 follow-up (`TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE`,
 `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`):** the same missing-`hazard_kind`
@@ -481,7 +481,7 @@ up to ~4× elapsed-time spread for identical seed/code). Full per-key evidence d
 
 ### P2-Q: Non-native factions stationed in a hazardous region with no immunity — recurring open design question, never formally resolved
 
-**Source:** `stored_artifacts/TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE/investigation.md` Risk #2;
+**Source:** `agent-working/stored_artifacts/TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE/investigation.md` Risk #2;
 recurred verbatim in `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`'s investigation
 (Root cause 2). New, added 2026-07-09.  
 **Files:** `data/content/social/factions.yaml` (`town_council`), `bandit_road`-composing world modules  
@@ -651,7 +651,7 @@ above, now RESOLVED with a distinct-finding note) and were actually a stale-comp
 `hazard_kind` content gap. All five rows above reflect fresh 200-tick, seed-42 calibration runs
 taken after that gap was fixed and each world was recompiled and re-verified for population
 stability (>=60% alive floor through 300 ticks — see
-`stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/investigation.md` Findings 1-4 and
+`agent-working/stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/investigation.md` Findings 1-4 and
 `docs/simulation_quality/eval_matrix_results.md` §Newly-Anchored Worlds for the full 3-seed
 tables). All five worlds are now anchored in `tests/simulation_quality/fixtures/grade_anchors.json`.
 
@@ -715,7 +715,7 @@ Grouped by effort and pillar:
 | AGENCY tracking signals | defer_with_reason, commitment_abandoned, rejection_cascade_tick, route_family_first_use | AGENCY: richer signal when routing ON |
 | Misc small gaps | paid_info_transaction (ECONOMY), conservation_law_verified (ECONOMY), alliance_proposed (FACTION), resource_seized (FACTION), social_memory_created (SOCIAL), contract_milestone_completed (SOCIAL), scenario_objective_progressed (NARRATIVE) | ECONOMY/FACTION/SOCIAL/NARRATIVE: marginal gains |
 
-Tickets created: `tickets/todos/simq-emit/` (5 tickets, 2026-07-01).
+Tickets created: `agent-working/tickets/todos/simq-emit/` (5 tickets, 2026-07-01).
 
 ---
 
@@ -787,7 +787,7 @@ already implemented by the pre-existing `TCK-20260627-P1H-GOAL-RUNNERUP`, discov
 also in this list as of 2026-07-03; **RESOLVED (verified 2026-07-07)** by
 `TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS` — see the P2-D section above.)
 
-**Completed as of 2026-07-01:** Engine emission gaps (`tickets/todos/simq-emit/`, 5 tickets created 2026-07-01)
+**Completed as of 2026-07-01:** Engine emission gaps (`agent-working/tickets/todos/simq-emit/`, 5 tickets created 2026-07-01)
 
 1. `TCK-20260701-SIMQ-EMIT-PROGRESSION` — 5 progression signal events
 2. `TCK-20260701-SIMQ-EMIT-INFORMATION2` — 5 information/cognition signal events
@@ -808,11 +808,11 @@ resolved 2026-07-04 — was already fixed by TCK-20260627-P1H-GOAL-RUNNERUP, a f
 and `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`'s investigations:** P2-O
 (hazard_kind corpus-wide completeness test — 3rd recurrence of the same bug class, highest-leverage
 of the three since it prevents future recurrences rather than reacting to them, ticket exists at
-`tickets/inprogress/TCK-20260710-HAZARD-KIND-CORPUS-WIDE.md`), P2-P (verify long-run SimQ anchor
+`agent-working/tickets/inprogress/TCK-20260710-HAZARD-KIND-CORPUS-WIDE.md`), P2-P (verify long-run SimQ anchor
 reliability against F6's throttle-timing variance — **RESOLVED 2026-07-11**,
 `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY`), P2-Q (one DA ruling closes two recurring open
 questions — lowest-effort item in this whole document, XS, ticket exists at
-`tickets/inprogress/TCK-20260710-TOWN-COUNCIL-HAZARD-DA.md`).
+`agent-working/tickets/inprogress/TCK-20260710-TOWN-COUNCIL-HAZARD-DA.md`).
 
 ---
 

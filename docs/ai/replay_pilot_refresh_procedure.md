@@ -17,21 +17,21 @@ run these steps as part of closing that ticket.
 ## When to refresh
 
 Per `agent_evaluation_foundation_experiment.md`'s Method step 5 ("periodically refresh the
-eligible pool"). No fixed cadence is mandated — refresh when a materially larger `tickets/done/`
+eligible pool"). No fixed cadence is mandated — refresh when a materially larger `agent-working/tickets/done/`
 corpus has accumulated since the last sample, or when a new recurring defect class is added to
 `guardrail_enforcement_epic.md` and needs its own detector.
 
 ## Steps
 
 1. **Re-sample.** Run `tools/agent_replay/sampler.py::build_sample_manifest()` against the
-   current `tickets/done/` and `agent-monitoring/` state:
+   current `agent-working/tickets/done/` and `agent-working/agent-monitoring/` state:
 
    ```python
    from pathlib import Path
    from agent_replay.sampler import build_sample_manifest, write_manifest
 
-   manifest = build_sample_manifest(Path("tickets/done"), Path("agent-monitoring"))
-   write_manifest(manifest, Path("stored_artifacts/<new-ticket-id>/sample_manifest.yaml"))
+   manifest = build_sample_manifest(Path("agent-working/tickets/done"), Path("agent-monitoring"))
+   write_manifest(manifest, Path("agent-working/stored_artifacts/<new-ticket-id>/sample_manifest.yaml"))
    ```
 
    This re-derives the corpus size, tier breakdown, and stratification live — never reuse the
@@ -40,8 +40,8 @@ corpus has accumulated since the last sample, or when a new recurring defect cla
 
 2. **Re-convert.** Run `tools/agent_replay/fixture_converter.py::convert_sample()` against the new
    manifest's ticket IDs, writing fresh fixtures and a fresh `conversion_log.yaml` under the new
-   ticket's own `stored_artifacts/` directory — never overwrite this pilot's own
-   `stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/` outputs or
+   ticket's own `agent-working/stored_artifacts/` directory — never overwrite this pilot's own
+   `agent-working/stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/` outputs or
    `tests/fixtures/agent_replay/pilot/sample/`.
 
 3. **Re-run the detectors.** Apply `tools/agent_replay/defect_detectors.py::detect_m2_doc_update_gap`
@@ -59,13 +59,13 @@ corpus has accumulated since the last sample, or when a new recurring defect cla
 
 5. **Recompute metrics and write a fresh results report.** Call
    `tools/agent_replay/metrics.py::compute_metrics()` and write a new
-   `stored_artifacts/<new-ticket-id>/results.md` — never overwrite this pilot's own results.md,
+   `agent-working/stored_artifacts/<new-ticket-id>/results.md` — never overwrite this pilot's own results.md,
    which is this ticket's permanent evidence record. A refreshed pilot's own results should be
    appended to `agent_evaluation_foundation_experiment.md` as a dated addendum under `## Results`,
    not by replacing this pilot's original entry.
 
 6. **File a new ticket for the refresh.** Per this project's Workflow Rule, a refresh run is new
-   work with its own ticket, its own `staging_artifacts/`, and its own Definition-of-Done — it is
+   work with its own ticket, its own `agent-working/staging_artifacts/`, and its own Definition-of-Done — it is
    not a silent edit to this pilot's own closed artifacts.
 
 ## What must not change between refreshes

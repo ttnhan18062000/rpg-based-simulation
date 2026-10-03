@@ -35,7 +35,7 @@ files were unkeyed in either registry before this ticket).
 
 Regex-based, following `workflow_meta_conformance.py`'s own precedent for scanning
 `.claude/workflows/*.js` rather than a general JS parser. Confirmed during investigation
-(`staging_artifacts/TCK-20260924-WORKFLOW-AGENT-LITERAL-VOCABULARY-CHECK/investigation.md`) that
+(`agent-working/staging_artifacts/TCK-20260924-WORKFLOW-AGENT-LITERAL-VOCABULARY-CHECK/investigation.md`) that
 every real `writeSidecar(...)` call site in all 11 files is single-line -- no multi-line-call
 coverage gap to guard against.
 

@@ -11,7 +11,7 @@ tags: [delivery, ai, process-improvement]
 # GitHub Delivery Process — epic plan
 
 **Status: approved 2026-09-24. All seven open decisions resolved (see §7). Tickets created — the epic
-folder is `tickets/todos/github-delivery-process/` with `SEQUENCE.md`, one epic-tier parent and six
+folder is `agent-working/tickets/todos/github-delivery-process/` with `SEQUENCE.md`, one epic-tier parent and six
 child tickets. Branch: `github-delivery-process-epic`.**
 
 This proposes making the **delivery lane** — commit → push → PR → CI → merge — as explicit,
@@ -30,14 +30,14 @@ rules keep living in exactly one place.
 
 ## 1. Evidence
 
-All figures measured over `agent-monitoring/data/2026-W3*/tools.jsonl` (W30–W39, **116,168** Bash
+All figures measured over `agent-working/agent-monitoring/data/2026-W3*/tools.jsonl` (W30–W39, **116,168** Bash
 calls), read from **`origin/main` at `75ab942b4`**, 2026-09-23. Scripts in this session's
 scratchpad (`remeasure_main.py`, `mainline_trace.sh`); M6 promotes them into the repo.
 
 > **Measurement caveat, learned the hard way during this plan's own drafting.** An earlier pass
 > read the *worktree* copy of these shards and under-counted, because this long-lived worktree had
 > drifted 8 commits behind `origin/main`. Separately, a "closed" calendar week keeps growing on
-> `main`: every PR stages `agent-monitoring/`, so a session whose activity happened in W38 but
+> `main`: every PR stages `agent-working/agent-monitoring/`, so a session whose activity happened in W38 but
 > whose PR merges weeks later still appends W38-timestamped rows. **Any weekly total from this
 > corpus is a snapshot, not a final count**, and must be read from a named ref, never from a
 > worktree. M6 must take a `--ref` and record the SHA it measured, or before/after comparisons
@@ -200,7 +200,7 @@ Concretely, for the last three real PRs, today vs proposed:
 | # | today | proposed |
 |---|---|---|
 | 240 | `AI-first hardening Bucket-B follow-on: shadow-reviewer default-on + item 18/19 experiment specs` | `agent-infra: shadow-reviewer default-on + item 18/19 experiment specs (3 tickets)` |
-| 237 | `Move Codex runtime-activation tickets to tickets/backlogs/` | `tickets: move Codex runtime-activation tickets to backlogs (1 ticket)` |
+| 237 | `Move Codex runtime-activation tickets to agent-working/tickets/backlogs/` | `tickets: move Codex runtime-activation tickets to backlogs (1 ticket)` |
 | 229 | `Mechanism registry: resolve all 47 unbound-claimed mechanisms (entity + world/faction/region/group)` | `mechanism-registry: resolve all 47 unbound-claimed mechanisms (1 ticket)` |
 
 `<scope>` is drawn from the ticket's registered `layer`, so it is not a new free-text vocabulary —
@@ -283,7 +283,7 @@ Six child tickets. M1–M2 are the substance; M3–M5 build on them; M6 proves w
 |---|---|---|---|---|
 | M1 | Delivery contract + templates | standard | — | `docs/guides/delivery_process.md` as the single source; `.gitmessage`; `.github/pull_request_template.md`; machine-readable template spec. CLAUDE.md's 84 lines shrink to a pointer. |
 | M2 | PR content renderer | standard | M1 | `tools/delivery/pr_render.py` — reads the ticket files on the branch, emits title + body per §3.5/§3.6. `--check` mode diffs a live PR against what would be rendered. |
-| M3 | Pre-push advisory check | standard | M1 | Advisory `PreToolUse` shape, following the existing sidecar-check hook: commit subjects reference a real ticket, `agent-monitoring/` staged, branch is not squash-merged-and-finished. **Never blocking.** |
+| M3 | Pre-push advisory check | standard | M1 | Advisory `PreToolUse` shape, following the existing sidecar-check hook: commit subjects reference a real ticket, `agent-working/agent-monitoring/` staged, branch is not squash-merged-and-finished. **Never blocking.** |
 | M4 | Delivery status tool | standard | — | `tools/delivery/pr_status.py` per §3.7. Independent of M1/M2 — can run first if you want the highest-value item earliest. |
 | M5 | CI triage classifier | standard | M4 | Encodes the triage decision tree: classifies a failure as own-regression / documented-flake / baseline-drift / environment, and says which path CLAUDE.md prescribes. Advisory output; the agent still files the ticket. |
 | M6 | Delivery cost measurement | standard | M4 | Builds fresh on `tools/agent-monitoring/bash_command_mix.py`; reports gh-calls-per-PR and subject traceability over a week range, so before/after is one command. |
@@ -301,7 +301,7 @@ largest measured cost (§1.1) and the most incident-backed logic (§3.7), and de
 are the visible deliverable the request asks for, but they attack the smaller cost. Running M4 first
 also means M6 has something real to measure. This inverts the request's own ordering, deliberately and
 with the user's agreement. The authoritative order now lives in
-`tickets/todos/github-delivery-process/SEQUENCE.md`; M1 has no intra-batch dependency either, so M4 and
+`agent-working/tickets/todos/github-delivery-process/SEQUENCE.md`; M1 has no intra-batch dependency either, so M4 and
 M1 may run in either order, but M1 must not be reordered after M2 or M3, which consume its template
 spec.
 
@@ -382,19 +382,19 @@ all.
 > from any peer session — including `agent-working-design`, which scoped the ticket. Scope approval and
 > diff approval are two separate approvals; the ticket carries only the first.
 
-**Q5 — Epic or batch?** Six standard-tier tickets is a real epic (`tickets/todos/` folder +
+**Q5 — Epic or batch?** Six standard-tier tickets is a real epic (`agent-working/tickets/todos/` folder +
 `SEQUENCE.md`, epic ticket tracking children). The alternative is two batches of three, avoiding
 the epic-staleness machinery. Recommend: epic, because the sequencing constraints in §4 are real
 and a folder records them.
 
-> **Decided: epic folder.** `tickets/todos/github-delivery-process/` with `SEQUENCE.md`, an epic-tier
+> **Decided: epic folder.** `agent-working/tickets/todos/github-delivery-process/` with `SEQUENCE.md`, an epic-tier
 > parent and six children. Note the consequence: the epic all-or-nothing rule applies — no
 > cherry-picking conflict-free children out of the folder.
 
 **Q6 (separate decision, not part of this epic) — the workflow literal vocabulary check.**
 
 > **Decided: build it as its own ticket outside this epic**, `TCK-20260924-WORKFLOW-AGENT-LITERAL-VOCABULARY-CHECK`
-> in `tickets/inprogress/`. Explicitly **not** a general dormant-path gate.
+> in `agent-working/tickets/inprogress/`. Explicitly **not** a general dormant-path gate.
 >
 > **Scope widened during verification, and the tier corrected with it (Q8/Q9 below).** The gap is live
 > right now, and larger than the original framing: **29 unregistered literals — 6 agent, 23 phase.**
@@ -457,13 +457,13 @@ and a folder records them.
 
 ## 8. Status — tickets created 2026-09-24
 
-1. **Done.** `tickets/todos/github-delivery-process/` exists with `SEQUENCE.md`,
+1. **Done.** `agent-working/tickets/todos/github-delivery-process/` exists with `SEQUENCE.md`,
    `TCK-20260924-EPIC-GITHUB-DELIVERY-PROCESS` (epic tier, scope-only) and the six child tickets, all
    `layer: ai`. Tags were validated against `registries/tag_registry.jsonl` rather than assumed — the
    `delivery` tag was registered on 2026-09-24 (`subsystem-topic`) because no existing tag covered the
    git/PR/CI delivery lane; every other tag used was confirmed already present.
    `TCK-20260924-WORKFLOW-AGENT-LITERAL-VOCABULARY-CHECK` was created separately in
-   `tickets/inprogress/`, deliberately not a child of the epic — **standard tier** (corrected from
+   `agent-working/tickets/inprogress/`, deliberately not a child of the epic — **standard tier** (corrected from
    `hotfix` once its scope widened, see Q8/Q9), so its staging artifacts come from the pipeline's own
    Investigate/Plan phases rather than being hand-written. Its ticket ID still reads `AGENT-LITERAL`
    although it now covers phase literals too; left unchanged deliberately, since the ID is referenced

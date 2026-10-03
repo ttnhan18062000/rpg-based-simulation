@@ -1,7 +1,7 @@
 """Single source of truth for "what identifier does this monitoring write/read belong to"
 (TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX).
 
-Replaces five independent, drifted copies of a per-identifier `agent-monitoring/data/<week>/
+Replaces five independent, drifted copies of a per-identifier `agent-working/agent-monitoring/data/<week>/
 <id>.<kind>.jsonl` write-target formula (`record_run.py`, `record_events.py`,
 `retrieval_events.py`, `post_tool_hook.py`, `shadow_reviewer_events.py`) -- two of which
 (`record_hand_orchestrated_closure.py`, `shadow_reviewer_events.py`) never adopted per-identifier
@@ -75,6 +75,10 @@ import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _REFLOG_CHECKOUT_RE = re.compile(r"checkout: moving from \S+ to (\S+)$")
 
@@ -88,7 +92,7 @@ _cache: dict[str, str] = {}
 
 def sanitize_for_filename(identifier: str) -> str:
     """Branch names may contain `/` (e.g. `feature/foo`), not valid as a bare filename component
-    without creating subdirectories under `agent-monitoring/data/<week>/`. Replaces `/` with `-`,
+    without creating subdirectories under `agent-working/agent-monitoring/data/<week>/`. Replaces `/` with `-`,
     matching this project's own `TCK-`-style hyphen-separated naming convention. A real, disclosed
     lossy mapping (two differently-slashed names could collide after sanitizing) -- accepted: no
     local branch name in this repo's real history contains `/` today."""
@@ -257,7 +261,7 @@ def resolve_batch_identifier(cwd: Path | None = None) -> str:
 
 
 def resolve_write_target(kind: str, iso_week: str | None = None, cwd: Path | None = None) -> Path:
-    """`agent-monitoring/data/<ISO-week>/<batch-identifier>.<kind>.jsonl` -- the one write-target
+    """`agent-working/agent-monitoring/data/<ISO-week>/<batch-identifier>.<kind>.jsonl` -- the one write-target
     formula every call site (`record_run.py`, `record_events.py`, `retrieval_events.py`,
     `record_hand_orchestrated_closure.py`, `post_tool_hook.py`, `shadow_reviewer_events.py`) now
     shares, replacing five independently-drifted copies of this same computation.
@@ -273,10 +277,10 @@ def resolve_write_target(kind: str, iso_week: str | None = None, cwd: Path | Non
     `cwd` is used to resolve the batch identifier (the `.git` lookup) and, when explicitly
     given (tests, pointing at a scratch repo), anchors the returned path there too. When omitted
     (every real call site), identifier resolution uses the real process `Path.cwd()` but the
-    returned path stays relative -- `Path("agent-monitoring/data") / ...` -- matching every
+    returned path stays relative -- `Path("agent-working/agent-monitoring/data") / ...` -- matching every
     existing call site's own convention (all of them already assume cwd is the repo root)."""
     identifier_cwd = cwd if cwd is not None else Path.cwd()
     week = iso_week if iso_week is not None else datetime.now(timezone.utc).strftime("%G-W%V")
     identifier = resolve_batch_identifier(identifier_cwd)
     base = cwd if cwd is not None else Path(".")
-    return base / "agent-monitoring" / "data" / week / f"{identifier}.{kind}.jsonl"
+    return base / AGENT_MONITORING / "data" / week / f"{identifier}.{kind}.jsonl"

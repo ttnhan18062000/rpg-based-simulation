@@ -1,4 +1,4 @@
-"""Read-only provenance classifier for agent-monitoring/*.jsonl records
+"""Read-only provenance classifier for agent-working/agent-monitoring/*.jsonl records
 (TCK-20260721-BASELINE-MONITORING-MANIFEST).
 
 Classifies a single already-parsed record against the documented legacy

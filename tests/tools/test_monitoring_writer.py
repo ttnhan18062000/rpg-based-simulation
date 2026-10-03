@@ -8,9 +8,9 @@ test that proves the actual recovery mechanism, not just eventual success.
 
 Test-side safety guard (mirrors the candidate's own `_assert_not_real_corpus`,
 enforced here rather than in writer.py, since writer.py's whole purpose is to
-write under the real agent-monitoring/ directory in production): every test
+write under the real agent-working/agent-monitoring/ directory in production): every test
 below targets a path under pytest's own `tmp_path` fixture, never a path
-resolving under this repo's real `agent-monitoring/` directory.
+resolving under this repo's real `agent-working/agent-monitoring/` directory.
 """
 import builtins
 import json
@@ -19,6 +19,7 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
@@ -30,7 +31,7 @@ import writer  # noqa: E402
 
 def test_no_test_target_path_resolves_under_real_agent_monitoring_dir():
     """Guard: no test in this file may hardcode a path under the real repo's
-    agent-monitoring/ directory — every target below must be tmp_path-rooted.
+    agent-working/agent-monitoring/ directory — every target below must be tmp_path-rooted.
 
     Scans every other test function's source (excluding this guard's own body,
     which necessarily names the forbidden patterns as string literals) for a
@@ -40,7 +41,7 @@ def test_no_test_target_path_resolves_under_real_agent_monitoring_dir():
 
     module = sys.modules[__name__]
     this_function_name = "test_no_test_target_path_resolves_under_real_agent_monitoring_dir"
-    real_dir = str((_REPO_ROOT / "agent-monitoring").resolve())
+    real_dir = str((_REPO_ROOT / AGENT_MONITORING).resolve())
     forbidden = [real_dir, "Path(" + '"agent-monitoring"' + ")", "Path(" + "'agent-monitoring'" + ")"]
 
     for name, obj in inspect.getmembers(module, inspect.isfunction):

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Read-only Bash-command-mix and search-tool-usage baseline over
-agent-monitoring/data/*/tools.jsonl (TCK-20260923-BASH-COMMAND-MIX-BASELINE).
+agent-working/agent-monitoring/data/*/tools.jsonl (TCK-20260923-BASH-COMMAND-MIX-BASELINE).
 
 Promotes a peer session's already-measured scratch prototype (`bash_mix.py`) into a tested,
 repeatable module. This corpus can answer two questions neither existing sibling tool already
@@ -21,7 +21,7 @@ covers:
    work runs through the catch-all `Bash` tool"). This module closes that documented gap by
    classifying Bash's own `input_summary` command head instead of substituting a proxy.
 
-Sourced from `agent-monitoring/data/*/tools.jsonl` -- committed to git, available to any session
+Sourced from `agent-working/agent-monitoring/data/*/tools.jsonl` -- committed to git, available to any session
 or CI, unlike `real_token_usage.py`'s developer-machine-only transcript corpus. Re-runnable over
 an arbitrary ISO-week range (`--since-week`/`--through-week`) so a before/after comparison for
 Batch B's advisory hooks (cd-prefix nudge, search-before-grep nudge) is a single command, diffed
@@ -32,14 +32,14 @@ filesystem read (the default, `--data-dir`) reflects THIS worktree's own git sta
 silently behind `origin/main` -- one real case found this ticket's own currently-behind worktree
 give 40 `search_docs` calls for a "closed" ISO week against 58 on a worktree that was current, an
 18-call/45% understatement from staleness alone, not from any real corpus difference. A "closed"
-week is also never really closed: every PR merge stages `agent-monitoring/`, so a session whose
+week is also never really closed: every PR merge stages `agent-working/agent-monitoring/`, so a session whose
 real activity happened during week W but whose PR lands later still appends W-stamped rows well
 after that week ends. For any before/after comparison, pass `--ref origin/main` (or any other
 exact ref/SHA) to pin the read to a git tree via `git ls-tree`/`git show` instead of the working
 tree -- the report then carries `measured_ref`/`measured_sha` so two runs' provenance is checkable
 before treating a difference between them as a real signal rather than worktree drift.
 
-Read-only: never opens `agent-monitoring/data/` for writing. `--ref` mode never touches the
+Read-only: never opens `agent-working/agent-monitoring/data/` for writing. `--ref` mode never touches the
 working tree at all -- it reads git blobs only.
 """
 import argparse
@@ -52,9 +52,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate import load_jsonl_with_line_count  # noqa: E402
 from monitoring_shard_paths import shard_paths  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, posix  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-DEFAULT_DATA_DIR = REPO_ROOT / "agent-monitoring" / "data"
+DEFAULT_DATA_DIR = REPO_ROOT / AGENT_MONITORING / "data"
 
 TICKET_ID = "TCK-20260923-BASH-COMMAND-MIX-BASELINE"
 SEARCH_DOCS_TOOL_NAME = "mcp__knowledge-search__search_docs"
@@ -123,13 +127,13 @@ def load_tools_rows_from_ref(
     since_week: "str | None" = None, through_week: "str | None" = None,
     repo_root: Path = REPO_ROOT,
 ) -> "tuple[list, str]":
-    """Reads agent-monitoring/data/*/<source>.jsonl shards from a git ref's tree via `git ls-tree`
+    """Reads agent-working/agent-monitoring/data/*/<source>.jsonl shards from a git ref's tree via `git ls-tree`
     + `git show`, never the working tree -- immune to a worktree being behind `origin/main` (see
     module docstring's reproducibility caveat). Returns (rows, resolved_sha)."""
     sha = resolve_ref_sha(ref, repo_root)
 
     listing = subprocess.run(
-        ["git", "ls-tree", "-r", "--name-only", sha, "--", "agent-monitoring/data/"],
+        ["git", "ls-tree", "-r", "--name-only", sha, "--", f"{posix(AGENT_MONITORING)}/data/"],
         capture_output=True, text=True, check=True, cwd=str(repo_root),
     ).stdout
 
@@ -140,9 +144,10 @@ def load_tools_rows_from_ref(
         if not line.endswith(suffix):
             continue
         parts = line.split("/")
-        if len(parts) != 4:  # agent-monitoring/data/<week>/<source>.jsonl
+        depth = len(AGENT_MONITORING.parts)
+        if len(parts) != depth + 3:  # <agent-monitoring root>/data/<week>/<source>.jsonl
             continue
-        week = parts[2]
+        week = parts[depth + 1]
         if since_week and week < since_week:
             continue
         if through_week and week > through_week:
@@ -312,7 +317,7 @@ def render_markdown(report: dict, top: int = 12) -> str:
 
 def main(argv: "list | None" = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data-dir", default=None, help="Override agent-monitoring/data/ (mainly for testing). Ignored if --ref is given.")
+    parser.add_argument("--data-dir", default=None, help="Override agent-working/agent-monitoring/data/ (mainly for testing). Ignored if --ref is given.")
     parser.add_argument("--ref", default=None, help='Read shards from a git ref/SHA tree instead of the working tree (e.g. "origin/main") -- recommended for any before/after comparison; see module docstring.')
     parser.add_argument("--since-week", default=None, help='Inclusive lower ISO week bound, e.g. "2026-W30".')
     parser.add_argument("--through-week", default=None, help='Inclusive upper ISO week bound, e.g. "2026-W39".')

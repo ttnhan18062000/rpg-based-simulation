@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Generate stored_artifacts/{ticket_id}/index.md landing pages for Docusaurus.
+Generate agent-working/stored_artifacts/{ticket_id}/index.md landing pages for Docusaurus.
 
-For each subdirectory in stored_artifacts/ that contains at least one of:
+For each subdirectory in agent-working/stored_artifacts/ that contains at least one of:
   investigation.md, plan.md, test_plan.md
 — writes an index.md with frontmatter and links to the available artifact files.
 
@@ -17,11 +17,15 @@ import argparse
 import os
 import sys
 from pathlib import Path
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STORED_ARTIFACTS as _STORED_ARTIFACTS_REL  # noqa: E402
 
 ARTIFACT_FILES = ["investigation.md", "plan.md", "test_plan.md"]
 
 REPO_ROOT = Path(__file__).parent.parent
-STORED_ARTIFACTS = REPO_ROOT / "stored_artifacts"
+STORED_ARTIFACTS = REPO_ROOT / _STORED_ARTIFACTS_REL
 
 INDEX_TEMPLATE = """\
 ---
@@ -58,7 +62,7 @@ def should_regenerate(index_path: Path, artifact_paths: list[Path]) -> bool:
 
 def run(dry_run: bool = False) -> int:
     if not STORED_ARTIFACTS.exists():
-        print(f"ERROR: stored_artifacts/ not found at {STORED_ARTIFACTS}", file=sys.stderr)
+        print(f"ERROR: agent-working/stored_artifacts/ not found at {STORED_ARTIFACTS}", file=sys.stderr)
         return 1
 
     generated = 0

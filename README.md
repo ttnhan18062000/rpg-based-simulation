@@ -55,7 +55,7 @@ The project has a unified Docusaurus 3 documentation site that covers all conten
 make docs-serve      # Start site at http://localhost:3000
 make docs-build      # Build static site (website/build/)
 make docs-registry   # Regenerate docs/REGISTRY.yaml after adding new docs
-make docs-artifacts  # Regenerate stored_artifacts/*/index.md landing pages
+make docs-artifacts  # Regenerate agent-working/stored_artifacts/*/index.md landing pages
 ```
 
 The site has four sections:
@@ -109,7 +109,7 @@ pytest tests/ --resource-budget=medium   # 4 GB RAM, 60s timeout (default)
 pytest tests/ --resource-budget=off      # no limits
 ```
 
-Never run `pytest tests/` without scoping — scope to the domain under change. See [testing taxonomy](docs/testing/v2_test_taxonomy.md).
+Never run `pytest tests/` without scoping — scope to the domain under change. See [testing taxonomy](docs/testing/test_taxonomy.md).
 
 ---
 
@@ -140,4 +140,4 @@ If Kafka/Redis throws `InconsistentClusterIdException`: `docker compose down -v 
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Tickets live in [`tickets/`](tickets/); active work tracked in [`tickets/working_log.csv`](tickets/working_log.csv).
+See [CONTRIBUTING.md](CONTRIBUTING.md). Tickets live in [`agent-working/tickets/`](agent-working/tickets/); active work tracked in [`agent-working/tickets/working_log.csv`](agent-working/tickets/working_log.csv).

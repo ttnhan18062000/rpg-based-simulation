@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Standalone, repo-wide sweep detecting the epic-scope-orphan defect fixed by
-TCK-20260711-EPIC-SCOPE-ORPHAN-FIX: an epic-tier ticket present in both `tickets/inprogress/`
-and `tickets/todos/**` simultaneously (a permanent duplicate, since epic tier never reaches
+TCK-20260711-EPIC-SCOPE-ORPHAN-FIX: an epic-tier ticket present in both `agent-working/tickets/inprogress/`
+and `agent-working/tickets/todos/**` simultaneously (a permanent duplicate, since epic tier never reaches
 Finalize's cleanup `rm` step).
 
 This is the *actual* orphan signature — dual presence — not merely "an epic ticket resting in
-`tickets/inprogress/`", which is the normal, documented resting place for `epic_id`-mode epics
+`agent-working/tickets/inprogress/`", which is the normal, documented resting place for `epic_id`-mode epics
 per `docs/ai/ticket-lifecycle.md:440` and must never be flagged on its own. It also must not flag
 non-epic (hotfix/standard) dual presence, which is the normal, expected mid-workflow state pending
 Finalize reconciliation.
@@ -25,9 +25,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from epic_staleness_check import _section_body  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS  # noqa: E402
 
-DEFAULT_INPROGRESS_DIR = Path("tickets/inprogress")
-DEFAULT_TODOS_DIR = Path("tickets/todos")
+DEFAULT_INPROGRESS_DIR = TICKETS / "inprogress"
+DEFAULT_TODOS_DIR = TICKETS / "todos"
 
 
 def check_single_epic_orphan(
@@ -37,14 +41,14 @@ def check_single_epic_orphan(
 ) -> tuple[str, str]:
     """(status, evidence) shape mirroring `done_checker_static.py::check_ticket_location`.
 
-    `"FAIL"` only when a `tickets/todos/**/{ticket_id}.md` original still exists alongside the
+    `"FAIL"` only when a `agent-working/tickets/todos/**/{ticket_id}.md` original still exists alongside the
     epic-tier copy at `inprogress_path` — dual presence, the actual orphan signature. `"PASS"`
     otherwise (including when `inprogress_path` itself doesn't exist, or the ticket is simply
-    resting in `tickets/inprogress/` with no todos original).
+    resting in `agent-working/tickets/inprogress/` with no todos original).
     """
     todos_matches = sorted(todos_dir.rglob(f"{ticket_id}.md")) if todos_dir.exists() else []
     if not todos_matches:
-        return ("PASS", f"No tickets/todos/ original found for {ticket_id}")
+        return ("PASS", f"No agent-working/tickets/todos/ original found for {ticket_id}")
 
     todos_path = todos_matches[0]
     return (

@@ -1,7 +1,7 @@
 """TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE: route_movement_intent must re-derive a live
 navigation target from task.payload["target_id"] when relying on a persisted (potentially stale)
 navigation.target snapshot, rather than blindly walking toward a fixed point the target has
-long since moved away from. See stored_artifacts/TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE/
+long since moved away from. See agent-working/stored_artifacts/TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE/
 investigation.md for the real per-tick trace that found this.
 """
 from __future__ import annotations

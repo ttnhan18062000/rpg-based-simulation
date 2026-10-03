@@ -335,7 +335,7 @@ def two_populations_sharing_one_region_bundle(catalog, module_repo):
     both necessarily resolve to the same spawn_region (no other region is in scope for
     either population's preferred_regions to point to). This is the direct regression
     test for "collisions are the expected case, not an edge case"
-    (staging_artifacts/.../investigation.md).
+    (agent-working/staging_artifacts/.../investigation.md).
     """
     composition = WorldCompositionSpec(
         schema_version="worldcomposition.v1",

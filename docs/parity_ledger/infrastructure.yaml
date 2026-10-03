@@ -1930,15 +1930,15 @@
     \ is fully grandfathered \u2014 no doc currently carries the field, so no existing\
     \ doc is newly rejected.\n\nOn ticket content type (TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT),\
     \ the module also enforces a location-aware cross-field rule independent of any\
-    \ single field's enum: `check_ticket_location_consistency()` requires `tickets/done/`\
-    \ files to carry `status: historical` and `phase: done`, and forbids `tickets/inprogress/`\
+    \ single field's enum: `check_ticket_location_consistency()` requires `agent-working/tickets/done/`\
+    \ files to carry `status: historical` and `phase: done`, and forbids `agent-working/tickets/inprogress/`\
     \ files from carrying `phase: done` -- catching drift where status and phase are\
-    \ each individually enum-valid but disagree with the tickets/ subdirectory the\
-    \ file physically sits in (e.g. status: active, phase: open sitting in tickets/done/,\
+    \ each individually enum-valid but disagree with the agent-working/tickets/ subdirectory the\
+    \ file physically sits in (e.g. status: active, phase: open sitting in agent-working/tickets/done/,\
     \ both enum-valid alone). This is deliberately not folded into validate_file/_validate_ticket's\
     \ automatic per-file validation -- callers call it explicitly: done_checker_static.check_frontmatter_valid()\
     \ for the single ticket being closed, and a corpus-wide test for every file already\
-    \ in tickets/done/."
+    \ in agent-working/tickets/done/."
   status: verified
   priority: P2
   legacy_evidence: null
@@ -1958,7 +1958,7 @@
     instance (the classic preset''s docs block, path docs/) publishing the approved
     developer-facing subset; its exclude list drops superpowers/, specs/, parity_ledger/,
     scenarios/, entity/, archive/, plans/, audits/, and optimization_audit_ledger.md.
-    The tickets/done, stored_artifacts, and agent-monitoring/retro plugin-content-docs
+    The agent-working/tickets/done, stored_artifacts, and agent-working/agent-monitoring/retro plugin-content-docs
     instances (and their sidebars-*.js files) were removed entirely, along with the
     matching navbar items and the search-local theme''s docsRouteBasePath entries,
     per TCK-20260821-DOCS-BUILD-LASTUPDATE-METADATA-OVERHEAD. Makefile targets docs-serve
@@ -2078,7 +2078,7 @@
 - id: INFRA-188
   text: "Local knowledge search HTTP server (tools/search_server.py) exposes POST\
     \ /api/search and GET /api/health on localhost:8765. Loads sqlite-vec vector index\
-    \ and BM25 keyword index from knowledge-index/ at startup; returns SearchResponse\
+    \ and BM25 keyword index from agent-working/.index/knowledge-index/ at startup; returns SearchResponse\
     \ with hybrid-scored results. Developer tooling only \u2014 not part of simulation\
     \ or AuthoritativeState. Deployed via Docker (make search-server-docker) with\
     \ read-only knowledge-index volume mount.\n"
@@ -2915,7 +2915,7 @@
     src/domains/optimization/ package"). The cited test_path (test_resolve_content_source_degraded_uses_catalog)
     does not exist in tests/unit/core/test_degraded_fallback.py (grep confirms only
     4 other test functions present); cleared rather than left dangling. A sibling
-    investigation (tickets/done/TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION.md)
+    investigation (agent-working/tickets/done/TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION.md)
     found a structural-match successor for the general degradation mechanism (src/engine/governor.py::ResourceGovernor)
     but explicitly left this specific behavior unconfirmed: does ResourceGovernor
     or anything else provide cheapest-first catalog selection in degraded mode, or
@@ -3637,7 +3637,7 @@
     \ stamped with pre-advance state.tick); src/engine/runtime_status.py:79 (reset_dwell\
     \ stamps last_transition_tick with the current_tick argument, called pre-advance\
     \ from src/engine/governor.py:45,51 via kernel.py:535-541's _phase_init()); the\
-    \ follow-up investigation staging_artifacts/TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER/tick_alignment_bug_investigation.md\
+    \ follow-up investigation agent-working/staging_artifacts/TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER/tick_alignment_bug_investigation.md\
     \ (full site inventory, blast-radius analysis, and test-impact confirmation).\n\
     \ Line citation refreshed for TCK-20260902-REPRODUCTION-MAGICAL-DEMONIC-PATH,\
     \ which inserted one line (flags = getattr(state, \"feature_flags\", None) or\
@@ -4305,21 +4305,21 @@
     '
 - id: INFRA-265
   text: 'Scope-phase epic-tier orphan fix (TCK-20260711-EPIC-SCOPE-ORPHAN-FIX): the
-    Scope phase''s ticket-location resolution (finding a ticketId under tickets/inprogress/,
-    then tickets/done/, then tickets/todos/**) and file relocation is resolved orchestrator-side
+    Scope phase''s ticket-location resolution (finding a ticketId under agent-working/tickets/inprogress/,
+    then agent-working/tickets/done/, then agent-working/tickets/todos/**) and file relocation is resolved orchestrator-side
     by resolveScopeTicketLocation() calling tools/agent-monitoring/scope_ticket_relocate.py
     via bash(), replacing the former agent-prompt-text Step 1a/1b/1c file search +
-    unconditional copy. Moves (copy-then-delete) a tickets/todos/ original to tickets/inprogress/{id}.md
+    unconditional copy. Moves (copy-then-delete) a agent-working/tickets/todos/ original to agent-working/tickets/inprogress/{id}.md
     when the ticket''s `## Tier` is `epic`; copies (leaving the todos original in
     place) for every other tier, preserving existing hotfix/standard Finalize-reconciliation
     behavior. This closes the permanent-duplicate defect: epic-tier tickets return
     EPIC_SCOPED immediately after Scope and never reach Finalize''s cleanup `rm` step,
-    so the old unconditional-copy behavior left a byte-identical orphan under tickets/todos/**.
+    so the old unconditional-copy behavior left a byte-identical orphan under agent-working/tickets/todos/**.
     resolveScopeTicketLocation() is invoked before scopeTs''s captureTs() call in
     the orchestrator''s Scope-phase sequence. A separate, standalone (not wired into
     any phase) repo-wide sweep, tools/agent-monitoring/epic_scope_orphan_check.py,
-    detects the dual-presence signature (epic-tier ticket present in both tickets/inprogress/
-    and tickets/todos/** simultaneously) for pre-existing orphans such as TCK-20260710-WORKFLOW-EXECUTION-DETERMINISM-EPIC''s.
+    detects the dual-presence signature (epic-tier ticket present in both agent-working/tickets/inprogress/
+    and agent-working/tickets/todos/** simultaneously) for pre-existing orphans such as TCK-20260710-WORKFLOW-EXECUTION-DETERMINISM-EPIC''s.
 
     '
   status: verified
@@ -4614,7 +4614,7 @@
     "Implementation Notes / Step 7" section (full per-event reconciliation methodology
     and the 61-diff / 41-reconciled / 20-deferred breakdown). UPDATE 2026-07-15 (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP,
     closed): the 14-anchor known-exception carve-out below is now closed. Each of
-    the 14 anchors got an independent controlled idle-vs-induced-load repro (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-
+    the 14 anchors got an independent controlled idle-vs-induced-load repro (agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-
     SENSITIVITY-SWEEP/repro_sweep.md) confirming genuine load/timing-sensitivity (not
     a stable value error) for every one, plus a dedicated tolerance-based multi-trial
     grade-stability guard in tests/unit/worldassembly/test_corpus_diversity.py (test_<anchor>_<pillar(s)>_grade_stability,
@@ -4648,7 +4648,7 @@
     \ single-draw failure risk against test_grade_regression.py's fixed \xB10.05/20%\
     \ tolerance -- this is a property of those pillars' real (not just artificially-induced)\
     \ wall-clock variance exceeding a fixed-width single-sample check, not a defect\
-    \ this ticket left unaddressed; see tickets/done/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP.md\
+    \ this ticket left unaddressed; see agent-working/tickets/done/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP.md\
     \ Implementation Notes for the full characterization (multiple independent fresh\
     \ single-draw samples collected and reported). RESOLVED 2026-07-16 (TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE):\
     \ SCORE_TOLERANCE_OVERRIDES in test_grade_regression.py now widens urban_political_seed123_1000t/ECONOMY\
@@ -4711,7 +4711,7 @@
     \ (updated to the final 5-entry set) and test_score_tolerance_overrides_do_not_affect_unlisted_anchors.\
     \ test_grade_within_anchor_band_long_run[urban_political_seed123_1000t] confirmed\
     \ passing (1 passed, non-skip) against freshly-regenerated real calibration data\
-    \ generated after the override-table edit landed. See stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md\
+    \ generated after the override-table edit landed. See agent-working/stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md\
     \ for the full 8-draw per-pillar table and derivations.\n\n\ntests/unit/worldassembly/test_corpus_diversity.py\
     \ -m slow --resource-budget large -k \"grade_stability\" (the 14 dedicated grade_stability\
     \ guards) was deliberately NOT added to test_path -- citing the bare file would\
@@ -4747,7 +4747,7 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md
+  v2_evidence: 'agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md
     Sections 2-7 (per-anchor idle-vs-induced-load trial tables, budget_warnings/watchdog_trips
     counts confirming genuine throttle activity, per-pillar event_count/score variance
     across trials). docs/simulation_quality/eval_matrix_results.md "Anchor Reliability
@@ -4757,7 +4757,7 @@
     Makefile target `simq-corpus-diversity-slow-isolated`, wired in ahead of the existing
     sequential invocation, which now `--ignore`s this file) instead of one long sequential
     in-process run, directly targeting the cumulative-session-load mechanism this
-    entry documents. See staging_artifacts/TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE/isolation_comparison.md
+    entry documents. See agent-working/staging_artifacts/TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE/isolation_comparison.md
     for the controlled-comparison data: 2 isolated runs (0/2 failures) and 1 fresh
     sequential run (0/32 failures) this session, alongside the 2 prior sequential-session
     failures cited above. Honest disclosure, not overclaimed: this session''s own
@@ -4782,7 +4782,7 @@
     mechanism-1/ mechanism-2 distinction did not previously have COGNITION evidence
     for. This does not contradict or restate the existing mechanism-1/mechanism-2
     distinction above -- it is a new anchor/tier data point for mechanism-1, cross-referenced
-    here. See stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md.
+    here. See agent-working/stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md.
     UPDATE 2026-08-06 (TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION): a full `make
     simq-full-audit-full` run (79 scenarios, required by that ticket''s own corpus-parity
     Scope item) showed hero_guild_routing_seed42_500t with COMBAT.event_count=0, ECONOMY.event_count=0,
@@ -4803,7 +4803,7 @@
     it. This is additional confirming evidence for this entry, not a new anchor exception
     requiring its own ticket: no anchor value or override table was touched by TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION,
     since grade_anchors.json/test_grade_regression.py were explicitly out of scope
-    for that migration ticket. See staging_artifacts/TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION/investigation.md
+    for that migration ticket. See agent-working/staging_artifacts/TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION/investigation.md
     "Full-corpus verification" section for the full repro methodology and raw-JSONL
     evidence.
 
@@ -4826,7 +4826,7 @@
     frequency in the already-most-loaded world in the test set, cascading into genuinely
     different simulation trajectories between runs -- not a defect in either the old
     extractor or the new shapers. No anchor or grade_anchors.json value was touched.
-    See staging_artifacts/TCK-20260806-PUSH-SHADOW-VALIDATION-PERF-PHASE2/investigation.md
+    See agent-working/staging_artifacts/TCK-20260806-PUSH-SHADOW-VALIDATION-PERF-PHASE2/investigation.md
     for the full repro methodology.
 
     '
@@ -4854,7 +4854,7 @@
     \ confirms the same mechanism, now visible on more pillars because Phase 2 widened\
     \ live delivery to AGENCY/COGNITION/INFORMATION/PROGRESSION/WORLD/SOCIAL -- not\
     \ a Phase 2 regression. `grade_anchors.json` left unrecalibrated for the same\
-    \ reason as Phase 1's own cutover. See stored_artifacts/TCK-20260806-PUSH-CUTOVER-PHASE2/investigation.md\
+    \ reason as Phase 1's own cutover. See agent-working/stored_artifacts/TCK-20260806-PUSH-CUTOVER-PHASE2/investigation.md\
     \ for the full repro.\n\nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path\
     \ normalized to a plain multi-citation (all citations confirmed to exist via grep\
     \ before writing). Full original test_path preserved verbatim below for disclosure:\n\
@@ -4878,7 +4878,7 @@
     `NEEDS_HUMAN_INPUT` whenever that prose contained a phrase like "No unresolved
     questions: ..." (the plural "questions" substring-matches "question" even when
     no genuine section exists). Fixed by replacing the prose substring check with
-    an orchestrator-run `bash()` read of the actual generated `staging_artifacts/${tid}/plan.md`
+    an orchestrator-run `bash()` read of the actual generated `agent-working/staging_artifacts/${tid}/plan.md`
     file, testing via `re.search(r''^##\s+Unresolved Questions\s*$'', text, re.MULTILINE)`
     for a genuine H2 markdown heading, mirroring this same file''s existing `tagCheckOutput`/`archCheckOutput`
     orchestrator-run-check-against-durable-state convention (marker-prefix output,
@@ -4925,7 +4925,7 @@
     heading presence; an empty/whitespace-only body, or a body whose first non-blank
     line starts with the word "None" (word-boundary, case-insensitive) returns `False`.
     Verified against the real, already-closed TCK-20260824-OCCUPATION-CHANGE-TRIGGER''s
-    own `stored_artifacts/TCK-20260824-OCCUPATION-CHANGE-TRIGGER/plan.md` (whose `##
+    own `agent-working/stored_artifacts/TCK-20260824-OCCUPATION-CHANGE-TRIGGER/plan.md` (whose `##
     Unresolved Questions` body reads "None. The one question investigation.md flagged
     ... was checked directly during planning and resolved: it does not apply.") --
     now returns `False`, previously returned `True`. Both call sites (`.claude/workflows/implement-ticket.js`
@@ -4978,7 +4978,7 @@
     standalone FastAPI app (src/api/agent_ops_dashboard/) exposing GET /api/tickets,
     /api/runs, /api/runs/{run_id}, /api/runs/{run_id}/timeline, /api/health as typed
     Pydantic response models only (never raw dict/domain payloads). ingest.py owns
-    all file reads over tickets/{inprogress,done,todos}/ and agent-monitoring/data/<ISO-week>/{runs,events,tools}.jsonl
+    all file reads over agent-working/tickets/{inprogress,done,todos}/ and agent-working/agent-monitoring/data/<ISO-week>/{runs,events,tools}.jsonl
     (every week shard, globbed and concatenated via _week_shard_paths/_load_jsonl_counted_multi),
     reusing tools/validate_frontmatter.py''s extract_frontmatter(), tools/generate_registry.py''s
     body-section parsers, and tools/agent-monitoring/validate.py''s tolerant load_jsonl
@@ -5050,7 +5050,7 @@
     \ (EPIC_TIER_VALUES tightened from {\"EPIC_SCOPED\", \"SCOPED\"} to {\"EPIC_SCOPED\"\
     } for consistency with the new canonical set \u2014 the corpus's one remaining\
     \ bare \"SCOPED\" ticket was already normalized to EPIC_SCOPED by the predecessor\
-    \ STATUS-MULTILINE-FIX ticket, confirmed via a full tickets/{done,inprogress,todos}/\
+    \ STATUS-MULTILINE-FIX ticket, confirmed via a full agent-working/tickets/{done,inprogress,todos}/\
     \ corpus scan finding zero non-canonical body Status values outside the already-deferred\
     \ colon-format/empty exemptions). TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL:\
     \ ingest.py:36-40 (import of LAYER_VALUES/PRIORITY_VALUES/TIER_VALUES alongside\
@@ -5106,7 +5106,7 @@
     \ tier/type/priority via generate_registry.py::parse_body_section, confirming\
     \ docs/REGISTRY.yaml is not a sufficient data source alone -- its ticket entries\
     \ have no layer, no priority, no body status, exactly as the dashboard's own origin\
-    \ idea doc already found), compute_velocity() (tickets/working_log.csv grouped\
+    \ idea doc already found), compute_velocity() (agent-working/tickets/working_log.csv grouped\
     \ by day/ISO-week via generate_retro.py::iso_week, reused not reimplemented),\
     \ compute_distribution() (tier/type/ priority/layer Counters plus a layer-by-tier\
     \ cross-tab, cross-referenced against tools/ticket_field_values.py's TIER_VALUES/PRIORITY_VALUES\
@@ -5123,7 +5123,7 @@
     \ models.py (5 new Pydantic models: VelocityStats, TicketDistributionStats, IncompleteArtifactEntry,\
     \ ArtifactCompletenessStats, TicketCorpusStats \u2014 field-for-field mirror of\
     \ build_json_report()'s dict shape). Live-verified against the real 1153-ticket\
-    \ tickets/done/ corpus: CLI (`make ticket-stats-report`) and the new route both\
+    \ agent-working/tickets/done/ corpus: CLI (`make ticket-stats-report`) and the new route both\
     \ return identical included_tickets/distribution numbers. TCK-20260718-STATS-TAB-FRONTEND:\
     \ new 4th \"Stats\" tab in dashboard-frontend/src/App.tsx (PageView extended to\
     \ include 'stats', NAV_ITEMS/render-branch additions \u2014 3-line diff, mirrors\
@@ -5149,7 +5149,7 @@
     \ corrected a false assumption in the ticket's own text: this dashboard has no\
     \ live light theme (`.dark` class is declared in index.css but never applied anywhere,\
     \ no ThemeContext, no prefers-color-scheme handling) \u2014 recorded as a documented\
-    \ scope call in stored_artifacts/TCK-20260718-STATS-TAB-FRONTEND/investigation.md\
+    \ scope call in agent-working/stored_artifacts/TCK-20260718-STATS-TAB-FRONTEND/investigation.md\
     \ rather than building a light-mode path with nothing else in the app to be consistent\
     \ with. Live-verified via a freshly-killed-and-rebuilt `make dashboard-serve`\
     \ plus a headless-Chromium (Playwright) run against the actual Stats tab: rendered\
@@ -5203,15 +5203,15 @@
     \ 3 hardcoded single-file fields (self._runs_file/_events_file/_tools_file) with\
     \ one self._data_root = repo_root / \"agent-monitoring\" / \"data\"; _current_source_state()\
     \ now computes per-source mtimes via the new _max_mtime(_week_shard_paths(self._data_root,\
-    \ filename)) helper (max mtime across every agent-monitoring/data/<week>/{runs,events,tools}.jsonl\
+    \ filename)) helper (max mtime across every agent-working/agent-monitoring/data/<week>/{runs,events,tools}.jsonl\
     \ shard, guarded against the empty-glob ValueError footgun via max(..., default=0.0));\
     \ _rebuild() now reads/concatenates all matching week shards per source via the\
     \ new _load_jsonl_counted_multi() helper (sums unparsed-line counts across shards\
     \ rather than the last file's count silently winning), mirroring the sorted(Path(...).glob(\"\
-    agent-monitoring/data/*/tools.jsonl\")) precedent already landed in tools/agent-monitoring/record_events.py::compute_tool_stats()\
+    agent-working/agent-monitoring/data/*/tools.jsonl\")) precedent already landed in tools/agent-monitoring/record_events.py::compute_tool_stats()\
     \ (TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY). This is also the dedicated\
     \ fix for a live production bug: self._tools_file previously pointed at the already-git-rm'd\
-    \ flat agent-monitoring/tools.jsonl path, so _tools_all/_tools_by_seq/_tools_by_run_recent\
+    \ flat agent-working/agent-monitoring/tools.jsonl path, so _tools_all/_tools_by_seq/_tools_by_run_recent\
     \ were silently empty, masking compute_inferred_active()'s 10-minute-window heuristic\
     \ in production; confirmed fixed by a new dedicated regression, test_dashboard_cache_tools_all_nonempty_against_real_sharded_layout,\
     \ plus test_dashboard_cache_rebuild_aggregates_across_multiple_weeks (2+ week\
@@ -5234,7 +5234,7 @@
     tests/tools/test_agent_ops_dashboard_stats.py; tests/tools/test_generate_retro.py;
     tests/tools/test_ticket_stats_report.py
   divergence_note: null
-  support_boundary: "Read-only over tickets/** and agent-monitoring/*.jsonl; never\
+  support_boundary: "Read-only over agent-working/tickets/** and agent-working/agent-monitoring/*.jsonl; never\
     \ touches AuthoritativeState. Excludes frontend, build/serve tooling (AGENTOPS-BUILD-SERVE),\
     \ the live phase/agent null-labeling gap (independent sibling ticket), and agent-monitoring\
     \ retention/rotation (out of scope, unbounded growth accepted).\n\nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL:\
@@ -5394,15 +5394,15 @@
   text: 'Ticket/run status-drift regression check (TCK-20260718-STATUS-DRIFT-REPAIR):
     tools/gate_checks/status_drift_check.py detects two historical data-drift classes
     so the one-time repair does not silently regress. check_ticket_status_drift()
-    flags any tickets/done/*.md file whose body `## Status` value is not `DONE`, exempting
+    flags any agent-working/tickets/done/*.md file whose body `## Status` value is not `DONE`, exempting
     {"EPIC_SCOPED", "SCOPED"} (legitimate epic-tier terminal text) and non-`TCK-`-prefixed
     filenames (pre-TCK-naming legacy files) by value/pattern, never a hardcoded filename
-    list. check_runs_jsonl_final_status_drift() flags any agent-monitoring/runs.jsonl
+    list. check_runs_jsonl_final_status_drift() flags any agent-working/agent-monitoring/runs.jsonl
     record whose final_status is not already its own uppercase form, skipping records
     that lack the key entirely (legacy status/started_at schema, out of scope by design).
     check_status_drift() aggregates both. Ships unwired -- no Makefile target, no
     .claude/workflows/*.js call site -- a future ticket decides where/whether to gate
-    on it. Motivating one-time data fixes: 71 tickets/done/*.md files'' `## Status`
+    on it. Motivating one-time data fixes: 71 agent-working/tickets/done/*.md files'' `## Status`
     corrected OPEN/INPROGRESS -> DONE; 7 runs.jsonl records'' final_status normalized
     "done"/"success" -> "DONE" via line-scoped string substitution (line count and
     every non-target byte unchanged), documented as a one-time, audited exception
@@ -5430,9 +5430,9 @@
     by this revision), status_drift_check.py:131-135 (check_status_drift aggregate),
     status_drift_check.py :138-144 (__main__ MARKER: json stdout contract, sys.exit(1)
     on any FAIL); docs/agent-monitoring /schema.md:69-78 ("Historical Corrections"
-    subsection, unchanged by this revision); agent-monitoring/runs.jsonl (7 records''
-    final_status now uppercase "DONE", unchanged by this revision); 71 tickets/done/*.md
-    files from the original fix (body `## Status` now DONE); 15 additional tickets/done/*.md
+    subsection, unchanged by this revision); agent-working/agent-monitoring/runs.jsonl (7 records''
+    final_status now uppercase "DONE", unchanged by this revision); 71 agent-working/tickets/done/*.md
+    files from the original fix (body `## Status` now DONE); 15 additional agent-working/tickets/done/*.md
     files fixed by TCK-20260718-STATUS-MULTILINE-FIX and TCK-20260718-STATUS-SUFFIX-TRIM
     (10 suffix-fragmented DONE variants, 3 stray-trailing-line files, 11 legacy bold-text-bleed
     files [1 file overlaps the stray-line count above], 1 epic ticket whose Status/phase
@@ -5453,7 +5453,7 @@
     blocking gate would have caught zero of the 7 real drift cases this ticket found
     and fixed, none of which were being re-closed at discovery time -- only a corpus-wide
     recurring report (this checker''s existing check_ticket_status_drift(done_dir)
-    design, unchanged) can surface drift already sitting in tickets/done/. Because
+    design, unchanged) can surface drift already sitting in agent-working/tickets/done/. Because
     no blocking gate was added, the forward-only-enforcement date-exemption question
     is structurally not applicable -- there is no ticket-close-time enforcement point
     for a legacy pre-2026-07-04 ticket to need exemption from. Also corrects the entry''s
@@ -5636,7 +5636,7 @@
     using its existing `note` field as the description -- read-time merge, never a
     duplicated second description for the same 19 layers (see investigation.md''s
     design-decision section). No src/ simulation file touched; this dashboard remains
-    read-only over tickets/**/agent-monitoring/*.jsonl plus, now, docs/guidelines/{glossary,layer}_registry.jsonl.
+    read-only over agent-working/tickets/**/agent-working/agent-monitoring/*.jsonl plus, now, docs/guidelines/{glossary,layer}_registry.jsonl.
 
     '
   status: verified
@@ -5750,7 +5750,7 @@
     '
 - id: INFRA-281
   text: 'Live phase/agent labeling threaded through the .claude/current_run sidecar
-    into agent-monitoring/tools.jsonl (TCK-20260719-LIVE-PHASE-AGENT-LABEL): the orchestrator''s
+    into agent-working/agent-monitoring/tools.jsonl (TCK-20260719-LIVE-PHASE-AGENT-LABEL): the orchestrator''s
     `writeSidecar(seq)` helper in implement-ticket.js was widened to `writeSidecar(seq,
     phase, agent)`, threading phase/agent string literals (''Investigate''/''investigator'',
     ''Plan''/''planner'', ''Review''/''architecture-reviewer'', ''Implement''/''implementer'',
@@ -5766,7 +5766,7 @@
     `phase`/`agent` as `None` rather than raising, per CLAUDE.md''s "monitoring write
     failure must never fail the workflow" rule. Net effect: a live dashboard can now
     show an in-progress run''s current phase/agent by reading `tools.jsonl`''s tail,
-    without waiting for `events.jsonl` to be written at run/phase exit. This is agent-orchestration/monitoring-pipeline
+    without waiting for `events.jsonl` to be written at run/phase exit. This is agent-working/agent-orchestration/monitoring-pipeline
     tooling (an on-disk schema widening of the sidecar and the tools.jsonl row shape)
     -- no simulation engine, mechanics, or determinism behavior is involved.
 
@@ -5838,7 +5838,7 @@
     events since 2026-07-11, root-caused to writeMonitoring''s old inline `python3
     -c` TOOL_STATS compute step (implement-ticket.js) failing wholesale per-run rather
     than per-event, with no deterministic fallback. Fix: `record_events.py::compute_tool_stats(records)`
-    reads agent-monitoring/ tools.jsonl once per write-batch and computes {(run_id,
+    reads agent-working/agent-monitoring/ tools.jsonl once per write-batch and computes {(run_id,
     seq): (tool_call_count, cost_proxy_score)} for every (run_id, seq) pair whose
     run_id belongs to the implement-ticket workflow (via vocabulary.py''s infer_workflow),
     reusing cost_proxy.py''s compute_cost_proxy_score unchanged. Wired into main()
@@ -5906,7 +5906,7 @@
     -- see INFRA-407 for their current names and current-state coverage.'
 - id: INFRA-283
   text: 'Phase/agent vocabulary casing normalization in the agent-monitoring retro
-    report (TCK-20260719-PHASE-AGENT-CASE-FOLD): direct measurement against live agent-monitoring/
+    report (TCK-20260719-PHASE-AGENT-CASE-FOLD): direct measurement against live agent-working/agent-monitoring/
     events.jsonl found 9 implement-ticket phases with genuine casing fragmentation
     (Finalize/ finalize/FINALIZE, Implement/implement/IMPLEMENT, Investigate/investigate/INVESTIGATE,
     Parity/ parity/PARITY, Plan/plan/PLAN, Review/review, Scope/scope, Test/test/TEST,
@@ -6127,7 +6127,7 @@
     that "no other `agent-monitoring-*` target is in `.PHONY`" precedent is now partially
     superseded -- `agent-monitoring-index` was added to `.PHONY` (Makefile line 1)
     to fix a silent, permanent no-op caused by that target''s name colliding with
-    the real, gitignored `agent-monitoring-index/` directory created by `build_index.py`''s
+    the real, gitignored `agent-working/.index/agent-monitoring-index/` directory created by `build_index.py`''s
     `DEFAULT_DB_PATH` (once that directory existed on disk, `make` treated the target
     as an already-up-to-date file target and never re-ran the recipe). `agent-monitoring-weight-check`
     has no such colliding filesystem path, so it correctly remains non-phony and is
@@ -6365,7 +6365,7 @@
     session''s phase at the same seq) and empirically bounded to 8 affected `run_id`s
     in the live corpus via the `>1 Scope/seq=1 event` signature. Fix: new `tools/agent-monitoring/seq_offset.py::compute_seq_offset(run_id,
     events)` (pure, read-only) looks up the max prior `seq` already recorded for `run_id`
-    in `agent-monitoring/events.jsonl` (0 for a brand-new ticket); `implement-ticket.js`
+    in `agent-working/agent-monitoring/events.jsonl` (0 for a brand-new ticket); `implement-ticket.js`
     computes it once at Scope-phase resume via `resolveSeqOffset(ticketId)` into a
     `seqOffset` variable, then adds `+ seqOffset` to all 11 seq-producing expressions
     (`pushEvent`''s and all 10 `writeSidecar` call sites) plus the Scope resume-branch''s
@@ -6375,7 +6375,7 @@
     report alongside the existing `compute_tool_count_drift_report`. Prevention-only,
     matching the sibling ticket''s precedent -- historical corrupted `tool_call_count`/`cost_proxy_score`
     values for the 8 already-affected run_ids are not backfilled. No `src/` file touched
-    -- this is agent-orchestration/monitoring- pipeline tooling only, no simulation
+    -- this is agent-working/agent-orchestration/monitoring- pipeline tooling only, no simulation
     engine, mechanics, or determinism behavior involved.
 
     '
@@ -6438,18 +6438,18 @@
     '
   cross_reference: 'TCK-20260713-MONITORING-VALIDATE-INDEX-MIGRATE (INFRA-290) also
     migrated compute_multi_invocation_collision_report -- the function this entry
-    documents -- onto the SQLite index read path (agent-monitoring-index/monitoring.db),
+    documents -- onto the SQLite index read path (agent-working/.index/agent-monitoring-index/monitoring.db),
     with zero changes to the function''s body or signature; only its caller, main(),
     changed how it sources events.
 
     '
 - id: INFRA-289
   text: 'tools/agent-monitoring/query.py''s read path migrated (TCK-20260713-MONITORING-QUERY-INDEX-
-    MIGRATE) from an in-memory linear scan of agent-monitoring/{runs,events}.jsonl
-    to the derived SQLite index at agent-monitoring-index/monitoring.db, built by
+    MIGRATE) from an in-memory linear scan of agent-working/agent-monitoring/{runs,events}.jsonl
+    to the derived SQLite index at agent-working/.index/agent-monitoring-index/monitoring.db, built by
     build_index.py (per the idea_agent_monitoring_derived_index.md read-only-index
     plan; sibling migration to TCK-20260713-MONITORING-SQLITE-INDEX). query.py''s
-    read path now performs zero direct reads of agent-monitoring/runs.jsonl or events.jsonl
+    read path now performs zero direct reads of agent-working/agent-monitoring/runs.jsonl or events.jsonl
     -- enforced by an architecture-guard test. main()''s monolithic filtering logic
     was extracted into importable pure functions filter_runs(records, args)/filter_events(records,
     args), and a new open_index(db_path) gives an actionable "run `make agent-monitoring-index`
@@ -6529,8 +6529,8 @@
     '
 - id: INFRA-290
   text: 'tools/agent-monitoring/validate.py''s main() migrated (TCK-20260713-MONITORING-VALIDATE-INDEX-
-    MIGRATE) from an in-memory linear scan of agent-monitoring/{runs,events,tools}.jsonl
-    to the derived SQLite index at agent-monitoring-index/monitoring.db, mirroring
+    MIGRATE) from an in-memory linear scan of agent-working/agent-monitoring/{runs,events,tools}.jsonl
+    to the derived SQLite index at agent-working/.index/agent-monitoring-index/monitoring.db, mirroring
     query.py''s precedent (INFRA-289) but independently written -- no cross-import
     between the two modules'' index-loading helpers. All three report functions --
     compute_drift_report, compute_tool_count_drift_report, and compute_multi_invocation_collision_report
@@ -6571,14 +6571,14 @@
     path. (a) A new hard precondition: validate.py now requires `make agent-monitoring-index`
     to have already been run -- open_index() exits 1 with an actionable error ("No
     agent-monitoring index found at <db_path> -- run `make agent-monitoring-index`
-    first.") if agent-monitoring-index/monitoring.db does not exist, whereas previously
-    validate.py ran standalone directly off agent-monitoring/{runs,events,tools}.jsonl
+    first.") if agent-working/.index/agent-monitoring-index/monitoring.db does not exist, whereas previously
+    validate.py ran standalone directly off agent-working/agent-monitoring/{runs,events,tools}.jsonl
     with no such dependency. Intentional and by design -- matches query.py''s identical
     INFRA-289 precondition. (b) A genuine, narrow, non-gating output divergence found
     on the live production corpus: compute_tool_count_drift_report''s "Mismatches"
     count shifts from 487 to 488. Root cause: build_index.py''s stricter tools-table
     ingestion (`_ingest_tools`, from the sibling TCK-20260713-MONITORING-SQLITE-INDEX
-    ticket) requires `isinstance(record.get("tool"), str)` and so excludes one agent-monitoring/tools.jsonl
+    ticket) requires `isinstance(record.get("tool"), str)` and so excludes one agent-working/agent-monitoring/tools.jsonl
     row (TCK-20260716-SIMQ-...-SWEEP seq=4) that has a valid run_id+seq but no `tool`
     field -- a row the old direct load_jsonl() path still counted (its actual_counts
     loop only checks run_id+seq presence) but the new index-backed path does not.
@@ -6623,7 +6623,7 @@
 - id: INFRA-291
   text: 'tools/agent-monitoring/generate_retro.py''s data-loading layer migrated (TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE)
     from direct load_jsonl(RUNS_FILE)/ load_jsonl(EVENTS_FILE) scans to the derived
-    SQLite index at agent-monitoring-index/monitoring.db, mirroring query.py''s (INFRA-289)
+    SQLite index at agent-working/.index/agent-monitoring-index/monitoring.db, mirroring query.py''s (INFRA-289)
     and validate.py''s (INFRA-290) precedent but deliberately diverging on missing-index
     handling: instead of query.py/validate.py''s hard sys.exit(1), this module builds
     the index on demand (via a function-local `import build_index` + `build_index.build(...)`
@@ -6650,7 +6650,7 @@
   priority: P2
   legacy_evidence: null
   v2_evidence: 'tools/agent-monitoring/generate_retro.py:40-41 (`DEFAULT_DB_PATH =
-    Path("agent-monitoring-index/monitoring.db")`, `DEFAULT_TOOLS_FILE = Path("agent-monitoring/tools.jsonl")`),
+    Path("agent-working/.index/agent-monitoring-index/monitoring.db")`, `DEFAULT_TOOLS_FILE = Path("agent-working/agent-monitoring/tools.jsonl")`),
     :53-87 (`def _load_runs_and_events()` -- builds the index on demand at :61-72
     if `DEFAULT_DB_PATH` doesn''t exist, reads `raw_json` back via `SELECT raw_json
     FROM runs/events ORDER BY id` at :76-77, and on any `Exception` prints a non-fatal
@@ -6690,7 +6690,7 @@
     AND a JSONL line is malformed -- the fallback path could still crash, identical
     to pre-migration behavior; this is not a new regression, since pre-migration `generate_retro.py`
     always read via its own strict `load_jsonl()` with no fallback at all. Confirmed
-    0 malformed lines exist in the live `agent-monitoring/runs.jsonl`/`events.jsonl`
+    0 malformed lines exist in the live `agent-working/agent-monitoring/runs.jsonl`/`events.jsonl`
     corpus today (per investigation.md and the Implementation Notes'' Test Summary)
     -- currently inert on production data, not a live bug. Not fixed here: doing so
     would mean either changing `generate_retro.py`''s own `load_jsonl()` body (a pre-existing,
@@ -6732,10 +6732,10 @@
     \ Monitoring Coverage Audit rationale were corrected in the same ticket to say\
     \ \"missing or stale\" rather than \"missing\" alone.\n\n**Addendum (TCK-20260902-MONITORING-SHARD-CONSUMERS,\
     \ 2026-09-03):** this entry's `v2_evidence` originally quoted `DEFAULT_TOOLS_FILE\
-    \ = Path(\"agent-monitoring/tools.jsonl\")` as the literal value of generate_retro.py's\
+    \ = Path(\"agent-working/agent-monitoring/tools.jsonl\")` as the literal value of generate_retro.py's\
     \ tools-source path constant. TCK-20260902-MONITORING-SHARD-MIGRATION retired\
-    \ that single physical file in favor of per-ISO-week shard files under agent-monitoring/tools/,\
-    \ and this ticket repointed `DEFAULT_TOOLS_FILE` to `Path(\"agent-monitoring/tools\"\
+    \ that single physical file in favor of per-ISO-week shard files under agent-working/agent-monitoring/tools/,\
+    \ and this ticket repointed `DEFAULT_TOOLS_FILE` to `Path(\"agent-working/agent-monitoring/tools\"\
     )` (the shard directory) and made `generate_retro.py`'s own `load_jsonl()` dir-aware\
     \ (globs and concatenates `sorted(tools_dir.glob(\"tools-*.jsonl\"))` when given\
     \ a directory; unchanged single-file behavior otherwise) and generalized `_index_is_stale()`\
@@ -6747,12 +6747,12 @@
     \ `test_generate_retro_index_is_stale_detects_write_to_non_newest_shard`.\n\n\
     **Addendum (TCK-20260903-MONITORING-DATA-CONSUMERS-CORE, 2026-09-03):** this entry's\
     \ `v2_evidence` (and the prior addendum immediately above) described `DEFAULT_TOOLS_FILE`\
-    \ as repointed to `Path(\"agent-monitoring/tools\")` (a flat shard directory)\
+    \ as repointed to `Path(\"agent-working/agent-monitoring/tools\")` (a flat shard directory)\
     \ with `load_jsonl()` dir-aware, globbing `sorted(tools_dir.glob(\"tools-*.jsonl\"\
     ))` -- both now superseded: TCK-20260903-MONITORING-DATA-MIGRATION retired that\
-    \ flat shard directory in favor of the unified per-ISO-week `agent-monitoring/data/<week>/{runs,events,tools}.jsonl`\
+    \ flat shard directory in favor of the unified per-ISO-week `agent-working/agent-monitoring/data/<week>/{runs,events,tools}.jsonl`\
     \ layout. This ticket repointed `RUNS_FILE`/`EVENTS_FILE`/`DEFAULT_TOOLS_FILE`\
-    \ all to the same `Path(\"agent-monitoring/data\")` root, ratifying investigation.md's\
+    \ all to the same `Path(\"agent-working/agent-monitoring/data\")` root, ratifying investigation.md's\
     \ Option B: `load_jsonl(path)` reverted to literal-single-file-only (its dir-mode\
     \ branch removed entirely), and a new sibling function `load_data_glob(data_dir,\
     \ source)` (added to `validate.py`, imported here) does `sorted(data_dir.glob(f\"\
@@ -6773,7 +6773,7 @@
     \ docs/ai/,\n.claude/skills/, docs/testing/regression_policy.md) -- a docs/prose-only\
     \ sweep correcting every remaining\nreference to a retired physical shape (bare\
     \ runs.jsonl/events.jsonl/tools.jsonl, or the intermediate\ntools/tools-YYYY-Www.jsonl\
-    \ shard) to the unified agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl\n\
+    \ shard) to the unified agent-working/agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl\n\
     layout this entry already documents at the code level. No further generate_retro.py\
     \ source-resolution\nchange beyond what the CONSUMERS-CORE addendum already landed.\n\
     \nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a\
@@ -6808,7 +6808,7 @@
     \ (TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING), whose own docstring states\
     \ it explicitly replaces the old name. Cited the real, current name."
 - id: INFRA-292
-  text: 'New read-only baseline-metrics reporting tool over agent-monitoring/*.jsonl
+  text: 'New read-only baseline-metrics reporting tool over agent-working/agent-monitoring/*.jsonl
     (context-tokens, follow-up-search-count, phase-duration, gate-outcome, review-rework)
     -- TCK-20260728-RETRIEVAL-BASELINE-METRICS. Follows the INFRA-281 through INFRA-291
     agent-tooling-infrastructure precedent for ledgering this class of change, rather
@@ -6829,7 +6829,7 @@
     the single read entrypoint composing those imports), :56-88 (`def build_context_tokens_section()`
     / `def build_search_count_section(tools)` -- the context-tokens AC is reported
     as `status: "unavailable"` since real token telemetry is platform-blocked and
-    not recorded in agent-monitoring/*.jsonl, per :58-61), :91-154 (`def build_duration_section(runs)`,
+    not recorded in agent-working/agent-monitoring/*.jsonl, per :58-61), :91-154 (`def build_duration_section(runs)`,
     `def build_gate_outcome_section(runs)`, `def build_review_rework_section(runs)`
     -- the phase-duration/gate-outcome/review-rework ACs, each disclosed as a derived
     proxy rather than fabricated data at :101-104/:121-122/:151-153), :157-167 (`def
@@ -6846,7 +6846,7 @@
     `raw_investigation_count` key alongside `search_count`), :227-240 (`def main()`,
     prints JSON to stdout via `json.dumps(..., sort_keys=True)` and optionally writes
     to `--output` only after `_assert_safe_output_path` validation at :237 -- never
-    writes into agent-monitoring/ itself).
+    writes into agent-working/agent-monitoring/ itself).
 
 
     Addendum (TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING, 2026-08-14): SEARCH_TOOL_NAMES,
@@ -6874,7 +6874,7 @@
     section) purely by importing and composing existing functions from generate_retro.py
     (`_load_runs_and_events`, `load_jsonl`, `_resolve_status`, `_is_gate_fail`), legacy_reader.py
     (`classify_provenance`), and manifest.py (`_assert_safe_output_path`); never modifies
-    any of those files, never writes into `agent-monitoring/` or `agent-monitoring/retro/`.
+    any of those files, never writes into `agent-working/agent-monitoring/` or `agent-working/agent-monitoring/retro/`.
 
     '
 - id: INFRA-293
@@ -6970,7 +6970,7 @@
   support_boundary: 'Agent-orchestration/retrieval tooling only -- no simulation behavior,
     Mechanics Bible chapter, or engine contract governs this module''s semantics (same
     category as INFRA-281 through INFRA-293). No `src/` file touched, no on-disk schema
-    change to `knowledge-index/knowledge.db` or `bm25.pkl` -- reads the *existing*
+    change to `agent-working/.index/knowledge-index/knowledge.db` or `bm25.pkl` -- reads the *existing*
     two indexes, not a new corpus source. `tools/search_server.py` shares the identical
     pre-fix bug pattern but is deliberately out of this ticket''s scope, left unfixed
     as a known, named remaining gap, not silently patched or silently ignored.
@@ -6990,13 +6990,13 @@
     \ hash and invalidates on any single cited-source hash mismatch, corpus_generation\
     \ change, or policy_version change -- operating on raw fields only, since `ContextPacket`\
     \ has no code class yet (context_packet_contract.md \xA74). `corpus_generation`\
-    \ is a read-only proxy derived from `knowledge-index/manifest.json`'s existing\
+    \ is a read-only proxy derived from `agent-working/.index/knowledge-index/manifest.json`'s existing\
     \ `built_at` field (never a new field written into `knowledge_search.py`); `retrieval_version`\
     \ is a new module-owned constant (`RETRIEVAL_VERSION = 1`), manually bumped on\
     \ breaking key/invalidation changes. A shared `_validate_may_list_kwargs()` guard\
     \ wraps all three write paths, raising `ValueError` on any field outside the `MAY_LIST_COLUMNS`\
     \ allowlist -- no raw prompt/chunk/source text is ever stored. Owns an isolated\
-    \ `knowledge-index/retrieval_cache.db` file, distinct from `knowledge-index/knowledge.db`,\
+    \ `agent-working/.index/knowledge-index/retrieval_cache.db` file, distinct from `agent-working/.index/knowledge-index/knowledge.db`,\
     \ specifically because `knowledge_search.py`'s `cmd_build()` and `cmd_build_incremental()`\
     \ unconditionally `unlink()` and rewrite `knowledge.db` on every rebuild -- sharing\
     \ that file would silently destroy every cached row on every index rebuild. Each\
@@ -7009,7 +7009,7 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'tools/retrieval_cache.py:59 (`CACHE_DB_PATH` -- isolated `knowledge-index/retrieval_cache.db`
+  v2_evidence: 'tools/retrieval_cache.py:59 (`CACHE_DB_PATH` -- isolated `agent-working/.index/knowledge-index/retrieval_cache.db`
     file), :76-95 (`MAY_LIST_COLUMNS` -- the exact allowlist of columns the three
     tables carry, including `created_at` on the same footing as `reason_code`/`cache_status`),
     :147-191 (`_init_schema()` -- `CREATE TABLE IF NOT EXISTS` for `retrieval_index_cache_rows`
@@ -7035,8 +7035,8 @@
   divergence_note: null
   support_boundary: 'Agent-orchestration/retrieval tooling only -- no simulation behavior,
     Mechanics Bible chapter, or engine contract governs this module''s semantics (same
-    category as INFRA-281 through INFRA-294). No `src/` file touched; `knowledge-index/knowledge.db`
-    never opened or modified by this module -- a separate `knowledge-index/retrieval_cache.db`
+    category as INFRA-281 through INFRA-294). No `src/` file touched; `agent-working/.index/knowledge-index/knowledge.db`
+    never opened or modified by this module -- a separate `agent-working/.index/knowledge-index/retrieval_cache.db`
     file is used specifically to avoid `knowledge_search.py`''s unconditional rebuild-time
     `unlink()` of `knowledge.db`.
 
@@ -7102,7 +7102,7 @@
     '
 - id: INFRA-297
   text: 'New additive, versioned retrieval-event field set appended to the existing
-    `agent-monitoring/events.jsonl` file, plus one shared module, `tools/retrieval_events.py`,
+    `agent-working/agent-monitoring/events.jsonl` file, plus one shared module, `tools/retrieval_events.py`,
     owning the field-shape constant and the wrapper functions that emit it -- TCK-20260729-RETRIEVAL-EVENT-SCHEMA-EMIT,
     the deferred "Phase 4" event-emission work TCK-20260729-HYBRID-RETRIEVAL-FUSION/TCK-20260729-RETRIEVAL-CACHE-LEVELS/
     TCK-20260729-CONTEXT-PACKET-ASSEMBLY (INFRA-294/295/296) each explicitly left
@@ -7231,7 +7231,7 @@
     Mechanics Bible chapter, or engine contract governs this module''s semantics (same
     category as INFRA-281 through INFRA-297). No `src/` file touched, no on-disk schema/corpus
     change to any existing store, and not wired into any real-time workflow orchestrator
-    file or existing pipeline/gate -- real retrieval-event volume in the live `agent-monitoring/events.jsonl`
+    file or existing pipeline/gate -- real retrieval-event volume in the live `agent-working/agent-monitoring/events.jsonl`
     stays at zero after this ticket ships, by design; the new report section only
     ever populates against fixture/test data or a future manual invocation, never
     against a real tracked workflow run. **Update (TCK-20260804-EXPANSION-RATE-WIRING):**
@@ -7262,7 +7262,7 @@
     so the emitted event is attributable to the real workflow run; `phase="Retrieval"`
     (hardcoded inside `wrap_context_packet_assembly` itself) is left unmodified. Uses
     a monotonic-negative `seq` counter, `seq = -(1 + prior_shadow_count_for_this_run_id)`
-    (computed via a read-only scan of `agent-monitoring/events.jsonl`), adopted after
+    (computed via a read-only scan of `agent-working/agent-monitoring/events.jsonl`), adopted after
     an architecture-review NEEDS_CHANGES verdict on an earlier `events.length`-derived
     approach -- provably disjoint from every real per-phase `seq` (`>= 1`) for the
     run. Candidate list passed to `assemble_context_packet()` is a minimal smoke-test
@@ -7345,7 +7345,7 @@
     Mechanics Bible chapter, or engine contract governs this module''s semantics (same
     category as INFRA-281 through INFRA-299). No `src/` file touched, no on-disk schema/corpus
     change, no new event-emission or call-site logic -- this is a pure read-only consumer
-    of already-emitted events. Real shadow- cohort volume in the live agent-monitoring/events.jsonl
+    of already-emitted events. Real shadow- cohort volume in the live agent-working/agent-monitoring/events.jsonl
     corpus stays at zero while SHADOW_CONTEXT_PACKET_ENABLED remains unset (the current
     default per INFRA-299) -- the new section only populates against fixture/test
     data or a future manual invocation until that flag is enabled.
@@ -7391,7 +7391,7 @@
   divergence_note: null
   support_boundary: 'Agent-orchestration/dashboard tooling only -- no simulation behavior,
     Mechanics Bible chapter, or engine contract governs this module''s semantics (same
-    category as INFRA-281 through INFRA-300). Read-only over tickets/** and agent-monitoring/*.jsonl;
+    category as INFRA-281 through INFRA-300). Read-only over agent-working/tickets/** and agent-working/agent-monitoring/*.jsonl;
     no new write path introduced (test_agent_ops_dashboard_module_has_no_write_path''s
     AST guard passes unmodified). No frontend consumption wired in this ticket --
     dashboard-frontend/src/api.ts is untouched, deferred to the downstream ProgressTimelineView
@@ -7690,7 +7690,7 @@
     source, and `assert_scratch_target` independently refuses `repo_root/.codex/config.toml`
     as a target. `.codex/config.toml` remains byte-identical/hook-free throughout
     (confirmed via `git diff --stat`/`git status --porcelain`, both empty). This is
-    agent-orchestration/developer-tooling only -- no `src/` simulation code, `docs/mechanics/`
+    agent-working/agent-orchestration/developer-tooling only -- no `src/` simulation code, `docs/mechanics/`
     chapter, or `docs/engine/` contract governs this module.
 
     '
@@ -7765,7 +7765,7 @@
   text: 'TCK-20260730-CODEX-RUNTIME-SHADOW -- builds the minimal Codex `implement-ticket`
     phase/tier runtime contract and its in-process shadow-parity proof (`tools/agent_codex_runtime_shadow/`),
     a fully additive package (zero existing file touched). `matrix.py::load_supported_matrix`
-    reads `workflow_version` from the real `agent-orchestration/workflows/implement-ticket.yaml`
+    reads `workflow_version` from the real `agent-working/agent-orchestration/workflows/implement-ticket.yaml`
     (read-only) and pairs it with the ticket''s hardcoded supported slice (`tier=standard`,
     `phases=[Scope, Investigate, Plan, Review]` -- the exact slice the one real fixture
     and canonical `tools.agent_replay.runner.replay_slice()` cover), raising `ContractVersionMismatchError`/`UnsupportedTierError`/`UnsupportedPhaseError`
@@ -7783,7 +7783,7 @@
     producing a `CodexShadowOutcome`. `shadow_comparison.py::run_shadow_comparison`
     makes the package''s one and only import of `tools.agent_replay.runner.replay_slice()`
     (read-only, canonical Claude-side ground truth) and compares on exactly the 4
-    axes `agent-orchestration/intentional-divergences.md`''s `## Entry Format` documents
+    axes `agent-working/agent-orchestration/intentional-divergences.md`''s `## Entry Format` documents
     (`terminal_status`, `phase_order`, `gate_policy`, `artifact_requirements`) --
     not the predecessor `shadow_mode.py`''s undocumented `"codex_parity"` catch-all
     -- gating each mismatched axis on `tools.agent_orchestration_claude_adapter.divergence_log.is_approved`
@@ -7793,7 +7793,7 @@
     and `tests/agent_codex_posttool_adapter/test_no_subprocess_and_no_live_wiring.py`''s
     existing precedent) and by direct verification that `.codex/config.toml`, `tools/agent_replay/`,
     `tools/agent_replay_codex/`, and `tools/agent_codex_pilot_guardrails/` all stayed
-    byte-identical across Implement (empty `git diff --stat`). This is agent-orchestration/developer-tooling
+    byte-identical across Implement (empty `git diff --stat`). This is agent-working/agent-orchestration/developer-tooling
     only -- no `src/` simulation code, `docs/mechanics/` chapter, or `docs/engine/`
     contract governs this module.
 
@@ -7806,7 +7806,7 @@
     `RequiredGateMissingError`, `RequiredArtifactMissingError`, `ShadowMismatchError`)
     + tools/agent_codex_runtime_shadow/matrix.py (`SupportedMatrix` dataclass, `load_supported_matrix`,
     hardcoded `_SUPPORTED_TIER = "standard"` / `_SUPPORTED_PHASES = ["Scope", "Investigate",
-    "Plan", "Review"]`, `workflow_version` read from the real `agent-orchestration/workflows/implement-ticket.yaml`)
+    "Plan", "Review"]`, `workflow_version` read from the real `agent-working/agent-orchestration/workflows/implement-ticket.yaml`)
     + tools/agent_codex_runtime_shadow/phase_order.py (`validate_phase_order`, in-order-prefix-only
     check) + tools/agent_codex_runtime_shadow/gate_validation.py (`validate_required_gate`,
     Review-only `output.verdict` check, no call into or modification of `tools.agent_replay.runner.replay_slice()`''s
@@ -7840,7 +7840,7 @@
     layer. Never invokes a real `codex exec` subprocess (proven by AST scan in `test_no_subprocess.py`,
     not string-match), so no live-consent gate is needed and none of this package''s
     own tests are consent-gated or skipped (`test_no_live_consent_dependency.py`).
-    Registers no new entry in `agent-orchestration/intentional-divergences.md` --
+    Registers no new entry in `agent-working/agent-orchestration/intentional-divergences.md` --
     this ticket''s own comparison logic found no unresolved axis mismatch requiring
     ratification; the escape hatch exists for future mismatches, not one raised by
     this ticket. Does not backfill TCK-20260721-CODEX-REPLAY-PARITY''s pre-existing
@@ -7868,7 +7868,7 @@
   text: 'TCK-20260731-CODEX-PILOT-EXECUTOR adds a scratch-only Codex pilot lifecycle
     simulator with Linux advisory claim locking, containment-first request/claim paths,
     synthetic run/event/tool evidence, exact suffix proof, and dashboard reader verification.
-    It is agent-orchestration/developer tooling only and never enables a hook, invokes
+    It is agent-working/agent-orchestration/developer tooling only and never enables a hook, invokes
     Codex, changes project config, or writes the real monitoring corpus.
 
     '
@@ -7902,7 +7902,7 @@
   legacy_evidence: null
   v2_evidence: 'tools/agent_orchestration/terminal_statuses.py + tools/agent_orchestration/loader.py
     + tools/agent_orchestration/generator.py + tools/agent_orchestration_codex_adapter/generator.py
-    + agent-orchestration/{contract.yaml,terminal-statuses.yaml,workflows/implement-ticket.yaml}
+    + agent-working/agent-orchestration/{contract.yaml,terminal-statuses.yaml,workflows/implement-ticket.yaml}
     + AGENTS.md.
 
     '
@@ -7938,7 +7938,7 @@
   priority: P2
   legacy_evidence: null
   v2_evidence: 'tools/agent_codex_realrepo_pilot_harness/{preflight.py,policy.py,proofs.py,boundary.py,
-    rollback.py} plus stored_artifacts/TCK-20260801-CODEX-REALREPO-PILOT-HARNESS/{investigation.md,
+    rollback.py} plus agent-working/stored_artifacts/TCK-20260801-CODEX-REALREPO-PILOT-HARNESS/{investigation.md,
     plan.md,architecture_verify.md,test_report.md}.
 
     '
@@ -7966,7 +7966,7 @@
   priority: P2
   legacy_evidence: null
   v2_evidence: 'tools/agent_codex_realrepo_pilot_harness/{preflight.py,live_preflight.py,boundary.py}
-    + tools/agent_codex_live_transport/invoker.py + stored_artifacts/TCK-20260801-CODEX-LIVE-TRANSPORT/{investigation.md,plan.md,test_plan.md}.
+    + tools/agent_codex_live_transport/invoker.py + agent-working/stored_artifacts/TCK-20260801-CODEX-LIVE-TRANSPORT/{investigation.md,plan.md,test_plan.md}.
 
     '
   proof_type: contract
@@ -7995,7 +7995,7 @@
   priority: P2
   legacy_evidence: null
   v2_evidence: 'tools/agent_codex_pilot_orchestration/{production_config.py,orchestrator.py}
-    + stored_artifacts/TCK-20260801-CODEX-PILOT-ORCHESTRATION/{investigation.md,plan.md,test_plan.md}.
+    + agent-working/stored_artifacts/TCK-20260801-CODEX-PILOT-ORCHESTRATION/{investigation.md,plan.md,test_plan.md}.
 
     '
   proof_type: contract
@@ -8021,7 +8021,7 @@
   priority: P2
   legacy_evidence: null
   v2_evidence: 'tools/agent_codex_pilot_entrypoint/{__main__.py,preparation.py} +
-    stored_artifacts/TCK-20260802-CODEX-PILOT-ENTRYPOINT/{investigation.md,plan.md,test_plan.md}.
+    agent-working/stored_artifacts/TCK-20260802-CODEX-PILOT-ENTRYPOINT/{investigation.md,plan.md,test_plan.md}.
 
     '
   proof_type: contract
@@ -8045,7 +8045,7 @@
   priority: P2
   legacy_evidence: null
   v2_evidence: 'tools/agent_codex_posttool_adapter/{hook_entry.py,command.py} + tools/agent_codex_live_transport/invoker.py
-    + tools/agent_codex_realrepo_pilot_harness/{policy.py,proofs.py} + staging_artifacts/TCK-20260802-CODEX-POSTTOOL-HOOK-COMMAND/{security_review.md,parity.md}.
+    + tools/agent_codex_realrepo_pilot_harness/{policy.py,proofs.py} + agent-working/staging_artifacts/TCK-20260802-CODEX-POSTTOOL-HOOK-COMMAND/{security_review.md,parity.md}.
 
     '
   proof_type: contract
@@ -8072,7 +8072,7 @@
     (CLAUDE.md) for tools.jsonl rows within Investigate-phase (run_id, seq) pairs
     identified via events.jsonl''s phase field, and (2) parity_index.py write-safety
     -- a zero-tolerance count of Edit/Write calls into docs/parity_ledger/*.yaml and
-    of `parity_index.py build` invocations targeting the real repo parity-index/parity.db
+    of `parity_index.py build` invocations targeting the real repo agent-working/.index/parity-index/parity.db
     path instead of a scratch path. generate() renders the result as a new, additively-appended
     "## Tool Safety Audit" section, placed after "## Shadow vs. Baseline Retrieval
     Comparison" and before "## Notes", gated on investigate_pair_count being nonzero
@@ -8153,7 +8153,7 @@
     "2026-08-03"`, `category: "phase"`, `term: "Document-Update"`, appended via `tools/glossary_registry.py
     add`). Deviation fix (discovered at Test phase, same ticket, same session): the
     identical two literals were also missing from a second, separate vocabulary-declaration
-    site, `agent-orchestration/workflows/implement-ticket.yaml`''s `phases:`/`agents:`
+    site, `agent-working/agent-orchestration/workflows/implement-ticket.yaml`''s `phases:`/`agents:`
     lists (the provider-neutral orchestration contract, "bootstrap-initialized once"
     from `vocabulary.py` per its own header comment) -- added there too, narrowly
     and additively. That edit surfaced 4 mechanically-derived stale-literal corrections
@@ -8165,9 +8165,9 @@
     state. Both vocabulary-declaration sites are now in sync. Follow-up (TCK-20260804-DOC-UPDATER-ROLE-FILE,
     discovered during a post-close provider-agnostic registration audit): the `phases:`/`agents:`
     sync above did not extend to `roles/*.yaml` -- `doc-updater` was added to `agents:`
-    but had no matching `agent-orchestration/roles/doc-updater.yaml` file, unlike
+    but had no matching `agent-working/agent-orchestration/roles/doc-updater.yaml` file, unlike
     the other 10 agents in that list, a gap explicitly disclosed (not silently skipped)
-    in this ticket''s own Implementation Notes at the time. Closed by adding `agent-orchestration/roles/doc-updater.yaml`
+    in this ticket''s own Implementation Notes at the time. Closed by adding `agent-working/agent-orchestration/roles/doc-updater.yaml`
     (mirrors `parity-updater.yaml`''s shape) and correcting 2 stale hardcoded role-count
     literals plus 2 stale README prose mentions. All three vocabulary-declaration
     surfaces are now in sync.
@@ -8181,7 +8181,7 @@
     no dashboard-frontend change -- this only registers two already-live literal strings
     and their one matching glossary entry so `validate.py`''s drift report and `generate_retro.py`
     recognize real `Document-Update`/ `doc-updater` events the sibling ticket''s already-landed
-    workflow wiring now emits. TCK-20260804-DOC-UPDATER-ROLE-FILE follow-up: agent-orchestration/roles/doc-updater.yaml
+    workflow wiring now emits. TCK-20260804-DOC-UPDATER-ROLE-FILE follow-up: agent-working/agent-orchestration/roles/doc-updater.yaml
     added (role_id: doc-updater, phases: [Document-Update], has_agent_file: true);
     test_contract_structure.py:81 and :147 (`== 10` -> `== 11`); README.md:17-18 corrected.
     Full 124-test `tests/agent_orchestration*` suite passes.
@@ -8652,7 +8652,7 @@
     each) with `ENABLE_PUSH_EVENT_SHAPERS=SHADOW`, event-for-event and payload-value
     compared against the old extractor''s real `simulation_events.jsonl` output: 130/131
     active ticks match exactly, 0 payload mismatches. Full trace, methodology, and
-    both bugs'' root-causing documented in `stored_artifacts/TCK-20260806-PUSH-SHADOW-VALIDATION-PERF/investigation.md`.
+    both bugs'' root-causing documented in `agent-working/stored_artifacts/TCK-20260806-PUSH-SHADOW-VALIDATION-PERF/investigation.md`.
 
     '
   proof_type: regression
@@ -9035,8 +9035,8 @@
   divergence_note: null
   support_boundary: 'Agent-orchestration/parity-ledger-tooling infrastructure only
     -- no simulation behavior is involved, and no src/ file was touched (confirmed:
-    this ticket''s changed-file list is tools/, tests/, .claude/agents/, docs/, tickets/,
-    staging_artifacts/ only). This is the first ledger entry for tools/parity_ledger_writer.py,
+    this ticket''s changed-file list is tools/, tests/, .claude/agents/, docs/, agent-working/tickets/,
+    agent-working/staging_artifacts/ only). This is the first ledger entry for tools/parity_ledger_writer.py,
     tools/parity_ledger_scan.py''s find_p0_intersection error-handling, and docs/parity_ledger/schema.json''s
     structure (confirmed by corpus search of docs/parity_ledger/*.yaml before this
     entry was added -- no prior entry cited any of the three), following the INFRA-281/315/321/322
@@ -9071,7 +9071,7 @@
     every other section in this file) '## Parity Index Read-Path Usage' section, placed
     after '## Tool Safety Audit' and before '## Notes' -- '0 today' is itself the
     reportable finding, not an empty period to stay silent about. This is a new read-only
-    monitoring/counting tool over agent-monitoring/*.jsonl data (never wires parity_index.py's
+    monitoring/counting tool over agent-working/agent-monitoring/*.jsonl data (never wires parity_index.py's
     read path into any real call site -- confirmed 0 real call sites, consistent with
     TCK-20260731-PARITY-READPATH-GATE's Gate A GO review, which approved the read
     path for eventual use but scoped actual wiring to a future, separately-scoped
@@ -9163,7 +9163,7 @@
     behavior, Mechanics Bible chapter, or engine contract governs this reporting tool''s
     semantics (same category as INFRA-281 through INFRA-332). No `src/` file was touched
     (confirmed: this ticket''s changed-file list is tools/agent-monitoring/, tests/,
-    docs/, tickets/, staging_artifacts/ only). Visibility-only: does not auto-invoke,
+    docs/, agent-working/tickets/, agent-working/staging_artifacts/ only). Visibility-only: does not auto-invoke,
     auto-deprecate, or otherwise act on any flagged skill, and does not reopen or
     re-score TCK-20260705-SIX-SKILLS-INVESTIGATION''s prior verdicts. Confirmed no
     prior INFRA-* entry in this shard cites build_skill_usage_section, compute_zero_invocation_skill_flags,
@@ -9498,7 +9498,7 @@
     = rel.with_suffix("").as_posix()`, the full nested relative path under docs_root,
     minus the .md suffix, replacing the prior truncated `f"{section}/{stem}"`; `section`
     retained immediately after for the unrelated chunk-metadata field), docstring
-    at :242-249 updated to state the new full-path doc_id semantics. Rebuilt knowledge-index/knowledge.db
+    at :242-249 updated to state the new full-path doc_id semantics. Rebuilt agent-working/.index/knowledge-index/knowledge.db
     via `make knowledge-index` (full rebuild, not --incremental) -- verified directly
     via SQLite query that nested docs under docs/engine/contracts/knowledge_gateway_mcp/
     now carry full-path doc_id values and the old truncated form no longer exists
@@ -9559,7 +9559,7 @@
     job), nor any redaction/secret-scanning/size-cap enforcement on result_payload
     (TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH''s job), nor evidence-fingerprint
     validation logic. tools/knowledge_gateway_router.py, tools/knowledge_gateway_packet_assembly.py,
-    and tools/knowledge_gateway_mcp.py remain byte-unchanged; knowledge-index/retrieval_cache.db
+    and tools/knowledge_gateway_mcp.py remain byte-unchanged; agent-working/.index/knowledge-index/retrieval_cache.db
     remains the single cache database file.'
   status: verified
   priority: P1
@@ -9603,7 +9603,7 @@
     no evidence-fingerprint validation logic. `tools/knowledge_gateway_router.py`,
     `tools/knowledge_gateway_packet_assembly.py`, and `tools/knowledge_gateway_mcp.py`
     remain byte-unchanged (confirmed via empty `git diff --stat HEAD` for all three);
-    `knowledge-index/retrieval_cache.db` remains the single cache database file, no
+    `agent-working/.index/knowledge-index/retrieval_cache.db` remains the single cache database file, no
     second database created.
 - id: INFRA-342
   text: 'Redaction/allowlist write-path enforcement functions in tools/knowledge_gateway_redaction.py
@@ -9994,7 +9994,7 @@
     \ existing marker-only `retrieval_packet_cache_rows` table (owned by the separate,\
     \ unrelated TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC) and Level 1's `retrieval_provider_result_cache_rows`\
     \ table plus `migration_003_add_redaction_policy_version_column` remain byte-unchanged\
-    \ by this ticket. `knowledge-index/retrieval_cache.db` remains the single cache\
+    \ by this ticket. `agent-working/.index/knowledge-index/retrieval_cache.db` remains the single cache\
     \ database file -- no second database created (see test_migration_002_never_creates_a_second_database_file\
     \ above). This entry also carries a known, formally-recorded intentional divergence\
     \ from docs/engine/contracts/knowledge_gateway_mcp/evidence_cache_identity_contract.md\
@@ -10485,7 +10485,7 @@
     absence of any knowledge-tool call, Architecture Review''s docs/REGISTRY.yaml
     filter, and the dormant SHADOW_CONTEXT_PACKET_ENABLED hook) and evaluates each
     against the real, committed Phase 1-3 latency/token measurements (docs/engine/contracts/knowledge_gateway_mcp/phase1_baseline_comparison.md,
-    phase2_baseline_recomparison.md, phase3_pilot_acceptance_measurement.md) and agent-monitoring/retro/RETRO-2026-W33.md.
+    phase2_baseline_recomparison.md, phase3_pilot_acceptance_measurement.md) and agent-working/agent-monitoring/retro/RETRO-2026-W33.md.
     This entry certifies that this evaluation''s methodology was sound -- real call
     sites were surveyed with real citations, real measured numbers were used without
     cherry-picking the most favorable phase, and no candidate point was left unaddressed,
@@ -10596,7 +10596,7 @@
     git status --porcelain across Implement and Architecture-Verify. Runner: tools/agent-monitoring/kgmcp_phase5_repeated_demand_measurement_runner.py,
     reading only two frozen point-in-time snapshot fixtures (tests/tools/fixtures/kgmcp_phase5_events_investigate_snapshot.json,
     521 records; kgmcp_phase5_working_log_snapshot.json, 1,411 records) -- never the
-    live agent-monitoring/events.jsonl or tickets/working_log.csv, so re-running always
+    live agent-working/agent-monitoring/events.jsonl or agent-working/tickets/working_log.csv, so re-running always
     reproduces the same numbers. Key functions: _build_records() (lines 159-175) extracts
     per-record identifiers (CamelCase symbols, file paths, ticket IDs, parity-entry
     IDs) via extract_identifiers() (lines 137-146) and classifies intent via classify_intent()
@@ -10608,7 +10608,7 @@
     Sec.11.2''s conservative multi-signal requirement). Self-contamination guard (Architecture
     Review 1st-pass required, independently re-verified fixed on both Review and Architecture-Verify
     passes): this ticket''s own mandatory Investigate-phase monitoring write would
-    otherwise land in the exact agent-monitoring/events.jsonl dataset this ticket
+    otherwise land in the exact agent-working/agent-monitoring/events.jsonl dataset this ticket
     measures -- the events snapshot fixture was frozen with an explicit run_id ==
     ''TCK-20260816-KGMCP-P5-REPEATED-DEMAND-MEASUREMENT'' exclusion applied before
     writing (521 records, not the live file''s 522), and the committed runner is structurally
@@ -10654,8 +10654,8 @@
     or that the recommendation itself is correct -- that is a separate, later, human-reviewer
     call, exactly as INFRA-344/INFRA-353 draw the same line for their own respective
     tickets. Real headline numbers, stated plainly: 17/521 conservative repeated-demand
-    pairs in the primary source (agent-monitoring/events.jsonl, 5.8% of tickets involved),
-    372/1411 in the secondary source (tickets/working_log.csv, 18.5% of tickets involved)
+    pairs in the primary source (agent-working/agent-monitoring/events.jsonl, 5.8% of tickets involved),
+    372/1411 in the secondary source (agent-working/tickets/working_log.csv, 18.5% of tickets involved)
     -- a small, real, mostly-non-literal signal, not proof of material repeated demand.
     Full numeric detail: docs/engine/contracts/knowledge_gateway_mcp/phase5_repeated_demand_measurement.md.'
 - id: INFRA-356
@@ -11063,7 +11063,7 @@
     is deliberately NOT used as a same-spec-seed-invariance anchor -- its current
     seed-invariance is an artifact of a stale resolved/world.resolved.yaml cache predating
     wolf_den_near_forest.yaml's terrain_variants field (TCK-20260821-WOLF-DEN-NOISE-MIGRATION),
-    not a structural property of its composition -- see stored_artifacts/TCK-20260821-VISUAL-VARIANTS-METRIC/investigation.md.
+    not a structural property of its composition -- see agent-working/stored_artifacts/TCK-20260821-VISUAL-VARIANTS-METRIC/investigation.md.
   status: verified
   priority: P2
   v2_evidence: src/rendering/variants.py
@@ -11108,7 +11108,7 @@
     CalibrationIntegrityError/INFRA-320 queue-drop/SURVIVAL-mode guard to this script's
     real single-compile-call architecture (no Kernel/ EventRecorder queue exists in
     this code path; compute_trail_activity, the one family half that would need one,
-    is deferred to a future ticket -- see staging_artifacts/TCK-20260821-VISUAL-QUALITY-CALIBRATION/plan.md
+    is deferred to a future ticket -- see agent-working/staging_artifacts/TCK-20260821-VISUAL-QUALITY-CALIBRATION/plan.md
     Decision 2/8). A compile_health.json sidecar is written atomically before the
     raise, mirroring calibrate_simq.py's write-before-raise ordering. This ticket's
     Out of Scope forbids any CI-gating or decision-consumption of the calibrated numeric
@@ -11472,7 +11472,7 @@
   proof_type: null
   test_path: tests/api/test_rest_parity.py::test_api_rest_parity
   divergence_note: world_day uses tick // 2400 (Mechanics Bible canonical day length),
-    not V1's tick // 100 -- see docs/engine/contracts/frontend.md and staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/plan.md
+    not V1's tick // 100 -- see docs/engine/contracts/frontend.md and agent-working/staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/plan.md
     Design Decisions for rationale.
   support_boundary: null
 - id: INFRA-388
@@ -11527,7 +11527,7 @@
     TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT.
 - id: INFRA-389
   text: 'Fix ad-hoc/non-ticket sessions inheriting a stale foreign ticket identity
-    in agent-monitoring/tools.jsonl: tools/agent-monitoring/post_tool_hook.py no longer
+    in agent-working/agent-monitoring/tools.jsonl: tools/agent-monitoring/post_tool_hook.py no longer
     falls back to the shared unscoped .claude/current_run file when no session-scoped
     sidecar exists for the calling session_id. Instead it writes a null-valued sentinel
     to .claude/current_run.<session_id> (create-if-absent) and reports null run_id/seq/phase/agent/ticket_id
@@ -11979,12 +11979,12 @@
 - id: INFRA-402
   text: 'Agent tool-usage baseline audit (TCK-20260904-AGENT-TOOL-USAGE-BASELINE):
     a new read-only script, tools/agent-monitoring/agent_tool_usage_baseline.py, aggregates
-    every agent-monitoring/data/*/tools.jsonl shard into a per-registered-agent tool-usage
+    every agent-working/agent-monitoring/data/*/tools.jsonl shard into a per-registered-agent tool-usage
     table (one row per live-globbed .claude/agents/*.md agent plus one unattributed
     row for null/non-matching agent values), each with a per-(agent, tool) call count
     and a real, verbatim, truncated:true-labeled example drawn from input_summary.
     Reuses generate_retro.py::load_data_glob rather than reimplementing a 4th shard-glob
-    loader; never opens agent-monitoring/data/ for writing.'
+    loader; never opens agent-working/agent-monitoring/data/ for writing.'
   status: verified
   priority: P2
   v2_evidence: tools/agent-monitoring/agent_tool_usage_baseline.py (registered_agents(),
@@ -12090,7 +12090,7 @@
     blocked by the sandbox''s own auto-mode classifier) rather than parsing transcript_path
     JSONL -- a non-empty background_tasks blocks (exit 2) unless stop_hook_active
     is already true, matching the harness''s own documented loop-prevention intent.
-    agent-orchestration/hook-events.yaml and hook-surface-policy.yaml updated to add
+    agent-working/agent-orchestration/hook-events.yaml and hook-surface-policy.yaml updated to add
     SubagentStop as a third enabled event and a new fourth available_events entry,
     with no loader.py/generator.py schema change required. .claude/agents/test-scoper.md''s
     existing prose Background Commands section is kept verbatim as defense-in-depth
@@ -12101,8 +12101,8 @@
   v2_evidence: tools/agent-monitoring/subagent_stop_background_guard.py (reads payload["background_tasks"],
     checks stop_hook_active first, blocks with exit 2 on a non-empty still-running
     background task, fails open on malformed/empty/non-JSON stdin); .claude/settings.json
-    (new SubagentStop hook key, matcher "*", command not suffixed with || true); agent-orchestration/hook-events.yaml
-    (new SubagentStop entry); agent-orchestration/hook-surface-policy.yaml (providers.claude.enabled_events
+    (new SubagentStop hook key, matcher "*", command not suffixed with || true); agent-working/agent-orchestration/hook-events.yaml
+    (new SubagentStop entry); agent-working/agent-orchestration/hook-surface-policy.yaml (providers.claude.enabled_events
     now includes SubagentStop; new providers.claude.available_events).
   test_path: tests/tools/test_subagent_stop_background_guard.py; tests/tools/test_settings_json_hooks_wiring.py;
     tests/agent_orchestration/test_contract_structure.py
@@ -12239,7 +12239,7 @@
 - id: INFRA-408
   text: 'gate_policy and artifact_requirements conformance: .claude/ provider translation
     of implement-ticket''s per-phase gate mechanism and per-tier staging-artifact
-    requirement must not silently diverge from agent-orchestration/gate-policy.yaml
+    requirement must not silently diverge from agent-working/agent-orchestration/gate-policy.yaml
     and contract.yaml''s artifact_requirements field.'
   status: verified
   priority: P2
@@ -12247,7 +12247,7 @@
   v2_evidence: tools/agent_orchestration_claude_adapter/gate_policy_extractor.py,
     tools/agent_orchestration_claude_adapter/artifact_requirements_extractor.py diff
     live .claude/workflows/implement-ticket.js and tools/gate_checks/done_checker_static.py
-    against agent-orchestration/{gate-policy.yaml,contract.yaml}
+    against agent-working/agent-orchestration/{gate-policy.yaml,contract.yaml}
   proof_type: contract
   test_path: tests/agent_orchestration_claude_adapter/test_gate_policy_conformance.py,tests/agent_orchestration_claude_adapter/test_artifact_requirements_conformance.py,tests/agent_orchestration_codex_adapter/test_gate_policy_artifact_requirements_conformance.py
   divergence_note: null
@@ -12333,7 +12333,7 @@
     Deliberately does NOT adopt post_tool_hook.py''s null-sentinel-on-absence write
     behavior (INFRA-389) -- this is a read-only advisory hook with no justified write
     side effect. No other segment of the command (FILE=$(...) extraction, case matcher
-    list, ls tickets/inprogress/*.md guard, echo JSON reminder text, or either subshell''s
+    list, ls agent-working/tickets/inprogress/*.md guard, echo JSON reminder text, or either subshell''s
     trailing 2>/dev/null || true fail-open wrapper) changed.'
   status: verified
   priority: P2
@@ -12353,7 +12353,7 @@
     Path(".claude").glob("current_run.*") pattern) and flags a detection when another
     session''s scoped sidecar has run_id == tid AND an mtime within a 15-minute window
     of now -- both conditions required together. Detections are appended to a new
-    dedicated agent-monitoring/data/YYYY-Www/claim_detections.jsonl via the shared
+    dedicated agent-working/agent-monitoring/data/YYYY-Www/claim_detections.jsonl via the shared
     writer.py::write_line() primitive, never into runs.jsonl/events.jsonl. Always-on
     (no env-var gate) -- a local file glob/JSON-parse, negligible cost, unlike the
     shadow-reviewer-logging precedent''s gated extra LLM call. Never raises, blocks,
@@ -12510,7 +12510,7 @@
   support_boundary: 'Agent-orchestration/parity-ledger-tooling infrastructure only
     -- no simulation behavior involved, and no src/ file was touched by this ticket
     (confirmed changed-file list: tools/, tests/tools/, docs/parity_ledger/, docs/ai/,
-    docs/testing/, tickets/, staging_artifacts/ only). This entry documents only the
+    docs/testing/, agent-working/tickets/, agent-working/staging_artifacts/ only). This entry documents only the
     write-time contract change to tools/parity_ledger_writer.py::validate_entry()
     and docs/parity_ledger/schema.json (evidence_kind field + Step 3a''s narrowed
     P0 rule) plus the new shared tools/parity_test_path.py parser -- it does not re-document
@@ -12522,7 +12522,7 @@
     write_entry()''s upsert+index-rebuild behavior).'
 - id: INFRA-416
   text: TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION -- every writer of
-    a merge=union-covered file (tickets/working_log.csv, agent-monitoring/data/*/*.jsonl)
+    a merge=union-covered file (agent-working/tickets/working_log.csv, agent-working/agent-monitoring/data/*/*.jsonl)
     must emit LF only. tools/agent-monitoring/record_hand_orchestrated_closure.py:207
     was the one CRLF writer (csv.writer with no lineterminator defaults to \r\n);
     fixed to lineterminator="\n". .gitattributes now carries text eol=lf ahead of
@@ -12536,9 +12536,9 @@
   legacy_evidence: null
   v2_evidence: 'tools/working_log_writer.py::append_working_log_row() -- csv.writer(f,
     quoting=csv.QUOTE_MINIMAL, lineterminator="\n"). tools/agent-monitoring/record_hand_orchestrated_closure.py
-    now calls this helper instead of writing tickets/working_log.csv directly (TCK-20260912-WORKING-LOG-APPEND-HELPER).
-    .gitattributes -- "agent-monitoring/data/*/*.jsonl text eol=lf merge=union" and
-    "tickets/working_log.csv text eol=lf merge=union" (both previously merge=union
+    now calls this helper instead of writing agent-working/tickets/working_log.csv directly (TCK-20260912-WORKING-LOG-APPEND-HELPER).
+    .gitattributes -- "agent-working/agent-monitoring/data/*/*.jsonl text eol=lf merge=union" and
+    "agent-working/tickets/working_log.csv text eol=lf merge=union" (both previously merge=union
     only). tests/integrity/test_merge_union_no_cr_bytes.py sweeps every file _merge_union_glob_patterns()/_covered_files()
     (imported, not reimplemented, from test_no_duplicate_content_blocks.py -- that
     helper was itself fixed to tokenize the attribute line instead of requiring merge=union
@@ -12630,7 +12630,7 @@
     tools/parity_corpus_check.py itself has no dedicated persisted test file; its
     classification output was verified once at investigation time by cross-checking
     against directly running validate_entry() over all 2187 live entries (zero mismatches,
-    documented in staging_artifacts/TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS/investigation.md)
+    documented in agent-working/staging_artifacts/TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS/investigation.md)
     rather than by an automated regression test -- disclosed honestly rather than
     cited as if a persisted test exists.
 - id: INFRA-419

@@ -80,7 +80,7 @@ Do not infer completion from ticket state here; use the plan frontmatter and its
 
 **2026-09-13 archival pass:** `architecture_resilience_remediation_roadmap.md` and
 `http_admission_control_epic.md` were confirmed fully shipped (all tracked epics/tickets in
-`tickets/done/`) and moved to `docs/plans/archive/` with `status: historical`, `maturity: shipped`;
+`agent-working/tickets/done/`) and moved to `docs/plans/archive/` with `status: historical`, `maturity: shipped`;
 both are removed from this table per the exclusion rule above.
 
 **Known-stale item not yet fixed:** `engine_future_epics_roadmap.md`'s "Headline Finding" (no
@@ -91,7 +91,7 @@ document body itself.
 **Needs a full audit, not yet done:** `long_term_development_roadmap.md` (dated 2026-06-19) has at
 least one confirmed-shipped item (§5.3 Faction & Diplomacy) and no per-item status tracking; given
 this repo's ticket velocity it is plausibly 50%+ stale relative to the newer, actively-worked
-`rpg_design_roadmap/` (M1-M9) program. Needs an item-by-item pass against `tickets/done/` before
+`rpg_design_roadmap/` (M1-M9) program. Needs an item-by-item pass against `agent-working/tickets/done/` before
 being trusted for prioritization — recommend filing a ticket for this rather than assuming.
 
 **Roadmap authority (no single index existed before this note):** for architecture/engine-scale

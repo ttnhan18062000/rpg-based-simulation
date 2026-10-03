@@ -131,15 +131,15 @@ class TestAtomicLifecycle:
 
     def test_db_not_tracked_by_git(self):
         gitignore = (_REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
-        assert "parity-index/" in gitignore
+        assert "agent-working/.index/parity-index/" in gitignore
 
         result = subprocess.run(
-            ["git", "check-ignore", "-v", "parity-index/parity.db"],
+            ["git", "check-ignore", "-v", "agent-working/.index/parity-index/parity.db"],
             capture_output=True,
             text=True,
             cwd=str(_REPO_ROOT),
         )
-        assert result.returncode == 0, "parity-index/parity.db is not git-ignored"
+        assert result.returncode == 0, "agent-working/.index/parity-index/parity.db is not git-ignored"
 
 
 # ---------------------------------------------------------------------------

@@ -38,11 +38,22 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set
 
 from tools.test_architecture import core_rpg_report as report
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, STAGING_ARTIFACTS, STORED_ARTIFACTS, TICKETS, posix  # noqa: E402
 
 SCHEMA_VERSION = 1
 SCENARIO_LANE_PATH = "tests/mechanic_scenarios"
 CONTENT_PREFIXES = ("data/worlds/", "data/content/", "config/")
-DOC_PREFIXES = ("docs/", "tickets/", "stored_artifacts/", "staging_artifacts/", "agent-monitoring/", "registries/")
+DOC_PREFIXES = (
+    "docs/",
+    posix(TICKETS) + "/",
+    posix(STORED_ARTIFACTS) + "/",
+    posix(STAGING_ARTIFACTS) + "/",
+    posix(AGENT_MONITORING) + "/",
+    "registries/",
+)
 GAP_TACTICAL_NAVIGATION = (
     "tactical navigation is listed under Movement in the ownership map but has no code root; changed paths "
     "that only belong to it cannot be mapped and are reported as impact-unknown"

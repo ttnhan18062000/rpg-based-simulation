@@ -136,7 +136,7 @@ def test_resolve_write_target_default_cwd_returns_relative_path(monkeypatch, tmp
     target = mbi.resolve_write_target("runs")
 
     assert not target.is_absolute()
-    assert str(target).startswith("agent-monitoring/data/")
+    assert str(target).startswith("agent-working/agent-monitoring/data/")
     assert target.name.endswith("relative-branch.runs.jsonl")
 
 

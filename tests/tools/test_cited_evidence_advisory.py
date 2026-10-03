@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "tools"))
@@ -25,15 +26,15 @@ def repo(tmp_path):
     """A throwaway git repo carrying the real .gitignore rule pair for stored_artifacts JSON."""
     _git(tmp_path, "init", "-q")
     (tmp_path / ".gitignore").write_text(
-        "stored_artifacts/**/*.json\n!stored_artifacts/**/manifest.json\n", encoding="utf-8"
+        "agent-working/stored_artifacts/**/*.json\n!agent-working/stored_artifacts/**/manifest.json\n", encoding="utf-8"
     )
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    (tmp_path / "stored_artifacts" / "T").mkdir(parents=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    (tmp_path / STORED_ARTIFACTS / "T").mkdir(parents=True)
     return tmp_path
 
 
 def _ticket(root, body):
-    (root / "tickets" / "inprogress" / f"{TID}.md").write_text(f"# {TID}\n\n{body}\n", encoding="utf-8")
+    (root / TICKETS / "inprogress" / f"{TID}.md").write_text(f"# {TID}\n\n{body}\n", encoding="utf-8")
 
 
 def _file(root, rel, tracked):
@@ -45,47 +46,47 @@ def _file(root, rel, tracked):
 
 
 def test_ignored_json_path_warns_naming_path_and_rule(repo):
-    _file(repo, "stored_artifacts/T/table.json", tracked=False)
-    _ticket(repo, "Evidence: `stored_artifacts/T/table.json`")
+    _file(repo, "agent-working/stored_artifacts/T/table.json", tracked=False)
+    _ticket(repo, "Evidence: `agent-working/stored_artifacts/T/table.json`")
     status, ev = check_cited_evidence_paths(TID, "standard", root=repo)
     assert status == "WARN"
-    assert "stored_artifacts/T/table.json" in ev
-    assert "stored_artifacts/**/*.json" in ev
+    assert "agent-working/stored_artifacts/T/table.json" in ev
+    assert "agent-working/stored_artifacts/**/*.json" in ev
 
 
 def test_all_tracked_paths_are_ok(repo):
-    _file(repo, "stored_artifacts/T/table.jsonl", tracked=True)
-    _file(repo, "stored_artifacts/T/manifest.json", tracked=True)
-    _ticket(repo, "`stored_artifacts/T/table.jsonl` and `stored_artifacts/T/manifest.json`")
+    _file(repo, "agent-working/stored_artifacts/T/table.jsonl", tracked=True)
+    _file(repo, "agent-working/stored_artifacts/T/manifest.json", tracked=True)
+    _ticket(repo, "`agent-working/stored_artifacts/T/table.jsonl` and `agent-working/stored_artifacts/T/manifest.json`")
     status, ev = check_cited_evidence_paths(TID, "standard", root=repo)
     assert status == "OK", ev
 
 
 def test_force_added_json_is_not_flagged(repo):
-    _file(repo, "stored_artifacts/T/forced.json", tracked=True)
-    _ticket(repo, "`stored_artifacts/T/forced.json`")
+    _file(repo, "agent-working/stored_artifacts/T/forced.json", tracked=True)
+    _ticket(repo, "`agent-working/stored_artifacts/T/forced.json`")
     assert check_cited_evidence_paths(TID, root=repo)[0] == "OK"
 
 
 def test_untracked_not_ignored_path_warns_differently(repo):
-    _file(repo, "stored_artifacts/T/notes.md", tracked=False)
-    _ticket(repo, "`stored_artifacts/T/notes.md`")
+    _file(repo, "agent-working/stored_artifacts/T/notes.md", tracked=False)
+    _ticket(repo, "`agent-working/stored_artifacts/T/notes.md`")
     status, ev = check_cited_evidence_paths(TID, root=repo)
     assert status == "WARN" and "not tracked" in ev and "gitignored" not in ev
 
 
 def test_staging_citation_is_checked_at_its_migrated_stored_path(repo):
-    _file(repo, "stored_artifacts/T/table.json", tracked=False)
-    _ticket(repo, "`staging_artifacts/T/table.json`")
+    _file(repo, "agent-working/stored_artifacts/T/table.json", tracked=False)
+    _ticket(repo, "`agent-working/staging_artifacts/T/table.json`")
     status, ev = check_cited_evidence_paths(TID, root=repo)
-    assert status == "WARN" and "stored_artifacts/T/table.json" in ev
+    assert status == "WARN" and "agent-working/stored_artifacts/T/table.json" in ev
 
 
 def test_missing_wildcard_and_placeholder_citations_are_skipped(repo):
     _ticket(
         repo,
-        "`stored_artifacts/T/gone.json` `stored_artifacts/**/*.json` `tickets/done/{ticket_id}.md` "
-        f"`tickets/inprogress/{TID}.md` `stored_artifacts/T/`",
+        "`agent-working/stored_artifacts/T/gone.json` `agent-working/stored_artifacts/**/*.json` `agent-working/tickets/done/{ticket_id}.md` "
+        f"`agent-working/tickets/inprogress/{TID}.md` `agent-working/stored_artifacts/T/`",
     )
     status, ev = check_cited_evidence_paths(TID, root=repo)
     assert status == "NA", ev
@@ -93,17 +94,17 @@ def test_missing_wildcard_and_placeholder_citations_are_skipped(repo):
 
 def test_missing_ticket_is_na_and_git_failure_degrades_to_warn(tmp_path):
     assert check_cited_evidence_paths(TID, root=tmp_path)[0] == "NA"
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
-    (tmp_path / "stored_artifacts" / "T").mkdir(parents=True)
-    (tmp_path / "stored_artifacts" / "T" / "a.md").write_text("x")
-    _ticket(tmp_path, "`stored_artifacts/T/a.md`")  # not a git repo: git exits 128
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    (tmp_path / STORED_ARTIFACTS / "T").mkdir(parents=True)
+    (tmp_path / STORED_ARTIFACTS / "T" / "a.md").write_text("x")
+    _ticket(tmp_path, "`agent-working/stored_artifacts/T/a.md`")  # not a git repo: git exits 128
     status, ev = check_cited_evidence_paths(TID, root=tmp_path)
     assert status == "WARN" and "could not run git" in ev
 
 
 def test_cited_paths_extraction_order_and_dedup():
-    text = "`tickets/a.md` prose `stored_artifacts/x/y.jsonl` `tickets/a.md` `docs/z.md` `plain.md`"
-    assert cited_paths(text) == ["tickets/a.md", "stored_artifacts/x/y.jsonl"]
+    text = "`agent-working/tickets/a.md` prose `agent-working/stored_artifacts/x/y.jsonl` `agent-working/tickets/a.md` `docs/z.md` `plain.md`"
+    assert cited_paths(text) == ["agent-working/tickets/a.md", "agent-working/stored_artifacts/x/y.jsonl"]
 
 
 def test_advisory_never_enters_precheck_or_changes_exit_code(monkeypatch, capsys):

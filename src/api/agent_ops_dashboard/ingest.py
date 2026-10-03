@@ -1,7 +1,7 @@
 """File-reading, parsing, join, and in-memory cache layer for the Agent Ops
 Dashboard backend.
 
-Read-only: this module never writes to tickets/**, agent-monitoring/*.jsonl,
+Read-only: this module never writes to agent-working/tickets/**, agent-working/agent-monitoring/*.jsonl,
 or any other durable source — it only reads them into an in-memory cache
 rebuilt on source mtime change.
 
@@ -83,12 +83,16 @@ from src.api.agent_ops_dashboard.models import (
     TierDistributionStats,
     TimelineEntry,
 )
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[3])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
 ACTIVE_WINDOW_MINUTES = 10
 _EDIT_TOOLS = {"Read", "Edit", "Write", "MultiEdit"}
 _TICKET_ID_RE = re.compile(r"^TCK-\d{8}-")
-# A ticket can transiently exist under both tickets/todos/{folder}/ and
-# tickets/inprogress/ (the todos source file is only deleted at ticket close,
+# A ticket can transiently exist under both agent-working/tickets/todos/{folder}/ and
+# agent-working/tickets/inprogress/ (the todos source file is only deleted at ticket close,
 # per CLAUDE.md's Workflow Rule) — lower number wins when the same ticket_id
 # is found under more than one lifecycle directory in the same rebuild.
 _LIFECYCLE_PRIORITY = {"inprogress": 0, "done": 1, "todos": 2}
@@ -119,9 +123,9 @@ def load_jsonl_counted(path: Path) -> tuple[list[dict], int]:
 
 
 def _week_shard_paths(data_root: Path, filename: str) -> list[Path]:
-    """Every agent-monitoring/data/<week>/{filename} shard under data_root, sorted for
+    """Every agent-working/agent-monitoring/data/<week>/{filename} shard under data_root, sorted for
     determinism — mirrors record_events.py::compute_tool_stats()'s
-    `sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl"))` precedent. A
+    `sorted(Path(".").glob("agent-working/agent-monitoring/data/*/tools.jsonl"))` precedent. A
     data_root with no matching week folders yields an empty list (not an error).
 
     Falls back to a single flat data_root.parent/{filename} file (e.g.
@@ -150,7 +154,7 @@ def _max_mtime(paths: list[Path]) -> float:
 
 
 def _load_jsonl_counted_multi(data_root: Path, filename: str) -> tuple[list[dict], int]:
-    """Read + concatenate every agent-monitoring/data/<week>/{filename} shard (sorted,
+    """Read + concatenate every agent-working/agent-monitoring/data/<week>/{filename} shard (sorted,
     ISO-week order) via load_jsonl_counted per file, summing unparsed-line counts
     across all shards. Safe against double-counting: (run_id, seq) is globally unique
     across weeks (see record_events.py::compute_tool_stats's docstring) and each shard
@@ -204,7 +208,7 @@ def parse_ticket_file(path: Path, lifecycle_state: str) -> Optional[dict]:
 
 
 def walk_ticket_dirs(tickets_root: Path) -> list[Path]:
-    """Return every TCK-*.md file under tickets/{inprogress,done,todos}/.
+    """Return every TCK-*.md file under agent-working/tickets/{inprogress,done,todos}/.
 
     done/ and todos/ are walked recursively (epics/sequences live in
     subfolders); non-ticket files (SEQUENCE.md, etc.) are filtered out by
@@ -504,7 +508,7 @@ def _load_agent_role_descriptions(repo_root: Path) -> dict[str, str]:
 
 
 class DashboardCache:
-    """In-memory cache over tickets/** + agent-monitoring/*.jsonl, rebuilt on
+    """In-memory cache over agent-working/tickets/** + agent-working/agent-monitoring/*.jsonl, rebuilt on
     source mtime change. Every public method opens `with self._lock:` as its
     first statement (single threading.RLock() guarding every read and write —
     src/api/read_model_cache.py::ReadModelCache's exact pattern, not the
@@ -512,8 +516,8 @@ class DashboardCache:
 
     def __init__(self, repo_root: Path = _REPO_ROOT):
         self._repo_root = repo_root
-        self._data_root = repo_root / "agent-monitoring" / "data"
-        self._tickets_root = repo_root / "tickets"
+        self._data_root = repo_root / AGENT_MONITORING / "data"
+        self._tickets_root = repo_root / TICKETS
         self._lock = threading.RLock()
 
         self._runs_all: list[dict] = []
@@ -927,7 +931,7 @@ class DashboardCache:
         called directly, never reimplemented. Unlike every other DashboardCache method, this one
         does its own fresh file walk each call rather than reading from the mtime-cached
         _tickets_by_id/_runs_all state: tools/ticket_stats_report.py is a standalone tool
-        following tools/tag_report.py's own precedent (a script that walks tickets/done/ itself),
+        following tools/tag_report.py's own precedent (a script that walks agent-working/tickets/done/ itself),
         and its output shape (layer/tier/priority per ticket) isn't a subset of what
         DashboardCache's own parse_ticket_file() already extracts and caches — folding it into
         the mtime-rebuild cycle would require restructuring _rebuild() for a stats view that
@@ -974,7 +978,7 @@ class DashboardCache:
 
         Like get_ticket_corpus_stats(), this does its own fresh file read rather than participating
         in the mtime-cached _rebuild() cycle — all three sources are small and change far less
-        often than tickets/runs, so a fresh read per call is simpler than restructuring
+        often than agent-working/tickets/runs, so a fresh read per call is simpler than restructuring
         _rebuild() for three more source files/dirs. self._maybe_rebuild() is still called first
         for interface consistency with every other method.
         """

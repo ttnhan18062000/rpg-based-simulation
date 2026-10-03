@@ -1,7 +1,7 @@
 docs/
 src_legacy/
 tests_legacy/
-tickets/
-stored_artifacts/
-reviews/
+agent-working/tickets/
+agent-working/stored_artifacts/
+agent-working/reviews/
 reports/

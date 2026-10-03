@@ -16,7 +16,7 @@ from .pilot_manifest import PilotRequest
 def select_pilot_candidate(ticket_id: str, pilot_requests_dir: Path) -> PilotRequest:
     """Load and validate the pilot request for ticket_id.
 
-    pilot_requests_dir is an injected parameter (never hardcoded to the real pilot_requests/) so
+    pilot_requests_dir is an injected parameter (never hardcoded to the real agent-working/pilot_requests/) so
     callers/tests can point it at a scratch directory.
     """
     request_path = pilot_requests_dir / f"{ticket_id}.yaml"
@@ -31,7 +31,7 @@ def assert_no_concurrent_claim(ticket_id: str, run_records: list[dict]) -> None:
     """Raise ConcurrentProviderClaimError if two or more in-progress records (end_ts absent/None)
     for ticket_id carry two different provider values.
 
-    run_records is shaped like agent-monitoring/runs.jsonl records (each with at minimum
+    run_records is shaped like agent-working/agent-monitoring/runs.jsonl records (each with at minimum
     ticket_id, provider, end_ts). This check is proven only against synthetic fixture lists
     constructed in-test — see provider_field_coverage's own docstring for why.
     """

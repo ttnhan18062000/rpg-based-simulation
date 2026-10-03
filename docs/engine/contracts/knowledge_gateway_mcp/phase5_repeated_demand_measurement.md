@@ -19,7 +19,7 @@ called, or modified by this ticket's own runner.
 
 ## Data source and method
 
-**Primary source**: `agent-monitoring/events.jsonl`, `phase == "Investigate"` events, deduplicated
+**Primary source**: `agent-working/agent-monitoring/events.jsonl`, `phase == "Investigate"` events, deduplicated
 to the first event per ticket `run_id` — 521 distinct tickets with a real Investigate-phase summary,
 frozen as a point-in-time snapshot (`tests/tools/fixtures/kgmcp_phase5_events_investigate_snapshot.
 json`) as of this ticket's own Implement step, **explicitly excluding this ticket's own run_id**
@@ -28,13 +28,13 @@ hazard where this ticket's own mandatory Investigate-phase monitoring write woul
 the exact dataset it measures (the raw, unfiltered live file yields 522 records; the correct,
 self-contamination-safe count is 521).
 
-**Secondary/corroborating source**: `tickets/working_log.csv`'s own `title`+`summary` columns —
+**Secondary/corroborating source**: `agent-working/tickets/working_log.csv`'s own `title`+`summary` columns —
 1,411 tickets with non-empty text, frozen the same way
 (`tests/tools/fixtures/kgmcp_phase5_working_log_snapshot.json`).
 
 Both sources are real, non-synthetic, non-corpus production data — not the frozen 7-entry
 `kgmcp_baseline_corpus.CORPUS` (deliberately built unique-per-entry, structurally incapable of
-demonstrating repeated demand), and not `agent-monitoring/retro/*.md` (pre-aggregated counts only,
+demonstrating repeated demand), and not `agent-working/agent-monitoring/retro/*.md` (pre-aggregated counts only,
 no per-question free text to compare).
 
 The equivalence-detection method mirrors proposal §11.2's conservative, multi-signal approach —
@@ -50,7 +50,7 @@ environment; disclosed, not silently worked around):
 3. **Classify intent** into 6 buckets (`mechanism_explanation`, `root_cause_debugging`,
    `completeness_verification`, `feasibility_evaluation`, `location_lookup`, `other`) via keyword
    rules.
-4. **Compare**: two different tickets/rows count as a conservative repeated-demand pair only if (a)
+4. **Compare**: two different agent-working/tickets/rows count as a conservative repeated-demand pair only if (a)
    same intent bucket (excluding `other`, too weak) AND (b) at least one overlapping *specific*
    identifier (CamelCase symbol, file path, ticket ID, or parity-entry ID) — subsystem-topic **tag
    alone** is explicitly not counted, and reported separately as a weaker signal.

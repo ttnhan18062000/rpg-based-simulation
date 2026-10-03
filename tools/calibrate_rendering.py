@@ -24,7 +24,7 @@ The `aggregate` subcommand then scans a directory of already-written per-run art
 and computes descriptive (min/max/mean, never asserted-against) healthy-band candidate
 statistics per family, writing one provenance-headed JSON report to config/rendering/ --
 a file separate from config/rendering/grade_thresholds.toml, never overwriting it (see
-staging_artifacts/TCK-20260821-VISUAL-QUALITY-CALIBRATION/plan.md Decision 1).
+agent-working/staging_artifacts/TCK-20260821-VISUAL-QUALITY-CALIBRATION/plan.md Decision 1).
 
 compute_trail_activity (src/rendering/variants.py) is deliberately NOT implemented,
 called, or calibrated anywhere in this script -- it structurally requires ticking a

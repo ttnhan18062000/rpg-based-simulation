@@ -11,13 +11,14 @@ from tools.agent_codex_pilot_guardrails.baseline_manifest_gate import (
     capture_pilot_baseline,
 )
 from tools.agent_codex_pilot_guardrails.errors import PilotManifestDriftError
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _FILES = ("runs.jsonl", "events.jsonl", "tools.jsonl")
 
 
 def _build_synthetic_monitoring_dir(tmp_path: Path) -> Path:
-    directory = tmp_path / "agent-monitoring"
-    directory.mkdir()
+    directory = tmp_path / AGENT_MONITORING
+    directory.mkdir(parents=True)
     for filename in _FILES:
         (directory / filename).write_text('{"a": 1}\n{"a": 2}\n{"a": 3}\n', encoding="utf-8")
     return directory

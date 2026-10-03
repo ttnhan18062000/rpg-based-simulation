@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only baseline metrics over agent-monitoring/*.jsonl
+"""Read-only baseline metrics over agent-working/agent-monitoring/*.jsonl
 (TCK-20260728-RETRIEVAL-BASELINE-METRICS).
 
 One-off baseline snapshot of current retrieval/context-loading behavior, computed purely by
@@ -7,10 +7,10 @@ importing and composing existing functions from generate_retro.py (_load_runs_an
 load_data_glob, DEFAULT_TOOLS_FILE, _resolve_status, _is_gate_fail, SEARCH_TOOL_NAMES,
 build_search_count_section, build_raw_investigation_count_section), legacy_reader.py
 (classify_provenance), and manifest.py (_assert_safe_output_path) — never reimplementing any of
-their logic. Prints a JSON report to stdout by default; never writes into agent-monitoring/ itself.
+their logic. Prints a JSON report to stdout by default; never writes into agent-working/agent-monitoring/ itself.
 
 Distinct from generate_retro.py's own recurring weekly RETRO-*.md cadence — this tool is a
-one-off/periodic snapshot, not part of that cadence, and does not write into agent-monitoring/retro/.
+one-off/periodic snapshot, not part of that cadence, and does not write into agent-working/agent-monitoring/retro/.
 SEARCH_TOOL_NAMES/build_search_count_section/build_raw_investigation_count_section were relocated
 into generate_retro.py by TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING to resolve a
 circular-import constraint (this module already imports FROM generate_retro.py; the reverse
@@ -57,14 +57,14 @@ def load_all_sources() -> tuple:
 
 
 def build_context_tokens_section() -> dict:
-    """`agent-monitoring/data/*.jsonl` itself carries no token field, and this report is scoped to
+    """`agent-working/agent-monitoring/data/*.jsonl` itself carries no token field, and this report is scoped to
     exactly that data (reproducible from the repo alone, on any machine, in CI). "unavailable" is
     still correct for THIS report's own status field -- but not because the underlying data is
     unobtainable everywhere: TCK-20260921-REAL-TOKEN-TELEMETRY corrected the earlier
     "platform-blocked, no workaround" claim as false. See `workaround` below."""
     return {
         "status": "unavailable",
-        "reason": "agent-monitoring/data/*.jsonl carries no token field -- the workflow's own "
+        "reason": "agent-working/agent-monitoring/data/*.jsonl carries no token field -- the workflow's own "
                   "per-event recording never receives real token usage from the Claude Code "
                   "runtime, so this report (reproducible from repo data alone) cannot include it.",
         "workaround": "tools/agent-monitoring/real_token_usage.py reads real per-request usage "

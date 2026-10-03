@@ -8,7 +8,7 @@ tags: [agent-monitoring, retro]
 
 # Agent Monitoring Retro Guide
 
-The retro process transforms raw `agent-monitoring/data/YYYY-Www/{runs,events}.jsonl` into a structured improvement cycle. Run it weekly or after a batch of tickets.
+The retro process transforms raw `agent-working/agent-monitoring/data/YYYY-Www/{runs,events}.jsonl` into a structured improvement cycle. Run it weekly or after a batch of tickets.
 
 ---
 
@@ -21,8 +21,8 @@ The retro process transforms raw `agent-monitoring/data/YYYY-Www/{runs,events}.j
 This is no longer pure human discipline: a `PostToolUse` hook
 (`tools/agent-monitoring/retro_nudge_hook.py`, wired in `.claude/settings.json`)
 counts `implement-ticket` runs with `final_status`/`status` `DONE` in
-`agent-monitoring/data/YYYY-Www/runs.jsonl` whose `start_ts`/`started_at` is later than the
-mtime of the most recent dated `agent-monitoring/retro/RETRO-<week>.md` report
+`agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl` whose `start_ts`/`started_at` is later than the
+mtime of the most recent dated `agent-working/agent-monitoring/retro/RETRO-<week>.md` report
 (`RETRO-ALL.md` is a static all-time snapshot and is excluded from this check).
 Once that count reaches 5, it injects an `additionalContext` reminder to run
 `/agent-monitoring-retro` — advisory only, it never blocks a tool call, and it
@@ -53,8 +53,8 @@ python3 tools/agent-monitoring/generate_retro.py --days 30
 python3 tools/agent-monitoring/generate_retro.py --all
 ```
 
-Reports are written to `agent-monitoring/retro/RETRO-<label>.md`.  
-The index at `agent-monitoring/retro/index.md` is updated automatically.
+Reports are written to `agent-working/agent-monitoring/retro/RETRO-<label>.md`.  
+The index at `agent-working/agent-monitoring/retro/index.md` is updated automatically.
 
 ---
 
@@ -65,7 +65,7 @@ The index at `agent-monitoring/retro/index.md` is updated automatically.
 | **Run Summary** | DONE rate < 80%? Average duration > 20 min? |
 | **Gate Failure Breakdown** | Which gates block most runs? Repeated TESTS_FAILED or PARITY_FAIL suggests systemic issues. |
 | **Reason Codes** | Only shown when at least one event carries a `reason_code` (see `docs/agent-monitoring/schema.md`). Disambiguates gate statuses that collapse multiple causes into one value — e.g. a run of `DOD_BLOCKED` or Scope/Structure `failed`/`blocked` counts alone can't tell you whether the cause was an unregistered tag, a duplicate ticket, or an unrelated DoD condition; this section can. A rising `tag_registry_rejection` count suggests agents need better registry-awareness before Scope, not just a Verify-time catch. |
-| **Tag Breakdown — Subsystem/Topic** | Only shown when at least one run resolves to a registered Subsystem/Topic tag. Tags are resolved live at report-generation time from ticket frontmatter under `tickets/done/` and `tickets/inprogress/`, keyed by `run_id` — a ticket file that has been moved, renamed, or deleted since its run completed becomes unresolvable and is silently excluded from this table (a known limitation of live resolution, not a bug). Use this to spot which subsystem/topic areas have the lowest DONE rate or the most gate failures. |
+| **Tag Breakdown — Subsystem/Topic** | Only shown when at least one run resolves to a registered Subsystem/Topic tag. Tags are resolved live at report-generation time from ticket frontmatter under `agent-working/tickets/done/` and `agent-working/tickets/inprogress/`, keyed by `run_id` — a ticket file that has been moved, renamed, or deleted since its run completed becomes unresolvable and is silently excluded from this table (a known limitation of live resolution, not a bug). Use this to spot which subsystem/topic areas have the lowest DONE rate or the most gate failures. |
 | **Tag Breakdown — Process/Skill-signal** | Only shown when at least one run resolves to a registered Process/Skill-signal tag. Deliberately asymmetric: only the `security` tag has a real gate to cross-reference today (`Security-Review` phase event or `SECURITY_BLOCKED` final_status, built by `TCK-20260705-WORKFLOW-SECURITY-GATE`) — its row shows a computed gate-hit count. `api-design`, `debugging`, and `performance` show `N/A — no gate implemented` in the same column, because no such gate exists in the orchestration code today, not because of a data gap. This is not a promise that symmetric gates are planned. |
 | **Tier Distribution** | Are hotfix tickets actually taking a fast path? High hotfix gate-fail rate = wrong tier. A tier's DONE rate is computed excluding EPIC_SCOPED runs (shown in a separate Scoped column) — EPIC_SCOPED is a correct terminal state for scope-only epics, not a failure, and inflating the denominator with it previously understated epic tier health (44% vs. the real 79%). |
 | **Agent Status Distribution** | High `failed` or `blocked` on specific agents → prompt problem. |
@@ -74,7 +74,7 @@ The index at `agent-monitoring/retro/index.md` is updated automatically.
 | **Slow Runs** | > 30 min runs (fixed threshold) — usually Review or Implement phase. Consider splitting or simplifying scope. |
 | **Outliers** | Conditionally rendered — only appears when at least one value exceeds 3x its group's median (`duration_s` grouped by tier, `cost_proxy_score` grouped by normalized phase). A *relative* signal, distinct from Slow Runs' fixed 30-minute threshold: a run can be an Outlier without being a Slow Run (fast overall, but far from its tier's norm) and vice versa. Flags a value as worth a look, not a claim about *why* it's high — investigate before assuming (`TCK-20260719-RETRO-OUTLIER-FLAGS`). |
 | **Tool Safety Audit** | Conditionally rendered — only appears when at least one Investigate-phase `(run_id, seq)` pair has `tools.jsonl` data in the period. Reports search-before-grep hard-rule (CLAUDE.md) compliance rate for real Investigate phases, and (since `TCK-20260807-PARITY-WRITE-SAFETY-METRIC-RESCOPE`) a count of `docs/parity_ledger/*.yaml` write calls made in a run that ALSO invokes `parity_index.py`'s build path (same `run_id`, anywhere in that run's own tool history) — an ordinary parity-updater edit with no co-occurring build call in the same run is not flagged, since it's the normal, required workflow (CLAUDE.md's Authoritative Mechanics Rule), not a risk. Also reports a zero-tolerance count of unsafe `parity_index.py build` invocations (targeting the real repo path instead of a scratch path) — unaffected by the rescope. Both counts should read 0 — a nonzero count is a real read-only-guarantee violation, not noise (`TCK-20260803-RETRO-TOOL-SAFETY-AUDIT`). See "Investigate-Step Search-Before-Grep Callout" below for the hand-orchestration-path fix this compliance rate measures. Its `### Read-Count Correlation (Search-Before-Grep Compliance)` subsection (`TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`) reports the compliant-vs-non-compliant groups' median/average `Read`-tool-call count per Investigate pair — a real evidence signal for whether search-before-grep compliance correlates with lower raw-investigation effort, not a proof that it causes it. The compliance rate itself only sees the orchestrating run's own direct `tools.jsonl` rows for each `(run_id, seq)` pair — a dispatched sub-agent's (e.g. `investigator`) own search/grep calls are invisible to it, so a "non-compliant" pair may just reflect an orchestrator-level incidental call, and the true rate for delegated investigation work is unknown and plausibly higher (`TCK-20260824-RETRO-METRIC-CAVEATS`). |
-| **Search & Investigation Effort** | Conditionally rendered — omitted when the period has zero search or `Read` tool calls. Corpus-wide (not per-run) trend of follow-up search-tool calls (`SEARCH_TOOL_NAMES` = `{mcp__knowledge-search__search_docs, ToolSearch, WebSearch}`) and raw-investigation `Read`-tool calls, plus their ratio — the same numbers `retrieval_baseline_metrics.py`'s one-off JSON snapshot reports, now trended report-over-report via `agent-monitoring/retro/index.md`'s Search Calls / Read Calls columns (`TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`). See `docs/parity_ledger/infrastructure.yaml`'s `INFRA-292` entry for the underlying section functions' provenance. |
+| **Search & Investigation Effort** | Conditionally rendered — omitted when the period has zero search or `Read` tool calls. Corpus-wide (not per-run) trend of follow-up search-tool calls (`SEARCH_TOOL_NAMES` = `{mcp__knowledge-search__search_docs, ToolSearch, WebSearch}`) and raw-investigation `Read`-tool calls, plus their ratio — the same numbers `retrieval_baseline_metrics.py`'s one-off JSON snapshot reports, now trended report-over-report via `agent-working/agent-monitoring/retro/index.md`'s Search Calls / Read Calls columns (`TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`). See `docs/parity_ledger/infrastructure.yaml`'s `INFRA-292` entry for the underlying section functions' provenance. |
 | **Parity Index Read-Path Usage** | Always rendered — the only section in this file that is never omitted, since "0 today" is itself the reportable finding: `parity_index.py`'s `entry`/`impact`/`health` read path was reviewed GO (`TCK-20260731-PARITY-READPATH-GATE`'s Gate A) but has zero real call sites yet. Reports a live count against the period's `tools.jsonl` data (not a hardcoded value), so a future ticket wiring in a real call site needs no code change here to start reporting nonzero (`TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`). |
 | **Skill Usage** | Two subsections with genuinely different scope, under one heading omitted only when both have nothing to show. `### Per-Skill Invocation Counts (This Period)` is period-scoped (reuses `build_skill_usage_section`, trended report-over-report via `index.md`'s Skill Invocations column) — omitted when the period has zero `Skill` tool calls. `### Zero-Invocation Flags (All-Time, N-Day Grace Period)` is all-time (never period-scoped — "has this skill ever been invoked" must be answered against the whole corpus, not one week's slice) and is only computed/rendered when the caller explicitly passed `all_tools` to `generate()` (`main()`'s real call path always does; the 121+ synthetic-fixture tests that pass only `tools=` never trigger it, so they never touch the real `.claude/skills/` catalog on disk). Splits flagged skills into `flagged_stale` (a real, parseable `date_added` older than the grace period — confirmed-age signal) and `flagged_unknown_age` (no recorded `date_added` — fail-open, lower-certainty signal, never conflated with `flagged_stale`). Visibility only: no skill is ever auto-invoked or auto-deprecated from this flag (`TCK-20260810-SKILL-USAGE-RETRO-TRACKING`). |
 
@@ -148,12 +148,12 @@ Commit the filled-in report to the repo. Do not discard notes — they are the i
 
 `tools/agent-monitoring/epic_staleness_check.py` is a separate, read-only check
 (distinct from the retro-cadence nudge above) that scans every open epic —
-`epic_id`-mode tickets (`## Tier` -> `epic`) in `tickets/inprogress/`, and
-`folder`-mode/hybrid `SEQUENCE.md` folders in `tickets/todos/*/` — for
+`epic_id`-mode tickets (`## Tier` -> `epic`) in `agent-working/tickets/inprogress/`, and
+`folder`-mode/hybrid `SEQUENCE.md` folders in `agent-working/tickets/todos/*/` — for
 child-ticket activity that has gone idle.
 
 It resolves each epic's child ticket IDs, then cross-references
-`tickets/working_log.csv` rows and `agent-monitoring/data/YYYY-Www/runs.jsonl` records for
+`agent-working/tickets/working_log.csv` rows and `agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl` records for
 the most recent matching timestamp across both sources. An epic is flagged
 **stale** only if at least one child ticket shows real activity evidence AND
 that evidence is older than the default **5-day** staleness window
@@ -163,7 +163,7 @@ If the same epic ticket is discoverable in both scan modes at once (a
 transient dual-presence state — e.g. an interrupted Scope-phase move, or a
 manual copy), `discover_candidate_epics()` dedupes by `epic_id` before
 classification, first-occurrence-wins with the `epic_id`-mode
-(`tickets/inprogress/`) candidate preferred, so the epic is reported at most
+(`agent-working/tickets/inprogress/`) candidate preferred, so the epic is reported at most
 once rather than double-counted in the stale list or hook nudge.
 
 **Stale vs. never-started — an intentional distinction.** An epic whose
@@ -182,7 +182,7 @@ Only an epic with real activity evidence that then goes idle past the window
 — the actual "started, then forgotten" failure mode this check targets — is
 flagged stale (the motivating case: `TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC`,
 whose 10 child tickets were all DONE before the epic ticket itself was left
-behind in `tickets/todos/`).
+behind in `agent-working/tickets/todos/`).
 
 **Stale vs. BLOCKED — a third, status-aware bucket.** An epic ticket whose
 own body `## Status` field reads `BLOCKED` is a deliberately governed pause,
@@ -228,7 +228,7 @@ under hand-orchestration and, when skipped, silently zeroes
 (`TCK-20260807-CURRENT-RUN-SIDECAR-HAND-ORCHESTRATION-GAP`).
 
 A `PreToolUse` hook entry (matcher `Edit|Write`, in `.claude/settings.json`)
-fires an advisory `additionalContext` reminder whenever `tickets/inprogress/`
+fires an advisory `additionalContext` reminder whenever `agent-working/tickets/inprogress/`
 has an active ticket but `.claude/current_run`'s `run_id` is empty — it goes
 silent again as soon as the sidecar is correctly written for that phase.
 Advisory-only, non-blocking; does not replace the orchestrating agent's own

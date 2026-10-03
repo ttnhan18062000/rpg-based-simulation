@@ -54,7 +54,7 @@ acceptable; rewriting, deleting, or corrupting existing records is not.
 
 ```text
                          Canonical semantic source
-                         agent-orchestration/
+                         agent-working/agent-orchestration/
        roles · workflows · gates · artifacts · schemas · divergences
                                        |
                ------------------------+------------------------
@@ -70,7 +70,7 @@ acceptable; rewriting, deleting, or corrupting existing records is not.
                        append-only historical + new records
 ```
 
-`agent-orchestration/` is the only semantic authority. Provider adapters may
+`agent-working/agent-orchestration/` is the only semantic authority. Provider adapters may
 translate invocation syntax, configuration, permissions, hook registration, and
 payload parsing. They must not independently redefine workflow phases, terminal
 statuses, gate policy, artifact requirements, or monitoring-field meanings.
@@ -79,7 +79,7 @@ statuses, gate policy, artifact requirements, or monitoring-field meanings.
 
 | Rule | Required implementation behavior |
 |---|---|
-| Existing JSONL is immutable historical input | Never rewrite, backfill, reorder, delete, or compact `agent-monitoring/*.jsonl` during this epic. |
+| Existing JSONL is immutable historical input | Never rewrite, backfill, reorder, delete, or compact `agent-working/agent-monitoring/*.jsonl` during this epic. |
 | New schema is additive | New records carry `schema_generation`, `provider`, `execution_id`, `ticket_id`, and contract version; legacy fields remain readable through normalization. |
 | Legacy gaps are explicit | Readers return `unknown`/`legacy` provenance for absent fields; they must not infer provider or execution identity from unreliable strings except in documented best-effort views. |
 | Writes are atomic and append-only | The approved Linux lock-file protocol guards every new shared writer; no provider writes until it uses the common writer boundary. |
@@ -98,10 +98,10 @@ alone.
 
 ### Canonical contract contents
 
-Create `agent-orchestration/` incrementally with a small versioned core:
+Create `agent-working/agent-orchestration/` incrementally with a small versioned core:
 
 ```text
-agent-orchestration/
+agent-working/agent-orchestration/
   README.md                         # ownership, compatibility, generation policy
   contract.yaml                     # contract version, global invariants, providers
   workflows/implement-ticket.yaml   # first vertical slice only

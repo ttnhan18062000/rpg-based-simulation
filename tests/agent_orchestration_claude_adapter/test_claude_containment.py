@@ -4,11 +4,11 @@ Mirrors tests/agent_replay/test_no_mutation_snapshot.py's clean-vs-dirty porcela
 fallback pattern exactly, watched pathspec swapped to `[".claude/"]`. This is the one test in the
 ticket that legitimately runs the generator against the real repo root (Review-phase Fix B moved
 the schema-shape check off the real tree onto `tmp_path` in test_generator_containment.py — only
-this containment proof still touches the committed `agent-orchestration/rendered/` output).
+this containment proof still touches the committed `agent-working/agent-orchestration/rendered/` output).
 
 Also asserts docs/guidelines/intentional_divergences.md's content is unchanged after running every
 tool built in this ticket — proves no accidental path collision between the new
-agent-orchestration/intentional-divergences.md and the pre-existing mechanics-bible log.
+agent-working/agent-orchestration/intentional-divergences.md and the pre-existing mechanics-bible log.
 """
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ import subprocess
 from pathlib import Path
 
 from tools.agent_orchestration_claude_adapter.generator import render_claude_adapter
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _WATCHED_GIT_PATHSPECS = [".claude/"]
@@ -57,7 +58,7 @@ def test_generator_produces_zero_git_diff_under_claude_before_and_after():
     pre_porcelain = _porcelain_snapshot()
 
     if pre_porcelain == "":
-        render_claude_adapter(_REPO_ROOT, _REPO_ROOT / "agent-orchestration" / "rendered")
+        render_claude_adapter(_REPO_ROOT, _REPO_ROOT / AGENT_ORCHESTRATION / "rendered")
         post_porcelain = _porcelain_snapshot()
         assert post_porcelain == "", (
             "render_claude_adapter mutated .claude/ (tree was clean before, dirty after): "
@@ -68,7 +69,7 @@ def test_generator_produces_zero_git_diff_under_claude_before_and_after():
     pre_hash = _content_hash_snapshot()
     assert _watched_files(), "no watched files found under .claude/ — snapshot would be vacuous"
 
-    render_claude_adapter(_REPO_ROOT, _REPO_ROOT / "agent-orchestration" / "rendered")
+    render_claude_adapter(_REPO_ROOT, _REPO_ROOT / AGENT_ORCHESTRATION / "rendered")
 
     post_hash = _content_hash_snapshot()
     assert pre_hash == post_hash, (
@@ -80,7 +81,7 @@ def test_generator_produces_zero_git_diff_under_claude_before_and_after():
 def test_mechanics_bible_divergence_log_is_never_touched_by_this_tickets_tooling():
     pre_hash = hashlib.sha256(_MECHANICS_BIBLE_DIVERGENCE_LOG.read_bytes()).hexdigest()
 
-    render_claude_adapter(_REPO_ROOT, _REPO_ROOT / "agent-orchestration" / "rendered")
+    render_claude_adapter(_REPO_ROOT, _REPO_ROOT / AGENT_ORCHESTRATION / "rendered")
 
     post_hash = hashlib.sha256(_MECHANICS_BIBLE_DIVERGENCE_LOG.read_bytes()).hexdigest()
     assert pre_hash == post_hash, (

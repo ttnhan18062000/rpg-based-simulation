@@ -13,13 +13,13 @@ tags: [idea, agent-infrastructure, observability, determinism]
 
 **Archived:** 2026-07-13 — epic `TCK-20260710-WORKFLOW-EXECUTION-DETERMINISM-EPIC` closed DONE: the
 near-horizon child (`TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK`) shipped, and the long-horizon
-child (`TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME`) was deliberately moved to `tickets/backlogs/`
+child (`TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME`) was deliberately moved to `agent-working/tickets/backlogs/`
 rather than left open — see the Resolution section below; this document is the historical design
 reference.
 
 > **Maturity: IDEA — not scheduled.** Raised 2026-07-10 as a follow-on observation while reviewing
 > [`idea_agent_bookkeeping_determinism.md`](idea_agent_bookkeeping_determinism.md) (archived — shipped) and its epic
-> ([`TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`](../../../../tickets/done/agent-bookkeeping-determinism/TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC.md), now DONE)
+> ([`TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`](../../../../agent-working/tickets/done/agent-bookkeeping-determinism/TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC.md), now DONE)
 > against how popular agent-orchestration tooling (Temporal, LangGraph, Airflow-style DAG engines)
 > actually executes workflows. Distinct from, and one architectural layer above, that epic — not a
 > child of it, and not folded into its scope.
@@ -97,7 +97,7 @@ a task to schedule now.
 Every workflow file already exports a `meta.phases` array — a declarative list of every phase the
 workflow is supposed to execute (`{ title, detail }` pairs; e.g. `implement-ticket.js`'s `meta.phases`
 lists Scope/Investigate/Plan/.../Finalize). And every phase already pushes an event to
-`agent-monitoring/events.jsonl` with a `phase` field. These two things are never cross-checked against
+`agent-working/agent-monitoring/events.jsonl` with a `phase` field. These two things are never cross-checked against
 each other today.
 
 Add a static verifier — `tools/gate_checks/workflow_meta_conformance.py`, mirroring the existing
@@ -126,7 +126,7 @@ eye.
 | Existing component | How this idea attaches |
 |---|---|
 | `.claude/workflows/{implement-ticket,implement-epic,create-tickets}.js`'s `meta.phases` | Already a declarative source of truth for "what phases should exist" — just never read by anything except a human/LLM eyeballing the file |
-| `agent-monitoring/events.jsonl` | Already has the `phase` field needed for cross-reference — no schema change required |
+| `agent-working/agent-monitoring/events.jsonl` | Already has the `phase` field needed for cross-reference — no schema change required |
 | `tools/gate_checks/parity_updater_static.py`'s `cross_reference_touched` | Direct structural precedent: "expected mapping vs. actual diff" cross-reference, applied to files→ledger there, phases→events here |
 | `tools/gate_checks/done_checker_static.py`'s `run_finalize_selfcheck` | Same "verify the narrated steps actually landed" philosophy, applied post-Finalize rather than mid-run |
 | [`idea_agent_bookkeeping_determinism.md`](idea_agent_bookkeeping_determinism.md) (sibling, archived — shipped) | That epic fixes sub-agent-layer mechanical-step reliability; this idea is the same principle one layer up, at the orchestrator/narrator layer — related, not a duplicate, and deliberately not folded into that epic's scope |
@@ -174,8 +174,8 @@ re-investigated twice this session (2026-07-11, ~03:12 and ~07:00) — both time
 re-confirming the blocking condition (no `Workflow`/`tool_runner`-equivalent tool exists inside this
 Claude Code harness; verified empirically via live `ToolSearch` probes, not just by re-reading
 `SKILL.md` text) with zero drift between checks. Rather than leave it sitting `BLOCKED` in
-`tickets/inprogress/` indefinitely waiting on a platform change nobody can schedule, it was moved to
-`tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md` — deliberately deprioritized future
+`agent-working/tickets/inprogress/` indefinitely waiting on a platform change nobody can schedule, it was moved to
+`agent-working/tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md` — deliberately deprioritized future
 work, not actively-blocked-and-waiting.
 
 **New finding this session: a concrete (if expensive) unblock path exists today.** Researching the
@@ -208,7 +208,7 @@ for it — that would be the signal that gate-based mitigation has hit a hard wa
 class specifically, not a reason to rewrite the whole orchestration layer preemptively.
 
 **Follow-up (2026-07-11, same-day): a fourth instance of the pattern shipped, from the first
-weekly agent-monitoring retro (`agent-monitoring/retro/RETRO-2026-W28.md`) rather than from live
+weekly agent-monitoring retro (`agent-working/agent-monitoring/retro/RETRO-2026-W28.md`) rather than from live
 session investigation.** The retro's own data confirmed the docs-update omission is not just a
 this-session anecdote: `done-checker` failed its first Verify attempt 22 of 61 times (36%) across
 the whole week, every failure tagged the same `reason_code`. `TCK-20260711-DOC-STALENESS-GATE-CHECK`
@@ -221,5 +221,5 @@ tripping this check, since nothing calls it. Whoever eventually decides whether/
 that wiring decision as the point where this specific failure class actually starts being prevented,
 not the day the detector was written.
 
-See `tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md` for the backlogged ticket itself
-(full investigation history preserved in `stored_artifacts/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME/`).
+See `agent-working/tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md` for the backlogged ticket itself
+(full investigation history preserved in `agent-working/stored_artifacts/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME/`).

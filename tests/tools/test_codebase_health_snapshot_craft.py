@@ -1,6 +1,6 @@
 """Tests for the craft metrics in tools/codebase_health_snapshot.py (TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS).
 
-Every history path here is rooted in tmp_path, never the real agent-monitoring/ directory.
+Every history path here is rooted in tmp_path, never the real agent-working/agent-monitoring/ directory.
 """
 import json
 import re

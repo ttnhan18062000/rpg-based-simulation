@@ -273,7 +273,7 @@ descriptor's values (particularly `timeout`/`cancellation`) can honestly change 
 - `docs/engine/contracts/knowledge_gateway_mcp/evidence_identity_kinds.schema.json` — the 8 closed
   evidence identity kinds (§12.1), owned by the same sibling ticket.
 - `docs/engine/contracts/knowledge_gateway_mcp/cache_migration_plan.md` — the migration design for
-  evolving `knowledge-index/retrieval_cache.db` in place (§10.1/§19), owned by the same sibling
+  evolving `agent-working/.index/knowledge-index/retrieval_cache.db` in place (§10.1/§19), owned by the same sibling
   ticket.
 - `docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` — the cached-payload
   eligible-source allowlist, redaction rules, secret-scan disclosure, payload size cap,
@@ -295,5 +295,5 @@ Graphify") are satisfied by this ticket's schema files, this document, and
 that cross-reference update, if desired, is a separate, optional follow-up.
 
 No `docs/parity_ledger/` entry accompanies this document — this subsystem is
-agent-orchestration/retrieval tooling, the same category `context_packet_contract.md` §4 already
+agent-working/agent-orchestration/retrieval tooling, the same category `context_packet_contract.md` §4 already
 classifies as not requiring a parity ledger entry.

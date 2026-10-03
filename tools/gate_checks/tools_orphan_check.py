@@ -5,7 +5,7 @@ user's stated decision that checks over agent tooling should stay proportionate 
 
 **Disambiguation**: this is NOT `tools/agent-monitoring/epic_scope_orphan_check.py`, which
 detects a completely different "orphan" meaning — an epic-tier ticket present in both
-`tickets/inprogress/` and `tickets/todos/**` simultaneously. This module finds `tools/` *files*
+`agent-working/tickets/inprogress/` and `agent-working/tickets/todos/**` simultaneously. This module finds `tools/` *files*
 with no live cross-reference anywhere in the repo — the same population-level method
 `TCK-20260820-SCRIPTS-TOOLS-GOVERNANCE-EPIC`'s investigation used by hand to find the `scripts/`
 and `tools/` orphans `TCK-20260929-RETIRE-SCRIPTS-DIR` then disposed of, made permanent and
@@ -38,7 +38,7 @@ land only in `excluded`):
   documented hand-run tool) — the report must present it as "review", not "delete".
 - `NO_REFERENCES`: no referencing file found anywhere in the tracked corpus.
 
-Reference hits inside `tickets/done/`, `docs/archive/`, or `stored_artifacts/` never count as
+Reference hits inside `agent-working/tickets/done/`, `docs/archive/`, or `agent-working/stored_artifacts/` never count as
 evidence of liveness for any bucket (historical record, not current wiring) — those paths are
 excluded from the token index entirely, so a file referenced *only* there is `NO_REFERENCES`.
 Excludes a file's own self-mentions (a file's own content is never counted as its own evidence).
@@ -62,6 +62,10 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Set
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS, posix  # noqa: E402
 
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
@@ -79,9 +83,9 @@ CODEX_SUBTREE_PREFIXES = (
 # record, not current wiring. Files under these prefixes are excluded from the token index
 # entirely (not merely down-weighted), so a tools/ file referenced only there is NO_REFERENCES.
 IGNORED_REFERENCE_PREFIXES = (
-    "tickets/done/",
+    posix(TICKETS / "done") + "/",
     "docs/archive/",
-    "stored_artifacts/",
+    posix(STORED_ARTIFACTS) + "/",
 )
 
 # Extensions read as text for the token index. Everything else (images, fonts, compiled

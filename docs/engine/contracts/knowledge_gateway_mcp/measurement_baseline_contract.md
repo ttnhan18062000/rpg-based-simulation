@@ -17,7 +17,7 @@ lookup, evidence validation, provider fallback, packet assembly, and end-to-end 
 evidence/cache-identity, and redaction/retention-policy documents. No `src/` or `tools/` gateway
 code exists yet, and none is added by this ticket — the two real Python artifacts this ticket does
 add (`tools/agent-monitoring/kgmcp_baseline_corpus.py`,
-`tools/agent-monitoring/kgmcp_baseline_runner.py`) are agent-orchestration/measurement tooling, not
+`tools/agent-monitoring/kgmcp_baseline_runner.py`) are agent-working/agent-orchestration/measurement tooling, not
 gateway code.
 
 ## 1. Representative-Query Corpus

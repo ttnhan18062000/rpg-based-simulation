@@ -61,7 +61,7 @@
     },
     "TICKET": {
       "stable_identity_form": "ticket:<ticket-id>",
-      "preferred_fingerprint": "Content hash (sha256) of the ticket file body at its current location (tickets/inprogress/<ticket-id>.md or tickets/done/<ticket-id>.md); the ticket-id itself never changes across the move.",
+      "preferred_fingerprint": "Content hash (sha256) of the ticket file body at its current location (agent-working/tickets/inprogress/<ticket-id>.md or agent-working/tickets/done/<ticket-id>.md); the ticket-id itself never changes across the move.",
       "normalization_rules": {
         "rename": "Tickets are never renamed (ticket_id is immutable per the ticket format); only the directory (inprogress -> done) changes, which is a location change, not an identity change — the content hash is recomputed from the file at its new location.",
         "delete": "Tickets are not deleted in normal workflow; if a ticket file is removed, its ticket-id is tombstoned and cached evidence citing it falls back to PROVIDER_GENERATION.",
@@ -95,7 +95,7 @@
       "normalization_rules": {
         "rename": "N/A — a provider-generation value is not a named/path-addressed entity; there is nothing to rename.",
         "delete": "N/A — a corpus generation is not individually deleted; a new generation simply supersedes the prior one as the corpus is rebuilt.",
-        "duplicate_name": "N/A — generation identity is provider-id + corpus-generation value, which is unique by construction (corpus-generation is sourced from knowledge-index/manifest.json's built_at field, per tools/retrieval_cache.py's existing _corpus_generation()).",
+        "duplicate_name": "N/A — generation identity is provider-id + corpus-generation value, which is unique by construction (corpus-generation is sourced from agent-working/.index/knowledge-index/manifest.json's built_at field, per tools/retrieval_cache.py's existing _corpus_generation()).",
         "schema_version_change": "A change to the provider's own generation-fingerprint format (e.g. how built_at is computed) is itself treated as triggering a new PROVIDER_GENERATION epoch, since the fingerprint format change cannot be distinguished from an actual corpus rebuild without finer signals that this kind, by definition, does not have."
       }
     }

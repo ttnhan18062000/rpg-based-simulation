@@ -1,7 +1,7 @@
 """Tests for tools/agent-monitoring/retro_nudge_hook.py
 (TCK-20260903-MONITORING-DATA-CONSUMERS-CORE).
 
-Before this ticket, RUNS_FILE pointed at the dead `agent-monitoring/runs.jsonl` path (retired by
+Before this ticket, RUNS_FILE pointed at the dead `agent-working/agent-monitoring/runs.jsonl` path (retired by
 TCK-20260903-MONITORING-DATA-MIGRATION), so `_count_done_since()` always returned 0 and this hook
 could never fire — a permanent silent no-op. This file is genuinely new coverage (no test file for
 this script existed before this ticket, confirmed by grep).
@@ -20,6 +20,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
@@ -51,14 +52,14 @@ def _run_hook(cwd, payload):
 
 
 def test_retro_nudge_hook_counts_done_runs_across_multiple_week_folders(tmp_path, monkeypatch):
-    week1 = tmp_path / "agent-monitoring" / "data" / "2026-W01"
+    week1 = tmp_path / AGENT_MONITORING / "data" / "2026-W01"
     week1.mkdir(parents=True)
     _write_jsonl(week1 / "runs.jsonl", [
         {"workflow": "implement-ticket", "final_status": "DONE", "start_ts": "2026-01-05T00:00:00Z"},
         {"workflow": "implement-ticket", "final_status": "DONE", "start_ts": "2026-01-06T00:00:00Z"},
     ])
 
-    week2 = tmp_path / "agent-monitoring" / "data" / "2026-W02"
+    week2 = tmp_path / AGENT_MONITORING / "data" / "2026-W02"
     week2.mkdir(parents=True)
     _write_jsonl(week2 / "runs.jsonl", [
         {"workflow": "implement-ticket", "final_status": "DONE", "start_ts": "2026-01-12T00:00:00Z"},
@@ -68,7 +69,7 @@ def test_retro_nudge_hook_counts_done_runs_across_multiple_week_folders(tmp_path
 
     module = _import_hook_module(monkeypatch, tmp_path, {"session_id": "sess-test"})
 
-    # No agent-monitoring/retro/RETRO-*.md exists in this fixture -> _last_dated_retro_mtime()
+    # No agent-working/agent-monitoring/retro/RETRO-*.md exists in this fixture -> _last_dated_retro_mtime()
     # returns 0.0 (threshold already crossed), so every seeded record's start_ts (all in 2026,
     # well after epoch) counts.
     assert module._count_done_since(0.0) == 5, (
@@ -78,13 +79,13 @@ def test_retro_nudge_hook_counts_done_runs_across_multiple_week_folders(tmp_path
 
 
 def test_retro_nudge_hook_fail_silent_on_malformed_data_dir(tmp_path):
-    # Case 1: agent-monitoring/data/ entirely absent.
+    # Case 1: agent-working/agent-monitoring/data/ entirely absent.
     result_missing = _run_hook(tmp_path, {"session_id": "sess-missing-dir"})
     assert result_missing.returncode == 0
     assert "Traceback" not in result_missing.stderr
 
     # Case 2: a malformed JSON line inside a real week folder's runs.jsonl.
-    week1 = tmp_path / "agent-monitoring" / "data" / "2026-W01"
+    week1 = tmp_path / AGENT_MONITORING / "data" / "2026-W01"
     week1.mkdir(parents=True)
     (week1 / "runs.jsonl").write_text("not valid json\n", encoding="utf-8")
 

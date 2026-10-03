@@ -21,7 +21,7 @@ function makeTimeline(overrides: Partial<RunTimeline> = {}): RunTimeline {
         cost_proxy_score: 0.5,
         reason_code: null,
         tool_calls: [
-          { tool: 'Read', input_summary: 'tickets/inprogress/T-1.md', status: 'ok', duration_ms: 50, ts: '2026-07-16T10:00:01Z' },
+          { tool: 'Read', input_summary: 'agent-working/tickets/inprogress/T-1.md', status: 'ok', duration_ms: 50, ts: '2026-07-16T10:00:01Z' },
         ],
       },
       {
@@ -41,7 +41,7 @@ function makeTimeline(overrides: Partial<RunTimeline> = {}): RunTimeline {
     ],
     live_tail: [],
     files_touched: [
-      { path: 'tickets/inprogress/T-1.md', tool: 'Read', ts: '2026-07-16T10:00:01Z' },
+      { path: 'agent-working/tickets/inprogress/T-1.md', tool: 'Read', ts: '2026-07-16T10:00:01Z' },
       { path: 'src/foo.py', tool: 'Edit', ts: '2026-07-16T10:05:01Z' },
     ],
     ...overrides,

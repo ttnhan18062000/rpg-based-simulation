@@ -220,14 +220,15 @@ def test_end_ts_and_batch_end_ts_captures_untouched():
 # ---------------------------------------------------------------------------
 
 
-def test_captureTs_helper_defined_once_after_writeSidecar():
+def test_captureTs_helper_defined_once_before_classifyChecklistFailure():
     it_source = _read_implement_ticket()
     assert it_source.count("const captureTs = async ()") == 1
 
-    write_sidecar_idx = it_source.index("const writeSidecar = async (seq, phase, agent)")
+    # captureTs is called by the Scope phase's first top-level line, so it is defined near the top
+    # (tests/tools/test_workflow_helper_definition_order.py pins definition-before-use generally).
     capture_ts_idx = it_source.index("const captureTs = async ()")
     classify_idx = it_source.index("const classifyChecklistFailure")
-    assert write_sidecar_idx < capture_ts_idx < classify_idx
+    assert capture_ts_idx < classify_idx
 
     # create-tickets.js (TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT) and implement-epic.js
     # (TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT) were ported to the native Workflow runtime,

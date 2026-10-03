@@ -42,14 +42,14 @@ carries `"execution_mode": "hand"` (TCK-20260929-RUN-EXECUTION-MODE-FIELD) -- a 
 never inferred, so `generate_retro.py`'s Run Summary can split real pipeline runs from hand
 closures without changing what `workflow` means to anyone already reading it.
 
-This call also appends one row to `tickets/working_log.csv` (`--title`/`--log-summary` plus
-`--artifacts-path`, which defaults to `stored_artifacts/<ticket-id>` for standard/epic tier or
+This call also appends one row to `agent-working/tickets/working_log.csv` (`--title`/`--log-summary` plus
+`--artifacts-path`, which defaults to `agent-working/stored_artifacts/<ticket-id>` for standard/epic tier or
 "none (hotfix — no staging artifacts)" for hotfix) -- do not append that row by hand separately
 when using this wrapper, or the ticket will get a duplicate working_log entry.
 
 As of `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`, that warning is also
 enforced, not just documented: before appending, this script checks whether
-`tickets/working_log.csv` already has a row for this exact `(ticket_id, title)` pair (via the
+`agent-working/tickets/working_log.csv` already has a row for this exact `(ticket_id, title)` pair (via the
 tolerant parser, `working_log_parser.parse_working_log`) and refuses -- prints an `ERROR:` to
 stderr naming the existing row and exits non-zero -- rather than silently writing a duplicate. The
 run/event monitoring writes above still happen either way; only the working-log append is
@@ -59,8 +59,8 @@ ticket's Implementation Notes for the reasoning.
 It also regenerates `docs/REGISTRY.yaml` (TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES, Scope 3
 addendum) via `generate_registry()`, the same function the pipeline's Finalize step uses, so a hand
 closure needs no separate `make docs-registry` step. Fail-open like the log write: a failure only
-warns. Precondition: the ticket must already be in `tickets/done/` when this runs (the documented
-closing order), or the regenerated registry will not carry its `tickets/done/` entry.
+warns. Precondition: the ticket must already be in `agent-working/tickets/done/` when this runs (the documented
+closing order), or the regenerated registry will not carry its `agent-working/tickets/done/` entry.
 """
 from __future__ import annotations
 
@@ -82,10 +82,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import append_working_log_row  # noqa: E402
 from working_log_parser import parse_working_log, parse_pending_working_log_shards  # noqa: E402
 from generate_registry import generate_registry  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, STORED_ARTIFACTS, TICKETS, posix  # noqa: E402
 
 
 def _existing_row_for(
-    csv_path: Path, ticket_id: str, title: str, data_root: Path = Path("agent-monitoring/data")
+    csv_path: Path, ticket_id: str, title: str, data_root: Path = AGENT_MONITORING / "data"
 ) -> dict | None:
     """Read-only lookup: the first kept (non-ambiguous) row matching (ticket_id, title) in
     csv_path OR still-pending in a per-batch working_log shard under data_root, else None.
@@ -114,7 +118,7 @@ def _existing_row_for(
 
     Does not open csv_path in a write/append mode, so it is invisible to
     tests/tools/test_working_log_writer.py's sole-writer AST guard -- that guard scans for
-    write-mode opens against tickets/working_log.csv, and this function only reads.
+    write-mode opens against agent-working/tickets/working_log.csv, and this function only reads.
     """
     if csv_path.exists():
         result = parse_working_log(csv_path)
@@ -299,12 +303,12 @@ def main() -> None:
     parser.add_argument("--workflow", default="implement-ticket")
     parser.add_argument("--provider", default="claude")
     parser.add_argument("--agent", default="claude", help="Default agent value for events that don't override it")
-    parser.add_argument("--title", required=True, help="Ticket title, for tickets/working_log.csv")
-    parser.add_argument("--log-summary", required=True, help="One-sentence summary for tickets/working_log.csv")
+    parser.add_argument("--title", required=True, help="Ticket title, for agent-working/tickets/working_log.csv")
+    parser.add_argument("--log-summary", required=True, help="One-sentence summary for agent-working/tickets/working_log.csv")
     parser.add_argument(
         "--artifacts-path",
         default=None,
-        help="Defaults to stored_artifacts/<ticket-id> for standard/epic tier, "
+        help="Defaults to agent-working/stored_artifacts/<ticket-id> for standard/epic tier, "
         "'none (hotfix — no staging artifacts)' for hotfix",
     )
     args = parser.parse_args()
@@ -389,12 +393,12 @@ def main() -> None:
         artifacts_path = (
             "none (hotfix — no staging artifacts)"
             if args.tier == "hotfix"
-            else f"stored_artifacts/{args.ticket_id}"
+            else f"{posix(STORED_ARTIFACTS)}/{args.ticket_id}"
         )
 
     # Cwd-relative by design -- see _existing_row_for()'s docstring
     # (TCK-20260928-WORKING-LOG-CONSOLIDATION-CROSS-CHECKOUT-ROW-LOSS) for why this is safe here.
-    working_log_path = Path("tickets/working_log.csv")
+    working_log_path = TICKETS / "working_log.csv"
     existing = _existing_row_for(working_log_path, args.ticket_id, args.title)
     if existing is not None:
         print(

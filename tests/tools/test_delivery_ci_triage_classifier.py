@@ -1,6 +1,6 @@
 """Tests for tools/delivery/ci_triage_classifier.py (TCK-20260924-DELIVERY-CI-TRIAGE-CLASSIFIER).
 
-One section per Acceptance Criterion, per staging_artifacts/TCK-20260924-DELIVERY-CI-TRIAGE-
+One section per Acceptance Criterion, per agent-working/staging_artifacts/TCK-20260924-DELIVERY-CI-TRIAGE-
 CLASSIFIER/test_plan.md.
 """
 import subprocess

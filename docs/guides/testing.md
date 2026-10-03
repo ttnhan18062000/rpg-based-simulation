@@ -1,5 +1,6 @@
 ---
 title: Testing — Getting Started Guide
+status: active
 layer: testing
 authority: P1
 audience: developer
@@ -142,15 +143,7 @@ and update the parity ledger entry if this closes a `missing` or `divergent` ite
 
 ## Triage: when a gate test fails
 
-1. **Find which requirement it protects.** Look up the file in `docs/testing/requirement_traceability.md`.
-2. **Check the parity ledger.** Find the entry in `docs/parity_ledger/` for the subsystem — is it `verified`, `divergent`, or `missing`?
-3. **Was the change intentional?** If yes, it must appear in `docs/guidelines/v2_intentional_divergences.md`. If not there, the change is unauthorized — revert it.
-4. **Decide:**
-   - Code broke the law → fix the code, not the test.
-   - Intentional + divergence filed → update the test and the parity ledger in the same session.
-   - Test was always wrong → fix the test, add a correct replacement, note in the ticket.
-
-Never delete a P0 test without a replacement. Never update a P0 test without a filed divergence.
+Triage of any test or gate failure follows one procedure: [`docs/testing/regression_policy.md` §13](../testing/regression_policy.md#13-failure-triage-procedure) (evidence record, failure classes, prohibitions). The decision rules it points to (§4 decision tree, §5 gate-test checklist, §7 P0 authority) are kept there, not repeated in this guide.
 
 ---
 
@@ -167,7 +160,7 @@ Updating one requires:
 ## Further reading
 
 - [`docs/testing/test_taxonomy.md`](../testing/test_taxonomy.md) — complete marker definitions and enforcement rules
-- [`docs/testing/regression_policy.md`](../testing/regression_policy.md) — full regression triage decision tree
+- [`docs/testing/regression_policy.md`](../testing/regression_policy.md) — the regression policy and, in §13, the single failure-triage procedure
 - [`docs/testing/how_to_add_requirement_tests.md`](../testing/how_to_add_requirement_tests.md) — four-part test pattern with examples
 - [`docs/testing/requirement_traceability.md`](../testing/requirement_traceability.md) — which tests protect which laws
 - [`docs/testing/no_duplication_test_policy.md`](../testing/no_duplication_test_policy.md) — ownership boundaries by test group

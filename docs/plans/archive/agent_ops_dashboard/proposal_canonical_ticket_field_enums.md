@@ -12,7 +12,7 @@ tags: [frontmatter, data-quality, observability]
 # Proposal: Canonical, hard-validated enums for Tier/Layer/Status/Priority — and make the dashboard's filter facets reflect them
 
 **Archived:** 2026-07-19 — shipped by `TCK-20260718-CANONICAL-FIELD-ENUMS-EPIC` and its five child
-tickets (all `tickets/done/`): `TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM` (concern 1, canonical
+tickets (all `agent-working/tickets/done/`): `TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM` (concern 1, canonical
 `TIER_VALUES`/`PRIORITY_VALUES` in new `tools/ticket_field_values.py`, hard-validated at close via
 `done_checker_static.py`), `TCK-20260718-LAYER-REGISTRY-CONVERSION` (converted `LAYER_VALUES` from a
 hardcoded enum into an append-only `docs/guidelines/layer_registry.jsonl` registry, mirroring
@@ -94,8 +94,8 @@ work lands, not left stale.
 - Structure this as an **epic** with child tickets, not one ticket.
 - The new Tier/Priority hard validation should be added for **future ticket
   closures** (via the same gate pattern Layer already uses), **and** the
-  existing closed corpus (`tickets/done/`, plus `tickets/inprogress/`,
-  `tickets/todos/`) should be **fully re-scanned now** against the new
+  existing closed corpus (`agent-working/tickets/done/`, plus `agent-working/tickets/inprogress/`,
+  `agent-working/tickets/todos/`) should be **fully re-scanned now** against the new
   canonical Tier/Priority enums to surface *any* drift beyond the 2 already-
   known `"P1: High"` cases — not just those 2, a full corpus check.
 
@@ -115,7 +115,7 @@ work lands, not left stale.
 
 2. **Full-corpus re-validation and cleanup.** Using the new canonical
    Tier/Priority checks, scan the *entire* current ticket corpus
-   (`tickets/done/`, `tickets/inprogress/`, `tickets/todos/`) for any
+   (`agent-working/tickets/done/`, `agent-working/tickets/inprogress/`, `agent-working/tickets/todos/`) for any
    drift — not just the 2 known `"P1: High"` cases, everything the new check
    would flag. Fix whatever is found, following this session's established
    pattern (`STATUS-DRIFT-REPAIR`/`STATUS-SUFFIX-TRIM`/`STATUS-MULTILINE-FIX`):

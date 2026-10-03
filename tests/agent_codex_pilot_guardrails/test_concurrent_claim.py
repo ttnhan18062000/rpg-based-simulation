@@ -11,9 +11,10 @@ from tools.agent_codex_pilot_guardrails.ticket_selection import (
     assert_no_concurrent_claim,
     provider_field_coverage,
 )
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
+_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / AGENT_MONITORING
 
 
 def test_no_concurrent_claim_passes_for_single_provider():
@@ -55,9 +56,9 @@ def test_provider_field_coverage_against_real_corpus_is_populated():
 
 def test_provider_field_coverage_resolves_sharded_real_repo_runs_source(tmp_path):
     """TCK-20260903-MONITORING-DATA-CODEX-REMIGRATION: provider_field_coverage must stream
-    every agent-monitoring/data/<week>/runs.jsonl shard, not a single hardcoded top-level
+    every agent-working/agent-monitoring/data/<week>/runs.jsonl shard, not a single hardcoded top-level
     runs.jsonl path."""
-    monitoring_dir = tmp_path / "agent-monitoring"
+    monitoring_dir = tmp_path / AGENT_MONITORING
     data_dir = monitoring_dir / "data"
     for week in ("2026-W01", "2026-W02", "unknown-week"):
         (data_dir / week).mkdir(parents=True)

@@ -12,9 +12,10 @@ from agent_replay.sampler import (  # noqa: E402
     load_manifest,
     write_manifest,
 )
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
-_DONE_DIR = _REPO_ROOT / "tickets" / "done"
-_MONITORING_ROOT = _REPO_ROOT / "agent-monitoring"
+_DONE_DIR = _REPO_ROOT / TICKETS / "done"
+_MONITORING_ROOT = _REPO_ROOT / AGENT_MONITORING
 
 
 def test_sampler_produces_valid_stratified_manifest():

@@ -117,7 +117,7 @@ By contrast, M5's other two branches do not touch this gap:
 - Idea 62 is a Knowledge/Belief-axis consumer, not a new parallel memory representation. Any
   implementation of idea 62 should be gated on the `BeliefEntry`/`KnowledgeFact` reconciliation decision,
   not proceed independently of it. **Gate cleared, 2026-09-04:**
-  `tickets/done/TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION.md` confirmed the split is
+  `agent-working/tickets/done/TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION.md` confirmed the split is
   deliberate (structured query responses → `KnowledgeFact`; raw witnessed events → `BeliefEntry`,
   contradiction-tracked) — the reconciliation decision this gate names is made. Idea 62 is unblocked to
   proceed as a `BeliefEntry` consumer specifically (it models degrading *witnessed* memory, not queried

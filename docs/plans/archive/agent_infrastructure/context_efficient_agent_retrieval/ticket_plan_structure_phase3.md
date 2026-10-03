@@ -83,7 +83,7 @@ in `tests/tools/test_X.py`" — not prose claims.
 **Do NOT ticket in this batch** (still gated behind this phase's own evidence, per the
 doc's Sequenced Future Epic):
 - Retrieval observability events, dashboard views, or any shared-writer change (Phase 4)
-  — do not add any new `agent-monitoring/*.jsonl` event type in this batch.
+  — do not add any new `agent-working/agent-monitoring/*.jsonl` event type in this batch.
 - Shadow context packets, workflow adoption, or wiring into any `.claude/workflows/*.js`
   file (Phase 5-6).
 - Any external vector/graph database (Qdrant, Postgres/pgvector, Neo4j) or hosted RAG

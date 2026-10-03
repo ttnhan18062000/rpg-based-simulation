@@ -8,7 +8,7 @@ tags: [architecture, content, feature-flags]
 
 # Epic Plan — RPG Design Roadmap, Milestone 6: Political Identity & Belonging
 
-**Tracking ticket:** `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`tickets/done/` as of
+**Tracking ticket:** `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`agent-working/tickets/done/` as of
 2026-09-06 — all 3 child tickets landed: idea 39
 (`TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE`), idea 56 (`TCK-20260905-DRIFTING-LOYALTY-SIGNAL`),
 idea 59/65 (`TCK-20260905-HOME-EXILE-REFUGEE-THREADS`) — epic closed)
@@ -109,7 +109,7 @@ split into a separate mutation-primitive/voluntary-trigger pair.
 - Idea 56 is scoped as a read-side `region_cultures` consumer, not deferred waiting on substrate that
   already exists (correction, 2026-09-02).
 - **Epic closed, 2026-09-06**: all 4 design ideas (39, 56, 59, 65) landed across the 3 confirmed
-  child tickets; `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` moved to `tickets/done/`.
+  child tickets; `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` moved to `agent-working/tickets/done/`.
 
 ## Open Questions
 

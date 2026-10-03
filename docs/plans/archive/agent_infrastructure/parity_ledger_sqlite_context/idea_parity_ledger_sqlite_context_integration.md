@@ -33,7 +33,7 @@ docs/parity_ledger/*.yaml       reviewed canonical state
         │
         │ validated import + deterministic links + generation hash
         ▼
-parity-index/parity.db          local derived read model, gitignored
+agent-working/.index/parity-index/parity.db          local derived read model, gitignored
         │                 ├── B-tree impact/test/constraint queries
         │                 └── FTS intent discovery, never a correctness gate
         ▼
@@ -44,10 +44,10 @@ ContextPacket / parity-phase evidence packet
 provider-neutral workflow adapters, initially shadow/advisory
 ```
 
-This follows the project’s existing `agent-monitoring-index/monitoring.db`
+This follows the project’s existing `agent-working/.index/agent-monitoring-index/monitoring.db`
 pattern (derived, rebuildable SQLite over text-source records) and the
-`knowledge-index/retrieval_cache.db` pattern (hash/generation based
-invalidation). It deliberately does **not** use `knowledge-index/knowledge.db`
+`agent-working/.index/knowledge-index/retrieval_cache.db` pattern (hash/generation based
+invalidation). It deliberately does **not** use `agent-working/.index/knowledge-index/knowledge.db`
 or its `sqlite-vec` extension for deterministic parity gates.
 
 ## Investment gates and sequencing
@@ -136,11 +136,11 @@ changed symbols, and risk level.
 | `tools/retrieval_cache.py` | Versioned cache keys, stale rejection, privacy-safe metadata | Needs a parity corpus generation input. |
 | `tools/context_packet_assembler.py` | Candidate and bounded-packet shape | Its parity adapter accepts fixtures only. |
 | `tools/retrieval_events.py` and retro views | Provider-neutral, metadata-only effectiveness measurement | No parity-selection/reconciliation event semantics yet. |
-| `agent-orchestration/` and generated `AGENTS.md` | Canonical provider-neutral workflow/role guidance | Current parity semantics must be extended there before provider-local instructions change. |
+| `agent-working/agent-orchestration/` and generated `AGENTS.md` | Canonical provider-neutral workflow/role guidance | Current parity semantics must be extended there before provider-local instructions change. |
 
 ## Target data model
 
-`parity-index/parity.db` is a derived index, generated from the reviewed YAML
+`agent-working/.index/parity-index/parity.db` is a derived index, generated from the reviewed YAML
 files and optional structured verification artifacts. It is ignored by Git and
 rebuildable from scratch. The first schema must use ordinary SQLite and FTS5
 only; the implementation must verify FTS5 availability and retain an exact-ID/
@@ -274,7 +274,7 @@ option, its proposed interface is:
 
 ```text
 parity-record validate mutation.json
-parity-record propose mutation.json --out staging_artifacts/<ticket>/parity_mutation.yaml
+parity-record propose mutation.json --out agent-working/staging_artifacts/<ticket>/parity_mutation.yaml
 parity-record apply mutation.json
 ```
 
@@ -307,7 +307,7 @@ after the read-path and context phases have separately passed their gates.
 Update instructions in the following order to preserve provider-neutral
 semantics:
 
-1. **Canonical contract first.** Extend `agent-orchestration/` with the parity
+1. **Canonical contract first.** Extend `agent-working/agent-orchestration/` with the parity
    index/write/health vocabulary, selection policy, terminal/gate behavior,
    and a declared intentional divergence policy. Do not put semantic rules only
    in `.claude/` or `.codex/`.
@@ -383,7 +383,7 @@ the packet narrowing.
 
 ### Phase 1 — Read-only importer, index, and health report
 
-- Build `parity-index/parity.db` from every current ledger shard, with an
+- Build `agent-working/.index/parity-index/parity.db` from every current ledger shard, with an
   input manifest and atomic replacement of the derived database.
 - Implement schema/import errors, duplicate-ID checks, link parsing confidence,
   health classifications, standard SQL indexes, and FTS fallback.

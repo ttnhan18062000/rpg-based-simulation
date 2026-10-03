@@ -2,7 +2,7 @@
 
 `tests/tools/test_open_ticket_overlap_real_corpus.py`'s job is to prove
 `tools/open_ticket_overlap.py`'s scoring is genuinely usable against a real, messy corpus — not a
-synthetic one. But the *live* `tickets/todos/`/`tickets/inprogress/` tree changes on every merge:
+synthetic one. But the *live* `agent-working/tickets/todos/`/`agent-working/tickets/inprogress/` tree changes on every merge:
 the target ticket this test's rank/margin assertions depend on
 (`TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`) will eventually close and leave the
 open corpus, and any new open ticket touching the same code areas could become a close runner-up
@@ -12,7 +12,7 @@ to do with `open_ticket_overlap.py` itself. Same defect class as
 changing), found by peer review round 4 on `TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER`.
 
 This directory (`todos/` + `inprogress/`) is a frozen copy of a *subset* of the real
-`tickets/todos/`+`tickets/inprogress/` trees as they stood at commit
+`agent-working/tickets/todos/`+`agent-working/tickets/inprogress/` trees as they stood at commit
 **`25be81b396e9b7fbe6c43df5d559831dc7381684`** on branch `working-log-consolidation-cross-checkout-fix`.
 The real-corpus test passes this directory as `todos_root`/`inprogress_root` instead of the live
 tree — still real, unedited ticket content (nothing here was written or rewritten for the test),

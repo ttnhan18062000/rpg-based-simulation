@@ -12,13 +12,14 @@ from agent_replay.fixture_converter import (  # noqa: E402
     write_conversion_log,
 )
 from agent_replay.fixture_envelope import load_fixture  # noqa: E402
+from tools.agent_working_paths import AGENT_MONITORING, STORED_ARTIFACTS, TICKETS  # noqa: E402
 
-_DONE_DIR = _REPO_ROOT / "tickets" / "done"
-_STORED_ARTIFACTS_ROOT = _REPO_ROOT / "stored_artifacts"
-_MONITORING_ROOT = _REPO_ROOT / "agent-monitoring"
+_DONE_DIR = _REPO_ROOT / TICKETS / "done"
+_STORED_ARTIFACTS_ROOT = _REPO_ROOT / STORED_ARTIFACTS
+_MONITORING_ROOT = _REPO_ROOT / AGENT_MONITORING
 
 # The ticket the one hand-built example fixture is itself sourced from — confirmed to carry real
-# Scope/Investigate/Plan/Review events.jsonl rows and a complete stored_artifacts/ dir.
+# Scope/Investigate/Plan/Review events.jsonl rows and a complete agent-working/stored_artifacts/ dir.
 _CONVERTIBLE_TICKET_ID = "TCK-20260721-ORCHESTRATION-CONTRACT-ADR"
 
 

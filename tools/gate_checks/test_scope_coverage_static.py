@@ -17,7 +17,7 @@ second time.
 One check function, one aggregator, matching `architecture_reviewer_static.py`'s shape:
 
 - `expected_test_dirs_for` — pure mapping function, changed file path -> expected test directory
-  (or `None` if no mapping rule applies — e.g. `docs/`, `tickets/`, config files). Mirrors
+  (or `None` if no mapping rule applies — e.g. `docs/`, `agent-working/tickets/`, config files). Mirrors
   `.claude/agents/test-scoper.md`'s Test Directory Map exactly; keep both in sync if either
   changes.
 - `check_test_scope_coverage` — the aggregator: for each changed file with a known expected test
@@ -162,7 +162,7 @@ _TOOLS_RELEASE_BASENAME_MAP = {
 
 def expected_test_dirs_for(path: str) -> "str | None":
     """Pure mapping: changed file path -> expected test directory substring, or None if this
-    module has no rule for it (docs/, tickets/, config files, unrecognized src/ subsystem, etc.)
+    module has no rule for it (docs/, agent-working/tickets/, config files, unrecognized src/ subsystem, etc.)
     — None means "not this check's concern", never "no tests needed"."""
     if path.startswith("tools/"):
         for prefix in _TOOLS_SUBDIR_MIRROR_PREFIXES:

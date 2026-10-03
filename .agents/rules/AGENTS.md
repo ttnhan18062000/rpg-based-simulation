@@ -31,9 +31,9 @@
 
 Before any implementation, check:
 
-* `tickets/`
+* `agent-working/tickets/`
 * `docs/` (Specifically the Mechanics Bible in `docs/mechanics/`)
-* `stored_artifacts/`
+* `agent-working/stored_artifacts/`
 * relevant code and tests
 
 Also use Graphify when available to understand:
@@ -67,8 +67,8 @@ Otherwise, follow existing patterns.
 
 Before coding:
 
-* create `tickets/inprogress/{id}.md`
-* create `staging_artifacts/{id}/`
+* create `agent-working/tickets/inprogress/{id}.md`
+* create `agent-working/staging_artifacts/{id}/`
 
 Minimum:
 
@@ -147,7 +147,7 @@ Before closing:
 
 Then:
 
-* move to `tickets/done/`
+* move to `agent-working/tickets/done/`
 * update logs
 * archive artifacts
 

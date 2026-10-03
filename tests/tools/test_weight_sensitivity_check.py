@@ -8,6 +8,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
@@ -150,7 +151,7 @@ def test_weight_sensitivity_check_real_multi_week_tools_and_events_produce_nonze
     # names explicitly: week1 seeds one (run_id, seq) group, week2 seeds a distinct one — a
     # same-week-only fixture could pass a weaker version of this test while leaving the
     # cross-week case silently broken.
-    week1 = tmp_path / "agent-monitoring" / "data" / "2026-W01"
+    week1 = tmp_path / AGENT_MONITORING / "data" / "2026-W01"
     week1.mkdir(parents=True)
     _write_jsonl(week1 / "tools.jsonl", [
         {"run_id": "TCK-A", "seq": 1, "tool": "Bash", "duration_ms": 1000},
@@ -159,7 +160,7 @@ def test_weight_sensitivity_check_real_multi_week_tools_and_events_produce_nonze
         {"run_id": "TCK-A", "seq": 1, "phase": "Test", "agent": "test-scoper"},
     ])
 
-    week2 = tmp_path / "agent-monitoring" / "data" / "2026-W02"
+    week2 = tmp_path / AGENT_MONITORING / "data" / "2026-W02"
     week2.mkdir(parents=True)
     _write_jsonl(week2 / "tools.jsonl", [
         {"run_id": "TCK-B", "seq": 1, "tool": "Agent"},

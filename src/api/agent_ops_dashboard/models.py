@@ -1,7 +1,7 @@
 """Typed Pydantic response models for the Agent Ops Dashboard backend.
 
 These are the only shapes routes in main.py ever return. Internal ingest.py
-parsing structures (raw dicts from tickets/**/*.md or agent-monitoring/*.jsonl)
+parsing structures (raw dicts from agent-working/tickets/**/*.md or agent-working/agent-monitoring/*.jsonl)
 are converted to these before crossing the route boundary — never returned
 directly, and never `.model_dump()`'d into a `response_model=dict` route
 (the pattern src/api/routes/history.py uses and this module deliberately does

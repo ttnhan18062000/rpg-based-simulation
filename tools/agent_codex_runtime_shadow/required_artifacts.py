@@ -2,7 +2,7 @@
 
 Generic, path-parameterized artifact-existence checker (mirrors
 tools/agent_replay_codex/containment.py's `repo_root`-parameterization precedent) — does not
-hardcode which root (`staging_artifacts/` vs. `stored_artifacts/`) is used; callers pass
+hardcode which root (`agent-working/staging_artifacts/` vs. `agent-working/stored_artifacts/`) is used; callers pass
 `artifacts_dir` explicitly.
 
 The scratch/shadow convention callers should default to is `<repo_root>/staging_artifacts/` (per

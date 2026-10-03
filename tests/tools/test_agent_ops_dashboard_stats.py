@@ -12,32 +12,33 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from src.api.agent_ops_dashboard import ingest, main
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS
 
 
 _FIXTURE_WEEK = "2026-W23"
 
 
 def _init_repo_skeleton(tmp_path: Path) -> None:
-    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
+    (tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "done").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "todos").mkdir(parents=True, exist_ok=True)
 
 
 def _write_runs(tmp_path: Path, rows: list[dict]) -> None:
-    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
+    runs_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "runs.jsonl"
     runs_file.parent.mkdir(parents=True, exist_ok=True)
     runs_file.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
 
 
 def _write_events(tmp_path: Path, rows: list[dict]) -> None:
-    events_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "events.jsonl"
+    events_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "events.jsonl"
     events_file.parent.mkdir(parents=True, exist_ok=True)
     events_file.write_text("\n".join(json.dumps(e) for e in rows) + "\n")
 
 
 def _write_tools(tmp_path: Path, rows: list[dict]) -> None:
-    tools_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "tools.jsonl"
+    tools_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "tools.jsonl"
     tools_file.parent.mkdir(parents=True, exist_ok=True)
     tools_file.write_text("\n".join(json.dumps(t) for t in rows) + "\n")
 
@@ -138,7 +139,7 @@ def test_stats_endpoint_route_returns_200_with_all_param(tmp_path, monkeypatch):
 
 def test_ticket_corpus_stats_route_returns_200(tmp_path, monkeypatch):
     _init_repo_skeleton(tmp_path)
-    tickets_dir = tmp_path / "tickets" / "done"
+    tickets_dir = tmp_path / TICKETS / "done"
     tickets_dir.mkdir(parents=True, exist_ok=True)
     (tickets_dir / "TCK-20260710-FAKE.md").write_text(
         "---\nstatus: historical\nlayer: engine\nauthority: P1\naudience: agent\n"
@@ -147,7 +148,7 @@ def test_ticket_corpus_stats_route_returns_200(tmp_path, monkeypatch):
         "## Priority\nP1\n\n## Status\nDONE\n",
         encoding="utf-8",
     )
-    (tmp_path / "tickets" / "working_log.csv").write_text(
+    (tmp_path / TICKETS / "working_log.csv").write_text(
         "timestamp,ticket_id,title,status,summary,artifacts_path\n"
         "2026-07-10T00:00:00Z,TCK-20260710-FAKE,x,DONE,x,none\n",
         encoding="utf-8",
@@ -165,7 +166,7 @@ def test_ticket_corpus_stats_route_returns_200(tmp_path, monkeypatch):
 
 def test_ticket_corpus_stats_empty_corpus_does_not_crash(tmp_path, monkeypatch):
     _init_repo_skeleton(tmp_path)
-    (tmp_path / "tickets" / "working_log.csv").write_text(
+    (tmp_path / TICKETS / "working_log.csv").write_text(
         "timestamp,ticket_id,title,status,summary,artifacts_path\n", encoding="utf-8"
     )
 
@@ -195,7 +196,7 @@ def test_stats_endpoint_includes_phase_status_distribution(tmp_path):
     cache = ingest.DashboardCache(repo_root=tmp_path)
     stats = cache.get_agent_monitoring_stats(all_time=True)
 
-    expected = compute_retro_metrics(runs, events, tickets_root=tmp_path / "tickets")
+    expected = compute_retro_metrics(runs, events, tickets_root=tmp_path / TICKETS)
     assert stats.phase_status_distribution == expected["phase_status_distribution"]
     assert stats.phase_status_distribution == {"Investigate": {"ok": 1, "failed": 1}}
 

@@ -9,7 +9,7 @@ You are a code-writing subagent for the rpg-based-simulation project. Your job i
 
 ## Before Writing Any Code
 
-1. Read the plan and any investigation artifacts in `staging_artifacts/` or `stored_artifacts/`.
+1. Read the plan and any investigation artifacts in `agent-working/staging_artifacts/` or `agent-working/stored_artifacts/`.
 2. Read the existing code in the affected files — never guess current state. See
    `docs/guidelines/retrieval_preference.md` for when a targeted range is enough versus when the
    file needs a full read; if a ranged read turns out to be insufficient, widen it immediately
@@ -67,8 +67,8 @@ src/
 
 ## After Writing Code
 
-1. **Update the ticket** — fill in the "Implementation Notes" section of `tickets/inprogress/{ticket_id}.md` with what was done: which functions were added/changed, why any step deviated from the plan (if it did), and any non-obvious decisions.
-2. **Update staging artifacts** — if any step deviated from `staging_artifacts/{ticket_id}/plan.md`, add a "Deviations" section at the bottom of that file. Never silently deviate.
+1. **Update the ticket** — fill in the "Implementation Notes" section of `agent-working/tickets/inprogress/{ticket_id}.md` with what was done: which functions were added/changed, why any step deviated from the plan (if it did), and any non-obvious decisions.
+2. **Update staging artifacts** — if any step deviated from `agent-working/staging_artifacts/{ticket_id}/plan.md`, add a "Deviations" section at the bottom of that file. Never silently deviate.
 3. **Report structured output**: list of changed files (paths), whether observable behavior changed (boolean — affects parity ledger), which parity subsystems are affected, a one-paragraph `implementation_summary`, and a one-sentence `summary` (≤200 chars) for the agent monitoring event record.
 
 If you discover a conflict with the plan or an architectural issue mid-implementation, stop and report it — do not work around it silently.
@@ -76,7 +76,7 @@ If you discover a conflict with the plan or an architectural issue mid-implement
 ## Before Returning — Ticket Hygiene Checklist
 
 Fresh evidence (agent-monitoring, Verify-phase failures since 2026-07-20) shows four specific,
-recurring hygiene gaps in `tickets/inprogress/{ticket_id}.md` at the point implementer work ends.
+recurring hygiene gaps in `agent-working/tickets/inprogress/{ticket_id}.md` at the point implementer work ends.
 Before ending your turn, confirm all four are true — do not return until each is satisfied:
 
 - [ ] **`## Completion Summary`** no longer reads the placeholder `(filled during Finalize)` — it
@@ -85,7 +85,7 @@ Before ending your turn, confirm all four are true — do not return until each 
 - [ ] **`## Files Changed`** lists every file path you created, edited, or deleted for this ticket
   — not only the "primary" file the plan named, and not only files matching the plan's original
   guess if the real diff touched more or fewer files. **This explicitly includes
-  `staging_artifacts/{ticket_id}/investigation.md`, `plan.md`, and `test_plan.md` whenever any of
+  `agent-working/staging_artifacts/{ticket_id}/investigation.md`, `plan.md`, and `test_plan.md` whenever any of
   them were created or substantively rewritten during this run's own Investigate/Plan phases —
   even though you personally did not write them.** They are part of this run's real changeset,
   and `done-checker` treats their omission as a DoD failure (`dod_condition_failed`) — this is the

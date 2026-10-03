@@ -77,7 +77,7 @@ MAY/PROHIBITED vocabulary specifically to the Knowledge Gateway MCP's future cac
 
 ## Decision B — Retrieval Events Are Retain-Forever/Redaction-Only; Caches Are Duration-Based
 
-Retrieval *events* (the telemetry records themselves) land in `agent-monitoring/*.jsonl` per the
+Retrieval *events* (the telemetry records themselves) land in `agent-working/agent-monitoring/*.jsonl` per the
 idea doc's "Retrieval Observability and Dashboard" architecture (lines 188-201).
 `docs/agent-monitoring/schema.md` establishes that `runs.jsonl` / `events.jsonl` / `tools.jsonl`
 are append-only-forever by explicit documented convention, with no pruning mechanism today — the
@@ -109,7 +109,7 @@ inventing a brand-new writer/pruning mechanism — both out of this ticket's sco
 | Embedding/index cache | `retrieval_index_cache` | ~30d (mirrors `important_failed_run`'s 30d tier) | Longest-lived of the three: expensive to rebuild (re-embedding/re-chunking a corpus), and content-hash-keyed per the idea doc's cache design so staleness is self-detecting (a hash mismatch forces recompute regardless of age) — the duration is a safety backstop, not the primary invalidation signal. |
 | Query-result cache | `retrieval_query_cache` | ~7d (mirrors `recent_run`'s 7d tier) | Shortest-lived: keyed by normalized query + corpus generation + retrieval version, and queries/corpus drift fastest of the three levels — any indexed-source or ranking change invalidates it, so a short backstop duration limits staleness exposure between explicit invalidations. |
 | Context-packet cache | `retrieval_packet_cache` | ~14d, or bounded to the owning ticket/task lifetime if shorter | Medium-lived: keyed by task/ticket/phase + cited hashes — explicitly ticket/task-scoped, so it should not meaningfully outlive the ticket it was built for; 14d is a placeholder backstop for tickets that stay open longer than a query cache's lifetime but shorter than an index rebuild cycle. |
-| Retrieval events | `retrieval_event` (not a `RetentionPolicy` category) | permanent / append-only | Per Decision B above: inherits `agent-monitoring/*.jsonl`'s existing retain-forever convention. Listed here only for completeness of "3 cache levels plus retrieval events" — it is explicitly NOT a duration-based category. |
+| Retrieval events | `retrieval_event` (not a `RetentionPolicy` category) | permanent / append-only | Per Decision B above: inherits `agent-working/agent-monitoring/*.jsonl`'s existing retain-forever convention. Listed here only for completeness of "3 cache levels plus retrieval events" — it is explicitly NOT a duration-based category. |
 
 These durations are placeholders by analogy to `retention.py`'s existing 7d/30d/permanent tiers
 (`src/observability/reporting/retention.py` lines 36-37, 54-55, 57), not measured values. Phase 3
@@ -138,7 +138,7 @@ This is decision/design only; a future Phase 3+ ticket performs the actual code 
 
 ## Resolution
 
-**Open Decision 4 — resolved.** Retrieval events (landing in `agent-monitoring/*.jsonl`) inherit
+**Open Decision 4 — resolved.** Retrieval events (landing in `agent-working/agent-monitoring/*.jsonl`) inherit
 that system's existing retain-forever/append-only convention: "retention" for events means
 redaction-only (MAY contain hashes/IDs/counts/reason codes/scores; PROHIBITED: raw prompt or
 retrieved-content text; never a deletion duration). Caches (embedding/index, query-result,

@@ -95,7 +95,7 @@ def test_finalize_step3_still_moves_a_non_epic_folder_when_no_tck_files_remain()
         "a folder with no epic-tier ticket must still move once every child is done -- the same "
         "outcome the old ls-based check produced, now driven by epic_folder_status.py's JSON"
     )
-    assert "Run: mv <parent-dir>/ tickets/done/<FOLDER>/" in step3
+    assert "Run: mv <parent-dir>/ agent-working/tickets/done/<FOLDER>/" in step3
     assert '"all_children_done" is false' in step3, (
         "an unfinished (non-epic) folder must still skip, same as before"
     )
@@ -104,9 +104,9 @@ def test_finalize_step3_still_moves_a_non_epic_folder_when_no_tck_files_remain()
 def test_finalize_step3_skips_and_never_moves_when_stale_child_copies_present():
     # TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT (agent-working-design review, second
     # pass): a non-empty "stale_child_copies" (a resurrected pre-close copy still physically in
-    # the folder, even though that ticket_id is already closed flat in tickets/done/) must block
-    # the move -- moving anyway would carry the stale copy into tickets/done/<folder>/, duplicating
-    # the basename against the flat tickets/done/<id>.md that is actually authoritative (the exact
+    # the folder, even though that ticket_id is already closed flat in agent-working/tickets/done/) must block
+    # the move -- moving anyway would carry the stale copy into agent-working/tickets/done/<folder>/, duplicating
+    # the basename against the flat agent-working/tickets/done/<id>.md that is actually authoritative (the exact
     # shape TCK-20260928-CLOSED-TICKETS-RESURRECTED-INTO-TODOS guards against elsewhere).
     text = _read()
     idx = text.find("Remove the todos source file")
@@ -114,4 +114,4 @@ def test_finalize_step3_skips_and_never_moves_when_stale_child_copies_present():
     step3 = text[idx:idx + 2200]
     assert '"stale_child_copies" is non-empty: skip' in step3
     assert "delete these stale copies" in step3
-    assert "the tickets/done/ versions are authoritative" in step3
+    assert "the agent-working/tickets/done/ versions are authoritative" in step3

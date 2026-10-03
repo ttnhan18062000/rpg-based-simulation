@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sole sanctioned writer for tickets/working_log.csv rows (TCK-20260912-WORKING-LOG-APPEND-HELPER).
+"""Sole sanctioned writer for agent-working/tickets/working_log.csv rows (TCK-20260912-WORKING-LOG-APPEND-HELPER).
 
 Before this module, every closing agent (the pipeline's own Finalize prompt, and the hand-
 orchestrated-closure script) hand-rolled the row write however it chose. Two independent
@@ -18,7 +18,7 @@ defect `TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE` fixed for
 by giving every write a disjoint per-batch file instead of a shared insertion point. This module
 now does the same for `working_log.csv`: `append_working_log_row()` writes one JSON line to a
 per-batch staging shard (`monitoring_batch_identifier.resolve_write_target("working_log")` --
-`agent-monitoring/data/<week>/<batch-id>.working_log.jsonl`), and `consolidate_pending_rows()`
+`agent-working/agent-monitoring/data/<week>/<batch-id>.working_log.jsonl`), and `consolidate_pending_rows()`
 below folds every pending shard's rows -- sorted by their own `timestamp` field, so chronological
 order across multiple batches consolidated in one pass matches what direct sequential appends
 would have produced -- into the real CSV via `_append_csv_row()`, then deletes the consumed
@@ -26,7 +26,7 @@ shards (idempotent-by-delete, mirroring `monitoring_consolidation.py`'s existing
 
 Both consolidation and every direct CSV write stay in *this* module (never
 `monitoring_consolidation.py` itself) so the AST guard below keeps meaning what it says: no other
-file ever opens `tickets/working_log.csv` in write mode, including the consolidator.
+file ever opens `agent-working/tickets/working_log.csv` in write mode, including the consolidator.
 
 Read-side parsing of the canonical CSV stays in `tools/working_log_parser.py`; that module also
 gained `parse_pending_working_log_shards()` (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET) so
@@ -46,7 +46,7 @@ callers agree on the write path by construction, not by being separately updated
 
 `tests/tools/test_working_log_writer.py::test_working_log_csv_has_exactly_one_writer` walks the
 AST of every `.py` file under `tools/` and asserts this module is the only one that opens
-`tickets/working_log.csv` in a write/append mode. `_WORKING_LOG_PATH` below must stay a genuine
+`agent-working/tickets/working_log.csv` in a write/append mode. `_WORKING_LOG_PATH` below must stay a genuine
 module-level constant -- not inlined into a function default expression or the `open()` call
 itself -- because that guard's resolver depends on it being a single, unambiguous, named binding
 site it can walk back to.
@@ -66,10 +66,14 @@ if str(_TOOLS_DIR / "agent-monitoring") not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR / "agent-monitoring"))
 
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
 _REPO_ROOT = _TOOLS_DIR.parent
-_WORKING_LOG_PATH = Path("tickets/working_log.csv")
-_DEFAULT_DATA_ROOT = Path("agent-monitoring/data")
+_WORKING_LOG_PATH = TICKETS / "working_log.csv"
+_DEFAULT_DATA_ROOT = AGENT_MONITORING / "data"
 
 
 def _anchored(path: Path) -> Path:
@@ -83,12 +87,12 @@ def _anchored(path: Path) -> Path:
     through untouched. `_WORKING_LOG_PATH`/`_DEFAULT_DATA_ROOT` stay literal, relative, genuine
     module-level constants -- not inlined into a function default -- so the AST single-writer
     guard in tests/tools/test_working_log_writer.py can still resolve the default parameter back
-    to "tickets/working_log.csv"; the anchoring happens at the point of use instead."""
+    to "agent-working/tickets/working_log.csv"; the anchoring happens at the point of use instead."""
     return path if path.is_absolute() else _REPO_ROOT / path
 
 
 def _append_csv_row(fields: list, path: Path = _WORKING_LOG_PATH) -> None:
-    """The one place that actually opens `tickets/working_log.csv` in append mode -- LF-
+    """The one place that actually opens `agent-working/tickets/working_log.csv` in append mode -- LF-
     terminated, `QUOTE_MINIMAL`, `newline=""` (so `csv.writer`, not the platform, controls
     line-ending bytes). Never truncates, never inserts before the header, always a pure
     bottom-append. Used by `consolidate_pending_rows()`; never called directly by an external
@@ -107,7 +111,7 @@ def append_working_log_row(
     artifacts_path: str,
     path: Path = None,
 ) -> None:
-    """Stage one row for `tickets/working_log.csv` in a per-batch shard, never the canonical CSV
+    """Stage one row for `agent-working/tickets/working_log.csv` in a per-batch shard, never the canonical CSV
     directly (see module docstring, TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET) --
     `consolidate_pending_rows()` folds it in later.
 

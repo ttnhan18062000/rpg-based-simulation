@@ -90,12 +90,12 @@ def test_fixed_instruction_escapes_control_characters_in_validated_evidence_fiel
     preflight = SimpleNamespace(
         context=SimpleNamespace(
             ticket_id="TCK-20260801-CODEX-LIVE-TRANSPORT",
-            candidate_path="tickets/inprogress/candidate\nnot-an-instruction",
+            candidate_path="agent-working/tickets/inprogress/candidate\nnot-an-instruction",
             policy_path="pilot_evidence/policy.json",
         )
     )
 
     instruction = _fixed_instruction(preflight)
 
-    assert "candidate_path=\"tickets/inprogress/candidate\\nnot-an-instruction\"" in instruction
-    assert "candidate_path=tickets/inprogress/candidate\nnot-an-instruction" not in instruction
+    assert "candidate_path=\"agent-working/tickets/inprogress/candidate\\nnot-an-instruction\"" in instruction
+    assert "candidate_path=agent-working/tickets/inprogress/candidate\nnot-an-instruction" not in instruction

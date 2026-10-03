@@ -12,7 +12,7 @@ Workflows are multi-agent orchestration scripts in `.claude/workflows/*.js`. The
 **Invocation — from a user prompt:**
 ```
 /implement-ticket request="add pagination to world listing"
-/implement-epic folder=tickets/todos/monitoring/
+/implement-epic folder=agent-working/tickets/todos/monitoring/
 ```
 Type the skill name as a slash command with args. Do **not** type `/workflow` — that is a Claude-internal tool name, not a user command.
 
@@ -54,7 +54,7 @@ Workflow({ name: "workflow-name", args: { key: value } })
 ```
 /create-tickets source=docs/plans/another_repair_phase_20_28.md
 /create-tickets source=docs/plans/my_feature_plan.md structure=docs/plans/ticket_plan_structure.md
-/create-tickets source=docs/plans/my_feature_plan.md output=tickets/todos/my-feature/
+/create-tickets source=docs/plans/my_feature_plan.md output=agent-working/tickets/todos/my-feature/
 /create-tickets source=docs/plans/my_feature_plan.md epic_id=TCK-20260608-MY-FEATURE-EPIC
 ```
 
@@ -62,11 +62,11 @@ Workflow({ name: "workflow-name", args: { key: value } })
 ```
 /create-tickets source=docs/plans/my_feature_plan.md structure=docs/plans/ticket_plan_structure.md
         ↓  (review generated tickets, adjust if needed)
-/implement-epic folder=tickets/todos/my-feature/
+/implement-epic folder=agent-working/tickets/todos/my-feature/
 ```
 
 **Artifacts produced:**
-- `tickets/todos/<folder>/TCK-YYYYMMDD-<SHORT-SCOPE>.md` — one per task that passed the tag-registry check, Status: OPEN, all required sections filled
+- `agent-working/tickets/todos/<folder>/TCK-YYYYMMDD-<SHORT-SCOPE>.md` — one per task that passed the tag-registry check, Status: OPEN, all required sections filled
 - Epic `## Related Tickets` updated (if `epic_id` provided)
 - Return value includes `tags_not_registered`: tasks skipped for an unregistered tag, alongside the existing `scope_dupes_dropped` field
 
@@ -80,7 +80,7 @@ Workflow({ name: "workflow-name", args: { key: value } })
 
 | Phase | Agent used | Gate condition |
 |---|---|---|
-| Scope | `ticket-scoper` | Stops if conflicts detected, or if any ticket tag isn't in `registries/tag_registry.jsonl` (orchestrator-run check via `tools/tag_registry.py::check_tags_registered`, after the agent call returns); when resuming an existing `ticket_id`, an orchestrator-run `resolveScopeTicketLocation()` step (via `tools/agent-monitoring/scope_ticket_relocate.py::resolve_and_relocate_ticket`) resolves `ticket_path`/`tier`/`todos_source_path` deterministically before the agent call, replacing the former agent-prompt-text file search — for a `tickets/todos/` original it moves (copy-then-delete) the file when `## Tier` is `epic`, or copies it (leaving the original in place, as before) otherwise, so an epic ticket — which never reaches Finalize's cleanup — never ends up permanently duplicated on disk |
+| Scope | `ticket-scoper` | Stops if conflicts detected, or if any ticket tag isn't in `registries/tag_registry.jsonl` (orchestrator-run check via `tools/tag_registry.py::check_tags_registered`, after the agent call returns); when resuming an existing `ticket_id`, an orchestrator-run `resolveScopeTicketLocation()` step (via `tools/agent-monitoring/scope_ticket_relocate.py::resolve_and_relocate_ticket`) resolves `ticket_path`/`tier`/`todos_source_path` deterministically before the agent call, replacing the former agent-prompt-text file search — for a `agent-working/tickets/todos/` original it moves (copy-then-delete) the file when `## Tier` is `epic`, or copies it (leaving the original in place, as before) otherwise, so an epic ticket — which never reaches Finalize's cleanup — never ends up permanently duplicated on disk |
 | Investigate | `investigator` | — |
 | Plan | `planner` | Stops if unresolved questions in plan |
 | Review | `architecture-reviewer` | Stops if NEEDS_CHANGES or BLOCKED |
@@ -121,7 +121,7 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 | `TAGS_NOT_REGISTERED` | A ticket tag isn't in `registries/tag_registry.jsonl` | Register it (`python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`) or edit the ticket to use an existing registered tag, then re-run with `ticket_id` |
 | `SCOPE_AGENT_FAILED` | The Scope-phase `ticket-scoper` agent call returned null or malformed output with no `ticket_id` | Re-run; if it persists, investigate the agent call itself |
 | `EPIC_SCOPED` | Ticket tier is `epic` — scoped only, no implementation performed | Create child tickets, implement them individually or via `implement-epic` |
-| `NEEDS_HUMAN_INPUT` | Plan has unresolved questions | Read `staging_artifacts/{id}/plan.md`, resolve, re-run with `ticket_id` |
+| `NEEDS_HUMAN_INPUT` | Plan has unresolved questions | Read `agent-working/staging_artifacts/{id}/plan.md`, resolve, re-run with `ticket_id` |
 | `NEEDS_CHANGES` | Architecture review rejected the plan (Review phase) or a post-Implement diff (Architecture-Verify phase) — same status string, distinguish by which phase logged it | Review: fix `plan.md` violations. Architecture-Verify: fix the flagged code. Re-run with `ticket_id` either way |
 | `BLOCKED` | Architecture fundamental conflict — plan (Review phase) or diff (Architecture-Verify phase) | Review: revisit scope. Architecture-Verify: fix the flagged code. Re-run with `ticket_id` either way |
 | `DOC_STALENESS_BLOCKED` | A behavior-changing `src/` or `.claude/workflows/*.js` diff has no `docs/` path in `files_changed` (`tools/gate_checks/doc_staleness_check.py`) | Add a `docs/` update reflecting the behavior change, re-run with `ticket_id` |
@@ -130,14 +130,14 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 | `SECURITY_BLOCKED` | Security review rejected the change | Fix violations, re-run with `ticket_id` |
 | `DOD_BLOCKED` | DoD conditions not met | Fix listed items, re-run with `ticket_id` |
 | `PARITY_INCOMPLETE` | A `src/` file mapped to a parity-ledger subsystem had no corresponding `docs/parity_ledger/*.yaml` entry touched in this diff (`tools/gate_checks/parity_updater_static.py::cross_reference_touched`) | Read `failing_items`, update the missing `docs/parity_ledger/*.yaml` entry, re-run with `ticket_id` |
-| `FINALIZE_INCOMPLETE` | Finalize ran its steps, but the post-migration self-check (`run_finalize_selfcheck`) found a discrepancy — e.g. `stored_artifacts/` incomplete, `staging_artifacts/` not cleaned, ticket not moved, or the working_log row is missing/duplicated | Read `failing_items`, fix the discrepancy manually, re-run with `ticket_id` |
+| `FINALIZE_INCOMPLETE` | Finalize ran its steps, but the post-migration self-check (`run_finalize_selfcheck`) found a discrepancy — e.g. `agent-working/stored_artifacts/` incomplete, `agent-working/staging_artifacts/` not cleaned, ticket not moved, or the working_log row is missing/duplicated | Read `failing_items`, fix the discrepancy manually, re-run with `ticket_id` |
 | `DONE` | Ticket closed, artifacts migrated | — |
 
 **Artifacts produced:**
-- `tickets/done/{ticket_id}.md`
-- `stored_artifacts/{ticket_id}/` (investigation.md, plan.md, test_plan.md)
-- `tickets/working_log.csv` (one new row)
-- `agent-monitoring/data/YYYY-Www/runs.jsonl` + `events.jsonl` (one run record + per-phase events)
+- `agent-working/tickets/done/{ticket_id}.md`
+- `agent-working/stored_artifacts/{ticket_id}/` (investigation.md, plan.md, test_plan.md)
+- `agent-working/tickets/working_log.csv` (one new row)
+- `agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl` + `events.jsonl` (one run record + per-phase events)
 
 **`lane-architecture` coverage boundary:** `make lane-architecture` (`pytest tests/ -m "architecture"`)
 is a `src/`-simulation-code guard lane only — durable-state mutation discipline, cross-domain import
@@ -145,7 +145,7 @@ bans, unstable-sort detection. It has **zero overlap** with the 4 gate-checker m
 `tools/gate_checks/` (`done_checker_static.py`, `parity_updater_static.py`,
 `mechanics_auditor_static.py`, `architecture_reviewer_static.py`): none of
 `tests/tools/test_*_static.py` carry `@pytest.mark.architecture`, by deliberate design
-(`tickets/done/gate-determinism-followups/SEQUENCE.md` decision 1) — these are agent-workflow
+(`agent-working/tickets/done/gate-determinism-followups/SEQUENCE.md` decision 1) — these are agent-workflow
 hygiene checks, not simulation-code architecture guards, and are intentionally not folded into
 `lane-architecture`. Whether `lane-architecture` itself is wired into CI is a separate,
 already-resolved question (audit finding D18 F3); this note is strictly about content-coverage
@@ -162,24 +162,24 @@ boundary.
 | Phase | What happens |
 |---|---|
 | Discover | Lists tickets in the folder or reads the epic's Related Tickets section; filters out already-done |
-| Implement | Runs `implement-ticket` for each ticket sequentially — stops on first gate failure. Once all tickets are done: `folder` mode moves the completed `tickets/todos/{folder}/` directory to `tickets/done/`; `epic_id` mode closes the epic ticket itself (frontmatter `phase: done`/`status: historical`, body `## Status: DONE`, moved to `tickets/done/{epic_id}.md`) — TCK-20260911-IMPLEMENT-EPIC-CLOSE-STEP-MISSING |
+| Implement | Runs `implement-ticket` for each ticket sequentially — stops on first gate failure. Once all tickets are done: `folder` mode moves the completed `agent-working/tickets/todos/{folder}/` directory to `agent-working/tickets/done/`; `epic_id` mode closes the epic ticket itself (frontmatter `phase: done`/`status: historical`, body `## Status: DONE`, moved to `agent-working/tickets/done/{epic_id}.md`) — TCK-20260911-IMPLEMENT-EPIC-CLOSE-STEP-MISSING |
 | Report | Summarises results: DONE count, gate failures, remaining tickets |
 
 **Args:**
 
 | Arg | Type | Required | Description |
 |---|---|---|---|
-| `folder` | string | One of three | Path to a folder of TCK-*.md files, e.g. `tickets/todos/monitoring/` |
+| `folder` | string | One of three | Path to a folder of TCK-*.md files, e.g. `agent-working/tickets/todos/monitoring/` |
 | `epic_id` | string | One of three | Existing epic ticket ID — reads its `## Related Tickets` section |
 | `request` | string | One of three | Natural language — creates an epic ticket, returns `EPIC_CREATED` for user to add children |
 | `tier_override` | string | No | Overrides the tier for every child ticket (`hotfix` / `standard`) |
 
 **Usage:**
 ```
-/implement-epic folder=tickets/todos/monitoring/
+/implement-epic folder=agent-working/tickets/todos/monitoring/
 /implement-epic epic_id=TCK-20260607-MY-EPIC
 /implement-epic request="add a full caching layer to the world registry"
-/implement-epic folder=tickets/todos/my-feature/ tier_override=hotfix
+/implement-epic folder=agent-working/tickets/todos/my-feature/ tier_override=hotfix
 ```
 
 **Return values:**
@@ -194,14 +194,14 @@ boundary.
 **Re-running after a failure:**
 ```
 # Batch stopped at TCK-20260607-C (TESTS_FAILED). Fix it, then:
-/implement-epic folder=tickets/todos/my-feature/
+/implement-epic folder=agent-working/tickets/todos/my-feature/
 # → skips TCK-20260607-A (done) and TCK-20260607-B (done), resumes at TCK-20260607-C
 ```
 
 **Artifacts produced:**
 - All artifacts from each child `implement-ticket` run (tickets, stored_artifacts, working_log)
-- `agent-monitoring/data/YYYY-Www/runs.jsonl` — one batch run record (`EPIC-{id}` or `FOLDER-{path}`)
-- `agent-monitoring/data/YYYY-Www/events.jsonl` — one event per child ticket
+- `agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl` — one batch run record (`EPIC-{id}` or `FOLDER-{path}`)
+- `agent-working/agent-monitoring/data/YYYY-Www/events.jsonl` — one event per child ticket
 
 ---
 

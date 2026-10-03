@@ -7,11 +7,15 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import KNOWLEDGE_INDEX  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _QUERIES_PATH = _REPO_ROOT / "tools" / "eval" / "queries.json"
 _KS_PATH = _REPO_ROOT / "tools" / "knowledge_search.py"
-_DB_PATH = _REPO_ROOT / "knowledge-index" / "knowledge.db"
+_DB_PATH = _REPO_ROOT / KNOWLEDGE_INDEX / "knowledge.db"
 _REPORTS_DIR = _REPO_ROOT / "reports"
 
 
