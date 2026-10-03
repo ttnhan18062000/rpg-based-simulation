@@ -142,6 +142,7 @@ _TOOLS_PERF_BASENAME_MAP = {
     "phase_inventory.py": "tests/tools/",
     "hash_callsite_inventory.py": "tests/tools/",
     "perf_threshold_inventory.py": "tests/tools/",
+    "wall_clock_inventory.py": "tests/tools/",
     "profile_tick.py": "tests/tools/",
     "profile_diff.py": "tests/tools/",
     "flag_attribution.py": "tests/tools/",

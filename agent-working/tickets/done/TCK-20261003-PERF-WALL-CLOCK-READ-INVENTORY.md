@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261003-PERF-WALL-CLOCK-READ-INVENTORY
-phase: open
+phase: done
 date: 2026-10-03
 tags: [performance, determinism, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, engine]
 Inventory every wall-clock and host-resource read in `src/` and whether it can reach authoritative state (PERF-D1 evidence, no measurement)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -52,12 +52,12 @@ Produce that inventory, with the same conventions as the phase and hash call-sit
 - Wiring `--check` into CI or any gate
 
 ## Acceptance Criteria
-- [ ] `python3 tools/perf/wall_clock_inventory.py --format json` runs without importing `src`, and two consecutive runs are byte-identical
-- [ ] Every read of the listed sources in `src/` appears with file, line, enclosing function, source kind, and guard expression; a manual `grep` for the source names over `src/` finds no read the script missed, and the comparison is recorded in the test plan
-- [ ] `docs/performance/wall_clock_inventory.md` traces every tick-path read to its sink (log/metric, control decision, or authoritative state) with file and line, and gives the PERF-D1 classification of each control decision
-- [ ] The summary section names every authoritative-state input beyond PERF-D1's three, or states that none was found and lists what the scan cannot see
-- [ ] Tests pass; the real-source test pins no line number and no total count
-- [ ] `git diff` touches only `tools/perf/`, `tests/tools/`, `tools/gate_checks/test_scope_coverage_static.py`, `docs/performance/`, `docs/REGISTRY.yaml`, `agent-working/tickets/`, `agent-working/stored_artifacts/`, and `agent-working/agent-monitoring/`
+- [x] `python3 tools/perf/wall_clock_inventory.py --format json` runs without importing `src`, and two consecutive runs are byte-identical
+- [x] Every read of the listed sources in `src/` appears with file, line, enclosing function, source kind, and guard expression; a manual `grep` for the source names over `src/` finds no read the script missed, and the comparison is recorded in the test plan
+- [x] `docs/performance/wall_clock_inventory.md` traces every tick-path read to its sink (log/metric, control decision, or authoritative state) with file and line, and gives the PERF-D1 classification of each control decision
+- [x] The summary section names every authoritative-state input beyond PERF-D1's three, or states that none was found and lists what the scan cannot see
+- [x] Tests pass; the real-source test pins no line number and no total count
+- [x] `git diff` touches only `tools/perf/`, `tests/tools/`, `tools/gate_checks/test_scope_coverage_static.py`, `docs/performance/`, `docs/REGISTRY.yaml`, `agent-working/tickets/`, `agent-working/stored_artifacts/`, and `agent-working/agent-monitoring/`
 
 ## Related Tickets
 - TCK-20260913-PERF-M0-ARCHITECTURE-GOVERNANCE-EPIC (parent)
@@ -86,9 +86,23 @@ Produce that inventory, with the same conventions as the phase and hash call-sit
 - perf-planner reviews the document before this ticket closes
 
 ## Implementation Notes
+- Scanner `tools/perf/wall_clock_inventory.py` (stdlib `ast`, deterministic, `--check`, `--update-doc`), reusing the guard and scope helpers of `hash_callsite_inventory.py`; sources beyond the ticket's list: `uuid`, `os.urandom` (host entropy).
+- Document `docs/performance/wall_clock_inventory.md` plus committed `docs/performance/wall_clock_inventory.json`.
+- perf-planner review: approved with two additions (proof-digest evidence line; completion-summary inputs), both applied.
 
 ## Test Summary
+- `tests/tools/test_wall_clock_inventory.py`: 16 passed. With `test_test_scope_coverage_static`, `test_hash_callsite_inventory` and `test_perf_threshold_inventory`: 72 passed. `--check` passes against the committed JSON; two runs byte-identical; the script imports no `src` module.
+- Text-search comparison recorded in the test plan: every match recorded except an exception-class mention (`observability.py:76`).
 
 ## Files Changed
+- tools/perf/wall_clock_inventory.py (new)
+- tests/tools/test_wall_clock_inventory.py (new)
+- docs/performance/wall_clock_inventory.md, docs/performance/wall_clock_inventory.json (new)
+- tools/gate_checks/test_scope_coverage_static.py (one map line)
 
 ## Completion Summary
+Inventory delivered; nothing under `src/` was edited and nothing was measured. Answer to PERF-D1's revisit condition: a fourth input exists. Previous-tick wall-clock `tick_compute_ms` becomes `global_salience` (`kernel.py:661-678`), is stored in `AuthoritativeState.pressure_signals` (`apply.py:335,510`) and sets the shop price (`economy.py:27`, `town/shop.py:36-41`); `audit_mode` zeroes it; `pressure_signals` is not in the proof digest.
+
+Two further inputs that PERF-D1's Canonical proxy set must cover (the planner records them in PERF-D1; the tool is unchanged):
+- the replay-buffer backlog as a governor DEGRADED trigger (`governor.py:101-102`), which depends on a background flush thread;
+- `PhaseBudgetGovernor` reading per-phase wall-clock costs and `tick_compute_ms` directly, whatever the current mode (`phase_governor.py:108-141`).
