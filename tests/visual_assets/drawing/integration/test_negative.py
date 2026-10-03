@@ -11,15 +11,14 @@ import errno
 import hashlib
 import logging
 import shutil
-import subprocess
 import sys
 import threading
-import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
 
+from tests.visual_assets.drawing import proc_support
 from visual_assets.drawing import api, config
 from visual_assets.drawing.backend import lua_runner
 from visual_assets.drawing.errors import AdapterError
@@ -57,13 +56,6 @@ def jobs_empty(ws):
     assert not jobs.exists() or list(jobs.iterdir()) == [], list(jobs.iterdir())
 
 
-def aseprite_pids():
-    out = subprocess.run(
-        ["pgrep", "-f", "aseprite -b --script /lua/ops.lua"], capture_output=True, text=True
-    )
-    return out.stdout.split()
-
-
 def mk(name="s"):
     return api.new_sprite(name, 4, 4, CLEAR)
 
@@ -78,10 +70,8 @@ def test_timeout_publishes_nothing_and_leaves_no_process(workspace, monkeypatch)
         api.apply_ops("s", "r0001", PX)
     assert revisions(workspace) == ["r0001"]
     jobs_empty(workspace)
-    deadline = time.monotonic() + 10  # bounded poll for the sandbox to be reaped, not a sync sleep
-    while aseprite_pids() and time.monotonic() < deadline:
-        time.sleep(0.05)
-    assert aseprite_pids() == [], "an aseprite process outlived the timeout"
+    # scoped to this test's own workspace (never a machine-wide pgrep: another session's sandbox must not fail or hide a leak here)
+    assert proc_support.wait_gone(str(workspace)) == [], "a sandbox process outlived the timeout"
     monkeypatch.undo()
     monkeypatch.setattr(config, "WORKSPACE", workspace)
     assert api.apply_ops("s", "r0001", PX)["revision"] == "r0002"  # still usable

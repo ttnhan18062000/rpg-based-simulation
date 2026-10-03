@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-VISUAL-ASSETS-SANDBOX-TIMEOUT-LEAK
-phase: open
+phase: done
 date: 2026-10-03
 tags: [security, testing, mcp]
 ---
@@ -15,7 +15,7 @@ tags: [security, testing, mcp]
 A timed-out Aseprite job can leave an orphaned bwrap sandbox process alive; the timeout test then fails machine-wide
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -62,11 +62,11 @@ before fixing: the hypothesis is the planner's, from observation, not proven.
 - Process cleanup outside the test's own job directories (an operator kills strays by hand; say how in `docs/assets/drawing_tools.md`).
 
 ## Acceptance Criteria
-- [ ] Root cause confirmed (or corrected) in Implementation Notes, with the evidence.
-- [ ] The stress test leaks against the old code and passes against the new code, both runs recorded.
-- [ ] The timeout test no longer depends on machine-wide process state.
-- [ ] `make visual-assets-aseprite-local` passes with 0 skipped, run twice in a row (a leak from the first run would fail the second).
-- [ ] `tests/visual_assets` passes without Aseprite.
+- [x] Root cause confirmed (or corrected) in Implementation Notes, with the evidence.
+- [x] The stress test leaks against the old code and passes against the new code, both runs recorded.
+- [x] The timeout test no longer depends on machine-wide process state.
+- [x] `make visual-assets-aseprite-local` passes with 0 skipped, run twice in a row (a leak from the first run would fail the second).
+- [x] `tests/visual_assets` passes without Aseprite.
 
 ## Related Tickets
 - TCK-20261003-EPIC-VISUAL-ASSET-HARDENING-AND-REHEARSAL (parent)
@@ -87,9 +87,22 @@ before fixing: the hypothesis is the planner's, from observation, not proven.
   required either way, because a leaked process keeps a bind mount on a workspace job directory.
 
 ## Implementation Notes
+- **Root cause confirmed, with one correction to the hypothesis.** Reproduced on the old code by sweeping the timeout (0.002 s to 0.12 s) over the real `apply_ops` path with a per-run workspace: 1 to 2 leaked processes per 100 runs in 3 of 4 trials, none that were aseprite itself. Inspected before killing: `Name: bwrap`, `PPid: 1`, `NSpid: <host pid> 1` (so it is the **init of the sandbox's PID namespace**, the inner bwrap), state sleeping in `do_wait`, no children left, cmdline naming the job's `--bind <workspace>/.jobs/<tmp> /job`. That matches the hypothesis (outer bwrap killed by `subprocess.run(timeout=)`, inner one orphaned; as a namespace init it ignores SIGTERM) except that the survivor is the inner bwrap, not Aseprite; Aseprite itself was already gone.
+- Fix in `visual_assets/drawing/backend/sandbox.py`: `Popen` + `communicate(timeout=)`; on timeout (or any exception) `kill_tree` SIGSTOPs the outer process and every descendant found in `/proc/<pid>/task/*/children`, repeating until no new child appears (nothing can fork or exec in between), then SIGKILLs all and reaps the outer one. No new dependency. The `AdapterError` text and the publish-nothing behaviour are unchanged. Isolation flags untouched.
+- Tests scope to their own workspace: `tests/visual_assets/drawing/proc_support.py` matches a process only when its command line or mount table names the test's workspace (the inner bwrap and Aseprite share the job directory's bind mount). The machine-wide `pgrep` is gone.
+- Not done (out of scope): `intake/quarantine.py` still names `config.MAX_RECORD_BYTES` for four files; the planner marked that optional.
 
 ## Test Summary
+- Old code vs new code with `test_sandbox_timeout_leak.py` (150 runs, timeouts 0.002 s to 0.12 s, one test each): **old `sandbox.py`: 2 of 5 runs failed** ("1 sandbox process(es) outlived 60 timeouts", "... 61 timeouts"; 3 passed); **new: 6 of 6 passed**, plus four 100-run reproduction sweeps with 0 strays after 3 of 4 leaked on the old code. The stress test is probabilistic against the old code (about 40% per run); the deterministic guard is `unit/test_sandbox_kill_tree.py` (real processes: a child in its own session that ignores SIGTERM, plus a grandchild; no Aseprite, runs in CI).
+- Mutants of `kill_tree`: outer process only (the old behaviour) and "never looks at descendants" both fail `test_kill_tree_kills_a_sigterm_ignoring_descendant_in_its_own_session` ("a descendant survived kill_tree").
+- `make visual-assets-aseprite-local` twice in a row: 202 passed, 0 skipped, both times.
+- `tests/visual_assets` without Aseprite: 920 passed, 202 skipped after the isolation-test adaptation (one test faked `subprocess.run`; it now fakes `Popen`); `tests/static tests/architecture tests/docs`: 240 passed.
+- A killed `pkill -f` pattern on my own shell cost one command during the old-code runs; the leftover test strays were killed and no stray naming a pytest directory remained.
 
 ## Files Changed
+- `visual_assets/drawing/backend/sandbox.py`
+- `tests/visual_assets/drawing/proc_support.py` (new), `integration/test_sandbox_timeout_leak.py` (new), `unit/test_sandbox_kill_tree.py` (new), `integration/test_negative.py`, `unit/test_workspace_isolation.py`
+- `docs/assets/drawing_tools.md`
 
 ## Completion Summary
+A timed-out Aseprite job now kills its whole sandbox tree, so no orphaned bwrap holds a job directory; the timeout test no longer depends on machine-wide process state.
