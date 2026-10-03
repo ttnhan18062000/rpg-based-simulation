@@ -184,7 +184,10 @@ it is listed because the ledger marks it divergent.
 
 Sections 1 and 3 are routed to `rpg-feature-planning` by one cross-session message. Sent 2026-10-03 (the send
 succeeded and was queued to that session; no reply had been received when this was written, so this records
-that it was sent, not that anyone agreed).
+that it was sent, not that anyone agreed). A second message on 2026-10-03 routed the section 4 follow-up (the
+line 46 and 64 reads are pinned by existing tests, so a later gate on them will fail those tests as
+expected) to `rpg-feature-planning`, with a copy to `world-rule-catalog-design`; both sends were queued and
+neither had replied when this was written.
 
 ## 4 · Mutation baseline on `appraisal.py` (`TCK-20261003-SOCIAL-APPRAISAL-MUTATION-BASELINE`)
 
@@ -233,6 +236,30 @@ No mutant on `_appraise_position_swap` or `recalibrate_trust` is killed by the s
 what the selection catches today, not a statement that either function is wrong, and not an equivalent-mutant
 classification: some survivors may be equivalent. Survivors are findings, not fixes, and no test is changed
 or suggested.
+
+**0 kills on `_appraise_position_swap` is measured under the one-hop selection only.** Tests that may reach
+it through the movement phase (`src/engine/pipeline_phases/movement.py`) and the social-contract goal scorer
+were not selected, and whether they kill these mutants was not measured. In the selection,
+`test_appraisal_logic.py` only names `POSITION_SWAP` in a gate-dispatch dict. A coverage reach check, like
+the one for `guilds.py` and in scratch only, was run on three such files
+(`tests/unit/movement/test_position_swap.py`,
+`tests/integration/pipeline/test_movement_micro_arena_position_swap.py`,
+`tests/unit/ai/goals/test_social_contract_goal_scorer.py`; 24 passed): they execute **1 of the 28
+statements** of the function (lines 234 to 298), so they do not reach its body either. Other tests in the
+repository were not measured. Neither result is a defect finding.
+
+**What kills the line 46 and 64 mutants, and a forward consequence.** Each of the 7 mutants was re-applied in
+the scratch copy and the selection re-run (mutmut does not record the killing test). Line 46 mutants fail
+6, 2 and 10 tests; line 64 mutants fail 1, 1, 4 and 34 tests (the 34-test mutant breaks the read itself, so
+many unrelated tests fail with it). The tests that most directly pin the reads are
+`tests/unit/social/test_parity_soc_134.py` (`test_high_public_reputation_source_accepted`,
+`test_zero_public_reputation_source_rejected`), `tests/unit/social/test_reputation_learning.py::test_public_vs_private_trust`,
+`tests/unit/social/test_domain_7_social.py::test_appraisal_traits`,
+`tests/unit/social/test_appraisal_logic.py::test_stranger_judgment_incorporates_clan_reputation` and
+`tests/simulation_quality/test_clan_reputation_witnessed_betrayal.py::test_defection_degrades_clan_reputation_and_flips_stranger_loan_decision`.
+So if anyone later gates the reads on lines 46 and 64 to resolve PERC-01 / KNOW-01, existing selected tests
+will fail; those failures are expected and are the tests pinning today's behaviour. They are not defects,
+and this report does not say which way the behaviour should go.
 
 **Current behaviour, catalog-CONFLICTING (kept as a separate list).** The reads on lines 46
 (`public_reputation`) and 64 (`clan_reputation`) have 3 and 4 mutants. All 7 were **killed**, so there are no
