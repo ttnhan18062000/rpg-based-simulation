@@ -411,26 +411,36 @@
   divergence_note: null
   support_boundary: null
 - id: WORLD-032
-  text: Faction raids spawn on raid interval, anchored on a real place in the world.
+  text: Faction raids spawn from a camp with declared provenance. The global world-clock raid that
+    spawned on a tick cadence is retired.
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: 'Implementation proven via exhaustive checklist audit Phase 1-11.
+  v2_evidence: 'Implementation proven via exhaustive checklist audit Phase 1-11 (as the world-clock
+    raid).
 
-    TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION: the interval gate
-    (tick % 500, tick 0 excluded) is unchanged, but the spawn anchor was a hardcoded (0,0) and is now
-    RaidService.global_raid_anchor() -- a PlaceKind.CITY where one exists, else a region centre.
-    Measured before the fix at 958aa103d (audit_mode=True, raised tick budget, dropped_work_total == 0):
-    4 raid events over 2 corpus worlds put all 12 raiders outside every region with region_id=None,
-    inert for 100-600 ticks. This entry was P0 with test_path: null; it now has a real pinned test
-    rather than a checklist assertion.
+    TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION: the world-clock raid
+    (RaidService.check_for_raid, world_dynamics step 3.5) is REMOVED. It passed origin=(0,0),
+    target=(0,0) literally, so every raider spawned on the radius-25 ring around the world origin.
+    Measured at 958aa103d (audit_mode=True, raised tick budget, dropped_work_total == 0,
+    repeat-stable) over 2 corpus worlds / 4 raid events: 12/12 raiders off-region with region_id=None,
+    and in frontier_marches zero raider combat, zero deaths and bit-identical influence/ownership
+    against a same-harness control arm. It had never once produced a raid, so retiring it removes
+    nothing that ever happened. The surviving mechanic is the camp-triggered path
+    (src/world/camp.py -> RaidService.spawn_raid), which has real provenance per ORG-03/CAUSE-01: a
+    declared actor, its own origin and a maturity gate. This entry previously claimed the world-clock
+    cadence and was P0 with test_path: null; it now describes what runs and carries a pinned test.
     '
   proof_type: parity
-  test_path: tests/unit/world/test_raid_spawn_origin.py::test_global_raid_still_gated_by_cadence;
-    tests/unit/world/test_raid_spawn_origin.py::test_global_raid_raiders_land_inside_a_region
-  divergence_note: 'See intentional_divergences.md 2.64 (Bug Fix). Placement change only -- the region
-    fallback exists so raid frequency is unchanged, since requiring a city suppressed raids in
-    city-less worlds and regressed test_phase9_stability::test_1000_tick_stability.
+  test_path: tests/unit/world/test_global_raid_retired.py::test_camp_triggered_spawn_raid_still_works;
+    tests/unit/world/test_global_raid_retired.py::test_no_raiders_spawn_on_the_former_cadence_tick
+  divergence_note: 'See intentional_divergences.md 2.64 (Bug Fix -- retirement stops the creation of
+    regionless, inert entities). Re-anchoring the world-clock raid on a real settlement was
+    implemented, measured and withdrawn: it would have activated a behaviour the world never had
+    (an Intentional Gameplay Change, parked by owner_decision_memo.md row 7), and it still would not
+    have functioned because tactical.py:141 PANIC_RETREAT overwrites a raider target with the same
+    hardcoded (0.0,0.0) within 15-38 ticks
+    (TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN).
     '
   support_boundary: null
 - id: WORLD-033

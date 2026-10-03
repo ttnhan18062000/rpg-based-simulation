@@ -20,27 +20,25 @@ def test_calamity_raid_maturity_advancement():
     assert update.maturity_set == 1
 
 def test_calamity_raid_spawning():
+    # TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION: the global
+    # world-clock raid (check_for_raid) is RETIRED -- measured over 2 corpus worlds, it had never
+    # produced a raid. What this test really exercises is raid composition, which survives as
+    # spawn_raid on the camp path, so it now drives that with an explicit origin/target. The
+    # retirement itself is asserted in tests/unit/world/test_global_raid_retired.py.
     generator = EntityGenerator(seed=42)
-    # Raid occurs every 5 days (500 ticks)
-    # TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION: the global raid
-    # now targets a real CITY place instead of the hardcoded world origin, so this fixture needs
-    # one. Previously it needed no places at all, which is exactly how the (0,0) assumption
-    # survived unnoticed. Every corpus world has exactly one CITY (verified), so one here matches
-    # production. The no-city case is covered by
-    # tests/unit/world/test_raid_spawn_origin.py::test_global_raid_does_not_fire_with_no_city_to_raid.
-    from src.core.state import PlaceState, PlaceKind
-    city = PlaceState(place_id="city_1", region_id="hometown", kind=PlaceKind.CITY,
-                      position=(130.0, 130.0))
-    state = AuthoritativeState(tick=500, seed=42, maturity=2, places={"city_1": city})
+    state = AuthoritativeState(tick=500, seed=42, maturity=2)
 
-    update = RaidService.check_for_raid(state, generator)
+    raid_size = RaidService.RAID_BASE_SIZE + state.maturity
+    update = RaidService.spawn_raid(
+        state, generator, origin=(120.0, 120.0), target=(130.0, 130.0), raid_size=raid_size,
+    )
 
     # Raid size = Base (3) + Maturity (2) = 5
     assert len(update.entities_add) == 5
     for mob in update.entities_add:
         assert mob.kind == "goblin_raider"
-        # Navigation target is the raided city, not the world origin (behaviour change above).
-        assert mob.navigation.target == city.position
+        # Navigation target is whatever the caller passed -- spawn_raid has no opinion of its own.
+        assert mob.navigation.target == (130.0, 130.0)
         # TCK-20260913-HOTFIX-GUILDNEEDSCORER-HIJACKS-HOSTILE-ENTITY-NAVIGATION: a raid mob's
         # navigation.target is a raw assignment with no accompanying strategic project, so any
         # capacity-gated goal scorer (confirmed real: GuildNeedScorer, once its own flag actually
@@ -51,30 +49,28 @@ def test_calamity_raid_spawning():
         assert mob.strategic.profile.max_active_projects == 0
 
 
-def test_calamity_raid_spawn_positions_are_the_ring_around_the_chosen_anchor():
+def test_calamity_raid_spawn_positions_are_the_ring_around_the_given_origin():
     """
-    Spawn positions are the deterministic ring around whatever anchor the global raid chose,
-    independently recomputed from the same RNG call the service makes.
+    Spawn positions are the deterministic ring around the origin the caller passed, independently
+    recomputed from the same RNG call the service makes.
 
-    Originally TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX asserted byte-identical positions against
-    a hardcoded (0,0) origin. TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-
-    REGION replaced that origin with a real anchor, so the expectation is now recomputed from
-    `global_raid_anchor()` instead of from zero. The ring geometry it was really guarding is
-    unchanged and still asserted.
+    Originally TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX asserted byte-identical positions against a
+    hardcoded (0,0) origin, because the only caller then passed (0,0).
+    TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION retired that caller,
+    so the expectation is recomputed from an explicit origin instead of from zero. The ring geometry
+    this test was really guarding is unchanged and still asserted.
 
-    The fixture now carries a region: without one this test went *vacuously green* -- no anchor
-    meant no raid, `entities_add` was empty, and the loop body never ran. The explicit
-    non-empty assertion below is what stops that from recurring.
+    The explicit non-empty assertion matters: an earlier revision of this test went *vacuously
+    green* -- its fixture produced no raiders, so the loop body never ran and it asserted nothing.
     """
     generator = EntityGenerator(seed=42)
-    region = RegionState(id="hometown", name="Hometown", bounds=(100, 100, 160, 160))
-    state = AuthoritativeState(tick=500, seed=42, maturity=2, regions={"hometown": region})
+    state = AuthoritativeState(tick=500, seed=42, maturity=2)
+    anchor = (120.0, 120.0)
 
-    update = RaidService.check_for_raid(state, generator)
+    update = RaidService.spawn_raid(
+        state, generator, origin=anchor, target=(130.0, 130.0), raid_size=5,
+    )
     assert update.entities_add, "no raiders spawned -- this test would otherwise pass vacuously"
-
-    anchor = RaidService.global_raid_anchor(state)
-    assert anchor is not None
 
     rng = DeterministicRNG(state.seed)
     angle = rng.get_float(Domain.CALAMITY, state.tick, 0) * 2 * math.pi

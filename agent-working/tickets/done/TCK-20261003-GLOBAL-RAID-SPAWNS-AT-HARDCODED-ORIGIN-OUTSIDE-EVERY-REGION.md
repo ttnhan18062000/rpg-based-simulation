@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION
-phase: open
+phase: done
 date: 2026-10-03
 tags: [world, root-cause]
 ---
@@ -14,11 +14,11 @@ tags: [world, root-cause]
 ## Title
 
 The global tick-cadence raid spawns on a radius-25 ring around hardcoded `(0,0)`, placing every raider
-outside every region where it is inert for the rest of the run
+outside every region where it is inert for the rest of the run — RETIRED, not re-anchored
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -145,16 +145,91 @@ entity ids and state, produces no raid, and leaves permanent debris.
 
 ## Implementation Notes
 
-_To be completed by the implementer._
+**Outcome: the global world-clock raid is RETIRED.** `RaidService.check_for_raid` and its
+`world_dynamics` step-3.5 call site are removed. `spawn_raid` survives as the camp path's composition
+logic, and `src/world/camp.py` is untouched — camp-triggered raids are now the only raid mechanic.
+
+**A re-anchoring fix was implemented, measured and WITHDRAWN.** It anchored on a `PlaceKind.CITY` with
+a region-centre fallback, passed its unit tests, and was committed as `509009d41`. A post-fix corpus
+measurement (8 runs, `audit_mode=True`, `max_tick_budget_ms=1e9`, `dropped_work_total == 0`, each world
+repeated byte-identically, with a same-harness pre-fix control arm) then killed it on four counts:
+
+1. **11 of 12 re-anchored spawns were still outside every region.** A radius-25 ring around a city
+   centred in a 30-wide region necessarily lands outside it. **My own AC-2/AC-3 test passed only
+   because its fixture used a 60-wide region** — it asserted a property real corpus worlds do not
+   satisfy. That is the sharpest mistake in this ticket.
+2. **`src/engine/tactical.py:141` `PANIC_RETREAT` overwrites a raider's target with the same hardcoded
+   `(0.0, 0.0)`** within 15–38 ticks of spawn; 10 of 12 raiders walked *past* the city to the world
+   origin and idled there. Re-anchoring would have shipped a feature that still did not work. Filed as
+   `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN`.
+3. **In `frontier_marches` it changed nothing measurable** — zero raider combat in both arms, zero
+   raider deaths, bit-identical final influence and ownership. In `crowded_frontier` it did come alive
+   (raider-as-defender attacks 6 → 158, 3 raiders killed, `hometown` influence +15 of 200), but raiders
+   killed nothing in any run and no region's owner changed in either arm.
+4. **It activated a behaviour the world has never had**, which is an Intentional Gameplay Change parked
+   by `owner_decision_memo.md` row 7 — and it made the `Bug Fix` rationale class wrong.
+
+The rule layer ruled the same way independently (memo row 9): **PLACE-01** rules out a geometric region
+centre as a destination (a bare coordinate is not a Place), and **CAUSE-01 / ID-04 / ORG-03** require a
+raid to have a real causal and organizational origin, which a world clock is not. If world-clock raids
+return, they do so as a declared feature with a settlement-Place predicate (SETT-01, **not** `== CITY`),
+no coordinate fallback, and `PANIC_RETREAT` fixed first.
+
+Also recorded: `NewStateUpdate` is bound inside earlier conditional branches in `world_dynamics`, so an
+unconditional use of it raises `UnboundLocalError`; step 3.5 imports it locally.
 
 ## Test Summary
 
-_To be completed by the implementer._
+New: `tests/unit/world/test_global_raid_retired.py` (4 tests), including a **positive control**
+(`test_camp_triggered_spawn_raid_still_works`) that proves the absence assertions pass because the
+cadence path is gone rather than because raid composition broke. `test_global_world_clock_raid_surface_is_absent`
+asserts the entry point is *removed*, not guarded, and that the withdrawn helpers do not linger.
+
+Changed, each because it called or encoded the retired path, with reasons in §2.64:
+`test_raid_spawn_origin.py` deleted (it tested the withdrawn fix); `test_calamity_raid.py` ×2 and
+`test_guild_need_scorer.py` ×1 rebased onto `spawn_raid`; `test_world_dynamics_raid_spawning` inverted
+to assert retirement; `test_phase9_stability::test_1000_tick_stability` monster floor 2 → 1.
+
+**That floor change is a finding, not a relaxation.** The fixture declares no places, so no camp raid
+and no boss spawn — the retired global raid was its *only* monster source, and the old floor of 2 was
+being met by raiders that spawned outside every region and never moved or fought.
+
+Scope: `tests/unit/world/` + `tests/integration/world/` + `tests/unit/engine` + `tests/unit/ai` =
+**638 passed, 1 skipped**. Pre-existing `test_long_run_stability` deselected — `TimeoutError` on clean
+`src/` too, reported not silenced.
 
 ## Files Changed
 
-_To be completed by the implementer._
+- `src/world/raid.py` — `check_for_raid` removed (and the withdrawn `global_raid_anchor`/`city_places`); retirement recorded in a comment block; `spawn_raid` untouched
+- `src/engine/world_dynamics.py` — step 3.5 contributes an empty update
+- `tests/unit/world/test_global_raid_retired.py` (new), `tests/unit/world/test_raid_spawn_origin.py` (deleted)
+- `tests/unit/world/test_calamity_raid.py`, `tests/unit/world/test_world_dynamics.py`, `tests/unit/ai/test_guild_need_scorer.py`, `tests/integration/world/test_phase9_stability.py`
+- `docs/guidelines/intentional_divergences.md` §2.64 (rewritten for retirement)
+- `docs/parity_ledger/world_dynamics.yaml` `WORLD-032` (restated; was P0 with `test_path: null`)
+- `docs/plans/systemic_world/owner_decision_memo.md` (row 9), `docs/plans/systemic_world/roadmap.md` (item 6 sub-bullet, §10 count and list) — `world-rule-catalog-design`'s verbatim text, all four anchors re-verified unique at HEAD
+- `agent-working/staging_artifacts/TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION/`
 
 ## Completion Summary
 
-_To be completed by the implementer._
+Closed 2026-10-03. The global world-clock raid is retired; the camp-triggered path survives.
+
+**This ticket's own fix was withdrawn after measurement, and that is the most useful thing in it.**
+Three ACs (2, 3) are moot because no raiders are created at all, and they are marked moot in `plan.md`
+rather than quietly dropped. AC-6 — the post-fix corpus measurement — is the AC that reversed the
+decision, which is the argument for having required it.
+
+Recorded gaps, none glossed:
+
+1. **`tactical.py`'s three hardcoded `(0.0, 0.0)` retreat destinations remain live** for every entity
+   that retreats, not just raiders. Filed as
+   `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN`. Whether non-raider kinds reach those
+   branches is **not measured** and the ticket says so.
+2. **The phase9 stress fixture now has no monster source at all.** Floor 1 is honest for what it can
+   guarantee; a fixture with a CAMP would be better and is out of scope.
+3. **One unexplained measurement divergence** between the two probe harnesses on whether three pre-fix
+   raiders moved (`investigation.md` §6a). Both agree on 12/12 off-region at spawn, which is the
+   load-bearing fact.
+4. **Raiders killed nothing and no region changed owner in any arm.** Even a functioning raid moved
+   `hometown` influence by 15 of 200 points. The influence/ownership channel remains essentially
+   unresponsive to raids — relevant to the `regional_sovereignty` near-inert verdict and its expiry
+   clause.
