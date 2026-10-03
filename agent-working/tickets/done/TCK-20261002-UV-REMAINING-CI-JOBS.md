@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261002-UV-REMAINING-CI-JOBS
-phase: open
+phase: done
 date: 2026-10-02
 tags: [delivery]
 ---
@@ -15,7 +15,7 @@ tags: [delivery]
 M2c: Migrate the remaining CI jobs and the Makefile install recipe to uv sync
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -54,19 +54,19 @@ Third part of finishing the uv adoption. After TCK-20261002-UV-FIRST-CI-JOB has 
 - Weakening any assertion in the edited tests beyond the install and cache lines they pin
 
 ## Acceptance Criteria
-- [ ] No Python job in `.github/workflows/test.yml` runs `pip install -r requirements.txt` (`grep -c` returns 0), and every Python job installs with `uv sync`
-- [ ] The `migration-lanes` and `slow` jobs differ from their previous YAML only in the install and cache lines, and `test_slow_and_migration_lanes_jobs_unchanged_by_this_ticket` passes against the updated expected YAML
-- [ ] `make install-py` installs through uv, and `tests/tools/test_dashboard_makefile_targets.py` passes with its pinned recipe string updated to match
-- [ ] `tests/tools/test_ci_split_tools_jobs.py` passes with its install pin changed from pip to uv for the three split jobs
-- [ ] `ruff` and `complexipy` are declared only in the `lint` group; `uv lock --check` passes; `uv export --frozen --no-hashes --no-emit-project` reproduces the committed `requirements.txt`, which still lists both tools
-- [ ] On the PR run, the install log of a job that passes `--no-group lint` shows neither ruff nor complexipy, and no test in any job fails or is skipped because one of the two tools is missing (the tests in `tests/tools/test_code_health_*.py` and `tests/tools/test_codebase_health_snapshot_craft.py` still run and pass)
-- [ ] `PERF_RE` and `MIG_RE` match `pyproject.toml` and `uv.lock`, and `pytest tests/static/test_ci_narrow_path_filtered_jobs.py` passes
-- [ ] The `typecheck` job has no separate `pip install mypy` step, `test.yml` still has a step named mypy that runs `mypy src/`, and `pytest tests/static/test_typecheck_gate_configured.py` passes
-- [ ] No job's install log shows torch or sentence-transformers, and `pytest tests/static/test_ci_requirements_no_ml_stack.py` passes or is updated with a recorded reason if `requirements.txt` is removed
-- [ ] `pytest tests/static/ tests/tools/test_dashboard_makefile_targets.py tests/tools/test_ci_workflow_test_coverage.py` passes; every edit to an existing test file is listed in the ticket with the reason
-- [ ] Every job is green on a real PR run, and the run link is recorded in the ticket
-- [ ] The three docs named in Scope no longer instruct `pip install -r requirements.txt` for CI or first-time setup, or state plainly that the file is a generated export; `docs/guidelines/agent_working_environment.md` no longer says CI installs with pip and describes the `lint` group; the dependency path list in `docs/testing/migration_ci_lanes.md` matches the new `MIG_RE`
-- [ ] `git diff --stat <base>...HEAD` lists no path under src/, no path under .claude/ and not CLAUDE.md
+- [x] No Python job in `.github/workflows/test.yml` runs `pip install -r requirements.txt` (`grep -c` returns 0), and every Python job installs with `uv sync`
+- [x] The `migration-lanes` and `slow` jobs differ from their previous YAML only in the install and cache lines, and `test_slow_and_migration_lanes_jobs_unchanged_by_this_ticket` passes against the updated expected YAML
+- [x] `make install-py` installs through uv, and `tests/tools/test_dashboard_makefile_targets.py` passes with its pinned recipe string updated to match
+- [x] `tests/tools/test_ci_split_tools_jobs.py` passes with its install pin changed from pip to uv for the three split jobs
+- [x] `ruff` and `complexipy` are declared only in the `lint` group; `uv lock --check` passes; `uv export --frozen --no-hashes --no-emit-project` reproduces the committed `requirements.txt`, which still lists both tools
+- [x] On the PR run, the install log of a job that passes `--no-group lint` shows neither ruff nor complexipy, and no test in any job fails or is skipped because one of the two tools is missing (the tests in `tests/tools/test_code_health_*.py` and `tests/tools/test_codebase_health_snapshot_craft.py` still run and pass)
+- [x] `PERF_RE` and `MIG_RE` match `pyproject.toml` and `uv.lock`, and `pytest tests/static/test_ci_narrow_path_filtered_jobs.py` passes
+- [x] The `typecheck` job has no separate `pip install mypy` step, `test.yml` still has a step named mypy that runs `mypy src/`, and `pytest tests/static/test_typecheck_gate_configured.py` passes
+- [x] No job's install log shows torch or sentence-transformers, and `pytest tests/static/test_ci_requirements_no_ml_stack.py` passes or is updated with a recorded reason if `requirements.txt` is removed
+- [x] `pytest tests/static/ tests/tools/test_dashboard_makefile_targets.py tests/tools/test_ci_workflow_test_coverage.py` passes; every edit to an existing test file is listed in the ticket with the reason
+- [x] Every job is green on a real PR run, and the run link is recorded in the ticket
+- [x] The three docs named in Scope no longer instruct `pip install -r requirements.txt` for CI or first-time setup, or state plainly that the file is a generated export; `docs/guidelines/agent_working_environment.md` no longer says CI installs with pip and describes the `lint` group; the dependency path list in `docs/testing/migration_ci_lanes.md` matches the new `MIG_RE`
+- [x] `git diff --stat <base>...HEAD` lists no path under src/, no path under .claude/ and not CLAUDE.md
 
 ## Related Tickets
 - TCK-20261002-PYTHON-CODE-CRAFT-EPIC
@@ -131,6 +131,8 @@ None.
 - Monitoring shard residue, following `docs/guides/agent_working_path_map.md` "Cleaning up pre-move residue": old-root `uv-remaining-ci-jobs.tools.jsonl` had 88 rows; the new-root shard had 33 rows when compared (8 when first noticed; hooks kept appending). Rows of the old file already present in the new one: 0. Appended: 88 (exact-content diff, nothing copied wholesale). Then the old file was deleted. Final count 122 unique rows after further hook appends (no duplicates). Backups of both files were saved in the session scratchpad before appending. `monitoring_anomaly_validator.py` exits 0 and `make duplicate-run-record-check` passes.
 - `docs/REGISTRY.yaml` regenerated (`make docs-registry`) because `tests/tools/test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry` found it stale after the merge.
 
+- Real PR run (PR #297, head 5ea1dc08): https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37116891369. All 14 jobs that ran passed (Slow regression, Scenario lane and SimQ grade drift skipped by their own gates). Install logs: unit-core-world and tools-f-z ran `uv sync --locked --no-install-project --no-group lint` (61 packages, no ruff or complexipy, no torch); tools-a-e ran the plain sync (63 packages, `+ complexipy==8.0.1`, `+ ruff==0.16.10`) and finished `1494 passed, 7 skipped`, which includes `test_compute_churn_target_pathspec_defaults_to_repo_wide` (it had timed out locally under load). Only annotation of note: setup-uv "unable to reserve cache" warning (parallel jobs share a cache key).
+- "Base branch test collection" is reasoned, not observed: the step has conclusion success in all 11 jobs that have it, but it ends in `|| true` and writes to /tmp/base-collect.txt, so the log cannot show that pytest was found from /tmp/base-checkout. It resolves because `activate-environment: true` exports `VIRTUAL_ENV` and `PATH` for every later step regardless of working directory, the same pattern `simulation-quality` has used since #288.
 - Negative control (scratch env built with `uv sync --locked --no-install-project --no-group lint`; neither tool installed): the 9 code-health tests that scan **fail** with `ToolUnavailableError: complexipy not found: install the project environment (uv sync)`; none skips. So a misplaced `--no-group lint` cannot pass silently.
 
 ## Test Summary
@@ -152,3 +154,4 @@ Additive tests: `tests/static/test_ci_uv_install.py` (new), one test appended to
 Docs: `docs/guidelines/agent_working_environment.md`, `docs/guides/delivery_process.md`, `docs/testing/migration_ci_lanes.md`.
 
 ## Completion Summary
+Every Python job in `.github/workflows/test.yml` (15 moved, `simulation-quality` already on uv) now installs with `uv sync --locked --no-install-project` from `uv.lock`, and `make install-py` / `make.bat` use `uv sync`. `ruff` and `complexipy` moved to a `lint` dependency group (`default-groups = ["dev","lint"]` keeps a plain sync and the `requirements.txt` export unchanged); only `tools-a-e` syncs it, every other job passes `--no-group lint`. mypy comes from the lockfile, `PERF_RE`/`MIG_RE` also match `pyproject.toml` and `uv.lock`, and the three docs were updated. Three pinned tests were edited (install/cache lines only) and four test additions guard the new shape. Delivered by PR #297; CI run https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37116891369 green. Known residue: none in scope. `requirements.txt` stays as a generated export (removing it is out of scope).
