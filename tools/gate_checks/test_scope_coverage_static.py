@@ -139,6 +139,12 @@ _TOOLS_PERF_BASENAME_MAP = {
     "profile_engine.py": "tests/unit/perf/",
     "profile_sweep.py": "tests/perf/",
     "profile_memory.py": "tests/unit/cli/",
+    "phase_inventory.py": "tests/tools/",
+    "hash_callsite_inventory.py": "tests/tools/",
+    "profile_tick.py": "tests/tools/",
+    "profile_diff.py": "tests/tools/",
+    "flag_attribution.py": "tests/tools/",
+    "_profiling_common.py": "tests/tools/",
 }
 
 # tools/release/<basename>.py -> its real owning test directory, same survey method as
