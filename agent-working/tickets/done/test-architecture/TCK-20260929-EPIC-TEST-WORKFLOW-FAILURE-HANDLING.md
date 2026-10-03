@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260929-EPIC-TEST-WORKFLOW-FAILURE-HANDLING
-phase: open
+phase: done
 date: 2026-09-29
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Epic C — Test workflow and failure handling: test-plan fields, an advisory test-quality checklist, and one failure-triage procedure
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -144,4 +144,4 @@ Defined by child tickets.
 (Child tickets.)
 
 ## Completion Summary
-(Open.)
+**Closed 2026-10-03 by owner decision** (the user's answers, relayed by `test-architecture-reviewer`), **with criteria 2 and 4 recorded as NOT DEMONSTRATED**, not met. Classed in `tickets/done/test-architecture/INDEX.md` (closure-readiness audit of 2026-10-03, base `origin/main` c0980e27a): C1 MET-with-caveat; C3 and C5 MET; **C2 and C4 NOT DEMONSTRATED (closed by user decision)**. Their protocols stay as written in this epic (criterion 2's protocol and run-2-blocked record, criterion 4's rule text), and the first eligible run is to be recorded against them later: C2 needs a test-changing pipeline run meeting the recorded protocol; C4 needs a ticket that changes an expectation and shows the document/ledger change first. Both are roadmap watch items.

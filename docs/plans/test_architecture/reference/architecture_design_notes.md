@@ -11,12 +11,12 @@ tags: [testing, architecture, planning]
 > **NON-BINDING REFERENCE (2026-09-29).** This document is investigation and design material kept
 > for the detail planner and implementer agents. The **binding** plan is
 > [`../roadmap.md`](../roadmap.md) plus the four epic tickets in
-> `agent-working/tickets/todos/test-architecture/`. Where this document is more specific than those, treat it as a
+> `agent-working/tickets/done/test-architecture/`. Where this document is more specific than those, treat it as a
 > suggestion, not a commitment. Decisions marked here remain **pending** unless the roadmap says
 > otherwise.
 
 
-**Status: REVISION 2026-09-29h, reviewable version (all listed decisions PENDING owner approval)** (g: D-MF tooling deferred; review-record validator, seeded-fault harness and coverage contexts moved to evidence-triggered tickets; no second proof-status registry). Revision f changes: §3.5, §6.2, §6.3, §7.3. Ticket outlines: (ticket outlines removed; see ../../../../agent-working/tickets/todos/test-architecture/). This roadmap owns **how
+**Status: REVISION 2026-09-29h, reviewable version (all listed decisions PENDING owner approval)** (g: D-MF tooling deferred; review-record validator, seeded-fault harness and coverage contexts moved to evidence-triggered tickets; no second proof-status registry). Revision f changes: §3.5, §6.2, §6.3, §7.3. Ticket outlines: (ticket outlines removed; see ../../../../agent-working/tickets/done/test-architecture/). This roadmap owns **how
 tests are planned, written, selected, organized, executed, measured, reviewed, maintained and
 repaired**. It does **not** own the design or schedule of RPG mechanics; another group of agents
 is reworking those. Core RPG is the **first application and validation scope**, not a feature
