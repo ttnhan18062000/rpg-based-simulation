@@ -31,3 +31,13 @@ def wait_gone(marker: str, seconds: float = 10.0) -> list[int]:
     while holders(marker) and time.monotonic() < deadline:
         time.sleep(0.05)
     return holders(marker)
+
+
+def describe(pid: int) -> str:
+    """One line for a failure message: pid, NSpid, state, parent and the command line tail, read from /proc (the process may be gone)."""
+    try:
+        status = dict(line.split(":", 1) for line in (Path("/proc") / str(pid) / "status").read_text().splitlines() if ":" in line)
+        cmd = (Path("/proc") / str(pid) / "cmdline").read_bytes().replace(b"\0", b" ").decode(errors="replace")
+    except OSError:
+        return f"pid {pid}: gone"
+    return f"pid {pid} NSpid={status.get('NSpid', '?').strip()} State={status.get('State', '?').strip()} PPid={status.get('PPid', '?').strip()} cmd=...{cmd[-110:]}"

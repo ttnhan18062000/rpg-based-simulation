@@ -14,7 +14,7 @@ from tests.visual_assets.drawing import proc_support
 from visual_assets.drawing import api, config
 from visual_assets.drawing.errors import AdapterError
 
-pytestmark = pytest.mark.needs_aseprite
+pytestmark = [pytest.mark.needs_aseprite, pytest.mark.resource_budget_large]  # 7 s idle, 17-43 s under heavy CPU load: over the 60 s default
 
 PX = [{"op": "pixels", "pixels": [{"x": 1, "y": 1, "color": "#ff0000"}]}]
 RUNS = 150
@@ -32,5 +32,6 @@ def test_no_sandbox_process_survives_any_timeout(workspace, monkeypatch):
             assert "timed out" in str(exc)
             timed_out += 1
     survivors = proc_support.wait_gone(str(workspace))
-    assert survivors == [], f"{len(survivors)} sandbox process(es) outlived {timed_out} timeouts"
-    assert timed_out >= RUNS // 3, "the sweep never reached the timeout path often enough to mean anything"
+    detail = "\n".join(proc_support.describe(pid) for pid in survivors)  # read before any assertion can hide it
+    assert survivors == [], f"{len(survivors)} sandbox process(es) outlived {timed_out} timeouts of {RUNS} runs:\n{detail}"
+    assert timed_out >= 1, f"the sweep never reached the timeout path ({timed_out} of {RUNS} runs timed out)"

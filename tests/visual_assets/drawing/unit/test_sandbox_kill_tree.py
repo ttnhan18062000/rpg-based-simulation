@@ -66,3 +66,79 @@ def test_kill_tree_on_an_already_dead_process_is_harmless():
 
 def test_children_of_a_gone_process_is_empty():
     assert sandbox._children(2**22 + os.getpid()) == set()
+
+
+class _FakeProc:
+    def __init__(self, pid: int):
+        self.pid = pid
+        self.returncode = None
+
+    def wait(self):
+        self.returncode = -9
+
+
+def _fake_proc_fs(monkeypatch, *, tree: dict[int, set[int]], settle_after: int | None):
+    """A fake /proc: `settle_after` state reads after a SIGSTOP the pid reads `T` (None: it never stops). Returns the event log."""
+    log: list[tuple] = []
+    reads: dict[int, int] = {}
+    stopped: set[int] = set()
+
+    def fake_signal(pids, sig):
+        for pid in sorted(pids):
+            log.append(("signal", pid, int(sig)))
+            if sig == sandbox.signal.SIGSTOP:
+                stopped.add(pid)
+                reads[pid] = 0
+
+    def fake_state(pid):
+        if pid in stopped:
+            reads[pid] += 1
+            if settle_after is not None and reads[pid] > settle_after:
+                return "T"
+        return "S"
+
+    def fake_children(pid):
+        log.append(("children", pid, fake_state(pid) if pid in stopped else "S"))
+        return set(tree.get(pid, set()))
+
+    monkeypatch.setattr(sandbox, "_signal", fake_signal)
+    monkeypatch.setattr(sandbox, "_state", fake_state)
+    monkeypatch.setattr(sandbox, "_children", fake_children)
+    return log
+
+
+def test_children_are_read_only_after_every_process_has_really_stopped(monkeypatch):
+    log = _fake_proc_fs(monkeypatch, tree={100: {101}, 101: {102}}, settle_after=3)
+    sandbox.kill_tree(_FakeProc(100))
+    reads = [event for event in log if event[0] == "children"]
+    assert reads and all(state == "T" for _, _, state in reads), reads  # never trusted a list read from a running process
+    killed = {pid for kind, pid, sig in log if kind == "signal" and sig == int(sandbox.signal.SIGKILL)}
+    assert killed == {100, 101, 102}
+
+
+def test_a_process_that_will_not_stop_is_still_killed_with_everything_known(monkeypatch):
+    monkeypatch.setattr(sandbox, "STOP_WAIT_S", 0.05)
+    log = _fake_proc_fs(monkeypatch, tree={100: {101}}, settle_after=None)
+    sandbox.kill_tree(_FakeProc(100))
+    killed = {pid for kind, pid, sig in log if kind == "signal" and sig == int(sandbox.signal.SIGKILL)}
+    assert killed == {100, 101}
+    assert [event for event in log if event[0] == "children"][-1][1] in {100, 101}  # one last look for late children after the kill
+
+
+def test_an_interrupt_between_stop_and_kill_still_kills_the_tree(monkeypatch):
+    """Found under CPU load: the test harness's SIGALRM time limit raised inside kill_tree after the tree was stopped; nothing was killed,
+    the tree stayed stopped for good and `Popen.__exit__` waited on it forever (a hang, not a leak)."""
+    log = _fake_proc_fs(monkeypatch, tree={100: {101}}, settle_after=0)
+
+    def interrupted(pids):
+        raise TimeoutError("alarm")
+
+    monkeypatch.setattr(sandbox, "_wait_stopped", interrupted)
+    try:
+        sandbox.kill_tree(_FakeProc(100))
+    except TimeoutError:
+        pass
+    else:  # pragma: no cover
+        raise AssertionError("the interrupt must propagate")
+    killed = {pid for kind, pid, sig in log if kind == "signal" and sig == int(sandbox.signal.SIGKILL)}
+    assert 100 in killed

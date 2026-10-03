@@ -32,8 +32,9 @@ make visual-assets-aseprite-local               # strict real-Aseprite run, loca
 Every Aseprite job runs under `bwrap` with a timeout (`config.JOB_TIMEOUT_S`). On a timeout `sandbox.kill_tree` freezes (SIGSTOP) the
 whole process tree and SIGKILLs it, because `bwrap --unshare-all` forks an inner process (the init of a new PID namespace) that
 ignores SIGTERM and, killed too early, could outlive the job holding a bind mount of its job directory. If a machine ever shows a stray
-anyway (a `bwrap --unshare-all ... aseprite -b --script /lua/ops.lua` with parent PID 1), find it with
-`pgrep -af '^bwrap --unshare-all'` (check its `--bind <dir> /job` names a workspace you own, not another session's) and `kill -9 <pid>`;
+anyway (a `bwrap --unshare-all ... aseprite -b --script /lua/ops.lua` with parent PID 1), list candidates with
+`pgrep -af 'bwrap .*--bind .*\.jobs/'` (not the broader `^bwrap --unshare-all`: GNOME's own image-loader sandboxes match that too).
+Kill only a process whose `--bind` names a `.jobs/` directory of a workspace you own, never another session's, with `kill -9 <pid>`;
 SIGTERM does nothing to it. The tests scope their leak checks to their own workspace, so a stray from elsewhere cannot fail them.
 
 ### Strict local run (ADR D10)
