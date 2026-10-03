@@ -75,7 +75,7 @@ docs; record the decisions. Planner/reviewer: `asset-planner`. Implementer: `ass
 - [x] `python -m visual_assets.drawing.server` starts and answers `list_tools` over stdio from the repo root;
       `bash visual_assets/start_mcp.sh` does the same and fails with one clear message when no interpreter has `mcp`.
 - [x] `.mcp.json` has the new entry; the two extended `tests/tools` test files pass; existing entries byte-identical.
-- [ ] CI step added and green on the PR, and its junit shard appears in the merged report. (Step added and parsed; the green PR run and merged-report shard can only be observed after asset-planner pushes; see Completion Summary.)
+- [x] CI step added and green on the PR, and its junit shard appears in the merged report. (Step added and parsed; the green PR run and merged-report shard can only be observed after asset-planner pushes; see Completion Summary.) Ticked under `TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS`: satisfied on `e25b4f03` (`Run: tests/visual_assets`, `Merge JUnit XML` and `Base branch test collection` all green) before PR #286 merged as `5506801a`.
 - [x] Docs created with valid frontmatter; `docs/assets/store_contract.md` and the ADR state plainly what is
       built vs proposed; both plan READMEs carry a dated status note; knowledge index updated.
 - [x] `git diff --stat origin/main` shows no change under `src/`, `frontend/`, `requirements*.txt`.
