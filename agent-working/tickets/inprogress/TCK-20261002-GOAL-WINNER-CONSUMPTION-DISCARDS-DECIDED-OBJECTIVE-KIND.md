@@ -485,6 +485,44 @@ This is the pre-existing saliency proxy becoming visible once the hostility test
 - AC2 (a catalog-hostile target is actually attacked, end to end) -> `TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES`.
   Measured here: attacks by `combat_engage` holders 2 -> 0 on `frontier_living_world`, 0 -> 0 on `crowded_frontier`.
 
+### 2026-10-03 — RE-MEASURED under `audit_mode=True` + `max_tick_budget_ms` raised out of reach; the earlier table is order-of-magnitude only; AC6 is NOT demonstrated
+
+The planner showed (and I verified at `kernel.py:612-620`) that with `audit_mode` off the mid-tick throttle drops authoritative items
+whenever a tick exceeds `max_tick_budget_ms`, so my first table (above) was taken under that throttle. Same method, `PROD_SMALL`
+with `max_tick_budget_ms=1e9`, `flags audit_mode=True`, `LocalSequentialExecutor()`, one run at a time, 2000 ticks, seed 42,
+state hash = sha256 of every entity's `to_canonical_dict()` (first 16 hex):
+
+| | crowded before | crowded after | frontier_living_world before | frontier_living_world after |
+|---|---|---|---|---|
+| tactical calls on a `combat_engage` holder | 215 | **1** | 20 | 105 / 104 |
+| of those, tactical `hostiles` true | 6 | 0 | 2 | 3 / 3 |
+| decision-path attacks (all entities) | 2 | 0 | 3 | 1 / 1 |
+| decision-path attacks by a `combat_engage` holder | 0 | 0 | 2 | 0 / 0 |
+| opportunity attacks | 139 | 136 | 783 | 780 / **1609** |
+| state hash, run 1 / repeat | `a2bcf6ad` = `a2bcf6ad` | `f7d33838` = `f7d33838` | `9fa832ae` = `9fa832ae` | `518c5bed` != `a60e481b` |
+
+- The `before` arm now reproduces the investigation's baseline exactly (783 opportunity attacks, 20 calls, 3 decision-path attacks), so
+  the investigation's numbers were sound and my earlier loaded-machine numbers were the throttled ones.
+- The directional reading is unchanged and in one respect worse: the earlier "all decision-path attacks 3 -> 20" on
+  `frontier_living_world` was a throttle artifact. Under audit mode it is **3 -> 1**. Do not quote that rise.
+- **`frontier_living_world` `after` is not reproducible** even in audit mode with the budget raised: two identical runs gave different
+  hashes (opportunity attacks 780 vs 1609). `crowded_frontier` `after` and both `before` arms are reproducible.
+
+**Localising it (what was and was not established).** Unmodified `main`: identical trail in 4/4 runs with random `PYTHONHASHSEED`.
+This branch: 4/4 distinct trails with random seed, and two distinct trails in 3 runs with `PYTHONHASHSEED=0`, so it is not string-hash
+order. Intermittent, not constant: a separate 4-run per-tick dump was identical through tick 24. Bisecting with throwaway copies (never
+committed): **hostility change alone** (obj_kind not carried) 3 distinct trails in 5 runs; **obj_kind carried alone** (raw-enum scorer)
+2 distinct in 5. Each half reproduces it; main does not. Neither half contains a wall-clock read or set iteration. The simplest reading
+consistent with this is that nondeterminism already exists on the combat/tactical path and was masked on main because that path fires
+rarely for these worlds (the dormancy this ticket ends), not that this logic is itself nondeterministic. **That is an inference, not a
+finding: I did not locate the source**, and `INFRA-273` / `TCK-20260818-STANDARD-LONGRUN-DETERMINISM-WATCHDOG-AUDITMODE` (the planner's
+named, already-recorded mechanism) may or may not be all of it. Raising `max_tick_budget_ms` does not defuse the other governor
+comparisons (they scale off the same budget), so that is not the explanation either.
+
+**Consequence for the ACs.** AC6 asks that determinism hold and the sweep be green. The sweep I ran (340 passed) did not set
+`audit_mode`, so it does not establish that, and the real-world after arm shows it does not hold for `frontier_living_world`. I am not
+claiming AC6. It needs the source of the nondeterminism found, which is not this ticket's scope.
+
 ## Test Summary
 New: `tests/unit/strategic/test_goal_winner_objective_kind.py` (13: T1 nine fall-through kinds stay `REACH_LOCATION`, T2 missing/None fallback,
 published kind carried, T6 `ProjectState.kind` stays `GoalKind` and `score` stays the 100-scale utility), and
