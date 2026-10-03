@@ -2039,29 +2039,48 @@ mechanisms:
     systems: [world, faction]
     depends_on: [world_generation]
     state: done
-    implemented_by: [src/world/influence.py::FactionInfluenceService]
+    implemented_by: [src/engine/world_dynamics.py::WorldDynamicsSystem, src/world/influence.py::FactionInfluenceService]
     verified:
-      instrument: code_trace
+      instrument: corpus_run
       verdict: observed
-      date: "2026-09-17"
+      date: "2026-10-03"
       note: >-
-        Corrected binding, caught by this split's own state-caller-mismatch re-check
-        (`RegionalSovereigntyService` was the first-guessed binding and has zero real callers
-        anywhere in `src/` -- see the flag below). The real, live ownership-tracking mechanism the
-        atlas's own extensive investigation confirms ("the sovereignty mechanism described above
-        is real and live exactly as documented") is `FactionInfluenceService`
-        (`RegionState.owner_faction_id`, `+-5.0` influence shift per relevant death, conquest at
-        `<= -50.0`/liberation at `>= +50.0`), with 3 real callers
-        (`engine/world_dynamics.py`, `systems/lifecycle_systems/lifecycle.py`,
-        `economy/vacancy.py`).
-        **Flagged, not further split or ticketed here**: `src/world/regional_sovereignty.py::RegionalSovereigntyService`
-        (regional taxation + macroscopic conquest debuffs -- `TAX_RATE_ENTITY`/`TAX_RATE_BUILDING`,
-        `CONQUERED_ATK_DEF_MOD`/`CONQUERED_SPD_MOD`) is real, distinct, non-dead-code, and has ZERO
-        real callers anywhere in `src/` -- a genuine `orphan` by this registry's own vocabulary,
-        found as a side effect of this split rather than this ticket's own target. Not filed as
-        its own ticket here to keep this identity-rules ticket's own scope bounded; worth its own
-        follow-up investigation (same shape as `camp`/`motivation_doctrine`'s own orphan findings)
-        for whoever next touches regional sovereignty.
+        Re-verified at runtime 2026-10-03, replacing the 2026-09-17 code_trace verdict. The binding
+        is corrected to name both live writers of `RegionState.owner_faction_id`. Evidence:
+        `runtime_evidence_regional_sovereignty.md` in
+        `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`'s artifacts (committed at
+        `ca3246338`; engine `6d630250d`; 5 corpus worlds, 2000 ticks each, about 48,000
+        region-ticks).
+        **Which writer actually moves ownership:** `WorldDynamicsSystem.resolve_dynamics`
+        (`world_dynamics` phase, an unconditional per-region sweep that emits `SOVEREIGNTY_SHIFT`)
+        made all 3 ownership writes observed. That includes both durable flips: `goblin_camp`
+        `None -> HERO_GUILD` at t1203 (`frontier_living_world`) and t1503 (`frontier_marches`).
+        `FactionInfluenceService.process_influence_shift` (`lifecycle` phase, death-gated) executes
+        (about 230 calls) and moves *influence* (about 80 non-zero deltas), but made **zero**
+        ownership writes. It is the influence producer, not the ownership writer in practice. The
+        2026-09-17 note called it "the real, live ownership-tracking mechanism"; that is
+        superseded.
+        **Outcome: executes but near-inert.** Influence stays at exactly 0.0 in most regions. The
+        town regions saturate but are already protector-owned. There were 0 same-tick overlaps
+        between the two writers. The two writers can still disagree in principle, but that needs
+        an invader-owned region at influence >= +50 with an in-region death in the same tick (a
+        constructed scenario reached it).
+        **Precision caveat:** the runs used `audit_mode=False`, so the mid-tick budget throttle
+        (`kernel.py:612-620`, known and deferred under `INFRA-273`) can drop result items. Counts are
+        order-of-magnitude. The zero results rest on the structural argument (evidence §5) and on
+        positive controls in both directions (evidence §6), not on exact counts. Exact figures need
+        a re-run under `audit_mode=True`. They are not required for this verdict.
+        **Related, not part of this mechanism's verdict:**
+        - The liberation branch's in-band `-1` "None" sentinel was persisted raw and crashed
+          `town_resolution.py` with `KeyError(-1)`. Fixed by
+          `TCK-20261003-REGION-OWNER-NONE-SENTINEL-PERSISTED-RAW`.
+        - `src/world/regional_sovereignty.py::RegionalSovereigntyService` (regional taxation and
+          conquest debuffs) is still a zero-caller `orphan`, distinct from this mechanism. It is
+          tracked by `TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS` and parked
+          as dormant under owner decision 7.
+        - The territory views' OBSERVED OUTCOME axis is a hardcoded constant
+          (`generate_territory_control_view.py:74`). It cannot reflect this runtime evidence until
+          the tooling reads it. That is a decision-7 foundation finding.
   - id: demographic_cohort_cycle
     layer: region
     systems: [world]
