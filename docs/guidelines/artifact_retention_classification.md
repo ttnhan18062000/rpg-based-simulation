@@ -9,7 +9,7 @@ tags: [ai, agent-monitoring, data-quality, documentation]
 # Artifact Retention Classification
 
 This doc classifies every repo artifact class that produces durable output outside the
-`agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` weekly shards (already fully classified and
+`agent-working/agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` weekly shards (already fully classified and
 resolved by the shipped `TCK-20260902-MONITORING-WEEKLY-SHARDING-EPIC` and
 `TCK-20260903-MONITORING-UNIFIED-WEEKLY-EPIC`). It is the M2 deliverable of
 `docs/plans/agent_infrastructure/ai_first_hardening_epics/telemetry_retention_epic.md`, shipped by
@@ -33,13 +33,13 @@ Every artifact class below is assigned exactly one of four categories:
 
 | Artifact class | Classification | Recommended Treatment | Evidence / Reference |
 |---|---|---|---|
-| `agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` | Long-lived / Institutional | Already resolved by the shipped weekly-sharding work; keep committed, no change from this ticket | `tickets/done/agent-monitoring-weekly-sharding/TCK-20260902-MONITORING-WEEKLY-SHARDING-EPIC.md` (Status: DONE), `tickets/done/agent-monitoring-unified-weekly-data/TCK-20260903-MONITORING-UNIFIED-WEEKLY-EPIC.md` (Status: DONE), `tools/agent-monitoring/verify_referential_integrity.py` |
-| `stored_artifacts/{id}/` | Ticket-scoped → Long-lived / Institutional | Keep permanent; never pruned | Referenced by `docs/REGISTRY.yaml` and `tools/registry_query.py`; read by every ticket's Prior Work investigation step |
-| `tickets/done/*.md` | Long-lived / Institutional | Keep permanent; never pruned | Same as above — `docs/REGISTRY.yaml` indexes every closed ticket by ID |
-| `agent-monitoring/retro/RETRO-*.md` | Long-lived / Institutional | Keep permanent | Generated and committed by `tools/agent-monitoring/generate_retro.py` |
-| `tickets/working_log.csv` | Long-lived / Institutional (currently data-quality-broken) | Keep permanent once its parser/format is fixed — see `TCK-20260904-WORKING-LOG-CSV-PARSER` | `tickets/todos/ai-first-hardening-h1-h2-followon/TCK-20260904-WORKING-LOG-CSV-PARSER.md` (not yet implemented) |
+| `agent-working/agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` | Long-lived / Institutional | Already resolved by the shipped weekly-sharding work; keep committed, no change from this ticket | `agent-working/tickets/done/agent-monitoring-weekly-sharding/TCK-20260902-MONITORING-WEEKLY-SHARDING-EPIC.md` (Status: DONE), `agent-working/tickets/done/agent-monitoring-unified-weekly-data/TCK-20260903-MONITORING-UNIFIED-WEEKLY-EPIC.md` (Status: DONE), `tools/agent-monitoring/verify_referential_integrity.py` |
+| `agent-working/stored_artifacts/{id}/` | Ticket-scoped → Long-lived / Institutional | Keep permanent; never pruned | Referenced by `docs/REGISTRY.yaml` and `tools/registry_query.py`; read by every ticket's Prior Work investigation step |
+| `agent-working/tickets/done/*.md` | Long-lived / Institutional | Keep permanent; never pruned | Same as above — `docs/REGISTRY.yaml` indexes every closed ticket by ID |
+| `agent-working/agent-monitoring/retro/RETRO-*.md` | Long-lived / Institutional | Keep permanent | Generated and committed by `tools/agent-monitoring/generate_retro.py` |
+| `agent-working/tickets/working_log.csv` | Long-lived / Institutional (currently data-quality-broken) | Keep permanent once its parser/format is fixed — see `TCK-20260904-WORKING-LOG-CSV-PARSER` | `agent-working/tickets/todos/ai-first-hardening-h1-h2-followon/TCK-20260904-WORKING-LOG-CSV-PARSER.md` (not yet implemented) |
 | `graphify-out/` | Ephemeral | Keep gitignored; rebuild via `graphify update .` (incremental) or a full `/graphify` rebuild — never commit | See "graphify-out/ resolution" below |
-| `knowledge-index/` | Ephemeral | Keep gitignored; rebuild via `make knowledge-index` (full) or `make knowledge-index-update` (incremental) | See "knowledge-index/ resolution" below |
+| `agent-working/.index/knowledge-index/` | Ephemeral | Keep gitignored; rebuild via `make knowledge-index` (full) or `make knowledge-index-update` (incremental) | See "agent-working/.index/knowledge-index/ resolution" below |
 | `.claude/current_run` | Run-scoped | No change needed; already correctly a per-run sidecar | Written per-run by `.claude/workflows/*.js`; never committed |
 
 ### `graphify-out/` resolution
@@ -64,24 +64,24 @@ recommendation, not a still-pending question:
 (incremental, AST-only, per `CLAUDE.md`'s Graphify Integration section) or a full `/graphify` rebuild.
 No further action needed.
 
-### `knowledge-index/` resolution
+### `agent-working/.index/knowledge-index/` resolution
 
 This artifact class is confirmed **Ephemeral** build output, with a resolved
 recommendation, not a still-pending question:
 
-- `.gitignore:264` — `knowledge-index/` (the active ignore rule, immediately preceded by the comment
+- `.gitignore:264` — `agent-working/.index/knowledge-index/` (the active ignore rule, immediately preceded by the comment
   "Knowledge search index (local only — rebuild with: make knowledge-index)" at `.gitignore:263`).
 - `Makefile:331` — the comment `# developer env only — not CI` immediately precedes the
   `knowledge-index:` target; the target's own `##` help text (`Makefile:334`) repeats "(developer env
   only — not CI)".
 - `docs/guidelines/agent_working_environment.md`'s existing "Other Local, Gitignored Caches" table
-  already documents two `knowledge-index/` paths (`knowledge.db` at line 278, `retrieval_cache.db` at
+  already documents two `agent-working/.index/knowledge-index/` paths (`knowledge.db` at line 278, `retrieval_cache.db` at
   line 280), each citing `.gitignore:264` and a rebuild command.
 - `tools/hooks/post-commit-reindex.sh` exists and pairs with `docs/guidelines/agent_working_environment.md:82-87`'s
   description of an installable post-commit hook that runs `make knowledge-index-update` and self-skips
-  if `knowledge-index/` does not exist.
+  if `agent-working/.index/knowledge-index/` does not exist.
 
-**Recommendation:** keep `knowledge-index/` gitignored. Rebuild via `make knowledge-index` (full) or
+**Recommendation:** keep `agent-working/.index/knowledge-index/` gitignored. Rebuild via `make knowledge-index` (full) or
 `make knowledge-index-update` (incremental). No further action needed.
 
 ## Related Docs
@@ -89,4 +89,4 @@ recommendation, not a still-pending question:
 - `docs/plans/agent_infrastructure/ai_first_hardening_epics/telemetry_retention_epic.md` — this doc is
   the M2 deliverable for that epic.
 - `docs/guidelines/agent_working_environment.md` — structural precedent for this doc's table shape, and
-  the existing home for `knowledge-index/` and (as of this ticket) `graphify-out/` cache documentation.
+  the existing home for `agent-working/.index/knowledge-index/` and (as of this ticket) `graphify-out/` cache documentation.

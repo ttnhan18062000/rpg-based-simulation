@@ -252,7 +252,7 @@ footer.rep{padding:36px 0 10px; font-size:12px; color:var(--ink-faint); font-fam
 
   <section id="summary">
     <div class="sec-head"><span class="sec-num">§1</span><h2>Executive summary</h2></div>
-    <p class="sec-intro">This repository runs a genuinely deterministic outer workflow (a hand-built phase pipeline, not an LLM deciding what to do next) around well-differentiated specialist agents, backed by live, provenance-tracked repository intelligence (hybrid search + a 34k-node code graph) and a three-tier execution trace (<span class="mono">agent-monitoring/{runs,events,tools}.jsonl</span>) that is, pattern-for-pattern, the strongest single piece of this architecture. That is the AI-first "task execution" and "engineering delivery" loops working as designed, with git-worktree isolation and a real ticket→spec→plan→artifact chain underneath it.</p>
+    <p class="sec-intro">This repository runs a genuinely deterministic outer workflow (a hand-built phase pipeline, not an LLM deciding what to do next) around well-differentiated specialist agents, backed by live, provenance-tracked repository intelligence (hybrid search + a 34k-node code graph) and a three-tier execution trace (<span class="mono">agent-working/agent-monitoring/{runs,events,tools}.jsonl</span>) that is, pattern-for-pattern, the strongest single piece of this architecture. That is the AI-first "task execution" and "engineering delivery" loops working as designed, with git-worktree isolation and a real ticket→spec→plan→artifact chain underneath it.</p>
     <p class="sec-intro">The gaps cluster tightly around <b>agent governance</b>, not workflow design: tool permissions are scoped at the session level, not per-agent, so an investigative agent inherits the same <span class="mono">rm *</span>/<span class="mono">docker *</span> allowlist as the implementer; the two adversarial reviewer roles (architecture, security) run on the same model family they're reviewing, reintroducing the correlated-failure risk the pattern is meant to prevent; and the two safety-critical "never do X" rules in <span class="mono">CLAUDE.md</span> are enforced as prose nudges, not blocking hooks, even though the repo's own hook infrastructure already proves the harder version is buildable. A third, structural gap — no real token/dollar cost visibility — is platform-imposed, not a repo defect, and it quietly caps two other patterns (cost-aware orchestration, and a real "agent v12 vs v13" success-rate comparison) from ever reaching full maturity without an upstream change.</p>
   </section>
 
@@ -367,7 +367,7 @@ footer.rep{padding:36px 0 10px; font-size:12px; color:var(--ink-faint); font-fam
     <div class="sec-head"><span class="sec-num">§7</span><h2>Quick wins</h2></div>
     <p class="sec-intro">Low-cost, high-leverage — every one of these reuses code or infrastructure that already exists in the repo.</p>
     <div class="qw-list">
-      <div class="qw-item"><span class="chk">✓</span>Add scoped <span class="mono">tools:</span> frontmatter to each of the 16 agent files, mined from real usage in <span class="mono">agent-monitoring/tools.jsonl</span></div>
+      <div class="qw-item"><span class="chk">✓</span>Add scoped <span class="mono">tools:</span> frontmatter to each of the 16 agent files, mined from real usage in <span class="mono">agent-working/agent-monitoring/tools.jsonl</span></div>
       <div class="qw-item"><span class="chk">✓</span>Reuse the gateway's already-tuned <span class="mono">scan_for_secrets()</span> as a <span class="mono">PreToolUse</span> Bash-command warning hook</div>
       <div class="qw-item"><span class="chk">✓</span>Add a post-commit hook running <span class="mono">graphify update .</span> / <span class="mono">make knowledge-index-update</span> automatically</div>
       <div class="qw-item"><span class="chk">✓</span>Add a test asserting each <span class="mono">SKILL.md</span>'s phase list is a subset of its <span class="mono">.js</span> workflow's phases</div>
@@ -390,7 +390,7 @@ footer.rep{padding:36px 0 10px; font-size:12px; color:var(--ink-faint); font-fam
       </div>
       <div class="bet-card">
         <h5>Agent-behavior eval harness</h5>
-        <p>Seed from the 1,300+ closed tickets in <span class="mono">tickets/done/</span> — replay historical investigation/plan/implement phases and diff outcome quality, feeding a real success-rate metric into the retro loop.</p>
+        <p>Seed from the 1,300+ closed tickets in <span class="mono">agent-working/tickets/done/</span> — replay historical investigation/plan/implement phases and diff outcome quality, feeding a real success-rate metric into the retro loop.</p>
       </div>
       <div class="bet-card">
         <h5>Provider portability, made live</h5>
@@ -431,8 +431,8 @@ const LAYERS = [
 
 const PATTERNS = {
 1:{name:"Spec-Driven Development", status:"warn", statusLabel:"Partial", maturity:3, relevance:"Critical", feasibility:"Easy", benefit:"High reliability &amp; traceability, already largely realized", priority:"MAINT",
-  evidence:"CLAUDE.md Workflow Rule · tickets/{inprogress,done}/ · staging_artifacts/{id}/{plan,investigation,test_plan}.md · docs/REGISTRY.yaml · docs/parity_ledger/*.yaml (id/text/status/test_path) · tools/validate_frontmatter.py",
-  design:"Requirement → frontmatter-validated ticket → investigation.md/test_plan.md → plan.md, all persisted per-ticket, migrated to stored_artifacts/ on close, indexed into REGISTRY.yaml, cross-linked to a machine-readable parity ledger tying claims to test_path.",
+  evidence:"CLAUDE.md Workflow Rule · agent-working/tickets/{inprogress,done}/ · agent-working/staging_artifacts/{id}/{plan,investigation,test_plan}.md · docs/REGISTRY.yaml · docs/parity_ledger/*.yaml (id/text/status/test_path) · tools/validate_frontmatter.py",
+  design:"Requirement → frontmatter-validated ticket → investigation.md/test_plan.md → plan.md, all persisted per-ticket, migrated to agent-working/stored_artifacts/ on close, indexed into REGISTRY.yaml, cross-linked to a machine-readable parity ledger tying claims to test_path.",
   gaps:"Hotfix tier explicitly skips investigation/plan artifacts — a real fraction of changes leave no persisted spec beyond the ticket body. Acceptance criteria are free-text, not machine-checked against implementation.",
   suggested:"Extend done-checker to spot-check that Acceptance Criteria bullets have a parity-ledger entry or test reference for standard/epic tier; leave hotfix as-is."},
 2:{name:"Deterministic Outer Workflow + Agentic Inner Loops", status:"good", statusLabel:"Implemented", maturity:3, relevance:"Critical", feasibility:"—", benefit:"Already realized: reliability, auditability, debuggability", priority:"MAINT",
@@ -444,7 +444,7 @@ const PATTERNS = {
   evidence:".claude/agents/*.md — 16 files (ticket-scoper, investigator, planner, architecture-reviewer, implementer, doc-updater, parity-updater, security-reviewer, test-scoper, done-checker, mechanics-auditor, spec-document-reviewer, concern-investigator, simulation-analyst, world-debugger, world-render-reviewer)",
   design:"Each agent has a distinct, single-purpose role with explicitly documented boundaries against neighboring roles (e.g. spec-document-reviewer vs. architecture-reviewer vs. mechanics-auditor). implement-ticket.js invokes each only in its designated phase.",
   gaps:"No near-duplicate agents found — genuine differentiation confirmed. But only 1 of 16 (concern-investigator) declares scoped tools: frontmatter; the rest default to full, unrestricted tool access regardless of role.",
-  suggested:"Audit and add explicit tools: frontmatter per agent, matching observed usage in agent-monitoring/tools.jsonl, starting with implementer and parity-updater."},
+  suggested:"Audit and add explicit tools: frontmatter per agent, matching observed usage in agent-working/agent-monitoring/tools.jsonl, starting with implementer and parity-updater."},
 4:{name:"Task DAG and Parallel Execution", status:"warn", statusLabel:"Partial", maturity:2, relevance:"Medium", feasibility:"Moderate", benefit:"Low-to-medium latency reduction on implement-ticket.js only", priority:"—",
   evidence:"implement-ticket.js / implement-epic.js: 0 parallel() calls, 15 sequential agent() calls · vs. 6 simulation-analysis workflows using real parallel() fan-out (generate-simulation-setup.js:41, prepare-simulation-execution.js:17,76, etc.)",
   design:"The two primary engineering-lifecycle workflows are strictly linear chains even where phases are logically independent (Parity-update and Security-Review don't depend on each other). The simulation-analysis workflow family already does correct DAG fan-out where independence is real.",
@@ -461,7 +461,7 @@ const PATTERNS = {
   gaps:"Graph build was 28 commits stale at review time — graphify update . is manual-trigger. Query results for one topic returned 146 loosely-ranked nodes with no visible pruning before return.",
   suggested:"Hook graphify update . to the same post-commit trigger as the search index; consider light result-ranking on BFS output."},
 7:{name:"Agent Instructions as Repository Infrastructure", status:"good", statusLabel:"Implemented", maturity:4, relevance:"Critical", feasibility:"Moderate", benefit:"Prevents silent instruction/behavior divergence", priority:"MAINT",
-  evidence:"CLAUDE.md (project, ~700 lines) · ~/.claude/CLAUDE.md (user-global) · AGENTS.md — header states it is generated by tools/agent_orchestration_codex_adapter/generator.py from the validated agent-orchestration/ contract, 'do not hand-edit'",
+  evidence:"CLAUDE.md (project, ~700 lines) · ~/.claude/CLAUDE.md (user-global) · AGENTS.md — header states it is generated by tools/agent_orchestration_codex_adapter/generator.py from the validated agent-working/agent-orchestration/ contract, 'do not hand-edit'",
   design:"CLAUDE.md is the human-maintained source of truth; AGENTS.md is explicitly generated rather than hand-duplicated, directly addressing the review's own §10 concern about redundant per-tool instruction files.",
   gaps:"CLAUDE.md itself (~700 lines) is approaching the size where a hierarchical split would help. No automated drift check exists — a past drift (TCK-20260804-CREATE-TICKETS-SKILL-SYNC) was caught manually, not by tooling.",
   suggested:"A cheap CI check diffing SKILL.md phase references against the .js workflow they describe, catching the class of drift already found once by hand."},
@@ -489,7 +489,7 @@ const PATTERNS = {
   evidence:".claude/settings.json permissions.allow — broad wildcard shell allowlist (Bash(git *), Bash(rm *), Bash(docker *), Bash(curl *), Bash(pkill *), Bash(python3 *)) plus unrestricted Write/Edit · settings.local.json has ~70 accreted one-off entries",
   design:"Permission scoping happens at the session level for every tool call and every agent, not per-agent or per-task. Only concern-investigator declares a scoped tools: frontmatter; the other 15 default to full access.",
   gaps:"No deny-list exists at all. A purely investigative agent (investigator, doc-updater) inherits the same rm */docker */curl * allowance as implementer.",
-  suggested:"Mine agent-monitoring/tools.jsonl for each agent's real historical tool usage, then set tools: frontmatter to that set plus headroom — starting with doc-updater and investigator."},
+  suggested:"Mine agent-working/agent-monitoring/tools.jsonl for each agent's real historical tool usage, then set tools: frontmatter to that set plus headroom — starting with doc-updater and investigator."},
 13:{name:"Deterministic Guardrails and Hooks", status:"warn", statusLabel:"Partial", maturity:2, relevance:"Critical", feasibility:"Moderate", benefit:"Closes a real gap between documented and enforced policy", priority:"P0",
   evidence:".claude/settings.json hooks — 4 PreToolUse (monitoring write, graphify-nudge, search_docs-nudge, sidecar-presence check) + 4 PostToolUse (monitoring write, graphify auto-update, retro-nudge, epic-staleness check) · tools/validate_frontmatter.py, tag_registry.py hard-raise on violation",
   design:"Two enforcement tiers exist: real gates (monitoring writes, graphify refresh, registry validators that hard-raise) vs. advisory nudges (search-before-grep and sidecar-write rules, both implemented as additionalContext text injections, not blocking calls).",
@@ -499,7 +499,7 @@ const PATTERNS = {
   evidence:".github/workflows/test.yml — 12 CI jobs (unit×3, integration, api-tools, agent-orchestration, simulation-quality, arch-docs, frontend, perf-cert, migration-lanes, slow-regression, typecheck-informational) · docs/testing/regression_policy.md (explicit hard-gate vs. soft-monitor split)",
   design:"Layered verification past unit tests: compile→unit→integration→architecture-guard→performance-threshold→certification, with an evidence-based hard-block/alert-only distinction, not a vibes-based one. Numeric, gated performance thresholds.",
   gaps:"No behavioral/LLM-output evaluation layer — everything verifies the simulation engine's correctness, not the AI agent workflow's output quality. mypy runs continue-on-error only (informational, acknowledged gap).",
-  suggested:"Reuse the tickets/done/ corpus (1,300+ tickets) as a seed eval set: replay a sample's investigation/plan/implement phases and diff outcome quality against the original result, feeding the retro loop."},
+  suggested:"Reuse the agent-working/tickets/done/ corpus (1,300+ tickets) as a seed eval set: replay a sample's investigation/plan/implement phases and diff outcome quality against the original result, feeding the retro loop."},
 15:{name:"Independent Reviewer / Critic", status:"warn", statusLabel:"Partial", maturity:2, relevance:"High", feasibility:"Moderate", benefit:"Reduces correlated blind spots between generation and review", priority:"P1",
   evidence:".claude/agents/architecture-reviewer.md (pre + post-implement, backed by tools/gate_checks/architecture_reviewer_static.py) · security-reviewer.md (tag-triggered) · none of the 4 gatekeeper agents declare a model: frontmatter field",
   design:"Independence is achieved through separate context, prompt, and invocation, plus (for architecture-reviewer) a deterministic static script pre-flagging findings before the LLM judges them — a genuinely good self-honesty pattern that documents its own blind spots.",
@@ -511,27 +511,27 @@ const PATTERNS = {
   gaps:"Cheap, mechanical roles (done-checker's 13-condition checklist, ticket-scoper's tag lookups — both fire on every single run) use the same model tier as reasoning-heavy roles like planner.",
   suggested:"Pilot model: haiku on done-checker.md and ticket-scoper.md only; A/B the final_status distribution in runs.jsonl before/after."},
 17:{name:"Cost-Aware Orchestration", status:"warn", statusLabel:"Partial", maturity:2, relevance:"Medium", feasibility:"Difficult (real $) / Easy (coverage)", benefit:"Comparable cost visibility across all workflows, not just one", priority:"P1",
-  evidence:"agent-monitoring/{runs,tools}.jsonl + docs/agent-monitoring/schema.md's cost_proxy_score field — deterministic, tools.jsonl-derived, implement-ticket only · schema.md:79 explicitly states the harness never forwards input/output token counts to workflow scripts",
+  evidence:"agent-working/agent-monitoring/{runs,tools}.jsonl + docs/agent-monitoring/schema.md's cost_proxy_score field — deterministic, tools.jsonl-derived, implement-ticket only · schema.md:79 explicitly states the harness never forwards input/output token counts to workflow scripts",
   design:"A monotonic, unitless cost proxy computed from tool-call volume, tracked per-run, aggregated in weekly retros — an honestly-disclosed proxy, not real dollars, because of a genuine platform limitation.",
   gaps:"Only implement-ticket gets cost_proxy_score/tool_call_count — implement-epic and create-tickets get neither (both null per schema).",
   suggested:"Wire the existing cost_proxy_score computation into implement-epic.js and create-tickets.js's event-recording call sites."},
 18:{name:"Durable State and Checkpointing", status:"warn", statusLabel:"Partial", maturity:2, relevance:"High", feasibility:"Moderate", benefit:"Fewer manual re-diagnoses after a crashed run", priority:"P1",
-  evidence:"tickets/{inprogress,done}/, staging_artifacts/{id}/, stored_artifacts/ (1,214 entries) · 7 tickets live in tickets/inprogress/ at review time, confirming real (not aspirational) usage",
-  design:"A ticket's plan.md/investigation.md/test_plan.md in staging_artifacts/ IS the checkpoint — a fresh agent can resume from any phase by reading the ticket + its 3 artifacts, without reconstructing intent from chat history.",
+  evidence:"agent-working/tickets/{inprogress,done}/, agent-working/staging_artifacts/{id}/, agent-working/stored_artifacts/ (1,214 entries) · 7 tickets live in agent-working/tickets/inprogress/ at review time, confirming real (not aspirational) usage",
+  design:"A ticket's plan.md/investigation.md/test_plan.md in agent-working/staging_artifacts/ IS the checkpoint — a fresh agent can resume from any phase by reading the ticket + its 3 artifacts, without reconstructing intent from chat history.",
   gaps:"This is file-based checkpointing at ticket granularity, not workflow-engine checkpointing at phase granularity — a mid-Implement crash has no automatic 'resume from Stage 3'; a human/agent must manually re-diagnose from runs.jsonl's final_status.",
   suggested:"Have implement-ticket.js read the existing .claude/current_run sidecar's phase on start and skip already-completed phases when an IN_PROGRESS/CRASHED run_id is found."},
 19:{name:"Artifact-Oriented Architecture", status:"good", statusLabel:"Implemented", maturity:3, relevance:"Critical", feasibility:"—", benefit:"Maintain — a genuine strength", priority:"MAINT",
-  evidence:"stored_artifacts/ (1,214 files) · staging_artifacts/{id}/{plan,investigation,test_plan}.md · docs/parity_ledger/*.yaml (schema-validated) · docs/REGISTRY.yaml (auto-regenerated) · tickets/working_log.csv (append-only)",
+  evidence:"agent-working/stored_artifacts/ (1,214 files) · agent-working/staging_artifacts/{id}/{plan,investigation,test_plan}.md · docs/parity_ledger/*.yaml (schema-validated) · docs/REGISTRY.yaml (auto-regenerated) · agent-working/tickets/working_log.csv (append-only)",
   design:"Every workflow output — plans, investigations, review findings, monitoring events — is written to a versioned, git-tracked file with a defined lifecycle, not left inside chat/agent messages. Frontmatter makes artifacts machine-queryable.",
   gaps:"docs/REGISTRY.yaml regeneration is coupled to Finalize's self-check — if Finalize is skipped (hand-orchestration), the registry can silently drift. No archival policy for very old stored artifacts.",
-  suggested:"A light audit of whether stored_artifacts/ needs an archival tier for artifacts with no live doc references."},
+  suggested:"A light audit of whether agent-working/stored_artifacts/ needs an archival tier for artifacts with no live doc references."},
 20:{name:"Human-in-the-Loop Design", status:"good", statusLabel:"Implemented", maturity:3, relevance:"High", feasibility:"Moderate", benefit:"Removes reliance on an agent remembering the rule", priority:"P2",
   evidence:"CLAUDE.md 'Proactive Tool Use' table — auto-invoke (read-only: search_docs, graphify, gh pr checks polling) vs. explicit opt-in (Workflow multi-agent orchestration, git push/PR creation/merge) · NEEDS_HUMAN_INPUT and BLOCKED as first-class final_status values",
   design:"Risk-based placement — read/query and CI-triage are unattended; anything hard-to-reverse or visible to others requires a fresh human ask each time. PR merge is explicitly 'their call, not something to do automatically once CI is green.'",
   gaps:"The boundary is enforced by documented convention (agent self-discipline) for most of it — nothing stops a misbehaving agent from calling gh pr create directly, short of the permission-prompt UI.",
   suggested:"Encode the opt-in table into .claude/settings.json permission rules directly (deny-by-default for git push/gh pr create/Workflow) rather than relying purely on CLAUDE.md prose."},
 21:{name:"Observability for Agents", status:"good", statusLabel:"Implemented", maturity:3, relevance:"Critical", feasibility:"Easy (except cost gap)", benefit:"Already realized — the strongest pattern in this review", priority:"MAINT",
-  evidence:"agent-monitoring/{runs,events,tools}.jsonl — real sampled fields: run_id, workflow, tier, final_status, agent_count, duration_s, phase, agent, status, cost_proxy_score · docs/agent-monitoring/schema.md",
+  evidence:"agent-working/agent-monitoring/{runs,events,tools}.jsonl — real sampled fields: run_id, workflow, tier, final_status, agent_count, duration_s, phase, agent, status, cost_proxy_score · docs/agent-monitoring/schema.md",
   design:"Three-table schema records workflow-, phase/agent-, and tool-call-level granularity — matching the ideal Workflow→Stage→Agent→Tool-call trace. A derived SQLite index makes it queryable.",
   gaps:"No real token counts or dollar cost anywhere — explicitly documented as a platform limitation ('no workaround short of a platform change from Anthropic'), not a repo defect.",
   suggested:"No urgent change. If the platform ever exposes per-call token usage, wire it in alongside cost_proxy_score rather than replacing it."},
@@ -541,7 +541,7 @@ const PATTERNS = {
   gaps:"No classification distinguishing why an agent got something wrong at the reasoning level — dod_condition_failed collapses many distinct causes into one bucket.",
   suggested:"Mine events.jsonl's free-text summary field for the dod_condition_failed and NEEDS_CHANGES/BLOCKED buckets before adding new categories — matching the repo's own evidence-driven standard."},
 23:{name:"AI System Improvement Loop", status:"warn", statusLabel:"Partial", maturity:2, relevance:"High", feasibility:"Moderate", benefit:"Would let prompt/agent changes be evaluated with CI-grade rigor", priority:"P3",
-  evidence:".claude/skills/agent-monitoring-retro/SKILL.md · tools/agent-monitoring/generate_retro.py · agent-monitoring/retro/RETRO-<week>.md · retro_nudge_hook.py (auto-nudges after 5+ completed runs) · weight_sensitivity_check.py (before/after comparison for cost-proxy weight changes)",
+  evidence:".claude/skills/agent-monitoring-retro/SKILL.md · tools/agent-monitoring/generate_retro.py · agent-working/agent-monitoring/retro/RETRO-<week>.md · retro_nudge_hook.py (auto-nudges after 5+ completed runs) · weight_sensitivity_check.py (before/after comparison for cost-proxy weight changes)",
   design:"A real closed loop: traces → weekly retro → 'what failed / what was slow / what to change' notes → committed as institutional memory → cadence enforced by hook, not manual discipline.",
   gaps:"No end-to-end 'agent v12 vs v13' success-rate comparison for prompt/phase changes generally — retro notes aren't tracked through to 'was this actually shipped and did it help.' Partly blocked by the token-cost gap.",
   suggested:"Extend weight_sensitivity_check.py's before/after pattern to agent-prompt changes generally: require citing retro metrics before/after a set number of subsequent runs when an agent .md file changes."},
@@ -549,7 +549,7 @@ const PATTERNS = {
   evidence:"5 live worktrees under .claude/worktrees/, 201 branches, PR-numbered squash commits · CLAUDE.md 'Worktree &amp; Branch Isolation' + 'PR Lifecycle' sections · TCK-YYYYMMDD-SCOPE commit convention",
   design:"Every unit of work gets an isolated worktree+branch; PR creation, CI monitoring, and merge are explicit steps with a defined owner (agent creates/monitors, human merges).",
   gaps:"No enforcement that agents actually use worktree isolation — it's a documented convention, not a hook-checked one.",
-  suggested:"A commit-msg hook validating the TCK-YYYYMMDD-SCOPE: prefix against tickets/{inprogress,done}/."},
+  suggested:"A commit-msg hook validating the TCK-YYYYMMDD-SCOPE: prefix against agent-working/tickets/{inprogress,done}/."},
 25:{name:"Architecture Boundary Enforcement", status:"warn", statusLabel:"Partial", maturity:2, relevance:"Critical", feasibility:"Moderate", benefit:"Closes a real evasion gap in a rule marked hard in CLAUDE.md", priority:"P0",
   evidence:"tests/architecture/test_api_read_model_guard.py, test_phase_domain_permissions.py (AST-based) · test_phase18_import_boundaries.py, test_phase19_observability_boundaries.py (substring-grep only, per docs/plans/architecture_boundary_hardening_epic.md:135-136) · 13+2 grandfathered violations frozen, not fixed",
   design:"Two-tier enforcement — an LLM-driven architecture-reviewer gate plus static Python tests in CI, some AST-based, some regex-based.",
@@ -572,7 +572,7 @@ const PATTERNS = {
   suggested:"Re-run the equivalent of the orphaned-test-directory audit specifically for retrieval-quality and prompt-regression coverage, given the repo's demonstrated pattern of infra tests existing but not being wired into CI."},
 29:{name:"Provider / Model Portability", status:"warn", statusLabel:"Partial (deliberately paused)", maturity:2, relevance:"High", feasibility:"Moderate", benefit:"Resilience, cost arbitrage, eval diversity (feeds Pattern 15 too)", priority:"P1",
   evidence:"TCK-20260721-PROVIDER-AGNOSTIC-IMPLEMENTATION-EPIC (DONE) · TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC (BLOCKED, by design) · docs/architecture/agent_orchestration_contract.md's Provider-Adapter Boundary ADR · tools/retrieval_event_parity_check.py statically bans provider-specific field names in the shared schema",
-  design:"A single provider-neutral agent-orchestration/ contract is the semantic source of truth; both Claude and Codex adapters must translate into it without redefining it — an unusually rigorous investment for a repo with one live provider.",
+  design:"A single provider-neutral agent-working/agent-orchestration/ contract is the semantic source of truth; both Claude and Codex adapters must translate into it without redefining it — an unusually rigorous investment for a repo with one live provider.",
   gaps:"The ADR's own conformance test is marked 'proposed-pending-implementation-evidence' — divergence between adapters is structurally guarded at the field-name level but not yet test-verified.",
   suggested:"Implement the conformance test the ADR already specifies: diff .claude/agents/*.md phase definitions against .codex/config.toml's translated equivalents against the canonical contract."},
 30:{name:"Long-Running / Always-On Engineering Agents", status:"bad", statusLabel:"Not Implemented", maturity:0, relevance:"Low", feasibility:"Moderate (infra exists)", benefit:"Low given current repo shape", priority:"NREC",
@@ -673,7 +673,7 @@ const ROADMAP = [
     {name:"Automated freshness for both intelligence indexes", problem:"search index and code graph both rely on a manual make/graphify command.", change:"Add a post-commit or CI hook triggering both refreshes automatically.", affected:"tools/knowledge_search.py, graphify-out/", effort:"Low", impact:"Medium", risk:"Low"},
     {name:"Model-diverse adversarial review", problem:"architecture-reviewer and security-reviewer run on the same model family as the implementer.", change:"Add model: frontmatter routing them to a distinct model.", affected:".claude/agents/architecture-reviewer.md, security-reviewer.md", effort:"Low", impact:"Medium-High", risk:"Low (cost increase only)"},
     {name:"Phase-level workflow resume", problem:"A crash mid-phase requires manual re-diagnosis from runs.jsonl.", change:"Read the existing sidecar's phase on start; skip completed phases.", affected:".claude/workflows/implement-ticket.js", effort:"Medium", impact:"Medium", risk:"Medium (stale-state edge cases)"},
-    {name:"Provider-portability conformance test", problem:"The ADR's own conformance test is unwritten; divergence is guarded at the field-name level only.", change:"Diff .claude/ and .codex/ phase/status/gate definitions against the shared contract.", affected:"agent-orchestration/, .codex/", effort:"Medium", impact:"Medium", risk:"Low"},
+    {name:"Provider-portability conformance test", problem:"The ADR's own conformance test is unwritten; divergence is guarded at the field-name level only.", change:"Diff .claude/ and .codex/ phase/status/gate definitions against the shared contract.", affected:"agent-working/agent-orchestration/, .codex/", effort:"Medium", impact:"Medium", risk:"Low"},
     {name:"Extend cost-proxy coverage", problem:"Only implement-ticket emits cost_proxy_score; the other two workflows get null.", change:"Wire the existing computation into implement-epic.js and create-tickets.js.", affected:".claude/workflows/", effort:"Low", impact:"Medium", risk:"Low"},
   ]},
   {tier:"P2", title:"Optimization / scalability", items:[
@@ -682,7 +682,7 @@ const ROADMAP = [
     {name:"SKILL.md ↔ workflow.js consistency test", problem:"The two most complex skills' docs already drifted from their .js implementation once.", change:"Assert SKILL.md's phase list is a subset of the .js file's phase names.", affected:"tests/tools/", effort:"Low", impact:"Medium", risk:"Low"},
   ]},
   {tier:"P3", title:"Experimental / future", items:[
-    {name:"Agent-behavior eval harness", problem:"No eval layer exists for agent output quality, only for engine correctness.", change:"Seed from tickets/done/ (1,300+) — replay and diff historical phases.", affected:"New tooling under tools/", effort:"High", impact:"High (long-term)", risk:"Medium (dataset curation cost)"},
+    {name:"Agent-behavior eval harness", problem:"No eval layer exists for agent output quality, only for engine correctness.", change:"Seed from agent-working/tickets/done/ (1,300+) — replay and diff historical phases.", affected:"New tooling under tools/", effort:"High", impact:"High (long-term)", risk:"Medium (dataset curation cost)"},
     {name:"Task-success-rate metric into the retro loop", problem:"Retro produces qualitative notes only, no closed-loop 'did this change help.'", change:"Define an objective success signal and track it before/after agent-prompt changes.", affected:"tools/agent-monitoring/", effort:"High", impact:"High", risk:"Medium (partly blocked on token-cost data)"},
   ]},
 ];

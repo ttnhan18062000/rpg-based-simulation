@@ -6,7 +6,7 @@ Path.read_text()-only technique tests/tools/test_current_run_sidecar_orchestrato
 uses (the workflow file is never executed — no JS test runner exists in this repo for
 .claude/workflows/*.js). One behavioral sub-test (seq non-collision, fail-open) exercises the
 same Python logic the inline python3 -c script runs, directly in-process against a tmp_path
-events_file — never the real agent-monitoring/events.jsonl.
+events_file — never the real agent-working/agent-monitoring/events.jsonl.
 """
 from __future__ import annotations
 

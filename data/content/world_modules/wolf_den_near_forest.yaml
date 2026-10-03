@@ -15,7 +15,7 @@ regions:
   # wolf_den has the higher hazard_level (2.0 vs 1.0) and is the module's namesake
   # region, so the overlap zone should read as "den territory," not merely "near the
   # forest." Do not reorder these two entries without re-reading Decision 3 in
-  # staging_artifacts/TCK-20260821-WOLF-DEN-NOISE-MIGRATION/investigation.md (or its
+  # agent-working/staging_artifacts/TCK-20260821-WOLF-DEN-NOISE-MIGRATION/investigation.md (or its
   # stored_artifacts copy after this ticket closes) — reordering flips which region's
   # terrain wins the overlap and contradicts this rationale.
   #

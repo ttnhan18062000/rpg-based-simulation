@@ -17,7 +17,7 @@ only.
 
 This does **not** supersede any prior `ticket_plan_structure_phaseN.md` file — Open Decisions
 1-6 and Phases 0-5 remain resolved/shipped as recorded in
-`tickets/done/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md`. Decisions 7-9 are a new,
+`agent-working/tickets/done/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md`. Decisions 7-9 are a new,
 independent strand raised 2026-08-02 by `TCK-20260731-PARITY-INDEX-EPIC`'s work landing a real
 `parity_ledger_entry` read path (`tools/parity_index.py`) alongside the already-defined but
 still-abstract `kind` vocabulary in `docs/engine/contracts/context_packet_contract.md`. They
@@ -50,9 +50,9 @@ explicit, cited answer," never "implements X" or "wires X into the workflow."
    in real, already-decided precedent where one exists (e.g. `_resolve_subject_conflicts()`'s
    same-`subject_key` authority-then-recency tie-break is a *same-kind* precedent worth citing,
    not copying uncritically to the cross-kind case).
-2. **Open Decision 8 — `stored_artifacts/` as a retrieval kind, and confirming
-   `staging_artifacts/`'s exclusion is intentional.** Investigate whether
-   `stored_artifacts/{ticket_id}/*.md`'s real frontmatter (`artifact_type`, `status`,
+2. **Open Decision 8 — `agent-working/stored_artifacts/` as a retrieval kind, and confirming
+   `agent-working/staging_artifacts/`'s exclusion is intentional.** Investigate whether
+   `agent-working/stored_artifacts/{ticket_id}/*.md`'s real frontmatter (`artifact_type`, `status`,
    `authority` — see `tools/validate_frontmatter.py`'s enums) is sufficient to support a new
    registry-indexed `kind` (e.g. `stored_artifact`), distinct from how
    `tools/generate_registry.py::join_artifact_files()` currently only attaches a flat path list
@@ -60,7 +60,7 @@ explicit, cited answer," never "implements X" or "wires X into the workflow."
    documents the `authority`/`freshness` population rule for it (following Decision 3's
    pattern exactly — do not invent a third vocabulary if the doc's own frontmatter fields
    already map cleanly). Also explicitly confirm — with a one-paragraph rationale, not just an
-   observation — that `staging_artifacts/`'s current total exclusion from
+   observation — that `agent-working/staging_artifacts/`'s current total exclusion from
    `generate_registry.py`'s scan is the correct permanent design (WIP/scratch content for an
    open ticket, not yet reviewable) rather than an accidental gap Decision 8 should also close.
 3. **Open Decision 9 — generalizing the exact-lookup pattern.** `tools/parity_index.py`'s

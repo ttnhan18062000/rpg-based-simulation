@@ -21,7 +21,7 @@ ticket rather than to itself. This document is Phase 0's identity-freeze half:
 The only real, already-existing code this document references is
 `tools/retrieval_cache.py` — cited by name and line for its existing normalization primitives and
 its `check_*_cache()`/`write_*_cache()` function shapes. Nothing in this document is implemented
-by, imported into, or executed against that module or the real `knowledge-index/retrieval_cache.db`
+by, imported into, or executed against that module or the real `agent-working/.index/knowledge-index/retrieval_cache.db`
 by this ticket.
 
 ---
@@ -128,7 +128,7 @@ Concretely:
 kind-specific fingerprint is unavailable, or already known-stale by a finer signal. It is the
 coarsest, corpus-wide generation signal available (analogous in spirit to
 `tools/retrieval_cache.py`'s existing `_corpus_generation()`, `tools/retrieval_cache.py:183-191`,
-which proxies `knowledge-index/manifest.json`'s `built_at` field) — but it must never be treated as
+which proxies `agent-working/.index/knowledge-index/manifest.json`'s `built_at` field) — but it must never be treated as
 a default dependency for kinds that have a finer fingerprint.
 
 **Hard rule:** a `SYMBOL`- or `FILE`-backed evidence record — both of which have a finer,
@@ -177,7 +177,7 @@ Per §12.3, cache-scope compatibility follows these rules:
   evidence identity kinds, each with its stable-identity form, preferred fingerprint, and
   normalization rules (§12.1).
 - `docs/engine/contracts/knowledge_gateway_mcp/cache_migration_plan.md` — the migration design
-  document for adding new tables to `knowledge-index/retrieval_cache.db` in place (§10.1/§19).
+  document for adding new tables to `agent-working/.index/knowledge-index/retrieval_cache.db` in place (§10.1/§19).
 - `docs/engine/contracts/knowledge_gateway_mcp/shared_enums.schema.json` — `freshness`/`verification`
   enum definitions, referenced by §2, not redefined here.
 - `docs/engine/contracts/knowledge_gateway_mcp/knowledge_context_request.schema.json` — the
@@ -186,6 +186,6 @@ Per §12.3, cache-scope compatibility follows these rules:
   its `:17-19` assigns this document's content area to this ticket.
 
 No `docs/parity_ledger/` entry accompanies this document — this subsystem is
-agent-orchestration/retrieval tooling, the same category `context_packet_contract.md` §4 and the
+agent-working/agent-orchestration/retrieval tooling, the same category `context_packet_contract.md` §4 and the
 sibling `knowledge_gateway_mcp_contract.md` §5 already classify as not requiring a parity ledger
 entry.

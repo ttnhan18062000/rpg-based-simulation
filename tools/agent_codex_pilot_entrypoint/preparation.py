@@ -8,11 +8,12 @@ from pathlib import Path
 
 from tools.agent_codex_realrepo_pilot_harness.proofs import capture_policy_baseline, tree_digest
 from tools.agent_codex_realrepo_pilot_harness.preflight import PilotHarnessContext
+from tools.agent_working_paths import PILOT_REQUESTS, TICKETS, posix  # noqa: E402
 
 
 _CANDIDATE = "TCK-20260801-MONITORING-WRITER-STATUS-STALE"
-_REQUEST = f"pilot_requests/{_CANDIDATE}.yaml"
-_TARGET = "tickets/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md"
+_REQUEST = f"{posix(PILOT_REQUESTS)}/{_CANDIDATE}.yaml"
+_TARGET = f"{posix(TICKETS)}/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md"
 _DEFAULT_MAX_TOOL_CALLS = 200
 
 
@@ -28,7 +29,7 @@ def prepare_policy(repo_root: Path | str, execution_id: str) -> PreparedPolicy:
     request = root / _REQUEST
     if not request.is_file():
         raise ValueError("fixed pilot request is missing")
-    candidate = root / "tickets" / "inprogress" / f"{_CANDIDATE}.md"
+    candidate = root / TICKETS / "inprogress" / f"{_CANDIDATE}.md"
     if not candidate.is_file():
         raise ValueError("fixed candidate is missing")
     evidence = root / "pilot_evidence" / _CANDIDATE
@@ -41,9 +42,9 @@ def prepare_policy(repo_root: Path | str, execution_id: str) -> PreparedPolicy:
         "target_transitions": {"status": ["active", "historical"], "phase": ["open", "done"], "body_status": ["OPEN", "DONE"]},
         "allowed_paths": [
             _TARGET,
-            f"tickets/inprogress/{_CANDIDATE}.md",
-            f"tickets/done/{_CANDIDATE}.md",
-            "tickets/working_log.csv",
+            f"{posix(TICKETS)}/inprogress/{_CANDIDATE}.md",
+            f"{posix(TICKETS)}/done/{_CANDIDATE}.md",
+            f"{posix(TICKETS)}/working_log.csv",
             "docs/REGISTRY.yaml",
             ".codex/config.toml",
         ],
@@ -70,7 +71,7 @@ def prepare_context(repo_root: Path | str, execution_id: str) -> PilotHarnessCon
         repo_root=root,
         ticket_id=_CANDIDATE,
         execution_id=execution_id,
-        candidate_path=f"tickets/inprogress/{_CANDIDATE}.md",
+        candidate_path=f"{posix(TICKETS)}/inprogress/{_CANDIDATE}.md",
         request_path=_REQUEST,
         policy_path=policy.policy_path.relative_to(root).as_posix(),
         enabled_hook_events=frozenset({"PostToolUse"}),

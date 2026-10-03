@@ -3,7 +3,7 @@
 Tests the apply-layer (push-based) EconomyShaper and FactionShaper: derive events from
 prior_state + update alone, no current_state diffing. See
 src/observability/event_shapers.py's module docstring and
-stored_artifacts/TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC/investigation.md's "Full
+agent-working/stored_artifacts/TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC/investigation.md's "Full
 event-coverage audit" section for the exact migrate/defer scope this exercises.
 """
 from __future__ import annotations

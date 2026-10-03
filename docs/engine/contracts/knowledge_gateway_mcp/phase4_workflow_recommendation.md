@@ -66,7 +66,7 @@ measured corpus entry in Phases 0–3 tests this call pattern at all — all 7 e
 natural-language investigation-style queries.
 
 **Insufficient evidence to recommend for.** The gateway's actual capability does not map to the
-retro's diagnosed problem (`agent-monitoring/retro/RETRO-2026-W33.md`'s Notes section names
+retro's diagnosed problem (`agent-working/agent-monitoring/retro/RETRO-2026-W33.md`'s Notes section names
 doc-staleness handling as this period's one recurring gap). That retro's own suggested fix — a
 prompt-content change to `doc-updater.md`'s base instructions — is not a knowledge-tool call and
 does not compete with or require this recommendation either way.
@@ -77,7 +77,7 @@ does not compete with or require this recommendation either way.
 filter on `type: doc`, `status: active|authoritative`, `layer: <plan_layer>`, no LLM/MCP round
 trip.
 
-**Evidence:** `agent-monitoring/retro/RETRO-2026-W33.md` shows Architecture-Verify has the
+**Evidence:** `agent-working/agent-monitoring/retro/RETRO-2026-W33.md` shows Architecture-Verify has the
 highest phase-average cost-proxy-score (85.5) and most raw failures (35/127), but its own Notes
 section (based on direct inspection) states these rejections are "almost all substantive
 catches... not noise" — the cost driver is review depth, not a slow context-discovery step. No
@@ -90,7 +90,7 @@ gateway call to solve.
 ## Candidate 4 — Dormant shadow-packet hook (`SHADOW_CONTEXT_PACKET_ENABLED`)
 
 **Call site:** `.claude/workflows/implement-ticket.js:528-588` — off by default, fail-open,
-`timeout 10s`, writes to `agent-monitoring/events.jsonl` on a disjoint negative `seq` range,
+`timeout 10s`, writes to `agent-working/agent-monitoring/events.jsonl` on a disjoint negative `seq` range,
 currently passes an empty candidate set (no real retrieval pipeline wired in;
 `tools/hybrid_retrieval.py` wiring explicitly deferred).
 

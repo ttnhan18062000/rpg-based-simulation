@@ -1,20 +1,21 @@
 """TCK-20260930-IMPLEMENT-TICKET-GATE-VS-BOOKKEEPING-CLASSIFICATION: the stored classification of
 implement-ticket.js's `bash(` call sites stays in step with the file.
 
-The classification itself is a decision record (stored_artifacts/<ticket>/classification.jsonl); this
+The classification itself is a decision record (agent-working/stored_artifacts/<ticket>/classification.jsonl); this
 test only guards that it covers every real call site and that every row is complete, so a new
 `bash(` added to the script without a classification fails here.
 """
 import json
 import sys
 from pathlib import Path
+from tools.agent_working_paths import STORED_ARTIFACTS
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "tools"))
 
 from workflow_bash_sites import find_bash_call_sites  # noqa: E402
 
-TABLE = REPO / "stored_artifacts" / "TCK-20260930-IMPLEMENT-TICKET-GATE-VS-BOOKKEEPING-CLASSIFICATION" / "classification.jsonl"
+TABLE = REPO / STORED_ARTIFACTS / "TCK-20260930-IMPLEMENT-TICKET-GATE-VS-BOOKKEEPING-CLASSIFICATION" / "classification.jsonl"
 SCRIPT = REPO / ".claude" / "workflows" / "implement-ticket.js"
 CLASSES = {"gate", "advisory", "bookkeeping", "input", "control"}
 ROUTES = {"args", "runcommand", "runcommand-attested", "defer"}

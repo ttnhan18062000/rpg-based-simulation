@@ -20,9 +20,9 @@ A fixture file is a single YAML document with this top-level shape:
 version: 1                       # int, currently always 1
 source:
   ticket_id: TCK-...              # the real ticket this fixture was derived from
-  ticket_path: tickets/done/TCK-....md
-  stored_artifacts_dir: stored_artifacts/TCK-.../
-  events_run_id: TCK-...          # run_id key in agent-monitoring/data/YYYY-Www/events.jsonl
+  ticket_path: agent-working/tickets/done/TCK-....md
+  stored_artifacts_dir: agent-working/stored_artifacts/TCK-.../
+  events_run_id: TCK-...          # run_id key in agent-working/agent-monitoring/data/YYYY-Www/events.jsonl
   events_seq_range: [1, 4]        # inclusive seq range covered by this fixture
 phases:
   - phase: Scope                  # one of: Scope, Investigate, Plan, Review
@@ -61,8 +61,8 @@ This fixture format, and the runner that consumes it, cover only the **Scope →
 Review** slice — the four `implement-ticket` phases before Implement. Implement,
 Architecture-Verify, Test, Parity, Security-Review, Verify, and Finalize are out of scope: those
 phases require a `files_changed`/diff payload this fixture format does not define, and replaying them
-is a materially larger and different proof. See `staging_artifacts/TCK-20260721-CODEX-REPLAY-PROOF/plan.md`
-(now `stored_artifacts/`) for the full reasoning.
+is a materially larger and different proof. See `agent-working/staging_artifacts/TCK-20260721-CODEX-REPLAY-PROOF/plan.md`
+(now `agent-working/stored_artifacts/`) for the full reasoning.
 
 ## Contract-representation evaluation (AC #5)
 
@@ -79,8 +79,8 @@ ADR's decision is not yet buildable. `load_fixture` is the practical analogue of
 "generated Python validation models" aspires to, adapted to what is actually implementable today.
 
 This fixture envelope is explicitly **not** the same artifact as the ADR's own future
-`agent-orchestration/contract.yaml`. The ADR's Source Ownership decision places that file under a new
-`agent-orchestration/` directory this ticket does not create — that directory is Out of Scope per the
+`agent-working/agent-orchestration/contract.yaml`. The ADR's Source Ownership decision places that file under a new
+`agent-working/agent-orchestration/` directory this ticket does not create — that directory is Out of Scope per the
 ADR's own ticket. The fixture envelope defined here is a separate, replay-specific data shape (test
 fixture data for one workflow's Scope→Review slice) that merely follows the same YAML-for-data format
 preference; it is not a draft, partial, or alternate implementation of the shared orchestration

@@ -25,6 +25,7 @@ from .containment import (
 )
 from .entry_criterion import assert_monitoring_writer_landed
 from .errors import CodexInvocationError
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 
 @dataclass(frozen=True)
@@ -48,7 +49,7 @@ def run_codex_replay(
     out_path = scratch_dir / "codex_result.json"
 
     pre_tickets = capture_snapshot(repo_root)
-    pre_monitoring = snapshot_monitoring_lines(repo_root / "agent-monitoring")
+    pre_monitoring = snapshot_monitoring_lines(repo_root / AGENT_MONITORING)
     pre_config = snapshot_config_bytes(repo_root)
 
     wrapper_path = Path(__file__).resolve().parent / "wrapper_script.py"
@@ -64,7 +65,7 @@ def run_codex_replay(
     )
 
     post_tickets = capture_snapshot(repo_root)
-    post_monitoring = snapshot_monitoring_lines(repo_root / "agent-monitoring")
+    post_monitoring = snapshot_monitoring_lines(repo_root / AGENT_MONITORING)
     post_config = snapshot_config_bytes(repo_root)
 
     assert_no_diff(pre_tickets, post_tickets)  # raises ContainmentViolationError, never swallowed

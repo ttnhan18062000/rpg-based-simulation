@@ -5,8 +5,8 @@ description: 'Generates the agent monitoring retro report from accumulated runs.
 
 # Agent Monitoring Retro
 
-Runs `make agent-monitoring-retro` to turn raw `agent-monitoring/runs.jsonl` and
-`agent-monitoring/events.jsonl` records into a structured retro report, then
+Runs `make agent-monitoring-retro` to turn raw `agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl` and
+`agent-working/agent-monitoring/data/YYYY-Www/events.jsonl` records into a structured retro report, then
 walks through the retrospective process so the findings actually get acted on.
 
 ## When to Use This Skill
@@ -20,8 +20,10 @@ walks through the retrospective process so the findings actually get acted on.
 
 1. Runs `make agent-monitoring-retro`, which invokes
    `python3 tools/agent-monitoring/generate_retro.py` for the current ISO week.
-   The report is written to `agent-monitoring/retro/RETRO-<week>.md` and
-   `agent-monitoring/retro/index.md` is updated automatically.
+   The report is written to `agent-working/agent-monitoring/retro/RETRO-<week>.md` and
+   `agent-working/agent-monitoring/retro/index.md` is updated automatically. The run is read-only for monitoring
+   data: it does not fold or delete per-batch shards. Closing a finished week is a separate,
+   explicit step (`make agent-monitoring-close-week WEEK=<YYYY-Www>`), nudged but never automatic.
 2. Reads the generated report and summarizes the sections that need attention:
    - **Run Summary** — DONE rate below 80%? Average duration above 20 min?
    - **Gate Failure Breakdown** — which gates block most runs?
@@ -31,6 +33,14 @@ walks through the retrospective process so the findings actually get acted on.
    - **Slow Runs** — runs over 30 minutes, and which phase caused it.
 3. Fills in the `## Notes` section of the report with concrete findings and one
    proposed action per issue found, then leaves the report ready to commit.
+4. Reads `docs/agent-monitoring/README.md`'s `## Measurement Watchlist` table. For any row whose
+   "Check when" condition is now met, records a verdict in that row (or notes it is still not yet
+   checkable) — then, once a verdict is recorded, deletes the row per the table's own preamble.
+
+**Regenerating an existing report preserves its `## Notes` content by default** (TCK-20260915-RETRO-CLI-OVERWRITES-HAND-AUTHORED-NOTES): re-running the generator against a report that
+already has hand-authored notes splices that exact `## Notes` section back onto the freshly
+regenerated data above it, rather than discarding it. Pass `--force` only when a deliberate full
+rewrite — including discarding existing notes — is actually intended.
 
 ## Quick Start
 
@@ -77,3 +87,4 @@ institutional memory of agent behavior over time.
   (`.claude/settings.json` `PostToolUse`) — nudges via `additionalContext` once
   5+ `implement-ticket` runs have completed DONE since the last dated
   `RETRO-<week>.md` report.
+- After committing the report: evaluate reset boundary per `docs/guides/agent_session_reset_boundaries.md`

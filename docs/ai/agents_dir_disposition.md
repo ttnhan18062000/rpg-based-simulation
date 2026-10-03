@@ -17,7 +17,7 @@ This is a decision record, not a migration. No file under `.agents/` is deleted,
 | Path | Classification | Rationale |
 |---|---|---|
 | `.agents/task.md` | **archive-retire** | 0 bytes. No content to lose. |
-| `.agents/rules/AGENTS.md` | **archive-retire** | Near-verbatim earlier draft of what is now `CLAUDE.md`'s top-level rule set. `CLAUDE.md` materially extends it (tag/layer registries, `docs/REGISTRY.yaml`, `agent-monitoring/`, tier routing — none present here). |
+| `.agents/rules/AGENTS.md` | **archive-retire** | Near-verbatim earlier draft of what is now `CLAUDE.md`'s top-level rule set. `CLAUDE.md` materially extends it (tag/layer registries, `docs/REGISTRY.yaml`, `agent-working/agent-monitoring/`, tier routing — none present here). |
 | `.agents/rules/workflow.md` | **archive-retire** | Earlier draft of `CLAUDE.md`'s "Workflow Rule" section; same Before/During/After skeleton, missing everything `CLAUDE.md` added since. |
 | `.agents/rules/ticket.md` | **archive-retire** | Earlier draft of `CLAUDE.md`'s "Ticket Format" section. Its required-section list omits `## Tier` and `## Priority` entirely, and it has no frontmatter block at all — a confirmed older ticket shape. |
 | `.agents/rules/testing.md` | **archive-retire** | Earlier draft of `CLAUDE.md`'s "Testing Rule" section, fully superseded. |
@@ -42,7 +42,7 @@ This is a decision record, not a migration. No file under `.agents/` is deleted,
 
 The `.agents/skills/` entries classified `archive-retire` above remain superseded specifically as **Claude** skill sources (by their `.claude/skills/` equivalents); that comparison was never about Codex. `.agents/rules/engine_contracts.md`'s unique operational content and the 6 unreviewed `.agents/skills/` `retain-and-migrate` dirs are still future-ticket work for the **Claude** surface (`CLAUDE.md` / `.claude/skills/`), not executed as part of landing this doc.
 
-The eventual single semantic authority for both provider surfaces is the shared `agent-orchestration/` contract (repo-root, proposed but not yet built) — see `docs/architecture/agent_orchestration_contract.md`'s "Source Ownership" decision (Status: Decided). This section describes today's delivery surfaces only; it is not a claim that the shared contract already exists. A future, real Codex delivery subtree (root `AGENTS.md` + reviewed `.agents/skills/`) must eventually be generated/reviewed from that shared contract — not produced by simply reclassifying or re-enabling today's stale `.agents/skills/` copies. That generation work is separate, later implementation-epic scope, not part of this fix.
+The eventual single semantic authority for both provider surfaces is the shared `agent-working/agent-orchestration/` contract (repo-root, proposed but not yet built) — see `docs/architecture/agent_orchestration_contract.md`'s "Source Ownership" decision (Status: Decided). This section describes today's delivery surfaces only; it is not a claim that the shared contract already exists. A future, real Codex delivery subtree (root `AGENTS.md` + reviewed `.agents/skills/`) must eventually be generated/reviewed from that shared contract — not produced by simply reclassifying or re-enabling today's stale `.agents/skills/` copies. That generation work is separate, later implementation-epic scope, not part of this fix.
 
 ## WorkflowRegistry determination
 
@@ -50,7 +50,7 @@ The eventual single semantic authority for both provider surfaces is the shared 
 
 1. **Zero production call sites.** `grep -rn "WorkflowRegistry" src/` returns only the class definition and its two `src/lab/__init__.py` export lines. A graphify BFS from `WorkflowRegistry` shows every `imports`/`calls` edge terminating at `tests/unit/lab_agent/test_workflow_registry.py` — none terminate in any other `src/` module.
 2. **Neither real consumer references it.** `src/lab/cli.py` (the `rpg-lab` console-script entry point) never references `registry` or `WorkflowRegistry`. `src/lab/workflows/` (the 8 real workflow classes, one per file since `TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT` — `GenerateSimulationSetupWorkflow`, `PrepareSimulationExecutionWorkflow`, `RegisterSimulationResultWorkflow`, `CompactSimulationDataWorkflow`, `InvestigateSimulationResultWorkflow`, `ProposeSimulationEnhancementsWorkflow`, `UpdateSimulationKnowledgeWorkflow`, `RevertSimulationKnowledgeWorkflow`) never references `allowed_actions`, `forbidden_actions`, or `WorkflowRegistry`.
-3. **Planned wiring was scoped, then abandoned — not merely never attempted.** `stored_artifacts/TCK-20260524-LAB-GUARDRAILS/plan.md:30` explicitly proposed integrating `WorkflowRegistry`'s dynamic frontmatter loading into the workflow classes. That ticket's delivered `Files Changed` (`src/lab/context.py`, `src/lab/workflows.py`, two new test files) never touches `registry.py`; its guardrail limits are sourced from a plain `limits: dict` parameter instead. This is direct evidence the intended call site was scoped and then dropped in favor of a simpler mechanism.
+3. **Planned wiring was scoped, then abandoned — not merely never attempted.** `agent-working/stored_artifacts/TCK-20260524-LAB-GUARDRAILS/plan.md:30` explicitly proposed integrating `WorkflowRegistry`'s dynamic frontmatter loading into the workflow classes. That ticket's delivered `Files Changed` (`src/lab/context.py`, `src/lab/workflows.py`, two new test files) never touches `registry.py`; its guardrail limits are sourced from a plain `limits: dict` parameter instead. This is direct evidence the intended call site was scoped and then dropped in favor of a simpler mechanism.
 
 **This determination is explicitly separated from a second, different question this doc does not decide:** whether `WorkflowRegistry`'s YAML-frontmatter-to-Pydantic parsing pattern is structurally reusable for the parent epic's still-open contract-format decision (`docs/plans/archive/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md:429-431`, archived — shipped — "reviewable YAML, validated Python models, or both"). `WorkflowRegistry`'s parsing pattern is structurally close to that undecided target shape, but reuse is a call for the parent epic's own future scope, not this one.
 
@@ -65,7 +65,7 @@ The eventual single semantic authority for both provider surfaces is the shared 
 - It does not delete, move, or archive any `.agents/` file. Execution of the `archive-retire` and `retain-and-migrate` classifications above is future-ticket work.
 - It does not migrate `.agents/rules/engine_contracts.md`'s unique content into `docs/engine/` or `CLAUDE.md`.
 - It does not perform a promotion review of the 6 `retain-and-migrate` `.agents/skills/` dirs.
-- It does not implement the Codex adapter, the shared `agent-orchestration/` contract format, or any provider-runtime code — blocked by the parent epic's exit gate (`TCK-20260721-PROVIDER-AGNOSTIC-EPIC`).
+- It does not implement the Codex adapter, the shared `agent-working/agent-orchestration/` contract format, or any provider-runtime code — blocked by the parent epic's exit gate (`TCK-20260721-PROVIDER-AGNOSTIC-EPIC`).
 - It does not delete or modify `src/lab/registry.py` or `src/lab/__init__.py`.
 
 ## Related
@@ -73,6 +73,6 @@ The eventual single semantic authority for both provider surfaces is the shared 
 - `docs/ai/agent_infrastructure_audit.md` — broader July audit of the `.claude/` orchestration layer, one of the two provider-native delivery surfaces this doc names (see "Approved active location").
 - `docs/plans/archive/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md` (archived — shipped) — source proposal that pre-labels `.agents/` as stale and defines the retain-and-migrate/replace/archive-retire classification scheme used above.
 - `docs/plans/agent_infrastructure/idea_provider_agnostic_agent_orchestration_finding_01_claude.md` — predecessor finding that first discovered `WorkflowRegistry`'s live dependency on `.agents/` and warned against archiving without updating `test_real_registry_contracts` in the same change.
-- `tickets/done/TCK-20260524-WORKFLOW-REGISTRY.md` — built `WorkflowRegistry`/`WorkflowSkill` and populated `.agents/workflows/*.md`.
-- `tickets/done/TCK-20260524-LAB-GUARDRAILS.md` — the ticket whose delivered scope is the strongest evidence `WorkflowRegistry`'s intended wiring was dropped.
-- `tickets/done/TCK-20260705-SIX-SKILLS-INVESTIGATION.md` — methodological precedent: classification-only investigation, verdict per item, no execution.
+- `agent-working/tickets/done/TCK-20260524-WORKFLOW-REGISTRY.md` — built `WorkflowRegistry`/`WorkflowSkill` and populated `.agents/workflows/*.md`.
+- `agent-working/tickets/done/TCK-20260524-LAB-GUARDRAILS.md` — the ticket whose delivered scope is the strongest evidence `WorkflowRegistry`'s intended wiring was dropped.
+- `agent-working/tickets/done/TCK-20260705-SIX-SKILLS-INVESTIGATION.md` — methodological precedent: classification-only investigation, verdict per item, no execution.

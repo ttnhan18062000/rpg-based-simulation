@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from tools.agent_working_paths import KNOWLEDGE_INDEX
 
 # ── Load search_server module via same importlib pattern as the server itself ──
 _REPO_ROOT = Path(__file__).parent.parent.parent
@@ -15,7 +16,7 @@ _SERVER_PATH = _REPO_ROOT / "tools" / "search_server.py"
 
 # Stub out knowledge_search before loading search_server
 _KS_STUB = MagicMock()
-_KS_STUB._DEFAULT_DB = _REPO_ROOT / "knowledge-index" / "knowledge.db"
+_KS_STUB._DEFAULT_DB = _REPO_ROOT / KNOWLEDGE_INDEX / "knowledge.db"
 _KS_STUB._MODEL_NAME = "all-MiniLM-L6-v2"
 _KS_STUB._tokenize = lambda text: text.lower().split()
 _KS_STUB._serialize_f32 = lambda vec: b"\x00" * (len(vec) * 4)

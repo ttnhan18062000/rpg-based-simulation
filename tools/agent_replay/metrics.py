@@ -77,7 +77,7 @@ def compute_metrics(
         else (
             f"pre-porcelain={isolation_evidence.pre_porcelain!r}, "
             f"post-porcelain={isolation_evidence.post_porcelain!r} — no pilot-attributed write "
-            "detected under agent-monitoring/*.jsonl, unscoped sidecar unchanged"
+            "detected under agent-working/agent-monitoring/*.jsonl, unscoped sidecar unchanged"
         )
     )
 

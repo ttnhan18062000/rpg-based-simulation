@@ -11,7 +11,7 @@ Two independent concerns are covered:
    literal string (through a module-level constant, and a single hop of function-local
    parameter-default-to-module-constant resolution -- exactly the shape
    `tools/working_log_writer.py`'s own `_WORKING_LOG_PATH` / `path` parameter default uses) and
-   asserts exactly one write-mode call resolves to "tickets/working_log.csv", and it lives in
+   asserts exactly one write-mode call resolves to "agent-working/tickets/working_log.csv", and it lives in
    working_log_writer.py. A grep-based version of this guard was rejected during planning: the
    literal path string never appears on the same line as the `open(` call it protects (it lives
    only in `_WORKING_LOG_PATH`'s own assignment), so a literal-text grep would find zero matches
@@ -26,7 +26,10 @@ import ast
 import json
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+
+import tools.agent_working_paths as _awp
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _TOOLS_DIR = str(_REPO_ROOT / "tools")
@@ -40,7 +43,7 @@ from working_log_parser import (  # noqa: E402
     parse_pending_working_log_shards,
 )
 
-_TARGET = "tickets/working_log.csv"
+_TARGET = f"{posix(TICKETS)}/working_log.csv"
 _WRITE_MODES = {"a", "w", "a+", "w+", "x"}
 
 
@@ -48,11 +51,20 @@ _WRITE_MODES = {"a", "w", "a+", "w+", "x"}
 
 
 def _literal_value(node):
-    """Return the literal string a node denotes: a plain string constant, or a `Path("literal")`
+    """Return the literal string a node denotes: a plain string constant, a root constant from
+    `tools.agent_working_paths`, a `/` join of two such operands, or a `Path("literal")`
     call (`Path` bound either as a bare name or via attribute access, e.g. `pathlib.Path`).
     Returns None for anything else -- callers must not guess."""
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
+    if isinstance(node, ast.Name) and isinstance(getattr(_awp, node.id, None), Path):
+        # A root constant imported from tools.agent_working_paths (e.g. TICKETS).
+        return posix(getattr(_awp, node.id))
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        left, right = _literal_value(node.left), _literal_value(node.right)
+        if left is not None and right is not None:
+            return (PurePosixPath(left) / right).as_posix()
+        return None
     if isinstance(node, ast.Call):
         func = node.func
         is_path_call = (isinstance(func, ast.Name) and func.id == "Path") or (
@@ -219,7 +231,7 @@ def test_resolver_positive_single_hop_parameter_default_to_module_constant():
     source = '''
 from pathlib import Path
 
-_WORKING_LOG_PATH = Path("tickets/working_log.csv")
+_WORKING_LOG_PATH = Path("agent-working/tickets/working_log.csv")
 
 
 def append_working_log_row(row, path=_WORKING_LOG_PATH):
@@ -236,7 +248,7 @@ def test_resolver_no_hit_on_read_only_open():
     source = '''
 from pathlib import Path
 
-_WORKING_LOG_PATH = Path("tickets/working_log.csv")
+_WORKING_LOG_PATH = Path("agent-working/tickets/working_log.csv")
 
 
 def read_it(path=_WORKING_LOG_PATH):
@@ -260,8 +272,8 @@ def write_other(path="some/other/file.txt"):
 def test_resolver_no_hit_on_plain_text_mention_with_no_open_call():
     source = '''
 def documented_only():
-    """This function talks about tickets/working_log.csv in its docstring only."""
-    return "tickets/working_log.csv"
+    """This function talks about agent-working/tickets/working_log.csv in its docstring only."""
+    return "agent-working/tickets/working_log.csv"
 '''
     assert find_write_mode_open_calls(source, _TARGET) == []
 
@@ -272,7 +284,7 @@ def test_resolver_detects_method_call_open_style():
     source = '''
 from pathlib import Path
 
-_WORKING_LOG_PATH = Path("tickets/working_log.csv")
+_WORKING_LOG_PATH = Path("agent-working/tickets/working_log.csv")
 
 
 def write_it(path=_WORKING_LOG_PATH):
@@ -288,14 +300,14 @@ def test_guard_fires_on_a_second_writer(tmp_path):
     append mode."""
     (tmp_path / "good_writer.py").write_text(
         'from pathlib import Path\n'
-        '_WORKING_LOG_PATH = Path("tickets/working_log.csv")\n'
+        '_WORKING_LOG_PATH = Path("agent-working/tickets/working_log.csv")\n'
         'def append_row(path=_WORKING_LOG_PATH):\n'
         '    with open(path, "a") as f:\n'
         '        f.write("x")\n'
     )
     (tmp_path / "evil_writer.py").write_text(
         'def sneaky_append():\n'
-        '    target = "tickets/working_log.csv"\n'
+        '    target = "agent-working/tickets/working_log.csv"\n'
         '    with open(target, "a") as f:\n'
         '        f.write("y")\n'
     )
@@ -351,7 +363,7 @@ def test_comma_bearing_title_round_trips(tmp_path):
 def test_tricky_field_round_trips_through_the_parser(tmp_path):
     log_path = _seed(tmp_path)
     append_working_log_row(
-        "2026-09-12T00:00:00Z", "TCK-FAKE", "A title", "DONE", _TRICKY_SUMMARY, "stored_artifacts/TCK-FAKE",
+        "2026-09-12T00:00:00Z", "TCK-FAKE", "A title", "DONE", _TRICKY_SUMMARY, "agent-working/stored_artifacts/TCK-FAKE",
         path=log_path,
     )
     result = parse_working_log(log_path)
@@ -365,7 +377,7 @@ def test_tricky_field_round_trips_through_the_parser(tmp_path):
 def test_output_ends_in_bare_lf_with_no_cr_bytes(tmp_path):
     log_path = _seed(tmp_path)
     append_working_log_row(
-        "2026-09-12T00:00:00Z", "TCK-FAKE", "A title", "DONE", _TRICKY_SUMMARY, "stored_artifacts/TCK-FAKE",
+        "2026-09-12T00:00:00Z", "TCK-FAKE", "A title", "DONE", _TRICKY_SUMMARY, "agent-working/stored_artifacts/TCK-FAKE",
         path=log_path,
     )
     raw = log_path.read_bytes()
@@ -409,7 +421,7 @@ def test_cli_reads_data_file_and_appends(tmp_path):
         "title": 'A "quoted", tricky title',
         "status": "DONE",
         "summary": _TRICKY_SUMMARY,
-        "artifacts_path": "stored_artifacts/TCK-CLI",
+        "artifacts_path": "agent-working/stored_artifacts/TCK-CLI",
     }
     data_file = tmp_path / "data.json"
     data_file.write_text(json.dumps(data), encoding="utf-8")
@@ -440,13 +452,13 @@ def test_cli_reads_data_file_and_appends(tmp_path):
 
 def test_append_working_log_row_stages_without_touching_canonical_csv(tmp_path, monkeypatch):
     """No `path` given (the only way a real caller invokes it) -- stages to a per-batch shard
-    under agent-monitoring/data/, never touches tickets/working_log.csv directly."""
+    under agent-working/agent-monitoring/data/, never touches agent-working/tickets/working_log.csv directly."""
     monkeypatch.chdir(tmp_path)
     append_working_log_row(
         "2026-09-25T00:00:00Z", "TCK-STAGE", "A title", "DONE", "A summary.", "none"
     )
-    assert not (tmp_path / "tickets" / "working_log.csv").exists()
-    pending = parse_pending_working_log_shards(tmp_path / "agent-monitoring" / "data")
+    assert not (tmp_path / TICKETS / "working_log.csv").exists()
+    pending = parse_pending_working_log_shards(tmp_path / AGENT_MONITORING / "data")
     assert len(pending) == 1
     assert pending[0]["ticket_id"] == "TCK-STAGE"
 
@@ -454,7 +466,7 @@ def test_append_working_log_row_stages_without_touching_canonical_csv(tmp_path, 
 def test_consolidate_pending_rows_orders_by_timestamp_across_multiple_shards(tmp_path):
     """AC4: a consolidation run that sees several different batches' shards at once reconstructs
     true chronological order from each row's own timestamp, not file-glob order."""
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     csv_path = tmp_path / "working_log.csv"
     csv_path.write_text(",".join(HEADER_FIELDS) + "\n", encoding="utf-8")
 
@@ -485,7 +497,7 @@ def test_consolidate_pending_rows_orders_by_timestamp_across_multiple_shards(tmp
 
 
 def test_consolidate_pending_rows_is_idempotent(tmp_path):
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     csv_path = tmp_path / "working_log.csv"
     csv_path.write_text(",".join(HEADER_FIELDS) + "\n", encoding="utf-8")
     (data_root / "2026-W01").mkdir(parents=True)
@@ -507,7 +519,7 @@ def test_consolidate_pending_rows_is_idempotent(tmp_path):
 
 
 def test_consolidate_pending_rows_merges_with_pre_existing_canonical_content(tmp_path):
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     csv_path = tmp_path / "working_log.csv"
     csv_path.write_text(
         ",".join(HEADER_FIELDS) + "\n2026-09-01T00:00:00Z,TCK-OLD,Old,DONE,s,none\n",
@@ -530,7 +542,7 @@ def test_consolidate_pending_rows_merges_with_pre_existing_canonical_content(tmp
 
 
 def test_consolidate_pending_rows_no_shards_is_a_no_op(tmp_path):
-    data_root = tmp_path / "agent-monitoring" / "data"
+    data_root = tmp_path / AGENT_MONITORING / "data"
     csv_path = tmp_path / "working_log.csv"
     csv_path.write_text(",".join(HEADER_FIELDS) + "\n", encoding="utf-8")
     result = consolidate_pending_rows(data_root=data_root, csv_path=csv_path)
@@ -571,28 +583,28 @@ def _init_repo(repo):
 def test_two_working_log_shards_never_conflict_under_sequential_squash_merges(tmp_path):
     repo = tmp_path / "repo"
     _init_repo(repo)
-    week_dir = repo / "agent-monitoring" / "data" / "2026-W01"
+    week_dir = repo / AGENT_MONITORING / "data" / "2026-W01"
     week_dir.mkdir(parents=True)
 
     _git(repo, "checkout", "-q", "-b", "ticket-a")
     (week_dir / "ticket-a.working_log.jsonl").write_text(
         json.dumps({"timestamp": "t", "ticket_id": "TCK-A", "title": "A", "status": "DONE", "summary": "s", "artifacts_path": "none"}) + "\n"
     )
-    _git(repo, "add", "agent-monitoring")
+    _git(repo, "add", posix(AGENT_MONITORING))
     _git(repo, "commit", "-q", "-m", "TCK-A: add working_log shard")
 
     _git(repo, "checkout", "-q", "main")
-    _git(repo, "checkout", "-q", "ticket-a", "--", "agent-monitoring")
-    _git(repo, "add", "agent-monitoring")
+    _git(repo, "checkout", "-q", "ticket-a", "--", posix(AGENT_MONITORING))
+    _git(repo, "add", posix(AGENT_MONITORING))
     _git(repo, "commit", "-q", "-m", "TCK-A: add working_log shard (squashed) (#1)")
 
     _git(repo, "checkout", "-q", "-b", "ticket-b", "main~1")
-    week_dir_b = repo / "agent-monitoring" / "data" / "2026-W01"
+    week_dir_b = repo / AGENT_MONITORING / "data" / "2026-W01"
     week_dir_b.mkdir(parents=True)
     (week_dir_b / "ticket-b.working_log.jsonl").write_text(
         json.dumps({"timestamp": "t", "ticket_id": "TCK-B", "title": "B", "status": "DONE", "summary": "s", "artifacts_path": "none"}) + "\n"
     )
-    _git(repo, "add", "agent-monitoring")
+    _git(repo, "add", posix(AGENT_MONITORING))
     _git(repo, "commit", "-q", "-m", "TCK-B: add working_log shard")
 
     _git(repo, "checkout", "-q", "main")

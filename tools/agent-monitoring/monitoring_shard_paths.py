@@ -21,12 +21,12 @@ resolve a relative root against the repo, so a CWD-relative `data_root` behaves 
 relative as it always would, silently returning `[]` from an unexpected CWD. Some real call sites
 (`manifest.py`, `bash_command_mix.py`, `ingest.py`) anchor their own default to
 `Path(__file__).resolve()...`; others (`record_events.py`, `done_checker_static.py`'s own several
-`data_root: Path = Path("agent-monitoring/data")` defaults) deliberately stay CWD-relative, matching
+`data_root: Path = Path("agent-working/agent-monitoring/data")` defaults) deliberately stay CWD-relative, matching
 this project's established convention that every real entry point (hooks, CLI scripts, pytest) runs
 with CWD already at the repo root -- and, for `record_events.py` specifically, matching that
 file's own test suite's `monkeypatch.chdir(tmp_path)`-based isolation strategy, which a `__file__`-
 anchored absolute root would break. An earlier version of the `record_events.py` migration wrongly
-claimed switching its literal from `Path(".").glob(...)` to `Path("agent-monitoring/data")` fixed
+claimed switching its literal from `Path(".").glob(...)` to `Path("agent-working/agent-monitoring/data")` fixed
 CWD-independence; it didn't (the two are behaviorally identical) -- corrected after review.
 """
 from __future__ import annotations

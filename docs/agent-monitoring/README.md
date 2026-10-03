@@ -16,7 +16,7 @@ Observability layer for the Claude Code AI agent workflow. Tracks workflow runs 
 
 - Which workflow ran and what its outcome was (`runs.jsonl`)
 - Which agents were called, in which phase, and what each did in one sentence (`events.jsonl`)
-- Every individual tool call during a session: tool name, input summary, status, duration (`agent-monitoring/data/YYYY-Www/tools.jsonl`, one per-week folder alongside `runs`/`events`)
+- Every individual tool call during a session: tool name, input summary, status, duration (`agent-working/agent-monitoring/data/YYYY-Www/tools.jsonl`, one per-week folder alongside `runs`/`events`)
 - Per-agent tool call counts derived from `tools.jsonl`, stored as `tool_call_count` on each event
 - A monotonic cost-proxy score per agent event, derived from `tools.jsonl` (Bash duration + Agent spawn count + edit-tool call count), stored as `cost_proxy_score` — an explicit proxy, not real token/dollar cost (see schema.md)
 - Weekly retro reports derived from the above
@@ -64,7 +64,7 @@ indefinitely (the sections after this one) does not belong here at all.
 
 `tools/agent-monitoring/retrieval_baseline_metrics.py` is a separate, one-off/periodic
 read-only baseline-snapshot script (distinct from the recurring weekly retro above) that prints a
-JSON report over the same `agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` sources. Report sections:
+JSON report over the same `agent-working/agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` sources. Report sections:
 `context_tokens`, `search_count`, `raw_investigation_count`, `duration`, `gate_outcome`,
 `review_rework`, `legacy_schema_notes`. Every derived/proxy section states its own computation and
 limits inline via a `derivation`/`disclosure`/`reason` field — never a silent number. See
@@ -76,10 +76,10 @@ provenance of each section.
 `build_search_count_section`, and `build_raw_investigation_count_section` were relocated into
 `generate_retro.py` (this module now re-imports them) to resolve a circular-import constraint and
 let `generate()` render a new `## Search & Investigation Effort` section plus per-week Search
-Calls / Read Calls trend columns on `agent-monitoring/retro/index.md` — see
+Calls / Read Calls trend columns on `agent-working/agent-monitoring/retro/index.md` — see
 `docs/guides/agent_monitoring.md`'s Report Sections table. This shares the underlying *numbers*
 between the two tools; it does not merge the two *cadences* — `retrieval_baseline_metrics.py` still
-never writes into `agent-monitoring/retro/`, and remains the one-off JSON snapshot described above.
+never writes into `agent-working/agent-monitoring/retro/`, and remains the one-off JSON snapshot described above.
 
 ## Security Gate Firing Check
 
@@ -108,7 +108,7 @@ audit found this question previously required ad hoc regex against raw `tools.js
 `generate_retro.py` (this module now re-imports it) to resolve the same circular-import constraint
 as the `search_count`/`raw_investigation_count` precedent above. `generate()` now renders a
 `## Skill Usage` section with two subsections of distinct scope: a period-scoped per-skill
-invocation count (trended report-over-report via `agent-monitoring/retro/index.md`'s new Skill
+invocation count (trended report-over-report via `agent-working/agent-monitoring/retro/index.md`'s new Skill
 Invocations column) and an all-time, two-bucket zero-invocation flag
 (`compute_zero_invocation_skill_flags` — `flagged_stale` for skills with a real `date_added` past
 a 14-day grace period, `flagged_unknown_age` for skills with no recorded `date_added`, fail-open by
@@ -122,7 +122,7 @@ based on this flag.
 ## Done-Ticket Monitoring Coverage Audit
 
 `tools/agent-monitoring/done_ticket_monitoring_coverage.py` is a separate, read-only audit
-checking whether every ticket under `tickets/done/` has at least one matching `run_id` record in
+checking whether every ticket under `agent-working/tickets/done/` has at least one matching `run_id` record in
 `runs.jsonl`. Reports `covered`/`missing`/`unparseable` ticket lists. Deliberately reads
 `runs.jsonl` directly rather than through `generate_retro`'s SQLite-index path — even after
 `TCK-20260811-AGENT-MONITORING-INDEX-SILENT-STALENESS` taught that path to rebuild on staleness
@@ -142,7 +142,7 @@ curve rather than a flat ongoing rate.
 follow-up re-run found the gap has **not** fully converged — 798 of 1,815 tickets are missing
 coverage, and 30 of those are dated within the last ~3 days, well after the 2026-06-07 rollout
 period. Root cause: any ticket closed by hand-orchestration (a session reading the ticket, editing
-code, running tests, and moving the file to `tickets/done/` without invoking the `Workflow` tool)
+code, running tests, and moving the file to `agent-working/tickets/done/` without invoking the `Workflow` tool)
 produces zero monitoring records, since only the formal `implement-ticket.js` pipeline auto-records
 coverage. This is a real, ongoing pattern, not a shrinking historical tail. See "Recording
 coverage for a hand-orchestrated closure" below for the fix. The 798 historical entries are **not**
@@ -190,7 +190,7 @@ caveat applies specifically to using it as a post-landing denial/regression sign
 ## Bash Command Mix Baseline
 
 `tools/agent-monitoring/bash_command_mix.py` is a separate, read-only measurement over
-`agent-monitoring/data/*/tools.jsonl` answering two questions neither `real_token_usage.py` nor
+`agent-working/agent-monitoring/data/*/tools.jsonl` answering two questions neither `real_token_usage.py` nor
 `agent_tool_usage_baseline.py` already cover: (1) the raw call-count mix of Bash command heads
 (`cd` vs `grep` vs `git` vs `python3`, etc — not context-token attribution, and not fragmented by
 `cd`'s own destination directory the way `real_token_usage.py::attribute_by_bash_family` splits
@@ -198,7 +198,7 @@ it), and (2) how many Bash calls are grep-flavored (`grep`/`rg` head) against ho
 `mcp__knowledge-search__search_docs` calls happened in the same window — closing a gap
 `generate_retro.py::build_raw_investigation_count_section` documents explicitly (it substitutes a
 Read-count proxy because "no distinct `Grep` tool name is ever recorded"; this script classifies
-Bash's own `input_summary` command head instead). Sourced from `agent-monitoring/data/`, which is
+Bash's own `input_summary` command head instead). Sourced from `agent-working/agent-monitoring/data/`, which is
 committed to git — unlike `real_token_usage.py`'s developer-machine-only transcript corpus, this
 tool's baseline is reproducible by any session or CI. Re-runnable over an arbitrary inclusive ISO
 week range (`--since-week`/`--through-week`), so a before/after comparison for an advisory nudge
@@ -235,8 +235,8 @@ Each event only needs `phase`/`status`/`summary` — `run_id`, `execution_id`, `
 "now" (identical value for both) if real elapsed wall-clock time wasn't tracked. See `CLAUDE.md`'s
 "After Work" checklist for when this is required.
 
-This call also appends one row to `tickets/working_log.csv` for you (`--title`/`--log-summary`,
-plus `--artifacts-path` which defaults to `stored_artifacts/<ticket-id>` for standard/epic tier or
+This call also appends one row to `agent-working/tickets/working_log.csv` for you (`--title`/`--log-summary`,
+plus `--artifacts-path` which defaults to `agent-working/stored_artifacts/<ticket-id>` for standard/epic tier or
 `none (hotfix — no staging artifacts)` for hotfix) — **do not append that row by hand** when using
 this wrapper, or the ticket ends up with a duplicate `working_log.csv` entry.
 
@@ -269,7 +269,7 @@ make agent-monitoring-close-week WEEK=2026-W39
   lines keep their order and new shard lines are exact-deduplicated (counted) and appended ordered by
   `ts` then `seq`. A second close changes nothing.
 - That week's pending `*.working_log.jsonl` shards go through `working_log_writer.consolidate_pending_rows`,
-  so `tickets/working_log.csv` keeps its single writer.
+  so `agent-working/tickets/working_log.csv` keeps its single writer.
 - A shard that arrives after its week was closed (a branch merging late) is folded by the next close of
   that week.
 - `retro_nudge_hook.py` adds a report-only line when a finished week still holds shards. It never blocks
@@ -284,8 +284,8 @@ Code: `tools/agent-monitoring/week_close.py`, `week_close_nudge.py`.
 `git show`, never the working tree, and prints a snapshot labelled with the ref and SHA. Report-only:
 exit 0 unless `--strict`, repairs nothing, not a CI job. It reports what per-ticket checks cannot see:
 closed tickets with no DONE working-log row or an identical duplicate row, per-batch shards left for a finished week,
-`stored_artifacts/` paths a closed ticket cites that are absent at the ref (the gitignored-`.json`
-case), tickets still under `tickets/inprogress/` at the ref (merged work whose Finalize never ran, or work in flight),
+`agent-working/stored_artifacts/` paths a closed ticket cites that are absent at the ref (the gitignored-`.json`
+case), tickets still under `agent-working/tickets/inprogress/` at the ref (merged work whose Finalize never ran, or work in flight),
 duplicate-run records and event-seq duplicates/gaps. A closed week can still receive late
 shards, so a count is as of that commit. Code: `tools/agent-monitoring/main_integrity_report.py`.
 
@@ -305,9 +305,9 @@ delivery epic, and it is a snapshot of the ref and SHA named in its output.
 
 | Doc | Contents |
 |---|---|
-| [schema.md](schema.md) | Full field reference for the `agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` per-week layout |
+| [schema.md](schema.md) | Full field reference for the `agent-working/agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` per-week layout |
 | [../guides/agent_monitoring.md](../guides/agent_monitoring.md) | How to run the weekly retro loop |
-| [agent-monitoring/README.md](../../agent-monitoring/README.md) | Quick-reference schema and data files |
+| [agent-working/agent-monitoring/README.md](../../agent-working/agent-monitoring/README.md) | Quick-reference schema and data files |
 
 ## Quick Start
 
@@ -318,7 +318,7 @@ make agent-monitoring-index
 
 # After some workflow runs have completed:
 make agent-monitoring-retro         # generate this week's report
-open agent-monitoring/retro/RETRO-$(date +%Y-W%V).md
+open agent-working/agent-monitoring/retro/RETRO-$(date +%Y-W%V).md
 
 # Validate integrity
 make agent-monitoring-validate

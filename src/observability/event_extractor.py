@@ -1234,7 +1234,7 @@ class EventExtractor:
             # LIFECYCLE). NEW signal, not a Phase 1/2 migration — no ProgressionShaper equivalent
             # exists, so there is no double-fire risk and this block is deliberately NOT gated
             # behind _push_shapers_phase2_active; it always runs regardless of that flag's value
-            # (see staging_artifacts/TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE/
+            # (see agent-working/staging_artifacts/TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE/
             # investigation.md's architecture-decision section for the full reasoning).
             if (hasattr(entity, "identity") and hasattr(prior_ent, "identity")
                     and hasattr(entity, "lifecycle") and hasattr(entity, "equipment")

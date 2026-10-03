@@ -1,6 +1,6 @@
-"""Validation entry point for the agent-orchestration/ contract.
+"""Validation entry point for the agent-working/agent-orchestration/ contract.
 
-`load_contract()` reads and validates all files under `agent-orchestration/`
+`load_contract()` reads and validates all files under `agent-working/agent-orchestration/`
 (contract.yaml, workflows/implement-ticket.yaml, all roles/*.yaml, skills.yaml,
 monitoring-schema.yaml, hook-events.yaml, hook-surface-policy.yaml, terminal-statuses.yaml,
 gate-policy.yaml), raising ContractValidationError on any missing
@@ -19,6 +19,7 @@ import yaml
 
 from .errors import ContractValidationError
 from .terminal_statuses import TerminalStatusValidationError, load_terminal_statuses
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REQUIRED_CONTRACT_KEYS = ("version", "name")
 _REQUIRED_WORKFLOW_KEYS = ("workflow_version", "workflow_id", "phases", "agents")
@@ -393,11 +394,11 @@ def _load_gate_policy_yaml(path: Path) -> dict[str, Any]:
 
 
 def load_contract(root: Path) -> ContractBundle:
-    """Load and validate the full agent-orchestration/ contract rooted at `root`.
+    """Load and validate the full agent-working/agent-orchestration/ contract rooted at `root`.
 
     `root` is the repository root — the contract directory itself is `root / "agent-orchestration"`.
     """
-    contract_dir = root / "agent-orchestration"
+    contract_dir = root / AGENT_ORCHESTRATION
 
     contract = _load_contract_yaml(contract_dir / "contract.yaml")
     try:

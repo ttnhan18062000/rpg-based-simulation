@@ -5,7 +5,7 @@ TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT.
 Also covers the SQLite-index-backed read path migration,
 TCK-20260713-MONITORING-VALIDATE-INDEX-MIGRATE (see classes at the bottom of
 this file): main() now sources runs/events/tools from
-agent-monitoring-index/monitoring.db instead of direct JSONL reads, mirroring
+agent-working/.index/agent-monitoring-index/monitoring.db instead of direct JSONL reads, mirroring
 tools/agent-monitoring/query.py's precedent (tests/tools/test_query.py).
 
 Constructs runs/events as plain Python dicts, mirroring
@@ -16,6 +16,7 @@ import json
 import sqlite3
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
@@ -157,7 +158,7 @@ def test_drift_report_is_read_only(tmp_path, monkeypatch):
     events = [{"run_id": "TCK-FAKE", "seq": 1, "ts": "t", "phase": "weird", "agent": "weird", "status": "ok", "summary": "ok"}]
     compute_drift_report(runs, events)
 
-    assert not (tmp_path / "agent-monitoring").exists()
+    assert not (tmp_path / AGENT_MONITORING).exists()
 
 
 # ---------------------------------------------------------------------------
@@ -234,7 +235,7 @@ def test_tool_count_drift_report_is_read_only(tmp_path, monkeypatch):
     tools = [_tool_row("TCK-F", 1)]
     compute_tool_count_drift_report(events, tools)
 
-    assert not (tmp_path / "agent-monitoring").exists()
+    assert not (tmp_path / AGENT_MONITORING).exists()
 
 
 # ---------------------------------------------------------------------------
@@ -263,7 +264,7 @@ def test_multi_invocation_collision_report_is_read_only(tmp_path, monkeypatch):
     events = [_scope_seq1("TCK-G"), _scope_seq1("TCK-G")]
     compute_multi_invocation_collision_report(events)
 
-    assert not (tmp_path / "agent-monitoring").exists()
+    assert not (tmp_path / AGENT_MONITORING).exists()
 
 
 # ---------------------------------------------------------------------------
@@ -324,7 +325,7 @@ _PARITY_TOOLS = [record for name in _TOOLS_SHAPE_FILES for record in _load_fixtu
 class TestMainUsesIndex:
     """AC1 — main() sources runs/events/tools from the SQLite index, not direct
     JSONL reads. Each test runs with cwd pointed at an empty tmp_path (no
-    agent-monitoring/ directory at all), so a passing report — reflecting real
+    agent-working/agent-monitoring/ directory at all), so a passing report — reflecting real
     fixture content — can only have come from the index db."""
 
     def test_main_loads_runs_from_index_not_direct_jsonl(self, tmp_path, monkeypatch, capsys):
@@ -338,7 +339,7 @@ class TestMainUsesIndex:
         out = capsys.readouterr().out
 
         assert "OK: 1 runs, 1 events" in out
-        assert not (tmp_path / "agent-monitoring" / "runs.jsonl").exists()
+        assert not (tmp_path / AGENT_MONITORING / "runs.jsonl").exists()
 
     def test_main_loads_events_from_index_not_direct_jsonl(self, tmp_path, monkeypatch, capsys):
         monkeypatch.chdir(tmp_path)
@@ -351,7 +352,7 @@ class TestMainUsesIndex:
         out = capsys.readouterr().out
 
         assert "'weird-phase': 1" in out
-        assert not (tmp_path / "agent-monitoring" / "events.jsonl").exists()
+        assert not (tmp_path / AGENT_MONITORING / "events.jsonl").exists()
 
     def test_main_loads_tools_from_index_not_direct_jsonl(self, tmp_path, monkeypatch, capsys):
         monkeypatch.chdir(tmp_path)
@@ -365,7 +366,7 @@ class TestMainUsesIndex:
         out = capsys.readouterr().out
 
         assert "TCK-IDX-C seq=1: recorded=5 actual=2" in out
-        assert not (tmp_path / "agent-monitoring" / "tools.jsonl").exists()
+        assert not (tmp_path / AGENT_MONITORING / "tools.jsonl").exists()
 
 
 class TestArchitectureGuards:
@@ -429,7 +430,7 @@ class TestRegressionParity:
 
     def test_tools_row_missing_tool_field_is_a_known_bounded_divergence(self, tmp_path):
         """Documents a real divergence found by spot-checking the live corpus
-        (agent-monitoring/tools.jsonl), outside the curated fixture shapes: a
+        (agent-working/agent-monitoring/tools.jsonl), outside the curated fixture shapes: a
         tools.jsonl record with a valid run_id+seq but no 'tool' field is counted
         by compute_tool_count_drift_report's load_jsonl() path (which only checks
         run_id+seq presence — see its actual_counts loop) but is structurally
@@ -441,7 +442,7 @@ class TestRegressionParity:
         (forbidden — its body must stay unchanged). Non-gating: this only shifts
         the reported 'Mismatches' count, never validate.py's exit code. Confirmed
         against production data 2026-07-28: exactly one such record exists in
-        agent-monitoring/tools.jsonl (TCK-20260716-SIMQ-...-SWEEP seq=4), shifting
+        agent-working/agent-monitoring/tools.jsonl (TCK-20260716-SIMQ-...-SWEEP seq=4), shifting
         the live report's mismatch count from 487 to 488."""
         off_schema_tool = {"run_id": "TCK-DIVERGE", "seq": 1, "ts": "t"}
         event = {"run_id": "TCK-DIVERGE", "seq": 1, "ts": "t", "phase": "Implement",
@@ -489,7 +490,7 @@ class TestDriftReportsUnaffectedByWeekShardMigration:
         pre_migration_report = compute_drift_report(week1_runs + week2_runs, week1_events + week2_events)
 
         # "Post-migration": the identical records physically split across 2 week folders under a
-        # temp agent-monitoring/data/-shaped directory, read via build_index.build()'s
+        # temp agent-working/agent-monitoring/data/-shaped directory, read via build_index.build()'s
         # _load_source()/load_data_glob() glob (this ticket's own fix), then re-derived through
         # the SQLite index exactly like TestRegressionParity above.
         for week_dir, runs, events in ((tmp_path / "2026-W01", week1_runs, week1_events),

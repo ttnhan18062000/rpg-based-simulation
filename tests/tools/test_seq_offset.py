@@ -9,6 +9,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
@@ -49,11 +50,11 @@ def test_compute_seq_offset_is_read_only():
 
 
 def test_seq_offset_reads_events_across_multiple_week_folders(tmp_path):
-    week1 = tmp_path / "agent-monitoring" / "data" / "2026-W01"
+    week1 = tmp_path / AGENT_MONITORING / "data" / "2026-W01"
     week1.mkdir(parents=True)
     (week1 / "events.jsonl").write_text(json.dumps(_event("TCK-FAKE", 3)) + "\n", encoding="utf-8")
 
-    week2 = tmp_path / "agent-monitoring" / "data" / "2026-W02"
+    week2 = tmp_path / AGENT_MONITORING / "data" / "2026-W02"
     week2.mkdir(parents=True)
     (week2 / "events.jsonl").write_text(json.dumps(_event("TCK-FAKE", 9)) + "\n", encoding="utf-8")
 

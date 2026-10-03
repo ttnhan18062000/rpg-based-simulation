@@ -45,7 +45,7 @@ _EXPECTED_TOOLS_HASHES = {
         "003565a6757a929b9560285364b0a6b58569acba783a806a4a56add1cd31fcde"
     ),
     "tools/hybrid_retrieval.py": (
-        "da65a5d08c14fc562110786f84d810990b7ecf2d907b6661e00692633489b71e"
+        "706b9b4b6a4b01ec08e46d6f9b485087cf586bd98e2d141537495dba9a8b761d"
     ),
 }
 
@@ -138,7 +138,7 @@ def test_decision_doc_confirms_last_verified_absent_from_artifact_frontmatter():
 
 
 # ---------------------------------------------------------------------------
-# AC3 — staging_artifacts/ exclusion is a reasoned, intentional-permanent-design paragraph
+# AC3 — agent-working/staging_artifacts/ exclusion is a reasoned, intentional-permanent-design paragraph
 # ---------------------------------------------------------------------------
 
 def test_decision_doc_contains_staging_artifacts_exclusion_paragraph():

@@ -3,7 +3,7 @@
 #
 # UNLIKE THIS DIRECTORY'S OTHER FOUR REGISTRIES (layer_registry.jsonl, tag_registry.jsonl,
 # tag_category_registry.jsonl, capability_envelope_registry.jsonl), this one is NOT append-only.
-# Those four are allowlists cited by id from tickets/docs, so a value can never be renamed or
+# Those four are allowlists cited by id from agent-working/tickets/docs, so a value can never be renamed or
 # removed once added. This file records mechanism STATE (done/partial/gap/orphan/gated/skeleton),
 # which is a live fact about the codebase, not an allowlist entry -- correcting a wrong state in
 # place (with a `verified` block explaining the correction) is expected, ordinary maintenance, not
@@ -20,7 +20,7 @@
 # capabilities page, wiring map) -- this file is the one thing in that split that is source of
 # truth, not a rendering.
 # See docs/plans/mechanism_registry_initiative.md for the full design rationale and
-# staging_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md for the full
+# agent-working/staging_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md for the full
 # per-mechanism citation/provenance trail (source doc, atlas/wiring-map card index, every judgment
 # call made while deriving this list).
 #
@@ -229,7 +229,7 @@ mechanisms:
         firing more often is desirable is a **design** question for the user, unresolved here per
         this investigation's own Assumption #2 -- what this closes is the mechanism, not the
         disposition. See `combat_resolution` and `combat_engagement` for the rest of this same
-        finding, and `stored_artifacts/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION/`
+        finding, and `agent-working/stored_artifacts/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION/`
         for the full per-world evidence table.
         **Scope note, added 2026-09-20 (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-
         VERIFICATION), made explicit per peer review rather than left as an unrecorded reasoning
@@ -918,7 +918,7 @@ mechanisms:
         bonus-application side is wired but never exercised with an acquired breakthrough in real
         play. Supersedes the 2026-09-20 code_trace/contradicted verdict (a grep of construction
         sites, which cannot show what real play does). Evidence:
-        stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
+        agent-working/stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
         EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe: runtime_probe.py, same folder).
         History: state corrected done -> orphan -> partial in TCK-20260920-MECHANISM-ENTITY-LAYER-
         UNBOUND-CLAIMS- RESOLUTION (apply_bonuses has a real caller at rpg_depth.py:367; acquisition
@@ -969,7 +969,7 @@ mechanisms:
         implemented_by -> RecoveryReadinessService, while resolving edge #4 of TCK-20260918-
         MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION) was a real misattribution, caught and
         reverted the same day by checking this mechanism's own original Foundation-era citation
-        (`stored_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md:199`:
+        (`agent-working/stored_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md:199`:
         "`trauma` | `combat_resolution` | done | atlas `entity-modification#0`; wiring-map
         `CMB -.-> TRM`"). `entity-modification#0` is the atlas's "Trauma: A Lasting Physical
         Consequence" card -- Wound (temporary) and Scar (permanent) as trauma's own two stages,
@@ -1271,7 +1271,7 @@ mechanisms:
         called (0 calls over the 5-world x 2000-tick probe; see `social_memory`), so the field is
         not accumulated in live runs. It is a dead producer, not merely a write-only field. The
         atlas card's "accumulates" wording is a claim made without a runtime instrument. Probe
-        output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/
+        output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/
         ---- earlier record, kept ----
         TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. Investigated, left unbound
         -- genuinely ambiguous. Zero literal matches for "affection" anywhere in `src/` (a
@@ -1352,7 +1352,7 @@ mechanisms:
         ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE): BetrayalRecord (src/core/models/social.py) was
         constructed 0 times -- confirms orphan: a real, purpose-built dataclass that nothing
         populates. Supersedes the 2026-09-20 code_trace/contradicted verdict. Evidence:
-        stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
+        agent-working/stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
         EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe: runtime_probe.py, same folder).
         History: the `-> combat_resolution` edge was removed (TCK-20260918-MECHANISM-UNCLASSIFIABLE-
         DEPENDS-ON-EDGES- RESOLUTION #7); the merge-with-commitment_pressure_consequences premise
@@ -1530,7 +1530,7 @@ mechanisms:
         trust therefore stays at its defaults in production. State moves `gated` -> `orphan`. The
         identity taxonomy's KEEP verdict (`docs/plans/mechanism_identity_and_change_taxonomy.md`)
         stands: `SourceTrustUpdateService` is the mechanism and "deception" is descriptive flavour.
-        `InformationBeliefPhase` belongs to `belief_cycle`, not here. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/
+        `InformationBeliefPhase` belongs to `belief_cycle`, not here. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/
   - id: knowledge_model
     layer: entity
     systems: [cognition]
@@ -1856,7 +1856,7 @@ mechanisms:
         21 worlds (21000 calls), so the siege_war half is reachable; the Betrayal(FactionDirective)
         directive (src/engine/faction_decision.py:97) was constructed 0 times -- confirms partial:
         siege_war half wired, betrayal half never triggered. Supersedes the 2026-09-20
-        code_trace/contradicted verdict. Evidence: stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-
+        code_trace/contradicted verdict. Evidence: agent-working/stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-
         VERDICTS-NEED-RUNTIME-EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe:
         runtime_probe.py, same folder). Possible Split candidate per
         docs/plans/mechanism_identity_and_change_taxonomy.md section 1 -- flagged, not performed.
@@ -1923,7 +1923,7 @@ mechanisms:
         which is live and belongs to `cross_episode_social_consequences` /
         `cross_episode_grief_nemesis`; note the existing `depends_on: [social_memory]` on
         `cross_episode_social_consequences` points at this entry although that mechanism uses the
-        campaigns module, and was left unchanged pending a decision. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/
+        campaigns module, and was left unchanged pending a decision. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/
   - id: cross_episode_social_consequences
     layer: faction
     systems: [faction]
@@ -2087,7 +2087,7 @@ mechanisms:
         POPULATION_MIGRATION events in 6 worlds; cohort totals also moved in 4 worlds (dungeon_crawl
         32 -> 29) through a writer not attributed here. Supersedes the 2026-09-16
         code_trace/contradicted verdict, which named the wrong reason; premise-false ticket closed
-        STALE-PREMISE (791e6bf6b). Evidence: stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-
+        STALE-PREMISE (791e6bf6b). Evidence: agent-working/stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-
         VERDICTS-NEED-RUNTIME- EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe:
         runtime_probe.py, same folder). Earlier history: mis-registered orphan; the caller is
         engine/world_dynamics.py:180 behind the compiler.py:203 empty-cohorts guard.
@@ -2129,7 +2129,7 @@ mechanisms:
         driven runs -- confirms orphan for simulation-driven use (request-time API use is not
         exercised by a tick run; see TCK-20260912-CAMPAIGN-CHRONICLE-API-REGISTRY-NEVER-POPULATED-
         IN-PRODUCTION for that side). Supersedes the 2026-09-20 code_trace/contradicted verdict.
-        Evidence: stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
+        Evidence: agent-working/stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
         EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe: runtime_probe.py, same folder).
   - id: opportunity_rumor_seeds
     layer: world
@@ -2208,7 +2208,7 @@ mechanisms:
         evidence shows the producer is never reached). Bound at method level to the producer, since
         the class's other method is live and binding the class would read as a live mechanism. The
         fix stays with TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES. Consumer of the dead
-        input: `refugee_displacement`. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/
+        input: `refugee_displacement`. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/
   - id: world_boss_spawn
     layer: world
     systems: [world]
@@ -2276,7 +2276,7 @@ mechanisms:
         rank_item, should_replace, auto_equip, repair_equipment) was called, from inside or outside
         src/core/equipment.py -- confirms orphan: real, well-built code nothing runs. Supersedes the
         2026-09-20 code_trace/contradicted verdict. Evidence:
-        stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
+        agent-working/stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
         EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe: runtime_probe.py, same folder).
   - id: inventory_trade_conservation
     layer: world
@@ -2441,7 +2441,7 @@ mechanisms:
         code_trace/contradicted verdict ('no world seeds state.camps'), which was false from
         2026-09-08 and which reading code could never have proven. Premise-false ticket closed
         STALE-PREMISE by rpg-feature-planning (791e6bf6b). Compile census:
-        compile_census_output.txt, same folder. Evidence: stored_artifacts/TCK-20260930-MECHANISM-
+        compile_census_output.txt, same folder. Evidence: agent-working/stored_artifacts/TCK-20260930-MECHANISM-
         ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe:
         runtime_probe.py, same folder). Bound to CampState itself 2026-09-20
         (TCK-20260920-MECHANISM-WORLD-FACTION- REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION).
@@ -2823,7 +2823,7 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `SpawnService.process_spawns` was called 30 times (its per-region cadence) across the three worlds. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `SpawnService.process_spawns` was called 30 times (its per-region cadence) across the three worlds. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         Regional monster replenishment and density management (cadence in spawn_config.py). Distinct from `world_boss_spawn` (BossService) and from camp-anchored spawns (`camp`).
 
   - id: resource_ecology_regrowth
@@ -2837,7 +2837,7 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `ResourceEcologyService.process_ecology` was called 30 times. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `ResourceEcologyService.process_ecology` was called 30 times. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         Regional resource-node and chest replenishment with a density modifier. The extraction side is `resource_harvesting` (HarvestSystem), a separate mechanism.
 
   - id: regional_transformation
@@ -2851,7 +2851,7 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `TransformationService.get_potential_transformation` was evaluated 15000 times; whether any region actually changed kind was not measured. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `TransformationService.get_potential_transformation` was evaluated 15000 times; whether any region actually changed kind was not measured. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         Shifts RegionState.kind by biome thresholds (atlas idea 48). `world_generation` is compile-time only.
 
   - id: production_role_vacancy
@@ -2865,7 +2865,7 @@ mechanisms:
       verdict: inconclusive
       date: "2026-09-30"
       note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls in the probe window, so the runtime verdict is inconclusive: the code has a real caller, but the probe horizon did not exercise it and no absence is claimed. `EconomicVacancyService.check_and_emit` fires only when a death leaves a region with no living holder of a production role. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls in the probe window, so the runtime verdict is inconclusive: the code has a real caller, but the probe horizon did not exercise it and no absence is claimed. `EconomicVacancyService.check_and_emit` fires only when a death leaves a region with no living holder of a production role. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         Emits a PRODUCTION_ROLE_VACATED world event from the lifecycle death path (`aging_death` covers the death check, not the economic consequence).
 
   - id: veterancy_rank
@@ -2879,7 +2879,7 @@ mechanisms:
       verdict: inconclusive
       date: "2026-09-30"
       note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls in the probe window, so the runtime verdict is inconclusive: the code has a real caller, but the probe horizon did not exercise it and no absence is claimed. `process_points` is called from IdentityPatch.apply; `get_stat_multiplier` has no caller in src (tracked by TCK-20260912-VETERANCY-STAT-MULTIPLIER-NEVER-APPLIED). Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls in the probe window, so the runtime verdict is inconclusive: the code has a real caller, but the probe horizon did not exercise it and no absence is claimed. `process_points` is called from IdentityPatch.apply; `get_stat_multiplier` has no caller in src (tracked by TCK-20260912-VETERANCY-STAT-MULTIPLIER-NEVER-APPLIED). Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         Veterancy points and rank-ups (+5% per rank multiplier); distinct from level thresholds (`evolution`) and class tiers (`build_diversity`).
 
   - id: quest_lifecycle_resolution
@@ -2893,7 +2893,7 @@ mechanisms:
       verdict: inconclusive
       date: "2026-09-30"
       note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls in the probe window, so the runtime verdict is inconclusive: the code has a real caller, but the probe horizon did not exercise it and no absence is claimed. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls in the probe window, so the runtime verdict is inconclusive: the code has a real caller, but the probe horizon did not exercise it and no absence is claimed. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         Quest progress and completion state transitions (`add_progress`, `mark_rewarded`) driven by `QuestResolutionSystem`, which emits reward transfers. `quest_generation_sourcing` generates quests; `quest_reward_distribution` binds only the group split.
 
   - id: intent_requirement_gating
@@ -2907,7 +2907,7 @@ mechanisms:
       verdict: inconclusive
       date: "2026-09-30"
       note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls in the probe window, so the runtime verdict is inconclusive: the code has a real caller, but the probe horizon did not exercise it and no absence is claimed. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls in the probe window, so the runtime verdict is inconclusive: the code has a real caller, but the probe horizon did not exercise it and no absence is claimed. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         Pure evaluator of action preconditions (has_gold, has_item, inventory_space, near_service, ...); a failed check yields a blocker kind plus resolution tags for detours. `action_pacing_readiness` covers readiness only.
 
   - id: regional_hazard_drain
@@ -2921,7 +2921,7 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `EnvironmentService.calculate_hazard_drain` was called 42604 times, `get_weather_multipliers` 89941 and `get_aura_multipliers` 20596. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `EnvironmentService.calculate_hazard_drain` was called 42604 times, `get_weather_multipliers` 89941 and `get_aura_multipliers` 20596. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         Drains HP and Readiness by region hazard_level and calamity_intensity. Kept separate from `regional_trauma` (a different cause and lifecycle: trauma_score).
 
   - id: humanoid_reproduction
@@ -2935,7 +2935,7 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls, consistent with the gate: ENABLE_REPRODUCTION_HUMANOID_PATH is FeatureMode.OFF in src/domains/optimization/feature_flags.py, and the probe ran the default PROD_SMALL profile. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls, consistent with the gate: ENABLE_REPRODUCTION_HUMANOID_PATH is FeatureMode.OFF in src/domains/optimization/feature_flags.py, and the probe ran the default PROD_SMALL profile. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         Pairs existing adults into a tracked-parent birth (atlas idea 32). `aging_death`/`succession` are lifecycle exits; `demographic_cohort_cycle` is aggregate.
 
   - id: role_model_imitation
@@ -2949,7 +2949,7 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls, consistent with the gate: ENABLE_ROLE_MODEL_IMITATION is FeatureMode.OFF in src/domains/optimization/feature_flags.py (ticket TCK-20260831-ROLE-MODEL-IMITATION), and the probe ran the default PROD_SMALL profile. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls, consistent with the gate: ENABLE_ROLE_MODEL_IMITATION is FeatureMode.OFF in src/domains/optimization/feature_flags.py (ticket TCK-20260831-ROLE-MODEL-IMITATION), and the probe ran the default PROD_SMALL profile. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         Per-tick writer for watching and choosing a role model. Not `personality`, `emotion` or `self_model`.
 
   - id: faction_raid
@@ -2963,7 +2963,7 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `RaidService.check_for_raid` was called 30 times and `spawn_raid` 3 times. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `RaidService.check_for_raid` was called 30 times and `spawn_raid` 3 times. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         A faction action against a place, launched from camp maturity or its own 500-tick cadence. Kept separate from `camp` (a place, not an action).
 
   - id: refugee_displacement
@@ -2977,7 +2977,7 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `DisplacementService.compute_displacement` was called 30 times. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `DisplacementService.compute_displacement` was called 30 times. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         Moves population out of regions with calamity_intensity >= DISPLACEMENT_THRESHOLD (src/world/displacement.py) and writes each entity's home region (atlas idea 65). **Its only input is `calamity_intensity`, whose sole producer is never invoked (see that entry), so it cannot activate in the current build**; state `partial` records wired-but-input-starved. It becomes live if the producer is fixed (TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES).
 
 # ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -2994,7 +2994,7 @@ mechanisms:
 # priority/ranking output can state "N of these edges are unvalidated" instead of silently
 # treating an unaudited edge as equivalent to a confirmed one. Full per-edge evidence (what was
 # searched, why no verdict was reachable) is in
-# stored_artifacts/TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT/edge_audit_results.md.
+# agent-working/stored_artifacts/TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT/edge_audit_results.md.
 # Each entry is [dependent, dependency], matching one line already present in that mechanism's own
 # depends_on list above -- validate() checks both.
 # TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION (2026-09-19): resolved 15 of

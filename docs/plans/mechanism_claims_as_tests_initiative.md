@@ -221,7 +221,7 @@ Physical Consequence" — the Wound→Scar physical combat-consequence system, i
 
 **The mitigation is a discipline, not a tool: check the entry's existing citation trail before
 replacing it.** `trauma`'s own original citation
-(`stored_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md:199`) named
+(`agent-working/stored_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md:199`) named
 `combat_resolution` as the dependency and `entity-modification#0` as the atlas card — both correct,
 both sitting there unread when the replacement was made. **The registry already held the correct
 answer.** The data that would have prevented the error was in the entry being overwritten, not

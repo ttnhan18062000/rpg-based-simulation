@@ -3,9 +3,9 @@
 of `.claude/workflows/implement-ticket.js`.
 
 Built for TCK-20260711-EPIC-SCOPE-ORPHAN-FIX: the Scope phase used to have the ticket-scoper
-agent locate a ticket file (checking `tickets/inprogress/`, then `tickets/done/`, then
-`tickets/todos/**`) and unconditionally *copy* a todos-originated file to
-`tickets/inprogress/{id}.md` inside its own LLM-interpreted prompt text, before the tier was
+agent locate a ticket file (checking `agent-working/tickets/inprogress/`, then `agent-working/tickets/done/`, then
+`agent-working/tickets/todos/**`) and unconditionally *copy* a todos-originated file to
+`agent-working/tickets/inprogress/{id}.md` inside its own LLM-interpreted prompt text, before the tier was
 known. For epic-tier tickets — which return immediately after Scope and never reach Finalize's
 `rm` cleanup step — that copy became a permanent duplicate. This module moves the same
 file-location + tier-read + relocate decision out of agent-prompt text into orchestrator-side
@@ -23,10 +23,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from epic_staleness_check import _section_body  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS  # noqa: E402
 
-DEFAULT_INPROGRESS_DIR = Path("tickets/inprogress")
-DEFAULT_TODOS_DIR = Path("tickets/todos")
-DEFAULT_DONE_DIR = Path("tickets/done")
+DEFAULT_INPROGRESS_DIR = TICKETS / "inprogress"
+DEFAULT_TODOS_DIR = TICKETS / "todos"
+DEFAULT_DONE_DIR = TICKETS / "done"
 
 DEFAULT_TIER = "standard"
 
@@ -50,7 +54,7 @@ def resolve_and_relocate_ticket(
         # TCK-20260930-SCOPE-RELOCATE-RESUME-LOSES-TODOS-SOURCE-PATH: on a resumed run the first
         # Scope's `copied_from_todos` result is gone, but the copy it left behind is still on disk.
         # Derive the path from the filesystem rather than carrying run state across the resume (no
-        # new durable state): a surviving tickets/todos/ copy is reported, so Verify keeps its
+        # new durable state): a surviving agent-working/tickets/todos/ copy is reported, so Verify keeps its
         # "expected todos duplicate" note and Finalize deletes it. An epic-tier move deleted the
         # todos original, so nothing is found and "" is correct.
         surviving = sorted(todos_dir.rglob(f"{ticket_id}.md")) if todos_dir.exists() else []

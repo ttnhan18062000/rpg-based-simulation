@@ -9,17 +9,17 @@ archived: 2026-07-28
 tags: [idea, agent-infrastructure, observability, data-quality, schema]
 ---
 
-# Idea: Derived SQLite Index Over agent-monitoring/*.jsonl (Read Path Only)
+# Idea: Derived SQLite Index Over agent-working/agent-monitoring/*.jsonl (Read Path Only)
 
 **Archived:** 2026-07-28 — fully shipped by the 4-ticket batch in
-`tickets/done/agent-monitoring-derived-index/` (`TCK-20260713-MONITORING-SQLITE-INDEX`,
+`agent-working/tickets/done/agent-monitoring-derived-index/` (`TCK-20260713-MONITORING-SQLITE-INDEX`,
 `TCK-20260713-MONITORING-QUERY-INDEX-MIGRATE`, `TCK-20260713-MONITORING-VALIDATE-INDEX-MIGRATE`,
 `TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE`); this document is the historical design reference.
 
 > **Maturity: SHIPPED.** `tools/agent-monitoring/build_index.py` delivers this doc's core "Idea"
 > section exactly as proposed: a gitignored, full-rebuild-only, on-demand SQLite index
-> (`agent-monitoring-index/monitoring.db`) built once from all 3 JSONL files, mirroring
-> `knowledge_search.py`'s `build`/`knowledge-index/` precedent, with a `make agent-monitoring-index`
+> (`agent-working/.index/agent-monitoring-index/monitoring.db`) built once from all 3 JSONL files, mirroring
+> `knowledge_search.py`'s `build`/`agent-working/.index/knowledge-index/` precedent, with a `make agent-monitoring-index`
 > target and zero change to the write path. All three named consumer-migration targets shipped in
 > the "Consumers migrate opportunistically" paragraph: `query.py` gained its first-ever test suite
 > (21 tests) in the same diff as its migration and a real legacy `--runs --status` bug was fixed
@@ -37,7 +37,7 @@ tags: [idea, agent-infrastructure, observability, data-quality, schema]
 
 ## Problem
 
-`agent-monitoring/` is 3 append-only JSONL files (`runs.jsonl` 582 lines, `events.jsonl` 2,724 lines, `tools.jsonl` 46,984 lines) read by 4 independent consumers, each of which re-implements its own interpretation of the same data:
+`agent-working/agent-monitoring/` is 3 append-only JSONL files (`runs.jsonl` 582 lines, `events.jsonl` 2,724 lines, `tools.jsonl` 46,984 lines) read by 4 independent consumers, each of which re-implements its own interpretation of the same data:
 
 - `tools/agent-monitoring/query.py` (120 lines) — full in-memory linear scan, list-comprehension filters. **Has zero test coverage** (`tests/tools/test_query.py` does not exist).
 - `tools/agent-monitoring/generate_retro.py` (507 lines) — hand-rolls `_resolve_status()`, `_is_legacy_event()`, `_is_gate_fail()` to interpret the same legacy record shapes.
@@ -50,12 +50,12 @@ This is explicitly **not** a performance problem at current volume — 47k small
 
 ## Idea
 
-Add a **derived, read-only SQLite index**, rebuilt from the 3 JSONL files, modeled directly on this repo's own existing precedent: `knowledge-index/knowledge.db` is built from `docs/`/`tickets/` by `tools/knowledge_search.py build`, is gitignored, and is never the source of truth — the markdown files are. Same shape here:
+Add a **derived, read-only SQLite index**, rebuilt from the 3 JSONL files, modeled directly on this repo's own existing precedent: `agent-working/.index/knowledge-index/knowledge.db` is built from `docs/`/`agent-working/tickets/` by `tools/knowledge_search.py build`, is gitignored, and is never the source of truth — the markdown files are. Same shape here:
 
 - **The JSONL files stay exactly as they are** — append-only, hook-written, source of truth. No change to `pre_tool_hook.py`/`post_tool_hook.py`/`writeSidecar`/`writeMonitoring`'s write path at all. This is deliberate: those hooks fire synchronously on every tool call, and CLAUDE.md's hard rule ("monitoring write failure must never fail the workflow") is far easier to guarantee for a bare file-append than for anything requiring a DB connection/lock.
 - A new build script (e.g. `tools/agent-monitoring/build_index.py`) reads all 3 files once, normalizes every legacy shape **in one place** (the same interpretation `generate_retro.py` and `validate.py` currently duplicate), and writes 3 tables (`runs`, `events`, `tools`) plus perhaps one normalized view (e.g. a `resolved_status` column computed once, replacing `_resolve_status()`).
 - **Full rebuild only — no incremental-build logic.** `knowledge_search.py`'s incremental mode exists because re-embedding is genuinely expensive (model inference over hundreds of docs). Parsing 47k small JSON lines into SQLite has no equivalent cost — a full rebuild is sub-second. Deliberately *not* copying the incremental-diff machinery avoids introducing a second surface for exactly the kind of subtle staleness bug this session's two tickets were both about. One Make target: `make agent-monitoring-index` (no `-update` variant needed).
-- The index is gitignored, like `knowledge-index/`. It is a convenience layer for querying/reporting, never a dependency for the write path or for anything gating a workflow.
+- The index is gitignored, like `agent-working/.index/knowledge-index/`. It is a convenience layer for querying/reporting, never a dependency for the write path or for anything gating a workflow.
 - Consumers migrate opportunistically, not as one big-bang rewrite: `query.py` (currently untested — lowest risk, and gets net-new test coverage as part of migrating) is the natural first target. `validate.py`'s two `compute_*_drift_report()` functions and `generate_retro.py`'s status/legacy-shape resolution are natural second/third targets, since consolidating their duplicated normalization logic is the actual DRY payoff.
 
 ### What this does not fix (orthogonal, already known)
@@ -96,7 +96,7 @@ Add a **derived, read-only SQLite index**, rebuilt from the 3 JSONL files, model
 - ~~Is a Make target the right home, or should this be a `tools/agent-monitoring/` CLI subcommand?~~
   — RESOLVED: Make target, per the author's stated preference. `make agent-monitoring-index` is the
   sole entry point; no CLI subcommand was added.
-- ~~If `agent-monitoring/tools.jsonl` grows by orders of magnitude in the future, should incremental
+- ~~If `agent-working/agent-monitoring/tools.jsonl` grows by orders of magnitude in the future, should incremental
   build be revisited?~~ — NOT reopened. Full-rebuild-only shipped exactly as scoped (`build_index.py`
   processes the live ~68k-line `tools.jsonl` corpus in well under a second); no evidence surfaced
   during this batch that revisits the simplification.
@@ -113,4 +113,4 @@ Add a **derived, read-only SQLite index**, rebuilt from the 3 JSONL files, model
 
 ---
 
-*Raised: 2026-07-11, directly from investigating whether `TCK-20260711-EVAL-SEARCH-DOCID-ANCHOR-FIX`'s and `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION`'s pattern (a derived signal nobody could cheaply cross-check against ground truth) generalizes across the whole `agent-monitoring/` subsystem, not just the one field each of those tickets fixed. Scheduled 2026-07-13 as 4 draft tickets in `tickets/todos/agent-monitoring-derived-index/`. Shipped 2026-07-28 — see the Maturity banner above.*
+*Raised: 2026-07-11, directly from investigating whether `TCK-20260711-EVAL-SEARCH-DOCID-ANCHOR-FIX`'s and `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION`'s pattern (a derived signal nobody could cheaply cross-check against ground truth) generalizes across the whole `agent-working/agent-monitoring/` subsystem, not just the one field each of those tickets fixed. Scheduled 2026-07-13 as 4 draft tickets in `agent-working/tickets/todos/agent-monitoring-derived-index/`. Shipped 2026-07-28 — see the Maturity banner above.*

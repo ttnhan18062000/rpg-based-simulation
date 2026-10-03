@@ -2,7 +2,7 @@
 
 Tests the apply-layer (push-based) CombatShaper: derives events from prior_state + update alone,
 no current_state diffing. See src/observability/event_shapers.py's module docstring and
-stored_artifacts/TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC/investigation.md's "Design
+agent-working/stored_artifacts/TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC/investigation.md's "Design
 refinement" section for the architecture this exercises.
 """
 from __future__ import annotations

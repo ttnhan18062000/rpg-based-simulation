@@ -8,6 +8,7 @@ import subprocess
 import sys
 
 from tools.agent_codex_posttool_adapter.hook_entry import main
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _ROOT = Path(__file__).parents[2]
 _FIXTURE = _ROOT / "tests" / "fixtures" / "codex_hook_payloads" / "post_tool_use_stdin_capture.json"
@@ -30,9 +31,9 @@ def _env() -> dict[str, str]:
 
 def test_hook_entry_appends_a_redacted_identity_bound_scratch_record(tmp_path):
     payload = json.loads(_FIXTURE.read_text())["raw_stdin_payload"]
-    (tmp_path / "agent-monitoring").mkdir()
+    (tmp_path / AGENT_MONITORING).mkdir(parents=True)
     assert main(StringIO(json.dumps(payload)), _env(), tmp_path) == 0
-    target = tmp_path / "agent-monitoring" / "tools.jsonl"
+    target = tmp_path / AGENT_MONITORING / "tools.jsonl"
     [record] = [json.loads(line) for line in target.read_text().splitlines()]
     assert {key: record[key] for key in ("execution_id", "ticket_id", "run_id", "provider")} == {
         **{"execution_id": _EXECUTION, "ticket_id": _TICKET, "run_id": _TICKET}, "provider": "codex"
@@ -42,7 +43,7 @@ def test_hook_entry_appends_a_redacted_identity_bound_scratch_record(tmp_path):
 
 def test_hook_entry_fails_open_for_invalid_json_and_does_not_write(tmp_path):
     assert main(StringIO("not-json"), _env(), tmp_path) == 0
-    target = tmp_path / "agent-monitoring" / "tools.jsonl"
+    target = tmp_path / AGENT_MONITORING / "tools.jsonl"
     assert not target.exists()
 
 

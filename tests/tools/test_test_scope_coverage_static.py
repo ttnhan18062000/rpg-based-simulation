@@ -81,11 +81,11 @@ def test_ai_and_systems_deliberately_unmapped_not_a_silent_gap():
 
 def test_docs_and_ticket_paths_return_none():
     assert expected_test_dirs_for("docs/mechanics/01_entity_anatomy.md") is None
-    assert expected_test_dirs_for("tickets/done/TCK-1.md") is None
+    assert expected_test_dirs_for("agent-working/tickets/done/TCK-1.md") is None
 
 
 def test_tools_subpath_with_no_rule_returns_none_not_tests_tools_fallback():
-    # A tools/ path that is neither a flat *.py file, agent-monitoring/gate_checks, nor a known
+    # A tools/ path that is neither a flat *.py file, agent-working/agent-monitoring/gate_checks, nor a known
     # agent_codex/orchestration/replay mirror subdir must not silently default to tests/tools/ --
     # that would mask genuinely unmapped directories instead of surfacing them for a future map
     # update.
@@ -224,7 +224,7 @@ def test_multiple_files_mapping_to_same_dir_only_report_once():
 
 
 def test_unmapped_files_produce_no_results_not_false_pass_or_fail():
-    files_changed = ["docs/mechanics/01_entity_anatomy.md", "tickets/done/TCK-1.md"]
+    files_changed = ["docs/mechanics/01_entity_anatomy.md", "agent-working/tickets/done/TCK-1.md"]
     pytest_command = "pytest tests/unit/core/ -v"
 
     results = check_test_scope_coverage(files_changed, pytest_command)

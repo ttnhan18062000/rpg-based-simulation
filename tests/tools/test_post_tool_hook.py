@@ -1,7 +1,7 @@
 """Tests for TCK-20260716-MONITORING-TOOLS-JSONL-WRITE-LOCK.
 
 `post_tool_hook.py` appends one JSON record per tool call to
-`agent-monitoring/data/<ISO-week>/tools.jsonl` (unified layout since
+`agent-working/agent-monitoring/data/<ISO-week>/tools.jsonl` (unified layout since
 TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY). Before the original write-lock ticket, the append
 (`with open(tools_file, "a") as f: f.write(...)`) had no synchronization across processes, and a
 real two-session race produced one corrupted, unparseable line in production (see the ticket's
@@ -11,7 +11,7 @@ Request Summary). The fix wraps the write in `fcntl.flock(f, fcntl.LOCK_EX)` /
 The hook is a top-level script (not importable as a module of functions — reading `sys.stdin`
 executes immediately on import), so every test here drives it the way Claude Code itself does:
 as a subprocess fed a JSON payload on stdin, with `cwd` pointed at a temp dir so
-`agent-monitoring/tools.jsonl` is created fresh per test.
+`agent-working/agent-monitoring/tools.jsonl` is created fresh per test.
 """
 import json
 import subprocess
@@ -19,6 +19,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
@@ -72,7 +73,7 @@ def _tools_lines(cwd):
     # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: keys by the current git branch now, not
     # ticket_id.
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    tools_file = cwd / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.tools.jsonl"
+    tools_file = cwd / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.tools.jsonl"
     return tools_file.read_text().splitlines()
 
 
@@ -511,10 +512,10 @@ def test_locking_failure_does_not_propagate(tmp_path):
 
     # TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY: the diagnostic sidecar path is derived from
     # target_path.parent (writer.py::_diagnostic_path_for), which is now
-    # agent-monitoring/data/<ISO-week>/ (the unified week folder) rather than
-    # agent-monitoring/tools/ (the prior epic's shard directory).
+    # agent-working/agent-monitoring/data/<ISO-week>/ (the unified week folder) rather than
+    # agent-working/agent-monitoring/tools/ (the prior epic's shard directory).
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    diagnostic_path = tmp_path / "agent-monitoring" / "data" / iso_week / ".writer_health.jsonl"
+    diagnostic_path = tmp_path / AGENT_MONITORING / "data" / iso_week / ".writer_health.jsonl"
     diagnostic_lines = diagnostic_path.read_text().splitlines()
     assert len(diagnostic_lines) == 1
     diagnostic = json.loads(diagnostic_lines[0])
@@ -525,15 +526,15 @@ def test_writes_to_unified_week_folder(tmp_path):
     result = _run_hook_with_frozen_now(tmp_path, _payload(), "2026-08-31T12:00:00+00:00")
     assert result.returncode == 0
 
-    week_file = tmp_path / "agent-monitoring" / "data" / "2026-W36" / f"{_TEST_BRANCH}.tools.jsonl"
+    week_file = tmp_path / AGENT_MONITORING / "data" / "2026-W36" / f"{_TEST_BRANCH}.tools.jsonl"
     assert week_file.exists()
     lines = week_file.read_text().splitlines()
     assert len(lines) == 1
     record = json.loads(lines[0])
     assert set(record.keys()) == _RECORD_FIELDS
 
-    assert not (tmp_path / "agent-monitoring" / "tools.jsonl").exists()
-    assert not (tmp_path / "agent-monitoring" / "tools" / "tools-2026-W36.jsonl").exists()
+    assert not (tmp_path / AGENT_MONITORING / "tools.jsonl").exists()
+    assert not (tmp_path / AGENT_MONITORING / "tools" / "tools-2026-W36.jsonl").exists()
 
 
 def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path):
@@ -547,8 +548,8 @@ def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path):
     )
     assert result_2.returncode == 0
 
-    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / f"{_TEST_BRANCH}.tools.jsonl"
-    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / f"{_TEST_BRANCH}.tools.jsonl"
+    week_36 = tmp_path / AGENT_MONITORING / "data" / "2026-W36" / f"{_TEST_BRANCH}.tools.jsonl"
+    week_37 = tmp_path / AGENT_MONITORING / "data" / "2026-W37" / f"{_TEST_BRANCH}.tools.jsonl"
     assert week_36.exists()
     assert week_37.exists()
 
@@ -564,12 +565,12 @@ def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path):
 
 
 def test_iso_week_shard_directory_created_on_first_write(tmp_path):
-    assert not (tmp_path / "agent-monitoring").exists()
+    assert not (tmp_path / AGENT_MONITORING).exists()
 
     result = _run_hook_with_frozen_now(tmp_path, _payload(), "2026-08-31T12:00:00+00:00")
     assert result.returncode == 0
 
-    week_dir = tmp_path / "agent-monitoring" / "data" / "2026-W36"
+    week_dir = tmp_path / AGENT_MONITORING / "data" / "2026-W36"
     assert week_dir.exists()
     assert (week_dir / f"{_TEST_BRANCH}.tools.jsonl").exists()
 
@@ -611,6 +612,6 @@ def test_iso_week_computation_failure_does_not_propagate(tmp_path):
 
     assert result.returncode == 0
     assert result.stderr == ""
-    assert not (tmp_path / "agent-monitoring" / "tools").exists()
-    assert not (tmp_path / "agent-monitoring" / "tools.jsonl").exists()
-    assert not (tmp_path / "agent-monitoring" / "data").exists()
+    assert not (tmp_path / AGENT_MONITORING / "tools").exists()
+    assert not (tmp_path / AGENT_MONITORING / "tools.jsonl").exists()
+    assert not (tmp_path / AGENT_MONITORING / "data").exists()

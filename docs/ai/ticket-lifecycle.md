@@ -37,7 +37,7 @@ above). Every gate-branch edge below is labeled with the exact return status tha
 flowchart TD
     Start([Request]) --> Scope
 
-    Scope["Scope<br/><i>ticket-scoper</i><br/>→ tickets/inprogress/{id}.md<br/>→ staging_artifacts/{id}/ (standard/epic only)"]
+    Scope["Scope<br/><i>ticket-scoper</i><br/>→ agent-working/tickets/inprogress/{id}.md<br/>→ agent-working/staging_artifacts/{id}/ (standard/epic only)"]
     Scope -- CONFLICTS_DETECTED --> ScopeFix[/"Human resolves, re-run"/]
     Scope -- TAGS_NOT_REGISTERED --> ScopeTagFix[/"Register tag(s) via tag_registry.py add,<br/>or edit ticket to use an existing tag, re-run"/]
     Scope -- "tier=epic" --> EpicDone(["EPIC_SCOPED"])
@@ -84,7 +84,7 @@ flowchart TD
     Verify -- DOD_BLOCKED --> VerifyFix[/"Human fixes remaining items, re-run with ticket_id"/]
     Verify --> Finalize
 
-    Finalize["Finalize<br/><i>inline</i><br/>→ ticket moved to tickets/done/<br/>→ working_log.csv appended<br/>→ staging_artifacts/ → stored_artifacts/ (standard)<br/>→ data/runs/, reports/ cleaned<br/>→ run_finalize_selfcheck confirms it all landed"]
+    Finalize["Finalize<br/><i>inline</i><br/>→ ticket moved to agent-working/tickets/done/<br/>→ working_log.csv appended<br/>→ agent-working/staging_artifacts/ → agent-working/stored_artifacts/ (standard)<br/>→ data/runs/, reports/ cleaned<br/>→ run_finalize_selfcheck confirms it all landed"]
     Finalize -- FINALIZE_INCOMPLETE --> FinalizeFix[/"Human fixes flagged discrepancy, re-run with ticket_id"/]
     Finalize --> Done(["DONE"])
 ```
@@ -123,12 +123,12 @@ Workflow({ name: 'implement-ticket', args: {
 **Agent:** `ticket-scoper`
 
 **What happens:**
-- Scans `tickets/` (including `inprogress/`, `done/`, and `backlogs/`) for duplicate or conflicting work — a hit in `backlogs/` means the work was already investigated and deliberately deprioritized, not abandoned
+- Scans `agent-working/tickets/` (including `inprogress/`, `done/`, and `backlogs/`) for duplicate or conflicting work — a hit in `backlogs/` means the work was already investigated and deliberately deprioritized, not abandoned
 - Scans `docs/mechanics/`, `docs/engine/` for constraints
-- Scans `stored_artifacts/` for prior investigations
+- Scans `agent-working/stored_artifacts/` for prior investigations
 - Reads relevant source files
-- Produces the ticket at `tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md`
-- Creates `staging_artifacts/{ticket_id}/` — **standard/epic tier only**. Hotfix tier skips this:
+- Produces the ticket at `agent-working/tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md`
+- Creates `agent-working/staging_artifacts/{ticket_id}/` — **standard/epic tier only**. Hotfix tier skips this:
   Investigate/Plan/Review (the phases that would populate it with `investigation.md`/`plan.md`/
   `test_plan.md`) never run for hotfix, so the directory would otherwise sit empty for the ticket's
   whole life and get flagged as a leftover by `done-checker`'s "repo state is consistent" condition
@@ -136,8 +136,8 @@ Workflow({ name: 'implement-ticket', args: {
 
 **Example output:**
 ```
-tickets/inprogress/TCK-20260606-COMBAT-RELATION.md
-staging_artifacts/TCK-20260606-COMBAT-RELATION/
+agent-working/tickets/inprogress/TCK-20260606-COMBAT-RELATION.md
+agent-working/staging_artifacts/TCK-20260606-COMBAT-RELATION/
 ```
 
 **Gate:** If conflicts are detected, the workflow returns `CONFLICTS_DETECTED` with a list. The user resolves (adjust scope, close duplicate, etc.) and re-runs. `conflicts` is reserved for genuine blocking duplicate/contradictory work only — good-faith informational disclosure (e.g. a related prior ticket that is not duplicate work, a mechanic/parity note worth surfacing) is returned separately via the optional `related_context` field, which is logged for visibility but never gates the pipeline (`TCK-20260824-HOTFIX-CONFLICTS-BLOCKING-SPLIT`).
@@ -164,11 +164,11 @@ been set by a human or by `create-tickets.js` without going through this check.
 - Reads the ticket's "Related Code Areas" — for the example: `src/content_semantics/relation.py`, `src/content_semantics/faction.py`, and the combat target selection component
 - Reads `docs/mechanics/02_combat_laws.md` for the target classification law
 - Checks `docs/parity_ledger/combat_movement.yaml` for overlapping P0 entries
-- Searches `stored_artifacts/` for prior related work
+- Searches `agent-working/stored_artifacts/` for prior related work
 
 **Produces:**
-- `staging_artifacts/{id}/investigation.md` — current combat classification behavior at `file:line`, relation projection service interface, legacy fallback path, anti-drift hazards ("do not rewrite full combat system", "do not remove legacy enum fallback")
-- `staging_artifacts/{id}/test_plan.md` — regression surface (existing arena/combat tests that must pass), new tests required (5 per the repair plan), scoped pytest commands
+- `agent-working/staging_artifacts/{id}/investigation.md` — current combat classification behavior at `file:line`, relation projection service interface, legacy fallback path, anti-drift hazards ("do not rewrite full combat system", "do not remove legacy enum fallback")
+- `agent-working/staging_artifacts/{id}/test_plan.md` — regression surface (existing arena/combat tests that must pass), new tests required (5 per the repair plan), scoped pytest commands
 
 **Structured return (added by `TCK-20260802-DOC-UPDATE-DISCIPLINE`):** the Investigate `agent()`
 call now has a schema requiring `docs_to_update` (array of the exact `docs/` paths this ticket must
@@ -254,7 +254,7 @@ Step 5 — Legacy regression
   Verify: test_legacy_monster_fallback_still_hostile, test_old_is_hostile_semantics_still_pass
 ```
 
-**Gate:** The workflow returns `NEEDS_HUMAN_INPUT` if plan.md's `## Unresolved Questions` section body has real content — the check is content-aware, not heading-presence-only. A heading followed by an empty/whitespace-only body, or by a first non-blank line starting with the word "None" (case-insensitive, word-boundary matched — "Nonetheless..." does not count), is treated as resolved and does not gate (`tools/gate_checks/plan_gate_static.py::plan_has_unresolved_questions_heading`). Any other body content still gates. The user reads `staging_artifacts/{id}/plan.md`, resolves the questions (editing the plan directly), and re-runs with `ticket_id`.
+**Gate:** The workflow returns `NEEDS_HUMAN_INPUT` if plan.md's `## Unresolved Questions` section body has real content — the check is content-aware, not heading-presence-only. A heading followed by an empty/whitespace-only body, or by a first non-blank line starting with the word "None" (case-insensitive, word-boundary matched — "Nonetheless..." does not count), is treated as resolved and does not gate (`tools/gate_checks/plan_gate_static.py::plan_has_unresolved_questions_heading`). Any other body content still gates. The user reads `agent-working/staging_artifacts/{id}/plan.md`, resolves the questions (editing the plan directly), and re-runs with `ticket_id`.
 
 ---
 
@@ -269,7 +269,7 @@ Step 5 — Legacy regression
 - No new hardcoded relationship labels in combat code — labels come from the projection service
 - Check `docs/mechanics/02_combat_laws.md` for any law governing target classification
 
-**Gate:** Returns `NEEDS_CHANGES` or `BLOCKED` with violation list. The user fixes `staging_artifacts/{id}/plan.md` and re-runs with `ticket_id`. The workflow resumes from the Review phase (Scope/Investigate/Plan are already cached).
+**Gate:** Returns `NEEDS_CHANGES` or `BLOCKED` with violation list. The user fixes `agent-working/staging_artifacts/{id}/plan.md` and re-runs with `ticket_id`. The workflow resumes from the Review phase (Scope/Investigate/Plan are already cached).
 
 ---
 
@@ -283,8 +283,8 @@ Step 5 — Legacy regression
 - No comments explaining the fallback logic unless the REASON is non-obvious (it is obvious here — skip)
 
 **After writing code, the implementer updates:**
-- `tickets/inprogress/{id}.md` → Implementation Notes section
-- `staging_artifacts/{id}/plan.md` → Deviations section (if any step differed)
+- `agent-working/tickets/inprogress/{id}.md` → Implementation Notes section
+- `agent-working/staging_artifacts/{id}/plan.md` → Deviations section (if any step differed)
 
 **Returns structured report:**
 ```json
@@ -457,10 +457,10 @@ cleaned successfully) the workflow proceeds silently to Parity. **Gate:** Return
 resolves manually and re-runs with `ticket_id`.
 
 **Reliability caveat (added by TCK-20260714-DATA-RUNS-VERIFY-REGEN):** direct evidence from
-`agent-monitoring/tools.jsonl` across 5+ weeks of runs found this checkpoint's own `bash()` call
+`agent-working/agent-monitoring/tools.jsonl` across 5+ weeks of runs found this checkpoint's own `bash()` call
 has never been observed to execute — as a bare, non-`phase()`-anchored block, the LLM orchestrator
 reading `implement-ticket.js` has no reliable translation-table anchor for it (see
-`stored_artifacts/TCK-20260714-DATA-RUNS-VERIFY-REGEN/investigation.md`). Its code and this
+`agent-working/stored_artifacts/TCK-20260714-DATA-RUNS-VERIFY-REGEN/investigation.md`). Its code and this
 paragraph are kept as documentation of intent and as a defense-in-depth no-op if the orchestrator
 ever does execute it, but it must not be relied on as the load-bearing cleanup mechanism. The
 Verify section below (`done-checker`'s Step 0a) carries the evidenced-reliable sweep that actually
@@ -553,7 +553,7 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
 | 9 | Repo consistent | No leftover temp files |
 | 10 | data/runs/ cleaned | — script-checked; primary cleanup now happens immediately before this check, inside done-checker's own Step 0a (as of TCK-20260714-DATA-RUNS-VERIFY-REGEN) — closes the gap where Parity/Verify's own re-verification work could regenerate artifacts after the post-Test checkpoint (Test section above, now a documented-intent no-op — see its Reliability caveat) had already run. `run_static_precheck`'s data_runs_clean check (Step 0b) remains the backstop confirmation read. |
 | 11 | No material gaps | All follow-up items (e.g. fallback reporting) marked complete or explicitly flagged |
-| 12 | Frontmatter valid (ticket + staging artifacts) | — script-checked; as of `TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT`, `check_frontmatter_valid()` also asserts `status`/`phase` agree with the ticket's physical location via `validate_frontmatter.py::check_ticket_location_consistency()` (`tickets/done/` requires `status: historical` + `phase: done`; `tickets/inprogress/` forbids `phase: done`) — independently re-enforced repo-wide by a corpus test over every real `tickets/done/**/*.md` file, so this catches drift from hand-orchestrated/unrecorded closes too, not just per-ticket Verify runs |
+| 12 | Frontmatter valid (ticket + staging artifacts) | — script-checked; as of `TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT`, `check_frontmatter_valid()` also asserts `status`/`phase` agree with the ticket's physical location via `validate_frontmatter.py::check_ticket_location_consistency()` (`agent-working/tickets/done/` requires `status: historical` + `phase: done`; `agent-working/tickets/inprogress/` forbids `phase: done`) — independently re-enforced repo-wide by a corpus test over every real `agent-working/tickets/done/**/*.md` file, so this catches drift from hand-orchestrated/unrecorded closes too, not just per-ticket Verify runs |
 | 13 | **Agent monitoring** _(pre-marked PASS)_ | Written by workflow `writeMonitoring` after READY_TO_CLOSE |
 
 ---
@@ -563,8 +563,8 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
 **Inline (no dedicated agent):**
 
 1. Update ticket: Status → `DONE`, fill Completion Summary and Files Changed
-2. Move: `tickets/inprogress/{id}.md` → `tickets/done/{id}.md`
-3. Append `tickets/working_log.csv` via the sanctioned helper, `tools/working_log_writer.py` — never
+2. Move: `agent-working/tickets/inprogress/{id}.md` → `agent-working/tickets/done/{id}.md`
+3. Append `agent-working/tickets/working_log.csv` via the sanctioned helper, `tools/working_log_writer.py` — never
    hand-roll this write (added by `TCK-20260912-WORKING-LOG-APPEND-HELPER`, after two independent
    improvised writers each emitted CRLF rows and blocked `merge=union` on 3 of 4 recent batch merges):
    a. Use the `Write` tool to create a JSON file with the 6 row fields, e.g.:
@@ -572,7 +572,7 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
       {"timestamp": "2026-06-06T00:00:00Z", "ticket_id": "TCK-20260606-COMBAT-RELATION",
        "title": "Relation Projection", "status": "DONE",
        "summary": "Added relation projection wrapper into combat target classification",
-       "artifacts_path": "stored_artifacts/TCK-20260606-COMBAT-RELATION"}
+       "artifacts_path": "agent-working/stored_artifacts/TCK-20260606-COMBAT-RELATION"}
       ```
       The `Write` tool's content is never shell-interpreted, so title/summary text (quotes,
       backticks, `$`, embedded commas, embedded newlines) needs no manual escaping or quoting here.
@@ -588,18 +588,18 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
    (`tests/tools/test_working_log_writer.py`), asserts `tools/working_log_writer.py` is the only
    module under `tools/` that writes this file — catching a reintroduced second writer in CI, not
    preventing one at write time.
-4. Move: `staging_artifacts/{id}/` → `stored_artifacts/{id}/`
+4. Move: `agent-working/staging_artifacts/{id}/` → `agent-working/stored_artifacts/{id}/`
 5. Clean: `data/runs/*`, `reports/release_proof/*` (backstop — primary cleanup happens post-Test as of
    TCK-20260708-DATA-RUNS-CLEANUP-TIMING; this step now typically finds nothing to remove).
 6. **Self-verification** (`bash()`, orchestrator-level — not the finalize agent's own prose report):
    runs `tools/gate_checks/done_checker_static.py::run_finalize_selfcheck(ticket_id, tier)` to
    confirm steps 2-4 above actually landed, aggregating 4 checks (as of
-   `TCK-20260709-REGISTRY-REGEN-ON-CLOSE`, up from 3): `stored_artifacts/` complete,
-   `staging_artifacts/` gone, ticket in `tickets/done/`, exactly one `working_log.csv` row, and
+   `TCK-20260709-REGISTRY-REGEN-ON-CLOSE`, up from 3): `agent-working/stored_artifacts/` complete,
+   `agent-working/staging_artifacts/` gone, ticket in `agent-working/tickets/done/`, exactly one `working_log.csv` row, and
    `docs/REGISTRY.yaml` regenerated with the closing ticket's entry landed in it. Any discrepancy
    (or unparseable script output) returns `FINALIZE_INCOMPLETE` with `failing_items` instead of
    falling through to `DONE`.
-7. **Write agent monitoring records** (`writeMonitoring`): appends one run entry to `agent-monitoring/data/YYYY-Www/runs.jsonl` and one event per phase to `agent-monitoring/data/YYYY-Www/events.jsonl` — status is `DONE` if the self-check passed, `FINALIZE_INCOMPLETE` otherwise. This step is non-fatal — if the write fails, it logs a WARNING and the workflow still returns its computed status.
+7. **Write agent monitoring records** (`writeMonitoring`): appends one run entry to `agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl` and one event per phase to `agent-working/agent-monitoring/data/YYYY-Www/events.jsonl` — status is `DONE` if the self-check passed, `FINALIZE_INCOMPLETE` otherwise. This step is non-fatal — if the write fails, it logs a WARNING and the workflow still returns its computed status.
 8. **Refresh the knowledge-search index** (added by `TCK-20260802-DOC-UPDATE-DISCIPLINE`, runs
    right after the self-check passes and before the `DONE` return): orchestrator-run `bash()`
    checks `git status --porcelain -- docs/`; if this run touched any `docs/` path, it runs `make
@@ -635,43 +635,43 @@ Use `/implement-epic` when you have multiple tickets to implement in sequence.
 agent can never start `/create-tickets` or `/implement-epic` itself — that stays user opt-in, per
 CLAUDE.md's own "Require explicit user opt-in" rule. But a session that notices the *shape* these
 workflows exist for — a plan or proposal about to become several tickets, or a
-`tickets/todos/<folder>/` sitting ready to dispatch — should **offer** the matching workflow (what
+`agent-working/tickets/todos/<folder>/` sitting ready to dispatch — should **offer** the matching workflow (what
 it would do, rough cost) and let the user decide. This is the gap `/create-tickets` and
 `/implement-epic` both fell to near-zero runs from: nothing ever led to either being offered, so
 neither ever got asked for. Offering costs nothing and changes no opt-in semantics; not offering
 when the shape is right is a missed handoff, not caution.
 
 ```
-/implement-epic folder=tickets/todos/monitoring/
+/implement-epic folder=agent-working/tickets/todos/monitoring/
 /implement-epic epic_id=TCK-20260607-MY-EPIC
 /implement-epic request="add a caching layer to the world registry"
 ```
 
 **How it works:**
-1. **Discover** — lists all TCK-*.md tickets in the folder or reads the epic's `## Related Tickets` section; filters out any already in `tickets/done/`, and any whose own `## Status` reads `BLOCKED` (excluded from the implementation order and named separately in the summary/report — a structurally-blocked ticket is never attempted; see `tools/gate_checks/epic_blocked_status_static.py`)
+1. **Discover** — lists all TCK-*.md tickets in the folder or reads the epic's `## Related Tickets` section; filters out any already in `agent-working/tickets/done/`, and any whose own `## Status` reads `BLOCKED` (excluded from the implementation order and named separately in the summary/report — a structurally-blocked ticket is never attempted; see `tools/gate_checks/epic_blocked_status_static.py`)
 2. **Implement** — calls `implement-ticket` for each ticket in order; stops at the first gate failure
 3. **Report** — summarizes done/failed/remaining/blocked tickets and writes a batch monitoring record
 
 **Gate failure recovery:**
 ```
 # Batch stopped at TCK-20260607-C (TESTS_FAILED). Fix it, then re-run:
-/implement-epic folder=tickets/todos/my-feature/
+/implement-epic folder=agent-working/tickets/todos/my-feature/
 # Already-done tickets are skipped automatically — resumes at TCK-20260607-C
 ```
 
-**Batch monitoring:** A single batch run record (prefixed `EPIC-` or `FOLDER-`) is written to `agent-monitoring/data/YYYY-Www/runs.jsonl` in addition to the per-ticket run records.
+**Batch monitoring:** A single batch run record (prefixed `EPIC-` or `FOLDER-`) is written to `agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl` in addition to the per-ticket run records.
 
 See `docs/ai/workflows.md` → `implement-epic` for the full args reference.
 
-**Epic staleness check:** `tools/agent-monitoring/epic_staleness_check.py` (`make agent-monitoring-epic-staleness`) periodically scans all open epics — both `epic_id`-mode tickets in `tickets/inprogress/` and `folder`-mode/hybrid `SEQUENCE.md` folders in `tickets/todos/*/` — for child-ticket activity that has gone idle. It flags an epic **stale** only if at least one child ticket shows real activity evidence (a `tickets/working_log.csv` row or `agent-monitoring/data/YYYY-Www/runs.jsonl` record) whose timestamp is older than a 5-day default window. An epic whose children have **zero activity ever** is never flagged stale — that shape (scoped and sequenced, then deliberately queued behind other work) is normal planning behavior, not abandonment; it is instead surfaced separately, informationally, as "never started" in the report (never in the hook nudge). `TCK-20260702-OBSISO-EPIC` is the concrete example: zero child activity ever, correctly classified as never-started, not stale. A third case is status-aware: an epic ticket whose own body `## Status` field reads `BLOCKED` (e.g. `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC`, parked pending an explicit owner decision with a dated rationale) is never flagged stale regardless of child idleness and never lands in the never-started bucket either — it is classified into a third "blocked" bucket and surfaced separately in the report under "Informational: BLOCKED epics (not stale — deliberately parked):" (`TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC`). The two discovery loops (`epic_id`-mode, `folder`-mode) are deduped by `epic_id` after both scans complete — first-occurrence-wins, with the `epic_id`-mode loop enumerated first so an epic present in both `tickets/inprogress/` and its `tickets/todos/` origin (e.g. during the window between Scope's copy and a later Finalize/cleanup) is reported exactly once, preferring the `tickets/inprogress/` candidate. Advisory-only, read-only, mirrors `retro_nudge_hook.py`'s `PostToolUse` hook shape — see "Agent Monitoring" below.
+**Epic staleness check:** `tools/agent-monitoring/epic_staleness_check.py` (`make agent-monitoring-epic-staleness`) periodically scans all open epics — both `epic_id`-mode tickets in `agent-working/tickets/inprogress/` and `folder`-mode/hybrid `SEQUENCE.md` folders in `agent-working/tickets/todos/*/` — for child-ticket activity that has gone idle. It flags an epic **stale** only if at least one child ticket shows real activity evidence (a `agent-working/tickets/working_log.csv` row or `agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl` record) whose timestamp is older than a 5-day default window. An epic whose children have **zero activity ever** is never flagged stale — that shape (scoped and sequenced, then deliberately queued behind other work) is normal planning behavior, not abandonment; it is instead surfaced separately, informationally, as "never started" in the report (never in the hook nudge). `TCK-20260702-OBSISO-EPIC` is the concrete example: zero child activity ever, correctly classified as never-started, not stale. A third case is status-aware: an epic ticket whose own body `## Status` field reads `BLOCKED` (e.g. `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC`, parked pending an explicit owner decision with a dated rationale) is never flagged stale regardless of child idleness and never lands in the never-started bucket either — it is classified into a third "blocked" bucket and surfaced separately in the report under "Informational: BLOCKED epics (not stale — deliberately parked):" (`TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC`). The two discovery loops (`epic_id`-mode, `folder`-mode) are deduped by `epic_id` after both scans complete — first-occurrence-wins, with the `epic_id`-mode loop enumerated first so an epic present in both `agent-working/tickets/inprogress/` and its `agent-working/tickets/todos/` origin (e.g. during the window between Scope's copy and a later Finalize/cleanup) is reported exactly once, preferring the `agent-working/tickets/inprogress/` candidate. Advisory-only, read-only, mirrors `retro_nudge_hook.py`'s `PostToolUse` hook shape — see "Agent Monitoring" below.
 
 ---
 
 ## Agent Monitoring
 
 Every `implement-ticket` run (including hotfix) writes:
-- `agent-monitoring/data/YYYY-Www/runs.jsonl` — one run record: `run_id`, timestamps, tier, `final_status`, phase event count
-- `agent-monitoring/data/YYYY-Www/events.jsonl` — one event per phase: phase name, agent name, status, summary
+- `agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl` — one run record: `run_id`, timestamps, tier, `final_status`, phase event count
+- `agent-working/agent-monitoring/data/YYYY-Www/events.jsonl` — one event per phase: phase name, agent name, status, summary
 
 These records are written at the end of every exit point (CONFLICTS_DETECTED, DONE, TESTS_FAILED, etc.) — not just on success. Hotfix runs push three `skipped` events for the Investigate/Plan/Review phases.
 
@@ -685,7 +685,7 @@ make agent-monitoring-query ARGS="--agent investigator --days 14"
 make agent-monitoring-epic-staleness  # report open epics with no recent child-ticket activity
 ```
 
-**Planning-doc staleness sweep:** `make planning-doc-staleness-check` (`tools/gate_checks/planning_doc_staleness_check.py`, `TCK-20260930-PLANNING-DOC-STALENESS-DETECTOR`) lists `docs/plans/` claims that a `tickets/done/` ticket already shipped — a doc with frontmatter `status: idea`, or a heading saying "ready, schedule later" — so a reader does not duplicate finished work. It is a **periodic sweep, not a close-time prompt**, because a close-time prompt only works when the closing ticket's `## Related Docs` correctly names the source planning doc, which is often implicit or missing; the sweep catches drift regardless. It matches by title keywords (the done ticket's slug against the doc's file name and H1, or the item's heading; the ticket must be dated on or after the doc, and a `## Disposition` closure never counts), so expect false negatives and the occasional coincidence. Report-only: it never edits a doc, never fails, exits 0. **Resolution convention** once a person confirms the whole idea shipped: move the doc to `docs/plans/archive/` with frontmatter `status: historical`, `maturity: shipped`, `archived: <date>` (the precedent `archive/agent_infrastructure/idea_agent_monitoring_pause_resume_seq_collision.md` already set; the sweep skips `archive/`); a shipped *item* inside a still-active doc gets an inline dated note on its heading (`SHIPPED <date> as <ticket id>`, and "was: ..." for the old claim — a heading with SHIPPED/CLOSED/"was:" is skipped). Closed tickets that cite the old path are historical records and are not rewritten.
+**Planning-doc staleness sweep:** `make planning-doc-staleness-check` (`tools/gate_checks/planning_doc_staleness_check.py`, `TCK-20260930-PLANNING-DOC-STALENESS-DETECTOR`) lists `docs/plans/` claims that a `agent-working/tickets/done/` ticket already shipped — a doc with frontmatter `status: idea`, or a heading saying "ready, schedule later" — so a reader does not duplicate finished work. It is a **periodic sweep, not a close-time prompt**, because a close-time prompt only works when the closing ticket's `## Related Docs` correctly names the source planning doc, which is often implicit or missing; the sweep catches drift regardless. It matches by title keywords (the done ticket's slug against the doc's file name and H1, or the item's heading; the ticket must be dated on or after the doc, and a `## Disposition` closure never counts), so expect false negatives and the occasional coincidence. Report-only: it never edits a doc, never fails, exits 0. **Resolution convention** once a person confirms the whole idea shipped: move the doc to `docs/plans/archive/` with frontmatter `status: historical`, `maturity: shipped`, `archived: <date>` (the precedent `archive/agent_infrastructure/idea_agent_monitoring_pause_resume_seq_collision.md` already set; the sweep skips `archive/`); a shipped *item* inside a still-active doc gets an inline dated note on its heading (`SHIPPED <date> as <ticket id>`, and "was: ..." for the old claim — a heading with SHIPPED/CLOSED/"was:" is skipped). Closed tickets that cite the old path are historical records and are not rewritten.
 
 **Epic staleness advisory hook:** a `PostToolUse` hook entry (`epic_staleness_check.py --hook`, wired alongside `retro_nudge_hook.py` in `.claude/settings.json`) fires an `additionalContext` nudge, at most once per session, if any open epic is flagged **stale** — i.e. has real child-ticket activity followed by 5+ days of silence. The separate "never started" (zero activity ever) and "BLOCKED" (deliberately parked, per the ticket's own `## Status` field) cases never reach this hook — both are queryable-surface only, via `make agent-monitoring-epic-staleness`, to avoid alarm-fatigue nudges on legitimately-queued or deliberately-paused backlog epics.
 
@@ -695,27 +695,27 @@ make agent-monitoring-epic-staleness  # report open epics with no recent child-t
 
 ```
 Before work:
-  tickets/inprogress/{ticket_id}.md
+  agent-working/tickets/inprogress/{ticket_id}.md
 
 During work:
-  staging_artifacts/{ticket_id}/
+  agent-working/staging_artifacts/{ticket_id}/
     investigation.md
     plan.md
     test_plan.md
 
 After work:
-  tickets/done/{ticket_id}.md
-  stored_artifacts/{ticket_id}/
+  agent-working/tickets/done/{ticket_id}.md
+  agent-working/stored_artifacts/{ticket_id}/
     investigation.md
     plan.md
     test_plan.md
-  tickets/working_log.csv  ← one new row appended
+  agent-working/tickets/working_log.csv  ← one new row appended
 
 Deliberately deprioritized (not done, not actively blocked-and-waiting):
-  tickets/backlogs/{ticket_id}.md
+  agent-working/tickets/backlogs/{ticket_id}.md
 ```
 
-**`tickets/backlogs/`** holds two distinct kinds of content — both intentionally out of the active
+**`agent-working/tickets/backlogs/`** holds two distinct kinds of content — both intentionally out of the active
 `inprogress/done/todos` pipeline:
 
 1. **Pre-ticket epic outlines** (the folder's original use) — lightweight `epic-NN-*.md` /
@@ -725,19 +725,19 @@ Deliberately deprioritized (not done, not actively blocked-and-waiting):
    ticket (already through Scope, and often through Investigate/Plan) whose work is real,
    understood, and worth keeping — but is not competing for active attention right now, and isn't
    "blocked" in the sense of *actively waiting* on a specific external event a human is tracking.
-   Distinguish this from `Status: BLOCKED` in `tickets/inprogress/`: BLOCKED means "paused mid-pipeline,
+   Distinguish this from `Status: BLOCKED` in `agent-working/tickets/inprogress/`: BLOCKED means "paused mid-pipeline,
    resume once the blocking condition changes" (the ticket stays where active work lives); BACKLOG
    means "understood, shelved on purpose, no one is watching for a trigger to resume it." Moving a
-   ticket here does not delete its `staging_artifacts/` — migrate them to `stored_artifacts/{ticket_id}/`
+   ticket here does not delete its `agent-working/staging_artifacts/` — migrate them to `agent-working/stored_artifacts/{ticket_id}/`
    as usual so the investigation record survives, and update the ticket's own `## Status` to
    `BACKLOG` (not `BLOCKED`/`OPEN`) plus its frontmatter `phase: backlog`. See
-   `tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md` for a worked example (moved
+   `agent-working/tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md` for a worked example (moved
    2026-07-11 after two independent re-confirmations that its actual platform blocker still held —
    the ticket was accurate, but "wait indefinitely in `inprogress/`" was the wrong resting place for
    a condition nobody could schedule or predict).
 
-There is no automated workflow step that reads from or writes to `tickets/backlogs/` — moving a
-ticket there (or promoting one out, back into `tickets/todos/` or `tickets/inprogress/` when it's
+There is no automated workflow step that reads from or writes to `agent-working/tickets/backlogs/` — moving a
+ticket there (or promoting one out, back into `agent-working/tickets/todos/` or `agent-working/tickets/inprogress/` when it's
 picked up) is a manual, deliberate action, not something `implement-ticket`/`implement-epic` do on
 their own.
 
@@ -749,14 +749,14 @@ their own.
 |---|---|---|---|
 | `CONFLICTS_DETECTED` | Duplicate or conflicting ticket found | Review `conflicts` list, adjust scope or close duplicate | Re-run with `request` (new scope) |
 | `TAGS_NOT_REGISTERED` | A ticket tag isn't in `registries/tag_registry.jsonl` | Register it (`python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`) or edit the ticket's tags to use an existing registered one | Re-run with `ticket_id` |
-| `NEEDS_HUMAN_INPUT` | Plan has unresolved questions | Edit `staging_artifacts/{id}/plan.md`, fill in the answers | Re-run with `ticket_id` |
+| `NEEDS_HUMAN_INPUT` | Plan has unresolved questions | Edit `agent-working/staging_artifacts/{id}/plan.md`, fill in the answers | Re-run with `ticket_id` |
 | `NEEDS_CHANGES` | Architecture violations in plan | Fix `plan.md` per violation list | Re-run with `ticket_id` |
 | `BLOCKED` | Fundamental architectural conflict | Revisit scope, possibly split ticket | Re-run with `ticket_id` or new `request` |
 | `TESTS_FAILED` | Tests failing after implementation | Fix the code or tests | Re-run with `ticket_id` |
 | `DATA_RUNS_CLEAN_FAILED` | Post-Test auto-clean of `data/runs/*`/`reports/release_proof/*` failed (deletion error, e.g. permission/lock) | Resolve the underlying error manually (check file permissions/locks), then confirm the flagged files are removable | Re-run with `ticket_id` |
 | `SECURITY_BLOCKED` | Security review found a vulnerability | Fix the flagged code | Re-run with `ticket_id` |
 | `DOD_BLOCKED` | DoD condition(s) not met | Fix each failing item listed | Re-run with `ticket_id` |
-| `FINALIZE_INCOMPLETE` | Finalize's own migration self-check found a discrepancy after moving artifacts | Fix each item in `failing_items` (e.g. incomplete `stored_artifacts/`, `staging_artifacts/` not cleaned, duplicate working_log row) | Re-run with `ticket_id` |
+| `FINALIZE_INCOMPLETE` | Finalize's own migration self-check found a discrepancy after moving artifacts | Fix each item in `failing_items` (e.g. incomplete `agent-working/stored_artifacts/`, `agent-working/staging_artifacts/` not cleaned, duplicate working_log row) | Re-run with `ticket_id` |
 
 ---
 
@@ -775,7 +775,7 @@ Agent(subagent_type="investigator", prompt="Investigate ticket TCK-20260606-..."
 Agent(subagent_type="planner", prompt="Plan implementation for TCK-20260606-...")
 
 # 4. Review
-Agent(subagent_type="architecture-reviewer", prompt="Review plan at staging_artifacts/TCK-20260606-.../plan.md")
+Agent(subagent_type="architecture-reviewer", prompt="Review plan at agent-working/staging_artifacts/TCK-20260606-.../plan.md")
 
 # 5. Implement
 Agent(subagent_type="implementer", prompt="Implement plan for TCK-20260606-...")
@@ -790,4 +790,4 @@ Agent(subagent_type="parity-updater", prompt="Update parity ledger for TCK-20260
 Agent(subagent_type="done-checker", prompt="Check DoD for ticket TCK-20260606-...")
 ```
 
-Each agent reads the artifacts written by the previous one from `staging_artifacts/{ticket_id}/`, so the handoff is through the filesystem — no direct parameter passing required.
+Each agent reads the artifacts written by the previous one from `agent-working/staging_artifacts/{ticket_id}/`, so the handoff is through the filesystem — no direct parameter passing required.

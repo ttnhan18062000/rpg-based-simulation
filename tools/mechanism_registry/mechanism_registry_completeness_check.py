@@ -28,7 +28,7 @@ a claim that nothing else in `src/` is missing -- see
 **This checks against `implemented_by`, not prose.** An earlier draft of this tool regex-searched
 `mechanisms.yaml`'s raw text for path-shaped citations. That failed hard on its first real run: the
 original 75 mechanisms have ZERO source-path citations anywhere in `mechanisms.yaml` -- their
-evidence (`stored_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md`) cites
+evidence (`agent-working/stored_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md`) cites
 atlas card IDs and wiring-map node names, never real files. A prose-text checker could only ever
 see the 11 mechanisms this session cited inline, producing 47 false "unmapped" results on its
 first run. `TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING` added a real, validated

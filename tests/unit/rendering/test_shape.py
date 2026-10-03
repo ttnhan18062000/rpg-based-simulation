@@ -10,7 +10,7 @@ test_density.py already established.
 
 Test 11 (the literal historical 26/33 corpus reproduction via a hardcoded 3-world
 exclusion list) is deliberately NOT implemented here -- see
-staging_artifacts/TCK-20260821-VISUAL-SHAPE-METRIC/plan.md's "Decision: AC #4 Corpus
+agent-working/staging_artifacts/TCK-20260821-VISUAL-SHAPE-METRIC/plan.md's "Decision: AC #4 Corpus
 Scope" section. Test 10 below asserts the qualitative, corpus-size-independent invariant
 instead (every sub-0.95 component is FOREST type), which holds identically regardless of
 how many worlds data/worlds/ currently contains.

@@ -204,7 +204,7 @@ Two genuinely distinct mechanisms answer to "archetype" language, and conflating
 real error:
 
 1. **Entity archetype (content-authoring template)** — `ArchetypeEntityFactory`
-   (`stored_artifacts/TCK-20260609-ARCHETYPE-ENTITY-FACTORY/`), `ResolvedEntityArchetype`
+   (`agent-working/stored_artifacts/TCK-20260609-ARCHETYPE-ENTITY-FACTORY/`), `ResolvedEntityArchetype`
    (`TCK-20260604-PHASE25-ARCHETYPE-POPULATION-RESOLVER`). This is a **content-authoring/world-
    assembly concept** — a compile-time template resolved into `EntityState` at spawn, not a runtime
    identity the entity itself holds or reasons about. Matches the brief's §2-D "narrative/analytical

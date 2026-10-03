@@ -111,7 +111,7 @@ def test_references_only_in_ignored_historical_paths_are_no_references(tmp_path)
     _write(tmp_path, "tools/maintenance/relic.py", "def relic():\n    return 1\n")
     _write(
         tmp_path,
-        "tickets/done/TCK-EXAMPLE.md",
+        "agent-working/tickets/done/TCK-EXAMPLE.md",
         "Built `relic.py` to do a thing.\n",
     )
     _write(
@@ -121,14 +121,14 @@ def test_references_only_in_ignored_historical_paths_are_no_references(tmp_path)
     )
     _write(
         tmp_path,
-        "stored_artifacts/TCK-EXAMPLE/plan.md",
+        "agent-working/stored_artifacts/TCK-EXAMPLE/plan.md",
         "relic.py implementation plan.\n",
     )
     tracked = [
         "tools/maintenance/relic.py",
-        "tickets/done/TCK-EXAMPLE.md",
+        "agent-working/tickets/done/TCK-EXAMPLE.md",
         "docs/archive/old_notes.md",
-        "stored_artifacts/TCK-EXAMPLE/plan.md",
+        "agent-working/stored_artifacts/TCK-EXAMPLE/plan.md",
     ]
     results = check_tools_orphans(repo_root=tmp_path, tracked_files=tracked)
     relic = _by_file(results, "tools/maintenance/relic.py")

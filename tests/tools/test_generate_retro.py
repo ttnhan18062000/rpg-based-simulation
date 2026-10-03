@@ -11,6 +11,7 @@ import subprocess
 import sys
 from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
+from tools.agent_working_paths import TICKETS
 
 import pytest
 
@@ -41,7 +42,7 @@ from tests.tools.skill_staleness_assertions import SkillStalenessWarning, skill_
 
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
-_PROTECTED_PATHS = ["docs/REGISTRY.yaml", "tickets/working_log.csv", "agent-monitoring/data"]
+_PROTECTED_PATHS = ["docs/REGISTRY.yaml", "agent-working/tickets/working_log.csv", "agent-working/agent-monitoring/data"]
 
 
 def _protected_paths_git_status() -> str:
@@ -74,7 +75,7 @@ def _isolate_monitoring_index(monkeypatch, tmp_path):
     _load_runs_and_events()/main() below — but main() now sources its data via
     DEFAULT_DB_PATH-backed _load_runs_and_events(). Without this monkeypatch, any test reaching
     that path would read (or worse, on-demand build) the real repo's
-    agent-monitoring-index/monitoring.db, corrupting durable state for other consumers
+    agent-working/.index/agent-monitoring-index/monitoring.db, corrupting durable state for other consumers
     (query.py/validate.py). tmp_path is function-scoped, so this points every test's index at its
     own private, nonexistent-by-default location."""
     monkeypatch.setattr(generate_retro, "DEFAULT_DB_PATH", tmp_path / "monitoring.db")
@@ -184,7 +185,7 @@ def _write_ticket(root, subdir, ticket_id, tags, date="20260710"):
     """Write a minimal ticket markdown file with a parseable frontmatter block under
     root/tickets/{subdir}/{ticket_id}.md. `date` controls the embedded ticket_id date used by
     _ticket_id_effective_date; defaults to a post-taxonomy date."""
-    tickets_dir = root / "tickets" / subdir
+    tickets_dir = root / TICKETS / subdir
     tickets_dir.mkdir(parents=True, exist_ok=True)
     tags_inline = "[" + ", ".join(tags) + "]"
     (tickets_dir / f"{ticket_id}.md").write_text(
@@ -317,8 +318,8 @@ def test_tag_breakdown_excludes_pre_taxonomy_and_untagged_tickets(tmp_path):
     # is readable.
     _write_ticket(tmp_path, "done", "TCK-20260601-OLD-TICKET", ["observability"], date="20260601")
     # Post-taxonomy ticket with no tags — excluded, must not crash.
-    (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "done" / "TCK-20260710-NO-TAGS.md").write_text(
+    (tmp_path / TICKETS / "done").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "done" / "TCK-20260710-NO-TAGS.md").write_text(
         "---\n"
         "status: active\n"
         "layer: observability\n"
@@ -560,7 +561,7 @@ def test_compute_retro_metrics_skill_tag_gate_hits_none_when_no_gate_implemented
 
 def test_phase_status_distribution_merges_casing_variants_review_failure_rate():
     # Fragmented input across 3 casing variants of the same logical phase — the exact shape
-    # confirmed in real agent-monitoring/events.jsonl data (Finalize/finalize/FINALIZE,
+    # confirmed in real agent-working/agent-monitoring/events.jsonl data (Finalize/finalize/FINALIZE,
     # Implement/implement/IMPLEMENT, Review/review, etc). 41 failed + 184 ok = 225 total,
     # 41/225 = 18.2% (rounded to 1 decimal) — the ticket's own motivating real-data example.
     runs = [_BASE_RUN]
@@ -1312,7 +1313,7 @@ def test_default_path_constants_are_absolute_under_repo_root():
     # RUNS_FILE/EVENTS_FILE/RETRO_DIR/DEFAULT_TOOLS_FILE (DEFAULT_DB_PATH is excluded here — the
     # file's autouse _isolate_monitoring_index fixture always monkeypatches it to a tmp_path, so
     # asserting on it here would test the fixture, not the module default) must be absolute paths
-    # rooted at generate_retro._REPO_ROOT, never a bare relative name like Path("agent-monitoring/
+    # rooted at generate_retro._REPO_ROOT, never a bare relative name like Path("agent-working/agent-monitoring/
     # data") that silently re-resolves against whatever the caller's cwd happens to be.
     for const_name in ("RUNS_FILE", "EVENTS_FILE", "RETRO_DIR", "DEFAULT_TOOLS_FILE"):
         value = getattr(generate_retro, const_name)
@@ -1328,7 +1329,7 @@ def test_load_runs_and_events_finds_real_data_from_a_foreign_cwd(monkeypatch, tm
     # which re-resolve against the process's CURRENT working directory at every filesystem call —
     # not against this module's own location. A caller running this module from a foreign cwd
     # (e.g. a different checkout) would read (or find nothing under) that foreign cwd's own
-    # agent-monitoring/ tree instead of this repo's. Deliberately does NOT monkeypatch RUNS_FILE/
+    # agent-working/agent-monitoring/ tree instead of this repo's. Deliberately does NOT monkeypatch RUNS_FILE/
     # EVENTS_FILE/DEFAULT_TOOLS_FILE (unlike every other test in this file) -- doing so would
     # exercise the override path, not the real default this ticket fixes.
     foreign_cwd = tmp_path / "foreign-checkout-with-no-agent-monitoring-dir"
@@ -2217,7 +2218,7 @@ def test_parity_write_safety_detects_build_targeting_real_repo_path():
     no_override_row = _tool_row(tool="Bash", input_summary="python3 tools/parity_index.py build")
     real_path_row = _tool_row(
         tool="Bash",
-        input_summary="python3 tools/parity_index.py build --db-path parity-index/parity.db",
+        input_summary="python3 tools/parity_index.py build --db-path agent-working/.index/parity-index/parity.db",
     )
     scratch_row = _tool_row(
         tool="Bash",
@@ -2606,7 +2607,7 @@ def test_parity_index_readpath_call_count_matches_real_corpus_state():
     # HYGIENE-SWEEP's implementer and done-checker agents legitimately ran
     # `tools/parity_index.py health` 3 times via Bash during Implement/Verify (that ticket's whole
     # subject was the parity-ledger health checker), recording 3 real rows into the committed
-    # agent-monitoring/tools.jsonl corpus this test reads. This is expected drift, not a bug -- see
+    # agent-working/agent-monitoring/tools.jsonl corpus this test reads. This is expected drift, not a bug -- see
     # TCK-20260820-HOTFIX-PARITY-READPATH-BASELINE-DRIFT. It then drifted a 2nd time (3 -> 4) when
     # TCK-20260817-FIX-CONCURRENCY-DOC-CONTRADICTION's parity-updater phase legitimately ran
     # `tools/parity_index.py entry INFRA-366` (2026-08-21T02:30:02Z), recording a 4th real row --

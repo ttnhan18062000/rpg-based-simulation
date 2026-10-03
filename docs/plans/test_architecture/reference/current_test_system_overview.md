@@ -11,7 +11,7 @@ tags: [testing, architecture, planning]
 > **NON-BINDING REFERENCE (2026-09-29).** This document is investigation and design material kept
 > for the detail planner and implementer agents. The **binding** plan is
 > [`../roadmap.md`](../roadmap.md) plus the four epic tickets in
-> `tickets/todos/test-architecture/`. Where this document is more specific than those, treat it as a
+> `agent-working/tickets/todos/test-architecture/`. Where this document is more specific than those, treat it as a
 > suggestion, not a commitment. Decisions marked here remain **pending** unless the roadmap says
 > otherwise.
 
@@ -223,7 +223,7 @@ living in unit directories.
 
 ### 4.5 Escaped-defect record (defect-escape analysis) [P]
 
-Ticket titles in `tickets/done/` and `tickets/todos/` matching *never fires / never applied /
+Ticket titles in `agent-working/tickets/done/` and `agent-working/tickets/todos/` matching *never fires / never applied /
 never seeded / always empty / never wired / starvation*: about **30 closed** (for example
 `TCK-20260912-VETERANCY-STAT-MULTIPLIER-NEVER-APPLIED`,
 `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION`,
@@ -309,7 +309,7 @@ Two separate stages, with different result types [O]:
 - **PR lane:** `tests/simulation_quality -m "not slow"` runs, but **the anchor-comparison tests
   `pytest.skip()` silently** because they read `data/calibration/`, which is gitignored and never
   populated in CI [O]. **Historical drift figures [H], not re-measured.** Source:
-  `tickets/done/TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS.md` (ticket dated 2026-09-03).
+  `agent-working/tickets/done/TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS.md` (ticket dated 2026-09-03).
   These are two different measurements, with different denominators:
 
   | Measurement | Date | Population | Executed | Pass | Fail | Not run | Source lines |

@@ -103,7 +103,7 @@ has to allow for the per-test time budget.
 2. **Order dependence outside the verified set.** Only the 8 polluter files plus the progression
    directory were checked under random order (seeds 1–10, 80 tests, all passing). Nothing else was.
 3. **Tracked-file writers still present.** Both full runs rewrote `docs/REGISTRY.yaml` and
-   `tickets/working_log.csv` and touched agent-monitoring shards. Attributed at file level to
+   `agent-working/tickets/working_log.csv` and touched agent-monitoring shards. Attributed at file level to
    `tests/tools/test_done_checker_static.py`; tracked as `TCK-20260929-DONE-CHECKER-TESTS-WRITE-TRACKED-FILES`.
 4. **4 candidate files (4 tests) never ran.** The fast marker filter deselects every test in them
    (`no tests collected (4 deselected)`): `tests/integration/optimization/test_cache_memory_bounds.py` and three

@@ -86,7 +86,7 @@ specialized enum-tooltip registry, not an architecture glossary.
 | Performance contracts | `docs/engine/performance_contract.md`; `docs/performance/perf_baseline_policy.md` | Targets, benchmark and gate policy | P1 | No | Specialized and mutually drifting | Cite and flag drift |
 | Dashboard glossary registry | `registries/glossary_registry.jsonl` | UI tooltips for workflow enum-like values | Runtime-owned registry | No; append-only via tool | Specialized glossary, unrelated to engine concepts | Do not duplicate or modify |
 | Performance optimization proposal/plan | `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md`; `docs/plans/design_enhancement/performance_optimization/performance_optimization_prerequisite_execution_plan.md` | Proposed — approval pending | P2 | No | Source for proposed/conditional vocabulary | Label every borrowed term pending/evidence-gated |
-| Archived glossary proposals/tickets | `docs/plans/archive/agent_ops_dashboard/`; `tickets/done/*GLOSSARY*` | Historical dashboard glossary work | Historical | Mixed artifacts | Historical/specialized | Do not revive or consolidate into this guide |
+| Archived glossary proposals/tickets | `docs/plans/archive/agent_ops_dashboard/`; `agent-working/tickets/done/*GLOSSARY*` | Historical dashboard glossary work | Historical | Mixed artifacts | Historical/specialized | Do not revive or consolidate into this guide |
 | Documentation registry | `docs/REGISTRY.yaml` | Generated navigation metadata | Generated | Yes | Navigation only | Regenerate with `tools/generate_registry.py`; never hand-edit |
 
 **Decision: Option C — create one new explanatory guide.** The selected WIP path is

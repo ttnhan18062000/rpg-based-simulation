@@ -15,8 +15,8 @@ class ConsentNotGrantedError(Exception):
 
 
 class ContainmentViolationError(Exception):
-    """Raised when a pre/post snapshot diff detects an unexpected change to tickets/ or
-    agent-monitoring/*.jsonl, or the committed .codex/config.toml changed."""
+    """Raised when a pre/post snapshot diff detects an unexpected change to agent-working/tickets/ or
+    agent-working/agent-monitoring/*.jsonl, or the committed .codex/config.toml changed."""
 
 
 class CodexInvocationError(Exception):

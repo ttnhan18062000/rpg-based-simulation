@@ -46,7 +46,7 @@ Two enforcement gaps remain live (a third, AST-based import-boundary enforcement
 see the superseded-M1 note above):
 
 1. **The doc-update self-report gap recurs across the repo's own retro history.** Read in full
-   this session: `agent-monitoring/retro/RETRO-2026-W33.md` and `RETRO-2026-W36.md`. Both weeks'
+   this session: `agent-working/agent-monitoring/retro/RETRO-2026-W33.md` and `RETRO-2026-W36.md`. Both weeks'
    `## Notes` sections independently surface the same defect — a `doc-updater`-added doc file not
    reflected back into the ticket's own `## Files Changed`/`## Related Docs` — caught by
    `done-checker`/Verify's existing `check_docs_to_update_coverage` re-derivation each time, and
@@ -124,7 +124,7 @@ per-session task registry, non-empty exactly when in-flight background work exis
 party field purpose-built for this exact question, making the transcript-heuristic architecture
 this milestone originally anticipated unnecessary. See
 `tests/fixtures/claude_hook_payloads/subagent_stop_schema_capture.json` for the full citation, and
-`staging_artifacts/TCK-20260904-TEST-SCOPER-HANG-GUARD/plan.md`'s Deviations section for the full
+`agent-working/staging_artifacts/TCK-20260904-TEST-SCOPER-HANG-GUARD/plan.md`'s Deviations section for the full
 accounting. This directly operationalizes the CLAUDE.md Hard Rule that has existed since
 2026-08-17/18 but had not, on its own, prevented the recurrence.
 
@@ -195,7 +195,7 @@ what detection already proved was open.
 - `AI_FIRST_ENGINEERING_NEXT_EVOLUTION_PROPOSAL` (`docs/brainstorm/agent-working-design/ai_first_engineering_next_evolution_proposal.html`) —
   Reassessment §3 ("Deterministic guardrails... upgraded"), Change Inventory rows for this epic's
   two items.
-- `agent-monitoring/retro/RETRO-2026-W33.md`, `RETRO-2026-W36.md` — the real, repeated evidence
+- `agent-working/agent-monitoring/retro/RETRO-2026-W33.md`, `RETRO-2026-W36.md` — the real, repeated evidence
   this epic's priority is drawn from.
 - `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` (done, 2026-08-19) — the real, closed ticket
   that already shipped M1 (see "M1 is superseded" above). `docs/plans/architecture_boundary_hardening_epic.md`

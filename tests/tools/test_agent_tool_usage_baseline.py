@@ -13,11 +13,12 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _MODULE_PATH = _MONITORING_TOOLS_DIR / "agent_tool_usage_baseline.py"
-_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
+_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / AGENT_MONITORING
 _AGENTS_DIR = _REPO_ROOT / ".claude" / "agents"
 
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
@@ -106,7 +107,7 @@ def test_null_and_non_matching_agent_values_bucket_to_unattributed():
 # ---------------------------------------------------------------------------
 
 def test_glob_matches_all_dated_week_shards_and_unknown_week(tmp_path):
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     (data_dir / "2026-W01").mkdir(parents=True)
     (data_dir / "2026-W02").mkdir(parents=True)
     (data_dir / "unknown-week").mkdir(parents=True)
@@ -247,11 +248,11 @@ def test_example_is_verbatim_substring_of_a_real_row_not_paraphrased():
 
 
 # ---------------------------------------------------------------------------
-# AC4 — read-only against agent-monitoring/data/
+# AC4 — read-only against agent-working/agent-monitoring/data/
 # ---------------------------------------------------------------------------
 
 def _file_size_snapshot() -> dict:
-    """{path: size_in_bytes} for every real file under agent-monitoring/, recursively."""
+    """{path: size_in_bytes} for every real file under agent-working/agent-monitoring/, recursively."""
     return {
         str(p): p.stat().st_size
         for p in _REAL_AGENT_MONITORING_DIR.rglob("*")
@@ -261,7 +262,7 @@ def _file_size_snapshot() -> dict:
 
 def test_script_is_read_only_against_real_agent_monitoring_data():
     """TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 3: the original version of this test
-    compared a full `git status --porcelain -- agent-monitoring/` snapshot before and after a
+    compared a full `git status --porcelain -- agent-working/agent-monitoring/` snapshot before and after a
     single load_all_tool_rows() + build_report() call, asserting byte-for-byte identity. That is
     NOT the same race as the sibling test above (there is only one read of the corpus here, not
     two) -- it is vulnerable to a DIFFERENT failure mode: any OTHER concurrent session's own
@@ -272,7 +273,7 @@ def test_script_is_read_only_against_real_agent_monitoring_data():
     The property this test actually needs to prove is narrower than "the working tree never
     changes at all" (which races legitimate concurrent activity in a shared, multi-session repo)
     -- it is "this script never truncates, deletes, or otherwise destroys existing content in
-    agent-monitoring/". A concurrent session's own hook can only ever APPEND to a shard file
+    agent-working/agent-monitoring/". A concurrent session's own hook can only ever APPEND to a shard file
     (grow it) or add a brand-new shard/week file; it can never make an existing file smaller or
     make it disappear. So: assert no existing file shrinks or is deleted, and don't assert
     anything about growth or new files, since those are expected, benign, and not attributable to

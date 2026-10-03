@@ -43,5 +43,5 @@ class PilotConfigToggleGuardError(Exception):
 
 
 class PilotRollbackVerificationError(Exception):
-    """Raised when the rollback-scope snapshot (agent-monitoring/*.jsonl + the pilot ticket file)
+    """Raised when the rollback-scope snapshot (agent-working/agent-monitoring/*.jsonl + the pilot ticket file)
     does not match byte-for-byte across a rollback drill."""

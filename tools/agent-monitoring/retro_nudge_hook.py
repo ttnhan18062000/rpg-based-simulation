@@ -19,10 +19,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate import load_data_glob  # noqa: E402
 from week_close_nudge import nudge_message, weeks_needing_close  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 THRESHOLD = 5
-RUNS_FILE = Path("agent-monitoring/data")
-RETRO_DIR = Path("agent-monitoring/retro")
+RUNS_FILE = AGENT_MONITORING / "data"
+RETRO_DIR = AGENT_MONITORING / "retro"
 STATE_FILE = Path(".claude/.retro_nudge_state.json")
 COOLDOWN_S = 3600  # fallback only, used if no session_id is available
 

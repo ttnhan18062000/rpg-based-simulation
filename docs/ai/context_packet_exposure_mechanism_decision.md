@@ -78,11 +78,11 @@ exists to be neutral *toward*. Checked directly:
   i.e., Codex can plausibly act as an MCP client, in principle.
 - The same doc's §3 confirms this repo currently has **no `.codex/` directory** — no live Codex
   runtime presence exists here at all.
-- `tickets/backlogs/codex-runtime-activation/` (moved from `tickets/todos/` 2026-09-22, deliberate
+- `agent-working/tickets/backlogs/codex-runtime-activation/` (moved from `agent-working/tickets/todos/` 2026-09-22, deliberate
   backlog housekeeping, not a substance change — now holds only the epic and the controlled-pilot
   ticket; the 4 supporting readiness tickets, `TCK-20260730-CLAUDE-EXECUTION-IDENTITY`,
   `PROVIDER-HOOK-POLICY`, `CODEX-POSTTOOL-ADAPTER`, `CODEX-RUNTIME-SHADOW`, are all in
-  `tickets/done/`) confirms real second-provider *activation* work is still entirely unstarted:
+  `agent-working/tickets/done/`) confirms real second-provider *activation* work is still entirely unstarted:
   those 4 done tickets build and verify controlled readiness only, per the folder's own
   `SEQUENCE.md` Safety Boundary — none of them invokes live Codex. The controlled-pilot ticket,
   the one step that would, remains backlogged.
@@ -123,7 +123,7 @@ no proposal to build two independent packet-assembly implementations.
 - **Not verifiable today**: zero real Codex executions exist in this repo. Codex's hook-matcher
   awareness of "MCP tool names" is suggestive, not proof, that a Codex-side MCP client integration
   will work the same way Claude Code's does. This should be revisited once
-  `tickets/backlogs/codex-runtime-activation/` produces at least one real live Codex run.
+  `agent-working/tickets/backlogs/codex-runtime-activation/` produces at least one real live Codex run.
 - **Not in scope here**: this decision does not choose *when* (which scenarios, which phases) any
   exposure mechanism gets wired into a real workflow — that remains Phase 6's job, gated by the
   56/122/6 sample-size floors Open Decision 5 already set, which are themselves still far from met

@@ -811,7 +811,7 @@ the two classes serve distinct roles in the same package.
 | Done | Macro-Economy Health Metrics | **IMPLEMENTED** — `GoldSinkSystem` + `GET /economy/health` (updated 2026-06-26) |
 | Done | Capability / Support Registry | **IMPLEMENTED** — `src/engine/capability.py` (updated 2026-06-26) |
 | Done | Pluggable Feature Pack Architecture | **IMPLEMENTED** — `src/domains/feature_packs/` (updated 2026-06-26) |
-| Scoped | Culture / Myth Drift | E62A–D in `tickets/todos/E62-CULTURE-DRIFT/` |
+| Scoped | Culture / Myth Drift | E62A–D in `agent-working/tickets/todos/E62-CULTURE-DRIFT/` |
 
 ---
 

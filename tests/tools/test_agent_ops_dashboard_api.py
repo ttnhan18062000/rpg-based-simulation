@@ -12,15 +12,16 @@ from fastapi.testclient import TestClient
 
 from src.api.agent_ops_dashboard import main
 from src.api.agent_ops_dashboard.ingest import DashboardCache
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS
 
 _FIXTURE_WEEK = "2026-W23"
 
 
 def _client_with_repo(tmp_path: Path) -> TestClient:
-    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
+    (tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "done").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "todos").mkdir(parents=True, exist_ok=True)
     main._cache = DashboardCache(repo_root=tmp_path)
     return TestClient(main.app)
 
@@ -44,8 +45,8 @@ def test_run_timeline_404_for_unknown_run_id(tmp_path):
 
 
 def test_run_detail_200_for_known_run_id(tmp_path):
-    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
-    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
+    (tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
+    runs_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "runs.jsonl"
     runs_file.write_text(
         json.dumps(
             {
@@ -77,12 +78,12 @@ def test_run_detail_200_for_known_run_id(tmp_path):
 
 
 def test_get_tickets_title_is_distinct_from_ticket_id(tmp_path):
-    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
+    (tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "done").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "todos").mkdir(parents=True, exist_ok=True)
 
-    ticket_path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-TITLED.md"
+    ticket_path = tmp_path / TICKETS / "inprogress" / "TCK-20260101-TITLED.md"
     ticket_path.write_text(
         "---\nstatus: active\nlayer: observability\nauthority: P1\naudience: agent\n"
         "ticket_id: TCK-20260101-TITLED\nphase: open\ndate: 2026-07-16\ntags: []\n---\n\n"
@@ -107,17 +108,17 @@ def test_get_tickets_title_is_distinct_from_ticket_id(tmp_path):
 
 
 def _write_multi_ticket_fixture(tmp_path: Path) -> None:
-    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
+    (tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "done").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "todos").mkdir(parents=True, exist_ok=True)
 
     for ticket_id, date in [
         ("TCK-20260101-ROWA", "2026-07-15"),
         ("TCK-20260101-ROWB", "2026-07-14"),
         ("TCK-20260101-ROWC", "2026-07-13"),
     ]:
-        path = tmp_path / "tickets" / "inprogress" / f"{ticket_id}.md"
+        path = tmp_path / TICKETS / "inprogress" / f"{ticket_id}.md"
         path.write_text(
             "---\nstatus: active\nlayer: observability\nauthority: P1\naudience: agent\n"
             f"ticket_id: {ticket_id}\nphase: open\ndate: {date}\ntags: []\n---\n\n"
@@ -155,8 +156,8 @@ def test_list_tickets_route_passes_limit_offset_through_to_cache(tmp_path):
 
 
 def test_malformed_jsonl_line_skipped_and_counted_in_health(tmp_path):
-    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
-    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
+    (tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
+    runs_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "runs.jsonl"
     runs_file.write_text(
         '{"run_id": "TCK-OK", "start_ts": "2026-07-01T00:00:00Z", "final_status": "DONE"}\n'
         "{this is not valid json\n"
@@ -176,8 +177,8 @@ def test_malformed_jsonl_line_skipped_and_counted_in_health(tmp_path):
 
 
 def test_health_status_is_always_ok_even_with_parse_errors(tmp_path):
-    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
-    events_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "events.jsonl"
+    (tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
+    events_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "events.jsonl"
     events_file.write_text("garbage\ngarbage\ngarbage\n")
     client = _client_with_repo(tmp_path)
 
@@ -193,8 +194,8 @@ def test_health_status_is_always_ok_even_with_parse_errors(tmp_path):
 
 
 def test_bulk_run_timeline_route_returns_200_with_entries_by_run_shape(tmp_path):
-    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
-    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
+    (tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
+    runs_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "runs.jsonl"
     runs_file.write_text(
         "\n".join(
             json.dumps(r)
@@ -205,7 +206,7 @@ def test_bulk_run_timeline_route_returns_200_with_entries_by_run_shape(tmp_path)
         )
         + "\n"
     )
-    events_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "events.jsonl"
+    events_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "events.jsonl"
     events_file.write_text(
         json.dumps(
             {
@@ -248,8 +249,8 @@ def test_bulk_run_timeline_route_rejects_out_of_range_limit_offset(tmp_path):
 
 
 def test_bulk_run_timeline_route_since_until_pass_through_to_cache(tmp_path):
-    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
-    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
+    (tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
+    runs_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "runs.jsonl"
     runs_file.write_text(
         "\n".join(
             json.dumps(r)
@@ -272,13 +273,13 @@ def test_bulk_run_timeline_route_since_until_pass_through_to_cache(tmp_path):
 
 
 def test_bulk_run_timeline_route_matches_per_run_route_for_same_run_id(tmp_path):
-    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
-    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
+    (tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
+    runs_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "runs.jsonl"
     runs_file.write_text(
         json.dumps({"run_id": "TCK-MATCH", "start_ts": "2026-07-20T00:00:00Z", "final_status": "DONE"})
         + "\n"
     )
-    events_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "events.jsonl"
+    events_file = tmp_path / AGENT_MONITORING / "data" / _FIXTURE_WEEK / "events.jsonl"
     events_file.write_text(
         json.dumps(
             {

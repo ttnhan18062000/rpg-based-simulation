@@ -20,7 +20,7 @@ persisted to any stored artifact for a past ticket — there is no reliable way 
 genuine per-ticket historical instance. Per investigation.md Risks #1 option (c), this detector's
 known-positive fixture is an explicitly synthetic, hand-built payload
 (`tests/fixtures/agent_replay/pilot/m3_synthetic_known_positive.yaml`) — never claimed to
-represent a real `tickets/done/` sample member. The live hook script is read only as a reference,
+represent a real `agent-working/tickets/done/` sample member. The live hook script is read only as a reference,
 never imported or subprocessed, per the unconditional containment law
 (docs/ai/replay_fixture_spec.md).
 """

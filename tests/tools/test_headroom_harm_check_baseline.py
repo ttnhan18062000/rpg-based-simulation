@@ -123,7 +123,7 @@ def test_cli_without_flag_still_produces_the_original_pinned_report_shape():
 
 def test_cli_does_not_mutate_agent_monitoring():
     pre = subprocess.run(
-        ["git", "status", "--porcelain", "--", "agent-monitoring/"],
+        ["git", "status", "--porcelain", "--", "agent-working/agent-monitoring/"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     ).stdout
     subprocess.run(
@@ -131,7 +131,7 @@ def test_cli_does_not_mutate_agent_monitoring():
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     )
     post = subprocess.run(
-        ["git", "status", "--porcelain", "--", "agent-monitoring/"],
+        ["git", "status", "--porcelain", "--", "agent-working/agent-monitoring/"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     ).stdout
     assert pre == post

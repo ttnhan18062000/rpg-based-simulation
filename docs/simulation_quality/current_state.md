@@ -154,7 +154,7 @@ Flagged here for whoever picks this up next, same as the prior session's own 2 s
 
 ## 2026-08-05/06 session summary
 
-A full working session covering all 11 tickets in `tickets/done/simulation-quality/`. Real
+A full working session covering all 11 tickets in `agent-working/tickets/done/simulation-quality/`. Real
 fixes/changes: **(1)** WORLD pillar anchors recalibrated against the `spawn_occupancy_violation`
 signal (37 scenarios, `TCK-20260805-SIMQ-WORLD-ANCHOR-RECALIBRATION`); **(2)** cognition-graph
 capture policy bug fixed (`TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP`); **(3)** the F grade

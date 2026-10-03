@@ -66,7 +66,7 @@ ever driving it toward that lead's own coordinate.
 (seed=42) — 4x the prior ticket's own 500-tick measurement — saw zero scars ever created and zero
 material blockers for `iron_ore` ever appear, across the entire run, matching both defects exactly.
 Full detail, including the counter table, in
-`stored_artifacts/TCK-20260914-REGION-DANGER-SEEN-COLOCATION-SCAR-CONJUNCTION-UNPROVEN/investigation.md`.
+`agent-working/stored_artifacts/TCK-20260914-REGION-DANGER-SEEN-COLOCATION-SCAR-CONJUNCTION-UNPROVEN/investigation.md`.
 
 ## Scope
 - Decide whether and how to wire `create_battlefield_scar()`/`create_raid_scar()` to a real trigger
@@ -117,7 +117,7 @@ Full detail, including the counter table, in
 - `docs/parity_ledger/strategic_cognition.yaml` `STRAT-230`
 
 ## Related Stored Artifacts
-`stored_artifacts/TCK-20260914-REGION-DANGER-SEEN-COLOCATION-SCAR-CONJUNCTION-UNPROVEN/investigation.md`
+`agent-working/stored_artifacts/TCK-20260914-REGION-DANGER-SEEN-COLOCATION-SCAR-CONJUNCTION-UNPROVEN/investigation.md`
 — the full investigation naming both defects, with the empirical 2000-tick confirmation.
 
 ## Related Code Areas

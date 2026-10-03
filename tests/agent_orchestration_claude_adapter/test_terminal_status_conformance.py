@@ -1,16 +1,16 @@
 """Terminal-status conformance test: LIVE `.claude/workflows/implement-ticket.js` extraction vs.
-`agent-orchestration/terminal-statuses.yaml` contract data (TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER,
+`agent-working/agent-orchestration/terminal-statuses.yaml` contract data (TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER,
 AC #3).
 
 Asserts full match as a set of (value, kind) pairs — order-independent, since terminal statuses
 are an unordered set, not a sequence like phase order. Because
-agent-orchestration/terminal-statuses.yaml was authored directly from this same live extraction
+agent-working/agent-orchestration/terminal-statuses.yaml was authored directly from this same live extraction
 (TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER Step 1), this test is expected to pass with zero
 divergence entries needed.
 
 Any per-value mismatch is checked against `divergence_log.is_approved()` (axis="terminal_status",
 value=<the status value>) before hard-failing — see
-`agent-orchestration/intentional-divergences.md` for the human-approval mechanism.
+`agent-working/agent-orchestration/intentional-divergences.md` for the human-approval mechanism.
 """
 from __future__ import annotations
 
@@ -21,10 +21,11 @@ from tools.agent_orchestration_claude_adapter.terminal_status_extractor import (
     extract_all_terminal_statuses,
 )
 from tools.agent_orchestration_claude_adapter.terminal_status_loader import load_terminal_statuses
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _WORKFLOW_JS_PATH = _REPO_ROOT / ".claude" / "workflows" / "implement-ticket.js"
-_DIVERGENCE_LOG_PATH = _REPO_ROOT / "agent-orchestration" / "intentional-divergences.md"
+_DIVERGENCE_LOG_PATH = _REPO_ROOT / AGENT_ORCHESTRATION / "intentional-divergences.md"
 
 
 def _as_value_kind_pairs(statuses: list[dict]) -> set[tuple[str, str]]:

@@ -6,8 +6,8 @@ one (run_id, seq) — i.e. one agent event's tool-call footprint. This is a comp
 telemetry is platform-blocked (see docs/agent-monitoring/README.md's "What It Does NOT Capture").
 
 Weights are calibratable, not load-bearing precision — sized from the real aggregate distribution
-of agent-monitoring/tools.jsonl (543 sampled event-groups) in this ticket's investigation
-(staging_artifacts/TCK-20260708-AGENT-COST-OBSERVABILITY/investigation.md), not guessed:
+of agent-working/agent-monitoring/tools.jsonl (543 sampled event-groups) in this ticket's investigation
+(agent-working/staging_artifacts/TCK-20260708-AGENT-COST-OBSERVABILITY/investigation.md), not guessed:
   - W_BASH:  score units per Bash duration_ms (0.001 == 1 unit per second of Bash wall time).
   - W_AGENT: score units per nested `Agent`-tool spawn (count, NEVER duration-sum — see note below).
   - W_EDIT:  score units per Read/Edit/Write/MultiEdit call.

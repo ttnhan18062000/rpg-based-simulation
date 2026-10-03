@@ -8,7 +8,7 @@ REPLACE. A function that stages a `cognition_bundle_set=...` write while buildin
 `CognitionModel` from a raw `<something>.cognition` attribute read -- instead of routing that read
 through `src/core/cognition_write.py::read_through_cognition()` -- silently discards whatever an
 earlier same-tick phase already staged for that entity, with no error (the exact bug
-staging_artifacts/TCK-20260914-COGNITION-BUNDLE-SET-WHOLE-OBJECT-REPLACE-HAZARD/investigation.md
+agent-working/staging_artifacts/TCK-20260914-COGNITION-BUNDLE-SET-WHOLE-OBJECT-REPLACE-HAZARD/investigation.md
 documents against the real writer set).
 
 This is a backstop, not a fix (see that investigation's own Option 3 verdict): it converts "a

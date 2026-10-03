@@ -183,7 +183,7 @@ None of these should be resolved unilaterally:
    file** — no CI job, no Makefile target, no gate-check registration. It has never run against the
    repository. Worse, it *deliberately excludes* exact-duplicate physical lines as "a known,
    tracked defect class", so even once wired in it would skip the precise rows the real defect
-   produces. Meanwhile `tickets/working_log.csv` carries 46 duplicate `(ticket_id, title)` pairs,
+   produces. Meanwhile `agent-working/tickets/working_log.csv` carries 46 duplicate `(ticket_id, title)` pairs,
    22 of them from 2026-09 alone.
 
    **`tools/` is audited as a caller, never as a subject** — the precise gap, verified against

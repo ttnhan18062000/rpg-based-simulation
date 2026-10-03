@@ -9,6 +9,7 @@ import csv
 import shutil
 import sys
 from pathlib import Path
+from tools.agent_working_paths import TICKETS
 
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
@@ -20,7 +21,7 @@ from working_log_parser import (  # noqa: E402
 )
 from validate_working_log import run_validation  # noqa: E402
 
-REAL_LOG_PATH = Path(__file__).parent.parent.parent / "tickets" / "working_log.csv"
+REAL_LOG_PATH = Path(__file__).parent.parent.parent / TICKETS / "working_log.csv"
 
 HEADER = "timestamp,ticket_id,title,status,summary,artifacts_path\n"
 
@@ -39,7 +40,7 @@ def _write_log(tmp_path: Path, body: str) -> Path:
 def test_clean_row_parses_with_expected_fields(tmp_path):
     log = _write_log(
         tmp_path,
-        '2026-07-06T00:00:00Z,TCK-A,A,DONE,"Did a thing, with a comma",stored_artifacts/TCK-A\n',
+        '2026-07-06T00:00:00Z,TCK-A,A,DONE,"Did a thing, with a comma",agent-working/stored_artifacts/TCK-A\n',
     )
     result = parse_working_log(log)
 
@@ -52,14 +53,14 @@ def test_clean_row_parses_with_expected_fields(tmp_path):
         "title": "A",
         "status": "DONE",
         "summary": "Did a thing, with a comma",
-        "artifacts_path": "stored_artifacts/TCK-A",
+        "artifacts_path": "agent-working/stored_artifacts/TCK-A",
     }
 
 
 _QUOTE_DESYNC_MISMATCH_ROW = (
     '2026-08-21T08:33:52Z,TCK-D,"Title text","DONE",'
     '"summary one, exposed as result["mode_sequence"], summary two",'
-    '"stored_artifacts/TCK-D/"\n'
+    '"agent-working/stored_artifacts/TCK-D/"\n'
 )
 
 
@@ -187,7 +188,7 @@ def test_quote_desync_row_with_unmatched_fragment_degrades_to_unrecoverable(tmp_
 
 
 def test_run_validation_preserves_existing_duplicate_id_and_missing_entry_checks(tmp_path):
-    tickets_dir = tmp_path / "tickets"
+    tickets_dir = tmp_path / TICKETS
     done_dir = tickets_dir / "done"
     done_dir.mkdir(parents=True)
     (done_dir / "TCK-ORPHAN.md").write_text("# orphan\n", encoding="utf-8")
@@ -213,7 +214,7 @@ def test_duplicate_ticket_ids_check_no_longer_excludes_flagged_duplicate_rows(tm
     silently excluded from it -- the prior exclusion meant this check could never see the exact
     defect class it exists to catch. A genuine same-ticket-ID, different-content second row (an
     actual reopened ticket / a real double-paste) is still reported too, same as before."""
-    tickets_dir = tmp_path / "tickets"
+    tickets_dir = tmp_path / TICKETS
     done_dir = tickets_dir / "done"
     done_dir.mkdir(parents=True)
 
@@ -237,7 +238,7 @@ def test_duplicate_ticket_ids_check_no_longer_excludes_flagged_duplicate_rows(tm
 
 
 def test_run_validation_reports_ambiguous_row_count(tmp_path):
-    tickets_dir = tmp_path / "tickets"
+    tickets_dir = tmp_path / TICKETS
     done_dir = tickets_dir / "done"
     done_dir.mkdir(parents=True)
 
@@ -258,7 +259,7 @@ def test_run_validation_reports_ambiguous_row_count(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Step 3 — integration tests against the real committed tickets/working_log.csv
+# Step 3 — integration tests against the real committed agent-working/tickets/working_log.csv
 # ---------------------------------------------------------------------------
 
 

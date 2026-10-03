@@ -10,12 +10,12 @@ tags: [ai, schema, mcp]
 
 This document is a **migration design specification**, not an implementation. No migration
 function body is written, and no `CREATE TABLE`/`ALTER TABLE` statement is executed against the
-real, gitignored `knowledge-index/retrieval_cache.db` by this ticket
+real, gitignored `agent-working/.index/knowledge-index/retrieval_cache.db` by this ticket
 (`TCK-20260814-KGMCP-EVIDENCE-CACHE-IDENTITY`). `tools/retrieval_cache.py` itself is not edited —
 verify with `git diff tools/retrieval_cache.py` (must be empty). Function names below are named
 placeholders; their bodies are explicitly Phase 2/3 work, out of this ticket's scope. This document
 specifies, per §10.1/§19 of `docs/plans/knowledge-gateway-mcp-proposal.md`, how those future
-migrations must evolve `knowledge-index/retrieval_cache.db` **in place** — the same file, not a
+migrations must evolve `agent-working/.index/knowledge-index/retrieval_cache.db` **in place** — the same file, not a
 second database — while preserving the three existing marker-only tables
 (`retrieval_index_cache_rows`, `retrieval_query_cache_rows`, `retrieval_packet_cache_rows`,
 `tools/retrieval_cache.py:111-150`) and their current callers/tests unchanged until a later ticket
@@ -132,7 +132,7 @@ Ordered migration function list (names are placeholders; bodies are Phase 2/3 wo
    `retrieval_cache_access_log`, a new, wholly-additive, append-only work-attribution log for
    Level 1/Level 2 cache `hit`/`write` events (`cache_level`, `query_hash`/`repo_branch_scope`/
    `packet_id`, `run_id`/`seq`/`phase`/`agent`/`execution_id`/`provider`/`ticket_id` sourced from
-   the same `.claude/current_run` sidecar mechanism `agent-monitoring/tools.jsonl` already uses,
+   the same `.claude/current_run` sidecar mechanism `agent-working/agent-monitoring/tools.jsonl` already uses,
    `sidecar_stale`, `ts`). Neither Level 1 nor Level 2's own `hit_count`/`last_hit_at`/
    `last_validated_at` columns carry any run/agent/phase attribution, and both are wiped to
    0/`NULL` on every `INSERT OR REPLACE` write — this table is append-only history that survives
@@ -190,7 +190,7 @@ drop-and-rebuild.
 
 Per §10.1/Scope ("evolve... rather than creating a second database... Do not create a second
 gateway database unless Phase 0 demonstrates an incompatible lifecycle or locking requirement"),
-this design keeps the new Level 1/2 tables in the same `knowledge-index/retrieval_cache.db` file as
+this design keeps the new Level 1/2 tables in the same `agent-working/.index/knowledge-index/retrieval_cache.db` file as
 the existing marker-only tables. This ticket's investigation found no evidence of an incompatible
 requirement — no WAL-mode conflict, no differing writer-process model between the marker-only tables
 and the planned new tables — so no justification exists to deviate from the same-file default.

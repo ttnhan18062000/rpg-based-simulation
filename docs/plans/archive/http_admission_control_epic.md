@@ -15,7 +15,7 @@ tags: [architecture, observability]
 **Priority:** P1 — the gating deployment-plan decision fired 2026-08-23: this API surface now goes
 public internet, multi-tenant (was trusted-network-only). Originally P2, gated on that decision not
 being made yet; now active, no longer front-loaded speculatively. See
-`tickets/todos/http-admission-control/TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC.md` for the full
+`agent-working/tickets/todos/http-admission-control/TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC.md` for the full
 2026-08-23 investigation and split into child tickets.
 
 ## Problem
@@ -59,7 +59,7 @@ engine and the HTTP layer.
 **Broken into child tickets as of 2026-08-23:** `TCK-20260823-HTTP-API-KEY-AUTH` (auth,
 implementation complete, in the pipeline) and `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`
 (admission control, depends on the first, not yet started — see
-`tickets/todos/http-admission-control/`).
+`agent-working/tickets/todos/http-admission-control/`).
 
 - ~~CORS config no longer uses the spec-invalid wildcard+credentials combination.~~ **Resolved**
   (`TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG`, 2026-08-20): `allow_credentials=True`

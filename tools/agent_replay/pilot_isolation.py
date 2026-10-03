@@ -10,9 +10,9 @@ proven property plus a widened snapshot-diff check instead of standing up a real
 Locally reimplements the porcelain-if-clean/content-hash-if-dirty zero-diff technique — mirroring
 `tools/agent_replay_codex/containment.py`'s own pattern — parameterized by a watch set sourced
 from `tools/agent_replay_codex/monitoring_shards.py::source_paths()` (sharding-aware) plus
-`tickets/`, rather than calling `containment.py`'s own `capture_snapshot`/`assert_no_diff`
+`agent-working/tickets/`, rather than calling `containment.py`'s own `capture_snapshot`/`assert_no_diff`
 directly: those two functions accept no path-list parameter and hardcode the retired 3-file
-`agent-monitoring/{runs,events,tools}.jsonl` pathspec internally (investigation.md Risks #3,
+`agent-working/agent-monitoring/{runs,events,tools}.jsonl` pathspec internally (investigation.md Risks #3,
 corrected during plan Review Round 1 — see plan.md).
 
 `snapshot_monitoring_lines`/`assert_monitoring_prefix_preserved` ARE imported and reused as-is
@@ -47,8 +47,9 @@ from agent_replay_codex.monitoring_shards import source_paths  # noqa: E402
 
 from .fixture_envelope import FixtureEnvelope
 from .runner import ReplayOutcome, replay_slice
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix  # noqa: E402
 
-_WATCHED_GIT_PATHSPECS = ["tickets/", "agent-monitoring/data/"]
+_WATCHED_GIT_PATHSPECS = [f"{posix(TICKETS)}/", f"{posix(AGENT_MONITORING)}/data/"]
 _UNSCOPED_SIDECAR_RELPATH = ".claude/current_run"
 
 PILOT_RUN_ID = "TCK-20260907-FILTERED-REPLAY-EVAL-PILOT"
@@ -83,8 +84,8 @@ def _porcelain_snapshot(repo_root: Path) -> str:
 
 
 def _watched_files(repo_root: Path) -> list:
-    files = [f for f in sorted((repo_root / "tickets").rglob("*")) if f.is_file()]
-    monitoring_data_dir = repo_root / "agent-monitoring" / "data"
+    files = [f for f in sorted((repo_root / TICKETS).rglob("*")) if f.is_file()]
+    monitoring_data_dir = repo_root / AGENT_MONITORING / "data"
     if monitoring_data_dir.is_dir():
         files += [f for f in sorted(monitoring_data_dir.rglob("*")) if f.is_file()]
     return files
@@ -108,7 +109,7 @@ def _sidecar_snapshot(repo_root: Path) -> tuple:
 def capture(repo_root: Path) -> IsolationSnapshot:
     porcelain = _porcelain_snapshot(repo_root)
     content_hash = _content_hash_snapshot(repo_root) if porcelain != "" else None
-    monitoring_lines = snapshot_monitoring_lines(repo_root / "agent-monitoring")
+    monitoring_lines = snapshot_monitoring_lines(repo_root / AGENT_MONITORING)
     sidecar_mtime, sidecar_content = _sidecar_snapshot(repo_root)
     return IsolationSnapshot(porcelain, content_hash, monitoring_lines, sidecar_mtime, sidecar_content)
 
@@ -147,7 +148,7 @@ def assert_isolation_held(
     both unchanged), nothing happened during the window — pass. Otherwise ambient concurrent-
     session activity is the expected common case in this routinely-dirty repo (per
     investigation.md Current Behavior §7): fall back to asserting append-only prefix-preservation
-    on every `agent-monitoring/*.jsonl` shard (no pre-existing line was rewritten/reordered/
+    on every `agent-working/agent-monitoring/*.jsonl` shard (no pre-existing line was rewritten/reordered/
     deleted) AND that none of the newly-appended lines carry the pilot's own `run_id` — the
     concrete distinguishing check between "grew because another concurrent session wrote its own
     attributed lines" (tolerated) and "grew because the pilot's own execution wrote something"

@@ -7,6 +7,7 @@ import yaml
 from tools.agent_orchestration_codex_adapter.errors import CodexAdapterMissingCompanionAssetError
 from tools.agent_orchestration_codex_adapter.generator import render_codex_guidance
 from tools.agent_orchestration.loader import load_contract
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 ROOT = Path(__file__).parent.parent.parent
 
@@ -65,8 +66,8 @@ def test_render_codex_guidance_copies_declared_companion_assets_byte_identical(t
 
 def test_missing_companion_asset_source_raises_named_error(tmp_path):
     source = tmp_path / "source"
-    shutil.copytree(ROOT / "agent-orchestration", source / "agent-orchestration")
-    skills_path = source / "agent-orchestration" / "skills.yaml"
+    shutil.copytree(ROOT / AGENT_ORCHESTRATION, source / AGENT_ORCHESTRATION)
+    skills_path = source / AGENT_ORCHESTRATION / "skills.yaml"
     data = yaml.safe_load(skills_path.read_text())
     data["skills"][0]["companion_assets"] = ["does-not-exist.md"]
     skills_path.write_text(yaml.safe_dump(data, sort_keys=False))

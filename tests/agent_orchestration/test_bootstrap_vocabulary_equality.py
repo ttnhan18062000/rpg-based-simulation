@@ -11,7 +11,7 @@ share the same Python object; this test asserts a value-equality snapshot betwee
 vocabulary.py, taken once at bootstrap time). Do not "fix" a future failure of this test by
 re-syncing the YAML to vocabulary.py forever — once provider adapters exist, this contract is
 meant to become the upstream authority and vocabulary.py becomes generated/validated FROM it,
-not the reverse (see agent-orchestration/README.md). Rewording this docstring to claim a
+not the reverse (see agent-working/agent-orchestration/README.md). Rewording this docstring to claim a
 permanent two-way binding would reintroduce the reversed-ownership bug this ticket's own history
 records being corrected once already.
 """
@@ -53,7 +53,7 @@ def test_bootstrap_phase_agent_vocabulary_matches_vocabulary_py():
     # TCK-20260915-MONITORING-ANOMALY-VALIDATOR registered 3 more literals in
     # vocabulary.py's WORKFLOW_AGENTS["implement-ticket"] set, each independently confirmed to be
     # the same pseudo-agent/advisory category as the two above, not a real subagent role the YAML
-    # is missing (verified against agent-orchestration/workflows/implement-ticket.yaml's own
+    # is missing (verified against agent-working/agent-orchestration/workflows/implement-ticket.yaml's own
     # `agents:` list, which declares none of the three):
     #   - "orchestrator": the same hand-orchestration pseudo-agent pattern as "claude" above, just
     #     a different, longer-running, still-growing literal for the identical concept.
@@ -67,7 +67,7 @@ def test_bootstrap_phase_agent_vocabulary_matches_vocabulary_py():
     # TCK-20260923-SHADOW-REVIEWER-VOCABULARY-GAP registered 2 more literals in
     # vocabulary.py's WORKFLOW_AGENTS["implement-ticket"] set, independently confirmed to be the
     # same pseudo-agent/advisory category as the five above, not real contract-declared subagent
-    # roles (re-verified against agent-orchestration/workflows/implement-ticket.yaml's own
+    # roles (re-verified against agent-working/agent-orchestration/workflows/implement-ticket.yaml's own
     # `agents:` list, which declares none of the seven):
     #   - "architecture-reviewer-shadow": the Architecture-Verify phase's shadow-reviewer advisory
     #     call site's own agent literal (.claude/workflows/implement-ticket.js:1074/:1099) -- an

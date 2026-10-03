@@ -260,9 +260,9 @@ def test_required_tests_from_registry_collects_test_paths_from_matching_entries(
     basename_index = chi.build_basename_index(graph)
 
     registry_entries = [
-        {"path": "tickets/done/TCK-EXAMPLE.md",
+        {"path": "agent-working/tickets/done/TCK-EXAMPLE.md",
          "related_code_areas": ["Widget", "tests/unit/foo/test_bar.py"]},
-        {"path": "tickets/done/TCK-UNRELATED.md",
+        {"path": "agent-working/tickets/done/TCK-UNRELATED.md",
          "related_code_areas": ["src/somewhere/else.py", "tests/unit/else/test_else.py"]},
     ]
 
@@ -279,7 +279,7 @@ def test_required_tests_from_registry_resolves_bare_filename_via_basename_index(
 
     # Bare filename (no directory), the other confirmed real shape.
     registry_entries = [
-        {"path": "tickets/done/TCK-EXAMPLE-2.md",
+        {"path": "agent-working/tickets/done/TCK-EXAMPLE-2.md",
          "related_code_areas": ["bar.py", "tests/unit/foo/test_bar_alt.py"]},
     ]
 
@@ -306,8 +306,8 @@ def test_required_tests_from_registry_handles_empty_related_code_areas():
     basename_index = chi.build_basename_index(graph)
 
     registry_entries = [
-        {"path": "tickets/done/TCK-NO-AREAS.md", "related_code_areas": []},
-        {"path": "tickets/done/TCK-NO-FIELD.md"},
+        {"path": "agent-working/tickets/done/TCK-NO-AREAS.md", "related_code_areas": []},
+        {"path": "agent-working/tickets/done/TCK-NO-FIELD.md"},
     ]
 
     required_tests = chi.required_tests_from_registry(

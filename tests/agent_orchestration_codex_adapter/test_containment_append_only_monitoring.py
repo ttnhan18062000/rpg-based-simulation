@@ -4,6 +4,7 @@ import importlib.util
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
@@ -15,8 +16,8 @@ _SPEC.loader.exec_module(_MANIFEST)
 
 
 def _monitoring_dir(tmp_path: Path) -> Path:
-    directory = tmp_path / "agent-monitoring"
-    directory.mkdir()
+    directory = tmp_path / AGENT_MONITORING
+    directory.mkdir(parents=True)
     for filename in ("runs.jsonl", "events.jsonl", "tools.jsonl"):
         (directory / filename).write_text("one\ntwo\n", encoding="utf-8")
     return directory
@@ -49,6 +50,6 @@ def test_assert_prefix_preserved_rejects_reordered_lines(tmp_path: Path):
 
 
 def test_capture_lines_reads_all_three_monitoring_files():
-    captured = _MANIFEST.capture_lines(_REPO_ROOT / "agent-monitoring")
+    captured = _MANIFEST.capture_lines(_REPO_ROOT / AGENT_MONITORING)
 
     assert set(captured) == {"runs.jsonl", "events.jsonl", "tools.jsonl"}

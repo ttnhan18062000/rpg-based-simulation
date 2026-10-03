@@ -20,7 +20,7 @@ Unconditional containment law (see docs/ai/replay_fixture_spec.md, which names t
 scripts under tools/agent-monitoring/ in full): this module must never subprocess or import any of
 those four scripts, under any condition. `_fake_write_monitoring` and `_fake_hook_boundary` are
 pure in-memory no-ops standing in for those call sites — they perform no I/O to
-`agent-monitoring/*.jsonl` or any `.claude/` sidecar file. This file deliberately never spells out
+`agent-working/agent-monitoring/*.jsonl` or any `.claude/` sidecar file. This file deliberately never spells out
 those four scripts' literal filenames anywhere in its own source (not even in a comment) — see
 tests/agent_replay/test_runner_no_forbidden_calls.py's whole-file string-constant scan, which
 checks every string literal in this package, not just call-argument-scoped ones.
@@ -49,7 +49,7 @@ class ReplayOutcome:
 
 def _fake_write_monitoring(final_status: str) -> dict:
     """In-memory stand-in for implement-ticket.js's writeMonitoring(). Performs no I/O to
-    agent-monitoring/runs.jsonl, agent-monitoring/events.jsonl, or any .claude/ sidecar file —
+    agent-working/agent-monitoring/runs.jsonl, agent-working/agent-monitoring/events.jsonl, or any .claude/ sidecar file —
     ever, regardless of cwd."""
     return {"status": "fake-recorded", "final_status": final_status}
 

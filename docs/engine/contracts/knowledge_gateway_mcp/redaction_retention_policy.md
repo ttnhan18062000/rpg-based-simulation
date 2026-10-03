@@ -54,7 +54,7 @@ when a future ticket adds one.
 Eligible source types, at Phase 2/3, are limited to:
 
 - Context Search provider results (`tools/search_mcp.py`), scoped to documentation, tickets,
-  investigations, and working-history material already indexed in `knowledge-index/knowledge.db`.
+  investigations, and working-history material already indexed in `agent-working/.index/knowledge-index/knowledge.db`.
 - Graphify provider results, scoped to source-symbol and dependency-relationship data already
   extracted into the graphify graph.
 - Content derived exclusively from the above two providers — never a raw filesystem read outside
@@ -113,7 +113,7 @@ persisted.
 
 No secret-detection or credential-scanning module exists anywhere in this repository today.
 `tools/agent_codex_posttool_adapter/redaction.py` is a different, unrelated subsystem — it
-truncates/selects fields for `agent-monitoring/tools.jsonl` records (`summarize_tool_input()`/
+truncates/selects fields for `agent-working/agent-monitoring/tools.jsonl` records (`summarize_tool_input()`/
 `derive_status()`, `tools/agent_codex_posttool_adapter/redaction.py:12-31`); it does not
 pattern-match or strip secret values, and must not be cited as an existing secret-detection
 precedent for this policy.
@@ -387,7 +387,7 @@ ticket.
 |---|---|
 | Maximum database size | 256 MB. Exceeding this ceiling blocks further writes until GC (§10) or manual `prune()` frees space. |
 | TTL/usage-based eviction | Governed by the Cache-GC Defaults in §10 below, by name. |
-| File permissions | `0600` (owner read/write only) on `knowledge-index/retrieval_cache.db`, set immediately after the file is created. |
+| File permissions | `0600` (owner read/write only) on `agent-working/.index/knowledge-index/retrieval_cache.db`, set immediately after the file is created. |
 | WAL mode | `PRAGMA journal_mode=WAL`, enabled on every connection open. |
 | Bounded transactions | Every write path wraps its `INSERT`/`UPDATE`/`DELETE` statements in a single transaction per call (matching the existing `execute(...)` + one `commit()` shape already used throughout `tools/retrieval_cache.py`), never an open-ended multi-call transaction. |
 | Busy timeouts | `PRAGMA busy_timeout=5000` (5000 ms), set on every connection open. |
@@ -470,6 +470,6 @@ production-complete secret scanner.**
   defaults (§10) describe future behavior for; zero edits made to it by this ticket.
 
 No `docs/parity_ledger/` entry accompanies this document — this subsystem is
-agent-orchestration/retrieval tooling, the same category the sibling
+agent-working/agent-orchestration/retrieval tooling, the same category the sibling
 `evidence_cache_identity_contract.md` §6 and `knowledge_gateway_mcp_contract.md` §5 already classify
 as not requiring a parity ledger entry.

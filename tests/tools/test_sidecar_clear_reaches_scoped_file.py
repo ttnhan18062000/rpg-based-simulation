@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
@@ -62,7 +63,7 @@ def _run_hook(cwd, payload):
 
 def _last_tools_row(cwd):
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    tools_file = cwd / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.tools.jsonl"
+    tools_file = cwd / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.tools.jsonl"
     lines = [l for l in tools_file.read_text().splitlines() if l.strip()]
     return json.loads(lines[-1])
 

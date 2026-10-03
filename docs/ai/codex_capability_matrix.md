@@ -137,7 +137,7 @@ hooks   stable   true
 
 This finding is now codified as a re-runnable regression check: `tests/tools/test_codex_capability_diagnostics.py::test_codex_hooks_feature_reported_enabled` re-executes `codex features list` and asserts the `hooks` row reports an enabled/stable state, skipping cleanly in any environment where `codex` is not on `PATH`.
 
-**Deferred (not performed in this ticket):** an isolated stdin-payload-capture fixture experiment — writing a throwaway `hooks.json` outside this repo's trust boundary and running `codex exec` against a scratch fixture to capture one event's real JSON payload — was considered and explicitly **not** performed. `codex features list` already satisfies AC3's literal requirement (at least one entry distinguishing fixture-confirmed from documentation-cited evidence). Payload-capture would consume real API usage under the user's authenticated account and is recorded here as future scope for a dedicated ticket (e.g. a `CODEX-REPLAY-PROOF` child per `tickets/todos/provider-agnostic-discovery/SEQUENCE.md`), not a gap silently filled by this one.
+**Deferred (not performed in this ticket):** an isolated stdin-payload-capture fixture experiment — writing a throwaway `hooks.json` outside this repo's trust boundary and running `codex exec` against a scratch fixture to capture one event's real JSON payload — was considered and explicitly **not** performed. `codex features list` already satisfies AC3's literal requirement (at least one entry distinguishing fixture-confirmed from documentation-cited evidence). Payload-capture would consume real API usage under the user's authenticated account and is recorded here as future scope for a dedicated ticket (e.g. a `CODEX-REPLAY-PROOF` child per `agent-working/tickets/todos/provider-agnostic-discovery/SEQUENCE.md`), not a gap silently filled by this one.
 
 ## 7. Divergences / Silences vs. the Plan's Existing Claims
 
@@ -157,6 +157,6 @@ This finding is now codified as a re-runnable regression check: `tests/tools/tes
 
 - `docs/plans/archive/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md:109` (archived — shipped) — the original 2026-07-20 ten-hook citation this matrix independently re-verifies, without merging into it.
 - `docs/ai/agents_dir_disposition.md` — sibling decision-record artifact from the same discovery batch; structural precedent for this doc's format.
-- `stored_artifacts/TCK-20260619-E-CAP-REGISTRY/investigation.md` — closest in-repo precedent for a machine-readable capability matrix, for a different domain (simulation engine features, not a third-party AI provider).
+- `agent-working/stored_artifacts/TCK-20260619-E-CAP-REGISTRY/investigation.md` — closest in-repo precedent for a machine-readable capability matrix, for a different domain (simulation engine features, not a third-party AI provider).
 - `tests/tools/test_codex_capability_diagnostics.py` — the re-runnable diagnostic test codifying §6's fixture-confirmed evidence.
-- `tickets/todos/provider-agnostic-discovery/SEQUENCE.md` — sequencing context; this ticket is a dependency of `TCK-20260721-ORCHESTRATION-CONTRACT-ADR` and `TCK-20260721-CODEX-REPLAY-PROOF`.
+- `agent-working/tickets/todos/provider-agnostic-discovery/SEQUENCE.md` — sequencing context; this ticket is a dependency of `TCK-20260721-ORCHESTRATION-CONTRACT-ADR` and `TCK-20260721-CODEX-REPLAY-PROOF`.

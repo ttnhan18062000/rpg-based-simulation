@@ -3,7 +3,7 @@ tools/hybrid_retrieval.py — Reciprocal-rank fusion over the existing dense (em
 lexical (BM25) knowledge indexes, plus pre-fusion authority/freshness metadata filtering.
 
 This is a fusion/filter layer over the *existing* knowledge_vec/knowledge_docs tables
-(knowledge-index/knowledge.db) and bm25.pkl built by tools/knowledge_search.py's `build`
+(agent-working/.index/knowledge-index/knowledge.db) and bm25.pkl built by tools/knowledge_search.py's `build`
 subcommand — it is not a new corpus source, is not wired into any .claude/workflows/*.js file or
 existing pipeline/gate, and implements no lightweight re-ranker beyond fusion + metadata
 filtering.
@@ -105,7 +105,7 @@ def resolve_metadata(path: str, source_type: str, registry_index: dict[str, dict
     """Resolve a knowledge_docs row's authority/freshness/kind against the loaded registry index.
 
     A `path` with no docs/REGISTRY.yaml entry (every `ticket`/`investigation`/`working_log` row
-    not under tickets/done/, since REGISTRY only indexes docs/ and tickets/done/) resolves to the
+    not under agent-working/tickets/done/, since REGISTRY only indexes docs/ and agent-working/tickets/done/) resolves to the
     UNRATED sentinel for both authority and freshness, per context_packet_contract.md §3's
     non-registry-backed fallback rule -- never a fabricated P2/historical-looking default.
     """

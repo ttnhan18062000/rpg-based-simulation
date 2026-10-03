@@ -10,6 +10,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from monitoring_shard_paths import per_identifier_shard_paths  # noqa: E402
 from week_close import WeekCloseError, is_finished  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _KINDS = ("runs", "events", "tools", "working_log")
 
@@ -45,5 +49,5 @@ def nudge_message(pending: list[tuple[str, int]]) -> str | None:
 
 
 if __name__ == "__main__":
-    msg = nudge_message(weeks_needing_close(Path("agent-monitoring/data")))
+    msg = nudge_message(weeks_needing_close(AGENT_MONITORING / "data"))
     print(msg or "No finished week has shards.")

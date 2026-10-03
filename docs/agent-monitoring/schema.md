@@ -16,11 +16,11 @@ Three append-only JSONL sources (`runs`, `events`, `tools`) per UTC ISO week, jo
 ## Derived SQLite Index (Read Path Only)
 
 `tools/agent-monitoring/build_index.py` builds a gitignored, full-rebuild-only SQLite index
-(`agent-monitoring-index/monitoring.db`) from all 3 JSONL files below — `runs`, `events`, and
+(`agent-working/.index/agent-monitoring-index/monitoring.db`) from all 3 JSONL files below — `runs`, `events`, and
 `tools` tables, each column-for-column derived from the corresponding JSONL shape, plus a
 materialized `resolved_status`/`is_complete` pair on `runs` computed by importing
 `generate_retro.py::_resolve_status()` and `validate.py::_record_is_complete()` directly rather
-than reimplementing that normalization in SQL. It mirrors this repo's `knowledge-index/knowledge.db`
+than reimplementing that normalization in SQL. It mirrors this repo's `agent-working/.index/knowledge-index/knowledge.db`
 precedent: derived, gitignored, rebuildable, **never** the source of truth — the JSONL files below
 remain the sole write-path/append-only ground truth, untouched by the index or its build step.
 
@@ -29,7 +29,7 @@ the index to exist (exiting with an actionable "run `make agent-monitoring-index
 it's missing) — a deliberate choice, since neither is meant to run without its data source.
 `generate_retro.py` is the one exception: it builds the index on demand if missing **or stale**
 (all 3 sources — `runs`/`events`/`tools` — are compared uniformly against the newest mtime across
-their respective `agent-monitoring/data/*/<source>.jsonl` week files, via `max()` — never the
+their respective `agent-working/agent-monitoring/data/*/<source>.jsonl` week files, via `max()` — never the
 data-dir root's own mtime, since a directory's mtime does not reliably update when an existing
 file inside it is appended to. Any of these being newer than the index —
 `TCK-20260811-AGENT-MONITORING-INDEX-SILENT-STALENESS`, since a present-but-outdated index was
@@ -48,7 +48,7 @@ divergences.
 
 ---
 
-## `runs` (`agent-monitoring/data/YYYY-Www/runs.jsonl`)
+## `runs` (`agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl`)
 
 One record per workflow invocation.
 
@@ -83,13 +83,13 @@ One record per workflow invocation.
 
 **Token counts are not recorded per-event, inline, in `runs.jsonl`/`events.jsonl`.** The workflow `agent()` call returns the agent's structured output only; API usage metadata (`input_tokens`, `output_tokens`) is consumed internally by the Claude Code runtime and is not forwarded to the workflow script, so there is still no way to attach a real token count to a specific run/phase/event at record-write time.
 
-**This is no longer a full blocker, though (corrected `TCK-20260921-REAL-TOKEN-TELEMETRY` — the original wording here claimed "no workaround within the current platform," which was false).** `tools/agent-monitoring/real_token_usage.py` reads the real per-request `message.usage` (`input_tokens`/`cache_creation_input_tokens`/`cache_read_input_tokens`/`output_tokens`) directly from this machine's own local Claude Code transcript files (`~/.claude/projects/**/*.jsonl`), which the runtime writes for every request regardless of what the workflow script itself ever receives. It is a real workaround, but a different-shaped one than a per-event field would be: retrospective, developer-machine-only (unavailable in CI or from a fresh clone, since transcripts live outside git), and read-only — it is never written into `agent-monitoring/data/`. It gives real totals and real attribution by day/model/session/main-vs-subagent/git-branch/tool/Bash-family, surfaced via `generate_retro.py`'s opt-in `## Token Usage (Real)` section (`--include-real-tokens`) — see that tool's own module docstring for the exact boundaries.
+**This is no longer a full blocker, though (corrected `TCK-20260921-REAL-TOKEN-TELEMETRY` — the original wording here claimed "no workaround within the current platform," which was false).** `tools/agent-monitoring/real_token_usage.py` reads the real per-request `message.usage` (`input_tokens`/`cache_creation_input_tokens`/`cache_read_input_tokens`/`output_tokens`) directly from this machine's own local Claude Code transcript files (`~/.claude/projects/**/*.jsonl`), which the runtime writes for every request regardless of what the workflow script itself ever receives. It is a real workaround, but a different-shaped one than a per-event field would be: retrospective, developer-machine-only (unavailable in CI or from a fresh clone, since transcripts live outside git), and read-only — it is never written into `agent-working/agent-monitoring/data/`. It gives real totals and real attribution by day/model/session/main-vs-subagent/git-branch/tool/Bash-family, surfaced via `generate_retro.py`'s opt-in `## Token Usage (Real)` section (`--include-real-tokens`) — see that tool's own module docstring for the exact boundaries.
 
 **Tool call counts** per agent are also not recorded. They could be self-reported (each agent counts its own tool calls and includes the total in its return value), but this is not currently implemented. Use `agent_count` as a coarse proxy for run complexity.
 
 **`duration_s` is naive wall-clock time** (`end_ts - start_ts`), with no awareness of idle gaps between phase transitions — a run paused for hours awaiting human review reports the same inflated `duration_s` as one that spent that whole span in real active work. `tools/agent-monitoring/duration_utils.py::compute_active_idle_split()` (TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT) computes a read-time-only `active_duration_s`/`idle_gap_s` split per run from its own `events.jsonl` rows (never mutating `runs.jsonl`/`events.jsonl` themselves), surfaced additively alongside raw `duration_s` in `generate_retro.py`'s Slow Runs and Duration outliers sections and in `retrieval_baseline_metrics.py`'s one-off snapshot — `duration_s` itself is not corrected or reinterpreted anywhere.
 
-**`workflow_version` per run and `input_hash` per phase are not recorded.** Neither `runs.jsonl` nor `events.jsonl` has a field capturing which `agent-orchestration/workflows/implement-ticket.yaml` `workflow_version` a run executed against, or a hash of the specific input a given phase consumed. `docs/ai/phase_resume_validation_rule_decision.md` (TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN) investigated both as part of designing a future phase-level workflow-resume validation rule and confirmed this gap directly against this section: both would need new fields added to these records — `workflow_version` cannot be inferred from any existing field, and `input_hash` is not the same thing as `cited_source_hashes` (a different, retrieval-event-only field gated behind `SHADOW_CONTEXT_PACKET_ENABLED`, not a general per-phase input hash). Neither field is recorded today; adding them is future implementation work, not yet scoped to a ticket.
+**`workflow_version` per run and `input_hash` per phase are not recorded.** Neither `runs.jsonl` nor `events.jsonl` has a field capturing which `agent-working/agent-orchestration/workflows/implement-ticket.yaml` `workflow_version` a run executed against, or a hash of the specific input a given phase consumed. `docs/ai/phase_resume_validation_rule_decision.md` (TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN) investigated both as part of designing a future phase-level workflow-resume validation rule and confirmed this gap directly against this section: both would need new fields added to these records — `workflow_version` cannot be inferred from any existing field, and `input_hash` is not the same thing as `cited_source_hashes` (a different, retrieval-event-only field gated behind `SHADOW_CONTEXT_PACKET_ENABLED`, not a general per-phase input hash). Neither field is recorded today; adding them is future implementation work, not yet scoped to a ticket.
 
 ### `final_status` values
 
@@ -115,23 +115,23 @@ One record per workflow invocation.
 | `CRASHED` | Synthetic status set by `validate.py` for runs with `start_ts` but no `end_ts`. |
 
 Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, new run records are no longer appended to a
-single `agent-monitoring/runs.jsonl` file. They are written to
-`agent-monitoring/data/YYYY-Www/runs.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed
+single `agent-working/agent-monitoring/runs.jsonl` file. They are written to
+`agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed
 at write time — i.e. when `record_run.py` is invoked, not from the record's own `start_ts` field —
 matching `post_tool_hook.py`'s existing precedent and `events.jsonl`'s write-time bucketing below).
 `TCK-20260903-MONITORING-DATA-MIGRATION` has since retired the historical monolithic
-`agent-monitoring/runs.jsonl` from the working tree: every pre-cutover row was migrated into its
-matching `agent-monitoring/data/YYYY-Www/runs.jsonl` bucket, keyed by each row's own `start_ts`
+`agent-working/agent-monitoring/runs.jsonl` from the working tree: every pre-cutover row was migrated into its
+matching `agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl` bucket, keyed by each row's own `start_ts`
 field (with a documented field-priority fallback — `ts`, `ts_start`, `started_at`, `completed_at`,
 `ts_end`, `finished_at`, `timestamp`, in that order — for the rare row missing `start_ts`). The
-retired file's full history remains recoverable via `git log --follow -- agent-monitoring/
+retired file's full history remains recoverable via `git log --follow -- agent-working/agent-monitoring/
 runs.jsonl`. The per-record schema is unaffected by this change; only where a record physically
 lands changes.
 
 ### Historical Corrections
 
 `runs.jsonl` was append-only for all writes prior to this cutover, and each per-week
-`agent-monitoring/data/YYYY-Www/runs.jsonl` shard remains append-only going forward — every writer
+`agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl` shard remains append-only going forward — every writer
 (`record_run.py`) only ever appends via `write_line()`, never rewrites an existing line. The one
 documented exception: **TCK-20260718-STATUS-DRIFT-REPAIR** (2026-07-18) corrected the `final_status`
 casing on 7 pre-existing records (`"done"`/`"success"` → `"DONE"`, predating this doc's all-uppercase
@@ -142,21 +142,21 @@ all writes going forward.
 
 ---
 
-## `events` (`agent-monitoring/data/YYYY-Www/events.jsonl`)
+## `events` (`agent-working/agent-monitoring/data/YYYY-Www/events.jsonl`)
 
 One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
 
 Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, new event records are no longer appended to
-a single `agent-monitoring/events.jsonl` file. They are written to
-`agent-monitoring/data/YYYY-Www/events.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed
+a single `agent-working/agent-monitoring/events.jsonl` file. They are written to
+`agent-working/agent-monitoring/data/YYYY-Www/events.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed
 at write time). `iso_week` is computed once per `record_events.py --data` invocation, not once per
 record, so a whole batch of events from one call always lands together in one target file — matching
 `write_lines()`'s single-target-path, one-lock-per-batch contract. `TCK-20260903-MONITORING-DATA-
-MIGRATION` has since retired the historical monolithic `agent-monitoring/events.jsonl` from the
-working tree: every pre-cutover row was migrated into its matching `agent-monitoring/data/YYYY-
+MIGRATION` has since retired the historical monolithic `agent-working/agent-monitoring/events.jsonl` from the
+working tree: every pre-cutover row was migrated into its matching `agent-working/agent-monitoring/data/YYYY-
 Www/events.jsonl` bucket, keyed by each row's own `ts` field (with the same documented
 field-priority fallback list used for `runs.jsonl` for the rare row missing `ts`). The retired
-file's full history remains recoverable via `git log --follow -- agent-monitoring/events.jsonl`.
+file's full history remains recoverable via `git log --follow -- agent-working/agent-monitoring/events.jsonl`.
 The per-record schema is unaffected by this change; only where a record physically lands changes.
 
 ```json
@@ -425,23 +425,23 @@ every-ticket volume, which is what surfaced the registry gap.)
 
 ---
 
-## `tools` (`agent-monitoring/data/YYYY-Www/tools.jsonl`)
+## `tools` (`agent-working/agent-monitoring/data/YYYY-Www/tools.jsonl`)
 
 One record per tool call, written by `PreToolUse` and `PostToolUse` hooks. Joined to events by `run_id` + `seq`.
 
-Since `TCK-20260902-MONITORING-SHARD-WRITE-PATH`, new tool-call rows are no longer appended to a single file. They were written to `agent-monitoring/tools/tools-YYYY-Www.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed at write time — matching `generate_retro.py::iso_week()`'s format and the `agent-monitoring/retro/RETRO-YYYY-Www.md` naming convention it already documents elsewhere). `TCK-20260902-MONITORING-SHARD-MIGRATION` has since retired the historical `agent-monitoring/tools.jsonl` from the working tree: every pre-cutover row was migrated into its matching `agent-monitoring/tools/tools-YYYY-Www.jsonl` shard (keyed by the row's own `ts` field), with the single confirmed row that carried no `ts` field routed to a dedicated `agent-monitoring/tools/tools-unknown-week.jsonl` fallback shard. The retired file's full history remains recoverable via `git log --follow -- agent-monitoring/tools.jsonl`.
+Since `TCK-20260902-MONITORING-SHARD-WRITE-PATH`, new tool-call rows are no longer appended to a single file. They were written to `agent-working/agent-monitoring/tools/tools-YYYY-Www.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed at write time — matching `generate_retro.py::iso_week()`'s format and the `agent-working/agent-monitoring/retro/RETRO-YYYY-Www.md` naming convention it already documents elsewhere). `TCK-20260902-MONITORING-SHARD-MIGRATION` has since retired the historical `agent-working/agent-monitoring/tools.jsonl` from the working tree: every pre-cutover row was migrated into its matching `agent-working/agent-monitoring/tools/tools-YYYY-Www.jsonl` shard (keyed by the row's own `ts` field), with the single confirmed row that carried no `ts` field routed to a dedicated `agent-working/agent-monitoring/tools/tools-unknown-week.jsonl` fallback shard. The retired file's full history remains recoverable via `git log --follow -- agent-working/agent-monitoring/tools.jsonl`.
 
 Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, this shard shape itself has been superseded
 by a second, distinct move (not a repeat of the prior migration): new tool-call rows are written to
-`agent-monitoring/data/YYYY-Www/tools.jsonl` instead — still one file per UTC ISO week, still
-`%G-W%V`, still computed at write time; only the directory shape changed (`agent-monitoring/tools/
-tools-<week>.jsonl` → `agent-monitoring/data/<week>/tools.jsonl`), not the sharding granularity.
-`TCK-20260903-MONITORING-DATA-MIGRATION` has since retired the prior epic's `agent-monitoring/
+`agent-working/agent-monitoring/data/YYYY-Www/tools.jsonl` instead — still one file per UTC ISO week, still
+`%G-W%V`, still computed at write time; only the directory shape changed (`agent-working/agent-monitoring/tools/
+tools-<week>.jsonl` → `agent-working/agent-monitoring/data/<week>/tools.jsonl`), not the sharding granularity.
+`TCK-20260903-MONITORING-DATA-MIGRATION` has since retired the prior epic's `agent-working/agent-monitoring/
 tools/tools-YYYY-Www.jsonl` shards from the working tree: each shard was relocated (not
 re-bucketed — the prior epic already did the per-line `ts`-based bucketing correctly, so this
 migration only parsed the ISO week directly out of each shard's own filename) into its matching
-`agent-monitoring/data/YYYY-Www/tools.jsonl` file. The retired directory's full history remains
-recoverable via `git log --follow -- agent-monitoring/tools/`. The per-record schema below is
+`agent-working/agent-monitoring/data/YYYY-Www/tools.jsonl` file. The retired directory's full history remains
+recoverable via `git log --follow -- agent-working/agent-monitoring/tools/`. The per-record schema below is
 unaffected by either change; only where a record physically lands changes.
 
 ```json
@@ -482,7 +482,7 @@ The `PostToolUse` hook (`post_tool_hook.py`) routes its append through `tools/ag
 
 ### How tool calls are attributed to agent events
 
-The orchestrating workflow (`implement-ticket.js`) writes `{"run_id": "...", "seq": N}` to `.claude/current_run` itself via a `bash()` call (the shared `writeSidecar(seq)` helper), immediately before dispatching each corresponding `agent()` call — agent prompts no longer contain a sidecar-write instruction. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. `record_events.py::compute_tool_stats()` — called at write time inside `record_events.py`'s own `main()`, not by `writeMonitoring`'s prompt — counts records per `(run_id, seq)` to produce `tool_call_count`/`cost_proxy_score` in `events.jsonl`, always overriding any value the caller passed in (`TCK-20260719-COST-PROXY-WRITE-PATH`; mirrors `record_run.py`'s `compute_duration_s`). Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, `compute_tool_stats()` reads the **union of every week folder's** `tools.jsonl` (a sorted glob over `agent-monitoring/data/*/tools.jsonl`, concatenated before grouping by `(run_id, seq)`) rather than a single fixed file — necessary because a paused/resumed run's tool-call rows can land in an earlier week than the event being written now (see the pause/resume mechanism below); this is safe against double-counting because `(run_id, seq)` is globally unique across weeks.
+The orchestrating workflow (`implement-ticket.js`) writes `{"run_id": "...", "seq": N}` to `.claude/current_run` itself via a `bash()` call (the shared `writeSidecar(seq)` helper), immediately before dispatching each corresponding `agent()` call — agent prompts no longer contain a sidecar-write instruction. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. `record_events.py::compute_tool_stats()` — called at write time inside `record_events.py`'s own `main()`, not by `writeMonitoring`'s prompt — counts records per `(run_id, seq)` to produce `tool_call_count`/`cost_proxy_score` in `events.jsonl`, always overriding any value the caller passed in (`TCK-20260719-COST-PROXY-WRITE-PATH`; mirrors `record_run.py`'s `compute_duration_s`). Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, `compute_tool_stats()` reads the **union of every week folder's** `tools.jsonl` (a sorted glob over `agent-working/agent-monitoring/data/*/tools.jsonl`, concatenated before grouping by `(run_id, seq)`) rather than a single fixed file — necessary because a paused/resumed run's tool-call rows can land in an earlier week than the event being written now (see the pause/resume mechanism below); this is safe against double-counting because `(run_id, seq)` is globally unique across weeks.
 
 **Hand-orchestrated closures (`TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP`).**
 `compute_tool_stats()`'s "zero matching rows means confirmed zero calls" logic above is only true
@@ -512,7 +512,7 @@ previously restart at `1`, silently aliasing the new session's tool-call attribu
 whatever `(run_id, seq)` buckets the pre-pause session already wrote in `tools.jsonl`. Fixed by a
 `seqOffset` computed once at Scope-phase resume — `tools/agent-monitoring/seq_offset.py`'s
 `compute_seq_offset(run_id, events)` looks up the max `seq` this `run_id` already has in
-`agent-monitoring/events.jsonl` (`0` for a brand-new ticket) — added into every `seq`-producing
+`agent-working/agent-monitoring/events.jsonl` (`0` for a brand-new ticket) — added into every `seq`-producing
 expression so a resumed session's numbering continues past the prior session's instead of
 restarting. `tools/agent-monitoring/validate.py`'s `compute_multi_invocation_collision_report()`
 detects this mechanism's historical signature (a `run_id` with more than one `phase="Scope",
@@ -522,7 +522,7 @@ seq=1` event) so a future recurrence surfaces automatically.
 
 Tool calls made outside a workflow (interactive Claude Code session) are still recorded with `run_id: null, seq: null` — useful for auditing overall tool usage. Historical `tool_call_count`/`cost_proxy_score` values recorded before this fix are not backfilled (append-only precedent) — they may still be wrong; only events recorded after this fix are expected to be reliable.
 
-**Cross-session contamination fix (`TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE`, 2026-08-24).** `.claude/current_run` is a single file shared by every concurrent Claude Code session working in this repository's shared directory — every session's own `writeSidecar()` call overwrites the same file, so a session's tool calls get attributed to whichever session wrote the sidecar most recently, not the session that actually made the call. This was confirmed live, not theoretically: `tickets/done/TCK-20260821-VISUAL-QUALITY-DOCS.md` closed on 2026-08-22T21:36:09Z, yet `tools.jsonl` kept receiving rows stamped with that same closed ticket's `run_id`/`phase`/`agent` from a different, concurrently-running session two days later, on 2026-08-24. **Fix:** `writeSidecar()` (and the Scope-phase resume branch) now additionally write a per-session-scoped copy, `.claude/current_run.<CLAUDE_CODE_SESSION_ID>` — a stable, process-level env var the harness sets once per session, so reading it introduces no new race — alongside the existing unscoped file. Two consumers were originally left reading only the unscoped file — `tools/retrieval_cache.py`'s `read_current_run_sidecar()` (migrated to the same scoped-then-unscoped-fallback order by `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY`, same day) and `.claude/settings.json`'s inline `Edit|Write` `PreToolUse` hook (migrated by `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE`, 2026-09-04, reading `CLAUDE_CODE_SESSION_ID` via `os.environ.get` since this bash-embedded hook has no payload `session_id` field to read) — both now prefer the scoped file when it exists, falling back to the unscoped file otherwise. `post_tool_hook.py` prefers the session-scoped file, keyed by the `session_id` it already reads from its own hook payload, falling back to the unscoped file when no scoped file exists for that session. The unscoped file itself is kept indefinitely as that shared fallback target, not as a sign any consumer is still unmigrated. Scoped files older than 24 hours are pruned opportunistically on every hook invocation (no "session end" hook exists in this repo to delete them precisely at session close). **Historical data:** consistent with the no-backfill precedent immediately above, no `tools.jsonl` row written before this fix is corrected or flagged — cross-session misattribution during concurrent-session windows before 2026-08-24 (the `TCK-20260821-VISUAL-QUALITY-DOCS` window above being the one concretely confirmed instance) remains an accepted, documented data-quality caveat, not something retroactively repaired.
+**Cross-session contamination fix (`TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE`, 2026-08-24).** `.claude/current_run` is a single file shared by every concurrent Claude Code session working in this repository's shared directory — every session's own `writeSidecar()` call overwrites the same file, so a session's tool calls get attributed to whichever session wrote the sidecar most recently, not the session that actually made the call. This was confirmed live, not theoretically: `agent-working/tickets/done/TCK-20260821-VISUAL-QUALITY-DOCS.md` closed on 2026-08-22T21:36:09Z, yet `tools.jsonl` kept receiving rows stamped with that same closed ticket's `run_id`/`phase`/`agent` from a different, concurrently-running session two days later, on 2026-08-24. **Fix:** `writeSidecar()` (and the Scope-phase resume branch) now additionally write a per-session-scoped copy, `.claude/current_run.<CLAUDE_CODE_SESSION_ID>` — a stable, process-level env var the harness sets once per session, so reading it introduces no new race — alongside the existing unscoped file. Two consumers were originally left reading only the unscoped file — `tools/retrieval_cache.py`'s `read_current_run_sidecar()` (migrated to the same scoped-then-unscoped-fallback order by `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY`, same day) and `.claude/settings.json`'s inline `Edit|Write` `PreToolUse` hook (migrated by `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE`, 2026-09-04, reading `CLAUDE_CODE_SESSION_ID` via `os.environ.get` since this bash-embedded hook has no payload `session_id` field to read) — both now prefer the scoped file when it exists, falling back to the unscoped file otherwise. `post_tool_hook.py` prefers the session-scoped file, keyed by the `session_id` it already reads from its own hook payload, falling back to the unscoped file when no scoped file exists for that session. The unscoped file itself is kept indefinitely as that shared fallback target, not as a sign any consumer is still unmigrated. Scoped files older than 24 hours are pruned opportunistically on every hook invocation (no "session end" hook exists in this repo to delete them precisely at session close). **Historical data:** consistent with the no-backfill precedent immediately above, no `tools.jsonl` row written before this fix is corrected or flagged — cross-session misattribution during concurrent-session windows before 2026-08-24 (the `TCK-20260821-VISUAL-QUALITY-DOCS` window above being the one concretely confirmed instance) remains an accepted, documented data-quality caveat, not something retroactively repaired.
 
 **`implement-epic.js`/`create-tickets.js` gain their own `writeSidecar` helpers (`TCK-20260904-COST-PROXY-EPIC-TICKETS`).** Both workflows previously never registered a `.claude/current_run` sidecar per agent call at all (a deliberate scope-narrowing decision by `TCK-20260719-COST-PROXY-WRITE-PATH`, not a technical limitation) — this ticket reverses that decision for the sites where a safe, non-racing write is possible. Each file adds its own 4-arg `writeSidecar(seq, phase, agentName)` helper — same dual-write shape as `implement-ticket.js`'s (unscoped `.claude/current_run` + session-scoped `.claude/current_run.<CLAUDE_CODE_SESSION_ID>` copy, argv-quoted, fail-open), but omitting the `execution_id`/`provider` fields (`TCK-20260730-CLAUDE-EXECUTION-IDENTITY`'s separate, unrelated addition to `implement-ticket.js` only) — `post_tool_hook.py` tolerates their absence. `implement-epic.js`'s helper closes over a single, hoisted `batchRunId` and is called at its 4 real top-level `agent()` sites (`discover`, `batch-monitoring-write`, `folder-cleanup`, `tracking-doc-update`) using a disjoint, monotonic **negative** `seq` range (`-1..-4`, never positive) — this run_id is shared with the pre-existing `batchEvents` array's own `seq = 1..N` positive range, so a positive value here would collide with it for realistic batch sizes (the same `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION` bug class). `create-tickets.js`'s helper reuses this file's own `events.length + 1` numbering (it already maintains an `events` array via `pushEvent`) and is called at 4 sites: `comprehend`, `structure`, `write-sequence`, `link-epic`. Three `create-tickets.js` sites are permanently excluded, each with its own documenting code comment: `writeMonitoring`'s own `agent()` call (mirrors `implement-ticket.js`'s identical, permanent exclusion of the same architectural role, immediately above) and the 2 `pipeline()` fan-out sites, `investigate:${concern.id}` and `write:${task.short_scope}` — `pipeline()` runs up to `min(16, CPUs-2)` truly concurrent `agent()` calls sharing the one mutable sidecar file, so a `writeSidecar()`-then-`agent()` pattern there would let a later concurrent iteration's write silently overwrite an earlier iteration's still-in-flight attribution, a structural race not fixable by distinct per-item `seq` values alone. `record_events.py::compute_tool_stats()`'s workflow filter was correspondingly widened from a single `== "implement-ticket"` check to a membership check against `{"implement-ticket", "implement-epic", "create-tickets"}` — `simq-audit` stays deliberately excluded (it has its own separate, still-unfixed inline compute path).
 
@@ -547,7 +547,7 @@ exact match rule.
 
 ---
 
-## `claim_detections` (`agent-monitoring/data/YYYY-Www/claim_detections.jsonl`)
+## `claim_detections` (`agent-working/agent-monitoring/data/YYYY-Www/claim_detections.jsonl`)
 
 Log-only ticket-claim detection (`TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING`, Bucket-B
 experiment per `docs/plans/agent_infrastructure/ai_first_hardening_epics/workflow_reliability_epic.md`
@@ -624,7 +624,7 @@ widening the window is not the fix.
 
 ### `.gitattributes` coverage
 
-Already covered by the existing `agent-monitoring/data/*/*.jsonl merge=union` glob — no new
+Already covered by the existing `agent-working/agent-monitoring/data/*/*.jsonl merge=union` glob — no new
 `.gitattributes` entry was needed for this new file (confirmed by direct pattern match).
 
 ---
@@ -637,18 +637,18 @@ from pathlib import Path
 from collections import defaultdict
 
 runs = {json.loads(l)['run_id']: json.loads(l)
-        for shard in sorted(Path('agent-monitoring/data').glob('*/runs.jsonl'))
+        for shard in sorted(Path('agent-working/agent-monitoring/data').glob('*/runs.jsonl'))
         for l in shard.read_text().splitlines() if l}
 
 events_by_run = defaultdict(list)
-for shard in sorted(Path('agent-monitoring/data').glob('*/events.jsonl')):
+for shard in sorted(Path('agent-working/agent-monitoring/data').glob('*/events.jsonl')):
     for line in shard.read_text().splitlines():
         if line:
             e = json.loads(line)
             events_by_run[e['run_id']].append(e)
 
 tools_by_event = defaultdict(list)
-for shard in sorted(Path('agent-monitoring/data').glob('*/tools.jsonl')):
+for shard in sorted(Path('agent-working/agent-monitoring/data').glob('*/tools.jsonl')):
     for line in shard.read_text().splitlines():
         if line:
             t = json.loads(line)
@@ -679,9 +679,9 @@ At least five historical monitoring-write generations coexist with the current s
 
 `validate.py`'s incomplete-run check now recognizes all of these as valid completion signals (not just the current schema's `end_ts`), via the `LEGACY_COMPLETION_FIELDS` (`end_ts`, `finished_at`, `completed_at`, `ts_end`) and `LEGACY_TERMINAL_STATUS_VALUES` (the enumerated union of every terminal `final_status`/`status` value observed in the data — `DONE`, `done`, `complete`, `completed`, `success`, `EPIC_SCOPED`, `ALL_SCOPED`, `DOD_BLOCKED`, `NEEDS_HUMAN_INPUT`, `GATE_FAIL`, `STOPPED_BY_USER`) allowlists in `tools/agent-monitoring/validate.py`. The check also dedupes by `run_id` first — a `run_id`'s group of records is only flagged if none of its records satisfy the completion check.
 
-This was a deliberate decision: an exhaustive audit (not a sample) of the 2026-07-05 investigation (`TCK-20260705-MONITORING-RUNID-JOIN`) found **107/107** of the previously-residual "Incomplete run (CRASHED?)" warnings were genuinely completed work — 98/107 via direct `tickets/done/` file match, the other 9 via explicit terminal-status fields plus independently-DONE child tickets. Zero genuine crashes or abandoned work were found.
+This was a deliberate decision: an exhaustive audit (not a sample) of the 2026-07-05 investigation (`TCK-20260705-MONITORING-RUNID-JOIN`) found **107/107** of the previously-residual "Incomplete run (CRASHED?)" warnings were genuinely completed work — 98/107 via direct `agent-working/tickets/done/` file match, the other 9 via explicit terminal-status fields plus independently-DONE child tickets. Zero genuine crashes or abandoned work were found.
 
-**Final residual after the fix: exactly 1** — `TCK-20260623-TYPE-CHECKER`, a 6th legacy shape (`"outcome":"success"`, `"phase":"implement"`, no `end_ts`/`final_status`/`status` field at all) confirmed genuinely complete via a direct `tickets/done/TCK-20260623-TYPE-CHECKER.md` match. It is not added to the allowlist (a single-record shape is not worth a speculative code addition) — it is accepted as a permanently-documented, individually-verified exception.
+**Final residual after the fix: exactly 1** — `TCK-20260623-TYPE-CHECKER`, a 6th legacy shape (`"outcome":"success"`, `"phase":"implement"`, no `end_ts`/`final_status`/`status` field at all) confirmed genuinely complete via a direct `agent-working/tickets/done/TCK-20260623-TYPE-CHECKER.md` match. It is not added to the allowlist (a single-record shape is not worth a speculative code addition) — it is accepted as a permanently-documented, individually-verified exception.
 
 Do not "fix" any of this by backfilling `runs.jsonl` (Out of Scope, append-only precedent) — the fix lives entirely in `validate.py`'s read-side interpretation.
 
@@ -693,7 +693,7 @@ The `run-{code}-{unix_ts}` run_id convention and ad hoc `-REDESIGN`-style suffix
 
 `tools/agent-monitoring/verify_referential_integrity.py` (TCK-20260903-MONITORING-DATA-REFERENTIAL-
 INTEGRITY) automates the 2 FK relationships documented above (`events.run_id -> runs.run_id`;
-`tools.(run_id, seq) -> events.(run_id, seq)`), reading the union of every `agent-monitoring/data/
+`tools.(run_id, seq) -> events.(run_id, seq)`), reading the union of every `agent-working/agent-monitoring/data/
 <week>/` folder (never scoped to one week) so a legitimate cross-week-boundary run is never
 false-flagged. It excludes the 3 documented exceptions: `RETRIEVAL-EVENT-<slug>` run_ids (no
 matching runs.jsonl row by design), `tools.jsonl` rows with `run_id: null` (outside an active
@@ -716,7 +716,7 @@ groups — flagged for possible follow-up investigation, not resolved here. As w
 Limitations above, no orphan is backfilled or repaired retroactively (append-only precedent) — this
 tool verifies and reports only.
 
-Full evidence: `stored_artifacts/TCK-20260903-MONITORING-DATA-REFERENTIAL-INTEGRITY/investigation.md`.
+Full evidence: `agent-working/stored_artifacts/TCK-20260903-MONITORING-DATA-REFERENTIAL-INTEGRITY/investigation.md`.
 
 ### Temporal Week Consistency Verification
 
@@ -753,20 +753,20 @@ yet been through a full week-spanning pause/resume cycle since the unified-weekl
 design went live. The check's real value is prospective — catching the first genuine future
 write-time-vs-record-time divergence — not retrospective.
 
-Full evidence: `stored_artifacts/TCK-20260904-MONITORING-TEMPORAL-WEEK-CONSISTENCY-CHECK/investigation.md`.
+Full evidence: `agent-working/stored_artifacts/TCK-20260904-MONITORING-TEMPORAL-WEEK-CONSISTENCY-CHECK/investigation.md`.
 
 ### Duplicate content block in `2026-W36/tools.jsonl` (squash-merge artifact)
 
-`agent-monitoring/data/2026-W36/tools.jsonl` physical lines 22830–22908 (79 lines) are
+`agent-working/agent-monitoring/data/2026-W36/tools.jsonl` physical lines 22830–22908 (79 lines) are
 byte-for-byte identical, at a fixed +409 line offset, to lines 23239–23317 — confirmed down to
 the microsecond `ts` field on a sampled pair, ruling out coincidental repeats
 (`TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP`). Root cause: the same defect class as
-that ticket's ~1586-row `tickets/working_log.csv` duplication — GitHub squash-merge (this repo's
+that ticket's ~1586-row `agent-working/tickets/working_log.csv` duplication — GitHub squash-merge (this repo's
 de facto standard PR-landing mechanism, confirmed 5/5 on a recent-PR sample) never invokes git's
-merge machinery, so `.gitattributes`' `agent-monitoring/data/*/*.jsonl merge=union` driver never
-gets a chance to run. This is **not remediated**: unlike `tickets/working_log.csv` (which received
+merge machinery, so `.gitattributes`' `agent-working/agent-monitoring/data/*/*.jsonl merge=union` driver never
+gets a chance to run. This is **not remediated**: unlike `agent-working/tickets/working_log.csv` (which received
 a one-time cleanup commit in the same ticket), this shard was deliberately left as-is because
-`agent-monitoring/data/*/*.jsonl` shards have a materially more active, per-tool-call writer
+`agent-working/agent-monitoring/data/*/*.jsonl` shards have a materially more active, per-tool-call writer
 profile than `working_log.csv`'s occasional ticket-close appends, so a cleanup edit here carries a
 higher, less-understood concurrent-write collision risk than that ticket's evidence base
 justified taking on. It is tracked, not silently left, via
@@ -779,8 +779,8 @@ not already dedupe by exact content — no downstream consumer-specific dedup fi
 `tools/knowledge_search.py`'s working-log corpus extraction (a different file) was part of that
 ticket's scope.
 
-Full evidence: `stored_artifacts/TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP/investigation.md`.
+Full evidence: `agent-working/stored_artifacts/TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP/investigation.md`.
 
 ### Full evidence
 
-Full classification evidence for the 2026-07-05 audit of 126 incomplete-run / 5 zero-event records (corrected: 16 true dedup-resolved, 107 true residual, 107/107 confirmed genuinely completed): `stored_artifacts/TCK-20260705-MONITORING-RUNID-JOIN/investigation.md`.
+Full classification evidence for the 2026-07-05 audit of 126 incomplete-run / 5 zero-event records (corrected: 16 true dedup-resolved, 107 true residual, 107/107 confirmed genuinely completed): `agent-working/stored_artifacts/TCK-20260705-MONITORING-RUNID-JOIN/investigation.md`.

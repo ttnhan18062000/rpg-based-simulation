@@ -11,7 +11,7 @@ last_verified: 2026-08-10
 ## Context
 
 `TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION`'s investigation (see
-`stored_artifacts/TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION/investigation.md`)
+`agent-working/stored_artifacts/TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION/investigation.md`)
 traced a failing test through three compounding, confirmed root causes, all rooted in the same
 underlying gap: two independent strategic-decision systems compete for the same
 `entity.strategic.current_project_id` field using hardcoded, non-generalizable rules.

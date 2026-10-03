@@ -381,7 +381,7 @@
     \ (entity-presence-only) behavior, not the *documented intent* (an HP check) \u2014\
     \ fixing the dead code is separate, small, out-of-scope cleanup, not part of this\
     \ migration ticket. Registered in `PHASE2_SHAPER_REGISTRY`, gated by `ENABLE_PUSH_EVENT_SHAPERS_PHASE2`\
-    \ (default OFF). SHADOW-only in this ticket. See stored_artifacts/TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION/investigation.md\
+    \ (default OFF). SHADOW-only in this ticket. See agent-working/stored_artifacts/TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION/investigation.md\
     \ for the full trace.\nUPDATE 2026-08-07 (TCK-20260806-PUSH-CUTOVER-PHASE2): the\
     \ SHADOW-only status above for faction_extinct (and WORLD-115's world_emergence_event/narrative_milestone\
     \ reuse of this entry's own world_events_add loop) is now closed too \u2014 ENABLE_PUSH_EVENT_SHAPERS_PHASE2\

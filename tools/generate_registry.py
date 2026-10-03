@@ -2,8 +2,8 @@
 """
 Generate docs/REGISTRY.yaml — a flat index of all tagged docs and closed tickets.
 
-Walks docs/ (excluding archive subdirs) and tickets/done/ to produce a single
-YAML list with one entry per file. Ticket entries are joined with stored_artifacts/
+Walks docs/ (excluding archive subdirs) and agent-working/tickets/done/ to produce a single
+YAML list with one entry per file. Ticket entries are joined with agent-working/stored_artifacts/
 by ticket_id to enumerate artifact_files.
 
 Usage:
@@ -33,6 +33,10 @@ from pathlib import Path
 _TOOLS_DIR = Path(__file__).parent
 sys.path.insert(0, str(_TOOLS_DIR))
 from validate_frontmatter import extract_frontmatter  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -156,8 +160,8 @@ def _strip_frontmatter(text: str) -> str:
 
 def join_artifact_files(root: Path, ticket_id: str) -> list:
     """Return sorted list of relative paths (from root) for files under
-    stored_artifacts/{ticket_id}/*.md. Returns [] if folder absent."""
-    artifact_dir = root / "stored_artifacts" / ticket_id
+    agent-working/stored_artifacts/{ticket_id}/*.md. Returns [] if folder absent."""
+    artifact_dir = root / STORED_ARTIFACTS / ticket_id
     if not artifact_dir.is_dir():
         return []
     files = sorted(artifact_dir.glob("*.md"))
@@ -298,7 +302,7 @@ def collect_docs(root: Path) -> tuple:
 def _build_ticket_entry(root: Path, md_file: Path) -> dict:
     """Build one ticket entry dict from a single ticket markdown file. Missing frontmatter →
     warning to stderr, entry still emitted with defaults (backward compat) — same behavior for
-    every ticket location, not just tickets/done/."""
+    every ticket location, not just agent-working/tickets/done/."""
     text = md_file.read_text(encoding="utf-8")
     try:
         fm = extract_frontmatter(text)
@@ -366,9 +370,9 @@ def collect_tickets(root: Path) -> list:
 
     The done/ folder walk is deliberately one level deep only, not recursive (`glob("*/*.md")`,
     not `rglob`) -- matches CLAUDE.md's own folder-move rule, which only ever nests a single level
-    (`tickets/done/{folder}/{epic-ticket}.md` + `SEQUENCE.md`; individual children already moved
+    (`agent-working/tickets/done/{folder}/{epic-ticket}.md` + `SEQUENCE.md`; individual children already moved
     out to the flat root as they closed, per the same rule). Confirmed against all 84 real
-    `tickets/done/*/` subdirectories at the time this was fixed: every one holds at most one
+    `agent-working/tickets/done/*/` subdirectories at the time this was fixed: every one holds at most one
     non-SEQUENCE.md ticket file (the folder's own epic, if one exists) at exactly this depth, never
     deeper.
 
@@ -377,7 +381,7 @@ def collect_tickets(root: Path) -> list:
     """
     entries = []
 
-    done_dir = root / "tickets" / "done"
+    done_dir = root / TICKETS / "done"
     if done_dir.is_dir():
         for md_file in sorted(done_dir.glob("*.md")):
             entries.append(_build_ticket_entry(root, md_file))
@@ -386,12 +390,12 @@ def collect_tickets(root: Path) -> list:
                 continue
             entries.append(_build_ticket_entry(root, md_file))
 
-    inprogress_dir = root / "tickets" / "inprogress"
+    inprogress_dir = root / TICKETS / "inprogress"
     if inprogress_dir.is_dir():
         for md_file in sorted(inprogress_dir.glob("*.md")):
             entries.append(_build_ticket_entry(root, md_file))
 
-    todos_dir = root / "tickets" / "todos"
+    todos_dir = root / TICKETS / "todos"
     if todos_dir.is_dir():
         for md_file in sorted(todos_dir.rglob("*.md")):
             if md_file.name == "SEQUENCE.md":

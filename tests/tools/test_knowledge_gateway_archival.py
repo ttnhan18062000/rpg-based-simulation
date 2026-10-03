@@ -7,6 +7,7 @@ TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY). Only the extracted, gateway-indepen
 from __future__ import annotations
 
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _TOOLS_DIR = _REPO_ROOT / "tools"
@@ -64,7 +65,7 @@ _RETAINED_MEASUREMENT_FIXTURES = [
 
 def test_kgmcp_measurement_modules_no_longer_exist():
     for filename in _MEASUREMENT_TOOLING_FILENAMES:
-        path = _TOOLS_DIR / "agent-monitoring" / filename
+        path = _TOOLS_DIR / AGENT_MONITORING / filename
         assert not path.exists(), f"expected {path} to no longer exist (removed measurement tooling)"
 
 

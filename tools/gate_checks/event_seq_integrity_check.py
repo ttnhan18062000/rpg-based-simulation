@@ -1,4 +1,4 @@
-"""Measures `agent-monitoring/data/*/events.jsonl` `seq` duplication and gaps
+"""Measures `agent-working/agent-monitoring/data/*/events.jsonl` `seq` duplication and gaps
 (TCK-20260915-EVENT-SEQ-INTEGRITY, child of TCK-20260915-MONITORING-ANOMALY-DETECTION-EPIC).
 
 **What this measures, and why most of it is not a defect**: 51 of 71 real duplicate-`seq` runs

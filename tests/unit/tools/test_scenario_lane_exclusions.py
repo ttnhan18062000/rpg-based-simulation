@@ -150,7 +150,7 @@ def test_scanner_ignores_unrelated_code():
 
 
 def test_prefix_extraction_covers_the_known_irrelevant_prefixes():
-    assert {"docs", "tickets", "tools", "registries", "stored_artifacts"} <= _BARE
+    assert {"docs", "agent-working", "tools", "registries"} <= _BARE
 
 
 def test_reachability_follows_imports_into_src_and_skips_unreached_modules():

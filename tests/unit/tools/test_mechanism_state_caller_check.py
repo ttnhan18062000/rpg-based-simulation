@@ -136,7 +136,7 @@ def test_real_registry_findings_pinned():
     check happens several call-frames up (`engine/world_dynamics.py`), not within the 5-line text
     window of the direct `GeneticsSystem` reference in `reproduction_humanoid.py` -- the check's
     own textual-proximity heuristic has a real, expected blind spot for flag checks made at a
-    different layer than the call site. See stored_artifacts/TCK-20260916-MECHANISM-ORPHAN-STATE-
+    different layer than the call site. See agent-working/stored_artifacts/TCK-20260916-MECHANISM-ORPHAN-STATE-
     BATCH-VERIFICATION/investigation.md for the full disposition of every finding in that batch.
 
     2026-09-19: `trauma` briefly carried a same-day, same-session `orphan_with_callers` finding

@@ -2,7 +2,7 @@
 (TCK-20260805-SECURITY-GATE-FIRING-MONITOR).
 
 Mirrors tests/tools/test_retrieval_baseline_metrics.py's design: synthetic-fixture unit tests for
-the classification logic itself, plus an integration test against the REAL agent-monitoring/
+the classification logic itself, plus an integration test against the REAL agent-working/agent-monitoring/
 corpus asserting today's known-correct classification — never a tmp_path copy for the live-corpus
 assertion, which would make it vacuous.
 """
@@ -11,6 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 from unittest.mock import patch
+from tools.agent_working_paths import AGENT_MONITORING, posix
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
@@ -202,12 +203,12 @@ def test_cli_runs_against_real_corpus_and_prints_json():
 
 def test_causes_zero_diff_on_real_corpus():
     pre = subprocess.run(
-        ["git", "status", "--porcelain", "--", "agent-monitoring/"],
+        ["git", "status", "--porcelain", "--", f"{posix(AGENT_MONITORING)}/"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     ).stdout
     check_security_gate_firing()
     post = subprocess.run(
-        ["git", "status", "--porcelain", "--", "agent-monitoring/"],
+        ["git", "status", "--porcelain", "--", f"{posix(AGENT_MONITORING)}/"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     ).stdout
-    assert pre == post, f"security_gate_firing_check mutated agent-monitoring/: pre={pre!r} post={post!r}"
+    assert pre == post, f"security_gate_firing_check mutated agent-working/agent-monitoring/: pre={pre!r} post={post!r}"
