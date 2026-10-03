@@ -201,7 +201,7 @@ Each follows §3.1 and is intentionally empty.
 
 #### PERF-D1 — Determinism contracts (Canonical and Live bounded)
 
-- **Status:** **approved by the repository owner on 2026-10-03** as drafted by `perf-planner`.
+- **Status:** **approved by the repository owner on 2026-10-03** as drafted by `perf-planner`. Amended on 2026-10-03 (amendment A1 below), also owner-approved, after the wall-clock inventory found a fourth input.
   The P1 document edits it requires are not yet applied; `PERF-M0-T09` applies them.
 - **Context:** `docs/engine/deterministic_execution.md` (P1) promises that sequential execution is
   bit-identical for the same seed and initial state. Three wall-clock inputs break that promise
@@ -289,6 +289,33 @@ Each follows §3.1 and is intentionally empty.
   slow-regression ticket its fix direction (run those tests under the Canonical contract).
 - **Revisit condition:** the control trace cannot be bounded; a new executor (free-threaded or
   native) adds a semantics-affecting input not in the table; the inventory finds a fourth input.
+- **Amendment A1 (owner-approved 2026-10-03), from the wall-clock inventory**
+  (`docs/performance/wall_clock_inventory.md`, `TCK-20261003-PERF-WALL-CLOCK-READ-INVENTORY`). The
+  inventory met the revisit condition "the inventory finds a fourth input":
+  4. **Fourth input — world-pressure salience.** The previous tick's measured `tick_compute_ms`
+     becomes `compute_ratio` and `global_salience` (`src/engine/kernel.py`, the pressure dict before
+     the `StateUpdate`), is applied to `AuthoritativeState.pressure_signals`
+     (`src/engine/apply.py`), and multiplies shop buy prices (`DynamicPriceService.calculate_buy_price`,
+     used by `ShopService.buy_item` for the gold check and cost). A slower or busier host makes items
+     cost more. No `RuntimeMode` change is involved, so the three inputs above do not cover it.
+     `audit_mode` zeroes it. `pressure_signals` is not part of the proof digest, so the flat hash
+     sees the effect only once a purchase changes gold or inventory.
+
+  **Decision A1:** a game-facing signal (any value that systems read from `AuthoritativeState` to
+  change gameplay: prices, salience, and anything derived from them) may be computed only from
+  deterministic inputs, **in both contracts**. Host timing and resources may choose how much work
+  the engine does (mode, budgets, cadence); they may never change what the world's rules say.
+  `compute_ratio` is removed from `global_salience`; salience keeps the work-debt term. This is a
+  gameplay change (prices no longer rise with host load) and needs an
+  `intentional_divergences.md` entry when implemented. Implementation edits `src/` and waits for the
+  RPG-core entry gate: `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`.
+
+  **Inputs the Canonical proxy set must also cover** (same inventory; classification unchanged):
+  the replay-backlog `DEGRADED` trigger in `ResourceGovernor` (depends on a background flush
+  thread; recorded as a mode transition), and `PhaseBudgetGovernor`, which reads per-phase
+  wall-clock costs and `tick_compute_ms` directly in every mode (the "phase budgets" row of the
+  table above). The inventory found nothing else on the tick path that feeds state, ids, seeds,
+  or sort keys; its limits are in its §6.
 - Related dispositions: C-03, C-04, C-05.
 
 #### PERF-D2 — Portability
