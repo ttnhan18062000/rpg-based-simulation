@@ -158,6 +158,8 @@ it and no dormancy protects it.
 - `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` — the parent chain whose root cause this fixes.
   Its `SEQUENCE.md` link (1) recorded the verdict; no fix was ever filed. **Filing this does not
   resume the epic** — links (2), (3) and (5) stay where they are.
+- `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` — owns the AC6 failure's
+  unexplained 780/1609 opportunity-attack nondeterminism (planner-owned; on main via #303).
 - `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` (done) — the P0 investigation that
   produced the verdict. Its 2026-09-19 addendum names `intelligence.py:1711` and the scorer at
   `src/ai/goals/scorers.py:101` (it cites `:108`; that citation has drifted).
