@@ -295,4 +295,9 @@ batch, one target.
 observed running the Epic C steps during the batch. This is what this session saw, not a census of other
 sessions.
 
-**Owner decision (next domain, or stop):** _pending: to be recorded by the owner after review._
+**Owner decision (2026-10-03): pause scale-out after social** (the owner's answer, relayed by
+`test-architecture-reviewer`). The batch's main findings are foundation gaps for the feature teams (211 of
+227 P0 entries without `test_path`; selected tests pin the catalog-CONFLICTING reputation read;
+`_appraise_position_swap` barely reached), not a case for more measurement batches. No next domain is chosen.
+Watch items (a)–(e) in the roadmap §6 continue; scale-out is revisited by a new owner decision, for example
+when the semantic-foundation work lands.

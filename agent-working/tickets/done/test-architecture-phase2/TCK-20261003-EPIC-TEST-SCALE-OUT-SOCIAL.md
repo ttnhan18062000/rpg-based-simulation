@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-EPIC-TEST-SCALE-OUT-SOCIAL
-phase: open
+phase: done
 date: 2026-10-03
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Phase 2 epic: apply the test-architecture capabilities to the social domain (one batch)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -59,16 +59,16 @@ All of the plan's §5 entry gates (G1–G4) must hold before the first child act
 ## Acceptance Criteria
 
 - [x] The owner approval is recorded in the plan's §9 (2026-10-03).
-- [ ] No RPG feature test file is changed by any child PR. The reviewer checks each diff.
-- [ ] G2 (social quiet, naming the two 2026-08-22 todos), G3 (determinism stance stated per target)
+- [x] No RPG feature test file is changed by any child PR. The reviewer checks each diff.
+- [x] G2 (social quiet, naming the two 2026-08-22 todos), G3 (determinism stance stated per target)
   and G4 (Rule classification) are each recorded with source and date.
-- [ ] Items 1–6 each have an output as listed in the plan's §6, or an honest "not done" with its
+- [x] Items 1–6 each have an output as listed in the plan's §6, or an honest "not done" with its
   reason.
-- [ ] The mutation baseline records the target, selection, full SHA, date, runtime, result
+- [x] The mutation baseline records the target, selection, full SHA, date, runtime, result
   categories, `stale_after`, and whether the kernel ran.
-- [ ] The oracle-map findings list the P0 entries without `test_path`, the 3 divergent entries,
+- [x] The oracle-map findings list the P0 entries without `test_path`, the 3 divergent entries,
   SOC-052, and the ch07 Bible-table gap. Each is routed to `rpg-feature-planning`.
-- [ ] A batch review is recorded against the roadmap §2 measures, with sample sizes, and the owner's
+- [x] A batch review is recorded against the roadmap §2 measures, with sample sizes, and the owner's
   next-domain or stop decision.
 
 ## Related Tickets
@@ -113,12 +113,25 @@ implementation, then the one batch PR. Children created 2026-10-03 (order in `SE
 
 ## Test Summary
 
-Not applicable. This is a scope-only epic.
+Not applicable: this is a scope-only epic. Children ran their own checks: the routing case file 27 passed,
+the social selections 296 and 372 passed, the mutation selection 313 passed, and the baseline-record shape
+tests 9 passed.
 
 ## Files Changed
 
-None yet.
+None directly. Through the children: `tests/unit/tools/test_scenario_lane_paths.py` (one case),
+`tests/mutation/baselines/src_systems_social_appraisal_v1.json` (data), `docs/testing/social_test_report_2026-10-03.md`,
+one row of `docs/plans/test_architecture/reference/architecture_design_notes.md` §3.1, and the Phase 2 plan, roadmap and
+Epic B cost-record updates.
 
 ## Completion Summary
 
-Not complete.
+**Closed 2026-10-03.** The four children (`TCK-20261003-SOCIAL-LANE-ROUTING-CASE-AND-SCENARIO-GAP`,
+`TCK-20261003-SOCIAL-TEST-LOCATE-AND-OWNER-ROUTING`, `TCK-20261003-SOCIAL-ORACLE-MAP-REPORT`,
+`TCK-20261003-SOCIAL-APPRAISAL-MUTATION-BASELINE`) are done and each was accepted by test-architecture-reviewer.
+No RPG feature test file was changed (the batch's only test paths are the routing case and the baseline data
+file). Gate evidence: G2 and G4 are recorded in the plan section 5, and G3 in the baseline record (the kernel
+ran in 3 selected files; `audit_mode` and the tick budget were forced in a scratch plugin only). The oracle-map
+findings were routed to `rpg-feature-planning` on 2026-10-03. The batch review is in the shared report, section 5.
+**Owner decision (2026-10-03, relayed by test-architecture-reviewer): pause scale-out after social.** No next
+domain is chosen; watch items (a)-(e) in the roadmap section 6 continue.
