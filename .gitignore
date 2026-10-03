@@ -284,6 +284,12 @@ agent-working/.index/agent-monitoring-index/
 # TCK-20260731-PARITY-INDEX-IMPORTER
 agent-working/.index/parity-index/
 
+# Pre-#289 residue: worktrees that built an index before the agent-working/ move still hold these at the old root.
+# Local-only; delete when no worktree has them. Never track them.
+/knowledge-index/
+/agent-monitoring-index/
+/parity-index/
+
 # Docusaurus
 website/node_modules/
 website/build/

@@ -13,8 +13,8 @@ help: ## Show available commands
 
 install: install-py install-fe ## Install all dependencies (Python + Node)
 
-install-py: ## Install Python dependencies
-	pip install -r requirements.txt
+install-py: ## Install Python dependencies from uv.lock (uv sync; needs uv, and UV_SYSTEM_CERTS=1 behind TLS interception)
+	uv sync
 
 install-fe: ## Install frontend Node dependencies
 	cd frontend && npm install
