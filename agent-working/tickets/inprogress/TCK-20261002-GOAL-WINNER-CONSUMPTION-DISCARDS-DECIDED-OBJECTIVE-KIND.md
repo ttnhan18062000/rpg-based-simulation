@@ -485,7 +485,7 @@ This is the pre-existing saliency proxy becoming visible once the hostility test
 - AC2 (a catalog-hostile target is actually attacked, end to end) -> `TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES`.
   Measured here: attacks by `combat_engage` holders 2 -> 0 on `frontier_living_world`, 0 -> 0 on `crowded_frontier`.
 
-### 2026-10-03 — RE-MEASURED under `audit_mode=True` + `max_tick_budget_ms` raised out of reach; the earlier table is order-of-magnitude only; AC6 is NOT demonstrated
+### 2026-10-03 — RE-MEASURED under `audit_mode=True` + `max_tick_budget_ms` raised out of reach; the earlier table is order-of-magnitude only; AC6 FAILS on `frontier_living_world`
 
 The planner showed (and I verified at `kernel.py:612-620`) that with `audit_mode` off the mid-tick throttle drops authoritative items
 whenever a tick exceeds `max_tick_budget_ms`, so my first table (above) was taken under that throttle. Same method, `PROD_SMALL`
@@ -519,9 +519,13 @@ finding: I did not locate the source**, and `INFRA-273` / `TCK-20260818-STANDARD
 named, already-recorded mechanism) may or may not be all of it. Raising `max_tick_budget_ms` does not defuse the other governor
 comparisons (they scale off the same budget), so that is not the explanation either.
 
-**Consequence for the ACs.** AC6 asks that determinism hold and the sweep be green. The sweep I ran (340 passed) did not set
-`audit_mode`, so it does not establish that, and the real-world after arm shows it does not hold for `frontier_living_world`. I am not
-claiming AC6. It needs the source of the nondeterminism found, which is not this ticket's scope.
+**Consequence for the ACs.** AC6 asks that determinism hold and the sweep be green. It is **failed, not merely undemonstrated**, on
+`frontier_living_world`: two identical audit-mode runs with the budget raised gave different hashes (780 vs 1609 opportunity attacks)
+while the unmodified arm was identical every time. The sweep I ran (340 passed) did not set `audit_mode`, so it neither contradicts nor
+rescues that. The ticket stays open; if it is ever landed against this failure, that must be recorded here as "AC6 failed and knowingly
+accepted" with these numbers. Finding the source of the nondeterminism is a separate investigation (candidate hard bug), not this
+ticket's scope; the planner recommends it not be attributed to `INFRA-273` without evidence (different signature: after-arm
+divergence with a clean before-arm, throttle suppressed).
 
 ## Test Summary
 New: `tests/unit/strategic/test_goal_winner_objective_kind.py` (13: T1 nine fall-through kinds stay `REACH_LOCATION`, T2 missing/None fallback,
