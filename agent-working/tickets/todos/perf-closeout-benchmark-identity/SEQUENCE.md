@@ -7,7 +7,8 @@ ticket in this batch edits `src/` or produces a performance measurement.
 
 1. TCK-20261003-PERF-M0-EPIC-CLOSURE  (no deps in this batch)
 2. TCK-20261003-TEST-SCOPER-TOOLS-PERF-MAPPING  (no deps in this batch)
-3. TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA  (no deps in this batch; largest, last)
+3. TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA  (no deps in this batch)
+4. TCK-20261003-IMPLEMENT-TICKET-PERF-REMINDER-CITATION  (follows 2; added by perf-planner at review of 2)
 
 ## Why This Order Matters
 
