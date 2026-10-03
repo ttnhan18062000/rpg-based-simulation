@@ -81,7 +81,7 @@ Finding 5 of `docs/performance/benchmark_identity_schema.md` §1 (row F7). Two s
 - Owner approved this tools-only batch on 2026-10-04 while the entry gate and the `src/` freeze hold.
 
 ## Implementation Notes
-- `perf_baseline.py` now exposes `validate_latest()`, `run_benchmarks()`, `update_baseline()` and `main(argv)` returning an exit code; the `__main__` guard does `sys.exit(main())`. Validation runs before the timestamp is added. Required keys: scenario_id (equal to its dict key), profile, sample_ticks, tick_ms, mem_rss_mb, and compute_tps or avg_tps. Unparseable JSON is also refused.
+- `perf_baseline.py` now exposes `validate_latest()`, `run_benchmarks()`, `update_baseline()` and `main(argv)` returning an exit code; the `__main__` guard does `sys.exit(main())`. Validation runs first; the promotion time is written per entry as `promoted_at` (follow-up after review: a top-level `timestamp` string made baseline.json fail its own validation), and the harness's per-entry `timestamp` is kept. Required keys: scenario_id (equal to its dict key), profile, sample_ticks, tick_ms, mem_rss_mb, and compute_tps or avg_tps. Unparseable JSON is also refused.
 - `bench_worker_throughput.py` gets `REPORT_FILENAME = "worker_throughput.json"`; stdout and `--json` unchanged.
 - Scope map: `perf_baseline.py` added to `_TOOLS_PERF_BASENAME_MAP` and the test-scoper.md tools/perf row; one parametrized case added to `test_test_scope_coverage_static.py`.
 - Schema doc: one "Fixed by" line under finding 5 and in the F7 row.

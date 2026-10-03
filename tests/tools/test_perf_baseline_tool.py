@@ -38,8 +38,30 @@ def test_update_copies_a_valid_scenario_keyed_file(paths):
     latest.write_text(json.dumps({"IDLE_100": _entry("IDLE_100"), "MIXED_1000": _entry("MIXED_1000")}))
     assert perf_baseline.main(["--update"]) == 0
     written = json.loads(baseline.read_text())
-    assert set(written) == {"IDLE_100", "MIXED_1000", "timestamp"}
-    assert written["timestamp"].endswith("Z")
+    assert set(written) == {"IDLE_100", "MIXED_1000"}
+    for entry in written.values():
+        assert entry["promoted_at"].endswith("Z")
+    # Round-trip invariant: what --update writes is itself a valid latest/baseline file.
+    assert perf_baseline.validate_latest(written) is None
+
+
+def test_update_keeps_the_harness_per_entry_timestamp(paths):
+    latest, baseline = paths
+    entry = _entry("IDLE_100")
+    entry["timestamp"] = 1790000000.0
+    latest.write_text(json.dumps({"IDLE_100": entry}))
+    assert perf_baseline.main(["--update"]) == 0
+    written = json.loads(baseline.read_text())["IDLE_100"]
+    assert written["timestamp"] == 1790000000.0
+    assert "promoted_at" in written
+
+
+def test_promoting_a_promoted_baseline_again_is_accepted(paths):
+    latest, baseline = paths
+    latest.write_text(json.dumps({"IDLE_100": _entry("IDLE_100")}))
+    assert perf_baseline.main(["--update"]) == 0
+    latest.write_text(baseline.read_text())
+    assert perf_baseline.main(["--update"]) == 0
 
 
 def test_update_accepts_the_legacy_avg_tps_alias(paths):

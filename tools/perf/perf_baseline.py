@@ -66,11 +66,14 @@ def update_baseline():
         print(f"Refusing to promote {LATEST_PATH}: {problem}. {BASELINE_PATH} is unchanged.")
         return 1
 
-    latest["timestamp"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    # Keep the top level purely scenario-keyed so baseline.json passes validate_latest() too.
+    # Each entry already has its own harness `timestamp`; the promotion time goes beside it.
+    promoted_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    baseline = {key: {**entry, "promoted_at": promoted_at} for key, entry in latest.items()}
 
     os.makedirs(os.path.dirname(BASELINE_PATH), exist_ok=True)
     with open(BASELINE_PATH, "w") as f:
-        json.dump(latest, f, indent=2)
+        json.dump(baseline, f, indent=2)
 
     print(f"Baseline updated at {BASELINE_PATH}")
     return 0
