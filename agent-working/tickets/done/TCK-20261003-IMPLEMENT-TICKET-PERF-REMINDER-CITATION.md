@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P2
 audience: agent
 ticket_id: TCK-20261003-IMPLEMENT-TICKET-PERF-REMINDER-CITATION
-phase: open
+phase: done
 date: 2026-10-03
 tags: [testing, performance]
 ---
@@ -15,7 +15,7 @@ tags: [testing, performance]
 implement-ticket.js: cite the tripwire and the performance contract in the `performance`-tag test-scoper reminder, not the retired PerfRegressionGate
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -39,9 +39,9 @@ P3
 - `docs/performance/perf_baseline_policy.md`, `src/perf/regression_gate.py`
 
 ## Acceptance Criteria
-- [ ] `grep -n "PerfRegressionGate" .claude/workflows/implement-ticket.js` returns nothing
-- [ ] `pytest tests/tools/test_perf_tag_test_scoper_wiring.py -q` passes, plus any test that loads or snapshot-checks `implement-ticket.js` (find them with `grep -rl implement-ticket.js tests/`)
-- [ ] `git diff` touches only `.claude/workflows/implement-ticket.js`, the test(s) above, any generated copy from Scope item 3, `agent-working/`, and `docs/REGISTRY.yaml`
+- [x] `grep -n "PerfRegressionGate" .claude/workflows/implement-ticket.js` returns nothing
+- [x] `pytest tests/tools/test_perf_tag_test_scoper_wiring.py -q` passes, plus any test that loads or snapshot-checks `implement-ticket.js` (find them with `grep -rl implement-ticket.js tests/`)
+- [x] `git diff` touches only `.claude/workflows/implement-ticket.js`, the test(s) above, any generated copy from Scope item 3, `agent-working/`, and `docs/REGISTRY.yaml`
 
 ## Related Tickets
 - TCK-20261003-TEST-SCOPER-TOOLS-PERF-MAPPING (found this)
@@ -60,13 +60,15 @@ None.
 - Added to the batch by perf-planner during review on 2026-10-03, as the same kind of edit as the test-scoper ticket that the owner approved.
 
 ## Implementation Notes
-
+The reminder now reads "regression check (the tripwire in tests/perf/test_perf_regression_baseline.py; clause authority is docs/engine/performance_contract.md §5)", the same wording as test-scoper.md. The test now checks the reminder window (from "This ticket is tagged" to "exists to trigger") for both new references and the absence of PerfRegressionGate. Scope item 3: no copy under agent-working/agent-orchestration/ or .codex carries the old text, so there was nothing to regenerate or report. The other files that load implement-ticket.js were run and pass.
 
 ## Test Summary
-
+62 passed: test_perf_tag_test_scoper_wiring.py plus the six other test files that load implement-ticket.js (sibling_workflow_summary_truncation, event_summary_truncation, arch_verify_test_quality_findings, finalize_epic_parent_advisory_pin, agent_replay no_forbidden_calls and no_mutation_snapshot). `node --check` printed nothing.
 
 ## Files Changed
-
+- .claude/workflows/implement-ticket.js (one parenthetical)
+- tests/tools/test_perf_tag_test_scoper_wiring.py (one test)
+- this ticket, docs/REGISTRY.yaml, monitoring shards
 
 ## Completion Summary
-
+The performance-tag reminder cites the tripwire and the performance contract; PerfRegressionGate no longer appears in the workflow.

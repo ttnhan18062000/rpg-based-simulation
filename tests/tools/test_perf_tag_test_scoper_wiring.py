@@ -60,7 +60,13 @@ def test_performance_tag_reminder_sits_inside_test_phase_agent_prompt():
 
 def test_performance_tag_reminder_cites_the_real_regression_gate_doc():
     text = _read_js()
-    assert "docs/performance/perf_baseline_policy.md" in text
+    start = text.find("This ticket is tagged")
+    end = text.find("exists to trigger", start)
+    assert start != -1 and end != -1
+    reminder = text[start:end]
+    assert "tests/perf/test_perf_regression_baseline.py" in reminder
+    assert "docs/engine/performance_contract.md" in reminder
+    assert "PerfRegressionGate" not in reminder
 
 
 def test_performance_tag_reminder_names_both_perf_test_dirs():
