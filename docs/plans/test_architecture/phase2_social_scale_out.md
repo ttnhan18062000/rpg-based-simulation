@@ -137,6 +137,7 @@ batch, no required checks or promotion, no §9 cleanup batch, no party, and no n
   are quiet; progression via watch item (d)) **or stops**.
 - **Cost estimate:** 4–6 child tickets, mostly hotfix or standard and read-only. Item 4 is the only
   long run; its runtime is recorded in the baseline file, as v3's was. No CI cost beyond the existing non-required lane.
+- **Batch review recorded 2026-10-03:** owner decision *pause scale-out*; see `docs/testing/social_test_report_2026-10-03.md` §5.
 
 ## 9 · Owner questions (answered 2026-10-03)
 

@@ -1,0 +1,1172 @@
+{
+  "schema_version": 1,
+  "kind": "mutation_baseline",
+  "baseline_id": "mutation-baseline-src-systems-social-appraisal-v1",
+  "target": {
+    "path": "src/systems/social_systems/appraisal.py",
+    "sha256": "d921245aaab745c724f5e1ef1011b8b5ef2eb3f2df1d48b6eb9891e12b78eceb",
+    "lines": 542
+  },
+  "run": {
+    "kind": "real-target",
+    "started_utc": "2026-10-03T09:17:20Z",
+    "finished_utc": "2026-10-03T09:47:11Z",
+    "runtime_seconds": 1791,
+    "source_sha": "9640ff942877cc7264e83309f35d19022a4a3fe6",
+    "source_note": "origin/main at the time (9640ff942, the merge of #294); a scratch copy made with git archive of that commit, outside the repo, with a cleared .mutmut-cache. The branch's own C1 to C3 docs and the one tooling test case were not in the copy and do not import the target.",
+    "target_last_changed_commit": "243e798ad"
+  },
+  "tool": {
+    "name": "mutmut",
+    "version": "2.5.1",
+    "install": "pip --target in a private scratch directory (optional dev tool, not a project dependency, shared venv untouched)",
+    "install_command": "python -m pip install --target <scratch>/mutmut_pkg mutmut==2.5.1",
+    "configuration": "none in the repo; every option is on the command line below",
+    "reproduction_command": "cd <scratch copy of the tree>; PYTHONPATH=<scratch>/kprobe:<scratch>/mutmut_pkg:<scratch copy> KPROBE_FORCE=1 python <scratch>/mutmut_pkg/bin/mutmut run --paths-to-mutate src/systems/social_systems/appraisal.py --runner \"python -m pytest -x -q -p no:cacheprovider -p kprobe tests/architecture/test_adventure_route_score_max_unchanged.py tests/architecture/test_clan_reputation_write_paths.py tests/architecture/test_committed_intention_arbiter_byte_identical_guard.py tests/integration/domains/adventure/test_phase3_adventure_decision_phase.py tests/integration/kernel/test_p1_replay_fidelity.py tests/integration/optimization/test_force_full_scan_phase_compliance.py tests/mechanic_scenarios/test_action_pacing_readiness_gate.py tests/mechanic_scenarios/test_combat_judgement_withdrawal.py tests/simulation_quality/test_clan_reputation_witnessed_betrayal.py tests/simulation_quality/test_marriage_trust_gate_corpus.py tests/simulation_quality/test_team_up_trust_gate_corpus.py tests/unit/cognition/test_information_seeking.py tests/unit/domains/adventure/test_phase3_project_switch_routing_guard.py tests/unit/engine/test_combat_actions_learning_wiring.py tests/unit/observability/test_event_extractor_agency2.py tests/unit/observability/test_event_shapers_agency.py tests/unit/social/test_appraisal_logic.py tests/unit/social/test_betrayal_consequence.py tests/unit/social/test_clan_appraisal.py tests/unit/social/test_contract_lifecycle.py tests/unit/social/test_contract_lifecycle_phase7.py tests/unit/social/test_domain_7_social.py tests/unit/social/test_marriage.py tests/unit/social/test_parity_soc_134.py tests/unit/social/test_recruitment.py tests/unit/social/test_reputation_learning.py tests/unit/social/test_social_bonds.py tests/unit/social/test_social_lifecycle.py tests/unit/social/test_social_party_regression.py tests/unit/social/test_source_trust.py tests/unit/social/test_teach.py tests/unit/social/test_team_up.py tests/unit/social/test_trade.py tests/unit/strategic/test_belief_integration.py tests/unit/strategic/test_capacity_enforcement.py tests/unit/strategic/test_cognition_authoritative_path.py tests/unit/strategic/test_committed_intention_materialization.py tests/unit/strategic/test_evaluate_project_switch_state_threading_guard.py tests/unit/strategic/test_intelligence_routine_blockers.py tests/unit/strategic/test_occupation_change_scorer.py tests/unit/strategic/test_region_stabilization_materialization.py tests/unit/strategic/test_rejection_backoff.py tests/unit/strategic/test_social_contract_materialization.py tests/unit/strategic/test_strategic_memory_v2.py tests/unit/strategic/test_strategic_social_contracts.py tests/unit/systems/test_quest_activation_pathway.py\" --no-progress",
+    "why_not_3x": "mutmut 3.x trampoline rejects modules whose import path starts with 'src.' (same finding as src_core_conservation_v3.json)",
+    "probe_plugin": "kprobe: a read-only pytest plugin kept outside the repo; it counts Kernel.tick_once calls and, when KPROBE_FORCE=1, forces audit_mode=True and max_tick_budget_ms=10000000 for the scratch run only"
+  },
+  "tests": {
+    "files": [
+      "tests/architecture/test_adventure_route_score_max_unchanged.py",
+      "tests/architecture/test_clan_reputation_write_paths.py",
+      "tests/architecture/test_committed_intention_arbiter_byte_identical_guard.py",
+      "tests/integration/domains/adventure/test_phase3_adventure_decision_phase.py",
+      "tests/integration/kernel/test_p1_replay_fidelity.py",
+      "tests/integration/optimization/test_force_full_scan_phase_compliance.py",
+      "tests/mechanic_scenarios/test_action_pacing_readiness_gate.py",
+      "tests/mechanic_scenarios/test_combat_judgement_withdrawal.py",
+      "tests/simulation_quality/test_clan_reputation_witnessed_betrayal.py",
+      "tests/simulation_quality/test_marriage_trust_gate_corpus.py",
+      "tests/simulation_quality/test_team_up_trust_gate_corpus.py",
+      "tests/unit/cognition/test_information_seeking.py",
+      "tests/unit/domains/adventure/test_phase3_project_switch_routing_guard.py",
+      "tests/unit/engine/test_combat_actions_learning_wiring.py",
+      "tests/unit/observability/test_event_extractor_agency2.py",
+      "tests/unit/observability/test_event_shapers_agency.py",
+      "tests/unit/social/test_appraisal_logic.py",
+      "tests/unit/social/test_betrayal_consequence.py",
+      "tests/unit/social/test_clan_appraisal.py",
+      "tests/unit/social/test_contract_lifecycle.py",
+      "tests/unit/social/test_contract_lifecycle_phase7.py",
+      "tests/unit/social/test_domain_7_social.py",
+      "tests/unit/social/test_marriage.py",
+      "tests/unit/social/test_parity_soc_134.py",
+      "tests/unit/social/test_recruitment.py",
+      "tests/unit/social/test_reputation_learning.py",
+      "tests/unit/social/test_social_bonds.py",
+      "tests/unit/social/test_social_lifecycle.py",
+      "tests/unit/social/test_social_party_regression.py",
+      "tests/unit/social/test_source_trust.py",
+      "tests/unit/social/test_teach.py",
+      "tests/unit/social/test_team_up.py",
+      "tests/unit/social/test_trade.py",
+      "tests/unit/strategic/test_belief_integration.py",
+      "tests/unit/strategic/test_capacity_enforcement.py",
+      "tests/unit/strategic/test_cognition_authoritative_path.py",
+      "tests/unit/strategic/test_committed_intention_materialization.py",
+      "tests/unit/strategic/test_evaluate_project_switch_state_threading_guard.py",
+      "tests/unit/strategic/test_intelligence_routine_blockers.py",
+      "tests/unit/strategic/test_occupation_change_scorer.py",
+      "tests/unit/strategic/test_region_stabilization_materialization.py",
+      "tests/unit/strategic/test_rejection_backoff.py",
+      "tests/unit/strategic/test_social_contract_materialization.py",
+      "tests/unit/strategic/test_strategic_memory_v2.py",
+      "tests/unit/strategic/test_strategic_social_contracts.py",
+      "tests/unit/systems/test_quest_activation_pathway.py"
+    ],
+    "count": 313
+  },
+  "selection": {
+    "rule": "import-based-one-hop",
+    "target_module": "src.systems.social_systems.appraisal",
+    "rule_description": "tests/**/test_*.py (excluding tests/mutation/) that import the target module, or import a src/ module that itself imports the target directly; resolved by tools/test_architecture/mutation_selection.py",
+    "one_hop_src_modules": [
+      "src.engine.domain.combat_actions",
+      "src.engine.domain.core_actions",
+      "src.engine.pipeline_phases.paid_information",
+      "src.systems.strategic_systems.intelligence"
+    ],
+    "rule_files": [
+      "tests/architecture/test_adventure_route_score_max_unchanged.py",
+      "tests/architecture/test_clan_reputation_write_paths.py",
+      "tests/architecture/test_committed_intention_arbiter_byte_identical_guard.py",
+      "tests/integration/domains/adventure/test_phase3_adventure_decision_phase.py",
+      "tests/integration/kernel/test_p1_replay_fidelity.py",
+      "tests/integration/optimization/test_force_full_scan_phase_compliance.py",
+      "tests/mechanic_scenarios/test_action_pacing_readiness_gate.py",
+      "tests/mechanic_scenarios/test_combat_judgement_withdrawal.py",
+      "tests/simulation_quality/test_clan_reputation_witnessed_betrayal.py",
+      "tests/simulation_quality/test_marriage_trust_gate_corpus.py",
+      "tests/simulation_quality/test_team_up_trust_gate_corpus.py",
+      "tests/unit/cognition/test_information_seeking.py",
+      "tests/unit/domains/adventure/test_phase3_project_switch_routing_guard.py",
+      "tests/unit/engine/test_combat_actions_learning_wiring.py",
+      "tests/unit/observability/test_event_extractor_agency2.py",
+      "tests/unit/observability/test_event_shapers_agency.py",
+      "tests/unit/social/test_appraisal_logic.py",
+      "tests/unit/social/test_betrayal_consequence.py",
+      "tests/unit/social/test_clan_appraisal.py",
+      "tests/unit/social/test_contract_lifecycle.py",
+      "tests/unit/social/test_contract_lifecycle_phase7.py",
+      "tests/unit/social/test_domain_7_social.py",
+      "tests/unit/social/test_marriage.py",
+      "tests/unit/social/test_parity_soc_134.py",
+      "tests/unit/social/test_recruitment.py",
+      "tests/unit/social/test_reputation_learning.py",
+      "tests/unit/social/test_social_bonds.py",
+      "tests/unit/social/test_social_lifecycle.py",
+      "tests/unit/social/test_social_party_regression.py",
+      "tests/unit/social/test_source_trust.py",
+      "tests/unit/social/test_teach.py",
+      "tests/unit/social/test_team_up.py",
+      "tests/unit/social/test_trade.py",
+      "tests/unit/strategic/test_belief_integration.py",
+      "tests/unit/strategic/test_capacity_enforcement.py",
+      "tests/unit/strategic/test_cognition_authoritative_path.py",
+      "tests/unit/strategic/test_committed_intention_materialization.py",
+      "tests/unit/strategic/test_evaluate_project_switch_state_threading_guard.py",
+      "tests/unit/strategic/test_intelligence_routine_blockers.py",
+      "tests/unit/strategic/test_occupation_change_scorer.py",
+      "tests/unit/strategic/test_region_stabilization_materialization.py",
+      "tests/unit/strategic/test_rejection_backoff.py",
+      "tests/unit/strategic/test_social_contract_materialization.py",
+      "tests/unit/strategic/test_strategic_memory_v2.py",
+      "tests/unit/strategic/test_strategic_social_contracts.py",
+      "tests/unit/systems/test_quest_activation_pathway.py"
+    ],
+    "curated_additions": [],
+    "resolved_files_sha256": "41fc8fd64d2e7ed53d04ae56609c21c02443a74ee55f776891417316374ecb00",
+    "selection_identity": "import-based-one-hop:src.systems.social_systems.appraisal:41fc8fd64d2e",
+    "selection_green_before_mutation": "313 passed in about 5 s, unforced and with the G3 forcing",
+    "known_exclusions": [
+      {
+        "path": "tests/mutation/",
+        "why": "mutation records and reruns are data, excluded by the rule"
+      }
+    ],
+    "not_proof": "an import-based rule is a reproducible starting point. It is not proof that every test relevant to the target is selected: dynamic imports, fixtures and paths of two or more hops are not found. tests/unit/social/test_multi_hero.py, which the plan expected to be selected, does not import the target and is not in the selection."
+  },
+  "determinism_g3": {
+    "kernel_ran_in_selection": true,
+    "kernel_calls": {
+      "Kernel.tick_once": 5
+    },
+    "files_running_the_kernel": [
+      "tests/mechanic_scenarios/test_action_pacing_readiness_gate.py (2 calls)",
+      "tests/mechanic_scenarios/test_combat_judgement_withdrawal.py (2 calls)",
+      "tests/simulation_quality/test_clan_reputation_witnessed_betrayal.py (1 call)"
+    ],
+    "as_found": "audit_mode False and max_tick_budget_ms 100 in all 5 calls (unforced probe run)",
+    "applied_for_the_run": "audit_mode=True and max_tick_budget_ms=10000000, forced by the scratch probe plugin only; the selection is still 313 passed under that forcing; no test or source file in the repo was changed",
+    "reference": "docs/engine/deterministic_execution.md, extension rule 5; src/engine/kernel.py drops results when not audit_mode and elapsed > max_tick_budget_ms (INFRA-273 / D06)"
+  },
+  "counts": {
+    "total": 345,
+    "killed": 188,
+    "survived": 157,
+    "timeout": 0,
+    "suspicious": 0,
+    "equivalent": "not-classified"
+  },
+  "result_categories": {
+    "killed": "mutmut ok_killed",
+    "survived": "mutmut bad_survived",
+    "timeout": "mutmut bad_timeout (none)",
+    "suspicious": "mutmut ok_suspicious (none)",
+    "equivalent": "mutmut does not classify equivalent mutants; none were classified here"
+  },
+  "positive_control": {
+    "fresh": true,
+    "reused_from": null,
+    "mutant": "src/systems/social_systems/appraisal.py line 67: (public_trust * 0.7) changed to (public_trust * 0.6), applied by hand in the scratch copy",
+    "expected": "the selection fails on the mutated copy and passes on the original",
+    "observed": "original: 313 passed; mutated: failed at tests/simulation_quality/test_clan_reputation_witnessed_betrayal.py::test_defection_degrades_clan_reputation_and_flips_stranger_loan_decision (-x, 1 failed, 22 passed); target restored, sha256 equal to the recorded one",
+    "scope": "shows the runner, environment and forcing can kill a mutant of this target; it does not validate the selection"
+  },
+  "target_selection": {
+    "confirmed_by": "owner (plan section 9, question 2: appraisal.py recommended and approved)",
+    "confirmed_on": "2026-10-03",
+    "reason": "highest P0 ledger evidence density in src/systems/social_systems/ (8 P0 citations at 2f520f0dd); contracts.py (3) is the fallback and was not needed",
+    "excluded": [
+      {
+        "path": "src/systems/social_systems/party*.py",
+        "why": "no oracle or owner (D-P deferred)"
+      },
+      {
+        "path": "src/systems/social_systems/memory.py",
+        "why": "dormant, TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS"
+      },
+      {
+        "path": "src/systems/social_systems/reputation.py",
+        "why": "13 statements and no direct importer under tests/unit/social/; recorded as a coverage gap, not a target"
+      }
+    ]
+  },
+  "stale_after": {
+    "target_sha256_changes": true,
+    "selection_changed": true,
+    "days": 30,
+    "relationship_vector_landing": "TCK-20260822-RELATIONSHIP-VECTOR-ADDITIVE-FIELD landing (it touches relationship precedence; appraisal.py measurements go stale when it lands)"
+  },
+  "survivors": [
+    {
+      "id": 1,
+      "location": "src/systems/social_systems/appraisal.py:19",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -16,7 +16,7 @@\n # ((1.0 - 0.5) * CLAN_INFLUENCE_WEIGHT). See docs/mechanics/04_strategic_cognition.md\n # Sec.10 and SOC-134's parity note for why this is an additive delta term, not a\n # re-weighted blend.\n-CLAN_INFLUENCE_WEIGHT: float = 0.2\n+CLAN_INFLUENCE_WEIGHT: float = 1.2\n \n \n class SocialAppraisalSystem:",
+      "material_sample": null
+    },
+    {
+      "id": 3,
+      "location": "src/systems/social_systems/appraisal.py:28",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -25,7 +25,6 @@\n     VERIFIED v2: SocialAppraisalSystem\n     \"\"\"\n \n-    @staticmethod\n     def appraise_contract(\n         entity: EntityState,\n         contract: ContractState,",
+      "material_sample": null
+    },
+    {
+      "id": 34,
+      "location": "src/systems/social_systems/appraisal.py:73",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -70,7 +70,7 @@\n             )\n         \n         # Persistent Distrust for betrayers\n-        if trust_score < 0.2 or (bond and bond.sentiment < -0.8):\n+        if trust_score <= 0.2 or (bond and bond.sentiment < -0.8):\n             return ContractStatus.CANCELLED, ReasonCode.TOTAL_DISTRUST, {}\n             \n         # Betrayal history check",
+      "material_sample": null
+    },
+    {
+      "id": 36,
+      "location": "src/systems/social_systems/appraisal.py:73",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -70,7 +70,7 @@\n             )\n         \n         # Persistent Distrust for betrayers\n-        if trust_score < 0.2 or (bond and bond.sentiment < -0.8):\n+        if trust_score < 0.2 or (bond and bond.sentiment <= -0.8):\n             return ContractStatus.CANCELLED, ReasonCode.TOTAL_DISTRUST, {}\n             \n         # Betrayal history check",
+      "material_sample": null
+    },
+    {
+      "id": 38,
+      "location": "src/systems/social_systems/appraisal.py:73",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -70,7 +70,7 @@\n             )\n         \n         # Persistent Distrust for betrayers\n-        if trust_score < 0.2 or (bond and bond.sentiment < -0.8):\n+        if trust_score < 0.2 or (bond and bond.sentiment < -1.8):\n             return ContractStatus.CANCELLED, ReasonCode.TOTAL_DISTRUST, {}\n             \n         # Betrayal history check",
+      "material_sample": null
+    },
+    {
+      "id": 41,
+      "location": "src/systems/social_systems/appraisal.py:77",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -74,7 +74,7 @@\n             return ContractStatus.CANCELLED, ReasonCode.TOTAL_DISTRUST, {}\n             \n         # Betrayal history check\n-        if entity.social.betrayal_count > 0:\n+        if entity.social.betrayal_count >= 0:\n             if trust_score < 0.4:\n                 return ContractStatus.CANCELLED, ReasonCode.BETRAYAL_HISTORY, {}",
+      "material_sample": null
+    },
+    {
+      "id": 43,
+      "location": "src/systems/social_systems/appraisal.py:78",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -75,7 +75,7 @@\n             \n         # Betrayal history check\n         if entity.social.betrayal_count > 0:\n-            if trust_score < 0.4:\n+            if trust_score <= 0.4:\n                 return ContractStatus.CANCELLED, ReasonCode.BETRAYAL_HISTORY, {}\n \n         # 2. Kind-Specific Appraisal",
+      "material_sample": null
+    },
+    {
+      "id": 55,
+      "location": "src/systems/social_systems/appraisal.py:117",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -114,7 +114,6 @@\n \n         return ContractStatus.CANCELLED, ReasonCode.UNKNOWN, {}\n \n-    @staticmethod\n     def _appraise_recruitment(\n         entity: EntityState,\n         contract: ContractState,",
+      "material_sample": null
+    },
+    {
+      "id": 60,
+      "location": "src/systems/social_systems/appraisal.py:127",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -124,7 +124,7 @@\n         # Repeated offers within a short window increase rejection probability\n         recent_rejections = entity.social.rejection_count.get(contract.source_id, 0)\n         fatigue_penalty = 0.0\n-        if recent_rejections > 0:\n+        if recent_rejections >= 0:\n             # -0.1 per recent rejection\n             fatigue_penalty = min(0.5, recent_rejections * 0.1)",
+      "material_sample": null
+    },
+    {
+      "id": 61,
+      "location": "src/systems/social_systems/appraisal.py:127",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -124,7 +124,7 @@\n         # Repeated offers within a short window increase rejection probability\n         recent_rejections = entity.social.rejection_count.get(contract.source_id, 0)\n         fatigue_penalty = 0.0\n-        if recent_rejections > 0:\n+        if recent_rejections > 1:\n             # -0.1 per recent rejection\n             fatigue_penalty = min(0.5, recent_rejections * 0.1)",
+      "material_sample": null
+    },
+    {
+      "id": 62,
+      "location": "src/systems/social_systems/appraisal.py:129",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -126,7 +126,7 @@\n         fatigue_penalty = 0.0\n         if recent_rejections > 0:\n             # -0.1 per recent rejection\n-            fatigue_penalty = min(0.5, recent_rejections * 0.1)\n+            fatigue_penalty = min(1.5, recent_rejections * 0.1)\n             \n         # 0. Loyalty/Trust check (Immediate acceptance if extremely high)\n         if trust_score >= 0.9 and fatigue_penalty < 0.2:",
+      "material_sample": null
+    },
+    {
+      "id": 63,
+      "location": "src/systems/social_systems/appraisal.py:129",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -126,7 +126,7 @@\n         fatigue_penalty = 0.0\n         if recent_rejections > 0:\n             # -0.1 per recent rejection\n-            fatigue_penalty = min(0.5, recent_rejections * 0.1)\n+            fatigue_penalty = min(0.5, recent_rejections / 0.1)\n             \n         # 0. Loyalty/Trust check (Immediate acceptance if extremely high)\n         if trust_score >= 0.9 and fatigue_penalty < 0.2:",
+      "material_sample": null
+    },
+    {
+      "id": 64,
+      "location": "src/systems/social_systems/appraisal.py:129",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -126,7 +126,7 @@\n         fatigue_penalty = 0.0\n         if recent_rejections > 0:\n             # -0.1 per recent rejection\n-            fatigue_penalty = min(0.5, recent_rejections * 0.1)\n+            fatigue_penalty = min(0.5, recent_rejections * 1.1)\n             \n         # 0. Loyalty/Trust check (Immediate acceptance if extremely high)\n         if trust_score >= 0.9 and fatigue_penalty < 0.2:",
+      "material_sample": null
+    },
+    {
+      "id": 66,
+      "location": "src/systems/social_systems/appraisal.py:132",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -129,7 +129,7 @@\n             fatigue_penalty = min(0.5, recent_rejections * 0.1)\n             \n         # 0. Loyalty/Trust check (Immediate acceptance if extremely high)\n-        if trust_score >= 0.9 and fatigue_penalty < 0.2:\n+        if trust_score > 0.9 and fatigue_penalty < 0.2:\n             return ContractStatus.ACCEPTED, ReasonCode.LOYALTY_ACCEPTANCE, {}\n             \n         pay = contract.terms.get(\"daily_pay\", 0)",
+      "material_sample": null
+    },
+    {
+      "id": 68,
+      "location": "src/systems/social_systems/appraisal.py:132",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -129,7 +129,7 @@\n             fatigue_penalty = min(0.5, recent_rejections * 0.1)\n             \n         # 0. Loyalty/Trust check (Immediate acceptance if extremely high)\n-        if trust_score >= 0.9 and fatigue_penalty < 0.2:\n+        if trust_score >= 0.9 and fatigue_penalty <= 0.2:\n             return ContractStatus.ACCEPTED, ReasonCode.LOYALTY_ACCEPTANCE, {}\n             \n         pay = contract.terms.get(\"daily_pay\", 0)",
+      "material_sample": null
+    },
+    {
+      "id": 69,
+      "location": "src/systems/social_systems/appraisal.py:132",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -129,7 +129,7 @@\n             fatigue_penalty = min(0.5, recent_rejections * 0.1)\n             \n         # 0. Loyalty/Trust check (Immediate acceptance if extremely high)\n-        if trust_score >= 0.9 and fatigue_penalty < 0.2:\n+        if trust_score >= 0.9 and fatigue_penalty < 1.2:\n             return ContractStatus.ACCEPTED, ReasonCode.LOYALTY_ACCEPTANCE, {}\n             \n         pay = contract.terms.get(\"daily_pay\", 0)",
+      "material_sample": null
+    },
+    {
+      "id": 72,
+      "location": "src/systems/social_systems/appraisal.py:135",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -132,7 +132,7 @@\n         if trust_score >= 0.9 and fatigue_penalty < 0.2:\n             return ContractStatus.ACCEPTED, ReasonCode.LOYALTY_ACCEPTANCE, {}\n             \n-        pay = contract.terms.get(\"daily_pay\", 0)\n+        pay = contract.terms.get(\"daily_pay\", 1)\n         risk = contract.terms.get(\"risk_level\", \"NORMAL\")\n         \n         # 1. Utility vs Risk",
+      "material_sample": null
+    },
+    {
+      "id": 75,
+      "location": "src/systems/social_systems/appraisal.py:136",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -133,7 +133,7 @@\n             return ContractStatus.ACCEPTED, ReasonCode.LOYALTY_ACCEPTANCE, {}\n             \n         pay = contract.terms.get(\"daily_pay\", 0)\n-        risk = contract.terms.get(\"risk_level\", \"NORMAL\")\n+        risk = contract.terms.get(\"risk_level\", \"XXNORMALXX\")\n         \n         # 1. Utility vs Risk\n         # Base pay expectation scales with level",
+      "material_sample": null
+    },
+    {
+      "id": 78,
+      "location": "src/systems/social_systems/appraisal.py:140",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -137,7 +137,7 @@\n         \n         # 1. Utility vs Risk\n         # Base pay expectation scales with level\n-        expected_pay = 10 * entity.identity.evolution_level\n+        expected_pay = 10 / entity.identity.evolution_level\n         utility = pay / max(1, expected_pay)\n         \n         risk_weight = 1.0 if risk == \"HIGH\" else (0.5 if risk == \"NORMAL\" else 0.1)",
+      "material_sample": null
+    },
+    {
+      "id": 81,
+      "location": "src/systems/social_systems/appraisal.py:141",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -138,7 +138,7 @@\n         # 1. Utility vs Risk\n         # Base pay expectation scales with level\n         expected_pay = 10 * entity.identity.evolution_level\n-        utility = pay / max(1, expected_pay)\n+        utility = pay / max(2, expected_pay)\n         \n         risk_weight = 1.0 if risk == \"HIGH\" else (0.5 if risk == \"NORMAL\" else 0.1)",
+      "material_sample": null
+    },
+    {
+      "id": 83,
+      "location": "src/systems/social_systems/appraisal.py:143",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -140,7 +140,7 @@\n         expected_pay = 10 * entity.identity.evolution_level\n         utility = pay / max(1, expected_pay)\n         \n-        risk_weight = 1.0 if risk == \"HIGH\" else (0.5 if risk == \"NORMAL\" else 0.1)\n+        risk_weight = 2.0 if risk == \"HIGH\" else (0.5 if risk == \"NORMAL\" else 0.1)\n         \n         # Domain 7 Hardening: Trait Modifiers\n         traits = entity.identity.traits",
+      "material_sample": null
+    },
+    {
+      "id": 85,
+      "location": "src/systems/social_systems/appraisal.py:143",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -140,7 +140,7 @@\n         expected_pay = 10 * entity.identity.evolution_level\n         utility = pay / max(1, expected_pay)\n         \n-        risk_weight = 1.0 if risk == \"HIGH\" else (0.5 if risk == \"NORMAL\" else 0.1)\n+        risk_weight = 1.0 if risk == \"XXHIGHXX\" else (0.5 if risk == \"NORMAL\" else 0.1)\n         \n         # Domain 7 Hardening: Trait Modifiers\n         traits = entity.identity.traits",
+      "material_sample": null
+    },
+    {
+      "id": 87,
+      "location": "src/systems/social_systems/appraisal.py:143",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -140,7 +140,7 @@\n         expected_pay = 10 * entity.identity.evolution_level\n         utility = pay / max(1, expected_pay)\n         \n-        risk_weight = 1.0 if risk == \"HIGH\" else (0.5 if risk == \"NORMAL\" else 0.1)\n+        risk_weight = 1.0 if risk == \"HIGH\" else (0.5 if risk != \"NORMAL\" else 0.1)\n         \n         # Domain 7 Hardening: Trait Modifiers\n         traits = entity.identity.traits",
+      "material_sample": null
+    },
+    {
+      "id": 88,
+      "location": "src/systems/social_systems/appraisal.py:143",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -140,7 +140,7 @@\n         expected_pay = 10 * entity.identity.evolution_level\n         utility = pay / max(1, expected_pay)\n         \n-        risk_weight = 1.0 if risk == \"HIGH\" else (0.5 if risk == \"NORMAL\" else 0.1)\n+        risk_weight = 1.0 if risk == \"HIGH\" else (0.5 if risk == \"XXNORMALXX\" else 0.1)\n         \n         # Domain 7 Hardening: Trait Modifiers\n         traits = entity.identity.traits",
+      "material_sample": null
+    },
+    {
+      "id": 89,
+      "location": "src/systems/social_systems/appraisal.py:143",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -140,7 +140,7 @@\n         expected_pay = 10 * entity.identity.evolution_level\n         utility = pay / max(1, expected_pay)\n         \n-        risk_weight = 1.0 if risk == \"HIGH\" else (0.5 if risk == \"NORMAL\" else 0.1)\n+        risk_weight = 1.0 if risk == \"HIGH\" else (0.5 if risk == \"NORMAL\" else 1.1)\n         \n         # Domain 7 Hardening: Trait Modifiers\n         traits = entity.identity.traits",
+      "material_sample": null
+    },
+    {
+      "id": 92,
+      "location": "src/systems/social_systems/appraisal.py:147",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -144,7 +144,7 @@\n         \n         # Domain 7 Hardening: Trait Modifiers\n         traits = entity.identity.traits\n-        if \"CAUTIOUS\" in traits:\n+        if \"XXCAUTIOUSXX\" in traits:\n             risk_weight *= 1.5\n             trust_score *= 0.8 # Requires higher trust",
+      "material_sample": null
+    },
+    {
+      "id": 94,
+      "location": "src/systems/social_systems/appraisal.py:148",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -145,7 +145,7 @@\n         # Domain 7 Hardening: Trait Modifiers\n         traits = entity.identity.traits\n         if \"CAUTIOUS\" in traits:\n-            risk_weight *= 1.5\n+            risk_weight = 1.5\n             trust_score *= 0.8 # Requires higher trust\n             \n         if \"LOYAL\" in traits and trust_score > 0.6:",
+      "material_sample": null
+    },
+    {
+      "id": 95,
+      "location": "src/systems/social_systems/appraisal.py:148",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -145,7 +145,7 @@\n         # Domain 7 Hardening: Trait Modifiers\n         traits = entity.identity.traits\n         if \"CAUTIOUS\" in traits:\n-            risk_weight *= 1.5\n+            risk_weight /= 1.5\n             trust_score *= 0.8 # Requires higher trust\n             \n         if \"LOYAL\" in traits and trust_score > 0.6:",
+      "material_sample": null
+    },
+    {
+      "id": 96,
+      "location": "src/systems/social_systems/appraisal.py:148",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -145,7 +145,7 @@\n         # Domain 7 Hardening: Trait Modifiers\n         traits = entity.identity.traits\n         if \"CAUTIOUS\" in traits:\n-            risk_weight *= 1.5\n+            risk_weight *= 2.5\n             trust_score *= 0.8 # Requires higher trust\n             \n         if \"LOYAL\" in traits and trust_score > 0.6:",
+      "material_sample": null
+    },
+    {
+      "id": 97,
+      "location": "src/systems/social_systems/appraisal.py:149",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -146,7 +146,7 @@\n         traits = entity.identity.traits\n         if \"CAUTIOUS\" in traits:\n             risk_weight *= 1.5\n-            trust_score *= 0.8 # Requires higher trust\n+            trust_score = 0.8 # Requires higher trust\n             \n         if \"LOYAL\" in traits and trust_score > 0.6:\n             utility += 0.3 # Easier to recruit by friends",
+      "material_sample": null
+    },
+    {
+      "id": 98,
+      "location": "src/systems/social_systems/appraisal.py:149",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -146,7 +146,7 @@\n         traits = entity.identity.traits\n         if \"CAUTIOUS\" in traits:\n             risk_weight *= 1.5\n-            trust_score *= 0.8 # Requires higher trust\n+            trust_score /= 0.8 # Requires higher trust\n             \n         if \"LOYAL\" in traits and trust_score > 0.6:\n             utility += 0.3 # Easier to recruit by friends",
+      "material_sample": null
+    },
+    {
+      "id": 99,
+      "location": "src/systems/social_systems/appraisal.py:149",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -146,7 +146,7 @@\n         traits = entity.identity.traits\n         if \"CAUTIOUS\" in traits:\n             risk_weight *= 1.5\n-            trust_score *= 0.8 # Requires higher trust\n+            trust_score *= 1.8 # Requires higher trust\n             \n         if \"LOYAL\" in traits and trust_score > 0.6:\n             utility += 0.3 # Easier to recruit by friends",
+      "material_sample": null
+    },
+    {
+      "id": 102,
+      "location": "src/systems/social_systems/appraisal.py:151",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -148,7 +148,7 @@\n             risk_weight *= 1.5\n             trust_score *= 0.8 # Requires higher trust\n             \n-        if \"LOYAL\" in traits and trust_score > 0.6:\n+        if \"LOYAL\" in traits and trust_score >= 0.6:\n             utility += 0.3 # Easier to recruit by friends\n             \n         if \"GREEDY\" in traits:",
+      "material_sample": null
+    },
+    {
+      "id": 104,
+      "location": "src/systems/social_systems/appraisal.py:151",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -148,7 +148,7 @@\n             risk_weight *= 1.5\n             trust_score *= 0.8 # Requires higher trust\n             \n-        if \"LOYAL\" in traits and trust_score > 0.6:\n+        if \"LOYAL\" in traits or trust_score > 0.6:\n             utility += 0.3 # Easier to recruit by friends\n             \n         if \"GREEDY\" in traits:",
+      "material_sample": null
+    },
+    {
+      "id": 107,
+      "location": "src/systems/social_systems/appraisal.py:152",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -149,7 +149,7 @@\n             trust_score *= 0.8 # Requires higher trust\n             \n         if \"LOYAL\" in traits and trust_score > 0.6:\n-            utility += 0.3 # Easier to recruit by friends\n+            utility += 1.3 # Easier to recruit by friends\n             \n         if \"GREEDY\" in traits:\n             if utility < 1.0:",
+      "material_sample": null
+    },
+    {
+      "id": 110,
+      "location": "src/systems/social_systems/appraisal.py:155",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -152,7 +152,7 @@\n             utility += 0.3 # Easier to recruit by friends\n             \n         if \"GREEDY\" in traits:\n-            if utility < 1.0:\n+            if utility <= 1.0:\n                 return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}\n             utility *= 0.7 # Harder to satisfy even with high pay",
+      "material_sample": null
+    },
+    {
+      "id": 111,
+      "location": "src/systems/social_systems/appraisal.py:155",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -152,7 +152,7 @@\n             utility += 0.3 # Easier to recruit by friends\n             \n         if \"GREEDY\" in traits:\n-            if utility < 1.0:\n+            if utility < 2.0:\n                 return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}\n             utility *= 0.7 # Harder to satisfy even with high pay",
+      "material_sample": null
+    },
+    {
+      "id": 119,
+      "location": "src/systems/social_systems/appraisal.py:162",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -159,7 +159,7 @@\n         hp_pct = entity.combat.hp / entity.combat.max_hp\n         \n         # 2. Hard Rejections\n-        if risk == \"HIGH\" and hp_pct < 0.5:\n+        if risk == \"HIGH\" and hp_pct <= 0.5:\n             return ContractStatus.FAILED, ReasonCode.LOW_HP_RETREAT, {} \n             \n         # 3. Scoring",
+      "material_sample": null
+    },
+    {
+      "id": 122,
+      "location": "src/systems/social_systems/appraisal.py:167",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -164,7 +164,7 @@\n             \n         # 3. Scoring\n         # Greed check: desperate entities accept lower pay\n-        is_desperate = entity.inventory.gold < 5\n+        is_desperate = entity.inventory.gold <= 5\n         greed_threshold = 0.5 if is_desperate else 1.0\n         \n         # Weighted score: (Trust * 0.4) + (Utility * 0.4) - (Risk * 0.2) - Fatigue",
+      "material_sample": null
+    },
+    {
+      "id": 123,
+      "location": "src/systems/social_systems/appraisal.py:167",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -164,7 +164,7 @@\n             \n         # 3. Scoring\n         # Greed check: desperate entities accept lower pay\n-        is_desperate = entity.inventory.gold < 5\n+        is_desperate = entity.inventory.gold < 6\n         greed_threshold = 0.5 if is_desperate else 1.0\n         \n         # Weighted score: (Trust * 0.4) + (Utility * 0.4) - (Risk * 0.2) - Fatigue",
+      "material_sample": null
+    },
+    {
+      "id": 124,
+      "location": "src/systems/social_systems/appraisal.py:167",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -164,7 +164,7 @@\n             \n         # 3. Scoring\n         # Greed check: desperate entities accept lower pay\n-        is_desperate = entity.inventory.gold < 5\n+        is_desperate = None\n         greed_threshold = 0.5 if is_desperate else 1.0\n         \n         # Weighted score: (Trust * 0.4) + (Utility * 0.4) - (Risk * 0.2) - Fatigue",
+      "material_sample": null
+    },
+    {
+      "id": 138,
+      "location": "src/systems/social_systems/appraisal.py:173",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -170,7 +170,7 @@\n         # Weighted score: (Trust * 0.4) + (Utility * 0.4) - (Risk * 0.2) - Fatigue\n         score = (trust_score * 0.4) + (utility * 0.4) - (risk_weight * 0.2) - fatigue_penalty\n         \n-        if score >= 0.5:\n+        if score > 0.5:\n             return ContractStatus.ACCEPTED, ReasonCode.FAIR_COMPENSATION, {}\n             \n         # 4. Haggling (COUNTERED)",
+      "material_sample": null
+    },
+    {
+      "id": 140,
+      "location": "src/systems/social_systems/appraisal.py:177",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -174,7 +174,7 @@\n             return ContractStatus.ACCEPTED, ReasonCode.FAIR_COMPENSATION, {}\n             \n         # 4. Haggling (COUNTERED)\n-        if score >= 0.3 and contract.negotiation_count < 2 and \"GREEDY\" not in traits:\n+        if score > 0.3 and contract.negotiation_count < 2 and \"GREEDY\" not in traits:\n             # Propose a fair pay\n             required_pay = int(max(pay, expected_pay * greed_threshold))\n             if required_pay > pay:",
+      "material_sample": null
+    },
+    {
+      "id": 142,
+      "location": "src/systems/social_systems/appraisal.py:177",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -174,7 +174,7 @@\n             return ContractStatus.ACCEPTED, ReasonCode.FAIR_COMPENSATION, {}\n             \n         # 4. Haggling (COUNTERED)\n-        if score >= 0.3 and contract.negotiation_count < 2 and \"GREEDY\" not in traits:\n+        if score >= 0.3 and contract.negotiation_count <= 2 and \"GREEDY\" not in traits:\n             # Propose a fair pay\n             required_pay = int(max(pay, expected_pay * greed_threshold))\n             if required_pay > pay:",
+      "material_sample": null
+    },
+    {
+      "id": 143,
+      "location": "src/systems/social_systems/appraisal.py:177",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -174,7 +174,7 @@\n             return ContractStatus.ACCEPTED, ReasonCode.FAIR_COMPENSATION, {}\n             \n         # 4. Haggling (COUNTERED)\n-        if score >= 0.3 and contract.negotiation_count < 2 and \"GREEDY\" not in traits:\n+        if score >= 0.3 and contract.negotiation_count < 3 and \"GREEDY\" not in traits:\n             # Propose a fair pay\n             required_pay = int(max(pay, expected_pay * greed_threshold))\n             if required_pay > pay:",
+      "material_sample": null
+    },
+    {
+      "id": 144,
+      "location": "src/systems/social_systems/appraisal.py:177",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -174,7 +174,7 @@\n             return ContractStatus.ACCEPTED, ReasonCode.FAIR_COMPENSATION, {}\n             \n         # 4. Haggling (COUNTERED)\n-        if score >= 0.3 and contract.negotiation_count < 2 and \"GREEDY\" not in traits:\n+        if score >= 0.3 and contract.negotiation_count < 2 and \"XXGREEDYXX\" not in traits:\n             # Propose a fair pay\n             required_pay = int(max(pay, expected_pay * greed_threshold))\n             if required_pay > pay:",
+      "material_sample": null
+    },
+    {
+      "id": 153,
+      "location": "src/systems/social_systems/appraisal.py:186",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -183,8 +183,7 @@\n                 return ContractStatus.COUNTERED, ReasonCode.HAGGLING_FOR_PAY, counter_terms\n             \n         return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}\n-            \n-    @staticmethod\n+\n     def recalibrate_trust(\n         observer_social: SocialComponent,\n         subject_id: int,",
+      "material_sample": null
+    },
+    {
+      "id": 154,
+      "location": "src/systems/social_systems/appraisal.py:191",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -188,7 +188,7 @@\n     def recalibrate_trust(\n         observer_social: SocialComponent,\n         subject_id: int,\n-        outcome_quality: float = 0.0,\n+        outcome_quality: float = 1.0,\n         harm_ratio: float = 0.0\n     ) -> SocialUpdate:\n         \"\"\"",
+      "material_sample": null
+    },
+    {
+      "id": 155,
+      "location": "src/systems/social_systems/appraisal.py:192",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -189,7 +189,7 @@\n         observer_social: SocialComponent,\n         subject_id: int,\n         outcome_quality: float = 0.0,\n-        harm_ratio: float = 0.0\n+        harm_ratio: float = 1.0\n     ) -> SocialUpdate:\n         \"\"\"\n         Recalculate trust based on a concrete interaction outcome.",
+      "material_sample": null
+    },
+    {
+      "id": 156,
+      "location": "src/systems/social_systems/appraisal.py:200",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -197,7 +197,7 @@\n         \"\"\"\n         # ... logic for recalibration ...\n         from src.core.updates import SocialBondUpdate, SocialUpdate\n-        trust_delta = outcome_quality * 0.1\n+        trust_delta = outcome_quality / 0.1\n         if harm_ratio > 0:\n             trust_delta -= harm_ratio * 0.5",
+      "material_sample": null
+    },
+    {
+      "id": 157,
+      "location": "src/systems/social_systems/appraisal.py:200",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -197,7 +197,7 @@\n         \"\"\"\n         # ... logic for recalibration ...\n         from src.core.updates import SocialBondUpdate, SocialUpdate\n-        trust_delta = outcome_quality * 0.1\n+        trust_delta = outcome_quality * 1.1\n         if harm_ratio > 0:\n             trust_delta -= harm_ratio * 0.5",
+      "material_sample": null
+    },
+    {
+      "id": 158,
+      "location": "src/systems/social_systems/appraisal.py:200",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -197,7 +197,7 @@\n         \"\"\"\n         # ... logic for recalibration ...\n         from src.core.updates import SocialBondUpdate, SocialUpdate\n-        trust_delta = outcome_quality * 0.1\n+        trust_delta = None\n         if harm_ratio > 0:\n             trust_delta -= harm_ratio * 0.5",
+      "material_sample": null
+    },
+    {
+      "id": 159,
+      "location": "src/systems/social_systems/appraisal.py:201",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -198,7 +198,7 @@\n         # ... logic for recalibration ...\n         from src.core.updates import SocialBondUpdate, SocialUpdate\n         trust_delta = outcome_quality * 0.1\n-        if harm_ratio > 0:\n+        if harm_ratio >= 0:\n             trust_delta -= harm_ratio * 0.5\n             \n         return SocialUpdate(",
+      "material_sample": null
+    },
+    {
+      "id": 160,
+      "location": "src/systems/social_systems/appraisal.py:201",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -198,7 +198,7 @@\n         # ... logic for recalibration ...\n         from src.core.updates import SocialBondUpdate, SocialUpdate\n         trust_delta = outcome_quality * 0.1\n-        if harm_ratio > 0:\n+        if harm_ratio > 1:\n             trust_delta -= harm_ratio * 0.5\n             \n         return SocialUpdate(",
+      "material_sample": null
+    },
+    {
+      "id": 161,
+      "location": "src/systems/social_systems/appraisal.py:202",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -199,7 +199,7 @@\n         from src.core.updates import SocialBondUpdate, SocialUpdate\n         trust_delta = outcome_quality * 0.1\n         if harm_ratio > 0:\n-            trust_delta -= harm_ratio * 0.5\n+            trust_delta = harm_ratio * 0.5\n             \n         return SocialUpdate(\n             trust_delta={subject_id: trust_delta},",
+      "material_sample": null
+    },
+    {
+      "id": 162,
+      "location": "src/systems/social_systems/appraisal.py:202",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -199,7 +199,7 @@\n         from src.core.updates import SocialBondUpdate, SocialUpdate\n         trust_delta = outcome_quality * 0.1\n         if harm_ratio > 0:\n-            trust_delta -= harm_ratio * 0.5\n+            trust_delta += harm_ratio * 0.5\n             \n         return SocialUpdate(\n             trust_delta={subject_id: trust_delta},",
+      "material_sample": null
+    },
+    {
+      "id": 163,
+      "location": "src/systems/social_systems/appraisal.py:202",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -199,7 +199,7 @@\n         from src.core.updates import SocialBondUpdate, SocialUpdate\n         trust_delta = outcome_quality * 0.1\n         if harm_ratio > 0:\n-            trust_delta -= harm_ratio * 0.5\n+            trust_delta -= harm_ratio / 0.5\n             \n         return SocialUpdate(\n             trust_delta={subject_id: trust_delta},",
+      "material_sample": null
+    },
+    {
+      "id": 164,
+      "location": "src/systems/social_systems/appraisal.py:202",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -199,7 +199,7 @@\n         from src.core.updates import SocialBondUpdate, SocialUpdate\n         trust_delta = outcome_quality * 0.1\n         if harm_ratio > 0:\n-            trust_delta -= harm_ratio * 0.5\n+            trust_delta -= harm_ratio * 1.5\n             \n         return SocialUpdate(\n             trust_delta={subject_id: trust_delta},",
+      "material_sample": null
+    },
+    {
+      "id": 165,
+      "location": "src/systems/social_systems/appraisal.py:208",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -205,7 +205,7 @@\n             trust_delta={subject_id: trust_delta},\n             bond_updates=[SocialBondUpdate(\n                 target_id=subject_id,\n-                sentiment_delta=trust_delta * 2.0\n+                sentiment_delta=trust_delta / 2.0\n             )]\n         )",
+      "material_sample": null
+    },
+    {
+      "id": 166,
+      "location": "src/systems/social_systems/appraisal.py:208",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -205,7 +205,7 @@\n             trust_delta={subject_id: trust_delta},\n             bond_updates=[SocialBondUpdate(\n                 target_id=subject_id,\n-                sentiment_delta=trust_delta * 2.0\n+                sentiment_delta=trust_delta * 3.0\n             )]\n         )",
+      "material_sample": null
+    },
+    {
+      "id": 167,
+      "location": "src/systems/social_systems/appraisal.py:212",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -209,7 +209,6 @@\n             )]\n         )\n \n-    @staticmethod\n     def _appraise_loan(\n         entity: EntityState,\n         contract: ContractState,",
+      "material_sample": null
+    },
+    {
+      "id": 168,
+      "location": "src/systems/social_systems/appraisal.py:218",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -215,7 +215,7 @@\n         contract: ContractState,\n         trust_score: float\n     ) -> Tuple[bool, ReasonCode]:\n-        amount = contract.terms.get(\"amount\", 0)\n+        amount = contract.terms.get(\"XXamountXX\", 0)\n         interest = contract.terms.get(\"interest_rate\", 0.0)\n         \n         if interest > 0.5: # Usury!",
+      "material_sample": null
+    },
+    {
+      "id": 169,
+      "location": "src/systems/social_systems/appraisal.py:218",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -215,7 +215,7 @@\n         contract: ContractState,\n         trust_score: float\n     ) -> Tuple[bool, ReasonCode]:\n-        amount = contract.terms.get(\"amount\", 0)\n+        amount = contract.terms.get(\"amount\", 1)\n         interest = contract.terms.get(\"interest_rate\", 0.0)\n         \n         if interest > 0.5: # Usury!",
+      "material_sample": null
+    },
+    {
+      "id": 171,
+      "location": "src/systems/social_systems/appraisal.py:219",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -216,7 +216,7 @@\n         trust_score: float\n     ) -> Tuple[bool, ReasonCode]:\n         amount = contract.terms.get(\"amount\", 0)\n-        interest = contract.terms.get(\"interest_rate\", 0.0)\n+        interest = contract.terms.get(\"XXinterest_rateXX\", 0.0)\n         \n         if interest > 0.5: # Usury!\n             return False, ReasonCode.USURY_REJECTION",
+      "material_sample": null
+    },
+    {
+      "id": 172,
+      "location": "src/systems/social_systems/appraisal.py:219",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -216,7 +216,7 @@\n         trust_score: float\n     ) -> Tuple[bool, ReasonCode]:\n         amount = contract.terms.get(\"amount\", 0)\n-        interest = contract.terms.get(\"interest_rate\", 0.0)\n+        interest = contract.terms.get(\"interest_rate\", 1.0)\n         \n         if interest > 0.5: # Usury!\n             return False, ReasonCode.USURY_REJECTION",
+      "material_sample": null
+    },
+    {
+      "id": 174,
+      "location": "src/systems/social_systems/appraisal.py:221",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -218,7 +218,7 @@\n         amount = contract.terms.get(\"amount\", 0)\n         interest = contract.terms.get(\"interest_rate\", 0.0)\n         \n-        if interest > 0.5: # Usury!\n+        if interest >= 0.5: # Usury!\n             return False, ReasonCode.USURY_REJECTION\n             \n         if entity.inventory.gold < 5 and amount > 20:",
+      "material_sample": null
+    },
+    {
+      "id": 175,
+      "location": "src/systems/social_systems/appraisal.py:221",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -218,7 +218,7 @@\n         amount = contract.terms.get(\"amount\", 0)\n         interest = contract.terms.get(\"interest_rate\", 0.0)\n         \n-        if interest > 0.5: # Usury!\n+        if interest > 1.5: # Usury!\n             return False, ReasonCode.USURY_REJECTION\n             \n         if entity.inventory.gold < 5 and amount > 20:",
+      "material_sample": null
+    },
+    {
+      "id": 176,
+      "location": "src/systems/social_systems/appraisal.py:222",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -219,7 +219,7 @@\n         interest = contract.terms.get(\"interest_rate\", 0.0)\n         \n         if interest > 0.5: # Usury!\n-            return False, ReasonCode.USURY_REJECTION\n+            return True, ReasonCode.USURY_REJECTION\n             \n         if entity.inventory.gold < 5 and amount > 20:\n             return True, ReasonCode.DESPERATION_ACCEPTANCE",
+      "material_sample": null
+    },
+    {
+      "id": 177,
+      "location": "src/systems/social_systems/appraisal.py:224",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -221,7 +221,7 @@\n         if interest > 0.5: # Usury!\n             return False, ReasonCode.USURY_REJECTION\n             \n-        if entity.inventory.gold < 5 and amount > 20:\n+        if entity.inventory.gold <= 5 and amount > 20:\n             return True, ReasonCode.DESPERATION_ACCEPTANCE\n             \n         if trust_score > 0.5 and interest <= 0.1:",
+      "material_sample": null
+    },
+    {
+      "id": 178,
+      "location": "src/systems/social_systems/appraisal.py:224",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -221,7 +221,7 @@\n         if interest > 0.5: # Usury!\n             return False, ReasonCode.USURY_REJECTION\n             \n-        if entity.inventory.gold < 5 and amount > 20:\n+        if entity.inventory.gold < 6 and amount > 20:\n             return True, ReasonCode.DESPERATION_ACCEPTANCE\n             \n         if trust_score > 0.5 and interest <= 0.1:",
+      "material_sample": null
+    },
+    {
+      "id": 179,
+      "location": "src/systems/social_systems/appraisal.py:224",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -221,7 +221,7 @@\n         if interest > 0.5: # Usury!\n             return False, ReasonCode.USURY_REJECTION\n             \n-        if entity.inventory.gold < 5 and amount > 20:\n+        if entity.inventory.gold < 5 and amount >= 20:\n             return True, ReasonCode.DESPERATION_ACCEPTANCE\n             \n         if trust_score > 0.5 and interest <= 0.1:",
+      "material_sample": null
+    },
+    {
+      "id": 180,
+      "location": "src/systems/social_systems/appraisal.py:224",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -221,7 +221,7 @@\n         if interest > 0.5: # Usury!\n             return False, ReasonCode.USURY_REJECTION\n             \n-        if entity.inventory.gold < 5 and amount > 20:\n+        if entity.inventory.gold < 5 and amount > 21:\n             return True, ReasonCode.DESPERATION_ACCEPTANCE\n             \n         if trust_score > 0.5 and interest <= 0.1:",
+      "material_sample": null
+    },
+    {
+      "id": 182,
+      "location": "src/systems/social_systems/appraisal.py:225",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -222,7 +222,7 @@\n             return False, ReasonCode.USURY_REJECTION\n             \n         if entity.inventory.gold < 5 and amount > 20:\n-            return True, ReasonCode.DESPERATION_ACCEPTANCE\n+            return False, ReasonCode.DESPERATION_ACCEPTANCE\n             \n         if trust_score > 0.5 and interest <= 0.1:\n             return True, ReasonCode.FRIENDLY_LOAN",
+      "material_sample": null
+    },
+    {
+      "id": 183,
+      "location": "src/systems/social_systems/appraisal.py:227",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -224,7 +224,7 @@\n         if entity.inventory.gold < 5 and amount > 20:\n             return True, ReasonCode.DESPERATION_ACCEPTANCE\n             \n-        if trust_score > 0.5 and interest <= 0.1:\n+        if trust_score >= 0.5 and interest <= 0.1:\n             return True, ReasonCode.FRIENDLY_LOAN\n             \n         return False, ReasonCode.UNNECESSARY_DEBT",
+      "material_sample": null
+    },
+    {
+      "id": 185,
+      "location": "src/systems/social_systems/appraisal.py:227",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -224,7 +224,7 @@\n         if entity.inventory.gold < 5 and amount > 20:\n             return True, ReasonCode.DESPERATION_ACCEPTANCE\n             \n-        if trust_score > 0.5 and interest <= 0.1:\n+        if trust_score > 0.5 and interest < 0.1:\n             return True, ReasonCode.FRIENDLY_LOAN\n             \n         return False, ReasonCode.UNNECESSARY_DEBT",
+      "material_sample": null
+    },
+    {
+      "id": 186,
+      "location": "src/systems/social_systems/appraisal.py:227",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -224,7 +224,7 @@\n         if entity.inventory.gold < 5 and amount > 20:\n             return True, ReasonCode.DESPERATION_ACCEPTANCE\n             \n-        if trust_score > 0.5 and interest <= 0.1:\n+        if trust_score > 0.5 and interest <= 1.1:\n             return True, ReasonCode.FRIENDLY_LOAN\n             \n         return False, ReasonCode.UNNECESSARY_DEBT",
+      "material_sample": null
+    },
+    {
+      "id": 190,
+      "location": "src/systems/social_systems/appraisal.py:231",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -228,9 +228,7 @@\n             return True, ReasonCode.FRIENDLY_LOAN\n             \n         return False, ReasonCode.UNNECESSARY_DEBT\n-    \n-    \n-    @staticmethod\n+\n     def _appraise_position_swap(\n         entity: EntityState,\n         contract: ContractState,",
+      "material_sample": null
+    },
+    {
+      "id": 191,
+      "location": "src/systems/social_systems/appraisal.py:257",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -254,7 +254,7 @@\n         \"\"\"\n         from src.core.movement_modes import MovementMode\n \n-        source = state.entities.get(contract.source_id)\n+        source = None\n         target = state.entities.get(contract.target_id)\n \n         if source is None or target is None:",
+      "material_sample": null
+    },
+    {
+      "id": 192,
+      "location": "src/systems/social_systems/appraisal.py:258",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -255,7 +255,7 @@\n         from src.core.movement_modes import MovementMode\n \n         source = state.entities.get(contract.source_id)\n-        target = state.entities.get(contract.target_id)\n+        target = None\n \n         if source is None or target is None:\n             return ContractStatus.CANCELLED, ReasonCode.TARGET_INVALID, {}",
+      "material_sample": null
+    },
+    {
+      "id": 193,
+      "location": "src/systems/social_systems/appraisal.py:260",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -257,7 +257,7 @@\n         source = state.entities.get(contract.source_id)\n         target = state.entities.get(contract.target_id)\n \n-        if source is None or target is None:\n+        if source is not None or target is None:\n             return ContractStatus.CANCELLED, ReasonCode.TARGET_INVALID, {}\n \n         if contract.expiry_tick != -1 and state.tick > contract.expiry_tick:",
+      "material_sample": null
+    },
+    {
+      "id": 194,
+      "location": "src/systems/social_systems/appraisal.py:260",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -257,7 +257,7 @@\n         source = state.entities.get(contract.source_id)\n         target = state.entities.get(contract.target_id)\n \n-        if source is None or target is None:\n+        if source is None or target is not None:\n             return ContractStatus.CANCELLED, ReasonCode.TARGET_INVALID, {}\n \n         if contract.expiry_tick != -1 and state.tick > contract.expiry_tick:",
+      "material_sample": null
+    },
+    {
+      "id": 195,
+      "location": "src/systems/social_systems/appraisal.py:260",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -257,7 +257,7 @@\n         source = state.entities.get(contract.source_id)\n         target = state.entities.get(contract.target_id)\n \n-        if source is None or target is None:\n+        if source is None and target is None:\n             return ContractStatus.CANCELLED, ReasonCode.TARGET_INVALID, {}\n \n         if contract.expiry_tick != -1 and state.tick > contract.expiry_tick:",
+      "material_sample": null
+    },
+    {
+      "id": 196,
+      "location": "src/systems/social_systems/appraisal.py:263",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -260,7 +260,7 @@\n         if source is None or target is None:\n             return ContractStatus.CANCELLED, ReasonCode.TARGET_INVALID, {}\n \n-        if contract.expiry_tick != -1 and state.tick > contract.expiry_tick:\n+        if contract.expiry_tick == -1 and state.tick > contract.expiry_tick:\n             return ContractStatus.EXPIRED, ReasonCode.PATH_EXHAUSTED, {}\n \n         if not source.lifecycle.active or not target.lifecycle.active:",
+      "material_sample": null
+    },
+    {
+      "id": 197,
+      "location": "src/systems/social_systems/appraisal.py:263",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -260,7 +260,7 @@\n         if source is None or target is None:\n             return ContractStatus.CANCELLED, ReasonCode.TARGET_INVALID, {}\n \n-        if contract.expiry_tick != -1 and state.tick > contract.expiry_tick:\n+        if contract.expiry_tick != +1 and state.tick > contract.expiry_tick:\n             return ContractStatus.EXPIRED, ReasonCode.PATH_EXHAUSTED, {}\n \n         if not source.lifecycle.active or not target.lifecycle.active:",
+      "material_sample": null
+    },
+    {
+      "id": 198,
+      "location": "src/systems/social_systems/appraisal.py:263",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -260,7 +260,7 @@\n         if source is None or target is None:\n             return ContractStatus.CANCELLED, ReasonCode.TARGET_INVALID, {}\n \n-        if contract.expiry_tick != -1 and state.tick > contract.expiry_tick:\n+        if contract.expiry_tick != -2 and state.tick > contract.expiry_tick:\n             return ContractStatus.EXPIRED, ReasonCode.PATH_EXHAUSTED, {}\n \n         if not source.lifecycle.active or not target.lifecycle.active:",
+      "material_sample": null
+    },
+    {
+      "id": 199,
+      "location": "src/systems/social_systems/appraisal.py:263",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -260,7 +260,7 @@\n         if source is None or target is None:\n             return ContractStatus.CANCELLED, ReasonCode.TARGET_INVALID, {}\n \n-        if contract.expiry_tick != -1 and state.tick > contract.expiry_tick:\n+        if contract.expiry_tick != -1 and state.tick >= contract.expiry_tick:\n             return ContractStatus.EXPIRED, ReasonCode.PATH_EXHAUSTED, {}\n \n         if not source.lifecycle.active or not target.lifecycle.active:",
+      "material_sample": null
+    },
+    {
+      "id": 200,
+      "location": "src/systems/social_systems/appraisal.py:263",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -260,7 +260,7 @@\n         if source is None or target is None:\n             return ContractStatus.CANCELLED, ReasonCode.TARGET_INVALID, {}\n \n-        if contract.expiry_tick != -1 and state.tick > contract.expiry_tick:\n+        if contract.expiry_tick != -1 or state.tick > contract.expiry_tick:\n             return ContractStatus.EXPIRED, ReasonCode.PATH_EXHAUSTED, {}\n \n         if not source.lifecycle.active or not target.lifecycle.active:",
+      "material_sample": null
+    },
+    {
+      "id": 201,
+      "location": "src/systems/social_systems/appraisal.py:266",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -263,7 +263,7 @@\n         if contract.expiry_tick != -1 and state.tick > contract.expiry_tick:\n             return ContractStatus.EXPIRED, ReasonCode.PATH_EXHAUSTED, {}\n \n-        if not source.lifecycle.active or not target.lifecycle.active:\n+        if  source.lifecycle.active or not target.lifecycle.active:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n         if not source.combat.alive or not target.combat.alive:",
+      "material_sample": null
+    },
+    {
+      "id": 202,
+      "location": "src/systems/social_systems/appraisal.py:266",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -263,7 +263,7 @@\n         if contract.expiry_tick != -1 and state.tick > contract.expiry_tick:\n             return ContractStatus.EXPIRED, ReasonCode.PATH_EXHAUSTED, {}\n \n-        if not source.lifecycle.active or not target.lifecycle.active:\n+        if not source.lifecycle.active or  target.lifecycle.active:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n         if not source.combat.alive or not target.combat.alive:",
+      "material_sample": null
+    },
+    {
+      "id": 203,
+      "location": "src/systems/social_systems/appraisal.py:266",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -263,7 +263,7 @@\n         if contract.expiry_tick != -1 and state.tick > contract.expiry_tick:\n             return ContractStatus.EXPIRED, ReasonCode.PATH_EXHAUSTED, {}\n \n-        if not source.lifecycle.active or not target.lifecycle.active:\n+        if not source.lifecycle.active and not target.lifecycle.active:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n         if not source.combat.alive or not target.combat.alive:",
+      "material_sample": null
+    },
+    {
+      "id": 204,
+      "location": "src/systems/social_systems/appraisal.py:269",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -266,7 +266,7 @@\n         if not source.lifecycle.active or not target.lifecycle.active:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n-        if not source.combat.alive or not target.combat.alive:\n+        if  source.combat.alive or not target.combat.alive:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n         if source.navigation.movement_mode == MovementMode.HOLD:",
+      "material_sample": null
+    },
+    {
+      "id": 205,
+      "location": "src/systems/social_systems/appraisal.py:269",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -266,7 +266,7 @@\n         if not source.lifecycle.active or not target.lifecycle.active:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n-        if not source.combat.alive or not target.combat.alive:\n+        if not source.combat.alive or  target.combat.alive:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n         if source.navigation.movement_mode == MovementMode.HOLD:",
+      "material_sample": null
+    },
+    {
+      "id": 206,
+      "location": "src/systems/social_systems/appraisal.py:269",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -266,7 +266,7 @@\n         if not source.lifecycle.active or not target.lifecycle.active:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n-        if not source.combat.alive or not target.combat.alive:\n+        if not source.combat.alive and not target.combat.alive:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n         if source.navigation.movement_mode == MovementMode.HOLD:",
+      "material_sample": null
+    },
+    {
+      "id": 207,
+      "location": "src/systems/social_systems/appraisal.py:272",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -269,7 +269,7 @@\n         if not source.combat.alive or not target.combat.alive:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n-        if source.navigation.movement_mode == MovementMode.HOLD:\n+        if source.navigation.movement_mode != MovementMode.HOLD:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n         if target.navigation.movement_mode == MovementMode.HOLD:",
+      "material_sample": null
+    },
+    {
+      "id": 208,
+      "location": "src/systems/social_systems/appraisal.py:275",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -272,7 +272,7 @@\n         if source.navigation.movement_mode == MovementMode.HOLD:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n-        if target.navigation.movement_mode == MovementMode.HOLD:\n+        if target.navigation.movement_mode != MovementMode.HOLD:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n         source_pos = source.navigation.position",
+      "material_sample": null
+    },
+    {
+      "id": 209,
+      "location": "src/systems/social_systems/appraisal.py:278",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -275,7 +275,7 @@\n         if target.navigation.movement_mode == MovementMode.HOLD:\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n-        source_pos = source.navigation.position\n+        source_pos = None\n         target_pos = target.navigation.position\n \n         dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[1])",
+      "material_sample": null
+    },
+    {
+      "id": 210,
+      "location": "src/systems/social_systems/appraisal.py:279",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -276,7 +276,7 @@\n             return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n         source_pos = source.navigation.position\n-        target_pos = target.navigation.position\n+        target_pos = None\n \n         dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[1])\n         if dist != 1:",
+      "material_sample": null
+    },
+    {
+      "id": 211,
+      "location": "src/systems/social_systems/appraisal.py:281",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -278,7 +278,7 @@\n         source_pos = source.navigation.position\n         target_pos = target.navigation.position\n \n-        dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[1])\n+        dist = abs(source_pos[1] - target_pos[0]) + abs(source_pos[1] - target_pos[1])\n         if dist != 1:\n             return ContractStatus.CANCELLED, ReasonCode.OUT_OF_RANGE, {}",
+      "material_sample": null
+    },
+    {
+      "id": 212,
+      "location": "src/systems/social_systems/appraisal.py:281",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -278,7 +278,7 @@\n         source_pos = source.navigation.position\n         target_pos = target.navigation.position\n \n-        dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[1])\n+        dist = abs(source_pos[0] + target_pos[0]) + abs(source_pos[1] - target_pos[1])\n         if dist != 1:\n             return ContractStatus.CANCELLED, ReasonCode.OUT_OF_RANGE, {}",
+      "material_sample": null
+    },
+    {
+      "id": 213,
+      "location": "src/systems/social_systems/appraisal.py:281",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -278,7 +278,7 @@\n         source_pos = source.navigation.position\n         target_pos = target.navigation.position\n \n-        dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[1])\n+        dist = abs(source_pos[0] - target_pos[1]) + abs(source_pos[1] - target_pos[1])\n         if dist != 1:\n             return ContractStatus.CANCELLED, ReasonCode.OUT_OF_RANGE, {}",
+      "material_sample": null
+    },
+    {
+      "id": 214,
+      "location": "src/systems/social_systems/appraisal.py:281",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -278,7 +278,7 @@\n         source_pos = source.navigation.position\n         target_pos = target.navigation.position\n \n-        dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[1])\n+        dist = abs(source_pos[0] - target_pos[0]) - abs(source_pos[1] - target_pos[1])\n         if dist != 1:\n             return ContractStatus.CANCELLED, ReasonCode.OUT_OF_RANGE, {}",
+      "material_sample": null
+    },
+    {
+      "id": 215,
+      "location": "src/systems/social_systems/appraisal.py:281",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -278,7 +278,7 @@\n         source_pos = source.navigation.position\n         target_pos = target.navigation.position\n \n-        dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[1])\n+        dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[2] - target_pos[1])\n         if dist != 1:\n             return ContractStatus.CANCELLED, ReasonCode.OUT_OF_RANGE, {}",
+      "material_sample": null
+    },
+    {
+      "id": 216,
+      "location": "src/systems/social_systems/appraisal.py:281",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -278,7 +278,7 @@\n         source_pos = source.navigation.position\n         target_pos = target.navigation.position\n \n-        dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[1])\n+        dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] + target_pos[1])\n         if dist != 1:\n             return ContractStatus.CANCELLED, ReasonCode.OUT_OF_RANGE, {}",
+      "material_sample": null
+    },
+    {
+      "id": 217,
+      "location": "src/systems/social_systems/appraisal.py:281",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -278,7 +278,7 @@\n         source_pos = source.navigation.position\n         target_pos = target.navigation.position\n \n-        dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[1])\n+        dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[2])\n         if dist != 1:\n             return ContractStatus.CANCELLED, ReasonCode.OUT_OF_RANGE, {}",
+      "material_sample": null
+    },
+    {
+      "id": 218,
+      "location": "src/systems/social_systems/appraisal.py:281",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -278,7 +278,7 @@\n         source_pos = source.navigation.position\n         target_pos = target.navigation.position\n \n-        dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[1])\n+        dist = None\n         if dist != 1:\n             return ContractStatus.CANCELLED, ReasonCode.OUT_OF_RANGE, {}",
+      "material_sample": null
+    },
+    {
+      "id": 219,
+      "location": "src/systems/social_systems/appraisal.py:282",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -279,7 +279,7 @@\n         target_pos = target.navigation.position\n \n         dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[1])\n-        if dist != 1:\n+        if dist == 1:\n             return ContractStatus.CANCELLED, ReasonCode.OUT_OF_RANGE, {}\n \n         expected_terms = {",
+      "material_sample": null
+    },
+    {
+      "id": 220,
+      "location": "src/systems/social_systems/appraisal.py:282",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -279,7 +279,7 @@\n         target_pos = target.navigation.position\n \n         dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[1])\n-        if dist != 1:\n+        if dist != 2:\n             return ContractStatus.CANCELLED, ReasonCode.OUT_OF_RANGE, {}\n \n         expected_terms = {",
+      "material_sample": null
+    },
+    {
+      "id": 221,
+      "location": "src/systems/social_systems/appraisal.py:286",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -283,7 +283,7 @@\n             return ContractStatus.CANCELLED, ReasonCode.OUT_OF_RANGE, {}\n \n         expected_terms = {\n-            \"source_from\": source_pos,\n+            \"XXsource_fromXX\": source_pos,\n             \"source_to\": target_pos,\n             \"target_from\": target_pos,\n             \"target_to\": source_pos,",
+      "material_sample": null
+    },
+    {
+      "id": 222,
+      "location": "src/systems/social_systems/appraisal.py:287",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -284,7 +284,7 @@\n \n         expected_terms = {\n             \"source_from\": source_pos,\n-            \"source_to\": target_pos,\n+            \"XXsource_toXX\": target_pos,\n             \"target_from\": target_pos,\n             \"target_to\": source_pos,\n         }",
+      "material_sample": null
+    },
+    {
+      "id": 223,
+      "location": "src/systems/social_systems/appraisal.py:288",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -285,7 +285,7 @@\n         expected_terms = {\n             \"source_from\": source_pos,\n             \"source_to\": target_pos,\n-            \"target_from\": target_pos,\n+            \"XXtarget_fromXX\": target_pos,\n             \"target_to\": source_pos,\n         }",
+      "material_sample": null
+    },
+    {
+      "id": 224,
+      "location": "src/systems/social_systems/appraisal.py:289",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -286,7 +286,7 @@\n             \"source_from\": source_pos,\n             \"source_to\": target_pos,\n             \"target_from\": target_pos,\n-            \"target_to\": source_pos,\n+            \"XXtarget_toXX\": source_pos,\n         }\n \n         for key, expected_pos in expected_terms.items():",
+      "material_sample": null
+    },
+    {
+      "id": 225,
+      "location": "src/systems/social_systems/appraisal.py:285",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -282,12 +282,7 @@\n         if dist != 1:\n             return ContractStatus.CANCELLED, ReasonCode.OUT_OF_RANGE, {}\n \n-        expected_terms = {\n-            \"source_from\": source_pos,\n-            \"source_to\": target_pos,\n-            \"target_from\": target_pos,\n-            \"target_to\": source_pos,\n-        }\n+        expected_terms = None\n \n         for key, expected_pos in expected_terms.items():\n             if key in contract.terms:",
+      "material_sample": null
+    },
+    {
+      "id": 226,
+      "location": "src/systems/social_systems/appraisal.py:293",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -290,7 +290,7 @@\n         }\n \n         for key, expected_pos in expected_terms.items():\n-            if key in contract.terms:\n+            if key not in contract.terms:\n                 actual = tuple(contract.terms[key])\n                 if actual != expected_pos:\n                     return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}",
+      "material_sample": null
+    },
+    {
+      "id": 227,
+      "location": "src/systems/social_systems/appraisal.py:294",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -291,7 +291,7 @@\n \n         for key, expected_pos in expected_terms.items():\n             if key in contract.terms:\n-                actual = tuple(contract.terms[key])\n+                actual = None\n                 if actual != expected_pos:\n                     return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}",
+      "material_sample": null
+    },
+    {
+      "id": 228,
+      "location": "src/systems/social_systems/appraisal.py:295",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -292,7 +292,7 @@\n         for key, expected_pos in expected_terms.items():\n             if key in contract.terms:\n                 actual = tuple(contract.terms[key])\n-                if actual != expected_pos:\n+                if actual == expected_pos:\n                     return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}\n \n         return ContractStatus.ACCEPTED, ReasonCode.POSITION_SWAP_ACCEPTED, {}",
+      "material_sample": null
+    },
+    {
+      "id": 229,
+      "location": "src/systems/social_systems/appraisal.py:300",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -297,7 +297,6 @@\n \n         return ContractStatus.ACCEPTED, ReasonCode.POSITION_SWAP_ACCEPTED, {}\n \n-    @staticmethod\n     def _appraise_trade(\n         entity: EntityState,\n         contract: ContractState,",
+      "material_sample": null
+    },
+    {
+      "id": 231,
+      "location": "src/systems/social_systems/appraisal.py:308",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -305,7 +305,7 @@\n     ) -> Tuple[ContractStatus, ReasonCode, Dict[str, Any]]:\n         \"\"\"Terms schema: {\"price\": int, \"item_value\": int}. Mirrors _appraise_recruitment's\n         utility-vs-risk-then-haggle shape, using price/item_value in place of pay/expected_pay.\"\"\"\n-        price = contract.terms.get(\"price\", 0)\n+        price = contract.terms.get(\"price\", 1)\n         item_value = contract.terms.get(\"item_value\", price)\n \n         if item_value <= 0:",
+      "material_sample": null
+    },
+    {
+      "id": 235,
+      "location": "src/systems/social_systems/appraisal.py:311",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -308,7 +308,7 @@\n         price = contract.terms.get(\"price\", 0)\n         item_value = contract.terms.get(\"item_value\", price)\n \n-        if item_value <= 0:\n+        if item_value < 0:\n             return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}\n \n         utility = price / max(1, item_value)",
+      "material_sample": null
+    },
+    {
+      "id": 236,
+      "location": "src/systems/social_systems/appraisal.py:311",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -308,7 +308,7 @@\n         price = contract.terms.get(\"price\", 0)\n         item_value = contract.terms.get(\"item_value\", price)\n \n-        if item_value <= 0:\n+        if item_value <= 1:\n             return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}\n \n         utility = price / max(1, item_value)",
+      "material_sample": null
+    },
+    {
+      "id": 238,
+      "location": "src/systems/social_systems/appraisal.py:314",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -311,7 +311,7 @@\n         if item_value <= 0:\n             return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}\n \n-        utility = price / max(1, item_value)\n+        utility = price / max(2, item_value)\n         if utility < 0.5:\n             return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}",
+      "material_sample": null
+    },
+    {
+      "id": 245,
+      "location": "src/systems/social_systems/appraisal.py:318",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -315,7 +315,7 @@\n         if utility < 0.5:\n             return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}\n \n-        score = (trust_score * 0.4) + (min(1.0, utility) * 0.6)\n+        score = (trust_score * 0.4) + (min(2.0, utility) * 0.6)\n \n         if score >= 0.6:\n             return ContractStatus.ACCEPTED, ReasonCode.FAIR_COMPENSATION, {}",
+      "material_sample": null
+    },
+    {
+      "id": 249,
+      "location": "src/systems/social_systems/appraisal.py:320",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -317,7 +317,7 @@\n \n         score = (trust_score * 0.4) + (min(1.0, utility) * 0.6)\n \n-        if score >= 0.6:\n+        if score > 0.6:\n             return ContractStatus.ACCEPTED, ReasonCode.FAIR_COMPENSATION, {}\n \n         if score >= 0.4 and contract.negotiation_count < 2:",
+      "material_sample": null
+    },
+    {
+      "id": 251,
+      "location": "src/systems/social_systems/appraisal.py:323",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -320,7 +320,7 @@\n         if score >= 0.6:\n             return ContractStatus.ACCEPTED, ReasonCode.FAIR_COMPENSATION, {}\n \n-        if score >= 0.4 and contract.negotiation_count < 2:\n+        if score > 0.4 and contract.negotiation_count < 2:\n             counter_terms = dict(contract.terms)\n             counter_terms[\"price\"] = int(item_value)\n             return ContractStatus.COUNTERED, ReasonCode.HAGGLING_FOR_PAY, counter_terms",
+      "material_sample": null
+    },
+    {
+      "id": 253,
+      "location": "src/systems/social_systems/appraisal.py:323",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -320,7 +320,7 @@\n         if score >= 0.6:\n             return ContractStatus.ACCEPTED, ReasonCode.FAIR_COMPENSATION, {}\n \n-        if score >= 0.4 and contract.negotiation_count < 2:\n+        if score >= 0.4 and contract.negotiation_count <= 2:\n             counter_terms = dict(contract.terms)\n             counter_terms[\"price\"] = int(item_value)\n             return ContractStatus.COUNTERED, ReasonCode.HAGGLING_FOR_PAY, counter_terms",
+      "material_sample": null
+    },
+    {
+      "id": 254,
+      "location": "src/systems/social_systems/appraisal.py:323",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -320,7 +320,7 @@\n         if score >= 0.6:\n             return ContractStatus.ACCEPTED, ReasonCode.FAIR_COMPENSATION, {}\n \n-        if score >= 0.4 and contract.negotiation_count < 2:\n+        if score >= 0.4 and contract.negotiation_count < 3:\n             counter_terms = dict(contract.terms)\n             counter_terms[\"price\"] = int(item_value)\n             return ContractStatus.COUNTERED, ReasonCode.HAGGLING_FOR_PAY, counter_terms",
+      "material_sample": null
+    },
+    {
+      "id": 255,
+      "location": "src/systems/social_systems/appraisal.py:323",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -320,7 +320,7 @@\n         if score >= 0.6:\n             return ContractStatus.ACCEPTED, ReasonCode.FAIR_COMPENSATION, {}\n \n-        if score >= 0.4 and contract.negotiation_count < 2:\n+        if score >= 0.4 or contract.negotiation_count < 2:\n             counter_terms = dict(contract.terms)\n             counter_terms[\"price\"] = int(item_value)\n             return ContractStatus.COUNTERED, ReasonCode.HAGGLING_FOR_PAY, counter_terms",
+      "material_sample": null
+    },
+    {
+      "id": 259,
+      "location": "src/systems/social_systems/appraisal.py:330",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -327,7 +327,6 @@\n \n         return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}\n \n-    @staticmethod\n     def _appraise_team_up(\n         entity: EntityState,\n         contract: ContractState,",
+      "material_sample": null
+    },
+    {
+      "id": 261,
+      "location": "src/systems/social_systems/appraisal.py:338",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -335,7 +335,7 @@\n     ) -> Tuple[ContractStatus, ReasonCode, Dict[str, Any]]:\n         \"\"\"No pay/utility dimension -- pure trust gate plus the same HIGH-risk/low-HP hard\n         rejection _appraise_recruitment uses (lines 119-120).\"\"\"\n-        risk = contract.terms.get(\"risk_level\", \"NORMAL\")\n+        risk = contract.terms.get(\"risk_level\", \"XXNORMALXX\")\n         hp_pct = entity.combat.hp / entity.combat.max_hp\n \n         if risk == \"HIGH\" and hp_pct < 0.5:",
+      "material_sample": null
+    },
+    {
+      "id": 267,
+      "location": "src/systems/social_systems/appraisal.py:341",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -338,7 +338,7 @@\n         risk = contract.terms.get(\"risk_level\", \"NORMAL\")\n         hp_pct = entity.combat.hp / entity.combat.max_hp\n \n-        if risk == \"HIGH\" and hp_pct < 0.5:\n+        if risk == \"HIGH\" and hp_pct <= 0.5:\n             return ContractStatus.FAILED, ReasonCode.LOW_HP_RETREAT, {}\n \n         if trust_score >= 0.6:",
+      "material_sample": null
+    },
+    {
+      "id": 268,
+      "location": "src/systems/social_systems/appraisal.py:341",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -338,7 +338,7 @@\n         risk = contract.terms.get(\"risk_level\", \"NORMAL\")\n         hp_pct = entity.combat.hp / entity.combat.max_hp\n \n-        if risk == \"HIGH\" and hp_pct < 0.5:\n+        if risk == \"HIGH\" and hp_pct < 1.5:\n             return ContractStatus.FAILED, ReasonCode.LOW_HP_RETREAT, {}\n \n         if trust_score >= 0.6:",
+      "material_sample": null
+    },
+    {
+      "id": 269,
+      "location": "src/systems/social_systems/appraisal.py:341",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -338,7 +338,7 @@\n         risk = contract.terms.get(\"risk_level\", \"NORMAL\")\n         hp_pct = entity.combat.hp / entity.combat.max_hp\n \n-        if risk == \"HIGH\" and hp_pct < 0.5:\n+        if risk == \"HIGH\" or hp_pct < 0.5:\n             return ContractStatus.FAILED, ReasonCode.LOW_HP_RETREAT, {}\n \n         if trust_score >= 0.6:",
+      "material_sample": null
+    },
+    {
+      "id": 270,
+      "location": "src/systems/social_systems/appraisal.py:344",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -341,7 +341,7 @@\n         if risk == \"HIGH\" and hp_pct < 0.5:\n             return ContractStatus.FAILED, ReasonCode.LOW_HP_RETREAT, {}\n \n-        if trust_score >= 0.6:\n+        if trust_score > 0.6:\n             return ContractStatus.ACCEPTED, ReasonCode.TEAM_UP_ACCEPTED, {}\n \n         return ContractStatus.CANCELLED, ReasonCode.TEAM_UP_DECLINED, {}",
+      "material_sample": null
+    },
+    {
+      "id": 272,
+      "location": "src/systems/social_systems/appraisal.py:349",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -346,7 +346,6 @@\n \n         return ContractStatus.CANCELLED, ReasonCode.TEAM_UP_DECLINED, {}\n \n-    @staticmethod\n     def _appraise_paid_information(\n         entity: EntityState,\n         contract: ContractState,",
+      "material_sample": null
+    },
+    {
+      "id": 273,
+      "location": "src/systems/social_systems/appraisal.py:360",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -357,7 +357,6 @@\n         means the prelude already passed, so it always accepts.\"\"\"\n         return ContractStatus.ACCEPTED, ReasonCode.INFORMATION_SALE_ACCEPTED, {}\n \n-    @staticmethod\n     def _appraise_teach(\n         entity: EntityState,\n         contract: ContractState,",
+      "material_sample": null
+    },
+    {
+      "id": 274,
+      "location": "src/systems/social_systems/appraisal.py:371",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -368,7 +368,6 @@\n         already passed, so it always accepts. No utility/risk model is added here.\"\"\"\n         return ContractStatus.ACCEPTED, ReasonCode.TEACH_ACCEPTED, {}\n \n-    @staticmethod\n     def _appraise_marriage(\n         entity: EntityState,\n         contract: ContractState,",
+      "material_sample": null
+    },
+    {
+      "id": 275,
+      "location": "src/systems/social_systems/appraisal.py:384",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -381,7 +381,6 @@\n         Decision 4.\"\"\"\n         return ContractStatus.ACCEPTED, ReasonCode.MARRIAGE_ACCEPTED, {}\n \n-    @staticmethod\n     def _appraise_clan(\n         entity: EntityState,\n         contract: ContractState,",
+      "material_sample": null
+    },
+    {
+      "id": 276,
+      "location": "src/systems/social_systems/appraisal.py:399",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -396,7 +396,6 @@\n         this ticket.\"\"\"\n         return ContractStatus.ACCEPTED, ReasonCode.CLAN_JOIN_ACCEPTED, {}\n \n-    @staticmethod\n     def process_betrayal(\n         victim: EntityState,\n         betrayer_id: int,",
+      "material_sample": null
+    },
+    {
+      "id": 278,
+      "location": "src/systems/social_systems/appraisal.py:414",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -411,7 +411,7 @@\n         from src.core.strategic import TurningPointState, DirectiveState, DirectivePriority\n         \n         # Heavy trust penalty for betrayal\n-        trust_delta = -0.3 - (salience * 0.4)\n+        trust_delta = -1.3 - (salience * 0.4)\n \n         social_update = SocialUpdate(\n             trust_delta={betrayer_id: trust_delta},",
+      "material_sample": null
+    },
+    {
+      "id": 280,
+      "location": "src/systems/social_systems/appraisal.py:414",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -411,7 +411,7 @@\n         from src.core.strategic import TurningPointState, DirectiveState, DirectivePriority\n         \n         # Heavy trust penalty for betrayal\n-        trust_delta = -0.3 - (salience * 0.4)\n+        trust_delta = -0.3 - (salience / 0.4)\n \n         social_update = SocialUpdate(\n             trust_delta={betrayer_id: trust_delta},",
+      "material_sample": null
+    },
+    {
+      "id": 281,
+      "location": "src/systems/social_systems/appraisal.py:414",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -411,7 +411,7 @@\n         from src.core.strategic import TurningPointState, DirectiveState, DirectivePriority\n         \n         # Heavy trust penalty for betrayal\n-        trust_delta = -0.3 - (salience * 0.4)\n+        trust_delta = -0.3 - (salience * 1.4)\n \n         social_update = SocialUpdate(\n             trust_delta={betrayer_id: trust_delta},",
+      "material_sample": null
+    },
+    {
+      "id": 283,
+      "location": "src/systems/social_systems/appraisal.py:420",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -417,7 +417,7 @@\n             trust_delta={betrayer_id: trust_delta},\n             bond_updates=[SocialBondUpdate(\n                 target_id=betrayer_id,\n-                sentiment_delta=trust_delta * 2.0,\n+                sentiment_delta=trust_delta / 2.0,\n                 last_interaction_tick_set=current_tick\n             )],\n             betrayal_increment=1",
+      "material_sample": null
+    },
+    {
+      "id": 284,
+      "location": "src/systems/social_systems/appraisal.py:420",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -417,7 +417,7 @@\n             trust_delta={betrayer_id: trust_delta},\n             bond_updates=[SocialBondUpdate(\n                 target_id=betrayer_id,\n-                sentiment_delta=trust_delta * 2.0,\n+                sentiment_delta=trust_delta * 3.0,\n                 last_interaction_tick_set=current_tick\n             )],\n             betrayal_increment=1",
+      "material_sample": null
+    },
+    {
+      "id": 287,
+      "location": "src/systems/social_systems/appraisal.py:428",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -425,7 +425,7 @@\n \n         # High-salience betrayals create an AVENGE directive and a TurningPoint\n         tp = TurningPointState(\n-            id=f\"tp_betrayal_{betrayer_id}_{current_tick}\",\n+            id=f\"XXtp_betrayal_{betrayer_id}_{current_tick}XX\",\n             kind=\"betrayal\",\n             subject_id=betrayer_id,\n             salience=salience,",
+      "material_sample": null
+    },
+    {
+      "id": 291,
+      "location": "src/systems/social_systems/appraisal.py:436",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -433,7 +433,7 @@\n         )\n         \n         strategic_update = StrategicUpdate(turning_points_add=[tp])\n-        if salience > 0.5:\n+        if salience >= 0.5:\n             directive = DirectiveState(\n                 id=f\"directive_avenge_{betrayer_id}\",\n                 kind=\"avenge\",",
+      "material_sample": null
+    },
+    {
+      "id": 293,
+      "location": "src/systems/social_systems/appraisal.py:438",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -435,7 +435,7 @@\n         strategic_update = StrategicUpdate(turning_points_add=[tp])\n         if salience > 0.5:\n             directive = DirectiveState(\n-                id=f\"directive_avenge_{betrayer_id}\",\n+                id=f\"XXdirective_avenge_{betrayer_id}XX\",\n                 kind=\"avenge\",\n                 target=str(betrayer_id),\n                 priority=DirectivePriority.HIGH if salience > 0.7 else DirectivePriority.NORMAL,",
+      "material_sample": null
+    },
+    {
+      "id": 295,
+      "location": "src/systems/social_systems/appraisal.py:441",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -438,7 +438,7 @@\n                 id=f\"directive_avenge_{betrayer_id}\",\n                 kind=\"avenge\",\n                 target=str(betrayer_id),\n-                priority=DirectivePriority.HIGH if salience > 0.7 else DirectivePriority.NORMAL,\n+                priority=DirectivePriority.HIGH if salience >= 0.7 else DirectivePriority.NORMAL,\n                 salience=salience,\n                 created_tick=current_tick\n             )",
+      "material_sample": null
+    },
+    {
+      "id": 299,
+      "location": "src/systems/social_systems/appraisal.py:451",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -448,7 +448,6 @@\n \n         return social_update, strategic_update\n \n-    @staticmethod\n     def recalibrate_source_trust(\n         observer: EntityState,\n         source_id: int,",
+      "material_sample": null
+    },
+    {
+      "id": 318,
+      "location": "src/systems/social_systems/appraisal.py:481",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -478,7 +478,6 @@\n \n         return StrategicUpdate(source_trust_updates=[updated])\n \n-    @staticmethod\n     def update_familiarity(\n         observer: EntityState,\n         subject_id: int,",
+      "material_sample": null
+    },
+    {
+      "id": 319,
+      "location": "src/systems/social_systems/appraisal.py:487",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -484,7 +484,7 @@\n         subject_id: int,\n         interaction_quality: float,\n         current_tick: int,\n-        cha_modifier: float = 1.0\n+        cha_modifier: float = 2.0\n     ) -> SocialUpdate:\n         \"\"\"\n         Part 1 \u00a7Social: Social learning updates familiarity/trust-like bonds.",
+      "material_sample": null
+    },
+    {
+      "id": 326,
+      "location": "src/systems/social_systems/appraisal.py:507",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -504,7 +504,6 @@\n             )]\n         )\n \n-    @staticmethod\n     def calculate_recruitment_cost(\n         recruiter: EntityState,\n         candidate: EntityState",
+      "material_sample": null
+    },
+    {
+      "id": 330,
+      "location": "src/systems/social_systems/appraisal.py:521",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -518,7 +518,7 @@\n         level_mult = candidate.identity.evolution_level\n         \n         # Bond sentiment preference\n-        bond = candidate.social.bonds.get(recruiter.id)\n+        bond = None\n         if bond:\n             # sentiment=1.0 -> trust=1.0, sentiment=-1.0 -> trust=0.0\n             trust = (bond.sentiment + 1.0) / 2.0",
+      "material_sample": null
+    },
+    {
+      "id": 331,
+      "location": "src/systems/social_systems/appraisal.py:524",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -521,7 +521,7 @@\n         bond = candidate.social.bonds.get(recruiter.id)\n         if bond:\n             # sentiment=1.0 -> trust=1.0, sentiment=-1.0 -> trust=0.0\n-            trust = (bond.sentiment + 1.0) / 2.0\n+            trust = (bond.sentiment - 1.0) / 2.0\n         else:\n             trust = candidate.social.trust_history.get(recruiter.id, 0.5)",
+      "material_sample": null
+    },
+    {
+      "id": 332,
+      "location": "src/systems/social_systems/appraisal.py:524",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -521,7 +521,7 @@\n         bond = candidate.social.bonds.get(recruiter.id)\n         if bond:\n             # sentiment=1.0 -> trust=1.0, sentiment=-1.0 -> trust=0.0\n-            trust = (bond.sentiment + 1.0) / 2.0\n+            trust = (bond.sentiment + 2.0) / 2.0\n         else:\n             trust = candidate.social.trust_history.get(recruiter.id, 0.5)",
+      "material_sample": null
+    },
+    {
+      "id": 333,
+      "location": "src/systems/social_systems/appraisal.py:524",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -521,7 +521,7 @@\n         bond = candidate.social.bonds.get(recruiter.id)\n         if bond:\n             # sentiment=1.0 -> trust=1.0, sentiment=-1.0 -> trust=0.0\n-            trust = (bond.sentiment + 1.0) / 2.0\n+            trust = (bond.sentiment + 1.0) * 2.0\n         else:\n             trust = candidate.social.trust_history.get(recruiter.id, 0.5)",
+      "material_sample": null
+    },
+    {
+      "id": 334,
+      "location": "src/systems/social_systems/appraisal.py:524",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -521,7 +521,7 @@\n         bond = candidate.social.bonds.get(recruiter.id)\n         if bond:\n             # sentiment=1.0 -> trust=1.0, sentiment=-1.0 -> trust=0.0\n-            trust = (bond.sentiment + 1.0) / 2.0\n+            trust = (bond.sentiment + 1.0) / 3.0\n         else:\n             trust = candidate.social.trust_history.get(recruiter.id, 0.5)",
+      "material_sample": null
+    },
+    {
+      "id": 335,
+      "location": "src/systems/social_systems/appraisal.py:524",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -521,7 +521,7 @@\n         bond = candidate.social.bonds.get(recruiter.id)\n         if bond:\n             # sentiment=1.0 -> trust=1.0, sentiment=-1.0 -> trust=0.0\n-            trust = (bond.sentiment + 1.0) / 2.0\n+            trust = None\n         else:\n             trust = candidate.social.trust_history.get(recruiter.id, 0.5)",
+      "material_sample": null
+    },
+    {
+      "id": 345,
+      "location": "src/systems/social_systems/appraisal.py:539",
+      "diff": "--- src/systems/social_systems/appraisal.py\n+++ src/systems/social_systems/appraisal.py\n@@ -536,7 +536,7 @@\n     Consolidated recruitment logic for Phase E5.\n     VERIFIED v2: RecruitmentAppraiser.evaluate\n     \"\"\"\n-    @staticmethod\n+\n     def evaluate(entity: EntityState, contract: ContractState, trust_score: float) -> Tuple[ContractStatus, ReasonCode, Dict[str, Any]]:\n         return SocialAppraisalSystem._appraise_recruitment(entity, contract, trust_score)",
+      "material_sample": null
+    }
+  ],
+  "catalog_conflicting_survivor_ids": [],
+  "catalog_conflicting_mutants_on_those_lines": {
+    "line_46_public_reputation_read": {
+      "mutants": 3,
+      "killed": 3,
+      "survived": 0
+    },
+    "line_64_clan_reputation_read": {
+      "mutants": 4,
+      "killed": 4,
+      "survived": 0
+    },
+    "read_from": "the mutmut cache (Mutant joined to Line, Line.line_number is 0-based so source lines 46 and 64 are 45 and 63)"
+  },
+  "catalog_conflicting_note": "Mutants on appraisal.py lines 46 (public_reputation read) and 64 (clan_reputation read) are kept in this separate list, and any survivor among them would carry the label 'current behaviour, catalog-CONFLICTING (PERC-01 / KNOW-01)'. At this SHA there is none: all 7 mutants on those two lines were killed, so the existing selected tests pin that current behaviour. That is an observation, not a recommendation either way: the label comes from world-rule-catalog-design's answer (plan G4) and is not re-derived here, and no test is suggested.",
+  "expectation_note": "No survivor-count threshold applies. 157 survivors is an observation, not an acceptance target. No survivor is called a defect, and none is a request to change a test."
+}
