@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-REGION-OWNER-NONE-SENTINEL-PERSISTED-RAW
-phase: open
+phase: done
 date: 2026-10-03
 tags: [world, observability, determinism]
 ---
@@ -18,7 +18,7 @@ authoritative pipeline on the next tax tick
 
 ## Status
 
-INPROGRESS
+DONE
 
 ## Tier
 
@@ -170,4 +170,24 @@ excluded).
 
 ## Completion Summary
 
-_Pending close._
+Closed 2026-10-03. A liberation can no longer persist `-1`; the sentinel is named once
+(`NO_OWNER_SENTINEL`) and decoded once (`decode_owner_faction_id_set`) in `src/core/updates.py`, used
+at the apply boundary and both observability payload sites.
+
+All 5 acceptance criteria met. The crash was **reproduced before being fixed** -- `KeyError: -1` at
+`src/engine/town_resolution.py:136`, reached across two real ticks through the authoritative pipeline
+-- and all three new tests fail on the unfixed code, verified by reverting the apply-boundary decode
+and re-running.
+
+Landed with work-order item 1 rather than parked, on `world-rule-catalog-design`'s analysis and the
+owner's decision: the defect is dormant only while regional influence stays inert, and item 1's
+expected effect is to move influence, which turns the latent crash live.
+
+Two pre-existing test failures were found, proven independent of this change, and reported rather than
+masked or skipped: `test_long_run_stability` (`TimeoutError`, fails on clean `src/`) and
+`test_resource_opportunity_provider::test_stone_outcrop_node_surfaces_as_opportunity_in_frontier_village`
+(cross-test pollution; still fails with this ticket's new test file excluded).
+
+Not done, deliberately: replacing the in-band sentinel with a dedicated `owner_faction_id_clear` field
+is the cleaner design and is recorded in Assumptions as the better eventual fix, but it is a schema
+change across producers and consumers and this was a hotfix on a reachable crash.

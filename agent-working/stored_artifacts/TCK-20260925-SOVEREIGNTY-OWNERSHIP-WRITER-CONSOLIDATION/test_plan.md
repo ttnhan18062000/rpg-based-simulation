@@ -20,6 +20,25 @@ cover the `-1` sentinel fix — that is
 `tests/integration/world/test_regional_sovereignty.py` + `tests/unit/world/test_sovereignty_events.py`
 = **10 passed** at `6d630250d`. Recorded so "still passing" is a comparison, not an assumption.
 
+## Proof Plan
+
+Per-criterion, in the Phase 1 test-architecture convention. Only AC-4 is proved by a new test; the
+rest are proved by record or by absence of change, and each says which.
+
+| AC | level | proof kind | oracle source | expected effect | selected commands |
+|---|---|---|---|---|---|
+| 1 — decision recorded with the phase-ordering consequence stated | n/a | record | `plan.md` + `investigation.md` §3; `docs/engine/authoritative_pipeline.md:79` | A written decision naming outcome 3 and the one-tick consequence | none — not a test-provable criterion |
+| 2 — no ownership-transfer capability lost | integration | regression (unchanged behaviour) | `docs/mechanics/05_world_evolution.md` ±50 thresholds; `WORLD-107` | Pre-existing flips still occur; no `src/` diff exists to change them | `pytest tests/integration/world/test_regional_sovereignty.py -q` |
+| 3 — `test_regional_ownership_flip` still passes | integration | regression | existing test as its own oracle | Unchanged pass | `pytest tests/integration/world/test_regional_sovereignty.py::test_regional_ownership_flip -q` |
+| 4 — ownership re-evaluated for a region with no death that tick | integration | **new guard test (T1)** | `docs/mechanics/regional_sovereignty.md`; sweep is unconditional per `pipeline.py:348` | Unowned region at influence ≥ +50 flips to `HERO_GUILD` with zero deaths that tick | `pytest tests/integration/world/test_regional_sovereignty.py::test_ownership_reevaluated_for_region_with_no_death_that_tick -q` |
+| 5 — any same-tick/next-tick timing change recorded | n/a | record (negative) | `docs/guidelines/intentional_divergences.md` §2.58/§2.59 shape | **No entry**, because no timing change exists; recorded as a decision in `plan.md` step 4 | none |
+| 6 — `WORLD-107` `status` + `v2_evidence` updated | unit | parity | `docs/parity_ledger/world_dynamics.yaml` `WORLD-107` | `v2_evidence` names the second writer; `status: verified` retained with the retention justified in-entry | `pytest tests/unit/world/test_sovereignty_events.py -q` |
+
+**Oracle note.** For AC-2 and AC-3 the oracle is the pre-change behaviour itself, which is only a valid
+oracle because this ticket changes no `src/` file — verified by `git diff --stat` showing no `src/` path
+in its commit. If a later revision of this ticket touches `src/`, these two rows need a real oracle
+from the Bible chapter instead.
+
 ## T1 — AC-4 guard: ownership is re-evaluated with no death that tick
 
 `tests/integration/world/test_regional_sovereignty.py::test_ownership_reevaluated_for_region_with_no_death_that_tick`
