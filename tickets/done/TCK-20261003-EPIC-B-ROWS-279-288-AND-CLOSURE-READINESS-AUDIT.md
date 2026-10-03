@@ -27,7 +27,7 @@ chore
 P2
 
 ## Request Summary
-Records and audit only, no product code and no status change to any epic. Requested through test-architecture-reviewer (plan approved 2026-10-03, base `origin/main` c0980e27a): (1) cost-record rows for each PR merged since the last row (#279-#288), by final head, verified by full SHA through the runs and jobs API; (2) check whether a test already asserts that `scenario_lane_paths` classifies a `src/progression/**` path as a trigger; (3) share the cost summary with the feature teams and record the date; (4) a closure-readiness table in `INDEX.md` for every criterion of Epics A-D.
+Records, audit and an owner-decided closure; no product code. The audit itself changes no epic status; the same day the user's decisions D1 and D2 (relayed by test-architecture-reviewer) closed all four test-architecture epics (A-D), which is folded in. Requested through test-architecture-reviewer (plan approved 2026-10-03, base `origin/main` c0980e27a): (1) cost-record rows for each PR merged since the last row (#279-#288), by final head, verified by full SHA through the runs and jobs API; (2) check whether a test already asserts that `scenario_lane_paths` classifies a `src/progression/**` path as a trigger; (3) share the cost summary with the feature teams and record the date; (4) a closure-readiness table in `INDEX.md` for every criterion of Epics A-D.
 
 ## Scope
 - Epic B cost record: 10 rows (#279-#288), a 2026-10-03 update paragraph with current totals (18 PRs, 23 rows; lane ran on 7 PRs, 34-52 s), the "~10 relevant PRs" statement made plainly (not satisfied if it means the lane ran), the new-job-layout marking per run, and the cost-sharing record.
