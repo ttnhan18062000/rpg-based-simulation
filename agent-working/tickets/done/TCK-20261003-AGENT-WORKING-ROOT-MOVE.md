@@ -198,15 +198,15 @@ by one rule (`<root>/` -> `agent-working/<root>/`, generated indexes -> `agent-w
 | `src/` | closed (no runtime path reads besides the dashboard ingest) |
 | `CLAUDE.md`, `AGENTS.md` | closed; owner-confirmed, `AGENTS.md` regenerated |
 
-AC 9 status: the config sweep is closed and a hand-run `implement-ticket` hotfix was done on throwaway `TCK-20261003-PATH-MAP-INDEX-REBUILD-COMMANDS` (Scope through Finalize, Verify `READY_TO_CLOSE`, 10 events and 1 run recorded under `agent-working/agent-monitoring/data/2026-W40/`, merged in #293). A native `Workflow` run first failed on a use-before-define defect in `implement-ticket.js` (fixed by `TCK-20261003-IMPLEMENT-TICKET-JS-USE-BEFORE-DEFINE`, #295); a native run on a fresh throwaway is still to do, with the owner's opt-in already given, and is NOT verified by this closure. Open side effect: the `search_docs` MCP server of an already-running session still points at the old index path until restarted.
+AC 9 status: AC 9 as written is met by the hand-run. The config sweep is closed, and a hand-run `implement-ticket` hotfix was done on throwaway `TCK-20261003-PATH-MAP-INDEX-REBUILD-COMMANDS` (Scope through Finalize, Verify `READY_TO_CLOSE`; 10 events and 1 run recorded in `agent-working/agent-monitoring/data/2026-W40/old-root-residue-guard.{events,runs,working_log}.jsonl`, merged in #293). A native `Workflow` run was attempted once after #295 (which fixed a use-before-define defect, `TCK-20261003-IMPLEMENT-TICKET-JS-USE-BEFORE-DEFINE`). It reached only Scope and failed with `ReferenceError: bash is not defined` at `implement-ticket.js:553` (the Scope-phase tag-registry check), because the native runtime has no `bash`; that is not caused by the move. It wrote no run or event records, because the exception skipped `writeMonitoring`. The fix belongs to the native-port epic children `TCK-20260930-NATIVE-PORT-ATTESTED-GATE-SITES` and `TCK-20260930-NATIVE-PORT-SMALL-TICKET-NATIVE-RUN`, which are the owner's call. The criterion was not reworded. Open side effect: the `search_docs` MCP server of an already-running session still points at the old index path until restarted.
 
 The standard-tier staging artifacts were never written during the move; they were reconstructed afterwards and say so (`agent-working/stored_artifacts/TCK-20261003-AGENT-WORKING-ROOT-MOVE/`).
 
 ## Test Summary
-See the retroactive `test_plan.md`: scoped suites green in a clean clone at 9175b8770 except 7 `codebase_health` tests needing `complexipy`; hand-run hotfix passed; native `Workflow` run not yet performed.
+See the retroactive `test_plan.md`: scoped suites green in a clean clone at 9175b8770 except 7 `codebase_health` tests needing `complexipy`; hand-run hotfix passed; the one native `Workflow` run failed at Scope on `bash is not defined` (see Implementation Notes).
 
 ## Files Changed
 See PR #289 (7,640 pure renames, about 3,200 rewritten references, `tools/agent_working_paths.py`, guard test, path-map doc).
 
 ## Completion Summary
-All agent-working state lives under `agent-working/`; Python reaches the roots only through `tools/agent_working_paths.py`; closed history is frozen. Landed in PR #289. Follow-ups: #293 (index residue), #295 (workflow helper order). AC 9 is met by the hand-run; the native `Workflow` run remains outstanding.
+All agent-working state lives under `agent-working/`; Python reaches the roots only through `tools/agent_working_paths.py`; closed history is frozen. Landed in PR #289. Follow-ups: #293 (index residue), #295 (workflow helper order). AC 9 as written is met by the hand-run; the one native `Workflow` run reached only Scope and failed because the native runtime has no `bash` (native-port epic work).
