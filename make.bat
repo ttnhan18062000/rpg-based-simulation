@@ -63,7 +63,7 @@ exit /b %errorlevel%
 
 :install-py
 echo Installing Python dependencies...
-pip install -r requirements.txt
+uv sync
 exit /b %errorlevel%
 
 :install-fe

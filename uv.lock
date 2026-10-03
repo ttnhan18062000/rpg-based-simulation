@@ -2290,7 +2290,6 @@ search-mcp = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "complexipy" },
     { name = "coverage" },
     { name = "httpx" },
     { name = "hypothesis" },
@@ -2299,8 +2298,11 @@ dev = [
     { name = "mypy" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
-    { name = "ruff" },
     { name = "websockets" },
+]
+lint = [
+    { name = "complexipy" },
+    { name = "ruff" },
 ]
 profiling = [
     { name = "memray" },
@@ -2334,7 +2336,6 @@ provides-extras = ["knowledge", "search-mcp"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "complexipy", specifier = "==8.0.1" },
     { name = "coverage", specifier = ">=7.0.0" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "hypothesis", specifier = ">=6.0.0" },
@@ -2343,8 +2344,11 @@ dev = [
     { name = "mypy" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-asyncio", specifier = ">=1.0.0" },
-    { name = "ruff", specifier = "==0.16.10" },
     { name = "websockets", specifier = ">=12.0" },
+]
+lint = [
+    { name = "complexipy", specifier = "==8.0.1" },
+    { name = "ruff", specifier = "==0.16.10" },
 ]
 profiling = [
     { name = "memray", specifier = ">=1.0.0" },

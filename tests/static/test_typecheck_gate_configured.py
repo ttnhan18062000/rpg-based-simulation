@@ -32,3 +32,11 @@ def test_ci_workflow_has_a_mypy_step():
     text = (_REPO_ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8")
     assert re.search(r"name:\s*mypy", text) is not None
     assert "mypy src/" in text
+
+
+def test_typecheck_job_gets_mypy_from_the_lockfile_not_a_separate_pip_install():
+    # mypy is in the `dev` dependency group (TCK-20261002-UV-DECLARE-AND-LOCK), so the uv sync
+    # step already installs it (TCK-20261002-UV-REMAINING-CI-JOBS removed `pip install mypy`).
+    text = (_REPO_ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8")
+    assert "pip install mypy" not in text
+    assert re.search(r'^\s*"mypy",?\s*$', (_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"), re.MULTILINE)
