@@ -57,9 +57,18 @@ def test_strict_problem_none_when_all_present_and_pinned():
     ) is None
 
 
-def _run_pytest(tmp_path: Path, binary: str, *, strict_on: bool) -> tuple[dict[str, int], str]:
+def _run_pytest(tmp_path: Path, binary: str, *, strict_on: bool, bwrap: bool = True) -> tuple[dict[str, int], str]:
+    """Run one `needs_aseprite` file in a child pytest. The child's PATH is a directory of its own holding only a stub `bwrap` (or nothing),
+    so the result never depends on whether the host has bwrap (a CI runner without it must give the same answer)."""
     junit = tmp_path / "out.xml"
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir(exist_ok=True)
+    if bwrap:
+        stub = bin_dir / "bwrap"
+        stub.write_text("#!/bin/sh\nexit 0\n")
+        stub.chmod(stub.stat().st_mode | stat.S_IXUSR)
     env = {k: v for k, v in os.environ.items() if k != strict.ENV_VAR}
+    env["PATH"] = str(bin_dir)  # the child is started by absolute interpreter path; nothing else is needed on PATH
     env["ASEPRITE_MCP_BINARY"] = binary
     if strict_on:
         env[strict.ENV_VAR] = "1"
@@ -94,6 +103,15 @@ def test_default_missing_binary_skips_every_test(tmp_path):
     counts, _ = _run_pytest(tmp_path, "/nonexistent/aseprite", strict_on=False)
     assert counts["skipped"] == counts["tests"]
     assert counts["failures"] + counts["errors"] == 0
+
+
+def test_strict_missing_bwrap_fails_every_test_with_that_reason_even_with_a_good_binary(tmp_path):
+    good = tmp_path / "aseprite"
+    good.write_text("#!/bin/sh\necho 'Aseprite 1.3.18.6-x64'\n")
+    good.chmod(good.stat().st_mode | stat.S_IXUSR)
+    counts, report = _run_pytest(tmp_path, str(good), strict_on=True, bwrap=False)
+    assert _failing_with(report, "strict mode: bwrap is missing") == counts["tests"]
+    assert counts["skipped"] == 0
 
 
 def test_strict_wrong_reported_version_fails_the_session(tmp_path):

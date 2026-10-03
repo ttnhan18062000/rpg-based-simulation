@@ -108,6 +108,8 @@ installing Aseprite. This ticket makes the local evidence strict and the CI skip
   - skip hook made unconditional -> `test_default_missing_binary_skips_every_test` fails.
   - version comparison disabled (`if found != pinned` -> `if False`) -> 3 tests fail (two unit, one subprocess).
 
+- CI follow-up (PR #309): `test_strict_wrong_reported_version_fails_the_session` ran a child pytest with the host's PATH, so on a runner without `bwrap` strict mode reported "bwrap is missing" before the version check (CI run 37139373409). The child now gets a PATH of its own holding only a stub `bwrap` (or nothing), so the result never depends on the host; a new test pins the "bwrap is missing" reason with a good binary. Proof: the old file with a bwrap-less PATH fails with exactly CI's message (1 failed, 17 passed); the new file passes with and without bwrap on the host PATH (19 passed each).
+
 ## Files Changed
 - `tests/visual_assets/conftest.py`, new `tests/visual_assets/strict_aseprite.py`
 - `visual_assets/drawing/config.py` (`ASEPRITE_VERSION`)
