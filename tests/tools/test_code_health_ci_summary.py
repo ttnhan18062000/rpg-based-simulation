@@ -80,3 +80,38 @@ def test_a_passing_check_writes_one_line_and_no_warning(seeded, capsys):
 def test_without_the_new_flags_check_behaves_as_before(seeded, capsys):
     assert _run(seeded, "check", *_scan_arg(seeded)) == 0
     assert "::warning::" not in capsys.readouterr().out
+
+
+def test_an_unusable_registry_still_writes_a_summary_line_and_a_warning_then_exits_2(seeded, capsys):
+    (seeded / "reg.jsonl").write_text("{not json\n")
+    out = seeded / "summary.md"
+    out.write_text("earlier step output\n")
+    assert _run(seeded, "check", *_scan_arg(seeded), "--summary-out", str(out), "--annotate") == 2
+    captured = capsys.readouterr()
+    assert "::warning::code-health could not run (advisory):" in captured.out
+    assert "error:" in captured.err, "the original stderr error is still printed"
+    text = out.read_text()
+    assert text.startswith("earlier step output\n")
+    assert "**Code health (advisory):** could not run:" in text and text.count("\n") == 2
+
+
+def test_an_unusable_tool_still_writes_a_summary_line_and_a_warning_then_exits_2(repo, monkeypatch, capsys):
+    from tools.code_health import scan
+
+    def broken(root, out_dir):
+        raise scan.ToolUnavailableError("npx --yes jscpd@5.4.0 exited 1: registry unreachable\nsecond line")
+
+    monkeypatch.setattr(scan, "run_scan", broken)
+    out = repo / "summary.md"
+    assert _run(repo, "check", "--summary-out", str(out), "--annotate") == 2
+    warning = [l for l in capsys.readouterr().out.splitlines() if l.startswith("::warning::")]
+    assert warning == ["::warning::code-health could not run (advisory): npx --yes jscpd@5.4.0 exited 1: registry unreachable second line"]
+    assert out.read_text() == "**Code health (advisory):** could not run: npx --yes jscpd@5.4.0 exited 1: registry unreachable second line\n"
+
+
+def test_without_the_flags_an_unusable_tool_prints_nothing_extra(repo, monkeypatch, capsys):
+    from tools.code_health import scan
+
+    monkeypatch.setattr(scan, "run_scan", lambda root, out_dir: (_ for _ in ()).throw(scan.ToolUnavailableError("x not found")))
+    assert _run(repo, "check") == 2
+    assert "::warning::" not in capsys.readouterr().out

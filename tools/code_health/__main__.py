@@ -13,7 +13,8 @@ unusable, 0 otherwise. This is the entry point behind `make code-health` and the
 `code-health` CI job (which turns the exit code into a job summary and a warning annotation, and
 never fails the PR). `check` also takes `--summary-for FILE` (paths the PR changed, one per line),
 `--summary-out PATH` (append a Markdown summary, changed files first) and `--annotate` (print a
-GitHub `::warning::` line when the exit code is non-zero).
+GitHub `::warning::` line when the exit code is non-zero). If the check cannot run (a tool or the
+registry is unusable) it still writes one "could not run" summary line and warning, then exits 2.
 """
 
 from __future__ import annotations
@@ -37,9 +38,28 @@ def _findings(args: argparse.Namespace, root: Path) -> list[Finding]:
     return scan.collect_findings(out_dir, root, args.scan_root)
 
 
+def _report_could_not_run(args: argparse.Namespace, exc: Exception) -> None:
+    """Say so in the job summary and with a warning when `check` cannot run, then let the error propagate.
+
+    Without this a broken tool (npx, a missing complexipy, a bad registry) would exit 2 with only stderr, and
+    the advisory CI job, whose step is `continue-on-error`, would look exactly like a clean pass.
+    """
+    reason = " ".join(f"{exc}".split())[:300] or type(exc).__name__
+    if args.summary_out:
+        with args.summary_out.open("a", encoding="utf-8") as handle:
+            handle.write(f"**Code health (advisory):** could not run: {reason}\n")
+    if args.annotate:
+        print(f"::warning::code-health could not run (advisory): {reason}")
+
+
 def _cmd_check(args: argparse.Namespace, root: Path, path: Path) -> int:
-    rows = registry.load_rows(path, root, check_files=False)
-    result = ratchet.compare(_findings(args, root), rows)
+    try:
+        rows = registry.load_rows(path, root, check_files=False)
+        findings = _findings(args, root)
+    except Exception as exc:
+        _report_could_not_run(args, exc)
+        raise
+    result = ratchet.compare(findings, rows)
     print(ratchet.format_report(result, args.limit))
     if args.summary_out:
         changed = args.summary_for.read_text(encoding="utf-8").split() if args.summary_for else []
