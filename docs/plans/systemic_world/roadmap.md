@@ -758,6 +758,11 @@ Region ownership (FAC-010) stays on its own track.
    Otherwise mortality stays parked as a disclosed behaviour change.
 5. **World-definition split first in the foundation programme** (`TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`, with `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` merged toward it; check `docs/architecture/world_repository_layout.md` first). It goes first because every later probe and rule-map slice collects evidence by running worlds, and a world id that resolves to different module sets by entry point makes that evidence incomparable.
 6. **Memo row 7 (b) before (a).** Registry binding changes the mechanism set that (a) is defined over. Then the rule map, sliced by mechanism cluster (3–5 mechanisms per pipeline ticket).
+   - **Added 2026-10-03 (owner): "executes" vs "has an effect".** `TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP` moves from parked feature into this foundation scope. Sequencing is the planner's; it is recommended alongside (b) and before (a). Three measured instances show a mechanism that runs on its cadence while changing no world state:
+     - `FactionInfluenceService`: ~230 calls, zero ownership writes;
+     - the region-owner `-1` sentinel path: reachable, never reached;
+     - the world-clock raid: 12 of 12 raiders inert (memo row 9).
+     A rule map whose verification cannot tell these apart from working mechanisms overstates what is realised.
 7. **Yield checkpoint after the first two rule-map slices.** Report defects found per mechanism. If both slices read zero, re-scope before continuing.
 
 Feature *design* in the catalog and this roadmap may continue alongside. Feature *implementation planning* waits for row 7.
@@ -814,7 +819,7 @@ question above already has a working answer today.
 
 ## 10. Owner decisions
 
-Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has eight
+Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has nine
 entries:
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
@@ -823,7 +828,8 @@ entries:
 5. how world time scale relates to feasible run length;
 6. where player-inference evidence will come from;
 7. whether RPG features wait for the semantic foundation (decided 2026-10-02: they do);
-8. which perception is authoritative (decided 2026-10-02: the perception that runs today).
+8. which perception is authoritative (decided 2026-10-02: the perception that runs today);
+9. whether the global world-clock raid exists (decided 2026-10-03: retired).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,

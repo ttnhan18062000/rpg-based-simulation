@@ -34,22 +34,24 @@ _EXPECTED_LITERAL_VALUES_MULTISET = [
     "FINALIZE_INCOMPLETE",
     "FINALIZE_INCOMPLETE",
     "DONE",
+    "WORKFLOW_ERROR",
 ]
 
 
-def test_terminal_status_extractor_finds_all_14_literal_call_sites():
+def test_terminal_status_extractor_finds_all_15_literal_call_sites():
     """Was 13 (TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER); TEST_SCOPE_COVERAGE_FAILED added
     2026-08-18 by TCK-20260818-KGMCP-TICKET-VERIFY-SCOPED-REGRESSION-GAP — a genuine new terminal
-    status, not drift."""
+    status, not drift. 15 with WORKFLOW_ERROR (TCK-20261003-IMPLEMENT-TICKET-JS-NO-MONITORING-ON-EXCEPTION),
+    the status the top-level exception recorder writes."""
     entries = extract_literal_statuses(_WORKFLOW_JS_PATH)
 
-    assert len(entries) == 14, f"expected 14 literal call sites, found {len(entries)}"
+    assert len(entries) == 15, f"expected 15 literal call sites, found {len(entries)}"
     assert sorted(e["value"] for e in entries) == sorted(_EXPECTED_LITERAL_VALUES_MULTISET)
     assert all(e["kind"] == "literal" for e in entries)
 
     distinct_values = {e["value"] for e in entries}
-    assert len(distinct_values) == 13, (
-        f"expected 13 distinct literal values (FINALIZE_INCOMPLETE deduping to one value from "
+    assert len(distinct_values) == 14, (
+        f"expected 14 distinct literal values (FINALIZE_INCOMPLETE deduping to one value from "
         f"two call sites), got {len(distinct_values)}: {sorted(distinct_values)}"
     )
 
@@ -92,8 +94,8 @@ def test_scope_agent_failed_handling_is_an_explicit_documented_decision():
 def test_extract_all_terminal_statuses_dedupes_by_value_not_call_site_count():
     all_statuses = extract_all_terminal_statuses(_WORKFLOW_JS_PATH)
 
-    assert len(all_statuses) == 16, (
-        f"expected 16 distinct terminal-status values (13 literal + 2 verdict-derived + 1 "
+    assert len(all_statuses) == 17, (
+        f"expected 17 distinct terminal-status values (14 literal + 2 verdict-derived + 1 "
         f"bypass), got {len(all_statuses)}: {sorted(e['value'] for e in all_statuses)}"
     )
 

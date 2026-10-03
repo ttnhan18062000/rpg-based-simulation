@@ -69,6 +69,38 @@ const sh = async (cmd, label) => {
 }
 const shOmit = async (cmd) => (legacyBash ? legacyBash(cmd) : '')
 
+// Uncaught-exception recorder (TCK-20261003-IMPLEMENT-TICKET-JS-NO-MONITORING-ON-EXCEPTION). Every run must record a
+// run entry and an event; writeMonitoring() is otherwise only reached on named terminal statuses, so an exception
+// thrown between them (the first native run died on `bash is not defined`) left no record. The catch at the bottom of
+// this file calls this, then rethrows the ORIGINAL error. Best-effort: a recorder failure is swallowed, never masks it.
+// `workflowMonitoringStarted` is set by writeMonitoring() so an exception inside or after a normal write cannot write
+// a second run row (the duplicate-run ratchet counts duplicates). `workflowErrorHook` is assigned once tid, events and
+// writeMonitoring exist; before that, the fallback below writes a minimal record the way SCOPE_AGENT_FAILED does.
+let workflowMonitoringStarted = false
+let workflowErrorHook = null
+const workflowErrorText = (err) => String((err && err.message) || err || 'unknown error').replace(/[^A-Za-z0-9 .:,_()\-]/g, ' ').slice(0, 150)
+const recordWorkflowError = async (err) => {
+  if (workflowMonitoringStarted) return
+  try {
+    if (workflowErrorHook) {
+      await workflowErrorHook(err)
+      return
+    }
+    const errTsRaw = await sh('date -u +%Y-%m-%dT%H:%M:%SZ')
+    const errTs = (errTsRaw || '').trim() || null
+    const errRunId = ticketId || `WORKFLOW-ERROR-${(errTs || '').replace(/[^0-9]/g, '')}`
+    await sh(
+      `python3 tools/agent-monitoring/record_events.py --default-ts "${errTs}" --data '[{"run_id":"${errRunId}","seq":1,"phase":"Scope","agent":"implement-ticket-orchestrator","status":"failed","summary":"WORKFLOW_ERROR before Scope finished: ${workflowErrorText(err)}","ts":"${errTs}"}]' 2>/dev/null || true`
+    )
+    await sh(
+      `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${errRunId}","start_ts":"${errTs}","end_ts":"${errTs}","workflow":"implement-ticket","tier":"${tierOverride || 'standard'}","final_status":"WORKFLOW_ERROR","agent_count":1,"execution_mode":"pipeline"}' 2>/dev/null || true`
+    )
+  } catch (recorderError) { /* best-effort: the original error is rethrown by the caller */ }
+}
+
+try {
+
+
 // Native runtime has no clock and no shell, so the caller supplies the run's identity up front
 // (TCK-20260930-NATIVE-PORT-INPUT-SITES). Checked before any work so a missing value cannot leave a
 // half-scoped ticket behind. The legacy runtime keeps generating both itself (unchanged).
@@ -171,6 +203,39 @@ const TICKET_SCHEMA = {
     summary: { type: 'string', description: 'One sentence: what was scoped and any conflicts found (≤200 chars)' },
     ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` run at start of this phase' },
   },
+}
+
+// Orchestrator-side ts capture — replaces the former per-prompt "Step 0: run `date -u ...`"
+// agent-prompt-text instruction (TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). Call this once,
+// immediately before writeSidecar/the paired `await agent(...)` call, so the captured value can be
+// wired directly into pushEvent — never depends on agent prose compliance. Called BEFORE
+// writeSidecar at each site so C1's writeSidecar-to-agent() adjacency strings (tests/tools/
+// test_current_run_sidecar_orchestrator.py) are untouched by this insertion.
+const captureTs = async () => {
+  const out = await shOmit('date -u +%Y-%m-%dT%H:%M:%SZ')
+  return (out || '').trim() || null
+}
+
+const captureEpochMs = async () => {
+  const out = await shOmit('date +%s%3N')
+  const parsed = parseInt((out || '').trim(), 10)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+// Orchestrator-side ticket-location resolution (TCK-20260711-EPIC-SCOPE-ORPHAN-FIX). Replaces
+// the former Step 1a/1b/1c agent-prompt-text file search + unconditional copy: `## Tier` is a
+// static fact already on disk, locatable by the same mechanical search the agent used to perform
+// itself, so the orchestrator resolves it deterministically before the ticket-scoper agent() call
+// runs. Moves (copy-then-delete) a agent-working/tickets/todos/ original when tier is epic — epic tier returns
+// immediately after Scope and never reaches Finalize's cleanup rm step, so leaving the copy-only
+// behavior for epic tier created a permanent duplicate. Copies (leaving the todos original in
+// place) for every other tier, preserving existing Finalize-reconciliation behavior.
+const resolveScopeTicketLocation = async (id) => {
+  const out = await sh(`python3 tools/agent-monitoring/scope_ticket_relocate.py "${id}" 2>/dev/null`)
+  const markerIndex = (out || '').indexOf('MARKER:')
+  if (markerIndex === -1) return null
+  try { return JSON.parse(out.slice(markerIndex + 'MARKER:'.length).trim()) }
+  catch (e) { return null }
 }
 
 const scopeOrphanInfo = ticketId ? await resolveScopeTicketLocation(ticketId) : null
@@ -418,44 +483,11 @@ if sid:
   )
 }
 
-// Orchestrator-side ts capture — replaces the former per-prompt "Step 0: run `date -u ...`"
-// agent-prompt-text instruction (TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). Call this once,
-// immediately before writeSidecar/the paired `await agent(...)` call, so the captured value can be
-// wired directly into pushEvent — never depends on agent prose compliance. Called BEFORE
-// writeSidecar at each site so C1's writeSidecar-to-agent() adjacency strings (tests/tools/
-// test_current_run_sidecar_orchestrator.py) are untouched by this insertion.
-const captureTs = async () => {
-  const out = await shOmit('date -u +%Y-%m-%dT%H:%M:%SZ')
-  return (out || '').trim() || null
-}
-
-const captureEpochMs = async () => {
-  const out = await shOmit('date +%s%3N')
-  const parsed = parseInt((out || '').trim(), 10)
-  return Number.isFinite(parsed) ? parsed : null
-}
-
 // Workflow-start epoch-ms, captured once, for the shadow-reviewer mechanism's
 // `workflow_wall_time_ms` field (TCK-20260904-SHADOW-REVIEWER-LOGGING) -- distinct from
 // `startTs` (an ISO string, used for run-record start_ts) and from any per-phase `captureTs()`
 // call. Read-only downstream; never mutated after this point.
 const workflowStartMs = await captureEpochMs()
-
-// Orchestrator-side ticket-location resolution (TCK-20260711-EPIC-SCOPE-ORPHAN-FIX). Replaces
-// the former Step 1a/1b/1c agent-prompt-text file search + unconditional copy: `## Tier` is a
-// static fact already on disk, locatable by the same mechanical search the agent used to perform
-// itself, so the orchestrator resolves it deterministically before the ticket-scoper agent() call
-// runs. Moves (copy-then-delete) a agent-working/tickets/todos/ original when tier is epic — epic tier returns
-// immediately after Scope and never reaches Finalize's cleanup rm step, so leaving the copy-only
-// behavior for epic tier created a permanent duplicate. Copies (leaving the todos original in
-// place) for every other tier, preserving existing Finalize-reconciliation behavior.
-const resolveScopeTicketLocation = async (id) => {
-  const out = await sh(`python3 tools/agent-monitoring/scope_ticket_relocate.py "${id}" 2>/dev/null`)
-  const markerIndex = (out || '').indexOf('MARKER:')
-  if (markerIndex === -1) return null
-  try { return JSON.parse(out.slice(markerIndex + 'MARKER:'.length).trim()) }
-  catch (e) { return null }
-}
 
 // Mirrors tools/gate_checks/done_checker_static.py's classify_checklist_failure() — updated in
 // lockstep with that function's TCK-20260720-TAG-TOUCHPOINT-CLEANUP redesign. The prior hand-synced
@@ -496,6 +528,7 @@ print('TAG_UNREG_JSON:' + ('true' if _frontmatter_has_unregistered_tags(sys.argv
 }
 
 const writeMonitoring = async (finalStatus) => {
+  workflowMonitoringStarted = true
   const eventsJson = JSON.stringify(events)
   const eventsCount = events.length
   // Pre-embed startTs so the agent only substitutes one placeholder (<END_TS>).
@@ -542,6 +575,14 @@ Return "monitoring written" or "monitoring write failed: <reason>".`,
   if (!result) {
     log('WARNING: agent-monitoring write agent returned null (non-fatal)')
   }
+}
+
+// Registered once writeMonitoring exists: an uncaught exception from here on records one error event (phase = the last
+// phase an event was pushed for, or Scope) and the run row via the normal writer (see recordWorkflowError above).
+workflowErrorHook = async (err) => {
+  const reachedPhase = events.length > 0 ? events[events.length - 1].phase : 'Scope'
+  pushEvent(reachedPhase, 'implement-ticket-orchestrator', 'failed', `WORKFLOW_ERROR after ${reachedPhase}: ${workflowErrorText(err)}`, null)
+  await writeMonitoring('WORKFLOW_ERROR')
 }
 
 // Tag-registry check (TCK-20260706-SCOPE-TAG-REGISTRY-CHECK): orchestrator-run, not
@@ -2120,4 +2161,8 @@ return {
   message: monitoringWarning
     ? `WARNING: agent-monitoring write for this run could not be verified (${monitoringWarning}). Ticket is otherwise complete — investigate agent-working/agent-monitoring/data/YYYY-Www/<branch>.runs.jsonl and <branch>.events.jsonl manually.`
     : undefined,
+}
+} catch (workflowError) {
+  await recordWorkflowError(workflowError)
+  throw workflowError
 }

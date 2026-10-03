@@ -14,6 +14,22 @@ def test_1000_tick_stability():
     1. Entity count staying within reasonable bounds (No explosion/extinction).
     2. Resource node replenishment.
     3. Regional trauma and hazard progression.
+
+    TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION lowered the monster
+    floor from 2 to 1, and the reason is worth knowing rather than treating as a relaxed number.
+
+    This fixture declares **no places** -- no CAMP, so the camp-triggered raid cannot fire; no
+    calamity intensity, so no boss spawns. The retired global world-clock raid was therefore this
+    synthetic world's *only* source of new monsters, injecting 3 every 500 ticks. The old floor of
+    2 was being met by those raiders -- which, measured over 2 corpus worlds, spawned outside every
+    region and never moved or fought. The floor was satisfied by inert off-map debris, so it was
+    pinning the count of a non-event, not a world semantic.
+
+    What this test can honestly guarantee with no monster source in its fixture is "no explosion and
+    not literal extinction", hence >= 1. Real corpus worlds all carry a CAMP and so retain a
+    legitimate monster source; a richer fixture would be the better long-term fix, and is
+    deliberately not done here -- this ticket retires a mechanic and does not redesign a stress
+    fixture.
     """
     # 1. Setup World
     generator = EntityGenerator(seed=42)
@@ -42,7 +58,9 @@ def test_1000_tick_stability():
         if t % 100 == 0:
             alive_monsters = [e for e in state.entities.values() if e.identity.role == EntityRole.MONSTER and e.combat.alive]
             # World should not be empty, nor should it have 1000s of monsters
-            assert 2 <= len(alive_monsters) <= 100, f"Monster count unstable at tick {t}: {len(alive_monsters)}"
+            # Floor 1, not 2: see the docstring -- the old floor was met by the retired global
+            # raid's inert off-map raiders, and this fixture has no other monster source.
+            assert 1 <= len(alive_monsters) <= 100, f"Monster count unstable at tick {t}: {len(alive_monsters)}"
             
     # 3. Final Assertions
     alive_monsters = [e for e in state.entities.values() if e.identity.role == EntityRole.MONSTER and e.combat.alive]
@@ -53,5 +71,5 @@ def test_1000_tick_stability():
     print(f"Total resource nodes: {total_nodes}")
     print(f"Region Forest Trauma: {state.regions['forest_1'].trauma_score}")
     
-    assert 2 <= len(alive_monsters) <= 50, "Final monster count should be stable."
+    assert 1 <= len(alive_monsters) <= 50, "Final monster count should be stable."
     assert total_nodes >= 2, "Resources should have replenished."

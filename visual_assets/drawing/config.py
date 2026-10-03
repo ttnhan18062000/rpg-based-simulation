@@ -12,7 +12,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 LUA_PATH = HERE / "backend" / "lua" / "ops.lua"
 # Pinned hash of backend/lua/ops.lua; bump deliberately with `python -m visual_assets.drawing.pin`.
-LUA_SHA256 = "efa8638607c4686717bb7a41ff0c4e1e7d7f1c543b6d032b3528143534b50a94"
+LUA_SHA256 = "ad42d215cea94f6b016f36abeaa344cdb912124e0c7881c2e9616e356883d9d0"
 
 WORKSPACE = Path(
     os.environ.get("ASEPRITE_MCP_WORKSPACE", Path.home() / ".cache" / "rpg-aseprite-mcp")

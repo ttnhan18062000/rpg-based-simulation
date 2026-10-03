@@ -9,6 +9,8 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+# visual_assets/store/build/ is a source package (sandboxed export), not build output; the rule above would hide it.
+!visual_assets/store/build/
 develop-eggs/
 dist/
 downloads/
@@ -283,6 +285,12 @@ agent-working/.index/agent-monitoring-index/
 # Parity-ledger derived SQLite index (local only — rebuild with: python3 tools/parity_index.py build)
 # TCK-20260731-PARITY-INDEX-IMPORTER
 agent-working/.index/parity-index/
+
+# Pre-#289 residue: worktrees that built an index before the agent-working/ move still hold these at the old root.
+# Local-only; delete when no worktree has them. Never track them.
+/knowledge-index/
+/agent-monitoring-index/
+/parity-index/
 
 # Docusaurus
 website/node_modules/

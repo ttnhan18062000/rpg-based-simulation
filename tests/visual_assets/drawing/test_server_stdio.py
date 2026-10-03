@@ -15,7 +15,15 @@ def test_exact_tool_list(tmp_path):
             return {t.name: t for t in (await s.list_tools()).tools}
 
     tools = run(go())
-    assert set(tools) == EXPECTED_TOOLS
+    assert set(tools) == EXPECTED_TOOLS and len(tools) == 19
+    # the gates are not on this server: no adopt, revoke, build, release, gc, verify, activate or delete tool (the store tools are read-only plus submit)
+    for name in tools:
+        for gate in ("adopt", "revoke", "build", "release", "gc", "verify", "activate", "delete", "approve", "publish"):
+            assert gate not in name, name
+    for name, tool in tools.items():  # and no tool takes a human decision as an argument
+        parameters = set(tool.inputSchema.get("properties", {}))
+        assert not parameters & {"approver", "approver_role", "confirm", "decided_at", "source_asset_id", "visual_key"}, (name, parameters)
+    assert "NOT an adoption" in tools["export_handoff"].description
     desc = tools["apply_ops"].description
     for op in ("delete_layer", "delete_frame", "resize_canvas"):
         assert op in desc
@@ -34,3 +42,17 @@ def test_bad_call_is_a_tool_error_carrying_the_adapter_message(tmp_path):
     assert bad_dim.isError and "width must be an integer in [1, 128]" in text(bad_dim)
     assert missing.isError and "no such sprite: ghost" in text(missing)
     assert not (tmp_path / "ws" / "sprites" / "evil").exists()
+
+
+def test_export_handoff_rejects_bad_requests_without_writing(tmp_path):
+    async def go():
+        async with session(tmp_path / "ws") as s:
+            return [
+                await s.call_tool("export_handoff", {"name": "ghost", "revision": "r0001"}),
+                await s.call_tool("export_handoff", {"name": "../evil", "revision": "r0001"}),
+                await s.call_tool("export_handoff", {"name": "ghost", "revision": "latest"}),
+            ]
+
+    for result in run(go()):
+        assert result.isError
+    assert not (tmp_path / "ws" / "handoffs").exists()

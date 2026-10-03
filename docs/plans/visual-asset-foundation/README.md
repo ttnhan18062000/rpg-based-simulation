@@ -11,7 +11,7 @@ tags: [assets, planning, architecture, mcp]
 
 ## Status
 
-**Structure approved by the user on 2026-10-02 (root folder `visual_assets/`). Only ticket 1 (foundation init) is in progress; the store logic is not built yet.** It proposes where the Aseprite drawing tools
+**Structure approved by the user on 2026-10-02 (root folder `visual_assets/`). BUILT: ticket 1 (foundation init) is merged (PR #286); tickets 2-6 are built on branch `visual-assets-store`. This page keeps the proposal's text; the section "As built: deviations from this proposal" at the end lists every place the build differs.** It proposed where the Aseprite drawing tools
 (today in `experiments/aseprite_mcp/`, PR #286) and a new asset store live in the project, how they are
 layered, and which parts of the existing plan packages they implement. Vocabulary, identities and gates are
 taken from `docs/brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md` (§6-§9) and
@@ -89,8 +89,10 @@ visual_assets/                     # ONE ROOT FOLDER: code and managed data toge
       release.py                   #   ReleaseCandidateManifest
       definitions.py               #   semantic registry entries (visual_key, family, allowed variants)
     intake/
-      quarantine.py                #   bounded copy into .quarantine, never trusts producer paths
-      validator.py                 #   claims vs staged bytes: hashes, format, bounds, symlink/traversal, licence state
+      quarantine.py                #   bounded copy into .quarantine, never trusts producer paths (built)
+      aseprite.py  png.py          #   bounded pure readers for the facts intake checks (built)
+      validator.py                 #   claims vs staged bytes: hashes, format, bounds, licence state, one policy for every producer (built)
+      service.py                   #   intake / review / list / show; writes IntakeResult inside the quarantine (built)
     adoption.py                    #   HUMAN-GATED: adopt an intake-passed candidate as a new source revision
     build/
       exporter.py                  #   allowlisted export of sources -> generated artifacts (sandboxed Aseprite)
@@ -101,7 +103,8 @@ visual_assets/                     # ONE ROOT FOLDER: code and managed data toge
     verify.py                      #   whole-store integrity: every record <-> bytes <-> hashes (pure Python, runs in CI)
     revoke.py                      #   quarantine/revoke a candidate or source revision; blocks build eligibility
     gc.py                          #   reachability-based dry-run GC of .quarantine and unreferenced generated files
-    cli.py  __main__.py            #   python -m visual_assets.store <intake|adopt|build|release|verify|revoke|gc|list|show>
+    cli.py  __main__.py            #   python -m visual_assets.store <intake|review|adopt|revoke|audit|list|show> built; build|release|verify|gc later
+    records.py catalogwrite.py audit.py   # safe record reads; all-or-nothing tracked publish; read-only chain audit (built)
     README.md
 
   catalog/                         # MANAGED STORE DATA (proposal §8 logical tree, made physical)
@@ -114,7 +117,9 @@ visual_assets/                     # ONE ROOT FOLDER: code and managed data toge
         r0001.aseprite               #   adopted editable source, immutable revision
         r0001.source.json            #   SourceRecord (hash, parent, adoption_id)
     provenance/
-      intake/<intake_id>.json        #   IntakeResult (immutable)
+      intake/<intake_id>.json        #   IntakeResult (immutable); COPIED here by `adopt` only. Until then it lives in
+                                     #   .quarantine/<intake_id>/ (decided 2026-10-02: intake has no human gate and D3 says
+                                     #   nothing unaccepted enters git history)
       adoptions/<adoption_id>.json   #   AdoptionRecord (immutable)
       revocations/<id>.json
       licences/                      #   rights evidence references
@@ -170,8 +175,18 @@ compose    ->  api, technique
 handoff    ->  api, store.contracts                # the only link from drawing tools to the store: a typed package
 server     ->  api, compose, handoff, store (read-only functions only)
 
-store.contracts  ->  (pydantic only)
-store.*          ->  contracts, config, errors; build -> drawing.backend.sandbox (shared sandbox)
+store.config, store.errors  ->  (nothing)
+store.identities            ->  errors                      # helpers raise IdentityError
+store.contracts             ->  identities, errors, config  # + pydantic; no os/pathlib/io/time/datetime/subprocess/yaml, no open()
+store.catalog               ->  contracts, identities, errors, config  # + yaml (the only layer that may import it)
+store.intake                ->  contracts, identities, errors, config  # file I/O (quarantine); takes created_at as a parameter
+store.records / audit       ->  intake (safe reader), contracts, identities, errors, config   # read-only
+store.catalogwrite          ->  intake, errors, config     # the all-or-nothing tracked writer; drawing may never import it
+store.adoption / revoke     ->  records, catalogwrite, intake, contracts, identities, errors, config  # HUMAN-GATED; drawing may never import them
+store.cli                   ->  intake, contracts, identities, errors, config  # the only module that reads the clock
+store.__main__              ->  cli
+store.*                     ->  contracts, config, errors; build -> drawing.backend.sandbox (shared sandbox)
+# each later store layer adds its own row to STORE_ALLOWED in the boundary test; an unlisted layer fails it
 ```
 
 - Nothing under `visual_assets/` imports `src/`. `src/` never imports `visual_assets`. (Asset systems are presentation-only
@@ -186,7 +201,7 @@ store.*          ->  contracts, config, errors; build -> drawing.backend.sandbox
 
 | Command | Gate | Effect |
 |---|---|---|
-| `intake <package>` | none (agent or human) | copy into `.quarantine`, validate claims vs bytes, write an immutable `IntakeResult` |
+| `intake <package>` | none (agent or human) | copy into `.quarantine`, validate claims vs bytes, write an immutable `IntakeResult` inside the quarantine directory (nothing tracked); staging is atomic (`.tmp-*` then rename) |
 | `review <intake_id>` | none | export previews of an intake-passed candidate into the local, gitignored `.review/` area for a human to look at; writes nothing tracked |
 | `adopt <intake_id> --visual-key K --approver NAME --licence STATE` | **human** | new `sources/<id>/rNNNN` + `AdoptionRecord`; refuses a failed, revoked or already-adopted intake |
 | `build [<source_asset_id>]` | none; needs Aseprite | export adopted sources per `build-config` into `generated/` with `ArtifactRecord`s |
@@ -201,9 +216,9 @@ store.*          ->  contracts, config, errors; build -> drawing.backend.sandbox
 |---|---|---|---|
 | D1 | One root folder `visual_assets/` with `drawing/`, `store/`, `catalog/`; tests in `tests/visual_assets/` | not `src/`: that is the installable engine (`include = ["src*"]`) and asset systems must never touch simulation state; not `tools/`: 94 unrelated entries; root subsystems have precedent (`agent-working/agent-orchestration/`, `frontend/`). Underscore so it is importable; the proposal's illustrative `visual-assets/` data tree becomes `catalog/` | the store needs to ship inside the installable package |
 | D7 | Add one CI step for `tests/visual_assets` | CI lists test directories explicitly, so a new test root runs nowhere until added | never |
-| D2 | Commit adopted `.aseprite` sources directly, no Git LFS | 16-32px sources are about 1-5 KB each | sources exceed about 100 KB or history grows past an agreed size |
+| D2 | Commit adopted `.aseprite` sources directly, no Git LFS | **decided by the user 2026-10-02**: 16-32px sources are about 1-5 KB each (`MAX_SOURCE_BYTES` = 100 KiB is the reversal trigger) | sources exceed about 100 KB or history grows past an agreed size |
 | D3 | Commit generated PNGs **only for adopted assets**; candidates and anything still under review stay local in a gitignored review area. Verify the committed ones in CI by canonical pixel hash | **decided by the user 2026-10-02**: assets are not always used and are chosen carefully, so nothing unaccepted enters git history. CI has no Aseprite, so committed bytes are what makes `verify` meaningful there | CI gains Aseprite, or the frontend build takes over generation |
-| D4 | Hash artifacts by decoded pixels (canonical hash), not file bytes | PNG byte determinism across Aseprite versions is unproven | byte-exact reproducibility is demonstrated |
+| D4 | Hash artifacts by decoded pixels (canonical hash), not file bytes | **decided by the user 2026-10-02**: PNG byte determinism across Aseprite versions is unproven | byte-exact reproducibility is demonstrated |
 | D5 | Human gates are CLI-only and absent from the MCP surface | proposal §6: no agent or MCP server may collapse the gates | never without a new decision |
 | D6 | Release **candidates** only; no active pointer, no runtime resolver | deployment profile A vs B (`AM1-W01`) is not selected; activation is `AM-M6` | profile selected and M5 gates pass |
 
@@ -226,13 +241,29 @@ store.*          ->  contracts, config, errors; build -> drawing.backend.sandbox
 | `AM4-W01`..`W10` (candidate record, source/artifact separation, allowlisted build, provenance, validation, audit reconstruction, cleanup, intake, revocation) | store commands + tests, on synthetic fixtures | implemented as mechanism, `REHEARSAL_ONLY` evidence |
 | `AM1-W01`, `W03`, `W04`, `W06`-`W11`, `W13`; `AM-M5`..`M7` | not covered | open |
 
-## Proposed delivery (one epic, child tickets, same branch and PR #286)
+## Delivery (one epic, child tickets; child 1 merged in PR #286, children 2-6 land together on branch `visual-assets-store`, one PR)
 
 1. **Foundation init** (`TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT`): move and restructure the drawing tools into `visual_assets/drawing/`, tests into `tests/visual_assets/drawing/`, no behaviour change; boundary test; CI step; `.mcp.json` + launcher; `store/` and `catalog/` skeletons (READMEs and package markers only, no logic); docs and ADR; plan-package status updates.
-2. **Store contracts and identities** (`visual_assets/store/contracts`, `identities`, `definitions`), pure, fully CI-tested.
-3. **Intake**: handoff package builder in the drawing tools, quarantine, validator, `IntakeResult`.
-4. **Adoption and provenance**: human-gated `adopt`, `revoke`, records, audit reconstruction test.
-5. **Build and release candidate**: sandboxed export, canonical hash, manifest, `verify`, `gc`.
-6. **Store docs and MCP read-only store tools**: `docs/assets/store_contract.md` completed, `store_list` / `store_show` / `submit_candidate` on the server.
+2. **Store contracts and identities** (`visual_assets/store/contracts`, `identities`, `catalog/registry`), pure, fully CI-tested. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS`).
+3. **Intake**: handoff package builder in the drawing tools, quarantine, validator, `IntakeResult`. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-INTAKE`): quarantine, validator, review, the `intake` / `review` / `list` / `show` CLI, and the drawing-side `export_handoff` (16 tools).
+4. **Adoption and provenance**: human-gated `adopt`, `revoke`, records, audit reconstruction test. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-ADOPTION`).
+5. **Build and release candidate**: sandboxed export, canonical hash, manifest, `verify`, `gc`. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-BUILD-RELEASE`), together with the store's own render check at review and adoption.
+6. **Store docs and MCP read-only store tools**: `docs/assets/store_contract.md` completed, `store_list` / `store_show` / `submit_candidate` on the server. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-MCP-TOOLS`; 19 tools on the server).
 
 Tickets 2-5 each land with synthetic fixtures only. Order matters: 1 before everything; 2 before 3-5.
+
+## As built: deviations from this proposal
+
+The structure above is what was approved; the build differs in these places (each decided with the planner and recorded in the ticket that made it, and in `docs/assets/store_contract.md` and the ADR):
+
+- **Layers.** `store.contracts` also imports the store leaves `identities`, `errors`, `config`; `identities` imports `errors`. Layers added beyond the proposal: `pixels` (pure PNG decoding and the `pixels-v1` hash), `rendering` and `review` (the store's own render of the source), `records`, `catalogwrite` (all-or-nothing tracked publish), `audit`, `readmodel` (shaped read-only views for agents), and `release` is `store/release.py`, not `store/catalog/release.py`. The drawing server may import only `intake`, `readmodel` and the shared leaves.
+- **`IntakeResult` lives in the gitignored quarantine** until `adopt` copies it into `provenance/intake/` (D3: nothing unaccepted enters git history).
+- **Hash-linked provenance.** `AdoptionRecord` carries `intake_hash` and `review_hash`, `SourceRecord` carries `adoption_hash`, `ArtifactRecord` carries `source_record_hash`, so `audit_chain` and `verify` detect an edited record; a consistent edit of two linked records is caught only by git history (stated limit).
+- **Intake id** is derived from all three staged files; **handoff directories** are named `<candidate_id>--<12 hex of package.json sha256>` and `submit_candidate` takes that `handoff_id`.
+- **The store renders the source itself.** `review` records a typed `ReviewRenderCheck`; `adopt` re-renders at adoption time (never trusting a stored file), checks the review image the human opened, and refuses on a machine without Aseprite.
+- **Adoption rules beyond the proposal:** explicit `--source-asset-id` and exactly one of `--new` / `--parent`; the licence comes only from the human's arguments; `visual_key_taken`; the same source bytes cannot be adopted twice or after a revocation through another intake.
+- **Artifacts:** the PNG is named by its pixel hash and each source revision has its own record (`<hash>.<revision>.artifact.json`); release ids are ordered `rc-NNNN`; a registry key may be `optional`; one visual key maps to one artifact (one scale class `x1`).
+- **Aseprite facts checked against the real binary:** an all-opaque-black stored palette is unverifiable without decoding pixels and is quarantined (`PALETTE_UNVERIFIABLE`); the summary of every sprite carries `cels` and `aseprite_version` (one reviewed line in the pinned `ops.lua`).
+- **Local only:** the real-Aseprite tests (`U-14` open); a local intake revocation covers only this machine.
+- **Not done, as planned:** runtime activation, a resolver, Live Map/HUD consumption, signing, more than one scale class.
+

@@ -340,7 +340,7 @@ def test_capture_epoch_ms_and_workflow_start_ms_defined_once_after_capture_ts():
     workflow_start_ms_idx = source.index("const workflowStartMs = await captureEpochMs()")
     resolve_scope_idx = source.index("const resolveScopeTicketLocation = async (id)")
 
-    assert capture_ts_idx < capture_epoch_ms_idx < workflow_start_ms_idx < resolve_scope_idx
+    assert capture_ts_idx < capture_epoch_ms_idx < resolve_scope_idx < workflow_start_ms_idx
 
 
 # ---------------------------------------------------------------------------

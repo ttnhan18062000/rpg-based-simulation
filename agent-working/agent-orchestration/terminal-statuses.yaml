@@ -25,6 +25,10 @@
 # but are left as originally written per this header's own "best-effort provenance only" note;
 # the `statuses:` data below is current and authoritative.
 #
+# 2026-10-03 (TCK-20261003-IMPLEMENT-TICKET-JS-NO-MONITORING-ON-EXCEPTION): added WORKFLOW_ERROR (literal) — written by
+# the top-level exception recorder when any phase throws; it can fire in any phase, so `phases` lists them all.
+# Non-breaking addition; terminal_status_schema_version stays 1.
+#
 # `kind` vocabulary:
 #   literal         — single writeMonitoring('STRING') call site (or more than one, for a
 #                     duplicated value like FINALIZE_INCOMPLETE).
@@ -81,3 +85,6 @@ statuses:
   - value: DONE
     kind: literal
     phases: [Finalize]
+  - value: WORKFLOW_ERROR
+    kind: literal
+    phases: [Scope, Investigate, Plan, Review, Implement, Document-Update, Architecture-Verify, Test, Parity, Security-Review, Verify, Finalize]
