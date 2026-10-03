@@ -129,7 +129,9 @@ describe a `src_legacy` comparison that no longer exists. There is no size marke
 | Unit · gameplay | `unit/{strategic,combat,social,economy,resource,progression,quest,movement,motivation,tactical,scenarios,systems,actions,ai}` | PR + push |
 | Unit · infra / observability | `unit/{domains,observability,rendering,lab,lab_agent,api,cli,views,perf,entity,entities,cognition,docs,certification,tools}` (one step each) | PR + push |
 | Integration | `tests/integration` | PR + push |
-| API / tools / logging | `tests/{api,cli,tools,logging,engine,observability}` | PR + push |
+| Tools · a–e | `tests/tools/test_[a-e]*.py` (the other half of `tests/tools` is ignored by glob) | PR + push |
+| Tools · f–z | `tests/tools/test_[f-z]*.py` (likewise) | PR + push |
+| API / CLI / engine / logging | `tests/{api,cli,logging,engine,observability,visual_assets}` | PR + push |
 | Agent orchestration / codex / replay | all 12 `tests/agent_*` | PR + push |
 | Simulation quality | `tests/simulation_quality` | PR + push |
 | Architecture / docs / static | `tests/{architecture,docs,integrity,static,refactor}` | PR + push |

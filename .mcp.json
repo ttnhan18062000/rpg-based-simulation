@@ -20,6 +20,12 @@
       "args": ["tools/start_headroom_mcp.sh"],
       "env": {},
       "description": "Headroom context-compression trial (TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT) — explicit-trigger retrieval tools only, nothing enabled; state isolated outside ~/.headroom"
+    },
+    "aseprite-pixel-art": {
+      "command": "bash",
+      "args": ["visual_assets/start_mcp.sh"],
+      "env": {},
+      "description": "Aseprite pixel-art drawing tools (typed ops, hash-pinned Lua, bwrap sandbox, immutable revisions); never writes the asset catalog"
     }
   }
 }
