@@ -16,7 +16,29 @@ Design decision needed: which of three perception-shaped things in this codebase
 the real one? (Not a wiring bug — a scope-of-concept question for the roadmap session.)
 
 ## Status
-OPEN
+BLOCKED — on the perception-foundation epic (`roadmap.md` §8 item 3), which owner decision 7 parks.
+
+**Its design question is ANSWERED and is not what blocks it.** Owner decision 8, 2026-10-02
+(`docs/plans/systemic_world/owner_decision_memo.md` row 8 — the only copy): *the perception that runs
+today is authoritative.* Specifically — (2) `SpatialQueryService.nearby_entities()` is authoritative for
+strategic situational awareness; (3) `PerceptionGate` (`src/world/perception/gate.py`) is authoritative
+for tactical sense-detection; the two coexist with **declared, non-overlapping scopes** and are not
+merged. (1) `PerceptionFilterService` / `PerceptionUpdatePhase` / `PerceptionModel` is **parked, not
+removed**, recorded as "designed, not in effect". Perception Rules are classified against (2) and (3) as
+they run, not against (1). Decision 8 costs no code, so **nothing in this ticket needs implementing.**
+
+What remains, and why the ticket is not closed: the parked model's eventual fate is the
+perception-foundation epic's, and `PerceptionGate` is to be registered as its own mechanism under memo
+row 7 (b) — the rule owner will draft that registry entry when (b) starts. Both are downstream of work
+decision 7 parks.
+
+**Why not DONE** (recorded so a later reader does not mistake this for an oversight): this is a
+standard-tier ticket with no staging artifacts, because no implementation pass ever ran. `done_checker`'s
+`migration_complete` condition requires `plan.md`/`investigation.md`/`test_plan.md` in
+`stored_artifacts/`, so a close would fail that gate. Manufacturing three artifacts for a ticket whose
+outcome is "the question is answered, no code changes" would be editing artifacts to satisfy a gate
+rather than to record real work, which this project forbids. BLOCKED is the accurate schema-valid state:
+the question is settled, the residual work is real, and it is owned elsewhere and parked.
 
 ## Tier
 standard

@@ -18,7 +18,24 @@ content-driven hostile factions into the same bucket — real but not the primar
 `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`
 
 ## Status
-OPEN
+BLOCKED — **folded into `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP` as its Group C site C1**
+(2026-10-02, per owner decision 7's approved work order, `docs/plans/systemic_world/roadmap.md` §8 item
+2). This site is `src/engine/cognition.py:44`, re-verified at `origin/main` `4c133297b` as still present
+and still at line 44. **Do not implement it here** — one writer, one branch; the sweep owns the shared
+catalog helper that every site including this one must use, and a separate fix would create the second
+hostility predicate the sweep exists to prevent.
+
+**One substantive change to this ticket's own finding, not just a re-home.** Its recorded **0.5% real
+impact** was measured for one specific consumer and should **not** be inherited. `CombatEngageScorer`
+calls `SensoryFilter.filter_saliency` on the line immediately above its own hostility test
+(`src/ai/goals/scorers.py:107-108`), so this filter shapes the candidate set that
+`TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND` (work-order item 1) will start
+acting on — and that path was measured on 2026-10-02 to be high-volume, not marginal: `COMBAT_ENGAGE` is
+the most frequent goal winner (485/1767 and 568/1744 competitions). The sweep's `test_plan.md` requires
+re-measurement rather than carrying 0.5% forward.
+
+Close this ticket when the sweep closes. The sweep's `plan.md` ("Docs and parity") carries that
+instruction so it is not forgotten.
 
 ## Tier
 hotfix
