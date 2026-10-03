@@ -38,7 +38,7 @@ pass. #12 and #18's real FAIL components are reported plainly below, exactly as 
 
 ## A required, disclosed corrective action during Implementation: the shared cache DB was cleared once
 
-`knowledge-index/retrieval_cache.db` is real, shared, gitignored, and non-resettable by design
+`agent-working/.index/knowledge-index/retrieval_cache.db` is real, shared, gitignored, and non-resettable by design
 (investigation.md, Prior Work) — this runner, like both predecessors, never pre-clears it as a
 matter of normal operation (Anti-Drift Notes, Step 9). During Implementation, the implementer's
 own necessary iterative testing of this brand-new runner (validating the 4-call sequence, the
@@ -157,7 +157,7 @@ Re-run with `tools/agent-monitoring/kgmcp_phase3_gateway_runner.py` **unmodified
 changes were needed — `_compute_budget_compliance()` already measures
 `kgmcp_char_heuristic_v1(json.dumps(response, sort_keys=True))` against the full response payload,
 exactly the ground-truth measurement this fix targets), against a freshly-cleared
-`knowledge-index/retrieval_cache.db` (required corrective action, same precedent as the original
+`agent-working/.index/knowledge-index/retrieval_cache.db` (required corrective action, same precedent as the original
 measurement's own disclosed cache-clear above — otherwise stale Level 1/Level 2 rows written
 before this fix would be served as cache hits and never exercise the new accounting at all):
 
@@ -411,7 +411,7 @@ rather than rewritten to chase a re-run this ticket was not scoped to re-litigat
 - `tools/knowledge_gateway_packet_assembly.py::assemble_within_budget()`/
   `truncate_conflicts_within_budget()` — the real, post-fix accounting this document's "Post-fix
   re-measurement" section reports against (TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE).
-- `staging_artifacts/TCK-20260816-KGMCP-P3-PILOT-ACCEPTANCE-MEASUREMENT/plan.md` — Architecture-
+- `agent-working/staging_artifacts/TCK-20260816-KGMCP-P3-PILOT-ACCEPTANCE-MEASUREMENT/plan.md` — Architecture-
   Review-approved plan (zero required changes) governing this ticket's own design, including the
   Resolution of the Level-1-Warm-Isolation Problem and the Deviations section documenting the
   hash-based frozen-file guard and the one-time corrective DB clear.

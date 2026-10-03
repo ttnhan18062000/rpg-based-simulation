@@ -1,6 +1,6 @@
 ---
 name: done-checker
-description: Verifies all 13 Definition-of-Done conditions for a ticket before it can move to tickets/done/, citing the static pre-check script for the five script-checkable conditions.
+description: Verifies all 13 Definition-of-Done conditions for a ticket before it can move to agent-working/tickets/done/, citing the static pre-check script for the five script-checkable conditions.
 tools: Bash, Read, Edit, Agent, Write, mcp__knowledge-search__search_docs, TaskUpdate, ToolSearch, ScheduleWakeup, TaskCreate, AskUserQuestion, Artifact, Monitor, ListAgents, WebSearch, TaskOutput, Skill, SendMessage, TaskStop, WebFetch, SendUserFile, ReportFindings
 ---
 
@@ -91,7 +91,7 @@ Before running the checklist, read the ticket's `## Tier` field (hotfix / standa
 Check each condition. Mark PASS, FAIL, or N/A with evidence.
 
 1. **Implementation matches accepted scope**
-   - Read `tickets/inprogress/{ticket_id}.md` → Scope and Acceptance Criteria sections.
+   - Read `agent-working/tickets/inprogress/{ticket_id}.md` → Scope and Acceptance Criteria sections.
    - Read the actual files changed. Confirm every AC is met. Confirm nothing outside scope was modified.
 
 2. **Architecture constraints were respected**
@@ -100,7 +100,7 @@ Check each condition. Mark PASS, FAIL, or N/A with evidence.
    - No durable meaning in `reason` strings, `metadata`, or comments.
    - Shared world behavior through systems/registries, not local hacks.
 
-3. **Ticket has required metadata and is in `tickets/inprogress/`**
+3. **Ticket has required metadata and is in `agent-working/tickets/inprogress/`**
    - Status must be `INPROGRESS` or ready to move to DONE.
    - `## Tier`, `## Type`, `## Priority` fields are present and contain valid values — `## Tier`/
      `## Priority` are cited verbatim from `run_static_precheck`'s `ticket_field_values_valid`
@@ -108,12 +108,12 @@ Check each condition. Mark PASS, FAIL, or N/A with evidence.
      judgment call.
    - Files Changed, Implementation Notes, Test Summary sections are filled in.
 
-4. **Staging artifacts complete in `staging_artifacts/{ticket_id}/`** _(N/A for hotfix)_
+4. **Staging artifacts complete in `agent-working/staging_artifacts/{ticket_id}/`** _(N/A for hotfix)_
    - If tier is `hotfix`: mark N/A.
    - Otherwise: `plan.md`, `investigation.md`, `test_plan.md` must exist and be non-empty.
 
 5. **Tests were run and updated**
-   - Check `staging_artifacts/{ticket_id}/test_plan.md` for the test commands used.
+   - Check `agent-working/staging_artifacts/{ticket_id}/test_plan.md` for the test commands used.
    - Confirm tests pass by reviewing any output or test logs referenced.
    - Confirm new behavior has test coverage.
 
@@ -122,25 +122,25 @@ Check each condition. Mark PASS, FAIL, or N/A with evidence.
    - If API changed: check schema/presenter docs updated.
    - If parity changed: check `docs/parity_ledger/` updated (at minimum the relevant YAML file).
 
-7. **`tickets/working_log.csv` entry added**
-   - Read `tickets/working_log.csv`.
+7. **`agent-working/tickets/working_log.csv` entry added**
+   - Read `agent-working/tickets/working_log.csv`.
    - Confirm a row exists for this ticket with correct format: `timestamp,ticket_id,title,status,summary,artifacts_path`.
 
 8. **No undocumented decisions**
-   - Review `staging_artifacts/{ticket_id}/investigation.md` and `plan.md`.
+   - Review `agent-working/staging_artifacts/{ticket_id}/investigation.md` and `plan.md`.
    - Any non-obvious implementation choice must be explained there.
 
 9. **Repo state is consistent**
    - No leftover staging or temp files.
    - No half-written files or uncommitted partial work that would confuse future readers.
-   - **A `tickets/todos/` copy of the ticket under check is a failure only when the caller did
-     not declare it.** Scope deliberately copies a non-epic ticket from `tickets/todos/` to
-     `tickets/inprogress/` and leaves the `tickets/todos/` original in place; Finalize deletes it
+   - **A `agent-working/tickets/todos/` copy of the ticket under check is a failure only when the caller did
+     not declare it.** Scope deliberately copies a non-epic ticket from `agent-working/tickets/todos/` to
+     `agent-working/tickets/inprogress/` and leaves the `agent-working/tickets/todos/` original in place; Finalize deletes it
      after this check passes — so at Verify time that exact duplicate is expected pipeline state,
      not inconsistency, and must not be flagged. If the Verify prompt names a
      `todos_source_path` for this ticket, treat exactly that path as declared and expected; any
-     other `tickets/todos/` duplicate is still a real finding. If no `todos_source_path` is named
-     (e.g. a hand-orchestrated closure with no orchestrator to declare it), a `tickets/todos/`
+     other `agent-working/tickets/todos/` duplicate is still a real finding. If no `todos_source_path` is named
+     (e.g. a hand-orchestrated closure with no orchestrator to declare it), a `agent-working/tickets/todos/`
      duplicate is a real finding — nothing else will delete it on that path
      (`TCK-20260927-PHASE-PROMPTS-OMIT-GATE-PRECONDITIONS`).
 
@@ -152,9 +152,9 @@ Check each condition. Mark PASS, FAIL, or N/A with evidence.
     - If anything was deferred or left incomplete, it must be explicitly documented in the ticket's Completion Summary with a follow-up ticket reference.
 
 12. **Frontmatter present and valid in ticket and artifacts** _(N/A for hotfix if no staging artifacts exist)_
-    - Run `python3 tools/validate_frontmatter.py tickets/inprogress/{ticket_id}.md` — must exit 0.
-    - Run `python3 tools/validate_frontmatter.py staging_artifacts/{ticket_id}/` — must exit 0.
-      (Artifacts are still in staging_artifacts/ at done-check time; finalize moves them to stored_artifacts/.)
+    - Run `python3 tools/validate_frontmatter.py agent-working/tickets/inprogress/{ticket_id}.md` — must exit 0.
+    - Run `python3 tools/validate_frontmatter.py agent-working/staging_artifacts/{ticket_id}/` — must exit 0.
+      (Artifacts are still in agent-working/staging_artifacts/ at done-check time; finalize moves them to agent-working/stored_artifacts/.)
     - If tier is `hotfix` and no staging artifacts exist: mark N/A.
 
 13. **Agent monitoring records** _(pre-marked PASS — written by workflow after READY_TO_CLOSE)_

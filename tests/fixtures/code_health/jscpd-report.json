@@ -1,0 +1,71 @@
+{
+  "duplicates": [
+    {
+      "firstFile": {
+        "end": 28,
+        "endLoc": {
+          "column": 25,
+          "line": 28,
+          "position": 838
+        },
+        "name": "dup_a.py",
+        "start": 5,
+        "startLoc": {
+          "column": 17,
+          "line": 5,
+          "position": 80
+        }
+      },
+      "format": "python",
+      "fragment": "    \"\"\"Copy one.\"\"\"\n    total = 0\n    for index in range(10):\n        if index % 2 == 0:\n            total += index * 3\n        else:\n            total -= index\n        if total > 100:\n            break\n    squares = [n * n for n in range(total)]\n    cubes = [n * n * n for n in range(total)]\n    pairs = [(a, b) for a in squares for b in cubes if a < b]\n    lookup = {a: b for a, b in pairs}\n    for key, value in lookup.items():\n        if key > value:\n            total += key\n        elif key < value:\n            total -= value\n        else:\n            total += 1\n    ordered = sorted(lookup.items(), key=lambda item: item[1])\n    labels = [\"row-\" + str(position) for position, _ in enumerate(ordered)]\n    summary = dict(zip(labels, ordered))\n    return summary, total",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 24,
+      "secondFile": {
+        "end": 28,
+        "endLoc": {
+          "column": 25,
+          "line": 28,
+          "position": 840
+        },
+        "name": "dup_b.py",
+        "start": 5,
+        "startLoc": {
+          "column": 17,
+          "line": 5,
+          "position": 82
+        }
+      },
+      "tokens": 191
+    }
+  ],
+  "statistics": {
+    "detectionDate": "2026-10-02T15:45:53.098Z",
+    "formats": {
+      "python": {
+        "clones": 1,
+        "duplicatedLines": 24,
+        "duplicatedTokens": 191,
+        "lines": 171,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 14.035087719298245,
+        "percentageTokens": 21.95402298850575,
+        "sources": 4,
+        "tokens": 870
+      }
+    },
+    "total": {
+      "clones": 1,
+      "duplicatedLines": 24,
+      "duplicatedTokens": 191,
+      "lines": 171,
+      "newClones": 0,
+      "newDuplicatedLines": 0,
+      "percentage": 14.035087719298245,
+      "percentageTokens": 21.95402298850575,
+      "sources": 4,
+      "tokens": 870
+    }
+  }
+}

@@ -1,18 +1,18 @@
 """Read-only Claude adapter representation generator.
 
-Renders a Claude-shaped projection of the agent-orchestration/ contract by combining
+Renders a Claude-shaped projection of the agent-working/agent-orchestration/ contract by combining
 `tools.agent_orchestration.loader.load_contract()`'s phase order with this package's own
 `load_terminal_statuses()`. Every field in the rendered output traces to one of those two read
 paths — no ad-hoc string literals duplicating contract data.
 
 Structural write-guard: `render_claude_adapter()` refuses to write to any resolved path outside
-`agent-orchestration/rendered/` unless the caller explicitly passes `allow_outside_contract=True`.
+`agent-working/agent-orchestration/rendered/` unless the caller explicitly passes `allow_outside_contract=True`.
 This is an independent implementation (not an import of
 `tools.agent_orchestration.generator._assert_write_allowed`) — reusing that private function would
 couple this ticket to an internal implementation detail of the predecessor's package.
 
 Never writes into `.claude/` under any flag combination — that directory is not in this module's
-write-guard allowlist at all, only `agent-orchestration/rendered/` (or, with the explicit opt-in
+write-guard allowlist at all, only `agent-working/agent-orchestration/rendered/` (or, with the explicit opt-in
 flag, any other target the caller names, which still can never be `.claude/` since callers of this
 generator never pass a `.claude/`-rooted target_dir).
 
@@ -26,14 +26,15 @@ import yaml
 
 from tools.agent_orchestration.loader import load_contract
 from tools.agent_orchestration_claude_adapter.terminal_status_loader import load_terminal_statuses
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
-_RENDERED_SUBDIR = Path("agent-orchestration") / "rendered"
+_RENDERED_SUBDIR = AGENT_ORCHESTRATION / "rendered"
 _CLAUDE_ADAPTER_SCHEMA_VERSION = 1
 
 
 class ClaudeAdapterWriteGuardError(Exception):
     """Raised by render_claude_adapter when a write target resolves outside
-    agent-orchestration/rendered/ and the explicit allow_outside_contract flag was not passed."""
+    agent-working/agent-orchestration/rendered/ and the explicit allow_outside_contract flag was not passed."""
 
 
 def _assert_write_allowed(repo_root: Path, target_path: Path, allow_outside_contract: bool) -> None:

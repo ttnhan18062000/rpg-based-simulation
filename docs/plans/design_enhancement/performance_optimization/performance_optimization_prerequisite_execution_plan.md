@@ -62,7 +62,7 @@ confused with `design_enhancement_roadmap.md` Section D1-D3. They map one-to-one
 
 PA identifiers retain the proposal's names because no conflicting PA namespace was found. Durable
 decision output goes to `docs/architecture/performance_optimization_decisions.md`; ticket-scoped
-evidence follows the repository convention `stored_artifacts/<ticket-id>/`. Gate A output goes
+evidence follows the repository convention `agent-working/stored_artifacts/<ticket-id>/`. Gate A output goes
 to `docs/performance/performance_optimization_gate_a.md`.
 
 ## 2. Intended outcome
@@ -133,7 +133,7 @@ working tree; an untracked source cannot safely govern ticket execution.
 ## 5. Existing-plan conflict register
 
 Standalone approval handoff:
-`docs/plans/design_enhancement/performance_optimization_conflict_approval_review.md`.
+`docs/plans/design_enhancement/performance_optimization/performance_optimization_conflict_approval_review.md`.
 
 ### Conflict severity
 

@@ -30,7 +30,7 @@ def test_subset_input_passes():
 
 
 def test_schema_valid_but_not_evidenced_hook_event_is_rejected():
-    # PreToolUse is schema-valid (agent-orchestration/hook-events.yaml declares it) but never
+    # PreToolUse is schema-valid (agent-working/agent-orchestration/hook-events.yaml declares it) but never
     # fixture-captured for Codex — proves this is a real subset assertion, not a hardcoded
     # equality check that trivially passes.
     with pytest.raises(EnabledSurfaceExceedsEvidenceError):

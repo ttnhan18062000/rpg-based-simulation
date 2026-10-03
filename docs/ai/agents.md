@@ -60,15 +60,15 @@ These agents handle the pre-implementation and post-implementation phases of a d
 **Role:** Creates a correctly-formatted ticket and scans for conflicts before any work begins.
 
 **What it does:**
-- Scans `tickets/inprogress/`, `tickets/done/`, `tickets/backlogs/`, `docs/`, `stored_artifacts/`, and relevant source files for duplicate work, conflicting requirements, or architectural mismatches — a hit in `tickets/backlogs/` means the work was already investigated and deliberately deprioritized, not abandoned
-- Produces `tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md` with all required sections
-- Creates `staging_artifacts/{ticket_id}/`
+- Scans `agent-working/tickets/inprogress/`, `agent-working/tickets/done/`, `agent-working/tickets/backlogs/`, `docs/`, `agent-working/stored_artifacts/`, and relevant source files for duplicate work, conflicting requirements, or architectural mismatches — a hit in `agent-working/tickets/backlogs/` means the work was already investigated and deliberately deprioritized, not abandoned
+- Produces `agent-working/tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md` with all required sections
+- Creates `agent-working/staging_artifacts/{ticket_id}/`
 - Picks tags per `docs/guidelines/tag_taxonomy.md`, ideally from what `python3 tools/tag_registry.py list` already shows registered — the orchestrator checks this after the agent returns and gates on it (`TAGS_NOT_REGISTERED`, `TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`), so this agent's own choice doesn't need to enforce it itself
 
 **Inputs:** A request description (free text) or an existing ticket path.
 
 **Outputs:**
-- Ticket file at `tickets/inprogress/{ticket_id}.md`
+- Ticket file at `agent-working/tickets/inprogress/{ticket_id}.md`
 - Staging directory
 - Conflict report (if any)
 - `suggested_skills` list (skill/agent invocations mapped from the ticket's `Process/Skill-signal` tags — e.g. `debugging` -> `/debugging-strategies` or `world-debugger`; empty if no tag maps)
@@ -86,13 +86,13 @@ These agents handle the pre-implementation and post-implementation phases of a d
 
 **What it does:**
 - Reads the ticket, all "Related Code Areas" files, relevant `docs/mechanics/` and `docs/engine/` chapters, and `docs/parity_ledger/` for overlapping entries
-- Searches `stored_artifacts/` and `tickets/done/` for prior work in the same area (including tag-based matches against `docs/REGISTRY.yaml`, per `docs/guides/ticket_tagging.md`)
+- Searches `agent-working/stored_artifacts/` and `agent-working/tickets/done/` for prior work in the same area (including tag-based matches against `docs/REGISTRY.yaml`, per `docs/guides/ticket_tagging.md`)
 
-**Inputs:** Ticket ID. Reads `tickets/inprogress/{ticket_id}.md`.
+**Inputs:** Ticket ID. Reads `agent-working/tickets/inprogress/{ticket_id}.md`.
 
 **Outputs:**
-- `staging_artifacts/{ticket_id}/investigation.md` — current behavior at `file:line`, mechanics constraints, parity ledger overlap, risks, anti-drift hazards
-- `staging_artifacts/{ticket_id}/test_plan.md` — regression surface, new tests required per AC, scoped pytest commands
+- `agent-working/staging_artifacts/{ticket_id}/investigation.md` — current behavior at `file:line`, mechanics constraints, parity ledger overlap, risks, anti-drift hazards
+- `agent-working/staging_artifacts/{ticket_id}/test_plan.md` — regression surface, new tests required per AC, scoped pytest commands
 
 **When to invoke directly:** When an existing ticket needs a fresh investigation before planning (e.g., investigation.md is stale after scope change).
 
@@ -103,7 +103,7 @@ These agents handle the pre-implementation and post-implementation phases of a d
 **Role:** Investigates a pre-ticket proposal concern and returns structured JSON findings for `create-tickets.js`'s Structure phase — distinct from `investigator`, which operates on an existing ticket and writes markdown files. Read-only: its `tools:` frontmatter field omits `Edit`, `Write`, and `NotebookEdit`, since this phase never needs to change repo state.
 
 **What it does:**
-- Works through the same mandatory context-scan ordering as `investigator`/`CLAUDE.md`'s Context Scan rule: semantic `search_docs` retrieval → graphify query → `docs/REGISTRY.yaml` (layer + tag match) → `tickets/working_log.csv` cross-reference → code file reads → test discovery → AC-signal derivation → tier assessment
+- Works through the same mandatory context-scan ordering as `investigator`/`CLAUDE.md`'s Context Scan rule: semantic `search_docs` retrieval → graphify query → `docs/REGISTRY.yaml` (layer + tag match) → `agent-working/tickets/working_log.csv` cross-reference → code file reads → test discovery → AC-signal derivation → tier assessment
 - Never writes files to disk — returns JSON only
 
 **Inputs:** A concern object (`id`, `title`, `description`, `domain_area`, `type_hint`, `priority_hint`, `raw_excerpts`) and a derived `registryLayers` list — supplied per-call in the invocation prompt. No ticket file is required or read.
@@ -128,7 +128,7 @@ Use `investigator` when a ticket already exists and you need file-based artifact
 
 **Inputs:** Ticket ID + investigation artifacts already written.
 
-**Outputs:** `staging_artifacts/{ticket_id}/plan.md`
+**Outputs:** `agent-working/staging_artifacts/{ticket_id}/plan.md`
 
 **When to invoke directly:** When the investigation is done but the plan needs revision without re-investigating.
 
@@ -164,7 +164,7 @@ and self-reports provenance in a `verified_by` field.
 - Engine contract compliance (`docs/engine/authoritative_pipeline.md` for pipeline changes)
 - Parity ledger impact — flags P0 entries that will be affected
 
-**Inputs:** `staging_artifacts/{ticket_id}/plan.md` + ticket (pre-Implement call); `files_changed` +
+**Inputs:** `agent-working/staging_artifacts/{ticket_id}/plan.md` + ticket (pre-Implement call); `files_changed` +
 static-check JSON (post-Implement `Architecture-Verify` call).
 
 **Outputs:** `APPROVED` / `NEEDS_CHANGES` / `BLOCKED` verdict with violation list and parity entries
@@ -197,11 +197,11 @@ Notes ("left for a future ticket if a dedicated DoD-list entry for this check is
 **The 13 conditions:**
 1. Implementation matches accepted scope
 2. Architecture constraints respected
-3. Ticket has required metadata, in `tickets/inprogress/` — script-checked
+3. Ticket has required metadata, in `agent-working/tickets/inprogress/` — script-checked
 4. Staging artifacts complete (`plan.md`, `investigation.md`, `test_plan.md`) — script-checked
 5. Tests run and updated
 6. Docs updated if behavior changed
-7. `tickets/working_log.csv` entry not yet present (pre-Finalize) — script-checked
+7. `agent-working/tickets/working_log.csv` entry not yet present (pre-Finalize) — script-checked
 8. No undocumented decisions
 9. Repo state consistent
 10. `data/runs/` and `reports/release_proof/` cleaned — script-checked
@@ -231,12 +231,12 @@ Notes ("left for a future ticket if a dedicated DoD-list entry for this check is
 - No unnecessary abstractions, no half-finished implementations
 - No comments unless WHY is non-obvious
 
-**Inputs:** Approved `staging_artifacts/{ticket_id}/plan.md` + investigation.md.
+**Inputs:** Approved `agent-working/staging_artifacts/{ticket_id}/plan.md` + investigation.md.
 
 **Outputs:**
 - Code changes in `src/`
 - Implementation Notes written back to the ticket's `Implementation Notes` section
-- Deviations from the plan written to `staging_artifacts/{ticket_id}/plan.md`
+- Deviations from the plan written to `agent-working/staging_artifacts/{ticket_id}/plan.md`
 - Structured report: files changed, `behavior_changed` boolean, parity subsystems affected, implementation summary
 
 **When to invoke directly:** When re-running a single implementation step after a plan correction (use the workflow's resume feature instead where possible).
@@ -254,7 +254,7 @@ Notes ("left for a future ticket if a dedicated DoD-list entry for this check is
 4. Builds and executes the scoped `pytest` command via Bash
 5. Reports pass count, fail count, failing test names, and coverage gaps
 
-**Inputs:** List of changed source files. Reads `staging_artifacts/{ticket_id}/test_plan.md`.
+**Inputs:** List of changed source files. Reads `agent-working/staging_artifacts/{ticket_id}/test_plan.md`.
 
 **Outputs:** Pytest command used, pass/fail counts, failing test names, coverage gaps.
 
@@ -276,7 +276,7 @@ runs `::next_available_id` for every shard `expected_subsystems_for_files` named
 injecting a `Next available ID per candidate shard` hint line (`max-numeric-suffix + 1`, never
 `entry-count + 1` — shards have gaps). After this agent's turn ends, the orchestrator runs
 `::cross_reference_touched` (via `bash()`) against the actual `git status` diff of
-`docs/parity_ledger/` and records any discrepancy in `agent-monitoring/data/YYYY-Www/events.jsonl` — visibility
+`docs/parity_ledger/` and records any discrepancy in `agent-working/agent-monitoring/data/YYYY-Www/events.jsonl` — visibility
 only, not a blocking gate. The agent self-reports which of its findings were informed by the
 injected context vs. independent judgment in a `verified_by` field.
 
@@ -510,7 +510,7 @@ gate, matching this ticket's own Out of Scope.
 | Agent | Phase in lifecycle | Primary output |
 |---|---|---|
 | `spec-document-reviewer` | Brainstorming (pre-ticket) | Approved / Issues Found verdict |
-| `ticket-scoper` | Pre-work | `tickets/inprogress/{id}.md` |
+| `ticket-scoper` | Pre-work | `agent-working/tickets/inprogress/{id}.md` |
 | `investigator` | Pre-work | `investigation.md`, `test_plan.md` |
 | `concern-investigator` | Pre-work (pre-ticket) | Structured JSON (files_found, ac_signals, ...) |
 | `planner` | Pre-work | `plan.md` |

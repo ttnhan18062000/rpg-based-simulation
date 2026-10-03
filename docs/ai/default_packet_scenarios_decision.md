@@ -18,7 +18,7 @@ Resolves **Open Decision 1** from
 This document **decides and evidences**. It implements nothing — no packet builder, retrieval
 code, or workflow phase change is created or modified as part of landing it. All claims below are
 grounded in the real, freshly-run output of `tools/agent-monitoring/retrieval_baseline_metrics.py`
-(TCK-20260728-RETRIEVAL-BASELINE-METRICS) over the live `agent-monitoring/*.jsonl` corpus, not a
+(TCK-20260728-RETRIEVAL-BASELINE-METRICS) over the live `agent-working/agent-monitoring/*.jsonl` corpus, not a
 fresh guess.
 
 ---
@@ -68,7 +68,7 @@ qualifying search call, `search_count.total = 1694`).
 ```json
 {
   "status": "unavailable",
-  "reason": "Real token/context-size telemetry is platform-blocked and is not recorded anywhere in agent-monitoring/*.jsonl.",
+  "reason": "Real token/context-size telemetry is platform-blocked and is not recorded anywhere in agent-working/agent-monitoring/*.jsonl.",
   "citation": "docs/agent-monitoring/schema.md — 'What is not recorded' section"
 }
 ```
@@ -103,7 +103,7 @@ count.
 
 ### 3.3 Scoped Limitation — no per-phase aggregation exists today
 
-`agent-monitoring/events.jsonl` records do carry both `phase` and `ts` fields per event (confirmed
+`agent-working/agent-monitoring/events.jsonl` records do carry both `phase` and `ts` fields per event (confirmed
 directly, e.g. `{"run_id":"TCK-20260728-CONTEXT-PACKET-SCHEMA","seq":6,"phase":"Architecture-Verify", ...,"ts":"2026-07-28T17:25:33Z"}`
 from the live file). However, **no function in `retrieval_baseline_metrics.py` aggregates
 `events.jsonl`'s `phase`+`ts` fields into a per-phase (as opposed to per-run) breakdown** —
@@ -147,7 +147,7 @@ document takes no position on it.
 Open Decisions list is not directly edited by this ticket (mirrors the precedent set by Open
 Decisions 2 and 3, both resolved via a standalone decision doc rather than an idea-doc edit) —
 resolution status is instead recorded in
-`tickets/inprogress/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md`'s Assumptions/Open Questions
+`agent-working/tickets/inprogress/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md`'s Assumptions/Open Questions
 section, marking Open Decision 1 **RESOLVED** and pointing here, in the same style as that
 ticket's existing Open Decision 2 / Open Decision 3 entries.
 

@@ -38,7 +38,7 @@ reading it.
 
 After your turn ends, the orchestrator independently re-runs `cross_reference_touched` against the
 actual `git status` diff of `docs/parity_ledger/` and records any discrepancy in
-`agent-monitoring/events.jsonl`. You do not need to run this verification yourself, but treat the
+`agent-working/agent-monitoring/events.jsonl`. You do not need to run this verification yourself, but treat the
 injected expected-subsystem context as a strong hint rather than optional flavor text — a mismatch
 will be visible regardless of whether you addressed it.
 

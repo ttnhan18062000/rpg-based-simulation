@@ -64,9 +64,9 @@ implementation authorization.
 Citation shorthand below is exact: **proposal** means
 `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md`;
 **prerequisite plan** means
-`docs/plans/design_enhancement/performance_optimization_prerequisite_execution_plan.md`; and
+`docs/plans/design_enhancement/performance_optimization/performance_optimization_prerequisite_execution_plan.md`; and
 **conflict review** means
-`docs/plans/design_enhancement/performance_optimization_conflict_approval_review.md`.
+`docs/plans/design_enhancement/performance_optimization/performance_optimization_conflict_approval_review.md`.
 PERF-D1..D6 and PA-00..08 are decision/work identifiers owned by those documents, not approvals
 granted by this guide.
 
@@ -85,12 +85,12 @@ specialized enum-tooltip registry, not an architecture glossary.
 | Candidate-selection and dirty-state guides | `docs/engine/candidate_selection.md`; `docs/core/dirty_state_and_dependency.md` | Scheduling/filtering internals | P1 | No | Specialized concepts | Cite as authority |
 | Performance contracts | `docs/engine/performance_contract.md`; `docs/performance/perf_baseline_policy.md` | Targets, benchmark and gate policy | P1 | No | Specialized and mutually drifting | Cite and flag drift |
 | Dashboard glossary registry | `registries/glossary_registry.jsonl` | UI tooltips for workflow enum-like values | Runtime-owned registry | No; append-only via tool | Specialized glossary, unrelated to engine concepts | Do not duplicate or modify |
-| Performance optimization proposal/plan | `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md`; `docs/plans/design_enhancement/performance_optimization_prerequisite_execution_plan.md` | Proposed — approval pending | P2 | No | Source for proposed/conditional vocabulary | Label every borrowed term pending/evidence-gated |
-| Archived glossary proposals/tickets | `docs/plans/archive/agent_ops_dashboard/`; `tickets/done/*GLOSSARY*` | Historical dashboard glossary work | Historical | Mixed artifacts | Historical/specialized | Do not revive or consolidate into this guide |
+| Performance optimization proposal/plan | `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md`; `docs/plans/design_enhancement/performance_optimization/performance_optimization_prerequisite_execution_plan.md` | Proposed — approval pending | P2 | No | Source for proposed/conditional vocabulary | Label every borrowed term pending/evidence-gated |
+| Archived glossary proposals/tickets | `docs/plans/archive/agent_ops_dashboard/`; `agent-working/tickets/done/*GLOSSARY*` | Historical dashboard glossary work | Historical | Mixed artifacts | Historical/specialized | Do not revive or consolidate into this guide |
 | Documentation registry | `docs/REGISTRY.yaml` | Generated navigation metadata | Generated | Yes | Navigation only | Regenerate with `tools/generate_registry.py`; never hand-edit |
 
 **Decision: Option C — create one new explanatory guide.** The selected WIP path is
-`docs/plans/design_enhancement/system_design_terms_and_concepts.md`, as requested. It is the
+`docs/plans/design_enhancement/performance_optimization/system_design_terms_and_concepts.md`, as requested. It is the
 candidate cross-project navigation guide inside the current epic, not an approved canonical
 navigation document and not the canonical source of any P1/P0 rule. Specialized contracts retain
 ownership of their definitions. The registry records discoverability; it does not promote status or
@@ -408,8 +408,8 @@ flowchart TD
 | <a id="term-ci-fast"></a>**CI-fast regression test / scheduled benchmark** | Adapted industry concept | Partially implemented | Cheap noisy smoke protection versus longer controlled capacity evidence. A CI-fast pass is not a capacity claim | live regression test; PERF-D4/PA-04 |
 | <a id="term-capacity-claim"></a>**Capacity claim** | Adapted industry concept | Unverified | Supported workload/tick target on a declared hardware/runtime class with correctness and mode/cardinality evidence | certification/performance contracts |
 | <a id="term-bottleneck"></a>**Bottleneck / material contributor** | Adapted industry concept | Unverified | Component limiting end-to-end target; “material” means measured contribution large enough to justify complexity under approved Gate A criteria | proposal §§6, 15 |
-| <a id="term-gate-a"></a>**Decision Gate A** | Project-specific | Proposed — approval pending | After corrected contracts/baselines, selects or rejects each exact Stage 5 optimization from end-to-end p95/p99, memory, work-cardinality, and correctness evidence | `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md` §15; `docs/plans/design_enhancement/performance_optimization_prerequisite_execution_plan.md` §§8–9 |
-| <a id="term-gate-b"></a>**Decision Gate B** | Project-specific | Proposed — approval pending | Re-runs the full matrix after selected exact optimizations and decides whether unmet goals justify separate advanced/semantic architecture | `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md` §15; `docs/plans/design_enhancement/performance_optimization_prerequisite_execution_plan.md` §§8–9 |
+| <a id="term-gate-a"></a>**Decision Gate A** | Project-specific | Proposed — approval pending | After corrected contracts/baselines, selects or rejects each exact Stage 5 optimization from end-to-end p95/p99, memory, work-cardinality, and correctness evidence | `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md` §15; `docs/plans/design_enhancement/performance_optimization/performance_optimization_prerequisite_execution_plan.md` §§8–9 |
+| <a id="term-gate-b"></a>**Decision Gate B** | Project-specific | Proposed — approval pending | Re-runs the full matrix after selected exact optimizations and decides whether unmet goals justify separate advanced/semantic architecture | `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md` §15; `docs/plans/design_enhancement/performance_optimization/performance_optimization_prerequisite_execution_plan.md` §§8–9 |
 
 A faster tick may mean fewer items were admitted or processed. Therefore every credible comparison
 records `RuntimeMode`, mode transitions, candidates, admitted/processed/dropped/coalesced work,
@@ -427,12 +427,12 @@ correctness result, and observer configuration alongside latency and memory.
 | <a id="term-fault-injection"></a>**Fault injection** | Industry-standard | Implemented | Deliberately triggers failure, corruption, delay, or capacity boundaries to verify fallback/recovery | `tests/unit/core/test_fallback_hardening.py`; `tests/unit/kernel/test_replay_determinism.py`; `tests/api/test_ws_protocol.py` |
 | <a id="term-determinism-matrix"></a>**Determinism matrix / certification run** | Adapted industry concept | Partially implemented | Repeated comparison across supported seeds, runtimes, executors, platforms, modes, and configurations | certification tests; PERF-D2 |
 | <a id="term-full-oracle"></a>**Full-scan / full-path oracle** | Project-specific | Implemented | Nonoptimized reference route used to prove an accelerator did not omit work or change state | `src/core/updates.py::StateUpdate.force_full_scan`; `src/core/dirty.py`; `tests/perf/test_dirty_parity.py` |
-| <a id="term-cache-bypass"></a>**Cache-bypass comparison** | Adapted industry concept | Partially implemented | Cache invalidation and selected reference/optimized parity tests exist; no universal cache-bypass harness covers every accelerator | `tests/unit/perf/test_phase10_cache_invalidation.py`; `tests/unit/domains/optimization/test_cache_invalidation_policy.py`; proposal §18 |
+| <a id="term-cache-bypass"></a>**Cache-bypass comparison** | Adapted industry concept | Partially implemented | Cache invalidation and selected reference/optimized parity tests exist; no universal cache-bypass harness covers every accelerator | `tests/unit/domains/optimization/test_cache_invalidation_policy.py`; proposal §18 |
 | <a id="term-shadow-mode"></a>**OFF / SHADOW mode** | Adapted industry concept | Implemented | Feature flags support OFF and SHADOW; SHADOW computes candidate behavior without enabling authoritative effects and supports parity checks | `src/domains/optimization/feature_flags.py::FeatureMode`; `src/engine/pipeline.py`; `tests/certification/test_phase10_enhanced_determinism_parity.py::test_shadow_mode_preserves_baseline_hash` |
 | <a id="term-rollout"></a>**Rollout / promotion / rollback** | Adapted industry concept | Implemented | Gradual enablement, evidence-based default adoption, and return to reference path on failure | `docs/guides/feature_flags.md`; proposal §18 |
 | <a id="term-retirement"></a>**Retirement rule** | Adapted industry concept | Proposed — approval pending | Explicit point at which one of dual reference/optimized paths is removed so permanent dual maintenance does not drift | proposal §18 |
 | <a id="term-expected-difference"></a>**Expected semantic difference / versioned semantic change** | Adapted industry concept | Implemented | Intentional output change with version bump, declared differences, migration, invariants, and acceptance tests | `docs/engine/contracts/certification_contract.md`; proposal §18 |
-| <a id="term-bug-parity"></a>**Bug-fix parity** | Project-specific | Implemented | A fix need not reproduce broken output. Its oracle is the corrected specification/golden result; unchanged unaffected behavior still needs coverage | `docs/plans/design_enhancement/performance_optimization_prerequisite_execution_plan.md` PA-01; `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md` §18 |
+| <a id="term-bug-parity"></a>**Bug-fix parity** | Project-specific | Implemented | A fix need not reproduce broken output. Its oracle is the corrected specification/golden result; unchanged unaffected behavior still needs coverage | `docs/plans/design_enhancement/performance_optimization/performance_optimization_prerequisite_execution_plan.md` PA-01; `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md` §18 |
 
 <a id="term-optimization-versus-semantic-approximation"></a>
 ### Optimization versus semantic approximation
@@ -452,10 +452,10 @@ correctness result, and observer configuration alongside latency and memory.
 | <a id="term-architecture-authority"></a>**Architecture authority / authority level** | Project-specific | Implemented | Precedence and normativity recorded as P0/P1/P2. Lower-authority prose cannot silently replace a higher-authority contract | document frontmatter; `docs/README.md` |
 | <a id="term-canonical-document"></a>**Canonical document / higher-authority contract** | Project-specific | Implemented | Designated navigation/source within its authority scope; “canonical” wording does not itself change metadata authority | `docs/README.md`; `docs/REGISTRY.yaml` |
 | <a id="term-decision-record"></a>**Decision record / ADR / approved decision** | Adapted industry concept | Implemented | Durable choice with context, alternatives, consequences, owner/approver, and revisit conditions. Draft/proposed records are not approved decisions | `docs/architecture/`; architecture skill |
-| <a id="term-proposal-governance"></a>**Proposal (governance)** | Industry-standard | Implemented | Candidate design for review. It differs from a runtime proposal and grants no authority until adopted through repository governance | `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md` §1; `docs/plans/design_enhancement/performance_optimization_conflict_approval_review.md` |
-| <a id="term-prerequisite"></a>**Prerequisite / dependency** | Industry-standard | Implemented | Condition or work that must complete before dependent work may start; dependency describes relation, not necessarily approval | `docs/plans/design_enhancement/performance_optimization_prerequisite_execution_plan.md` §§3, 8; `AGENTS.md` (Workflow Continuation) |
-| <a id="term-adoption-gate"></a>**Adoption, exit, and evidence gate** | Adapted industry concept | Implemented | Explicit proof/decision boundary for entering work, completing a phase, or promoting a candidate | `docs/plans/design_enhancement/performance_optimization_prerequisite_execution_plan.md` §§3, 8; proposal §15 |
-| <a id="term-conditional-optimization"></a>**Conditional optimization** | Project-specific | Proposed — approval pending | Candidate retained for measurement but not authorized until Gate A selects it | `docs/plans/design_enhancement/performance_optimization_prerequisite_execution_plan.md` §8 |
+| <a id="term-proposal-governance"></a>**Proposal (governance)** | Industry-standard | Implemented | Candidate design for review. It differs from a runtime proposal and grants no authority until adopted through repository governance | `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md` §1; `docs/plans/design_enhancement/performance_optimization/performance_optimization_conflict_approval_review.md` |
+| <a id="term-prerequisite"></a>**Prerequisite / dependency** | Industry-standard | Implemented | Condition or work that must complete before dependent work may start; dependency describes relation, not necessarily approval | `docs/plans/design_enhancement/performance_optimization/performance_optimization_prerequisite_execution_plan.md` §§3, 8; `AGENTS.md` (Workflow Continuation) |
+| <a id="term-adoption-gate"></a>**Adoption, exit, and evidence gate** | Adapted industry concept | Implemented | Explicit proof/decision boundary for entering work, completing a phase, or promoting a candidate | `docs/plans/design_enhancement/performance_optimization/performance_optimization_prerequisite_execution_plan.md` §§3, 8; proposal §15 |
+| <a id="term-conditional-optimization"></a>**Conditional optimization** | Project-specific | Proposed — approval pending | Candidate retained for measurement but not authorized until Gate A selects it | `docs/plans/design_enhancement/performance_optimization/performance_optimization_prerequisite_execution_plan.md` §8 |
 | <a id="term-architectural-enablement"></a>**Architectural enablement** | Project-specific | Proposed — approval pending | Prerequisite contract/infrastructure correction that enables trustworthy measurement without preselecting an accelerator | `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md` §15 PA table |
 | <a id="term-semantic-change"></a>**Semantic change** | Adapted industry concept | Implemented | Intentional change to authoritative outcomes, workload admission, or fidelity requiring explicit version/acceptance/migration treatment | `docs/engine/contracts/certification_contract.md`; proposal §15 Gate B |
 | <a id="term-feature-admission"></a>**Feature admission rule** | Project-specific | Proposed — approval pending | New RPG features first declare authoritative state, read/write domains, ordering, cadence/LOD, invariants, observability, and performance budget; phase growth follows semantics rather than a fixed ideal count | `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md` §3.5; prerequisite plan PERF-D6 |
@@ -522,7 +522,7 @@ refined update, authoritative state, and same-scheme hash. A resulting contract 
 a stable final key (for example, validated system/work identity) or a proved commutative merge rule.
 
 The detailed approval handoff is
-`docs/plans/design_enhancement/performance_optimization_conflict_approval_review.md`.
+`docs/plans/design_enhancement/performance_optimization/performance_optimization_conflict_approval_review.md`.
 
 ## 15. Alphabetical glossary
 
@@ -626,7 +626,7 @@ Validation snapshot: 2026-09-08.
 
 | Check | Result |
 |---|---|
-| Location retained | `docs/plans/design_enhancement/system_design_terms_and_concepts.md` |
+| Location retained | `docs/plans/design_enhancement/performance_optimization/system_design_terms_and_concepts.md` |
 | Metadata/status decision | Keep `status: active`, `layer: architecture`, `authority: P2`. These are validator-supported values; active means current epic work here, while P2 and the authority statement prevent approval/normative inference |
 | Status vocabulary changes | Added `Not implemented — explanatory only` and `Explicit non-goal`; narrowed `Documented but not enforced` to intended/required behavior lacking enforcement |
 | Entries reclassified | Amdahl/serial fraction and event sourcing → explanatory only; ECS, second mutable truth, and client prediction/rollback → explicit non-goal; client interpolation → documented but not enforced |

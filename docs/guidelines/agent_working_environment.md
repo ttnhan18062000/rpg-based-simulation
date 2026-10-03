@@ -17,8 +17,10 @@ This document is the single reference for setting up and operating the local con
 | Requirement | Version | Notes |
 |---|---|---|
 | Docker Engine | 24+ | Required for `make search-server-docker` (primary) |
-| Python | 3.11+ | For index build and CLI fallback |
-| `pip install -r requirements.txt` | — | Core app deps: `fastapi`, `uvicorn`, etc. Installed by CI too. |
+| Python | 3.11+ (floor); 3.13 is the CI-tested version | The floor is `requires-python` in `pyproject.toml`, which is the source; `[tool.mypy] python_version` follows it. CI (`.github/workflows/test.yml`) runs 3.13. The floor stays at 3.11 because `.venv-knowledge` is on 3.12. |
+| `uv` | 0.11+ | Resolves and installs from `pyproject.toml` and `uv.lock`. On this machine every `uv` network command needs `--system-certs` (see "TLS interception" below). |
+| `uv sync --system-certs` | — | Core app, test and dev deps from `uv.lock` (`fastapi`, `uvicorn`, `pytest`, etc.). Dependencies are declared once, in `pyproject.toml`. |
+| `pip install -r requirements.txt` | — | Same set, for jobs not yet on uv; CI still installs this way. `requirements.txt` is a **generated export** of `uv.lock`: never edit it by hand (see "Changing a dependency" below). |
 | `pip install -r requirements-knowledge.txt` | — | Knowledge-search stack: `torch`, `sentence-transformers`, `sqlite-vec`, `rank_bm25`. Local agent tooling only — CI never installs this. |
 
 First-time model download: `all-MiniLM-L6-v2` (~22 MB) is downloaded automatically on first `make knowledge-index`. Subsequent builds use the local cache.
@@ -88,8 +90,11 @@ uv pip install --python .venv/bin/python3 --system-certs -r requirements.txt
 Run these once after cloning or after a clean checkout.
 
 ```bash
-# 1. Install core Python dependencies
-pip install -r requirements.txt
+# 1. Install core Python dependencies into .venv from uv.lock
+#    (drop --system-certs on a network without TLS interception)
+uv sync --python 3.13 --system-certs
+#    Equivalent without uv, as CI does it today:
+#    pip install -r requirements.txt
 
 # 1b. Install the knowledge-search stack (torch must come from the CPU wheel index)
 pip install torch --index-url https://download.pytorch.org/whl/cpu
@@ -109,6 +114,36 @@ curl -s http://localhost:8765/api/health
 
 The Docker container runs with `restart: unless-stopped` — it will come back automatically after system restarts as long as Docker Engine is running.
 
+`uv sync` installs the default dependencies plus the `dev` group, and installs this package itself
+as editable. It does not install the knowledge-search stack: that stays in
+`requirements-knowledge.txt` and `.venv-knowledge` (step 1b), unchanged. The opt-in `profiling`
+group (`memray`) is installed with `uv sync --group profiling`.
+
+### Changing a dependency
+
+Dependencies are declared in one place, `pyproject.toml` (`TCK-20261002-UV-DECLARE-AND-LOCK`):
+runtime packages under `[project] dependencies`, test and dev tooling under
+`[dependency-groups] dev`. After editing it, refresh the lock and regenerate the export, and commit
+all three files together:
+
+```bash
+uv lock --system-certs
+uv export --frozen --no-hashes --no-emit-project -o requirements.txt
+```
+
+**After the Python Code Craft branch merges, every existing environment (the main checkout's
+`.venv`, other worktrees) must re-run `uv sync --system-certs` or `pip install -r requirements.txt`.**
+`ruff` and `complexipy` are now dev dependencies, and the codebase-health snapshot measures with them
+live, so tests such as `tests/tools/test_codebase_health_snapshot.py`'s throwaway-repository tests fail
+in an older environment with `complexipy not found: install the project environment (uv sync)`. That
+failure is deliberate: the snapshot never silently skips its craft metrics. CI is unaffected because
+`requirements.txt` carries both tools.
+
+`uv lock --check` exits non-zero if `uv.lock` is out of date with `pyproject.toml`. Re-running the
+export on an unchanged lock produces no diff. The export leaves out extras, so `torch`,
+`sentence-transformers`, `sqlite-vec` and `rank-bm25` never reach `requirements.txt`
+(`tests/static/test_ci_requirements_no_ml_stack.py` pins this).
+
 ---
 
 ## Daily Workflow
@@ -126,23 +161,23 @@ make knowledge-index-update
 
 The running Docker container picks up the new index on its next query — no restart needed.
 
-### After closing a ticket (ticket moved to `tickets/done/`)
+### After closing a ticket (ticket moved to `agent-working/tickets/done/`)
 
 ```bash
 make knowledge-index-update
 ```
 
-Same command. The incremental build detects the new file in `tickets/done/` and adds it.
+Same command. The incremental build detects the new file in `agent-working/tickets/done/` and adds it.
 
 ### Automatic reindex on commit (optional but recommended)
 
 ```bash
 # Install git post-commit hook — runs make knowledge-index-update automatically
-# when a commit touches docs/ or tickets/done/
+# when a commit touches docs/ or agent-working/tickets/done/
 make install-hooks
 ```
 
-Once installed, the hook is silent on unrelated commits and self-skips if `knowledge-index/` does not exist.
+Once installed, the hook is silent on unrelated commits and self-skips if `agent-working/.index/knowledge-index/` does not exist.
 
 ---
 
@@ -315,7 +350,7 @@ All HTTP queries work identically. The only difference is the server does not au
 |---|---|
 | First setup or after changing embedding model | `make knowledge-index` (full) |
 | After adding/editing a doc in `docs/` | `make knowledge-index-update` |
-| After closing a ticket (new file in `tickets/done/`) | `make knowledge-index-update` |
+| After closing a ticket (new file in `agent-working/tickets/done/`) | `make knowledge-index-update` |
 | After deleting a doc | `make knowledge-index-update` |
 | Index seems stale or returning wrong results | `make knowledge-index` (full rebuild) |
 | Switching to a different embedding model | `make knowledge-index` (full rebuild) |
@@ -335,9 +370,9 @@ new environment, none of these need to be copied — rebuild them instead:
 
 | Artifact | Real path | What it is | Gitignored? | How to rebuild |
 |---|---|---|---|---|
-| Semantic search index | `knowledge-index/knowledge.db`, `bm25.pkl`, `embeddings_cache.pkl`, `manifest.json` | The `search_docs` index described above | Yes (`.gitignore:264`) | `make knowledge-index` |
-| Parity Ledger query index | `parity-index/parity.db` | Read-only SQLite index over `docs/parity_ledger/*.yaml`, built by `tools/parity_index.py` | Yes (`.gitignore:271`) | `make parity-index` |
-| Knowledge Gateway MCP cache | `knowledge-index/retrieval_cache.db` | The Knowledge Gateway MCP's Level 1 (provider-result) and Level 2 (assembled-packet) cache — see `docs/plans/knowledge-gateway-mcp-proposal.md` §10 for the cache design | Yes (same `knowledge-index/` ignore rule) | No bootstrap command exists — see below |
+| Semantic search index | `agent-working/.index/knowledge-index/knowledge.db`, `bm25.pkl`, `embeddings_cache.pkl`, `manifest.json` | The `search_docs` index described above | Yes (`.gitignore:264`) | `make knowledge-index` |
+| Parity Ledger query index | `agent-working/.index/parity-index/parity.db` | Read-only SQLite index over `docs/parity_ledger/*.yaml`, built by `tools/parity_index.py` | Yes (`.gitignore:271`) | `make parity-index` |
+| Knowledge Gateway MCP cache | `agent-working/.index/knowledge-index/retrieval_cache.db` | The Knowledge Gateway MCP's Level 1 (provider-result) and Level 2 (assembled-packet) cache — see `docs/plans/knowledge-gateway-mcp-proposal.md` §10 for the cache design | Yes (same `agent-working/.index/knowledge-index/` ignore rule) | No bootstrap command exists — see below |
 | `graphify` code-graph index | `graphify-out/graph.json` (plus other `graphify-out/*` build output) | The `graphify` CLI's persistent knowledge graph — god nodes, community detection, and query/path/explain data described in `graphify-out/GRAPH_REPORT.md` | Yes (`.gitignore:260` `graphify-out/*`, `.gitignore:261` `src/graphify-out/`) | `graphify update .` (incremental, AST-only) or a full `/graphify` rebuild — see `CLAUDE.md`'s Graphify Integration section |
 
 **One-command bootstrap for a fresh environment:**

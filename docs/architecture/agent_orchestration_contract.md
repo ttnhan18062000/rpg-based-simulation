@@ -31,7 +31,7 @@ parent discovery epic, `TCK-20260721-PROVIDER-AGNOSTIC-EPIC`, is complete only
 once all 5 listed outputs are reviewed and approved; this ADR does not by itself
 authorize a follow-on implementation epic.
 
-This ADR consumes three evidence-input tickets/docs, produced earlier in the same
+This ADR consumes three evidence-input agent-working/tickets/docs, produced earlier in the same
 discovery batch, as required inputs:
 
 - `TCK-20260721-AGENTS-DIR-DISPOSITION` (`docs/ai/agents_dir_disposition.md`) —
@@ -47,7 +47,7 @@ discovery batch, as required inputs:
   Identity (Consumed Input)" subsection below.
 
 This ADR makes no final storage location or writer-implementation choice; it
-records design decisions only, and creates no `agent-orchestration/` directory,
+records design decisions only, and creates no `agent-working/agent-orchestration/` directory,
 contract file, or runtime code.
 
 ## Decision
@@ -76,7 +76,7 @@ be referenced by name in `SKILL.md`'s own body.
 
 ### Source Ownership
 
-The shared contract lives under a new repository-root `agent-orchestration/`
+The shared contract lives under a new repository-root `agent-working/agent-orchestration/`
 directory, functioning as a source specification — not a second implementation —
 per the source plan's proposed layout
 (`idea_provider_agnostic_agent_orchestration.md:158-178`): `README.md`,
@@ -185,7 +185,7 @@ undetected. The source plan already steered toward this pairing; this ADR closes
 the "or both" question the plan left open in favor of both, rather than picking
 one exclusively.
 
-**Source Ownership.** A dedicated repo-root `agent-orchestration/` directory
+**Source Ownership.** A dedicated repo-root `agent-working/agent-orchestration/` directory
 keeps the contract provider-neutral by construction — embedding it inside
 `.claude/` would tie a shared specification to one provider's config surface and
 invite exactly the "silently redefine" drift the Provider-Adapter Boundary
@@ -221,7 +221,7 @@ guessed in advance of it.
   not authoring time — a malformed `contract.yaml` edit will not surface until
   the generated Python models are regenerated or validated, not the moment it is
   typed.
-- A repo-root `agent-orchestration/` directory adds one more top-level path to
+- A repo-root `agent-working/agent-orchestration/` directory adds one more top-level path to
   this repo's discoverability surface (in the spirit of
   `docs/architecture/world_repository_layout.md`'s concerns about top-level path
   proliferation — noted here, not edited there).
@@ -235,16 +235,16 @@ guessed in advance of it.
 ## Consequences
 
 - Future provider-runtime implementation tickets should scaffold against this
-  contract shape (YAML + generated Python validation, `agent-orchestration/`
+  contract shape (YAML + generated Python validation, `agent-working/agent-orchestration/`
   source ownership, the stated adapter boundary) rather than re-deriving it.
 - Conformance tests become a gating requirement once provider adapters exist,
   per the Conformance Mechanism decision above.
 - No immediate code change is required by this ADR itself — no
-  `agent-orchestration/` directory, contract file, or runtime code is created as
+  `agent-working/agent-orchestration/` directory, contract file, or runtime code is created as
   part of landing this document.
 
 ## Revisit Trigger
-- Source Ownership (`agent-orchestration/` location) is revisited if a future
+- Source Ownership (`agent-working/agent-orchestration/` location) is revisited if a future
   provider-runtime implementation ticket's evidence contradicts the proposed
   layout.
 - Versioning scheme is revisited once a concrete `contract.yaml` schema is

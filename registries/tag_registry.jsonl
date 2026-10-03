@@ -11,7 +11,7 @@
 {"added_date": "2026-07-06", "category": "quality-attribute", "note": "seed: explicit tag_taxonomy.md worked example (SimQ calibration)", "tag": "calibration"}
 {"added_date": "2026-07-06", "category": "process-skill-signal", "note": "seed: matches /security-review skill 1:1 per ticket_tagging.md", "tag": "security"}
 {"added_date": "2026-07-06", "category": "meta-process", "note": "seed: Claude Code agent workflow tooling", "tag": "workflows"}
-{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: agent-monitoring/ runs.jsonl/events.jsonl tooling", "tag": "agent-monitoring"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: agent-working/agent-monitoring/ runs.jsonl/events.jsonl tooling", "tag": "agent-monitoring"}
 {"added_date": "2026-07-06", "category": "meta-process", "note": "seed: the tag taxonomy/registry system itself", "tag": "tagging"}
 {"added_date": "2026-07-06", "category": "meta-process", "note": "seed: docs/ authoring and maintenance", "tag": "documentation"}
 {"added_date": "2026-07-06", "category": "meta-process", "note": "seed: tag taxonomy definition work", "tag": "taxonomy"}
@@ -33,7 +33,7 @@
 {"added_date": "2026-07-06", "category": "meta-process", "note": "seed: UpdateSimulationKnowledgeWorkflow revert mechanism (agent tooling, not gameplay rollback)", "tag": "rollback"}
 {"added_date": "2026-07-06", "category": "meta-process", "note": "seed: UpdateSimulationKnowledgeWorkflow audit trail (agent tooling)", "tag": "audit-trail"}
 {"added_date": "2026-07-06", "category": "meta-process", "note": "seed: docs/ai/ agent-orchestration domain (this repo's layer:ai means the Claude agent system, not gameplay AI/cognition \u2014 that's tracked under 'strategy'/'cognition' instead)", "tag": "ai"}
-{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: agent-monitoring/reporting data-quality fixes (working_log.csv, generate_retro.py)", "tag": "data-quality"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: agent-working/agent-monitoring/reporting data-quality fixes (working_log.csv, generate_retro.py)", "tag": "data-quality"}
 {"added_date": "2026-07-06", "category": "meta-process", "note": "seed: ticket/tag reporting tooling (tools/tag_report.py, docs/guides/ticket_reporting.md)", "tag": "reporting"}
 {"added_date": "2026-07-06", "category": "meta-process", "note": "seed: documentation diagram coverage/index work (TCK-20260706-DIAGRAM-COVERAGE)", "tag": "diagrams"}
 {"added_date": "2026-07-06", "category": "process-skill-signal", "note": "matches /api-design-principles skill 1:1 per ticket_tagging.md's skill-suggestion table; discovered unregistered while auditing create-tickets.js (TCK-20260706-CREATE-TICKETS-TAG-CHECK)", "tag": "api-design"}

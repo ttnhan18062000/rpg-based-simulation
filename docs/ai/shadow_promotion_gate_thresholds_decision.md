@@ -19,7 +19,7 @@ This document **decides and evidences**. It implements nothing — no promotion,
 PASS/FAIL/BLOCKED logic, and no live shadow evaluation is created or run as part of landing it.
 Every numeric anchor below is either (a) a real, freshly-computed field from
 `tools/agent-monitoring/retrieval_baseline_metrics.py`'s output (re-run on 2026-07-30 against the
-live `agent-monitoring/*.jsonl` corpus: 721 `runs.jsonl` records, 3831 `events.jsonl` records, 122
+live `agent-working/agent-monitoring/*.jsonl` corpus: 721 `runs.jsonl` records, 3831 `events.jsonl` records, 122
 distinct run_ids with at least one qualifying search, `search_count.total = 1738`), (b) a real
 figure already recorded in a prior Phase-2 decision doc this one builds on, or (c) an explicit,
 labeled policy choice made in the deliberate absence of real shadow data — never an unattributed
@@ -73,7 +73,7 @@ ticket's.
 | 3 | a meaningful, pre-declared reduction in median injected context tokens or follow-up retrieval burden | `context_tokens` is confirmed platform-unavailable (`build_context_tokens_section()`'s own `"status": "unavailable"`, matching `docs/agent-monitoring/schema.md`'s "What is not recorded" section). Proxy: `search_count.per_run`, corpus-wide median currently **3** (n=122). Bar: shadow-cohort median `search_count.per_run` for a scenario must be **at least 1 whole search lower** than the baseline-cohort's contemporaneous median for that same scenario — a full integer unit, not a fractional/noise-level delta, since `search_count.per_run` is integer-valued by construction. | Numeric bar possible today as a proxy; genuinely cannot cite a token figure (see intro). |
 | 4 | cache correctness: stale packets are rejected and source-hash checks pass | Zero tolerance. Any single cache `HIT` served for content whose `source_hash` does not match (i.e., any `STALE_REJECTED`-eligible case not rejected), or any regression in the existing 25 tests in `tests/tools/test_retrieval_cache.py`, fails this criterion outright. Not a percentage — a correctness invariant. | Yes — fully defensible today; this is a deterministic code-correctness property already tested, not a statistical one requiring live shadow volume. |
 | 5 | provider parity: comparable request/packet/outcome events are emitted for every enabled provider | `tools/retrieval_event_parity_check.py`'s existing structural check (zero provider-specific/execution-identity field names in `RETRIEVAL_EVENT_FIELDS`) must continue passing — that much is enforceable today. | **No — flagged in §6.** Of the two known provider adapters (`codex`, `claude`/`claude-code`, per `retrieval_event_parity_check.py`'s `_KNOWN_PROVIDER_TOKENS`), only `claude-code` has ever produced a real workflow event; Codex has no live pilot (`TCK-20260729-SHADOW-PACKET-CALL-SITE`'s Out-of-Scope: "No live Codex pilot"). "Comparable events emitted for every enabled provider" cannot be measured against live data when only one provider is live. |
-| 6 | privacy boundary: monitoring contains no raw prompts, raw retrieved source text, or sensitive tool payloads | Zero tolerance, grounded in `docs/observability/retrieval_retention_redaction_policy.md`'s already-enumerated MAY/PROHIBITED field list (Open Decision 4). Any single occurrence of a PROHIBITED field or content shape in `agent-monitoring/*.jsonl` fails the gate. | Yes — fully defensible today; the enumerated list already exists and is checkable by direct field-shape inspection, independent of shadow-packet volume. |
+| 6 | privacy boundary: monitoring contains no raw prompts, raw retrieved source text, or sensitive tool payloads | Zero tolerance, grounded in `docs/observability/retrieval_retention_redaction_policy.md`'s already-enumerated MAY/PROHIBITED field list (Open Decision 4). Any single occurrence of a PROHIBITED field or content shape in `agent-working/agent-monitoring/*.jsonl` fails the gate. | Yes — fully defensible today; the enumerated list already exists and is checkable by direct field-shape inspection, independent of shadow-packet volume. |
 
 ---
 
@@ -164,7 +164,7 @@ context today.** This is a genuine gap, not an oversight to be papered over:
 
 ## 5. Zero Real Shadow-Packet Production Events Exist As Of This Decision
 
-Confirmed directly: `agent-monitoring/events.jsonl` (4064 lines as of 2026-07-30) contains **zero**
+Confirmed directly: `agent-working/agent-monitoring/events.jsonl` (4064 lines as of 2026-07-30) contains **zero**
 records carrying the `retrieval_event_schema_version` key that `compute_retrieval_metrics()` uses
 to identify a retrieval event. Independently confirmed via `compute_shadow_baseline_comparison()`:
 both its `"shadow"` and `"baseline"` cohorts report `retrieval_event_count: 0` against the live
@@ -231,7 +231,7 @@ implementation, Architecture-planning), promotion from advisory to default behav
   shadow-packet events exist for the scenario under review, not merely that `SHADOW_CONTEXT_PACKET_
   ENABLED` was toggled once.
 
-`tickets/inprogress/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md`'s Assumptions/Open Questions
+`agent-working/tickets/inprogress/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md`'s Assumptions/Open Questions
 section is updated to mark Open Decision 5 **RESOLVED**, mirroring the convention set by Open
 Decisions 1-4, and pointing here.
 

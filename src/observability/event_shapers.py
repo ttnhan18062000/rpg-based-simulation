@@ -5,7 +5,7 @@ Alternative to EventExtractor's post-tick snapshot-diff model: shapers here deri
 directly from `prior_state` + `update` (the typed, already-causally-tagged records domain systems
 produce), the same two objects already available before ApplyPath.apply_generation() ever runs.
 No post-mutation `current_state` is read. See
-stored_artifacts/TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC/investigation.md's "Design
+agent-working/stored_artifacts/TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC/investigation.md's "Design
 refinement" section for the full reasoning.
 
 SHADOW mode only in this ticket: shapers construct events, but nothing here delivers them to the
@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Protocol
 
 from src.core.enums import EntityRole
 from src.core.state import AuthoritativeState
-from src.core.updates import StateUpdate
+from src.core.updates import StateUpdate, decode_owner_faction_id_set
 from src.observability.config import ObservabilityMode
 from src.observability.entity_kind_constants import BOSS_ENTITY_KINDS, SPAWN_CADENCE_EXCLUDED_KINDS
 from src.domains.world_emergence.schema import WorldEventCategory
@@ -691,7 +691,7 @@ class StrategyShaper:
     decision_divergence_detected.
 
     Two source mechanisms, both confirmed against `event_extractor.py:295-563`'s existing
-    behavior (see stored_artifacts/TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY/investigation.md):
+    behavior (see agent-working/stored_artifacts/TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY/investigation.md):
 
     1. `EntityUpdate.property_updates` (a generic per-tick key/value bag) and
        `EntityUpdate.self_model_bundle_set` — read directly for `route_selected`/
@@ -1258,7 +1258,10 @@ class WorldDynamicsShaper:
                     event_type="region_ownership_changed", event_category="region",
                     tick=tick, entity_id=None, severity="WARNING",
                     source_system="event_shapers", message="",
-                    payload={"region_id": rid, "new_owner": str(w_upd.owner_faction_id_set)},
+                    # TCK-20261003-REGION-OWNER-NONE-SENTINEL-PERSISTED-RAW: decode the
+                    # unowned sentinel so a liberation reports "None", not a literal "-1".
+                    payload={"region_id": rid,
+                             "new_owner": str(decode_owner_faction_id_set(w_upd.owner_faction_id_set))},
                 ))
             if getattr(w_upd, "kind_set", None) is not None:
                 events.append(SimulationEvent(
@@ -1892,7 +1895,7 @@ AGENCY_SHAPER_REGISTRY: dict[str, list[EventShaper]] = {
 # build, since event_extractor.py's branches for these new domains weren't flag-gated at that
 # point either. Confirmed as a real bug (self_model_updated/cooperation_event double-firing) via a
 # real kernel run before this separate flag/registry split was added — see
-# stored_artifacts/TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY/investigation.md.
+# agent-working/stored_artifacts/TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY/investigation.md.
 PHASE2_SHAPER_REGISTRY: dict[str, list[EventShaper]] = {
     "strategy": [StrategyShaper()],
     "progression": [ProgressionShaper()],

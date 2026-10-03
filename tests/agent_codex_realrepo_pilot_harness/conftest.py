@@ -6,10 +6,11 @@ from pathlib import Path
 import pytest
 
 from tools.agent_replay_codex.monitoring_shards import read_source_bytes
+from tools.agent_working_paths import AGENT_MONITORING, PILOT_REQUESTS, TICKETS  # noqa: E402
 
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
-_AGENT_MONITORING_DIR = _PROJECT_ROOT / "agent-monitoring"
+_AGENT_MONITORING_DIR = _PROJECT_ROOT / AGENT_MONITORING
 _CODEX_CONFIG_PATH = _PROJECT_ROOT / ".codex" / "config.toml"
 _MONITORING_SOURCES = ("runs.jsonl", "events.jsonl", "tools.jsonl")
 
@@ -27,7 +28,7 @@ def _snapshot() -> dict[str, bytes | None]:
     watched.update(
         {
             str(path): path.read_bytes()
-            for directory in (_PROJECT_ROOT / "pilot_requests", _PROJECT_ROOT / "tickets")
+            for directory in (_PROJECT_ROOT / PILOT_REQUESTS, _PROJECT_ROOT / TICKETS)
             if directory.is_dir()
             for path in directory.rglob("*")
             if path.is_file()

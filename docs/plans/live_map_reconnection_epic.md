@@ -57,7 +57,7 @@ decorator across `src/api/routes/*.py`, `src/api/ws/*.py`, `src/api/server.py`,
    **confirmed (see Open Questions) that this spatial shape doesn't exist anywhere in V2 at all**, not even
    in the compiled world spec's `RegionRecipeSpec` (`grid_bounds` only, no center/radius/locations). A real
    gap, resolved with a concrete derivation approach below, not an unresolved lookup.
-7. **Root cause / history**: `tickets/done/infra-04-realtime-state-streaming.md` (a historical V1-era
+7. **Root cause / history**: `agent-working/tickets/done/infra-04-realtime-state-streaming.md` (a historical V1-era
    ticket) planned this exact WS/SSE refactor, including "Refactor the React `useSimulation` hook" as its
    own step 4. Only the backend half shipped, under V2, as WebSocket (not the SSE shape that ticket
    sketched) — the frontend step was never done, leaving `useSimulation.ts` stuck on the old contract ever
@@ -128,7 +128,7 @@ implementation plan exists yet." The user chose the faster, already-mostly-built
 ## Not related to this epic
 
 `TCK-20260820-EPIC-WORLD-RENDERING-CORE` (batch/QA measurement-only PNG renderer feeding the visual-quality
-scoring system, already scoped into 9 child tickets under `tickets/todos/world-rendering-core/`) is a
+scoring system, already scoped into 9 child tickets under `agent-working/tickets/todos/world-rendering-core/`) is a
 distinct, unrelated system — a server-side offline renderer for scoring, not a player-facing live view.
 Neither epic depends on the other.
 
@@ -531,7 +531,7 @@ viewers — not a large multiplayer game):
   object), since presenters read state, not specs. `region.name` also already exists and needed no
   drop/re-source decision either. `locations` is dropped (`[]`, no location/POI concept exists in V2 at
   all); `difficulty` is derived from `region.hazard_level`, `region.kind` derives a `terrain` code — see
-  `stored_artifacts/TCK-20260821-PRESENT-MAP-STATIC/investigation.md` for the full decision record.
+  `agent-working/stored_artifacts/TCK-20260821-PRESENT-MAP-STATIC/investigation.md` for the full decision record.
 - **`total_spawned`/`total_deaths` — now fully resolved.** See item 3 above: V1's exact computation
   pattern found and confirmed absent from V2. Item 3's child ticket adds two simple counters to
   `V2EngineManager`, following V1's proven pattern.
@@ -566,7 +566,7 @@ viewers — not a large multiplayer game):
   broadcast-payload findings that doc didn't cover.
 - `docs/plans/world_rendering/idea_world_rendering_core.md` — the alternative "Option C" server-owned
   rendering core architecture, explicitly not chosen for this epic.
-- `tickets/done/infra-04-realtime-state-streaming.md` — the historical V1-era ticket whose incomplete
+- `agent-working/tickets/done/infra-04-realtime-state-streaming.md` — the historical V1-era ticket whose incomplete
   step 4 ("refactor `useSimulation`") is this epic's direct root cause.
 - `docs/engine/performance_contract.md`, `docs/performance/perf_baseline_policy.md` — the scoped-claims
   methodology and the `CLASS_A`/`CLASS_B`/`CLASS_C` hardware-class targets item 5's performance-validation

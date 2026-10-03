@@ -2,10 +2,10 @@
 (TCK-20260903-MONITORING-DATA-CODEX-REMIGRATION).
 
 TCK-20260903-MONITORING-DATA-MIGRATION retired the per-source top-level files
-(agent-monitoring/{runs,events,tools}.jsonl) and the prior tools-only
-agent-monitoring/tools/tools-YYYY-Www.jsonl shard directory in favor of one unified layout:
-agent-monitoring/data/<week>/<source>.jsonl for every one of the 3 sources
-("runs.jsonl" | "events.jsonl" | "tools.jsonl"), plus an agent-monitoring/data/unknown-week/
+(agent-working/agent-monitoring/{runs,events,tools}.jsonl) and the prior tools-only
+agent-working/agent-monitoring/tools/tools-YYYY-Www.jsonl shard directory in favor of one unified layout:
+agent-working/agent-monitoring/data/<week>/<source>.jsonl for every one of the 3 sources
+("runs.jsonl" | "events.jsonl" | "tools.jsonl"), plus an agent-working/agent-monitoring/data/unknown-week/
 fallback bucket for rows whose week bucket could not be derived. The codex-runtime-activation
 containment/rollback/provenance guardrails in this subsystem (tools/agent_codex_*,
 tools/agent_replay_codex/, and their tests) treat each of the 3 sources as one logical monitoring
@@ -23,6 +23,7 @@ from __future__ import annotations
 import hashlib
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING, posix  # noqa: E402
 
 _MONITORING_TOOLS_DIR = Path(__file__).resolve().parent.parent / "agent-monitoring"
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
@@ -30,7 +31,7 @@ if str(_MONITORING_TOOLS_DIR) not in sys.path:
 from monitoring_shard_paths import shard_paths  # noqa: E402
 
 _DATA_DIR_NAME = "data"
-_TREE_DATA_DIR_PREFIX = "agent-monitoring/data/"
+_TREE_DATA_DIR_PREFIX = f"{posix(AGENT_MONITORING)}/data/"
 
 
 def source_paths(agent_monitoring_dir: Path, source: str) -> list[Path]:
@@ -68,10 +69,10 @@ def resolve_tree_lines(tree: dict[str, bytes], name: str) -> list[bytes]:
     (e.g. tools/agent_codex_realrepo_pilot_harness/proofs.py's capture_tree() output), tolerating
     both tree shapes.
 
-    Real-repo shape: a tree captured from the real repo carries agent-monitoring/data/<week>/<name>
+    Real-repo shape: a tree captured from the real repo carries agent-working/agent-monitoring/data/<week>/<name>
     keys for every week (sorted by full key, matching source_paths' ordering). Scratch shape: a
     synthetic tree built directly by a test or fixture (never through the real weekly migration)
-    carries a single literal agent-monitoring/<name> key.
+    carries a single literal agent-working/agent-monitoring/<name> key.
     """
     shard_keys = sorted(
         key for key in tree
@@ -80,4 +81,4 @@ def resolve_tree_lines(tree: dict[str, bytes], name: str) -> list[bytes]:
     if shard_keys:
         content = b"".join(tree[key] for key in shard_keys)
         return content.splitlines(keepends=True)
-    return tree.get(f"agent-monitoring/{name}", b"").splitlines(keepends=True)
+    return tree.get(f"{posix(AGENT_MONITORING)}/{name}", b"").splitlines(keepends=True)

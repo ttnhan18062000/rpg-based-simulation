@@ -34,7 +34,7 @@ count heuristic conflated the two. Per peer review: a check known to be wrong, l
 confidence, becomes permanent known-noise a reader learns to ignore -- exactly the attribution-
 ratchet failure shape this corpus already has a precedent for. Deleted rather than downgraded;
 re-add only if a real signal for this claim is found (see
-`stored_artifacts/TCK-20260916-MECHANISM-STATE-CALLER-MISMATCH-DETECTION/investigation.md` for the
+`agent-working/stored_artifacts/TCK-20260916-MECHANISM-STATE-CALLER-MISMATCH-DETECTION/investigation.md` for the
 full disposition of its own one real test).
 
 **Symbol-level bindings, when available, check only the bound symbol's real callers -- not every

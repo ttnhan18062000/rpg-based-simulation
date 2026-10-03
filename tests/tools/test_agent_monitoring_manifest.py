@@ -1,6 +1,6 @@
 """Tests for tools/agent-monitoring/manifest.py (TCK-20260721-BASELINE-MONITORING-MANIFEST).
 
-Runs against the REAL agent-monitoring/ directory — never a tmp_path copy, which
+Runs against the REAL agent-working/agent-monitoring/ directory — never a tmp_path copy, which
 would make the zero-mutation and streaming-guard assertions vacuous (nothing real
 to prove wasn't loaded wholesale or mutated). Mirrors
 tests/agent_replay/test_no_mutation_snapshot.py's dirty-tree-aware two-branch
@@ -15,11 +15,12 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING, posix
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _MANIFEST_PATH = _MONITORING_TOOLS_DIR / "manifest.py"
-_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
+_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / AGENT_MONITORING
 
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
@@ -63,14 +64,14 @@ def test_build_manifest_shape_against_real_corpus():
 def test_manifest_cli_reproducible_byte_identical_across_two_runs(tmp_path):
     # Frozen snapshot of the real corpus (TCK-20260919-AGENT-MONITORING-MANIFEST-
     # REPRODUCIBILITY-CI-FAILURE): this test asserts the CLI is deterministic for a
-    # given input, not that the live agent-monitoring/ directory never changes between
+    # given input, not that the live agent-working/agent-monitoring/ directory never changes between
     # two subprocess calls a couple seconds apart — the latter is a race the test was
     # never meant to depend on. Copying real content into tmp_path here is unlike the
     # module docstring's "never a tmp_path copy" rule above, which guards the
     # zero-mutation and streaming-guard tests specifically (they need a real, live path
     # to prove something wasn't silently swapped out from under them); this test's own
     # assertion is unaffected by the source being frozen.
-    snapshot_dir = tmp_path / "agent-monitoring"
+    snapshot_dir = tmp_path / AGENT_MONITORING
     shutil.copytree(_REAL_AGENT_MONITORING_DIR / "data", snapshot_dir / "data")
 
     result_1 = subprocess.run(
@@ -224,7 +225,7 @@ def test_manifest_source_never_calls_full_file_read_methods():
 
 def _porcelain_snapshot() -> str:
     result = subprocess.run(
-        ["git", "status", "--porcelain", "--", "agent-monitoring/"],
+        ["git", "status", "--porcelain", "--", f"{posix(AGENT_MONITORING)}/"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     )
     return result.stdout
@@ -251,7 +252,7 @@ def test_manifest_run_against_real_corpus_produces_zero_diff():
         build_manifest(_REAL_AGENT_MONITORING_DIR)
         post_porcelain = _porcelain_snapshot()
         assert post_porcelain == "", (
-            "build_manifest mutated agent-monitoring/ (tree was clean before, dirty after): "
+            "build_manifest mutated agent-working/agent-monitoring/ (tree was clean before, dirty after): "
             f"{post_porcelain!r}"
         )
         return
@@ -260,7 +261,7 @@ def test_manifest_run_against_real_corpus_produces_zero_diff():
     build_manifest(_REAL_AGENT_MONITORING_DIR)
     post_hash = _content_hash_snapshot()
     assert pre_hash == post_hash, (
-        "build_manifest changed the content of one or more agent-monitoring/*.jsonl files "
+        "build_manifest changed the content of one or more agent-working/agent-monitoring/*.jsonl files "
         "(ambient dirty state existed before the run, but its content hash must be unchanged after)"
     )
 

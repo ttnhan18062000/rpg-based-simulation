@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from tools.test_architecture import core_rpg_report as report
+from tools.agent_working_paths import TICKETS, posix
 
 AS_OF = dt.date(2026, 9, 30)
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -66,9 +67,9 @@ def repo(tmp_path):
         """)
     _write(root / "registries/tag_registry.jsonl",
            '{"added_date": "2026-08-15", "category": "process-skill-signal", "note": "n", "tag": "escaped-defect"}\n')
-    _write(root / "tickets/done/TCK-1.md",
+    _write(root / f"{posix(TICKETS)}/done/TCK-1.md",
            "---\nticket_id: TCK-1\ndate: 2026-09-10\ntags: [testing, escaped-defect]\n---\n\nFailure class: never-fires\n")
-    _write(root / "tickets/done/TCK-2.md", "---\nticket_id: TCK-2\ndate: 2026-09-11\ntags: [testing]\n---\n")
+    _write(root / f"{posix(TICKETS)}/done/TCK-2.md", "---\nticket_id: TCK-2\ndate: 2026-09-11\ntags: [testing]\n---\n")
     _write(root / "docs/parity_ledger/x.yaml", "- id: A\n  status: verified\n- id: B\n  status: missing\n")
     return root
 
@@ -394,7 +395,7 @@ def test_scanned_inputs_dirty_flags_uncommitted_scanned_inputs_only(repo):
     _git(repo, "commit", "-q", "-m", "init")
     assert _build(repo)["manifest"]["scanned_inputs_dirty"] is False
     _write(repo / "tests/unit/other/test_d.py", "import os\n")            # a scanned input
-    _write(repo / "tickets/working_log.csv", "x\n")                        # not a scanned input (not .md)
+    _write(repo / f"{posix(TICKETS)}/working_log.csv", "x\n")                        # not a scanned input (not .md)
     manifest = _build(repo)["manifest"]
     assert manifest["scanned_inputs_dirty"] is True
     assert manifest["dirty_input_paths"] == ["tests/unit/other/test_d.py"]

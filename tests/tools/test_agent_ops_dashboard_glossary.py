@@ -13,13 +13,14 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from src.api.agent_ops_dashboard import ingest, main
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS
 
 
 def _init_repo_skeleton(tmp_path: Path) -> None:
-    (tmp_path / "agent-monitoring").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
+    (tmp_path / AGENT_MONITORING).mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "done").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "todos").mkdir(parents=True, exist_ok=True)
     (tmp_path / "registries").mkdir(parents=True, exist_ok=True)
 
 

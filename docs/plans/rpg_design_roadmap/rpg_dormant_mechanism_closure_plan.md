@@ -76,7 +76,7 @@ have no live path connecting them to the rest of the simulation.
    own comment — zero real production call sites. Unlike items 1-3, this requires a real product
    decision (flip the flag ON and verify, or leave deliberately dormant pending a real consumer),
    not a wiring fix — flagged for that decision, not resolved here.
-   **Resolved, 2026-09-07** (`TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION`, `tickets/done/`): also
+   **Resolved, 2026-09-07** (`TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION`, `agent-working/tickets/done/`): also
    confirmed **zero real consumer** exists (not just zero producer, unlike every other item in this
    list) — real user decision, **defer**, `ENABLE_ITEM_INSTANCE_HISTORY` stays `OFF`.
 5. **CORRECTED, 2026-09-07 — this item's original premise was stale and factually wrong.** This
@@ -96,13 +96,13 @@ have no live path connecting them to the rest of the simulation.
 6. **Ideas 50 (Material-Gated Evolution) and 64 (The Empty Chair) were confirmed unbuilt during M9's
    scoping** — building either is real new-feature work, a product decision for the roadmap owner, not
    an "observe and fix" item. Out of this plan's scope; not re-ticketed here.
-   **Resolved, 2026-09-07** (`TCK-20260907-DORMANT-IDEA-DISPOSITION-DECISIONS`, `tickets/done/`):
+   **Resolved, 2026-09-07** (`TCK-20260907-DORMANT-IDEA-DISPOSITION-DECISIONS`, `agent-working/tickets/done/`):
    real user decision, **schedule both for a future milestone** (see `rpg_design_roadmap.md` §M10 —
    Deferred Ideas Backlog) rather than retire.
 7. **The `CHURCH` building's Blessing/Resurrection services are fully coded and placed in zero of the
    20 world modules** — a pure content-authoring gap (add the building to at least one module's
    composition), no code required. Lowest priority since it's isolated and low-risk either way.
-   **Resolved, 2026-09-07** (`TCK-20260907-CHURCH-CONTENT-AUTHORING`, `tickets/done/`): premise was
+   **Resolved, 2026-09-07** (`TCK-20260907-CHURCH-CONTENT-AUTHORING`, `agent-working/tickets/done/`): premise was
    wrong — `BLESSING`/`RESURRECTION` have zero real code reading them anywhere, unlike this plan's
    other content-only gaps. Real user decision (after two revisions, see the ticket's own
    Completion Summary): **deferred**, same treatment as idea 30 (`TCK-20260907-ITEM-INSTANCE-

@@ -1,4 +1,4 @@
-"""Measures `agent-monitoring/data/*/tools.jsonl` run_id attribution coverage
+"""Measures `agent-working/agent-monitoring/data/*/tools.jsonl` run_id attribution coverage
 (TCK-20260915-SIDECAR-ATTRIBUTION-GAP, child of TCK-20260915-MONITORING-ANOMALY-DETECTION-EPIC).
 
 **This module used to also gate on the rate (a floor ratchet); that gate was removed by
@@ -41,7 +41,7 @@ WINDOW_DAYS = 14
 def compute_attribution_rate(tools: List[dict] = None, window_days: int = WINDOW_DAYS):
     """Returns (rate_pct, attributed_count, total_count) over the last `window_days` days of
     real tool rows. `tools` defaults to the real corpus when not supplied -- tests inject a
-    synthetic list instead of touching the real `agent-monitoring/data/` shards."""
+    synthetic list instead of touching the real `agent-working/agent-monitoring/data/` shards."""
     if tools is None:
         tools = _load_source(DEFAULT_TOOLS_FILE, "tools")
     cutoff = (datetime.now(timezone.utc) - timedelta(days=window_days)).isoformat()

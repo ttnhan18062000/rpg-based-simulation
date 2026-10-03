@@ -14,12 +14,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate import load_data_glob  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
-DATA_DIR = Path("agent-monitoring/data")
+DATA_DIR = AGENT_MONITORING / "data"
 
 # Pilot-window sizes (TCK-20260904-SHADOW-REVIEWER-LOGGING plan.md Judgment Call 4): sized from
 # real corpus volume (478 historical Architecture-Verify events vs. 14 Security-Review events,
-# confirmed by direct count against agent-monitoring/data/*/events.jsonl at plan time) — NOT a
+# confirmed by direct count against agent-working/agent-monitoring/data/*/events.jsonl at plan time) — NOT a
 # promotion/statistical-significance threshold, purely a cap on total candidate model calls this
 # pilot ever makes. Adjust here only — never duplicate this literal at any call site.
 SHADOW_MAX_SAMPLES = {

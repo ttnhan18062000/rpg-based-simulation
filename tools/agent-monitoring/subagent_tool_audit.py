@@ -2,7 +2,7 @@
 """Read-only caller-level tool-usage audit over Claude Code's own subagent transcripts
 (TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2).
 
-agent-monitoring/data/*/tools.jsonl's `agent` field is the pipeline *phase* the orchestrator last
+agent-working/agent-monitoring/data/*/tools.jsonl's `agent` field is the pipeline *phase* the orchestrator last
 announced (tools/agent-monitoring/post_tool_hook.py reads it from the run sidecar), not the real
 caller — every tool call made while that sidecar is current gets attributed to it, including the
 orchestrator's own calls. This over- and under-counts real per-agent usage (investigation.md §2).

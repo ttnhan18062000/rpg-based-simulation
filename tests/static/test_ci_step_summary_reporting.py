@@ -2,7 +2,7 @@
 `--junit-xml=` flag and the `if: always()` job-summary step are wired correctly into each of the
 9 fast-lane jobs in `.github/workflows/test.yml`, that no new dependency or marketplace Action
 was introduced, and that the `slow`/`migration-lanes` jobs (explicitly deferred, see
-staging_artifacts/TCK-20260823-CI-STEP-SUMMARY-REPORTING/plan.md "Decisions Made by This Plan")
+agent-working/staging_artifacts/TCK-20260823-CI-STEP-SUMMARY-REPORTING/plan.md "Decisions Made by This Plan")
 stay untouched.
 
 Follows the established `yaml.safe_load` + dict/text-assertion pattern used by
@@ -23,7 +23,9 @@ _FASTLANE_JOBS = [
     "unit-gameplay",
     "unit-infra",
     "integration",
-    "api-tools",
+    "tools-a-e",
+    "tools-f-z",
+    "api-cli-engine",
     "agent-orchestration",
     "simulation-quality",
     "arch-docs",
@@ -38,6 +40,9 @@ _PRE_EXISTING_USES = {
     # 'frontend' job -- a legitimate, expected new Action (mirrors deploy-docs.yml's existing
     # actions/setup-node@v4 usage), not scope creep on this ticket's own dependency guard.
     "actions/setup-node@v4",
+    # astral-sh/setup-uv added by TCK-20261002-UV-FIRST-CI-JOB for the first job installed with
+    # `uv sync` (owner decision, python_code_craft_roadmap.md 8.11).
+    "astral-sh/setup-uv@v10.2.0",
 }
 
 _BANNED_REQUIREMENTS_ENTRIES = ("pytest-cov", "pytest-html")
@@ -68,7 +73,9 @@ needs:
   - unit-gameplay
   - unit-infra
   - integration
-  - api-tools
+  - tools-a-e
+  - tools-f-z
+  - api-cli-engine
   - agent-orchestration
   - simulation-quality
   - arch-docs

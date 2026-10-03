@@ -4,7 +4,7 @@ Covers TCK-20260716-AGENTOPS-DASHBOARD-BACKEND's AC #1 (typed response models
 only, never raw dict — the src/api/routes/history.py pattern this module
 deliberately does not mirror) plus two scope guards named in the ticket's own
 test plan: no StaticFiles/frontend-serving mount, and no write path into
-tickets/**/agent-monitoring/*.jsonl.
+agent-working/tickets/**/agent-working/agent-monitoring/*.jsonl.
 """
 from __future__ import annotations
 
@@ -76,7 +76,7 @@ def test_main_mounts_no_static_files():
 
 
 def test_agent_ops_dashboard_module_has_no_write_path():
-    """Read-only contract: never write to agent-monitoring/*.jsonl or tickets/**."""
+    """Read-only contract: never write to agent-working/agent-monitoring/*.jsonl or agent-working/tickets/**."""
     forbidden_calls = {"write_text", "write_bytes", "open"}
     violations = []
     for py_file in _SRC_ROOT.glob("*.py"):

@@ -27,7 +27,7 @@ paths were deliberately left open. Full structure, layering rules and command ta
 
 | # | Decision | Status | Why | Reverse when |
 |---|---|---|---|---|
-| D1 | One root folder `visual_assets/` (`drawing/`, `store/`, `catalog/`); tests in `tests/visual_assets/` | **decided** | not `src/` (the installable engine; asset systems must never touch simulation state), not `tools/` (94 unrelated entries); root subsystems have precedent (`agent-orchestration/`, `frontend/`) | the store must ship inside the installable package |
+| D1 | One root folder `visual_assets/` (`drawing/`, `store/`, `catalog/`); tests in `tests/visual_assets/` | **decided** | not `src/` (the installable engine; asset systems must never touch simulation state), not `tools/` (94 unrelated entries); root subsystems have precedent (`agent-working/agent-orchestration/`, `frontend/`) | the store must ship inside the installable package |
 | D5 | Human gates (`adopt`, `revoke`, release, gc deletion) are CLI-only and absent from the MCP surface | **decided** | proposal section 6: no agent or MCP server may collapse the gates | never without a new decision |
 | D6 | Release **candidates** only; no active pointer, no runtime resolver | **decided** | deployment profile A vs B (`AM1-W01`) is not selected; activation is `AM-M6` | profile selected and M5 gates pass |
 | D7 | One CI step `Run: tests/visual_assets` in the `api-tools` job | **decided** | CI lists test directories explicitly, so a new test root runs nowhere until added | never |

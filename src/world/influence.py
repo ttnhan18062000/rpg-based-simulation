@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Dict, List, Optional, TYPE_CHECKING
 from src.core.state import AuthoritativeState, EntityState
-from src.core.updates import StateUpdate, WorldUpdate
+from src.core.updates import StateUpdate, WorldUpdate, NO_OWNER_SENTINEL
 from src.core.enums import Faction
 from src.content_semantics.faction import get_faction_id_str, get_faction_semantics_service
 
@@ -67,7 +67,7 @@ class FactionInfluenceService:
 
             # Liberation Check
             elif owner_fid is not None and semantics.is_invader(owner_fid) and new_influence >= FactionInfluenceService.LIBERATION_THRESHOLD:
-                w_upd_args["owner_faction_id_set"] = -1  # Sentinel for None
+                w_upd_args["owner_faction_id_set"] = NO_OWNER_SENTINEL
 
             world_updates[r_id] = WorldUpdate(**w_upd_args)
             
@@ -95,7 +95,7 @@ class FactionInfluenceService:
                 entities_add.append(stronghold)
                 
             # 2. New Liberation -> Remove Stronghold
-            elif w_upd.owner_faction_id_set == -1:
+            elif w_upd.owner_faction_id_set == NO_OWNER_SENTINEL:
                 # Find stronghold in this region
                 for e_id, entity in state.entities.items():
                     if entity.kind == "stronghold":

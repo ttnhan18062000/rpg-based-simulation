@@ -12,10 +12,10 @@ tags: [idea, agent-infrastructure, observability, schema, data-quality]
 # Idea: Enforce agent-monitoring Schema at Write Time, Not Just at Read Time
 
 **Archived:** 2026-07-12 — fully shipped by `TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT`
-(`tickets/done/`); this document is the historical design reference.
+(`agent-working/tickets/done/`); this document is the historical design reference.
 
 > **Maturity: SHIPPED.** Implemented in full by `TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT`
-> (`tickets/done/`), sequenced first under `TCK-20260708-AGENT-INFRA-HARDENING-EPIC` since the
+> (`agent-working/tickets/done/`), sequenced first under `TCK-20260708-AGENT-INFRA-HARDENING-EPIC` since the
 > cost-observability idea depended on this one's vocabulary cleanup (now also shipped — see
 > [`idea_agent_cost_observability.md`](idea_agent_cost_observability.md) (archived — shipped)). All 3 layers from this
 > doc's "Idea" section landed: (1) non-null enforcement is a hard reject in both `record_run.py` and
@@ -26,14 +26,14 @@ tags: [idea, agent-infrastructure, observability, schema, data-quality]
 > `tools/agent-monitoring/vocabulary.py` is the single source of truth for the canonical sets, per
 > this doc's "Natural Integration Points" table. As decided when this was raised, the 98 historical
 > drifted records were **not** backfilled or rewritten — only future drift is prevented. Raised from
-> a direct investigation of `agent-monitoring/runs.jsonl`/`events.jsonl` (2026-07-04), the same
-> investigation that produced [`TCK-20260704-CREATE-TICKETS-MONITORING`](../../../../tickets/done/TCK-20260704-CREATE-TICKETS-MONITORING.md).
+> a direct investigation of `agent-working/agent-monitoring/runs.jsonl`/`events.jsonl` (2026-07-04), the same
+> investigation that produced [`TCK-20260704-CREATE-TICKETS-MONITORING`](../../../../agent-working/tickets/done/TCK-20260704-CREATE-TICKETS-MONITORING.md).
 
 ---
 
 ## Problem
 
-Direct analysis of the live `agent-monitoring/` data (466 runs, 1844 events) found real, measurable schema drift:
+Direct analysis of the live `agent-working/agent-monitoring/` data (466 runs, 1844 events) found real, measurable schema drift:
 
 - **21% of runs (98/466) have `workflow: null`.** These are older-format records using a completely different field set (`ticket_id`/`status`/`started_at`/`completed_at`/`notes` instead of `run_id`/`final_status`/`start_ts`/`end_ts`/`summary`) — they could not have been written by the current `record_run.py`, since its `REQUIRED` check would reject a record missing the `workflow` key entirely. They must predate it or bypass it (direct file writes).
 - **`events.jsonl`'s `phase` field appears in at least 8 forms for the same concept**: `Implement`, `implement`, `IMPLEMENT`, plus combined values like `Implement+Finalize` and `Investigate+Plan+Implement`.

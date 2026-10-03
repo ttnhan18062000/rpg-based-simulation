@@ -48,7 +48,7 @@ documented **fallback only**, for when the tool call itself errors.
 The other two scripts (`implement-ticket.js`, `simq-audit.js`) are **not**
 ported yet — both still fail the acorn parse outright (same
 nested-backtick defect class, unfixed — out of this pilot's scope, see
-`stored_artifacts/TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT/pilot_measurement.md` for the
+`agent-working/stored_artifacts/TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT/pilot_measurement.md` for the
 full parse-status list and the go/no-go on porting them). Their skills still hand-translate only (as does `/implement-epic` for any epic with pending children),
 same as before this pilot:
 

@@ -2,7 +2,7 @@
 
 Tests the apply-layer (push-based) ProgressionShaper: XP/level/skill/trait/AP events derived from
 prior_state + update alone, plus progression_plateau_detected's cross-tick shaper-local state. See
-stored_artifacts/TCK-20260806-PUSH-SHAPER-REGISTRY-PROGRESSION/investigation.md's "Key finding" for
+agent-working/stored_artifacts/TCK-20260806-PUSH-SHAPER-REGISTRY-PROGRESSION/investigation.md's "Key finding" for
 the any-update-vs-identity-update gating fix this file's plateau tests specifically exercise.
 """
 from __future__ import annotations

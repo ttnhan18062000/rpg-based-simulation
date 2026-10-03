@@ -12,7 +12,7 @@ meaningful, not circular.
 `tools.agent_replay.runner.replay_slice()` normalizes verdicts (`"ok"` when Review's verdict is
 `APPROVED`, else the raw verdict string) — re-implemented here, not imported, since
 `replay_slice()` has no standalone normalization function to import. This avoids reintroducing the
-vocabulary bug `tickets/done/TCK-20260721-CODEX-REPLAY-PARITY.md` Implementation Notes Step 11
+vocabulary bug `agent-working/tickets/done/TCK-20260721-CODEX-REPLAY-PARITY.md` Implementation Notes Step 11
 already found and fixed once in `shadow_mode.py`.
 """
 from __future__ import annotations

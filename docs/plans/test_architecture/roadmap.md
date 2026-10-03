@@ -10,7 +10,7 @@ tags: [testing, architecture, planning]
 
 **Status: owner decisions recorded 2026-09-30 (§11): D-R2, D-MF and D-M2 approved with changes; D-P deferred; D-PERF assigned when its trigger fires; D-PR resolved.** Approval lifts a HOLD; it does not mean the epic is complete. See each epic's own status.
 
-This roadmap and the four epic tickets in `tickets/todos/test-architecture/` are the **binding** plan.
+This roadmap and the four epic tickets in `agent-working/tickets/done/test-architecture/` are the **binding** plan.
 Everything in [`reference/`](reference/) is non-binding investigation and design material for the
 detail planner and implementer agents. Child tickets are **not** created here; they are the detail
 planner's job.
@@ -256,6 +256,18 @@ Sample size is 1 for each, so no false-positive rate or cost rate is stated or i
 | Domain roll-out | **none**. Instead a second pilot surface in progression |
 | Still the owner's, later | promotion to required, any scale-out, any §9 cleanup target |
 
+**Phase 1 closed 2026-10-03 by owner decision, with limits.** The four epics A–D are closed (the user's answers, relayed by `test-architecture-reviewer`; the closure-readiness audit is in `agent-working/tickets/done/test-architecture/INDEX.md`, base `origin/main` c0980e27a). Epic B criterion 4 is accepted as MET-with-caveat: routing observed on 18 PRs, the scenario lane ran on 7 (34–52 s whole-job) against the roughly 10 planned, and the `src/progression/**`-only trigger was not observed in CI; the rule-level test `tests/unit/tools/test_scenario_lane_paths.py::test_src_progression_only_routes_to_the_dedicated_job` (against the live `PERF_RE`) stands in. Epic C criteria 2 and 4 are recorded as **NOT DEMONSTRATED**; their protocols stay as written and the first eligible run is recorded against them. **Phase 2 (scale-out) needed a new owner decision: on 2026-10-03 the owner approved it for social only, with RPG feature tests read-only; see [`phase2_social_scale_out.md`](phase2_social_scale_out.md).** Closure promotes nothing: the scenario lane stays non-required and every advisory check stays advisory.
+
+**Watch items (2026-10-03; this roadmap stays the live document).** Each has an owner and a trigger; none has a date.
+
+| Item | Owner | Trigger |
+|---|---|---|
+| (a) Epic C criterion 2 rerun | test-architecture, with `rpg-feature-planning` supplying candidates | A test-changing ticket outside owner decision 7's parked set appears, from any owner, and the user gives a launch go-ahead; it re-enters through the protocol in Epic C criterion 2 (`agent-working/tickets/done/test-architecture/TCK-20260929-EPIC-TEST-WORKFLOW-FAILURE-HANDLING.md`). Possible future sources, undated, not commitments (relayed from `rpg-feature-planning`, 2026-10-02): `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP` (held behind `TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND`) and `TCK-20261002-EPIC-SEMANTIC-FOUNDATION-COMPLETION` child B |
+| (b) Epic C criterion 4, first expectation-change run | test-architecture | A ticket that changes an expectation shows the Bible/contract and parity-ledger change before the test change, or an escalation record |
+| (c) First CI-observed `src/progression/**`-only PR | test-architecture | A merged PR whose changed paths hit the scenario lane but not `PERF_RE`; append its row to the Epic B cost record (`agent-working/tickets/done/test-architecture/TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION.md`) |
+| (d) Pilot P (a second surface in progression) | `rpg-feature-planning` (surface stability) and test-architecture | The AC6 tripwire of `TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS` fires or the derived-stat behaviour stops being provisional; launch needs the user's go-ahead |
+| (e) Mutation baseline v3 goes stale | test-architecture | About 2026-11-02 (30 days after its 2026-10-03 run, per `stale_after` in `tests/mutation/baselines/src_core_conservation_v3.json`, which superseded v2), or its target file or selection changes |
+
 ## 7 · Epics (Phase 1)
 
 | Epic | Outcome | Depends on | Parts that were gated (decision recorded 2026-09-30) |
@@ -304,7 +316,8 @@ The assessment found cost without matching protection (F5). Pruning by line-coun
    run and per directory, test count, an **observed test duration** (the sum of recorded per-test time, not
    wall time or compute cost) and outcomes. **Failure history is unavailable** from it, and whether tests
    protect a declared behaviour or only assert text is not measured by it. CI uploads JUnit only from
-   `api-tools` today, so most directories read `not-in-supplied-runs`. It enables cleanup *investigation*
+   `tools-a-e`, `tools-f-z` and `api-cli-engine` (the former `api-tools` job, split by
+   `TCK-20261003-CI-SPLIT-API-TOOLS-JOB`) today, so most directories read `not-in-supplied-runs`. It enables cleanup *investigation*
    and authorizes nothing: points 3 and 4 still apply.
 2. **Candidates:**
    - the `agent_codex_*` suites (deletion intent approved 2026-09-28 as D6, execution still pending);
@@ -356,7 +369,7 @@ baselines* have **not fired**.
 | Seeded-fault evaluation harness | Before the impact report is ever used to skip a test or lane, or after the first recorded CI selection failure |
 | Per-test coverage contexts | A recorded selection failure where static inputs missed a dynamic dependency |
 | Quarantine enforcement tooling | The first real case needing quarantine |
-| JUnit upload from every CI job | When manual JUnit input to the report becomes the recurring bottleneck (today only `api-tools` uploads) |
+| JUnit upload from every CI job | When manual JUnit input to the report becomes the recurring bottleneck (today only `tools-a-e`, `tools-f-z` and `api-cli-engine`, the former `api-tools` job, upload) |
 | CI coverage job | After its runtime is measured and its information is judged useful (not an owner-decision gate) |
 | Broader mutation testing (more targets, scheduled runs) | The post-pilot review, if the baseline showed useful survivors |
 | Core-RPG perf baselines | A feature change needing a perf claim, or the post-pilot review (D-PERF) |

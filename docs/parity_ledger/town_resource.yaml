@@ -2257,7 +2257,7 @@
     \ the same \"check already-constructed events\" pattern the old extractor's own\
     \ version uses). gold_transferred/ gold_transaction remains the one genuinely\
     \ still-deferred ECONOMY event \u2014 no typed record exists for entity.inventory.gold's\
-    \ raw diff, not scoped to this ticket. See stored_artifacts/TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION/investigation.md\
+    \ raw diff, not scoped to this ticket. See agent-working/stored_artifacts/TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION/investigation.md\
     \ for the full trace and the deliberately-preserved faction_extinct dead-HP-check\
     \ finding (FAC-013).\nUPDATE 2026-08-07 (TCK-20260806-PUSH-CUTOVER-PHASE2): the\
     \ SHADOW-only status above for resource_node_depleted/regenerated/node_recharged/conservation_law_verified\

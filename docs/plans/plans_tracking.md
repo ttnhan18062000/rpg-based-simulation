@@ -8,7 +8,7 @@ tags: [planning, tracking, documentation]
 
 # Plans Tracking — Quick Overview
 
-Date: 2026-09-13 (updated: added 2 previously-missing render-and-art sibling packages; archived 2 fully-shipped roadmaps — see Maintenance note; rest of the table is unchanged from the 2026-09-09 snapshot)
+Date: 2026-10-02 (updated: added the Python Code Craft roadmap row; the record count is the table's 39 rows; the file count was incremented by that row's 2 files, not re-audited. Previous update 2026-09-13: added 2 previously-missing render-and-art sibling packages; archived 2 fully-shipped roadmaps — see Maintenance note; rest of the table is unchanged from the 2026-09-09 snapshot)
 
 ## Scope
 
@@ -18,8 +18,8 @@ authority come from document frontmatter; brainstorm sources are listed only whe
 references `docs/brainstorm/`.
 
 `docs/plans/archive/` is excluded. Multi-file plan packages are collapsed into one program row, so
-milestone and supporting files are not repeated individually. This snapshot summarizes 97 Markdown
-files as 37 plan records; `plans_tracking.md` excludes itself.
+milestone and supporting files are not repeated individually. This snapshot summarizes 99 Markdown
+files as 39 plan records; `plans_tracking.md` excludes itself.
 
 ### Status key
 
@@ -41,6 +41,7 @@ files as 37 plan records; `plans_tracking.md` excludes itself.
 | [Implementation Plan: Provider-Agnostic Agent Orchestration](agent_infrastructure/provider_agnostic_orchestration/implementation_plan.md) | Implementation plan for Provider-Agnostic Agent Orchestration. | `historical` | `P1` | — | 1 |
 | [Aseprite Agent-Controlled Pixel-Art — Draft Milestone Plan Package](aseprite-mcp-pixel-art/README.md) | Draft milestone plan for agent-controlled Aseprite pixel-art drawing (CAP-A/CAP-B), gated behind authority/preflight contracts; execution remains NO-GO pending separate authorization. | `active` | `P1` | [aseprite_mcp_pixel_art_workflow_proposal.md](../brainstorm/render-and-art/aseprite_mcp_pixel_art_workflow_proposal.md) | 8 |
 | [Audit Fix Plan — Remaining Open Issues](audit_fix_plan.md) | Audit Fix Plan — Remaining Open Issues. | `active` | `P1` | — | 1 |
+| [Python Code Craft Roadmap — Standard, Modern Toolchain, Debt Registry, Refactor Lane](codebase_health/python_code_craft_roadmap.md) | Plans a Python code standard, lint/complexity/duplication toolchain, a code-health exception registry with a ratchet, and a deferred refactor lane; `src/` frozen. | `active` | `P2` | — | 2 |
 | [Design Enhancement Roadmap — Performance-First, With Scoped Non-Performance Additions](design_enhancement/design_enhancement_roadmap.md) | Design Enhancement Roadmap — Performance-First, With Scoped Non-Performance Additions. | `active` | `P1` | [performance_evolution_roadmap.html](../brainstorm/performance_evolution_roadmap.html)<br>[simulation_design_taxonomy.html](../brainstorm/simulation_design_taxonomy.html) | 1 |
 | [Epic Plan — Determinism Envelope for Wall-Clock-Driven Mode Escalation](design_enhancement/determinism_envelope_epic.md) | Delivery program for Determinism Envelope for Wall-Clock-Driven Mode Escalation. | `active` | `P1` | — | 1 |
 | [Epic Plan — Performance Evolution, Sequenced by Risk](design_enhancement/performance_milestones_epic.md) | Delivery program for Performance Evolution, Sequenced by Risk. | `active` | `P1` | [performance_evolution_roadmap.html](../brainstorm/performance_evolution_roadmap.html) | 1 |
@@ -79,7 +80,7 @@ Do not infer completion from ticket state here; use the plan frontmatter and its
 
 **2026-09-13 archival pass:** `architecture_resilience_remediation_roadmap.md` and
 `http_admission_control_epic.md` were confirmed fully shipped (all tracked epics/tickets in
-`tickets/done/`) and moved to `docs/plans/archive/` with `status: historical`, `maturity: shipped`;
+`agent-working/tickets/done/`) and moved to `docs/plans/archive/` with `status: historical`, `maturity: shipped`;
 both are removed from this table per the exclusion rule above.
 
 **Known-stale item not yet fixed:** `engine_future_epics_roadmap.md`'s "Headline Finding" (no
@@ -90,7 +91,7 @@ document body itself.
 **Needs a full audit, not yet done:** `long_term_development_roadmap.md` (dated 2026-06-19) has at
 least one confirmed-shipped item (§5.3 Faction & Diplomacy) and no per-item status tracking; given
 this repo's ticket velocity it is plausibly 50%+ stale relative to the newer, actively-worked
-`rpg_design_roadmap/` (M1-M9) program. Needs an item-by-item pass against `tickets/done/` before
+`rpg_design_roadmap/` (M1-M9) program. Needs an item-by-item pass against `agent-working/tickets/done/` before
 being trusted for prioritization — recommend filing a ticket for this rather than assuming.
 
 **Roadmap authority (no single index existed before this note):** for architecture/engine-scale

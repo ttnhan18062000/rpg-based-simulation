@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared Linux-only append-only writer for agent-monitoring/*.jsonl.
+"""Shared Linux-only append-only writer for agent-working/agent-monitoring/*.jsonl.
 
 Single production implementation of the O_CREAT|O_EXCL lock-file protocol
 (bounded retry, stale-lock recovery) that post_tool_hook.py, record_run.py,

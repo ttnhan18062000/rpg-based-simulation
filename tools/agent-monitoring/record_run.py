@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Append a run record to agent-monitoring/data/<ISO-week>/runs.jsonl."""
+"""Append a run record to agent-working/agent-monitoring/data/<ISO-week>/runs.jsonl."""
 import argparse
 import json
 import sys
@@ -61,7 +61,7 @@ def compute_duration_s(record: dict) -> int | None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Append a run record to agent-monitoring/data/<ISO-week>/runs.jsonl")
+    parser = argparse.ArgumentParser(description="Append a run record to agent-working/agent-monitoring/data/<ISO-week>/runs.jsonl")
     parser.add_argument("--data", required=True, help="JSON object to append")
     args = parser.parse_args()
 

@@ -3,7 +3,7 @@
 
 Mirrors tests/tools/test_retrieval_baseline_metrics.py's design: synthetic-fixture unit tests for
 the counting logic itself, plus a frozen-fixture corpus test with literal expected counts (so the result never depends on
-which shards a branch carries), and smoke tests against the REAL agent-monitoring/ corpus.
+which shards a branch carries), and smoke tests against the REAL agent-working/agent-monitoring/ corpus.
 """
 import ast
 import json
@@ -12,11 +12,12 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING, posix
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _MODULE_PATH = _MONITORING_TOOLS_DIR / "skill_usage_metric.py"
-_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
+_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / AGENT_MONITORING
 
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
@@ -128,7 +129,7 @@ def test_derivation_string_present_and_non_fabricated():
 
 # ---------------------------------------------------------------------------
 # Frozen-fixture corpus test (TCK-20260930-SKILL-USAGE-METRIC-LIVE-CORPUS-TEST-FROZEN-FIXTURE).
-# The previous version counted Skill rows in the live agent-monitoring/data/ shards, so any branch
+# The previous version counted Skill rows in the live agent-working/agent-monitoring/data/ shards, so any branch
 # that carried its own shard with a Skill row changed the expected count. The fixture below is a
 # hand-written tree covering both shard shapes; the expected counts are literals, not derived from
 # the production glob, so file discovery is checked independently of the code under test.
@@ -146,7 +147,7 @@ def _write_shard(path: Path, skills: list) -> None:
 
 @pytest.fixture
 def frozen_corpus(tmp_path):
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     _write_shard(data_dir / "2026-W01" / "tools.jsonl", ["graphify", "graphify"])  # bare canonical shape
     _write_shard(data_dir / "2026-W01" / "some-branch.tools.jsonl", ["implement-ticket"])  # per-branch shape
     _write_shard(data_dir / "2026-W02" / "tools.jsonl", ["graphify"])
@@ -196,7 +197,7 @@ def test_causes_zero_diff_on_real_corpus():
 
     def _porcelain():
         return subprocess.run(
-            ["git", "status", "--porcelain", "--", "agent-monitoring/"],
+            ["git", "status", "--porcelain", "--", f"{posix(AGENT_MONITORING)}/"],
             cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
         ).stdout
 
@@ -204,7 +205,7 @@ def test_causes_zero_diff_on_real_corpus():
     tools = load_data_glob(DEFAULT_TOOLS_FILE, "tools")
     build_skill_usage_section(tools)
     post = _porcelain()
-    assert pre == post, f"skill_usage_metric mutated agent-monitoring/: pre={pre!r} post={post!r}"
+    assert pre == post, f"skill_usage_metric mutated agent-working/agent-monitoring/: pre={pre!r} post={post!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -216,7 +217,7 @@ def test_causes_zero_diff_on_real_corpus():
 def test_load_data_glob_reads_across_multiple_week_folders(tmp_path):
     from generate_retro import load_data_glob
 
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     (data_dir / "2026-W01").mkdir(parents=True)
     (data_dir / "2026-W02").mkdir(parents=True)
     (data_dir / "2026-W01" / "tools.jsonl").write_text(

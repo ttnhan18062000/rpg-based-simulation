@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 from src.core.enums import ReasonCode
 from src.core.state import CorpseState
+from src.core.updates import decode_owner_faction_id_set
 from src.engine.cadence import should_run
 from src.world.environment import EnvironmentService
 from src.world.consequences import RegionalConsequenceService
@@ -116,7 +117,11 @@ class ApplyPlanBuilder:
                     tra = r_upd.trauma_score_set if r_upd.trauma_score_set is not None else reg.trauma_score + r_upd.trauma_delta
                     ret = r_upd.retaliation_pressure_set if r_upd.retaliation_pressure_set is not None else reg.retaliation_pressure + r_upd.retaliation_pressure_delta
                     inf = reg.influence + r_upd.influence_delta
-                    own = r_upd.owner_faction_id_set if r_upd.owner_faction_id_set is not None else reg.owner_faction_id
+                    # TCK-20261003-REGION-OWNER-NONE-SENTINEL-PERSISTED-RAW: decode the
+                    # in-band unowned sentinel. `is not None` alone passes -1 straight into
+                    # durable state, where Faction-keyed lookups raise KeyError.
+                    own = (decode_owner_faction_id_set(r_upd.owner_faction_id_set)
+                           if r_upd.owner_faction_id_set is not None else reg.owner_faction_id)
                     knd = r_upd.kind_set if r_upd.kind_set is not None else reg.kind
                     wth = r_upd.weather_set if r_upd.weather_set is not None else reg.weather
                     mods = list(set([m for m in reg.active_modifiers if m not in r_upd.modifiers_remove] + r_upd.modifiers_add))

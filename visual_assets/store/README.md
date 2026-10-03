@@ -1,7 +1,7 @@
 # visual_assets/store — asset store logic (contracts built, writers not yet)
 
 **Status: the pure contract layer and candidate intake exist. No tracked-catalog writer exists yet (adoption, build, release, verify, gc);
-see `tickets/todos/visual-asset-foundation/SEQUENCE.md` for the tickets that build them, in order.**
+see `agent-working/tickets/todos/visual-asset-foundation/SEQUENCE.md` for the tickets that build them, in order.**
 
 ## What exists
 

@@ -157,7 +157,7 @@ const TICKET_SCHEMA = {
   properties: {
     ticket_id: { type: 'string' },
     ticket_path: { type: 'string' },
-    todos_source_path: { type: 'string', description: 'Path of the original file under tickets/todos/ if the ticket originated there; empty string otherwise.' },
+    todos_source_path: { type: 'string', description: 'Path of the original file under agent-working/tickets/todos/ if the ticket originated there; empty string otherwise.' },
     status: { type: 'string', enum: ['CREATED', 'EXISTING'] },
     conflicts: { type: 'array', items: { type: 'string' } },
     related_context: { type: 'array', items: { type: 'string' }, description: 'Non-blocking informational disclosure — e.g. a related prior ticket that is not duplicate work, or a mechanic/parity note worth surfacing — that must NOT trigger CONFLICTS_DETECTED. Empty array if none, never omitted.' },
@@ -173,6 +173,39 @@ const TICKET_SCHEMA = {
   },
 }
 
+// Orchestrator-side ts capture — replaces the former per-prompt "Step 0: run `date -u ...`"
+// agent-prompt-text instruction (TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). Call this once,
+// immediately before writeSidecar/the paired `await agent(...)` call, so the captured value can be
+// wired directly into pushEvent — never depends on agent prose compliance. Called BEFORE
+// writeSidecar at each site so C1's writeSidecar-to-agent() adjacency strings (tests/tools/
+// test_current_run_sidecar_orchestrator.py) are untouched by this insertion.
+const captureTs = async () => {
+  const out = await shOmit('date -u +%Y-%m-%dT%H:%M:%SZ')
+  return (out || '').trim() || null
+}
+
+const captureEpochMs = async () => {
+  const out = await shOmit('date +%s%3N')
+  const parsed = parseInt((out || '').trim(), 10)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+// Orchestrator-side ticket-location resolution (TCK-20260711-EPIC-SCOPE-ORPHAN-FIX). Replaces
+// the former Step 1a/1b/1c agent-prompt-text file search + unconditional copy: `## Tier` is a
+// static fact already on disk, locatable by the same mechanical search the agent used to perform
+// itself, so the orchestrator resolves it deterministically before the ticket-scoper agent() call
+// runs. Moves (copy-then-delete) a agent-working/tickets/todos/ original when tier is epic — epic tier returns
+// immediately after Scope and never reaches Finalize's cleanup rm step, so leaving the copy-only
+// behavior for epic tier created a permanent duplicate. Copies (leaving the todos original in
+// place) for every other tier, preserving existing Finalize-reconciliation behavior.
+const resolveScopeTicketLocation = async (id) => {
+  const out = await sh(`python3 tools/agent-monitoring/scope_ticket_relocate.py "${id}" 2>/dev/null`)
+  const markerIndex = (out || '').indexOf('MARKER:')
+  if (markerIndex === -1) return null
+  try { return JSON.parse(out.slice(markerIndex + 'MARKER:'.length).trim()) }
+  catch (e) { return null }
+}
+
 const scopeOrphanInfo = ticketId ? await resolveScopeTicketLocation(ticketId) : null
 
 const scopeTs = await captureTs()
@@ -181,12 +214,12 @@ const ticketInfo = await agent(
     ? `Load the existing ticket.
 
 The ticket file has already been located by the orchestrator (and relocated from
-tickets/todos/ to tickets/inprogress/ if it originated there — moved, with the todos original
+agent-working/tickets/todos/ to agent-working/tickets/inprogress/ if it originated there — moved, with the todos original
 deleted, if its tier is epic; copied, with the todos original left in place, otherwise):
   ticket_path = "${scopeOrphanInfo && scopeOrphanInfo.ticket_path}"
   tier = "${scopeOrphanInfo && scopeOrphanInfo.tier}"
   todos_source_path = "${scopeOrphanInfo && scopeOrphanInfo.todos_source_path}"
-${scopeOrphanInfo && scopeOrphanInfo.ticket_path ? '' : '(No ticket file was found at tickets/inprogress/, tickets/done/, or under tickets/todos/ for this ticket_id — report this in conflicts.)\n'}
+${scopeOrphanInfo && scopeOrphanInfo.ticket_path ? '' : '(No ticket file was found at agent-working/tickets/inprogress/, agent-working/tickets/done/, or under agent-working/tickets/todos/ for this ticket_id — report this in conflicts.)\n'}
 Step 1 — read the file at ticket_path directly (skip this if ticket_path is empty, per the note
 above). Do not re-locate, re-copy, or move the file — that has already been done.
 
@@ -223,12 +256,12 @@ Step 0b (context warm-start — REQUIRED before any file reads):
 Request: ${request}
 
 Steps:
-1. Scan tickets/ (inprogress/, done/, and backlogs/) for overlapping scope or prior attempts, and tickets/todos/ via \`python3 tools/open_ticket_overlap.py --title "..." --summary "..."\` (TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER — always exits 0, prints a JSON array, informational only). A hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned — flag it as related_context (non-blocking) rather than re-scoping from scratch, unless it is a genuine blocking duplicate of this exact request, in which case flag it as a conflicts entry. A tickets/todos/ scanner hit always goes to related_context, never conflicts — it is a report, not a duplicate judgment.
+1. Scan agent-working/tickets/ (inprogress/, done/, and backlogs/) for overlapping scope or prior attempts, and agent-working/tickets/todos/ via \`python3 tools/open_ticket_overlap.py --title "..." --summary "..."\` (TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER — always exits 0, prints a JSON array, informational only). A hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned — flag it as related_context (non-blocking) rather than re-scoping from scratch, unless it is a genuine blocking duplicate of this exact request, in which case flag it as a conflicts entry. A agent-working/tickets/todos/ scanner hit always goes to related_context, never conflicts — it is a report, not a duplicate judgment.
 2. Scan docs/ (mechanics Bible chapters, engine contracts) for constraints on the request.
-3. Scan stored_artifacts/ for prior investigations in the same area.
+3. Scan agent-working/stored_artifacts/ for prior investigations in the same area.
 4. Read relevant source files to understand current state.
 5. Check docs/parity_ledger/ for entries that overlap with the proposed scope.
-6. Draft the ticket at tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md.
+6. Draft the ticket at agent-working/tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md.
    The file MUST begin with a YAML frontmatter block (before the # heading):
    ---
    status: active
@@ -246,7 +279,7 @@ Steps:
    Related Tickets, Related Docs, Related Stored Artifacts, Related Code Areas,
    Assumptions/Open Questions, Implementation Notes (blank), Test Summary (blank),
    Files Changed (blank), Completion Summary (blank).
-7. If the Tier you inferred in step 6 is hotfix: skip this step entirely — do NOT create staging_artifacts/{ticket_id}/. Hotfix tickets skip Investigate/Plan/Review, so nothing ever writes into that directory. Otherwise (standard or epic tier): create the staging directory staging_artifacts/{ticket_id}/.
+7. If the Tier you inferred in step 6 is hotfix: skip this step entirely — do NOT create agent-working/staging_artifacts/{ticket_id}/. Hotfix tickets skip Investigate/Plan/Review, so nothing ever writes into that directory. Otherwise (standard or epic tier): create the staging directory agent-working/staging_artifacts/{ticket_id}/.
 
 Step 8 — check for a security mis-tag against the just-drafted ticket: if the ticket's "Related Code Areas" section contains any path or filename matching one of: \`credential\`, \`secret\`, \`password\`, \`api_key\`, \`private_key\`, \`.env\`, \`oauth\`, \`jwt\` (case-insensitive substring match; do NOT match \`auth\`, \`cert\`, \`key\`, \`token\`, or \`session\` bare — those collide with this codebase's own \`AuthoritativeState\`/\`authoritative_pipeline\`/\`certification\`/\`LabSessionStore\` vocabulary), AND the ticket's tags do NOT include \`security\` — set mistag_warning=true. Otherwise mistag_warning=false.
 
@@ -418,44 +451,11 @@ if sid:
   )
 }
 
-// Orchestrator-side ts capture — replaces the former per-prompt "Step 0: run `date -u ...`"
-// agent-prompt-text instruction (TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). Call this once,
-// immediately before writeSidecar/the paired `await agent(...)` call, so the captured value can be
-// wired directly into pushEvent — never depends on agent prose compliance. Called BEFORE
-// writeSidecar at each site so C1's writeSidecar-to-agent() adjacency strings (tests/tools/
-// test_current_run_sidecar_orchestrator.py) are untouched by this insertion.
-const captureTs = async () => {
-  const out = await shOmit('date -u +%Y-%m-%dT%H:%M:%SZ')
-  return (out || '').trim() || null
-}
-
-const captureEpochMs = async () => {
-  const out = await shOmit('date +%s%3N')
-  const parsed = parseInt((out || '').trim(), 10)
-  return Number.isFinite(parsed) ? parsed : null
-}
-
 // Workflow-start epoch-ms, captured once, for the shadow-reviewer mechanism's
 // `workflow_wall_time_ms` field (TCK-20260904-SHADOW-REVIEWER-LOGGING) -- distinct from
 // `startTs` (an ISO string, used for run-record start_ts) and from any per-phase `captureTs()`
 // call. Read-only downstream; never mutated after this point.
 const workflowStartMs = await captureEpochMs()
-
-// Orchestrator-side ticket-location resolution (TCK-20260711-EPIC-SCOPE-ORPHAN-FIX). Replaces
-// the former Step 1a/1b/1c agent-prompt-text file search + unconditional copy: `## Tier` is a
-// static fact already on disk, locatable by the same mechanical search the agent used to perform
-// itself, so the orchestrator resolves it deterministically before the ticket-scoper agent() call
-// runs. Moves (copy-then-delete) a tickets/todos/ original when tier is epic — epic tier returns
-// immediately after Scope and never reaches Finalize's cleanup rm step, so leaving the copy-only
-// behavior for epic tier created a permanent duplicate. Copies (leaving the todos original in
-// place) for every other tier, preserving existing Finalize-reconciliation behavior.
-const resolveScopeTicketLocation = async (id) => {
-  const out = await sh(`python3 tools/agent-monitoring/scope_ticket_relocate.py "${id}" 2>/dev/null`)
-  const markerIndex = (out || '').indexOf('MARKER:')
-  if (markerIndex === -1) return null
-  try { return JSON.parse(out.slice(markerIndex + 'MARKER:'.length).trim()) }
-  catch (e) { return null }
-}
 
 // Mirrors tools/gate_checks/done_checker_static.py's classify_checklist_failure() — updated in
 // lockstep with that function's TCK-20260720-TAG-TOUCHPOINT-CLEANUP redesign. The prior hand-synced
@@ -526,7 +526,7 @@ Step 2 — build and write events:
   set "ts" to END_TS.
   Do NOT compute or set "tool_call_count"/"cost_proxy_score" yourself — record_events.py now
   computes both deterministically from the real per-branch tools shard
-  (agent-monitoring/data/YYYY-Www/<branch>.tools.jsonl) ground truth at write time
+  (agent-working/agent-monitoring/data/YYYY-Www/<branch>.tools.jsonl) ground truth at write time
   and always overrides whatever you pass, so omit both keys entirely from each event object.
   Run: python3 tools/agent-monitoring/record_events.py --default-ts "<END_TS>" --data '<final JSON array>'
   (--default-ts is a safety net for exactly the "ts is null or missing" case above — it never overrides
@@ -677,18 +677,18 @@ Read:
 - All source files listed in the "Related Code Areas" section (read the actual code)
 - All docs in "Related Docs" — especially docs/mechanics/ chapters and docs/engine/ contracts
 - docs/parity_ledger/ entries that overlap with the scope
-- stored_artifacts/ for prior investigations in this area
-- tickets/done/ for similar completed work
+- agent-working/stored_artifacts/ for prior investigations in this area
+- agent-working/tickets/done/ for similar completed work
 
 Produce two files:
 
-FILE 1: staging_artifacts/${tid}/investigation.md
+FILE 1: agent-working/staging_artifacts/${tid}/investigation.md
 Sections: Current Behavior (file:line refs) | Mechanics/Engine Constraints | Docs Requiring Update (every specific docs/ path this ticket must change if implemented as scoped — empty/"None" only if no doc anywhere needs to change. REQUIRED FORMAT, machine-parsed by done-checker's static coverage check: one bullet per path, backtick-wrapped, immediately after "- ", e.g. "- \`docs/mechanics/03_economic_laws.md\`: one-line reason". If none apply, write exactly "None." with no bullets — any other format is treated as a format regression, not a clean "nothing required" case) | Parity Ledger Overlap (IDs + status) | Prior Work | Risks and Open Questions | Anti-Drift Hazards
 
-FILE 2: staging_artifacts/${tid}/test_plan.md
+FILE 2: agent-working/staging_artifacts/${tid}/test_plan.md
 Sections: Regression Surface (existing tests that must pass) | New Tests Required (per AC) | Scoped Pytest Commands | Anti-Drift Test Guards
 
-Each new file must begin with a valid frontmatter block matching sibling files' format (see other staging_artifacts/ files for the pattern), with artifact_type set to one of investigation, plan, test_plan — the enum tools/validate_frontmatter.py's ARTIFACT_TYPE_VALUES defines and done_checker_static.py enforces. Missing or invalid frontmatter is a DOD_BLOCKED failure caught late at Verify — get it right now.
+Each new file must begin with a valid frontmatter block matching sibling files' format (see other agent-working/staging_artifacts/ files for the pattern), with artifact_type set to one of investigation, plan, test_plan — the enum tools/validate_frontmatter.py's ARTIFACT_TYPE_VALUES defines and done_checker_static.py enforces. Missing or invalid frontmatter is a DOD_BLOCKED failure caught late at Verify — get it right now.
 
 Write both files. Then return: docs_to_update (array of the exact docs/ paths from the "Docs Requiring Update" section above — empty array only if none apply), findings_summary (key findings, open questions requiring a decision, parity entry IDs that will need updating).`,
     { label: 'investigate', agentType: 'investigator', schema: INVESTIGATION_SCHEMA }
@@ -775,13 +775,13 @@ except Exception:
 
 Read:
 - ${ticketInfo.ticket_path}
-- staging_artifacts/${tid}/investigation.md
-- staging_artifacts/${tid}/test_plan.md
+- agent-working/staging_artifacts/${tid}/investigation.md
+- agent-working/staging_artifacts/${tid}/test_plan.md
 
 Investigation summary:
 ${investigationText}
 
-Produce staging_artifacts/${tid}/plan.md with:
+Produce agent-working/staging_artifacts/${tid}/plan.md with:
 - Ordered steps (each narrow and independently verifiable)
 - Files to change per step (specific, not "relevant files")
 - Explicit scope guards (what NOT to touch)
@@ -808,7 +808,7 @@ import sys, json
 sys.path.insert(0, 'tools')
 from gate_checks.plan_gate_static import plan_has_unresolved_questions_heading
 print('UNRESOLVED_CHECK_JSON:' + json.dumps(plan_has_unresolved_questions_heading(sys.argv[1])))
-" "staging_artifacts/${tid}/plan.md"`
+" "agent-working/staging_artifacts/${tid}/plan.md"`
   )
 
   let hasUnresolvedQuestions = false
@@ -826,7 +826,7 @@ print('UNRESOLVED_CHECK_JSON:' + json.dumps(plan_has_unresolved_questions_headin
       status: 'NEEDS_HUMAN_INPUT',
       ticket_id: tid,
       plan_summary: planText,
-      message: 'Review staging_artifacts/' + tid + '/plan.md, resolve open questions, then re-run with ticket_id="' + tid + '".',
+      message: 'Review agent-working/staging_artifacts/' + tid + '/plan.md, resolve open questions, then re-run with ticket_id="' + tid + '".',
     }
   }
 
@@ -855,8 +855,8 @@ print('UNRESOLVED_CHECK_JSON:' + json.dumps(plan_has_unresolved_questions_headin
     `Architecture review for ticket ${tid}.
 
 Read:
-- staging_artifacts/${tid}/plan.md
-- staging_artifacts/${tid}/investigation.md
+- agent-working/staging_artifacts/${tid}/plan.md
+- agent-working/staging_artifacts/${tid}/investigation.md
 - ${ticketInfo.ticket_path}
 
 Plan summary:
@@ -888,7 +888,7 @@ summary (one sentence: verdict + key reason, ≤200 chars).`,
       status: review.verdict,
       ticket_id: tid,
       violations: review.violations,
-      message: 'Fix violations in staging_artifacts/' + tid + '/plan.md then re-run with ticket_id="' + tid + '".',
+      message: 'Fix violations in agent-working/staging_artifacts/' + tid + '/plan.md then re-run with ticket_id="' + tid + '".',
     }
   }
 
@@ -924,8 +924,8 @@ const implementation = await agent(
   `Implement ticket ${tid}. Tier: ${tier}.
 
 Read:
-${tier !== 'hotfix' ? `- staging_artifacts/${tid}/plan.md (follow this exactly)
-- staging_artifacts/${tid}/investigation.md` : `- ${ticketInfo.ticket_path} (hotfix — implement the fix directly from the ticket scope)`}
+${tier !== 'hotfix' ? `- agent-working/staging_artifacts/${tid}/plan.md (follow this exactly)
+- agent-working/staging_artifacts/${tid}/investigation.md` : `- ${ticketInfo.ticket_path} (hotfix — implement the fix directly from the ticket scope)`}
 - ${ticketInfo.ticket_path}
 
 ${tier !== 'hotfix' ? `Architecture is APPROVED. Mechanics chapters to read first: ${review.mechanics_chapters_to_read.length > 0 ? review.mechanics_chapters_to_read.join(', ') : 'none specified — verify with investigation.md'}.` : 'Hotfix: implement the minimal targeted fix described in the ticket scope.'}
@@ -940,7 +940,7 @@ Architecture constraints (non-negotiable):
 
 After writing code:
 1. Update the "Implementation Notes" section in ${ticketInfo.ticket_path} with what was done (concise, factual). Also fill in the ticket's "## Completion Summary" section now — never leave it blank when the ticket is later moved to done; a blank Completion Summary is a DOD_BLOCKED failure caught late at Verify.
-${tier !== 'hotfix' ? `2. Update staging_artifacts/${tid}/plan.md "Deviations" section if any step differed from the plan — never silently deviate. If you amend that file, keep its existing frontmatter block valid — artifact_type must remain one of investigation, plan, test_plan (tools/validate_frontmatter.py's ARTIFACT_TYPE_VALUES enum).` : ''}
+${tier !== 'hotfix' ? `2. Update agent-working/staging_artifacts/${tid}/plan.md "Deviations" section if any step differed from the plan — never silently deviate. If you amend that file, keep its existing frontmatter block valid — artifact_type must remain one of investigation, plan, test_plan (tools/validate_frontmatter.py's ARTIFACT_TYPE_VALUES enum).` : ''}
 
 Note on behavior_changed: set this true for ANY new logic, new feature, or new setting/config value this ticket introduces — not only modifications to behavior that already existed. A brand-new feature has no prior behavior to diverge from, but it still requires doc updates and parity-ledger entries the same as a modification would.
 
@@ -993,7 +993,7 @@ const docUpdate = await agent(
   `Update documentation for ticket ${tid}. Tier: ${tier}.
 
 ${tier !== 'hotfix'
-    ? `Read staging_artifacts/${tid}/investigation.md's "## Docs Requiring Update" section for the full path/reason list. Docs flagged (paths only — read investigation.md for the reason text): ${(investigation.docs_to_update || []).join(', ') || '(none flagged — use your own judgment against the implementation summary below)'}`
+    ? `Read agent-working/staging_artifacts/${tid}/investigation.md's "## Docs Requiring Update" section for the full path/reason list. Docs flagged (paths only — read investigation.md for the reason text): ${(investigation.docs_to_update || []).join(', ') || '(none flagged — use your own judgment against the implementation summary below)'}`
     : `Hotfix tier — no investigation.md exists. Read ${ticketInfo.ticket_path}'s "## Scope" section directly and use the real diff below to judge whether a docs/ update is warranted, and where.`}
 
 Implementation summary: ${implementation.implementation_summary}
@@ -1052,7 +1052,7 @@ const docStalenessFailure = docStalenessResults && docStalenessResults.find(r =>
 const docStalenessAdvisory = docStalenessResults && docStalenessResults.find(r => r.status === 'ADVISORY')
 
 // Files-Changed-omission early warning (TCK-20260831-HOTFIX-FILES-CHANGED-DOC-OMISSION-EARLY-
-// WARNING, agent-monitoring/retro/RETRO-2026-W35.md § "What to change?" item 1): a ticket's own
+// WARNING, agent-working/agent-monitoring/retro/RETRO-2026-W35.md § "What to change?" item 1): a ticket's own
 // `## Files Changed` prose section omitting a path Document-Update genuinely touched was
 // previously only caught reactively by done-checker at Verify, 6+ phases later. combinedFilesChanged
 // already has everything needed to catch it right here — orchestrator-run, deterministic, no
@@ -1336,7 +1336,7 @@ individual files inside one, will be rejected by the gate after you return.` : '
 
 Step 1 — Map each changed src/ file to its tests/unit/ counterpart DIRECTORY (not a specific file inside it), AND each changed tools/ file to its tests/tools/ (or same-name tests/<subdir>/ mirror) counterpart DIRECTORY per .claude/agents/test-scoper.md's Test Directory Map — tools/ is a second, equally-real source tree, not a special case of src/. For changes to src/core/, src/systems/, src/engine/, or any flat tools/*.py file, also find transitive test dependents via grep across the whole tests/ tree.
 
-Step 2 — ${tier !== 'hotfix' ? `Check staging_artifacts/${tid}/test_plan.md: are all required new tests present? List any missing.` : 'For a hotfix, confirm the targeted behavior is tested. No formal test_plan.md required.'}
+Step 2 — ${tier !== 'hotfix' ? `Check agent-working/staging_artifacts/${tid}/test_plan.md: are all required new tests present? List any missing.` : 'For a hotfix, confirm the targeted behavior is tested. No formal test_plan.md required.'}
 
 Step 3 — Build the scoped pytest command as bare directory paths, including every directory from the computed floor above (never individual files from within one). Never use bare "pytest tests/".
 
@@ -1587,7 +1587,7 @@ print('PARITY_CHECK_JSON:' + json.dumps(results))
   const parityCrossRefFailures = (parityCrossRef || []).filter(r => r.status === 'FAIL')
 
   // Reverses TCK-20260705-GATE-DET-PARITY-UPDATER's explicit "visibility-only, no new blocking
-  // status" decision (stored_artifacts/TCK-20260705-GATE-DET-PARITY-UPDATER/plan.md lines 222-227) —
+  // status" decision (agent-working/stored_artifacts/TCK-20260705-GATE-DET-PARITY-UPDATER/plan.md lines 222-227) —
   // this ticket's own ACs ask for exactly the gate that decision declined to add. Only a genuine
   // FAIL (a src/ file mapped to a ledger subsystem with no matching ledger touch) hard-blocks; an
   // unparseable cross-ref result (parityCrossRef === null) stays non-blocking, unchanged from today.
@@ -1783,9 +1783,9 @@ Context from this run:
 ${ticketInfo.todos_source_path ? `
 Condition 9 (repo state is consistent) note: "${ticketInfo.todos_source_path}" still exists on
 disk right now, as a duplicate of this ticket. This is EXPECTED, not a repo-consistency failure —
-Scope deliberately copied this ticket from tickets/todos/ to tickets/inprogress/ and left that
+Scope deliberately copied this ticket from agent-working/tickets/todos/ to agent-working/tickets/inprogress/ and left that
 exact original in place; Finalize step 3 deletes it AFTER this check passes. Do not flag this
-declared path. Any OTHER tickets/todos/ duplicate is still a real finding.` : ''}
+declared path. Any OTHER agent-working/tickets/todos/ duplicate is still a real finding.` : ''}
 
 Tier-specific N/A rules:
 - If tier is 'hotfix': mark Condition 4 (staging artifacts) as N/A — no investigation.md / plan.md / test_plan.md required.
@@ -1845,13 +1845,13 @@ Complete these steps in order:
    - Fill in "Completion Summary" section: what was implemented, tests added, files changed
    - Fill in "Files Changed" section if not already done
 
-2. Move the ticket: tickets/inprogress/${tid}.md → tickets/done/${tid}.md
+2. Move the ticket: agent-working/tickets/inprogress/${tid}.md → agent-working/tickets/done/${tid}.md
 
 3. Remove the todos source file and clean up the parent folder if applicable:
 ${ticketInfo.todos_source_path ? `
    a. Run: rm "${ticketInfo.todos_source_path}"
    b. Determine the parent directory (dirname of "${ticketInfo.todos_source_path}").
-      If it is a subfolder of tickets/todos/ (i.e. the path has the form tickets/todos/FOLDER/TCK-*.md):
+      If it is a subfolder of agent-working/tickets/todos/ (i.e. the path has the form agent-working/tickets/todos/FOLDER/TCK-*.md):
       - Run: python3 tools/epic_folder_status.py <parent-dir>
         Prints one JSON object: {"folder", "epic_parent", "epic_parent_ticket_id",
         "open_children", "stale_child_copies", "all_children_done"}. The epic parent (if any) is
@@ -1862,13 +1862,13 @@ ${ticketInfo.todos_source_path ? `
       - If "all_children_done" is true but "stale_child_copies" is non-empty: skip — do NOT move
         the folder. A non-empty "stale_child_copies" means a non-epic child's file is still
         physically in this folder even though that same ticket_id is already closed flat in
-        tickets/done/ — a resurrected pre-close copy (the exact shape TCK-20260928-CLOSED-TICKETS-
+        agent-working/tickets/done/ — a resurrected pre-close copy (the exact shape TCK-20260928-CLOSED-TICKETS-
         RESURRECTED-INTO-TODOS guards against elsewhere), never a legitimate state. Print:
           "Folder <FOLDER> has stale pre-close copies of already-done tickets: <stale_child_copies>
-          — delete these stale copies (the tickets/done/ versions are authoritative), then re-run."
+          — delete these stale copies (the agent-working/tickets/done/ versions are authoritative), then re-run."
       - If "all_children_done" is true, "stale_child_copies" is empty, and "epic_parent" is null
         (no epic-tier ticket in this folder): move the whole folder:
-        Run: mv <parent-dir>/ tickets/done/<FOLDER>/
+        Run: mv <parent-dir>/ agent-working/tickets/done/<FOLDER>/
         This preserves SEQUENCE.md and any folder-level metadata in the done archive.
       - If "all_children_done" is true, "stale_child_copies" is empty, and "epic_parent" is not
         null: do NOT close or move anything from here — closing another ticket's own lifecycle is
@@ -1876,29 +1876,29 @@ ${ticketInfo.todos_source_path ? `
           "All children of <FOLDER> are done; epic parent <EPIC-ID> remains — close it via
           implement-epic (epic_id mode) or by hand."
         (substitute <FOLDER> for the folder name and <EPIC-ID> for "epic_parent_ticket_id").
-      If the source was directly in tickets/todos/ (no subfolder): skip the folder step.` : '   No todos source path recorded — skip.'}
+      If the source was directly in agent-working/tickets/todos/ (no subfolder): skip the folder step.` : '   No todos source path recorded — skip.'}
 
-4. Append to tickets/working_log.csv via the sanctioned helper — never hand-roll this write:
+4. Append to agent-working/tickets/working_log.csv via the sanctioned helper — never hand-roll this write:
    a. Use the Write tool to create a JSON file (e.g. a scratch path under
-      stored_artifacts/${tid}/ or an ephemeral tmp path) containing exactly:
+      agent-working/stored_artifacts/${tid}/ or an ephemeral tmp path) containing exactly:
       {"timestamp": ..., "ticket_id": ..., "title": ..., "status": ..., "summary": ..., "artifacts_path": ...}
       - timestamp: ISO 8601 (e.g., 2026-06-06T00:00:00Z — use the current session date)
       - ticket_id: ${tid}
       - title: from the ticket Title section
       - status: DONE
       - summary: one sentence of what was implemented
-      - artifacts_path: ${tier !== 'hotfix' ? `stored_artifacts/${tid}` : 'none (hotfix — no staging artifacts)'}
+      - artifacts_path: ${tier !== 'hotfix' ? `agent-working/stored_artifacts/${tid}` : 'none (hotfix — no staging artifacts)'}
    b. Run: python3 tools/working_log_writer.py --data-file <path from step a>
       The Write tool's content is never shell-interpreted, so title/summary text (quotes,
       backticks, $, embedded newlines) needs no escaping — never embed this text as a Python
       or shell source string (e.g. an inline `-c` script) instead of using the JSON file above.
 
-5. ${tier !== 'hotfix' ? `Move staging_artifacts/${tid}/ → stored_artifacts/${tid}/
-   This step is mandatory for standard/epic tickets. Do not skip it — leftover staging dirs accumulate as debt.` : 'Hotfix: no staging artifacts to move. Delete staging_artifacts/${tid}/ if it was accidentally created (rm -rf staging_artifacts/${tid}/).'}
+5. ${tier !== 'hotfix' ? `Move agent-working/staging_artifacts/${tid}/ → agent-working/stored_artifacts/${tid}/
+   This step is mandatory for standard/epic tickets. Do not skip it — leftover staging dirs accumulate as debt.` : 'Hotfix: no staging artifacts to move. Delete agent-working/staging_artifacts/${tid}/ if it was accidentally created (rm -rf agent-working/staging_artifacts/${tid}/).'}
 
 6. Clean data/runs/* and reports/release_proof/* only if they contain artifacts from this work session (check modification times before deleting).
 
-7. Verify: (a) no leftover files remain under staging_artifacts/${tid}/, (b) stored_artifacts/${tid}/ exists with expected contents (standard/epic only).
+7. Verify: (a) no leftover files remain under agent-working/staging_artifacts/${tid}/, (b) agent-working/stored_artifacts/${tid}/ exists with expected contents (standard/epic only).
 
 Report each step: DONE / SKIPPED (reason).`,
   { label: 'finalize' }
@@ -2116,8 +2116,8 @@ return {
   files_changed: implementation.files_changed,
   tests: { pass_count: testResult.pass_count },
   parity_updated: implementation.behavior_changed,
-  artifacts: tier !== 'hotfix' ? `stored_artifacts/${tid}` : 'none (hotfix)',
+  artifacts: tier !== 'hotfix' ? `agent-working/stored_artifacts/${tid}` : 'none (hotfix)',
   message: monitoringWarning
-    ? `WARNING: agent-monitoring write for this run could not be verified (${monitoringWarning}). Ticket is otherwise complete — investigate agent-monitoring/data/YYYY-Www/<branch>.runs.jsonl and <branch>.events.jsonl manually.`
+    ? `WARNING: agent-monitoring write for this run could not be verified (${monitoringWarning}). Ticket is otherwise complete — investigate agent-working/agent-monitoring/data/YYYY-Www/<branch>.runs.jsonl and <branch>.events.jsonl manually.`
     : undefined,
 }

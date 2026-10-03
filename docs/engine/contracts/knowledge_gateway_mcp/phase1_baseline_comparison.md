@@ -178,10 +178,10 @@ exactly as documented, and this residual mismatch is reported honestly as an add
 the broader-than-predicted §4.3 miss, not papered over.
 
 A second, smaller honest note: the live corpus/document index reflects the *current* state of
-`docs/`/`tickets/`, which continues to evolve after the Phase 0 fixture was recorded
+`docs/`/`agent-working/tickets/`, which continues to evolve after the Phase 0 fixture was recorded
 (`recorded_at_utc: 2026-08-15T05:09:04Z`) — this comparison ran at `2026-08-15T12:08:34Z`, roughly
 7 hours later, and several `gateway_sources` entries (e.g. Q6's
-`TCK-20260814-KGMCP-MEASUREMENT-BASELINE`) reflect tickets/docs that did not exist, or were not
+`TCK-20260814-KGMCP-MEASUREMENT-BASELINE`) reflect agent-working/tickets/docs that did not exist, or were not
 indexed, at Phase 0 recording time. This natural corpus drift is a real, honest confound on top of
 the two structural causes above, not a defect in either system.
 

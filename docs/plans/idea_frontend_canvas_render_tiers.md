@@ -177,7 +177,7 @@ reason to abandon dirty-region rendering discipline.
   prerequisite this idea was missing an explicit note on.** Confirmed by reading that epic directly: it
   explicitly keeps `GameCanvas.tsx`/`useCanvas.ts` untouched (data-layer reconnection only —
   `useSimulation.ts` and backend routes/broadcast) and, as of 2026-08-23, is still `OPEN` in
-  `tickets/todos/`, not started. Until M1 ships, `GameCanvas.tsx` renders nothing live — there is no real
+  `agent-working/tickets/todos/`, not started. Until M1 ships, `GameCanvas.tsx` renders nothing live — there is no real
   entity/building data flowing to apply any render tier to yet. This idea is not blocked in the sense of
   needing M1's own scope changed (no conflict — M1's untouched-`GameCanvas.tsx` boundary is exactly
   compatible with this idea living as a separate, later effort), but it is premature to sequence before M1,

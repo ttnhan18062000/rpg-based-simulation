@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Query the agent-monitoring SQLite index (agent-monitoring-index/monitoring.db),
-built from agent-monitoring/{runs,events}.jsonl by build_index.py.
+Query the agent-monitoring SQLite index (agent-working/.index/agent-monitoring-index/monitoring.db),
+built from agent-working/agent-monitoring/{runs,events}.jsonl by build_index.py.
 
 Usage:
   python3 tools/agent-monitoring/query.py [filters]
@@ -20,9 +20,13 @@ import sqlite3
 import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING_INDEX  # noqa: E402
 
 
-DEFAULT_DB_PATH = Path("agent-monitoring-index/monitoring.db")
+DEFAULT_DB_PATH = AGENT_MONITORING_INDEX / "monitoring.db"
 COL_WIDTH = 22
 
 

@@ -11,7 +11,7 @@ and has nothing to do with `src/api/routes/history.py` or `src/api/ws/stream.py`
 Code Areas boilerplate listed those four stale paths as reuse-source
 references; this guard makes sure no frontend code, mock, or fetch client ever
 actually couples to them (see
-staging_artifacts/TCK-20260716-AGENTOPS-ACTIVITY-GANTT/plan.md's Anti-Drift
+agent-working/staging_artifacts/TCK-20260716-AGENTOPS-ACTIVITY-GANTT/plan.md's Anti-Drift
 Notes, "Stale backend references").
 """
 from __future__ import annotations

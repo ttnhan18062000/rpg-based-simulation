@@ -17,7 +17,7 @@ This page records what the store is meant to guarantee so later tickets build to
 
 Source of truth for vocabulary and gates: `docs/brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md`
 (sections 6-9) and `docs/plans/visual-asset-management-runtime-integration/`. Physical layout, layering rules and the
-command table: `docs/plans/visual-asset-foundation/README.md`. Build order: `tickets/todos/visual-asset-foundation/SEQUENCE.md`.
+command table: `docs/plans/visual-asset-foundation/README.md`. Build order: `agent-working/tickets/todos/visual-asset-foundation/SEQUENCE.md`.
 
 ## Lifecycle and gates (designed)
 

@@ -20,7 +20,7 @@ This document **decides and evidences**. It does not implement. The recommended 
 and the execution-identity schema proposal below are follow-on, epic-gated implementation
 work — no production monitoring writer path (`tools/agent-monitoring/post_tool_hook.py` or any
 other file under `tools/agent-monitoring/`) changes as part of landing this document, and no
-`agent-monitoring/*.jsonl` data file is touched.
+`agent-working/agent-monitoring/*.jsonl` data file is touched.
 
 ---
 
@@ -94,7 +94,7 @@ execution key from the join key explicitly.
 
 **This is a schema field proposal for a future implementation ticket.** No field is added to
 any real record as part of this document landing — the shape below is illustrated with a
-synthetic example only, never a write to any real `agent-monitoring/*.jsonl` file. This is
+synthetic example only, never a write to any real `agent-working/agent-monitoring/*.jsonl` file. This is
 consistent with `validate.py`'s existing "read-side absorbs legacy variance, write-side stays
 append-only" precedent (`LEGACY_COMPLETION_FIELDS` / `LEGACY_TERMINAL_STATUS_VALUES`, Section 1
 above).
@@ -215,7 +215,7 @@ preserves traceability without falsely representing an actual Codex execution.
 
 `tools/agent_codex_pilot_executor/` provides only a disposable simulation
 boundary.  Its caller supplies a scratch root outside the repository; it
-rejects the repository, real `agent-monitoring/`, and any resolved escape.
+rejects the repository, real `agent-working/agent-monitoring/`, and any resolved escape.
 It never reads or changes `.codex/config.toml`, registers a hook, invokes
 Codex, or writes the real corpus.
 

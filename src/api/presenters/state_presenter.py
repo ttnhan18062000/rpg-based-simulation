@@ -134,7 +134,7 @@ class StatePresenter:
         """Lightweight per-entity projection for the WS entity-delta broadcast.
 
         9 fields with a confirmed direct or lightly-mapped V2 source (see
-        staging_artifacts/TCK-20260821-WS-ENTITY-DELTA-BROADCAST/plan.md Open Design Question 2 for
+        agent-working/staging_artifacts/TCK-20260821-WS-ENTITY-DELTA-BROADCAST/plan.md Open Design Question 2 for
         the full drop-vs-derive rationale against V1's EntitySlimSchema): state, tier,
         combat_target_id, loot_progress, loot_duration, display_name have no confirmed V2 source and
         are dropped. Always reads live component values -- never a diff against a prior snapshot.
@@ -221,7 +221,7 @@ class StatePresenter:
     def present_static(state: AuthoritativeState) -> Dict[str, Any]:
         """Static world objects (buildings, resource nodes, treasure chests, regions).
 
-        See staging_artifacts/TCK-20260821-PRESENT-MAP-STATIC/investigation.md for the field-level
+        See agent-working/staging_artifacts/TCK-20260821-PRESENT-MAP-STATIC/investigation.md for the field-level
         drop-vs-derive decisions (building name/owner, resource-node name/terrain, chest
         guard/tier/looted, region terrain/difficulty/locations) — none are stored on the
         corresponding state class, so each is either derived from an existing field or dropped.
@@ -301,7 +301,7 @@ class StatePresenter:
 
         world_day = tick // 2400 per docs/mechanics/05_world_evolution.md:15-22 ("1 Day = 2400 ticks",
         Certified Level 1) -- NOT V1's legacy tick // 100, NOT src/world/raid.py's unrelated
-        RaidService.TICKS_PER_DAY=100 (see staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/plan.md
+        RaidService.TICKS_PER_DAY=100 (see agent-working/staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/plan.md
         Design Decisions).
         alive_count filters state.entities by combat.alive, ported from V1's exact semantics and
         matching the in-repo precedent at src/api/presenters/economy.py's EconomyPresenter

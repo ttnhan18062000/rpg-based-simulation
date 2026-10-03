@@ -1,6 +1,6 @@
 """Unit tests for GET /api/v1/manifest endpoint and ManifestPresenter.
 
-Test plan reference: staging_artifacts/TCK-20260821-MANIFEST-ID-LOOKUP-ENDPOINT/test_plan.md
+Test plan reference: agent-working/staging_artifacts/TCK-20260821-MANIFEST-ID-LOOKUP-ENDPOINT/test_plan.md
 Ticket: TCK-20260821-MANIFEST-ID-LOOKUP-ENDPOINT
 """
 from __future__ import annotations

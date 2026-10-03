@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING
 
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
@@ -30,7 +31,7 @@ from gate_checks.workflow_meta_conformance import (  # noqa: E402
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _WORKFLOWS_DIR = _REPO_ROOT / ".claude" / "workflows"
 _SKILLS_DIR = _REPO_ROOT / ".claude" / "skills"
-_REAL_EVENTS_ROOT = _REPO_ROOT / "agent-monitoring" / "data"
+_REAL_EVENTS_ROOT = _REPO_ROOT / AGENT_MONITORING / "data"
 
 
 def _write_workflow_js(tmp_path, workflow_name, titles):
@@ -56,7 +57,7 @@ def _write_skill_md(tmp_path, workflow_name, body_text):
 def _write_events_jsonl(tmp_path, run_id, phase_statuses, week="2026-W28"):
     """phase_statuses: list of (phase, status) tuples -> one event row each, written under
     tmp_path/<week>/events.jsonl (a weekly shard, TCK-20260904-HOTFIX-WORKFLOW-META-CONFORMANCE-
-    SHARD-AWARENESS -- the retired flat agent-monitoring/events.jsonl no longer exists). Returns
+    SHARD-AWARENESS -- the retired flat agent-working/agent-monitoring/events.jsonl no longer exists). Returns
     tmp_path itself (the shard *root*, matching collect_run_event_statuses'/
     check_workflow_meta_conformance's `data_root` parameter), not the shard file."""
     lines = []
@@ -130,7 +131,7 @@ def test_collect_run_event_statuses_groups_by_phase(tmp_path):
 
 def test_collect_run_event_statuses_finds_rows_only_in_a_weekly_shard(tmp_path):
     """The regression test this ticket's own AC requires: a run_id whose events live only in a
-    weekly shard, not the (now nonexistent) flat agent-monitoring/events.jsonl file."""
+    weekly shard, not the (now nonexistent) flat agent-working/agent-monitoring/events.jsonl file."""
     data_root = _write_events_jsonl(
         tmp_path, "TCK-SHARD-ONLY", [("Scope", "ok"), ("Investigate", "ok")], week="2026-W30",
     )

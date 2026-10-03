@@ -30,6 +30,10 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 import yaml
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS, posix  # noqa: E402
 
 SCHEMA_VERSION = 2
 
@@ -75,7 +79,8 @@ _UNOWNED_DOMAIN_IMPORT_PREFIXES = (  # "Party / group" row: no oracle and no own
 )
 
 V0_LIMITS = (
-    "Execution data is a supplied input: in CI only the `api-tools` job uploads JUnit, so most lanes have no "
+    "Execution data is a supplied input: in CI only the three jobs split from the former `api-tools` job "
+    "(`tools-a-e`, `tools-f-z`, `api-cli-engine`) upload JUnit, so most lanes have no "
     "JUnit artifact to supply unless a local run produces one.",
     "There is no CI coverage job. Package coverage comes only from a supplied local run (`provisional-local`); "
     "otherwise it shows `no-coverage-artifact`.",
@@ -86,7 +91,7 @@ V0_LIMITS = (
     "oracle or owner (decision D-P, deferred), so files that only import it are `unowned-domain`, outside the "
     "core-RPG candidate set.",
     "The manifest hashes the supplied artifacts, the workflow, the tag registry and the mutation records; the "
-    "scanned tests/, tickets/ and parity ledger are covered only by the `scanned_inputs_dirty` flag, which needs a git checkout. "
+    "scanned tests/, agent-working/tickets/ and parity ledger are covered only by the `scanned_inputs_dirty` flag, which needs a git checkout. "
     "That flag covers only those scanned inputs, not the whole repository (renamed from `worktree_dirty` in schema_version 2).",
     "`not-in-supplied-runs` means a candidate file has no testcase in any supplied JUnit run. It does not mean the file "
     "was never executed anywhere; with no run supplied at all the state is `no-junit-artifact`.",
@@ -600,7 +605,7 @@ def escaped_defects_layer(repo_root: Path, as_of: dt.date) -> Dict[str, Any]:
                     added = dt.date.fromisoformat(entry["added_date"])
     if added is None:
         return {"state": "tag-not-registered", "months": {}, "tickets": []}
-    tickets_dir = repo_root / "tickets"
+    tickets_dir = repo_root / TICKETS
     scanned = 0
     tagged: List[Dict[str, Any]] = []
     for path in sorted(tickets_dir.rglob("*.md")):
@@ -661,7 +666,7 @@ def _dirty_inputs(repo_root: Path, target_paths: Sequence[str]) -> Any:
     for line in out.splitlines():
         path = line[3:].split(" -> ")[-1].strip().strip('"')
         scanned = path.startswith(_SCANNED_PREFIXES) or path in target_paths or (
-            path.startswith("tickets/") and path.endswith(".md"))
+            path.startswith(posix(TICKETS) + "/") and path.endswith(".md"))
         if scanned:
             dirty.add(path)
     return sorted(dirty)

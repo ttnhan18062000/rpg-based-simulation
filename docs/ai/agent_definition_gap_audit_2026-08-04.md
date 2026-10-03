@@ -12,13 +12,13 @@ Evidence base for `TCK-20260804-SKILL-JS-PHASE-SYNC`, `TCK-20260804-CREATE-TICKE
 and a planner fact-verification ticket. Triggered by finding a real bug: `.claude/skills/
 implement-ticket/SKILL.md` had drifted from `.claude/workflows/implement-ticket.js` in 7 ways,
 none of which showed up in any failure metric (the gaps caused silent under-execution, not
-errors). That precedent motivated two passes: (1) mine `agent-monitoring/*.jsonl` for real,
+errors). That precedent motivated two passes: (1) mine `agent-working/agent-monitoring/*.jsonl` for real,
 recurring failure signals that existing metrics *can* see, and (2) a targeted drift-comparison
 pass on the other `.claude/skills/*`/`.claude/agents/*.md` files for the same silent-gap class
 metrics *can't* see. Both passes found real, current gaps.
 
 Every number below was independently re-queried directly against
-`agent-monitoring-index/monitoring.db` (rebuilt first — it was 1.3% stale) for this document,
+`agent-working/.index/agent-monitoring-index/monitoring.db` (rebuilt first — it was 1.3% stale) for this document,
 not copied from the investigating agent's report without verification.
 
 ## Part 1 — Data-evidenced findings
@@ -126,15 +126,15 @@ checklist, and a root-cause parser fix (`done_checker_static.py`'s new `_is_none
 now tolerates trailing rationale prose after "None."/"N/A" — e.g. "None. See note below" — while
 still correctly detecting a real `docs/` bullet if one follows, avoiding the false-PASS risk a
 looser prefix check alone would carry) — see
-`stored_artifacts/TCK-20260804-AGENT-DEF-GAP-FIXES/plan.md` for exact text and reasoning.
+`agent-working/stored_artifacts/TCK-20260804-AGENT-DEF-GAP-FIXES/plan.md` for exact text and reasoning.
 
 **How to check if THIS fix worked**, using the same method as this ticket's own investigation
-(`stored_artifacts/TCK-20260804-AGENT-DEF-GAP-FIXES/investigation.md`), not the original audit's
+(`agent-working/stored_artifacts/TCK-20260804-AGENT-DEF-GAP-FIXES/investigation.md`), not the original audit's
 one-time monthly percentages:
 
 1. **Immediate, non-deferred check (parser fix only):** re-run the Verify-failure count for the
    "Docs Requiring Update" none-phrase/trailing-prose failure mode specifically — query
-   `agent-monitoring-index/monitoring.db` for `phase='Verify'`, `status='failed'` events since
+   `agent-working/.index/agent-monitoring-index/monitoring.db` for `phase='Verify'`, `status='failed'` events since
    2026-08-05 whose evidence text mentions "Docs Requiring Update" or "none-phrase". Expected: 0
    going forward, immediately — this is a deterministic parser fix, not a behavior-change-dependent
    one, so it does not need weeks of accumulation to validate. (A separate, still-open `:line`-
@@ -169,7 +169,7 @@ This document's own "Deferred check" (item 2 of the 2026-08-05 update) asked a f
 re-run the Review/Verify failure query after several weeks of real runs and compare against the
 pre-fix baseline window of **2026-07-20 → 2026-08-05 (15 Review, 25 Verify failures)**. Six weeks
 elapsed and nobody had run it. Run now, using the same method: `phase IN ('Review','Verify')`,
-`status='failed'`, read directly from the sharded `agent-monitoring/data/*/events.jsonl` corpus.
+`status='failed'`, read directly from the sharded `agent-working/agent-monitoring/data/*/events.jsonl` corpus.
 
 **Method validation first, because the numbers only mean something if the method reproduces.**
 Re-counting this document's own baseline window returns **Verify 25 — an exact match** — and
@@ -234,6 +234,6 @@ every one caught by another party re-deriving rather than by any gate.
 
 - **55 event rows carry a `None` timestamp** and are invisible to any time-windowed query,
   including this one. Mostly June-era `TCK-20260618/19` audit runs.
-- **`agent-monitoring/data/unknown-week/` holds 34 rows** — that shard is where records with no
+- **`agent-working/agent-monitoring/data/unknown-week/` holds 34 rows** — that shard is where records with no
   derivable `ts` land (29 of them `None`). Any consumer assuming one `ts` shape drops them
   silently. Not fixed here; recorded so the next query does not rediscover it.

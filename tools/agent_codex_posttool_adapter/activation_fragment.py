@@ -3,7 +3,7 @@
 PROPOSED_HOOK_BLOCK is a deliberate inert no-op placeholder (`command = "true"`), the same
 discipline tools/agent_codex_pilot_guardrails/config_toggle.py::_HOOK_BLOCK already uses. The real
 invocation command is deferred to a future activation ticket because
-agent-orchestration/hook-surface-policy.yaml's `human_approval`, `project_trust_review`, and
+agent-working/agent-orchestration/hook-surface-policy.yaml's `human_approval`, `project_trust_review`, and
 `hook_trust_review` activation_prerequisites remain unmet by this ticket.
 
 `render_proposed_fragment` is pure append and is never called against a real path anywhere in

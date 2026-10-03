@@ -1,6 +1,6 @@
 """Tests for tools/delivery/pr_status.py (TCK-20260924-DELIVERY-STATUS-TOOL).
 
-One section per Acceptance Criterion, per staging_artifacts/TCK-20260924-DELIVERY-STATUS-TOOL/
+One section per Acceptance Criterion, per agent-working/staging_artifacts/TCK-20260924-DELIVERY-STATUS-TOOL/
 test_plan.md. All I/O is a FakeRunner — no real subprocess, no network, fully deterministic.
 """
 import json

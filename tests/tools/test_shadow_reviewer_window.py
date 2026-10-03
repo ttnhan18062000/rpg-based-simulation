@@ -1,7 +1,7 @@
 """Pure-function unit tests for tools/agent-monitoring/shadow_reviewer_window.py
 (TCK-20260904-SHADOW-REVIEWER-LOGGING).
 
-Every test here uses a tmp_path-based agent-monitoring/data/<week>/events.jsonl fixture via
+Every test here uses a tmp_path-based agent-working/agent-monitoring/data/<week>/events.jsonl fixture via
 monkeypatch — never the real corpus.
 """
 from __future__ import annotations

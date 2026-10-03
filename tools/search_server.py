@@ -27,8 +27,8 @@ if "knowledge_search" not in sys.modules:
     spec.loader.exec_module(_ks)
 _ks = sys.modules["knowledge_search"]
 
-_INDEX_DIR = _ks._DEFAULT_DB.parent  # knowledge-index/
-_DB_PATH = _ks._DEFAULT_DB            # knowledge-index/knowledge.db
+_INDEX_DIR = _ks._DEFAULT_DB.parent  # agent-working/.index/knowledge-index/
+_DB_PATH = _ks._DEFAULT_DB            # agent-working/.index/knowledge-index/knowledge.db
 _BM25_PATH = _INDEX_DIR / "bm25.pkl"
 _MODEL_NAME: str = _ks._MODEL_NAME
 
@@ -74,7 +74,7 @@ async def lifespan(app: FastAPI):
 
     _APP_STATE.ready = True
     print(f"[search-server] Listening on http://localhost:8765")
-    print(f"[search-server] Index: knowledge-index/knowledge.db ({_APP_STATE.chunk_count} chunks across {_APP_STATE.doc_count} docs)")
+    print(f"[search-server] Index: agent-working/.index/knowledge-index/knowledge.db ({_APP_STATE.chunk_count} chunks across {_APP_STATE.doc_count} docs)")
     print(f"[search-server] Model: {_MODEL_NAME}")
     print(f"[search-server] Docs: http://localhost:8765/docs")
     yield

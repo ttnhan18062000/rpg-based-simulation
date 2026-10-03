@@ -41,7 +41,8 @@ def test_parses_real_workflow_fastlane_job_paths():
     assert "tests/unit/core" in job_paths["unit-core-world"]
     assert "tests/unit/domains" in job_paths["unit-infra"]
     assert "tests/integration" in job_paths["integration"]
-    assert "tests/tools" in job_paths["api-tools"]
+    assert "tests/tools" in job_paths["tools-a-e"]
+    assert "tests/tools" in job_paths["tools-f-z"]
 
 
 def test_parses_real_workflow_slow_job_blanket():

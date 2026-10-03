@@ -2,6 +2,7 @@
 import subprocess
 import sys
 from pathlib import Path
+from tools.agent_working_paths import TICKETS
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "tools" / "gate_checks"))
@@ -18,7 +19,7 @@ def test_missing_ticket_fails_without_running_checkers():
 def test_done_ticket_without_working_log_row_fails_naming_the_check(tmp_path):
     # A done ticket whose run never appended a working_log row: the Finalize gate must fail, whatever
     # a native run's agent reported. Run against the real repo with a ticket id that has no row.
-    ticket = REPO / "tickets" / "done" / "TCK-99990101-BACKSTOP-FIXTURE.md"
+    ticket = REPO / TICKETS / "done" / "TCK-99990101-BACKSTOP-FIXTURE.md"
     ticket.write_text(
         "---\nstatus: historical\nlayer: ai\nauthority: P1\naudience: agent\n"
         "ticket_id: TCK-99990101-BACKSTOP-FIXTURE\nphase: done\ndate: 2026-10-01\ntags: []\n---\n\n"

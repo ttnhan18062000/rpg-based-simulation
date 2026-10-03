@@ -54,7 +54,7 @@ usage-count evidence and explicitly supersedes `TCK-20260824-KGMCP-KEEP-OR-DEPRE
 below) for the full blocking chain — not duplicated here.
 
 Two other gaps the same investigation found, left for whoever eventually re-scopes this item: the
-"2 vs 2,138 calls" figure below could not be reconciled against a direct `agent-monitoring/data/*/
+"2 vs 2,138 calls" figure below could not be reconciled against a direct `agent-working/agent-monitoring/data/*/
 tools.jsonl` grep (found 13 `mcp__knowledge-gateway__*` calls vs. 3,212 `mcp__knowledge-search__*`
 calls — same order-of-magnitude imbalance, different exact numbers, likely a narrower/earlier
 measurement window than the raw corpus); and `tools/retrieval_cache.py` has a real import
@@ -78,7 +78,7 @@ disabled or broken, just underused.
 2. **Archive, don't hard-delete**, the remaining gateway modules — move to an archive location,
    remove the `.mcp.json` registration.
 3. **Monitor for 2 weeks**: confirm zero `mcp__knowledge-gateway__*` calls appear in
-   `agent-monitoring/data/*/tools.jsonl` post-archival.
+   `agent-working/agent-monitoring/data/*/tools.jsonl` post-archival.
 4. **Delete** only after the monitoring window confirms no renewed calls.
 
 **Acceptance signal**: a repository-owner re-ratification superseding
@@ -100,7 +100,7 @@ not a technical limitation) — so the milestone below was reversing that exclus
 an existing computation into two more call sites.
 
 **Original problem**: only `implement-ticket.js` emitted `cost_proxy_score`/`tool_call_count` into
-`agent-monitoring/`; `implement-epic.js` and `create-tickets.js` reported `null` for both fields
+`agent-working/agent-monitoring/`; `implement-epic.js` and `create-tickets.js` reported `null` for both fields
 (`docs/agent-monitoring/schema.md`).
 
 **What actually landed**: a dual-write `writeSidecar(seq, phase, agentName)` helper in each file —
@@ -135,7 +135,7 @@ a membership check covering all three workflows (`simq-audit` stays excluded). F
 quality problems: unescaped commas in free-text `summary` fields corrupt column alignment for a
 visible subset of the file's 3,300 rows).
 
-**Problem**: `tickets/working_log.csv` cannot currently support any automated rework-rate or
+**Problem**: `agent-working/tickets/working_log.csv` cannot currently support any automated rework-rate or
 reopened-ticket signal — grep-level analysis over it is unreliable, confirmed this session.
 
 **Milestone**: write a proper CSV parser (handling the existing malformed rows) or migrate the
@@ -161,12 +161,12 @@ test as "proposed-pending-implementation-evidence" — a documented, not yet bui
 
 **Problem**: `docs/architecture/agent_orchestration_contract.md`'s Provider-Adapter Boundary ADR
 requires `.claude/` and `.codex/` to stay "thin" translations of the shared
-`agent-orchestration/` contract — but no test currently verifies that constraint holds; it's
+`agent-working/agent-orchestration/` contract — but no test currently verifies that constraint holds; it's
 enforced only at the field-name level (`tools/retrieval_event_parity_check.py` bans
 provider-specific field names in the shared schema).
 
 **Milestone**: write a test diffing `.claude/agents/*.md` phase/status/gate definitions and
-`.codex/config.toml`'s translated equivalents against the canonical `agent-orchestration/`
+`.codex/config.toml`'s translated equivalents against the canonical `agent-working/agent-orchestration/`
 contract — the ADR's own spec for what this test should check.
 
 **Acceptance signal**: the test exists, passes against current `.claude/`/`.codex/` state, and

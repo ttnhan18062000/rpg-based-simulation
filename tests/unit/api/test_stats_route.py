@@ -1,6 +1,6 @@
 """Unit tests for GET /api/v1/stats endpoint and StatePresenter.present_stats.
 
-Test plan reference: staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/test_plan.md
+Test plan reference: agent-working/staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/test_plan.md
 Ticket: TCK-20260821-REST-MAP-STATIC-STATS
 """
 from __future__ import annotations

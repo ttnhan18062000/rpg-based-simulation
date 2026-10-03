@@ -37,9 +37,13 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from validate_working_log import run_validation  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS  # noqa: E402
 
-DEFAULT_LOG_PATH = Path("tickets/working_log.csv")
-DEFAULT_DONE_DIR = Path("tickets/done")
+DEFAULT_LOG_PATH = TICKETS / "working_log.csv"
+DEFAULT_DONE_DIR = TICKETS / "done"
 
 
 def compute_working_log_duplicate_ticket_ids(

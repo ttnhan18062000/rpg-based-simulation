@@ -360,7 +360,7 @@ future imitation-driven behavior.
   `SpeciesDefinition.intelligence_tier` (landed by `TCK-20260831-SPECIES-INTELLIGENCE-TIER`) and maps
   `"high"` → `1.0`, `"low"` (or an unresolved species/tier) → `0.5`. Deliberately kept as a separate
   service rather than folded into `CapacityService.derive_profile` — see the Anti-Drift Notes in
-  `staging_artifacts`/`stored_artifacts/TCK-20260831-ROLE-MODEL-IMITATION/plan.md` for the fork
+  `staging_artifacts`/`agent-working/stored_artifacts/TCK-20260831-ROLE-MODEL-IMITATION/plan.md` for the fork
   rationale; `CognitionProfile`'s existing 11 fields are untouched.
 - **Rollout**: gated off by default behind `ENABLE_ROLE_MODEL_IMITATION`
   (`src/domains/optimization/feature_flags.py`), per the DEV-002 default-OFF policy for brand-new

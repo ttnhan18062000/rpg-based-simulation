@@ -67,12 +67,12 @@ doc-staleness gate's `pushEvent`/`writeMonitoring` calls (source lines 927-941) 
 *after* `phase('Document-Update')` (:805) but *before* `phase('Architecture-Verify')` (:959) — a
 nearest-preceding-`phase()`-marker approach would misattribute this gate to Document-Update,
 contradicting its own inline `pushEvent('Implement', ...)` call at :927 and the `gate_policy:
-Implement` phase this ticket's `agent-orchestration/gate-policy.yaml` records for it (matching
+Implement` phase this ticket's `agent-working/agent-orchestration/gate-policy.yaml` records for it (matching
 CLAUDE.md's own documented workflow structure: Document-Update happens between Implement and its
 own doc-staleness gate, but the gate's outcome folds back into the *Implement* phase event, not a
 new Document-Update event — see the source file's own comment at lines 920-922). The
 nearest-preceding-`pushEvent`-literal approach gets this right automatically (and also correctly
-resolves NEEDS_HUMAN_INPUT to Plan, not Investigate, matching `agent-orchestration/gate-policy.yaml`'s
+resolves NEEDS_HUMAN_INPUT to Plan, not Investigate, matching `agent-working/agent-orchestration/gate-policy.yaml`'s
 own corrective note) because every gate's failure branch always emits its own `pushEvent('<Phase>',
 ...)` call naming its real phase immediately before (or in place of) its `writeMonitoring` call —
 confirmed true for all 13 gate/status call sites in the live file.

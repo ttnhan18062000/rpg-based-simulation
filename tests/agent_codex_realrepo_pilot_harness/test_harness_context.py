@@ -21,6 +21,7 @@ from tools.agent_codex_realrepo_pilot_harness.proofs import (
     tree_digest,
 )
 from tools.agent_codex_posttool_adapter.errors import IdentityValidationError
+from tools.agent_working_paths import AGENT_MONITORING, PILOT_REQUESTS, STAGING_ARTIFACTS, TICKETS, posix  # noqa: E402
 
 
 TICKET = "TCK-20260801-MONITORING-WRITER-STATUS-STALE"
@@ -28,15 +29,15 @@ EXECUTION = "codex-TCK-20260801-MONITORING-WRITER-STATUS-STALE-1722500000000-dea
 
 
 def _write_shape(root: Path) -> PilotHarnessContext:
-    request = root / "pilot_requests" / f"{TICKET}.yaml"
-    candidate = root / "tickets" / "todos" / f"{TICKET}.md"
-    target = root / "tickets" / "done" / "TCK-20260721-MONITORING-WRITER-UNIFICATION.md"
+    request = root / PILOT_REQUESTS / f"{TICKET}.yaml"
+    candidate = root / TICKETS / "todos" / f"{TICKET}.md"
+    target = root / TICKETS / "done" / "TCK-20260721-MONITORING-WRITER-UNIFICATION.md"
     for path in (request, candidate, target):
         path.parent.mkdir(parents=True, exist_ok=True)
     request.write_text(yaml.safe_dump({"ticket_id": TICKET, "human_owner": "tnhan", "rollback_plan_summary": "restore scratch bytes"}))
     candidate.write_text("candidate\n")
     target.write_text("---\nstatus: active\nphase: open\n---\n# old\n\n## Status\nOPEN\n")
-    monitoring = root / "agent-monitoring"
+    monitoring = root / AGENT_MONITORING
     monitoring.mkdir()
     for name in ("runs.jsonl", "events.jsonl", "tools.jsonl"):
         (monitoring / name).write_text('{"historical":true}\n')
@@ -46,18 +47,18 @@ def _write_shape(root: Path) -> PilotHarnessContext:
         "candidate_ticket_id": TICKET,
         "request_sha256": hashlib.sha256(request.read_bytes()).hexdigest(),
         "baseline_sha256": baseline,
-        "target_path": "tickets/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md",
+        "target_path": f"{posix(TICKETS)}/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md",
         "target_transitions": {
             "status": ["active", "historical"],
             "phase": ["open", "done"],
             "body_status": ["OPEN", "DONE"],
         },
         "allowed_paths": [
-            "tickets/todos/TCK-20260801-MONITORING-WRITER-STATUS-STALE.md",
-            "tickets/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md",
+            f"{posix(TICKETS)}/todos/TCK-20260801-MONITORING-WRITER-STATUS-STALE.md",
+            f"{posix(TICKETS)}/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md",
             "working_log.csv",
             "docs/REGISTRY.yaml",
-            "staging_artifacts/TCK-20260801-MONITORING-WRITER-STATUS-STALE/proof.json",
+            f"{posix(STAGING_ARTIFACTS)}/TCK-20260801-MONITORING-WRITER-STATUS-STALE/proof.json",
         ],
         "monitoring_suffixes": {
             "runs.jsonl": [{"ticket_id": TICKET, "execution_id": EXECUTION, "provider": "codex", "run_id": "pilot-run"}],
@@ -72,8 +73,8 @@ def _write_shape(root: Path) -> PilotHarnessContext:
         repo_root=root,
         ticket_id=TICKET,
         execution_id=EXECUTION,
-        candidate_path="tickets/todos/TCK-20260801-MONITORING-WRITER-STATUS-STALE.md",
-        request_path=f"pilot_requests/{TICKET}.yaml",
+        candidate_path=f"{posix(TICKETS)}/todos/TCK-20260801-MONITORING-WRITER-STATUS-STALE.md",
+        request_path=f"{posix(PILOT_REQUESTS)}/{TICKET}.yaml",
         policy_path="pilot_evidence/policy.json",
         enabled_hook_events=frozenset({"PostToolUse"}),
         enabled_writer_names=frozenset({"write_line", "write_lines"}),
@@ -94,7 +95,7 @@ def test_preflight_captures_validated_immutable_context_before_claim_or_invoker(
 def test_policy_baseline_excludes_only_the_policy_bytes(tmp_path):
     root = tmp_path / "scratch"
     policy = root / "pilot_evidence" / "policy.json"
-    ordinary = root / "tickets" / "candidate.md"
+    ordinary = root / TICKETS / "candidate.md"
     policy.parent.mkdir(parents=True)
     ordinary.parent.mkdir(parents=True)
     ordinary.write_text("candidate\n")
@@ -105,7 +106,7 @@ def test_policy_baseline_excludes_only_the_policy_bytes(tmp_path):
 
     assert capture_policy_baseline(root, policy) == first
     assert "pilot_evidence/policy.json" not in first
-    assert first["tickets/candidate.md"] == b"candidate\n"
+    assert first[f"{posix(TICKETS)}/candidate.md"] == b"candidate\n"
 
 
 def test_boundary_accepts_only_a_captured_preflight_before_constructing_invoker(tmp_path):
@@ -162,10 +163,10 @@ def test_post_run_proof_requires_exact_historical_fields_and_declared_suffixes(t
     context = _write_shape(tmp_path / "scratch")
     admitted = ordinary_preflight(context)
     before = admitted.baseline_tree
-    target = context.repo_root / "tickets/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md"
+    target = context.repo_root / TICKETS / "done" / "TCK-20260721-MONITORING-WRITER-UNIFICATION.md"
     target.write_text("---\nstatus: historical\nphase: done\n---\n# old\n\n## Status\nDONE\n")
     for name, rows in admitted.policy.monitoring_suffixes.items():
-        with (context.repo_root / "agent-monitoring" / name).open("a") as stream:
+        with (context.repo_root / AGENT_MONITORING / name).open("a") as stream:
             for row in rows:
                 stream.write(json.dumps(row, separators=(",", ":")) + "\n")
 
@@ -179,12 +180,12 @@ def test_post_run_proof_requires_exact_historical_fields_and_declared_suffixes(t
 def test_post_run_proof_rejects_an_extra_monitoring_row(tmp_path):
     context = _write_shape(tmp_path / "scratch")
     admitted = ordinary_preflight(context)
-    target = context.repo_root / "tickets/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md"
+    target = context.repo_root / TICKETS / "done" / "TCK-20260721-MONITORING-WRITER-UNIFICATION.md"
     target.write_text("---\nstatus: historical\nphase: done\n---\n# old\n\n## Status\nDONE\n")
     for name, rows in admitted.policy.monitoring_suffixes.items():
-        with (context.repo_root / "agent-monitoring" / name).open("a") as stream:
+        with (context.repo_root / AGENT_MONITORING / name).open("a") as stream:
             for row in rows:
                 stream.write(json.dumps(row) + "\n")
-    (context.repo_root / "agent-monitoring" / "runs.jsonl").open("a").write('{"unexpected":true}\n')
+    (context.repo_root / AGENT_MONITORING / "runs.jsonl").open("a").write('{"unexpected":true}\n')
     with pytest.raises(ValueError, match="suffix"):
         assert_post_run_proof(admitted, capture_tree(context.repo_root))

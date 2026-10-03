@@ -7,7 +7,7 @@ verifier for that subset:
 
 - Part A (`run_static_precheck`): the pre-Finalize conditions `done-checker` can check before
   Finalize has run (staging artifacts complete, data/runs+release_proof clean, ticket still in
-  tickets/inprogress/, no working_log row yet, frontmatter valid, and more added since). Called
+  agent-working/tickets/inprogress/, no working_log row yet, frontmatter valid, and more added since). Called
   from the Verify-phase agent prompt in `.claude/workflows/implement-ticket.js`; a static FAIL
   downgrades to the existing `DOD_BLOCKED` status. Not FAIL-or-PASS-only: `NA` (a condition that
   doesn't apply to this tier) and, since TCK-20260924-DONE-CHECKER-DATA-RUNS-CLEAN-NO-START-TS,
@@ -15,8 +15,8 @@ verifier for that subset:
   every real consumer of this contract branches only on the literal string `"FAIL"`, never on an
   assumption that only two values exist.
 - Part B (`run_finalize_selfcheck`): the 4 post-Finalize conditions confirming Finalize's own
-  migration actually landed (stored_artifacts/ complete and staging_artifacts/ gone, ticket moved
-  to tickets/done/, exactly one working_log row, and — as of TCK-20260709-REGISTRY-REGEN-ON-CLOSE
+  migration actually landed (agent-working/stored_artifacts/ complete and agent-working/staging_artifacts/ gone, ticket moved
+  to agent-working/tickets/done/, exactly one working_log row, and — as of TCK-20260709-REGISTRY-REGEN-ON-CLOSE
   — docs/REGISTRY.yaml regenerated with an entry for the closing ticket). Called directly via
   `bash(...)` from the Finalize phase in `implement-ticket.js`; a FAIL here produces the one new
   status this ticket introduces, `FINALIZE_INCOMPLETE`.
@@ -69,6 +69,10 @@ from verify_temporal_week_consistency import compute_temporal_week_consistency_r
 from monitoring_shard_paths import shard_paths  # noqa: E402
 from gate_checks.proof_plan_advisory import check_proof_plan_fields  # noqa: E402
 from gate_checks.cited_evidence_advisory import check_cited_evidence_paths  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, STAGING_ARTIFACTS, STORED_ARTIFACTS, TICKETS, posix  # noqa: E402
 
 REQUIRED_ARTIFACT_FILES = ("plan.md", "investigation.md", "test_plan.md")
 
@@ -107,9 +111,9 @@ def _jsonl_rows_for_run_id(path: Path, run_id: str) -> list[dict]:
 
 def _jsonl_rows_for_run_id_across_weeks(data_root: Path, filename: str, run_id: str) -> list[dict]:
     """Return every parsed JSON row whose run_id == run_id, across every
-    agent-monitoring/data/<week>/{filename} shard under data_root (sorted for
+    agent-working/agent-monitoring/data/<week>/{filename} shard under data_root (sorted for
     determinism — mirrors record_events.py::compute_tool_stats()'s
-    `sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl"))` precedent).
+    `sorted(Path(".").glob("agent-working/agent-monitoring/data/*/tools.jsonl"))` precedent).
     A data_root that doesn't exist, or exists with no matching week folders,
     yields an empty glob and returns [] — matching the old single-file
     ".exists() -> []" precedent, not an error.
@@ -166,7 +170,7 @@ def _pending_rows_for_ticket_as_lists(ticket_id: str, data_root: Path) -> list:
 
 
 def _count_rows_for_ticket(
-    csv_path: Path, ticket_id: str, data_root: Path = Path("agent-monitoring/data")
+    csv_path: Path, ticket_id: str, data_root: Path = AGENT_MONITORING / "data"
 ) -> int:
     """Count rows in csv_path (plus any still-pending working_log shard under data_root) that
     contain ticket_id in ANY column.
@@ -180,7 +184,7 @@ def _count_rows_for_ticket(
 
 
 def _rows_for_ticket(
-    csv_path: Path, ticket_id: str, data_root: Path = Path("agent-monitoring/data")
+    csv_path: Path, ticket_id: str, data_root: Path = AGENT_MONITORING / "data"
 ) -> list:
     """Same matching rule and same column-shift tolerance as before (scans every column, never
     assumes a fixed column index), but also includes any row still staged in a pending
@@ -223,7 +227,7 @@ def _status_for_row(row: list) -> str:
 
 
 def check_staging_artifacts_complete(
-    ticket_id: str, tier: str, base_dir: Path = Path("staging_artifacts")
+    ticket_id: str, tier: str, base_dir: Path = STAGING_ARTIFACTS
 ) -> tuple[str, str]:
     if tier == "hotfix":
         return ("NA", "hotfix tier — staging artifacts not required")
@@ -273,13 +277,13 @@ def check_data_runs_clean(
     ticket_id: str | None = None,
     runs_dir: Path = Path("data/runs"),
     proof_dir: Path = Path("reports/release_proof"),
-    data_root: Path = Path("agent-monitoring/data"),
+    data_root: Path = AGENT_MONITORING / "data",
 ) -> tuple[str, str]:
     """`start_ts` given (whether it parses or not) is unchanged, existing behavior (AC4) — an
     explicit-but-unparsable value still flags every file, the pipeline path's fail-closed rule.
 
     When `start_ts` is absent (the hand-orchestrated CLI path, which has never had a source for
-    it), falls back to this ticket's own run record in `agent-monitoring/data/*/runs.jsonl`
+    it), falls back to this ticket's own run record in `agent-working/agent-monitoring/data/*/runs.jsonl`
     (`run_id == ticket_id`, the same shape `check_monitoring_write_recorded` already reads via
     `_jsonl_rows_for_run_id_across_weeks`) — but that value is only as reliable as whatever the
     closer passed to `record_hand_orchestrated_closure.py`'s own `--start-ts`; if that was also
@@ -387,7 +391,7 @@ def clean_data_runs_early(
 
 
 def check_ticket_location(
-    ticket_id: str, inprogress_dir: Path = Path("tickets/inprogress")
+    ticket_id: str, inprogress_dir: Path = TICKETS / "inprogress"
 ) -> tuple[str, str]:
     path = inprogress_dir / f"{ticket_id}.md"
     if path.exists():
@@ -397,8 +401,8 @@ def check_ticket_location(
 
 def check_working_log_no_row_yet(
     ticket_id: str,
-    csv_path: Path = Path("tickets/working_log.csv"),
-    data_root: Path = Path("agent-monitoring/data"),
+    csv_path: Path = TICKETS / "working_log.csv",
+    data_root: Path = AGENT_MONITORING / "data",
 ) -> tuple[str, str]:
     count = _count_rows_for_ticket(csv_path, ticket_id, data_root)
     if count == 0:
@@ -417,9 +421,9 @@ def check_frontmatter_valid(
     staging_dir: Path = None,
 ) -> tuple[str, str]:
     if ticket_path is None:
-        ticket_path = Path(f"tickets/inprogress/{ticket_id}.md")
+        ticket_path = TICKETS / "inprogress" / f"{ticket_id}.md"
     if staging_dir is None:
-        staging_dir = Path(f"staging_artifacts/{ticket_id}")
+        staging_dir = STAGING_ARTIFACTS / f"{ticket_id}"
 
     # Load the live registry so _check_tags's registry-membership branch actually runs on this
     # path — without this, an unregistered tag silently PASSes (only canonical-form violations
@@ -429,7 +433,7 @@ def check_frontmatter_valid(
     ticket_errors = validate_file(ticket_path, registry=registry)
 
     # Location consistency (TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT): a ticket's
-    # status/phase can each be individually enum-valid while disagreeing with which tickets/
+    # status/phase can each be individually enum-valid while disagreeing with which agent-working/tickets/
     # subdirectory it sits in -- validate_file's per-field enum checks alone miss that class.
     # Not folded into validate_file itself; called explicitly here, same as the corpus test.
     if ticket_path.exists():
@@ -441,8 +445,8 @@ def check_frontmatter_valid(
             return ("FAIL", "; ".join(ticket_errors))
         return ("NA", "hotfix tier — no staging artifacts to validate")
 
-    # staging_artifacts/ paths do not auto-detect as `artifact` content type (only
-    # stored_artifacts/ does) — must pass content_type_override explicitly or this silently
+    # agent-working/staging_artifacts/ paths do not auto-detect as `artifact` content type (only
+    # agent-working/stored_artifacts/ does) — must pass content_type_override explicitly or this silently
     # falls through to `doc`'s looser required-field set.
     results = validate_directory(staging_dir, content_type_override="artifact", registry=registry)
     artifact_errors = [err for errs in results.values() for err in errs]
@@ -463,7 +467,7 @@ def check_ticket_field_values_valid(
     so it slots into `run_static_precheck`'s existing `checks` tuple unchanged.
     """
     if ticket_path is None:
-        ticket_path = Path(f"tickets/inprogress/{ticket_id}.md")
+        ticket_path = TICKETS / "inprogress" / f"{ticket_id}.md"
     if not ticket_path.exists():
         return ("FAIL", f"{ticket_path} does not exist — cannot validate Tier/Priority")
     result = check_ticket_field_values(ticket_path)[0]
@@ -477,8 +481,8 @@ _DOCS_NONE_PREFIX_RE = re.compile(r"^(none|n/a)\.?\s*", re.IGNORECASE)
 # TCK-20260904-DOC-COVERAGE-REVERSE-CHECK: unlike `_DOCS_BULLET_RE`, this matches a bare
 # `docs/...` token anywhere in prose, with no line-start-bullet anchor and no backtick
 # requirement — `## Files Changed` entries are backtick-wrapped
-# (`tickets/done/TCK-20260831-RACE-RELATIONS-MATRIX.md:210`) but `## Related Docs` entries are
-# bare, no backticks (`tickets/done/TCK-20260831-READINESS-SPEED-FORMULA.md:56-57`); the reverse
+# (`agent-working/tickets/done/TCK-20260831-RACE-RELATIONS-MATRIX.md:210`) but `## Related Docs` entries are
+# bare, no backticks (`agent-working/tickets/done/TCK-20260831-READINESS-SPEED-FORMULA.md:56-57`); the reverse
 # check must recognize both forms.
 _DOCS_PROSE_TOKEN_RE = re.compile(r"docs/[^\s`]+")
 
@@ -709,9 +713,9 @@ def _prose_docs_paths(section_text: str) -> set[str]:
     """Extract every `docs/...` path token appearing anywhere in `section_text`'s prose, covering
     both real body-section formats confirmed by reading actual DONE tickets: `## Files Changed`'s
     backtick-wrapped bullets (`` - `docs/mechanics/02_combat_laws.md` — reason ``,
-    `tickets/done/TCK-20260831-RACE-RELATIONS-MATRIX.md:210`) and `## Related Docs`'s bare, no-backtick
+    `agent-working/tickets/done/TCK-20260831-RACE-RELATIONS-MATRIX.md:210`) and `## Related Docs`'s bare, no-backtick
     bullets (`- docs/simulation_quality/corpus_tier_taxonomy.md`,
-    `tickets/done/TCK-20260831-READINESS-SPEED-FORMULA.md:56-57`). Strips trailing punctuation
+    `agent-working/tickets/done/TCK-20260831-READINESS-SPEED-FORMULA.md:56-57`). Strips trailing punctuation
     (mirrors `_parse_docs_to_update`'s own trailing-suffix-stripping precedent, applied to a
     different suffix shape: prose punctuation instead of a `:digits` line-number suffix)."""
     return {match.rstrip(".,;:)") for match in _DOCS_PROSE_TOKEN_RE.findall(section_text)}
@@ -745,12 +749,12 @@ def _sibling_declared_docs_paths(exclude_ticket_id: str, status_touched: set[str
     its siblings' own declared docs.
 
     "Another ticket" means one of:
-    - any ticket currently in `tickets/inprogress/` (still open, so definitely not this ticket's
+    - any ticket currently in `agent-working/tickets/inprogress/` (still open, so definitely not this ticket's
       own commits), or
-    - a ticket in `tickets/done/` that is ITSELF present in `status_touched` (i.e. closed in this
+    - a ticket in `agent-working/tickets/done/` that is ITSELF present in `status_touched` (i.e. closed in this
       same uncommitted batch — its own move-to-done is part of the uncommitted diff too).
 
-    A ticket in `tickets/done/` that is NOT in `status_touched` is an already-committed prior
+    A ticket in `agent-working/tickets/done/` that is NOT in `status_touched` is an already-committed prior
     closure, not a same-batch sibling — its own declared docs are irrelevant here (it can't have
     caused an *uncommitted* docs/ change). `exclude_ticket_id` is the ticket currently being
     checked, so its own declarations are never treated as a "sibling."
@@ -762,11 +766,11 @@ def _sibling_declared_docs_paths(exclude_ticket_id: str, status_touched: set[str
     """
     sibling_ticket_paths: list[Path] = []
 
-    inprogress_dir = Path("tickets/inprogress")
+    inprogress_dir = TICKETS / "inprogress"
     if inprogress_dir.exists():
         sibling_ticket_paths.extend(sorted(inprogress_dir.glob("*.md")))
 
-    done_dir = Path("tickets/done")
+    done_dir = TICKETS / "done"
     if done_dir.exists():
         for p in sorted(done_dir.glob("*.md")):
             if str(p) in status_touched:
@@ -789,14 +793,14 @@ def _resolve_ticket_body_path(ticket_id: str) -> Path:
     """Resolve the closing ticket's own body-text file the same way `check_tag_drift` does — a
     small private helper of its own, not extracted into a shared function, so `check_tag_drift`'s
     body stays untouched (its forward-direction-adjacent contract is out of this ticket's Scope)."""
-    path = Path(f"tickets/done/{ticket_id}.md")
+    path = TICKETS / "done" / f"{ticket_id}.md"
     if not path.exists():
-        path = Path(f"tickets/inprogress/{ticket_id}.md")
+        path = TICKETS / "inprogress" / f"{ticket_id}.md"
     return path
 
 
 def check_docs_to_update_coverage(
-    ticket_id: str, tier: str, base_dir: Path = Path("staging_artifacts")
+    ticket_id: str, tier: str, base_dir: Path = STAGING_ARTIFACTS
 ) -> tuple[str, str]:
     """Independently re-verify docs/ coverage in both directions — deliberately reads only
     investigation.md / the ticket's own body-section text and real git state, NEVER any
@@ -923,7 +927,7 @@ def check_docs_to_update_coverage(
 
 
 def check_temporal_week_consistency(
-    data_dir: Path = Path("agent-monitoring/data"),
+    data_dir: Path = AGENT_MONITORING / "data",
 ) -> tuple[str, str]:
     """Report-only corpus-health check (TCK-20260904-MONITORING-TEMPORAL-WEEK-
     CONSISTENCY-CHECK): always returns PASS — never blocks a ticket close — but
@@ -931,7 +935,7 @@ def check_temporal_week_consistency(
     Reuses the existing PASS status rather than introducing a new status value;
     NA already means "this condition does not apply at this tier," a different
     meaning than "informational, always non-blocking" (see this ticket's plan.md
-    Decision 2). Degrades gracefully against a repo with no agent-monitoring/data/
+    Decision 2). Degrades gracefully against a repo with no agent-working/agent-monitoring/data/
     directory at all (e.g. _scaffold_precheck_repo's fixture) — compute_temporal_
     week_consistency_report's own load_all_weeks() calls return an empty list per
     source in that case, not an exception, matching verify_referential_integrity.
@@ -980,9 +984,9 @@ def _frontmatter_has_unregistered_tags(
     which files' tags to check, without sharing implementation or return shape.
     """
     if ticket_path is None:
-        ticket_path = Path(f"tickets/inprogress/{ticket_id}.md")
+        ticket_path = TICKETS / "inprogress" / f"{ticket_id}.md"
     if staging_dir is None:
-        staging_dir = Path(f"staging_artifacts/{ticket_id}")
+        staging_dir = STAGING_ARTIFACTS / f"{ticket_id}"
 
     files = [ticket_path] if ticket_path.exists() else []
     if not (tier == "hotfix" and not staging_dir.exists()):
@@ -1094,11 +1098,11 @@ def check_migration_complete(
         return ("NA", "hotfix tier — no migration expected")
     if tier == "epic":
         # TCK-20260921-NESTED-EPIC-FOLDER-REGISTRY-VISIBILITY-GAP: CLAUDE.md's own literal text
-        # groups epic with standard ("Standard/epic only: Create staging_artifacts/{ticket_id}/"),
+        # groups epic with standard ("Standard/epic only: Create agent-working/staging_artifacts/{ticket_id}/"),
         # but epic tier's own Tier Routing row says "Scope only -- tracks child tickets; no direct
         # implementation" -- and in practice, no epic ticket, flat or folder-nested, has ever had
-        # its own stored_artifacts/{ticket_id}/ (confirmed against every real epic in
-        # tickets/done/ at the time this was added, not just the two folder-nested precedents this
+        # its own agent-working/stored_artifacts/{ticket_id}/ (confirmed against every real epic in
+        # agent-working/tickets/done/ at the time this was added, not just the two folder-nested precedents this
         # ticket was filed against). An epic's own investigation/plan/test_plan work is its child
         # tickets' -- SEQUENCE.md plus those children are the epic's real artifact trail. Treating
         # this as "no migration expected," same as hotfix, matches actual practice rather than
@@ -1106,9 +1110,9 @@ def check_migration_complete(
         return ("NA", "epic tier — scope-only, no ticket-owned stored_artifacts expected")
 
     if staging_dir is None:
-        staging_dir = Path(f"staging_artifacts/{ticket_id}")
+        staging_dir = STAGING_ARTIFACTS / f"{ticket_id}"
     if stored_dir is None:
-        stored_dir = Path(f"stored_artifacts/{ticket_id}")
+        stored_dir = STORED_ARTIFACTS / f"{ticket_id}"
 
     ok, problems = _files_complete(stored_dir, REQUIRED_ARTIFACT_FILES)
     if not ok:
@@ -1119,19 +1123,19 @@ def check_migration_complete(
 
 
 def check_ticket_finalized(ticket_id: str) -> tuple[str, str]:
-    """PASS iff the ticket file exists somewhere under tickets/done/ and no longer exists under
-    tickets/inprogress/.
+    """PASS iff the ticket file exists somewhere under agent-working/tickets/done/ and no longer exists under
+    agent-working/tickets/inprogress/.
 
     TCK-20260921-NESTED-EPIC-FOLDER-REGISTRY-VISIBILITY-GAP: also checks
-    tickets/done/{folder}/{ticket_id}.md, one level deep -- an epic ticket closed via CLAUDE.md's
-    own folder-move rule ("move the entire folder to tickets/done/{folder}/") never lives at the
-    flat tickets/done/{ticket_id}.md path the original check-only assumed. One level deep only,
+    agent-working/tickets/done/{folder}/{ticket_id}.md, one level deep -- an epic ticket closed via CLAUDE.md's
+    own folder-move rule ("move the entire folder to agent-working/tickets/done/{folder}/") never lives at the
+    flat agent-working/tickets/done/{ticket_id}.md path the original check-only assumed. One level deep only,
     matching generate_registry.py::collect_tickets()'s own folder-depth assumption and the rule's
     own real shape (a folder never nests a folder).
     """
-    flat_done_path = Path(f"tickets/done/{ticket_id}.md")
-    nested_done_matches = sorted(Path("tickets/done").glob(f"*/{ticket_id}.md"))
-    inprogress_path = Path(f"tickets/inprogress/{ticket_id}.md")
+    flat_done_path = TICKETS / "done" / f"{ticket_id}.md"
+    nested_done_matches = sorted((TICKETS / "done").glob(f"*/{ticket_id}.md"))
+    inprogress_path = TICKETS / "inprogress" / f"{ticket_id}.md"
 
     done_path = flat_done_path if flat_done_path.exists() else (
         nested_done_matches[0] if nested_done_matches else flat_done_path
@@ -1139,7 +1143,7 @@ def check_ticket_finalized(ticket_id: str) -> tuple[str, str]:
 
     problems = []
     if not done_path.exists():
-        problems.append(f"{flat_done_path} does not exist (flat or one-level-deep under tickets/done/)")
+        problems.append(f"{flat_done_path} does not exist (flat or one-level-deep under agent-working/tickets/done/)")
     if inprogress_path.exists():
         problems.append(f"{inprogress_path} still exists")
 
@@ -1150,8 +1154,8 @@ def check_ticket_finalized(ticket_id: str) -> tuple[str, str]:
 
 def check_working_log_exactly_one_row(
     ticket_id: str,
-    csv_path: Path = Path("tickets/working_log.csv"),
-    data_root: Path = Path("agent-monitoring/data"),
+    csv_path: Path = TICKETS / "working_log.csv",
+    data_root: Path = AGENT_MONITORING / "data",
 ) -> tuple[str, str]:
     """PASS iff there is at most one working_log row per *(ticket_id, status)* pair for this
     ticket, not at most one row per ticket_id overall (TCK-20260913-DONE-CHECKER-WORKING-LOG-
@@ -1198,7 +1202,7 @@ def check_working_log_exactly_one_row(
 
 def check_monitoring_write_recorded(
     ticket_id: str,
-    data_root: Path = Path("agent-monitoring/data"),
+    data_root: Path = AGENT_MONITORING / "data",
 ) -> tuple[str, str]:
     """Verify the agent-monitoring write for this run actually landed. Deliberately has no
     `tier` parameter and no NA branch — CLAUDE.md's Hard Rule requires the monitoring write
@@ -1241,9 +1245,9 @@ def check_tag_drift(
     """
     resolved_path = ticket_path
     if resolved_path is None:
-        resolved_path = Path(f"tickets/done/{ticket_id}.md")
+        resolved_path = TICKETS / "done" / f"{ticket_id}.md"
         if not resolved_path.exists():
-            resolved_path = Path(f"tickets/inprogress/{ticket_id}.md")
+            resolved_path = TICKETS / "inprogress" / f"{ticket_id}.md"
     if not resolved_path.exists():
         return ("CLEAN", f"no ticket file found for {ticket_id} — skipping drift check")
 
@@ -1293,7 +1297,7 @@ def check_registry_entry_regenerated(
     With `regenerate=False` (the CLI default, TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES) a
     gate check must not write a tracked, shared file: the registry is generated to a temp path
     and only read, and the on-disk file is checked as-is. A disk file without the ticket's
-    `tickets/done/` entry FAILs with the command that fixes it, rather than being silently
+    `agent-working/tickets/done/` entry FAILs with the command that fixes it, rather than being silently
     rewritten.
 
     `generate_registry()`'s own nonzero return (it writes the YAML unconditionally, then returns
@@ -1321,23 +1325,23 @@ def check_registry_entry_regenerated(
 
     entries = yaml.safe_load(registry_to_read.read_text(encoding="utf-8")) or []
     # TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE (Option A) extended
-    # generate_registry.py::collect_tickets() to also index tickets/todos/ and
-    # tickets/inprogress/, not only tickets/done/ -- so a ticket_id match alone no longer proves
+    # generate_registry.py::collect_tickets() to also index agent-working/tickets/todos/ and
+    # agent-working/tickets/inprogress/, not only agent-working/tickets/done/ -- so a ticket_id match alone no longer proves
     # the Finalize move-to-done step happened; the SAME ticket_id can now legitimately appear in
-    # the registry while still sitting in tickets/inprogress/. This check's own purpose (confirm
+    # the registry while still sitting in agent-working/tickets/inprogress/. This check's own purpose (confirm
     # the move-to-done actually occurred) requires the matching entry's own `path` to specifically
-    # start with "tickets/done/", not merely that some entry with this ticket_id exists anywhere.
+    # start with "agent-working/tickets/done/", not merely that some entry with this ticket_id exists anywhere.
     found = any(
         isinstance(entry, dict)
         and entry.get("ticket_id") == ticket_id
-        and entry.get("path", "").startswith("tickets/done/")
+        and entry.get("path", "").startswith(posix(TICKETS / "done") + "/")
         for entry in entries
     )
 
     if found:
         return (
             "PASS",
-            f"{output_path} contains a tickets/done/ entry for {ticket_id}"
+            f"{output_path} contains a agent-working/tickets/done/ entry for {ticket_id}"
             + (f" (note: regen exited nonzero: {regen_note})" if regen_note else ""),
         )
     if not regenerate:
@@ -1350,7 +1354,7 @@ def check_registry_entry_regenerated(
                 fresh_has_entry = any(
                     isinstance(e, dict)
                     and e.get("ticket_id") == ticket_id
-                    and e.get("path", "").startswith("tickets/done/")
+                    and e.get("path", "").startswith(posix(TICKETS / "done") + "/")
                     for e in fresh
                 )
             except Exception:  # noqa: BLE001 - read-only check stays advisory about why
@@ -1358,13 +1362,13 @@ def check_registry_entry_regenerated(
         if fresh_has_entry:
             return (
                 "FAIL",
-                f"{output_path} is stale: a fresh registry has a tickets/done/ entry for "
+                f"{output_path} is stale: a fresh registry has a agent-working/tickets/done/ entry for "
                 f"{ticket_id} but the on-disk file does not (read-only check, nothing written); "
                 "run `make docs-registry` or re-run with --regenerate-registry, then stage it",
             )
     return (
         "FAIL",
-        f"{output_path} has no tickets/done/ entry for {ticket_id}"
+        f"{output_path} has no agent-working/tickets/done/ entry for {ticket_id}"
         + (" after regeneration" if regenerate else " (read-only check)")
         + (f" (regen also exited nonzero: {regen_note})" if regen_note else ""),
     )
@@ -1419,14 +1423,14 @@ def run_finalize_selfcheck(ticket_id: str, tier: str, regenerate_registry: bool 
 
 
 def _resolve_tier(ticket_id: str, tier_override: str | None) -> str:
-    """Auto-detect `## Tier` from the ticket file (tickets/inprogress/, else tickets/done/) unless
+    """Auto-detect `## Tier` from the ticket file (agent-working/tickets/inprogress/, else agent-working/tickets/done/) unless
     `tier_override` is given. Falls back to "standard" if the file can't be found or the field
     can't be parsed -- tier resolution alone must never crash the CLI."""
     if tier_override:
         return tier_override
     for candidate in (
-        Path(f"tickets/inprogress/{ticket_id}.md"),
-        Path(f"tickets/done/{ticket_id}.md"),
+        TICKETS / "inprogress" / f"{ticket_id}.md",
+        TICKETS / "done" / f"{ticket_id}.md",
     ):
         if candidate.exists():
             body = _strip_frontmatter(candidate.read_text(encoding="utf-8"))
@@ -1462,9 +1466,9 @@ def main(argv=None) -> int:
         help="precheck = Part A (pre-Finalize, Verify-phase conditions); "
         "finalize = Part B (post-Finalize migration self-check, includes "
         "working_log_exactly_one_row); both = run both aggregates. If omitted: 'both', unless "
-        "the ticket already resolves under tickets/done/ (TCK-20260929-DONE-CHECKER-POST-"
+        "the ticket already resolves under agent-working/tickets/done/ (TCK-20260929-DONE-CHECKER-POST-"
         "CLOSURE-FALSE-FAILS), in which case precheck's own conditions assume the ticket is "
-        "still in tickets/inprogress/ and would false-FAIL post-closure, so only 'finalize' "
+        "still in agent-working/tickets/inprogress/ and would false-FAIL post-closure, so only 'finalize' "
         "runs. Pass --part both explicitly to force precheck to run anyway.",
     )
     parser.add_argument(
@@ -1487,8 +1491,8 @@ def main(argv=None) -> int:
         if already_closed:
             part = "finalize"
             print(
-                f"NOTE: {args.ticket_id} already resolves under tickets/done/ — skipping "
-                "precheck (its conditions assume tickets/inprogress/ and would false-FAIL here). "
+                f"NOTE: {args.ticket_id} already resolves under agent-working/tickets/done/ — skipping "
+                "precheck (its conditions assume agent-working/tickets/inprogress/ and would false-FAIL here). "
                 "Pass --part both to run it anyway."
             )
         else:

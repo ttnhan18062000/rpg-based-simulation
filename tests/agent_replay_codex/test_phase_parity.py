@@ -9,12 +9,13 @@ from pathlib import Path
 from tools.agent_orchestration_claude_adapter.divergence_log import is_approved, load_divergences
 from tools.agent_replay.fixture_envelope import load_fixture
 from tools.agent_replay.runner import replay_slice
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REAL_FIXTURE_PATH = (
     _REPO_ROOT / "tests" / "fixtures" / "agent_replay" / "TCK-20260721-ORCHESTRATION-CONTRACT-ADR.yaml"
 )
-_DIVERGENCE_LOG_PATH = _REPO_ROOT / "agent-orchestration" / "intentional-divergences.md"
+_DIVERGENCE_LOG_PATH = _REPO_ROOT / AGENT_ORCHESTRATION / "intentional-divergences.md"
 
 
 def test_codex_execution_path_matches_python_runner_output(real_codex_replay):
@@ -28,7 +29,7 @@ def test_codex_execution_path_matches_python_runner_output(real_codex_replay):
         divergences = load_divergences(_DIVERGENCE_LOG_PATH)
         assert is_approved(divergences, "codex_parity", "TCK-20260721-ORCHESTRATION-CONTRACT-ADR"), (
             f"Codex-side execution ({codex_outcome}) diverges from Python runner ({python_outcome}) "
-            "with no matching RATIFIED entry in agent-orchestration/intentional-divergences.md"
+            "with no matching RATIFIED entry in agent-working/agent-orchestration/intentional-divergences.md"
         )
     else:
         assert python_outcome.final_status == codex_outcome.final_status

@@ -21,6 +21,7 @@ if str(_TOOLS_DIR) not in sys.path:
 
 from tag_report import collect_sweep_files, sweep_file_rows, tag_issues  # noqa: E402
 from tag_corpus_sweep import build_json_report, print_report, run_sweep  # noqa: E402
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS, posix
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _SWEEP_SCRIPT = _TOOLS_DIR / "tag_corpus_sweep.py"
@@ -46,39 +47,39 @@ _VALID_CATEGORIES = frozenset({"subsystem-topic", "process-skill-signal", "quali
 
 
 def test_sweep_walks_all_four_corpus_roots(tmp_path):
-    _make_md(tmp_path, "tickets/done/TCK-20260705-A.md", "tags: [faction]")
-    _make_md(tmp_path, "tickets/inprogress/TCK-20260705-B.md", "tags: [faction]")
-    _make_md(tmp_path, "tickets/todos/TCK-20260705-C.md", "tags: [faction]")
-    _make_md(tmp_path, "stored_artifacts/TCK-20260705-D/plan.md", "tags: [faction]")
+    _make_md(tmp_path, f"{posix(TICKETS)}/done/TCK-20260705-A.md", "tags: [faction]")
+    _make_md(tmp_path, f"{posix(TICKETS)}/inprogress/TCK-20260705-B.md", "tags: [faction]")
+    _make_md(tmp_path, f"{posix(TICKETS)}/todos/TCK-20260705-C.md", "tags: [faction]")
+    _make_md(tmp_path, f"{posix(STORED_ARTIFACTS)}/TCK-20260705-D/plan.md", "tags: [faction]")
 
     relative_paths, skip_reasons, _skipped_paths = collect_sweep_files(tmp_path)
 
     assert set(relative_paths) == {
-        "tickets/done/TCK-20260705-A.md",
-        "tickets/inprogress/TCK-20260705-B.md",
-        "tickets/todos/TCK-20260705-C.md",
-        "stored_artifacts/TCK-20260705-D/plan.md",
+        f"{posix(TICKETS)}/done/TCK-20260705-A.md",
+        f"{posix(TICKETS)}/inprogress/TCK-20260705-B.md",
+        f"{posix(TICKETS)}/todos/TCK-20260705-C.md",
+        f"{posix(STORED_ARTIFACTS)}/TCK-20260705-D/plan.md",
     }
     assert sum(skip_reasons.values()) == 0
 
 
 def test_sweep_skips_sequence_md_at_every_level(tmp_path):
-    _make_md(tmp_path, "tickets/todos/some-folder/other.md", "tags: [faction]")
-    seq_todos = tmp_path / "tickets/todos/some-folder/SEQUENCE.md"
+    _make_md(tmp_path, f"{posix(TICKETS)}/todos/some-folder/other.md", "tags: [faction]")
+    seq_todos = tmp_path / f"{posix(TICKETS)}/todos/some-folder/SEQUENCE.md"
     seq_todos.write_text("# Sequence index\n", encoding="utf-8")
-    seq_done = tmp_path / "tickets/done/other-folder/SEQUENCE.md"
+    seq_done = tmp_path / f"{posix(TICKETS)}/done/other-folder/SEQUENCE.md"
     seq_done.parent.mkdir(parents=True, exist_ok=True)
     seq_done.write_text("# Sequence index\n", encoding="utf-8")
 
     relative_paths, skip_reasons, skipped_paths = collect_sweep_files(tmp_path)
 
-    assert "tickets/todos/some-folder/SEQUENCE.md" not in relative_paths
-    assert "tickets/done/other-folder/SEQUENCE.md" not in relative_paths
-    assert "tickets/todos/some-folder/other.md" in relative_paths
+    assert f"{posix(TICKETS)}/todos/some-folder/SEQUENCE.md" not in relative_paths
+    assert f"{posix(TICKETS)}/done/other-folder/SEQUENCE.md" not in relative_paths
+    assert f"{posix(TICKETS)}/todos/some-folder/other.md" in relative_paths
     assert skip_reasons["sequence_index_file"] == 2
     assert set(skipped_paths["sequence_index_file"]) == {
-        "tickets/todos/some-folder/SEQUENCE.md",
-        "tickets/done/other-folder/SEQUENCE.md",
+        f"{posix(TICKETS)}/todos/some-folder/SEQUENCE.md",
+        f"{posix(TICKETS)}/done/other-folder/SEQUENCE.md",
     }
 
 
@@ -154,17 +155,17 @@ def test_sweep_multi_issue_tag_produces_multiple_rows():
 def test_sweep_does_not_apply_taxonomy_date_cutoff():
     text = "---\nticket_id: TCK-20260101-OLD\ntags: [totally-unregistered-tag]\n---\n\n# Old\n"
 
-    rows = sweep_file_rows("tickets/done/TCK-20260101-OLD.md", text, {}, _VALID_CATEGORIES)
+    rows = sweep_file_rows(f"{posix(TICKETS)}/done/TCK-20260101-OLD.md", text, {}, _VALID_CATEGORIES)
 
     assert rows == [
-        {"file": "tickets/done/TCK-20260101-OLD.md", "tag": "totally-unregistered-tag", "issue": "unregistered"}
+        {"file": f"{posix(TICKETS)}/done/TCK-20260101-OLD.md", "tag": "totally-unregistered-tag", "issue": "unregistered"}
     ]
 
 
 def test_sweep_does_not_apply_taxonomy_date_cutoff_when_ticket_id_missing():
     text = "---\ntags: [totally-unregistered-tag]\n---\n\n# No ticket_id\n"
 
-    rows = sweep_file_rows("stored_artifacts/legacy/notes.md", text, {}, _VALID_CATEGORIES)
+    rows = sweep_file_rows(f"{posix(STORED_ARTIFACTS)}/legacy/notes.md", text, {}, _VALID_CATEGORIES)
 
     assert len(rows) == 1
     assert rows[0]["issue"] == "unregistered"
@@ -174,31 +175,31 @@ def test_sweep_multi_issue_tag_produces_multiple_rows_via_sweep_file_rows():
     registry = {"Some_Tag": {"tag": "Some_Tag", "category": "retired-category", "added_date": "2026-01-01", "note": ""}}
     text = "---\ntags: [Some_Tag]\n---\n\n# Doc\n"
 
-    rows = sweep_file_rows("stored_artifacts/x/plan.md", text, registry, _VALID_CATEGORIES)
+    rows = sweep_file_rows(f"{posix(STORED_ARTIFACTS)}/x/plan.md", text, registry, _VALID_CATEGORIES)
 
     assert len(rows) == 2
     assert {row["issue"] for row in rows} == {"invalid_category", "non_canonical_form"}
-    assert {row["file"] for row in rows} == {"stored_artifacts/x/plan.md"}
+    assert {row["file"] for row in rows} == {f"{posix(STORED_ARTIFACTS)}/x/plan.md"}
     assert {row["tag"] for row in rows} == {"Some_Tag"}
 
 
 def test_sweep_no_frontmatter_fixture_produces_zero_rows():
-    fixture = _REPO_ROOT / "stored_artifacts/TCK-20260623-FIX-INVENTORY-DEFAULTS/plan.md"
+    fixture = _REPO_ROOT / f"{posix(STORED_ARTIFACTS)}/TCK-20260623-FIX-INVENTORY-DEFAULTS/plan.md"
     text = fixture.read_text(encoding="utf-8")
 
     rows = sweep_file_rows(
-        "stored_artifacts/TCK-20260623-FIX-INVENTORY-DEFAULTS/plan.md", text, {}, _VALID_CATEGORIES
+        f"{posix(STORED_ARTIFACTS)}/TCK-20260623-FIX-INVENTORY-DEFAULTS/plan.md", text, {}, _VALID_CATEGORIES
     )
 
     assert rows == []
 
 
 def test_sweep_no_tags_key_fixture_produces_zero_rows():
-    fixture = _REPO_ROOT / "stored_artifacts/TCK-20260607-MON-DASHBOARD/investigation.md"
+    fixture = _REPO_ROOT / f"{posix(STORED_ARTIFACTS)}/TCK-20260607-MON-DASHBOARD/investigation.md"
     text = fixture.read_text(encoding="utf-8")
 
     rows = sweep_file_rows(
-        "stored_artifacts/TCK-20260607-MON-DASHBOARD/investigation.md", text, {}, _VALID_CATEGORIES
+        f"{posix(STORED_ARTIFACTS)}/TCK-20260607-MON-DASHBOARD/investigation.md", text, {}, _VALID_CATEGORIES
     )
 
     assert rows == []
@@ -207,7 +208,7 @@ def test_sweep_no_tags_key_fixture_produces_zero_rows():
 def test_sweep_unparseable_frontmatter_produces_zero_rows_not_a_crash():
     text = "---\nthis line has no colon\n---\n\n# Broken\n"
 
-    rows = sweep_file_rows("tickets/todos/broken.md", text, {}, _VALID_CATEGORIES)
+    rows = sweep_file_rows(f"{posix(TICKETS)}/todos/broken.md", text, {}, _VALID_CATEGORIES)
 
     assert rows == []
 
@@ -218,8 +219,8 @@ def test_sweep_unparseable_frontmatter_produces_zero_rows_not_a_crash():
 
 
 def test_sweep_json_and_stdout_output_shapes_agree_on_row_count(tmp_path, capsys):
-    _make_md(tmp_path, "tickets/done/TCK-20260705-A.md", "tags: [some-unregistered-tag, Combat]")
-    _make_md(tmp_path, "tickets/todos/TCK-20260705-B.md", "tags: [phase-5]")
+    _make_md(tmp_path, f"{posix(TICKETS)}/done/TCK-20260705-A.md", "tags: [some-unregistered-tag, Combat]")
+    _make_md(tmp_path, f"{posix(TICKETS)}/todos/TCK-20260705-B.md", "tags: [phase-5]")
 
     result = run_sweep(tmp_path)
     json_report = build_json_report(result)

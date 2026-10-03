@@ -21,7 +21,7 @@ Scope phase already did real topic-relevant research skipped a fresh Investigate
 entirely and went straight to source-level grep).
 
 You receive a ticket ID. Read:
-- `tickets/inprogress/{ticket_id}.md` — scope, acceptance criteria, related code areas
+- `agent-working/tickets/inprogress/{ticket_id}.md` — scope, acceptance criteria, related code areas
 - Every source file listed in "Related Code Areas" (read the actual code, not just the path) —
   see `docs/guidelines/retrieval_preference.md` for when a targeted range is enough versus when
   the file needs a full read
@@ -36,14 +36,14 @@ Use whichever path is available:
 **If `docs/REGISTRY.yaml` exists (preferred):**
 1. Read it once. Filter entries where `type: ticket` and either: `related_code_areas` overlaps with the current ticket's Related Code Areas, **or** `tags` intersects candidate Subsystem/Topic tags derived from the current ticket's own title/summary (same seed-vocabulary substring match `tools/registry_query.py` uses — reference that module by path to stay conceptually in sync, even though this is prose, not code that imports it). Tags are a second dimension alongside `related_code_areas` here; a topic like `faction` can span multiple modules that `related_code_areas` alone would miss.
 2. For each matching ticket, read the ticket file and any listed `artifact_files` (investigation.md, plan.md — skip test_plan.md unless the regression surface is relevant).
-3. Do not scan `stored_artifacts/` or `tickets/done/` by directory — the registry is the index.
+3. Do not scan `agent-working/stored_artifacts/` or `agent-working/tickets/done/` by directory — the registry is the index.
 
 **Fallback (no REGISTRY.yaml yet):**
-1. Read `tickets/done/` listing, filter by name similarity to the affected modules (e.g., if working on `src/content/`, look for tickets with `CONTENT`, `PHASE2[0-8]`, or module-specific names).
-2. For promising matches, check `stored_artifacts/{ticket_id}/` for investigation.md and plan.md. Join by ticket_id — the folder name is the ticket ID. Also consider whether the candidate ticket's own frontmatter `tags` overlap with candidate Subsystem/Topic tags for the current ticket — a lightweight supplementary check, not a new file-scan mechanism (this path has no registry to query, so it cannot replicate `filter_registry`).
-3. Do not read every file in `stored_artifacts/` — only the ones matched from `tickets/done/`.
+1. Read `agent-working/tickets/done/` listing, filter by name similarity to the affected modules (e.g., if working on `src/content/`, look for tickets with `CONTENT`, `PHASE2[0-8]`, or module-specific names).
+2. For promising matches, check `agent-working/stored_artifacts/{ticket_id}/` for investigation.md and plan.md. Join by ticket_id — the folder name is the ticket ID. Also consider whether the candidate ticket's own frontmatter `tags` overlap with candidate Subsystem/Topic tags for the current ticket — a lightweight supplementary check, not a new file-scan mechanism (this path has no registry to query, so it cannot replicate `filter_registry`).
+3. Do not read every file in `agent-working/stored_artifacts/` — only the ones matched from `agent-working/tickets/done/`.
 
-## Output 1 — `staging_artifacts/{ticket_id}/investigation.md`
+## Output 1 — `agent-working/staging_artifacts/{ticket_id}/investigation.md`
 
 Each output file must begin with a YAML frontmatter block before the `# Investigation —` heading:
 
@@ -96,11 +96,11 @@ of this ticket. Never use it for a doc you considered and decided *not* to touch
 **Format 2 — a doc that was considered but explicitly excluded**: prose only, with no leading
 `` - `docs/...` `` bullet. State the doc's path inline (still backtick-wrapped, since it's still
 worth naming precisely) but do not start the line with `- `. For example (real pattern, from
-`stored_artifacts/TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD/investigation.md`'s own "Docs
+`agent-working/stored_artifacts/TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD/investigation.md`'s own "Docs
 Requiring Update" section):
 ```
 The `docs/agent-monitoring/schema.md` doc (path: `docs/agent-monitoring/schema.md`, under
-`docs/`) is not required to change for this ticket: it documents `agent-monitoring/*.jsonl`, a
+`docs/`) is not required to change for this ticket: it documents `agent-working/agent-monitoring/*.jsonl`, a
 separate file family from this ticket's new history file, and this ticket does not modify it.
 ```
 
@@ -151,7 +151,7 @@ If an open question blocks the implementation, flag it — do not assume an answ
 Specific things in this area that are easy to accidentally break or scope-creep into.
 ```
 
-## Output 2 — `staging_artifacts/{ticket_id}/test_plan.md`
+## Output 2 — `agent-working/staging_artifacts/{ticket_id}/test_plan.md`
 
 Each output file must begin with a YAML frontmatter block before the `# Test Plan —` heading:
 
