@@ -128,9 +128,10 @@ slice gathers evidence by running worlds.
   `agent-working/stored_artifacts/TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED/investigation.md`
   compiled via the catalog path (`data/content/world_compositions/frontier_living_world.yaml`). It is
   the one confirmed instance; the general case is AC-7 below.
-- **17 `world_id`s exist only in `data/worlds/`** with no catalog composition at all (including
-  `generated_frontier_3_42`, `crowded_frontier`, `quest_dense_frontier`, `simq_scale_stress_seed42`).
-  **Zero exist only in the catalog.** That asymmetry is itself evidence for which side is authoritative.
+- **15 `world_id`s exist only in `data/worlds/`** with no catalog composition at all. **Zero exist only
+  in the catalog.** That asymmetry is itself evidence for which side is authoritative. *(Corrected
+  2026-10-04 — the folded ticket said 17 and named two examples that are present on both sides. See the
+  re-measurement section below for the measured list.)*
 - Two of its conclusions were checked and **survive** this defect, so do not reopen them: the
   demographic-cohort truncation finding (its decisive probe used `load_world_with_context` across 21
   worlds) and the camp `STALE-PREMISE` closure (both its modules are present in *both* definitions of
@@ -191,6 +192,60 @@ tension this leaves:** the ADR (`ACCEPTED`) and `content_authoring.md` §4 (a li
 different locations, and neither references the other. That conflict, not a missing decision, is what
 AC-8 resolves.
 
+## 2026-10-04 re-measurement — the 8 content decisions collapse to ONE
+
+**This supersedes the 2026-09-12 block's central claim.** That block concluded "neither side is
+consistently the superset" and "a rule like 'prefer the richer file' does not resolve this", and sized
+the ticket at **8 separate per-world content-authority decisions, likely needing user or peer input per
+world**. Re-measured against all 9 pairs at `1a40d22d1`: that is no longer true, and the sizing was the
+main thing making this ticket expensive and hard to dispatch.
+
+**Result: in 8 of the 9 pairs there is nothing on the catalog side at all** — no module, no key, no
+value — that is not also in `data/worlds/`. The running definition is a strict superset. **Exactly one
+real value conflict exists in the whole corpus:**
+
+| pair | catalog-only content |
+|---|---|
+| `dungeon_crawl` | `scalable_bandit_camp.parameters.danger_scale` — **catalog `2`, running `4`** |
+| the other 8 | **none** |
+
+Module-set direction, same measurement: `catalog-only-modules` is **empty for all 9 pairs**. Five pairs
+have the running side adding modules (`trading_company_hub` ×3, `goblin_camp_conflict` +
+`old_mine_resource_loop`, `hero_adventurers`); four have identical module sets
+(`highland_traverse`, `wilderness_survival`, `generated_frontier_3_42`, `simq_scale_stress_seed42`).
+
+**Why that collapses the decisions rather than just shrinking them.** Combined with the
+measurement-validity finding above — the catalog path has never driven a production run — a catalog copy
+that is a strict subset of the running definition contains no intent that was ever in effect. There is
+nothing to choose between, so AC-3's "per-world authoritative-content decision" is satisfied for 8
+worlds by one recorded decision, not eight. The remaining `danger_scale` 2-vs-4 is the only place the
+two definitions genuinely disagree, and even there the catalog's `2` has never executed — so it is a
+**confirm**, not a design choice. Worth one explicit sentence in the record, not a round of input.
+
+**Method, so this can be re-run and checked rather than trusted.** Load both YAMLs; normalise
+`module_refs:` (dict form, with `parameters`) and `modules:` (string shorthand) to one `{module_id:
+parameters}` map; recursively report anything present in the catalog copy and absent-or-different in the
+running one. **Known limits, stated because the first version of this check was wrong:** it compares
+lists by length, not by deep membership, and an earlier pass **excluded `module_refs` from the recursive
+walk and so missed the `danger_scale` difference entirely** — it reported a clean strict superset for all
+9 pairs, which was false. The per-module parameter comparison is a separate pass for that reason.
+Re-run both passes at pickup; do not treat this table as the full diff the Scope already asks for.
+
+**Correction to a number this ticket carried for one commit.** The merge block above originally said
+**17** `world_id`s exist only in `data/worlds/`, citing `generated_frontier_3_42` and
+`simq_scale_stress_seed42` as examples. Measured: it is **15**, and **both of those examples are wrong** —
+each exists on both sides. The figure came from the folded ticket and I propagated it without checking.
+The asymmetry conclusion it supports is unaffected and in fact cleaner: **15 running-only, 0
+catalog-only.** The 15 are `camp_maturity_calibration_pilot`, `crowded_frontier`, `frontier_marches`,
+`hero_guild_routing`, `lifecycle_full_coverage_world`,
+`mechanic_scenario_combat_judgement_withdrawal`, `quest_dense_frontier`, `resource_dense_basin`,
+`sandbox_world`, `simq_routing_test`, `unit_faction_tension`, `unit_information_density`,
+`unit_information_routing_pilot`, `unit_information_source`, `unit_selfmodel_pilot`.
+
+**What this does not change.** The two pinned tests still ride the default and still must be updated
+before any redirect; Gaps 1-3 are untouched; the deletion is still gated on nothing reading *or writing*
+the directory. The ticket got cheaper and much more dispatchable, not smaller in its other obligations.
+
 ## Why this is now first, and why it is now P1
 
 **Raised P2 → P1, 2026-10-03.** `TCK-20261002-EPIC-SEMANTIC-FOUNDATION-COMPLETION` makes this ticket
@@ -204,11 +259,16 @@ not comparable and a slice's verdicts inherit that ambiguity. Fixing it afterwar
 slices already taken.
 
 ## Scope
-- **For each of the 8 diverged pairs (list in the 2026-09-12 findings block above), decide per-
-  world which content is authoritative.** Confirmed 2026-09-12: NOT a mechanical "prefer the
-  richer file" rule — neither side is consistently the superset. This is a real content/design
-  decision per world, likely requiring peer/user input for at least some of the 8, not something to
-  resolve unilaterally during Investigate.
+- **Record ONE decision: `data/worlds/<id>/world.yaml` is authoritative.** Grounds, all three
+  independent: the ADR's unified-root decision; the catalog path has never driven a production run; and
+  the running definition is a strict superset of the catalog copy in 8 of 9 pairs with zero catalog-only
+  content anywhere. ~~A per-world decision for each of 8 diverged pairs, likely needing peer/user
+  input.~~ **Superseded by the 2026-10-04 re-measurement above** — there is no content to choose between
+  for 8 of the 9.
+  - **The one genuine disagreement to confirm explicitly:** `dungeon_crawl`'s
+    `scalable_bandit_camp.parameters.danger_scale`, catalog `2` vs running `4`. Keep `4` (it is what has
+    been running) and say so in one sentence. Do not silently drop it — it is the only place the two
+    definitions actually conflict, so it is the only place a reader could reasonably ask what happened.
 - Inventory every file under `data/content/world_compositions/` and check whether a
   `data/worlds/<id>/world.yaml` counterpart already exists (mostly already done, see findings
   block — `simq_scale_stress_seed42` is the one byte-identical pair; confirm no new drift since
@@ -260,9 +320,11 @@ slices already taken.
 - [ ] Every world composition has exactly one authoritative source under `data/worlds/<id>/
       world.yaml`; `data/content/world_compositions/` is empty or removed.
 - [ ] Every caller of `ScenarioSetupResolver` uses the unified layout, verified by a real test.
-- [ ] Each of the 8 diverged pairs has a recorded, evidenced per-world authoritative-content
-      decision (not a blanket "richer file wins" rule — confirmed 2026-09-12 that doesn't hold),
-      with rationale for each.
+- [ ] **One** recorded, evidenced authoritative-source decision covers the corpus, with the
+      `dungeon_crawl` `danger_scale` 2-vs-4 conflict called out explicitly as the single genuine
+      disagreement and its resolution stated. *(Amended 2026-10-04: was "each of the 8 diverged pairs has
+      a per-world decision". Re-measurement found zero catalog-only content in 8 of 9 pairs, so eight
+      separate decisions would be eight restatements of one.)*
 - [ ] `test_scenario_catalog_matrix.py`/`test_scenario_setup_resolver.py` (the two tests relying on
       the un-overridden default) are updated to match whatever content the reconciliation settles
       on, confirmed passing.
