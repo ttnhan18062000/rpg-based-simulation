@@ -39,7 +39,9 @@ a citation that does not start with a pre-move root, or already carries the new 
 A worktree that had files at an old root before it merged #289 can still hold them. Old-root files are never tracked
 on main, so they are residue, but check before deleting:
 - Index folders (`knowledge-index/`, `agent-monitoring-index/`, `parity-index/`) are generated and git-ignored at the
-  old root; delete them and rebuild under `agent-working/.index/` (`make knowledge-index-update`).
+  old root; delete them and rebuild under `agent-working/.index/`: `make knowledge-index-update` for
+  `knowledge-index/`, `make agent-monitoring-index` for `agent-monitoring-index/`, and
+  `python3 tools/parity_index.py build` for `parity-index/`.
 - A monitoring shard left at the old path (`agent-monitoring/data/<week>/<branch>.tools.jsonl`) is NOT necessarily a
   subset of the new one: a tool can write a row before the merge that the rename does not carry. Diff the contents
   by row; append only the rows whose exact content is absent from `agent-working/agent-monitoring/data/<week>/`
