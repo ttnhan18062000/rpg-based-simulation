@@ -99,7 +99,7 @@ authorizes no implementation, and Gate A and Gate B keep their roles for everyth
 | Proposal and plan are untracked in git (C-17) | Resolved: the folder and the source proposal are tracked since PR #185 |
 | Zero-worker utilization reports `1.0` (C-03) | Fixed to `0.0` by `TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER`, ahead of PERF-D1. PERF-D1 must ratify or revise that fix; the zero-queue case still reports `1.0` |
 | FULL persistence hashes directly (C-06) | Still true (`Kernel._phase_persistence`); `BudgetedCanonicalHasher` has no caller outside its own module |
-| Threshold checks default to warning (C-13 area) | Still true: 12 of 53 `assert_perf_threshold` call sites pass `hard=True` |
+| Threshold checks default to warning (C-13 area) | Still true, and stronger than first recorded: no call site passes a literal `hard=True` (0 of 55 `assert_perf_threshold`/`perf_check` calls, `docs/performance/performance_clause_inventory.md` §7; corrected 2026-10-03 from an earlier "12 of 53" that does not reproduce); 45 of the 55 are also `slow`-marked and deselected on PRs |
 | Regression gate samples 10/50 ticks, average only, skips a missing baseline, empty hard-scenario set | Still true |
 | Debt harness accounting defect (PA-02) | Still present and latent: `src/perf/long_run_harness.py` calls `len()` on integer debt values |
 

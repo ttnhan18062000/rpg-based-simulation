@@ -2819,7 +2819,11 @@
     \ This conditional gate itself remains unchanged; DEGRADED/SURVIVAL run outputs\
     \ are now explicitly flagged as reduced-verification via ShutdownResult.verification_level\
     \ / RunManifest.verification_level / run_report metadata.verification_level \u2014\
-    \ see INFRA-363 (TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC).\n"
+    \ see INFRA-363 (TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC). The per-tick value
+    \ is the payload key hash of a TICK_END TraceEvent (no warehouse field named tick_hash
+    \ exists). Naming and coverage caveats (proof digest flat-sha256-v1; the MD5 fingerprint
+    \ is a stability check, not proof; pressure_signals is outside the proof digest)
+    \ are in docs/engine/deterministic_execution.md (PERF-D5, TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT).\n"
   proof_type: null
   test_path: tests/integration/kernel/test_determinism_suite.py
   divergence_note: null
