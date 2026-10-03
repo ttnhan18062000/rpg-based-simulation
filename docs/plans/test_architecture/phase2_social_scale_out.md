@@ -57,6 +57,7 @@ once and has **no direct importer under `tests/unit/social/`**.
 
 - `src/domains/perception/`: designed, not in effect (owner decision 8).
 - Dormant paths with no live caller (owner decision 7).
+- `src/systems/social_systems/memory.py` (`SocialMemoryService`, its only class): 0 runtime calls, and named as a delete-or-re-export candidate by `TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS` (OPEN, `Type: repair`, so owner decision 7 does not park it). Added on `rpg-feature-planning`'s G2 advice, 2026-10-03.
 - **Party** (`party.py`, `party_composition.py`, `party_lifecycle.py`): no oracle document or owner
   (D-P deferred, roadmap §11).
 - Writing mechanic scenarios for social. That is the feature team's job; this batch only records the
@@ -67,9 +68,16 @@ once and has **no direct importer under `tests/unit/social/`**.
 | Gate | Condition | Who |
 |---|---|---|
 | G1 | The owner approves this plan (§9). **Met 2026-10-03** | user |
-| G2 | `rpg-feature-planning` re-confirms that social is quiet at start. The confirmation names `TCK-20260822-RELATIONSHIP-VECTOR-ADDITIVE-FIELD` (embedding-latent-cognition, touches relationship precedence) and `TCK-20260822-SOCIAL-MEMORY-DECISION-CONTEXT` (intention-log-first-class), plus anything opened since | rpg-feature-planning |
+| G2 | **Met 2026-10-03 (see below).** `rpg-feature-planning` re-confirms that social is quiet at start. The confirmation names `TCK-20260822-RELATIONSHIP-VECTOR-ADDITIVE-FIELD` (embedding-latent-cognition, touches relationship precedence) and `TCK-20260822-SOCIAL-MEMORY-DECISION-CONTEXT` (intention-log-first-class), plus anything opened since | rpg-feature-planning |
 | G3 | **Determinism.** The engine is not deterministic by default: `src/engine/kernel.py:612-620` drops results when `not audit_mode and elapsed > max_tick_budget_ms` (INFRA-273 / D06 §F6-F7). Any mutation or baseline run that executes the kernel sets `audit_mode=True` and relaxes `max_tick_budget_ms` (`docs/engine/deterministic_execution.md` Extension rule 5). A target whose selected tests do not run the kernel states that it doesn't. At `2f520f0dd`, the only `tests/unit/social` file that references the kernel is `test_multi_hero.py` | implementer, checked by reviewer |
 | G4 | `world-rule-catalog-design` states which social-lineage Rules are classified. Targets that touch an unclassified Rule are flagged, not changed. **Answered 2026-10-03 (see below)** | world-rule-catalog-design |
+
+**G2 answer (`rpg-feature-planning`, 2026-10-03, at `origin/main` `958aa103d`; the reviewer re-verified the `memory.py` exclusion):**
+- `TCK-20260822-RELATIONSHIP-VECTOR-ADDITIVE-FIELD`: OPEN, `Type: feature`, in a feature epic that owner decision 7 parks, so it cannot start before this batch. It names `relationships.py`, `appraisal.py` and `consequence_events.py`, so the batch report states that measurements of those files go stale when it lands. This is not a gate.
+- `TCK-20260822-SOCIAL-MEMORY-DECISION-CONTEXT`: outside scope (`src/domains/campaigns/`, `src/observability/cognition/` only).
+- Nothing in `agent-working/tickets/inprogress/` touches social.
+- No ticket is planned for the gate-free reputation read at `appraisal.py:46/64`. The measurement stays valid through the batch, and the CONFLICTING state has no assignee. The batch reports it as a finding line, and filing it is `world-rule-catalog-design`'s or `rpg-feature-planning`'s call.
+- Expectation for later phases: 93% of social P0 ledger entries (211 of 227) have no `test_path`. Any later "improve social test quality" phase means writing into that gap, not refining existing coverage, and should be budgeted at that size.
 
 **G4 answer (`world-rule-catalog-design`, 2026-10-03, checked against `origin/main`; the reviewer
 re-verified the two load-bearing facts at `2f520f0dd`):**
