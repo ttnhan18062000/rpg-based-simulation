@@ -60,15 +60,31 @@ mechanisms, and the 14 edge-bearing Rules are exactly the 14 classified ones.
    (`src/world/perception/gate.py`) as its own mechanism per owner decision 8 row 8, and the
    `MOTIVATION-DOCTRINE` entry retire/rename — both of those registry entries are drafted by
    `world-rule-catalog-design`, which owns `registries/mechanisms.yaml` content.
-3. **Children C… — the rule map (row 7 (a)), sliced by MECHANISM CLUSTER**, 3-5 mechanisms per
+3. **Child B2 — the "executes" vs "has an effect" instrument, ALONGSIDE child B and BEFORE the rule
+   map.** `TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP`, moved from parked feature
+   into this foundation scope by the owner on **2026-10-03** (`roadmap.md` §8 work-order item 6
+   addendum). **Sequencing was left to the planner; it is placed here, alongside (b) and before (a),
+   2026-10-03.** The reason it cannot wait until after the rule map: a rule-map verdict that can only
+   show a mechanism *runs* will record it as realised even when it changes no world state, so every
+   slice taken before this instrument exists **overstates what is realised** and would need redoing.
+   Three measured instances already exist, none of them inferred:
+   - `FactionInfluenceService` — ~230 calls, **zero** ownership writes;
+   - the region-owner `-1` sentinel path — reachable, **never reached**;
+   - the world-clock raid — **12 of 12** raiders inert (memo row 9).
+
+   `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN` is a **fourth instance of the same
+   shape** and is in the hard-bug queue, not this epic: `PANIC_RETREAT` fired 62–591 times per raider
+   while parking every one of them outside the world. It is a usable validation case for this
+   instrument, not a child of it.
+4. **Children C… — the rule map (row 7 (a)), sliced by MECHANISM CLUSTER**, 3-5 mechanisms per
    standard-tier ticket. For every mechanism carrying `implemented_by`, each catalog Rule that
    constrains it is classified in `registries/rule_classifications.yaml` with a
    `rule_mechanism_edges.yaml` edge behind the verdict, **or** the mechanism is recorded as constrained
    by no catalog Rule.
-4. **Yield checkpoint after the first two rule-map slices.** Report defects found per mechanism. **If
+5. **Yield checkpoint after the first two rule-map slices.** Report defects found per mechanism. **If
    both slices read zero, re-scope before continuing** — this is a real stop condition, not a
    formality. See Assumptions.
-5. Every child runs through the formal `implement-ticket` pipeline, per row 7 (c), so its cost is
+6. Every child runs through the formal `implement-ticket` pipeline, per row 7 (c), so its cost is
    measured.
 
 ## Out of Scope
@@ -91,7 +107,11 @@ mechanisms, and the 14 edge-bearing Rules are exactly the 14 classified ones.
 - [ ] Child A has landed and a world id resolves to one module set regardless of entry point.
 - [ ] Row 7 (b) holds: all 25 core-tier modules bound or excluded-with-reason, and
       `mechanism_registry_completeness_check` reports zero undispositioned core-tier modules.
-- [ ] Row 7 (a) holds over every mechanism carrying `implemented_by`, by the definition in Scope 3.
+- [ ] Child B2's instrument exists and can distinguish "executes" from "has an effect" on at least the
+      three measured instances in Scope 3, **before the first rule-map slice is taken.** A slice taken
+      without it is not accepted as complete.
+- [ ] Row 7 (a) holds over every mechanism carrying `implemented_by`, by the definition in Scope 4.
+      Every verdict of "realised" rests on an effect, not only on a call count.
 - [ ] `tools/semantic_control_plane/registry.py` validates all three registries at each child's close.
 - [ ] The yield checkpoint ran after the second rule-map slice and its numbers are recorded in this
       epic — **including if they were zero and the epic was re-scoped as a result.**
@@ -102,6 +122,11 @@ mechanisms, and the 14 edge-bearing Rules are exactly the 14 classified ones.
 ## Related Tickets
 - `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION` — child A (the older, owning ticket)
 - `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` — to be merged into child A, not run separately
+- `TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP` — **child B2**, moved into this scope by
+  the owner 2026-10-03; sequenced alongside child B, before any rule-map slice
+- `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN` — **not a child.** A fourth measured
+  instance of the "executes without effect" shape, usable as a validation case for child B2's
+  instrument. It belongs to the hard-bug queue and carries its own rule-owner ruling
 - `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED` — BLOCKED; decision 8 answered its design
   question, and registering `PerceptionGate` is child B's
 - `TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN` — only its registry
