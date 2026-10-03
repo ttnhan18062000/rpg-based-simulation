@@ -6,7 +6,8 @@ artifacts recorded: testcase and unique-node counts, the sum of recorded `time` 
 outcomes, and the slowest files and nodes. It never runs tests and changes no exit code from its findings.
 
 It enables cleanup *investigation* and authorizes nothing: a §9 cleanup still needs its per-target record and
-an owner decision. CI uploads JUnit only from the api-tools job today, so most directories will honestly read
+an owner decision. CI uploads JUnit only from the three jobs split from the former api-tools job (tools-a-e, tools-f-z and
+api-cli-engine) today, so most directories will honestly read
 `not-in-supplied-runs`; that is "no evidence", never zero seconds.
 
 Run: `python3 -m tools.test_architecture.junit_cost_report PATH [PATH ...] [--sha SHA] [--source LABEL]

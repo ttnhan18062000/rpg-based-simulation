@@ -9,6 +9,16 @@ tags: [architecture, aseprite, mcp, pixel-art, planning, security]
 
 # Aseprite Agent-Controlled Pixel-Art — Draft Milestone Plan Package
 
+## Status update 2026-10-02 (decided by evidence; see `docs/plans/visual-asset-foundation/README.md`)
+
+The spike in `experiments/aseprite_mcp/` (PR #286) is now the in-project package `visual_assets/drawing/`
+(`TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT`), registered in `.mcp.json`. This draft package otherwise still authorizes
+nothing beyond what a ticket authorizes. Register state of the unverified items:
+
+- **Decided by evidence:** `U-01` host is the Linux dev machine; `U-03` project-owned stdio adapter; `U-04` the `mcp` package is
+  already pinned in `requirements.txt`; `U-06` bwrap confinement proven on the dev machine (spike-level).
+- **Still open:** `U-02` licence/provenance, `U-05` numeric budgets, `U-07`..`U-14`.
+
 ## Status and decision boundary
 
 This package translates the P2

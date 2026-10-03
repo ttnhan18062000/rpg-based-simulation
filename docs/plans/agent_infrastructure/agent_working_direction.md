@@ -61,6 +61,7 @@ Status values: `shipped`, `in flight`, `next`, `idea`, `held`.
 |---|---|---|
 | Record which path each ticket took and why | idea | invisible today |
 | Tier-based routing for phases that are almost always skipped | idea | depends on the path record and on trustworthy data |
+| Session-layer working process (roles, launch, routing, recovery) | planned | plan `docs/plans/agent_infrastructure/session_layer_working_process.md` and epics A-D in `tickets/todos/session-layer/` (scoped 2026-10-02); M0 harness spike first, nothing built yet |
 
 ## Rules this track keeps
 

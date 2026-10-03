@@ -16,6 +16,7 @@ from pathlib import Path
 
 _SEARCH_LAUNCHER = Path("tools/start_search_mcp.sh")
 _HEADROOM_LAUNCHER = Path("tools/start_headroom_mcp.sh")
+_VISUAL_ASSETS_LAUNCHER = Path("visual_assets/start_mcp.sh")
 
 
 def _text(path: Path) -> str:
@@ -134,3 +135,50 @@ def test_headroom_launcher_still_sets_isolated_workspace_dir():
         "expected the isolation env var to still be exported before launching the server -- "
         "unrelated to this hardening pass, but a real regression if lost"
     )
+
+
+# --- visual_assets/start_mcp.sh (TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT): same static guards ---
+
+
+def test_visual_assets_launcher_probes_mcp_before_selecting():
+    text = _text(_VISUAL_ASSETS_LAUNCHER)
+    assert "find_spec('mcp')" in text, (
+        "expected the drawing-server launcher to probe that `mcp` is locatable, not just that the "
+        "interpreter exists"
+    )
+
+
+def test_visual_assets_launcher_probe_is_quiet_and_has_no_bare_exists_shortcut():
+    text = _text(_VISUAL_ASSETS_LAUNCHER)
+    assert "find_spec('mcp') else 1)\" >/dev/null 2>&1" in text
+    assert '[ -x "$py" ] && exec' not in text
+
+
+def test_visual_assets_launcher_runs_from_repo_root_as_a_module():
+    text = _text(_VISUAL_ASSETS_LAUNCHER)
+    assert 'cd "$REPO_ROOT"' in text, "the visual_assets package is only importable from the repo root"
+    assert 'exec "$py" -m visual_assets.drawing.server' in text
+    assert text.index('cd "$REPO_ROOT"') < text.index('exec "$py"')
+
+
+def test_visual_assets_launcher_final_error_message_preserved():
+    text = _text(_VISUAL_ASSETS_LAUNCHER)
+    assert 'echo "ERROR:' in text and text.rstrip().endswith("exit 1")
+
+
+def test_visual_assets_launcher_prefers_repo_venv_then_shared_checkout_venv():
+    text = _text(_VISUAL_ASSETS_LAUNCHER)
+    assert text.index('"$REPO_ROOT/.venv/bin/python3"') < text.index(
+        "/home/vboxuser/Work/rpg-based-simulation/.venv/bin/python3"
+    )
+
+
+def test_visual_assets_launcher_is_executable_bash():
+    import os
+
+    assert text_first_line(_VISUAL_ASSETS_LAUNCHER) == "#!/usr/bin/env bash"
+    assert os.access(_VISUAL_ASSETS_LAUNCHER, os.X_OK)
+
+
+def text_first_line(path: Path) -> str:
+    return _text(path).splitlines()[0]
