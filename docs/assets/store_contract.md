@@ -145,10 +145,10 @@ Runtime activation, a resolver, Live Map and HUD consumption, signing, client co
   (size = 1 + distinct opaque colours), which needs pixel decoding. Intake quarantines it with `PALETTE_UNVERIFIABLE`. Only a never-edited first revision
   carries one; any edit re-saves a palette with real entries. Every other palette is checked exactly against what Aseprite reports.
 - Intake accepts only 32-bit RGBA sources (`SOURCE_UNSUPPORTED_COLOR_DEPTH` otherwise); the package carries no colour-depth claim, so it is a support policy, not a claim check.
-- The unsupported-feature list (`unsupported:tilemap`, `...indexed_color`, `...grayscale`, `...linked_cels`, `...external_reference`) and the preview/file size bounds are provisional (`U-05`).
+- The unsupported-feature list (`unsupported:tilemap`, `...indexed_color`, `...grayscale`, `...linked_cels`, `...external_reference`) are a support list recorded in `docs/assets/budgets.md`. Every numeric bound (preview, file, record, registry, decode) is a **proposed** budget there, measured on 2026-10-03 and pinned to the code by a test; the owner approves the numbers in PR review. Open flags F1-F6 in that file (notably: the registry's real capacity is set by `MAX_RECORD_BYTES`, about 200 keys).
 
 ## Decisions still open
 
 D2 (sources committed directly, no Git LFS), D3 (only adopted assets' PNGs committed; verified in CI by pixel hash) and D4
 (artifact identity is the decoded-pixel hash) are **decided** (`docs/architecture/visual_asset_foundation_adr.md`). Still open: deployment profile (`AM1-W01`), signing/trust channel (`AM1-W08`),
-retention numbers, the Aseprite licence review (`U-02`), numeric budgets (`U-05`) and CI with Aseprite (`U-14`).
+retention numbers, the Aseprite licence review (`U-02`), numeric budgets (`U-05`: proposed, awaiting owner approval, `docs/assets/budgets.md`) and CI with Aseprite (decided against: ADR D10).

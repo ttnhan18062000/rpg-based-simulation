@@ -13,8 +13,8 @@ Family = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,31}$")]
 AxisName = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,31}$")]
 AxisValue = Annotated[str, StringConstraints(pattern=r"^[a-z0-9][a-z0-9_]{0,31}$")]
 
-MAX_AXES = 8  # provisional (U-05)
-MAX_AXIS_VALUES = 64  # provisional (U-05)
+MAX_AXES = 8  # budget: docs/assets/budgets.md
+MAX_AXIS_VALUES = 64  # budget: docs/assets/budgets.md
 
 
 class VariantAxis(StoreRecord):

@@ -97,6 +97,7 @@ installing Aseprite. This ticket makes the local evidence strict and the CI skip
 - Evidence `commit` is HEAD, not the working tree; documented.
 
 ## Test Summary
+- Wording note (planner review): strict mode reports as pytest ERRORs (`pytest.fail` runs in fixture setup), not FAILs; a strict run therefore shows `errors` > 0 and `failed` = 0. The evidence file counts both, and the target never passes or skips them.
 - `make visual-assets-aseprite-local` on this machine (Aseprite 1.3.18.6-x64): 201 passed, 0 failed, 0 errors, 0 skipped, 45.0 s. Evidence file: `{"commit": "6aa9b9722b01c2c7f86ec83df564f3bf873e7a53", "utc_time": "2026-10-03T12:12:18Z", "aseprite_version": "Aseprite 1.3.18.6-x64", "passed": 201, "failed": 0, "errors": 0, "skipped": 0, "total": 201, "duration_seconds": 45.04, "pytest_exit_code": 0, "ok": true}`.
 - `tests/visual_assets` with `ASEPRITE_MCP_BINARY=/nonexistent` (CI-like): 897 passed, 201 skipped.
 - `tests/static tests/architecture tests/docs tests/tools/test_ci_junit_summary.py tests/tools/test_ci_workflow_test_coverage.py`: all pass (237 + 69, 2 skipped, 1 xfailed).

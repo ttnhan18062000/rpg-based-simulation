@@ -34,7 +34,7 @@ installs it, so every `needs_aseprite` test skips there and the CI job summary s
 `make visual-assets-aseprite-local` runs `tests/visual_assets -m needs_aseprite` with
 `VISUAL_ASSETS_REQUIRE_ASEPRITE=1` under a 2 GB memory cap (`systemd-run`, when available). In that mode a missing
 binary or bwrap, or a binary whose `aseprite --version` is not `config.ASEPRITE_VERSION` (`1.3.18.6`), makes every
-`needs_aseprite` test **fail** instead of skip, and the target exits non-zero on any failure, any skip or an empty run.
+`needs_aseprite` test **fail or error** (pytest reports it as an ERROR, raised in fixture setup) instead of skip, so a strict run can never pass or skip them, and the target exits non-zero on any failure, any skip or an empty run.
 It writes `reports/visual_assets/aseprite_local_run.json` (gitignored run output): `commit` (HEAD; a dirty tree is
 not reflected), `utc_time`, `aseprite_version`, `passed`, `failed`, `errors`, `skipped`, `total`, `duration_seconds`,
 `pytest_exit_code` and `ok`. A guard test (`tests/visual_assets/test_aseprite_licence_guard.py`) fails if a workflow
