@@ -105,7 +105,11 @@ start.
 
 ## Implementation Notes
 
-The detail planner creates the children after G1. The reviewer reviews each child PR.
+The detail planner creates the children after G1. The reviewer reviews each child plan before
+implementation, then the one batch PR. Children created 2026-10-03 (order in `SEQUENCE.md`):
+`TCK-20261003-SOCIAL-LANE-ROUTING-CASE-AND-SCENARIO-GAP` (hotfix),
+`TCK-20261003-SOCIAL-TEST-LOCATE-AND-OWNER-ROUTING`, `TCK-20261003-SOCIAL-ORACLE-MAP-REPORT`,
+`TCK-20261003-SOCIAL-APPRAISAL-MUTATION-BASELINE` (standard). Plan item 5 has no ticket.
 
 ## Test Summary
 
