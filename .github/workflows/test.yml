@@ -869,10 +869,13 @@ jobs:
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
-      # Remove continue-on-error once baseline error count is documented
-      # (open_audit_findings_backlog §1G).
+      # TCK-20261003-MYPY-BASELINE-ADVISORY: runs `mypy src/ --config-file pyproject.toml` through
+      # mypy-baseline (registries/mypy_baseline.txt) so only errors not in the baseline are reported. Advisory
+      # for the two-week soak: the gate returns 1 on new errors and 2 if it cannot run, and the step's
+      # continue-on-error keeps the job green; the job summary states the new-error count and the baseline
+      # size, and a ::warning:: annotation marks a failure. Blocking is TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING.
       - name: mypy
-        run: python3 -m mypy src/ --config-file pyproject.toml --no-error-summary || true
+        run: python3 -m tools.code_health.mypy_gate --summary-out "$GITHUB_STEP_SUMMARY" --annotate
         continue-on-error: true
 
   # ── SimQ grade-anchor drift (informational) ──────────────────────────────

@@ -37,8 +37,15 @@ Every rule has an Enforcement cell with one of:
   plus that advisory check. The first-run counts are in
   `TCK-20261002-CODE-HEALTH-TOOL-CONFIG`; later counts belong to the code-health snapshot.
 - **mypy, advisory today**: mypy is configured (`[tool.mypy]` in `pyproject.toml`) but runs
-  non-blocking in `make typecheck-py` and CI, and five packages are excluded. Blocking is planned
-  for roadmap M4.
+  non-blocking in `make typecheck-py` and CI, and five packages are excluded. Existing errors are held in
+  `registries/mypy_baseline.txt` (mypy-baseline 0.7.4, configured in `[tool.mypy_baseline]`; **1569
+  entries** at `TCK-20261003-MYPY-BASELINE-ADVISORY`, one per error, line numbers normalised to 0, notes
+  ignored), so `make typecheck-py` and the CI `mypy` step report only errors that are not in it. The CI
+  job summary prints the new-error count and the current baseline size on every run. A fixed error does
+  not fail the gate before the baseline is re-synced (`allow_unsynced`). **Re-syncing** the baseline
+  (`make typecheck-baseline-sync`) is done only on `main`, by the codebase domain, together with the
+  code-health registry reseed; never to hide a new error and never by a domain fixing one error.
+  Blocking is planned for roadmap M4 (`TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING`).
 
 The ruff rule codes and the thresholds below were run against `src/` by
 `TCK-20261002-CODE-HEALTH-TOOL-CONFIG` and are the ones in `[tool.ruff.lint]`; the thresholds live

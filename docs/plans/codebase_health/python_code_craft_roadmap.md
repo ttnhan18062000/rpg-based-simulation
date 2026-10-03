@@ -181,7 +181,11 @@ The home-grown part, needed because ruff and ast-grep have no baseline.
   complexipy was planned the same way but goes through an adapter into the registry instead
   (`TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY`, accepted in review 2026-10-02): its JSON already
   names the function, so one ratchet covers it with symbol-level keys. Reverting means dropping
-  `adapt_complexipy` and recording complexipy's snapshot file in the registry.
+  `adapt_complexipy` and recording complexipy's snapshot file in the registry. mypy-baseline is also
+  not recorded in the registry (`TCK-20261003-MYPY-BASELINE-ADVISORY`, accepted in review 2026-10-03):
+  its file path and entry count are recorded in `docs/guidelines/python_code_standard.md`, and the
+  mypy gate's job summary prints the current baseline size on every run, so the trend stays visible
+  without a registry or snapshot schema change.
 - The registry is seeded from one snapshot of `src/`, which other sessions keep changing. Before
   the ratchet gates anything (M4), it is reseeded on `main` at the start of the soak, and a reseed
   must carry over `reviewed`, `retiring_ticket` and `added_date` for rows whose key persists.

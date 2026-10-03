@@ -74,6 +74,7 @@ mcp==1.28.1
 msgpack==1.1.2
     # via rpg-based-simulation
 mypy==2.1.0
+mypy-baseline==0.7.4
 mypy-extensions==1.1.0
     # via mypy
 packaging==26.0
