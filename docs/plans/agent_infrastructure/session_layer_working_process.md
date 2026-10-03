@@ -197,7 +197,9 @@ path, ticket, or role is reported, not trusted. This is the exact failure from s
 
 Platform facts (documented, per the Claude Code docs; verify in the spike, section 12.1):
 `--name` fixes a session name visible as `session_title` to hooks and to `ListAgents`, surviving
-`/clear` and `--resume`; `--agent <name>` runs the main session as a `.claude/agents/<name>.md`
+`/clear` and `--resume` (M0 2026-10-03, Claude Code 2.1.286: verified for `--resume`, fork and a cross-cwd
+resume; `session_title` is in `SessionStart` and `UserPromptSubmit` payloads but **not** in `PreToolUse`,
+`Stop` or `SessionEnd`; `/clear` itself is still unprobed, class 2); `--agent <name>` runs the main session as a `.claude/agents/<name>.md`
 definition with its prompt, tool allowlist and model; `SessionStart` receives `session_id`,
 `source`, `session_title`, `agent_type` and can inject `additionalContext`; environment variables
 set before launch reach hooks.
@@ -207,7 +209,10 @@ set before launch reach hooks.
 1. Resolve the role from the manifest. Unknown role: list the roster, exit.
 2. Ensure the worktree exists (section 8); create off `origin/main` if missing; `cd` into it.
 3. Compose the role card from function template + domain overlay + role entry (<= ~400 tokens).
-4. `exec claude --name <role-id> --agent session-<role>` with `SESSION_ROLE=<role>` in the
+4. `exec claude --name <role-id> --agent session-<role>` (M0d: a `.claude/agents/session-<role>.md` file
+   **does** appear in the Agent-tool roster of every plain session in that project, so each generated file
+   needs a description that says "launcher-only, never spawn", or another location or inline definition;
+   which one is an M1 decision, with a probe that the model does not spawn it) with `SESSION_ROLE=<role>` in the
    environment as one *input signal* (not the sole source of identity, see Binding).
    `--resume` is a flag on the launcher for continuing a named session.
 5. **Concurrency.** `max_sessions` is a per-role policy checked best-effort at launch (the launcher
@@ -237,9 +242,21 @@ set by the launcher, the worktree path), resolve the role, bind the **current** 
 write a **binding record** (`session_id`, `role`, `manifest_digest`, `worktree`, `source`, `signals`,
 `ts`) next to the existing per-session `current_run.<session_id>` sidecar. The record is runtime state,
 not a role definition. If the signals **disagree** or none resolves, the hook does not guess: it injects
-nothing privileged and says how to launch with a role. **Which signal wins is an M0 result** (12.1 a, f,
-k, m), not a planning assertion; the plan assumes only that at least one harness-supplied signal
-(`agent_type` first candidate) survives start, resume and clear.
+nothing privileged and says how to launch with a role. **Signal precedence (M0o, observed 2026-10-03,
+2.1.286):**
+
+| Signal | start | resume (no flags) | fork | in `PreToolUse` |
+|---|---|---|---|---|
+| `session_title` | yes | **yes** (stored in the transcript as `customTitle`) | yes (duplicates the name) | no |
+| `agent_type` | yes | **`SessionStart`: absent**; `UserPromptSubmit`: present; the allowlist still applies | not probed | yes, when started with `--agent` |
+| `SESSION_ROLE` / `CLAUDE_CODE_AGENT` env | yes | **no** (per-process, not persisted) | not probed | not probed |
+| `session_id` | yes | same id | **new id** | yes |
+
+So on `source: resume` the hook must not trust `agent_type` or the environment; `session_title` (the role
+id) is the resume signal. A `PreToolUse` guardrail cannot read the title: it resolves the role by
+`session_id` from the binding record that `SessionStart` wrote, falling back to the payload's `agent_type`
+when present. `/clear` and rename of a live session are class 2 and still unverified; until they are, the
+plan assumes only that at least one harness-supplied signal survives start, resume and fork.
 
 **Manifest revision.** The card carries the manifest digest. On resume or clear, if the digest
 differs from the previous binding record, the hook says what changed in a line or two; an authority
@@ -251,7 +268,10 @@ two things that must both be tested: starting, resuming or renaming an interacti
 another live local session already holds renames the new one to a variant, **and** sessions can still
 share a name (an older Claude Code version, or a name Claude Code generated), in which case other
 identifiers disambiguate. Either behaviour would break a name-keyed lookup, which is why the name is a
-signal and not the key. M0m records what actually happens.
+signal and not the key. M0m observed: resume by name is scoped to the cwd's project directory, and when two
+sessions in one project directory share a name `--resume <name>` **errors and lists the ids**; it never picks
+silently. A fork keeps the name, so forks create duplicates. Recovery therefore always resumes by
+**session id**. The variant-rename behaviour for a live name collision is a class 2 probe, not yet run.
 
 **Launcher bypass.** A native `claude --resume` outside the launcher does not set `SESSION_ROLE`; the
 hook then resolves from `agent_type` and `session_title` (and the worktree) with the same disagreement
@@ -295,11 +315,18 @@ survives the removal of any one of them (`git rev-parse --git-common-dir` resolv
 every worktree here, checked 2026-10-02):
 
 - `bindings.jsonl` (append-only): the binding record of section 5, one per `SessionStart`:
-  `session_id`, `role`, `source`, `worktree`, `branch`, `transcript path`, `process id`,
+  `session_id`, `role`, `source`, `worktree`, `branch`, `transcript path` (a hint only, see below),
+  `process id` (`CLAUDE_PID` from the hook environment, with its start time),
   `manifest_digest`, `ts`. This is the role's history of instances.
 - `instance.json`: the current holder (the last binding) and its `state`: `live`, `orphaned` or
   `released` (set when an instance ends cleanly or the seat is retired).
 - the writer lease (section 5), so a dead holder's lease is recognizably stale.
+
+**Transcript lookup is by session id, never by the payload path.** M0p: after `claude --resume <id>` from
+a different cwd, `SessionStart`'s `transcript_path` points into the **new** cwd's project directory, but the
+harness keeps appending to the original file in the **original** project directory. Recovery finds a
+transcript with `~/.claude/projects/*/<session-id>.jsonl`, and candidate transcripts for a role are found by
+scanning all project directories for `customTitle == <role id>`.
 
 **Not stored by us, because it is derivable:** branch and open PR (`gh pr list --head <branch>`), dirty
 files, unpushed commits, a git operation left in progress (merge, rebase and cherry-pick state), the
@@ -314,8 +341,12 @@ recovery key is the **role id used as the session title**, which every instance 
 clears, and not a session id.
 
 **Detect.** `cc <role>` and `status.py` read `instance.json`: process alive -> `live` (a second launch is
-refused); process gone and not `released` -> **orphaned**. How liveness is checked (process id,
-inbox socket) is an M0 item (q).
+refused); process gone and not `released` -> **orphaned**. **Liveness is the recorded process id in `/proc`
+(checked against its command line and start time, since ids are reused), never the inbox socket file**:
+M0q/r observed that after `kill -9` the socket file `/run/user/<uid>/cc-socks/<pid>.sock` stays, and 6 of the
+12 socket files in that directory on 2026-10-03 belonged to dead processes. A killed process fires **no**
+`SessionEnd`, so "no `released` mark" is exactly the orphan signal; its transcript stays intact and
+`claude --resume <id>` of it works and the model recalls the conversation.
 
 **Recover.** On an orphan, `cc <role>` never silently starts or resumes. It shows the evidence: last
 activity (the transcript's modification time), worktree and branch, dirty and unpushed state, any **git
@@ -554,11 +585,17 @@ problem (sandboxing, separate OS users) outside this plan; nothing here is an ad
     silently allow**.
 
   If the hook API cannot return "ask", the fallback is **deny with a message telling the session to
-  ask the user**. What the harness does when the hook itself fails (crash, unparseable input) is an M0e
-  result; **this plan does not claim "fail-closed" until that is shown.** Because it is unproven, the
-  authority-class command patterns are *also* declared as harness-native permission rules
+  ask the user**. **M0n result (observed 2026-10-03, 2.1.286, each with a positive control that an
+  unblocked call executes): a `PreToolUse` call is blocked only by exit code 2 or a well-formed JSON `deny`;
+  JSON `ask` with no UI was blocked; exit code 1 and unparseable output with exit 0 both let the call RUN.**
+  The harness is therefore **fail-open on a hook crash**, and a Python traceback (exit 1) is a crash. The
+  guardrail script must catch every exception itself and convert it to exit 2 (or a JSON deny) for the
+  authority classes, and its matcher stays narrow (`Bash`, `Edit`, `Write`) so a bug cannot block every tool.
+  The plan does not claim fail-closed beyond that script-level discipline. The authority-class command
+  patterns are *also* declared as harness-native permission rules
   (`permissions` ask and deny lists for `git push`, `gh pr merge`, remote-branch deletion), which the
-  harness enforces by itself whether or not the hook runs; the hook adds the role-conditional logic
+  harness enforces by itself whether or not the hook runs (and which, given the fail-open result, are the
+  primary backstop for command patterns rather than an extra); the hook adds the role-conditional logic
   (who is the writer, which grants exist) on top. Any edit that touches `settings.json` needs the
   user's literal-text confirmation.
 - **Authority-file integrity: governing-file class, no external pin in v1.** Changes to
@@ -641,6 +678,12 @@ transcript path convention holds for a worktree, and `claude --resume <id>` work
 If official documentation and a local observation disagree, the local behaviour is recorded and the plan
 is updated from it.
 Outcome: a go / adjust decision on sections 5, 9.5, 10, before M1, plus the signal-precedence table.
+
+**Recorded 2026-10-03 (class 1; Claude Code 2.1.286):** decision **adjust** for sections 5, 6.1 and 10 (edits
+above, each citing its item), **hold** for 9.5 (items c, l are class 2 and unprobed, so 9.5 stays "unverified
+until M0c"). Items a (resume part), b, e, f, h, j, n, p, q are verified; d, i, m, o, r are partial; c, g, k, l and
+the interactive `ask`, power-loss and crash-mid-rebase cases are not run. Record:
+`agent-working/stored_artifacts/TCK-20261003-SESSION-LAYER-M0-HARNESS-SPIKE/investigation.md`.
 
 ### 12.2 Milestones (epic children)
 
