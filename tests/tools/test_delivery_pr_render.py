@@ -973,3 +973,55 @@ def test_check_matches_a_ticketless_body_when_given_the_same_flags(tmp_path):
         _git_diff_rule(["docs/world_rules/foundations/state-ownership.md", "agent-working/stored_artifacts/X/evidence.jsonl"]),
     ])
     assert pr_render.check_against_live(run_command=runner, tickets_root=tickets_root, **kw)["matches"] is True
+
+
+def test_file_summary_lists_each_directory_when_it_fits():
+    summary = pr_render.summarize_changed_files(["a/x.md", "a/y.md", "b/c/z.md"])
+    assert summary == "- a/ (2 files)\n- b/c/ (1 file)"
+
+
+def test_file_summary_collapses_directories_so_a_move_sized_pr_fits_the_body_limit():
+    files = [f"root/data/week-{w:02d}/shard-{i}.jsonl" for w in range(80) for i in range(3)]
+    summary = pr_render.summarize_changed_files(files)
+    lines = summary.splitlines()
+    assert len(lines) <= pr_render._MAX_FILE_SUMMARY_LINES + 1
+    assert lines == ["- root/data/ (240 files)"]
+
+
+def test_file_summary_states_the_remainder_when_collapsing_is_not_enough():
+    files = [f"d{i:03d}/f.md" for i in range(100)]
+    lines = pr_render.summarize_changed_files(files, max_lines=10).splitlines()
+    assert len(lines) == 11
+    assert lines[-1] == "- ... and 90 more directories (90 files)"
+
+
+def test_file_summary_is_deterministic_regardless_of_input_order():
+    files = [f"d{i % 7}/e{i % 3}/f{i}.md" for i in range(300)]
+    assert pr_render.summarize_changed_files(files) == pr_render.summarize_changed_files(list(reversed(files)))
+
+
+def test_a_pure_folder_rename_of_tickets_is_not_a_changed_ticket(tmp_path):
+    def git(*args):
+        subprocess.run(["git", "-C", str(tmp_path), *args], check=True, capture_output=True)
+
+    git("init", "-q", "-b", "main")
+    git("config", "user.email", "t@example.com")
+    git("config", "user.name", "T")
+    old_root = tmp_path / "old_root"
+    old_root.mkdir()
+    (old_root / "TCK-20260101-MOVED.md").write_text("moved\n")
+    git("add", "-A")
+    git("commit", "-q", "-m", "base")
+    git("branch", "base")
+    live = tmp_path / TICKETS
+    live.parent.mkdir(parents=True, exist_ok=True)
+    git("mv", "old_root", str(TICKETS))
+    (live / "TCK-20260102-EDITED.md").write_text("new\n")
+    git("add", "-A")
+    git("commit", "-q", "-m", "move and add")
+
+    def run(command):
+        done = subprocess.run(command, cwd=tmp_path, capture_output=True, text=True)
+        return pr_render.CommandResult(done.returncode, done.stdout, done.stderr)
+
+    assert pr_render.discover_changed_ticket_ids(run, base_ref="base") == ["TCK-20260102-EDITED"]

@@ -104,12 +104,21 @@ def discover_commit_ticket_ids(run_command=default_run_command, base_ref: str = 
 
 
 def discover_changed_ticket_ids(run_command=default_run_command, base_ref: str = "origin/main") -> list:
-    result = run_command(["git", "diff", "--name-only", f"{base_ref}..HEAD", "--", posix(TICKETS) + "/"])
+    """Ticket IDs whose file content changed under the tickets root. A pure rename (a folder move,
+    similarity 100%) changes no ticket, so it is not reported; rename detection needs the whole diff, so the
+    tickets-root filter is applied here rather than as a git pathspec."""
+    result = run_command(["git", "diff", "--name-status", "--find-renames=100%", f"{base_ref}..HEAD"])
     if result.returncode != 0:
         return []
+    prefix = posix(TICKETS) + "/"
     ids = []
     for line in result.stdout.splitlines():
-        ids.extend(_TICKET_ID_RE.findall(line))
+        fields = line.split("\t")
+        if fields[0].startswith("R") and len(fields) > 1:
+            continue
+        path = fields[-1].strip()
+        if path.startswith(prefix):
+            ids.extend(_TICKET_ID_RE.findall(path))
     return _dedup_preserve_order(ids)
 
 
@@ -457,15 +466,40 @@ def render(
     return {"title": title, "body": body, "warnings": warnings, "hints": hints}
 
 
+_MAX_FILE_SUMMARY_LINES = 40
+
+
+def summarize_changed_files(files: list, max_lines: int = _MAX_FILE_SUMMARY_LINES) -> str:
+    """One line per directory; when that exceeds `max_lines` (a move-sized PR would otherwise overflow
+    GitHub's PR body limit), directories are merged to their first N path segments with N reduced until
+    the listing fits. Deterministic, so `--check` renders the same text."""
+    def group(depth: Optional[int]) -> Dict[str, int]:
+        by_dir: Dict[str, int] = {}
+        for f in files:
+            parts = f.split("/")[:-1]
+            parent = "/".join(parts if depth is None else parts[:depth]) or "."
+            by_dir[parent] = by_dir.get(parent, 0) + 1
+        return by_dir
+
+    by_dir = group(None)
+    max_depth = max((len(f.split("/")) - 1 for f in files), default=0)
+    depth = max_depth
+    while len(by_dir) > max_lines and depth > 1:
+        depth -= 1
+        by_dir = group(depth)
+    items = sorted(by_dir.items())
+    lines = [f"- {d}/ ({n} file{'s' if n != 1 else ''})" for d, n in items[:max_lines]]
+    if len(items) > max_lines:
+        rest = items[max_lines:]
+        lines.append(f"- ... and {len(rest)} more directories ({sum(n for _, n in rest)} files)")
+    return "\n".join(lines)
+
+
 def render_ticketless_body(theme: str, why: str, files: list, spec: dict, warnings: list) -> str:
     """Body for a branch that closes no ticket (docs-only or record-only). Nothing here is invented:
     the theme and the why come from the caller, the file summary from the diff, and `Closes:` is
     explicitly empty."""
-    by_dir: Dict[str, int] = {}
-    for f in files:
-        parent = "/".join(f.split("/")[:-1]) or "."
-        by_dir[parent] = by_dir.get(parent, 0) + 1
-    summary = "\n".join(f"- {d}/ ({n} file{'s' if n != 1 else ''})" for d, n in sorted(by_dir.items()))
+    summary = summarize_changed_files(files)
     sections = {
         "## What landed": f"{theme}\n\nChanged files ({len(files)}):\n{summary}" if files else theme,
         "## Tickets": "(none: this PR closes no ticket)",
