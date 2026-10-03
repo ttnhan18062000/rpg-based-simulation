@@ -10,7 +10,7 @@ from .errors import (
     CodexAdapterWriteGuardError,
 )
 
-_AUTHORITATIVE_PIPELINE_NOTE = "All durable-state changes in this simulation are refined through the 39-phase authoritative mutation pipeline defined in `docs/engine/authoritative_pipeline.md` (the Singular Bottleneck Law: no system, worker, or external process may mutate `AuthoritativeState` directly; all changes are represented as a `StateUpdate` and refined through these 39 phases)."
+_AUTHORITATIVE_PIPELINE_NOTE = "All durable-state changes in this simulation are refined through the authoritative mutation pipeline's refinement phases (one per `run_phase()` call in `AuthoritativeApplyPipeline.refine`) defined in `docs/engine/authoritative_pipeline.md` (the Singular Bottleneck Law: no system, worker, or external process may mutate `AuthoritativeState` directly; all changes are represented as a `StateUpdate` and refined through these phases; the current list is generated in `docs/performance/phase_inventory.md`)."
 _ID = re.compile(r"[a-z0-9][a-z0-9-]*\Z")
 
 def _assert_write_allowed(repo_root: Path, path: Path, allow: bool) -> None:
