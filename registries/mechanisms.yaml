@@ -2049,8 +2049,8 @@ mechanisms:
         is corrected to name both live writers of `RegionState.owner_faction_id`. Evidence:
         `runtime_evidence_regional_sovereignty.md` in
         `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`'s artifacts (committed at
-        `ca3246338`; engine `6d630250d`; 5 corpus worlds, 2000 ticks each, about 48,000
-        region-ticks).
+        `ca3246338`; engine `6d630250d`; 4 corpus worlds in 5 world/seed configurations, 2000
+        ticks each, about 48,000 region-ticks).
         **Which writer actually moves ownership:** `WorldDynamicsSystem.resolve_dynamics`
         (`world_dynamics` phase, an unconditional per-region sweep that emits `SOVEREIGNTY_SHIFT`)
         made all 3 ownership writes observed. That includes both durable flips: `goblin_camp`
@@ -2065,6 +2065,12 @@ mechanisms:
         between the two writers. The two writers can still disagree in principle, but that needs
         an invader-owned region at influence >= +50 with an in-region death in the same tick (a
         constructed scenario reached it).
+        **When this verdict expires:** "near-inert" and "zero ownership writes by
+        `FactionInfluenceService`" describe engine `6d630250d`, before work-order item 1
+        (`TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND`). That fix is
+        expected to raise attack and death volume, so influence may start moving. This outcome
+        record expires when item 1 lands, and the mechanism must be re-measured then before
+        anyone cites it as current.
         **Precision caveat:** the runs used `audit_mode=False`, so the mid-tick budget throttle
         (`kernel.py:612-620`, known and deferred under `INFRA-273`) can drop result items. Counts are
         order-of-magnitude. The zero results rest on the structural argument (evidence §5) and on
