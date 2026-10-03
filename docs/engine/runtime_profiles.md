@@ -34,7 +34,7 @@ Every runtime profile must explicitly define the following fields:
     - **Class A (Server)**: High throughput within the envelope.
     - **Class B (Dev/Workstation)**: Medium throughput within the envelope.
     - **Class C (Legacy/Edge)**: Low throughput, potential frequent degradation.
-- **Rule**: The same profile on different hardware classes must yield **identical semantics** and **identical resource ceilings**, but will result in different throughput.
+- **Rule**: Under the Canonical contract (`docs/engine/deterministic_execution.md`, PERF-D1), the same profile on different hardware classes must yield **identical semantics** and **identical resource ceilings**, but will result in different throughput. This does not hold today for a run outside `audit_mode`, because wall-clock and host-resource signals still change what is computed (four inputs are listed in `deterministic_execution.md`, "What runs today"); the Canonical contract that removes them is approved and its implementation is pending (`PERF-M1`). Hardware classes are defined once, in `docs/engine/contracts/certification_contract.md` §3 (PERF-D4).
 
 ## 5. Runtime Modes
 Profiles define the thresholds for switching between:

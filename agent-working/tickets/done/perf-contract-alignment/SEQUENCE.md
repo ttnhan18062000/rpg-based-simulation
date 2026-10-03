@@ -8,6 +8,7 @@ alphabetical order.
 1. TCK-20261003-PERF-M2-CLAUSE-INVENTORY  (no deps in this batch)
 2. TCK-20261003-PERF-WALL-CLOCK-READ-INVENTORY  (no deps in this batch; may run before or after 1)
 3. TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT  (depends on: TCK-20261003-PERF-M2-CLAUSE-INVENTORY; uses TCK-20261003-PERF-WALL-CLOCK-READ-INVENTORY if closed)
+4. TCK-20261003-PERF-PHASE-COUNT-PINNED-TEXT  (added 2026-10-03 after T09 stop-and-report; pairs with T09 items 6-7, same PR; owns the generator and test edits)
 
 ## Why This Order Matters
 

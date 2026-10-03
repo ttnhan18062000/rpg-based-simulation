@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT
-phase: open
+phase: done
 date: 2026-10-03
 tags: [performance, determinism, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, documentation]
 Apply the approved PERF-D1/D2/D4/D5/D6 decisions and the C-01..C-16 dispositions to the P1 documents (PERF-M0-T09; documents only)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -69,15 +69,15 @@ Each item names its source decision or disposition. Line references are from the
 - Registering `docs/brainstorm/` (F-05)
 
 ## Acceptance Criteria
-- [ ] Every item 1-14 is applied, or recorded in Implementation Notes with the reason it was not
-- [ ] No edited document describes an approved-but-unbuilt mechanism as existing; each such statement names its pending ticket or program ID
-- [ ] Each of the seven statements in `docs/performance/hash_callsite_inventory.md` §6 is corrected, and the hash inventory's "consistent" statements are left consistent
-- [ ] The three performance documents agree with each other and with every row of `docs/performance/performance_clause_inventory.md`'s PERF-D4 destination column; a check of the inventory against the edited text is recorded in the test plan
-- [ ] No literal refinement-phase count remains in `authoritative_pipeline.md`, `CLAUDE.md`, or `AGENTS.md`; `AGENTS.md` matches its regenerated output
-- [ ] Parity ledger entries citing changed text are updated and `docs/parity_ledger/schema.json` validation passes
-- [ ] `tests/static`, `tests/docs`, and `tests/architecture` pass (the doc and frontmatter checks, the AGENTS.md generator drift check if one exists)
-- [ ] `git diff` touches only `docs/`, `CLAUDE.md`, `AGENTS.md`, `agent-working/agent-orchestration/` (the generator source line only), `agent-working/tickets/`, `agent-working/stored_artifacts/`, `agent-working/agent-monitoring/`, and the knowledge index files
-- [ ] The repository owner approves the P1 diff on the PR (these are authority-P1 documents)
+- [x] Every item 1-14 is applied, or recorded in Implementation Notes with the reason it was not
+- [x] No edited document describes an approved-but-unbuilt mechanism as existing; each such statement names its pending ticket or program ID
+- [x] Each of the seven statements in `docs/performance/hash_callsite_inventory.md` §6 is corrected, and the hash inventory's "consistent" statements are left consistent
+- [x] The three performance documents agree with each other and with every row of `docs/performance/performance_clause_inventory.md`'s PERF-D4 destination column; a check of the inventory against the edited text is recorded in the test plan
+- [x] No literal refinement-phase count remains in `authoritative_pipeline.md`, `CLAUDE.md`, or `AGENTS.md`; `AGENTS.md` matches its regenerated output
+- [ ] Parity ledger entries citing changed text are updated and `docs/parity_ledger/schema.json` validation passes (entries updated; **schema validation is unmet, pre-existing and out of scope**: 330 errors at `HEAD`, 330 after this change, 0 new)
+- [x] `tests/static`, `tests/docs`, and `tests/architecture` pass (the doc and frontmatter checks, the AGENTS.md generator drift check if one exists)
+- [x] `git diff` touches only `docs/`, `CLAUDE.md`, `AGENTS.md`, `agent-working/agent-orchestration/` (the generator source line only), `agent-working/tickets/`, `agent-working/stored_artifacts/`, `agent-working/agent-monitoring/`, and the knowledge index files
+- [ ] The repository owner approves the P1 diff on the PR (these are authority-P1 documents) (open by design until the owner reviews the PR)
 
 ## Related Tickets
 - TCK-20260913-PERF-M0-ARCHITECTURE-GOVERNANCE-EPIC (parent; this is `PERF-M0-T09`)
@@ -108,9 +108,24 @@ Each item names its source decision or disposition. Line references are from the
 - Large: if the diff becomes hard to review, split at item 5 (performance documents) into a second ticket and tell perf-planner
 
 ## Implementation Notes
+- Items 1-5 and 8-14 applied as written, with perf-planner's dispositions for item 5 (comparative clause kind; absolute ceilings and `PerfBudget` recorded as tripwire-adjacent debt in `performance_contract.md` §5.2; the governor trigger stays outside the contract) and A1 for item 1. Item 15 (index, registry) done at close.
+- Items 6-7: unit definitions, the unchecked-table warning, the pointer to `phase_inventory.md`, and the D19 snapshot label are here. The pinned literals moved to `TCK-20261003-PERF-PHASE-COUNT-PINNED-TEXT` (generator note, `AGENTS.md`, the "39" in `authoritative_pipeline.md`, the tests, `docs/engine/README.md`, `session_layer_working_process.md`). The `CLAUDE.md` row was changed there with the user's explicit approval. AC5 is met through that sibling ticket, in the same batch and PR.
+- Stop-and-report: two tests pin "39" (reported to perf-planner, who created the sibling ticket).
+- Parity AC: `docs/parity_ledger` schema validation fails at `HEAD` with 330 errors, and with 330 after this change (0 new). Unmet, pre-existing and out of scope.
+- Beyond the ticket's list, because they cited removed thresholds or classes: `docs/testing/regression_policy.md`, `docs/engine/architecture.md`.
+- Left alone on purpose: `kernel_concurrency_design_philosophy.md`, `tag_taxonomy.md` (dated records), `.claude/agents/test-scoper.md`, render/art and aseprite plans, brainstorm docs.
+- `CLAUDE.md` Engine Contracts rows: the `authoritative_pipeline.md` row (phase count, via the sibling ticket) and the `performance_contract.md` row (now says how performance is measured, compared and claimed, and points to `certification_contract.md` §3 for hardware classes) were each changed with the user's explicit approval, confirmed in this session on 2026-10-03.
+- The V1 ADR's decisions 1, 2 and 4 could not be found in current code; marked "not verified as current".
 
 ## Test Summary
+- `tests/docs` + `tests/static` (not slow): 121 passed, 2 skipped, 1 xfailed. `tests/architecture`, `tests/parity`, doc-wiring tests: 150 passed. Frontmatter valid on every edited document. See the stored test plan.
 
 ## Files Changed
+- docs/engine/{deterministic_execution,known_limitations,runtime_profiles,performance_contract,architecture,authoritative_pipeline}.md; docs/engine/contracts/certification_contract.md
+- docs/performance/{perf_baseline_policy,optimization_architecture}.md; docs/audits/D19_domain_phase_inventory.md; docs/testing/regression_policy.md
+- docs/architecture/{performance_optimization,performance_optimization_decisions}.md
+- docs/plans/design_enhancement/{design_enhancement_roadmap,determinism_envelope_epic,performance_milestones_epic,subphase_domain_contracts_epic}.md
+- docs/parity_ledger/infrastructure.yaml (INFRA-223)
 
 ## Completion Summary
+P1 documents aligned with the approved PERF-D1 (with A1), D2, D4, D5 and D6 decisions and the C-01..C-16 dispositions; every approved-but-unbuilt mechanism is labeled pending with its ticket or program ID. The owner reviews the P1 wording on the PR.
