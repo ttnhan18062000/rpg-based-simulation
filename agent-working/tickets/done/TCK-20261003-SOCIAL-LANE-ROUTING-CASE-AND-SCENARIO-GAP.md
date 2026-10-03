@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-SOCIAL-LANE-ROUTING-CASE-AND-SCENARIO-GAP
-phase: open
+phase: done
 date: 2026-10-03
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Phase 2 social item 2 (Run): a lane routing case for `src/systems/social_systems/**`, and a scenario-gap record
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -98,12 +98,20 @@ Figures re-measured at the then-current `origin/main` with the full SHA.
 
 ## Test Summary
 
-Not run yet.
+`tests/unit/tools/test_scenario_lane_paths.py`: 27 passed (venv python, `-p no:cacheprovider`). Positive
+control: with `src/systems|` added to a scratch copy of the `PERF_RE` string the social path matches it
+(so the new assertion would fail); the live pattern does not match. Measured routing at `origin/main`
+`9640ff942877cc7264e83309f35d19022a4a3fe6`: `run=True`, `perf=False`.
 
 ## Files Changed
 
-None yet.
+- `tests/unit/tools/test_scenario_lane_paths.py` (one new case, `test_src_systems_social_only_routes_to_the_dedicated_job`)
+- `docs/testing/social_test_report_2026-10-03.md` (new shared batch report, section 1)
 
 ## Completion Summary
 
-Not complete.
+Done 2026-10-03. The routing case pins that a social-only `src/` change goes to the dedicated `Scenario
+lane` job, not `Perf / cert / arena`. It is rule-level evidence, not a CI observation. The scenario gap
+is recorded: no scenario in `tests/mechanic_scenarios/` imports `social_systems`. The report is the shared
+Phase 2 social findings doc and carries the RELATIONSHIP-VECTOR staleness line once at the top. The gap is
+for `rpg-feature-planning` (routing message pending in the batch). The only test-file change in the batch.
