@@ -109,7 +109,7 @@ pytest tests/ --resource-budget=medium   # 4 GB RAM, 60s timeout (default)
 pytest tests/ --resource-budget=off      # no limits
 ```
 
-Never run `pytest tests/` without scoping — scope to the domain under change. See [testing taxonomy](docs/testing/v2_test_taxonomy.md).
+Never run `pytest tests/` without scoping — scope to the domain under change. See [testing taxonomy](docs/testing/test_taxonomy.md).
 
 ---
 
