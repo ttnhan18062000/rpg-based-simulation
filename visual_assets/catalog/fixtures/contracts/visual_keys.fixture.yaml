@@ -1,0 +1,17 @@
+# Synthetic registry for loader tests. Needs load_registry(..., allow_fixture_namespace=True).
+record_type: visual_key_registry
+schema_version: 1
+keys:
+  - key: fixture.sample.icon
+    family: sample
+    description: synthetic fixture key
+    variant_axes:
+      - name: scale
+        values: [x1, x2]
+  - key: fixture.sample.tile
+    family: sample
+    description: synthetic fixture key
+    variant_axes: []
+aliases:
+  - alias: fixture.sample.old_icon
+    target: fixture.sample.icon

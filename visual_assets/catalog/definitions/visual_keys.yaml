@@ -1,0 +1,6 @@
+# Semantic visual-key registry. Committed with ZERO keys: no real key exists until a later decision adds one.
+# The key namespace is finite and fixed by this file; nothing registers keys dynamically.
+record_type: visual_key_registry
+schema_version: 1
+keys: []
+aliases: []
