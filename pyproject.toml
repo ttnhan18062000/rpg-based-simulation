@@ -42,8 +42,8 @@ search-mcp = [
     "mcp>=1.0.0",
 ]
 
-# Test and dev tooling. `dev` is installed by default by `uv sync` and is part of the
-# requirements.txt export; `profiling` is opt-in (`uv sync --group profiling`).
+# Test and dev tooling. `dev` and `lint` are installed by default by `uv sync` (`[tool.uv]
+# default-groups`) and are part of the requirements.txt export; `profiling` is opt-in (`uv sync --group profiling`).
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
@@ -57,14 +57,21 @@ dev = [
     # the default export (requirements.txt) reach it for tests/tools/test_search_mcp.py.
     "mcp>=1.0.0",
     "websockets>=12.0",
-    # Code-health tools (TCK-20261002-CODE-HEALTH-TOOL-CONFIG). Pinned exactly: a new release
-    # can add or retune rules, which would change the measured baseline without a code change.
-    # jscpd is a Node tool and is pinned separately (JSCPD_VERSION in the Makefile).
+]
+# Code-health tools (TCK-20261002-CODE-HEALTH-TOOL-CONFIG). Pinned exactly: a new release can
+# add or retune rules, which would change the measured baseline without a code change.
+# jscpd is a Node tool and is pinned separately (JSCPD_VERSION in the Makefile). Kept out of
+# `dev` so CI jobs that do not run the code-health tests skip them (`uv sync --no-group lint`);
+# `default-groups` below keeps a plain `uv sync` and the requirements.txt export unchanged.
+lint = [
     "ruff==0.16.10",
     "complexipy==8.0.1",
 ]
 profiling = [
     "memray>=1.0.0",
+    # Sampling profiler for tools/perf/profile_tick.py (TCK-20261003-PERF-PROFILING-TOOLKIT). Opt-in
+    # with the rest of this group, so it is not in `dev` and not in the requirements.txt export.
+    "py-spy>=0.3.14",
 ]
 
 [project.scripts]
@@ -72,6 +79,9 @@ rpg-sim = "src.__main__:main"
 rpg-world = "src.worldbuilding.cli:main"
 rpg-lab = "src.lab.cli:main"
 
+
+[tool.uv]
+default-groups = ["dev", "lint"]
 
 [tool.setuptools.packages.find]
 include = ["src*"]
@@ -165,7 +175,7 @@ ignore = ["ANN401"]
 # PLR1702 is preview-only. Preview behaviour is enabled but every preview *rule* must be
 # selected by its exact code, so no other preview rule turns on. Note that `preview = true` also
 # switches the selected stable rules to their preview behaviour; with ruff pinned exactly in the
-# dev group that is stable, but a ruff version bump can change findings and needs a baseline
+# lint group that is stable, but a ruff version bump can change findings and needs a baseline
 # reseed (registries/code_health_exceptions.jsonl).
 preview = true
 explicit-preview-rules = true

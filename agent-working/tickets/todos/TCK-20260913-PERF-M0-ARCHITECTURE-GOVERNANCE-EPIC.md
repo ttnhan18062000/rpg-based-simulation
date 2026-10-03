@@ -96,6 +96,8 @@ semantic-deferred-work pattern anywhere in `src/`, matching the proposal's own d
 ## Related Tickets
 - TCK-20260913-PERF-M0-SOURCE-AUDIT
 - TCK-20260913-PERF-M0-OWNER-TRIAGE
+- TCK-20261003-PERF-PHASE-INVENTORY-SCRIPT (evidence half of `PERF-M0-T08`)
+- TCK-20261003-PERF-HASH-CALLSITE-INVENTORY (evidence half of `PERF-M0-T07`, call sites only)
 
 ## Related Docs
 - `docs/plans/design_enhancement/performance_optimization/performance_m0_architecture_governance_epic.md`

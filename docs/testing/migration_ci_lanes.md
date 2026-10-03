@@ -94,8 +94,15 @@ src/worldmodules/**
 src/certification/**
 Makefile
 requirements.txt
+pyproject.toml
+uv.lock
 .github/workflows/test.yml
 ```
+
+`pyproject.toml` and `uv.lock` are on the list because dependencies are declared there (`requirements.txt` is a
+generated export of the lock). A side effect: any `pyproject.toml` edit, including tool configuration such as
+ruff settings, now also triggers `migration-lanes` and `perf-cert-arena`. That cost was accepted
+(`TCK-20261002-UV-REMAINING-CI-JOBS`).
 
 Note: the workflow's regex builds this list as a cross product across
 `tests/(integration|unit)/(content|scenarios|worldassembly|certification|runtime)/` — it also
