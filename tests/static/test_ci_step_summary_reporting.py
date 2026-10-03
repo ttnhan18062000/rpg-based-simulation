@@ -446,10 +446,13 @@ def test_no_cross_job_aggregate_step_or_job_added() -> None:
         "slow",
         "frontend",
         "simq-grade-drift",
+        # TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB: the advisory ratchet job (no pytest, so it is
+        # not in _FASTLANE_JOBS and has no JUnit/base-collection reporting).
+        "code-health",
     }
     assert set(_jobs().keys()) == expected_job_names, (
-        "job set changed -- this ticket must not add a new CI job (no cross-job aggregate "
-        "new-vs-existing summary is in scope, per the ticket's Out of Scope bullet)"
+        "job set changed -- a new CI job must be added to this expected set deliberately (no cross-job "
+        "aggregate new-vs-existing summary is in scope for the fast-lane reporting this test pins)"
     )
 
 

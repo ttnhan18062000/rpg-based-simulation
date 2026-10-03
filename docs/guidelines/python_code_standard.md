@@ -29,10 +29,12 @@ Every rule has an Enforcement cell with one of:
 
 - **reviewer**: a person or review agent judges it on the diff. No tool checks it.
 - **a named tool, configured**: the tool is configured in this repo (`pyproject.toml`) and can be
-  run on demand (below), but it is **not gated**: no CI job or hook fails on it. The violations that
-  already exist in `src/` are held in `registries/code_health_exceptions.jsonl`, and `make code-health`
-  fails only on a new or worse one, but it is run by hand, not by CI (roadmap M4 gates it). Until
-  then such a rule is enforced by review plus that on-demand check. The first-run counts are in
+  run on demand (below). It is **advisory in CI (soak)**: the `Code health (advisory)` job runs the
+  ratchet on every PR and reports in its job summary (changed files first) and one warning annotation,
+  but no CI job or hook fails on it yet. The violations that already exist in `src/` are held in
+  `registries/code_health_exceptions.jsonl`, and `make code-health` fails only on a new or worse one.
+  Blocking comes after the two-week soak (roadmap M4). Until then such a rule is enforced by review
+  plus that advisory check. The first-run counts are in
   `TCK-20261002-CODE-HEALTH-TOOL-CONFIG`; later counts belong to the code-health snapshot.
 - **mypy, advisory today**: mypy is configured (`[tool.mypy]` in `pyproject.toml`) but runs
   non-blocking in `make typecheck-py` and CI, and five packages are excluded. Blocking is planned

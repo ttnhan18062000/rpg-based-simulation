@@ -66,7 +66,7 @@ None.
 - tests/static/test_typecheck_gate_configured.py
 
 ## Assumptions / Open Questions
-- Soak start: TBD (merge of the advisory CI job). Soak end: start + 14 days
+- Soak start: date of batch PR merge (the PR that carries the advisory CI job; the closure commit of TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB writes the real date). Soak end: start + 14 days
 - Blocking gates affect every domain that edits src/; announce the date to other planners before flipping
 
 ## Implementation Notes

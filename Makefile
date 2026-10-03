@@ -282,7 +282,7 @@ code-health-dup: ## Report duplicated Python blocks under src/ with jscpd (repor
 
 # `code-health` is the Python craft-debt ratchet (tools/code_health/, registries/code_health_exceptions.jsonl).
 # It is unrelated to the codebase-health-* targets, which belong to tools/codebase_health_*.py.
-code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than registries/code_health_exceptions.jsonl (on demand; not run in CI)
+code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than registries/code_health_exceptions.jsonl (also the advisory `Code health (advisory)` CI job during the soak: reports, never fails the PR)
 	python3 -m tools.code_health check
 
 typecheck-py: ## Run Python type checking via mypy (src/ only, informational first pass)

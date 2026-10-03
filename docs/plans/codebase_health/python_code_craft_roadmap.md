@@ -223,6 +223,8 @@ Each is separately closable. None before M6 modifies `src/`.
 | M6 | Agent integration | Skill, edit hook, implementer pointer, review rubric | request to agent-working |
 | M7 | Refactor lane | **Deferred until the owner reopens `src/`.** Standing batch folder, one file per batch, fed by the registry; first targets `api/server.py` and `observability/event_extractor.py` | codebase, with rpg-planner for engine files |
 
+**M4 soak:** start = date of batch PR merge (the PR that adds the advisory `Code health (advisory)` CI job; the closure commit writes the real date), end = start + 14 days. The flip ticket `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING` carries the same dates.
+
 Order: M1, M2, M3, M4. M5 and M6 can start after M3. M7 is a lane, not an epic, and never closes.
 
 ## 8. Owner decisions

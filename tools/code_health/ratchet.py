@@ -14,13 +14,14 @@ The two non-failing outcomes are how paid-off debt shows up: `tighten` (or `dele
 regression are different lists in the report, which is what an earlier single-number ratchet in
 this repo (TCK-20260915-RATCHET-CONFLATES-HISTORICAL-DEBT-WITH-LIVE-REGRESSION) could not say.
 
-Report-only for now: nothing in CI or any hook runs this (roadmap M4 gates it).
+Advisory in CI (the `code-health` job in test.yml runs it on every PR with `continue-on-error`, roadmap M4
+soak); nothing blocks on it yet.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from typing import Collection, Iterable, Sequence
 
 from tools.code_health.findings import Finding
 from tools.code_health.registry import Row
@@ -109,3 +110,30 @@ def format_report(result: RatchetResult, limit: int = DEFAULT_REPORT_LIMIT) -> s
         f"{len(result.gone)} gone, {result.unchanged} unchanged"
     )
     return "\n".join(lines)
+
+
+def format_summary(result: RatchetResult, changed_files: Collection[str] = (), limit: int = DEFAULT_REPORT_LIMIT) -> str:
+    """A Markdown job summary: one line on a pass; on a failure, violations in changed files come first.
+
+    `changed_files` are repository-relative paths (for example the PR's `git diff --name-only`). A
+    violation counts as "in a changed file" when its `file` is in that set; the lists are capped at
+    `limit` each so a large baseline drift cannot flood the summary.
+    """
+    counts = f"{len(result.improved)} improved, {len(result.gone)} gone, {result.unchanged} unchanged"
+    if not result.failed:
+        return f"**Code health (advisory):** OK, no new or worse violations ({counts})."
+    changed = set(changed_files)
+    entries = [(f, f"NEW value={f.value}") for f in result.new]
+    entries += [(f, f"WORSE {f.value} > ceiling {row.ceiling}") for f, row in result.worse]
+    mine = [e for e in entries if e[0].file in changed]
+    other = [e for e in entries if e[0].file not in changed]
+
+    def block(title: str, items: list[tuple[Finding, str]]) -> list[str]:
+        lines = [f"- `{_where(f)}` [{f.tool} {f.rule}] {what}" for f, what in items]
+        return _section(title, lines, limit)
+
+    out = [f"**Code health (advisory):** {len(result.new)} new, {len(result.worse)} worse ({counts}).", ""]
+    out += block("In files this PR changed", mine) + ([""] if mine and other else [])
+    out += block("Elsewhere (baseline drift or other merged changes)", other)
+    out += ["", "Advisory only: this does not fail the PR during the soak (roadmap M4)."]
+    return "\n".join(out)

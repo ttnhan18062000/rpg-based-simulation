@@ -11,7 +11,8 @@ import yaml
 _ROOT = Path(__file__).resolve().parent.parent.parent
 _JOBS = yaml.safe_load((_ROOT / ".github" / "workflows" / "test.yml").read_text())["jobs"]
 _NO_PYTHON_INSTALL = {"changed-files", "frontend"}
-_LINT_JOBS = {"tools-a-e"}
+# code-health runs the ratchet itself (ruff, complexipy), so it syncs `lint` too.
+_LINT_JOBS = {"tools-a-e", "code-health"}
 
 
 def _run_lines(job: dict) -> list[str]:
@@ -47,3 +48,14 @@ def test_lint_group_holds_the_code_health_tools_and_is_a_default_group() -> None
     assert lint == {"ruff", "complexipy"}
     assert not any(d.split("==")[0] in lint for d in groups["dev"])
     assert data["tool"]["uv"]["default-groups"] == ["dev", "lint"]
+
+
+def test_code_health_job_is_advisory_and_keeps_the_ratchet_step_non_blocking() -> None:
+    """TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB: the soak job must never fail the PR."""
+    job = _JOBS["code-health"]
+    assert job["name"].endswith("(advisory)")
+    assert job["continue-on-error"] is True, "backstop for setup failures"
+    assert "if" not in job and "needs" not in job, "runs on every trigger, not behind the path-filter gate"
+    step = next(s for s in job["steps"] if "tools.code_health check" in s.get("run", ""))
+    assert step["continue-on-error"] is True, "the step carries the behaviour: exit 1 or 2 leaves the job green"
+    assert "--annotate" in step["run"] and "--summary-out" in step["run"] and "$GITHUB_STEP_SUMMARY" in step["run"]
