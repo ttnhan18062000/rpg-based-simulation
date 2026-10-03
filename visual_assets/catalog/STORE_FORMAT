@@ -1,2 +1,2 @@
-store_format_version: 0
-status: skeleton (no store logic or records yet; see agent-working/tickets/todos/visual-asset-foundation/SEQUENCE.md)
+store_format_version: 1
+status: store built through ticket 5 (contracts, intake, human-gated adoption and revocation, sandboxed build, release candidates, verify, gc); the committed catalog still holds zero keys, sources and artifacts; see agent-working/tickets/todos/visual-asset-foundation/SEQUENCE.md

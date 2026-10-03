@@ -19,6 +19,12 @@ nothing beyond what a ticket authorizes. Register state of the unverified items:
   already pinned in `requirements.txt`; `U-06` bwrap confinement proven on the dev machine (spike-level).
 - **Still open:** `U-02` licence/provenance, `U-05` numeric budgets, `U-07`..`U-14`.
 
+## Status update 2026-10-03
+
+The package `visual_assets/drawing/` now also hands a revision off as a candidate (`export_handoff`) and, over the same MCP server, lets an agent submit it for intake and
+read the store (`submit_candidate`, `store_list`, `store_show`: 19 tools in all). Adopting, revoking, building, releasing and deleting stay human decisions with no tool here
+(`docs/assets/store_contract.md`). `U-14` (CI with Aseprite) is still open: the real-Aseprite tests run locally only.
+
 ## Status and decision boundary
 
 This package translates the P2

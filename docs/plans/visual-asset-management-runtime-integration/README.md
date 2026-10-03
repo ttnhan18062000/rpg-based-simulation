@@ -19,6 +19,13 @@ spike) and empty `visual_assets/store/` / `visual_assets/catalog/` skeletons. Th
 first versions of `AM1-W02`, `AM1-W05`, `AM1-W12` and mechanisms for `AM4-W01`..`W10` on synthetic fixtures (children 2-6, not yet
 filed). Nothing here is activated; `AM1-W01`, `W03`, `W04`, `W06`-`W11`, `W13` and `AM-M5`..`M7` remain open.
 
+## Status update 2026-10-03
+
+The foundation's children 1-6 are built (`TCK-20261002-EPIC-VISUAL-ASSET-FOUNDATION`; see `docs/assets/store_contract.md`): typed records and identities
+(`AM1-W02`, `AM1-W05`, `AM1-W12`), intake with an independent validator, human-gated adoption and revocation, a provenance chain the audit can rebuild, sandboxed
+build to pixel-hashed artifacts, immutable release CANDIDATES, `verify`, `gc`, and read-only MCP store tools, all on synthetic fixtures and with
+`REHEARSAL_ONLY` evidence. Nothing is activated. Still open: `AM1-W01` (deployment profile), `W03`, `W04`, `W06`-`W11`, `W13` and `AM-M5`..`M7`.
+
 ## Status and authorization boundary
 
 This package translates the P2
