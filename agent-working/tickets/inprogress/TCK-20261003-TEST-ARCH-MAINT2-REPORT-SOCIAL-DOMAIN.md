@@ -15,7 +15,7 @@ tags: [testing]
 Teach `core_rpg_report.py` the social domain as a reported, non-core signal
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -42,15 +42,20 @@ figures**, and record the social row once at the then-current `origin/main`.
    `marker_check.py` and the `domain` marker vocabulary).
 2. Report social as a **separate, non-exclusive field**: files with the social signal, broken down by their
    existing class, plus the overlap and exclusion counts. The existing `class` values and counts do not move.
-3. Update the Party-row and the §3.1 sentence in `V0_LIMITS` so they say what the code now does.
-4. Tests in `tests/unit/tools/test_core_rpg_report.py` only: signal present/absent, party excluded, memory
-   excluded, parse-error stays `None`, and an invariance test that the existing class counts of a fixture tree
-   are identical with and without a social importer added.
-5. Run the report once at the then-current `origin/main` (full SHA) and record the social row as a dated
+   "Own domain `social`" in the request means a **reported domain signal, not an exclusive `class`** (design
+   C, chosen by test-architecture-reviewer at plan review of `38423a1151a0ee2c9f6d6de0a55ad67406d009d4`).
+3. Bump `SCHEMA_VERSION` 2 to 3 (the JSON gains keys) and say what v3 added in a short note at the top of the
+   module's docstring or schema comment. `impact_report.py` has its own `SCHEMA_VERSION = 1` and is unaffected.
+4. Update the Party-row and the §3.1 sentence in `V0_LIMITS` so they say what the code now does.
+5. Tests in `tests/unit/tools/test_core_rpg_report.py` only: signal present/absent, party excluded, memory
+   excluded, parse-error stays `None`, an assertion for the new social keys, the existing schema test updated
+   so it still checks the v2 renames, and **the invariance test** (the existing class counts of a fixture tree
+   are identical with and without a social importer added).
+6. Run the report once at the then-current `origin/main` (full SHA) and record the social row as a dated
    addendum in `docs/testing/social_test_report_2026-10-03.md` (that doc is the batch report the C2/C3/C4
    figures live in; `docs/testing/core_rpg_test_baseline_2026-09-30.md` is the report's own earlier output doc
    for the core-RPG baseline and is not edited).
-6. `make knowledge-index-update` if any `docs/` file changes.
+7. `make knowledge-index-update` if any `docs/` file changes.
 
 ## Out of Scope
 
