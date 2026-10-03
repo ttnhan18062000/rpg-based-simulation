@@ -39,8 +39,9 @@ def test_committed_registry_loads_with_zero_keys():
 
 def test_committed_catalog_has_no_real_assets():
     # zero keys (above); no sources, artifacts, provenance, candidates or manifests are committed
-    for sub in ("sources", "generated", "provenance", "manifests/candidates", "build-config"):
+    for sub in ("sources", "generated", "provenance", "manifests/candidates"):
         assert [p.name for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep"] == [], sub
+    assert [p.name for p in (config.CATALOG_ROOT / "build-config").iterdir() if p.name != ".gitkeep"] == ["export.toml"]  # rules, not an asset
     assert {p.name for p in (config.CATALOG_ROOT / "fixtures").iterdir()} == {"contracts"}
     assert "fixture" not in [p.name for p in (config.CATALOG_ROOT / "definitions").iterdir()]
 
