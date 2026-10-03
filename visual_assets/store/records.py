@@ -13,6 +13,8 @@ from pathlib import Path
 from visual_assets.store import config
 from visual_assets.store.contracts import AdoptionRecord, RevocationRecord, SourceRecord, parse_record
 from visual_assets.store.contracts.base import StoreRecord
+from visual_assets.store.errors import ContractError, StoreError
+from visual_assets.store.identities import SourceAssetId, SourceRevision, check
 from visual_assets.store.intake import quarantine
 
 REVISION_FILE = re.compile(r"(r[0-9]{4})\.(aseprite|source\.json)")
@@ -28,6 +30,11 @@ def adoption_id_for(intake_id: str, source_asset_id: str, revision: str) -> str:
     return "ad-" + hashlib.sha256("\n".join((intake_id, source_asset_id, revision)).encode()).hexdigest()[:16]
 
 
+def review_copy_path(intake_id: str, root: Path | None = None) -> Path:
+    """The copy of the intake's ReviewRenderCheck, next to the intake result copy (written by `adopt`)."""
+    return intake_dir(root) / f"{intake_id}.review.json"
+
+
 def sources_dir(root: Path | None = None) -> Path:
     return _root(root) / "sources"
 
@@ -38,6 +45,20 @@ def adoptions_dir(root: Path | None = None) -> Path:
 
 def intake_dir(root: Path | None = None) -> Path:
     return _root(root) / "provenance" / "intake"
+
+
+def generated_dir(root: Path | None = None) -> Path:
+    return _root(root) / "generated"
+
+
+def manifests_dir(root: Path | None = None) -> Path:
+    return _root(root) / "manifests" / "candidates"
+
+
+def artifact_paths(artifact_id: str, digest_hex: str, revision: str, root: Path | None = None) -> tuple[Path, Path]:
+    """(PNG, ArtifactRecord) of one artifact: the PNG is named by its pixel hash, the record by pixel hash AND source revision."""
+    directory = generated_dir(root) / artifact_id
+    return directory / f"{digest_hex}.png", directory / f"{digest_hex}.{revision}.artifact.json"
 
 
 def revocations_dir(root: Path | None = None) -> Path:
@@ -132,6 +153,22 @@ def locally_revoked_source_hashes() -> dict[str, str]:
     return out
 
 
+def load_artifact_for(source_asset_id: str, revision: str, scale_class: str, root: Path | None = None):
+    """The ArtifactRecord built from exactly this source revision at this scale class, or None. Raises on two (a non-reproducible build)."""
+    from visual_assets.store.contracts import ArtifactRecord
+
+    directory = generated_dir(root) / f"{source_asset_id}--{scale_class}"
+    if not directory.is_dir() or directory.is_symlink():
+        return None
+    found = sorted(directory.glob(f"*.{revision}.artifact.json"))
+    if not found:
+        return None
+    if len(found) > 1:
+        raise ContractError("ambiguous_artifact", f"{len(found)} artifact records exist for {source_asset_id} {revision}")
+    record, _ = parse_file(ArtifactRecord, found[0])
+    return record, found[0]
+
+
 def all_revocations(root: Path | None = None) -> list[RevocationRecord]:
     """Every revocation record. Raises on an unreadable one: callers decide whether to fail closed."""
     base = revocations_dir(root)
@@ -150,6 +187,29 @@ def revoked_revisions(source_asset_id: str, root: Path | None = None) -> set[str
         if getattr(target, "kind", "") == "source_revision" and target.source_asset_id == source_asset_id:  # type: ignore[union-attr]
             revoked.add(target.source_revision)  # type: ignore[union-attr]
     return revoked
+
+
+def is_eligible(source_asset_id: str, revision: str, root: Path | None = None) -> bool:
+    """THE eligibility test (`revoke.is_build_eligible` is this): an existing, readable, matching source revision with no revocation. Fails closed."""
+    try:
+        check(SourceAssetId, source_asset_id)
+        check(SourceRevision, revision)
+        record = load_source(source_asset_id, revision, root)
+        if record.source_asset_id != source_asset_id or record.source_revision != revision:
+            return False
+        return revision not in revoked_revisions(source_asset_id, root)
+    except (StoreError, OSError):
+        return False
+
+
+def key_holders(visual_key: str, root: Path | None = None) -> list[str]:
+    """Source assets whose latest build-eligible revision was adopted under `visual_key` (an asset holds the key its live revision carries)."""
+    holders = []
+    for sid in list_source_ids(root):
+        eligible = [rev for rev in list_revisions(sid, root) if is_eligible(sid, rev, root)]
+        if eligible and load_adoption(load_source(sid, eligible[-1], root).adoption_id, root).visual_key == visual_key:
+            holders.append(sid)
+    return holders
 
 
 def intake_revoked_locally(intake_id: str) -> bool:

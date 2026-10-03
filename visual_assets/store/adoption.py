@@ -11,20 +11,22 @@ from __future__ import annotations
 
 from pydantic import ValidationError
 
-from visual_assets.store import config, records
+from visual_assets.store import config, records, rendering
 from visual_assets.store.catalog.registry import Registry, load_registry
 from visual_assets.store.catalogwrite import Confirm, publish
 from visual_assets.store.contracts import (
     AdoptionRecord,
     CandidateHandoffPackage,
     ContractError,
+    ReviewRenderCheck,
     SourceRecord,
     canonical_json,
     parse_record,
 )
 from visual_assets.store.contracts.base import Evidence, IntakeVerdict, LicenceState
+from visual_assets.store.contracts.review import RenderVerdict
 from visual_assets.store.contracts.handoff import SourceFormat
-from visual_assets.store.errors import GateError, IdentityError, IntakeError, RegistryError, StageError
+from visual_assets.store.errors import GateError, IdentityError, IntakeError, RegistryError, RenderError, StageError
 from visual_assets.store.identities import IntakeId, SourceAssetId, SourceRevision, UtcTimestamp, check, next_revision
 from visual_assets.store.intake import quarantine, service, validator
 
@@ -70,6 +72,42 @@ def _lineage(source_asset_id: str, new: bool, parent: str | None) -> tuple[str, 
         raise _refuse("revision_limit", f"{source_asset_id} has no revision numbers left") from None
 
 
+def _verify_store_render(
+    intake_id: str, directory, files: quarantine.PackageFiles, staged: dict[str, str], renderer: rendering.RenderTool | None
+) -> bytes:
+    """The store's own render of the staged source must match the producer's preview, re-done NOW.
+
+    A file in the gitignored quarantine can be written by any local process, so a stored check is evidence for the human, never the gate. This
+    re-renders at adoption time and compares again, and also requires the review-time check to describe the very image being adopted (`stale` otherwise).
+    Returns the exact stored check bytes (they are copied into the tracked provenance and hashed into the AdoptionRecord).
+    """
+    if renderer is None:
+        raise _refuse("renderer_unavailable", "adopt needs the store's own render of the source (Aseprite), and none is available on this machine")
+    try:
+        stored_bytes = quarantine.read_one(directory, quarantine.RENDER_CHECK_FILE)
+    except StageError as exc:
+        if exc.code == "missing_file":
+            raise _refuse("review_render_missing", f"{intake_id} has no store-rendered review; run `review` where Aseprite is available") from None
+        raise _refuse("review_render_corrupt", f"the stored render check cannot be read safely ({exc.code})") from None
+    try:
+        stored = parse_record(ReviewRenderCheck, stored_bytes)
+    except ContractError as exc:
+        raise _refuse("review_render_corrupt", f"the stored render check is invalid ({exc.code})") from None
+    if (stored.intake_id, stored.source_hash, stored.producer_preview_hash) != (intake_id, staged["source.aseprite"], staged["preview.png"]):
+        raise _refuse("review_render_stale", "the stored render check describes different bytes than the ones being adopted; review again")
+    try:
+        now = rendering.compare_preview(
+            intake_id=intake_id, source=files.source, preview=files.preview, tool=renderer, created_at=stored.created_at
+        )
+    except RenderError as exc:
+        raise _refuse(exc.code, exc.message) from None
+    if now.check.verdict is RenderVerdict.MISMATCH or stored.verdict is RenderVerdict.MISMATCH:
+        raise _refuse("preview_mismatch", "the store's own render of the source does not match the producer's preview; this candidate cannot be adopted")
+    if now.check.rendered_pixel_hash != stored.rendered_pixel_hash:
+        raise _refuse("review_render_stale", "the image the human reviewed is not the image the source renders to now; review again")
+    return stored_bytes
+
+
 def adopt(
     intake_id: str,
     *,
@@ -84,6 +122,7 @@ def adopt(
     decided_at: str,
     confirm: Confirm,
     registry: Registry | None = None,
+    renderer: rendering.RenderTool | None = None,
 ) -> AdoptionRecord:
     """Adopt `intake_id` as a new revision of `source_asset_id`. Raises `GateError`; writes only on success."""
     _arg(UtcTimestamp, decided_at, "bad_decided_at", "decided_at")
@@ -100,7 +139,7 @@ def adopt(
 
     directory = config.QUARANTINE_ROOT / intake_id
     try:
-        files = quarantine.read_directory(directory, extra_allowed=(quarantine.RESULT_FILE, quarantine.REVOCATION_FILE))
+        files = quarantine.read_directory(directory, extra_allowed=quarantine.EXTRA_FILES)
         result_bytes = quarantine.read_one(directory, quarantine.RESULT_FILE)
     except StageError as exc:
         if exc.code == "oversize_file" and "source.aseprite" in exc.message:
@@ -144,6 +183,12 @@ def adopt(
         raise _refuse("registry_unreadable", str(exc)) from None
     if visual_key not in known:
         raise _refuse("unknown_visual_key", "the visual key is not in the registry (keys are never registered dynamically)")
+    try:
+        holders = [holder for holder in records.key_holders(visual_key) if holder != source_asset_id]
+    except (StageError, ContractError) as exc:
+        raise _refuse("catalog_unreadable", f"existing records could not be read ({exc.code})") from None
+    if holders:
+        raise _refuse("visual_key_taken", f"{holders[0]} already holds this visual key; revoke its revisions first to replace it")
 
     state = getattr(licence_state, "value", licence_state)
     if state != LicenceState.CLEARED.value:
@@ -157,6 +202,8 @@ def adopt(
         revision, parent_revision = _lineage(source_asset_id, new, parent)
     except (StageError, ContractError) as exc:
         raise _refuse("catalog_unreadable", f"existing records could not be read ({exc.code})") from None
+    review_bytes = _verify_store_render(intake_id, directory, files, staged, renderer)
+
     try:
         package = parse_record(CandidateHandoffPackage, files.package)
     except ContractError as exc:
@@ -166,7 +213,8 @@ def adopt(
     try:
         adoption = AdoptionRecord(
             record_type="adoption_record", schema_version=1, adoption_id=ad_id, intake_id=intake_id,
-            intake_hash=validator.file_hash(result_bytes), candidate_id=result.candidate_id,
+            intake_hash=validator.file_hash(result_bytes), review_hash=validator.file_hash(review_bytes),
+            candidate_id=result.candidate_id,
             approver_name=approver, approver_role=approver_role, source_hash=staged["source.aseprite"],
             source_asset_id=source_asset_id, source_revision=revision, parent_revision=parent_revision,
             visual_key=visual_key, licence_state=LicenceState.CLEARED, licence_evidence_ref=licence_evidence_ref,
@@ -187,6 +235,7 @@ def adopt(
     notices = (
         PREVIEW_WARNING,
         f"adopt {intake_id} as {source_asset_id} {revision}" + (f" (parent {parent_revision})" if parent_revision else " (new source asset)"),
+        "the store re-rendered the source just now and its pixels MATCH the producer's preview",
         f"visual key {visual_key}; licence recorded as CLEARED, evidence {licence_evidence_ref!r} (stated by you, not taken from the package)",
         f"approver {approver!r} ({approver_role}); recorded, not authenticated",
     )
@@ -197,6 +246,7 @@ def adopt(
     publish([
         (aseprite_path, files.source),
         (records.intake_dir() / f"{intake_id}.json", result_bytes),
+        (records.review_copy_path(intake_id), review_bytes),
         (records.adoptions_dir() / f"{ad_id}.json", adoption_bytes),
         (record_path, source_bytes),  # last: the SourceRecord is what makes the revision exist
     ])

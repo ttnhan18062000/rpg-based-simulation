@@ -33,6 +33,7 @@ class VisualKeyDefinition(StoreRecord):
     family: Family
     description: BoundedText
     variant_axes: Annotated[tuple[VariantAxis, ...], Field(max_length=MAX_AXES)]
+    optional: bool = False  # a release may omit an optional key; every other registry key needs an artifact
 
     @model_validator(mode="after")
     def _unique_axes(self) -> VisualKeyDefinition:

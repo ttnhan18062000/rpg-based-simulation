@@ -9,7 +9,7 @@ from visual_assets.store.errors import IdentityError
 H = "a" * 64
 
 OPAQUE = [ids.SourceAssetId, ids.ArtifactId, ids.CatalogId, ids.CandidateId, ids.IntakeId, ids.AdoptionId,
-          ids.RevocationId, ids.ReleaseId]
+          ids.RevocationId]
 
 GOOD = {
     ids.VisualKey: ["a.b", "terrain.grass.tile", "a.b.c.d", "fixture.x_1.y"],
@@ -115,3 +115,19 @@ def test_fixture_namespace_helper():
     assert ids.is_fixture_key("fixture.a.b")
     assert not ids.is_fixture_key("fixtures.a.b")
     assert not ids.is_fixture_key("a.fixture.b")
+
+
+def test_release_ids_are_ordered_rc_numbers():
+    for good in ("rc-0001", "rc-0042", "rc-9999"):
+        assert ids.check(ids.ReleaseId, good) == good
+    for bad in ("rc-0000", "RC-0001", "rc-1", "rc-00001", "rc_0001", "rc-000a", "fixture-rc-0001", " rc-0001", "rc-0001\n", "", "0001"):
+        with pytest.raises(IdentityError):
+            ids.check(ids.ReleaseId, bad)
+    assert ids.release_number("rc-0007") == 7
+    assert ids.next_release_id([]) == "rc-0001"
+    assert ids.next_release_id(["rc-0001", "rc-0010", "rc-0002"]) == "rc-0011"  # numeric, not string, order
+    assert ids.next_release_id(["rc-0009"]) == "rc-0010"
+    with pytest.raises(IdentityError):
+        ids.next_release_id(["rc-9999"])
+    with pytest.raises(IdentityError):
+        ids.release_number("nope")

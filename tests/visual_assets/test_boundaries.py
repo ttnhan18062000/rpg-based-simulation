@@ -54,20 +54,30 @@ STORE_ALLOWED: dict[str, set[str]] = {
     "contracts": {"contracts", "identities", "errors", "config"},
     "catalog": {"catalog", "contracts", "identities", "errors", "config"},
     # intake does file I/O (the quarantine) but takes timestamps as parameters; only `cli` reads the clock
-    "intake": {"intake", "contracts", "identities", "errors", "config"},
-    "cli": {"cli", "intake", "adoption", "revoke", "audit", "records", "catalog", "contracts", "identities", "errors", "config"},
+    "intake": {"intake", "pixels", "contracts", "identities", "errors", "config"},
+    # pure, stdlib-only PNG decoding and the pixels-v1 hash; intake and build both use it
+    "pixels": {"pixels", "errors", "config"},
+    # the injected-renderer comparison shared by review and adopt (no Aseprite here: the real renderer lives in build)
+    "rendering": {"rendering", "intake", "pixels", "contracts", "identities", "errors", "config"},
+    "review": {"review", "rendering", "intake", "pixels", "contracts", "identities", "errors", "config"},
+    # build owns the one allowed import from drawing (the shared sandbox)
+    "build": {"build", "records", "revoke", "catalogwrite", "intake", "pixels", "contracts", "identities", "errors", "config"},
+    "cli": {"cli", "intake", "adoption", "revoke", "audit", "records", "review", "rendering", "build", "release", "verify", "gc", "catalog", "contracts", "identities", "errors", "config"},
     "__main__": {"cli"},
     # catalog records and the human-gated writers (adoption, revoke, catalogwrite) are never reachable from the drawing tools
     "records": {"records", "intake", "contracts", "identities", "errors", "config"},
     "catalogwrite": {"catalogwrite", "intake", "errors", "config"},
-    "adoption": {"adoption", "records", "catalogwrite", "catalog", "intake", "contracts", "identities", "errors", "config"},
+    "adoption": {"adoption", "records", "rendering", "catalogwrite", "catalog", "intake", "pixels", "contracts", "identities", "errors", "config"},
     "revoke": {"revoke", "records", "catalogwrite", "intake", "contracts", "identities", "errors", "config"},
     "audit": {"audit", "records", "intake", "contracts", "identities", "errors", "config"},
+    "release": {"release", "records", "catalog", "catalogwrite", "revoke", "pixels", "intake", "contracts", "identities", "errors", "config"},
+    "verify": {"verify", "records", "audit", "build", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
+    "gc": {"gc", "records", "intake", "contracts", "identities", "errors", "config"},
 }
 # store layers that write the tracked catalog (human gates): no drawing module may import them, not even the server
-GATE_LAYERS = {"adoption", "revoke", "catalogwrite"}
+GATE_LAYERS = {"adoption", "revoke", "catalogwrite", "release", "gc"}
 # no I/O, clock or process access in the pure layers; PyYAML only in `catalog`
-PURE_STORE_LAYERS = {"contracts", "identities"}
+PURE_STORE_LAYERS = {"contracts", "identities", "pixels"}
 PURE_FORBIDDEN_IMPORTS = {"os", "pathlib", "io", "time", "datetime", "subprocess", "yaml"}
 YAML_LAYERS = {"catalog"}
 
@@ -318,7 +328,7 @@ def test_planted_store_importing_drawing_is_caught():
     # the sandbox exception for `store.build` is judged on the drawing rule only; `build` has no STORE_ALLOWED
     # row until its ticket adds one (that unknown-layer failure is covered by its own planted test)
     problems = check_source("visual_assets/store/build/exporter.py", "from visual_assets.drawing.backend import sandbox\n")
-    assert not any("store must not import drawing" in p for p in problems), problems
+    assert problems == [], problems  # restored to the strict assertion (planner item 7): the build row exists now
 
 
 def test_every_store_module_has_a_known_layer():
@@ -330,8 +340,8 @@ def test_every_store_module_has_a_known_layer():
 
 
 def test_planted_unknown_store_layer_is_caught():
-    problems = check_source("visual_assets/store/release/manifest.py", "import json\n")
-    assert any("unknown store layer 'release'" in p for p in problems), problems
+    problems = check_source("visual_assets/store/zzz/thing.py", "import json\n")
+    assert any("unknown store layer 'zzz'" in p for p in problems), problems
 
 
 def test_planted_store_layering_violations_are_caught():

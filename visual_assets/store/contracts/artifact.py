@@ -35,6 +35,7 @@ class ArtifactRecord(StoreRecord):
     source_asset_id: SourceAssetId
     source_revision: SourceRevision
     source_hash: FileHash
+    source_record_hash: FileHash  # hash of the exact SourceRecord bytes this was built from: anchors the chain intake -> artifact
     build: BuildFingerprint
     width: Dimension
     height: Dimension

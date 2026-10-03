@@ -103,12 +103,4 @@ def revoke(
 
 def is_build_eligible(source_asset_id: str, revision: str) -> bool:
     """True only for an existing, readable source revision with no revocation. Fails closed on any doubt."""
-    try:
-        check(SourceAssetId, source_asset_id)
-        check(SourceRevision, revision)
-        record = records.load_source(source_asset_id, revision)
-        if record.source_asset_id != source_asset_id or record.source_revision != revision:
-            return False
-        return revision not in records.revoked_revisions(source_asset_id)
-    except (StoreError, OSError):
-        return False
+    return records.is_eligible(source_asset_id, revision)

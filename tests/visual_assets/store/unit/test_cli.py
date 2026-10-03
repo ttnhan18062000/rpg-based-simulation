@@ -18,6 +18,9 @@ REPO = Path(__file__).resolve().parents[4]
 @pytest.fixture(autouse=True)
 def fixed_clock(monkeypatch):
     monkeypatch.setattr(cli, "_now", lambda: "2026-03-03T03:03:03Z")
+    from tests.visual_assets.store.adoption_support import FakeRenderer
+
+    monkeypatch.setattr(cli, "_renderer", lambda: FakeRenderer())  # deterministic: never the real Aseprite
 
 
 @pytest.fixture
@@ -68,19 +71,18 @@ def test_list_show_and_review(good, bad, roots, capsys):
 
 
 def test_unknown_commands_and_missing_arguments_are_usage_errors(capsys):
-    for argv in ([], ["adopt", "x"], ["intake"], ["revoke"], ["gc"], ["build"], ["release"], ["verify"]):
+    for argv in ([], ["adopt", "x"], ["intake"], ["revoke"], ["release"], ["frobnicate"], ["gc", "--bogus"]):
         with pytest.raises(SystemExit) as err:
             cli.main(argv)
         assert err.value.code == 2
 
 
-def test_the_module_runs_as_a_script_and_has_no_gate_commands():
+def test_the_module_runs_as_a_script_and_only_adopt_and_revoke_are_human_only():
     env = {**os.environ, "PYTHONPATH": str(REPO)}  # inherit: user-site packages (pydantic) must stay importable
     run = subprocess.run([sys.executable, "-m", "visual_assets.store", "--help"], capture_output=True, text=True, env=env, cwd=REPO)
     assert run.returncode == 0
     commands = run.stdout.split("positional arguments")[-1].split("options")[0]
-    for command in ("intake", "review", "list", "show", "audit", "adopt", "revoke"):
+    for command in ("intake", "review", "list", "show", "audit", "verify", "build", "release", "gc", "adopt", "revoke"):
         assert command in commands, command
     assert commands.count("HUMAN ONLY") == 2  # adopt and revoke say so in their own help
-    for later in ("build", "release", "gc", "verify"):  # not built yet (ticket 5)
-        assert f"\n    {later}" not in commands, later
+    assert "activate" not in commands and "publish" not in commands  # nothing in this foundation activates anything (D6)

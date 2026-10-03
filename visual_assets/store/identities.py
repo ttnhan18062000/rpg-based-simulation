@@ -16,6 +16,7 @@ from visual_assets.store.errors import IdentityError
 VISUAL_KEY_PATTERN = r"^[a-z][a-z0-9_]{0,31}(\.[a-z][a-z0-9_]{0,31}){1,3}$"
 ID_PATTERN = r"^[a-z0-9][a-z0-9_-]{0,63}$"
 SOURCE_REVISION_PATTERN = r"^r[0-9]{4}$"
+RELEASE_ID_PATTERN = r"^rc-[0-9]{4}$"
 FILE_HASH_PATTERN = r"^sha256:[0-9a-f]{64}$"
 PIXEL_HASH_PATTERN = r"^pixels-v1:[0-9a-f]{64}$"
 UTC_TIMESTAMP_PATTERN = r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
@@ -53,7 +54,17 @@ CandidateId = NewType("CandidateId", _OpaqueId)
 IntakeId = NewType("IntakeId", _OpaqueId)
 AdoptionId = NewType("AdoptionId", _OpaqueId)
 RevocationId = NewType("RevocationId", _OpaqueId)
-ReleaseId = NewType("ReleaseId", _OpaqueId)
+
+def _check_release(value: str) -> str:
+    if value == "rc-0000":
+        raise ValueError("rc-0000 is not a valid release id")
+    return value
+
+
+# Release ids are ORDERED (rc-0001, rc-0002, ...) so "greater than every existing one" compares numbers, not opaque strings.
+ReleaseId = NewType(
+    "ReleaseId", Annotated[str, StringConstraints(pattern=RELEASE_ID_PATTERN), AfterValidator(_check_release)]
+)
 
 SourceRevision = Annotated[
     str, StringConstraints(pattern=SOURCE_REVISION_PATTERN), AfterValidator(_check_revision)
@@ -83,6 +94,19 @@ def next_revision(revision: str) -> str:
     if number >= _MAX_REVISION:
         raise IdentityError("source revision space exhausted (r9999)")
     return f"r{number + 1:04d}"
+
+
+def release_number(release_id: str) -> int:
+    check(ReleaseId, release_id)
+    return int(release_id[3:])
+
+
+def next_release_id(existing: list[str]) -> str:
+    """The next ordered release id after every id in `existing` (rc-0001 when there is none)."""
+    number = max((release_number(r) for r in existing), default=0) + 1
+    if number > 9999:
+        raise IdentityError("release id space exhausted (rc-9999)")
+    return f"rc-{number:04d}"
 
 
 def is_fixture_key(key: str) -> bool:

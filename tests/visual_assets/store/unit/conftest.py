@@ -14,6 +14,7 @@ FIXTURES = Path(__file__).resolve().parents[4] / "visual_assets" / "catalog" / "
 RECORD_FILES = {
     "CandidateHandoffPackage": "candidate_handoff_package.json",
     "IntakeResult": "intake_result.json",
+    "ReviewRenderCheck": "review_render_check.json",
     "AdoptionRecord": "adoption_record.json",
     "RevocationRecord": "revocation_record.json",
     "SourceRecord": "source_record.json",

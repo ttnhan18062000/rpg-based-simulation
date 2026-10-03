@@ -161,3 +161,89 @@ def bad_files(**source_kw) -> tuple[bytes, bytes, bytes]:
     preview = png(source_kw.get("width", 16) * 8, source_kw.get("height", 16) * 8)
     package = package_bytes(source, preview, candidate_id="cand-badbadbadbad0001")
     return package, source[:4] + b"\x00\x00" + source[6:], preview
+
+
+# --------------------------------------------------------------------------- a real PNG encoder (all filters, colour types, chunks)
+
+Pixel = tuple[int, int, int, int]
+
+
+def png_chunk(kind: bytes, body: bytes) -> bytes:
+    return struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body) & 0xFFFFFFFF)
+
+
+def _paeth(a: int, b: int, c: int) -> int:
+    p = a + b - c
+    pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
+    return a if (pa <= pb and pa <= pc) else (b if pb <= pc else c)
+
+
+def filter_rows(samples: bytes, stride: int, height: int, bpp: int, types: list[int]) -> bytes:
+    """Apply PNG filter `types[row % len(types)]` to each row of `samples` (the inverse of what the reader undoes)."""
+    out = bytearray()
+    for row in range(height):
+        ftype = types[row % len(types)]
+        line = samples[row * stride : (row + 1) * stride]
+        prev = samples[(row - 1) * stride : row * stride] if row else bytes(stride)
+        out.append(ftype)
+        for i in range(stride):
+            a = line[i - bpp] if i >= bpp else 0
+            b_ = prev[i]
+            c = prev[i - bpp] if i >= bpp else 0
+            predicted = (0, a, b_, (a + b_) >> 1, _paeth(a, b_, c))[ftype]
+            out.append((line[i] - predicted) & 255)
+    return bytes(out)
+
+
+def png_encode(
+    width: int,
+    height: int,
+    pixels: list[Pixel],
+    *,
+    ctype: int = 6,
+    filters: list[int] | None = None,
+    level: int = 9,
+    extra: list[tuple[bytes, bytes]] | None = None,
+    idat_split: int = 0,
+) -> bytes:
+    """Encode `pixels` (RGBA tuples, row-major) as a PNG of colour type 6 (RGBA), 2 (RGB), 0 (grey), 4 (grey+alpha) or 3 (indexed)."""
+    assert len(pixels) == width * height
+    palette: list[Pixel] = []
+    if ctype == 6:
+        samples, bpp = b"".join(bytes(p) for p in pixels), 4
+    elif ctype == 2:
+        samples, bpp = b"".join(bytes(p[:3]) for p in pixels), 3
+    elif ctype == 0:
+        samples, bpp = bytes(p[0] for p in pixels), 1
+    elif ctype == 4:
+        samples, bpp = b"".join(bytes((p[0], p[3])) for p in pixels), 2
+    else:
+        palette = sorted(set(pixels))
+        samples, bpp = bytes(palette.index(p) for p in pixels), 1
+    raw = filter_rows(samples, width * bpp, height, bpp, filters or [0])
+    chunks = [png_chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, ctype, 0, 0, 0))]
+    chunks += [png_chunk(k, v) for k, v in (extra or []) if k not in (b"IDAT",)]
+    if ctype == 3:
+        chunks.append(png_chunk(b"PLTE", b"".join(bytes(p[:3]) for p in palette)))
+        chunks.append(png_chunk(b"tRNS", bytes(p[3] for p in palette)))
+    data = zlib.compress(raw, level)
+    if idat_split:
+        chunks += [png_chunk(b"IDAT", data[i : i + idat_split]) for i in range(0, len(data), idat_split)]
+    else:
+        chunks.append(png_chunk(b"IDAT", data))
+    chunks.append(png_chunk(b"IEND", b""))
+    return b"\x89PNG\r\n\x1a\n" + b"".join(chunks)
+
+
+def sample_pixels(width: int, height: int, *, transparent_rgb: tuple[int, int, int] = (0, 0, 0)) -> list[Pixel]:
+    """A deterministic image with opaque, semi-transparent and fully transparent pixels."""
+    out: list[Pixel] = []
+    for y in range(height):
+        for x in range(width):
+            if (x + y) % 5 == 0:
+                out.append((*transparent_rgb, 0))  # fully transparent: the RGB under it must not matter
+            elif (x * y) % 7 == 0:
+                out.append(((x * 31) % 256, (y * 17) % 256, (x * y) % 256, 128))
+            else:
+                out.append(((x * 29 + 3) % 256, (y * 43 + 5) % 256, ((x + y) * 11) % 256, 255))
+    return out

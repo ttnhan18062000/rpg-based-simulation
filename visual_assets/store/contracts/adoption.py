@@ -41,6 +41,7 @@ class AdoptionRecord(StoreRecord):
     adoption_id: AdoptionId
     intake_id: IntakeId
     intake_hash: FileHash  # hash of the exact IntakeResult bytes copied to provenance/intake/
+    review_hash: FileHash  # hash of the exact ReviewRenderCheck bytes copied next to it: the store's own render matched the preview
     candidate_id: CandidateId
     approver_name: PersonText
     approver_role: PersonText

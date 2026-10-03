@@ -14,7 +14,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from visual_assets.store import config, records
-from visual_assets.store.contracts import AdoptionRecord, IntakeResult, RevocationRecord, SourceRecord, parse_record
+from visual_assets.store.contracts import AdoptionRecord, IntakeResult, RevocationRecord, ReviewRenderCheck, SourceRecord, parse_record
+from visual_assets.store.contracts.review import RenderVerdict
 from visual_assets.store.contracts.base import IntakeVerdict
 from visual_assets.store.errors import ContractError, StageError
 from visual_assets.store.identities import revision_number
@@ -133,6 +134,18 @@ def _audit_source(root: Path, sid: str, report: AuditReport, adoptions: set[str]
                                             "the intake result bytes differ from the hash the adoption record holds"))
         _check_intake(root, adoption, result, intake_path, report)
 
+        review_path = records.review_copy_path(adoption.intake_id, root)
+        review, review_bytes = _load(ReviewRenderCheck, review_path, root, report, "REVIEW_MISSING", "REVIEW_UNREADABLE")
+        if review is None:
+            continue
+        if file_hash(review_bytes) != adoption.review_hash:
+            report.breaks.append(AuditBreak("REVIEW_HASH_MISMATCH", _rel(root, review_path),
+                                            "the render check bytes differ from the hash the adoption record holds"))
+        if (review.intake_id != adoption.intake_id or review.source_hash != adoption.source_hash
+                or review.verdict is not RenderVerdict.MATCH):
+            report.breaks.append(AuditBreak("REVIEW_MISMATCH", _rel(root, review_path),
+                                            "the render check does not describe the adopted source or did not match the preview"))
+
 
 def _read_source_bytes(path: Path, root: Path, report: AuditReport) -> bytes | None:
     if not path.exists() and not path.is_symlink():
@@ -196,7 +209,7 @@ def _audit_unreferenced(root: Path, report: AuditReport, adoptions: set[str], in
         for path in sorted(base.iterdir()):
             if path.name in _IGNORED or path.name.startswith(TEMP):
                 continue
-            if path.suffix != ".json" or path.stem not in referenced:
+            if path.suffix != ".json" or path.name.split(".")[0] not in referenced:
                 report.breaks.append(AuditBreak("ORPHAN_FILE", _rel(root, path), f"an {label} no SourceRecord refers to"))
 
 

@@ -11,7 +11,7 @@ import pytest
 from tests.visual_assets.store import builders as b
 from visual_assets.store import config
 from visual_assets.store.contracts.intake import IntakeFindingCode as Code
-from visual_assets.store.intake import aseprite, png
+from visual_assets.store.intake import aseprite
 from visual_assets.store.intake.validator import UNSUPPORTED_LIMITATIONS, VALIDATOR_VERSION, file_hash, validate
 
 
@@ -124,10 +124,13 @@ def test_source_hash_mismatch_is_its_own_code():
 
 def test_preview_hash_mismatch_is_its_own_code():
     package, source, preview = b.good_files()
-    other = b.png(16 * 8, 16 * 8)[:-12] + b.png(16 * 8, 16 * 8)[-12:]
+    # a DIFFERENT but perfectly valid PNG of the same size: only the claimed hash is wrong
+    other = b.png_encode(128, 128, b.sample_pixels(128, 128))
+    assert other != preview and only(package, source, other) == Code.PREVIEW_HASH_MISMATCH
+    # a flipped byte inside the file is a different defect: the chunk checksum no longer matches (and the hash differs too)
     flipped = bytearray(preview)
-    flipped[40] ^= 0x01  # inside IDAT; header still valid
-    assert only(package, source, bytes(flipped)) == Code.PREVIEW_HASH_MISMATCH
+    flipped[40] ^= 0x01
+    assert set(codes(package, source, bytes(flipped))) == {Code.PREVIEW_HASH_MISMATCH, Code.PNG_BAD_CRC}
 
 
 def test_dimensions_over_the_bound_are_a_finding(monkeypatch):
@@ -296,31 +299,47 @@ def test_findings_never_echo_producer_text():
 def test_preview_checks():
     source, preview = base()
     package = b.package_bytes(source, preview)
-    # not a PNG at all
-    junk = b"GIF89a" + b"\x00" * 40
-    p_junk = json.dumps({**json.loads(package), "preview_hash": file_hash(junk)}).encode()
-    assert only(p_junk, source, junk) == Code.PNG_SIGNATURE_INVALID
-    # damaged IHDR checksum
+
+    def only_preview(blob: bytes, expected: Code):
+        pk = json.dumps({**json.loads(package), "preview_hash": file_hash(blob)}).encode()
+        assert only(pk, source, blob) == expected
+
+    only_preview(b"GIF89a" + b"\x00" * 40, Code.PNG_SIGNATURE_INVALID)
     damaged = bytearray(preview)
-    damaged[29] ^= 0xFF
-    p_dam = json.dumps({**json.loads(package), "preview_hash": file_hash(bytes(damaged))}).encode()
-    assert only(p_dam, source, bytes(damaged)) == Code.PNG_MALFORMED
+    damaged[29] ^= 0xFF  # the IHDR checksum
+    only_preview(bytes(damaged), Code.PNG_BAD_CRC)
+    only_preview(preview + b"\x00", Code.PNG_TRAILING_DATA)
+    only_preview(preview[:-20], Code.PNG_TRUNCATED)
+    only_preview(b.png_encode(128, 128, b.sample_pixels(128, 128), ctype=6)[:0] + _png16(128, 128), Code.PNG_UNSUPPORTED)
     # a 3x-wide preview of a 16x16 source is not a whole-number scale in both axes
     odd = b.png(48, 40)
-    p_odd = json.dumps({**json.loads(package), "preview_hash": file_hash(odd)}).encode()
-    assert only(p_odd, source, odd) == Code.PREVIEW_DIMENSION_MISMATCH
-    # 1x and 16x previews are fine
+    only_preview(odd, Code.PREVIEW_DIMENSION_MISMATCH)
+    # 1x and 16x previews are fine, whatever filters the encoder chose
     for scale in (1, 16):
         ok = b.png(16 * scale, 16 * scale)
         pk = json.dumps({**json.loads(package), "preview_hash": file_hash(ok)}).encode()
         assert validate(pk, source, ok).findings == (), scale
+    paeth = b.png_encode(128, 128, b.sample_pixels(128, 128), filters=[0, 1, 2, 3, 4])
+    pk = json.dumps({**json.loads(package), "preview_hash": file_hash(paeth)}).encode()
+    assert validate(pk, source, paeth).findings == ()
 
 
-def test_png_reader_edges():
-    for blob in (b"", b"\x89PNG\r\n\x1a\n", b"\x89PNG\r\n\x1a\n" + b"\x00" * 20):
-        with pytest.raises(png.PngError):
-            png.read_header(blob)
-    assert png.read_header(b.png(3, 5)) == png.PngHeader(3, 5)
+def _png16(width: int, height: int) -> bytes:
+    """A syntactically valid 16-bit RGBA PNG (a kind the store does not accept)."""
+    import struct
+    import zlib
+
+    raw = b"".join(b"\x00" + b"\x00" * (width * 8) for _ in range(height))
+    return b"\x89PNG\r\n\x1a\n" + b.png_chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 16, 6, 0, 0, 0)) \
+        + b.png_chunk(b"IDAT", zlib.compress(raw)) + b.png_chunk(b"IEND", b"")
+
+
+def test_every_preview_defect_gets_its_own_distinct_code():
+    from visual_assets.store.contracts.intake import IntakeFindingCode
+
+    for name in ("PNG_SIGNATURE_INVALID", "PNG_BAD_CRC", "PNG_UNSUPPORTED", "PNG_TRUNCATED", "PNG_TOO_LARGE_DECODED",
+                 "PNG_TRAILING_DATA", "PNG_MALFORMED", "PREVIEW_OUT_OF_BOUNDS", "PREVIEW_DIMENSION_MISMATCH"):
+        assert IntakeFindingCode[name].value == name
 
 
 def test_every_unsupported_limitation_token_is_enforced():

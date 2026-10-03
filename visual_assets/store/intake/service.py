@@ -11,6 +11,8 @@ from __future__ import annotations
 import hashlib
 import os
 import re
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 
 from visual_assets.store import config
@@ -141,13 +143,29 @@ def list_results() -> tuple[list[IntakeResult], list[str]]:
     return results, problems
 
 
-def _summary(package: CandidateHandoffPackage, result: IntakeResult) -> bytes:
+@dataclass(frozen=True)
+class ReviewMaterial:
+    """A PASSED, unrevoked, still-intact intake, ready to be shown to a human (everything verified against the recorded hashes)."""
+
+    intake_id: str
+    result: IntakeResult
+    package: CandidateHandoffPackage
+    files: quarantine.PackageFiles
+
+
+UNVERIFIED_NOTE = (
+    "The preview is producer-supplied and UNVERIFIED: nothing yet proves it depicts the source "
+    "(the store has not rendered the source itself)."
+)
+
+
+def _summary(package: CandidateHandoffPackage, result: IntakeResult, notes: Sequence[str]) -> bytes:
     def shown(value: object) -> str:
         return str(getattr(value, "value", value))
 
     lines = [
+        *notes,
         "REVIEW ONLY. This candidate is NOT adopted, published or active.",
-        "The preview is producer-supplied and UNVERIFIED: nothing yet proves it depicts the source (known gap).",
         f"intake_id: {result.intake_id}",
         f"candidate_id: {package.candidate_id}",
         f"validator: {result.validator_version}, passed at {result.created_at}",
@@ -172,45 +190,56 @@ def _summary(package: CandidateHandoffPackage, result: IntakeResult) -> bytes:
     return "\n".join(lines).encode("utf-8")
 
 
-def _review_matches(target: Path, preview: bytes, summary: bytes) -> bool:
+def _review_matches(target: Path, expected: Mapping[str, bytes]) -> bool:
     try:
-        return (
-            not target.is_symlink()
-            and quarantine.read_one_any(target, PREVIEW_COPY, config.MAX_PREVIEW_BYTES) == preview
-            and quarantine.read_one_any(target, SUMMARY_FILE, config.MAX_RECORD_BYTES) == summary
+        return not target.is_symlink() and sorted(p.name for p in target.iterdir()) == sorted(expected) and all(
+            quarantine.read_one_any(target, name, config.MAX_PREVIEW_BYTES) == data for name, data in expected.items()
         )
-    except StageError:
+    except (StageError, OSError):
         return False
 
 
-def review(intake_id: str) -> Path:
-    """Export a PASSED, still-intact candidate to `config.REVIEW_ROOT/<intake_id>/`. Needs no Aseprite."""
+def prepare_review(intake_id: str) -> ReviewMaterial:
+    """Verify an intake can be reviewed and return what a human is shown. Raises `IntakeError` / `StageError` otherwise."""
     directory = _stage_directory(intake_id)
     result = _load_result(directory)
     if result.verdict is not IntakeVerdict.PASSED:
         raise IntakeError("not_passed", f"{intake_id} is {result.verdict.value}; only a PASSED intake can be reviewed")
     if os.path.lexists(directory / quarantine.REVOCATION_FILE):
         raise IntakeError("intake_revoked", f"{intake_id} was revoked; it cannot be reviewed")
-    files = quarantine.read_directory(directory, extra_allowed=(quarantine.RESULT_FILE, quarantine.REVOCATION_FILE))
+    files = quarantine.read_directory(directory, extra_allowed=quarantine.EXTRA_FILES)
     if _staged_files(files) != result.staged_files or validator.file_hash(files.package) != result.package_hash:
         raise IntakeError("staged_bytes_changed", f"{intake_id}: staged bytes no longer match the recorded hashes")
     try:
         package = parse_record(CandidateHandoffPackage, files.package)
     except ContractError as exc:
         raise IntakeError("corrupt_result", f"{intake_id}: staged package.json no longer parses ({exc.code})") from None
+    return ReviewMaterial(intake_id, result, package, files)
 
-    summary = _summary(package, result)
+
+def export_review(material: ReviewMaterial, *, notes: Sequence[str] = (UNVERIFIED_NOTE,), extra_files: Mapping[str, bytes] | None = None) -> Path:
+    """Write the review directory (the producer's preview, a summary, any extra files) or confirm an identical one exists."""
+    expected = {
+        PREVIEW_COPY: material.files.preview,
+        SUMMARY_FILE: _summary(material.package, material.result, notes),
+        **(extra_files or {}),
+    }
     root = quarantine.ensure_root(config.REVIEW_ROOT)
-    target = root / intake_id
+    target = root / material.intake_id
     if target.exists() or target.is_symlink():
-        if not _review_matches(target, files.preview, summary):
+        if not _review_matches(target, expected):
             raise IntakeError("review_exists_differs", f"{target.name} already exists in the review area with different content")
         return target
     target.mkdir(mode=0o700)
     try:
-        quarantine.write_new(target / PREVIEW_COPY, files.preview)
-        quarantine.write_new(target / SUMMARY_FILE, summary)
+        for name, data in expected.items():
+            quarantine.write_new(target / name, data)
     except BaseException:
         quarantine.remove_partial(target)
         raise
     return target
+
+
+def review(intake_id: str) -> Path:
+    """Export a PASSED, still-intact candidate to `config.REVIEW_ROOT/<intake_id>/` (producer preview, UNVERIFIED). Needs no Aseprite."""
+    return export_review(prepare_review(intake_id))

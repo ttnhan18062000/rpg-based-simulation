@@ -114,10 +114,10 @@ def test_a_target_outside_the_catalog_is_refused(env):
     assert err.value.code == "outside_catalog" and not (env.tmp / "elsewhere.json").exists()
 
 
-def test_adopt_rolls_back_at_every_position_of_its_four_writes(env, monkeypatch):
+def test_adopt_rolls_back_at_every_position_of_its_five_writes(env, monkeypatch):
     result = s.make_intake(env.tmp)
     real = os.link
-    for position in range(4):
+    for position in range(5):
         calls = {"n": 0}
 
         def flaky(src, dst, _p=position, _c=calls):
@@ -155,6 +155,7 @@ def test_adopt_publishes_the_source_record_last(env, monkeypatch):
     assert order == [
         "sources/hero/r0001.aseprite",
         f"provenance/intake/{result.intake_id}.json",
+        f"provenance/intake/{result.intake_id}.review.json",
         f"provenance/adoptions/{adoption.adoption_id}.json",
         "sources/hero/r0001.source.json",
     ]

@@ -21,8 +21,9 @@ from visual_assets.store.contracts.handoff import (
 )
 from visual_assets.store.contracts.intake import MAX_FINDINGS, IntakeFinding
 from visual_assets.store.contracts.intake import IntakeFindingCode as Code
-from visual_assets.store.errors import ContractError
-from visual_assets.store.intake import aseprite, png
+from visual_assets.store import pixels
+from visual_assets.store.errors import ContractError, PngDecodeError
+from visual_assets.store.intake import aseprite
 
 VALIDATOR_VERSION = "intake-validator-1"
 
@@ -48,6 +49,16 @@ _PARSE_CODES = {
     "missing_field": Code.PACKAGE_MISSING_FIELD,
     "wrong_record_type": Code.PACKAGE_WRONG_RECORD_TYPE,
     "unsupported_schema_version": Code.PACKAGE_UNSUPPORTED_VERSION,
+}
+_PNG_CODES = {
+    "signature": Code.PNG_SIGNATURE_INVALID,
+    "crc": Code.PNG_BAD_CRC,
+    "unsupported": Code.PNG_UNSUPPORTED,
+    "dimensions": Code.PREVIEW_OUT_OF_BOUNDS,
+    "truncated": Code.PNG_TRUNCATED,
+    "too_large": Code.PNG_TOO_LARGE_DECODED,
+    "trailing_data": Code.PNG_TRAILING_DATA,
+    "malformed": Code.PNG_MALFORMED,
 }
 _SAFE_FIELD = re.compile(r"[a-z][a-z0-9_]{0,40}(\.[a-z0-9_]{1,40}){0,3}")
 
@@ -111,14 +122,11 @@ def _check_source(
 def _check_preview(
     package: CandidateHandoffPackage | None, source: bytes, preview: bytes
 ) -> list[IntakeFinding]:
-    try:
-        header = png.read_header(preview)
-    except png.PngError as exc:
-        code = Code.PNG_SIGNATURE_INVALID if exc.signature else Code.PNG_MALFORMED
-        return [_finding(code, str(exc))]
+    try:  # the whole preview is decoded with the bounded reader: structure, CRCs, supported kind, sizes, no trailing data
+        header = pixels.decode_png(preview, max_dim=config.MAX_PREVIEW_DIM)
+    except PngDecodeError as exc:
+        return [_finding(_PNG_CODES.get(exc.code, Code.PNG_MALFORMED), f"preview rejected ({exc.code}): {exc.message}")]
     out: list[IntakeFinding] = []
-    if header.width > config.MAX_PREVIEW_DIM or header.height > config.MAX_PREVIEW_DIM:
-        out.append(_finding(Code.PREVIEW_OUT_OF_BOUNDS, f"preview is {header.width}x{header.height}; limit is {config.MAX_PREVIEW_DIM}"))
     facts, _ = aseprite.read_facts(source)
     if facts is not None and facts.width >= 1 and facts.height >= 1:
         scale = header.width // facts.width

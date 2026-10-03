@@ -7,12 +7,14 @@ from visual_assets.store.contracts.definitions import VisualKeyRegistry
 from visual_assets.store.contracts.handoff import CandidateHandoffPackage
 from visual_assets.store.contracts.intake import IntakeResult
 from visual_assets.store.contracts.release import ReleaseCandidateManifest
+from visual_assets.store.contracts.review import ReviewRenderCheck
 from visual_assets.store.contracts.source import SourceRecord
 from visual_assets.store.errors import ContractError
 
 RECORD_TYPES = (
     CandidateHandoffPackage,
     IntakeResult,
+    ReviewRenderCheck,
     AdoptionRecord,
     RevocationRecord,
     SourceRecord,

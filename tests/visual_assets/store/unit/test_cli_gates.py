@@ -18,6 +18,7 @@ ARGS = ["--visual-key", s.KEY, "--approver", "Pat Approver", "--approver-role", 
 @pytest.fixture(autouse=True)
 def clock(monkeypatch):
     monkeypatch.setattr(cli, "_now", lambda: s.NOW)
+    monkeypatch.setattr(cli, "_renderer", lambda: s.FakeRenderer())  # deterministic: never the real Aseprite
     # the fixture registry stands in for the committed (empty) one so a synthetic key can be adopted
     monkeypatch.setattr("visual_assets.store.adoption.load_registry", lambda *a, **k: s.registry())
 

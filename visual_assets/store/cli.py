@@ -2,7 +2,7 @@
 
 Read-only or local: `intake <dir>`, `review <id>`, `list`, `show <id>`, `audit`. HUMAN-GATED (never run by an agent): `adopt` and
 `revoke`, which write the tracked catalog, refuse unless stdin is a terminal, and make the operator type the id after reading what
-they are about to decide. Exit codes: 0 success (a PASSED intake, a clean audit), 1 a QUARANTINED intake or an audit with breaks,
+they are about to decide. Exit codes: 0 success (a PASSED intake, a clean audit, a review whose preview matches or could not be checked here), 1 a QUARANTINED intake, a preview that does NOT match the source, or an audit with breaks,
 2 a refusal or error. This is the only module that reads the clock; library code takes timestamps as parameters.
 """
 
@@ -13,15 +13,23 @@ import sys
 from collections.abc import Sequence
 from datetime import datetime, timezone
 
-from visual_assets.store import adoption, audit, records, revoke
+from visual_assets.store import adoption, audit, gc, records, release, revoke, verify
+from visual_assets.store import review as review_api
+from visual_assets.store.build import exporter
 from visual_assets.store import intake as intake_api
 from visual_assets.store.contracts.base import IntakeVerdict
+from visual_assets.store.contracts.review import RenderVerdict
 from visual_assets.store.contracts.intake import IntakeResult
 from visual_assets.store.errors import GateError, StageError, StoreError
 
 
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _renderer():
+    """The real sandboxed Aseprite renderer when this machine has Aseprite and bwrap, else None (then nothing is verified and `adopt` refuses)."""
+    return exporter.default_renderer()
 
 
 def _stdin_is_tty() -> bool:
@@ -59,6 +67,14 @@ def _parser() -> argparse.ArgumentParser:
     sub.add_parser("list", help="list quarantined intakes and adopted sources")
     sub.add_parser("show", help="print an intake (in-...), an adoption (ad-...) or a source revision (<id>/<rNNNN>)").add_argument("id")
     sub.add_parser("audit", help="rebuild and check the catalog's provenance chain (read-only)")
+    sub.add_parser("verify", help="whole-store integrity check in pure Python (read-only); exits non-zero on any blocking finding")
+    build = sub.add_parser("build", help="export adopted sources to PNG artifacts (needs Aseprite and bwrap)")
+    build.add_argument("source_asset_id", nargs="?")
+    rel = sub.add_parser("release", help="assemble an immutable release CANDIDATE manifest (there is no active release)")
+    rel.add_argument("--catalog-id", required=True)
+    rel.add_argument("--release-id", help="rc-NNNN; default is the next one")
+    collect = sub.add_parser("gc", help="list files nothing needs; deletes only with --delete")
+    collect.add_argument("--delete", action="store_true")
 
     adopt = sub.add_parser("adopt", help="HUMAN ONLY: adopt a PASSED intake as a new source revision")
     adopt.add_argument("intake_id")
@@ -110,8 +126,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             _print_result(result)
             return 0 if result.verdict is IntakeVerdict.PASSED else 1
         if args.command == "review":
-            print(intake_api.review(args.intake_id))
-            return 0
+            outcome = review_api.review(args.intake_id, created_at=_now(), renderer=_renderer())
+            print(outcome.directory)
+            print(outcome.note)
+            return 1 if outcome.verdict is RenderVerdict.MISMATCH else 0
         if args.command == "show":
             return _show(args.id)
         if args.command == "audit":
@@ -122,12 +140,31 @@ def main(argv: Sequence[str] | None = None) -> int:
                 print(f"note: {note}")
             print("chain ok" if report.ok else f"{len(report.breaks)} break(s)")
             return 0 if report.ok else 1
+        if args.command == "verify":
+            findings = verify.verify()
+            for f in findings:
+                print(f"{'FINDING' if f.blocking else 'note'} {f.code}  {f.path}  {f.detail}")
+            blocking = [f for f in findings if f.blocking]
+            print("store ok" if not blocking else f"{len(blocking)} blocking finding(s)")
+            return 1 if blocking else 0
+        if args.command == "build":
+            for item in exporter.build(args.source_asset_id, renderer=_renderer()):
+                print(f"{item.artifact_id} {item.source_revision} {item.pixel_hash} {'built' if item.created else 'unchanged'}")
+            return 0
+        if args.command == "release":
+            manifest = release.assemble_release(args.catalog_id, release_id=args.release_id)
+            print(f"{manifest.catalog_id}/{manifest.release_id}: {len(manifest.entries)} entries (candidate only, nothing is active)")
+            return 0
+        if args.command == "gc":
+            for item in gc.gc(delete=args.delete):
+                print(f"{'deleted' if args.delete else 'would delete'} {item.kind} {item.path.name}  ({item.reason})")
+            return 0
         if args.command == "adopt":
             _require_terminal("adopt")
             record = adoption.adopt(
                 args.intake_id, visual_key=args.visual_key, approver=args.approver, approver_role=args.approver_role,
                 licence_state=args.licence, licence_evidence_ref=args.licence_evidence, source_asset_id=args.source_asset_id,
-                new=args.new, parent=args.parent, decided_at=_now(), confirm=_prompt,
+                new=args.new, parent=args.parent, decided_at=_now(), confirm=_prompt, renderer=_renderer(),
             )
             print(f"adopted {record.intake_id} as {record.source_asset_id} {record.source_revision} ({record.adoption_id})")
             return 0
@@ -149,6 +186,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             for rev in records.list_revisions(sid):
                 print(f"source {sid}/{rev}  eligible {revoke.is_build_eligible(sid, rev)}")
         return 0
-    except (StoreError, StageError) as exc:
+    except StoreError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

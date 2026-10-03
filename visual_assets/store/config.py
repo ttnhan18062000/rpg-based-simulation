@@ -23,3 +23,4 @@ MAX_SOURCE_BYTES = 100 * 1024  # provisional (U-05); the D2 (no Git LFS) reversa
 MAX_DIM = 128  # provisional (U-05)
 MAX_PREVIEW_BYTES = 512 * 1024  # provisional (U-05)
 MAX_PREVIEW_DIM = 2048  # provisional (U-05); 128 px at the largest drawing-tool scale (16x)
+MAX_DECODED_BYTES = 24 * 1024 * 1024  # provisional (U-05); decompressed PNG data above this is refused before it is inflated

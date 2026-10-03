@@ -39,6 +39,34 @@ class IntakeError(StoreError):
         self.message = message
 
 
+class PngDecodeError(StoreError):
+    """A PNG was refused by the bounded reader. `code` is one of: signature, crc, unsupported, dimensions, truncated, too_large,
+    trailing_data, malformed."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+
+
+class RenderError(StoreError):
+    """The store could not render a source with Aseprite (unavailable, failed, unsupported scale). `code` is stable."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+
+
+class BuildError(StoreError):
+    """`build` or `release` refused or failed. Nothing was written. `code` is stable."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+
+
 class GateError(StoreError):
     """A human-gated command (`adopt`, `revoke`) refused. Nothing was written. `code` is stable."""
 

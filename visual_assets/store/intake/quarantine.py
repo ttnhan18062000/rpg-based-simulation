@@ -24,6 +24,8 @@ SOURCE_FILE = "source.aseprite"
 PREVIEW_FILE = "preview.png"
 RESULT_FILE = "intake_result.json"
 REVOCATION_FILE = "revocation.json"  # local revocation of an un-adopted intake (written by `revoke`)
+RENDER_CHECK_FILE = "review_render.json"  # the store's own render compared with the producer preview (written by `review`)
+EXTRA_FILES = (RESULT_FILE, REVOCATION_FILE, RENDER_CHECK_FILE)  # what a quarantine directory may hold beside the three staged files
 STAGED_NAMES = (PACKAGE_FILE, SOURCE_FILE, PREVIEW_FILE)
 
 _DIR_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
@@ -45,6 +47,7 @@ def _limit(name: str) -> int:
         PREVIEW_FILE: config.MAX_PREVIEW_BYTES,
         RESULT_FILE: config.MAX_RECORD_BYTES,
         REVOCATION_FILE: config.MAX_RECORD_BYTES,
+        RENDER_CHECK_FILE: config.MAX_RECORD_BYTES,
     }[name]
 
 

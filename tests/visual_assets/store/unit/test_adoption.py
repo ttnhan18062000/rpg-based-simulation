@@ -10,7 +10,7 @@ from tests.visual_assets.store import adoption_support as s
 from tests.visual_assets.store.unit.conftest import snapshot
 from visual_assets.store import config, records
 from visual_assets.store.adoption import PREVIEW_WARNING
-from visual_assets.store.contracts import AdoptionRecord, IntakeResult, SourceRecord, parse_record
+from visual_assets.store.contracts import AdoptionRecord, IntakeResult, ReviewRenderCheck, SourceRecord, parse_record
 from visual_assets.store.errors import GateError
 from visual_assets.store.intake.validator import file_hash
 
@@ -26,10 +26,11 @@ def paths(env, sid="hero", rev="r0001", ad=None, intake_id=None):
         "record": env.catalog / "sources" / sid / f"{rev}.source.json",
         "adoption": env.catalog / "provenance" / "adoptions" / f"{ad}.json",
         "intake": env.catalog / "provenance" / "intake" / f"{intake_id}.json",
+        "review": env.catalog / "provenance" / "intake" / f"{intake_id}.review.json",
     }
 
 
-def test_adopting_a_passed_intake_writes_exactly_four_consistent_files(env):
+def test_adopting_a_passed_intake_writes_exactly_five_consistent_files(env):
     result = s.make_intake(env.tmp)
     before = snapshot(env.catalog)
     adoption = s.do_adopt(result.intake_id)
@@ -47,6 +48,9 @@ def test_adopting_a_passed_intake_writes_exactly_four_consistent_files(env):
     digest = file_hash(p["source"].read_bytes())
     assert source.source_hash == adopted.source_hash == digest and result.staged_files[1].file_hash == digest
     assert adopted.intake_hash == file_hash(copy) and source.adoption_hash == file_hash(p["adoption"].read_bytes())
+    check = parse_record(ReviewRenderCheck, p["review"].read_bytes())  # the store's own render check is part of the tracked provenance
+    assert p["review"].read_bytes() == (staged / "review_render.json").read_bytes() and adopted.review_hash == file_hash(p["review"].read_bytes())
+    assert check.verdict.value == "MATCH" and check.intake_id == result.intake_id and check.source_hash == digest
     assert (source.source_revision, source.parent_revision, source.adoption_id) == ("r0001", None, adoption.adoption_id)
     assert adopted.adoption_id == records.adoption_id_for(result.intake_id, "hero", "r0001")
     assert (adopted.approver_name, adopted.approver_role, adopted.visual_key) == ("Pat Approver", "art lead", s.KEY)
@@ -250,7 +254,7 @@ def test_a_fixture_key_is_refused_by_the_default_registry(env):
 def test_an_alias_is_not_a_visual_key_for_adoption(env):
     result = s.make_intake(env.tmp)
     with pytest.raises(GateError) as err:
-        s.do_adopt(result.intake_id, visual_key="fixture.sample.old_icon")  # an alias of fixture.sample.icon
+        s.do_adopt(result.intake_id, visual_key="fixture.sample.old_hero")  # an alias of the key of "hero"
     assert err.value.code == "unknown_visual_key"
 
 
