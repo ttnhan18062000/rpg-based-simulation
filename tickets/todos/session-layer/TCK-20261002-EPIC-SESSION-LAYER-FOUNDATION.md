@@ -51,6 +51,10 @@ Binding plan: `docs/plans/agent_infrastructure/session_layer_working_process.md`
 
 ## Scope
 
+- **M-1 — agent-working root (before M0).** Move `tickets/`, `stored_artifacts/`, `staging_artifacts/`,
+  `agent-monitoring/`, `agent-orchestration/`, `pilot_requests/`, `reviews/` and the generated index folders
+  under one `agent-working/` root: path constants first, then one quiet-window move, closed history frozen
+  (child `TCK-20261003-AGENT-WORKING-ROOT-MOVE`). `registries/`, `tools/`, `experiments/` and `docs/` stay.
 - **M0 — harness spike (first, gates the rest).** One investigation record with a **positive-controlled
   local result for every item a to r** in plan 12.1: name, `/clear`, resume, rename, fork and duplicate-name
   behaviour; `agent_type` / `SESSION_ROLE` / `session_title` / `session_id` stability (the
@@ -80,7 +84,8 @@ Binding plan: `docs/plans/agent_infrastructure/session_layer_working_process.md`
 - Metrics, roster-check analytics, the first-month review (Epic D).
 - Staffing the two unstaffed seats and the practice changes in plan section 3 (owner decisions).
 - Auto-wake and a message inbox (Epic B decides the inbox from M0's wake result).
-- Any change to `.claude/agents/` agent roles, `agent-orchestration/`, or `Workflow` scripts.
+- Any change to `.claude/agents/` agent roles, `agent-orchestration/` contents, or `Workflow` scripts, other than
+  the path updates M-1 makes.
 - The home-directory authority digest pin (deferred by plan section 10).
 
 ## Acceptance Criteria
@@ -107,11 +112,14 @@ Binding plan: `docs/plans/agent_infrastructure/session_layer_working_process.md`
    only by the same role or by the owner, never silently stolen.
 6. **Governing files.** Every `settings.json` / hook change is confirmed by the owner against the literal
    diff before it lands.
+7. **Root move (M-1).** The seven folders and three index folders live under agent-working/; history is
+   unmodified apart from renames; validators, CI and monitoring work on the new paths (child ticket AC 1-8).
 
 ## Related Tickets
 
 - Sibling epics: `TCK-20261002-EPIC-SESSION-LAYER-COMMUNICATION-AND-AUTHORITY` (B),
   `TCK-20261002-EPIC-SESSION-LAYER-OPERATIONS` (C), `TCK-20261002-EPIC-SESSION-LAYER-MEASUREMENT-AND-REVIEW` (D).
+- `TCK-20261003-AGENT-WORKING-ROOT-MOVE` (child, M-1).
 - Parent of child tickets to be created by the agent-working planner (see Implementation Notes).
 - Evidence and prior art: `TCK-20260921-SESSION-CONTEXT-RESET-TRIAL` (the handover hook),
   `TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE` (the per-session sidecar),
@@ -149,7 +157,8 @@ a governing file); `.claude/agents/` (generated `session-*.md`); `.claude/handov
 Child tickets are created later by the agent-working planner (that seat is unstaffed and currently held by
 `agent-working-design`), not here. Suggested, non-binding breakdown: M0 spike; M1 registry + validator;
 M1 memory migration; M2 resolution + binding record; M2 launcher; M2 recovery flow; M2 worktree self-heal.
-**M0 must finish before any M1 or M2 child is activated.** Implementation commits stay with the
+**M-1 finishes before M0, and M0 before any M1 or M2 child is activated.** Suggested breakdown gains a first
+item: M-1 root move. Implementation commits stay with the
 agent-working implementer.
 
 ## Test Summary

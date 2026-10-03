@@ -646,7 +646,8 @@ Outcome: a go / adjust decision on sections 5, 9.5, 10, before M1, plus the sign
 
 | M | Child | Delivers | Depends |
 |---|---|---|---|
-| M0 | Harness spike | a recorded result for every item a to r in 12.1, written to `investigation.md` | - |
+| M-1 | agent-working root move | `tickets/`, `stored_artifacts/`, `staging_artifacts/`, `agent-monitoring/`, `agent-orchestration/`, `pilot_requests/`, `reviews/` and the generated indexes moved under one `agent-working/` root (path constants first, then one quiet-window move, closed history frozen; live references in tools, tests, docs, skills, workflows, agents, CI and ignore/attribute files updated); `registries/`, `tools/`, `experiments/`, `docs/` stay | - |
+| M0 | Harness spike | a recorded result for every item a to r in 12.1, written to `investigation.md` | M-1 |
 | M1 | Manifest + validator | `registries/session_roles.yaml` and `registries/session_authority.yaml`, function templates, domain overlays, validator (globs resolve, no overlap, handover exists, one writer per worktree, generated agent files match the manifest), the 7 memory files migrated to pointers | M0 |
 | M2 | Launcher + role-aware SessionStart | `tools/sessions/launch.py`, `cc` alias, signal-based role resolution and binding record, card injection, own-handover-only, writer lease, the role-state directory and the orphan recovery flow (6.1), worktree self-heal | M1 |
 | M3 | Route + message classes | `tools/sessions/route.py <path>` and `--route-key`, the message-class convention (9.0), advisory rules in the function templates | M1 |
@@ -679,7 +680,9 @@ resumed or replaced from the role id alone**, with its worktree, branch, batch a
 **Decided by the owner (2026-10-02):** one launcher command, `cc <role>`; the launcher may start role
 sessions with `--settings '{"crossSessionInbound":"accept"}'` (delivery only; it authorizes nothing);
 agent-working drafts and implements the manifest and authority files and the user confirms every
-authority diff; standing grants have no default expiry and are revoked by deletion; **three functions
+authority diff; standing grants have no default expiry and are revoked by deletion; the **recovery default for an
+orphaned instance** is to offer resume, replace and inspect with evidence, suggesting *resume* when the
+transcript is newer than the handover note and *replace* otherwise, with the owner choosing; **three functions
 (designer, planner/reviewer, implementer) and a full set of three seats per domain**, with `rpg`,
 `agent-working` and `testing` today and UI, assets and others later.
 
@@ -701,10 +704,6 @@ manifest (M0d may force a separate directory).
    drafts the planner hands over, with no plan-only PRs.
 3. When a new domain (UI, assets) is added, may a seat start unstaffed with a named holder, or must all
    three be staffed first?
-
-4. Recovery default on an orphaned instance: offer resume and replace with evidence and let the owner
-   choose, suggesting *resume* when the transcript is newer than the handover and *replace* otherwise
-   (proposed). Confirm, or choose a fixed default.
 
 **Open, for the spike or a reviewer:** the M0 items a to r; whether a hook can return "ask"; which
 identity signal is stable; whether a minimal inbox is needed (M0c).

@@ -16,6 +16,8 @@ disposable instances that hold a seat.
 | 3 | `TCK-20261002-EPIC-SESSION-LAYER-OPERATIONS` (C) | after A's M1; parallel with B | status and hygiene tooling; justified by the 2026-10-02 disk incident; never blocks A or B |
 | 4 | `TCK-20261002-EPIC-SESSION-LAYER-MEASUREMENT-AND-REVIEW` (D) | M6a after A and B land; **M7 four weeks later** | time-gated; not a candidate for `implement-epic` until the data window elapses |
 
+Epic A starts with **M-1 (agent-working root move)**, then the M0 spike (owner decision 2026-10-03).
+
 A is the critical path. B and C can run in parallel once A's registry (M1) exists. D is last by design.
 
 **Why four epics.** The repo's epic rule is all-or-nothing, so one epic ending in a four-week soak could never
@@ -41,5 +43,5 @@ isolates the time-gated review (D).
 3. Whether a new domain (UI, assets) may start with an unstaffed seat.
 
 **Hold rule:** child tickets may be described by the detail planner, but **no M1 or M2 child may be activated
-before M0 has recorded its go / adjust decision**, and no `settings.json` or hook change lands without the
+before M-1 has merged and M0 has recorded its go / adjust decision**, and no `settings.json` or hook change lands without the
 owner's confirmation of the literal diff.
