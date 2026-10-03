@@ -836,6 +836,28 @@ class BuildingUpdate:
 
 
 
+#: In-band sentinel meaning "set the region's owner to None (unowned)".
+#: `owner_faction_id_set=None` already means "no change", so an explicit
+#: clear-to-unowned cannot be expressed with None and needs its own value.
+#: Always decode with `decode_owner_faction_id_set()` before the value reaches
+#: durable state, an event payload, or a `Faction`-keyed lookup -- `-1` is not a
+#: `Faction` member, so indexing by it raises KeyError
+#: (TCK-20261003-REGION-OWNER-NONE-SENTINEL-PERSISTED-RAW).
+NO_OWNER_SENTINEL: int = -1
+
+
+def decode_owner_faction_id_set(value: Optional[int]) -> Optional[int]:
+    """Decode a staged `WorldUpdate.owner_faction_id_set` into a durable owner.
+
+    Returns None both for "no change" and for the explicit unowned sentinel; callers
+    distinguish the two by testing `value is None` first. Mirrors the established
+    `group_id_set` idiom in `src/engine/patches.py`.
+    """
+    if value == NO_OWNER_SENTINEL:
+        return None
+    return value
+
+
 @dataclass(frozen=True, slots=True)
 class WorldUpdate:
     """Updates to regional world state."""

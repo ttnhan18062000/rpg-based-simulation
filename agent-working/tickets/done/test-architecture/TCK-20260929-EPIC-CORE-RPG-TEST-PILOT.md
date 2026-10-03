@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260929-EPIC-CORE-RPG-TEST-PILOT
-phase: open
+phase: done
 date: 2026-09-29
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Epic D — Bounded core-RPG pilot: show that the test workflow works end to end on one or two small changes
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -141,3 +141,6 @@ Acceptance criteria as stated by the first pilot report (2026-09-30), with the s
 4. Keep / revise / inconclusive per intervention recorded, directional.
 5. The shortfalls (conservation mapped to substrate only; no domain/level for a tests-only change; parity layer not showing test_path) were revise items for Epics A and B and are fixed in this batch. The heuristic file classification stays as a documented decision.
 No D2 synthetic exercise was needed.
+
+## Completion Summary
+**Closed 2026-10-03 by owner decision** (the user's answers, relayed by `test-architecture-reviewer`; closing the folder as a whole). Classed in `tickets/done/test-architecture/INDEX.md` (closure-readiness audit of 2026-10-03, base `origin/main` c0980e27a): D2 and D5 MET; D1, D3 and D4 MET-with-caveat (cap 5 an injected drill; surface stability confirmed at scope level only; cost inconclusive for the hand-orchestrated rows). The pilot remains a bounded demonstration with sample size 1 per item and no rate implied. Capability 8 (pilot P, a second surface in progression) was **Blocked**, not exercised; it stays a roadmap watch item. Phase 2 (scale-out) is not approved by this closure.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260929-EPIC-TEST-BASELINE-RELIABILITY
-phase: open
+phase: done
 date: 2026-09-29
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Epic A — Test baseline and reliability: an honest core-RPG test report, and fixes for the known progression order leak and tracked-file write
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -158,4 +158,4 @@ Defined by child tickets.
 (Child tickets.)
 
 ## Completion Summary
-(Open.)
+**Closed 2026-10-03 by owner decision** (the user's answers, relayed by `test-architecture-reviewer`; closing the folder as a whole). Criteria A1-A6 are classed in `tickets/done/test-architecture/INDEX.md` (closure-readiness audit of 2026-10-03, base `origin/main` c0980e27a): A1, A2 and A6 MET; A3, A4 and A5 MET-with-caveat. Caveats as recorded there: the combined-suite and random-order results for A3 were not re-run in the audit (last evidence `tickets/done/TCK-20260929-CATALOG-REGISTRY-TEST-LEAK.md`); the optional advisory tracked-file guard was not built and other tracked-file writers remain; `mutmut` is not a project dependency, so the mutation run is not reproducible from a clean install, and the v2 baseline goes stale 30 days after 2026-10-01. Remaining unknowns are in `docs/testing/core_rpg_test_baseline_2026-09-30.md`.
