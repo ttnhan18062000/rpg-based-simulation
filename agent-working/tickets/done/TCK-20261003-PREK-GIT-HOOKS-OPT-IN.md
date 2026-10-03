@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-PREK-GIT-HOOKS-OPT-IN
-phase: open
+phase: done
 date: 2026-10-03
 tags: [delivery]
 ---
@@ -15,7 +15,7 @@ tags: [delivery]
 M4d: prek git hooks with an opt-in install that keeps the post-commit reindex hook
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -43,11 +43,11 @@ Roadmap 6.2 picks prek as the git hook runner. `.git/hooks` is shared by every w
 - Formatting hooks (decision 8.3)
 
 ## Acceptance Criteria
-- [ ] Opt-in target installs both hooks; running it twice is a no-op; existing post-commit behaviour unchanged (demonstrated in a scratch clone, not the shared .git)
-- [ ] A commit adding a new ruff violation in a staged file is rejected with the ratchet's message; a commit touching only grandfathered code passes
-- [ ] Hook run time on a typical one-file commit recorded and under 5 s
-- [ ] No target, script or CI step installs hooks implicitly (static test)
-- [ ] `git diff --stat <base>...HEAD` lists no path under src/, none under .claude/, and not CLAUDE.md
+- [x] Opt-in target installs both hooks; running it twice is a no-op; existing post-commit behaviour unchanged (demonstrated in a scratch clone, not the shared .git)
+- [x] A commit adding a new ruff violation in a staged file is rejected with the ratchet's message; a commit touching only grandfathered code passes
+- [x] Hook run time on a typical one-file commit recorded and under 5 s
+- [x] No target, script or CI step installs hooks implicitly (static test)
+- [x] `git diff --stat <base>...HEAD` lists no path under src/, none under .claude/, and not CLAUDE.md
 
 ## Related Tickets
 - TCK-20261003-PYTHON-CODE-CRAFT-GATES-EPIC
@@ -72,6 +72,7 @@ None.
 - prek version and whether it is a Python dependency (lock group) or a standalone binary is for Investigate
 
 ## Implementation Notes
+- **Real PR run (PR #305, head b4076b46):** https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37134889219: all 18 jobs that ran are green (Slow regression, Scenario lane and SimQ grade-anchor drift are skipped by their own gates). No criterion of this ticket depends on the PR run; the installer, config and ratchet tests ran in `Tools a-e` (1,574 passed, 7 skipped, 0 failed).
 - Dependency: `prek==0.5.4` in the `dev` group (planner: yes, because the installer tests sort into `tools-f-z`/`tools-a-e` and must have the binary; a skip there would hide a broken install). The `uv.lock` diff adds exactly one package, `prek` 0.5.4 (18 lines, wheels only, no dependencies); `requirements.txt` gains one line; `uv lock --check` passes.
 - `tools/code_health/staged_ratchet.py` (planner condition D, reuse): keeps existing safe `src/**/*.py` paths with `sarif_feedback.changed_python_files`, runs `ruff check --output-format json` on them, converts with `adapters.adapt_ruff` and compares with the registry rows of those files through `ratchet.compare`; it prints `ratchet.format_report` of the NEW / WORSE entries and a how-to line. Nothing re-implements the grouping.
 - Planner condition A (worktrees without the environment must not be blocked): `.git/hooks` is shared by every worktree, so both hooks skip with one visible line and exit 0 where they cannot run. `tools/hooks/code_health_pre_commit.sh` prints "code-health hook skipped: environment not synced (uv sync) or tools.code_health not importable here" when `python3` cannot import the module; the module itself skips (exit 0, "code-health hook skipped: <reason>") when ruff is not installed for that Python, the registry is missing, or the registry/ruff output is unreadable; `tools/hooks/uv_lock_pre_commit.sh` skips when `uv` is absent. Only a real NEW or WORSE result (or a stale `uv.lock`) blocks. prek hides the output of a passing hook, so both hooks have `verbose: true` (found by a test: the skip line was invisible without it). Tested in a temporary repo whose staged deletion of `tools/code_health` makes the module unimportable (commit succeeds, skip line shown) and in unit tests (no ruff, no registry, unusable registry).
@@ -90,3 +91,4 @@ None.
 `pyproject.toml` (`prek` in `dev`), `uv.lock`, `requirements.txt` (generated), `.pre-commit-config.yaml` (new), `tools/code_health/staged_ratchet.py` (new), `tools/hooks/install_git_hooks.py` (new), `tools/hooks/code_health_pre_commit.sh` (new), `tools/hooks/uv_lock_pre_commit.sh` (new), `Makefile` (`install-prek-hooks`, `uninstall-prek-hooks`; the `install-hooks` help text now says it overwrites), `docs/guidelines/agent_working_environment.md`, `docs/guidelines/python_code_standard.md`, `docs/REGISTRY.yaml`. Tests (all new, no existing test edited): `tests/tools/test_code_health_staged_ratchet.py` (9) and `tests/tools/test_code_health_install_git_hooks.py` (15, including the static opt-in guards and real commits through prek in temporary repositories).
 
 ## Completion Summary
+`make install-prek-hooks` / `make uninstall-prek-hooks` install the prek pre-commit hook (ruff ratchet on staged `src` files, offline `uv.lock` check) and the post-commit reindex hook without overwriting either, idempotently; prek's shim is made safe for other worktrees (`--allow-missing-config` plus a missing-prek guard, rolled back if it cannot be guarded); verified in a scratch clone (reject 0.64 s, grandfathered one-file commit 0.61 s). Nothing installs hooks automatically. Delivered by PR #305; CI run https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37134889219 green. Process incident recorded in the Implementation Notes (reverted the same minute).

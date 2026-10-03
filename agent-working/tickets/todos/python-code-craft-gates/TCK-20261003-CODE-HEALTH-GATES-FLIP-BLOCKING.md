@@ -66,6 +66,7 @@ None.
 - tests/static/test_typecheck_gate_configured.py
 
 ## Assumptions / Open Questions
+- **Explicit step: the real soak start (the merge date of PR #305) and end (start + 14 days) are written into this ticket, the epic and roadmap Section 7 in the first commit of the next codebase batch after the merge (no docs-only PR for it).**
 - Soak start: date of batch PR merge (the PR that carries the advisory CI job; the closure commit of TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB writes the real date). Soak end: start + 14 days
 - Blocking gates affect every domain that edits src/; announce the date to other planners before flipping
 

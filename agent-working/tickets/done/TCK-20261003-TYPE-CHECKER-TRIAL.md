@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-TYPE-CHECKER-TRIAL
-phase: open
+phase: done
 date: 2026-10-03
 tags: [benchmarking]
 ---
@@ -15,7 +15,7 @@ tags: [benchmarking]
 M4e: Type-checker trial — basedpyright and Pyrefly against mypy on src/ (report only)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -40,9 +40,9 @@ Roadmap 6.2 keeps mypy + mypy-baseline as primary and names basedpyright (native
 - Any change to pyproject.toml, uv.lock, CI or Makefile
 
 ## Acceptance Criteria
-- [ ] Decision record exists with the measurements above for all three checkers on the same commit, and the commit SHA
-- [ ] Measurements reproducible from commands written in the record
-- [ ] `git diff --stat <base>...HEAD` lists no path under src/, none under .claude/, and not CLAUDE.md
+- [x] Decision record exists with the measurements above for all three checkers on the same commit, and the commit SHA
+- [x] Measurements reproducible from commands written in the record
+- [x] `git diff --stat <base>...HEAD` lists no path under src/, none under .claude/, and not CLAUDE.md
 
 ## Related Tickets
 - TCK-20261003-PYTHON-CODE-CRAFT-GATES-EPIC
@@ -63,6 +63,7 @@ None.
 - Independent of the other tickets; may run any time
 
 ## Implementation Notes
+- **Real PR run (PR #305, head b4076b46):** https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37134889219: all 18 jobs that ran are green (Slow regression, Scenario lane and SimQ grade-anchor drift are skipped by their own gates). Report-only ticket: no CI behaviour depends on it.
 - Decision record: `docs/plans/codebase_health/python_code_craft_type_checker_trial.md` (frontmatter as the M4 brief, per the planner: layer `architecture`, tags `[architecture, planning, benchmarking]`). It holds the commit SHA (`e6b3f97fde4bdce921369e7c5f9190a0c9e379c3`), the measurements table, the baseline findings, the overlap with mypy, the adoption cost, the limits, and copy-pasteable commands.
 - Recommendation recorded: **keep mypy + mypy-baseline as primary; do not replace it; do not add basedpyright; consider Pyrefly as a cheap advisory second opinion after the M4 soak (a new ticket), not as a gate.**
 - Headline numbers (same commit, same scope: `src/` minus the five excluded V1 packages, Python 3.11, non-strict, missing imports ignored, third-party packages from the project `.venv`; each run alone under `MemoryMax=2G`, none hit the cap): mypy 2.1.0 1,569 errors in 236 files, 30.0 s cold / 0.49 s warm, 406 MB; basedpyright 1.40.1 (`standard`) 711 errors + 1 warning in 160 files, about 70 s, 1,041 MB, plus a Node runtime wheel (200 MB); Pyrefly 1.3.2 817 errors in 151 files, about 2.2 s, 207 MB, a single 33 MB wheel with no dependencies. basedpyright `basic` 684 and `recommended` 1,207 errors (+25,657 warnings) as sensitivity points. (file, line) overlap: 448 flagged by all three; 395 only by mypy, 67 only by basedpyright, 100 only by Pyrefly.
@@ -79,3 +80,4 @@ Report-only ticket: no code. Evidence is the measurements and their reproducibil
 `docs/plans/codebase_health/python_code_craft_type_checker_trial.md` (new), `docs/REGISTRY.yaml` (generated), this ticket and its staging artifacts, the monitoring shard. No existing test edited; nothing under `src/`, `.claude/` or CLAUDE.md.
 
 ## Completion Summary
+`docs/plans/codebase_health/python_code_craft_type_checker_trial.md` compares mypy 2.1.0, basedpyright 1.40.1 and Pyrefly 1.3.2 on one pinned commit (time, memory, error counts, baseline behaviour with no source edits, overlap, adoption cost, reproduction commands). Recommendation: keep mypy + mypy-baseline; do not add basedpyright; consider Pyrefly as an advisory second opinion after the M4 soak (a new ticket). Delivered by PR #305; CI run https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37134889219 green.

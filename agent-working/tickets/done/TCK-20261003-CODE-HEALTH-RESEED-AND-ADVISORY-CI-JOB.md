@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB
-phase: open
+phase: done
 date: 2026-10-03
 tags: [delivery]
 ---
@@ -15,7 +15,7 @@ tags: [delivery]
 M4a: Reseed the code-health registry on main and start the soak with an advisory CI job
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -46,13 +46,13 @@ The ratchet (`python3 -m tools.code_health check`, `make code-health`) runs only
 - A Node lockfile for jscpd (owner decision: jscpd stays report-only)
 
 ## Acceptance Criteria
-- [ ] Registry reseeded on main; `python3 -m tools.code_health validate` passes; row counts before/after per tool recorded; review fields preserved for persisting keys (test or recorded spot-check)
-- [ ] `python3 -m tools.code_health check` exits 0 on the reseed commit
-- [ ] test.yml has a `code-health` job that syncs `lint`, cannot fail the workflow, and writes a job summary; the job's wall time on the PR run is recorded and is not above the longest existing PR job, or a split is proposed
-- [ ] Tests that enumerate CI jobs pass with the new job included; every edit to an existing test listed with its reason
-- [ ] Soak start date recorded in the epic and roadmap; flip ticket carries the end date
-- [ ] Green PR run link recorded
-- [ ] `git diff --stat <base>...HEAD` lists no path under src/, none under .claude/, and not CLAUDE.md
+- [x] Registry reseeded on main; `python3 -m tools.code_health validate` passes; row counts before/after per tool recorded; review fields preserved for persisting keys (test or recorded spot-check)
+- [x] `python3 -m tools.code_health check` exits 0 on the reseed commit
+- [x] test.yml has a `code-health` job that syncs `lint`, cannot fail the workflow, and writes a job summary; the job's wall time on the PR run is recorded and is not above the longest existing PR job, or a split is proposed
+- [x] Tests that enumerate CI jobs pass with the new job included; every edit to an existing test listed with its reason
+- [ ] Soak start date recorded in the epic and roadmap; flip ticket carries the end date *(Left unticked on purpose: the epic, roadmap Section 7 and the flip ticket carry the placeholder "date of batch PR merge"; the real start and end dates (start + 14 days) are filled in after the merge, because the merge date is not known before it.)*
+- [x] Green PR run link recorded
+- [x] `git diff --stat <base>...HEAD` lists no path under src/, none under .claude/, and not CLAUDE.md
 
 ## Related Tickets
 - TCK-20261003-PYTHON-CODE-CRAFT-GATES-EPIC
@@ -83,6 +83,7 @@ The ratchet (`python3 -m tools.code_health check`, `make code-health`) runs only
 - Tests edited here belong to the testing domain; tell its planner before the change lands
 
 ## Implementation Notes
+- **Real PR run (PR #305, head b4076b46):** https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37134889219: all 18 jobs that ran are green (Slow regression, Scenario lane and SimQ grade-anchor drift are skipped by their own gates). `Code health (advisory)`: 119 s wall (steps: `uv sync` 1 s, `setup-node` 4 s, changed paths 0 s, the ratchet 3 s); the longest existing PR job, Integration, took 336 s, so no split is needed. The ratchet step printed `OK: 0 new, 0 worse, 0 improved, 0 gone, 3617 unchanged` and no `::warning::`. GitHub's own code-scanning check `code-health` also passed.
 - Reseed (development reseed on this branch; planner condition B: it is re-run as the last step before the batch push, after merging origin/main, and both reseeds' counts are recorded here). Reseed 1 counts, before and after: ruff 2892 -> 2892, line_count 283 -> 283, complexipy 384 -> 384, jscpd 58 -> 58; total 3617 -> 3617. Check on the old registry first: 9 rows WORSE (line_count in `src/observability/event_extractor.py` and `event_shapers.py`, from src changes merged since the first seed), 3608 unchanged. After `seed --force`: `validate` valid (0 problems), `check` exit 0 (3617 unchanged). Review data: all 3617 keys persist and all 3617 `added_date` values are kept; no row was `reviewed` yet, so none was lost (carry-over is also unit-tested in `test_code_health_ratchet_registry.py::test_reseed_carries_over_review_data_...`). The diff of `registries/code_health_exceptions.jsonl` is 9 changed lines (the 9 ceilings).
 - **Final reseed (planner condition B), run as the last step before the batch push, on the head merged with `origin/main` (main's one new commit, #299, changed no `src/`, `pyproject.toml`, `uv.lock` or registry file):** scan, `seed --from --force`, `validate` (valid, 0 problems), `check` exit 0. Counts by tool, before and after: ruff 2892 -> 2892, line_count 283 -> 283, complexipy 384 -> 384, jscpd 58 -> 58; total 3617 -> 3617. The reseeded `registries/code_health_exceptions.jsonl` is byte-identical to the committed version (no row changed), so the first reseed above (9 ceilings) is the only registry diff in the batch.
 - **Second final reseed (planner: origin/main moved again, #300 to #304, with `src/` changes in #303 `src/engine/world_dynamics.py` and `src/world/raid.py`), on the head merged with it:** `check` on the previous registry first reported `FAIL: 0 new, 2 worse` (`src/world/raid.py` ruff F401 5 > ceiling 4; `WorldDynamicsSystem.resolve_dynamics` line_count function-length 281 > ceiling 276), i.e. exactly the drift the soak would otherwise have started with. After `seed --from --force`: valid, `check` exit 0. Counts by tool, before and after, unchanged: ruff 2892, line_count 283, complexipy 384, jscpd 58, total 3617; no row added or removed, all `added_date` values kept, and exactly **two ceilings changed** (276 -> 281, 4 -> 5). So the registry diff of the whole batch is the first reseed's 9 ceilings plus these 2.
@@ -92,7 +93,7 @@ The ratchet (`python3 -m tools.code_health check`, `make code-health`) runs only
 - Node version (planner condition C): 20, the same as the `frontend` job; jscpd 5.4.0 declares `engines: node >=18`, so 20 satisfies it.
 - Wall time: `python3 -m tools.code_health check` end to end takes 9 s locally (scan 12 s measured separately, under load average about 10) at a 2 GB memory cap. In CI add `uv sync` and the first `npx` fetch of jscpd; the authoritative number comes from the PR run (Integration, about 324 s, is the longest existing PR job).
 - Docs (planner condition D): `docs/guidelines/python_code_standard.md` now says "advisory in CI (soak)" for configured tools; the Makefile `code-health` help text, the `tools/code_health/__main__.py` and `ratchet.py` docstrings, and `docs/guidelines/agent_working_environment.md` follow.
-- Soak start is marked "date of batch PR merge" in the epic, roadmap Section 7 and the flip ticket; the closure commit writes the real dates (start, and end = start + 14 days).
+- Soak start is marked "date of batch PR merge" in the epic, roadmap Section 7 and the flip ticket. Planner decision at closure: keep the placeholders; the real start (the merge date of PR #305) and end (start + 14 days) are written into those three files in the first commit of the next codebase batch after the merge, with no docs-only PR. That step is also recorded in the flip ticket.
 
 ## Test Summary
 
@@ -105,3 +106,4 @@ Edits to existing tests (for the testing planner; no assertion weakened):
 Added tests: `tests/tools/test_code_health_ci_summary.py` (new: could-not-run summary and warning for an unusable registry and tool, summary format, cap, ordering, CLI flags, exit codes unchanged, warning only on failure, summary appended not overwritten) and `test_code_health_job_is_advisory_and_keeps_the_ratchet_step_non_blocking` in `tests/static/test_ci_uv_install.py`. `test_ci_narrow_path_filtered_jobs.py` and `test_ci_workflow_test_coverage.py` needed no change (the new job runs no pytest and is not in the gated-job lists).
 
 ## Completion Summary
+The registry was reseeded (3,617 rows; 9 ceilings moved by the first reseed, 2 more by the final one after #303), `tools/code_health` gained a changed-files-first summary and a could-not-run report, and the advisory `Code health (advisory)` CI job runs the ratchet on every PR/push/schedule with `continue-on-error`. Delivered by PR #305; CI run https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37134889219 green. Open: the real soak start/end dates are filled in after the merge (the criterion above stays unticked until then).

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-MYPY-BASELINE-ADVISORY
-phase: open
+phase: done
 date: 2026-10-03
 tags: [delivery]
 ---
@@ -15,7 +15,7 @@ tags: [delivery]
 M4c: mypy baseline with mypy-baseline, advisory until the soak ends
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -44,13 +44,13 @@ The CI typecheck job runs `mypy src/ ... || true` with continue-on-error, so not
 - Fixing any type error (the 104 name-defined errors are routed to the rpg domain separately)
 
 ## Acceptance Criteria
-- [ ] Baseline committed; `mypy src/ ... | mypy-baseline filter` reports 0 new errors on main
-- [ ] Investigate shows how mypy-baseline normalises line numbers, and a test or recorded demo proves an unrelated edit above an existing error does not resurface it, while a genuinely new error is reported
-- [ ] CI typecheck step uses the filter, remains advisory, and its summary shows the new-error count
-- [ ] `pytest tests/static/test_typecheck_gate_configured.py` passes; INFRA-TYPE-001 updated with v2_evidence
-- [ ] `uv lock --check` passes and the export reproduces requirements.txt
-- [ ] Green PR run link recorded
-- [ ] `git diff --stat <base>...HEAD` lists no path under src/, none under .claude/, and not CLAUDE.md
+- [x] Baseline committed; `mypy src/ ... | mypy-baseline filter` reports 0 new errors on main
+- [x] Investigate shows how mypy-baseline normalises line numbers, and a test or recorded demo proves an unrelated edit above an existing error does not resurface it, while a genuinely new error is reported
+- [x] CI typecheck step uses the filter, remains advisory, and its summary shows the new-error count *(The job-summary text itself is not retrievable through the REST API; on the PR run the `mypy` step (10 s) ran `tools.code_health.mypy_gate --summary-out ... --annotate`, printed nothing and emitted no `::warning::`, i.e. 0 new errors; the summary format is covered by `tests/tools/test_mypy_gate.py`.)*
+- [x] `pytest tests/static/test_typecheck_gate_configured.py` passes; INFRA-TYPE-001 updated with v2_evidence
+- [x] `uv lock --check` passes and the export reproduces requirements.txt
+- [x] Green PR run link recorded
+- [x] `git diff --stat <base>...HEAD` lists no path under src/, none under .claude/, and not CLAUDE.md
 
 ## Related Tickets
 - TCK-20261003-PYTHON-CODE-CRAFT-GATES-EPIC
@@ -79,6 +79,7 @@ The CI typecheck job runs `mypy src/ ... || true` with continue-on-error, so not
 - Which dependency group: `dev` (typecheck job already syncs it) unless Investigate finds a reason for its own group
 
 ## Implementation Notes
+- **Real PR run (PR #305, head b4076b46):** https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37134889219: all 18 jobs that ran are green (Slow regression, Scenario lane and SimQ grade-anchor drift are skipped by their own gates). Type check job 33 s; the `mypy` step 10 s, green, no warning.
 - Dependency: `mypy-baseline==0.7.4` in the `dev` group (the typecheck job and `make typecheck-py` already use it). Planner condition B: the `uv.lock` diff adds exactly one package, `mypy-baseline` 0.7.4 (11 lines), with no dependencies of its own and no version moves; `requirements.txt` gains one line (`mypy-baseline==0.7.4`) and `uv lock --check` passes.
 - Config in `[tool.mypy_baseline]`: `baseline_path = "registries/mypy_baseline.txt"`, `allow_unsynced = true`, `hide_stats = true`, `sort_baseline = true` (planner nit, taken: the committed baseline is sorted, same 1,569 entries, so re-sync diffs stay minimal and two syncs are byte-comparable; the gate still exits 0 against it), `ignore_categories = ["note", "annotation-unchecked"]`.
 - Notes (planner condition A): mypy emitted 1,716 lines for 1,569 errors; the other 147 are `note:` lines. With `ignore_categories = ["note"]` the baseline held 1,586 lines, because 17 remaining notes are standalone `annotation-unchecked` notes that carry their own category; ignoring that category too gives a baseline of exactly **1,569 entries, all errors, 0 notes**. Demonstrated (scratch dir, real output) and tested (`tests/tools/test_mypy_gate.py`): a reworded note alone does not count as new; a new error with an attached note reports only the error; a standalone `annotation-unchecked` note is neither baselined nor reported.
@@ -100,3 +101,4 @@ The CI typecheck job runs `mypy src/ ... || true` with continue-on-error, so not
 Edits to existing tests: none were weakened. `tests/static/test_typecheck_gate_configured.py` keeps its three original tests unchanged and passing (the Makefile target still contains `mypy src/` and `pyproject.toml`; the workflow still has a step named `mypy` and the text `mypy src/`, now in the comment that explains the gate) and gains three tests (baseline config and file, Makefile filter and sync target, CI step runs the gate and is advisory). New: `tests/tools/test_mypy_gate.py`.
 
 ## Completion Summary
+`mypy-baseline` 0.7.4 is pinned in `dev`; `registries/mypy_baseline.txt` holds 1,569 sorted error entries (notes ignored); `tools/code_health/mypy_gate.py` runs behind the CI `mypy` step and `make typecheck-py` and prints the new-error count and the baseline size on every run (reporting "could not run" when mypy, the filter or the baseline fails); `make typecheck-baseline-sync` is documented as codebase-domain-only, on main, with the code-health reseed. INFRA-TYPE-001 and `python_code_standard.md` are updated, roadmap 6.3 carries the amendment. Advisory until the flip ticket. Delivered by PR #305; CI run https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37134889219 green.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK
-phase: open
+phase: done
 date: 2026-10-03
 tags: [delivery, security]
 ---
@@ -15,7 +15,7 @@ tags: [delivery, security]
 M4b: Changed-line PR feedback through SARIF upload to GitHub code scanning (advisory)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -44,12 +44,12 @@ Owner decision 2026-10-03: PRs get changed-line feedback through SARIF upload to
 - jscpd and line-count SARIF (no native SARIF; report-only)
 
 ## Acceptance Criteria
-- [ ] On a PR that adds one new ruff violation in a changed file, code scanning shows exactly that finding and none of the registry's existing rows (demonstrated on the real PR run or a recorded test PR)
-- [ ] Unit tests for the SARIF filter cover: matching row filtered, new finding kept, worse-than-row finding kept, malformed SARIF reported not swallowed
-- [ ] Only the uploading job has `security-events: write`; a static test asserts it
-- [ ] The step cannot fail the PR during the soak
-- [ ] Green PR run link recorded
-- [ ] `git diff --stat <base>...HEAD` lists no path under src/, none under .claude/, and not CLAUDE.md
+- [ ] On a PR that adds one new ruff violation in a changed file, code scanning shows exactly that finding and none of the registry's existing rows (demonstrated on the real PR run or a recorded test PR) *(Left unticked on purpose, as agreed with the planner and not reworded: it is demonstrated locally on the real registry and by unit tests, and its live proof is deferred to the first same-repository PR that touches `src/` during the soak; it is a soak-review checklist line in `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING`.)*
+- [x] Unit tests for the SARIF filter cover: matching row filtered, new finding kept, worse-than-row finding kept, malformed SARIF reported not swallowed
+- [x] Only the uploading job has `security-events: write`; a static test asserts it
+- [x] The step cannot fail the PR during the soak
+- [x] Green PR run link recorded
+- [x] `git diff --stat <base>...HEAD` lists no path under src/, none under .claude/, and not CLAUDE.md
 
 ## Related Tickets
 - TCK-20261003-PYTHON-CODE-CRAFT-GATES-EPIC
@@ -75,6 +75,7 @@ None.
 - complexipy SARIF output support and its symbol keys must be confirmed against complexipy 8.0.1
 
 ## Implementation Notes
+- **Real PR run (PR #305, head b4076b46):** https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37134889219: all 18 jobs that ran are green (Slow regression, Scenario lane and SimQ grade-anchor drift are skipped by their own gates). `Code health SARIF (advisory)` 119 s. **The empty-SARIF upload was accepted by code scanning.** Upload step log, verbatim: `Validating reports/code_health/code-health.sarif` / `Uploading results` / `Successfully uploaded results` / `Analysis upload status is complete.` GitHub's API for `refs/pull/305/merge` returns analysis id 1886299427, category `code-health`, tool `code-health`, `results_count` 0; GitHub's own check `code-health` (app github-advanced-security) reports "No new alerts in code changed by this pull request". So third-party SARIF is accepted on this repository and the job-level `security-events: write` permission works; no owner setting was needed.
 - Filter `tools/code_health/sarif_feedback.py`: runs `ruff check <files> --output-format sarif` and `complexipy <files> -q --output-format sarif` on the PR's changed `src/**/*.py` files, drops every result the registry already holds, and writes one SARIF 2.1.0 file for `upload-sarif`. Per ratchet unit (SARIF results have no identity): a ruff (file, code) group is dropped when its count is at or below the row's ceiling and kept **whole** when above the ceiling or without a row; a complexipy function is dropped when its complexity is at or below its row's ceiling. ruff names some rules by code (`E722`) and others by name (`blind-except`); the name -> code map comes from `ruff rule --all --output-format json` (971 rules) and an unknown id falls back to itself (so `invalid-syntax` matches a registry row of that name). ruff's absolute `file://` uris become repository-relative; a uri outside the repository or with `..` is rejected. Results are capped at 1000 per upload (code scanning accepts 5000 per run) and the omitted count is stated.
 - Planner condition B: the job summary line says "N findings not in the baseline in changed files (ruff N in M over-ceiling groups; complexipy N). Dropped as already in the baseline: ... Groups are shown whole: an over-ceiling (file, rule) group includes its older findings, so do not read every finding of such a group as new." The same caveat is in `docs/guidelines/agent_working_environment.md` ("Reading code-health results on a PR", which also gives the read order: job summary first, code-scanning second).
 - Planner condition A: when no `src/**/*.py` file changed the filter writes a valid SARIF with one run and an empty `results` array, and the upload step has **no** `hashFiles` guard, so the batch PR (which changes no `src/` file) still exercises the upload, `security-events: write` and code-scanning acceptance. The upload step runs when the filter step's outcome is `success`; if the filter could not run (tool missing or malformed SARIF, or an unusable registry) it writes no SARIF, a "could not run" summary line and warning, and exits 2, so the upload is skipped (an empty upload would wrongly clear existing alerts). Record the upload outcome on the PR run here.
@@ -103,3 +104,4 @@ Edits to existing tests (no assertion weakened):
 - `tests/static/test_ci_uv_install.py`: `_LINT_JOBS` gains `code-health-sarif`. Reason: the job runs ruff and complexipy, so it syncs `lint`.
 
 ## Completion Summary
+ruff and complexipy findings in a PR's changed `src` files that the code-health registry does not already hold are uploaded to GitHub code scanning (category `code-health`) by a separate advisory job that alone holds `security-events: write`, runs for same-repository pull requests only, pins `upload-sarif` by full commit SHA, uploads an empty SARIF when no `src` Python file changed, and fails closed when the changed-path list is unavailable. Security-Review: pass with findings, two fixed, one medium accepted and documented. Delivered by PR #305; CI run https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37134889219 green and the upload accepted. Open: the live proof that a PR adding one new violation shows exactly that finding (deferred to the first same-repository PR touching `src/` during the soak).
