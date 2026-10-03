@@ -47,6 +47,7 @@ _GATE_FAILURE_STATUSES = frozenset(
         "GATE_FAIL",
         "PARITY_INCOMPLETE",
         "ANCHORS_STILL_FAILING",
+        "WORKFLOW_ERROR",
     }
 )
 

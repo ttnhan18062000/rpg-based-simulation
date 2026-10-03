@@ -97,17 +97,28 @@ The body from `phase('Scope')` to the end now sits inside one `try { ... }` with
 
 `WORKFLOW_ERROR` is a new terminal status, so it was added to `agent-working/agent-orchestration/terminal-statuses.yaml` (non-breaking, schema version stays 1) and to the `final_status` table in `docs/agent-monitoring/schema.md`; four count pins moved (16 to 17 statuses, 14 to 15 literal call sites, 13 to 14 distinct literals).
 
+Consumers of the status vocabulary, checked by grepping `tools/` for the status names (a grep, not a run of each tool):
+- `tools/agent-monitoring/generate_retro.py` counts DONE by exact match and treats anything other than `DONE`, `EPIC_SCOPED` and `IN_PROGRESS` as a non-success, so a `WORKFLOW_ERROR` run counts as non-success there without a change.
+- `tools/agent_replay/sampler.py` labels a run `failure` only if its status is in `_GATE_FAILURE_STATUSES` and `success` otherwise, so an unlisted `WORKFLOW_ERROR` would have been labelled a success. `WORKFLOW_ERROR` is now in that set (one line) with a test. Other unlisted failure statuses such as `SCOPE_AGENT_FAILED` and `TEST_SCOPE_COVERAGE_FAILED` already had this gap and are untouched.
+- `tools/agent-monitoring/validate.py` decides a run is complete from `end_ts` or a fixed `LEGACY_TERMINAL_STATUS_VALUES` set; the error run row carries `end_ts`, so it counts as complete, the same as `TESTS_FAILED` and other statuses that are not in that set.
+- `tools/agent_orchestration/loader.py` reserves every non-`DONE` terminal status as a word a `non_gates` entry may not use; no current entry is `WORKFLOW_ERROR`, and the loader and contract-structure tests pass (one pin moved 16 to 17).
+- The duplicate-run ratchet counts duplicate `run_id` rows; the started flag keeps the error path from adding a second row after a normal write.
+- The `dashboard-frontend` replay timeline classes event statuses `ok`/`failed`/`blocked`/`skipped`; the error event is `failed`.
+
+Intentional-divergences log: a new terminal status is NOT a divergence. That log records a mismatch between the contract and the live script that the conformance tests find; here the contract (`terminal-statuses.yaml`) was updated in the same change, so the conformance test sees no mismatch and passes without an entry. The only approval-gated file is that log, and it needs no entry. Adding the status to the contract is a reviewable edit in this change, in the same shape as `TEST_SCOPE_COVERAGE_FAILED`.
+
 Open question answered: whether the native runtime's `agent()` still works after an exception was NOT verified here. The tests run the script in a node `vm` with stubbed dispatches, not in the native runtime. A native run is not part of this ticket and needs the owner's opt-in.
 
 ## Test Summary
-New `tests/tools/test_implement_ticket_records_on_exception.py` (5 tests, node `vm` with stubbed `agent()`/`bash()`): an exception after Scope writes exactly one monitoring dispatch carrying `final_status` `WORKFLOW_ERROR` and the rethrown original error; an exception before Scope finishes writes one fallback event and one run row; a throwing recorder does not mask the original error; a normal gate return (`CONFLICTS_DETECTED`) writes one record and no `WORKFLOW_ERROR`; an exception inside the normal monitoring write writes no second run row. The first two fail on the pre-change script. 46 files naming `implement-ticket.js`, `tests/agent_orchestration_claude_adapter`, `tests/docs`, the order test and `test_validate_agent_monitoring.py`: 685 passed, 11 skipped, 2 xfailed. The tests skip when `node` is absent.
+New `tests/tools/test_implement_ticket_records_on_exception.py` (5 tests, node `vm` with stubbed `agent()`/`bash()`): an exception after Scope writes exactly one monitoring dispatch carrying `final_status` `WORKFLOW_ERROR` and the rethrown original error; an exception before Scope finishes writes one fallback event and one run row; a throwing recorder does not mask the original error; a normal gate return (`CONFLICTS_DETECTED`) writes one record and no `WORKFLOW_ERROR`; an exception inside the normal monitoring write writes no second run row. The first two fail on the pre-change script. 46 files naming `implement-ticket.js`, `tests/agent_orchestration_claude_adapter`, `tests/docs`, the order test and `test_validate_agent_monitoring.py`: 685 passed, 11 skipped, 2 xfailed; after the consumer check, `tests/agent_orchestration`, `tests/agent_replay`, the adapter tests, the new tests, `test_validate_agent_monitoring.py` and `test_duplicate_run_record_check.py`: 201 passed. The tests skip when `node` is absent.
 
 ## Files Changed
 - .claude/workflows/implement-ticket.js (recorder, one `try`/`catch`, flag in `writeMonitoring`, error hook)
 - agent-working/agent-orchestration/terminal-statuses.yaml (WORKFLOW_ERROR)
 - docs/agent-monitoring/schema.md (WORKFLOW_ERROR row)
+- tools/agent_replay/sampler.py (`WORKFLOW_ERROR` is a failure stratum) and tests/agent_replay/test_sampler.py
 - tests/tools/test_implement_ticket_records_on_exception.py (new)
-- tests/agent_orchestration_claude_adapter/test_terminal_status_extractor.py, test_terminal_status_schema.py, test_generator_containment.py (count pins)
+- tests/agent_orchestration_claude_adapter/test_terminal_status_extractor.py, test_terminal_status_schema.py, test_generator_containment.py, tests/agent_orchestration/test_contract_structure.py (count pins)
 
 ## Completion Summary
 An uncaught exception anywhere in `implement-ticket.js` now records one `WORKFLOW_ERROR` event and one run row best-effort, then rethrows the original error; a normal write is never doubled. Not verified: behaviour inside the native `Workflow` runtime (needs the owner's opt-in).

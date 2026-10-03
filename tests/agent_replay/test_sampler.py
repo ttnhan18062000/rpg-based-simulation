@@ -8,6 +8,7 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from agent_replay.sampler import (  # noqa: E402
+    _outcome_stratum,
     build_sample_manifest,
     load_manifest,
     write_manifest,
@@ -62,3 +63,11 @@ def test_sampler_persists_manifest_as_durable_artifact(tmp_path):
     reloaded = load_manifest(output_path)
     assert reloaded.sample_size == manifest.sample_size
     assert {t.ticket_id for t in reloaded.tickets} == {t.ticket_id for t in manifest.tickets}
+
+
+def test_a_workflow_error_run_is_a_failure_stratum_not_a_success():
+    outcomes = {"TCK-A": "WORKFLOW_ERROR", "TCK-B": "DONE", "TCK-C": "DOD_BLOCKED"}
+    assert _outcome_stratum("TCK-A", outcomes) == "failure"
+    assert _outcome_stratum("TCK-B", outcomes) == "success"
+    assert _outcome_stratum("TCK-C", outcomes) == "failure"
+    assert _outcome_stratum("TCK-D", outcomes) == "unknown"
