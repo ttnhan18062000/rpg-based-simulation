@@ -7,27 +7,27 @@ date: 2026-10-02
 tags: [architecture, mcp, documentation, rendering]
 ---
 
-# Visual asset store contract (partly built)
+# Visual asset store contract (built)
 
-**Status: the typed records, identities and the semantic registry loader are built; every store writer is still
-designed only.** `visual_assets/store/` and `visual_assets/catalog/` were created as skeletons by
-`TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT`; `TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS` added the pure contract layer.
-This page records what the store is meant to guarantee so later tickets build to one contract. Each section is marked
-**designed** or **built**.
+**Status: built (`TCK-20261002-EPIC-VISUAL-ASSET-FOUNDATION`, children 1-6).** The drawing tools hand off a candidate, the store
+stages it into a quarantine, judges it independently, lets a human adopt it as an immutable source revision, exports pixel-hashed artifacts
+and assembles release CANDIDATES, and checks the whole store in pure Python. Nothing activates anything at runtime (`AM-M5`-`M7` are out of
+scope). The committed `visual_assets/catalog/` holds zero keys, sources, adoptions and artifacts: only layout, rules and synthetic fixtures.
+This page says what each command and MCP tool does, who may run it and what it writes.
 
 Source of truth for vocabulary and gates: `docs/brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md`
 (sections 6-9) and `docs/plans/visual-asset-management-runtime-integration/`. Physical layout, layering rules and the
 command table: `docs/plans/visual-asset-foundation/README.md`. Build order: `agent-working/tickets/todos/visual-asset-foundation/SEQUENCE.md`.
 
-## Lifecycle and gates (designed)
+## Lifecycle and gates
 
 ```
 candidate --(human review)--> adoption approved --> adopted source --> validated build
    --> release candidate --(compatibility validation, human activation)--> active release
 ```
 
-No tool may collapse a gate. An agent can draw and hand off a candidate; only a human-run command can adopt it;
-nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out of scope).
+No tool may collapse a gate. An agent can draw, hand off a candidate, submit it for intake and read the store; only a human-run command can adopt or revoke;
+release candidates are assembled but never activated (the last arrow is out of scope: there is no active pointer, D6).
 
 ## Three places, three writers
 
@@ -36,7 +36,7 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 | Experiment workspace (every drawing revision) | `~/.cache/rpg-aseprite-mcp/` | the drawing tools | built |
 | Intake quarantine | `visual_assets/catalog/.quarantine/` (gitignored) | the store's intake step only | **built** (store side); holds the staged files and the `IntakeResult` until adoption |
 | Local review area | `visual_assets/catalog/.review/` (gitignored) | `review` only | **built** |
-| Managed store | `visual_assets/catalog/` | the store's human-gated commands only | layout built (empty); commands designed |
+| Managed store | `visual_assets/catalog/` | the store's commands only: `adopt`, `revoke` (human-gated), `build`, `release` | **built**; only adopted assets and their derived files are tracked |
 
 ## What is built now
 
@@ -47,14 +47,14 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
   `VisualKeyRegistry`. Canonical JSON (`canonical_json`) and strict parsing (`parse_record`: oversize, UTF-8, duplicate keys, NaN,
   unknown fields, wrong type, unsupported version each rejected with a stable `ContractError.code`).
 - Identities with no normalisation: `VisualKey`, eight opaque id types, `SourceRevision`, `FileHash` (`sha256:`), `PixelHash`
-  (`pixels-v1:`; the algorithm is child 5), `UtcTimestamp`.
+  (`pixels-v1:`, defined below), `UtcTimestamp`.
 - Registry loader: duplicate YAML keys, anchors, alias problems and the reserved `fixture.*` namespace are rejected; nothing registers dynamically.
 - Adoption and revocation (**human-gated**, `python -m visual_assets.store adopt|revoke`; the first writers of the tracked catalog): `adopt` takes the licence state and its
   evidence ONLY from the human's own arguments (never from the package, whose licence statement is only a claim), refuses an Evidence marker as evidence and anything but
   `CLEARED`, requires an explicit `--source-asset-id` and exactly one of `--new` or `--parent rNNNN` (the latest unrevoked revision), checks the visual key against the
   registry, and refuses, each with its own code and before writing anything: an unknown, failed, revoked or already-adopted intake, changed staged bytes, an oversize source
-  (ADR D2), a revoked or closed lineage. It prints the preview warning and what is being decided, then makes the operator type the id. The four files (source bytes, intake
-  copy, adoption record, SourceRecord) are published all together or not at all, the SourceRecord last. `revoke` never deletes: a source revision gets a tracked revocation
+  (ADR D2), a revoked or closed lineage. It prints the preview warning and what is being decided, then makes the operator type the id. The five files (source bytes, intake
+  copy, render check copy, adoption record, SourceRecord) are published all together or not at all, the SourceRecord last. `revoke` never deletes: a source revision gets a tracked revocation
   record, an un-adopted intake a local one; `is_build_eligible` fails closed. A revoked revision does not freeze its asset: the next revision continues the numbering and takes the
   latest UNREVOKED revision as its parent; an asset whose every revision is revoked is closed.
 - `audit_chain` rebuilds intake result -> adoption record -> SourceRecord -> source bytes from the tree alone using the hashes the records carry (`AdoptionRecord.intake_hash`,
@@ -93,12 +93,38 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 - `tests/visual_assets/test_boundaries.py`: `drawing` has no write path into `catalog/` (it may not even reference the path),
   `store` does not import `drawing`, nothing imports `src/` and `src/` never imports `visual_assets`.
 
-## What is designed, not built
+## Commands (`python -m visual_assets.store <command>`)
 
-| Piece | Designed behaviour | Child ticket |
+| Command | Gate | Writes | Tracked |
+|---|---|---|---|
+| `intake` | none (agent or human) | the staged files and `IntakeResult` in `.quarantine/<intake_id>/` | no (gitignored) |
+| `review` | none | `.review/<intake_id>/` (producer preview, the store's own `store_render.png`, `summary.txt`) and, with a renderer, `review_render.json` in the quarantine | no (gitignored) |
+| `list` | none | nothing | n/a |
+| `show` | none | nothing | n/a |
+| `audit` | none | nothing | n/a |
+| `verify` | none | nothing | n/a |
+| `build` | none; needs Aseprite and bwrap | `generated/<source_asset_id>--x1/<pixel hash>.png` and `<hash>.<revision>.artifact.json` | yes |
+| `release` | none | `manifests/candidates/<catalog_id>/rc-NNNN.json` (a CANDIDATE, never active) | yes |
+| `gc` | none; deletes only with `--delete` | removes only what it lists, under the quarantine, the review area and `generated/` | no (never `sources/`, `provenance/`, `manifests/`) |
+| `adopt` | **human only**: terminal on stdin and the typed id | `sources/<id>/rNNNN.aseprite` + `.source.json`, `provenance/adoptions/`, `provenance/intake/<in>.json` and `.review.json` | yes |
+| `revoke` | **human only**: terminal on stdin and the typed id | `provenance/revocations/<id>.json` for a source revision; `revocation.json` in the quarantine for an un-adopted intake | revision: yes; intake: no |
+
+## MCP tools on the drawing server (restart the server for new tools to appear in a running session)
+
+| Tool | What it does | Writes |
 |---|---|---|
-| Intake | bounded copy into quarantine, claims checked against staged bytes (hashes, format, bounds, symlinks, traversal, licence state), immutable `IntakeResult` | 3 |
-| MCP store tools | read-only `store_list` / `store_show` and `submit_candidate`; never adopt, build, release, revoke or gc | 6 |
+| `export_handoff` | packages one exact revision as a handoff directory in the experiment workspace | the experiment workspace only |
+| `submit_candidate` | runs intake on a handoff written by `export_handoff`, found only by its `handoff_id` (never a path, never a bare candidate id) | the quarantine only |
+| `store_list` | bounded listing of intakes, sources, artifacts or release candidates | nothing |
+| `store_show` | one record as a shaped summary (producer statements labelled as claims); no raw files, no absolute paths | nothing |
+
+There is no MCP tool that adopts, revokes, builds, releases, deletes or activates, and the boundary test lets the drawing server import only the store layers
+`intake`, `readmodel`, `contracts`, `identities`, `errors` and `config`.
+
+## Not built (outside this foundation's scope)
+
+Runtime activation, a resolver, Live Map and HUD consumption, signing, client compatibility ranges, more than one scale class, atlases and animation export
+(`AM-M5`-`M7`, `AM1-W08`). Open decisions are listed at the end of this page.
 
 ## Known gaps (stated, not hidden)
 

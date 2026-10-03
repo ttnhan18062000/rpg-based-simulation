@@ -67,6 +67,15 @@ class BuildError(StoreError):
         self.message = message
 
 
+class ReadError(StoreError):
+    """A read-only listing or lookup was refused (unknown kind, malformed or unknown id). `code` is stable."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+
+
 class GateError(StoreError):
     """A human-gated command (`adopt`, `revoke`) refused. Nothing was written. `code` is stable."""
 

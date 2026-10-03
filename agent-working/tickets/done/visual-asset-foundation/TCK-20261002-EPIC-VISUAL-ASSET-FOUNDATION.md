@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261002-EPIC-VISUAL-ASSET-FOUNDATION
-phase: open
+phase: done
 date: 2026-10-02
 tags: [mcp, architecture, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [mcp, architecture, documentation]
 Visual asset foundation: in-project drawing tools and asset store under `visual_assets/`
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -44,13 +44,14 @@ Tracks the child tickets in `SEQUENCE.md`. No direct implementation.
 - Closing `U-02` (Aseprite licence/provenance), `U-05` (budgets), `U-14` (CI with Aseprite).
 
 ## Acceptance Criteria
-- [ ] Every child ticket in `SEQUENCE.md` is closed.
-- [ ] `docs/plans/visual-asset-foundation/README.md` matches what was built, or records each deviation.
-- [ ] No `src/` import of `visual_assets` and no `visual_assets` import of `src/` (boundary test green).
+- [x] Every child ticket in `SEQUENCE.md` is closed (all six; see Related Tickets).
+- [x] `docs/plans/visual-asset-foundation/README.md` matches what was built, or records each deviation (its "As built: deviations" section).
+- [x] No `src/` import of `visual_assets` and no `visual_assets` import of `src/` (boundary test green; also nothing under `visual_assets/` may import the human-gated layers from the drawing code).
 
 ## Related Tickets
 - TCK-20261002-ASEPRITE-MCP-SPIKE-HARDENING, TCK-20261002-ASEPRITE-MCP-HIGHLEVEL-PIXEL-ART-TOOLS (done; the code being moved)
 - TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT (child 1, done; merged in PR #286)
+- TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS, -STORE-INTAKE, -STORE-ADOPTION, -STORE-BUILD-RELEASE, -STORE-MCP-TOOLS (children 2-6, done on branch `visual-assets-store`)
 
 ## Related Docs
 - docs/plans/visual-asset-foundation/README.md
@@ -72,7 +73,13 @@ Tracks the child tickets in `SEQUENCE.md`. No direct implementation.
   2026-10-02.
 
 ## Implementation Notes
-Epic: see children.
+Epic: see children. Built: the drawing tools in `visual_assets/drawing/` (19 MCP tools), the store in `visual_assets/store/` (records and identities, intake with an independent validator and the store's own render check, human-gated adoption and revocation, sandboxed pixel-hashed build, release candidates, `verify`, `gc`, read-only MCP store tools), the managed catalog `visual_assets/catalog/` (still zero keys, sources, adoptions and artifacts), and the boundary test that keeps drawing code away from every writer. Planner follow-ups R1-R4, H1, B1 and the `ops.lua` summary change are recorded in the children.
+
+### What stays open (stated, not ticked)
+- `U-02` Aseprite licence/provenance review; `U-05` numeric budgets (every bound is provisional); `U-14` CI with Aseprite (the real-Aseprite tests run locally only; CI runs everything that needs no Aseprite).
+- `AM1-W01` deployment profile, signing/trust channel (`AM1-W08`), retention numbers, and `AM-M5`..`M7` (activation, resolver, Live Map/HUD): out of scope by design (D6).
+- Known limits: the human gate does not authenticate the person; a consistent forgery of two linked records is caught only by git history; a local intake revocation covers only one machine; animation metadata beyond frame and tag counts is not checked; one visual key maps to one artifact (one scale class); an untouched first revision with a default palette is quarantined (`PALETTE_UNVERIFIABLE`).
+- The branch has not been pushed and no PR is open; that decision is the user's.
 
 ## Test Summary
 Epic: see children.
@@ -81,4 +88,4 @@ Epic: see children.
 Epic: see children.
 
 ## Completion Summary
-(open)
+All six children are closed. An agent can draw, hand a revision off, submit it for intake and read the store through the MCP server; only a human-run command can adopt or revoke; the store builds pixel-hashed artifacts and immutable release candidates and checks itself in pure Python; nothing activates at runtime. The committed catalog holds zero keys, sources, adoptions and artifacts. What stays open and the known limits are listed under Implementation Notes.

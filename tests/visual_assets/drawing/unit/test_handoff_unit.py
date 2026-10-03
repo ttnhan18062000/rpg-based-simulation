@@ -81,3 +81,47 @@ def test_publish_creates_the_directory_only_when_complete(tmp_path, monkeypatch)
     handoff._publish(target, {"package.json": b"{}", "source.aseprite": b"s", "preview.png": b"p"})
     assert seen == [(True, ["package.json", "preview.png", "source.aseprite"])]
     assert sorted(p.name for p in target.iterdir()) == ["package.json", "preview.png", "source.aseprite"]
+
+
+# --------------------------------------------------------------------------- handoff_directory: found ONLY by its exact id
+
+
+GOOD_ID = "cand-0123456789abcdef--0123456789ab"
+
+
+def test_a_handoff_is_found_only_by_its_exact_id():
+    directory = config.WORKSPACE / "handoffs" / GOOD_ID
+    directory.mkdir(parents=True)
+    assert handoff.handoff_directory(GOOD_ID) == directory
+
+
+@pytest.mark.parametrize("bad", [
+    "", " ", "..", "../x", "/etc/passwd", "cand-0123456789abcdef", "cand-0123456789abcdef--", GOOD_ID + "/..", GOOD_ID + "/", GOOD_ID + "\n",
+    "x/" + GOOD_ID, "handoffs/" + GOOD_ID, GOOD_ID.upper(), GOOD_ID[:-1], GOOD_ID + "0", "cand-0123456789abcdeg--0123456789ab", None, 5, ["a"], b"x",
+])
+def test_anything_but_the_exact_shape_is_refused_before_touching_the_disk(bad):
+    (config.WORKSPACE / "handoffs" / GOOD_ID).mkdir(parents=True)
+    with pytest.raises(AdapterError, match="handoff id looks like"):
+        handoff.handoff_directory(bad)
+
+
+def test_an_unknown_or_symlinked_or_file_handoff_is_refused(tmp_path):
+    (config.WORKSPACE / "handoffs").mkdir(parents=True)
+    with pytest.raises(AdapterError, match="no such handoff"):
+        handoff.handoff_directory(GOOD_ID)
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    (config.WORKSPACE / "handoffs" / GOOD_ID).symlink_to(elsewhere, target_is_directory=True)
+    with pytest.raises(AdapterError, match="no such handoff"):
+        handoff.handoff_directory(GOOD_ID)
+    (config.WORKSPACE / "handoffs" / GOOD_ID).unlink()
+    (config.WORKSPACE / "handoffs" / GOOD_ID).write_text("a file, not a directory")
+    with pytest.raises(AdapterError, match="no such handoff"):
+        handoff.handoff_directory(GOOD_ID)
+
+
+def test_the_id_pattern_matches_what_build_handoff_returns():
+    import re
+
+    assert re.fullmatch(handoff.HANDOFF_ID, "cand-" + "a" * 16 + "--" + "b" * 12)
+    assert not re.fullmatch(handoff.HANDOFF_ID, "cand-" + "a" * 16)

@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import secrets
 import shutil
 from pathlib import Path
@@ -21,6 +22,7 @@ from visual_assets.store.contracts import CandidateHandoffPackage, ContractError
 from visual_assets.store.contracts.handoff import HANDOFF_ASSERTION
 
 PREVIEW_SCALE = 8
+HANDOFF_ID = re.compile(r"cand-[0-9a-f]{16}--[0-9a-f]{12}")
 FILES = ("package.json", "source.aseprite", "preview.png")
 
 
@@ -29,6 +31,20 @@ def _handoffs_root() -> Path:
     if root.is_symlink():
         raise AdapterError("the handoffs directory is a symlink; refusing to use it")
     return root
+
+
+def handoff_directory(handoff_id: str) -> Path:
+    """The workspace directory of a handoff previously written by `build_handoff`, found ONLY by its id.
+
+    The id must have exactly the shape `build_handoff` returns (`cand-<16 hex>--<12 hex>`), so a path, `..`, a separator or a bare candidate id can never
+    select a directory. The result is always `<workspace>/handoffs/<handoff_id>`.
+    """
+    if not isinstance(handoff_id, str) or not HANDOFF_ID.fullmatch(handoff_id):
+        raise AdapterError("a handoff id looks like cand-<16 hex>--<12 hex>: the handoff_id export_handoff returned (a candidate id alone is not enough)")
+    directory = _handoffs_root() / handoff_id
+    if directory.is_symlink() or not directory.is_dir():
+        raise AdapterError(f"no such handoff: {handoff_id}")
+    return directory
 
 
 def _file_hash(data: bytes) -> str:

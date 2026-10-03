@@ -3,9 +3,8 @@
 `TCK-20261002-EPIC-VISUAL-ASSET-FOUNDATION` is the epic-tier parent and is not implemented directly. Structure
 and layering rules: `docs/plans/visual-asset-foundation/README.md`.
 
-Child 1 landed in PR #286 (merged, branch finished). Children 2-6 land together on branch `visual-assets-store`
-as one batch and one PR; the PR is opened only when the planner (`asset-planner`) says the batch is ready. The
-implementer (`asset-implementer`) asks for planner review after each ticket's commit.
+**All six children are done.** Child 1 landed in PR #286 (merged, branch finished). Children 2-6 were built together on branch `visual-assets-store`
+as one batch (one PR, opened only when the planner says the batch is ready; not yet opened). Each ticket's commit was reviewed by the planner (`asset-planner`).
 
 ## Order
 

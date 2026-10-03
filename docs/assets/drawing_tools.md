@@ -35,7 +35,11 @@ repo in `~/.cache/rpg-aseprite-mcp` (override: `ASEPRITE_MCP_WORKSPACE`; binary 
 `new_sprite`, `apply_ops` (one batch of operations -> exactly one new immutable revision, all-or-nothing),
 `branch_sprite` (variants such as grayscale), `inspect` (layers, frames with duration/pixel count/checksum,
 tags, palette, colours, optional 32x32 region), `preview` (one frame or one layer, 1-16x), `filmstrip`,
-`list_sprites`, `export_handoff`.
+`list_sprites`, `export_handoff`, and three store tools (19 tools in all): `submit_candidate`, `store_list`, `store_show`.
+
+`submit_candidate {handoff_id}` runs intake on a handoff written by `export_handoff` (found only by its `handoff_id`: never a path, never a bare candidate id) and returns the verdict and findings; it writes only the
+local quarantine and is not an adoption. `store_list {kind, limit}` and `store_show {kind, id}` (kinds: `intake`, `source`, `artifact`, `release`) are read-only shaped summaries with bounded output and no absolute paths;
+producer statements are labelled as claims. Restart the MCP server for new tools to appear in a running session. The full command and tool table is in `docs/assets/store_contract.md`.
 
 `export_handoff {name, revision, licence_state, licence_evidence_ref, brief_id, review_evidence_ref, limitations}` packages one exact
 revision (the revision is required, never defaulted) as a handoff directory `<workspace>/handoffs/<handoff_id>/` with exactly

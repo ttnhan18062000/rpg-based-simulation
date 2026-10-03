@@ -11,7 +11,7 @@ tags: [assets, planning, architecture, mcp]
 
 ## Status
 
-**Structure approved by the user on 2026-10-02 (root folder `visual_assets/`). Ticket 1 (foundation init) is merged (PR #286); ticket 2 (store contracts) is built on branch `visual-assets-store`; the store's writers (tickets 3-6) are not built yet.** It proposes where the Aseprite drawing tools
+**Structure approved by the user on 2026-10-02 (root folder `visual_assets/`). BUILT: ticket 1 (foundation init) is merged (PR #286); tickets 2-6 are built on branch `visual-assets-store`. This page keeps the proposal's text; the section "As built: deviations from this proposal" at the end lists every place the build differs.** It proposed where the Aseprite drawing tools
 (today in `experiments/aseprite_mcp/`, PR #286) and a new asset store live in the project, how they are
 layered, and which parts of the existing plan packages they implement. Vocabulary, identities and gates are
 taken from `docs/brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md` (§6-§9) and
@@ -248,6 +248,22 @@ store.*                     ->  contracts, config, errors; build -> drawing.back
 3. **Intake**: handoff package builder in the drawing tools, quarantine, validator, `IntakeResult`. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-INTAKE`): quarantine, validator, review, the `intake` / `review` / `list` / `show` CLI, and the drawing-side `export_handoff` (16 tools).
 4. **Adoption and provenance**: human-gated `adopt`, `revoke`, records, audit reconstruction test. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-ADOPTION`).
 5. **Build and release candidate**: sandboxed export, canonical hash, manifest, `verify`, `gc`. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-BUILD-RELEASE`), together with the store's own render check at review and adoption.
-6. **Store docs and MCP read-only store tools**: `docs/assets/store_contract.md` completed, `store_list` / `store_show` / `submit_candidate` on the server.
+6. **Store docs and MCP read-only store tools**: `docs/assets/store_contract.md` completed, `store_list` / `store_show` / `submit_candidate` on the server. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-MCP-TOOLS`; 19 tools on the server).
 
 Tickets 2-5 each land with synthetic fixtures only. Order matters: 1 before everything; 2 before 3-5.
+
+## As built: deviations from this proposal
+
+The structure above is what was approved; the build differs in these places (each decided with the planner and recorded in the ticket that made it, and in `docs/assets/store_contract.md` and the ADR):
+
+- **Layers.** `store.contracts` also imports the store leaves `identities`, `errors`, `config`; `identities` imports `errors`. Layers added beyond the proposal: `pixels` (pure PNG decoding and the `pixels-v1` hash), `rendering` and `review` (the store's own render of the source), `records`, `catalogwrite` (all-or-nothing tracked publish), `audit`, `readmodel` (shaped read-only views for agents), and `release` is `store/release.py`, not `store/catalog/release.py`. The drawing server may import only `intake`, `readmodel` and the shared leaves.
+- **`IntakeResult` lives in the gitignored quarantine** until `adopt` copies it into `provenance/intake/` (D3: nothing unaccepted enters git history).
+- **Hash-linked provenance.** `AdoptionRecord` carries `intake_hash` and `review_hash`, `SourceRecord` carries `adoption_hash`, `ArtifactRecord` carries `source_record_hash`, so `audit_chain` and `verify` detect an edited record; a consistent edit of two linked records is caught only by git history (stated limit).
+- **Intake id** is derived from all three staged files; **handoff directories** are named `<candidate_id>--<12 hex of package.json sha256>` and `submit_candidate` takes that `handoff_id`.
+- **The store renders the source itself.** `review` records a typed `ReviewRenderCheck`; `adopt` re-renders at adoption time (never trusting a stored file), checks the review image the human opened, and refuses on a machine without Aseprite.
+- **Adoption rules beyond the proposal:** explicit `--source-asset-id` and exactly one of `--new` / `--parent`; the licence comes only from the human's arguments; `visual_key_taken`; the same source bytes cannot be adopted twice or after a revocation through another intake.
+- **Artifacts:** the PNG is named by its pixel hash and each source revision has its own record (`<hash>.<revision>.artifact.json`); release ids are ordered `rc-NNNN`; a registry key may be `optional`; one visual key maps to one artifact (one scale class `x1`).
+- **Aseprite facts checked against the real binary:** an all-opaque-black stored palette is unverifiable without decoding pixels and is quarantined (`PALETTE_UNVERIFIABLE`); the summary of every sprite carries `cels` and `aseprite_version` (one reviewed line in the pinned `ops.lua`).
+- **Local only:** the real-Aseprite tests (`U-14` open); a local intake revocation covers only this machine.
+- **Not done, as planned:** runtime activation, a resolver, Live Map/HUD consumption, signing, more than one scale class.
+

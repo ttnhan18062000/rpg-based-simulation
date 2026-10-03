@@ -73,9 +73,14 @@ STORE_ALLOWED: dict[str, set[str]] = {
     "release": {"release", "records", "catalog", "catalogwrite", "revoke", "pixels", "intake", "contracts", "identities", "errors", "config"},
     "verify": {"verify", "records", "audit", "build", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
     "gc": {"gc", "records", "intake", "contracts", "identities", "errors", "config"},
+    # shaped, bounded, read-only views for agents; the drawing server may import it
+    "readmodel": {"readmodel", "records", "intake", "pixels", "contracts", "identities", "errors", "config"},
 }
 # store layers that write the tracked catalog (human gates): no drawing module may import them, not even the server
 GATE_LAYERS = {"adoption", "revoke", "catalogwrite", "release", "gc"}
+# the ONLY store layers the drawing MCP server may import: intake (submit_candidate) and the read-only views, plus the shared leaves.
+# Everything else (adoption, revoke, build, release, gc, cli, verify, review, rendering, records, audit, catalogwrite, pixels) is a violation.
+SERVER_STORE_ALLOWED = {"intake", "readmodel", "contracts", "identities", "errors", "config"}
 # no I/O, clock or process access in the pure layers; PyYAML only in `catalog`
 PURE_STORE_LAYERS = {"contracts", "identities", "pixels"}
 PURE_FORBIDDEN_IMPORTS = {"os", "pathlib", "io", "time", "datetime", "subprocess", "yaml"}
@@ -159,6 +164,8 @@ def check_source(rel: str, source: str) -> list[str]:
                     continue
                 if own == "handoff" and not module.startswith("visual_assets.store.contracts"):
                     problems.append(f"{rel}:{node.lineno}: handoff may import only store.contracts ({module})")
+                elif own == "server" and module != "visual_assets.store" and store_layer(module) not in SERVER_STORE_ALLOWED:
+                    problems.append(f"{rel}:{node.lineno}: the drawing server may import only {sorted(SERVER_STORE_ALLOWED)} from the store ({module})")
                 elif own not in ("handoff", "server"):
                     problems.append(f"{rel}:{node.lineno}: drawing layer '{own}' must not import the store ({module})")
                 continue
@@ -417,3 +424,32 @@ def test_planted_store_layering_for_the_gated_layers_is_caught():
         assert any("must not import layer" in p for p in problems), (rel, problems)
     assert check_source("visual_assets/store/adoption.py", "from visual_assets.store import records, catalogwrite\n") == []
     assert check_source("visual_assets/store/cli.py", "from visual_assets.store import adoption, revoke, audit\n") == []
+
+
+def test_planted_server_importing_a_forbidden_store_layer_is_caught():
+    forbidden = ("adoption", "revoke", "build", "release", "gc", "cli", "verify", "review", "rendering", "records", "audit", "catalogwrite", "pixels")
+    for layer in forbidden:
+        for src in (f"from visual_assets.store import {layer}\n", f"import visual_assets.store.{layer}\n", f"from visual_assets.store.{layer} import x\n"):
+            problems = check_source("visual_assets/drawing/server/store_readonly_tools.py", src)
+            assert problems, (layer, src)
+            assert any("human-gated" in p or "may import only" in p for p in problems), (layer, problems)
+    for layer in sorted(SERVER_STORE_ALLOWED):
+        assert check_source("visual_assets/drawing/server/store_readonly_tools.py", f"from visual_assets.store import {layer}\n") == [], layer
+
+
+def test_planted_non_server_drawing_layers_still_cannot_import_any_store_layer_but_contracts():
+    for rel in ("visual_assets/drawing/api.py", "visual_assets/drawing/compose.py"):
+        problems = check_source(rel, "from visual_assets.store import intake\n")
+        assert any("must not import the store" in p for p in problems), (rel, problems)
+    assert check_source("visual_assets/drawing/handoff.py", "from visual_assets.store import intake\n")  # handoff: contracts only
+    assert check_source("visual_assets/drawing/handoff.py", "from visual_assets.store.contracts import canonical_json\n") == []
+
+
+def test_the_real_server_imports_only_the_allowlisted_store_layers():
+    imported = set()
+    for path in (PKG / "drawing" / "server").glob("*.py"):
+        for module, _ in imported_modules(ast.parse(path.read_text()), "visual_assets.drawing.server." + path.stem):
+            layer = store_layer(module)
+            if layer is not None and module != "visual_assets.store":
+                imported.add(layer)
+    assert imported <= SERVER_STORE_ALLOWED and {"intake", "readmodel"} <= imported, imported

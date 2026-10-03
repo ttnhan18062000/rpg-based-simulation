@@ -15,11 +15,14 @@ def test_exact_tool_list(tmp_path):
             return {t.name: t for t in (await s.list_tools()).tools}
 
     tools = run(go())
-    assert set(tools) == EXPECTED_TOOLS and len(tools) == 16
-    # the gates are not on this server: no adopt, build, release, revoke or gc tool, and no store tool at all yet
+    assert set(tools) == EXPECTED_TOOLS and len(tools) == 19
+    # the gates are not on this server: no adopt, revoke, build, release, gc, verify, activate or delete tool (the store tools are read-only plus submit)
     for name in tools:
-        for gate in ("adopt", "build", "release", "revoke", "gc", "verify", "intake", "submit", "store_"):
+        for gate in ("adopt", "revoke", "build", "release", "gc", "verify", "activate", "delete", "approve", "publish"):
             assert gate not in name, name
+    for name, tool in tools.items():  # and no tool takes a human decision as an argument
+        parameters = set(tool.inputSchema.get("properties", {}))
+        assert not parameters & {"approver", "approver_role", "confirm", "decided_at", "source_asset_id", "visual_key"}, (name, parameters)
     assert "NOT an adoption" in tools["export_handoff"].description
     desc = tools["apply_ops"].description
     for op in ("delete_layer", "delete_frame", "resize_canvas"):
