@@ -54,10 +54,12 @@ def test_pyproject_configures_mypy_baseline_with_the_committed_baseline_and_tole
     assert table["allow_unsynced"] is True, "a fixed-but-unsynced error must not fail the gate"
     assert "note" in table["ignore_categories"], "a reworded note alone must not count as a new error"
     assert "mypy-baseline==0.7.4" in data["dependency-groups"]["dev"]
+    assert table["sort_baseline"] is True, "a sorted baseline keeps re-sync diffs minimal and byte-comparable"
     baseline = (_REPO_ROOT / table["baseline_path"]).read_text(encoding="utf-8").splitlines()
     assert baseline and all(": error:" in line and ":0:" in line for line in baseline), (
         "entries are errors only, with the line number normalised to 0"
     )
+    assert baseline == sorted(baseline), "the committed baseline is sorted (sort_baseline = true)"
 
 
 def test_makefile_typecheck_py_filters_through_the_baseline_and_stays_advisory():

@@ -96,6 +96,8 @@ baseline_path = "registries/mypy_baseline.txt"
 # fix a type error in src/ without touching the baseline.
 allow_unsynced = true
 hide_stats = true
+# Sorted, so a re-sync diff shows only the entries that changed and two syncs are byte-comparable.
+sort_baseline = true
 # Notes hang off errors and change wording between mypy versions, so a note-only difference must not count
 # as a new error. `annotation-unchecked` notes are standalone notes with their own category.
 ignore_categories = ["note", "annotation-unchecked"]
