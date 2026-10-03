@@ -129,7 +129,12 @@ def install(repo: Path, prek: str | None = None) -> list[str]:
     else:
         foreign = pre_commit.exists()
         _prek(repo, "install", "--hook-type", "pre-commit", "--allow-missing-config", prek=prek)
-        guard_shim(pre_commit)
+        try:
+            guard_shim(pre_commit)
+        except InstallError:
+            # prek has already written its own, unguarded shim: leave nothing behind that could block a commit.
+            _prek(repo, "uninstall", "--hook-type", "pre-commit", prek=prek)
+            raise
         report.append("pre-commit: prek hook installed (skips where the config or prek is missing)"
                       + ("; the existing hook is kept as pre-commit.legacy and still runs" if foreign else ""))
     return report
