@@ -366,6 +366,7 @@ local function summary()
   res.palette, res.palette_size = pal, #p
   res.colors, res.n_colors = colors, n_colors
   res.nonempty_pixels = frames[1].nonempty
+  res.cels, res.aseprite_version = #spr.cels, tostring(app.version)
 end
 
 local ok, err = pcall(function()

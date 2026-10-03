@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from visual_assets.drawing.server import highlevel_tools, lowlevel_tools  # noqa: F401  (registers the low-level tools)
+from visual_assets.drawing.server import (  # noqa: F401  (registers tools)
+    handoff_tools,
+    highlevel_tools,
+    lowlevel_tools,
+    store_readonly_tools,
+)
 from visual_assets.drawing.server.app import mcp
 
 highlevel_tools.register(mcp)
