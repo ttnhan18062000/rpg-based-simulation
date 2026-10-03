@@ -39,7 +39,7 @@ dict that is the "harness dict" below. Its keys: `scenario_id`, `profile` (profi
 | F4 | `tools/bench_corpus_world.py` stdout JSON | `bench_corpus_world()` | human, or F1 via `--commit` | seed and warmup are inputs but not written |
 | F5 | `reports/perf/matrix_full.json`, `reports/perf/<scenario>_<scale>_<mode>.json` (git-ignored) | `tools/perf/run_benchmarks.py::run_matrix` | `tools/perf/perf_report.py`, `check_perf_regression.py` | failed scenarios are skipped silently |
 | F6 | `tools/perf/check_perf_regression.py`, `tools/perf/perf_ci.py` | stdout and exit code only | n/a | pairs baseline and report by file name only; a missing report is a skipped warning; second threshold policy (×1.15 or +3 ms on average and per-phase p95, +20 MB RSS) beside F1's `max(5 ms, ×1.25)` |
-| F7 | `reports/perf/baseline.json`, `reports/perf/latest.json` (git-ignored) | `tools/perf/run_perf_baseline.py` (scenario-keyed dict of harness dicts); `tests/perf/bench_worker_throughput.py` (a different, flat shape); `tools/perf/perf_baseline.py` (copies latest to baseline) | `tools/release/generate_optimization_proof.py`, `tests/perf/test_optimization_proof_report.py` | three writers, two incompatible shapes, one path |
+| F7 | `reports/perf/baseline.json`, `reports/perf/latest.json` (git-ignored) | `tools/perf/run_perf_baseline.py` (scenario-keyed dict of harness dicts); `tests/perf/bench_worker_throughput.py` (a different, flat shape); `tools/perf/perf_baseline.py` (copies latest to baseline) | `tools/release/generate_optimization_proof.py`, `tests/perf/test_optimization_proof_report.py` | `latest.json`: two writers, two incompatible shapes; `baseline.json`: a copy made by `perf_baseline.py` |
 | F8 | `reports/perf/<test name>.json` | `tests/perf/conftest.py::perf_reporter` (any `@pytest.mark.perf` test that sets `perf_results`) | `tools/perf/perf_report.py` fallback glob | the glob can ingest mixed shapes |
 | F9 | `reports/perf/optimization_proof.{json,md}` | `tools/release/generate_optimization_proof.py::run_proof` | `tests/perf/test_optimization_proof_report.py` (key presence, `speedup_x > 0`) | see finding 1 |
 | F10 | `reports/perf/profiles/comparison.json` | `tools/release/verify_production_profiles.py::run_suite` | none | `{profile: {scenario: {p95_ms, avg_tps, peak_rss} or "CRASHED"}}`, 10 warmup and 10 sample ticks |
@@ -76,12 +76,16 @@ repeated here; the paths and function names are the citations.
 3. **Comparison run lengths differ from baseline lengths.** The synthetic baselines were taken at 20
    sample ticks, the corpus ones at 1000, and the live test re-measures all of them at warmup 10 and
    sample 50. `check_perf_regression.py` has no length check at all.
-4. **Percentiles are computed three ways.** The harness uses `sorted[int(n*q)]`, so p95 and p99 equal
-   the max below about 100 ticks; the profiling toolkit uses nearest-rank `ceil(0.95n)`; the sweep
-   uses `round(p*(n-1))`.
+4. **Percentiles are computed three ways.** The harness uses `sorted[int(n*q)]`, so p95 is the max
+   only when n ≤ 20 and p99 is the max only when n ≤ 100. All 12 synthetic baselines (n = 20) record
+   p95 = p99 = max, and the live tripwire's 50-tick sample records p99 = max while its p95 is the
+   48th of 50 values. The profiling toolkit uses nearest-rank `ceil(0.95n)`; the sweep uses
+   `round(p*(n-1))`.
 5. **Two threshold policies and one name collision.** F1's reader and `check_perf_regression.py`
-   disagree (see F6). `reports/perf/latest.json` has three writers with two shapes.
-6. **No `INCONCLUSIVE` exists anywhere.** The only explicit outcome states are F19's
+   disagree (see F6). `reports/perf/latest.json` has two writers with incompatible shapes (`run_perf_baseline.py` and `bench_worker_throughput.py`), and `perf_baseline.py` copies whichever ran last to `baseline.json`.
+6. **No performance result format or perf gate has an `INCONCLUSIVE` outcome.** (The word exists
+   elsewhere, unrelated: a Gate A read-path verdict in `src/observability/warehouse/adapters.py`
+   and `tests/tools/test_gate_a_readpath_review.py`.) The only explicit outcome states are F19's
    `attempted/aborted/abort_reason`, F22's boolean certifications, and F10's `"CRASHED"`.
 7. **A committed baseline cannot prove it ran in `NORMAL`.** None of the 15 files has
    `mode_sequence`, and the hard-scenario set that would enforce it is empty.
@@ -451,7 +455,7 @@ never a skip that reads as success. A missing baseline, a baseline with a differ
 | `gate.tier`, `gate.projection` | blocking | a tripwire result never stands in for a capacity run |
 | `protocol.*` (warmup, measured ticks, repetitions, percentile method, clock, gc) | blocking | a 20-tick and a 1000-tick sample are not comparable (finding 3) |
 | `runtime_mode_sequence` | blocking when either side left `NORMAL`; otherwise recorded | an excursion changes the work done (`RuntimeMode` can leave `NORMAL`) |
-| `validity.hash_scheme` | blocking when both carry a hash; digests of different schemes are not comparable (PERF-D5) | |
+| `validity.hash_scheme` | blocking when both carry a hash; digests of different schemes are not comparable (PERF-D5) | two digests produced by different hash schemes can differ with identical state, so a mismatch proves nothing |
 | `recorded_at`, host name, load average | recorded only | noise context; load average may add a variance warning, not a verdict |
 
 **Schema version change.** A MAJOR bump invalidates every stored baseline of the older MAJOR for
@@ -540,10 +544,18 @@ For perf-planner and the owner.
 5. Should a `capacity_run` record embed raw samples, or keep a `{uri, sha256}` pointer? Size and
    retention depend on the runner decision (`PERF-M2-T04`).
 6. Which percentile method is the contract's? Nearest-rank is the toolkit's and `pyperf`-friendly;
-   the harness's `int(n*q)` makes p95 and p99 equal the max below 100 ticks.
+   the harness's `int(n*q)` makes p95 equal the max at 20 ticks or fewer and p99 equal the max at 100 ticks or fewer.
 7. Is `runtime.hardware_class` detected from cores and RAM per `certification_contract.md` §3, or
    declared by the runner configuration?
-8. Findings 1 to 7 in §1: which become tickets? Finding 1 (claim text without identity) touches a
+8. Should the blocking set vary by projection? `runtime.cpu_model` and `runtime.logical_cores` are
+   blocking, so a wall-clock tripwire on shared CI runners whose CPU model varies would often return
+   `INCONCLUSIVE`. An instruction-count tripwire (the survey's choice) may not need `cpu_model` to
+   block. This draft does not change the rule.
+9. Should a `RuntimeMode` excursion be `INCONCLUSIVE` or `REGRESSION`? §4 makes it `INCONCLUSIVE`
+   when either side left `NORMAL`, but a head-side excursion against a `NORMAL` base may be the
+   regression itself, and the live test already fails hard on it for scenarios in
+   `_RUNTIME_MODE_HARD_SCENARIOS` (empty today). This draft does not change the rule.
+10. Findings 1 to 7 in §1: which become tickets? Finding 1 (claim text without identity) touches a
    file under `tools/release/`.
 
 ### M1 candidates that could change identity fields
