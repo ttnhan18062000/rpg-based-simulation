@@ -8,6 +8,8 @@ tags: [testing]
 
 # Core-RPG test pilot report (2026-09-30)
 
+**Status (2026-10-03): Phase 1 of the test-architecture roadmap is closed by owner decision, with limits; this report is a closed record of a bounded demonstration (sample size 1 per item, no rate implied).** Epic D and its three sibling epics are closed (`tickets/done/test-architecture/`, closure-readiness audit in its `INDEX.md`); capability 8 (pilot P) stayed blocked and is a watch item in roadmap §6. Phase 2 (scale-out) is not approved.
+
 Report for `TCK-20260929-EPIC-CORE-RPG-TEST-PILOT` (roadmap `docs/plans/test_architecture/roadmap.md` §3, §6). One
 exercise, D1 (`TCK-20260930-CORE-RPG-PILOT-NODE-CHARGE-ACCOUNTING`), on a real surface. It is a workflow
 demonstration, not a feature proof portfolio, and it is directional: it makes no causal claim. Evidence

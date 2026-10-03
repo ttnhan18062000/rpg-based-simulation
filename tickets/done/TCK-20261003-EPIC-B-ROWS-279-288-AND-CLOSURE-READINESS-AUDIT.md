@@ -35,8 +35,10 @@ Records and audit only, no product code and no status change to any epic. Reques
 - `INDEX.md`: the closure-readiness audit and a "what closes the folder" line; row 2's status column updated to the current record.
 - Two documentation defects found by the audit and fixed in the same change (reviewer's direction): `docs/guides/testing.md`'s own triage list replaced by a pointer to `docs/testing/regression_policy.md` §13 (the guide's non-triage text is kept), and the dead `README.md:112` taxonomy link repointed to `docs/testing/test_taxonomy.md`.
 
+- **Folded in later the same day (the user's decisions D1 and D2 of 2026-10-03, relayed by test-architecture-reviewer and recorded as the user's own):** B4 classed MET-with-caveat; C2 and C4 classed NOT DEMONSTRATED; all four epics closed (status DONE, frontmatter `historical`/`done`, dated Completion Summaries citing the audit); the whole folder moved to `tickets/done/test-architecture/`; roadmap §6 records "Phase 1 closed 2026-10-03 by owner decision, with limits", Phase 2 not approved, and a dated Watch items list (owner and trigger each, no dates); the pilot report's header status line updated; live-doc references to the folder repointed. I could not verify the relay directly; the PR is where the user confirms it.
+
 ## Out of Scope
-- Adding a routing test, changing any epic's status text or criterion status, closing any epic.
+- Adding a routing test.
 - Re-running A3's combined-suite and random-order checks (recorded as not re-run, with the last evidence cited).
 - Any change to the workflow, `scenario_lane_paths.py`, or other agents' tickets.
 
@@ -58,7 +60,7 @@ docs/testing/regression_policy.md, docs/testing/core_rpg_test_pilot_2026-09-30.m
 None (hotfix).
 
 ## Related Code Areas
-- tickets/todos/test-architecture/
+- tickets/done/test-architecture/
 - tools/test_architecture/scenario_lane_paths.py (read only)
 
 ## Assumptions / Open Questions
@@ -74,7 +76,7 @@ Runs: #279 36900341228, #280 36964376584, #281 36965381697, #282 36995844110, #2
 Text only (docs and README edits are links and a pointer). Frontmatter and registry checks run after the edit; the audit's scoped test runs are listed in `INDEX.md` evidence pointers.
 
 ## Files Changed
-tickets/todos/test-architecture/TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION.md; tickets/todos/test-architecture/INDEX.md; docs/guides/testing.md; README.md; docs/REGISTRY.yaml.
+tickets/done/test-architecture/TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION.md; tickets/done/test-architecture/INDEX.md; docs/guides/testing.md; README.md; docs/plans/test_architecture/roadmap.md; docs/plans/test_architecture/reference/{architecture_design_notes,current_test_system_overview,milestone_design_notes}.md; docs/testing/core_rpg_test_pilot_2026-09-30.md; the four epic files and INDEX.md (moved to tickets/done/test-architecture/); docs/REGISTRY.yaml.
 
 ## Completion Summary
-Epic B's record is 18 PRs and 23 rows (#271-#288): the lane ran on 7 PRs (34-52 s), Perf covered 6, and 6 are docs-only skips. The "about 10 lane runs" reading is not met and the `src/progression/**`-only trigger is unobserved in CI; a rule-level test exists. The cost summary was shared on 2026-10-03. `INDEX.md` carries a closure-readiness audit (21 criteria: 10 MET, 8 MET-with-caveat, 2 NOT MET, 1 NOT EXERCISED; no epic status text changed): blockers are B4, C2 and C4. The audit's two documentation findings (the guide's parallel triage list, the dead README link) were fixed in the same change.
+Epic B's record is 18 PRs and 23 rows (#271-#288): the lane ran on 7 PRs (34-52 s), Perf covered 6, and 6 are docs-only skips. The "about 10 lane runs" reading is not met and the `src/progression/**`-only trigger is unobserved in CI; a rule-level test exists. The cost summary was shared on 2026-10-03. `INDEX.md` carries a closure-readiness audit (21 criteria; after the owner decisions: 10 MET, 9 MET-with-caveat, 2 NOT DEMONSTRATED). All four epics were closed by owner decision (B4 accepted with both limits; C2 and C4 NOT DEMONSTRATED) and the whole folder moved to `tickets/done/test-architecture/`; roadmap §6 records Phase 1 closed with limits, Phase 2 not approved, and five dated watch items. The audit's two documentation findings (the guide's parallel triage list, the dead README link) were fixed in the same change.

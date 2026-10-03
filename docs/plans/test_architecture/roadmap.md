@@ -10,7 +10,7 @@ tags: [testing, architecture, planning]
 
 **Status: owner decisions recorded 2026-09-30 (§11): D-R2, D-MF and D-M2 approved with changes; D-P deferred; D-PERF assigned when its trigger fires; D-PR resolved.** Approval lifts a HOLD; it does not mean the epic is complete. See each epic's own status.
 
-This roadmap and the four epic tickets in `tickets/todos/test-architecture/` are the **binding** plan.
+This roadmap and the four epic tickets in `tickets/done/test-architecture/` are the **binding** plan.
 Everything in [`reference/`](reference/) is non-binding investigation and design material for the
 detail planner and implementer agents. Child tickets are **not** created here; they are the detail
 planner's job.
@@ -255,6 +255,18 @@ Sample size is 1 for each, so no false-positive rate or cost rate is stated or i
 | Scenario lane | stays **non-required**. Promotion to required is a later owner decision; the roughly 10-PR cost record is an observation checkpoint, not an authorization |
 | Domain roll-out | **none**. Instead a second pilot surface in progression |
 | Still the owner's, later | promotion to required, any scale-out, any §9 cleanup target |
+
+**Phase 1 closed 2026-10-03 by owner decision, with limits.** The four epics A–D are closed (the user's answers, relayed by `test-architecture-reviewer`; the closure-readiness audit is in `tickets/done/test-architecture/INDEX.md`, base `origin/main` c0980e27a). Epic B criterion 4 is accepted as MET-with-caveat: routing observed on 18 PRs, the scenario lane ran on 7 (34–52 s whole-job) against the roughly 10 planned, and the `src/progression/**`-only trigger was not observed in CI; the rule-level test `tests/unit/tools/test_scenario_lane_paths.py::test_src_progression_only_routes_to_the_dedicated_job` (against the live `PERF_RE`) stands in. Epic C criteria 2 and 4 are recorded as **NOT DEMONSTRATED**; their protocols stay as written and the first eligible run is recorded against them. **Phase 2 (scale-out) is NOT approved and needs a new owner decision.** Closure promotes nothing: the scenario lane stays non-required and every advisory check stays advisory.
+
+**Watch items (2026-10-03; this roadmap stays the live document).** Each has an owner and a trigger; none has a date.
+
+| Item | Owner | Trigger |
+|---|---|---|
+| (a) Epic C criterion 2 rerun | test-architecture, with `rpg-feature-planning` supplying candidates | A test-changing ticket outside owner decision 7's parked set appears, from any owner, and the user gives a launch go-ahead; it re-enters through the protocol in Epic C criterion 2 (`tickets/done/test-architecture/TCK-20260929-EPIC-TEST-WORKFLOW-FAILURE-HANDLING.md`). Possible future sources, undated, not commitments (relayed from `rpg-feature-planning`, 2026-10-02): `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP` (held behind `TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND`) and `TCK-20261002-EPIC-SEMANTIC-FOUNDATION-COMPLETION` child B |
+| (b) Epic C criterion 4, first expectation-change run | test-architecture | A ticket that changes an expectation shows the Bible/contract and parity-ledger change before the test change, or an escalation record |
+| (c) First CI-observed `src/progression/**`-only PR | test-architecture | A merged PR whose changed paths hit the scenario lane but not `PERF_RE`; append its row to the Epic B cost record (`tickets/done/test-architecture/TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION.md`) |
+| (d) Pilot P (a second surface in progression) | `rpg-feature-planning` (surface stability) and test-architecture | The AC6 tripwire of `TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS` fires or the derived-stat behaviour stops being provisional; launch needs the user's go-ahead |
+| (e) Mutation baseline v2 goes stale | test-architecture | 2026-10-31 (30 days after its 2026-10-01 run, per `stale_after` in `tests/mutation/baselines/src_core_conservation_v2.json`), or its target file changes |
 
 ## 7 · Epics (Phase 1)
 

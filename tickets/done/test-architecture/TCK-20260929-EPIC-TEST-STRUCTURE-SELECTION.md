@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION
-phase: open
+phase: done
 date: 2026-09-29
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Epic B — Test structure and selection: level conventions and metadata, scenario tests on relevant PRs, and a first impact report
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -164,4 +164,4 @@ Defined by child tickets.
 (Child tickets.)
 
 ## Completion Summary
-(Open.)
+**Closed 2026-10-03 by owner decision** (the user's answers, relayed by `test-architecture-reviewer`). Classed in `tickets/done/test-architecture/INDEX.md` (closure-readiness audit of 2026-10-03, base `origin/main` c0980e27a): B1, B2 and B5 MET; B3 MET-with-caveat; **B4 MET-with-caveat by the user's decision (D1)**: routing is observed on 18 PRs (23 rows), the lane ran on 7 (34-52 s whole-job), and `tests/unit/tools/test_scenario_lane_paths.py::test_src_progression_only_routes_to_the_dedicated_job` (against the live `PERF_RE`) stands in for the progression-only case. **Both limits stand: 7 lane runs against about 10, and the `src/progression/**`-only trigger was not observed in CI.** The first CI-observed progression-only PR is a watch item, to be appended to the cost record. The cost summary was shared on 2026-10-03 (sent, no reply recorded). The lane stays non-required; this closure is not a promotion.

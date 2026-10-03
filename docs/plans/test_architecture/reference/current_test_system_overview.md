@@ -11,7 +11,7 @@ tags: [testing, architecture, planning]
 > **NON-BINDING REFERENCE (2026-09-29).** This document is investigation and design material kept
 > for the detail planner and implementer agents. The **binding** plan is
 > [`../roadmap.md`](../roadmap.md) plus the four epic tickets in
-> `tickets/todos/test-architecture/`. Where this document is more specific than those, treat it as a
+> `tickets/done/test-architecture/`. Where this document is more specific than those, treat it as a
 > suggestion, not a commitment. Decisions marked here remain **pending** unless the roadmap says
 > otherwise.
 
