@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-PERF-LATEST-JSON-SINGLE-WRITER
-phase: open
+phase: done
 date: 2026-10-04
 tags: [performance, benchmarking]
 ---
@@ -15,7 +15,7 @@ tags: [performance, benchmarking]
 Give `reports/perf/latest.json` one writer and one shape, and make `perf_baseline.py --update` refuse to promote anything else
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -59,10 +59,10 @@ Finding 5 of `docs/performance/benchmark_identity_schema.md` §1 (row F7). Two s
 - Committing any file under `reports/`
 
 ## Acceptance Criteria
-- [ ] Only `run_perf_baseline.py` writes `reports/perf/latest.json` (verified by `grep -rn "latest.json" tools/ tests/`)
-- [ ] `perf_baseline.py --update` refuses a non-scenario-keyed file and leaves `baseline.json` unchanged; the tests prove it without running a benchmark
-- [ ] `pytest tests/tools/test_perf_baseline_tool.py tests/tools/test_test_scope_coverage_static.py tests/tools/test_tools_orphan_check.py tests/static -q` passes
-- [ ] No file under `reports/` or `data/runs/` is committed
+- [x] Only `run_perf_baseline.py` writes `reports/perf/latest.json` (verified by `grep -rn "latest.json" tools/ tests/`)
+- [x] `perf_baseline.py --update` refuses a non-scenario-keyed file and leaves `baseline.json` unchanged; the tests prove it without running a benchmark
+- [x] `pytest tests/tools/test_perf_baseline_tool.py tests/tools/test_test_scope_coverage_static.py tests/tools/test_tools_orphan_check.py tests/static -q` passes
+- [x] No file under `reports/` or `data/runs/` is committed
 
 ## Related Tickets
 - TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA (finding 5, row F7)
@@ -81,13 +81,21 @@ Finding 5 of `docs/performance/benchmark_identity_schema.md` §1 (row F7). Two s
 - Owner approved this tools-only batch on 2026-10-04 while the entry gate and the `src/` freeze hold.
 
 ## Implementation Notes
-
+- `perf_baseline.py` now exposes `validate_latest()`, `run_benchmarks()`, `update_baseline()` and `main(argv)` returning an exit code; the `__main__` guard does `sys.exit(main())`. Validation runs before the timestamp is added. Required keys: scenario_id (equal to its dict key), profile, sample_ticks, tick_ms, mem_rss_mb, and compute_tps or avg_tps. Unparseable JSON is also refused.
+- `bench_worker_throughput.py` gets `REPORT_FILENAME = "worker_throughput.json"`; stdout and `--json` unchanged.
+- Scope map: `perf_baseline.py` added to `_TOOLS_PERF_BASENAME_MAP` and the test-scoper.md tools/perf row; one parametrized case added to `test_test_scope_coverage_static.py`.
+- Schema doc: one "Fixed by" line under finding 5 and in the F7 row.
+- Not run: any benchmark, baseline or proof script.
 
 ## Test Summary
-
+199 passed, 2 skipped, 1 xfailed: tests/tools/test_perf_baseline_tool.py (11 new), test_test_scope_coverage_static.py, test_tools_orphan_check.py, test_perf_tag_test_scoper_wiring.py, tests/static, tests/docs (not slow). `grep -rn latest.json tools tests` shows only run_perf_baseline.py as writer.
 
 ## Files Changed
-
+- tools/perf/perf_baseline.py, tests/perf/bench_worker_throughput.py
+- tests/tools/test_perf_baseline_tool.py (new), tests/tools/test_test_scope_coverage_static.py
+- tools/gate_checks/test_scope_coverage_static.py, .claude/agents/test-scoper.md
+- docs/performance/benchmark_identity_schema.md (two Fixed-by lines)
+- this ticket, docs/REGISTRY.yaml, monitoring shards
 
 ## Completion Summary
-
+latest.json has one writer and one shape; perf_baseline.py --update refuses anything else.

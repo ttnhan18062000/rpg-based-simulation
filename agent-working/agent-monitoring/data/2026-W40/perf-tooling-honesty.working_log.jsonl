@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-03T17:13:21.174619Z", "ticket_id": "TCK-20261004-PERF-LATEST-JSON-SINGLE-WRITER", "title": "latest.json single writer", "status": "DONE", "summary": "bench_worker_throughput writes its own file; perf_baseline.py runs the scenario suite and validates before promoting.", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}
