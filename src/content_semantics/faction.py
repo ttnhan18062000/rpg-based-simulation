@@ -67,6 +67,28 @@ def get_species_id_str(entity: Any) -> str:
 
 
 
+def are_entities_hostile(source: Any, target: Any, context: Any) -> bool:
+    """Catalog-driven hostility between two entities for the given ``RelationContext``.
+
+    The single home for the "resolve both faction ids, then ask the catalog" test, so that engagement
+    legality and goal scoring cannot diverge (TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND).
+    Faction ids come from ``EntityIdentityResolver`` with ``get_faction_id_str`` as the
+    ``IdentityResolutionError`` fallback. The caller owns the context (distance, combat_engaged).
+    """
+    from src.entities.identity_resolver import EntityIdentityResolver, IdentityResolutionError
+
+    id_resolver = EntityIdentityResolver()
+    try:
+        src_faction_id = id_resolver.resolve(source).faction_id
+    except IdentityResolutionError:
+        src_faction_id = get_faction_id_str(source)
+    try:
+        tgt_faction_id = id_resolver.resolve(target).faction_id
+    except IdentityResolutionError:
+        tgt_faction_id = get_faction_id_str(target)
+    return get_faction_semantics_service().is_hostile_compat(src_faction_id, tgt_faction_id, context)
+
+
 class FactionSemanticsService:
     """
     Code-based interpretation of Faction catalog definition meaning.

@@ -99,6 +99,12 @@ def _stage_detour_project(state, *, goblin_position):
 
     new_entities = dict(state.entities)
     new_entities[GOBLIN_ID] = goblin
+    # Isolate the detour mechanism: the orc is catalog-hostile to the goblin, and since
+    # TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND the combat_engage scorer sees that
+    # (it used to compare the raw Faction enum, where both are MONSTER_HORDE) and legitimately outbids the
+    # staged detour project. These tests are about the detour's distance resolution, not goal arbitration.
+    for entity_id in [eid for eid in new_entities if eid != GOBLIN_ID]:
+        del new_entities[entity_id]
     object.__setattr__(state, "entities", new_entities)
     return state
 
