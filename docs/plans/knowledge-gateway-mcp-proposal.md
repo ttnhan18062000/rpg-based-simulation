@@ -136,7 +136,7 @@ the MCP does not silently override them.
 - `search_docs`
 - `search_health`
 
-It queries `knowledge-index/knowledge.db` using hybrid dense and BM25 retrieval. The index currently contains documentation, completed tickets, investigations, and working-log material. It returns paths, headings, relevance scores, and short excerpts.
+It queries `agent-working/.index/knowledge-index/knowledge.db` using hybrid dense and BM25 retrieval. The index currently contains documentation, completed tickets, investigations, and working-log material. It returns paths, headings, relevance scores, and short excerpts.
 
 This is the best current provider for:
 
@@ -163,7 +163,7 @@ Graphify output can also contain inferred relationships. The gateway must preser
 
 ### 3.3 Parity Ledger
 
-`docs/parity_ledger/*.yaml` and the derived `parity-index/parity.db` specialize in questions about whether requirements and behaviors are implemented, tested, missing, divergent, unsupported, or legacy-verified.
+`docs/parity_ledger/*.yaml` and the derived `agent-working/.index/parity-index/parity.db` specialize in questions about whether requirements and behaviors are implemented, tested, missing, divergent, unsupported, or legacy-verified.
 
 The Parity Ledger remains authoritative for implementation-completeness questions. The gateway may cache and explain its results but must never replace or independently override ledger status.
 
@@ -175,7 +175,7 @@ Other authoritative or high-value providers include:
 - source code and deterministic code indexes for current implementation facts
 - architecture tests for enforced invariants
 - tickets for decisions, work status, and historical reasoning
-- `tickets/working_log.csv` for completed-work history
+- `agent-working/tickets/working_log.csv` for completed-work history
 - agent-orchestration contracts and generated agent instructions for workflow policy
 
 These should be queried through adapters where useful, not copied into a competing truth store.
@@ -511,7 +511,7 @@ Do not initially expose `knowledge_learn`, `knowledge_promote`, `knowledge_verif
 Evolve the existing gitignored retrieval-cache database:
 
 ```text
-knowledge-index/retrieval_cache.db
+agent-working/.index/knowledge-index/retrieval_cache.db
 ```
 
 Add versioned payload and dependency tables through migrations. Preserve the current marker-only
@@ -1240,7 +1240,7 @@ this result is a separate, later human-reviewer decision, out of this ticket's o
   `migration_001_add_level1_tables(conn)` function that creates the new
   `retrieval_provider_result_cache_rows` (§10.2's Level 1: Provider-result cache row shape) and
   `retrieval_cache_generation` metadata tables — additive-only, `CREATE TABLE IF NOT EXISTS` against
-  the same `knowledge-index/retrieval_cache.db` file, never called from `_get_connection()`,
+  the same `agent-working/.index/knowledge-index/retrieval_cache.db` file, never called from `_get_connection()`,
   `_init_schema()`, or any existing `check_*_cache()`/`write_*_cache()`/`prune()` hot path, and the 3
   existing marker-only tables left byte-unchanged; tested by 11 new tests in
   `tests/tools/test_retrieval_cache.py` (new `TestMigrations` class plus one `TestCrashRecovery`
@@ -1407,7 +1407,7 @@ boundary — that determination is a separate, later human-reviewer call based o
   `test_gateway_call_never_crashes_when_parity_index_absent` (both real calls, no
   `tools.parity_index` internals mocked). `negative_knowledge_support` is declared `SCOPED`, earned
   by the adapter calling `check_staleness()` whenever `entry()` returns `found: False`. A
-  missing/stale `parity-index/parity.db` fails open via a named `IndexNotBuiltError` catch at the
+  missing/stale `agent-working/.index/parity-index/parity.db` fails open via a named `IndexNotBuiltError` catch at the
   dispatch layer, never crashing the gateway call
   (`test_missing_parity_index_fails_open_not_crash`,
   `test_stale_parity_index_is_disclosed_not_silently_trusted`). `context_search` stays a co-primary
@@ -1483,8 +1483,8 @@ boundary — that determination is a separate, later human-reviewer call based o
 repeated/semantically-equivalent question demand for this phase, against this repository's own
 real historical usage (not the frozen 7-entry corpus, which is deliberately built unique-per-entry
 and cannot demonstrate repeated demand by design). Primary source
-(`agent-monitoring/events.jsonl` Investigate-phase summaries, 521 distinct tickets): 17
-conservative repeated-demand pairs. Secondary/corroborating source (`tickets/working_log.csv`,
+(`agent-working/agent-monitoring/events.jsonl` Investigate-phase summaries, 521 distinct tickets): 17
+conservative repeated-demand pairs. Secondary/corroborating source (`agent-working/tickets/working_log.csv`,
 1,411 tickets): 372 conservative repeated-demand pairs. See
 `docs/engine/contracts/knowledge_gateway_mcp/phase5_repeated_demand_measurement.md` for full
 per-source detail, method, and figures. The finding is a small, real, but mostly-non-literal
@@ -1743,7 +1743,7 @@ evidence for this 2026-08-11 snapshot is:
 | Parity authority and derived index | `docs/parity_ledger/schema.json`, `tools/parity_index.py` |
 | Document authority/lifecycle vocabulary | `docs/REGISTRY.yaml`, `tools/generate_registry.py`, `tools/validate_frontmatter.py` |
 | Graphify current graph and extraction mix | `graphify-out/GRAPH_REPORT.md`, `graphify-out/manifest.json` |
-| Existing context-efficient retrieval initiative | `tickets/backlogs/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md` and its linked decision docs |
+| Existing context-efficient retrieval initiative | `agent-working/tickets/backlogs/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md` and its linked decision docs |
 | Approved simulation knowledge writes and revert | `src/lab/workflows/` (per-workflow files), `docs/ai/workflows.md` §`update-knowledge-store` |
 
 ## 27. Follow-Up Clarification Map

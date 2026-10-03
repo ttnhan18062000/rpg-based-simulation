@@ -52,10 +52,10 @@ class TestParseTrackingDocFromSequence:
 
 class TestRenderStatusLine:
     def test_renders_expected_shape(self):
-        line = render_status_line(4, 21, 17, "folder-based batch at `tickets/todos/m1-quick-wins/`", "2026-08-26T10:00:00Z")
+        line = render_status_line(4, 21, 17, "folder-based batch at `agent-working/tickets/todos/m1-quick-wins/`", "2026-08-26T10:00:00Z")
         assert "4/21 tickets done, 17 remaining" in line
         assert "2026-08-26T10:00:00Z" in line
-        assert "folder-based batch at `tickets/todos/m1-quick-wins/`" in line
+        assert "folder-based batch at `agent-working/tickets/todos/m1-quick-wins/`" in line
 
 
 class TestUpdateTrackingDocStatusBlock:
@@ -106,7 +106,7 @@ class TestUpdateTrackingDocStatusBlock:
         )
         result = update_tracking_doc_status_block(
             doc, done_count=4, total_count=21, remaining_count=17,
-            description="folder-based batch at `tickets/todos/m1-quick-wins/`",
+            description="folder-based batch at `agent-working/tickets/todos/m1-quick-wins/`",
             ts="2026-08-26T10:00:00Z",
         )
         assert result["status"] == "updated"

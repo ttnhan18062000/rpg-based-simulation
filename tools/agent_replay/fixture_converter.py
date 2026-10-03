@@ -3,14 +3,14 @@
 
 Models `tests/fixtures/agent_replay/TCK-20260721-ORCHESTRATION-CONTRACT-ADR.yaml` — the one
 existing hand-built example — reading a closed ticket's real permanent files (path references
-only, never embedded copies) plus its `agent-monitoring/data/*/events.jsonl` phase records for
+only, never embedded copies) plus its `agent-working/agent-monitoring/data/*/events.jsonl` phase records for
 Scope/Investigate/Plan/Review. `Review.output.verdict`/`.violations` are reconstructed from
 `events.jsonl`'s truncated `summary` field where no fuller record exists (the same disclosed
 limitation the hand-built fixture already documents) — every converted fixture records a
 `review_output_fidelity` field in the conversion log so this is visible per-fixture, never
 smoothed over (investigation.md Risk #5).
 
-A ticket missing `stored_artifacts/{id}/`, `investigation.md`, `plan.md`, or any of the 4
+A ticket missing `agent-working/stored_artifacts/{id}/`, `investigation.md`, `plan.md`, or any of the 4
 Scope/Investigate/Plan/Review phase events is NOT converted — it is excluded with a specific,
 logged reason (Scope item 3), never silently dropped. Every accepted fixture is round-tripped
 through the existing, unmodified `fixture_envelope.load_fixture()` before acceptance.
@@ -104,18 +104,18 @@ def convert_ticket_to_fixture(
 
     if not stored_artifacts_dir.is_dir():
         return ConversionResult(
-            ticket_id, False, None, None, f"missing stored_artifacts/{ticket_id}/"
+            ticket_id, False, None, None, f"missing agent-working/stored_artifacts/{ticket_id}/"
         )
 
     investigation_path = stored_artifacts_dir / "investigation.md"
     plan_path = stored_artifacts_dir / "plan.md"
     if not investigation_path.exists():
         return ConversionResult(
-            ticket_id, False, None, None, f"missing stored_artifacts/{ticket_id}/investigation.md"
+            ticket_id, False, None, None, f"missing agent-working/stored_artifacts/{ticket_id}/investigation.md"
         )
     if not plan_path.exists():
         return ConversionResult(
-            ticket_id, False, None, None, f"missing stored_artifacts/{ticket_id}/plan.md"
+            ticket_id, False, None, None, f"missing agent-working/stored_artifacts/{ticket_id}/plan.md"
         )
 
     events = _read_events_for_ticket(monitoring_root, ticket_id)

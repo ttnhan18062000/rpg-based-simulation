@@ -29,7 +29,7 @@ one real precedent (`action_pacing_readiness`, a kept-ID split) is only detectab
 snapshot diff against a stored review-time baseline, which would duplicate
 `mechanism_registry_changed_code_check.py`'s own whole-entry-equality check on a different axis, for
 a scenario that has not occurred once among M1's five mapped mechanisms. See
-`tickets/inprogress/TCK-20260924-M2-MAPPING-DRIFT-DETECTION.md`'s own Assumptions/Open Questions and
+`agent-working/tickets/inprogress/TCK-20260924-M2-MAPPING-DRIFT-DETECTION.md`'s own Assumptions/Open Questions and
 Implementation Notes for the recorded disposition. (Plain rename/removal is already a hard validator
 failure today via `tools/semantic_control_plane/registry.py::validate_rule_mechanism_edges()`'s
 unresolved-id check -- not this module's job either.)

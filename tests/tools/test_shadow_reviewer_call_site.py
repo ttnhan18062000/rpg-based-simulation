@@ -7,7 +7,7 @@ Path.read_text()-only technique tests/tools/test_shadow_packet_call_site.py alre
 uses (the workflow file is never executed — no JS test runner exists in this repo for
 .claude/workflows/*.js). Behavioral sub-tests exercise the new Python modules
 (shadow_reviewer_events, shadow_reviewer_window) directly, in-process, against tmp_path
-fixtures — never the real agent-monitoring/data corpus.
+fixtures — never the real agent-working/agent-monitoring/data corpus.
 """
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ import re
 import sys
 import tempfile
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _WORKFLOW_PATH = _REPO_ROOT / ".claude" / "workflows" / "implement-ticket.js"
@@ -277,8 +278,8 @@ def test_candidate_call_cost_and_timing_labeled_separately_from_production(tmp_p
     )
 
     monkeypatch.chdir(tmp_path)
-    (tmp_path / "agent-monitoring" / "data" / "2026-W99").mkdir(parents=True)
-    (tmp_path / "agent-monitoring" / "data" / "2026-W99" / "tools.jsonl").write_text(
+    (tmp_path / AGENT_MONITORING / "data" / "2026-W99").mkdir(parents=True)
+    (tmp_path / AGENT_MONITORING / "data" / "2026-W99" / "tools.jsonl").write_text(
         "\n".join(json.dumps(r) for r in production_rows + shadow_rows) + "\n"
     )
 
@@ -339,7 +340,7 @@ def test_capture_epoch_ms_and_workflow_start_ms_defined_once_after_capture_ts():
     workflow_start_ms_idx = source.index("const workflowStartMs = await captureEpochMs()")
     resolve_scope_idx = source.index("const resolveScopeTicketLocation = async (id)")
 
-    assert capture_ts_idx < capture_epoch_ms_idx < workflow_start_ms_idx < resolve_scope_idx
+    assert capture_ts_idx < capture_epoch_ms_idx < resolve_scope_idx < workflow_start_ms_idx
 
 
 # ---------------------------------------------------------------------------

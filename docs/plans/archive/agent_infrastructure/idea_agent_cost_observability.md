@@ -12,12 +12,12 @@ tags: [idea, agent-infrastructure, observability, cost, tokens, model-routing]
 # Idea: Agent Spend & Token Observability Layer
 
 **Archived:** 2026-07-13 — Tier 1 shipped by `TCK-20260708-AGENT-COST-OBSERVABILITY`
-(`tickets/done/`); Tier 2 (`self_reported_scope`) deliberately deferred as stretch-only (no ticket,
+(`agent-working/tickets/done/`); Tier 2 (`self_reported_scope`) deliberately deferred as stretch-only (no ticket,
 no demonstrated need yet) and Tier 3 remains platform-blocked, both by design rather than left
 incomplete; this document is the historical design reference.
 
 > **Maturity: SHIPPED (Tier 1).** Implemented by `TCK-20260708-AGENT-COST-OBSERVABILITY`
-> (`tickets/done/`) under `TCK-20260708-AGENT-INFRA-HARDENING-EPIC`. `cost_proxy_score` is computed
+> (`agent-working/tickets/done/`) under `TCK-20260708-AGENT-INFRA-HARDENING-EPIC`. `cost_proxy_score` is computed
 > in `writeMonitoring`'s existing single pass over `tools.jsonl` (weighted Bash `duration_ms` +
 > `Agent`-spawn count + edit-tool-call count; concrete starting weights `w_bash=0.001`, `w_agent=50`,
 > `w_edit=1`, sized against real data rather than left as this doc's original placeholders), written
@@ -90,7 +90,7 @@ Longer-term, once cost-by-agent-type is visible for a few weeks, it becomes the 
 | Existing component | How this idea attaches |
 |---|---|
 | `docs/agent-monitoring/schema.md` — "What is not recorded" | This idea is the direct answer to that documented gap; the schema doc should gain a `cost_proxy_score` / `self_reported_scope` field spec once implemented |
-| `agent-monitoring/README.md` — "What It Does NOT Capture" | Token counts stay listed as not captured (still platform-blocked); the proxy should be described as a proxy, not silently presented as equivalent |
+| `agent-working/agent-monitoring/README.md` — "What It Does NOT Capture" | Token counts stay listed as not captured (still platform-blocked); the proxy should be described as a proxy, not silently presented as equivalent |
 | `writeMonitoring` (workflow finalize step) | Natural place to compute Tier 1 — it already reads `tools.jsonl` to derive `tool_call_count` today |
 | `make agent-monitoring-retro` | Where the payoff has to show up, or this is telemetry nobody looks at |
 | [`idea_agent_gate_determinism.md`](idea_agent_gate_determinism.md) (archived — shipped) | Its `verified_by` field tells you which half of a gate is static vs. LLM-judged — exactly the split needed before a model-routing decision is defensible |

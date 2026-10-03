@@ -4,7 +4,7 @@ M2's known-positive input is reconstructed from TCK-20260831-RACE-RELATIONS-MATR
 commit and its own ticket text. That ticket's final (post-fix) `## Files Changed` prose itself
 discloses the real historical gap: `docs/mechanics/02_combat_laws.md` "was not updated by the
 original Implement pass" and was "added by Document-Update after" the gap was caught at Verify
-(see staging_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/investigation.md Current Behavior
+(see agent-working/staging_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/investigation.md Current Behavior
 §5). Since the gap was caught and fixed before the ticket's single closing commit, the ticket's
 *current* committed state has no live gap — this test reconstructs the pre-fix self-report moment
 by using the real touched-docs set (from `git show`) against a declared-text excerpt that omits
@@ -30,6 +30,7 @@ from agent_replay.defect_detectors import (  # noqa: E402
     detect_m3_background_hang,
     extract_ticket_section,
 )
+from tools.agent_working_paths import TICKETS  # noqa: E402
 
 _RACE_RELATIONS_TICKET_ID = "TCK-20260831-RACE-RELATIONS-MATRIX"
 _RACE_RELATIONS_REAL_TOUCHED_DOCS = [
@@ -53,7 +54,7 @@ _M3_SYNTHETIC_FIXTURE_PATH = (
 
 
 def _real_ticket_files_changed_and_related_docs_text() -> tuple:
-    ticket_path = _REPO_ROOT / "tickets" / "done" / f"{_RACE_RELATIONS_TICKET_ID}.md"
+    ticket_path = _REPO_ROOT / TICKETS / "done" / f"{_RACE_RELATIONS_TICKET_ID}.md"
     text = ticket_path.read_text(encoding="utf-8")
     return (
         extract_ticket_section(text, "Files Changed"),

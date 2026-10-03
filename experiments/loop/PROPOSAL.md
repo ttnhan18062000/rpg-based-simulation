@@ -21,7 +21,7 @@ Two reference points were reviewed:
 
 ## 3. What the current process already covers vs. what's missing
 
-This project's agent system (11 subagents, 11 workflows, 16 skills — see `docs/ai/system_overview.md`) already has a 10-phase gated ticket pipeline, a 7-phase `/simq-audit` calibration lane, and `agent-monitoring/` observability. It scores 8.0/10 on its own infrastructure audit ("Mature, gated, not yet deterministic").
+This project's agent system (11 subagents, 11 workflows, 16 skills — see `docs/ai/system_overview.md`) already has a 10-phase gated ticket pipeline, a 7-phase `/simq-audit` calibration lane, and `agent-working/agent-monitoring/` observability. It scores 8.0/10 on its own infrastructure audit ("Mature, gated, not yet deterministic").
 
 What it does not have, structurally:
 
@@ -29,7 +29,7 @@ What it does not have, structurally:
 |---|---|
 | Parameter search, not single-shot guessing | The ticket pipeline is built for "implement a known, scoped change correctly," not "try 20-30 variants and compare." |
 | Unattended/overnight execution | Every phase needs a live agent call in an active session — nothing here runs while a human is away. |
-| Per-trial trend logging | `agent-monitoring/` logs *workflow runs*; nothing logs *experiment trials* with a metric delta and keep/discard verdict. |
+| Per-trial trend logging | `agent-working/agent-monitoring/` logs *workflow runs*; nothing logs *experiment trials* with a metric delta and keep/discard verdict. |
 | Automatic revert bookkeeping | Reverting a bad experimental change today is a manual, human-decided `git revert`. |
 
 **What this does not replace:** architecture review, security review, DoD verification, Mechanics Bible/parity-ledger consistency. A loop-found result is a *candidate*, not a landed change — it still goes through one normal ticket to reach `simulation_quality`/`main`.
@@ -53,7 +53,7 @@ What it does not have, structurally:
 
 At the time this was scoped, another session was actively working `TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE` (Phase 3 of the SimQ roadmap — COGNITION pipeline wiring) on this same branch (`simulation_quality`), with 18 uncommitted files including `src/engine/pipeline.py`, `phase_graph.py`, `feature_flags.py`.
 
-Checked against `tickets/working_log.csv` and `git log`: 4 of 5 SimQ roadmap tickets had already landed in commit `5c51dca2` (`SIMQ-EVAL-PROFILE-BUG`, `SIMQ-SCORE-CEILING-FIX`, `SIMQ-RAWSCORE-PERSIST`, `SIMQ-ECONOMY-CONTENT-DEPTH`) — including the exact weight-tuning proof-of-concept originally proposed for this loop (`SCORE-CEILING-FIX` already recalibrated `config/simulation_quality/scoring_weights.yaml`). Only Phase 3 (COGNITION wiring) remains, it's a one-time structural wiring task (not a numeric-tuning problem, so not a good loop candidate anyway), and it was actively in flight — a direct collision target to avoid.
+Checked against `agent-working/tickets/working_log.csv` and `git log`: 4 of 5 SimQ roadmap tickets had already landed in commit `5c51dca2` (`SIMQ-EVAL-PROFILE-BUG`, `SIMQ-SCORE-CEILING-FIX`, `SIMQ-RAWSCORE-PERSIST`, `SIMQ-ECONOMY-CONTENT-DEPTH`) — including the exact weight-tuning proof-of-concept originally proposed for this loop (`SCORE-CEILING-FIX` already recalibrated `config/simulation_quality/scoring_weights.yaml`). Only Phase 3 (COGNITION wiring) remains, it's a one-time structural wiring task (not a numeric-tuning problem, so not a good loop candidate anyway), and it was actively in flight — a direct collision target to avoid.
 
 Cross-referenced perf test imports (`grep -rl "engine.pipeline\|phase_graph\|optimization.feature_flags" tests/perf/*.py`): only 2 of ~20 perf test files (`bench_capacity.py`, `test_phase10_integrated_enhanced_stack_budget.py`) overlap the files being concurrently edited. Everything else in `tests/perf/` is a safe, non-colliding scope.
 
@@ -103,4 +103,4 @@ git worktree add ../rpg-simq-loop -b loop/simq-roadmap2 simulation_quality
 - `docs/ai/system_overview.md` — the existing agent/workflow/skill system this loop supplements, not replaces
 - `docs/plans/simq_scoring_improvement_roadmap.md` — the (now largely closed) roadmap that originally motivated the SimQ use case
 - `tools/perf_guard.py`, `perf_baselines.json` — the tooling the first run's Metric/Guard reuse
-- `tickets/working_log.csv` — source of truth for what SimQ roadmap work has actually landed
+- `agent-working/tickets/working_log.csv` — source of truth for what SimQ roadmap work has actually landed

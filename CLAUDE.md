@@ -20,7 +20,7 @@
 * Do not break determinism.
 * Do not expose raw domain models from APIs.
 * Do not leave changes untested or untraceable.
-* Every implement-ticket workflow run (including hotfix) must record a run entry and at least one event entry to `agent-monitoring/`. Monitoring write failure must never fail the workflow.
+* Every implement-ticket workflow run (including hotfix) must record a run entry and at least one event entry to `agent-working/agent-monitoring/`. Monitoring write failure must never fail the workflow.
 * **Do not run grep, find, raw file reads, or spawn Explore agents for investigation before first calling `search_docs` (MCP) and `graphify query` for the topic.** These tools traverse inferred relationships and doc registries that raw grep cannot. Grep and file reads are permitted only as follow-up after the semantic search results are in hand.
 * **Never edit an artifact to make an automated gate/check pass instead of fixing the underlying substance.** A gate's blocking result (`NEEDS_CHANGES`, `BLOCKED`, `NEEDS_HUMAN_INPUT`, a failing test, a failing validator, etc.) is correct information to report, not an obstacle to route around — stop and report it truthfully, even if it looks trivially resolvable. This applies at every level of agent delegation, including any sub-agent you spawn to carry out a step.
 * **If you are a dispatched sub-agent (not the top-level orchestrator), never end your turn while your own `run_in_background` command is still running.** You are not auto-resumed the way the top-level orchestrator is — an unfinished background command left running when your turn ends stalls the pipeline until it is manually detected and you are re-prompted, wasting a full round-trip. Either run the command in the foreground, or poll for its own completion within the same turn before returning control. (Confirmed as a repeated real failure mode on 2026-08-17/18: 3 independent `general-purpose` sub-agent dispatches spawned their own background tasks, then stopped to "wait for a notification" they had no mechanism to receive, requiring manual `SendMessage` resumption each time. `implementer.md`/`test-scoper.md` already carried this warning for their own roles; this bullet generalizes it to every dispatched agent, since `general-purpose` and most other project agent roles have no equivalent project-level file to carry it.)
@@ -34,7 +34,7 @@ Before any implementation or investigation (ticket creation, scoping, planning),
 1. `mcp__knowledge-search__search_docs` — semantic search over docs, tickets, and investigations. Always call this first.
 2. `graphify query "<topic>"` — code structure, relationships, and inferred edges.
 3. `python3 tools/knowledge_search.py query "<q>" --top-k 5` — fallback if MCP unavailable.
-4. Then check: `tickets/`, `docs/`, `stored_artifacts/`, relevant code and tests.
+4. Then check: `agent-working/tickets/`, `docs/`, `agent-working/stored_artifacts/`, relevant code and tests.
 
 Raw grep and direct file reads are **follow-up steps only** — they narrow down what the semantic tools already surfaced. Never start with grep.
 
@@ -61,8 +61,8 @@ Otherwise, follow existing patterns.
 
 - Scan tickets, docs, stored artifacts, relevant code, and tests.
 - Identify reuse opportunities and conflicts.
-- Create `tickets/inprogress/{ticket_id}.md`.
-- **Standard/epic only:** Create `staging_artifacts/{ticket_id}/` with `plan.md`, `investigation.md`, `test_plan.md`.
+- Create `agent-working/tickets/inprogress/{ticket_id}.md`.
+- **Standard/epic only:** Create `agent-working/staging_artifacts/{ticket_id}/` with `plan.md`, `investigation.md`, `test_plan.md`.
 - **Hotfix:** No staging artifacts required — self-evident intent is captured in the ticket itself.
 
 ### Required Artifacts (standard/epic only)
@@ -80,11 +80,11 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 
 ### After Work
 
-- Finish ticket, move to `tickets/done/`.
-- If the ticket originated in a `tickets/todos/{folder}/` subfolder:
-  - Delete the source file from the subfolder (`rm tickets/todos/{folder}/{ticket_id}.md`).
-  - When **all** tickets in the folder are done, move the **entire folder** to `tickets/done/{folder}/` — this preserves `SEQUENCE.md` and any folder-level metadata (`mv tickets/todos/{folder}/ tickets/done/{folder}/`). Never leave a completed folder's skeleton in `tickets/todos/`.
-- Append to the **bottom** of `tickets/working_log.csv` (never insert after the header) via
+- Finish ticket, move to `agent-working/tickets/done/`.
+- If the ticket originated in a `agent-working/tickets/todos/{folder}/` subfolder:
+  - Delete the source file from the subfolder (`rm agent-working/tickets/todos/{folder}/{ticket_id}.md`).
+  - When **all** tickets in the folder are done, move the **entire folder** to `agent-working/tickets/done/{folder}/` — this preserves `SEQUENCE.md` and any folder-level metadata (`mv agent-working/tickets/todos/{folder}/ agent-working/tickets/done/{folder}/`). Never leave a completed folder's skeleton in `agent-working/tickets/todos/`.
+- Append to the **bottom** of `agent-working/tickets/working_log.csv` (never insert after the header) via
   `tools/working_log_writer.py::append_working_log_row()` — never hand-roll this write (two
   independent hand-rolled writers produced the identical CRLF defect; see
   `TCK-20260912-WORKING-LOG-APPEND-HELPER`). **If this is a hand-orchestrated closure**, do not
@@ -93,14 +93,14 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
   calling both for the same ticket close writes the row twice (see
   `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`, and note the closure
   tool now refuses the second write with a non-zero exit rather than silently duplicating it).
-- **Standard/epic only:** Move staging artifacts to `stored_artifacts/`.
+- **Standard/epic only:** Move staging artifacts to `agent-working/stored_artifacts/`.
 - Update related docs.
 - Clean up: `rm -rf data/runs/* reports/release_proof/*`.
 - Verify no leftover staging/temp files remain.
 - If any files under `docs/` were created or modified: run `make knowledge-index-update` to keep the agent context search index current.
-- `docs/REGISTRY.yaml` is regenerated unconditionally as part of Finalize's post-migration self-check (all tiers, including hotfix) — no manual `make docs-registry` step is needed. Always stage the regenerated file (`git add docs/REGISTRY.yaml`) as part of ticket close, alongside `agent-monitoring/`. Run `make setup-merge-drivers` once (repo-wide, not per-worktree — see `TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX`) so a `docs/REGISTRY.yaml` merge conflict between two concurrently-closed tickets regenerates automatically instead of needing the manual "take either side + rerun `make docs-registry`" resolution — that manual path still works and is still the fallback if the driver isn't installed. **This driver only helps local `git merge`/rebase/cherry-pick operations run through your own worktree — it has no effect on GitHub's own server-side PR merge-ref computation** (`refs/pull/N/merge`), which never sees your local `.git/config` driver registration. A `docs/REGISTRY.yaml`-only PR going `CONFLICTING` is expected and normal in that case, not a sign the driver failed — fetch and merge `origin/main` locally (where the driver *does* apply) and push, same as any other conflict.
-- **Always stage `agent-monitoring/` (including the current week's `data/YYYY-Www/{runs,events,tools}.jsonl` shard) in every commit** — the monitoring tools auto-update these per-week shards on every run; never leave them as an unstaged modification.
-- **If this ticket was closed by hand-orchestration (reading the ticket, editing code, running tests, without invoking the `Workflow` tool) rather than the formal multi-agent `implement-ticket.js` pipeline: record its own run + event coverage yourself** — the pipeline's own auto-recording never ran, so nothing else will do this for you (confirmed real, ongoing gap: `TCK-20260903-HAND-ORCHESTRATED-TICKETS-MISSING-MONITORING-COVERAGE`). Use `tools/agent-monitoring/record_hand_orchestrated_closure.py` (one call, auto-fills the shared `run_id`/`execution_id`/`provider`/`ticket_id`/`seq` fields). **This call already appends the `tickets/working_log.csv` row itself** (via `append_working_log_row()` internally) — do not also follow the `append_working_log_row()` bullet above for this same ticket close, or the row is written twice (the tool refuses and exits non-zero if it detects that a row for this exact `(ticket_id, title)` already exists, rather than silently duplicating it — see `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`):
+- `docs/REGISTRY.yaml` is regenerated unconditionally as part of Finalize's post-migration self-check (all tiers, including hotfix) — no manual `make docs-registry` step is needed. Always stage the regenerated file (`git add docs/REGISTRY.yaml`) as part of ticket close, alongside `agent-working/agent-monitoring/`. Run `make setup-merge-drivers` once (repo-wide, not per-worktree — see `TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX`) so a `docs/REGISTRY.yaml` merge conflict between two concurrently-closed tickets regenerates automatically instead of needing the manual "take either side + rerun `make docs-registry`" resolution — that manual path still works and is still the fallback if the driver isn't installed. **This driver only helps local `git merge`/rebase/cherry-pick operations run through your own worktree — it has no effect on GitHub's own server-side PR merge-ref computation** (`refs/pull/N/merge`), which never sees your local `.git/config` driver registration. A `docs/REGISTRY.yaml`-only PR going `CONFLICTING` is expected and normal in that case, not a sign the driver failed — fetch and merge `origin/main` locally (where the driver *does* apply) and push, same as any other conflict.
+- **Always stage `agent-working/agent-monitoring/` (including the current week's `data/YYYY-Www/{runs,events,tools}.jsonl` shard) in every commit** — the monitoring tools auto-update these per-week shards on every run; never leave them as an unstaged modification.
+- **If this ticket was closed by hand-orchestration (reading the ticket, editing code, running tests, without invoking the `Workflow` tool) rather than the formal multi-agent `implement-ticket.js` pipeline: record its own run + event coverage yourself** — the pipeline's own auto-recording never ran, so nothing else will do this for you (confirmed real, ongoing gap: `TCK-20260903-HAND-ORCHESTRATED-TICKETS-MISSING-MONITORING-COVERAGE`). Use `tools/agent-monitoring/record_hand_orchestrated_closure.py` (one call, auto-fills the shared `run_id`/`execution_id`/`provider`/`ticket_id`/`seq` fields). **This call already appends the `agent-working/tickets/working_log.csv` row itself** (via `append_working_log_row()` internally) — do not also follow the `append_working_log_row()` bullet above for this same ticket close, or the row is written twice (the tool refuses and exits non-zero if it detects that a row for this exact `(ticket_id, title)` already exists, rather than silently duplicating it — see `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`):
   ```
   python3 tools/agent-monitoring/record_hand_orchestrated_closure.py --ticket-id <TCK-ID> --tier <hotfix|standard|epic> --events '[{"phase":"Scope","status":"ok","summary":"..."},{"phase":"Implement","status":"ok","summary":"..."},{"phase":"Test","status":"ok","summary":"..."},{"phase":"Parity","status":"skipped","summary":"..."},{"phase":"Verify","status":"ok","summary":"..."},{"phase":"Finalize","status":"ok","summary":"..."}]'
   ```
@@ -138,7 +138,7 @@ race to watch for when switching branches in place.
 
 **File name:** `TCK-YYYYMMDD-SHORT-SCOPE.md` (uppercase, hyphen-separated)
 
-**Location:** `tickets/inprogress/{ticket_id}.md` → `tickets/done/{ticket_id}.md`
+**Location:** `agent-working/tickets/inprogress/{ticket_id}.md` → `agent-working/tickets/done/{ticket_id}.md`
 
 **Required sections (in order):**
 
@@ -184,7 +184,7 @@ Frontmatter block is required as the first element. Fill `layer` and `tags` base
 
 `layer` and `tags` are both registry-backed and append-only, but differ in shape: `layer` is single-value and uncategorized (it *is* the subsystem-topic dimension itself), `tags` is multi-value and split into 4 taxonomy categories (Subsystem/Topic, Process/Skill-signal, Phase/Milestone, Quality-attribute — see `docs/guidelines/tag_taxonomy.md`). `## Tier` (`hotfix | standard | epic`) and `## Status` (`OPEN | INPROGRESS | BLOCKED | DONE`, plus `EPIC_SCOPED` for epic-tier tickets) are ticket-*body* fields, not frontmatter — validated by a separate mechanism, `tools/ticket_field_values.py`, since body sections are parsed differently from frontmatter (see that module's docstring). `## Priority` is body-field too, values `P0 | P1 | P2 | P3`.
 
-**Frontmatter `status`/`phase` must also agree with the ticket's physical location**, not just be individually valid enum values: a ticket in `tickets/done/` requires `status: historical` + `phase: done`; a ticket in `tickets/inprogress/` must never have `phase: done`. `tools/validate_frontmatter.py::check_ticket_location_consistency()` enforces this (wired into `done_checker`'s `frontmatter_valid` condition, plus a corpus test over all of `tickets/done/`) — added by `TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT` after finding 395 `tickets/done/*.md` files where each field was enum-valid alone but disagreed with the directory. See `docs/guidelines/frontmatter_schema.md`'s ticket section for the full rule.
+**Frontmatter `status`/`phase` must also agree with the ticket's physical location**, not just be individually valid enum values: a ticket in `agent-working/tickets/done/` requires `status: historical` + `phase: done`; a ticket in `agent-working/tickets/inprogress/` must never have `phase: done`. `tools/validate_frontmatter.py::check_ticket_location_consistency()` enforces this (wired into `done_checker`'s `frontmatter_valid` condition, plus a corpus test over all of `agent-working/tickets/done/`) — added by `TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT` after finding 395 `agent-working/tickets/done/*.md` files where each field was enum-valid alone but disagreed with the directory. See `docs/guidelines/frontmatter_schema.md`'s ticket section for the full rule.
 
 ---
 
@@ -235,16 +235,16 @@ A task is not done unless all are true:
 
 - Implementation matches accepted scope
 - Architecture constraints were respected
-- Ticket is updated and moved to `tickets/done/`
-- Staging artifacts are complete and migrated to `stored_artifacts/`
+- Ticket is updated and moved to `agent-working/tickets/done/`
+- Staging artifacts are complete and migrated to `agent-working/stored_artifacts/`
 - Tests were run and updated
 - Docs were updated if behavior changed
-- Working log entry was added (`tickets/working_log.csv`)
+- Working log entry was added (`agent-working/tickets/working_log.csv`)
 - No important decision is undocumented
 - Repo state is consistent
 - Temporary run data cleaned: `data/runs/`, `reports/release_proof/`
 - No known material gap is left unstated
-- Agent monitoring records written: run entry in `agent-monitoring/data/YYYY-Www/runs.jsonl`, at least one event in `agent-monitoring/data/YYYY-Www/events.jsonl` _(guaranteed by workflow — not verified by done-checker)_
+- Agent monitoring records written: run entry in `agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl`, at least one event in `agent-working/agent-monitoring/data/YYYY-Www/events.jsonl` _(guaranteed by workflow — not verified by done-checker)_
 - Frontmatter valid in the ticket and its staging artifacts (script-checked by `done-checker`'s `frontmatter_valid` condition)
 
 ---
@@ -361,7 +361,7 @@ Some tools should be invoked automatically based on the task — the user does n
 
 The boundary is: **single read/query tools are free to invoke proactively; multi-agent orchestration and anything that changes shared/remote state requires the user to ask**.
 
-Offering is not invoking: when about to turn a plan into several tickets, or when a `tickets/todos/<folder>/` is ready to dispatch, briefly offer `/create-tickets` or `/implement-epic` (what it would do, rough cost) and let the user choose.
+Offering is not invoking: when about to turn a plan into several tickets, or when a `agent-working/tickets/todos/<folder>/` is ready to dispatch, briefly offer `/create-tickets` or `/implement-epic` (what it would do, rough cost) and let the user choose.
 
 ### CI Failure Triage (read-only follow-up to an already-authorized push — no separate opt-in needed to check)
 

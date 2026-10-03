@@ -6,8 +6,8 @@ sample into fixtures (Step 2), applies the M2 detector to every real converted f
 detector to its own synthetic/clean fixtures only (Steps 3-4 — M3 has no real per-ticket
 historical signal, see defect_detectors.py's module docstring), replays the sample twice under
 isolation (Step 5), and computes the 3-tier metrics (Step 6). Writes
-`stored_artifacts/{ticket_id}/{sample_manifest,conversion_log}.yaml` and `pilot_run_raw_output.jsonl`
-(one JSON object per line: `.gitignore` drops `stored_artifacts/**/*.json`, so a `.json` here never reaches the remote)
+`agent-working/stored_artifacts/{ticket_id}/{sample_manifest,conversion_log}.yaml` and `pilot_run_raw_output.jsonl`
+(one JSON object per line: `.gitignore` drops `agent-working/stored_artifacts/**/*.json`, so a `.json` here never reaches the remote)
 and generates `results.md` plus the `## Results`/`## Decision` doc sections (Step 8).
 
 Orchestration only — no dedicated unit test of its own (test_plan.md); its correctness is the
@@ -37,12 +37,13 @@ from agent_replay import metrics as metrics_module  # noqa: E402
 from agent_replay import pilot_isolation  # noqa: E402
 from agent_replay.fixture_envelope import load_fixture  # noqa: E402
 from agent_replay_codex.monitoring_shards import source_paths  # noqa: E402
+from tools.agent_working_paths import AGENT_MONITORING, STORED_ARTIFACTS, TICKETS  # noqa: E402
 
 TICKET_ID = "TCK-20260907-FILTERED-REPLAY-EVAL-PILOT"
-DONE_DIR = _REPO_ROOT / "tickets" / "done"
-STORED_ARTIFACTS_ROOT = _REPO_ROOT / "stored_artifacts"
+DONE_DIR = _REPO_ROOT / TICKETS / "done"
+STORED_ARTIFACTS_ROOT = _REPO_ROOT / STORED_ARTIFACTS
 STORED_ARTIFACTS_DIR = STORED_ARTIFACTS_ROOT / TICKET_ID
-MONITORING_ROOT = _REPO_ROOT / "agent-monitoring"
+MONITORING_ROOT = _REPO_ROOT / AGENT_MONITORING
 FIXTURES_OUT_DIR = _REPO_ROOT / "tests" / "fixtures" / "agent_replay" / "pilot" / "sample"
 M3_SYNTHETIC_PATH = (
     _REPO_ROOT / "tests" / "fixtures" / "agent_replay" / "pilot" / "m3_synthetic_known_positive.yaml"
@@ -282,12 +283,12 @@ def _exit_criteria_findings(payload: dict) -> list:
         "to fired=False (no evidence either way) for those rather than guessing, disclosed "
         "per-ticket in m2_results rather than silently smoothed into the fired-count. A gap that "
         "genuinely fires against an isolable commit is expected to be rare, since such a gap is "
-        "normally caught and fixed before a ticket is ever committed to tickets/done/ "
+        "normally caught and fixed before a ticket is ever committed to agent-working/tickets/done/ "
         "(investigation.md Current Behavior §5) — a disclosed characteristic of the historical "
         "corpus, not a detector defect. M3 (synthetic-"
         "disclosed): validated only against a synthetic known-positive and a clean fixture "
         f"(fired={payload['m3_synthetic_fired']} / {payload['m3_clean_fired']}) — never claimed "
-        "against a real historical tickets/done/ sample member, per investigation.md Risks #1 "
+        "against a real historical agent-working/tickets/done/ sample member, per investigation.md Risks #1 "
         "option (c). Sample quality is accepted for the 2 target defect classes specifically, not "
         "claimed for any defect class beyond those two."
     )
@@ -300,7 +301,7 @@ def _exit_criteria_findings(payload: dict) -> list:
         f"post-porcelain={payload['isolation_post_porcelain']!r}. No literal `git worktree add` "
         "was created — Method step 3's isolation was satisfied via replay_slice()'s already-"
         "proven zero-write execution path (tests/agent_replay/test_no_mutation_snapshot.py) plus "
-        "a snapshot-diff check parameterized over the real sharded agent-monitoring/data/ layout "
+        "a snapshot-diff check parameterized over the real sharded agent-working/agent-monitoring/data/ layout "
         "(investigation.md Risks #2 option (b), corrected during plan Review Round 1)."
     )
 
@@ -322,7 +323,7 @@ def _kill_criteria_findings(payload: dict, exit_findings: list) -> list:
     kill2_fired = not payload["isolation_held"]
     kill2_evidence = (
         "Not fired: the isolation evidence (Exit Criterion 3 above) shows no write attributable "
-        "to this pilot touched agent-monitoring/*.jsonl or the unscoped .claude/current_run "
+        "to this pilot touched agent-working/agent-monitoring/*.jsonl or the unscoped .claude/current_run "
         "sidecar during the pilot's own 2-run execution window."
         if not kill2_fired
         else f"FIRED: {payload['isolation_violation']}"
@@ -356,10 +357,10 @@ def write_results_report(payload: dict) -> Path:
     lines.append("")
     lines.append("## Freshly-Measured Baseline (AC #6 — never copied from the frozen spec doc)")
     lines.append("")
-    lines.append(f"- `tickets/done/` top-level `TCK-*.md` count: {baseline['corpus_size']}")
+    lines.append(f"- `agent-working/tickets/done/` top-level `TCK-*.md` count: {baseline['corpus_size']}")
     lines.append(f"- Tier breakdown: {baseline['tier_breakdown']}")
     lines.append(
-        f"- Standard-tier tickets with a matching `stored_artifacts/{{id}}/`: "
+        f"- Standard-tier tickets with a matching `agent-working/stored_artifacts/{{id}}/`: "
         f"{baseline['standard_with_artifacts']}/{baseline['standard_count']} "
         f"({baseline['standard_artifact_coverage_pct']:.2f}%)"
     )
@@ -373,7 +374,7 @@ def write_results_report(payload: dict) -> Path:
     lines.append(f"- Excluded (logged reason, never silently dropped): {payload['excluded_count']}")
     if payload["excluded_reasons"]:
         lines.append("")
-        lines.append("Excluded ticket reasons (see `stored_artifacts/{id}/conversion_log.yaml` for the full list):")
+        lines.append("Excluded ticket reasons (see `agent-working/stored_artifacts/{id}/conversion_log.yaml` for the full list):")
         for entry in payload["excluded_reasons"][:10]:
             lines.append(f"- `{entry['ticket_id']}`: {entry['reason']}")
         if len(payload["excluded_reasons"]) > 10:
@@ -419,7 +420,7 @@ def write_results_report(payload: dict) -> Path:
         "only against a hand-built synthetic known-positive fixture "
         "(`tests/fixtures/agent_replay/pilot/m3_synthetic_known_positive.yaml`) and a clean "
         f"fixture (fired={payload['m3_synthetic_fired']} / {payload['m3_clean_fired']}) — never "
-        "applied to or claimed against any real `tickets/done/` sample member."
+        "applied to or claimed against any real `agent-working/tickets/done/` sample member."
     )
     lines.append("")
     lines.append("## Decision")
@@ -471,7 +472,7 @@ def append_spec_doc_results(payload: dict) -> None:
     lines = ["", "## Results", ""]
     lines.append(
         f"Executed by {TICKET_ID} ({payload['generated_at']}). Full report: "
-        f"`stored_artifacts/{TICKET_ID}/results.md`."
+        f"`agent-working/stored_artifacts/{TICKET_ID}/results.md`."
     )
     lines.append("")
     for idx, (criterion, met, _evidence) in enumerate(exit_findings, start=1):

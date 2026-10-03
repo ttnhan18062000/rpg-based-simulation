@@ -5,7 +5,7 @@ SOCIAL cooperation_event) events derived from prior_state + update alone. Also t
 ENABLE_PUSH_EVENT_SHAPERS_PHASE2 flag split (SHAPER_REGISTRY vs PHASE2_SHAPER_REGISTRY) that
 run_shadow_shapers() uses to keep Phase 2 shapers genuinely SHADOW-only even though
 ENABLE_PUSH_EVENT_SHAPERS already defaults ON from Phase 1's cutover — see
-stored_artifacts/TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY/investigation.md's Key finding 2.
+agent-working/stored_artifacts/TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY/investigation.md's Key finding 2.
 """
 from __future__ import annotations
 from unittest.mock import MagicMock, create_autospec

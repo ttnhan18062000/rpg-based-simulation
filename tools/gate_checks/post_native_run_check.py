@@ -3,7 +3,7 @@
 (TCK-20260930-NATIVE-PORT-ORCHESTRATOR-BACKSTOP).
 
 A native implement-ticket run has no shell, so each gate result reaches the script as an agent's
-report, and an agent that wants to can forge it (stored_artifacts/TCK-20260930-NATIVE-GATE-RESULT-
+report, and an agent that wants to can forge it (agent-working/stored_artifacts/TCK-20260930-NATIVE-GATE-RESULT-
 ATTESTATION-DESIGN/design.md). The top-level session has a shell: it runs this one command after the
 run returns and before committing. It re-derives three results itself and trusts none of the run's own
 gate verdicts:
@@ -20,6 +20,10 @@ import argparse
 import subprocess
 import sys
 from pathlib import Path
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 TICKET_DIRS = ("inprogress", "done")
@@ -27,7 +31,7 @@ TICKET_DIRS = ("inprogress", "done")
 
 def find_ticket(ticket_id, repo=REPO):
     for sub in TICKET_DIRS:
-        p = repo / "tickets" / sub / f"{ticket_id}.md"
+        p = repo / TICKETS / sub / f"{ticket_id}.md"
         if p.exists():
             return p
     return None
@@ -46,7 +50,7 @@ def build_checks(ticket_id, ticket_path, repo=REPO):
 def run(ticket_id, repo=REPO, out=print):
     ticket = find_ticket(ticket_id, repo)
     if ticket is None:
-        out(f"FAIL ticket_location: no tickets/inprogress|done/{ticket_id}.md")
+        out(f"FAIL ticket_location: no agent-working/tickets/inprogress|done/{ticket_id}.md")
         return 1
     failed = []
     for name, cmd in build_checks(ticket_id, ticket, repo):

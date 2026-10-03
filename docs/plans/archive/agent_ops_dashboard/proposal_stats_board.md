@@ -12,7 +12,7 @@ tags: [dashboard, observability, reporting, agent-monitoring]
 # Proposal: Statistics board — a 4th "Stats" tab on the Agent Ops Dashboard, covering both agent-monitoring and ticket-corpus aggregate metrics
 
 **Archived:** 2026-07-19 — shipped by `TCK-20260718-AGENTOPS-STATS-BOARD-EPIC` and its five child
-tickets (all `tickets/done/`): `TCK-20260718-RETRO-STATS-REFACTOR` (concern 1, `generate_retro.py`'s
+tickets (all `agent-working/tickets/done/`): `TCK-20260718-RETRO-STATS-REFACTOR` (concern 1, `generate_retro.py`'s
 `compute_retro_metrics()` extracted as a typed, reusable function, proven byte-identical to the prior
 Markdown output via `git stash` comparison), `TCK-20260718-AGENTOPS-STATS-API` (concern 2, agent-
 monitoring stats endpoint), `TCK-20260718-TICKET-CORPUS-REPORT` (concern 3, new
@@ -43,7 +43,7 @@ own origin doc, "Relationship to Planned Tickets" section) explicitly flags:
 `docs/guides/ticket_reporting.md`'s "Other candidate pillars (not built)"
 section names exactly four ticket-corpus statistics as known-wanted,
 never-scoped work:
-- **Ticket velocity/throughput** — from `tickets/working_log.csv` timestamps
+- **Ticket velocity/throughput** — from `agent-working/tickets/working_log.csv` timestamps
   (tickets closed per day/week, by tier or layer). Confirmed the CSV's real
   columns: `timestamp,ticket_id,title,status,summary,artifacts_path` —
   sufficient for this, no schema change needed.
@@ -56,7 +56,7 @@ never-scoped work:
   (`docs/guidelines/layer_registry.jsonl` / `tools/layer_registry.py`,
   from the same epic).
 - **Artifact completeness** — how many `standard`/`epic` tickets have a
-  matching `stored_artifacts/{ticket_id}/` folder with all 3 required files
+  matching `agent-working/stored_artifacts/{ticket_id}/` folder with all 3 required files
   (`investigation.md`/`plan.md`/`test_plan.md`), vs. gaps.
 
 `docs/guides/ticket_reporting.md` also states its own convention for any new
@@ -108,7 +108,7 @@ computation, formatted two ways" pattern already exists once in this repo
 - `DashboardCache`'s existing `RLock`-per-method pattern and mtime-triggered
   rebuild should extend naturally to serve computed stats — investigate
   whether stats need their own cache entry or can be derived from the
-  existing cached tickets/runs data without a second full corpus re-read.
+  existing cached agent-working/tickets/runs data without a second full corpus re-read.
 - No chart library exists in `dashboard-frontend/package.json` today
   (confirmed via direct read — only `@radix-ui/*`, no charting dependency).
   **Before writing any chart code or choosing chart colors, load the
@@ -120,7 +120,7 @@ computation, formatted two ways" pattern already exists once in this repo
   is still an implementation decision — but the visual design discipline
   (form heuristic, color formula, light/dark theming) is not optional per
   that skill's own stated scope.
-- This dashboard is read-only over `tickets/**` and `agent-monitoring/
+- This dashboard is read-only over `agent-working/tickets/**` and `agent-working/agent-monitoring/
   *.jsonl` — a stats endpoint must never write anything, including no
   `reports/*.json` side-effect files the CLI tool might otherwise produce.
 
@@ -150,7 +150,7 @@ computation, formatted two ways" pattern already exists once in this repo
    velocity/throughput (from `working_log.csv`), tier/type/priority
    distribution (via `tools/ticket_field_values.py`'s new canonical enums),
    layer distribution (via `tools/layer_registry.py` + `docs/REGISTRY.yaml`),
-   artifact completeness (`stored_artifacts/{ticket_id}/` presence check for
+   artifact completeness (`agent-working/stored_artifacts/{ticket_id}/` presence check for
    standard/epic tickets). Then a new dashboard backend endpoint exposing
    this as typed JSON, same pattern as concern 2.
 
@@ -176,7 +176,7 @@ computation, formatted two ways" pattern already exists once in this repo
   redesign of the existing retro report.
 - Any new agent-monitoring instrumentation or schema change — this proposal
   only aggregates/visualizes data that already exists in
-  `agent-monitoring/{runs,events,tools}.jsonl` and `tickets/**` today.
+  `agent-working/agent-monitoring/{runs,events,tools}.jsonl` and `agent-working/tickets/**` today.
 - Real-time/live-updating charts — the existing dashboard's polling-based
   `useRunsPolling` pattern for the Gantt view is the only precedent for
   "live" data in this app; whether stats need similar polling vs.

@@ -40,7 +40,7 @@ from pathlib import Path
 # Taxonomy constants — see docs/guidelines/tag_taxonomy.md.
 # ---------------------------------------------------------------------------
 
-# Enforcement is forward-only: only tickets/artifacts whose ticket_id embeds a date on or after
+# Enforcement is forward-only: only agent-working/tickets/artifacts whose ticket_id embeds a date on or after
 # this cutoff are checked, per the "no backfill of history" decision (TCK-20260704-TAG-TAXONOMY).
 TAG_TAXONOMY_EFFECTIVE_DATE = "20260704"
 

@@ -22,6 +22,10 @@ if str(_MONITORING_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_DIR))
 
 from writer import write_line  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 CLAIM_DETECTION_WINDOW_SECONDS = 900  # 15 minutes — see experiment doc for rationale/tradeoff
 
@@ -75,12 +79,12 @@ def check_and_log(
     tid: str,
     *,
     claude_dir: Path = Path(".claude"),
-    data_dir: Path = Path("agent-monitoring/data"),
+    data_dir: Path = AGENT_MONITORING / "data",
     window_seconds: int = CLAIM_DETECTION_WINDOW_SECONDS,
     own_session_id: str | None = None,
 ) -> dict | None:
     """Checks for other concurrent sessions on the same ticket ID; writes exactly one detection
-    record (if any match found) to agent-monitoring/data/<iso-week>/claim_detections.jsonl. Never
+    record (if any match found) to agent-working/agent-monitoring/data/<iso-week>/claim_detections.jsonl. Never
     raises. Returns the written record dict for tests, or None if nothing was detected/written."""
     try:
         if not tid:

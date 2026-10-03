@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Read-only baseline inventory of agent-monitoring/*.jsonl
+"""Read-only baseline inventory of agent-working/agent-monitoring/*.jsonl
 (TCK-20260721-BASELINE-MONITORING-MANIFEST).
 
 Streams each of runs.jsonl/events.jsonl/tools.jsonl in a single line-lazy pass —
 never a full read_text()/read()/readlines() of the whole file — to compute a
 line count, byte size, SHA-256 hash, parser result, and legacy-warning count per
 file. Prints a JSON array to stdout by default; never writes into
-agent-monitoring/ itself.
+agent-working/agent-monitoring/ itself.
 """
 import argparse
 import hashlib
@@ -17,9 +17,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from legacy_reader import classify_provenance  # noqa: E402
 from monitoring_shard_paths import shard_paths  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
+_AGENT_MONITORING_DIR = _REPO_ROOT / AGENT_MONITORING
 
 _FILES_BY_SOURCE = {
     "events.jsonl": "events",
@@ -137,7 +141,7 @@ def _assert_safe_output_path(path: Path) -> None:
     real_monitoring_dir = _AGENT_MONITORING_DIR.resolve()
     if resolved == real_monitoring_dir or real_monitoring_dir in resolved.parents:
         raise ValueError(
-            f"refusing to write manifest output under the real agent-monitoring/ "
+            f"refusing to write manifest output under the real agent-working/agent-monitoring/ "
             f"directory: {resolved}"
         )
 
@@ -149,7 +153,7 @@ def main():
         "--dir",
         type=Path,
         default=None,
-        help="agent-monitoring/ directory to scan (default: the real repo directory); "
+        help="agent-working/agent-monitoring/ directory to scan (default: the real repo directory); "
         "exists for test isolation (a frozen snapshot copy), not for normal use",
     )
     args = parser.parse_args()

@@ -14,9 +14,9 @@ tags: [cognition, strategy, documentation]
 ## Purpose
 
 `TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION`'s investigation
-(`staging_artifacts/TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION/investigation.md` —
-that ticket is still open/in `tickets/inprogress/` as of this writing, so the source material has
-**not** yet moved to `stored_artifacts/`; cite the `staging_artifacts/` path above until it does)
+(`agent-working/staging_artifacts/TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION/investigation.md` —
+that ticket is still open/in `agent-working/tickets/inprogress/` as of this writing, so the source material has
+**not** yet moved to `agent-working/stored_artifacts/`; cite the `agent-working/staging_artifacts/` path above until it does)
 surfaced a recurring pattern while tracing a failing quartile-engagement test: real, authored,
 tested wiring that sits dormant because nothing downstream ever reads it, alongside real,
 authored, tested vocabulary that never got exercised because the code path that would exercise it
@@ -36,8 +36,8 @@ This document is authored last in that batch (`TCK-20260810-D22-DORMANT-WIRING-A
 that each finding's status reflects the real, landed state of C1/C2/C3 — not a forecast made when
 the parent investigation was still in progress.
 
-**Status caveat on C2**: `tickets/done/TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION.md`'s own
-body `## Status` field still reads `INPROGRESS` even though the file lives under `tickets/done/`
+**Status caveat on C2**: `agent-working/tickets/done/TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION.md`'s own
+body `## Status` field still reads `INPROGRESS` even though the file lives under `agent-working/tickets/done/`
 with all 5 Acceptance Criteria checked `[x]` and a filled-in Completion Summary. This document
 treats C2's code as landed (verified directly against the real source below), consistent with the
 file's location and completed checklist, and flags the stale `## Status` field as a hygiene gap
@@ -143,11 +143,11 @@ floor, regardless of `kind`.
 > D22/C4) — it only reads the enum identity already present at each `ProjectState` construction
 > site.
 
-C2's own `plan.md` (`stored_artifacts/TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION/plan.md`)
+C2's own `plan.md` (`agent-working/stored_artifacts/TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION/plan.md`)
 has an explicit `## Scope Guards` section: "Do not touch `GoalKind`/`ProjectKind` vocabulary
 unification. ... Do not ... introduce a `ProjectKind`/`GoalKind` common base or rename either
 enum's members." C2's own ticket Out of Scope section
-(`tickets/done/TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION.md`) does not list unification
+(`agent-working/tickets/done/TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION.md`) does not list unification
 explicitly, but its Related Code Areas and plan-level Scope Guards make clear the two enums were
 deliberately left untouched — `strategic.py:121-148` is byte-identical to before C2 landed.
 
@@ -220,10 +220,10 @@ did.
   entry)
 - `docs/parity_ledger/strategic_cognition.yaml` (STRAT-185/186/187, STRAT-243 — C1/C2's parity
   entries)
-- `staging_artifacts/TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION/investigation.md`
-  (origin of all 3 findings; still in `staging_artifacts/` since the parent ticket has not closed)
-- `stored_artifacts/TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY/` (C1's plan/investigation/test_plan)
-- `stored_artifacts/TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION/` (C2's plan/investigation/test_plan)
-- `tickets/done/TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY.md`
-- `tickets/done/TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION.md`
-- `tickets/done/TCK-20260810-COGNITION-ELIGIBILITY-BYPASS-DOCS.md`
+- `agent-working/staging_artifacts/TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION/investigation.md`
+  (origin of all 3 findings; still in `agent-working/staging_artifacts/` since the parent ticket has not closed)
+- `agent-working/stored_artifacts/TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY/` (C1's plan/investigation/test_plan)
+- `agent-working/stored_artifacts/TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION/` (C2's plan/investigation/test_plan)
+- `agent-working/tickets/done/TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY.md`
+- `agent-working/tickets/done/TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION.md`
+- `agent-working/tickets/done/TCK-20260810-COGNITION-ELIGIBILITY-BYPASS-DOCS.md`

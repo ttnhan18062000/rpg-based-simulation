@@ -4,7 +4,7 @@ Mirrors tools/gate_checks/workflow_meta_conformance.py::extract_meta_phases's re
 `Path.read_text()` + regex technique exactly: no JS parser, no subprocess, never opens the target
 file in write mode.
 
-Terminal statuses reach `agent-monitoring/*.jsonl` through three distinct mechanisms in the live
+Terminal statuses reach `agent-working/agent-monitoring/*.jsonl` through three distinct mechanisms in the live
 workflow source, each with its own extraction function:
   - `literal`         — `await writeMonitoring('STRING')` call sites.
   - `verdict_derived` — `await writeMonitoring(<var>.verdict)` call sites; the value is not a

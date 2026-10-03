@@ -14,6 +14,7 @@ the first real long-running/paused ticket that crosses an ISO-week boundary.
 import json
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "tools" / "agent-monitoring"))
 
@@ -27,7 +28,7 @@ from verify_temporal_week_consistency import (  # noqa: E402
 )
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REAL_DATA_DIR = _REPO_ROOT / "agent-monitoring" / "data"
+_REAL_DATA_DIR = _REPO_ROOT / AGENT_MONITORING / "data"
 
 
 def _write_jsonl(path: Path, records: list[dict]) -> None:

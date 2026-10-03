@@ -27,11 +27,11 @@ Rules:
 
 Active work:
 
-`tickets/inprogress/{ticket_id}.md`
+`agent-working/tickets/inprogress/{ticket_id}.md`
 
 Completed work:
 
-`tickets/done/{ticket_id}.md`
+`agent-working/tickets/done/{ticket_id}.md`
 
 ---
 

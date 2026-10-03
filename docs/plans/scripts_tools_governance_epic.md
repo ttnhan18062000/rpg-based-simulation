@@ -23,7 +23,7 @@ mechanism catching files that stop being used. Investigated via direct cross-ref
    distinction that exists today is an inferred pattern, not a stated rule: `tools/` (52
    top-level files + 18 subdirs) is the living agent-infrastructure/governance ecosystem —
    tag/layer registries, frontmatter validation, knowledge search/KGMCP, the parity ledger,
-   `agent-monitoring/`, `gate_checks/`, the Codex-integration cluster. `scripts/` (28 files) is
+   `agent-working/agent-monitoring/`, `gate_checks/`, the Codex-integration cluster. `scripts/` (28 files) is
    almost entirely performance/release/certification pipeline utilities, apparently built
    per-milestone and often abandoned after.
 2. **`tools/` is healthy**: only 2 of 52 top-level files (`extract_defs.py`, `test_docker.py`)
@@ -36,7 +36,7 @@ mechanism catching files that stop being used. Investigated via direct cross-ref
    `merge_documents.py`, `process_pytest_report.py`, `refresh_proofs.py`, `run_perf_optimized.py`,
    `split_milestone.py`. Two of those (`merge_documents.py`, `process_pytest_report.py`) have
    never been referenced by anything, not even a historical ticket. The other four appear only in
-   old `tickets/done/`/`docs/archive/` records — built for one past ticket, then abandoned.
+   old `agent-working/tickets/done/`/`docs/archive/` records — built for one past ticket, then abandoned.
 4. **No mechanism exists to catch this going forward** — unlike several other checks this same
    investigation session found or built (epic-staleness, status-drift, working-log schema), there
    is no standing "orphaned script/tool" check anywhere in this repo.

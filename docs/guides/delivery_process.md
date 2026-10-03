@@ -85,7 +85,7 @@ present and valid, and no `src/` change attributed to the ticket (its own commit
 uncommitted), `done_checker_static.py`'s `migration_complete` passes without
 `plan.md`/`investigation.md`/`test_plan.md`; a missing value, missing or empty rationale, an
 uncited rationale, or an attributed `src/` change fails it and names which. Absent `## Disposition`
-means a normal implementation closure. `grep -A1 '^## Disposition$' tickets/done/*.md` lists every
+means a normal implementation closure. `grep -A1 '^## Disposition$' agent-working/tickets/done/*.md` lists every
 disposition closure.
 
 ### Running `done_checker_static.py` by hand
@@ -98,17 +98,17 @@ rewriting it. The Finalize step that does regenerate it is `--regenerate-registr
 The CLI also prints `[advisory]` lines from `run_advisory_checks()`, currently two (`OK`/`WARN`/`NA`):
 `test_plan_proof_fields` lists the mandatory `## Proof Plan` fields (defined in
 `.claude/agents/investigator.md`) missing from a standard ticket's `test_plan.md`; and
-`cited_evidence_tracked` (all tiers) WARNs for a backticked `stored_artifacts/`, `staging_artifacts/`
-or `tickets/` path the ticket cites that exists locally but is gitignored (naming the matching rule)
+`cited_evidence_tracked` (all tiers) WARNs for a backticked `agent-working/stored_artifacts/`, `agent-working/staging_artifacts/`
+or `agent-working/tickets/` path the ticket cites that exists locally but is gitignored (naming the matching rule)
 or untracked, so it would be absent from a clean checkout. `.gitignore` drops
-`stored_artifacts/**/*.json` except `manifest.json`, so store machine-readable evidence as `.jsonl`.
+`agent-working/stored_artifacts/**/*.json` except `manifest.json`, so store machine-readable evidence as `.jsonl`.
 Advisories never affect the `RESULT:` line or the exit code, and are not part of
 `run_static_precheck()`'s PASS/FAIL/NA list.
 
 ### After a native Workflow run: re-run the gates yourself
 
 A native `implement-ticket` run has no shell, so every gate result in it is an agent's report, and an
-agent can forge one (`stored_artifacts/TCK-20260930-NATIVE-GATE-RESULT-ATTESTATION-DESIGN/design.md`:
+agent can forge one (`agent-working/stored_artifacts/TCK-20260930-NATIVE-GATE-RESULT-ATTESTATION-DESIGN/design.md`:
 a nonce-hash attestation was forged on the first try). The top-level session therefore runs one
 command after the run returns and before committing, and trusts none of the run's own gate verdicts:
 
@@ -159,10 +159,10 @@ alongside the main checkout, each independently on its own branch.
   of work to its own branch as usual; never mix commits from two unrelated units of work onto one
   branch.
 - Watch for the shared-directory monitoring auto-write race when switching branches this way: the
-  current week's `agent-monitoring/data/YYYY-Www/tools.jsonl` shard is rewritten by a hook on nearly
+  current week's `agent-working/agent-monitoring/data/YYYY-Www/tools.jsonl` shard is rewritten by a hook on nearly
   every tool call, so a plain `git checkout -b` can fail with "local changes would be overwritten"
   if that file is dirty from the immediately preceding tool call. Chain the commit and the checkout
-  in one Bash invocation (`git add agent-monitoring/data/ && git commit -m "..." && git checkout -b
+  in one Bash invocation (`git add agent-working/agent-monitoring/data/ && git commit -m "..." && git checkout -b
   <branch> origin/<default-branch>`) to close the race window, rather than issuing them as separate
   tool calls. (`TCK-20260919-CLAUDE-MD-CHECKOUT-RACE-GUIDANCE-UNOWNED-AND-INCOMPLETE`)
   - **The chained fix covers one tool call, not an operation that spans several.** The shard is
@@ -173,7 +173,7 @@ alongside the main checkout, each independently on its own branch.
     overwritten". **Do not discard the shard to clear it** (`git checkout HEAD -- …/tools.jsonl`):
     the hook appends, so that permanently deletes every monitoring row written since the last commit,
     including other sessions' rows in the same worktree. Instead, stage it into the operation —
-    include `agent-monitoring/data/` in the same `git add` that precedes `--continue` — so the rows
+    include `agent-working/agent-monitoring/data/` in the same `git add` that precedes `--continue` — so the rows
     ride into that commit and the tree is clean for the next step. A different session appending to
     the same worktree's shard mid-command is not covered by this; only a hook-level fix removes that.
 
@@ -228,9 +228,9 @@ attribution guidance generally ([[feedback_no_coauthor_footer_in_pr]]). The
 `.github/pull_request_template.md` skeleton is the one place that omission must be structurally
 impossible to forget.
 
-The renderer leaves out of `Closes:` (with a warning) any ticket whose file is still under `tickets/todos/` or
-`tickets/inprogress/`, since a PR that only *files* a follow-up names it in a commit subject without closing it;
-move it to `tickets/done/` if the PR really does close it.
+The renderer leaves out of `Closes:` (with a warning) any ticket whose file is still under `agent-working/tickets/todos/` or
+`agent-working/tickets/inprogress/`, since a PR that only *files* a follow-up names it in a commit subject without closing it;
+move it to `agent-working/tickets/done/` if the PR really does close it.
 
 It likewise leaves out a ticket that a commit subject only *cites* (its file is not changed by the branch), such as a
 follow-up commit to an already-closed ticket. A branch that closes no ticket at all (docs-only or record-only) renders
@@ -267,7 +267,7 @@ Checking CI status and diagnosing a failure is read-only — do it proactively o
 The steps above cover diagnosing a failure; this covers the surrounding push→PR→merge→sync cadence itself, since it isn't a `Workflow` and has no other home.
 
 1. **Before staging/committing**: always run `git status`/`git log` first — this repo's working directory can be shared by more than one concurrent session (see `CLAUDE.md`'s Hard Rules), so check for in-flight files that belong to another ticket before touching them.
-2. **Commit** per ticket, referencing its ID (see `## Commit Contract` above). Stage `agent-monitoring/` in every commit, including any small trailing update the monitoring tools auto-write after the main commit — commit that separately rather than leaving it unstaged.
+2. **Commit** per ticket, referencing its ID (see `## Commit Contract` above). Stage `agent-working/agent-monitoring/` in every commit, including any small trailing update the monitoring tools auto-write after the main commit — commit that separately rather than leaving it unstaged.
 3. **Push** the branch, then **create the PR** (`gh pr create`). The title and the generated body
    sections (`## What landed` through `## Verification`/`## Known gaps`, plus the `Closes:` line)
    come from `python3 tools/delivery/pr_render.py` — run it plain for readable stdout

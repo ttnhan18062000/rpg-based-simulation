@@ -3,7 +3,7 @@
 
 Investigation for that ticket found the instruction has existed since commit ff0235a71
 (2026-06-12, currently around line 1671) yet ~24.6% of tickets closed via `implement-ticket.js`
-after that commit still land in `tickets/done/` with non-canonical frontmatter — the fix that
+after that commit still land in `agent-working/tickets/done/` with non-canonical frontmatter — the fix that
 ticket lands is enforcement (a cross-field validator rule + a corpus-wide test, both in
 tools/validate_frontmatter.py), not more prompt text. This instruction is left unchanged, but
 pinned here so a future edit can't silently drop it without a test noticing — mirrors
@@ -45,10 +45,10 @@ def test_phase_status_instruction_is_inside_finalize_phase():
 def test_phase_status_instruction_precedes_the_move_to_done():
     text = _read()
     instruction_idx = text.find("set \\`phase: done\\` and \\`status: historical\\`")
-    move_idx = text.find("tickets/inprogress/${tid}.md → tickets/done/${tid}.md")
+    move_idx = text.find("agent-working/tickets/inprogress/${tid}.md → agent-working/tickets/done/${tid}.md")
     assert instruction_idx != -1
     assert move_idx != -1
     assert instruction_idx < move_idx, (
         "frontmatter must be normalized before the ticket file is physically moved to "
-        "tickets/done/, matching the location-aware validator rule's expectation of that ordering"
+        "agent-working/tickets/done/, matching the location-aware validator rule's expectation of that ordering"
     )

@@ -92,7 +92,7 @@ def test_unmapped_paths_are_impact_unknown_with_pr_eligible_fallback(repo):
 
 
 def test_docs_only_change_is_not_impact_unknown_and_recommends_nothing(repo):
-    rep = _report(repo, "docs/x.md", "tickets/inprogress/T.md")
+    rep = _report(repo, "docs/x.md", "agent-working/tickets/inprogress/T.md")
     assert {c["status"] for c in rep["changes"]} == {"no-runtime-impact-rule"}
     assert rep["impact_unknown"] == [] and rep["recommended_tests"] == [] and rep["levels"] == []
 

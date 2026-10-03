@@ -21,7 +21,7 @@ tags: [idea, documentation, process-improvement]
 
 Several `docs/plans/` planning documents still say an item is open ("idea", "ready — schedule
 later") after a real ticket has already shipped exactly that item — nothing currently re-checks a
-planning doc's own claimed status against `tickets/done/` once the referenced ticket closes.
+planning doc's own claimed status against `agent-working/tickets/done/` once the referenced ticket closes.
 
 **Confirmed on real data, not speculative** — found while looking for a small real proposal to
 pilot a tooling change against:
@@ -29,8 +29,8 @@ pilot a tooling change against:
 - `docs/plans/agent_infrastructure/idea_agent_monitoring_active_duration.md` (frontmatter
   `status: idea`, dated 2026-07-28) describes adding an active/idle duration split to
   `generate_retro.py`. This shipped as `TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT` and
-  `TCK-20260822-DASHBOARD-DURATION-GAP-AWARE` (both in `tickets/done/`, folder
-  `tickets/done/agent-monitoring-active-duration/`). The idea doc was never updated or moved to
+  `TCK-20260822-DASHBOARD-DURATION-GAP-AWARE` (both in `agent-working/tickets/done/`, folder
+  `agent-working/tickets/done/agent-monitoring-active-duration/`). The idea doc was never updated or moved to
   `docs/plans/archive/` the way a sibling idea in the same doc's own "Natural Integration Points"
   table says shipped ideas should be (it points at
   `../archive/agent_infrastructure/idea_agent_monitoring_pause_resume_seq_collision.md` as the
@@ -40,12 +40,12 @@ pilot a tooling change against:
   ("Horizon 2 — ready, schedule later"): item 3, "working_log.csv parser and cleanup", and item 4,
   "Provider-portability conformance test." Both already shipped —
   `TCK-20260904-WORKING-LOG-CSV-PARSER` and `TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST`
-  are both in `tickets/done/`, dated the same day as the planning doc itself.
+  are both in `agent-working/tickets/done/`, dated the same day as the planning doc itself.
 
 A reader (human or agent) landing on either doc today would reasonably conclude real, unstarted
 work remains — and could duplicate it, exactly the failure mode `create-tickets.js`'s own
 duplicate-detection step exists to catch, but only if the investigating agent happens to search
-`tickets/done/` for the right keywords rather than trusting the planning doc's own stated status.
+`agent-working/tickets/done/` for the right keywords rather than trusting the planning doc's own stated status.
 
 ## Idea
 
@@ -54,7 +54,7 @@ specific planning document as the source of the shipped work, flag that planning
 update — either as part of ticket close ("After Work" → "Update related docs" already covers this
 in principle, but nothing currently prompts *which* planning doc, or verifies it actually got
 touched) or as a periodic sweep (similar in spirit to the existing epic-staleness check) that
-diffs each `docs/plans/*idea*.md` / "ready, schedule later" item against `tickets/done/` for an
+diffs each `docs/plans/*idea*.md` / "ready, schedule later" item against `agent-working/tickets/done/` for an
 obvious title/keyword match and flags a mismatch for a human or agent to resolve — never
 auto-edits the doc, since only a person can judge whether the shipped ticket actually covers the
 full idea or just part of it.

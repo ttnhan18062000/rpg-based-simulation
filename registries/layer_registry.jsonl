@@ -1,6 +1,6 @@
 {"added_date": "2026-07-18", "layer": "mechanics", "note": "Simulation formulas/laws documented in docs/mechanics/ (combat, economy, etc.)"}
 {"added_date": "2026-07-18", "layer": "engine", "note": "Core deterministic tick loop, kernel, authoritative mutation pipeline"}
-{"added_date": "2026-07-18", "layer": "testing", "note": "Test infrastructure, fixtures, and testing-strategy tickets/docs"}
+{"added_date": "2026-07-18", "layer": "testing", "note": "Test infrastructure, fixtures, and testing-strategy agent-working/tickets/docs"}
 {"added_date": "2026-07-18", "layer": "simulation", "note": "Simulation-quality scoring, calibration, and full-run behavior work"}
 {"added_date": "2026-07-18", "layer": "ai", "note": "Claude agent/orchestration tooling (this repo's layer:ai means the agent system, not gameplay cognition)"}
 {"added_date": "2026-07-18", "layer": "architecture", "note": "ADRs and structural/architectural decisions"}

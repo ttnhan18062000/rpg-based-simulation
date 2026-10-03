@@ -1,5 +1,5 @@
-"""Literal AC-bullet assertion: pre/post content-hash or git-porcelain snapshot of tickets/ and
-agent-monitoring/*.jsonl around the real Codex invocation is asserted identical
+"""Literal AC-bullet assertion: pre/post content-hash or git-porcelain snapshot of agent-working/tickets/ and
+agent-working/agent-monitoring/*.jsonl around the real Codex invocation is asserted identical
 (TCK-20260721-CODEX-REPLAY-PARITY, Step 7). Exercises the same underlying mechanism as
 test_containment_real_process.py and test_no_production_hook_invocation.py, phrased as its own
 named test for direct AC traceability.

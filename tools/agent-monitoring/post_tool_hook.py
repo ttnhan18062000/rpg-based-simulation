@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PostToolUse hook: appends one tool-call record to agent-monitoring/data/<ISO-week>/tools.jsonl."""
+"""PostToolUse hook: appends one tool-call record to agent-working/agent-monitoring/data/<ISO-week>/tools.jsonl."""
 import json
 import sys
 import time

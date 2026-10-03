@@ -212,7 +212,7 @@ def test_does_not_flag_or_crash_on_unannotated_handler():
 
 def test_flags_delimiter_joined_reason_field():
     # Rule-derived, not incident-derived: investigation.md found zero real historical instances of
-    # this exact pattern anywhere in this repo's history (git log, tickets/done/, docs/archive/,
+    # this exact pattern anywhere in this repo's history (git log, agent-working/tickets/done/, docs/archive/,
     # and all 31 recorded NEEDS_CHANGES/BLOCKED architecture-review verdicts).
     source = (
         "def build(cause, severity, actor_id):\n"

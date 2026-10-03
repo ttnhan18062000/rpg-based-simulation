@@ -42,7 +42,7 @@ def check_security_gate_firing(tickets_root: Path | None = None) -> dict:
         SECURITY_BLOCKED final_status exists somewhere in its run history — the gate fired.
       - `pending`: has zero DONE-resolved runs.jsonl records (still in progress, blocked, or no
         run data recorded at all yet) — not yet evaluable, never silently dropped.
-    Never mutates agent-monitoring/*.jsonl or any ticket file — read-only.
+    Never mutates agent-working/agent-monitoring/*.jsonl or any ticket file — read-only.
     """
     tickets_root = tickets_root if tickets_root is not None else Path(".")
     ticket_tag_map = _collect_tagged_tickets(tickets_root)
@@ -84,8 +84,8 @@ def check_security_gate_firing(tickets_root: Path | None = None) -> dict:
         "pending": pending,
         "excluded": excluded,
         "derivation": (
-            "Derived from generate_retro._collect_tagged_tickets (tickets/done/ + "
-            "tickets/inprogress/ frontmatter, security tag) cross-referenced against "
+            "Derived from generate_retro._collect_tagged_tickets (agent-working/tickets/done/ + "
+            "agent-working/tickets/inprogress/ frontmatter, security tag) cross-referenced against "
             "generate_retro._load_runs_and_events's real runs.jsonl/events.jsonl. A ticket is "
             "only classified 'missed' or 'clean' once it has at least one DONE-resolved "
             "runs.jsonl record (an in-progress/blocked ticket has not necessarily reached the "

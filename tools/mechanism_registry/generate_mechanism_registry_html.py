@@ -66,12 +66,16 @@ import sys
 from pathlib import Path
 
 import yaml
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import TICKETS, posix  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REGISTRY_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
 _DEFAULT_OUTPUT = _REPO_ROOT / "docs" / "brainstorm" / "mechanism_registry.html"
 _EPIC_TICKET_ID = "TCK-20260915-EPIC-MECHANISM-REGISTRY"
-_EPIC_TICKET_RELATIVE_LINK = f"../../tickets/done/mechanism-registry/{_EPIC_TICKET_ID}.md"
+_EPIC_TICKET_RELATIVE_LINK = f"../../{posix(TICKETS)}/done/mechanism-registry/{_EPIC_TICKET_ID}.md"
 
 sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
 from registry import all_mechanisms_combined_view, build_system_rollup  # noqa: E402

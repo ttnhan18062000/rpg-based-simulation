@@ -8,6 +8,7 @@ class — not "correctly classifies" (there is nothing to classify; the field do
 
 import sys
 from pathlib import Path
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS
 
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
@@ -70,9 +71,9 @@ def _write_complete_stored_artifacts(stored_base: Path, ticket_id: str) -> None:
 
 
 def _scaffold(tmp_path):
-    done_dir = tmp_path / "tickets" / "done"
+    done_dir = tmp_path / TICKETS / "done"
     done_dir.mkdir(parents=True)
-    stored_base = tmp_path / "stored_artifacts"
+    stored_base = tmp_path / STORED_ARTIFACTS
 
     _write_ticket_with_tier(done_dir / "TCK-OK.md", "TCK-OK", "standard")
     _write_complete_stored_artifacts(stored_base, "TCK-OK")
@@ -89,10 +90,10 @@ def _scaffold(tmp_path):
     # plan.md intentionally missing
 
     _write_ticket_with_tier(done_dir / "TCK-MISSING.md", "TCK-MISSING", "standard")
-    # no stored_artifacts/TCK-MISSING/ at all
+    # no agent-working/stored_artifacts/TCK-MISSING/ at all
 
     _write_ticket_with_tier(done_dir / "TCK-HOTFIX.md", "TCK-HOTFIX", "hotfix")
-    # no stored_artifacts/TCK-HOTFIX/ — correct, not expected
+    # no agent-working/stored_artifacts/TCK-HOTFIX/ — correct, not expected
 
     _write_legacy_ticket_no_tier(done_dir / "METRICS-01.md", "METRICS-01")
 

@@ -12,7 +12,7 @@ with no behavior change. §9's `check_db_size_within_limit()`/`execute_bounded_t
 write-guard pair, and §10's GC-eligibility predicates stayed behind in the archived module and are
 not re-tested here — see the archived test file for their own (now-historical) coverage.
 
-No test in this file opens `knowledge-index/retrieval_cache.db` at its real path or issues a real
+No test in this file opens `agent-working/.index/knowledge-index/retrieval_cache.db` at its real path or issues a real
 INSERT/UPDATE against `retrieval_provider_result_cache_rows`; every §9 test uses a tmp_path-scoped
 throwaway SQLite file, mirroring tests/tools/test_retrieval_cache.py's own `_isolated_cache_db`
 fixture pattern (never CACHE_DB_PATH itself).

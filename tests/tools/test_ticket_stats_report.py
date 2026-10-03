@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS
 
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
@@ -23,7 +24,7 @@ from ticket_stats_report import (  # noqa: E402
 
 def _write_ticket(root: Path, ticket_id: str, *, layer="engine", tier="standard",
                    ticket_type="feature", priority="P1", date="2026-07-10") -> Path:
-    tickets_dir = root / "tickets" / "done"
+    tickets_dir = root / TICKETS / "done"
     tickets_dir.mkdir(parents=True, exist_ok=True)
     p = tickets_dir / f"{ticket_id}.md"
     p.write_text(
@@ -50,7 +51,7 @@ def test_collect_done_tickets_extracts_layer_tier_type_priority(tmp_path):
 
 def test_collect_done_tickets_skips_sequence_md(tmp_path):
     _write_ticket(tmp_path, "TCK-20260710-FAKE-ONE")
-    (tmp_path / "tickets" / "done" / "SEQUENCE.md").write_text("# Sequence\n", encoding="utf-8")
+    (tmp_path / TICKETS / "done" / "SEQUENCE.md").write_text("# Sequence\n", encoding="utf-8")
 
     included, skip_reasons = collect_done_tickets(tmp_path)
 
@@ -59,8 +60,8 @@ def test_collect_done_tickets_skips_sequence_md(tmp_path):
 
 
 def test_compute_velocity_groups_by_day_and_week(tmp_path):
-    (tmp_path / "tickets").mkdir(parents=True, exist_ok=True)
-    log = tmp_path / "tickets" / "working_log.csv"
+    (tmp_path / TICKETS).mkdir(parents=True, exist_ok=True)
+    log = tmp_path / TICKETS / "working_log.csv"
     log.write_text(
         "timestamp,ticket_id,title,status,summary,artifacts_path\n"
         "2026-07-06T00:00:00Z,TCK-A,A,DONE,x,none\n"
@@ -77,8 +78,8 @@ def test_compute_velocity_groups_by_day_and_week(tmp_path):
 
 
 def test_compute_velocity_counts_unparseable_rows_without_crashing(tmp_path):
-    (tmp_path / "tickets").mkdir(parents=True, exist_ok=True)
-    log = tmp_path / "tickets" / "working_log.csv"
+    (tmp_path / TICKETS).mkdir(parents=True, exist_ok=True)
+    log = tmp_path / TICKETS / "working_log.csv"
     log.write_text(
         "timestamp,ticket_id,title,status,summary,artifacts_path\n"
         ",TCK-A,A,DONE,x,none\n"
@@ -111,12 +112,12 @@ def test_compute_artifact_completeness_detects_missing_files(tmp_path):
         {"ticket_id": "TCK-INCOMPLETE", "layer": "engine", "tier": "standard", "ticket_type": "feature", "priority": "P1", "date": "2026-07-10"},
         {"ticket_id": "TCK-HOTFIX", "layer": "engine", "tier": "hotfix", "ticket_type": "bug", "priority": "P1", "date": "2026-07-10"},
     ]
-    complete_dir = tmp_path / "stored_artifacts" / "TCK-COMPLETE"
+    complete_dir = tmp_path / STORED_ARTIFACTS / "TCK-COMPLETE"
     complete_dir.mkdir(parents=True)
     for fname in ("investigation.md", "plan.md", "test_plan.md"):
         (complete_dir / fname).write_text("content", encoding="utf-8")
 
-    incomplete_dir = tmp_path / "stored_artifacts" / "TCK-INCOMPLETE"
+    incomplete_dir = tmp_path / STORED_ARTIFACTS / "TCK-INCOMPLETE"
     incomplete_dir.mkdir(parents=True)
     (incomplete_dir / "investigation.md").write_text("content", encoding="utf-8")
     # plan.md, test_plan.md missing entirely

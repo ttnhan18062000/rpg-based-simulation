@@ -9,7 +9,7 @@ session's `seq` values collide with the pre-pause session's, silently aliasing t
 tool-call attribution onto the prior session's `(run_id, seq)` buckets in `tools.jsonl`.
 
 `compute_seq_offset(run_id, events)` looks up the max `seq` this `run_id` already has in
-`agent-monitoring/events.jsonl` (the authoritative 1:1 per-call record — see this ticket's
+`agent-working/agent-monitoring/events.jsonl` (the authoritative 1:1 per-call record — see this ticket's
 investigation.md for why `events.jsonl`, not `tools.jsonl`, is the correct source) so the
 resumed session's numbering can continue past it instead of restarting at 1.
 
@@ -23,8 +23,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate import load_data_glob  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
-EVENTS_FILE = Path("agent-monitoring/data")
+EVENTS_FILE = AGENT_MONITORING / "data"
 
 
 def compute_seq_offset(run_id: str, events: list) -> int:

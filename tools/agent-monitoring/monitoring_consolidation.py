@@ -21,7 +21,7 @@ advisory-only row-count signal) and already covered for `runs.jsonl`/`events.jso
 existing `duplicate_run_record_check.py`/`event_seq_integrity_check.py` anomaly detectors, which
 exist precisely to surface this class of issue rather than let it corrupt silently.
 
-**Update (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET): `tickets/working_log.csv` IS now
+**Update (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET): `agent-working/tickets/working_log.csv` IS now
 consolidated here too**, closing the scope reduction above. The synchronous done-checker
 dependency that motivated leaving it out is solved on the *read* side instead — the two callers
 that need a just-closed ticket's row without waiting for consolidation
@@ -29,7 +29,7 @@ that need a just-closed ticket's row without waiting for consolidation
 and `record_hand_orchestrated_closure.py`'s own double-write guard) now also read the pending
 per-batch shards directly (`working_log_parser.parse_pending_working_log_shards()`), so
 consolidation timing never blocks or races either check. `consolidate_pending_rows()` (the
-function that actually opens `tickets/working_log.csv`) lives in `tools/working_log_writer.py`
+function that actually opens `agent-working/tickets/working_log.csv`) lives in `tools/working_log_writer.py`
 itself, not here — `working_log_writer.py`'s own AST guard
 (`tests/tools/test_working_log_writer.py::test_working_log_csv_has_exactly_one_writer`) asserts it
 is the *only* file that ever opens that CSV in write mode, and this module calling into it rather
@@ -52,8 +52,12 @@ from writer import write_lines  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import consolidate_pending_rows  # noqa: E402
 from monitoring_shard_paths import per_identifier_shard_paths  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS  # noqa: E402
 
-DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "agent-monitoring" / "data"
+DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / AGENT_MONITORING / "data"
 JSONL_KINDS = ("runs", "events", "tools")
 
 
@@ -91,7 +95,7 @@ def consolidate_week(week_dir: Path) -> dict:
 
 
 def _default_csv_path_for(data_dir: Path) -> Path:
-    """Derive `tickets/working_log.csv`'s path from `data_dir`'s own root, so a `--data-dir`
+    """Derive `agent-working/tickets/working_log.csv`'s path from `data_dir`'s own root, so a `--data-dir`
     override (the real `__file__`-anchored default, or a test's own scratch tree) never writes to
     a checkout other than the one that owns `data_dir`
     (TCK-20260928-WORKING-LOG-CONSOLIDATION-CROSS-CHECKOUT-ROW-LOSS). `data_dir`'s real-shape
@@ -99,11 +103,12 @@ def _default_csv_path_for(data_dir: Path) -> Path:
     `<root>` is two levels up (matching `DEFAULT_DATA_DIR`'s own construction below); a shallower
     test-fixture shape (e.g. `tmp_path / "data"`, no `agent-monitoring` parent) falls back to one
     level up, still fully contained in that fixture's own sandbox rather than escaping it."""
-    if data_dir.parent.name == "agent-monitoring" and data_dir.name == "data":
-        root = data_dir.parent.parent
+    monitoring_parts = AGENT_MONITORING.parts
+    if data_dir.name == "data" and data_dir.parent.parts[-len(monitoring_parts) :] == monitoring_parts:
+        root = data_dir.parent.parents[len(monitoring_parts) - 1]
     else:
         root = data_dir.parent
-    return root / "tickets" / "working_log.csv"
+    return root / TICKETS / "working_log.csv"
 
 
 def consolidate_all(data_dir: Path = DEFAULT_DATA_DIR) -> dict:
@@ -138,7 +143,7 @@ def main(argv=None) -> int:
         "runs.jsonl/events.jsonl/tools.jsonl. Read-only for the working tree except appending to "
         "and deleting already-folded-in per-ticket files; never touches consumer read contracts."
     )
-    parser.add_argument("--data-dir", default=None, help="Override agent-monitoring/data/ (mainly for testing).")
+    parser.add_argument("--data-dir", default=None, help="Override agent-working/agent-monitoring/data/ (mainly for testing).")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
@@ -158,7 +163,7 @@ def main(argv=None) -> int:
             if week == "working_log":
                 print(
                     f"working_log: folded {counts['shard_files']} shard file(s) "
-                    f"({counts['consolidated_rows']} row(s)) into tickets/working_log.csv"
+                    f"({counts['consolidated_rows']} row(s)) into agent-working/tickets/working_log.csv"
                 )
                 continue
             total = sum(counts.values())

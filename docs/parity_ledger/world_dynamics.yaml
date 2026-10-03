@@ -1391,7 +1391,17 @@
     \ TCK-20260628-E52G-SOVEREIGNTY-EVENTS.\n TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT:\
     \ threshold literals replaced with FactionInfluenceService.LIBERATION_THRESHOLD/CONQUEST_THRESHOLD\
     \ imports, resolving a prior \xB150/\xB1100 disagreement against src/world/influence.py;\
-    \ event emission and flush mechanism unchanged.\n"
+    \ event emission and flush mechanism unchanged.\n TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION:\
+    \ ownership has a SECOND writer, FactionInfluenceService.process_influence_shift,\
+    \ which does NOT emit SOVEREIGNTY_SHIFT; any flip it performed would be unobservable\
+    \ to WorldEmergencePhase. This entry's observability claim holds today because that\
+    \ writer is measured to make zero ownership writes across ~48,000 region-ticks in\
+    \ four corpus worlds (both observed durable flips were world_dynamics-only). Status\
+    \ stays verified: the entry's text makes no phase-position claim and its P1 test_path\
+    \ passes. Scope limit -- a true zero for this corpus, not proof of impossibility;\
+    \ a constructed scenario drives both writers in one tick. Counts are order-of-magnitude\
+    \ (runs predate the audit_mode discipline INFRA-273 requires). Evidence: that ticket's\
+    \ stored artifacts, investigation.md \xA73-\xA75b and runtime_evidence_regional_sovereignty.md.\n"
   proof_type: parity
   test_path: tests/unit/world/test_sovereignty_events.py::test_world_dynamics_flips_ownership_at_shared_threshold_boundary
   divergence_note: "New mechanic added by TCK-20260628-E52G-SOVEREIGNTY-EVENTS. Previously,\

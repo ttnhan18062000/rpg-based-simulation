@@ -22,6 +22,7 @@ from agent_replay.fixture_envelope import (  # noqa: E402
     PhaseEntry,
     load_fixture,
 )
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix  # noqa: E402
 
 _REAL_FIXTURE_PATH = (
     _REPO_ROOT / "tests" / "fixtures" / "agent_replay" / "TCK-20260721-ORCHESTRATION-CONTRACT-ADR.yaml"
@@ -33,7 +34,7 @@ def _well_formed_fixture_dict() -> dict:
         "version": 1,
         "source": {
             "ticket_id": "TCK-EXAMPLE",
-            "ticket_path": "tickets/done/TCK-EXAMPLE.md",
+            "ticket_path": f"{posix(TICKETS)}/done/TCK-EXAMPLE.md",
             "events_run_id": "TCK-EXAMPLE",
         },
         "phases": [
@@ -99,10 +100,10 @@ def test_real_fixture_set_loads_and_validates():
 
     # Anti-drift guard: the fixture's ticket_id must correspond to a real, permanent record — not
     # invented example data.
-    done_ticket_path = _REPO_ROOT / "tickets" / "done" / "TCK-20260721-ORCHESTRATION-CONTRACT-ADR.md"
-    assert done_ticket_path.exists(), "fixture's source ticket_id has no matching tickets/done/ file"
+    done_ticket_path = _REPO_ROOT / TICKETS / "done" / "TCK-20260721-ORCHESTRATION-CONTRACT-ADR.md"
+    assert done_ticket_path.exists(), "fixture's source ticket_id has no matching agent-working/tickets/done/ file"
 
-    runs_jsonl_shards = sorted((_REPO_ROOT / "agent-monitoring" / "data").glob("*/runs.jsonl"))
+    runs_jsonl_shards = sorted((_REPO_ROOT / AGENT_MONITORING / "data").glob("*/runs.jsonl"))
     matching_run_ids = set()
     for runs_jsonl in runs_jsonl_shards:
         for line in runs_jsonl.read_text(encoding="utf-8").splitlines():
@@ -111,7 +112,7 @@ def test_real_fixture_set_loads_and_validates():
             row = json.loads(line)
             matching_run_ids.add(row.get("run_id"))
     assert envelope.source["ticket_id"] in matching_run_ids, (
-        "fixture's source ticket_id has no matching row in any agent-monitoring/data/*/runs.jsonl shard"
+        "fixture's source ticket_id has no matching row in any agent-working/agent-monitoring/data/*/runs.jsonl shard"
     )
 
 

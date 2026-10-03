@@ -56,7 +56,7 @@ fresh three-factor consent; none may be inferred from the completed capability t
 
 **Implemented**
 
-- `agent-orchestration/` is the canonical source for the `implement-ticket`
+- `agent-working/agent-orchestration/` is the canonical source for the `implement-ticket`
   first vertical slice: workflow, roles, terminal statuses, skills, monitoring
   fields, normalized hook vocabulary, and reviewed divergences.
 - The contract validator is deterministic, network-free, and write-guarded.
@@ -287,5 +287,5 @@ distinguished from activation regressions until repaired.
 - `docs/plans/agent_infrastructure/provider_agnostic_orchestration/final_configuration_parity_verification_claude.md`
 - `docs/plans/agent_infrastructure/provider_agnostic_orchestration/final_configuration_parity_verification_response_codex.md`
 - `docs/plans/agent_infrastructure/provider_agnostic_orchestration/skill_companion_assets_fix_verification_claude.md`
-- `agent-orchestration/README.md`
+- `agent-working/agent-orchestration/README.md`
 - `docs/ai/codex_capability_matrix.md`

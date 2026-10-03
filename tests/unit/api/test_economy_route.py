@@ -1,6 +1,6 @@
 """Unit tests for GET /api/v1/economy/health endpoint and EconomyPresenter.
 
-Test plan reference: staging_artifacts/TCK-20260619-E33B-ALERTS-REST/test_plan.md
+Test plan reference: agent-working/staging_artifacts/TCK-20260619-E33B-ALERTS-REST/test_plan.md
 Ticket: TCK-20260619-E33B-ALERTS-REST
 """
 from __future__ import annotations

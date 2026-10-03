@@ -258,7 +258,7 @@ class TestShardedToolsSource:
 
 
 # ---------------------------------------------------------------------------
-# Group 1c — unified agent-monitoring/data/ layout, all 3 sources (AC2)
+# Group 1c — unified agent-working/agent-monitoring/data/ layout, all 3 sources (AC2)
 # ---------------------------------------------------------------------------
 
 class TestUnifiedDataDirSource:
@@ -509,16 +509,16 @@ class TestGitignore:
     def test_db_path_in_gitignore(self):
         gitignore = _REPO_ROOT / ".gitignore"
         content = gitignore.read_text(encoding="utf-8")
-        assert "agent-monitoring-index/" in content
+        assert "agent-working/.index/agent-monitoring-index/" in content
 
     def test_git_check_ignore(self, tmp_path):
         result = subprocess.run(
-            ["git", "check-ignore", "-v", "agent-monitoring-index/monitoring.db"],
+            ["git", "check-ignore", "-v", "agent-working/.index/agent-monitoring-index/monitoring.db"],
             capture_output=True,
             text=True,
             cwd=str(_REPO_ROOT),
         )
-        assert result.returncode == 0, "agent-monitoring-index/monitoring.db is not git-ignored"
+        assert result.returncode == 0, "agent-working/.index/agent-monitoring-index/monitoring.db is not git-ignored"
 
 
 # ---------------------------------------------------------------------------

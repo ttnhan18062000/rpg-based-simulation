@@ -201,17 +201,17 @@ from registration" above), the same exemption shape one level up.
 ## Enforcement
 
 Enforcement is **forward-only** from `2026-07-04`: `tools/validate_frontmatter.py` only applies
-tag checks to tickets/artifacts whose `ticket_id` embeds a date (`TCK-YYYYMMDD-...`) on or after
+tag checks to agent-working/tickets/artifacts whose `ticket_id` embeds a date (`TCK-YYYYMMDD-...`) on or after
 this date. Tickets and artifacts predating this taxonomy are intentionally not backfilled or
 re-validated, so a whole-directory validation run does not newly fail on historical tags.
 
-For tickets/artifacts within scope, two checks now apply, in order: canonical form (as above), then
+For agent-working/tickets/artifacts within scope, two checks now apply, in order: canonical form (as above), then
 **registry membership** — `validate_frontmatter.py` loads `registries/tag_registry.jsonl` and
 rejects any canonical-form tag that isn't registered there (except `phase-N` tags, always allowed).
 This is a **hard allowlist**: a genuinely new tag must be registered via `tools/tag_registry.py add`
 before it can be used on any ticket/artifact. Confirmed to introduce zero new regressions against
 the existing corpus: seeding the registry from every tag already in use across the 27 (at the time)
-post-cutoff tickets, then re-running `validate_frontmatter.py tickets/done`, produced the identical
+post-cutoff tickets, then re-running `validate_frontmatter.py agent-working/tickets/done`, produced the identical
 185-violation count as the unmodified tree — the only 2 tag-related failures already existed before
 the registry (a non-canonical `simulation_quality` usage, unrelated to registration).
 

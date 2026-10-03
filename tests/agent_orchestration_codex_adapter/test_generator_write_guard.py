@@ -4,6 +4,7 @@ import shutil
 import yaml
 from tools.agent_orchestration_codex_adapter.errors import CodexAdapterWriteGuardError
 from tools.agent_orchestration_codex_adapter.generator import render_codex_guidance
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 ROOT=Path(__file__).parent.parent.parent
 
 def test_refuses_external_target_without_flag(tmp_path):
@@ -21,8 +22,8 @@ def test_never_targets_dot_claude_or_dot_codex():
 
 def test_rejects_path_traversal_skill_id_before_writing(tmp_path):
     source = tmp_path / "source"
-    shutil.copytree(ROOT / "agent-orchestration", source / "agent-orchestration")
-    skills_path = source / "agent-orchestration" / "skills.yaml"
+    shutil.copytree(ROOT / AGENT_ORCHESTRATION, source / AGENT_ORCHESTRATION)
+    skills_path = source / AGENT_ORCHESTRATION / "skills.yaml"
     data = yaml.safe_load(skills_path.read_text())
     data["skills"][0]["id"] = "../../etc"
     skills_path.write_text(yaml.safe_dump(data, sort_keys=False))
@@ -38,8 +39,8 @@ def test_companion_asset_copy_respects_write_guard_and_refuses_traversal(tmp_pat
     # actually resolves back through the shared root, exercising _assert_write_allowed's
     # resolve-based containment check rather than the unrelated `id`-format regex.
     source = tmp_path / "source"
-    shutil.copytree(ROOT / "agent-orchestration", source / "agent-orchestration")
-    skills_path = source / "agent-orchestration" / "skills.yaml"
+    shutil.copytree(ROOT / AGENT_ORCHESTRATION, source / AGENT_ORCHESTRATION)
+    skills_path = source / AGENT_ORCHESTRATION / "skills.yaml"
     data = yaml.safe_load(skills_path.read_text())
     data["skills"][0]["companion_assets"] = ["../../../etc/passwd"]
     skills_path.write_text(yaml.safe_dump(data, sort_keys=False))
@@ -51,8 +52,8 @@ def test_companion_asset_copy_respects_write_guard_and_refuses_traversal(tmp_pat
 
 def test_companion_asset_copy_refuses_traversal_into_dot_claude(tmp_path):
     source = tmp_path / "source"
-    shutil.copytree(ROOT / "agent-orchestration", source / "agent-orchestration")
-    skills_path = source / "agent-orchestration" / "skills.yaml"
+    shutil.copytree(ROOT / AGENT_ORCHESTRATION, source / AGENT_ORCHESTRATION)
+    skills_path = source / AGENT_ORCHESTRATION / "skills.yaml"
     data = yaml.safe_load(skills_path.read_text())
     data["skills"][0]["companion_assets"] = ["../../../.claude/skills/agent-monitoring-retro/SKILL.md"]
     skills_path.write_text(yaml.safe_dump(data, sort_keys=False))

@@ -377,7 +377,7 @@ class SocialAppraisalSystem:
         """The shared prelude (trust<0.2, sentiment<-0.8, betrayal-history) already expresses
         the entire trust gate this contract kind uses; reaching this method means the prelude
         already passed, so it always accepts. No utility/risk model or eligibility_gate scoring
-        is added here -- see stored_artifacts/TCK-20260902-MARRIAGE-PROPOSAL-CONTRACT/plan.md
+        is added here -- see agent-working/stored_artifacts/TCK-20260902-MARRIAGE-PROPOSAL-CONTRACT/plan.md
         Decision 4."""
         return ContractStatus.ACCEPTED, ReasonCode.MARRIAGE_ACCEPTED, {}
 

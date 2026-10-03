@@ -112,7 +112,7 @@ Stats tab proposal already established for its charts.
 - `DashboardCache`'s existing `RLock`-per-method pattern and mtime-triggered rebuild should
   extend naturally; investigate whether the bulk timeline read needs its own cache entry or can
   reuse what backs the existing per-run endpoint.
-- This dashboard is read-only over `tickets/**` and `agent-monitoring/*.jsonl` — the new
+- This dashboard is read-only over `agent-working/tickets/**` and `agent-working/agent-monitoring/*.jsonl` — the new
   endpoint must not write anything.
 - Mirror `dashboard-frontend/src/api.ts`'s own established convention: new response interfaces
   there must mirror `models.py` field-for-field (see the file's own header comment enforcing
@@ -183,5 +183,5 @@ Stats tab proposal already established for its charts.
 - Any change to the single-run `GET /api/runs/{run_id}/timeline` endpoint — concern 1 adds a
   bulk sibling, it does not modify the existing endpoint.
 - Any new agent-monitoring instrumentation or schema change — this proposal only surfaces
-  `TimelineEntry` data that already exists in `agent-monitoring/*.jsonl` via the existing
+  `TimelineEntry` data that already exists in `agent-working/agent-monitoring/*.jsonl` via the existing
   ingest/cache path.

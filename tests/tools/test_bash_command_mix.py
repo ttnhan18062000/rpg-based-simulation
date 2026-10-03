@@ -13,11 +13,12 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _MODULE_PATH = _MONITORING_TOOLS_DIR / "bash_command_mix.py"
-_REAL_DATA_DIR = _REPO_ROOT / "agent-monitoring" / "data"
+_REAL_DATA_DIR = _REPO_ROOT / AGENT_MONITORING / "data"
 
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
@@ -174,7 +175,7 @@ def test_render_markdown_includes_cd_and_ratio_lines():
 # ---------------------------------------------------------------------------
 
 def test_week_shards_filters_to_inclusive_range(tmp_path):
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     for week in ("2026-W28", "2026-W29", "2026-W30", "2026-W31"):
         (data_dir / week).mkdir(parents=True)
         (data_dir / week / "tools.jsonl").write_text(
@@ -189,7 +190,7 @@ def test_week_shards_filters_to_inclusive_range(tmp_path):
 def test_week_shards_picks_up_per_identifier_shaped_files_too(tmp_path):
     """TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: a per-ticket/per-branch shaped shard
     must be found too, not just the bare `tools.jsonl` name."""
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     (data_dir / "2026-W30").mkdir(parents=True)
     (data_dir / "2026-W30" / "tools.jsonl").write_text(json.dumps({"tool": "Bash"}) + "\n")
     (data_dir / "2026-W30" / "some-branch.tools.jsonl").write_text(json.dumps({"tool": "Read"}) + "\n")
@@ -201,7 +202,7 @@ def test_week_shards_picks_up_per_identifier_shaped_files_too(tmp_path):
 
 
 def test_load_tools_rows_respects_week_range(tmp_path):
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     (data_dir / "2026-W01").mkdir(parents=True)
     (data_dir / "2026-W02").mkdir(parents=True)
     (data_dir / "2026-W01" / "tools.jsonl").write_text(
@@ -220,7 +221,7 @@ def test_load_tools_rows_respects_week_range(tmp_path):
 
 
 def test_load_tools_rows_with_line_count_matches_row_count(tmp_path):
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     (data_dir / "2026-W01").mkdir(parents=True)
     (data_dir / "2026-W01" / "tools.jsonl").write_text(
         json.dumps({"tool": "Bash", "input_summary": "cd /a"}) + "\n"
@@ -267,7 +268,7 @@ def _file_size_snapshot() -> dict:
 
 def test_script_is_read_only_against_real_agent_monitoring_data():
     """Same rationale as test_agent_tool_usage_baseline.py's sibling test: proves this script
-    never truncates or deletes existing content under agent-monitoring/data/, without racing a
+    never truncates or deletes existing content under agent-working/agent-monitoring/data/, without racing a
     concurrent session's own append-only PostToolUse hook writes during the test's wall-clock
     window (growth and new files are expected and not attributable to this script)."""
     assert _REAL_DATA_DIR.is_dir()
@@ -377,7 +378,7 @@ def test_cli_ref_mode_prints_measured_ref_and_sha_in_json():
 
 
 def test_cli_ref_mode_never_touches_working_tree():
-    """Read-only guard, ref-mode variant: --ref must never write to agent-monitoring/data/, same
+    """Read-only guard, ref-mode variant: --ref must never write to agent-working/agent-monitoring/data/, same
     property the filesystem-mode test proves for the default path."""
     pre_sizes = _file_size_snapshot()
     subprocess.run(

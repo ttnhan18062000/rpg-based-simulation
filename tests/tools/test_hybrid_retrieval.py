@@ -150,7 +150,7 @@ class TestResolveMetadata:
         }
         for source_type in ("ticket", "investigation", "working_log"):
             meta = _hr.resolve_metadata(
-                "tickets/inprogress/TCK-20260101-EXAMPLE.md", source_type, registry_index
+                "agent-working/tickets/inprogress/TCK-20260101-EXAMPLE.md", source_type, registry_index
             )
             assert meta["authority"] == _hr.UNRATED
             assert meta["freshness"] == _hr.UNRATED

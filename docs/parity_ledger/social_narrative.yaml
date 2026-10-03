@@ -3362,7 +3362,7 @@
   proof_type: parity
   test_path: tests/unit/observability/test_event_shapers_narrative.py
   divergence_note: 'TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-PHASE2-EPIC''s
-    own closed ticket record (tickets/done/TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-PHASE2-EPIC.md,
+    own closed ticket record (agent-working/tickets/done/TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-PHASE2-EPIC.md,
     Out of Scope section) states quest_event "already come[s] from quest_system, a
     separate live-emission source, not event_extractor.py''s diffing pass" based on
     a raw-JSONL inspection. This is incorrect, confirmed by reading the code directly:
@@ -3375,7 +3375,7 @@
     WorldEvent(category=QUEST_COMPLETED) (src/engine/pipeline_phases/quest_opportunity_rewards.py)
     -- a different mechanism for a different registry (state.quest_registry''s QuestOpportunity
     entries, E23C), not the entity-project QuestState lifecycle quest_event actually
-    tracks. Historical ticket files in tickets/done/ are not edited after close; this
+    tracks. Historical ticket files in agent-working/tickets/done/ are not edited after close; this
     entry is the correction of record going forward.'
   support_boundary: 'Observability delivery-mechanism migration only -- no change
     to NarrativeScorer''s scoring logic, no change to which statuses fire (byte-identical

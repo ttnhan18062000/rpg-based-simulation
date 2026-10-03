@@ -11,13 +11,13 @@ tags: [idea, agent-infrastructure, determinism, gates, enforcement, observabilit
 
 # Idea: Deterministic Gate Substrate for Agent Workflows
 
-**Archived:** 2026-07-12 — fully shipped, all 5 implementing tickets confirmed in `tickets/done/`
+**Archived:** 2026-07-12 — fully shipped, all 5 implementing tickets confirmed in `agent-working/tickets/done/`
 (`gate-determinism-followups/` batch + `TCK-20260708-AGENT-GATE-ENFORCEMENT-HARDENING`); this
 document is the historical design reference.
 
 > **Maturity: SHIPPED.** The four static-verifier gates and the `verified_by` provenance
 > field (this doc's "Idea" and "Verdict provenance" sections) were implemented in full by
-> `gate-determinism-followups` (2026-07-05, `tickets/done/gate-determinism-followups/`) — see
+> `gate-determinism-followups` (2026-07-05, `agent-working/tickets/done/gate-determinism-followups/`) — see
 > `TCK-20260705-GATE-DET-DONE-CHECKER`, `-PARITY-UPDATER`, `-MECHANICS-AUDITOR`,
 > `-ARCHITECTURE-REVIEWER`. The "Enforcement: nudge vs. block" section below was subsequently
 > shipped by `TCK-20260708-AGENT-GATE-ENFORCEMENT-HARDENING` (under
@@ -55,7 +55,7 @@ Give each LLM-judged gate a companion **deterministic verifier** that runs first
 | Gate agent | Deterministic check (new) | What stays LLM-judged |
 |---|---|---|
 | `architecture-reviewer` | AST scan for direct durable-state mutation outside `src/engine/authoritative_pipeline*`; grep-scoped check for raw domain objects returned from `src/api/`; regex check for known "meaning smuggled into `reason`/`metadata` string" patterns | Whether the *design* is sound — strategic/tactical boundary, whether an abstraction is premature |
-| `done-checker` | Script-verifiable subset of the 11 DoD conditions: `working_log.csv` has a new row, `staging_artifacts/{id}/` has all three files, `data/runs/` and `reports/release_proof/` are empty, ticket file exists in `tickets/inprogress/` | "No material gap is left unstated" — irreducibly a judgment call |
+| `done-checker` | Script-verifiable subset of the 11 DoD conditions: `working_log.csv` has a new row, `agent-working/staging_artifacts/{id}/` has all three files, `data/runs/` and `reports/release_proof/` are empty, ticket file exists in `agent-working/tickets/inprogress/` | "No material gap is left unstated" — irreducibly a judgment call |
 | `parity-updater` | Git-diff cross-reference: every `src/` file touched in the commit that maps to a `docs/parity_ledger/*.yaml` subsystem must have a corresponding entry touched in the same commit | Whether the chosen `status` (`verified`/`divergent`) is the correct one |
 | `mechanics-auditor` | For any `PARITY` verdict, confirm the cited `test_path` exists **and is green in this run** — not just present in the ledger | Whether an `UNDOCUMENTED` implementation is actually intended behavior |
 
@@ -77,7 +77,7 @@ Not every hook should escalate — over-blocking exploratory work is its own fai
 | Existing component | How this idea attaches |
 |---|---|
 | `make lane-architecture` | Becomes the home for the new static verifiers, or a documented sibling — either way, its coverage should be written down explicitly against the four gates above, closing Recommendation 3 of the audit |
-| `agent-monitoring/tools.jsonl` / hooks | The hard-block escalation lives in `implement-ticket.js`'s own control flow (early `return {status: ...}`), the same mechanism every other gate in this pipeline already uses — not a `.claude/settings.json` hook change; hooks in this harness can only inject `additionalContext`, never block a tool call (confirmed by TCK-20260708-AGENT-GATE-ENFORCEMENT-HARDENING's investigation) |
+| `agent-working/agent-monitoring/tools.jsonl` / hooks | The hard-block escalation lives in `implement-ticket.js`'s own control flow (early `return {status: ...}`), the same mechanism every other gate in this pipeline already uses — not a `.claude/settings.json` hook change; hooks in this harness can only inject `additionalContext`, never block a tool call (confirmed by TCK-20260708-AGENT-GATE-ENFORCEMENT-HARDENING's investigation) |
 | `docs/parity_ledger/*.yaml` schema | `parity-updater`'s diff cross-reference needs a stable mapping from `src/` path → subsystem YAML file; this may already be implicit in how `parity-updater` scopes its reads and just needs to be made explicit and scriptable |
 | `docs/ai/agent_infrastructure_audit.md` | Recommendations 1 ("log hook near-misses") and 3 ("write down what `lane-architecture` covers") are subsumed by this idea rather than being separate small fixes |
 

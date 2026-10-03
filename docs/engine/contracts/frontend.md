@@ -35,7 +35,7 @@ fetch is issued, then performs three critical fetch calls joined into one `Promi
 2.  **`/api/v1/static`**: Fetches all persistent world objects (Buildings, Resource Nodes, Treasure Chests).
 3.  **`/api/v1/manifest`**: Fetches the versioned ID-to-meaning lookup table (`terrain_types`,
     `entity_kinds`, `building_types`; `location_types` intentionally omitted — no backend registry
-    exists for it, see `stored_artifacts/TCK-20260821-MANIFEST-ID-LOOKUP-ENDPOINT/investigation.md`
+    exists for it, see `agent-working/stored_artifacts/TCK-20260821-MANIFEST-ID-LOOKUP-ENDPOINT/investigation.md`
     and `plan.md`). `terrain_types` is keyed by the same int codes `/api/v1/map`'s RLE grid uses.
     The fetched value is stored in hook state (`manifest`) but not yet consumed by any
     rendering/color logic — retiring `colors.ts`'s hardcoded maps to consume it is a fast-follow.

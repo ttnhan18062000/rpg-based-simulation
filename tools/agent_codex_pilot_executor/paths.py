@@ -7,9 +7,10 @@ from pathlib import Path
 from tools.agent_codex_posttool_adapter.identity import validate_identity
 
 from .errors import ScratchContainmentError
+from tools.agent_working_paths import AGENT_MONITORING, PILOT_REQUESTS  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_REAL_MONITORING = _REPO_ROOT / "agent-monitoring"
+_REAL_MONITORING = _REPO_ROOT / AGENT_MONITORING
 
 
 @dataclass(frozen=True)
@@ -43,9 +44,9 @@ def resolve_scratch_paths(*, scratch_root: Path, ticket_id: str, execution_id: s
     if root == repo or root == monitoring or repo in root.parents or monitoring in root.parents:
         raise ScratchContainmentError(f"scratch root must be outside repository: {root}")
 
-    request_dir = _contained(root / "pilot_requests", root)
+    request_dir = _contained(root / PILOT_REQUESTS, root)
     claims_dir = _contained(root / "claims", root)
-    monitoring_dir = _contained(root / "agent-monitoring", root)
+    monitoring_dir = _contained(root / AGENT_MONITORING, root)
     request_path = _contained(request_dir / f"{ticket_id}.yaml", request_dir)
     claim_path = _contained(claims_dir / f"{ticket_id}.json", claims_dir)
     lock_path = _contained(claims_dir / f"{ticket_id}.json.lock", claims_dir)

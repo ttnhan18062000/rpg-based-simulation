@@ -163,7 +163,7 @@ tables and per-world justification.
 | `lifecycle_full_coverage_world` | Stress | 41 entities, 8 regions, 7 populated factions — fills gap 6 (`entity_lifecycle_score.py`'s own `lifecycle_phase_buckets` coverage). Composes `hero_guild_routing`'s own proven 5-module base (`frontier_village_core`, `hero_adventurers`, `mountain_pass`, `ruins_mystery_quest`, `goblin_camp_conflict`) plus 3 more hostile/terrain modules from `simq_scale_stress_seed42`'s own proven set (`wolf_den_near_forest`, `orc_clan_territory`, `river_crossing`), with `ENABLE_ADVENTURE_ROUTING`/`ENABLE_SOCIAL_COOPERATION`/`ENABLE_BELIEF_ASSIMILATION`/`ENABLE_GUILD_QUEST_GENERATION` all ON. Real 5000-tick observation result: **7/10 buckets reached** (COMBAT, CONCLUSION_DEMOGRAPHIC, ECONOMY, EXPLORATION, GROWTH_PROGRESSION, STRATEGY_COGNITION, VITALS) — below `urban_political`'s existing incidental 8/10, and below this ticket's own hoped-for 9/10 ceiling. `IDENTITY` is confirmed structurally unreachable by any content (`TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD`'s own investigation.md: no code path anywhere in `src/` ever constructs `IdentityUpdate(role_set=...)`/`faction_set=...`; the nearest real candidate, `PartyLifecycleService.check_defection()`, only mutates notoriety, not identity). `SOCIAL` and `NARRATIVE_QUEST` stayed at 0 real events despite their enabling flags being ON — root-caused (not merely observed) to a single real cause: this world's own 4 hostile modules created sustained COMBAT pressure that starved every entity's `strategic.current_objective_id`/goal-selection of the lower-priority SOCIAL-cooperation and Tier-4 GUILD-quest goals for the *entire* 5000-tick run (all 3 HERO entities died ~tick 1001 without ever visiting the guild; the surviving civilian population never accrued a settled economic/social objective either). This is a genuinely new, third finding class — a **composition-balance interaction**, not a pure content gap (the content and flags are real and correctly wired) and not a pure mechanism gap (the mechanisms work, as `highland_traverse`/`frontier_living_world` prove for SOCIAL) — disclosed rather than iterated on further within this ticket; see `TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD`'s own Completion Summary for the recommended follow-up (a lower-hostile-density recomposition, or explicit goal-priority tuning, would be needed to actually test the 9/10 ceiling). |
 
 Full per-world entity/region/resource/quest counts and module composition are documented in
-`staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2 — this doc cites that
+`agent-working/staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2 — this doc cites that
 table as its evidentiary source rather than duplicating it, since the investigation's numbers are
 the audited, evidence-backed original and should not risk drifting out of sync with a second copy.
 
@@ -211,7 +211,7 @@ independent of how long any given run drives it, exactly the same relationship
 `grade_anchors.json`'s real run_keys use only 200 ticks — too short for several real lifecycle/
 diversity signals (`entity_lifecycle_score.py`'s own `clustering_reliable_tick_threshold: 1000`;
 a real, corpus-wide survey found 7 more tick-gated SimQ scorer rules beyond the 2 previously
-known, real max 500 ticks — see `stored_artifacts/TCK-20260808-SIMQ-LONG-RUN-LIFECYCLE-
+known, real max 500 ticks — see `agent-working/stored_artifacts/TCK-20260808-SIMQ-LONG-RUN-LIFECYCLE-
 OBSERVATION-TIER/investigation.md`). `tools/simq_long_run_observation.py`
 (`make simq-long-run-lifecycle-observation`) drives one real 5000-tick run (measured cost: ~250s
 for the corpus's 2 largest worlds, `dropped_count=0`) per world across a 6-world curated sample
@@ -223,7 +223,7 @@ pillar-scoring formula.
 
 ## Named scale-diversity gaps (stress-tier candidates)
 
-Per `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2, the following
+Per `agent-working/staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2, the following
 scale/composition combinations are **not currently represented** by any world in the corpus, and are
 the concrete candidates a stress-tier world should cite when justifying its authoring:
 
@@ -343,11 +343,11 @@ its *authoring justification*, not by every mechanic it happens to touch.
 
 - `docs/simulation_quality/extension_points.md` — situates this doc's world-breadth/depth
   taxonomy within the full set of SimQ extension axes (events, pillars, tuning config, and more)
-- `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` — full evidentiary
+- `agent-working/staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` — full evidentiary
   source for the mechanic inventory (§1) and scale diversity tables/gap analysis (§2) this doc
-  summarizes. **Path no longer resolves** — `staging_artifacts/` is gitignored and this pre-ticket
-  epic-scoping doc was never migrated to `stored_artifacts/` before being lost; see
-  `tickets/done/TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING.md` for the root cause. The tables
+  summarizes. **Path no longer resolves** — `agent-working/staging_artifacts/` is gitignored and this pre-ticket
+  epic-scoping doc was never migrated to `agent-working/stored_artifacts/` before being lost; see
+  `agent-working/tickets/done/TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING.md` for the root cause. The tables
   this doc summarizes have been independently re-verified against ground truth (`world.yaml`/
   `world_compile_report.json`, `test_corpus_diversity.py::EXPECTED_DISTINCT_POPULATED_FACTIONS`).
 - `docs/guidelines/design_patterns.md` — Pattern 6, "Compile-Time Pillar Activation Pattern"
@@ -360,5 +360,5 @@ its *authoring justification*, not by every mechanic it happens to touch.
   for reading and interpreting them relative to the corpus's own real observed range
   (TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE)
 - `docs/plans/audit_fix_plan.md`
-- `tickets/todos/simq-corpus-tiers/SEQUENCE.md` — ordering rationale for this epic's 10 child
+- `agent-working/tickets/todos/simq-corpus-tiers/SEQUENCE.md` — ordering rationale for this epic's 10 child
   tickets, several of which author worlds this taxonomy classifies

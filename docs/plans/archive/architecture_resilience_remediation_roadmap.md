@@ -47,8 +47,8 @@ multi-ticket-shaped). No ticket was removed.
 | G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | `docs/plans/archive/architecture_boundary_hardening_epic.md` | standard | **Resolved** |
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/archive/error_handling_hygiene_epic.md` | standard | **Resolved** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/archive/determinism_verification_gap_epic.md` | standard | **Resolved** |
-| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/archive/codebase_navigability_hygiene_epic.md` | epic | **Resolved** (2026-08-20 — both extracted sibling tickets reached `tickets/done/`) |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/archive/codebase_health_observatory_tooling_epic.md` | epic | **Resolved** (2026-08-23 — all 4 extracted sibling tickets reached `tickets/done/`) |
+| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/archive/codebase_navigability_hygiene_epic.md` | epic | **Resolved** (2026-08-20 — both extracted sibling tickets reached `agent-working/tickets/done/`) |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/archive/codebase_health_observatory_tooling_epic.md` | epic | **Resolved** (2026-08-23 — all 4 extracted sibling tickets reached `agent-working/tickets/done/`) |
 
 **(2026-08-19)** Three new tickets extend this tree, plus one item resolved without a ticket:
 - `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING` — Epic J's item 3 (domains test-dir placement),
@@ -70,9 +70,9 @@ multi-ticket-shaped). No ticket was removed.
   by marker-luck.
 
 **(2026-08-18)** The 8 downgraded (standard/hotfix) tickets moved from their own
-`tickets/todos/<name>/` folder to flat `tickets/todos/TCK-*.md` files — standard/hotfix tier
+`agent-working/tickets/todos/<name>/` folder to flat `agent-working/tickets/todos/TCK-*.md` files — standard/hotfix tier
 tickets in this project don't carry a per-ticket subfolder. J and K, still epic tier, keep their
-`tickets/todos/<name>/` folders. None of the ten live in `tickets/inprogress/`.
+`agent-working/tickets/todos/<name>/` folders. None of the ten live in `agent-working/tickets/inprogress/`.
 
 ## Important connection to existing work
 
@@ -196,7 +196,7 @@ never returns from; `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` no longer surfa
 ### Epic F — HTTP-Layer Admission Control & Auth
 **Priority: P2, gate explicitly on deployment plans**
 **Status: Resolved** by `TCK-20260823-HTTP-API-KEY-AUTH` and `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`
-(both in `tickets/done/`), tracked in full by `docs/plans/archive/http_admission_control_epic.md`.
+(both in `agent-working/tickets/done/`), tracked in full by `docs/plans/archive/http_admission_control_epic.md`.
 **(2026-09-13)** Both child tickets are confirmed shipped; the "mid-pipeline" note below is stale
 and superseded by this line.
 
@@ -208,9 +208,9 @@ below) stay explicitly deferred, not investigated further, until that changes.
 the **public internet, multi-tenant**, reversing the 2026-08-19 trusted-network-only confirmation.
 Priority is now **P1**. The deferred scope was investigated and split into 2 child tickets, per
 `docs/plans/archive/http_admission_control_epic.md`'s own updated Acceptance signal section:
-`TCK-20260823-HTTP-API-KEY-AUTH` (per-client API-key auth, implemented — reached `tickets/done/`
+`TCK-20260823-HTTP-API-KEY-AUTH` (per-client API-key auth, implemented — reached `agent-working/tickets/done/`
 2026-08-23) and `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL` (per-client admission control,
-also reached `tickets/done/` 2026-08-23).
+also reached `agent-working/tickets/done/` 2026-08-23).
 
 - No rate limiting, no authentication, no per-client admission control on any REST endpoint
   (`src/api/server.py` registers only `CORSMiddleware` + `GZipMiddleware`). Auth resolved by
@@ -329,7 +329,7 @@ canonical-hash gate remain deliberately conditional, unchanged by this epic. See
   builder) directly instead, which already covers the same need.
 
 All 4 original items now resolved or extracted; this epic has no remaining unscoped work of its
-own. **Closed 2026-08-20** — both extracted sibling tickets reached `tickets/done/`, satisfying
+own. **Closed 2026-08-20** — both extracted sibling tickets reached `agent-working/tickets/done/`, satisfying
 `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC`'s own Acceptance Criteria gate.
 
 *Evidence: D24 §D, §F, §I.*
@@ -341,7 +341,7 @@ unblocked, not just theoretically scoped.
 
 - **(2026-08-19) Extracted to `TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`.**
   `make codebase-health-baseline`: permanent LoC/churn snapshot target, excluding known
-  append-only process files (`agent-monitoring/*.jsonl`, `tickets/working_log.csv`,
+  append-only process files (`agent-working/agent-monitoring/*.jsonl`, `agent-working/tickets/working_log.csv`,
   `docs/REGISTRY.yaml`) by name/pattern — without this exclusion, every report is dominated by
   expected bookkeeping churn, not real instability signal.
 - **(2026-08-19) Extracted to `TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND`.**
@@ -351,7 +351,7 @@ unblocked, not just theoretically scoped.
   individually verified (found `graphify` needs a custom traversal, no ready CLI verb; found
   `related_code_areas` only 53.3% filled with mixed path/symbol shapes).
 - **(2026-08-23) Resolved via `TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD`.** Historical
-  metric snapshots (append-only file, same pattern as `agent-monitoring/runs.jsonl`) + a
+  metric snapshots (append-only file, same pattern as `agent-working/agent-monitoring/runs.jsonl`) + a
   multi-dimension scorecard (trend arrows, not a single score). Built
   `tools/codebase_health_snapshot.py` + `make codebase-health-snapshot`/`make codebase-health-scorecard`;
   full detail in `docs/plans/archive/codebase_health_observatory_tooling_epic.md`'s own Resolved
@@ -366,7 +366,7 @@ unblocked, not just theoretically scoped.
   item.
 
 All 4 original items now resolved or extracted; this epic has no remaining unscoped work of its
-own. **Closed 2026-08-23** — all 4 extracted sibling tickets reached `tickets/done/`, satisfying
+own. **Closed 2026-08-23** — all 4 extracted sibling tickets reached `agent-working/tickets/done/`, satisfying
 `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC`'s own Acceptance Criteria gate.
 
 *Evidence: D24 §J, §L, §M Phase 3-4.*

@@ -165,23 +165,23 @@ make knowledge-index-update
 
 The running Docker container picks up the new index on its next query — no restart needed.
 
-### After closing a ticket (ticket moved to `tickets/done/`)
+### After closing a ticket (ticket moved to `agent-working/tickets/done/`)
 
 ```bash
 make knowledge-index-update
 ```
 
-Same command. The incremental build detects the new file in `tickets/done/` and adds it.
+Same command. The incremental build detects the new file in `agent-working/tickets/done/` and adds it.
 
 ### Automatic reindex on commit (optional but recommended)
 
 ```bash
 # Install git post-commit hook — runs make knowledge-index-update automatically
-# when a commit touches docs/ or tickets/done/
+# when a commit touches docs/ or agent-working/tickets/done/
 make install-hooks
 ```
 
-Once installed, the hook is silent on unrelated commits and self-skips if `knowledge-index/` does not exist.
+Once installed, the hook is silent on unrelated commits and self-skips if `agent-working/.index/knowledge-index/` does not exist.
 
 ---
 
@@ -354,7 +354,7 @@ All HTTP queries work identically. The only difference is the server does not au
 |---|---|
 | First setup or after changing embedding model | `make knowledge-index` (full) |
 | After adding/editing a doc in `docs/` | `make knowledge-index-update` |
-| After closing a ticket (new file in `tickets/done/`) | `make knowledge-index-update` |
+| After closing a ticket (new file in `agent-working/tickets/done/`) | `make knowledge-index-update` |
 | After deleting a doc | `make knowledge-index-update` |
 | Index seems stale or returning wrong results | `make knowledge-index` (full rebuild) |
 | Switching to a different embedding model | `make knowledge-index` (full rebuild) |
@@ -374,9 +374,9 @@ new environment, none of these need to be copied — rebuild them instead:
 
 | Artifact | Real path | What it is | Gitignored? | How to rebuild |
 |---|---|---|---|---|
-| Semantic search index | `knowledge-index/knowledge.db`, `bm25.pkl`, `embeddings_cache.pkl`, `manifest.json` | The `search_docs` index described above | Yes (`.gitignore:264`) | `make knowledge-index` |
-| Parity Ledger query index | `parity-index/parity.db` | Read-only SQLite index over `docs/parity_ledger/*.yaml`, built by `tools/parity_index.py` | Yes (`.gitignore:271`) | `make parity-index` |
-| Knowledge Gateway MCP cache | `knowledge-index/retrieval_cache.db` | The Knowledge Gateway MCP's Level 1 (provider-result) and Level 2 (assembled-packet) cache — see `docs/plans/knowledge-gateway-mcp-proposal.md` §10 for the cache design | Yes (same `knowledge-index/` ignore rule) | No bootstrap command exists — see below |
+| Semantic search index | `agent-working/.index/knowledge-index/knowledge.db`, `bm25.pkl`, `embeddings_cache.pkl`, `manifest.json` | The `search_docs` index described above | Yes (`.gitignore:264`) | `make knowledge-index` |
+| Parity Ledger query index | `agent-working/.index/parity-index/parity.db` | Read-only SQLite index over `docs/parity_ledger/*.yaml`, built by `tools/parity_index.py` | Yes (`.gitignore:271`) | `make parity-index` |
+| Knowledge Gateway MCP cache | `agent-working/.index/knowledge-index/retrieval_cache.db` | The Knowledge Gateway MCP's Level 1 (provider-result) and Level 2 (assembled-packet) cache — see `docs/plans/knowledge-gateway-mcp-proposal.md` §10 for the cache design | Yes (same `agent-working/.index/knowledge-index/` ignore rule) | No bootstrap command exists — see below |
 | `graphify` code-graph index | `graphify-out/graph.json` (plus other `graphify-out/*` build output) | The `graphify` CLI's persistent knowledge graph — god nodes, community detection, and query/path/explain data described in `graphify-out/GRAPH_REPORT.md` | Yes (`.gitignore:260` `graphify-out/*`, `.gitignore:261` `src/graphify-out/`) | `graphify update .` (incremental, AST-only) or a full `/graphify` rebuild — see `CLAUDE.md`'s Graphify Integration section |
 
 **One-command bootstrap for a fresh environment:**

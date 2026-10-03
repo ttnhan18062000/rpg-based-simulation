@@ -88,8 +88,8 @@ def test_registry_matches_union_layer_and_tags_not_intersection():
     # never emits one — see investigation.md's Current Behavior section), so the layer-match
     # case below uses a doc entry, which does carry `layer` today.
     layer_match_doc = {"type": "doc", "path": "docs/a.md", "layer": "ai", "tags": []}
-    tag_match_entry = {"type": "ticket", "path": "tickets/done/b.md", "tags": ["faction"]}
-    no_match_entry = {"type": "ticket", "path": "tickets/done/c.md", "tags": ["unrelated"]}
+    tag_match_entry = {"type": "ticket", "path": "agent-working/tickets/done/b.md", "tags": ["faction"]}
+    no_match_entry = {"type": "ticket", "path": "agent-working/tickets/done/c.md", "tags": ["unrelated"]}
 
     entries = [layer_match_doc, tag_match_entry, no_match_entry]
 
@@ -104,11 +104,11 @@ def test_registry_matches_union_layer_and_tags_not_intersection():
 
 
 def test_faction_tag_query_surfaces_entries_layer_search_would_miss():
-    ai_faction = {"type": "ticket", "path": "tickets/done/a.md", "layer": "ai", "tags": ["faction"]}
+    ai_faction = {"type": "ticket", "path": "agent-working/tickets/done/a.md", "layer": "ai", "tags": ["faction"]}
     social_faction = {
-        "type": "ticket", "path": "tickets/done/b.md", "layer": "social", "tags": ["faction"],
+        "type": "ticket", "path": "agent-working/tickets/done/b.md", "layer": "social", "tags": ["faction"],
     }
-    ai_no_faction = {"type": "ticket", "path": "tickets/done/c.md", "layer": "ai", "tags": []}
+    ai_no_faction = {"type": "ticket", "path": "agent-working/tickets/done/c.md", "layer": "ai", "tags": []}
 
     entries = [ai_faction, social_faction, ai_no_faction]
 

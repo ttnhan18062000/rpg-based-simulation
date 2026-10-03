@@ -1,12 +1,12 @@
 ---
 name: agent-monitoring-retro
-description: Generate the agent monitoring retro report from accumulated agent-monitoring/data/YYYY-Www/{runs,events}.jsonl data. Use when the cadence rule is due (weekly, after 5+ completed tickets, or before changing any agent prompt/phase/tier rule) or when the retro-loop-enforcement hook nudges that the threshold has been crossed.
+description: Generate the agent monitoring retro report from accumulated agent-working/agent-monitoring/data/YYYY-Www/{runs,events}.jsonl data. Use when the cadence rule is due (weekly, after 5+ completed tickets, or before changing any agent prompt/phase/tier rule) or when the retro-loop-enforcement hook nudges that the threshold has been crossed.
 ---
 
 # Agent Monitoring Retro
 
-Runs `make agent-monitoring-retro` to turn raw `agent-monitoring/data/YYYY-Www/runs.jsonl` and
-`agent-monitoring/data/YYYY-Www/events.jsonl` records into a structured retro report, then
+Runs `make agent-monitoring-retro` to turn raw `agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl` and
+`agent-working/agent-monitoring/data/YYYY-Www/events.jsonl` records into a structured retro report, then
 walks through the retrospective process so the findings actually get acted on.
 
 ## When to Use This Skill
@@ -20,8 +20,8 @@ walks through the retrospective process so the findings actually get acted on.
 
 1. Runs `make agent-monitoring-retro`, which invokes
    `python3 tools/agent-monitoring/generate_retro.py` for the current ISO week.
-   The report is written to `agent-monitoring/retro/RETRO-<week>.md` and
-   `agent-monitoring/retro/index.md` is updated automatically. The run is read-only for monitoring
+   The report is written to `agent-working/agent-monitoring/retro/RETRO-<week>.md` and
+   `agent-working/agent-monitoring/retro/index.md` is updated automatically. The run is read-only for monitoring
    data: it does not fold or delete per-batch shards. Closing a finished week is a separate,
    explicit step (`make agent-monitoring-close-week WEEK=<YYYY-Www>`), nudged but never automatic.
 2. Reads the generated report and summarizes the sections that need attention:

@@ -2,7 +2,7 @@
 `--junit-xml=` flag and the `if: always()` job-summary step are wired correctly into each of the
 9 fast-lane jobs in `.github/workflows/test.yml`, that no new dependency or marketplace Action
 was introduced, and that the `slow`/`migration-lanes` jobs (explicitly deferred, see
-staging_artifacts/TCK-20260823-CI-STEP-SUMMARY-REPORTING/plan.md "Decisions Made by This Plan")
+agent-working/staging_artifacts/TCK-20260823-CI-STEP-SUMMARY-REPORTING/plan.md "Decisions Made by This Plan")
 stay untouched.
 
 Follows the established `yaml.safe_load` + dict/text-assertion pattern used by

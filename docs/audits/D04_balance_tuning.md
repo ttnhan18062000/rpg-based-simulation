@@ -227,7 +227,7 @@ After completing P0-HUNGER-SATIATION and P0-ENTITY-INIT, a controlled measuremen
 
 **Status update (2026-07-04):** RC2 and RC3 below are both **RESOLVED** —
 `TCK-20260627-P0B-URBAN-RESOURCE-NODES` and `TCK-20260627-P0C-ENTITY-REGION-ASSIGN` (the tickets
-already named in each Root Cause's callout below) both landed and are in `tickets/done/`. Confirmed
+already named in each Root Cause's callout below) both landed and are in `agent-working/tickets/done/`. Confirmed
 during `TCK-20260703-SIMQ-UPLIFT3-DUAL-GATE-AUDIT`'s investigation this session, which found and
 corrected a stale claim in `docs/simulation_quality/quality_scoring_contract.md` repeating this
 same "resource_nodes=0/region_id=None" finding as if still current. The historical measurements

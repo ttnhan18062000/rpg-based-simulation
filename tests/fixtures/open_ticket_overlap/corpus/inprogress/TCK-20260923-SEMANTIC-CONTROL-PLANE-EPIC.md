@@ -67,7 +67,7 @@ of it. This epic tracks scoping the child tickets only, milestone by milestone, 
       phase finds the three schemas warrant separate tickets) exists and is linked in this epic's
       Related Tickets section.
 - [ ] The M0 ticket(s) do not include any M1–M4 deliverable and do not populate real mapping data.
-- [ ] This epic ticket is not moved to `tickets/done/` until M0–M4 each have a disposition (done,
+- [ ] This epic ticket is not moved to `agent-working/tickets/done/` until M0–M4 each have a disposition (done,
       blocked, or explicitly deferred) — per `roadmap.md`'s own milestone gating.
 
 ## Related Tickets

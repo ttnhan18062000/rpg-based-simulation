@@ -1837,7 +1837,7 @@ untouched by §2.57's fix (out of that ticket's scope).
 - **Subsystem**: World Evolution / Boss & Lair Spawning
 - **Old Behavior**: three compounding defects, all silent, meant a "world boss" or Lair occupant
   effectively never appeared, correctly, in any real run — see the sibling investigation
-  (`staging_artifacts/TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY/investigation.md`)
+  (`agent-working/staging_artifacts/TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY/investigation.md`)
   for the full trace:
   1. `EntityGenerator.spawn_monster()`'s tier lookup (`DIFFICULTY_TIERS.get(difficulty_tier,
      DIFFICULTY_TIERS[1])`) silently fell back to **tier 1** for `difficulty_tier=5` (requested by
@@ -2237,7 +2237,7 @@ The following legacy behaviors have been intentionally omitted or retired.
   `EntityUpdate` directly (`src/domains/progression/phase.py:73`) — and that whole
   `ProgressionConversionPhase` is gated behind `ENABLE_PROGRESSION_EVOLUTION`, which defaults to
   `FeatureMode.OFF` per DEV-003's standing policy, with an already-filed, not-yet-run follow-up
-  (`tickets/todos/TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION.md`).
+  (`agent-working/tickets/todos/TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION.md`).
 - **Decision**: Keep `execute_allocate_ap` wired but dormant. No new producer is built by this
   ticket.
   - `resolver.py`'s `ConversionKind.ALLOCATE_AP` branch (`src/domains/progression/resolver.py:82-89`)
