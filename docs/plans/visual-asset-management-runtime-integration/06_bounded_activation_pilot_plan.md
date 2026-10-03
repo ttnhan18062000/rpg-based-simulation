@@ -9,6 +9,12 @@ tags: [assets, activation, pilot, rollback, planning]
 
 # AM-M6 — Bounded Activation Pilot
 
+## Status 2026-10-03
+
+Still dormant. Profile A is selected (ADR `D8`), so activation will be the normal reviewed deployment of a whole frontend
+release and rollback a redeployment of the previous one; no asset-only pointer exists. Not started: no adopted art, no human-selected role,
+no authorization.
+
 ## Outcome
 
 Define a dormant `ASSET-4` plan for one later, human-selected, noncritical semantic visual role. The plan

@@ -25,6 +25,14 @@ The package `visual_assets/drawing/` now also hands a revision off as a candidat
 read the store (`submit_candidate`, `store_list`, `store_show`: 19 tools in all). Adopting, revoking, building, releasing and deleting stay human decisions with no tool here
 (`docs/assets/store_contract.md`). `U-14` (CI with Aseprite) is still open: the real-Aseprite tests run locally only.
 
+## Status update 2026-10-03 (decided by the user)
+
+- `U-02` **decided**: the binary in use, its provenance and the licence clauses that matter are recorded in
+  `docs/assets/aseprite_licence_review.md`; Aseprite runs only on the licence holder's own machine (ADR `D10`).
+- `U-14` **decided: no** for GitHub-hosted CI (same record). Real-Aseprite tests stay local evidence through one strict make target
+  (`TCK-20261003-VISUAL-ASSETS-LOCAL-ASEPRITE-EVIDENCE`).
+- `U-05` measurement and proposed values: `TCK-20261003-VISUAL-ASSETS-BUDGETS`; the owner approves the numbers in PR review.
+
 ## Status and decision boundary
 
 This package translates the P2

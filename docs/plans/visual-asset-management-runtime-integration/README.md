@@ -26,6 +26,17 @@ The foundation's children 1-6 are built (`TCK-20261002-EPIC-VISUAL-ASSET-FOUNDAT
 build to pixel-hashed artifacts, immutable release CANDIDATES, `verify`, `gc`, and read-only MCP store tools, all on synthetic fixtures and with
 `REHEARSAL_ONLY` evidence. Nothing is activated. Still open: `AM1-W01` (deployment profile), `W03`, `W04`, `W06`-`W11`, `W13` and `AM-M5`..`M7`.
 
+## Status update 2026-10-03 (decisions by the user)
+
+- `AM1-W01` / `AM-DR-05` / `AM-C01` profile choice: **Profile A** (build-coupled frontend assets), ADR `D8`. Profile B is not built.
+- `AM1-W08` / `AM-U09` for Profile A: **no signing**; integrity is the `pixels-v1` hash plus the hash-linked provenance chain, authenticity is
+  git review plus the normal frontend deployment (ADR `D9`).
+- Batch `TCK-20261003-EPIC-VISUAL-ASSET-HARDENING-AND-REHEARSAL` (folder
+  `agent-working/tickets/todos/visual-asset-hardening-and-rehearsal/`): local real-Aseprite evidence, budgets (`AM-U08` proposal), a
+  minimal runtime manifest export (proposal 9.3) and an isolated `AM-M5` surface rehearsal on synthetic fixtures. The user authorized this
+  `AM-M5` rehearsal on 2026-10-03; it changes no normal Live Map, HUD or simulation path.
+- `AM-M6` and `AM-M7` stay **dormant**: there is no adopted art and no human-selected role, and each needs its own authorization.
+
 ## Status and authorization boundary
 
 This package translates the P2
