@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pydantic import ValidationError
 
-from visual_assets.store import config, records, rendering
+from visual_assets.store import config, pixels, records, rendering
 from visual_assets.store.catalog.registry import Registry, load_registry
 from visual_assets.store.catalogwrite import Confirm, publish
 from visual_assets.store.contracts import (
@@ -26,7 +26,7 @@ from visual_assets.store.contracts import (
 from visual_assets.store.contracts.base import Evidence, IntakeVerdict, LicenceState
 from visual_assets.store.contracts.review import RenderVerdict
 from visual_assets.store.contracts.handoff import SourceFormat
-from visual_assets.store.errors import GateError, IdentityError, IntakeError, RegistryError, RenderError, StageError
+from visual_assets.store.errors import GateError, IdentityError, IntakeError, PngDecodeError, RegistryError, RenderError, StageError
 from visual_assets.store.identities import IntakeId, SourceAssetId, SourceRevision, UtcTimestamp, check, next_revision
 from visual_assets.store.intake import quarantine, service, validator
 
@@ -72,6 +72,26 @@ def _lineage(source_asset_id: str, new: bool, parent: str | None) -> tuple[str, 
         raise _refuse("revision_limit", f"{source_asset_id} has no revision numbers left") from None
 
 
+def _verify_review_image(intake_id: str, expected_pixel_hash: str) -> None:
+    """The image file the human actually opened (`store_render.png` in the gitignored review area) must still show what the source renders to now.
+
+    That folder can be rewritten by any local process after the review, so the file itself is decoded (bounded, through `pixels`) and compared by pixels.
+    """
+    directory = config.REVIEW_ROOT / intake_id
+    try:
+        data = quarantine.read_one_any(directory, "store_render.png", config.MAX_DECODED_BYTES)
+    except StageError as exc:
+        if exc.code in {"missing_file", "not_found"}:
+            raise _refuse("review_render_missing", f"the review image the human opened is missing for {intake_id}; review again") from None
+        raise _refuse("review_image_changed", f"the review image cannot be read safely ({exc.code}); review again") from None
+    try:
+        actual = pixels.pixel_hash(data, max_dim=config.MAX_PREVIEW_DIM)
+    except PngDecodeError as exc:
+        raise _refuse("review_image_changed", f"the review image is not a valid PNG any more ({exc.code}); review again") from None
+    if actual != expected_pixel_hash:
+        raise _refuse("review_image_changed", "the review image the human opened no longer shows what the source renders to; review again")
+
+
 def _verify_store_render(
     intake_id: str, directory, files: quarantine.PackageFiles, staged: dict[str, str], renderer: rendering.RenderTool | None
 ) -> bytes:
@@ -105,6 +125,7 @@ def _verify_store_render(
         raise _refuse("preview_mismatch", "the store's own render of the source does not match the producer's preview; this candidate cannot be adopted")
     if now.check.rendered_pixel_hash != stored.rendered_pixel_hash:
         raise _refuse("review_render_stale", "the image the human reviewed is not the image the source renders to now; review again")
+    _verify_review_image(intake_id, now.check.rendered_pixel_hash)
     return stored_bytes
 
 

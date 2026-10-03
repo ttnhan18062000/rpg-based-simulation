@@ -69,7 +69,9 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
   pixels with the producer's preview, writes a typed `ReviewRenderCheck` into the candidate's quarantine directory and shows `store_render.png` plus a prominent mismatch warning in the
   review area. Without Aseprite it says plainly that the preview is producer-supplied and unverified and records nothing. `adopt` never trusts that stored file (any local process can write
   the gitignored quarantine): it re-renders at adoption time, refuses `preview_mismatch`, `review_render_missing`, `review_render_stale` or `renderer_unavailable`, then copies the check into the
-  tracked provenance and binds its hash in the `AdoptionRecord`; `audit_chain` covers it.
+  tracked provenance and binds its hash in the `AdoptionRecord`; `audit_chain` covers it. It also decodes the image file the human actually opened
+  (`store_render.png` in the gitignored review area, which any local process can rewrite) and refuses `review_image_changed` unless its pixels equal the adoption-time render (`review_render_missing` if it is gone).
+  The producer preview is bounded to 1024 px (scale 8 of the largest sprite, the only scale `export_handoff` makes) because PNG unfiltering is a pure-Python per-byte loop.
 - **Build, release candidate, verify, gc.** `build` exports the latest build-eligible revision of each adopted source (fixed allowlisted command through the shared sandbox, rules pinned in
   `build-config/export.toml`, one scale class `x1`) to `generated/<source_asset_id>--x1/<pixel hash hex>.png` plus `<hex>.<revision>.artifact.json` (the PNG is named by its pixels and shared by
   revisions that render identically; each revision has its own record). Building twice gives the same hash and one file; a render that is not reproducible is refused. `ArtifactRecord` carries the hash

@@ -283,3 +283,97 @@ def test_a_preview_that_is_not_a_whole_number_scale_of_the_source_is_refused_by_
     assert err.value.code == "preview_undecodable"
     with pytest.raises(RenderError):
         rendering.preview_scale(b.png(16, 16), b"not an aseprite file")
+
+
+# --------------------------------------------------------------------------- B1: the image the human actually opened
+
+
+def review_image(env, result):
+    return env.review / result.intake_id / "store_render.png"
+
+
+def test_adopt_checks_the_image_file_the_human_opened(env):
+    result = s.make_intake(env.tmp)
+    image = review_image(env, result)
+    original = image.read_bytes()
+    assert adopt_ok_after(result, image, original) is True  # a re-encoded file with the SAME pixels is fine
+
+
+def adopt_ok_after(result, image, original) -> bool:
+    from visual_assets.store import pixels
+
+    image.write_bytes(b.png_encode(128, 128, [tuple(p) for p in _pixels(original)], filters=[4], level=0))
+    assert image.read_bytes() != original and pixels.pixel_hash(image.read_bytes(), max_dim=1024) == pixels.pixel_hash(original, max_dim=1024)
+    return s.do_adopt(result.intake_id).intake_id == result.intake_id
+
+
+def _pixels(png: bytes):
+    from visual_assets.store import pixels
+
+    rgba = pixels.decode_png(png, max_dim=1024).rgba
+    return [rgba[i : i + 4] for i in range(0, len(rgba), 4)]
+
+
+@pytest.mark.parametrize("how,code", [
+    ("rewritten", "review_image_changed"), ("garbage", "review_image_changed"), ("truncated", "review_image_changed"),
+    ("symlink", "review_image_changed"), ("deleted", "review_render_missing"), ("directory_missing", "review_render_missing"),
+])
+def test_a_review_image_that_was_changed_or_removed_after_the_review_is_refused(env, how, code):
+    result = s.make_intake(env.tmp)
+    image = review_image(env, result)
+    original = image.read_bytes()
+    if how == "rewritten":
+        image.write_bytes(b.png_encode(128, 128, [(1, 2, 3, 255)] * (128 * 128)))  # a valid PNG of a different picture
+    elif how == "garbage":
+        image.write_bytes(b"not a png")
+    elif how == "truncated":
+        image.write_bytes(original[:-30])
+    elif how == "symlink":
+        elsewhere = env.tmp / "elsewhere.png"
+        elsewhere.write_bytes(original)
+        image.unlink()
+        image.symlink_to(elsewhere)
+    elif how == "deleted":
+        image.unlink()
+    else:
+        import shutil
+
+        shutil.rmtree(env.review / result.intake_id)
+    before = snapshot(env.catalog)
+    s.CALLS.clear()
+    with pytest.raises(GateError) as err:
+        s.do_adopt(result.intake_id)
+    assert err.value.code == code and snapshot(env.catalog) == before and s.CALLS == []
+
+
+def test_a_genuine_review_again_repairs_it(env):
+    result = s.make_intake(env.tmp)
+    review_image(env, result).write_bytes(b"not a png")
+    with pytest.raises(GateError):
+        s.do_adopt(result.intake_id)
+    import shutil
+
+    shutil.rmtree(env.review / result.intake_id)
+    review_mod.review(result.intake_id, created_at="2026-07-07T07:07:07Z", renderer=s.FakeRenderer())
+    assert s.do_adopt(result.intake_id).intake_id == result.intake_id
+
+
+def test_a_large_render_is_not_blocked_by_the_producer_preview_size_limit(env, monkeypatch):
+    """The store's own render can be larger than the producer preview limit; re-reviewing must still be idempotent."""
+
+    class Uncompressed(s.FakeRenderer):  # the same pixels as the producer preview, but stored uncompressed: ~65 KB
+        def render(self, source, *, scale):
+            facts = rendering.aseprite.read_facts(source)[0]
+            width, height = facts.width * scale, facts.height * scale
+            return b.png_encode(width, height, [(0x20, 0x40, 0x60, 255)] * (width * height), level=0)
+
+    result = s.make_intake(env.tmp, reviewed=False)
+    assert review_mod.review(result.intake_id, created_at=LATER, renderer=Uncompressed()).verdict is RenderVerdict.MATCH
+    assert review_image(env, result).stat().st_size > 50_000
+    monkeypatch.setattr(config, "MAX_PREVIEW_BYTES", 1000)  # above the staged preview, far below the store render
+    assert review_mod.review(result.intake_id, created_at=LATER, renderer=Uncompressed()).verdict is RenderVerdict.MATCH
+    assert s.do_adopt(result.intake_id, renderer=Uncompressed()).intake_id == result.intake_id
+
+
+def test_the_preview_bound_is_what_export_handoff_can_produce():
+    assert config.MAX_PREVIEW_DIM == 128 * 8  # scale 8 of the largest sprite: the only scale export_handoff makes

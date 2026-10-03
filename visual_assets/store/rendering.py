@@ -34,13 +34,20 @@ class RenderComparison:
     rendered_png: bytes
 
 
-def preview_scale(preview: bytes, source: bytes) -> int:
-    """The whole-number scale at which `preview` shows `source` (the source's width divides the preview's width)."""
-    facts, _ = aseprite.read_facts(source)
+def _decode_preview(preview: bytes) -> pixels.DecodedImage:
     try:
-        width = pixels.decode_png(preview, max_dim=config.MAX_PREVIEW_DIM).width
+        return pixels.decode_png(preview, max_dim=config.MAX_PREVIEW_DIM)
     except PngDecodeError as exc:
         raise RenderError("preview_undecodable", f"the producer preview cannot be decoded ({exc.code})") from None
+
+
+def preview_scale(preview: bytes, source: bytes) -> int:
+    """The whole-number scale at which `preview` shows `source` (the source's width divides the preview's width)."""
+    return _scale_for_width(_decode_preview(preview).width, source)
+
+
+def _scale_for_width(width: int, source: bytes) -> int:
+    facts, _ = aseprite.read_facts(source)
     if facts is None or facts.width < 1 or width % facts.width:
         raise RenderError("scale_unsupported", "the preview is not a whole-number scale of the source")
     scale = width // facts.width
@@ -51,7 +58,8 @@ def preview_scale(preview: bytes, source: bytes) -> int:
 
 def compare_preview(*, intake_id: str, source: bytes, preview: bytes, tool: RenderTool, created_at: str) -> RenderComparison:
     """Render `source` with `tool` at the preview's scale and compare decoded pixels with the producer's `preview`."""
-    scale = preview_scale(preview, source)
+    producer_image = _decode_preview(preview)  # decoded once: each decode of a large PNG is a pure-Python per-byte loop
+    scale = _scale_for_width(producer_image.width, source)
     try:
         rendered = tool.render(source, scale=scale)
     except RenderError:
@@ -60,7 +68,7 @@ def compare_preview(*, intake_id: str, source: bytes, preview: bytes, tool: Rend
         raise RenderError("render_failed", f"the renderer failed ({type(exc).__name__})") from None
     try:
         rendered_px = pixels.pixel_hash(rendered, max_dim=config.MAX_PREVIEW_DIM)
-        producer_px = pixels.pixel_hash(preview, max_dim=config.MAX_PREVIEW_DIM)
+        producer_px = pixels.pixel_hash_of(producer_image)
     except PngDecodeError as exc:
         raise RenderError("render_undecodable", f"a rendered or preview PNG cannot be decoded ({exc.code})") from None
     check = ReviewRenderCheck(

@@ -22,5 +22,5 @@ MAX_ALIASES = 1024  # provisional (U-05)
 MAX_SOURCE_BYTES = 100 * 1024  # provisional (U-05); the D2 (no Git LFS) reversal trigger
 MAX_DIM = 128  # provisional (U-05)
 MAX_PREVIEW_BYTES = 512 * 1024  # provisional (U-05)
-MAX_PREVIEW_DIM = 2048  # provisional (U-05); 128 px at the largest drawing-tool scale (16x)
+MAX_PREVIEW_DIM = 1024  # provisional (U-05); 128 px at scale 8, the only scale `export_handoff` produces. Kept low because PNG unfiltering is a pure-Python per-byte loop (a 2048 px preview cost ~16 M steps per decode, and adopt decodes more than once)
 MAX_DECODED_BYTES = 24 * 1024 * 1024  # provisional (U-05); decompressed PNG data above this is refused before it is inflated
