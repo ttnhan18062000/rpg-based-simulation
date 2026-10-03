@@ -89,6 +89,8 @@ def get_epic_folder_status(folder: Path, done_dir: Path) -> dict:
                 open_children.append(ticket_id)
             continue
 
+        # Flat done/<id>.md only, on purpose: a child still in this todos folder whose closed copy sits flat in
+        # done/ is a stale pre-close copy. A nested done/<folder>/ copy is a different folder, not a stale one.
         if (done_dir / f"{ticket_id}.md").exists():
             stale_child_copies.append(ticket_id)
         else:
