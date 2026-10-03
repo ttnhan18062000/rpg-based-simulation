@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-TEST-ARCH-MAINT-EPIC-B-COST-ROWS-292-302
-phase: open
+phase: done
 date: 2026-10-03
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Epic B cost record: dated rows for every PR merged after the #290 row, through #302
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -106,8 +106,36 @@ Plan for reviewer: (1) `gh api pulls/N` per PR for the final head; (2) `gh api` 
 head SHA, require exactly one; (3) read its jobs; (4) write one block in the same shape as the #290 update;
 (5) recount totals from the file text before writing them.
 
+Plan approved by test-architecture-reviewer at review of `5d2360f2229f1ae50ce9e87147803fdbafa69281`, who
+confirmed: no header, frontmatter or status change on the frozen Epic B ticket, and one paragraph in the shape
+of the #290 row. The GitHub API returned TLS certificate errors partway through the first pass (from #296
+on); those empty results were discarded, not read as zeros, and the failed PRs were re-queried once the API
+answered again. Every figure in the paragraph comes from the second, error-free read. The earlier #302 head
+was queried by this session by full SHA (one run, lane success).
+
 ## Test Summary
+
+Records only, no code. Each of the 11 recorded PRs (#289, #292-#300, #302) returned exactly one `Tests` run
+for its final head SHA; the extra earlier #302 head (`09f13898e588908d1e2d0633d3d77ea787e82cea`) also one run.
+Lane wall times were computed from the jobs' `started_at` and `completed_at`. Watch item (c) was checked per PR
+from `gh api pulls/N/files`: 0 `src/progression/` matches in all 11. Gate:
+`git diff --name-only origin/main...HEAD` is checked before the PR.
+
+Limit, stated plainly: the totals line (30 PRs, 36 rows; lane ran on 14 PRs across 19 rows) adds this update to
+the 19 PRs / 24 rows already stated in the #290 row. I checked that the file's stated chain is internally
+consistent (18 PRs / 23 rows through #288, plus #290) but did not re-enumerate every earlier row, so "recounted
+from the file" means that consistency check, not a row-by-row recount.
 
 ## Files Changed
 
+- `agent-working/tickets/done/test-architecture/TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION.md` (one dated
+  update paragraph inserted after the #290 row; nothing else changed)
+
 ## Completion Summary
+
+Done 2026-10-03. Rows recorded for #289 and #292-#300 and #302, each by final head full SHA and one `Tests`
+run: the lane ran on 6 PRs (#293, #295, #296, #299, #300, #302; whole-job 33-61 s), `Perf / cert / arena` ran
+and covered the scenario tests on 3 (#289, #292, #297), both jobs were skipped on 2 (#294, #298). #302's
+earlier head is a second row of the same PR. #291 and #301 are open and not recorded. Watch item (c) is
+unfired. The lane has now run on 14 PRs against the roughly 10 planned; no promotion of the lane to required
+is made or implied.

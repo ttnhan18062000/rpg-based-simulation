@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-TEST-ARCH-MAINT-MUTATION-BASELINE-METHOD-DOC
-phase: open
+phase: done
 date: 2026-10-03
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 A mutation-baseline method doc, `docs/testing/mutation_baseline_method.md`, plus a reach-check rule
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -109,8 +109,34 @@ Then `make knowledge-index-update`.
 
 ## Implementation Notes
 
+Plan approved by test-architecture-reviewer at review of `5d2360f2229f1ae50ce9e87147803fdbafa69281`; the
+reviewer named the pilot doc (`docs/testing/core_rpg_test_pilot_2026-09-30.md`, the "**Update 2026-10-01 (v2
+baseline).**" paragraph). The doc points at the existing `tools/test_architecture/mutation_selection.py`
+(found at investigation) instead of describing a new tool. Facts were read from the social v1 and v3 baseline
+JSONs, the social report and the closed tickets' artifacts; the table does not name a `provenance` key
+because the records have none (provenance is carried by `run`, `tool` and `target_selection`). The
+`guilds.py` case is pinned to branch head `f13baaf24578eb4529948f4e7e045c8468ca6886` as the report states
+(SHA existence checked with `git cat-file`).
+
 ## Test Summary
+
+Docs only, no behavior change. `validate_frontmatter.py` passes on the new doc and the three staging
+artifacts. Scoped run with the repo venv: `tests/tools/test_add_frontmatter_live.py`,
+`tests/unit/tools/test_core_rpg_design_direction_docs.py`, `tests/unit/tools/test_scenario_lane_paths.py`,
+`tests/docs`: 206 passed, 1 skipped, 1 xfailed. `make knowledge-index-update` exited 0.
 
 ## Files Changed
 
+- `docs/testing/mutation_baseline_method.md` (new)
+- `docs/plans/test_architecture/roadmap.md` (§6 watch item (e): social baseline and method link)
+- `docs/testing/core_rpg_test_pilot_2026-09-30.md` (one sentence linking the method doc)
+- `agent-working/stored_artifacts/TCK-20261003-TEST-ARCH-MAINT-MUTATION-BASELINE-METHOD-DOC/` (plan, investigation, test_plan)
+
 ## Completion Summary
+
+Done 2026-10-03. The mutation-baseline method is written down once: scratch copy by `git archive` at a pinned
+SHA, mutmut by `pip --target`, `setsid` run, import-based one-hop selection with its file list and sha256,
+green before mutation, a fresh positive control per new target, G3 detect-then-force with as-found and forced
+values, the record fields and `stale_after`, separate catalog-CONFLICTING lists, and the new reach-check rule
+with the `guilds.py` (0% to 92%) and `_appraise_position_swap` (0 of 38 killed; 1 of 28 statements reached)
+cases. No tool, test, source or parity-ledger change.
