@@ -29,8 +29,9 @@ P2
 ## Request Summary
 
 Phase 1 (Epics A–D) closed on 2026-10-03 (#290). The roadmap says scale-out needs a new owner
-decision. This epic carries the Phase 2 plan's single batch for social. **HOLD: no child ticket may
-be activated until the owner approves the plan** (`docs/plans/test_architecture/phase2_social_scale_out.md` §9).
+decision. This epic carries the Phase 2 plan's single batch for social. The owner approved the plan on 2026-10-03
+(`docs/plans/test_architecture/phase2_social_scale_out.md` §9), with the recommended answers and one
+constraint: **RPG feature tests are read-only in this batch.** Child tickets still wait for gate G2.
 
 ## Scope
 
@@ -47,6 +48,7 @@ All of the plan's §5 entry gates (G1–G4) must hold before the first child act
 ## Out of Scope
 
 - RPG behaviour or expectation changes.
+- Editing, moving, marking or strengthening any RPG feature test (owner constraint, 2026-10-03). The only test change is the tooling routing case in `tests/unit/tools/test_scenario_lane_paths.py`.
 - Applying ledger status changes or test links. Those are proposed to `rpg-feature-planning`.
 - Party (`party*.py`, D-P).
 - `src/domains/perception/` and dormant paths.
@@ -56,7 +58,8 @@ All of the plan's §5 entry gates (G1–G4) must hold before the first child act
 
 ## Acceptance Criteria
 
-- [ ] The owner approval is recorded in the plan's §9 before any child activates.
+- [x] The owner approval is recorded in the plan's §9 (2026-10-03).
+- [ ] No RPG feature test file is changed by any child PR. The reviewer checks each diff.
 - [ ] G2 (social quiet, naming the two 2026-08-22 todos), G3 (determinism stance stated per target)
   and G4 (Rule classification) are each recorded with source and date.
 - [ ] Items 1–6 each have an output as listed in the plan's §6, or an honest "not done" with its
@@ -97,7 +100,7 @@ All of the plan's §5 entry gates (G1–G4) must hold before the first child act
 
 ## Assumptions / Open Questions
 
-These are the plan's §9 questions 1–5. Figures are as of `2f520f0dd`, and the epic re-measures at
+The plan's §9 questions 1–5 were answered on 2026-10-03. Figures are as of `2f520f0dd`, and the epic re-measures at
 start.
 
 ## Implementation Notes

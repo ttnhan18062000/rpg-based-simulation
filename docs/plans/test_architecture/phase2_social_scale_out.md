@@ -8,9 +8,10 @@ tags: [testing, architecture, planning]
 
 # Test Architecture Phase 2: Scale-Out to Social (plan)
 
-**Status: DRAFT, awaiting owner approval. Nothing here is approved, and no child ticket may be
-created or activated until the owner records a decision in §9.** This is the "new owner decision"
-that the roadmap §6 "Phase 1 closed" block requires before any scale-out.
+**Status: APPROVED by the owner on 2026-10-03, with the recommended answers to all five §9
+questions and one added constraint: do not touch RPG feature tests deeply (§9 "Owner decision").**
+This is the "new owner decision" that the roadmap §6 "Phase 1 closed" block requires before any
+scale-out. Child tickets still wait for gate G2 (§5).
 
 Parent: [`roadmap.md`](roadmap.md) §6 (Phase 2 row) and §2 (measures). Epic:
 `agent-working/tickets/todos/test-architecture-phase2/TCK-20261003-EPIC-TEST-SCALE-OUT-SOCIAL.md`.
@@ -65,7 +66,7 @@ once and has **no direct importer under `tests/unit/social/`**.
 
 | Gate | Condition | Who |
 |---|---|---|
-| G1 | The owner approves this plan (§9) | user |
+| G1 | The owner approves this plan (§9). **Met 2026-10-03** | user |
 | G2 | `rpg-feature-planning` re-confirms that social is quiet at start. The confirmation names `TCK-20260822-RELATIONSHIP-VECTOR-ADDITIVE-FIELD` (embedding-latent-cognition, touches relationship precedence) and `TCK-20260822-SOCIAL-MEMORY-DECISION-CONTEXT` (intention-log-first-class), plus anything opened since | rpg-feature-planning |
 | G3 | **Determinism.** The engine is not deterministic by default: `src/engine/kernel.py:612-620` drops results when `not audit_mode and elapsed > max_tick_budget_ms` (INFRA-273 / D06 §F6-F7). Any mutation or baseline run that executes the kernel sets `audit_mode=True` and relaxes `max_tick_budget_ms` (`docs/engine/deterministic_execution.md` Extension rule 5). A target whose selected tests do not run the kernel states that it doesn't. At `2f520f0dd`, the only `tests/unit/social` file that references the kernel is `test_multi_hero.py` | implementer, checked by reviewer |
 | G4 | `world-rule-catalog-design` states which social-lineage Rules are classified. Targets that touch an unclassified Rule are flagged, not changed. **Answered 2026-10-03 (see below)** | world-rule-catalog-design |
@@ -129,7 +130,7 @@ batch, no required checks or promotion, no §9 cleanup batch, no party, and no n
 - **Cost estimate:** 4–6 child tickets, mostly hotfix or standard and read-only. Item 4 is the only
   long run; its runtime is recorded in the baseline file, as v3's was. No CI cost beyond the existing non-required lane.
 
-## 9 · Open questions for the owner
+## 9 · Owner questions (answered 2026-10-03)
 
 1. Approve Phase 2 for social only, as scoped here? (G1)
 2. Mutation target:
@@ -147,3 +148,21 @@ batch, no required checks or promotion, no §9 cleanup batch, no party, and no n
    - (a) **start once approved** (recommended)? Every item is measurement or report only, item 3
      does not touch the registry, and findings are flagged "unbound module";
    - (b) **wait** until foundation step (b) binds the social modules?
+
+**Owner decision (2026-10-03):** "go with your recommendation, avoid touch deeply in RPG feature
+tests".
+- Q1: yes, Phase 2 for social only.
+- Q2: `appraisal.py`, with the reputation-read mutants labelled catalog-CONFLICTING.
+- Q3: report only. No proposed link list.
+- Q4: `rpg-feature-planning` owns the ch07 Bible-table fix. This batch does not block on it.
+- Q5: (a) start once approved, with findings flagged "unbound module".
+
+**Added constraint: RPG feature tests are read-only in this batch.**
+- No social test file (under `tests/unit/social/`, `tests/simulation_quality/`,
+  `tests/integration/` or `tests/architecture/`) is edited, moved, renamed, marked, deleted or
+  strengthened.
+- Item 1 measures marker coverage and placement and records findings. It does **not** add markers.
+- Item 4 runs the existing tests unchanged. Survivors are findings for `rpg-feature-planning`, not
+  new tests.
+- The only test change in the batch is item 2's routing case in
+  `tests/unit/tools/test_scenario_lane_paths.py`, which is tooling, not an RPG feature test.
