@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261003-PERF-M0-EPIC-CLOSURE
-phase: open
+phase: done
 date: 2026-10-03
 tags: [performance, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [performance, documentation]
 Close the performance M0 architecture-governance epic: record a disposition for PERF-M0-T01..T09 and move it to done
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -42,10 +42,10 @@ P3
 - Reopening or re-arguing any decision
 
 ## Acceptance Criteria
-- [ ] The epic records a disposition and evidence for each of PERF-M0-T01..T09
-- [ ] Each Exit Criterion of the M0 epic doc is marked met with evidence, or the ticket stops and reports
-- [ ] The epic is in `agent-working/tickets/done/` with `status: historical`, `phase: done`, `## Status` DONE, and `python3 tools/validate_frontmatter.py` accepts it
-- [ ] `git diff` touches only `agent-working/`, `docs/plans/design_enhancement/performance_optimization/performance_optimization_roadmap.md`, `docs/REGISTRY.yaml`, and the knowledge index files
+- [x] The epic records a disposition and evidence for each of PERF-M0-T01..T09
+- [x] Each Exit Criterion of the M0 epic doc is marked met with evidence, or the ticket stops and reports
+- [x] The epic is in `agent-working/tickets/done/` with `status: historical`, `phase: done`, `## Status` DONE, and `python3 tools/validate_frontmatter.py` accepts it
+- [x] `git diff` touches only `agent-working/`, `docs/plans/design_enhancement/performance_optimization/performance_optimization_roadmap.md`, `docs/REGISTRY.yaml`, and the knowledge index files
 
 ## Related Tickets
 - TCK-20260913-PERF-M0-ARCHITECTURE-GOVERNANCE-EPIC (the epic being closed)
@@ -68,13 +68,15 @@ None (bookkeeping only).
 - Assumes the owner's merge of #306 on 2026-10-03 is the approval of the P1 wording, as recorded in the perf-planner handover. If a T0x item turns out to have no closing record at all, record it as deferred with a reason rather than inventing one, and tell perf-planner.
 
 ## Implementation Notes
-
+Disposition table and per-criterion evidence are in the closed epic's Implementation Notes. All five Exit Criteria were met, so no stop-and-report was needed. The P2 roadmap had no table cell showing M0 open; its one status sentence ("Until M0 closes ...") was rewritten to record the closure and keep the entry-gate caveat. T01/T02 were created in PR #287 (their ticket files were relocated by #289).
 
 ## Test Summary
-
+`python3 tools/validate_frontmatter.py` on the closed epic: no violations. No code changed, so no pytest run.
 
 ## Files Changed
-
+- agent-working/tickets/done/TCK-20260913-PERF-M0-ARCHITECTURE-GOVERNANCE-EPIC.md (moved from todos/)
+- docs/plans/design_enhancement/performance_optimization/performance_optimization_roadmap.md (one sentence)
+- this ticket, docs/REGISTRY.yaml, working log, monitoring shards
 
 ## Completion Summary
-
+M0 epic closed with a disposition for T01..T09 and all Exit Criteria met.
