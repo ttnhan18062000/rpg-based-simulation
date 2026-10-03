@@ -207,6 +207,7 @@ Epic A:
 2. **Escaped-defect tracking.** A registered `escaped-defect` ticket tag for defects that reached
    `main` past green tests, with the failure class from §4.5. Counted per month in the report. This
    replaces today's title-matched estimate with a declared signal.
+   *Recorded 2026-10-03:* **September 2026: 0 tagged** (state `counting`; 2387 tickets scanned; the window opens at the tag's registration, 2026-09-29, so September is 2 days). It is "0 tagged", not "0 escaped": no ticket carries the tag or a `Failure class:` line. From `python3 tools/test_architecture/core_rpg_report.py --as-of 2026-10-03 --sha bd8367a121d432ab43fccbfa54f554fa44a1b5fc` (the report tool is the source).
 
 Neither is a gate. Both feed the post-pilot review (§6).
 

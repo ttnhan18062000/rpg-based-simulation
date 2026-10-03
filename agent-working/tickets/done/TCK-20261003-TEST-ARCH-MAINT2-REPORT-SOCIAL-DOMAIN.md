@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-TEST-ARCH-MAINT2-REPORT-SOCIAL-DOMAIN
-phase: open
+phase: done
 date: 2026-10-03
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Teach `core_rpg_report.py` the social domain as a reported, non-core signal
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -99,10 +99,8 @@ figures**, and record the social row once at the then-current `origin/main`.
 
 - Context scan: `search_docs`, graphify and `tools/knowledge_search.py` were unavailable all session; the scan
   is targeted reads and a read-only probe over the real test tree. Disclosed, not a gate.
-- **Question for the reviewer:** "own domain `social`" is satisfied here as a reported domain signal, not as a
-  new exclusive `class`. The alternative (an exclusive class) moves 32 files out of `not-core-rpg`. Which?
-- Whether adding keys bumps `schema_version` 2 to 3 (the existing test pins `== 2`): proposed yes, because
-  the JSON shape gains keys; the test is updated in the same change.
+- RESOLVED by test-architecture-reviewer at plan review of `38423a1151a0ee2c9f6d6de0a55ad67406d009d4`: design
+  C (a reported signal, not an exclusive class), and `schema_version` 2 to 3.
 
 ## Implementation Notes
 
@@ -117,13 +115,39 @@ unowned-domain 7 (core-RPG candidates = classified + uncertain = **197**).
 | C. non-exclusive social signal field (proposed) | 197 (unchanged) | no existing count moves | proposed |
 
 Under C, 37 files carry a social (non-party, non-memory) submodule import: not-core-rpg 32, uncertain 2,
-classified 1, unowned-domain 2. One file imports both party and social code; two import `memory` only (excluded);
-no file imports only the bare package. Rule used by the probe: a name that starts with
+classified 1, unowned-domain 2. Two files import both party and social code (the plan message said one: the
+probe checked only `social_systems.party*`, while the tool's Party row also includes `src.systems.party`; the
+tool's figure of 2 is the right one); two import `memory` only (excluded); no file imports only the bare package. Rule used by the probe: a name that starts with
 `src.systems.social_systems.` and is neither `party*` nor `memory`. The bare package name is not a signal on
 its own, because `from pkg import x` adds both `pkg` and `pkg.x` to the import list.
 
 ## Test Summary
 
+`tests/unit/tools/test_core_rpg_report.py`, `test_impact_report.py`, `test_marker_vocabulary.py`,
+`test_marker_check.py`: 89 passed (repo venv, `-p no:cacheprovider`). New cases cover the signal (three import
+forms), exclusions (party, memory, bare package), memory-only and party-overlap counts, parse-error `None`, the
+`social_domain` block, the schema v3 test (which still asserts the v2 renames) and the limits/markdown text, plus
+the invariance test.
+
+Positive control: a temporary out-of-repo plugin that puts social into `_GAMEPLAY_IMPORT_PREFIXES` (design A)
+made 5 tests fail, including the invariance test, so it detects the mistake it guards. Live comparison at
+`bd8367a121d432ab43fccbfa54f554fa44a1b5fc` (`origin/main` `599966e8dd18dcde97c1093e44d909f3cb7c0212` plus the
+tool change): the unmodified `origin/main` tool and the v3 tool give identical class counts (1398 / 119 / 78 / 7 /
+0), candidates 197 in both, an identical manifest, and identical layers once `social_domain` is removed. Social
+row: 37 / 1602 files (not-core-rpg 32, uncertain 2, classified 1, unowned-domain 2), 2 party overlaps, 2 memory-only.
+
 ## Files Changed
 
+- `tools/test_architecture/core_rpg_report.py` (social signal, `social_domain` block, schema v3, limits, markdown)
+- `tests/unit/tools/test_core_rpg_report.py` (new social tests, schema test updated)
+- `docs/testing/social_test_report_2026-10-03.md` (§6, a dated addendum with the social row)
+- `agent-working/stored_artifacts/TCK-20261003-TEST-ARCH-MAINT2-REPORT-SOCIAL-DOMAIN/` (plan, investigation, test_plan)
+
 ## Completion Summary
+
+Done 2026-10-03. `core_rpg_report.py` (schema v3) reports social imports as a non-exclusive signal with a
+by-class breakdown, the party overlap and the memory-only exclusion, and does not change any class, count or the
+core-RPG candidate set (checked live against the unmodified tool at the same SHA). Social is kept out of
+`DOMAIN_IMPORT_PREFIXES`, so `impact_report.py`, `marker_check.py` and the marker vocabulary are unaffected. The
+social row is recorded as an addendum in the social report. No tests outside `tests/unit/tools/`, no `src/` or
+parity-ledger change.

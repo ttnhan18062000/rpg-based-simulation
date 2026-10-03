@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-TEST-ARCH-MAINT2-EPIC-B-COST-ROW-304
-phase: open
+phase: done
 date: 2026-10-03
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Epic B cost record: the row for #304 and any PR merged after it
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -91,8 +91,31 @@ None.
 
 ## Implementation Notes
 
+Approved as written by test-architecture-reviewer at plan review of `38423a1151a0ee2c9f6d6de0a55ad67406d009d4`.
+Done last in the batch. Scope grew by one PR: **#301**, which was open when the previous update was written, merged
+on 2026-10-03T13:42:40Z (between #302 and #304) and had no row, is recorded here with an explicit note. PRs merged
+after #304 at the time of writing: only #306. Open, not recorded: #291 and #305. No TLS or other API error in this
+pass.
+
 ## Test Summary
+
+Records only. Each of #301, #304 and #306 returned exactly one `Tests` run for its final head SHA; the figures
+were read from `gh api` by this session (the reviewer's #304 head and run id matched). Lane ran on #301 (31 s)
+and #306 (39 s); both jobs skipped on #304, whose file list was checked and held only `agent-working/` and `docs/`
+paths. Watch item (c): 0 `src/progression/` matches in all 3 file lists, unfired.
+
+Totals, stated plainly: 30 PRs / 36 rows are carried forward from the previous update; that line's own chain
+(18 / 23 through #288, plus #290, plus 11 PRs / 12 rows) adds up, but earlier rows were not re-enumerated one by
+one. Adding 3 PRs and 3 rows gives 33 PRs / 39 rows; the lane ran on 16 PRs across 21 rows, whole-job 31-61 s.
 
 ## Files Changed
 
+- `agent-working/tickets/done/test-architecture/TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION.md` (one dated update
+  paragraph inserted after the previous update; nothing else changed)
+
 ## Completion Summary
+
+Done 2026-10-03. Rows recorded for #301, #304 and #306 by final head full SHA and one `Tests` run each: lane ran
+on #301 and #306, both jobs skipped on #304. #301 was added because it merged after the previous update was
+written. #291 and #305 are open and not recorded. Watch item (c) is unfired. The lane has now run on 16 PRs
+against the roughly 10 planned; no promotion of the lane to required is made or implied.
