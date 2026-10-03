@@ -2,7 +2,7 @@
 from __future__ import annotations
 import math
 from dataclasses import replace
-from typing import List, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING
 from src.core.state import AuthoritativeState, EntityState
 from src.core.updates import StateUpdate
 from src.core.enums import Faction, Domain
@@ -21,24 +21,26 @@ class RaidService:
     RAID_BASE_SIZE = 3
     SANCTUARY_RADIUS = 15
     
-    @staticmethod
-    def check_for_raid(state: AuthoritativeState, generator: EntityGenerator) -> StateUpdate:
-        """
-        Checks if the global (non-camp) tick-cadence raid should spawn and returns the update.
-
-        TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX: this method's own gate/output are unchanged --
-        it delegates to spawn_raid() with the same (0,0)-anchored origin/target it always used,
-        so this caller's behavior is byte-identical to before the extraction. The camp-triggered
-        raid path (src/world/camp.py) calls spawn_raid() directly with a real origin/target and
-        its own (different) cadence gate, since this method's tick%raid_interval_ticks check does
-        not apply to that call site.
-        """
-        raid_interval_ticks = RaidService.RAID_INTERVAL_DAYS * RaidService.TICKS_PER_DAY
-        if state.tick % raid_interval_ticks != 0 or state.tick == 0:
-            return StateUpdate()
-
-        raid_size = RaidService.RAID_BASE_SIZE + state.maturity
-        return RaidService.spawn_raid(state, generator, origin=(0, 0), target=(0, 0), raid_size=raid_size)
+    # TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION:
+    # `check_for_raid()` -- the global world-clock raid, fired on a tick % 500 cadence -- is
+    # RETIRED, not re-anchored. It passed origin=(0,0), target=(0,0) literally, so every raider
+    # spawned on the radius-25 ring around the world origin, outside every region, and sat there.
+    # Measured over 2 corpus worlds / 4 raid events: 12/12 raiders off-region, and in the world
+    # where they never drifted into one, zero raider combat and bit-identical regional influence.
+    # It had never once produced a raid.
+    #
+    # Retiring it is the hard-bug fix (it stops creating regionless, inert entities). Re-anchoring
+    # it on a real settlement was implemented, measured, and withdrawn: that would ACTIVATE a
+    # behaviour the world has never had, which is a gameplay change with a balance footprint, and
+    # `owner_decision_memo.md` row 7 parks feature work. It also would not have worked --
+    # `src/engine/tactical.py:141` PANIC_RETREAT overwrites a raider's target with the same
+    # hardcoded (0.0, 0.0) within 15-38 ticks of spawn, so the raid is swallowed on the flight path
+    # even once the spawn path is correct (TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN).
+    #
+    # The camp-triggered path below is UNAFFECTED and is the surviving raid mechanic: it has real
+    # provenance (a declared actor, its own origin and maturity gate) per ORG-03 / CAUSE-01.
+    # If world-clock raids are ever wanted, they return as a declared feature with a
+    # settlement-Place target and no coordinate fallback (PLACE-01: a bare coordinate is not a Place).
 
     @staticmethod
     def spawn_raid(

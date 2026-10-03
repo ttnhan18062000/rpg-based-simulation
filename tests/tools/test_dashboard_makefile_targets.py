@@ -19,7 +19,7 @@ _NEW_TARGETS = ["dashboard-install", "dashboard-build", "dashboard-dev", "dashbo
 # target's recipe was edited, which AC #1 forbids.
 _EXISTING_RECIPE_SNAPSHOT = {
     "install": "",
-    "install-py": "\tpip install -r requirements.txt\n",
+    "install-py": "\tuv sync\n",
     "install-fe": "\tcd frontend && npm install\n",
     "build": "\tcd frontend && npm run build\n",
     "dev": (

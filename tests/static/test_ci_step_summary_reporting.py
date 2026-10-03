@@ -55,9 +55,9 @@ needs: [changed-files]
 if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') }}
 steps:
   - uses: actions/checkout@v5
-  - uses: actions/setup-python@v6
-    with: { python-version: "3.13", cache: pip }
-  - run: pip install -r requirements.txt
+  - uses: astral-sh/setup-uv@v10.2.0
+    with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+  - run: uv sync --locked --no-install-project --no-group lint
   - name: Fast lanes
     run: make lane-all-fast
   - name: Expansion gate
@@ -84,9 +84,9 @@ needs:
   - migration-lanes
 steps:
   - uses: actions/checkout@v5
-  - uses: actions/setup-python@v6
-    with: { python-version: "3.13", cache: pip }
-  - run: pip install -r requirements.txt
+  - uses: astral-sh/setup-uv@v10.2.0
+    with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+  - run: uv sync --locked --no-install-project --no-group lint
   - name: Slow tests — corpus diversity (isolated per-test, TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
     run: make simq-corpus-diversity-slow-isolated
   - name: Slow tests (includes 5k behavioral regression)

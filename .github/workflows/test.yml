@@ -26,9 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
         run: |
           pytest tests/unit/core \
@@ -90,9 +90,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
         run: |
           pytest tests/unit/strategic \
@@ -152,9 +152,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       # Split into one step per test directory, each with if: always(), so a failure names its
       # own directory via step conclusions alone -- readable even when raw logs are unreachable
       # (TCK-20260916-CI-PER-DIRECTORY-STEPS-FOR-BLOCKED-LOGS). Verified against the prior
@@ -294,9 +294,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
         run: |
           pytest tests/integration \
@@ -330,9 +330,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project
       # TCK-20261003-CI-SPLIT-API-TOOLS-JOB: tests/tools (211 flat files, about 275-340 s of the old
       # 440-520 s `api-tools` job) is cut in two by file name. The two --ignore-glob patterns are
       # complementary: a file matching neither runs in both jobs and no file can match both, so
@@ -378,9 +378,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       # Sibling of `tools-a-e` (TCK-20261003-CI-SPLIT-API-TOOLS-JOB); see the comment there for why
       # the two --ignore-glob patterns must stay complementary and how to rebalance them.
       - name: "Run: tests/tools (f–z)"
@@ -422,9 +422,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       # Split into one step per test directory, each with if: always(), so a failure names its
       # own directory via step conclusions alone -- readable even when raw logs are unreachable
       # (TCK-20260916-CI-PER-DIRECTORY-STEPS-FOR-BLOCKED-LOGS, applied to the former `api-tools` job
@@ -524,9 +524,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
         run: |
           pytest tests/agent_codex_live_transport \
@@ -582,13 +582,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      # First job installed with uv from uv.lock (TCK-20261002-UV-FIRST-CI-JOB); the other jobs
-      # stay on pip until this one has a green PR run. setup-uv provides Python 3.13 and puts
-      # .venv on PATH, so the pytest/python3 steps below are unchanged. --no-install-project
-      # keeps today's behaviour of no editable install; extras (knowledge stack) are not selected.
+      # Every Python job installs from uv.lock (TCK-20261002-UV-FIRST-CI-JOB,
+      # TCK-20261002-UV-REMAINING-CI-JOBS). setup-uv provides Python 3.13 and puts .venv on PATH,
+      # so the pytest/python3 steps are unchanged. --no-install-project keeps the old behaviour of
+      # no editable install; extras (knowledge stack) are not selected. Only tools-a-e syncs the
+      # `lint` group (ruff, complexipy), which the code-health tests invoke; the rest pass
+      # --no-group lint.
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
-      - run: uv sync --locked --no-install-project
+      - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
         run: |
           pytest tests/simulation_quality \
@@ -622,9 +624,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
         run: |
           pytest tests/architecture \
@@ -750,8 +752,8 @@ jobs:
             exit 0
           fi
           echo "$CHANGED"
-          PERF_RE='^(tests/(perf|certification|arena)/|src/(ai|api|certification|cognition|config|core|domains|engine|observability|perf|platform|replay|world|worldbuilding)/|Makefile$|requirements\.txt$|\.github/workflows/test\.yml$)'
-          MIG_RE='^(tests/architecture/|tests/(integration|unit)/(content|scenarios|worldassembly|certification|runtime)/|tests/conftest\.py$|src/(core|content|platform|runtime|scenarios|worldassembly|worldbuilding|worldmodules|certification)/|Makefile$|requirements\.txt$|\.github/workflows/test\.yml$)'
+          PERF_RE='^(tests/(perf|certification|arena)/|src/(ai|api|certification|cognition|config|core|domains|engine|observability|perf|platform|replay|world|worldbuilding)/|Makefile$|requirements\.txt$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
+          MIG_RE='^(tests/architecture/|tests/(integration|unit)/(content|scenarios|worldassembly|certification|runtime)/|tests/conftest\.py$|src/(core|content|platform|runtime|scenarios|worldassembly|worldbuilding|worldmodules|certification)/|Makefile$|requirements\.txt$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
           FRONTEND_RE='^(frontend/|\.github/workflows/test\.yml$)'
           echo "run_perf_cert_arena=$(echo "$CHANGED" | grep -qE "$PERF_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "run_migration_lanes=$(echo "$CHANGED" | grep -qE "$MIG_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
@@ -778,9 +780,9 @@ jobs:
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_perf_cert_arena == 'true') }}
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
         run: |
           pytest tests/perf \
@@ -825,9 +827,9 @@ jobs:
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || (needs.changed-files.outputs.run_scenario_lane == 'true' && needs.changed-files.outputs.run_perf_cert_arena != 'true')) }}
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       - id: started
         run: echo "t=$(date +%s)" >> "$GITHUB_OUTPUT"
       - name: Run
@@ -850,9 +852,9 @@ jobs:
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') }}
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       - name: Fast lanes
         run: make lane-all-fast
       - name: Expansion gate
@@ -864,10 +866,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
-      - run: pip install mypy
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       # Remove continue-on-error once baseline error count is documented
       # (open_audit_findings_backlog §1G).
       - name: mypy
@@ -897,9 +898,9 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       - name: SimQ full audit (engine re-run + anchor diff + regression tests + coverage scan)
         run: make simq-full-audit-full || true
         continue-on-error: true
@@ -930,9 +931,9 @@ jobs:
       - migration-lanes
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
-      - run: pip install -r requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       - name: Slow tests — corpus diversity (isolated per-test, TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
         run: make simq-corpus-diversity-slow-isolated
       - name: Slow tests (includes 5k behavioral regression)

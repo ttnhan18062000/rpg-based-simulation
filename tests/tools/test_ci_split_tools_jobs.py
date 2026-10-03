@@ -97,10 +97,16 @@ def test_each_new_job_keeps_the_reporting_the_old_job_had(job):
     assert steps["Base branch test collection"]["if"] == "github.event_name == 'pull_request'"
 
 
-def test_every_new_job_still_installs_with_pip_until_the_uv_migration():
+def test_every_new_job_installs_with_uv_from_the_lockfile():
+    # Was a pip pin until TCK-20261002-UV-REMAINING-CI-JOBS moved every job to uv. Only tools-a-e
+    # runs the code-health tests that invoke ruff/complexipy, so it alone syncs the `lint` group.
     for job in _NEW_JOBS:
-        runs = [s.get("run") for s in _jobs()[job]["steps"]]
-        assert "pip install -r requirements.txt" in runs
+        steps = _jobs()[job]["steps"]
+        runs = [s.get("run") for s in steps]
+        expected = "uv sync --locked --no-install-project" + ("" if job == "tools-a-e" else " --no-group lint")
+        assert expected in runs
+        assert any(s.get("uses") == "astral-sh/setup-uv@v10.2.0" for s in steps)
+        assert not any("pip install" in (r or "") for r in runs)
 
 
 def test_the_coverage_parser_reads_tests_tools_for_both_tools_jobs_and_ignores_the_glob_word():

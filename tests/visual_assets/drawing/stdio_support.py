@@ -22,16 +22,29 @@ EXPECTED_TOOLS = {
     # high-level layer (server/highlevel_tools.register)
     "make_ramp", "shade", "dither", "stroke", "auto_outline", "remap_palette", "lint_sprite",
     "ascii_view",
+    # handoff (server/handoff_tools)
+    "export_handoff",
+    # read-only store tools plus submit_candidate (server/store_readonly_tools)
+    "submit_candidate", "store_list", "store_show",
 }
 
 
+def isolated_repo(tmp_path: Path) -> Path:
+    """A private copy of the `visual_assets` package, so a server started from it has its OWN catalog and quarantine (never the real ones)."""
+    import shutil
+
+    root = tmp_path / "repo"
+    shutil.copytree(REPO_ROOT / "visual_assets", root / "visual_assets", ignore=shutil.ignore_patterns("__pycache__", ".quarantine", ".review"))
+    return root
+
+
 @asynccontextmanager
-async def session(workspace: Path):
+async def session(workspace: Path, root: Path | None = None):
     """Spawn `python -m visual_assets.drawing.server` from the repo root with an isolated workspace."""
     params = StdioServerParameters(
         command=sys.executable,
         args=["-m", "visual_assets.drawing.server"],
-        cwd=str(REPO_ROOT),
+        cwd=str(root if root is not None else REPO_ROOT),
         env={"ASEPRITE_MCP_WORKSPACE": str(workspace), "ASEPRITE_MCP_BINARY": config.ASEPRITE},
     )
     async with stdio_client(params) as (read, write):
