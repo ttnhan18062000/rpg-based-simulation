@@ -44,3 +44,20 @@ def test_cli_exit_code_is_nonzero_on_failure():
 def test_passes_for_a_real_closed_ticket():
     lines = []
     assert pnr.run("TCK-20260930-IMPLEMENT-TICKET-PARSE-AND-NONDETERMINISM-FIX", out=lines.append) == 0, lines
+
+
+def test_find_ticket_finds_a_ticket_in_a_one_level_done_epic_folder(tmp_path):
+    nested = tmp_path / TICKETS / "done" / "some-epic-folder" / "TCK-20261003-NESTED.md"
+    nested.parent.mkdir(parents=True)
+    nested.write_text("x", encoding="utf-8")
+    assert pnr.find_ticket("TCK-20261003-NESTED", repo=tmp_path) == nested
+    assert pnr.find_ticket("TCK-20261003-ABSENT", repo=tmp_path) is None
+
+
+def test_find_ticket_prefers_inprogress_and_flat_done_over_a_nested_copy(tmp_path):
+    flat = tmp_path / TICKETS / "done" / "TCK-20261003-BOTH.md"
+    nested = tmp_path / TICKETS / "done" / "some-epic-folder" / "TCK-20261003-BOTH.md"
+    nested.parent.mkdir(parents=True)
+    flat.write_text("flat", encoding="utf-8")
+    nested.write_text("nested", encoding="utf-8")
+    assert pnr.find_ticket("TCK-20261003-BOTH", repo=tmp_path) == flat

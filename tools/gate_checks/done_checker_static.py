@@ -789,14 +789,28 @@ def _sibling_declared_docs_paths(exclude_ticket_id: str, status_touched: set[str
     return declared
 
 
+def _ticket_file_candidates(ticket_id: str, prefer_done: bool = False) -> list[Path]:
+    """Every place a ticket file can live, in lookup order: `inprogress/<id>.md`, the flat
+    `done/<id>.md`, then the one-level `done/<folder>/<id>.md` an epic ticket gets from CLAUDE.md's
+    folder-move rule (one level deep only, the depth `check_ticket_finalized` and
+    `generate_registry.collect_tickets()` assume). `prefer_done` puts the done locations first."""
+    inprogress = [TICKETS / "inprogress" / f"{ticket_id}.md"]
+    done = [TICKETS / "done" / f"{ticket_id}.md", *sorted((TICKETS / "done").glob(f"*/{ticket_id}.md"))]
+    return done + inprogress if prefer_done else inprogress + done
+
+
+def _find_ticket_file(ticket_id: str, prefer_done: bool = False) -> Path | None:
+    """The first existing candidate from `_ticket_file_candidates`, or None."""
+    for candidate in _ticket_file_candidates(ticket_id, prefer_done):
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def _resolve_ticket_body_path(ticket_id: str) -> Path:
-    """Resolve the closing ticket's own body-text file the same way `check_tag_drift` does — a
-    small private helper of its own, not extracted into a shared function, so `check_tag_drift`'s
-    body stays untouched (its forward-direction-adjacent contract is out of this ticket's Scope)."""
-    path = TICKETS / "done" / f"{ticket_id}.md"
-    if not path.exists():
-        path = TICKETS / "inprogress" / f"{ticket_id}.md"
-    return path
+    """Resolve the closing ticket's own body-text file (done locations first, then inprogress). When no
+    file exists, returns the flat `done/<id>.md` path so callers' `.exists()` checks stay valid."""
+    return _find_ticket_file(ticket_id, prefer_done=True) or (TICKETS / "done" / f"{ticket_id}.md")
 
 
 def check_docs_to_update_coverage(
@@ -1134,12 +1148,9 @@ def check_ticket_finalized(ticket_id: str) -> tuple[str, str]:
     own real shape (a folder never nests a folder).
     """
     flat_done_path = TICKETS / "done" / f"{ticket_id}.md"
-    nested_done_matches = sorted((TICKETS / "done").glob(f"*/{ticket_id}.md"))
     inprogress_path = TICKETS / "inprogress" / f"{ticket_id}.md"
 
-    done_path = flat_done_path if flat_done_path.exists() else (
-        nested_done_matches[0] if nested_done_matches else flat_done_path
-    )
+    done_path = next((c for c in _ticket_file_candidates(ticket_id) if c != inprogress_path and c.exists()), flat_done_path)
 
     problems = []
     if not done_path.exists():
@@ -1245,9 +1256,7 @@ def check_tag_drift(
     """
     resolved_path = ticket_path
     if resolved_path is None:
-        resolved_path = TICKETS / "done" / f"{ticket_id}.md"
-        if not resolved_path.exists():
-            resolved_path = TICKETS / "inprogress" / f"{ticket_id}.md"
+        resolved_path = _find_ticket_file(ticket_id, prefer_done=True) or (TICKETS / "done" / f"{ticket_id}.md")
     if not resolved_path.exists():
         return ("CLEAN", f"no ticket file found for {ticket_id} — skipping drift check")
 
@@ -1423,20 +1432,23 @@ def run_finalize_selfcheck(ticket_id: str, tier: str, regenerate_registry: bool 
 
 
 def _resolve_tier(ticket_id: str, tier_override: str | None) -> str:
-    """Auto-detect `## Tier` from the ticket file (agent-working/tickets/inprogress/, else agent-working/tickets/done/) unless
-    `tier_override` is given. Falls back to "standard" if the file can't be found or the field
-    can't be parsed -- tier resolution alone must never crash the CLI."""
+    """Auto-detect `## Tier` from the ticket file (inprogress, the flat done folder, or a one-level
+    done epic folder) unless `tier_override` is given. Falls back to "standard" if the file can't be
+    found or the field can't be parsed -- tier resolution alone must never crash the CLI -- but says
+    so on stderr, naming the paths tried, instead of falling back silently."""
     if tier_override:
         return tier_override
-    for candidate in (
-        TICKETS / "inprogress" / f"{ticket_id}.md",
-        TICKETS / "done" / f"{ticket_id}.md",
-    ):
-        if candidate.exists():
-            body = _strip_frontmatter(candidate.read_text(encoding="utf-8"))
-            value = parse_body_section(body, "Tier")
-            if value in TIER_VALUES:
-                return value
+    candidate = _find_ticket_file(ticket_id)
+    if candidate is not None:
+        body = _strip_frontmatter(candidate.read_text(encoding="utf-8"))
+        value = parse_body_section(body, "Tier")
+        if value in TIER_VALUES:
+            return value
+        reason = f"{candidate} has no parseable `## Tier` (got {value!r})"
+    else:
+        tried = ", ".join(str(c) for c in _ticket_file_candidates(ticket_id))
+        reason = f"no ticket file found (tried {tried})"
+    print(f"NOTE: tier for {ticket_id} falls back to 'standard': {reason}. Pass --tier to override.", file=sys.stderr)
     return "standard"
 
 

@@ -66,6 +66,10 @@ def resolve_and_relocate_ticket(
         }
 
     done_path = done_dir / f"{ticket_id}.md"
+    if not done_path.exists():
+        # A closed epic folder lives at done/<folder>/ (CLAUDE.md "After Work"), one level deep.
+        nested_done = sorted(done_dir.glob(f"*/{ticket_id}.md")) if done_dir.exists() else []
+        done_path = nested_done[0] if nested_done else done_path
     if done_path.exists():
         text = done_path.read_text()
         return {
