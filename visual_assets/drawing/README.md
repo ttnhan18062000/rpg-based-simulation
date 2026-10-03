@@ -9,7 +9,9 @@ backend   -> config, errors             bwrap sandbox + the pinned Lua template 
 workspace -> config, errors             the EXPERIMENT workspace (revisions, jobs, locks); not the asset store
 api       -> schema, backend, workspace new_sprite, apply_ops, branch, inspect, preview, filmstrip, list
 compose   -> api, technique             high-level tools (shade, dither, stroke, outline, remap, lint)
-server    -> api, compose               FastMCP app and tool registration (python -m visual_assets.drawing.server)
+handoff   -> api, store.contracts       package ONE revision as a candidate (the only link from drawing to the store; writes only
+                                        <workspace>/handoffs/, never the asset store)
+server    -> api, compose, handoff      FastMCP app and tool registration (python -m visual_assets.drawing.server)
 ```
 
 Rule that matters in tests: modules read limits and paths as `config.NAME` at call time, never

@@ -97,6 +97,7 @@ One record per workflow invocation.
 |---|---|
 | `IN_PROGRESS` | Run-start record written; end record not yet written. Should not appear in completed runs. |
 | `DONE` | Workflow completed successfully. |
+| `WORKFLOW_ERROR` | An uncaught exception ended the run in any phase. One error event (phase = the last phase an event was pushed for, agent `implement-ticket-orchestrator`, summary starts `WORKFLOW_ERROR after <phase>:` with the bounded error text) and the run row are written best-effort, then the original exception is rethrown; before Scope finishes a minimal fallback record is written the way `SCOPE_AGENT_FAILED` is (`TCK-20261003-IMPLEMENT-TICKET-JS-NO-MONITORING-ON-EXCEPTION`). |
 | `EPIC_SCOPED` | Epic tier — ticket scoped, no implementation. |
 | `CONFLICTS_DETECTED` | Duplicate or conflicting ticket found at Scope gate. |
 | `TAGS_NOT_REGISTERED` | A ticket's tag isn't in `registries/tag_registry.jsonl` — caught at Scope, before the rest of the pipeline runs (`TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`). |

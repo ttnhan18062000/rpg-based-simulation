@@ -12,7 +12,9 @@ mcp = FastMCP(
         "Draw small RGB pixel-art sprites (max 128x128). Every edit takes the sprite's current "
         "revision as base_revision and creates a NEW immutable revision; a stale base_revision is "
         "rejected, so re-inspect and retry. Colors are #rrggbb or #rrggbbaa. Coordinates are "
-        "0-based from the top-left. Use preview to look at the result and inspect to read pixels back."
+        "0-based from the top-left. Use preview to look at the result and inspect to read pixels back. "
+        "Gates: an agent may draw, hand off (export_handoff), submit a handoff for intake and read the store, but adopting, revoking, "
+        "building, releasing and deleting are human decisions with no tool on this server."
     ),
 )
 
