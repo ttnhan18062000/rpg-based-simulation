@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-SOCIAL-ORACLE-MAP-REPORT
-phase: open
+phase: done
 date: 2026-10-03
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Phase 2 social item 3 (Oracle map): map social tests to `social_narrative.yaml` ids, P0 first, report only
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -96,12 +96,21 @@ All figures re-measured at the then-current `origin/main`, with the full SHA.
 
 ## Test Summary
 
-Not run yet.
+No test added or changed. A read-only script over `docs/parity_ledger/social_narrative.yaml` produced the
+counts and lists at `origin/main` `9640ff942877cc7264e83309f35d19022a4a3fe6`; all 23 cited test files exist.
+Source lines re-checked with `sed -n '46p;64p'`.
 
 ## Files Changed
 
-None yet.
+- `docs/testing/social_test_report_2026-10-03.md` (section 3, plus the `guilds.py` follow-up in section 2.2)
 
 ## Completion Summary
 
-Not complete.
+Done 2026-10-03. The plan's figures re-hold: 227 P0 entries, 211 without a `test_path` (166 verified,
+44 legacy_verified, 1 missing), 3 divergent (SOC-242, SOC-263, SOC-265, all P1), SOC-052 missing (its cited
+path never existed), the ch07 Bible-table gap, the `appraisal.py` line 46 and 64 reputation reads labelled
+"current behaviour, catalog-CONFLICTING", and `reputation.py` with no direct importer under
+`tests/unit/social`. Nothing in `docs/parity_ledger/` or any test changed, and no link list was proposed.
+Findings were sent to `rpg-feature-planning` on 2026-10-03 (no reply received when closed). Also folded in
+from the C2 review: `tests/unit/world/test_guild_intel.py` covers `guilds.py` at 92%, so its 0% in the
+social selections is a selection artefact.

@@ -43,7 +43,7 @@ sets `trust_history` on the entity's social component) and
 `test_succession_heir_selection_value_differential.py` (uses `src.core.models.social.SocialBond` as input
 to succession). They exercise other systems that read social state, not `src/systems/social_systems/`. So
 the lane's scenarios give a social-only change no check of the social systems today. Writing a social scenario is
-out of scope for this batch; the gap will be routed to `rpg-feature-planning` together with section 3's findings (not yet sent).
+out of scope for this batch; the gap was routed to `rpg-feature-planning` together with section 3's findings (section 3.5).
 
 ## 2 · Locate: coverage, markers, placement (`TCK-20261003-SOCIAL-TEST-LOCATE-AND-OWNER-ROUTING`)
 
@@ -91,9 +91,11 @@ Reading it: coverage is execution evidence, not proof of an approved claim (taxo
 - `clan_lifecycle.py` is covered by `tests/unit/domains/faction/`, not by `tests/unit/social` (28% to 95%).
 - `reputation.py` has no direct importer under `tests/unit/social`, yet reaches 77% there: it is exercised
   through other modules. The 85% figure adds the elsewhere-files.
-- `guilds.py` is at 0% under every social selection. It is imported by `src/systems/guild_system.py`,
-  which the ownership map lists under Quests / guild, so it is live code in the social directory owned by
-  another domain. Whether guild tests elsewhere reach it was not measured here.
+- `guilds.py` is at 0% under every social selection, which is an artefact of the selection, not untested
+  code. It is imported by `src/systems/guild_system.py`, which the ownership map lists under Quests / guild,
+  so it is live code in the social directory owned by another domain. `tests/unit/world/test_guild_intel.py`
+  (2 tests, 2 passed) calls `GuildIntelSystem.update` and covers `guilds.py` at **92%** (39 statements,
+  3 missed), measured on the same branch head with the same coverage command.
 
 ### 2.3 Marker coverage (collect-only census of the same 372 tests)
 
@@ -125,3 +127,58 @@ The ownership map already has a social row. `docs/plans/test_architecture/refere
 the Party row; `memory.py` excluded), the oracle documents and the owner contact `rpg-feature-planning`. No
 other ownership-map or triage text changed. A test-found social defect routes to the feature-owning team
 through that map (`docs/testing/regression_policy.md` §13.4).
+
+## 3 · Oracle map (`TCK-20261003-SOCIAL-ORACLE-MAP-REPORT`)
+
+Report only. No ledger entry, test or mechanism link was changed or proposed (owner decision, 2026-10-03).
+Measured at `origin/main` `9640ff942877cc7264e83309f35d19022a4a3fe6`, 2026-10-03, by a read-only script
+over `docs/parity_ledger/social_narrative.yaml`.
+
+### 3.1 Ledger shape
+
+294 entries: 246 `verified`, 44 `legacy_verified`, 3 `divergent`, 1 `missing`. By priority: 227 P0, 53 P1,
+14 P2. The plan's figures (227 P0, 211 without `test_path`) hold at this SHA. All 23 test-file references
+that the existing `test_path` values contain resolve to files that exist.
+
+### 3.2 P0 entries with no `test_path`: 211 of 227
+
+16 P0 entries have a `test_path`. The 211 without one are: 166 `verified` (no `proof_type`), 44
+`legacy_verified` (`proof_type: parity`) and 1 `missing` (SOC-052). CLAUDE.md requires a passing `test_path`
+for P0 entries; this is reported, not fixed. Every P1 and P2 entry has a `test_path`. Reproduce: load the
+YAML, filter `priority == P0` and an empty or null `test_path`.
+
+Ids: SOC-009 SOC-010 SOC-011 SOC-012 SOC-013 SOC-014 SOC-015 SOC-016 SOC-017 SOC-018 SOC-019 SOC-020 SOC-021 SOC-022 SOC-023 SOC-024 SOC-025 SOC-026 SOC-027 SOC-028 SOC-029 SOC-030 SOC-031 SOC-032 SOC-033 SOC-034 SOC-035 SOC-036 SOC-037 SOC-038 SOC-039 SOC-040 SOC-041 SOC-042 SOC-043 SOC-044 SOC-045 SOC-046 SOC-047 SOC-048 SOC-049 SOC-050 SOC-052 SOC-053 SOC-054 SOC-055 SOC-056 SOC-057 SOC-058 SOC-059 SOC-060 SOC-061 SOC-062 SOC-063 SOC-064 SOC-065 SOC-066 SOC-067 SOC-068 SOC-069 SOC-070 SOC-071 SOC-072 SOC-073 SOC-074 SOC-075 SOC-076 SOC-077 SOC-078 SOC-079 SOC-080 SOC-081 SOC-082 SOC-083 SOC-084 SOC-085 SOC-086 SOC-087 SOC-088 SOC-089 SOC-090 SOC-091 SOC-092 SOC-093 SOC-094 SOC-095 SOC-096 SOC-097 SOC-098 SOC-099 SOC-100 SOC-101 SOC-102 SOC-103 SOC-104 SOC-105 SOC-106 SOC-107 SOC-108 SOC-109 SOC-110 SOC-111 SOC-112 SOC-113 SOC-114 SOC-115 SOC-116 SOC-117 SOC-118 SOC-119 SOC-120 SOC-121 SOC-122 SOC-123 SOC-124 SOC-125 SOC-126 SOC-127 SOC-128 SOC-129 SOC-130 SOC-131 SOC-132 SOC-133 SOC-135 SOC-136 SOC-137 SOC-138 SOC-139 SOC-140 SOC-141 SOC-142 SOC-143 SOC-144 SOC-145 SOC-146 SOC-147 SOC-148 SOC-149 SOC-150 SOC-151 SOC-152 SOC-153 SOC-154 SOC-155 SOC-156 SOC-157 SOC-158 SOC-159 SOC-160 SOC-161 SOC-162 SOC-163 SOC-164 SOC-165 SOC-166 SOC-167 SOC-168 SOC-169 SOC-170 SOC-171 SOC-172 SOC-173 SOC-174 SOC-175 SOC-176 SOC-177 SOC-178 SOC-179 SOC-180 SOC-181 SOC-182 SOC-183 SOC-184 SOC-185 SOC-186 SOC-187 SOC-188 SOC-189 SOC-190 SOC-191 SOC-192 SOC-193 SOC-194 SOC-195 SOC-196 SOC-197 SOC-198 SOC-199 SOC-200 SOC-201 SOC-202 SOC-203 SOC-205 SOC-206 SOC-209 SOC-210 SOC-211 SOC-212 SOC-213 SOC-214 SOC-215 SOC-216 SOC-218 SOC-219 SOC-220 SOC-221 SOC-222 SOC-223 SOC-224 SOC-225
+
+### 3.3 The divergent and missing entries
+
+| Id | Status, priority | What it is | `test_path` |
+|---|---|---|---|
+| SOC-052 | missing, P0 | the `test_entity_integration` parity entry (Entity and IdentityComponent absorb new Phase 3 fields), whose cited `tests_v2/parity/test_entity_construction.py` never existed in this repository; its own `support_boundary` says `missing` here means unverified, not known-broken (`TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT`) | none |
+| SOC-242 | divergent, P1 | `quest_event` moved from post-tick diffing to a push-based `NarrativeShaper` (observability delivery mechanism only; no scoring change) | `tests/unit/observability/test_event_shapers_narrative.py` |
+| SOC-263 | divergent, P1 | `SocialComponent` canonical hash previously covered 10 of 17 fields; 7 added (`TCK-20260902-SOCIAL-CANONICAL-HASH-GAP`) | two cases in `tests/unit/core/test_entity_integrity.py` |
+| SOC-265 | divergent, P1 | nemesis versus friend-bond precedence in party composition (`TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE`) | five cases in `tests/unit/social/test_party_composition.py` |
+
+SOC-265 concerns party composition, which is outside this batch's findings scope (no oracle or owner, D-P);
+it is listed because the ledger marks it divergent.
+
+### 3.4 Other findings
+
+- **Bible-table gap.** `docs/mechanics/07_social_political_dynamics.md` exists but is not in CLAUDE.md's
+  Mechanics Bible table, which lists chapters 01 to 06. Owner: `rpg-feature-planning`, who raised it already.
+  This batch does not block on it and does not edit CLAUDE.md.
+- **Current behaviour, catalog-CONFLICTING (PERC-01 / KNOW-01).** Two reads in `appraisal.py` at this SHA:
+  line 46, `public_trust = source_entity.social.public_reputation / 2.0`, and line 64,
+  `clan_trust = (state.clans[clan_id].clan_reputation / 2.0) if clan_id else 0.5`. The classification comes
+  from `world-rule-catalog-design` through the plan's G4 answer and is not re-derived here. These are
+  recorded as current behaviour, not as bugs, and not as targets for tests.
+- **`reputation.py` coverage gap.** `reputation.py` (13 statements) has no direct importer under
+  `tests/unit/social/`. It reaches 77% from that directory through other modules and 85% with the
+  elsewhere-files (section 2.2).
+- **Name matches are not links.** No test-to-id link was made by name; only the ledger's own `test_path`
+  values were read.
+
+### 3.5 Routing
+
+Sections 1 and 3 are routed to `rpg-feature-planning` by one cross-session message. Sent 2026-10-03 (the send
+succeeded and was queued to that session; no reply had been received when this was written, so this records
+that it was sent, not that anyone agreed).

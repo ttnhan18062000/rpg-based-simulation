@@ -110,7 +110,13 @@ collect-only over the same 372 tests. Branch head measured: `f13baaf24578eb45299
 
 Done 2026-10-03. Coverage, markers and placement are recorded in section 2 of the shared report: 83.0%
 line coverage of the non-party, non-memory social files with all 372 tests (75.9% from `tests/unit/social`
-alone), `guilds.py` at 0%, no `domain`/`level` markers anywhere (not a defect under the taxonomy), one
+alone), `guilds.py` at 0% in the social selections (92% from `tests/unit/world/test_guild_intel.py`), no `domain`/`level` markers anywhere (not a defect under the taxonomy), one
 candidate misplacement (`test_multi_hero.py` runs a real kernel under `tests/unit/`) and one ambiguous
 placement (clan lifecycle tests under the faction component). Nothing was moved or marked. The social
 ownership-map row now carries the measured roots, oracle documents and owner contact.
+
+**Process note.** The staging set (`plan.md`, `investigation.md`, `test_plan.md`) was created at closure,
+after `done_checker_static` failed, not before implementation. The plan review of `bb196e30a` by
+test-architecture-reviewer (2026-10-03) stood in for it, and the artifacts are labelled "Written at
+closure". The monitoring log's first Finalize event says "ok"; a later Finalize event with status "warn"
+records the repair.
