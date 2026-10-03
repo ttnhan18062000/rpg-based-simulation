@@ -467,6 +467,24 @@ passed, 3 failed: `test_long_run_stability` and `test_bravery_quartile_combat_ra
 `test_campaign_runner_outputs_entity_and_world_arc_reports` passes in isolation on both main and this branch (failed only in the
 contended full run).
 
+### 2026-10-03 — why `crowded_frontier` fell 218 -> 1 (not a regression; an ordering defect upstream of this fix)
+
+Supplied by the planner's review of PR #291; the code is verified, the causal claim is **not measured by me**.
+`SensoryFilter.filter_saliency` (`src/engine/cognition.py:44`) adds its +200 "Hostility" bonus on
+`ent.identity.faction != subject.identity.faction` — the raw four-value enum. A genuine MONSTER_HORDE and a
+catalog-friendly TOWN_COUNCIL both receive +200, so they are ranked by proximity alone, and `max_targets=5`
+(`scorers.py`, the line above the changed one) truncates on that wrong proxy **before** the corrected catalog test
+runs. In a crowd, nearby friendlies can therefore displace distant real hostiles and `hostiles` comes back empty.
+This is the pre-existing saliency proxy becoming visible once the hostility test became correct. Raising
+`max_targets` is not the fix; making the saliency hostility term ask the catalog is, and that is
+`TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP` (prioritise `cognition.py:44`).
+
+**Where AC2 and AC3 go (planner's re-scope, 2026-10-03; neither was met by this ticket):**
+- AC3 (`hostiles` meaningfully non-empty) -> the hostility sweep. Measured here: 3/52 after vs 2/18 before on
+  `frontier_living_world`, 0/1 vs 6/218 on `crowded_frontier`.
+- AC2 (a catalog-hostile target is actually attacked, end to end) -> `TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES`.
+  Measured here: attacks by `combat_engage` holders 2 -> 0 on `frontier_living_world`, 0 -> 0 on `crowded_frontier`.
+
 ## Test Summary
 New: `tests/unit/strategic/test_goal_winner_objective_kind.py` (13: T1 nine fall-through kinds stay `REACH_LOCATION`, T2 missing/None fallback,
 published kind carried, T6 `ProjectState.kind` stays `GoalKind` and `score` stays the 100-scale utility), and
