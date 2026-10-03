@@ -38,8 +38,8 @@ Sovereignty has three runtime effects:
 `owner_faction_id` is written by two separate code paths, not one:
 
 - `FactionInfluenceService.process_influence_shift()` (`src/world/influence.py`) — triggered only
-  when a death occurred this tick (`src/systems/lifecycle_systems/lifecycle.py:272`, gated on
-  `if recent_deaths:`).
+  when a death occurred this tick (`src/systems/lifecycle_systems/lifecycle.py:298`, gated on
+  `if recent_deaths:` at `:294`).
 - `WorldDynamicsSystem.resolve_dynamics()`'s own ownership block (`src/engine/world_dynamics.py`)
   — an unconditional sweep over every region, every tick, against final settled influence
   regardless of cause, running earlier in the same tick's pipeline
@@ -53,6 +53,43 @@ naively consolidating would delay death-driven flips by one tick (a determinism/
 requiring its own investigation). Tracked separately:
 `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`. Do not assume this is an oversight —
 it is a scoped, documented decision.
+
+### Precedence, resolved 2026-10-03 (`TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`)
+
+That ticket closed **decision-only**: two writers stay, consolidation stays deferred, and the
+following four facts — previously undocumented — are now part of this contract.
+
+1. **Precedence is writer-2-overrides-writer-1, and it is not a split-brain fact.** Both paths write
+   *the same field of the same staged `WorldUpdate`*. `lifecycle.py:303-307` merges
+   `process_influence_shift`'s update into the `world_dynamics` entry, and `WorldUpdate.merge`
+   (`src/core/updates.py`) resolves `owner_faction_id_set` as **other-wins**, so the death-gated path
+   silently overrides the sweep. The apply path then writes exactly one value. The accurate
+   description is *an unordered, undocumented precedence between two producers of one field* — **not**
+   "one durable fact held with two conflicting live values", a framing that was measured and found
+   false.
+2. **The unconditional sweep evaluates last tick's influence, not this tick's.**
+   `src/world/influence.py` is the only producer of `WorldUpdate.influence_delta` in `src/`, and it
+   runs at the `lifecycle` phase — 13 phases *after* its only consumer in
+   `world_dynamics.py`. Measured at that exact read: 24,000 executions, **0 nonzero**. A death's
+   influence therefore cannot reach the sweep in the same tick, so a sweep-driven flip always lags its
+   causing death by at least one tick.
+3. **The death-gated writer emits no `SOVEREIGNTY_SHIFT`.** Only the `world_dynamics` block emits it.
+   Any ownership flip performed by `process_influence_shift` is therefore **invisible** to
+   `WorldEmergencePhase` and to agent observability. This is latent rather than live only because that
+   writer is measured never to write ownership (point 4) — which is also why `WORLD-107`'s
+   observability claim is not currently false.
+4. **The death-gated writer is measured inert for ownership.** Across ≈48,000 region-ticks in four
+   corpus worlds it was called ~230 times, produced ~80 influence-delta updates, and made **zero**
+   ownership writes; the sweep made 3. Both observed durable flips were sweep-only. **Scope limit:
+   that is a true zero for this corpus, not a proof of impossibility** — a constructed scenario drives
+   both writers in one tick, so the overlap path is live, merely unreached. Counts are
+   order-of-magnitude: the runs predate the `audit_mode` discipline that `INFRA-273` requires.
+
+Evidence: `agent-working/staging_artifacts/TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION/`
+(`investigation.md` §3-§5b, `runtime_evidence_regional_sovereignty.md`). The contract review in §3
+found **no** obstruction to moving settlement after `lifecycle` should consolidation ever be taken up:
+Sovereignty-ordering is `action_routing`-local, no test pins the phase order, and no intervening phase
+reads `owner_faction_id`.
 
 ---
 
