@@ -35,7 +35,26 @@ repo in `~/.cache/rpg-aseprite-mcp` (override: `ASEPRITE_MCP_WORKSPACE`; binary 
 `new_sprite`, `apply_ops` (one batch of operations -> exactly one new immutable revision, all-or-nothing),
 `branch_sprite` (variants such as grayscale), `inspect` (layers, frames with duration/pixel count/checksum,
 tags, palette, colours, optional 32x32 region), `preview` (one frame or one layer, 1-16x), `filmstrip`,
-`list_sprites`.
+`list_sprites`, `export_handoff`, and three store tools (19 tools in all): `submit_candidate`, `store_list`, `store_show`.
+
+`submit_candidate {handoff_id}` runs intake on a handoff written by `export_handoff` (found only by its `handoff_id`: never a path, never a bare candidate id) and returns the verdict and findings; it writes only the
+local quarantine and is not an adoption. `store_list {kind, limit}` and `store_show {kind, id}` (kinds: `intake`, `source`, `artifact`, `release`) are read-only shaped summaries with bounded output and no absolute paths;
+producer statements are labelled as claims. Restart the MCP server for new tools to appear in a running session. The full command and tool table is in `docs/assets/store_contract.md`.
+
+`export_handoff {name, revision, licence_state, licence_evidence_ref, brief_id, review_evidence_ref, limitations}` packages one exact
+revision (the revision is required, never defaulted) as a handoff directory `<workspace>/handoffs/<handoff_id>/` with exactly
+`package.json` (a `CandidateHandoffPackage`), `source.aseprite` (the revision's exact bytes) and `preview.png`. `candidate_id` is `cand-` plus 16
+hex of the source's sha256 (it identifies the source bytes); `handoff_id` is `<candidate_id>--` plus 12 hex of the sha256 of `package.json`. Each handoff directory is
+immutable: rebuilding with the same inputs is idempotent, and changing any input (a corrected brief, a different licence statement) for the same revision creates a new handoff,
+so several handoffs may exist for one candidate (intake tells them apart). Provenance is what the tools know (adapter version and Lua pin, Aseprite version, counts from Aseprite itself) and an explicit
+`UNAVAILABLE` / `NOT_APPLICABLE` otherwise, e.g. the creator. It is a **candidate, not an adoption**: nothing is written to the asset store, and the
+next step is the separate `python -m visual_assets.store intake <directory>`. The server has no adopt, build, release, revoke or gc tool.
+
+**Rule for agents: an agent never runs `adopt` or `revoke`** (`python -m visual_assets.store adopt|revoke`). They are human decisions that write the tracked catalog; they refuse to run without a terminal and make the operator type the id, and the drawing code cannot import them.
+
+Every sprite summary (`new_sprite`, `apply_ops`, `branch_sprite`, `inspect`) also carries `cels` (number of cels as Aseprite stores them,
+linked cels included) and `aseprite_version` (string, from the running binary). Both are read-only facts added for candidate handoff.
+Note: `palette_size` of `new_sprite` is the in-memory palette; `inspect` reports the size Aseprite gives after reloading the file.
 
 Operations inside `apply_ops` (targeted ops take optional `layer` name and `frame`):
 

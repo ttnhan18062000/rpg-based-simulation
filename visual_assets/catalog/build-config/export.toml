@@ -1,0 +1,8 @@
+# Pinned export rules for adopted sources. Parsed strictly: unknown keys are rejected, and this foundation exports
+# exactly one scale class, x1. Its file hash is part of every artifact's build fingerprint.
+format = "png"
+frame = 1
+
+[[scale_class]]
+name = "x1"
+scale = 1

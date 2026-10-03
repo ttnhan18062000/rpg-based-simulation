@@ -1,0 +1,1 @@
+{"approver_name":"Fixture Approver","approver_role":"fixture reviewer","decided_at":"2026-01-03T00:00:00Z","reason":"synthetic fixture revocation","record_type":"revocation_record","revocation_id":"fixture-revoke-0001","schema_version":1,"target":{"kind":"source_revision","source_asset_id":"fixture-source-0001","source_revision":"r0001"}}
