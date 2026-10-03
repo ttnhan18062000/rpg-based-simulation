@@ -266,6 +266,10 @@ lint: ## Run linters (frontend)
 typecheck: ## Run TypeScript type checking
 	cd frontend && npx tsc --noEmit
 
+.PHONY: visual-assets-aseprite-local
+visual-assets-aseprite-local: ## Strict local run of the real-Aseprite tests (fails on any skip; writes reports/visual_assets/aseprite_local_run.json; ADR D10)
+	$(PYTHON3) -m tools.visual_assets_aseprite_local
+
 lint-py: ## Lint Python under src/ with ruff (check only: no formatter, no --fix). Reports existing violations; the baseline ratchet is TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY
 	python3 -m ruff check src
 
