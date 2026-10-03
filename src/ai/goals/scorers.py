@@ -1,7 +1,7 @@
 from __future__ import annotations
 from src.ai.goals.base import GoalScorer, GoalScore
 from src.core.state import EntityState, AuthoritativeState
-from src.core.strategic import GoalKind
+from src.core.strategic import GoalKind, ObjectiveKind
 
 class HarvestScorer(GoalScorer):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
@@ -102,10 +102,21 @@ class CombatEngageScorer(GoalScorer):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
         from src.engine.domain_logic import SimulationDomainLogic
         from src.engine.cognition import SensoryFilter
+        from src.content_semantics.faction import are_entities_hostile
+        from src.content_semantics.relation import RelationContext
         
         raw_neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0)
         neighbors = SensoryFilter.filter_saliency(entity, raw_neighbors, max_targets=5)
-        hostiles = [n for n in neighbors if n.identity.faction != entity.identity.faction and n.combat.alive]
+        # Catalog hostility with the real distance, not the raw 4-value Faction enum (which collapses content
+        # factions): the tactical layer decides whether to engage with the same test, so a target chosen here
+        # on the enum alone is never attackable there (TCK-20261002-GOAL-WINNER-CONSUMPTION-...).
+        ex, ey = entity.navigation.position
+        hostiles = [
+            n for n in neighbors
+            if n.combat.alive and are_entities_hostile(entity, n, RelationContext(
+                distance=abs(n.navigation.position[0] - ex) + abs(n.navigation.position[1] - ey),
+                combat_engaged=True))
+        ]
         
         if not hostiles:
             return GoalScore(kind=GoalKind.COMBAT_ENGAGE, utility=0.0)
@@ -128,7 +139,8 @@ class CombatEngageScorer(GoalScorer):
             kind=GoalKind.COMBAT_ENGAGE,
             utility=utility,
             target_id=str(nearest_hostile.id),
-            target_pos=nearest_hostile.navigation.position
+            target_pos=nearest_hostile.navigation.position,
+            metadata={"obj_kind": ObjectiveKind.DEFEAT_ENEMY},
         )
 
 

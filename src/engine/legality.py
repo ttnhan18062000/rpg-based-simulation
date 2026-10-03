@@ -526,22 +526,10 @@ class LegalityServiceV2:
         it on 34%-97% of every pair either source flagged as hostile
         (TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS).
         """
-        from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str
+        from src.content_semantics.faction import are_entities_hostile
         from src.content_semantics.relation import RelationContext
-        from src.entities.identity_resolver import EntityIdentityResolver, IdentityResolutionError
 
-        id_resolver = EntityIdentityResolver()
-        try:
-            src_faction_id = id_resolver.resolve(entity).faction_id
-        except IdentityResolutionError:
-            src_faction_id = get_faction_id_str(entity)
-        try:
-            tgt_faction_id = id_resolver.resolve(other).faction_id
-        except IdentityResolutionError:
-            tgt_faction_id = get_faction_id_str(other)
-
-        ctx = RelationContext(distance=1.0, combat_engaged=True)
-        return get_faction_semantics_service().is_hostile_compat(src_faction_id, tgt_faction_id, ctx)
+        return are_entities_hostile(entity, other, RelationContext(distance=1.0, combat_engaged=True))
 
     @staticmethod
     def get_engaged_hostiles_at_pos(pos: Tuple[float, float], entity: EntityState, state: Any) -> List[int]:

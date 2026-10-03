@@ -241,6 +241,18 @@ materialized `ProjectState.score` equals `best_candidate.utility` directly (the 
 scale) — this is scale-consistent by construction, unlike the three special branches, which
 must use `metadata["raw_score"]` to avoid the 2.9-ceiling `ProjectKind` scale.
 
+**Objective kind of a generic winner.** The kind of the single objective a generic (non-bespoke) tier-5
+winner materializes is decided by its scorer, not by the consumer. A scorer may publish
+`metadata["obj_kind"]`; `evaluate_strategic_intent()`'s generic branch reads it and falls back to
+`ObjectiveKind.REACH_LOCATION` when none is published, `None` included. The fallback is correct for every
+scorer whose target is a node, building or fixed place (harvesting, hunger, fatigue, social, town return,
+retreat, recover, resolve-blocker, guild), which therefore need no change. `CombatEngageScorer` is the case
+that needs it: its `target_id` is an entity id, so it publishes `ObjectiveKind.DEFEAT_ENEMY` and selects its
+targets with the same content-catalog hostility test the tactical layer applies
+(`content_semantics.faction.are_entities_hostile`, real distance, `combat_engaged=True`), never the raw
+four-value `Faction` enum. The materialized `ProjectState.kind` stays the `GoalKind` and `score` stays the
+100-scale utility (see `_score_scale_max()`); only the objective's kind changes. Parity: `STRAT-274`.
+
 **Retry-on-loss.** When the synthesized candidate loses arbitration (a different candidate
 wins, or `evaluate_project_switch()` itself blocks the switch), no code touches
 `committed_intentions` — the entry is left exactly as it was (`sequence_index` unchanged,
