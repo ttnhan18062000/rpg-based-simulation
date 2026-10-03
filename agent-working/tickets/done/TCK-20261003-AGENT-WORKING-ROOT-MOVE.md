@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-AGENT-WORKING-ROOT-MOVE
-phase: open
+phase: done
 date: 2026-10-03
 tags: [ai, process-improvement, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 Move agent-working state under one `agent-working/` root: path constants first, then one quiet-window move, history frozen
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -198,14 +198,15 @@ by one rule (`<root>/` -> `agent-working/<root>/`, generated indexes -> `agent-w
 | `src/` | closed (no runtime path reads besides the dashboard ingest) |
 | `CLAUDE.md`, `AGENTS.md` | closed; owner-confirmed, `AGENTS.md` regenerated |
 
-Not verified: AC 9's `implement-ticket` hotfix `Workflow` dry run (needs the owner's explicit `Workflow` opt-in). Open
-side effect: the `search_docs` MCP server of an already-running session still points at the old index path until restarted.
+AC 9 status: the config sweep is closed and a hand-run `implement-ticket` hotfix was done on throwaway `TCK-20261003-PATH-MAP-INDEX-REBUILD-COMMANDS` (Scope through Finalize, Verify `READY_TO_CLOSE`, 10 events and 1 run recorded under `agent-working/agent-monitoring/data/2026-W40/`, merged in #293). A native `Workflow` run first failed on a use-before-define defect in `implement-ticket.js` (fixed by `TCK-20261003-IMPLEMENT-TICKET-JS-USE-BEFORE-DEFINE`, #295); a native run on a fresh throwaway is still to do, with the owner's opt-in already given, and is NOT verified by this closure. Open side effect: the `search_docs` MCP server of an already-running session still points at the old index path until restarted.
+
+The standard-tier staging artifacts were never written during the move; they were reconstructed afterwards and say so (`agent-working/stored_artifacts/TCK-20261003-AGENT-WORKING-ROOT-MOVE/`).
 
 ## Test Summary
-Defined at planning.
+See the retroactive `test_plan.md`: scoped suites green in a clean clone at 9175b8770 except 7 `codebase_health` tests needing `complexipy`; hand-run hotfix passed; native `Workflow` run not yet performed.
 
 ## Files Changed
-(Open.)
+See PR #289 (7,640 pure renames, about 3,200 rewritten references, `tools/agent_working_paths.py`, guard test, path-map doc).
 
 ## Completion Summary
-(Open.)
+All agent-working state lives under `agent-working/`; Python reaches the roots only through `tools/agent_working_paths.py`; closed history is frozen. Landed in PR #289. Follow-ups: #293 (index residue), #295 (workflow helper order). AC 9 is met by the hand-run; the native `Workflow` run remains outstanding.
