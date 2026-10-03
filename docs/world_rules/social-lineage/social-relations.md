@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-03"
 ---
 
 # World Rule Family: Social Relations
@@ -292,6 +292,19 @@ that reputation." This is the same class of finding as Batch 06's own CONFLICTIN
 gate), now confirmed for reputation specifically. Cross-referenced in depth from
 `lineage-descent.md`'s own LIN-02 evidence, where this same gap collapses two causal steps this
 follow-up's own §8 requires kept distinct.
+
+**Tracked, 2026-10-03:** `TCK-20261003-APPRAISAL-READS-REPUTATION-WITHOUT-A-KNOWLEDGE-GATE`
+(BLOCKED). The conflict's resolution waits on owner decision 4 (row 4 of
+`docs/plans/systemic_world/owner_decision_memo.md`, what `public_reputation` is):
+- If the owner rules it a publicly knowable fact, this entry is re-stated and the CONFLICTING
+  evidence dissolves with no code change.
+- Otherwise, resolving it needs a reputation knowledge channel, which is perception-foundation
+  feature work.
+
+A 2026-10-03 mutation baseline killed 7 of 7 mutants on the two ungated reads
+(`appraisal.py:46` and `:64`). The ticket lists the tests that pin today's read and would fail by
+design if it is ever gated. Parity entry `SOC-134` records this behaviour as verified. That is true
+of the code, not of this Rule.
 
 **Scenarios:** [SL-S15](../scenarios/social-lineage-batch-09.md#sl-s15) (extended — famous
 ancestor, uninformed stranger).

@@ -134,7 +134,7 @@ missing), against CLAUDE.md's rule that P0 requires a passing one. `SOC-052` (mi
 ## Related Docs
 
 - `docs/plans/systemic_world/owner_decision_memo.md` **row 4** — the blocking decision
-- `docs/world_rules/social-culture/social-relations.md` — PERC-01 / KNOW-01 reputation reach
+- `docs/world_rules/social-lineage/social-relations.md` — PERC-01 / KNOW-01 reputation reach
 - `docs/world_rules/social-lineage/lineage-descent.md` — LIN-02's collapsed step two
 - `docs/mechanics/07_social_political_dynamics.md` — **note: this chapter is absent from CLAUDE.md's
   Mechanics Bible table, which stops at 06.** Raised with the owner separately.
