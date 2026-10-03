@@ -57,6 +57,14 @@ Not created yet — this epic is scope-only. Milestones in dependency order:
    reproducible *given that trace* — the trace itself isn't predictable in advance, and that's
    accepted). This is a real design decision needing maintainer sign-off, not something to default
    into silently.
+
+   **Decision (2026-10-03, repository owner; PERF-D1, conflict C-04): both.** The Canonical
+   contract and the Live bounded contract are adopted as two named contracts for two uses, with
+   amendment A1 (game-facing signals use deterministic inputs only, in both). The record is
+   `docs/architecture/performance_optimization_decisions.md` (PERF-D1); the contract text is in
+   `docs/engine/deterministic_execution.md`. The wall-clock inventory
+   (`docs/performance/wall_clock_inventory.md`) found a fourth input beyond the problem statement
+   above: world-pressure salience derived from `tick_compute_ms`. Implementation (M2) is not done.
 2. **Write the decision into `docs/engine/deterministic_execution.md`.** Its "Scope of the
    guarantee" section currently names only OS-level worker-completion-order as the concurrent-mode
    carve-out reason — add `RuntimeMode`-driven divergence as the second, distinct mechanism, and

@@ -24,6 +24,14 @@ tags: [audit, domain-phases, pipeline, feature-inventory, wiring, domain-layer]
 authoritative pipeline, in what order they execute, whether each is always active or
 behind a FeatureMode gate, and what a passing test would verify for each.
 
+> **Historical snapshot (PERF-D6, applied 2026-10-03).** The phase list and phase count in this
+> audit describe `AuthoritativeApplyPipeline.refine()` as read on the audit date (2026-06-27) and are
+> not current. The pipeline has changed since (one phase was added between 2026-09-08 and
+> 2026-10-02), and the audit's list lacks several executable phases. The current list, generated from
+> the code, is `docs/performance/phase_inventory.md`; the counted units are defined in
+> `docs/engine/authoritative_pipeline.md` (a *refinement phase* is one `run_phase()` call in `refine`).
+> Do not cite this document's count as the current number.
+
 This document is the domain-phase counterpart to D02 (Foundation Feature Inventory).
 D02 catalogued technical enabling capabilities (infrastructure, algorithms, data structures).
 D19 catalogues the domain-level phases wired into `AuthoritativeApplyPipeline.refine()`
