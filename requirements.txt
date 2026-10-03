@@ -83,6 +83,7 @@ pathspec==1.1.1
     # via mypy
 pluggy==1.6.0
     # via pytest
+prek==0.5.4
 prometheus-client==0.24.1
     # via rpg-based-simulation
 psutil==7.0.0

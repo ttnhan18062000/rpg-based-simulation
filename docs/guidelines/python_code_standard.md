@@ -34,7 +34,8 @@ Every rule has an Enforcement cell with one of:
   but no CI job or hook fails on it yet. The violations that already exist in `src/` are held in
   `registries/code_health_exceptions.jsonl`, and `make code-health` fails only on a new or worse one.
   Blocking comes after the two-week soak (roadmap M4). Until then such a rule is enforced by review
-  plus that advisory check. The first-run counts are in
+  plus that advisory check. An opt-in pre-commit hook (`make install-prek-hooks`, see "Git hooks (opt-in)" in
+  `docs/guidelines/agent_working_environment.md`) runs the same ratchet on the staged files. The first-run counts are in
   `TCK-20261002-CODE-HEALTH-TOOL-CONFIG`; later counts belong to the code-health snapshot.
 - **mypy, advisory today**: mypy is configured (`[tool.mypy]` in `pyproject.toml`) but runs
   non-blocking in `make typecheck-py` and CI, and five packages are excluded. Existing errors are held in

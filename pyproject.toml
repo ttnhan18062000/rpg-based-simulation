@@ -60,6 +60,9 @@ dev = [
     # Baseline filter for mypy (TCK-20261003-MYPY-BASELINE-ADVISORY): existing errors are held in
     # registries/mypy_baseline.txt, so only new ones are reported. Pinned exactly like the code-health tools.
     "mypy-baseline==0.7.4",
+    # Git hook runner for the opt-in `make install-prek-hooks` (TCK-20261003-PREK-GIT-HOOKS-OPT-IN); a single
+    # binary wheel. In `dev` so every CI job and the installer tests have it.
+    "prek==0.5.4",
 ]
 # Code-health tools (TCK-20261002-CODE-HEALTH-TOOL-CONFIG). Pinned exactly: a new release can
 # add or retune rules, which would change the measured baseline without a code change.

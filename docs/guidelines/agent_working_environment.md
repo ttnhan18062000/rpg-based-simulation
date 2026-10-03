@@ -174,6 +174,39 @@ Three advisory CI jobs report on a pull request; none of them can fail it during
 3. Locally: `make code-health` (ratchet), `make typecheck-py` (mypy through the baseline) and
    `python3 -m tools.code_health.sarif_feedback --changed FILE --out SARIF` (the SARIF the job would upload).
 
+### Git hooks (opt-in)
+
+Two optional hooks, installed only when someone runs `make install-prek-hooks`; nothing installs them
+automatically (no make target, script, CI step or session hook), and CI stays the real gate.
+
+- **What they do.** `pre-commit` (run by [prek](https://github.com/j178/prek), pinned in the `dev` group,
+  configured in `.pre-commit-config.yaml`): `code-health-ratchet` runs ruff on the staged `src/**/*.py` files
+  and rejects the commit only for a violation that is **new or above its row** in
+  `registries/code_health_exceptions.jsonl` (a commit touching only grandfathered code passes; it uses the
+  ratchet's own NEW / WORSE report); `uv-lock-check` runs `uv lock --check --offline` only when
+  `pyproject.toml` or `uv.lock` is staged (no network, ever). `post-commit` is the incremental knowledge reindex
+  (`tools/hooks/post-commit-reindex.sh`, a no-op unless docs/ or `agent-working/tickets/done/` changed and a
+  knowledge index exists). The check sees the **staged** content: prek stashes unstaged changes while the
+  hooks run and restores them afterwards.
+- **Install affects every worktree on this machine.** `.git/hooks` is the common directory shared by all
+  worktrees of this repository, so once anyone installs, the pre-commit hook runs on every commit in every
+  worktree, including ones with no project environment. The hooks therefore never block for a missing
+  environment: without ruff, without the registry, without `tools.code_health` or without `uv` they print one
+  visible `... skipped: ...` line and exit 0. Only a real new or worse violation (or a stale `uv.lock`) blocks.
+- **`make install-prek-hooks` never overwrites.** `post-commit` is installed only when absent (identical ->
+  no change; a different one is kept and reported). An existing foreign `pre-commit` hook is kept by prek as
+  `pre-commit.legacy` and still runs. Running it twice changes nothing. By contrast the older
+  `make install-hooks` **overwrites** `.git/hooks/post-commit` with `cp`; use `install-prek-hooks` unless you
+  want exactly that. `post-merge` (from `make setup-merge-drivers`) and every other hook are never touched.
+- **Bypass.** `git commit --no-verify` skips the hooks. Use it only with the owner's say-so (for example
+  owner-approved debt, or fixing the gate itself), never to get a new violation past the ratchet; CI runs the
+  same check advisory during the soak and will report it anyway.
+- **Uninstall.** `make uninstall-prek-hooks` removes prek's pre-commit shim (restoring a legacy hook, if
+  any) and removes `post-commit` only if it is byte-identical to the repository's reindex hook.
+- **Verify in a scratch clone, never here.** To try the hooks, `git clone --no-hardlinks` the repository into a
+  scratch directory and run the installer there (`python3 tools/hooks/install_git_hooks.py install --repo <clone>`);
+  installing in the main checkout changes the shared hooks of every session on the machine.
+
 ---
 
 ## Daily Workflow
