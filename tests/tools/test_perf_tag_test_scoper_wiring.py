@@ -101,7 +101,9 @@ def test_test_scoper_md_documents_the_same_rule():
     assert "performance" in text
     assert "tests/unit/perf/" in text
     assert "tests/perf/" in text
-    assert "docs/performance/perf_baseline_policy.md" in text
+    assert "tests/perf/test_perf_regression_baseline.py" in text
+    assert "docs/engine/performance_contract.md" in text
+    assert "PerfRegressionGate" not in text
 
 
 def test_test_scoper_md_rule_sits_in_scoping_rules_section():
