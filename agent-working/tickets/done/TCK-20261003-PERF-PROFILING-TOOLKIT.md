@@ -94,7 +94,7 @@ Add the profiling half of the performance management loop (`performance_optimiza
 - The planner session reviews one real output of each tool before this ticket closes
 
 ## Implementation Notes
-Hand-orchestrated by perf-implementer. Shared helpers in `tools/perf/_profiling_common.py`; `profile_tick.py` runs the kernel in a child under `py-spy record` (nonblocking by default) and keeps only stacks inside the measured-tick loop; `flag_attribution.py` reuses the child mode with a forced flag. Forcing a flag builds a new state with `dataclasses.replace` (never writes through the freeze) and wraps `FeatureFlagManager.get_flag_mode` in the child process only. py-spy lives only in the optional `perf` group of `pyproject.toml`.
+Hand-orchestrated by perf-implementer. Shared helpers in `tools/perf/_profiling_common.py`; `profile_tick.py` runs the kernel in a child under `py-spy record` (nonblocking by default) and keeps only stacks inside the measured-tick loop; `flag_attribution.py` reuses the child mode with a forced flag. Forcing a flag builds a new state with `dataclasses.replace` (never writes through the freeze) and wraps `FeatureFlagManager.get_flag_mode` in the child process only. py-spy lives only in the opt-in `profiling` dependency group of `pyproject.toml` (beside memray). It was first added as a separate `perf` group; after main replaced the `dev` extra with `[dependency-groups]` (#288) it was folded into the existing `profiling` group on perf-planner's request, so there is one opt-in profiling group.
 
 ## Test Summary
 `python3 -m pytest tests/tools/test_profiling_toolkit.py tests/tools/test_test_scope_coverage_static.py -q` -> 58 passed, 1 skipped without py-spy (the skipped end-to-end test passes with py-spy on PATH). Real runs of all three tools and a memray smoke run are recorded in the test plan; `git status` after them showed nothing outside ignored paths. perf-planner reviewed one real output of each tool and requested one change (`dataclasses.replace` instead of writing through the freeze), made and re-verified with a fresh `flag_attribution` run.
@@ -103,7 +103,7 @@ Hand-orchestrated by perf-implementer. Shared helpers in `tools/perf/_profiling_
 - tools/perf/_profiling_common.py, profile_tick.py, profile_diff.py, flag_attribution.py (new)
 - tests/tools/test_profiling_toolkit.py (new)
 - docs/guides/performance_profiling.md (new)
-- pyproject.toml (new optional `perf` group: py-spy)
+- pyproject.toml (py-spy added to the existing opt-in `profiling` dependency group)
 - tools/gate_checks/test_scope_coverage_static.py (four entries in `_TOOLS_PERF_BASENAME_MAP`)
 - tickets/todos/perf-evidence-inventories/ -> tickets/done/ (this file); stored_artifacts/; tickets/working_log.csv, docs/REGISTRY.yaml, agent-monitoring/ (closure bookkeeping)
 

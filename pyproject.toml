@@ -65,11 +65,8 @@ dev = [
 ]
 profiling = [
     "memray>=1.0.0",
-]
-# Sampling profiler for tools/perf/profile_tick.py (TCK-20261003-PERF-PROFILING-TOOLKIT). Opt-in on
-# purpose: `uv sync --group perf`. It is not in `dev`, so it is not in the requirements.txt export, and
-# CI does not install it. memray for `profile_tick.py --memory` is in the `profiling` group above.
-perf = [
+    # Sampling profiler for tools/perf/profile_tick.py (TCK-20261003-PERF-PROFILING-TOOLKIT). Opt-in
+    # with the rest of this group, so it is not in `dev` and not in the requirements.txt export.
     "py-spy>=0.3.14",
 ]
 

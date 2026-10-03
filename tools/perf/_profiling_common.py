@@ -40,8 +40,8 @@ METROPOLIS_WARNING = (
 
 # Install hints, named in the missing-binary message.
 INSTALL_HINTS = {
-    "py-spy": 'uv sync --group perf   (the opt-in `perf` dependency group in pyproject.toml)',
-    "memray": 'uv sync --group profiling   (memray is in the opt-in `profiling` group)',
+    "py-spy": 'uv sync --group profiling   (the opt-in `profiling` dependency group in pyproject.toml)',
+    "memray": 'uv sync --group profiling   (the same opt-in `profiling` group)',
 }
 
 # Metric counters recorded per tick as the "processed work" context for a profile.

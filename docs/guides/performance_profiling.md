@@ -51,10 +51,9 @@ context. Only samples taken inside the measured ticks are kept; import, setup an
 `--memory` runs the same child under `memray` and writes its flame graph (stamped with the header);
 the binary capture gets a `.provisional.txt` sidecar.
 
-Install: `uv sync --group perf` for py-spy (an opt-in dependency group in `pyproject.toml`; it is not in
-`dev`, so it is not in the `requirements.txt` export, and CI does not install it) and
-`uv sync --group profiling` for memray. When the binary is missing the tool exits with that message; it
-never falls back to another profiler.
+Install: `uv sync --group profiling`, the one opt-in dependency group in `pyproject.toml` for both py-spy
+and memray. It is not part of `dev`, so it is not in the `requirements.txt` export, and CI does not install
+it. When a binary is missing the tool exits with that message; it never falls back to another profiler.
 
 **Sampler overhead.** py-spy pauses the process at every sample by default, which slowed a tick roughly
 eightfold in the one sandbox run recorded for this ticket (about 235 ms unprofiled, 1,990 ms blocking,

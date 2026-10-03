@@ -161,7 +161,7 @@ class TestAttribution:
 class TestBinaryHandling:
     def test_missing_binary_message_names_the_install_command_and_forbids_substitution(self):
         msg = common.missing_binary_message("py-spy")
-        assert "uv sync --group perf" in msg and "No substitute profiler" in msg
+        assert "uv sync --group profiling" in msg and "No substitute profiler" in msg
         assert "--group profiling" in common.missing_binary_message("memray")
 
     def test_find_binary_explicit_env_and_absent(self, tmp_path, monkeypatch):
@@ -179,7 +179,7 @@ class TestBinaryHandling:
         done = subprocess.run([sys.executable, str(PERF / "profile_tick.py"), "--scenario", "idle",
                                "--py-spy", str(tmp_path / "absent"), "--out-dir", str(tmp_path / "o")],
                               capture_output=True, text=True, cwd=REPO_ROOT)
-        assert done.returncode == 2 and "uv sync --group perf" in done.stderr
+        assert done.returncode == 2 and "uv sync --group profiling" in done.stderr
         assert not (tmp_path / "o").exists()  # nothing is written when the profiler is missing
 
     def test_metropolis_selection_prints_the_known_defect_warning(self, tmp_path):
@@ -276,7 +276,7 @@ class TestReportRendering:
         assert "| a | 10.000 | 15.000 |" in text
 
 
-@pytest.mark.skipif(shutil.which("py-spy") is None, reason="py-spy is not installed (opt-in `perf` dependency group)")
+@pytest.mark.skipif(shutil.which("py-spy") is None, reason="py-spy is not installed (opt-in `profiling` dependency group)")
 def test_end_to_end_tiny_profile_with_py_spy(tmp_path):
     done = subprocess.run([sys.executable, str(PERF / "profile_tick.py"), "--scenario", "idle", "--entities", "20",
                            "--ticks", "4", "--warmup", "1", "--out-dir", str(tmp_path)],
