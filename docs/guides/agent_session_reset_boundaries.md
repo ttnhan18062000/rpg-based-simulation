@@ -33,7 +33,7 @@ propose a full `/clear`.
 | Process | HARD | SOFT | NEVER |
 |---|---|---|---|
 | PR lifecycle | Merged + synced. PR open, CI green, awaiting merge — only if the handover records PR#/branch. | — | CI still polling; conflict resolution in progress. |
-| Hand-orchestrated ticket | Finalize closed + pushed. | After Investigate/Plan, with `investigation.md`/`plan.md` written to `staging_artifacts/`. | Mid Implement/Test. |
+| Hand-orchestrated ticket | Finalize closed + pushed. | After Investigate/Plan, with `investigation.md`/`plan.md` written to `agent-working/staging_artifacts/`. | Mid Implement/Test. |
 | Formal `Workflow` run (`implement-ticket`, `implement-epic`, `create-tickets`, `investigate-simulation-result`, `simq-audit`, etc.) — the orchestrating session | Workflow finished, results reviewed and recorded. Phase agents already run in fresh contexts of their own — this row is about the orchestrator only. | — | While running. **Unknown, recorded as unknown, not assumed**: whether a background completion notice survives a `/clear`. |
 | Epic | Between children: each child closed + pushed, `SEQUENCE.md` updated. | — | Mid-child. |
 | Planning/design | Plan/tickets filed and handed off. | — | Mid decision thread. |

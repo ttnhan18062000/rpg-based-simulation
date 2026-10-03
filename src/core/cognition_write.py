@@ -8,7 +8,7 @@ REPLACE, not a per-subfield merge. Any phase that builds a new `CognitionModel` 
 tick-START snapshot (`entity.cognition`) instead of reading through whatever an earlier phase this
 same tick already staged will silently discard that earlier write the moment both phases touch the
 same entity in the same tick -- no error, just vanished data (the real bug this ticket investigates;
-see staging_artifacts/TCK-20260914-COGNITION-BUNDLE-SET-WHOLE-OBJECT-REPLACE-HAZARD/investigation.md
+see agent-working/staging_artifacts/TCK-20260914-COGNITION-BUNDLE-SET-WHOLE-OBJECT-REPLACE-HAZARD/investigation.md
 for the full writer enumeration and the structural-options evaluation).
 
 `read_through_cognition()` is the single, sanctioned way to obtain the correct base `CognitionModel`

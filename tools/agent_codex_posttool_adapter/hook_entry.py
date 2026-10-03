@@ -16,6 +16,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from tools.agent_codex_posttool_adapter.adapter import process_post_tool_use
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 
 _IDENTITY_ENV = {
@@ -66,7 +67,7 @@ def main(
         source_env = os.environ if env is None else env
         execution_id, ticket_id, run_id, phase, agent, seq_start = _identity_from_env(source_env)
         root = _ROOT if repo_root is None else Path(repo_root).resolve()
-        target_path = root / "agent-monitoring" / "tools.jsonl"
+        target_path = root / AGENT_MONITORING / "tools.jsonl"
         process_post_tool_use(
             raw_payload,
             target_path=target_path,

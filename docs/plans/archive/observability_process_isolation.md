@@ -11,7 +11,7 @@ tags: [observability, simulation-quality, process-isolation, broker-mode, hot-pa
 
 # Observability & SimQ Process Isolation — Requirements, Current State, Gaps
 
-Source proposal for the `obs-isolation` epic batch (`tickets/todos/obs-isolation/`). All claims below verified against code on 2026-07-02.
+Source proposal for the `obs-isolation` epic batch (`agent-working/tickets/todos/obs-isolation/`). All claims below verified against code on 2026-07-02.
 
 ---
 

@@ -63,7 +63,7 @@ SCORE_TOLERANCE_REL_PCT = 0.20
 # confirmed real-world single-draw variance exceeding the global default width.
 # The first two entries' values are reused verbatim from the corresponding
 # tests/unit/worldassembly/test_corpus_diversity.py `*_grade_stability` guard's own
-# `abs_floor` — see stored_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/
+# `abs_floor` — see agent-working/stored_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/
 # repro_sweep.md Section 8 for derivation. Section 8 shows both floors were widened
 # against independent single fresh-draw samples (not only 3-trial means: e.g. ECONOMY's
 # floor was set after two independent single-draw evaluate_simq.py runs, not a trial
@@ -77,7 +77,7 @@ SCORE_TOLERANCE_REL_PCT = 0.20
 # session) using the same 1.3x max-observed-deviation formula: max deviation 0.2459,
 # round(1.3 * 0.2459, 4) = 0.3197. The anchor is NOT re-centered (matches the ECONOMY
 # precedent, not the frontier_marches-NARRATIVE re-centered precedent) — see
-# staging_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE/investigation.md
+# agent-working/staging_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE/investigation.md
 # for the full 6-draw table and derivation.
 #
 # urban_political_seed123_1000t/SOCIAL: abs_floor=5.003 is derived from 11 independent
@@ -88,7 +88,7 @@ SCORE_TOLERANCE_REL_PCT = 0.20
 # default width of 3.5931). The max deviation across the combined 11 draws is 3.8485,
 # from one of the 3 historical draws: round(1.3 * 3.8485, 4) = 5.003. The anchor is NOT
 # re-centered (matches the ECONOMY/NARRATIVE precedent on this same anchor) — see
-# stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md
+# agent-working/stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md
 # for the full 8-draw table and combined-evidence derivation.
 #
 # urban_political_seed123_1000t/COGNITION: abs_floor=2.0435 is derived from 8 independent
@@ -98,7 +98,7 @@ SCORE_TOLERANCE_REL_PCT = 0.20
 # `decision_divergence_detected` event has no dedup gate and can refire every tick
 # (src/observability/event_extractor.py:477-496), so the floor bounds this session's
 # observed spikes but is not a hard ceiling on the mechanism's worst case — see
-# stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md
+# agent-working/stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md
 # Risks and Open Questions #1 for the full reasoning.
 SCORE_TOLERANCE_OVERRIDES: dict[tuple[str, str], float] = {
     ("urban_political_seed123_1000t", "ECONOMY"): 0.2878,

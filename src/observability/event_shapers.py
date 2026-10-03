@@ -5,7 +5,7 @@ Alternative to EventExtractor's post-tick snapshot-diff model: shapers here deri
 directly from `prior_state` + `update` (the typed, already-causally-tagged records domain systems
 produce), the same two objects already available before ApplyPath.apply_generation() ever runs.
 No post-mutation `current_state` is read. See
-stored_artifacts/TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC/investigation.md's "Design
+agent-working/stored_artifacts/TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC/investigation.md's "Design
 refinement" section for the full reasoning.
 
 SHADOW mode only in this ticket: shapers construct events, but nothing here delivers them to the
@@ -691,7 +691,7 @@ class StrategyShaper:
     decision_divergence_detected.
 
     Two source mechanisms, both confirmed against `event_extractor.py:295-563`'s existing
-    behavior (see stored_artifacts/TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY/investigation.md):
+    behavior (see agent-working/stored_artifacts/TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY/investigation.md):
 
     1. `EntityUpdate.property_updates` (a generic per-tick key/value bag) and
        `EntityUpdate.self_model_bundle_set` — read directly for `route_selected`/
@@ -1892,7 +1892,7 @@ AGENCY_SHAPER_REGISTRY: dict[str, list[EventShaper]] = {
 # build, since event_extractor.py's branches for these new domains weren't flag-gated at that
 # point either. Confirmed as a real bug (self_model_updated/cooperation_event double-firing) via a
 # real kernel run before this separate flag/registry split was added — see
-# stored_artifacts/TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY/investigation.md.
+# agent-working/stored_artifacts/TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY/investigation.md.
 PHASE2_SHAPER_REGISTRY: dict[str, list[EventShaper]] = {
     "strategy": [StrategyShaper()],
     "progression": [ProgressionShaper()],

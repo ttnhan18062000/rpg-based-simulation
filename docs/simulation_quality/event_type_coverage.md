@@ -47,7 +47,7 @@ own pre-existing, already-disclosed "does NOT generalize" finding for this exact
 independently re-confirmed at 1.5-2.5x that test's own 200-tick budget and a second seed, not just
 inherited. Since no shipped corpus fires it, built a deterministic before/after proof through the
 real `QualityHub`/`InformationScorer` instead (`route_new_query_isolated_calibration.py`,
-`stored_artifacts/TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS/`), replaying the real,
+`agent-working/stored_artifacts/TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS/`), replaying the real,
 engine-captured envelope shape: INFORMATION raw_score 0.0 → 10.0, grade C → S — a real, non-flat,
 fully attributable delta proving the wiring is correct and will register the moment any corpus
 profile actually routes Branch 3. Also ran the epic's own idea-level completeness cross-check
@@ -212,7 +212,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `quest_completed` | campaigns/runner | NarrativeScorer | 0 | Campaign-gated; also reachable via quest_event conditional translation |
 | `scenario_objective_completed` | engine/scenario_runtime | NarrativeScorer | 0 | Scenario-gated (see §4) |
 | `scenario_stalled` | engine/scenario_runtime | NarrativeScorer | 0 | Scenario-gated (see §4) |
-| `route_new_query` | event_extractor / event_shapers (StrategyShaper) | InformationScorer | 0 | `prop.last_routed_query_tick == prior_state.tick` — TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE. Emitted by both `event_extractor.py` and `event_shapers.py` (StrategyShaper) since that ticket but never registered with `InformationScorer.EVENT_TYPES` or this table until `TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES` found the gap. **Calibrated 2026-09-06 (`TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS`):** 0 occurrences confirmed in 2 fresh real runs of `urban_political_selfmodel_execution_probe` (seed 42/500t, seed 137/300t) — matches this table's own pre-existing `test_urban_political_selfmodel_execution_isolated_grade_anchor` disclosure. No shipped corpus profile fires it; wiring proven correct via an isolated `QualityHub` replay instead (raw_score 0.0 → 10.0, grade C → S) — see `stored_artifacts/TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS/route_new_query_isolated_calibration.py`. |
+| `route_new_query` | event_extractor / event_shapers (StrategyShaper) | InformationScorer | 0 | `prop.last_routed_query_tick == prior_state.tick` — TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE. Emitted by both `event_extractor.py` and `event_shapers.py` (StrategyShaper) since that ticket but never registered with `InformationScorer.EVENT_TYPES` or this table until `TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES` found the gap. **Calibrated 2026-09-06 (`TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS`):** 0 occurrences confirmed in 2 fresh real runs of `urban_political_selfmodel_execution_probe` (seed 42/500t, seed 137/300t) — matches this table's own pre-existing `test_urban_political_selfmodel_execution_isolated_grade_anchor` disclosure. No shipped corpus profile fires it; wiring proven correct via an isolated `QualityHub` replay instead (raw_score 0.0 → 10.0, grade C → S) — see `agent-working/stored_artifacts/TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS/route_new_query_isolated_calibration.py`. |
 
 ### §1.2 Via `_TRANSLATE_SIMPLE` (one-to-one remaps)
 

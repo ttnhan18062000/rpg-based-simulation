@@ -305,13 +305,13 @@ docs-registry: ## Regenerate docs/REGISTRY.yaml from frontmatter
 docs-registry-check: ## Report whether docs/REGISTRY.yaml is stale relative to a fresh regeneration
 	python3 tools/generate_registry.py --check
 
-working-log-duplicate-check: ## Report duplicate ticket_ids in tickets/working_log.csv, non-blocking
+working-log-duplicate-check: ## Report duplicate ticket_ids in agent-working/tickets/working_log.csv, non-blocking
 	python3 tools/gate_checks/working_log_duplicate_check.py
 
-working-log-content-duplicate-check: ## Ratcheted check for duplicate (ticket_id, title) rows in tickets/working_log.csv
+working-log-content-duplicate-check: ## Ratcheted check for duplicate (ticket_id, title) rows in agent-working/tickets/working_log.csv
 	python3 tools/gate_checks/working_log_content_duplicate_check.py
 
-duplicate-run-record-check: ## Ratcheted check for genuinely-accidental duplicate agent-monitoring/data/*/runs.jsonl records
+duplicate-run-record-check: ## Ratcheted check for genuinely-accidental duplicate agent-working/agent-monitoring/data/*/runs.jsonl records
 	python3 tools/gate_checks/duplicate_run_record_check.py
 
 sidecar-attribution-coverage-check: ## Report tools.jsonl run_id attribution coverage (non-blocking; see module docstring)
@@ -445,10 +445,10 @@ agent-monitoring-weight-check: ## Required check before proposing a cost_proxy.p
 agent-monitoring-epic-staleness: ## Report open epics with no recent child-ticket activity
 	python3 tools/agent-monitoring/epic_staleness_check.py
 
-planning-doc-staleness-check: ## Report docs/plans/ claims (status: idea, 'ready, schedule later') that a tickets/done/ ticket already shipped
+planning-doc-staleness-check: ## Report docs/plans/ claims (status: idea, 'ready, schedule later') that a agent-working/tickets/done/ ticket already shipped
 	python3 tools/gate_checks/planning_doc_staleness_check.py
 
-status-drift-check: ## Report ## Status body-text drift in tickets/done/ and lowercase final_status in runs.jsonl
+status-drift-check: ## Report ## Status body-text drift in agent-working/tickets/done/ and lowercase final_status in runs.jsonl
 	python3 tools/gate_checks/status_drift_check.py
 
 codebase-health-baseline: ## Print a live LoC/churn/dependency baseline snapshot (on-demand only — not CI)
@@ -457,7 +457,7 @@ codebase-health-baseline: ## Print a live LoC/churn/dependency baseline snapshot
 codebase-health-impact: ## Print a change-impact report for a source path (pass ARGS="src/engine/pipeline.py") (on-demand only — not CI)
 	python3 tools/code_health_impact.py $(ARGS)
 
-codebase-health-snapshot: ## Append a codebase-health metrics snapshot to agent-monitoring/codebase_health_history.jsonl (on-demand only — not CI)
+codebase-health-snapshot: ## Append a codebase-health metrics snapshot to agent-working/agent-monitoring/codebase_health_history.jsonl (on-demand only — not CI)
 	python3 tools/codebase_health_snapshot.py snapshot $(ARGS)
 
 codebase-health-scorecard: ## Print a per-dimension trend scorecard over codebase-health history (on-demand only — not CI)
@@ -476,7 +476,7 @@ parity-index: ## Rebuild the derived read-only SQLite index over docs/parity_led
 tools-orphan-check: ## Report tools/ files with no live cross-reference (report-only) (on-demand only — not CI)
 	python3 tools/gate_checks/tools_orphan_check.py
 
-parity-index-check: ## Report whether parity-index/parity.db is stale relative to live docs/parity_ledger/*.yaml
+parity-index-check: ## Report whether agent-working/.index/parity-index/parity.db is stale relative to live docs/parity_ledger/*.yaml
 	python3 tools/parity_index.py check-staleness
 
 simq-long-run-lifecycle-observation: ## Run the 5000-tick combined SimQ + entity-lifecycle observation across the curated 6-world sample
@@ -501,8 +501,8 @@ knowledge-index-update: ## Incremental reindex — only re-embeds changed/new fi
 	  tools/knowledge_search.py build --incremental
 
 kgmcp-bootstrap: parity-index knowledge-index ## Rebuild all local, gitignored Knowledge Gateway MCP caches for a fresh environment (see docs/guidelines/agent_working_environment.md)
-	@echo "parity-index/parity.db and knowledge-index/{knowledge.db,bm25.pkl,embeddings_cache.pkl} rebuilt."
-	@echo "knowledge-index/retrieval_cache.db (KGMCP Level 1/2 cache) has no bootstrap step -- it"
+	@echo "agent-working/.index/parity-index/parity.db and agent-working/.index/knowledge-index/{knowledge.db,bm25.pkl,embeddings_cache.pkl} rebuilt."
+	@echo "agent-working/.index/knowledge-index/retrieval_cache.db (KGMCP Level 1/2 cache) has no bootstrap step -- it"
 	@echo "self-initializes empty on the first real knowledge_context/knowledge_status call and warms"
 	@echo "up from there. See docs/guidelines/agent_working_environment.md for full detail."
 
@@ -520,7 +520,7 @@ search-server: ## FALLBACK ONLY — start search server directly via uvicorn (ex
 	@echo "[search-server] Fallback mode — use make search-server-docker for persistent deployment"
 	uvicorn tools.search_server:app --host 127.0.0.1 --port 8765 --reload
 
-install-hooks: ## Install git hooks (post-commit incremental reindex when docs/ or tickets/done/ changed)
+install-hooks: ## Install git hooks (post-commit incremental reindex when docs/ or agent-working/tickets/done/ changed)
 	cp tools/hooks/post-commit-reindex.sh .git/hooks/post-commit
 	chmod +x .git/hooks/post-commit
 	@echo "[hooks] post-commit hook installed"

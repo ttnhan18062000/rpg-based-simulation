@@ -34,8 +34,8 @@ def _new_ticket_scope_text() -> str:
 
 def test_new_ticket_scope_step_1_scans_todos_via_the_scanner():
     step_1 = _new_ticket_scope_text()
-    assert "tickets/todos/" in step_1, (
-        "new-ticket Scope Step 1 no longer mentions tickets/todos/ — "
+    assert "agent-working/tickets/todos/" in step_1, (
+        "new-ticket Scope Step 1 no longer mentions agent-working/tickets/todos/ — "
         "see TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER"
     )
     assert "open_ticket_overlap.py" in step_1, (
@@ -46,7 +46,7 @@ def test_new_ticket_scope_step_1_scans_todos_via_the_scanner():
 
 def test_new_ticket_scope_step_1_routes_todos_hits_to_related_context_not_conflicts():
     step_1 = _new_ticket_scope_text()
-    assert "tickets/todos/ scanner hit always goes to related_context, never conflicts" in step_1
+    assert "agent-working/tickets/todos/ scanner hit always goes to related_context, never conflicts" in step_1
 
 
 # ---------------------------------------------------------------------------

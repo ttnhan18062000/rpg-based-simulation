@@ -2,12 +2,12 @@
 
 Covers test_plan.md item 8 (`test_generator_output_matches_representation_schema_shape`), run
 against `tmp_path` per Review-phase Fix B — this test only checks output shape, so it must not
-rewrite the committed `agent-orchestration/rendered/claude-adapter.yaml` as a side effect. The
+rewrite the committed `agent-working/agent-orchestration/rendered/claude-adapter.yaml` as a side effect. The
 zero-git-diff-under-`.claude/` proof lives entirely in test_claude_containment.py (Step 8), the one
 test that legitimately runs the generator against the real repo root.
 
 Also covers the generator's own write-guard (refuses writes outside
-`agent-orchestration/rendered/` without the explicit opt-in flag), mirroring
+`agent-working/agent-orchestration/rendered/` without the explicit opt-in flag), mirroring
 tests/agent_orchestration/test_validator_no_network_calls.py's equivalent guard tests for the
 predecessor package's generator.
 """

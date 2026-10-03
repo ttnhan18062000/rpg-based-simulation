@@ -14,7 +14,7 @@ string-constant scan, a new sibling instance of tools/agent_replay's own guard).
 
 Reads ONLY: the fixture YAML at --fixture (read-only) and the tools/agent_replay/*,
 tools/gate_checks/*, tools/tag_registry.py Python source (import, read-only). Writes ONLY the
-JSON result file at --out — never any path under tickets/ or agent-monitoring/.
+JSON result file at --out — never any path under agent-working/tickets/ or agent-working/agent-monitoring/.
 """
 from __future__ import annotations
 

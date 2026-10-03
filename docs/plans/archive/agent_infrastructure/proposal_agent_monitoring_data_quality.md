@@ -11,8 +11,8 @@ tags: [idea, agent-infrastructure, observability, agent-monitoring, data-quality
 
 # Proposal: Agent-monitoring data-quality epic — normalize, cover, flag, and stop re-deriving the same signals by hand
 
-**Archived:** 2026-07-19 — all five concerns shipped the same day, via `tickets/todos/agent-monitoring-data-quality/`
-(all now `tickets/done/`): `TCK-20260719-PHASE-AGENT-CASE-FOLD` (concern 1, casing-variant
+**Archived:** 2026-07-19 — all five concerns shipped the same day, via `agent-working/tickets/todos/agent-monitoring-data-quality/`
+(all now `agent-working/tickets/done/`): `TCK-20260719-PHASE-AGENT-CASE-FOLD` (concern 1, casing-variant
 normalization in `generate_retro.py`, new `phase_status_distribution` report section), `TCK-20260719-COST-PROXY-WRITE-PATH`
 (concern 2 — investigation found the coverage question was **not** a pure audit: `duration_s` is
 already resolved at 99.13% coverage, but `cost_proxy_score`/`tool_call_count` had a real, ongoing
@@ -35,7 +35,7 @@ recalibrate `cost_proxy_score`'s shipped weights against real local token-usage 
 **disciplined negative for direct weight adoption** (the only fit with real signal comes from a
 domain-mismatched population — whole-session totals, not per-subagent/per-phase scoring), but along
 the way surfaced — and, via `experiments/audit_expansion/PROPOSAL.md`'s independent D25 dimension,
-corroborated — several real, fixable data-quality gaps in `agent-monitoring/*.jsonl` that don't
+corroborated — several real, fixable data-quality gaps in `agent-working/agent-monitoring/*.jsonl` that don't
 require solving the platform-blocked telemetry problem at all. This proposal scopes those into a
 real epic, and explicitly keeps weight recalibration itself **out** of the actionable set until
 better ground-truth data exists.
@@ -55,13 +55,13 @@ better ground-truth data exists.
   `edit_count` was the strongest single predictor (r=0.91) — noted as a weak, unconfirmed prior that
   `W_EDIT` may be under-weighted relative to `W_AGENT` in the shipped formula, not adopted.
 - The validation-gate script (`validate_rank_order.py`) proved real, material rank-order sensitivity
-  to weight choice on the actual 928 `(run_id, seq)` groups in `agent-monitoring/tools.jsonl` today
+  to weight choice on the actual 928 `(run_id, seq)` groups in `agent-working/agent-monitoring/tools.jsonl` today
   (Spearman 0.76 phase / 0.85 agent, `Plan`/`planner` moving 7 ranks) — meaning the *tooling* to judge
   a future candidate weight change is now real and reusable, even though this pass's specific
   candidate weights aren't trustworthy enough to ship.
 
 **From `experiments/audit_expansion/PROPOSAL.md`'s D25 (Pipeline Throughput & Rework Economics,
-computed directly from live `agent-monitoring/events.jsonl`/`runs.jsonl`, 2,901 events / 609 runs /
+computed directly from live `agent-working/agent-monitoring/events.jsonl`/`runs.jsonl`, 2,901 events / 609 runs /
 51,549 tool calls, 2026-07-14) — independent corroborating evidence, not re-derived here:**
 - **F1 — phase/agent vocabulary fragmented 2-3 ways per label**: `Verify`/`verify`/`VERIFY`,
   `Implement`/`implement`/`IMPLEMENT`, and 6 more phases each split into separate buckets — this
@@ -88,7 +88,7 @@ totals — neither of which this epic's concerns below require.
 
 ## Architectural constraints (carry forward from prior agent-monitoring work)
 
-- `agent-monitoring/*.jsonl` stays append-only, hook-written — no change to the write path's
+- `agent-working/agent-monitoring/*.jsonl` stays append-only, hook-written — no change to the write path's
   synchronous, must-never-fail-the-workflow guarantee (CLAUDE.md hard rule). Every concern below is
   a **read-time** normalization/reporting change, or a **going-forward coverage audit**, never a
   historical backfill (matching this subsystem's established no-backfill precedent, e.g.
@@ -97,7 +97,7 @@ totals — neither of which this epic's concerns below require.
   `_resolve_status()`/`_is_legacy_event()`/`_is_gate_fail()` already occupy — extend that
   established normalization point, don't invent a second one. Cross-check against
   `docs/plans/agent_infrastructure/idea_agent_monitoring_derived_index.md` (SCHEDULED, 4 draft
-  tickets already queued in `tickets/todos/agent-monitoring-derived-index/`) before touching this —
+  tickets already queued in `agent-working/tickets/todos/agent-monitoring-derived-index/`) before touching this —
   that idea's `build_index.py` is explicitly designed to centralize exactly this kind of
   once-per-reader-duplicated normalization logic; if its first ticket (`TCK-20260713-MONITORING-SQLITE-INDEX`)
   lands before this epic's normalization concern is scoped, the normalization may belong in the
@@ -105,10 +105,10 @@ totals — neither of which this epic's concerns below require.
   sequencing decision for Investigate, not assumed here.
 - `tools/agent-monitoring/cost_proxy.py`'s own module docstring is the established place this
   subsystem records calibration provenance ("weights... sized from the real aggregate distribution
-  of `agent-monitoring/tools.jsonl`... not guessed") — any doc update recording this experiment's
+  of `agent-working/agent-monitoring/tools.jsonl`... not guessed") — any doc update recording this experiment's
   findings should extend that docstring's spirit, not create a disconnected second record.
 - `experiments/cost_proxy_calibration/validate_rank_order.py` was written against real
-  `agent-monitoring/tools.jsonl`/`events.jsonl` already (not a fixture) — promoting it should
+  `agent-working/agent-monitoring/tools.jsonl`/`events.jsonl` already (not a fixture) — promoting it should
   preserve that real-data default while still allowing tests to exercise it against a `tmp_path`
   fixture, mirroring how every other `tools/agent-monitoring/*.py` module is tested.
 
@@ -159,12 +159,12 @@ totals — neither of which this epic's concerns below require.
   deferred" above.
 - Solving the subagent-token-telemetry platform-blocked gap itself — not newly investigated here,
   only reconfirmed.
-- The SQLite derived-index work itself (`tickets/todos/agent-monitoring-derived-index/`'s 4 already-
+- The SQLite derived-index work itself (`agent-working/tickets/todos/agent-monitoring-derived-index/`'s 4 already-
   scheduled tickets) — this proposal only asks Investigate to check sequencing against it, not to
   duplicate or re-scope it.
 - Backfilling historical `duration_s`/`cost_proxy_score`/normalized-phase data — append-only,
   no-backfill precedent holds throughout.
-- Any UI/dashboard change — this proposal is about the underlying `agent-monitoring/*.jsonl` data
+- Any UI/dashboard change — this proposal is about the underlying `agent-working/agent-monitoring/*.jsonl` data
   and its CLI/report consumers, not the Agent Ops Dashboard's Stats tab (which already consumes
   whatever `generate_retro.py` computes, per `TCK-20260718-RETRO-STATS-REFACTOR`, and would benefit
   from this epic's fixes automatically without needing its own ticket).

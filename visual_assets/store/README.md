@@ -1,6 +1,6 @@
 # visual_assets/store — asset store logic (not implemented)
 
-**Status: skeleton only. No store logic exists yet; see `tickets/todos/visual-asset-foundation/SEQUENCE.md`
+**Status: skeleton only. No store logic exists yet; see `agent-working/tickets/todos/visual-asset-foundation/SEQUENCE.md`
 for the child tickets that build it, in order.**
 
 This package will hold the producer-neutral store: typed records (`contracts/`), identities, intake into

@@ -18,7 +18,7 @@ unlayered CSS reset silently zeroing Tailwind padding utilities app-wide, not a 
 `TCK-20260717-TICKET-TITLE-PARSE-FIX` (#4, Ticket/Title duplication — backend ingest was returning
 `ticket_id` as the title for every row), `TCK-20260717-DASHBOARD-RESPONSIVE-LAYOUT` (#5, responsive
 header + Gantt tooltip), `TCK-20260717-TICKETS-TABLE-PAGINATION` (#6, table pagination). All in
-`tickets/done/`. This document is the historical record of the findings as originally reproduced.
+`agent-working/tickets/done/`. This document is the historical record of the findings as originally reproduced.
 
 **Maturity: SHIPPED** — found by driving the shipped dashboard
 (`make dashboard-serve`) with a headless browser across all three views

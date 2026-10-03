@@ -85,7 +85,7 @@ regression); these worlds add entity-count/region-count/module-family diversity 
 > with `KeyError: Resource not found in ResourceRegistry: STONE` (a pre-existing, unrelated bug in
 > `src/world/ecology.py`'s dynamic resource-node generation, confirmed via `git stash` bisection to
 > reproduce identically with and without this ticket's content changes — see Implementation Notes
-> in `tickets/done/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS.md`). `simq_routing_test`'s 3 anchor
+> in `agent-working/tickets/done/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS.md`). `simq_routing_test`'s 3 anchor
 > entries are left unchanged (not silently marked as verified); a follow-up ticket is recommended
 > for the `ResourceRegistry` gap.
 
@@ -798,7 +798,7 @@ were the only pillars still within band+tolerance.
 
 Five worlds that previously had zero calibration-corpus anchor entries were recompiled (picking up
 the Step 1 hazard-kind fixes), re-verified for population stability (>=60% alive floor over 300
-ticks at seed 42 — see `stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/investigation.md`
+ticks at seed 42 — see `agent-working/stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/investigation.md`
 Finding 3 for the pre-fix collapse pattern this guards against), and anchored at 3 seeds x 200t
 each. None of the four flag-gated pillars (AGENCY/FACTION/INFORMATION/SOCIAL) are reachable by
 these worlds by design (out of scope for this ticket) — uniform C is expected and correct, not a
@@ -1255,7 +1255,7 @@ shows tick 50 now at 42/44 (95.5%, up from 38/44 pre-fix — the 4 `arcane_circl
 die immediately) and the population still narrows late in the run (tick 800: 68.2%, tick 900:
 56.8%, tick 1000: 34.1%). The late-tick (roughly tick 740-860 onward) erosion documented above is
 **not** primarily caused by the 4 `moon_cave` entities — the investigation
-(`stored_artifacts/TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE/investigation.md`,
+(`agent-working/stored_artifacts/TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE/investigation.md`,
 Root cause 3) traced it to the engine's documented, wall-clock-dependent tick-budget
 watchdog/emergency-throttle (`docs/engine/kernel.md` §"Emergency Throttling"), which drops
 different entities' resolution work depending on real compute timing, not the deterministic seed —
@@ -1314,7 +1314,7 @@ one place rather than patching five scattered headers. `distinct_populated_facti
 `entity.properties["faction_id"]` values actually assigned to a compiled entity (not the static
 16-entry `AuthoritativeState.factions` catalog, which is constant across all worlds and therefore
 not a meaningful per-world signal on its own — see
-`staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2).
+`agent-working/staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2).
 
 | World | Seed | Entities | Regions | Resource Nodes | Buildings | Quests | Distinct Populated Factions |
 |---|---|---|---|---|---|---|---|
@@ -1604,7 +1604,7 @@ the same stasis pattern `simq_routing_test_seed456` hit pre-fix.
 Three new **stress-tier** worlds (per `docs/simulation_quality/corpus_tier_taxonomy.md`'s
 classification: justified by scale/shape alone, not by exercising a new gated mechanic) fill the
 corpus's three named scale-diversity gaps (§2 of the epic-scoping investigation doc — path no
-longer resolves, see `tickets/done/TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING.md`): a
+longer resolves, see `agent-working/tickets/done/TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING.md`): a
 many-factions/small-map world (gap 1), a resource-saturated/small-map world (gap 2), and a
 large-scale FACTION/INFORMATION world (gap 3). All 3 are built entirely from existing
 `data/content/world_modules/` catalog content — no new module was authored — and all 3 compiled
@@ -1809,7 +1809,7 @@ and the pre-existing `test_resource_opportunities_goblin_camp_and_haunted_battle
 
 ## Long-Run Hot-Pillar Anchors (TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS)
 
-**Single-seed (seed42) evidence** — see `staging_artifacts/TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS/
+**Single-seed (seed42) evidence** — see `agent-working/staging_artifacts/TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS/
 plan.md`'s seed-count rationale for why this ticket departs from the `dungeon_crawl`/`urban_political`
 3-seed convention: this is hypothesis-testing evidence, not a production regression-guard expansion,
 and `evaluate_simq.py --full` re-runs every anchored key on every future invocation, so extra seeds
@@ -1950,7 +1950,7 @@ grade_anchors.json` had been captured from a single calibration run. This sectio
 re-verifies all 18 keys, 3 independent same-seed trials each, via
 `tools/calibrate_simq.py` (real, throttled `Kernel`, no `audit_mode`), same machine,
 back-to-back. Full per-trial per-pillar transcription lives in
-`staging_artifacts/TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY/raw_calibration_sweep.md`
+`agent-working/staging_artifacts/TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY/raw_calibration_sweep.md`
 (the source this section's tables are drawn from).
 
 **Result: all 18/18 keys are `stable`.** Zero keys required conversion to a
@@ -2335,7 +2335,7 @@ reconcile against that ticket's weight-collision fix — 4 COGNITION anchors mat
 `decision_divergence_detected`'s F6-class missing-dedup-gate signature, plus 10 anchors
 across SOCIAL/COMBAT/PROGRESSION/NARRATIVE/ECONOMY not previously proven F6-class. This
 ticket ran a controlled idle-vs-induced-load repro for each of the 14 independently
-(`staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md`, 2
+(`agent-working/staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md`, 2
 idle repeats + 2x/4x core-oversubscription induced load per anchor, real throttled
 `Kernel`, no `audit_mode`).
 
@@ -2642,7 +2642,7 @@ This closes the SOCIAL follow-up Part 4 named (`docs/parity_ledger/
 infrastructure.yaml::INFRA-272`'s `RESOLVED 2026-07-16
 (TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP)` paragraph); `INFRA-273` was also
 updated with a cross-reference for the new COGNITION-mechanism-1 evidence this sweep
-surfaced. See `stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/
+surfaced. See `agent-working/stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/
 investigation.md` for the full derivation detail.
 
 ## FACTION Coverage Closure — Phase 3 (TCK-20260710-SIMQ-DEPTH-FACTION)
@@ -2793,7 +2793,7 @@ not provisional.
 
 See `docs/parity_ledger/infrastructure.yaml::INFRA-260` (support_boundary addition) and
 `::INFRA-266` (new split-verdict entry) for the parity-ledger record, and
-`tickets/todos/simq-roadmap-phase4-depth-cognition/TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE.md`
+`agent-working/tickets/todos/simq-roadmap-phase4-depth-cognition/TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE.md`
 for the scoped follow-up fixing the 4 routing-half points.
 
 ---
@@ -2941,7 +2941,7 @@ the anomaly's raw_score *magnitude* but not its *event_count* jump; that finding
 as `TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION` and is out of scope here.)
 
 **Controlled repro** (full data:
-`staging_artifacts/TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM/repro_sweep.md`): drove
+`agent-working/staging_artifacts/TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM/repro_sweep.md`): drove
 `urban_political` seed 123, 500 ticks, via the real throttled `Kernel` (no `audit_mode`), two idle
 repeats and two escalating induced-load levels (multiprocessing busy-loop pool oversubscribing the
 4-core test machine 2x and 4x):

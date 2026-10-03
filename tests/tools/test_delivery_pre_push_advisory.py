@@ -1,6 +1,6 @@
 """Tests for tools/delivery/pre_push_advisory_hook.py (TCK-20260924-DELIVERY-PRE-PUSH-ADVISORY).
 
-One section per Acceptance Criterion, per staging_artifacts/TCK-20260924-DELIVERY-PRE-PUSH-ADVISORY/
+One section per Acceptance Criterion, per agent-working/staging_artifacts/TCK-20260924-DELIVERY-PRE-PUSH-ADVISORY/
 test_plan.md. Checks A/B use a FakeRunner; Check C (AC6) uses a real throwaway git repo, since a
 faked-output fixture cannot prove the ancestor-vs-content distinction is real.
 """
@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from tools.delivery import pre_push_advisory_hook as hook
+from tools.agent_working_paths import TICKETS
 
 
 def _write_ticket(root: Path, ticket_id: str) -> Path:
@@ -90,8 +91,8 @@ def test_matcher_regex_against_measured_corpus_shapes():
 # ---------------------------------------------------------------------------
 
 def test_all_clear_yields_no_findings(tmp_path):
-    tickets_root = tmp_path / "tickets"
-    tickets_root.mkdir()
+    tickets_root = tmp_path / TICKETS
+    tickets_root.mkdir(parents=True)
     _write_ticket(tickets_root, "TCK-20260924-EXAMPLE")
     runner = FakeRunner([
         _log_rule(["abc1234\tTCK-20260924-EXAMPLE: do the thing"]),
@@ -107,8 +108,8 @@ def test_all_clear_yields_no_findings(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_commit_with_no_ticket_id_is_reported(tmp_path):
-    tickets_root = tmp_path / "tickets"
-    tickets_root.mkdir()
+    tickets_root = tmp_path / TICKETS
+    tickets_root.mkdir(parents=True)
     runner = FakeRunner([_log_rule(["abc1234\tjust a fix, no ticket"])])
     findings = hook.check_commit_subjects(run_command=runner, tickets_root=tickets_root)
     assert len(findings) == 1
@@ -117,8 +118,8 @@ def test_commit_with_no_ticket_id_is_reported(tmp_path):
 
 
 def test_commit_with_ticket_id_but_no_file_is_a_distinct_finding(tmp_path):
-    tickets_root = tmp_path / "tickets"
-    tickets_root.mkdir()
+    tickets_root = tmp_path / TICKETS
+    tickets_root.mkdir(parents=True)
     runner = FakeRunner([_log_rule(["def5678\tTCK-20260924-GHOST: does not exist"])])
     findings = hook.check_commit_subjects(run_command=runner, tickets_root=tickets_root)
     assert len(findings) == 1
@@ -128,7 +129,7 @@ def test_commit_with_ticket_id_but_no_file_is_a_distinct_finding(tmp_path):
 
 
 def test_ticket_moved_to_done_mid_branch_not_reported_missing(tmp_path):
-    tickets_root = tmp_path / "tickets"
+    tickets_root = tmp_path / TICKETS
     done_dir = tickets_root / "done"
     done_dir.mkdir(parents=True)
     _write_ticket(done_dir, "TCK-20260924-MOVED")
@@ -142,7 +143,7 @@ def test_ticket_moved_to_done_mid_branch_not_reported_missing(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_dirty_shard_is_reported():
-    runner = FakeRunner([_status_rule([" M agent-monitoring/data/2026-W39/tools.jsonl"])])
+    runner = FakeRunner([_status_rule([" M agent-working/agent-monitoring/data/2026-W39/tools.jsonl"])])
     findings = hook.check_monitoring_shard_staged(run_command=runner)
     assert len(findings) == 1
     assert "tools.jsonl" in findings[0]
@@ -232,11 +233,11 @@ def test_branch_merely_behind_main_is_not_flagged(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_exit_code_zero_for_every_check_combination(tmp_path, monkeypatch):
-    tickets_root = tmp_path / "tickets"
-    tickets_root.mkdir()
+    tickets_root = tmp_path / TICKETS
+    tickets_root.mkdir(parents=True)
     runner = FakeRunner([
         _log_rule(["abc1234\tno ticket here"]),
-        _status_rule([" M agent-monitoring/data/2026-W39/tools.jsonl"]),
+        _status_rule([" M agent-working/agent-monitoring/data/2026-W39/tools.jsonl"]),
         _revlist_rule(0),
     ])
     findings = hook.run_all_checks(run_command=runner, tickets_root=tickets_root)

@@ -11,7 +11,7 @@ tags: [ai, codex, workflows, hooks, agent-monitoring]
 
 ## Requested review
 
-Please review the ticket batch in `tickets/todos/codex-runtime-activation/`, created from
+Please review the ticket batch in `agent-working/tickets/todos/codex-runtime-activation/`, created from
 `current_codex_runtime_status_and_activation_plan.md` using the create-tickets workflow.
 
 The proposed sequence is intentionally gated:

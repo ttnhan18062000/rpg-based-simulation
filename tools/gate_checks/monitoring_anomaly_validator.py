@@ -1,4 +1,4 @@
-"""Aggregate coherence validator for `agent-monitoring/data/*` (TCK-20260915-MONITORING-ANOMALY-VALIDATOR,
+"""Aggregate coherence validator for `agent-working/agent-monitoring/data/*` (TCK-20260915-MONITORING-ANOMALY-VALIDATOR,
 child of TCK-20260915-MONITORING-ANOMALY-DETECTION-EPIC, scoped LAST per the epic's own instruction
 so it encodes tickets 1-7's confirmed causes, not this ticket's own original hypotheses).
 
@@ -56,7 +56,7 @@ fails on missing ones" this ticket's own Title asks for -- rather than five/six 
 Mirrors the batch's own `check_*()` shape: `List[dict]` (`{"status": "PASS"|"FAIL", "evidence":
 "..."}`), `MARKER:` + `json.dumps(result)` stdout contract in `__main__`. Reproducible from the raw
 JSONL shards directly (via `generate_retro._load_runs_and_events()`/`_load_source()`), never from
-`agent-monitoring-index/monitoring.db`, which goes stale (see `generate_retro.py`'s own warning) --
+`agent-working/.index/agent-monitoring-index/monitoring.db`, which goes stale (see `generate_retro.py`'s own warning) --
 per this ticket's own Implementation Notes.
 """
 import json

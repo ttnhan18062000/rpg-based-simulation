@@ -17,7 +17,7 @@ landed change (per the proposal's own guardrails).
 33 files, emits only aggregate numeric features — never raw content — to
 `extracted_usage_features.jsonl`), `fit_regression.py` (fits the regression,
 `regression_fit_result.json`). The §4 step 4 validation gate against real
-`agent-monitoring/tools.jsonl`/`events.jsonl` originally lived here as `validate_rank_order.py`;
+`agent-working/agent-monitoring/tools.jsonl`/`events.jsonl` originally lived here as `validate_rank_order.py`;
 promoted to `tools/agent-monitoring/weight_sensitivity_check.py` by
 `TCK-20260719-WEIGHT-SENSITIVITY-PROMOTE` as a real, tested, parameterized CLI tool — see that
 module for the current version.

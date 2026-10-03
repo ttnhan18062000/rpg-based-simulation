@@ -9,7 +9,7 @@ Implement all tickets in a folder or epic sequentially.
 ## Usage
 
 ```
-/implement-epic folder=tickets/todos/monitoring/
+/implement-epic folder=agent-working/tickets/todos/monitoring/
 /implement-epic epic_id=TCK-20260607-MY-EPIC
 /implement-epic request="add a caching layer to the world registry"
 ```
@@ -18,12 +18,32 @@ Implement all tickets in a folder or epic sequentially.
 
 Parse the user's input to extract one of:
 
-- `folder` — path to a directory containing TCK-*.md tickets (e.g. `tickets/todos/monitoring/`)
+- `folder` — path to a directory containing TCK-*.md tickets (e.g. `agent-working/tickets/todos/monitoring/`)
 - `epic_id` — an existing epic ticket ID (e.g. `TCK-20260607-MY-EPIC`)
 - `request` — natural language description of a new epic (creates the epic ticket, then returns)
 - `tier_override` — optional, overrides the tier for every child ticket (`hotfix`/`standard`)
 
-If the input is ambiguous (no prefix), treat as a folder path if it contains `/` or starts with `tickets/`, otherwise as a natural language request.
+`folder` mode only: `SEQUENCE.md` may declare an optional `tracking_doc: <path>` line (plain text,
+anywhere in the file) naming a roadmap/plan doc whose status block should be kept in sync as the
+batch progresses — see "Tracking doc status block" below. No `epic_id`-mode equivalent: an epic
+ticket is already its own tracking surface.
+
+If the input is ambiguous (no prefix), treat as a folder path if it contains `/` or starts with `agent-working/tickets/`, otherwise as a natural language request.
+
+## Native Workflow runtime status (TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT)
+
+`.claude/workflows/implement-epic.js` is **ported to the native `Workflow` runtime** (no `bash()`, no
+`Date.now()`; `start_ts` is a required arg; every shell step is a `runCommand()` agent dispatch with a
+fail-open warning; run records carry `"execution_mode":"workflow"`). It parses under acorn. What is **not**
+possible yet: the child loop calls `workflow('implement-ticket', ...)`, and `workflow()` nests exactly one
+level (measured 2026-10-01) but `implement-ticket.js` itself still uses `bash()` and fails to parse, so a
+native run stops at the first child with `WORKFLOW_ERROR` and the fallback below. A native run is therefore
+useful today only for `INVALID_ARGS`, `EPIC_CREATED` and `NOTHING_TO_DO` outcomes. Until
+`TCK-20260930-IMPLEMENT-TICKET-NATIVE-PORT` lands, **the primary path for an epic that has pending children is
+the hand-translation below.** If you do invoke the native tool, run `date -u +%Y-%m-%dT%H:%M:%SZ` first and use
+`Workflow({scriptPath: '.claude/workflows/implement-epic.js', args: {folder|epic_id|request, start_ts}})`
+(`scriptPath`, never `name`, from a worktree). When hand-translating, use `"execution_mode":"pipeline"`, not the
+JS literal `"workflow"`, and run each `runCommand(cmd, label)` yourself via Bash.
 
 ## Action
 
@@ -41,16 +61,34 @@ If the input is ambiguous (no prefix), treat as a folder path if it contains `/`
 
 | Phase | What happens |
 |---|---|
-| **Discover** | List tickets in folder or read epic's Related Tickets; check `tickets/done/` to skip already-done ones; capture start timestamp (`ts` field, required) |
+| **Discover** | List tickets in folder or read epic's Related Tickets; check `agent-working/tickets/done/` to skip already-done ones; capture start timestamp (`ts` field, required) |
 | **Implement** | Run implement-ticket pipeline for each pending ticket in order; stop on first gate failure |
 | **Report** | Summarise: DONE count, gate failures, remaining tickets |
 
-After the Implement phase, write the batch monitoring record (the block at the bottom of the Implement phase in the JS). Then, if `batchStatus === 'DONE'` and mode is `folder`, move the entire `tickets/todos/{folder}/` to `tickets/done/{folder}/` — this preserves SEQUENCE.md and any folder-level metadata. Then move to Report.
+After the Implement phase, write the batch monitoring record (the block at the bottom of the Implement phase in the JS). Then, if `batchStatus === 'DONE'` and mode is `folder`, move the entire `agent-working/tickets/todos/{folder}/` to `agent-working/tickets/done/{folder}/` — this preserves SEQUENCE.md and any folder-level metadata. Then move to Report.
+
+### Tracking doc status block (folder mode only, TCK-20260826-IMPLEMENT-EPIC-ROADMAP-DOC-STALENESS-GAP)
+
+At the start of Report, if Discover found a `tracking_doc:` declaration in `SEQUENCE.md`, run
+`tools/gate_checks/epic_tracking_doc_static.py::update_tracking_doc_status_block` (via `bash()`)
+with the real done/total/remaining counts. This runs on **every** batch invocation, not only when
+`batchStatus === 'DONE'` — a batch that stops partway on a gate failure still gets its counts
+refreshed. It replaces only the content strictly between two literal markers,
+`<!-- IMPLEMENT-EPIC-STATUS:BEGIN -->` / `<!-- IMPLEMENT-EPIC-STATUS:END -->`, that must already
+exist in the tracking doc — placed manually once by whoever authors it, wherever the block should
+render. Never free-form prose rewriting, never a guessed insertion point.
+
+**Explicit no-op when undeclared**: if Discover found no `tracking_doc:` line (the common case
+today — no `SEQUENCE.md`, or a `SEQUENCE.md` without the line), this step does not run at all — no
+Python call, no file touched. If a `tracking_doc:` is declared but the doc has no markers yet (or
+they're malformed/reversed), the update reports `markers_missing` instead of silently doing
+nothing, so the gap is visible rather than invisible.
 
 ## Notes
 
 - Stops on the first gate failure and tells the user which ticket blocked and why
-- Re-running after a fix automatically skips already-done tickets — Discover re-checks `tickets/done/` each time
+- Re-running after a fix automatically skips already-done tickets — Discover re-checks `agent-working/tickets/done/` each time
 - Each child ticket writes its own `implement-ticket` monitoring records; the epic also writes one batch record (`EPIC-{id}` or `FOLDER-{path}`)
 - Sequential only — not parallel
 - For `request` mode: creates the epic ticket and returns `EPIC_CREATED`; no implementation happens until re-run with `epic_id`
+- After Report: evaluate reset boundary per `docs/guides/agent_session_reset_boundaries.md`

@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
@@ -132,7 +133,7 @@ def test_parse_ts_handles_z_suffix_and_rejects_garbage():
 
 def test_real_corpus_simq_depth_social_reproduces_documented_gap():
     events = []
-    for events_path in sorted((_REPO_ROOT / "agent-monitoring" / "data").glob("*/events.jsonl")):
+    for events_path in sorted((_REPO_ROOT / AGENT_MONITORING / "data").glob("*/events.jsonl")):
         with events_path.open() as f:
             for line in f:
                 row = json.loads(line)

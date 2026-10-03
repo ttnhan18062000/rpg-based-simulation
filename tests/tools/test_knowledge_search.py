@@ -22,6 +22,7 @@ import types
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import KNOWLEDGE_INDEX, STORED_ARTIFACTS, TICKETS, posix
 
 # ---------------------------------------------------------------------------
 # Module import — tools/ is not a package; add repo root to sys.path.
@@ -55,8 +56,8 @@ _hr = sys.modules["hybrid_retrieval"]
 
 def _make_minimal_corpus(tmp_path: Path) -> None:
     """Create a minimal but valid corpus tree under tmp_path."""
-    # tickets/done/
-    done_dir = tmp_path / "tickets" / "done"
+    # agent-working/tickets/done/
+    done_dir = tmp_path / TICKETS / "done"
     done_dir.mkdir(parents=True)
     (done_dir / "TCK-20260101-ALPHA.md").write_text(
         "---\nstatus: active\n---\n\n## Request Summary\nAlpha ticket: test stamina pressure mechanics.\n",
@@ -67,16 +68,16 @@ def _make_minimal_corpus(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    # stored_artifacts/*/investigation.md
-    art_dir = tmp_path / "stored_artifacts" / "TCK-20260101-ALPHA"
+    # agent-working/stored_artifacts/*/investigation.md
+    art_dir = tmp_path / STORED_ARTIFACTS / "TCK-20260101-ALPHA"
     art_dir.mkdir(parents=True)
     (art_dir / "investigation.md").write_text(
         "---\nstatus: active\n---\n\nInvestigation of stamina pressure: entity depletes energy during combat.\n",
         encoding="utf-8",
     )
 
-    # tickets/working_log.csv
-    wl_path = tmp_path / "tickets" / "working_log.csv"
+    # agent-working/tickets/working_log.csv
+    wl_path = tmp_path / TICKETS / "working_log.csv"
     wl_path.write_text(
         "ticket_id,title,summary,date\n"
         "TCK-20260101-ALPHA,Alpha Ticket,stamina pressure mechanics,2026-01-01\n"
@@ -124,12 +125,12 @@ class TestBuildHappyPath:
 
     @pytest.mark.slow
     def test_build_produces_db(self, tmp_path):
-        """AC1: build command completes and produces knowledge-index/knowledge.db."""
+        """AC1: build command completes and produces agent-working/.index/knowledge-index/knowledge.db."""
         if not _deps_available():
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         result = subprocess.run(
             [
@@ -152,7 +153,7 @@ class TestBuildHappyPath:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         result = subprocess.run(
             [
@@ -173,7 +174,7 @@ class TestBuildHappyPath:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         result = subprocess.run(
             [
@@ -198,7 +199,7 @@ class TestBuildHappyPath:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         for _ in range(2):
             result = subprocess.run(
@@ -227,7 +228,7 @@ class TestQueryHappyPath:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         # First build
         build_result = subprocess.run(
@@ -268,7 +269,7 @@ class TestQueryHappyPath:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         # Use the live knowledge-index if available
-        live_db = _REPO_ROOT / "knowledge-index" / "knowledge.db"
+        live_db = _REPO_ROOT / KNOWLEDGE_INDEX / "knowledge.db"
         if not live_db.exists():
             pytest.skip("knowledge index not built — run make knowledge-index")
 
@@ -294,7 +295,7 @@ class TestQueryHappyPath:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         subprocess.run(
             [
@@ -336,7 +337,7 @@ class TestQueryHappyPath:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         subprocess.run(
             [
@@ -371,7 +372,7 @@ class TestQueryHappyPath:
 class TestGracefulDegradation:
 
     def test_missing_index_warning_and_exit_0(self, tmp_path):
-        """AC4: If knowledge-index/ does not exist, query prints warning and exits 0."""
+        """AC4: If agent-working/.index/knowledge-index/ does not exist, query prints warning and exits 0."""
         nonexistent_db = tmp_path / "no-such-dir" / "knowledge.db"
 
         result = subprocess.run(
@@ -404,7 +405,7 @@ spec.loader.exec_module(mod)
 import types, argparse
 args = types.SimpleNamespace(
     corpus_root=r'{tmp_path}',
-    db_path=r'{tmp_path / "knowledge-index" / "k.db"}',
+    db_path=r'{tmp_path / KNOWLEDGE_INDEX / "k.db"}',
 )
 result = mod.cmd_build(args)
 sys.exit(result)
@@ -511,24 +512,24 @@ class TestMakeTarget:
 class TestGitignore:
 
     def test_knowledge_index_in_gitignore(self):
-        """AC8: knowledge-index/ is listed in .gitignore."""
+        """AC8: agent-working/.index/knowledge-index/ is listed in .gitignore."""
         gitignore = _REPO_ROOT / ".gitignore"
         assert gitignore.exists(), ".gitignore not found"
         content = gitignore.read_text(encoding="utf-8")
-        assert "knowledge-index/" in content, \
-            "knowledge-index/ is not listed in .gitignore"
+        assert "agent-working/.index/knowledge-index/" in content, \
+            "agent-working/.index/knowledge-index/ is not listed in .gitignore"
 
     def test_git_check_ignore(self, tmp_path):
-        """AC8: git check-ignore confirms knowledge-index/ is ignored."""
+        """AC8: git check-ignore confirms agent-working/.index/knowledge-index/ is ignored."""
         result = subprocess.run(
-            ["git", "check-ignore", "-v", "knowledge-index/knowledge.db"],
+            ["git", "check-ignore", "-v", "agent-working/.index/knowledge-index/knowledge.db"],
             capture_output=True,
             text=True,
             cwd=str(_REPO_ROOT),
         )
         # git check-ignore returns 0 if the path is ignored, 1 if not ignored
         assert result.returncode == 0, \
-            "git check-ignore reports knowledge-index/knowledge.db is NOT ignored"
+            "git check-ignore reports agent-working/.index/knowledge-index/knowledge.db is NOT ignored"
 
 
 # ---------------------------------------------------------------------------
@@ -538,7 +539,7 @@ class TestGitignore:
 class TestCorpusScopeGuard:
 
     def test_collect_corpus_only_reads_defined_roots(self, tmp_path):
-        """Corpus collection must only read tickets/done, stored_artifacts, working_log.csv, and docs/.
+        """Corpus collection must only read agent-working/tickets/done, stored_artifacts, working_log.csv, and docs/.
 
         docs/ is a valid corpus source (added by TCK-20260612-LOCAL-CTX-DOCS-CORPUS).
         src/ and other non-corpus paths must remain excluded.
@@ -712,7 +713,7 @@ class TestExtractWorkingLogRows:
         self, tmp_path, capsys, monkeypatch
     ):
         """TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP: a squash-merge whole-block
-        duplication (e.g. tickets/working_log.csv's confirmed ~1586-row incident) must not
+        duplication (e.g. agent-working/tickets/working_log.csv's confirmed ~1586-row incident) must not
         produce one corpus document per duplicate physical line -- only the first occurrence
         of each distinct (ticket_id, title, summary) tuple is kept. This must never open the
         source file in a non-read mode."""
@@ -758,13 +759,13 @@ class TestCollectCorpus:
 
     def test_ticket_text_is_request_summary_only(self, tmp_path):
         """Ticket corpus text is the Request Summary section, not full file."""
-        done_dir = tmp_path / "tickets" / "done"
+        done_dir = tmp_path / TICKETS / "done"
         done_dir.mkdir(parents=True)
         (done_dir / "TCK-20260101-TEST.md").write_text(
             "---\nstatus: active\n---\n\n## Request Summary\nExact summary text.\n\n## Scope\nScope text.\n",
             encoding="utf-8",
         )
-        (tmp_path / "tickets").joinpath("working_log.csv").write_text(
+        (tmp_path / TICKETS).joinpath("working_log.csv").write_text(
             "ticket_id,title,summary\n", encoding="utf-8"
         )
 
@@ -776,12 +777,12 @@ class TestCollectCorpus:
 
     def test_investigation_text_is_first_500_chars(self, tmp_path):
         """Investigation corpus text is capped at 500 characters."""
-        art_dir = tmp_path / "stored_artifacts" / "TCK-20260101-TEST"
+        art_dir = tmp_path / STORED_ARTIFACTS / "TCK-20260101-TEST"
         art_dir.mkdir(parents=True)
         long_text = "A" * 1000
         (art_dir / "investigation.md").write_text(long_text, encoding="utf-8")
-        (tmp_path / "tickets").mkdir(parents=True)
-        (tmp_path / "tickets" / "working_log.csv").write_text(
+        (tmp_path / TICKETS).mkdir(parents=True)
+        (tmp_path / TICKETS / "working_log.csv").write_text(
             "ticket_id,title,summary\n", encoding="utf-8"
         )
 
@@ -1129,7 +1130,7 @@ class TestDocsBuildSummary:
             "## Section Two\n\nSecond section with different content about game mechanics.\n",
             encoding="utf-8",
         )
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         result = subprocess.run(
             [
@@ -1164,7 +1165,7 @@ class TestDocsBuildSummary:
             "## Overview\n\nThis covers mechanics overview content.\n",
             encoding="utf-8",
         )
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         result = subprocess.run(
             [
@@ -1184,10 +1185,10 @@ class TestDocsBuildSummary:
 
 
 # ---------------------------------------------------------------------------
-# Group 10 — Slow live-query tests (require knowledge-index/knowledge.db)
+# Group 10 — Slow live-query tests (require agent-working/.index/knowledge-index/knowledge.db)
 # ---------------------------------------------------------------------------
 
-_LIVE_DB = _REPO_ROOT / "knowledge-index" / "knowledge.db"
+_LIVE_DB = _REPO_ROOT / KNOWLEDGE_INDEX / "knowledge.db"
 
 
 def _live_db_available() -> bool:
@@ -1315,7 +1316,7 @@ class TestLiveQueryDocsMechanics:
         if not _deps_available():
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
         result = subprocess.run(
             [
                 sys.executable, str(_KS_PATH), "build",
@@ -1341,7 +1342,7 @@ class TestLiveQueryDocsMechanics:
         if not _deps_available():
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
         start = time.monotonic()
         result = subprocess.run(
             [
@@ -1381,10 +1382,10 @@ class TestLiveQueryDocsMechanics:
         assert result.returncode == 0
         lines = [l for l in result.stdout.strip().split("\n") if l]
         assert len(lines) >= 1, "No results returned for existing ticket query"
-        # At least one result should come from tickets/done/ or stored_artifacts/
+        # At least one result should come from agent-working/tickets/done/ or agent-working/stored_artifacts/
         paths = [line.split("\t")[1] for line in lines if "\t" in line]
         has_ticket_result = any(
-            "tickets/done" in p.replace("\\", "/") or "stored_artifacts" in p.replace("\\", "/")
+            f"{posix(TICKETS)}/done" in p.replace("\\", "/") or posix(STORED_ARTIFACTS) in p.replace("\\", "/")
             for p in paths
         )
         assert has_ticket_result, f"No ticket/investigation result in: {paths}"
@@ -1577,12 +1578,12 @@ class TestBuildProducesBm25:
 
     @pytest.mark.slow
     def test_build_produces_bm25_pkl(self, tmp_path):
-        """AC1: build also produces knowledge-index/bm25.pkl."""
+        """AC1: build also produces agent-working/.index/knowledge-index/bm25.pkl."""
         if not _deps_available():
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         result = subprocess.run(
             [
@@ -1594,7 +1595,7 @@ class TestBuildProducesBm25:
             text=True,
         )
         assert result.returncode == 0, f"build failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
-        bm25_path = tmp_path / "knowledge-index" / "bm25.pkl"
+        bm25_path = tmp_path / KNOWLEDGE_INDEX / "bm25.pkl"
         assert bm25_path.exists(), "bm25.pkl was not created alongside knowledge.db"
 
     @pytest.mark.slow
@@ -1604,7 +1605,7 @@ class TestBuildProducesBm25:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         subprocess.run(
             [
@@ -1616,7 +1617,7 @@ class TestBuildProducesBm25:
             text=True,
             check=True,
         )
-        bm25_path = tmp_path / "knowledge-index" / "bm25.pkl"
+        bm25_path = tmp_path / KNOWLEDGE_INDEX / "bm25.pkl"
         bm25_obj, doc_ids = _ks._load_bm25(bm25_path)
         assert bm25_obj is not None, "Loaded BM25 object is None"
         assert isinstance(doc_ids, list), f"doc_ids should be a list, got {type(doc_ids)}"
@@ -1629,7 +1630,7 @@ class TestBuildProducesBm25:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         result = subprocess.run(
             [
@@ -1659,7 +1660,7 @@ class TestQueryModeRouting:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         subprocess.run(
             [sys.executable, str(_KS_PATH), "build",
@@ -1685,7 +1686,7 @@ class TestQueryModeRouting:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         subprocess.run(
             [sys.executable, str(_KS_PATH), "build",
@@ -1694,7 +1695,7 @@ class TestQueryModeRouting:
         )
 
         # Remove bm25.pkl to confirm vector mode doesn't need it
-        bm25_path = tmp_path / "knowledge-index" / "bm25.pkl"
+        bm25_path = tmp_path / KNOWLEDGE_INDEX / "bm25.pkl"
         if bm25_path.exists():
             bm25_path.unlink()
 
@@ -1717,7 +1718,7 @@ class TestQueryModeRouting:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         subprocess.run(
             [sys.executable, str(_KS_PATH), "build",
@@ -1747,7 +1748,7 @@ class TestQueryScoreFields:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         subprocess.run(
             [sys.executable, str(_KS_PATH), "build",
@@ -1773,7 +1774,7 @@ class TestQueryScoreFields:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         subprocess.run(
             [sys.executable, str(_KS_PATH), "build",
@@ -1813,7 +1814,7 @@ class TestQueryScoreFields:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         subprocess.run(
             [sys.executable, str(_KS_PATH), "build",
@@ -1848,7 +1849,7 @@ class TestMissingBm25Fallback:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         # Build vector index only (no bm25.pkl)
         subprocess.run(
@@ -1858,7 +1859,7 @@ class TestMissingBm25Fallback:
         )
 
         # Delete bm25.pkl if it was created
-        bm25_path = tmp_path / "knowledge-index" / "bm25.pkl"
+        bm25_path = tmp_path / KNOWLEDGE_INDEX / "bm25.pkl"
         if bm25_path.exists():
             bm25_path.unlink()
 
@@ -1879,7 +1880,7 @@ class TestMissingBm25Fallback:
             pytest.skip("sentence-transformers / sqlite-vec not installed")
 
         _make_minimal_corpus(tmp_path)
-        db_path = tmp_path / "knowledge-index" / "knowledge.db"
+        db_path = tmp_path / KNOWLEDGE_INDEX / "knowledge.db"
 
         subprocess.run(
             [sys.executable, str(_KS_PATH), "build",
@@ -1887,7 +1888,7 @@ class TestMissingBm25Fallback:
             capture_output=True, text=True, check=True,
         )
 
-        bm25_path = tmp_path / "knowledge-index" / "bm25.pkl"
+        bm25_path = tmp_path / KNOWLEDGE_INDEX / "bm25.pkl"
         if bm25_path.exists():
             bm25_path.unlink()
 

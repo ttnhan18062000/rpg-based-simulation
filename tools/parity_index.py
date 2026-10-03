@@ -7,7 +7,7 @@ evidence-capture precedent. This module dynamically globs every current
 docs/parity_ledger/*.yaml shard (all nine, including faction.yaml -- deliberately
 independent of tools.parity_ledger_scan.CANONICAL_LEDGER_FILES's frozen 8-file
 compatibility list) and imports them into a local, gitignored, derived-only SQLite
-database (default parity-index/parity.db). It never writes into docs/parity_ledger/
+database (default agent-working/.index/parity-index/parity.db). It never writes into docs/parity_ledger/
 and implements no mutation CLI ("build" is the only subcommand that writes anything,
 and only to the derived database).
 
@@ -30,7 +30,7 @@ entry_health is a materialized table, not a live SQL VIEW, because its
 absent_file finding requires a filesystem Path.exists() check that cannot be
 expressed as portable SQL without registering a custom SQLite function. This is a
 documented interpretation of the idea doc's "view" language, not a scope
-reduction -- see staging_artifacts/TCK-20260731-PARITY-INDEX-IMPORTER/plan.md
+reduction -- see agent-working/staging_artifacts/TCK-20260731-PARITY-INDEX-IMPORTER/plan.md
 Step 4.
 
 Reference resolution (code_refs/test_refs/constraint_refs/ticket_refs) is
@@ -63,12 +63,16 @@ if str(_TOOLS_DIR) not in sys.path:
 
 from parity_index_baseline import _sha256_hex, serialize_manifest  # noqa: E402
 from parity_test_path import parse_test_path_citations  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import PARITY_INDEX  # noqa: E402
 
 SCHEMA_VERSION = 1
 IMPORTER_VERSION = "1.0.0"
 
 DEFAULT_LEDGER_DIR = Path("docs/parity_ledger")
-DEFAULT_DB_PATH = Path("parity-index/parity.db")
+DEFAULT_DB_PATH = PARITY_INDEX / "parity.db"
 
 _PATH_REF_RE = re.compile(r"\b(?:src|tools|tests|docs)/[\w./-]+\.\w+\b")
 _TICKET_REF_RE = re.compile(r"\bTCK-\d{8}-[A-Z0-9-]+\b")
@@ -443,7 +447,7 @@ def _shard_manifest_hash(shards: list) -> tuple[list, str, str]:
 
 
 def check_staleness(db_path=None, ledger_dir=None) -> dict:
-    """Cheaply report whether an already-built parity-index/parity.db is stale relative to the
+    """Cheaply report whether an already-built agent-working/.index/parity-index/parity.db is stale relative to the
     live docs/parity_ledger/*.yaml shards, without doing a full rebuild.
 
     Reuses _load_shards() + _shard_manifest_hash() -- the exact same functions a real build calls
@@ -754,7 +758,7 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     build_parser = subparsers.add_parser(
-        "build", help="Rebuild parity-index/parity.db from docs/parity_ledger/*.yaml"
+        "build", help="Rebuild agent-working/.index/parity-index/parity.db from docs/parity_ledger/*.yaml"
     )
     build_parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH))
     build_parser.add_argument("--force-fts5-unavailable", action="store_true")

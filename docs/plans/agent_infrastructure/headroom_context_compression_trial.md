@@ -24,10 +24,10 @@ tags: [ai, workflows, agent-monitoring, process-improvement, optimization]
 > **What stays:** the MCP registration (`.mcp.json`'s `headroom` entry, the launcher, the `.venv`
 > install) remains on `main` — kept as the user's own separate call, not a conclusion this trial
 > reached on its own, since it costs nothing dormant and did deliver one real result. Its usage going
-> forward is automatically visible via `mcp__headroom__*` rows in `agent-monitoring/data/`.
+> forward is automatically visible via `mcp__headroom__*` rows in `agent-working/agent-monitoring/data/`.
 >
 > **Caveman proxy: closed 2026-09-21, not worth it for cost.** The 14-day real-token retro in
-> `tickets/done/TCK-20260921-REAL-TOKEN-TELEMETRY.md` shows cache-read tokens dominate cost and
+> `agent-working/tickets/done/TCK-20260921-REAL-TOKEN-TELEMETRY.md` shows cache-read tokens dominate cost and
 > Bash/grep/git housekeeping dominates context-attributed spend, not tool-output size or output
 > tokens — the two things Caveman's proxy targets. See that ticket for the figures; not re-derived
 > here.
@@ -160,7 +160,7 @@ work where lossy compression is dangerous.
 
 Target payloads — the JSON/log-shaped content where 60–95% actually applies:
 
-- `agent-monitoring/data/**/*.jsonl` shards during retro and corpus analysis
+- `agent-working/agent-monitoring/data/**/*.jsonl` shards during retro and corpus analysis
 - `graphify-out/graph.json` (~50MB, local-only)
 - `docs/REGISTRY.yaml`, junit XML under `reports/junit/`
 

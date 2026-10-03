@@ -1,6 +1,6 @@
 from pathlib import Path
 
-# Static guard for TCK-20260821-DOCS-BUILD-LASTUPDATE-METADATA-OVERHEAD: the tickets/artifacts/
+# Static guard for TCK-20260821-DOCS-BUILD-LASTUPDATE-METADATA-OVERHEAD: the agent-working/tickets/artifacts/
 # agent-monitoring plugin-content-docs instances were removed entirely (not just metadata-disabled)
 # to shrink the public Docusaurus build, and the docs preset's exclude list was expanded to drop
 # archive/plans/audits. Follows the tests/static/test_deploy_docs_heap_limit.py precedent: parse

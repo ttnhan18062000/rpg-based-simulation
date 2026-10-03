@@ -40,7 +40,7 @@ sibling auth ticket: middleware cannot see the already-resolved
   auth dependency instead
   (`dependencies=[Depends(require_api_key_header_or_query), Depends(require_admission_header_or_query)]`) —
   a deviation from the pure-replace strategy, recorded in
-  `staging_artifacts/TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL/plan.md`'s
+  `agent-working/staging_artifacts/TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL/plan.md`'s
   "Deviations" section, required to keep
   `tests/api/test_api_key_auth.py::test_only_dashboard_and_websocket_routes_use_weaker_auth_channel`
   (a pinned anti-drift test this ticket does not edit) green: that test inspects

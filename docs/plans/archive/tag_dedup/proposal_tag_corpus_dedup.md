@@ -18,8 +18,8 @@ recent works."
 
 ## Background investigation (already done, feed this to Investigate — do not redo)
 
-Full corpus scan (`tickets/{done,inprogress,todos}/` +
-`stored_artifacts/`, via `tools/validate_frontmatter.py::extract_frontmatter`,
+Full corpus scan (`agent-working/tickets/{done,inprogress,todos}/` +
+`agent-working/stored_artifacts/`, via `tools/validate_frontmatter.py::extract_frontmatter`,
 1352 distinct tags in current use) grouped by normalized form
 (lowercase, `_`→`-`) to find literal-tag variants sharing one real meaning.
 Found 8 collision groups — cross-checked every one against
@@ -63,7 +63,7 @@ Two distinct fix types, both already codified in `canonical_form_violation()`:
 "don't retrofit new conventions onto genuinely old tickets" pattern from
 the Layer-registry and Status-drift tickets earlier today): most hits
 (dated before `TAG_TAXONOMY_EFFECTIVE_DATE` = 2026-07-04) are pre-taxonomy.
-**However**, 3 files under `stored_artifacts/TCK-20260704-SIMQ-*` use
+**However**, 3 files under `agent-working/stored_artifacts/TCK-20260704-SIMQ-*` use
 `simulation_quality` (non-canonical) with a `ticket_id` dated exactly
 2026-07-04 or later — i.e. **inside** the taxonomy's enforcement window,
 not legacy-exempt. Investigate must re-derive the exact legacy/in-scope

@@ -10,7 +10,7 @@ against the real corpus (sandbox_world seed 42 tick 0, dungeon_crawl seed 42 tic
 population standard deviation of per-entity nearest Euclidean distance divided by the
 mean, over active entities only, reproduces the documented ~0.648 / ~0.678 values to
 6+ significant figures (0.6478017242079448 / 0.6782405727873148). See
-staging_artifacts/TCK-20260821-VISUAL-DENSITY-METRIC/investigation.md for the full
+agent-working/staging_artifacts/TCK-20260821-VISUAL-DENSITY-METRIC/investigation.md for the full
 trace, including the ruled-out sample-stdev variant (0.667/0.689, does not match).
 
 compute_terrain_histogram is a verbatim extraction of the counting logic already

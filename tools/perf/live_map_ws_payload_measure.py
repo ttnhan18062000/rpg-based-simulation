@@ -12,7 +12,7 @@ encodings, over two buckets:
   NOT a live WS capture).
 
 One known gap this script routes around without touching production code
-(see staging_artifacts/TCK-20260821-LIVE-MAP-PERF-VALIDATION/investigation.md):
+(see agent-working/staging_artifacts/TCK-20260821-LIVE-MAP-PERF-VALIDATION/investigation.md):
 `python3 -m src serve --entities N` silently ignores `--entities`
 (`src/cli/entry.py::_run_serve` never reads `args.entities`). This script
 never shells out to `-m src serve`; its own `--internal-serve` mode
@@ -60,7 +60,7 @@ simplification given this sandbox's tight memory budget.
 
 Auth: reuses the exact `RPG_API_KEY_HASHES` env var + `X-API-Key` header
 pattern already proven end-to-end in tests/api/test_ws_protocol.py and
-tickets/done/TCK-20260823-LIVE-TEST-API-KEY-AUTH.md.
+agent-working/tickets/done/TCK-20260823-LIVE-TEST-API-KEY-AUTH.md.
 
 Must run under the repo's pydantic-capable interpreter:
     .venv/bin/python3 tools/perf/live_map_ws_payload_measure.py --entities 500
@@ -86,6 +86,10 @@ import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STAGING_ARTIFACTS  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -402,7 +406,7 @@ def main() -> int:
     parser.add_argument("--entities", type=int, default=500)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--out-dir", type=str,
-                         default=str(REPO_ROOT / "staging_artifacts" / "TCK-20260821-LIVE-MAP-PERF-VALIDATION" / "raw"))
+                         default=str(REPO_ROOT / STAGING_ARTIFACTS / "TCK-20260821-LIVE-MAP-PERF-VALIDATION" / "raw"))
     parser.add_argument("--port", type=int, default=8100)
     parser.add_argument("--warmup-ticks", type=int, default=100)
     parser.add_argument("--sample-ticks", type=int, default=1000)

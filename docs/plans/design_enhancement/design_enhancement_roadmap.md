@@ -56,7 +56,7 @@ regardless of real load, so **all 6 scenarios currently report `DEGRADED` for ev
 independent of what the code under test actually does. The perf-regression gate added by that
 ticket is deliberately soft (warning-only) specifically because of this, "pending a follow-up
 ticket to fix the `WorkerManager`/Governor signal defect itself." No such follow-up ticket exists
-yet (checked `tickets/` before writing this).
+yet (checked `agent-working/tickets/` before writing this).
 
 **Why this is Priority 0, not folded into Section A:** every other item in this roadmap will be
 measured, tuned, or validated against these same 6 scenarios. Building anything performance-related

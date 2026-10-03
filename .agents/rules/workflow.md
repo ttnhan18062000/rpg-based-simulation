@@ -8,8 +8,8 @@ trigger: always_on
 
 - scan tickets, docs, stored artifacts, relevant code, and tests
 - identify reuse opportunities and conflicts
-- create `tickets/inprogress/{ticket_id}.md`
-- create `staging_artifacts/{ticket_id}/`
+- create `agent-working/tickets/inprogress/{ticket_id}.md`
+- create `agent-working/staging_artifacts/{ticket_id}/`
 
 ## Required Artifacts
 
@@ -41,9 +41,9 @@ Ticket must include:
 ## After Work
 
 - finish ticket
-- move ticket to `tickets/done/`
-- append `tickets/working_log.csv`
-- move staging artifacts to `stored_artifacts/`
+- move ticket to `agent-working/tickets/done/`
+- append `agent-working/tickets/working_log.csv`
+- move staging artifacts to `agent-working/stored_artifacts/`
 - update related docs
 - clean up temporary run data: `rm -rf data/runs/* reports/release_proof/*`
 - verify no leftover staging/temp files remain

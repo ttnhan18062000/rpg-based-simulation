@@ -54,7 +54,7 @@ def test_run_benchmark_records_mode_sequence():
     valid_names = {m.name for m in RuntimeMode}
     assert all(m in valid_names for m in result["mode_sequence"])
     # Deviation from plan.md Step 5a (TCK-20260817-RUNTIMEMODE-BENCH-SCOPING, see
-    # staging_artifacts/.../plan.md Deviations): the plan's original assertion here asserted
+    # agent-working/staging_artifacts/.../plan.md Deviations): the plan's original assertion here asserted
     # every tick stays NORMAL, on the unverified assumption that an ordinary low-load movement
     # scenario would. The Step 4 empirical pass proved this false for every PERF_*_LOCAL profile,
     # not just this one: WorkerManager.get_stats() (src/engine/worker_manager.py:229-232) defaults

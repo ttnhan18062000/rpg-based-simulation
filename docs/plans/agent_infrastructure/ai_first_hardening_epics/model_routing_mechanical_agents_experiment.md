@@ -48,9 +48,9 @@ rule-following agents, not the open-ended judgment agents (`architecture-reviewe
 
 ## Baseline (item 13's real, already-executed results — no new pilot baseline needed)
 
-- **Source**: `stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md` and
+- **Source**: `agent-working/stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md` and
   `agent_evaluation_foundation_experiment.md`'s own appended `## Results`/`## Decision` sections.
-- **Sample**: 27 tickets sampled (hard-bounded 20-40) from the live `tickets/done/` corpus; 5
+- **Sample**: 27 tickets sampled (hard-bounded 20-40) from the live `agent-working/tickets/done/` corpus; 5
   converted to real replay fixtures (22 excluded with logged reasons, mostly hotfix-tier tickets
   with no Investigate/Plan/Review phase events — `done-checker`'s own verification phase is part of
   what's missing there, a relevant caveat for this pilot's own sample availability, see Method
@@ -66,7 +66,7 @@ rule-following agents, not the open-ended judgment agents (`architecture-reviewe
 
 1. **Sample, reusing item 13's infrastructure, not a new harness**: use
    `tools/agent_replay/sampler.py`'s existing stratified sampler to select a comparable slice of
-   `tickets/done/` tickets that actually exercise `done-checker` (has a Verify-phase event with a
+   `agent-working/tickets/done/` tickets that actually exercise `done-checker` (has a Verify-phase event with a
    real DoD-condition verdict) and `ticket-scoper` (has a Scope-phase event with a real ticket
    produced). Note from item 13's own execution: the largest exclusion reason was hotfix-tier
    tickets lacking phase events entirely — this pilot's eligible pool may be smaller than item 13's
@@ -160,5 +160,5 @@ abandoned.
   `model:` override) and a different agent scope from this item.
 - `tools/agent_replay/` — the sampling/replay/scoring infrastructure this pilot reuses.
 - `.claude/agents/done-checker.md`, `.claude/agents/ticket-scoper.md` — the two pilot targets.
-- `stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md` — the real baseline data
+- `agent-working/stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md` — the real baseline data
   this spec's Method and Metrics sections cite.

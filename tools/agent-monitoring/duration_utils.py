@@ -6,7 +6,7 @@ distinguish real working time from idle gaps between phase transitions (session 
 human-review waits, etc.), which distorts what "slow" means in generate_retro.py's Slow Runs /
 Duration outliers reporting and retrieval_baseline_metrics.py's one-off snapshot.
 
-Two judgment calls (real decisions, not derived law — see staging_artifacts/
+Two judgment calls (real decisions, not derived law — see agent-working/staging_artifacts/
 TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT/investigation.md for the full evidence):
 
 1. Pause threshold: 1800s (30 min), reusing generate_retro.py's own existing "Slow Runs" absolute

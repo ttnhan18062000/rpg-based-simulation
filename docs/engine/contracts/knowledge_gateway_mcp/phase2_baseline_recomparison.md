@@ -42,7 +42,7 @@ deliberate choice, not an oversight: shrinking `budget_tokens` specifically beca
 default triggers the size-cap REJECT would answer a different, narrower question ("does the cache
 mechanism work at all for an artificially small payload") than the one this ticket exists to
 answer ("does caching make the real, default-shaped gateway response measurably faster/smaller").
-See `staging_artifacts/TCK-20260815-KGMCP-P2-BASELINE-RECOMPARISON/plan.md` DD1 for the full
+See `agent-working/staging_artifacts/TCK-20260815-KGMCP-P2-BASELINE-RECOMPARISON/plan.md` DD1 for the full
 reasoning. No `budget_tokens_used` field in the committed fixture ever differs from `4000`.
 
 ## Why 0/7: the real size-cap finding, confirmed by direct measurement
@@ -217,6 +217,6 @@ this ticket does not itself make or recommend that decision, per its own Out of 
 - `tools/knowledge_gateway_redaction.py::check_size_cap()`,
   `tools/knowledge_gateway_redaction.py::MAX_PAYLOAD_BYTES` — the real 8 KB cache-write size cap
   responsible for this run's 0/7 genuine-cache-hit result.
-- `staging_artifacts/TCK-20260815-KGMCP-P2-BASELINE-RECOMPARISON/plan.md` DD1 — the Architecture
+- `agent-working/staging_artifacts/TCK-20260815-KGMCP-P2-BASELINE-RECOMPARISON/plan.md` DD1 — the Architecture
   Review ruling (option (b), exact Phase 1 request-shape parity) governing this ticket's own request
   shape.

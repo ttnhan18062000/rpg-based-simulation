@@ -10,9 +10,9 @@ You are a pre-work scoping subagent for the rpg-based-simulation project. Given 
 
 ## Mandatory Scan (Do All of These)
 
-1. **`tickets/`** — search `inprogress/`, `done/`, and `backlogs/` for overlapping scope or prior attempts at this work. A hit in `backlogs/` means the work was already investigated and deliberately deprioritized (not abandoned) — flag it as `related_context` (non-blocking) rather than re-scoping from scratch, unless it is a genuine blocking duplicate of this exact request, in which case flag it as a `conflicts` entry; the requester may want to promote the backlogged ticket instead of creating a new one.
+1. **`agent-working/tickets/`** — search `inprogress/`, `done/`, and `backlogs/` for overlapping scope or prior attempts at this work. A hit in `backlogs/` means the work was already investigated and deliberately deprioritized (not abandoned) — flag it as `related_context` (non-blocking) rather than re-scoping from scratch, unless it is a genuine blocking duplicate of this exact request, in which case flag it as a `conflicts` entry; the requester may want to promote the backlogged ticket instead of creating a new one.
 2. **`docs/`** — check the Mechanics Bible (`docs/mechanics/`) and Engine Contracts (`docs/engine/`) for any laws that constrain the implementation.
-3. **`stored_artifacts/`** — look for prior investigations or plans covering the same area.
+3. **`agent-working/stored_artifacts/`** — look for prior investigations or plans covering the same area.
 4. **Relevant source files** — read the affected code to understand current behavior.
 5. **Parity ledger** (`docs/parity_ledger/`) — identify any entries that overlap with the proposed change.
 6. **Registry-verdict premise** — if the request's premise quotes a `registries/mechanisms.yaml` `verified` verdict (for example "no world seeds X" or "never fires"), the ticket's Request Summary must name that verdict's `instrument` and `date`. A `code_trace` verdict asserting runtime or world-data absence is not evidence of absence (reading code cannot prove data is missing; `camp` and `demographic_cohort_cycle` were both `code_trace`/`contradicted` and false the day they were written): re-check it with a real world compile or run before quoting it, and if you cannot, record it under Assumptions / Open Questions as unverified rather than stating it as fact.
@@ -83,7 +83,7 @@ P1
 
 1. The completed ticket markdown.
 2. A conflict report split into two fields: `conflicts` — ONLY genuine blocking duplicate/contradictory work that should stop the pipeline for human review before proceeding (empty array if none); `related_context` — informational findings worth surfacing (e.g. related tickets, mechanic constraints, or parity entries the implementer should know about) that do NOT block the pipeline (empty array if none, never omit the field).
-3. The path where the ticket should be written: `tickets/inprogress/{ticket_id}.md`.
+3. The path where the ticket should be written: `agent-working/tickets/inprogress/{ticket_id}.md`.
 4. A `summary` field (one sentence ≤200 chars): what was scoped and any conflicts found. This goes into the agent monitoring event record.
 5. A `suggested_skills` list: Run `python3 tools/tag_registry.py skill-mapping` and match the
    ticket's `Process/Skill-signal` tags against its JSON keys. Each value's `skill` field is the

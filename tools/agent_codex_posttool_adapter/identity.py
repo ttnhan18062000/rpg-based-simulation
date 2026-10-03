@@ -1,13 +1,13 @@
 """Execution identity validation: format-only ticket_id, execution_id shape, and a strict
 provider=="codex" equality check (Step 3).
 
-**Format-valid only — no filesystem existence check** against tickets/inprogress/ or
-tickets/done/. See staging_artifacts/TCK-20260730-CODEX-POSTTOOL-ADAPTER/plan.md's "Resolution —
+**Format-valid only — no filesystem existence check** against agent-working/tickets/inprogress/ or
+agent-working/tickets/done/. See agent-working/staging_artifacts/TCK-20260730-CODEX-POSTTOOL-ADAPTER/plan.md's "Resolution —
 what makes a ticket_id 'known'": the parallel Claude convention
 (.claude/workflows/implement-ticket.js's execution_id generation) performs no independent
 filesystem check at the point of identity generation either — it trusts the ticket-scoper agent's
 own prior validation. This module is pure and I/O-free by design; it does not import pathlib,
-os.path, or anything from tickets/.
+os.path, or anything from agent-working/tickets/.
 """
 from __future__ import annotations
 

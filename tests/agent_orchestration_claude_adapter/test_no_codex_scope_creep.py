@@ -8,7 +8,7 @@ shipped `.py`/`.yaml`/`.md` files — catches this ticket's tooling accidentally
 out-of-scope Codex-side adapter work (owned by a different ticket).
 
 Scoped to the shipped code/contract tree only, mirroring the predecessor guard's own scope
-exactly (`_TOOL_DIR` + `agent-orchestration/`, never its own tests/ directory) — this ticket's own
+exactly (`_TOOL_DIR` + `agent-working/agent-orchestration/`, never its own tests/ directory) — this ticket's own
 test modules (this file included) legitimately discuss ".codex/" as a concept when describing what
 is explicitly NOT being built here, which is not the same as the shipped tree actually containing
 adapter code; the tests/ directory is not scanned.
@@ -16,6 +16,7 @@ adapter code; the tests/ directory is not scanned.
 from __future__ import annotations
 
 from pathlib import Path
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 
@@ -23,9 +24,9 @@ _SCANNED_DIRS = [
     _REPO_ROOT / "tools" / "agent_orchestration_claude_adapter",
 ]
 _SCANNED_FILES = [
-    _REPO_ROOT / "agent-orchestration" / "terminal-statuses.yaml",
-    _REPO_ROOT / "agent-orchestration" / "rendered" / "claude-adapter.yaml",
-    _REPO_ROOT / "agent-orchestration" / "intentional-divergences.md",
+    _REPO_ROOT / AGENT_ORCHESTRATION / "terminal-statuses.yaml",
+    _REPO_ROOT / AGENT_ORCHESTRATION / "rendered" / "claude-adapter.yaml",
+    _REPO_ROOT / AGENT_ORCHESTRATION / "intentional-divergences.md",
 ]
 
 _SCOPE_CREEP_MARKERS = (".codex/", "conformance_diff", "claude_conformance", ".claude/conformance")

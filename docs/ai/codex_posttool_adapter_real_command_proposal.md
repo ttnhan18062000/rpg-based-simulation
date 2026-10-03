@@ -75,7 +75,7 @@ to a hook's actual execution environment.
 - It does not implement any of the above. `hook_entry.py` does not exist.
 - It does not change `invoker.py`, `.codex/config.toml`, or any hook registration.
 - It does not satisfy `human_approval`, `project_trust_review`, `hook_trust_review`,
-  or `reviewed_config_diff` from `agent-orchestration/hook-surface-policy.yaml`'s
+  or `reviewed_config_diff` from `agent-working/agent-orchestration/hook-surface-policy.yaml`'s
   own governed checklist — those remain exactly what they've always been: human
   decisions this document can inform but not stand in for.
 

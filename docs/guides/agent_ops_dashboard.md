@@ -8,10 +8,10 @@ tags: [documentation, observability, api-design]
 
 # Agent Ops Dashboard
 
-A read-only visual viewer over `tickets/` and `agent-monitoring/*.jsonl` — recent
+A read-only visual viewer over `agent-working/tickets/` and `agent-working/agent-monitoring/*.jsonl` — recent
 run activity, per-run replay, a filterable ticket table, and a statistics
-board. It is purely presentational: it never mutates `tickets/`,
-`agent-monitoring/`, or any `AuthoritativeState`, and it is not itself a
+board. It is purely presentational: it never mutates `agent-working/tickets/`,
+`agent-working/agent-monitoring/`, or any `AuthoritativeState`, and it is not itself a
 source of truth for anything it displays. Written as of
 TCK-20260717-AGENTOPS-DASHBOARD-DOCS and updated by
 TCK-20260718-STATS-DOCS-UPDATE for the Stats tab — commands, ports, and

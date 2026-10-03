@@ -7,7 +7,7 @@ field is never read in the admission path. Live `graphify-out/graph.json` data p
 two fields disagree on real edges (5 `inherits` edges carry `confidence="EXTRACTED"` but
 `confidence_score=0.5`), and a relation-type-name-only filter would wrongly admit 45.1% of
 the naive Part A edge set (34,616 of 76,829 edges) as "deterministic" when it is not -- see
-`staging_artifacts/TCK-20260729-DETERMINISTIC-CODE-INDEX/investigation.md`. Reintroducing a
+`agent-working/staging_artifacts/TCK-20260729-DETERMINISTIC-CODE-INDEX/investigation.md`. Reintroducing a
 relation-name-only filter anywhere in this module silently reintroduces that bug.
 
 Scope decisions (full rationale in this ticket's plan.md "Resolved Decisions"):
@@ -54,7 +54,7 @@ from typing import Iterator
 # older graphifyy version). Deliberately excludes `references` and `re_exports` (Resolved
 # Decision 4) even though both are 100% per-edge deterministic in the live graph -- neither
 # is in the ticket's or decision doc's documented allowlist and the ticket never asked to
-# resolve them. See staging_artifacts/TCK-20260729-DETERMINISTIC-CODE-INDEX/plan.md.
+# resolve them. See agent-working/staging_artifacts/TCK-20260729-DETERMINISTIC-CODE-INDEX/plan.md.
 PART_A_ALLOWLIST: frozenset[str] = frozenset(
     {
         "imports",

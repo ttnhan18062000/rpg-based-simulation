@@ -10,7 +10,7 @@ Status terms used here:
 
 - **Promoted** — a brainstorm finding is named and scoped in a plan or ticket. Promotion does not by itself mean the artifact is tracked, approved, or durable.
 - **Scope-only** — a plan exists, but no tracking/child tickets for its implementation were found.
-- **Ticketed** — concrete files exist under `tickets/`; this does not mean implementation has started.
+- **Ticketed** — concrete files exist under `agent-working/tickets/`; this does not mean implementation has started.
 - **Tracked/committed** — Git knows the file at the evidence baseline.
 - **Untracked** — the file exists in the working tree but is not in Git.
 - **Executable ordering authority** — a committed ticket sequence consumed by the implementation workflow; it does not imply that every ticket is dependency-ready at the same time.
@@ -87,34 +87,34 @@ Idea 66 is not part of the original 65-idea partition. It is more than an M8 cor
 
 ## Items that already became actionable tickets
 
-M1's 20-idea scope produced 21 tickets: 19 ideas were ticketed, idea 16 was closed by investigation without an implementation ticket, and ideas 7 and 17 were split by responsibility. The committed `tickets/todos/m1-quick-wins/SEQUENCE.md` is now the executable ordering authority for this batch.
+M1's 20-idea scope produced 21 tickets: 19 ideas were ticketed, idea 16 was closed by investigation without an implementation ticket, and ideas 7 and 17 were split by responsibility. The committed `agent-working/tickets/todos/m1-quick-wins/SEQUENCE.md` is now the executable ordering authority for this batch.
 
 The relationship is not one idea to one ticket:
 
 | Atlas idea | Child ticket(s) or disposition |
 |---|---|
-| 1 — Wire orphaned mechanisms | [`TCK-20260824-WIRE-ORPHANED-MECHANISMS`](../../../tickets/todos/m1-quick-wins/TCK-20260824-WIRE-ORPHANED-MECHANISMS.md) |
-| 3 — Breakthrough bonuses | [`TCK-20260824-BREAKTHROUGH-BONUS-APPLICATION`](../../../tickets/todos/m1-quick-wins/TCK-20260824-BREAKTHROUGH-BONUS-APPLICATION.md) |
-| 7 — Grief/Nemesis reachability and protection | [`TCK-20260824-GRIEF-NEMESIS-REACHABILITY`](../../../tickets/todos/m1-quick-wins/TCK-20260824-GRIEF-NEMESIS-REACHABILITY.md), [`TCK-20260824-NEMESIS-MEMORY-UNIT-TESTS`](../../../tickets/todos/m1-quick-wins/TCK-20260824-NEMESIS-MEMORY-UNIT-TESTS.md) |
-| 9 — Rollout flags | [`TCK-20260824-ROLLOUT-FLAG-DECISIONS`](../../../tickets/todos/m1-quick-wins/TCK-20260824-ROLLOUT-FLAG-DECISIONS.md) |
-| 10 — Assign heirs | [`TCK-20260824-DEFAULT-HEIR-ASSIGNMENT`](../../../tickets/todos/m1-quick-wins/TCK-20260824-DEFAULT-HEIR-ASSIGNMENT.md) |
-| 12 — Lead contradiction wiring | [`TCK-20260824-LEAD-CONTRADICTION-WIRING`](../../../tickets/todos/m1-quick-wins/TCK-20260824-LEAD-CONTRADICTION-WIRING.md) |
-| 13 — Affection/contract gate | [`TCK-20260824-AFFECTION-CONTRACT-GATE`](../../../tickets/todos/m1-quick-wins/TCK-20260824-AFFECTION-CONTRACT-GATE.md) |
-| 15 — Wound-threshold question | [`TCK-20260824-WOUND-THRESHOLD-DECISION`](../../../tickets/todos/m1-quick-wins/TCK-20260824-WOUND-THRESHOLD-DECISION.md) |
+| 1 — Wire orphaned mechanisms | [`TCK-20260824-WIRE-ORPHANED-MECHANISMS`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-WIRE-ORPHANED-MECHANISMS.md) |
+| 3 — Breakthrough bonuses | [`TCK-20260824-BREAKTHROUGH-BONUS-APPLICATION`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-BREAKTHROUGH-BONUS-APPLICATION.md) |
+| 7 — Grief/Nemesis reachability and protection | [`TCK-20260824-GRIEF-NEMESIS-REACHABILITY`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-GRIEF-NEMESIS-REACHABILITY.md), [`TCK-20260824-NEMESIS-MEMORY-UNIT-TESTS`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-NEMESIS-MEMORY-UNIT-TESTS.md) |
+| 9 — Rollout flags | [`TCK-20260824-ROLLOUT-FLAG-DECISIONS`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-ROLLOUT-FLAG-DECISIONS.md) |
+| 10 — Assign heirs | [`TCK-20260824-DEFAULT-HEIR-ASSIGNMENT`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-DEFAULT-HEIR-ASSIGNMENT.md) |
+| 12 — Lead contradiction wiring | [`TCK-20260824-LEAD-CONTRADICTION-WIRING`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-LEAD-CONTRADICTION-WIRING.md) |
+| 13 — Affection/contract gate | [`TCK-20260824-AFFECTION-CONTRACT-GATE`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-AFFECTION-CONTRACT-GATE.md) |
+| 15 — Wound-threshold question | [`TCK-20260824-WOUND-THRESHOLD-DECISION`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-WOUND-THRESHOLD-DECISION.md) |
 | 16 — Ranger-doctrine question | No implementation ticket; the investigation resolved the question without requiring a behavior change. |
-| 17 — Wound/scar mechanics | [`TCK-20260824-WOUND-PENALTY-FORMULA-WIRING`](../../../tickets/todos/m1-quick-wins/TCK-20260824-WOUND-PENALTY-FORMULA-WIRING.md), [`TCK-20260824-WOUND-HEALING-DECISION`](../../../tickets/todos/m1-quick-wins/TCK-20260824-WOUND-HEALING-DECISION.md) |
-| 18 — Route-kind count | [`TCK-20260824-ROUTE-KIND-COUNT-FIX`](../../../tickets/todos/m1-quick-wins/TCK-20260824-ROUTE-KIND-COUNT-FIX.md) |
-| 19 — `ALLOCATE_AP` reachability | [`TCK-20260824-ALLOCATE-AP-BRANCH-DECISION`](../../../tickets/todos/m1-quick-wins/TCK-20260824-ALLOCATE-AP-BRANCH-DECISION.md) |
-| 20 — Life-stage transitions | [`TCK-20260824-LIFE-STAGE-TRANSITIONS`](../../../tickets/todos/m1-quick-wins/TCK-20260824-LIFE-STAGE-TRANSITIONS.md) |
-| 21 — Careers/occupation changes | [`TCK-20260824-OCCUPATION-CHANGE-TRIGGER`](../../../tickets/todos/m1-quick-wins/TCK-20260824-OCCUPATION-CHANGE-TRIGGER.md) |
-| 22 — Relationship roles | [`TCK-20260824-RELATIONSHIP-ROLE-FIELD`](../../../tickets/todos/m1-quick-wins/TCK-20260824-RELATIONSHIP-ROLE-FIELD.md) |
-| 24 — Personal economy | [`TCK-20260824-PERSONAL-ECONOMY-SCOPE-BLOCK`](../../../tickets/todos/m1-quick-wins/TCK-20260824-PERSONAL-ECONOMY-SCOPE-BLOCK.md) |
-| 25 — Secrets/disclosure | [`TCK-20260824-SECRETS-DISCLOSURE-SCOPE-SEQ`](../../../tickets/todos/m1-quick-wins/TCK-20260824-SECRETS-DISCLOSURE-SCOPE-SEQ.md) |
-| 26 — Causal memory consumer | [`TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING`](../../../tickets/todos/m1-quick-wins/TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING.md) |
-| 29 — Wound-aware tactics | [`TCK-20260824-TACTICAL-WOUND-SCAR-WIRING`](../../../tickets/todos/m1-quick-wins/TCK-20260824-TACTICAL-WOUND-SCAR-WIRING.md) |
-| 42 — Town-center bug | [`TCK-20260824-TOWN-CENTER-POINTER-FIX`](../../../tickets/todos/m1-quick-wins/TCK-20260824-TOWN-CENTER-POINTER-FIX.md) |
+| 17 — Wound/scar mechanics | [`TCK-20260824-WOUND-PENALTY-FORMULA-WIRING`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-WOUND-PENALTY-FORMULA-WIRING.md), [`TCK-20260824-WOUND-HEALING-DECISION`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-WOUND-HEALING-DECISION.md) |
+| 18 — Route-kind count | [`TCK-20260824-ROUTE-KIND-COUNT-FIX`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-ROUTE-KIND-COUNT-FIX.md) |
+| 19 — `ALLOCATE_AP` reachability | [`TCK-20260824-ALLOCATE-AP-BRANCH-DECISION`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-ALLOCATE-AP-BRANCH-DECISION.md) |
+| 20 — Life-stage transitions | [`TCK-20260824-LIFE-STAGE-TRANSITIONS`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-LIFE-STAGE-TRANSITIONS.md) |
+| 21 — Careers/occupation changes | [`TCK-20260824-OCCUPATION-CHANGE-TRIGGER`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-OCCUPATION-CHANGE-TRIGGER.md) |
+| 22 — Relationship roles | [`TCK-20260824-RELATIONSHIP-ROLE-FIELD`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-RELATIONSHIP-ROLE-FIELD.md) |
+| 24 — Personal economy | [`TCK-20260824-PERSONAL-ECONOMY-SCOPE-BLOCK`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-PERSONAL-ECONOMY-SCOPE-BLOCK.md) |
+| 25 — Secrets/disclosure | [`TCK-20260824-SECRETS-DISCLOSURE-SCOPE-SEQ`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-SECRETS-DISCLOSURE-SCOPE-SEQ.md) |
+| 26 — Causal memory consumer | [`TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING.md) |
+| 29 — Wound-aware tactics | [`TCK-20260824-TACTICAL-WOUND-SCAR-WIRING`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-TACTICAL-WOUND-SCAR-WIRING.md) |
+| 42 — Town-center bug | [`TCK-20260824-TOWN-CENTER-POINTER-FIX`](../../../agent-working/tickets/todos/m1-quick-wins/TCK-20260824-TOWN-CENTER-POINTER-FIX.md) |
 
-See the committed [`SEQUENCE.md`](../../../tickets/todos/m1-quick-wins/SEQUENCE.md) for the actual dependency ordering. The table above explains traceability, not scheduling.
+See the committed [`SEQUENCE.md`](../../../agent-working/tickets/todos/m1-quick-wins/SEQUENCE.md) for the actual dependency ordering. The table above explains traceability, not scheduling.
 
 This means the following language is stale in both `rpg_design_roadmap.md` and `rpg_m1_quick_wins_epic.md`:
 

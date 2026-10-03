@@ -1,7 +1,7 @@
 """Agent Ops Dashboard backend — standalone FastAPI app.
 
-Read-only viewer over tickets/{inprogress,done,todos}/ and
-agent-monitoring/{runs,events,tools}.jsonl. Not mounted on src/api/server.py
+Read-only viewer over agent-working/tickets/{inprogress,done,todos}/ and
+agent-working/agent-monitoring/{runs,events,tools}.jsonl. Not mounted on src/api/server.py
 (the main simulation API) — a separate product/port, since this dashboard
 never touches AuthoritativeState. No StaticFiles mount here (owned by the
 sibling AGENTOPS-BUILD-SERVE ticket).

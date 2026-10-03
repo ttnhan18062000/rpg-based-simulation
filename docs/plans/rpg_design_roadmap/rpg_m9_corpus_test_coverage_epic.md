@@ -17,9 +17,9 @@ one being referenced in M4's own epic doc and the parent roadmap's "12 ideas shi
 corpus-test authoring for those two is genuinely blocked, not ready work. Scoped into 8 child tickets,
 see `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE`.
 
-**Tracking ticket:** `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (`tickets/inprogress/`,
+**Tracking ticket:** `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (`agent-working/tickets/inprogress/`,
 `## Status: EPIC_SCOPED` as of 2026-09-06 — 8 child tickets scoped in
-`tickets/todos/m9-corpus-test-coverage/`, none yet implemented)
+`agent-working/tickets/todos/m9-corpus-test-coverage/`, none yet implemented)
 **Source:** Direct investigation of `docs/simulation_quality/corpus_tier_taxonomy.md`,
 `config/simulation_quality/corpus_registry.yaml`'s `_worlds` key (21 real worlds), `data/worlds/*/world.yaml`
 and `data/worlds/*/world_compile_report.json`, `data/content/world_modules/*.yaml` (20 real modules),
@@ -128,7 +128,7 @@ not tier labels with a one-line gesture.
    file — see that ticket's own Implementation Notes for the full corrected design.
 
 2. **Idea 66 (Region/Place rebuild) — corpus-wide migration, not a single test world. RESOLVED,
-   2026-09-06 (re-verified against `tickets/done/TCK-20260902-EPIC-IDEA66-REGION-PLACE-REBUILD.md`).**
+   2026-09-06 (re-verified against `agent-working/tickets/done/TCK-20260902-EPIC-IDEA66-REGION-PLACE-REBUILD.md`).**
    The real implementation followed this exact procedure: the Stage A/Stage B two-stage pilot named
    below, and the `state_hash`-first recalibration across all 21 worlds/84 run_keys. One real
    deviation, triaged rather than worked around: `state_hash` itself (`StateFingerprinter`) was found

@@ -1,9 +1,9 @@
-"""Retrospective, read-only audit of stored_artifacts/ migration completeness for done tickets.
+"""Retrospective, read-only audit of agent-working/stored_artifacts/ migration completeness for done tickets.
 
 Built for TCK-20260705-GATE-DET-DONE-CHECKER Part C. The investigation measured a 39.2% historical
-gap (338/862 standard/epic done tickets have an absent or incomplete stored_artifacts/{id}/), still
+gap (338/862 standard/epic done tickets have an absent or incomplete agent-working/stored_artifacts/{id}/), still
 ~23-26% in the two most recent months — a real, ongoing gap, not a negligible curiosity (GO decision,
-see stored_artifacts/TCK-20260705-GATE-DET-DONE-CHECKER/investigation.md).
+see agent-working/stored_artifacts/TCK-20260705-GATE-DET-DONE-CHECKER/investigation.md).
 
 Mirrors `tools/agent-monitoring/validate.py`'s established shape exactly: read-only, disclose-don't-fix,
 warn-only (never blocking), no automated exit-code gate tied to findings. Never moves, creates, or
@@ -26,13 +26,17 @@ for _dir in (str(_TOOLS_DIR), str(_GATE_CHECKS_DIR)):
 
 from generate_registry import parse_body_section  # noqa: E402
 from done_checker_static import REQUIRED_ARTIFACT_FILES, _files_complete  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS  # noqa: E402
 
 _EXCLUDED_FILENAMES = {"README.md", "SEQUENCE.md"}
 _RECOGNISED_TIERS = {"standard", "epic", "hotfix"}
 
 
-def scan_done_tickets(done_dir: Path = Path("tickets/done")) -> list[dict]:
-    """Walk tickets/done/*.md and tickets/done/{folder}/*.md (excluding README.md/SEQUENCE.md).
+def scan_done_tickets(done_dir: Path = TICKETS / "done") -> list[dict]:
+    """Walk agent-working/tickets/done/*.md and agent-working/tickets/done/{folder}/*.md (excluding README.md/SEQUENCE.md).
 
     Returns a list of {"ticket_id", "path", "tier"} dicts. `tier` is the lowercased, stripped
     `## Tier` section text, or None if the ticket has no parseable Tier field at all (legacy
@@ -54,11 +58,11 @@ def scan_done_tickets(done_dir: Path = Path("tickets/done")) -> list[dict]:
 
 
 def audit_stored_artifacts_migration(
-    done_dir: Path = Path("tickets/done"),
-    stored_base: Path = Path("stored_artifacts"),
+    done_dir: Path = TICKETS / "done",
+    stored_base: Path = STORED_ARTIFACTS,
 ) -> dict:
-    """Read-only audit: for every standard/epic done ticket, check stored_artifacts/{id}/
-    completeness. Never mutates any file. hotfix tickets are skipped (no stored_artifacts/
+    """Read-only audit: for every standard/epic done ticket, check agent-working/stored_artifacts/{id}/
+    completeness. Never mutates any file. hotfix tickets are skipped (no agent-working/stored_artifacts/
     expected — not a gap). Legacy/unrecognised-tier tickets are skipped with a WARNING, never
     counted as missing/incomplete.
     """
@@ -106,8 +110,8 @@ def print_report(summary: dict) -> None:
     print("Part C — stored_artifacts migration audit (read-only, disclose-don't-fix)")
     print(f"standard/epic tickets checked: {total_checked}")
     print(f"  ok: {len(summary['ok'])}")
-    print(f"  missing stored_artifacts/: {len(summary['missing'])}")
-    print(f"  incomplete stored_artifacts/: {len(summary['incomplete'])}")
+    print(f"  missing agent-working/stored_artifacts/: {len(summary['missing'])}")
+    print(f"  incomplete agent-working/stored_artifacts/: {len(summary['incomplete'])}")
     print(f"hotfix tickets skipped (no stored_artifacts expected): {summary['hotfix_skipped']}")
     print(f"legacy/no-Tier-field tickets skipped: {summary['legacy_skipped']}")
     if summary["missing"]:

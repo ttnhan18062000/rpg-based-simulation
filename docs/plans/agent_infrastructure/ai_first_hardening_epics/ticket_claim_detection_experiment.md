@@ -37,8 +37,8 @@ without meaningful false-positive noise from crashed or abandoned sessions' stal
 
 ## Baseline
 
-- **Zero known historical double-claim incidents.** Checked `tickets/done/`,
-  `agent-monitoring/retro/`, and `tickets/inprogress/` at scoping time (2026-09-07) — no report of
+- **Zero known historical double-claim incidents.** Checked `agent-working/tickets/done/`,
+  `agent-working/agent-monitoring/retro/`, and `agent-working/tickets/inprogress/` at scoping time (2026-09-07) — no report of
   two sessions actually colliding on the same ticket ID was found.
 - **Real concurrency opportunity already exists today.** `git worktree list` showed 8 active
   worktrees at scoping time, each on its own branch — this repo already runs many concurrent
@@ -50,7 +50,7 @@ without meaningful false-positive noise from crashed or abandoned sessions' stal
   built exclusively for the Codex pilot-execution harness's synthetic/disposable fixtures
   (`tools/agent_codex_pilot_executor/simulation.py::simulate_pilot()`). It actively **raises**
   `ClaimRefusedError` on a second claim — exactly the "build a lock" behavior this roadmap item's
-  kill-criteria gate defers — and it never operates against the real `tickets/inprogress/`
+  kill-criteria gate defers — and it never operates against the real `agent-working/tickets/inprogress/`
   directory or a real multi-session Claude Code working tree. Not extended or reused here.
 
 ## Method
@@ -62,7 +62,7 @@ Claude Code harness sets once per session, already confirmed present in every Ba
 (`implement-ticket.js:274-285`) at every phase transition, and inline by the Scope-phase resume
 branch (`implement-ticket.js:61-73`) before the ticket-scoper agent call. No new identity mechanism
 is invented; this is the only on-disk session-identity artifact this repo already has
-(`agent-monitoring/data/*/runs.jsonl`/`events.jsonl` carry no `session_id` field of their own).
+(`agent-working/agent-monitoring/data/*/runs.jsonl`/`events.jsonl` carry no `session_id` field of their own).
 
 **The check**: wired into `implement-ticket.js`'s Scope phase, immediately after
 `const tid = ticketInfo.ticket_id` (line ~213) — the earliest point common to both the new-ticket
@@ -89,7 +89,7 @@ the specific gap this creates; do not read the 900-second figure as a guarantee 
 catches every real concurrent-claim scenario.
 
 A detection (if any) is written to a brand-new dedicated JSONL,
-`agent-monitoring/data/YYYY-Www/claim_detections.jsonl`, via the shared
+`agent-working/agent-monitoring/data/YYYY-Www/claim_detections.jsonl`, via the shared
 `tools/agent-monitoring/writer.py::write_line()` primitive — never into `runs.jsonl`/`events.jsonl`,
 keeping this experimental, unvalidated-shape signal fully separate from the schema-validated
 production shards. The check is always-on (no env-var gate — a local file glob plus JSON parse has

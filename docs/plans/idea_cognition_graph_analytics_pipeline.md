@@ -26,7 +26,7 @@ tags: [idea, cognition-graph, observability, analytics, visualization, tuning, d
 >    tables — this doc has none today.
 > 2. **"Relationship to Planned Tickets" below is written forward-looking about work that has since
 >    shipped.** E22-DECISION-EXPLAIN, E12-BALANCE-BASELINE, and E11D-SCORING-CAL are all in
->    `tickets/done/` now. E22 shipped `decision_trace_writer.py` + a tick-index sidecar — matching this
+>    `agent-working/tickets/done/` now. E22 shipped `decision_trace_writer.py` + a tick-index sidecar — matching this
 >    doc's own anticipated shape, and its §3c prerequisite (`decision_trace.jsonl` existing) is genuinely
 >    satisfied today, unlike at write time. But E12 already ran its measurement pass *without* cognition
 >    data, so the doc's closing recommendation ("wire before E12 measurement begins") describes a window

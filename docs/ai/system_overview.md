@@ -128,7 +128,7 @@ child ticket's gate status.
 
 Across these workflows, the literal gate/return-status vocabulary is: `CONFLICTS_DETECTED`,
 `TAGS_NOT_REGISTERED`, `NEEDS_HUMAN_INPUT`, `NEEDS_CHANGES`, `BLOCKED`, `TESTS_FAILED`,
-`SECURITY_BLOCKED`, `DOD_BLOCKED`, `DONE`. `agent-monitoring/events.jsonl` additionally carries an
+`SECURITY_BLOCKED`, `DOD_BLOCKED`, `DONE`. `agent-working/agent-monitoring/events.jsonl` additionally carries an
 optional `reason_code` on some `Scope`/`Structure`/`Verify` events, disambiguating a status that
 collapses more than one cause into one value (e.g. `DOD_BLOCKED` alone doesn't say whether the
 cause was an unregistered tag or an unrelated DoD condition) — see
@@ -228,7 +228,7 @@ and Do-Not list.
 
 ## 6. Observability and Where to Go Deeper
 
-Agent activity is recorded as append-only JSONL under `agent-monitoring/data/YYYY-Www/`, one
+Agent activity is recorded as append-only JSONL under `agent-working/agent-monitoring/data/YYYY-Www/`, one
 per-week folder per UTC ISO week, holding 3 sources joined by `run_id` (and additionally by `seq`
 for the tool-call records): `runs.jsonl`, `events.jsonl`, `tools.jsonl`.
 
@@ -275,6 +275,6 @@ overview does not re-derive or re-score it.
 - [`docs/simulation_quality/audit_workflow.md`](../simulation_quality/audit_workflow.md) — full phase mechanics and Do-Not list
 
 **Observability**
-- [`docs/agent-monitoring/schema.md`](../agent-monitoring/schema.md) — JSONL schemas and known limitations
+- [`docs/agent-monitoring/schema.md`](../agent-working/agent-monitoring/schema.md) — JSONL schemas and known limitations
 - [`docs/guides/agent_monitoring.md`](../guides/agent_monitoring.md) — the retro process and query patterns
 - [`docs/ai/agent_infrastructure_audit.md`](agent_infrastructure_audit.md) — scored technical audit (2026-07-03)

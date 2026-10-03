@@ -55,13 +55,13 @@ _BATCH_SUBSYSTEM_EVIDENCE = {
 }
 
 _ARTIFACT_CLASS_STRINGS = [
-    "agent-monitoring/data/",
-    "stored_artifacts/",
-    "tickets/done/",
+    "agent-working/agent-monitoring/data/",
+    "agent-working/stored_artifacts/",
+    "agent-working/tickets/done/",
     "retro/RETRO-*.md",
     "working_log.csv",
     "graphify-out/",
-    "knowledge-index/",
+    "agent-working/.index/knowledge-index/",
     ".claude/current_run",
 ]
 

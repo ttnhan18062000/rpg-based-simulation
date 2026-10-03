@@ -22,7 +22,7 @@ document — those remain Phase 1/IMPORTER and later phases' work.
 
 ## Ownership
 
-`parity-index/parity.db` (Phase 1+) is a local, gitignored, derived-only
+`agent-working/.index/parity-index/parity.db` (Phase 1+) is a local, gitignored, derived-only
 artifact rebuilt from the reviewed `docs/parity_ledger/*.yaml` shards. No
 agent or tool edits it directly — the YAML shards remain the sole
 reviewable, version-controlled source of truth. This ticket (Phase 0) does
@@ -96,8 +96,8 @@ of Graphify's update/rebuild guarantees.
 
 This ticket's own baseline manifest (`tools/parity_index_baseline.py`,
 written to
-`staging_artifacts/TCK-20260731-PARITY-INDEX-BASELINE/baseline_manifest.json`,
-migrating to `stored_artifacts/` at ticket close) is the reference
+`agent-working/staging_artifacts/TCK-20260731-PARITY-INDEX-BASELINE/baseline_manifest.json`,
+migrating to `agent-working/stored_artifacts/` at ticket close) is the reference
 serialization convention for Phase 1's own build-report/manifest output:
 JSON with `sort_keys=True`, a fixed `indent`, `ensure_ascii=True`, and a
 trailing newline, so unchanged source input reliably yields byte-identical

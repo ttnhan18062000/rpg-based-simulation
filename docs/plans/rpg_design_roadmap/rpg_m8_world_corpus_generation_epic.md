@@ -46,7 +46,7 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
 ## Scope (not yet broken into child tickets)
 
 1. **Idea 43's insertion point — confirmed clean, low-risk. Landed, 2026-09-06 (re-verified):**
-   `TCK-20260831-POPULATION-COHORT-SEEDING` (`tickets/done/`, DONE) implemented exactly this — real
+   `TCK-20260831-POPULATION-COHORT-SEEDING` (`agent-working/tickets/done/`, DONE) implemented exactly this — real
    `_seed_population_cohorts()` function, called at compile time from `WorldCompiler.compile()` step 2
    (`src/worldbuilding/compiler.py:190,354`). Every compiled world now gets real, populated
    `RegionState.population_cohorts` at compile time — confirmed directly in source, not merely
@@ -71,7 +71,7 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
 3. **Idea 14/44's `settlement_capacity` — resolved differently than originally scoped, 2026-09-06
    (re-verified).** No literal `settlement_capacity` field was ever added to `data/content/living/
    races.yaml` (confirmed — still zero hits repo-wide for that exact field name). Instead,
-   `TCK-20260904-CAMP-NEST-CLASSIFICATION` (`tickets/done/`, DONE) consolidated ideas 44+45+46 and
+   `TCK-20260904-CAMP-NEST-CLASSIFICATION` (`agent-working/tickets/done/`, DONE) consolidated ideas 44+45+46 and
    delivered the underlying City/Camp/Nest/Excluded classification as a documented, race-data-verified
    rule with its sole code projection `CampService.NEST_RACE_KINDS` (`src/world/camp.py`) — a derived
    classification, not a stored per-race field. M2's idea-14 ticket correctly did NOT add this field
@@ -164,7 +164,7 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
 - `docs/world/compiler_contract.md`, `docs/world/generator_contract.md`
 - `docs/simulation_quality/corpus_tier_taxonomy.md`
 - `docs/mechanics/regional_sovereignty.md`
-- `tickets/done/TCK-20260630-WORLD-DEPLOY-MODULES.md`
+- `agent-working/tickets/done/TCK-20260630-WORLD-DEPLOY-MODULES.md`
 - `docs/brainstorm/rpg_feature_atlas.html` — ideas 14, 32, 39, 43, 44, 45, 48, 51
 - `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, Idea 66 promotion, temporal axis
 - `docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` — Idea 66 schema-migration
