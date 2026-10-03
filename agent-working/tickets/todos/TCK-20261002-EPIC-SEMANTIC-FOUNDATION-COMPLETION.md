@@ -185,12 +185,30 @@ mechanisms, and the 14 edge-bearing Rules are exactly the 14 classified ones.
 - Of the 25 core-tier modules, the tool says they are "not yet checkable, NOT asserted to be gaps", so
   an unknown fraction resolve to exclusions rather than bindings. Child B is therefore cheaper than 25
   bindings, by an amount nobody has measured.
-- Whether a "classified, no code needed" child can reach `DONE` is **an open process question, not
-  rhetorical**: `done_checker`'s `migration_complete` requires `plan.md`/`investigation.md`/
-  `test_plan.md` in `agent-working/stored_artifacts/`, and `## Status` offers no superseded-style value. It already
-  blocked `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED` from closing. Children that
-  classify Rules without changing code may hit it. Owned by `agent-working-design`, not filed yet —
-  waiting for a second instance so it arrives with evidence rather than one anecdote.
+- ~~Whether a "classified, no code needed" child can reach `DONE` is **an open process question**~~
+  **RESOLVED — the mechanism already exists, 2026-10-03.** A child that classifies Rules without
+  changing code closes with the **`## Disposition`** pair, not by fabricating staging artifacts:
+  `## Disposition` holds one bare value of `STALE-PREMISE` / `NO-MECHANISM` / `DUPLICATE` /
+  `SUPERSEDED` / `WONT-DO`, and `## Disposition Rationale` is prose that must cite a commit SHA, a
+  `file:line`, or fenced run output. With both valid and no `src/` change attributed to the ticket,
+  `done_checker_static.py`'s `migration_complete` passes without
+  `plan.md`/`investigation.md`/`test_plan.md`.
+  - Built by `TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES`. Enum at
+    `tools/ticket_field_values.py:57`; waiver at
+    `tools/gate_checks/done_checker_static.py:1071` (`_disposition_migration_result`); guide at
+    `docs/guides/delivery_process.md:77`. `grep -A1 '^## Disposition$' agent-working/tickets/done/*.md`
+    lists every existing use.
+  - **The trap that made this look unresolved, worth knowing before repeating it:** `## Disposition`
+    is a **separate body section, not a `## Status` value**, by design. Checking the `## Status` enum
+    and finding no superseded-style value there says nothing about whether a retirement path exists.
+    This epic's note asserted the gap on exactly that reasoning, and so did a 2026-10-03 session that
+    deleted a duplicate ticket outright rather than closing it — corrected, and the ticket is now at
+    `agent-working/tickets/done/TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS.md` as a
+    `DUPLICATE` closure.
+  - **Still to check, not assumed:** whether
+    `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED` — recorded above as blocked from closing
+    for this reason — can now close as a disposition. Its blocker was plausibly this same stale view,
+    but that is untested.
 
 ## Implementation Notes
 _(epic — not implemented directly; children carry implementation)_
