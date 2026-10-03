@@ -6,7 +6,7 @@ All 104 mechanisms, one row each, sorted by priority (`layer weight × transitiv
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**45 runtime-verified, 50 static (`code_trace`)-verified, 9 unverified** — of 104 total.
+**46 runtime-verified, 49 static (`code_trace`)-verified, 9 unverified** — of 104 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
@@ -28,7 +28,7 @@ All 104 mechanisms, one row each, sorted by priority (`layer weight × transitiv
 | `buildings` | world | done | static | observed | 2 | 2 |
 | `camp` | region | done | runtime | observed | 2 | 1 |
 | `inventory_trade_conservation` | world | done | static | observed | 2 | 2 |
-| `regional_sovereignty` | region | done | static | observed | 2 | 1 |
+| `regional_sovereignty` | region | done | runtime | observed | 2 | 1 |
 | `world_generation` | world | done | static | observed | 2 | 2 |
 | `calamity_intensity` | world | orphan | runtime | observed | 1 | 1 |
 | `action_pacing_readiness` | entity | done | runtime | observed | 0 | 0 |
