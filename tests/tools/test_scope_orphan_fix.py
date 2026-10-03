@@ -195,3 +195,29 @@ def test_resumed_epic_tier_run_has_no_todos_copy_left(tmp_path):
     resolve_and_relocate_ticket("TCK-20260930-E", inprogress_dir, todos_dir, done_dir)  # moves it
     resumed = resolve_and_relocate_ticket("TCK-20260930-E", inprogress_dir, todos_dir, done_dir)
     assert resumed["action"] == "already_in_inprogress" and resumed["todos_source_path"] == ""
+
+
+def test_already_in_done_finds_a_ticket_in_a_one_level_done_epic_folder(tmp_path):
+    inprogress, todos, done = tmp_path / "inprogress", tmp_path / "todos", tmp_path / "done"
+    inprogress.mkdir()
+    todos.mkdir()
+    nested = done / "some-epic-folder" / "TCK-20261003-NESTED.md"
+    nested.parent.mkdir(parents=True)
+    nested.write_text("# T\n\n## Tier\nepic\n", encoding="utf-8")
+
+    result = resolve_and_relocate_ticket("TCK-20261003-NESTED", inprogress, todos, done)
+
+    assert result["action"] == "already_in_done"
+    assert result["ticket_path"] == str(nested)
+    assert result["tier"] == "epic"
+
+
+def test_a_ticket_two_folders_deep_in_done_is_still_not_found(tmp_path):
+    inprogress, todos, done = tmp_path / "inprogress", tmp_path / "todos", tmp_path / "done"
+    inprogress.mkdir()
+    todos.mkdir()
+    deep = done / "outer" / "inner" / "TCK-20261003-DEEP.md"
+    deep.parent.mkdir(parents=True)
+    deep.write_text("# T\n\n## Tier\nepic\n", encoding="utf-8")
+
+    assert resolve_and_relocate_ticket("TCK-20261003-DEEP", inprogress, todos, done)["action"] == "not_found"

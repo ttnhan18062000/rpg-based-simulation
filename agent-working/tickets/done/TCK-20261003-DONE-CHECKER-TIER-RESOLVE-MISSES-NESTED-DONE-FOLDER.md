@@ -95,14 +95,22 @@ Verified against the code before editing: `_resolve_tier` and `_resolve_ticket_b
 
 Added `_ticket_file_candidates` / `_find_ticket_file` (inprogress, flat done, one-level `done/*/`; `prefer_done` flips the order for the two callers that preferred done) and used them in `_resolve_tier`, `_resolve_ticket_body_path`, the drift lookup and `check_ticket_finalized`. `_resolve_tier` still falls back to `standard` but now prints `NOTE: tier for <id> falls back to 'standard': ...` on stderr, naming the paths tried or the file with the unparseable `## Tier`. The `inprogress/<id>.md` lookups in the pre-check paths (they run only on a ticket still in progress) are unchanged.
 
-Other flat `done/<id>.md` lookups found by grep, not read in full and not changed: `tools/epic_folder_status.py:92` (checks for a stale flat copy on purpose), `tools/agent_replay/fixture_converter.py:255`, `tools/gate_checks/post_native_run_check.py:53` (its FAIL message names only the flat path), `tools/agent-monitoring/scope_ticket_relocate.py:68`, and prompt text in `.claude/workflows/implement-epic.js` (lines 230, 267). `cited_evidence_advisory.py`, `pr_render.py` and `pre_push_advisory_hook.py` already use `rglob`. Bundle with the open native-`implement-ticket` branch if the owner wants one PR.
+The other flat `done/<id>.md` lookups, each read:
+- `tools/gate_checks/post_native_run_check.py` `find_ticket`: it looked only at `inprogress/` and the flat `done/`, so the backstop reported `FAIL ticket_location` for a ticket already moved into a closed epic folder. Fixed with a one-level `done/*/` glob that honours its `repo` argument (importing `_find_ticket_file` would ignore it), flat and inprogress still win.
+- `tools/agent-monitoring/scope_ticket_relocate.py`: a resumed `ticket_id` run on a nested done ticket fell through to the todos search and reported `not_found`, so Scope said "ticket file not found" for a ticket that exists. Fixed with the same glob, returning `already_in_done`.
+- `tools/agent_replay/fixture_converter.py:255`: left flat on purpose. The sampler selects top-level `done/*.md` only (its docstring), so a nested ticket is never sampled; an ID passed by hand fails loudly with "missing ticket file". A comment now says so.
+- `tools/epic_folder_status.py:92`: left flat on purpose (a flat done copy of a child still in the todos folder is the stale pre-close copy it looks for). A comment now says so.
+- `.claude/workflows/implement-epic.js` lines 230 and 267 (`A ticket is already done if agent-working/tickets/done/{ticket_id}.md exists.`): agent prompt text, no change. Children of an epic are closed one by one into the flat `done/`; the folder only moves into `done/<folder>/` once every child is done, at which point there is nothing left to dispatch.
+`cited_evidence_advisory.py`, `pr_render.py` and `pre_push_advisory_hook.py` already use `rglob`.
 
 ## Test Summary
-New `tests/tools/test_done_checker_ticket_lookup.py` (8 tests): a nested done-folder epic ticket resolves to `epic` with no NOTE; flat done and inprogress tickets still resolve; an explicit `--tier` wins; a missing ticket and an unparseable tier fall back to `standard` with the NOTE; `_resolve_ticket_body_path` finds a nested ticket and `check_ticket_finalized` agrees; the lookup goes one folder deep only. On the pre-change module 6 of the 8 fail (the nested-epic test fails by returning `standard`; several others fail on the missing helpers), the 2 flat/inprogress/override cases pass.
+New `tests/tools/test_done_checker_ticket_lookup.py` (8 tests): a nested done-folder epic ticket resolves to `epic` with no NOTE; flat done and inprogress tickets still resolve; an explicit `--tier` wins; a missing ticket and an unparseable tier fall back to `standard` with the NOTE; `_resolve_ticket_body_path` finds a nested ticket and `check_ticket_finalized` agrees; the lookup goes one folder deep only. On the pre-change module 6 of the 8 fail (the nested-epic test fails by returning `standard`; several others fail on the missing helpers), the 2 flat/inprogress/override cases pass. Two tests added to `test_scope_orphan_fix.py` (a nested done ticket is `already_in_done`; two folders deep is still `not_found`) and two to `test_post_native_run_check.py` (`find_ticket` finds a nested ticket; flat wins over a nested copy); the two nested-positive tests fail on the pre-change tools.
 
 ## Files Changed
 - tools/gate_checks/done_checker_static.py
-- tests/tools/test_done_checker_ticket_lookup.py (new)
+- tools/gate_checks/post_native_run_check.py, tools/agent-monitoring/scope_ticket_relocate.py (nested done lookup)
+- tools/epic_folder_status.py, tools/agent_replay/fixture_converter.py (comment only: why the lookup stays flat)
+- tests/tools/test_done_checker_ticket_lookup.py (new), tests/tools/test_scope_orphan_fix.py, tests/tools/test_post_native_run_check.py
 
 ## Completion Summary
 `done_checker_static.py` finds a ticket in inprogress, the flat done folder or a one-level done epic folder through one shared helper, and says so on stderr when it falls back to `standard`.
