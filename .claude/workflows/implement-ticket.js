@@ -173,6 +173,39 @@ const TICKET_SCHEMA = {
   },
 }
 
+// Orchestrator-side ts capture — replaces the former per-prompt "Step 0: run `date -u ...`"
+// agent-prompt-text instruction (TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). Call this once,
+// immediately before writeSidecar/the paired `await agent(...)` call, so the captured value can be
+// wired directly into pushEvent — never depends on agent prose compliance. Called BEFORE
+// writeSidecar at each site so C1's writeSidecar-to-agent() adjacency strings (tests/tools/
+// test_current_run_sidecar_orchestrator.py) are untouched by this insertion.
+const captureTs = async () => {
+  const out = await shOmit('date -u +%Y-%m-%dT%H:%M:%SZ')
+  return (out || '').trim() || null
+}
+
+const captureEpochMs = async () => {
+  const out = await shOmit('date +%s%3N')
+  const parsed = parseInt((out || '').trim(), 10)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+// Orchestrator-side ticket-location resolution (TCK-20260711-EPIC-SCOPE-ORPHAN-FIX). Replaces
+// the former Step 1a/1b/1c agent-prompt-text file search + unconditional copy: `## Tier` is a
+// static fact already on disk, locatable by the same mechanical search the agent used to perform
+// itself, so the orchestrator resolves it deterministically before the ticket-scoper agent() call
+// runs. Moves (copy-then-delete) a agent-working/tickets/todos/ original when tier is epic — epic tier returns
+// immediately after Scope and never reaches Finalize's cleanup rm step, so leaving the copy-only
+// behavior for epic tier created a permanent duplicate. Copies (leaving the todos original in
+// place) for every other tier, preserving existing Finalize-reconciliation behavior.
+const resolveScopeTicketLocation = async (id) => {
+  const out = await sh(`python3 tools/agent-monitoring/scope_ticket_relocate.py "${id}" 2>/dev/null`)
+  const markerIndex = (out || '').indexOf('MARKER:')
+  if (markerIndex === -1) return null
+  try { return JSON.parse(out.slice(markerIndex + 'MARKER:'.length).trim()) }
+  catch (e) { return null }
+}
+
 const scopeOrphanInfo = ticketId ? await resolveScopeTicketLocation(ticketId) : null
 
 const scopeTs = await captureTs()
@@ -418,44 +451,11 @@ if sid:
   )
 }
 
-// Orchestrator-side ts capture — replaces the former per-prompt "Step 0: run `date -u ...`"
-// agent-prompt-text instruction (TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). Call this once,
-// immediately before writeSidecar/the paired `await agent(...)` call, so the captured value can be
-// wired directly into pushEvent — never depends on agent prose compliance. Called BEFORE
-// writeSidecar at each site so C1's writeSidecar-to-agent() adjacency strings (tests/tools/
-// test_current_run_sidecar_orchestrator.py) are untouched by this insertion.
-const captureTs = async () => {
-  const out = await shOmit('date -u +%Y-%m-%dT%H:%M:%SZ')
-  return (out || '').trim() || null
-}
-
-const captureEpochMs = async () => {
-  const out = await shOmit('date +%s%3N')
-  const parsed = parseInt((out || '').trim(), 10)
-  return Number.isFinite(parsed) ? parsed : null
-}
-
 // Workflow-start epoch-ms, captured once, for the shadow-reviewer mechanism's
 // `workflow_wall_time_ms` field (TCK-20260904-SHADOW-REVIEWER-LOGGING) -- distinct from
 // `startTs` (an ISO string, used for run-record start_ts) and from any per-phase `captureTs()`
 // call. Read-only downstream; never mutated after this point.
 const workflowStartMs = await captureEpochMs()
-
-// Orchestrator-side ticket-location resolution (TCK-20260711-EPIC-SCOPE-ORPHAN-FIX). Replaces
-// the former Step 1a/1b/1c agent-prompt-text file search + unconditional copy: `## Tier` is a
-// static fact already on disk, locatable by the same mechanical search the agent used to perform
-// itself, so the orchestrator resolves it deterministically before the ticket-scoper agent() call
-// runs. Moves (copy-then-delete) a agent-working/tickets/todos/ original when tier is epic — epic tier returns
-// immediately after Scope and never reaches Finalize's cleanup rm step, so leaving the copy-only
-// behavior for epic tier created a permanent duplicate. Copies (leaving the todos original in
-// place) for every other tier, preserving existing Finalize-reconciliation behavior.
-const resolveScopeTicketLocation = async (id) => {
-  const out = await sh(`python3 tools/agent-monitoring/scope_ticket_relocate.py "${id}" 2>/dev/null`)
-  const markerIndex = (out || '').indexOf('MARKER:')
-  if (markerIndex === -1) return null
-  try { return JSON.parse(out.slice(markerIndex + 'MARKER:'.length).trim()) }
-  catch (e) { return null }
-}
 
 // Mirrors tools/gate_checks/done_checker_static.py's classify_checklist_failure() — updated in
 // lockstep with that function's TCK-20260720-TAG-TOUCHPOINT-CLEANUP redesign. The prior hand-synced
