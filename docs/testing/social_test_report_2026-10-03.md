@@ -248,6 +248,16 @@ the one for `guilds.py` and in scratch only, was run on three such files
 statements** of the function (lines 234 to 298), so they do not reach its body either. Other tests in the
 repository were not measured. Neither result is a defect finding.
 
+**Static follow-up on whether anything creates a `POSITION_SWAP` contract** (a source search at
+`9640ff942`, not a runtime measurement). In `src/`, `ContractKind.POSITION_SWAP` appears only in the enum
+(`src/core/strategic.py`), the dispatch at `appraisal.py:90` and the read at
+`src/engine/pipeline_phases/movement.py:407`; the `kind=ContractKind.…` construction sites found in `src/`
+build `LOAN`, `RECRUITMENT` and `PAID_INFORMATION` contracts. The constructions of a `POSITION_SWAP`
+contract that were found are in tests (for example `tests/unit/movement/test_position_swap.py`, lines 105
+and 192). No creation site in `src/` was found, which fits a branch that nothing produces at runtime, but a
+search absence is not proof: contracts built from data, strings or another path would not appear, and no run
+was probed. Whether the branch is dormant or just untested is left open for the contracts-mechanism work.
+
 **What kills the line 46 and 64 mutants, and a forward consequence.** Each of the 7 mutants was re-applied in
 the scratch copy and the selection re-run (mutmut does not record the killing test). Line 46 mutants fail
 6, 2 and 10 tests; line 64 mutants fail 1, 1, 4 and 34 tests (the 34-test mutant breaks the read itself, so
