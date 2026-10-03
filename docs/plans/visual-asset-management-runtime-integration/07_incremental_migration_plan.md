@@ -9,6 +9,10 @@ tags: [assets, migration, rendering, rollback, planning]
 
 # AM-M7 — Incremental Migration
 
+## Status 2026-10-03
+
+Still dormant: depends on an `AM-M6` pilot pass, which has not started.
+
 ## Outcome
 
 Define optional `ASSET-5` planning for migrating only individually approved visual families after a bounded

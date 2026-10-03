@@ -16,7 +16,7 @@ from visual_assets.store import config, pixels, records
 from visual_assets.store.audit import audit_chain
 from visual_assets.store.build.exportconfig import load_export_config
 from visual_assets.store.catalog.registry import load_registry
-from visual_assets.store.contracts import ArtifactRecord, ReleaseCandidateManifest, parse_record
+from visual_assets.store.contracts import ArtifactRecord, ReleaseCandidateManifest, SourceRecord, parse_record, record_bound
 from visual_assets.store.errors import BuildError, ContractError, PngDecodeError, RegistryError, StageError
 from visual_assets.store.intake.validator import file_hash
 
@@ -124,7 +124,7 @@ def _check_record(root: Path, directory: Path, name: str, digest: str, revision:
     path = directory / name
     rel = _rel(root, path)
     try:
-        data = records.read_file(path, config.MAX_RECORD_BYTES)
+        data = records.read_file(path, record_bound(ArtifactRecord))
         record = parse_record(ArtifactRecord, data)
     except (StageError, ContractError) as exc:
         out.append(Finding("ARTIFACT_RECORD_UNREADABLE", rel, f"cannot be read ({exc.code})"))
@@ -136,7 +136,7 @@ def _check_record(root: Path, directory: Path, name: str, digest: str, revision:
         out.append(Finding("ARTIFACT_PNG_MISSING", _rel(root, png_path), "the artifact record has no PNG"))
     else:
         try:
-            png = records.read_file(png_path, config.MAX_DECODED_BYTES)
+            png = records.read_file(png_path, config.MAX_PNG_FILE_BYTES)
             if file_hash(png) != record.png_hash:
                 out.append(Finding("ARTIFACT_PNG_HASH_MISMATCH", _rel(root, png_path), "the PNG bytes differ from the recorded file hash"))
             actual = pixels.pixel_hash(png, max_dim=config.MAX_DIM * 16)
@@ -146,7 +146,7 @@ def _check_record(root: Path, directory: Path, name: str, digest: str, revision:
             out.append(Finding("ARTIFACT_PNG_UNREADABLE", _rel(root, png_path), f"cannot be decoded ({getattr(exc, 'code', 'error')})"))
     try:
         source = records.load_source(record.source_asset_id, record.source_revision, root)
-        source_record_bytes = records.read_file(records.source_paths(record.source_asset_id, record.source_revision, root)[1], config.MAX_RECORD_BYTES)
+        source_record_bytes = records.read_file(records.source_paths(record.source_asset_id, record.source_revision, root)[1], record_bound(SourceRecord))
     except (StageError, ContractError):
         out.append(Finding("ARTIFACT_SOURCE_MISSING", rel, f"its source revision {record.source_asset_id} {record.source_revision} cannot be read"))
         return
@@ -191,7 +191,7 @@ def _manifests(root: Path, out: list[Finding]) -> None:
                 out.append(Finding("UNEXPECTED_FILE", rel, "a release candidate directory never names an active, current or latest release"))
                 continue
             try:
-                manifest = parse_record(ReleaseCandidateManifest, records.read_file(path, config.MAX_RECORD_BYTES))
+                manifest = parse_record(ReleaseCandidateManifest, records.read_file(path, record_bound(ReleaseCandidateManifest)))
             except (StageError, ContractError) as exc:
                 out.append(Finding("MANIFEST_UNREADABLE", rel, f"cannot be read ({exc.code})"))
                 continue
@@ -212,7 +212,7 @@ def _check_entry(root: Path, rel: str, entry, registry_keys: set[str], out: list
         out.append(Finding("MANIFEST_UNKNOWN_KEY", rel, f"{entry.visual_key} is not in the registry"))
     for candidate in candidates:
         try:
-            record = parse_record(ArtifactRecord, records.read_file(candidate, config.MAX_RECORD_BYTES))
+            record = parse_record(ArtifactRecord, records.read_file(candidate, record_bound(ArtifactRecord)))
             if record.source_revision in records.revoked_revisions(record.source_asset_id, root):
                 out.append(Finding("MANIFEST_ENTRY_SOURCE_REVOKED", rel, f"{entry.visual_key} lists an artifact built from a revoked source revision"))
         except (StageError, ContractError):

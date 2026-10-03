@@ -21,6 +21,7 @@ RECORD_FILES = {
     "ArtifactRecord": "artifact_record.json",
     "ReleaseCandidateManifest": "release_candidate_manifest.json",
     "VisualKeyRegistry": "visual_key_registry.json",
+    "RuntimeManifest": "runtime_manifest.json",
 }
 
 

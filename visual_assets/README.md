@@ -13,4 +13,5 @@ touched by asset systems; not `tools/`). Structure, layering rules and decisions
 
 Tests live in `tests/visual_assets/` (`drawing/unit` runs everywhere; `drawing/integration` needs Aseprite and bwrap and
 skips cleanly without them; `test_boundaries.py` enforces the layering). Run:
-`python -m pytest tests/visual_assets -q`.
+`python -m pytest tests/visual_assets -q`. The real-Aseprite tests run strictly (no skips, pinned version, evidence
+JSON) only on the licence holder's machine: `make visual-assets-aseprite-local` (ADR D10; see `docs/assets/drawing_tools.md`).

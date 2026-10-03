@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 
 from visual_assets.store import config
-from visual_assets.store.contracts import AdoptionRecord, RevocationRecord, SourceRecord, parse_record
+from visual_assets.store.contracts import AdoptionRecord, RevocationRecord, SourceRecord, parse_record, record_bound
 from visual_assets.store.contracts.base import StoreRecord
 from visual_assets.store.errors import ContractError, StoreError
 from visual_assets.store.identities import SourceAssetId, SourceRevision, check
@@ -76,7 +76,7 @@ def read_file(path: Path, limit: int) -> bytes:
 
 
 def parse_file(cls: type[StoreRecord], path: Path) -> tuple[StoreRecord, bytes]:
-    data = read_file(path, config.MAX_RECORD_BYTES)
+    data = read_file(path, record_bound(cls))
     return parse_record(cls, data), data
 
 
