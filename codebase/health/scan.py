@@ -21,7 +21,7 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Collection, Sequence
 
 from codebase.health import adapters
 from codebase.health.findings import Finding
@@ -126,11 +126,24 @@ _SCANNERS = {
 }
 
 
-def run_scan(root: Path, out_dir: Path, tools: Sequence[str] = ALL_TOOLS) -> None:
-    """Run `tools` (default: all five) over `src/`, writing each one's raw JSON to `out_dir`."""
+def run_scan(
+    root: Path, out_dir: Path, tools: Sequence[str] = ALL_TOOLS, skippable: Collection[str] = ()
+) -> tuple[str, ...]:
+    """Run `tools` (default: all five) over `src/`, writing each one's raw JSON to `out_dir`.
+
+    A tool in `skippable` that cannot run is skipped, not fatal: its name is returned (callers must treat it as
+    "not measured") and the scan goes on. Any other tool that cannot run raises `ToolUnavailableError`.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
+    skipped: list[str] = []
     for name in tools:
-        _SCANNERS[name](root, out_dir)
+        try:
+            _SCANNERS[name](root, out_dir)
+        except ToolUnavailableError:
+            if name not in skippable:
+                raise
+            skipped.append(name)
+    return tuple(skipped)
 
 
 def _load(path: Path) -> Any:

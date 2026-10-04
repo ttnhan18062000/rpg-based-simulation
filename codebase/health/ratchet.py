@@ -14,8 +14,9 @@ The two non-failing outcomes are how paid-off debt shows up: `tighten` (or `dele
 regression are different lists in the report, which is what an earlier single-number ratchet in
 this repo (TCK-20260915-RATCHET-CONFLATES-HISTORICAL-DEBT-WITH-LIVE-REGRESSION) could not say.
 
-Advisory in CI (the `code-health` job in test.yml runs it on every PR with `continue-on-error`, roadmap M4
-soak); nothing blocks on it yet.
+Blocking in CI (the `code-health` job in test.yml runs it on every PR; roadmap M4 flip,
+TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING). Two sets below are the policy, in code rather than in flags:
+`REPORT_ONLY_TOOLS` findings are listed but never fail `check`; `SKIPPABLE_TOOLS` may fail to run without failing it.
 """
 
 from __future__ import annotations
@@ -27,6 +28,15 @@ from codebase.health.findings import Finding
 from codebase.health.registry import Row
 
 DEFAULT_REPORT_LIMIT = 25
+
+# Tools whose new or worse findings are listed and labelled "report-only" but do not fail `check`
+# (decision 8.10/8.16: jscpd stays report-only; ast-grep until TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING).
+REPORT_ONLY_TOOLS = frozenset({"jscpd", "ast_grep"})
+# Tools that may fail to run without failing `check`: jscpd needs npx and the npm registry. A skipped tool is
+# "not measured", never "gone". Deliberately its own set, never derived from REPORT_ONLY_TOOLS: ast_grep is
+# report-only but a local binary, so it keeps exit 2. Must stay a subset of REPORT_ONLY_TOOLS.
+SKIPPABLE_TOOLS = frozenset({"jscpd"})
+REPORT_ONLY_LABEL = "(report-only)"
 
 
 @dataclass(frozen=True)
@@ -43,6 +53,20 @@ class RatchetResult:
     def failed(self) -> bool:
         """True if any violation is new or above its ceiling."""
         return bool(self.new or self.worse)
+
+    @property
+    def blocking_failed(self) -> bool:
+        """True if a new or worse finding belongs to a tool that is not report-only; this is `check`'s exit 1."""
+        return any(f.tool not in REPORT_ONLY_TOOLS for f in self.new) or any(
+            f.tool not in REPORT_ONLY_TOOLS for f, _ in self.worse
+        )
+
+    @property
+    def report_only(self) -> tuple[tuple[Finding, str], ...]:
+        """The new or worse findings of report-only tools, each with what changed."""
+        entries = [(f, f"NEW value={f.value}") for f in self.new if f.tool in REPORT_ONLY_TOOLS]
+        entries += [(f, f"WORSE {f.value} > ceiling {row.ceiling}") for f, row in self.worse if f.tool in REPORT_ONLY_TOOLS]
+        return tuple(entries)
 
 
 def compare(findings: Iterable[Finding], rows: Sequence[Row]) -> RatchetResult:
@@ -68,6 +92,10 @@ def compare(findings: Iterable[Finding], rows: Sequence[Row]) -> RatchetResult:
     return RatchetResult(tuple(new), tuple(worse), tuple(improved), tuple(gone), unchanged)
 
 
+def _tag(finding: Finding) -> str:
+    return f" {REPORT_ONLY_LABEL}" if finding.tool in REPORT_ONLY_TOOLS else ""
+
+
 def _where(finding: Finding) -> str:
     place = f"{finding.file}:{finding.line}" if finding.line else finding.file
     return f"{place} {finding.symbol}" if finding.symbol else place
@@ -86,12 +114,12 @@ def format_report(result: RatchetResult, limit: int = DEFAULT_REPORT_LIMIT) -> s
     lines: list[str] = []
     lines += _section(
         "NEW violations (no baseline row)",
-        [f"  {_where(f)} [{f.tool} {f.rule}] value={f.value}" for f in result.new],
+        [f"  {_where(f)} [{f.tool} {f.rule}] value={f.value}{_tag(f)}" for f in result.new],
         limit,
     )
     lines += _section(
         "WORSE than baseline",
-        [f"  {_where(f)} [{f.tool} {f.rule}] {f.value} > ceiling {r.ceiling}" for f, r in result.worse],
+        [f"  {_where(f)} [{f.tool} {f.rule}] {f.value} > ceiling {r.ceiling}{_tag(f)}" for f, r in result.worse],
         limit,
     )
     lines += _section(
@@ -104,27 +132,37 @@ def format_report(result: RatchetResult, limit: int = DEFAULT_REPORT_LIMIT) -> s
         [f"  {r.file} {r.symbol or ''} [{r.tool} {r.rule}]" for r in result.gone],
         limit,
     )
-    verdict = "FAIL" if result.failed else "OK"
+    verdict = "FAIL" if result.blocking_failed else "OK"
+    note = f" ({len(result.report_only)} report-only)" if result.report_only else ""
     lines.append(
         f"{verdict}: {len(result.new)} new, {len(result.worse)} worse, {len(result.improved)} improved, "
-        f"{len(result.gone)} gone, {result.unchanged} unchanged"
+        f"{len(result.gone)} gone, {result.unchanged} unchanged{note}"
     )
     return "\n".join(lines)
 
 
-def format_summary(result: RatchetResult, changed_files: Collection[str] = (), limit: int = DEFAULT_REPORT_LIMIT) -> str:
+def skipped_note(skipped: Collection[str]) -> str:
+    """The one-line note for tools that could not run: they were not measured, which is not the same as clean."""
+    return "; ".join(f"{name} could not run {REPORT_ONLY_LABEL}; its findings were not measured" for name in sorted(skipped))
+
+
+def format_summary(
+    result: RatchetResult,
+    changed_files: Collection[str] = (),
+    limit: int = DEFAULT_REPORT_LIMIT,
+    skipped: Collection[str] = (),
+) -> str:
     """A Markdown job summary: one line on a pass; on a failure, violations in changed files come first.
 
     `changed_files` are repository-relative paths (for example the PR's `git diff --name-only`). A
     violation counts as "in a changed file" when its `file` is in that set; the lists are capped at
-    `limit` each so a large baseline drift cannot flood the summary.
+    `limit` each so a large baseline drift cannot flood the summary. Report-only findings and tools that
+    could not run get their own lines and never change the verdict.
     """
     counts = f"{len(result.improved)} improved, {len(result.gone)} gone, {result.unchanged} unchanged"
-    if not result.failed:
-        return f"**Code health (advisory):** OK, no new or worse violations ({counts})."
+    entries = [(f, f"NEW value={f.value}") for f in result.new if f.tool not in REPORT_ONLY_TOOLS]
+    entries += [(f, f"WORSE {f.value} > ceiling {row.ceiling}") for f, row in result.worse if f.tool not in REPORT_ONLY_TOOLS]
     changed = set(changed_files)
-    entries = [(f, f"NEW value={f.value}") for f in result.new]
-    entries += [(f, f"WORSE {f.value} > ceiling {row.ceiling}") for f, row in result.worse]
     mine = [e for e in entries if e[0].file in changed]
     other = [e for e in entries if e[0].file not in changed]
 
@@ -132,8 +170,14 @@ def format_summary(result: RatchetResult, changed_files: Collection[str] = (), l
         lines = [f"- `{_where(f)}` [{f.tool} {f.rule}] {what}" for f, what in items]
         return _section(title, lines, limit)
 
-    out = [f"**Code health (advisory):** {len(result.new)} new, {len(result.worse)} worse ({counts}).", ""]
-    out += block("In files this PR changed", mine) + ([""] if mine and other else [])
-    out += block("Elsewhere (baseline drift or other merged changes)", other)
-    out += ["", "Advisory only: this does not fail the PR during the soak (roadmap M4)."]
+    if entries:
+        out = [f"**Code health:** {len(entries)} new or worse blocking violations ({counts}).", ""]
+        out += block("In files this PR changed", mine) + ([""] if mine and other else [])
+        out += block("Elsewhere (baseline drift or other merged changes)", other)
+    else:
+        out = [f"**Code health:** OK, no new or worse blocking violations ({counts})."]
+    if result.report_only:
+        out += ["", *block(f"Report-only findings {REPORT_ONLY_LABEL}, they do not fail the PR", list(result.report_only))]
+    if skipped:
+        out += ["", f"**{skipped_note(skipped)}**"]
     return "\n".join(out)

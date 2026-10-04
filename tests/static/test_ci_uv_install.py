@@ -50,12 +50,18 @@ def test_lint_group_holds_the_code_health_tools_and_is_a_default_group() -> None
     assert data["tool"]["uv"]["default-groups"] == ["dev", "lint"]
 
 
-def test_code_health_job_is_advisory_and_keeps_the_ratchet_step_non_blocking() -> None:
-    """TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB: the soak job must never fail the PR."""
+def test_code_health_job_is_blocking_and_the_ratchet_step_can_fail_it() -> None:
+    """TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING: a required check must be able to fail the PR.
+
+    Branch protection lists the job by its name. Only the changed-paths step and the not-yet-flipped package-registry
+    step keep a step-level `continue-on-error`; the ratchet step and the job carry none.
+    """
     job = _JOBS["code-health"]
-    assert job["name"].endswith("(advisory)")
-    assert job["continue-on-error"] is True, "backstop for setup failures"
+    assert job["name"] == "Code health"
+    assert "continue-on-error" not in job, "a broken setup must not read as a pass for a required check"
     assert "if" not in job and "needs" not in job, "runs on every trigger, not behind the path-filter gate"
     step = next(s for s in job["steps"] if "codebase.health check" in s.get("run", ""))
-    assert step["continue-on-error"] is True, "the step carries the behaviour: exit 1 or 2 leaves the job green"
+    assert "continue-on-error" not in step, "exit 1 or 2 must fail the job"
     assert "--annotate" in step["run"] and "--summary-out" in step["run"] and "$GITHUB_STEP_SUMMARY" in step["run"]
+    tolerant = {s["name"] for s in job["steps"] if s.get("continue-on-error")}
+    assert tolerant == {"Paths this PR changed", "Package registry"}

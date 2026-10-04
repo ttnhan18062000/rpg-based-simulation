@@ -29,16 +29,15 @@ Every rule has an Enforcement cell with one of:
 
 - **reviewer**: a person or review agent judges it on the diff. No tool checks it.
 - **a named tool, configured**: the tool is configured in this repo (`pyproject.toml`) and can be
-  run on demand (below). It is **advisory in CI (soak)**: the `Code health (advisory)` job runs the
-  ratchet on every PR and reports in its job summary (changed files first) and one warning annotation,
-  but no CI job or hook fails on it yet. The violations that already exist in `src/` are held in
+  run on demand (below). It is **blocking in CI** for ruff, complexipy and the length limits: the `Code health`
+  job runs the ratchet on every PR, reports in its job summary (changed files first) and fails the PR on a new or
+  worse violation. The violations that already exist in `src/` are held in
   `codebase/baselines/code_health_exceptions.jsonl`, and `make code-health` fails only on a new or worse one.
-  Blocking comes after the two-week soak (roadmap M4). Until then such a rule is enforced by review
-  plus that advisory check. An opt-in pre-commit hook (`make install-prek-hooks`, see "Git hooks (opt-in)" in
+  jscpd and the ast-grep rules are report-only in that job (a cell says so where it applies). An opt-in pre-commit hook (`make install-prek-hooks`, see "Git hooks (opt-in)" in
   `docs/guidelines/agent_working_environment.md`) runs the same ratchet on the staged files. The first-run counts are in
   `TCK-20261002-CODE-HEALTH-TOOL-CONFIG`; later counts belong to the code-health snapshot.
-- **mypy, advisory today**: mypy is configured (`[tool.mypy]` in `pyproject.toml`) but runs
-  non-blocking in `make typecheck-py` and CI, and five packages are excluded. Existing errors are held in
+- **mypy, blocking**: mypy is configured (`[tool.mypy]` in `pyproject.toml`), runs blocking in
+  `make typecheck-py` and the `Type check` CI job, and five packages are excluded. Existing errors are held in
   `codebase/baselines/mypy_baseline.txt` (mypy-baseline 0.7.4, configured in `[tool.mypy_baseline]`; **1569
   entries** at `TCK-20261003-MYPY-BASELINE-ADVISORY`, one per error, line numbers normalised to 0, notes
   ignored), so `make typecheck-py` and the CI `mypy` step report only errors that are not in it. The CI
@@ -135,10 +134,10 @@ Python identifier conventions that section does not state.
 
 | ID | Rule | Enforcement |
 |---|---|---|
-| T1 | Every function has annotations on all arguments and on the return value. | ruff `ANN` rules except `ANN401`, configured; mypy, advisory today |
+| T1 | Every function has annotations on all arguments and on the return value. | ruff `ANN` rules except `ANN401`, configured; mypy, blocking |
 | T2 | Do not use `Any` in a public signature unless the value is a serialization boundary. Say why in the docstring. | reviewer |
 | T3 | Durable data, and anything passed or returned across a module boundary, is a typed model (dataclass or Pydantic), not `dict[str, Any]` (see the Durable State Rule in `CLAUDE.md`). | reviewer |
-| T4 | New code passes mypy under the repo config without a new `# type: ignore`. | mypy, advisory today |
+| T4 | New code passes mypy under the repo config without a new `# type: ignore`. | mypy, blocking |
 
 ## 8. Error handling
 

@@ -1,4 +1,4 @@
-"""Tests for the advisory mypy gate (TCK-20261003-MYPY-BASELINE-ADVISORY).
+"""Tests for the mypy gate (TCK-20261003-MYPY-BASELINE-ADVISORY).
 
 The unit tests feed canned mypy output (`--mypy-output`). The end-to-end tests build a tiny project in tmp_path
 with its own `[tool.mypy]` and `[tool.mypy_baseline]` and run the real mypy and mypy-baseline, so they prove the
@@ -61,7 +61,7 @@ def test_the_repository_declares_a_baseline_file_and_the_filter_config():
 
 def test_summary_is_one_line_with_the_baseline_size_when_nothing_is_new():
     text = format_summary([], 1569)
-    assert text == "**mypy (advisory):** 0 new errors (baseline holds 1569 entries)."
+    assert text == "**mypy:** 0 new errors (baseline holds 1569 entries)."
 
 
 def test_summary_lists_new_errors_with_a_cap():
@@ -78,7 +78,7 @@ def test_only_error_lines_count_as_new():
 def test_an_unrelated_edit_above_an_existing_error_does_not_resurface_it(project):
     _sync(project, _ERROR.format(line=3) + "\n")
     assert _gate(project, _ERROR.format(line=43) + "\n", "summary") == 0
-    assert (project / "summary.md").read_text() == "**mypy (advisory):** 0 new errors (baseline holds 1 entries).\n"
+    assert (project / "summary.md").read_text() == "**mypy:** 0 new errors (baseline holds 1 entries).\n"
 
 
 def test_a_genuinely_new_error_is_reported_alone_with_a_warning(project, capsys):
@@ -87,7 +87,7 @@ def test_a_genuinely_new_error_is_reported_alone_with_a_warning(project, capsys)
     assert _gate(project, _ERROR.format(line=3) + "\n" + new + "\n", "summary", "annotate") == 1
     out = capsys.readouterr().out
     assert new in out and _ERROR.format(line=3) not in out
-    assert "::warning::mypy-baseline: 1 new errors (advisory); see job summary" in out
+    assert "::error::mypy-baseline: 1 new errors; see job summary" in out
     assert "1 new errors (baseline holds 1 entries)" in (project / "summary.md").read_text()
 
 
@@ -117,8 +117,8 @@ def test_a_fixed_error_that_was_not_re_synced_does_not_fail_the_gate(project):
 def test_a_missing_baseline_is_reported_as_could_not_run(project, capsys):
     assert _gate(project, "", "summary", "annotate") == 2
     out = capsys.readouterr().out
-    assert "::warning::mypy-baseline could not run (advisory): baseline codebase/baselines/mypy_baseline.txt does not exist" in out
-    assert (project / "summary.md").read_text().startswith("**mypy (advisory):** could not run: baseline")
+    assert "::error::mypy-baseline could not run: baseline codebase/baselines/mypy_baseline.txt does not exist" in out
+    assert (project / "summary.md").read_text().startswith("**mypy:** could not run: baseline")
 
 
 def test_mypy_crashing_is_reported_as_could_not_run_and_the_summary_is_appended(project, monkeypatch, capsys):
@@ -130,8 +130,8 @@ def test_mypy_crashing_is_reported_as_could_not_run_and_the_summary_is_appended(
 
     monkeypatch.setattr(mypy_gate, "_run", boom)
     assert run(project, project / "summary.md", True, None) == 2
-    assert "::warning::mypy-baseline could not run (advisory): -m mypy exited 2: INTERNAL ERROR second line" in capsys.readouterr().out
-    assert (project / "summary.md").read_text() == "earlier step\n**mypy (advisory):** could not run: -m mypy exited 2: INTERNAL ERROR second line\n"
+    assert "::error::mypy-baseline could not run: -m mypy exited 2: INTERNAL ERROR second line" in capsys.readouterr().out
+    assert (project / "summary.md").read_text() == "earlier step\n**mypy:** could not run: -m mypy exited 2: INTERNAL ERROR second line\n"
 
 
 def test_the_whole_gate_runs_real_mypy_on_a_tiny_project(project):

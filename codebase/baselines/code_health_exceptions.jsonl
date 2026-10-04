@@ -557,7 +557,6 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/core/movement_modes.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/core/protocol_validator.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/core/protocol_validator.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 18, "file": "src/core/protocol_validator.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "ProtocolValidator.validate_result_batch", "tool": "complexipy", "value": 18}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/core/quests.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/core/quests.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/core/reason.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
@@ -1161,7 +1160,6 @@
 {"added_date": "2026-10-02", "ceiling": 13, "file": "src/engine/candidate_selector.py", "retiring_ticket": null, "reviewed": false, "rule": "duplicate-block", "symbol": "dup:src/engine/pipeline_phases/movement.py", "tool": "jscpd", "value": 13}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/capability.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/checkpoint.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/checkpoint.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/checkpoint.py", "retiring_ticket": null, "reviewed": false, "rule": "N818", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 21, "file": "src/engine/checkpoint.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "CanonicalStateHasher.to_canonical_data", "tool": "complexipy", "value": 21}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/cognition.py", "retiring_ticket": null, "reviewed": false, "rule": "C901", "symbol": null, "tool": "ruff", "value": 1}
@@ -1378,11 +1376,11 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "D102", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 3, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 3}
-{"added_date": "2026-10-02", "ceiling": 5, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "PLC0415", "symbol": null, "tool": "ruff", "value": 5}
+{"added_date": "2026-10-02", "ceiling": 2, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 2}
+{"added_date": "2026-10-02", "ceiling": 4, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "PLC0415", "symbol": null, "tool": "ruff", "value": 4}
 {"added_date": "2026-10-02", "ceiling": 4, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0912", "symbol": null, "tool": "ruff", "value": 4}
 {"added_date": "2026-10-04", "ceiling": 1, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "n4-version-marker-name", "symbol": "LegalityServiceV2", "tool": "ast_grep", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 596, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "class-length", "symbol": "LegalityServiceV2", "tool": "line_count", "value": 596}
+{"added_date": "2026-10-02", "ceiling": 584, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "class-length", "symbol": "LegalityServiceV2", "tool": "line_count", "value": 584}
 {"added_date": "2026-10-02", "ceiling": 44, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "LegalityServiceV2.get_engaged_hostiles_at_pos", "tool": "complexipy", "value": 44}
 {"added_date": "2026-10-02", "ceiling": 24, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "LegalityServiceV2.get_occupant", "tool": "complexipy", "value": 24}
 {"added_date": "2026-10-02", "ceiling": 38, "file": "src/engine/legality.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "LegalityServiceV2.has_line_of_sight", "tool": "complexipy", "value": 38}
@@ -2811,7 +2809,7 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/perf/long_run_harness.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/perf/long_run_harness.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0913", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/perf/long_run_harness.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0915", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 50, "file": "src/perf/long_run_harness.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "LongRunStabilityHarness.execute_run", "tool": "complexipy", "value": 50}
+{"added_date": "2026-10-02", "ceiling": 47, "file": "src/perf/long_run_harness.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "LongRunStabilityHarness.execute_run", "tool": "complexipy", "value": 47}
 {"added_date": "2026-10-02", "ceiling": 173, "file": "src/perf/long_run_harness.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "LongRunStabilityHarness.execute_run", "tool": "line_count", "value": 173}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/perf/profile_governance.py", "retiring_ticket": null, "reviewed": false, "rule": "ANN201", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/perf/profile_governance.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
@@ -2828,10 +2826,8 @@
 {"added_date": "2026-10-02", "ceiling": 19, "file": "src/perf/regression_gate.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "PerfRegressionGate.compare", "tool": "complexipy", "value": 19}
 {"added_date": "2026-10-02", "ceiling": 89, "file": "src/perf/regression_gate.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "PerfRegressionGate.compare", "tool": "line_count", "value": 89}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/perf/scenarios.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 4, "file": "src/perf/scenarios.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 4}
-{"added_date": "2026-10-02", "ceiling": 2, "file": "src/perf/scenarios.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 2}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/perf/scenarios.py", "retiring_ticket": null, "reviewed": false, "rule": "PLC0415", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 91, "file": "src/perf/scenarios.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "build_metropolis_state", "tool": "line_count", "value": 91}
+{"added_date": "2026-10-02", "ceiling": 1, "file": "src/perf/scenarios.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 1}
+{"added_date": "2026-10-02", "ceiling": 1, "file": "src/perf/scenarios.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/platform/__init__.py", "retiring_ticket": null, "reviewed": false, "rule": "D104", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/platform/rng.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 3, "file": "src/platform/rng.py", "retiring_ticket": null, "reviewed": false, "rule": "D102", "symbol": null, "tool": "ruff", "value": 3}

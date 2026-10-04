@@ -78,6 +78,13 @@ None.
 - Blocking gates affect every domain that edits src/; announce the date to other planners before flipping
 
 ## Implementation Notes
+- Policy in code (`codebase/health/ratchet.py`): `REPORT_ONLY_TOOLS = {jscpd, ast_grep}` and a separate `SKIPPABLE_TOOLS = {jscpd}`, pinned `SKIPPABLE_TOOLS <= REPORT_ONLY_TOOLS`. `RatchetResult.failed` keeps its meaning (edit hook and staged ratchet); `blocking_failed` is what `check` exits 1 on.
+- **Decision (planner, 2026-10-04): jscpd is exempt from exit 2.** `scan.run_scan(..., skippable=)` returns the tools that could not run; `check` skips them ("not measured", never "gone": their rows are left out of the comparison), writes a summary line and a `::warning::`, and exits 0/1 from the other tools. Reason: with the step blocking, an npm registry or `npx --yes` failure would fail a required check for a tool that is report-only by decision 16. Exit 2 stays for ruff, complexipy, line_count, ast_grep and any registry error. `check --from DIR`, `seed` and `tighten` never skip, so a partial scan can never delete jscpd rows or reseed from one.
+- Annotations on `check` and `mypy_gate` changed from `::warning::` to `::error::` (they now fail a required check); the skip note stays a `::warning::`.
+- CI: no `continue-on-error` on the `code-health` job, the `Code health ratchet` step or the `mypy` step (a broken setup must not read as a pass for a required check). **Kept on purpose:** the "Paths this PR changed" step (it truncates `/tmp/changed.txt` first and a failed diff only changes summary ordering) and `Package registry` (until its own flip). Jobs renamed `Code health` and `Type check`. The workflow has no path filter and neither job has an `if:`, so a required check cannot hang in "expected".
+- Registry: `tighten --yes` after reading the list: 6 rows lowered, 4 deleted (see the soak review); `check` then reports `0 improved, 0 gone`.
+- Precondition measured 2026-10-04 on `origin/main` 053f459e4: `check` exit 0 and `mypy_gate` exit 0. To be repeated right before merge.
+- The mypy gate first reached `main` in PR #313 (2026-10-04T04:59Z), so its window ends 2026-10-18T04:59Z; the merge is on or after 2026-10-18 05:00Z.
 
 ## Test Summary
 

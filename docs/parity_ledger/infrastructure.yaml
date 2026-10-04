@@ -2749,9 +2749,10 @@
 - id: INFRA-TYPE-001
   text: 'mypy type checking gate is configured for src/ (excluding V1 modules: src/ai/,
     src/town/, src/quests/, src/entities/, src/progression/). The gate runs on every
-    PR via CI, advisory: it reports only errors that are not in the committed mypy-baseline
+    PR via CI, blocking since TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING (the `Type check`
+    job): it fails the PR on an error that is not in the committed mypy-baseline
     file (codebase/baselines/mypy_baseline.txt, 1569 entries at TCK-20261003-MYPY-BASELINE-ADVISORY)
-    and its step is continue-on-error until the soak ends (TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING).
+    or when mypy cannot run, and its step carries no continue-on-error.
     Response model annotations are present
     on all actionable inline routes in server.py (13 of 18; 5 excluded due to raw
     Response/Redirect/HTML types). src/api/schemas.py created with typed TypedDict
@@ -2765,7 +2766,7 @@
     Makefile (filters through mypy_baseline; typecheck-baseline-sync rewrites the baseline);
     [tool.mypy_baseline] and codebase/baselines/mypy_baseline.txt; codebase/gates/mypy_gate.py
     (job summary with the new-error count and baseline size); mypy step in .github/workflows/test.yml
-    (runs the gate, continue-on-error during the soak); response_model= on 13 inline routes in src/api/server.py; src/api/schemas.py created
+    (runs the gate; no continue-on-error, job `Type check` is a required check); response_model= on 13 inline routes in src/api/server.py; src/api/schemas.py created
     with WorldStateResponse, EntityPageResponse, EntityDetailResponse TypedDict schemas.
 
     '
@@ -2774,8 +2775,8 @@
     tests/codebase/test_typecheck_gate_configured.py::test_makefile_typecheck_py_target_runs_mypy_on_src,
     tests/codebase/test_typecheck_gate_configured.py::test_ci_workflow_has_a_mypy_step,
     tests/codebase/test_typecheck_gate_configured.py::test_pyproject_configures_mypy_baseline_with_the_committed_baseline_and_tolerant_syncing,
-    tests/codebase/test_typecheck_gate_configured.py::test_makefile_typecheck_py_filters_through_the_baseline_and_stays_advisory,
-    tests/codebase/test_typecheck_gate_configured.py::test_ci_mypy_step_runs_the_advisory_gate_and_is_not_blocking,
+    tests/codebase/test_typecheck_gate_configured.py::test_makefile_typecheck_py_filters_through_the_baseline_and_is_blocking,
+    tests/codebase/test_typecheck_gate_configured.py::test_ci_mypy_step_runs_the_gate_and_is_blocking,
     tests/codebase/test_mypy_gate.py::test_the_whole_gate_runs_real_mypy_on_a_tiny_project
   divergence_note: null
   support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
