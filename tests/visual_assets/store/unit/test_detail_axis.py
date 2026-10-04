@@ -94,7 +94,14 @@ def test_a_declared_detail_value_is_recorded_and_fills_its_own_slot(adopting):
     assert json.loads((adopting.catalog / "provenance" / "adoptions" / f"{record.adoption_id}.json").read_bytes())["detail_value"] == "bush"
     assert records.slot_holders(adopting.registry.keys[HERO], "bush") == ["hero"]
     assert records.slot_holders(adopting.registry.keys[HERO], "plain") == []
-    assert any("[bush]" in notice for notice in s.CALLS[-1][1])  # the human is shown the slot they are filling
+    text = "\n".join(s.CALLS[-1][1])
+    assert f"visual key {HERO} [bush]; licence recorded as CLEARED, evidence 'licence-note-7'" in text  # the slot AND the real evidence ref
+    assert "default detail value" not in text
+
+
+def test_the_notice_says_when_the_slot_is_the_keys_default(adopting):
+    adopt(adopting, s.make_intake(adopting.tmp, 16).intake_id, "hero", visual_key=HERO)
+    assert f"visual key {HERO} [plain] (the key's default detail value); licence" in "\n".join(s.CALLS[-1][1])
 
 
 def refuse(env, code, intake_id, sid, **over):
@@ -161,6 +168,29 @@ def test_a_release_needs_the_default_slot_but_not_the_other_values(tree):
     with pytest.raises(BuildError) as err:
         release(tree)
     assert err.value.code == "key_without_artifact" and "[tree]" in err.value.message and snapshot(tree.catalog) == before
+
+
+def test_an_adopted_slot_without_an_artifact_is_refused_not_dropped(env):
+    s.CALLS.clear()
+    s.write_export_config(env.catalog)
+    s.write_store_format(env.catalog)
+    env.registry = s.detail_registry(HERO)
+    adopt(env, s.make_intake(env.tmp, 16).intake_id, "hero", visual_key=HERO, detail_value="plain")
+    exporter.build(renderer=s.HashRenderer())  # plain is built; bush is adopted AFTERWARDS and never built
+    adopt(env, s.make_intake(env.tmp, 17).intake_id, "rock", visual_key=HERO, detail_value="bush")
+    s.write_registry(env.catalog, [HERO], detail=AXIS)
+    before = snapshot(env.catalog)
+    with pytest.raises(BuildError) as err:
+        release(env)
+    assert err.value.code == "key_without_artifact" and "[bush]" in err.value.message and "run build" in err.value.message
+    assert snapshot(env.catalog) == before
+    s.write_registry(env.catalog, [HERO], optional=(HERO,), detail=AXIS)  # an OPTIONAL key keeps the old skip behaviour
+    assert [e.detail for e in release(env).entries] == ["plain"]
+
+
+def test_an_unadopted_non_default_slot_is_simply_absent(tree):
+    s.write_registry(tree.catalog, [HERO], detail={HERO: (("plain", "bush", "tree", "shrub"), "plain")})  # tree and shrub: declared, never adopted
+    assert [e.detail for e in release(tree).entries] == ["bush", "plain"]
 
 
 def test_an_optional_key_may_omit_its_default_slot(tree):

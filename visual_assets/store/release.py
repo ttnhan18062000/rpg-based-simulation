@@ -4,7 +4,8 @@ There is no active pointer and no "latest" file (D6): a candidate is only a cand
 maps to its source asset through the adoption record of the asset's latest build-eligible revision; two assets claiming one SLOT is refused as ambiguous.
 A slot is a visual key, plus a detail value when the key declares a detail axis (`detail` in the registry): one key then carries one artifact per
 declared detail value, each adopted separately (`AdoptionRecord.detail_value`, `None` = the key's default value). Every artifact is at the single `x1` scale class.
-A key that is not optional needs its default slot's artifact; its other detail values are optional (the client falls back to the default).
+A key that is not optional needs its default slot's artifact; its other detail values need none until someone adopts them, but an adopted (held) slot
+without an artifact is refused (`key_without_artifact`: run `build`), never dropped.
 """
 
 from __future__ import annotations
@@ -108,7 +109,7 @@ def assemble_release(catalog_id: str, *, release_id: str | None = None, allow_fi
                     if not required:
                         continue
                     raise BuildError("key_without_artifact", f"the registry key {what} has no adopted, build-eligible source; mark it optional or adopt one")
-                entry = _entry(what, key, detail, assets[(key, detail)], optional=not required)
+                entry = _entry(what, key, detail, assets[(key, detail)], optional=definition.optional)  # a HELD slot with no artifact is a forgotten `build`, never silently dropped
                 if entry is not None:
                     entries.append(entry)
         manifest = ReleaseCandidateManifest(

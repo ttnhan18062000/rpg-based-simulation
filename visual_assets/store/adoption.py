@@ -266,7 +266,7 @@ def adopt(
         PREVIEW_WARNING,
         f"adopt {intake_id} as {source_asset_id} {revision}" + (f" (parent {parent_revision})" if parent_revision else " (new source asset)"),
         "the store re-rendered the source just now and its pixels MATCH the producer's preview",
-        f"visual key {slot_name}" + (" (the key's default detail value)" if detail_value is None and slot is not None else "") + "; licence recorded as CLEARED, evidence {licence_evidence_ref!r} (stated by you, not taken from the package)",
+        f"visual key {slot_name}" + (" (the key's default detail value)" if detail_value is None and slot is not None else "") + f"; licence recorded as CLEARED, evidence {licence_evidence_ref!r} (stated by you, not taken from the package)",
         f"approver {approver!r} ({approver_role}); recorded, not authenticated",
     )
     if not confirm(intake_id, notices):

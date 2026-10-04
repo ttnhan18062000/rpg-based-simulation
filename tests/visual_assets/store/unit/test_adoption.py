@@ -70,6 +70,7 @@ def test_the_human_is_shown_the_warning_and_asked_once_and_last(env):
     text = "\n".join(notices)
     assert PREVIEW_WARNING in notices and "hero r0001" in text and "stated by you, not taken from the package" in text
     assert "recorded, not authenticated" in text
+    assert "evidence 'licence-note-7'" in text and "{licence_evidence_ref" not in text  # the notice the human approves shows the real evidence ref
 
 
 def test_a_second_revision_gets_r0002_with_parent_r0001_and_leaves_r0001_untouched(env):
