@@ -13,9 +13,11 @@ from src.worldbuilding.repository import WorldRepository, WorldRepositoryError
 from src.worldbuilding.schema import WorldSpec, InvalidWorldSpecError, load_world_spec_from_yaml
 from src.worldbuilding.validator import WorldValidator
 from src.worldbuilding.compiler import WorldCompiler
-from src.content.paths import ContentPathConfig
-from src.worldmodules.repository import WorldModuleRepository
-from src.worldassembly.resolve_io import resolve_composition_file, write_resolved_artifacts
+from src.worldassembly.resolve_io import (
+    load_content_repositories,
+    resolve_composition_file,
+    write_resolved_artifacts,
+)
 from src.worldassembly.context import CompileContext
 from src.worldgeneration.schema import GenerationIntentSpec
 from src.worldgeneration.generator import ProceduralCompositionGenerator, GenerationCompositionError
@@ -361,11 +363,12 @@ def handle_generate(args) -> int:
     )
 
     try:
-        mod_repo = WorldModuleRepository(ContentPathConfig().world_modules_dir)
-        mod_repo.load_all()
+        # The CLI is the boundary where resolving content paths against the process cwd is
+        # legitimate; the generator itself takes both repositories injected.
+        cat_repo, mod_repo = load_content_repositories()
 
         generator = ProceduralCompositionGenerator()
-        output_path = generator.generate(intent, mod_repo)
+        output_path = generator.generate(intent, mod_repo, cat_repo)
 
         print(str(output_path))
         return 0

@@ -18,6 +18,7 @@ from pathlib import Path
 
 from src.worldgeneration.generator import ProceduralCompositionGenerator
 from src.worldgeneration.schema import GenerationIntentSpec
+from src.content.repository import CatalogRepository
 from src.worldmodules.repository import WorldModuleRepository
 from src.worldmodules.schema import WorldModuleSpec, ModuleParameterSpec
 from src.worldassembly.schema import WorldCompositionSpec
@@ -61,6 +62,17 @@ def _make_module(
     )
 
 
+def _make_catalog() -> CatalogRepository:
+    """An explicitly empty catalog: these fixtures' modules reference no catalog records.
+
+    Explicit rather than a cwd-relative load, which is exactly the hidden dependency the
+    generator's injected catalog_repo exists to remove.
+    """
+    repo = CatalogRepository("tests/fixtures/__nonexistent_catalog__")
+    repo.load_all()
+    return repo
+
+
 def _make_repo(modules: list[WorldModuleSpec]) -> WorldModuleRepository:
     """Return a WorldModuleRepository populated in memory, with no file I/O.
 
@@ -97,7 +109,7 @@ def _generate_and_load(
     monkeypatch.chdir(tmp_path)
     repo = _make_repo(modules)
     gen = ProceduralCompositionGenerator()
-    output_path = gen.generate(intent, repo)
+    output_path = gen.generate(intent, repo, _make_catalog())
     raw = yaml.safe_load(output_path.read_text())
     return WorldCompositionSpec.model_validate(raw)
 

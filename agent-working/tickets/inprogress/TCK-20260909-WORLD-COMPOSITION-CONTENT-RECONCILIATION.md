@@ -995,45 +995,101 @@ actually re-checked.
   - the camp **`STALE-PREMISE`** closure — both modules it turns on are present in *both*
     definitions of `frontier_living_world`. **Survives.**
 
-### Blocking conflict — reported, not worked around
+### Catalog injection — the conflict I reported was real, but my diagnosis was one level too shallow
 
-**Step 11's decision that `generate()` also runs the resolve breaks two of the six tests Scope
-Guard 3 names byte-unchanged, and I did not edit them.**
+My first Implement report framed the two failing `test_generated_composition_*` tests as an
+overbroad Scope Guard 3 and recommended relaxing the guard. **The coordinator overrode that, and
+the evidence proves them right.**
+`git show c86fa3a21:src/worldgeneration/generator.py | grep -nE "CatalogRepository\("` returns
+**nothing** — no catalog was constructed anywhere in that module before this ticket. The
+`CatalogRepository("data/content")` I added at `:565` was therefore a **cwd-dependent hidden
+dependency introduced inside a library function** by this very diff. The two tests
+`monkeypatch.chdir(tmp_path)` to isolate their output, which is correct behaviour, and they caught
+a real design problem. Relaxing the guard would have preserved the smell and spent the guard's
+credibility doing it.
 
-- Failing: `tests/integration/worldassembly/test_real_content_world_compositions.py::test_generated_composition_is_valid_worldcompositionspec`
-  and `::test_generated_composition_determinism` (plan line references `:265` and `:300`).
-- Root cause, measured: both `monkeypatch.chdir(tmp_path)` and call `gen.generate(intent, mod)`
-  with the real module repo but **no catalog**. `generate()` loads
-  `CatalogRepository("data/content")`, which is cwd-relative, so under `tmp_path` it loads an
-  **empty** catalog; the resolver then raises
-  `ResolverError: [region] 'judgement_arena' not found in catalog — referenced by module 'combat_judgement_arena'`.
-  This is not a latent content defect — against the real catalog the same composition resolves.
-- The plan's Step 11 enumerated only `tests/unit/worldgeneration/test_composition_generator.py` as
-  the generator's test surface and did not notice these two integration tests also call
-  `generate()`. Scope Guard 3's own rationale is about the ADR's reach over *which file defines a
-  world*; Step 11 changes the generator's **contract**, a different axis. The guard nevertheless
-  names both tests by line, so resolving it is a scope decision I do not own.
-- **Options, none of which I applied:**
-  1. Let the two tests pass a catalog (or stop chdir-ing) — a byte change to a
-     Scope-Guard-3-protected file; smallest fix, needs the guard relaxed for this axis.
-  2. Make `generate()` take `catalog` and skip the resolve when it is `None` — keeps the two tests
-     byte-unchanged but introduces a silent "authored but unresolved" degradation path, which is
-     exactly the half-finished shape Step 11 item 4 exists to prevent.
-  3. Move the resolve to the CLI's `generate` handler — restores the unrecoverable
-     `world.yaml`-written-but-resolve-failed state that option (a) was chosen to prevent.
-  4. Anchor the catalog load on a repo root rather than cwd — a new cross-cutting concept, and
-     every other loader in this repo is cwd-relative by convention.
+Fixed in the production code instead:
 
-  My own reading is that (1) is correct and cheap, and that the guard was simply not written with
-  this axis in mind — but it is a scope decision, so it is reported rather than taken.
+- `ProceduralCompositionGenerator.generate()` now takes `catalog_repo: CatalogRepository` as a
+  **required** parameter, with **no default** — a default would re-introduce the same cwd
+  dependency less visibly. The in-function construction is gone. This restores the module's own
+  convention: `WorldProceduralGenerator.__init__` at `:65` already takes an injected
+  `catalog_repo`, and the comment at `:148` already calls that class "constructor-injectable with
+  ANY CatalogRepository". My `:565` line was the only thing in the module violating it.
+- `src/worldbuilding/cli.py`'s `generate` handler passes the catalog it loads through
+  `load_content_repositories()`. The CLI is the boundary where resolving content paths against the
+  process cwd is legitimate; the library function no longer does it. Two now-unused imports
+  dropped.
+- The two integration tests changed **minimally**: their `repos` fixture already loads the real
+  catalog *before* any chdir and both were discarding it (`_, mod = repos`); they now do
+  `cat, mod = repos` and pass it. The `monkeypatch.chdir(tmp_path)` is kept.
+- The generator's unit tests gained an explicit `_make_catalog()` (a loaded, empty
+  `CatalogRepository` pointed at a nonexistent directory) — explicit rather than cwd-relative, for
+  the same reason. All 42 pass.
+
+**Scope Guard 3 was NOT weakened on its own axis.** Its rationale is the ADR's reach over *which
+file defines a world*, which still holds: the other four named tests (`:171`, `:188`, `:205`,
+`:224`) are byte-unchanged. These two changed because Step 11 legitimately changes `generate()`'s
+**signature** — Step 11's own surface, not the ADR's.
+
+### STILL RED — a real generator defect the injection surfaced, routed rather than decided
+
+With the real catalog injected, the same two tests now fail for a different and deeper reason:
+
+```
+ValueError: Duplicate region ID collision 'hometown' detected during assembly merge.
+src/worldassembly/resolver.py:359
+```
+
+Measured, not inferred:
+
+- `frontier_village_core.yaml` and `trading_company_hub.yaml` **both declare region id
+  `hometown`**.
+- Today's `ModuleScorer` ranks them **1 and 2** for this intent (`generated_frontier_3_42`, seed
+  42, `settlement_style="frontier"`), so the generator selects both.
+- The generator emits every `ModuleRefSpec` with `namespace=None` and never sets one; its Rule 5
+  fail-fast guards duplicate **`provides`** strings only, not duplicate region ids.
+- The hand-authored `data/worlds/urban_political/world.yaml` composes the same two modules and
+  resolves this with `namespace: trading` — exactly as `test_urban_political_composition`'s
+  docstring says.
+- The **committed** `data/worlds/generated_frontier_3_42/world.yaml`, authored by the generator
+  before this ticket, contains `frontier_village_core` but **not** `trading_company_hub`. The
+  module corpus and/or scorer has moved since, so today's selection picks a colliding pair.
+
+**Pre-existing latent defect, newly surfaced rather than caused.** The selection code is
+byte-unchanged by this diff: `git diff c86fa3a21 HEAD -- src/worldgeneration/generator.py` shows no
+change to `ModuleScorer` use, the ranking, `selected_ids`, `BUDGET` or Rule 5 — the only matching
+diff lines are docstring text. It was invisible because nothing ever resolved what the generator
+authored; Step 11 item 4 made it visible, which is exactly what that item exists for.
+
+**Not fixed here.** Every available fix changes *which world a given intent generates*:
+(a) auto-namespace colliding modules — changes region identity itself; (b) extend Rule 5 to reject
+region-id collisions and fall through to the next candidate; (c) filter colliding candidates during
+selection. All three are world-semantics decisions, which this repo routes to the rule owner rather
+than letting an implementer take. **The two tests stay red and the "Full scoped regression" AC
+stays unchecked.** This wants its own ticket:
+*the procedural composition generator can author a composition that cannot assemble.*
 
 ### Pre-existing failures, verified not caused by this ticket
 
-- **17 failures in `tests/unit/worldassembly/test_corpus_diversity.py` and
-  `test_hero_guild_routing_population_stability.py`.** `test_corpus_diversity.py`'s own module
-  docstring documents 13 failures + 1 error as an accepted consequence of
-  `TCK-20260824-TOWN-CENTER-POINTER-FIX`, with 10 of 13 deliberately left. Neither file imports
-  anything this ticket changed.
+- **11 failures in `tests/unit/worldassembly/test_corpus_diversity.py` and
+  `test_hero_guild_routing_population_stability.py`** (`11 failed, 83 passed in 1338s`, measured
+  in the foreground on the final tree). Evidence they predate this diff, rather than an assertion:
+  (i) `git diff --stat c86fa3a21 HEAD -- <both test files> data/worlds/` is **empty** — the tests
+  and every world definition and snapshot they read are byte-identical to the commit before this
+  ticket; (ii) an import-closure probe loading both test modules pulls in **230** modules and
+  **none** of this ticket's ten changed `src/` modules; (iii) of the four changed modules that
+  pytest's `conftest.py` could additionally pull in, the exact diffs are inert for a world loaded
+  from `data/worlds/` — `paths.py` only removes an unread field, `repository.py` only shrinks
+  `NON_CATALOG_DIRS` (strict-mode ignored-file reporting), `worldbuilding/repository.py` only adds
+  a module-level constant, and `worldassembly/schema.py` adds a new model plus an **optional**
+  field that is `None` on every existing definition, making its normalizer `pop` a no-op.
+  *(Caveat, stated rather than hidden: the conftest-inclusive variant of the closure probe failed
+  to import under a bare interpreter, so (ii) is the closure without `conftest.py` and (iii) is the
+  diff-level argument that covers the remainder. I did not re-run these two files at `c86fa3a21`
+  — that is a 22-minute run whose outcome (i)-(iii) already determine.)* Their own module docstring
+  independently documents 13 failures + 1 error as accepted fallout from
+  `TCK-20260824-TOWN-CENTER-POINTER-FIX`, 10 of 13 deliberately left unfixed.
 - **`tests/integration/content/test_swamp_border_pack.py::test_base_strict_matrix_unaffected_by_pack_content`**
   errors only when run in the same process as those failing stability tests; the content suite is
   109/109 green on its own.
@@ -1056,18 +1112,25 @@ provenance history, refuse-to-overwrite, resolve-failure cleanup). Deliberately 
 
 | command | result |
 |---|---|
-| `pytest tests/architecture/test_world_definition_single_source.py -q` | **7 passed** (2 of them red before Step 12, as designed) |
-| `pytest tests/unit/worldbuilding/ -q` | 225 passed |
-| `pytest tests/integration/worldassembly/ tests/unit/worldassembly/ tests/integration/content/ tests/unit/content/ tests/tools/test_content_inventory.py tests/unit/worldgeneration/ tests/unit/worldbuilding/ -q` (minus the two pre-existing stability families) | **756 passed, 2 failed** — the two Scope-Guard-3 tests in the blocking conflict |
+| `pytest tests/architecture/test_world_definition_single_source.py -q` | **7 passed** (guards 1-2 red before Step 12, by design) |
+| `pytest tests/integration/worldassembly/ tests/unit/worldassembly/ -q` (minus the two stability families) | **133 passed, 2 failed** — the two generator tests in the region-collision finding |
+| `pytest tests/unit/worldgeneration/ -q` | **42 passed** |
+| `pytest tests/unit/content/ tests/integration/content/ tests/tools/test_content_inventory.py tests/unit/worldbuilding/ tests/unit/scenarios/ tests/unit/domains/campaigns/test_campaign_orchestrator.py tests/architecture/test_world_definition_single_source.py tests/unit/rendering/test_variants.py -q` | **685 passed** |
 | `pytest tests/integration/scenarios/ -q` | 172 passed, 2 skipped, 1 xfailed, 1 pre-existing failure |
-| `pytest tests/unit/scenarios/ tests/unit/domains/campaigns/test_campaign_orchestrator.py -q` | 84 passed |
 | `pytest tests/integration/campaigns/ -q` | 21 passed, 1 pre-existing failure (reproduced at `c86fa3a21`) |
+| `pytest tests/unit/worldassembly/test_corpus_diversity.py tests/unit/worldassembly/test_hero_guild_routing_population_stability.py -q` | **11 failed, 83 passed** in 1338s — pre-existing, evidence below |
 | `pytest tests/unit/rendering/test_variants.py -q` | 13 passed — the `INFRA-373` tripwire did not move |
 | `tools/parity_index.py check-staleness` | FRESH |
 
-**Step 15 is therefore not satisfied.** Everything in the plan's five scoped commands is green
-except the two tests named in the blocking conflict, which cannot be fixed without crossing Scope
-Guard 3.
+Every command was run in the foreground on the final tree.
+
+**Step 15 is therefore not satisfied**, and the AC stays unchecked. Exactly two tests fail for a
+reason attributable to this ticket's own work —
+`test_generated_composition_is_valid_worldcompositionspec` and
+`::test_generated_composition_determinism` — and they fail on a pre-existing generator-selection
+defect that Step 11's resolve surfaced (`Duplicate region ID collision 'hometown'`), whose fix is a
+world-semantics decision routed to the rule owner. Everything else in the plan's scoped commands is
+green apart from the enumerated pre-existing set.
 
 ## Files Changed
 
@@ -1138,11 +1201,15 @@ generator was changed to author `data/worlds/<id>/world.yaml` directly with a hi
 provenance marker, refusing to overwrite and resolving before committing either write.
 `SUB-394` records the law with the guard as its `test_path`.
 
-**Not complete.** Step 15's all-green regression is not satisfied: Step 11's decision that
-`generate()` also runs the resolve breaks two of the six tests Scope Guard 3 names byte-unchanged
-(`test_generated_composition_is_valid_worldcompositionspec`,
-`test_generated_composition_determinism`), because they chdir to `tmp_path` and pass no catalog, so
-the cwd-relative catalog load comes back empty. Those two tests were left untouched and the
-conflict is reported with four options in the Implementation Notes rather than resolved on this
-ticket's authority. AC-5's oracle stays `unresolved` for this ticket, which is correct rather than a
-gap.
+**Not complete.** Step 15's all-green regression is not satisfied. Two tests remain red:
+`test_generated_composition_is_valid_worldcompositionspec` and
+`::test_generated_composition_determinism`. The first cause I reported — a cwd-dependent
+`CatalogRepository` I had added inside `generate()` — is **fixed**, by injecting the catalog as a
+required parameter with no default, per the coordinator's scope decision; my own earlier
+recommendation to relax Scope Guard 3 instead was wrong, and the guard was not weakened. What
+remains is a genuine, pre-existing generator defect the fix surfaced: today's `ModuleScorer` ranks
+`frontier_village_core` and `trading_company_hub` first and second, both declare region id
+`hometown`, and the generator never sets a `namespace` — so it authors a composition that cannot
+assemble. Every fix for that changes which world a given intent generates, so it is routed to the
+rule owner rather than decided here, and it wants its own ticket. AC-5's oracle stays `unresolved`
+for this ticket, which is correct rather than a gap.

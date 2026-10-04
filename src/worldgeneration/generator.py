@@ -396,6 +396,7 @@ class ProceduralCompositionGenerator:
         self,
         intent: GenerationIntentSpec,
         module_repo: WorldModuleRepository,
+        catalog_repo: CatalogRepository,
         output_dir: Path | None = None,
     ) -> Path:
         """
@@ -407,6 +408,12 @@ class ProceduralCompositionGenerator:
             High-level generation parameters (seed, danger_level, settlement_style, etc.)
         module_repo : WorldModuleRepository
             Loaded repository of available WorldModuleSpec candidates.
+        catalog_repo : CatalogRepository
+            Loaded catalog the authored composition is resolved against. Injected rather than
+            constructed here, and deliberately without a default: constructing one inside this
+            function would read the filesystem relative to the CALLER'S cwd, which is a hidden
+            dependency in a library function, and a default would re-introduce it less visibly.
+            Matches WorldProceduralGenerator's own constructor-injection convention.
         output_dir : Path | None
             World root to author into; defaults to the authoritative one.
 
@@ -562,9 +569,7 @@ class ProceduralCompositionGenerator:
         # Resolve BEFORE committing either write. These are two durable writes with no atomicity:
         # a resolve that fails after world.yaml has landed leaves a world that
         # WorldRepository.load_world() refuses AND that the refusal above makes un-regenerable.
-        catalog = CatalogRepository("data/content")
-        catalog.load_all()
-        bundle, rendered_world_yaml = resolve_composition(composition, catalog, module_repo)
+        bundle, rendered_world_yaml = resolve_composition(composition, catalog_repo, module_repo)
 
         world_dir.mkdir(parents=True, exist_ok=True)
         output_path.write_text(

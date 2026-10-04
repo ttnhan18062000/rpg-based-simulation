@@ -285,7 +285,7 @@ def test_generated_composition_is_valid_worldcompositionspec(repos, tmp_path, mo
     from src.worldgeneration.schema import GenerationIntentSpec
 
     monkeypatch.chdir(tmp_path)
-    _, mod = repos
+    cat, mod = repos
 
     intent = GenerationIntentSpec(
         generation_id="generated_frontier_3_42",
@@ -298,7 +298,7 @@ def test_generated_composition_is_valid_worldcompositionspec(repos, tmp_path, mo
     )
 
     gen = ProceduralCompositionGenerator()
-    output_path = gen.generate(intent, mod)
+    output_path = gen.generate(intent, mod, cat)
 
     assert output_path.exists(), "Generator must write output YAML to disk"
     raw = _yaml.safe_load(output_path.read_text())
@@ -319,7 +319,7 @@ def test_generated_composition_determinism(repos, tmp_path, monkeypatch):
     from src.worldgeneration.schema import GenerationIntentSpec
 
     monkeypatch.chdir(tmp_path)
-    _, mod = repos
+    cat, mod = repos
 
     intent = GenerationIntentSpec(
         generation_id="generated_frontier_3_42",
@@ -329,14 +329,19 @@ def test_generated_composition_determinism(repos, tmp_path, monkeypatch):
     )
 
     gen = ProceduralCompositionGenerator()
-    path1 = gen.generate(intent, mod)
-    content1 = path1.read_text()
+    path1 = gen.generate(intent, mod, cat)
+    content1 = _yaml.safe_load(path1.read_text())
     path1.unlink()
 
-    path2 = gen.generate(intent, mod)
-    content2 = path2.read_text()
+    path2 = gen.generate(intent, mod, cat)
+    content2 = _yaml.safe_load(path2.read_text())
 
-    assert content1 == content2, "Same intent must produce identical YAML across calls"
+    # generation_provenance.generated_at is a wall-clock origin record, outside the composition's
+    # identity -- the same split the resolver draws with provenance_manifest.created_at.
+    content1["generation_provenance"].pop("generated_at")
+    content2["generation_provenance"].pop("generated_at")
+
+    assert content1 == content2, "Same intent must produce an identical composition across calls"
 
 
 # ---------------------------------------------------------------------------

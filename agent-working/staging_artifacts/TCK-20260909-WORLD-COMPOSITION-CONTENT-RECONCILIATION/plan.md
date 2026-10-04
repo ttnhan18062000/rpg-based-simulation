@@ -1028,3 +1028,84 @@ Recorded during Implement. Nothing here was changed silently.
    did not notice these two integration tests also call `generate()`. The two tests were left
    untouched; four options are recorded in the ticket's Implementation Notes for whoever owns the
    scope decision.
+
+### Deviation 10 — the generator's catalog is INJECTED (coordinator scope decision, supersedes my option (1))
+
+My Implement-phase report framed the two failing `test_generated_composition_*` tests as an
+overbroad Scope Guard 3 and recommended relaxing it. **That reading was one level too shallow and
+the coordinator's decision overrides it.** Checked and confirmed:
+`git show c86fa3a21:src/worldgeneration/generator.py | grep -nE "CatalogRepository\("` returns
+**nothing** — there was no catalog construction in that module before this ticket. The
+`CatalogRepository("data/content")` at `:565` was introduced by **this diff**, as part of Step 11
+item 4. So the defect was a **cwd-dependent hidden dependency added inside a library function**,
+not a guard that was too broad. The two tests `monkeypatch.chdir(tmp_path)` to isolate their
+output, which is correct, and they caught a real design problem.
+
+Applied instead:
+
+1. `ProceduralCompositionGenerator.generate()` takes `catalog_repo: CatalogRepository` as a
+   required parameter and the in-function construction is gone. **Deliberately no default** — a
+   default would re-introduce the same cwd dependency, just less visibly. This matches the
+   convention the module already establishes at `src/worldgeneration/generator.py:65`
+   (`WorldProceduralGenerator.__init__(self, catalog_repo, module_repo)`), and the comment at
+   `:148` already describes that class as "constructor-injectable with ANY CatalogRepository" — my
+   `:565` construction was the only thing in the module violating its own convention.
+2. The two tests changed **minimally**: the `repos` fixture already loads the real catalog before
+   any chdir, and both tests were discarding it with `_, mod = repos`. They now do
+   `cat, mod = repos` and pass `cat` through. `monkeypatch.chdir(tmp_path)` is kept — it is doing
+   its job. `test_generated_composition_determinism` additionally excludes
+   `generation_provenance.generated_at` from its comparison, the same already-recorded treatment
+   deviation 7(b) applies to the unit-level determinism test.
+3. `src/worldbuilding/cli.py`'s `generate` handler passes the catalog it now loads via
+   `load_content_repositories()` — the CLI is the boundary where resolving content paths against
+   the process cwd is legitimate. Its two now-unused imports (`ContentPathConfig`,
+   `WorldModuleRepository`) were dropped.
+4. The generator's own unit tests gained an explicit `_make_catalog()` returning a loaded, empty
+   `CatalogRepository` pointed at a nonexistent directory — explicit rather than cwd-relative, for
+   the same reason.
+
+**Scope Guard 3 was NOT weakened on its own axis.** Its rationale is the ADR's reach over *which
+file defines a world*, and that still holds: the other four named tests (`:171`, `:188`, `:205`,
+`:224`) remain byte-unchanged. These two changed because Step 11 legitimately changes
+`generate()`'s **signature**, which is Step 11's own surface, not the ADR's.
+
+### Deviation 11 — a REAL generator defect surfaced by the injection, and NOT fixed here
+
+With the real catalog injected, the two tests fail for a different and deeper reason:
+
+```
+ValueError: Duplicate region ID collision 'hometown' detected during assembly merge.
+src/worldassembly/resolver.py:359
+```
+
+Measured, not inferred:
+
+- `data/content/world_modules/frontier_village_core.yaml` and `trading_company_hub.yaml` **both
+  declare region id `hometown`**.
+- Today's `ModuleScorer` ranks them **1 and 2** for this intent
+  (`generated_frontier_3_42`, seed 42, `settlement_style="frontier"`), so the generator selects
+  both.
+- The generator emits every `ModuleRefSpec` with `namespace=None` and never sets one. Its Rule 5
+  fail-fast guards duplicate **`provides`** strings only, not duplicate region ids.
+- The hand-authored `data/worlds/urban_political/world.yaml` composes the same two modules and
+  resolves the collision with `namespace: trading` on `trading_company_hub` — exactly as
+  `test_urban_political_composition`'s docstring states.
+- The **committed** `data/worlds/generated_frontier_3_42/world.yaml`, authored by the generator
+  *before* this ticket, contains `frontier_village_core` but **not** `trading_company_hub`. So the
+  module corpus and/or the scorer moved since that world was generated, and today's selection
+  picks a colliding pair.
+
+**This is a pre-existing latent defect, newly surfaced rather than caused.** The selection code is
+byte-unchanged by this diff — `git diff c86fa3a21 HEAD -- src/worldgeneration/generator.py`
+contains no change to `ModuleScorer` use, the ranking, `selected_ids`, `BUDGET`, or Rule 5; the
+only matching diff lines are docstring text. It was invisible because nothing ever resolved what
+the generator authored. Step 11 item 4 made it visible, which is precisely what that item exists
+for.
+
+**Not fixed here, because every available fix is a world-semantics decision I do not own.** The
+options are (a) auto-namespace colliding modules, (b) extend Rule 5 to reject region-id collisions
+and fall through to the next candidate, or (c) filter colliding candidates during selection. All
+three change *which world a given intent generates* — region ids, hence world content — and (a)
+changes region identity itself. Per this repo's rule-owner ordering, that is routed, not decided by
+the implementer. **The two tests therefore remain red, and the "Full scoped regression" AC stays
+unchecked.**
