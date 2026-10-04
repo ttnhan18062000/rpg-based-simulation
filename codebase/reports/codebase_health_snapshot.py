@@ -62,7 +62,7 @@ test isolation: `write_line`'s own real signature has no default for its
 target path either, which is exactly why `tests/tools/test_monitoring_writer.py`'s
 literal-source-scan guard can catch a hardcoded real-corpus path — a default
 on `write_snapshot` would let a test that simply omits the keyword argument
-silently target the real `agent-working/agent-monitoring/codebase_health_history.jsonl` with
+silently target the real `codebase/reports/codebase_health_history.jsonl` with
 nothing textually present in that test's source for such a scan to catch.
 """
 
@@ -78,7 +78,6 @@ from codebase.health.metrics import (
 )
 from codebase.health.scan import ToolUnavailableError
 from codebase.reports.codebase_health_baseline import build_report
-from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -101,7 +100,7 @@ EXPECTED_BASELINE_KEYS = frozenset({
 # build_report()'s keys plus the second metric source's (codebase/health/metrics.py).
 EXPECTED_SNAPSHOT_KEYS = EXPECTED_BASELINE_KEYS | frozenset(CRAFT_METRIC_KEYS)
 SNAPSHOT_SCHEMA_VERSION = 3
-DEFAULT_HISTORY_PATH = _REPO_ROOT / AGENT_MONITORING / "codebase_health_history.jsonl"
+DEFAULT_HISTORY_PATH = _REPO_ROOT / "codebase" / "reports" / "codebase_health_history.jsonl"
 
 # The 11 scalar dimensions that get a Δ + arrow trend row.
 SCALAR_DIMENSIONS = (
