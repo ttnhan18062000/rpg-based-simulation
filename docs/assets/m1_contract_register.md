@@ -36,11 +36,11 @@ Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); rea
 | `AM1-W07` | Compatibility/rollback contract | 3 | 3 | 1 | PARTIAL |
 | `AM1-W08` | Trust/authority model | 4 | 1 | 2 | PARTIAL |
 | `AM1-W09` | Build/provenance boundary | 3 | 0 | 0 | CLOSED |
-| `AM1-W10` | Retention/GC contract | 3 | 2 | 2 | PARTIAL |
+| `AM1-W10` | Retention/GC contract | 3 | 3 | 1 | PARTIAL |
 | `AM1-W11` | M2 evidence charter | 0 | 5 | 0 | OPEN |
 | `AM1-W12` | Candidate handoff/intake contract | 4 | 0 | 0 | CLOSED |
 | `AM1-W13` | Rights/provenance recall contract | 3 | 3 | 0 | PARTIAL |
-| | **Total** | **40** | **23** | **5** | |
+| | **Total** | **40** | **24** | **4** | |
 
 `CLOSED` = no `GAP` row; `OPEN` = no `MET` row; `PARTIAL` = both. `W06` and `W11` are `OPEN` until their own tickets write them; those tickets update their rows.
 
@@ -140,9 +140,9 @@ Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); rea
 | # | Clause | Evidence | Verdict | Note |
 |---|---|---|---|---|
 | W10.1 | Reachability roots | `docs/assets/retention_and_rollback.md`; `visual_assets/store/gc.py::collect`; `tests/visual_assets/store/unit/test_gc.py` | MET | Protected: all tracked state, PASSED un-adopted intakes younger than the bound, any intake an adoption refers to, and referenced review evidence. Retained releases are derived (every committed candidate), not declared. No typed roots record exists because `gc` has no deletion kind for tracked objects; if it gains one, that record must exist first (stated in the store contract). |
-| W10.2 | Leases/pins | `ADR D10`; `docs/assets/retention_and_rollback.md` | N/A | One operator on the licence holder's own machine (D10): no concurrent holders, so no leases. Evidence an adoption needs is pinned by being copied into tracked `provenance/`. |
+| W10.2 | Leases/pins | `ADR D8`; `docs/assets/retention_and_rollback.md#what-gc-protects-am-c09-judged-as-gc-removes-no-protected-object`; `visual_assets/store/gc.py::collect` | N/A | Under Profile A nothing reads store objects at runtime: the client build carries its own files (D8). `gc` can delete only untracked local quarantine files, review exports no adoption refers to and unreferenced PNGs, so a lease would have nothing to protect. Evidence an adoption needs is pinned by being copied into tracked `provenance/`. |
 | W10.3 | Grace | `visual_assets/store/config.py::MAX_UNADOPTED_INTAKE_AGE_DAYS`; `docs/assets/budgets.md#bounds`; `tests/visual_assets/store/unit/test_gc.py` | MET | 30 days, approved 2026-10-04 (a judgment, not a measurement); exactly 30 days is kept; the cutoff is computed by the CLI because library code may not read the clock. |
-| W10.4 | Locks | `ADR D10`; `visual_assets/store/catalogwrite.py` | N/A | No lock exists. One operator on one machine (D10) and all-or-nothing staged writes and exclusive-create releases are the only guards, so two concurrent store commands are not defended against. |
+| W10.4 | Locks | `visual_assets/store/catalogwrite.py`; `visual_assets/store/release.py::assemble_release` | GAP | No lock exists. The guards are all-or-nothing staged writes (`catalogwrite.py`) and exclusive-create release publishing; two store commands running at once are not defended against, and no decision puts that out of scope. |
 | W10.5 | Dry run | `visual_assets/store/gc.py::gc`; `tests/visual_assets/store/unit/test_gc.py` | MET | `gc` lists by default and deletes only with `--delete`, re-checking each item before removal. |
 | W10.6 | Deletion audit | `visual_assets/store/gc.py::gc` | GAP | `gc --delete` records nothing about what it removed. Only untracked local quarantine and review files and unreferenced PNGs can be deleted, so no protected record is lost, but there is no deletion record. |
 | W10.7 | Storage-pressure disposition | `docs/assets/retention_and_rollback.md#retention-u-05-the-last-unset-row-approved`; `docs/assets/budgets.md#bounds` | GAP | Growth is measured (about 4.4 KB tracked per adoption, about 6 KB per local intake) but nothing says what happens at a size or disk limit, or who decides. |
@@ -194,6 +194,7 @@ One line per `GAP`. Each needs code or an owner decision, so none is fixed here 
 - `W07.4` Capability range: Add required capabilities to the manifest only when a capability exists (code, with the first capability).
 - `W07.7` Retirement rules: Write the rule for retiring old candidates, old client paths and primitive fallbacks (owner decision).
 - `W08.5` Roles: Separate and name build, publish and activate roles when the charter is signed (owner decision).
+- `W10.4` Locks: Decide whether to add a lock or to record single-operator use as the rule (owner decision, then code if a lock).
 - `W10.6` Deletion audit: Decide whether `gc --delete` must record what it removed (owner decision, then a typed record; code).
 - `W10.7` Storage-pressure disposition: Set a size or disk limit and who decides at it (owner decision).
 - `W11.1` Synthetic fixtures: Closed by writing the M2 evidence charter (`TCK-20261004-VISUAL-ASSETS-M2-EVIDENCE-CHARTER`), which needs the owner's approval.

@@ -20,7 +20,7 @@ Docs-only ticket: no code behaviour changes, so no new tests. Checks:
 
 ## Results
 
-Check 1 (run on the committed page): `checked 178 evidence entries`, no `UNRESOLVED` line. Check 2: with a broken heading and a broken symbol the same script printed `UNRESOLVED W02.3 visual_assets/store/identities.py::NOPE_SYMBOL symbol missing` and `UNRESOLVED W12.4 docs/assets/store_contract.md#nope heading missing`, exit 1. Summary: 40 MET, 23 GAP, 5 N/A over 68 rows. Checks 4 and 5: see the ticket's Test Summary.
+Check 1 (run on the committed page): `checked 179 evidence entries` (178 before the W10 review fix), no `UNRESOLVED` line. Check 2: with a broken heading and a broken symbol the same script printed `UNRESOLVED W02.3 visual_assets/store/identities.py::NOPE_SYMBOL symbol missing` and `UNRESOLVED W12.4 docs/assets/store_contract.md#nope heading missing`, exit 1. Summary: 40 MET, 24 GAP, 4 N/A over 68 rows (W10.2 and W10.4 corrected in a review-fix commit; the first run read 40/23/5). Checks 4 and 5: see the ticket's Test Summary.
 
 ## Proof Plan
 
