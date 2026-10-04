@@ -307,3 +307,12 @@ stability entry gate"):
 - Perf's M1 under the partial lift touches `worker_manager.py`, `checkpoint.py`,
   `long_run_harness.py` and `protocol_validator.py`. Perf will flag it on the PR (Ask 2 in
   reverse) if any of those turns out to need a core-file change.
+
+### `perf-planner`, 2026-10-04 — salience ticket update (owner decision)
+
+Work debt is never produced in `src/`: nothing increases `state.work_debt`
+(`TCK-20261004-WORK-DEBT-NEVER-ACCUMULATES-IN-PRODUCTION`). The debt half of `global_salience` is
+therefore always 0, and today salience comes only from the wall-clock term. The owner chose to
+**retire** work debt. For `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`, this means: drop
+`global_salience` and the buy-price `1 + salience` multiplier entirely, instead of keeping a term
+that is always 0. The ticket's assumptions say so.
