@@ -1,0 +1,19 @@
+---
+name: feedback-maintain-simulation-design-taxonomy
+description: "docs/brainstorm/simulation_design_taxonomy.html is a pinned, living reference of which simulation-design patterns are actually applied in the engine — keep it current, same as rpg_feature_atlas.html"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 0ef40a52-ae1c-44cd-971b-eee440aa733a
+  modified: 2026-08-25T07:48:16.725Z
+---
+
+`docs/brainstorm/simulation_design_taxonomy.html` (108-pattern audit of the engine's architecture against the general taxonomy of simulation-design patterns) is not a one-off artifact — the user explicitly called it out as a document worth pinning long-term, the same status `docs/brainstorm/rpg_feature_atlas.html` has for gameplay features (see [[feedback_sync_capabilities_with_atlas]], [[project_simulation_capabilities_page]]).
+
+**Why:** stated directly by the user right after the doc went through two rounds of external-review-driven revision (v1→v2→v3) in the same session. The value of the doc is that its per-pattern verdicts (Implemented / Partial / Planned gap / Architecture-enabled / Not applicable / Unconfirmed) stay trustworthy without the reader re-auditing the codebase themselves — same principle as the atlas/capabilities-page sync rule, just for architecture patterns instead of player-facing features.
+
+**How to apply:**
+- When engine architecture changes in a way that would change a pattern's verdict or evidence citation (a new mechanism ships, an existing one is corrected/removed, a "Planned gap" gets built, an "Unconfirmed" item gets verified either way), update the relevant card in the same session as that change — don't let it silently drift stale.
+- The doc already has its own internal precedent for this: it was revised in place (not left as a dead artifact) when its own audit turned out to have 5 misclassifications (LOD, Multi-Rate, Dependency Graph, Adaptive Resolution, Demand-Driven Simulation), each time with the correction visible in the card text itself ("Corrected during a later performance-focused pass — this was wrong...") rather than silently rewritten — keep that visible-correction convention, don't quietly overwrite verdicts.
+- Companion doc `docs/brainstorm/performance_evolution_roadmap.html` and the planning doc `docs/plans/design_enhancement/design_enhancement_roadmap.md` both cite specific taxonomy verdicts — if a verdict changes, check whether either of those needs a matching update too (same cross-doc consistency concern as the atlas/capabilities pair).
+- Republish the Artifact after editing (same URL: `https://claude.ai/code/artifact/609a5e03-0837-4ce3-a89f-881cafab03eb`) — it's already being watched by this project's sessions the same way the atlas is.

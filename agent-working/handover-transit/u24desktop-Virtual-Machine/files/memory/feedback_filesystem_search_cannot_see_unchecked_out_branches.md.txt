@@ -1,0 +1,35 @@
+---
+name: feedback_filesystem_search_cannot_see_unchecked_out_branches
+description: Never assert a file does not exist from find/grep alone in this multi-worktree repo — a branch checked out nowhere has no files on disk; search git refs too
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: d8de60b8-6c3c-4815-992e-d03845ceefc3
+  modified: 2026-09-30T10:59:09.206Z
+---
+
+Before claiming a ticket, doc or file **does not exist**, search git refs, not just the filesystem:
+`git log --all --diff-filter=A --name-only -- '*<NAME>*'`, `git branch -a --contains`, or
+`git show <branch>:<path>`. A `find` / `grep` sweep — even across every worktree — **cannot see a
+branch that no worktree has checked out.** Its files exist only as git objects.
+
+**Why:** 2026-09-30, told both `test-architecture-implementer` and `rpg-implementer (2)` that
+`TCK-20260930-CONSERVATION-REJECTION-PATH-ASSERTION-GAP` "does not exist as a file anywhere on this
+machine", based on `find` over the repo and all 10 worktrees. It was real, on local unpushed branch
+`conservation-rejection-path-assertion-gap` (commit `0c3125123`), checked out nowhere. I reported my
+instrument's silence as a fact about the world — the exact error
+[[feedback_a_probe_is_an_instrument_that_can_be_wrong]] names, and worse than a wrong answer because
+I used it to tell another session to stop looking for something that existed.
+
+This repo makes the trap likely: ~10 concurrent worktrees, and peers routinely hold work on local
+branches they haven't been authorized to push yet ([[feedback_push_authorization_not_peer_transferable]]).
+"Not on origin/main" and "does not exist" are very different claims here.
+
+**How to apply:**
+- Phrase the finding as what was actually checked: "not on `origin/main` and not checked out in any
+  worktree" — never "does not exist".
+- A peer saying "it's unpushed in a worktree" may be *approximately* right (unpushed branch) while
+  wrong on the detail. Ask which branch before concluding it's lost; don't escalate a location error
+  into a missing-artifact claim.
+- Correct it to **every** session you misinformed, and name the error as yours rather than letting it
+  read as a peer's misreport ([[feedback_attribute_relayed_findings_to_source]]).

@@ -1,0 +1,39 @@
+---
+name: feedback-sidecar-shape-and-index-staleness
+description: Two monitoring-pipeline pitfalls when hand-orchestrating implement-ticket.js — incomplete .claude/current_run sidecar zeroes cost tracking; generate_retro.py needs a manual index rebuild
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 582421d6-5556-4d97-8b19-772abecddc64
+  modified: 2026-08-04T02:38:14.379Z
+---
+
+When manually translating `.claude/workflows/implement-ticket.js` phases into tool calls (per
+the `/implement-ticket` skill, since the `Workflow` tool isn't available), two things to always do:
+
+1. **Write the full `.claude/current_run` sidecar shape before every phase**, matching the real
+   `writeSidecar()` helper exactly: `{run_id, seq, phase, agent, execution_id, provider}`. A
+   shortened version (e.g. only `execution_id`/`phase`/`agent`) breaks `record_events.py`'s
+   authoritative `(run_id, seq)`-keyed lookup against real `tools.jsonl` rows — it always
+   overrides caller-supplied `tool_call_count`/`cost_proxy_score` with what it derives from that
+   lookup (by design, to prevent fabricated cost claims), so a mismatched key silently zeroes both
+   fields even when real tool calls happened. Doesn't break ticket validity (done-checker doesn't
+   gate on cost_proxy_score) but corrupts the agent-monitoring retro's Spend Proxy numbers for that
+   run.
+
+2. **Before trusting `generate_retro.py` output, run `make agent-monitoring-index` first** if
+   recent work isn't showing up. `_load_runs_and_events()` reads from a derived SQLite index
+   (`build_index.py`'s output) and only auto-rebuilds it when the DB file is *missing*, not when
+   it's stale — so a pre-existing index silently excludes every run/event written since it was last
+   built, with no warning. Discovered when a retro run reported only 7/34 runs-events for a week
+   that should have had 27/105.
+
+**Why:** both surfaced in the same session while checking the retro after finishing
+TCK-20260804-DOC-UPDATER-ROLE-FILE — 9 hand-written events (epic close + the hotfix ticket) all
+had `cost_proxy_score: 0.0` despite real tool use, and the retro was reading months-stale index
+data before a manual rebuild.
+
+**How to apply:** any future session hand-orchestrating `implement-ticket.js` phases should copy
+the exact sidecar JSON shape from the JS file's `writeSidecar` definition rather than
+reconstructing it from memory, and should run `make agent-monitoring-index` before generating or
+trusting a retro report if the working tree has uncommitted/recent agent-monitoring writes.

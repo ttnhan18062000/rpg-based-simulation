@@ -1,0 +1,20 @@
+---
+name: feedback-pr-render-needs-every-ticket-id-in-a-commit-subject
+description: "pr_render.py finds a batch's tickets only from commit subjects, so a ticket named in no subject is dropped from the title count and Closes:; also never retype a SHA"
+metadata:
+  node_type: memory
+  type: feedback
+  originSessionId: f4971fc8-4cc7-44d6-aea1-91c1f4e85799
+  modified: 2026-10-04T03:05:13.875Z
+---
+
+`tools/delivery/pr_render.py` discovers a PR's tickets from the ticket IDs in commit **subjects**, not from the changed
+ticket files (it only warns "changed ticket file but no commit-subject mention"). In the maintenance-2 batch the
+rendered title said "(2 tickets)" and `Closes:` omitted the third until a commit subject named it.
+
+**Why:** a ticket missing from `Closes:` stays open after the merge and the PR title undercounts the batch.
+
+**How to apply:** before the first push, render once with `--theme`, and if the ticket count or `Closes:` is short,
+name the missing IDs in the final commit subject (still unpushed, so no history rewrite). Re-render, then `--check
+--pr N` after `gh pr create`. Related slip: I mistyped a 40-character SHA in a peer message; copy a SHA from tool
+output or `git rev-parse`, never retype it, and keep full SHAs out of hand-written PR notes (use the short form).

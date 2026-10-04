@@ -1,0 +1,47 @@
+---
+name: feedback-parity-updater-full-file-yaml-rewrite-risk
+description: "When a parity-updater sub-agent edits docs/parity_ledger/*.yaml, check git diff --stat — a big diff via the sanctioned parity_ledger_writer.py is expected/safe, but via a raw Edit/ad-hoc script it's a real corruption risk"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 4557b07f-4dbe-4868-adcd-33bfa34ff473
+  modified: 2026-08-26T17:51:16.179Z
+---
+
+During TCK-20260822-PAID-INFO-INDEX-RETROFIT (rpg-based-simulation, 2026-08-26), a parity-updater
+sub-agent asked to make a small, targeted `v2_evidence` text update to one entry
+(`docs/parity_ledger/town_resource.yaml`, entry TOWN-182) instead produced a diff touching the
+**entire file** — 354 insertions / 340 deletions across dozens of unrelated entries, almost
+certainly from loading the whole YAML into a Python dict and re-dumping it (which changes line-wrap
+width and other cosmetic formatting on every entry, not just the one intended to change).
+
+**Why this matters:** these parity-ledger files are multi-thousand-line, hand-maintained YAML with
+long free-text fields (`text`, `v2_evidence`, `divergence_note`) whose exact line-wrapping is
+significant for diff review — a full load/dump round-trip makes the real change impossible to spot
+in review and risks silently altering another entry's actual semantic content during re-serialization
+(not just whitespace), especially for YAML's more permissive scalar-folding rules.
+
+**How to apply:** after any sub-agent (parity-updater or otherwise) reports editing a
+`docs/parity_ledger/*.yaml` file, run `git diff --stat <file>` yourself before accepting the result.
+If the diff is far larger than the described change, **first check whether the write went through
+`tools/parity_ledger_writer.py::write_entry()`** (the sanctioned, schema-validating write path built
+by `TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL`) — its `write_entry()` deliberately does a full
+`yaml.safe_load()`/`yaml.safe_dump(entries, sort_keys=False)` round-trip on the whole shard as its
+actual designed behavior (schema validation + guaranteed valid YAML on write), not a mistake. A big
+diff from *that* tool is expected and safe — don't revert it; instead verify content integrity
+(`yaml.safe_load` both versions, compare entry counts and ID sets for duplicates/drops, re-run
+`jsonschema.validate` and confirm any violation is pre-existing by diffing against `git show
+HEAD:<file>`) and move on.
+
+Only revert-and-redo-surgically when the big diff came from something OTHER than that sanctioned
+writer — a raw `Edit`/ad-hoc Python `yaml.safe_load`+`yaml.safe_dump` script an agent improvised on
+its own (confirmed live once, `TCK-20260822-PAID-INFO-INDEX-RETROFIT`/`TOWN-182`, no schema
+validation, no `parity_index.py` rebuild side effect). In that case: revert with `git checkout --
+<file>` (safe once confirmed no other ticket this session touched the same file — check via `git
+diff` for other entries' presence first) and redo as a surgical text edit (`Edit` tool with exact
+`old_string`/`new_string`), since that path has no validation guardrail at all.
+
+The distinguishing signal: `write_entry()`'s full-rewrite also triggers an in-process
+`tools/parity_index.py::build()` call (and the `parity-updater` agent role additionally issues a
+second, visible `python3 tools/parity_index.py build` Bash call for retro-metric visibility) — if
+you see that build step run alongside the edit, it's the sanctioned path.

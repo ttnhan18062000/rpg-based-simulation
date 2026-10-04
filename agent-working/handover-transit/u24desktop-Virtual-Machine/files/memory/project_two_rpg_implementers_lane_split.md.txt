@@ -1,0 +1,42 @@
+---
+name: project_two_rpg_implementers_lane_split
+description: "POINTER → docs/plans/rpg_design_roadmap/rpg_implementer_lane_split.md: RPG core runs two implementers permanently, split Agents vs World & Body"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: f39f2e13-ef59-4217-9a61-840066d6a0da
+  modified: 2026-10-04T13:56:53.256Z
+---
+
+**The authority is the doc, not this note:**
+`docs/plans/rpg_design_roadmap/rpg_implementer_lane_split.md` (owned by `rpg-planner`). Read it before
+dispatching any rpg work. This note exists so a fresh session knows the doc is there.
+
+**Owner's decision, 2026-10-04:** RPG core was blocking other sessions with ~60 loose tickets plus 16
+epic folders left, so the rpg domain runs **two implementer sessions permanently** — with the explicit
+constraint "make sure they don't overlap too much and conflict (inefficiency)".
+
+- **Lane A — Agents** (`rpg-implementer`): what entities perceive, decide, do. cognition/strategy/ai,
+  perception/motivation/emotion/memory, combat_engagement/faction/culture, social+strategic systems, the
+  combat/cognition/legality engine files. Bible 02/04.
+- **Lane B — World & Body** (`rpg-implementer-2`): what the world and entities are made of. world*/
+  content/entities/progression/economy/town/quests, world+lifecycle+economy systems, `data/worlds/**`.
+  Bible 01/03/05/06.
+
+**Why this seam:** one line partitions `src/`, the Bible chapters, and the parity-ledger files at once —
+that convergence is the evidence it is a real seam rather than an arbitrary cut. A ticket that needs both
+lanes is mis-scoped.
+
+**How to apply — the two rules that actually prevent collisions:**
+1. **Dispatch-time file-overlap check is the planner's job, every dispatch.** No two concurrently-open
+   tickets may name the same file in `## Related Code Areas`. Keep an in-flight file list and check a
+   candidate *before* dispatching. A lane split without this just relocates the conflict to merge time.
+2. **A named contested surface belongs to neither lane** — `src/core/**`, `src/engine/kernel.py` and the
+   7-phase loop, the authoritative mutation path, `src/observability/**`, `src/api/**`,
+   `docs/mechanics/**`, `docs/engine/**`, shared test fixtures. Claim-before-edit: the planner grants an
+   exclusive hold for one ticket's life. A lane boundary implies no hold.
+
+Also: one simulation pipeline at a time **across both lanes** — see
+[[project_data_runs_cleanup_not_session_scoped]], which gets sharper with two implementers live. One git
+writer per worktree still holds; see [[feedback_worktree_by_default]]. A planner sharing a worktree with
+an implementer stops running git in it entirely.

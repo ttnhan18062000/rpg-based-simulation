@@ -1,0 +1,70 @@
+---
+name: project-ci-poll-tls-block-false-green
+description: "A gh CI poll loop can read the Fortiguard TLS block's error text as '0 pending checks' and falsely report CI green; cross-check completion directly"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: 8553c310-aa3d-4e2b-ad90-19452165200a
+  modified: 2026-10-04T10:19:35.032Z
+---
+
+The sandbox's Fortiguard TLS block (already documented in CLAUDE.md for log *fetching*) also hits
+`gh pr checks` **mid-poll**. Confirmed 2026-09-20 on PR #224: the implementer's monitor loop parsed
+the TLS error text as "0 pending checks" and reported CI complete and green while it was still
+running. Caught only by cross-checking the PR state directly.
+
+**Why:** the loop's completion test was "no pending rows in the output." A failed call returns no
+rows either, so a network failure is indistinguishable from success to that test — absence of a
+pending signal read as positive evidence of completion.
+
+**How to apply:** a CI poll loop must treat a non-zero exit or unparseable output as *retry*, never
+as *done*. Require a positive completion signal (an explicit conclusion on every expected check),
+not the absence of a pending one. Before reporting CI green, confirm against a fresh direct query.
+Same shape as [[project_worktree_verification_traps]] and the registry's own
+assert-presence-not-absence rule.
+
+**Second cause of the same false green, confirmed 2026-09-30 on PR #266: a peer merging first.**
+`gh pr checks` said "no checks reported" and `pr_status.py` returned `verdict: ABSENT / cause not
+determined`. The cause was that another session's PR merged to `main` minutes after mine opened,
+which put mine at `mergeable: CONFLICTING` / `mergeStateStatus: DIRTY`. **GitHub cannot compute a
+merge ref for a conflicting PR, so `pull_request` workflows never fire at all** — no run is
+created, and "no checks" again looks exactly like "nothing failed". `on: pull_request` with no
+path filter does not protect against this.
+
+Diagnostic order that worked: `gh run list --branch <b>` (empty) → `gh run list` (other branches
+running, so Actions is healthy, not the repo) → `gh pr view --json mergeable,mergeStateStatus`
+(CONFLICTING). Fix is the ordinary one — merge `origin/main` locally where the merge driver
+applies, push, and the run fires immediately.
+
+**So: never conclude from an absent run. Check `mergeable` before believing "no checks" is
+benign**, and write the poll loop to emit an explicit `STILL-ABSENT` line after a few empty polls
+rather than staying silent — silence is what makes this indistinguishable from green.
+
+## Third instance, 2026-10-04 — `tools/delivery/pr_status.py` itself emits a false GREEN
+
+**`pr_status.py` is not ground truth. `gh pr checks <PR#>` is.** On PR #291 the tool printed
+`verdict: GREEN — all checks completed successfully against <sha>` while the required `ruff` check was
+**failing**. I relayed that GREEN to a peer as fact; the user caught it, not me.
+
+**Cause, confirmed from the code by `agent-working-design`:** `compute_pr_status` reads only
+`actions/runs` for the **target workflow path**, so **standalone check runs are never seen**. Tell them
+apart by URL shape: a job inside the workflow run is `/actions/runs/<run-id>/job/<job-id>`; a standalone
+check run is `/runs/<id>` with no workflow ancestor. In this repo `ruff` and `complexipy` are standalone,
+so either can fail while the verdict reads GREEN. Ticketed P1 to `agent-working-implementer`; until it
+lands, `gh pr checks` is the only trustworthy read.
+
+**The generalisation, which is why this belongs with the other two instances:** all three *infer success
+from the absence of a failure the instrument can see*. TLS block → no visible failure → "green". Absent
+run → no visible failure → "green". Un-enumerated check context → no visible failure → "green".
+**Require a positive completion signal for every required context, and treat "a context I could not
+evaluate" as UNKNOWN, never as pass.** This note already said that for CI polling; it did not fire when
+the thing reporting green was *our own tool*, because a tool verdict reads as authoritative in a way a
+silent poll does not. It is not.
+
+Related failure-shape notes that also did not fire: [[feedback_absent_from_sample_is_not_unreachable]]
+and [[feedback_a_probe_is_an_instrument_that_can_be_wrong]]. Both existed; neither triggered. **When a
+*tool* is the instrument, apply them to the tool.**
+
+Minor, unverified: `gh api .../code-scanning/alerts?ref=refs/pull/N/head&tool_name=ruff&state=open`
+returned **empty** while that check run's `/annotations` endpoint returned all four alerts. Use the
+annotations endpoint to read ruff failures.

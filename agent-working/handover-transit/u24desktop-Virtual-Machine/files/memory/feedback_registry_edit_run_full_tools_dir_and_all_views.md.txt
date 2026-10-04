@@ -1,0 +1,21 @@
+---
+name: feedback_registry_edit_run_full_tools_dir_and_all_views
+description: "After any registries/mechanisms.yaml edit, regenerate every derived view and run all of tests/unit/tools, not a -k filtered subset"
+metadata:
+  node_type: memory
+  type: feedback
+  originSessionId: 33223835-8fe8-4045-a973-7bed4fcef10f
+  modified: 2026-10-03T07:35:45.689Z
+---
+
+After editing `registries/mechanisms.yaml`, do two things before handing the change over:
+- Regenerate **every** derived view, not just the `mechanism_*` ones. That includes `make territory-control-view` and `make cross-domain-management-view`.
+- Run the **whole** `tests/unit/tools` directory, which is what CI runs. Do not run a `-k "mechanism or semantic or rule"` subset.
+
+**Why:** on 2026-10-03 my regional_sovereignty change (`ab69c175c`) passed my filtered 326-test run. It then failed CI on PR #292, because `territory_control_management_view.md` and `cross_domain_management_view.md` had gone stale. The peer had re-run my exact narrower command, so both checks shared the same blind spot.
+
+**How to apply:**
+- Use `pytest tests/unit/tools`, the full directory (about 493 tests).
+- When handing over the verification command, give the CI-equivalent one, not a narrower one.
+
+Related: [[project_mechanism_registry_ownership_split]], [[feedback_a_probe_is_an_instrument_that_can_be_wrong]].

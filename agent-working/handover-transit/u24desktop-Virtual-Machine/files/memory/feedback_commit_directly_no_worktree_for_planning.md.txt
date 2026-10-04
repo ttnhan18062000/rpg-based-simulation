@@ -1,0 +1,54 @@
+---
+name: feedback-commit-directly-no-worktree-for-planning
+description: "SUPERSEDED 2026-08-22 by [[feedback_worktree_by_default]] — kept for historical context on why direct-commit was originally preferred and what changed."
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 1320d448-7c21-407e-9223-ab3a065cba89
+  modified: 2026-08-22T13:24:34.516Z
+---
+
+> **SUPERSEDED 2026-08-22:** after this exact policy caused two orphaned-commit incidents and one
+> accidental cross-session commit-bundling in a single session (concurrent sessions repeatedly moved/reset
+> the shared branch, destroying un-pushed local commits — recoverable only because they were commits, not
+> uncommitted edits), the user explicitly reversed this preference: **"switch to worktree by default."**
+> See [[feedback_worktree_by_default]] for the current rule. This file is kept only so the original
+> reasoning (why worktrees felt like unnecessary overhead at the time) isn't lost.
+
+For work that is purely scope/tickets/plans (ticket files, `docs/plans/*.md`, no `src/`/`frontend/src/`
+changes), commit directly to whatever branch is currently checked out in the shared working directory —
+do not create an isolated `git worktree` targeting `main` to avoid another concurrent session's branch.
+
+**Why:** [[feedback_concurrent_session_caution]] (this session's earlier established caution about not
+disturbing another session's in-flight branch) led to defensively using `git worktree add <tmp> main` +
+commit-there + `git worktree remove` for every planning commit, even when the currently-checked-out branch
+belonged to a different concurrent session. The user found this confusing (files ended up on `main`,
+invisible at the normal path while a different branch was checked out — `ls docs/plans/foo.md` failed with
+"No such file or directory" even though the file was fully committed) and explicitly said: "just commit in
+the current branch, all our working on scope, tickets and plans, don't need to move to any other branch."
+
+**How to apply:** For ticket/plan-doc-only work (no `src/`/`frontend/src/` edits), skip the worktree
+entirely — `git add`/`git commit` directly on the currently-checked-out branch, same as any other file.
+Still check `git status`/`git branch --show-current` first per the Hard Rules (never blanket `git add`,
+never touch another session's uncommitted files), but don't route around the checked-out branch itself.
+Reserve worktree isolation for cases the user hasn't explicitly relaxed — e.g. if a genuinely risky/large
+operation is requested, or if the user asks for a worktree again specifically.
+
+**Extension confirmed 2026-08-22:** the same "don't route around the checked-out branch" rule applies to
+`git checkout` itself, not just worktrees. In a later session, a concurrent session repeatedly moved the
+shared working directory to a different branch mid-run; each time, the reaction was to `git stash` +
+`git checkout` back to the branch this session's own work had been using, then reapply and commit there.
+The user's correction: "remember don't check out in this session, just commit" — i.e. even a *corrective*
+checkout back to "my own" branch is still a checkout, and the rule is to just commit to whatever is
+currently checked out, full stop, not to restore any particular branch first. If a commit lands on an
+unexpected branch because a concurrent session moved things, that is not itself a problem to fix via
+checkout — only intervene (e.g. cherry-pick a misplaced commit) if explicitly asked, and prefer asking the
+user how they want a cross-branch situation handled over unilaterally checking out to "fix" it.
+
+**Extended 2026-08-22**: the same rule applies to `git checkout` (switching branches), not just worktrees.
+Even when another concurrent session repeatedly changes which branch is checked out mid-session (observed
+across a single conversation: `agent-working` → `kernel-concurrency-design-review` →
+`codebase-health-observatory-tooling`, each a different session's active branch), do not `git checkout`
+to move to a "safer" or more familiar branch before committing. Just keep committing to whatever is
+currently checked out at commit time — this is expected/normal in this shared repo, not a problem to
+route around. The user's exact words: "remember don't check out in this session, just commit."

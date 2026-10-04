@@ -1,0 +1,15 @@
+---
+name: feedback-prefer-popular-skills-over-custom
+description: "For .claude/skills/, prefer adopting popular/well-known community skills (used as-is or with minor tweaks) over authoring bespoke project-original ones"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 582421d6-5556-4d97-8b19-772abecddc64
+  modified: 2026-08-04T19:15:49.524Z
+---
+
+When a `.claude/skills/` gap is found or a new skill is being considered, the user's stated preference is to look for an established, popular skill from the community/internet first — and use it largely as-is, or with only minor project-specific modifications — rather than have me write an original skill from scratch.
+
+**Why:** stated directly after an audit found 10 of 16 project skills had zero invocations in the entire agent-monitoring history. For the subset with no CLAUDE.md auto-trigger at all (`architecture`, `backend-testing`, `doc-coauthoring`, `frontend-design`, `prompt-builder`, `python-testing-patterns`, `test-driven-development` — see [[feedback_agent_infra_scope_openness]] for the related "can expand/remove skill infra" precedent), the user's preference is community-sourced content over bespoke authorship, presumably to benefit from broader battle-testing/consensus than a single-repo original would have.
+
+**How to apply:** Before writing a new skill's SKILL.md content from scratch, search for whether a popular/established version already exists (e.g. well-known Claude Code skill collections, widely-used prompt/skill repos) and adapt that instead of designing fresh. This applies to skill *content* — it does not override [[feedback_agent_infra_scope_openness]]'s guidance on *structural* decisions (new phase, new agent, wiring, removal), which remain judgment calls based on measurability via agent-monitoring data. Still respect the no-guessing-URLs rule — use WebSearch to find real, current sources rather than fabricating a URL, and confirm the found skill's content before adopting it.

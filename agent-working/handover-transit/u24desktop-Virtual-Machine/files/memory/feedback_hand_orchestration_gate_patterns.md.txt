@@ -1,0 +1,62 @@
+---
+name: feedback-hand-orchestration-gate-patterns
+description: Implement-ticket.js hand-orchestration pitfalls beyond sidecar shape — stale tickets/todos/ duplicate blocking Verify, test_scope_coverage_static requiring a bare directory token, and Files Changed omitting staging_artifacts/investigation.md+test_plan.md
+metadata:
+  node_type: memory
+  type: feedback
+  originSessionId: 0eb49422-4d8d-4a40-8b6f-f864a48eae9b
+  modified: 2026-08-19T05:06:20.221Z
+---
+
+Pitfalls when hand-orchestrating `.claude/workflows/implement-ticket.js` via the
+`/implement-ticket` skill (see also [[feedback-sidecar-shape-and-index-staleness]]):
+
+1. **Delete the `tickets/todos/{tid}.md` source copy proactively, before Verify, not after.**
+   Scope-phase copies (doesn't move) the ticket from `tickets/todos/` to `tickets/inprogress/`
+   for standard/hotfix tier, leaving the todos original in place until Finalize's own cleanup
+   step deletes it. But `done-checker`'s "repo state consistent" condition sometimes (not always —
+   observed inconsistent across otherwise-similar runs) flags that still-present todos/ duplicate
+   as a blocking inconsistency, since its content (unchecked AC boxes, pre-Implement wording) has
+   drifted from the more complete `inprogress/` copy by the time Implement finishes. Waiting for
+   Verify to catch it costs a full re-run round-trip. Just `rm tickets/todos/{tid}.md` yourself
+   right after Scope confirms the copy landed (or any time before dispatching Verify) — it's
+   exactly what Finalize would do anyway, so this isn't gaming the check, just doing the real
+   cleanup earlier.
+
+2. **`test_scope_coverage_static.check_test_scope_coverage()` requires the bare directory token
+   in `pytest_command`, not specific files under it.** If a changed file maps to an expected test
+   directory (e.g. `tools/agent-monitoring/foo.py` → `tests/tools/`), listing individual relevant
+   files from that directory (`tests/tools/test_foo.py tests/tools/test_bar.py`) still FAILs the
+   gate even though those are the only genuinely relevant tests — `_directory_is_covered()` checks
+   for the literal directory-path substring, not "at least one file from this directory is
+   included." Build the scoped command with the bare directory (`tests/tools/`) and use
+   `--deselect <specific::test>` for anything you need to exclude (e.g. known pre-existing
+   unrelated failures), rather than cherry-picking files to include.
+
+3. **The implementer's own `## Files Changed` section reliably omits
+   `staging_artifacts/{tid}/investigation.md` and `test_plan.md`, even though both were genuinely
+   (and often substantially, +150 to +275 lines) rewritten during the Investigate phase.** The
+   implementer agent tends to only list files it personally touched during Implement, forgetting
+   that Investigate's own artifacts are part of "this run's" changed-file set too — `plan.md`
+   usually does get listed (since the implementer itself edits it for a Deviations section) but
+   the other two staging files don't get equivalent treatment. `done-checker` catches this
+   reliably on its first Verify pass (condition 3, "ticket metadata"), costing a re-run round-trip
+   every time. Hit 3 separate tickets in the same session
+   (`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`, `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC`,
+   and one earlier sibling) with an identical fix each time: add both files to `## Files Changed`
+   with a one-line "written during the Investigate phase" note.
+
+**Why:** all three surfaced in the same session (2026-08-19) running seven tickets
+(`TCK-20260817-DEAD-INFRA-REMOVAL-EPIC`, `TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC`,
+`TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC`, `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC`,
+`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`, `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC`,
+plus a hotfix) back to back through the full hand-orchestrated pipeline — pattern #1 hit ticket
+A's first Verify pass, pattern #2 hit tickets B and E's Test phase, pattern #3 hit 3 of the 4
+standard-tier tickets in the second batch.
+
+**How to apply:** in any future hand-orchestrated `implement-ticket.js` run — clean up the todos/
+duplicate early, always scope pytest commands to whole directories (with `--deselect` for
+exclusions) rather than individual files whenever the changed file maps to a directory-level
+expected-test-dir rule, and when dispatching the Implement-phase agent, explicitly instruct it to
+include `staging_artifacts/{tid}/investigation.md` and `test_plan.md` in `## Files Changed` up
+front — don't wait for done-checker to catch the omission a second time.

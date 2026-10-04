@@ -1,0 +1,33 @@
+---
+name: feedback-attribute-relayed-findings-to-source
+description: "When relaying a peer session's diagnosis, name whose it was — misattribution that lands in a handover note or memory file hardens into fact for later sessions that have no way to verify it."
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 465df9fe-e370-436f-b2cb-33faa11e3386
+  modified: 2026-09-23T17:50:24.686Z
+---
+
+When passing another session's finding along, say whose it was. If a peer then credits *you* for it,
+correct them before it gets recorded.
+
+**Why:** handover notes and memory files are read by sessions that cannot check the original
+transcript — they have no path back to who actually did the work, so whatever the note says becomes
+the fact. Confirmed live 2026-09-24: `rpg-implementer` diagnosed a vocabulary-ratchet CI failure,
+filed the hotfix, found `vocabulary.py`'s own "register the literal, never raise the ceiling"
+precedent, and caught a second instance in `test_bootstrap_vocabulary_equality.py`. This session
+relayed that to `agent-working-design`, which credited the framing to the relayer and was about to
+write it into both its handover and a memory note. A two-line correction fixed it in both places;
+without it, the wrong attribution would have outlived every session involved.
+
+The same hazard shape as [[project_worktree_verification_traps]] and
+[[project_investigation_forks_ignore_readonly]]: a confident claim that no downstream reader can
+falsify. Cheap to prevent at the moment of relay, effectively permanent if missed.
+
+**How to apply:**
+- Relaying a peer's work: name the source in the same sentence as the finding.
+- Being credited for something relayed: correct it, even when the peer says "nothing further
+  needed" — a handover write is usually imminent.
+- Writing a handover/memory note from a peer's report: attribute it, and say it came via report
+  rather than direct verification unless it was independently checked (see
+  [[feedback_verify_governing_file_edits_directly]] for the stricter case).

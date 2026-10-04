@@ -1,0 +1,42 @@
+---
+name: feedback-working-log-duplicate-keep-main-matching-copy
+description: When resolving a tickets/working_log.csv duplicate-content-block conflict (merge=union artifact), keep the copy whose bytes match origin/main, not just any byte-identical copy — deleting the wrong one re-arms the same conflict on the next merge.
+metadata:
+  type: feedback
+  originSessionId: rpg-implementer
+  modified: 2026-09-11T06:19:30.788Z
+---
+
+When `tests/integrity/test_no_duplicate_content_blocks.py` flags a duplicate block in
+`tickets/working_log.csv` after a merge, **keep the copy whose bytes match `origin/main`**, not
+just whichever copy looks "cleaner" or comes first/last positionally.
+
+**Why:** root-caused by a peer session (`agent-working-design`) on 2026-09-11:
+`tools/agent-monitoring/record_hand_orchestrated_closure.py`'s `csv.writer` call opens with no
+`lineterminator` argument, so Python defaults to **CRLF**, while every other writer in this repo
+uses **LF**. A line-ending change is an invisible content rewrite from git's perspective.
+`merge=union` (the `.gitattributes` protection this file relies on) is only safe for pure
+appends — when one side's line-ending differs, both sides look like they "changed" the same rows,
+and `merge=union` keeps both copies rather than recognizing them as the same row. Confirmed 3-for-3
+across three real incidents (Batch A, Batch C, PR #160) with a writer fingerprint: every CR-ending
+row carries a real microsecond timestamp from that script (e.g. `...:54.208358Z`), while
+hand-written Finalize rows are LF with a zeroed timestamp (`...:00.000000Z`).
+
+**The trap this explains:** earlier in this same session, I resolved several of these duplicates by
+just picking one copy (often by position, or whichever line-ending "looked more normal") and
+deleting the other, verifying only that the two copies were byte-identical content-wise (ignoring
+CRLF vs LF as immaterial). That's exactly backwards — deleting the copy that happens to match
+`main`'s own committed bytes, and keeping the one that doesn't, is itself a rewrite relative to
+`main`, which silently re-arms the identical conflict on the very next merge. This is likely why
+the same class of duplicate kept recurring across batches despite careful, verified cleanup each
+time.
+
+**How to apply:** before deleting either copy of a detected duplicate block, diff each candidate
+against `git show origin/main:tickets/working_log.csv`'s corresponding lines (not just against each
+other) and keep whichever one is byte-identical to `main`'s own copy, line-ending included. The
+underlying writer bug (`record_hand_orchestrated_closure.py`'s missing `lineterminator`) is
+tracked/being fixed by `agent-working-design`'s own track — this rule is the correct interim
+workaround for any session (this one included) that hits the symptom before that fix lands.
+
+See also [[project_batch_c_ci_line_pin_conflict_heads_up]] for a related, unrelated-cause
+heads-up from the same message.

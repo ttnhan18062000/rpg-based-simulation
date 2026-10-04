@@ -1,0 +1,42 @@
+---
+name: feedback_verify_both_implementers_orchestration
+description: "Owner 2026-10-04: as planner, actively check that BOTH rpg implementers are orchestrating their work properly — verify observable state, don't just take status reports"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: f39f2e13-ef59-4217-9a61-840066d6a0da
+  modified: 2026-10-04T15:11:06.341Z
+---
+
+**Owner instruction, 2026-10-04:** *"remember to check both rpg-implementer and rpg-implementer-2
+orchestrate their works."* Given right after staffing the second implementer — so running two lanes
+comes with a standing duty to verify both, not just dispatch to both.
+
+**Why:** a planner that only reads status reports sees what each implementer believes. The first real
+check found things no report mentioned: Lane A's sweep was not merely unpushed but **uncommitted**, with
+no second copy anywhere; and Lane B's tool-cost rows had been attributed to a *finished ticket of mine*
+for over an hour, because `.claude/current_run` is shared per worktree and I handed the worktree over
+without clearing my own pipeline's sidecar out of it.
+
+**How to apply — check the repo first, then ask only what the repo cannot tell you:**
+- `ListAgents` for busy/idle. An implementer that reported "halted at a gate" and then went **idle** has
+  stopped, which is different from working.
+- Branch reality per lane: `git log --oneline -3 <branch>` (refs are shared across worktrees, so a
+  peer's commits are visible before any push) and `git ls-remote origin <branch>` for whether a remote
+  copy exists at all. Uncommitted work is invisible to both — ask directly.
+- `cat .claude/current_run` — the sidecar is **shared**, so a stale `run_id` silently mis-attributes the
+  current session's tool rows. Clear it when handing a worktree over.
+  See [[project_sidecar_cross_session_contamination]].
+- Before a multi-ticket hand-orchestrated close: one `record_hand_orchestrated_closure.py` call per
+  ticket, never also `append_working_log_row()`, fresh `end_ts` per `record_run.py` call, never raise
+  the duplicate-run ratchet, `done_checker_static.py` per ticket.
+- A gate halt awaiting the implementer's *own user* is a legitimate state — report it as a user-decision
+  stall, not as the implementer's delay.
+
+**Corollary worth keeping:** advise an implementer blocked from pushing to **commit locally anyway**.
+Committing needs no authorization and removes the single-copy risk; pushing is the part that needs the
+user. Also: push authorization is not transferable from planner to implementer — a correct implementer
+refuses my say-so and asks its own user, see
+[[feedback_push_authorization_not_peer_transferable]].
+
+Related: [[project_two_rpg_implementers_lane_split]] for the lane boundaries this duty accompanies.

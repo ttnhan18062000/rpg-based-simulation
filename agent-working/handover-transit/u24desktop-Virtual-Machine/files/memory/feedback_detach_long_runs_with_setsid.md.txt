@@ -1,0 +1,22 @@
+---
+name: detach-long-runs-with-setsid
+description: a background task started from the session dies when the session closes or restarts; detach multi-minute runs with setsid nohup and keep foreground waits under the 10-minute tool timeout
+metadata:
+  node_type: memory
+  type: feedback
+  originSessionId: 7923cf74-93f5-4fde-b01d-46fe3dcf24ec
+  modified: 2026-09-30T04:16:21.449Z
+---
+
+A 17–35 minute full-suite run started with a plain background command or `nohup ... &` was killed when the session closed mid-run. Its partial output (a pytest traceback, empty timing files, a `DONE` marker written anyway) looked finished at a glance and would have been misread as a result.
+
+**Why:** the harness owns the process group; closing or restarting the session kills it. A `run_in_background` command is also capped at the 10-minute tool timeout, so an until-loop waiting on a long run gets killed too.
+
+**How to apply:**
+- Launch anything longer than a few minutes as `setsid nohup <script> > log 2>&1 < /dev/null & disown`.
+- Have the script write an `.end` file with a timestamp only on real completion, and check the log tail for a pytest summary line before trusting any result. A `DONE` marker alone is not proof.
+- Wait in foreground loops of at most ~9.5 minutes each (`for i in $(seq 1 19); do ...; sleep 30; done`), not one long wait.
+- After a session restart, check for stale partial outputs first, reset the worktrees (`git checkout -- .`, `git clean -fd`) and relaunch. Never use output from an interrupted run.
+- Run long measurement runs one after the other. Overlapping runs perturb resource-sensitive tests (SURVIVAL/DEGRADED runtime modes, the 60 s per-test budget).
+
+Related: [[ci-poll-tls-block-false-green]] (the same "look for a positive completion signal" rule applies here).
