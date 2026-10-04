@@ -1,3 +1,8 @@
+"""Coverage tests of the state fingerprint (the PERF-D5 stability check) and of the flat proof digest.
+
+The `fingerprint()` tests here prove which state domains the fingerprint can see. They are not proof that two
+runs are equal; cross-run equality is claimed only with `CanonicalStateHasher.get_hash`.
+"""
 import pytest
 from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, EntityState, RegionState, LocalScarState

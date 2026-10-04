@@ -10,6 +10,8 @@ audience: developer
 ## 1. Purpose
 This contract defines how performance (TPS, Tick Cost) must be measured, reported, and certified. It ensures that performance claims are honest, scoped, and reproducible.
 
+**Authority (PERF-D4, approved 2026-10-03).** This document is the single clause-level authority for how performance is measured, compared, and claimed. Hardware classes are defined once, in `docs/engine/contracts/certification_contract.md` §3. `docs/performance/perf_baseline_policy.md` is the calibration procedure only. Every clause below says whether a check enforces it today; a clause with no enforcing check says so and names the work that adds one (`PERF-M2-T03` for the tripwire, `PERF-M2-T04` for the capacity run). The row-by-row evidence is `docs/performance/performance_clause_inventory.md`.
+
 ## 2. Primary Metrics
 
 ### 2.1 Tick Cost (ms)
@@ -22,13 +24,15 @@ This contract defines how performance (TPS, Tick Cost) must be measured, reporte
 - **Measurement**: `1000 / avg_tick_compute_ms`.
 
 ### 2.3 Phase Breakdown
-The engine must report the cost of each authoritative phase separately:
+The engine must report the cost of each authoritative phase separately. The kernel phases named here are:
 - `INIT`: Context setup and policy.
 - `SCHEDULING`: Work selection.
 - `COLLECTION`: Execution (local or concurrent).
 - `RESOLUTION`: Applying results to state.
 - `CLEANUP`: Metrics and finalization.
 - `ADVANCEMENT`: Signal recording.
+
+In practice the harness records every phase key the kernel emits, which is more than these six (a committed baseline carries, for example, `apply`, `resource`, `combat`, `movement`, `strategic` and `persistence`, and the kernel also emits sub-phase keys). The reported set is whatever `phase_breakdown` contains; this list is the minimum.
 
 ## 3. Benchmarking Rules
 
@@ -44,10 +48,24 @@ Performance claims are ONLY valid when combined with:
 - **RuntimeMode**: (NORMAL — see §7 Adaptive Phase Budget Governor for the ladder; a claim
   measured while the Governor left NORMAL is not a valid baseline claim without stating so)
 
+Every result record also carries (PERF-D4, approved; the record shape is pending `PERF-M2-T02`; provisional draft in `docs/performance/benchmark_identity_schema.md`): the PERF-D2 runtime identity (interpreter version and build flavor, OS, architecture, native-kernel versions) and its DET-PORT tier; the PERF-D1 contract it ran under (Canonical or Live bounded); the `RuntimeMode` sequence observed during sampling; and the processed-work count. A comparison between results with different identities is not valid and returns `INCONCLUSIVE` (§3.3).
+
 ### 3.2 measurement Protocol
-- **Warmup**: Benchmarks must run a minimum of 100 warmup ticks before recording starts.
-- **Sampling**: A minimum of 1000 ticks must be sampled for a baseline.
-- **Environmental Stability**: Benchmarks must run on isolated cores if possible to minimize noise.
+These minimums apply to the **capacity run** (§3.3). The **tripwire** is a cheaper projection and uses smaller, stated sizes.
+- **Warmup**: A capacity run must execute a minimum of 100 warmup ticks before recording starts.
+- **Sampling**: A capacity run must sample a minimum of 1000 ticks for a baseline.
+- **Environmental Stability**: Capacity runs must run on isolated cores if possible to minimize noise.
+
+What runs today: the tripwire check (`tests/perf/test_perf_regression_baseline.py`) uses 10 warmup and 50 sampled ticks; the smoke benchmark tool (`tools/perf/run_benchmarks.py`) uses 10/20 or 50/200. `BenchHarness` defaults to 100/1000, so a harness caller that passes nothing runs the capacity sizes. No capacity run exists as a gate. Of the 15 committed files in `tests/perf/baselines/`, 12 record 20 sampled ticks and only the three `simq_corpus_*` files record 1000; they are **tripwire references only** and carry no capacity claim.
+
+### 3.3 Projections, outcomes, and clause kinds
+Approved decision: PERF-D4. A performance claim is made by one of three clause kinds, which have different claims and are never mixed.
+
+- **Tripwire.** Fast, runs on every relevant change, detects change against a baseline of the same identity, and makes **no capacity claim**. The current 10/50-tick average check is the tripwire. Today it compares the average tick compute time with `max(5.0 ms, baseline average x 1.25)`, reads the committed JSON directly, and a breach is a warning, not a failure (`tests/tools/perf_assertions.py`; no call site passes `hard=True`). It is `slow`-marked, so it runs on pushes to `main`, nightly, and on manual dispatch, not on pull requests.
+- **Capacity run.** Warmup and sample sizes from §3.2, percentiles and memory, repeated, on a controlled runner, bound to a hardware class (`certification_contract.md` §3). It is the only kind that may support a statement of the form "this build sustains X on class Y". It does not exist yet as a gate (`PERF-M2-T04`).
+- **Comparative.** Compares two configurations of one build (for example instrumentation off against on), or the start and the end of one run. It uses the same four outcomes and the same identity fields as the other kinds and makes **no capacity claim**. Its current instances, all soft: the instrumentation and subsystem overhead ratios (`tests/perf/test_hard_law_monitor_overhead.py`, `tests/perf/test_production_observatory_overhead.py`, the four bands of `tests/perf/test_simq_isolation_overhead.py`), and the within-run trend checks of the long-run harness (`src/perf/long_run_harness.py`: `rss_bounded`, `latency_stable`, `caches_bounded`, `gc_stable`, exercised by `tests/certification/test_cert_long_run_stability.py`).
+
+Every projection returns one of `PASS`, `REGRESSION`, `INCONCLUSIVE`, or `NOT_APPLICABLE`. A missing baseline, or one whose identity is incompatible with the run, is `INCONCLUSIVE`, never a skip that reads as success. Today the tripwire skips a missing baseline (`pytest.skip`) and `PerfRegressionGate` raises `MissingBaselineError` only in CI mode; neither returns these outcomes (`PERF-M2-T03`).
 
 ## 4. Optimization Laws
 
@@ -55,11 +73,33 @@ Performance claims are ONLY valid when combined with:
 Optimization MUST NOT change the semantic outcome of an official RPG slice. Any optimization that causes a hash mismatch in the `AuthoritativeState` vs the baseline is a failure.
 
 ### 4.2 Bounded Overhead
-Timing instrumentation itself must stay bounded (< 1% of total tick time).
+Timing instrumentation itself must stay bounded (< 1% of total tick time). This is a **comparative** clause (§3.3). **Not met by one existing check:** the hard-law monitor's overhead test records, in its own comment, that the monitor cannot meet 1% and asserts a looser absolute limit, soft (`tests/perf/test_hard_law_monitor_overhead.py`). The 1% figure is a target; no check enforces it as written.
 
 ## 5. Regression Enforcement
-- Any commit that increases `avg_tick_compute_ms` by > 5% on a stable scenario must be flagged.
-- Significant regressions require a "Divergence Reason" in the performance log.
+These are **tripwire** clauses (§3.3).
+- A commit that increases `avg_tick_compute_ms` on a stable scenario beyond the tripwire threshold, against a baseline of compatible identity, must be reported as `REGRESSION`. **The threshold is not yet set;** `PERF-M2-T03` sets it (relative and absolute thresholds with a noise budget). Three different tolerances appear in the repository today and none is the contract's number: `max(5 ms, 1.25x)` in the live check, `max(1.15x, +3 ms)` in the unwired `tools/perf/check_perf_regression.py`, and 5% / 10% / 15% for p50 / p95 / p99 in `perf_baseline_policy.md` §3 before it was moved here. An earlier version of this contract said "> 5%"; no check implements that figure.
+- Documented targets, not enforced by any check (no enforcing check yet; `PERF-M2-T03`): p50 latency not above baseline by more than 5.0%, p95 by more than 10.0%, p99 by more than 15.0% (moved from `perf_baseline_policy.md` §3.1). `PerfRegressionGate` (`src/perf/regression_gate.py`) implements p95, p99, throughput, memory and per-phase comparisons with a 10% default tolerance, and is exercised only against synthetic fixtures (`tests/unit/perf/test_perf_regression_gate.py`); no production caller runs it.
+- An intentional baseline increase is accepted by recording a rationale with the baseline update. A rationale does not turn a `REGRESSION` into a `PASS`; it is the record that explains why the baseline moved.
+
+### 5.1 Capacity-run targets
+Not enforced by any check today (`PERF-M2-T04`). Moved from `perf_baseline_policy.md` §2.2 and §3.2, and keyed to the hardware classes of `certification_contract.md` §3 (the policy's own class table is removed because it contradicted that definition):
+
+| Class | Target |
+|---|---|
+| `CLASS_A` | 10,000+ entities at < 50 ms per tick |
+| `CLASS_B` | 2,500 entities at < 40 ms per tick |
+| `CLASS_C` | 500 entities at < 30 ms per tick |
+
+- Resident memory growth between tick 100 and tick 1,000 must not exceed 15.0% of its value at tick 100.
+- Garbage-collection sweep counts must remain stable over a capacity run (the high-frequency no-op singletons exist to prevent generation 1 and 2 heap fragmentation).
+
+The nearest live checks are the long-run harness's trend checks (comparative, §3.3) and the passive-scaling memory check (`tests/perf/test_perf_passive_scaling.py`), both soft.
+
+### 5.2 Known gaps (recorded debt, not clauses)
+- **Absolute per-scenario and per-phase ceilings.** Many tests in `tests/perf/` and `tests/arena/` assert hard-coded millisecond, MB and TPS limits (for example `tests/perf/test_perf_idle.py`, `test_perf_stress.py`, `test_phase2_self_model_budget.py` through `test_phase9_campaign_semantic_budget.py`). No document sets these numbers and they are not contract clauses. They are tripwire-adjacent debt for `PERF-M2-T03` to absorb into the tripwire or delete.
+- **The `PerfBudget` store.** `perf_baselines.json` at the repository root and the `perf_budget` fixture (`tests/perf/conftest.py`, `make perf-measure`) form a second baseline store, per named test, with its own 20% tolerance. It is not described by any other document. It is tripwire-adjacent debt for `PERF-M2-T03` to absorb or delete.
+- **Soft thresholds.** Every threshold in the test tree is soft (0 of 55 `assert_perf_threshold` / `perf_check` call sites pass `hard=True`, `docs/performance/performance_clause_inventory.md` §7), and 45 of the 55 are `slow`-marked and deselected on pull requests. `TCK-20260914-PERF-THRESHOLD-SOFT-GATE-DEFECT` tracks this; changing a warning to a failure reaches RPG-core pull requests through the `perf-cert-arena` job and waits for the RPG-core entry gate.
+- **The governor's trigger rule** (`PhaseBudgetGovernor`, §7) is a runtime control rule, not a measurement clause, and is not governed by this section.
 
 ## 6. Memory Management & Pooling
 - **Differential Caching**: AuthoritativeState must utilize differential caching for read-only views. Reconstruction of views should be O(Dirty) rather than O(N).

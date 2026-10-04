@@ -1,0 +1,19 @@
+id: n3-private-name-import
+valid:
+  - from src.core.state import AuthoritativeState
+  - from src.core import state
+  - from __future__ import annotations
+  - from typing import TYPE_CHECKING, Any
+  - from src.engine import __version__
+  - from . import sibling
+  - from _internal_pkg import public_thing
+  - import _private_module
+invalid:
+  - from src.systems.strategic_systems.intelligence import _GOAL_UTILITY_SCALE
+  - from src.engine.cadence import should_run, _internal
+  - from src.engine.cadence import _internal as internal
+  - |
+    from src.engine.cadence import (
+        should_run,
+        _internal,
+    )

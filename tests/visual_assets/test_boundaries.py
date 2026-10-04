@@ -62,7 +62,7 @@ STORE_ALLOWED: dict[str, set[str]] = {
     "review": {"review", "rendering", "intake", "pixels", "contracts", "identities", "errors", "config"},
     # build owns the one allowed import from drawing (the shared sandbox)
     "build": {"build", "records", "revoke", "catalogwrite", "intake", "pixels", "contracts", "identities", "errors", "config"},
-    "cli": {"cli", "intake", "adoption", "revoke", "audit", "records", "review", "rendering", "build", "release", "verify", "gc", "catalog", "contracts", "identities", "errors", "config"},
+    "cli": {"cli", "intake", "adoption", "revoke", "audit", "records", "review", "rendering", "build", "release", "runtime_export", "verify", "gc", "catalog", "contracts", "identities", "errors", "config"},
     "__main__": {"cli"},
     # catalog records and the human-gated writers (adoption, revoke, catalogwrite) are never reachable from the drawing tools
     "records": {"records", "intake", "contracts", "identities", "errors", "config"},
@@ -73,6 +73,8 @@ STORE_ALLOWED: dict[str, set[str]] = {
     "release": {"release", "records", "catalog", "catalogwrite", "revoke", "pixels", "intake", "contracts", "identities", "errors", "config"},
     "verify": {"verify", "records", "audit", "build", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
     "gc": {"gc", "records", "intake", "contracts", "identities", "errors", "config"},
+    # reads committed candidates, writes a new directory OUTSIDE the catalog; not a gate layer, but the drawing server still may not import it (no MCP export)
+    "runtime_export": {"runtime_export", "records", "verify", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
     # shaped, bounded, read-only views for agents; the drawing server may import it
     "readmodel": {"readmodel", "records", "intake", "pixels", "contracts", "identities", "errors", "config"},
 }
@@ -427,7 +429,7 @@ def test_planted_store_layering_for_the_gated_layers_is_caught():
 
 
 def test_planted_server_importing_a_forbidden_store_layer_is_caught():
-    forbidden = ("adoption", "revoke", "build", "release", "gc", "cli", "verify", "review", "rendering", "records", "audit", "catalogwrite", "pixels")
+    forbidden = ("adoption", "revoke", "build", "release", "runtime_export", "gc", "cli", "verify", "review", "rendering", "records", "audit", "catalogwrite", "pixels")
     for layer in forbidden:
         for src in (f"from visual_assets.store import {layer}\n", f"import visual_assets.store.{layer}\n", f"from visual_assets.store.{layer} import x\n"):
             problems = check_source("visual_assets/drawing/server/store_readonly_tools.py", src)

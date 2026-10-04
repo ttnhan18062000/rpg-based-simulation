@@ -30,10 +30,17 @@ def test_generate_optimization_proof_report() -> None:
     }
     assert set(results["comparisons"].keys()) == expected_scenarios
     
+    assert results["metadata"]["provisional"] is True
     for name, comp in results["comparisons"].items():
         assert comp["scenario"] == name
-        assert comp["speedup_x"] > 0
-        assert comp["latency_reduction_x"] > 0
+        assert comp["status"] in ("compared", "not_comparable")
+        if comp["status"] == "compared":
+            assert comp["speedup_x"] > 0
+            assert comp["latency_reduction_x"] > 0
+        else:
+            # Ratios exist only for compared scenarios; a mismatch carries its reason.
+            assert comp["reason"]
+            assert "speedup_x" not in comp and "latency_reduction_x" not in comp
         assert "metrics" in comp["optimized"]
         
     # Check that output files were successfully created

@@ -1,0 +1,21 @@
+# Git hooks run by prek (https://github.com/j178/prek), installed OPT-IN only: `make install-prek-hooks`
+# (TCK-20261003-PREK-GIT-HOOKS-OPT-IN). Nothing installs them automatically. .git/hooks is shared by every worktree
+# on the machine, so both hooks skip with a visible line, never fail, where the environment is missing.
+# Local `language: system` hooks: no environment build, no network. No formatter hooks (roadmap decision 8.3).
+minimum_prek_version: "0.5.4"
+repos:
+  - repo: local
+    hooks:
+      - id: code-health-ratchet
+        name: code-health ratchet (ruff on staged src files, new or worse violations only)
+        entry: bash codebase/hooks/code_health_pre_commit.sh
+        language: system
+        files: ^src/.*\.py$
+        verbose: true  # prek hides a passing hook's output; a skip ("environment not synced") must stay visible
+      - id: uv-lock-check
+        name: uv.lock matches pyproject.toml (offline)
+        entry: bash codebase/hooks/uv_lock_pre_commit.sh
+        language: system
+        files: ^(pyproject\.toml|uv\.lock)$
+        pass_filenames: false
+        verbose: true

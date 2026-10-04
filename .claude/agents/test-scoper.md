@@ -63,12 +63,28 @@ tools/mechanism_registry/*.py      -> tests/unit/tools/       (NOT a same-name m
 tools/semantic_control_plane/*.py  -> tests/unit/tools/       (NOT a same-name mirror; same
                                                                  fallback trap as mechanism_registry/
                                                                  above)
-tools/perf/*.py                    -> tests/static/           (default fallback for this subdir;
+tools/perf/*.py                    -> tests/static/           (default fallback for a module with no
+                                                                 dedicated test: live_map_ws_payload_measure,
+                                                                 turbo_run,
+                                                                 perf_report,
+                                                                 profile_api_payload, run_benchmarks,
+                                                                 run_perf_baseline, memory_probe.
                                                                  NOT a same-name mirror, and NOT
                                                                  tests/unit/perf/ — that directory
                                                                  tests src/perf/, a different tree.
-                                                                 3 basenames have their own real
-                                                                 owner instead of this default:
+                                                                 Modules with their own real owner,
+                                                                 derived from the tests that import
+                                                                 them:
+                                                                 phase_inventory.py,
+                                                                 hash_callsite_inventory.py,
+                                                                 perf_baseline.py,
+                                                                 check_perf_regression.py,
+                                                                 perf_ci.py,
+                                                                 perf_threshold_inventory.py,
+                                                                 wall_clock_inventory.py,
+                                                                 profile_tick.py, profile_diff.py,
+                                                                 flag_attribution.py,
+                                                                 _profiling_common.py -> tests/tools/,
                                                                  profile_engine.py -> tests/unit/perf/,
                                                                  profile_sweep.py -> tests/perf/,
                                                                  profile_memory.py -> tests/unit/cli/)
@@ -84,6 +100,15 @@ tools/release/*.py                 -> tests/certification/    (default fallback 
                                                                  tests/perf/)
 tools/maintenance/*.py             -> tests/tools/            (NOT a same-name mirror; no
                                                                  tests/maintenance/ directory exists)
+```
+
+**`codebase/` (the codebase domain root, a third source tree: Python code-craft tooling, gates, hooks, reports, baselines):**
+```
+codebase/**                        -> tests/codebase/         (the codebase domain root: health/,
+                                                                 gates/, hooks/, reports/, baselines/,
+                                                                 config/. Run the whole dir; not under
+                                                                 tests/tools/ any more. codebase/README.md
+                                                                 is prose, no test requirement)
 ```
 If a changed `tools/` path doesn't match any pattern above, check for a same-name directory
 under `tests/` before falling back to `tests/tools/`. This fallback does NOT apply to the six
@@ -133,7 +158,7 @@ under `tests/` before falling back to `tests/tools/`. This fallback does NOT app
   coming_of_age.py`, for example, lives in `tests/unit/strategic/`, not `tests/unit/ai/` — so
   relying on the naming convention alone silently misses it; only the grep-based expansion in Step
   3 reliably finds the real owning tests.
-- If the orchestrator's prompt states the ticket is tagged `performance`, always include `tests/unit/perf/` and `tests/perf/` (with `-m "not slow"`) in the scoped command, regardless of which `src/` paths were changed — a performance-motivated change is frequently outside `src/perf/` itself (e.g. a hot-path change in `src/engine/` or `src/world/`), so the naming-convention mapping alone would miss the real regression-gate check (`PerfRegressionGate`, `docs/performance/perf_baseline_policy.md` §3) this tag exists to trigger.
+- If the orchestrator's prompt states the ticket is tagged `performance`, always include `tests/unit/perf/` and `tests/perf/` (with `-m "not slow"`) in the scoped command, regardless of which `src/` paths were changed — a performance-motivated change is frequently outside `src/perf/` itself (e.g. a hot-path change in `src/engine/` or `src/world/`), so the naming-convention mapping alone would miss the real regression check (the tripwire in `tests/perf/test_perf_regression_baseline.py`; clause authority is `docs/engine/performance_contract.md` §5) this tag exists to trigger.
 - If any changed file is under `tools/` (flat, i.e. directly `tools/*.py` — not a named
   subdirectory), always include the **entire `tests/tools/` directory** in the scoped command,
   never a subset — do not try to guess which of its 100+ files are "relevant" by filename alone;

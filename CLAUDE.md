@@ -281,10 +281,10 @@ The master index is `project_lawbook_m10.md`. Key contracts:
 | File | Covers |
 |---|---|
 | `kernel.md` | 7-phase deterministic loop (Init → Scheduling → Collection → Resolution → Cleanup → Advancement → Persistence) |
-| `authoritative_pipeline.md` | 39-phase refinement sequence for world mutation |
+| `authoritative_pipeline.md` | Refinement-phase sequence for world mutation (counted unit defined there; generated list in `docs/performance/phase_inventory.md`) |
 | `authoritative_mutation_pipeline_contract.md` | Mutation rules and apply-path law |
 | `governance_logic.md` | Governance and eligibility rules |
-| `performance_contract.md` | Hardware classes (A/B/C) and scaling limits |
+| `performance_contract.md` | How performance is measured, compared and claimed (tripwire, capacity run, comparative); hardware classes are in `contracts/certification_contract.md` §3 |
 | `known_limitations.md` | Current scope boundaries |
 
 ### Core State — `docs/core/`

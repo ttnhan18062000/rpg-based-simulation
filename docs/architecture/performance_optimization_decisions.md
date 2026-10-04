@@ -13,7 +13,7 @@ Stage 0). Created by `TCK-20260913-PERF-M0-OWNER-TRIAGE` on 2026-10-02. This fil
 dispositions and decision records; it does not change any behavior, and it does not edit or
 supersede any authority-P1 document. A planner review is not owner approval (§1.3).
 
-Status of this version: PERF-D1, D2, D4 and D6 were drafted by the planner session and **approved by the repository owner on 2026-10-03**; PERF-D3 is closed; PERF-D5 was drafted on 2026-10-03 from the hash call-site inventory and awaits the owner's decision. Approval accepts the decisions. No P1 document is changed by this file, and each P1 edit a decision requires is applied by its own ticket.
+Status of this version: PERF-D1, D2, D4, D5 and D6 were drafted by the planner session and **approved by the repository owner on 2026-10-03** (D5 separately, after the hash call-site inventory); PERF-D3 is closed. Approval accepts the decisions. No P1 document is changed by this file, and each P1 edit a decision requires is applied by its own ticket.
 
 ## Working scale target (owner decision, 2026-10-03)
 
@@ -94,7 +94,7 @@ accountable approval is required before the change, and until then the decision 
 | PERF-D2 portability | Architecture, Release/Certification | planner | implementer | `docs/engine/deterministic_execution.md` |
 | PERF-D3 debt meaning | Simulation Semantics | planner (closed, §3.2) | none | none (matches current behavior) |
 | PERF-D4 performance contract | Performance, Release/Certification | planner | implementer | performance, certification and baseline contracts (`performance_contract.md`, `certification_contract.md`, `perf_baseline_policy.md`) |
-| PERF-D5 hash policy | Simulation Correctness, Observability/Replay | planner | implementer (PA-03A audit) | `docs/engine/deterministic_execution.md` if a hash boundary changes |
+| PERF-D5 hash policy | Simulation Correctness, Observability/Replay | planner | implementer (PA-03A audit) | `docs/engine/deterministic_execution.md`, `docs/engine/known_limitations.md` §2.4, `performance_milestones_epic.md` M2 item 6 (the seven statements in `docs/performance/hash_callsite_inventory.md` §6) |
 | PERF-D6 phase catalog | Engine Architecture | planner | implementer (PA-05A inventory) | `authoritative_pipeline.md`, `subphase_domain_contracts_epic.md` |
 | Gate A prerequisite sequence | Performance, Engine Architecture, Simulation Correctness | planner | none | `design_enhancement_roadmap.md`, `performance_milestones_epic.md` |
 | Stage 6 separation | Architecture, Simulation Correctness | planner | none | `performance_milestones_epic.md`, `subphase_domain_contracts_epic.md` |
@@ -140,7 +140,7 @@ planner means drafting and review by `perf-planner`.
 | C-10 | stage boundary | Adopted. Concurrent Resolution leaves ordinary performance execution; domain/catalog safety work is retained; Gate B and a separate architecture proposal are required. The owner's technology direction (roadmap, "Technology direction") reopened this exclusion for evaluation under M6-T05; the interim interpretation is unchanged until that proposal is approved. | carried | Gate B (M6) | Resolution stays serial. |
 | C-11 | stage boundary | Adopted. Aggregate simulation requires Gate B, a separate versioned semantic architecture, transition rules, migration, conservation/invariant tests and explicit SimQ/arena bounds. The owner's technology direction (roadmap, "Technology direction") reopened this exclusion for evaluation under M6-T05; the interim interpretation is unchanged until that proposal is approved. | carried | Gate B (M6) | Aggregation is a fidelity change, not an exact optimization. |
 | C-12 | stage boundary | Adopted. Keep implementation ownership in `TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT`; the performance program may measure projection, serialization and queue cost and returns findings to that owner. | T01 (the epic exists, status OPEN, dispositioned "defer / no merge" for this reason) | owner of the live-map epic | No second interest-management implementation stream. |
-| C-13 | implementation-blocking (baseline promotion) | Adopted. PERF-D4/PA-04 select one clause-level authority and map each clause to a CI-fast projection or scheduled evidence; preserve a cheap CI-fast smoke projection and keep it separate from capacity evidence. | re-verified by planner (regression gate still samples 10/50 ticks, average only, skips a missing baseline, has an empty hard-scenario set; 12 of 53 `assert_perf_threshold` call sites pass `hard=True`) | PERF-D4 (planner); P1-owner for contract edits | No baseline is promoted and no soft check becomes blocking, per the roadmap's entry gate. |
+| C-13 | implementation-blocking (baseline promotion) | Adopted. PERF-D4/PA-04 select one clause-level authority and map each clause to a CI-fast projection or scheduled evidence; preserve a cheap CI-fast smoke projection and keep it separate from capacity evidence. | re-verified by planner (regression gate still samples 10/50 ticks, average only, skips a missing baseline, has an empty hard-scenario set; no call site passes a literal `hard=True` (0 of 55 `assert_perf_threshold`/`perf_check` calls, `docs/performance/performance_clause_inventory.md` §7; corrected 2026-10-03 from an earlier "12 of 53" that does not reproduce)) | PERF-D4 (planner); P1-owner for contract edits | No baseline is promoted and no soft check becomes blocking, per the roadmap's entry gate. |
 | C-14 | stage boundary | Adopted. Keep the compatible declarative phase/domain safety work under PERF-D6/PA-05; replace the automatic cross-epic M3 path with Gate B and separate-architecture wording. | carried | PERF-D6 (planner); P1-owner for `subphase_domain_contracts_epic.md` | Phase declarations are justified for identity, drift detection and instrumentation, not as a presumed step to concurrency. |
 | C-15 | documentation drift | Adopted. Each P1 statement in `docs/performance/optimization_architecture.md` is classified as verified current behavior, target architecture or obsolete; inaccurate P1 claims are updated or superseded by their owner. | carried | PERF-D4/PERF-D6 (planner); P1-owner | Read that document's phase count and "universal" claims as target statements until classified. |
 | C-16 | documentation-status drift | Adopted. The owner makes `docs/architecture/performance_optimization.md`'s status and scope unambiguous: keep verified surviving decisions, mark the removed RabbitMQ mechanism historical or superseded, do not revive removed transport design. | carried | P1-owner (PERF-M0-T09) | Treat the RabbitMQ mechanism as historical; this ticket does not edit the document. |
@@ -201,8 +201,10 @@ Each follows §3.1 and is intentionally empty.
 
 #### PERF-D1 — Determinism contracts (Canonical and Live bounded)
 
-- **Status:** **approved by the repository owner on 2026-10-03** as drafted by `perf-planner`.
-  The P1 document edits it requires are not yet applied; `PERF-M0-T09` applies them.
+- **Status:** **approved by the repository owner on 2026-10-03** as drafted by `perf-planner`. Amended on 2026-10-03 (amendment A1 below), also owner-approved, after the wall-clock inventory found a fourth input.
+  The P1 document edits it requires were applied by `TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT`
+  (`docs/engine/deterministic_execution.md`, `docs/engine/runtime_profiles.md` §4, and the determinism
+  envelope epic's M1 item 1); the Canonical contract itself is not implemented (`PERF-M1`).
 - **Context:** `docs/engine/deterministic_execution.md` (P1) promises that sequential execution is
   bit-identical for the same seed and initial state. Three wall-clock inputs break that promise
   today, in every execution mode unless `audit_mode` is on:
@@ -289,12 +291,40 @@ Each follows §3.1 and is intentionally empty.
   slow-regression ticket its fix direction (run those tests under the Canonical contract).
 - **Revisit condition:** the control trace cannot be bounded; a new executor (free-threaded or
   native) adds a semantics-affecting input not in the table; the inventory finds a fourth input.
+- **Amendment A1 (owner-approved 2026-10-03), from the wall-clock inventory**
+  (`docs/performance/wall_clock_inventory.md`, `TCK-20261003-PERF-WALL-CLOCK-READ-INVENTORY`). The
+  inventory met the revisit condition "the inventory finds a fourth input":
+  4. **Fourth input — world-pressure salience.** The previous tick's measured `tick_compute_ms`
+     becomes `compute_ratio` and `global_salience` (`src/engine/kernel.py`, the pressure dict before
+     the `StateUpdate`), is applied to `AuthoritativeState.pressure_signals`
+     (`src/engine/apply.py`), and multiplies shop buy prices (`DynamicPriceService.calculate_buy_price`,
+     used by `ShopService.buy_item` for the gold check and cost). A slower or busier host makes items
+     cost more. No `RuntimeMode` change is involved, so the three inputs above do not cover it.
+     `audit_mode` zeroes it. `pressure_signals` is not part of the proof digest, so the flat hash
+     sees the effect only once a purchase changes gold or inventory.
+
+  **Decision A1:** a game-facing signal (any value that systems read from `AuthoritativeState` to
+  change gameplay: prices, salience, and anything derived from them) may be computed only from
+  deterministic inputs, **in both contracts**. Host timing and resources may choose how much work
+  the engine does (mode, budgets, cadence); they may never change what the world's rules say.
+  `compute_ratio` is removed from `global_salience`; salience keeps the work-debt term. This is a
+  gameplay change (prices no longer rise with host load) and needs an
+  `intentional_divergences.md` entry when implemented. Implementation edits `src/` and waits for the
+  RPG-core entry gate: `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`.
+
+  **Inputs the Canonical proxy set must also cover** (same inventory; classification unchanged):
+  the replay-backlog `DEGRADED` trigger in `ResourceGovernor` (depends on a background flush
+  thread; recorded as a mode transition), and `PhaseBudgetGovernor`, which reads per-phase
+  wall-clock costs and `tick_compute_ms` directly in every mode (the "phase budgets" row of the
+  table above). The inventory found nothing else on the tick path that feeds state, ids, seeds,
+  or sort keys; its limits are in its §6.
 - Related dispositions: C-03, C-04, C-05.
 
 #### PERF-D2 — Portability
 
 - **Status:** **approved by the repository owner on 2026-10-03** as drafted by `perf-planner`.
-  The edit to `docs/engine/deterministic_execution.md` is not yet applied (`PERF-M0-T09`).
+  The edit to `docs/engine/deterministic_execution.md` was applied by
+  `TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT`; no tier is recorded on results yet (`PERF-M2-T02`).
 - **Context:** the determinism contract does not say across which environments the guarantee
   holds. `pyproject.toml` allows Python 3.11 and later, CI runs 3.13, and the contract lists
   float-rounding edge cases as a known risk. The owner's technology direction adds compiled
@@ -335,7 +365,13 @@ Each follows §3.1 and is intentionally empty.
 #### PERF-D4 — Performance-contract authority
 
 - **Status:** **approved by the repository owner on 2026-10-03** as drafted by `perf-planner`.
-  The edits to the three P1 documents are not yet applied (`PERF-M0-T09`, after `PERF-M2-T01`).
+  The edits to the three P1 documents were applied by `TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT`,
+  driven by `PERF-M2-T01`'s inventory. Disposition of the clauses the two-projection shape did not
+  express: overhead ratios, the SimQ isolation bands, and within-run trend checks became a third,
+  named **comparative** clause kind in `performance_contract.md` §3.3 (perf-planner decision,
+  2026-10-03); absolute per-scenario and per-phase ceilings and the `PerfBudget` store are recorded
+  in its §5.2 as tripwire-adjacent debt for `PERF-M2-T03`; the governor's trigger rule stays a runtime
+  control rule outside the contract.
 - **Context:** three P1 documents and the live gate disagree (conflict C-13).
   `docs/engine/performance_contract.md` and `docs/performance/perf_baseline_policy.md` require 100
   warmup and 1,000 sampled ticks; the gate runs 10 and 50. The policy specifies p50/p95/p99 and
@@ -369,10 +405,14 @@ Each follows §3.1 and is intentionally empty.
   silently will report `INCONCLUSIVE` until baselines exist.
 - **Evidence:** the three documents as read on 2026-10-03;
   `tests/perf/test_perf_regression_baseline.py` (10/50 ticks, average only, skip on missing
-  baseline, empty hard-scenario set); 12 of 53 `assert_perf_threshold` call sites pass
-  `hard=True`; `perf_baseline_policy.md` §3's own 2026-08-08 correction note.
-  **Uncertainty:** the clause-by-clause inventory (`PERF-M2-T01`) has not been done; this decision
-  selects the authority and the shape, and the inventory may add clauses.
+  baseline, empty hard-scenario set); no call site passes a literal `hard=True` 
+  (0 of 55 `assert_perf_threshold`/`perf_check` calls, `docs/performance/performance_clause_inventory.md` §7; corrected 2026-10-03 from an earlier "12 of 53" that does not reproduce); `perf_baseline_policy.md` §3's own 2026-08-08 correction note.
+  **Inventory (2026-10-03):** the clause-by-clause inventory (`PERF-M2-T01`,
+  `docs/performance/performance_clause_inventory.md`) maps 76 clauses to destinations under this
+  shape. Its §6.2 lists checks the two-projection shape does not express (A/B overhead ratios,
+  within-run trend checks, absolute per-scenario ceilings, the per-test `PerfBudget` store, and one
+  runtime control rule). That is a partial hit on the revisit condition below; `PERF-M0-T09`
+  records how each is handled. The authority and shape stand.
 - **Authority:** `docs/engine/performance_contract.md`.
 - **Named approvers:** repository owner. Reviewed from the Performance and Release/Certification
   perspectives by `perf-planner`.
@@ -390,9 +430,15 @@ Each follows §3.1 and is intentionally empty.
 
 #### PERF-D5 — Hash policy
 
-- **Status:** drafted by `perf-planner` on 2026-10-03 from the PA-03A call-site inventory;
-  **not owner-approved**. It was written after the owner approved D1, D2, D4 and D6, so that
-  approval does not cover it.
+- **Status:** drafted by `perf-planner` on 2026-10-03 from the PA-03A call-site inventory and
+  **approved by the repository owner on 2026-10-03** as drafted, in a separate decision after
+  D1, D2, D4 and D6. The document edits it requires were applied by
+  `TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT` (the corrections to `deterministic_execution.md`,
+  `known_limitations.md` §2.4 and `performance_milestones_epic.md`); the
+  mechanism changes (points 2, 3, 6) edit `src/` and wait for the RPG-core entry gate.
+  **Update 2026-10-04:** the `src/engine/checkpoint.py` slice of points 2, 3 and 6 was built under the
+  owner's partial lift (`TCK-20261004-PERF-M1-HASH-POLICY-CHECKPOINT-SLICE`); the kernel and
+  certification-harness slice (`PERF-M1-T03b`) still waits for the gate.
 - **Context:** `docs/performance/hash_callsite_inventory.md` (generated by
   `tools/perf/hash_callsite_inventory.py`) establishes:
   - Two digest families exist. The **flat hash** is SHA-256 over canonical JSON of the whole
@@ -481,7 +527,13 @@ Each follows §3.1 and is intentionally empty.
 
 - **Status:** **approved by the repository owner on 2026-10-03** as drafted by `perf-planner`
   from the PA-05A inventory. The catalog itself is a `src/engine/` change and waits for the
-  RPG-core entry gate; the P1 document edits are not yet applied (`PERF-M0-T09`).
+  RPG-core entry gate. The P1 document edits were applied in part by
+  `TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT` (unit definitions, the unchecked-table warning and the
+  pointer to the generated inventory in `authoritative_pipeline.md`, the D19 snapshot label, the
+  `optimization_architecture.md` phase text). The literal-count removal in `authoritative_pipeline.md`,
+  `AGENTS.md` and its generator note, and the tests that pin the old text, moved to
+  `TCK-20261003-PERF-PHASE-COUNT-PINNED-TEXT`; the `CLAUDE.md` count is left for the owner's approval
+  of that file edit.
 - **Context:** the repository states 37, 38, 39, and 44 as "the" phase count. The inventory
   (`docs/performance/phase_inventory.md`, generated by `tools/perf/phase_inventory.py`) shows
   these are not one number with errors:
@@ -563,7 +615,7 @@ rather than fixed:
 | ID | Finding | Where it matters |
 |---|---|---|
 | F-05 | The source proposal is tracked but never registered, because `tools/generate_registry.py` skips `docs/brainstorm/`. | C-17 residual; decide whether "registered-source" should cover it |
-| F-06 | `TCK-20260825-EPIC-PERFORMANCE-EVOLUTION` and `TCK-20260825-EPIC-SUBPHASE-DOMAIN-CONTRACTS` were named by the P1 plans and never created. | C-01 and PERF-M0-T09 (which P1 plans have tracking tickets) |
+| F-06 | `TCK-20260825-EPIC-PERFORMANCE-EVOLUTION` and `TCK-20260825-EPIC-SUBPHASE-DOMAIN-CONTRACTS` were named by the P1 plans and never created. | C-01 and PERF-M0-T09 (which P1 plans have tracking tickets). **Partly resolved by `TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT`:** the one discoverable execution order is now in `design_enhancement_roadmap.md` Section A, so the plans no longer need those tickets to be found. **Still open:** the two tickets do not exist and both P1 epics still say "not yet created"; creating them was out of that ticket's scope |
 | F-07 | 38 (D19 audit), 39 (contract), 43 (earlier static count) and 44 (static count on 2026-10-02) are different counted units. | C-02, PERF-D6 |
 | F-08 | `docs/REGISTRY.yaml` regenerates from the working tree, not from git `HEAD`, so uncommitted edits are registered. | any claim that a doc is "registered" |
 

@@ -17,13 +17,21 @@ nothing beyond what a ticket authorizes. Register state of the unverified items:
 
 - **Decided by evidence:** `U-01` host is the Linux dev machine; `U-03` project-owned stdio adapter; `U-04` the `mcp` package is
   already pinned in `requirements.txt`; `U-06` bwrap confinement proven on the dev machine (spike-level).
-- **Still open:** `U-02` licence/provenance, `U-05` numeric budgets, `U-07`..`U-14`.
+- **Still open:** `U-02` licence/provenance, `U-07`..`U-14`. `U-05` numeric budgets are approved 2026-10-04 (`docs/assets/budgets.md`); only the retention row is deliberately unset.
 
 ## Status update 2026-10-03
 
 The package `visual_assets/drawing/` now also hands a revision off as a candidate (`export_handoff`) and, over the same MCP server, lets an agent submit it for intake and
 read the store (`submit_candidate`, `store_list`, `store_show`: 19 tools in all). Adopting, revoking, building, releasing and deleting stay human decisions with no tool here
 (`docs/assets/store_contract.md`). `U-14` (CI with Aseprite) is still open: the real-Aseprite tests run locally only.
+
+## Status update 2026-10-03 (decided by the user)
+
+- `U-02` **decided**: the binary in use, its provenance and the licence clauses that matter are recorded in
+  `docs/assets/aseprite_licence_review.md`; Aseprite runs only on the licence holder's own machine (ADR `D10`).
+- `U-14` **decided: no** for GitHub-hosted CI (same record). Real-Aseprite tests stay local evidence through one strict make target
+  (`TCK-20261003-VISUAL-ASSETS-LOCAL-ASEPRITE-EVIDENCE`).
+- `U-05` measurement and proposed values: `TCK-20261003-VISUAL-ASSETS-BUDGETS`, recorded in `docs/assets/budgets.md` (every row `APPROVED 2026-10-04` by the owner on PR #309; retention is the one deliberately unset row).
 
 ## Status and decision boundary
 

@@ -119,9 +119,9 @@ def test_rejects_unsupported_schema_version(record_cls):
 
 def test_rejects_oversize_input(record_cls, monkeypatch):
     raw = fixture_bytes(record_cls)
-    monkeypatch.setattr(config, "MAX_RECORD_BYTES", len(raw) - 1)
+    monkeypatch.setattr(config, record_cls.size_bound, len(raw) - 1)  # each record type has its own bound (`size_bound`)
     assert code_of(record_cls, raw) == "oversize"
-    monkeypatch.setattr(config, "MAX_RECORD_BYTES", len(raw))
+    monkeypatch.setattr(config, record_cls.size_bound, len(raw))
     parse_record(record_cls, raw)  # exactly at the bound is fine
 
 

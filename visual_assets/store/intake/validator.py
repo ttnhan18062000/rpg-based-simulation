@@ -28,7 +28,7 @@ from visual_assets.store.intake import aseprite
 VALIDATOR_VERSION = "intake-validator-1"
 
 # A producer signals a feature the store cannot hold by declaring one of these exact tokens as a limitation.
-# Provisional until the format/feature decision (U-05); anything else in `declared_limitations` is informational.
+# Budget: docs/assets/budgets.md (the format/feature decision); anything else in `declared_limitations` is informational.
 UNSUPPORTED_LIMITATIONS = frozenset(
     {
         "unsupported:tilemap",

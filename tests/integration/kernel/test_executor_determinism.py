@@ -5,6 +5,7 @@ from src.config.profiles import RuntimeProfile, HardwareClass
 from src.core.state import AuthoritativeState
 from src.platform.rng import DeterministicRNG
 from src.engine.kernel import Kernel
+from src.engine.checkpoint import CanonicalStateHasher
 from src.engine.executor import LocalSequentialExecutor
 from src.core.builder import V2EntityBuilder
 from src.core.enums import Faction
@@ -57,7 +58,7 @@ def test_sequential_vs_concurrent_determinism(test_profile):
     kernel_seq = Kernel(test_profile, initial_state, rng_seq, executor=LocalSequentialExecutor())
     try:
         kernel_seq.tick_once()
-        hash_seq = kernel_seq.state.fingerprint()["state_hash"]
+        hash_seq = CanonicalStateHasher.get_hash(kernel_seq.state)
     finally:
         kernel_seq.shutdown()
 
@@ -68,7 +69,7 @@ def test_sequential_vs_concurrent_determinism(test_profile):
     kernel_con = Kernel(concurrent_profile, initial_state, rng_con)
     try:
         kernel_con.tick_once()
-        hash_con = kernel_con.state.fingerprint()["state_hash"]
+        hash_con = CanonicalStateHasher.get_hash(kernel_con.state)
     finally:
         kernel_con.shutdown()
 

@@ -41,7 +41,7 @@ class LongRunSample:
     movement_cache_size: int
     read_model_cache_size: int
     spatial_index_entries: int
-    candidate_count: int
+    systems_with_debt: int  # systems whose integer work debt is > 0 (PERF-D3); work_debt is the sum
     work_debt: int
     active_mode: str
     timestamp: float = field(default_factory=time.perf_counter)
@@ -208,7 +208,7 @@ class LongRunStabilityHarness:
                 # Spatial index
                 s_size = len(kernel.state.entities)
                 work_debt = sum(kernel.state.work_debt.values())
-                candidate_count = sum(len(q) for q in kernel.state.work_debt.values()) if kernel.state.work_debt else 0
+                systems_with_debt = sum(1 for debt in kernel.state.work_debt.values() if debt > 0)
                 
                 sample = LongRunSample(
                     tick=t,
@@ -220,7 +220,7 @@ class LongRunStabilityHarness:
                     movement_cache_size=m_size,
                     read_model_cache_size=r_size,
                     spatial_index_entries=s_size,
-                    candidate_count=candidate_count,
+                    systems_with_debt=systems_with_debt,
                     work_debt=work_debt,
                     active_mode=kernel.status.current_mode.name
                 )

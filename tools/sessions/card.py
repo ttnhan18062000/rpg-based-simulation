@@ -1,0 +1,103 @@
+"""Compose a session role card: function template + domain overlay + generated role and authority lines.
+
+Read-only. The injected text of a template is its `## Card` section; everything else in the file is
+rationale and is never injected. Ownership, routes, handover and authority are generated from the
+manifest and the authority file, so no template restates them (define once).
+
+Budget (plan section 5, step 3): about 400 tokens. No tokenizer is installed in this repo, so the
+measure is a deliberately conservative estimate, `ceil(len(text) / 3.5)`: path-heavy text tokenizes
+at roughly 3 to 4 characters per token, so this over-counts prose and is about right for globs.
+"""
+
+from __future__ import annotations
+
+import math
+import re
+from pathlib import Path
+
+from tools.sessions.roster import REPO_ROOT, Authority, Role, Roster
+
+CARD_BUDGET_TOKENS = 400
+CHARS_PER_TOKEN = 3.5
+TEMPLATE_DIR = Path("docs/guidelines/session_roles")
+
+_CARD_SECTION = re.compile(r"^## Card\s*\n(.*?)(?=^## |\Z)", re.DOTALL | re.MULTILINE)
+
+
+def estimate_tokens(text: str) -> int:
+    return math.ceil(len(text) / CHARS_PER_TOKEN)
+
+
+def _card_section(path: Path) -> str:
+    match = _CARD_SECTION.search(path.read_text(encoding="utf-8"))
+    if not match or not match.group(1).strip():
+        raise ValueError(f"{path}: no `## Card` section")
+    return match.group(1).strip()
+
+
+_DIR_GLOB = re.compile(r"^(?P<parent>.+)/(?P<leaf>[^/*]+)/\*\*$")
+
+
+def _compact_globs(globs: list[str] | tuple[str, ...]) -> str:
+    """`docs/a/**, docs/b/**` -> `docs/{a,b}/**`: a shared parent is named once."""
+    groups: dict[str, list[str]] = {}
+    order: list[str] = []
+    for g in globs:
+        m = _DIR_GLOB.match(g)
+        key = m.group("parent") if m else g
+        if key not in groups:
+            groups[key] = []
+            order.append(key)
+        groups[key].append(m.group("leaf") if m else "")
+    out = []
+    for key in order:
+        leaves = [leaf for leaf in groups[key] if leaf]
+        if not leaves:
+            out.append(key)
+        elif len(leaves) == 1:
+            out.append(f"{key}/{leaves[0]}/**")
+        else:
+            out.append(f"{key}/{{{','.join(leaves)}}}/**")
+    return ", ".join(out)
+
+
+def _routes_text(role: Role) -> str:
+    """Routes grouped by target role, so a target is named once."""
+    by_target: dict[str, list[str]] = {}
+    for glob, target in role.routes:
+        by_target.setdefault(target, []).append(glob)
+    if not by_target:
+        return ""
+    return "Route elsewhere: " + "; ".join(f"{_compact_globs(globs)} -> {t}" for t, globs in by_target.items()) + "."
+
+
+def _role_line(role: Role, roster: Roster) -> str:
+    seat = "" if role.seat_status == "staffed" else f" (unstaffed, held by {role.interim_holder})"
+    parts = [
+        f"You are `{role.role}`{seat}. Owns: {_compact_globs(role.owns)}.",
+        _routes_text(role),
+        f"Dispatch from: {', '.join(role.accepts_dispatch_from)}." if role.accepts_dispatch_from else "",
+        f"Worktree {role.worktree}; handover `{role.handover}`.",
+    ]
+    return " ".join(p for p in parts if p)
+
+
+def _authority_line(role: Role, authority: Authority) -> str:
+    base = authority.for_function(role.function)
+    if base is None:
+        raise ValueError(f"no authority default for function {role.function!r}")
+    line = f"Never: {', '.join(base.forbidden)}. " if base.forbidden else ""
+    line += f"Needs the user: {', '.join(base.needs_user)}."
+    grants = authority.grants_for(role.role)
+    if grants:
+        line += " Granted: " + "; ".join(f"{'/'.join(g.actions)} ({g.date})" for g in grants) + "."
+    return line
+
+
+def compose_card(role_id: str, roster: Roster, authority: Authority, root: Path = REPO_ROOT) -> str:
+    role = roster.role(role_id)
+    if role is None:
+        raise KeyError(role_id)
+    function = _card_section(root / TEMPLATE_DIR / "functions" / f"{role.function}.md")
+    domain = _card_section(root / TEMPLATE_DIR / "domains" / f"{role.domain}.md")
+    return "\n\n".join([_role_line(role, roster), function, domain, _authority_line(role, authority)])

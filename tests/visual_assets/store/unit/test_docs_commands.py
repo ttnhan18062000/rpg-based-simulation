@@ -17,7 +17,7 @@ def table_first_column(heading: str) -> list[str]:
     for line in section.splitlines()[1:]:
         if line.startswith("## "):
             break
-        match = re.match(r"\| `([a-z_]+)` \|", line)
+        match = re.match(r"\| `([a-z_-]+)` \|", line)
         if match:
             rows.append(match.group(1))
     return rows

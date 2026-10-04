@@ -301,3 +301,40 @@ sessions.
 `_appraise_position_swap` barely reached), not a case for more measurement batches. No next domain is chosen.
 Watch items (a)–(e) in the roadmap §6 continue; scale-out is revisited by a new owner decision, for example
 when the semantic-foundation work lands.
+
+## 6 · Addendum 2026-10-03: the social row in the report tool (`TCK-20261003-TEST-ARCH-MAINT2-REPORT-SOCIAL-DOMAIN`)
+
+`tools/test_architecture/core_rpg_report.py` (schema v3) now reports social imports as a **non-exclusive signal**,
+not a class: a test file that imports a `src.systems.social_systems` submodule other than `party*` and the dormant
+`memory` keeps its class, and no core-RPG figure moves (§3.1 of `architecture_design_notes.md`: `party*.py` stays in
+the Party row, `memory.py` is excluded). The bare package name alone is not a signal.
+
+Measured at branch head `bd8367a121d432ab43fccbfa54f554fa44a1b5fc` (`origin/main`
+`599966e8dd18dcde97c1093e44d909f3cb7c0212` plus the tool change), 2026-10-03, with
+`python3 tools/test_architecture/core_rpg_report.py --as-of 2026-10-03 --sha bd8367a121d432ab43fccbfa54f554fa44a1b5fc --out-dir <scratch>`
+(repo venv python, output outside the repo):
+
+| Figure | Value |
+|---|---|
+| Test files scanned (denominator) | 1602 |
+| Test files with the social signal | **37 / 1602** |
+| ...by existing class | not-core-rpg 32, uncertain 2, classified 1, unowned-domain 2, parse-error 0 |
+| Party overlap (social signal and a party import; the Party row still wins) | 2 |
+| Memory-only (imports `memory`, excluded as dormant) | 2 |
+| Core-RPG candidates (classified + uncertain) | 197 |
+
+**Invariance, checked at this SHA:** the unmodified `origin/main` tool and the v3 tool were run on the same tree
+with the same `--sha` and `--as-of`. Class counts are identical (not-core-rpg 1398, uncertain 119, classified 78,
+unowned-domain 7, parse-error 0), the core-RPG candidates are 197 in both, the manifest is identical, and every
+layer is identical once the new `social_domain` block is removed. Only `schema_version` (2 to 3), one added limit
+line and the `social_domain` block differ.
+
+Reading it: the 37 is an import signal over test files, not a count of social tests and not a coverage figure.
+It is not comparable with the §2 figures (372 tests in 53 files), which came from a different selection (the whole
+`tests/unit/social` directory plus any file outside it importing `src.systems.social_systems`, party tests
+included in the runs); the two are not reconciled here. The signal depends on
+imports only, so it does not depend on the contents of `relationships.py`, `appraisal.py` or
+`consequence_events.py` and is not made stale by `TCK-20260822-RELATIONSHIP-VECTOR-ADDITIVE-FIELD`. The two overlap
+files are `tests/unit/social/test_party_lifecycle.py` and `tests/unit/social/test_social_lifecycle.py` (the Party
+row includes `src.systems.party`, so the overlap is 2; an earlier plan note said 1 because it checked only
+`social_systems.party*`). The report is report-only and not a gate.
