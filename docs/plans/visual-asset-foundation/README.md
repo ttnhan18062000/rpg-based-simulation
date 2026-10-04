@@ -220,15 +220,15 @@ store.*                     ->  contracts, config, errors; build -> drawing.back
 | D3 | Commit generated PNGs **only for adopted assets**; candidates and anything still under review stay local in a gitignored review area. Verify the committed ones in CI by canonical pixel hash | **decided by the user 2026-10-02**: assets are not always used and are chosen carefully, so nothing unaccepted enters git history. CI has no Aseprite, so committed bytes are what makes `verify` meaningful there | CI gains Aseprite, or the frontend build takes over generation |
 | D4 | Hash artifacts by decoded pixels (canonical hash), not file bytes | **decided by the user 2026-10-02**: PNG byte determinism across Aseprite versions is unproven | byte-exact reproducibility is demonstrated |
 | D5 | Human gates are CLI-only and absent from the MCP surface | proposal §6: no agent or MCP server may collapse the gates | never without a new decision |
-| D6 | Release **candidates** only; no active pointer, no runtime resolver | deployment profile A vs B (`AM1-W01`) is not selected; activation is `AM-M6` | profile selected and M5 gates pass |
+| D6 | Release **candidates** only; no active pointer, no runtime resolver | Profile A is selected (ADR D8, 2026-10-03), so there is never an asset-only active pointer; activation is `AM-M6` | profile selected and M5 gates pass |
 
 ## What this foundation does NOT do
 
 - Activation, runtime resolution, Live Map or HUD consumption, any `frontend/` or `src/` change (`AM-M5`-`M7`).
-- Selecting the deployment profile (`AM1-W01`), signing/trust channel (`AM1-W08`), retention policy numbers.
+- Selecting the deployment profile (`AM1-W01`), signing/trust channel (`AM1-W08`), retention policy numbers. *(Decided afterwards, outside this foundation: Profile A, ADR D8; no signing, D9; retention 30 days, `docs/assets/retention_and_rollback.md`.)*
 - Any art decision: palette, resolution, style, which sprites exist. The store ships empty except `fixtures/`.
 - Closing the licence/provenance review of the Aseprite binary (`U-02`), numeric budgets (`U-05`), CI with
-  Aseprite (`U-14`). These stay open in the plan packages.
+  Aseprite (`U-14`). *(Decided afterwards: `U-02` and `U-14` by ADR D10, 2026-10-03; budgets approved 2026-10-04.)*
 
 ## Mapping to the existing plan packages
 
@@ -239,7 +239,7 @@ store.*                     ->  contracts, config, errors; build -> drawing.back
 | `AM1-W05` audit/provenance contract | `contracts/adoption.py`, `provenance/` | minimal first version |
 | `AM1-W12` candidate handoff/intake contract | `contracts/handoff.py`, `intake/` | implemented |
 | `AM4-W01`..`W10` (candidate record, source/artifact separation, allowlisted build, provenance, validation, audit reconstruction, cleanup, intake, revocation) | store commands + tests, on synthetic fixtures | implemented as mechanism, `REHEARSAL_ONLY` evidence |
-| `AM1-W01`, `W03`, `W04`, `W06`-`W11`, `W13`; `AM-M5`..`M7` | not covered | open |
+| `AM1-W01`, `W03`, `W04`, `W06`-`W11`, `W13`; `AM-M5`..`M7` | not covered by the foundation itself | status per item: `docs/assets/m1_contract_register.md`; `AM-M5` was rehearsed (`INCONCLUSIVE`); `AM-M6` is `NO-GO`, `AM-M7` dormant |
 
 ## Delivery (one epic, child tickets; child 1 merged in PR #286, children 2-6 land together on branch `visual-assets-store`, one PR)
 

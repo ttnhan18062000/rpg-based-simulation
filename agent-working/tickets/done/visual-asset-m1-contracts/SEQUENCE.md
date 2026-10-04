@@ -25,3 +25,7 @@ planner says it is ready and the user authorizes the push; merging needs the use
   the W06 framework, approving the W11 charter and its prior-evidence rule.
 - Each ticket was written before the previous one was built. Before starting a ticket, re-check it against what
   actually landed; where they disagree, tell the planner instead of guessing.
+
+## Status
+
+All four children are done (2026-10-04). The `AM-M1` result is `BLOCKED`; see `docs/assets/m1_contract_register.md`. Folder moved to `agent-working/tickets/done/`.

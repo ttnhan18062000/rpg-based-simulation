@@ -180,8 +180,8 @@ There is no MCP tool that adopts, revokes, builds, releases, deletes or activate
 
 ## Not built (outside this foundation's scope)
 
-Runtime activation, a resolver in the real client, Live Map and HUD consumption, signing, client compatibility ranges, more than one scale class, atlases and animation export
-(`AM-M6`/`M7`, `AM1-W08`). Built since: the runtime manifest and `export-runtime` (above) and an **isolated** `AM-M5` surface rehearsal on synthetic fixtures in
+Runtime activation, a resolver in the real client, Live Map and HUD consumption, client compatibility ranges (register `W03.5`, `W07`), more than one scale class, atlases and animation export
+(`AM-M6`/`M7`; signing was decided against, ADR D9). Built since: the runtime manifest and `export-runtime` (above) and an **isolated** `AM-M5` surface rehearsal on synthetic fixtures in
 `frontend/src/visualAssets/` (a strict parser, resolver, typed fallbacks and single-generation loader that nothing in the normal app imports); its per-gate result, overall
 `INCONCLUSIVE`, is `docs/assets/surface_rehearsal_result.md`; the pilot terrain tile's gap results (reviewer criteria, colour-vision check, client matrix) are in `docs/assets/pilot_terrain_m5_results.md`. Open decisions are listed at the end of this page.
 
@@ -211,10 +211,12 @@ Runtime activation, a resolver in the real client, Live Map and HUD consumption,
   (size = 1 + distinct opaque colours), which needs pixel decoding. Intake quarantines it with `PALETTE_UNVERIFIABLE`. Only a never-edited first revision
   carries one; any edit re-saves a palette with real entries. Every other palette is checked exactly against what Aseprite reports.
 - Intake accepts only 32-bit RGBA sources (`SOURCE_UNSUPPORTED_COLOR_DEPTH` otherwise); the package carries no colour-depth claim, so it is a support policy, not a claim check.
-- The unsupported-feature list (`unsupported:tilemap`, `...indexed_color`, `...grayscale`, `...linked_cels`, `...external_reference`) are a support list recorded in `docs/assets/budgets.md`. Every numeric bound (preview, file, record, registry, decode) is a budget there, measured on 2026-10-03, pinned to the code by a test and `APPROVED 2026-10-04` by the owner (PR #309); retention is the one deliberately unset row. Rulings F1-F6 are recorded there. Size bounds are per record type (`StoreRecord.size_bound`, `record_bound(cls)`): the registry and the release manifest have their own bounds, and `tests/visual_assets/store/unit/test_record_bounds.py` proves every record a writer can produce under the contract bounds is readable by every reader. PNG files are bounded by `MAX_PNG_FILE_BYTES`; `MAX_DECODED_BYTES` bounds decoded size only.
+- The unsupported-feature list (`unsupported:tilemap`, `...indexed_color`, `...grayscale`, `...linked_cels`, `...external_reference`) are a support list recorded in `docs/assets/budgets.md`. Every numeric bound (preview, file, record, registry, decode) is a budget there, measured on 2026-10-03, pinned to the code by a test and `APPROVED 2026-10-04` by the owner (PR #309); retention (30 days) was the last row and was approved the same day. Rulings F1-F6 are recorded there. Size bounds are per record type (`StoreRecord.size_bound`, `record_bound(cls)`): the registry and the release manifest have their own bounds, and `tests/visual_assets/store/unit/test_record_bounds.py` proves every record a writer can produce under the contract bounds is readable by every reader. PNG files are bounded by `MAX_PNG_FILE_BYTES`; `MAX_DECODED_BYTES` bounds decoded size only.
 
-## Decisions still open
+## Decisions
 
-D2 (sources committed directly, no Git LFS), D3 (only adopted assets' PNGs committed; verified in CI by pixel hash) and D4
-(artifact identity is the decoded-pixel hash) are **decided** (`docs/architecture/visual_asset_foundation_adr.md`). Still open: deployment profile (`AM1-W01`), signing/trust channel (`AM1-W08`),
-retention numbers, the Aseprite licence review (`U-02`), numeric budgets (`U-05`: approved 2026-10-04 except the deliberately unset retention row, `docs/assets/budgets.md`) and CI with Aseprite (decided against: ADR D10).
+D2 (sources committed directly, no Git LFS), D3 (only adopted assets' PNGs committed; verified in CI by pixel hash), D4 (artifact identity is the decoded-pixel hash), D8 (deployment profile A, `AM1-W01`), D9 (no signing,
+`AM1-W08`), D10 (real Aseprite on the licence holder's own machine only, which closes the licence review `U-02` and decides against CI with Aseprite, `U-14`), D11 (the detail axis) and D12 (draft sets) are **decided**
+(`docs/architecture/visual_asset_foundation_adr.md`). Numeric budgets (`U-05`) and retention (30 days) are approved (`docs/assets/budgets.md`, `docs/assets/retention_and_rollback.md`). What is still open is per
+`AM-M1` item in `docs/assets/m1_contract_register.md`, which also records the `AM-M1` result (`BLOCKED`) and what would unblock it: mostly owner decisions (key-derivation owner, surface owners, audit authority, build/publish/activate roles, retirement
+rules, whether compatibility ranges are needed under Profile A) and the fallback activation check and registry class field that follow from approved decisions.

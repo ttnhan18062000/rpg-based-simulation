@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-EPIC-VISUAL-ASSET-M1-CONTRACTS
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, documentation, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation, planning]
 Close the `AM-M1` paperwork for visual assets: write up the contracts as built, draft the two missing charters, and classify M1
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -54,15 +54,15 @@ authorizes nothing (`AM-M6` stays `NO-GO`, `AM-M7` dormant).
   asks a blocking question at review.
 
 ## Acceptance Criteria
-- [ ] `docs/assets/m1_contract_register.md` covers all 13 `AM1-W` items, every acceptance clause of each, with evidence
+- [x] `docs/assets/m1_contract_register.md` covers all 13 `AM1-W` items, every acceptance clause of each, with evidence
   that resolves to a real path/symbol on the branch (M1-CONTRACT-REGISTER).
-- [ ] `docs/assets/fallback_safety.md` exists, `PROPOSED` or owner-approved, and the register's `W06` row points at it
+- [x] `docs/assets/fallback_safety.md` exists, `PROPOSED` or owner-approved, and the register's `W06` row points at it
   (FALLBACK-SAFETY-FRAMEWORK).
-- [ ] `docs/assets/m2_evidence_charter.md` exists, `DRAFT` or owner-approved, and the register's `W11` row points at it
+- [x] `docs/assets/m2_evidence_charter.md` exists, `DRAFT` or owner-approved, and the register's `W11` row points at it
   (M2-EVIDENCE-CHARTER).
-- [ ] Plan package status, `01_...` plan and `store_contract.md` "Decisions still open" agree with the register; an
+- [x] Plan package status, `01_...` plan and `store_contract.md` "Decisions still open" agree with the register; an
   `AM-M1` result (`PASS` / `INCONCLUSIVE` / `BLOCKED`) is recorded with its reasons (M1-STATUS-CLOSEOUT).
-- [ ] `git diff origin/main --stat` for the batch touches only `docs/` and `agent-working/` (plus regenerated
+- [x] `git diff origin/main --stat` for the batch touches only `docs/` and `agent-working/` (plus regenerated
   `docs/REGISTRY.yaml` and monitoring shards).
 
 ## Related Tickets
@@ -99,4 +99,4 @@ Docs only: frontmatter and docs static tests, `make docs-registry` clean, no cod
 See the children.
 
 ## Completion Summary
-(open)
+All four children are done on branch `visual-asset-m1-contracts`: the register (68 clauses, 47 `MET`, 17 `GAP`, 4 `N/A`), the fallback-safety framework (approved 2026-10-04, "Approve as written (Recommended)"), the `AM-M2` evidence charter (approved 2026-10-04, "Approve, with the rerun rule (Recommended)"; the old-results alternative declined), and the status close-out. The `AM-M1` result is `BLOCKED` (not the expected `INCONCLUSIVE`; reasoning in the register): no `AM-M0` result record exists and owner decisions are absent. Nothing outside `docs/` and `agent-working/` changed (plus the regenerated `docs/REGISTRY.yaml` and monitoring shards). Nothing was pushed; push, PR and merge wait for the user's own answer.

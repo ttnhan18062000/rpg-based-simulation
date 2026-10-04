@@ -18,8 +18,8 @@ tags: [mcp, live-map, planning]
 
 | Prerequisite | State |
 |---|---|
-| `AM-M1` contracts | Open items remain as the runtime README lists them: `AM1-W03`, `W04`, `W06`-`W11`, `W13`. `AM1-W01` is decided by ADR D8 (Profile A) and `AM1-W08` by D9 (no signing). |
-| `AM-M2` synthetic harness | **No `PASS` record exists.** |
+| `AM-M1` contracts | **Result `BLOCKED`, not `PASS`** (`docs/assets/m1_contract_register.md`, 2026-10-04): no `AM-M0` result record, and owner and authority decisions are absent. `AM1-W01` is decided by ADR D8 (Profile A), `AM1-W08` by D9 (no signing), and `AM1-W04`, `W09`, `W11` (approved 2026-10-04) and `W12` are closed; `W02`, `W03`, `W05`, `W06`, `W07`, `W08` (roles), `W10` and `W13` are partial, with the open clauses listed in the register. |
+| `AM-M2` synthetic harness | **No `PASS` record exists.** Its evidence charter is approved (2026-10-04, `docs/assets/m2_evidence_charter.md`); `AM-M2` itself is `BLOCKED`. |
 | `AM-M4` adoption rehearsal | **No `PASS` record exists** (a real adoption of the pilot tile was made by the owner, `docs/assets/pilot_terrain_key.md`, but that is not an M4 rehearsal result). |
 | `AM-M5` | Overall `INCONCLUSIVE`. Not `PASS`: `AM5-W05`, `AM5-W09`, `AM-C05`, `AM-C06`, `AM-C07`, `AM-C09` are all `INCONCLUSIVE` (reasons in the result record). |
 | One role, source and artifact adopted under named human authority | Role and key chosen by the owner (a terrain cell, Forest); adopted by `nhan` (owner) through the CLI gate: adoption `ad-caf09a15bd89d2af`. |
@@ -30,9 +30,9 @@ tags: [mcp, live-map, planning]
 | Item | Fact |
 |---|---|
 | Role | Live Map terrain cell, tile code 6 (Forest), one 16-pixel cell at scale x1; noncritical (the flat fill and the hover text carry the terrain type) |
-| Visual key / family | `terrain.forest` / `terrain`; no variant axes (detail variants are deferred to `TCK-20261004-VISUAL-ASSETS-TERRAIN-DETAIL-VARIANTS`) |
-| Source and artifact | source asset `terrain_forest` `r0001` (source hash `sha256:2d87ed5de4c5de406f219aa22493b50a5201e1785a26f1f52a7d7eb7e38d5c03`); artifact pixel hash `pixels-v1:2f62ba6cd4df1284815545b59371f7f5d37216234a1d6342424312da56e672a8`; PNG hash `sha256:e542661faa1b5a62bbb68ca6a63ffe152116b134c8582fe573aa523d7aa3f8ce` |
-| Release candidate and manifest | `pilot/rc-0001`, candidate manifest hash `sha256:4f5eb10ff20955596bfabbc7a9a19f11cee8d2dda38ea11beb814b8655aaea42`; registry hash `sha256:07f5d265767176d981aaa41c68544779436225de80da7c1fdefafa4e41821133`; one entry |
+| Visual key / family | `terrain.forest` / `terrain`; no `variant_axes`, and a decorative detail axis `plain` (default), `bush`, `tree` (ADR D11, `docs/assets/pilot_terrain_key.md`) |
+| Source and artifact | three adopted slots: `plain` = source asset `terrain_forest` `r0001` (source hash `sha256:2d87ed5de4c5de406f219aa22493b50a5201e1785a26f1f52a7d7eb7e38d5c03`), artifact pixel hash `pixels-v1:2f62ba6cd4df1284815545b59371f7f5d37216234a1d6342424312da56e672a8`; `bush` = `terrain_forest_bush` `r0001`, `pixels-v1:58f2fd6fff9025564b0b03efbe0cef18691e3673486e616539d20ef6ba8fac33`; `tree` = `terrain_forest_tree` `r0001`, `pixels-v1:569ba7004064ee83b51f9c8c13c2624e1c8e4bcf0ad76936e740a4b8fa031654` (adoptions and PNG hashes: `docs/assets/pilot_terrain_key.md`) |
+| Release candidate and manifest | `pilot/rc-0003` (three entries, one per slot), candidate manifest hash `sha256:32c38266f10a1fb8b5e3d31d7b865e1fc350c00fde696d2ce6f2aa0c18eada19`; registry hash `sha256:3d2eeeccc864b5a0dae9660075eba66e0f27940ab024f2a58740d229f0a41451`. `rc-0001` and `rc-0002` stay committed as history and can no longer be exported (`registry_mismatch`) |
 | Deployment profile | Profile A (ADR D8): activation is the normal reviewed deployment of a whole frontend build; rollback is redeploying the previous whole build; no asset-only pointer; no signing (D9) |
 | Control / fallback | The current flat fill `TILE_COLORS[6]` (`#1b3a1b`) plus the hover text `TILE_NAMES[6]`; the image is decoration, never the only carrier (`pilot_terrain_m5_criteria.md`, `AM-U21`) |
 | Clients actually tested (not a support declaration) | Playwright Chromium 148.0.7778.96 and Google Chrome 151.0.7922.71 on Linux, each at device pixel ratio 1 and 2; Firefox, Safari/WebKit, mobile: not tested |

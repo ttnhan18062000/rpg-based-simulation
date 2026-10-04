@@ -11,8 +11,8 @@ tags: [architecture, documentation]
 
 What each `AM1-W01`..`W13` acceptance clause has, as built, on the `visual-asset-m1-contracts` branch. One row per clause of the
 "Objective acceptance" cell in `docs/plans/visual-asset-management-runtime-integration/01_architecture_decisions_and_contracts_plan.md`.
-Written by `TCK-20261004-VISUAL-ASSETS-M1-CONTRACT-REGISTER`. **This page classifies nothing about `AM-M1` as a whole**, authorizes nothing
-and changes no decision: it records evidence. Whether `AM-M1` passes is the status close-out's job.
+Written by `TCK-20261004-VISUAL-ASSETS-M1-CONTRACT-REGISTER`; the "Result" section was added by `TCK-20261004-VISUAL-ASSETS-M1-STATUS-CLOSEOUT`. The rows record evidence; the result is a classification
+from them. This page authorizes nothing and changes no decision.
 
 How to read it. **Evidence** is a doc section (`path#heading`), an ADR row (`ADR D1`-`D12`), a code symbol (`path::name`) or a test path, and every
 entry resolves on this branch. **MET** = built or decided, with evidence. **GAP** = not covered; the note says what is missing. **N/A** = does not apply, and the
@@ -22,6 +22,48 @@ note cites the decision that makes it so. Where a doc and the code disagree the 
 Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); real Aseprite on the licence holder's own machine only, `U-02` closed
 (`ADR D10`, `docs/assets/aseprite_licence_review.md`); the detail axis (`ADR D11`); draft sets (`ADR D12`); retention 30 days with the `gc` protected set
 (`docs/assets/retention_and_rollback.md`); the fallback-safety framework (`docs/assets/fallback_safety.md`) and the `AM-M2` evidence charter with its rerun rule (`docs/assets/m2_evidence_charter.md`), both approved 2026-10-04; every budget `APPROVED 2026-10-04` (`docs/assets/budgets.md`).
+
+## Result: `AM-M1` is `BLOCKED`
+
+Written by `TCK-20261004-VISUAL-ASSETS-M1-STATUS-CLOSEOUT` from this register and the plan's own "Result classification" table
+(`docs/plans/visual-asset-management-runtime-integration/01_architecture_decisions_and_contracts_plan.md`). Nothing was reworded to reach a result. It is a classification for the owner and the planner to
+check, not an owner decision, and it authorizes nothing: `AM-M2` cannot start without `AM-M1` `PASS` and new authority (the same plan), and `AM-M6` stays `NO-GO`.
+
+| Plan row | Condition | Applies? |
+|---|---|---|
+| `PASS` | `AM-C01` passes, one profile and minimum contracts are coherent, owners/charter exist, and no implementation authority is implied | **No.** Owners do not all exist (below) and the contracts are not coherent where the register shows `GAP` in `W03` and `W07`. |
+| `FAIL` | A valid decision violates authority, requires both profiles without evidence, or conflicts with Live Map/HUD/CAP owners | No. No decision found violates authority or mandates both profiles; Profile B is not built (`ADR D8`). |
+| `BLOCKED` | M0 did not pass or a required profile/authority/security owner decision is absent | **Yes**, on two counts below. |
+| `INCONCLUSIVE` | Evidence cannot distinguish profiles or a material contract choice lacks sufficient repository support | Partly; see "Why not `INCONCLUSIVE`". |
+
+**Why `BLOCKED`.**
+
+1. **No `AM-M0` result record exists.** The plan lists "M0 `PASS` and human acceptance of its evidence as M1 input" as a prerequisite. A search of `docs/` and `agent-working/tickets/done/` for an `AM-M0` or `AM0-W` result finds only the plan text and
+   the roadmaps, no result record. The proposal's rule is that no missing result defaults to a pass (section 17), so the prerequisite is unmet. The foundation was built on the owner's own decisions (Profile A, D8; no signing, D9) instead.
+2. **Required owner and authority decisions are absent.** These register rows are `GAP` because a person has not decided, not because evidence is missing:
+   `W02.2` (who derives a visual key from game state), `W03.4` (Live Map and HUD ownership), `W05.4` (an audit authority distinct from the approver), `W08.5` (build, publish and activate roles), and `W07.7` (retirement rules).
+   The plan's prerequisites also require the architecture, frontend/release, Live Map, HUD, accessibility, security, art-adoption, provenance/licence and rollback roles to be "named or explicitly block the affected decision"; only
+   the owner as approver and the rollback/recall owner are named (`docs/assets/retention_and_rollback.md`), and the charter's role fields are `TO BE SIGNED BY OWNER`.
+
+**Why not `INCONCLUSIVE`.** Evidence does distinguish the profiles (the repository has one Vite frontend and no asset service; `ADR D8`). A few contract choices do lack repository support (`W03.1` nothing resolves `variant_axes`, `W03.5` and `W07.3` no
+renderer or descriptor range, `W07.4` no capability exists), which is the `INCONCLUSIVE` wording. The `BLOCKED` row is the better fit because what resolves them is an owner decision (define the axis or drop it; say whether a range is needed),
+not more evidence; if the owner narrows those clauses the `INCONCLUSIVE` reading goes away, and `BLOCKED` remains for the reasons above.
+
+**`AM-C01`, judged on its own clause.** The gate's pass condition is "one smallest valid profile and its unresolved prerequisites are approved for planning". I judge it met on the repository evidence: Profile A was selected by the owner
+(`ADR D8`, 2026-10-03) from repository facts with a reversal trigger (`W01.1`-`W01.3`), no decision requires both profiles, and the unresolved prerequisites block implementation explicitly (`AM-M6` is `NO-GO`, the pilot charter's human fields are unsigned, no
+supported client is declared). The plan's rule for closing it ("all material unresolved profile prerequisites are either resolved or explicitly block implementation") holds. Not claimed: an authority map, which the gate lists as an input; the missing roles above
+are carried as `AM-M1` blockers instead of being hidden inside `AM-C01`. This is a judgment recorded here for review, not a gate record signed by the owner. `AM-C01` passing does not make `AM-M1` pass.
+
+**What would unblock `AM-M1`, owner decisions first.**
+
+1. Record an `AM-M0` result, or have the owner decide how `AM-M1`'s `AM-M0` prerequisite is treated.
+2. Name the key-derivation owner (`W02.2`), the Live Map and HUD owners (`W03.4`), the audit authority or record that one person holds every role (`W05.4`), and the build, publish and activate roles (`W08.5`).
+3. Decide the retirement rules (`W07.7`); whether a client, descriptor or renderer range is needed under Profile A (`W03.5`, `W07.3`); and whether to define the variant axes or drop `variant_axes` (`W03.1`).
+4. Decide the retention-contract gaps: locks (`W10.4`), a deletion record (`W10.6`) and storage-pressure handling (`W10.7`).
+5. After those decisions, code in its own tickets: the registry class field (`W02.7`) and an activation check for fallbacks (`W06.3`); a capability field only when a capability exists (`W07.4`).
+6. `W13.3`, `W13.4` and `W13.6` (distribution stop, stale/offline/cache, a tested rollback) need `AM-M6` authorization, or the owner narrowing them to the harness drill, as was done for `AM-C09`.
+
+Approved 2026-10-04, so no longer open: the fallback-safety framework (`W06.1`, `W06.2`) and the `AM-M2` evidence charter with its rerun rule (`W11`). Closed items: `W01`, `W04`, `W09`, `W11`, `W12`.
 
 ## Summary
 
@@ -201,11 +243,11 @@ One line per `GAP`. Each needs code or an owner decision, so none is fixed here 
 
 ## Where docs and code disagree
 
-The code (and the decision records it follows) win. These are listed, not fixed, because this batch writes only the register and the three tickets after it.
+The code (and the decision records it follows) win. The first version of this table was written by the register ticket; all four were fixed by `TCK-20261004-VISUAL-ASSETS-M1-STATUS-CLOSEOUT` and the table is kept as the record of what was wrong.
 
-| Doc | What it says | What is built or decided |
-|---|---|---|
-| `docs/assets/store_contract.md`, "Decisions still open" and "Not built" | Lists the deployment profile (`AM1-W01`), signing (`AM1-W08`), the Aseprite licence review (`U-02`), retention numbers and "CI with Aseprite" as open, and says client compatibility ranges and `AM1-W08` are not built. | ADR D8, D9 and D10 decided the first three and the last on 2026-10-03; retention is approved (`budgets.md` "Unset: None"). The same page's "Known gaps" already says retention is 30 days, and its budgets line still calls retention "the one deliberately unset row". |
-| `docs/architecture/visual_asset_foundation_adr.md`, Status and Consequences | Says the store's writers (intake, adoption, build, release, verify, gc) "are not built" and that open plan items `U-02`, `AM1-W01` are unchanged. | All of them are built and merged; D8-D10 decided `AM1-W01`, `AM1-W08` and `U-02`. |
-| `docs/plans/visual-asset-management-runtime-integration/README.md`, status lines | Says `AM1-W01` (deployment profile) remains open. | ADR D8 decided it. Handled by `TCK-20261004-VISUAL-ASSETS-M1-STATUS-CLOSEOUT`. |
-| `docs/assets/pilot_charter_am6.md`, section 2 facts | Names `pilot/rc-0001` with one entry and "no variant axes (detail variants are deferred)". | The detail axis is built and adopted: the committed release is `pilot/rc-0003` with three slots (`pilot_terrain_key.md`). The charter is an unsigned owner document, so the planner decides when to refresh it. |
+| Doc | What it said | What is built or decided | Status |
+|---|---|---|---|
+| `docs/assets/store_contract.md`, "Decisions still open" and "Not built" | Lists the deployment profile (`AM1-W01`), signing (`AM1-W08`), the Aseprite licence review (`U-02`), retention numbers and "CI with Aseprite" as open, and says client compatibility ranges and `AM1-W08` are not built. | ADR D8, D9 and D10 decided the first three and the last on 2026-10-03; retention is approved (`budgets.md` "Unset: None"). The same page's "Known gaps" already says retention is 30 days, and its budgets line still calls retention "the one deliberately unset row". | fixed by M1-STATUS-CLOSEOUT |
+| `docs/architecture/visual_asset_foundation_adr.md`, Status and Consequences | Says the store's writers (intake, adoption, build, release, verify, gc) "are not built" and that open plan items `U-02`, `AM1-W01` are unchanged. | All of them are built and merged; D8-D10 decided `AM1-W01`, `AM1-W08` and `U-02`. | fixed by M1-STATUS-CLOSEOUT |
+| `docs/plans/visual-asset-management-runtime-integration/README.md`, status lines | Says `AM1-W01` (deployment profile) remains open. | ADR D8 decided it. Handled by `TCK-20261004-VISUAL-ASSETS-M1-STATUS-CLOSEOUT`. | fixed by M1-STATUS-CLOSEOUT |
+| `docs/assets/pilot_charter_am6.md`, sections 1 and 2 (facts only) | Names `pilot/rc-0001` with one entry and "no variant axes (detail variants are deferred)". | The detail axis is built and adopted: the committed release is `pilot/rc-0003` with three slots (`pilot_terrain_key.md`). Only sections 1 and 2 (agent-filled facts) were refreshed; the human fields (3) and the signature (5) are untouched, and section 4 still names `rc-0001` (not in this ticket's scope). | fixed by M1-STATUS-CLOSEOUT |
