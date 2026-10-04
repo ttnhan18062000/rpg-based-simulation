@@ -66,7 +66,7 @@ describe('isolation of the surface rehearsal', () => {
       expect(built.length).toBeGreaterThan(1) // there is an index.html and its assets
       // every fixture image under __fixtures__/* (the synthetic rehearsal set and the pilot terrain export), not one directory
       const fixtureNames = files(path.join(MODULE, '__fixtures__'), (p) => p.endsWith('.png')).map((p) => path.basename(p))
-      expect(fixtureNames).toHaveLength(4) // 3 synthetic + 1 pilot: a new fixture image must be added to this count on purpose
+      expect(fixtureNames).toHaveLength(6) // 3 synthetic + 3 pilot (plain, bush, tree): a new fixture image must be added to this count on purpose
       const names = built.map((p) => path.basename(p))
       expect(names.filter((n) => fixtureNames.includes(n) || /rehearsal/i.test(n))).toEqual([])
       expect(built.some((p) => p.endsWith('.png') && fixtureNames.some((n) => p.includes(n.slice(0, 16))))).toBe(false)

@@ -88,6 +88,7 @@ looks the same, and resolves it with a typed fallback order. Look only: nothing 
 - Mutants, each applied, run, restored: replacing the index with `Math.floor(Math.random() * n)` fails 8+ tests (golden vectors, declared order, ...); dropping `x` from the hashed string fails 8 (golden vectors, declared order, the x/y/key/seed dependence test, refusals, the spread).
 - Fallback order each step with its recorded reason: picked image, picked missing (no entry, missing file, decode failed, late) -> default, neither -> role fallback, picked default unavailable, no cell, key without an axis.
 - **Spread over a 64 x 64 grid** of `[plain, bush, tree]` for `terrain.forest`, seed 1 (4096 cells): plain 1354 (33.1 %), bush 1397 (34.1 %), tree 1345 (32.8 %). Near-uniform as expected; the Python mirror and the TS pick give the same counts (asserted). For the user to approve; weights would be a follow-up, not this ticket.
+- Spread approved 2026-10-04 (user, blocking question; relayed by asset-planner): "Approve even spread".
 
 ## Files Changed
 - frontend/src/visualAssets/{pickDetail (new),resolver,loader,pilotScene}.ts

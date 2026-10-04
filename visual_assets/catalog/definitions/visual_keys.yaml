@@ -7,4 +7,5 @@ keys:
     family: terrain
     description: Live Map forest terrain cell (tile code 6), one 16x16 tile at scale x1; the colour fill is its fallback
     variant_axes: []
+    detail: {values: [plain, bush, tree], default: plain}
 aliases: []

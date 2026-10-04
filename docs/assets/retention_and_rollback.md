@@ -32,7 +32,7 @@ Proof: `tests/visual_assets/store/unit/test_gc.py` (17 tests). Mutants, each fai
 ## Rollback drill (`AM5-W09`, `AM-C06`) under Profile A (ADR D8)
 
 Rollback is redeploying the previous whole frontend build. In the drill, "previous release" = the previous build's runtime fixture set (the synthetic rehearsal export, catalog `rehearsal`) and "new" =
-the pilot export (`pilot/rc-0001`). `frontend/src/visualAssets/__tests__/rollbackDrill.test.ts`:
+the pilot export (`pilot/rc-0002`, since `TCK-20261004-VISUAL-ASSETS-FOREST-DETAIL-TILES`; `rc-0001` is the retained earlier release). `frontend/src/visualAssets/__tests__/rollbackDrill.test.ts`:
 
 | Combination | Result |
 |---|---|

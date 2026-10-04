@@ -17,8 +17,7 @@ Forest (Live Map tile code 6, fallback fill `TILE_COLORS[6]` = `#1b3a1b`). Nothi
 
 16 x 16, scale class `x1`, 7 colours, no animation: a quiet speckled ground with crowded canopies of varying size and a darkest-tone shadow, drawn so it wraps at every
 edge (a 4 x 4 repeat has no seam). Its average colour is (28, 60, 28) against the fallback (27, 58, 27). The user chose it over a first, plainer candidate on 2026-10-04.
-Detail variants (plain, bush, tree) are deferred to `TCK-20261004-VISUAL-ASSETS-TERRAIN-DETAIL-VARIANTS` by user decision; this tile is meant to become their `plain` default.
-The registry entry has `variant_axes: []`.
+This tile is the `plain` slot of the key's detail axis (see "The three slots"). The registry entry has `variant_axes: []` and a `detail` axis.
 
 ## The chain (everything that belongs together)
 
@@ -40,3 +39,31 @@ A first candidate (`forest_a` r0002, intake `in-87b5972640ed63c7`, PASSED) was d
 `python -m visual_assets.store audit` (`chain ok`) and `verify` (`store ok`) on the committed catalog; `tests/visual_assets` (including the real-Aseprite tests, run locally under D10) pass.
 The adoption was typed by the user in their own terminal; an agent never ran `adopt`. Reproduce the export with
 `python -m visual_assets.store export-runtime --catalog-id pilot --release-id rc-0001 --out <new dir>`.
+
+## The three slots (`TCK-20261004-VISUAL-ASSETS-FOREST-DETAIL-TILES`)
+
+The key declares a decorative detail axis, `detail: {values: [plain, bush, tree], default: plain}`, in that order: the client picks over the declared order, and the
+64 x 64 spread the user approved on 2026-10-04 (plain 1354, bush 1397, tree 1345 at seed 1) was computed for it. Each value has its own adopted tile; the
+client falls back picked -> `plain` -> the flat fill. Look only.
+
+| Slot | Source asset | Adoption | Artifact pixel hash |
+|---|---|---|---|
+| `plain` (the default) | `terrain_forest` r0001 | `ad-caf09a15bd89d2af` (names no detail value: it was adopted before the axis existed and fills the default, unchanged) | `pixels-v1:2f62ba6c...e672a8` |
+| `bush` | `terrain_forest_bush` r0001 | `ad-5615d03ed5a98f0a`, `--detail bush`, 2026-10-04 by `nhan` (owner) | `pixels-v1:58f2fd6fff9025564b0b03efbe0cef18691e3673486e616539d20ef6ba8fac33` |
+| `tree` | `terrain_forest_tree` r0001 | `ad-34303489f1e5db70`, `--detail tree`, 2026-10-04 by `nhan` (owner) | `pixels-v1:569ba7004064ee83b51f9c8c13c2624e1c8e4bcf0ad76936e740a4b8fa031654` |
+
+The bush (producer sprite `forest_bush2`, intake `in-0bb0ef9116d72ee2`) is low, lighter foliage clumps with red berries; the tree (`forest_tree2`, intake `in-3cafac684023adbc`) is one large
+dome crown with leaf highlights and a cast shadow. Both keep the plain tile's outer ring and its bottom band, so any mix of the three tiles shows no seam (evidence: a 4 x 4 mixed preview and a
+side-by-side strip in `agent-working/stored_artifacts/TCK-20261004-VISUAL-ASSETS-FOREST-DETAIL-TILES/`). They add two colours to the plain tile's seven: leaf-light `#3a6e32` and berry `#9a3b3b`.
+
+**The redraw.** A first draft of each (intakes `in-1f3ef37e2cc9156b` bush and `in-990026dd005070e8` tree) changed only one canopy and used the plain palette; the user found both too close to the plain tile
+and asked why, so both were redrawn. The first drafts stay PASSED, reviewed and **un-adopted** in the local, gitignored quarantine; they are not part of the catalog.
+
+| Link | Value |
+|---|---|
+| Release candidate | `manifests/candidates/pilot/rc-0002.json`, file hash `sha256:b330f49dd0cf980a06ffe6a93cb28ffe70e39ea1dc03be9eb146cdc53bd83367` (three entries, one per slot; not active). `rc-0001` stays as the retained previous release |
+| Runtime manifest | `export-runtime --catalog-id pilot --release-id rc-0002`: `candidate_manifest_hash` the file hash above, `registry_hash` `sha256:cefb9984f300603b37ec5c9a2fbaa911800d0829a72244f46c5474c4ca0efce9`, entries per slot and a `details` block with the declared axis |
+| Frontend fixture | `frontend/src/visualAssets/__fixtures__/pilot/` is the committed copy of that export; `tests/visual_assets/test_pilot_fixture.py` checks it equals a fresh export |
+
+`rc-0001` can no longer be exported (the registry changed since it was assembled, `registry_mismatch`); it is still read and `verify` tolerates its axis-less entry.
+

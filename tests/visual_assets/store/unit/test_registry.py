@@ -35,17 +35,20 @@ def test_committed_registry_holds_exactly_the_pilot_key():
     assert list(registry.keys) == ["terrain.forest"] and dict(registry.aliases) == {}
     forest = registry.keys["terrain.forest"]
     assert forest.family == "terrain" and forest.variant_axes == () and not forest.optional
+    # the declared order is what the client picks over: the spread the user approved (64 x 64: plain 1354, bush 1397, tree 1345) was computed for it
+    assert forest.detail.values == ("plain", "bush", "tree") and forest.detail.default == "plain"
     data = (config.CATALOG_ROOT / "definitions" / "visual_keys.yaml").read_bytes()
     assert registry.file_hash == "sha256:" + hashlib.sha256(data).hexdigest()
 
 
 def test_committed_catalog_holds_only_the_pilot_asset():
-    # one key (above), one adopted source and what was derived from it; exact contents: tests/visual_assets/test_catalog_integrity.py
-    expected = {"sources": ["terrain_forest"], "generated": ["terrain_forest--x1"], "manifests/candidates": ["pilot"]}
+    # one key (above), its three adopted slot sources and what was derived from them; exact contents: tests/visual_assets/test_catalog_integrity.py
+    expected = {"sources": ["terrain_forest", "terrain_forest_bush", "terrain_forest_tree"],
+                "generated": ["terrain_forest--x1", "terrain_forest_bush--x1", "terrain_forest_tree--x1"], "manifests/candidates": ["pilot"]}
     for sub, names in expected.items():
         assert sorted(p.name for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep") == names, sub
     for sub in ("provenance/adoptions", "provenance/intake"):
-        assert len([p for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep"]) == (1 if sub.endswith("adoptions") else 2), sub
+        assert len([p for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep"]) == (3 if sub.endswith("adoptions") else 6), sub
     assert [p.name for p in (config.CATALOG_ROOT / "build-config").iterdir() if p.name != ".gitkeep"] == ["export.toml"]  # rules, not an asset
     assert {p.name for p in (config.CATALOG_ROOT / "fixtures").iterdir()} == {"contracts"}
     assert "fixture" not in [p.name for p in (config.CATALOG_ROOT / "definitions").iterdir()]

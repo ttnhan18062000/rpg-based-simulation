@@ -326,9 +326,10 @@ def test_a_symlinked_catalog_directory_is_refused_without_writing_through_it(env
 
 
 def test_the_committed_catalog_is_never_touched_by_these_tests():
-    # only the pilot asset's own records are there (TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE); a test adoption would add a second one
+    # only the terrain.forest slots' own records are there (the pilot plain tile, TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE, and its bush and tree,
+    # TCK-20261004-VISUAL-ASSETS-FOREST-DETAIL-TILES): three sources, three adoptions, two intake files each; a test adoption would add a fourth
     committed = config.CATALOG_ROOT
-    for name, count in (("sources", 1), ("provenance/adoptions", 1), ("provenance/intake", 2), ("provenance/revocations", 0)):
+    for name, count in (("sources", 3), ("provenance/adoptions", 3), ("provenance/intake", 6), ("provenance/revocations", 0)):
         found = [p.name for p in (committed / name).iterdir() if p.name != ".gitkeep"] if (committed / name).exists() else []
         assert len(found) == count, (name, found)
 

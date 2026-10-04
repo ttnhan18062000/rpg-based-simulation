@@ -24,6 +24,13 @@ function snapshotWith(have: readonly string[]): RuntimeSnapshot {
   return parseManifest(JSON.stringify(raw))
 }
 
+/** The rc-0001 shape: an entry with no `detail` field. */
+const withoutDetail = (entry: Record<string, unknown>) => {
+  const copy = { ...entry }
+  delete copy.detail
+  return copy
+}
+
 const urls = (missing: readonly string[] = []) => (file: string) => (missing.includes(file) ? undefined : `/build/${file}`)
 const forestCells = () => {
   const cells: { x: number; y: number }[] = []
@@ -79,7 +86,10 @@ describe('resolveVisual for a key with a detail axis', () => {
 
   it('with no cell the default value is used; a key without an axis ignores the cell', () => {
     expect(resolveVisual(all, PILOT_KEY, { urlFor: urls() })).toMatchObject({ kind: 'image', file: FILE.plain, picked: 'plain', detail: 'plain' })
-    const old = parseManifest(pilotManifestText)
+    const raw = JSON.parse(pilotManifestText)
+    raw.entries = raw.entries.filter((e: Record<string, unknown>) => e.detail === 'plain').map(withoutDetail) // the rc-0001 shape: one axis-free entry
+    delete raw.details
+    const old = parseManifest(JSON.stringify(raw))
     const result = resolveVisual(old, PILOT_KEY, { urlFor: pilotUrlFor }, { x: 3, y: 4 })
     expect(result).toMatchObject({ kind: 'image', visualKey: PILOT_KEY })
     expect(result).not.toHaveProperty('picked')
@@ -106,8 +116,11 @@ describe('the pilot scene with a detail axis', () => {
     expect(new Set(picks(forestCells()))).toEqual(new Set(VALUES))
   })
 
-  it('draws the same pixels as the pilot scene without an axis: same calls, same positions', async () => {
-    const view = new SnapshotLoader(decode, pilotUrlFor).mount(parseManifest(pilotManifestText))
+  it('draws the same pixels as the pilot scene without an axis (the rc-0001 shape): same calls, same positions', async () => {
+    const raw = JSON.parse(pilotManifestText)
+    raw.entries = raw.entries.filter((e: Record<string, unknown>) => e.detail === 'plain').map(withoutDetail)
+    delete raw.details
+    const view = new SnapshotLoader(decode, pilotUrlFor).mount(parseManifest(JSON.stringify(raw)))
     await view.ready
     const old = new Recorder()
     drawPilotScene(old.asCtx(), view, 'image')

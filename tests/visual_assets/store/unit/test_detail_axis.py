@@ -332,10 +332,16 @@ def test_verify_reports_a_manifest_with_a_duplicate_slot_as_unreadable(tree):
     assert "MANIFEST_UNREADABLE" in codes(tree)
 
 
-def test_the_committed_pilot_adoption_fills_the_plain_slot_of_a_key_that_declares_the_axis():
-    pilot = s.detail_registry("terrain.forest").keys["terrain.forest"]
-    assert len(records.slot_holders(pilot, "plain")) == 1 and records.slot_holders(pilot, "bush") == []
-    assert all(a.detail_value is None for a in (records.load_adoption(p.stem) for p in sorted(records.adoptions_dir().glob("*.json"))))
+def test_the_committed_catalog_fills_each_declared_slot_of_terrain_forest_once_and_the_pilot_adoption_still_names_none():
+    forest = load_registry().keys["terrain.forest"]
+    assert [(detail, records.slot_holders(forest, detail)) for detail in forest.detail.values] == [
+        ("plain", ["terrain_forest"]), ("bush", ["terrain_forest_bush"]), ("tree", ["terrain_forest_tree"]),
+    ]
+    # the pilot adoption was made before the axis existed: it names no detail value and fills the default, with no re-adoption
+    assert records.load_adoption("ad-caf09a15bd89d2af").detail_value is None
+    assert {a.source_asset_id: a.detail_value for a in (records.load_adoption(p.stem) for p in sorted(records.adoptions_dir().glob("*.json")))} == {
+        "terrain_forest": None, "terrain_forest_bush": "bush", "terrain_forest_tree": "tree",
+    }
 
 
 # ---- the client parser accepts and rejects the same manifests -----------------------------------------------------------------------

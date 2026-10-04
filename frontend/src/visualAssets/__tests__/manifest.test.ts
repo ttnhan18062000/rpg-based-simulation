@@ -107,10 +107,11 @@ describe('the detail axis (shared cases with the Python contract)', () => {
     expect((snapshot.details as unknown as { set?: unknown }).set).toBeUndefined()
   })
 
-  it('parses the committed pilot manifest with no details and one slot keyed by its visual key', () => {
+  it('parses the committed pilot manifest (rc-0002): one key, three slots, the declared axis in its declared order', () => {
     const snapshot = parseManifest(readFileSync(path.resolve(__dirname, '../__fixtures__/pilot/runtime_manifest.json'), 'utf8'))
-    expect(snapshot.details.size).toBe(0)
-    expect(snapshot.entries.get('terrain.forest')!.detail).toBeNull()
+    expect(snapshot.details.get('terrain.forest')).toMatchObject({ values: ['plain', 'bush', 'tree'], default: 'plain' })
+    expect(['plain', 'bush', 'tree'].map((d) => snapshot.entries.get(slotKey('terrain.forest', d))!.detail)).toEqual(['plain', 'bush', 'tree'])
+    expect(snapshot.entries.has('terrain.forest')).toBe(false)
   })
 
   it('mirrors the Python bounds', () => {
