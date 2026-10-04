@@ -242,7 +242,8 @@ _(none yet — filed as a root-caused finding, not yet implemented)_
 ## Files Changed
 - `src/perf/scenarios.py`, `tools/perf/_profiling_common.py`, `tools/perf/profile_tick.py`,
   `tools/perf/flag_attribution.py`, `tests/tools/test_profiling_toolkit.py`,
-  `tests/tools/test_perf_scenarios_placement.py` (new), `docs/guides/performance_profiling.md`
+  `tests/tools/test_perf_scenarios_placement.py` (new), `docs/guides/performance_profiling.md`,
+  `docs/plans/design_enhancement/performance_optimization/performance_m4_baseline_gate_a_epic.md` (metropolis gap row)
 
 ## Completion Summary
 `build_metropolis_state()` now places every entity on its own tile (zero LAW-SPAWN-OCCUPANCY at 200/500/1000 entities, was 50/100/100), deterministically, via helpers `_region_free_slots` and `_spread_entities_into_regions`; overflow raises ValueError. The known-defect warning workaround was removed. Code-health 0 new / 0 worse; typecheck baseline filter clean. Standalone `build_mixed_state` collisions split to TCK-20261004-PERF-SCENARIO-MIXED-STATE-SPAWN-COLLISION.
