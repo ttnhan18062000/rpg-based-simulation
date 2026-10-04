@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-VISUAL-ASSETS-M1-RECLASSIFY
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, documentation, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation, planning]
 Re-derive the `AM-M1` result from the updated register and the `AM-M0` result, align status lines (epic close-out)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -51,11 +51,11 @@ decisions (child 2) land, the register's "Result: `AM-M1` is `BLOCKED`" section 
   `AM-M2` still needs new authority from the owner.
 
 ## Acceptance Criteria
-- [ ] The M1 result follows from the register's verdicts, the M0 result and the plan's table (the planner re-derives
+- [x] The M1 result follows from the register's verdicts, the M0 result and the plan's table (the planner re-derives
   it at review).
-- [ ] No doc in the plan package or `docs/assets/` still states the old `BLOCKED` reasons as current
+- [x] No doc in the plan package or `docs/assets/` still states the old `BLOCKED` reasons as current
   (`grep -n "BLOCKED\|AM-M0" ` over both folders, output in the ticket).
-- [ ] Knowledge index updated; frontmatter valid; `done_checker_static.py` passes for every child.
+- [x] Knowledge index updated; frontmatter valid; `done_checker_static.py` passes for every child.
 
 ## Related Tickets
 - Parent: TCK-20261004-EPIC-VISUAL-ASSET-M1-UNBLOCK; after M0-RESULT and M1-OWNER-DECISIONS
@@ -74,9 +74,18 @@ decisions (child 2) land, the register's "Result: `AM-M1` is `BLOCKED`" section 
   to M1's coherence; otherwise the honest result stands.
 
 ## Implementation Notes
+Register "Result" re-derived: **still `BLOCKED`, for a different reason.** `AM-M0` did not pass (record `INCONCLUSIVE`; user kept it, "Keep INCONCLUSIVE", 2026-10-04); the old reasons (no M0 record, absent owner decisions) are resolved. Remaining `GAP` rows judged one by one: `W02.7`, `W03.1`, `W06.3` keep the contracts incoherent, `W07.4` does not, `W13.3/4/6` are carried to `AM-M6` (owner). Even with an M0 `PASS` the result would be `INCONCLUSIVE`, not `PASS`.
+The M0 plan's "M1 does not start on M0 INCONCLUSIVE" line is judged openly in the register: two readings (stop condition for starting, already overtaken; or a bound on what M1 may claim), same result either way, no decision unwound. `AM-C01` judgment kept, inputs updated (D13 authority map, M0 record).
+Folded in the planner's review nits for ticket 2: the ADR Status comma, and the register "Follow-ups" intro reworded.
+Status lines aligned: register header, plan package README (block rewritten, table updated), `00_` and `01_` plans (status blockquote), the charter's section 1 `AM-M1` row (agent-filled facts, a row the batch's wording would otherwise leave stale; sections 3 and 5 untouched), `store_contract.md` pointer.
+Acceptance grep over `docs/assets`, the plan package and the ADR for the old reasons ("no `AM-M0` result record", "owner and authority decisions are absent"): the only hit is the README sentence saying those old reasons are resolved.
 
 ## Test Summary
+Docs-only. Frontmatter, docs/static tests, index and done-checker: see the commit.
 
 ## Files Changed
+- `docs/assets/m1_contract_register.md`, `docs/architecture/visual_asset_foundation_adr.md`, `docs/assets/pilot_charter_am6.md` (section 1 row), `docs/assets/store_contract.md`, `docs/plans/visual-asset-management-runtime-integration/{README,00_...,01_...}.md`
+- `agent-working/tickets/` (children, epic, SEQUENCE), `docs/REGISTRY.yaml`, monitoring shards
 
 ## Completion Summary
+Done. `AM-M1` is `BLOCKED` (re-derived), reasons stated, nothing reworded to reach it.

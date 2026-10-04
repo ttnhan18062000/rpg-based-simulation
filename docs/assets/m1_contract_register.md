@@ -11,7 +11,7 @@ tags: [architecture, documentation]
 
 What each `AM1-W01`..`W13` acceptance clause has, as built, on the `visual-asset-m1-contracts` branch. One row per clause of the
 "Objective acceptance" cell in `docs/plans/visual-asset-management-runtime-integration/01_architecture_decisions_and_contracts_plan.md`.
-Written by `TCK-20261004-VISUAL-ASSETS-M1-CONTRACT-REGISTER`; the "Result" section was added by `TCK-20261004-VISUAL-ASSETS-M1-STATUS-CLOSEOUT`. The rows record evidence; the result is a classification
+Written by `TCK-20261004-VISUAL-ASSETS-M1-CONTRACT-REGISTER`; the "Result" section was added by `TCK-20261004-VISUAL-ASSETS-M1-STATUS-CLOSEOUT` and re-derived by `TCK-20261004-VISUAL-ASSETS-M1-RECLASSIFY`. The rows record evidence; the result is a classification
 from them. This page authorizes nothing and changes no decision.
 
 How to read it. **Evidence** is a doc section (`path#heading`), an ADR row (`ADR D1`-`D12`), a code symbol (`path::name`) or a test path, and every
@@ -23,48 +23,61 @@ Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); rea
 (`ADR D10`, `docs/assets/aseprite_licence_review.md`); the detail axis (`ADR D11`); draft sets (`ADR D12`); the owner's `AM-M1` decisions on roles, key derivation, retirement, ranges, variant axes and retention operations (`ADR D13`-`D18`, 2026-10-04); retention 30 days with the `gc` protected set
 (`docs/assets/retention_and_rollback.md`); the fallback-safety framework (`docs/assets/fallback_safety.md`) and the `AM-M2` evidence charter with its rerun rule (`docs/assets/m2_evidence_charter.md`), both approved 2026-10-04; every budget `APPROVED 2026-10-04` (`docs/assets/budgets.md`).
 
-## Result: `AM-M1` is `BLOCKED`
+## Result: `AM-M1` is `BLOCKED` (re-derived 2026-10-04)
 
-Written by `TCK-20261004-VISUAL-ASSETS-M1-STATUS-CLOSEOUT` from this register and the plan's own "Result classification" table
-(`docs/plans/visual-asset-management-runtime-integration/01_architecture_decisions_and_contracts_plan.md`). Nothing was reworded to reach a result. It is a classification for the owner and the planner to
-check, not an owner decision, and it authorizes nothing: `AM-M2` cannot start without `AM-M1` `PASS` and new authority (the same plan), and `AM-M6` stays `NO-GO`.
+First written by `TCK-20261004-VISUAL-ASSETS-M1-STATUS-CLOSEOUT`, re-derived by `TCK-20261004-VISUAL-ASSETS-M1-RECLASSIFY` from this register as it now stands (55 `MET`, 7 `GAP`, 6 `N/A`), the `AM-M0` result record
+(`docs/assets/m0_discovery_result.md`: `INCONCLUSIVE`) and the owner's decisions of 2026-10-04 (`ADR D13`-`D18`), against the plan's own "Result classification" table
+(`docs/plans/visual-asset-management-runtime-integration/01_architecture_decisions_and_contracts_plan.md`). Nothing was reworded to reach a result. The result keeps its name but **its reasons changed**: the missing
+`AM-M0` record and the five absent owner decisions of the first version are resolved or recorded; `BLOCKED` now rests on `AM-M0` not having passed. It is a classification for the owner and the planner to check, not an owner decision,
+and it authorizes nothing: `AM-M2` cannot start without `AM-M1` `PASS` and new authority (the same plan), and `AM-M6` stays `NO-GO`.
 
 | Plan row | Condition | Applies? |
 |---|---|---|
-| `PASS` | `AM-C01` passes, one profile and minimum contracts are coherent, owners/charter exist, and no implementation authority is implied | **No.** Owners do not all exist (below) and the contracts are not coherent where the register shows `GAP` in `W03` and `W07`. |
-| `FAIL` | A valid decision violates authority, requires both profiles without evidence, or conflicts with Live Map/HUD/CAP owners | No. No decision found violates authority or mandates both profiles; Profile B is not built (`ADR D8`). |
-| `BLOCKED` | M0 did not pass or a required profile/authority/security owner decision is absent | **Yes**, on two counts below. |
-| `INCONCLUSIVE` | Evidence cannot distinguish profiles or a material contract choice lacks sufficient repository support | Partly; see "Why not `INCONCLUSIVE`". |
+| `PASS` | `AM-C01` passes, one profile and minimum contracts are coherent, owners/charter exist, and no implementation authority is implied | **No.** `AM-M0` has not passed (below), and the contracts are not coherent where `GAP` remains (row by row below). `AM-C01` and the owners/charter conditions are met. |
+| `FAIL` | A valid decision violates authority, requires both profiles without evidence, or conflicts with Live Map/HUD/CAP owners | No. No decision found violates authority or mandates both profiles; Profile B is not built (`ADR D8`); the surface owners are now named (`ADR D13`). |
+| `BLOCKED` | M0 did not pass or a required profile/authority/security owner decision is absent | **Yes**, on the first clause: `AM-M0` did not pass. |
+| `INCONCLUSIVE` | Evidence cannot distinguish profiles or a material contract choice lacks sufficient repository support | Partly, not the best fit; see "Why not `INCONCLUSIVE`". |
 
 **Why `BLOCKED`.**
 
-1. **No `AM-M0` result record existed** when this was written. One now exists, retrospective, result `INCONCLUSIVE` (`docs/assets/m0_discovery_result.md`, `TCK-20261004-VISUAL-ASSETS-M0-RESULT`); this register's result is re-derived by `TCK-20261004-VISUAL-ASSETS-M1-RECLASSIFY`, not here. The text below is the original finding:
-  (original) **No `AM-M0` result record exists.** The plan lists "M0 `PASS` and human acceptance of its evidence as M1 input" as a prerequisite. A search of `docs/` and `agent-working/tickets/done/` for an `AM-M0` or `AM0-W` result finds only the plan text and
-   the roadmaps, no result record. The proposal's rule is that no missing result defaults to a pass (section 17), so the prerequisite is unmet. The foundation was built on the owner's own decisions (Profile A, D8; no signing, D9) instead.
-2. **Required owner and authority decisions are absent.** These register rows are `GAP` because a person has not decided, not because evidence is missing:
-   `W02.2` (who derives a visual key from game state), `W03.4` (Live Map and HUD ownership), `W05.4` (an audit authority distinct from the approver), `W08.5` (build, publish and activate roles), and `W07.7` (retirement rules).
-   The plan's prerequisites also require the architecture, frontend/release, Live Map, HUD, accessibility, security, art-adoption, provenance/licence and rollback roles to be "named or explicitly block the affected decision"; only
-   the owner as approver and the rollback/recall owner are named (`docs/assets/retention_and_rollback.md`), and the charter's role fields are `TO BE SIGNED BY OWNER`.
+1. **`AM-M0` did not pass.** The record exists now and its result is `INCONCLUSIVE`: production hosting, caches, the supported client matrix and the tolerated staleness are `UNVERIFIED` from the repository
+   (`docs/assets/m0_discovery_result.md`, `AM0-W03`). The user was asked whether to supply those facts and chose "Keep `INCONCLUSIVE`" (user, 2026-10-04): they stay open inputs for `AM-M6`, and the M0 record stays as written.
+   The plan's prerequisite is "M0 `PASS`", and the `BLOCKED` row's first clause is "M0 did not pass", so it applies.
+2. **No required owner decision is absent any more.** The five that were (`W02.2`, `W03.4`, `W05.4`, `W08.5`, `W07.7`) are decided (`ADR D13`-`D15`), as are `W03.5`, `W07.3` (`D16`), `W03.1` (`D17`, see below) and `W10.4`,
+   `W10.6`, `W10.7` (`D18`). Roles are named, not separated: the owner holds every role and separation is stated as not achieved (`D13`). That is not an absent decision, so it is not a `BLOCKED` count.
 
-**Why not `INCONCLUSIVE`.** Evidence does distinguish the profiles (the repository has one Vite frontend and no asset service; `ADR D8`). A few contract choices do lack repository support (`W03.1` nothing resolves `variant_axes`, `W03.5` and `W07.3` no
-renderer or descriptor range, `W07.4` no capability exists), which is the `INCONCLUSIVE` wording. The `BLOCKED` row is the better fit because what resolves them is an owner decision (define the axis or drop it; say whether a range is needed),
-not more evidence; if the owner narrows those clauses the `INCONCLUSIVE` reading goes away, and `BLOCKED` remains for the reasons above.
+**The M0 plan's own line, judged openly.** `00_repository_grounded_discovery_plan.md` says "M1 does not start on M0 `FAIL`, `BLOCKED`, or `INCONCLUSIVE`." The contracts here were started and largely built before any M0 record existed
+(`ADR D8`, 2026-10-03), so the order the plan asks for was not followed. Two readings are open. (a) The line is a stop condition for *starting* M1, already overtaken: nothing can be unstarted, and the decisions `D8`-`D18` stand as the owner's.
+(b) The line bounds what M1 may *claim*: while M0 has not passed, M1 cannot pass. This register does not choose between them, because the result is the same either way: the `BLOCKED` row's clause "M0 did not pass" is a fact
+under both, and `PASS` is not reached even on a hypothetical M0 `PASS` (the remaining `GAP` rows below). No decision is unwound.
+
+**The remaining `GAP` rows, one by one: do they keep the contracts from being coherent?** A judgment recorded here for review.
+
+| Row | Why it is still `GAP` | Keeps "contracts coherent" from holding? |
+|---|---|---|
+| `W02.7` safety-class link | `VisualKeyDefinition` has no class field; the approved framework (`fallback_safety.md`) is policy only | **Yes.** A clause of the minimum registry contract has no field. Immaterial for the one noncritical terrain pilot, material for any later role. |
+| `W03.1` variant axes | frozen empty (`D17`), but nothing rejects a non-empty `variant_axes`, so determinism rests on a rule | **Yes, until `verify` enforces it** (parked code follow-up). |
+| `W06.3` activation policy | requiring an alternative at activation is not built; a policy beyond that needs `AM-M6` | **Yes.** The fallback-safety contract is only half executable. |
+| `W07.4` capability range | no capability exists to require | **No.** There is nothing to range over; it reopens with the first capability. |
+| `W13.3`, `W13.4`, `W13.6` | distribution stop, stale/offline/cache handling and a tested real rollback need a real deployment | **Not material to M1's coherence by the owner's assignment** (carried to `AM-M6` as its prerequisites, 2026-10-04, not narrowed to the harness drill), but the clauses remain unmet, so `PASS` cannot claim every clause. |
+
+**Why not `INCONCLUSIVE`.** Evidence does distinguish the profiles (one Vite frontend, no asset service; `ADR D8`). The contract choices that lack code support (`W03.1`, `W07.4`, `W02.7`, `W06.3`) are the
+`INCONCLUSIVE` wording in part. `BLOCKED` is the better fit because its first clause is met as a fact (the M0 result is `INCONCLUSIVE`, by the record and by the user's choice) rather than judged, and the plan's
+rule is that missing evidence never defaults to a pass. Had M0 passed, the remaining `GAP` rows would put the result at `INCONCLUSIVE`, not `PASS`.
 
 **`AM-C01`, judged on its own clause.** The gate's pass condition is "one smallest valid profile and its unresolved prerequisites are approved for planning". I judge it met on the repository evidence: Profile A was selected by the owner
-(`ADR D8`, 2026-10-03) from repository facts with a reversal trigger (`W01.1`-`W01.3`), no decision requires both profiles, and the unresolved prerequisites block implementation explicitly (`AM-M6` is `NO-GO`, the pilot charter's human fields are unsigned, no
-supported client is declared). The plan's rule for closing it ("all material unresolved profile prerequisites are either resolved or explicitly block implementation") holds. Not claimed: an authority map, which the gate lists as an input; the missing roles above
-are carried as `AM-M1` blockers instead of being hidden inside `AM-C01`. This is a judgment recorded here for review, not a gate record signed by the owner. `AM-C01` passing does not make `AM-M1` pass.
+(`ADR D8`, 2026-10-03) from repository facts with a reversal trigger (`W01.1`-`W01.3`), no decision requires both profiles, and the unresolved prerequisites block implementation explicitly (`AM-M6` is `NO-GO`, the pilot charter's
+human fields are unsigned, no supported client is declared). Changed inputs since the first version: an authority map now exists as `ADR D13` (one person holds every role; separation not achieved), and the M0 record exists
+but is `INCONCLUSIVE`, and M0 cannot pass `AM-C01` itself (the M0 plan). This is a judgment recorded here for review, not a gate record signed by the owner. `AM-C01` passing does not make `AM-M1` pass.
 
-**What would unblock `AM-M1`, owner decisions first.**
+**What remains before `AM-M1` could be `PASS`** (nothing here is authorized by this page).
 
-1. Record an `AM-M0` result, or have the owner decide how `AM-M1`'s `AM-M0` prerequisite is treated.
-2. Name the key-derivation owner (`W02.2`), the Live Map and HUD owners (`W03.4`), the audit authority or record that one person holds every role (`W05.4`), and the build, publish and activate roles (`W08.5`).
-3. Decide the retirement rules (`W07.7`); whether a client, descriptor or renderer range is needed under Profile A (`W03.5`, `W07.3`); and whether to define the variant axes or drop `variant_axes` (`W03.1`).
-4. Decide the retention-contract gaps: locks (`W10.4`), a deletion record (`W10.6`) and storage-pressure handling (`W10.7`).
-5. After those decisions, code in its own tickets: the registry class field (`W02.7`) and an activation check for fallbacks (`W06.3`); a capability field only when a capability exists (`W07.4`).
-6. `W13.3`, `W13.4` and `W13.6` (distribution stop, stale/offline/cache, a tested rollback) need `AM-M6` authorization, or the owner narrowing them to the harness drill, as was done for `AM-C09`.
+1. `AM-M0` `PASS`: an owner statement of the hosting target, supported clients and staleness limit, or an owner decision that they are not inputs under Profile A. Today the user keeps them open for `AM-M6`.
+2. Code, each in its own ticket: the registry class field (`W02.7`), an activation check for fallbacks (`W06.3`), a `verify` rule rejecting a non-empty `variant_axes` (`W03.1`), a capability field with the first capability (`W07.4`).
+3. `W13.3`, `W13.4`, `W13.6` at `AM-M6` authorization, or the owner narrowing them.
+4. Then a fresh re-derivation of this section. `PASS` would still authorize nothing: `AM-M2` needs new authority from the owner.
 
-Approved 2026-10-04, so no longer open: the fallback-safety framework (`W06.1`, `W06.2`) and the `AM-M2` evidence charter with its rerun rule (`W11`). Closed items: `W01`, `W04`, `W09`, `W11`, `W12`.
+Approved 2026-10-04, so no longer open: the fallback-safety framework (`W06.1`, `W06.2`) and the `AM-M2` evidence charter with its rerun rule (`W11`). Closed items: `W01`, `W04`, `W05`, `W08`, `W09`, `W10`, `W11`, `W12`.
 
 ## Summary
 
@@ -222,7 +235,7 @@ Approved 2026-10-04, so no longer open: the fallback-safety framework (`W06.1`, 
 
 ## Follow-ups (parked, no tickets)
 
-One line per `GAP`. Each needs code or an owner decision, so none is fixed here and none has a ticket.
+One line per clause that was `GAP` in the first register; the decided ones are marked with their ADR row. The rest need code or a later authorization, so none is fixed here and none has a ticket.
 
 - `W02.2` Derivation owner: **decided 2026-10-04 (`ADR D14`)**; the mapping itself is built at `AM-M6`, outside the dev-only draft page.
 - `W02.7` Safety-class link: Add a safety-class field to `VisualKeyDefinition` now that the W06 framework is approved (registry change plus parser and client mirror, in its own ticket). `fallback_safety.md` (approved) states the rule as policy only, so keys declare a class in their ticket until then.

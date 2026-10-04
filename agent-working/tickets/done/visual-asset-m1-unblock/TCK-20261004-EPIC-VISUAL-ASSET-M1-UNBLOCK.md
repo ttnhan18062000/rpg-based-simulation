@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-EPIC-VISUAL-ASSET-M1-UNBLOCK
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, documentation, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation, planning]
 Unblock `AM-M1` for visual assets: write the missing `AM-M0` result, record the owner's decisions, and reclassify M1
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -59,12 +59,12 @@ needs `AM-M1` `PASS` plus new authority, `AM-M6` stays `NO-GO`, the charter stay
 - Any decision beyond the table above. A new question goes to the planner, who asks the user.
 
 ## Acceptance Criteria
-- [ ] An `AM-M0` result record exists with a result from the M0 plan's own table, never reworded to pass (child 1).
-- [ ] ADR rows and register rows carry each decision above with its date and source; no `GAP` is flipped without
+- [x] An `AM-M0` result record exists with a result from the M0 plan's own table, never reworded to pass (child 1).
+- [x] ADR rows and register rows carry each decision above with its date and source; no `GAP` is flipped without
   a decision or evidence (child 2).
-- [ ] The register's "Result" section is re-derived from the plan's table after children 1 and 2, whatever it comes
+- [x] The register's "Result" section is re-derived from the plan's table after children 1 and 2, whatever it comes
   out as (child 3).
-- [ ] `git diff origin/main --stat` touches only `docs/` and `agent-working/` (plus regenerated `docs/REGISTRY.yaml`
+- [x] `git diff origin/main --stat` touches only `docs/` and `agent-working/` (plus regenerated `docs/REGISTRY.yaml`
   and monitoring shards).
 
 ## Related Tickets
@@ -101,3 +101,4 @@ Docs only: frontmatter and docs static tests, `make docs-registry` clean, no cod
 See the children.
 
 ## Completion Summary
+All three children are done on branch `visual-asset-m1-unblock`. `AM-M0` record: `INCONCLUSIVE` (retrospective; the user kept it, 2026-10-04). Owner decisions: ADR D13-D18, register 55 `MET` / 7 `GAP` / 6 `N/A`. `AM-M1` result: still `BLOCKED`, now because `AM-M0` did not pass, with the remaining `GAP` rows judged one by one. Nothing outside `docs/` and `agent-working/` changed. `AM-M2` stays `BLOCKED`, `AM-M6` `NO-GO`, the charter unsigned.

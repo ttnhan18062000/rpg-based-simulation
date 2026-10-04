@@ -18,7 +18,7 @@ tags: [mcp, live-map, planning]
 
 | Prerequisite | State |
 |---|---|
-| `AM-M1` contracts | **Result `BLOCKED`, not `PASS`** (`docs/assets/m1_contract_register.md`, 2026-10-04): no `AM-M0` result record, and owner and authority decisions are absent. `AM1-W01` is decided by ADR D8 (Profile A), `AM1-W08` by D9 (no signing), and `AM1-W04`, `W09`, `W11` (approved 2026-10-04) and `W12` are closed; `W02`, `W03`, `W05`, `W06`, `W07`, `W08` (roles), `W10` and `W13` are partial, with the open clauses listed in the register. |
+| `AM-M1` contracts | **Result `BLOCKED`, not `PASS`** (`docs/assets/m1_contract_register.md`, re-derived 2026-10-04): `AM-M0` did not pass (its retrospective record is `INCONCLUSIVE`, `docs/assets/m0_discovery_result.md`, kept so by the user). The owner's decisions are recorded (ADR D13-D18); `W01`, `W04`, `W05`, `W08`, `W09`, `W10`, `W11` and `W12` are closed; `W02`, `W03`, `W06`, `W07` and `W13` are partial, with the open clauses listed in the register. |
 | `AM-M2` synthetic harness | **No `PASS` record exists.** Its evidence charter is approved (2026-10-04, `docs/assets/m2_evidence_charter.md`); `AM-M2` itself is `BLOCKED`. |
 | `AM-M4` adoption rehearsal | **No `PASS` record exists** (a real adoption of the pilot tile was made by the owner, `docs/assets/pilot_terrain_key.md`, but that is not an M4 rehearsal result). |
 | `AM-M5` | Overall `INCONCLUSIVE`. Not `PASS`: `AM5-W05`, `AM5-W09`, `AM-C05`, `AM-C06`, `AM-C07`, `AM-C09` are all `INCONCLUSIVE` (reasons in the result record). |

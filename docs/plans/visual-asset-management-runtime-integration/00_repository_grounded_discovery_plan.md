@@ -9,6 +9,8 @@ tags: [assets, discovery, repository, deployment, planning]
 
 # AM-M0 — Repository-Grounded Discovery
 
+> **Status 2026-10-04: a retrospective `AM-M0` result record exists and its result is `INCONCLUSIVE`** (`docs/assets/m0_discovery_result.md`): it was written after ADR D8 and the foundation build, read-only, on revision `f389ab5a8`. Production hosting, caches, the supported client matrix and staleness are `UNVERIFIED` from the repository; the user kept `INCONCLUSIVE` (2026-10-04) and left those as open inputs for `AM-M6`. It selects no profile. The plan text below is unchanged.
+
 ## Outcome
 
 Produce the factual decision input for `ASSET-0` without selecting build-coupled or independently activated

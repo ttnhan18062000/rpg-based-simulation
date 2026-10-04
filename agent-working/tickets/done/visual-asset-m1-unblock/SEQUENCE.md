@@ -25,4 +25,4 @@ planner says it is ready and the user authorizes the push; merging needs the use
 
 ## Status
 
-Open.
+All three children are done (2026-10-04). The `AM-M0` result is `INCONCLUSIVE`; the `AM-M1` result is `BLOCKED` (re-derived); see `docs/assets/m0_discovery_result.md` and `docs/assets/m1_contract_register.md`. Folder moved to `agent-working/tickets/done/`.
