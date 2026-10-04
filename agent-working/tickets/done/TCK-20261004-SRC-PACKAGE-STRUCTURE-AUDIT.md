@@ -79,6 +79,9 @@ None.
 - Findings the owner should see: `core` imports engine/domains/systems (D14 says nothing); five import cycles; four packages with only test importers.
 
 
+- **Correction (2026-10-04, found during ticket 4):** the scan mapped the bare stdlib `import logging` / `import platform` onto `src/logging` and `src/platform`. `logging` has 3 src importing files, not 112; `platform` 27 src / 139 outside (not 28 / 157); `worldmodules` 33 outside (not 42, a brief figure); `content` 67 outside. `logging` moved from keep to investigate; no other decision changed. The package registry row and outbox Message 7 were updated.
+- Also corrected: 20 of 36 top-level packages have no `__init__.py`, not five (the five were the first lines of a truncated listing).
+
 ## Test Summary
 No code. Checked: 36 audit rows against `git ls-files src` (none missing), frontmatter validator on the doc, ticket and artifacts, empty `git diff --stat origin/main -- src`.
 

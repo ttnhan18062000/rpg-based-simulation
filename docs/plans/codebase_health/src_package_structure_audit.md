@@ -17,14 +17,19 @@ seeding, `codebase/structure/package_registry.jsonl` is the source of truth and 
 
 ## Method
 
+**Correction (2026-10-04, found while preparing the import-linter evaluation):** an earlier version counted the stdlib
+`import logging` and `import platform` as imports of `src/logging` and `src/platform`, giving `logging` 112 importers.
+The scan now counts `src.<pkg>` imports only. `logging` is `investigate` (one file, 3 importing files); no other
+decision changed.
+
 - Population: top-level directories of `git ls-files src` with at least one tracked file: **36** packages.
   `src/social/` and `src/graphify-out/` are untracked local leftovers (a `__pycache__` only; a June graphify
   output). They are not packages. The owner may delete them; no ticket action.
 - Size: tracked `.py` files and lines per package, measured on `origin/main` 9793aee08 (2026-10-04).
 - Import graph: an `ast` scan of every tracked `.py` file (src, tests, tools, codebase, agent-working,
-  experiments, visual_assets), counting **files** that import another top-level package. It resolves both
-  `src.x` and bare `x` forms, counts function-local and `TYPE_CHECKING` imports, and ignores relative imports
-  (they stay inside a package). `src/` has namespace packages (no `__init__.py` in `core`, `api`, `perf`,
+  experiments, visual_assets), counting **files** that import another top-level package. It resolves `src.x` imports (a bare `x` form of a first-party package does not occur; the bare `logging`
+  and `platform` imports are the stdlib and are not counted), counts function-local and `TYPE_CHECKING` imports, and ignores relative imports
+  (they stay inside a package). `src/` has 20 of 36 top-level packages without `__init__.py` (namespace packages, among them `core`, `api`, `perf`,
   `certification`, `content_semantics`), so a grimp build over `src` sees only 215 modules and is not used here.
   The brief's importer counts were grep counts; the figures below replace them.
 - Layer model: D14 (`docs/audits/D14_coupling_depth.md`, "Layer Architecture") names 8 of the 36 packages.
@@ -49,23 +54,23 @@ Decisions: `keep`, `merge-candidate into <pkg>`, `retire-candidate`, `investigat
 |---|---|---|---|---|---|
 | `actions` | Two legacy action classes (HarvestAction, LootAction) | 2 / 88 | 0 src / 2 outside | L4 simulation systems; D14: not covered; upward imports: none | **retire-candidate**. 0 src importers, 2 test importers; same responsibilities as `systems/harvest_system.py` and `systems/loot_system.py`; `town/` holds the other `*Action` classes. Owner rpg-planner. |
 | `ai` | Life-stage, personality and goal scorers | 11 / 1,318 | 3 src / 26 outside | L4 simulation systems; D14: not covered; upward imports: observability | **keep**. 3 files import it, all in `systems`; `ai/goals` overlaps `strategy`/`cognition` by name only, not verified by import edges. |
-| `api` | FastAPI service, presenters, read models | 41 / 7,965 | 3 src / 42 outside | L5 consumer; D14: engine + core; upward imports: none | **keep**. D14 layer; imports 13 packages, 3 of them (`scenarios`, `simulation_quality`, `economy`) not named by D14. |
+| `api` | FastAPI service, presenters, read models | 41 / 7,965 | 3 src / 42 outside | L5 consumer; D14: engine + core; upward imports: none | **keep**. D14 layer; imports 12 packages, 3 of them (`scenarios`, `simulation_quality`, `economy`) not named by D14. |
 | `certification` | Certification and scoring harness | 7 / 1,843 | 2 src / 24 outside | L5 consumer; D14: not covered; upward imports: none | **keep**. Imported only by `engine` (1 file) and `scenarios` (1 file) from src. |
 | `cli` | Command-line entry points | 3 / 1,077 | 0 src / 9 outside | L5 consumer; D14: not covered; upward imports: none | **keep**. Entry point, no src importer. |
 | `cognition` | Self-model, capability estimate, knowledge model, self-model phase | 7 / 1,027 | 3 src / 9 outside | L2 domain; D14: not covered; upward imports: world | **keep**. Distinct from `strategy` (capacity, leads, role-model imitation); both are domain services used by `engine`. See `strategy`. |
-| `config` | Runtime configuration | 5 / 631 | 26 src / 180 outside | L0 foundation; D14: not covered; upward imports: engine | **keep**. Imports `engine` and `logging`; 8 src packages import it. |
-| `content` | Content schema, loaders, validator | 9 / 3,648 | 26 src / 68 outside | L1 content pipeline; D14: isolated (imports nothing); upward imports: engine | **keep**. D14 says isolated; observed imports `engine`, `worldassembly`, `worldmodules`, `content_semantics`. Shares `ValidationIssue` with `worldbuilding`. |
+| `config` | Runtime configuration | 5 / 631 | 26 src / 180 outside | L0 foundation; D14: not covered; upward imports: engine | **keep**. Imports `engine`; 8 src packages import it. |
+| `content` | Content schema, loaders, validator | 9 / 3,648 | 26 src / 67 outside | L1 content pipeline; D14: isolated (imports nothing); upward imports: engine | **keep**. D14 says isolated; observed imports `engine`, `worldassembly`, `worldmodules`, `content_semantics`. Shares `ValidationIssue` with `worldbuilding`. |
 | `content_semantics` | Semantic services over content (faction, role, relation, personality) | 5 / 668 | 17 src / 13 outside | L1 content pipeline; D14: not covered; upward imports: none | **keep**. 17 src files in 8 packages import it; cycle with `content` (each imports the other). |
-| `core` | Entity, state, registry and item primitives | 49 / 9,456 | 291 src / 738 outside | L0 foundation; D14: imports nothing; upward imports: systems, domains, content, replay, engine | **keep**. D14 says imports nothing; observed imports `content`, `domains`, `engine`, `logging`, `replay`, `systems`. Largest fan-in (291 src files). |
-| `domains` | Domain services and phase handlers | 133 / 16,577 | 34 src / 274 outside | L2 domain; D14: core only; upward imports: world, systems, engine, observability, scenarios | **keep**. D14 layer; observed imports 15 packages including `engine`, `observability`, `systems` (D14: core only). Subpackages out of scope. |
+| `core` | Entity, state, registry and item primitives | 49 / 9,456 | 291 src / 738 outside | L0 foundation; D14: imports nothing; upward imports: systems, domains, content, replay, engine | **keep**. D14 says imports nothing; observed imports `content`, `domains`, `engine`, `replay`, `systems`. Largest fan-in (291 src files). |
+| `domains` | Domain services and phase handlers | 133 / 16,577 | 34 src / 274 outside | L2 domain; D14: core only; upward imports: world, systems, engine, observability, scenarios | **keep**. D14 layer; observed imports 14 packages including `engine`, `observability`, `systems` (D14: core only). Subpackages out of scope. |
 | `economy` | Economy health monitor and vacancy service | 3 / 159 | 4 src / 4 outside | L2 domain; D14: not covered; upward imports: observability, engine | **merge-candidate into systems**. 3 files, 159 lines; `systems/economy.py` and `systems/economy_systems/` cover the same area. Importers: `api` 1, `engine` 2, `systems` 1. Owner rpg-planner. |
-| `engine` | Kernel, pipeline, phases | 94 / 19,823 | 59 src / 463 outside | L3 engine; D14: core + domains; upward imports: systems, world, town, observability, simulation_quality, certification | **keep**. D14 layer; imports 20 packages (D14: core + domains). `pipeline.py` is the engine to domains point. |
+| `engine` | Kernel, pipeline, phases | 94 / 19,823 | 59 src / 463 outside | L3 engine; D14: core + domains; upward imports: systems, world, town, observability, simulation_quality, certification | **keep**. D14 layer; imports 19 packages (D14: core + domains). `pipeline.py` is the engine to domains point. |
 | `entities` | Archetype factory, identity resolver, runtime contract | 5 / 472 | 4 src / 7 outside | L2 domain; D14: not covered; upward imports: none | **keep**. Imported by `engine` (3) and `worldassembly` (1). |
 | `lab` | Simulation lab, experiments | 28 / 7,957 | 0 src / 41 outside | L5 consumer; D14: engine; upward imports: none | **keep**. D14 layer; 0 src importers (entry point). |
-| `logging` | JSON formatter and logging context | 1 / 71 | 112 src / 30 outside | L0 foundation; D14: not covered; upward imports: none | **keep**. 1 file, 71 lines, 112 src importers. The package name shadows the stdlib `logging` name for any import path that has `src/` itself on `sys.path`; not checked here. Record for the owner; no move. |
+| `logging` | JSON formatter and logging context | 1 / 71 | 3 src / 3 outside | L0 foundation; D14: not covered; upward imports: none | **investigate**. 1 file, 71 lines, 3 src importing files (`cli/entry.py` for `setup_v2_logging`, 2 in `observability`). The 112 importers an earlier draft counted were the stdlib `import logging`, which an `ast` scan cannot tell from this package; corrected 2026-10-04. The package name shares the stdlib name. Candidate home is `cli` or `platform`; needs the owner. |
 | `observability` | Event recording, monitors, analysis | 136 / 27,642 | 37 src / 230 outside | L5 consumer; D14: engine; upward imports: none | **keep**. D14 layer; observed imports `domains`, `systems`, `worldbuilding`, `perf` (D14: engine). |
 | `perf` | Performance harness | 7 / 1,403 | 2 src / 28 outside | L5 consumer; D14: not covered; upward imports: none | **keep**. Imported by `observability` only; imports `api`. |
-| `platform` | RNG, scenario registry, spatial hash | 4 / 192 | 28 src / 139 outside | L0 foundation; D14: not covered; upward imports: none | **keep**. 4 files, 192 lines, 157 outside importers; the deterministic RNG home. `platform/scenarios.py` (`ScenarioRegistry`) overlaps the name of the `scenarios` package: investigate inside the keep. |
+| `platform` | RNG, scenario registry, spatial hash | 4 / 192 | 27 src / 139 outside | L0 foundation; D14: not covered; upward imports: none | **keep**. 4 files, 192 lines, 139 outside importers (the one src file importing bare `platform` is the stdlib); the deterministic RNG home. `platform/scenarios.py` (`ScenarioRegistry`) overlaps the name of the `scenarios` package: investigate inside the keep. |
 | `progression` | Leveling, veterancy, class tiers, skills | 6 / 376 | 4 src / 12 outside | L2 domain; D14: not covered; upward imports: none | **keep**. Imported only by `engine` (4). `SkillScalingService` also exists in `engine/rpg_depth.py`. |
 | `quests` | Quest templates, generator, service | 4 / 319 | 4 src / 1 outside | L2 domain; D14: not covered; upward imports: none | **investigate**. `QuestGenerator` exists here and in `systems/world_systems/quest_generator.py`; `QuestTemplate` in three modules (`quests/generator.py`, `quests/templates.py`, `systems/world_systems/quests.py`). Likely a merge with `systems`; needs behaviour comparison. Owner rpg-planner. |
 | `rendering` | Map and density rendering | 11 / 1,232 | 0 src / 13 outside | L5 consumer; D14: not covered; upward imports: none | **keep**. 11 files; imports `core` only (the stdlib+src rule in the boundary tests). |
@@ -82,12 +87,12 @@ Decisions: `keep`, `merge-candidate into <pkg>`, `retire-candidate`, `investigat
 | `worldassembly` | World module assembly | 5 / 1,823 | 10 src / 25 outside | L1 content pipeline; D14: not covered; upward imports: entities | **keep**. Part of the `world*` family; see family note. |
 | `worldbuilding` | Worldbuilding validation and repository | 8 / 2,707 | 18 src / 109 outside | L1 content pipeline; D14: not covered; upward imports: replay, engine, domains, world | **keep**. Shares `ValidationIssue` with `content`; imports 11 packages. |
 | `worldgeneration` | Procedural world generator | 3 / 743 | 1 src / 5 outside | L1 content pipeline; D14: not covered; upward imports: none | **keep**. 3 files; its only src importer is `worldbuilding`. |
-| `worldmodules` | World module schema, repository, normalizer | 5 / 488 | 9 src / 33 outside | L1 content pipeline; D14: not covered; upward imports: none | **keep**. 42 outside importers; imports only `content` and `worldbuilding` (cycle with `worldbuilding`). |
+| `worldmodules` | World module schema, repository, normalizer | 5 / 488 | 9 src / 33 outside | L1 content pipeline; D14: not covered; upward imports: none | **keep**. 33 outside importers; imports only `content` and `worldbuilding` (cycle with `worldbuilding`). |
 
 ## Findings
 
 1. **The layer model is not what the graph shows.** D14 says `core` imports nothing. `core` imports
-   `content`, `domains`, `engine`, `logging`, `replay` and `systems`. D14 says `content` is isolated. It imports
+   `content`, `domains`, `engine`, `replay` and `systems`. D14 says `content` is isolated. It imports
    `engine`, `worldassembly` and `worldmodules`. The registry's `layer` field records the intended layer; the
    disagreement is data for the import-linter evaluation (`TCK-20261004-IMPORT-LINTER-EVALUATION`), not a
    claim that the model is wrong.
@@ -103,10 +108,12 @@ Decisions: `keep`, `merge-candidate into <pkg>`, `retire-candidate`, `investigat
    two import cycles: `worldbuilding` and `worldmodules` import each other; `worldbuilding`, `worldassembly`
    and `worldgeneration` form another. They do not read as five independent packages. No merge is proposed
    before the cycles are understood: that is the `investigate` item for the owner, not a decision here.
-5. **`logging` shares its name with the stdlib module.** Left as is; recorded so the owner can decide at M7.
+5. **`logging` shares its name with the stdlib module.** An earlier draft of this audit counted the stdlib
+   `import logging` as 112 importers of this package; the corrected scan finds 3 src files. The package is one
+   file with one real consumer (`cli`), hence `investigate`.
 
 ## Handoff
 
 Non-`keep` decisions go to the owning planner as notes in `.claude/handover/codebase-planner-outbox.md`
-(status: pending): `actions`, `economy`, `quests`, `replay`, `runtime`, `strategy`, `views` to `rpg-planner`;
+(status: pending): `actions`, `economy`, `logging`, `quests`, `replay`, `runtime`, `strategy`, `views` to `rpg-planner`;
 `testing` to the `testing` planner. Nothing moves in M5.
