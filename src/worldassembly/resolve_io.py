@@ -1,16 +1,25 @@
 # Compliance IDs: WORLD-ASM-006, WORLD-ASM-007
+"""File and repository I/O around resolving a `worldcomposition.v1` world.
+
+Loads and validates a composition source file, loads the catalog and module repositories a resolve
+reads from, resolves the composition into a bundle together with the exact `world.resolved.yaml`
+text it serializes to, and writes the five `resolved/` artifacts. The resolve CLI and the guard that
+compares a committed snapshot against a fresh resolve both go through these functions, so neither can
+drift in how a resolved world is serialized.
+"""
 from __future__ import annotations
 
 import json
-import yaml
 from pathlib import Path
 from typing import Optional
 
+import yaml
+
 from src.content.paths import ContentPathConfig
 from src.content.repository import CatalogRepository
-from src.worldmodules.repository import WorldModuleRepository
-from src.worldassembly.resolver import WorldAssemblyResolver, ResolvedWorldBundle
+from src.worldassembly.resolver import ResolvedWorldBundle, WorldAssemblyResolver
 from src.worldassembly.schema import WorldCompositionSpec
+from src.worldmodules.repository import WorldModuleRepository
 
 RESOLVED_DIRNAME = "resolved"
 RESOLVED_WORLD_FILENAME = "world.resolved.yaml"
