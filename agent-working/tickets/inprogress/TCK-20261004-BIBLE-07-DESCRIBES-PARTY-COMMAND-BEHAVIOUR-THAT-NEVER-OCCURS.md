@@ -18,7 +18,7 @@ party-command behaviour occurs in the world (rule owner's ruling, verbatim repla
 
 ## Status
 
-OPEN
+INPROGRESS
 
 ## Tier
 
@@ -164,11 +164,11 @@ an exclusive hold on `docs/mechanics/07_social_political_dynamics.md` for the li
 
 ## Test Summary
 
-_(to be filled during implementation)_
+Doc-only change; no test applies. `grep -rn issue_party_command docs/mechanics docs/parity_ledger docs/guidelines` shows one match, the corrected sentence. `validate_frontmatter.py` passes on the edited file.
 
 ## Files Changed
 
-_(to be filled during implementation)_
+`docs/mechanics/07_social_political_dynamics.md` (one sentence, verbatim owner text, re-wrapped only). No `intentional_divergences.md` or `docs/parity_ledger/` change.
 
 ## Completion Summary
 
