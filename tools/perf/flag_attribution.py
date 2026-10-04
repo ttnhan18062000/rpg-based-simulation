@@ -103,8 +103,6 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--out-dir", default=None, help=f"also write the result here (default {common.OUT_ROOT}/flag_attribution)")
     args = parser.parse_args(argv)
 
-    if args.scenario == "metropolis":
-        print(common.METROPOLIS_WARNING, file=sys.stderr)
     if args.reps < 1:
         parser.error("--reps must be at least 1")
 
