@@ -11,7 +11,7 @@ tags: [architecture, documentation]
 
 What each `AM1-W01`..`W13` acceptance clause has, as built, on the `visual-asset-m1-contracts` branch. One row per clause of the
 "Objective acceptance" cell in `docs/plans/visual-asset-management-runtime-integration/01_architecture_decisions_and_contracts_plan.md`.
-Written by `TCK-20261004-VISUAL-ASSETS-M1-CONTRACT-REGISTER`; the "Result" section was added by `TCK-20261004-VISUAL-ASSETS-M1-STATUS-CLOSEOUT`. The rows record evidence; the result is a classification
+Written by `TCK-20261004-VISUAL-ASSETS-M1-CONTRACT-REGISTER`; the "Result" section was added by `TCK-20261004-VISUAL-ASSETS-M1-STATUS-CLOSEOUT` and re-derived by `TCK-20261004-VISUAL-ASSETS-M1-RECLASSIFY`. The rows record evidence; the result is a classification
 from them. This page authorizes nothing and changes no decision.
 
 How to read it. **Evidence** is a doc section (`path#heading`), an ADR row (`ADR D1`-`D12`), a code symbol (`path::name`) or a test path, and every
@@ -20,71 +20,85 @@ note cites the decision that makes it so. Where a doc and the code disagree the 
 "Where docs and code disagree" and is not fixed here. Describes built behaviour as it is, not as the plan imagined it.
 
 Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); real Aseprite on the licence holder's own machine only, `U-02` closed
-(`ADR D10`, `docs/assets/aseprite_licence_review.md`); the detail axis (`ADR D11`); draft sets (`ADR D12`); retention 30 days with the `gc` protected set
+(`ADR D10`, `docs/assets/aseprite_licence_review.md`); the detail axis (`ADR D11`); draft sets (`ADR D12`); the owner's `AM-M1` decisions on roles, key derivation, retirement, ranges, variant axes and retention operations (`ADR D13`-`D18`, 2026-10-04); retention 30 days with the `gc` protected set
 (`docs/assets/retention_and_rollback.md`); the fallback-safety framework (`docs/assets/fallback_safety.md`) and the `AM-M2` evidence charter with its rerun rule (`docs/assets/m2_evidence_charter.md`), both approved 2026-10-04; every budget `APPROVED 2026-10-04` (`docs/assets/budgets.md`).
 
-## Result: `AM-M1` is `BLOCKED`
+## Result: `AM-M1` is `BLOCKED` (re-derived 2026-10-04)
 
-Written by `TCK-20261004-VISUAL-ASSETS-M1-STATUS-CLOSEOUT` from this register and the plan's own "Result classification" table
-(`docs/plans/visual-asset-management-runtime-integration/01_architecture_decisions_and_contracts_plan.md`). Nothing was reworded to reach a result. It is a classification for the owner and the planner to
-check, not an owner decision, and it authorizes nothing: `AM-M2` cannot start without `AM-M1` `PASS` and new authority (the same plan), and `AM-M6` stays `NO-GO`.
+First written by `TCK-20261004-VISUAL-ASSETS-M1-STATUS-CLOSEOUT`, re-derived by `TCK-20261004-VISUAL-ASSETS-M1-RECLASSIFY` from this register as it now stands (55 `MET`, 7 `GAP`, 6 `N/A`), the `AM-M0` result record
+(`docs/assets/m0_discovery_result.md`: `INCONCLUSIVE`) and the owner's decisions of 2026-10-04 (`ADR D13`-`D18`), against the plan's own "Result classification" table
+(`docs/plans/visual-asset-management-runtime-integration/01_architecture_decisions_and_contracts_plan.md`). Nothing was reworded to reach a result. The result keeps its name but **its reasons changed**: the missing
+`AM-M0` record and the five absent owner decisions of the first version are resolved or recorded; `BLOCKED` now rests on `AM-M0` not having passed. It is a classification for the owner and the planner to check, not an owner decision,
+and it authorizes nothing: `AM-M2` cannot start without `AM-M1` `PASS` and new authority (the same plan), and `AM-M6` stays `NO-GO`.
 
 | Plan row | Condition | Applies? |
 |---|---|---|
-| `PASS` | `AM-C01` passes, one profile and minimum contracts are coherent, owners/charter exist, and no implementation authority is implied | **No.** Owners do not all exist (below) and the contracts are not coherent where the register shows `GAP` in `W03` and `W07`. |
-| `FAIL` | A valid decision violates authority, requires both profiles without evidence, or conflicts with Live Map/HUD/CAP owners | No. No decision found violates authority or mandates both profiles; Profile B is not built (`ADR D8`). |
-| `BLOCKED` | M0 did not pass or a required profile/authority/security owner decision is absent | **Yes**, on two counts below. |
-| `INCONCLUSIVE` | Evidence cannot distinguish profiles or a material contract choice lacks sufficient repository support | Partly; see "Why not `INCONCLUSIVE`". |
+| `PASS` | `AM-C01` passes, one profile and minimum contracts are coherent, owners/charter exist, and no implementation authority is implied | **No.** `AM-M0` has not passed (below), and the contracts are not coherent where `GAP` remains (row by row below). `AM-C01` and the owners/charter conditions are met. |
+| `FAIL` | A valid decision violates authority, requires both profiles without evidence, or conflicts with Live Map/HUD/CAP owners | No. No decision found violates authority or mandates both profiles; Profile B is not built (`ADR D8`); the surface owners are now named (`ADR D13`). |
+| `BLOCKED` | M0 did not pass or a required profile/authority/security owner decision is absent | **Yes**, on the first clause: `AM-M0` did not pass. |
+| `INCONCLUSIVE` | Evidence cannot distinguish profiles or a material contract choice lacks sufficient repository support | Partly, not the best fit; see "Why not `INCONCLUSIVE`". |
 
 **Why `BLOCKED`.**
 
-1. **No `AM-M0` result record exists.** The plan lists "M0 `PASS` and human acceptance of its evidence as M1 input" as a prerequisite. A search of `docs/` and `agent-working/tickets/done/` for an `AM-M0` or `AM0-W` result finds only the plan text and
-   the roadmaps, no result record. The proposal's rule is that no missing result defaults to a pass (section 17), so the prerequisite is unmet. The foundation was built on the owner's own decisions (Profile A, D8; no signing, D9) instead.
-2. **Required owner and authority decisions are absent.** These register rows are `GAP` because a person has not decided, not because evidence is missing:
-   `W02.2` (who derives a visual key from game state), `W03.4` (Live Map and HUD ownership), `W05.4` (an audit authority distinct from the approver), `W08.5` (build, publish and activate roles), and `W07.7` (retirement rules).
-   The plan's prerequisites also require the architecture, frontend/release, Live Map, HUD, accessibility, security, art-adoption, provenance/licence and rollback roles to be "named or explicitly block the affected decision"; only
-   the owner as approver and the rollback/recall owner are named (`docs/assets/retention_and_rollback.md`), and the charter's role fields are `TO BE SIGNED BY OWNER`.
+1. **`AM-M0` did not pass.** The record exists now and its result is `INCONCLUSIVE`: production hosting, caches, the supported client matrix and the tolerated staleness are `UNVERIFIED` from the repository
+   (`docs/assets/m0_discovery_result.md`, `AM0-W03`). The user was asked whether to supply those facts and chose "Keep `INCONCLUSIVE`" (user, 2026-10-04): they stay open inputs for `AM-M6`, and the M0 record stays as written.
+   The plan's prerequisite is "M0 `PASS`", and the `BLOCKED` row's first clause is "M0 did not pass", so it applies.
+2. **No required owner decision is absent any more.** The five that were (`W02.2`, `W03.4`, `W05.4`, `W08.5`, `W07.7`) are decided (`ADR D13`-`D15`), as are `W03.5`, `W07.3` (`D16`), `W03.1` (`D17`, see below) and `W10.4`,
+   `W10.6`, `W10.7` (`D18`). Roles are named, not separated: the owner holds every role and separation is stated as not achieved (`D13`). That is not an absent decision, so it is not a `BLOCKED` count.
 
-**Why not `INCONCLUSIVE`.** Evidence does distinguish the profiles (the repository has one Vite frontend and no asset service; `ADR D8`). A few contract choices do lack repository support (`W03.1` nothing resolves `variant_axes`, `W03.5` and `W07.3` no
-renderer or descriptor range, `W07.4` no capability exists), which is the `INCONCLUSIVE` wording. The `BLOCKED` row is the better fit because what resolves them is an owner decision (define the axis or drop it; say whether a range is needed),
-not more evidence; if the owner narrows those clauses the `INCONCLUSIVE` reading goes away, and `BLOCKED` remains for the reasons above.
+**The M0 plan's own line, judged openly.** `00_repository_grounded_discovery_plan.md` says "M1 does not start on M0 `FAIL`, `BLOCKED`, or `INCONCLUSIVE`." The contracts here were started and largely built before any M0 record existed
+(`ADR D8`, 2026-10-03), so the order the plan asks for was not followed. Two readings are open. (a) The line is a stop condition for *starting* M1, already overtaken: nothing can be unstarted, and the decisions `D8`-`D18` stand as the owner's.
+(b) The line bounds what M1 may *claim*: while M0 has not passed, M1 cannot pass. This register does not choose between them, because the result is the same either way: the `BLOCKED` row's clause "M0 did not pass" is a fact
+under both, and `PASS` is not reached even on a hypothetical M0 `PASS` (the remaining `GAP` rows below). No decision is unwound.
+
+**The remaining `GAP` rows, one by one: do they keep the contracts from being coherent?** A judgment recorded here for review.
+
+| Row | Why it is still `GAP` | Keeps "contracts coherent" from holding? |
+|---|---|---|
+| `W02.7` safety-class link | `VisualKeyDefinition` has no class field; the approved framework (`fallback_safety.md`) is policy only | **Yes.** A clause of the minimum registry contract has no field. Immaterial for the one noncritical terrain pilot, material for any later role. |
+| `W03.1` variant axes | frozen empty (`D17`), but nothing rejects a non-empty `variant_axes`, so determinism rests on a rule | **Yes, until `verify` enforces it** (parked code follow-up). |
+| `W06.3` activation policy | requiring an alternative at activation is not built; a policy beyond that needs `AM-M6` | **Yes.** The fallback-safety contract is only half executable. |
+| `W07.4` capability range | no capability exists to require | **No.** There is nothing to range over; it reopens with the first capability. |
+| `W13.3`, `W13.4`, `W13.6` | distribution stop, stale/offline/cache handling and a tested real rollback need a real deployment | **Not material to M1's coherence by the owner's assignment** (carried to `AM-M6` as its prerequisites, 2026-10-04, not narrowed to the harness drill), but the clauses remain unmet, so `PASS` cannot claim every clause. |
+
+**Why not `INCONCLUSIVE`.** Evidence does distinguish the profiles (one Vite frontend, no asset service; `ADR D8`). The contract choices that lack code support (`W03.1`, `W07.4`, `W02.7`, `W06.3`) are the
+`INCONCLUSIVE` wording in part. `BLOCKED` is the better fit because its first clause is met as a fact (the M0 result is `INCONCLUSIVE`, by the record and by the user's choice) rather than judged, and the plan's
+rule is that missing evidence never defaults to a pass. Had M0 passed, the remaining `GAP` rows would put the result at `INCONCLUSIVE`, not `PASS`.
 
 **`AM-C01`, judged on its own clause.** The gate's pass condition is "one smallest valid profile and its unresolved prerequisites are approved for planning". I judge it met on the repository evidence: Profile A was selected by the owner
-(`ADR D8`, 2026-10-03) from repository facts with a reversal trigger (`W01.1`-`W01.3`), no decision requires both profiles, and the unresolved prerequisites block implementation explicitly (`AM-M6` is `NO-GO`, the pilot charter's human fields are unsigned, no
-supported client is declared). The plan's rule for closing it ("all material unresolved profile prerequisites are either resolved or explicitly block implementation") holds. Not claimed: an authority map, which the gate lists as an input; the missing roles above
-are carried as `AM-M1` blockers instead of being hidden inside `AM-C01`. This is a judgment recorded here for review, not a gate record signed by the owner. `AM-C01` passing does not make `AM-M1` pass.
+(`ADR D8`, 2026-10-03) from repository facts with a reversal trigger (`W01.1`-`W01.3`), no decision requires both profiles, and the unresolved prerequisites block implementation explicitly (`AM-M6` is `NO-GO`, the pilot charter's
+human fields are unsigned, no supported client is declared). Changed inputs since the first version: an authority map now exists as `ADR D13` (one person holds every role; separation not achieved), and the M0 record exists
+but is `INCONCLUSIVE`, and M0 cannot pass `AM-C01` itself (the M0 plan). This is a judgment recorded here for review, not a gate record signed by the owner. `AM-C01` passing does not make `AM-M1` pass.
 
-**What would unblock `AM-M1`, owner decisions first.**
+**What remains before `AM-M1` could be `PASS`** (nothing here is authorized by this page).
 
-1. Record an `AM-M0` result, or have the owner decide how `AM-M1`'s `AM-M0` prerequisite is treated.
-2. Name the key-derivation owner (`W02.2`), the Live Map and HUD owners (`W03.4`), the audit authority or record that one person holds every role (`W05.4`), and the build, publish and activate roles (`W08.5`).
-3. Decide the retirement rules (`W07.7`); whether a client, descriptor or renderer range is needed under Profile A (`W03.5`, `W07.3`); and whether to define the variant axes or drop `variant_axes` (`W03.1`).
-4. Decide the retention-contract gaps: locks (`W10.4`), a deletion record (`W10.6`) and storage-pressure handling (`W10.7`).
-5. After those decisions, code in its own tickets: the registry class field (`W02.7`) and an activation check for fallbacks (`W06.3`); a capability field only when a capability exists (`W07.4`).
-6. `W13.3`, `W13.4` and `W13.6` (distribution stop, stale/offline/cache, a tested rollback) need `AM-M6` authorization, or the owner narrowing them to the harness drill, as was done for `AM-C09`.
+1. `AM-M0` `PASS`: an owner statement of the hosting target, supported clients and staleness limit, or an owner decision that they are not inputs under Profile A. Today the user keeps them open for `AM-M6`.
+2. Code, each in its own ticket: the registry class field (`W02.7`), an activation check for fallbacks (`W06.3`), a `verify` rule rejecting a non-empty `variant_axes` (`W03.1`). `W07.4` (a capability field) reopens with the first capability and is not needed for `PASS`.
+3. `W13.3`, `W13.4`, `W13.6` at `AM-M6` authorization, or the owner narrowing them.
+4. Then a fresh re-derivation of this section. `PASS` would still authorize nothing: `AM-M2` needs new authority from the owner.
 
-Approved 2026-10-04, so no longer open: the fallback-safety framework (`W06.1`, `W06.2`) and the `AM-M2` evidence charter with its rerun rule (`W11`). Closed items: `W01`, `W04`, `W09`, `W11`, `W12`.
+Approved 2026-10-04, so no longer open: the fallback-safety framework (`W06.1`, `W06.2`) and the `AM-M2` evidence charter with its rerun rule (`W11`). Closed items: `W01`, `W04`, `W05`, `W08`, `W09`, `W10`, `W11`, `W12`.
 
 ## Summary
 
 | Item | Title | MET | GAP | N/A | Overall |
 |---|---|---|---|---|---|
 | `AM1-W01` | Deployment-profile ADR | 3 | 0 | 0 | CLOSED |
-| `AM1-W02` | Semantic registry contract | 5 | 2 | 0 | PARTIAL |
-| `AM1-W03` | Surface descriptor contract | 2 | 3 | 0 | PARTIAL |
+| `AM1-W02` | Semantic registry contract | 6 | 1 | 0 | PARTIAL |
+| `AM1-W03` | Surface descriptor contract | 3 | 1 | 1 | PARTIAL |
 | `AM1-W04` | Runtime release contract | 6 | 0 | 0 | CLOSED |
-| `AM1-W05` | Protected audit/provenance contract | 4 | 1 | 0 | PARTIAL |
+| `AM1-W05` | Protected audit/provenance contract | 5 | 0 | 0 | CLOSED |
 | `AM1-W06` | Fallback-safety framework | 2 | 1 | 0 | PARTIAL |
-| `AM1-W07` | Compatibility/rollback contract | 3 | 3 | 1 | PARTIAL |
-| `AM1-W08` | Trust/authority model | 4 | 1 | 2 | PARTIAL |
+| `AM1-W07` | Compatibility/rollback contract | 4 | 1 | 2 | PARTIAL |
+| `AM1-W08` | Trust/authority model | 5 | 0 | 2 | CLOSED |
 | `AM1-W09` | Build/provenance boundary | 3 | 0 | 0 | CLOSED |
-| `AM1-W10` | Retention/GC contract | 3 | 3 | 1 | PARTIAL |
+| `AM1-W10` | Retention/GC contract | 6 | 0 | 1 | CLOSED |
 | `AM1-W11` | M2 evidence charter | 5 | 0 | 0 | CLOSED |
 | `AM1-W12` | Candidate handoff/intake contract | 4 | 0 | 0 | CLOSED |
 | `AM1-W13` | Rights/provenance recall contract | 3 | 3 | 0 | PARTIAL |
-| | **Total** | **47** | **17** | **4** | |
+| | **Total** | **55** | **7** | **6** | |
 
-`CLOSED` = no `GAP` row; `OPEN` = no `MET` row; `PARTIAL` = both. The owner approved `W06` (`fallback_safety.md`) and `W11` (`m2_evidence_charter.md`) on 2026-10-04; `W06` stays `PARTIAL` (the activation policy is not built) and `W11` is `CLOSED`.
+`CLOSED` = no `GAP` row; `OPEN` = no `MET` row; `PARTIAL` = both. The owner approved `W06` (`fallback_safety.md`) and `W11` (`m2_evidence_charter.md`) on 2026-10-04; `W06` stays `PARTIAL` (the activation policy is not built) and `W11` is `CLOSED`. The owner's decisions of 2026-10-04 (`ADR D13`-`D18`) moved 8 rows from `GAP` to `MET` (`W02.2`, `W03.4`, `W05.4`, `W07.7`, `W08.5`, `W10.4`, `W10.6`, `W10.7`) and 2 to `N/A` (`W03.5`, `W07.3`); the earlier total was 47 `MET`, 17 `GAP`, 4 `N/A`. `W03.1` stays `GAP` (the rule is not enforced) and `W13.3`, `W13.4`, `W13.6` stay `GAP`, carried to `AM-M6`.
 
 ## `AM1-W01` Deployment-profile ADR
 
@@ -99,7 +113,7 @@ Approved 2026-10-04, so no longer open: the fallback-safety framework (`W06.1`, 
 | # | Clause | Evidence | Verdict | Note |
 |---|---|---|---|---|
 | W02.1 | Finite key namespace | `visual_assets/store/catalog/registry.py::load_registry`; `visual_assets/catalog/definitions/visual_keys.yaml`; `tests/visual_assets/store/unit/test_registry.py` | MET | The namespace is the hand-edited file: nothing registers dynamically, duplicates, anchors and aliases-of-aliases are rejected, the reserved `fixture.*` namespace is refused outside tests. The committed registry has 23 keys, 22 of them `optional`, no aliases. |
-| W02.2 | Derivation owner | `frontend/src/visualAssets/terrainDrafts.ts::TERRAIN_DRAFT_KEYS`; `docs/assets/pilot_terrain_key.md` | GAP | No doc or code names who derives a visual key from game state. The only code-to-key mapping is the dev-only draft page's `TERRAIN_DRAFT_KEYS` (23 Live Map terrain codes); the real Live Map reads no key (`AM-M6` is dormant). Needs an owner decision before `AM-M6`. |
+| W02.2 | Derivation owner | `frontend/src/visualAssets/terrainDrafts.ts::TERRAIN_DRAFT_KEYS`; `docs/assets/pilot_terrain_key.md`, `ADR D14` | MET | Decided (user, 2026-10-04, `ADR D14`): the frontend derives visual keys from read-model fields, next to the registry it ships with; owner nhan; the backend API never carries visual keys. The clause asks for an owner and that is met. The real mapping is built only at `AM-M6`; until then `TERRAIN_DRAFT_KEYS` is the dev-only draft page's mapping and the real Live Map reads no key. |
 | W02.3 | Normalization | `visual_assets/store/identities.py::VISUAL_KEY_PATTERN`; `frontend/src/visualAssets/manifest.ts::VISUAL_KEY`; `tests/visual_assets/store/unit/test_identities.py` | MET | Identities are never normalised: a key either matches `^[a-z][a-z0-9_]{0,31}(\.[a-z][a-z0-9_]{0,31}){1,3}$` exactly or is rejected (no case folding, no trimming). The client parser repeats the same pattern. |
 | W02.4 | Bounds | `visual_assets/store/config.py::MAX_VISUAL_KEYS`; `visual_assets/store/config.py::MAX_REGISTRY_BYTES`; `visual_assets/store/config.py::MAX_ALIASES`; `docs/assets/budgets.md#bounds`; `tests/visual_assets/store/unit/test_record_bounds.py` | MET | Keys 1024, aliases 1024, registry bytes 458752, axes 8 x 64 values, detail 64 keys x 16 values; every row is `APPROVED 2026-10-04` and pinned to the code by `tests/visual_assets/test_budgets_parity.py`. |
 | W02.5 | Unknown behavior | `frontend/src/visualAssets/resolver.ts::resolveVisual`; `frontend/src/visualAssets/__tests__/resolver.test.ts`; `visual_assets/store/catalog/registry.py::Registry` | MET | Client: a key not in the manifest resolves to a typed `unknown_key` fallback and never causes a fetch or a registration. Store: `Registry.resolve` raises `RegistryError` for an unknown key. |
@@ -110,11 +124,11 @@ Approved 2026-10-04, so no longer open: the fallback-safety framework (`W06.1`, 
 
 | # | Clause | Evidence | Verdict | Note |
 |---|---|---|---|---|
-| W03.1 | Deterministic variant axes/precedence | `visual_assets/store/contracts/definitions.py::VariantAxis`; `visual_assets/store/contracts/definitions.py::DetailAxis`; `frontend/src/visualAssets/pickDetail.ts::pickDetail`; `frontend/src/visualAssets/__tests__/pickDetail.test.ts`; `ADR D11` | GAP | Only the decorative detail axis has a deterministic rule (FNV-1a over the declared values; picked, then default, then the flat fill). `variant_axes` (context-selected: scale, state, contrast, motion, tier) are declared and bounded but nothing resolves them and every committed key has `variant_axes: []`; no precedence order exists. |
+| W03.1 | Deterministic variant axes/precedence | `visual_assets/store/contracts/definitions.py::VariantAxis`; `visual_assets/store/contracts/definitions.py::DetailAxis`; `frontend/src/visualAssets/pickDetail.ts::pickDetail`; `frontend/src/visualAssets/__tests__/pickDetail.test.ts`; `ADR D11`, `ADR D17` | GAP | Decided (user, 2026-10-04, `ADR D17`): `variant_axes` stay empty and the detail axis is the only variant mechanism, which is deterministic (FNV-1a over the declared values; picked, then default, then the flat fill). **Stays `GAP`:** the freeze is a rule, not a mechanism. `VisualKeyDefinition` still accepts a non-empty `variant_axes` (only duplicate axis names are checked) and nothing would resolve it, so determinism holds only while the rule is obeyed. Meeting the clause needs the parked `verify` rule that rejects a non-empty `variant_axes`. |
 | W03.2 | Limits | `visual_assets/store/contracts/definitions.py::MAX_AXES`; `visual_assets/store/contracts/definitions.py::MAX_AXIS_VALUES`; `visual_assets/store/contracts/definitions.py::MAX_DETAIL_VALUES`; `visual_assets/store/config.py::MAX_DETAIL_KEYS`; `docs/assets/budgets.md#bounds` | MET | Axes, values per axis, detail values and keys, and keys per release are bounded and approved. There is no separate cap on variants per family; the key cap bounds them. |
 | W03.3 | Fallback depth/cycles | `frontend/src/visualAssets/resolver.ts::resolveVisual`; `visual_assets/store/catalog/registry.py::load_registry`; `tests/visual_assets/store/unit/test_registry.py::test_alias_problems_are_rejected` | MET | Depth is fixed in code at picked value, then the default value, then the role fallback; there are no fallback edges, so a cycle cannot be written. Aliases follow at most one hop and an alias of an alias is rejected at load. If a descriptor with explicit edges is ever added this row reopens. |
-| W03.4 | Live Map/HUD ownership | `docs/assets/surface_rehearsal_result.md`; `docs/assets/pilot_charter_am6.md` | GAP | No document assigns a surface owner. Only the Live Map terrain cell was rehearsed; the HUD is recorded as out of scope, not passed (`AM5-W01`), and the charter's activation owner is `TO BE SIGNED BY OWNER`. |
-| W03.5 | Compatibility ranges | `visual_assets/store/contracts/runtime.py::RuntimeManifest` | GAP | The runtime manifest carries `schema_version` and `fallback_contract_version` only: no client, renderer or descriptor range. Same finding as `AM1-W07`. |
+| W03.4 | Live Map/HUD ownership | `docs/assets/surface_rehearsal_result.md`; `docs/assets/pilot_charter_am6.md`, `ADR D13` | MET | Decided (user, 2026-10-04, `ADR D13`): nhan (owner) is the Live Map owner and the HUD owner. The owner is named; no more is claimed: only the Live Map terrain cell was rehearsed, the HUD is out of scope, not passed (`AM5-W01`), and the charter's activation owner still awaits signature. |
+| W03.5 | Compatibility ranges | `visual_assets/store/contracts/runtime.py::RuntimeManifest`, `ADR D16` | N/A | Not needed under Profile A (user, 2026-10-04, `ADR D16`): the manifest is built into the client's own release (`ADR D8`), the same reasoning as `W07.1`. Exact `schema_version` and `fallback_contract_version` matching stays (`W07.2`, `W07.5`). Reopens on Profile B or a second renderer. |
 
 ## `AM1-W04` Runtime release contract
 
@@ -134,7 +148,7 @@ Approved 2026-10-04, so no longer open: the fallback-safety framework (`W06.1`, 
 | W05.1 | Adoption/activation identities | `visual_assets/store/contracts/adoption.py::AdoptionRecord`; `visual_assets/store/contracts/adoption.py::RevocationRecord`; `visual_assets/store/contracts/draft.py::SetAdoptionRecord`; `ADR D6` | MET | Adoption (`ad-` id, bound by hash to its intake), set adoption and revocation have typed records. There is no activation identity by design: under Profile A activation is the reviewed frontend deployment, so its identity is that deployment's own commit and review (D6, D8). |
 | W05.2 | Source/build lineage | `visual_assets/store/audit.py::audit_chain`; `visual_assets/store/contracts/source.py::SourceRecord`; `visual_assets/store/contracts/artifact.py::ArtifactRecord`; `visual_assets/store/contracts/artifact.py::BuildFingerprint`; `tests/visual_assets/store/unit/test_audit.py` | MET | Intake result, adoption record, SourceRecord, source bytes and artifact are linked by hashes the records carry; `audit_chain` rebuilds and reports every break, `verify` checks the artifacts and manifests. Stated limit: a consistent edit of two linked records passes the chain and git history is the backstop. |
 | W05.3 | License | `visual_assets/store/adoption.py::check_licence_and_approver`; `visual_assets/store/contracts/base.py::LicenceState`; `docs/assets/aseprite_licence_review.md#decision-d10`; `ADR D10` | MET | `adopt` takes the licence state and its evidence only from the human's own arguments and accepts only `CLEARED`. The Aseprite editor's own licence (`U-02`) is closed: D10, the review records the clauses and the owner confirmed it is their licence and machine on 2026-10-04. The artwork's rights remain the adopter's statement; nothing verifies them. |
-| W05.4 | Approver/audit separation | `visual_assets/store/adoption.py::adopt`; `visual_assets/store/audit.py::audit_chain`; `ADR D5`; `tests/visual_assets/test_boundaries.py` | GAP | Agents cannot adopt or revoke (D5, boundary test) and `audit`/`verify` are read-only, but one human holds the approver role and also runs the audit; the approver's name and role are recorded, not authenticated (`store_contract.md` known gaps). No separate audit authority is named; the charter's separate build, publish and activate roles are unsigned. |
+| W05.4 | Approver/audit separation | `visual_assets/store/adoption.py::adopt`; `visual_assets/store/audit.py::audit_chain`; `ADR D5`; `tests/visual_assets/test_boundaries.py`, `ADR D13` | MET | Decided (user, 2026-10-04, `ADR D13`): nhan (owner) holds the approver and the audit authority; separation is an accepted, stated limit of a one-person project, **not achieved**. This row's own unblock criterion was "name an audit authority distinct from the approver, or record that one person holds every role"; the second is met. Agents still cannot adopt or revoke (D5, boundary test); `audit`/`verify` are read-only; the approver's name and role are recorded, not authenticated (`store_contract.md` known gaps). Reverses when a second person joins. |
 | W05.5 | Retention references | `docs/assets/retention_and_rollback.md`; `visual_assets/store/gc.py::collect`; `docs/assets/store_contract.md#known-gaps-stated-not-hidden` | MET | Records reference each other by hash and live in tracked `provenance/`, which `gc` never touches; review evidence an adoption refers to is copied into `provenance/` at adoption. |
 
 ## `AM1-W06` Fallback-safety framework
@@ -151,11 +165,11 @@ Approved 2026-10-04, so no longer open: the fallback-safety framework (`W06.1`, 
 |---|---|---|---|---|
 | W07.1 | Client range | `ADR D8`; `docs/assets/retention_and_rollback.md` | N/A | Profile A: the manifest is built into the same release as the client, so an old client never receives a new manifest (D8). The old-client plus new-release case is a mis-deploy, drilled as defence in depth only. |
 | W07.2 | Schema range | `frontend/src/visualAssets/manifest.ts::parseManifest`; `visual_assets/store/contracts/runtime.py::RuntimeManifest`; `frontend/src/visualAssets/__tests__/manifest.test.ts` | MET | Exact match only: `schema_version` is the literal 1 on both sides and the client rejects anything else as `unsupported_version`. There is no range and no migration. |
-| W07.3 | Renderer range | `visual_assets/store/contracts/runtime.py::RuntimeManifest` | GAP | No renderer or protocol version is carried or checked. Whether one is needed with a single canvas renderer is an owner decision. |
+| W07.3 | Renderer range | `visual_assets/store/contracts/runtime.py::RuntimeManifest`, `ADR D16` | N/A | Not needed with one canvas renderer under Profile A (user, 2026-10-04, `ADR D16`); no renderer or protocol version is carried or checked. Reopens on a second renderer or Profile B. |
 | W07.4 | Capability range | `visual_assets/store/contracts/runtime.py::RuntimeManifest` | GAP | The manifest has no required-capabilities field; no capability exists to require yet. |
 | W07.5 | Fallback range | `frontend/src/visualAssets/manifest.ts::parseManifest`; `visual_assets/store/contracts/runtime.py::RuntimeManifest` | MET | `fallback_contract_version` is the literal 1 on both sides; a client that does not know a version refuses the manifest and draws only fallbacks. |
 | W07.6 | Profile-specific rollback | `docs/assets/retention_and_rollback.md`; `frontend/src/visualAssets/__tests__/rollbackDrill.test.ts`; `ADR D8` | MET | Profile A: rollback is redeploying the previous whole frontend build. The rule is defined and drilled in the harness (new/old client x new/old release, recall, mid-load switch). The real procedure and authority are `AM-M6`. |
-| W07.7 | Retirement rules | `docs/assets/pilot_charter_am6.md`; `visual_assets/store/gc.py::collect` | GAP | No rule retires an old release candidate, an old client path or a primitive fallback. Candidates are kept as history (`gc` never deletes tracked state) and retiring primitives is in the charter's forbidden scope. |
+| W07.7 | Retirement rules | `docs/assets/pilot_charter_am6.md`; `visual_assets/store/gc.py::collect`, `ADR D15` | MET | Decided (user, 2026-10-04, `ADR D15`): release candidates are never retired (tracked history; `gc` never deletes tracked state); primitive fallbacks are never retired; an old client path retires only by deploying a newer frontend (Profile A). Revisit when release count matters. |
 
 ## `AM1-W08` Trust/authority model
 
@@ -165,7 +179,7 @@ Approved 2026-10-04, so no longer open: the fallback-safety framework (`W06.1`, 
 | W08.2 | Authenticity | `ADR D9`; `docs/assets/store_contract.md#known-gaps-stated-not-hidden` | MET | Decided: authenticity is the reviewed git history and the normal frontend deployment. The catalog alone cannot catch a consistent forgery of linked records (stated). |
 | W08.3 | Authorization | `ADR D5`; `ADR D9`; `visual_assets/store/adoption.py::adopt`; `tests/visual_assets/test_boundaries.py` | MET | Adopt, revoke, set adoption and release are CLI-only and human-gated (terminal on stdin, typed id) and absent from the MCP surface. The gate stops accidents and scripts; it does not authenticate the person. |
 | W08.4 | Freshness | `ADR D8`; `ADR D9` | N/A | Assets ship inside the client build and are never fetched separately, so there is nothing to go stale between a manifest and its client. |
-| W08.5 | Roles | `visual_assets/store/contracts/adoption.py::AdoptionRecord`; `docs/assets/pilot_charter_am6.md` | GAP | An adoption records an approver name and role and the rollback/recall owner is named (nhan, owner), but build, publish and activate roles are not separated or named; the charter fields are `TO BE SIGNED BY OWNER`. |
+| W08.5 | Roles | `visual_assets/store/contracts/adoption.py::AdoptionRecord`; `docs/assets/pilot_charter_am6.md`, `ADR D13` | MET | Decided (user, 2026-10-04, `ADR D13`): nhan (owner) holds every role (Live Map owner, HUD owner, approver, audit authority, build, publish, activate, rollback/recall). Roles are named, not separated. The charter's role fields stay `TO BE SIGNED BY OWNER`; signing is not done here. |
 | W08.6 | Rotation/recovery | `ADR D9` | N/A | No signing keys exist under D9, so there is nothing to rotate or recover. |
 | W08.7 | Minimum channel/signature decision | `ADR D9` | MET | No signing and no separate trust channel for assets under Profile A; reversal trigger recorded (Profile B, or assets fetched from outside the client's own build output). |
 
@@ -184,10 +198,10 @@ Approved 2026-10-04, so no longer open: the fallback-safety framework (`W06.1`, 
 | W10.1 | Reachability roots | `docs/assets/retention_and_rollback.md`; `visual_assets/store/gc.py::collect`; `tests/visual_assets/store/unit/test_gc.py` | MET | Protected: all tracked state, PASSED un-adopted intakes younger than the bound, any intake an adoption refers to, and referenced review evidence. Retained releases are derived (every committed candidate), not declared. No typed roots record exists because `gc` has no deletion kind for tracked objects; if it gains one, that record must exist first (stated in the store contract). |
 | W10.2 | Leases/pins | `ADR D8`; `docs/assets/retention_and_rollback.md#what-gc-protects-am-c09-judged-as-gc-removes-no-protected-object`; `visual_assets/store/gc.py::collect` | N/A | Under Profile A nothing reads store objects at runtime: the client build carries its own files (D8). `gc` can delete only untracked local quarantine files, review exports no adoption refers to and unreferenced PNGs, so a lease would have nothing to protect. Evidence an adoption needs is pinned by being copied into tracked `provenance/`. |
 | W10.3 | Grace | `visual_assets/store/config.py::MAX_UNADOPTED_INTAKE_AGE_DAYS`; `docs/assets/budgets.md#bounds`; `tests/visual_assets/store/unit/test_gc.py` | MET | 30 days, approved 2026-10-04 (a judgment, not a measurement); exactly 30 days is kept; the cutoff is computed by the CLI because library code may not read the clock. |
-| W10.4 | Locks | `visual_assets/store/catalogwrite.py`; `visual_assets/store/release.py::assemble_release` | GAP | No lock exists. The guards are all-or-nothing staged writes (`catalogwrite.py`) and exclusive-create release publishing; two store commands running at once are not defended against, and no decision puts that out of scope. |
+| W10.4 | Locks | `visual_assets/store/catalogwrite.py`; `visual_assets/store/release.py::assemble_release`, `ADR D18` | MET | Decided (user, 2026-10-04, `ADR D18`): single-operator rule, one store command at a time, no lock. The code still defends only a single operator (all-or-nothing staged writes, exclusive-create release publishing); the rule, not code, covers two commands at once. Reverses when a second operator or automation runs store commands. |
 | W10.5 | Dry run | `visual_assets/store/gc.py::gc`; `tests/visual_assets/store/unit/test_gc.py` | MET | `gc` lists by default and deletes only with `--delete`, re-checking each item before removal. |
-| W10.6 | Deletion audit | `visual_assets/store/gc.py::gc` | GAP | `gc --delete` records nothing about what it removed. Only untracked local quarantine and review files and unreferenced PNGs can be deleted, so no protected record is lost, but there is no deletion record. |
-| W10.7 | Storage-pressure disposition | `docs/assets/retention_and_rollback.md#retention-u-05-the-last-unset-row-approved`; `docs/assets/budgets.md#bounds` | GAP | Growth is measured (about 4.4 KB tracked per adoption, about 6 KB per local intake) but nothing says what happens at a size or disk limit, or who decides. |
+| W10.6 | Deletion audit | `visual_assets/store/gc.py::gc`, `ADR D18` | MET | Decided (user, 2026-10-04, `ADR D18`): `gc --delete` prints each item it removes (`deleted <kind> <name> (<reason>)`, the `gc` branch of `visual_assets/store/cli.py`) and keeps no record. It cannot delete tracked state, so no protected record is lost. A printed line is not an audit record: the clause is met by the decision, not by a record. |
+| W10.7 | Storage-pressure disposition | `docs/assets/retention_and_rollback.md#retention-u-05-the-last-unset-row-approved`; `docs/assets/budgets.md#bounds`, `ADR D18` | MET | Decided (user, 2026-10-04, `ADR D18`): the owner reviews growth by hand when the tracked catalog passes 50 MB (about 0.9 MB today, `du -sh visual_assets/catalog`). A review trigger, not an enforced limit; nothing checks it. Growth is measured (about 4.4 KB tracked per adoption, about 6 KB per local intake). |
 
 ## `AM1-W11` M2 evidence charter
 
@@ -214,32 +228,32 @@ Approved 2026-10-04, so no longer open: the fallback-safety framework (`W06.1`, 
 |---|---|---|---|---|
 | W13.1 | Named post-activation authority | `docs/assets/retention_and_rollback.md`; `docs/assets/pilot_charter_am6.md` | MET | The recall owner is named as nhan (owner), recorded 2026-10-04 from a blocking question. The charter still has to confirm it and nothing is activated, so the authority has never been exercised. |
 | W13.2 | Release/build eligibility revocation | `visual_assets/store/revoke.py::revoke`; `visual_assets/store/revoke.py::is_build_eligible`; `tests/visual_assets/store/unit/test_revoke.py`; `tests/visual_assets/store/unit/test_release.py`; `tests/visual_assets/store/unit/test_verify.py` | MET | A revoked source revision gets a tracked revocation record; `is_build_eligible` fails closed; `build` and `release` refuse it and `verify` reports a manifest entry for a revoked revision as blocking. A revoked revision does not freeze its asset. |
-| W13.3 | Distribution stop | `docs/assets/retention_and_rollback.md`; `frontend/src/visualAssets/__tests__/rollbackDrill.test.ts` | GAP | Under Profile A the stop is redeploying a build without the key, shown only in the harness (a release with the key removed shows the flat fill). No procedure, authority or timing for stopping an already-deployed build exists (`AM6-W09` absent). |
-| W13.4 | Stale/offline/cache handling | `frontend/src/visualAssets/loader.ts::SnapshotLoader`; `docs/assets/surface_rehearsal_result.md` | GAP | The loader keeps one snapshot per view and drops late results, and there is no asset cache of its own; no stale-client, offline, browser or CDN cache case is defined or tested (`AM-C05` is `INCONCLUSIVE`). |
+| W13.3 | Distribution stop | `docs/assets/retention_and_rollback.md`; `frontend/src/visualAssets/__tests__/rollbackDrill.test.ts` | GAP | Under Profile A the stop is redeploying a build without the key, shown only in the harness (a release with the key removed shows the flat fill). No procedure, authority or timing for stopping an already-deployed build exists (`AM6-W09` absent). Carried to `AM-M6` as its prerequisite (owner, 2026-10-04); not narrowed to the harness drill. |
+| W13.4 | Stale/offline/cache handling | `frontend/src/visualAssets/loader.ts::SnapshotLoader`; `docs/assets/surface_rehearsal_result.md` | GAP | The loader keeps one snapshot per view and drops late results, and there is no asset cache of its own; no stale-client, offline, browser or CDN cache case is defined or tested (`AM-C05` is `INCONCLUSIVE`). Carried to `AM-M6` as its prerequisite (owner, 2026-10-04); not narrowed to the harness drill. |
 | W13.5 | Audit retention | `visual_assets/store/revoke.py::revoke`; `docs/assets/retention_and_rollback.md`; `docs/assets/store_contract.md#known-gaps-stated-not-hidden` | MET | Revocations of source revisions are tracked in `provenance/revocations/` and `gc` never deletes tracked records. A local intake revocation is local only (stated gap). |
-| W13.6 | Tested rollback | `frontend/src/visualAssets/__tests__/rollbackDrill.test.ts`; `docs/assets/retention_and_rollback.md` | GAP | A harness drill exists and passes; no real rollback to a previous build was exercised (`AM-C06` is `INCONCLUSIVE`, real rollback is `AM-M6`). |
+| W13.6 | Tested rollback | `frontend/src/visualAssets/__tests__/rollbackDrill.test.ts`; `docs/assets/retention_and_rollback.md` | GAP | A harness drill exists and passes; no real rollback to a previous build was exercised (`AM-C06` is `INCONCLUSIVE`, real rollback is `AM-M6`). Carried to `AM-M6` as its prerequisite (owner, 2026-10-04); not narrowed to the harness drill. |
 
 ## Follow-ups (parked, no tickets)
 
-One line per `GAP`. Each needs code or an owner decision, so none is fixed here and none has a ticket.
+One line per clause that was `GAP` in the first register; the decided ones are marked with their ADR row. The rest need code or a later authorization, so none is fixed here and none has a ticket.
 
-- `W02.2` Derivation owner: Name who derives a visual key from game state (an owner decision), then build the mapping outside the dev-only draft page. Needed before `AM-M6`.
+- `W02.2` Derivation owner: **decided 2026-10-04 (`ADR D14`)**; the mapping itself is built at `AM-M6`, outside the dev-only draft page.
 - `W02.7` Safety-class link: Add a safety-class field to `VisualKeyDefinition` now that the W06 framework is approved (registry change plus parser and client mirror, in its own ticket). `fallback_safety.md` (approved) states the rule as policy only, so keys declare a class in their ticket until then.
-- `W03.1` Deterministic variant axes/precedence: Define the context axes and their strict precedence, or remove `variant_axes` as unused (an owner decision, then code).
-- `W03.4` Live Map/HUD ownership: Name an owner per surface (Live Map, HUD) in the charter or an ADR row (owner decision).
-- `W03.5` Compatibility ranges: Decide whether a client or descriptor range is needed under Profile A; if so add it to `RuntimeManifest` and the client parser (code, bumps the manifest contract).
-- `W05.4` Approver/audit separation: Name an audit authority distinct from the approver, or record that one owner holds every role (owner decision).
+- `W03.1` Deterministic variant axes/precedence: decided 2026-10-04 (`ADR D17`, frozen empty); stays open until `verify` rejects a non-empty `variant_axes` (code, its own ticket, parked). A context axis needs its own decision.
+- `W03.4` Live Map/HUD ownership: **decided 2026-10-04 (`ADR D13`)**; the charter still has to be signed.
+- `W03.5` Compatibility ranges: **not needed under Profile A (`ADR D16`)**; reopens on Profile B or a second renderer.
+- `W05.4` Approver/audit separation: **decided 2026-10-04 (`ADR D13`)**: one owner holds every role; separation is an accepted limit.
 - `W06.3` Activation/runtime failure policy: Requiring an alternative at activation is a check in `release`/`build`/`adopt` (code, a ticket of its own); an activation policy beyond that needs `AM-M6`.
-- `W07.3` Renderer range: Decide whether a renderer or protocol version is needed with one canvas renderer (owner decision).
+- `W07.3` Renderer range: **not needed under Profile A (`ADR D16`)**.
 - `W07.4` Capability range: Add required capabilities to the manifest only when a capability exists (code, with the first capability).
-- `W07.7` Retirement rules: Write the rule for retiring old candidates, old client paths and primitive fallbacks (owner decision).
-- `W08.5` Roles: Separate and name build, publish and activate roles when the charter is signed (owner decision).
-- `W10.4` Locks: Decide whether to add a lock or to record single-operator use as the rule (owner decision, then code if a lock).
-- `W10.6` Deletion audit: Decide whether `gc --delete` must record what it removed (owner decision, then a typed record; code).
-- `W10.7` Storage-pressure disposition: Set a size or disk limit and who decides at it (owner decision).
-- `W13.3` Distribution stop: Write and drill a real stop procedure for a deployed build (needs `AM-M6` authorization).
-- `W13.4` Stale/offline/cache handling: Define and test stale-client, offline and cache behaviour (needs `AM-M6`).
-- `W13.6` Tested rollback: Exercise a real rollback to a previous build (needs `AM-M6`).
+- `W07.7` Retirement rules: **decided 2026-10-04 (`ADR D15`)**: never retire candidates or primitives.
+- `W08.5` Roles: **decided 2026-10-04 (`ADR D13`)**: the owner holds every role; the charter is still to be signed.
+- `W10.4` Locks: **decided 2026-10-04 (`ADR D18`)**: single-operator rule, no lock.
+- `W10.6` Deletion audit: **decided 2026-10-04 (`ADR D18`)**: `gc --delete` prints, keeps no record.
+- `W10.7` Storage-pressure disposition: **decided 2026-10-04 (`ADR D18`)**: owner review by hand above 50 MB tracked catalog.
+- `W13.3` Distribution stop: Write and drill a real stop procedure for a deployed build (needs `AM-M6` authorization). Carried to `AM-M6` as its prerequisite (owner, 2026-10-04).
+- `W13.4` Stale/offline/cache handling: Define and test stale-client, offline and cache behaviour (needs `AM-M6`). Carried to `AM-M6` as its prerequisite (owner, 2026-10-04).
+- `W13.6` Tested rollback: Exercise a real rollback to a previous build (needs `AM-M6`). Carried to `AM-M6` as its prerequisite (owner, 2026-10-04).
 
 ## Where docs and code disagree
 

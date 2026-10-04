@@ -188,6 +188,7 @@ Runtime activation, a resolver in the real client, Live Map and HUD consumption,
 ## Known gaps (stated, not hidden)
 
 - **The human gate does not authenticate the person.** The terminal check and the typed id stop accidental and scripted adoption; the approver name and role are recorded, not proven.
+- **Approver and audit are one person (accepted limit, `ADR D13`, 2026-10-04).** The owner holds the approver role and also runs the audit; separation is not achieved and is an accepted, stated limit of a one-person project. There is no store lock by rule (`ADR D18`): one store command at a time, a single-operator rule that the code does not enforce.
 - **The catalog alone cannot catch a consistent forgery.** Someone who edits an adoption record and the hash in its SourceRecord together still passes `audit_chain`; git history is the
   backstop. (Ticket 5 binds artifacts to the SourceRecord bytes, so a release manifest anchors the whole chain.)
 - **A local intake revocation is local.** Revoking an un-adopted intake writes only into this machine's gitignored quarantine, so it covers other intakes of the same bytes
@@ -218,5 +219,4 @@ Runtime activation, a resolver in the real client, Live Map and HUD consumption,
 D2 (sources committed directly, no Git LFS), D3 (only adopted assets' PNGs committed; verified in CI by pixel hash), D4 (artifact identity is the decoded-pixel hash), D8 (deployment profile A, `AM1-W01`), D9 (no signing,
 `AM1-W08`), D10 (real Aseprite on the licence holder's own machine only, which closes the licence review `U-02` and decides against CI with Aseprite, `U-14`), D11 (the detail axis) and D12 (draft sets) are **decided**
 (`docs/architecture/visual_asset_foundation_adr.md`). Numeric budgets (`U-05`) and retention (30 days) are approved (`docs/assets/budgets.md`, `docs/assets/retention_and_rollback.md`). What is still open is per
-`AM-M1` item in `docs/assets/m1_contract_register.md`, which also records the `AM-M1` result (`BLOCKED`) and what would unblock it: mostly owner decisions (key-derivation owner, surface owners, audit authority, build/publish/activate roles, retirement
-rules, whether compatibility ranges are needed under Profile A) and the fallback activation check and registry class field that follow from approved decisions.
+`AM-M1` item in `docs/assets/m1_contract_register.md`, which also records the `AM-M1` result (`BLOCKED`, re-derived 2026-10-04: `AM-M0` is `INCONCLUSIVE`) and what remains: an `AM-M0` `PASS`, the registry class field, the fallback activation check, a `verify` rule for `variant_axes`, and the `AM-M6`-carried clauses. The owner's role, key, retirement, range and retention decisions are `D13`-`D18`.

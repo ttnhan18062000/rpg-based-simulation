@@ -29,6 +29,12 @@ If `gc` ever gains a deletion kind for tracked objects, a typed roots record mus
 Proof: `tests/visual_assets/store/unit/test_gc.py` (17 tests). Mutants, each failing a named test: age guard dropped (young intake listed), adoption guard dropped (old adopted intake listed), age bound infinite
 (old intake kept), boundary off by one (an intake exactly on the cutoff listed), unreferenced report emptied.
 
+## Store operations (`ADR D18`, owner, 2026-10-04)
+
+- **Single operator, no lock.** One store command at a time; the rule, not a lock, covers two commands at once. The code still defends only a single operator (all-or-nothing staged writes, exclusive-create release publishing). Reverses when a second operator or automation runs store commands.
+- **`gc --delete` keeps no record.** It prints each item it removes (`deleted <kind> <name> (<reason>)`, the `gc` branch of `visual_assets/store/cli.py`) and cannot delete tracked state, so no protected record is lost. The printed line is the only trace.
+- **Growth review by hand.** When the tracked catalog passes 50 MB (about 0.9 MB today, `du -sh visual_assets/catalog`) the owner reviews it. A review trigger, not an enforced limit; nothing checks it.
+
 ## Rollback drill (`AM5-W09`, `AM-C06`) under Profile A (ADR D8)
 
 Rollback is redeploying the previous whole frontend build. In the drill, "previous release" = the previous build's runtime fixture set (the synthetic rehearsal export, catalog `rehearsal`) and "new" =
