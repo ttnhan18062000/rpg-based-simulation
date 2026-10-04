@@ -35,5 +35,10 @@ opened only when the planner says it is ready and the user authorizes the push; 
 - Per-tile adoption replaced by drafts + whole-set review: user, 2026-10-04 (blocking question "Drafts now, batch
   review"). The bush/tree adoptions already given stay (user, same day); the M5 rerun is deferred (user, same day).
   Adoption stays the human gate (`AM-F01`); its unit becomes a reviewed set.
+- PAUSE after this batch: user, 2026-10-04 (blocking question "Finish map, park icons"). Asset work stops at map basics
+  (terrain drafts) until the RPG core features land; avoid over-engineering this feature. Parked, no tickets filed:
+  icons and the other asset kinds in the original plans (entities, buildings, items, UI), which reuse draft sets and
+  `adopt-set` when resumed; the deferred `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN`; charter signing / AM-M6. Tickets 5
+  and 6 stay minimal: no extras beyond their acceptance criteria.
 - Each ticket was written before the previous one was built. Before starting a ticket, re-check it against what actually
   landed; where they disagree, tell the planner instead of guessing.
