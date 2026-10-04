@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-SRC-PACKAGE-STRUCTURE-AUDIT
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, planning]
 M5.1: Structure audit of src/ top-level packages (decisions only)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -44,10 +44,10 @@ One decision record with a row per tracked top-level src/ package: purpose, size
 - Changing M4 soak thresholds, ruff/complexipy versions or existing rows in codebase/baselines/code_health_exceptions.jsonl
 
 ## Acceptance Criteria
-- [ ] Audit doc has exactly one row per tracked top-level src/ package, count verified against git ls-files
-- [ ] Every non-keep decision has an owning domain and a note written to .claude/handover/codebase-planner-outbox.md with status: pending
-- [ ] Layer column covers all packages and records D14 disagreements
-- [ ] `git diff --stat <base>...HEAD` lists no path under src/
+- [x] Audit doc has exactly one row per tracked top-level src/ package, count verified against git ls-files
+- [x] Every non-keep decision has an owning domain and a note written to .claude/handover/codebase-planner-outbox.md with status: pending
+- [x] Layer column covers all packages and records D14 disagreements
+- [x] `git diff --stat <base>...HEAD` lists no path under src/
 
 ## Related Tickets
 - TCK-20261004-PYTHON-CODE-CRAFT-STRUCTURE-EPIC
@@ -73,10 +73,18 @@ None.
 - Hand-written by codebase-planner brief (owner decisions 2026-10-04); filed by codebase-implementer 2026-10-04. Facts in the brief were measured on main b9251cf5; each ticket's Investigate phase re-verifies the ones it relies on
 
 ## Implementation Notes
+- Own `ast` import scan instead of grimp: `src/` has namespace packages (no `__init__.py` in core, api, perf, certification, content_semantics), so grimp sees 215 of 744 files. Importer counts are file counts across src, tests, tools, codebase, agent-working, experiments and visual_assets.
+- Outbox messages 7 (rpg-planner) and 8 (testing-planner) written to `.claude/handover/codebase-planner-outbox.md` with status: pending (the file is git-ignored).
+- Deviation: `plan.md` was written after the audit, not sent to the planner first (docs-only ticket); the planner reviews the commit.
+- Findings the owner should see: `core` imports engine/domains/systems (D14 says nothing); five import cycles; four packages with only test importers.
 
 
 ## Test Summary
+No code. Checked: 36 audit rows against `git ls-files src` (none missing), frontmatter validator on the doc, ticket and artifacts, empty `git diff --stat origin/main -- src`.
 
 ## Files Changed
+- docs/plans/codebase_health/src_package_structure_audit.md (new)
+- agent-working/tickets, stored artifacts, monitoring shards
 
 ## Completion Summary
+Audit of the 36 tracked top-level `src/` packages written with layer, evidence and a decision per package: 7 non-keep decisions routed to rpg-planner and 1 to the testing planner by pending outbox notes. No `src/` change.
