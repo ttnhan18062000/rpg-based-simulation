@@ -11,10 +11,10 @@ tags: [architecture, mcp, documentation, rendering]
 
 ## Status
 
-Accepted for D1-D7 (decided by the user on 2026-10-02 or forced by existing CI constraints) and D8-D10 (decided by the user on 2026-10-03: deployment profile, trust, where Aseprite may run); nothing is still proposed.
-Delivered so far: `TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT` (the move, the skeletons, the boundary test, CI step,
-`.mcp.json` entry; merged in PR #286) and `TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS` (typed records, identities and the semantic
-registry loader, on branch `visual-assets-store`). The store's writers (intake, adoption, build, release, verify, gc) are not built.
+Accepted for D1-D7 (decided by the user on 2026-10-02 or forced by existing CI constraints), D8-D10 (decided by the user on 2026-10-03: deployment profile, trust, where Aseprite may run) and D11-D12 (2026-10-04, below); nothing is still proposed.
+Delivered: the foundation epic (the move, the skeletons, the boundary test, CI step, `.mcp.json` entry, typed records, identities and the registry loader, intake, human-gated adoption and revocation, sandboxed build, release candidates, `verify`, `gc`
+and the read-only MCP store tools; PRs #286 and #299), the runtime manifest and `export-runtime`, the isolated `AM-M5` rehearsal, the pilot terrain tile with its detail variants and the draft-set workflow (PRs #309, #317, #327). `AM1-W01`,
+`AM1-W08` and `U-02` are decided here (D8, D9, D10). The status of every `AM-M1` item, the `AM-M1` result and what would unblock it are in `docs/assets/m1_contract_register.md`.
 
 ## Context
 
@@ -75,4 +75,4 @@ paths were deliberately left open. Full structure, layering rules and command ta
   held zero keys, sources, adoptions and artifacts when the store was built (synthetic fixtures only, under `catalog/fixtures/`); since 2026-10-04 it holds the one pilot terrain tile (`docs/assets/pilot_terrain_key.md`). Nothing activates at runtime.
 - The drawing server may import from the store only `intake`, `readmodel` and the shared leaves; the human-gated and tracked-catalog layers are unreachable from it (boundary test).
 - Real-Aseprite tests run locally only; CI sees the unit and stdio tests that need no Aseprite (`U-14` open).
-- Plan packages gain dated status notes; open items there (`U-02`, `U-05`, `U-07`..`U-14`, `AM1-W01` ...) are unchanged.
+- Plan packages gain dated status notes. `U-02`, `U-05` and `AM1-W01`/`W08` are decided (D8-D10, budgets approved 2026-10-04); the other open items are tracked per `AM-M1` item in `docs/assets/m1_contract_register.md`.
