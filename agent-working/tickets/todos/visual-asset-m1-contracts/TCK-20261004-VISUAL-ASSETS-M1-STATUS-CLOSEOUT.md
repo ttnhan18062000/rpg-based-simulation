@@ -39,7 +39,16 @@ the status text everywhere it is stated.
   line at the top of `01_architecture_decisions_and_contracts_plan.md`, both pointing at the register.
 - `docs/assets/store_contract.md` "Decisions still open" and `docs/plans/visual-asset-foundation/README.md` "open" row
   (`AM1-W01`, `W03`, ...) updated to match the register.
-- `make knowledge-index-update`; `docs/REGISTRY.yaml` regenerated and staged.
+- Added at the ticket-1 review (planner, 2026-10-04), from the register's "Where docs and code disagree" table:
+  - `docs/assets/store_contract.md` "Decisions still open" / "Not built" and its budgets line ("the one deliberately
+    unset row"): match ADR D8-D10, `budgets.md` and the register.
+  - `docs/architecture/visual_asset_foundation_adr.md` Status and Consequences: the store writers are built; `U-02`,
+    `AM1-W01` and `AM1-W08` are decided (D8-D10). Status text only; no decision row changes.
+  - `docs/assets/pilot_charter_am6.md` **section 2 (agent-filled facts) only**: `pilot/rc-0003`, three slots, the detail
+    axis (D11). Sections 3 (human fields) and 5 (signature) are not touched.
+  - Remove each fixed line from the register's disagreement table (or mark it "fixed by M1-STATUS-CLOSEOUT").
+- `make knowledge-index-update` (worktree: `PYTHON_KNOWLEDGE=/home/vboxuser/Work/rpg-based-simulation/.venv-knowledge/bin/python3`);
+  `docs/REGISTRY.yaml` regenerated and staged.
 - Epic close-out: parent ticket and `SEQUENCE.md` completed, folder moved to `done/` per CLAUDE.md.
 
 ## Out of Scope
