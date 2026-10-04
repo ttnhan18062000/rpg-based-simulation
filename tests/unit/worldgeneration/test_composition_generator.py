@@ -499,3 +499,36 @@ class TestRegionIdNamespacing:
         ]
         with pytest.raises(GenerationCompositionError, match="bbb_y"):
             self._assign(modules)
+
+    def test_generate_emits_the_namespace_on_the_authored_module_refs(self, tmp_path, monkeypatch):
+        """Goes through generate(), not the helper: deleting the emission turns this red.
+
+        The resolve step is intercepted so the authored composition can be read directly; a stub
+        catalog cannot resolve a stubbed `hometown` region, and the real-content integration test
+        covers the full resolve.
+        """
+        monkeypatch.chdir(tmp_path)
+        captured: dict = {}
+
+        class _Stop(Exception):
+            pass
+
+        def _capture(composition, catalog, module_repo):
+            captured["refs"] = {r.module_id: r.namespace for r in composition.module_refs}
+            raise _Stop
+
+        monkeypatch.setattr("src.worldgeneration.generator.resolve_composition", _capture)
+        modules = [
+            self._regional("aaa_core", "hometown"),
+            self._regional("zzz_hub", "hometown"),
+            _make_module("terrain_basic", "terrain"),
+        ]
+        with pytest.raises(_Stop):
+            ProceduralCompositionGenerator().generate(
+                _default_intent(), _make_repo(modules), _make_catalog(), output_dir=tmp_path / "out"
+            )
+
+        assert captured["refs"]  # non-vacuous
+        assert captured["refs"]["zzz_hub"] == "zzz_hub"
+        assert captured["refs"]["aaa_core"] is None
+        assert captured["refs"]["terrain_basic"] is None
