@@ -44,7 +44,7 @@ Requested by the owner via perf-planner (2026-10-03). docs/parity_ledger/*.yaml 
 - [x] On main's ledger the checker reports 2,862 errors split as above (or the current count, recorded), and the committed baseline matches it
 - [x] Adding one entry with status verified and test_path null makes the test fail and names the file and rule; removing an existing error passes and reports the decrease
 - [x] schema.json is byte-identical to main
-- [ ] The test runs in a CI job (coverage test passes); green PR run recorded (the test is in `tests/codebase`, collected by `tools-a-e`, and the coverage test passes locally; the green PR run is still to be recorded after the push)
+- [x] The test runs in a CI job (coverage test passes); green PR run recorded. The test is in `tests/codebase`, collected by `tools-a-e`; PR #313, run https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37176317649 (head 03bac060d): all 18 required jobs green, 3 skipped as on main, `Tools · a–e` 1702 passed (includes the parity gate's live test).
 - [x] `git diff --stat` for this ticket's own commits lists no path under src/, none under .claude/, and not CLAUDE.md (the batch as a whole carries the root-move ticket's one `.claude/agents/test-scoper.md` row)
 
 ## Related Tickets
