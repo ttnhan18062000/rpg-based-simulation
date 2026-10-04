@@ -1003,3 +1003,32 @@ def test_reconstructed_survivor_wounds_and_scars_are_deliberately_reset_not_carr
 
     assert survivor.combat.wounds == []
     assert survivor.combat.scars == []
+
+
+def test_campaign_orchestrator_uses_resolver_default_not_an_override():
+    """Campaign rides ScenarioSetupResolver's default compositions_dir.
+
+    Asserted at the source level because the construction happens once inside
+    `_ensure_catalog_builder`, and the point is the absence of a second hard-coded path — not
+    merely that the resolved value happens to be right today.
+    """
+    from src.scenarios.resolver import ScenarioSetupResolver
+
+    source = Path("src/domains/campaigns/orchestrator.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    calls = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "CatalogScenarioStateBuilder"
+    ]
+    assert len(calls) == 1, f"Expected one CatalogScenarioStateBuilder construction, got {len(calls)}"
+
+    overrides = [kw.arg for kw in calls[0].keywords if kw.arg == "compositions_dir"]
+    assert not overrides, (
+        "CampaignOrchestrator must not override compositions_dir — the resolver default is now "
+        "the authoritative world root."
+    )
+    assert ScenarioSetupResolver._DEFAULT_COMPOSITIONS_DIR == Path("data/worlds")

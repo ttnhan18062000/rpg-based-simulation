@@ -181,15 +181,19 @@ def test_gate_07_world_modules_normalize(module_repo):
 def test_gate_08_world_compositions_load():
     """All world composition YAML files must parse into WorldCompositionSpec."""
     from src.worldassembly.schema import WorldCompositionSpec
-    compositions_dir = Path("data/content/world_compositions")
     failures = []
-    for yaml_file in sorted(compositions_dir.glob("*.yaml")):
+    checked = 0
+    for yaml_file in sorted(Path("data/worlds").glob("*/world.yaml")):
+        with open(yaml_file, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        if "worldcomposition" not in str(data.get("schema_version", "")):
+            continue
+        checked += 1
         try:
-            with open(yaml_file, encoding="utf-8") as f:
-                data = yaml.safe_load(f)
             WorldCompositionSpec.model_validate(data)
         except Exception as e:
-            failures.append(f"  {yaml_file.name}: {e}")
+            failures.append(f"  {yaml_file.parent.name}: {e}")
+    assert checked, "Gate 08 FAIL — no world compositions found under data/worlds/"
     assert not failures, (
         f"Gate 08 FAIL — {len(failures)} composition(s) failed to load:\n"
         + "\n".join(failures)
@@ -245,10 +249,13 @@ def test_gate_11_world_assembly_resolves(catalog, module_repo):
     """WorldAssemblyResolver must assemble at least one composition without error."""
     from src.worldassembly.resolver import WorldAssemblyResolver
     resolver = WorldAssemblyResolver(catalog, module_repo)
-    compositions_dir = Path("data/content/world_compositions")
     from src.worldassembly.schema import WorldCompositionSpec
     import yaml as _yaml
-    first = sorted(compositions_dir.glob("*.yaml"))[0]
+    first = next(
+        path
+        for path in sorted(Path("data/worlds").glob("*/world.yaml"))
+        if "worldcomposition" in str(_yaml.safe_load(path.read_text(encoding="utf-8")).get("schema_version", ""))
+    )
     with open(first) as f:
         spec = WorldCompositionSpec.model_validate(_yaml.safe_load(f))
     result = resolver.assemble(spec)

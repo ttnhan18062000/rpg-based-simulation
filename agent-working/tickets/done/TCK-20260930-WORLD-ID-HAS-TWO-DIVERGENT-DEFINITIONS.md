@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS
-phase: open
+phase: done
 date: 2026-09-30
 tags: [world, architecture]
 ---
@@ -40,7 +40,45 @@ production runs) and `data/content/world_compositions/<id>.yaml` (what the catal
 a measurement taken via the catalog path describes a world that never runs
 
 ## Status
-OPEN
+DONE
+
+## Disposition
+DUPLICATE
+
+## Disposition Rationale
+Duplicate of `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`, which was filed 2026-09-09 and
+refined 2026-09-12, reports a **wider** comparison (8 of 9 pairs divergent, against this ticket's 5 of
+7 module-set-only comparison), and cites the same `frontier_living_world` / `trading_company_hub` and
+`dungeon_crawl` / `danger_scale` examples. Nothing in this ticket needed building that the older ticket
+did not already own.
+
+**Closed by merge, not by discard.** Everything unique to this ticket was folded into the older one in
+commit `872537ed5` — the measurement-validity framing (a probe via `WorldAssemblyResolver.assemble()`
+describes a world that never runs, while production loads via
+`src/worldbuilding/repository.py:89-114`), the 17-to-0 asymmetry, the affected stored artifact, and
+three acceptance criteria the older ticket lacked (the one-`world_id`-one-module-set check, the
+prior-measurement assessment, and stating authority in the docs). The older ticket was raised P2 → P1
+in the same commit as Child A of `TCK-20261002-EPIC-SEMANTIC-FOUNDATION-COMPLETION`.
+
+**No `src/` change is attributed to this ticket** — the merge touched only
+`agent-working/tickets/todos/` and `agent-working/agent-monitoring/`.
+
+**Why this ticket was filed at all, kept as the useful record:** its own context scan checked `docs/`
+and code but never grepped `agent-working/tickets/todos/` for existing coverage (CLAUDE.md Context Scan
+step 4). A single `grep -l "world_composition" agent-working/tickets/todos/` would have found the older
+ticket.
+
+**Closure history, recorded because it was not clean.** On 2026-10-03 this file was first *deleted*
+from `agent-working/tickets/todos/` in `872537ed5`, on the mistaken belief that no mechanism existed to
+retire a ticket without implementation. The `## Disposition` mechanism
+(`TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES`) already existed and was present in this very
+worktree — `tools/ticket_field_values.py:57` (`DISPOSITION_VALUES`),
+`tools/gate_checks/done_checker_static.py:1071` (`_disposition_migration_result`), and
+`docs/guides/delivery_process.md:77`. The error was checking the `## Status` enum, finding no
+superseded-style value there, and concluding none existed anywhere, rather than searching for a
+retirement mechanism; `## Disposition` is a separate section by design. `agent-working-design` caught
+it. The file was restored from `872537ed5^` and closed here properly, so it stays queryable in
+`docs/REGISTRY.yaml` and to any grep over `agent-working/tickets/`.
 
 ## Tier
 standard
@@ -176,4 +214,8 @@ _(not started)_
 _(none yet)_
 
 ## Completion Summary
-_(not started)_
+Closed `DUPLICATE` on 2026-10-03. Nothing built; nothing lost. Its unique content lives in
+`TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`, which is now that epic's Child A at P1 and is
+the ticket to read. **The defect this ticket reported is still real and still unfixed** — it was
+re-confirmed live at `1a40d22d1` during the merge. `DUPLICATE` here means "the wrong ticket for it", not
+"not a problem". See `## Disposition Rationale` for the evidence and for the closure's own false start.

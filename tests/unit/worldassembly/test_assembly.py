@@ -1055,7 +1055,7 @@ def test_unknown_field_in_real_composition_fails():
     from pydantic import ValidationError
     from src.worldassembly.schema import WorldCompositionSpec
 
-    comp_path = Path("data/content/world_compositions/frontier_living_world.yaml")
+    comp_path = Path("data/worlds/frontier_living_world/world.yaml")
     assert comp_path.is_file()
 
     with open(comp_path, "r", encoding="utf-8") as f:
@@ -1076,7 +1076,7 @@ def test_real_composition_normalization_preserves_perspectives():
     from pathlib import Path
     from src.worldassembly.schema import WorldCompositionSpec, WorldCompositionNormalizer
 
-    comp_path = Path("data/content/world_compositions/frontier_living_world.yaml")
+    comp_path = Path("data/worlds/frontier_living_world/world.yaml")
     assert comp_path.is_file()
 
     with open(comp_path, "r", encoding="utf-8") as f:
@@ -1094,14 +1094,15 @@ def test_real_composition_normalization_preserves_perspectives():
         "goblin_warband_perspective"
     ]
 
-    # Verify shorthand modules list converted to module_refs
-    assert len(normalized.module_refs) == 6
+    assert len(normalized.module_refs) == 7
     module_ids = [ref.module_id for ref in normalized.module_refs]
     assert "frontier_village_core" in module_ids
     assert "wolf_den_near_forest" in module_ids
 
-    # Assert mixed shorthand and structured refs raises ValueError
+    # Assert mixed shorthand and structured refs raises ValueError. The authoritative definition
+    # carries only the structured form, so the shorthand side is added here to create the conflict.
     mixed = copy.deepcopy(raw)
+    mixed["modules"] = ["frontier_village_core"]
     mixed["module_refs"] = [{"module_id": "test_module", "enabled": True}]
     with pytest.raises(ValueError, match="Cannot specify both 'modules' shorthand"):
         WorldCompositionNormalizer.normalize(mixed)

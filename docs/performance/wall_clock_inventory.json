@@ -5685,7 +5685,7 @@
     },
     {
       "file": "src/worldbuilding/repository.py",
-      "line": 206,
+      "line": 209,
       "enclosing_function": "WorldRepository._update_index_entry",
       "source": "datetime.datetime.now",
       "kind": "wall-clock",
@@ -5700,7 +5700,7 @@
     },
     {
       "file": "src/worldbuilding/repository.py",
-      "line": 278,
+      "line": 281,
       "enclosing_function": "WorldRepository.rebuild_index",
       "source": "datetime.datetime.now",
       "kind": "wall-clock",
@@ -5720,7 +5720,7 @@
     },
     {
       "file": "src/worldbuilding/repository.py",
-      "line": 294,
+      "line": 297,
       "enclosing_function": "WorldRepository.rebuild_index",
       "source": "datetime.datetime.now",
       "kind": "wall-clock",
@@ -5739,7 +5739,7 @@
     },
     {
       "file": "src/worldgeneration/generator.py",
-      "line": 329,
+      "line": 332,
       "enclosing_function": "WorldProceduralGenerator.generate",
       "source": "datetime.datetime.now",
       "kind": "wall-clock",
@@ -5751,6 +5751,21 @@
       "note": "",
       "reachable_from_kernel": false,
       "ordinal": 363
+    },
+    {
+      "file": "src/worldgeneration/generator.py",
+      "line": 556,
+      "enclosing_function": "ProceduralCompositionGenerator.generate",
+      "source": "datetime.datetime.now",
+      "kind": "wall-clock",
+      "call": "datetime.now",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 364
     }
   ],
   "unresolved_candidates": [

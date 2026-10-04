@@ -13,11 +13,11 @@ from src.worldbuilding.repository import WorldRepository, WorldRepositoryError
 from src.worldbuilding.schema import WorldSpec, InvalidWorldSpecError, load_world_spec_from_yaml
 from src.worldbuilding.validator import WorldValidator
 from src.worldbuilding.compiler import WorldCompiler
-from src.content.repository import CatalogRepository
-from src.content.paths import ContentPathConfig
-from src.worldmodules.repository import WorldModuleRepository
-from src.worldassembly.schema import WorldCompositionSpec
-from src.worldassembly.resolver import WorldAssemblyResolver
+from src.worldassembly.resolve_io import (
+    load_content_repositories,
+    resolve_composition_file,
+    write_resolved_artifacts,
+)
 from src.worldassembly.context import CompileContext
 from src.worldgeneration.schema import GenerationIntentSpec
 from src.worldgeneration.generator import ProceduralCompositionGenerator, GenerationCompositionError
@@ -144,68 +144,16 @@ def handle_resolve(args) -> int:
             print_colored(f"World composition file not found at: {yaml_path}", COLOR_RED)
             return 1
 
-        with open(yaml_path, "r", encoding="utf-8") as f:
-            raw_data = yaml.safe_load(f)
-
-        schema_version = raw_data.get("schema_version", "")
-        if "worldcomposition" not in schema_version:
-            print_colored(f"Error: World '{world_id}' is not a worldcomposition.v1 composition (got schema: '{schema_version}').", COLOR_RED)
-            return 1
-
-        # Load composition
-        try:
-            composition = WorldCompositionSpec.model_validate(raw_data)
-        except Exception as e:
-            world_id_val = raw_data.get("world_id", world_id)
-            raise ValueError(f"Validation failed for composition '{world_id_val}' in family 'world_compositions' at '{yaml_path}': {e}") from e
-
-        # Load repositories
-        cat_repo = CatalogRepository("data/content")
-        cat_repo.load_all()
-        mod_repo = WorldModuleRepository(ContentPathConfig().world_modules_dir)
-        mod_repo.load_all()
-
         print(f"Resolving composition world '{world_id}'...")
-        resolver = WorldAssemblyResolver(cat_repo, mod_repo)
-        bundle = resolver.assemble(composition)
-
-        # Build output directory
-        resolved_dir = world_dir / "resolved"
-        resolved_dir.mkdir(parents=True, exist_ok=True)
-
-        # Standard resolved files paths
-        resolved_world_path = resolved_dir / "world.resolved.yaml"
-        compile_context_path = resolved_dir / "compile_context.json"
-        provenance_path = resolved_dir / "provenance_manifest.json"
-        assembly_report_path = resolved_dir / "assembly_report.json"
-        validation_report_path = resolved_dir / "validation_report.json"
-
-        # Write world.resolved.yaml
-        with open(resolved_world_path, "w", encoding="utf-8") as f:
-            yaml.safe_dump(bundle.world_spec.model_dump(exclude_none=True), f, sort_keys=False, allow_unicode=True)
-
-        # Write compile_context.json
-        with open(compile_context_path, "w", encoding="utf-8") as f:
-            json.dump(bundle.compile_context.to_dict(), f, indent=2)
-
-        # Write provenance_manifest.json
-        with open(provenance_path, "w", encoding="utf-8") as f:
-            json.dump(bundle.provenance_manifest.model_dump(exclude_none=True), f, indent=2)
-
-        # Write assembly_report.json
-        with open(assembly_report_path, "w", encoding="utf-8") as f:
-            json.dump(bundle.assembly_report, f, indent=2)
-
-        # Write validation_report.json
-        with open(validation_report_path, "w", encoding="utf-8") as f:
-            json.dump(bundle.validation_report, f, indent=2)
+        bundle, rendered_world_yaml = resolve_composition_file(yaml_path)
+        paths = write_resolved_artifacts(world_dir, bundle, rendered_world_yaml)
 
         print_colored(f"\nResolution successful for world '{world_id}'!", COLOR_GREEN)
-        print(f"  Resolved world spec:    {resolved_world_path.relative_to(repo.worlds_dir)}")
-        print(f"  Compile context:        {compile_context_path.relative_to(repo.worlds_dir)}")
-        print(f"  Provenance manifest:    {provenance_path.relative_to(repo.worlds_dir)}")
-        print(f"  Assembly report:        {assembly_report_path.relative_to(repo.worlds_dir)}")
-        print(f"  Validation report:      {validation_report_path.relative_to(repo.worlds_dir)}")
+        print(f"  Resolved world spec:    {paths['world'].relative_to(repo.worlds_dir)}")
+        print(f"  Compile context:        {paths['compile_context'].relative_to(repo.worlds_dir)}")
+        print(f"  Provenance manifest:    {paths['provenance'].relative_to(repo.worlds_dir)}")
+        print(f"  Assembly report:        {paths['assembly_report'].relative_to(repo.worlds_dir)}")
+        print(f"  Validation report:      {paths['validation_report'].relative_to(repo.worlds_dir)}")
 
         return 0
 
@@ -415,11 +363,12 @@ def handle_generate(args) -> int:
     )
 
     try:
-        mod_repo = WorldModuleRepository(ContentPathConfig().world_modules_dir)
-        mod_repo.load_all()
+        # The CLI is the boundary where resolving content paths against the process cwd is
+        # legitimate; the generator itself takes both repositories injected.
+        cat_repo, mod_repo = load_content_repositories()
 
         generator = ProceduralCompositionGenerator()
-        output_path = generator.generate(intent, mod_repo)
+        output_path = generator.generate(intent, mod_repo, cat_repo)
 
         print(str(output_path))
         return 0
