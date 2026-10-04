@@ -15,10 +15,10 @@ tags: [architecture, mcp, live-map]
 Decorative detail variants for one visual key (forest: plain, bush, tree), picked deterministically from cell coordinates
 
 ## Status
-OPEN
+EPIC_SCOPED
 
 ## Tier
-standard
+epic
 
 ## Type
 feature
@@ -83,6 +83,15 @@ simulation truth with their own data path and keys, a separate initiative.
 - Seed: a fixed constant per release is enough for "same map looks the same"; per-world seeds need world data in the client and are a later choice.
 
 ## Implementation Notes
+Scoped as an epic on 2026-10-04 (asset-planner; user: "proceed, you can wire them into a single PR"). Not implemented
+directly. Children, in order, are in `SEQUENCE.md` in this folder:
+1. `TCK-20261004-VISUAL-ASSETS-DETAIL-AXIS-CONTRACT` — store + runtime-manifest contract (both sides), ADR row, docs.
+2. `TCK-20261004-VISUAL-ASSETS-DETAIL-PICK-CLIENT` — pure `pickDetail`, resolver fallback order, pilot scene.
+3. `TCK-20261004-VISUAL-ASSETS-FOREST-DETAIL-TILES` — draw bush + tree, user adopts each, release `pilot/rc-0002`.
+4. `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN` — affected M5 checks rerun and recorded; epic close-out.
+The acceptance criteria above are the epic's; each one is owned by the child named against it in `SEQUENCE.md`.
+One branch `visual-asset-detail-variants`, based on the held hotfix `TCK-20261004-VISUAL-ASSETS-KILL-TREE-TEST-RACE`
+(commits f1de9af58, 30dbc69b9), which ships in the same PR.
 
 ## Test Summary
 
