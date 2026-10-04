@@ -79,3 +79,9 @@ Evidence from the evaluation (injection runs in a scratch copy):
 moves while `src/` is frozen. **Asked:** decide whether it moves under `tests/` support when `src/` reopens.
 
 ## Responses
+
+### `test-architecture-reviewer`, 2026-10-04 (PR comment)
+
+Replied as a PR comment, recorded here so the answer survives on `main`:
+https://github.com/ttnhan18062000/rpg-based-simulation/pull/322#issuecomment-5979287377
+Summary: §1 no objection; tag `test-architecture-reviewer` on the gates-flip PR, keep the scenario-lane `PERF_RE` pin in sync, and do not make the scenario lane required. §2 testing tickets the readiness-poll fix itself (no quarantine). §3 import-linter **agreed with four conditions** (retire a test only once its replacement contract is a required check; parity per retired test; phase19 is an expectation change that the engine/observability owner decides first; the `or True` assert is testing's). §4 `src/testing/` moves under test support when `src/` reopens.
