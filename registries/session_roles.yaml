@@ -1,0 +1,155 @@
+# Session role manifest: the single source of truth for long-lived interactive sessions.
+# Plan: docs/plans/agent_infrastructure/session_layer_working_process.md (sections 3, 4).
+# Not to be confused with agent-working/agent-orchestration/roles/*.yaml (delegated subagent roles).
+# Validated by tools/sessions/validate.py. Authority lives in registries/session_authority.yaml.
+# Liveness and the current holder are runtime state (derivable); nothing here stores them.
+version: 1
+
+# Domain defaults: a role inherits owns / owns_not / routes from its domain unless it overrides
+# them in its own entry (every override is counted in the complexity report).
+domains:
+  rpg:
+    owns:
+      - src/**
+      - frontend/**
+      - docs/mechanics/**
+      - docs/engine/**
+      - docs/parity_ledger/**
+      - docs/plans/rpg_design_roadmap/**
+      - docs/plans/simulation_semantic_control_plane/**
+      - docs/plans/systemic_world/**
+      - docs/world_rules/**
+      - docs/brainstorm/**
+      - registries/mechanisms.yaml
+      - tests/**
+    owns_not: []
+    routes:
+      "agent-working/**": agent-working-designer
+      ".claude/**": agent-working-designer
+      "tools/agent-monitoring/**": agent-working-designer
+      "docs/plans/test_architecture/**": testing-planner
+      "tests/architecture/**": testing-planner
+  agent-working:
+    owns:
+      - tools/agent-monitoring/**
+      - tools/delivery/**
+      - tools/gate_checks/**
+      - tools/agent_orchestration/**
+      - tools/sessions/**
+      - docs/agent-monitoring/**
+      - docs/plans/agent_infrastructure/**
+      - agent-working/agent-orchestration/**
+      - registries/session_roles.yaml
+      - registries/session_authority.yaml
+      - .claude/agents/**
+      - tests/tools/**
+      - tests/docs/**
+    owns_not:
+      - registries/mechanisms.yaml   # content is rpg-domain; only the advisory tooling around it stays here
+    routes:
+      "registries/mechanisms.yaml": rpg-planner
+      "src/**": rpg-planner
+      "tests/architecture/**": testing-planner
+  testing:
+    owns:
+      - docs/plans/test_architecture/**
+      - tests/architecture/**
+      - tests/mutation/**
+    owns_not: []
+    routes:
+      "src/**": rpg-planner                   # ask before touching RPG logic
+      "docs/mechanics/**": rpg-planner
+      "agent-working/**": agent-working-designer   # process problems
+      "tools/**": agent-working-designer
+
+# Intentional overlaps between domains (a path matched by two domains' owns is an error unless a
+# split here names both domains and covers it).
+ownership_splits:
+  - {paths: ["tests/architecture/**", "tests/mutation/**"], domains: [rpg, testing],
+     reason: "rpg owns tests/** generally; the testing domain owns the architecture and mutation suites"}
+  - {paths: ["tests/tools/**", "tests/docs/**"], domains: [rpg, agent-working],
+     reason: "rpg owns tests/** generally; agent-working owns the tooling and docs suites"}
+
+roles:
+  - role: rpg-designer
+    identity: {domain: rpg, function: designer, session_name: rpg-designer,
+               legacy_session_name: world-rule-catalog-design, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "docs/world_rules/**", "docs/plans/systemic_world/**"]}
+    placement: {worktree: rpg, max_sessions: 1}
+    handover: .claude/handover/rpg-designer.md
+  - role: rpg-planner
+    identity: {domain: rpg, function: planner, session_name: rpg-planner,
+               legacy_session_name: rpg-feature-planning, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, rpg-designer]
+    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/**", "agent-working/tickets/**"]}
+    placement: {worktree: rpg, max_sessions: 1}
+    handover: .claude/handover/rpg-planner.md
+  - role: rpg-implementer
+    identity: {domain: rpg, function: implementer, session_name: rpg-implementer,
+               legacy_session_name: rpg-implementer, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, rpg-planner]
+    capability: {may_write: ["**"]}
+    placement: {worktree: rpg, max_sessions: 1}
+    handover: .claude/handover/rpg-implementer.md
+  - role: agent-working-designer
+    identity: {domain: agent-working, function: designer, session_name: agent-working-designer,
+               legacy_session_name: agent-working-design, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/agent_infrastructure/**"]}
+    placement: {worktree: agent-working, max_sessions: 1}
+    handover: .claude/handover/agent-working-designer.md
+  - role: agent-working-planner
+    identity: {domain: agent-working, function: planner, session_name: agent-working-planner,
+               legacy_session_name: agent-working-design, seat_status: unstaffed,
+               interim_holder: agent-working-designer}   # named holder until the seat is staffed
+    responsibility:
+      accepts_dispatch_from: [user, agent-working-designer]
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**"]}
+    placement: {worktree: agent-working, max_sessions: 1}
+    handover: .claude/handover/agent-working-planner.md
+  - role: agent-working-implementer
+    identity: {domain: agent-working, function: implementer, session_name: agent-working-implementer,
+               legacy_session_name: agent-working-implementer, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, agent-working-designer, agent-working-planner]
+    capability: {may_write: ["**"]}
+    placement: {worktree: agent-working, max_sessions: 1}
+    handover: .claude/handover/agent-working-implementer.md
+  - role: testing-designer
+    identity: {domain: testing, function: designer, session_name: testing-designer,
+               legacy_session_name: null, seat_status: unstaffed,
+               interim_holder: testing-planner}   # the roadmap's author became the reviewer
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/test_architecture/**"]}
+    placement: {worktree: testing, max_sessions: 1}
+    handover: .claude/handover/testing-designer.md
+  - role: testing-planner
+    identity: {domain: testing, function: planner, session_name: testing-planner,
+               legacy_session_name: test-architecture-reviewer, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, testing-designer]
+    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/test_architecture/**", "agent-working/tickets/**"]}
+    placement: {worktree: testing, max_sessions: 1}
+    handover: .claude/handover/testing-planner.md
+  - role: testing-implementer
+    identity: {domain: testing, function: implementer, session_name: testing-implementer,
+               legacy_session_name: test-architecture-implementer, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, testing-planner]
+    capability: {may_write: ["**"]}
+    placement: {worktree: testing, max_sessions: 1}
+    handover: .claude/handover/testing-implementer.md
+
+# Exclusive resources. The writer slot belongs to the worktree, not to a role; the holder must have
+# the implementer function (designers and planners hand drafts, as today). The lease itself is taken
+# at SessionStart by M2 and is runtime state.
+worktrees:
+  rpg: {writer: rpg-implementer}
+  agent-working: {writer: agent-working-implementer}
+  testing: {writer: testing-implementer}
