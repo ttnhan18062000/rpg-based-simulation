@@ -62,7 +62,7 @@ def _fake_tools(monkeypatch, repo, failing=()):
 
 
 def test_the_policy_sets():
-    assert REPORT_ONLY_TOOLS == {"jscpd", "ast_grep"}
+    assert REPORT_ONLY_TOOLS == {"jscpd"}
     assert SKIPPABLE_TOOLS == {"jscpd"}
 
 
@@ -82,7 +82,7 @@ def test_a_new_report_only_finding_is_listed_and_does_not_block(tool):
     assert "Report-only findings" in format_summary(result)
 
 
-@pytest.mark.parametrize("tool", ["ruff", "complexipy", "line_count"])
+@pytest.mark.parametrize("tool", ["ruff", "complexipy", "line_count", "ast_grep"])
 def test_a_new_blocking_finding_blocks(tool):
     result = compare([_f("a.py", "R1", 2, tool=tool)], [])
     assert result.blocking_failed and format_report(result).splitlines()[-1].startswith("FAIL:")
@@ -110,12 +110,13 @@ def test_check_exits_0_and_lists_a_new_jscpd_finding(seeded, capsys):
     assert "(report-only)" in out and "::error::" not in out
 
 
-def test_check_exits_0_and_lists_a_new_ast_grep_finding(seeded, capsys):
+def test_check_exits_1_on_a_new_ast_grep_finding(seeded, capsys):
     path = seeded / "scan" / "ast_grep.json"
     record = {"file": str(seeded / "sample_src" / "bad.py"), "range": {"start": {"line": 0}}, "ruleId": "E3"}
     path.write_text(json.dumps([record]))
-    assert _run(seeded, "check", *_scan_arg(seeded)) == 0
-    assert "ast_grep E3" in capsys.readouterr().out
+    assert _run(seeded, "check", *_scan_arg(seeded), "--annotate") == 1
+    out = capsys.readouterr().out
+    assert "ast_grep E3" in out and "(report-only)" not in out and "::error::code-health:" in out
 
 
 @pytest.mark.parametrize("tool", ["ruff", "complexipy", "line_count"])

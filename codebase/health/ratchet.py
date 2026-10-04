@@ -30,11 +30,13 @@ from codebase.health.registry import Row
 DEFAULT_REPORT_LIMIT = 25
 
 # Tools whose new or worse findings are listed and labelled "report-only" but do not fail `check`
-# (decision 8.10/8.16: jscpd stays report-only; ast-grep until TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING).
-REPORT_ONLY_TOOLS = frozenset({"jscpd", "ast_grep"})
+# (decision 8.16: jscpd stays report-only; ast-grep joined the blocking tools in
+# TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING).
+REPORT_ONLY_TOOLS = frozenset({"jscpd"})
 # Tools that may fail to run without failing `check`: jscpd needs npx and the npm registry. A skipped tool is
-# "not measured", never "gone". Deliberately its own set, never derived from REPORT_ONLY_TOOLS: ast_grep is
-# report-only but a local binary, so it keeps exit 2. Must stay a subset of REPORT_ONLY_TOOLS.
+# "not measured", never "gone". Deliberately its own set, never derived from REPORT_ONLY_TOOLS, so that a blocking
+# tool can never become skippable by accident (ast_grep is a local binary and keeps exit 2). Must stay a subset of
+# REPORT_ONLY_TOOLS.
 SKIPPABLE_TOOLS = frozenset({"jscpd"})
 REPORT_ONLY_LABEL = "(report-only)"
 

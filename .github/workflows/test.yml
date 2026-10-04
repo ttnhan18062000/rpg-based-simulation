@@ -924,7 +924,7 @@ jobs:
   # main, schedule and dispatch -- no job-level `if` and no path-filter gate, because the ratchet reads all of src/
   # and a required check that is skipped would hang in "expected". Exit 1 (a new or worse violation of ruff,
   # complexipy or line counts) and exit 2 (the check cannot run) fail the job; the result lands in the job summary
-  # (changed files first) and an ::error:: annotation. jscpd and ast-grep are report-only: listed, never failing. A
+  # (changed files first) and an ::error:: annotation. jscpd is report-only: listed, never failing. A
   # jscpd that cannot run (npx, the npm registry) is skipped with a summary line and a ::warning::, never exit 2.
   # Branch protection lists this job as "Code health". There is no job-level continue-on-error: a broken setup
   # (runner, uv, Node) must not read as a pass for a required check.

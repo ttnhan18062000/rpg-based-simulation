@@ -286,7 +286,7 @@ code-health-dup: ## Report duplicated Python blocks under src/ with jscpd (repor
 
 # `code-health` is the Python craft-debt ratchet (codebase/health/, codebase/baselines/code_health_exceptions.jsonl).
 # It is unrelated to the codebase-health-* targets, which belong to codebase/reports/codebase_health_*.py.
-code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than codebase/baselines/code_health_exceptions.jsonl (also the blocking `Code health` CI job; jscpd and ast-grep findings are listed but report-only, and a jscpd that cannot run, for example offline, is noted and skipped)
+code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than codebase/baselines/code_health_exceptions.jsonl (also the blocking `Code health` CI job; ruff, complexipy, ast-grep and line-count findings block while jscpd findings are listed but report-only, and a jscpd that cannot run, for example offline, is noted and skipped)
 	python3 -m codebase.health check
 
 # Ratchet over docs/parity_ledger/*.yaml against docs/parity_ledger/schema.json (TCK-20261003-PARITY-LEDGER-SCHEMA-RATCHET).

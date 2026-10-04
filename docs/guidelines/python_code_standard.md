@@ -33,7 +33,7 @@ Every rule has an Enforcement cell with one of:
   job runs the ratchet on every PR, reports in its job summary (changed files first) and fails the PR on a new or
   worse violation. The violations that already exist in `src/` are held in
   `codebase/baselines/code_health_exceptions.jsonl`, and `make code-health` fails only on a new or worse one.
-  jscpd and the ast-grep rules are report-only in that job (a cell says so where it applies). An opt-in pre-commit hook (`make install-prek-hooks`, see "Git hooks (opt-in)" in
+  jscpd is report-only in that job; the ast-grep rules (N3, N4, E3) block like ruff. An opt-in pre-commit hook (`make install-prek-hooks`, see "Git hooks (opt-in)" in
   `docs/guidelines/agent_working_environment.md`) runs the same ratchet on the staged files. The first-run counts are in
   `TCK-20261002-CODE-HEALTH-TOOL-CONFIG`; later counts belong to the code-health snapshot.
 - **mypy, blocking**: mypy is configured (`[tool.mypy]` in `pyproject.toml`), runs blocking in
@@ -118,8 +118,8 @@ Python identifier conventions that section does not state.
 |---|---|---|
 | N1 | Follow `docs/engine/architecture_reference.md` section 9 for what a name means. | reviewer |
 | N2 | Functions, methods, variables and modules are `snake_case`; classes are `PascalCase`; module-level constants are `UPPER_SNAKE_CASE`. | ruff `N` rules, configured |
-| N3 | A leading underscore marks a name as private to its module or class. Do not import a `_private` name from another module. | ast-grep rule `n3-private-name-import` (advisory, own soak) |
-| N4 | No version or sequence markers in new names (`V2` prefix or suffix, `_v2`, `2`, `_new`). Replace the old thing or name the difference. Existing `V2` names are not to be renamed. | ast-grep rule `n4-version-marker-name` (advisory, own soak): `V2` prefix or suffix, `_v2`, `_new` at the end of a def or class name; a trailing digit (`2`) is left to the reviewer |
+| N3 | A leading underscore marks a name as private to its module or class. Do not import a `_private` name from another module. | ast-grep rule `n3-private-name-import` (blocking in the `Code health` ratchet) |
+| N4 | No version or sequence markers in new names (`V2` prefix or suffix, `_v2`, `2`, `_new`). Replace the old thing or name the difference. Existing `V2` names are not to be renamed. | ast-grep rule `n4-version-marker-name` (blocking in the `Code health` ratchet): `V2` prefix or suffix, `_v2`, `_new` at the end of a def or class name; a trailing digit (`2`) is left to the reviewer |
 
 ## 6. Docstrings
 
@@ -145,7 +145,7 @@ Python identifier conventions that section does not state.
 |---|---|---|
 | E1 | No bare `except:`. | ruff `E722`, configured |
 | E2 | Catch the narrowest exception that the code can handle. A justified `except Exception` carries `# noqa: BLE001` and the reason. | ruff `BLE001`, configured; reviewer |
-| E3 | Do not swallow an exception silently. Handle it, log it with context, or re-raise. | ast-grep rule `e3-silent-except` (advisory, own soak): an `except` whose body is only `pass` (comments allowed); other ways of swallowing stay with the reviewer |
+| E3 | Do not swallow an exception silently. Handle it, log it with context, or re-raise. | ast-grep rule `e3-silent-except` (blocking in the `Code health` ratchet): an `except` whose body is only `pass` (comments allowed); other ways of swallowing stay with the reviewer |
 | E4 | When re-raising as a different type, chain it with `raise ... from err`. | ruff `B904`, configured |
 
 ## 9. Module layout
