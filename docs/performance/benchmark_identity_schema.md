@@ -38,10 +38,10 @@ dict that is the "harness dict" below. Its keys: `scenario_id`, `profile` (profi
 | F3 | corpus baseline checks, `tests/tools/test_corpus_perf_baseline.py` | none | asserts `scenario_id`, and that `profile`, `avg_tick_compute_ms`, `tick_ms`, `mem_rss_mb` exist | |
 | F4 | `tools/bench_corpus_world.py` stdout JSON | `bench_corpus_world()` | human, or F1 via `--commit` | seed and warmup are inputs but not written |
 | F5 | `reports/perf/matrix_full.json`, `reports/perf/<scenario>_<scale>_<mode>.json` (git-ignored) | `tools/perf/run_benchmarks.py::run_matrix` | `tools/perf/perf_report.py`, `check_perf_regression.py` | failed scenarios are skipped silently |
-| F6 | `tools/perf/check_perf_regression.py`, `tools/perf/perf_ci.py` | stdout and exit code only | n/a | pairs baseline and report by file name only; a missing report is a skipped warning; second threshold policy (×1.15 or +3 ms on average and per-phase p95, +20 MB RSS) beside F1's `max(5 ms, ×1.25)` |
-| F7 | `reports/perf/baseline.json`, `reports/perf/latest.json` (git-ignored) | `tools/perf/run_perf_baseline.py` (scenario-keyed dict of harness dicts); `tests/perf/bench_worker_throughput.py` (a different, flat shape); `tools/perf/perf_baseline.py` (copies latest to baseline) | `tools/release/generate_optimization_proof.py`, `tests/perf/test_optimization_proof_report.py` | `latest.json`: two writers, two incompatible shapes; `baseline.json`: a copy made by `perf_baseline.py` |
+| F6 | `tools/perf/check_perf_regression.py`, `tools/perf/perf_ci.py` | stdout and exit code only | n/a | pairs baseline and report by file name only; a missing report is a skipped warning; second threshold policy (×1.15 or +3 ms on average and per-phase p95, +20 MB RSS) beside F1's `max(5 ms, ×1.25)`. Fixed by `TCK-20261004-PERF-REGRESSION-CHECK-NO-SILENT-PASS`: profile, sample_ticks and (when both carry it) warmup_ticks must match; a missing or malformed report is not comparable; exit 0 passed, 1 regressed, 2 not comparable (including nothing compared). |
+| F7 | `reports/perf/baseline.json`, `reports/perf/latest.json` (git-ignored) | `tools/perf/run_perf_baseline.py` (scenario-keyed dict of harness dicts); `tests/perf/bench_worker_throughput.py` (a different, flat shape); `tools/perf/perf_baseline.py` (copies latest to baseline) | `tools/release/generate_optimization_proof.py`, `tests/perf/test_optimization_proof_report.py` | `latest.json`: two writers, two incompatible shapes; `baseline.json`: a copy made by `perf_baseline.py`. Fixed by `TCK-20261004-PERF-LATEST-JSON-SINGLE-WRITER`: `bench_worker_throughput.py` now writes `worker_throughput.json`, `perf_baseline.py` runs `run_perf_baseline.py` and `--update` refuses a non-scenario-keyed file. |
 | F8 | `reports/perf/<test name>.json` | `tests/perf/conftest.py::perf_reporter` (any `@pytest.mark.perf` test that sets `perf_results`) | `tools/perf/perf_report.py` fallback glob | the glob can ingest mixed shapes |
-| F9 | `reports/perf/optimization_proof.{json,md}` | `tools/release/generate_optimization_proof.py::run_proof` | `tests/perf/test_optimization_proof_report.py` (key presence, `speedup_x > 0`) | see finding 1 |
+| F9 | `reports/perf/optimization_proof.{json,md}` | `tools/release/generate_optimization_proof.py::run_proof` | `tests/perf/test_optimization_proof_report.py` (key presence, `speedup_x > 0`) | see finding 1 Fixed by `TCK-20261004-PERF-OPTIMIZATION-PROOF-HONEST-CLAIMS` (claims and defaults only): each scenario is now `compared` or `not_comparable` with a reason, the `1.0` fallbacks and fixed conclusion text are gone, and the report is labeled provisional. |
 | F10 | `reports/perf/profiles/comparison.json` | `tools/release/verify_production_profiles.py::run_suite` | none | `{profile: {scenario: {p95_ms, avg_tps, peak_rss} or "CRASHED"}}`, 10 warmup and 10 sample ticks |
 | F11 | `perf_baselines.json` (root; `entries` is `{}`), `.perf_last_run.json` | by hand from `tools/perf_guard.py` proposals; `PerfMeasurePlugin` for the last-run file | `tests/perf/conftest.py::_perf_baselines`, `perf_budget` fixture | per-pytest-nodeid `{time_ms, memory_kb, tolerance_pct, hardware_class, rationale, updated_by, updated_at}`; hardware class is the `PERF_HARDWARE_CLASS` env label (default "B"), not detected |
 | F12 | `src/perf/regression_gate.py` (`PerfBaseline`, `PerfResult`, `PerfGateResult`) | none (never serialized) | `tests/unit/perf/test_perf_regression_gate.py` only | no consumer (`perf_baseline_policy.md` §3); reads `raw_entity_updates` from a top-level key the harness never emits (it writes `metrics.raw_entity_updates`), so it always reads 0 |
@@ -71,11 +71,13 @@ repeated here; the paths and function names are the citations.
    defaults to `1.0`, which inflates the speedup silently, and it compares `PROD_*` runs against a
    baseline whose profile is never checked. F22's `passed_certification` is an outcome claim with
    no runtime identity.
+   Fixed by `TCK-20261004-PERF-OPTIMIZATION-PROOF-HONEST-CLAIMS` for the proof report (the `1.0` defaults, the unchecked profile, the fixed text); `passed_certification` is not changed by it.
 2. **Hardware class is a label, not a measurement.** Every `PERF_*` profile is hard-coded
    `CLASS_A` (`src/perf/profiles.py`), and F11 reads it from an environment variable.
 3. **Comparison run lengths differ from baseline lengths.** The synthetic baselines were taken at 20
    sample ticks, the corpus ones at 1000, and the live test re-measures all of them at warmup 10 and
    sample 50. `check_perf_regression.py` has no length check at all.
+   `check_perf_regression.py` half fixed by `TCK-20261004-PERF-REGRESSION-CHECK-NO-SILENT-PASS`; the live tripwire's 10+50 re-measure is unchanged and waits for the entry gate.
 4. **Percentiles are computed three ways.** The harness uses `sorted[int(n*q)]`, so p95 is the max
    only when n ≤ 20 and p99 is the max only when n ≤ 100. All 12 synthetic baselines (n = 20) record
    p95 = p99 = max, and the live tripwire's 50-tick sample records p99 = max while its p95 is the
@@ -83,6 +85,7 @@ repeated here; the paths and function names are the citations.
    `round(p*(n-1))`.
 5. **Two threshold policies and one name collision.** F1's reader and `check_perf_regression.py`
    disagree (see F6). `reports/perf/latest.json` has two writers with incompatible shapes (`run_perf_baseline.py` and `bench_worker_throughput.py`), and `perf_baseline.py` copies whichever ran last to `baseline.json`.
+   Fixed by `TCK-20261004-PERF-LATEST-JSON-SINGLE-WRITER` (the `latest.json` half only): `latest.json` has one writer, and `perf_baseline.py --update` validates the shape before promoting.
 6. **No performance result format or perf gate has an `INCONCLUSIVE` outcome.** (The word exists
    elsewhere, unrelated: a Gate A read-path verdict in `src/observability/warehouse/adapters.py`
    and `tests/tools/test_gate_a_readpath_review.py`.) The only explicit outcome states are F19's
