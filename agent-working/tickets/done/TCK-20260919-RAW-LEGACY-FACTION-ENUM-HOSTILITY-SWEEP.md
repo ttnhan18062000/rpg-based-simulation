@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP
-phase: open
+phase: done
 date: 2026-09-19
 tags: [combat, faction, root-cause]
 ---
@@ -18,7 +18,7 @@ found at least 7 more real, load-bearing ones across combat, cognition, cooperat
 strategic subsystems — triage and prioritize, do not fix all at once)
 
 ## Status
-INPROGRESS (implementation landed, awaiting Verify/Finalize)
+DONE (implementation landed, awaiting Verify/Finalize)
 
 ## Tier
 standard
@@ -223,9 +223,12 @@ re-swept from scratch:**
 
 ## Related Docs
 - `docs/engine/contracts/combat_contract.md`
+- `docs/mechanics/02_combat_laws.md` (splash targeting now catalog-driven)
+- `docs/mechanics/04_strategic_cognition.md` (concern intake, saliency, partner pool, threat-resolved inputs)
+- `docs/guidelines/intentional_divergences.md` (new Section 2.65, rationale Bug Fix / Unified)
 
 ## Related Stored Artifacts
-_(none yet — filed as a sweep finding, not yet investigated per-site)_
+- `agent-working/stored_artifacts/TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP/` — `investigation.md`, `plan.md`, `test_plan.md`, plus `architecture_verify_output.jsonl` (the production Architecture-Verify JSON, verbatim) and `architecture_verify_full_reply.jsonl` (the reviewer's full verbatim reply including its notes). Moved there at Finalize.
 
 ## Related Code Areas
 - `src/ai/goals/scorers.py` (`CombatEngageScorer.score`)
@@ -247,6 +250,20 @@ _(none yet — filed as a sweep finding, not yet investigated per-site)_
   consumer that misuses them — left open, not asserted as settled.
 
 ## Implementation Notes
+
+### 2026-10-04 — orchestration record (how this ticket was run)
+
+Run as the Epic C criterion 2 rerun. The native `implement-ticket` Workflow could not run it, so it was **hand-executed via the skill path**:
+- `watti6za3`: rejected immediately (`INVALID_ARGS`, missing `start_ts` / `execution_id_suffix`). No agent ran.
+- `wf_ca51b3b4-356`: died with `ReferenceError: bash is not defined` just after Scope (6 agents, ~277k tokens, none reached Implement). The native runtime has no `bash()` and `implement-ticket.js` still calls it at its gate sites. `implement-ticket.js` was not edited.
+- Hand run `execution_id` `claude-TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP-1791116151380-59afb654`. The pre-dispatch sidecar was written by hand (seq 5 Review, 6 Implement, 6 Document-Update, 8 Architecture-Verify, 9 Test, 10 Parity), not by the pipeline.
+- Investigate and Plan agents were **not re-run** (the planning session authored `investigation.md`, `plan.md`, `test_plan.md` on 2026-10-03); both are recorded as skipped. The plan gate (no `Unresolved Questions` heading) ran and was clear.
+- Review needed one re-ask because the first verdict was not an exact enum value (verdict-strictness rule).
+- Every prompt addition is listed in the message sent to test-architecture-reviewer. Architecture-Verify's only additions were the mechanically generated `schema_format_tail.py --schema ARCH_VERIFY_SCHEMA` line and the implementer's file list.
+
+**`test_quality_findings` came back empty by omission, not after a clean review.** The Architecture-Verify reviewer's own notes say it did not read `tests/unit/combat/test_catalog_hostility_sweep.py`, did not trace one `concerns.append(...)` hit, and did not check the parity ledger or doc edits. Nothing here claims the new tests were reviewed by the reviewer.
+
+**Test gate.** The Test phase returned `passed: false` (4654 passed, 2 failed) and the pipeline halted at `TESTS_FAILED`. The gate was not overridden. With the owner's go-ahead the two failing tests were run on a clean checkout of `246ee09f7` (the base this branch sits on, none of this ticket's changes) and **both fail there identically**: `test_bravery_quartile_combat_rate_2x` (`seed=4: quartile size collapsed to 1 (n_alive=7)`) and `test_long_run_stability` (conftest `TimeoutError`, 93.9s run). A further run of the seven directories the scoper had not run (`tests/unit/{content,kernel,quest,resource,tools}`, `tests/mutation`, `tests/simulation_quality`): 1555 passed, 65 skipped, 0 failed. The post-Test cleanup removed this worktree's own `data/runs`.
 
 ### 2026-10-04 — implemented (all three groups, measured per group)
 
@@ -406,6 +423,7 @@ closed, since real work remains and the finding above is valuable and durable re
 the rest resumes.
 
 ## Test Summary
+Final gate state: 2 failures, both verified pre-existing at `246ee09f7` (see the orchestration record); the 7 directories the scoper skipped are green (1555 passed). Details of the implementer's runs:
 New `tests/unit/combat/test_catalog_hostility_sweep.py`: 15 tests, 12 fail at HEAD and all 15 pass after (both error
 directions per site, a neutral case, an inversion guard for splash, shared-helper identity). Scoped runs after the
 change: `tests/unit` + `tests/engine` 6199 passed, 3 skipped; `tests/integration` + `tests/mechanic_scenarios` +
@@ -425,7 +443,9 @@ Implementation Notes).
 - `docs/mechanics/04_strategic_cognition.md`
 - `docs/guidelines/intentional_divergences.md` (new Section 2.65)
 - `docs/parity_ledger/combat_movement.yaml` (COMB-326; the writer re-wrapped some neighbouring entries' YAML line breaks)
-- `docs/parity_ledger/strategic_cognition.yaml` (STRAT-275)
+- `docs/parity_ledger/strategic_cognition.yaml` (STRAT-275; STRAT-263 cross-reference)
+- `docs/parity_ledger/combat_movement.yaml` also: COMB-030, COMB-035, COMB-261 (v2_evidence plus P0 `test_path` set to the sweep tests) and COMB-303 (cross-reference)
+- `agent-working/staging_artifacts/TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP/architecture_verify_output.jsonl` and `architecture_verify_full_reply.jsonl` (new)
 - `agent-working/tickets/inprogress/TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP.md`
 - `agent-working/tickets/done/TCK-20260915-SENSORY-FILTER-SALIENCY-USES-LEGACY-FACTION-ENUM.md` (moved from `todos/`, closed as folded)
 - `agent-working/staging_artifacts/TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP/plan.md` (Deviations section)
@@ -437,4 +457,4 @@ through the single shared `are_entities_hostile` helper item 1 created, plus a n
 ally test. Measured per group on two corpus worlds: over-detection, not the predicted under-detection, dominates;
 splash and lead observation never run in the corpus, so they are proven by unit tests only. 15 new tests; the
 sibling saliency ticket is closed as folded. Open: `frontier_living_world` is bimodal across repeats from Group B on
-(not attributed), and two integration tests fail identically at HEAD.
+(not attributed), and two integration tests fail identically on the base `246ee09f7` (verified, not assumed).

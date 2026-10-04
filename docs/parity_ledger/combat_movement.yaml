@@ -377,9 +377,12 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: 'Implementation proven via exhaustive checklist audit Phase 1-11 TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP:
+    resolve_aoe_attack in src/engine/combat.py now skips victims the content catalog
+    calls not hostile (are_entities_hostile).'
   proof_type: null
-  test_path: null
+  test_path: tests/unit/combat/test_catalog_hostility_sweep.py::TestSplashFriendlyFire::test_same_bucket_catalog_hostile_victim_is_splashed;
+    tests/unit/combat/test_catalog_hostility_sweep.py::TestSplashFriendlyFire::test_different_bucket_catalog_friendly_victim_is_not_splashed
   divergence_note: null
   support_boundary: null
 - id: COMB-031
@@ -428,9 +431,11 @@
   status: legacy_verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: 'Implementation proven via exhaustive checklist audit Phase 1-11 TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP:
+    flanking in src/engine/legality.py check_flanking uses catalog are_entities_hostile.'
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/combat/test_catalog_hostility_sweep.py::TestFlanking::test_same_bucket_catalog_hostile_flankers_flank;
+    tests/unit/combat/test_catalog_hostility_sweep.py::TestFlanking::test_different_bucket_catalog_friendly_neighbours_do_not_flank
   divergence_note: null
   support_boundary: null
 - id: COMB-036
@@ -2794,9 +2799,12 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: 'Implementation proven via exhaustive checklist audit Phase 1-11 TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP:
+    AoE friendly-fire decided by catalog hostility in src/engine/combat.py resolve_aoe_attack;
+    own faction and neutrals never splashed.'
   proof_type: null
-  test_path: null
+  test_path: tests/unit/combat/test_catalog_hostility_sweep.py::TestSplashFriendlyFire::test_own_faction_and_neutral_are_never_splashed;
+    tests/unit/combat/test_catalog_hostility_sweep.py::TestSplashFriendlyFire::test_different_bucket_catalog_friendly_victim_is_not_splashed
   divergence_note: null
   support_boundary: null
 - id: COMB-262
@@ -3611,9 +3619,9 @@
     distances 2-12) -- a distinct, downstream pursuit-convergence bottleneck, not
     this bug, filed separately as TCK-20260809-COMBAT-PURSUIT-NEVER-CLOSES-TO-MELEE-RANGE.
     combat_damage/entity_killed remain zero in this specific 2000-tick window -- not
-    claimed as fully resolved.
-
-    '
+    claimed as fully resolved. TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP:
+    remaining raw-legacy-enum hostility sites downstream of identity resolution (splash,
+    flanking) now use the same catalog helper; see COMB-326.'
   proof_type: regression
   test_path: tests/unit/entities/test_entity_identity_resolver.py::test_faction_id_alone_resolves_clean_not_collapsed_to_neutral;
     tests/unit/entities/test_entity_identity_resolver.py::test_faction_id_alone_with_unmappable_legacy_role_gets_unresolved_role;

@@ -4059,8 +4059,11 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/engine/tactical.py:212-216 (RelationContext(source_species=get_species_id_str(entity),
+  v2_evidence: 'src/engine/tactical.py:212-216 (RelationContext(source_species=get_species_id_str(entity),
     target_species=get_species_id_str(n)) feeding is_hostile_compat() -> hostiles.append(n)).
+    TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP: sibling hostility sites
+    (intake danger, saliency, outnumbered ratio) moved to catalog are_entities_hostile;
+    see STRAT-275.'
   proof_type: regression
   test_path: tests/unit/combat/test_species_relations_tactical_wiring.py
   divergence_note: null
