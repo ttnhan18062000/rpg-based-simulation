@@ -9,17 +9,19 @@ opened only when the planner says it is ready and the user authorizes the push; 
 
 ## Order
 
-1. `TCK-20261004-VISUAL-ASSETS-DETAIL-AXIS-CONTRACT` (P2, standard) — separate `detail` field on a key (values +
-   default), `detail_value` on adoption (None = default, keeps the pilot adoption), slots per `(key, value)` through
-   release candidate and runtime manifest (`details` block), TS parser mirror, ADR row, docs. Epic ACs 1 and 3.
-2. `TCK-20261004-VISUAL-ASSETS-DETAIL-PICK-CLIENT` (P2, standard) — pure `pickDetail` (FNV-1a, documented), resolver
-   fallback picked -> default -> role fallback, pilot scene, golden vectors + two mutants, spread for the user. Epic ACs 2 and 5.
-3. `TCK-20261004-VISUAL-ASSETS-FOREST-DETAIL-TILES` (P2, standard) — bush + tree drawn, **adopted by the user** per slot,
-   `pilot/rc-0002`, fresh runtime fixture. Ends `BLOCKED` on the user's adoptions if not given. Epic AC 4.
-4. `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN` (P2, standard) — affected M5 checks rerun and recorded; epic close-out.
+1. `TCK-20261004-VISUAL-ASSETS-DETAIL-AXIS-CONTRACT` — DONE (e6c003892, fix 7fe7aa5cb).
+2. `TCK-20261004-VISUAL-ASSETS-DETAIL-PICK-CLIENT` — DONE (8b537c002); even spread approved by the user.
+3. `TCK-20261004-VISUAL-ASSETS-FOREST-DETAIL-TILES` (P2, standard) — bush + tree, adopted by the user
+   (ad-5615d03ed5a98f0a, ad-34303489f1e5db70), `pilot/rc-0002`. The last per-tile adoption in this batch.
+4. `TCK-20261004-VISUAL-ASSETS-DRAFT-SETS-AND-SET-ADOPTION` (P2, standard) — tracked draft sets outside the catalog,
+   `draft keep` / `draft verify`, and the user-only `adopt-set` (one confirmation, one record per entry, all or nothing).
+5. `TCK-20261004-VISUAL-ASSETS-DRAFT-PREVIEW-PAGE` (P2, standard) — draft preview manifest (own record type) and an
+   isolated whole-map preview page covering every terrain code.
+6. `TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET` (P2, standard) — one draft per Live Map terrain code in set
+   `terrain-v1`; no adoption. Epic close-out.
 
-1 before 2 (the client parses the new manifest fields). 3 needs 1 (the `--detail` option) and is shown with 2.
-4 is last because it measures what 1-3 produced.
+4 before 5 (the page reads draft sets), both before 6. `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN` was moved to
+`todos/` root, deferred until a set is adopted.
 
 ## Decisions
 
@@ -30,5 +32,8 @@ opened only when the planner says it is ready and the user authorizes the push; 
 - Budgets: the implementer measured the detail fields over `MAX_MANIFEST_BYTES` (runtime ~404820 B with no `details`
   block). Owner, 2026-10-04 (blocking question): raise `MAX_MANIFEST_BYTES` to 524288 (8 x 64 KiB), new
   `MAX_DETAIL_VALUES = 16` and `MAX_DETAIL_KEYS = 64`; total manifest entries stay at most `MAX_VISUAL_KEYS`.
+- Per-tile adoption replaced by drafts + whole-set review: user, 2026-10-04 (blocking question "Drafts now, batch
+  review"). The bush/tree adoptions already given stay (user, same day); the M5 rerun is deferred (user, same day).
+  Adoption stays the human gate (`AM-F01`); its unit becomes a reviewed set.
 - Each ticket was written before the previous one was built. Before starting a ticket, re-check it against what actually
   landed; where they disagree, tell the planner instead of guessing.

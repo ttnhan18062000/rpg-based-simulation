@@ -65,6 +65,9 @@ Last child of `TCK-20261004-VISUAL-ASSETS-TERRAIN-DETAIL-VARIANTS`. With `plain`
 - None.
 
 ## Implementation Notes
+DEFERRED by the user, 2026-10-04 (blocking question): rerun M5 once a full draft set has been reviewed and adopted
+(`adopt-set`), so one review covers a whole map. Moved out of the detail-variants batch; re-scope against the adopted set
+before starting.
 
 ## Test Summary
 
