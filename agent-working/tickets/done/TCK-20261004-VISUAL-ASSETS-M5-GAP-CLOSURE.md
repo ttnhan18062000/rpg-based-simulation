@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-VISUAL-ASSETS-M5-GAP-CLOSURE
-phase: open
+phase: done
 date: 2026-10-04
 tags: [live-map, testing, architecture]
 ---
@@ -15,7 +15,7 @@ tags: [live-map, testing, architecture]
 Close the `AM-M5` gaps for the terrain role: crowded-scene criteria and review, supported-client matrix, preserved-information contract and colour-vision check
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -52,11 +52,11 @@ role. Child 3 of `TCK-20261004-EPIC-VISUAL-ASSET-PILOT-READINESS`.
 - Any new art.
 
 ## Acceptance Criteria
-- [ ] Criteria for W03 and the W05 pass rule are committed before the review/run that uses them (commit order shows it).
-- [ ] The user's W03 review and W07 matrix approval are recorded with date and wording.
-- [ ] Each client in the approved matrix has a recorded capture result; none is claimed that was not run.
-- [ ] Tests show the terrain fallback (fill + hover text) for missing, corrupt, late and invalid-manifest cases.
-- [ ] `isolation.test.ts` still passes: nothing in the normal app imports `visualAssets`; frontend `vitest`, `eslint`, `npm run build` pass.
+- [x] Criteria for W03 and the W05 pass rule are committed before the review/run that uses them (commit order shows it).
+- [x] The user's W03 review and W07 matrix approval are recorded with date and wording.
+- [x] Each client in the approved matrix has a recorded capture result; none is claimed that was not run.
+- [x] Tests show the terrain fallback (fill + hover text) for missing, corrupt, late and invalid-manifest cases.
+- [x] `isolation.test.ts` still passes: nothing in the normal app imports `visualAssets`; frontend `vitest`, `eslint`, `npm run build` pass.
 
 ## Related Tickets
 - TCK-20261003-VISUAL-ASSETS-SURFACE-REHEARSAL (done), TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE
@@ -76,9 +76,17 @@ role. Child 3 of `TCK-20261004-EPIC-VISUAL-ASSET-PILOT-READINESS`.
 - Firefox may not be installed for Playwright locally; if so, say so and ask the user to shrink the matrix rather than skip silently.
 
 ## Implementation Notes
+Two commits, because the first acceptance criterion needs the criteria committed before the review: `31eaf3f8b` (criteria) then the build and results. The ticket's own wording "terrain/forest" is the real key `terrain.forest`.
+Pilot page `rehearsal-pilot.html` + `PilotHarness`/`pilotScene`; the old rehearsal page and harness are unchanged. Real export committed as a fixture with an equality test. Details and traps: `investigation.md`.
+Results: `docs/assets/pilot_terrain_m5_results.md`. W03 `PASS` (owner, all five criteria yes), W05 `PASS` by the predeclared rule (with the weak-baseline caveat stated), W07 approved matrix Chromium 148 + Chrome 151 at DPR 1 and 2, all four ran and passed; Firefox not in the matrix and not run.
 
 ## Test Summary
+frontend vitest 111 passed; `eslint src/visualAssets rehearsal-capture playwright.pilot.config.ts` clean; `npm run build` ok; whole-project `eslint .` has 18 pre-existing errors in files this ticket does not touch. `pytest tests/visual_assets` passed (see below). Browser captures: 4 clients x 4 tests, 16 passed (local).
 
 ## Files Changed
+- docs/assets/pilot_terrain_m5_criteria.md, docs/assets/pilot_terrain_m5_results.md (new), docs/assets/store_contract.md
+- frontend/src/visualAssets/{pilotScene,pilotSource,PilotHarness,pilotMain}.ts(x), __fixtures__/pilot/, __tests__/pilotScene.test.ts; frontend/rehearsal-pilot.html, playwright.pilot.config.ts, rehearsal-capture/pilot.capture.ts
+- tests/visual_assets/pilot_colour_vision.py, test_pilot_colour_vision.py, test_pilot_fixture.py
 
 ## Completion Summary
+The terrain role's AM-U21 contract is defined and tested; W03, W05 and W07 have recorded evidence for the one pilot role. Nothing is activated; the normal Live Map is untouched. Ticket 5 re-classifies the M5 deliverables.

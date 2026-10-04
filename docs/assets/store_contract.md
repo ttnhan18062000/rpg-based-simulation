@@ -145,7 +145,7 @@ There is no MCP tool that adopts, revokes, builds, releases, deletes or activate
 Runtime activation, a resolver in the real client, Live Map and HUD consumption, signing, client compatibility ranges, more than one scale class, atlases and animation export
 (`AM-M6`/`M7`, `AM1-W08`). Built since: the runtime manifest and `export-runtime` (above) and an **isolated** `AM-M5` surface rehearsal on synthetic fixtures in
 `frontend/src/visualAssets/` (a strict parser, resolver, typed fallbacks and single-generation loader that nothing in the normal app imports); its per-gate result, overall
-`INCONCLUSIVE`, is `docs/assets/surface_rehearsal_result.md`. Open decisions are listed at the end of this page.
+`INCONCLUSIVE`, is `docs/assets/surface_rehearsal_result.md`; the pilot terrain tile's gap results (reviewer criteria, colour-vision check, client matrix) are in `docs/assets/pilot_terrain_m5_results.md`. Open decisions are listed at the end of this page.
 
 ## Known gaps (stated, not hidden)
 
