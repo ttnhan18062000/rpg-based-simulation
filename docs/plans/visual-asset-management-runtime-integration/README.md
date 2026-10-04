@@ -45,6 +45,14 @@ rehearsal** ran on synthetic fixtures with the normal Live Map, HUD and simulati
 `AM5-W01`, `W02`, `W04`, `W06`, `W08` `PASS` within their stated scope; `W03`, `W05`, `W07` `INCONCLUSIVE`; `W09` `BLOCKED`; gates `AM-C05` and `AM-C07` `INCONCLUSIVE`, `AM-C06` and
 `AM-C09` `BLOCKED`. `AM-M6` and `AM-M7` stay dormant; no gate toward activation passed.
 
+## Status update 2026-10-04 (decisions by the user)
+
+- `U-05`: every row of `docs/assets/budgets.md` approved by the owner on PR #309; retention stays the one unset row.
+- Batch `TCK-20261004-EPIC-VISUAL-ASSET-PILOT-READINESS` (folder `agent-working/tickets/todos/visual-asset-pilot-readiness/`) filed to make
+  `AM-M6` *ready to authorize*: one real **terrain** tile adopted by the user (the pilot role kind the user chose; planner recommends Forest),
+  the `AM-M5` gaps closed for that role, retention and rollback, an M5 rerun and an `AM6-W01` charter **draft**.
+- `AM-M6` execution stays `NO-GO` until the user signs the charter and gives a new explicit authorization. `AM-M7` stays dormant.
+
 ## Status and authorization boundary
 
 This package translates the P2
