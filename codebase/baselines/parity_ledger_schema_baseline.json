@@ -1,0 +1,41 @@
+{
+  "counts": {
+    "combat_movement.yaml": {
+      "allOf/0/then/properties/test_path/type": 241,
+      "allOf/2/else/then/properties/test_path/type": 269,
+      "properties/proof_type/enum": 4
+    },
+    "infrastructure.yaml": {
+      "allOf/0/then/properties/test_path/type": 149,
+      "allOf/2/else/then/properties/test_path/type": 162,
+      "properties/proof_type/enum": 19
+    },
+    "progression.yaml": {
+      "allOf/0/then/properties/test_path/type": 89,
+      "allOf/2/else/then/properties/test_path/type": 99
+    },
+    "social_narrative.yaml": {
+      "allOf/0/then/properties/test_path/type": 166,
+      "allOf/2/else/then/properties/test_path/type": 210
+    },
+    "strategic_cognition.yaml": {
+      "allOf/0/then/properties/test_path/type": 142,
+      "allOf/2/else/then/properties/test_path/type": 198
+    },
+    "substrate.yaml": {
+      "allOf/0/then/properties/test_path/type": 308,
+      "allOf/2/else/then/properties/test_path/type": 355,
+      "properties/proof_type/enum": 1
+    },
+    "town_resource.yaml": {
+      "allOf/0/then/properties/test_path/type": 130,
+      "allOf/2/else/then/properties/test_path/type": 144,
+      "properties/proof_type/enum": 1
+    },
+    "world_dynamics.yaml": {
+      "allOf/0/then/properties/test_path/type": 87,
+      "allOf/2/else/then/properties/test_path/type": 88
+    }
+  },
+  "version": 1
+}

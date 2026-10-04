@@ -138,7 +138,7 @@ uv export --frozen --no-hashes --no-emit-project -o requirements.txt
 **After the Python Code Craft branch merges, every existing environment (the main checkout's
 `.venv`, other worktrees) must re-run `uv sync --system-certs` or `pip install -r requirements.txt`.**
 `ruff` and `complexipy` are now `lint` dependencies (the advisory `Code health (advisory)` and `Code health SARIF (advisory)` jobs sync them too), and the codebase-health snapshot measures with them
-live, so tests such as `tests/tools/test_codebase_health_snapshot.py`'s throwaway-repository tests fail
+live, so tests such as `tests/codebase/test_codebase_health_snapshot.py`'s throwaway-repository tests fail
 in an older environment with `complexipy not found: install the project environment (uv sync)`. That
 failure is deliberate: the snapshot never silently skips its craft metrics. CI is unaffected because
 the one job that runs those tests (`tools-a-e`) syncs the `lint` group, and `requirements.txt` carries both tools.
@@ -172,9 +172,11 @@ Three advisory CI jobs report on a pull request; none of them can fail it during
    accepted only because the `if` keeps fork PRs out and a same-repository author already has write access.
    Do not widen that `if` (for example to `pull_request_target`) without a new security review.
 3. Locally: `make code-health` (ratchet), `make typecheck-py` (mypy through the baseline) and
-   `python3 -m tools.code_health.sarif_feedback --changed FILE --out SARIF` (the SARIF the job would upload).
+   `python3 -m codebase.gates.sarif_feedback --changed FILE --out SARIF` (the SARIF the job would upload).
 
 ### Git hooks (opt-in)
+
+The hook scripts and the installer live in `codebase/hooks/` (moved from `tools/hooks/` by `TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE`; `post-commit-reindex.sh` stays in `tools/hooks/`). prek's generated shim reads `.pre-commit-config.yaml` when a commit runs, so an existing install picks up the new paths by itself; re-running `make install-prek-hooks` is idempotent and safe if you want to be sure.
 
 Two optional hooks, installed only when someone runs `make install-prek-hooks`; nothing installs them
 automatically (no make target, script, CI step or session hook), and CI stays the real gate.
@@ -182,7 +184,7 @@ automatically (no make target, script, CI step or session hook), and CI stays th
 - **What they do.** `pre-commit` (run by [prek](https://github.com/j178/prek), pinned in the `dev` group,
   configured in `.pre-commit-config.yaml`): `code-health-ratchet` runs ruff on the staged `src/**/*.py` files
   and rejects the commit only for a violation that is **new or above its row** in
-  `registries/code_health_exceptions.jsonl` (a commit touching only grandfathered code passes; it uses the
+  `codebase/baselines/code_health_exceptions.jsonl` (a commit touching only grandfathered code passes; it uses the
   ratchet's own NEW / WORSE report); `uv-lock-check` runs `uv lock --check --offline` only when
   `pyproject.toml` or `uv.lock` is staged (no network, ever). `post-commit` is the incremental knowledge reindex
   (`tools/hooks/post-commit-reindex.sh`, a no-op unless docs/ or `agent-working/tickets/done/` changed and a
@@ -192,7 +194,7 @@ automatically (no make target, script, CI step or session hook), and CI stays th
   worktrees of this repository, so once anyone installs, the pre-commit hook runs on every commit in every
   worktree, including ones with no project environment and ones on a branch cut before this config existed. The
   hooks therefore never block for a missing environment: without ruff, without the registry, without
-  `tools.code_health` or without `uv` they print one visible `... skipped: ...` line and exit 0. The same holds for
+  `codebase.health` or without `uv` they print one visible `... skipped: ...` line and exit 0. The same holds for
   prek's own hook: the installer uses `--allow-missing-config` (a tree with no `.pre-commit-config.yaml` commits
   normally, silently) and adds a guard to prek's generated `pre-commit` script, so if prek itself cannot be found (the
   environment was re-synced without it, or deleted) it prints `pre-commit hook skipped: prek not found ...` and
@@ -209,7 +211,7 @@ automatically (no make target, script, CI step or session hook), and CI stays th
 - **Uninstall.** `make uninstall-prek-hooks` removes prek's pre-commit shim (restoring a legacy hook, if
   any) and removes `post-commit` only if it is byte-identical to the repository's reindex hook.
 - **Verify in a scratch clone, never here.** To try the hooks, `git clone --no-hardlinks` the repository into a
-  scratch directory and run the installer there (`python3 tools/hooks/install_git_hooks.py install --repo <clone>`);
+  scratch directory and run the installer there (`python3 -m codebase.hooks.install_git_hooks install --repo <clone>`);
   installing in the main checkout changes the shared hooks of every session on the machine.
 
 ---

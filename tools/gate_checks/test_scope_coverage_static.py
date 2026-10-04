@@ -143,6 +143,9 @@ _TOOLS_PERF_BASENAME_MAP = {
     "hash_callsite_inventory.py": "tests/tools/",
     "perf_threshold_inventory.py": "tests/tools/",
     "wall_clock_inventory.py": "tests/tools/",
+    "perf_baseline.py": "tests/tools/",
+    "check_perf_regression.py": "tests/tools/",
+    "perf_ci.py": "tests/tools/",
     "profile_tick.py": "tests/tools/",
     "profile_diff.py": "tests/tools/",
     "flag_attribution.py": "tests/tools/",
@@ -187,6 +190,11 @@ def expected_test_dirs_for(path: str) -> "str | None":
         if re.match(r"^tools/[^/]+\.py$", path):
             return "tests/tools/"
         return None
+
+    if path.startswith("codebase/"):
+        # The codebase domain root (TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE): its code, hooks, baselines and config
+        # are covered by tests/codebase/. The README is prose, not this check's concern.
+        return None if path == "codebase/README.md" else "tests/codebase/"
 
     if path.startswith("src/"):
         parts = path.split("/")

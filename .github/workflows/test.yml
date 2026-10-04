@@ -339,10 +339,12 @@ jobs:
       # nothing can be skipped. Keep the literal path `tests/tools` in both jobs
       # (tools/gate_checks/ci_workflow_test_coverage.py reads it as the covered directory). To
       # rebalance, change the letter ranges here and in the sibling tools job together.
+      # tests/codebase (the codebase domain's tests, TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE) runs here, not in
+      # arch-docs: this job installs the lint group, so the ruff/complexipy/mypy-baseline tests really run.
       - name: "Run: tests/tools (a–e)"
         if: always()
         run: |
-          pytest tests/tools --ignore-glob='tests/tools/test_[f-z]*.py' -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/tools tests/codebase --ignore-glob='tests/tools/test_[f-z]*.py' -m "not slow and not extra_slow" --tb=short -q \
                  --junit-xml=reports/junit/tools-a-e.xml
       - name: Upload JUnit XML
         if: always()
@@ -366,7 +368,8 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           if [ -d /tmp/base-checkout ]; then
-            cd /tmp/base-checkout && pytest tests/tools --ignore-glob='tests/tools/test_[f-z]*.py' \
+            # tests/codebase does not exist on a base that predates the domain root: pass it only when present
+            cd /tmp/base-checkout && pytest tests/tools $( [ -d tests/codebase ] && echo tests/codebase ) --ignore-glob='tests/tools/test_[f-z]*.py' \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
       - name: Job summary
@@ -873,12 +876,12 @@ jobs:
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       # TCK-20261003-MYPY-BASELINE-ADVISORY: runs `mypy src/ --config-file pyproject.toml` through
-      # mypy-baseline (registries/mypy_baseline.txt) so only errors not in the baseline are reported. Advisory
+      # mypy-baseline (codebase/baselines/mypy_baseline.txt) so only errors not in the baseline are reported. Advisory
       # for the two-week soak: the gate returns 1 on new errors and 2 if it cannot run, and the step's
       # continue-on-error keeps the job green; the job summary states the new-error count and the baseline
       # size, and a ::warning:: annotation marks a failure. Blocking is TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING.
       - name: mypy
-        run: python3 -m tools.code_health.mypy_gate --summary-out "$GITHUB_STEP_SUMMARY" --annotate
+        run: python3 -m codebase.gates.mypy_gate --summary-out "$GITHUB_STEP_SUMMARY" --annotate
         continue-on-error: true
 
   # ── SimQ grade-anchor drift (informational) ──────────────────────────────
@@ -912,8 +915,8 @@ jobs:
         continue-on-error: true
 
   # ── Code health ratchet (advisory soak) ────────────────────────────────────
-  # TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB: runs `python3 -m tools.code_health check`
-  # (ruff, complexipy, jscpd, line counts against registries/code_health_exceptions.jsonl) on every PR,
+  # TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB: runs `python3 -m codebase.health check`
+  # (ruff, complexipy, jscpd, line counts against codebase/baselines/code_health_exceptions.jsonl) on every PR,
   # push to main, schedule and dispatch -- no job-level `if` and no path-filter gate, because the ratchet
   # reads all of src/. Advisory for the two-week soak (roadmap decision 8.10): the check step has
   # `continue-on-error`, so a ratchet exit of 1 or 2 leaves this job green and the result lands in the job
@@ -942,7 +945,12 @@ jobs:
           fi
         continue-on-error: true
       - name: Code health ratchet
-        run: python3 -m tools.code_health check --summary-for /tmp/changed.txt --summary-out "$GITHUB_STEP_SUMMARY" --annotate
+        run: python3 -m codebase.health check --summary-for /tmp/changed.txt --summary-out "$GITHUB_STEP_SUMMARY" --annotate
+        continue-on-error: true
+      # TCK-20261004-PACKAGE-REGISTRY-VALIDATOR: advisory like the ratchet, with its own continue-on-error so it
+      # stays advisory when the ratchet step above flips to blocking (TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING).
+      - name: Package registry
+        run: python3 -m codebase.structure.packages validate --summary-out "$GITHUB_STEP_SUMMARY" --annotate
         continue-on-error: true
 
   # ── Code health SARIF feedback (advisory soak) ────────────────────────────
@@ -985,7 +993,7 @@ jobs:
       - name: Code health SARIF
         id: sarif
         if: ${{ steps.changed.outcome == 'success' }}
-        run: python3 -m tools.code_health.sarif_feedback --changed /tmp/changed.txt --out reports/code_health/code-health.sarif --summary-out "$GITHUB_STEP_SUMMARY" --annotate
+        run: python3 -m codebase.gates.sarif_feedback --changed /tmp/changed.txt --out reports/code_health/code-health.sarif --summary-out "$GITHUB_STEP_SUMMARY" --annotate
         continue-on-error: true
       - name: Upload SARIF to code scanning
         if: ${{ steps.sarif.outcome == 'success' }}

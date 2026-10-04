@@ -32,14 +32,14 @@ Every rule has an Enforcement cell with one of:
   run on demand (below). It is **advisory in CI (soak)**: the `Code health (advisory)` job runs the
   ratchet on every PR and reports in its job summary (changed files first) and one warning annotation,
   but no CI job or hook fails on it yet. The violations that already exist in `src/` are held in
-  `registries/code_health_exceptions.jsonl`, and `make code-health` fails only on a new or worse one.
+  `codebase/baselines/code_health_exceptions.jsonl`, and `make code-health` fails only on a new or worse one.
   Blocking comes after the two-week soak (roadmap M4). Until then such a rule is enforced by review
   plus that advisory check. An opt-in pre-commit hook (`make install-prek-hooks`, see "Git hooks (opt-in)" in
   `docs/guidelines/agent_working_environment.md`) runs the same ratchet on the staged files. The first-run counts are in
   `TCK-20261002-CODE-HEALTH-TOOL-CONFIG`; later counts belong to the code-health snapshot.
 - **mypy, advisory today**: mypy is configured (`[tool.mypy]` in `pyproject.toml`) but runs
   non-blocking in `make typecheck-py` and CI, and five packages are excluded. Existing errors are held in
-  `registries/mypy_baseline.txt` (mypy-baseline 0.7.4, configured in `[tool.mypy_baseline]`; **1569
+  `codebase/baselines/mypy_baseline.txt` (mypy-baseline 0.7.4, configured in `[tool.mypy_baseline]`; **1569
   entries** at `TCK-20261003-MYPY-BASELINE-ADVISORY`, one per error, line numbers normalised to 0, notes
   ignored), so `make typecheck-py` and the CI `mypy` step report only errors that are not in it. The CI
   job summary prints the new-error count and the current baseline size on every run. A fixed error does
@@ -59,13 +59,13 @@ in `pyproject.toml` (`[tool.ruff.lint.mccabe]`, `[tool.ruff.lint.pylint]`, `[too
 | `make code-health-complexity` | functions over the cognitive-complexity limit (complexipy) |
 | `make code-health-size` | functions, classes and modules over the length limits |
 | `make code-health-dup` | duplicated Python blocks under `src/` (jscpd, pinned in the Makefile) |
-| `make code-health` | all four tools, then the ratchet: fails only on a violation that is new or above its row in `registries/code_health_exceptions.jsonl` |
+| `make code-health` | all four tools, then the ratchet: fails only on a violation that is new or above its row in `codebase/baselines/code_health_exceptions.jsonl` |
 
 The registry rows are matched by file, symbol, tool and rule, never by line, so moving code does
-not make an old violation look new. Do not edit the file by hand: `python3 -m tools.code_health
+not make an old violation look new. Do not edit the file by hand: `python3 -m codebase.health
 tighten` lowers ceilings and removes rows for debt you paid, `delete` removes one row, and a ruff or
 complexipy version bump needs `seed --force` (which keeps each surviving row's `reviewed`, `retiring_ticket` and `added_date`). The match key for each tool is documented in
-`tools/code_health/findings.py`.
+`codebase/health/findings.py`.
 
 Where a rule allows a justified exception and also names a tool (E2, M1), the tool cannot read a
 plain comment. In new or changed code the exception is written as `# noqa: <code>` followed by the
@@ -91,15 +91,15 @@ limits backed by controlled evidence.
 
 | ID | Measure | Limit | Enforcement |
 |---|---|---|---|
-| S1 | Function length | warn over 50 lines, fail over 80 | `tools/code_health/line_count.py`, configured |
+| S1 | Function length | warn over 50 lines, fail over 80 | `codebase/health/line_count.py`, configured |
 | S2 | Statements per function | 50 | ruff `PLR0915`, configured |
 | S3 | Cyclomatic complexity | 10 | ruff `C901`, configured |
 | S4 | Cognitive complexity | 15 | complexipy, configured |
 | S5 | Arguments per function | 5 | ruff `PLR0913`, configured |
 | S6 | Branches per function | 12 | ruff `PLR0912`, configured |
 | S7 | Nesting depth | 5 | ruff `PLR1702` (a preview rule, enabled by exact code), configured |
-| S8 | Class length | flag over 500 lines | `tools/code_health/line_count.py`, configured |
-| S9 | Module length | flag over 1,000 lines | `tools/code_health/line_count.py`, configured |
+| S8 | Class length | flag over 500 lines | `codebase/health/line_count.py`, configured |
+| S9 | Module length | flag over 1,000 lines | `codebase/health/line_count.py`, configured |
 
 A function already over a limit must not get longer or more complex when you change it.
 
@@ -113,8 +113,8 @@ Python identifier conventions that section does not state.
 |---|---|---|
 | N1 | Follow `docs/engine/architecture_reference.md` section 9 for what a name means. | reviewer |
 | N2 | Functions, methods, variables and modules are `snake_case`; classes are `PascalCase`; module-level constants are `UPPER_SNAKE_CASE`. | ruff `N` rules, configured |
-| N3 | A leading underscore marks a name as private to its module or class. Do not import a `_private` name from another module. | reviewer |
-| N4 | No version or sequence markers in new names (`V2` prefix or suffix, `_v2`, `2`, `_new`). Replace the old thing or name the difference. Existing `V2` names are not to be renamed. | reviewer |
+| N3 | A leading underscore marks a name as private to its module or class. Do not import a `_private` name from another module. | ast-grep rule `n3-private-name-import` (advisory, own soak) |
+| N4 | No version or sequence markers in new names (`V2` prefix or suffix, `_v2`, `2`, `_new`). Replace the old thing or name the difference. Existing `V2` names are not to be renamed. | ast-grep rule `n4-version-marker-name` (advisory, own soak): `V2` prefix or suffix, `_v2`, `_new` at the end of a def or class name; a trailing digit (`2`) is left to the reviewer |
 
 ## 6. Docstrings
 
@@ -140,7 +140,7 @@ Python identifier conventions that section does not state.
 |---|---|---|
 | E1 | No bare `except:`. | ruff `E722`, configured |
 | E2 | Catch the narrowest exception that the code can handle. A justified `except Exception` carries `# noqa: BLE001` and the reason. | ruff `BLE001`, configured; reviewer |
-| E3 | Do not swallow an exception silently. Handle it, log it with context, or re-raise. | reviewer |
+| E3 | Do not swallow an exception silently. Handle it, log it with context, or re-raise. | ast-grep rule `e3-silent-except` (advisory, own soak): an `except` whose body is only `pass` (comments allowed); other ways of swallowing stay with the reviewer |
 | E4 | When re-raising as a different type, chain it with `raise ... from err`. | ruff `B904`, configured |
 
 ## 9. Module layout
@@ -151,7 +151,7 @@ Python identifier conventions that section does not state.
 | M2 | No wildcard imports. | ruff `F403` (part of `F`), configured |
 | M3 | No I/O and no mutation of unrelated global state when a module is imported. Registering into an existing registry at import time, through that registry's established pattern, is allowed. | reviewer |
 | M4 | New repo tooling goes under `tools/` per `docs/guidelines/repo_tooling_layout.md`. | reviewer |
-| M5 | A new module belongs to the package whose responsibility it shares. Do not create a new top-level `src/` package without an owner decision. | reviewer |
+| M5 | A new module belongs to the package whose responsibility it shares. Do not create a new top-level `src/` package without an owner decision. | reviewer; `python3 -m codebase.structure.packages validate` reports a tracked top-level package with no row (advisory) |
 
 ## 10. Correctness
 

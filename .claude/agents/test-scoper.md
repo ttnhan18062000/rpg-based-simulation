@@ -65,8 +65,8 @@ tools/semantic_control_plane/*.py  -> tests/unit/tools/       (NOT a same-name m
                                                                  above)
 tools/perf/*.py                    -> tests/static/           (default fallback for a module with no
                                                                  dedicated test: live_map_ws_payload_measure,
-                                                                 turbo_run, check_perf_regression,
-                                                                 perf_baseline, perf_ci, perf_report,
+                                                                 turbo_run,
+                                                                 perf_report,
                                                                  profile_api_payload, run_benchmarks,
                                                                  run_perf_baseline, memory_probe.
                                                                  NOT a same-name mirror, and NOT
@@ -77,6 +77,9 @@ tools/perf/*.py                    -> tests/static/           (default fallback 
                                                                  them:
                                                                  phase_inventory.py,
                                                                  hash_callsite_inventory.py,
+                                                                 perf_baseline.py,
+                                                                 check_perf_regression.py,
+                                                                 perf_ci.py,
                                                                  perf_threshold_inventory.py,
                                                                  wall_clock_inventory.py,
                                                                  profile_tick.py, profile_diff.py,
@@ -97,6 +100,15 @@ tools/release/*.py                 -> tests/certification/    (default fallback 
                                                                  tests/perf/)
 tools/maintenance/*.py             -> tests/tools/            (NOT a same-name mirror; no
                                                                  tests/maintenance/ directory exists)
+```
+
+**`codebase/` (the codebase domain root, a third source tree: Python code-craft tooling, gates, hooks, reports, baselines):**
+```
+codebase/**                        -> tests/codebase/         (the codebase domain root: health/,
+                                                                 gates/, hooks/, reports/, baselines/,
+                                                                 config/. Run the whole dir; not under
+                                                                 tests/tools/ any more. codebase/README.md
+                                                                 is prose, no test requirement)
 ```
 If a changed `tools/` path doesn't match any pattern above, check for a same-name directory
 under `tests/` before falling back to `tests/tools/`. This fallback does NOT apply to the six

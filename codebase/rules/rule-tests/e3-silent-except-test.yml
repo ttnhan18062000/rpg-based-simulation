@@ -1,0 +1,48 @@
+id: e3-silent-except
+valid:
+  - |
+    try:
+        run()
+    except ValueError:
+        log.warning("bad value", exc_info=True)
+  - |
+    try:
+        run()
+    except ValueError:
+        raise
+  - |
+    try:
+        run()
+    except ValueError:
+        pass
+        log.info("kept")
+  - |
+    for item in items:
+        pass
+invalid:
+  - |
+    try:
+        run()
+    except ValueError:
+        pass
+  - |
+    try:
+        run()
+    except Exception:
+        pass
+  - |
+    try:
+        run()
+    except:
+        pass
+  - |
+    try:
+        run()
+    except OSError:
+        # best effort
+        pass
+  - |
+    try:
+        run()
+    except OSError:
+        pass  # best effort

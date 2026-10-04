@@ -2747,7 +2747,7 @@
   text: 'mypy type checking gate is configured for src/ (excluding V1 modules: src/ai/,
     src/town/, src/quests/, src/entities/, src/progression/). The gate runs on every
     PR via CI, advisory: it reports only errors that are not in the committed mypy-baseline
-    file (registries/mypy_baseline.txt, 1569 entries at TCK-20261003-MYPY-BASELINE-ADVISORY)
+    file (codebase/baselines/mypy_baseline.txt, 1569 entries at TCK-20261003-MYPY-BASELINE-ADVISORY)
     and its step is continue-on-error until the soak ends (TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING).
     Response model annotations are present
     on all actionable inline routes in server.py (13 of 18; 5 excluded due to raw
@@ -2760,26 +2760,26 @@
   legacy_evidence: null
   v2_evidence: '[tool.mypy] section in pyproject.toml; make typecheck-py target in
     Makefile (filters through mypy_baseline; typecheck-baseline-sync rewrites the baseline);
-    [tool.mypy_baseline] and registries/mypy_baseline.txt; tools/code_health/mypy_gate.py
+    [tool.mypy_baseline] and codebase/baselines/mypy_baseline.txt; codebase/gates/mypy_gate.py
     (job summary with the new-error count and baseline size); mypy step in .github/workflows/test.yml
     (runs the gate, continue-on-error during the soak); response_model= on 13 inline routes in src/api/server.py; src/api/schemas.py created
     with WorldStateResponse, EntityPageResponse, EntityDetailResponse TypedDict schemas.
 
     '
   proof_type: null
-  test_path: tests/static/test_typecheck_gate_configured.py::test_pyproject_declares_tool_mypy_section,
-    tests/static/test_typecheck_gate_configured.py::test_makefile_typecheck_py_target_runs_mypy_on_src,
-    tests/static/test_typecheck_gate_configured.py::test_ci_workflow_has_a_mypy_step,
-    tests/static/test_typecheck_gate_configured.py::test_pyproject_configures_mypy_baseline_with_the_committed_baseline_and_tolerant_syncing,
-    tests/static/test_typecheck_gate_configured.py::test_makefile_typecheck_py_filters_through_the_baseline_and_stays_advisory,
-    tests/static/test_typecheck_gate_configured.py::test_ci_mypy_step_runs_the_advisory_gate_and_is_not_blocking,
-    tests/tools/test_mypy_gate.py::test_the_whole_gate_runs_real_mypy_on_a_tiny_project
+  test_path: tests/codebase/test_typecheck_gate_configured.py::test_pyproject_declares_tool_mypy_section,
+    tests/codebase/test_typecheck_gate_configured.py::test_makefile_typecheck_py_target_runs_mypy_on_src,
+    tests/codebase/test_typecheck_gate_configured.py::test_ci_workflow_has_a_mypy_step,
+    tests/codebase/test_typecheck_gate_configured.py::test_pyproject_configures_mypy_baseline_with_the_committed_baseline_and_tolerant_syncing,
+    tests/codebase/test_typecheck_gate_configured.py::test_makefile_typecheck_py_filters_through_the_baseline_and_stays_advisory,
+    tests/codebase/test_typecheck_gate_configured.py::test_ci_mypy_step_runs_the_advisory_gate_and_is_not_blocking,
+    tests/codebase/test_mypy_gate.py::test_the_whole_gate_runs_real_mypy_on_a_tiny_project
   divergence_note: null
   support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
     ("make typecheck-py") was not a pytest citation at all -- the real evidence is
     a build/lint gate configuration. Confirmed via a corpus-wide grep this shape is
     a genuine one-off (no other entry cites a bare make target or similar), so a schema
-    change was not warranted for one entry. Added tests/static/test_typecheck_gate_configured.py
+    change was not warranted for one entry. Added tests/codebase/test_typecheck_gate_configured.py
     (3 static assertions pinning the same 3 facts this entry''s own text/v2_evidence
     already claimed: pyproject.toml [tool.mypy] section, the Makefile typecheck-py
     target, and the CI mypy step) as a real pytest citation instead.'
@@ -12647,23 +12647,23 @@
     rather than by an automated regression test -- disclosed honestly rather than
     cited as if a persisted test exists.
 - id: INFRA-419
-  text: 'Code-health registry and ratchet: registries/code_health_exceptions.jsonl
+  text: 'Code-health registry and ratchet: codebase/baselines/code_health_exceptions.jsonl
     holds the grandfathered Python craft violations found by a full scan of src/ (ruff,
     complexipy, jscpd, line count), keyed by (file, symbol, tool, rule) and never
     by line number, with a value, a ceiling and reviewed: false on every seeded row.
-    `make code-health` (python3 -m tools.code_health check) runs the tools and fails
+    `make code-health` (python3 -m codebase.health check) runs the tools and fails
     only on a violation with no row or above its row''s ceiling; improved and gone
     rows are reported without failing, and rows are deleted (delete, tighten) when
     debt is paid. On demand only: not wired into CI, hooks or any pipeline phase.'
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: tools/code_health/{findings,adapters,registry,ratchet,scan,__main__}.py;
-    registries/code_health_exceptions.jsonl; make code-health in Makefile; match keys
-    documented in tools/code_health/findings.py and tools/code_health/registry.py
+  v2_evidence: codebase/health/{findings,adapters,registry,ratchet,scan,__main__}.py;
+    codebase/baselines/code_health_exceptions.jsonl; make code-health in Makefile; match keys
+    documented in codebase/health/findings.py and codebase/health/registry.py
     (TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY)
   proof_type: contract
-  test_path: tests/tools/test_code_health_adapters.py, tests/tools/test_code_health_ratchet_registry.py
+  test_path: tests/codebase/test_code_health_adapters.py, tests/codebase/test_code_health_ratchet_registry.py
   divergence_note: null
   support_boundary: 'Python code-health tooling only: no simulation behavior is involved
     and no src/ file was touched. Adapter tests use real captured tool output (tests/fixtures/code_health/);

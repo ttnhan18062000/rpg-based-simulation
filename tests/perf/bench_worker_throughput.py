@@ -14,6 +14,9 @@ from src.engine.executor import ConcurrentExecutionAdapter
 from src.engine.worker_manager import WorkerManager
 from src.engine.worker_logic import default_simulation_worker
 
+REPORT_FILENAME = "worker_throughput.json"
+
+
 def bench_worker_throughput(as_json: bool = False):
     count = 5000
     entities = {}
@@ -67,12 +70,13 @@ def bench_worker_throughput(as_json: bool = False):
         print(f"Throughput: {throughput:.2f} items/sec")
         print(f"Results returned: {len(results)}")
     
-    # Save to latest report
-    import os
+    # Save to this script's own report file. `latest.json` belongs to
+    # tools/perf/run_perf_baseline.py (a scenario-keyed dict of BenchHarness results); this flat
+    # worker-throughput shape must never be written there (TCK-20261004-PERF-LATEST-JSON-SINGLE-WRITER).
     import json
     REPORT_DIR = Path("reports/perf")
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    with open(REPORT_DIR / "latest.json", "w") as f:
+    with open(REPORT_DIR / REPORT_FILENAME, "w") as f:
         json.dump(report, f, indent=2)
     
     manager.shutdown()
