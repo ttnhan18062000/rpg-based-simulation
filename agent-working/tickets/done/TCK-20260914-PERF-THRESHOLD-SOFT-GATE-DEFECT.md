@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P2
 audience: agent
 ticket_id: TCK-20260914-PERF-THRESHOLD-SOFT-GATE-DEFECT
-phase: open
+phase: done
 date: 2026-09-14
 tags: [performance, testing]
 ---
@@ -16,7 +16,7 @@ tags: [performance, testing]
 never fail a test — a diagnosed defect, confirmed live with real breaching-but-green evidence
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -89,11 +89,11 @@ failure was a wall-clock `TimeoutError` from the pytest harness's own resource b
   done and unrelated to this defect (a tier change, not a threshold change).
 
 ## Acceptance Criteria
-- A real migration plan exists (or this ticket concludes the M4 epic's own `PERF-M4-T02`/`T07`-shaped
+- [x] A real migration plan exists (or this ticket concludes the M4 epic's own `PERF-M4-T02`/`T07`-shaped
   work already supersedes it and closes as a duplicate/superseded finding).
-- Whichever calls sites are deemed stable enough to harden get `hard=True` with named-owner
+- [x] (moot, see Implementation Notes) Whichever calls sites are deemed stable enough to harden get `hard=True` with named-owner
   sign-off, per M4's own stated migration discipline.
-- The gap-table row in `performance_m4_baseline_gate_a_epic.md` is updated to reference this
+- [x] The gap-table row in `performance_m4_baseline_gate_a_epic.md` is updated to reference this
   ticket's own disposition once resolved.
 
 ## Related Tickets
@@ -137,13 +137,24 @@ failure was a wall-clock `TimeoutError` from the pytest harness's own resource b
   inventory counts plus the metropolis breaching-green evidence; `plan.md` = the disposition and doc
   edits; `test_plan.md` = the inventory sync test and `validate_frontmatter`. No `src/` or `tests/` edit.
 
-_(pending)_
+**Disposition (perf-implementer, 2026-10-04): closed as superseded, AC1's second branch.**
+- Inventory regenerated with `tools/perf/perf_threshold_inventory.py`: 55 call sites (49 `assert_perf_threshold`,
+  6 `perf_check`); 0 literal `hard=True`, 0 explicit `hard=False`, 52 with `hard` absent, 3 passing it through
+  a variable (`tests/perf/conftest.py` x2, `test_perf_regression_baseline.py:40`), all soft in practice.
+- Owner's gate rule (roadmap, gate item 2): "no soft check becomes blocking". AC2 is therefore moot: no call site hardened.
+- M4 owners, read from the epic table: PERF-M4-T02 (PR-fast performance tripwire), PERF-M4-T07 (evidence-bundle
+  contract), PERF-M4-T10 (benchmark manifest and preflight, no-silent-skip), under PERF-D4.
+- Default question (keep `hard=False` default vs require every site to choose) recorded in the M4 gap-table row as an
+  open input; trade-off in `investigation.md`. Not decided.
+- Edited: the `perf_assertions.py` gap-table row and the "Confirmed field evidence" note in the M4 epic.
 
 ## Test Summary
-_(pending)_
+Docs only. `tests/tools/test_perf_inventories_committed_in_sync.py` and frontmatter validation run at close.
 
 ## Files Changed
-_(pending)_
+- `docs/plans/design_enhancement/performance_optimization/performance_m4_baseline_gate_a_epic.md`
+- `docs/performance/benchmark_identity_schema.md` (F13: 66 -> 55 call sites, per clause inventory §7)
+- `agent-working/tickets/` (this ticket), `agent-working/staging_artifacts/`/`stored_artifacts/` (3 artifacts)
 
 ## Completion Summary
-_(pending)_
+Closed as superseded by M4 (PERF-M4-T02, T07, T10). No `src/` or `tests/` change; no call site hardened.
