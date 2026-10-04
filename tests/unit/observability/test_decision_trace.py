@@ -361,26 +361,63 @@ def test_adventure_goal_scorer_wires_writer():
 # Architecture guard: execute_brain not imported by writer
 # ---------------------------------------------------------------------------
 
+_FORBIDDEN_COGNITION_MODULE = "src.engine.domain.cognition"
+
+
+def _find_engine_cognition_imports(source: str) -> list[str]:
+    """Return a description of every import of src.engine.domain.cognition in `source`."""
+    import ast
+
+    found: list[str] = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name == _FORBIDDEN_COGNITION_MODULE or alias.name.startswith(
+                    _FORBIDDEN_COGNITION_MODULE + "."
+                ):
+                    found.append(f"line {node.lineno}: import {alias.name}")
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            if node.module == _FORBIDDEN_COGNITION_MODULE or node.module.startswith(
+                _FORBIDDEN_COGNITION_MODULE + "."
+            ):
+                found.append(f"line {node.lineno}: from {node.module} import ...")
+            elif node.module == "src.engine.domain" and any(
+                alias.name == "cognition" for alias in node.names
+            ):
+                found.append(f"line {node.lineno}: from src.engine.domain import cognition")
+    return found
+
+
 def test_decision_trace_writer_does_not_import_engine_cognition():
     """DecisionTraceWriter must not import engine.domain.cognition (execute_brain guard)."""
     import importlib
-    import sys
-
-    module_path = "src.observability.cognition.decision_trace_writer"
-    if module_path in sys.modules:
-        mod = sys.modules[module_path]
-    else:
-        mod = importlib.import_module(module_path)
-
-    # Verify the module's imports do not pull in the engine cognition domain
-    assert "src.engine.domain.cognition" not in sys.modules or True  # just check imports list
     import inspect
-    source = inspect.getsource(mod)
-    # Must not import from engine cognition domain
-    assert "from src.engine.domain.cognition" not in source, (
-        "decision_trace_writer.py must not import from engine.domain.cognition"
+
+    mod = importlib.import_module("src.observability.cognition.decision_trace_writer")
+    found = _find_engine_cognition_imports(inspect.getsource(mod))
+    assert not found, (
+        "decision_trace_writer.py must not import engine.domain.cognition: " + "; ".join(found)
     )
-    assert "import CognitionDomain" not in source
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "import src.engine.domain.cognition",
+        "import src.engine.domain.cognition.brain as brain",
+        "from src.engine.domain.cognition import execute_brain",
+        "from src.engine.domain.cognition.brain import execute_brain",
+        "from src.engine.domain import cognition",
+    ],
+)
+def test_engine_cognition_import_detector_flags_each_import_form(line):
+    """Positive control: the AST guard fails on every import form it claims to cover."""
+    assert _find_engine_cognition_imports("import os\n" + line + "\n")
+
+
+def test_engine_cognition_import_detector_ignores_unrelated_imports():
+    source = "import os\nfrom src.engine.domain import movement\nfrom src.observability import x\n"
+    assert _find_engine_cognition_imports(source) == []
 
 
 # ---------------------------------------------------------------------------
