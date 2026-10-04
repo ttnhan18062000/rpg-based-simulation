@@ -194,6 +194,7 @@ completeness is verified by reading (ticket assumption).
 - **Verification:** none new. Any proposal to add deferred-work state must open a new decision.
 - **Child packages:** PERF-M0-T05 needs no investigation beyond this record.
 - **Revisit condition:** a concrete feature contract that needs authoritative deferred work.
+- **Update 2026-10-04 (owner decision, `TCK-20261004-WORK-DEBT-NEVER-ACCUMULATES-IN-PRODUCTION`):** the aggregate counter this decision ratified has no producer. `AuthoritativeState.work_debt` is never increased in production (nothing turns dropped or overflowed work into debt; `DRAIN_DEBT` only drains existing debt; `PressureInjector.inject_work_debt` has no caller), so every reader sees 0. Guard: `tests/integration/kernel/test_work_debt_stays_empty_in_production.py`. A producer was rejected because "overflowed work" has no deterministic definition (the shedding signals are wall-clock-driven, which PERF-D1 amendment A1 forbids feeding into game-facing values) and because the engine keeps no backlog to count. The owner chose to retire `work_debt` and its dead branches in two steps: step 1 corrects the documents (`TCK-20261004-WORK-DEBT-RETIRE-STEP1-DOCS`), step 2 removes the code and waits for the RPG-core entry gate (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`). The "closure matches existing behavior, so nothing changes" trade-off above describes the counter's code, not a working capacity signal.
 
 ### 3.3 Stubs to be drafted by the planner
 

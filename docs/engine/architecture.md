@@ -51,7 +51,7 @@ Every tick executes exactly seven phases in a strict, contract-enforced sequence
 | Phase | Responsibility | Permissions (READ / MUTATE) |
 | :--- | :--- | :--- |
 | **1. INIT** | Increments simulation clock and resets per-tick buffers. | `state.world_time` / `state.world_time` |
-| **2. SCHEDULING** | Identifies entities due to act and selects work based on the **Work Debt** budget. | `state.entities`, `policy` / `tick_work` |
+| **2. SCHEDULING** | Identifies entities due to act and selects work by readiness, cadence and the governor policy (the **Work Debt** budget of the original design is never exercised: nothing produces debt, see `docs/engine/contracts/resource_governor_contract.md`). | `state.entities`, `policy` / `tick_work` |
 | **3. COLLECTION** | Offloads AI deliberation tasks to the `WorkerManager` (bounded concurrent pool) using compact packets. | `entity, schedule` / `proposals` |
 | **4. RESOLUTION** | **Authoritative Update**. Converts results into `StateUpdate` and applies it via `ApplyPath`, incrementing the state generation. | `worker_results` / `state.authoritative` |
 | **5. CLEANUP** | Internal metrics and state finalization. | `platform, infra` / `infra` |
