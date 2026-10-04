@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from tools.code_health import mypy_gate
-from tools.code_health.mypy_gate import baseline_entries, format_summary, new_error_lines, run
+from codebase.gates import mypy_gate
+from codebase.gates.mypy_gate import baseline_entries, format_summary, new_error_lines, run
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _PYPROJECT = """\
@@ -24,7 +24,7 @@ python_version = "3.11"
 ignore_missing_imports = true
 
 [tool.mypy_baseline]
-baseline_path = "registries/mypy_baseline.txt"
+baseline_path = "codebase/baselines/mypy_baseline.txt"
 allow_unsynced = true
 hide_stats = true
 ignore_categories = ["note", "annotation-unchecked"]
@@ -36,7 +36,7 @@ _NOTE = "src/a.py:{line}: note: PEP 484 prohibits implicit Optional."
 @pytest.fixture
 def project(tmp_path):
     (tmp_path / "src").mkdir()
-    (tmp_path / "registries").mkdir()
+    (tmp_path / "codebase" / "baselines").mkdir(parents=True)
     (tmp_path / "pyproject.toml").write_text(_PYPROJECT)
     return tmp_path
 
@@ -56,7 +56,7 @@ def _gate(project: Path, output: str, *flags: str) -> int:
 
 def test_the_repository_declares_a_baseline_file_and_the_filter_config():
     assert baseline_entries(_REPO_ROOT) > 0
-    assert mypy_gate.baseline_path(_REPO_ROOT).relative_to(_REPO_ROOT).as_posix() == "registries/mypy_baseline.txt"
+    assert mypy_gate.baseline_path(_REPO_ROOT).relative_to(_REPO_ROOT).as_posix() == "codebase/baselines/mypy_baseline.txt"
 
 
 def test_summary_is_one_line_with_the_baseline_size_when_nothing_is_new():
@@ -117,7 +117,7 @@ def test_a_fixed_error_that_was_not_re_synced_does_not_fail_the_gate(project):
 def test_a_missing_baseline_is_reported_as_could_not_run(project, capsys):
     assert _gate(project, "", "summary", "annotate") == 2
     out = capsys.readouterr().out
-    assert "::warning::mypy-baseline could not run (advisory): baseline registries/mypy_baseline.txt does not exist" in out
+    assert "::warning::mypy-baseline could not run (advisory): baseline codebase/baselines/mypy_baseline.txt does not exist" in out
     assert (project / "summary.md").read_text().startswith("**mypy (advisory):** could not run: baseline")
 
 

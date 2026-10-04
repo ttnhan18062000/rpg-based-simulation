@@ -270,7 +270,7 @@ lint-py: ## Lint Python under src/ with ruff (check only: no formatter, no --fix
 	python3 -m ruff check src
 
 code-health-size: ## Report modules/classes/functions over the length limits in [tool.code_health.size] (report-only)
-	python3 -m tools.code_health.line_count src --flagged-only
+	python3 -m codebase.health.line_count src --flagged-only
 
 code-health-complexity: ## Report functions over the cognitive-complexity limit in [tool.complexipy] (report-only)
 	complexipy --failed --ignore-complexity
@@ -280,15 +280,15 @@ JSCPD_VERSION ?= 5.4.0
 code-health-dup: ## Report duplicated Python blocks under src/ with jscpd (report-only; JSON in reports/code_health/jscpd/)
 	npx --yes jscpd@$(JSCPD_VERSION) src --config .jscpd.json
 
-# `code-health` is the Python craft-debt ratchet (tools/code_health/, registries/code_health_exceptions.jsonl).
+# `code-health` is the Python craft-debt ratchet (codebase/health/, codebase/baselines/code_health_exceptions.jsonl).
 # It is unrelated to the codebase-health-* targets, which belong to tools/codebase_health_*.py.
-code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than registries/code_health_exceptions.jsonl (also the advisory `Code health (advisory)` CI job during the soak: reports, never fails the PR)
-	python3 -m tools.code_health check
+code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than codebase/baselines/code_health_exceptions.jsonl (also the advisory `Code health (advisory)` CI job during the soak: reports, never fails the PR)
+	python3 -m codebase.health check
 
-typecheck-py: ## Run mypy over src/ and show only errors not in registries/mypy_baseline.txt (advisory during the soak: never fails)
+typecheck-py: ## Run mypy over src/ and show only errors not in codebase/baselines/mypy_baseline.txt (advisory during the soak: never fails)
 	python3 -m mypy src/ --config-file pyproject.toml --no-error-summary | python3 -m mypy_baseline filter || true
 
-typecheck-baseline-sync: ## Rewrite registries/mypy_baseline.txt from a fresh mypy run. Codebase domain only, on main, together with the code-health reseed (make code-health seed); never to hide a new error
+typecheck-baseline-sync: ## Rewrite codebase/baselines/mypy_baseline.txt from a fresh mypy run. Codebase domain only, on main, together with the code-health reseed (make code-health seed); never to hide a new error
 	python3 -m mypy src/ --config-file pyproject.toml --no-error-summary | python3 -m mypy_baseline sync
 
 # ── Documentation Site ───────────────────────────────────

@@ -1,9 +1,9 @@
 """The advisory mypy gate: report only the mypy errors that are not in the committed baseline.
 
-    python3 -m tools.code_health.mypy_gate [--summary-out PATH] [--annotate] [--mypy-output FILE]
+    python3 -m codebase.gates.mypy_gate [--summary-out PATH] [--annotate] [--mypy-output FILE]
 
 It runs the repository's mypy command, pipes the output through `mypy-baseline filter` (configured in
-`[tool.mypy_baseline]` in pyproject.toml; the baseline is `registries/mypy_baseline.txt`), prints the errors
+`[tool.mypy_baseline]` in pyproject.toml; the baseline is `codebase/baselines/mypy_baseline.txt`), prints the errors
 that are new, and returns the filter's exit code: 0 for none, 1 for at least one new error. On every run it
 appends one Markdown summary to `--summary-out` ($GITHUB_STEP_SUMMARY in CI) that states the new-error count
 and the current baseline size, so the trend stays visible without a snapshot metric. With `--annotate` a
@@ -11,7 +11,7 @@ failure also prints one GitHub `::warning::` line.
 
 If mypy or the filter cannot run (a crash, a missing tool, a missing baseline) it still writes a "could not
 run" summary line and warning and returns 2, so a broken tool never looks like a clean pass in the
-`continue-on-error` CI step (the same rule as `tools.code_health check`).
+`continue-on-error` CI step (the same rule as `codebase.health check`).
 
 Advisory for the roadmap M4 soak: nothing blocks on the result yet.
 """
@@ -25,11 +25,11 @@ import tomllib
 from pathlib import Path
 from typing import Sequence
 
-from tools.code_health import registry
+from codebase.health import registry
 
 MYPY_COMMAND = ("-m", "mypy", "src/", "--config-file", "pyproject.toml", "--no-error-summary")
 FILTER_COMMAND = ("-m", "mypy_baseline", "filter")
-DEFAULT_BASELINE = "registries/mypy_baseline.txt"
+DEFAULT_BASELINE = "codebase/baselines/mypy_baseline.txt"
 LIST_LIMIT = 25
 
 
@@ -38,7 +38,7 @@ class GateCannotRun(Exception):
 
 
 def baseline_path(root: Path) -> Path:
-    """The baseline file named by `[tool.mypy_baseline] baseline_path`, default `registries/mypy_baseline.txt`."""
+    """The baseline file named by `[tool.mypy_baseline] baseline_path`, default `codebase/baselines/mypy_baseline.txt`."""
     with (root / "pyproject.toml").open("rb") as handle:
         table = tomllib.load(handle).get("tool", {}).get("mypy_baseline", {})
     return root / str(table.get("baseline_path", DEFAULT_BASELINE))
@@ -112,7 +112,7 @@ def run(root: Path, summary_out: Path | None = None, annotate: bool = False, myp
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Command-line entry point."""
-    parser = argparse.ArgumentParser(prog="python3 -m tools.code_health.mypy_gate", description=__doc__)
+    parser = argparse.ArgumentParser(prog="python3 -m codebase.gates.mypy_gate", description=__doc__)
     parser.add_argument("--root", type=Path, default=registry.REPO_ROOT, help=argparse.SUPPRESS)
     parser.add_argument("--summary-out", type=Path, help="append a Markdown summary here ($GITHUB_STEP_SUMMARY)")
     parser.add_argument("--annotate", action="store_true", help="print a GitHub ::warning:: line on a failure")

@@ -24,12 +24,12 @@ the sibling directory instead of the file's own parent.
 
 **Second metric source (schema version 2, TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS)**:
 Python craft metrics (lint findings, over-limit functions, duplication, ...) are computed by
-`tools/code_health/metrics.py` from the code-health tools' findings and the code-health
+`codebase/health/metrics.py` from the code-health tools' findings and the code-health
 registry, and merged into each record next to `build_report()`'s keys. This module still never
-computes any metric itself: it persists what `build_report()` and `tools.code_health.metrics`
+computes any metric itself: it persists what `build_report()` and `codebase.health.metrics`
 return. `build_report()` and `make codebase-health-baseline` are unchanged, so the baseline
 target does not depend on the code-health tools. Craft keys all start `craft_`; those starting
-`craft_baseline_` are read from `registries/code_health_exceptions.jsonl` (the baselined state, not
+`craft_baseline_` are read from `codebase/baselines/code_health_exceptions.jsonl` (the baselined state, not
 a live measurement), the rest are measured live by the offline Python tools (never jscpd, which
 needs `npx`). The snapshot is taken with `craft_metrics=None` (measure live) in production; a
 caller may pass a prepared dict, which is how tests keep a snapshot of a throwaway repository
@@ -37,7 +37,7 @@ from running the tools.
 
 **Schema freeze**: `EXPECTED_BASELINE_KEYS` is a frozen, hand-copied allowlist
 of `build_report()`'s real return-dict keys, and `EXPECTED_SNAPSHOT_KEYS` is that set plus
-`tools.code_health.metrics.CRAFT_METRIC_KEYS`. `build_snapshot_record` validates
+`codebase.health.metrics.CRAFT_METRIC_KEYS`. `build_snapshot_record` validates
 `set(report.keys()) == EXPECTED_BASELINE_KEYS` and the craft source's keys against
 `CRAFT_METRIC_KEYS` exactly (not a subset/superset
 check) and raises `RuntimeError` loudly on any mismatch — a future
@@ -78,12 +78,12 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 from codebase_health_baseline import build_report  # noqa: E402
 
-# tools/code_health/ is a real package (`from tools.code_health...`); a script run as
+# codebase/health/ is a real package (`from codebase.health...`); a script run as
 # `python3 tools/codebase_health_snapshot.py` has only tools/ on sys.path, so the repo root is added
 # for that one import. The flat tools/codebase_health_*.py files are not moved.
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
-from tools.code_health.metrics import (  # noqa: E402
+from codebase.health.metrics import (  # noqa: E402
     CRAFT_LABELS,
     CRAFT_METRIC_KEYS,
     measure_craft_metrics,
@@ -107,7 +107,7 @@ EXPECTED_BASELINE_KEYS = frozenset({
     "registry_size_bytes", "registry_size_lines", "dead_bytecode_files",
     "unused_core_dependencies", "churn_lines_changed_excl_bookkeeping",
 })
-# build_report()'s keys plus the second metric source's (tools/code_health/metrics.py).
+# build_report()'s keys plus the second metric source's (codebase/health/metrics.py).
 EXPECTED_SNAPSHOT_KEYS = EXPECTED_BASELINE_KEYS | frozenset(CRAFT_METRIC_KEYS)
 SNAPSHOT_SCHEMA_VERSION = 2
 DEFAULT_HISTORY_PATH = _REPO_ROOT / AGENT_MONITORING / "codebase_health_history.jsonl"
@@ -159,7 +159,7 @@ def _check_keys(actual: set, expected: frozenset, source: str) -> None:
             f"{source}'s return shape no longer matches its expected keys — "
             f"missing keys: {sorted(expected - actual)}, unexpected keys: "
             f"{sorted(actual - expected)}. If this is an intentional change, "
-            "update EXPECTED_BASELINE_KEYS or tools/code_health/metrics.py's CRAFT_METRIC_KEYS, "
+            "update EXPECTED_BASELINE_KEYS or codebase/health/metrics.py's CRAFT_METRIC_KEYS, "
             "bump SNAPSHOT_SCHEMA_VERSION, and update "
             "docs/agent-monitoring/codebase_health_history_schema.md in the same commit."
         )
@@ -170,14 +170,14 @@ def build_snapshot_record(repo_root: Path, craft_metrics: dict | None = None) ->
 
     Never re-derives/recomputes any individual metric — `report` is used
     exactly as `build_report()` returns it, the craft metrics exactly as
-    `tools.code_health.metrics` returns them (measured live from `repo_root`
+    `codebase.health.metrics` returns them (measured live from `repo_root`
     unless a prepared `craft_metrics` dict is passed), with only a
     schema-version field stamped on top.
     """
     report = build_report(repo_root)
     _check_keys(set(report.keys()), EXPECTED_BASELINE_KEYS, "build_report()")
     craft = measure_craft_metrics(repo_root) if craft_metrics is None else craft_metrics
-    _check_keys(set(craft.keys()), frozenset(CRAFT_METRIC_KEYS), "tools.code_health.metrics")
+    _check_keys(set(craft.keys()), frozenset(CRAFT_METRIC_KEYS), "codebase.health.metrics")
     return {**report, **craft, "snapshot_schema_version": SNAPSHOT_SCHEMA_VERSION}
 
 

@@ -17,7 +17,7 @@ from tests.tools.test_code_health_ratchet_registry import (  # noqa: F401  (pyte
     repo,
     seeded,
 )
-from tools.code_health.ratchet import DEFAULT_REPORT_LIMIT, compare, format_summary
+from codebase.health.ratchet import DEFAULT_REPORT_LIMIT, compare, format_summary
 
 
 def _result(baseline, current):
@@ -96,7 +96,7 @@ def test_an_unusable_registry_still_writes_a_summary_line_and_a_warning_then_exi
 
 
 def test_an_unusable_tool_still_writes_a_summary_line_and_a_warning_then_exits_2(repo, monkeypatch, capsys):
-    from tools.code_health import scan
+    from codebase.health import scan
 
     def broken(root, out_dir):
         raise scan.ToolUnavailableError("npx --yes jscpd@5.4.0 exited 1: registry unreachable\nsecond line")
@@ -110,7 +110,7 @@ def test_an_unusable_tool_still_writes_a_summary_line_and_a_warning_then_exits_2
 
 
 def test_without_the_flags_an_unusable_tool_prints_nothing_extra(repo, monkeypatch, capsys):
-    from tools.code_health import scan
+    from codebase.health import scan
 
     monkeypatch.setattr(scan, "run_scan", lambda root, out_dir: (_ for _ in ()).throw(scan.ToolUnavailableError("x not found")))
     assert _run(repo, "check") == 2

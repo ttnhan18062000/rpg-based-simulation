@@ -1,7 +1,7 @@
 """The ratchet: fail only on a violation that is new, or worse than its baseline row.
 
 `compare` matches each current `Finding` to a registry `Row` by `(file, symbol, tool, rule)`
-(never a line number; see `tools/code_health/findings.py` for the key each tool produces):
+(never a line number; see `codebase/health/findings.py` for the key each tool produces):
 
 - no row                         -> NEW      (fails)
 - value above the row's ceiling  -> WORSE    (fails)
@@ -10,7 +10,7 @@
 - otherwise                      -> unchanged
 
 The two non-failing outcomes are how paid-off debt shows up: `tighten` (or `delete`) in
-`tools.code_health.registry` then lowers or removes the row. Frozen historical debt and a live
+`codebase.health.registry` then lowers or removes the row. Frozen historical debt and a live
 regression are different lists in the report, which is what an earlier single-number ratchet in
 this repo (TCK-20260915-RATCHET-CONFLATES-HISTORICAL-DEBT-WITH-LIVE-REGRESSION) could not say.
 
@@ -23,8 +23,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Collection, Iterable, Sequence
 
-from tools.code_health.findings import Finding
-from tools.code_health.registry import Row
+from codebase.health.findings import Finding
+from codebase.health.registry import Row
 
 DEFAULT_REPORT_LIMIT = 25
 

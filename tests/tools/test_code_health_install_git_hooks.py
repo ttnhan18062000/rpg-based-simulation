@@ -1,7 +1,7 @@
 """Tests for the opt-in git hook installer and the pre-commit config (TCK-20261003-PREK-GIT-HOOKS-OPT-IN).
 
 Every test uses a temporary git repository (never this machine's shared .git/hooks) and the real prek binary.
-The temporary repository gets a copy of the real hook scripts, config, `tools/code_health` and installer, so the
+The temporary repository gets a copy of the real hook scripts, config, `codebase/health` and installer, so the
 real commit-time path is what runs.
 """
 from __future__ import annotations
@@ -16,8 +16,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tools.code_health import registry
-from tools.code_health.registry import Row
+from codebase.health import registry
+from codebase.health.registry import Row
 
 _REPO = Path(__file__).resolve().parent.parent.parent
 _BARE = "def f():\n    try:\n        pass\n    except:\n        pass\n"
@@ -43,17 +43,17 @@ def repo(tmp_path):
     _git(root, "init", "-q", "-b", "main")
     _git(root, "config", "user.email", "t@example.com")
     _git(root, "config", "user.name", "t")
-    shutil.copytree(_REPO / "tools" / "code_health", root / "tools" / "code_health", ignore=shutil.ignore_patterns("__pycache__"))
-    (root / "tools" / "hooks").mkdir()
+    shutil.copytree(_REPO / "codebase", root / "codebase", ignore=shutil.ignore_patterns("__pycache__", "baselines"))
+    (root / "tools" / "hooks").mkdir(parents=True)
     for name in ("code_health_pre_commit.sh", "uv_lock_pre_commit.sh", "post-commit-reindex.sh"):
         shutil.copy(_REPO / "tools" / "hooks" / name, root / "tools" / "hooks" / name)
     shutil.copy(_REPO / ".pre-commit-config.yaml", root / ".pre-commit-config.yaml")
     (root / "pyproject.toml").write_text('[tool.ruff.lint]\nselect = ["E722"]\n')
-    (root / "registries").mkdir()
+    (root / "codebase" / "baselines").mkdir(parents=True)
     (root / "src").mkdir()
     (root / "src" / "a.py").write_text(_BARE)
     (root / "src" / "b.py").write_text("x = 1\n")
-    registry.write_rows(root / "registries" / "code_health_exceptions.jsonl", [_row("src/a.py", "E722", 1)])
+    registry.write_rows(root / "codebase" / "baselines" / "code_health_exceptions.jsonl", [_row("src/a.py", "E722", 1)])
     _git(root, "add", "-A")
     _git(root, "commit", "-q", "-m", "baseline", "--no-verify")
     return root
@@ -176,7 +176,7 @@ def test_a_worktree_without_the_project_environment_is_not_blocked(repo):
     _install(repo)
     (repo / "src" / "b.py").write_text(_BARE)
     _git(repo, "add", "src/b.py")
-    _git(repo, "rm", "-rq", "tools/code_health")  # staged deletion: prek restores unstaged changes before the hook runs
+    _git(repo, "rm", "-rq", "codebase/health")  # staged deletion: prek restores unstaged changes before the hook runs
     done = _git(repo, "commit", "-q", "-m", "no environment", env=_env(), check=False)
     assert done.returncode == 0, done.stdout + done.stderr
     assert "code-health hook skipped: environment not synced" in done.stdout + done.stderr

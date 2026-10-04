@@ -1,4 +1,4 @@
-"""Tests for the pre-commit ratchet check (TCK-20261003-PREK-GIT-HOOKS-OPT-IN): `tools.code_health.staged_ratchet`.
+"""Tests for the pre-commit ratchet check (TCK-20261003-PREK-GIT-HOOKS-OPT-IN): `codebase.gates.staged_ratchet`.
 
 Real ruff runs in a temporary project; the registry is hand-written so each case is explicit.
 """
@@ -8,9 +8,10 @@ import importlib.util
 
 import pytest
 
-from tools.code_health import registry, staged_ratchet
-from tools.code_health.registry import Row
-from tools.code_health.staged_ratchet import run
+from codebase.gates import staged_ratchet
+from codebase.health import registry
+from codebase.health.registry import Row
+from codebase.gates.staged_ratchet import run
 
 _PYPROJECT = '[tool.ruff.lint]\nselect = ["E722"]\n'
 _BARE = "def f():\n    try:\n        pass\n    except:\n        pass\n"
@@ -23,11 +24,11 @@ def _row(file, rule, ceiling):
 @pytest.fixture
 def project(tmp_path):
     (tmp_path / "src").mkdir()
-    (tmp_path / "registries").mkdir()
+    (tmp_path / "codebase" / "baselines").mkdir(parents=True)
     (tmp_path / "pyproject.toml").write_text(_PYPROJECT)
     (tmp_path / "src" / "a.py").write_text(_BARE)
     (tmp_path / "src" / "b.py").write_text("x = 1\n")
-    registry.write_rows(tmp_path / "registries" / "code_health_exceptions.jsonl", [_row("src/a.py", "E722", 1)])
+    registry.write_rows(tmp_path / "codebase" / "baselines" / "code_health_exceptions.jsonl", [_row("src/a.py", "E722", 1)])
     return tmp_path
 
 
@@ -69,14 +70,14 @@ def test_files_outside_src_and_unsafe_paths_are_ignored(project):
 
 
 def test_a_missing_registry_skips_with_a_visible_line_instead_of_blocking(project, capsys):
-    (project / "registries" / "code_health_exceptions.jsonl").unlink()
+    (project / "codebase" / "baselines" / "code_health_exceptions.jsonl").unlink()
     (project / "src" / "b.py").write_text(_BARE)
     assert run(project, ["src/b.py"]) == 0
     assert capsys.readouterr().out.startswith("code-health hook skipped: no code-health registry")
 
 
 def test_an_unusable_registry_skips_with_a_visible_line(project, capsys):
-    (project / "registries" / "code_health_exceptions.jsonl").write_text("{not json\n")
+    (project / "codebase" / "baselines" / "code_health_exceptions.jsonl").write_text("{not json\n")
     assert run(project, ["src/a.py"]) == 0
     assert capsys.readouterr().out.startswith("code-health hook skipped: the code-health registry is unusable")
 

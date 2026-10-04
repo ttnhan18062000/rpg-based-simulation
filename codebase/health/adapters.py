@@ -2,7 +2,7 @@
 
 Each adapter is a pure function of the tool's own JSON, so it can be tested against a captured
 real output (tests/fixtures/code_health/). The match key each adapter produces is documented in
-`tools/code_health/findings.py`.
+`codebase/health/findings.py`.
 
 complexipy is handled by an adapter, not by its native snapshot file. Roadmap section 6.3 allowed
 either; the adapter keeps one ratchet, one registry and symbol-level keys for every tool, and
@@ -15,7 +15,7 @@ from __future__ import annotations
 from pathlib import PurePosixPath
 from typing import Any, Mapping, Sequence
 
-from tools.code_health.findings import (
+from codebase.health.findings import (
     TOOL_COMPLEXIPY,
     TOOL_JSCPD,
     TOOL_LINE_COUNT,

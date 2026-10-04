@@ -9,7 +9,7 @@ Two kinds of key, told apart by name:
 
 - live keys (`craft_<thing>`): measured now from ruff, complexipy and the line-count report. These
   are the offline Python tools; a snapshot never needs the network.
-- registry-derived keys (`craft_baseline_<thing>`): read from `registries/code_health_exceptions.jsonl`,
+- registry-derived keys (`craft_baseline_<thing>`): read from `codebase/baselines/code_health_exceptions.jsonl`,
   so they describe the baselined state at the last seed or `tighten`, not a live measurement. Duplication
   is reported this way because jscpd needs `npx`; it can become a live key once jscpd has a lockfile.
 
@@ -24,16 +24,16 @@ import tempfile
 from pathlib import Path
 from typing import Iterable, Sequence
 
-from tools.code_health import registry, scan
-from tools.code_health.adapters import RULE_DUPLICATE, RULE_SYNTAX_ERROR
-from tools.code_health.findings import (
+from codebase.health import registry, scan
+from codebase.health.adapters import RULE_DUPLICATE, RULE_SYNTAX_ERROR
+from codebase.health.findings import (
     TOOL_COMPLEXIPY,
     TOOL_JSCPD,
     TOOL_LINE_COUNT,
     TOOL_RUFF,
     Finding,
 )
-from tools.code_health.registry import Row
+from codebase.health.registry import Row
 
 LIVE_KEYS = (
     "craft_ruff_findings",

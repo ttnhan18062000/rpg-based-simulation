@@ -1,6 +1,6 @@
 """Changed-line PR feedback for code scanning: SARIF for the code-health findings a PR introduced.
 
-    python3 -m tools.code_health.sarif_feedback --changed FILE --out SARIF [--summary-out PATH] [--annotate]
+    python3 -m codebase.gates.sarif_feedback --changed FILE --out SARIF [--summary-out PATH] [--annotate]
 
 `--changed` lists the paths a PR changed (one per line). Only existing `src/**/*.py` files are checked, because
 the code-health registry covers `src/` only. ruff and complexipy are run on those files with `--output-format
@@ -8,7 +8,7 @@ sarif`, every result the registry already holds is dropped, and the rest are wri
 for `github/codeql-action/upload-sarif`. The registry is never changed.
 
 SARIF results have no baseline identity, so the filter works per ratchet unit (the key in
-`registries/code_health_exceptions.jsonl`):
+`codebase/baselines/code_health_exceptions.jsonl`):
 
 - ruff: a (file, rule code) group is dropped when its count is at or below the row's ceiling, and kept
   **whole** when it is above the ceiling or has no row. The SARIF cannot say which finding of an over-ceiling
@@ -42,10 +42,10 @@ from collections import Counter
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
-from tools.code_health import registry, scan
-from tools.code_health.adapters import RULE_COGNITIVE
-from tools.code_health.findings import TOOL_COMPLEXIPY, TOOL_RUFF
-from tools.code_health.registry import Row
+from codebase.health import registry, scan
+from codebase.health.adapters import RULE_COGNITIVE
+from codebase.health.findings import TOOL_COMPLEXIPY, TOOL_RUFF
+from codebase.health.registry import Row
 
 SARIF_VERSION = "2.1.0"
 SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json"
@@ -277,7 +277,7 @@ def run(root: Path, changed: Path, out: Path, summary_out: Path | None = None, a
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Command-line entry point."""
-    parser = argparse.ArgumentParser(prog="python3 -m tools.code_health.sarif_feedback", description=__doc__)
+    parser = argparse.ArgumentParser(prog="python3 -m codebase.gates.sarif_feedback", description=__doc__)
     parser.add_argument("--root", type=Path, default=registry.REPO_ROOT, help=argparse.SUPPRESS)
     parser.add_argument("--registry", type=Path, default=None, help=argparse.SUPPRESS)
     parser.add_argument("--changed", type=Path, required=True, help="file listing the paths a PR changed, one per line")

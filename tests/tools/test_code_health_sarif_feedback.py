@@ -12,9 +12,10 @@ from pathlib import Path
 
 import pytest
 
-from tools.code_health import registry, sarif_feedback
-from tools.code_health.registry import Row
-from tools.code_health.sarif_feedback import (
+from codebase.gates import sarif_feedback
+from codebase.health import registry
+from codebase.health.registry import Row
+from codebase.gates.sarif_feedback import (
     SarifError,
     cap_results,
     changed_python_files,
@@ -190,12 +191,12 @@ _COMPLEX = textwrap.dedent("""\
 @pytest.fixture
 def project(tmp_path):
     (tmp_path / "src").mkdir()
-    (tmp_path / "registries").mkdir()
+    (tmp_path / "codebase" / "baselines").mkdir(parents=True)
     (tmp_path / "pyproject.toml").write_text(_PYPROJECT)
     (tmp_path / "src" / "a.py").write_text(_BARE + "\n" + _COMPLEX)
     (tmp_path / "src" / "b.py").write_text("x = 1\n")
     rows = [_row("src/a.py", None, "ruff", "E722", 1), _row("src/a.py", "tangled", "complexipy", "cognitive-complexity", 15)]
-    registry.write_rows(tmp_path / "registries" / "code_health_exceptions.jsonl", rows)
+    registry.write_rows(tmp_path / "codebase" / "baselines" / "code_health_exceptions.jsonl", rows)
     return tmp_path
 
 
@@ -252,7 +253,7 @@ def test_end_to_end_with_no_changed_src_python_an_empty_valid_sarif_is_still_wri
 
 
 def test_end_to_end_an_unusable_registry_writes_no_sarif_and_reports_could_not_run(project, capsys):
-    (project / "registries" / "code_health_exceptions.jsonl").write_text("{not json\n")
+    (project / "codebase" / "baselines" / "code_health_exceptions.jsonl").write_text("{not json\n")
     summary = project / "summary.md"
     out = project / "out.sarif"
     assert run(project, _changed(project, "src/a.py"), out, summary, annotate=True) == 2

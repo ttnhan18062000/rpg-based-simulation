@@ -20,8 +20,8 @@ is the number of lines in the file.
 Thresholds come from `[tool.code_health.size]` in pyproject.toml, the single place they are
 configured; the defaults below apply only when the table or a key is missing.
 
-    python3 -m tools.code_health.line_count src --flagged-only
-    python3 -m tools.code_health.line_count src --format json
+    python3 -m codebase.health.line_count src --flagged-only
+    python3 -m codebase.health.line_count src --format json
 """
 
 from __future__ import annotations
@@ -206,7 +206,7 @@ def _format_text(report: Report, flagged_only: bool) -> str:
 
 
 def report_to_dict(report: Report, flagged_only: bool = False) -> dict[str, object]:
-    """The JSON-serialisable form of a report, as read by `tools.code_health.adapters`."""
+    """The JSON-serialisable form of a report, as read by `codebase.health.adapters`."""
     return {
         "thresholds": asdict(report.thresholds),
         "records": [asdict(r) for r in report.records if not (flagged_only and r.level == LEVEL_OK)],

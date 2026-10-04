@@ -1,11 +1,11 @@
-"""Tests for tools/code_health/adapters.py and findings.py (TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY).
+"""Tests for codebase/health/adapters.py and findings.py (TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY).
 
 The JSON fixtures in tests/fixtures/code_health/ are the real output of ruff 0.16.10, complexipy
-8.0.1, jscpd 5.4.0 and `tools.code_health.line_count`, run over tests/fixtures/code_health/sample_src/
+8.0.1, jscpd 5.4.0 and `codebase.health.line_count`, run over tests/fixtures/code_health/sample_src/
 (a few files with deliberate violations). To recapture: copy sample_src, pyproject.toml and
 .jscpd.json to a scratch directory, run each tool there (ruff `check sample_src --output-format
 json`; `complexipy sample_src -q --output-format json --output complexipy.json`; `npx jscpd@5.4.0
-sample_src --config .jscpd.json --output jscpd`; `python3 -m tools.code_health.line_count
+sample_src --config .jscpd.json --output jscpd`; `python3 -m codebase.health.line_count
 sample_src --format json`), and replace the scratch directory in ruff.json with `/FIXTURE_ROOT`
 (ruff prints absolute paths; that substitution is the only edit).
 """
@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from tools.code_health.adapters import (
+from codebase.health.adapters import (
     RULE_COGNITIVE,
     RULE_DUPLICATE,
     adapt_complexipy,
@@ -22,7 +22,7 @@ from tools.code_health.adapters import (
     adapt_line_count,
     adapt_ruff,
 )
-from tools.code_health.findings import Finding, aggregate
+from codebase.health.findings import Finding, aggregate
 
 _FIXTURES = Path(__file__).resolve().parent.parent / "fixtures" / "code_health"
 

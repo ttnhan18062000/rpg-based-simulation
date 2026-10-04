@@ -1,6 +1,6 @@
 """The pre-commit check: ruff on the staged `src` Python files, compared with the code-health registry.
 
-    python3 -m tools.code_health.staged_ratchet FILE...
+    python3 -m codebase.gates.staged_ratchet FILE...
 
 prek passes the staged files. Only existing, safe `src/**/*.py` paths are used (the same rule as the SARIF
 module). ruff runs on them, and the findings are compared with the registry rows of those files by the
@@ -22,8 +22,8 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-from tools.code_health import adapters, ratchet, registry
-from tools.code_health.sarif_feedback import changed_python_files
+from codebase.health import adapters, ratchet, registry
+from codebase.gates.sarif_feedback import changed_python_files
 
 HOW_TO = (
     "Fix the new violation. If it is genuinely owner-approved debt, `git commit --no-verify` is the bypass; "

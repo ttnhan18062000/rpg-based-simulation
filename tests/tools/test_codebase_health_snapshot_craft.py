@@ -16,7 +16,7 @@ if str(_TOOLS_DIR) not in sys.path:
 
 import codebase_health_baseline as chb  # noqa: E402
 import codebase_health_snapshot as chs  # noqa: E402
-from tools.code_health.metrics import CRAFT_METRIC_KEYS, REGISTRY_KEYS  # noqa: E402
+from codebase.health.metrics import CRAFT_METRIC_KEYS, REGISTRY_KEYS  # noqa: E402
 
 
 def _git(args, cwd):

@@ -14,12 +14,12 @@ from pathlib import Path
 
 import pytest
 
-from tools.code_health import registry, scan
-from tools.code_health.__main__ import main
-from tools.code_health.adapters import adapt_ruff
-from tools.code_health.findings import Finding
-from tools.code_health.ratchet import compare, format_report
-from tools.code_health.registry import Row, RegistryError
+from codebase.health import registry, scan
+from codebase.health.__main__ import main
+from codebase.health.adapters import adapt_ruff
+from codebase.health.findings import Finding
+from codebase.health.ratchet import compare, format_report
+from codebase.health.registry import Row, RegistryError
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _FIXTURES = _REPO_ROOT / "tests" / "fixtures" / "code_health"
@@ -351,7 +351,7 @@ def test_code_health_make_target_runs_the_ratchet_and_is_phony():
     makefile = (_REPO_ROOT / "Makefile").read_text(encoding="utf-8")
     assert re.search(r"^\.PHONY:.*\bcode-health\b", makefile, re.M)
     recipe = re.search(r"^code-health:.*\n((?:\t.*\n)+)", makefile, re.M)
-    assert recipe and "tools.code_health check" in recipe.group(1)
+    assert recipe and "codebase.health check" in recipe.group(1)
 
 
 def test_jscpd_pin_is_read_from_the_makefile_and_the_complexity_limit_from_pyproject():

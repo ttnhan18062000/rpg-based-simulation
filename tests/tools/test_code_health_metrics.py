@@ -1,4 +1,4 @@
-"""Tests for tools/code_health/metrics.py and the offline scan subset (TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS)."""
+"""Tests for codebase/health/metrics.py and the offline scan subset (TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS)."""
 from __future__ import annotations
 
 import re
@@ -7,16 +7,16 @@ from pathlib import Path
 
 import pytest
 
-from tools.code_health import scan
-from tools.code_health.findings import Finding
-from tools.code_health.metrics import (
+from codebase.health import scan
+from codebase.health.findings import Finding
+from codebase.health.metrics import (
     CRAFT_LABELS,
     CRAFT_METRIC_KEYS,
     LIVE_KEYS,
     REGISTRY_KEYS,
     compute_craft_metrics,
 )
-from tools.code_health.registry import Row
+from codebase.health.registry import Row
 
 _FIXTURES = Path(__file__).resolve().parent.parent / "fixtures" / "code_health"
 

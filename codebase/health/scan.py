@@ -2,7 +2,7 @@
 
 `run_scan` writes each tool's raw JSON into one directory; `collect_findings` reads that directory
 through the adapters. They are separate so the ratchet can be tested on captured output and a
-scan can be reused (`python3 -m tools.code_health check --from DIR`).
+scan can be reused (`python3 -m codebase.health check --from DIR`).
 
 Tools are found next to the running interpreter first (the project environment), then on PATH.
 ruff ships a `__main__`, so it is started as `python -m ruff`, which always uses the interpreter's
@@ -23,9 +23,9 @@ import tomllib
 from pathlib import Path
 from typing import Any, Sequence
 
-from tools.code_health import adapters
-from tools.code_health.findings import Finding
-from tools.code_health.line_count import load_thresholds, measure_paths, report_to_dict
+from codebase.health import adapters
+from codebase.health.findings import Finding
+from codebase.health.line_count import load_thresholds, measure_paths, report_to_dict
 
 SCAN_ROOT = "src"
 RUFF_JSON = "ruff.json"

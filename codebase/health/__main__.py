@@ -1,12 +1,12 @@
 """Command line for the code-health registry and ratchet.
 
-    python3 -m tools.code_health check [--from DIR]    scan (or reuse a scan) and run the ratchet
-    python3 -m tools.code_health scan [--out DIR]      run the tools, keep their raw JSON
-    python3 -m tools.code_health seed [--from DIR] [--force]
-    python3 -m tools.code_health validate
-    python3 -m tools.code_health list [--tool T] [--file PREFIX]
-    python3 -m tools.code_health delete FILE TOOL RULE [--symbol S]
-    python3 -m tools.code_health tighten [--from DIR] [--yes]
+    python3 -m codebase.health check [--from DIR]    scan (or reuse a scan) and run the ratchet
+    python3 -m codebase.health scan [--out DIR]      run the tools, keep their raw JSON
+    python3 -m codebase.health seed [--from DIR] [--force]
+    python3 -m codebase.health validate
+    python3 -m codebase.health list [--tool T] [--file PREFIX]
+    python3 -m codebase.health delete FILE TOOL RULE [--symbol S]
+    python3 -m codebase.health tighten [--from DIR] [--yes]
 
 `check` exits 1 if a violation is new or worse than its row, 2 if a tool or the registry is
 unusable, 0 otherwise. This is the entry point behind `make code-health` and the advisory
@@ -25,8 +25,8 @@ from datetime import date
 from pathlib import Path
 from typing import Callable, Sequence
 
-from tools.code_health import ratchet, registry, scan
-from tools.code_health.findings import Finding
+from codebase.health import ratchet, registry, scan
+from codebase.health.findings import Finding
 
 DEFAULT_SCAN_DIR = Path("reports/code_health/scan")
 
@@ -140,7 +140,7 @@ COMMANDS: dict[str, Callable[[argparse.Namespace, Path, Path], int]] = {
 
 def build_parser() -> argparse.ArgumentParser:
     """The argument parser; `--root` and `--registry` exist so tests can use a scratch repository."""
-    parser = argparse.ArgumentParser(prog="python3 -m tools.code_health", description=__doc__)
+    parser = argparse.ArgumentParser(prog="python3 -m codebase.health", description=__doc__)
     parser.add_argument("--root", type=Path, default=registry.REPO_ROOT, help=argparse.SUPPRESS)
     parser.add_argument("--registry", type=Path, default=None, help=argparse.SUPPRESS)
     parser.add_argument("--scan-root", default=scan.SCAN_ROOT, help=argparse.SUPPRESS)

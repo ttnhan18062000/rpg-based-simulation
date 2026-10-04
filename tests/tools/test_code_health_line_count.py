@@ -1,4 +1,4 @@
-"""Tests for tools/code_health/line_count.py and the code-health tool configuration
+"""Tests for codebase/health/line_count.py and the code-health tool configuration
 (TCK-20261002-CODE-HEALTH-TOOL-CONFIG).
 """
 from __future__ import annotations
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from tools.code_health.line_count import (
+from codebase.health.line_count import (
     LEVEL_FAIL,
     LEVEL_FLAG,
     LEVEL_OK,

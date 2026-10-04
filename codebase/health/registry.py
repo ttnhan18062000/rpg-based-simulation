@@ -1,7 +1,7 @@
-"""registries/code_health_exceptions.jsonl: the grandfathered code-health violations.
+"""codebase/baselines/code_health_exceptions.jsonl: the grandfathered code-health violations.
 
 One row per known violation of a rule at a place, found by a full scan when the registry was
-seeded. The ratchet (`tools.code_health.ratchet`) fails only on a violation that has no row, or
+seeded. The ratchet (`codebase.health.ratchet`) fails only on a violation that has no row, or
 whose measured value is above its row's `ceiling`.
 
 Unlike `registries/tag_registry.jsonl` and `registries/layer_registry.jsonl` (append-only), rows
@@ -17,7 +17,7 @@ Row fields (roadmap section 6.3), all required, `symbol` and `retiring_ticket` m
 
 Match key: `(file, symbol, tool, rule)`, never a line number. What `symbol` holds for each tool
 (qualified function name, `None`, or `dup:<other file>` for a jscpd file pair) is documented in
-`tools/code_health/findings.py`. The file is kept sorted by that key so concurrent edits to
+`codebase/health/findings.py`. The file is kept sorted by that key so concurrent edits to
 different rows merge cleanly.
 
 Validation rejects: a row missing a required field or with a wrongly typed one, two rows with the
@@ -32,10 +32,10 @@ from datetime import date
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
 
-from tools.code_health.findings import TOOL_JSCPD, Finding, Key
+from codebase.health.findings import TOOL_JSCPD, Finding, Key
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-REGISTRY_REL_PATH = Path("registries/code_health_exceptions.jsonl")
+REGISTRY_REL_PATH = Path("codebase/baselines/code_health_exceptions.jsonl")
 
 REQUIRED_FIELDS = (
     "file", "symbol", "tool", "rule", "value", "ceiling", "added_date", "reviewed", "retiring_ticket",

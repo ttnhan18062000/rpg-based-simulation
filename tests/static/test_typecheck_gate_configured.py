@@ -50,7 +50,7 @@ def test_pyproject_configures_mypy_baseline_with_the_committed_baseline_and_tole
 
     data = tomllib.loads((_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     table = data["tool"]["mypy_baseline"]
-    assert table["baseline_path"] == "registries/mypy_baseline.txt"
+    assert table["baseline_path"] == "codebase/baselines/mypy_baseline.txt"
     assert table["allow_unsynced"] is True, "a fixed-but-unsynced error must not fail the gate"
     assert "note" in table["ignore_categories"], "a reworded note alone must not count as a new error"
     assert "mypy-baseline==0.7.4" in data["dependency-groups"]["dev"]
@@ -77,5 +77,5 @@ def test_ci_mypy_step_runs_the_advisory_gate_and_is_not_blocking():
 
     steps = yaml.safe_load((_REPO_ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8"))["jobs"]["typecheck"]["steps"]
     step = next(s for s in steps if s.get("name") == "mypy")
-    assert "tools.code_health.mypy_gate" in step["run"] and "--annotate" in step["run"]
+    assert "codebase.gates.mypy_gate" in step["run"] and "--annotate" in step["run"]
     assert step["continue-on-error"] is True, "advisory until TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING"
