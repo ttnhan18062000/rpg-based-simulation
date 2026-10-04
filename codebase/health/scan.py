@@ -38,7 +38,9 @@ JSCPD_REPORT = "jscpd-report.json"
 JSCPD_CONFIG = "codebase/config/.jscpd.json"
 # A stalled `npx` download never fails, it just waits; without a limit the required check would sit until the job
 # limit. Recent CI runs finish the whole code-health job in at most 183 s, so 300 s is far above jscpd's own share.
-# Only jscpd gets a limit: the local tools have no network to stall on.
+# Only jscpd gets a limit: the local tools have no network to stall on. 300 s is not a hard bound: on a timeout
+# `subprocess.run` kills only the direct child and then waits on its pipes again, which can block while npx's node
+# grandchild holds them; the job's `timeout-minutes` is the real backstop.
 JSCPD_TIMEOUT_S = 300.0
 DEFAULT_COMPLEXITY_LIMIT = 15
 
