@@ -85,6 +85,15 @@ class GateError(StoreError):
         self.message = message
 
 
+class DraftError(StoreError):
+    """A draft set operation refused or a draft failed its checks. Nothing was written. `code` is stable."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+
+
 class IdentityError(StoreError):
     """A value is not a canonical identity of the requested type."""
 

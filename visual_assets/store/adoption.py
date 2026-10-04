@@ -72,6 +72,14 @@ def _lineage(source_asset_id: str, new: bool, parent: str | None) -> tuple[str, 
         raise _refuse("revision_limit", f"{source_asset_id} has no revision numbers left") from None
 
 
+def new_source_asset(source_asset_id: str) -> tuple[str, None]:
+    """The (revision, parent) of a brand-new source asset; refused if the id already exists. Used by the set adoption, which only creates new assets."""
+    try:
+        return _lineage(source_asset_id, True, None)
+    except (StageError, ContractError) as exc:
+        raise _refuse("catalog_unreadable", f"existing records could not be read ({exc.code})") from None
+
+
 def _verify_review_image(intake_id: str, expected_pixel_hash: str) -> None:
     """The image file the human actually opened (`store_render.png` in the gitignored review area) must still show what the source renders to now.
 
@@ -129,6 +137,89 @@ def _verify_store_render(
     return stored_bytes
 
 
+def check_source_bytes_are_new(intake_id: str, source_hash: str) -> None:
+    """The SAME BYTES must not reach the catalog through another intake (R4): not after a revocation, not twice."""
+    try:
+        copies = records.revisions_with_source_hash(source_hash)
+        revoked_copies = [(sid, rev) for sid, rev in copies if rev in records.revoked_revisions(sid)]
+        local_copy = records.locally_revoked_source_hashes().get(source_hash)
+    except (StageError, ContractError) as exc:
+        raise _refuse("catalog_unreadable", f"existing records could not be read ({exc.code})") from None
+    if revoked_copies:
+        sid, rev = revoked_copies[0]
+        raise _refuse("source_bytes_revoked", f"these exact bytes are revoked revision {sid} {rev}; a revocation cannot be sidestepped by a new intake")
+    if local_copy is not None and local_copy != intake_id:
+        raise _refuse("source_bytes_revoked", f"these exact bytes belong to {local_copy}, which was revoked on this machine")
+    if copies:
+        sid, rev = copies[0]
+        raise _refuse("duplicate_source", f"these exact bytes are already adopted as {sid} {rev}; adopt a genuinely different source")
+
+
+def check_slot(registry: Registry | None, visual_key: str, detail_value: str | None, source_asset_id: str):
+    """The key must be registered, a detail value declared, and the slot not held by another live asset. Returns (definition, slot value, slot name)."""
+    try:
+        known = (registry if registry is not None else load_registry()).keys
+    except RegistryError as exc:
+        raise _refuse("registry_unreadable", str(exc)) from None
+    if visual_key not in known:
+        raise _refuse("unknown_visual_key", "the visual key is not in the registry (keys are never registered dynamically)")
+    definition = known[visual_key]
+    if detail_value is not None:
+        if definition.detail is None:
+            raise _refuse("detail_not_declared", f"{visual_key} declares no detail axis, so it takes no --detail value")
+        if detail_value not in definition.detail.values:
+            raise _refuse("unknown_detail_value", f"{detail_value!r} is not one of the declared detail values of {visual_key}: {', '.join(definition.detail.values)}")
+    slot = definition.effective_detail(detail_value)
+    slot_name = visual_key if slot is None else f"{visual_key} [{slot}]"
+    try:
+        holders = [holder for holder in records.slot_holders(definition, slot) if holder != source_asset_id]
+    except (StageError, ContractError) as exc:
+        raise _refuse("catalog_unreadable", f"existing records could not be read ({exc.code})") from None
+    if holders:
+        raise _refuse("visual_key_taken", f"{holders[0]} already holds {slot_name}; revoke its revisions first to replace it")
+    return definition, slot, slot_name
+
+
+def check_licence_and_approver(licence_state, licence_evidence_ref, approver: str, approver_role: str) -> None:
+    state = getattr(licence_state, "value", licence_state)
+    if state != LicenceState.CLEARED.value:
+        raise _refuse("licence_not_cleared", f"only a CLEARED licence can be adopted (got {state!r}); the licence review is U-02")
+    if not isinstance(licence_evidence_ref, str) or licence_evidence_ref in _MARKERS or not licence_evidence_ref:
+        raise _refuse("licence_evidence_missing", "give a real licence evidence reference, not NOT_APPLICABLE, UNAVAILABLE or empty")
+    if not approver or not approver.strip() or not approver_role or not approver_role.strip():
+        raise _refuse("invalid_approver", "an approver name and role are required")
+
+
+def build_entry_records(
+    *, intake_id, result, result_bytes, review_bytes, source_hash, package, source_asset_id, revision, parent_revision, visual_key, detail_value,
+    licence_evidence_ref, approver, approver_role, decided_at,
+):
+    """The AdoptionRecord and SourceRecord for one adoption: (adoption id, adoption, adoption bytes, source bytes)."""
+    ad_id = records.adoption_id_for(intake_id, source_asset_id, revision)
+    try:
+        adoption = AdoptionRecord(
+            record_type="adoption_record", schema_version=1, adoption_id=ad_id, intake_id=intake_id,
+            intake_hash=validator.file_hash(result_bytes), review_hash=validator.file_hash(review_bytes),
+            candidate_id=result.candidate_id,
+            approver_name=approver, approver_role=approver_role, source_hash=source_hash,
+            source_asset_id=source_asset_id, source_revision=revision, parent_revision=parent_revision,
+            visual_key=visual_key, detail_value=detail_value, licence_state=LicenceState.CLEARED, licence_evidence_ref=licence_evidence_ref,
+            decided_at=decided_at,
+        )
+        adoption_bytes = canonical_json(adoption)
+        source = SourceRecord(
+            record_type="source_record", schema_version=1, source_asset_id=source_asset_id, source_revision=revision,
+            source_hash=source_hash, parent_revision=parent_revision, adoption_id=ad_id,
+            adoption_hash=validator.file_hash(adoption_bytes), source_format=SourceFormat.ASEPRITE,
+            width=package.width, height=package.height,
+        )
+        source_bytes = canonical_json(source)
+    except (ValidationError, ContractError) as exc:
+        detail = exc.errors()[0]["loc"] if isinstance(exc, ValidationError) else exc.code
+        raise _refuse("invalid_argument", f"an argument is not acceptable ({detail})") from None
+    return ad_id, adoption, adoption_bytes, source_bytes
+
+
 def adopt(
     intake_id: str,
     *,
@@ -140,6 +231,7 @@ def adopt(
     source_asset_id: str,
     new: bool = False,
     parent: str | None = None,
+    detail_value: str | None = None,
     decided_at: str,
     confirm: Confirm,
     registry: Registry | None = None,
@@ -183,41 +275,10 @@ def adopt(
     except (StageError, ContractError) as exc:
         raise _refuse("catalog_unreadable", f"an adoption record could not be read ({exc.code})") from None
 
-    try:  # the SAME BYTES must not reach the catalog through another intake (R4): not after a revocation, not twice
-        copies = records.revisions_with_source_hash(staged["source.aseprite"])
-        revoked_copies = [(sid, rev) for sid, rev in copies if rev in records.revoked_revisions(sid)]
-        local_copy = records.locally_revoked_source_hashes().get(staged["source.aseprite"])
-    except (StageError, ContractError) as exc:
-        raise _refuse("catalog_unreadable", f"existing records could not be read ({exc.code})") from None
-    if revoked_copies:
-        sid, rev = revoked_copies[0]
-        raise _refuse("source_bytes_revoked", f"these exact bytes are revoked revision {sid} {rev}; a revocation cannot be sidestepped by a new intake")
-    if local_copy is not None and local_copy != intake_id:
-        raise _refuse("source_bytes_revoked", f"these exact bytes belong to {local_copy}, which was revoked on this machine")
-    if copies:
-        sid, rev = copies[0]
-        raise _refuse("duplicate_source", f"these exact bytes are already adopted as {sid} {rev}; adopt a genuinely different source")
+    check_source_bytes_are_new(intake_id, staged["source.aseprite"])
 
-    try:
-        known = (registry if registry is not None else load_registry()).keys
-    except RegistryError as exc:
-        raise _refuse("registry_unreadable", str(exc)) from None
-    if visual_key not in known:
-        raise _refuse("unknown_visual_key", "the visual key is not in the registry (keys are never registered dynamically)")
-    try:
-        holders = [holder for holder in records.key_holders(visual_key) if holder != source_asset_id]
-    except (StageError, ContractError) as exc:
-        raise _refuse("catalog_unreadable", f"existing records could not be read ({exc.code})") from None
-    if holders:
-        raise _refuse("visual_key_taken", f"{holders[0]} already holds this visual key; revoke its revisions first to replace it")
-
-    state = getattr(licence_state, "value", licence_state)
-    if state != LicenceState.CLEARED.value:
-        raise _refuse("licence_not_cleared", f"only a CLEARED licence can be adopted (got {state!r}); the licence review is U-02")
-    if not isinstance(licence_evidence_ref, str) or licence_evidence_ref in _MARKERS or not licence_evidence_ref:
-        raise _refuse("licence_evidence_missing", "give a real licence evidence reference, not NOT_APPLICABLE, UNAVAILABLE or empty")
-    if not approver or not approver.strip() or not approver_role or not approver_role.strip():
-        raise _refuse("invalid_approver", "an approver name and role are required")
+    definition, slot, slot_name = check_slot(registry, visual_key, detail_value, source_asset_id)
+    check_licence_and_approver(licence_state, licence_evidence_ref, approver, approver_role)
 
     try:
         revision, parent_revision = _lineage(source_asset_id, new, parent)
@@ -230,34 +291,17 @@ def adopt(
     except ContractError as exc:
         raise _refuse("staged_package_invalid", f"the staged package.json no longer parses ({exc.code})") from None
 
-    ad_id = records.adoption_id_for(intake_id, source_asset_id, revision)
-    try:
-        adoption = AdoptionRecord(
-            record_type="adoption_record", schema_version=1, adoption_id=ad_id, intake_id=intake_id,
-            intake_hash=validator.file_hash(result_bytes), review_hash=validator.file_hash(review_bytes),
-            candidate_id=result.candidate_id,
-            approver_name=approver, approver_role=approver_role, source_hash=staged["source.aseprite"],
-            source_asset_id=source_asset_id, source_revision=revision, parent_revision=parent_revision,
-            visual_key=visual_key, licence_state=LicenceState.CLEARED, licence_evidence_ref=licence_evidence_ref,
-            decided_at=decided_at,
-        )
-        adoption_bytes = canonical_json(adoption)
-        source = SourceRecord(
-            record_type="source_record", schema_version=1, source_asset_id=source_asset_id, source_revision=revision,
-            source_hash=staged["source.aseprite"], parent_revision=parent_revision, adoption_id=ad_id,
-            adoption_hash=validator.file_hash(adoption_bytes), source_format=SourceFormat.ASEPRITE,
-            width=package.width, height=package.height,
-        )
-        source_bytes = canonical_json(source)
-    except (ValidationError, ContractError) as exc:
-        detail = exc.errors()[0]["loc"] if isinstance(exc, ValidationError) else exc.code
-        raise _refuse("invalid_argument", f"an argument is not acceptable ({detail})") from None
+    ad_id, adoption, adoption_bytes, source_bytes = build_entry_records(
+        intake_id=intake_id, result=result, result_bytes=result_bytes, review_bytes=review_bytes, source_hash=staged["source.aseprite"], package=package,
+        source_asset_id=source_asset_id, revision=revision, parent_revision=parent_revision, visual_key=visual_key, detail_value=detail_value,
+        licence_evidence_ref=licence_evidence_ref, approver=approver, approver_role=approver_role, decided_at=decided_at,
+    )
 
     notices = (
         PREVIEW_WARNING,
         f"adopt {intake_id} as {source_asset_id} {revision}" + (f" (parent {parent_revision})" if parent_revision else " (new source asset)"),
         "the store re-rendered the source just now and its pixels MATCH the producer's preview",
-        f"visual key {visual_key}; licence recorded as CLEARED, evidence {licence_evidence_ref!r} (stated by you, not taken from the package)",
+        f"visual key {slot_name}" + (" (the key's default detail value)" if detail_value is None and slot is not None else "") + f"; licence recorded as CLEARED, evidence {licence_evidence_ref!r} (stated by you, not taken from the package)",
         f"approver {approver!r} ({approver_role}); recorded, not authenticated",
     )
     if not confirm(intake_id, notices):

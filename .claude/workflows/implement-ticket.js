@@ -69,6 +69,26 @@ const sh = async (cmd, label) => {
 }
 const shOmit = async (cmd) => (legacyBash ? legacyBash(cmd) : '')
 
+// Gate, control and input sites that still call the runtime's bare `bash()` (TCK-20261004-IMPLEMENT-TICKET-NATIVE-
+// REFUSE-UP-FRONT-WHEN-GATE-SITES-UNPORTED). Natively `bash` is undefined, so a non-epic native run dies with
+// `ReferenceError: bash is not defined` at the first of these sites, after Scope has already spent its agents (one run
+// burned ~277k tokens). While this list is non-empty a native non-epic run is refused before any pipeline agent is
+// dispatched. Each key is the variable the site assigns. A port ticket deletes its entry when it converts the site to
+// sh()/shOmit(); the refusal lifts when the list is empty. tests/tools/test_implement_ticket_native_refusal.py ties
+// this list to the actual bare `bash(` call sites, so adding one without listing it (or porting one without removing
+// it) fails the test.
+const NATIVE_UNPORTED_GATE_SITES = [
+  'tagCheckOutput',
+  'unresolvedCheckOutput',
+  'docStalenessOutput',
+  'testScopeCheckOutput',
+  'cleanupOutput',
+  'p0ScanOutput',
+  'touchedOutput',
+  'crossRefOutput',
+  'finalizeCheckOutput',
+]
+
 // Uncaught-exception recorder (TCK-20261003-IMPLEMENT-TICKET-JS-NO-MONITORING-ON-EXCEPTION). Every run must record a
 // run entry and an event; writeMonitoring() is otherwise only reached on named terminal statuses, so an exception
 // thrown between them (the first native run died on `bash is not defined`) left no record. The catch at the bottom of
@@ -110,6 +130,29 @@ if (!legacyBash) {
     return {
       status: 'INVALID_ARGS',
       message: `Native Workflow runtime requires args: ${missingNativeArgs.join(', ')}. start_ts=<ISO timestamp from \`date -u +%Y-%m-%dT%H:%M:%SZ\`>, execution_id_suffix=<unique string, e.g. epoch-ms plus a random hex>.`,
+    }
+  }
+  // Refuse before any pipeline agent runs (see NATIVE_UNPORTED_GATE_SITES). Epic tier returns before the gates, so it
+  // is the one tier that may proceed natively; an unknown tier is refused too, because it is only known after Scope.
+  if (NATIVE_UNPORTED_GATE_SITES.length && tierOverride !== 'epic') {
+    const refusedDigits = String(args.start_ts).replace(/[^0-9]/g, '')
+    const refusedRunId = ticketId || `NATIVE-REFUSED-${refusedDigits}`
+    // Best-effort run row + event, written the way recordWorkflowError's pre-Scope fallback writes them (the
+    // SCOPE_AGENT_FAILED shape). A failure here never changes the returned status. Only these recorder commands are
+    // dispatched natively, never a pipeline agent.
+    try {
+      await sh(
+        `python3 tools/agent-monitoring/record_events.py --default-ts "${args.start_ts}" --data '[{"run_id":"${refusedRunId}","seq":1,"phase":"Scope","agent":"implement-ticket-orchestrator","status":"failed","summary":"NATIVE_GATE_SITES_UNPORTED: refused before Scope, ${NATIVE_UNPORTED_GATE_SITES.length} gate sites still need the runtime shell","ts":"${args.start_ts}"}]' 2>/dev/null || true`,
+        'refusal-record'
+      )
+      await sh(
+        `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${refusedRunId}","start_ts":"${args.start_ts}","end_ts":"${args.start_ts}","workflow":"implement-ticket","tier":"${tierOverride || 'standard'}","final_status":"NATIVE_GATE_SITES_UNPORTED","agent_count":0,"execution_mode":"pipeline"}' 2>/dev/null || true`,
+        'refusal-record'
+      )
+    } catch (recorderError) { /* best-effort: the refusal itself is the result */ }
+    return {
+      status: 'NATIVE_GATE_SITES_UNPORTED',
+      message: `The native Workflow runtime cannot run implement-ticket for a non-epic ticket yet: ${NATIVE_UNPORTED_GATE_SITES.length} gate sites (${NATIVE_UNPORTED_GATE_SITES.join(', ')}) still call the runtime's own shell function, which the native runtime does not provide, so the run would fail after Scope. Nothing was dispatched. Use the legacy runtime, or pass tier "epic". Deferral: TCK-20260930-IMPLEMENT-TICKET-NATIVE-PORT (attested gate sites, owner decision 2026-10-01).`,
     }
   }
 }

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-VISUAL-ASSETS-TERRAIN-DETAIL-VARIANTS
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, mcp, live-map]
 ---
@@ -15,10 +15,10 @@ tags: [architecture, mcp, live-map]
 Decorative detail variants for one visual key (forest: plain, bush, tree), picked deterministically from cell coordinates
 
 ## Status
-OPEN
+EPIC_SCOPED
 
 ## Tier
-standard
+epic
 
 ## Type
 feature
@@ -60,11 +60,11 @@ simulation truth with their own data path and keys, a separate initiative.
 - The normal Live Map, unless an `AM-M6` authorization covering it exists by then.
 
 ## Acceptance Criteria
-- [ ] Store contract, ADR and `store_contract.md` describe the detail axis; the one-key-one-artifact limit is replaced, not silently broken.
-- [ ] Same `(key, x, y, seed)` gives the same variant on every run and client (test); mutant "use Math.random" fails.
-- [ ] The pilot's adopted `terrain.forest` artifact is the default variant (or the re-adoption is recorded).
-- [ ] Each new variant adopted by the user; `verify` clean; runtime manifest lists every value.
-- [ ] Fallback order tested: missing variant -> default variant -> role fallback.
+- [x] Store contract, ADR (D11) and `store_contract.md` describe the detail axis; the one-key-one-artifact limit is replaced, not silently broken (DETAIL-AXIS-CONTRACT).
+- [x] Same `(key, x, y, seed)` gives the same variant on every run (golden vectors, Math.random and dropped-x mutants fail; the user approved the 64 x 64 spread) (DETAIL-PICK-CLIENT).
+- [x] The pilot's adopted `terrain.forest` artifact is the default variant (`plain`), with no re-adoption (`detail_value` None = the declared default).
+- [x] Each new variant (bush, tree) adopted by the user (`ad-5615d03ed5a98f0a`, `ad-34303489f1e5db70`); `verify` clean; the runtime manifest lists every value (release `pilot/rc-0002`, now `rc-0003` under the extended registry) (FOREST-DETAIL-TILES, TERRAIN-DRAFT-SET). Per-tile adoption was then replaced by drafts and whole-set review by the user's decision.
+- [x] Fallback order tested: missing variant -> default variant -> role fallback (DETAIL-PICK-CLIENT).
 
 ## Related Tickets
 - TCK-20261004-EPIC-VISUAL-ASSET-PILOT-READINESS, TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE
@@ -83,9 +83,23 @@ simulation truth with their own data path and keys, a separate initiative.
 - Seed: a fixed constant per release is enough for "same map looks the same"; per-world seeds need world data in the client and are a later choice.
 
 ## Implementation Notes
+Scoped as an epic on 2026-10-04 (asset-planner; user: "proceed, you can wire them into a single PR"). Not implemented
+directly. Children, in order, are in `SEQUENCE.md` in this folder:
+1. `TCK-20261004-VISUAL-ASSETS-DETAIL-AXIS-CONTRACT` — store + runtime-manifest contract (both sides), ADR row, docs.
+2. `TCK-20261004-VISUAL-ASSETS-DETAIL-PICK-CLIENT` — pure `pickDetail`, resolver fallback order, pilot scene.
+3. `TCK-20261004-VISUAL-ASSETS-FOREST-DETAIL-TILES` — draw bush + tree, user adopts each, release `pilot/rc-0002`.
+4. (moved out, deferred by the user 2026-10-04) `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN`.
+Extended by the user on 2026-10-04 ("drafts now, batch review"): `...-DRAFT-SETS-AND-SET-ADOPTION`,
+`...-DRAFT-PREVIEW-PAGE`, `...-TERRAIN-DRAFT-SET` (last; epic close-out).
+The acceptance criteria above are the epic's; each one is owned by the child named against it in `SEQUENCE.md`.
+One branch `visual-asset-detail-variants`, based on the held hotfix `TCK-20261004-VISUAL-ASSETS-KILL-TREE-TEST-RACE`
+(commits f1de9af58, 30dbc69b9), which ships in the same PR.
 
 ## Test Summary
+See the children's done tickets; the batch ends at 1521 `tests/visual_assets` and 187 `src/visualAssets` tests passing, `verify` and `draft verify` clean.
 
 ## Files Changed
+See the children (done): DETAIL-AXIS-CONTRACT, DETAIL-PICK-CLIENT, FOREST-DETAIL-TILES, DRAFT-SETS-AND-SET-ADOPTION, DRAFT-PREVIEW-PAGE, TERRAIN-DRAFT-SET. DETAIL-M5-RERUN was deferred (todos/ root).
 
 ## Completion Summary
+The detail axis (contract, client pick, three forest slots) and the draft-set workflow (`draft keep/verify/export`, the user-only `adopt-set`, the isolated preview page, the draft set `terrain-v1` for every Live Map terrain code) are built on branch `visual-asset-detail-variants`. Asset work is paused after this batch by the user's decision (2026-10-04): icons and other asset kinds, the M5 rerun and the charter stay parked.

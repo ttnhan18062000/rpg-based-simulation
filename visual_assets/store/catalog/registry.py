@@ -103,6 +103,9 @@ def load_registry(path: Path | None = None, *, allow_fixture_namespace: bool = F
     if len(record.aliases) > config.MAX_ALIASES:
         raise RegistryError(f"more than {config.MAX_ALIASES} aliases")
 
+    if sum(1 for definition in record.keys if definition.detail is not None) > config.MAX_DETAIL_KEYS:
+        raise RegistryError(f"more than {config.MAX_DETAIL_KEYS} keys declare a detail axis")
+
     keys: dict[str, VisualKeyDefinition] = {}
     for definition in record.keys:
         if definition.key in keys:

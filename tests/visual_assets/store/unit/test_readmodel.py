@@ -161,7 +161,7 @@ def test_a_large_release_is_bounded_in_show_and_counted_in_full(tree):
     from visual_assets.store.contracts.release import ReleaseEntry
 
     entry = readmodel.show_item("release", "main/rc-0001")["entries"][0]
-    entries = tuple(ReleaseEntry(visual_key=f"fixture.sample.k{i}", artifact_id="hero--x1", pixel_hash=entry["pixel_hash"]) for i in range(250))
+    entries = tuple(ReleaseEntry(visual_key=f"fixture.sample.k{i:03d}", artifact_id="hero--x1", pixel_hash=entry["pixel_hash"]) for i in range(250))
     manifest = ReleaseCandidateManifest(record_type="release_candidate_manifest", schema_version=1, catalog_id="main", release_id="rc-0002",
                                         registry_hash="sha256:" + "0" * 64, entries=entries, status="CANDIDATE")
     (tree.catalog / "manifests" / "candidates" / "main" / "rc-0002.json").write_bytes(canonical_json(manifest))
