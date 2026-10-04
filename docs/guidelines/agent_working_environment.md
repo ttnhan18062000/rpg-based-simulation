@@ -251,6 +251,17 @@ Once installed, the hook is silent on unrelated commits and self-skips if `agent
 
 ---
 
+### Derived indexes pile up in every worktree
+
+Each git worktree builds its own `agent-working/.index/` (knowledge index ~105M, agent-monitoring index ~145M). Both are untracked and regenerable, and a per-worktree index is always current for that worktree's own docs, so there is deliberately no shared index across branches. Reclaim the space from worktrees you are no longer using:
+
+```bash
+python3 tools/prune_worktree_indexes.py                 # report only, 7-day idle threshold
+python3 tools/prune_worktree_indexes.py --days 3 --apply  # delete idle worktrees' knowledge + monitoring indexes
+```
+
+It never touches the current worktree, the main checkout or the parity index. Rebuild a pruned one with `make knowledge-index` (re-runs the embedding model) or `make agent-monitoring-index`. The index path is anchored to the checkout that owns `tools/knowledge_search.py`, not the process working directory, so `search_docs` (MCP) and `tools/knowledge_search.py` resolve the same index from any start directory.
+
 ## Command Reference
 
 | Command | What it does |
