@@ -168,7 +168,7 @@ Doc-only change; no test applies. `grep -rn issue_party_command docs/mechanics d
 
 ## Files Changed
 
-`docs/mechanics/07_social_political_dynamics.md` (one sentence, verbatim owner text, re-wrapped only). No `intentional_divergences.md` or `docs/parity_ledger/` change.
+`docs/mechanics/07_social_political_dynamics.md` (one sentence, verbatim owner text, re-wrapped only). No `intentional_divergences.md` or `docs/parity_ledger/` change. The sentence's first clause was later dropped under `TCK-20261004-REMOVE-THE-DORMANT-PARTY-COMMAND-METHOD`, as the rule owner specified for removal.
 
 ## Completion Summary
 

@@ -23,8 +23,8 @@ tags: [engine, social, root-cause, observability]
 - **expected effect**: `RunManifest.catalog_fingerprint` and `module_fingerprints` equal the provenance file's values; corrupt file produces a warning and `None` fingerprints
 - **selected commands**: `pytest tests/unit/engine/test_kernel_provenance_manifest_load.py -q`
 ### AC4
-- **level**: unit
-- **proof kind**: regression
-- **oracle source**: none for world behaviour (the Bible now states the method has no caller); this only proves the undefined name is gone
-- **expected effect**: returns a `StrategicUpdate` with one CRITICAL `DirectiveState`
-- **selected commands**: `pytest tests/unit/social/test_party_issue_command.py -q`
+- **level**: n/a
+- **proof kind**: removal
+- **oracle source**: `TCK-20261004-REMOVE-THE-DORMANT-PARTY-COMMAND-METHOD`
+- **expected effect**: the method no longer exists; whole-repo grep finds no reference outside historical records
+- **selected commands**: `grep -rIn issue_party_command . --exclude-dir=.git --exclude-dir=.venv --exclude-dir=agent-working --exclude-dir=plans`

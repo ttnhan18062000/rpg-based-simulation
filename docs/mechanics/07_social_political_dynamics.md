@@ -326,8 +326,7 @@ boost = 25.0 + (trust_score * 15.0)     # trust_score: bond.sentiment or trust_h
 This is strong enough to dominate ordinary goal candidates but can still be overridden by survival
 needs (hunger/HP) scoring higher. `validate_shared_target()` clears a group's `shared_target_id` if
 the target dies, deactivates, or leaves `2 * cohesion_radius` of the anchor.
-`issue_party_command()` exists in `party.py` but has no caller; no party-command behaviour occurs in
-the world. Leadership acts only through `apply_leadership_influence()`'s goal injection above.
+Leadership acts only through `apply_leadership_influence()`'s goal injection above.
 
 ### Leadership Election & Defection (`party_lifecycle.py`, SOC-228/SOC-230)
 - **Election:** every `LEADERSHIP_CHECK_INTERVAL` ticks, if the highest-sociability member exceeds

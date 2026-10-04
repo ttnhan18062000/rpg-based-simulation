@@ -180,17 +180,17 @@ None. The evidence is in `codebase-planner`'s own handoff and re-verified in thi
 - Bug 1 (LIVE, silent): module-level `import json` in `src/engine/kernel.py`; the two function-local imports removed; `except Exception: pass` narrowed to `(OSError, ValueError)` with a `logger.warning` (a missing or corrupt manifest degrades fingerprints but must not abort a run, so it is logged, not raised).
 - Blast radius, measured: `prov_manifest_data` only feeds `RunManifest.catalog_fingerprint` and `module_fingerprints` as fallbacks; `src/lab/orchestrator.py` passes neither, so every lab-orchestrated run recorded the process-wide catalog fingerprint and `module_fingerprints=None` instead of the resolve-time values. Anything that read those from a lab run's manifest did not have provenance.
 - Bug 2 (DORMANT, zero callers): `StrategicUpdate` imported from `src/core/updates.py`. The ticket and the handoff named `src/core/strategic.py`, which does not define it; a first edit using that path failed the new test.
-- Decision for `issue_party_command`: kept and now tested, NOT wired and NOT removed. Escalated to the rule owner (`world-rule-catalog-design`) via the planner, who ruled: the Bible was wrong, wiring is ruled out permanently (the function would not be a valid realisation under AUTH-05/ORG-02/AGENCY-01/02 and the Durable State Rule), and removal is codebase-health's disposition call. The Bible sentence was corrected in place under `TCK-20261004-BIBLE-07-DESCRIBES-PARTY-COMMAND-BEHAVIOUR-THAT-NEVER-OCCURS`. Cross-lane exception recorded in `docs/plans/rpg_design_roadmap/rpg_implementer_lane_split.md` section 5.
+- Decision for `issue_party_command`: first kept and tested while escalated; the rule owner then ruled wiring out permanently and the Bible wrong (`TCK-20261004-BIBLE-07-DESCRIBES-PARTY-COMMAND-BEHAVIOUR-THAT-NEVER-OCCURS`), and the planner ruled removal (`TCK-20261004-REMOVE-THE-DORMANT-PARTY-COMMAND-METHOD`). The method, the `StrategicUpdate` import added for it, and its test were removed, so Bug 2's `NameError` is gone because the method is gone. The import fix was made first and verified by a test that failed before it (the `StrategicUpdate` module path was learned that way), then superseded. Cross-lane exception recorded in `docs/plans/rpg_design_roadmap/rpg_implementer_lane_split.md` section 5.
 
 ## Test Summary
 
-- `tests/unit/engine/test_kernel_provenance_manifest_load.py` (2) and `tests/unit/social/test_party_issue_command.py` (1): all fail on the old code, pass on the fix.
+- `tests/unit/engine/test_kernel_provenance_manifest_load.py` (2): both fail on the old code, pass on the fix. A third test, for `issue_party_command`, failed on the old code too but was deleted with the method (`TCK-20261004-REMOVE-THE-DORMANT-PARTY-COMMAND-METHOD`).
 - AC-5: `ruff` is not installed in this environment, so F821 was not run; the NameErrors are covered by tests instead. The mypy baseline was not regenerated or reduced here (not measured).
 - Scoped run on the final tree: 1693 passed, 0 failed.
 
 ## Files Changed
 
-`src/engine/kernel.py`; `src/systems/social_systems/party.py`; `tests/unit/engine/test_kernel_provenance_manifest_load.py`; `tests/unit/social/test_party_issue_command.py`.
+`src/engine/kernel.py`; `tests/unit/engine/test_kernel_provenance_manifest_load.py`. (`src/systems/social_systems/party.py` and its test were touched and then removed under `TCK-20261004-REMOVE-THE-DORMANT-PARTY-COMMAND-METHOD`; net diff for them from this ticket is nil.)
 
 ## Completion Summary
 
