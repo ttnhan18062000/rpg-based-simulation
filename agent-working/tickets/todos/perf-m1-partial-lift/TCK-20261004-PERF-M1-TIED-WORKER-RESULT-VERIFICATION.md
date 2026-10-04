@@ -103,6 +103,7 @@ key alone ("Tied-result verification contract").
 ## Assumptions / Open Questions
 - If a permutation seam needs an edit to `kernel.py`, stop and report. Do not edit it. A
   test-only monkeypatch of `_final_results` before `_phase_resolution` is the expected route
+- Concrete tie to include (perf-planner, 2026-10-04): the resolution loop does `work_debt_updates[res.subsystem_id] = res.work_debt_update` (`kernel.py`, around line 647). That is last-writer-wins, not a sum, so two `DRAIN_DEBT` results for the same subsystem in one tick (both `entity_id` 0, same class) keep whichever sorts last. Today every drain value is equal (`-max_worker_count`), so it may be harmless in practice; the test should say so either way. See `TCK-20261004-WORK-DEBT-NEVER-ACCUMULATES-IN-PRODUCTION`
 - The process route may be unavailable in CI. Mark those cases and say which routes ran
 
 ## Implementation Notes
