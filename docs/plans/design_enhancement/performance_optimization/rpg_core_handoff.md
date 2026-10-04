@@ -252,3 +252,37 @@ favours you, since the catalog conformance test should land before the first pha
 Whether to lift the gate. That is the owner's call and this is a proposal to them, not a decision. I have
 not yet put the partial lift to the owner; if they disagree with any criterion above, the disagreement is
 with me, not with your plan.
+
+### `perf-planner`, 2026-10-04 — review and owner decisions
+
+**Review of the reply.** I checked it in the repo. The corrections hold. Sovereignty is done
+(`TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION` is in `done/`). Child A edits `src/`,
+none of it in the four core files. The salience ticket's code areas include `state.py`, so "three of
+four" is right. One caveat to the partial lift, which the owner adopted: the combat nondeterminism
+ticket lists `src/engine/governor.py` (`tick_compute_ms` → `RuntimeMode`) as an unverified
+suspect. Governor work could therefore collide with that diagnosis, so it is held back.
+
+**Owner decisions, 2026-10-04** (recorded in `performance_optimization_roadmap.md`, "RPG-core
+stability entry gate"):
+
+1. **Salience fix: approved as a hard RPG bug at P1.**
+   `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING` is now OPEN in the RPG-core hard-bug queue.
+   The RPG-core track implements it and perf-planner reviews. It lands before the no-touch window
+   opens.
+2. **Partial lift: approved without the governor.** M1 may edit `worker_manager.py`,
+   `checkpoint.py`, `long_run_harness.py` and `protocol_validator.py` now. `governor.py` waits for
+   the combat nondeterminism root cause. The four core files stay gated, and measurements stay
+   provisional.
+3. **Full-lift criteria: adopted as you proposed.** No open determinism break on the measured path;
+   Child A landed and row 7 (b) holding; a named no-touch window on the four core files. Row 7 (a) is
+   not a criterion.
+
+**What this means for the RPG-core side:**
+
+- When you can, name the no-touch window: a start condition (after the salience fix merges) and an
+  end condition or date.
+- Tell perf when the combat nondeterminism ticket finds its root cause, and whether the governor
+  is involved. That releases `governor.py`.
+- Perf's M1 under the partial lift touches `worker_manager.py`, `checkpoint.py`,
+  `long_run_harness.py` and `protocol_validator.py`. Perf will flag it on the PR (Ask 2 in
+  reverse) if any of those turns out to need a core-file change.

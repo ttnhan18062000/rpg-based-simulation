@@ -15,7 +15,7 @@ tags: [determinism, economy, engine, bug]
 Remove wall-clock compute time from `global_salience` so host speed no longer changes shop prices (PERF-D1 amendment A1)
 
 ## Status
-BLOCKED
+OPEN
 
 ## Tier
 standard
@@ -24,7 +24,7 @@ standard
 bug
 
 ## Priority
-P2
+P1
 
 ## Request Summary
 `TCK-20261003-PERF-WALL-CLOCK-READ-INVENTORY` found, and perf-planner confirmed by reading the code on 2026-10-03, that measured wall-clock time reaches authoritative gameplay. `Kernel` builds `compute_ratio = tick_compute_ms / max_tick_budget_ms` from the previous tick's measured compute time, adds it to `debt_ratio` to form `global_salience` (capped at 2.0), and writes it into the `StateUpdate` as `pressure_signals_set` (`src/engine/kernel.py`, around lines 661-678). `apply.py` stores it in `AuthoritativeState.pressure_signals`. `DynamicPriceService.calculate_buy_price` (`src/systems/economy_systems/economy.py:27`) multiplies the price by `1 + salience`. `ShopService.buy_item` (`src/town/shop.py:35-41`) uses that price for the gold-sufficiency check and the cost, and is reached from the live intent path (`src/engine/intent/action_intent.py:246`). So the same seed on a slower or busier host produces higher prices, different purchase outcomes, and a different world. `audit_mode` zeroes the signal, which hides the problem from audited runs.
@@ -68,7 +68,8 @@ The owner decided on 2026-10-03 (PERF-D1 amendment A1, `docs/architecture/perfor
 - `src/engine/kernel.py`, `src/engine/apply.py`, `src/systems/economy_systems/economy.py`, `src/town/shop.py`, `src/engine/intent/action_intent.py`, `src/core/state.py`
 
 ## Assumptions / Open Questions
-- BLOCKED until the RPG-core stability entry gate opens and the Code Craft `src/` freeze lifts (performance roadmap, "Plan review, 2026-10-02"). If the owner judges this a correctness bug that should land sooner, it can be routed to the codebase track; perf-planner has not raised that yet
+- **Unblocked by the owner, 2026-10-04 (PR #312, `docs/plans/design_enhancement/performance_optimization/rpg_core_handoff.md`):** a determinism break, so a hard RPG bug under memo row 7 (`docs/plans/systemic_world/owner_decision_memo.md`), raised to P1 and placed in the RPG-core hard-bug queue. The RPG-core track implements it; perf-planner reviews. It lands before the no-touch window on `state.py`/`apply.py`/`pipeline.py`/`kernel.py` opens (it edits three of the four). Was BLOCKED behind the RPG-core entry gate and the Code Craft `src/` freeze from 2026-10-03 to 2026-10-04
+- Add a regression test that fails with `audit_mode=False`: `audit_mode` zeroes the signal and hides the defect from audited runs
 - Whether economy calibration worlds were tuned while salience moved with host timing is unknown; calibration drift after the fix is expected to be small because the compute term is near zero on fast hosts, but this is unmeasured
 
 ## Implementation Notes
