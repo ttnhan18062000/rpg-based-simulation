@@ -49,7 +49,7 @@ Owner decision 2026-10-03 (decision record `docs/plans/codebase_health/codebase_
 ## Acceptance Criteria
 - [x] `codebase/` exists with the layout above and a README naming the owner; `python3 -m codebase.health check` replaces `python3 -m tools.code_health check` everywhere it is referenced
 - [x] `git grep` finds no live reference to `tools/code_health`, `tools.code_health`, the five moved flat files or `registries/code_health_exceptions.jsonl` / `registries/mypy_baseline.txt` outside closed history (tickets/done, stored_artifacts, monitoring shards)
-- [x] Makefile target names and CI job names are unchanged; on the PR run `Code health (advisory)` reports 3,617 unchanged (or the reseed count of the merged head), the mypy gate 0 new, and the SARIF job uploads
+- [ ] Makefile target names and CI job names are unchanged; on the PR run `Code health (advisory)` reports 3,617 unchanged (or the reseed count of the merged head), the mypy gate 0 new, and the SARIF job uploads (local verification done: names identical to origin/main, count 3,617 and mypy 0 new on the merged head; the PR run itself is still to be recorded after the push)
 - [x] Moved tests pass from `tests/codebase/`, and the CI coverage test shows them collected by a job
 - [x] repo_tooling_layout.md amended as in Scope; the orphan check covers `codebase/**`; the reappearance guard test passes
 - [x] Soak start and end dates filled in the epic, roadmap and flip ticket

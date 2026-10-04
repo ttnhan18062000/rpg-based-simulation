@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P2
 audience: agent
@@ -27,3 +27,6 @@ Live: the real ledger against the committed baseline passes (no rise); the basel
 Mutation proofs (verify the mutant applied and failed for the right reason): flip the rise comparison; skip the new-rule branch; make `tighten` accept a rise. Each must fail at least one named test.
 Real CLI: `python3 -m codebase.gates.parity_ledger_schema check` from the repo root on main's ledger prints 2,862 as split and exits 0; the AC demo in a scratch copy (add a verified/null entry: exit 1 naming file and rule; remove an error: exit 0 plus decrease).
 Also: `git diff --stat` shows `schema.json` and every ledger YAML absent; CI coverage test (`tests/codebase` already in `tools-a-e`); frontmatter validators.
+
+## Results (recorded at close)
+Unit and live tests: 33 passed. Six mutants, each applied and each caught (see the ticket's Test Summary). Real CLI and both acceptance demos recorded in the ticket. Whole `tests/codebase`: 5 failed, all known environmental (3 `test_real_path_*`, 2 make-target timeouts); no new failure.
