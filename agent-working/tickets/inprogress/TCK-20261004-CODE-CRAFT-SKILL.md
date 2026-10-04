@@ -4,7 +4,7 @@ layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-CODE-CRAFT-SKILL
-phase: open
+phase: inprogress
 date: 2026-10-04
 tags: [architecture, skills]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, skills]
 M6d: `code-craft` skill and the implementer pointer
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -72,9 +72,12 @@ None.
 - Nothing here blocks a PR or tool call; M4 and M5 soaks are not disturbed
 
 ## Implementation Notes
+`.claude/skills/code-craft/SKILL.md` (no counts, precise trigger: src/ or tools/ Python, not docs/YAML/test-only), catalog entry, Codex mirror generated with `render_codex_guidance` (the only change it caused beyond the new mirror was the required `code-craft` line in `AGENTS.md`; no unrelated drift), `docs/ai/skills.md` row. E3 example uses `except Exception: return None` around a parse step and says handling (`except KeyError: return default`) is not a swallow. One pointer line added to `.claude/agents/implementer.md` after the owner confirmed the literal diff (AskUserQuestion, 2026-10-04).
 
 ## Test Summary
+`tests/tools/test_code_craft_skill_content.py` plus `tests/agent_orchestration` and `tests/agent_orchestration_codex_adapter`: 106 passed (with the settings wiring tests).
 
 ## Files Changed
+.claude/skills/code-craft/SKILL.md (new), .claude/agents/implementer.md (agent-working's), .agents/skills/code-craft/SKILL.md (generated), AGENTS.md (generated), agent-working/agent-orchestration/skills.yaml, docs/ai/skills.md, tests/tools/test_code_craft_skill_content.py (new), ticket and staging artifacts
 
 ## Completion Summary
