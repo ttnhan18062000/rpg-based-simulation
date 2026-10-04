@@ -468,7 +468,7 @@ codebase-health-baseline: ## Print a live LoC/churn/dependency baseline snapshot
 codebase-health-impact: ## Print a change-impact report for a source path (pass ARGS="src/engine/pipeline.py") (on-demand only — not CI)
 	python3 -m codebase.reports.code_health_impact $(ARGS)
 
-codebase-health-snapshot: ## Append a codebase-health metrics snapshot to agent-working/agent-monitoring/codebase_health_history.jsonl (on-demand only — not CI)
+codebase-health-snapshot: ## Append a codebase-health metrics snapshot to codebase/reports/codebase_health_history.jsonl (on-demand only — not CI)
 	python3 -m codebase.reports.codebase_health_snapshot snapshot $(ARGS)
 
 codebase-health-scorecard: ## Print a per-dimension trend scorecard over codebase-health history (on-demand only — not CI)
