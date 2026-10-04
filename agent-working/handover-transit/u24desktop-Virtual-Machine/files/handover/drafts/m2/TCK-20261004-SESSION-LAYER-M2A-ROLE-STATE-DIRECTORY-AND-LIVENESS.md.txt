@@ -38,6 +38,8 @@ Child of `TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION` (milestone M2). Hold rule 
 - `tools/sessions/state.py` CLI: `show <role>`, `release <role>` (explicit, for the user).
 - Concurrent writers: two processes appending a binding at once must not corrupt `bindings.jsonl`.
 
+- Lease key is the PHYSICAL worktree path, not the manifest's logical worktree name: a domain may have several physical worktrees (observed 2026-10-04: two rpg implementers in two worktrees, one git writer each). `max_sessions` stays a best-effort launch-time count per role; instance naming for a second holder of one role (`<role>-N`) is decided with the owner, and `tools/sessions/validate.py` stays a static manifest check that never reads live staffing.
+
 ## Out of Scope
 - SessionStart hook and binding resolution (M2b), launcher, recovery flow and worktree self-heal (M2c), any `settings.json` change, guardrail enforcement of the lease (M5).
 

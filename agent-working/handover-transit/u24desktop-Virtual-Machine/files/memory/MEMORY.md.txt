@@ -60,6 +60,7 @@
 - [Resolve shard conflicts by filtering](feedback_resolve_shard_conflicts_by_filtering_consolidated_rows.md) — keep rows whose ts is absent from canonical
 - [Monitoring corpus measurement staleness](project_worktree_corpus_measurement_staleness.md) — read counts from a named ref + SHA
 - [Disposition closes no-code tickets](feedback_disposition_closes_no_code_tickets.md) — never delete a ticket to retire it; Status enum ≠ no retirement path
+- [data/runs cleanup is not session-scoped](project_data_runs_cleanup_not_session_scoped.md) — mtime-gated, deletes peers' runs; a PID check is no fix (PIDs recycle); one pipeline at a time
 - [working_log row lives in a pending shard](feedback_working_log_row_lives_in_pending_shard.md) — use done_checker_static [finalize]
 - [working_log wrapper double-write](feedback_working_log_wrapper_double_write.md) — never append_working_log_row() + closure tool together
 - [working_log duplicate: keep main's copy](feedback_working_log_duplicate_keep_main_matching_copy.md) — match origin/main bytes
