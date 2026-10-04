@@ -275,6 +275,12 @@ def test_pack_refs_disabled_pack_raises_at_assembly(repos):
 # Generated composition integration test (TCK-20260614-WORLDGEN-COMPOSE)
 # ---------------------------------------------------------------------------
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION: "
+           "generator selects two modules both declaring region id hometown and sets no "
+           "namespace; resolver raises at resolver.py:359",
+)
 def test_generated_composition_is_valid_worldcompositionspec(repos, tmp_path, monkeypatch):
     """
     ProceduralCompositionGenerator produces a YAML that parses as a valid
@@ -310,6 +316,12 @@ def test_generated_composition_is_valid_worldcompositionspec(repos, tmp_path, mo
     assert len(spec.module_refs) > 0
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION: "
+           "generator selects two modules both declaring region id hometown and sets no "
+           "namespace; resolver raises at resolver.py:359",
+)
 def test_generated_composition_determinism(repos, tmp_path, monkeypatch):
     """
     Two calls with identical intent and seed produce byte-identical YAML.

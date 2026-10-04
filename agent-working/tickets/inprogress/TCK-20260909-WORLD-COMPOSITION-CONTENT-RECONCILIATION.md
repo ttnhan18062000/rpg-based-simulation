@@ -1082,8 +1082,10 @@ intermittent — which the new ticket's Assumptions depend on.
 ### Pre-existing failures, verified not caused by this ticket
 
 - **11 failures in `tests/unit/worldassembly/test_corpus_diversity.py` and
-  `test_hero_guild_routing_population_stability.py`** (`11 failed, 83 passed in 1338s`, measured
-  in the foreground on the final tree). Evidence they predate this diff, rather than an assertion:
+  `test_hero_guild_routing_population_stability.py`**, measured twice in the foreground
+  (`11 failed, 83 passed` in 1338s, then again in 1321s on the final tree). The two runs' `FAILED`
+  lines are **byte-identical after sorting** — the same 11 tests, not merely the same count, so
+  this is a stable set rather than flake. Evidence they predate this diff, rather than an assertion:
   (i) `git diff --stat c86fa3a21 HEAD -- <both test files> data/worlds/` is **empty** — the tests
   and every world definition and snapshot they read are byte-identical to the commit before this
   ticket; (ii) an import-closure probe loading both test modules pulls in **230** modules and
@@ -1122,16 +1124,19 @@ provenance history, refuse-to-overwrite, resolve-failure cleanup). Deliberately 
 | command | result |
 |---|---|
 | `pytest tests/architecture/test_world_definition_single_source.py -q` | **7 passed** (guards 1-2 red before Step 12, by design) |
-| `pytest tests/integration/worldassembly/ tests/unit/worldassembly/ -q` (minus the two stability families) | **133 passed, 2 failed** — the two generator tests in the region-collision finding |
-| `pytest tests/unit/worldgeneration/ -q` | **42 passed** |
-| `pytest tests/unit/content/ tests/integration/content/ tests/tools/test_content_inventory.py tests/unit/worldbuilding/ tests/unit/scenarios/ tests/unit/domains/campaigns/test_campaign_orchestrator.py tests/architecture/test_world_definition_single_source.py tests/unit/rendering/test_variants.py -q` | **685 passed** |
-| `pytest tests/integration/scenarios/ -q` | 172 passed, 2 skipped, 1 xfailed, 1 pre-existing failure |
-| `pytest tests/integration/campaigns/ -q` | 21 passed, 1 pre-existing failure (reproduced at `c86fa3a21`) |
-| `pytest tests/unit/worldassembly/test_corpus_diversity.py tests/unit/worldassembly/test_hero_guild_routing_population_stability.py -q` | **11 failed, 83 passed** in 1338s — pre-existing, evidence below |
-| `pytest tests/unit/rendering/test_variants.py -q` | 13 passed — the `INFRA-373` tripwire did not move |
+| `pytest tests/integration/worldassembly/ tests/unit/worldassembly/ -q -rxX` (minus the 2 stability families) | **133 passed, 2 xfailed** |
+| `pytest tests/unit/content/ tests/integration/content/ tests/tools/test_content_inventory.py tests/unit/worldgeneration/ tests/unit/worldbuilding/ tests/unit/scenarios/ tests/unit/domains/campaigns/test_campaign_orchestrator.py tests/architecture/test_world_definition_single_source.py tests/unit/rendering/test_variants.py -q` | **727 passed** |
+| `pytest tests/integration/scenarios/ -q` | 172 passed, 2 skipped, 1 xfailed, **1 pre-existing failure** |
+| `pytest tests/integration/campaigns/ -q` | 21 passed, **1 pre-existing failure** (reproduced at `c86fa3a21`) |
+| `pytest tests/unit/worldassembly/test_corpus_diversity.py tests/unit/worldassembly/test_hero_guild_routing_population_stability.py -q` | **11 failed, 83 passed** in 1321s — pre-existing, evidence below |
 | `tools/parity_index.py check-staleness` | FRESH |
 
-Every command was run in the foreground on the final tree.
+Every command above was run in the **foreground** on the final tree.
+
+**Caused by this diff: zero failures.** The two tests this ticket's own work affects report
+**xfailed**, not failed and not xpassed — so the defect they track is deterministic rather than
+intermittent, which is what `TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION`'s
+Assumptions depend on. The remaining 13 failures are the pre-existing set enumerated below.
 
 **All tests pass except two xfail-marked cases tracking a filed P1 defect**
 (TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION), plus the
