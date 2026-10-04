@@ -1,9 +1,10 @@
 import hashlib
 import requests
 import sys
-import time
 import subprocess
 import os
+
+from tests.api.server_readiness import wait_for_server_ready
 
 _TEST_CLIENT_ID = "rest-parity-test-client"
 _TEST_RAW_KEY = "rest-parity-test-key"
@@ -18,10 +19,8 @@ def test_api_rest_parity():
     server = subprocess.Popen(cmd, env=env)
     headers = {"X-API-Key": _TEST_RAW_KEY}
 
-    # Wait for server
-    time.sleep(3)
-
     try:
+        wait_for_server_ready(server, port)
         # 1. Health check (the sole route exempt from API-key auth)
         resp = requests.get(f"http://127.0.0.1:{port}/health")
         assert resp.status_code == 200
@@ -84,9 +83,9 @@ def test_api_compression():
     cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
     env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
     server = subprocess.Popen(cmd, env=env)
-    time.sleep(3)
 
     try:
+        wait_for_server_ready(server, port)
         # Request with gzip encoding
         headers = {"Accept-Encoding": "gzip", "X-API-Key": _TEST_RAW_KEY}
         resp = requests.get(f"http://127.0.0.1:{port}/api/v1/state", headers=headers)

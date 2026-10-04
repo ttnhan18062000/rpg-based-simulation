@@ -6,6 +6,7 @@ import sys
 import requests
 import time
 import pytest
+from tests.api.server_readiness import wait_for_server_ready
 
 _TEST_CLIENT_ID = "live-observability-status-test-client"
 _TEST_RAW_KEY = "live-observability-status-test-key"
@@ -19,10 +20,8 @@ def test_live_observability_endpoints():
     server = subprocess.Popen(cmd, env=env)
     headers = {"X-API-Key": _TEST_RAW_KEY}
 
-    # Wait for server to boot
-    time.sleep(3)
-
     try:
+        wait_for_server_ready(server, port)
         # 1. Verify status endpoint returns RUNNING or PAUSED and the correct health status
         resp = requests.get(f"http://127.0.0.1:{port}/api/v1/observability/live/status", headers=headers)
         assert resp.status_code == 200
