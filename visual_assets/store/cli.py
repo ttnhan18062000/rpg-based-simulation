@@ -11,9 +11,9 @@ from __future__ import annotations
 import argparse
 import sys
 from collections.abc import Sequence
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-from visual_assets.store import adoption, audit, gc, records, release, revoke, runtime_export, verify
+from visual_assets.store import adoption, audit, config, gc, records, release, revoke, runtime_export, verify
 from visual_assets.store import review as review_api
 from visual_assets.store.build import exporter
 from visual_assets.store import intake as intake_api
@@ -25,6 +25,11 @@ from visual_assets.store.errors import GateError, StageError, StoreError
 
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _retention_cutoff() -> str:
+    """`now` minus the retention bound, as a UTC timestamp: intakes created before it are expired (the clock is read here, not in the library)."""
+    return (datetime.now(timezone.utc) - timedelta(days=config.MAX_UNADOPTED_INTAKE_AGE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _renderer():
@@ -164,8 +169,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"{runtime.catalog_id}/{runtime.release_id}: {len(runtime.entries)} entries exported to {args.out}")
             return 0
         if args.command == "gc":
-            for item in gc.gc(delete=args.delete):
+            for item in gc.gc(delete=args.delete, expire_before=_retention_cutoff()):
                 print(f"{'deleted' if args.delete else 'would delete'} {item.kind} {item.path.name}  ({item.reason})")
+            if not args.delete:  # a dry-run-only report; tracked history is never deleted
+                for path in gc.tracked_unreferenced():
+                    print(f"kept: tracked history, never deleted: {path.name}  (no committed release candidate references it)")
             return 0
         if args.command == "adopt":
             _require_terminal("adopt")
