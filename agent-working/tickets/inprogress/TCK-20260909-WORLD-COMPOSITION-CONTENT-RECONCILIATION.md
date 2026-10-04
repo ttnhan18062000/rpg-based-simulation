@@ -286,9 +286,45 @@ operative target:
 
 So editing `data/worlds/<id>/world.yaml` alone changes **nothing** in production until its `resolved/`
 snapshot is regenerated. `dungeon_crawl`'s snapshot is dated 2026-09-08 against a `world.yaml` of
-2026-08-31, so they are not even generated in lockstep. **Whether AC-6's one-definition check must also
-assert source-vs-resolved agreement is now an open scoping question** — a check that ignores `resolved/`
-would pass while production still ran a stale world.
+2026-08-31, so they are not even generated in lockstep.
+
+### Rule-owner ruling on the third artifact, 2026-10-04 — and a correction to my premise
+
+Asked and answered by `world-rule-catalog-design`, checked at `origin/main`. **Both questions: yes.**
+
+**My premise was too narrow, and this is the important part.** I framed the rule as "regenerate
+`resolved/` whenever `world.yaml` changes". Wrong: **the snapshot is a function of `world.yaml` PLUS the
+module and catalog content the resolver reads at resolve time.** So a snapshot can go stale from a module
+or catalog edit with `world.yaml` never touched — and the 09-08-vs-08-31 dates do **not** show which
+input moved. Any freshness rule written only against `world.yaml` would miss that whole class.
+
+**Also noted:** the ADR **already** draws the source/projection line at
+`docs/architecture/world_repository_layout.md:41-54` — a `worldcomposition.v1` source is never passed to
+the compiler, and the resolver writes the `resolved/` output the loader reads. **What the ADR lacks is the
+authority and freshness rule**, not the structure. The gap is narrower than I described it.
+
+**(1) The ADR clause** — goes in **§1, directly after the normative sentence, as one rule, not a new
+section.** Wording supplied by the rule owner:
+
+> *"Within that directory, `world.yaml` is the authored definition. For a `worldcomposition.v1` world,
+> `resolved/world.resolved.yaml` is a generated projection of it: it is never hand-edited, and it must
+> equal what the resolver produces from the current `world.yaml` and the current module/catalog content.
+> A committed projection that differs from a fresh resolve is a defect. It is not an alternative
+> definition."*
+
+Bible 06 states the invariant — *"the world the engine loads is the one its authored definition resolves
+to"* — and cites the ADR, same pattern as the world-id ruling. **No catalog Rule is added:** this is
+storage and build, below catalog scope, by analogy to `OWN-01`.
+
+**(2) AC-6 must include agreement — it currently does not test its own invariant.** The rule owner's
+reasoning, which is the decisive point: *"one `world_id` resolves to exactly one module set" is about the
+world that runs. A check that compares two authored files while production loads a third would pass green
+on exactly the failure you found.* So AC-6 is amended below. The comparison is **equality against a fresh
+resolve**, never a field-by-field diff against `world.yaml`, because the projection legitimately contains
+expanded content. **If a fresh resolve is not byte-deterministic today, that is a finding to file, not a
+reason to weaken the check to a subset.** Mechanism (CI test, regenerate-and-diff make target, or both;
+and whether the provenance/report sidecars join the comparison) is explicitly **not** the rule owner's —
+it is this ticket's or test-architecture's.
 
 ### The decision needed (user / rule owner), before Implement
 
@@ -495,16 +531,29 @@ slices already taken.
         file.** Deleting the test must not quietly relocate the wrong expectation.
 - [ ] Full scoped regression across every consumer of `ScenarioSetupResolver`/
       `CatalogScenarioStateBuilder`/`WorldAssemblyResolver` passes.
-- [ ] **AC-6 (merged):** a check fails when one `world_id` resolves to two different module sets. It
-      must fail on today's content before the reconciliation lands, or it is not testing anything.
+- [ ] **AC-6 (merged; AMENDED 2026-10-04 by the rule owner):** a check fails when one `world_id` resolves
+      to two different module sets. It must fail on today's content before the reconciliation lands, or it
+      is not testing anything. **It must ALSO assert that re-resolving each composition world
+      deterministically reproduces its committed `resolved/world.resolved.yaml`** — equality against a
+      **fresh resolve**, not a field-by-field diff against `world.yaml`. Without that half, the check
+      compares two authored files while production loads a third and **passes green on exactly the
+      `dungeon_crawl` failure recorded above**, i.e. it does not test its own invariant. If a fresh
+      resolve is not byte-deterministic today, **file that as a finding — do not weaken the check**.
 - [ ] **AC-7 (merged):** a written assessment of which prior measurements used the non-running
       definition, and whether any recorded conclusion changes. Conclusions that survive are stated as
       survivals, with what was re-checked.
-- [ ] **AC-8 (merged, amended):** `docs/mechanics/06_worldbuilding_foundation.md` **and**
+- [ ] **AC-8 (merged, amended twice):** `docs/mechanics/06_worldbuilding_foundation.md` **and**
       `docs/architecture/world_repository_layout.md` state which location is authoritative. The ADR is
       amended rather than merely cited, because it does not currently say this (see the attribution
-      correction above), and `docs/guides/content_authoring.md` §4 currently points the other way. All
-      three must agree when this closes.
+      correction above), and `docs/guides/content_authoring.md` teaches the other way. All three must
+      agree when this closes.
+      **2026-10-04: the ADR edit is now TWO sentences in §1** — the authority sentence plus the rule
+      owner's verbatim source/projection clause (quoted above). Bible 06 adds the invariant *"the world
+      the engine loads is the one its authored definition resolves to"* and cites the ADR; it must not
+      restate the location or the freshness mechanics.
+      **Also 2026-10-04:** `content_authoring.md` teaches the retired path at **four** sites — `:27`,
+      `:72`, `:164-167`, `:292` — not only §4. Fixing §4 alone leaves three live instructions pointing at
+      a deleted directory.
 - [ ] **AC-9 (from Gap 1):** no code path writes into a retired `data/content/world_compositions/`. A
       world-generation run does not recreate it.
 - [ ] **AC-10 (parity ledger, made explicit 2026-10-04):** the matching `docs/parity_ledger/` entry is
