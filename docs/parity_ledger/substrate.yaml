@@ -5125,7 +5125,14 @@
     §11 (the invariant, stated as a sibling law and explicitly not a compile gate)
     + tests/architecture/test_world_definition_single_source.py (seven guards: one-definition,
     no-redefinition-of-a-known-world_id, fresh-resolve equality across all 24 composition
-    worlds, docs-stated-once, not-a-compile-gate, catalog-directory-absent, no-contradicting-danger_scale)'
+    worlds, docs-stated-once, not-a-compile-gate, catalog-directory-absent, no-contradicting-danger_scale)
+    + src/scenarios/resolver.py (ScenarioSetupResolver._DEFAULT_COMPOSITIONS_DIR = Path("data/worlds"),
+    the runtime lookup root every scenario caller now inherits; the per-world nested
+    <world_id>/world.yaml layout is tried first and the flat <world_id>.yaml form survives
+    only as a fallback for explicit compositions_dir overrides, so no caller needs its
+    own override to reach the authoritative location -- CampaignOrchestrator''s former
+    data/worlds override was reverted as redundant) + src/content/validator.py (load_all_compositions
+    default = DEFAULT_WORLDS_ROOT, the validation-side consumer; see docs/parity_ledger/infrastructure.yaml::INFRA-184)'
   proof_type: parity
   test_path: tests/architecture/test_world_definition_single_source.py::test_world_id_resolves_to_exactly_one_definition
   divergence_note: null

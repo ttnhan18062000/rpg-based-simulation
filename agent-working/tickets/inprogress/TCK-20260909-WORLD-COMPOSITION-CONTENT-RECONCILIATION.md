@@ -716,7 +716,20 @@ slices already taken.
   only in the **running** definition, so §3 was describing `data/worlds/`
 
 ## Related Stored Artifacts
-None yet — created when this ticket is picked up.
+All three exist and migrate to `agent-working/stored_artifacts/TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION/`
+at Finalize *(corrected 2026-10-04 — this section still read "None yet, created when this ticket is
+picked up", which was true when filed and stale once the pipeline ran)*:
+
+- `investigation.md` — the three-artifact analysis, the 7-of-9 genuine test-dependency classification,
+  the parity-entry inventory, and the two corrections to its own "Docs Requiring Update" judgements
+- `plan.md` — 15 ordered steps, `## Resolved Decisions` (UQ-1's ruling and its three hard constraints),
+  Scope Guards, Dependency Map, and 12 numbered Deviations
+- `test_plan.md` — Regression Surface, New Tests Required per AC, five scoped commands, Anti-Drift
+  Test Guards; AC-5's oracle is deliberately marked `unresolved`
+
+Also relevant, from the ticket this one absorbed:
+- `agent-working/stored_artifacts/TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED/investigation.md` — the
+  one confirmed prior investigation that compiled via the retired catalog path (AC-7's named instance)
 
 ## Related Code Areas
 - `src/scenarios/resolver.py` (`ScenarioSetupResolver`, `_compositions_dir`; default at `:34`)
@@ -1209,13 +1222,23 @@ for that reason.
 - `tests/unit/worldgeneration/test_composition_generator.py`
 - `tests/unit/worldgeneration/test_seed_params.py`
 
-**Docs (8)**
+**Docs (9)**
 - `docs/architecture/world_repository_layout.md` — §1, the two normative sentences
 - `docs/mechanics/06_worldbuilding_foundation.md` — new §11 sibling law
 - `docs/guides/content_authoring.md` — four sites
 - `docs/content/pipeline_contract.md` — path-layout table row retired
 - `docs/world/generator_contract.md` — output contract, three constraints, determinism clause
 - `docs/parity_ledger/substrate.yaml` — `SUB-394` added; `SUBSTRATE-NEW-010`/`011` refreshed
+- `docs/parity_ledger/infrastructure.yaml` — `INFRA-184` updated: world definitions are no longer
+  addressed as content at all (`ContentPathConfig.world_compositions_dir` retired, the
+  `world_compositions` member removed from `CatalogRepository.NON_CATALOG_DIRS` because its
+  strict-mode ignore-exemption became dead config once the directory was gone, and
+  `load_all_compositions` now defaults to `DEFAULT_WORLDS_ROOT`). Gains two `v2_evidence` lines and a
+  second `test_path` on
+  `tests/architecture/test_world_definition_single_source.py::test_catalog_world_compositions_directory_is_absent`;
+  points at `SUB-394` as the owner of the law itself so the law is not restated in two shards.
+  *(Added 2026-10-04 after the Verify gate caught its omission — the Parity phase's edit landed after
+  the earlier `docs_to_update_coverage` measurement, so that measurement was stale, not wrong.)*
 - `docs/world/compiler_contract.md` — the `generate` subcommand's stated output location
   (`status: authoritative`; the investigation's "no claim about the directory's location" judgment
   did not hold for this one line, found during the doc-verification sweep)
