@@ -231,3 +231,14 @@ def test_paths_with_spaces_are_kept_whole(tmp_path):
     (root / "src" / "alpha" / "my file.py").write_text("z = 3\n")
     subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
     assert packages.tracked_packages(root) == {"alpha", "beta"}
+
+
+def test_missing_registry_file_is_a_schema_problem_not_a_pass(tmp_path, capsys):
+    root = tmp_path / "empty"
+    (root / "src").mkdir(parents=True)
+    found = validate_file(packages.registry_path(root), root)
+    assert [(p.kind, "registry file not found" in p.message) for p in found] == [(SCHEMA, True)]
+    assert packages.main(["validate", "--root", str(root), "--schema-only"]) == 1
+    assert "registry file not found" in capsys.readouterr().out
+    with pytest.raises(RegistryError):
+        packages.load_rows(packages.registry_path(root), root)

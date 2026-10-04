@@ -199,14 +199,16 @@ def validate_file(
     kinds: Sequence[str] = (SCHEMA, COMPLETENESS),
     notes: list[str] | None = None,
 ) -> list[Problem]:
-    """Every problem of the requested classes in the registry at `path`. A missing file is valid for `schema`.
+    """Every problem of the requested classes in the registry at `path`. A missing file is a `schema` problem.
 
     `notes` collects non-problem notices (the git fallback in `tracked_packages`).
     """
     root = root or REPO_ROOT
     problems: list[Problem] = []
-    entries, json_problems = ([], []) if not path.exists() else _load_entries(path)
-    schema = list(json_problems)
+    if path.exists():
+        entries, schema = _load_entries(path)
+    else:
+        entries, schema = [], [Problem(SCHEMA, f"registry file not found: {path}")]
     systems = _system_names(root)
     seen: dict[str, str] = {}
     rows: dict[str, dict] = {}
@@ -242,8 +244,6 @@ def load_rows(path: Path, root: Path | None = None, kinds: Sequence[str] = (SCHE
     problems = validate_file(path, root, kinds)
     if problems:
         raise RegistryError(problems)
-    if not path.exists():
-        return []
     rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     return sorted(rows, key=lambda row: row["package"])
 

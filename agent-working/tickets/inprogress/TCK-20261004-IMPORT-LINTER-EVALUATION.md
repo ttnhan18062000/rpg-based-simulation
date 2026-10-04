@@ -4,7 +4,7 @@ layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-IMPORT-LINTER-EVALUATION
-phase: open
+phase: inprogress
 date: 2026-10-04
 tags: [architecture, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, planning]
 M5.4: import-linter evaluation (report only)
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
