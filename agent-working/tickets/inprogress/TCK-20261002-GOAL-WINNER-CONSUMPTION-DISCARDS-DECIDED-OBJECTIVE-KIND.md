@@ -529,6 +529,12 @@ accepted" with these numbers. Finding the source of the nondeterminism is a sepa
 ticket's scope; the planner recommends it not be attributed to `INFRA-273` without evidence (different signature: after-arm
 divergence with a clean before-arm, throttle suppressed).
 
+**AC6 disposition (2026-10-04): FAILED AND KNOWINGLY ACCEPTED.** Measured, not undemonstrated: two identical audit-mode runs of
+`frontier_living_world` gave 780 vs 1609 opportunity attacks. The nondeterminism is a pre-existing property of the combat/tactical
+path that this change did not introduce (either half of the change alone reproduces it, and the unmodified arm was identical every
+time only because the throttle masked it); it is owned by `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE`.
+`rpg-feature-planning` withdrew its hold on #291 on this basis. The merge decision itself is the owner's.
+
 ## Test Summary
 New: `tests/unit/strategic/test_goal_winner_objective_kind.py` (13: T1 nine fall-through kinds stay `REACH_LOCATION`, T2 missing/None fallback,
 published kind carried, T6 `ProjectState.kind` stays `GoalKind` and `score` stays the 100-scale utility), and
