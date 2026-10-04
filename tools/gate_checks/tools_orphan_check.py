@@ -69,6 +69,11 @@ from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS, posix  # noqa: 
 
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
+# `codebase/` is the codebase domain's root (TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE): its code files are classified
+# like `tools/` files. Only `.py` and `.sh` there: baselines, config and the README are data with no identifier stem.
+CODEBASE_ROOT_PREFIX = "codebase/"
+CODEBASE_CODE_SUFFIXES = {".py", ".sh"}
+
 # Codex subtree prefixes this check excludes from classification entirely, reported in their own
 # "excluded" bucket rather than silently skipped — a separate, already-tracked initiative
 # (TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC, currently blocked) with its own governance
@@ -109,6 +114,13 @@ def git_ls_tracked_files(repo_root: Path) -> List[str]:
 
 def _is_ignored_reference(path: str) -> bool:
     return any(path.startswith(p) for p in IGNORED_REFERENCE_PREFIXES)
+
+
+def _is_classified_file(path: str) -> bool:
+    """A `tools/` file, or a `.py`/`.sh` file under `codebase/` (the codebase domain root)."""
+    if path.startswith("tools/"):
+        return True
+    return path.startswith(CODEBASE_ROOT_PREFIX) and Path(path).suffix in CODEBASE_CODE_SUFFIXES
 
 
 def is_codex_subtree(path: str) -> bool:
@@ -155,7 +167,7 @@ def _classify(referencing_files: Set[str]) -> str:
 def check_tools_orphans(
     repo_root: Optional[Path] = None, tracked_files: Optional[List[str]] = None
 ) -> List[dict]:
-    """Classify every tracked `tools/` file into NO_REFERENCES / DOC_ONLY / TEST_ONLY / LIVE
+    """Classify every tracked `tools/` file (and `.py`/`.sh` file under `codebase/`) into NO_REFERENCES / DOC_ONLY / TEST_ONLY / LIVE
     (Codex subtree files, plus `__init__.py` and `__pycache__/`, go in `excluded` / are skipped
     respectively), each with its referencing files as evidence.
 
@@ -176,7 +188,7 @@ def check_tools_orphans(
     else:
         tracked_files = sorted(set(tracked_files))
 
-    tools_files = [f for f in tracked_files if f.startswith("tools/")]
+    tools_files = [f for f in tracked_files if _is_classified_file(f)]
     index = build_token_index(tracked_files, repo_root)
 
     findings: List[dict] = []

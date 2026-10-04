@@ -188,6 +188,11 @@ def expected_test_dirs_for(path: str) -> "str | None":
             return "tests/tools/"
         return None
 
+    if path.startswith("codebase/"):
+        # The codebase domain root (TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE): its code, hooks, baselines and config
+        # are covered by tests/codebase/. The README is prose, not this check's concern.
+        return None if path == "codebase/README.md" else "tests/codebase/"
+
     if path.startswith("src/"):
         parts = path.split("/")
         if len(parts) >= 2 and parts[1] in _SRC_UNIT_SUBSYSTEMS:

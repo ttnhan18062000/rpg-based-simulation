@@ -54,6 +54,25 @@ def test_agent_codex_subdir_maps_to_same_name_mirror():
     )
 
 
+@pytest.mark.parametrize(
+    "path",
+    [
+        "codebase/health/scan.py",
+        "codebase/gates/mypy_gate.py",
+        "codebase/reports/pr_impact_report.py",
+        "codebase/hooks/install_git_hooks.py",
+        "codebase/hooks/code_health_pre_commit.sh",
+        "codebase/baselines/code_health_exceptions.jsonl",
+    ],
+)
+def test_codebase_domain_root_maps_to_tests_codebase_not_to_a_silent_skip(path):
+    assert expected_test_dirs_for(path) == "tests/codebase/"
+
+
+def test_codebase_readme_is_prose_and_returns_none():
+    assert expected_test_dirs_for("codebase/README.md") is None
+
+
 def test_src_subsystem_maps_to_tests_unit():
     assert expected_test_dirs_for("src/combat/resolver.py") == "tests/unit/combat/"
     assert expected_test_dirs_for("src/worldassembly/assembler.py") == "tests/unit/worldassembly/"

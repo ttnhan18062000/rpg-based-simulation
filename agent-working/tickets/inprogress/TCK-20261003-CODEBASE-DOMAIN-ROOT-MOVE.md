@@ -35,6 +35,7 @@ Owner decision 2026-10-03 (decision record `docs/plans/codebase_health/codebase_
 - Update every live reference: Makefile targets (names unchanged), .github/workflows/test.yml job commands (job names unchanged), pyproject.toml (`[tool.mypy_baseline] baseline_path`, any tool path), .pre-commit-config.yaml entries, docs (standard, plans, environment guide, parity INFRA-TYPE-001 evidence), open tickets in agent-working/tickets/todos/python-code-craft-gates/
 - Amend docs/guidelines/repo_tooling_layout.md: a domain root may own its tooling (agent-working/ for data, visual_assets/ and codebase/ for their own Python); every other tool still goes in a tools/ subpackage; scripts/ stays retired
 - Extend tools/gate_checks/tools_orphan_check.py (or its config) to cover `codebase/**`; add a guard test that fails if `tools/code_health/` or the moved flat files reappear
+- Map `codebase/**` -> `tests/codebase/` in `tools/gate_checks/test_scope_coverage_static.py::expected_test_dirs_for()` (with pins in `tests/tools/test_test_scope_coverage_static.py`) and add a `codebase/` row to `.claude/agents/test-scoper.md`'s Directory Map; otherwise a later `codebase/` change returns None (a SKIP) and passes the done-gate without running `tests/codebase/`. Cross-domain edits (agent-working owns both files), approved by the owner's decision B
 - Fill the M4 soak dates (start = PR #305 merge date, end = start + 14 days) in the epic, roadmap Section 7 and TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING
 
 ## Out of Scope
@@ -52,7 +53,7 @@ Owner decision 2026-10-03 (decision record `docs/plans/codebase_health/codebase_
 - [ ] Moved tests pass from `tests/codebase/`, and the CI coverage test shows them collected by a job
 - [ ] repo_tooling_layout.md amended as in Scope; the orphan check covers `codebase/**`; the reappearance guard test passes
 - [ ] Soak start and end dates filled in the epic, roadmap and flip ticket
-- [ ] `git diff --stat <base>...HEAD` lists no path under src/, none under .claude/, and not CLAUDE.md
+- [ ] `git diff --stat <base>...HEAD` lists no path under src/ and not CLAUDE.md, and under .claude/ only `.claude/agents/test-scoper.md` (the one Directory Map row for `codebase/`, planner REQUIRED 4)
 
 ## Related Tickets
 - TCK-20261003-PYTHON-CODE-CRAFT-GATES-EPIC
