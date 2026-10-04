@@ -339,10 +339,12 @@ jobs:
       # nothing can be skipped. Keep the literal path `tests/tools` in both jobs
       # (tools/gate_checks/ci_workflow_test_coverage.py reads it as the covered directory). To
       # rebalance, change the letter ranges here and in the sibling tools job together.
+      # tests/codebase (the codebase domain's tests, TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE) runs here, not in
+      # arch-docs: this job installs the lint group, so the ruff/complexipy/mypy-baseline tests really run.
       - name: "Run: tests/tools (a–e)"
         if: always()
         run: |
-          pytest tests/tools --ignore-glob='tests/tools/test_[f-z]*.py' -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/tools tests/codebase --ignore-glob='tests/tools/test_[f-z]*.py' -m "not slow and not extra_slow" --tb=short -q \
                  --junit-xml=reports/junit/tools-a-e.xml
       - name: Upload JUnit XML
         if: always()
@@ -366,7 +368,8 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           if [ -d /tmp/base-checkout ]; then
-            cd /tmp/base-checkout && pytest tests/tools --ignore-glob='tests/tools/test_[f-z]*.py' \
+            # tests/codebase does not exist on a base that predates the domain root: pass it only when present
+            cd /tmp/base-checkout && pytest tests/tools $( [ -d tests/codebase ] && echo tests/codebase ) --ignore-glob='tests/tools/test_[f-z]*.py' \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
       - name: Job summary

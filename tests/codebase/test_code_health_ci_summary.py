@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 
-from tests.tools.test_code_health_ratchet_registry import (  # noqa: F401  (pytest fixtures)
+from tests.codebase.test_code_health_ratchet_registry import (  # noqa: F401  (pytest fixtures)
     _edit_ruff,
     _f,
     _rows,

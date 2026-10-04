@@ -2767,19 +2767,19 @@
 
     '
   proof_type: null
-  test_path: tests/static/test_typecheck_gate_configured.py::test_pyproject_declares_tool_mypy_section,
-    tests/static/test_typecheck_gate_configured.py::test_makefile_typecheck_py_target_runs_mypy_on_src,
-    tests/static/test_typecheck_gate_configured.py::test_ci_workflow_has_a_mypy_step,
-    tests/static/test_typecheck_gate_configured.py::test_pyproject_configures_mypy_baseline_with_the_committed_baseline_and_tolerant_syncing,
-    tests/static/test_typecheck_gate_configured.py::test_makefile_typecheck_py_filters_through_the_baseline_and_stays_advisory,
-    tests/static/test_typecheck_gate_configured.py::test_ci_mypy_step_runs_the_advisory_gate_and_is_not_blocking,
-    tests/tools/test_mypy_gate.py::test_the_whole_gate_runs_real_mypy_on_a_tiny_project
+  test_path: tests/codebase/test_typecheck_gate_configured.py::test_pyproject_declares_tool_mypy_section,
+    tests/codebase/test_typecheck_gate_configured.py::test_makefile_typecheck_py_target_runs_mypy_on_src,
+    tests/codebase/test_typecheck_gate_configured.py::test_ci_workflow_has_a_mypy_step,
+    tests/codebase/test_typecheck_gate_configured.py::test_pyproject_configures_mypy_baseline_with_the_committed_baseline_and_tolerant_syncing,
+    tests/codebase/test_typecheck_gate_configured.py::test_makefile_typecheck_py_filters_through_the_baseline_and_stays_advisory,
+    tests/codebase/test_typecheck_gate_configured.py::test_ci_mypy_step_runs_the_advisory_gate_and_is_not_blocking,
+    tests/codebase/test_mypy_gate.py::test_the_whole_gate_runs_real_mypy_on_a_tiny_project
   divergence_note: null
   support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
     ("make typecheck-py") was not a pytest citation at all -- the real evidence is
     a build/lint gate configuration. Confirmed via a corpus-wide grep this shape is
     a genuine one-off (no other entry cites a bare make target or similar), so a schema
-    change was not warranted for one entry. Added tests/static/test_typecheck_gate_configured.py
+    change was not warranted for one entry. Added tests/codebase/test_typecheck_gate_configured.py
     (3 static assertions pinning the same 3 facts this entry''s own text/v2_evidence
     already claimed: pyproject.toml [tool.mypy] section, the Makefile typecheck-py
     target, and the CI mypy step) as a real pytest citation instead.'
@@ -12663,7 +12663,7 @@
     documented in tools/code_health/findings.py and tools/code_health/registry.py
     (TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY)
   proof_type: contract
-  test_path: tests/tools/test_code_health_adapters.py, tests/tools/test_code_health_ratchet_registry.py
+  test_path: tests/codebase/test_code_health_adapters.py, tests/codebase/test_code_health_ratchet_registry.py
   divergence_note: null
   support_boundary: 'Python code-health tooling only: no simulation behavior is involved
     and no src/ file was touched. Adapter tests use real captured tool output (tests/fixtures/code_health/);

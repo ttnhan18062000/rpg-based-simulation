@@ -2,7 +2,7 @@
 (TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND).
 
 Coverage-honesty requirement (matches this repo's established convention, e.g.
-tests/tools/test_codebase_health_baseline.py's own docstring): every check the
+tests/codebase/test_codebase_health_baseline.py's own docstring): every check the
 tool claims to compute has at least one fixture proving it computes correctly,
 not just that it runs without error.
 """

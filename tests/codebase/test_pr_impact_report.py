@@ -1,7 +1,7 @@
 """Tests for codebase/reports/pr_impact_report.py
 (TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR).
 
-Mirrors tests/tools/test_code_health_impact.py's fixture-graph/injected-
+Mirrors tests/codebase/test_code_health_impact.py's fixture-graph/injected-
 affected_runner/_requires_graphify conventions — every test below uses a
 fixture graph.json-shaped dict and an injected affected_runner unless it is
 the one @_requires_graphify-marked Makefile end-to-end test.

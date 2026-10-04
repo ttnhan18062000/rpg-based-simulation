@@ -63,7 +63,7 @@ None.
 
 ## Related Code Areas
 - .github/workflows/test.yml
-- tests/static/test_typecheck_gate_configured.py
+- tests/codebase/test_typecheck_gate_configured.py
 
 ## Assumptions / Open Questions
 - **Explicit step: the real soak start (the merge date of PR #305) and end (start + 14 days) are written into this ticket, the epic and roadmap Section 7 in the first commit of the next codebase batch after the merge (no docs-only PR for it).**

@@ -138,7 +138,7 @@ uv export --frozen --no-hashes --no-emit-project -o requirements.txt
 **After the Python Code Craft branch merges, every existing environment (the main checkout's
 `.venv`, other worktrees) must re-run `uv sync --system-certs` or `pip install -r requirements.txt`.**
 `ruff` and `complexipy` are now `lint` dependencies (the advisory `Code health (advisory)` and `Code health SARIF (advisory)` jobs sync them too), and the codebase-health snapshot measures with them
-live, so tests such as `tests/tools/test_codebase_health_snapshot.py`'s throwaway-repository tests fail
+live, so tests such as `tests/codebase/test_codebase_health_snapshot.py`'s throwaway-repository tests fail
 in an older environment with `complexipy not found: install the project environment (uv sync)`. That
 failure is deliberate: the snapshot never silently skips its craft metrics. CI is unaffected because
 the one job that runs those tests (`tools-a-e`) syncs the `lint` group, and `requirements.txt` carries both tools.

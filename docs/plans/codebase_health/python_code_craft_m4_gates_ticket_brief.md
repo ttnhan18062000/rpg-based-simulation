@@ -40,7 +40,7 @@ tickets, under the owner decisions recorded below.
 - CI `typecheck` job is informational: `mypy src/ ... || true` plus `continue-on-error: true`, with
   the comment "remove once the baseline error count is documented". Pinned by parity entry
   `INFRA-TYPE-001` (`docs/parity_ledger/infrastructure.yaml`) and
-  `tests/static/test_typecheck_gate_configured.py` (asserts a step named mypy runs `mypy src/`).
+  `tests/codebase/test_typecheck_gate_configured.py` (asserts a step named mypy runs `mypy src/`).
 - Ratchet: `python3 -m tools.code_health check` (exit 1 new/worse, 2 tool or registry unusable).
   Registry `registries/code_health_exceptions.jsonl`: 3,617 rows, **all `reviewed: false`** — ruff
   2,892, complexipy 384, line_count 283, jscpd 58. Seeded on the `python-code-craft` branch, so
