@@ -458,3 +458,9 @@ ally test. Measured per group on two corpus worlds: over-detection, not the pred
 splash and lead observation never run in the corpus, so they are proven by unit tests only. 15 new tests; the
 sibling saliency ticket is closed as folded. Open: `frontier_living_world` is bimodal across repeats from Group B on
 (not attributed), and two integration tests fail identically on the base `246ee09f7` (verified, not assumed).
+
+**Recorded prediction miss.** The plan predicted under-detection would dominate the corpus effect; over-detection dominated at four of the seven sites that ran in both worlds, so the plan got the direction backwards at a majority of sites.
+
+**Coverage boundary.** Splash (`combat.py`) and the lead-observation gate (`intelligence.py:439`) never executed in either corpus world (0 AoE attacks, no lead ever confirmed); they are proven by unit tests only, and `:439` has no direct test at all. Do not assume corpus coverage for either.
+
+**Bimodality is not attributed.** `frontier_living_world` gave two outcome hashes across repeats from Group B on. Two explanations fit the symptom equally and were not separated: the already-filed combat/tactical nondeterminism (`TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE`), or the world having two different compositions depending on loader (a catalog copy and a `world.yaml` declaring different module sets, per Lane B's finding). The cheap discriminator is whether the split tracks the two module sets; re-run against a single definition once that fix lands before attributing.
