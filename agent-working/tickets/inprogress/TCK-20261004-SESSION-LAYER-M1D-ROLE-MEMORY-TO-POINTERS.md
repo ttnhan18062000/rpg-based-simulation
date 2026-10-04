@@ -69,11 +69,14 @@ Child of `TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION` (milestone M1). Hold rule 
 ## Implementation Notes
 Repo side done in the M1 bundle PR: `migration_map.md` (every role-defining memory file mapped to its repo home; 3 rules are GAP, 3 PARTIAL). Memory is NOT shortened: the ticket requires the repo homes merged first and the owner's confirmation of the list (memory is per-user and outside git). Remaining steps after merge: fill the merge SHA in the map, owner confirms the list, shorten each confirmed memory file to frontmatter + links + a pointer line, update MEMORY.md hooks, grep the memory dir for role rules stated twice.
 
+2026-10-04: owner confirmed the list (relayed by agent-working-design). Six memory files shortened to pointers, originals kept in `original_memory_files.md`, `MEMORY.md` hooks updated, merge SHA filled. Four files stay in memory until their gaps are homed (branch-recovery subsection in `docs/guides/delivery_process.md`, drafted by design; the other two need no new text). Ticket stays INPROGRESS.
+
 ## Test Summary
 No code. The map is checked by reading each cited home (templates, overlays, manifest, authority file) against the memory text.
 
 ## Files Changed
 - `agent-working/stored_artifacts/TCK-20261004-SESSION-LAYER-M1D-ROLE-MEMORY-TO-POINTERS/migration_map.md`
+- `agent-working/stored_artifacts/TCK-20261004-SESSION-LAYER-M1D-ROLE-MEMORY-TO-POINTERS/original_memory_files.md`
 
 ## Completion Summary
-Open: waiting for the M1 bundle PR to merge and the owner to confirm the memory list.
+Open: six of ten files shortened; waiting on the branch-recovery text from design to home the remaining gaps.

@@ -11,13 +11,13 @@ tags: [ai, process-improvement, governance]
 # Role memory -> repo homes (migration map)
 
 Memory directory: `~/.claude/projects/-home-u24desktop-Working-rpg-based-simulation/memory/` (per-user, outside git).
-**Nothing in memory has been shortened.** Order required by the ticket: repo homes merged first (M1a to M1c,
+**Six files shortened 2026-10-04 (see Owner confirmation); four kept.** Order required by the ticket: repo homes merged first (M1a to M1c,
 this PR), the owner confirms this list, then each memory file is reduced to a pointer. Status below is
 about the repo side only. `GAP` means the rule has no repo home yet; that memory file keeps the rule until one exists.
 
 Home paths: `R` = `registries/session_roles.yaml`, `A` = `registries/session_authority.yaml`,
 `F/<f>` = `docs/guidelines/session_roles/functions/<f>.md`, `D/<d>` = `docs/guidelines/session_roles/domains/<d>.md`.
-Merge SHA: to be filled when the PR merges.
+Repo homes merged: PR #314, squash commit `242d8920e89bff578a83ab31d2366a215af3d2dc` (M1a/b/c).
 
 | Memory file | Role rule it holds | Repo home | Status |
 |---|---|---|---|
@@ -47,7 +47,15 @@ Merge SHA: to be filled when the PR merges.
    the 400-token budget, so a new card sentence needs one removed or a rule placed in a guide instead of a card.
 3. The shortened files keep their frontmatter, `[[links]]` and one pointer line; `MEMORY.md` hooks change to say "pointer".
 
+## Owner confirmation (2026-10-04)
+
+The owner confirmed the M1d list ("confirm the memory list", agent-working-design session), relayed to the implementer by message.
+
+- **Shortened to pointers** (every rule HOME EXISTS): `project_semantic_control_plane_role_division`, `project_mechanism_registry_ownership_split`, `feedback_planner_creates_epic_tickets_only`, `feedback_route_work_via_rpg_feature_planning`, `feedback_small_doc_changes_handoff_to_rpg_planner`, `feedback_report_agent_process_issues_to_agent_working_design`. Originals: `original_memory_files.md` in this folder.
+- **Kept as is until their gaps close**: `project_session_role_division` (GAP stay-in-scope, PARTIAL; obsolete only after M2), `feedback_implementer_owns_all_commits` (GAP branch-recovery), `feedback_ask_rpg_feature_planning_before_touching_rpg_logic` (GAP test-infra-no-ask), `project_test_architecture_reviewer_role` (PARTIAL).
+- **Gap homes accepted**: stay-in-scope = `owns_not`/routes plus plan section 10 advisory boundaries (no new text); branch-recovery = a short subsection in `docs/guides/delivery_process.md` (design drafts the text); test-infra-no-ask = testing `owns` in the registry (no card text).
+- M1d closes once the four kept files' gaps are homed or the owner accepts them staying in memory.
+
 ## Not done yet
 
-Per the ticket, memory is shortened only after this PR merges and the owner confirms the list. The ticket stays
-`INPROGRESS` until then.
+The four kept files and their gap homes (above). The ticket stays `INPROGRESS` until then.
