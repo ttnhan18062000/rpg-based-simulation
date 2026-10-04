@@ -88,7 +88,8 @@ Reading it:
   above: `c01`, `c04`, `c08` are broken only with TC counted (4, 2 and 1 `TYPE_CHECKING` imports), which is why the
   tests pass today.
 - `c06` stays broken in every configuration: `src.engine.kernel` imports `src.observability.reporting.artifact_repository`,
-  `.reporting.metric_recorder`, `.cognition.recorder` and `.cognition.decision_trace_writer` at module level.
+  `.reporting.metric_recorder`, `.cognition.recorder` and `.cognition.decision_trace_writer` inside functions (function-local
+  imports, lines 149, 304, 305, 316 and 1241; grimp counts them).
 - `unmatched_ignore_imports_alerting` found one stale allowlist entry: the phase18 test allows
   `observability/cognition/recorder.py` to import domains/systems, but that file no longer does
   (`No matches for ignored import src.observability.cognition.recorder -> src.domains.**`). The test cannot see this;

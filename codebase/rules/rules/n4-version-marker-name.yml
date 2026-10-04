@@ -1,0 +1,13 @@
+id: n4-version-marker-name
+language: python
+severity: warning
+message: "No version or sequence markers in new names (standard rule N4): V2 prefix or suffix, _v2, _new. Replace the old thing or name the difference. A trailing digit is left to the reviewer."
+rule:
+  any:
+    - kind: function_definition
+    - kind: class_definition
+  has:
+    field: name
+    kind: identifier
+    regex: '^V2|V2$|_v2(_|$)|_new$'
+    stopBy: neighbor

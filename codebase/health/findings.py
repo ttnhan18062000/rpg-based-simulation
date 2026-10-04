@@ -20,6 +20,11 @@ Match keys by tool (python_code_craft_roadmap.md section 6.3):
                A clone that moves inside either file keeps its key; a new clone between files that
                had none, or more duplicated lines between files that did, is new or worse.
 
+- ast_grep:    `(file, "Class.method" | "<module>", "ast_grep", <rule id>)`, value = number of findings of that rule
+               in that symbol. The symbol is the innermost enclosing def or class (computed from the file with the
+               stdlib `ast`, `<module>` when there is none), so module-level findings keep a stable key. The rules
+               live in `codebase/rules/`; the binary is `ast-grep`, never `sg`.
+
 A function renamed, or moved to another file, surfaces as new. That is accepted: it is a real
 change to the code, and the old row then shows as "gone" and can be deleted.
 """
@@ -33,6 +38,7 @@ TOOL_RUFF = "ruff"
 TOOL_COMPLEXIPY = "complexipy"
 TOOL_JSCPD = "jscpd"
 TOOL_LINE_COUNT = "line_count"
+TOOL_AST_GREP = "ast_grep"
 
 Key = tuple[str, str | None, str, str]
 

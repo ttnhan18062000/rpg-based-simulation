@@ -1,0 +1,9 @@
+# ast-grep project config for the code-health rule pack (TCK-20261004-AST-GREP-RULE-PACK-ADVISORY).
+# Run with the `ast-grep` binary (never `sg`: on Linux that is shadow-utils' switch-group command):
+#   ast-grep scan --config codebase/rules/sgconfig.yml src
+#   ast-grep test --config codebase/rules/sgconfig.yml --skip-snapshot-tests
+# Findings reach the ratchet through `codebase.health.adapters.adapt_ast_grep` under tool key `ast_grep`.
+ruleDirs:
+  - rules
+testConfigs:
+  - testDir: rule-tests

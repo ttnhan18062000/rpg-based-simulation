@@ -193,6 +193,8 @@ The home-grown part, needed because ruff and ast-grep have no baseline.
   the existing snapshot tool.
 - A moved or renamed function must not resurface as "new". Matching is by file and symbol, not line.
 
+**M5 note (2026-10-04):** the first ast-grep rules are N3, N4 and E3. T3 (`dict[str, Any]` in public signatures) stays a reviewer rule: a signature-only pattern still matched 185 places on `main` and cannot tell a typed-model candidate from a legitimate JSON passthrough.
+
 ### 6.4 Package registry
 
 `codebase/structure/package_registry.jsonl` (owner decision 2026-10-04: `registries/` holds only cross-domain registries since the root move): one row per tracked top-level `src/` package (purpose, layer, status

@@ -72,6 +72,8 @@ dev = [
 lint = [
     "ruff==0.16.10",
     "complexipy==8.0.1",
+    # TCK-20261004-AST-GREP-RULE-PACK-ADVISORY: project rules in codebase/rules/ (binary: `ast-grep`, never `sg`).
+    "ast-grep-cli==0.45.3",
 ]
 profiling = [
     "memray>=1.0.0",

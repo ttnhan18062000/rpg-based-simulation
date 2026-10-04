@@ -2,7 +2,7 @@
 
     python3 -m codebase.health check [--from DIR]    scan (or reuse a scan) and run the ratchet
     python3 -m codebase.health scan [--out DIR]      run the tools, keep their raw JSON
-    python3 -m codebase.health seed [--from DIR] [--force]
+    python3 -m codebase.health seed [--from DIR] [--force] [--tool TOOL]
     python3 -m codebase.health validate
     python3 -m codebase.health list [--tool T] [--file PREFIX]
     python3 -m codebase.health delete FILE TOOL RULE [--symbol S]
@@ -31,11 +31,11 @@ from codebase.health.findings import Finding
 DEFAULT_SCAN_DIR = Path("reports/code_health/scan")
 
 
-def _findings(args: argparse.Namespace, root: Path) -> list[Finding]:
+def _findings(args: argparse.Namespace, root: Path, tools: Sequence[str] = scan.ALL_TOOLS) -> list[Finding]:
     out_dir = args.source if args.source else root / DEFAULT_SCAN_DIR
     if not args.source:
-        scan.run_scan(root, out_dir)
-    return scan.collect_findings(out_dir, root, args.scan_root)
+        scan.run_scan(root, out_dir) if tools == scan.ALL_TOOLS else scan.run_scan(root, out_dir, tools)
+    return scan.collect_findings(out_dir, root, args.scan_root, tools)
 
 
 def _report_could_not_run(args: argparse.Namespace, exc: Exception) -> None:
@@ -77,7 +77,23 @@ def _cmd_scan(args: argparse.Namespace, root: Path, path: Path) -> int:
     return 0
 
 
+def _seed_one_tool(args: argparse.Namespace, root: Path, path: Path) -> int:
+    """Seed only `--tool`'s rows; every row of another tool is kept exactly as it is."""
+    everything = registry.load_rows(path, root, check_files=False) if path.exists() else []
+    own = [row for row in everything if row.tool == args.tool]
+    if own and not args.force:
+        print(f"error: {path} already has {len(own)} {args.tool} rows; use --force to reseed them", file=sys.stderr)
+        return 2
+    others = [row for row in everything if row.tool != args.tool]
+    rows = others + registry.seed_rows(_findings(args, root, (args.tool,)), previous=own)
+    registry.write_rows(path, rows)
+    print(f"seeded {len(rows) - len(others)} {args.tool} rows into {path}; {len(others)} rows of other tools left untouched")
+    return 0
+
+
 def _cmd_seed(args: argparse.Namespace, root: Path, path: Path) -> int:
+    if args.tool:
+        return _seed_one_tool(args, root, path)
     if path.exists() and path.read_text(encoding="utf-8").strip() and not args.force:
         print(f"error: {path} already has rows; use --force to reseed", file=sys.stderr)
         return 2
@@ -155,6 +171,7 @@ def build_parser() -> argparse.ArgumentParser:
             sp.add_argument("--annotate", action="store_true", help="print a GitHub ::warning:: line on a failure")
         if name == "seed":
             sp.add_argument("--force", action="store_true", help="reseed an existing registry (keeps review data)")
+            sp.add_argument("--tool", choices=scan.ALL_TOOLS, help="seed only this tool's rows; other tools' rows are kept as they are")
         if name == "tighten":
             sp.add_argument("--yes", action="store_true", help="confirm deleting rows whose violation is gone")
     sub.add_parser("scan").add_argument("--out", type=Path)
