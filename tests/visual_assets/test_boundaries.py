@@ -62,7 +62,7 @@ STORE_ALLOWED: dict[str, set[str]] = {
     "review": {"review", "rendering", "intake", "pixels", "contracts", "identities", "errors", "config"},
     # build owns the one allowed import from drawing (the shared sandbox)
     "build": {"build", "records", "revoke", "catalogwrite", "intake", "pixels", "contracts", "identities", "errors", "config"},
-    "cli": {"cli", "intake", "adoption", "setadoption", "drafts", "revoke", "audit", "records", "review", "rendering", "build", "release", "runtime_export", "verify", "gc", "catalog", "contracts", "identities", "errors", "config"},
+    "cli": {"cli", "intake", "adoption", "setadoption", "drafts", "draftexport", "revoke", "audit", "records", "review", "rendering", "build", "release", "runtime_export", "verify", "gc", "catalog", "contracts", "identities", "errors", "config"},
     "__main__": {"cli"},
     # catalog records and the human-gated writers (adoption, revoke, catalogwrite) are never reachable from the drawing tools
     "records": {"records", "intake", "contracts", "identities", "errors", "config"},
@@ -70,6 +70,8 @@ STORE_ALLOWED: dict[str, set[str]] = {
     "adoption": {"adoption", "records", "rendering", "catalogwrite", "catalog", "intake", "pixels", "contracts", "identities", "errors", "config"},
     # draft sets live in git OUTSIDE the catalog and record no approval; the set adoption is a human gate that writes the catalog (it reuses adopt's checks)
     "drafts": {"drafts", "records", "catalog", "intake", "pixels", "contracts", "identities", "errors", "config"},
+    # read-only on the drafts and the catalog; writes a NEW directory outside both (the isolated preview page's input); the drawing server may not import it
+    "draftexport": {"draftexport", "drafts", "records", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
     "setadoption": {"setadoption", "adoption", "drafts", "records", "rendering", "catalogwrite", "catalog", "intake", "pixels", "contracts", "identities", "errors", "config"},
     "revoke": {"revoke", "records", "catalogwrite", "intake", "contracts", "identities", "errors", "config"},
     "audit": {"audit", "records", "intake", "contracts", "identities", "errors", "config"},

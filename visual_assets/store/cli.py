@@ -13,7 +13,7 @@ import sys
 from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 
-from visual_assets.store import adoption, audit, config, drafts, gc, records, release, revoke, runtime_export, setadoption, verify
+from visual_assets.store import adoption, audit, config, draftexport, drafts, gc, records, release, revoke, runtime_export, setadoption, verify
 from visual_assets.store import review as review_api
 from visual_assets.store.build import exporter
 from visual_assets.store import intake as intake_api
@@ -107,6 +107,9 @@ def _parser() -> argparse.ArgumentParser:
     keep.add_argument("--detail", default=None, help="the key's detail value (only for a key that declares a detail axis)")
     keep.add_argument("--source-asset-id", default=None, help="the id it will be adopted under (default: the key with dots as underscores, plus _<detail>)")
     keep.add_argument("--replace", action="store_true", help="replace the set's existing draft for this slot")
+    dexport = draft_sub.add_parser("export", help="write a draft preview manifest and its preview PNGs for the isolated preview page into a NEW directory (read-only on the drafts)")
+    dexport.add_argument("set_id")
+    dexport.add_argument("out_dir", help="a directory that does not exist yet")
     dverify = draft_sub.add_parser("verify", help="check every draft's hashes, declared keys and no stray files (read-only)")
     dverify.add_argument("set_id", nargs="?")
     aset = sub.add_parser("adopt-set", help="HUMAN ONLY: adopt every entry of a REVIEWED draft set in one decision (all or nothing)")
@@ -210,6 +213,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                                     source_asset_id=args.source_asset_id, replace=args.replace)
                 print(f"kept {entry.draft_id} in {args.set_id} as {entry.visual_key}{'' if entry.detail is None else ' [' + entry.detail + ']'} "
                       f"(will be adopted as {entry.source_asset_id}); nothing is adopted")
+                return 0
+            if args.draft_command == "export":
+                manifest = draftexport.export_draft_preview(args.set_id, args.out_dir)
+                print(f"{args.set_id}: {len(manifest.entries)} drafts exported to {args.out_dir}; draft set hash {manifest.draft_set_hash}")
                 return 0
             findings = drafts.verify_set(args.set_id) if args.set_id else drafts.verify_all()
             for finding in findings:

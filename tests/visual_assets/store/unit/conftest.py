@@ -24,6 +24,7 @@ RECORD_FILES = {
     "RuntimeManifest": "runtime_manifest.json",
     "DraftSet": "draft_set.json",
     "SetAdoptionRecord": "set_adoption_record.json",
+    "DraftPreviewManifest": "draft_preview_manifest.json",
 }
 
 

@@ -67,7 +67,7 @@ export function slotKey(visualKey: string, detail: string | null): string {
 
 // ---- JSON that refuses duplicate object keys (JSON.parse silently keeps the last one) --------------------------
 
-type Json = null | boolean | number | string | Json[] | { [key: string]: Json }
+export type Json = null | boolean | number | string | Json[] | { [key: string]: Json }
 
 class Reader {
   private pos = 0
@@ -168,6 +168,11 @@ class Reader {
   }
 }
 
+/** Parse JSON text, refusing duplicate object keys. Throws a `ManifestError`. */
+export function readJson(manifestText: string): Json {
+  return new Reader(manifestText).parse()
+}
+
 // ---- validation ----------------------------------------------------------------------------------------------------
 
 const TOP_FIELDS = [
@@ -179,16 +184,16 @@ const ENTRY_FIELDS = ['visual_key', 'family', 'pixel_hash', 'file', 'width', 'he
 const OPTIONAL_ENTRY_FIELDS = ['detail'] as const
 const DETAIL_FIELDS = ['visual_key', 'values', 'default'] as const
 
-const ID = /^[a-z0-9][a-z0-9_-]{0,63}$/
+export const ID = /^[a-z0-9][a-z0-9_-]{0,63}$/
 const RELEASE = /^rc-(?!0000$)[0-9]{4}$/
-const FILE_HASH = /^sha256:[0-9a-f]{64}$/
-const PIXEL_HASH = /^pixels-v1:[0-9a-f]{64}$/
-const VISUAL_KEY = /^[a-z][a-z0-9_]{0,31}(\.[a-z][a-z0-9_]{0,31}){1,3}$/
-const FAMILY = /^[a-z][a-z0-9_]{0,31}$/
-const FILE = /^[0-9a-f]{64}\.png$/
-const AXIS_VALUE = /^[a-z0-9][a-z0-9_]{0,31}$/
+export const FILE_HASH = /^sha256:[0-9a-f]{64}$/
+export const PIXEL_HASH = /^pixels-v1:[0-9a-f]{64}$/
+export const VISUAL_KEY = /^[a-z][a-z0-9_]{0,31}(\.[a-z][a-z0-9_]{0,31}){1,3}$/
+export const FAMILY = /^[a-z][a-z0-9_]{0,31}$/
+export const FILE = /^[0-9a-f]{64}\.png$/
+export const AXIS_VALUE = /^[a-z0-9][a-z0-9_]{0,31}$/
 
-function object(value: Json, what: string, fields: readonly string[], optional: readonly string[] = []): { [key: string]: Json } {
+export function object(value: Json, what: string, fields: readonly string[], optional: readonly string[] = []): { [key: string]: Json } {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     throw new ManifestError('invalid_value', `${what} must be an object`)
   }
@@ -201,7 +206,7 @@ function object(value: Json, what: string, fields: readonly string[], optional: 
   return value
 }
 
-function text(value: Json, what: string, pattern: RegExp): string {
+export function text(value: Json, what: string, pattern: RegExp): string {
   if (typeof value !== 'string' || !pattern.test(value)) throw new ManifestError('invalid_value', `${what} is not valid`)
   return value
 }
@@ -231,7 +236,7 @@ function parseEntry(raw: Json, index: number): RuntimeEntry {
   })
 }
 
-function parseDetail(raw: Json, index: number): RuntimeDetail {
+export function parseDetail(raw: Json, index: number): RuntimeDetail {
   const o = object(raw, `details[${index}]`, DETAIL_FIELDS)
   if (!Array.isArray(o.values) || o.values.length < 1 || o.values.length > MAX_DETAIL_VALUES) {
     throw new ManifestError('invalid_value', `details[${index}].values must be a list of 1..${MAX_DETAIL_VALUES} values`)
@@ -244,7 +249,7 @@ function parseDetail(raw: Json, index: number): RuntimeDetail {
 }
 
 // A ReadonlyMap is not frozen by Object.freeze (its entries stay mutable through `set`), so expose a map whose mutators throw.
-function readOnly<V>(map: Map<string, V>): ReadonlyMap<string, V> {
+export function readOnly<V>(map: Map<string, V>): ReadonlyMap<string, V> {
   return Object.freeze({
     get: (key: string) => map.get(key),
     has: (key: string) => map.has(key),
