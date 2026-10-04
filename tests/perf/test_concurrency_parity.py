@@ -3,7 +3,7 @@ from src.core.state import AuthoritativeState
 from src.engine.kernel import Kernel
 from src.config.profiles import PROD_SMALL as SimulationProfile
 from src.platform.rng import DeterministicRNG
-from src.replay.fingerprint import StateFingerprinter
+from src.engine.checkpoint import CanonicalStateHasher
 from src.engine.executor import LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.engine.worker_manager import WorkerManager
 from src.perf.scenarios import (
@@ -29,7 +29,7 @@ def run_parity_check(initial_state, seed=42, ticks=100, workers=4):
     try:
         for _ in range(ticks):
             kernel_loc.tick_once()
-        hash_loc = StateFingerprinter.get_fingerprint(kernel_loc._state)['state_hash']
+        hash_loc = CanonicalStateHasher.get_hash(kernel_loc._state)
     finally:
         kernel_loc.shutdown()
 
@@ -46,7 +46,7 @@ def run_parity_check(initial_state, seed=42, ticks=100, workers=4):
     try:
         for _ in range(ticks):
             kernel_con.tick_once()
-        hash_con = StateFingerprinter.get_fingerprint(kernel_con._state)['state_hash']
+        hash_con = CanonicalStateHasher.get_hash(kernel_con._state)
     finally:
         kernel_con.shutdown()
         worker_manager.shutdown()

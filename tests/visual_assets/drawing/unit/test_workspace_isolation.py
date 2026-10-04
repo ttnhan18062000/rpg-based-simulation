@@ -40,12 +40,23 @@ def test_every_workspace_consumer_sees_the_patched_workspace(workspace):
 def test_timeout_and_binary_are_read_from_config_at_call_time(monkeypatch, tmp_path):
     seen = {}
 
-    def fake_run(cmd, **kw):
-        seen["timeout"] = kw["timeout"]
-        seen["cmd"] = cmd
-        return subprocess.CompletedProcess(cmd, 0, b"", b"")
+    class FakePopen:
+        returncode = 0
 
-    monkeypatch.setattr(sandbox.subprocess, "run", fake_run)
+        def __init__(self, cmd, **kw):
+            seen["cmd"] = cmd
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def communicate(self, timeout=None):
+            seen["timeout"] = timeout
+            return b"", b""
+
+    monkeypatch.setattr(sandbox.subprocess, "Popen", FakePopen)
     monkeypatch.setattr(config, "JOB_TIMEOUT_S", 7.5)
     monkeypatch.setattr(config, "ASEPRITE", "/opt/not-the-real-aseprite")
     sandbox.bwrap(tmp_path, ["--script", "x.lua"])

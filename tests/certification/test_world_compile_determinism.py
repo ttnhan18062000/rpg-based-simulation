@@ -52,7 +52,9 @@ def test_compiler_seeding_determinism():
     state1, report1 = WorldCompiler.compile(spec, seed=999)
     state2, report2 = WorldCompiler.compile(spec, seed=999)
     
-    # 1. State hashes must be exactly the same
+    # 1. Proof digests must be exactly the same (PERF-D5: the flat hash is the only proof value).
+    assert report1["canonical_state_hash"] == report2["canonical_state_hash"]
+    # Stability check only (the fingerprint does not cover Place data); it proves nothing alone.
     assert report1["state_hash"] == report2["state_hash"]
     
     # 2. Entity count must match
@@ -83,7 +85,7 @@ def test_compiler_layout_variation_under_different_seeds():
     state_b, report_b = WorldCompiler.compile(spec, seed=100)
     
     # 1. State hashes should differ
-    assert report_a["state_hash"] != report_b["state_hash"]
+    assert report_a["canonical_state_hash"] != report_b["canonical_state_hash"]
     
     # 2. Extract coordinates list
     coords_a = [e.navigation.position for e in state_a.entities.values()]

@@ -26,6 +26,8 @@ Tests that pin the deterministic scheduler and work classification laws. Every b
 
 ## 3. Bounded Work Debt
 
+> **Status 2026-10-04:** only the drain half of the debt design exists; nothing produces debt, so the overflow tests below were never written (`test_debt_overflow_reject` is not in `tests/`). The tests that exist seed debt by hand (`tests/unit/core/test_deferred_work_debt.py`), and `tests/integration/kernel/test_work_debt_stays_empty_in_production.py` guards that production debt stays empty. Retirement: `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`.
+
 | Test Name | Input | Expected Rule | Regression Caught |
 | :--- | :--- | :--- | :--- |
 | `test_non_deferrable_critical` | CRITICAL work budget overflow | Kernel error / violation | Illegal critical deferral |
@@ -35,5 +37,5 @@ Tests that pin the deterministic scheduler and work classification laws. Every b
 ## Regression Intent
 
 - **Semantic Drift**: Catching cases where scheduling changes who gets to act first.
-- **Hidden Backlogs**: Catching deferred queues that grow without limits.
+- **Hidden Backlogs**: Catching deferred queues that grow without limits. (No deferred queue exists in production today; see the status note in section 3.)
 - **State Inconsistency**: Catching cases where the scheduler uses non-authoritative data to make decisions.

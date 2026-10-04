@@ -28,7 +28,7 @@ The Resource Governor is the engine's authoritative safety-control layer. It pro
   2. The system has remained in the current mode for at least `N` ticks (Dwell Time / Cooldown).
 
 ## Pressure Signal Semantics
-- `work_debt`: Total count of postponed authoritative items.
+- `work_debt`: Sum of the per-system integer debt counters in `AuthoritativeState.work_debt`. The design was a count of postponed authoritative items, but nothing produces debt. As of 2026-10-04 `work_debt` is never increased in production: nothing converts overflowed or dropped work into debt, `DRAIN_DEBT` only consumes debt that already exists, and `PressureInjector.inject_work_debt` has no caller, so every reader sees 0 (guard: `tests/integration/kernel/test_work_debt_stays_empty_in_production.py`). The field is scheduled for retirement (owner decision 2026-10-04; `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`, which waits for the RPG-core entry gate).
 - `tick_compute_ms`: Wall-clock time of the previous kernel loop.
 - `queue_utilization`: % of bounded buffer capacity used.
 

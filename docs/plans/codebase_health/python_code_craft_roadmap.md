@@ -84,13 +84,13 @@ Sources and caveats are in the session record; several figures came from seconda
 
 | Area | What exists | Consequence for this plan |
 |---|---|---|
-| Repo-scale health metrics | `tools/codebase_health_baseline.py`, `codebase_health_snapshot.py`, `code_health_impact.py`, `pr_impact_report.py` (`TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC`, done) | **Extend** the snapshot with craft metrics. Build no second metrics tool. Note: no snapshot has ever been taken. |
-| Type checking | mypy config, `make typecheck-py`, CI step (`TCK-20260623-TYPE-CHECKER`, D13 F1). Pinned by parity ledger `INFRA-TYPE-001` and `tests/static/test_typecheck_gate_configured.py` | Changing the mypy gate must update the ledger entry and that test in the same ticket. |
+| Repo-scale health metrics | `codebase/reports/codebase_health_baseline.py`, `codebase_health_snapshot.py`, `code_health_impact.py`, `pr_impact_report.py` (`TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC`, done) | **Extend** the snapshot with craft metrics. Build no second metrics tool. Note: no snapshot has ever been taken. |
+| Type checking | mypy config, `make typecheck-py`, CI step (`TCK-20260623-TYPE-CHECKER`, D13 F1). Pinned by parity ledger `INFRA-TYPE-001` and `tests/codebase/test_typecheck_gate_configured.py` | Changing the mypy gate must update the ledger entry and that test in the same ticket. |
 | Import boundaries | AST tests in `tests/architecture/` (e.g. `test_phase18_import_boundaries.py`, `test_phase19_observability_boundaries.py`), D14 layer model, `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` (done) | import-linter is **evaluated, not assumed** (M5): it must replace or clearly add to these tests, never run as a second copy. |
-| Dead code | D11, `tools/audit_unreachable_code.py`, `docs/audits/unreachable_code_inventory.*`, `tools/gate_checks/tools_orphan_check.py` | **Reuse.** vulture is a trial only if it finds what these miss. |
+| Dead code | D11, `codebase/reports/audit_unreachable_code.py`, `docs/audits/unreachable_code_inventory.*`, `tools/gate_checks/tools_orphan_check.py` | **Reuse.** vulture is a trial only if it finds what these miss. |
 | Duplicate classes | `TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS` (open, four pairs, raised by `rpg-feature-planning`) | Owned elsewhere. Link it; the duplication check here must not re-file those pairs. |
 | Conventions | `docs/guidelines/design_patterns.md` (extension points), `docs/engine/architecture_reference.md` §9 (naming) | The standard cites both and does not restate them. |
-| Tools layout | `docs/guidelines/repo_tooling_layout.md`, `TCK-20260929-RETIRE-SCRIPTS-DIR` | **No `tools/` tidy ticket here.** New tools go in a `tools/code_health/` subpackage. |
+| Tools layout | `docs/guidelines/repo_tooling_layout.md`, `TCK-20260929-RETIRE-SCRIPTS-DIR` | **No `tools/` tidy ticket here.** New tools go in a `codebase/health/` subpackage. |
 | Environment | `uv.lock` tracked; `docs/guidelines/agent_working_environment.md` uses `uv venv` / `uv pip`; `tests/static/test_no_hardcoded_venv_interpreter_path.py`; `TCK-20260702-CI-REQUIREMENTS-SPLIT` | uv adoption finishes something half-done. It must keep the knowledge-search stack split and the venv-path guard. |
 | Registry pattern | `registries/*.jsonl`, `tools/capability_envelope_baseline.py` (grandfathered baseline with a typed `reviewed` field) | Direct template for the debt registry. |
 | Ownership | `docs/guidelines/subsystem_ownership_lifecycle.md` | New subsystems from this plan get rows there. |
@@ -155,7 +155,7 @@ repo before adoption.
 | Types | **mypy + `mypy-baseline`** | Keeps the existing config and parity-ledger entry; the baseline makes it blocking without source edits. | **basedpyright** as a second checker with its native baseline; **Pyrefly** benchmarked against it. `ty` is excluded: its only suppression path edits source. |
 | Project-specific rules | **ast-grep** | YAML rules with custom fix messages and rule tests. A cheaper home for some of the hand-written AST tests. | Semgrep CE |
 | Cognitive complexity | **complexipy** | Native snapshot ratchet and `--diff`. radon, xenon and wily are dormant. | |
-| Line-count limits | small script in `tools/code_health/` | No tool has a lines-per-function rule with a baseline. | |
+| Line-count limits | small script in `codebase/health/` | No tool has a lines-per-function rule with a baseline. | |
 | Duplication | **jscpd** | Token-based clone detection with JSON output. Needs Node, which the repo already has for the frontend. | pylint `R0801`; `arid` (new, unverified) |
 | Dependency hygiene | **deptry** | Finds declared-but-unused dependencies (the baseline tool already reports three). Needs dependencies in `pyproject.toml`, so it follows uv. | |
 | Dead code | existing `audit_unreachable_code.py` | Already built and tuned to this repo. | vulture, only if it finds more |
@@ -171,17 +171,21 @@ Lint messages state the fix, since the reader is usually an agent.
 
 The home-grown part, needed because ruff and ast-grep have no baseline.
 
-- `registries/code_health_exceptions.jsonl`: one row per grandfathered violation (file, symbol where
+- `codebase/baselines/code_health_exceptions.jsonl`: one row per grandfathered violation (file, symbol where
   the tool gives one, tool, rule, measured value or count, ceiling, `added_date`, `reviewed`,
   retiring ticket). CLI and validator follow `tools/capability_envelope_baseline.py`.
-- `tools/code_health/`: adapters that read each tool's JSON output and normalise it, and one ratchet
+- `codebase/health/`: adapters that read each tool's JSON output and normalise it, and one ratchet
   command that fails only when a violation is new or worse than its row.
 - Tools with a native baseline (mypy-baseline, basedpyright) keep their own baseline file; the
   registry records that the file exists and its size, so the trend is still visible in one place.
   complexipy was planned the same way but goes through an adapter into the registry instead
   (`TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY`, accepted in review 2026-10-02): its JSON already
   names the function, so one ratchet covers it with symbol-level keys. Reverting means dropping
-  `adapt_complexipy` and recording complexipy's snapshot file in the registry.
+  `adapt_complexipy` and recording complexipy's snapshot file in the registry. mypy-baseline is also
+  not recorded in the registry (`TCK-20261003-MYPY-BASELINE-ADVISORY`, accepted in review 2026-10-03):
+  its file path and entry count are recorded in `docs/guidelines/python_code_standard.md`, and the
+  mypy gate's job summary prints the current baseline size on every run, so the trend stays visible
+  without a registry or snapshot schema change.
 - The registry is seeded from one snapshot of `src/`, which other sessions keep changing. Before
   the ratchet gates anything (M4), it is reseeded on `main` at the start of the soak, and a reseed
   must carry over `reviewed`, `retiring_ticket` and `added_date` for rows whose key persists.
@@ -189,10 +193,12 @@ The home-grown part, needed because ruff and ast-grep have no baseline.
   the existing snapshot tool.
 - A moved or renamed function must not resurface as "new". Matching is by file and symbol, not line.
 
+**M5 note (2026-10-04):** the first ast-grep rules are N3, N4 and E3. T3 (`dict[str, Any]` in public signatures) stays a reviewer rule: a signature-only pattern still matched 185 places on `main` and cannot tell a typed-model candidate from a legitimate JSON passthrough.
+
 ### 6.4 Package registry
 
-`registries/package_registry.jsonl`: one row per `src/` package (purpose, layer, status
-`active | legacy | frozen`, strictness tier, exemplar modules, do-not-imitate files). It answers
+`codebase/structure/package_registry.jsonl` (owner decision 2026-10-04: `registries/` holds only cross-domain registries since the root move): one row per tracked top-level `src/` package (purpose, layer, status
+`active | legacy | frozen`, strictness tier, exemplar modules, do-not-imitate files). Validator: `python3 -m codebase.structure.packages validate` (advisory; `schema` and `completeness` problem classes). Seeded 2026-10-04 from `src_package_structure_audit.md`; the registry is the source of truth afterwards. It answers
 which of the 36 packages are live, and gives agents a named good example per package. Seeding it
 includes an audit of tiny and overlapping packages (`actions`, `logging`, `views`, `runtime`,
 `replay`, empty `social`; the `world*` family; `content` / `content_semantics`). The audit produces
@@ -217,13 +223,15 @@ Each is separately closable. None before M6 modifies `src/`.
 |---|---|---|---|
 | M1 | Standard | `python_code_standard.md`; ownership-table row; plans tracking entry | codebase |
 | M2 | Environment | uv as the single dependency source: refreshed `uv.lock`, dev tools in a dependency group, CI on `uv sync`, Python version aligned, environment guide updated | codebase |
-| M3 | Measure and baseline | Ruff, complexipy, jscpd and the line-count script configured; `tools/code_health/` adapters and ratchet; registry seeded from a full scan; first health snapshot taken | codebase |
+| M3 | Measure and baseline | Ruff, complexipy, jscpd and the line-count script configured; `codebase/health/` adapters and ratchet; registry seeded from a full scan; first health snapshot taken | codebase |
 | M4 | Gates | Ratchet as an advisory CI job with changed-line PR feedback, blocking after a clean soak; mypy blocking through `mypy-baseline` with ledger and static-test updates; prek hooks; type-checker trial (basedpyright vs Pyrefly) reported | codebase |
-| M5 | Structure | Package registry seeded; structure audit decisions; ast-grep rule pack for project rules; import-linter evaluation | codebase |
-| M6 | Agent integration | Skill, edit hook, implementer pointer, review rubric | request to agent-working |
+| M5 | Structure | Package registry seeded; structure audit decisions; ast-grep rule pack for project rules; import-linter evaluation. **done 2026-10-04 (PR #315), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (blocked on owner and testing planner), plus follow-ups: ast-grep SARIF feedback and snapshot inclusion, `exemplar_modules` (M6 or owner)** | codebase |
+| M6 | Agent integration | Skill, edit hook, implementer pointer, review rubric; batched with the M5 follow-ups (exemplar modules, ast-grep SARIF and snapshot). Brief `python_code_craft_m6_agent_integration_ticket_brief.md` (2026-10-04) | codebase, by owner decision 17 (paths under `.claude/**` stay agent-working's) |
 | M7 | Refactor lane | **Deferred until the owner reopens `src/`.** Standing batch folder, one file per batch, fed by the registry; first targets `api/server.py` and `observability/event_extractor.py` | codebase, with rpg-planner for engine files |
 
-Order: M1, M2, M3, M4. M5 and M6 can start after M3. M7 is a lane, not an epic, and never closes.
+**M4 soak:** start = 2026-10-03 (PR #305, which added the advisory `Code health (advisory)` CI job, merged 2026-10-03T16:47:13Z), end = 2026-10-17 (start + 14 days). The flip ticket `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING` carries the same dates.
+
+Order: M1, M2, M3, M4, M5 (done 2026-10-04 (PR #315), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (blocked on owner and testing planner), plus follow-ups: ast-grep SARIF feedback and snapshot inclusion, `exemplar_modules` (M6 or owner)). M6 can start after M3. M7 is a lane, not an epic, and never closes.
 
 ## 8. Owner decisions
 
@@ -249,8 +257,21 @@ Recorded 2026-10-02:
     tests belong to the `testing` domain, whose planner is told before the change lands.
 12. **Python version:** keep the `>=3.11` floor and document 3.13 as the CI-tested version; raising
     the floor would break the 3.12 knowledge-search venv.
+13. **mypy soaks with the ratchet** (2026-10-03): `mypy-baseline` runs advisory for the same two
+    weeks and flips to blocking in the same follow-up ticket.
+14. **Changed-line PR feedback through SARIF upload to GitHub code scanning** (2026-10-03), not
+    reviewdog comments; findings already in the registry are filtered out.
+15. **prek is installed opt-in only** (2026-10-03), because `.git/hooks` is shared by every worktree
+    on the machine; the install keeps the existing post-commit reindex hook.
+16. **jscpd stays report-only** (2026-10-03) and is excluded from the blocking set until its
+    dependencies are locked.
+17. **The codebase domain implements M6 itself** (2026-10-04), although `.claude/**` is routed to
+    agent-working and no agent-working session is running. The owner confirms the literal diff of
+    `.claude/settings.json` and `.claude/agents/implementer.md`; agent-working is told through the outbox.
 
-Tickets: `agent-working/tickets/todos/python-code-craft/` (epic plus seven children, order in `SEQUENCE.md`).
+Tickets: M1 to M3 in `agent-working/tickets/done/python-code-craft/` (closed 2026-10-03, PRs #288,
+#297, #298). M4 in `agent-working/tickets/todos/python-code-craft-gates/` (epic plus six children,
+order in `SEQUENCE.md`; brief `python_code_craft_m4_gates_ticket_brief.md`). M5 in `agent-working/tickets/todos/python-code-craft-structure/` (epic `TCK-20261004-PYTHON-CODE-CRAFT-STRUCTURE-EPIC` and four children done 2026-10-04, three blocked follow-ups still there; brief `python_code_craft_m5_structure_ticket_brief.md`; results in `src_package_structure_audit.md` and `import_linter_evaluation.md`).
 
 ## 9. Risks
 

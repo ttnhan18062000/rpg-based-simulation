@@ -178,3 +178,25 @@ def test_bare_heading_behaviour_unchanged(tmp_path):
     plan = tmp_path / "plan.md"
     plan.write_text("# Plan\n\n## Unresolved Questions\n\n1. A real open question.\n", encoding="utf-8")
     assert plan_has_unresolved_questions_heading(str(plan)) is True
+
+
+# TCK-20261004-PLAN-GATE-NONE-BODY-MARKDOWN-EMPHASIS-FALSE-POSITIVE
+@pytest.mark.parametrize(
+    "body, open_",
+    [
+        ("**None.**", False),
+        ("_None_", False),
+        ("`None`", False),
+        ("- None", False),
+        ("* None", False),
+        ("None.", False),
+        ("**None of the options fits**", False),
+        ("Nonetheless, the owner must pick a store.", True),
+        ("**Nonetheless**", True),
+        ("- Which owner decides X?", True),
+    ],
+)
+def test_markdown_decorated_none_body(tmp_path, body, open_):
+    plan = tmp_path / "plan.md"
+    plan.write_text(f"# Plan\n\n## Unresolved Questions\n\n{body}\n\n## Next\n\nx\n", encoding="utf-8")
+    assert plan_has_unresolved_questions_heading(str(plan)) is open_

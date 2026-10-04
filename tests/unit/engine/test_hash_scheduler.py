@@ -4,7 +4,6 @@ Compliance: INFRA-197 — Full canonical hashing must only occur at sanctioned b
 """
 from __future__ import annotations
 
-import time
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -23,7 +22,12 @@ class TestHashMode:
     def test_hash_mode_values(self):
         from src.engine.checkpoint import HashMode
         assert HashMode.FULL == "full"
-        assert HashMode.LIGHT == "light"
+
+    def test_light_mode_is_retired(self):
+        """PERF-D5 point 3: a proof digest is computed or reported as not computed, never approximated."""
+        from src.engine.checkpoint import HashMode
+        assert [m.name for m in HashMode] == ["FULL"]
+        assert not hasattr(HashMode, "LIGHT")
 
 
 class TestHashScheduleViolation:
@@ -103,59 +107,65 @@ class TestCanonicalHashSchedulerFullMode:
             scheduler.compute_hash(state, tick=7, mode=HashMode.FULL, reason="unknown")
 
 
-class TestCanonicalHashSchedulerLightMode:
-    def test_light_hash_always_allowed(self):
-        from src.engine.checkpoint import CanonicalHashScheduler, HashMode
+class TestComputeHashIsFlatOnly:
+    def test_default_mode_is_the_sanctioned_flat_digest(self):
+        from src.engine.checkpoint import CanonicalHashScheduler, CanonicalStateHasher
+
+        state = _make_mock_state(tick=0)
+        with patch.object(CanonicalStateHasher, "get_hash", return_value="a" * 64) as mock_hash:
+            assert CanonicalHashScheduler().compute_hash(state, tick=0) == "a" * 64
+        mock_hash.assert_called_once_with(state)
+
+    def test_default_mode_off_boundary_raises_instead_of_approximating(self):
+        from src.engine.checkpoint import CanonicalHashScheduler, HashScheduleViolation
+
+        with pytest.raises(HashScheduleViolation):
+            CanonicalHashScheduler().compute_hash(_make_mock_state(tick=99), tick=99)
+
+
+class TestProofDigest:
+    def test_scheme_name_is_versioned_flat_sha256(self):
+        from src.engine.checkpoint import PROOF_DIGEST_SCHEME
+        assert PROOF_DIGEST_SCHEME == "flat-sha256-v1"
+
+    def test_computed_digest_carries_scheme_tick_status_and_value(self):
+        from src.engine.checkpoint import (
+            PROOF_DIGEST_SCHEME, CanonicalHashScheduler, CanonicalStateHasher, DigestStatus,
+        )
+
+        state = _make_mock_state(tick=0)
+        with patch.object(CanonicalStateHasher, "get_hash", return_value="b" * 64):
+            digest = CanonicalHashScheduler().compute_digest(state, tick=0)
+        assert (digest.scheme, digest.tick, digest.status, digest.value) == (
+            PROOF_DIGEST_SCHEME, 0, DigestStatus.COMPUTED, "b" * 64,
+        )
+
+    def test_unsanctioned_boundary_is_reported_not_computed_and_not_served_stale(self):
+        from src.engine.checkpoint import CanonicalHashScheduler, CanonicalStateHasher, DigestStatus
 
         scheduler = CanonicalHashScheduler()
-        state = _make_mock_state(tick=99)
-        # Should never raise regardless of tick/reason
-        result = scheduler.compute_hash(state, tick=99, mode=HashMode.LIGHT, reason="")
-        assert isinstance(result, str) and len(result) == 32  # MD5 hex digest
+        with patch.object(CanonicalStateHasher, "get_hash", return_value="c" * 64) as mock_hash:
+            scheduler.compute_digest(_make_mock_state(tick=0), tick=0)  # a value exists to go stale
+            digest = scheduler.compute_digest(_make_mock_state(tick=42), tick=42)
+        assert digest.status is DigestStatus.NOT_COMPUTED_UNSANCTIONED_BOUNDARY
+        assert digest.value is None and digest.tick == 42
+        assert mock_hash.call_count == 1  # the second call did not hash and did not reuse the first value
 
-    def test_light_hash_default_mode(self):
-        from src.engine.checkpoint import CanonicalHashScheduler
+    def test_value_is_set_if_and_only_if_computed(self):
+        from src.engine.checkpoint import PROOF_DIGEST_SCHEME, DigestStatus, ProofDigest
 
-        scheduler = CanonicalHashScheduler()
-        state = _make_mock_state(tick=5)
-        result = scheduler.compute_hash(state, tick=5)
-        assert isinstance(result, str) and len(result) == 32
+        with pytest.raises(ValueError):
+            ProofDigest(PROOF_DIGEST_SCHEME, 1, DigestStatus.COMPUTED)
+        with pytest.raises(ValueError):
+            ProofDigest(PROOF_DIGEST_SCHEME, 1, DigestStatus.NOT_COMPUTED_LIVE_POLICY, "d" * 64)
 
-    def test_light_hash_is_fast(self):
-        from src.engine.checkpoint import CanonicalHashScheduler, HashMode
+    def test_digest_record_is_immutable(self):
+        import dataclasses
+        from src.engine.checkpoint import PROOF_DIGEST_SCHEME, DigestStatus, ProofDigest
 
-        scheduler = CanonicalHashScheduler()
-        state = _make_mock_state(tick=1, n_entities=1000, n_regions=50)
-
-        t0 = time.perf_counter()
-        for _ in range(100):
-            scheduler.compute_hash(state, tick=1, mode=HashMode.LIGHT)
-        elapsed_ms = (time.perf_counter() - t0) * 1000
-
-        # 100 light hashes must complete in under 10ms total (< 0.1ms each)
-        assert elapsed_ms < 10.0, f"LIGHT hash too slow: {elapsed_ms:.2f}ms for 100 calls"
-
-    def test_light_hash_changes_on_tick(self):
-        from src.engine.checkpoint import CanonicalHashScheduler, HashMode
-
-        scheduler = CanonicalHashScheduler()
-        state = _make_mock_state(tick=1)
-        h1 = scheduler.compute_hash(state, tick=1, mode=HashMode.LIGHT)
-        h2 = scheduler.compute_hash(state, tick=2, mode=HashMode.LIGHT)
-        assert h1 != h2
-
-    def test_light_hash_no_json_serialization(self):
-        """LIGHT hash must not call json.dumps (no full state walk)."""
-        from src.engine.checkpoint import CanonicalHashScheduler, HashMode
-        import json
-
-        scheduler = CanonicalHashScheduler()
-        state = _make_mock_state(tick=3)
-
-        with patch.object(json, "dumps", side_effect=AssertionError("json.dumps called in LIGHT mode")) as mock_dumps:
-            # Should NOT raise — LIGHT path must not use JSON
-            result = scheduler.compute_hash(state, tick=3, mode=HashMode.LIGHT)
-        assert isinstance(result, str)
+        digest = ProofDigest(PROOF_DIGEST_SCHEME, 1, DigestStatus.NOT_COMPUTED_LIVE_POLICY)
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            digest.tick = 2  # type: ignore[misc]
 
 
 class TestAllowFullHashAt:

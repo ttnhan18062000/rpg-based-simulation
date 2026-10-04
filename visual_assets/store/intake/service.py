@@ -193,7 +193,7 @@ def _summary(package: CandidateHandoffPackage, result: IntakeResult, notes: Sequ
 def _review_matches(target: Path, expected: Mapping[str, bytes]) -> bool:
     try:
         return not target.is_symlink() and sorted(p.name for p in target.iterdir()) == sorted(expected) and all(
-            quarantine.read_one_any(target, name, config.MAX_DECODED_BYTES) == data for name, data in expected.items()  # the store's own render is not bounded by the producer preview limit
+            quarantine.read_one_any(target, name, config.MAX_PNG_FILE_BYTES) == data for name, data in expected.items()  # the store's own render is not bounded by the producer preview limit
         )
     except (StageError, OSError):
         return False

@@ -158,6 +158,8 @@ it and no dormancy protects it.
 - `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` — the parent chain whose root cause this fixes.
   Its `SEQUENCE.md` link (1) recorded the verdict; no fix was ever filed. **Filing this does not
   resume the epic** — links (2), (3) and (5) stay where they are.
+- `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` — owns the AC6 failure's
+  unexplained 780/1609 opportunity-attack nondeterminism (planner-owned; on main via #303).
 - `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` (done) — the P0 investigation that
   produced the verdict. Its 2026-09-19 addendum names `intelligence.py:1711` and the scorer at
   `src/ai/goals/scorers.py:101` (it cites `:108`; that citation has drifted).
@@ -401,8 +403,145 @@ explicitly in the plan rather than assumed.
 Unverified and deliberately not claimed: how often either path fires in corpus play. The 34-97% figure
 is a disagreement rate over flagged pairs, **not** a frequency of occurrence.
 
+### 2026-10-03 — IMPLEMENTED per plan.md steps 1-2; measured effect is NOT the hoped-for one. Ticket left open.
+
+**Hostility helper decision (plan step 1a):** option (ii), lifted. `content_semantics.faction.are_entities_hostile(source,
+target, context)` is the single home for "resolve both faction ids, then ask the catalog"; `LegalityServiceV2._is_engagement_hostile`
+now delegates to it (same `RelationContext(distance=1.0, combat_engaged=True)`, behaviour unchanged) and `CombatEngageScorer` calls it
+with the real Manhattan distance and `combat_engaged=True`. Option (i) was not taken because the helper was a private static on the
+legality service; importing it from an AI scorer would invert the dependency. The identity-resolver import is lazy inside the helper.
+
+**Step 2:** one line, `kind=best_candidate.metadata.get("obj_kind") or ObjectiveKind.REACH_LOCATION`, plus the `ObjectiveKind` import.
+`ProjectState.kind`, `score`, `target_id`, `target_pos` untouched. No other raw-enum site touched.
+
+**Two existing tests changed, both explained by the catalog/enum divergence this ticket closes:**
+- `tests/unit/strategic/test_expanded_goals.py` (2 tests) built its "hostile" as `faction=2` (TOWN_COUNCIL) — raw-enum-different but
+  catalog-FRIENDLY to a hero. Pair changed to MONSTER_HORDE (catalog-hostile); intent unchanged. Added the T5 negative control.
+- `tests/mechanic_scenarios/test_strategic_intelligence_detour_resolution.py`: goblin and orc share the raw `MONSTER_HORDE` enum, so
+  the old scorer saw no hostile and `COMBAT_ENGAGE` scored 0; the catalog calls them hostile, so it now outbids the staged detour project
+  (`proj_combat_engage_19` replaced `detour_scenario`). That is "these entities now consider combat and previously did not". The detour
+  tests are about distance resolution, so the staging now removes the orc. No recorded-hash fixture moved.
+
+**Measurement (plan step 3).** Real `Kernel.tick_once()`, seed 42, 2000 ticks, `LocalSequentialExecutor()`, `PROD_SMALL`, run ONE AT A TIME
+on an otherwise idle machine. Measured while other jobs shared the CPU, the same unmodified code gave materially different outcomes
+(e.g. 588 vs 319 opportunity attacks on `frontier_living_world`); the sequential runs are reproducible (crowded_frontier before and
+after each repeated identically). Do not take a number from a loaded machine. Counts are attackers, not calls.
+
+| | crowded_frontier before | after | frontier_living_world before | after |
+|---|---|---|---|---|
+| tactical calls on a `combat_engage` holder | 218 | **1** | 18 | 52 |
+| of those, `hostiles` non-empty (tactical.py hostile test true) | 6 | 0 | 2 | 3 |
+| decision-path attacks, all entities | 2 | 0 | 3 | 20 |
+| decision-path attacks by a `combat_engage` holder | 0 | 0 | 2 | **0** |
+| opportunity attacks | 119 | 136 | 1295 | 1363 |
+
+Instrument differences vs the investigation: its baseline said `hostiles` non-empty 0/216 and 0/20 and 0 CE-holder attacks; this probe
+(wrapping `is_hostile_compat` calls made from `tactical.py`) counts 6/218 and 2/18 and 2 CE-holder attacks on main. Same order of
+magnitude for volume (216/218 calls, 2 vs 119 attacks reproduce); the zero-vs-small gap is the instrument, so compare my before and
+after, not mine against the investigation's.
+
+**Reading, stated plainly.**
+1. AC1 (win materialises `DEFEAT_ENEMY` with the hostile's id) is MET and proven through a real kernel tick.
+2. AC2 (a CE holder whose target the catalog calls hostile actually attacks, end to end) is NOT MET and I could not construct it.
+   In the scenario world the two entities are tactically evaluated twice in 300 ticks, then chase each other's stale position
+   without attacking — the sibling ticket's defect. A bare adjacent pair never elects `COMBAT_ENGAGE`. CE-holder attacks went 2 -> 0 on
+   `frontier_living_world`, not up.
+3. AC3 (`hostiles` non-empty for such an entity) is NOT meaningfully MET: 3/52 (5.8%) after, 2/18 (11%) before, and 0/1 in crowded.
+4. The big mover is the candidate set, not attacks: in `crowded_frontier`, `combat_engage` holders drop 218 -> 1 tactical calls.
+   `CombatEngageScorer` first runs `SensoryFilter.filter_saliency(..., max_targets=5)` (a raw-enum site, plan scope guard 4 — not
+   touched here) and only then applies the catalog test, so in a crowd the five salient neighbours are mostly catalog-friendly and the
+   catalog-hostile ones never reach the hostility test. That is hostility-sweep territory, and it means the scorer now correctly
+   declines goals it could never execute, but nothing replaces them with real combat.
+5. Overall decision-path attacks on `frontier_living_world` rose 3 -> 20, from entities NOT holding a `combat_engage` project: changed
+   goal competition, not the fix doing what it was written to do. Not claimed as a win.
+
+The plan said a smaller-than-hoped delta is a finding, not a failure, and asked for it to be reported honestly. This is that report. I am NOT
+marking the ticket done: two of its acceptance criteria are not satisfied and I will not narrow them to pass. The fix is correct and
+necessary (kind carried, one hostility test) but not sufficient; the blockers are `TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-
+FIXED-POINT-AND-NEVER-TERMINATES` (entity id used as a fixed-point target; arrival never terminates) and the saliency-filter site in
+`TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP`. Decision needed from the planner: land this as a prerequisite and re-scope AC2/AC3
+onto those tickets, or hold it until they land.
+
+Verification run: `tests/unit/{strategic,ai,tactical,movement,engine}` 667 passed + the new tests; `tests/mechanic_scenarios` 86 passed
+after the detour fix (one load-induced failure of `test_combat_judgement_withdrawal` on a first, contended run did not recur and passes in
+isolation on both branches); determinism/canonical/replay/fingerprint/checkpoint sweep 340 passed; `tests/integration -m "not slow"` 970
+passed, 3 failed: `test_long_run_stability` and `test_bravery_quartile_combat_rate_2x` are on the known base-failure list,
+`test_campaign_runner_outputs_entity_and_world_arc_reports` passes in isolation on both main and this branch (failed only in the
+contended full run).
+
+### 2026-10-03 — why `crowded_frontier` fell 218 -> 1 (not a regression; an ordering defect upstream of this fix)
+
+Supplied by the planner's review of PR #291; the code is verified, the causal claim is **not measured by me**.
+`SensoryFilter.filter_saliency` (`src/engine/cognition.py:44`) adds its +200 "Hostility" bonus on
+`ent.identity.faction != subject.identity.faction` — the raw four-value enum. A genuine MONSTER_HORDE and a
+catalog-friendly TOWN_COUNCIL both receive +200, so they are ranked by proximity alone, and `max_targets=5`
+(`scorers.py`, the line above the changed one) truncates on that wrong proxy **before** the corrected catalog test
+runs. In a crowd, nearby friendlies can therefore displace distant real hostiles and `hostiles` comes back empty.
+This is the pre-existing saliency proxy becoming visible once the hostility test became correct. Raising
+`max_targets` is not the fix; making the saliency hostility term ask the catalog is, and that is
+`TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP` (prioritise `cognition.py:44`).
+
+**Where AC2 and AC3 go (planner's re-scope, 2026-10-03; neither was met by this ticket):**
+- AC3 (`hostiles` meaningfully non-empty) -> the hostility sweep. Measured here: 3/52 after vs 2/18 before on
+  `frontier_living_world`, 0/1 vs 6/218 on `crowded_frontier`.
+- AC2 (a catalog-hostile target is actually attacked, end to end) -> `TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES`.
+  Measured here: attacks by `combat_engage` holders 2 -> 0 on `frontier_living_world`, 0 -> 0 on `crowded_frontier`.
+
+### 2026-10-03 — RE-MEASURED under `audit_mode=True` + `max_tick_budget_ms` raised out of reach; the earlier table is order-of-magnitude only; AC6 FAILS on `frontier_living_world`
+
+The planner showed (and I verified at `kernel.py:612-620`) that with `audit_mode` off the mid-tick throttle drops authoritative items
+whenever a tick exceeds `max_tick_budget_ms`, so my first table (above) was taken under that throttle. Same method, `PROD_SMALL`
+with `max_tick_budget_ms=1e9`, `flags audit_mode=True`, `LocalSequentialExecutor()`, one run at a time, 2000 ticks, seed 42,
+state hash = sha256 of every entity's `to_canonical_dict()` (first 16 hex):
+
+| | crowded before | crowded after | frontier_living_world before | frontier_living_world after |
+|---|---|---|---|---|
+| tactical calls on a `combat_engage` holder | 215 | **1** | 20 | 105 / 104 |
+| of those, tactical `hostiles` true | 6 | 0 | 2 | 3 / 3 |
+| decision-path attacks (all entities) | 2 | 0 | 3 | 1 / 1 |
+| decision-path attacks by a `combat_engage` holder | 0 | 0 | 2 | 0 / 0 |
+| opportunity attacks | 139 | 136 | 783 | 780 / **1609** |
+| state hash, run 1 / repeat | `a2bcf6ad` = `a2bcf6ad` | `f7d33838` = `f7d33838` | `9fa832ae` = `9fa832ae` | `518c5bed` != `a60e481b` |
+
+- The `before` arm now reproduces the investigation's baseline exactly (783 opportunity attacks, 20 calls, 3 decision-path attacks), so
+  the investigation's numbers were sound and my earlier loaded-machine numbers were the throttled ones.
+- The directional reading is unchanged and in one respect worse: the earlier "all decision-path attacks 3 -> 20" on
+  `frontier_living_world` was a throttle artifact. Under audit mode it is **3 -> 1**. Do not quote that rise.
+- **`frontier_living_world` `after` is not reproducible** even in audit mode with the budget raised: two identical runs gave different
+  hashes (opportunity attacks 780 vs 1609). `crowded_frontier` `after` and both `before` arms are reproducible.
+
+**Localising it (what was and was not established).** Unmodified `main`: identical trail in 4/4 runs with random `PYTHONHASHSEED`.
+This branch: 4/4 distinct trails with random seed, and two distinct trails in 3 runs with `PYTHONHASHSEED=0`, so it is not string-hash
+order. Intermittent, not constant: a separate 4-run per-tick dump was identical through tick 24. Bisecting with throwaway copies (never
+committed): **hostility change alone** (obj_kind not carried) 3 distinct trails in 5 runs; **obj_kind carried alone** (raw-enum scorer)
+2 distinct in 5. Each half reproduces it; main does not. Neither half contains a wall-clock read or set iteration. The simplest reading
+consistent with this is that nondeterminism already exists on the combat/tactical path and was masked on main because that path fires
+rarely for these worlds (the dormancy this ticket ends), not that this logic is itself nondeterministic. **That is an inference, not a
+finding: I did not locate the source**, and `INFRA-273` / `TCK-20260818-STANDARD-LONGRUN-DETERMINISM-WATCHDOG-AUDITMODE` (the planner's
+named, already-recorded mechanism) may or may not be all of it. Raising `max_tick_budget_ms` does not defuse the other governor
+comparisons (they scale off the same budget), so that is not the explanation either.
+
+**Consequence for the ACs.** AC6 asks that determinism hold and the sweep be green. It is **failed, not merely undemonstrated**, on
+`frontier_living_world`: two identical audit-mode runs with the budget raised gave different hashes (780 vs 1609 opportunity attacks)
+while the unmodified arm was identical every time. The sweep I ran (340 passed) did not set `audit_mode`, so it neither contradicts nor
+rescues that. The ticket stays open; if it is ever landed against this failure, that must be recorded here as "AC6 failed and knowingly
+accepted" with these numbers. Finding the source of the nondeterminism is a separate investigation (candidate hard bug), not this
+ticket's scope; the planner recommends it not be attributed to `INFRA-273` without evidence (different signature: after-arm
+divergence with a clean before-arm, throttle suppressed).
+
+**AC6 disposition (2026-10-04): FAILED AND KNOWINGLY ACCEPTED.** Measured, not undemonstrated: two identical audit-mode runs of
+`frontier_living_world` gave 780 vs 1609 opportunity attacks. The nondeterminism is a pre-existing property of the combat/tactical
+path that this change did not introduce (either half of the change alone reproduces it, and the unmodified arm was identical every
+time only because the throttle masked it); it is owned by `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE`.
+`rpg-feature-planning` withdrew its hold on #291 on this basis. The merge decision itself is the owner's.
+
 ## Test Summary
-_(not started)_
+New: `tests/unit/strategic/test_goal_winner_objective_kind.py` (13: T1 nine fall-through kinds stay `REACH_LOCATION`, T2 missing/None fallback,
+published kind carried, T6 `ProjectState.kind` stays `GoalKind` and `score` stays the 100-scale utility), and
+`tests/mechanic_scenarios/test_combat_engage_objective_kind_through_kernel.py` (2: real-kernel `DEFEAT_ENEMY` materialisation, determinism;
+the first fails without the fix). Updated: `test_expanded_goals.py`, `test_strategic_intelligence_detour_resolution.py`. T4 (a real attack
+attributable to a CE holder) is NOT written: it cannot pass today (see Implementation Notes, 2026-10-03). Measurement table and verification
+run are in Implementation Notes.
 
 ## Files Changed
 
@@ -425,9 +564,16 @@ so a reviewer is not surprised by them in the diff:
   that decision 7 partly supersedes ("Do not stop normal RPG-core engineering work until the mapping is
   complete"). Written by this session, not the rule owner, and it is an SCP plan doc this session owns.
 
-Docs this ticket's **own fix** will change, per `plan.md` step 4 — not yet touched:
-- `docs/mechanics/04_strategic_cognition.md`
-- `docs/parity_ledger/strategic_cognition.yaml`
+Code and tests changed by the fix (2026-10-03):
+- `src/ai/goals/scorers.py` (`CombatEngageScorer`: catalog hostility with real distance, publishes `obj_kind=DEFEAT_ENEMY`)
+- `src/systems/strategic_systems/intelligence.py` (generic branch reads `obj_kind`, `REACH_LOCATION` fallback; `ObjectiveKind` import)
+- `src/content_semantics/faction.py` (new shared `are_entities_hostile`), `src/engine/legality.py` (`_is_engagement_hostile` delegates to it)
+- `tests/unit/strategic/test_goal_winner_objective_kind.py` (new), `tests/mechanic_scenarios/test_combat_engage_objective_kind_through_kernel.py` (new),
+  `tests/unit/strategic/test_expanded_goals.py`, `tests/mechanic_scenarios/test_strategic_intelligence_detour_resolution.py` (updated, see Implementation Notes)
+
+Docs changed by the fix, per `plan.md` step 4:
+- `docs/mechanics/04_strategic_cognition.md` (new "Objective kind of a generic winner" paragraph)
+- `docs/parity_ledger/strategic_cognition.yaml` (new `STRAT-274`, written with `parity_ledger_writer.write_entry`)
 
 ## Completion Summary
 _(not started)_

@@ -99,7 +99,7 @@ authorizes no implementation, and Gate A and Gate B keep their roles for everyth
 | Proposal and plan are untracked in git (C-17) | Resolved: the folder and the source proposal are tracked since PR #185 |
 | Zero-worker utilization reports `1.0` (C-03) | Fixed to `0.0` by `TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER`, ahead of PERF-D1. PERF-D1 must ratify or revise that fix; the zero-queue case still reports `1.0` |
 | FULL persistence hashes directly (C-06) | Still true (`Kernel._phase_persistence`); `BudgetedCanonicalHasher` has no caller outside its own module |
-| Threshold checks default to warning (C-13 area) | Still true: 12 of 53 `assert_perf_threshold` call sites pass `hard=True` |
+| Threshold checks default to warning (C-13 area) | Still true, and stronger than first recorded: no call site passes a literal `hard=True` (0 of 55 `assert_perf_threshold`/`perf_check` calls, `docs/performance/performance_clause_inventory.md` §7; corrected 2026-10-03 from an earlier "12 of 53" that does not reproduce); 45 of the 55 are also `slow`-marked and deselected on PRs |
 | Regression gate samples 10/50 ticks, average only, skips a missing baseline, empty hard-scenario set | Still true |
 | Debt harness accounting defect (PA-02) | Still present and latent: `src/perf/long_run_harness.py` calls `len()` on integer debt values |
 
@@ -136,6 +136,42 @@ an M6 revisit trigger. It is an entry gate:
   delivered as re-runnable tooling under `tools/`, so they are regenerated, not re-authored, after
   each RPG-core merge.
 
+**Gate definition and partial lift (owner decisions, 2026-10-04).** The RPG-core planning session
+proposed these in `rpg_core_handoff.md` ("Responses"), `perf-planner` reviewed them, and the owner
+decided:
+
+1. **Full-lift criteria.** The owner declares the lift once all three hold. Each one can be checked,
+   but the lift itself is still an owner statement, not an automatic result:
+   1. No open determinism-break ticket on the path being measured. On 2026-10-04 that is
+      `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` (PR #291's AC6).
+   2. The world-definition split (`TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`, Child A
+      of the semantic foundation) has landed, and memo row 7 (b) holds: every core-tier module is
+      bound, or excluded with a reason. Until then one `world_id` can resolve to different module
+      sets, so two measurements of "the same world" are not comparable.
+   3. The RPG-core track names a no-touch window on `src/core/state.py`, `src/engine/apply.py`,
+      `src/engine/pipeline.py` and `src/engine/kernel.py`. The window opens only after
+      `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING` lands, because that fix edits three of the
+      four files.
+
+   Memo row 7 (a), the full rule map, is **not** a criterion: it changes no `src/` behaviour and
+   cannot invalidate a baseline.
+2. **Partial lift now.** The gate and the Code Craft `src/` freeze are lifted for M1 work on
+   `src/engine/worker_manager.py`, `src/engine/checkpoint.py`, `src/perf/long_run_harness.py` and
+   `src/core/protocol_validator.py`, because no open RPG-core ticket edits them. **`src/engine/governor.py`
+   is held back**: the combat nondeterminism ticket lists the governor's `RuntimeMode` transitions
+   as an unverified suspect, so governor work waits until that root cause is known. The four core
+   files stay gated. Every measurement taken under the partial lift is still labelled provisional,
+   and no soft check becomes blocking.
+3. **Salience fix out of the gate.** `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING` is a
+   determinism break, which makes it a hard RPG bug under memo row 7. It moves to the RPG-core
+   hard-bug queue at P1, and perf reviews it.
+4. **Partial lift extended to `src/perf/scenarios.py` (owner decision, 2026-10-04, later the same
+   day).** The extension covers only `TCK-20260919-PERF-SCENARIO-METROPOLIS-SPAWN-COLLISION`:
+   `build_metropolis_state()` stacks up to ten entities on one tile at its default parameters. The
+   file is a perf scenario builder, not one of the four core files, and no open RPG-core ticket
+   edits it. Metropolis numbers taken before the fix are not comparable with numbers taken after
+   it, and both stay provisional.
+
 ### Foundation slice that may start now
 
 Documents, tickets, and read-only tooling only — no `src/` edit, no baseline:
@@ -147,7 +183,8 @@ Documents, tickets, and read-only tooling only — no `src/` edit, no baseline:
 5. M2-T01 clause-level inventory of the performance contracts against the gates that actually run.
 6. Decision drafts for PERF-D2, PERF-D4, and PERF-D6, and the recorded closure of PERF-D3.
 
-Items 3–6 follow item 2. Everything else in M1–M6 waits for the entry gate.
+Items 3–6 follow item 2. Everything else in M1–M6 waits for the entry gate, except the M1 work
+that the 2026-10-04 partial lift above releases.
 
 ### Performance management loop (added 2026-10-03)
 
@@ -294,7 +331,7 @@ stable.
 | Performance/certification/baseline P1 docs | Sampling, metrics, baseline, and failure rules drift from live gates | M2 reconciles clause by clause before M4 baselines |
 | Live performance and SimQ CI gates | Performance thresholds can warn without failing; missing baselines/calibration can skip; full SimQ audit is informational while known drift remains | M2 defines result/debt policy; M4 separates old debt from new deltas, calibrates trustworthy hard gates, and assigns an expiry/owner to temporary informational status |
 
-Until M0 closes, this folder is a P2 decomposition for review—not implementation authorization.
+M0 closed on 2026-10-03 (`TCK-20261003-PERF-M0-EPIC-CLOSURE`). This folder remains a P2 decomposition beneath the P1 roadmap, and M1–M6 stay gated by the RPG-core stability entry gate above, so it is still not implementation authorization.
 
 ## Completion outcomes
 

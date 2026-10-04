@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 
 from visual_assets.store import config
-from visual_assets.store.contracts import AdoptionRecord, RevocationRecord, SourceRecord, parse_record
+from visual_assets.store.contracts import AdoptionRecord, RevocationRecord, SourceRecord, parse_record, record_bound
 from visual_assets.store.contracts.base import StoreRecord
 from visual_assets.store.errors import ContractError, StoreError
 from visual_assets.store.identities import SourceAssetId, SourceRevision, check
@@ -41,6 +41,11 @@ def sources_dir(root: Path | None = None) -> Path:
 
 def adoptions_dir(root: Path | None = None) -> Path:
     return _root(root) / "provenance" / "adoptions"
+
+
+def set_adoptions_dir(root: Path | None = None) -> Path:
+    """Records of reviewed-set adoptions: a folder of their own, because every reader parses `adoptions/*.json` as an `AdoptionRecord`."""
+    return _root(root) / "provenance" / "set-adoptions"
 
 
 def intake_dir(root: Path | None = None) -> Path:
@@ -76,7 +81,7 @@ def read_file(path: Path, limit: int) -> bytes:
 
 
 def parse_file(cls: type[StoreRecord], path: Path) -> tuple[StoreRecord, bytes]:
-    data = read_file(path, config.MAX_RECORD_BYTES)
+    data = read_file(path, record_bound(cls))
     return parse_record(cls, data), data
 
 
@@ -202,12 +207,18 @@ def is_eligible(source_asset_id: str, revision: str, root: Path | None = None) -
         return False
 
 
-def key_holders(visual_key: str, root: Path | None = None) -> list[str]:
-    """Source assets whose latest build-eligible revision was adopted under `visual_key` (an asset holds the key its live revision carries)."""
+def slot_holders(definition, detail: str | None, root: Path | None = None) -> list[str]:
+    """Source assets whose latest build-eligible revision fills the slot `(definition.key, detail)`.
+
+    An asset holds the slot its live revision's adoption names: the key, and the detail value (`None` in the adoption means the key's declared default).
+    """
     holders = []
     for sid in list_source_ids(root):
         eligible = [rev for rev in list_revisions(sid, root) if is_eligible(sid, rev, root)]
-        if eligible and load_adoption(load_source(sid, eligible[-1], root).adoption_id, root).visual_key == visual_key:
+        if not eligible:
+            continue
+        adoption = load_adoption(load_source(sid, eligible[-1], root).adoption_id, root)
+        if adoption.visual_key == definition.key and definition.effective_detail(adoption.detail_value) == detail:
             holders.append(sid)
     return holders
 

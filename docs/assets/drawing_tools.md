@@ -24,7 +24,31 @@ python -m visual_assets.drawing.server          # stdio MCP server (from the rep
 bash visual_assets/start_mcp.sh                 # same, via the launcher .mcp.json uses
 python -m pytest tests/visual_assets -q         # integration tests need aseprite + bwrap, else they skip
 python -m visual_assets.drawing.pin             # after a reviewed edit of backend/lua/ops.lua
+make visual-assets-aseprite-local               # strict real-Aseprite run, local only (ADR D10)
 ```
+
+### Timeouts and stray sandboxes
+
+Every Aseprite job runs under `bwrap` with a timeout (`config.JOB_TIMEOUT_S`). On a timeout `sandbox.kill_tree` freezes (SIGSTOP) the
+whole process tree and SIGKILLs it, because `bwrap --unshare-all` forks an inner process (the init of a new PID namespace) that
+ignores SIGTERM and, killed too early, could outlive the job holding a bind mount of its job directory. If a machine ever shows a stray
+anyway (a `bwrap --unshare-all ... aseprite -b --script /lua/ops.lua` with parent PID 1), list candidates with
+`pgrep -af 'bwrap .*--bind .*\.jobs/'` (not the broader `^bwrap --unshare-all`: GNOME's own image-loader sandboxes match that too).
+Kill only a process whose `--bind` names a `.jobs/` directory of a workspace you own, never another session's, with `kill -9 <pid>`;
+SIGTERM does nothing to it. The tests scope their leak checks to their own workspace, so a stray from elsewhere cannot fail them.
+
+### Strict local run (ADR D10)
+
+Real Aseprite runs only on the licence holder's own machine (`docs/assets/aseprite_licence_review.md`); CI never
+installs it, so every `needs_aseprite` test skips there and the CI job summary states how many.
+`make visual-assets-aseprite-local` runs `tests/visual_assets -m needs_aseprite` with
+`VISUAL_ASSETS_REQUIRE_ASEPRITE=1` under a 2 GB memory cap (`systemd-run`, when available). In that mode a missing
+binary or bwrap, or a binary whose `aseprite --version` is not `config.ASEPRITE_VERSION` (`1.3.18.6`), makes every
+`needs_aseprite` test **fail or error** (pytest reports it as an ERROR, raised in fixture setup) instead of skip, so a strict run can never pass or skip them, and the target exits non-zero on any failure, any skip or an empty run.
+It writes `reports/visual_assets/aseprite_local_run.json` (gitignored run output): `commit` (HEAD; a dirty tree is
+not reflected), `utc_time`, `aseprite_version`, `passed`, `failed`, `errors`, `skipped`, `total`, `duration_seconds`,
+`pytest_exit_code` and `ok`. A guard test (`tests/visual_assets/test_aseprite_licence_guard.py`) fails if a workflow
+names Aseprite or a tracked file is an Aseprite executable or package.
 
 The server is registered for this repository in `.mcp.json` as `aseprite-pixel-art`. Sprites live outside the
 repo in `~/.cache/rpg-aseprite-mcp` (override: `ASEPRITE_MCP_WORKSPACE`; binary override:
@@ -48,7 +72,11 @@ hex of the source's sha256 (it identifies the source bytes); `handoff_id` is `<c
 immutable: rebuilding with the same inputs is idempotent, and changing any input (a corrected brief, a different licence statement) for the same revision creates a new handoff,
 so several handoffs may exist for one candidate (intake tells them apart). Provenance is what the tools know (adapter version and Lua pin, Aseprite version, counts from Aseprite itself) and an explicit
 `UNAVAILABLE` / `NOT_APPLICABLE` otherwise, e.g. the creator. It is a **candidate, not an adoption**: nothing is written to the asset store, and the
-next step is the separate `python -m visual_assets.store intake <directory>`. The server has no adopt, build, release, revoke or gc tool.
+next step is the separate `python -m visual_assets.store intake <directory>`. The server has no adopt, adopt-set, build, release, revoke or gc tool. Agent flow for drafts: draw -> `export_handoff` -> `intake` -> `review` -> `python -m visual_assets.store draft keep <intake_id> --set <set_id> --as <key> [--detail <value>]` (not an MCP tool; it records no approval); a human later reviews the whole set and runs `adopt-set`.
+
+Reviewing a draft set (`TCK-20261004-VISUAL-ASSETS-DRAFT-PREVIEW-PAGE`): `python -m visual_assets.store draft export <set_id> <out_dir>` writes a draft preview manifest and the preview PNGs into a new directory; then from `frontend/` run `npx vite` and open `http://localhost:5173/rehearsal-draft.html` (a dev-only page, never in the production build and never imported by the Live Map).
+It opens the committed fixture set by default; use its "Open an exported set" picker and choose `<out_dir>` to review yours. The page draws one deterministic map that uses every Live Map terrain code in patches (23, from the explicit code-to-key table `TERRAIN_DRAFT_KEYS` in `frontend/src/visualAssets/terrainDrafts.ts`: `terrain.` plus the snake_case name),
+picks forest-style detail values with `pickDetail`, marks a code with no draft with a diagonal over its flat fill, can show the plain colour fills beside it, lists per code which draft is shown, and prints the set id and the draft set hash, the same `sha256:` value the `adopt-set` confirmation prints, so a review record can name exactly what was reviewed.
 
 **Rule for agents: an agent never runs `adopt` or `revoke`** (`python -m visual_assets.store adopt|revoke`). They are human decisions that write the tracked catalog; they refuse to run without a terminal and make the operator type the id, and the drawing code cannot import them.
 

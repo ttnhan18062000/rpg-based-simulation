@@ -22,9 +22,11 @@ def run_ci_gate():
 
     # 2. Run Regression Check
     logger.info("Step 2: Checking for performance regressions...")
-    try:
-        subprocess.run([sys.executable, "tools/perf/check_perf_regression.py"], check=True)
-    except subprocess.CalledProcessError:
+    result = subprocess.run([sys.executable, "tools/perf/check_perf_regression.py"])
+    if result.returncode == 2:
+        logger.error("Performance regression check was not comparable: not every baseline was compared.")
+        return False
+    if result.returncode != 0:
         logger.error("Performance regression check failed.")
         return False
 

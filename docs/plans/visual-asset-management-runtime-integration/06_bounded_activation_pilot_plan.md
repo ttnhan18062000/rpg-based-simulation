@@ -9,6 +9,18 @@ tags: [assets, activation, pilot, rollback, planning]
 
 # AM-M6 — Bounded Activation Pilot
 
+## Status 2026-10-03
+
+Still dormant. Profile A is selected (ADR `D8`), so activation will be the normal reviewed deployment of a whole frontend
+release and rollback a redeployment of the previous one; no asset-only pointer exists. Not started: no adopted art, no human-selected role,
+no authorization.
+
+## Status update 2026-10-04
+
+Still dormant and `NO-GO`. A pilot role (terrain `terrain.forest`) was adopted by the owner and the `AM-M5` gaps for it were rerun (`docs/assets/surface_rehearsal_result.md`), but the prerequisites are **not** met:
+`M1` has open items (`AM1-W03`, `W04`, `W06`-`W11`, `W13`), no `M2` or `M4` `PASS` record exists, `M5` is `INCONCLUSIVE` (`AM5-W05`, `AM5-W09`, `AM-C05`, `AM-C06`, `AM-C07`, `AM-C09`), and no authorization exists.
+A charter **draft** is at `docs/assets/pilot_charter_am6.md` (every human field marked for the owner; not an authorization).
+
 ## Outcome
 
 Define a dormant `ASSET-4` plan for one later, human-selected, noncritical semantic visual role. The plan

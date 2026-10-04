@@ -627,8 +627,8 @@
       "id": "authoritative_pipeline_md",
       "path": "docs/engine/authoritative_pipeline.md",
       "readable": true,
-      "stated_count": 39,
-      "stated_in": "heading 'The N Phases of Refinement'",
+      "stated_count": null,
+      "stated_in": null,
       "names_listed": 39,
       "duplicate_entries": [],
       "executable_phases_without_entry": [
@@ -674,8 +674,8 @@
       "id": "codex_generator_note",
       "path": "tools/agent_orchestration_codex_adapter/generator.py",
       "readable": true,
-      "stated_count": 39,
-      "stated_in": "_AUTHORITATIVE_PIPELINE_NOTE",
+      "stated_count": null,
+      "stated_in": null,
       "names_listed": 0,
       "duplicate_entries": [],
       "note": "states a count only; no phase names to compare"
@@ -684,13 +684,11 @@
       "id": "subphase_domain_contracts_epic",
       "path": "docs/plans/design_enhancement/subphase_domain_contracts_epic.md",
       "readable": true,
-      "stated_count": 37,
-      "stated_in": "prose ('N sub-phases' / 'N Resolution phases')",
+      "stated_count": null,
+      "stated_in": null,
       "names_listed": 0,
       "duplicate_entries": [],
-      "stated_counts_seen": [
-        37
-      ],
+      "stated_counts_seen": [],
       "note": "states a count only; no phase names to compare"
     }
   ],

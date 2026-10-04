@@ -39,7 +39,7 @@ def test_generator_output_matches_representation_schema_shape(tmp_path):
     assert isinstance(data["phase_order"], list) and len(data["phase_order"]) == 12
     assert all(isinstance(p, str) for p in data["phase_order"])
 
-    assert isinstance(data["terminal_statuses"], list) and len(data["terminal_statuses"]) == 17  # was 16; WORKFLOW_ERROR added 2026-10-03 (was 15 before TEST_SCOPE_COVERAGE_FAILED, 2026-08-18)
+    assert isinstance(data["terminal_statuses"], list) and len(data["terminal_statuses"]) == 18  # was 17; NATIVE_GATE_SITES_UNPORTED added 2026-10-04 (WORKFLOW_ERROR 2026-10-03 (was 15 before TEST_SCOPE_COVERAGE_FAILED, 2026-08-18)
     for entry in data["terminal_statuses"]:
         assert {"value", "kind", "phases"} <= entry.keys()
 

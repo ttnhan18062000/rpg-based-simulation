@@ -207,6 +207,7 @@ Epic A:
 2. **Escaped-defect tracking.** A registered `escaped-defect` ticket tag for defects that reached
    `main` past green tests, with the failure class from §4.5. Counted per month in the report. This
    replaces today's title-matched estimate with a declared signal.
+   *Recorded 2026-10-03:* **September 2026: 0 tagged** (state `counting`; 2387 tickets scanned; the window opens at the tag's registration, 2026-09-29, so September is 2 days). It is "0 tagged", not "0 escaped": no ticket carries the tag or a `Failure class:` line. From `python3 tools/test_architecture/core_rpg_report.py --as-of 2026-10-03 --sha bd8367a121d432ab43fccbfa54f554fa44a1b5fc` (the report tool is the source).
 
 Neither is a gate. Both feed the post-pilot review (§6).
 
@@ -266,7 +267,7 @@ Sample size is 1 for each, so no false-positive rate or cost rate is stated or i
 | (b) Epic C criterion 4, first expectation-change run | test-architecture | A ticket that changes an expectation shows the Bible/contract and parity-ledger change before the test change, or an escalation record |
 | (c) First CI-observed `src/progression/**`-only PR | test-architecture | A merged PR whose changed paths hit the scenario lane but not `PERF_RE`; append its row to the Epic B cost record (`agent-working/tickets/done/test-architecture/TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION.md`) |
 | (d) Pilot P (a second surface in progression) | `rpg-feature-planning` (surface stability) and test-architecture | The AC6 tripwire of `TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS` fires or the derived-stat behaviour stops being provisional; launch needs the user's go-ahead |
-| (e) Mutation baseline v3 goes stale | test-architecture | About 2026-11-02 (30 days after its 2026-10-03 run, per `stale_after` in `tests/mutation/baselines/src_core_conservation_v3.json`, which superseded v2), or its target file or selection changes |
+| (e) A mutation baseline goes stale (v3 conservation; social appraisal v1) | test-architecture | About 2026-11-02 (30 days after its 2026-10-03 run, per `stale_after` in `tests/mutation/baselines/src_core_conservation_v3.json`, which superseded v2), or its target file or selection changes. The same date applies to the social baseline `tests/mutation/baselines/src_systems_social_appraisal_v1.json` (run 2026-10-03, 30 days), which also goes stale when `TCK-20260822-RELATIONSHIP-VECTOR-ADDITIVE-FIELD` lands; method: `docs/testing/mutation_baseline_method.md` |
 
 ## 7 · Epics (Phase 1)
 

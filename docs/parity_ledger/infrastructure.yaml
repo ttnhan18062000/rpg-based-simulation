@@ -2251,30 +2251,33 @@
   divergence_note: null
   support_boundary: null
 - id: INFRA-196
-  text: 'BudgetedCanonicalHasher tracks full-hash call count per 100-tick window.
-    pressure_report() returns WARN when call count reaches >= 80% of max_full_hashes_per_100_ticks,
-    and DEGRADED at >= 100%. Over-budget calls to get_hash() return the last known
-    hash (stale); degradation_action contains "returning_stale_hash" to make the degraded
-    return value self-documenting. The underlying CanonicalStateHasher static class
-    is unchanged (INFRA-119 through INFRA-130 unaffected); BudgetedCanonicalHasher
-    is a thin wrapper. Window resets when current_tick - window_start_tick >= 100.
+  text: 'BudgetedCanonicalHasher (a rate-limited wrapper around CanonicalStateHasher that
+    returned a stale hash when over its per-100-tick budget) is retired. PERF-D5 point
+    3: a proof digest is either computed for the current state or reported as not computed,
+    never served stale. The class had no production caller.
 
     '
-  status: verified
+  status: unsupported
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/engine/checkpoint.py::BudgetedCanonicalHasher
+  v2_evidence: null
   proof_type: null
-  test_path: tests/unit/engine/test_resource_budget_gate.py::TestBudgetedCanonicalHasher::test_canonical_hasher_reports_warn_over_budget
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'Retired by TCK-20261004-PERF-M1-HASH-POLICY-CHECKPOINT-SLICE (PERF-D5, owner-approved
+    2026-10-03). BudgetedCanonicalHasher and its tests were removed from src/engine/checkpoint.py
+    and tests/unit/engine/test_resource_budget_gate.py. The hashing budget config (DEFAULT_HASHING_BUDGET)
+    remains in src/config/optimization_profiles.py with no consumer.'
 - id: INFRA-197
   text: 'CanonicalHashScheduler enforces sanctioned-boundary policy for full canonical
     state hashes. Full-hash calls are only allowed at tick=0, tick==run_end_tick,
-    or when reason is in {"certification","audit","replay"}. Any other call raises
-    HashScheduleViolation(RuntimeError). Light-hash (MD5 over tick+seed+entity/region
-    counts) is always allowed and never raises. HashMode enum values: FULL="full",
-    LIGHT="light". Both harness.py call sites updated to use CanonicalHashScheduler.compute_hash(...,
+    or when reason is in {"certification","audit","replay"}. compute_hash() raises
+    HashScheduleViolation(RuntimeError) for any other call and returns the flat SHA-256
+    value otherwise; compute_digest() returns a ProofDigest record (scheme "flat-sha256-v1",
+    tick, DigestStatus, value) and reports NOT_COMPUTED_UNSANCTIONED_BOUNDARY instead
+    of raising. HashMode has one member, FULL="full" (the LIGHT MD5 mode was retired by
+    PERF-D5 point 3); the mode parameter is kept only for src/certification/harness.py
+    (gated; PERF-M1-T03b). Both harness.py call sites use CanonicalHashScheduler.compute_hash(...,
     mode=FULL, reason="certification").
 
     '
@@ -2764,7 +2767,10 @@
 - id: INFRA-TYPE-001
   text: 'mypy type checking gate is configured for src/ (excluding V1 modules: src/ai/,
     src/town/, src/quests/, src/entities/, src/progression/). The gate runs on every
-    PR via CI (continue-on-error on first pass). Response model annotations are present
+    PR via CI, advisory: it reports only errors that are not in the committed mypy-baseline
+    file (codebase/baselines/mypy_baseline.txt, 1569 entries at TCK-20261003-MYPY-BASELINE-ADVISORY)
+    and its step is continue-on-error until the soak ends (TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING).
+    Response model annotations are present
     on all actionable inline routes in server.py (13 of 18; 5 excluded due to raw
     Response/Redirect/HTML types). src/api/schemas.py created with typed TypedDict
     response schemas for the 4 highest-risk engine_manager routes.
@@ -2774,21 +2780,27 @@
   priority: P1
   legacy_evidence: null
   v2_evidence: '[tool.mypy] section in pyproject.toml; make typecheck-py target in
-    Makefile; mypy step in .github/workflows/test.yml (continue-on-error first pass);
-    response_model= on 13 inline routes in src/api/server.py; src/api/schemas.py created
+    Makefile (filters through mypy_baseline; typecheck-baseline-sync rewrites the baseline);
+    [tool.mypy_baseline] and codebase/baselines/mypy_baseline.txt; codebase/gates/mypy_gate.py
+    (job summary with the new-error count and baseline size); mypy step in .github/workflows/test.yml
+    (runs the gate, continue-on-error during the soak); response_model= on 13 inline routes in src/api/server.py; src/api/schemas.py created
     with WorldStateResponse, EntityPageResponse, EntityDetailResponse TypedDict schemas.
 
     '
   proof_type: null
-  test_path: tests/static/test_typecheck_gate_configured.py::test_pyproject_declares_tool_mypy_section,
-    tests/static/test_typecheck_gate_configured.py::test_makefile_typecheck_py_target_runs_mypy_on_src,
-    tests/static/test_typecheck_gate_configured.py::test_ci_workflow_has_a_mypy_step
+  test_path: tests/codebase/test_typecheck_gate_configured.py::test_pyproject_declares_tool_mypy_section,
+    tests/codebase/test_typecheck_gate_configured.py::test_makefile_typecheck_py_target_runs_mypy_on_src,
+    tests/codebase/test_typecheck_gate_configured.py::test_ci_workflow_has_a_mypy_step,
+    tests/codebase/test_typecheck_gate_configured.py::test_pyproject_configures_mypy_baseline_with_the_committed_baseline_and_tolerant_syncing,
+    tests/codebase/test_typecheck_gate_configured.py::test_makefile_typecheck_py_filters_through_the_baseline_and_stays_advisory,
+    tests/codebase/test_typecheck_gate_configured.py::test_ci_mypy_step_runs_the_advisory_gate_and_is_not_blocking,
+    tests/codebase/test_mypy_gate.py::test_the_whole_gate_runs_real_mypy_on_a_tiny_project
   divergence_note: null
   support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
     ("make typecheck-py") was not a pytest citation at all -- the real evidence is
     a build/lint gate configuration. Confirmed via a corpus-wide grep this shape is
     a genuine one-off (no other entry cites a bare make target or similar), so a schema
-    change was not warranted for one entry. Added tests/static/test_typecheck_gate_configured.py
+    change was not warranted for one entry. Added tests/codebase/test_typecheck_gate_configured.py
     (3 static assertions pinning the same 3 facts this entry''s own text/v2_evidence
     already claimed: pyproject.toml [tool.mypy] section, the Makefile typecheck-py
     target, and the CI mypy step) as a real pytest citation instead.'
@@ -2828,7 +2840,11 @@
     \ This conditional gate itself remains unchanged; DEGRADED/SURVIVAL run outputs\
     \ are now explicitly flagged as reduced-verification via ShutdownResult.verification_level\
     \ / RunManifest.verification_level / run_report metadata.verification_level \u2014\
-    \ see INFRA-363 (TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC).\n"
+    \ see INFRA-363 (TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC). The per-tick value
+    \ is the payload key hash of a TICK_END TraceEvent (no warehouse field named tick_hash
+    \ exists). Naming and coverage caveats (proof digest flat-sha256-v1; the MD5 fingerprint
+    \ is a stability check, not proof; pressure_signals is outside the proof digest)
+    \ are in docs/engine/deterministic_execution.md (PERF-D5, TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT).\n"
   proof_type: null
   test_path: tests/integration/kernel/test_determinism_suite.py
   divergence_note: null
@@ -12652,25 +12668,52 @@
     rather than by an automated regression test -- disclosed honestly rather than
     cited as if a persisted test exists.
 - id: INFRA-419
-  text: 'Code-health registry and ratchet: registries/code_health_exceptions.jsonl
+  text: 'Code-health registry and ratchet: codebase/baselines/code_health_exceptions.jsonl
     holds the grandfathered Python craft violations found by a full scan of src/ (ruff,
     complexipy, jscpd, line count), keyed by (file, symbol, tool, rule) and never
     by line number, with a value, a ceiling and reviewed: false on every seeded row.
-    `make code-health` (python3 -m tools.code_health check) runs the tools and fails
+    `make code-health` (python3 -m codebase.health check) runs the tools and fails
     only on a violation with no row or above its row''s ceiling; improved and gone
     rows are reported without failing, and rows are deleted (delete, tighten) when
     debt is paid. On demand only: not wired into CI, hooks or any pipeline phase.'
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: tools/code_health/{findings,adapters,registry,ratchet,scan,__main__}.py;
-    registries/code_health_exceptions.jsonl; make code-health in Makefile; match keys
-    documented in tools/code_health/findings.py and tools/code_health/registry.py
+  v2_evidence: codebase/health/{findings,adapters,registry,ratchet,scan,__main__}.py;
+    codebase/baselines/code_health_exceptions.jsonl; make code-health in Makefile; match keys
+    documented in codebase/health/findings.py and codebase/health/registry.py
     (TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY)
   proof_type: contract
-  test_path: tests/tools/test_code_health_adapters.py, tests/tools/test_code_health_ratchet_registry.py
+  test_path: tests/codebase/test_code_health_adapters.py, tests/codebase/test_code_health_ratchet_registry.py
   divergence_note: null
   support_boundary: 'Python code-health tooling only: no simulation behavior is involved
     and no src/ file was touched. Adapter tests use real captured tool output (tests/fixtures/code_health/);
     the CLI tests run in a scratch repository, so no test depends on the live contents
     of src/ or of the seeded registry.'
+- id: INFRA-420
+  text: 'Worker-result resolution order does not change the committed state. Kernel._phase_resolution
+    sorts results by (class_priority, -local_priority, entity_id) with a stable sort. Entity
+    results (non-zero entity_id) have a unique key: a second result for one entity is rejected
+    by ProtocolValidator.validate_result_batch and by the resolution guard. System results
+    (entity_id 0, DRAIN_DEBT) tie on the whole key; their merge into work_debt_updates is
+    last-writer-wins per subsystem_id, so it commutes exactly when no subsystem has two system
+    results with different values in one tick. ProtocolValidator.validate_result_batch rejects a
+    second debt-update result for one subsystem (enforced), and the shipped scheduler and executors
+    emit at most one DRAIN_DEBT result per subsystem per tick. Permuting arrival order left the ordered
+    batch content, raw StateUpdate, refined update, authoritative state and proof digest unchanged.
+    Debt is seeded in these tests; in ordinary play work_debt stays empty, so no DRAIN_DEBT result
+    is produced today (TCK-20261004-WORK-DEBT-NEVER-ACCUMULATES-IN-PRODUCTION).
+
+    '
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/kernel.py::Kernel._phase_resolution; src/core/protocol_validator.py::ProtocolValidator.validate_result_batch
+  proof_type: contract
+  test_path: tests/integration/kernel/test_tied_worker_result_order.py
+  divergence_note: null
+  support_boundary: 'Bounded commutative merge rules (TCK-20261004-PERF-M1-TIED-WORKER-RESULT-VERIFICATION).
+    The bound (at most one debt-update system result per subsystem per tick) is enforced by
+    validate_result_batch (TCK-20261004-PERF-M1-VALIDATOR-ONE-SYSTEM-RESULT-PER-SUBSYSTEM); the
+    divergent case is only constructible below the validator, in the mutation test.
+    Non-combat scenarios, audit_mode on, five ticks, local/thread/process routes only.'

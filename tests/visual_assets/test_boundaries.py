@@ -62,22 +62,29 @@ STORE_ALLOWED: dict[str, set[str]] = {
     "review": {"review", "rendering", "intake", "pixels", "contracts", "identities", "errors", "config"},
     # build owns the one allowed import from drawing (the shared sandbox)
     "build": {"build", "records", "revoke", "catalogwrite", "intake", "pixels", "contracts", "identities", "errors", "config"},
-    "cli": {"cli", "intake", "adoption", "revoke", "audit", "records", "review", "rendering", "build", "release", "verify", "gc", "catalog", "contracts", "identities", "errors", "config"},
+    "cli": {"cli", "intake", "adoption", "setadoption", "drafts", "draftexport", "revoke", "audit", "records", "review", "rendering", "build", "release", "runtime_export", "verify", "gc", "catalog", "contracts", "identities", "errors", "config"},
     "__main__": {"cli"},
     # catalog records and the human-gated writers (adoption, revoke, catalogwrite) are never reachable from the drawing tools
     "records": {"records", "intake", "contracts", "identities", "errors", "config"},
     "catalogwrite": {"catalogwrite", "intake", "errors", "config"},
     "adoption": {"adoption", "records", "rendering", "catalogwrite", "catalog", "intake", "pixels", "contracts", "identities", "errors", "config"},
+    # draft sets live in git OUTSIDE the catalog and record no approval; the set adoption is a human gate that writes the catalog (it reuses adopt's checks)
+    "drafts": {"drafts", "records", "catalog", "intake", "pixels", "contracts", "identities", "errors", "config"},
+    # read-only on the drafts and the catalog; writes a NEW directory outside both (the isolated preview page's input); the drawing server may not import it
+    "draftexport": {"draftexport", "drafts", "records", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
+    "setadoption": {"setadoption", "adoption", "drafts", "records", "rendering", "catalogwrite", "catalog", "intake", "pixels", "contracts", "identities", "errors", "config"},
     "revoke": {"revoke", "records", "catalogwrite", "intake", "contracts", "identities", "errors", "config"},
     "audit": {"audit", "records", "intake", "contracts", "identities", "errors", "config"},
     "release": {"release", "records", "catalog", "catalogwrite", "revoke", "pixels", "intake", "contracts", "identities", "errors", "config"},
     "verify": {"verify", "records", "audit", "build", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
     "gc": {"gc", "records", "intake", "contracts", "identities", "errors", "config"},
+    # reads committed candidates, writes a new directory OUTSIDE the catalog; not a gate layer, but the drawing server still may not import it (no MCP export)
+    "runtime_export": {"runtime_export", "records", "verify", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
     # shaped, bounded, read-only views for agents; the drawing server may import it
     "readmodel": {"readmodel", "records", "intake", "pixels", "contracts", "identities", "errors", "config"},
 }
 # store layers that write the tracked catalog (human gates): no drawing module may import them, not even the server
-GATE_LAYERS = {"adoption", "revoke", "catalogwrite", "release", "gc"}
+GATE_LAYERS = {"adoption", "setadoption", "revoke", "catalogwrite", "release", "gc"}
 # the ONLY store layers the drawing MCP server may import: intake (submit_candidate) and the read-only views, plus the shared leaves.
 # Everything else (adoption, revoke, build, release, gc, cli, verify, review, rendering, records, audit, catalogwrite, pixels) is a violation.
 SERVER_STORE_ALLOWED = {"intake", "readmodel", "contracts", "identities", "errors", "config"}
@@ -427,7 +434,7 @@ def test_planted_store_layering_for_the_gated_layers_is_caught():
 
 
 def test_planted_server_importing_a_forbidden_store_layer_is_caught():
-    forbidden = ("adoption", "revoke", "build", "release", "gc", "cli", "verify", "review", "rendering", "records", "audit", "catalogwrite", "pixels")
+    forbidden = ("adoption", "revoke", "build", "release", "runtime_export", "gc", "cli", "verify", "review", "rendering", "records", "audit", "catalogwrite", "pixels")
     for layer in forbidden:
         for src in (f"from visual_assets.store import {layer}\n", f"import visual_assets.store.{layer}\n", f"from visual_assets.store.{layer} import x\n"):
             problems = check_source("visual_assets/drawing/server/store_readonly_tools.py", src)

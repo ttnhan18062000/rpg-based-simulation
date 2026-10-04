@@ -140,4 +140,4 @@ def test_export_handoff_then_submit_candidate_over_stdio_for_a_real_revision(tmp
     after = snapshot(catalog)
     changed = {k for k in set(pristine) | set(after) if pristine.get(k) != after.get(k)}
     assert changed and all(k == ".quarantine" or k.startswith(".quarantine/") for k in changed), changed  # ONLY the quarantine was written
-    assert [p.name for p in (catalog / "sources").iterdir() if p.name != ".gitkeep"] == []  # nothing was adopted
+    assert sorted(p.name for p in (catalog / "sources").iterdir() if p.name != ".gitkeep") == ["terrain_forest", "terrain_forest_bush", "terrain_forest_tree"]  # nothing new was adopted (the three terrain.forest slot tiles only)

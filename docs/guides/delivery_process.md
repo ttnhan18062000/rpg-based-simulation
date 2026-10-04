@@ -23,6 +23,14 @@ extracted ticket-ID citations before and after the move).
 otherwise describes. This guide states the *policy* — what a verdict means and what to do about it
 — the tool establishes the verdict itself; the two must not duplicate each other's logic in prose.
 
+**Completeness rule (`TCK-20261004-PR-STATUS-FALSE-GREEN-ON-STANDALONE-CHECK-RUNS`).** A verdict covers
+*every* context at the head SHA, not only the workflow's own jobs: all check runs and commit statuses
+(all pages), cross-checked against `gh pr checks`. Any failing context is `FAILING` and is named; a fetch
+error, a required check never examined, or a context only `gh pr checks` can see is `UNKNOWN`, never
+`GREEN`. The result prints `contexts_examined` so a reader can see how complete the view was. Before this
+rule a standalone `ruff` check run failing outside the target workflow read `GREEN`. `gh pr checks <N>`
+remains the ground truth for a human; do not relay a `GREEN` as fact without `contexts_examined` in it.
+
 ---
 
 ## Commit Contract
@@ -176,6 +184,25 @@ alongside the main checkout, each independently on its own branch.
     include `agent-working/agent-monitoring/data/` in the same `git add` that precedes `--continue` — so the rows
     ride into that commit and the tree is clean for the next step. A different session appending to
     the same worktree's shard mid-command is not covered by this; only a hook-level fix removes that.
+
+### Recovering when a commit lands on a branch an implementer holds
+
+One writer per branch: only the implementer role commits or pushes on a branch it holds, and that includes a
+branch a `Workflow` run is working on. If a designer or planner session commits there by mistake (the tell: you
+are about to `git add` in a worktree whose current branch you handed to an implementer earlier in the session;
+check `git log origin/<branch>` first), do not reset and lose the work:
+
+1. Park the commit: `git branch <topic-name> <commit>`.
+2. Restore the shared branch to exactly what was pushed: `git reset --hard <origin-sha>`.
+3. Verify: `git rev-parse HEAD origin/<branch>` prints two identical SHAs.
+4. Once the implementer or the workflow reports done, `git merge --ff-only origin/<branch>`, then
+   `git cherry-pick` the parked commit, or hand its content to the implementer to commit.
+5. If the branch was squash-merged, confirm the change landed by content
+   (`git show origin/main:<path> | grep <the change>`), never by `git merge-base --is-ancestor`, which is
+   always false after a squash.
+
+Hand the implementer the verification detail it cannot re-derive (baseline values with their SHAs, bisection
+evidence, what was ruled out and how) together with the content to commit.
 
 ---
 

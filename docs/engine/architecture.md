@@ -51,7 +51,7 @@ Every tick executes exactly seven phases in a strict, contract-enforced sequence
 | Phase | Responsibility | Permissions (READ / MUTATE) |
 | :--- | :--- | :--- |
 | **1. INIT** | Increments simulation clock and resets per-tick buffers. | `state.world_time` / `state.world_time` |
-| **2. SCHEDULING** | Identifies entities due to act and selects work based on the **Work Debt** budget. | `state.entities`, `policy` / `tick_work` |
+| **2. SCHEDULING** | Identifies entities due to act and selects work by readiness, cadence and the governor policy (the **Work Debt** budget of the original design is never exercised: nothing produces debt, see `docs/engine/contracts/resource_governor_contract.md`). | `state.entities`, `policy` / `tick_work` |
 | **3. COLLECTION** | Offloads AI deliberation tasks to the `WorkerManager` (bounded concurrent pool) using compact packets. | `entity, schedule` / `proposals` |
 | **4. RESOLUTION** | **Authoritative Update**. Converts results into `StateUpdate` and applies it via `ApplyPath`, incrementing the state generation. | `worker_results` / `state.authoritative` |
 | **5. CLEANUP** | Internal metrics and state finalization. | `platform, infra` / `infra` |
@@ -93,15 +93,13 @@ Throughput claims are never made in isolation. The engine certifies its performa
 - **Class B (Consumer)**: Standard profile (20 TPS).
 - **Class C (High-Performance)**: Enhanced observability profiles.
 
-> **Known conflict, not resolved here**: This table's Class A/B/C mapping is inverted relative to
-> `docs/engine/contracts/certification_contract.md` §3 and `docs/performance/perf_baseline_policy.md`
-> §2.2, both of which make Class A the *most* powerful tier (≥16 cores/≥32GB or "High-Performance
-> Server"). This table makes Class A the *least* powerful ("Low-Power," 10 TPS) and Class C the
-> most powerful — an opposite-direction conflict, not just a threshold disagreement. Newly found by
-> TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT; see also the pre-existing, differently-shaped conflict
-> already flagged at `docs/performance/perf_baseline_policy.md`'s own callout box
-> (TCK-20260702-OBSISO-ISOLATION-PROOF). Not fixed here — pending owner decision on which mapping
-> is canonical.
+> **Known conflict, canonical mapping decided, table not yet corrected**: This table's Class A/B/C
+> mapping is inverted relative to `docs/engine/contracts/certification_contract.md` §3, which makes
+> Class A the *most* powerful tier (≥16 logical cores and ≥32GB). PERF-D4 (owner-approved 2026-10-03)
+> makes that section the single definition of hardware class, and the baseline policy's own class
+> table has been removed in its favor. This table makes Class A the *least* powerful ("Low-Power,"
+> 10 TPS) and Class C the most powerful, and still needs correcting to match; the TPS figures have no
+> enforcing check. Found by TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT.
 
 ---
 

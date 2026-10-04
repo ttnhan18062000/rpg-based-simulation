@@ -8,8 +8,6 @@ Covers:
   - DEFAULT_SUBSYSTEM_BUDGETS sanity (7 subsystems, non-None defaults)
   - DEBUG_REFERENCE all-None budgets
   - EventRecorder.pressure_report() at varying queue occupancies
-  - BudgetedCanonicalHasher.get_hash() rate limiting and window reset
-  - BudgetedCanonicalHasher.pressure_report() state transitions
   - ReplayManager.pressure_report() existence and basic contract
 
 All tests are fast (< 100 ms) and do not touch real disk I/O except via tmp_path.
@@ -19,7 +17,7 @@ from __future__ import annotations
 import threading
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -33,7 +31,6 @@ from src.config.optimization_profiles import (
     DEFAULT_OBSERVABILITY_BUDGET,
     DEFAULT_REPLAY_BUDGET,
 )
-from src.engine.checkpoint import BudgetedCanonicalHasher, CanonicalStateHasher
 from src.observability.event_recorder import EventRecorder
 
 
@@ -193,118 +190,6 @@ class TestEventRecorderPressureReport:
         recorder = _make_recorder(queue_size=0, max_queue_items=100)
         report = recorder.pressure_report()
         assert isinstance(report, SubsystemPressureReport)
-
-
-# ---------------------------------------------------------------------------
-# STEP 4: BudgetedCanonicalHasher
-# ---------------------------------------------------------------------------
-
-class TestBudgetedCanonicalHasher:
-    """Tests for BudgetedCanonicalHasher rate limiting and pressure reporting."""
-
-    @staticmethod
-    def _mock_state():
-        """Return a minimal mock that satisfies CanonicalStateHasher.get_hash()."""
-        return MagicMock()
-
-    def _make_hasher(self, max_hashes: int | None) -> BudgetedCanonicalHasher:
-        budget = SubsystemBudget(subsystem="hashing", max_full_hashes_per_100_ticks=max_hashes)
-        return BudgetedCanonicalHasher(budget=budget)
-
-    def test_canonical_hasher_within_budget(self):
-        """Call count < 80% of max → pressure OK."""
-        # cap=5, 3 calls → 60% → OK
-        hasher = self._make_hasher(max_hashes=5)
-        state = self._mock_state()
-        with patch.object(CanonicalStateHasher, "get_hash", return_value="abc123"):
-            for _ in range(3):
-                hasher.get_hash(state, current_tick=0)
-        report = hasher.pressure_report()
-        assert report.pressure_state == "OK"
-        assert report.current_usage == 3.0
-        assert report.budget == 5.0
-
-    def test_canonical_hasher_reports_warn_at_80pct(self):
-        """Call count at 80% of max → WARN."""
-        # cap=5, 4 calls → 80% → WARN
-        hasher = self._make_hasher(max_hashes=5)
-        state = self._mock_state()
-        with patch.object(CanonicalStateHasher, "get_hash", return_value="abc123"):
-            for _ in range(4):
-                hasher.get_hash(state, current_tick=0)
-        report = hasher.pressure_report()
-        assert report.pressure_state == "WARN"
-
-    def test_canonical_hasher_reports_warn_over_budget(self):
-        """Call count > max → DEGRADED; degradation_action contains 'stale'."""
-        # cap=3, make 4 calls (first 3 succeed; 4th is over-budget and uses stale)
-        hasher = self._make_hasher(max_hashes=3)
-        state = self._mock_state()
-        with patch.object(CanonicalStateHasher, "get_hash", return_value="deadbeef"):
-            for _ in range(4):
-                hasher.get_hash(state, current_tick=0)
-        report = hasher.pressure_report()
-        assert report.pressure_state == "DEGRADED"
-        assert report.degradation_action is not None
-        assert "stale" in report.degradation_action
-
-    def test_canonical_hasher_returns_stale_hash_over_limit(self):
-        """Over-budget call returns last known hash without computing a new one."""
-        hasher = self._make_hasher(max_hashes=2)
-        state = self._mock_state()
-        call_count = 0
-
-        def fake_get_hash(s):
-            nonlocal call_count
-            call_count += 1
-            return f"hash_{call_count}"
-
-        with patch.object(CanonicalStateHasher, "get_hash", side_effect=fake_get_hash):
-            h1 = hasher.get_hash(state, current_tick=0)  # call 1 → "hash_1"
-            h2 = hasher.get_hash(state, current_tick=0)  # call 2 → "hash_2"
-            h3 = hasher.get_hash(state, current_tick=0)  # over-budget → stale "hash_2"
-
-        assert h1 == "hash_1"
-        assert h2 == "hash_2"
-        assert h3 == "hash_2"   # stale, not a new hash
-        assert call_count == 2  # underlying hasher called only twice
-
-    def test_canonical_hasher_window_resets_after_100_ticks(self):
-        """After 100+ tick advance, call counter resets and new hashes are computed."""
-        hasher = self._make_hasher(max_hashes=2)
-        state = self._mock_state()
-
-        with patch.object(CanonicalStateHasher, "get_hash", return_value="fresh"):
-            # Exhaust the budget in tick window starting at 0
-            hasher.get_hash(state, current_tick=0)
-            hasher.get_hash(state, current_tick=0)
-            # This would be over-budget if window hadn't reset
-            h = hasher.get_hash(state, current_tick=100)  # new window
-
-        assert h == "fresh"
-        assert hasher._call_count == 1  # window reset and this call counted
-
-    def test_canonical_hasher_none_budget_always_ok(self):
-        """Unlimited budget (None) → pressure always OK."""
-        hasher = self._make_hasher(max_hashes=None)
-        state = self._mock_state()
-        with patch.object(CanonicalStateHasher, "get_hash", return_value="x"):
-            for _ in range(1000):
-                hasher.get_hash(state, current_tick=0)
-        report = hasher.pressure_report()
-        assert report.pressure_state == "OK"
-        assert report.budget is None
-
-    def test_canonical_hasher_ok_below_80pct(self):
-        """2 calls at cap=5 (40%) → OK."""
-        hasher = self._make_hasher(max_hashes=5)
-        state = self._mock_state()
-        with patch.object(CanonicalStateHasher, "get_hash", return_value="z"):
-            hasher.get_hash(state, current_tick=0)
-            hasher.get_hash(state, current_tick=0)
-        report = hasher.pressure_report()
-        assert report.pressure_state == "OK"
-        assert report.current_usage == 2.0
 
 
 # ---------------------------------------------------------------------------

@@ -4,6 +4,7 @@ from src.core.builder import V2EntityBuilder
 from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate, InventoryUpdate
 from src.engine.compactor import StateUpdateCompactor, CompactionMetrics
 from src.engine.apply import ApplyPath
+from src.engine.checkpoint import CanonicalStateHasher
 
 
 @pytest.fixture
@@ -86,7 +87,7 @@ def test_compacted_update_applies_same_as_uncompacted_update(base_state: Authori
     compacted = StateUpdateCompactor.compact(base_state, update)
     compacted_state = ApplyPath.apply_generation(base_state, compacted)
 
-    assert uncompacted_state.fingerprint() == compacted_state.fingerprint()
+    assert CanonicalStateHasher.get_hash(uncompacted_state) == CanonicalStateHasher.get_hash(compacted_state)
 
 
 def test_compactor_reports_reduction_metrics(base_state: AuthoritativeState):

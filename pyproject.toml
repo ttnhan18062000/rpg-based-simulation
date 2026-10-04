@@ -57,6 +57,12 @@ dev = [
     # the default export (requirements.txt) reach it for tests/tools/test_search_mcp.py.
     "mcp>=1.0.0",
     "websockets>=12.0",
+    # Baseline filter for mypy (TCK-20261003-MYPY-BASELINE-ADVISORY): existing errors are held in
+    # codebase/baselines/mypy_baseline.txt, so only new ones are reported. Pinned exactly like the code-health tools.
+    "mypy-baseline==0.7.4",
+    # Git hook runner for the opt-in `make install-prek-hooks` (TCK-20261003-PREK-GIT-HOOKS-OPT-IN); a single
+    # binary wheel. In `dev` so every CI job and the installer tests have it.
+    "prek==0.5.4",
 ]
 # Code-health tools (TCK-20261002-CODE-HEALTH-TOOL-CONFIG). Pinned exactly: a new release can
 # add or retune rules, which would change the measured baseline without a code change.
@@ -66,6 +72,8 @@ dev = [
 lint = [
     "ruff==0.16.10",
     "complexipy==8.0.1",
+    # TCK-20261004-AST-GREP-RULE-PACK-ADVISORY: project rules in codebase/rules/ (binary: `ast-grep`, never `sg`).
+    "ast-grep-cli==0.45.3",
 ]
 profiling = [
     "memray>=1.0.0",
@@ -82,6 +90,22 @@ rpg-lab = "src.lab.cli:main"
 
 [tool.uv]
 default-groups = ["dev", "lint"]
+
+# mypy-baseline (TCK-20261003-MYPY-BASELINE-ADVISORY). `sync` rewrites the baseline with line numbers
+# replaced by 0, so edits above an existing error do not resurface it; only a new error (or a repeated
+# identical message in the same file) is reported. Run `sync` only on main, by the codebase domain, together
+# with the code-health registry reseed (`make typecheck-baseline-sync`), never to hide a new error.
+[tool.mypy_baseline]
+baseline_path = "codebase/baselines/mypy_baseline.txt"
+# A baseline error that has been fixed but not yet re-synced must not turn the gate red: any domain may
+# fix a type error in src/ without touching the baseline.
+allow_unsynced = true
+hide_stats = true
+# Sorted, so a re-sync diff shows only the entries that changed and two syncs are byte-comparable.
+sort_baseline = true
+# Notes hang off errors and change wording between mypy versions, so a note-only difference must not count
+# as a new error. `annotation-unchecked` notes are standalone notes with their own category.
+ignore_categories = ["note", "annotation-unchecked"]
 
 [tool.setuptools.packages.find]
 include = ["src*"]
@@ -176,7 +200,7 @@ ignore = ["ANN401"]
 # selected by its exact code, so no other preview rule turns on. Note that `preview = true` also
 # switches the selected stable rules to their preview behaviour; with ruff pinned exactly in the
 # lint group that is stable, but a ruff version bump can change findings and needs a baseline
-# reseed (registries/code_health_exceptions.jsonl).
+# reseed (codebase/baselines/code_health_exceptions.jsonl).
 preview = true
 explicit-preview-rules = true
 
@@ -194,7 +218,7 @@ max-nested-blocks = 5
 paths = ["src"]
 max-complexity-allowed = 15
 
-# Length limits read by tools/code_health/line_count.py.
+# Length limits read by codebase/health/line_count.py.
 [tool.code_health.size]
 function-warn-lines = 50
 function-fail-lines = 80

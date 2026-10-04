@@ -164,42 +164,69 @@ live/concurrent server specifically, that assumption is now known to need this q
 ## Section A — Performance (primary)
 
 **Full milestone breakdown:** `docs/plans/design_enhancement/performance_milestones_epic.md`
-(M1 measurement → M2 output-preserving optimizations → M3 job graph, gated on Section F below →
-M4 hierarchical/aggregate simulation, gated on the same acceptance signal as M3).
+(M1 measurement committed; M2 items 3, 5 and 6 are Gate A candidates and item 4 is excluded from
+the preselected set; M3 concurrent Resolution and M4 aggregate simulation are Gate B
+separate-architecture proposals, not ordinary milestones; see that document's "Gate status").
 
-**(2026-09-13, added by review) Related P2 governance package:**
-`docs/plans/design_enhancement/performance_optimization/performance_optimization_roadmap.md`
-proposes a separate, more formal evidence-gating process (M0 decision governance → M1 correctness
-prerequisites → M2 performance contract → M3 phase/observability → M4 assurance/Gate A → M5 exact
-optimizations → M6 Gate B). It is **not yet authorized to supersede this document** — M0-scoped
-prerequisite ticket creation (decision ownership, conflict triage, and the PERF-D1–D6 decisions
-below) is authorized; M1+ of that package stays blocked until M0 names real accountable owners.
-This roadmap's own M1–M4 above are unaffected and may proceed on their own existing gates (each
-item's determinism/fidelity risk is already justified per-item above; M3/M4 already require
-`docs/plans/design_enhancement/subphase_domain_contracts_epic.md` first plus a SimQ/arena
-regression comparison, and will hit this repo's standard architecture-reviewer gate once ticketed
-regardless of which roadmap governs them). PERF-M0-T09 (P1 roadmap and contract reconciliation) is
-the eventual single point where any real conflict between the two gets resolved through this
-roadmap's own named owners — not by either document unilaterally claiming supersession.
+**Execution plan and authority (C-01, applied 2026-10-03 by `PERF-M0-T09`).** This P1 roadmap
+stays the parent authority for performance work. Its evidence-gated execution plan is the P2
+package `docs/plans/design_enhancement/performance_optimization/` (start at
+`performance_optimization_roadmap.md`), which sits beneath this document and does not supersede it.
+The record of the decisions that package needed is
+`docs/architecture/performance_optimization_decisions.md`. Where the P2 package and this roadmap
+or `performance_milestones_epic.md` disagree, the dispositions in that decisions file (C-01..C-17)
+and the owner-approved decisions PERF-D1, D2, D4, D5 and D6 settle it; PERF-D3 is closed.
 
-**PERF-D1–D6 disposition (recorded 2026-09-13, per review):**
-- `PERF-D3` (capacity-debt semantics) — **fast-closed**: `AuthoritativeState.work_debt` is already
-  a plain aggregate int with no competing semantic-deferred-work pattern anywhere in `src/`,
-  matching the new package's proposed default exactly. No PERF-M0-T05 investigation needed beyond
-  recording this.
-- `PERF-D1` (determinism/control-trace, Canonical vs. Live bounded contract), `PERF-D2`
-  (portability), `PERF-D4` (performance-authority charter, this roadmap vs. the P2 package),
-  `PERF-D5` (hash-scheduling audit), `PERF-D6` (phase-count reconciliation — confirmed real: 43
-  actual `run_phase()` calls in `pipeline.py` vs. 39 documented in `authoritative_pipeline.md` vs.
-  37/38 claimed in `subphase_domain_contracts_epic.md`/`docs/audits/D19_domain_phase_inventory.md`)
-  — all remain genuinely open and require the full PERF-M0-T03/T04/T06/T07/T08 process with named
-  owners; none are closed by this note.
+**Decision status (owner-approved 2026-10-03; the P1 document edits were applied by
+`TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT`):**
+- `PERF-D1` (Canonical and Live bounded determinism contracts, with amendment A1) — approved;
+  recorded in `docs/engine/deterministic_execution.md`. Implementation is pending (`PERF-M1`).
+- `PERF-D2` (portability tiers DET-PORT-0/1/2) — approved; recorded in the same document.
+- `PERF-D3` (capacity-debt semantics) — closed (recorded 2026-09-13): `AuthoritativeState.work_debt`
+  is a plain per-system counter map with no competing deferred-work pattern in `src/`.
+- `PERF-D4` (performance-contract authority) — approved; `docs/engine/performance_contract.md` is
+  the clause-level authority, `docs/engine/contracts/certification_contract.md` §3 the hardware-class
+  definition.
+- `PERF-D5` (hash policy) — approved; proof digest versus stability check recorded in
+  `docs/engine/deterministic_execution.md`. Mechanism changes are pending (`PERF-M1-T03`).
+- `PERF-D6` (phase-catalog authority) — approved; the counted units are defined in
+  `docs/engine/authoritative_pipeline.md`. The typed catalog is pending (`PERF-M3-T01`).
+
+**One discoverable execution order.** Pointers, not a copy of the P2 plans. Each step names its gate.
+
+1. **Foundation slice** (documents, tickets and read-only tooling; allowed now): decision records
+   and inventories (`docs/performance/hash_callsite_inventory.md`, `phase_inventory.md`,
+   `performance_clause_inventory.md`, `wall_clock_inventory.md`) and the P1 reconciliation.
+   Gate: none beyond the owner's approvals. See `performance_optimization_roadmap.md`, "Foundation
+   slice that may start now".
+2. **RPG-core stability entry gate.** No baseline, capacity measurement or SimQ/Arena comparison counts
+   as evidence, no ticket in the program edits `src/`, and no soft performance check becomes
+   blocking, until the owner states the RPG-core foundation has reached a stable point. Everything
+   below waits for it. See `performance_optimization_roadmap.md`, "RPG-core stability entry gate".
+3. **P2 M1 correctness prerequisites** (`performance_m1_correctness_prerequisites_epic.md`): the
+   Canonical contract and control trace, zero-capacity semantics, hash-policy reconciliation.
+4. **P2 M2 performance contract** (`performance_m2_performance_contract_epic.md`): the tripwire,
+   capacity-run and comparative clause kinds of `docs/engine/performance_contract.md`.
+5. **P2 M3 phase and observability foundation** (`performance_m3_phase_observability_foundation_epic.md`):
+   the typed phase catalog and bounded instrumentation. This is where this roadmap's M1 measurement
+   (profiling by phase, LOD tier and cadence bucket) is delivered.
+6. **P2 M4 assurance, baselines and Gate A** (`performance_m4_baseline_gate_a_epic.md`). **Gate A:** a
+   trustworthy baseline matrix and an approved bottleneck decision select which exact optimizations
+   proceed. Gate A materiality thresholds are not set yet; they are derived from the working scale target in `docs/architecture/performance_optimization_decisions.md` (owner decision 2026-10-03).
+7. **P2 M5 exact optimization delivery** (`performance_m5_exact_optimization_delivery_epic.md`): only
+   Gate-A-selected, semantics-preserving accelerators (this roadmap's M2 items 3, 5 and 6 compete
+   here; item 4 only after the working-set measurement).
+8. **P2 M6 Gate B and future architecture** (`performance_m6_gate_b_future_architecture_epic.md`).
+   **Gate B:** concurrent Resolution and aggregate simulation are evaluated as separate-architecture
+   proposals (M6-T05, under the owner's technology direction).
 
 **C-01..C-17 disposition (recorded 2026-09-13, per review):** all 17 conflicts in
 `performance_optimization_conflict_approval_review.md` are confirmed real and their proposed
-dispositions are adopted, with two corrections: C-03/C-04's worker-utilization half is already
+dispositions are adopted, with two corrections: C-03's worker-utilization half (the earlier "C-03/C-04"
+grouping blurred which finding it belongs to) is already
 fixed by `TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER` (only the
-queue-utilization-zero half of that finding is still open), and C-07 should exclude this roadmap's
+queue-utilization-zero half of that finding is still open; finding F-09: the fix concerns C-03's
+signal, while C-04 is the separate Canonical-versus-Live contract choice, decided by PERF-D1), and C-07 should exclude this roadmap's
 M2 item 4 (DOD hot-path projection), which is already gated on M1's measurement per the table
 above, not unconditionally preselected like M2 items 3/5/6.
 
@@ -326,7 +353,7 @@ bug rather than a fidelity question, so raw determinism/regression testing alrea
   `kernel_concurrency_design_philosophy.md`) — one-line fixes, ride along with any other ticket
   touching that file rather than getting their own.
 
-## Section F — Per-sub-phase domain/dependency declarations for the 37 Resolution phases
+## Section F — Per-sub-phase domain/dependency declarations for the Resolution phases
 
 **Full milestone breakdown:** `docs/plans/design_enhancement/subphase_domain_contracts_epic.md`.
 
@@ -334,22 +361,26 @@ bug rather than a fidelity question, so raw determinism/regression testing alrea
 declares read/write/emit domains only at the 7 *kernel*-phase granularity (`TickPhase.RESOLUTION`
 as one undivided block: reads `{proposals, policy, entity}`, writes `{entity, world, policy,
 infra}`) — confirmed by reading the file directly. There is no equivalent declaration for any of
-the 37 named sub-phases *inside* Resolution (`trust_boundary`, `combat_engagement`,
+the named sub-phases *inside* Resolution (`trust_boundary`, `combat_engagement`,
 `resource_transactions`, etc.) — no accepted-intent-type, read/write-domain, or ordering-key
 contract per sub-phase, and nothing in `tests/architecture/` checks whether two sub-phases assumed
 to be independent secretly touch the same state.
 
 **Why this belongs in the plan, not just as an observation:** Section A #7 ("job graph for
-provably-independent Resolution phases") is only safe if independence between sub-phases can
-actually be proven. Today it can't be — there's no declared contract to check it against. This
-makes Section F a **prerequisite for #7**, not a parallel nice-to-have: build the per-sub-phase
+provably-independent Resolution phases") would only be safe if independence between sub-phases could
+actually be proven, and today it can't be — there's no declared contract to check it against. Under
+C-14 (2026-10-03) that is no longer an automatic path: concurrent Resolution is a Gate B,
+separate-architecture proposal (`performance_milestones_epic.md`, M3), and the declarations are
+justified on their own terms (phase identity, drift detection, instrumentation) and are evidence a
+Gate B proposal would have to use, not a presumed step toward concurrency. Build the per-sub-phase
 domain declarations (and the CI check that a declared-independent pair never writes the same
-domain) before attempting #7's parallelization, not after. Same value the existing 7-phase-level
+domain) for those reasons. Same value the existing 7-phase-level
 declarations already provide (`RPG-INFRA-155/156/157`) — this is the same pattern, one level
 finer-grained, where the existing pattern doesn't yet reach. Note the existing file's own comment:
 these are "declarative only — no runtime enforcement," enforced by test, not mechanically — worth
-deciding whether the 39-phase version should be held to a higher (mechanical) standard, or the same
-test-guarded one.
+deciding whether the sub-phase version should be held to a higher (mechanical) standard, or the same
+test-guarded one. (PERF-D6: the counted unit is the refinement phase, `run_phase()` calls in `refine`;
+prose states no literal count.)
 
 ## Section G — Additional external-note proposals, not verified this pass
 

@@ -83,7 +83,7 @@ def _read_bounded(path: Path) -> bytes:
 def _parse(data: bytes) -> VisualKeyRegistry:
     try:
         raw = yaml.load(data.decode("utf-8"), Loader=_StrictLoader)  # noqa: S506 - SafeLoader subclass
-        body = json.dumps(raw, allow_nan=False).encode("utf-8")
+        body = json.dumps(raw, allow_nan=False, separators=(",", ":")).encode("utf-8")
     except RegistryError:
         raise
     except (yaml.YAMLError, UnicodeDecodeError, TypeError, ValueError, RecursionError) as exc:
@@ -102,6 +102,9 @@ def load_registry(path: Path | None = None, *, allow_fixture_namespace: bool = F
         raise RegistryError(f"more than {config.MAX_VISUAL_KEYS} keys")
     if len(record.aliases) > config.MAX_ALIASES:
         raise RegistryError(f"more than {config.MAX_ALIASES} aliases")
+
+    if sum(1 for definition in record.keys if definition.detail is not None) > config.MAX_DETAIL_KEYS:
+        raise RegistryError(f"more than {config.MAX_DETAIL_KEYS} keys declare a detail axis")
 
     keys: dict[str, VisualKeyDefinition] = {}
     for definition in record.keys:

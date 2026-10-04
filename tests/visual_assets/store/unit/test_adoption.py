@@ -70,6 +70,7 @@ def test_the_human_is_shown_the_warning_and_asked_once_and_last(env):
     text = "\n".join(notices)
     assert PREVIEW_WARNING in notices and "hero r0001" in text and "stated by you, not taken from the package" in text
     assert "recorded, not authenticated" in text
+    assert "evidence 'licence-note-7'" in text and "{licence_evidence_ref" not in text  # the notice the human approves shows the real evidence ref
 
 
 def test_a_second_revision_gets_r0002_with_parent_r0001_and_leaves_r0001_untouched(env):
@@ -325,9 +326,12 @@ def test_a_symlinked_catalog_directory_is_refused_without_writing_through_it(env
 
 
 def test_the_committed_catalog_is_never_touched_by_these_tests():
+    # only the terrain.forest slots' own records are there (the pilot plain tile, TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE, and its bush and tree,
+    # TCK-20261004-VISUAL-ASSETS-FOREST-DETAIL-TILES): three sources, three adoptions, two intake files each; a test adoption would add a fourth
     committed = config.CATALOG_ROOT
-    for name in ("sources", "provenance/adoptions", "provenance/intake", "provenance/revocations"):
-        assert [p.name for p in (committed / name).iterdir() if p.name != ".gitkeep"] == [] if (committed / name).exists() else True
+    for name, count in (("sources", 3), ("provenance/adoptions", 3), ("provenance/intake", 6), ("provenance/revocations", 0)):
+        found = [p.name for p in (committed / name).iterdir() if p.name != ".gitkeep"] if (committed / name).exists() else []
+        assert len(found) == count, (name, found)
 
 
 # --------------------------------------------------------------------------- R4: the same bytes through another intake

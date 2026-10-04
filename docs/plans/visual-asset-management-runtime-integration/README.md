@@ -17,14 +17,66 @@ The physical home for the store and the drawing tools is chosen and partly built
 `docs/architecture/visual_asset_foundation_adr.md`. Built so far: `visual_assets/drawing/` (the Aseprite tools, moved from the
 spike) and empty `visual_assets/store/` / `visual_assets/catalog/` skeletons. The foundation is planned to implement minimal
 first versions of `AM1-W02`, `AM1-W05`, `AM1-W12` and mechanisms for `AM4-W01`..`W10` on synthetic fixtures (children 2-6, not yet
-filed). Nothing here is activated; `AM1-W01`, `W03`, `W04`, `W06`-`W11`, `W13` and `AM-M5`..`M7` remain open.
+filed). Nothing here is activated; `AM1-W01`, `W03`, `W04`, `W06`-`W11`, `W13` and `AM-M5`..`M7` remain open. *(Superseded: see the 2026-10-04 `AM-M1` status update below.)*
 
 ## Status update 2026-10-03
 
 The foundation's children 1-6 are built (`TCK-20261002-EPIC-VISUAL-ASSET-FOUNDATION`; see `docs/assets/store_contract.md`): typed records and identities
 (`AM1-W02`, `AM1-W05`, `AM1-W12`), intake with an independent validator, human-gated adoption and revocation, a provenance chain the audit can rebuild, sandboxed
 build to pixel-hashed artifacts, immutable release CANDIDATES, `verify`, `gc`, and read-only MCP store tools, all on synthetic fixtures and with
-`REHEARSAL_ONLY` evidence. Nothing is activated. Still open: `AM1-W01` (deployment profile), `W03`, `W04`, `W06`-`W11`, `W13` and `AM-M5`..`M7`.
+`REHEARSAL_ONLY` evidence. Nothing is activated. Still open: `AM1-W01` (deployment profile), `W03`, `W04`, `W06`-`W11`, `W13` and `AM-M5`..`M7`. *(Superseded: `AM1-W01` was decided the same day, see below, and the 2026-10-04 `AM-M1` status update has the per-item status.)*
+
+## Status update 2026-10-03 (decisions by the user)
+
+- `AM1-W01` / `AM-DR-05` / `AM-C01` profile choice: **Profile A** (build-coupled frontend assets), ADR `D8`. Profile B is not built.
+- `AM1-W08` / `AM-U09` for Profile A: **no signing**; integrity is the `pixels-v1` hash plus the hash-linked provenance chain, authenticity is
+  git review plus the normal frontend deployment (ADR `D9`).
+- Batch `TCK-20261003-EPIC-VISUAL-ASSET-HARDENING-AND-REHEARSAL` (folder
+  `agent-working/tickets/todos/visual-asset-hardening-and-rehearsal/`): local real-Aseprite evidence, budgets (`AM-U08` proposal), a
+  minimal runtime manifest export (proposal 9.3) and an isolated `AM-M5` surface rehearsal on synthetic fixtures. The user authorized this
+  `AM-M5` rehearsal on 2026-10-03; it changes no normal Live Map, HUD or simulation path.
+- `AM-M6` and `AM-M7` stay **dormant**: there is no adopted art and no human-selected role, and each needs its own authorization.
+
+## Status update 2026-10-03 (hardening and isolated rehearsal)
+
+Batch `TCK-20261003-EPIC-VISUAL-ASSET-HARDENING-AND-REHEARSAL` is built. Profile A (D8), no signing (D9) and local-only real Aseprite (D10) are recorded in the ADR; budgets are
+measured and `PROPOSED` at the time (`docs/assets/budgets.md`; approved 2026-10-04, see the status update below); the minimal runtime manifest and `export-runtime` exist; and the user-authorized **isolated `AM-M5`
+rehearsal** ran on synthetic fixtures with the normal Live Map, HUD and simulation untouched. Result (`docs/assets/surface_rehearsal_result.md`): overall `INCONCLUSIVE`;
+`AM5-W01`, `W02`, `W04`, `W06`, `W08` `PASS` within their stated scope; `W03`, `W05`, `W07` `INCONCLUSIVE`; `W09` `BLOCKED`; gates `AM-C05` and `AM-C07` `INCONCLUSIVE`, `AM-C06` and
+`AM-C09` `BLOCKED`. `AM-M6` and `AM-M7` stay dormant; no gate toward activation passed.
+
+## Status update 2026-10-04 (decisions by the user)
+
+- `U-05`: every row of `docs/assets/budgets.md` approved by the owner on PR #309; retention stays the one unset row.
+- Batch `TCK-20261004-EPIC-VISUAL-ASSET-PILOT-READINESS` (folder `agent-working/tickets/todos/visual-asset-pilot-readiness/`) filed to make
+  `AM-M6` *ready to authorize*: one real **terrain** tile adopted by the user (the pilot role kind the user chose; planner recommends Forest),
+  the `AM-M5` gaps closed for that role, retention and rollback, an M5 rerun and an `AM6-W01` charter **draft**.
+- `AM-M6` execution stays `NO-GO` until the user signs the charter and gives a new explicit authorization. `AM-M7` stays dormant.
+
+### Results 2026-10-04 (ticket batch closed)
+
+One real terrain tile (`terrain.forest`) was adopted by the owner and is in release candidate `pilot/rc-0001`; the `AM-M5` gaps for it were rerun on commit `401921bdd`: `W03`, `W07` (within the approved matrix) `PASS`, `W05`, `W09`, `C05`, `C06`, `C07`, `C09` `INCONCLUSIVE`, overall `INCONCLUSIVE`
+(`docs/assets/surface_rehearsal_result.md`). Retention is approved (30 days, local only) and a rollback drill exists (`docs/assets/retention_and_rollback.md`). A charter **draft** is at `docs/assets/pilot_charter_am6.md`, marked not an authorization.
+`AM-M6` stays `NO-GO` (M1 open items, no M2 or M4 `PASS` record, M5 not `PASS`, no signed charter, no authorization); `AM-M7` stays dormant.
+
+## Status update 2026-10-04 (`AM-M1` result)
+
+`TCK-20261004-EPIC-VISUAL-ASSET-M1-CONTRACTS` wrote the `AM-M1` contracts up as built, against each acceptance clause: `docs/assets/m1_contract_register.md` (68 clauses, 47 `MET`, 17 `GAP`, 4 `N/A`).
+**The `AM-M1` result is `BLOCKED`, not `PASS`** (no `AM-M0` result record exists, and owner and authority decisions are absent; reasoning against the "Result classification" table of
+`01_architecture_decisions_and_contracts_plan.md`, and the list of what would unblock it, are in the register). `AM-C01` is judged met on its own clause there.
+
+| Item | Status | | Item | Status |
+|---|---|---|---|---|
+| `AM1-W01` deployment profile | closed (Profile A, ADR D8) | | `AM1-W08` trust/authority | partial (no signing, D9; roles open) |
+| `AM1-W02` registry | partial (derivation owner, class field) | | `AM1-W09` build boundary | closed |
+| `AM1-W03` descriptor | partial (variant axes, surface owners, ranges) | | `AM1-W10` retention/GC | partial (locks, deletion record, storage pressure) |
+| `AM1-W04` runtime release contract | closed | | `AM1-W11` M2 evidence charter | closed (approved 2026-10-04, `docs/assets/m2_evidence_charter.md`) |
+| `AM1-W05` audit/provenance | partial (audit authority) | | `AM1-W12` handoff/intake | closed |
+| `AM1-W06` fallback safety | partial (approved 2026-10-04, `docs/assets/fallback_safety.md`; activation policy not built) | | `AM1-W13` recall | partial (distribution stop, stale/offline/cache, tested rollback) |
+| `AM1-W07` compatibility/rollback | partial (renderer, capability, retirement) | | | |
+
+The owner approved the fallback-safety framework and the `AM-M2` evidence charter (with its rerun rule: old results count only when rerun unchanged on a named commit after approval) on 2026-10-04. `AM-M2` stays `BLOCKED`
+(`AM-M1` is not `PASS`, no implementation authorization); `AM-M6` stays `NO-GO`; `AM-M7` stays dormant. Nothing here is activated or authorized.
 
 ## Status and authorization boundary
 

@@ -28,6 +28,23 @@ distant regions. They don't all belong in one ticket: their risk profiles (to bo
 emergent-behavior quality — see `design_enhancement_roadmap.md` Section A's two-column table) are
 different enough that bundling them would force the riskiest item's review bar onto the safest one.
 
+## Gate status (2026-10-03, owner-approved dispositions)
+
+`docs/architecture/performance_optimization_decisions.md` records the dispositions applied below
+(C-07, C-09, C-10, C-11; PERF-D5). The evidence-gated execution plan is the P2 package
+`docs/plans/design_enhancement/performance_optimization/`, with its entry gate, Gate A and Gate B;
+this epic stays the P1 parent and states what is and is not committed:
+
+- **Committed:** M1 (measurement). Nothing else in M2 to M4 is committed because it is listed.
+- **Gate A candidates, not committed milestones:** M2 items 3 (spatial decomposition), 5
+  (memoization) and 6 (hierarchical hashing). M2 item 4 (the data-oriented hot-path projection) is
+  **excluded** from the preselected set: it stays gated on M1 item 2's measurement. No M2
+  implementation is approved solely because it is listed.
+- **Gate B, separate-architecture proposals:** M3 (concurrent Resolution) and M4 (aggregate
+  simulation). They are not ordinary performance work. The owner's technology direction reopened
+  both for evaluation under M6-T05; until a proposal is approved, Resolution stays serial and
+  aggregation is treated as a fidelity change, not an exact optimization.
+
 ## Scope for the eventual `create-tickets` pass
 
 Not created yet — this epic is scope-only. Four milestones, in strict dependency order — later
@@ -47,10 +64,14 @@ milestones assume earlier ones landed:
 
 ### M2 — Output-preserving optimizations (Low risk to determinism, no emergent-behavior risk by design)
 
+Items 3, 5 and 6 are **Gate A candidates**; item 4 is excluded from the preselected set (see "Gate status").
+
 3. **Spatial domain decomposition as the parallelism unit** — `WorkerManager` chunks by region
    instead of flat index range (confirmed today: `packets[i:i + chunk_size]`, no spatial awareness).
    Safe because Resolution re-sorts canonically regardless of which worker computed what — a bug
-   here is a correctness bug, not a fidelity tradeoff.
+   here is a correctness bug, not a fidelity tradeoff. (C-07, C-08: needs measured imbalance and
+   locality, deterministic ownership, complete and duplicate-free coverage, and executor parity;
+   canonical result sorting is not evidence of complete, duplicate-free task ownership.)
 4. **Data-Oriented hot-path projection for `COLLECTION`'s tightest loops** — narrowly scoped (a
    projection for measured hot fields, not an ECS rewrite), and **only after M1.2's measurement**
    confirms the working set is large enough for this to matter; the existing scheduling gates may
@@ -58,18 +79,26 @@ milestones assume earlier ones landed:
 5. **Deterministic memoization by input signature** for pathfinding/utility scoring — real risk is
    an incomplete signature causing stale results (a correctness bug to test for directly), not a
    fidelity question.
-6. **Hierarchical/incremental hashing** for the full canonical-hash calls that do happen (rate
-   already limited by `BudgetedCanonicalHasher` — this reduces the per-call cost of the calls that
-   survive that budget, a different lever). Zero simulation-logic risk — this only changes how the
-   verification hash is computed.
+6. **Hierarchical/incremental hashing** (Gate A candidate; C-09, PERF-D5). It is not zero-risk: it
+   changes how the verification digest is computed. Per PERF-D5 it is admitted only as a **new
+   versioned scheme** (the proof digest stays `flat-sha256-v1` until then), with a flat digest still
+   computed at certification boundaries as the audit, after Gate A shows flat hashing is a material
+   cost, and with same-scheme validation, scheme/tick/freshness metadata, and tree-rebuild parity.
+   This epic's earlier statement that the full-hash calls are "rate already limited by
+   `BudgetedCanonicalHasher`" was wrong: that wrapper has no production caller (the kernel calls
+   `CanonicalStateHasher.get_hash` directly), and PERF-D5 retires it
+   (`docs/performance/hash_callsite_inventory.md` §6, row 7).
 
 ### M3 — Job graph for provably-independent phases (Medium risk to determinism, Real risk to emergent-behavior quality)
 
-**Hard gate, not a suggestion:** do not start this milestone before
-`docs/plans/design_enhancement/subphase_domain_contracts_epic.md` lands. That epic's per-sub-phase
-domain declarations are the only mechanical way to prove two sub-phases are actually independent —
-today there's no contract to check that against, and a wrong independence assumption here silently
-changes outcomes rather than erroring.
+**Gate B, a separate-architecture proposal (C-10).** Concurrent Resolution leaves ordinary
+performance execution: it needs Gate B and its own architecture proposal, and Resolution stays
+serial until one is approved. The owner's technology direction reopened it for evaluation under
+M6-T05; the interim interpretation is unchanged. The per-sub-phase domain declarations of
+`docs/plans/design_enhancement/subphase_domain_contracts_epic.md` are the only mechanical way to
+prove two sub-phases independent, and a wrong independence assumption here silently changes
+outcomes rather than erroring, so any proposal must use them; but landing them does not by itself
+start this milestone (C-14).
 
 7. **Build the job graph** from the sub-phase domain contracts, run provably-independent sub-phases
    concurrently within Resolution, keep the existing canonical-order guarantee for everything that
@@ -80,6 +109,12 @@ changes outcomes rather than erroring.
    independence proof actually held in practice at scale, SimQ/arena can.
 
 ### M4 — Hierarchical/aggregate simulation for distant regions (Higher risk to determinism, Real and intentional emergent-behavior tradeoff)
+
+**Gate B, a separate-architecture proposal (C-11).** Aggregate simulation requires Gate B, a
+separate versioned semantic architecture, transition rules, migration, conservation and invariant
+tests, and explicit SimQ/arena bounds. It is a fidelity change, not an exact optimization. The
+owner's technology direction reopened it for evaluation under M6-T05; the interim interpretation
+is unchanged until that proposal is approved.
 
 **Same acceptance gate as M3, not optional here either** — this milestone is an explicit,
 deliberate fidelity cut (an aggregate population model instead of individual simulation for

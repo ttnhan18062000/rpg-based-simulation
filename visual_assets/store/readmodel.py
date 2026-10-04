@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from visual_assets.store import config, intake as intake_api, pixels, records
-from visual_assets.store.contracts import ArtifactRecord, ReleaseCandidateManifest, parse_record
+from visual_assets.store.contracts import ArtifactRecord, ReleaseCandidateManifest, parse_record, record_bound
 from visual_assets.store.errors import ContractError, IdentityError, IntakeError, ReadError, StageError
 from visual_assets.store.identities import IntakeId, ReleaseId, SourceAssetId, SourceRevision, check
 
@@ -86,7 +86,7 @@ def list_items(kind: str, limit: int = DEFAULT_LIMIT) -> dict:
                     if directory.is_dir() and not directory.is_symlink() and _ARTIFACT_ID.fullmatch(directory.name):
                         for path in sorted(directory.glob("rc-*.json")):
                             try:
-                                entries = len(parse_record(ReleaseCandidateManifest, records.read_file(path, config.MAX_RECORD_BYTES)).entries)
+                                entries = len(parse_record(ReleaseCandidateManifest, records.read_file(path, record_bound(ReleaseCandidateManifest))).entries)
                                 readable = True
                             except (StageError, ContractError):
                                 entries, readable = None, False
@@ -153,6 +153,7 @@ def _show_source(item_id: str) -> dict:
         "revoked": rev in records.revoked_revisions(sid),
         "adoption": {
             "adoption_id": adoption.adoption_id, "intake_id": adoption.intake_id, "visual_key": adoption.visual_key,
+            "detail_value": adoption.detail_value,
             "approver_name": adoption.approver_name, "approver_role": adoption.approver_role, "decided_at": adoption.decided_at,
             "licence_state": adoption.licence_state.value, "licence_note": "stated by the approver at adoption",
         },
@@ -167,7 +168,7 @@ def _show_artifact(item_id: str) -> dict:
         raise ReadError("unknown_id", "no such artifact")
     out = []
     for path in sorted(directory.glob("*.artifact.json"))[:MAX_LIMIT]:
-        record = parse_record(ArtifactRecord, records.read_file(path, config.MAX_RECORD_BYTES))
+        record = parse_record(ArtifactRecord, records.read_file(path, record_bound(ArtifactRecord)))
         out.append({
             "source_revision": record.source_revision, "source_asset_id": record.source_asset_id, "pixel_hash": record.pixel_hash,
             "png_hash": record.png_hash, "width": record.width, "height": record.height, "scale_class": record.scale_class,
@@ -187,8 +188,8 @@ def _show_release(item_id: str) -> dict:
     path: Path = records.manifests_dir() / cid / f"{rid}.json"
     if not path.is_file() or path.is_symlink():
         raise ReadError("unknown_id", "no such release candidate")
-    manifest = parse_record(ReleaseCandidateManifest, records.read_file(path, config.MAX_RECORD_BYTES))
-    entries = [{"visual_key": e.visual_key, "artifact_id": e.artifact_id, "pixel_hash": e.pixel_hash} for e in manifest.entries]
+    manifest = parse_record(ReleaseCandidateManifest, records.read_file(path, record_bound(ReleaseCandidateManifest)))
+    entries = [{"visual_key": e.visual_key, "detail": e.detail, "artifact_id": e.artifact_id, "pixel_hash": e.pixel_hash} for e in manifest.entries]
     return {
         "kind": "release", "catalog_id": manifest.catalog_id, "release_id": manifest.release_id, "status": manifest.status,
         "note": "a release CANDIDATE only: nothing is active", "registry_hash": manifest.registry_hash,

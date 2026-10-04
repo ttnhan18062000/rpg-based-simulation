@@ -54,6 +54,10 @@ CandidateId = NewType("CandidateId", _OpaqueId)
 IntakeId = NewType("IntakeId", _OpaqueId)
 AdoptionId = NewType("AdoptionId", _OpaqueId)
 RevocationId = NewType("RevocationId", _OpaqueId)
+DraftSetId = NewType("DraftSetId", _OpaqueId)
+SetAdoptionId = NewType("SetAdoptionId", _OpaqueId)
+# A draft is kept under the id of the intake it came from, which the store always generates as `in-` + 16 hex.
+DraftId = Annotated[str, StringConstraints(pattern=r"^in-[0-9a-f]{16}$")]
 
 def _check_release(value: str) -> str:
     if value == "rc-0000":

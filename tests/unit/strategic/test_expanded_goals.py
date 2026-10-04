@@ -5,7 +5,8 @@ from src.core.state import (
     StrategicComponent, BiologicalComponent, CombatComponent, StaminaComponent,
     BuildingState
 )
-from src.core.strategic import BlockerState, LeadState, GoalKind
+from src.core.strategic import BlockerState, LeadState, GoalKind, ObjectiveKind
+from src.core.enums import Faction
 from src.core.builder import V2EntityBuilder
 from src.core.updates import StrategicUpdate, EntityUpdate
 from src.systems.strategic import StrategicIntelligenceSystem
@@ -38,8 +39,9 @@ def test_combat_engage_scorer_threat_and_bravery_bias(base_state):
                .location(2.0, 2.0)
                .build())
     
-    # We must mock faction differences
-    hostile = replace(hostile, identity=replace(hostile.identity, faction=2))
+    # The pair must be hostile per the content catalog (MONSTER_HORDE vs hero_guild), not merely differ in the
+    # raw Faction enum: the scorer now asks the catalog (TCK-20261002-GOAL-WINNER-CONSUMPTION-...).
+    hostile = replace(hostile, identity=replace(hostile.identity, faction=Faction.MONSTER_HORDE))
     
     brave_entity = (V2EntityBuilder(1)
                     .kind("hero")
@@ -64,6 +66,21 @@ def test_combat_engage_scorer_threat_and_bravery_bias(base_state):
     assert score_brave.utility > score_coward.utility
     assert score_brave.target_id == "2"
     assert score_brave.target_pos == (2.0, 2.0)
+    assert score_brave.metadata["obj_kind"] == ObjectiveKind.DEFEAT_ENEMY
+
+
+def test_combat_engage_scorer_ignores_raw_enum_different_but_catalog_friendly_target(base_state):
+    """Negative control (test_plan T5): TOWN_COUNCIL differs from HERO_GUILD in the raw enum but the catalog
+    does not call it hostile, so it is not a combat target. Proves the predicate changed, not just the luck."""
+    friendly = replace(V2EntityBuilder(2).kind("goblin").location(2.0, 2.0).build())
+    friendly = replace(friendly, identity=replace(friendly.identity, faction=Faction.TOWN_COUNCIL))
+    hero = V2EntityBuilder(1).kind("hero").location(0.0, 0.0).build()
+    state = replace(base_state, entities={1: hero, 2: friendly})
+
+    score = CombatEngageScorer().score(hero, state)
+
+    assert score.utility == 0.0
+    assert score.target_id is None
 
 
 def test_combat_retreat_scorer(base_state):
@@ -297,7 +314,7 @@ def test_integration_strategic_project_selection(base_state):
                .kind("goblin")
                .location(1.0, 1.0)
                .build())
-    hostile = replace(hostile, identity=replace(hostile.identity, faction=2))
+    hostile = replace(hostile, identity=replace(hostile.identity, faction=Faction.MONSTER_HORDE))  # catalog-hostile to hero_guild
     
     entity = (V2EntityBuilder(1)
               .kind("hero")
@@ -314,3 +331,4 @@ def test_integration_strategic_project_selection(base_state):
     project = update.projects_add_or_update[0]
     assert project.kind == "combat_engage"
     assert project.active_objective_id is not None
+    assert project.objectives[0].kind == ObjectiveKind.DEFEAT_ENEMY

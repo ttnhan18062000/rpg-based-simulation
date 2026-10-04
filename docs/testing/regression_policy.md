@@ -12,7 +12,7 @@ last_verified: 2026-09-30
 - `docs/testing/test_taxonomy.md` — marker definitions (`regression`, `v2_contract`, `differential`, etc.)
 - `docs/testing/requirement_traceability.md` — which tests protect which requirements
 - `docs/testing/how_to_add_requirement_tests.md` — how to add a test after fixing a regression
-- `docs/performance/perf_baseline_policy.md` — numeric performance regression thresholds
+- `docs/engine/performance_contract.md` — performance regression targets (§5, §5.1); `docs/performance/perf_baseline_policy.md` — baseline calibration procedure
 - `docs/parity_ledger/` — P0 law parity evidence; must be updated when a P0 test changes
 
 ---
@@ -43,13 +43,13 @@ These test groups must pass on every commit. A failure in any of them blocks mer
 | API security | `tests/api/test_cognition_history_api.py` (path-traversal test), `tests/api/test_historical_event_search_api.py` (security sanitization test) | API security (P0) | Path traversal is a security gate, not just a correctness gate |
 | Architecture guards | `tests/architecture/` | Import boundaries, enum migration, hot-path safety | Boundary violations create hidden coupling that degrades future changes |
 
-**Performance gates** (from `docs/performance/perf_baseline_policy.md`):
+**Performance regression targets** (from `docs/engine/performance_contract.md` §5 and §5.1, PERF-D4):
 - p50 latency must not exceed baseline by more than **5%**
 - p95 latency must not exceed baseline by more than **10%**
 - p99 latency must not exceed baseline by more than **15%**
 - RSS delta between tick 100 and tick 1000 must not exceed **15%** of starting baseline
 
-A performance gate failure raises `UnacceptableRegressionError` and blocks CI. See `docs/performance/perf_baseline_policy.md` §3 for full details.
+**These are documented targets, not enforced gates.** No check applies them to a real run, and no `UnacceptableRegressionError` exists. The only live baseline comparison is the soft, `slow`-marked tripwire in `tests/perf/test_perf_regression_baseline.py`, and every performance threshold in the test tree is a warning (`docs/performance/performance_clause_inventory.md` §7). See `performance_contract.md` §3.3 and §5 for what each projection claims.
 
 ---
 
@@ -165,16 +165,16 @@ A **P0 test** is any test that protects a P0 requirement (see `docs/testing/requ
 
 ## 8. Performance Regression Thresholds
 
-Performance regression thresholds are defined in `docs/performance/perf_baseline_policy.md` §3. Summary:
+Performance regression targets are defined in `docs/engine/performance_contract.md` §5 and §5.1 (moved from the baseline policy by PERF-D4). They are documented targets that no check enforces yet. Summary:
 
-| Metric | Gate threshold |
+| Metric | Target (not enforced) |
 |---|---|
 | p50 tick latency | Must not exceed baseline by > 5% |
 | p95 tick latency | Must not exceed baseline by > 10% |
 | p99 tick latency | Must not exceed baseline by > 15% |
 | RSS delta (tick 100 → 1000) | Must not exceed 15% of starting baseline |
 
-If a performance gate fires due to a legitimate architectural change, follow the baseline re-calibration procedure in `docs/performance/perf_baseline_policy.md` §4 before merging.
+If the tripwire reports a change that is legitimate, follow the baseline calibration procedure in `docs/performance/perf_baseline_policy.md` §2 and record the rationale with the baseline update.
 
 ---
 

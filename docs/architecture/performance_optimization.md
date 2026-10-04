@@ -8,11 +8,22 @@ audience: developer
 # Simulation Performance Optimization
 
 ## Status
-Superseded (historical) for the RabbitMQ-specific mechanism (AI Task Batching, item 3 under
-Decision below). RabbitMQ/Kafka were removed entirely from this repo by
-`TCK-20260817-DEAD-INFRA-REMOVAL-EPIC`; this ADR's other decisions (shallow-copy snapshots, grid
-compression, frontier-scan optimization) remain valid and were separately implemented. This
-document remains a valid historical record of a V1-era optimization design.
+**Historical (V1-era design record). Not a statement of current behavior.** Scope clarified under C-16
+(`docs/architecture/performance_optimization_decisions.md`, applied by `TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT`):
+
+- **Decision 3 (AI Task Batching over RabbitMQ): superseded, historical.** RabbitMQ/Kafka were removed
+  entirely from this repo by `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC`. The removed transport design is
+  not revived by this document.
+- **Decisions 1, 2 and 4 (shallow-copy snapshots, grid compression, frontier-scan optimization): not
+  verified as current.** An earlier version of this status said they "remain valid and were separately
+  implemented". A search of `src/` on 2026-10-03 found no `model_copy(deep=False)`, no `Grid` class
+  holding a `bytearray`, and no `find_frontier_target`; the entity type is now the `EntityState`
+  dataclass (`src/core/state.py`), not a Pydantic `Entity`. They are kept below as the record of what
+  was decided, not as live decisions. If the owner wants one of them confirmed as surviving, it needs
+  its own check against the current code.
+- **Current performance authority** is `docs/engine/performance_contract.md` (measurement and claims),
+  `docs/engine/contracts/certification_contract.md` §3 (hardware classes), and the decision records in
+  `docs/architecture/performance_optimization_decisions.md`.
 
 ## Context
 The RPG simulation is currently throughput-bottlenecked at 0.45 TPS with 100% CPU on the backend. Profiling identified the `collect` phase (worker dispatch and result collection) as the primary bottleneck (2.1s per tick). 

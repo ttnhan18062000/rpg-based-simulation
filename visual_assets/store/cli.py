@@ -1,6 +1,6 @@
 """Command line for the store: `python -m visual_assets.store <command>`.
 
-Read-only or local: `intake <dir>`, `review <id>`, `list`, `show <id>`, `audit`. HUMAN-GATED (never run by an agent): `adopt` and
+Read-only or local: `intake <dir>`, `review <id>`, `list`, `show <id>`, `audit`, `verify`, `export-runtime` (reads committed candidates, writes a NEW directory outside the catalog). HUMAN-GATED (never run by an agent): `adopt` and
 `revoke`, which write the tracked catalog, refuse unless stdin is a terminal, and make the operator type the id after reading what
 they are about to decide. Exit codes: 0 success (a PASSED intake, a clean audit, a review whose preview matches or could not be checked here), 1 a QUARANTINED intake, a preview that does NOT match the source, or an audit with breaks,
 2 a refusal or error. This is the only module that reads the clock; library code takes timestamps as parameters.
@@ -11,9 +11,9 @@ from __future__ import annotations
 import argparse
 import sys
 from collections.abc import Sequence
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-from visual_assets.store import adoption, audit, gc, records, release, revoke, verify
+from visual_assets.store import adoption, audit, config, draftexport, drafts, gc, records, release, revoke, runtime_export, setadoption, verify
 from visual_assets.store import review as review_api
 from visual_assets.store.build import exporter
 from visual_assets.store import intake as intake_api
@@ -25,6 +25,11 @@ from visual_assets.store.errors import GateError, StageError, StoreError
 
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _retention_cutoff() -> str:
+    """`now` minus the retention bound, as a UTC timestamp: intakes created before it are expired (the clock is read here, not in the library)."""
+    return (datetime.now(timezone.utc) - timedelta(days=config.MAX_UNADOPTED_INTAKE_AGE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _renderer():
@@ -73,6 +78,10 @@ def _parser() -> argparse.ArgumentParser:
     rel = sub.add_parser("release", help="assemble an immutable release CANDIDATE manifest (there is no active release)")
     rel.add_argument("--catalog-id", required=True)
     rel.add_argument("--release-id", help="rc-NNNN; default is the next one")
+    exp = sub.add_parser("export-runtime", help="write the client's runtime manifest and PNGs for one release candidate into a NEW directory outside the catalog")
+    exp.add_argument("--catalog-id", required=True)
+    exp.add_argument("--release-id", required=True, help="rc-NNNN")
+    exp.add_argument("--out", required=True, help="a directory that does not exist yet")
     collect = sub.add_parser("gc", help="list files nothing needs; deletes only with --delete")
     collect.add_argument("--delete", action="store_true")
 
@@ -84,9 +93,32 @@ def _parser() -> argparse.ArgumentParser:
     adopt.add_argument("--licence", required=True, help="your own licence decision (only CLEARED is adoptable)")
     adopt.add_argument("--licence-evidence", required=True, help="your own evidence reference, never taken from the package")
     adopt.add_argument("--source-asset-id", required=True)
+    adopt.add_argument("--detail", default=None, help="the key's detail value this fills (only for a key that declares a detail axis; omitted = its default)")
     lineage = adopt.add_mutually_exclusive_group(required=True)
     lineage.add_argument("--new", action="store_true", help="start a new source asset (refused if the id exists)")
     lineage.add_argument("--parent", metavar="rNNNN", help="the latest unrevoked revision of an existing source asset")
+
+    draft = sub.add_parser("draft", help="draft sets: unadopted drafts kept in git outside the catalog (no approval is recorded)")
+    draft_sub = draft.add_subparsers(dest="draft_command", required=True)
+    keep = draft_sub.add_parser("keep", help="keep a PASSED intake as a draft in a set (an agent may run this)")
+    keep.add_argument("intake_id")
+    keep.add_argument("--set", dest="set_id", required=True)
+    keep.add_argument("--as", dest="visual_key", required=True, help="the visual key this draft is for")
+    keep.add_argument("--detail", default=None, help="the key's detail value (only for a key that declares a detail axis)")
+    keep.add_argument("--source-asset-id", default=None, help="the id it will be adopted under (default: the key with dots as underscores, plus _<detail>)")
+    keep.add_argument("--replace", action="store_true", help="replace the set's existing draft for this slot")
+    dexport = draft_sub.add_parser("export", help="write a draft preview manifest and its preview PNGs for the isolated preview page into a NEW directory (read-only on the drafts)")
+    dexport.add_argument("set_id")
+    dexport.add_argument("out_dir", help="a directory that does not exist yet")
+    dverify = draft_sub.add_parser("verify", help="check every draft's hashes, declared keys and no stray files (read-only)")
+    dverify.add_argument("set_id", nargs="?")
+    aset = sub.add_parser("adopt-set", help="HUMAN ONLY: adopt every entry of a REVIEWED draft set in one decision (all or nothing)")
+    aset.add_argument("set_id")
+    aset.add_argument("--approver", required=True)
+    aset.add_argument("--approver-role", required=True)
+    aset.add_argument("--licence", required=True, help="your own licence decision (only CLEARED is adoptable)")
+    aset.add_argument("--licence-evidence", required=True, help="your own evidence reference, never taken from any draft")
+    aset.add_argument("--review-evidence", required=True, help="what you reviewed, for example the preview page of this set")
 
     rev = sub.add_parser("revoke", help="HUMAN ONLY: revoke an intake (in-...) or a source revision (<id>/<rNNNN>)")
     rev.add_argument("target")
@@ -155,18 +187,50 @@ def main(argv: Sequence[str] | None = None) -> int:
             manifest = release.assemble_release(args.catalog_id, release_id=args.release_id)
             print(f"{manifest.catalog_id}/{manifest.release_id}: {len(manifest.entries)} entries (candidate only, nothing is active)")
             return 0
+        if args.command == "export-runtime":
+            runtime = runtime_export.export_runtime(args.catalog_id, args.release_id, args.out)
+            print(f"{runtime.catalog_id}/{runtime.release_id}: {len(runtime.entries)} entries exported to {args.out}")
+            return 0
         if args.command == "gc":
-            for item in gc.gc(delete=args.delete):
+            for item in gc.gc(delete=args.delete, expire_before=_retention_cutoff()):
                 print(f"{'deleted' if args.delete else 'would delete'} {item.kind} {item.path.name}  ({item.reason})")
+            if not args.delete:  # a dry-run-only report; tracked history is never deleted
+                for path in gc.tracked_unreferenced():
+                    print(f"kept: tracked history, never deleted: {path.name}  (no committed release candidate references it)")
             return 0
         if args.command == "adopt":
             _require_terminal("adopt")
             record = adoption.adopt(
                 args.intake_id, visual_key=args.visual_key, approver=args.approver, approver_role=args.approver_role,
                 licence_state=args.licence, licence_evidence_ref=args.licence_evidence, source_asset_id=args.source_asset_id,
-                new=args.new, parent=args.parent, decided_at=_now(), confirm=_prompt, renderer=_renderer(),
+                new=args.new, parent=args.parent, detail_value=args.detail, decided_at=_now(), confirm=_prompt, renderer=_renderer(),
             )
             print(f"adopted {record.intake_id} as {record.source_asset_id} {record.source_revision} ({record.adoption_id})")
+            return 0
+        if args.command == "draft":
+            if args.draft_command == "keep":
+                entry = drafts.keep(args.intake_id, set_id=args.set_id, visual_key=args.visual_key, detail=args.detail,
+                                    source_asset_id=args.source_asset_id, replace=args.replace)
+                print(f"kept {entry.draft_id} in {args.set_id} as {entry.visual_key}{'' if entry.detail is None else ' [' + entry.detail + ']'} "
+                      f"(will be adopted as {entry.source_asset_id}); nothing is adopted")
+                return 0
+            if args.draft_command == "export":
+                manifest = draftexport.export_draft_preview(args.set_id, args.out_dir)
+                print(f"{args.set_id}: {len(manifest.entries)} drafts exported to {args.out_dir}; draft set hash {manifest.draft_set_hash}")
+                return 0
+            findings = drafts.verify_set(args.set_id) if args.set_id else drafts.verify_all()
+            for finding in findings:
+                print(f"{finding.code}  {finding.path}: {finding.detail}")
+            print("drafts ok" if not findings else f"{len(findings)} finding(s)")
+            return 1 if findings else 0
+        if args.command == "adopt-set":
+            _require_terminal("adopt-set")
+            record = setadoption.adopt_set(
+                args.set_id, approver=args.approver, approver_role=args.approver_role, licence_state=args.licence,
+                licence_evidence_ref=args.licence_evidence, review_evidence_ref=args.review_evidence, decided_at=_now(), confirm=_prompt,
+                renderer=_renderer(),
+            )
+            print(f"adopted set {record.set_id}: {len(record.entries)} entries ({record.set_adoption_id})")
             return 0
         if args.command == "revoke":
             _require_terminal("revoke")

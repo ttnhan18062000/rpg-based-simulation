@@ -8,21 +8,22 @@ tags: [agent-monitoring, schema]
 
 # Codebase Health History — Schema Reference
 
-One append-only JSONL file, written by `tools/codebase_health_snapshot.py`
+One append-only JSONL file, written by `codebase/reports/codebase_health_snapshot.py`
 (`TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD`, item 3 of
 `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC`). It persists
-`tools/codebase_health_baseline.py::build_report()`'s live metrics across
+`codebase/reports/codebase_health_baseline.py::build_report()`'s live metrics across
 runs so a scorecard can render per-dimension trends — no single record here
 is meaningful on its own; the value is in the sequence. Since schema version 2
 (`TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS`) each record also carries Python craft
-metrics from a second source, `tools/code_health/metrics.py` — see "Second metric source".
+metrics from a second source, `codebase/health/metrics.py` — see "Second metric source".
 
-**File path:** `agent-working/agent-monitoring/codebase_health_history.jsonl`
+**File path:** `codebase/reports/codebase_health_history.jsonl`
 
-This lives inside the same directory family as `runs.jsonl`/`events.jsonl`/
-`tools.jsonl` purely for writer/lock/diagnostic-infrastructure reuse — it is
-its own distinct file, joined to nothing else in that family, and shares no
-path constant with `RUNS_FILE`.
+The file lives in the codebase domain, next to its only writer. It moved there from
+`agent-working/agent-monitoring/` (TCK-20261004-CODEBASE-HEALTH-HISTORY-MOVE, with agent-working's
+agreement); it still reuses the same writer/lock/diagnostic infrastructure as `runs.jsonl`/`events.jsonl`/
+`tools.jsonl`, is its own distinct file, joined to nothing else in that family, and shares no path constant
+with `RUNS_FILE`. Citations of the old path in frozen history (`agent-monitoring/...` or `agent-working/agent-monitoring/...`) refer to the file now at `codebase/reports/`; `docs/guides/agent_working_path_map.md` does not translate this one file (a gap reported to agent-working).
 
 ```json
 {
@@ -62,10 +63,10 @@ path constant with `RUNS_FILE`.
 
 ## Append-only contract
 
-`agent-working/agent-monitoring/codebase_health_history.jsonl` is append-only for all
+`codebase/reports/codebase_health_history.jsonl` is append-only for all
 writes — mirroring `docs/agent-monitoring/schema.md`'s own wording for
 `runs.jsonl`. The writer
-(`tools/codebase_health_snapshot.py::write_snapshot`, via
+(`codebase/reports/codebase_health_snapshot.py::write_snapshot`, via
 `tools/agent-monitoring/writer.py::write_line`) only ever appends, never
 rewrites an existing line. There is no historical-correction exception
 documented for this file yet (unlike `runs.jsonl`'s one documented case,
@@ -78,7 +79,7 @@ audited, line-scoped substitution, never a bulk parse/re-serialize.
 ## Field table
 
 Every field in the first table below is one key from
-`tools/codebase_health_baseline.py::build_report()`'s own return dict, used exactly as
+`codebase/reports/codebase_health_baseline.py::build_report()`'s own return dict, used exactly as
 returned — this module never recomputes or re-derives any individual metric.
 `codebase_health_snapshot.py::EXPECTED_BASELINE_KEYS` is the enforced, frozen source of truth
 for that set, and `EXPECTED_SNAPSHOT_KEYS` is that set plus the craft keys below:
@@ -107,16 +108,18 @@ rename/add/remove is a visible breaking change here, never silent drift.
 
 ---
 
-## Second metric source — craft metrics (schema version 2)
+## Second metric source — craft metrics (schema versions 2 and 3)
 
-These keys come from `tools/code_health/metrics.py::compute_craft_metrics`, not from
+These keys come from `codebase/health/metrics.py::compute_craft_metrics`, not from
 `build_report()`. `build_report()` and `make codebase-health-baseline` are unchanged, so the baseline
 target does not depend on the code-health tools. Every key is a plain integer and each trends on its
 own: there is no aggregate or combined craft number anywhere (D24 sections J and M).
 
-**Live keys** (`craft_<thing>`) are measured at snapshot time from ruff, complexipy and the line-count
-report over `src/` with the repository's own configuration. They are the offline Python tools; a
-snapshot never runs jscpd or needs the network.
+**Live keys** (`craft_<thing>`) are measured at snapshot time from ruff, complexipy, the line-count
+report and the ast-grep rule pack (`codebase/rules/`) over `src/` with the repository's own configuration. They are the
+offline tools; a snapshot never runs jscpd or needs the network. A snapshot needs every one of them: if a tool is missing
+(for example ast-grep, which is in the `lint` dependency group) `make codebase-health-snapshot` exits 2 and writes nothing,
+so a missing tool is never recorded as 0 findings.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -130,9 +133,12 @@ snapshot never runs jscpd or needs the network.
 | `craft_modules_over_length_limit` | int | Modules over the module length limit (1,000 lines). |
 | `craft_longest_function_lines` | int | Length of the longest function over the fail limit, 0 if none. |
 | `craft_highest_cognitive_complexity` | int | Highest cognitive complexity among functions over the limit, 0 if none. |
+| `craft_ast_grep_private_name_imports` | int | ast-grep rule `n3-private-name-import` findings (standard N3), added in version 3. |
+| `craft_ast_grep_version_marker_names` | int | ast-grep rule `n4-version-marker-name` findings (standard N4), added in version 3. |
+| `craft_ast_grep_silent_excepts` | int | ast-grep rule `e3-silent-except` findings (standard E3), added in version 3. |
 
 **Registry-derived keys** (`craft_baseline_<thing>`) are read from
-`registries/code_health_exceptions.jsonl`. They describe the baselined state as of the last seed or
+`codebase/baselines/code_health_exceptions.jsonl`. They describe the baselined state as of the last seed or
 `tighten`, not a live measurement, and the scorecard labels them "(registry)". Duplication is
 reported this way because jscpd needs `npx`; it can become a live key once jscpd has a lockfile.
 
@@ -149,18 +155,19 @@ reported this way because jscpd needs `npx`; it can become a live key once jscpd
 
 `snapshot_schema_version` versions the snapshot record's shape itself — the
 set of keys captured, not any individual metric's computation. It starts at
-`1` (`tools/codebase_health_snapshot.py::SNAPSHOT_SCHEMA_VERSION`) and is
+`1` (`codebase/reports/codebase_health_snapshot.py::SNAPSHOT_SCHEMA_VERSION`) and is
 manually incremented whenever `EXPECTED_SNAPSHOT_KEYS` changes.
 
 | Version | Keys |
 |---|---|
-| 1 | `build_report()`'s 14 keys. No record of this version has been written to `agent-working/agent-monitoring/codebase_health_history.jsonl`. |
-| 2 | Version 1's keys plus the 14 `craft_*` keys above (`TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS`). |
+| 1 | `build_report()`'s 14 keys. No record of this version has been written to `codebase/reports/codebase_health_history.jsonl`. |
+| 2 | Version 1's keys plus the 14 `craft_*` keys above that are not `craft_ast_grep_*` (`TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS`). |
+| 3 | Version 2's keys plus the 3 `craft_ast_grep_*` keys (`TCK-20261004-AST-GREP-SARIF-AND-SNAPSHOT`). Version-2 lines already in the history file stay as written; a reader treats a key a record lacks as "not measured", never as 0. |
 
 A schema-version bump is always a **paired change**, landed in the same
 commit:
 
-1. Edit `EXPECTED_BASELINE_KEYS` (or the craft key set in `tools/code_health/metrics.py`) to
+1. Edit `EXPECTED_BASELINE_KEYS` (or the craft key set in `codebase/health/metrics.py`) to
    match the new shape, which updates `EXPECTED_SNAPSHOT_KEYS`.
 2. Increment `SNAPSHOT_SCHEMA_VERSION`.
 3. Update this doc's field tables to match.
@@ -176,7 +183,7 @@ the dimension is left out. The 14 baseline dimensions are required in every reco
 
 ## Scorecard read path
 
-`tools/codebase_health_snapshot.py::read_snapshots` / `build_scorecard` /
+`codebase/reports/codebase_health_snapshot.py::read_snapshots` / `build_scorecard` /
 `format_scorecard` render a per-dimension trend view over this file's
 records — 11 scalar dimensions get a Δ + `↑`/`↓`/`→` arrow, the registry-size
 fold renders `registry_size_lines` only, `unused_core_dependencies`

@@ -30,17 +30,34 @@ def rejects(tmp_path: Path, body: str, match: str | None = None, **kw) -> None:
         load(tmp_path, body, **kw)
 
 
-def test_committed_registry_loads_with_zero_keys():
+def test_committed_registry_holds_the_adopted_forest_key_and_one_optional_key_per_other_terrain_code():
+    """`terrain.forest` is the one adopted key; the other 22 Live Map terrain codes are registered `optional: true` for the draft set `terrain-v1`
+    (`TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET`). The expected keys are read from the page's explicit code-to-key table, the contract both sides share."""
+    import re
+
+    table = (Path(__file__).resolve().parents[4] / "frontend" / "src" / "visualAssets" / "terrainDrafts.ts").read_text()
+    expected = re.findall(r"'(terrain\.[a-z_]+)'", table[table.index("TERRAIN_DRAFT_KEYS"):table.index("TERRAIN_CODES")])
+    assert len(expected) == 23 and len(set(expected)) == 23
     registry = load_registry()
-    assert dict(registry.keys) == {} and dict(registry.aliases) == {}
+    assert sorted(registry.keys) == sorted(expected) and dict(registry.aliases) == {}
+    others = [d for k, d in registry.keys.items() if k != "terrain.forest"]
+    assert len(others) == 22 and all(d.optional and d.family == "terrain" and d.detail is None and d.variant_axes == () for d in others)
+    forest = registry.keys["terrain.forest"]
+    assert forest.family == "terrain" and forest.variant_axes == () and not forest.optional
+    # the declared order is what the client picks over: the spread the user approved (64 x 64: plain 1354, bush 1397, tree 1345) was computed for it
+    assert forest.detail.values == ("plain", "bush", "tree") and forest.detail.default == "plain"
     data = (config.CATALOG_ROOT / "definitions" / "visual_keys.yaml").read_bytes()
     assert registry.file_hash == "sha256:" + hashlib.sha256(data).hexdigest()
 
 
-def test_committed_catalog_has_no_real_assets():
-    # zero keys (above); no sources, artifacts, provenance, candidates or manifests are committed
-    for sub in ("sources", "generated", "provenance", "manifests/candidates"):
-        assert [p.name for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep"] == [], sub
+def test_committed_catalog_holds_only_the_pilot_asset():
+    # one key (above), its three adopted slot sources and what was derived from them; exact contents: tests/visual_assets/test_catalog_integrity.py
+    expected = {"sources": ["terrain_forest", "terrain_forest_bush", "terrain_forest_tree"],
+                "generated": ["terrain_forest--x1", "terrain_forest_bush--x1", "terrain_forest_tree--x1"], "manifests/candidates": ["pilot"]}
+    for sub, names in expected.items():
+        assert sorted(p.name for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep") == names, sub
+    for sub in ("provenance/adoptions", "provenance/intake"):
+        assert len([p for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep"]) == (3 if sub.endswith("adoptions") else 6), sub
     assert [p.name for p in (config.CATALOG_ROOT / "build-config").iterdir() if p.name != ".gitkeep"] == ["export.toml"]  # rules, not an asset
     assert {p.name for p in (config.CATALOG_ROOT / "fixtures").iterdir()} == {"contracts"}
     assert "fixture" not in [p.name for p in (config.CATALOG_ROOT / "definitions").iterdir()]
@@ -125,7 +142,8 @@ def test_count_bounds(tmp_path, monkeypatch):
 
 
 def test_size_bound(tmp_path, monkeypatch):
-    path = write(tmp_path, HEAD + "keys: []\naliases: []\n")
+    # padded with a comment: the bound applies to the file and, as compact JSON, to the parsed body, which must not exceed it
+    path = write(tmp_path, HEAD + "keys: []\naliases: []\n# " + "x" * 200 + "\n")
     size = path.stat().st_size
     monkeypatch.setattr(config, "MAX_REGISTRY_BYTES", size)
     load_registry(path)
