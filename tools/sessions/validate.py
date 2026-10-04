@@ -30,6 +30,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from tools.agent_working_paths import TICKETS
 from tools.sessions.card import TEMPLATE_DIR
 from tools.sessions.generate_agents import check_generated
 from tools.sessions.roster import (
@@ -206,7 +207,7 @@ def _check_authority(roster: Roster, authority: Authority) -> list[Finding]:
 
 
 def _ticket_ids_on_disk(root: Path) -> set[str]:
-    base = root / "agent-working" / "tickets"
+    base = root / TICKETS
     return {p.stem for p in base.rglob("TCK-*.md")} if base.is_dir() else set()
 
 

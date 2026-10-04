@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tools.agent_working_paths import TICKETS
 from tools.sessions import roster as roster_mod
 from tools.sessions.roster import RosterError, load_authority, load_roster
 from tools.sessions.validate import complexity_report, main, validate
@@ -174,7 +175,7 @@ def test_stale_ticket_citation_reported(fixture_root):
 
     findings = _mutated(fixture_root, cite)
     assert "stale-citation" in _rules(findings)
-    tickets = fixture_root / "agent-working/tickets/done"
+    tickets = fixture_root / TICKETS / "done"
     tickets.mkdir(parents=True)
     (tickets / "TCK-20200101-NO-SUCH-TICKET.md").write_text("x", encoding="utf-8")
     assert "stale-citation" not in _rules(validate(fixture_root))
