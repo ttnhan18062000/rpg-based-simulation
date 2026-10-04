@@ -40,7 +40,7 @@ build to pixel-hashed artifacts, immutable release CANDIDATES, `verify`, `gc`, a
 ## Status update 2026-10-03 (hardening and isolated rehearsal)
 
 Batch `TCK-20261003-EPIC-VISUAL-ASSET-HARDENING-AND-REHEARSAL` is built. Profile A (D8), no signing (D9) and local-only real Aseprite (D10) are recorded in the ADR; budgets are
-measured and `PROPOSED` (`docs/assets/budgets.md`, awaiting owner approval); the minimal runtime manifest and `export-runtime` exist; and the user-authorized **isolated `AM-M5`
+measured and `PROPOSED` at the time (`docs/assets/budgets.md`; approved 2026-10-04, see the status update below); the minimal runtime manifest and `export-runtime` exist; and the user-authorized **isolated `AM-M5`
 rehearsal** ran on synthetic fixtures with the normal Live Map, HUD and simulation untouched. Result (`docs/assets/surface_rehearsal_result.md`): overall `INCONCLUSIVE`;
 `AM5-W01`, `W02`, `W04`, `W06`, `W08` `PASS` within their stated scope; `W03`, `W05`, `W07` `INCONCLUSIVE`; `W09` `BLOCKED`; gates `AM-C05` and `AM-C07` `INCONCLUSIVE`, `AM-C06` and
 `AM-C09` `BLOCKED`. `AM-M6` and `AM-M7` stay dormant; no gate toward activation passed.

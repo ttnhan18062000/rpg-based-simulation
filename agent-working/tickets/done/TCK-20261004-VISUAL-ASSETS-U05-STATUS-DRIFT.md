@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-VISUAL-ASSETS-U05-STATUS-DRIFT
-phase: open
+phase: done
 date: 2026-10-04
 tags: [documentation, mcp]
 ---
@@ -15,7 +15,7 @@ tags: [documentation, mcp]
 Docs still say the U-05 budget numbers await owner approval; they were approved on 2026-10-04
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -44,9 +44,9 @@ Grep `docs/` and `visual_assets/` once more for `awaiting owner approval` and `P
 - Any number in `budgets.md` or in code; the retention row (ticket 4).
 
 ## Acceptance Criteria
-- [ ] No doc outside `budgets.md`'s own history sentence says the U-05 numbers are proposed or awaiting approval.
-- [ ] `tests/visual_assets/test_budgets_parity.py` still passes.
-- [ ] `make knowledge-index-update` run (docs changed).
+- [x] No doc outside `budgets.md`'s own history sentence says the U-05 numbers are proposed or awaiting approval.
+- [x] `tests/visual_assets/test_budgets_parity.py` still passes.
+- [x] `make knowledge-index-update` run (docs changed).
 
 ## Related Tickets
 - TCK-20261003-VISUAL-ASSETS-BUDGETS (done)
@@ -64,9 +64,15 @@ Grep `docs/` and `visual_assets/` once more for `awaiting owner approval` and `P
 - None.
 
 ## Implementation Notes
+Four stale sentences in three docs now say U-05 is approved 2026-10-04 (retention the one unset row), pointing at `docs/assets/budgets.md`. The dated 2026-10-03 history paragraph is kept, with `PROPOSED at the time` and a pointer to the 2026-10-04 status update. A grep of `docs/` and `visual_assets/` found no other hit.
 
 ## Test Summary
+`tests/visual_assets/test_budgets_parity.py`: 6 passed. `make knowledge-index-update` run.
 
 ## Files Changed
+- docs/plans/visual-asset-management-runtime-integration/README.md
+- docs/assets/store_contract.md
+- docs/plans/aseprite-mcp-pixel-art/README.md
 
 ## Completion Summary
+Docs-only hotfix; no number or code changed.

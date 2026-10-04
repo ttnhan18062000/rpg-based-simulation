@@ -172,4 +172,4 @@ Runtime activation, a resolver in the real client, Live Map and HUD consumption,
 
 D2 (sources committed directly, no Git LFS), D3 (only adopted assets' PNGs committed; verified in CI by pixel hash) and D4
 (artifact identity is the decoded-pixel hash) are **decided** (`docs/architecture/visual_asset_foundation_adr.md`). Still open: deployment profile (`AM1-W01`), signing/trust channel (`AM1-W08`),
-retention numbers, the Aseprite licence review (`U-02`), numeric budgets (`U-05`: proposed, awaiting owner approval, `docs/assets/budgets.md`) and CI with Aseprite (decided against: ADR D10).
+retention numbers, the Aseprite licence review (`U-02`), numeric budgets (`U-05`: approved 2026-10-04 except the deliberately unset retention row, `docs/assets/budgets.md`) and CI with Aseprite (decided against: ADR D10).
