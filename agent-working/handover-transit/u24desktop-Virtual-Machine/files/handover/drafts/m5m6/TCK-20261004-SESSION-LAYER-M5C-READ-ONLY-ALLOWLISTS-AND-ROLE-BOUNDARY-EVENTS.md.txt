@@ -1,0 +1,76 @@
+---
+status: active
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20261004-SESSION-LAYER-M5C-READ-ONLY-ALLOWLISTS-AND-ROLE-BOUNDARY-EVENTS
+phase: open
+date: 2026-10-04
+tags: [ai, process-improvement, governance]
+---
+
+# TCK-20261004-SESSION-LAYER-M5C-READ-ONLY-ALLOWLISTS-AND-ROLE-BOUNDARY-EVENTS
+
+## Title
+Session-layer M5c: read-only role allowlists and advisory `role_boundary` events
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P2
+
+## Request Summary
+Use the free hard boundary (a `--agent` tool allowlist makes pure review roles read-only, verified M0b: it applies to the main session and persists across resume) and add the advisory semantic boundaries: warn and log a `role_boundary` monitoring event, never block.
+
+Child of `TCK-20261002-EPIC-SESSION-LAYER-COMMUNICATION-AND-AUTHORITY`. **Hold rule: do not activate before M2a-M2b are merged** (this ticket consumes the binding record and role-state directory) and M0 results (done). Every `settings.json` or hook edit needs the owner's confirmation of the literal diff, and a settings-shape test search first (grep `tests/` for the pinned hook shape).
+
+## Scope
+- Decide which roles are pure review (candidate: seats whose function is reviewer only, per the manifest); set their `tools` allowlist in `registries/session_roles.yaml` and regenerate `session-<role>.md` (M1c). Check that the allowlist still lets them read and message.
+- `role_boundary` event: emitted (advisory) by the M5b hook path or a separate PostToolUse/UserPromptSubmit helper when a role edits a path outside its `owns` (per `route.py`, M3a) or sends a dispatch-class message from a role not in the receiver's `accepts_dispatch_from`. Event carries role, session id, class, path or target, never message content. Writes via the existing monitoring recorder; write failure never fails anything.
+- Warn text goes to the session once per path class per session (no spam).
+- Retire criteria recorded in the ticket: harden only what recurs after a measured window (target four weeks of retro data); hardening is its own ticket (M7).
+
+## Out of Scope
+- Any deny or ask on semantic boundaries; hardening decisions (M7); new vocabulary for the `agent` field (`role_boundary` events use their own field set, never `agent`).
+
+## Acceptance Criteria
+1. Allowlisted roles cannot Edit or Write (probe with a positive control that an unlisted role can); they can still Read and SendMessage.
+2. An edit outside `owns` produces exactly one advisory warning and one event per path class per session; an edit inside `owns` produces none.
+3. The event validates against the monitoring schema and does not touch the `vocabulary_drift` ratchet (test).
+4. Event write failure is swallowed (fault-injection test).
+5. Owner confirmed the literal diff for any `settings.json` or hook edit; scoped tests green; docs and `docs/REGISTRY.yaml` regenerated.
+
+## Related Tickets
+- `TCK-20261002-EPIC-SESSION-LAYER-COMMUNICATION-AND-AUTHORITY` (parent), M2b, M3a, M5b; feeds M6a and M7
+
+## Related Docs
+- `docs/plans/agent_infrastructure/session_layer_working_process.md` (binding; sections 9.0, 10, 11, 12.2)
+- `agent-working/stored_artifacts/TCK-20261003-SESSION-LAYER-M0-HARNESS-SPIKE/investigation.md` (M0n: exit 2 or JSON deny blocks; exit 1 and unparseable output fail open)
+
+## Related Stored Artifacts
+- `agent-working/stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/`
+
+## Related Code Areas
+- `registries/session_roles.yaml` (`tools`), `.claude/agents/session-*.md` (generated), `tools/sessions/`, monitoring recorder, tests.
+
+## Assumptions / Open Questions
+- Which seats are pure review is an owner decision (drafted: none today if all nine seats write drafts; then this ticket is only the events). Record the answer and proceed with the events regardless.
+
+## Implementation Notes
+Draft by `agent-working-design` (planner seat), 2026-10-04. Not yet activated; the implementer commits it.
+
+## Test Summary
+Not started.
+
+## Files Changed
+None yet.
+
+## Completion Summary
+Not started.

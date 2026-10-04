@@ -1,0 +1,32 @@
+---
+name: project_worktree_corpus_measurement_staleness
+description: "Measuring agent-monitoring shards from a worktree's working copy silently under-counts; read from a named ref and record the SHA"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: 5e91d3b6-4116-4322-9536-73ed39455e1e
+  modified: 2026-09-23T13:27:43.450Z
+---
+
+Any count taken from `agent-monitoring/data/YYYY-Www/tools.jsonl` must be read from a **named ref**
+(`git show origin/main:<path>`) and must record the SHA measured. Two independent staleness sources,
+both confirmed live on 2026-09-23:
+
+1. **A long-lived worktree drifts behind `origin/main`.** This session's worktree was 8 commits
+   behind (HEAD `b9f4b5d87` vs origin/main `75ab942b4`) while the handover still described it as
+   "sits at origin/main" — true when written, false later. Measuring the working copy under-counted
+   `search_docs` by ~2% and Bash calls by ~1,900.
+2. **A "closed" calendar week keeps growing on `main`.** Every PR stages `agent-monitoring/`, so a
+   session whose activity happened in W38 but whose PR merges weeks later still appends
+   W38-timestamped rows. A weekly total is a snapshot, never a final count.
+
+**Why:** before/after comparisons are the whole point of the token/delivery-cost measurement tools,
+and two measurements taken from different corpora look like a real effect. A 40-vs-58 discrepancy in
+W38 between this session and `agent-working-implementer` was initially misattributed to a matcher bug
+and to branch divergence; both were ruled out and the real cause was (1)+(2).
+
+**How to apply:** measurement tools under `tools/agent-monitoring/` (and the planned
+`tools/delivery/`) take a `--ref` and print the SHA they measured. Never `git checkout` to refresh a
+worktree for this — the live W39 shard is dirty from the PostToolUse hook and would be clobbered
+(see [[feedback_no_monitoring_commits_while_polling_ci]]); read blobs instead. Related:
+[[project_worktree_verification_traps]].

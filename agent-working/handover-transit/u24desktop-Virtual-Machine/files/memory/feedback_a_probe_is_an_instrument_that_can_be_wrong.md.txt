@@ -1,0 +1,54 @@
+---
+name: feedback_a_probe_is_an_instrument_that_can_be_wrong
+description: "require a positive control on any measurement, and when a measurement contradicts you, concede exactly what it disproves and no more"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 734bdb4d-8d7d-46b9-bf76-89e45e8a2d75
+  modified: 2026-09-30T09:27:41.298Z
+---
+
+Runtime measurement is the right instrument for a reachability or absence claim — and a probe is
+itself an instrument that can be wrong. Give every probe a **positive control**, and scrutinise a
+contradicting measurement as hard as the claim it contradicts.
+
+**Both failure directions happened on 2026-09-30, hours apart.**
+
+*False positive.* A peer's probe reported "30 `POPULATION_BIRTH`/`POPULATION_DEATH` events in 6 of
+21 worlds", apparently disproving my ticket. Its filter matched any category *containing*
+`POPULATION`, so all 30 were `POPULATION_MIGRATION`. Re-run with exact names: **0 and 0**.
+
+*False negative risk.* My own probe monkeypatched `get_effective_stats` and counted 0 calls over
+600 ticks. A zero from a monkeypatch is meaningless if the patch never took effect, so the probe
+asserted a positive control first — call through the *consumer's own resolved name*
+(`apply_mod.SkillScalingService is rpg_depth.SkillScalingService`, then invoke it) and require the
+counter to increment by exactly 1 before the run. It did, which is the only reason the 0 was
+reportable.
+
+**What caught the false positive was an invariant, not suspicion.** `process_demographics` computes
+`net = int(births - deaths)` with `birth_rate 0.02 > mortality_rate 0.01`, so `net >= 0` always and
+the rates are never overridden anywhere in `src/`. A reported *decrease* was therefore impossible
+from that service. Checking one arithmetic invariant against the reported data located the filter
+bug.
+
+**The second mistake, which cost a commit to undo:** I conceded the *entire* premise, then appended
+the invariant objection. The right order is the reverse — lead with what cannot be true, and
+concede only the part actually contradicted. My ticket had two claims ("never emits an event" and
+"counts frozen"); only the second was false, and I withdrew both, then had to restore the first
+(`da5172170` → `e60b6af71`).
+
+**How to apply:**
+- Before reporting a count, especially a zero: add a positive control that proves the instrument
+  fires. Say in the write-up that it passed.
+- Prefer exact matching over substring/prefix matching in any event or category filter, and state
+  which you used.
+- Use the *production* entry point — see [[project_worktree_verification_traps]]; loading a world
+  via a non-production loader measures a different world.
+- When a measurement contradicts you, check it against an invariant of the code before conceding.
+  Then concede precisely the contradicted claim and restate what survives.
+- State the bounds every time: how many worlds, which seed, how many ticks. A 3-world zero is
+  strong; a 1-world zero is the overgeneralisation that got a whole pattern document retired the
+  same day.
+
+Related: [[feedback_check_ancestry_before_citing_pr_lines]],
+[[feedback_check_recorded_decision_before_filing_defect]].

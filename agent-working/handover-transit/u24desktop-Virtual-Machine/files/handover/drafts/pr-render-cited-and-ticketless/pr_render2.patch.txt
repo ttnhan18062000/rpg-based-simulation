@@ -1,0 +1,254 @@
+diff --git a/docs/guides/delivery_process.md b/docs/guides/delivery_process.md
+index 4d00db9c1..6d50cfba1 100644
+--- a/docs/guides/delivery_process.md
++++ b/docs/guides/delivery_process.md
+@@ -232,6 +232,11 @@ The renderer leaves out of `Closes:` (with a warning) any ticket whose file is s
+ `tickets/inprogress/`, since a PR that only *files* a follow-up names it in a commit subject without closing it;
+ move it to `tickets/done/` if the PR really does close it.
+ 
++It likewise leaves out a ticket that a commit subject only *cites* (its file is not changed by the branch), such as a
++follow-up commit to an already-closed ticket. A branch that closes no ticket at all (docs-only or record-only) renders
++with `--theme`, `--scope` (a registered layer) and `--why`: the title ends `(no tickets)`, the body lists the changed
++directories, and the last line is `Closes: (none)`. Pass the same three flags to `--check`.
++
+ `## Known gaps` is load-bearing and deliberate: the repo's Gate Integrity rule says a blocking gate
+ result is information to report, never an obstacle to route around. Giving it a fixed slot in every
+ PR body makes reporting it the default rather than an act of virtue.
+diff --git a/tests/tools/test_delivery_pr_render.py b/tests/tools/test_delivery_pr_render.py
+index 162b2e45d..453d4e15d 100644
+--- a/tests/tools/test_delivery_pr_render.py
++++ b/tests/tools/test_delivery_pr_render.py
+@@ -636,7 +636,7 @@ def test_known_gap_two_tickets_render_as_separate_tagged_entries_not_run_on(tmp_
+ # TCK-20260927-PR-RENDER-NO-RECORDED-TICKET-EXCLUSION
+ # ---------------------------------------------------------------------------
+ 
+-def _three_ticket_fixture(tmp_path, subdir="tickets"):
++def _three_ticket_fixture(tmp_path, subdir="tickets", b_changed=False):
+     """Three discovered tickets, one of which (B) is the 'phantom' shape from the real PR #251
+     finding: named in a commit subject but never changed on the branch (its file still exists,
+     e.g. already merged in a prior PR)."""
+@@ -651,7 +651,11 @@ def _three_ticket_fixture(tmp_path, subdir="tickets"):
+         ]),
+         # B's file exists (found by find_ticket_file) but was never actually changed on this
+         # branch -- the real PR #251 shape.
+-        _git_diff_rule(["tickets/TCK-20260924-A.md", "tickets/TCK-20260924-C.md"]),
++        _git_diff_rule(
++            ["tickets/TCK-20260924-A.md"]
++            + (["tickets/TCK-20260924-B.md"] if b_changed else [])
++            + ["tickets/TCK-20260924-C.md"]
++        ),
+     ])
+     return tickets_root, runner
+ 
+@@ -679,8 +683,9 @@ def test_ac1_excluded_ticket_omitted_from_title_and_all_five_sections(tmp_path):
+ def test_ac1_isolated_diff_shape_matches_the_bug_that_found_this(tmp_path):
+     """Same isolated-diff method that found the original bug: compare a fully-excluded render
+     against the untouched full render and confirm exactly the expected sections differ (because
+-    the ticket count genuinely changed), not more and not fewer."""
+-    tickets_root, runner = _three_ticket_fixture(tmp_path)
++    the ticket count genuinely changed), not more and not fewer. B is a changed ticket here: an
++    unchanged (cited-only) one is now left out automatically, see the cited-only tests below."""
++    tickets_root, runner = _three_ticket_fixture(tmp_path, b_changed=True)
+     full = pr_render.render(tickets_root=tickets_root, run_command=runner)
+     excluded = pr_render.render(
+         tickets_root=tickets_root, run_command=runner,
+@@ -744,7 +749,7 @@ def test_ac3_check_with_no_operator_flags_reproduces_recorded_exclusion_from_liv
+ 
+ 
+ def test_ac4_excluding_a_ticket_not_in_the_discovered_set_is_reported(tmp_path):
+-    tickets_root, runner = _three_ticket_fixture(tmp_path)
++    tickets_root, runner = _three_ticket_fixture(tmp_path, b_changed=True)
+     result = pr_render.render(
+         tickets_root=tickets_root, run_command=runner,
+         exclusions={"TCK-99999999-NOT-DISCOVERED": "typo'd id"},
+@@ -899,3 +904,71 @@ def test_a_ticket_directly_under_the_root_stays_listed(tmp_path):
+     runner = FakeRunner([_git_log_rule(["TCK-20260924-FLAT: x"]), _git_diff_rule(["tickets/TCK-20260924-FLAT.md"])])
+     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
+     assert "TCK-20260924-FLAT" in result["body"] and result["warnings"] == []
++
++
++# ---------------------------------------------------------------------------
++# A ticket only CITED by a commit subject, and a branch that closes no ticket
++# ---------------------------------------------------------------------------
++
++def test_a_ticket_cited_but_not_changed_is_left_out_of_closes_automatically(tmp_path):
++    tickets_root, runner = _three_ticket_fixture(tmp_path)  # B is cited-only (the PR #251 shape)
++    result = pr_render.render(tickets_root=tickets_root, run_command=runner)
++    assert "(2 tickets)" in result["title"]
++    assert "TCK-20260924-B" not in result["body"].split("Closes:")[-1]
++    assert any("TCK-20260924-B" in w and "cited, not closed" in w for w in result["warnings"])
++
++
++def _docs_only_runner(subjects):
++    return FakeRunner([
++        _git_log_rule(subjects),
++        _git_diff_rule(["docs/world_rules/foundations/state-ownership.md", "stored_artifacts/X/evidence.jsonl"]),
++    ])
++
++
++def test_a_docs_only_branch_citing_a_closed_ticket_renders_a_ticketless_body(tmp_path):
++    tickets_root = tmp_path / "tickets"
++    (tickets_root / "done").mkdir(parents=True)
++    _write_ticket(tickets_root / "done", "TCK-20260924-A", "ai", "Already closed upstream")
++    result = pr_render.render(
++        tickets_root=tickets_root, run_command=_docs_only_runner(["TCK-20260924-A: follow-up evidence"]),
++        theme="Record the derived-stat ownership evidence", scope="ai", why="Evidence for a closed ticket.",
++    )
++    assert result["title"] == "ai: Record the derived-stat ownership evidence (no tickets)"
++    body = result["body"]
++    assert body.rstrip().endswith("Closes: (none)")
++    assert "TCK-20260924-A" not in body.split("Closes:")[-1]
++    assert "- docs/world_rules/foundations/ (1 file)" in body and "- stored_artifacts/X/ (1 file)" in body
++    assert "Evidence for a closed ticket." in body
++
++
++def test_a_ticketless_branch_without_theme_scope_and_why_says_what_to_pass(tmp_path):
++    tickets_root = tmp_path / "tickets"
++    tickets_root.mkdir()
++    result = pr_render.render(tickets_root=tickets_root, run_command=_docs_only_runner([]))
++    assert result["title"] is None and result["body"] is None
++    assert any("--theme" in w and "--scope" in w and "--why" in w for w in result["warnings"])
++
++
++def test_a_ticketless_branch_with_an_unregistered_scope_is_reported_not_defaulted(tmp_path):
++    tickets_root = tmp_path / "tickets"
++    tickets_root.mkdir()
++    result = pr_render.render(
++        tickets_root=tickets_root, run_command=_docs_only_runner([]),
++        theme="t", scope="not-a-layer", why="w",
++    )
++    assert result["title"] == "not-a-layer: t (no tickets)"
++    assert any("not-a-layer" in w and "not in" in w for w in result["warnings"])
++
++
++def test_check_matches_a_ticketless_body_when_given_the_same_flags(tmp_path):
++    tickets_root = tmp_path / "tickets"
++    tickets_root.mkdir()
++    kw = dict(theme="Record evidence", scope="ai", why="Because.")
++    rendered = pr_render.render(tickets_root=tickets_root, run_command=_docs_only_runner([]), **kw)
++    runner = FakeRunner([
++        (lambda cmd: cmd[:2] == ["gh", "pr"],
++         CommandResult(0, json.dumps({"title": rendered["title"], "body": rendered["body"]}), "")),
++        _git_log_rule([]),
++        _git_diff_rule(["docs/world_rules/foundations/state-ownership.md", "stored_artifacts/X/evidence.jsonl"]),
++    ])
++    assert pr_render.check_against_live(run_command=runner, tickets_root=tickets_root, **kw)["matches"] is True
+diff --git a/tools/delivery/pr_render.py b/tools/delivery/pr_render.py
+index c524cbb99..28b1a77e9 100644
+--- a/tools/delivery/pr_render.py
++++ b/tools/delivery/pr_render.py
+@@ -109,6 +109,13 @@ def discover_changed_ticket_ids(run_command=default_run_command, base_ref: str =
+     return _dedup_preserve_order(ids)
+ 
+ 
++def discover_changed_files(run_command=default_run_command, base_ref: str = "origin/main") -> list:
++    result = run_command(["git", "diff", "--name-only", f"{base_ref}..HEAD"])
++    if result.returncode != 0:
++        return []
++    return sorted({line.strip() for line in result.stdout.splitlines() if line.strip()})
++
++
+ def find_ticket_file(ticket_id: str, tickets_root: Path = _DEFAULT_TICKETS_ROOT) -> Optional[Path]:
+     matches = sorted(tickets_root.rglob(f"{ticket_id}.md"))
+     return matches[0] if matches else None
+@@ -233,6 +240,14 @@ def discover_tickets(
+         if path is None:
+             warnings.append(f"{ticket_id}: no ticket file found under {tickets_root}/")
+             continue
++        if ticket_id not in changed_set:
++            # a follow-up commit to an already-closed ticket names it (the repo's own commit
++            # convention) without touching its file; a PR that closes a ticket always changes it
++            warnings.append(
++                f"{ticket_id}: named in a commit subject but its ticket file is not changed by this "
++                f"branch -- cited, not closed; left out of Closes:"
++            )
++            continue
+         open_dir = _not_closed_dir(path, tickets_root)
+         if open_dir:
+             # a PR that files a follow-up names it in a commit subject too; its location says it is not closed
+@@ -397,10 +412,29 @@ def render(
+     layer_registry_path: Path = _DEFAULT_LAYER_REGISTRY,
+     run_command=default_run_command,
+     exclusions: Optional[Dict[str, str]] = None,
++    scope: Optional[str] = None,
++    why: Optional[str] = None,
+ ) -> dict:
+     tickets, warnings = discover_tickets(run_command, tickets_root, base_ref, exclusions=exclusions)
+     if not tickets:
+-        return {"title": None, "body": None, "warnings": warnings + ["no tickets discovered"]}
++        warnings = warnings + ["no tickets discovered"]
++        if not (theme and scope and why):
++            warnings.append(
++                "a branch that closes no ticket can still be rendered: pass --theme, --scope (a "
++                "registered layer) and --why"
++            )
++            return {"title": None, "body": None, "warnings": warnings}
++        registry = _load_layer_registry(layer_registry_path)
++        if registry and scope not in registry:
++            warnings.append(f"scope {scope!r} is not in {layer_registry_path} — reported, not defaulted")
++        spec = json.loads(Path(spec_path).read_text(encoding="utf-8"))
++        files = discover_changed_files(run_command, base_ref)
++        return {
++            "title": f"{scope}: {_collapse_whitespace(theme)} (no tickets)",
++            "body": render_ticketless_body(_collapse_whitespace(theme), why.strip(), files, spec, warnings),
++            "warnings": warnings,
++            "hints": [],
++        }
+ 
+     scope, tie_warning, unregistered_warning = choose_scope(tickets, layer_registry_path)
+     for w in (tie_warning, unregistered_warning):
+@@ -419,6 +453,33 @@ def render(
+     return {"title": title, "body": body, "warnings": warnings, "hints": hints}
+ 
+ 
++def render_ticketless_body(theme: str, why: str, files: list, spec: dict, warnings: list) -> str:
++    """Body for a branch that closes no ticket (docs-only or record-only). Nothing here is invented:
++    the theme and the why come from the caller, the file summary from the diff, and `Closes:` is
++    explicitly empty."""
++    by_dir: Dict[str, int] = {}
++    for f in files:
++        parent = "/".join(f.split("/")[:-1]) or "."
++        by_dir[parent] = by_dir.get(parent, 0) + 1
++    summary = "\n".join(f"- {d}/ ({n} file{'s' if n != 1 else ''})" for d, n in sorted(by_dir.items()))
++    sections = {
++        "## What landed": f"{theme}\n\nChanged files ({len(files)}):\n{summary}" if files else theme,
++        "## Tickets": "(none: this PR closes no ticket)",
++        "## Why": why,
++        "## Verification": "- Tests: (none recorded: no ticket on this branch)\n- Known gaps: none stated"
++        + (f"\n- Discovery warnings: {'; '.join(warnings)}" if warnings else ""),
++        "## Review notes": _REVIEW_NOTES_PLACEHOLDER,
++    }
++    parts = []
++    for section in spec["sections"]:
++        heading = section["heading"]
++        if heading == "Closes:":
++            continue
++        parts += [heading, sections[heading], ""]
++    parts.append("Closes: (none)")
++    return "\n".join(parts).strip() + "\n"
++
++
+ _CLOSES_RE = re.compile(r"^Closes:\s*(.*)$", re.MULTILINE)
+ _ANY_H2_RE = re.compile(r"^##\s.+$", re.MULTILINE)
+ 
+@@ -551,6 +612,8 @@ def main(argv=None) -> int:
+     )
+     parser.add_argument("--pr", default=None, help="PR number, used only by --check")
+     parser.add_argument("--theme", default=None)
++    parser.add_argument("--scope", default=None, help="Layer for a branch that closes no ticket (with --theme and --why).")
++    parser.add_argument("--why", default=None, help="Why text for a branch that closes no ticket.")
+     parser.add_argument("--base-ref", default="origin/main")
+     parser.add_argument("--check", action="store_true")
+     parser.add_argument("--json", action="store_true")
+@@ -577,9 +640,9 @@ def main(argv=None) -> int:
+ 
+     try:
+         if args.check:
+-            result = check_against_live(pr=args.pr, theme=args.theme, base_ref=args.base_ref)
++            result = check_against_live(pr=args.pr, theme=args.theme, base_ref=args.base_ref, scope=args.scope, why=args.why)
+         else:
+-            result = render(theme=args.theme, base_ref=args.base_ref, exclusions=exclusions)
++            result = render(theme=args.theme, base_ref=args.base_ref, exclusions=exclusions, scope=args.scope, why=args.why)
+     except Exception as exc:  # noqa: BLE001 - the one deliberate non-zero-exit path
+         print(f"INTERNAL ERROR: {exc}", file=sys.stderr)
+         return 1

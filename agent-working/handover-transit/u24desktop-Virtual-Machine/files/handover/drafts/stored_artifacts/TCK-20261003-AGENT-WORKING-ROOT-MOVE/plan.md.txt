@@ -1,0 +1,47 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20261003-AGENT-WORKING-ROOT-MOVE
+artifact_type: plan
+tags: [ai, process-improvement, governance]
+---
+
+# Plan (retroactive)
+
+**Written after the fact**, from the ticket's Scope and Implementation Notes and the four stage commits actually made in PR
+#289 (squash-merged 243e798ad). It records the plan as executed, not a prior document.
+
+## Target layout (prefix-only)
+
+Every moved path is the old path with `agent-working/` in front: `tickets/`, `stored_artifacts/`, `staging_artifacts/`,
+`agent-monitoring/` (the data folder), `agent-orchestration/`, `pilot_requests/`, `reviews/`. The three generated index
+folders go to `agent-working/.index/<name>/`. Not moved: `registries/`, `tools/`, `experiments/`, `docs/`, `src/`, `tests/`,
+`config/`, `data/`, `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agents/`.
+
+## Order of work (one PR, four commits, rename commit kept pure)
+
+1. **Stage 1, `33ee17bd1`:** one paths module (`tools/agent_working_paths.py`) naming the roots; migrate live consumers onto it
+   with nothing moved; add a guard test that fails on a hardcoded old root in live Python (seeded failure included).
+2. **Stage 2a, `7c10d1243`:** `git mv` only, every file R100.
+3. **Stage 2b, `888c0a686`:** flip the constants; rewrite live references with one rule (`<root>/` to `agent-working/<root>/`, indexes to
+   `.index/`), `.gitignore`, `.gitattributes` merge rules, CI, skills, agents, workflows, orchestration files; `CLAUDE.md`,
+   `AGENTS.md` and `settings.json` diffs each owner-confirmed; regenerate `AGENTS.md` and `docs/REGISTRY.yaml`.
+4. **Stage 3, `9175b8770`:** validators, index rebuilds, the pre-move path map and its resolver, the sweep checklist.
+
+## Rules held throughout
+
+- Closed history is frozen: `agent-working/tickets/done/**`, `agent-working/stored_artifacts/**`, `docs/archive/**`, working-log rows
+  and past monitoring shards keep citing old paths; a path map and `resolve_legacy_citation()` resolve them.
+- Open work is live and was rewritten (`tickets/todos`, `tickets/inprogress`, `docs/` outside the archive).
+- No folder renames inside `agent-working/`.
+- Traps handled by hand or by the guard: bare "reviews/" in prose, make-target names without a slash, the `agent-orchestration`
+  CI job and junit name, URLs, and Python that builds paths without writing the slash.
+- Owner confirmed each `CLAUDE.md`, `AGENTS.md` and `settings.json` diff before it landed; other sessions were told to stay out
+  of the tree during the move; PR title and body were rendered with `pr_render.py` (whose file list is capped per directory).
+
+## Plan changes while executing
+
+The owner moved Stage 1 into the same PR instead of its own; priority and effort were raised (P1, about 7,600 renames and
+about 3,200 rewritten references). AC 9's `implement-ticket` run was deferred, see the test plan.

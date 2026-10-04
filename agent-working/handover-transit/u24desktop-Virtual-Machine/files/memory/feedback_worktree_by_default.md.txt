@@ -1,0 +1,64 @@
+---
+name: feedback-worktree-by-default
+description: "Default to git worktree add <path> <new-branch-off-main> for any unit of work with commits, instead of committing into the shared working directory's currently-checked-out branch. Worktrees are kept per major domain (e.g. RPG, agent-working), not removed per task."
+metadata:
+  node_type: memory
+  type: feedback
+  originSessionId: 1320d448-7c21-407e-9223-ab3a065cba89
+  modified: 2026-09-07T02:39:31.413Z
+---
+
+Default to an isolated `git worktree` per unit of work (ticket, epic, doc batch) that will be committed —
+`git worktree add <path> <new-branch-from-main>` — instead of committing directly into whatever branch is
+currently checked out in the shared working directory. Supersedes
+[[feedback_commit_directly_no_worktree_for_planning]].
+
+**Why:** in one session, committing directly into the shared directory caused three real incidents from
+concurrent sessions repeatedly moving/resetting the shared branch: two sets of commits got orphaned
+(recoverable only because `git cat-file -e` still found them intact in the object store — an uncommitted
+edit would have had no such recovery path), and once a plain `git commit` with no pathspec accidentally
+bundled a concurrent session's already-staged, unrelated file rename into an unrelated commit. The user's
+own proposed fix ("work without committing, then cherry-pick to a new branch") doesn't actually work —
+cherry-pick needs commits to exist — and uncommitted changes are strictly more fragile in a shared
+directory than committed ones, not less. A worktree is a genuinely separate working directory + index +
+HEAD; nothing a concurrent session does to the shared directory's checkout can touch it, because git
+mechanically cannot collide two separate worktrees. The user's explicit instruction: "switch to worktree by
+default."
+
+**How to apply:**
+- For any task that will produce commits (tickets, plan docs, code), create a worktree on a fresh branch
+  off `main` at the start: `git worktree add <path> -b <new-branch> main` (or checkout an existing branch
+  with `git worktree add <path> <existing-branch>` if resuming one). Do the edits, `git add`/`git commit`,
+  and `git push` there — never in the shared directory.
+- Read-only investigation (grep, `graphify query`, reading existing files, `search_docs`) does not need a
+  worktree — it doesn't mutate state, so it's safe from the shared directory as always.
+- Each Bash call resets cwd to the base directory, so every command touching the worktree needs an explicit
+  `cd <worktree-path> &&` prefix in the same call — don't rely on a prior `cd` persisting.
+- Before every commit inside the worktree, still run `git diff --cached --stat` to verify exactly what's
+  staged — the worktree isolates you from *other sessions'* files, not from your own `git commit`
+  without a pathspec picking up more than intended within your own worktree's index.
+- **Correction (2026-09-06): do not remove the worktree per task.** Worktrees are granted per major
+  domain (e.g. "RPG" / simulation-mechanics work, "agent working" / agent-infra-and-monitoring work),
+  not per branch or per ticket — a domain's worktree stays alive and gets reused across many
+  successive units of work over the life of a session (and across sessions). When starting a new
+  unit of work in an already-open domain worktree, switch branches inside it (`git fetch origin main
+  && git checkout -b <new-branch> origin/main`, CLAUDE.md's own "accepted fallback" pattern) rather
+  than creating a brand-new worktree — the fresh-branch-off-main step still isolates the new unit of
+  work at the branch/commit level, it just doesn't get a new directory each time. Only spin up a
+  genuinely new worktree when starting work in a new domain, or when the current domain worktree's
+  working tree has become unusably dirty with unrelated in-flight content (e.g. another concurrent
+  session's leftovers) and a clean one is worth the reset.
+- This changes PR granularity too: each worktree's branch gets pushed and PR'd on its own, rather than
+  accumulating onto one long-lived shared branch for later batch-PR consolidation. Push/PR creation still
+  requires the user's explicit go-ahead each time — the worktree only changes where local commits sit while
+  waiting for that go-ahead, not the standing "don't push without asking" rule.
+- The shared directory's own currently-checked-out branch is no longer something to protect or route
+  around at all with this pattern — it's simply not touched, so the whole "don't checkout, don't disturb it"
+  caution becomes moot for any work that goes through a worktree instead.
+- **Addition (2026-09-29): the paired design + implementer sessions of one domain share ONE
+  worktree.** The user approved agent-working-design and agent-working-implementer sharing
+  `.claude/worktrees/doc-tag-enforcement` (to be renamed `agent-working`). Only the implementer runs
+  git there. Design writes draft files (tickets, handover notes) directly into the tree, so hand-offs
+  don't depend on a private /tmp scratchpad the peer may not be able to read. A session is
+  harness-locked to the worktree it started in, so moving means restarting `claude` from the target
+  directory. See [[feedback_implementer_owns_all_commits]].

@@ -9,6 +9,9 @@ the confirmed `.claude/current_run` sidecar contamination), so one note per role
 directory. See `docs/guides/agent_session_reset_boundaries.md` for the handover note format and
 the reset-boundary map this hook exists to make reachable at the one moment it matters.
 
+On `startup`, `resume` and `clear` it also adds one line when `agent-working/handover-transit/`
+holds a bundle from another machine this host has not imported (tools/handover_transit.py).
+
 Read-only, fails open: prints nothing and exits 0 on any error, an unrecognized `source`, a
 missing directory, or an empty directory. Never treats "hook input didn't parse" as reportable.
 """
@@ -17,6 +20,7 @@ import sys
 from pathlib import Path
 
 HANDOVER_DIR = Path(".claude/handover")
+TRANSIT_SOURCES = ("startup", "resume", "clear")
 
 
 def _first_line_title(path: Path) -> str:
@@ -48,16 +52,36 @@ def build_additional_context(handover_dir: Path) -> str:
     return "\n".join(lines)
 
 
+def build_transit_notice(transit_root: Path, local_host: str | None = None) -> str:
+    """One line naming each transit bundle this host has not imported; "" when none or on error.
+    TCK-20261004-HANDOVER-CROSS-MACHINE-TRANSIT."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        from handover_transit import pending_bundles
+        pending = pending_bundles(transit_root, local_host)
+    except Exception:
+        return ""
+    if not pending:
+        return ""
+    cmds = "; ".join(f"python3 tools/handover_transit.py import {h}" for h in pending)
+    return f"handover-transit: pending bundle(s) from another machine: {', '.join(pending)} — run: {cmds}"
+
+
 def main() -> int:
     try:
         payload = json.load(sys.stdin)
     except Exception:
         return 0
 
-    if payload.get("source") != "clear":
+    source = payload.get("source")
+    if source not in TRANSIT_SOURCES:
         return 0
 
-    context = build_additional_context(HANDOVER_DIR)
+    parts = []
+    if source == "clear":
+        parts.append(build_additional_context(HANDOVER_DIR))
+    parts.append(build_transit_notice(Path("agent-working/handover-transit")))
+    context = "\n".join(p for p in parts if p)
     if not context:
         return 0
 

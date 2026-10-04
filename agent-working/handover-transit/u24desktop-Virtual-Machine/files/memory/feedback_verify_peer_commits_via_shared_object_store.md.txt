@@ -1,0 +1,30 @@
+---
+name: feedback_verify_peer_commits_via_shared_object_store
+description: "A peer session's unpushed commit is already readable from your worktree — all worktrees share one object store, so verify its claims with git show/ls-tree instead of waiting for a push"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: de6512a7-ccc0-47bd-8f72-10908b45e312
+  modified: 2026-09-27T22:30:00.763Z
+---
+
+All worktrees of this repo share a single git object store, so **a commit another session made in
+its own worktree is readable from yours the moment it exists — no push, no fetch, no network.**
+Given a peer's reported SHA: `git cat-file -t <sha>` confirms it exists, then
+`git show <sha>:<path>` and `git ls-tree -r --name-only <sha> -- <path>` read its contents and
+verify which files it does and does not contain.
+
+**Why:** waiting for a push to verify a peer's "it's done locally" report costs a full round-trip,
+and the push may itself be gated on a user approval the peer has to ask for separately. Confirmed
+2026-09-27: `world-rule-catalog-design` reported three fixes in unpushed commit `f2596db2a` while
+correctly holding for direct push approval per
+[[feedback_push_authorization_not_peer_transferable]]. All three were verified from this worktree
+immediately, including one claim that resolved *differently* than asked (six briefs withdrawn and
+replaced, not pushed) — which a push-then-read cycle would have surfaced no sooner.
+
+**How to apply:** when a peer reports a local commit, verify it from the shared store before
+asking for or waiting on a push, and say the verification was independent. Still re-verify the
+remote ref (`git ls-remote origin <branch>`) once a push is claimed — the object store proves the
+commit exists, never that it reached the remote; those are separate claims. Pair this with
+[[feedback_attribute_relayed_findings_to_source]]: verifying locally is what lets you report a
+peer's claim as confirmed rather than relayed.

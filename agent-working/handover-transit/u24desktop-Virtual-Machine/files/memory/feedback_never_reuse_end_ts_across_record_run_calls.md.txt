@@ -1,0 +1,36 @@
+---
+name: feedback_never_reuse_end_ts_across_record_run_calls
+description: "A second record_run.py call for the same run_id that reuses a literal end_ts (instead of capturing a fresh timestamp) creates an \"identical_outcome\" duplicate that trips the duplicate_run_record_check.py ratchet — capture end_ts fresh every time."
+metadata: 
+  node_type: memory
+  type: feedback
+  status: active
+  originSessionId: b45ddb62-e7b1-4c35-8f61-f84f98389312
+  modified: 2026-09-29T15:17:25.129Z
+---
+
+When hand-orchestrating `implement-ticket.js` and issuing a corrective/second `record_run.py` call
+for a run_id that already has a run record (e.g. fixing `agent_count` after backfilling missed
+events), always run `date -u +%Y-%m-%dT%H:%M:%SZ` fresh for that call's `end_ts` — never reuse the
+literal `end_ts` string from the prior call.
+
+**Why:** `tools/agent-monitoring/run_dedup.py::classify_duplicate_groups()` groups records by
+`(run_id, execution_id, start_ts)` and classifies a group as `identical_outcome` (the narrow,
+genuinely-ambiguous bucket) when every record in the group shares the same `final_status` AND the
+same `end_ts` — nothing distinguishes them. A corrective second write that keeps `final_status`
+the same (e.g. `DONE` → `DONE`, just fixing `agent_count`) and copies the prior call's `end_ts`
+verbatim produces exactly that shape: two indistinguishable rows for one real event. This trips
+`tools/gate_checks/duplicate_run_record_check.py`'s live ratchet (`IDENTICAL_OUTCOME_CEILING`),
+which the project explicitly forbids raising to paper over a newly-introduced accidental duplicate
+— see [[project_never_raise_duplicate_run_ratchet]]. I made this exact mistake twice in one
+session (2026-09-29, on `TCK-20260929-RUN-DEDUP-BASELINE-PINS-GROWING-CORPUS` and again on
+`TCK-20260928-COMBAT-DEATH-TRACE-SITUATED-ENCOUNTERABILITY`) — the first time the ticket owner
+caught and corrected it; the second time I caught it myself before committing.
+
+**How to apply:** Before any `record_run.py --data '{...}'` call, capture `end_ts` with its own
+fresh `date -u +%Y-%m-%dT%H:%M:%SZ` invocation, even for a "just fixing one field" correction call.
+If a duplicate does slip through and is still uncommitted/unpushed, the fix is to delete the stale
+line from the per-batch shard (`agent-monitoring/data/<week>/<batch-id>.runs.jsonl`) by hand,
+keeping the corrected row — this is not a history rewrite (it corrects a data-entry error for one
+real event, not two distinct events), but only when nothing has been committed or published yet.
+Never touch a run_id's row once it's been pushed/merged.

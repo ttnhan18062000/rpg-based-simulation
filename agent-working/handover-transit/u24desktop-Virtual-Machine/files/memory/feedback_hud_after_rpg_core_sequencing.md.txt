@@ -1,0 +1,30 @@
+---
+name: feedback-hud-after-rpg-core-sequencing
+description: "HUD/frontend epics should be sequenced after core RPG (backend mechanics) work completes, not run concurrently just because file overlap is low"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 4557b07f-4dbe-4868-adcd-33bfa34ff473
+  modified: 2026-08-26T03:37:25.573Z
+---
+
+User corrected an epic pick: even though the HUD Design System Foundation epic
+(`tickets/todos/hud-design-system-foundation/`) has zero file overlap with the
+concurrent RPG-core session (`m1-quick-wins` worktree/branch, working through
+backend progression/entity/cognition mechanics tickets), the user wants HUD
+work sequenced *after* core RPG work is done, not picked up in parallel just
+because it avoids merge conflicts.
+
+**Why:** not stated explicitly, but implied — HUD content wiring likely depends
+on the underlying mechanics being stable/complete first (the HUD epics
+themselves are gated on each other for the same "validate before building on
+top" reason), and/or the user wants RPG-core prioritized as the critical path.
+
+**How to apply:** when picking a next epic to implement in a fresh worktree,
+"low file conflict with the active session" is necessary but not sufficient —
+also check whether the epic is *thematically* front-end/presentation-layer
+work that depends on backend mechanics catching up first. Prefer picking
+another backend/tooling epic with low overlap (e.g. `world-grammar-semantic-constraints`,
+`semantic-entity-index`) over HUD/live-map frontend epics until the RPG-core
+batch (`tickets/todos/m1-quick-wins/`) is substantially further along or done.
+See [[project_m1_quick_wins_rpg_core_status]] for the batch's progress snapshot.

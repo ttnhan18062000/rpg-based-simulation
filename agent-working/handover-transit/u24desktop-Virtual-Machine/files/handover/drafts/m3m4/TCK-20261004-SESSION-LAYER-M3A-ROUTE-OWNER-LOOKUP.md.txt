@@ -1,0 +1,77 @@
+---
+status: active
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20261004-SESSION-LAYER-M3A-ROUTE-OWNER-LOOKUP
+phase: open
+date: 2026-10-04
+tags: [ai, process-improvement, governance]
+---
+
+# TCK-20261004-SESSION-LAYER-M3A-ROUTE-OWNER-LOOKUP
+
+## Title
+Session-layer M3a: `route.py` owner lookup by path and by route key
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P2
+
+## Request Summary
+Add `tools/sessions/route.py <path>` and `--route-key <key>`: answer "who owns this" from the manifest, with no free-text topic lookup (plan 9.1).
+
+Child of `TCK-20261002-EPIC-SESSION-LAYER-COMMUNICATION-AND-AUTHORITY`. Hold rule met: M1 merged.
+
+## Scope
+- `tools/sessions/route.py`: importable `route(path) -> RouteResult` plus CLI. Resolution: the domains' `owns` globs, the longest matching glob wins; `owns_not` and `routes` carry the content-versus-tooling splits; a path matched by an `ownership_splits` entry returns both domains and the split reason; a path nothing owns returns `unowned` (never a guess).
+- Result names the **seat** to contact (the domain planner for dispatch, the named semantic owner for a question, per plan 9.0) and states that liveness is a model-side `ListAgents` call, not computed here.
+- `--route-key <key>`: a named entry for a recurring subject paths cannot express. The manifest has no such section yet; add a `route_keys:` map to `registries/session_roles.yaml` (empty or with at most the entries evidence supports) and extend loader and validator (unknown role target is an error). The key set is closed: an unknown key is an error, not a fuzzy match.
+- Reads only through the typed loader; read-only.
+
+## Out of Scope
+- Free-text or semantic topic routing, liveness checks, message-class rules (M3b), any hook or `settings.json` change.
+
+## Acceptance Criteria
+1. Test cases from the manifest: `registries/mechanisms.yaml` routes content to the rpg planner and `tools/mechanism_registry/**` to agent-working; `tests/architecture/**` returns the split between rpg and testing; `tools/sessions/**` returns agent-working; `src/**` from the agent-working side routes to `rpg-planner`; an unowned path returns `unowned`.
+2. Longest-match wins over a shorter overlapping glob (fixture).
+3. `--route-key` resolves a defined key, errors on an unknown key and on a key whose target role does not exist (validator reports it).
+4. Output names a seat and never a session or a liveness claim; a test proves route.py imports nothing that lists sessions.
+5. Read-only: a test proves it writes no file. Loader types only; scoped tests green; docs and `docs/REGISTRY.yaml` regenerated.
+
+## Related Tickets
+- `TCK-20261002-EPIC-SESSION-LAYER-COMMUNICATION-AND-AUTHORITY` (parent), M1a (done; loader and validator)
+- M3b (shares the card and templates, not the code)
+
+## Related Docs
+- `docs/plans/agent_infrastructure/session_layer_working_process.md` (binding)
+- `docs/guidelines/session_roles/functions/*.md`
+
+## Related Stored Artifacts
+- `agent-working/stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/`
+
+## Related Code Areas
+- `tools/sessions/route.py` (new; reuses `roster.py`), `registries/session_roles.yaml` (`route_keys:`), `tools/sessions/validate.py`, `tests/tools/`.
+
+## Assumptions / Open Questions
+- Adding a `route_keys:` section changes the manifest schema; it is registry-backed and append-only in spirit, and M1a's loader and validator are extended in the same ticket. If the owner prefers path-only routing in v1, drop the `--route-key` flag and this section; nothing else changes.
+
+## Implementation Notes
+Draft by `agent-working-design` (planner seat), 2026-10-04. Not yet activated; the implementer commits it.
+
+## Test Summary
+Not started.
+
+## Files Changed
+None yet.
+
+## Completion Summary
+Not started.

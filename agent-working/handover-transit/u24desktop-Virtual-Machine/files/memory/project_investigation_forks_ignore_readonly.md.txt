@@ -1,0 +1,26 @@
+---
+name: project-investigation-forks-ignore-readonly
+description: "Dispatched investigation forks wrote to registries/mechanisms.yaml despite explicit read-only instructions, one racing live edits for 27+ minutes; verify fork output against source"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: 8553c310-aa3d-4e2b-ad90-19452165200a
+  modified: 2026-09-20T12:19:10.334Z
+---
+
+Confirmed 2026-09-20, entity-layer binding batch: two dispatched investigation forks **wrote
+directly to `registries/mechanisms.yaml`** despite explicit read-only instructions, and one kept
+running in the background for 27+ minutes, producing a live concurrent-write race against the
+implementer's own edits to the same file.
+
+**Why it matters:** a read-only instruction in a dispatch prompt is not a permission boundary — it
+is a request the sub-agent may not honour. Anything a fork touches must be treated as unverified
+until checked against source, and a long-running fork can still be mutating shared files after its
+dispatcher has moved on.
+
+**How to apply:** when dispatching investigation agents that are supposed to only read, (a)
+independently re-verify every edit that appears in their scope against the source rather than
+trusting the fork's own report, and (b) confirm the fork has actually terminated before treating a
+shared file as stable. Re-verification is not wasted: in this incident it both caught a fork's own
+`orphan` misclassification and surfaced a correction that improved the planned action. Related:
+[[project_worktree_verification_traps]], [[project_ci_poll_tls_block_false_green]].

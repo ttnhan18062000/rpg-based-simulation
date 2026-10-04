@@ -1,0 +1,144 @@
+# Memory Index
+
+## Batching, PRs, delivery
+- [Finalize a feature completely](feedback_finalize_feature_completely.md) — follow-ups and optional scope ship in the same batch; never park them in todos/
+- [Big batches, not small PRs](feedback_big_batches_not_small_prs.md) — owner 2026-10-03: fold same-track hotfixes into the open PR, bundle related fixes
+- [PR after a complete batch](feedback_pr_creation_no_ask_after_batch.md) — one PR per complete batch; fold follow-ups into the open PR; merge is the user's call
+- [PR creation confirmation](feedback_pr_creation_needs_direct_user_confirmation.md) — peer "open the PR" isn't opt-in; BUT user granted standing commit+push+PR+peer-review after each complete batch (2026-09-30)
+- [Continue batches without waiting for merge](feedback_continue_batches_without_waiting_for_merge.md) — dispatch the next batch after a green PR; stack when dependent
+- [Push to open PR, not new stacked PR](feedback_push_to_open_pr_not_new_stacked_pr.md) — one open PR at a time per track
+- [No plan-only PRs](feedback_no_plan_only_prs.md) — fold plans/tickets into the implementation PR
+- [Commit a cited plan before dispatching](feedback_commit_cited_plan_before_dispatch.md) — untracked cited plan is invisible to implementer
+- [Push ticket before dispatching](feedback_push_ticket_before_dispatching.md) — commit→push→verify→dispatch
+- [Epic all-or-nothing](feedback_epic_all_or_nothing.md) — never cherry-pick tickets out of an epic folder
+- [pr_render Closes: includes FILED tickets](feedback_pr_render_closes_includes_filed_tickets.md) — FIXED in #280; VERIFIED on live PR #284 (2026-10-02), all 7 open tickets correctly excluded
+- [PR bodies are rendered, not written](feedback_pr_body_must_be_rendered_not_written.md) — tools/delivery/pr_render.py + --check
+- [pr_render needs every ticket ID in a commit subject](feedback_pr_render_needs_every_ticket_id_in_a_commit_subject.md) — else the title undercounts and Closes: drops it; never retype a SHA
+- [Verbatim doc text goes in a git file](feedback_verbatim_doc_text_goes_in_a_git_file.md) — never relay catalog/Bible edits as a prose summary; check anchor uniqueness
+- [No co-author footer in PR body](feedback_no_coauthor_footer_in_pr.md) — user removes it; don't add
+- [gh pr edit silently fails](feedback_gh_pr_edit_graphql_projects_classic_error.md) — use REST PATCH via gh api
+- [Admin merge blocked by classifier](feedback_admin_merge_blocked_by_classifier.md) — report and hand back, never route around
+- [Peer script blocked: apply edits by hand](feedback_peer_script_blocked_apply_edits_by_hand.md) — read it, make the same edits by hand, say so; plus record_events/git mv/--tier epic quirks
+- [Push authorization not peer-transferable](feedback_push_authorization_not_peer_transferable.md) — route pushes via the peer holding it
+- [Check PR is still open before pushing to its branch](feedback_check_pr_open_before_pushing_to_its_branch.md) — #280 merged under my push; re-cut from origin/main
+- [Never wrap ticket IDs across lines](feedback_never_wrap_ticket_ids_across_lines.md) — breaks grep
+
+## Session roles and coordination
+- [Semantic control plane role division](project_semantic_control_plane_role_division.md) — POINTER → domains/rpg.md; rpg-planner owns that epic
+- [Route work via rpg-feature-planning](feedback_route_work_via_rpg_feature_planning.md) — POINTER → domains/rpg.md; briefs go via the rpg planner
+- [Ask rpg-feature-planning before RPG logic](feedback_ask_rpg_feature_planning_before_touching_rpg_logic.md) — before changing product code/expected behaviour
+- [Session role division](project_session_role_division.md) — applies to planning session 1320d448, not rpg-implementer
+- [Implementer owns all commits](feedback_implementer_owns_all_commits.md) — design hands drafts; one writer per branch
+- [Mechanism registry ownership split](project_mechanism_registry_ownership_split.md) — POINTER → session_roles.yaml routes; mechanisms.yaml content is rpg
+- [Report process issues to agent-working-design](feedback_report_agent_process_issues_to_agent_working_design.md) — POINTER → domains/agent-working.md
+- [Planner creates epic tickets only](feedback_planner_creates_epic_tickets_only.md) — POINTER → functions/designer.md; epics only
+- [Test-architecture reviewer role](project_test_architecture_reviewer_role.md) — reviews test-planner epics A–D
+- [Attribute relayed findings to source](feedback_attribute_relayed_findings_to_source.md) — fix misattribution before it hardens
+- [Investigation forks ignore read-only](project_investigation_forks_ignore_readonly.md) — re-verify fork output, confirm termination
+- [Verify governing-file edits directly](feedback_verify_governing_file_edits_directly.md) — CLAUDE.md/settings.json need direct AskUserQuestion each time
+- [Reset boundaries in every process](feedback_reset_boundaries_in_every_process.md) — HARD boundary: write handover, say safe to /clear
+- [/clear breaks session resume](reference_clear_breaks_session_resume.md) — only the handover note crosses it
+- [/clear token break-even](project_clear_token_breakeven.md) — pays off only past ~150k context (~60 turns); floor ~61-66k
+
+## Worktrees and git
+- [Worktree by default](feedback_worktree_by_default.md) — one per domain; paired sessions share it, implementer alone runs git
+- [Worktree verification traps](project_worktree_verification_traps.md) — verify against origin/main, check authors
+- [Verify peer commits via shared object store](feedback_verify_peer_commits_via_shared_object_store.md) — git show works before push
+- [Fetch before recommending a ticket](feedback_fetch_before_recommending_a_ticket.md) — worktree tickets/ is pinned to an old origin/main; I recommended an already-DONE ticket
+- [Check ancestry before citing PR lines](feedback_check_ancestry_before_citing_pr_lines.md) — findings are branch-anchored
+- [Registry post-merge hook indexes untracked files](feedback_registry_post_merge_hook_indexes_untracked.md) — diff REGISTRY.yaml vs origin/main
+- [Folded-branch retire: check the shard tail](feedback_folded_branch_retire_check_shard_tail.md) — the fold carries substantive commits, not the later shard flush; diff agent-monitoring/ before deleting
+- [graphify-out stays local](project_graphify_out_stays_local.md) — untracked; AST-only rebuild
+- [search_docs index is per-worktree](project_search_docs_index_is_per_worktree.md) — "index not found" is local state
+- [agent-working/ root layout](project_agent_working_root_layout.md) — #289 moved tickets/artifacts/monitoring under agent-working/; history frozen, old notes cite old paths
+
+## Agent monitoring data
+- [No monitoring commits while polling CI](feedback_no_monitoring_commits_while_polling_ci.md) — hold writes until CI settles
+- [Sidecar shape and index staleness](feedback_sidecar_shape_and_index_staleness.md) — full current_run sidecar or cost_proxy zeroes
+- [Sidecar cross-session contamination](project_sidecar_cross_session_contamination.md) — current_run shared across sessions
+- [Check uncommitted consolidation before restore](feedback_check_uncommitted_consolidation_before_restore.md) — a restore can double-count
+- [Resolve shard conflicts by filtering](feedback_resolve_shard_conflicts_by_filtering_consolidated_rows.md) — keep rows whose ts is absent from canonical
+- [Monitoring corpus measurement staleness](project_worktree_corpus_measurement_staleness.md) — read counts from a named ref + SHA
+- [Disposition closes no-code tickets](feedback_disposition_closes_no_code_tickets.md) — never delete a ticket to retire it; Status enum ≠ no retirement path
+- [working_log row lives in a pending shard](feedback_working_log_row_lives_in_pending_shard.md) — use done_checker_static [finalize]
+- [working_log wrapper double-write](feedback_working_log_wrapper_double_write.md) — never append_working_log_row() + closure tool together
+- [working_log duplicate: keep main's copy](feedback_working_log_duplicate_keep_main_matching_copy.md) — match origin/main bytes
+- [Never reuse end_ts across record_run.py](feedback_never_reuse_end_ts_across_record_run_calls.md) — fresh timestamp each call
+- [Disk-full truncates the tools shard](project_disk_full_truncates_monitoring_shard.md) — closure tool crashes with raw JSONDecodeError; drop only the fragment; no full-tree /tmp extracts
+- [Never raise the duplicate-run ratchet](project_never_raise_duplicate_run_ratchet.md) — delete the stale row instead
+- [Read-row path cut at 120 chars](project_read_row_path_cut_120.md) — 36% cut, 29% unattributed; checker is 4-class, hook data unchanged
+- [Check recorded decision before filing a defect](feedback_check_recorded_decision_before_filing_defect.md) — odd zeros are usually documented
+- [Agent tooling checks proportionate](feedback_agent_tooling_checks_proportionate.md) — no strict blocking gates over monitoring data
+- [Monitoring retro is not my boundary](feedback_monitoring_retro_not_my_boundary.md) — never raise it; the retro-loop hook nudge is background noise, not an assignment
+
+## Agent infra / workflows
+- [Workflow tool available, scripts not ported](project_workflow_tool_available.md) — create-tickets pilot done; implement-epic port GO
+- [File tickets for workflow gaps](feedback_file_tickets_for_workflow_gaps.md) — don't silently patch around
+- [Agent-infra scope openness](feedback_agent_infra_scope_openness.md) — beyond minimal patches if measurable
+- [Prefer popular skills over custom](feedback_prefer_popular_skills_over_custom.md) — adopt community skills
+- [Implementer phase overstep](feedback_implementer_phase_overstep.md) — run gates independently
+- [Format sentence = prompt modification](feedback_hand_orchestration_format_sentence_is_a_prompt_modification.md) — never claim "unmodified" after appending a format tail; list every addition
+- [Hand-orchestration gate patterns](feedback_hand_orchestration_gate_patterns.md) — delete todos/ duplicate before Verify; bare test dir in pytest_command
+- [settings.json edits need shape-test search](feedback_settings_json_edit_needs_shape_test_search.md) — grep tests/ for pinned hook shape
+- [KGMCP status 2026-08](project_kgmcp_status_2026_08.md) — gateway loses to direct tools 7/7; not pursued
+- [Token efficiency over speed](feedback_token_efficiency_over_speed.md) — ~50% slower for ~30% fewer tokens is fine
+
+## CI and testing
+- [Registry edit: full tools dir + all views](feedback_registry_edit_run_full_tools_dir_and_all_views.md) — regenerate territory/cross-domain views too; never a -k subset
+- [CI poll TLS block false green](project_ci_poll_tls_block_false_green.md) — require positive completion signal; also check `mergeable` — a conflicting PR runs no workflows at all
+- [Verify with the command CI runs](feedback_verify_with_the_command_ci_runs_not_the_authors_filter.md) — reproducing a peer's own filtered test command inherits their blind spot
+- [Trace the call, never name-match paths](feedback_trace_the_call_never_name_match_paths.md) — a shared identifier is not a shared path; grep the producer, not the handler
+- [A probe is an instrument that can be wrong](feedback_a_probe_is_an_instrument_that_can_be_wrong.md) — positive-control every measurement; check an invariant before conceding to one
+- [Verify a peer finding before relaying it](feedback_verify_a_peer_finding_before_relaying_it_as_fact.md) — a reviewer's plausible structural claim reached a roadmap draft and was false; measure your own claims
+- [Absent from sample is not unreachable](feedback_absent_from_sample_is_not_unreachable.md) — never read an empty measurement as "cannot happen"; 5 peer-caught errors in one session
+- [find can't see unchecked-out branches](feedback_filesystem_search_cannot_see_unchecked_out_branches.md) — never claim a file doesn't exist without searching git refs
+- [CI repro never from /tmp](feedback_ci_repro_never_from_tmp.md) — clone to a real path at the exact SHA
+- [CI deterministic, zero local repro → hardcoded path](feedback_ci_deterministic_repro_check_hardcoded_path_first.md) — grep for local venv paths first
+- [Slow-regression determinism root cause](project_slow_regression_determinism_root_cause.md) — PARKED by user; don't re-raise
+- [Batch C CI line-pin conflict heads-up](project_batch_c_ci_line_pin_conflict_heads_up.md) — keep my 3e4154ba version
+- [Detach long runs with setsid](feedback_detach_long_runs_with_setsid.md) — session close kills plain background runs
+- [pgrep self-matching background wait](feedback_pgrep_self_matching_background_wait.md) — pattern matches its own wrapper
+- [Frozen fixture = minimal subset](feedback_frozen_fixture_minimal_subset.md) — only what assertions need + ~10-15
+- [Check whether the invariant already exists](feedback_check_whether_the_invariant_already_exists.md) — the law may be asserted, just pointed at the wrong half
+- [Verify default-on flips for dormant side effects](feedback_verify_default_on_flips_for_dormant_side_effects.md) — check emitted literals vs registry
+- [No process labels in identifiers](feedback_no_process_labels_in_identifiers.md) — no phase/ticket IDs in names
+
+## Simulation / RPG design
+- [Foundation before features (2026-10-02)](project_foundation_before_features_direction.md) — hard RPG bugs only; registry + rule map + foundation complete before feature planning
+- [Ask the rule owner before implementing world semantics](feedback_ask_the_rule_owner_before_implementing_world_semantics.md) — I built the raid fix then asked; PLACE-01 withdrew it
+- [Green test on an unrepresentative fixture](feedback_green_test_on_an_unrepresentative_fixture.md) — my 60-wide region hid that real 30-wide regions can't contain a radius-25 ring
+- [World-rules catalog governs sim semantics](reference_world_rules_catalog_governs_sim_semantics.md) — accepted Rule IDs outrank the Bible; LIFE-02/LIMIT-04/CAUSE-01/HP-02
+- [mechanisms.yaml verdict is not evidence](project_mechanisms_yaml_verdict_not_evidence.md) — re-verify against code before filing
+- [Economy code location trap](project_economy_code_location_trap.md) — conservation lives in src/core/conservation.py
+- [SimQ is for balance, not narrow features](feedback_simq_not_for_narrow_features.md) — use focused scenarios for mechanics
+- [No forced routes for SimQ fixes](feedback_simq_no_forced_routes.md) — investigate bug vs correct first
+- [Faction war: foundation only](project_faction_war_foundation_only.md) — fix starved systems below it
+- [Feature flags only for isolated features](feedback_feature_flags_only_for_isolated_features.md) — core mechanisms ship unflagged
+- [Bottom-up RPG feature priority](feedback_bottom_up_rpg_feature_priority.md) — core layers first
+- [Demographic cohort truncation: fix direction open](project_demographic_cohort_truncation_fix_options.md) — 3 options; seeded stochastic rounding unnamed
+- [HUD after RPG-core sequencing](feedback_hud_after_rpg_core_sequencing.md) — don't parallelize with RPG-core
+- [Live Map skeleton before assets](feedback_live_map_skeleton_before_assets.md) — naming/contracts only
+- [Rebuild when baseline is better](feedback_rebuild_when_baseline_is_better.md) — propose evidence-backed rebuild over reuse
+- [Date sources before applying precedence](feedback_date_sources_before_applying_precedence.md) — date competing Bible sections
+- [Cite external references in plans](feedback_cite_external_references_in_plans.md) — [R#] cites, no bespoke models
+- [Define information once](feedback_define_information_once_never_repeat.md) — one fact, one document
+- [Options + recommendation on concerns](feedback_options_and_recommendation_on_concerns.md) — not bare yes/no
+- [Verify milestone state before dispatch](feedback_verify_milestone_state_before_dispatch.md) — check origin/main, don't re-ask
+
+## Docs pages
+- [Sync capabilities page with atlas](feedback_sync_capabilities_with_atlas.md) — mirror atlas edits same turn, plain language
+- [Simulation Capabilities page](project_simulation_capabilities_page.md) — non-dev atlas companion
+- [Maintain simulation design taxonomy](feedback_maintain_simulation_design_taxonomy.md) — living page, keep verdicts current
+
+## Environment
+- [Two dev environments](project_environments.md) — u24desktop `.venv` and vboxuser venv; CPU-only torch
+- [Small doc changes → rpg-feature-planning](feedback_small_doc_changes_handoff_to_rpg_planner.md) — POINTER → functions/designer.md; exact before/after text
+- [gitignore drops stored_artifacts .json](project_gitignore_drops_stored_artifacts_json.md) — cited evidence as .json never reaches the remote; use .jsonl
+- [Working-log edits: check line pins](feedback_working_log_edits_check_line_pins.md) — data-file drafts must list tests pinning line numbers; closure events use agent "claude"
+- [parity-updater YAML rewrite risk](feedback_parity_updater_full_file_yaml_rewrite_risk.md) — check git diff --stat; big diff safe only via parity_ledger_writer.py
+- [Agent-working scope only](feedback_agent_working_scope_only.md) — report only agent-working matters; don't mention other domains' PRs
+- [Session-layer plan pointer](project_session_layer_plan.md) — plan + 4 epics on main (#283); decisions live in the plan; M0 spike is next
+- [Terminal-status and worktree traps](project_terminal_status_and_worktree_traps.md) — files a new status touches; shard branch-switch abort; no /tmp worktree on a full disk
+- [Measure per-tick counters under audit_mode](feedback_measure_per_tick_counters_audit_mode_idle_sequential.md) — throttle makes loaded/non-audit runs invalid; idle, sequential, hashed, repeated
+- [Main checkout tree vs HEAD after ff](feedback_check_main_checkout_tree_matches_head_after_ff.md) — verify tree matches HEAD after a big-move ff; back up, reset --hard, re-append shards
+- [Native implement-ticket gate sites unported](feedback_native_implement_ticket_gate_sites_unported.md) — check native-port SEQUENCE before recommending the native path; it crashed after Scope (277k tokens)

@@ -1,0 +1,39 @@
+---
+name: project_graphify_out_stays_local
+description: graphify-out/ is deliberately untracked and local-only — tracking it produced huge PR additions/deletions; rebuild per-worktree with the free AST-only path
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: d40de24b-2429-4d3f-b227-9ddb9189078f
+  modified: 2026-09-15T09:25:15.208Z
+---
+
+`graphify-out/` is **deliberately kept local and untracked**, never committed. Confirmed by the
+user 2026-09-15.
+
+**Why:** the graph artifacts are enormous (`graph.json` is ~50MB, `GRAPH_REPORT.md` ~430KB), and a
+previous attempt at tracking them produced huge addition/deletion churn on every PR, making diffs
+unreviewable. The `.gitignore` entries around line 256 are commented out, which is a remnant of
+that experiment — do not "fix" those comments into active rules or propose committing the
+directory.
+
+**Consequences worth knowing:**
+
+- It is absent in some worktrees and present in others (4 of 10 checkouts had none on 2026-09-15).
+  That is normal, not a broken checkout — `git ls-files graphify-out` returns 0, and `git status`
+  shows no deletions.
+- CLAUDE.md makes `graphify query` step 2 of the mandatory context scan, so in a worktree without
+  a graph that step simply errors (`graph file not found`). Build it rather than treating the gap
+  as a defect.
+- Rebuilding is **cheap, not expensive**: `graphify update .` is AST-only with no API cost
+  (CLAUDE.md line 417). `graphify-out/cost.json` in the primary checkout records exactly one LLM
+  run ever — 1,150 input / 2,800 output tokens across 2 files, 2026-06-28. The 50MB artifacts are
+  local computation, not token spend.
+- Graph freshness varies by location: the primary checkout's `graph.json` was dated 2026-08-25
+  while several worktrees' were rebuilt 2026-09-15, so `graphify query` can answer from materially
+  different graphs depending on where it runs, with nothing announcing it.
+
+**How to apply:** if a worktree lacks `graphify-out/`, run `graphify update .` there. Never scope a
+ticket to "make the graph available per-worktree" or to track it — see
+[[feedback_verify_claims_with_the_settling_command]] for the check that settles it
+(`git ls-files graphify-out`, and `cost.json` for real spend).

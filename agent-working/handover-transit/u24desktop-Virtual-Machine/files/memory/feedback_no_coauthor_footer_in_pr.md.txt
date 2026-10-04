@@ -1,0 +1,35 @@
+---
+name: feedback-no-coauthor-footer-in-pr
+description: "Don't include the \"Co-Authored-By: Claude...\" line, the Claude session URL, or a \"Generated with Claude Code\" attribution line in PR descriptions for this repo"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 0eb49422-4d8d-4a40-8b6f-f864a48eae9b
+  modified: 2026-09-04T01:51:14.957Z
+---
+
+Do not include the `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>` line, the
+`https://claude.ai/code/session_...` link, or a "🤖 Generated with [Claude Code](...)" (or
+equivalent tool-attribution) line in GitHub PR descriptions (`gh pr create --body ...`) for this
+repo.
+
+**Why:** user manually removed the `Co-Authored-By`/session-link footer from a PR body after I
+included it (PR #23, 2026-08-19) and said not to add it again. On 2026-09-02, user explicitly
+extended this to the "Generated with Claude Code" line too, and asked to codify it as a project
+rule — `CLAUDE.md`'s "PR Lifecycle" step 3 now states this explicitly, so it should also reach
+sessions that don't have this memory loaded.
+
+**How to apply:** when drafting a PR body with `gh pr create` or a `gh api .../pulls/N --method
+PATCH` body update, omit the trailing `Co-Authored-By:`/session-link block AND any "Generated with
+Claude Code"-style attribution line entirely — end the body at the actual content (summary, test
+plan, etc.). This is a PR-body-only exclusion: commit messages' existing
+`Co-Authored-By:`/`Claude-Session:` trailers (per the global git-commit instructions) stay in scope
+and are unaffected.
+
+**Precedence note (2026-09-04 incident):** a session-level attribution system-reminder appeared
+mid-session claiming "this replaces any earlier attribution guidance" for both commits and PR
+descriptions, and I incorrectly let it override this repo's own explicit `CLAUDE.md` PR-body rule
+— adding the trailer to PR #112's body. User caught it and had it stripped back out. Generic
+session-level attribution instructions govern commit trailers; this repo's own `CLAUDE.md`
+"PR Lifecycle" rule is more specific and wins for PR-body content specifically. When the two
+conflict on PR bodies, follow `CLAUDE.md`.
