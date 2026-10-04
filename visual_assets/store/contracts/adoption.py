@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, model_serializer, model_validator
 
 from visual_assets.store.contracts.base import (
     BoundedText,
@@ -12,7 +12,9 @@ from visual_assets.store.contracts.base import (
     PersonText,
     ProvenanceText,
     StoreRecord,
+    drop_absent,
 )
+from visual_assets.store.contracts.definitions import AxisValue
 from visual_assets.store.identities import (
     AdoptionId,
     CandidateId,
@@ -50,9 +52,14 @@ class AdoptionRecord(StoreRecord):
     source_revision: SourceRevision
     parent_revision: SourceRevision | None
     visual_key: VisualKey
+    detail_value: AxisValue | None = None  # the key's detail slot this fills; None = the key's declared default (or the key itself if it has no axis)
     licence_state: LicenceState
     licence_evidence_ref: ProvenanceText
     decided_at: UtcTimestamp
+
+    @model_serializer(mode="wrap")
+    def _omit_absent_detail(self, handler):  # type: ignore[no-untyped-def]
+        return drop_absent(handler(self), "detail_value")
 
     @model_validator(mode="after")
     def _rules(self) -> AdoptionRecord:

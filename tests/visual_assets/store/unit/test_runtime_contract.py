@@ -37,9 +37,9 @@ def test_the_fixture_round_trips_to_canonical_bytes():
 def test_the_allowed_field_names_are_exactly_these_and_none_comes_from_provenance():
     assert set(RuntimeManifest.model_fields) == {
         "record_type", "schema_version", "catalog_id", "release_id", "candidate_manifest_hash", "registry_hash",
-        "fallback_contract_version", "entries",
+        "fallback_contract_version", "entries", "details",
     }
-    assert set(RuntimeManifest.model_fields["entries"].annotation.__args__[0].model_fields) == {"visual_key", "family", "pixel_hash", "file", "width", "height"}
+    assert set(RuntimeManifest.model_fields["entries"].annotation.__args__[0].model_fields) == {"visual_key", "family", "pixel_hash", "file", "width", "height", "detail"}
 
 
 def test_unknown_fields_are_rejected_at_both_levels():

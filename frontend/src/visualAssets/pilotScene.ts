@@ -4,6 +4,7 @@
 // src/visualAssets/); tests assert each equals the original, read-only. Pure functions over a 2D context, so tests drive them with a recorder.
 import { CELL_SIZE } from './cell'
 import type { View } from './loader'
+import type { Cell } from './resolver'
 
 export const PILOT_KEY = 'terrain.forest'
 export const FOREST_CODE = 6
@@ -52,11 +53,14 @@ export type PilotCtx = Pick<
 /** The hover text of a terrain cell: what the Live Map shows, whatever the cell looks like. */
 export const hoverText = (code: number): string => TILE_NAMES_COPY[code] ?? 'Unknown'
 
-/** Draw one terrain cell. Only Forest may show an image, and only when the view has it decoded; every other case shows the flat fill. */
-export function drawTerrainCell(ctx: PilotCtx, view: View | null, code: number, x: number, y: number): void {
+/**
+ * Draw one terrain cell. Only Forest may show an image, and only when the view has it decoded; every other case shows the flat fill.
+ * `cell` is the Live Map cell (column, row), which a key with a detail axis uses to pick its look; without it the key's default is drawn.
+ */
+export function drawTerrainCell(ctx: PilotCtx, view: View | null, code: number, x: number, y: number, cell?: Cell): void {
   ctx.imageSmoothingEnabled = false
   if (code === FOREST_CODE && view !== null) {
-    const result = view.resolve(PILOT_KEY)
+    const result = view.resolve(PILOT_KEY, cell)
     if (result.kind === 'image') {
       const bitmap = view.bitmapFor(result.file)
       if (bitmap) {
@@ -132,7 +136,7 @@ export function drawMarker(ctx: PilotCtx, marker: Marker): void {
 /** The crowded pilot scene. `mode` 'image' draws forest cells with the tile when the view has it; 'flat' is the control (fill everywhere). */
 export function drawPilotScene(ctx: PilotCtx, view: View | null, mode: 'image' | 'flat'): void {
   for (let y = 0; y < PILOT_ROWS; y++) {
-    for (let x = 0; x < PILOT_COLUMNS; x++) drawTerrainCell(ctx, mode === 'image' ? view : null, terrainAt(x, y), x * CELL_SIZE, y * CELL_SIZE)
+    for (let x = 0; x < PILOT_COLUMNS; x++) drawTerrainCell(ctx, mode === 'image' ? view : null, terrainAt(x, y), x * CELL_SIZE, y * CELL_SIZE, { x, y })
   }
   for (const marker of MARKERS) drawMarker(ctx, marker)
   ctx.textBaseline = 'alphabetic'
