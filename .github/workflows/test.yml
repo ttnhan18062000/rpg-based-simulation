@@ -870,6 +870,9 @@ jobs:
   typecheck:
     name: "Type check"
     runs-on: ubuntu-latest
+    # Backstop so a stalled step cannot hold the required check for GitHub's 6 h default. Recent runs took at most
+    # 96 s (average 34 s, 40 runs of 2026-10-03/04), so 10 minutes leaves wide headroom.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v10.2.0
@@ -928,6 +931,9 @@ jobs:
   code-health:
     name: "Code health"
     runs-on: ubuntu-latest
+    # Backstop for a hang (for example a stalled `npx` download that jscpd's own 300 s limit did not catch). Recent
+    # runs took at most 183 s (average 118 s, 40 runs of 2026-10-03/04), so 20 minutes leaves wide headroom.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 0 }

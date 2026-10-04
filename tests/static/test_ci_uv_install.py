@@ -63,5 +63,6 @@ def test_code_health_job_is_blocking_and_the_ratchet_step_can_fail_it() -> None:
     step = next(s for s in job["steps"] if "codebase.health check" in s.get("run", ""))
     assert "continue-on-error" not in step, "exit 1 or 2 must fail the job"
     assert "--annotate" in step["run"] and "--summary-out" in step["run"] and "$GITHUB_STEP_SUMMARY" in step["run"]
+    assert job["timeout-minutes"] == 20 and _JOBS["typecheck"]["timeout-minutes"] == 10, "a hang must not hold a required check"
     tolerant = {s["name"] for s in job["steps"] if s.get("continue-on-error")}
     assert tolerant == {"Paths this PR changed", "Package registry"}

@@ -170,6 +170,51 @@ def test_any_other_tool_unavailable_exits_2(seeded, monkeypatch, capsys, tool):
     assert "could not run:" in summary.read_text()
 
 
+def test_a_jscpd_timeout_is_a_skip_not_a_hang_and_not_exit_2(seeded, monkeypatch, capsys):
+    import subprocess
+
+    def stalled(command, **kwargs):
+        raise subprocess.TimeoutExpired(command, kwargs["timeout"])
+
+    (seeded / "Makefile").write_text("JSCPD_VERSION = 5.4.0\n")
+    real_jscpd = scan._SCANNERS["jscpd"]
+    _fake_tools(monkeypatch, seeded)  # every tool but jscpd copies captured output
+    monkeypatch.setitem(scan._SCANNERS, "jscpd", real_jscpd)
+    monkeypatch.setattr(scan.subprocess, "run", stalled)
+    assert _run(seeded, "check") == 0
+    out = capsys.readouterr().out
+    assert "jscpd could not run (report-only); its findings were not measured" in out
+    assert [l for l in out.splitlines() if l.startswith(("OK:", "FAIL:"))][0].startswith("OK:")
+
+
+def test_the_jscpd_run_has_a_timeout_and_the_other_tools_have_none(monkeypatch, tmp_path):
+    import subprocess
+
+    seen = {}
+
+    def fake(command, **kwargs):
+        seen[command[0]] = kwargs.get("timeout")
+        return subprocess.CompletedProcess(command, 0, stdout="[]", stderr="")
+
+    (tmp_path / "Makefile").write_text("JSCPD_VERSION = 5.4.0\n")
+    monkeypatch.setattr(scan.subprocess, "run", fake)
+    scan._scan_jscpd(tmp_path, tmp_path)
+    assert seen["npx"] == scan.JSCPD_TIMEOUT_S and 0 < scan.JSCPD_TIMEOUT_S <= 600
+    scan._scan_ruff(tmp_path, tmp_path)
+    assert seen[scan.sys.executable] is None
+
+
+def test_the_timeout_names_the_command_and_the_limit(monkeypatch, tmp_path):
+    import subprocess
+
+    def stalled(command, **kwargs):
+        raise subprocess.TimeoutExpired(command, kwargs["timeout"])
+
+    monkeypatch.setattr(scan.subprocess, "run", stalled)
+    with pytest.raises(scan.ToolUnavailableError, match=r"timed out after 7s"):
+        scan._run(["npx", "jscpd"], tmp_path, (0,), timeout=7)
+
+
 def test_an_unusable_registry_exits_2(seeded, monkeypatch):
     _fake_tools(monkeypatch, seeded)
     (seeded / "reg.jsonl").write_text("{not json\n")

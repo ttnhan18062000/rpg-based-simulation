@@ -24,6 +24,8 @@ A test asserts `SKIPPABLE_TOOLS <= REPORT_ONLY_TOOLS`, so a blocking tool can ne
 
 **CI.** Remove `continue-on-error` from the `Code health ratchet` step, the `mypy` step, and the `code-health` job (default; a broken setup must not read as a pass for a required check). Rename jobs "Code health (advisory)" to "Code health" and "Type check (informational)" to "Type check". `Package registry` keeps its step-level one (removed in ticket 2). The SARIF job changes only its comment (advisory permanently, decision 8.19). Comments rewritten. Keep the `scenario-lane` `PERF_RE` and the job list in sync and run `tests/unit/tools/test_scenario_lane_paths.py`.
 
+**Hang backstops (planner review 2026-10-04).** `scan._run` gets an optional `timeout`; only `_scan_jscpd` passes one (`JSCPD_TIMEOUT_S = 300`), and `TimeoutExpired` becomes `ToolUnavailableError`, so a stalled `npx` download is a jscpd skip. `code-health` gets `timeout-minutes: 20` and `typecheck` `timeout-minutes: 10` (measured max 183 s and 96 s over 40 runs). "Paths this PR changed" keeps its step-level `continue-on-error` on purpose (it truncates `/tmp/changed.txt` first; a failed diff only changes summary ordering) and its CI comment says so.
+
 **Makefile.** Drop `|| true` from `typecheck-py`; fix the `##` help of `typecheck-py` and `code-health`.
 
 **Registry rows.** Tighten the 6 improved rows and delete the 4 gone rows (evidence: the ratchet output of 2026-10-04 on `053f459e4`), then re-check for "0 improved, 0 gone". Via `tighten --yes` after reading its list; no other row changes.
