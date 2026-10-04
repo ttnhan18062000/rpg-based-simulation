@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE
-phase: open
+phase: done
 date: 2026-10-04
 tags: [mcp, live-map, testing]
 ---
@@ -15,7 +15,7 @@ tags: [mcp, live-map, testing]
 One real terrain tile through the whole store: draw, hand off, intake, user adoption, build, release candidate, runtime manifest
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -52,12 +52,12 @@ authority". The user chose a terrain cell (2026-10-04). The committed catalog ha
 - The harness changes (ticket 3).
 
 ## Acceptance Criteria
-- [ ] The catalog has exactly one real key (terrain/forest or the user's choice) plus the existing fixtures.
-- [ ] Its adoption record names the user as the adopting human and was made through the CLI gate, not by the agent.
-- [ ] `verify` passes; the release candidate and runtime manifest contain the key with matching hashes.
-- [ ] The tile tiles cleanly: a 4 x 4 repeat has no visible seam (shown to the user, user's call recorded).
-- [ ] Boundary tests and `tests/visual_assets/` pass (scoped, under the 2 GB cap); real-Aseprite steps run locally (D10).
-- [ ] If the user declines every candidate or has not adopted, the ticket ends `BLOCKED` with that stated, not `DONE`.
+- [x] The catalog has exactly one real key (terrain/forest or the user's choice) plus the existing fixtures.
+- [x] Its adoption record names the user as the adopting human and was made through the CLI gate, not by the agent.
+- [x] `verify` passes; the release candidate and runtime manifest contain the key with matching hashes.
+- [x] The tile tiles cleanly: a 4 x 4 repeat has no visible seam (shown to the user, user's call recorded).
+- [x] Boundary tests and `tests/visual_assets/` pass (scoped, under the 2 GB cap); real-Aseprite steps run locally (D10).
+- [x] If the user declines every candidate or has not adopted, the ticket ends `BLOCKED` with that stated, not `DONE`.
 
 ## Related Tickets
 - TCK-20261003-VISUAL-ASSETS-RUNTIME-MANIFEST (done), TCK-20261003-VISUAL-ASSETS-LOCAL-ASEPRITE-EVIDENCE (done)
@@ -77,9 +77,17 @@ authority". The user chose a terrain cell (2026-10-04). The committed catalog ha
 - Whether a 16 px tile looks right at 1:1 is a human call; the agent proposes, the user decides.
 
 ## Implementation Notes
+- Detail variants (plain/bush/tree) are deferred to `TCK-20261004-VISUAL-ASSETS-TERRAIN-DETAIL-VARIANTS` by user decision on 2026-10-04: decoration only, picked client-side from (x, y) plus a fixed seed. This ticket registers `terrain.forest` with `variant_axes: []`.
+- Candidate A (`forest_a` r0002, 4 colours) handed off; intake `in-87b5972640ed63c7` PASSED, store render MATCHES. Intake was run via the CLI in this worktree (the MCP server may root elsewhere). Revision B (`forest_b` r0002, 7 colours, speckled ground and crowded canopies) was drawn after the user found A lacking detail; the user picked B (2026-10-04). Intake `in-ea65cc2668bc8430` PASSED. A (`in-87b5972640ed63c7`) stays un-adopted. The user adopted B in their own terminal (`ad-caf09a15bd89d2af`, source asset `terrain_forest` r0001; a first adoption under a misspelled id was discarded before any commit, at the user's choice). Then `build`, `release --catalog-id pilot` (rc-0001), `export-runtime`, `audit` and `verify` all clean. Hashes: `docs/assets/pilot_terrain_key.md`. Tests that assumed an empty catalog now expect exactly the pilot asset.
+- Also fixed a ticket-1 miss: the `store_contract.md` Known-gaps bullet still said "proposed budget".
 
 ## Test Summary
+`tests/visual_assets`: 1182 passed (real Aseprite, local, under a 2 GB cap; rerun after the re-adoption). `audit`: chain ok. `verify`: store ok.
 
 ## Files Changed
+- visual_assets/catalog/definitions/visual_keys.yaml; sources/, provenance/, generated/, manifests/candidates/pilot/ (adopted and derived records)
+- tests/visual_assets (5 tests updated for one pilot asset, registry test)
+- docs/assets/pilot_terrain_key.md (new), docs/assets/store_contract.md, docs/architecture/visual_asset_foundation_adr.md, visual_assets/catalog/README.md
 
 ## Completion Summary
+Exactly one real key, `terrain.forest`, adopted by the user through the CLI gate, built, in release candidate `pilot/rc-0001` and exported to a runtime manifest. Nothing activates it.

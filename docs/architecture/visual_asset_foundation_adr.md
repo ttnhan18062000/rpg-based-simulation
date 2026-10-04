@@ -70,7 +70,7 @@ paths were deliberately left open. Full structure, layering rules and command ta
 - Drawing tools are in the project, registered in `.mcp.json`, unit-tested in CI; Aseprite-backed tests still run only where
   Aseprite and bwrap exist (`U-14` open).
 - The store is built through its last child: records and identities, intake, human-gated adoption and revocation, sandboxed build, release candidates, `verify`, `gc`, and read-only MCP store tools (`submit_candidate`, `store_list`, `store_show`). The committed catalog
-  still holds zero keys, sources, adoptions and artifacts (synthetic fixtures only, under `catalog/fixtures/`). Nothing activates at runtime.
+  held zero keys, sources, adoptions and artifacts when the store was built (synthetic fixtures only, under `catalog/fixtures/`); since 2026-10-04 it holds the one pilot terrain tile (`docs/assets/pilot_terrain_key.md`). Nothing activates at runtime.
 - The drawing server may import from the store only `intake`, `readmodel` and the shared leaves; the human-gated and tracked-catalog layers are unreachable from it (boundary test).
 - Real-Aseprite tests run locally only; CI sees the unit and stdio tests that need no Aseprite (`U-14` open).
 - Plan packages gain dated status notes; open items there (`U-02`, `U-05`, `U-07`..`U-14`, `AM1-W01` ...) are unchanged.

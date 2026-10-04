@@ -12,7 +12,7 @@ tags: [architecture, mcp, documentation, rendering]
 **Status: built (`TCK-20261002-EPIC-VISUAL-ASSET-FOUNDATION`, children 1-6).** The drawing tools hand off a candidate, the store
 stages it into a quarantine, judges it independently, lets a human adopt it as an immutable source revision, exports pixel-hashed artifacts
 and assembles release CANDIDATES, and checks the whole store in pure Python. Nothing activates anything at runtime (`AM-M5`-`M7` are out of
-scope). The committed `visual_assets/catalog/` holds zero keys, sources, adoptions and artifacts: only layout, rules and synthetic fixtures.
+scope). The committed `visual_assets/catalog/` holds one real key, `terrain.forest` (the `AM-M6` pilot tile, `docs/assets/pilot_terrain_key.md`), with its one adopted source, adoption, artifact and release candidate; everything else is layout, rules and synthetic fixtures.
 This page says what each command and MCP tool does, who may run it and what it writes.
 
 Source of truth for vocabulary and gates: `docs/brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md`
@@ -41,7 +41,7 @@ release candidates are assembled but never activated (the last arrow is out of s
 ## What is built now
 
 - `visual_assets/store/` with `errors`, `config`, `identities`, `contracts/` and `catalog/registry.py` (read-only), and `visual_assets/catalog/`
-  (README, `STORE_FORMAT` = version 1, the zero-key `definitions/visual_keys.yaml`, synthetic `fixtures/contracts/`, other directories empty).
+  (README, `STORE_FORMAT` = version 1, the `definitions/visual_keys.yaml` (one real key, `terrain.forest`), synthetic `fixtures/contracts/`, other directories empty).
 - Typed records (`extra="forbid"`, frozen, strict, `record_type` + `schema_version`, no free-form field): `CandidateHandoffPackage`,
   `IntakeResult`, `AdoptionRecord`, `RevocationRecord`, `SourceRecord`, `ArtifactRecord`, `ReleaseCandidateManifest`,
   `VisualKeyRegistry`. Canonical JSON (`canonical_json`) and strict parsing (`parse_record`: oversize, UTF-8, duplicate keys, NaN,
@@ -166,7 +166,7 @@ Runtime activation, a resolver in the real client, Live Map and HUD consumption,
   (size = 1 + distinct opaque colours), which needs pixel decoding. Intake quarantines it with `PALETTE_UNVERIFIABLE`. Only a never-edited first revision
   carries one; any edit re-saves a palette with real entries. Every other palette is checked exactly against what Aseprite reports.
 - Intake accepts only 32-bit RGBA sources (`SOURCE_UNSUPPORTED_COLOR_DEPTH` otherwise); the package carries no colour-depth claim, so it is a support policy, not a claim check.
-- The unsupported-feature list (`unsupported:tilemap`, `...indexed_color`, `...grayscale`, `...linked_cels`, `...external_reference`) are a support list recorded in `docs/assets/budgets.md`. Every numeric bound (preview, file, record, registry, decode) is a **proposed** budget there, measured on 2026-10-03 and pinned to the code by a test; the owner approves the numbers in PR review. Rulings F1-F6 are recorded there. Size bounds are per record type (`StoreRecord.size_bound`, `record_bound(cls)`): the registry and the release manifest have their own bounds, and `tests/visual_assets/store/unit/test_record_bounds.py` proves every record a writer can produce under the contract bounds is readable by every reader. PNG files are bounded by `MAX_PNG_FILE_BYTES`; `MAX_DECODED_BYTES` bounds decoded size only.
+- The unsupported-feature list (`unsupported:tilemap`, `...indexed_color`, `...grayscale`, `...linked_cels`, `...external_reference`) are a support list recorded in `docs/assets/budgets.md`. Every numeric bound (preview, file, record, registry, decode) is a budget there, measured on 2026-10-03, pinned to the code by a test and `APPROVED 2026-10-04` by the owner (PR #309); retention is the one deliberately unset row. Rulings F1-F6 are recorded there. Size bounds are per record type (`StoreRecord.size_bound`, `record_bound(cls)`): the registry and the release manifest have their own bounds, and `tests/visual_assets/store/unit/test_record_bounds.py` proves every record a writer can produce under the contract bounds is readable by every reader. PNG files are bounded by `MAX_PNG_FILE_BYTES`; `MAX_DECODED_BYTES` bounds decoded size only.
 
 ## Decisions still open
 
