@@ -161,7 +161,8 @@ is changed-line feedback only and stays advisory permanently (decision 8.19).
    complexipy or a line count, a new mypy error, or a check that cannot run fails the job and leaves one
    `::error::` annotation; a tool that could not run says "could not run" in the summary. jscpd and ast-grep
    findings are **report-only**: listed and labelled in the summary, never failing (ast-grep until
-   `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`). The one tolerated failure is jscpd itself (it needs `npx` and
+   `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`). The `Code health` job also runs `python3 -m codebase.structure.packages validate`: a new top-level `src/` package
+   without a row in `codebase/structure/package_registry.jsonl` (or a row for a package that is gone) fails it; run that command locally to reproduce it. The one tolerated failure is jscpd itself (it needs `npx` and
    the npm registry): if it cannot run, the check says "jscpd could not run (report-only); its findings were not
    measured" in the summary and as a `::warning::`, leaves its registry rows alone and still exits 0, so a local
    `make code-health` without network prints that note instead of exiting 2. `seed` and `tighten` never skip a tool.

@@ -53,8 +53,8 @@ def test_lint_group_holds_the_code_health_tools_and_is_a_default_group() -> None
 def test_code_health_job_is_blocking_and_the_ratchet_step_can_fail_it() -> None:
     """TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING: a required check must be able to fail the PR.
 
-    Branch protection lists the job by its name. Only the changed-paths step and the not-yet-flipped package-registry
-    step keep a step-level `continue-on-error`; the ratchet step and the job carry none.
+    Branch protection lists the job by its name. Only the changed-paths step keeps a step-level `continue-on-error`; the ratchet step, the package-registry step
+    (blocking since TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING) and the job carry none.
     """
     job = _JOBS["code-health"]
     assert job["name"] == "Code health"
@@ -65,4 +65,4 @@ def test_code_health_job_is_blocking_and_the_ratchet_step_can_fail_it() -> None:
     assert "--annotate" in step["run"] and "--summary-out" in step["run"] and "$GITHUB_STEP_SUMMARY" in step["run"]
     assert job["timeout-minutes"] == 20 and _JOBS["typecheck"]["timeout-minutes"] == 10, "a hang must not hold a required check"
     tolerant = {s["name"] for s in job["steps"] if s.get("continue-on-error")}
-    assert tolerant == {"Paths this PR changed", "Package registry"}
+    assert tolerant == {"Paths this PR changed"}

@@ -156,7 +156,7 @@ Python identifier conventions that section does not state.
 | M2 | No wildcard imports. | ruff `F403` (part of `F`), configured |
 | M3 | No I/O and no mutation of unrelated global state when a module is imported. Registering into an existing registry at import time, through that registry's established pattern, is allowed. | reviewer |
 | M4 | New repo tooling goes under `tools/` per `docs/guidelines/repo_tooling_layout.md`. | reviewer |
-| M5 | A new module belongs to the package whose responsibility it shares. Do not create a new top-level `src/` package without an owner decision. | reviewer; `python3 -m codebase.structure.packages validate` reports a tracked top-level package with no row (advisory) |
+| M5 | A new module belongs to the package whose responsibility it shares. Do not create a new top-level `src/` package without an owner decision. | reviewer; `python3 -m codebase.structure.packages validate` reports a tracked top-level package with no row (blocking in the `Code health` job; the live-repo test in `tests/codebase/test_package_registry.py` checks it too) |
 
 ## 10. Correctness
 

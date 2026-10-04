@@ -70,6 +70,10 @@ None.
 - The `Package registry` step has its own `continue-on-error`, so the M4 flip (which removes it from the `code-health` job's ratchet step) does not make this step blocking
 
 ## Implementation Notes
+- `Package registry` step: `continue-on-error` removed, CI comment rewritten. It is a step of `Code health`, already a required check, so no separate setting is needed (recorded here). Exit 1 (problem) and exit 2 (cannot run) now fail the job; the validator's annotations changed from `::warning::` to `::error::` and "(advisory)" left its summary text.
+- The real-repo test now asserts completeness as well as schema (`load_rows(..., (SCHEMA, COMPLETENESS))`); its docstring says it is a second enforcement point, intended at the flip. Mutation proof: removing one registry row fails it with `[completeness] tracked top-level package has no row: src/actions`.
+- Static pin: the tolerant steps of `code-health` are exactly `{"Paths this PR changed"}`.
+- Precondition: `validate` on `origin/main` 053f459e4 gives 0 problems over 36 rows (2026-10-04). Repeat right before merge.
 
 ## Test Summary
 

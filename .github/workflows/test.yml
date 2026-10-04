@@ -955,11 +955,12 @@ jobs:
         continue-on-error: true
       - name: Code health ratchet
         run: python3 -m codebase.health check --summary-for /tmp/changed.txt --summary-out "$GITHUB_STEP_SUMMARY" --annotate
-      # TCK-20261004-PACKAGE-REGISTRY-VALIDATOR: advisory, with its own continue-on-error so it stays advisory now
-      # that the ratchet step above is blocking; TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING removes it.
+      # TCK-20261004-PACKAGE-REGISTRY-VALIDATOR, blocking since TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING:
+      # exit 1 (a tracked top-level `src/` package with no registry row, a row for a package that is gone, or a schema
+      # problem) and exit 2 (cannot run) fail this job. It is part of "Code health", so no separate required-check
+      # setting exists or is needed. Add the row in codebase/structure/package_registry.jsonl in the same PR.
       - name: Package registry
         run: python3 -m codebase.structure.packages validate --summary-out "$GITHUB_STEP_SUMMARY" --annotate
-        continue-on-error: true
 
   # ── Code health SARIF feedback (advisory, permanently) ─────────────────────
   # TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK: findings in the PR's changed src/*.py files that the code-health
