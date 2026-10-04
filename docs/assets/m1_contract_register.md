@@ -73,7 +73,7 @@ but is `INCONCLUSIVE`, and M0 cannot pass `AM-C01` itself (the M0 plan). This is
 **What remains before `AM-M1` could be `PASS`** (nothing here is authorized by this page).
 
 1. `AM-M0` `PASS`: an owner statement of the hosting target, supported clients and staleness limit, or an owner decision that they are not inputs under Profile A. Today the user keeps them open for `AM-M6`.
-2. Code, each in its own ticket: the registry class field (`W02.7`), an activation check for fallbacks (`W06.3`), a `verify` rule rejecting a non-empty `variant_axes` (`W03.1`), a capability field with the first capability (`W07.4`).
+2. Code, each in its own ticket: the registry class field (`W02.7`), an activation check for fallbacks (`W06.3`), a `verify` rule rejecting a non-empty `variant_axes` (`W03.1`). `W07.4` (a capability field) reopens with the first capability and is not needed for `PASS`.
 3. `W13.3`, `W13.4`, `W13.6` at `AM-M6` authorization, or the owner narrowing them.
 4. Then a fresh re-derivation of this section. `PASS` would still authorize nothing: `AM-M2` needs new authority from the owner.
 
