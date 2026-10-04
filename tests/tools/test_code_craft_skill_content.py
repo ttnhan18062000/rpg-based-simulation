@@ -9,12 +9,13 @@ from pathlib import Path
 import yaml
 
 from tools.agent_orchestration_codex_adapter.generator import build_codex_skill_md
+from tools.agent_working_paths import AGENT_ORCHESTRATION
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _SKILL_MD = _REPO_ROOT / ".claude" / "skills" / "code-craft" / "SKILL.md"
 _MIRROR_MD = _REPO_ROOT / ".agents" / "skills" / "code-craft" / "SKILL.md"
 _STANDARD = _REPO_ROOT / "docs" / "guidelines" / "python_code_standard.md"
-_SKILLS_YAML = _REPO_ROOT / "agent-working" / "agent-orchestration" / "skills.yaml"
+_SKILLS_YAML = _REPO_ROOT / AGENT_ORCHESTRATION / "skills.yaml"
 _IMPLEMENTER = _REPO_ROOT / ".claude" / "agents" / "implementer.md"
 
 _REVIEWER_RULES = ["F1", "F2", "F4", "F5", "N1", "N4", "D2", "D3", "T2", "T3", "E2", "E3"]
