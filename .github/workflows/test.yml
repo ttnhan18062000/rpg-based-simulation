@@ -869,7 +869,7 @@ jobs:
   # ── Type check (blocking) ─────────────────────────────────────────────────
   typecheck:
     name: "Type check"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Backstop so a stalled step cannot hold the required check for GitHub's 6 h default. Recent runs took at most
     # 96 s (average 34 s, 40 runs of 2026-10-03/04), so 10 minutes leaves wide headroom.
     timeout-minutes: 10
@@ -930,7 +930,7 @@ jobs:
   # (runner, uv, Node) must not read as a pass for a required check.
   code-health:
     name: "Code health"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Backstop for a hang (for example a stalled `npx` download that jscpd's own 300 s limit did not catch). Recent
     # runs took at most 183 s (average 118 s, 40 runs of 2026-10-03/04), so 20 minutes leaves wide headroom.
     timeout-minutes: 20
