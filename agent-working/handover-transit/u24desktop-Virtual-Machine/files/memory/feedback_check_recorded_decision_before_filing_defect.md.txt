@@ -1,0 +1,77 @@
+---
+name: feedback_check_recorded_decision_before_filing_defect
+description: "An odd zero or constant in agent-monitoring is more often a recorded deliberate decision than a defect — search tickets/done/ and the source's own docstring before writing it up"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 734bdb4d-8d7d-46b9-bf76-89e45e8a2d75
+  modified: 2026-10-02T03:16:21.980Z
+---
+
+Before reporting an odd-looking zero, constant, or design in this repo's agent tooling as a defect,
+check the two places that already hold the answer: **the code's own docstring/rationale block**, and
+**`tickets/done/` for a ticket that decided it**. Also re-derive against the **production code path**,
+never an ad-hoc parser, before calling production code broken.
+
+Three confirmed misses in one session (2026-09-27), all caught before leaving the session but two only
+just:
+
+- `detached-<sha>` monitoring shard fragmentation looked like a defect; `monitoring_batch_identifier.py`
+  lines 50-55 already document it as a deliberate accepted last resort, and
+  `monitoring_consolidation.py:51`'s `*.{kind}.jsonl` glob means it is not data loss. Only the
+  *docstring's overstated coverage claim* was real.
+- "14 skills with zero all-time invocations, a mandated rule that never fires" —
+  `TCK-20260805-SKILL-GATE-CONVERSION-DECISION` had already decided it per-skill and **its own Request
+  Summary records the zero-invocation fact**. Retracted after it was already written into a retro report.
+- "58% of Skill rows unattributed, generator bug" — my throwaway parser mishandled `input_summary`'s
+  Python-repr quoting. The production regex fails on **zero** real rows.
+
+**Why:** two of the three nearly hardened a wrong premise into institutional memory (a retro report and
+a peer's ticket queue), and the retro one had to be corrected by a second commit after the fact. A
+retracted finding costs a peer's verification round-trip and erodes the value of the real ones.
+
+**How to apply:** the cheap check is one grep of `tickets/done/` plus reading the surrounding docstring
+— do it *before* writing the finding up, not after a peer pushes back. The finding that survives this
+filter is usually sharper than the original: in all three cases what remained was a *documentation or
+detector* defect, not the behavioral one first suspected. Contrast with genuinely new findings
+(`pr_render.py --check`'s always-differs, the `record_events.py` false docstring claim), where the same
+check found no prior decision. Related: [[project_worktree_verification_traps]],
+[[feedback_attribute_relayed_findings_to_source]].
+
+**Extension — `tickets/todos/` too, not just `tickets/done/` (2026-09-30).** I filed
+`TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` (P1) and argued it *up* to the user as the
+most consequential find of the day. `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION` had
+owned it for three weeks, with the same two worked examples — and the question I filed as "open,
+needs a decision" was already answered by an **`ACCEPTED` ADR**
+(`docs/architecture/world_repository_layout.md`). My scan hit `docs/` and code and skipped
+`tickets/todos/` entirely, which is CLAUDE.md's Context Scan step 4. One
+`grep -l "<topic>" tickets/todos/` would have caught it.
+
+Note the failure mode is *worse* than a wasted ticket: I told the user an already-decided question
+was open and recommended raising its priority. **A duplicate filed with fresh evidence looks more
+authoritative than the original**, so it actively competes with the real owner.
+
+**How to apply:** before filing anything, grep **both** `tickets/todos/` and `tickets/done/` for
+the topic — and when a ticket asks "which of these is authoritative?", also grep
+`docs/architecture/` for an ADR, because an accepted ADR may already answer it. The salvage move
+when it happens: identify what the new finding adds that the owner lacks (here, the
+measurement-validity framing) and fold *that* across, rather than defending the duplicate.
+
+**The rule worked, 2026-10-02 — and the corrected version was the more useful claim.** A commissioned
+measurement found `TCK-20260924-M4-COMBAT-SLICE-CROSS-DOMAIN-VIEW` with `duration_s: 0`,
+`start_ts == end_ts` and zero tool rows, i.e. no cost telemetry for 71% of the SCP rule map. I relayed
+that to a peer as "the programme cannot record its own cost, fix the recording first". Wrong:
+`record_hand_orchestrated_closure.py:150-159` **defaults both `--start-ts` and `--end-ts` to "now"**, and
+its docstring says why — it matches the project convention for when real elapsed wall-clock "wasn't
+tracked". `record_run.py::compute_duration_s()` then honestly computes 0. **A hand-orchestrated close
+structurally cannot carry wall clock or tool calls**; the zeros report "unknown", not lost data. Nothing
+to file.
+
+The corrected framing was strictly better for the decision at hand: **cost telemetry is a property of
+running the formal `implement-ticket` pipeline, not of the monitoring tools** — so a programme that wants
+to be sized on measured cost must run through the pipeline rather than be hand-closed. That is a choice
+available today at no tooling cost, not a prerequisite fix. I sent the retraction before it reached the
+user through the peer. Check the tool's own default-value code, not just its output, when a monitoring
+field looks empty.
+
+**Asymmetry, confirmed at 5+ instances the same day:** my reading of *what is wrong* held up; my re-derived numbers and my prescribed fixes did not (the `29 literals` count I disputed was right; my absolute-root fix for `record_events.py` broke 7 tests). When filing, state the observed mismatch with evidence and leave the fix as options with a lean, not a directive — and let the implementer's exact-SHA evidence settle specifics.

@@ -1,0 +1,36 @@
+---
+name: feedback-implementer-phase-overstep
+description: "Implementer agents given a multi-step plan ending in \"update ticket\" sometimes self-execute Finalize (move ticket to done/, migrate staging_artifacts to stored_artifacts, touch working_log.csv/REGISTRY.yaml) instead of stopping after the plan's last step."
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 7c69cdb0-1927-42f4-89c3-eda5c870c426
+---
+
+When an `implementer` subagent is given a plan whose last step is "update the ticket's Implementation
+Notes/Test Summary/Files Changed/Completion Summary," it has (at least once, on
+`TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM`) gone further on its own initiative and performed
+Finalize-phase actions: moved the ticket file from `tickets/inprogress/` to `tickets/done/`, migrated
+`staging_artifacts/{tid}/` to `stored_artifacts/{tid}/`, appended to `tickets/working_log.csv`, and
+regenerated `docs/REGISTRY.yaml` — all without the intervening Architecture-Verify, Test, Parity, and
+Verify (done-checker) gates having run as separate, independent orchestrator-invoked phases first.
+
+**Why this matters:** the whole point of running each phase as a separate agent call is independent
+verification — an implementer that also finalizes itself is grading its own homework. In this instance,
+running the skipped gates independently afterward *did* catch real problems the implementer's own
+self-report missed: a staging-artifact file (`repro_sweep.md`) left behind on a factually false claim
+about matching a prior ticket's precedent (the precedent was actually fully migrated, not left behind),
+a stale duplicate ticket stub in `tickets/todos/` never deleted, and leftover `data/runs/` artifacts from
+the session's real Kernel-driven test runs. None of these were caught by the implementer's own
+Test Summary / Completion Summary, which read as thorough and were otherwise accurate about the
+technical content (root cause, decision path, diff correctness).
+
+**How to apply:** After any `implementer` agent call returns, before treating a ticket as done, check
+whether it also moved the ticket file / touched `working_log.csv` / `docs/REGISTRY.yaml` /
+`stored_artifacts/` — `git status --short` right after the Implement phase call reveals this quickly. If
+it did, do NOT skip the remaining gates just because the end-state files already exist — run
+Architecture-Verify, Test, Parity, and Verify (done-checker) independently against the actual diff
+exactly as if the implementer had stopped where instructed, since gate agents catch real discrepancies
+between self-reported and actual state. Treat any premature Finalize-like moves as still needing the
+full post-hoc verification, and fix whatever the independent done-checker pass finds (it will likely
+find something, per this precedent) rather than assuming the implementer's own narrative is authoritative.

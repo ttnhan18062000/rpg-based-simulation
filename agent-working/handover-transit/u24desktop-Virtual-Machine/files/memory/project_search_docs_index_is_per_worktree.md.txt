@@ -1,0 +1,47 @@
+---
+name: project_search_docs_index_is_per_worktree
+description: "search_docs \"index not found\" is per-worktree state, not a repo fact — don't conclude a peer's findings are better-sourced than yours from it"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: 734bdb4d-8d7d-46b9-bf76-89e45e8a2d75
+  modified: 2026-10-02T02:47:58.484Z
+---
+
+`mcp__knowledge-search__search_docs` returning `{"error":"index not found","action":"run make
+knowledge-index"}` is **local to that worktree's index state**, not a property of the repo or the
+branch. Confirmed 2026-09-30: dead in `m2-idea43-temporal-note`, working in
+`world-rule-catalog-design`'s worktree at the same `origin/main` SHA (`4ae37d395`). `graphify`
+worked in both. The fix is `make knowledge-index` in the affected worktree.
+
+**Refinement, 2026-10-01: the index can be present while the MCP tool still reports it missing.**
+In `m2-idea43-temporal-note` `knowledge-index/` existed (`knowledge.db`, `bm25.pkl`,
+`manifest.json`) and queries worked fine run directly — so the MCP server's own path resolution was
+the fault, not a missing index. Before concluding anything is missing, try the CLI with the
+knowledge venv (the one interpreter that has `sentence-transformers`; the repo `.venv` and system
+`python3` both lack it):
+
+    /home/u24desktop/Working/rpg-based-simulation/.venv-knowledge/bin/python3 \
+      tools/knowledge_search.py query "<q>" --top-k 6
+
+That satisfies the CLAUDE.md context-scan step without a rebuild. `make knowledge-index-update`
+takes several minutes when the index is weeks stale (1080 files re-embedded on 2026-10-01).
+
+**Confirmed conclusively 2026-10-02:** a full `make knowledge-index` in `m2-idea43-temporal-note`
+exited 0 and wrote 13404 documents to `knowledge-index/knowledge.db` + `bm25.pkl` — and the MCP tool
+*still* returned `index not found` on the very next call. So rebuilding does not fix the MCP path; it
+only wastes several minutes. Go straight to the `.venv-knowledge` CLI above. `graphify` was also
+unavailable in that worktree (`graphify-out/graph.json` untracked, never built there) — see
+[[project_graphify_out_stays_local]].
+
+**Why:** a prior handover recorded it as dead in two worktrees and drew a standing conclusion from
+that — "its findings are semantically sourced and mine are grep-derived, and that asymmetry matters
+when comparing conclusions." That framing treats a local index gap as a durable evidentiary
+difference between sessions. It isn't one, and it quietly discounts your own findings against a
+peer's for no real reason.
+
+**How to apply:** when `search_docs` fails, say plainly that the semantic scan did not run (the
+CLAUDE.md context-scan rule requires honesty about this) — but don't rank your conclusions below a
+peer's on that basis, and don't record the asymmetry as a repo fact in a handover. Just rebuild the
+index, or note it as a local gap. See [[feedback_attribute_relayed_findings_to_source]] and
+[[project_worktree_verification_traps]].

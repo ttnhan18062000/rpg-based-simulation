@@ -1,0 +1,29 @@
+---
+name: reference_clear_breaks_session_resume
+description: /clear allocates a new sessionId with no parent link, so resume can never restore context from across a clear boundary — the handover note is the only thing that crosses
+metadata:
+  type: reference
+---
+
+Transcripts persist at `~/.claude/projects/<slugified-cwd>/<sessionId>.jsonl`. A closed session is
+resumable; what is *not* recoverable is context from the other side of a `/clear`.
+
+- **`/clear` allocates a new sessionId and a new transcript file, with no parent pointer or linking
+  row between them.** Verified 2026-09-27 in the agent-monitoring-data-quality-fix worktree:
+  `e3f10e82-…` (596 rows) then `ebbcf56c-…` as a wholly separate file, same custom title, zero
+  linking rows. So `--resume` restores one side of a clear boundary, never a merged view.
+- The project slug is the **worktree path**, not the repo root. `claude -c` ("most recent
+  conversation in the current directory") and the `--resume` picker only list a worktree's sessions
+  when launched from that worktree.
+- Most reliable recovery: `claude --resume <session-id>` with the id read off disk — bypasses both
+  the picker and the cwd scoping.
+
+**Why:** the user asked why an accidentally-closed session could not be resumed "from current
+context" after using the /clear workflow. The answer is that /clear, not the close, is what severs
+it — which is the whole reason the handover-note discipline exists.
+
+**How to apply:** treat the role handover note as the only artifact that crosses a `/clear`, and
+update it *at* the boundary rather than later — a note one day stale caused a confident wrong report
+about ticket state. Keep the current and previous sessionIds at the top of the note so the transcript
+stays findable. See [[feedback_reset_boundaries_in_every_process]] and
+[[feedback_worktree_verification_traps]].

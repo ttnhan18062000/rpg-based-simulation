@@ -1,0 +1,10 @@
+---
+name: feedback-native-implement-ticket-gate-sites-unported
+description: Never steer a peer to the native Workflow path for a standard-tier implement-ticket run until the native-port gate-site items land; it crashes after Scope
+metadata:
+  type: feedback
+---
+On 2026-10-04 I told rpg-implementer the native Workflow path was "preferred" for the Epic C rerun. It crashed after Scope (`ReferenceError: bash is not defined`, about 277k tokens wasted), because implement-ticket.js gate sites still call bash(), and native-port SEQUENCE items 4-5 were deferred by user decision on 2026-10-01.
+
+**Why:** I recommended a path without checking its port state.
+**How to apply:** before recommending how to run implement-ticket, read `agent-working/tickets/todos/implement-ticket-native-port/SEQUENCE.md` (or done/ if it moved). Until ATTESTED-GATE-SITES lands, use the hand-executed skill path: a hand-written sidecar plus the schema_format_tail.py tail. Related: [[feedback-hand-orchestration-format-sentence-is-a-prompt-modification]].

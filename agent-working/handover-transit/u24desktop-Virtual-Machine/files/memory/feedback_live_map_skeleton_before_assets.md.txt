@@ -1,0 +1,15 @@
+---
+name: feedback-live-map-skeleton-before-assets
+description: "User wants the Live Map/HUD epic (docs/plans/render-and-art/00-06) implemented as pure architecture/naming/identifier work first, no real asset wiring, until the separate asset-drawing epic is done"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 8464651d-43f1-4369-b7ec-234e20fd0f4a
+  modified: 2026-09-14T02:50:32.843Z
+---
+
+When scoping or implementing the Live Map/HUD epic (`docs/plans/render-and-art/00_contract_and_evidence_baseline_plan.md` through `06_conditional_native_validation_plan.md`, tracked at the program level by `docs/plans/render_and_art_program_roadmap.md`): keep it to skeleton/architecture work only — typed protocol contracts, identifiers, naming, the Live Map Core / HUD Core separation, H2M/M2H interaction contracts. Do **not** wire any detailed/real visual assets into it. Continue using the existing placeholder/primitive Canvas rendering (`frontend/src/lib/colors.ts` style primitives) throughout.
+
+**Why:** confirmed by direct inspection (2026-09-14) that this is already how the plan is actually structured — grepped all 8 numbered plans in `docs/plans/render-and-art/`; only `07_manual_art_experiment_execution_plan.md` and the separate `visual-asset-management-runtime-integration/` epic ever mention assets/sprites/the semantic visual-key registry. `01_live_map_core_and_renderer_evidence_plan.md`'s own `G1-W01`–`G1-W11` work packages are entirely protocol validator/reducer/store/camera/renderer-adapter seams, with zero asset dependency — the user's direction matches the plan's existing design, not a change request.
+
+**How to apply:** when a future `create-tickets` pass scopes G0/G1 (or any 00-06 plan) into real tickets, explicitly tell the Structure/Investigate agents "no asset wiring, identifiers/contracts only" so scope doesn't accidentally creep into sprite/visual-key work. Asset wiring is the separate, later `07_manual_art_experiment_execution_plan.md` + asset-management epic's job, once the skeleton lands. See [[project_render_and_art_sequencing_recommendation]] if that memory exists, or the render-and-art program roadmap directly, for the overall epic ordering (Live Map/HUD skeleton first, Asset Management next, Aseprite CAP-A last/optional).

@@ -1,0 +1,36 @@
+---
+name: project-batch-c-ci-line-pin-conflict-heads-up
+description: A peer session (agent-working-design) is replacing the line-keyed pinned-import-exception mechanism in tests/architecture/test_phase18_import_boundaries.py with a content-keyed one; my own commit 3e4154ba (re-pinning orchestrator.py's import at line 498) will conflict with that change when it lands — keep my version, don't pre-adapt.
+metadata:
+  type: project
+  originSessionId: rpg-implementer
+  modified: 2026-09-11T06:19:48.011Z
+---
+
+**What happened (2026-09-11):** while landing Batch C (`batch-c-campaign-followups`,
+`3e4154ba`), CI failed on `tests/architecture/test_phase18_import_boundaries.py`'s
+`test_domains_do_not_import_observability_outside_pinned_exceptions` — this batch's own edits
+shifted an already-pinned, unchanged `src.observability.events` import in
+`src/domains/campaigns/orchestrator.py` from line 487 to 498. Fixed by re-pinning the line number
+per that file's own established convention (it had already been re-pinned twice before, for the
+same collateral-drift reason).
+
+**Why:** the pinning mechanism itself is hardcoded by exact line number
+(`_DOMAINS_OBSERVABILITY_PINNED = {(path, lineno): (...)}`), which makes it brittle to any
+unrelated edit above the pinned import — confirmed as the third occurrence of this exact drift
+within this one follow-up batch arc alone (per `rpg-feature-planning`, relaying word from a peer
+track).
+
+**How to apply — do not act on this until it actually happens:** a peer session
+(`agent-working-design`) owns `TCK-20260909-ARCHITECTURE-BOUNDARY-LINE-KEYED-PINNING-BRITTLE` and
+is replacing this line-keyed mechanism with a content-keyed one (matching on the import statement's
+own AST shape/content rather than its line number) — which would make this whole class of
+collateral-drift hotfix unnecessary going forward. Once that lands on `main`, my own `3e4154ba`
+re-pin (adding the `Line 487->498 re-pinned...` entry) will very likely produce a real merge
+conflict against their replacement of the same dict/mechanism. **Keep my version when that
+conflict happens** (per `rpg-feature-planning`, who has already told `agent-working-design`'s own
+implementer the same) — do not try to pre-emptively adapt this repo's code to the new
+content-keyed mechanism before it has actually landed, since its real shape isn't known yet.
+
+See also [[feedback_working_log_duplicate_keep_main_matching_copy]] for a related but
+unrelated-cause heads-up from the same relayed message.

@@ -143,3 +143,84 @@ def test_a_deleted_test_file_is_not_listed_but_an_added_and_a_renamed_one_are(tm
     git("add", "-A"); git("commit", "-q", "-m", "change")
     out = m.changed_test_files("main", run=lambda cmd, **kw: subprocess.run(cmd, cwd=tmp_path, **kw))
     assert out == ["tests/added.py", "tests/new_name.py"]
+
+
+# ---- TCK-20261004-ARCH-VERIFY-TESTS-READ-EVIDENCE ----------------------------------------------
+
+def _git_env_run(tmp_path):
+    env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t", "PATH": "/usr/bin:/bin"}
+
+    def git(*a):
+        subprocess.run(["git", *a], cwd=tmp_path, check=True, capture_output=True, env=env)
+    return git, (lambda cmd, **kw: subprocess.run(cmd, cwd=tmp_path, **kw))
+
+
+def test_changed_test_sources_sees_committed_uncommitted_untracked_and_excludes_deleted(tmp_path):
+    git, run = _git_env_run(tmp_path)
+    (tmp_path / "tests").mkdir()
+    for name in ("base", "edited", "gone"):
+        (tmp_path / "tests" / f"{name}.py").write_text(f"{name}\n" * 10)
+    git("init", "-q", "-b", "main"); git("add", "-A"); git("commit", "-q", "-m", "base")
+    git("checkout", "-q", "-b", "work")
+    (tmp_path / "tests" / "committed.py").write_text("c\n")
+    git("add", "-A"); git("commit", "-q", "-m", "work")
+    (tmp_path / "tests" / "edited.py").write_text("changed\n")        # modified, uncommitted
+    (tmp_path / "tests" / "untracked.py").write_text("u\n")           # untracked
+    (tmp_path / "tests" / "gone.py").unlink()                         # deleted: must not be listed
+    (tmp_path / "docs.md").write_text("not a test\n")
+    got = m.changed_test_sources("main", run=run)
+    assert got == {"tests/committed.py": ["committed"], "tests/edited.py": ["working-tree"],
+                   "tests/untracked.py": ["untracked"]}
+    assert m.changed_test_files("main", run=run) == sorted(got)
+
+
+def test_a_file_both_committed_and_edited_lists_both_sources(tmp_path):
+    git, run = _git_env_run(tmp_path)
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "a.py").write_text("a\n")
+    git("init", "-q", "-b", "main"); git("add", "-A"); git("commit", "-q", "-m", "base")
+    git("checkout", "-q", "-b", "work")
+    (tmp_path / "tests" / "a.py").write_text("b\n"); git("commit", "-q", "-am", "w")
+    (tmp_path / "tests" / "a.py").write_text("c\n")
+    assert m.changed_test_sources("main", run=run) == {"tests/a.py": ["working-tree", "committed"]}
+
+
+def _verify_event(**extra):
+    return {"run_id": TID, "seq": 5, "phase": m.PHASE, "agent": m.PRODUCTION_AGENT, "ts": "2026-10-02T10:00:00Z", **extra}
+
+
+def _events_with(**extra):
+    ev = _events()
+    ev[1] = _verify_event(**extra)
+    return ev
+
+
+def test_empty_findings_with_an_unread_changed_test_is_unverified(tmp_path):
+    root = _write(tmp_path, [_read(f"{ROOT}/tests/a/test_one.py")], _events_with(test_quality_findings=[]))
+    res = m.check(TID, ["tests/a/test_one.py", "tests/a/test_two.py"], root)
+    assert res["empty_findings_claim"] == "unverified"
+    assert res["unread_changed_tests"] == ["tests/a/test_two.py"]
+    assert "UNVERIFIED" in m.render(res)
+
+
+def test_tests_read_declaration_covers_a_file_with_no_read_row(tmp_path):
+    root = _write(tmp_path, [_read(f"{ROOT}/tests/a/test_one.py")],
+                  _events_with(test_quality_findings=[], tests_read=["tests/a/test_two.py"]))
+    res = m.check(TID, ["tests/a/test_one.py", "tests/a/test_two.py"], root)
+    assert res["empty_findings_claim"] == "read-backed" and res["unread_changed_tests"] == []
+    assert res["tests_read_declared"] == ["tests/a/test_two.py"]
+
+
+def test_nonempty_or_absent_findings_make_no_claim(tmp_path):
+    root = _write(tmp_path, [_read(f"{ROOT}/tests/a/test_one.py")], _events_with(test_quality_findings=["x"]))
+    assert m.check(TID, ["tests/a/test_two.py"], root)["empty_findings_claim"] is None
+    root2 = tmp_path / "second"; root2.mkdir()
+    root2 = _write(root2, [_read(f"{ROOT}/tests/a/test_one.py")], _events())
+    assert m.check(TID, ["tests/a/test_two.py"], root2)["empty_findings_claim"] is None
+
+
+def test_render_shows_the_source_of_each_file():
+    res = {"ticket_id": TID, "attributed_read_rows": 1, "attributed_rows_cut_at_120": 0,
+           "phase_window": [None, None], "files": {"tests/u.py": "NOT-READ"}, "sources": {"tests/u.py": ["untracked"]}}
+    assert "tests/u.py  [untracked]" in m.render(res)
