@@ -61,6 +61,12 @@ in `pyproject.toml` (`[tool.ruff.lint.mccabe]`, `[tool.ruff.lint.pylint]`, `[too
 | `make code-health-dup` | duplicated Python blocks under `src/` (jscpd, pinned in the Makefile) |
 | `make code-health` | all four tools, then the ratchet: fails only on a violation that is new or above its row in `codebase/baselines/code_health_exceptions.jsonl` |
 
+**Edit hook (advisory).** In a Claude Code session, right after an `Edit`, `Write` or `MultiEdit` of a `src/**/*.py` file,
+`codebase/hooks/edit_ratchet_hook.py` runs ruff on that one file and compares it with the registry like the pre-commit
+check. It speaks only when the file has a new or worse finding, adding that report as context for the agent; it is silent
+on a pass, never blocks, and always exits 0 (including when ruff or the registry is missing or it takes over about 5 seconds).
+Ruff only: complexity, size and ast-grep are left to `make code-health` and CI.
+
 The registry rows are matched by file, symbol, tool and rule, never by line, so moving code does
 not make an old violation look new. Do not edit the file by hand: `python3 -m codebase.health
 tighten` lowers ceilings and removes rows for debt you paid, `delete` removes one row, and a ruff or

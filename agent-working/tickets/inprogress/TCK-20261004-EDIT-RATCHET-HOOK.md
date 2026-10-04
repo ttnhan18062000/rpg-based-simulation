@@ -4,7 +4,7 @@ layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-EDIT-RATCHET-HOOK
-phase: open
+phase: inprogress
 date: 2026-10-04
 tags: [architecture, hooks]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, hooks]
 M6c: Advisory code-health PostToolUse edit hook
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -76,9 +76,14 @@ None.
 - Nothing here blocks a PR or tool call; M4 and M5 soaks are not disturbed
 
 ## Implementation Notes
+`codebase/hooks/edit_ratchet_hook.py` reuses `staged_ratchet.check()` (new keyword-only `python` and `timeout`, defaults keep pre-commit behaviour; a missing ruff, detected by "No module named" with empty stdout, or a timeout raises `HookSkipped`, never a clean pass). Repo root comes from the module path, not the cwd; stdin and path are filtered before the health modules are imported (lazy). Prefers `.venv/bin/python3`. Wired as the last PostToolUse group; the owner confirmed the literal diff (AskUserQuestion, 2026-10-04) before commit.
+
+**Finding for agent-working (capability envelope, no schema change):** `tools/capability_envelope_baseline.py` audits only `.claude/settings.local.json` and 4 fields (`permissions.allow` plus 3 MCP fields). It covers neither `hooks` nor `settings.json`, so no row could be added; roadmap 5.8's "new hooks must be added there" is not satisfiable without extending the schema. Also in the codebase-planner outbox (Message 12).
 
 ## Test Summary
+`tests/codebase/test_edit_ratchet_hook.py` + `test_code_health_staged_ratchet.py` 37 passed; wiring test added in `tests/tools/test_settings_json_hooks_wiring.py`. Wall time: non-src edit 0.05 s (bare python3 0.04 s); src edit 0.31 s warm. One first src-edit run took 17 s; it did not reproduce in 5 later runs (all <= 0.37 s, imports 55 ms, registry load 0.14 s, ruff 0.06 s), so it is attributed to a cold file cache, not measured directly. Only the ruff subprocess has a deadline (5 s); Claude Code's own hook timeout bounds the rest.
 
 ## Files Changed
+codebase/hooks/edit_ratchet_hook.py (new), codebase/gates/staged_ratchet.py, .claude/settings.json (agent-working's), tests/codebase/test_edit_ratchet_hook.py (new), tests/tools/test_settings_json_hooks_wiring.py, codebase/README.md, docs/guidelines/python_code_standard.md, ticket and staging artifacts
 
 ## Completion Summary
