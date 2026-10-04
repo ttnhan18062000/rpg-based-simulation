@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-PERF-M1-TIED-WORKER-RESULT-VERIFICATION
-phase: open
+phase: done
 date: 2026-10-04
 tags: [performance, determinism, testing, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, testing, engine]
 PERF-M1-T04: verify whether tied `WorkerResult` sort keys make the committed state depend on worker completion order
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -107,9 +107,26 @@ key alone ("Tied-result verification contract").
 - The process route may be unavailable in CI. Mark those cases and say which routes ran
 
 ## Implementation Notes
+- **Outcome: bounded commutative merge rules.** Entity results have a unique key (validator and resolution guard reject a duplicate). System results (`entity_id` 0, `DRAIN_DEBT`) tie on the whole key; their merge is last-writer-wins per `subsystem_id`, so it commutes exactly when no subsystem has two system results with different values in one tick. The shipped scheduler/executors emit one per subsystem per tick. It is not a unique key (ID-zero ties are real) and not a defect (no shipped path diverges, no test shows different state or digests for shipped inputs).
+- **The gap, stated once:** `ProtocolValidator.validate_result_batch` accepts two system results for one subsystem. With different values the committed state and proof digest depend on arrival order (mutation test). Enforcing "at most one per subsystem per tick" is a separate approved change (`protocol_validator.py` is within the lift; not done here because this ticket is verification only). Today every drain value is equal (`-max_worker_count`), so the divergent case is also value-equal in practice; see `TCK-20261004-WORK-DEBT-NEVER-ACCUMULATES-IN-PRODUCTION`.
+- Seam: a `Kernel` subclass overriding `_phase_resolution` (test-only), and a wrapper on the static `AuthoritativeApplyPipeline.refine` to capture raw and refined updates. No edit to `kernel.py`.
+- Level 1 is compared as the same results in key order: the ordered batch differs inside a tied group by construction (stable sort keeps arrival order), which is asserted separately. Wall-clock fields are excluded: `WorkerResult.compute_time_ns`, `sub_phase_costs`, metric counters named `*_ms`. Runs use `audit_mode=True`.
+- Routes that ran: local, thread (`WorkerManager(use_processes=False)`) and process (`use_processes=True`, ProcessPoolExecutor, 2 workers): 0 skipped on this machine. The process route is skipped automatically if the pool cannot be created.
+- Scenarios (non-combat): idle, movement, resource, strategic, and `ready_movers` (twelve entities ready every tick, so many CRITICAL results share class and local priority). The four stock scenarios schedule one entity result per tick, so ties among entity results needed `ready_movers`. Debt is seeded for four subsystems so four ID-zero results tie every tick.
+- Seeded debt: the system-result ties in the tests come from seeded debt; in ordinary play `work_debt` stays empty and no `DRAIN_DEBT` result is produced today (`TCK-20261004-WORK-DEBT-NEVER-ACCUMULATES-IN-PRODUCTION`). Said in the Rule 2 bullet and in `INFRA-420`.
+- Docs: `docs/engine/deterministic_execution.md` Rule 2 corrected (it said the key is "always stable and total") and parity ledger `INFRA-420` added (`make parity-ledger-schema-check`: 0 rose, 0 new).
+- Limits: five ticks, small worlds, four permutations per route, no combat, `audit_mode` on. With `audit_mode` off the mid-tick throttle drops the tail of the sorted list, so which tied result is dropped would follow arrival order; that path is already wall-clock-dependent and is not covered.
 
 ## Test Summary
+- `tests/integration/kernel/test_tied_worker_result_order.py`: 26 passed in about 38 s (5 scenarios x 3 routes permutation test, 5 cross-route digest tests, ID-zero, equal-priority, same-entity, validator gap, shipped-constructor and mutation cases).
+- AC2: the ID-zero test asserts the tied key and that the reversed input order differs while the key is equal; the permutation test asserts at least one tied group was reordered; the same-entity test shows both orders raise.
+- AC5 (mutation proof): two same-subsystem drains (-1, -4) make the comparison fail at the first differing level and the proof digests differ; equal-valued duplicates (-2, -2) commute.
+- Time cost: about 38 s for the module; it is not marked `slow`.
 
 ## Files Changed
+- `tests/integration/kernel/test_tied_worker_result_order.py` (new)
+- `docs/engine/deterministic_execution.md`, `docs/parity_ledger/infrastructure.yaml`, `docs/REGISTRY.yaml`
+- No `src/` file. `git diff --stat` shows no gated file.
 
 ## Completion Summary
+The outcome of the tied-result verification is bounded commutative merge rules: entity results have a unique key; system results tie but commute unless one subsystem has two results with different values in a tick, which the shipped producers never emit and the validator does not forbid. 26 new tests pass, with a mutation proof, and no `src/` file changed.

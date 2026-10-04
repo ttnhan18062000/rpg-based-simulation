@@ -132,7 +132,12 @@ After all workers complete, their results are sorted before resolution:
 sorted(results, key=lambda r: (r.class_priority, -r.local_priority, r.entity_id))
 ```
 
-`entity_id` is the tiebreaker — no two entities have the same ID, so the ordering is always stable and total.
+**Tied results (verified 2026-10-04, `TCK-20261004-PERF-M1-TIED-WORKER-RESULT-VERIFICATION`).** The key is not unique, and the earlier statement that it is "always total" was wrong. Verified outcome: **bounded commutative merge rules**.
+
+- *Entity results* (non-zero `entity_id`) have a unique key. `ProtocolValidator.validate_result_batch` rejects a second result for one entity, and `_phase_resolution` has its own guard (`Duplicate authoritative result for entity`). A same-entity tie is therefore a protocol violation, never an ordering question.
+- *System results* (`entity_id` 0, such as `DRAIN_DEBT`) tie on the whole key (debt is seeded in these tests; in ordinary play `work_debt` stays empty, so no DRAIN_DEBT result is produced today — see TCK-20261004-WORK-DEBT-NEVER-ACCUMULATES-IN-PRODUCTION). They are merged into `work_debt_updates[subsystem_id]`. Results for **distinct** subsystems write distinct keys, so they commute: permuting their arrival order left the ordered-batch content, the raw `StateUpdate`, the refined update (timing fields excluded), the authoritative state and the proof digest (`CanonicalStateHasher.get_hash`) unchanged on the local, thread and process routes, over the idle, movement, resource, strategic and a twelve-entity all-ready scenario (non-combat).
+- *The bound.* The merge is last-writer-wins, not a sum. Two results for the **same** subsystem with different values are order-dependent (the proof digest diverges; `test_mutation_proof_a_noncommutative_tie_makes_the_comparison_fail`). The supported protocol is at most one system result per subsystem per tick. The shipped constructors satisfy it (the scheduler emits one `DRAIN_DEBT` item per debt key), but `validate_result_batch` does not enforce it. Enforcing it is a separate, approved change; this record is not a defect claim because no shipped path produces the divergent case.
+- *Not covered:* combat scenarios (open ticket `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE`), `audit_mode=False` (the mid-tick throttle drops the tail of the sorted list, so which tied result is dropped would follow arrival order), and runs longer than five ticks.
 
 ### Rule 3: Read-only worker state
 

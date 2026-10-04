@@ -12672,3 +12672,28 @@
     and no src/ file was touched. Adapter tests use real captured tool output (tests/fixtures/code_health/);
     the CLI tests run in a scratch repository, so no test depends on the live contents
     of src/ or of the seeded registry.'
+- id: INFRA-420
+  text: 'Worker-result resolution order does not change the committed state. Kernel._phase_resolution
+    sorts results by (class_priority, -local_priority, entity_id) with a stable sort. Entity
+    results (non-zero entity_id) have a unique key: a second result for one entity is rejected
+    by ProtocolValidator.validate_result_batch and by the resolution guard. System results
+    (entity_id 0, DRAIN_DEBT) tie on the whole key; their merge into work_debt_updates is
+    last-writer-wins per subsystem_id, so it commutes exactly when no subsystem has two system
+    results with different values in one tick. The shipped scheduler and executors emit at most
+    one DRAIN_DEBT result per subsystem per tick. Permuting arrival order left the ordered
+    batch content, raw StateUpdate, refined update, authoritative state and proof digest unchanged.
+    Debt is seeded in these tests; in ordinary play work_debt stays empty, so no DRAIN_DEBT result
+    is produced today (TCK-20261004-WORK-DEBT-NEVER-ACCUMULATES-IN-PRODUCTION).
+
+    '
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/kernel.py::Kernel._phase_resolution; src/core/protocol_validator.py::ProtocolValidator.validate_result_batch
+  proof_type: contract
+  test_path: tests/integration/kernel/test_tied_worker_result_order.py
+  divergence_note: null
+  support_boundary: 'Bounded commutative merge rules (TCK-20261004-PERF-M1-TIED-WORKER-RESULT-VERIFICATION).
+    The bound (at most one system result per subsystem per tick, or equal values) is not
+    enforced by validate_result_batch; a duplicate with different values is order-dependent.
+    Non-combat scenarios, audit_mode on, five ticks, local/thread/process routes only.'
