@@ -4,7 +4,7 @@ layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING
-phase: blocked
+phase: inprogress
 date: 2026-10-04
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 M5f: After its own two-week soak, make the ast-grep rules (N3, N4, E3) block new violations
 
 ## Status
-BLOCKED
+INPROGRESS
 
 ## Tier
 standard
@@ -34,7 +34,6 @@ Roadmap decision 8.10: a new check is advisory for two weeks before it blocks. T
 - Remove the exclusion of `ast_grep` from the blocking set the M4 flip created (the ratchet then fails a PR on a new or worse `ast_grep` finding)
 - Ask the owner to confirm the required-check setting (owner action; record it)
 - Announce the date to the other planners before flipping: it makes N3, N4 and E3 violations in new code fail a PR for every domain that edits `src/`
-- Decide whether the SARIF changed-line feedback should include `ast_grep` (it builds ruff and complexipy only today; a structural change)
 
 ## Out of Scope
 - Any file under src/
@@ -65,7 +64,7 @@ None.
 - .github/workflows/test.yml
 
 ## Assumptions / Open Questions
-- Soak start and end: unknown until the rule pack's PR merges; written here at that merge
+- Soak start 2026-10-04 (PR #315 merged 2026-10-04T06:26:43Z), end 2026-10-18 (start + 14 days). Roadmap decision 8.18: ships in the one flip batch, merged on or after 2026-10-18; the soak review is drafted now and finalized after the window
 - N4 leaves a trailing digit to the reviewer; the standard's Enforcement cell says so
 
 ## Implementation Notes

@@ -4,7 +4,7 @@ layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING
-phase: blocked
+phase: inprogress
 date: 2026-10-04
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 M5f: After its own two-week soak, make the package-registry completeness check block a new top-level `src/` package without a row
 
 ## Status
-BLOCKED
+INPROGRESS
 
 ## Tier
 standard
@@ -66,7 +66,7 @@ None.
 - tests/codebase/test_package_registry.py
 
 ## Assumptions / Open Questions
-- Soak start and end: unknown until the validator's PR merges; written here at that merge
+- Soak start 2026-10-04 (PR #315 merged 2026-10-04T06:26:43Z), end 2026-10-18 (start + 14 days). Roadmap decision 8.18: ships in the one flip batch, merged on or after 2026-10-18; the soak review is drafted now and finalized after the window
 - The `Package registry` step has its own `continue-on-error`, so the M4 flip (which removes it from the `code-health` job's ratchet step) does not make this step blocking
 
 ## Implementation Notes

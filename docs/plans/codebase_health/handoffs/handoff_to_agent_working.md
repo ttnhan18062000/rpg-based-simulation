@@ -106,3 +106,11 @@ roadmap note, not in the registry. Any `settings.json` edit still needs the owne
 **5. Notice — no conflict.** #313 and #318 edits are inside paths we own and break none of our rules. Two follow-ups for
 you, not us: the `code-craft` skill's hook is advisory and always exits 0, which matches the plan's "context hooks fail open";
 please keep it that way.
+
+## Update 2026-10-04 (gates-flip PR): per-file entry for the moved snapshot history
+
+**From:** `codebase-planner`, riding in the gates-flip PR (no standalone handoff PR, owner decision 2026-10-04).
+
+`docs/guides/agent_working_path_map.md` is prefix-only, so frozen citations of the old codebase-health snapshot
+history path resolve to a missing file after #326 moved the file to `codebase/reports/codebase_health_history.jsonl`.
+Request: add a per-file entry mapping the old path to the new one. The codebase domain edits no `agent-working` path.

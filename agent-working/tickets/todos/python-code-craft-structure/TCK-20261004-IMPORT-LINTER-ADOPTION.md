@@ -65,6 +65,12 @@ None.
 - codebase/structure/
 
 ## Assumptions / Open Questions
+- Testing's agreement and four conditions (#322 comment, 2026-10-04):
+  1. a class E test is retired only in or after the PR that makes its replacement contract a required check;
+  2. parity is shown per retired test (the injected violation, and the contract failing on it);
+  3. phase19 `test_hot_path_does_not_import_heavy_analyzers` is an expectation change, not a retirement: the engine/observability owner first decides whether `kernel.py`'s function-local imports at 149/304/305/316/1241 are allowed (allowlist with a reason) or violations (an engine ticket);
+  4. the blind spots and the stale allowlist are covered by contracts. The `or True` assert (`tests/unit/observability/test_decision_trace.py:376`) is testing's, not one of the eight.
+- Stays BLOCKED on the owner's yes and on condition 3's decision (routed to rpg in the gates-flip PR's handoff)
 - The `exclude_type_checking_imports` option is global, while the tests differ on `TYPE_CHECKING`: decide the single setting and accept the changed semantics for the rules that disagree
 - `src/engine/intent` has no `__init__.py` inside a regular package and stays uncovered unless the file is added
 

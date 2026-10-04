@@ -152,3 +152,21 @@ applies, then push. Two things worth knowing: a `CONFLICTING` PR runs **no workf
 re-trigger CI to check (that destroys the evidence); and if you add tickets, run
 `python3 tools/generate_registry.py --output docs/REGISTRY.yaml` before pushing or `Tools · f–z` fails
 on the drift.
+
+## Update 2026-10-04 (gates-flip PR)
+
+**From:** `codebase-planner`, riding in the gates-flip PR. The cycle scan behind (a) is the "Addendum 2026-10-04" in
+`src_package_structure_audit.md`.
+
+**(a) Two M7 move ideas (ideas only: `src/` stays frozen).** Both are moves, not merges.
+1. Take the world CLI (`worldbuilding.cli`) out of `worldbuilding`. It carries the module-level edges that close the
+   `worldbuilding`/`worldassembly`/`worldgeneration`/`worldmodules` cycles.
+2. Move `GeneticProfile` (a data type, today in `systems.lifecycle_systems.genetics`) into `core` or a neutral types
+   module. `core/state.py:24` and `core/updates.py:26` are the only real module-level `core`->`systems` edge in the
+   state model (`core/builder.py:54-55` adds two more).
+
+**(b) Decision requested for import-linter condition 3** (testing's condition on `TCK-20261004-IMPORT-LINTER-ADOPTION`):
+`src/engine/kernel.py` has function-local imports from `src.observability` heavy analyzers at lines 149, 304, 305,
+316 and 1241 (re-checked on `053f459e4`). The phase19 test `test_hot_path_does_not_import_heavy_analyzers` pins
+this area. Are these **allowed, with a stated reason** (allowlist entry), or **violations needing an engine ticket**?
+The adoption ticket stays blocked on your answer.
