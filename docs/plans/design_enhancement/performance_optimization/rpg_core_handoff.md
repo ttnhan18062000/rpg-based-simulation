@@ -149,7 +149,9 @@ catalog entry. Having this in your specs makes that a copy, not an investigation
 
 - Perf will not edit the four core files while RPG-core tickets are open against them, and will
   not edit `src/` at all until the gate and the freeze lift.
-- Perf will not turn any soft performance check into a blocking one until the gate lifts. When we
+- Perf will not turn any soft performance check into a blocking one until the gate lifts. (This means
+  timing and capacity checks. The inventory in-sync test that Ask 2's update describes is a structural
+  check, not a performance one. The owner made it blocking on 2026-10-04.) When we
   do, the `perf-cert-arena` CI job (runs `tests/perf` on PRs touching `src/core` or `src/engine`)
   will start to block RPG-core PRs on real regressions. We will announce it here first.
 - Perf will review, on request, any RPG-core PR that touches the kernel loop, hashing, the
