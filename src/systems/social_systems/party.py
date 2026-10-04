@@ -130,6 +130,7 @@ class PartyCoordinationSystem:
         Creates a high-priority directive for all party members.
         """
         from src.core.strategic import DirectiveState, DirectivePriority
+        from src.core.updates import StrategicUpdate
         
         directive = DirectiveState(
             id=f"party_cmd_{command_kind}_{tick}",
