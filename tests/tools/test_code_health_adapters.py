@@ -3,9 +3,9 @@
 The JSON fixtures in tests/fixtures/code_health/ are the real output of ruff 0.16.10, complexipy
 8.0.1, jscpd 5.4.0 and `codebase.health.line_count`, run over tests/fixtures/code_health/sample_src/
 (a few files with deliberate violations). To recapture: copy sample_src, pyproject.toml and
-.jscpd.json to a scratch directory, run each tool there (ruff `check sample_src --output-format
+codebase/config/.jscpd.json to a scratch directory, run each tool there (ruff `check sample_src --output-format
 json`; `complexipy sample_src -q --output-format json --output complexipy.json`; `npx jscpd@5.4.0
-sample_src --config .jscpd.json --output jscpd`; `python3 -m codebase.health.line_count
+sample_src --config codebase/config/.jscpd.json --output jscpd`; `python3 -m codebase.health.line_count
 sample_src --format json`), and replace the scratch directory in ruff.json with `/FIXTURE_ROOT`
 (ruff prints absolute paths; that substitution is the only edit).
 """

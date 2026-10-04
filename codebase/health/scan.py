@@ -33,6 +33,7 @@ COMPLEXIPY_JSON = "complexipy.json"
 LINE_COUNT_JSON = "line_count.json"
 JSCPD_DIR = "jscpd"
 JSCPD_REPORT = "jscpd-report.json"
+JSCPD_CONFIG = "codebase/config/.jscpd.json"
 DEFAULT_COMPLEXITY_LIMIT = 15
 
 # jscpd needs npx and the npm registry; the others are Python tools in the project environment.
@@ -94,7 +95,7 @@ def _scan_complexipy(root: Path, out_dir: Path) -> None:
 
 def _scan_jscpd(root: Path, out_dir: Path) -> None:
     version = jscpd_version(root / "Makefile")
-    command = ["npx", "--yes", f"jscpd@{version}", SCAN_ROOT, "--config", ".jscpd.json", "--output", str(out_dir / JSCPD_DIR)]
+    command = ["npx", "--yes", f"jscpd@{version}", SCAN_ROOT, "--config", JSCPD_CONFIG, "--output", str(out_dir / JSCPD_DIR)]
     _run(command, root, (0,))
 
 

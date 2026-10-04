@@ -278,7 +278,7 @@ code-health-complexity: ## Report functions over the cognitive-complexity limit 
 # jscpd is a Node tool outside uv.lock; its version is pinned here and fetched with npx.
 JSCPD_VERSION ?= 5.4.0
 code-health-dup: ## Report duplicated Python blocks under src/ with jscpd (report-only; JSON in reports/code_health/jscpd/)
-	npx --yes jscpd@$(JSCPD_VERSION) src --config .jscpd.json
+	npx --yes jscpd@$(JSCPD_VERSION) src --config codebase/config/.jscpd.json
 
 # `code-health` is the Python craft-debt ratchet (codebase/health/, codebase/baselines/code_health_exceptions.jsonl).
 # It is unrelated to the codebase-health-* targets, which belong to tools/codebase_health_*.py.
