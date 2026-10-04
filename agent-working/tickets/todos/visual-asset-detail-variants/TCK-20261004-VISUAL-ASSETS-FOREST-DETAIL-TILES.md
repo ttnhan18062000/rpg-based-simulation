@@ -33,8 +33,14 @@ Third child of `TCK-20261004-VISUAL-ASSETS-TERRAIN-DETAIL-VARIANTS`. Real art fo
 ## Scope
 - Draw two 16 x 16 tiles with the aseprite-pixel-art drawing tools, starting from the pilot tile's palette and ground so
   any mix of `plain` / `bush` / `tree` tiles seamlessly (edges match the plain tile; the detail sits inside the tile).
-  Check with a preview of a mixed 4 x 4 arrangement before handing off. A third value is optional and only if it is
-  declared in the registry by ticket 1 (otherwise do not add one).
+  Check with a preview of a mixed 4 x 4 arrangement before handing off. A third value is optional; if drawn, it is declared in
+  the same registry change below.
+- Declare the axis on `terrain.forest` in `visual_assets/catalog/definitions/visual_keys.yaml`
+  (`detail: {values: [bush, plain, tree], default: plain}`), moved here from ticket 1: it changes `registry_hash`, so it lands
+  together with `pilot/rc-0002`, and before the adoptions (`adopt --detail` needs it). rc-0001 stays valid (`verify`
+  tolerates its axis-less entry); its export now refuses on `registry_hash`, so any test that re-exports rc-0001 (the
+  fixture-equality test, the rollback drill's retained release) must be re-pointed honestly, with the change named in
+  the commit; if a guard can only pass by weakening it, stop and tell the planner.
 - Hand off and pass intake per tile (`export_handoff`, `submit_candidate`).
 - **Adoption is the user's**, one blocking question per tile, run by the user in their own terminal:
   `adopt <intake_id> --visual-key terrain.forest --detail bush|tree ...`. Never run `adopt` or `revoke` yourself. The
