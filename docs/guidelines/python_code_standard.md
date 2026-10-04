@@ -32,14 +32,14 @@ Every rule has an Enforcement cell with one of:
   run on demand (below). It is **advisory in CI (soak)**: the `Code health (advisory)` job runs the
   ratchet on every PR and reports in its job summary (changed files first) and one warning annotation,
   but no CI job or hook fails on it yet. The violations that already exist in `src/` are held in
-  `registries/code_health_exceptions.jsonl`, and `make code-health` fails only on a new or worse one.
+  `codebase/baselines/code_health_exceptions.jsonl`, and `make code-health` fails only on a new or worse one.
   Blocking comes after the two-week soak (roadmap M4). Until then such a rule is enforced by review
   plus that advisory check. An opt-in pre-commit hook (`make install-prek-hooks`, see "Git hooks (opt-in)" in
   `docs/guidelines/agent_working_environment.md`) runs the same ratchet on the staged files. The first-run counts are in
   `TCK-20261002-CODE-HEALTH-TOOL-CONFIG`; later counts belong to the code-health snapshot.
 - **mypy, advisory today**: mypy is configured (`[tool.mypy]` in `pyproject.toml`) but runs
   non-blocking in `make typecheck-py` and CI, and five packages are excluded. Existing errors are held in
-  `registries/mypy_baseline.txt` (mypy-baseline 0.7.4, configured in `[tool.mypy_baseline]`; **1569
+  `codebase/baselines/mypy_baseline.txt` (mypy-baseline 0.7.4, configured in `[tool.mypy_baseline]`; **1569
   entries** at `TCK-20261003-MYPY-BASELINE-ADVISORY`, one per error, line numbers normalised to 0, notes
   ignored), so `make typecheck-py` and the CI `mypy` step report only errors that are not in it. The CI
   job summary prints the new-error count and the current baseline size on every run. A fixed error does
@@ -59,13 +59,13 @@ in `pyproject.toml` (`[tool.ruff.lint.mccabe]`, `[tool.ruff.lint.pylint]`, `[too
 | `make code-health-complexity` | functions over the cognitive-complexity limit (complexipy) |
 | `make code-health-size` | functions, classes and modules over the length limits |
 | `make code-health-dup` | duplicated Python blocks under `src/` (jscpd, pinned in the Makefile) |
-| `make code-health` | all four tools, then the ratchet: fails only on a violation that is new or above its row in `registries/code_health_exceptions.jsonl` |
+| `make code-health` | all four tools, then the ratchet: fails only on a violation that is new or above its row in `codebase/baselines/code_health_exceptions.jsonl` |
 
 The registry rows are matched by file, symbol, tool and rule, never by line, so moving code does
-not make an old violation look new. Do not edit the file by hand: `python3 -m tools.code_health
+not make an old violation look new. Do not edit the file by hand: `python3 -m codebase.health
 tighten` lowers ceilings and removes rows for debt you paid, `delete` removes one row, and a ruff or
 complexipy version bump needs `seed --force` (which keeps each surviving row's `reviewed`, `retiring_ticket` and `added_date`). The match key for each tool is documented in
-`tools/code_health/findings.py`.
+`codebase/health/findings.py`.
 
 Where a rule allows a justified exception and also names a tool (E2, M1), the tool cannot read a
 plain comment. In new or changed code the exception is written as `# noqa: <code>` followed by the
@@ -91,15 +91,15 @@ limits backed by controlled evidence.
 
 | ID | Measure | Limit | Enforcement |
 |---|---|---|---|
-| S1 | Function length | warn over 50 lines, fail over 80 | `tools/code_health/line_count.py`, configured |
+| S1 | Function length | warn over 50 lines, fail over 80 | `codebase/health/line_count.py`, configured |
 | S2 | Statements per function | 50 | ruff `PLR0915`, configured |
 | S3 | Cyclomatic complexity | 10 | ruff `C901`, configured |
 | S4 | Cognitive complexity | 15 | complexipy, configured |
 | S5 | Arguments per function | 5 | ruff `PLR0913`, configured |
 | S6 | Branches per function | 12 | ruff `PLR0912`, configured |
 | S7 | Nesting depth | 5 | ruff `PLR1702` (a preview rule, enabled by exact code), configured |
-| S8 | Class length | flag over 500 lines | `tools/code_health/line_count.py`, configured |
-| S9 | Module length | flag over 1,000 lines | `tools/code_health/line_count.py`, configured |
+| S8 | Class length | flag over 500 lines | `codebase/health/line_count.py`, configured |
+| S9 | Module length | flag over 1,000 lines | `codebase/health/line_count.py`, configured |
 
 A function already over a limit must not get longer or more complex when you change it.
 

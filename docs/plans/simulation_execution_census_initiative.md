@@ -135,7 +135,7 @@ every entry carries a **stated reason**, never a blanket ignore.
 
 This repo has already paid for getting this wrong: `docs/audits/D11_dead_code.md` (2026-06-18) used
 grep-based import counting and was found to have a **100% false-positive rate** — every flagged
-orphan had a real importer, mostly via lazy imports. `tools/audit_unreachable_code.py` was later
+orphan had a real importer, mostly via lazy imports. `codebase/reports/audit_unreachable_code.py` was later
 built to avoid that failure mode and documents two further methodology bugs found while writing it.
 Read that tool before designing this one; it is the same problem one layer down, and it already
 encodes hard-won lessons (notably: test-only usage must not count as alive).
@@ -239,9 +239,9 @@ from this week's own combat-engagement investigation, landing after this doc was
 ### 7.1 What's instrumented
 
 **`src/` and `tools/`, both, full scope — not narrowed to Mechanics-Bible-declared features for
-v1.** This directly resolves Open Decision #5: `tools/audit_unreachable_code.py` defines
+v1.** This directly resolves Open Decision #5: `codebase/reports/audit_unreachable_code.py` defines
 `SRC_ROOTS = [Path("src")]` and scans `TEST_TOOL_ROOTS = [Path("tests"), Path("tools")]` only for
-*occurrences* (confirmed by direct read, `tools/audit_unreachable_code.py:86-87`) — so a
+*occurrences* (confirmed by direct read, `codebase/reports/audit_unreachable_code.py:86-87`) — so a
 zero-caller function under `tools/` is invisible to it by construction, and `tools/` simultaneously
 helps decide whether a `src/` identifier counts as used elsewhere. The census must not repeat this
 asymmetry: `tools/` is instrumented as a subject with its own branch-coverage report, not only
@@ -407,7 +407,7 @@ effectiveness axis above), and the exact mechanics of the suppression-list stabi
   answers are stale and, in at least two cases, wrong.
 - `docs/audits/D11_dead_code.md` — the 100%-false-positive precedent; read the Post-Audit
   Correction before designing detection.
-- `tools/audit_unreachable_code.py` — static caller analysis, correctly excludes test-only usage.
+- `codebase/reports/audit_unreachable_code.py` — static caller analysis, correctly excludes test-only usage.
   Complementary: it finds zero-caller code, this finds zero-effect code.
 - `docs/simulation_quality/quality_scoring_contract.md` — SimQ's own scope; the boundary in §3.
 - `docs/plans/agent_infrastructure/reachability_verification_findings.md` — why test coverage is

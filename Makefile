@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks install-prek-hooks uninstall-prek-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py typecheck-baseline-sync lint-py code-health-size code-health-complexity code-health-dup code-health perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check duplicate-run-record-check sidecar-attribution-coverage-check tool-call-count-mismatch-check event-seq-integrity-check monitoring-integrity-backlog-check monitoring-anomaly-validate premise-staleness-check tools-orphan-check planning-doc-staleness-check
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks install-prek-hooks uninstall-prek-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py typecheck-baseline-sync lint-py code-health-size code-health-complexity code-health-dup code-health parity-ledger-schema-check perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check duplicate-run-record-check sidecar-attribution-coverage-check tool-call-count-mismatch-check event-seq-integrity-check monitoring-integrity-backlog-check monitoring-anomaly-validate premise-staleness-check tools-orphan-check planning-doc-staleness-check
 
 # Default
 help: ## Show available commands
@@ -274,7 +274,7 @@ lint-py: ## Lint Python under src/ with ruff (check only: no formatter, no --fix
 	python3 -m ruff check src
 
 code-health-size: ## Report modules/classes/functions over the length limits in [tool.code_health.size] (report-only)
-	python3 -m tools.code_health.line_count src --flagged-only
+	python3 -m codebase.health.line_count src --flagged-only
 
 code-health-complexity: ## Report functions over the cognitive-complexity limit in [tool.complexipy] (report-only)
 	complexipy --failed --ignore-complexity
@@ -282,17 +282,21 @@ code-health-complexity: ## Report functions over the cognitive-complexity limit 
 # jscpd is a Node tool outside uv.lock; its version is pinned here and fetched with npx.
 JSCPD_VERSION ?= 5.4.0
 code-health-dup: ## Report duplicated Python blocks under src/ with jscpd (report-only; JSON in reports/code_health/jscpd/)
-	npx --yes jscpd@$(JSCPD_VERSION) src --config .jscpd.json
+	npx --yes jscpd@$(JSCPD_VERSION) src --config codebase/config/.jscpd.json
 
-# `code-health` is the Python craft-debt ratchet (tools/code_health/, registries/code_health_exceptions.jsonl).
-# It is unrelated to the codebase-health-* targets, which belong to tools/codebase_health_*.py.
-code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than registries/code_health_exceptions.jsonl (also the advisory `Code health (advisory)` CI job during the soak: reports, never fails the PR)
-	python3 -m tools.code_health check
+# `code-health` is the Python craft-debt ratchet (codebase/health/, codebase/baselines/code_health_exceptions.jsonl).
+# It is unrelated to the codebase-health-* targets, which belong to codebase/reports/codebase_health_*.py.
+code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than codebase/baselines/code_health_exceptions.jsonl (also the advisory `Code health (advisory)` CI job during the soak: reports, never fails the PR)
+	python3 -m codebase.health check
 
-typecheck-py: ## Run mypy over src/ and show only errors not in registries/mypy_baseline.txt (advisory during the soak: never fails)
+# Ratchet over docs/parity_ledger/*.yaml against docs/parity_ledger/schema.json (TCK-20261003-PARITY-LEDGER-SCHEMA-RATCHET).
+parity-ledger-schema-check: ## Fail when any parity-ledger schema error count rose or a new error rule appeared against codebase/baselines/parity_ledger_schema_baseline.json (blocking; the tests/codebase live test runs it in CI)
+	python3 -m codebase.gates.parity_ledger_schema check
+
+typecheck-py: ## Run mypy over src/ and show only errors not in codebase/baselines/mypy_baseline.txt (advisory during the soak: never fails)
 	python3 -m mypy src/ --config-file pyproject.toml --no-error-summary | python3 -m mypy_baseline filter || true
 
-typecheck-baseline-sync: ## Rewrite registries/mypy_baseline.txt from a fresh mypy run. Codebase domain only, on main, together with the code-health reseed (make code-health seed); never to hide a new error
+typecheck-baseline-sync: ## Rewrite codebase/baselines/mypy_baseline.txt from a fresh mypy run. Codebase domain only, on main, together with the code-health reseed (make code-health seed); never to hide a new error
 	python3 -m mypy src/ --config-file pyproject.toml --no-error-summary | python3 -m mypy_baseline sync
 
 # ── Documentation Site ───────────────────────────────────
@@ -459,19 +463,19 @@ status-drift-check: ## Report ## Status body-text drift in agent-working/tickets
 	python3 tools/gate_checks/status_drift_check.py
 
 codebase-health-baseline: ## Print a live LoC/churn/dependency baseline snapshot (on-demand only — not CI)
-	python3 tools/codebase_health_baseline.py
+	python3 -m codebase.reports.codebase_health_baseline
 
 codebase-health-impact: ## Print a change-impact report for a source path (pass ARGS="src/engine/pipeline.py") (on-demand only — not CI)
-	python3 tools/code_health_impact.py $(ARGS)
+	python3 -m codebase.reports.code_health_impact $(ARGS)
 
 codebase-health-snapshot: ## Append a codebase-health metrics snapshot to agent-working/agent-monitoring/codebase_health_history.jsonl (on-demand only — not CI)
-	python3 tools/codebase_health_snapshot.py snapshot $(ARGS)
+	python3 -m codebase.reports.codebase_health_snapshot snapshot $(ARGS)
 
 codebase-health-scorecard: ## Print a per-dimension trend scorecard over codebase-health history (on-demand only — not CI)
-	python3 tools/codebase_health_snapshot.py scorecard $(ARGS)
+	python3 -m codebase.reports.codebase_health_snapshot scorecard $(ARGS)
 
 codebase-health-pr-impact: ## Print a batched PR/AI change-impact report for one or more source paths (pass ARGS="path1 path2 ...") (on-demand only — not CI)
-	python3 tools/pr_impact_report.py $(ARGS)
+	python3 -m codebase.reports.pr_impact_report $(ARGS)
 
 agent-monitoring-index: ## Rebuild the derived read-only SQLite index over agent-monitoring JSONL logs (on-demand only — not CI)
 	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
@@ -533,10 +537,10 @@ install-hooks: ## Install git hooks (post-commit incremental reindex when docs/ 
 	@echo "[hooks] post-commit hook installed"
 
 install-prek-hooks: ## OPT-IN: install the prek pre-commit hook (ruff ratchet on staged src files, offline uv.lock check) and the post-commit reindex hook, never overwriting; affects EVERY worktree on this machine
-	python3 tools/hooks/install_git_hooks.py install
+	python3 -m codebase.hooks.install_git_hooks install
 
 uninstall-prek-hooks: ## Remove what install-prek-hooks installed (prek pre-commit shim, restoring any legacy hook; post-commit only if it is ours); never touches post-merge
-	python3 tools/hooks/install_git_hooks.py uninstall
+	python3 -m codebase.hooks.install_git_hooks uninstall
 
 eval-search: ## Run search quality evaluation — Recall@5, MRR@10 (requires knowledge-index)
 	$(PYTHON_KNOWLEDGE) tools/eval_search.py

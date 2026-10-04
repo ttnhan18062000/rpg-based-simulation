@@ -8,13 +8,13 @@ repos:
     hooks:
       - id: code-health-ratchet
         name: code-health ratchet (ruff on staged src files, new or worse violations only)
-        entry: bash tools/hooks/code_health_pre_commit.sh
+        entry: bash codebase/hooks/code_health_pre_commit.sh
         language: system
         files: ^src/.*\.py$
         verbose: true  # prek hides a passing hook's output; a skip ("environment not synced") must stay visible
       - id: uv-lock-check
         name: uv.lock matches pyproject.toml (offline)
-        entry: bash tools/hooks/uv_lock_pre_commit.sh
+        entry: bash codebase/hooks/uv_lock_pre_commit.sh
         language: system
         files: ^(pyproject\.toml|uv\.lock)$
         pass_filenames: false
