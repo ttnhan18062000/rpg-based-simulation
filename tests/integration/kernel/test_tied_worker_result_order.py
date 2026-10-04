@@ -341,13 +341,16 @@ def _drain(subsystem: str, value: int, work_id: str) -> WorkerResult:
     )
 
 
-def test_validator_accepts_two_system_results_for_one_subsystem():
-    """Characterisation of a gap: nothing forbids a second ID-zero result for the same subsystem.
+def test_validator_rejects_two_system_results_for_one_subsystem():
+    """The bound of the merge rule is enforced (TCK-20261004-PERF-M1-VALIDATOR-ONE-SYSTEM-RESULT-PER-SUBSYSTEM).
 
-    If a validator rule is added later (a separately approved change), this test should flip to
-    `pytest.raises` and the conclusion in `deterministic_execution.md` be updated.
+    Before that ticket the validator accepted this batch, which is why the mutation test below injects
+    its divergent pair *after* collection-time validation, directly into resolution: it keeps showing
+    that the comparison can see the divergence the validator now makes unreachable.
     """
-    ProtocolValidator.validate_result_batch([_drain("SYS_A", -2, "a1"), _drain("SYS_A", -5, "a2")], {})
+    for batch in ([_drain("SYS_A", -2, "a1"), _drain("SYS_A", -5, "a2")], [_drain("SYS_A", -5, "a2"), _drain("SYS_A", -2, "a1")]):
+        with pytest.raises(ProtocolViolationError, match="SYS_A"):
+            ProtocolValidator.validate_result_batch(batch, {})
 
 
 def test_shipped_constructors_never_emit_two_system_results_for_one_subsystem(capture_updates):
@@ -359,7 +362,10 @@ def test_shipped_constructors_never_emit_two_system_results_for_one_subsystem(ca
 
 
 def test_mutation_proof_a_noncommutative_tie_makes_the_comparison_fail(capture_updates):
-    """The instrument can see a divergence: two same-subsystem drains with different values are last-writer-wins."""
+    """The instrument can see a divergence: two same-subsystem drains with different values are last-writer-wins.
+
+    The pair is injected into `_phase_resolution`, below the validator that now rejects it at collection.
+    """
     def inject(results):
         return results + [_drain("SYS_A", -1, "inj_a"), _drain("SYS_A", -4, "inj_b")]
 

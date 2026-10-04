@@ -44,6 +44,7 @@ class ProtocolValidator:
     ) -> None:
         """Verify results against their source packets and enforce Option A."""
         seen_entities: Set[int] = set()
+        seen_debt_subsystems: Set[str] = set()
         
         for result in results:
             # 1. Source Traceability (Optional for local-only baseline runs)
@@ -73,6 +74,16 @@ class ProtocolValidator:
                 # System results (entity_id=0) must specify a subsystem_id to avoid collision
                 raise ProtocolViolationError("System result missing subsystem_id")
             
+            # 3b. System results tie on the whole sort key and the kernel merges their debt updates
+            # last-writer-wins per subsystem, so two for one subsystem would make the committed state
+            # depend on arrival order. At most one per subsystem per batch (PERF-M1-T04).
+            if result.work_debt_update is not None and result.subsystem_id:
+                if result.subsystem_id in seen_debt_subsystems:
+                    raise ProtocolViolationError(
+                        f"Duplicate system result for subsystem {result.subsystem_id}"
+                    )
+                seen_debt_subsystems.add(result.subsystem_id)
+
             # 4. Success invariant
             if result.status == ResultStatus.FAILURE:
                 # Failure is acceptable by contract, but we ensure it didn't return a corrupted delta
