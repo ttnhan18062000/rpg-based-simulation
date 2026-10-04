@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-VISUAL-ASSETS-M5-RERUN-AND-M6-CHARTER
-phase: open
+phase: active
 date: 2026-10-04
 tags: [planning, live-map, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [planning, live-map, documentation]
 Rerun and re-record `AM-M5` for the terrain role, draft the `AM6-W01` pilot charter, and date the M6/M7 plan status
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -42,6 +42,12 @@ P1
 - Dated status notes (2026-10-xx) in `06_bounded_activation_pilot_plan.md` (prerequisites met / not met, charter draft
   link) and `07_incremental_migration_plan.md` (still dormant: needs M6 `PASS` and a disposition), and in the package `README.md`.
 - Epic close-out.
+
+## Planner rulings 2026-10-04
+1. The charter's top list names M2 and M4 as "no PASS record exists", and M1 with its open items as the runtime README lists them (AM1-W03, W04, W06-W11, W13; W01 is decided by D8, W08 by D9). Nothing is claimed beyond the records.
+2. Classifications accepted: W05 `INCONCLUSIVE` (the hover text is the real Live Map's non-hue route and this harness does not render it; no assistive technology run). `AM5-W09` and `AM-C09` are `INCONCLUSIVE`, not `PASS`, and plan 05 is not edited: "satisfied by construction for the store (gc never deletes tracked state, so previous-release artifacts are protected; tested by the retained-release guard + mutant). Supported-client roots are a deployment fact under Profile A, not modelled. Gate wording unchanged. Reclassify to PASS only if the owner explicitly accepts the narrowed definition (to be asked at charter signing)." That acceptance is one more `TO BE SIGNED BY OWNER` line in the charter. Overall M5 `INCONCLUSIVE`.
+3. Commit everything else first, run every check on that clean HEAD, name the hash in the record; the record and the epic close-out are the last commit.
+4. Charter: human fields `TO BE SIGNED BY OWNER`, no proposed numbers; the AM6-W02..W09 list marked exists / harness-drill-only / absent; top line "DRAFT — not an authorization; AM-M6 NO-GO until signed and separately authorized". M7 note: still dormant, needs M6 `PASS` and a recorded disposition.
 
 ## Out of Scope
 - Signing the charter, authorizing or executing `AM-M6`, any deployment, any `AM-M7` planning beyond the dated note.
