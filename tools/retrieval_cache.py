@@ -77,8 +77,8 @@ retrieval_cache_schema_version: int = 3
 # timestamp.
 _NO_MANIFEST = "no_manifest"
 
-CACHE_DB_PATH: Path = KNOWLEDGE_INDEX / "retrieval_cache.db"
-_MANIFEST_PATH: Path = KNOWLEDGE_INDEX / "manifest.json"
+CACHE_DB_PATH: Path = _REPO_ROOT / KNOWLEDGE_INDEX / "retrieval_cache.db"
+_MANIFEST_PATH: Path = _REPO_ROOT / KNOWLEDGE_INDEX / "manifest.json"
 
 INDEX_CACHE_CATEGORY = "retrieval_index_cache"
 QUERY_CACHE_CATEGORY = "retrieval_query_cache"

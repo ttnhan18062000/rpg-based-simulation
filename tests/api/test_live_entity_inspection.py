@@ -4,8 +4,8 @@ import os
 import subprocess
 import sys
 import requests
-import time
 import pytest
+from tests.api.server_readiness import wait_for_server_ready
 
 _TEST_CLIENT_ID = "live-entity-inspection-test-client"
 _TEST_RAW_KEY = "live-entity-inspection-test-key"
@@ -19,10 +19,8 @@ def test_live_entity_inspection():
     server = subprocess.Popen(cmd, env=env)
     headers = {"X-API-Key": _TEST_RAW_KEY}
 
-    # Wait for server to boot
-    time.sleep(3)
-
     try:
+        wait_for_server_ready(server, port)
         # 1. Inspect a missing/invalid entity ID (should return 404)
         resp = requests.get(f"http://127.0.0.1:{port}/api/v1/observability/live/entities/9999", headers=headers)
         assert resp.status_code == 404

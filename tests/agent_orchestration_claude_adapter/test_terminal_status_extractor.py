@@ -94,8 +94,8 @@ def test_scope_agent_failed_handling_is_an_explicit_documented_decision():
 def test_extract_all_terminal_statuses_dedupes_by_value_not_call_site_count():
     all_statuses = extract_all_terminal_statuses(_WORKFLOW_JS_PATH)
 
-    assert len(all_statuses) == 17, (
-        f"expected 17 distinct terminal-status values (14 literal + 2 verdict-derived + 1 "
+    assert len(all_statuses) == 18, (
+        f"expected 18 distinct terminal-status values (14 literal + 2 verdict-derived + 2 "
         f"bypass), got {len(all_statuses)}: {sorted(e['value'] for e in all_statuses)}"
     )
 

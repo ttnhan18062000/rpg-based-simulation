@@ -27,8 +27,9 @@ The owner asked (2026-10-03) whether codebase tooling should be better structure
   - `tools/hooks/`, shared with agent-working's reindex hooks: `code_health_pre_commit.sh`,
     `uv_lock_pre_commit.sh`, `install_git_hooks.py`
   - `registries/`: `code_health_exceptions.jsonl`, `mypy_baseline.txt`
-  - `agent-working/agent-monitoring/codebase_health_history.jsonl` (snapshot history; it sits in
-    another domain's data root)
+  - `agent-working/agent-monitoring/codebase_health_history.jsonl` (snapshot history; it sat in
+    another domain's data root until TCK-20261004-CODEBASE-HEALTH-HISTORY-MOVE moved it to
+    `codebase/reports/`)
   - plus root config (`pyproject.toml` tool sections, `.pre-commit-config.yaml`, `.jscpd.json`), docs
     (`docs/guidelines/python_code_standard.md`, `docs/plans/codebase_health/`) and tests
     (`tests/tools/test_code_health_*`, `test_codebase_health_*`, `test_mypy_gate.py`).
@@ -93,8 +94,8 @@ now; the split grows with each milestone.
 B, as one ticket at the start of the next codebase batch, with no behaviour change:
 - Pure moves plus reference updates, in a quiet window right after #305 merges, early in the soak,
   so the flip ticket and M5 target final paths.
-- `codebase_health_history.jsonl` moves only with agent-working's agreement. It is their data root,
-  so request it through the outbox and keep it in place until they answer.
+- `codebase_health_history.jsonl` moved only with agent-working's agreement (given 2026-10-04 in PR #322);
+  it now lives in `codebase/reports/` (TCK-20261004-CODEBASE-HEALTH-HISTORY-MOVE).
 - Add the codebase domain's `owns:` entry to the session-layer table as an agent-working request,
   since agent-working owns that document.
 - Acceptance:

@@ -17,7 +17,7 @@ from pathlib import Path
 from visual_assets.store import config, pixels, records, verify
 from visual_assets.store.catalog.registry import load_registry
 from visual_assets.store.contracts import ReleaseCandidateManifest, RuntimeManifest, canonical_json, parse_record, record_bound
-from visual_assets.store.contracts.runtime import RuntimeEntry
+from visual_assets.store.contracts.runtime import RuntimeDetail, RuntimeEntry
 from visual_assets.store.errors import BuildError, ContractError, IdentityError, PngDecodeError, RegistryError, StageError
 from visual_assets.store.identities import CatalogId, ReleaseId, check
 from visual_assets.store.intake.validator import file_hash
@@ -92,11 +92,17 @@ def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, all
                 raise BuildError("artifact_mismatch", f"the artifact PNG for {entry.visual_key} does not match its pixel hash")
             files[f"{digest}.png"] = png
             entries.append(RuntimeEntry(visual_key=entry.visual_key, family=registry.keys[entry.visual_key].family, pixel_hash=entry.pixel_hash,
-                                        file=f"{digest}.png", width=decoded.width, height=decoded.height))
+                                        file=f"{digest}.png", width=decoded.width, height=decoded.height, detail=entry.detail))
+        # the client picks over the DECLARED values, copied from the registry (the registry hash was just checked equal to the candidate's)
+        details = tuple(
+            RuntimeDetail(visual_key=key, values=tuple(registry.keys[key].detail.values), default=registry.keys[key].detail.default)
+            for key in sorted({e.visual_key for e in entries}) if registry.keys[key].detail is not None
+        )
         runtime = RuntimeManifest(
             record_type="runtime_manifest", schema_version=1, catalog_id=catalog_id, release_id=release_id,
             candidate_manifest_hash=file_hash(manifest_bytes), registry_hash=candidate.registry_hash,
-            fallback_contract_version=FALLBACK_CONTRACT_VERSION, entries=tuple(sorted(entries, key=lambda e: e.visual_key)),
+            fallback_contract_version=FALLBACK_CONTRACT_VERSION, entries=tuple(sorted(entries, key=lambda e: (e.visual_key, e.detail or ""))),
+            details=details,
         )
         data = canonical_json(runtime)
     except RegistryError as exc:

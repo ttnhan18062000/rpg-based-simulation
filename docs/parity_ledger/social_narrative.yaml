@@ -128,7 +128,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/arena/test_arena_stop_conditions.py::test_arena_stop_condition_wipe
   divergence_note: null
   support_boundary: null
 - id: SOC-011
@@ -139,7 +139,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/arena/test_arena_stop_conditions.py::test_arena_stop_condition_timeout
   divergence_note: null
   support_boundary: null
 - id: SOC-012

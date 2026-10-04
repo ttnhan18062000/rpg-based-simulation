@@ -379,6 +379,8 @@ baselines* have **not fired**.
 | Cleanup batch (§9) | Epic A's cost view exists and the post-pilot review accepts a batch |
 | Scale-out to further domains | Post-pilot review approval (§6) |
 | Parity evidence model, API/UI tests | Their own decisions or a demonstrated core-RPG dependency |
+| `social_narrative.yaml` P0 evidence re-verification and relocation of misfiled entries (`docs/testing/social_test_report_2026-10-03.md` §7) | Owner decision; nothing in this batch |
+| `src/testing/` (`route_family_classifier.py`, `scenario_runner.py`) moves under test support | `src/` reopening (agreed on PR #322) |
 
 ## 12 · Risks to this roadmap
 
