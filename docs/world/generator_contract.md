@@ -24,7 +24,7 @@ There are **two distinct generators** in `src/worldgeneration/`:
 
 | Generator | Class | Input | Output | Approach |
 |---|---|---|---|---|
-| **Composition-based** (primary, new) | `ProceduralCompositionGenerator` | `GenerationIntentSpec` + `WorldModuleRepository` | `WorldCompositionSpec` YAML in `data/content/world_compositions/generated/` | Scores and selects existing world modules, writes a composition YAML |
+| **Composition-based** (primary, new) | `ProceduralCompositionGenerator` | `GenerationIntentSpec` + `WorldModuleRepository` | `WorldCompositionSpec` YAML at `data/worlds/{world_id}/world.yaml` plus its `resolved/` sibling | Scores and selects existing world modules, writes a source definition |
 | **Spec-based** (legacy, preserved) | `WorldProceduralGenerator` | `GenerationIntentSpec` + `CatalogRepository` | `ResolvedWorldBundle` | Builds a `WorldSpec` directly from catalog records (no modules) |
 
 The composition-based path is the **intended path for CLI-driven generation** and produces compositions that survive the full `WorldAssemblyResolver` → `WorldCompiler` pipeline. The spec-based path is preserved for lab experiments and internal tooling.
@@ -299,12 +299,28 @@ For each selected module (in selection-rank order), for each parameter declarati
 3. Else if `type == "float"` and bounds set → `param_rng.uniform(min_value, max_value)`
 4. Else → use `default`
 
-**Determinism:** Given identical `(intent, module_repo)` inputs, the generator produces the same `WorldCompositionSpec` YAML. `param_rng` is isolated from all other RNG state.
+**Determinism:** Given identical `(intent, module_repo)` inputs, the generator produces the same `WorldCompositionSpec`, with the single exception of `generation_provenance.generated_at`. That field is a wall-clock origin record, legitimate provenance rather than part of the composition's identity — the same split the resolver draws with `provenance_manifest.created_at`. `param_rng` is isolated from all other RNG state.
 
 **Output:**
-- File: `data/content/world_compositions/generated/{world_id}.yaml`
+- Source definition: `data/worlds/{world_id}/world.yaml` (the root defaults to `DEFAULT_WORLDS_ROOT` and is overridable via `generate(..., output_dir=...)`)
+- Projection: `{world_id}/resolved/world.resolved.yaml` and its four sidecars, written through the same single resolve path the `resolve` CLI subcommand uses. Without it `WorldRepository.load_world()` refuses the new world.
 - World ID format: `generated_{settlement_style}_{int(danger_level)}_{seed}`
 - The output YAML is a valid `WorldCompositionSpec` and can be fed directly to `WorldAssemblyResolver.assemble()`.
+
+**The generator is a one-time author, not a continuing projection.** What it writes IS the
+definition from that moment on — `docs/architecture/world_repository_layout.md` §1: "once written
+it is edited, not regenerated". Three constraints follow, and they are design rules rather than
+suggestions:
+
+1. The `generation_provenance` marker records **history only** (generator, version, seed, intent
+   params). It is not an input contract.
+2. **Nothing may assert `world.yaml == generate(marker)`.** That would convert the marker into a
+   re-derivation obligation and make `world.yaml` a projection of params stored inside it.
+3. Nothing outside `data/worlds/{world_id}/` holds generation inputs as a definition.
+
+Consequently `generate()` refuses to overwrite an existing `world.yaml`, and it resolves from the
+in-memory composition **before** committing either write, so a failed resolve cannot leave a world
+that is simultaneously unloadable and un-regenerable.
 
 ---
 

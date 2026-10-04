@@ -10,13 +10,12 @@ from __future__ import annotations
 import pytest
 import yaml
 from pathlib import Path
-from unittest.mock import MagicMock
-
 from src.worldgeneration.generator import (
     ProceduralCompositionGenerator,
     GenerationCompositionError,
 )
 from src.worldgeneration.schema import GenerationIntentSpec
+from src.worldmodules.repository import WorldModuleRepository
 from src.worldmodules.schema import WorldModuleSpec
 from src.worldassembly.schema import WorldCompositionSpec
 
@@ -45,10 +44,15 @@ def _make_module(
     )
 
 
-def _make_repo(modules: list[WorldModuleSpec]) -> MagicMock:
-    """Return a mock WorldModuleRepository with list_modules() returning given modules."""
-    repo = MagicMock()
-    repo.list_modules.return_value = modules
+def _make_repo(modules: list[WorldModuleSpec]) -> WorldModuleRepository:
+    """Return a WorldModuleRepository populated in memory, with no file I/O.
+
+    A real repository rather than a mock: generate() now resolves the composition it authored,
+    and the resolver looks modules up by id through get_module()/module_fingerprint().
+    """
+    repo = WorldModuleRepository(modules_dir="tests/fixtures/__nonexistent_world_modules__")
+    repo.modules = {m.module_id: m for m in modules}
+    repo.raw_data = {m.module_id: m.model_dump() for m in modules}
     return repo
 
 
@@ -84,16 +88,17 @@ class TestDeterminism:
         intent = _default_intent()
         gen = ProceduralCompositionGenerator()
 
-        path1 = gen.generate(intent, repo)
-        content1 = path1.read_text()
+        path1 = gen.generate(intent, repo, output_dir=tmp_path / "run1")
+        path2 = gen.generate(intent, repo, output_dir=tmp_path / "run2")
 
-        # Remove generated file so second call recreates it fresh
-        path1.unlink()
+        def _without_origin_timestamp(path):
+            raw = yaml.safe_load(path.read_text())
+            raw["generation_provenance"].pop("generated_at")
+            return raw
 
-        path2 = gen.generate(intent, repo)
-        content2 = path2.read_text()
-
-        assert content1 == content2, "Same intent must produce byte-identical YAML"
+        assert _without_origin_timestamp(path1) == _without_origin_timestamp(path2), (
+            "Same intent must produce an identical composition"
+        )
 
 
 class TestSettlementStyleNone:
@@ -192,11 +197,12 @@ class TestOutputPath:
         gen = ProceduralCompositionGenerator()
         output_path = gen.generate(intent, repo)
 
-        assert output_path.name == "generated_frontier_3_42.yaml", (
-            f"Expected generated_frontier_3_42.yaml, got {output_path.name}"
-        )
-        assert "generated" in str(output_path), (
-            "Output should be under the generated/ subdirectory"
+        # Exact path, not a "generated" substring check: the old assertion survived the move to
+        # the authoritative layout only by accident, because the world_id itself starts with
+        # "generated_".
+        assert (
+            output_path.resolve()
+            == (tmp_path / "data/worlds" / "generated_frontier_3_42" / "world.yaml").resolve()
         )
 
     def test_output_path_contains_seed_and_style(self, tmp_path, monkeypatch):
@@ -207,7 +213,99 @@ class TestOutputPath:
         gen = ProceduralCompositionGenerator()
         output_path = gen.generate(intent, repo)
 
-        assert output_path.name == "generated_none_1_99.yaml"
+        assert output_path.parent.name == "generated_none_1_99"
+        assert output_path.name == "world.yaml"
+
+
+class TestAuthoritativeOutputLocation:
+    """The generator authors the source definition directly (AC-9).
+
+    Deliberately absent from this class: any test asserting
+    `world.yaml == generate(provenance_marker)`. That would convert the marker into a
+    re-derivation obligation and make `world.yaml` a projection of params stored inside it —
+    forbidden by docs/architecture/world_repository_layout.md §1.
+    """
+
+    def test_generation_run_does_not_create_data_content_world_compositions(self, tmp_path, monkeypatch):
+        """Absence asserted explicitly — asserting only that the new path exists would pass a
+        'wrote to both' implementation."""
+        monkeypatch.chdir(tmp_path)
+        gen = ProceduralCompositionGenerator()
+        gen.generate(_default_intent(), _make_repo([_make_module("terrain_basic", "terrain")]))
+
+        assert not (tmp_path / "data/content/world_compositions").exists()
+
+    def test_generated_world_has_its_resolved_sibling(self, tmp_path, monkeypatch):
+        """Without it, WorldRepository.load_world() refuses the world it just authored."""
+        monkeypatch.chdir(tmp_path)
+        gen = ProceduralCompositionGenerator()
+        output_path = gen.generate(
+            _default_intent(), _make_repo([_make_module("terrain_basic", "terrain")])
+        )
+
+        resolved = output_path.parent / "resolved"
+        assert (resolved / "world.resolved.yaml").is_file()
+        for sidecar in (
+            "compile_context.json",
+            "provenance_manifest.json",
+            "assembly_report.json",
+            "validation_report.json",
+        ):
+            assert (resolved / sidecar).is_file()
+
+    def test_generated_world_records_provenance_history(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        gen = ProceduralCompositionGenerator()
+        intent = _default_intent(seed=1234, settlement_style="frontier")
+        output_path = gen.generate(
+            intent, _make_repo([_make_module("terrain_basic", "terrain")])
+        )
+
+        spec = WorldCompositionSpec.model_validate(yaml.safe_load(output_path.read_text()))
+        provenance = spec.generation_provenance
+        assert provenance is not None
+        assert provenance.generator == "ProceduralCompositionGenerator"
+        assert provenance.generator_version
+        assert provenance.generation_id == intent.generation_id
+        assert provenance.seed == 1234
+        assert provenance.generated_at
+        assert provenance.intent_parameters["settlement_style"] == "frontier"
+
+    def test_generate_refuses_to_overwrite_an_existing_definition(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        gen = ProceduralCompositionGenerator()
+        modules = [_make_module("terrain_basic", "terrain")]
+        intent = _default_intent()
+        gen.generate(intent, _make_repo(modules))
+
+        with pytest.raises(GenerationCompositionError, match="already exists"):
+            gen.generate(intent, _make_repo(modules))
+
+    def test_resolve_failure_leaves_no_half_written_world(self, tmp_path, monkeypatch):
+        """The one path that could produce an unrecoverable state.
+
+        A world.yaml committed before a failed resolve would be both unloadable (no resolved/
+        snapshot) and un-regenerable (refuse-to-overwrite), so the resolve runs first.
+        """
+        monkeypatch.chdir(tmp_path)
+        gen = ProceduralCompositionGenerator()
+        modules = [_make_module("terrain_basic", "terrain")]
+        intent = _default_intent()
+
+        def _boom(*args, **kwargs):
+            raise RuntimeError("resolve exploded")
+
+        monkeypatch.setattr("src.worldgeneration.generator.resolve_composition", _boom)
+        with pytest.raises(RuntimeError, match="resolve exploded"):
+            gen.generate(intent, _make_repo(modules))
+
+        world_dir = tmp_path / "data/worlds" / "generated_frontier_3_42"
+        assert not (world_dir / "world.yaml").exists()
+
+        monkeypatch.undo()
+        monkeypatch.chdir(tmp_path)
+        retried = gen.generate(intent, _make_repo(modules))
+        assert retried.is_file()
 
 
 class TestConflictDetection:

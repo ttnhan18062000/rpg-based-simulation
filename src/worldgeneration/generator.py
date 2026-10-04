@@ -13,11 +13,14 @@ from src.content.repository import CatalogRepository
 from src.worldmodules.repository import WorldModuleRepository
 from src.worldgeneration.schema import GenerationIntentSpec
 from src.worldassembly.schema import (
+    GenerationProvenanceSpec,
     ProvenanceManifest,
     ProvenanceRecord,
     WorldCompositionSpec,
     ModuleRefSpec,
 )
+from src.worldassembly.resolve_io import resolve_composition, write_resolved_artifacts
+from src.worldbuilding.repository import DEFAULT_WORLDS_ROOT
 from src.worldassembly.resolver import ResolvedWorldBundle
 
 
@@ -380,15 +383,20 @@ class ProceduralCompositionGenerator:
     4. Auto-add dependency modules required by selected modules (BFS).
     5. Fail-fast if two selected modules claim the same `provides` string.
 
-    Output: `data/content/world_compositions/generated/{world_id}.yaml`
+    Output: `<output_dir>/{world_id}/world.yaml` plus its `resolved/` sibling, where
+    `output_dir` defaults to the authoritative world root. The generator acts as a one-time
+    author: what it writes IS the definition from that moment on, carrying a
+    `generation_provenance` marker that records origin history only.
     """
 
     BUDGET: int = 6
+    VERSION: str = "1.0"
 
     def generate(
         self,
         intent: GenerationIntentSpec,
         module_repo: WorldModuleRepository,
+        output_dir: Path | None = None,
     ) -> Path:
         """
         Execute the procedural composition pipeline.
@@ -399,16 +407,19 @@ class ProceduralCompositionGenerator:
             High-level generation parameters (seed, danger_level, settlement_style, etc.)
         module_repo : WorldModuleRepository
             Loaded repository of available WorldModuleSpec candidates.
+        output_dir : Path | None
+            World root to author into; defaults to the authoritative one.
 
         Returns
         -------
         Path
-            Absolute path to the written WorldCompositionSpec YAML.
+            Path to the written world.yaml source definition.
 
         Raises
         ------
         GenerationCompositionError
-            If two selected modules claim the same feature in their `provides` list.
+            If two selected modules claim the same feature in their `provides` list, or if a
+            definition already exists for the generated world_id.
         """
         from src.worldgeneration.scorer import ModuleScorer
 
@@ -530,12 +541,32 @@ class ProceduralCompositionGenerator:
             name=f"Generated {intent.settlement_style} world (seed={intent.seed})",
             module_refs=module_refs,
             generation_seed=intent.seed,
+            generation_provenance=GenerationProvenanceSpec(
+                generator=type(self).__name__,
+                generator_version=self.VERSION,
+                generation_id=intent.generation_id,
+                seed=intent.seed,
+                generated_at=datetime.now(timezone.utc).isoformat(),
+                intent_parameters=intent.model_dump(mode="json"),
+            ),
         )
 
-        # Write YAML to disk
-        output_dir = Path("data/content/world_compositions/generated")
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / f"{world_id}.yaml"
+        world_dir = (output_dir or Path(DEFAULT_WORLDS_ROOT)) / world_id
+        output_path = world_dir / "world.yaml"
+        if output_path.exists():
+            raise GenerationCompositionError(
+                f"A definition already exists at '{output_path}'. Once written, a world.yaml is "
+                f"edited, not regenerated."
+            )
+
+        # Resolve BEFORE committing either write. These are two durable writes with no atomicity:
+        # a resolve that fails after world.yaml has landed leaves a world that
+        # WorldRepository.load_world() refuses AND that the refusal above makes un-regenerable.
+        catalog = CatalogRepository("data/content")
+        catalog.load_all()
+        bundle, rendered_world_yaml = resolve_composition(composition, catalog, module_repo)
+
+        world_dir.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
             yaml.dump(
                 composition.model_dump(exclude_none=True),
@@ -544,5 +575,6 @@ class ProceduralCompositionGenerator:
                 allow_unicode=True,
             )
         )
+        write_resolved_artifacts(world_dir, bundle, rendered_world_yaml)
 
         return output_path

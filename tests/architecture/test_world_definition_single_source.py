@@ -13,7 +13,7 @@ from pathlib import Path
 
 import yaml
 
-from src.worldassembly.resolve_io import load_composition_spec, resolve_composition
+from src.worldassembly.resolve_io import resolve_composition_file
 from src.worldbuilding.repository import WorldRepository
 
 # The walk is bounded to the repository's content roots and never reaches `docs/`: at least a
@@ -101,7 +101,7 @@ def test_committed_resolved_projection_equals_a_fresh_resolve():
             failures.append(f"{world_id}: no committed resolved/world.resolved.yaml")
             continue
 
-        _, fresh_yaml = resolve_composition(load_composition_spec(source))
+        _, fresh_yaml = resolve_composition_file(source)
         if committed.read_text(encoding="utf-8") != fresh_yaml:
             failures.append(
                 f"{world_id}: committed resolved/world.resolved.yaml differs from a fresh resolve"

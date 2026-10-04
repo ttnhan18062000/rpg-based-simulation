@@ -25,10 +25,22 @@ def render_resolved_world_yaml(bundle: ResolvedWorldBundle) -> str:
     )
 
 
-def resolve_composition(
-    composition: WorldCompositionSpec,
+def load_content_repositories(
     catalog_root: str = "data/content",
     world_modules_dir: Optional[str] = None,
+) -> tuple[CatalogRepository, WorldModuleRepository]:
+    """Loads the catalog and module repositories a resolve reads from."""
+    cat_repo = CatalogRepository(catalog_root)
+    cat_repo.load_all()
+    mod_repo = WorldModuleRepository(world_modules_dir or ContentPathConfig().world_modules_dir)
+    mod_repo.load_all()
+    return cat_repo, mod_repo
+
+
+def resolve_composition(
+    composition: WorldCompositionSpec,
+    catalog: CatalogRepository,
+    module_repo: WorldModuleRepository,
 ) -> tuple[ResolvedWorldBundle, str]:
     """
     Resolves an already-validated composition into its bundle and the rendered
@@ -38,12 +50,7 @@ def resolve_composition(
     architecture guard that compares a committed snapshot against a fresh resolve must not be
     able to drift in serialization, or a byte comparison between them proves nothing.
     """
-    cat_repo = CatalogRepository(catalog_root)
-    cat_repo.load_all()
-    mod_repo = WorldModuleRepository(world_modules_dir or ContentPathConfig().world_modules_dir)
-    mod_repo.load_all()
-
-    bundle = WorldAssemblyResolver(cat_repo, mod_repo).assemble(composition)
+    bundle = WorldAssemblyResolver(catalog, module_repo).assemble(composition)
     return bundle, render_resolved_world_yaml(bundle)
 
 
@@ -75,7 +82,8 @@ def resolve_composition_file(
 ) -> tuple[ResolvedWorldBundle, str]:
     """Path-loading wrapper over `resolve_composition` for callers that start from disk."""
     composition = load_composition_spec(yaml_path)
-    return resolve_composition(composition, catalog_root, world_modules_dir)
+    catalog, module_repo = load_content_repositories(catalog_root, world_modules_dir)
+    return resolve_composition(composition, catalog, module_repo)
 
 
 def write_resolved_artifacts(
