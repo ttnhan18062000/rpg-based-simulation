@@ -1,4 +1,4 @@
-"""Run the four adopted tools over `src/` and turn their output into `Finding` records.
+"""Run the five adopted tools over `src/` and turn their output into `Finding` records.
 
 `run_scan` writes each tool's raw JSON into one directory; `collect_findings` reads that directory
 through the adapters. They are separate so the ratchet can be tested on captured output and a
@@ -31,6 +31,8 @@ SCAN_ROOT = "src"
 RUFF_JSON = "ruff.json"
 COMPLEXIPY_JSON = "complexipy.json"
 LINE_COUNT_JSON = "line_count.json"
+AST_GREP_JSON = "ast_grep.json"
+AST_GREP_CONFIG = "codebase/rules/sgconfig.yml"
 JSCPD_DIR = "jscpd"
 JSCPD_REPORT = "jscpd-report.json"
 JSCPD_CONFIG = "codebase/config/.jscpd.json"
@@ -39,7 +41,9 @@ DEFAULT_COMPLEXITY_LIMIT = 15
 # jscpd needs npx and the npm registry; the others are Python tools in the project environment.
 # `OFFLINE_TOOLS` is what the codebase-health snapshot uses, so a snapshot never needs the network.
 TOOL_JSCPD_NAME = "jscpd"
-ALL_TOOLS = ("ruff", "complexipy", TOOL_JSCPD_NAME, "line_count")
+TOOL_AST_GREP_NAME = "ast_grep"
+ALL_TOOLS = ("ruff", "complexipy", TOOL_JSCPD_NAME, "line_count", TOOL_AST_GREP_NAME)
+# ast_grep is not in the snapshot set yet: that is a follow-up, so the snapshot metrics do not change here.
 OFFLINE_TOOLS = ("ruff", "complexipy", "line_count")
 
 
@@ -93,6 +97,13 @@ def _scan_complexipy(root: Path, out_dir: Path) -> None:
     _run(command, root, (0, 1))
 
 
+def _scan_ast_grep(root: Path, out_dir: Path) -> None:
+    # The binary is `ast-grep`, never `sg` (on Linux `sg` is shadow-utils' switch-group command).
+    command = [_find("ast-grep"), "scan", "--config", AST_GREP_CONFIG, SCAN_ROOT, "--json=compact"]
+    done = _run(command, root, (0, 1))
+    (out_dir / AST_GREP_JSON).write_text(done.stdout or "[]", encoding="utf-8")
+
+
 def _scan_jscpd(root: Path, out_dir: Path) -> None:
     version = jscpd_version(root / "Makefile")
     command = ["npx", "--yes", f"jscpd@{version}", SCAN_ROOT, "--config", JSCPD_CONFIG, "--output", str(out_dir / JSCPD_DIR)]
@@ -109,11 +120,12 @@ _SCANNERS = {
     "complexipy": _scan_complexipy,
     TOOL_JSCPD_NAME: _scan_jscpd,
     "line_count": _scan_line_count,
+    TOOL_AST_GREP_NAME: _scan_ast_grep,
 }
 
 
 def run_scan(root: Path, out_dir: Path, tools: Sequence[str] = ALL_TOOLS) -> None:
-    """Run `tools` (default: all four) over `src/`, writing each one's raw JSON to `out_dir`."""
+    """Run `tools` (default: all five) over `src/`, writing each one's raw JSON to `out_dir`."""
     out_dir.mkdir(parents=True, exist_ok=True)
     for name in tools:
         _SCANNERS[name](root, out_dir)
@@ -139,4 +151,6 @@ def collect_findings(
         findings += adapters.adapt_jscpd(_load(out_dir / JSCPD_DIR / JSCPD_REPORT), scan_root)
     if "line_count" in tools:
         findings += adapters.adapt_line_count(_load(out_dir / LINE_COUNT_JSON))
+    if TOOL_AST_GREP_NAME in tools:
+        findings += adapters.adapt_ast_grep(_load(out_dir / AST_GREP_JSON), str(root))
     return findings

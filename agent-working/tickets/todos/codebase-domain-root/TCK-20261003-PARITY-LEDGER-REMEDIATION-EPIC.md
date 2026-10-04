@@ -32,7 +32,7 @@ Owner decision 2026-10-03: the 2,862 schema errors are fixed through a scope-onl
 ## Scope
 - One child ticket per ledger file (or per part of a large file), filed with the owning domain's planner: substrate, combat_movement, social_narrative, strategic_cognition, town_resource, world_dynamics, progression, faction (rpg); infrastructure (testing / agent-working, to be confirmed by the owner)
 - Per entry, exactly one of: cite the real test that proves it (test_path); change status to what the evidence supports (missing/unsupported with a support_boundary for P0, or legacy_verified for non-P0) with the reason; or an owner-approved exception through a mechanism the owner first approves (none exists today)
-- Owner decision on the 25 proof_type values (feature 13, architecture 6, unit 5, integration 1): add them to the enum with definitions, or remap; recorded before the child that touches them
+- proof_type (decided by the owner 2026-10-04: remap, do not extend the enum): each child remaps the 25 out-of-enum values (feature 13, architecture 6, unit 5, integration 1) in its own ledger file, entry by entry, with a reason
 - Each child tightens the ratchet baseline from TCK-20261003-PARITY-LEDGER-SCHEMA-RATCHET
 - Each child runs `python3 -m codebase.gates.parity_ledger_schema tighten --yes` in the same PR as its ledger fix and commits `codebase/baselines/parity_ledger_schema_baseline.json` (any domain may lower a count; none may raise one; see `docs/parity_ledger/README.md`)
 
@@ -42,7 +42,7 @@ Owner decision 2026-10-03: the 2,862 schema errors are fixed through a scope-onl
 
 ## Acceptance Criteria
 - [ ] Every child filed with its owning domain and listed here
-- [ ] proof_type decision recorded
+- [x] proof_type decision recorded: owner decision 2026-10-04, REMAP (the enum is not extended). The 25 values outside the enum (feature 13, architecture 6, unit 5, integration 1) are remapped to an existing enum value by each owning domain's remediation child, entry by entry, with a reason
 - [ ] Ratchet baseline at zero, or the remainder carried forward by explicit owner decision
 
 ## Related Tickets

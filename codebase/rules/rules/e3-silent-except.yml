@@ -1,0 +1,10 @@
+id: e3-silent-except
+language: python
+severity: warning
+message: "Do not swallow an exception silently (standard rule E3). Handle it, log it with context, or re-raise."
+rule:
+  kind: except_clause
+  has:
+    kind: block
+    regex: '^(\s*#[^\n]*\n)*\s*pass\s*(#[^\n]*)?$'
+    stopBy: neighbor

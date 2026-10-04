@@ -12,10 +12,12 @@ dropping `adapt_complexipy` and recording the snapshot file in the registry.
 
 from __future__ import annotations
 
-from pathlib import PurePosixPath
+import ast
+from pathlib import Path, PurePosixPath
 from typing import Any, Mapping, Sequence
 
 from codebase.health.findings import (
+    TOOL_AST_GREP,
     TOOL_COMPLEXIPY,
     TOOL_JSCPD,
     TOOL_LINE_COUNT,
@@ -27,6 +29,7 @@ from codebase.health.findings import (
 RULE_COGNITIVE = "cognitive-complexity"
 RULE_DUPLICATE = "duplicate-block"
 RULE_SYNTAX_ERROR = "syntax-error"
+MODULE_SYMBOL = "<module>"
 _LENGTH_RULES = {"function": "function-length", "class": "class-length", "module": "module-length"}
 _OVER_LIMIT_LEVELS = {"fail", "flag"}
 
@@ -115,3 +118,52 @@ def adapt_line_count(report: Mapping[str, Any]) -> list[Finding]:
         if record["level"] in _OVER_LIMIT_LEVELS
     ]
     return aggregate(findings, "max")
+
+
+def _symbol_spans(source: str) -> list[tuple[int, int, str]]:
+    """`(first line, last line, qualified name)` for every def and class in `source`; `[]` if it does not parse."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return []
+    spans: list[tuple[int, int, str]] = []
+
+    def visit(node: ast.AST, prefix: str) -> None:
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                name = f"{prefix}{child.name}"
+                spans.append((child.lineno, child.end_lineno or child.lineno, name))
+                visit(child, name + ".")
+            else:
+                visit(child, prefix)
+
+    visit(tree, "")
+    return spans
+
+
+def _enclosing_symbol(spans: Sequence[tuple[int, int, str]], line: int) -> str:
+    inside = [span for span in spans if span[0] <= line <= span[1]]
+    return min(inside, key=lambda span: span[1] - span[0])[2] if inside else MODULE_SYMBOL
+
+
+def adapt_ast_grep(records: Sequence[Mapping[str, Any]], root: str | None = None) -> list[Finding]:
+    """`ast-grep scan --json=compact` -> one count per (file, enclosing symbol, rule id).
+
+    ast-grep gives a file, a rule id and a range but no enclosing symbol, so the symbol is found by parsing the
+    file under `root` with the stdlib `ast` (a def's own name finding belongs to that def). A file that cannot
+    be read or parsed falls back to `<module>`. The key never holds a line, so moving code keeps its key.
+    """
+    spans: dict[str, list[tuple[int, int, str]]] = {}
+    findings: list[Finding] = []
+    for record in records:
+        file = _relative(str(record["file"]), root)
+        if file not in spans:
+            try:
+                spans[file] = _symbol_spans((Path(root or ".") / file).read_text(encoding="utf-8"))
+            except OSError:
+                spans[file] = []
+        line = int(record["range"]["start"]["line"]) + 1
+        findings.append(
+            Finding(file, _enclosing_symbol(spans[file], line), TOOL_AST_GREP, str(record["ruleId"]), 1, line)
+        )
+    return aggregate(findings, "sum")
