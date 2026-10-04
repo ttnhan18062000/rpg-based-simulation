@@ -5,6 +5,7 @@ import logging
 from typing import Optional, TYPE_CHECKING, Any
 from src.core.enums import Faction
 from src.content.repository import CatalogRepository
+from src.entities.identity_resolver import EntityIdentityResolver, IdentityResolutionError
 
 if TYPE_CHECKING:
     from src.content_semantics.relation import RelationContext
@@ -75,8 +76,6 @@ def are_entities_hostile(source: Any, target: Any, context: Any) -> bool:
     Faction ids come from ``EntityIdentityResolver`` with ``get_faction_id_str`` as the
     ``IdentityResolutionError`` fallback. The caller owns the context (distance, combat_engaged).
     """
-    from src.entities.identity_resolver import EntityIdentityResolver, IdentityResolutionError
-
     id_resolver = EntityIdentityResolver()
     try:
         src_faction_id = id_resolver.resolve(source).faction_id

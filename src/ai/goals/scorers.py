@@ -1,5 +1,7 @@
 from __future__ import annotations
 from src.ai.goals.base import GoalScorer, GoalScore
+from src.content_semantics.faction import are_entities_hostile
+from src.content_semantics.relation import RelationContext
 from src.core.state import EntityState, AuthoritativeState
 from src.core.strategic import GoalKind, ObjectiveKind
 
@@ -102,8 +104,6 @@ class CombatEngageScorer(GoalScorer):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
         from src.engine.domain_logic import SimulationDomainLogic
         from src.engine.cognition import SensoryFilter
-        from src.content_semantics.faction import are_entities_hostile
-        from src.content_semantics.relation import RelationContext
         
         raw_neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0)
         neighbors = SensoryFilter.filter_saliency(entity, raw_neighbors, max_targets=5)
