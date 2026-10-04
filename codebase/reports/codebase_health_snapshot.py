@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Append-only history and per-dimension trend scorecard over
-`tools/codebase_health_baseline.py::build_report()`'s live metrics.
+`codebase/reports/codebase_health_baseline.py::build_report()`'s live metrics.
 
 Built for TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD, item 3 of
 `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` (see
@@ -71,33 +71,23 @@ import json
 import sys
 from pathlib import Path
 
-_TOOLS_DIR = Path(__file__).resolve().parent
-_REPO_ROOT = _TOOLS_DIR.parent
-
-if str(_TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(_TOOLS_DIR))
-from codebase_health_baseline import build_report  # noqa: E402
-
-# codebase/health/ is a real package (`from codebase.health...`); a script run as
-# `python3 tools/codebase_health_snapshot.py` has only tools/ on sys.path, so the repo root is added
-# for that one import. The flat tools/codebase_health_*.py files are not moved.
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
-from codebase.health.metrics import (  # noqa: E402
+from codebase.health.metrics import (
     CRAFT_LABELS,
     CRAFT_METRIC_KEYS,
     measure_craft_metrics,
 )
+from codebase.reports.codebase_health_baseline import build_report
+from tools.agent_working_paths import AGENT_MONITORING
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# `tools/agent-monitoring/` has a hyphen, so it is not importable as a package: its directory goes on sys.path
+# (the same pattern as `tools/agent-monitoring/record_run.py`).
 sys.path.insert(0, str(_REPO_ROOT / "tools" / "agent-monitoring"))
 from writer import write_line  # noqa: E402
-_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
-if _REPO_ROOT_STR not in sys.path:
-    sys.path.append(_REPO_ROOT_STR)
-from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 # Hand-copied once from the real `build_report()` return statement
-# (`tools/codebase_health_baseline.py:238-253`) — the single source of truth
+# (`codebase/reports/codebase_health_baseline.py:238-253`) — the single source of truth
 # for what a valid snapshot record must contain. Never edit this without also
 # bumping SNAPSHOT_SCHEMA_VERSION and updating
 # docs/agent-monitoring/codebase_health_history_schema.md in the same commit.

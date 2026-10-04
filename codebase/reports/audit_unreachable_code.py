@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-tools/audit_unreachable_code.py
+codebase/reports/audit_unreachable_code.py
 
 Finds implemented-but-unreferenced code in src/: module-level functions/classes and class
 methods with no real call site anywhere in the repo, outside their own definition.
@@ -67,7 +67,7 @@ names. A real fix would require type-aware call-graph analysis, out of this tool
 
 Usage
 -----
-    python3 tools/audit_unreachable_code.py [--json OUT.json] [--csv OUT.csv]
+    python3 -m codebase.reports.audit_unreachable_code [--json OUT.json] [--csv OUT.csv]
 
 Prints a human-readable summary to stdout; --json/--csv write the full structured inventory.
 """
@@ -84,7 +84,7 @@ from pathlib import Path
 from typing import Any
 
 SRC_ROOTS = [Path("src")]
-TEST_TOOL_ROOTS = [Path("tests"), Path("tools")]
+TEST_TOOL_ROOTS = [Path("tests"), Path("tools"), Path("codebase")]
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
 FASTAPI_DECORATORS = {"get", "post", "put", "delete", "patch", "websocket", "options", "head"}

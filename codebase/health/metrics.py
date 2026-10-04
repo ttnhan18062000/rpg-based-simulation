@@ -1,7 +1,7 @@
 """Craft metrics for the codebase health snapshot: per-dimension counts, never a combined score.
 
 `compute_craft_metrics` is a pure function of the tool findings and the registry rows. The
-snapshot (`tools/codebase_health_snapshot.py`) merges its result into each record as a second
+snapshot (`codebase/reports/codebase_health_snapshot.py`) merges its result into each record as a second
 metric source next to `codebase_health_baseline.build_report()`; the snapshot only persists these
 numbers and does not recompute them.
 

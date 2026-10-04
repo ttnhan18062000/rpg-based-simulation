@@ -12,7 +12,7 @@ and `tools/` orphans `TCK-20260929-RETIRE-SCRIPTS-DIR` then disposed of, made pe
 repeatable so a future orphan doesn't have to wait for another manual audit to be found.
 
 **Method**: builds one repo-wide, one-pass identifier-token index (word-boundary tokens via
-`IDENT_RE`, the same approach `tools/audit_unreachable_code.py` uses — reimplemented here rather
+`IDENT_RE`, the same approach `codebase/reports/audit_unreachable_code.py` uses — reimplemented here rather
 than imported, since that module's own entry point and CLI surface aren't a stable import target
 for this narrower purpose) instead of a per-target-file regex scan of the whole corpus — the
 `O(targets * corpus)` approach that took over 300s on this repo's real size. Each tracked

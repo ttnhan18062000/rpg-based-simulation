@@ -43,7 +43,7 @@ in `.claude/agents/test-scoper.md`'s Test Directory Map, reused here rather
 than reinvented.
 
 **Criticality tier** extends (does not duplicate)
-`tools/codebase_health_baseline.py::compute_churn_lines_changed()` with an
+`codebase/reports/codebase_health_baseline.py::compute_churn_lines_changed()` with an
 optional `target_pathspec` parameter, combined with graph edge-degree
 (in-edges + out-edges, summed across every node whose `source_file` is the
 target path) for centrality. The high/medium/low bucket cutoffs below are
@@ -63,12 +63,9 @@ from pathlib import Path
 
 import yaml
 
-_TOOLS_DIR = Path(__file__).resolve().parent
-_REPO_ROOT = _TOOLS_DIR.parent
-if str(_TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(_TOOLS_DIR))
+from codebase.reports.codebase_health_baseline import compute_churn_lines_changed
 
-from codebase_health_baseline import compute_churn_lines_changed  # noqa: E402
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 DEFAULT_GRAPH_PATH = _REPO_ROOT / "graphify-out" / "graph.json"
 DEFAULT_REGISTRY_PATH = _REPO_ROOT / "docs" / "REGISTRY.yaml"

@@ -3,21 +3,21 @@
 
 Item 4 of `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC`, built for
 `TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR` on top of
-`tools/code_health_impact.py::build_impact_report()`. This is a
+`codebase/reports/code_health_impact.py::build_impact_report()`. This is a
 **discovery/triage aid, not a certified coverage oracle** — every signal
 below is a best-effort heuristic and is presented as such; false
 positives/negatives are acceptable, silently presenting them as certain is
 not.
 
-**Design decision — no dependency on `tools/codebase_health_snapshot.py`**:
+**Design decision — no dependency on `codebase/reports/codebase_health_snapshot.py`**:
 this module renders exclusively from `chi.build_impact_report()`'s existing
 per-path output, batched across one or more target paths. It has no import
-of, and no dependency on, `tools/codebase_health_snapshot.py`'s
+of, and no dependency on, `codebase/reports/codebase_health_snapshot.py`'s
 repo-wide-aggregate snapshot/scorecard mechanism — that mechanism has no
 per-path join key to integrate against, and the source audit's own "built on
 top of Phase 3's impact model" phrasing (`docs/audits/D24_codebase_health_observatory.md`
 §M item 11) refers to the Phase 3 impact command
-(`tools/code_health_impact.py`), not the Phase 4 historical-snapshot
+(`codebase/reports/code_health_impact.py`), not the Phase 4 historical-snapshot
 mechanism. See `TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR` and the epic
 (`TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC`) for the full
 resolved reasoning.
@@ -28,12 +28,9 @@ import json
 import sys
 from pathlib import Path
 
-_TOOLS_DIR = Path(__file__).resolve().parent
-_REPO_ROOT = _TOOLS_DIR.parent
-if str(_TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(_TOOLS_DIR))
+from codebase.reports import code_health_impact as chi
 
-import code_health_impact as chi  # noqa: E402
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 FRAMING_NOTE = (
     "discovery/triage aid, not a certified coverage oracle — verify before "

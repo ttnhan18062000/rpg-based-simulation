@@ -45,8 +45,7 @@ def repo(tmp_path):
     _git(root, "config", "user.name", "t")
     shutil.copytree(_REPO / "codebase", root / "codebase", ignore=shutil.ignore_patterns("__pycache__", "baselines"))
     (root / "tools" / "hooks").mkdir(parents=True)
-    for name in ("code_health_pre_commit.sh", "uv_lock_pre_commit.sh", "post-commit-reindex.sh"):
-        shutil.copy(_REPO / "tools" / "hooks" / name, root / "tools" / "hooks" / name)
+    shutil.copy(_REPO / "tools" / "hooks" / "post-commit-reindex.sh", root / "tools" / "hooks" / "post-commit-reindex.sh")
     shutil.copy(_REPO / ".pre-commit-config.yaml", root / ".pre-commit-config.yaml")
     (root / "pyproject.toml").write_text('[tool.ruff.lint]\nselect = ["E722"]\n')
     (root / "codebase" / "baselines").mkdir(parents=True)
@@ -60,7 +59,7 @@ def repo(tmp_path):
 
 
 def _install(root: Path, action: str = "install"):
-    return subprocess.run([sys.executable, str(_REPO / "tools" / "hooks" / "install_git_hooks.py"), action, "--repo", str(root)],
+    return subprocess.run([sys.executable, str(_REPO / "codebase" / "hooks" / "install_git_hooks.py"), action, "--repo", str(root)],
                           capture_output=True, text=True, env=_env())
 
 
@@ -217,7 +216,7 @@ def _install_with_a_removable_prek(repo: Path, tmp_path: Path) -> Path:
     copy = tmp_path / "bin" / "prek"
     copy.parent.mkdir()
     shutil.copy(Path(sys.executable).parent / "prek", copy)
-    done = subprocess.run([sys.executable, str(_REPO / "tools" / "hooks" / "install_git_hooks.py"), "install", "--repo", str(repo), "--prek", str(copy)],
+    done = subprocess.run([sys.executable, str(_REPO / "codebase" / "hooks" / "install_git_hooks.py"), "install", "--repo", str(repo), "--prek", str(copy)],
                           capture_output=True, text=True, env=_env())
     assert done.returncode == 0, done.stderr
     return copy
@@ -255,7 +254,7 @@ def test_the_guard_is_added_once_and_an_older_unguarded_shim_is_upgraded(repo):
     once = _hook(repo, "pre-commit").read_bytes()
     again = _install(repo)
     assert _hook(repo, "pre-commit").read_bytes() == once and "unchanged" in again.stdout
-    assert once.count(b"guard added by tools/hooks/install_git_hooks.py") == 1
+    assert once.count(b"guard added by codebase/hooks/install_git_hooks.py") == 1
 
 
 def test_an_unrecognised_shim_format_is_removed_again_instead_of_left_unguarded(repo, tmp_path):
@@ -271,7 +270,7 @@ def test_an_unrecognised_shim_format_is_removed_again_instead_of_left_unguarded(
         esac
         """))
     fake.chmod(0o755)
-    done = subprocess.run([sys.executable, str(_REPO / "tools" / "hooks" / "install_git_hooks.py"), "install", "--repo", str(repo), "--prek", str(fake)],
+    done = subprocess.run([sys.executable, str(_REPO / "codebase" / "hooks" / "install_git_hooks.py"), "install", "--repo", str(repo), "--prek", str(fake)],
                           capture_output=True, text=True, env=_env())
     assert done.returncode == 2 and "unrecognised prek shim" in done.stderr
     assert not _hook(repo, "pre-commit").exists(), "the unguarded shim must not stay behind"
@@ -307,14 +306,14 @@ def test_the_config_lists_exactly_the_two_local_system_hooks():
     assert hooks["code-health-ratchet"]["files"] == r"^src/.*\.py$"
     assert all(h["verbose"] is True for h in hooks.values()), "a skip line from a passing hook must stay visible"
     assert hooks["uv-lock-check"]["files"] == r"^(pyproject\.toml|uv\.lock)$" and hooks["uv-lock-check"]["pass_filenames"] is False
-    assert "uv lock --check --offline" in (_REPO / "tools" / "hooks" / "uv_lock_pre_commit.sh").read_text(), "a commit never waits for the network"
+    assert "uv lock --check --offline" in (_REPO / "codebase" / "hooks" / "uv_lock_pre_commit.sh").read_text(), "a commit never waits for the network"
 
 
 def test_the_makefile_targets_only_call_the_installer_and_name_the_risk():
     text = (_REPO / "Makefile").read_text()
     install = next(l for l in text.splitlines() if l.startswith("install-prek-hooks:"))
     assert "OPT-IN" in install and "EVERY worktree" in install
-    assert "python3 tools/hooks/install_git_hooks.py install" in text and "python3 tools/hooks/install_git_hooks.py uninstall" in text
+    assert "python3 -m codebase.hooks.install_git_hooks install" in text and "python3 -m codebase.hooks.install_git_hooks uninstall" in text
     assert "OVERWRITES" in next(l for l in text.splitlines() if l.startswith("install-hooks:"))
 
 
@@ -338,4 +337,4 @@ def test_nothing_installs_hooks_implicitly():
                  if p.name != "install_git_hooks.py" and any(n in code(p) for n in needles)]
     assert offenders == [], offenders
     recipe_lines = [l for l in lines if l.startswith("\t") and any(n in l for n in needles)]
-    assert recipe_lines == ["\tpython3 tools/hooks/install_git_hooks.py install", "\tpython3 tools/hooks/install_git_hooks.py uninstall"]
+    assert recipe_lines == ["\tpython3 -m codebase.hooks.install_git_hooks install", "\tpython3 -m codebase.hooks.install_git_hooks uninstall"]

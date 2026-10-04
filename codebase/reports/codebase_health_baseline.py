@@ -64,13 +64,9 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
-_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
-if _REPO_ROOT_STR not in sys.path:
-    sys.path.append(_REPO_ROOT_STR)
-from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix  # noqa: E402
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix
 
-_TOOLS_DIR = Path(__file__).resolve().parent
-_REPO_ROOT = _TOOLS_DIR.parent
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 CHURN_EXCLUDE_PATHSPECS = [
     f":!{posix(AGENT_MONITORING)}/*.jsonl",
@@ -217,7 +213,7 @@ def compute_churn_lines_changed(
 
     `target_pathspec` (default `"."`, the repo-wide aggregate `build_report()`
     uses) lets a caller scope the same computation to a single path — added
-    for `tools/code_health_impact.py`'s per-path criticality-tier churn signal
+    for `codebase/reports/code_health_impact.py`'s per-path criticality-tier churn signal
     (TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND), reusing this function
     rather than writing a second, parallel `git log --shortstat` implementation.
     """

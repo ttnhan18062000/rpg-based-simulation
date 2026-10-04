@@ -1,4 +1,4 @@
-"""Tests for tools/codebase_health_snapshot.py
+"""Tests for codebase/reports/codebase_health_snapshot.py
 (TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD).
 
 Coverage-honesty requirement (matches this repo's established convention, e.g.
@@ -26,12 +26,8 @@ from pathlib import Path
 import pytest
 from tools.agent_working_paths import AGENT_MONITORING
 
-_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
-if str(_TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(_TOOLS_DIR))
-
-import codebase_health_snapshot as chs  # noqa: E402
-import codebase_health_baseline as chb  # noqa: E402
+from codebase.reports import codebase_health_snapshot as chs
+from codebase.reports import codebase_health_baseline as chb
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 

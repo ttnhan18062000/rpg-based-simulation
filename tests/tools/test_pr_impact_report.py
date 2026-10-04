@@ -1,4 +1,4 @@
-"""Tests for tools/pr_impact_report.py
+"""Tests for codebase/reports/pr_impact_report.py
 (TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR).
 
 Mirrors tests/tools/test_code_health_impact.py's fixture-graph/injected-
@@ -7,21 +7,17 @@ fixture graph.json-shaped dict and an injected affected_runner unless it is
 the one @_requires_graphify-marked Makefile end-to-end test.
 """
 
-import inspect
 import json
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 
-_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
-if str(_TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(_TOOLS_DIR))
+from codebase.reports import code_health_impact as chi
+from codebase.reports import pr_impact_report as pir
 
-import code_health_impact as chi  # noqa: E402
-import pr_impact_report as pir  # noqa: E402
+_REPORTS_DIR = Path(__file__).parent.parent.parent / "codebase" / "reports"
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 
@@ -329,7 +325,7 @@ def test_report_output_has_no_aggregate_or_combined_score_field():
 
 
 def test_report_generator_has_no_import_of_codebase_health_snapshot_module():
-    source = (_TOOLS_DIR / "pr_impact_report.py").read_text(encoding="utf-8")
+    source = (_REPORTS_DIR / "pr_impact_report.py").read_text(encoding="utf-8")
     assert "import codebase_health_snapshot" not in source
     assert "from codebase_health_snapshot" not in source
 

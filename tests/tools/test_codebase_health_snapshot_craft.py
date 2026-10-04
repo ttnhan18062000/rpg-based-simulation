@@ -1,21 +1,15 @@
-"""Tests for the craft metrics in tools/codebase_health_snapshot.py (TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS).
+"""Tests for the craft metrics in codebase/reports/codebase_health_snapshot.py (TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS).
 
 Every history path here is rooted in tmp_path, never the real agent-working/agent-monitoring/ directory.
 """
 import json
 import re
 import subprocess
-import sys
-from pathlib import Path
 
 import pytest
 
-_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
-if str(_TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(_TOOLS_DIR))
-
-import codebase_health_baseline as chb  # noqa: E402
-import codebase_health_snapshot as chs  # noqa: E402
+from codebase.reports import codebase_health_baseline as chb
+from codebase.reports import codebase_health_snapshot as chs
 from codebase.health.metrics import CRAFT_METRIC_KEYS, REGISTRY_KEYS  # noqa: E402
 
 

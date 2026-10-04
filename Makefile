@@ -455,19 +455,19 @@ status-drift-check: ## Report ## Status body-text drift in agent-working/tickets
 	python3 tools/gate_checks/status_drift_check.py
 
 codebase-health-baseline: ## Print a live LoC/churn/dependency baseline snapshot (on-demand only — not CI)
-	python3 tools/codebase_health_baseline.py
+	python3 -m codebase.reports.codebase_health_baseline
 
 codebase-health-impact: ## Print a change-impact report for a source path (pass ARGS="src/engine/pipeline.py") (on-demand only — not CI)
-	python3 tools/code_health_impact.py $(ARGS)
+	python3 -m codebase.reports.code_health_impact $(ARGS)
 
 codebase-health-snapshot: ## Append a codebase-health metrics snapshot to agent-working/agent-monitoring/codebase_health_history.jsonl (on-demand only — not CI)
-	python3 tools/codebase_health_snapshot.py snapshot $(ARGS)
+	python3 -m codebase.reports.codebase_health_snapshot snapshot $(ARGS)
 
 codebase-health-scorecard: ## Print a per-dimension trend scorecard over codebase-health history (on-demand only — not CI)
-	python3 tools/codebase_health_snapshot.py scorecard $(ARGS)
+	python3 -m codebase.reports.codebase_health_snapshot scorecard $(ARGS)
 
 codebase-health-pr-impact: ## Print a batched PR/AI change-impact report for one or more source paths (pass ARGS="path1 path2 ...") (on-demand only — not CI)
-	python3 tools/pr_impact_report.py $(ARGS)
+	python3 -m codebase.reports.pr_impact_report $(ARGS)
 
 agent-monitoring-index: ## Rebuild the derived read-only SQLite index over agent-monitoring JSONL logs (on-demand only — not CI)
 	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
@@ -529,10 +529,10 @@ install-hooks: ## Install git hooks (post-commit incremental reindex when docs/ 
 	@echo "[hooks] post-commit hook installed"
 
 install-prek-hooks: ## OPT-IN: install the prek pre-commit hook (ruff ratchet on staged src files, offline uv.lock check) and the post-commit reindex hook, never overwriting; affects EVERY worktree on this machine
-	python3 tools/hooks/install_git_hooks.py install
+	python3 -m codebase.hooks.install_git_hooks install
 
 uninstall-prek-hooks: ## Remove what install-prek-hooks installed (prek pre-commit shim, restoring any legacy hook; post-commit only if it is ours); never touches post-merge
-	python3 tools/hooks/install_git_hooks.py uninstall
+	python3 -m codebase.hooks.install_git_hooks uninstall
 
 eval-search: ## Run search quality evaluation — Recall@5, MRR@10 (requires knowledge-index)
 	$(PYTHON_KNOWLEDGE) tools/eval_search.py

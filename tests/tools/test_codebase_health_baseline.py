@@ -1,4 +1,4 @@
-"""Tests for tools/codebase_health_baseline.py
+"""Tests for codebase/reports/codebase_health_baseline.py
 (TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET).
 
 Coverage-honesty requirement (matches this repo's established convention, e.g.
@@ -8,15 +8,10 @@ not just that it runs without error.
 """
 
 import subprocess
-import sys
 from pathlib import Path
 from tools.agent_working_paths import AGENT_MONITORING, TICKETS
 
-_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
-if str(_TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(_TOOLS_DIR))
-
-import codebase_health_baseline as chb  # noqa: E402
+from codebase.reports import codebase_health_baseline as chb
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 
