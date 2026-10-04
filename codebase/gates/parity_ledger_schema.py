@@ -167,8 +167,11 @@ def write_baseline(path: Path, counts: Counts) -> None:
     path.write_text(json.dumps(body, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def _ids(scan: Scan, name: str, rule: str) -> str:
+def _ids(scan: Scan, name: str, rule: str, latest: int | None = None) -> str:
+    """Entry ids that fail `rule` in `name`: the first few, or (for a rise) the last `latest`, where new entries usually are."""
     labels = scan.labels.get((name, rule), [])
+    if latest is not None and len(labels) > IDS_SHOWN:
+        return f"most likely the last {min(latest, IDS_SHOWN)}, as new entries are normally appended: {', '.join(labels[-min(latest, IDS_SHOWN):])}; {len(labels)} fail in all, see git diff"
     shown = ", ".join(labels[:IDS_SHOWN])
     return shown + (f", ... ({len(labels)} in all)" if len(labels) > IDS_SHOWN else "")
 
@@ -177,7 +180,7 @@ def format_report(result: Comparison, scan: Scan, total: int) -> str:
     """The text `check` prints: one line per failing or fallen rule, a hint, and a summary line."""
     lines: list[str] = []
     for name, rule, before, now in result.rises:
-        lines.append(f"FAIL {name}: rule {rule} rose from {before} to {now} (entries: {_ids(scan, name, rule)})")
+        lines.append(f"FAIL {name}: rule {rule} rose from {before} to {now} (entries: {_ids(scan, name, rule, latest=now - before)})")
     for name, rule, now in result.new:
         lines.append(f"FAIL {name}: rule {rule} is new, {now} error(s) not in the baseline (entries: {_ids(scan, name, rule)})")
     for name, rule, before, now in result.decreases:

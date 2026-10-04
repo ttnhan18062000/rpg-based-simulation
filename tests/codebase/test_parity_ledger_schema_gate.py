@@ -140,9 +140,17 @@ def test_a_new_shard_with_errors_fails_and_a_vanished_shard_is_a_decrease(tmp_pa
     assert code == 1 and "FAIL new.yaml" in out and "better gone.yaml: rule r fell from 3 to 0" in out
 
 
-def test_the_failure_message_caps_the_entry_list(tmp_path, capsys):
+def test_a_rise_lists_the_last_failing_entries_where_new_ones_are_appended_and_caps_the_list(tmp_path, capsys):
     entries = [_verified_without_test_path(f"SUB-{n:03d}") for n in range(1, 9)]
-    argv, _, _ = _ledger(tmp_path, {"a.yaml": entries}, {"a.yaml": {_RULE_VERIFIED: 1}})
+    argv, _, _ = _ledger(tmp_path, {"a.yaml": entries}, {"a.yaml": {_RULE_VERIFIED: 6}})
+    _, out = _run([*argv, "check"], capsys)
+    assert "rose from 6 to 8" in out and "most likely the last 2" in out and "SUB-007, SUB-008" in out
+    assert "SUB-001" not in out and "8 fail in all" in out
+
+
+def test_a_new_rule_lists_its_first_failing_entries_capped(tmp_path, capsys):
+    entries = [_verified_without_test_path(f"SUB-{n:03d}") for n in range(1, 9)]
+    argv, _, _ = _ledger(tmp_path, {"a.yaml": entries}, {"a.yaml": {"properties/proof_type/enum": 1}})
     _, out = _run([*argv, "check"], capsys)
     assert "SUB-005, ... (8 in all)" in out and "SUB-006" not in out
 

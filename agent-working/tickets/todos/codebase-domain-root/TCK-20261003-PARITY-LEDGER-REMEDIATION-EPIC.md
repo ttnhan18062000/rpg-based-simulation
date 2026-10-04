@@ -34,6 +34,7 @@ Owner decision 2026-10-03: the 2,862 schema errors are fixed through a scope-onl
 - Per entry, exactly one of: cite the real test that proves it (test_path); change status to what the evidence supports (missing/unsupported with a support_boundary for P0, or legacy_verified for non-P0) with the reason; or an owner-approved exception through a mechanism the owner first approves (none exists today)
 - Owner decision on the 25 proof_type values (feature 13, architecture 6, unit 5, integration 1): add them to the enum with definitions, or remap; recorded before the child that touches them
 - Each child tightens the ratchet baseline from TCK-20261003-PARITY-LEDGER-SCHEMA-RATCHET
+- Each child runs `python3 -m codebase.gates.parity_ledger_schema tighten --yes` in the same PR as its ledger fix and commits `codebase/baselines/parity_ledger_schema_baseline.json` (any domain may lower a count; none may raise one; see `docs/parity_ledger/README.md`)
 
 ## Out of Scope
 - Loosening schema.json to reach zero
