@@ -344,6 +344,42 @@ with a recorded rationale?
   `requires: frontier_village_core`" grounds, but the 4-module running definition assembles and compiles
   cleanly today, so that stated justification looks questionable.
 
+## AC-6 mechanism, measured 2026-10-04 — a fresh resolve IS comparable, and there is a ready oracle
+
+The rule owner left one sub-question open — *"whether the provenance/report sidecars join the comparison or
+only `world.resolved.yaml`"* — and warned that if a fresh resolve is not byte-deterministic, that is itself
+a finding to file. Measured, so the implementer does not have to discover it:
+
+**There is exactly one nondeterministic field in the resolve output, and it is isolated.**
+`src/worldassembly/resolver.py:709` sets `created_at = datetime.now(timezone.utc)...`. It lands **only in
+`provenance_manifest.json`**. Confirmed: `created_at` does **not** appear in
+`data/worlds/dungeon_crawl/resolved/world.resolved.yaml`, and the manifest is the only file under
+`resolved/` containing it.
+
+**So the comparison splits cleanly and no determinism finding needs filing:**
+
+| artifact | comparison |
+|---|---|
+| `world.resolved.yaml` | **byte-comparable against a fresh resolve.** No timestamp. AC-6's primary oracle |
+| `provenance_manifest.json` | **not** byte-comparable (`created_at`). Compare `content_fingerprint` instead |
+| `assembly_report.json`, `validation_report.json`, `compile_context.json` | timestamp content **unverified** — exclude by default, or check before including |
+
+**`content_fingerprint` is a ready-made staleness oracle, cheaper than a full diff.** Built at
+`resolver.py:702-708` as `sha256(world_id + catalog_fingerprint + each module fingerprint, modules sorted)`
+— fully deterministic, and it covers exactly the inputs the rule owner named: the authored composition
+**plus** current module and catalog content. `manifest_id` is `prov_` + its first 16 chars, so one field
+comparison detects staleness. A mismatch means the committed snapshot was not produced from today's inputs.
+
+**It also confirms the `dungeon_crawl` defect a third time, via a different artifact.** The committed
+manifest's `module_fingerprints` holds **4** modules, including `goblin_camp_conflict` and
+`old_mine_resource_loop` — the two the closed P1 fix removed. `created_at: 2026-09-08T02:50:41Z`. Three
+independent artifacts now agree that the pre-fix configuration is what production resolves.
+
+**Implementer note:** use `content_fingerprint`/`manifest_id` equality as the fast path, with a
+`world.resolved.yaml` byte-compare as authoritative confirmation. Do **not** include `created_at` in any
+comparison, and do **not** "fix" determinism by removing the timestamp — it is legitimate provenance, just
+not part of the projection's identity.
+
 ## Rule-layer ruling, 2026-10-04 — where the normative sentence lives
 
 **Source:** `world-rule-catalog-design`, owner of `docs/world_rules/`, checked at `origin/main`. Asked
@@ -520,8 +556,23 @@ slices already taken.
       seven sites and asserts `danger_scale == 2`; nine test files reference the directory. Every test
       that genuinely depends on it must be resolved, and the repoint-or-delete decision for
       `test_real_content_world_compositions.py` recorded with its reasoning.
-- [ ] The `dungeon_crawl` `danger_scale` resolution is recorded as **"catalog value never drove a run;
-      running value (4) kept"**, and no test or doc is left asserting `2` as intended design.
+- [ ] **AC-5 — RESOLVED 2026-10-04 (owner decision), and REVERSED from what it said.** It previously read
+      *"catalog value never drove a run; running value (4) kept"*. **That is wrong and must not be
+      implemented** — see the BLOCKER section: the catalog's `2` is the delivered remedy of a closed P1
+      ticket, so keeping `4` would re-ratify a measured 94–97% extinction configuration.
+      **The owner's decision is to RE-APPLY the balance fix**, and delivering it is **not this ticket's
+      job** — it is owned by `TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION`
+      (P1), which lands first or together with this one.
+      **This ticket's remaining obligation on `danger_scale` is narrow:** when the catalog copy is
+      deleted, do **not** carry its `2` forward as the authoritative value and do **not** carry `4`
+      forward as "confirmed correct" either. Record that the value is owned by the other ticket, and
+      leave no test or doc asserting either number as intended design on this ticket's authority.
+      The rule owner's constraint still binds and is unchanged: repointed, `:452` must assert whatever
+      the authoritative definition actually holds **after** the other ticket lands, with a note saying
+      why; deleted, no surviving copy of the `== 2` assertion may reappear in any of the nine referencing
+      files.
+      `test_plan.md` marks AC-5's oracle `oracle: unresolved` — it stays unresolved **for this ticket**,
+      and that is now correct rather than a gap.
       **Sharpened by the rule owner 2026-10-04 — this holds under BOTH options for
       `test_real_content_world_compositions.py` and applies across all nine referencing files, not just
       that one:**
