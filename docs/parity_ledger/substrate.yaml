@@ -4106,7 +4106,10 @@
     "none"; (3) remaining budget slots (default BUDGET=6) filled by highest-scoring
     non-settlement candidates when settlement_style="none"; (4) dependency modules
     auto-added via BFS on WorldModuleSpec.requires; (5) fail-fast GenerationCompositionError
-    raised if two selected modules share a provides string. Output written to data/content/world_compositions/generated/{world_id}.yaml.
+    raised if two selected modules share a provides string. Output written to data/worlds/{world_id}/world.yaml
+    (the authoritative source definition, overridable via generate(output_dir=...)), with its
+    resolved/ projection and a history-only generation_provenance marker
+    (TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION).
     world_id = f"generated_{settlement_style}_{int(danger_level)}_{seed}". Sort is
     deterministic: (-score, module_id) for tie-breaking.
 
@@ -4116,7 +4119,9 @@
   legacy_evidence: null
   v2_evidence: 'src/worldgeneration/generator.py (ProceduralCompositionGenerator,
     GenerationCompositionError) + src/worldgeneration/scorer.py (ModuleScorer.score)
-    + src/worldassembly/schema.py (WorldCompositionSpec, ModuleRefSpec)
+    + src/worldassembly/schema.py (WorldCompositionSpec, ModuleRefSpec, GenerationProvenanceSpec)
+    + src/worldassembly/resolve_io.py (the single resolve/write path the generator shares with
+    the resolve CLI) + src/worldbuilding/repository.py (DEFAULT_WORLDS_ROOT)
 
     '
   proof_type: null
@@ -4140,7 +4145,10 @@
   v2_evidence: 'src/worldgeneration/generator.py:452 (param_rng = DeterministicRNG(intent.seed))
     + src/worldmodules/schema.py (ModuleParameterSpec) + src/worldassembly/schema.py
     (ModuleRefSpec.parameters) + TCK-20260619-P0-DETERMINISM (replaced bare random.Random
-    with DeterministicRNG)
+    with DeterministicRNG). Parameter sampling remains fully deterministic; the only
+    run-varying field in the authored YAML is generation_provenance.generated_at, a wall-clock
+    origin record outside the composition identity
+    (TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION)
 
     '
   proof_type: null
@@ -5095,3 +5103,32 @@
   test_path: tests/unit/entities/test_entity_identity_resolver.py::test_clean_archetype_contract_resolves_clean_identity
   divergence_note: null
   support_boundary: null
+- id: SUB-394
+  text: 'data/worlds/<world_id>/ is the sole authoritative definition of a world_id;
+    no other location may define one. Within it, world.yaml is the source definition,
+    whether written by hand or by a generator, and once written it is edited, not
+    regenerated. For a worldcomposition.v1 world, resolved/world.resolved.yaml is
+    a generated projection: never hand-edited, and it must equal what the resolver
+    produces from the current world.yaml and the current module/catalog content. A
+    committed projection that differs from a fresh resolve is a defect, not an alternative
+    definition. Enforced by architecture guards rather than by the compile pipeline:
+    whether a second definition of the same world_id exists elsewhere in the repository
+    is unknowable to a WorldValidator handed one spec, so this is a repository-layout
+    law and deliberately carries no WORLD-* rule id and no severity (TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION).
+    The retired second location, data/content/world_compositions/, held 9 duplicate
+    definitions and had never driven a production run.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'docs/architecture/world_repository_layout.md §1 (the normative authority
+    sentence plus the source/projection clause) + docs/mechanics/06_worldbuilding_foundation.md
+    §11 (the invariant, stated as a sibling law and explicitly not a compile gate)
+    + tests/architecture/test_world_definition_single_source.py (seven guards: one-definition,
+    no-redefinition-of-a-known-world_id, fresh-resolve equality across all 24 composition
+    worlds, docs-stated-once, not-a-compile-gate, catalog-directory-absent, no-contradicting-danger_scale)'
+  proof_type: parity
+  test_path: tests/architecture/test_world_definition_single_source.py::test_world_id_resolves_to_exactly_one_definition
+  divergence_note: null
+  support_boundary: World definition storage and freshness only. The dungeon_crawl
+    danger_scale value is owned by TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION,
+    not by this entry.
