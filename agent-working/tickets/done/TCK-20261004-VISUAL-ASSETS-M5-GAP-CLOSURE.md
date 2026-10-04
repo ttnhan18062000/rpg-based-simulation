@@ -90,3 +90,5 @@ frontend vitest 111 passed; `eslint src/visualAssets rehearsal-capture playwrigh
 
 ## Completion Summary
 The terrain role's AM-U21 contract is defined and tested; W03, W05 and W07 have recorded evidence for the one pilot role. Nothing is activated; the normal Live Map is untouched. Ticket 5 re-classifies the M5 deliverables.
+
+Follow-up commit (planner review): the AM5-W08 production-build check in `isolation.test.ts` covered only the rehearsal fixture PNG names, so a bundled pilot image would have slipped through; and Vite inlines small images as data: URIs, so even a name check was blind. It now checks every PNG under `__fixtures__/*` by name and by its own base64 bytes in the bundle, plus `terrain.forest` and the pilot page title. Mutant: importing the pilot PNG from `main.tsx` made the build test fail ("the production build inlines 2f62ba6c...png"); the old test passed that mutant's build; reverted, all 80 `src/visualAssets` tests pass. The scoped-eslint reading of the "eslint passes" criterion is the planner's (18 pre-existing errors elsewhere).
