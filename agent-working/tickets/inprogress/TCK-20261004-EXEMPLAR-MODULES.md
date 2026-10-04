@@ -4,7 +4,7 @@ layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-EXEMPLAR-MODULES
-phase: open
+phase: inprogress
 date: 2026-10-04
 tags: [architecture, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, planning]
 M6a: Exemplar modules in the package registry
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -42,7 +42,7 @@ Fill `exemplar_modules` (0 to 3 paths) in `codebase/structure/package_registry.j
 - `do_not_imitate` additions beyond what the measurement shows
 
 ## Acceptance Criteria
-- [ ] Every `active` package has `exemplar_modules` set by the criterion; `legacy`/`frozen` have none
+- [ ] Every `active` package has `exemplar_modules` set by the criterion (possibly `[]`); `legacy`/`frozen` have none
 - [ ] Registry validator passes
 - [ ] Criterion and command documented in the audit
 - [ ] Pin test added and passes
@@ -69,9 +69,12 @@ None.
 - Nothing here blocks a PR or tool call; M4 and M5 soaks are not disturbed
 
 ## Implementation Notes
+`codebase/structure/exemplars.py` (`measure`, `apply`); importer ranking counts absolute, relative and submodule forms from `src` only; `apply` rewrites only changed rows (byte-stable). 3 of 36 packages got picks (710 of 744 src files carry an exceptions row; the D2 path-banner filter dropped 8 more). The pin test asserts no exceptions row only, never existence (blocking lane).
 
 ## Test Summary
+`tests/codebase/test_package_exemplars.py` + `test_package_registry.py`: 42 passed. `python3 -m codebase.structure.packages validate`: 0 problems. ruff clean on new files.
 
 ## Files Changed
+codebase/structure/exemplars.py (new), codebase/structure/package_registry.jsonl, tests/codebase/test_package_exemplars.py (new), docs/plans/codebase_health/src_package_structure_audit.md, ticket and staging artifacts
 
 ## Completion Summary
