@@ -240,6 +240,21 @@ own documented read-only/deterministic contract one call further down the same c
 
 ---
 
+## 11. One Definition Per `world_id` (Repository-Layout Law)
+
+The world the engine loads is the one its authored definition resolves to — a `world_id` resolves
+to exactly one definition. See `docs/architecture/world_repository_layout.md` for which location
+holds it and for the source/projection freshness rule.
+
+This is a repository-layout law, enforced by that ADR plus the architecture guard in
+`tests/architecture/test_world_definition_single_source.py`. It is a distinct, sibling law — **not**
+a compile-pipeline gate: it is not part of §7's build-time gate ladder, carries no rule id and no
+severity, and nothing aborts compilation on it. It structurally cannot be a `WorldValidationRule`,
+because whether a second definition of the same `world_id` exists elsewhere in the repository is
+unknowable to a validator handed one spec.
+
+---
+
 ## 📜 Compliance Status
 
 | Chapter | Status | Last Action |

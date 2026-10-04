@@ -13,11 +13,9 @@ AuthoritativeState before the engine loop is even entered. This is the minimum
 gate that pytest can run quickly and deterministically without spawning a full
 kernel loop.
 
-All four compositions verified PASS for 10-tick Bash smoke:
-- wilderness_survival:    10 ticks, 11 entities, no exception
-- urban_political:        10 ticks, 27 entities, no exception
-- dungeon_crawl:          10 ticks, 32 entities, no exception
-- generated_frontier_3_42: 10 ticks, 44 entities, no exception
+All four compositions verified PASS for 10-tick Bash smoke, each producing a
+non-empty AuthoritativeState with no exception: wilderness_survival,
+urban_political, dungeon_crawl and generated_frontier_3_42.
 """
 from __future__ import annotations
 
@@ -53,28 +51,8 @@ def _compile_composition(world_id: str, repos) -> tuple:
     engine loop.
     """
     cat, mod = repos
-    comp_path = Path(f"data/content/world_compositions/{world_id}.yaml")
+    comp_path = Path(f"data/worlds/{world_id}/world.yaml")
     assert comp_path.is_file(), f"Composition file missing: {comp_path}"
-
-    raw = yaml.safe_load(comp_path.read_text(encoding="utf-8"))
-    spec = WorldCompositionSpec.model_validate(raw)
-
-    resolver = WorldAssemblyResolver(cat, mod)
-    bundle = resolver.assemble(spec)
-
-    state, report = WorldCompiler.compile(
-        bundle.world_spec,
-        seed=spec.generation_seed,
-        context=bundle.compile_context,
-    )
-    return state, report
-
-
-def _compile_generated_composition(world_id: str, repos) -> tuple:
-    """Like _compile_composition but reads from the generated/ subdirectory."""
-    cat, mod = repos
-    comp_path = Path(f"data/content/world_compositions/generated/{world_id}.yaml")
-    assert comp_path.is_file(), f"Generated composition file missing: {comp_path}"
 
     raw = yaml.safe_load(comp_path.read_text(encoding="utf-8"))
     spec = WorldCompositionSpec.model_validate(raw)
@@ -204,7 +182,7 @@ def test_smoke_generated_frontier_3_42_compiles_to_authoritative_state(repos):
     The resolver fix (module-scoped resource node IDs) is required for this
     world to assemble when two modules share the same catalog resource type.
     """
-    state, report = _compile_generated_composition("generated_frontier_3_42", repos)
+    state, report = _compile_composition("generated_frontier_3_42", repos)
 
     assert state is not None
     assert report["world_id"] == "generated_frontier_3_42"

@@ -9,8 +9,11 @@ def test_default_content_paths_point_to_data_content():
     config = ContentPathConfig()
     assert config.content_root == "data/content"
     assert config.world_modules_dir == "data/content/world_modules"
-    assert config.world_compositions_dir == "data/content/world_compositions"
     assert config.simulation_scenarios_dir == "data/content/simulation_scenarios"
+    # World definitions live under data/worlds/, which this registry must not declare: every
+    # field here is a child of content_root, and the worlds root is pinned next to
+    # DEFAULT_WORLDS_ROOT in the worldbuilding layer's own tests.
+    assert not hasattr(config, "world_compositions_dir")
 
 
 def test_world_module_repository_default_uses_content_path():
@@ -166,7 +169,6 @@ def test_non_catalog_dirs_constant_matches_path_config():
     config = ContentPathConfig()
     expected = {
         config.world_modules_dir.split("/")[-1],
-        config.world_compositions_dir.split("/")[-1],
         config.simulation_scenarios_dir.split("/")[-1],
     }
     assert expected == NON_CATALOG_DIRS, (

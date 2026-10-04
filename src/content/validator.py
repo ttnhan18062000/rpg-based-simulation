@@ -10,6 +10,7 @@ from src.content.repository import CatalogRepository, CANONICAL_FAMILIES
 from src.content.paths import ContentPathConfig
 from src.worldmodules.schema import WorldModuleSpec
 from src.worldassembly.schema import WorldCompositionSpec
+from src.worldbuilding.repository import DEFAULT_WORLDS_ROOT
 
 _paths = ContentPathConfig()
 
@@ -35,7 +36,7 @@ class ValidationIssue(BaseModel):
     filename: Optional[str] = Field(None, description="Filename where the issue resides")
 
 
-def load_all_compositions(worlds_dir: str = ContentPathConfig().world_compositions_dir) -> List[WorldCompositionSpec]:
+def load_all_compositions(worlds_dir: str = DEFAULT_WORLDS_ROOT) -> List[WorldCompositionSpec]:
     compositions = []
     dir_path = Path(worlds_dir)
     if not dir_path.exists():
@@ -150,7 +151,7 @@ class CatalogValidator:
         if self._custom_compositions is not None:
             compositions = self._custom_compositions
         else:
-            compositions = load_all_compositions(_paths.world_compositions_dir)
+            compositions = load_all_compositions(DEFAULT_WORLDS_ROOT)
 
         # Build graph
         from src.content.reference_graph import ContentReferenceGraph

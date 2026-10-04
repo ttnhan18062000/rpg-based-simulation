@@ -173,7 +173,7 @@ The CLI (`cli.py`) provides a command-line interface to `WorldRepository`, `Worl
 | `--resource-density` | `0.5` | Resource node density scalar |
 | `--population-scale` | `1.0` | Population count scalar |
 
-Output: writes `data/content/world_compositions/generated/{world_id}.yaml`. World ID format: `generated_{settlement_style}_{int(danger_level)}_{seed}`.
+Output: writes the source definition `data/worlds/{world_id}/world.yaml` plus its `resolved/` projection sidecars, under the authoritative world root (`DEFAULT_WORLDS_ROOT`, `src/worldbuilding/repository.py`) — see `docs/architecture/world_repository_layout.md`. World ID format: `generated_{settlement_style}_{int(danger_level)}_{seed}`. The generator refuses to overwrite an existing `world.yaml`; that conflict is reported as a composition conflict and exits `1`.
 
 CLI-002 governs the CLI's operational contract (argument parsing, exit codes, error reporting format).
 

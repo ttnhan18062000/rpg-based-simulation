@@ -9,6 +9,9 @@ from datetime import datetime
 from typing import Any, Optional
 from src.worldbuilding.schema import WorldSpec, load_world_spec_from_yaml, InvalidWorldSpecError
 
+DEFAULT_WORLDS_ROOT = "data/worlds"
+
+
 class WorldRepositoryError(Exception):
     """Base exception for WorldRepository operations."""
     pass

@@ -90,7 +90,7 @@ def test_pack_world_modules_resolve(manifest):
 def test_pack_sample_composition_file_exists(manifest):
     import os
     for cid in manifest.sample_compositions:
-        path = f"data/content/world_compositions/{cid}.yaml"
+        path = f"data/worlds/{cid}/world.yaml"
         assert os.path.exists(path), f"Sample composition {cid!r} file not found at {path}"
 
 

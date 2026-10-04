@@ -5,5 +5,4 @@ from dataclasses import dataclass
 class ContentPathConfig:
     content_root: str = "data/content"
     world_modules_dir: str = "data/content/world_modules"
-    world_compositions_dir: str = "data/content/world_compositions"
     simulation_scenarios_dir: str = "data/content/simulation_scenarios"
