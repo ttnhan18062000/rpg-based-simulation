@@ -104,6 +104,7 @@ Under the RPG-core entry gate, any number this tool produces is provisional, and
 - Ledgers and docs: `docs/optimization_audit_ledger.md` and `docs/parity_ledger/infrastructure.yaml` have no entry citing this report; `docs/plans/scripts_tools_governance_epic.md` names the generator without presenting its output as evidence; `docs/archive/profiling_performance/perf_plan_v2.md` is archived and untouched. Nothing to correct.
 - `tests/perf/test_optimization_proof_report.py` (slow) assertions updated to the new shape; not run (it executes real benchmarks).
 - Schema doc: `Fixed by` lines under finding 1 and in the F9 row.
+- Review follow-up: "compared" means only that profile and sample_ticks matched, so the report now states the limits of its own check. `UNCHECKED_IDENTITY` (workload cardinality as builder kwargs, warmup_ticks, run flags) is written to `metadata.unchecked_identity` and named in the Summary sentence (always shown); each scenario's builder kwargs are recorded under `optimized.workload`. Cardinality is deliberately not part of the comparison rule, because the baseline has nothing to compare it with. Two tests added (20 in the file).
 
 ## Test Summary
 129 passed in 4.5 s: tests/perf/test_optimization_proof_claims.py (18 new, stub-only, not slow), test_test_scope_coverage_static.py, test_perf_baseline_tool.py, tests/static. No benchmark, baseline or proof was run.

@@ -223,3 +223,32 @@ def test_source_has_no_numeric_fallback_for_measured_values():
     source = Path(gop.__file__).read_text(encoding="utf-8")
     assert ", 1.0)" not in source
     assert "else 1.0" not in source
+
+
+def test_report_states_the_limits_of_its_own_check(proof):
+    proof["write_baseline"](_all_matching_baseline())
+    results = gop.run_proof()
+    saved = json.loads((proof["tmp"] / "optimization_proof.json").read_text())
+    md = (proof["tmp"] / "optimization_proof.md").read_text()
+
+    listed = saved["metadata"]["unchecked_identity"]
+    assert listed == list(gop.UNCHECKED_IDENTITY)
+    assert any("workload" in item for item in listed)
+    assert "warmup_ticks" in listed and "run flags" in listed
+
+    summary_section = md.split("## Summary")[1].split("## Comparison Matrix")[0]
+    assert "Comparability was checked on profile and sample_ticks only;" in summary_section
+    for item in listed:
+        assert item in summary_section
+    assert "are not recorded in the baseline and were not checked." in summary_section
+
+    for name, c in results["comparisons"].items():
+        assert c["optimized"]["workload"] == gop.SCENARIO_CONFIGS[name]["kwargs"]
+        assert saved["comparisons"][name]["optimized"]["workload"] == gop.SCENARIO_CONFIGS[name]["kwargs"]
+
+
+def test_limits_sentence_is_shown_even_when_nothing_is_compared(proof):
+    proof["write_baseline"](_all_matching_baseline())
+    gop.main(["--quick"])
+    md = (proof["tmp"] / "optimization_proof.md").read_text()
+    assert "were not checked." in md

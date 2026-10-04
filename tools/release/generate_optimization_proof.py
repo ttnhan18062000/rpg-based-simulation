@@ -74,6 +74,10 @@ SCENARIO_CONFIGS = {
     },
 }
 
+# What the comparison cannot see because the baseline does not record it. "compared" therefore means
+# only that profile and sample_ticks matched (warmup_ticks is checked only if both sides ever carry it).
+UNCHECKED_IDENTITY = ("workload cardinality (builder kwargs)", "warmup_ticks", "run flags")
+
 STATUS_COMPARED = "compared"
 STATUS_NOT_COMPARABLE = "not_comparable"
 
@@ -106,6 +110,7 @@ def compare_scenario(
     base: Optional[Dict[str, Any]],
     res: Dict[str, Any],
     warmup_ticks: int,
+    workload: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Compare one scenario. Pure: returns the JSON record for it, never raises on bad data."""
     base = base if isinstance(base, dict) else None
@@ -156,6 +161,7 @@ def compare_scenario(
             "profile": res.get("profile"),
             "sample_ticks": res.get("sample_ticks"),
             "warmup_ticks": warmup_ticks,
+            "workload": dict(workload) if workload is not None else None,
             "phase_breakdown": res.get("phase_breakdown", {}),
             "metrics": res.get("metrics", {}),
         },
@@ -220,6 +226,7 @@ def run_proof(quick_test: bool = False) -> Dict[str, Any]:
             "timestamp": time.time(),
             "quick_test": quick_test,
             "provisional": True,
+            "unchecked_identity": list(UNCHECKED_IDENTITY),
             "run_flags": dict(RUN_FLAGS),
             "seeds": {},
         },
@@ -244,7 +251,7 @@ def run_proof(quick_test: bool = False) -> Dict[str, Any]:
             flags=dict(RUN_FLAGS),
         )
 
-        record = compare_scenario(name, baseline_data.get(name), res, warmup_ticks)
+        record = compare_scenario(name, baseline_data.get(name), res, warmup_ticks, cfg["kwargs"])
         proof_results["comparisons"][name] = record
         if record["status"] == STATUS_COMPARED:
             print(f"  {name}: compared; speedup {record['speedup_x']}x, latency reduction {record['latency_reduction_x']}x")
@@ -278,6 +285,9 @@ def generate_markdown_report(proof_results: Dict[str, Any]) -> None:
         "\n## Summary",
         f"\n{summary['compared']} of {summary['total']} scenarios were compared against the baseline; "
         f"{summary['not_comparable']} were not comparable.",
+        "\nComparability was checked on profile and sample_ticks only; "
+        f"{', '.join(meta.get('unchecked_identity', UNCHECKED_IDENTITY))} "
+        "are not recorded in the baseline and were not checked.",
     ]
     if summary["compared"]:
         md.append(
