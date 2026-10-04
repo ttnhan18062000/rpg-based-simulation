@@ -9,6 +9,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 from src.core.enums import EntityRole, ReasonCode
+from src.content_semantics.faction import are_entities_hostile
+from src.content_semantics.relation import RelationContext
 from src.core.state import EquipSlot
 
 if TYPE_CHECKING:
@@ -433,8 +435,6 @@ class CombatResolutionSystem:
     ) -> Dict[int, CombatUpdate]:
         from src.core.updates import CombatIntent, ResourceTransferIntent, SocialUpdate, SocialBondUpdate
         from src.engine.legality import LegalityServiceV2
-        from src.content_semantics.faction import are_entities_hostile
-        from src.content_semantics.relation import RelationContext
         
         is_legal, reason = LegalityServiceV2.verify_aoe_legality(attacker, target_pos, state)
         if not is_legal:
