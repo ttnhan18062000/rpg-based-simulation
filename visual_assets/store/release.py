@@ -83,7 +83,7 @@ def assemble_release(catalog_id: str, *, release_id: str | None = None, allow_fi
                 raise BuildError("artifact_source_revoked", f"the artifact for {key} comes from a revoked source revision")
             digest = artifact.pixel_hash[len(pixels.HASH_PREFIX):]
             png_path = records.artifact_paths(artifact.artifact_id, digest, artifact.source_revision)[0]
-            png = records.read_file(png_path, config.MAX_DECODED_BYTES)
+            png = records.read_file(png_path, config.MAX_PNG_FILE_BYTES)
             if file_hash(png) != artifact.png_hash or pixels.pixel_hash(png, max_dim=config.MAX_DIM) != artifact.pixel_hash:
                 raise BuildError("artifact_hash_mismatch", f"the artifact PNG for {key} no longer matches its record; run verify")
             entries.append(ReleaseEntry(visual_key=key, artifact_id=artifact.artifact_id, pixel_hash=artifact.pixel_hash))

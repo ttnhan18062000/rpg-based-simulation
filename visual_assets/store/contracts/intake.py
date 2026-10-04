@@ -14,7 +14,7 @@ from pydantic import Field, model_validator
 from visual_assets.store.contracts.base import BoundedText, IntakeVerdict, StoreRecord
 from visual_assets.store.identities import CandidateId, FileHash, IntakeId, UtcTimestamp
 
-MAX_FINDINGS = 64  # provisional (U-05)
+MAX_FINDINGS = 64  # budget: docs/assets/budgets.md
 STAGED_FILE_NAMES = ("package.json", "source.aseprite", "preview.png")
 
 

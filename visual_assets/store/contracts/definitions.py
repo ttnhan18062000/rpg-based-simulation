@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import Annotated, ClassVar, Literal
 
 from pydantic import Field, StringConstraints, model_validator
 
@@ -13,8 +13,8 @@ Family = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,31}$")]
 AxisName = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,31}$")]
 AxisValue = Annotated[str, StringConstraints(pattern=r"^[a-z0-9][a-z0-9_]{0,31}$")]
 
-MAX_AXES = 8  # provisional (U-05)
-MAX_AXIS_VALUES = 64  # provisional (U-05)
+MAX_AXES = 8  # budget: docs/assets/budgets.md
+MAX_AXIS_VALUES = 64  # budget: docs/assets/budgets.md
 
 
 class VariantAxis(StoreRecord):
@@ -53,3 +53,4 @@ class VisualKeyRegistry(StoreRecord):
     schema_version: Literal[1]
     keys: tuple[VisualKeyDefinition, ...]
     aliases: tuple[AliasEntry, ...]
+    size_bound: ClassVar[str] = "MAX_REGISTRY_BYTES"  # the registry is a hand-edited file of up to MAX_VISUAL_KEYS keys

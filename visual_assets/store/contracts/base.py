@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import unicodedata
 from enum import Enum
-from typing import Annotated, Any, TypeVar, get_args
+from typing import Annotated, Any, ClassVar, TypeVar, get_args
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, StringConstraints, ValidationError
 
@@ -95,9 +95,18 @@ class StoreRecord(BaseModel):
     """Base of every record: unknown fields forbidden, immutable, no coercion."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+    # Name of the `store.config` attribute bounding this record's serialized size, for the writer (`canonical_json`) and every
+    # reader (`parse_record`, `record_bound`). A record whose legal maximum is bigger than MAX_RECORD_BYTES overrides it, so
+    # nothing a writer can produce under the contract bounds is refused by a reader.
+    size_bound: ClassVar[str] = "MAX_RECORD_BYTES"
 
 
 RecordT = TypeVar("RecordT", bound=StoreRecord)
+
+
+def record_bound(cls: type[StoreRecord]) -> int:
+    """The byte bound for a `cls` record (read at call time, so a test may patch the config attribute)."""
+    return getattr(config, cls.size_bound)
 
 
 def canonical_json(record: StoreRecord) -> bytes:
@@ -113,8 +122,9 @@ def canonical_json(record: StoreRecord) -> bytes:
         data = text.encode("utf-8") + b"\n"
     except (ValueError, UnicodeError) as exc:
         raise ContractError("invalid_record", f"not serialisable: {exc}") from None
-    if len(data) > config.MAX_RECORD_BYTES:
-        raise ContractError("oversize", f"record exceeds {config.MAX_RECORD_BYTES} bytes")
+    bound = record_bound(type(record))
+    if len(data) > bound:
+        raise ContractError("oversize", f"record exceeds {bound} bytes")
     return data
 
 
@@ -137,8 +147,9 @@ def _expected_literal(cls: type[StoreRecord], field: str) -> Any:
 
 def parse_record(cls: type[RecordT], data: bytes) -> RecordT:
     """Strictly parse `data` as a `cls`; every failure is a `ContractError` with a stable `code`."""
-    if len(data) > config.MAX_RECORD_BYTES:
-        raise ContractError("oversize", f"input exceeds {config.MAX_RECORD_BYTES} bytes")
+    bound = record_bound(cls)
+    if len(data) > bound:
+        raise ContractError("oversize", f"input exceeds {bound} bytes")
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError:

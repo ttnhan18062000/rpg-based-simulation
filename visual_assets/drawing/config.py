@@ -18,6 +18,8 @@ WORKSPACE = Path(
     os.environ.get("ASEPRITE_MCP_WORKSPACE", Path.home() / ".cache" / "rpg-aseprite-mcp")
 )
 ASEPRITE = os.environ.get("ASEPRITE_MCP_BINARY", "/usr/bin/aseprite")
+# The editor build the real-Aseprite tests are run against (ADR D10); strict mode fails on any other version.
+ASEPRITE_VERSION = "1.3.18.6"
 
 MAX_DIM = 128
 MAX_PIXELS_PER_OP = 4096

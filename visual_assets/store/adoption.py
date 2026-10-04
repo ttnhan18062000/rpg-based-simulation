@@ -79,7 +79,7 @@ def _verify_review_image(intake_id: str, expected_pixel_hash: str) -> None:
     """
     directory = config.REVIEW_ROOT / intake_id
     try:
-        data = quarantine.read_one_any(directory, "store_render.png", config.MAX_DECODED_BYTES)
+        data = quarantine.read_one_any(directory, "store_render.png", config.MAX_PNG_FILE_BYTES)
     except StageError as exc:
         if exc.code in {"missing_file", "not_found"}:
             raise _refuse("review_render_missing", f"the review image the human opened is missing for {intake_id}; review again") from None
