@@ -88,10 +88,7 @@ def generate() -> dict:
 
     counts["Simulation scenarios"] = _count_scenarios()
     counts["World modules"] = len(glob.glob("data/content/world_modules/*.yaml"))
-    counts["World compositions"] = len(glob.glob("data/content/world_compositions/*.yaml"))
-    counts["World compositions (generated)"] = len(
-        glob.glob("data/content/world_compositions/generated/*.yaml")
-    )
+    counts["World compositions"] = len(glob.glob("data/worlds/*/world.yaml"))
     return counts
 
 

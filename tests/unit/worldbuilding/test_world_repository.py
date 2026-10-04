@@ -315,3 +315,15 @@ def test_repository_save_world(tmp_path):
     loaded_spec = repo.load_world("new_sandbox")
     assert loaded_spec.name == "New Sandbox World"
     assert loaded_spec.topology.width == 100
+
+
+def test_default_worlds_root_is_the_authoritative_world_location():
+    """The worlds root is pinned here, in the layer that owns it.
+
+    `ContentPathConfig` deliberately does not declare it — that registry holds only children of
+    `data/content/`. See `docs/architecture/world_repository_layout.md` §1.
+    """
+    from src.worldbuilding.repository import DEFAULT_WORLDS_ROOT
+
+    assert DEFAULT_WORLDS_ROOT == "data/worlds"
+    assert (Path(DEFAULT_WORLDS_ROOT) / "frontier_living_world" / "world.yaml").is_file()
