@@ -1,6 +1,10 @@
-# Semantic visual-key registry. Committed with ZERO keys: no real key exists until a later decision adds one.
-# The key namespace is finite and fixed by this file; nothing registers keys dynamically.
+# Semantic visual-key registry. Nothing registers keys dynamically: the namespace is finite and fixed by this hand-reviewed file.
+# One real key so far (the AM-M6 pilot role, TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE); everything else is a synthetic fixture.
 record_type: visual_key_registry
 schema_version: 1
-keys: []
+keys:
+  - key: terrain.forest
+    family: terrain
+    description: Live Map forest terrain cell (tile code 6), one 16x16 tile at scale x1; the colour fill is its fallback
+    variant_axes: []
 aliases: []

@@ -40,10 +40,24 @@ build to pixel-hashed artifacts, immutable release CANDIDATES, `verify`, `gc`, a
 ## Status update 2026-10-03 (hardening and isolated rehearsal)
 
 Batch `TCK-20261003-EPIC-VISUAL-ASSET-HARDENING-AND-REHEARSAL` is built. Profile A (D8), no signing (D9) and local-only real Aseprite (D10) are recorded in the ADR; budgets are
-measured and `PROPOSED` (`docs/assets/budgets.md`, awaiting owner approval); the minimal runtime manifest and `export-runtime` exist; and the user-authorized **isolated `AM-M5`
+measured and `PROPOSED` at the time (`docs/assets/budgets.md`; approved 2026-10-04, see the status update below); the minimal runtime manifest and `export-runtime` exist; and the user-authorized **isolated `AM-M5`
 rehearsal** ran on synthetic fixtures with the normal Live Map, HUD and simulation untouched. Result (`docs/assets/surface_rehearsal_result.md`): overall `INCONCLUSIVE`;
 `AM5-W01`, `W02`, `W04`, `W06`, `W08` `PASS` within their stated scope; `W03`, `W05`, `W07` `INCONCLUSIVE`; `W09` `BLOCKED`; gates `AM-C05` and `AM-C07` `INCONCLUSIVE`, `AM-C06` and
 `AM-C09` `BLOCKED`. `AM-M6` and `AM-M7` stay dormant; no gate toward activation passed.
+
+## Status update 2026-10-04 (decisions by the user)
+
+- `U-05`: every row of `docs/assets/budgets.md` approved by the owner on PR #309; retention stays the one unset row.
+- Batch `TCK-20261004-EPIC-VISUAL-ASSET-PILOT-READINESS` (folder `agent-working/tickets/todos/visual-asset-pilot-readiness/`) filed to make
+  `AM-M6` *ready to authorize*: one real **terrain** tile adopted by the user (the pilot role kind the user chose; planner recommends Forest),
+  the `AM-M5` gaps closed for that role, retention and rollback, an M5 rerun and an `AM6-W01` charter **draft**.
+- `AM-M6` execution stays `NO-GO` until the user signs the charter and gives a new explicit authorization. `AM-M7` stays dormant.
+
+### Results 2026-10-04 (ticket batch closed)
+
+One real terrain tile (`terrain.forest`) was adopted by the owner and is in release candidate `pilot/rc-0001`; the `AM-M5` gaps for it were rerun on commit `401921bdd`: `W03`, `W07` (within the approved matrix) `PASS`, `W05`, `W09`, `C05`, `C06`, `C07`, `C09` `INCONCLUSIVE`, overall `INCONCLUSIVE`
+(`docs/assets/surface_rehearsal_result.md`). Retention is approved (30 days, local only) and a rollback drill exists (`docs/assets/retention_and_rollback.md`). A charter **draft** is at `docs/assets/pilot_charter_am6.md`, marked not an authorization.
+`AM-M6` stays `NO-GO` (M1 open items, no M2 or M4 `PASS` record, M5 not `PASS`, no signed charter, no authorization); `AM-M7` stays dormant.
 
 ## Status and authorization boundary
 

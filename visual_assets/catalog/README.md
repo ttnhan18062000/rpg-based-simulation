@@ -1,9 +1,9 @@
-# visual_assets/catalog — managed store data (zero assets)
+# visual_assets/catalog — managed store data (one pilot asset)
 
 This tree will hold the **managed** asset store: adopted sources, semantic definitions, provenance records,
 build configuration, generated artifacts, release-candidate manifests and synthetic test fixtures. At this
-point it contains the directory layout, `STORE_FORMAT` (version 1), the semantic registry `definitions/visual_keys.yaml` with **zero keys**,
-and synthetic test fixtures under `fixtures/contracts/`; **no real asset, record or key exists.**
+point it contains the directory layout, `STORE_FORMAT` (version 1), the semantic registry `definitions/visual_keys.yaml` with **one real key**, `terrain.forest`,
+its one adopted source, derived artifact and release candidate (`docs/assets/pilot_terrain_key.md`), and synthetic test fixtures under `fixtures/contracts/`.
 
 ## Who may write here
 

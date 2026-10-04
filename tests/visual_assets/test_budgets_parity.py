@@ -96,9 +96,12 @@ def test_no_provisional_u05_comment_is_left():
     assert not leftover_provisional(PKG)
 
 
-def test_the_doc_keeps_the_unset_retention_row_and_marks_every_bound_proposed_or_approved():
+def test_the_retention_bound_is_an_approved_row_and_every_bound_is_proposed_or_approved():
     text = DOC.read_text()
-    assert "Retention" in text and "UNSET" in text and "gc` is reachability-only" in text
+    # the last unset row (retention) was approved on 2026-10-04 (TCK-20261004-VISUAL-ASSETS-RETENTION-AND-ROLLBACK); no row is UNSET any more
+    retention = [line for line in text.splitlines() if "`MAX_UNADOPTED_INTAKE_AGE_DAYS`" in line and ROW.match(line)]
+    assert len(retention) == 1 and retention[0].rstrip().endswith("APPROVED 2026-10-04 |"), retention
+    assert "| UNSET |" not in text
     for line in text.splitlines():
         if ROW.match(line):
             status = line.strip("| ").split("|")[-1].strip()

@@ -64,13 +64,20 @@ describe('isolation of the surface rehearsal', () => {
       })
       const built = files(out, () => true)
       expect(built.length).toBeGreaterThan(1) // there is an index.html and its assets
-      const fixtureNames = readdirSync(path.join(MODULE, '__fixtures__', 'rehearsal')).filter((n) => n.endsWith('.png'))
-      expect(fixtureNames).toHaveLength(3)
+      // every fixture image under __fixtures__/* (the synthetic rehearsal set and the pilot terrain export), not one directory
+      const fixtureNames = files(path.join(MODULE, '__fixtures__'), (p) => p.endsWith('.png')).map((p) => path.basename(p))
+      expect(fixtureNames).toHaveLength(4) // 3 synthetic + 1 pilot: a new fixture image must be added to this count on purpose
       const names = built.map((p) => path.basename(p))
       expect(names.filter((n) => fixtureNames.includes(n) || /rehearsal/i.test(n))).toEqual([])
       expect(built.some((p) => p.endsWith('.png') && fixtureNames.some((n) => p.includes(n.slice(0, 16))))).toBe(false)
       const text = built.filter((p) => /\.(js|css|html)$/.test(p)).map((p) => readFileSync(p, 'utf8')).join('\n')
-      for (const needle of ['visualAssets', 'rehearsal', 'runtime_manifest', 'fallback_contract_version', 'duplicate object key', 'fixture.rehearsal', ...fixtureNames.map((n) => n.slice(0, 16)), 'Visual asset surface']) {
+      // Vite inlines small images as data: URIs, so no .png file or name would show: look for every fixture's own bytes (base64) in the bundle too
+      const fixturePaths = files(path.join(MODULE, '__fixtures__'), (p) => p.endsWith('.png'))
+      for (const file of fixturePaths) {
+        const encoded = readFileSync(file).toString('base64')
+        expect(text.includes(encoded.slice(0, 120)), `the production build inlines ${path.basename(file)}`).toBe(false)
+      }
+      for (const needle of ['visualAssets', 'rehearsal', 'runtime_manifest', 'fallback_contract_version', 'duplicate object key', 'fixture.rehearsal', 'terrain.forest', ...fixtureNames.map((n) => n.slice(0, 16)), 'Visual asset surface', 'Pilot terrain rehearsal']) {
         expect(text.includes(needle), `the production build contains ${needle}`).toBe(false)
       }
     } finally {
