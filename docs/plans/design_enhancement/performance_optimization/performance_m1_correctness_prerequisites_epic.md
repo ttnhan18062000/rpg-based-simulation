@@ -32,6 +32,20 @@ authorize it.
 | PERF-M1-T04 | Tied `WorkerResult` determinism verification | PERF-D1 owner disposition | Adversarial ID-zero/system-result experiment and contract conclusion |
 | PERF-M1-T05 | Correctness-baseline invalidation ledger | T01–T04 as applicable | Consolidated list of artifacts that remain valid, require rerun, or are incomparable |
 
+**Partial-lift batch (2026-10-04).** The owner's partial lift of the RPG-core entry gate
+(`performance_optimization_roadmap.md`, "Gate definition and partial lift") releases the M1 work
+on `worker_manager.py`, `checkpoint.py`, `long_run_harness.py` and `protocol_validator.py`. It is
+filed in `agent-working/tickets/todos/perf-m1-partial-lift/`:
+
+- T02, as `TCK-20261004-PERF-M1-DEBT-HARNESS-CORRECTNESS`;
+- T04 (verification only), as `TCK-20261004-PERF-M1-TIED-WORKER-RESULT-VERIFICATION`;
+- T03 is split. T03a, the `checkpoint.py` half, is
+  `TCK-20261004-PERF-M1-HASH-POLICY-CHECKPOINT-SLICE`. T03b, the kernel and certification-harness
+  half, is unfiled and gated.
+- An inventory refresh, `TCK-20261004-PERF-M1-PHASE-INVENTORY-REGEN`.
+
+T01 waits for `governor.py`. T05 waits for T01–T04.
+
 T03 may close as a documented no-change result. T04 is verification-first: it must not modify the
 commit key unless its investigation proves a defect and a separately approved correction scope
 selects a remedy.
