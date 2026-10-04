@@ -82,11 +82,12 @@ None.
 - Seeded 36 rows from the audit table by a one-off script (not committed). `do_not_imitate` carries the four roadmap Section 2 worst cases with sizes re-measured with `ast` on 2026-10-04 (`EventExtractor.extract` is 1,588 lines now, the roadmap says 1,585). `exemplar_modules` is empty and `system` null on every row: choosing exemplars is judgement the audit did not make. **Open follow-up for M6 or the owner: pick exemplar modules.**
 - The registry is the source of truth after seeding; the audit table carries a dated-snapshot note, and the README and standard rows say so.
 - Flip ticket filed: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING` (BLOCKED, dates written at merge). The namespace-package assumption was added to `TCK-20261004-IMPORT-LINTER-EVALUATION` as the planner asked.
+- Planner review of 859eec3d5 (fixup): the advisory step was invisible, so `validate` gained `--summary-out` and `--annotate` (the ratchet step's pattern), exit 2 with "could not run (<reason>)" on a crash, and a notice when `git ls-files` fails and the on-disk fallback is used; `splitlines()` replaces `split()` so paths with spaces survive. Five tests added (31 total).
 - No CI-pinning test needed editing (adding a step to an existing job changed no job set); no outbox note to the testing planner was needed.
 
 
 ## Test Summary
-`tests/codebase/test_package_registry.py`: 26 passed (real-repo schema check, 13 schema-defect cases, missing field, duplicate and bad JSON, both completeness checks, untracked directory, kinds filter, non-git fallback, `load_rows`, CLI exit codes, CI step advisory). CI-pinning static and tools tests (126 with the new file) pass. `ruff check codebase/structure` clean. `python3 -m codebase.structure.packages validate` on main: 0 problems.
+`tests/codebase/test_package_registry.py`: 31 passed (real-repo schema check, 13 schema-defect cases, missing field, duplicate and bad JSON, both completeness checks, untracked directory, kinds filter, non-git fallback, `load_rows`, CLI exit codes, CI step advisory). CI-pinning static and tools tests (126 with the new file) pass. `ruff check codebase/structure` clean. `python3 -m codebase.structure.packages validate` on main: 0 problems.
 
 ## Files Changed
 - codebase/structure/__init__.py, packages.py, package_registry.jsonl (new)

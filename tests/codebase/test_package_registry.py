@@ -179,5 +179,55 @@ def test_ci_step_is_advisory_in_the_code_health_job():
     workflow = yaml.safe_load((_REPO_ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8"))
     steps = workflow["jobs"]["code-health"]["steps"]
     step = next(s for s in steps if s.get("name") == "Package registry")
-    assert step["run"] == "python3 -m codebase.structure.packages validate"
+    assert step["run"] == (
+        'python3 -m codebase.structure.packages validate --summary-out "$GITHUB_STEP_SUMMARY" --annotate'
+    )
     assert step["continue-on-error"] is True
+
+
+# ── Advisory visibility: summary and annotation ───────────────────────────────
+
+
+def test_summary_and_warning_on_problems(tmp_path, capsys):
+    root = _scratch(tmp_path, [_row("alpha")])
+    summary = tmp_path / "summary.md"
+    assert packages.main(["validate", "--root", str(root), "--summary-out", str(summary), "--annotate"]) == 1
+    text = summary.read_text()
+    assert "package registry: 1 problem(s)" in text and "src/beta" in text
+    assert capsys.readouterr().out.count("::warning::package registry: 1 problem(s)") == 1
+
+
+def test_clean_run_writes_a_summary_and_no_warning(tmp_path, capsys):
+    root = _clean(tmp_path)
+    summary = tmp_path / "summary.md"
+    assert packages.main(["validate", "--root", str(root), "--summary-out", str(summary), "--annotate"]) == 0
+    assert "package registry: 0 problem(s)" in summary.read_text()
+    assert "::warning::" not in capsys.readouterr().out
+
+
+def test_crash_is_reported_not_silent(tmp_path, capsys, monkeypatch):
+    def boom(*_args, **_kwargs):
+        raise RuntimeError("kaput")
+
+    monkeypatch.setattr(packages, "validate_file", boom)
+    summary = tmp_path / "summary.md"
+    assert packages.main(["validate", "--root", str(tmp_path), "--summary-out", str(summary), "--annotate"]) == 2
+    assert "could not run (RuntimeError: kaput)" in summary.read_text()
+    assert "::warning::package registry could not run" in capsys.readouterr().out
+
+
+def test_git_fallback_leaves_a_notice(tmp_path):
+    root = _scratch(tmp_path, [_row("alpha"), _row("beta")], git=False)
+    notes: list[str] = []
+    assert packages.tracked_packages(root, notes) == {"alpha", "beta"}
+    assert notes and "directories on disk" in notes[0]
+    summary = tmp_path / "summary.md"
+    packages.main(["validate", "--root", str(root), "--summary-out", str(summary)])
+    assert "note: git ls-files failed" in summary.read_text()
+
+
+def test_paths_with_spaces_are_kept_whole(tmp_path):
+    root = _clean(tmp_path)
+    (root / "src" / "alpha" / "my file.py").write_text("z = 3\n")
+    subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+    assert packages.tracked_packages(root) == {"alpha", "beta"}

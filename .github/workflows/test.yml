@@ -950,7 +950,7 @@ jobs:
       # TCK-20261004-PACKAGE-REGISTRY-VALIDATOR: advisory like the ratchet, with its own continue-on-error so it
       # stays advisory when the ratchet step above flips to blocking (TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING).
       - name: Package registry
-        run: python3 -m codebase.structure.packages validate
+        run: python3 -m codebase.structure.packages validate --summary-out "$GITHUB_STEP_SUMMARY" --annotate
         continue-on-error: true
 
   # ── Code health SARIF feedback (advisory soak) ────────────────────────────
