@@ -20,13 +20,15 @@ _REPO_ROOT = Path(__file__).parent.parent.parent
 
 # graphify (the CLI binary, not just graphify-out/graph.json) is a locally-installed
 # dev tool -- confirmed absent from requirements.txt/pyproject.toml/any CI workflow,
-# and graphify-out/ is entirely gitignored (never committed). The 4 real-path tests
-# below invoke the real `graphify affected` subprocess against the real graph.json,
-# both of which are only present in an environment that has separately run
-# `graphify update .` -- not a fresh CI checkout. This mirrors the existing skip
-# pattern for `tools/search_mcp.py`'s tests (skipped when the knowledge index isn't
-# built) rather than requiring graphify as a new CI dependency for what is,
-# by design, an on-demand-only developer/agent tool.
+# and graphify-out/ is entirely gitignored (never committed). Only the one
+# end-to-end smoke test below (test_make_target_runs_successfully_against_real_repo)
+# invokes the real `graphify affected` against the real graph.json, so only it
+# needs an environment that has separately run `graphify update .`; it is skipped
+# without one. The other former real-path tests are fixture-based
+# (TCK-20261004-CODE-HEALTH-IMPACT-TESTS-LOCAL-ENV) and run everywhere. This mirrors
+# the existing skip pattern for `tools/search_mcp.py`'s tests (skipped when the
+# knowledge index isn't built) rather than requiring graphify as a new CI
+# dependency for what is, by design, an on-demand-only developer/agent tool.
 _GRAPHIFY_AVAILABLE = shutil.which("graphify") is not None and (
     _REPO_ROOT / "graphify-out" / "graph.json"
 ).exists()
@@ -338,38 +340,89 @@ def test_build_impact_report_degrades_gracefully_with_no_registry_hits():
 # ---------------------------------------------------------------------------
 
 
-@_requires_graphify
-def test_real_path_pipeline_includes_kernel_as_dependent():
-    report = chi.build_impact_report(_REPO_ROOT, "src/engine/pipeline.py")
+def _pipeline_fixture_graph():
+    """pipeline.py with two defined symbols, shaped like graph.json."""
+    nodes = [
+        {"id": "pipeline", "label": "pipeline.py", "file_type": "code",
+         "source_file": "src/engine/pipeline.py", "source_location": "L1"},
+        {"id": "pipeline_run", "label": "run_phases()", "file_type": "code",
+         "source_file": "src/engine/pipeline.py", "source_location": "L10"},
+        {"id": "pipeline_cls", "label": "Pipeline", "file_type": "code",
+         "source_file": "src/engine/pipeline.py", "source_location": "L50"},
+    ]
+    links = [
+        {"source": "pipeline", "target": "pipeline_run", "relation": "contains"},
+        {"source": "pipeline", "target": "pipeline_cls", "relation": "contains"},
+    ]
+    return _make_graph(nodes, links)
+
+
+def _pipeline_fixture_affected(symbol, depth, graph_path):
+    """Stand-in for `graphify affected`: many unrelated dependents that sort
+    alphabetically BEFORE src/engine/ (src/aaa_*, tests/), the target's own
+    subsystem, and the two files the regression guard names.  120 + 30 + 2
+    dependents is well past the 40-entry display window, so only the
+    same-subsystem-first sort keeps kernel.py visible."""
+    lines = [f"- helper [code] src/aaa_other/mod_{i:03d}.py:L1" for i in range(120)]
+    lines += [f"- helper [code] src/engine/a_sibling_{i:02d}.py:L1" for i in range(30)]
+    lines += [
+        "- Kernel [code] src/engine/kernel.py:L5",
+        "- Checkpoint [code] src/engine/scenario_checkpoint.py:L7",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def _pipeline_fixture_repo(tmp_path):
+    _init_repo(tmp_path)
+    (tmp_path / "src" / "engine").mkdir(parents=True)
+    (tmp_path / "src" / "engine" / "pipeline.py").write_text("x = 1\n", encoding="utf-8")
+    _commit(tmp_path, "init pipeline")
+    return tmp_path
+
+
+def test_fixture_pipeline_includes_kernel_as_dependent(tmp_path):
+    # Fixture twin of the former real-graph test: same properties, no local
+    # graphify graph or full git history needed
+    # (TCK-20261004-CODE-HEALTH-IMPACT-TESTS-LOCAL-ENV).
+    report = chi.build_impact_report(
+        _pipeline_fixture_repo(tmp_path),
+        "src/engine/pipeline.py",
+        graph=_pipeline_fixture_graph(),
+        registry_entries=[],
+        affected_runner=_pipeline_fixture_affected,
+    )
     assert "src/engine/kernel.py" in report["dependents"]
     assert "src/engine/scenario_checkpoint.py" in report["dependents"]
     assert report["dependents_degraded"] is False
     assert report["criticality_tier"] in ("high", "medium", "low")
 
 
-@_requires_graphify
-def test_real_path_pipeline_kernel_visible_in_formatted_output_not_just_internal_data():
+def test_fixture_pipeline_kernel_visible_in_formatted_output_not_just_internal_data(tmp_path):
     # Regression guard for a real bug found during independent Test-phase
     # verification: report["dependents"] containing "src/engine/kernel.py" is
-    # necessary but not sufficient -- pipeline.py has 622 total / 68 same-
-    # subsystem dependents, and a plain alphabetical sort put kernel.py past
-    # position 100, invisible in format_impact_report's truncated human-facing
-    # summary even though the AC test above passed. Same-subsystem-first
-    # sorting (sort_dependents_src_first) plus a wider truncation window fixed
-    # this -- this test locks in the fix against the actual printed text, not
-    # just the internal data structure the AC test above already covers.
+    # necessary but not sufficient -- pipeline.py has hundreds of dependents,
+    # and a plain alphabetical sort put kernel.py past position 100, invisible
+    # in format_impact_report's truncated human-facing summary even though the
+    # internal-data test above passed. Same-subsystem-first sorting
+    # (sort_dependents_src_first) plus a wider truncation window fixed this --
+    # this test locks in the fix against the actual printed text.
     #
-    # TCK-20260823-HOTFIX-CODE-HEALTH-IMPACT-APPLY-PY-STALE-DEPENDENT: the
-    # second-dependent example used here was updated from
-    # "src/engine/apply.py" to "src/engine/scenario_checkpoint.py" because
-    # apply.py no longer has any import relationship (direct or within the
-    # tool's affected-depth) to pipeline.py -- the original narrative above
-    # about the truncation-window fix is still accurate, only the specific
-    # example path was stale.
-    report = chi.build_impact_report(_REPO_ROOT, "src/engine/pipeline.py")
+    # Moved onto a fixture graph by TCK-20261004-CODE-HEALTH-IMPACT-TESTS-LOCAL-ENV:
+    # the fixture's 120 src/aaa_other/* dependents sort before src/engine/*
+    # alphabetically, so reverting to a plain sort pushes kernel.py to position
+    # 150 and fails this test, as the real graph did.
+    report = chi.build_impact_report(
+        _pipeline_fixture_repo(tmp_path),
+        "src/engine/pipeline.py",
+        graph=_pipeline_fixture_graph(),
+        registry_entries=[],
+        affected_runner=_pipeline_fixture_affected,
+    )
+    assert len(report["dependents"]) > 100
     formatted = chi.format_impact_report(report)
     assert "src/engine/kernel.py" in formatted
     assert "src/engine/scenario_checkpoint.py" in formatted
+    assert "src/aaa_other/mod_119.py" not in formatted  # truncated, not dumped
 
 
 def test_sort_dependents_src_first_prioritizes_same_subsystem():
@@ -388,19 +441,42 @@ def test_sort_dependents_src_first_prioritizes_same_subsystem():
     ]
 
 
-@_requires_graphify
-def test_real_path_low_centrality_profile_generalizes():
-    # A real path with a markedly different (low churn, low centrality)
-    # profile than src/engine/pipeline.py, to prove the command isn't
-    # special-cased to the one file it was designed against.
-    report = chi.build_impact_report(_REPO_ROOT, "src/observability/reporter.py")
+def test_fixture_low_centrality_profile_generalizes(tmp_path):
+    # A path with a markedly different (low churn, low centrality) profile than
+    # the pipeline fixture, to prove the command isn't special-cased to one
+    # file. Fixture-based (TCK-20261004-CODE-HEALTH-IMPACT-TESTS-LOCAL-ENV): the
+    # former real-graph version depended on each worktree's local graph.
+    _init_repo(tmp_path)
+    (tmp_path / "src" / "observability").mkdir(parents=True)
+    (tmp_path / "src" / "observability" / "reporter.py").write_text("x = 1\n", encoding="utf-8")
+    _commit(tmp_path, "init reporter")
 
+    graph = _make_graph(
+        [
+            {"id": "rep", "label": "reporter.py", "file_type": "code",
+             "source_file": "src/observability/reporter.py", "source_location": "L1"},
+            {"id": "rep_cls", "label": "Reporter", "file_type": "code",
+             "source_file": "src/observability/reporter.py", "source_location": "L5"},
+        ],
+        [{"source": "rep", "target": "rep_cls", "relation": "contains"}],
+    )
+
+    def fake_affected(symbol, depth, graph_path):
+        return "- consumer [code] src/observability/runner.py:L3\n"
+
+    report = chi.build_impact_report(
+        tmp_path,
+        "src/observability/reporter.py",
+        graph=graph,
+        registry_entries=[],
+        affected_runner=fake_affected,
+    )
     assert report["criticality_tier"] == "low"
     assert report["churn_lines_changed"] < 200
     assert report["edge_degree"] < 100
-    # This file has real, resolvable dependents (unlike the ambiguous-label
-    # degrade case) — proving the non-degraded aggregation path also
-    # generalizes beyond pipeline.py.
+    # Real, resolvable dependents (unlike the ambiguous-label degrade case) --
+    # proves the non-degraded aggregation path also generalizes.
+    assert report["dependents"] == ["src/observability/runner.py"]
     assert report["dependents_degraded"] is False
 
 
@@ -445,9 +521,20 @@ def test_compute_churn_target_pathspec_scopes_to_smaller_number(tmp_path):
     assert scoped_churn == 3  # 3 insertions from src/small.py's own commit
 
 
-def test_compute_churn_target_pathspec_defaults_to_repo_wide():
+def test_compute_churn_target_pathspec_defaults_to_repo_wide(tmp_path):
     # Backward-compatibility: the default must behave exactly like the old
-    # hardcoded "." pathspec — build_report()'s own call site relies on this.
-    default_call = chb.compute_churn_lines_changed(_REPO_ROOT)
-    explicit_dot_call = chb.compute_churn_lines_changed(_REPO_ROOT, target_pathspec=".")
+    # hardcoded "." pathspec -- build_report()'s own call site relies on this.
+    # Runs on a small temporary repository: over the real repository on a full
+    # local clone this exceeded the 60 s resource budget
+    # (TCK-20261004-CODE-HEALTH-IMPACT-TESTS-LOCAL-ENV).
+    _init_repo(tmp_path)
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "a.py").write_text("x = 1\n" * 4, encoding="utf-8")
+    _commit(tmp_path, "init a")
+    (tmp_path / "src" / "b.py").write_text("y = 2\n" * 7, encoding="utf-8")
+    _commit(tmp_path, "add b")
+
+    default_call = chb.compute_churn_lines_changed(tmp_path)
+    explicit_dot_call = chb.compute_churn_lines_changed(tmp_path, target_pathspec=".")
     assert default_call == explicit_dot_call
+    assert default_call == 11

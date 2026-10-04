@@ -16,7 +16,7 @@ from visual_assets.store import config, pixels, records
 from visual_assets.store.audit import audit_chain
 from visual_assets.store.build.exportconfig import load_export_config
 from visual_assets.store.catalog.registry import load_registry
-from visual_assets.store.contracts import ArtifactRecord, ReleaseCandidateManifest, SourceRecord, parse_record, record_bound
+from visual_assets.store.contracts import AdoptionRecord, ArtifactRecord, ReleaseCandidateManifest, SetAdoptionRecord, SourceRecord, parse_record, record_bound
 from visual_assets.store.errors import BuildError, ContractError, PngDecodeError, RegistryError, StageError
 from visual_assets.store.intake.validator import file_hash
 
@@ -26,7 +26,7 @@ _INSIDE = {
     "definitions": {"visual_keys.yaml", ".gitkeep"},
     "build-config": {"export.toml", ".gitkeep"},
     "manifests": {"candidates", ".gitkeep"},
-    "provenance": {"adoptions", "intake", "revocations", "licences", ".gitkeep"},
+    "provenance": {"adoptions", "intake", "revocations", "set-adoptions", "licences", ".gitkeep"},
 }
 _ID = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}")
 _PNG_NAME = re.compile(r"([0-9a-f]{64})\.png")
@@ -54,6 +54,8 @@ def verify(catalog_root: Path | str | None = None, *, allow_fixture_namespace: b
     out: list[Finding] = []
     _store_format(root, out)
     _registry(root, out, allow_fixture_namespace)
+    _adoption_details(root, out, allow_fixture_namespace)
+    _set_adoptions(root, out)
     out += [Finding(b.code, b.path, b.detail) for b in audit_chain(root).breaks]
     _tracked_tree(root, out)
     has_artifacts = _artifacts(root, out)
@@ -78,6 +80,51 @@ def _registry(root: Path, out: list[Finding], allow_fixture: bool) -> None:
         load_registry(root / "definitions" / "visual_keys.yaml", allow_fixture_namespace=allow_fixture)
     except RegistryError as exc:
         out.append(Finding("REGISTRY_INVALID", "definitions/visual_keys.yaml", str(exc)))
+
+
+def _adoption_details(root: Path, out: list[Finding], allow_fixture: bool) -> None:
+    """A live adoption's `detail_value` must be declared by its key (an undeclared one would make `assemble_release` refuse)."""
+    try:
+        keys = load_registry(root / "definitions" / "visual_keys.yaml", allow_fixture_namespace=allow_fixture).keys
+    except RegistryError:
+        return  # REGISTRY_INVALID already says so
+    try:
+        for sid in records.list_source_ids(root):
+            eligible = [rev for rev in records.list_revisions(sid, root) if records.is_eligible(sid, rev, root)]
+            if not eligible:
+                continue
+            adoption = records.load_adoption(records.load_source(sid, eligible[-1], root).adoption_id, root)
+            definition = keys.get(adoption.visual_key)
+            if adoption.detail_value is None or definition is None:
+                continue
+            if definition.detail is None or adoption.detail_value not in definition.detail.values:
+                out.append(Finding("ADOPTION_UNKNOWN_DETAIL", f"sources/{sid}", f"{adoption.visual_key} does not declare the detail value {adoption.detail_value!r}"))
+    except (StageError, ContractError):
+        return  # the audit reports unreadable records
+
+
+def _set_adoptions(root: Path, out: list[Finding]) -> None:
+    """Each reviewed-set adoption record parses, is named by its id, and every entry points at an adoption of the same intake, key and detail slot."""
+    base = records.set_adoptions_dir(root)
+    if not base.is_dir() or base.is_symlink():
+        return
+    for path in sorted(base.iterdir()):
+        rel = _rel(root, path)
+        try:
+            record = parse_record(SetAdoptionRecord, records.read_file(path, record_bound(SetAdoptionRecord)))
+        except (StageError, ContractError) as exc:
+            out.append(Finding("SET_ADOPTION_UNREADABLE", rel, f"cannot be read ({exc.code})"))
+            continue
+        if path.name != f"{record.set_adoption_id}.json":
+            out.append(Finding("SET_ADOPTION_MISMATCH", rel, "the file name is not the record's set adoption id"))
+        for entry in record.entries:
+            try:
+                adoption = parse_record(AdoptionRecord, records.read_file(records.adoptions_dir(root) / f"{entry.adoption_id}.json", record_bound(AdoptionRecord)))
+            except (StageError, ContractError):
+                out.append(Finding("SET_ADOPTION_DANGLING", rel, f"{entry.visual_key} points at an adoption record that cannot be read"))
+                continue
+            if (adoption.intake_id, adoption.visual_key, adoption.detail_value) != (entry.intake_id, entry.visual_key, entry.detail):
+                out.append(Finding("SET_ADOPTION_MISMATCH", rel, f"{entry.visual_key}: the adoption record names another intake, key or detail value"))
 
 
 def _tracked_tree(root: Path, out: list[Finding]) -> None:
@@ -176,9 +223,9 @@ def _manifests(root: Path, out: list[Finding]) -> None:
     if not base.is_dir() or base.is_symlink():
         return
     try:
-        registry_keys = set(load_registry(root / "definitions" / "visual_keys.yaml", allow_fixture_namespace=True).keys)
+        registry_keys = dict(load_registry(root / "definitions" / "visual_keys.yaml", allow_fixture_namespace=True).keys)
     except RegistryError:
-        registry_keys = set()
+        registry_keys = {}
     for catalog in sorted(base.iterdir()):
         if catalog.name in (".gitkeep",) or catalog.name.startswith(".tmp-"):
             continue
@@ -201,7 +248,7 @@ def _manifests(root: Path, out: list[Finding]) -> None:
                 _check_entry(root, rel, entry, registry_keys, out)
 
 
-def _check_entry(root: Path, rel: str, entry, registry_keys: set[str], out: list[Finding]) -> None:
+def _check_entry(root: Path, rel: str, entry, registry_keys: dict, out: list[Finding]) -> None:
     digest = entry.pixel_hash[len(pixels.HASH_PREFIX):]
     directory = records.generated_dir(root) / entry.artifact_id
     candidates = sorted(directory.glob(f"{digest}.r????.artifact.json")) if directory.is_dir() else []
@@ -210,6 +257,11 @@ def _check_entry(root: Path, rel: str, entry, registry_keys: set[str], out: list
         return
     if registry_keys and entry.visual_key not in registry_keys:
         out.append(Finding("MANIFEST_UNKNOWN_KEY", rel, f"{entry.visual_key} is not in the registry"))
+    elif entry.detail is not None and registry_keys:
+        # An entry WITHOUT a detail value is tolerated for a key that now declares an axis: the candidate predates the declaration.
+        declared = registry_keys[entry.visual_key].detail
+        if declared is None or entry.detail not in declared.values:
+            out.append(Finding("MANIFEST_UNKNOWN_DETAIL", rel, f"{entry.visual_key} does not declare the detail value {entry.detail!r}"))
     for candidate in candidates:
         try:
             record = parse_record(ArtifactRecord, records.read_file(candidate, record_bound(ArtifactRecord)))

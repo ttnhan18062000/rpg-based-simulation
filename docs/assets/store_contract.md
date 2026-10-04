@@ -98,9 +98,19 @@ release candidates are assembled but never activated (the last arrow is out of s
 Under Profile A (ADR D8) the frontend build consumes the assets of one release candidate. The candidate manifest is an internal record; what ships is the smaller
 `RuntimeManifest` (`contracts/runtime.py`, proposal 9.3): `catalog_id`, `release_id`, `candidate_manifest_hash` (the `sha256:` file hash of the exact candidate
 manifest bytes it was exported from), `registry_hash`, `fallback_contract_version` (1) and `entries`, each `visual_key`, `family` (from the registry), `pixel_hash`,
-`file`, `width`, `height`. `file` is exactly `<64 hex>.png`, derived from the pixel hash and never a path; entries are unique and sorted by key, at most `MAX_VISUAL_KEYS`;
+`file`, `width`, `height`, and `detail` (the slot's detail value, present exactly for a key listed in `details`). `details` (omitted when empty) holds one `{visual_key, values, default}` per key that declares a detail
+axis and has an entry, copied from the registry and sorted by key (at most `MAX_DETAIL_KEYS`): the client picks over these DECLARED values, so adding art for a declared value never reshuffles the map.
+`file` is exactly `<64 hex>.png`, derived from the pixel hash and never a path; entries are unique per slot and sorted by `(key, detail)`, at most `MAX_VISUAL_KEYS`;
 the record's size bound is `MAX_MANIFEST_BYTES`. It **excludes** everything protected: approver, licence record, source path or revision, review note, intake, artifact id.
 Same strictness as every record (unknown fields, wrong versions, oversize dimensions rejected).
+
+**Client detail pick (contract version 1, `frontend/src/visualAssets/pickDetail.ts`).** For a key listed in `details`, the client shows one DECLARED value per Live Map cell:
+`index = fnv1a32(utf8("<key>|<x>|<y>|<seed>")) mod values.length`, with x, y and seed base-10 integers (a negative keeps its `-`), over the declared `values` in their declared order, and
+the fixed `DETAIL_SEED` (1; per-world seeds would be a later decision). FNV-1a is the 32-bit variant (offset basis `0x811c9dc5`, prime `0x01000193`, wrapping multiply). It is pure: no `Math.random`, no clock, no
+state, nothing from the simulation, so the same map always looks the same. Changing the hash, the string, the value order or the seed changes every map and is a contract change (bump `PICK_CONTRACT_VERSION`).
+`resolveVisual(snapshot, key, context, cell?)` then resolves, in order: the picked value's image, the default value's image (result `detail` = the shown value, `picked` = the pick, `detailFallback` = why they differ), the
+role fallback (a typed fallback result carrying `picked`; the caller draws its flat fill). Without a cell the default is used; a key without an axis ignores the cell. Weighted picks, per-world seeds and neighbour-aware
+(autotile) picks are out of scope. Golden vectors and a 64 x 64 spread are in `__tests__/pickDetail.test.ts`.
 
 `python -m visual_assets.store export-runtime --catalog-id C --release-id rc-NNNN --out DIR` (library: `runtime_export.export_runtime`) runs `verify` first, reads the
 candidate strictly, re-decodes every artifact PNG and checks its pixel hash, and writes `runtime_manifest.json` (canonical JSON) plus the PNGs named by their pixel hash into
@@ -126,7 +136,35 @@ regeneration. Wiring the export into the real frontend build is `AM-M6` (dormant
 | `export-runtime` | none (reads committed candidates; writes outside the catalog) | a NEW directory given by `--out`: `runtime_manifest.json` and `<64 hex>.png` files (all-or-nothing, never into the catalog) | n/a |
 | `gc` | none; deletes only with `--delete` | removes only what it lists, under the quarantine, the review area and `generated/` | no (never `sources/`, `provenance/`, `manifests/`) |
 | `adopt` | **human only**: terminal on stdin and the typed id | `sources/<id>/rNNNN.aseprite` + `.source.json`, `provenance/adoptions/`, `provenance/intake/<in>.json` and `.review.json` | yes |
+| `draft` | `keep`: none (an agent may run it; it records no approval and is not an MCP tool). `verify`: none (read-only) | `visual_assets/drafts/<set_id>/` (outside the catalog): `draft_set.json` and one folder per entry (`package.json`, `source.aseprite`, `preview.png`, `intake_result.json`) | yes (drafts are tracked, never released) |
+| `adopt-set` | **human only**: terminal on stdin and the typed set id | per entry what `adopt` writes (`sources/`, `provenance/adoptions/`, `provenance/intake/<in>.json` and `.review.json`) plus `provenance/set-adoptions/<sa-id>.json` | yes |
 | `revoke` | **human only**: terminal on stdin and the typed id | `provenance/revocations/<id>.json` for a source revision; `revocation.json` in the quarantine for an un-adopted intake | revision: yes; intake: no |
+
+## Draft sets and `adopt-set`
+
+The user decided (2026-10-04, "Drafts now, batch review") that assets are drafted without adoption and reviewed as a whole set, then approved in one decision. Adoption stays the human gate (`AM-F01`); its unit becomes
+a reviewed set. A **draft set** is `visual_assets/drafts/<set_id>/`, tracked in git and OUTSIDE the catalog: `build`, `release`, `export-runtime` and the catalog's `verify` never read it, and `gc` never touches it (its 30-day
+rule is for local quarantine and review files, which drafts do not depend on). `draft_set.json` is a `DraftSet` (`contracts/draft.py`): entries `{visual_key, detail?, source_asset_id, draft_id, pixel_hash, intake_hash}`,
+unique per slot, sorted, at most `MAX_DRAFT_SET_ENTRIES` (256; no limit on the number of sets). `draft_id` is the intake id and the entry's folder, which holds the three staged files and the intake result of a PASSED intake.
+`pixel_hash` is the pixels-v1 hash of the preview, the image the human reviews. The source's hash is deliberately not repeated: it is bound through the chain (below), which keeps a full set under `MAX_RECORD_BYTES`.
+
+- `draft keep <intake_id> --set <set_id> --as <visual_key> [--detail <value>] [--source-asset-id <id>] [--replace]`: only from a PASSED, locally unrevoked intake, with a declared key and value. `source_asset_id` is the id the entry will be adopted under (default: the key with dots as
+  underscores plus `_<detail>`); it is refused if it already exists as a source asset in the catalog or is used by another entry of the set, so a collision shows when the draft is kept, not at adoption. A second draft for the same slot
+  (the key's default counts as its default value) is refused unless `--replace`. All-or-nothing writes (a staged `.tmp-*` directory renamed into place). Errors have stable codes (`DraftError`).
+- `draft verify [set_id]`: the full chain for every entry, declared keys and values, one entry per effective slot, no stray or leftover files. **The chain**, checked identically by `draft verify` and `adopt-set` (`drafts.read_entry`):
+  `source.aseprite` bytes -> the staged-file hash inside `intake_result.json`; `intake_result.json` bytes -> `intake_hash`; `preview.png` pixels -> `pixel_hash`.
+- `adopt-set <set_id> --approver ... --approver-role ... --licence CLEARED --licence-evidence ... --review-evidence ...` (`setadoption.py`): **human only** (terminal on stdin, one typed confirmation of the set id; the drawing server may not import it, and it is not an MCP tool).
+  For every entry it runs the checks `adopt` runs (shared code: staged bytes, the same bytes not adopted or revoked, key and slot declared and free, licence, approver; entries are always NEW source assets, so a held slot is refused and replacing means revoking first) and, instead of the
+  per-intake review area, **re-renders the draft's source with the store's own Aseprite now and requires the render to equal the draft's preview pixel for pixel** (a hard refusal on any mismatch: no stored check is trusted). It prints ONE notice listing every entry, the licence evidence,
+  the review evidence and the **DraftSet's file hash** (the preview page shows the same hash, so "what I reviewed" and "what I adopted" are the same bytes), then writes all files together or none: per entry the source, the intake result copy, a fresh `ReviewRenderCheck`, an ordinary `AdoptionRecord` (schema unchanged)
+  and a `SourceRecord`, then one `SetAdoptionRecord` in `provenance/set-adoptions/` (a folder of its own, because every reader parses `provenance/adoptions/*.json` as an `AdoptionRecord`). The catalog's `verify` checks each set record and that every entry points at an adoption of the same intake, key and slot.
+  A set adoption does not change the meaning of an adoption record, a release or the runtime manifest.
+- `draft export <set_id> <out_dir>` (`draftexport.py`, read-only on the drafts and the catalog; writes a NEW directory outside both, all-or-nothing, deterministic) verifies the set first (the chain, declared keys, no revoked intake: any finding refuses) and writes `draft_preview_manifest.json`
+  (`DraftPreviewManifest`, record type `draft_preview_manifest`, bound `MAX_MANIFEST_BYTES`) plus each entry's `preview.png` byte for byte, named by its pixel hash. The manifest has the runtime manifest's entry and `details` shape plus `set_id`, `draft_set_hash` (the file hash of the exact `draft_set.json`
+  bytes: the value `adopt-set` prints), `registry_hash`, and per entry `source_asset_id`, `draft_id` and `scale` (a whole number dividing the preview size; the page draws the preview at 1/`scale` with smoothing off). A live ADOPTED slot the set does not hold (for example the adopted forest tiles in `terrain-v1`) is added as a labelled **reference** entry (`adopted: true`, only ever the literal `true`, built from the catalog's 16 x 16 artifact at `scale` 1,
+  never copied into the drafts); a draft for the slot always wins, and a reference exists only in this export, never in a `DraftSet`, so `draft verify` and `adopt-set` never see one. The page labels it "adopted (reference)". It is **never parseable as a runtime manifest and a runtime manifest never as it** (record type, required set fields, strict
+  unknown-field rejection; tested in Python and in the client). The isolated page that shows it is documented in `docs/assets/drawing_tools.md`.
+- Layering (`tests/visual_assets/test_boundaries.py`): `drafts` is a store layer of its own (it writes outside the catalog and records no approval, so it is not a gate layer, but the drawing server may not import it); `setadoption` is a gate layer like `adoption` and `revoke`, never importable from `visual_assets/drawing/`, and the CLI is the only caller.
 
 ## MCP tools on the drawing server (restart the server for new tools to appear in a running session)
 
@@ -159,8 +197,14 @@ Runtime activation, a resolver in the real client, Live Map and HUD consumption,
 - **Agents never run `adopt` or `revoke`.** They are absent from the MCP server and a boundary test forbids the drawing code from importing them.
 - **The preview is proven only where Aseprite is available.** Intake alone cannot prove a preview depicts its source, so adoption requires the store's own render (see above) and therefore refuses on a machine
   without Aseprite and bwrap. The comparison is by decoded pixels at the preview's scale, so it is exact for what the sandboxed Aseprite renders; it is not a statement about artistic intent.
-- **One visual key maps to one artifact** (the single `x1` scale class): a key cannot carry two variants. A release candidate lists one artifact per key. A second asset cannot take a key a live asset holds (`visual_key_taken`);
-  replacing an asset under the same key means revoking the old asset's revisions first.
+- **One SLOT maps to one artifact** (the single `x1` scale class). A slot is a visual key, plus a detail value when the key declares a **detail axis** (`detail: {values, default}` on the
+  registry key; at most `MAX_DETAIL_VALUES` values, at most `MAX_DETAIL_KEYS` keys per registry; a key without an axis is the single slot `(key, none)`). An adoption names its slot with `adopt --detail <value>`
+  (`AdoptionRecord.detail_value`; omitted/`None` = the key's declared default, so an adoption made before the axis existed fills the default slot unchanged). A release candidate lists one artifact per slot,
+  sorted by `(key, detail)`; a key that is not optional needs its default slot's artifact and every other declared value needs no art until someone adopts it (the client falls back to the default), but an adopted slot without a built artifact is refused at release (`key_without_artifact`, run `build`) unless the key is optional. A second asset cannot take a slot a live
+  asset holds (`visual_key_taken`); replacing an asset in a slot means revoking the old asset's revisions first. Refusals: `detail_not_declared` (a value on a key with no axis), `unknown_detail_value`; at release,
+  `undeclared_detail` (the registry no longer declares an adopted value). Total entries across all slots stay at most `MAX_VISUAL_KEYS`. The default is the only declared meaning of "no value": changing a key's
+  `default` re-binds every adoption that names none, and the release lists the explicit value on each entry. This replaced the earlier limit "one visual key maps to one artifact"
+  (ADR D11); no schema version changed: every new field has a default and is omitted from the bytes when absent, and a strict client rejects the new fields.
 - Animation metadata beyond `frame_count` and `tag_count` (per-frame durations, tag ranges, loop modes) is not part of the handoff package or checked by intake
   (proposal 9.6 lists "animation metadata"; ticket 3 adds only the producer state).
 - **Palette size is unverifiable for an all-opaque-black stored palette.** Aseprite 1.3.18.6 rebuilds such a palette from the image when it loads a file
