@@ -104,6 +104,14 @@ axis and has an entry, copied from the registry and sorted by key (at most `MAX_
 the record's size bound is `MAX_MANIFEST_BYTES`. It **excludes** everything protected: approver, licence record, source path or revision, review note, intake, artifact id.
 Same strictness as every record (unknown fields, wrong versions, oversize dimensions rejected).
 
+**Client detail pick (contract version 1, `frontend/src/visualAssets/pickDetail.ts`).** For a key listed in `details`, the client shows one DECLARED value per Live Map cell:
+`index = fnv1a32(utf8("<key>|<x>|<y>|<seed>")) mod values.length`, with x, y and seed base-10 integers (a negative keeps its `-`), over the declared `values` in their declared order, and
+the fixed `DETAIL_SEED` (1; per-world seeds would be a later decision). FNV-1a is the 32-bit variant (offset basis `0x811c9dc5`, prime `0x01000193`, wrapping multiply). It is pure: no `Math.random`, no clock, no
+state, nothing from the simulation, so the same map always looks the same. Changing the hash, the string, the value order or the seed changes every map and is a contract change (bump `PICK_CONTRACT_VERSION`).
+`resolveVisual(snapshot, key, context, cell?)` then resolves, in order: the picked value's image, the default value's image (result `detail` = the shown value, `picked` = the pick, `detailFallback` = why they differ), the
+role fallback (a typed fallback result carrying `picked`; the caller draws its flat fill). Without a cell the default is used; a key without an axis ignores the cell. Weighted picks, per-world seeds and neighbour-aware
+(autotile) picks are out of scope. Golden vectors and a 64 x 64 spread are in `__tests__/pickDetail.test.ts`.
+
 `python -m visual_assets.store export-runtime --catalog-id C --release-id rc-NNNN --out DIR` (library: `runtime_export.export_runtime`) runs `verify` first, reads the
 candidate strictly, re-decodes every artifact PNG and checks its pixel hash, and writes `runtime_manifest.json` (canonical JSON) plus the PNGs named by their pixel hash into
 `DIR`, staged in a `.tmp-*` sibling and renamed, so the result is all-or-nothing and byte-identical for the same release. It never writes into the catalog and has no MCP tool
