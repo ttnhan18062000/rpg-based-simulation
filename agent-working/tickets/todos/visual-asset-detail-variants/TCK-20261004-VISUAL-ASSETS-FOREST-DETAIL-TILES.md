@@ -36,7 +36,7 @@ Third child of `TCK-20261004-VISUAL-ASSETS-TERRAIN-DETAIL-VARIANTS`. Real art fo
   Check with a preview of a mixed 4 x 4 arrangement before handing off. A third value is optional; if drawn, it is declared in
   the same registry change below.
 - Declare the axis on `terrain.forest` in `visual_assets/catalog/definitions/visual_keys.yaml`
-  (`detail: {values: [bush, plain, tree], default: plain}`), moved here from ticket 1: it changes `registry_hash`, so it lands
+  (`detail: {values: [plain, bush, tree], default: plain}`, in that order: the pick indexes the declared order, and the spread the user approved on 2026-10-04 — plain 1354, bush 1397, tree 1345 over 64 x 64, seed 1 — was computed for it), moved here from ticket 1: it changes `registry_hash`, so it lands
   together with `pilot/rc-0002`, and before the adoptions (`adopt --detail` needs it). rc-0001 stays valid (`verify`
   tolerates its axis-less entry); its export now refuses on `registry_hash`, so any test that re-exports rc-0001 (the
   fixture-equality test, the rollback drill's retained release) must be re-pointed honestly, with the change named in
