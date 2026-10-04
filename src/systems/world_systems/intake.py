@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import List, Tuple, TYPE_CHECKING
 from src.core.state import EntityState, AuthoritativeState
 from src.core.strategic import ConcernState
+from src.content_semantics.faction import are_entities_allied, are_entities_hostile
+from src.content_semantics.relation import RelationContext
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -27,21 +29,20 @@ class ConcernIntakeSystem:
         # 1. Nearby Combat Threat
         # If any hostile neighbor is currently attacking or has recently attacked
         for _, neighbor in neighbors:
-            if neighbor.identity.faction != entity.identity.faction:
-                if neighbor.combat.alive:
-                    # Hostile is alive and nearby -> DANGER
-                    dist = abs(neighbor.navigation.position[0] - entity.navigation.position[0]) + abs(neighbor.navigation.position[1] - entity.navigation.position[1])
-                    if dist <= 3.0:
-                        concerns.append(ConcernState(
-                            id=f"danger_hostile_{neighbor.id}",
-                            kind="danger",
-                            source=str(neighbor.id),
-                            urgency=0.8 if dist <= 1.5 else 0.5,
-                            created_tick=state.tick
-                        ))
+            if neighbor.combat.alive:
+                # Hostile is alive and nearby -> DANGER
+                dist = abs(neighbor.navigation.position[0] - entity.navigation.position[0]) + abs(neighbor.navigation.position[1] - entity.navigation.position[1])
+                if dist <= 3.0 and are_entities_hostile(entity, neighbor, RelationContext(distance=dist, combat_engaged=True)):
+                    concerns.append(ConcernState(
+                        id=f"danger_hostile_{neighbor.id}",
+                        kind="danger",
+                        source=str(neighbor.id),
+                        urgency=0.8 if dist <= 1.5 else 0.5,
+                        created_tick=state.tick
+                    ))
 
             # 2. Witnessing Death (Grief/Trauma)
-            if not neighbor.combat.alive and neighbor.identity.faction == entity.identity.faction:
+            if not neighbor.combat.alive and are_entities_allied(entity, neighbor):
                  # Ally just died or is lying dead nearby
                  concerns.append(ConcernState(
                      id=f"trauma_dead_ally_{neighbor.id}",
