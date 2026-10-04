@@ -2747,7 +2747,7 @@
   text: 'mypy type checking gate is configured for src/ (excluding V1 modules: src/ai/,
     src/town/, src/quests/, src/entities/, src/progression/). The gate runs on every
     PR via CI, advisory: it reports only errors that are not in the committed mypy-baseline
-    file (registries/mypy_baseline.txt, 1569 entries at TCK-20261003-MYPY-BASELINE-ADVISORY)
+    file (codebase/baselines/mypy_baseline.txt, 1569 entries at TCK-20261003-MYPY-BASELINE-ADVISORY)
     and its step is continue-on-error until the soak ends (TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING).
     Response model annotations are present
     on all actionable inline routes in server.py (13 of 18; 5 excluded due to raw
@@ -2760,7 +2760,7 @@
   legacy_evidence: null
   v2_evidence: '[tool.mypy] section in pyproject.toml; make typecheck-py target in
     Makefile (filters through mypy_baseline; typecheck-baseline-sync rewrites the baseline);
-    [tool.mypy_baseline] and registries/mypy_baseline.txt; tools/code_health/mypy_gate.py
+    [tool.mypy_baseline] and codebase/baselines/mypy_baseline.txt; codebase/gates/mypy_gate.py
     (job summary with the new-error count and baseline size); mypy step in .github/workflows/test.yml
     (runs the gate, continue-on-error during the soak); response_model= on 13 inline routes in src/api/server.py; src/api/schemas.py created
     with WorldStateResponse, EntityPageResponse, EntityDetailResponse TypedDict schemas.
@@ -12647,20 +12647,20 @@
     rather than by an automated regression test -- disclosed honestly rather than
     cited as if a persisted test exists.
 - id: INFRA-419
-  text: 'Code-health registry and ratchet: registries/code_health_exceptions.jsonl
+  text: 'Code-health registry and ratchet: codebase/baselines/code_health_exceptions.jsonl
     holds the grandfathered Python craft violations found by a full scan of src/ (ruff,
     complexipy, jscpd, line count), keyed by (file, symbol, tool, rule) and never
     by line number, with a value, a ceiling and reviewed: false on every seeded row.
-    `make code-health` (python3 -m tools.code_health check) runs the tools and fails
+    `make code-health` (python3 -m codebase.health check) runs the tools and fails
     only on a violation with no row or above its row''s ceiling; improved and gone
     rows are reported without failing, and rows are deleted (delete, tighten) when
     debt is paid. On demand only: not wired into CI, hooks or any pipeline phase.'
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: tools/code_health/{findings,adapters,registry,ratchet,scan,__main__}.py;
-    registries/code_health_exceptions.jsonl; make code-health in Makefile; match keys
-    documented in tools/code_health/findings.py and tools/code_health/registry.py
+  v2_evidence: codebase/health/{findings,adapters,registry,ratchet,scan,__main__}.py;
+    codebase/baselines/code_health_exceptions.jsonl; make code-health in Makefile; match keys
+    documented in codebase/health/findings.py and codebase/health/registry.py
     (TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY)
   proof_type: contract
   test_path: tests/codebase/test_code_health_adapters.py, tests/codebase/test_code_health_ratchet_registry.py

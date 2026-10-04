@@ -8,7 +8,7 @@ tags: [audit, dead-code, architecture]
 
 # Unreachable Implemented Code — Audit
 
-`TCK-20260909-UNREACHABLE-IMPLEMENTED-CODE-AUDIT`. Produced by `tools/audit_unreachable_code.py`
+`TCK-20260909-UNREACHABLE-IMPLEMENTED-CODE-AUDIT`. Produced by `codebase/reports/audit_unreachable_code.py`
 (committed, re-runnable — see that file's own docstring for full method detail). Raw structured
 data: `docs/audits/unreachable_code_inventory.{json,csv}`.
 

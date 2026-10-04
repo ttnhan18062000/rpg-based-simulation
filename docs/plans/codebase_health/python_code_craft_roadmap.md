@@ -84,13 +84,13 @@ Sources and caveats are in the session record; several figures came from seconda
 
 | Area | What exists | Consequence for this plan |
 |---|---|---|
-| Repo-scale health metrics | `tools/codebase_health_baseline.py`, `codebase_health_snapshot.py`, `code_health_impact.py`, `pr_impact_report.py` (`TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC`, done) | **Extend** the snapshot with craft metrics. Build no second metrics tool. Note: no snapshot has ever been taken. |
+| Repo-scale health metrics | `codebase/reports/codebase_health_baseline.py`, `codebase_health_snapshot.py`, `code_health_impact.py`, `pr_impact_report.py` (`TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC`, done) | **Extend** the snapshot with craft metrics. Build no second metrics tool. Note: no snapshot has ever been taken. |
 | Type checking | mypy config, `make typecheck-py`, CI step (`TCK-20260623-TYPE-CHECKER`, D13 F1). Pinned by parity ledger `INFRA-TYPE-001` and `tests/codebase/test_typecheck_gate_configured.py` | Changing the mypy gate must update the ledger entry and that test in the same ticket. |
 | Import boundaries | AST tests in `tests/architecture/` (e.g. `test_phase18_import_boundaries.py`, `test_phase19_observability_boundaries.py`), D14 layer model, `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` (done) | import-linter is **evaluated, not assumed** (M5): it must replace or clearly add to these tests, never run as a second copy. |
-| Dead code | D11, `tools/audit_unreachable_code.py`, `docs/audits/unreachable_code_inventory.*`, `tools/gate_checks/tools_orphan_check.py` | **Reuse.** vulture is a trial only if it finds what these miss. |
+| Dead code | D11, `codebase/reports/audit_unreachable_code.py`, `docs/audits/unreachable_code_inventory.*`, `tools/gate_checks/tools_orphan_check.py` | **Reuse.** vulture is a trial only if it finds what these miss. |
 | Duplicate classes | `TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS` (open, four pairs, raised by `rpg-feature-planning`) | Owned elsewhere. Link it; the duplication check here must not re-file those pairs. |
 | Conventions | `docs/guidelines/design_patterns.md` (extension points), `docs/engine/architecture_reference.md` §9 (naming) | The standard cites both and does not restate them. |
-| Tools layout | `docs/guidelines/repo_tooling_layout.md`, `TCK-20260929-RETIRE-SCRIPTS-DIR` | **No `tools/` tidy ticket here.** New tools go in a `tools/code_health/` subpackage. |
+| Tools layout | `docs/guidelines/repo_tooling_layout.md`, `TCK-20260929-RETIRE-SCRIPTS-DIR` | **No `tools/` tidy ticket here.** New tools go in a `codebase/health/` subpackage. |
 | Environment | `uv.lock` tracked; `docs/guidelines/agent_working_environment.md` uses `uv venv` / `uv pip`; `tests/static/test_no_hardcoded_venv_interpreter_path.py`; `TCK-20260702-CI-REQUIREMENTS-SPLIT` | uv adoption finishes something half-done. It must keep the knowledge-search stack split and the venv-path guard. |
 | Registry pattern | `registries/*.jsonl`, `tools/capability_envelope_baseline.py` (grandfathered baseline with a typed `reviewed` field) | Direct template for the debt registry. |
 | Ownership | `docs/guidelines/subsystem_ownership_lifecycle.md` | New subsystems from this plan get rows there. |
@@ -155,7 +155,7 @@ repo before adoption.
 | Types | **mypy + `mypy-baseline`** | Keeps the existing config and parity-ledger entry; the baseline makes it blocking without source edits. | **basedpyright** as a second checker with its native baseline; **Pyrefly** benchmarked against it. `ty` is excluded: its only suppression path edits source. |
 | Project-specific rules | **ast-grep** | YAML rules with custom fix messages and rule tests. A cheaper home for some of the hand-written AST tests. | Semgrep CE |
 | Cognitive complexity | **complexipy** | Native snapshot ratchet and `--diff`. radon, xenon and wily are dormant. | |
-| Line-count limits | small script in `tools/code_health/` | No tool has a lines-per-function rule with a baseline. | |
+| Line-count limits | small script in `codebase/health/` | No tool has a lines-per-function rule with a baseline. | |
 | Duplication | **jscpd** | Token-based clone detection with JSON output. Needs Node, which the repo already has for the frontend. | pylint `R0801`; `arid` (new, unverified) |
 | Dependency hygiene | **deptry** | Finds declared-but-unused dependencies (the baseline tool already reports three). Needs dependencies in `pyproject.toml`, so it follows uv. | |
 | Dead code | existing `audit_unreachable_code.py` | Already built and tuned to this repo. | vulture, only if it finds more |
@@ -171,10 +171,10 @@ Lint messages state the fix, since the reader is usually an agent.
 
 The home-grown part, needed because ruff and ast-grep have no baseline.
 
-- `registries/code_health_exceptions.jsonl`: one row per grandfathered violation (file, symbol where
+- `codebase/baselines/code_health_exceptions.jsonl`: one row per grandfathered violation (file, symbol where
   the tool gives one, tool, rule, measured value or count, ceiling, `added_date`, `reviewed`,
   retiring ticket). CLI and validator follow `tools/capability_envelope_baseline.py`.
-- `tools/code_health/`: adapters that read each tool's JSON output and normalise it, and one ratchet
+- `codebase/health/`: adapters that read each tool's JSON output and normalise it, and one ratchet
   command that fails only when a violation is new or worse than its row.
 - Tools with a native baseline (mypy-baseline, basedpyright) keep their own baseline file; the
   registry records that the file exists and its size, so the trend is still visible in one place.
@@ -221,13 +221,13 @@ Each is separately closable. None before M6 modifies `src/`.
 |---|---|---|---|
 | M1 | Standard | `python_code_standard.md`; ownership-table row; plans tracking entry | codebase |
 | M2 | Environment | uv as the single dependency source: refreshed `uv.lock`, dev tools in a dependency group, CI on `uv sync`, Python version aligned, environment guide updated | codebase |
-| M3 | Measure and baseline | Ruff, complexipy, jscpd and the line-count script configured; `tools/code_health/` adapters and ratchet; registry seeded from a full scan; first health snapshot taken | codebase |
+| M3 | Measure and baseline | Ruff, complexipy, jscpd and the line-count script configured; `codebase/health/` adapters and ratchet; registry seeded from a full scan; first health snapshot taken | codebase |
 | M4 | Gates | Ratchet as an advisory CI job with changed-line PR feedback, blocking after a clean soak; mypy blocking through `mypy-baseline` with ledger and static-test updates; prek hooks; type-checker trial (basedpyright vs Pyrefly) reported | codebase |
 | M5 | Structure | Package registry seeded; structure audit decisions; ast-grep rule pack for project rules; import-linter evaluation | codebase |
 | M6 | Agent integration | Skill, edit hook, implementer pointer, review rubric | request to agent-working |
 | M7 | Refactor lane | **Deferred until the owner reopens `src/`.** Standing batch folder, one file per batch, fed by the registry; first targets `api/server.py` and `observability/event_extractor.py` | codebase, with rpg-planner for engine files |
 
-**M4 soak:** start = date of batch PR merge (the PR that adds the advisory `Code health (advisory)` CI job; the closure commit writes the real date), end = start + 14 days. The flip ticket `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING` carries the same dates.
+**M4 soak:** start = 2026-10-03 (PR #305, which added the advisory `Code health (advisory)` CI job, merged 2026-10-03T16:47:13Z), end = 2026-10-17 (start + 14 days). The flip ticket `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING` carries the same dates.
 
 Order: M1, M2, M3, M4. M5 and M6 can start after M3. M7 is a lane, not an epic, and never closes.
 

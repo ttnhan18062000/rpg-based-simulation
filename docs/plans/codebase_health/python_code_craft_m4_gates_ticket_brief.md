@@ -41,8 +41,8 @@ tickets, under the owner decisions recorded below.
   the comment "remove once the baseline error count is documented". Pinned by parity entry
   `INFRA-TYPE-001` (`docs/parity_ledger/infrastructure.yaml`) and
   `tests/codebase/test_typecheck_gate_configured.py` (asserts a step named mypy runs `mypy src/`).
-- Ratchet: `python3 -m tools.code_health check` (exit 1 new/worse, 2 tool or registry unusable).
-  Registry `registries/code_health_exceptions.jsonl`: 3,617 rows, **all `reviewed: false`** — ruff
+- Ratchet: `python3 -m codebase.health check` (exit 1 new/worse, 2 tool or registry unusable).
+  Registry `codebase/baselines/code_health_exceptions.jsonl`: 3,617 rows, **all `reviewed: false`** — ruff
   2,892, complexipy 384, line_count 283, jscpd 58. Seeded on the `python-code-craft` branch, so
   `src/` changes merged since then will show as new until the registry is reseeded on `main`.
 - jscpd runs through `npx --yes jscpd@5.4.0` (Makefile `JSCPD_VERSION`); its own dependencies are not
@@ -76,11 +76,11 @@ is filed with its start date.
 
 ## Concern 1: Reseed the registry on main and start the soak with an advisory CI job
 
-- Reseed `registries/code_health_exceptions.jsonl` on current `main` with `seed --force` (keeps
+- Reseed `codebase/baselines/code_health_exceptions.jsonl` on current `main` with `seed --force` (keeps
   `reviewed`, `retiring_ticket`, `added_date` for persisting keys, roadmap 6.3). Record the reseed
   commit and the row counts per tool before and after.
 - Add a CI job `code-health` (name ends "(advisory)") that syncs the `lint` group plus Node for jscpd,
-  runs `python3 -m tools.code_health check`, never fails the PR (`continue-on-error`), and writes a
+  runs `python3 -m codebase.health check`, never fails the PR (`continue-on-error`), and writes a
   job summary: new or worse violations, with the ones in files the PR changed listed first. Add it to
   the job lists that existing CI tests enumerate (`test_ci_uv_install.py` `_LINT_JOBS`, coverage test).
 - Record the soak start date (the merge date) in the ticket and the roadmap.
