@@ -32,6 +32,17 @@ _NEXT_H2_RE = re.compile(r"^##\s+\S", re.MULTILINE)
 # "Nonetheless" starts with the four characters "none").
 _NONE_BODY_RE = re.compile(r"^none\b", re.IGNORECASE)
 
+# Markdown decoration a planner may wrap "None." in: emphasis (*, _), code (`), list/quote
+# markers (-, +, >). Stripped before the word-boundary match so "**None.**", "_None_", "`None`" and
+# "- None" read as the resolved word, exactly like a plain "None." (TCK-20261004). The match itself is
+# not loosened: "Nonetheless" and "- Which owner decides X?" still read as open.
+_MARKUP = " \t*_`-+>"
+
+
+def _strip_markup(line: str) -> str:
+    # Both ends: a trailing "_" is a word character, so "_None_" has no word boundary after "None".
+    return line.strip(_MARKUP)
+
 
 def plan_has_unresolved_questions_heading(plan_path: str) -> bool:
     """True if plan_path contains a genuine, unresolved `## Unresolved Questions` H2 section.
@@ -65,7 +76,7 @@ def plan_has_unresolved_questions_heading(plan_path: str) -> bool:
         stripped = line.strip()
         if not stripped:
             continue
-        return not bool(_NONE_BODY_RE.match(stripped))
+        return not bool(_NONE_BODY_RE.match(_strip_markup(stripped)))
 
     # Heading present but the section body is empty/whitespace-only all the way to the next
     # heading (or EOF) — same as a genuine "None." body: no real unresolved question.
