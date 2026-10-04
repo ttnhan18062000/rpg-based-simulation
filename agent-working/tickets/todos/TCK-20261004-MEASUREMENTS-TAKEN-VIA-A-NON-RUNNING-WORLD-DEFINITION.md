@@ -13,8 +13,8 @@ tags: [world, content, investigation, simulation-quality]
 
 ## Title
 
-Closed tickets and a 13-world census measured worlds through the catalog copy, which for five worlds is
-not what production loads — find every such measurement and re-take or retire it
+Three closed tickets measured `frontier_living_world` through the catalog copy, which is not what
+production loaded — establish whether their conclusions survive re-measurement
 
 ## Status
 
@@ -36,115 +36,137 @@ P1
 
 For five corpus `world_id`s, `data/content/world_compositions/<id>.yaml` (the catalog copy) and
 `data/worlds/<id>/world.yaml` (what production loads, via `src/worldbuilding/repository.py`'s redirect to
-`resolved/`) declared **different module sets**. Any measurement taken through the catalog path therefore
+`resolved/`) declared **different module sets**. A measurement taken through the catalog path therefore
 describes a world that never ran. `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION` (PR #328) made
 `world.yaml` the single source and deleted the catalog directory, so the divergence cannot recur — but it
-did **not** go back and re-take the measurements that were already made through the wrong path.
+did not go back and re-take measurements already made through the wrong path.
 
-Two independent instances are already known, which is why this is a class and not a one-off:
+**Known affected work:** the CAMP-STATE, DEMOGRAPHIC-COHORT and UNREACHABLE-CLASSIFY closed tickets took
+their measurements via the catalog copy of `frontier_living_world`, whose catalog copy lacked
+`trading_company_hub`. Reported by `rpg-implementer-2` during the AC-5 sweep of
+`TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION`.
 
-1. **Three closed tickets** — the CAMP-STATE, DEMOGRAPHIC-COHORT and UNREACHABLE-CLASSIFY work — took
-   their measurements via the catalog copy of `frontier_living_world`, which differs from what runs.
-   Reported by `rpg-implementer-2` during the AC-5 sweep of
-   `TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION`.
-2. **A 13-world census in a live test.** `EXPECTED_DISTINCT_POPULATED_FACTIONS` in
-   `tests/unit/worldassembly/test_corpus_diversity.py` pinned `dungeon_crawl: 4`. The real post-fix
-   number is 2; the 4 came from a stale `world_compile_report.json`. The table's own comment says the
-   counts were "re-confirmed by `TCK-20260704-SIMQ-CORPUS-SCALE-METRIC`'s own recompile cross-check" —
-   so that cross-check was reading the artifact rather than what production loads, and the table has been
-   asserting a stale number successfully for months.
+**This ticket stays P1 for one specific reason:** `TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-
+TO-ZERO` is **open** and sits in the lineage of one of those three tickets, so an open ticket's premise
+may rest on a measurement of a world that never ran. If that dependency turns out not to exist, this is a
+P2.
 
-The second instance makes the first one's blast radius much larger than three tickets: a *test* that
-passes against a stale artifact is the mechanism that let the original `dungeon_crawl` defect hide from
-June to October.
+### Corrected 2026-10-04 — the original second instance in this ticket was wrong
+
+This ticket was first filed claiming that a 13-world census
+(`EXPECTED_DISTINCT_POPULATED_FACTIONS` in `tests/unit/worldassembly/test_corpus_diversity.py`) had also
+been corrupted by the catalog path, on the reasoning that its `dungeon_crawl: 4` entry came from a stale
+`world_compile_report.json`. **That was wrong, and the correction matters more than the original claim.**
+
+`rpg-implementer-2` freshly compiled all 24 worlds and compared: every entry in the table agrees with a
+fresh compile, including the four divergent worlds the original premise singled out —
+`frontier_extended` 9, `frontier_living_world` 6, `swamp_border_world` 4, `urban_political` 4. Verified
+independently here: `origin/main`'s `data/worlds/dungeon_crawl/world.yaml` carries four modules, so the
+census `4` was a **faithful measurement of the world that actually ran**. The defect was never that the
+census read the wrong artifact — it was that the running world was the unintended one, because the June
+balance fix landed only in the catalog copy. A census that correctly records a world nobody intended to
+ship is a different problem from a census that reads the wrong file, and only the second one would have
+made the table unsound.
+
+Two consequences: (1) the census needs no re-baselining beyond the single `dungeon_crawl` entry, already
+corrected 4 → 2 in that ticket; (2) **the catalog/`world.yaml` divergence is not by itself evidence that
+a measurement is invalid** — what matters is which path the measurement was taken through. Any
+investigation under this ticket must establish the path, not infer corruption from the divergence.
+
+### Related finding, not this ticket's scope
+
+Committed `world_compile_report.json` `state_hash`/`canonical_state_hash` differ from a fresh compile in
+~20 of 24 worlds, and `place_count` in ~12, while **no content-derived count differs anywhere**. Compile
+was run twice and is deterministic, so this is compiler-version staleness, not content drift — the
+already-filed, still-unresolved `TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS`. It is recorded
+here because it is why the new freshness guard asserts only the six content-derived count fields: a
+whole-report guard would fail on ~20 worlds for a reason unrelated to correctness. See parity entry
+SUB-394's `support_boundary`.
 
 ## Scope
 
-- Enumerate the affected worlds authoritatively. The five divergent `world_id`s and, from the AC-5 sweep:
-  `dungeon_crawl` (the lost balance fix), `frontier_extended`, `frontier_living_world` and
-  `swamp_border_world` (catalog copy missing `trading_company_hub`), `urban_political` (missing
-  `hero_adventurers`). `highland_traverse` and `wilderness_survival` were identical, so measurements
-  through either path are valid for those two.
-- Find every measurement taken through the catalog path: closed tickets, stored artifacts, the parity
-  ledger, SimQ baselines, and **committed expectation tables in tests** — the last category is the one
-  that was missed.
-- For each: re-take it against `world.yaml`, or mark it explicitly as measured against a definition that
-  never ran. **A measurement that cannot be re-taken cheaply is retired, not quietly kept.**
-- Verify the four remaining census entries for the divergent worlds that appear in
-  `EXPECTED_DISTINCT_POPULATED_FACTIONS`: `frontier_extended` (9), `frontier_living_world` (6),
-  `swamp_border_world` (4), `urban_political` (4).
+- Establish, for each of the three closed tickets, **which path its measurements were taken through**,
+  and whether its stated conclusion survives a re-measurement against `world.yaml`.
+- Determine whether `TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO`'s premise depends on
+  any of those measurements, and correct that ticket if so.
+- Search for any other measurement taken through the catalog path — stored artifacts, parity-ledger
+  `v2_evidence`, SimQ baselines — restricted to the five divergent worlds and to the period before #328.
+- For each: re-take against `world.yaml`, or annotate at its source as measured against a definition
+  that never ran. **A measurement that cannot be re-taken cheaply is retired, not quietly kept.**
 
 ## Out of Scope
 
-- Re-deciding any world's module set. The reconciliation decisions are made and recorded in
+- Re-baselining `EXPECTED_DISTINCT_POPULATED_FACTIONS`. Verified sound; see the correction above.
+- `world_compile_report.json` hash/`place_count` staleness — `TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-
+  STALENESS` owns it.
+- Re-deciding any world's module set; those decisions are recorded in
   `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`'s `plan.md`.
-- Rendering-metric evidence — that is
-  `TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT`.
-- Re-opening the closed tickets' conclusions on their merits. This ticket establishes whether each
-  conclusion still stands on a valid measurement; where it does not, it files the correction.
+- Rendering-metric evidence — `TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT`.
+- Building a new freshness guard. One already exists (see Acceptance Criteria 4).
 
 ## Acceptance Criteria
 
-1. A complete enumeration of measurements taken via the catalog copy, with the affected `world_id` named
-   for each — covering closed tickets, stored artifacts, parity-ledger `v2_evidence`, SimQ baselines and
-   test expectation tables.
-2. Each enumerated measurement is re-taken against `world.yaml`, or annotated at its source as measured
-   against a non-running definition, or retired with a reason. No entry is left undecided.
-3. The four `EXPECTED_DISTINCT_POPULATED_FACTIONS` entries above are confirmed or corrected against
-   freshly regenerated `world_compile_report.json` files.
-4. Where a re-taken measurement changes a conclusion, a follow-up ticket exists and is linked here.
-5. A guard exists that fails when a committed expectation table is asserted against a stale generated
-   artifact — extending the freshness guard from
-   `TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION` rather than adding a
-   second mechanism. Without this, AC-1's enumeration decays the moment it is written.
-6. The three closed tickets in Request Summary §1 each carry a note stating whether their conclusion
-   survives re-measurement.
+1. For each of the three closed tickets: the measurement path is stated as a fact (which loader, which
+   file), not inferred, and the conclusion is marked as surviving, overturned, or unverifiable.
+2. The `TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO` dependency question is answered
+   explicitly. If its premise is affected, that ticket is corrected and this one's priority is restated.
+3. Any further catalog-path measurement found in artifacts, parity `v2_evidence` or SimQ baselines is
+   enumerated with its world named, and each is re-taken, annotated or retired. Finding none is an
+   acceptable result **only** if the search method is stated.
+4. Confirmed that the guard added by `TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-
+   DEFINITION` (committed vs fresh compile across the six content-derived count fields, positive-
+   controlled against the old `dungeon_crawl` report) is sufficient to catch a recurrence of **this**
+   defect class, or extended with a stated reason. Do not add a second parallel mechanism.
+5. Where a re-taken measurement changes a conclusion, a follow-up ticket exists and is linked here.
 
 ## Related Tickets
 
 - `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION` — made `world.yaml` authoritative (PR #328)
 - `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` — closed `DUPLICATE`; the measurement-validity
   framing originated there and was folded into the ticket above
-- `TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION` — found instance 1
+- `TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION` — found this; authored the
+  guard in AC-4 and corrected the one wrong census entry
+- `TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO` — **open**; the reason this is P1
+- `TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS` — open; owns the hash/`place_count` drift
 - `TCK-20260704-SIMQ-CORPUS-SCALE-METRIC`, `TCK-20260704-SIMQ-CORPUS-TIERS-EPIC` — authored the census
-  whose cross-check read the artifact
-- `TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO` — open, and one of the three tickets
-  named above is in its lineage; check whether its own numbers came through the catalog path
-- `TCK-20260912-CORPUS-DIVERSITY-NARRATIVE-PILLAR-POST-REFRESH-DRIFT`,
-  `TCK-20260915-SIMQ-CORPUS-BLIND-TO-SCALE-DEPENDENT-BEHAVIOR` — open, same corpus surface
+  that was wrongly suspected here
 
 ## Related Docs
 
 - `docs/architecture/world_repository_layout.md` §1 — the single-source law
 - `docs/mechanics/06_worldbuilding_foundation.md` §11 — cites §1 as a sibling law, deliberately not a §7
   compile gate
-- `docs/parity_ledger/substrate.yaml` — `v2_evidence` entries to re-check
+- `docs/parity_ledger/substrate.yaml` — SUB-394 and the `v2_evidence` entries to re-check
 
 ## Related Stored Artifacts
 
 - `agent-working/stored_artifacts/TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION/` —
   `investigation.md` has the 8-of-9 divergence comparison; `plan.md` has the per-world decisions
-- `agent-working/staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2 — the census
-  the test cites
+- `agent-working/stored_artifacts/TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION/`
+  — the AC-5 sweep and the all-24-world fresh-compile comparison
 
 ## Related Code Areas
 
-- `tests/unit/worldassembly/test_corpus_diversity.py` — `EXPECTED_DISTINCT_POPULATED_FACTIONS`
 - `src/worldbuilding/repository.py` — the `resolved/` redirect that defines "what production loads"
 - `src/worldassembly/resolver.py` — regenerates the snapshot and the compile report
-- `data/worlds/*/resolved/`, `data/worlds/*/world_compile_report.json`, the corpus registry
+- `tests/integration/worldassembly/test_resolved_snapshot_freshness.py` — the guard in AC-4
+- `data/worlds/*/resolved/`, `data/worlds/*/world_compile_report.json`
 
 ## Assumptions / Open Questions
 
-- **UQ-1:** how are the three closed tickets' conclusions to be recorded if a re-measurement overturns
-  one? A closed ticket should not be silently edited. Likely a note in the closed ticket plus a new
-  ticket — confirm the convention before writing to `agent-working/tickets/done/`.
-- **UQ-2:** is the SimQ corpus baseline affected? If pillar scores were computed through the catalog
-  path for any of the five worlds, the baselines move, which touches `simulation-quality` territory and
-  may need that owner rather than this lane.
-- Assumption: the AC-5 sweep results quoted in Scope are as reported by `rpg-implementer-2` on
-  2026-10-04. **Re-derive them before acting** — they were relayed to this ticket, not independently
-  measured by its author.
+- **UQ-1:** how is a closed ticket's conclusion to be corrected if re-measurement overturns it? A closed
+  ticket should not be silently edited. Likely a note in the closed ticket plus a new ticket — confirm
+  the convention before writing to `agent-working/tickets/done/`.
+- **UQ-2:** is the SimQ corpus baseline affected? If pillar scores were computed through the catalog path
+  for any of the five divergent worlds, baselines move, which is `simulation-quality` territory and may
+  need that owner rather than this lane.
+- **UQ-3:** the three closed tickets are identified here by shorthand (CAMP-STATE, DEMOGRAPHIC-COHORT,
+  UNREACHABLE-CLASSIFY) as relayed. Resolve them to full ticket IDs first; do not assume the shorthand
+  maps to the ticket you expect.
+- The AC-5 sweep results and the all-24-world comparison quoted above were **reported by
+  `rpg-implementer-2`, not measured by this ticket's author**. The `dungeon_crawl` four-module claim and
+  the `StrategicUpdate` location were independently re-verified; the rest were not. Re-derive before
+  acting.
 
 ## Implementation Notes
 

@@ -19,7 +19,7 @@ provenance manifest on every lab run, and `party.py`'s missing `StrategicUpdate`
 
 ## Status
 
-OPEN
+INPROGRESS
 
 ## Tier
 
@@ -177,15 +177,20 @@ None. The evidence is in `codebase-planner`'s own handoff and re-verified in thi
 
 ## Implementation Notes
 
-_(not started)_
+- Bug 1 (LIVE, silent): module-level `import json` in `src/engine/kernel.py`; the two function-local imports removed; `except Exception: pass` narrowed to `(OSError, ValueError)` with a `logger.warning` (a missing or corrupt manifest degrades fingerprints but must not abort a run, so it is logged, not raised).
+- Blast radius, measured: `prov_manifest_data` only feeds `RunManifest.catalog_fingerprint` and `module_fingerprints` as fallbacks; `src/lab/orchestrator.py` passes neither, so every lab-orchestrated run recorded the process-wide catalog fingerprint and `module_fingerprints=None` instead of the resolve-time values. Anything that read those from a lab run's manifest did not have provenance.
+- Bug 2 (DORMANT, zero callers): `StrategicUpdate` imported from `src/core/updates.py`. The ticket and the handoff named `src/core/strategic.py`, which does not define it; a first edit using that path failed the new test.
+- Decision for `issue_party_command`: kept and now tested, NOT wired and NOT removed. `docs/mechanics/07_social_political_dynamics.md` documents it as existing behavior (removal breaks doc-code parity) and wiring a caller is Lane A feature work; the dormancy is escalated to the planner. Cross-lane exception recorded in `docs/plans/rpg_design_roadmap/rpg_implementer_lane_split.md` section 5.
 
 ## Test Summary
 
-_(not started)_
+- `tests/unit/engine/test_kernel_provenance_manifest_load.py` (2) and `tests/unit/social/test_party_issue_command.py` (1): all fail on the old code, pass on the fix.
+- AC-5: `ruff` is not installed in this environment, so F821 was not run; the NameErrors are covered by tests instead. The mypy baseline was not regenerated or reduced here (not measured).
+- Scoped run on the final tree: 1693 passed, 0 failed.
 
 ## Files Changed
 
-_(not started)_
+`src/engine/kernel.py`; `src/systems/social_systems/party.py`; `tests/unit/engine/test_kernel_provenance_manifest_load.py`; `tests/unit/social/test_party_issue_command.py`.
 
 ## Completion Summary
 

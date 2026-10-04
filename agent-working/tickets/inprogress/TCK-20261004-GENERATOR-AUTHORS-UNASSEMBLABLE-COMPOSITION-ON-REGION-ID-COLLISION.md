@@ -231,11 +231,13 @@ fallthrough — that would just be option 2 wearing a different hat.
 
 ## Test Summary
 
-_(not started)_
+- New: 3 unit tests (`TestRegionIdNamespacing`) and 1 real-content integration test (assembles, and each module's population spawns in its own module's region). Fail on the unfixed generator, pass with the fix.
+- Scoped run on the final tree (rendering, worldassembly, worldgeneration, engine, social, cli, lab, simulation_quality and related): 1693 passed, 0 failed.
+- AC-3 DEFERRED, not met: the two `xfail(strict=True)` marks exist only on #328. Sequence ruled by the planner: #328 merges, `origin/main` is merged into this branch, the strict xfails XPASS against this fix, and they are removed in this PR.
 
 ## Files Changed
 
-_(not started)_
+`src/worldgeneration/generator.py`; `tests/unit/worldgeneration/test_composition_generator.py`; `tests/integration/worldassembly/test_real_content_world_compositions.py`; `docs/guidelines/intentional_divergences.md` (DEV-008); `docs/parity_ledger/substrate.yaml` (SUBSTRATE-NEW-010).
 
 ## Completion Summary
 

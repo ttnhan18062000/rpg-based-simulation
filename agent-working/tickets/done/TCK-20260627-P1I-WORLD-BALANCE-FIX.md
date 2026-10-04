@@ -103,3 +103,7 @@ modules (goblin_camp_conflict, old_mine_resource_loop) and scaling down the band
 (danger_scale 4→2). wilderness_survival now has 1 building (healer_hut via survivor_camp_shelter
 module) that enables the near_service requirement path. All integration tests pass (43/43).
 Both worlds validate without errors. No engine code or parity ledger modified.
+
+## Post-Closure Note (2026-10-04, TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION)
+
+The `dungeon_crawl` remedy above was written only to `data/content/world_compositions/dungeon_crawl.yaml`, which no production path reads. Production loads `data/worlds/dungeon_crawl/resolved/world.resolved.yaml`, so **the remedy was inert from 2026-06-27 until that ticket closed** and the 94-97% extinction configuration kept running. The DONE status above reflects the edit, not its effect.
