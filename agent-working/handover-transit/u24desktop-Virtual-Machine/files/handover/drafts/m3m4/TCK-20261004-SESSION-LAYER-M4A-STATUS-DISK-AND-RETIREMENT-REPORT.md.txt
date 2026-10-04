@@ -1,0 +1,78 @@
+---
+status: active
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20261004-SESSION-LAYER-M4A-STATUS-DISK-AND-RETIREMENT-REPORT
+phase: open
+date: 2026-10-04
+tags: [ai, process-improvement, governance]
+---
+
+# TCK-20261004-SESSION-LAYER-M4A-STATUS-DISK-AND-RETIREMENT-REPORT
+
+## Title
+Session-layer M4a: `status.py` in-flight view, disk-budget warning and worktree retirement report
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P2
+
+## Request Summary
+A read-only `tools/sessions/status.py` that answers "what is in flight" per seat and worktree, warns when the volume passes 85% naming the largest worktrees, and lists worktrees that look removable (plan 8, 11). It reads instance state from M2a's role-state directory when that exists and reports `instance: unknown (M2 not present)` until then, so M4a can land before M2.
+
+Child of `TCK-20261002-EPIC-SESSION-LAYER-OPERATIONS`. Hold rule met: M1 merged.
+
+## Scope
+- Per worktree: path, branch, dirty state, any git operation left in progress (merge, rebase, cherry-pick), open PR (`gh pr list --head`), size on disk, last commit and last activity. Per seat: owning worktree, seat status (staffed or unstaffed), instance state live/orphaned/none from M2a. Also: a worktree whose recorded writer is not the manifest's writer, and a role showing two seats.
+- Disk budget: threshold 85% of the volume (a constant, test-injectable volume reading); on breach print the largest worktrees by size.
+- Retirement report: a worktree with no open PR and no unmerged unique commits, whose seat is retired or idle past a threshold, is *reported* as removable with the exact `git worktree remove` command for the owner to run. The idle threshold is a named constant (default 14 days; per-seat tuning is not built).
+- `gh` unavailable or rate-limited: print `pr: unknown` and continue; never fail the view. Exit code 0 unless the manifest cannot load.
+- Strictly read-only: no `git worktree prune`, no fetch, no file writes.
+
+## Out of Scope
+- Deleting or pruning anything, branch hygiene (M4b), worktree creation and self-heal (M2c), analytics (Epic D), shared-index disk fix (`TCK-20261004-WORKTREE-INDEX-DUPLICATION`).
+
+## Acceptance Criteria
+1. A seeded multi-worktree repository fixture: the report shows every field above for each worktree and seat; a test proves status.py changes no file, ref or worktree (compare a tree and ref snapshot before and after).
+2. The disk warning fires at the threshold with a faked volume reading and names the largest worktrees in size order; below it prints nothing.
+3. The retirement report lists a seeded removable worktree and does not list one with an open PR, with unique commits, or with a dirty tree.
+4. A repo mid-rebase fixture is flagged as a git operation in progress.
+5. `gh` failure degrades to `pr: unknown` without raising; a missing role-state directory degrades to `unknown`, not `none`.
+6. Run against this repository's real worktrees as a positive control, with the output pasted into the ticket (sizes and branches checked against `git worktree list`). Scoped tests green; docs and `docs/REGISTRY.yaml` regenerated.
+
+## Related Tickets
+- `TCK-20261002-EPIC-SESSION-LAYER-OPERATIONS` (parent), M2a (instance state; soft dependency), M4b (parallel)
+
+## Related Docs
+- `docs/plans/agent_infrastructure/session_layer_working_process.md` (binding)
+- `docs/guides/delivery_process.md` (Worktree & Branch Isolation)
+
+## Related Stored Artifacts
+- `agent-working/stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/`
+
+## Related Code Areas
+- `tools/sessions/status.py` (new; reuses `roster.py`), `tests/tools/`.
+
+## Assumptions / Open Questions
+- Whether "idle" is a fixed number of days or per seat is left open; the constant is easy to change. Distinguishing an owned from an unowned worktree depends on the manifest's `worktrees:` section only.
+
+## Implementation Notes
+Draft by `agent-working-design` (planner seat), 2026-10-04. Not yet activated; the implementer commits it.
+
+## Test Summary
+Not started.
+
+## Files Changed
+None yet.
+
+## Completion Summary
+Not started.

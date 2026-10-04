@@ -1,0 +1,32 @@
+---
+name: project-faction-war-foundation-only
+description: "Faction war is deliberately foundation-only for now — don't drive the war chain upward; fix the lower systems that feed it instead"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: 8553c310-aa3d-4e2b-ad90-19452165200a
+  modified: 2026-09-15T06:50:40.882Z
+---
+
+Faction war is a large, complex feature and the user has deliberately capped investment in it:
+**build a bit of foundation, then work on the lower features that support it.** Do not keep pushing
+the war chain upward.
+
+Stated 2026-09-15, after faction sentiment shipped (pairwise tension, sentiment accumulating from
+real interaction, TENSE/HOSTILE reachable).
+
+**What was queued and is now deprioritised:** the military-strength driver (loop #1,
+`military_strength` frozen at 1.0), and the faction importance signal
+(`TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE`). Both remain real and filed; neither is next.
+
+**What "lower features that support it" means concretely** — the systems that produce the inputs
+war needs, all currently starved:
+- cross-faction combat rarity (zero in 3 of 4 corpus worlds)
+- regional trauma never accumulating (lair regions never see combat)
+- calamity intensity never firing (sole producer never runs)
+- regional influence shift never firing
+
+**Why:** these are the "a real system fed by nothing" family — mechanisms that work perfectly and
+receive no input. They sit *below* faction politics and feed it, so fixing them is both
+higher-priority under [[feedback-bottom-up-rpg-feature-priority]] and the actual precondition for
+war ever being worth building.

@@ -44,6 +44,10 @@ def validate_record(record: dict) -> list[str]:
     normalized = record.get("test_quality_findings_normalized")
     if normalized is not None and not (isinstance(normalized, int) and not isinstance(normalized, bool) and normalized >= 0):
         errors.append("test_quality_findings_normalized must be a non-negative integer")
+    # Optional reviewer-declared list of changed test files it opened (TCK-20261004-ARCH-VERIFY-TESTS-READ-EVIDENCE).
+    tests_read = record.get("tests_read")
+    if tests_read is not None and not (isinstance(tests_read, list) and all(isinstance(x, str) for x in tests_read)):
+        errors.append("tests_read must be a list of strings")
     return errors
 
 

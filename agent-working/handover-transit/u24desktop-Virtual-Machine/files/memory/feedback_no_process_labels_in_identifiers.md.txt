@@ -1,0 +1,32 @@
+---
+name: feedback-no-process-labels-in-identifiers
+description: Don't embed workflow/process labels (phase numbers, stage names, ticket IDs) into file names or function/class names — those belong in comments or docs, not code identifiers
+metadata:
+  node_type: memory
+  type: feedback
+  originSessionId: 0eb49422-4d8d-4a40-8b6f-f864a48eae9b
+  modified: 2026-08-19T03:56:13.788Z
+---
+
+Don't put process/workflow tracking information — a pipeline phase number ("phase18"), a stage
+name, a ticket ID, a batch label — into a file name, function name, class name, or any other code
+identifier. That information belongs in a comment or doc reference, not in the identifier itself.
+
+**Why:** identifiers are supposed to describe what the code *does*, not when/how it was
+introduced or which internal pipeline stage it corresponds to at authoring time. A name like
+`test_phase18_import_boundaries.py` ties the file's identity to a phase-numbering scheme that can
+renumber, merge, or drift independently of the file's actual content — the name stops describing
+the test's real subject (import-boundary enforcement) and starts describing incidental process
+metadata instead. This repo already has two live examples of the anti-pattern
+(`tests/architecture/test_phase18_import_boundaries.py`,
+`test_phase19_observability_boundaries.py`) — flagged by the user while `TCK-20260817-
+ARCHITECTURE-BOUNDARY-HARDENING-EPIC` was actively adding new AST-based boundary tests to those
+same files, specifically to make sure the new function names being added didn't repeat the
+pattern (e.g. no `test_step5_systems_engine_boundary`).
+
+**How to apply:** when naming a new file, function, class, or variable, name it for what it
+verifies/does (`test_import_boundaries_domains_observability`, `test_systems_engine_boundary`),
+never for which plan step, ticket, or pipeline phase produced it. If that provenance is worth
+recording, put it in a code comment or the ticket/PR description, not the identifier. This
+applies going forward to new code; it is not, by itself, a mandate to rename existing
+phase-numbered files unless a ticket's own scope already covers that rename.

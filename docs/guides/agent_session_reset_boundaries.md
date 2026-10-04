@@ -92,3 +92,23 @@ may run `<role>-2` .. `<role>-N`. Runtime state lives in `<git-common-dir>/sessi
 
 One-line shell alias (installing it is the owner's step): `alias cc='python3 tools/sessions/launch.py'`.
 
+## Moving sessions between machines
+
+A transcript does not cross machines; the handover note is the only continuity that can.
+`tools/handover_transit.py` carries notes, the untracked `.claude/handover/drafts/` tree and the
+project memory through `agent-working/handover-transit/<host>/` (one rolling bundle per source
+host; files stored with a `.txt` suffix so registry and validators ignore them).
+
+1. On the machine being left: `python3 tools/handover_transit.py export` (`--roles a,b`,
+   `--no-drafts`, `--no-memory` narrow it), commit and push the branch (a PR's own export step does
+   this already — see `delivery_process.md`).
+2. On the new machine: pull, then `python3 tools/handover_transit.py import <host>` (`--dry-run`
+   first if unsure). Every sha256 is verified before any write; a differing local file is backed up
+   as `<name>.local-backup-<ts>` and reported.
+3. Start a fresh session per role and read its note. A `SessionStart` hook (`startup`, `resume`,
+   `clear`) names any bundle this host has not imported.
+4. When every machine that needs it has imported: `python3 tools/handover_transit.py discard <host>`
+   (refuses without an `.imported-*` marker unless `--force`). `status` lists bundles.
+
+Export on the machine you are leaving, then import on the new one; importing an older bundle over
+a newer local note is the one way to lose work, which is why differing files are backed up.

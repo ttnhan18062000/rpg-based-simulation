@@ -1,0 +1,21 @@
+<!-- Insert into docs/guides/delivery_process.md immediately BEFORE the horizontal rule ("---", preceded by a blank line) that sits directly above the line "## PR Title Template" (that heading occurs once), keeping one blank line before the rule, i.e. as the last subsection of "## Worktree & Branch Isolation". Text between the markers is verbatim. -->
+<!-- BEGIN -->
+### Recovering when a commit lands on a branch an implementer holds
+
+One writer per branch: only the implementer role commits or pushes on a branch it holds, and that includes a
+branch a `Workflow` run is working on. If a designer or planner session commits there by mistake (the tell: you
+are about to `git add` in a worktree whose current branch you handed to an implementer earlier in the session;
+check `git log origin/<branch>` first), do not reset and lose the work:
+
+1. Park the commit: `git branch <topic-name> <commit>`.
+2. Restore the shared branch to exactly what was pushed: `git reset --hard <origin-sha>`.
+3. Verify: `git rev-parse HEAD origin/<branch>` prints two identical SHAs.
+4. Once the implementer or the workflow reports done, `git merge --ff-only origin/<branch>`, then
+   `git cherry-pick` the parked commit, or hand its content to the implementer to commit.
+5. If the branch was squash-merged, confirm the change landed by content
+   (`git show origin/main:<path> | grep <the change>`), never by `git merge-base --is-ancestor`, which is
+   always false after a squash.
+
+Hand the implementer the verification detail it cannot re-derive (baseline values with their SHAs, bisection
+evidence, what was ruled out and how) together with the content to commit.
+<!-- END -->

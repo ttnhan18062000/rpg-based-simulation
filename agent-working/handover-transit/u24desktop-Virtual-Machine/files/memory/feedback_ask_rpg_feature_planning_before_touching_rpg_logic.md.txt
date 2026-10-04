@@ -1,0 +1,22 @@
+---
+name: feedback-ask-rpg-feature-planning-before-touching-rpg-logic
+description: In test-architecture work, ask rpg-feature-planning via SendMessage before changing any RPG logic (product code or expected behaviour)
+metadata:
+  type: feedback
+---
+
+During test-architecture work, if a change would touch **RPG logic**, ask **`rpg-feature-planning`**
+with SendMessage **before** making it. This applies to me and to my implementer peer
+(test-architecture-implementer). RPG logic covers:
+- product code under `src/`;
+- a test's expected RPG behaviour or oracle;
+- Mechanics Bible or parity-ledger semantics;
+- choosing a pilot surface or mutation target.
+
+**Why:** the user said so on 2026-09-29. Feature teams own RPG behaviour, and the test-architecture
+track must not change it on its own authority (see [[project-test-architecture-reviewer-role]]).
+
+**How to apply:** test-infra-only changes, such as conftest fixtures and test isolation, don't need
+to ask. Anything that changes what the simulation does, or what a test says it should do, waits for
+rpg-feature-planning's answer. Process problems go to agent-working-design instead
+([[feedback-report-agent-process-issues-to-agent-working-design]]).

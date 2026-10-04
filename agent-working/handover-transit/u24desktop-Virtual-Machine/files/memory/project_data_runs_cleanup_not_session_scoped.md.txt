@@ -1,0 +1,42 @@
+---
+name: project-data-runs-cleanup-not-session-scoped
+description: "implement-ticket's data/runs cleanup is mtime-gated, not session-scoped, so it deletes other sessions' run data; and a PID-suffix check is NOT a safe substitute because PIDs get recycled"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: e571fb83-37f9-4cfb-a0a9-fdb17a0177ce
+  modified: 2026-10-04T13:40:39.786Z
+---
+
+`clean_data_runs_early` (the post-Test cleanup checkpoint in `implement-ticket`) is **mtime-gated, not
+session-scoped**. It deletes every `data/runs/` file with `mtime >= startTs`, regardless of which session
+produced it. `implement-ticket.js`'s own comment concedes this as accepted residual risk: it "does NOT
+protect against a second session concurrently/overlapping in progress".
+
+Measured 2026-10-04 on a real run: it removed **3684 files across 14 distinct PID suffixes**, not just
+mine. Nothing in flight was lost, but only by luck — every one of those 14 sessions happened to be dead.
+
+**Correcting my own earlier prescription, which was incomplete.** A previous handover of mine said "clean
+by PID suffix, not wholesale", after a blanket `rm -rf data/runs/*` deleted ~17 directories that may have
+belonged to another session. **A PID-liveness check is not a safe substitute**: PIDs get recycled. In that
+same 2026-10-04 check, suffix `3846` showed as LIVE — but the live process was `goa-identity-se`, a GNOME
+daemon that had inherited a dead session's PID. A naive "is this PID alive?" test would have reported a
+false LIVE and, inverted, could just as easily report a false DEAD and delete in-flight data.
+
+**A correct ownership test needs a session id or a lock/ownership marker in the run directory, not a PID.**
+Reported to `agent-working-design` 2026-10-04 and ticketed to `agent-working-implementer` with a session
+ownership marker as the fix.
+
+**How to apply, until that lands:**
+- **Run one `implement-ticket` pipeline at a time** whenever run evidence matters. This repo routinely has
+  10–15 live Claude processes, so the overlap window is real on every run.
+- Don't "fix" it by adding a PID check — that trades one unreliable test for another.
+- `data/runs/` is gitignored, so the blast radius is local run evidence, never source. That is why this is
+  a caution and not a blocker.
+- Note the cleanup only unlinks `is_file()` paths, so it leaves **empty directory shells** behind with
+  fresh mtimes. A visibly non-empty `data/runs/` after a CLEANED result is expected, not a failure —
+  check `find data/runs -type f -newermt <start>` rather than `ls`.
+
+Same instrument-trust family as [[project_ci_poll_tls_block_false_green]] and
+[[feedback_a_probe_is_an_instrument_that_can_be_wrong]]: the check reported what it was pointed at (a PID)
+rather than what was being asked (session ownership).

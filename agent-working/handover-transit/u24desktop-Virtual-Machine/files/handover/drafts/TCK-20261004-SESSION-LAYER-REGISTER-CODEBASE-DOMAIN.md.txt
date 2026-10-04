@@ -1,0 +1,73 @@
+---
+status: active
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20261004-SESSION-LAYER-REGISTER-CODEBASE-DOMAIN
+phase: open
+date: 2026-10-04
+tags: [ai, process-improvement, governance]
+---
+
+# TCK-20261004-SESSION-LAYER-REGISTER-CODEBASE-DOMAIN
+
+## Title
+Register the codebase domain in the session-layer manifest and authority file
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P2
+
+## Request Summary
+The owner created a `codebase/` domain root on 2026-10-03; `registries/session_roles.yaml` and `session_authority.yaml` do not mention it (verified `git grep codebase` on `origin/main`: no hits).
+
+Source: `docs/plans/codebase_health/handoffs/handoff_to_agent_working.md` (PR #322, codebase-planner, 2026-10-04); structure re-read on `origin/main` by `agent-working-design`.
+
+## Scope
+- Add a `codebase` domain overlay owning `codebase/**`, `docs/plans/codebase_health/**`, `docs/guidelines/python_code_standard.md`, `.pre-commit-config.yaml` (and `tests/codebase/**`, with the `ownership_splits` entries the validator requires for overlaps with `tests/**` and `docs/**`).
+- Roles per the plan's three-seat model: `codebase-designer` (unstaffed, interim holder recorded), `codebase-planner`, `codebase-implementer`; `codebase` worktree entry with the implementer as the single writer; handover paths; `accepts_dispatch_from`.
+- Generated agent files (M1c generator) and cards regenerate; card budget stays unchanged.
+- `session_authority.yaml`: function defaults inherit; no grants.
+
+## Out of Scope
+- Staffing decisions, launcher behaviour, other domains' overlays.
+
+## Acceptance Criteria
+1. The validator passes (globs resolve, no unsplit overlap, one writer, handovers exist) and `generate_agents --check` is clean.
+2. Existing role cards unchanged; new cards within budget.
+3. Owner confirmed the literal `session_authority.yaml` diff (governing file); recorded in the ticket. Scoped tests green; docs and `docs/REGISTRY.yaml` regenerated.
+
+## Related Tickets
+- PR #322 handoff; `TCK-20260904-*` monitoring-anomaly ratchet tickets where cited in the validator
+
+## Related Docs
+- `docs/plans/codebase_health/handoffs/handoff_to_agent_working.md`
+
+## Related Stored Artifacts
+- none
+
+## Related Code Areas
+- `registries/session_roles.yaml`, `registries/session_authority.yaml`, `.claude/agents/session-codebase-*.md` (generated), `tools/sessions/`, tests.
+
+## Assumptions / Open Questions
+- Two seats versus three: drafted three; the codebase-planner may ask for two. The codebase sessions run on another machine, so their handover note paths need confirming with them.
+
+## Implementation Notes
+Draft by `agent-working-design`, 2026-10-04. Not activated; the implementer commits it.
+
+## Test Summary
+Not started.
+
+## Files Changed
+None yet.
+
+## Completion Summary
+Not started.

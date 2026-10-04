@@ -1,0 +1,83 @@
+---
+status: active
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20261004-SESSION-LAYER-M2A-ROLE-STATE-DIRECTORY-AND-LIVENESS
+phase: open
+date: 2026-10-04
+tags: [ai, process-improvement, governance]
+---
+
+# TCK-20261004-SESSION-LAYER-M2A-ROLE-STATE-DIRECTORY-AND-LIVENESS
+
+## Title
+Session-layer M2a: role-state directory, instance record, writer lease and liveness
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P1
+
+## Request Summary
+Build the runtime-state library of plan 6.1 and 5.5: `<git-common-dir>/session-roles/<role-id>/` with append-only `bindings.jsonl`, `instance.json` (`live|orphaned|released`) and the writer lease, plus a `/proc`-based liveness check. A library with a small CLI, no hooks and no launcher yet; M2b and M2c consume it.
+
+Child of `TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION` (milestone M2). Hold rule met: M1 merged.
+
+## Scope
+- `tools/sessions/state.py`: typed records (`Binding`, `Instance`, `Lease`), resolve the state dir via `git rev-parse --git-common-dir` (same from every worktree), atomic append to `bindings.jsonl`, atomic replace of `instance.json`.
+- Liveness (M0q/r): a recorded pid is live only if `/proc/<pid>` exists **and** its cmdline and start time match what was recorded (ids are reused). Never read the inbox socket file. Nothing about liveness is stored as a fact: `instance.json` stores the holder and `released`; `live` versus `orphaned` is computed on read.
+- Writer lease: lease file in the role-state dir (or a named alternative, see Assumptions), taken by the role that is a worktree's `writer` in `registries/session_roles.yaml`; a stale lease is reported, released only by the user or the same role re-taking it, never stolen. Decide file-versus-git-native from M0 evidence and record the choice.
+- `tools/sessions/state.py` CLI: `show <role>`, `release <role>` (explicit, for the user).
+- Concurrent writers: two processes appending a binding at once must not corrupt `bindings.jsonl`.
+
+- Lease key is the PHYSICAL worktree path, not the manifest's logical worktree name: a domain may have several physical worktrees (observed 2026-10-04: two rpg implementers in two worktrees, one git writer each). `max_sessions` stays a best-effort launch-time count per role; instance naming for a second holder of one role (`<role>-N`) is decided with the owner, and `tools/sessions/validate.py` stays a static manifest check that never reads live staffing.
+
+## Out of Scope
+- SessionStart hook and binding resolution (M2b), launcher, recovery flow and worktree self-heal (M2c), any `settings.json` change, guardrail enforcement of the lease (M5).
+
+## Acceptance Criteria
+1. State lives under the git common dir; a test with two worktrees proves both see the same role state and that removing one worktree leaves it intact.
+2. Liveness test with a positive control: a live child process reads `live`; after `kill -9` it reads `orphaned` without any `SessionEnd`; a reused pid with a different start time or cmdline reads `orphaned`; a leftover socket file alone never makes an instance `live`.
+3. `released` is set only by an explicit clean end or retirement and survives re-reading; `live`/`orphaned` is never written to disk.
+4. Lease: holder re-take after `/clear` succeeds; another role is refused; a stale lease is reported with its holder and age and is not taken silently.
+5. Concurrent append test: N parallel appends yield N valid JSON lines.
+6. Loader and records are typed, nothing writes outside the role-state dir, no raw dict past the module boundary; scoped tests green; docs and `docs/REGISTRY.yaml` regenerated.
+
+## Related Tickets
+- `TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION` (parent), `TCK-20261003-SESSION-LAYER-M0-HARNESS-SPIKE` (done), M1a-d (done, #314 and the M1d PR)
+- M2b and M2c depend on this ticket.
+
+## Related Docs
+- `docs/plans/agent_infrastructure/session_layer_working_process.md` (binding; sections 5, 6, 6.1, 8, 10, 12.2)
+- `agent-working/stored_artifacts/TCK-20261003-SESSION-LAYER-M0-HARNESS-SPIKE/investigation.md` (M0 record; signal precedence table)
+- `docs/guides/agent_session_reset_boundaries.md`, `docs/guides/delivery_process.md`
+
+## Related Stored Artifacts
+- `agent-working/stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/`
+
+## Implementation Notes
+Draft by `agent-working-design` (planner seat), 2026-10-04. Not yet activated; the implementer commits it. Bundle M2a-c into one PR (owner preference: big batches).
+
+## Test Summary
+Not started.
+
+## Files Changed
+None yet.
+
+## Completion Summary
+Not started.
+
+## Related Code Areas
+- `tools/sessions/` (new `state.py`; reuses `roster.py`), `tests/tools/` (new tests).
+
+## Assumptions / Open Questions
+- Lease mechanism (file versus git-native) is decided here from M0 evidence; default is a file in the role-state dir.
+- `CLAUDE_PID` availability in the hook environment is taken from M0q; if absent, the launcher passes the pid (M2c).

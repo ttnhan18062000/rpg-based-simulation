@@ -1,0 +1,83 @@
+---
+status: active
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20261003-SESSION-LAYER-M0-HARNESS-SPIKE
+artifact_type: investigation
+tags: [ai, process-improvement, governance]
+---
+
+# Investigation: session-layer M0 harness spike (class 1)
+
+Harness: Claude Code 2.1.286, Linux, 2026-10-03. Author: agent-working-design (draft; the implementer commits).
+Raw evidence: `evidence/*.jsonl` next to this file (stdout and hook logs of the disposable runs; hook logger
+`log_hook.py`, probe settings `probe_settings.json`, agent files `session-probe*.md`). No `.json` files.
+
+## Method
+
+Disposable `claude -p --model haiku --setting-sources project` child sessions in a scratch git repo, with project
+settings whose hooks log each payload and the `CLAUDE*`/`SESSION*` environment. Every **negative or blocking
+claim has a positive control**: a run with no hook decision (and one with `allow`) executes the command and leaves a
+side-effect file, so "blocked" means the effect file is absent while the control's is present. Probe transcripts
+were deleted afterwards (verified: no `*m0*` or `*other*` project directories remain).
+
+Classes (ticket Scope): **1** = checkable by the agent alone (done here); **2** = needs a live interactive terminal
+or a deliberate crash and the owner's opt-in (not run).
+
+## Results per item
+
+| Item | Status | Result | Evidence |
+|---|---|---|---|
+| a | partial | `--name` survives `--resume` and fork and is `session_title` in `SessionStart`/`UserPromptSubmit`. The `/clear` half is class 2. | a, f1-f3 |
+| b | verified | `--agent session-probe` (tools Read, Glob) applies the allowlist to the **main** session (no Bash; the model said so). Control: a plain run had Bash. | b |
+| c | not run | wake of an idle session, `SendMessage` after `/clear`: class 2. | n/a |
+| d | partial | The agent file **does** appear in the Agent-tool roster of a plain session (claude, Explore, general-purpose, Plan, session-probe, statusline-setup). Whether the model would spawn it is untested. | d |
+| e | verified | `PreToolUse` payload: `session_id`, `tool_name`, `tool_input.file_path` (Write) or `tool_input.command` (Bash), `tool_use_id`, `prompt_id`, `permission_mode`, `transcript_path`, `cwd`, plus `agent_type` when started with `--agent`; **no `session_title`**. Sub-agent (Task) tool calls not probed. | e, last_hook_log |
+| f | verified | `--resume <id>` from another cwd: same `session_id`, same `session_title`, `source: "resume"`. | f1-f3 |
+| g | not run | rename of a live session: class 2. | n/a |
+| h | verified | `--resume <id> --fork-session`: **new** `session_id`, `source: "fork"`, **same** `session_title` (a fork duplicates the name); transcript in the cwd's project directory. | f1 |
+| i | partial | Started with `--agent session-probe2` and `SESSION_ROLE=rpg-x`, resumed with neither: see o. A manifest-digest change is not exercised (no manifest yet). | i1, i2 |
+| j | verified | `UserPromptSubmit` carries `prompt`, `prompt_id`, `permission_mode`, `session_title`: usable for sampling the headline metric. | j1 |
+| k | not run | `/clear` yields a new id with the name kept: class 2 (plan records it as observed 2026-09-27). | n/a |
+| l | not run | `crossSessionInbound` pairs, `dialogExpiry`: class 2. | n/a |
+| m | partial | Resume by name is scoped to the cwd's project directory. Two sessions in one project directory with one name: `--resume <name>` **errors, lists both ids with times, asks for an id**; never picks silently. Variant rename of a live collision: class 2. | m1, m2 |
+| n | verified (non-interactive) | `none`/`allow`: executed. JSON `deny`: blocked, reason reached the model verbatim. Exit 2 (stderr): blocked. JSON `ask` with no UI: blocked. **Exit 1: EXECUTED. Unparseable stdout with exit 0: EXECUTED.** An interactive `ask` is class 2. | n_*.out |
+| o | partial | See the precedence table in plan 5 (edit E3). The resume row is the finding: `SessionStart(resume)` shows `agent_type` absent and the env unset, `UserPromptSubmit` of the same session shows `agent_type`, and the tool allowlist still applies. | i1, i2 |
+| p | verified | Title is stored in the transcript as `"customTitle":"<name>"`; survives resume and fork. After a cross-cwd resume the payload's `transcript_path` points into the **new** cwd's project directory and **the file there does not exist** (control), while the real file in the **original** directory keeps growing. | f2, f3 |
+| q | verified | A live `claude -p` has `CLAUDE_PID` alive in `/proc`, a socket file `/run/user/<uid>/cc-socks/<pid>.sock`, and `CLAUDE_CODE_MESSAGING_SOCKET` in the hook env. After `kill -9`: pid gone, socket file **remains**. Independent observation, not a probe: on 2026-10-03, 6 of 12 socket files in that directory belonged to dead processes (control: the live ones resolved in `/proc`). | notes only (raw kill and socket logs were not saved) |
+| r | partial | `kill -9`: no `SessionEnd` fired; transcript intact (29 lines, unchanged); `--resume <id>` works and the model recalled its last reply. Not run: power loss, out-of-memory, dropped ssh, `/clear` right before a crash, crash mid-rebase or mid-merge. | notes only (raw kill and socket logs were not saved) |
+
+Documentation versus observation: the plan assumed `agent_type` and `SESSION_ROLE` are reliable binding signals at
+`SessionStart` and that a hook crash is "unproven" for fail-closed. Observation: neither holds on resume, and a hook
+crash fails **open**. The plan is updated from the observation (see the patch).
+
+## Outcome
+
+**Decision: ADJUST** sections 5, 6.1 and 10; **HOLD** section 9.5. No item observed contradicts the design's core
+(role id as identity, sessions disposable, recovery by role id, guardrail not sandbox); every finding changes a
+mechanism, not the architecture.
+
+1. **Section 5, binding**: resume must resolve the role from `session_title`, not from `SessionStart`'s `agent_type`
+   or the environment; a `PreToolUse` guardrail resolves by `session_id` from the binding record.
+2. **Section 5, launcher**: generated `session-<role>.md` files enter every plain session's Agent roster; each needs
+   a "launcher-only, never spawn" description, or another location. Chosen in M1 with a spawn probe.
+3. **Section 10, guardrail**: only exit 2 or a JSON deny blocks. The script must catch every exception and exit 2 for
+   authority classes; keep the matcher narrow; harness permission rules become the primary backstop for command
+   patterns. "Fail-closed" is still not claimed beyond that discipline.
+4. **Section 6.1, liveness**: the recorded pid in `/proc` (with cmdline and start time), never the socket file; a
+   missing `SessionEnd` is the orphan signal.
+5. **Section 6.1, transcripts**: find by `session_id` glob across all project directories; candidate transcripts for a
+   role by scanning for `customTitle`; resume by id, never by name (forks and re-runs duplicate names).
+6. **Section 9.5**: unchanged. The inbox question (M0c) stays open until items c and l run.
+
+## Not verifiable here (reason)
+
+c, g, k, l, interactive `ask`, `agent_type` on sub-agent tool calls: need live terminals (class 2). Power loss and
+crash mid-rebase: destructive, need a scratch machine or worktree and a separate decision. Spawn behaviour of the
+model toward a roster-listed `session-*` agent (d): not probed. All results are one harness version; re-check on a
+harness upgrade.
+
+## Answer to "is a minimal inbox needed" (M0c)
+
+Undecided; depends on class 2 items c and l. Nothing in class 1 changes the plan's gate.

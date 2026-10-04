@@ -1,0 +1,76 @@
+diff --git a/tests/tools/test_main_integrity_report.py b/tests/tools/test_main_integrity_report.py
+index 8ca1bc8fb..959aa4ccd 100644
+--- a/tests/tools/test_main_integrity_report.py
++++ b/tests/tools/test_main_integrity_report.py
+@@ -164,3 +164,27 @@ def test_a_bare_directory_citation_is_skipped_but_a_missing_file_is_not(tmp_path
+     _git(repo, "commit", "-q", "-m", "dir cite")
+     findings = _report(repo)["findings"]["cited_evidence"]
+     assert len(findings) == 1 and "evidence.json" in findings[0] and "FIRST-WAVE" not in findings[0]
++
++
++def test_an_epic_tier_ticket_needs_a_row_of_any_status_not_a_done_row(tmp_path):
++    repo = _clean_repo(tmp_path)
++    epic = "# t\n\n## Status\nEPIC_SCOPED\n\n## Tier\nepic\n\n## Type\nfeature\n"
++    _w(repo, "tickets/done/folder/TCK-20260924-AN-EPIC.md", epic)
++    _w(repo, "tickets/working_log.csv", CSV_HEADER + "2026-09-20T00:00:00Z,TCK-20260920-GOOD,t,DONE,s,\n"
++       "2026-09-24T00:00:00Z,TCK-20260924-AN-EPIC,t,EPIC_SCOPED,s,\n")
++    _git(repo, "add", "-A")
++    _git(repo, "commit", "-q", "-m", "epic with EPIC_SCOPED row")
++    assert _report(repo)["findings"]["working_log"] == []
++    # control 1: an epic with no row at all IS reported, under its own wording
++    _w(repo, "tickets/working_log.csv", CSV_HEADER + "2026-09-20T00:00:00Z,TCK-20260920-GOOD,t,DONE,s,\n")
++    _git(repo, "add", "-A")
++    _git(repo, "commit", "-q", "-m", "epic with no row")
++    assert any("TCK-20260924-AN-EPIC: epic has no working-log row" in x for x in _report(repo)["findings"]["working_log"])
++    # control 2: the exemption is tier-scoped; a non-epic ticket with only an EPIC_SCOPED row is still reported
++    _w(repo, "tickets/done/TCK-20260925-NOT-AN-EPIC.md", "# t\n\n## Tier\nstandard\n")
++    _w(repo, "tickets/working_log.csv", CSV_HEADER + "2026-09-20T00:00:00Z,TCK-20260920-GOOD,t,DONE,s,\n"
++       "2026-09-24T00:00:00Z,TCK-20260924-AN-EPIC,t,EPIC_SCOPED,s,\n"
++       "2026-09-25T00:00:00Z,TCK-20260925-NOT-AN-EPIC,t,EPIC_SCOPED,s,\n")
++    _git(repo, "add", "-A")
++    _git(repo, "commit", "-q", "-m", "non-epic with EPIC_SCOPED row")
++    assert [x for x in _report(repo)["findings"]["working_log"] if "NOT-AN-EPIC: no DONE" in x]
+diff --git a/tools/agent-monitoring/main_integrity_report.py b/tools/agent-monitoring/main_integrity_report.py
+index 17b73ebe7..9f696959c 100644
+--- a/tools/agent-monitoring/main_integrity_report.py
++++ b/tools/agent-monitoring/main_integrity_report.py
+@@ -11,7 +11,7 @@ as of that commit, not final.
+ 
+ Checks (each finding names its ticket or path):
+   working_log      every closed ticket (tickets/done/**/TCK-*.md) has at least one DONE working-log row
+-                   and no identical duplicate rows, over `tickets/working_log.csv` plus any pending
++                   (epic-tier: at least one row of any status, since an epic closes as EPIC_SCOPED) and no identical duplicate rows, over `tickets/working_log.csv` plus any pending
+                    `*.working_log.jsonl` shard. BLOCKED progress rows and later DONE rows with a different
+                    title (post-merge fix rounds) are legitimate. Narrower than `done_checker_static`'s
+                    per-ticket rule on purpose; a ticket with no row at all (some epics) is reported
+@@ -46,6 +46,7 @@ REPO_ROOT = _HERE.parent.parent
+ _TICKET_RE = re.compile(r"^tickets/done/(?:[^/]+/)?(TCK-(\d{8})-[A-Z0-9-]+)\.md$")
+ _SHARD_RE = re.compile(r"^agent-monitoring/data/(\d{4}-W\d{2})/[^/]+\.(runs|events|tools|working_log)\.jsonl$")
+ _CITE_RE = re.compile(r"`(stored_artifacts/[^`\s]+)`")
++_EPIC_TIER_RE = re.compile(r"^## Tier\s*\n\s*epic\b", re.M)
+ _LINE_SUFFIX_RE = re.compile(r":\d+(?:-\d+)?$")  # `investigation.md:199` cites a line, not a file named that
+ 
+ 
+@@ -78,7 +79,8 @@ def _closed_tickets(reader: RefReader, since_date: str | None):
+ 
+ 
+ def check_working_log(reader: RefReader, since_date: str | None) -> list[str]:
+-    """A closed ticket needs at least one DONE row, and no two rows may be identical (ticket, title,
++    """A closed ticket needs at least one DONE row (an epic-tier ticket, which closes as EPIC_SCOPED, needs
++    at least one row of any status), and no two rows may be identical (ticket, title,
+     status, summary: a double write). Progress rows (BLOCKED) and later DONE rows with a different title
+     (post-merge fix rounds logged under the same ticket) are legitimate. Narrower than
+     `done_checker_static`'s per-ticket rule on purpose; a ticket with no row at all (some epics) is
+@@ -102,7 +104,11 @@ def check_working_log(reader: RefReader, since_date: str | None) -> list[str]:
+     findings = []
+     for tid, path in _closed_tickets(reader, since_date):
+         rows = rows_by_ticket.get(tid, [])
+-        if not any(status.upper() == "DONE" for _, status, _ in rows):
++        if _EPIC_TIER_RE.search(reader.show(path)):
++            # an epic closes as EPIC_SCOPED, never DONE (it tracks children), so any row satisfies it
++            if not rows:
++                findings.append(f"{tid}: epic has no working-log row ({path})")
++        elif not any(status.upper() == "DONE" for _, status, _ in rows):
+             findings.append(f"{tid}: no DONE working-log row ({len(rows)} row(s) of any status) ({path})")
+         dupes = [r for r, n in Counter(rows).items() if n > 1]
+         if dupes:

@@ -1,0 +1,20 @@
+---
+name: project-clear-token-breakeven
+description: Measured 2026-09-30 — /clear saves tokens only once main-thread context passes ~150k; the post-/clear floor is ~61-66k
+metadata:
+  node_type: memory
+  type: project
+  originSessionId: b7db5241-49dd-4df7-981a-c6157b431877
+  modified: 2026-09-30T10:02:16.388Z
+---
+
+Measured by agent-working-implementer on 2026-09-30 (74 sessions, 30 days, weights input 1 / cache write 1.25 / cache read 0.1 / output 5):
+- After /clear the context restarts at ~61k and reaches ~66k by turn 5 (system prompt, CLAUDE.md, MEMORY.md, handover). The first 5 turns cost ~89K weighted.
+- Median context: t50 160k, t100 240k. Median long session reaches 200k at turn 64.
+- A reset pays for itself after 24 turns at 100k context, 6 turns at 200k, and 2.5 turns at 400k. Median saving on long sessions is ~21%.
+- The sessions that already cleared were short (~71k), so those resets saved little.
+- Subagents are 18% of weighted cost, and a /clear in the parent does not reduce that.
+
+**Why:** the user asked whether /clear after every batch actually saves tokens. It does only on long sessions. [[reset-boundaries-in-every-process]] [[token-efficiency-over-speed]]
+
+**How to apply:** recommend /clear at a batch boundary when context is over ~150k (about 60+ turns). For short batches, clearing is roughly cost-neutral, so do it only for hygiene or context-quality reasons. This measures cost only, not quality loss.

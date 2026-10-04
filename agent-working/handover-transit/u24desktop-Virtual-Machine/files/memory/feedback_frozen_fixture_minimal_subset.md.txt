@@ -1,0 +1,24 @@
+---
+name: feedback-frozen-fixture-minimal-subset
+description: "When freezing real repo data (tickets, docs) into a test fixture, snapshot only the minimal subset the assertion needs, never the whole corpus"
+metadata:
+  node_type: memory
+  type: feedback
+  originSessionId: 9d60c0ad-3d0c-42bb-9997-4281a804a043
+  modified: 2026-09-29T08:43:45.184Z
+---
+
+When a test must be pinned to real data (e.g. to stop it breaking as the live backlog changes),
+freeze the **minimal subset** the assertion depends on (the targets plus a small, realistic
+background set), not a full copy of the corpus.
+
+**Why:** On 2026-09-29 I told the implementer that "copying the whole current todos/+inprogress/ set
+is fine" for the open-ticket overlap scanner's real-corpus test. It produced 82 real-looking
+TCK-*.md copies under tests/fixtures/. The user asked why, and had it shrunk to 21 before merging
+#255. Full copies pollute repo-wide greps for a ticket ID and duplicate content, against
+[[feedback-define-information-once-never-repeat]].
+
+**How to apply:** When requesting a frozen fixture, name the specific files the assertion needs
+plus a bounded background count (~10–15). Require that the key assertion still passes on the
+subset, and to STOP and report rather than tune if it doesn't. Document the source SHA and why the
+subset is small in a README.

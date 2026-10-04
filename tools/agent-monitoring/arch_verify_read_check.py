@@ -7,7 +7,11 @@ This reads the tools monitoring shards (`agent-working/agent-monitoring/data/**/
 each test file the branch changed, whether a `Read` row attributed to the Architecture-Verify
 phase of this ticket's run names it.
 
-Nothing is gated, written or changed: no schema field, no prompt change, always exit 0 unless
+It also compares the reviewer's own `tests_read` (TCK-20261004-ARCH-VERIFY-TESTS-READ-EVIDENCE) with the
+changed tests, and reports an empty `test_quality_findings` as UNVERIFIED when a changed test is neither declared
+nor seen. Changed tests include uncommitted and untracked files, not only base...HEAD.
+
+Nothing is gated or written: no verdict or workflow effect, always exit 0 unless
 the arguments are unusable. A reader must keep in mind the limits below, which is why the output
 has FOUR classes and never says "not read" when it cannot know.
 
@@ -64,13 +68,31 @@ PRODUCTION_AGENT = "architecture-reviewer"
 CUT = 120  # post_tool_hook._input_summary's cap for a Read's file_path
 
 
+def changed_test_sources(base_ref: str, run=subprocess.run) -> dict[str, list[str]]:
+    """{test path: sources} for every test file the work changes, wherever it lives: `untracked`, `working-tree`
+    (modified or staged but uncommitted) and `committed` (base...HEAD). A hand-orchestrated run reviews before it
+    commits, so a committed-only diff reports "no test files" for a test that exists only in the working tree.
+    Deleted files are excluded (--diff-filter=d): a deleted file cannot be read, so it would be a false NOT-READ; a
+    renamed file is listed under its new path. The committed diff is run last."""
+    queries = [
+        ("untracked", ["git", "ls-files", "--others", "--exclude-standard"]),
+        ("working-tree", ["git", "diff", "--name-only", "--diff-filter=d", "HEAD"]),
+        ("committed", ["git", "diff", "--name-only", "--diff-filter=d", f"{base_ref}...HEAD"]),
+    ]
+    sources: dict[str, list[str]] = {}
+    for label, cmd in queries:
+        out = run(cmd, capture_output=True, text=True)
+        if out.returncode != 0:
+            raise RuntimeError(f"{' '.join(cmd[:3])} failed: {out.stderr.strip()}")
+        for ln in out.stdout.splitlines():
+            ln = ln.strip()
+            if ln.startswith("tests/"):
+                sources.setdefault(ln, []).append(label)
+    return {path: sources[path] for path in sorted(sources)}
+
+
 def changed_test_files(base_ref: str, run=subprocess.run) -> list[str]:
-    """Test files the branch added or modified. Deleted files are excluded (--diff-filter=d): a deleted file cannot be
-    read, so it would be a false NOT-READ; a renamed file is listed under its new path."""
-    out = run(["git", "diff", "--name-only", "--diff-filter=d", f"{base_ref}...HEAD"], capture_output=True, text=True)
-    if out.returncode != 0:
-        raise RuntimeError(f"git diff failed: {out.stderr.strip()}")
-    return sorted({ln.strip() for ln in out.stdout.splitlines() if ln.strip().startswith("tests/")})
+    return list(changed_test_sources(base_ref, run=run))
 
 
 def _rows(data_root: Path, kind: str):
@@ -110,7 +132,16 @@ def phase_window(data_root: Path, ticket_id: str):
     return None, None
 
 
-def check(ticket_id: str, tests: list[str], data_root: Path) -> dict:
+def verify_event(data_root: Path, ticket_id: str) -> dict:
+    """The last production Architecture-Verify events row of this run ({} when none)."""
+    found: dict = {}
+    for e in _rows(data_root, "events"):
+        if e.get("run_id") == ticket_id and e.get("phase") == PHASE and e.get("agent") == PRODUCTION_AGENT:
+            found = e
+    return found
+
+
+def check(ticket_id: str, tests: list[str], data_root: Path, sources: dict | None = None) -> dict:
     attributed = []
     unattributed_reads = []
     start, end = phase_window(data_root, ticket_id)
@@ -131,8 +162,22 @@ def check(ticket_id: str, tests: list[str], data_root: Path) -> dict:
             files[t] = "POSSIBLY-READ"
         else:
             files[t] = "NOT-READ"
+    event = verify_event(data_root, ticket_id)
+    declared = event.get("tests_read")
+    declared = declared if isinstance(declared, list) else None
+    findings = event.get("test_quality_findings")
+    # Advisory only: an empty findings list is a claim about files read. It is "unverified" when a changed test is
+    # neither declared in `tests_read` nor seen as an exact Read row (POSSIBLY-READ cannot be disproved).
+    missing = [t for t in tests if t not in (declared or []) and files[t] in ("NOT-READ", "UNATTRIBUTED")]
+    claim = None
+    if isinstance(findings, list) and not findings and tests:
+        claim = "unverified" if missing else "read-backed"
     return {
         "ticket_id": ticket_id,
+        "sources": sources or {},
+        "tests_read_declared": declared,
+        "unread_changed_tests": missing,
+        "empty_findings_claim": claim,
         "phase_window": [start, end],
         "attributed_read_rows": len(attributed),
         "attributed_rows_cut_at_120": sum(1 for s in attributed if len(s) >= CUT),
@@ -151,7 +196,16 @@ def render(result: dict) -> str:
             f"{result['phase_window']} and are the only candidates. 'Not read' cannot be said."
         )
     for path, cls in result["files"].items():
-        lines.append(f"  {cls:<14} {path}")
+        src = result.get("sources", {}).get(path)
+        lines.append(f"  {cls:<14} {path}" + (f"  [{', '.join(src)}]" if src else ""))
+    if result.get("tests_read_declared") is not None:
+        lines.append(f"  reviewer-declared tests_read: {len(result['tests_read_declared'])} file(s)")
+    if result.get("empty_findings_claim") == "unverified":
+        lines.append(
+            "  UNVERIFIED: test_quality_findings is [] but these changed tests are neither in tests_read nor an exact "
+            f"Read row: {', '.join(result['unread_changed_tests'])}. An empty list is a claim about files read; "
+            "treat it as unverified, not clean (advisory, no verdict effect)."
+        )
     if not result["files"]:
         lines.append("  (the branch changes no file under tests/)")
     return "\n".join(lines)
@@ -165,11 +219,11 @@ def main(argv=None) -> int:
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     try:
-        tests = changed_test_files(args.base_ref)
+        sources = changed_test_sources(args.base_ref)
     except RuntimeError as e:
         print(f"ERROR: {e}", file=sys.stderr)
         return 1
-    result = check(args.ticket_id, tests, Path(args.data_root))
+    result = check(args.ticket_id, list(sources), Path(args.data_root), sources)
     print(json.dumps(result) if args.json else render(result))
     return 0
 
