@@ -734,6 +734,41 @@ None yet — created when this ticket is picked up.
   still ride the default. This is the trap the 2026-09-12 block flagged, still live
 - `data/content/world_compositions/` (7 top-level + `generated/`), `data/worlds/`
 
+## Known residual after Architecture-Verify, 2026-10-04 (disclosed, not a violation)
+
+**One write-ordering window survives V3's atomicity fix, and it is narrower than V3's but the same
+shape.** Architecture-Verify confirmed the implemented ordering is correct — the `output_path.exists()`
+refusal fires first, `resolve_composition(...)` runs to completion, and only then does `world.yaml` land,
+with every `mkdir`/`write_text`/`json.dump` in `src/worldassembly/resolve_io.py` confined to
+`write_resolved_artifacts` (`:89-114`), so a **resolve** failure leaves the filesystem untouched and the
+world stays regenerable. That is exactly what V3 asked for.
+
+**The residual:** if **`write_resolved_artifacts` itself** fails (disk full, permissions) *after*
+`world.yaml` has landed, the result is a `world.yaml` with no `resolved/` sibling — which
+`repository.py`'s redirect then refuses to load, and which the `exists()` guard then refuses to
+regenerate. Same un-regenerable end state V3 identified, reached one step later.
+
+**Not a durable-state-rule violation and not a `NEEDS_CHANGES` trigger** (Architecture-Verify's
+judgement): `world.yaml` is a typed definition at a stable authoritative location with a defined
+lifecycle, and the code comment is honest that atomicity is absent rather than claiming it. Recorded here
+so it is a known, disclosed residual rather than a surprise.
+
+**If it is closed later, the fix named is:** write `world.yaml` **last**, or write into a temp directory
+renamed on success. Either removes the window entirely. **Deliberately not done in this ticket** — it
+changes write ordering in a durable path and so wants its own test, which is more than a reorder, and
+Architecture-Verify had already approved the diff. The `exists()` check is also TOCTOU, which is
+immaterial for a single-author generator with no concurrent-invocation contract.
+
+**Separately, a note about the checker rather than the code:**
+`architecture_reviewer_static.py`'s `durable_state_mutation` condition **fails on any file that mutates an
+intentionally-mutable owned container**. It fired here on `src/domains/campaigns/orchestrator.py` for
+three pre-existing assignments, because it matches attribute-chain shape (`.grief_urgencies`,
+`.nemesis_relations`) and cannot resolve whether the target is frozen. `CampaignState`
+(`src/domains/campaigns/state.py:364`) is a bare `@dataclass` whose docstring says verbatim *"NOT frozen —
+mutation by CampaignOrchestrator is intentional. Sub-records are frozen"* — the project's typed-record
+pattern working as designed. **Expect this FAIL on any future diff touching that file; it is a disclosed
+checker limitation, not debt.**
+
 ## Assumptions / Open Questions
 - ~~Whether every `data/content/world_compositions/*.yaml` file has a `data/worlds/<id>/`
   counterpart, or some are genuinely orphaned/never-migrated, is not yet known — real inventory
