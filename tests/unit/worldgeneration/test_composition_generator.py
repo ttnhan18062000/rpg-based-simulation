@@ -321,3 +321,51 @@ class TestBudgetLimit:
         assert len(spec.module_refs) <= ProceduralCompositionGenerator.BUDGET + 5, (
             "Module count should be near budget (deps can add a few extra)"
         )
+
+
+class TestRegionIdNamespacing:
+    """Two selected modules declaring one region id must be disambiguated by namespace."""
+
+    @staticmethod
+    def _regional(module_id: str, module_type: str = "settlement"):
+        from src.worldbuilding.recipe import RegionRecipeSpec
+
+        mod = _make_module(module_id, module_type)
+        return mod.model_copy(update={
+            "regions": [RegionRecipeSpec(id="hometown", type="town", grid_bounds=(0, 0, 5, 5))]
+        })
+
+    def _generate(self, modules, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        path = ProceduralCompositionGenerator().generate(
+            _default_intent(), _make_repo(modules)
+        )
+        raw = yaml.safe_load(path.read_text())
+        return {r["module_id"]: r.get("namespace") for r in raw["module_refs"]}
+
+    def test_colliding_region_id_gets_namespace(self, tmp_path, monkeypatch):
+        refs = self._generate(
+            [self._regional("aaa_core"), self._regional("zzz_hub"), _make_module("terrain_basic", "terrain")],
+            tmp_path, monkeypatch,
+        )
+        assert refs  # non-vacuous
+        assert refs["aaa_core"] is None
+        assert refs["zzz_hub"] == "zzz_hub"
+        assert refs["terrain_basic"] is None
+
+    def test_bare_id_owner_is_independent_of_selection_order(self, tmp_path, monkeypatch):
+        """Condition 1: the same module keeps the bare id however the modules are listed/ranked."""
+        a, z = self._regional("aaa_core"), self._regional("zzz_hub")
+        t = _make_module("terrain_basic", "terrain")
+        forward = self._generate([a, z, t], tmp_path, monkeypatch)
+        reverse = self._generate([t, z, a], tmp_path, monkeypatch)
+        assert forward == reverse
+        assert forward["aaa_core"] is None
+
+    def test_no_collision_leaves_namespace_unset(self, tmp_path, monkeypatch):
+        refs = self._generate(
+            [_make_module("terrain_basic", "terrain"), _make_module("village_core", "settlement")],
+            tmp_path, monkeypatch,
+        )
+        assert refs
+        assert all(ns is None for ns in refs.values())

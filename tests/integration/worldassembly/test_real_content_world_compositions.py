@@ -472,3 +472,61 @@ def test_dungeon_crawl_composition(repos):
     assert state is not None
     assert report["world_id"] == "dungeon_crawl"
     assert report["quest_count"] >= 2
+
+
+def test_generated_composition_assembles_with_populations_in_their_own_region(
+    repos, tmp_path, monkeypatch
+):
+    """
+    A generated composition must ASSEMBLE, not merely validate, and each module's
+    population must land in its own module's region (LOC-01), not the other
+    module's same-named `hometown`.
+    """
+    from src.worldgeneration.generator import ProceduralCompositionGenerator
+    from src.worldgeneration.schema import GenerationIntentSpec
+
+    cat, mod = repos
+    intent = GenerationIntentSpec(
+        generation_id="generated_frontier_3_42",
+        seed=42,
+        settlement_style="frontier",
+        danger_level=3.0,
+        terrain_style="temperate",
+        resource_density=1.0,
+        population_scale=1.0,
+    )
+    # The generator writes relative to cwd; assembly needs the repo root as cwd.
+    with monkeypatch.context() as scoped:
+        scoped.chdir(tmp_path)
+        output_path = ProceduralCompositionGenerator().generate(intent, mod)
+        composition = WorldCompositionSpec.model_validate(
+            yaml.safe_load(output_path.read_text())
+        )
+
+    selected = {ref.module_id: ref for ref in composition.module_refs}
+    assert {"frontier_village_core", "trading_company_hub"} <= set(selected), (
+        "premise: the intent selects both modules that declare 'hometown'"
+    )
+
+    bundle = WorldAssemblyResolver(cat, mod).assemble(composition)
+    world = bundle.world_spec
+    region_ids = {r.id for r in world.regions}
+    bounds_by_region = {r.id: tuple(r.bounds) for r in world.regions}
+    origins = bundle.provenance_manifest.entity_origins
+
+    checked = 0
+    for pop in world.entities:
+        source = origins[pop.id]
+        module_spec = mod.get_module(source)
+        own_bounds = {
+            tuple(r.grid_bounds) for r in (module_spec.regions or [])
+        }
+        if not own_bounds:
+            continue
+        assert pop.spawn_region in region_ids
+        assert bounds_by_region[pop.spawn_region] in own_bounds, (
+            f"population {pop.id} from {source} spawns in {pop.spawn_region},"
+            " which is another module's region"
+        )
+        checked += 1
+    assert checked > 0, "no population was checked; the assertion would be vacuous"

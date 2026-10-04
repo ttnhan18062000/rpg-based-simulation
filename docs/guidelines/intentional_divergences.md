@@ -2447,6 +2447,29 @@ The following legacy behaviors have been intentionally omitted or retired.
   regression, updated for the two-party/no-gold shape).
 - **Status**: ACTIVE
 
+### DEV-008 — Generated Compositions Namespace Colliding Region Ids (TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION)
+
+- **Situation**: `ProceduralCompositionGenerator` emitted every `ModuleRefSpec` with
+  `namespace=None`. When two selected modules declared the same region id (`hometown` in
+  `frontier_village_core` and `trading_company_hub`), the resolver failed fast at assembly
+  (`Duplicate region ID collision`), so the generated composition could not be assembled. Five
+  region ids collide across the 22 modules today (`hometown` three ways, `haunted_battlefield`,
+  `near_forest`, `wolf_den`, `bandit_road`), so this is a class, not one pair.
+- **Decision** (rule owner `world-rule-catalog-design`, 2026-10-04, option 1): the generator namespaces
+  the colliding module instead of changing the selected module set. Modules are walked in
+  `module_id` order; one declaring a region id already claimed by an earlier module gets
+  `namespace=<its module_id>`. Which module keeps the bare id depends on the module set only, never
+  on rank. The resolver already rewrites region, place, `spawn_region` and recipe ids from the
+  namespace, so each module's population lands in its own region (`LOC-01`).
+- **Visible change**: region ids in generated worlds change (`trading_company_hub_hometown`, not
+  `hometown`). No generated world had previously run, so no live region identity is renamed.
+  Hand-authored worlds are unchanged; they use short namespaces such as `trading`, which the
+  generator does not reproduce.
+- **Rationale**: **Bug Fix**. Two distinct places sharing one identifier violated `ID-01`/`LOC-01`.
+- **Verification**: `tests/integration/worldassembly/test_real_content_world_compositions.py::test_generated_composition_assembles_with_populations_in_their_own_region`,
+  `tests/unit/worldgeneration/test_composition_generator.py::TestRegionIdNamespacing`.
+- **Status**: ACTIVE
+
 ---
 *Last updated: 2026-09-02 (DEV-007 addendum, TCK-20260902-CLASSHALL-DEAD-CODE — deferred
 `ClassHallAction.train()` cleanup landed).*

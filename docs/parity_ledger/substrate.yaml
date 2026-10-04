@@ -4109,12 +4109,17 @@
     raised if two selected modules share a provides string. Output written to data/content/world_compositions/generated/{world_id}.yaml.
     world_id = f"generated_{settlement_style}_{int(danger_level)}_{seed}". Sort is
     deterministic: (-score, module_id) for tie-breaking.
+    (6) region ids declared by more than one selected module are disambiguated by
+    namespace: walking selected modules in module_id order, a module declaring a
+    region id already claimed by an earlier module gets namespace=<its module_id>
+    on its ModuleRefSpec, so the bare id's owner depends only on the module set, never
+    on rank. Residual collisions after namespacing raise GenerationCompositionError.
 
     '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/worldgeneration/generator.py (ProceduralCompositionGenerator,
+  v2_evidence: 'src/worldgeneration/generator.py (ProceduralCompositionGenerator._assign_region_namespaces,
     GenerationCompositionError) + src/worldgeneration/scorer.py (ModuleScorer.score)
     + src/worldassembly/schema.py (WorldCompositionSpec, ModuleRefSpec)
 

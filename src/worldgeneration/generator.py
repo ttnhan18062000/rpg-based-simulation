@@ -385,6 +385,42 @@ class ProceduralCompositionGenerator:
 
     BUDGET: int = 6
 
+    @staticmethod
+    def _assign_region_namespaces(
+        selected_ids: list[str],
+        mod_by_id: dict,
+    ) -> dict[str, str]:
+        """
+        Disambiguate region ids declared by more than one selected module.
+
+        Which module keeps the bare id is a function of the module SET only:
+        modules are walked in `module_id` order, and a module that declares a
+        region id already claimed by an earlier module is namespaced with its own
+        `module_id`. Selection rank and order never decide, so a scorer change
+        cannot swap which module's place owns a bare id.
+
+        Raises GenerationCompositionError if ids still collide after namespacing
+        (validation only — never a reason to change the selected module set).
+        """
+        claimed: set[str] = set()
+        namespaces: dict[str, str] = {}
+        for mid in sorted(selected_ids):
+            mod = mod_by_id.get(mid)
+            if mod is None:
+                continue
+            region_ids = [r.id for r in (mod.regions or [])]
+            if any(rid in claimed for rid in region_ids):
+                namespaces[mid] = mid
+                region_ids = [f"{mid}_{rid}" for rid in region_ids]
+            for rid in region_ids:
+                if rid in claimed:
+                    raise GenerationCompositionError(
+                        f"Region id '{rid}' from module '{mid}' is still declared"
+                        " by another selected module after namespacing"
+                    )
+                claimed.add(rid)
+        return namespaces
+
     def generate(
         self,
         intent: GenerationIntentSpec,
@@ -479,6 +515,7 @@ class ProceduralCompositionGenerator:
                     )
                 feature_owners[feature] = mid
 
+        namespaces = self._assign_region_namespaces(selected_ids, mod_by_id)
 
         # Build WorldCompositionSpec
         world_id = (
@@ -522,7 +559,13 @@ class ProceduralCompositionGenerator:
                             sampled_params[param_spec.name] = param_spec.default
                         # required params with no default and no bounds: left absent
             module_refs.append(
-                ModuleRefSpec(module_id=mid, enabled=True, order=i, parameters=sampled_params)
+                ModuleRefSpec(
+                    module_id=mid,
+                    enabled=True,
+                    order=i,
+                    namespace=namespaces.get(mid),
+                    parameters=sampled_params,
+                )
             )
         composition = WorldCompositionSpec(
             schema_version="worldcomposition.v1",
