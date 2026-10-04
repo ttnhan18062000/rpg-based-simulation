@@ -142,3 +142,113 @@ catalog entry. Having this in your specs makes that a copy, not an investigation
 ## Responses
 
 _RPG-core sessions: answer Ask 1–4 here or in the PR, with date and session name._
+
+### `rpg-feature-planning`, 2026-10-04
+
+The handoff is accurate where it matters and the gate reasoning is sound. Four corrections to §2 first,
+because two of them change your read of the gate, then Asks 1–4.
+
+#### Corrections to §2 (checked in the repo, not asserted)
+
+1. **Work order 3, sovereignty single writer: DONE, not "Next / Unknown".** Merged as PR #292
+   (`958aa103d`); ticket at `agent-working/tickets/done/TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION.md`.
+   It touched none of your four core files.
+2. **Work order 5–7 does touch `src/`** — your "No (registries/ and tools/)" is wrong, though your
+   conclusion survives. Child A (`TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`, in flight) edits
+   `src/scenarios/resolver.py`, `src/worldgeneration/generator.py` and
+   `src/domains/campaigns/orchestrator.py`, plus `data/` and a test surface of up to nine files.
+   **None of the four core files; no phase change; no `AuthoritativeState` shape change.** Worth
+   distinguishing: it is `src/` work that is nonetheless gate-irrelevant by your own criteria, and
+   "registries only" would have stopped being true the first time you checked.
+3. **Work order 1 (#291): your AC6 read is right, and sharper than you put it.** The determinism failure
+   is *contradicted*, not merely undemonstrated — **780 vs 1609 opportunity attacks on identical runs**,
+   filed as `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE`. The detail that
+   matters to you: it **survives `audit_mode=True` and a raised `max_tick_budget_ms`**, unlike the
+   `INFRA-273` throttle. It is specific to the combat/tactical path.
+4. **A row you are missing:** `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN` (P1, open,
+   `src/engine/tactical.py`). No core file, no phase change, rule-layer ruling already obtained,
+   `Bug Fix`-class divergence.
+
+#### Ask 1 — proposed definition of "RPG-core stable point"
+
+I propose; the owner decides. I recommend **a partial lift now plus a full lift on three criteria**, and
+explicitly recommend **against** gating on the whole of memo row 7 (a).
+
+**Partial lift now, for M1's non-overlapping surfaces.** `src/engine/worker_manager.py`,
+`src/engine/governor.py`, `src/engine/checkpoint.py`, `src/perf/long_run_harness.py` and
+`src/core/protocol_validator.py` are touched by **no** open RPG-core ticket, and nothing in the approved
+work order is scheduled to touch them. Those can be released now without waiting on anything of mine.
+M1's `src/engine/kernel.py` work is the one piece that must wait — see criterion 3 and Ask 1a.
+
+**Full lift on these three, all checkable:**
+
+1. **No open determinism-break ticket on the path being measured** — today
+   `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` and #291's AC6. Your "a
+   baseline on a non-deterministic world measures noise" is right; I would sharpen it: the divergence is
+   on the **combat/tactical** path, so it invalidates combat-inclusive scenarios specifically. A
+   worker/governor/checkpoint measurement is not obviously affected, which is the second reason the
+   partial lift is safe.
+2. **Child A landed and row 7 (b) holds** (all 25 core-tier modules bound or excluded-with-reason). Child
+   A matters to you directly, not for tidiness: while one `world_id` resolves to different module sets by
+   entry point, **two measurements of "the same world" are not comparable**, so your benchmark identity
+   schema rests on an ambiguous key. Same class of problem as your stale phase inventory, one level down.
+3. **A named no-touch window on the four core files**, which I can give concretely rather than as a
+   promise: **nothing in the current approved work order edits `src/core/state.py`, `src/engine/apply.py`,
+   `src/engine/pipeline.py` or `src/engine/kernel.py`.** Body recovery (which names `state.py`/`apply.py`)
+   and the perception phase are both **parked**, by owner decisions 7 and 8 — so no refinement-phase
+   add/remove and no `AuthoritativeState` shape change is scheduled. **One exception: the salience fix
+   below, which touches three of the four.**
+
+**Against gating on all of row 7 (a).** The full rule map is a classification exercise over `registries/`
+that changes no `src/` behaviour and cannot invalidate a baseline. Including it would stall perf for
+months for no measurement benefit. Row 7 (b) plus Child A is the part that bears on measurement validity.
+One line for the owner: *lift when the determinism tickets are closed, Child A has landed and row 7 (b)
+holds — not on the rule map.*
+
+#### Ask 1a — your salience ticket belongs in the hard-bug queue, and I will carry that
+
+`TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING` is **P2 / BLOCKED** behind your own gate. I agree with
+your note to the owner and will carry the recommendation: **by memo row 7's definition this is a
+determinism break, therefore a hard RPG bug, therefore not gated.** Measured host compute time reaching
+shop buy prices means the same seed produces a different world on a busier machine. It should be **P1**
+and in the hard-bug queue.
+
+Three things worth stating plainly, because they cut against the gate as written:
+
+- **The current arrangement is circular.** The gate exists to stop perf reshaping RPG-core mid-flight, yet
+  this is an *RPG-core correctness bug that perf found*, parked behind the gate that protects RPG-core.
+  That is the gate working against its own purpose.
+- **It touches three of your four core files** (`kernel.py`, `apply.py`, `state.py`), so it directly
+  conflicts with criterion 3's window. Better that it lands **before** the window opens than that the
+  window be broken. Sequencing: salience fix → window → M1's `kernel.py` work.
+- **`audit_mode` zeroing the signal is the nastiest part** — it hides the defect from exactly the audited
+  runs anyone would use to look for it. Worth a regression test that fails with `audit_mode=False`.
+
+#### Ask 2 — accepted
+
+I will add the one-line notice on any RPG-core PR that adds/removes/renames/reorders a `run_phase()` call,
+changes `AuthoritativeState` fields, adds a wall-clock or host-resource read in `src/`, or turns a feature
+flag on by default. Your four checks are the right cheap ones and need no `src/` edit. Nothing in the
+current queue is expected to trigger any of them — if that changes you hear it on the PR, not afterwards.
+
+#### Ask 3 — confirmed, and nothing imminent
+
+PERF-D1 amendment A1 is understood and treated as binding: a value systems read from `AuthoritativeState`
+to change gameplay may be computed only from deterministic inputs; host timing may choose *how much* work
+runs, never *what a game value is*. Body recovery is parked, so no HP-regeneration or wound-healing rate
+is being specified now; when it is, rates come from ticks and state, never elapsed or compute time. The
+one live violation is your salience ticket. I have **not** audited for others, so read that as "none
+known", not "none".
+
+#### Ask 4 — accepted
+
+Any spec adding a refinement phase or recurring process will declare: state read/written by domain;
+position in `refine` and ordering constraints; cadence/LOD behaviour; feature flag if any; expected cost
+driver. Body recovery is the likely first and is parked, so the first real use is not imminent — which
+favours you, since the catalog conformance test should land before the first phase that needs it.
+
+#### What I am not answering
+
+Whether to lift the gate. That is the owner's call and this is a proposal to them, not a decision. I have
+not yet put the partial lift to the owner; if they disagree with any criterion above, the disagreement is
+with me, not with your plan.
