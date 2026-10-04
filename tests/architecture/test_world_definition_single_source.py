@@ -9,6 +9,7 @@ on-disk artifacts. They are repository-layout laws, enforced here.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import yaml
@@ -187,3 +188,44 @@ def test_bible_06_does_not_present_the_invariant_as_a_compile_gate():
             f"The one-definition invariant's block must not assign a severity ({severity_word!r}); "
             "nothing aborts compilation on it."
         )
+
+
+def test_catalog_world_compositions_directory_is_absent():
+    assert not Path("data/content/world_compositions").exists(), (
+        "The catalog composition directory is retired; a world_id is defined only under "
+        "data/worlds/<world_id>/."
+    )
+
+
+def test_no_test_contradicts_the_authoritative_danger_scale():
+    """No test may assert a `danger_scale` that contradicts the authoritative definition.
+
+    Compared against what `data/worlds/dungeon_crawl/world.yaml` actually holds rather than
+    against a hard-coded number, so this stays correct whichever order this ticket and
+    TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION land in. A
+    "no == 2 anywhere" guard would become wrong the moment that ticket sets the authoritative
+    value to 2.
+    """
+    raw = yaml.safe_load(
+        (WORLDS_ROOT / "dungeon_crawl" / "world.yaml").read_text(encoding="utf-8")
+    )
+    bandit_ref = next(
+        ref for ref in raw["module_refs"] if ref["module_id"] == "scalable_bandit_camp"
+    )
+    authoritative = (bandit_ref.get("parameters") or {}).get("danger_scale")
+    assert authoritative is not None, (
+        "scalable_bandit_camp declares no danger_scale in the authoritative definition; "
+        "the guard would be vacuous."
+    )
+
+    pattern = re.compile(r"danger_scale[\"')\]]*\s*==\s*(\d+)")
+    offenders = []
+    for path in sorted(Path("tests").rglob("*.py")):
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            for match in pattern.finditer(line):
+                if int(match.group(1)) != authoritative:
+                    offenders.append(f"{path}:{lineno} asserts {match.group(1)}")
+    assert not offenders, (
+        f"These tests assert a danger_scale that contradicts the authoritative value "
+        f"{authoritative}:\n  " + "\n  ".join(offenders)
+    )
