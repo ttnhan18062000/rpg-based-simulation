@@ -180,8 +180,9 @@ def test_a_missing_binary_is_a_tool_unavailable_error_naming_ast_grep_never_sg(t
     assert asked == ["ast-grep"]
 
 
-def test_ast_grep_is_in_the_full_scan_but_not_the_snapshot_set():
-    assert "ast_grep" in scan.ALL_TOOLS and "ast_grep" not in scan.OFFLINE_TOOLS
+def test_ast_grep_is_in_the_full_scan_and_the_snapshot_set():
+    """It joined the snapshot set in TCK-20261004-AST-GREP-SARIF-AND-SNAPSHOT (a local binary, no network)."""
+    assert "ast_grep" in scan.ALL_TOOLS and "ast_grep" in scan.OFFLINE_TOOLS
 
 
 def test_the_staged_hook_ignores_ast_grep_rows_and_does_not_need_the_binary(tmp_path, monkeypatch, capsys):
@@ -196,6 +197,6 @@ def test_the_staged_hook_ignores_ast_grep_rows_and_does_not_need_the_binary(tmp_
     def boom(*_a, **_k):
         raise AssertionError("the staged hook must not look for ast-grep")
 
-    monkeypatch.setattr(scan, "_find", boom)
+    monkeypatch.setattr(scan, "find_tool", boom)
     assert staged_ratchet.run(tmp_path, ["src/a.py"]) == 0
     assert "skipped" not in capsys.readouterr().out

@@ -127,6 +127,7 @@ def test_offline_scan_subset_needs_no_jscpd_output(tmp_path):
     (scan_dir / "ruff.json").write_text(ruff)
     shutil.copy(_FIXTURES / "complexipy.json", scan_dir / "complexipy.json")
     shutil.copy(_FIXTURES / "line_count.json", scan_dir / "line_count.json")  # no jscpd directory at all
+    (scan_dir / "ast_grep.json").write_text("[]")  # ast-grep is part of the offline set; no findings here
     findings = scan.collect_findings(scan_dir, tmp_path, tools=scan.OFFLINE_TOOLS)
     assert findings and not any(f.tool == "jscpd" for f in findings)
     metrics = compute_craft_metrics(findings, [])
@@ -144,3 +145,28 @@ def test_offline_tools_exclude_jscpd_and_all_tools_include_it():
 
 def test_complexity_limit_defaults_when_there_is_no_pyproject(tmp_path):
     assert scan.complexity_limit(tmp_path / "missing.toml") == scan.DEFAULT_COMPLEXITY_LIMIT
+
+
+def test_ast_grep_is_an_offline_tool_and_counts_each_rule_separately():
+    assert "ast_grep" in scan.OFFLINE_TOOLS
+    findings = [
+        _f("ast_grep", "n3-private-name-import", 2, symbol="<module>"),
+        _f("ast_grep", "n3-private-name-import", 1, symbol="f", file="b.py"),
+        _f("ast_grep", "n4-version-marker-name", 4),
+        _f("ast_grep", "e3-silent-except", 5),
+        _f("ruff", "e3-silent-except", 100),  # another tool's rule of the same name is not an ast-grep finding
+    ]
+    metrics = compute_craft_metrics(findings, [])
+    assert metrics["craft_ast_grep_private_name_imports"] == 3
+    assert metrics["craft_ast_grep_version_marker_names"] == 4
+    assert metrics["craft_ast_grep_silent_excepts"] == 5
+
+
+def test_the_existing_dimensions_are_unchanged_by_ast_grep_findings():
+    base = [_f("ruff", "F401", 4), _f("complexipy", "cognitive-complexity", 40, symbol="f"), _f("line_count", "function-length", 90, symbol="g")]
+    ast = [_f("ast_grep", "e3-silent-except", 7), _f("ast_grep", "n4-version-marker-name", 2)]
+    before = compute_craft_metrics(base, [])
+    after = compute_craft_metrics(base + ast, [])
+    ast_keys = {key for key in CRAFT_METRIC_KEYS if key.startswith("craft_ast_grep_")}
+    assert {k: v for k, v in after.items() if k not in ast_keys} == {k: v for k, v in before.items() if k not in ast_keys}
+    assert all(before[key] == 0 for key in ast_keys)

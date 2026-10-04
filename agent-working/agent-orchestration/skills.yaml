@@ -33,6 +33,11 @@ skills:
     workflows: []
     roles: []
     companion_assets: [visual-companion.md, scripts/frame-template.html, scripts/helper.js, scripts/server.cjs, scripts/start-server.sh, scripts/stop-server.sh]
+  - id: code-craft
+    description: Python code-craft reviewer rules, pre-commit workflow and review rubric for src/ and tools/ (docs/guidelines/python_code_standard.md).
+    workflows: []
+    roles: []
+    companion_assets: []
   - id: combat-mechanics
     description: Deterministic combat resolution (damage formula, tactical modifiers) and CombatPosture pre-combat assessment in src/domains/combat_engagement/.
     workflows: []

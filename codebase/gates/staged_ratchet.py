@@ -40,13 +40,18 @@ def _skip(reason: str) -> int:
     return 0
 
 
-def _ruff_json(paths: Sequence[str], root: Path) -> list[dict]:
-    if importlib.util.find_spec("ruff") is None:
+def _ruff_json(paths: Sequence[str], root: Path, python: str | None = None, timeout: float | None = None) -> list[dict]:
+    if python is None and importlib.util.find_spec("ruff") is None:
         raise HookSkipped("ruff is not installed for this Python (environment not synced: uv sync)")
-    done = subprocess.run(
-        [sys.executable, "-m", "ruff", "check", *paths, "--output-format", "json"],
-        cwd=root, capture_output=True, text=True, check=False,
-    )
+    try:
+        done = subprocess.run(
+            [python or sys.executable, "-m", "ruff", "check", *paths, "--output-format", "json"],
+            cwd=root, capture_output=True, text=True, check=False, timeout=timeout,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise HookSkipped(f"ruff could not run ({type(exc).__name__})") from exc
+    if done.returncode == 1 and not done.stdout.strip() and "No module named" in done.stderr:
+        raise HookSkipped("ruff is not installed for the chosen Python (environment not synced: uv sync)")
     if done.returncode not in (0, 1):
         raise HookSkipped(f"ruff exited {done.returncode}: {' '.join(done.stderr.split())[:200]}")
     try:
@@ -58,8 +63,19 @@ def _ruff_json(paths: Sequence[str], root: Path) -> list[dict]:
     return records
 
 
-def check(root: Path, files: Sequence[str], registry_file: Path | None = None) -> ratchet.RatchetResult | None:
-    """The ratchet result for the staged files, or None when none of them is a checkable `src` file."""
+def check(
+    root: Path,
+    files: Sequence[str],
+    registry_file: Path | None = None,
+    *,
+    python: str | None = None,
+    timeout: float | None = None,
+) -> ratchet.RatchetResult | None:
+    """The ratchet result for the staged files, or None when none of them is a checkable `src` file.
+
+    `python` (default: this interpreter) and `timeout` (default: none) are for the edit hook; a missing ruff
+    or a timeout raises `HookSkipped`, never a clean pass.
+    """
     paths = changed_python_files(files, root)
     if not paths:
         return None
@@ -68,7 +84,7 @@ def check(root: Path, files: Sequence[str], registry_file: Path | None = None) -
         raise HookSkipped(f"no code-health registry at {path.name} (an older checkout?)")
     try:
         rows = [row for row in registry.load_rows(path, root, check_files=False) if row.file in set(paths)]
-        findings = adapters.adapt_ruff(_ruff_json(paths, root), str(root))
+        findings = adapters.adapt_ruff(_ruff_json(paths, root, python, timeout), str(root))
     except registry.RegistryError as exc:
         raise HookSkipped(f"the code-health registry is unusable ({exc})") from exc
     return ratchet.compare(findings, rows)

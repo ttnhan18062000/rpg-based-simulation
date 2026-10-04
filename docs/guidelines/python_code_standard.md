@@ -61,6 +61,12 @@ in `pyproject.toml` (`[tool.ruff.lint.mccabe]`, `[tool.ruff.lint.pylint]`, `[too
 | `make code-health-dup` | duplicated Python blocks under `src/` (jscpd, pinned in the Makefile) |
 | `make code-health` | all four tools, then the ratchet: fails only on a violation that is new or above its row in `codebase/baselines/code_health_exceptions.jsonl` |
 
+**Edit hook (advisory).** In a Claude Code session, right after an `Edit`, `Write` or `MultiEdit` of a `src/**/*.py` file,
+`codebase/hooks/edit_ratchet_hook.py` runs ruff on that one file and compares it with the registry like the pre-commit
+check. It speaks only when the file has a new or worse finding, adding that report as context for the agent; it is silent
+on a pass, never blocks, and always exits 0 (including when ruff or the registry is missing or it takes over about 5 seconds).
+Ruff only: complexity, size and ast-grep are left to `make code-health` and CI.
+
 The registry rows are matched by file, symbol, tool and rule, never by line, so moving code does
 not make an old violation look new. Do not edit the file by hand: `python3 -m codebase.health
 tighten` lowers ceilings and removes rows for debt you paid, `delete` removes one row, and a ruff or
@@ -159,7 +165,23 @@ Python identifier conventions that section does not state.
 |---|---|---|
 | X1 | New or changed code has no pyflakes error: no undefined name, unused import or variable, redefinition of an unused name, or f-string without a placeholder; and no syntax error. | ruff `F` and `E9`, configured |
 
-## 11. Related
+## 11. Review rubric
+
+For whoever reviews a Python change (the planner seat, `/code-review` style reviews). Examples live in the `code-craft` skill.
+
+| Category | Meaning | Blocks? |
+|---|---|---|
+| **Important** | The change breaks a rule of this standard or an architecture rule, or is a correctness bug | Yes |
+| **Nit** | A taste or polish point that no rule requires | No |
+| **Pre-existing** | The problem was there before the change and the change did not make it worse | No |
+
+- Only Important blocks. Every other finding is advice.
+- Each Important finding names the rule ID (F1, T3, E3 ...) or the architecture rule it breaks, or, for a correctness bug, the concrete failure (input or state, then wrong result or crash); without one of these it is a Nit.
+- At most 3 Nits per review; the rest are dropped.
+- Do not raise by hand what a configured tool already reports (the Enforcement column says which); the ratchet reports it.
+- A Pre-existing finding never blocks the change under review. If a tool reports it, it is already a row in `codebase/baselines/code_health_exceptions.jsonl`. If it is a reviewer rule and spans the whole file, propose it as a `do_not_imitate` entry in `codebase/structure/package_registry.jsonl`; otherwise mention it once and drop it.
+
+## 12. Related
 
 - `docs/plans/codebase_health/python_code_craft_roadmap.md`: plan, evidence and toolchain.
 - `docs/guidelines/design_patterns.md`: extension points.
