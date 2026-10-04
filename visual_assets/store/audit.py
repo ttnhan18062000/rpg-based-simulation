@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from visual_assets.store import config, records
-from visual_assets.store.contracts import AdoptionRecord, IntakeResult, RevocationRecord, ReviewRenderCheck, SourceRecord, parse_record
+from visual_assets.store.contracts import AdoptionRecord, IntakeResult, RevocationRecord, ReviewRenderCheck, SourceRecord, parse_record, record_bound
 from visual_assets.store.contracts.review import RenderVerdict
 from visual_assets.store.contracts.base import IntakeVerdict
 from visual_assets.store.errors import ContractError, StageError
@@ -58,7 +58,7 @@ def _load(cls, path: Path, root: Path, report: AuditReport, missing: str, unread
         report.breaks.append(AuditBreak(missing, _rel(root, path), "the file is missing"))
         return None, None
     try:
-        data = records.read_file(path, config.MAX_RECORD_BYTES if limit is None else limit)
+        data = records.read_file(path, limit if limit is not None else (record_bound(cls) if cls is not None else config.MAX_RECORD_BYTES))
         return (parse_record(cls, data) if cls is not None else None), data
     except (StageError, ContractError) as exc:
         report.breaks.append(AuditBreak(unreadable, _rel(root, path), f"cannot be read ({exc.code})"))

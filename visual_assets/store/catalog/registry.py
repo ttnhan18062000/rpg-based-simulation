@@ -83,7 +83,7 @@ def _read_bounded(path: Path) -> bytes:
 def _parse(data: bytes) -> VisualKeyRegistry:
     try:
         raw = yaml.load(data.decode("utf-8"), Loader=_StrictLoader)  # noqa: S506 - SafeLoader subclass
-        body = json.dumps(raw, allow_nan=False).encode("utf-8")
+        body = json.dumps(raw, allow_nan=False, separators=(",", ":")).encode("utf-8")
     except RegistryError:
         raise
     except (yaml.YAMLError, UnicodeDecodeError, TypeError, ValueError, RecursionError) as exc:

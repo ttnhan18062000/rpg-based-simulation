@@ -93,6 +93,24 @@ release candidates are assembled but never activated (the last arrow is out of s
 - `tests/visual_assets/test_boundaries.py`: `drawing` has no write path into `catalog/` (it may not even reference the path),
   `store` does not import `drawing`, nothing imports `src/` and `src/` never imports `visual_assets`.
 
+## The runtime manifest and `export-runtime`
+
+Under Profile A (ADR D8) the frontend build consumes the assets of one release candidate. The candidate manifest is an internal record; what ships is the smaller
+`RuntimeManifest` (`contracts/runtime.py`, proposal 9.3): `catalog_id`, `release_id`, `candidate_manifest_hash` (the `sha256:` file hash of the exact candidate
+manifest bytes it was exported from), `registry_hash`, `fallback_contract_version` (1) and `entries`, each `visual_key`, `family` (from the registry), `pixel_hash`,
+`file`, `width`, `height`. `file` is exactly `<64 hex>.png`, derived from the pixel hash and never a path; entries are unique and sorted by key, at most `MAX_VISUAL_KEYS`;
+the record's size bound is `MAX_MANIFEST_BYTES`. It **excludes** everything protected: approver, licence record, source path or revision, review note, intake, artifact id.
+Same strictness as every record (unknown fields, wrong versions, oversize dimensions rejected).
+
+`python -m visual_assets.store export-runtime --catalog-id C --release-id rc-NNNN --out DIR` (library: `runtime_export.export_runtime`) runs `verify` first, reads the
+candidate strictly, re-decodes every artifact PNG and checks its pixel hash, and writes `runtime_manifest.json` (canonical JSON) plus the PNGs named by their pixel hash into
+`DIR`, staged in a `.tmp-*` sibling and renamed, so the result is all-or-nothing and byte-identical for the same release. It never writes into the catalog and has no MCP tool
+(the drawing server may not import it). Refusals, each leaving no output and the catalog unchanged (exit code 2): `verify_failed`, `unknown_release`, `registry_mismatch` (the registry
+changed since the candidate was assembled), `artifact_mismatch`, `out_exists` (also a symlink, and an output that appears while exporting), `out_inside_catalog`,
+`out_parent_missing`, `invalid_catalog_id`, `invalid_release_id`, `registry_invalid`, `catalog_unreadable`. A committed synthetic export (three `fixture.rehearsal.*` images in
+different shapes) lives at `frontend/src/visualAssets/__fixtures__/rehearsal/`; `python -m tests.visual_assets.store.runtime_fixture --write` (run from the repo root, module form) refreshes it and a test checks it equals a fresh
+regeneration. Wiring the export into the real frontend build is `AM-M6` (dormant).
+
 ## Commands (`python -m visual_assets.store <command>`)
 
 | Command | Gate | Writes | Tracked |
@@ -105,6 +123,7 @@ release candidates are assembled but never activated (the last arrow is out of s
 | `verify` | none | nothing | n/a |
 | `build` | none; needs Aseprite and bwrap | `generated/<source_asset_id>--x1/<pixel hash>.png` and `<hash>.<revision>.artifact.json` | yes |
 | `release` | none | `manifests/candidates/<catalog_id>/rc-NNNN.json` (a CANDIDATE, never active) | yes |
+| `export-runtime` | none (reads committed candidates; writes outside the catalog) | a NEW directory given by `--out`: `runtime_manifest.json` and `<64 hex>.png` files (all-or-nothing, never into the catalog) | n/a |
 | `gc` | none; deletes only with `--delete` | removes only what it lists, under the quarantine, the review area and `generated/` | no (never `sources/`, `provenance/`, `manifests/`) |
 | `adopt` | **human only**: terminal on stdin and the typed id | `sources/<id>/rNNNN.aseprite` + `.source.json`, `provenance/adoptions/`, `provenance/intake/<in>.json` and `.review.json` | yes |
 | `revoke` | **human only**: terminal on stdin and the typed id | `provenance/revocations/<id>.json` for a source revision; `revocation.json` in the quarantine for an un-adopted intake | revision: yes; intake: no |
@@ -123,8 +142,10 @@ There is no MCP tool that adopts, revokes, builds, releases, deletes or activate
 
 ## Not built (outside this foundation's scope)
 
-Runtime activation, a resolver, Live Map and HUD consumption, signing, client compatibility ranges, more than one scale class, atlases and animation export
-(`AM-M5`-`M7`, `AM1-W08`). Open decisions are listed at the end of this page.
+Runtime activation, a resolver in the real client, Live Map and HUD consumption, signing, client compatibility ranges, more than one scale class, atlases and animation export
+(`AM-M6`/`M7`, `AM1-W08`). Built since: the runtime manifest and `export-runtime` (above) and an **isolated** `AM-M5` surface rehearsal on synthetic fixtures in
+`frontend/src/visualAssets/` (a strict parser, resolver, typed fallbacks and single-generation loader that nothing in the normal app imports); its per-gate result, overall
+`INCONCLUSIVE`, is `docs/assets/surface_rehearsal_result.md`. Open decisions are listed at the end of this page.
 
 ## Known gaps (stated, not hidden)
 
@@ -145,10 +166,10 @@ Runtime activation, a resolver, Live Map and HUD consumption, signing, client co
   (size = 1 + distinct opaque colours), which needs pixel decoding. Intake quarantines it with `PALETTE_UNVERIFIABLE`. Only a never-edited first revision
   carries one; any edit re-saves a palette with real entries. Every other palette is checked exactly against what Aseprite reports.
 - Intake accepts only 32-bit RGBA sources (`SOURCE_UNSUPPORTED_COLOR_DEPTH` otherwise); the package carries no colour-depth claim, so it is a support policy, not a claim check.
-- The unsupported-feature list (`unsupported:tilemap`, `...indexed_color`, `...grayscale`, `...linked_cels`, `...external_reference`) and the preview/file size bounds are provisional (`U-05`).
+- The unsupported-feature list (`unsupported:tilemap`, `...indexed_color`, `...grayscale`, `...linked_cels`, `...external_reference`) are a support list recorded in `docs/assets/budgets.md`. Every numeric bound (preview, file, record, registry, decode) is a **proposed** budget there, measured on 2026-10-03 and pinned to the code by a test; the owner approves the numbers in PR review. Rulings F1-F6 are recorded there. Size bounds are per record type (`StoreRecord.size_bound`, `record_bound(cls)`): the registry and the release manifest have their own bounds, and `tests/visual_assets/store/unit/test_record_bounds.py` proves every record a writer can produce under the contract bounds is readable by every reader. PNG files are bounded by `MAX_PNG_FILE_BYTES`; `MAX_DECODED_BYTES` bounds decoded size only.
 
 ## Decisions still open
 
 D2 (sources committed directly, no Git LFS), D3 (only adopted assets' PNGs committed; verified in CI by pixel hash) and D4
 (artifact identity is the decoded-pixel hash) are **decided** (`docs/architecture/visual_asset_foundation_adr.md`). Still open: deployment profile (`AM1-W01`), signing/trust channel (`AM1-W08`),
-retention numbers, the Aseprite licence review (`U-02`), numeric budgets (`U-05`) and CI with Aseprite (`U-14`).
+retention numbers, the Aseprite licence review (`U-02`), numeric budgets (`U-05`: proposed, awaiting owner approval, `docs/assets/budgets.md`) and CI with Aseprite (decided against: ADR D10).

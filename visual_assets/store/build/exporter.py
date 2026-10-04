@@ -17,7 +17,7 @@ from visual_assets.store import config, pixels, records
 from visual_assets.store.build.exportconfig import ExportConfig, load_export_config
 from visual_assets.store.build.fingerprint import build_fingerprint
 from visual_assets.store.catalogwrite import publish
-from visual_assets.store.contracts import ArtifactRecord, canonical_json
+from visual_assets.store.contracts import ArtifactRecord, SourceRecord, canonical_json, record_bound
 from visual_assets.store.errors import BuildError, ContractError, PngDecodeError, RenderError, StageError
 from visual_assets.store.intake.validator import file_hash
 from visual_assets.store.revoke import is_build_eligible
@@ -65,7 +65,7 @@ class SandboxRenderer:
             except sandbox.AdapterError as exc:
                 raise RenderError("render_failed", str(exc)) from None
             out = job / "out.png"
-            if not out.is_file() or out.stat().st_size > config.MAX_DECODED_BYTES:
+            if not out.is_file() or out.stat().st_size > config.MAX_PNG_FILE_BYTES:
                 tail = proc.stderr.decode("utf-8", "replace")[-200:]
                 raise RenderError("render_failed", f"Aseprite produced no usable PNG (exit {proc.returncode}): {tail}")
             return out.read_bytes()
@@ -115,7 +115,7 @@ def build(source_asset_id: str | None = None, *, renderer: SandboxRenderer | Non
 def _build_revision(sid: str, revision: str, tool: SandboxRenderer, cfg: ExportConfig, lua_pin: str) -> list[BuiltArtifact]:
     bytes_path, record_path = records.source_paths(sid, revision)
     source = records.read_file(bytes_path, config.MAX_SOURCE_BYTES)
-    record_bytes = records.read_file(record_path, config.MAX_RECORD_BYTES)
+    record_bytes = records.read_file(record_path, record_bound(SourceRecord))
     source_record = records.load_source(sid, revision)
     if file_hash(source) != source_record.source_hash:
         raise BuildError("source_bytes_changed", f"{sid} {revision} no longer matches its recorded hash; run audit")
@@ -142,7 +142,7 @@ def _build_revision(sid: str, revision: str, tool: SandboxRenderer, cfg: ExportC
             continue
         files: list[tuple[Path, bytes]] = []
         if png_path.exists():  # identical pixels already stored (an older revision rendered the same): keep that file, never rewrite it
-            stored_png = records.read_file(png_path, config.MAX_DECODED_BYTES)
+            stored_png = records.read_file(png_path, config.MAX_PNG_FILE_BYTES)
             if pixels.pixel_hash(stored_png, max_dim=config.MAX_DIM * scale_class.scale) != px:
                 raise BuildError("artifact_corrupt", f"{png_path.name} does not hash to its own name; run verify")
             png_for_record = stored_png
