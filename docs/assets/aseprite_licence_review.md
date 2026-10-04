@@ -24,7 +24,7 @@ written terms ever say otherwise, they win and `D10` is reopened.
 | Licence text | `/usr/share/doc/aseprite/EULA.txt` (Igara Studio S.A.) | read in full |
 | Scripting API | the pinned `backend/lua/ops.lua` (hash-pinned as `LUA_SHA256`) runs against this version; integration tests prove it locally | `tests/visual_assets/` (`needs_aseprite`) |
 
-The licence holder and the purchase are the owner's own; this repository records no licence key and never will.
+The licence holder and the purchase are the owner's own: **confirmed by the owner on 2026-10-04** (this is their licence and their machine). This repository records no licence key and never will.
 
 ## Clauses that decide where Aseprite may run
 

@@ -50,7 +50,7 @@ Tracks the child tickets in `SEQUENCE.md`. No direct implementation.
 ## Acceptance Criteria
 - [x] Every child in `SEQUENCE.md` is closed.
 - [x] ADR D8-D10 and `docs/assets/aseprite_licence_review.md` match what was built.
-- [ ] Every bound in `visual_assets/` that was marked "provisional (U-05)" either carries an owner-approved value from `docs/assets/budgets.md` or is listed there as deliberately unset, with the reason. **Not yet satisfied, by design:** every row is `PROPOSED` (retention is listed as unset with its reason); the owner approves in PR review and the planner flips the rows to `APPROVED <date>`. The PR does not merge before that.
+- [x] Every bound in `visual_assets/` that was marked "provisional (U-05)" either carries an owner-approved value from `docs/assets/budgets.md` or is listed there as deliberately unset, with the reason. Every row `APPROVED 2026-10-04` by the owner (blocking question on PR #309; `MAX_SOURCE_BYTES` kept at 102400, D2 not reopened); retention is listed as unset with its reason.
 - [x] The `AM-M5` rehearsal records a result per gate (`PASS` / `FAIL` / `BLOCKED` / `INCONCLUSIVE`) with its evidence, never a pass by default.
 - [x] Boundary tests stay green: no `src/` <-> `visual_assets` import; the normal frontend path does not import the rehearsal code.
 
