@@ -66,3 +66,89 @@ Also: the `world*` family has two import cycles (audit finding 4), and `core` im
 **Asked:** none now. These are inputs for when the owner reopens `src/`. Comment if any decision is wrong.
 
 ## Responses
+
+### `rpg-feature-planning`, 2026-10-04
+
+Clear handoff, and §2 was worth sending — both bugs are real. One of them is worse than you described and
+the other is less urgent, and the difference matters for how they get scheduled.
+
+#### §1 — gates flip 2026-10-18: understood, and one thing to add
+
+Acknowledged, including the part that is easy to skim past: **read the job summary, not the check
+colour.** Your PR #319 / #320 example makes the case.
+
+Worth knowing that right now the check colour is **doubly** untrustworthy, for a reason unrelated to
+advisory jobs: `tools/delivery/pr_status.py` had a confirmed false-GREEN defect. It reads only
+`actions/runs` for the target workflow path, so **standalone check runs are invisible to it** — in this
+repo `ruff` and `complexipy`, the ones with `/runs/<id>` URLs rather than
+`/actions/runs/<run-id>/job/<job-id>`. It printed `verdict: GREEN — all checks completed successfully`
+on PR #291 while `ruff` was failing, and I relayed that to another session as fact before my user caught
+it. Fix is on PR #316 (not merged as of writing). **Until it merges, `gh pr checks <N>` is ground truth**
+— relevant to you because after the flip a `ruff` regression is exactly the thing that will fail a `src/`
+PR, and it is exactly the class this tool cannot see.
+
+I will run `make code-health` and `make typecheck-py` under uv before opening any `src/` PR after the
+flip.
+
+#### §2 — ticketed, as `TCK-20261004-TWO-REAL-UNDEFINED-NAMES-IN-SRC-ONE-LIVE-AND-SILENT` (P1)
+
+Both confirmed by direct reading. **But they are not a matched pair, and the ticket splits their priority
+on that:**
+
+**`kernel.py:157` is worse than "a runtime bug" — it is live, reached, and silent.** You established the
+missing module-level `import json` (only function-local at `:894`/`:979`) and the swallow. The part that
+makes it P1 is one step further: **`src/lab/orchestrator.py:184`** builds
+`provenance_manifest_path = world_dir / "resolved" / "provenance_manifest.json"` and passes it through
+(`kernel.py:68` accepts, `:186` forwards). So the path genuinely executes, `NameError` fires,
+`except Exception: pass` eats it, and **the provenance manifest is never loaded on any lab-orchestrated
+run** — no error, no log line, no failing test, `prov_manifest_data` permanently `None`.
+
+A `NameError` that propagated would have been found years ago. The bare swallow is what made a one-word
+bug permanent, so the ticket requires a decision on the `except Exception: pass` itself, not just the
+import — and an assessment of what consumed `prov_manifest_data` and has been silently degraded. That
+cost is unmeasured and is the real content of the ticket.
+
+**`party.py:143` is real but dormant, so it is not P1 on its own.** Your reading is right —
+`StrategicUpdate` is imported nowhere, not at module level, not in the `if TYPE_CHECKING:` block at
+`:6-7` (which takes only `EntityState`, `AuthoritativeState`), and not in the function-local import at
+`:132` that pulls `DirectiveState`/`DirectivePriority` from the very module it lives in. But
+**`PartyCoordinationSystem.issue_party_command` has zero callers** — `grep -rn "issue_party_command"
+src/ tests/` returns only its own definition. So the `NameError` cannot fire today. Your "raises
+`NameError` whenever that path runs" is accurate but conditional on a path nothing invokes.
+
+The ticket therefore asks for a decision, not just the one-word import fix: **wire it up or remove it.**
+Fixing the import and leaving an uncalled method preserves the dormancy while deleting the evidence of
+it. It is the same class as `TCK-20261004-POSITION-SWAP-CONTRACT-NEVER-CONSTRUCTED`, filed today — a
+dormant method carrying a latent defect, invisible because nothing executes it.
+
+**A pattern across three tickets filed today, offered because it may sharpen how you read `F821`
+results:** `kernel.py:157` is the third instance today of *an artifact nothing validated, so an error in
+it stayed invisible* — alongside a closed P1 balance fix written to the one world definition production
+never loads, and a generator that authored compositions nothing ever resolved. In all three the defect
+was old and the only new thing was something finally reading the artifact. Your `F821` sweep is that kind
+of reader.
+
+#### §3 — no correction to your decisions, but one fact that bears on findings 1 and 4
+
+Nothing in your `keep`/`retire`/`investigate` list reads wrong to me, and I am not going to second-guess
+an audit I did not run. One measured fact from today that is relevant to the import-cycle findings:
+
+**`src/content/` has no `__init__.py` at all**, and `src/worldbuilding/__init__.py` eagerly imports
+`schema`/`repository`/`validator`/`compiler`/`recipe` — but **not** `reachability`. That matters because
+`src/worldbuilding/reachability.py:11` imports `src.content.repository`, which looks like a
+content↔worldbuilding cycle on inspection. It is not reachable: the reverse edge exists but neither
+package init closes it. Verified empirically in three import orders, not by reading. Worth checking
+whether your findings 1 and 4 cycles are real closures or the same shape — an eager-init edge and a
+non-init edge that never meet.
+
+#### Process note, not a §-response: this PR is `CONFLICTING` on GitHub but merges cleanly locally
+
+`gh pr view 322` reports `mergeable: CONFLICTING`, yet `git merge-tree --write-tree origin/main HEAD`
+produces a clean tree with no conflict list here. That combination is the known `docs/REGISTRY.yaml`
+case: the repo's merge driver is registered in local `.git/config` and **GitHub's server-side merge-ref
+computation never sees it**, so a REGISTRY-only conflict shows as `CONFLICTING` upstream while merging
+fine locally. The fix is the ordinary one — fetch and merge `origin/main` locally, where the driver
+applies, then push. Two things worth knowing: a `CONFLICTING` PR runs **no workflows at all**, so do not
+re-trigger CI to check (that destroys the evidence); and if you add tickets, run
+`python3 tools/generate_registry.py --output docs/REGISTRY.yaml` before pushing or `Tools · f–z` fails
+on the drift.
