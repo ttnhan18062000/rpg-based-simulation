@@ -211,7 +211,7 @@ than making a new one.
 
 - New `tests/integration/worldassembly/test_resolved_snapshot_freshness.py` (49 cases): snapshot == fresh resolve per composition world, resolve determinism, compile-report counts == fresh compile per world, dungeon_crawl remedy at the loaded location (12 entities, non-empty first). Positive controls: the compile-report guard fails on the old report; the catalog copy differs from the snapshot.
 - Updated: census pin (`dungeon_crawl` 4 -> 2), corpus registry regenerated, six rendering tests repointed.
-- Scoped run on the final tree: 1693 passed, 0 failed.
+- Final-tree run (after merging `origin/main` at `ad194bec4`, #328 included): scoped suites over rendering, worldassembly, worldgeneration, architecture, engine, social, cli, lab, simulation_quality, scenarios, content and related = 2547 passed, 1 failed; full `tests/tools` plus `tests/unit/tools` = 4243 passed, 0 failed after removing the three resurrected `todos/` ticket copies the merge brought back. The one failure, `tests/integration/scenarios/test_entity_differentiation.py::test_bravery_quartile_combat_rate_2x` (population guard), is not from this batch: it fails identically on a clean `origin/main` (`1c59e01f4`).
 
 ## Files Changed
 

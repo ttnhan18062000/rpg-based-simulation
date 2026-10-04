@@ -185,8 +185,8 @@ None. The evidence is in `codebase-planner`'s own handoff and re-verified in thi
 ## Test Summary
 
 - `tests/unit/engine/test_kernel_provenance_manifest_load.py` (2): both fail on the old code, pass on the fix. A third test, for `issue_party_command`, failed on the old code too but was deleted with the method (`TCK-20261004-REMOVE-THE-DORMANT-PARTY-COMMAND-METHOD`).
-- AC-5: `ruff` is not installed in this environment, so F821 was not run; the NameErrors are covered by tests instead. The mypy baseline was not regenerated or reduced here (not measured).
-- Scoped run on the final tree: 1693 passed, 0 failed.
+- AC-5: `uvx ruff@0.16.10 check --select F821`: `kernel.py` went from 3 undefined-name findings on `origin/main` to 2 (the `json` one is gone; the two left are `EntityState` inside quoted annotations, the harmless class the ticket scoped out); `party.py` has 0. The mypy baseline was not regenerated or reduced here (not measured).
+- Final-tree run (after merging `origin/main` at `ad194bec4`, #328 included): scoped suites over rendering, worldassembly, worldgeneration, architecture, engine, social, cli, lab, simulation_quality, scenarios, content and related = 2547 passed, 1 failed; full `tests/tools` plus `tests/unit/tools` = 4243 passed, 0 failed after removing the three resurrected `todos/` ticket copies the merge brought back. The one failure, `tests/integration/scenarios/test_entity_differentiation.py::test_bravery_quartile_combat_rate_2x` (population guard), is not from this batch: it fails identically on a clean `origin/main` (`1c59e01f4`).
 
 ## Files Changed
 

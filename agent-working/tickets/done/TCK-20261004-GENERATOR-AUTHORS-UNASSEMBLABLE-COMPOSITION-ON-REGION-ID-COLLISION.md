@@ -232,7 +232,7 @@ fallthrough — that would just be option 2 wearing a different hat.
 ## Test Summary
 
 - New: 3 unit tests (`TestRegionIdNamespacing`) and 1 real-content integration test (assembles, and each module's population spawns in its own module's region). Fail on the unfixed generator, pass with the fix.
-- Scoped run on the final tree (rendering, worldassembly, worldgeneration, engine, social, cli, lab, simulation_quality and related): 1693 passed, 0 failed.
+- Final-tree run (after merging `origin/main` at `ad194bec4`, #328 included): scoped suites over rendering, worldassembly, worldgeneration, architecture, engine, social, cli, lab, simulation_quality, scenarios, content and related = 2547 passed, 1 failed; full `tests/tools` plus `tests/unit/tools` = 4243 passed, 0 failed after removing the three resurrected `todos/` ticket copies the merge brought back. The one failure, `tests/integration/scenarios/test_entity_differentiation.py::test_bravery_quartile_combat_rate_2x` (population guard), is not from this batch: it fails identically on a clean `origin/main` (`1c59e01f4`).
 - AC-3 met: the two `xfail(strict=True)` marks (left by #328) were removed after #328 merged; both tests pass. The adapted integration tests and the namespacing unit tests were re-checked against the unfixed generator: all three real-content integration tests fail with the original duplicate-region error when the namespace emission is removed.
 
 ## Files Changed
