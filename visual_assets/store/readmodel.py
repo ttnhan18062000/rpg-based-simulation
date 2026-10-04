@@ -153,6 +153,7 @@ def _show_source(item_id: str) -> dict:
         "revoked": rev in records.revoked_revisions(sid),
         "adoption": {
             "adoption_id": adoption.adoption_id, "intake_id": adoption.intake_id, "visual_key": adoption.visual_key,
+            "detail_value": adoption.detail_value,
             "approver_name": adoption.approver_name, "approver_role": adoption.approver_role, "decided_at": adoption.decided_at,
             "licence_state": adoption.licence_state.value, "licence_note": "stated by the approver at adoption",
         },
@@ -188,7 +189,7 @@ def _show_release(item_id: str) -> dict:
     if not path.is_file() or path.is_symlink():
         raise ReadError("unknown_id", "no such release candidate")
     manifest = parse_record(ReleaseCandidateManifest, records.read_file(path, record_bound(ReleaseCandidateManifest)))
-    entries = [{"visual_key": e.visual_key, "artifact_id": e.artifact_id, "pixel_hash": e.pixel_hash} for e in manifest.entries]
+    entries = [{"visual_key": e.visual_key, "detail": e.detail, "artifact_id": e.artifact_id, "pixel_hash": e.pixel_hash} for e in manifest.entries]
     return {
         "kind": "release", "catalog_id": manifest.catalog_id, "release_id": manifest.release_id, "status": manifest.status,
         "note": "a release CANDIDATE only: nothing is active", "registry_hash": manifest.registry_hash,

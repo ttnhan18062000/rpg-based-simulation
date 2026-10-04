@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { KIND_COLORS, STATE_COLORS, TILE_COLORS, TILE_NAMES } from '@/constants/colors'
 import { CELL_SIZE } from '../cell'
 import { SnapshotLoader, type Decode } from '../loader'
-import { parseManifest } from '../manifest'
+import { parseManifest, slotKey } from '../manifest'
 import { pilotManifestText, pilotUrlFor } from '../pilotSource'
 import {
   BUILDING_COLORS_COPY, BUILDING_LABELS_COPY, FOREST_CODE, KIND_COLORS_COPY, MARKERS, PILOT_COLUMNS, PILOT_ROWS, PILOT_KEY, STATE_COLOR_COPY,
@@ -25,10 +25,10 @@ async function viewWith(decode: Decode, urlFor: (f: string) => string | undefine
 }
 
 describe('the pilot export', () => {
-  it('holds exactly terrain.forest (16 x 16, family terrain)', () => {
-    expect([...snapshot.entries.keys()]).toEqual([PILOT_KEY])
-    const entry = snapshot.entries.get(PILOT_KEY)!
-    expect([entry.family, entry.width, entry.height]).toEqual(['terrain', 16, 16])
+  it('holds exactly terrain.forest: three declared slots (plain, bush, tree), each 16 x 16, family terrain', () => {
+    expect([...snapshot.entries.keys()]).toEqual([slotKey(PILOT_KEY, 'bush'), slotKey(PILOT_KEY, 'plain'), slotKey(PILOT_KEY, 'tree')])
+    expect([...snapshot.details.values()]).toMatchObject([{ visualKey: PILOT_KEY, values: ['plain', 'bush', 'tree'], default: 'plain' }])
+    for (const entry of snapshot.entries.values()) expect([entry.family, entry.width, entry.height]).toEqual(['terrain', 16, 16])
   })
 })
 

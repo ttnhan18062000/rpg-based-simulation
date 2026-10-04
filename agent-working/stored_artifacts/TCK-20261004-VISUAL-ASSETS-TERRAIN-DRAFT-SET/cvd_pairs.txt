@@ -1,0 +1,27 @@
+pairs x visions: 1012
+P1-style (tile mean may be at most 2.0 dE less distinguishable than the flat fills):
+pairs where the tile mean is >2.0 dE closer than the flat fills AND under dE 10 (hard to tell apart): 30
+  -8.0 tile 6.6 flat 14.6 terrain.floor / terrain.dungeon_entrance (protan)
+  -7.2 tile 4.4 flat 11.6 terrain.grassland / terrain.farmland (protan)
+  -6.8 tile 9.7 flat 16.5 terrain.camp / terrain.dungeon_entrance (tritan)
+  -6.2 tile 5.9 flat 12.1 terrain.grassland / terrain.farmland (deutan)
+  -4.3 tile 6.0 flat 10.3 terrain.swamp / terrain.dungeon_entrance (protan)
+  -4.0 tile 2.2 flat 6.3 terrain.desert / terrain.ruins (tritan)
+  -3.7 tile 3.6 flat 7.3 terrain.camp / terrain.dungeon_entrance (deutan)
+  -3.3 tile 4.4 flat 7.7 terrain.mountain / terrain.dungeon_entrance (deutan)
+  -3.1 tile 7.1 flat 10.3 terrain.town / terrain.graveyard (deutan)
+  -3.1 tile 8.5 flat 11.6 terrain.desert / terrain.dungeon_entrance (deutan)
+  -3.1 tile 2.0 flat 5.1 terrain.jungle / terrain.volcanic (deutan)
+  -2.9 tile 7.0 flat 9.9 terrain.mountain / terrain.graveyard (protan)
+smallest tile-mean dE over all pairs and visions:
+  tile 1.6 flat 2.8 terrain.forest / terrain.volcanic (protan)
+  tile 2.0 flat 5.1 terrain.jungle / terrain.volcanic (deutan)
+  tile 2.2 flat 6.3 terrain.desert / terrain.ruins (tritan)
+  tile 2.9 flat 3.5 terrain.swamp / terrain.cave (protan)
+  tile 2.9 flat 4.7 terrain.town / terrain.mountain (deutan)
+  tile 3.2 flat 3.7 terrain.bridge / terrain.grassland (tritan)
+(flat fills' own smallest dE, for reference:)
+  flat 0.8 terrain.lava / terrain.jungle (protan)
+  flat 1.5 terrain.forest / terrain.desert (deutan)
+  flat 2.8 terrain.forest / terrain.volcanic (protan)
+  flat 2.9 terrain.desert / terrain.volcanic (protan)

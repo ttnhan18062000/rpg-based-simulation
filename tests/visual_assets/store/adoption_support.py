@@ -36,6 +36,18 @@ def registry():
     return Registry(keys, {"fixture.sample.old_hero": key_for("hero")}, "sha256:" + "0" * 64)
 
 
+def detail_registry(key: str, values: tuple[str, ...] = ("plain", "bush", "tree"), default: str = "plain"):
+    """`registry()` plus `key` declaring a detail axis, built directly."""
+    from visual_assets.store.catalog.registry import Registry
+    from visual_assets.store.contracts.definitions import DetailAxis, VisualKeyDefinition
+
+    base = registry()
+    keys = dict(base.keys)
+    keys[key] = VisualKeyDefinition(key=key, family="sample", description="synthetic fixture key", variant_axes=(), optional=False,
+                                    detail=DetailAxis(values=values, default=default))
+    return Registry(keys, dict(base.aliases), base.file_hash)
+
+
 class FakeRenderer:
     """A deterministic stand-in for the sandboxed Aseprite: it draws the same solid-colour image the test builders use for previews."""
 
@@ -133,11 +145,15 @@ def write_export_config(catalog: Path) -> Path:
     return target
 
 
-def write_registry(catalog: Path, keys: list[str], optional: tuple[str, ...] = ()) -> Path:
-    """A registry file in the catalog with the given (fixture) keys."""
+def write_registry(catalog: Path, keys: list[str], optional: tuple[str, ...] = (), detail: dict[str, tuple[tuple[str, ...], str]] | None = None) -> Path:
+    """A registry file in the catalog with the given (fixture) keys; `detail` maps a key to its detail axis `(values, default)`."""
     lines = ["record_type: visual_key_registry", "schema_version: 1", "keys:"]
     for key in keys:
-        lines.append(f"  - {{key: {key}, family: sample, description: d, variant_axes: [], optional: {str(key in optional).lower()}}}")
+        axis = ""
+        if detail and key in detail:
+            values, default = detail[key]
+            axis = f", detail: {{values: [{', '.join(values)}], default: {default}}}"
+        lines.append(f"  - {{key: {key}, family: sample, description: d, variant_axes: [], optional: {str(key in optional).lower()}{axis}}}")
     lines.append("aliases: []" if keys else "aliases: []")
     if not keys:
         lines[lines.index("keys:")] = "keys: []"

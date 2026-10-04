@@ -104,6 +104,14 @@ class StoreRecord(BaseModel):
 RecordT = TypeVar("RecordT", bound=StoreRecord)
 
 
+def drop_absent(data: dict[str, Any], *fields: str) -> dict[str, Any]:
+    """Omit each of `fields` from a serialised record when it is `None`, so a record written before the field existed round-trips byte-identically."""
+    for name in fields:
+        if data.get(name) is None:
+            data.pop(name, None)
+    return data
+
+
 def record_bound(cls: type[StoreRecord]) -> int:
     """The byte bound for a `cls` record (read at call time, so a test may patch the config attribute)."""
     return getattr(config, cls.size_bound)
