@@ -76,16 +76,21 @@ def are_entities_hostile(source: Any, target: Any, context: Any) -> bool:
     Faction ids come from ``EntityIdentityResolver`` with ``get_faction_id_str`` as the
     ``IdentityResolutionError`` fallback. The caller owns the context (distance, combat_engaged).
     """
-    id_resolver = EntityIdentityResolver()
+    return get_faction_semantics_service().is_hostile_compat(
+        _resolve_faction_id(source), _resolve_faction_id(target), context
+    )
+
+
+def are_entities_allied(source: Any, target: Any) -> bool:
+    """Same resolved catalog faction. Not the complement of hostility: a neutral is neither ally nor enemy."""
+    return _resolve_faction_id(source) == _resolve_faction_id(target)
+
+
+def _resolve_faction_id(entity: Any) -> str:
     try:
-        src_faction_id = id_resolver.resolve(source).faction_id
+        return EntityIdentityResolver().resolve(entity).faction_id
     except IdentityResolutionError:
-        src_faction_id = get_faction_id_str(source)
-    try:
-        tgt_faction_id = id_resolver.resolve(target).faction_id
-    except IdentityResolutionError:
-        tgt_faction_id = get_faction_id_str(target)
-    return get_faction_semantics_service().is_hostile_compat(src_faction_id, tgt_faction_id, context)
+        return get_faction_id_str(entity)
 
 
 class FactionSemanticsService:

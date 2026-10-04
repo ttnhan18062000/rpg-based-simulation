@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
@@ -134,3 +134,19 @@ again — if you do it, do it in the same commit as 1c so the two movements are 
   path.
 - Close `TCK-20260915-SENSORY-FILTER-SALIENCY-USES-LEGACY-FACTION-ENUM` as folded into this ticket; do
   not leave it open in `agent-working/tickets/todos/`.
+
+## Deviations
+
+1. **Step 2 (Group B) did not copy the `:265-269` `has_clean` shape.** `is_hostile_compat` already falls back to the
+   legacy-bucket `is_hostile` when no clean relationship/perspective data exists, and `are_entities_hostile` reaches
+   it, so `has_hostile_at` now calls the shared helper directly. Copying the raw-enum `else:` branch would have kept
+   the over-detection this ticket removes. `legality.py:269` is untouched. T4b of the test plan is therefore moot.
+2. **Step 3 promotion.** `cooperation/providers.py:50` (feeds contract proposals) and `intelligence.py:439` (gates
+   durable lead/belief writes) were confirmed durable and fixed and measured in the Group A stage, as the plan's
+   "stop and promote" instruction requires. `intelligence.py:149` stayed Group C.
+3. **Stage boundaries were measured by file-level staging, not by three commits**, because the orchestrator owns
+   commits (A1). Stage s1 = intake + splash + providers + `intelligence.py:439`; s2 adds flanking; s3 adds the rest.
+4. **Step 1d**: `trauma_dead_ally_<id>` literal not changed - the corrected predicate makes the claim true.
+5. **Measurement of splash (A1) and lead observation (`:439`)** is "never evaluated in either world over 2000 ticks";
+   no before/after is possible, proof is unit-level only. The plan's expectation that under-detection would dominate
+   was not borne out (see ticket Implementation Notes).

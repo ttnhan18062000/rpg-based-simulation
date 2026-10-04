@@ -4059,8 +4059,11 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/engine/tactical.py:212-216 (RelationContext(source_species=get_species_id_str(entity),
+  v2_evidence: 'src/engine/tactical.py:212-216 (RelationContext(source_species=get_species_id_str(entity),
     target_species=get_species_id_str(n)) feeding is_hostile_compat() -> hostiles.append(n)).
+    TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP: sibling hostility sites
+    (intake danger, saliency, outnumbered ratio) moved to catalog are_entities_hostile;
+    see STRAT-275.'
   proof_type: regression
   test_path: tests/unit/combat/test_species_relations_tactical_wiring.py
   divergence_note: null
@@ -4366,3 +4369,22 @@
   divergence_note: null
   support_boundary: null
   evidence_kind: null
+- id: STRAT-275
+  text: 'TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP: concern intake (danger,
+    trauma_dead_ally), sensory saliency, the outnumbered morale ratio, cooperation
+    partner exclusion and the intelligence threat-resolved/lead-observation checks
+    read hostility from the content catalog (are_entities_hostile) and allegiance
+    as the same resolved catalog faction (are_entities_allied), never from the four-value
+    legacy Faction enum (Mechanics Bible 04 Section 5). A neutral is neither ally
+    nor enemy.'
+  v2_evidence: src/systems/world_systems/intake.py, src/engine/cognition.py (filter_saliency,
+    evaluate_emotional_state), src/domains/cooperation/providers.py, src/systems/strategic_systems/intelligence.py
+    (_threat_resolved, lead observation), src/content_semantics/faction.py.
+  test_path: tests/unit/combat/test_catalog_hostility_sweep.py::TestDangerAndGriefConcerns::test_danger_only_for_catalog_hostile_neighbour;
+    tests/unit/combat/test_catalog_hostility_sweep.py::test_one_shared_hostility_helper_is_imported_by_module_level_consumers
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  proof_type: regression
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.65.
+  support_boundary: null

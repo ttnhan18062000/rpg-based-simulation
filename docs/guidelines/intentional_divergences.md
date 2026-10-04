@@ -36,6 +36,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Combat-Progression** | Hero's Journey Rebirth Orphaned in the Real Dominant Kill Path | **Bug Fix** | **SUPERSEDED** 2026-10-01 by §2.63 |
 | **Engine / Cognition-Strategy** | Adventure-Route Defer-Reason Observability Gap | **Bounded** | RATIFIED |
 | **Strategic Cognition / Regional Danger** | Regional-Danger Stabilization No Longer Unconditionally Wins the Project Slot | **Enforced** | RATIFIED |
+| **Engine / Combat-Cognition** | Hostility and Allegiance Read From the Content Catalog, Not the Legacy `Faction` Enum, at Eight More Sites (§2.65) | **Bug Fix** | RATIFIED |
 | **Knowledge Gateway MCP / Packet Cache** | Level 2 Packet-Cache Freshness/Verification Column Co-location | **Bounded** | RATIFIED |
 | **Engine / Progression** | ALLOCATE_AP Action-Router Branch Kept Dormant | **Bounded** | ACTIVE |
 | **Engine / Combat** | Wounds Permanent; `heal_wound()`/`get_diagnosis_quality()` Removed | **Bug Fix** | ACTIVE |
@@ -2214,6 +2215,36 @@ untouched by §2.57's fix (out of that ticket's scope).
   `tests/unit/world/test_calamity_raid.py` (rebased onto `spawn_raid`). Scope:
   `tests/unit/world/` + `tests/integration/world/` + `tests/unit/engine` + `tests/unit/ai` = 638
   passed, 1 skipped.
+- **Status**: RATIFIED
+
+### 2.65 Hostility and Allegiance Are Read From the Content Catalog, Not the Four-Value Legacy `Faction` Enum, at Eight More Sites (TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP)
+- **Subsystem**: Combat (splash, flanking) / Strategic Cognition (concern intake, saliency, morale) / Cooperation / Strategic Intelligence
+- **Old Behavior**: `a.identity.faction != b.identity.faction` was used as "hostile" and `==` as "ally" at
+  `combat.py` splash, `legality.py` `check_flanking`, `intake.py` (`danger`, `trauma_dead_ally`),
+  `cognition.py` (`filter_saliency`, outnumbered ratio), `cooperation/providers.py`, and `intelligence.py`
+  (`_threat_resolved`, lead-observation). The enum has four values; `bandit_company`, `goblin_warband` and
+  `orc_clan` all map to `MONSTER_HORDE`, so same-bucket enemies were invisible to every one of these and
+  different-bucket allies (`hero_guild`/`town_council`) were treated as enemies.
+- **New Behavior**: each site asks `content_semantics.faction.are_entities_hostile` (the helper
+  `TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND` established; this ticket added
+  `are_entities_allied`, same resolved catalog faction) with the real distance and `combat_engaged=True`.
+  Consequences: splash hits catalog-hostile victims only (neutrals and allies are spared); `danger`
+  concerns only for catalog-hostile neighbours; `trauma_dead_ally` only for a dead member of the entity's
+  own catalog faction (the record id still reads `trauma_dead_ally_<id>` and is now true); cooperation
+  partner pools exclude catalog-hostile entities rather than every other-bucket entity (so catalog-friendly
+  or neutral other-bucket entities are now eligible).
+- **Not behavior-neutral; measured** (real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`,
+  `max_tick_budget_ms=1e9`, `LocalSequentialExecutor`, repeat-identical entity hashes unless stated):
+  with all groups applied, `danger` concerns emitted 1025 to 485 (crowded_frontier) and 2078 to 2091
+  (frontier_living_world); `trauma_dead_ally` 742 to 100 and 1315 to 42; cooperation contracts held at end
+  110 to 554 and 825 to 537 (frontier_living_world is bimodal across repeats from Group B on, see the
+  ticket; the figure is the modal outcome);
+  the splash site was **never evaluated** in either world (0 AoE attacks), so its effect is proven by unit
+  test only. Raw-vs-catalog disagreement per site is in the ticket's Implementation Notes.
+- **Rationale**: **Bug Fix** (the enum cannot represent the catalog's factions), with **Unified** for the
+  single shared helper.
+- **Verification**: `tests/unit/combat/test_catalog_hostility_sweep.py` (both error directions per site, a
+  neutral case, helper uniqueness).
 - **Status**: RATIFIED
 ---
 

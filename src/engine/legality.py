@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Tuple, Optional, Any, List, Dict
 
 from src.engine.domain.view import DomainView
 from src.core.enums import ReasonCode, EntityRole
+from src.content_semantics.faction import are_entities_hostile
+from src.content_semantics.relation import RelationContext
 from src.engine.spatial_query import SpatialQueryService
 from src.engine.rpg_depth import TerrainCostService
 from src.world.environment import EnvironmentService
@@ -444,11 +446,13 @@ class LegalityServiceV2:
             
         x, y = int(defender.navigation.position[0]), int(defender.navigation.position[1])
         
+
         spatial_index = LegalityServiceV2.get_spatial_index(state)
         def has_hostile_at(pos: Tuple[int, int]) -> bool:
             entity = spatial_index.get(pos)
             if entity:
-                return entity.identity.faction != defender.identity.faction
+                dist = LegalityServiceV2.get_manhattan_dist(defender.navigation.position, entity.navigation.position)
+                return are_entities_hostile(defender, entity, RelationContext(distance=float(dist), combat_engaged=True))
             return False
 
         n = has_hostile_at((x, y - 1))
@@ -526,8 +530,6 @@ class LegalityServiceV2:
         it on 34%-97% of every pair either source flagged as hostile
         (TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS).
         """
-        from src.content_semantics.faction import are_entities_hostile
-        from src.content_semantics.relation import RelationContext
 
         return are_entities_hostile(entity, other, RelationContext(distance=1.0, combat_engaged=True))
 
