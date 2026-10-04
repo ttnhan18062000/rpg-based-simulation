@@ -140,6 +140,7 @@ def adopt(
     source_asset_id: str,
     new: bool = False,
     parent: str | None = None,
+    detail_value: str | None = None,
     decided_at: str,
     confirm: Confirm,
     registry: Registry | None = None,
@@ -204,12 +205,20 @@ def adopt(
         raise _refuse("registry_unreadable", str(exc)) from None
     if visual_key not in known:
         raise _refuse("unknown_visual_key", "the visual key is not in the registry (keys are never registered dynamically)")
+    definition = known[visual_key]
+    if detail_value is not None:
+        if definition.detail is None:
+            raise _refuse("detail_not_declared", f"{visual_key} declares no detail axis, so it takes no --detail value")
+        if detail_value not in definition.detail.values:
+            raise _refuse("unknown_detail_value", f"{detail_value!r} is not one of the declared detail values of {visual_key}: {', '.join(definition.detail.values)}")
+    slot = definition.effective_detail(detail_value)
+    slot_name = visual_key if slot is None else f"{visual_key} [{slot}]"
     try:
-        holders = [holder for holder in records.key_holders(visual_key) if holder != source_asset_id]
+        holders = [holder for holder in records.slot_holders(definition, slot) if holder != source_asset_id]
     except (StageError, ContractError) as exc:
         raise _refuse("catalog_unreadable", f"existing records could not be read ({exc.code})") from None
     if holders:
-        raise _refuse("visual_key_taken", f"{holders[0]} already holds this visual key; revoke its revisions first to replace it")
+        raise _refuse("visual_key_taken", f"{holders[0]} already holds {slot_name}; revoke its revisions first to replace it")
 
     state = getattr(licence_state, "value", licence_state)
     if state != LicenceState.CLEARED.value:
@@ -238,7 +247,7 @@ def adopt(
             candidate_id=result.candidate_id,
             approver_name=approver, approver_role=approver_role, source_hash=staged["source.aseprite"],
             source_asset_id=source_asset_id, source_revision=revision, parent_revision=parent_revision,
-            visual_key=visual_key, licence_state=LicenceState.CLEARED, licence_evidence_ref=licence_evidence_ref,
+            visual_key=visual_key, detail_value=detail_value, licence_state=LicenceState.CLEARED, licence_evidence_ref=licence_evidence_ref,
             decided_at=decided_at,
         )
         adoption_bytes = canonical_json(adoption)
@@ -257,7 +266,7 @@ def adopt(
         PREVIEW_WARNING,
         f"adopt {intake_id} as {source_asset_id} {revision}" + (f" (parent {parent_revision})" if parent_revision else " (new source asset)"),
         "the store re-rendered the source just now and its pixels MATCH the producer's preview",
-        f"visual key {visual_key}; licence recorded as CLEARED, evidence {licence_evidence_ref!r} (stated by you, not taken from the package)",
+        f"visual key {slot_name}" + (" (the key's default detail value)" if detail_value is None and slot is not None else "") + "; licence recorded as CLEARED, evidence {licence_evidence_ref!r} (stated by you, not taken from the package)",
         f"approver {approver!r} ({approver_role}); recorded, not authenticated",
     )
     if not confirm(intake_id, notices):

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-VISUAL-ASSETS-DETAIL-AXIS-CONTRACT
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, determinism, mcp]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, determinism, mcp]
 A declared decorative detail axis on a visual key: one adopted artifact per value, carried through adoption, release candidate and runtime manifest
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -78,11 +78,11 @@ Planner's design (deviate only after telling the planner why):
 - Any change to `src/`, the API, world generation or the normal Live Map.
 
 ## Acceptance Criteria
-- [ ] The one-key-one-artifact statement is replaced in code docstrings, `store_contract.md` and the ADR (row with the separate-field and no-version-bump decisions).
-- [ ] The committed pilot adoption, `pilot/rc-0001` and its runtime export still parse and `verify` is clean; the pilot adoption fills the `plain` slot (test).
-- [ ] Tests: adopt with a declared / undeclared / no-axis detail value; a second holder of the same slot refused, of a different slot accepted; release needs the default slot, not the others; entries unique and sorted per slot; total entries bounded by `MAX_VISUAL_KEYS`.
-- [ ] Python and TS manifest parsers accept and reject the same cases (shared cases or mirrored tests).
-- [ ] `test_record_bounds.py` covers the widest legal manifests with detail fields under the new bounds; `budgets.md` rows for `MAX_DETAIL_VALUES`, `MAX_DETAIL_KEYS` and the raised `MAX_MANIFEST_BYTES` carry measured values and `APPROVED 2026-10-04`; the budget parity test passes.
+- [x] The one-key-one-artifact statement is replaced in code docstrings, `store_contract.md` and the ADR (row with the separate-field and no-version-bump decisions).
+- [x] The committed pilot adoption, `pilot/rc-0001` and its runtime export still parse and `verify` is clean; the pilot adoption fills the `plain` slot (test).
+- [x] Tests: adopt with a declared / undeclared / no-axis detail value; a second holder of the same slot refused, of a different slot accepted; release needs the default slot, not the others; entries unique and sorted per slot; total entries bounded by `MAX_VISUAL_KEYS`.
+- [x] Python and TS manifest parsers accept and reject the same cases (shared cases or mirrored tests).
+- [x] `test_record_bounds.py` covers the widest legal manifests with detail fields under the new bounds; `budgets.md` rows for `MAX_DETAIL_VALUES`, `MAX_DETAIL_KEYS` and the raised `MAX_MANIFEST_BYTES` carry measured values and `APPROVED 2026-10-04`; the budget parity test passes.
 
 ## Related Tickets
 - TCK-20261004-VISUAL-ASSETS-TERRAIN-DETAIL-VARIANTS (epic), TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE
@@ -102,9 +102,22 @@ Planner's design (deviate only after telling the planner why):
 - Changing a key's declared `default` after adoptions exist re-binds every `None` adoption to the new default; the release lists the explicit value per entry, so the effect is visible. Accepted; no lock is added.
 
 ## Implementation Notes
+- Hard stop first: before building, the widest legal runtime manifest measured 404820 B with a `detail` on every entry (11604 B over the 393216 B bound) and the `details` block at `MAX_AXIS_VALUES` (64) could reach about 2.3 MB. The planner took it to the owner, who raised `MAX_MANIFEST_BYTES` to 524288 and set `MAX_DETAIL_VALUES` 16 and `MAX_DETAIL_KEYS` 64 (2026-10-04). Measured at the new bounds: runtime 451552 B (parse 0.008 s), candidate 337137 B (0.003 s), registry with 64 detail keys 431326 B (loads in 1.52 s, under the R3 2 s line and `MAX_REGISTRY_BYTES`).
+- Design as the ticket says: `DetailAxis` on the key, `AdoptionRecord.detail_value` (`None` = the key's default), slots per `(key, effective value)` in `records.slot_holders` (replaces `key_holders`), release and runtime entries, `RuntimeManifest.details`, TS mirror, ADR D11, `store_contract.md`, `budgets.md`.
+- Byte stability without a version bump: `detail_value`, `detail` and an empty `details` are omitted from the serialised bytes when absent (`drop_absent`, a wrap serializer per record), so every committed record, the rehearsal and pilot fixtures and the committed registry round-trip byte-identically. The TS parser treats an explicit `null` detail as absent, as the Python model does.
+- New refusal codes: `detail_not_declared`, `unknown_detail_value` (adopt); `undeclared_detail` (release); `ADOPTION_UNKNOWN_DETAIL`, `MANIFEST_UNKNOWN_DETAIL` (verify). A manifest entry WITHOUT a detail value is tolerated for a key that now declares an axis (the candidate predates the declaration, and ticket 3 declares the axis on `terrain.forest` after `rc-0001`); an optional key may omit its default slot (the ticket required the default only for non-optional keys).
+- The registry is NOT declared on `terrain.forest` here: that changes `registry_hash`, so `rc-0001` could no longer be exported and the pilot fixture would break; ticket 3 does it with the new release.
+- Two existing tests were adjusted on purpose: `RuntimeManifest`'s field allow-list gained `details` (and `detail` on the entry), and a readmodel test's synthetic entries are now zero-padded so they are sorted (the new candidate sortedness rule).
+- Parity of the two parsers: `frontend/src/visualAssets/__fixtures__/detail_cases.json` (26 cases) is decided by both `parse_record(RuntimeManifest)` and `parseManifest`.
 
 ## Test Summary
+`tests/visual_assets`: 1258 passed (real Aseprite is local; run under a 2 GB cap). New: `test_detail_axis.py` (24 + 26 shared cases), bounds for the widest manifests and registry with detail fields. Frontend: `vitest src/visualAssets` 115 passed, `tsc -b` and `eslint src/visualAssets` clean. `verify` on the committed catalog: store ok; runtime fixtures `--check`: current.
 
 ## Files Changed
+- visual_assets/store/{config,records,release,runtime_export,verify,adoption,cli,readmodel}.py, catalog/registry.py, contracts/{base,definitions,adoption,release,runtime}.py
+- frontend/src/visualAssets/manifest.ts, __tests__/manifest.test.ts, __fixtures__/detail_cases.json (new)
+- tests/visual_assets/store/unit/{test_detail_axis (new),test_record_bounds,test_runtime_contract,test_readmodel}.py, store/adoption_support.py
+- docs/assets/{store_contract,budgets}.md, docs/architecture/visual_asset_foundation_adr.md (D11), docs/plans/visual-asset-foundation/README.md
 
 ## Completion Summary
+A key may now declare a bounded decorative detail axis; one adopted artifact per declared value flows through adoption, holding, release candidate, runtime manifest (`details`) and the client parser, with no schema bump and no change to any committed record or fixture. The pilot adoption fills the `plain` slot of such a key unchanged. No picking, no art (tickets 2 and 3).

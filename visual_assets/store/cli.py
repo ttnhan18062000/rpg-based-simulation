@@ -93,6 +93,7 @@ def _parser() -> argparse.ArgumentParser:
     adopt.add_argument("--licence", required=True, help="your own licence decision (only CLEARED is adoptable)")
     adopt.add_argument("--licence-evidence", required=True, help="your own evidence reference, never taken from the package")
     adopt.add_argument("--source-asset-id", required=True)
+    adopt.add_argument("--detail", default=None, help="the key's detail value this fills (only for a key that declares a detail axis; omitted = its default)")
     lineage = adopt.add_mutually_exclusive_group(required=True)
     lineage.add_argument("--new", action="store_true", help="start a new source asset (refused if the id exists)")
     lineage.add_argument("--parent", metavar="rNNNN", help="the latest unrevoked revision of an existing source asset")
@@ -180,7 +181,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             record = adoption.adopt(
                 args.intake_id, visual_key=args.visual_key, approver=args.approver, approver_role=args.approver_role,
                 licence_state=args.licence, licence_evidence_ref=args.licence_evidence, source_asset_id=args.source_asset_id,
-                new=args.new, parent=args.parent, decided_at=_now(), confirm=_prompt, renderer=_renderer(),
+                new=args.new, parent=args.parent, detail_value=args.detail, decided_at=_now(), confirm=_prompt, renderer=_renderer(),
             )
             print(f"adopted {record.intake_id} as {record.source_asset_id} {record.source_revision} ({record.adoption_id})")
             return 0

@@ -98,7 +98,9 @@ release candidates are assembled but never activated (the last arrow is out of s
 Under Profile A (ADR D8) the frontend build consumes the assets of one release candidate. The candidate manifest is an internal record; what ships is the smaller
 `RuntimeManifest` (`contracts/runtime.py`, proposal 9.3): `catalog_id`, `release_id`, `candidate_manifest_hash` (the `sha256:` file hash of the exact candidate
 manifest bytes it was exported from), `registry_hash`, `fallback_contract_version` (1) and `entries`, each `visual_key`, `family` (from the registry), `pixel_hash`,
-`file`, `width`, `height`. `file` is exactly `<64 hex>.png`, derived from the pixel hash and never a path; entries are unique and sorted by key, at most `MAX_VISUAL_KEYS`;
+`file`, `width`, `height`, and `detail` (the slot's detail value, present exactly for a key listed in `details`). `details` (omitted when empty) holds one `{visual_key, values, default}` per key that declares a detail
+axis and has an entry, copied from the registry and sorted by key (at most `MAX_DETAIL_KEYS`): the client picks over these DECLARED values, so adding art for a declared value never reshuffles the map.
+`file` is exactly `<64 hex>.png`, derived from the pixel hash and never a path; entries are unique per slot and sorted by `(key, detail)`, at most `MAX_VISUAL_KEYS`;
 the record's size bound is `MAX_MANIFEST_BYTES`. It **excludes** everything protected: approver, licence record, source path or revision, review note, intake, artifact id.
 Same strictness as every record (unknown fields, wrong versions, oversize dimensions rejected).
 
@@ -159,8 +161,14 @@ Runtime activation, a resolver in the real client, Live Map and HUD consumption,
 - **Agents never run `adopt` or `revoke`.** They are absent from the MCP server and a boundary test forbids the drawing code from importing them.
 - **The preview is proven only where Aseprite is available.** Intake alone cannot prove a preview depicts its source, so adoption requires the store's own render (see above) and therefore refuses on a machine
   without Aseprite and bwrap. The comparison is by decoded pixels at the preview's scale, so it is exact for what the sandboxed Aseprite renders; it is not a statement about artistic intent.
-- **One visual key maps to one artifact** (the single `x1` scale class): a key cannot carry two variants. A release candidate lists one artifact per key. A second asset cannot take a key a live asset holds (`visual_key_taken`);
-  replacing an asset under the same key means revoking the old asset's revisions first.
+- **One SLOT maps to one artifact** (the single `x1` scale class). A slot is a visual key, plus a detail value when the key declares a **detail axis** (`detail: {values, default}` on the
+  registry key; at most `MAX_DETAIL_VALUES` values, at most `MAX_DETAIL_KEYS` keys per registry; a key without an axis is the single slot `(key, none)`). An adoption names its slot with `adopt --detail <value>`
+  (`AdoptionRecord.detail_value`; omitted/`None` = the key's declared default, so an adoption made before the axis existed fills the default slot unchanged). A release candidate lists one artifact per slot,
+  sorted by `(key, detail)`; a key that is not optional needs its default slot's artifact and every other declared value is optional (the client falls back to the default). A second asset cannot take a slot a live
+  asset holds (`visual_key_taken`); replacing an asset in a slot means revoking the old asset's revisions first. Refusals: `detail_not_declared` (a value on a key with no axis), `unknown_detail_value`; at release,
+  `undeclared_detail` (the registry no longer declares an adopted value). Total entries across all slots stay at most `MAX_VISUAL_KEYS`. The default is the only declared meaning of "no value": changing a key's
+  `default` re-binds every adoption that names none, and the release lists the explicit value on each entry. This replaced the earlier limit "one visual key maps to one artifact"
+  (ADR D11); no schema version changed: every new field has a default and is omitted from the bytes when absent, and a strict client rejects the new fields.
 - Animation metadata beyond `frame_count` and `tag_count` (per-frame durations, tag ranges, loop modes) is not part of the handoff package or checked by intake
   (proposal 9.6 lists "animation metadata"; ticket 3 adds only the producer state).
 - **Palette size is unverifiable for an all-opaque-black stored palette.** Aseprite 1.3.18.6 rebuilds such a palette from the image when it loads a file

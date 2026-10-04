@@ -23,6 +23,7 @@ from tests.visual_assets.store.unit.conftest import FIXTURES, RECORD_FILES
 from visual_assets.store import config, pixels, records
 from visual_assets.store.catalog.registry import load_registry
 from visual_assets.store.contracts import RECORD_TYPES, ReleaseCandidateManifest, RuntimeManifest, VisualKeyRegistry, canonical_json, parse_record, record_bound
+from visual_assets.store.contracts.definitions import MAX_DETAIL_VALUES
 from visual_assets.store.contracts.handoff import MAX_LIMITATIONS
 from visual_assets.store.contracts.intake import MAX_FINDINGS, IntakeFindingCode
 
@@ -78,22 +79,41 @@ def _maximal_package(cls) -> dict:
     return data
 
 
+def _wide_key(i: int) -> str:
+    return f"a{i:05d}" + "x" * 26 + ".b" + "y" * 31 + ".c" + "z" * 29
+
+
+def _wide_slots() -> list[tuple[str, str]]:
+    """MAX_VISUAL_KEYS slots, every one carrying a maximum-length detail value: MAX_DETAIL_KEYS keys x MAX_DETAIL_VALUES values.
+
+    That is the widest legal slot set: a slot without a detail value is narrower, and a key needs no more than MAX_DETAIL_VALUES values to
+    have its entries distinguished, so fewer keys would not fit MAX_VISUAL_KEYS slots.
+    """
+    assert config.MAX_DETAIL_KEYS * MAX_DETAIL_VALUES == config.MAX_VISUAL_KEYS
+    return [(_wide_key(k), f"{v:02d}" + "d" * 30) for k in range(config.MAX_DETAIL_KEYS) for v in range(MAX_DETAIL_VALUES)]
+
+
 def _maximal_manifest(cls) -> dict:
     data = _fixture(cls)
     data["entries"] = [
-        {"visual_key": f"a{i:05d}" + "x" * 26 + ".b" + "y" * 31 + ".c" + "z" * 29, "artifact_id": "x" * 62 + f"{i % 100:02d}", "pixel_hash": "pixels-v1:" + f"{i:064x}"}
-        for i in range(config.MAX_VISUAL_KEYS)
+        {"visual_key": key, "detail": detail, "artifact_id": "x" * 62 + f"{i % 100:02d}", "pixel_hash": "pixels-v1:" + f"{i:064x}"}
+        for i, (key, detail) in enumerate(_wide_slots())
     ]
     return data
 
 
 def _maximal_runtime(cls) -> dict:
-    """MAX_VISUAL_KEYS entries of maximum-length keys and families, 128 px images: the widest legal runtime manifest."""
+    """MAX_VISUAL_KEYS slots of maximum-length keys, families and detail values, 128 px images, plus the full `details` block: the widest legal runtime manifest."""
     data = _fixture(cls)
+    slots = _wide_slots()
     data["entries"] = [
-        {"visual_key": f"a{i:05d}" + "x" * 26 + ".b" + "y" * 31 + ".c" + "z" * 29, "family": "f" * 32, "pixel_hash": "pixels-v1:" + f"{i:064x}",
-         "file": f"{i:064x}.png", "width": config.MAX_DIM, "height": config.MAX_DIM}
-        for i in range(config.MAX_VISUAL_KEYS)
+        {"visual_key": key, "family": "f" * 32, "pixel_hash": "pixels-v1:" + f"{i:064x}", "file": f"{i:064x}.png",
+         "width": config.MAX_DIM, "height": config.MAX_DIM, "detail": detail}
+        for i, (key, detail) in enumerate(slots)
+    ]
+    data["details"] = [
+        {"visual_key": _wide_key(k), "values": [d for key, d in slots if key == _wide_key(k)], "default": f"00{'d' * 30}"}
+        for k in range(config.MAX_DETAIL_KEYS)
     ]
     return data
 
@@ -107,6 +127,8 @@ def _maximal_registry(cls) -> dict:
          "variant_axes": [{"name": f"axis{a}", "values": [f"value{v}" for v in range(4)]} for a in range(2)], "optional": False}
         for i in range(config.MAX_VISUAL_KEYS)
     ]
+    for definition in data["keys"][: config.MAX_DETAIL_KEYS]:
+        definition["detail"] = {"values": [f"{'d' * 30}{v:02d}" for v in range(MAX_DETAIL_VALUES)], "default": f"{'d' * 30}00"}
     data["aliases"] = [{"alias": f"ui.old{i}.entry{i}", "target": f"ui.family{i % 40}.entry{i}"} for i in range(config.MAX_ALIASES)]
     return data
 

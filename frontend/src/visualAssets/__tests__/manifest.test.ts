@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { ManifestError, MAX_VISUAL_KEYS, parseManifest, type ManifestErrorCode } from '../manifest'
+import { ManifestError, MAX_DETAIL_KEYS, MAX_DETAIL_VALUES, MAX_VISUAL_KEYS, parseManifest, slotKey, type ManifestErrorCode } from '../manifest'
 import { fixtureManifestText } from '../fixtureSource'
 import { fixtureObject, manifestWith } from './helpers'
 
@@ -78,4 +80,40 @@ describe('parseManifest', () => {
       expect(['invalid_json', 'invalid_value']).toContain(codeOf(text))
     },
   )
+})
+
+// The same cases `tests/visual_assets/store/unit/test_detail_axis.py` runs through the Python contract: both parsers must decide each one alike.
+describe('the detail axis (shared cases with the Python contract)', () => {
+  const cases = JSON.parse(readFileSync(path.resolve(__dirname, '../__fixtures__/detail_cases.json'), 'utf8')) as {
+    name: string
+    accept: boolean
+    manifest: unknown
+  }[]
+
+  it.each(cases.map((c) => [c.name, c] as const))('%s', (_name, c) => {
+    const text = JSON.stringify(c.manifest)
+    if (c.accept) expect(() => parseManifest(text)).not.toThrow()
+    else expect(() => parseManifest(text)).toThrow(ManifestError)
+  })
+
+  it('exposes the declared axis and a slot per detail value, and leaves a key without an axis keyed by its own name', () => {
+    const accepted = cases.find((c) => c.name === 'a manifest with a detail axis and per-slot entries')!
+    const snapshot = parseManifest(JSON.stringify(accepted.manifest))
+    expect([...snapshot.entries.keys()]).toEqual([slotKey('ui.a', 'bush'), slotKey('ui.a', 'plain'), 'ui.b'])
+    expect(snapshot.details.get('ui.a')).toMatchObject({ values: ['bush', 'plain'], default: 'plain' })
+    expect(snapshot.entries.get(slotKey('ui.a', 'bush'))!.detail).toBe('bush')
+    expect(snapshot.entries.get('ui.b')!.detail).toBeNull()
+    expect(Object.isFrozen(snapshot.details)).toBe(true)
+    expect((snapshot.details as unknown as { set?: unknown }).set).toBeUndefined()
+  })
+
+  it('parses the committed pilot manifest with no details and one slot keyed by its visual key', () => {
+    const snapshot = parseManifest(readFileSync(path.resolve(__dirname, '../__fixtures__/pilot/runtime_manifest.json'), 'utf8'))
+    expect(snapshot.details.size).toBe(0)
+    expect(snapshot.entries.get('terrain.forest')!.detail).toBeNull()
+  })
+
+  it('mirrors the Python bounds', () => {
+    expect([MAX_DETAIL_VALUES, MAX_DETAIL_KEYS]).toEqual([16, 64])
+  })
 })
