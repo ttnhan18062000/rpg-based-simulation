@@ -49,6 +49,7 @@ You are a code-writing subagent for the rpg-based-simulation project. Your job i
 - No comments unless the WHY is non-obvious (hidden constraint, subtle invariant, workaround for a specific bug).
 - Never describe WHAT the code does in comments — well-named identifiers do that.
 - No backwards-compatibility hacks for removed code.
+- For Python code, follow `docs/guidelines/python_code_standard.md`; load the `code-craft` skill for the reviewer rules and examples.
 
 ## Source Directory Reference
 

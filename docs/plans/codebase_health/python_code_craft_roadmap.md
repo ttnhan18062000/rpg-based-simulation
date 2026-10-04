@@ -226,7 +226,7 @@ Each is separately closable. None before M6 modifies `src/`.
 | M3 | Measure and baseline | Ruff, complexipy, jscpd and the line-count script configured; `codebase/health/` adapters and ratchet; registry seeded from a full scan; first health snapshot taken | codebase |
 | M4 | Gates | Ratchet as an advisory CI job with changed-line PR feedback, blocking after a clean soak; mypy blocking through `mypy-baseline` with ledger and static-test updates; prek hooks; type-checker trial (basedpyright vs Pyrefly) reported | codebase |
 | M5 | Structure | Package registry seeded; structure audit decisions; ast-grep rule pack for project rules; import-linter evaluation. **done 2026-10-04 (PR #315), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (blocked on owner and testing planner), plus follow-ups: ast-grep SARIF feedback and snapshot inclusion, `exemplar_modules` (M6 or owner)** | codebase |
-| M6 | Agent integration | Skill, edit hook, implementer pointer, review rubric | request to agent-working |
+| M6 | Agent integration | Skill, edit hook, implementer pointer, review rubric; batched with the M5 follow-ups (exemplar modules, ast-grep SARIF and snapshot). Brief `python_code_craft_m6_agent_integration_ticket_brief.md` (2026-10-04) | codebase, by owner decision 17 (paths under `.claude/**` stay agent-working's) |
 | M7 | Refactor lane | **Deferred until the owner reopens `src/`.** Standing batch folder, one file per batch, fed by the registry; first targets `api/server.py` and `observability/event_extractor.py` | codebase, with rpg-planner for engine files |
 
 **M4 soak:** start = 2026-10-03 (PR #305, which added the advisory `Code health (advisory)` CI job, merged 2026-10-03T16:47:13Z), end = 2026-10-17 (start + 14 days). The flip ticket `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING` carries the same dates.
@@ -265,6 +265,9 @@ Recorded 2026-10-02:
     on the machine; the install keeps the existing post-commit reindex hook.
 16. **jscpd stays report-only** (2026-10-03) and is excluded from the blocking set until its
     dependencies are locked.
+17. **The codebase domain implements M6 itself** (2026-10-04), although `.claude/**` is routed to
+    agent-working and no agent-working session is running. The owner confirms the literal diff of
+    `.claude/settings.json` and `.claude/agents/implementer.md`; agent-working is told through the outbox.
 
 Tickets: M1 to M3 in `agent-working/tickets/done/python-code-craft/` (closed 2026-10-03, PRs #288,
 #297, #298). M4 in `agent-working/tickets/todos/python-code-craft-gates/` (epic plus six children,

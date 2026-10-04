@@ -230,6 +230,7 @@ These skills are Python and engineering patterns adapted for this project and st
 | `/combat-mechanics` | `combat-mechanics/SKILL.md` | `src/domains/combat_engagement/` and combat resolution — deterministic damage formula, tactical modifiers, `CombatPosture` pre-combat assessment, the Sliding State pipeline-ordering rule (added `TCK-20260805-COMBAT-SKILL`) |
 | `/cognition-strategy` | `cognition-strategy/SKILL.md` | `src/cognition/`, `src/strategy/`, `src/ai/goals/` — foregrounds the cognition/strategy/domain-decision boundary a generic skill would get wrong; goal hierarchy, interruption resistance, bounded strategic appraisal scoring (added `TCK-20260805-COGNITION-STRATEGY-SKILL`, flagged the highest-value gap in the sweep) |
 | `/progression-entities` | `progression-entities/SKILL.md` | `src/entities/`, `src/progression/` — core attributes, derived stat formulas, XP curve, level-up execution, AP allocation gates (added `TCK-20260805-PROGRESSION-ENTITIES-SKILL`, the last of the 6 confirmed domain-coverage-sweep gaps) |
+| `/code-craft` | `code-craft/SKILL.md` | Writing, refactoring or reviewing Python under `src/` or `tools/` — the standard's reviewer-only rules with examples, the pre-commit workflow, exemplar modules and the review rubric (added `TCK-20261004-CODE-CRAFT-SKILL`, python-code-craft M6) |
 
 ---
 
