@@ -344,6 +344,33 @@ with a recorded rationale?
   `requires: frontier_village_core`" grounds, but the 4-module running definition assembles and compiles
   cleanly today, so that stated justification looks questionable.
 
+## Plan-phase findings, 2026-10-04 — two traps and a resolved internal contradiction
+
+**1. `docs/mechanics/content_usage_matrix.md` is GENERATED, not hand-editable.** It is produced by
+`tests/unit/content/test_content_usage_matrix.py::test_generate_and_save_report` (`:111-120`). The
+Investigate phase listed it under "docs requiring update", and that must **not** be read as licence to
+hand-edit it — a hand edit will be overwritten by the next test run and will look like a mystery revert.
+Change the generator or the inputs, never the output file.
+
+**2. `resolved/world.resolved.yaml` has exactly ONE writer in the whole tree** —
+`src/worldbuilding/cli.py:177-205`, via `make world-resolve` — against **five read-only consumers**
+(`repository.py:78,132`, `lab/orchestrator.py:181-184`, `generate_corpus_registry.py:108,139`,
+`calibrate_simq.py:150`, `perf/profile_sweep.py:73`). This is why AC-6's agreement half is feasible
+without a locking story. Worth contrasting with the authored side, which has **no** single-writer
+discipline — which is part of why the generator writing directly into `data/worlds/` (UQ-1, Option A)
+deserves the rule owner's read rather than a unilateral choice.
+
+**3. An internal contradiction in AC-5, resolved — the amended text wins.** The older rule-owner
+sharpening recorded above says *"if repointed, `:452` must assert `4`"*. The later amended AC-5 says carry
+**neither** `2` as authoritative **nor** `4` as confirmed-correct. **The amended reading is the correct one
+and supersedes the earlier sharpening**, because the earlier one predates the discovery that the balance
+fix never applied — at the time it was written, `4` genuinely looked like the confirmed running value.
+Resolution: remove **both** numeric assertions with a pointer comment to
+`TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION`, and make the
+anti-relocation guard compare against whatever `data/worlds/dungeon_crawl/world.yaml` actually holds — so
+it is correct in **either** landing order of the two tickets. The rule owner's no-stale-expectation
+constraint is still honoured: no surviving copy of `== 2` anywhere.
+
 ## AC-6 mechanism, measured 2026-10-04 — a fresh resolve IS comparable, and there is a ready oracle
 
 The rule owner left one sub-question open — *"whether the provenance/report sidecars join the comparison or
@@ -379,6 +406,50 @@ independent artifacts now agree that the pre-fix configuration is what productio
 `world.resolved.yaml` byte-compare as authoritative confirmation. Do **not** include `created_at` in any
 comparison, and do **not** "fix" determinism by removing the timestamp — it is legitimate provenance, just
 not part of the projection's identity.
+
+**Limitation of the fingerprint, corrected by the rule owner 2026-10-04 — read this before "optimising"
+AC-6 down to a fingerprint check.** `content_fingerprint` is computed from the **inputs**, so it detects a
+**stale** snapshot. It **cannot** detect a **hand-edited** `world.resolved.yaml` whose recorded fingerprint
+still matches — and *"never hand-edited"* is half of the ADR clause. **So equality against a fresh resolve
+stays the check.** The fingerprint is a cheap first pass **in front of** it, never a substitute for it. My
+original framing presented the two as fast-path-plus-confirmation, which is compatible, but it did not say
+*why* the confirmation is non-optional; it is non-optional because it is the only half that catches
+hand-editing.
+
+## UQ-1 RESOLVED, 2026-10-04 — Option A is conformant; "authored" names the file's ROLE
+
+The Plan phase halted on this and it is now answered by `world-rule-catalog-design`.
+
+**Ruling: "authored" names the file's ROLE, not who wrote the bytes. Option A is conformant** — the
+generator may write `data/worlds/<id>/world.yaml` directly, with a provenance marker. Their reasoning:
+the clause splits **source of record** from **derived projection**, and each is defined by an obligation,
+not by authorship. A *projection* must equal a fresh derivation from other committed inputs, so it may
+never be edited independently. A *source* has no such obligation — it is what everything else derives
+from. Who typed the bytes plays no part in either definition.
+
+**Clause wording tightened, so nobody later reads it as provenance.** Replace *"`world.yaml` is the
+authored definition"* with:
+
+> *"`world.yaml` is the source definition, whether written by hand or by a generator; once written it is
+> edited, not regenerated."*
+
+The rest of the clause recorded above is unchanged. **AC-8 must use this wording, not the earlier draft.**
+
+**The one condition, and it is a real constraint on the design:** once the generator writes
+`world.yaml`, **that file IS the definition** — the generator acted as a one-time author, not a continuing
+projection. If the design instead expects `world.yaml` to be regenerable from a seed and params stored
+elsewhere, **those params become the real definition and `world.yaml` becomes a projection of them**,
+which re-creates a second definition location — Option C's problem by another route. Therefore:
+
+- The provenance marker records **history** (generator, version, seed, params) as a fact about origin.
+- **No check may assert `world.yaml == generate(marker)`.** That would convert the marker into a
+  re-derivation obligation and make `world.yaml` a projection.
+- **Nothing outside `data/worlds/<id>/` may hold generation inputs as a definition.**
+
+**Explicitly engineering-only, not the rule owner's** (so do not ask them again):
+whether `list_worlds()` needs to distinguish generated worlds (the marker suffices from the rule side;
+structure is not required); whether `generate()` must also run resolve so the new world has its `resolved/`
+sibling (without it `load_world()` raises); and single-writer discipline on the authored side.
 
 ## Rule-layer ruling, 2026-10-04 — where the normative sentence lives
 
