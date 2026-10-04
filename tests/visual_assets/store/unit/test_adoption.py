@@ -325,9 +325,11 @@ def test_a_symlinked_catalog_directory_is_refused_without_writing_through_it(env
 
 
 def test_the_committed_catalog_is_never_touched_by_these_tests():
+    # only the pilot asset's own records are there (TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE); a test adoption would add a second one
     committed = config.CATALOG_ROOT
-    for name in ("sources", "provenance/adoptions", "provenance/intake", "provenance/revocations"):
-        assert [p.name for p in (committed / name).iterdir() if p.name != ".gitkeep"] == [] if (committed / name).exists() else True
+    for name, count in (("sources", 1), ("provenance/adoptions", 1), ("provenance/intake", 2), ("provenance/revocations", 0)):
+        found = [p.name for p in (committed / name).iterdir() if p.name != ".gitkeep"] if (committed / name).exists() else []
+        assert len(found) == count, (name, found)
 
 
 # --------------------------------------------------------------------------- R4: the same bytes through another intake
