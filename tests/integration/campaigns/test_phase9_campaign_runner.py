@@ -1,5 +1,6 @@
 from src.domains.campaigns.spec import CampaignSpecLoader
 from src.domains.campaigns.runner import SimulationAnalysisRunner
+from src.engine.checkpoint import CanonicalStateHasher
 
 
 def test_campaign_runner_executes_small_campaign():
@@ -78,4 +79,4 @@ forbidden_behavior:
     res1 = runner.run(spec)
     res2 = runner.run(spec)
     
-    assert res1.final_state.fingerprint()["state_hash"] == res2.final_state.fingerprint()["state_hash"]
+    assert CanonicalStateHasher.get_hash(res1.final_state) == CanonicalStateHasher.get_hash(res2.final_state)

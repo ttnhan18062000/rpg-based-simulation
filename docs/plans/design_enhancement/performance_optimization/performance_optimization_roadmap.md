@@ -165,6 +165,12 @@ decided:
 3. **Salience fix out of the gate.** `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING` is a
    determinism break, which makes it a hard RPG bug under memo row 7. It moves to the RPG-core
    hard-bug queue at P1, and perf reviews it.
+4. **Partial lift extended to `src/perf/scenarios.py` (owner decision, 2026-10-04, later the same
+   day).** The extension covers only `TCK-20260919-PERF-SCENARIO-METROPOLIS-SPAWN-COLLISION`:
+   `build_metropolis_state()` stacks up to ten entities on one tile at its default parameters. The
+   file is a perf scenario builder, not one of the four core files, and no open RPG-core ticket
+   edits it. Metropolis numbers taken before the fix are not comparable with numbers taken after
+   it, and both stay provisional.
 
 ### Foundation slice that may start now
 

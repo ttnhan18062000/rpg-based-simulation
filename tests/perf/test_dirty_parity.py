@@ -6,7 +6,7 @@ from src.config.profiles import PROD_SMALL as SimulationProfile
 from src.platform.rng import DeterministicRNG
 from src.core.builder import V2EntityBuilder
 from src.core.strategic import ProjectStatus, ObjectiveStatus
-from src.replay.fingerprint import StateFingerprinter
+from src.engine.checkpoint import CanonicalStateHasher
 
 @pytest.fixture
 def rng():
@@ -74,21 +74,21 @@ def test_dirty_set_vs_full_scan_parity(rng):
             kernel_opt.tick_once()
 
         final_state_opt = kernel_opt._state
-        fingerprint_opt = StateFingerprinter.get_fingerprint(final_state_opt)
+        digest_opt = CanonicalStateHasher.get_hash(final_state_opt)
 
         # We use a fresh RNG with the SAME seed to ensure determinism
         for _ in range(ticks_to_run):
             kernel_ref.tick_once()
 
         final_state_ref = kernel_ref._state
-        fingerprint_ref = StateFingerprinter.get_fingerprint(final_state_ref)
+        digest_ref = CanonicalStateHasher.get_hash(final_state_ref)
 
         # 3. Compare
-        print(f"Optimized Hash: {fingerprint_opt['state_hash']}")
-        print(f"Reference Hash: {fingerprint_ref['state_hash']}")
+        print(f"Optimized Hash: {digest_opt}")
+        print(f"Reference Hash: {digest_ref}")
 
         # If hashes differ, we need to find out why
-        if fingerprint_opt['state_hash'] != fingerprint_ref['state_hash']:
+        if digest_opt != digest_ref:
             # Check some basic fields first
             assert final_state_opt.tick == final_state_ref.tick
             assert len(final_state_opt.entities) == len(final_state_ref.entities)
@@ -104,7 +104,7 @@ def test_dirty_set_vs_full_scan_parity(rng):
                 if e_opt.strategic.current_project_id != e_ref.strategic.current_project_id:
                     pytest.fail(f"Entity {eid} project mismatch: {e_opt.strategic.current_project_id} vs {e_ref.strategic.current_project_id}")
 
-        assert fingerprint_opt['state_hash'] == fingerprint_ref['state_hash'], "Optimized vs Full Scan parity failed!"
+        assert digest_opt == digest_ref, "Optimized vs Full Scan parity failed!"
     finally:
         kernel_opt.shutdown()
         kernel_ref.shutdown()

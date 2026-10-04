@@ -73,6 +73,7 @@ Do not stop merely for:
 - `architecture` — Architectural decision-making framework — requirements analysis, trade-off evaluation, ADR documentation. (see `.agents/skills/architecture/SKILL.md`)
 - `backend-testing` — Writes comprehensive backend unit, integration, and API tests. (see `.agents/skills/backend-testing/SKILL.md`)
 - `brainstorming` — Explores user intent, requirements, and design before creative implementation work. (see `.agents/skills/brainstorming/SKILL.md`)
+- `code-craft` — Python code-craft reviewer rules, pre-commit workflow and review rubric for src/ and tools/ (docs/guidelines/python_code_standard.md). (see `.agents/skills/code-craft/SKILL.md`)
 - `combat-mechanics` — Deterministic combat resolution (damage formula, tactical modifiers) and CombatPosture pre-combat assessment in src/domains/combat_engagement/. (see `.agents/skills/combat-mechanics/SKILL.md`)
 - `cognition-strategy` — Internal self-model, bounded strategic appraisal, goal hierarchy, and interruption resistance across src/cognition/, src/strategy/, src/ai/goals/ — foregrounds the boundary between them. (see `.agents/skills/cognition-strategy/SKILL.md`)
 - `create-tickets` — Ticket creation/scoping workflow — comprehend, investigate, structure, write, link. (see `.agents/skills/create-tickets/SKILL.md`)

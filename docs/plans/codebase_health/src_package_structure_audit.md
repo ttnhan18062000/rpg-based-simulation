@@ -112,6 +112,29 @@ Decisions: `keep`, `merge-candidate into <pkg>`, `retire-candidate`, `investigat
    `import logging` as 112 importers of this package; the corrected scan finds 3 src files. The package is one
    file with one real consumer (`cli`), hence `investigate`.
 
+## Exemplar criterion
+
+Added 2026-10-04 (`TCK-20261004-EXEMPLAR-MODULES`). `exemplar_modules` in `codebase/structure/package_registry.jsonl`
+is filled by a measurement, not by hand. A module qualifies when, measured on `main`:
+
+- it is a `src/<package>/**/*.py` file, not an `__init__.py`;
+- it is 60 to 400 lines long and has a module docstring whose first line is not a path banner (does not start with
+  `src/` and does not end in `.py`; standard rule D2: the first line says what the module does);
+- it has no row of any tool in `codebase/baselines/code_health_exceptions.jsonl`;
+- it is not in any registry row's `do_not_imitate`.
+
+Qualifying modules are ranked by how many other `src` modules import them (absolute, relative and
+`from pkg import module` forms), then by path; at most 3 are kept. Importing is a preference, not a filter.
+`legacy` and `frozen` packages get none, and a package with no qualifying module gets `[]`.
+
+    python3 -m codebase.structure.exemplars measure   # print the picks, change nothing
+    python3 -m codebase.structure.exemplars apply     # write them; byte-stable, only changed rows rewritten
+
+Result on 2026-10-04: 3 of the 36 packages got picks; the rest have none because 710 of the 744 `src` files carry
+an exceptions row, and a further 8 would-be picks were dropped by the path-banner filter (156 `src` files carry one;
+it is legacy habit, not house style). The sparsity is the honest result. `reviewed` stays `false`: the owner can veto any pick in the PR. Re-pick (measure, then apply)
+when a test reports that an exemplar gained an exceptions row, or after a baseline reseed.
+
 ## Handoff
 
 Non-`keep` decisions go to the owning planner as notes in `.claude/handover/codebase-planner-outbox.md`

@@ -50,14 +50,14 @@ M4 must migrate real mechanisms rather than describe them as already complete:
 
 | Existing mechanism | Current limitation | Safe migration |
 |---|---|---|
-| `tests/tools/perf_assertions.py` | Threshold checks default to `PerformanceThresholdWarning`; a breach can leave pytest green | Calibrate stable PR tripwires, make selected checks hard, and retain controlled confirmation for noisy capacity claims |
+| `tests/tools/perf_assertions.py` | Threshold checks default to `PerformanceThresholdWarning`; a breach can leave pytest green | Calibrate stable PR tripwires, make selected checks hard, and retain controlled confirmation for noisy capacity claims. Owned by PERF-M4-T02 (tripwire), T07 (evidence bundle) and T10 (no-silent-skip preflight) under PERF-D4. `TCK-20260914-PERF-THRESHOLD-SOFT-GATE-DEFECT` closed as superseded on 2026-10-04: 55 call sites, none passes a literal `hard=True`; no soft check becomes blocking until the gate lifts (roadmap, gate item 2). Open input for M4: keep `hard=False` as the default, or require every call site to choose |
 | `tests/perf/test_perf_regression_baseline.py` | Missing baselines skip; RuntimeMode hard-scenario set is empty; samples are short compared with the P1 contract | Reconcile under M2, prohibit missing evidence from PASS, calibrate hard scenarios, and distinguish tripwire from capacity evidence |
 | `.github/workflows/test.yml` SimQ drift job | Full recalibration is informational and uses `|| true`/`continue-on-error` because historical anchors already drift | Inventory/quarantine old drift, detect new base/candidate drift separately, then promote the lane to blocking when exit criteria hold |
 | `tests/simulation_quality/test_grade_regression.py` | Comparisons skip when gitignored calibration reports are absent | Materialize the required corpus before comparison and treat missing required reports as an evidence failure |
 | `tests/arena/` | Small Arena coverage is fast; stress Arena is `extra_slow` | Keep a stable representative PR slice and reserve the stress matrix for controlled scheduled/promotion gates |
 | `tests/regression/test_behavioral_5k.py` | Valuable long-horizon coverage is `extra_slow` and its missing baseline skips | Keep it scheduled/promotion-bound, validate baseline presence, and create a faster substitute only with demonstrated detection equivalence |
 | SimQ calibration corpus (added 2026-10-02) | Runs at roughly ten entities, so a change that only shows at population scale moves no pillar (`TCK-20260915-SIMQ-CORPUS-BLIND-TO-SCALE-DEPENDENT-BEHAVIOR`); most grade anchors also fail on untouched `main` (`TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED`) | T05 cannot cite SimQ as evidence for a scale-dependent change until a scale tier exists or an approved substitute oracle is named; anchor repair belongs to its own ticket, not to this epic |
-| `src/perf/scenarios.py::build_metropolis_state()` (added 2026-10-02) | Places ten entities per colliding tile at default parameters (`TCK-20260919-PERF-SCENARIO-METROPOLIS-SPAWN-COLLISION`) | T09 maps no scenario identity to this builder until the defect is fixed; earlier metropolis numbers in this file are contributor hints, not baselines |
+| `src/perf/scenarios.py::build_metropolis_state()` (added 2026-10-02, updated 2026-10-04) | Fixed 2026-10-04 (`TCK-20260919-PERF-SCENARIO-METROPOLIS-SPAWN-COLLISION`): zero spawn-occupancy violations at 200, 500 and 1000 entities. Standalone `build_mixed_state()` still collides (`TCK-20261004-PERF-SCENARIO-MIXED-STATE-SPAWN-COLLISION`) | T09 may now map a scenario identity to the metropolis builder; metropolis numbers taken before the fix are not comparable with later ones, and all stay provisional (roadmap gate item 4) |
 
 These limitations are not permission to flip every warning or informational job to blocking at
 once. A noisy permanently-red gate trains maintainers to ignore it. Migration requires debt
@@ -77,7 +77,8 @@ plus raw Gate-A-shaped evidence worth preserving here rather than only in that t
   turned this test red was a wall-clock `TimeoutError` from the test harness's own resource budget
   (conftest.py), not the perf gate itself — the perf gate never fired in either state. This is the
   concrete instance the gap-table row above was describing in the abstract. Filed as its own
-  diagnosed defect: `TCK-20260914-PERF-THRESHOLD-SOFT-GATE-DEFECT`.
+  diagnosed defect: `TCK-20260914-PERF-THRESHOLD-SOFT-GATE-DEFECT`, closed as superseded on 2026-10-04: the
+  migration belongs to PERF-M4-T02, T07 and T10 (see the gap-table row above); no call site was hardened.
 - **Re-tier, not a fix**: with user sign-off, that test was re-tiered `extra_slow` +
   `resource_budget_large` (it already ran 23s under a 60s "medium" budget with the flag OFF — a
   slow test mistakenly carrying a medium marker, independent of this ticket). Assertions/thresholds

@@ -166,6 +166,8 @@ stateDiagram-v2
     CONSTRAINED --> NORMAL: same gate
 ```
 
+> The two `work_debt` thresholds in this diagram are coded (`governor.py`) but never fire: production debt is always 0 (see the hard backstop paragraph below and `tests/integration/kernel/test_work_debt_stays_empty_in_production.py`).
+
 Each mode is a pre-composed policy bundle (`src/engine/policy.py`):
 
 | | NORMAL | CONSTRAINED | DEGRADED | SURVIVAL |
@@ -196,13 +198,14 @@ strategy re-evaluation staggered per entity). A population spike means more enti
 for the same bounded budget slots, not a proportionally larger per-tick workload.
 
 **Hard backstop**: if Resolution runs long, `kernel.py` checks elapsed time every 10 results and,
-past the hard cap, drops remaining results outright, records the drop, force-escalates to
-DEGRADED, and fires a watchdog alert. Dropped work becomes an entry in
-`state.work_debt[subsystem_id]` (`src/engine/apply.py:280` — a typed, durable, per-subsystem
-ledger), drained later via low-priority `DRAIN_DEBT` items that always sort last in the
-deterministic commit order, so backlog repayment never starves fresh critical work.
-`work_debt_total >= max_work_debt` is itself one of the two hardest SURVIVAL triggers: "can't
-keep up" means "shrink scope further," never "blow the budget."
+past the hard cap, drops remaining results outright, records the drop in `RuntimeStatus` counters, force-escalates to
+DEGRADED, and fires a watchdog alert. Dropped work is **not** turned into debt: as of 2026-10-04 nothing
+increases `state.work_debt` (`src/engine/apply.py` only applies drain deltas; `DRAIN_DEBT` items exist only
+for debt that already exists, and they always sort last in the deterministic commit order). Every
+`work_debt_total` is therefore 0 in production, so the `work_debt_total >= max_work_debt` SURVIVAL trigger
+and the 50% DEGRADED trigger never fire (guard: `tests/integration/kernel/test_work_debt_stays_empty_in_production.py`). The design intent, "can't keep up" means
+"shrink scope further," never "blow the budget," is carried today by the compute and memory signals only.
+The field is scheduled for retirement (owner decision 2026-10-04; `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`, which waits for the RPG-core entry gate).
 
 ## Part 5 — Benchmarking integrity
 

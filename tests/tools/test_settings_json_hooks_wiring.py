@@ -74,9 +74,10 @@ def test_existing_hook_writers_untouched():
     settings = _load_settings()
     # Count includes the TCK-20260904-BASH-SECRET-SCAN-HOOK PreToolUse[4] entry, the
     # TCK-20260923-CD-PREFIX-ADVISORY-HOOK PreToolUse[5] entry, and the later, purely-additive
-    # TCK-20260924-DELIVERY-PRE-PUSH-ADVISORY PreToolUse[6] entry.
+    # TCK-20260924-DELIVERY-PRE-PUSH-ADVISORY PreToolUse[6] entry. PostToolUse count 5 includes the purely
+    # additive, last-appended TCK-20261004-EDIT-RATCHET-HOOK entry (the first four are unchanged).
     assert len(settings["hooks"]["PreToolUse"]) == 7
-    assert len(settings["hooks"]["PostToolUse"]) == 4
+    assert len(settings["hooks"]["PostToolUse"]) == 5
     assert "permissions" in settings
     assert "allow" in settings["permissions"]
 
@@ -131,3 +132,13 @@ def test_edit_write_hook_json_still_valid_after_edit():
     assert "permissions" in settings
     assert "allow" in settings["permissions"]
     assert {"PreToolUse", "PostToolUse", "SubagentStop"} <= set(settings["hooks"])
+
+
+def test_edit_ratchet_hook_is_wired_advisory_and_last():
+    # TCK-20261004-EDIT-RATCHET-HOOK: the code-health edit hook is the last PostToolUse group, matches only
+    # Edit|Write|MultiEdit, and is fail-open (`|| true`) so it can never block a tool call.
+    groups = _load_settings()["hooks"]["PostToolUse"]
+    last = groups[-1]
+    assert last["matcher"] == "Edit|Write|MultiEdit"
+    assert [h["command"] for h in last["hooks"]] == ["python3 -m codebase.hooks.edit_ratchet_hook 2>/dev/null || true"]
+    assert sum("edit_ratchet_hook" in h["command"] for g in groups for h in g["hooks"]) == 1

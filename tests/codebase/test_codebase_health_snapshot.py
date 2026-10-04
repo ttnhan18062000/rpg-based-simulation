@@ -19,6 +19,7 @@ tests/tools/test_monitoring_writer.py:31-51's literal-source-scan pattern.
 import inspect
 import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -58,6 +59,7 @@ def _make_minimal_repo(tmp_path):
     (tmp_path / "pyproject.toml").write_text(
         '[project]\ndependencies = []\n', encoding="utf-8"
     )
+    shutil.copytree(_REPO_ROOT / "codebase" / "rules", tmp_path / "codebase" / "rules", ignore=shutil.ignore_patterns("rule-tests"))  # ast-grep config
     _commit(tmp_path, "init minimal repo")
 
 
