@@ -4,7 +4,7 @@ layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-REVIEW-RUBRIC
-phase: open
+phase: inprogress
 date: 2026-10-04
 tags: [architecture, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, planning]
 M6b: Review rubric in the Python code standard
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -68,9 +68,12 @@ None.
 - Nothing here blocks a PR or tool call; M4 and M5 soaks are not disturbed
 
 ## Implementation Notes
+New Section 11 "Review rubric" in the standard (one table, 5 bullets); old Section 11 "Related" became 12 (no inbound references to the number found). Docs-only: no plan.md round trip.
 
 ## Test Summary
+`tests/codebase/test_review_rubric.py`: 3 passed (three categories, the "Only Important blocks." sentence, length limit). ruff clean.
 
 ## Files Changed
+docs/guidelines/python_code_standard.md, tests/codebase/test_review_rubric.py (new), ticket
 
 ## Completion Summary
