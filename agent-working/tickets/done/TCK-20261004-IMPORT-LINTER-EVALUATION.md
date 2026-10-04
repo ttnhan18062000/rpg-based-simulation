@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-IMPORT-LINTER-EVALUATION
-phase: inprogress
+phase: done
 date: 2026-10-04
 tags: [architecture, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, planning]
 M5.4: import-linter evaluation (report only)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -46,11 +46,11 @@ Evaluate import-linter against the existing import-boundary tests and the packag
 - Changing M4 soak thresholds, ruff/complexipy versions or existing rows in codebase/baselines/code_health_exceptions.jsonl
 
 ## Acceptance Criteria
-- [ ] Decision record written with the measurements above
-- [ ] Injected-violation results for each rule, in the record
-- [ ] phase19 finding confirmed or refuted; outbox note written to .claude/handover/codebase-planner-outbox.md with status: pending, if confirmed
-- [ ] Adoption ticket filed if the recommendation is replace or add
-- [ ] git diff shows no change to pyproject.toml, CI, tests/ or src/
+- [x] Decision record written with the measurements above
+- [x] Injected-violation results for each rule, in the record
+- [x] phase19 finding confirmed or refuted; outbox note written to .claude/handover/codebase-planner-outbox.md with status: pending, if confirmed
+- [x] Adoption ticket filed if the recommendation is replace or add
+- [x] git diff shows no change to pyproject.toml, CI, tests/ or src/
 
 ## Related Tickets
 - TCK-20261004-PYTHON-CODE-CRAFT-STRUCTURE-EPIC
@@ -73,16 +73,25 @@ None.
 - tests/api/
 
 ## Assumptions / Open Questions
-- Namespace packages (from the audit, TCK-20261004-SRC-PACKAGE-STRUCTURE-AUDIT): `core`, `api`, `perf`, `certification`, `content_semantics` have no `__init__.py`, and a grimp build over `src` saw only 215 of 744 files. import-linter is built on grimp, so this ticket must MEASURE (not assume) (a) whether import-linter/grimp can cover those packages without adding `__init__.py` (a `src/` edit, out of scope), and (b) what coverage loss a `drop` or `add` recommendation would carry if it cannot. If full coverage needs `__init__.py` files, the record says so; that becomes an M7 / rpg decision, not part of this batch
+- Namespace packages (from the audit, TCK-20261004-SRC-PACKAGE-STRUCTURE-AUDIT): 20 of 36 top-level packages have no `__init__.py` (actions, ai, api, certification, content, content_semantics, core, domains, logging, observability, perf, strategy, systems, testing, town, views, world, worldassembly, worldgeneration, worldmodules), and a grimp build over `src` saw only 215 of 744 files. import-linter is built on grimp, so this ticket must MEASURE (not assume) (a) whether import-linter/grimp can cover those 20 packages without adding `__init__.py` (a `src/` edit, out of scope), and (b) what coverage loss a `drop` or `add` recommendation would carry if it cannot. If full coverage needs `__init__.py` files, the record says so; that becomes an M7 / rpg decision, not part of this batch
 - Depends on ticket 2 (the layers contract reads the registry)
 - Heavy runs one at a time under systemd-run --user --scope -p MemoryMax=2G
 - Hand-written by codebase-planner brief (owner decisions 2026-10-04); filed by codebase-implementer 2026-10-04. Facts in the brief were measured on main b9251cf5; each ticket's Investigate phase re-verifies the ones it relies on
 
 ## Implementation Notes
+- Record: `docs/plans/codebase_health/import_linter_evaluation.md`. Recommendation ADD with a narrow replace of 8 equivalent rules; versions import-linter 2.15 / grimp 3.17; scratch tree from `git archive c4304a7a3`; the exact command is in the record.
+- Namespace packages measured: 20 of 36 top-level packages lack `__init__.py`; `src` + `src.<pkg>` for each covers 774 of 744 files plus package nodes except `src/engine/intent`; `src` alone makes a contract on `src.core` fail loudly. No `src/` edit needed for the 20; the one uncovered directory is an M7 / rpg decision.
+- The inventory (a read-only subagent) lists 50 rules in 29 files (its own summary said 53; the brief said 41 in 31). 27 were exercised by injection; 23 are classified from the inventory only.
+- phase19 no-op confirmed; Message 9 written to the outbox (status: pending). Adoption ticket filed: `TCK-20261004-IMPORT-LINTER-ADOPTION` (BLOCKED on owner and testing planner).
+- The harness and cases ran from the scratchpad and are not committed; the contract bodies are in the record's Appendix A.
 
 
 ## Test Summary
+No repo test changed. Evidence is the record: baseline of 12 contracts in a 2 x 2 flag matrix, 45 injected-violation rows (existing test result vs contract), layer contract baseline 113 / 99, namespace coverage counts. `git diff --stat origin/main...HEAD` shows no change to src/, tests/ (other than ticket 2's new test), pyproject.toml, uv.lock or .github/ from this ticket.
 
 ## Files Changed
+- docs/plans/codebase_health/import_linter_evaluation.md (new)
+- agent-working: this ticket, the adoption ticket, stored artifacts, monitoring shards; outbox Message 9 (git-ignored)
 
 ## Completion Summary
+import-linter evaluated against the existing import-boundary tests and the registry's layer order: ADD, with a narrow replace of 8 equivalent tests (one a no-op), subject to the owner and the testing planner. Open: the `src/engine/intent` `__init__.py` question (M7 / rpg) and the adoption ticket.
