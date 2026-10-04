@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P2
 audience: agent
 ticket_id: TCK-20260915-SENSORY-FILTER-SALIENCY-USES-LEGACY-FACTION-ENUM
-phase: open
+phase: done
 date: 2026-09-15
 tags: [combat]
 ---
@@ -18,7 +18,7 @@ content-driven hostile factions into the same bucket — real but not the primar
 `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`
 
 ## Status
-BLOCKED — **folded into `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP` as its Group C site C1**
+DONE — **folded into `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP` as its Group C site C1**
 (2026-10-02, per owner decision 7's approved work order, `docs/plans/systemic_world/roadmap.md` §8 item
 2). This site is `src/engine/cognition.py:44`, re-verified at `origin/main` `4c133297b` as still present
 and still at line 44. **Do not implement it here** — one writer, one branch; the sweep owns the shared
@@ -86,9 +86,9 @@ finding rather than folded into that ticket's own scope.
   in scope here.
 
 ## Acceptance Criteria
-- `filter_saliency`'s hostility scoring uses the same resolved faction identity as the rest of the
+- [x] `filter_saliency`'s hostility scoring uses the same resolved faction identity as the rest of the
   targeting/combat pipeline.
-- New regression test passes; existing `tests/unit/` combat/cognition/tactical suites still pass.
+- [x] New regression test passes; existing `tests/unit/` combat/cognition/tactical suites still pass.
 
 ## Related Tickets
 - `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (parent investigation that surfaced
@@ -110,13 +110,13 @@ _(none — hotfix tier)_
 _(none)_
 
 ## Implementation Notes
-_(none yet — not yet implemented)_
+Implemented by `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP` (Group C): `SensoryFilter.filter_saliency` now uses `are_entities_hostile` with the real distance. The inherited 0.5% impact was re-measured there: the raw enum disagreed with the catalog on (3330 over + 116 under) of 21295 evaluated pairs (16.2%) in crowded_frontier and 3483+1828 of 23069 (23.0%) in frontier_living_world, over 2000 ticks, seed 42.
 
 ## Test Summary
-_(none yet)_
+`tests/unit/combat/test_catalog_hostility_sweep.py::TestCognitionInputs::test_saliency_ranks_catalog_hostile_above_catalog_friendly_at_equal_distance` (in the sweep ticket).
 
 ## Files Changed
-_(none yet)_
+`src/engine/cognition.py` (via the sweep ticket).
 
 ## Completion Summary
-_(not started)_
+Folded into and closed by `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP`; `filter_saliency` reads catalog hostility through the single shared helper.

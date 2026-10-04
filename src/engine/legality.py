@@ -444,11 +444,15 @@ class LegalityServiceV2:
             
         x, y = int(defender.navigation.position[0]), int(defender.navigation.position[1])
         
+        from src.content_semantics.faction import are_entities_hostile
+        from src.content_semantics.relation import RelationContext
+
         spatial_index = LegalityServiceV2.get_spatial_index(state)
         def has_hostile_at(pos: Tuple[int, int]) -> bool:
             entity = spatial_index.get(pos)
             if entity:
-                return entity.identity.faction != defender.identity.faction
+                dist = LegalityServiceV2.get_manhattan_dist(defender.navigation.position, entity.navigation.position)
+                return are_entities_hostile(defender, entity, RelationContext(distance=float(dist), combat_engaged=True))
             return False
 
         n = has_hostile_at((x, y - 1))

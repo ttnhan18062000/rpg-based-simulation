@@ -74,6 +74,8 @@ from src.core.strategic import (
     CognitionProfile, ProjectKind, GoalKind, ObjectiveKind
 )
 from src.engine.spatial_query import SpatialQueryService
+from src.content_semantics.faction import are_entities_hostile
+from src.content_semantics.relation import RelationContext
 from src.strategy.cognition_capacity import CapacityService
 from src.core.inventory import InventoryService
 from src.engine.cadence import should_run, SystemCadence
@@ -146,7 +148,10 @@ def _threat_resolved(hero: EntityState, state: AuthoritativeState) -> bool:
         eid != hero.id
         and (e := state.entities.get(eid)) is not None
         and e.combat.alive
-        and e.identity.faction != hero.identity.faction
+        and are_entities_hostile(hero, e, RelationContext(
+            distance=abs(e.navigation.position[0] - hero.navigation.position[0]) + abs(e.navigation.position[1] - hero.navigation.position[1]),
+            combat_engaged=True,
+        ))
         for eid in nearby_ids
     )
     return not has_hostile
@@ -436,7 +441,12 @@ class StrategicIntelligenceSystem:
                         dist = ((px - coords[0])**2 + (py - coords[1])**2)**0.5
                         if dist < 1.0:
                             raw_neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0)
-                            hostiles = [n[1] for n in raw_neighbors if n[1].identity.faction != entity.identity.faction and n[1].combat.alive]
+                            hostiles = [
+                                n[1] for n in raw_neighbors
+                                if n[1].combat.alive and are_entities_hostile(entity, n[1], RelationContext(
+                                    distance=abs(px - n[1].navigation.position[0]) + abs(py - n[1].navigation.position[1]),
+                                    combat_engaged=True))
+                            ]
 
                             if hostiles:
                                 confirm_up = BeliefCycleSystem.process_observation(entity, lead.subject, lead.detail, state.tick)

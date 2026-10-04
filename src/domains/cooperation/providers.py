@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from typing import Tuple, List
 from src.core.state import EntityState, AuthoritativeState
 from src.domains.cooperation.evaluators import HelpNeed
+from src.content_semantics.faction import are_entities_hostile
+from src.content_semantics.relation import RelationContext
 
 @dataclass(frozen=True, slots=True)
 class PartnerCandidate:
@@ -47,7 +49,8 @@ class PartnerCandidateProvider:
                 continue
                 
             # Exclude hostiles
-            if cand.identity.faction != entity.identity.faction:
+            manhattan = abs(my_pos[0] - cand.navigation.position[0]) + abs(my_pos[1] - cand.navigation.position[1])
+            if are_entities_hostile(entity, cand, RelationContext(distance=float(manhattan), combat_engaged=True)):
                 # TODO(TCK-20260824-OCCUPATION-CHANGE-TRIGGER): EntityRole(1) is SHOPKEEPER
                 # (src/core/enums.py:8), not a distinct "Hireling"/"Guild Merchant" role. Now
                 # that role_set is runtime-reachable (OccupationChangeGoalScorer), any entity

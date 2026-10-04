@@ -18,7 +18,7 @@ found at least 7 more real, load-bearing ones across combat, cognition, cooperat
 strategic subsystems — triage and prioritize, do not fix all at once)
 
 ## Status
-INPROGRESS
+INPROGRESS (implementation landed, awaiting Verify/Finalize)
 
 ## Tier
 standard
@@ -248,6 +248,96 @@ _(none yet — filed as a sweep finding, not yet investigated per-site)_
 
 ## Implementation Notes
 
+### 2026-10-04 — implemented (all three groups, measured per group)
+
+**Shared helper: established by item 1, not this ticket.** `TCK-20261002-GOAL-WINNER-CONSUMPTION-...` had already
+landed `are_entities_hostile(source, target, context)` in `src/content_semantics/faction.py`; every fix below consumes
+it, and no second helper was created. This ticket added only `are_entities_allied` (same resolved catalog faction) and
+a private `_resolve_faction_id` that both functions share.
+
+**Sites fixed** (each takes the real Manhattan distance and `combat_engaged=True`, as item 1's scorer does):
+- A1 `combat.py` `resolve_aoe_attack`: skip a splash victim when the catalog says **not hostile** (so catalog-allies
+  *and neutrals* are spared, matching the primary-target Friendly-Fire Law).
+- A2 `intake.py` `danger`: catalog-hostile neighbour only. `trauma_dead_ally`: `are_entities_allied`.
+  **Predicate decision (1c): "allied" = same resolved catalog faction id, not `not hostile`**, so a dead neutral is
+  not grieved. **Id decision (1d): the `trauma_dead_ally_<id>` literal is left unchanged** - with the predicate fixed
+  the id's claim ("ally") is now true, so no durable meaning is misplaced and no second hash movement was introduced.
+- A3 (promoted from Group C, see below) `cooperation/providers.py` and `intelligence.py` lead-observation hostiles.
+- B `legality.py` `check_flanking.has_hostile_at`: `are_entities_hostile` with the real distance.
+- C `cognition.py` `filter_saliency` and the outnumbered ratio (allies = `are_entities_allied`, hostiles =
+  `are_entities_hostile`, a neutral counts as neither), `intelligence.py` `_threat_resolved`.
+- Not touched: `scorers.py:108` (item 1), `legality.py:269`/`:524`, the benign sites.
+
+**Promotion to Group A (plan Step 3 instruction).** Checked durability before fixing C3/C4: `providers.py` candidates
+feed contract proposal (`cooperation/services.py`, `phase.py`) and the `intelligence.py:439` hostiles gate lets
+`BeliefCycleSystem.process_observation` write `leads_add_or_update`/`beliefs_add_or_update` - both durable, so they were
+fixed and measured in the Group A stage. `intelligence.py:149` (`_threat_resolved`) is a transient lock-release input
+and stayed Group C.
+
+**Deviation (also in plan.md).** B did **not** copy the `:265-269` `has_clean` shape. `is_hostile_compat` already
+falls back to the legacy-bucket `is_hostile` itself when clean data is missing, and the shared helper reaches it, so
+the explicit raw-enum `else:` would re-introduce the over-detection (any two different buckets "hostile") that this
+ticket removes. `:269` itself is untouched.
+
+**Measurement.** Real `Kernel.tick_once()`, `PROD_SMALL` with `max_tick_budget_ms=1e9`, `audit_mode=True`,
+`LocalSequentialExecutor()`, seed 42, 2000 ticks, one run at a time, sha256 of every entity's canonical dict, each arm
+repeated. An earlier non-audit pass was discarded (the throttle made repeats differ). The probe lived in the session
+scratchpad only. Stages: s0 baseline (HEAD incl. item 1), s1 = A, s2 = A+B, s3 = A+B+C.
+
+Raw-enum vs catalog disagreement at baseline, % of evaluated pairs (over = raw said enemy/ally, catalog says not;
+under = the reverse), crowded_frontier / frontier_living_world:
+
+| site | evaluated | over | under |
+|---|---|---|---|
+| `intake.py:30` danger (alive, <=3 tiles) | 6426 / 7596 | 9.7% / 11.5% | 1.5% / 11.0% |
+| `intake.py:44` dead neighbour (ally test) | 1572 / 3435 | 40.8% / 31.7% | 0 / 0 |
+| `cognition.py:44` saliency | 21295 / 23069 | 15.6% / 15.1% | 0.5% / 7.9% |
+| `cognition.py:117` ratio pairs | 16682 / 8995 | 10.4% / 12.0% | 0.3% / 4.5% |
+| `legality.py:451` flanking | 214 / 432 | 10.3% / 2.1% | 13.6% / 31.5% |
+| `providers.py:50` partner pool | 307162 / 644292 | 16.9% / 4.4% | 7.7% / 14.9% |
+| `intelligence.py:149` threat-resolved | 16 / 0 | 25.0% / n/a | 0 / n/a |
+| `combat.py:507` splash | **0 / 0 AoE attacks in 2000 ticks** | unmeasurable | unmeasurable |
+| `intelligence.py:439` lead observation | **0 / 0 confirmations; 0 location leads ever tested** | unmeasurable | unmeasurable |
+
+**The plan's expectation was wrong.** It predicted under-detection (monster-vs-monster conflict) would dominate.
+Over-detection (allies/neutrals treated as enemies) dominates at four of the seven measurable sites in both worlds;
+under-detection dominates only flanking and partner exclusion in `frontier_living_world`. Reported as a finding.
+
+Durable consequences, baseline s0 to all-fixed s3, per world (counts per 2000 ticks):
+
+| | crowded_frontier | frontier_living_world |
+|---|---|---|
+| `danger` concerns emitted | 1025 to 485 | 2078 to 2091 |
+| `trauma_dead_ally` concerns emitted | 742 to 100 | 1315 to 42 |
+| contracts held at end | 110 to 554 | 825 to 537 (modal) |
+| partner candidates produced | 30065 to 24491 | 82449 to 80617 |
+| flanked results / flank checks | 9/129 to 10/97 | 18/200 to 8/172 |
+| panic flag cleared / raised (shadow, s0) | 191 / 8 | 17 / 87 |
+| splash victims, deaths from splash | 0, 0 (site never runs) | 0, 0 |
+
+Group A alone already carries nearly the whole `danger`/`trauma` change in crowded_frontier (486 and 100 at s1).
+
+**C1 re-measured, not inherited.** `filter_saliency` raw-vs-catalog disagreement was 16.2% (crowded_frontier) and
+23.0% (frontier_living_world) of evaluated pairs, versus the inherited 0.5% (a drop-from-top-5 rate for another
+consumer). Different quantity, not a contradiction; the inherited figure should not be cited for this ticket.
+
+**Determinism.** Entity canonical hashes: s0 reproducible 6/6 on frontier_living_world; crowded_frontier reproducible at
+every stage. **`frontier_living_world` is bimodal across repeats at stages s2/s3** (two outcomes, 512c.../534b...; the
+modal 534b... in 9 of 11 runs; s2 and s3 share the same two outcomes). Not attributable to this change on the evidence
+here - it is the already-filed class `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` - and it
+was not seen at s0 (6/6) or s1 (2/2); reported, not explained. Moved hashes are explained as "these concerns are no
+longer generated / these entities are now eligible partners", per the plan's rule; no recorded-hash fixture moved
+(no test failed on a hash).
+
+**Other observation, not chased:** every entity is `alive == False` at tick 2000 in both worlds at baseline too.
+
+**Pre-existing failures, verified at HEAD behaviour** (stage 0): `tests/integration/scenarios/test_entity_differentiation.py::test_bravery_quartile_combat_rate_2x` (seed 4 population guard, n_alive=7) and `tests/integration/world/test_long_run_stability.py::test_long_run_stability` (conftest timeout) fail identically without this change.
+
+**Not done / honest gaps.** T4b (clean-data-unavailable flanking fallback) is not applicable after the deviation above.
+`intelligence.py:439` has no direct unit test (it lives inside the several-hundred-line `evaluate_strategic_intent`);
+it is covered by the shared-helper identity test only. `resolve_aoe_attack` has no corpus firing, so its measured
+effect is nil and its proof is the unit tests alone.
+
 ### 2026-10-02 — RESUMED as work-order item 2. Site inventory re-verified; three corrections.
 
 Resumed under owner decision 7's approved work order (`docs/plans/systemic_world/roadmap.md` §8, item
@@ -316,21 +406,35 @@ closed, since real work remains and the finding above is valuable and durable re
 the rest resumes.
 
 ## Test Summary
-_(none — investigation only, no code changed)_
+New `tests/unit/combat/test_catalog_hostility_sweep.py`: 15 tests, 12 fail at HEAD and all 15 pass after (both error
+directions per site, a neutral case, an inversion guard for splash, shared-helper identity). Scoped runs after the
+change: `tests/unit` + `tests/engine` 6199 passed, 3 skipped; `tests/integration` + `tests/mechanic_scenarios` +
+`tests/architecture` (not slow) 1205 passed, 2 failed - both failures reproduce identically at HEAD behaviour (see
+Implementation Notes).
 
 ## Files Changed
-_(none — investigation only, no code changed)_
+- `src/content_semantics/faction.py`
+- `src/engine/combat.py`
+- `src/engine/legality.py`
+- `src/engine/cognition.py`
+- `src/systems/world_systems/intake.py`
+- `src/systems/strategic_systems/intelligence.py`
+- `src/domains/cooperation/providers.py`
+- `tests/unit/combat/test_catalog_hostility_sweep.py` (new)
+- `docs/mechanics/02_combat_laws.md`
+- `docs/mechanics/04_strategic_cognition.md`
+- `docs/guidelines/intentional_divergences.md` (new Section 2.65)
+- `docs/parity_ledger/combat_movement.yaml` (COMB-326; the writer re-wrapped some neighbouring entries' YAML line breaks)
+- `docs/parity_ledger/strategic_cognition.yaml` (STRAT-275)
+- `agent-working/tickets/inprogress/TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP.md`
+- `agent-working/tickets/done/TCK-20260915-SENSORY-FILTER-SALIENCY-USES-LEGACY-FACTION-ENUM.md` (moved from `todos/`, closed as folded)
+- `agent-working/staging_artifacts/TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP/plan.md` (Deviations section)
 
 ## Completion Summary
-**Not closed — paused.** One of 8 numbered sites (`ai/goals/scorers.py:108`,
-`CombatEngageScorer`) investigated in full: found and recorded the real downstream gate that
-makes this arc's own "why doesn't the decision layer engage" question independent of this
-scorer's own hostility-detection accuracy — winning `COMBAT_ENGAGE` structurally cannot produce a
-`DEFEAT_ENEMY` objective under the current code, regardless of semantics, because the generic
-goal-winner-consumption branch hardcodes a `reach_location` objective kind rather than deriving
-it from the winning goal. The cross-subsystem divergence this arc's own fix created here is real
-but currently inert as a result — recorded explicitly for whoever eventually fixes
-`AdventureGoalScorer`'s own eligibility gate, since that is the point at which this divergence
-would start to matter. Remaining 7 sites (6 new + the known sibling) not yet investigated; sweep
-track paused per explicit user direction to prioritize the mechanism-registry/system-membership
-program.
+Eight raw legacy-`Faction`-enum hostility/allegiance sites (splash, flanking, concern intake x2, saliency, outnumbered
+ratio, cooperation partner pool, intelligence threat-resolved and lead observation) now ask the content catalog
+through the single shared `are_entities_hostile` helper item 1 created, plus a new `are_entities_allied` for the one
+ally test. Measured per group on two corpus worlds: over-detection, not the predicted under-detection, dominates;
+splash and lead observation never run in the corpus, so they are proven by unit tests only. 15 new tests; the
+sibling saliency ticket is closed as folded. Open: `frontier_living_world` is bimodal across repeats from Group B on
+(not attributed), and two integration tests fail identically at HEAD.

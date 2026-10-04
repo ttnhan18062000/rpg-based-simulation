@@ -433,6 +433,8 @@ class CombatResolutionSystem:
     ) -> Dict[int, CombatUpdate]:
         from src.core.updates import CombatIntent, ResourceTransferIntent, SocialUpdate, SocialBondUpdate
         from src.engine.legality import LegalityServiceV2
+        from src.content_semantics.faction import are_entities_hostile
+        from src.content_semantics.relation import RelationContext
         
         is_legal, reason = LegalityServiceV2.verify_aoe_legality(attacker, target_pos, state)
         if not is_legal:
@@ -504,7 +506,7 @@ class CombatResolutionSystem:
                 # COMB-006: radius application legality — only living, active entities are valid splash targets
                 if not other_ent.combat.alive or not other_ent.lifecycle.active:
                     continue
-                if attacker.identity.faction == other_ent.identity.faction:
+                if not are_entities_hostile(attacker, other_ent, RelationContext(distance=float(dist), combat_engaged=True)):
                     continue
 
                 if LegalityServiceV2.has_line_of_sight(target_pos, other_ent.navigation.position, state):
