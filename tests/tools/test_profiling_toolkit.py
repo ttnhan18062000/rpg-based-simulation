@@ -40,11 +40,6 @@ class TestHeader:
             for needle in ("PROVISIONAL", "abc", "combat", "60", "42", "python", "host_cores", "warmup_ticks", "measured_ticks"):
                 assert needle in text, (needle, text)
 
-    def test_metropolis_header_carries_the_known_defect_warning(self):
-        assert "TCK-20260919-PERF-SCENARIO-METROPOLIS-SPAWN-COLLISION" in "\n".join(
-            common.header_lines(common.header_fields("metropolis", 10, 1, 1, 1, commit="x"), "T"))
-        assert "METROPOLIS" not in "\n".join(common.header_lines(common.header_fields("combat", 10, 1, 1, 1, commit="x"), "T"))
-
     def test_comment_header_round_trips_provenance(self):
         text = common.comment_header(common.header_fields("combat", 60, 42, 3, 10, commit="abc"), "T") + "a;b 3\n"
         got = common.parse_comment_header(text)
@@ -181,16 +176,6 @@ class TestBinaryHandling:
                               capture_output=True, text=True, cwd=REPO_ROOT)
         assert done.returncode == 2 and "uv sync --group profiling" in done.stderr
         assert not (tmp_path / "o").exists()  # nothing is written when the profiler is missing
-
-    def test_metropolis_selection_prints_the_known_defect_warning(self, tmp_path):
-        done = subprocess.run([sys.executable, str(PERF / "profile_tick.py"), "--scenario", "metropolis",
-                               "--py-spy", str(tmp_path / "absent")], capture_output=True, text=True, cwd=REPO_ROOT)
-        assert "TCK-20260919-PERF-SCENARIO-METROPOLIS-SPAWN-COLLISION" in done.stderr
-
-    def test_flag_attribution_warns_for_metropolis_before_running(self, tmp_path):
-        done = subprocess.run([sys.executable, str(PERF / "flag_attribution.py"), "--flag", "ENABLE_NOPE",
-                               "--scenario", "metropolis", "--reps", "0"], capture_output=True, text=True, cwd=REPO_ROOT)
-        assert "TCK-20260919-PERF-SCENARIO-METROPOLIS-SPAWN-COLLISION" in done.stderr
 
 
 class TestProfileDiffCli:

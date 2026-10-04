@@ -80,9 +80,6 @@ def run_child(args: argparse.Namespace) -> int:
 
 
 def run_parent(args: argparse.Namespace) -> int:
-    if args.scenario == "metropolis":
-        print(common.METROPOLIS_WARNING, file=sys.stderr)
-
     tool = "memray" if args.memory else "py-spy"
     binary = common.find_binary(tool, args.memray if args.memory else args.py_spy)
     if binary is None:
