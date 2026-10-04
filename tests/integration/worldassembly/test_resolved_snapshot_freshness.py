@@ -80,3 +80,45 @@ def test_dungeon_crawl_runs_the_accepted_balance_remedy():
     world = WorldRepository("data/worlds").load_world("dungeon_crawl")
     assert world.entities, "no populations loaded; the count assertion would be vacuous"
     assert sum(pop.count for pop in world.entities) == 12
+
+
+# world_compile_report.json is what test_distinct_populated_factions and the corpus registry read, so a
+# stale one hides a stale world (dungeon_crawl's said 32 entities for months after the fix). Only the
+# content-derived counts are compared: the report's state/canonical hashes and place_count are stale in
+# ~20 worlds from compiler changes (not content drift) -- a separate, broader finding, deliberately
+# not asserted here. compile_duration_ms is wall-clock.
+_COMPILE_REPORT_COUNT_FIELDS = (
+    "entity_count",
+    "region_count",
+    "resource_node_count",
+    "building_count",
+    "quest_count",
+    "distinct_populated_factions",
+)
+
+
+def _worlds_with_compile_report() -> list[str]:
+    return sorted(p.parent.name for p in WORLDS_DIR.glob("*/world_compile_report.json"))
+
+
+def test_compile_report_worlds_discovered():
+    assert len(_worlds_with_compile_report()) > 10
+
+
+@pytest.mark.parametrize("world_id", _worlds_with_compile_report())
+def test_committed_compile_report_counts_equal_fresh_compile(world_id):
+    from src.worldbuilding.compiler import WorldCompiler
+
+    committed = yaml.safe_load((WORLDS_DIR / world_id / "world_compile_report.json").read_text(encoding="utf-8"))
+    spec, context = WorldRepository("data/worlds").load_world_with_context(world_id)
+    _, fresh = WorldCompiler.compile(spec, seed=committed["seed"], context=context)
+
+    stale = {
+        field: (committed.get(field), fresh.get(field))
+        for field in _COMPILE_REPORT_COUNT_FIELDS
+        if committed.get(field) != fresh.get(field)
+    }
+    assert not stale, (
+        f"{world_id}: committed world_compile_report.json is stale (committed, fresh): {stale}; "
+        f"run `make world-compile WORLD={world_id}`"
+    )

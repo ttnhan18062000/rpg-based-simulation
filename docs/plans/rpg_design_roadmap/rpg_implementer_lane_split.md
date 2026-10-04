@@ -68,6 +68,25 @@ Bible chapters **01** (entity anatomy), **03** (economic laws), **05** (world ev
 name suggests content but whose behaviour is appraisal-side. If a second such case appears, correct this
 document rather than deciding ad hoc.)*
 
+### Assigned to neither lane
+
+Added 2026-10-04, within hours of this document's first version, because Lane B immediately needed a
+ruling on one of these. These are **not** contested (§3) — they are simply outside both lanes, and work
+that lands in them needs a planner ruling or another track's owner:
+
+```
+src/rendering/            docs/visual_quality/      docs/parity_ledger/infrastructure.yaml
+src/simulation_quality/   src/lab/                  src/perf/
+src/certification/        src/platform/             src/cli/        src/config/
+frontend/**
+```
+
+`src/rendering/` and `docs/visual_quality/` are the live case: their authoring work
+(`TCK-20260820-EPIC-WORLD-RENDERING-CORE`, the three `TCK-20260821-VISUAL-*-METRIC` tickets) all closed in
+Aug 2026 and **no live session owns them**, so there is nobody to route to and the planner rules. When a
+ruling is needed here, prefer the option that keeps the change inside the asking lane's own surface over
+the option that edits an unowned area's documented numbers — see the §5 ruling for the worked example.
+
 ## 3. The contested surface — claim before editing
 
 These paths are reachable from both lanes, so they are **not** owned by either. They are the entire
@@ -106,13 +125,38 @@ ticket. `tests/architecture/**` additionally routes to `testing-planner` — ask
 6. **A cross-lane need is reported, not taken.** Message the other implementer first. Small, confirmed
    non-overlapping exceptions are fine when granted explicitly and written down (see §5).
 
-## 5. Standing exceptions
+## 5. Standing exceptions and worked rulings
 
 - `TCK-20261004-TWO-REAL-UNDEFINED-NAMES-IN-SRC-ONE-LIVE-AND-SILENT` (Lane B's batch) fixes one
   undefined name in `src/engine/kernel.py` (contested) and one in
   `src/systems/social_systems/party.py` (**Lane A's** territory). Granted as a cross-lane exception on
   2026-10-04: both are one-line fixes, and Lane A confirmed its own in-flight sweep touches neither
   file. Recorded here rather than waived silently.
+- `src/systems/world_systems/intake.py` — a Lane B path that **Lane A** is editing under the hostility
+  sweep that predates this document. Pre-existing, not a precedent. Lane B stays out of that file until
+  Lane A's branch lands; Lane A pings the planner at close so it can be released.
+
+**Worked ruling, 2026-10-04 — rendering evidence (keep the change in the asking lane's surface).** Lane
+B's `dungeon_crawl` fix removed two modules and with them the subject of six rendering-quality tests in
+`tests/unit/rendering/`. Lane B proposed updating the numbers in `docs/visual_quality/` and the
+`src/rendering/{variants,density}.py` docstrings, plus a fixture for the three shape tests whose subject
+no longer exists. **Ruled the other way:** freeze the old `resolved/` snapshot as a minimal fixture for
+all six. Reasons, in order of weight — (1) `src/rendering/` and `docs/visual_quality/` are assigned to
+neither lane and have no live owner to approve the edit; (2) one baseline beats two, and the numbers
+already in those docs stay true *of the fixture*, so neither file is touched; (3) the balance ticket's
+AC-7 permits updating INFRA-373's number, not re-deciding what the evidence is; (4) it keeps the whole
+change inside `tests/`. The deferred decision — live corpus vs deliberately frozen reference — is
+`TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT`, which must state that **a frozen
+fixture no longer detects rendering regressions in the live corpus**.
+
+**Worked ruling, 2026-10-04 — a stale expectation table is a census, not a threshold.**
+`EXPECTED_DISTINCT_POPULATED_FACTIONS` in `tests/unit/worldassembly/test_corpus_diversity.py` pinned
+`dungeon_crawl: 4`; the real post-fix count is 2. Ruled: update the entry, do **not** drop the world from
+the table (that deletes coverage to make a number go away), and do **not** treat it as a SimQ balance
+call — the table's own comment shows it is descriptive, a record of what each world compiles to. The
+wider consequence (the "recompile cross-check" that confirmed the table was reading a stale artifact, so
+other entries are suspect) is `TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION` —
+measure and report inside the current ticket, fix in that one.
 
 ## 6. Current state, 2026-10-04
 

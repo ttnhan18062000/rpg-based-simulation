@@ -2470,6 +2470,25 @@ The following legacy behaviors have been intentionally omitted or retired.
   `tests/unit/worldgeneration/test_composition_generator.py::TestRegionIdNamespacing`.
 - **Status**: ACTIVE
 
+### DEV-009 — dungeon_crawl Runs the Accepted Balance Remedy It Was Always Meant To (TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION)
+
+- **Situation**: `TCK-20260627-P1I-WORLD-BALANCE-FIX` cut `dungeon_crawl` from 32 to 12 entities to fix a
+  measured 94-97% extinction rate, but wrote it only to `data/content/world_compositions/dungeon_crawl.yaml`.
+  Production loads `data/worlds/dungeon_crawl/resolved/world.resolved.yaml` (via `WorldRepository.load_world`),
+  so the extinction configuration kept running until now.
+- **Change**: `data/worlds/dungeon_crawl/world.yaml` now composes 2 modules (`ruins_mystery_quest`,
+  `scalable_bandit_camp` with `danger_scale: 2`); `resolved/` and `world_compile_report.json` were regenerated.
+  The live world is now 12 entities, 2 regions, 0 resource nodes, 0 buildings, 2 populated factions (was 32, 4, 3, 1, 4).
+- **Rationale**: **Bug Fix**. Restores an accepted, closed decision; it does not re-decide the balance target.
+- **Consequences recorded**: the `dungeon_crawl` entry of `EXPECTED_DISTINCT_POPULATED_FACTIONS` is now 2 (was 4, read from the stale report);
+  the generated corpus registry changed; rendering-evidence tests that reproduce documented measurements of the
+  old terrain now run against a frozen fixture (`tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml`),
+  so they no longer detect rendering regressions in the live `dungeon_crawl`.
+- **Verification**: `tests/integration/worldassembly/test_resolved_snapshot_freshness.py`
+  (`test_dungeon_crawl_runs_the_accepted_balance_remedy`, `test_committed_snapshot_equals_fresh_resolve`,
+  `test_committed_compile_report_counts_equal_fresh_compile`).
+- **Status**: ACTIVE
+
 ---
 *Last updated: 2026-09-02 (DEV-007 addendum, TCK-20260902-CLASSHALL-DEAD-CODE — deferred
 `ClassHallAction.train()` cleanup landed).*

@@ -1,5 +1,7 @@
 import json
 import logging
+import shutil
+from pathlib import Path
 
 import pytest
 
@@ -19,8 +21,16 @@ def _profile():
     )
 
 
+@pytest.fixture(autouse=True)
+def _remove_own_run_dirs():
+    # Stay in the repo cwd: Kernel's content warmup loads data/content relatively, and a different cwd
+    # would install an empty catalog into process-wide singletons and break later tests.
+    yield
+    for run_id in ("prov_load_ok", "prov_load_bad"):
+        shutil.rmtree(Path("data/runs") / run_id, ignore_errors=True)
+
+
 def _make_kernel(tmp_path, monkeypatch, run_id, provenance_path):
-    monkeypatch.chdir(tmp_path)  # RunArtifactRepository writes to ./data/runs
     monkeypatch.setattr(ObservabilityConfig, "get_mode", classmethod(lambda cls: ObservabilityMode.LIGHT))
     return Kernel(
         state=AuthoritativeState(tick=0, seed=42), profile=_profile(), rng=MagicMock(),
