@@ -37,6 +37,7 @@ tags: [mcp, live-map, planning]
 | Control / fallback | The current flat fill `TILE_COLORS[6]` (`#1b3a1b`) plus the hover text `TILE_NAMES[6]`; the image is decoration, never the only carrier (`pilot_terrain_m5_criteria.md`, `AM-U21`) |
 | Clients actually tested (not a support declaration) | Playwright Chromium 148.0.7778.96 and Google Chrome 151.0.7922.71 on Linux, each at device pixel ratio 1 and 2; Firefox, Safari/WebKit, mobile: not tested |
 | Forbidden scope (from the plan's non-goals) | choosing other roles, creating or adopting further art, broad rollout, renderer migration, HUD redesign, retiring primitives, dynamic runtime IDs, user or mod uploads, hot reload, `CAP-B`, autonomous activation, any `AM-M7` family, any change to simulation truth or the mutation pipeline |
+| Roles (decision recorded, charter not signed) | The owner, nhan, holds every role: Live Map owner, HUD owner, approver, audit authority, build, publish, activate and rollback/recall (`ADR D13`, user, 2026-10-04). This is a recorded decision, not a signature: the human fields in section 3 stay `TO BE SIGNED BY OWNER`. |
 
 ## 3. Human fields
 

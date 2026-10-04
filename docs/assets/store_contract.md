@@ -188,6 +188,7 @@ Runtime activation, a resolver in the real client, Live Map and HUD consumption,
 ## Known gaps (stated, not hidden)
 
 - **The human gate does not authenticate the person.** The terminal check and the typed id stop accidental and scripted adoption; the approver name and role are recorded, not proven.
+- **Approver and audit are one person (accepted limit, `ADR D13`, 2026-10-04).** The owner holds the approver role and also runs the audit; separation is not achieved and is an accepted, stated limit of a one-person project. There is no store lock by rule (`ADR D18`): one store command at a time, a single-operator rule that the code does not enforce.
 - **The catalog alone cannot catch a consistent forgery.** Someone who edits an adoption record and the hash in its SourceRecord together still passes `audit_chain`; git history is the
   backstop. (Ticket 5 binds artifacts to the SourceRecord bytes, so a release manifest anchors the whole chain.)
 - **A local intake revocation is local.** Revoking an un-adopted intake writes only into this machine's gitignored quarantine, so it covers other intakes of the same bytes
