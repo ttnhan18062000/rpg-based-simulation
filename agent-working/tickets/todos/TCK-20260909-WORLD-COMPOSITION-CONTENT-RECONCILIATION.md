@@ -394,6 +394,13 @@ slices already taken.
       `test_real_content_world_compositions.py` recorded with its reasoning.
 - [ ] The `dungeon_crawl` `danger_scale` resolution is recorded as **"catalog value never drove a run;
       running value (4) kept"**, and no test or doc is left asserting `2` as intended design.
+      **Sharpened by the rule owner 2026-10-04 — this holds under BOTH options for
+      `test_real_content_world_compositions.py` and applies across all nine referencing files, not just
+      that one:**
+      - If the file is **repointed**, `:452` must assert **`4`**, carrying a comment or ticket note
+        saying why (the catalog value never drove a run; the running value is kept).
+      - If the file is **deleted**, **no surviving copy of the `== 2` assertion may reappear in another
+        file.** Deleting the test must not quietly relocate the wrong expectation.
 - [ ] Full scoped regression across every consumer of `ScenarioSetupResolver`/
       `CatalogScenarioStateBuilder`/`WorldAssemblyResolver` passes.
 - [ ] **AC-6 (merged):** a check fails when one `world_id` resolves to two different module sets. It
