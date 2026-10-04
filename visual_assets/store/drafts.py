@@ -107,6 +107,19 @@ def read_entry(set_id: str, entry: DraftEntry, root: Path | None = None) -> Entr
     return EntryFiles(files.package, files.source, files.preview, result_bytes, result)
 
 
+def check_not_revoked(intake_id: str) -> None:
+    """A draft whose intake was revoked, in the catalog (an intake-target revocation record) or locally in the quarantine, is never adoptable. Raises `DraftError`."""
+    try:
+        for revocation in records.all_revocations():
+            target = revocation.target
+            if getattr(target, "kind", "") == "intake" and target.intake_id == intake_id:  # type: ignore[union-attr]
+                raise DraftError("intake_revoked", f"{intake_id} was revoked ({revocation.revocation_id})")
+    except (StageError, ContractError) as exc:
+        raise DraftError("catalog_unreadable", f"revocations could not be read ({getattr(exc, 'code', 'error')})") from None
+    if records.intake_revoked_locally(intake_id):
+        raise DraftError("intake_revoked", f"{intake_id} was revoked on this machine")
+
+
 def _declared(registry: Registry, visual_key: str, detail: str | None) -> str | None:
     """The slot value, or raises `DraftError` when the key or value is not declared."""
     definition = registry.keys.get(visual_key)
@@ -273,6 +286,7 @@ def verify_set(set_id: str, *, registry: Registry | None = None, root: Path | No
                 out.append(DraftFinding(exc.code, where, exc.message))
         try:
             read_entry(set_id, entry, root)
+            check_not_revoked(entry.draft_id)
         except DraftError as exc:
             out.append(DraftFinding(exc.code, where, exc.message))
     return out

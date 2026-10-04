@@ -63,6 +63,9 @@ def adopt_set(
         raise _refuse(exc.code, exc.message) from None
     findings = drafts.verify_set(set_id, registry=registry, root=drafts_root)
     if findings:
+        revoked = [x for x in findings if x.code == "intake_revoked"]
+        if revoked:
+            raise _refuse("intake_revoked", revoked[0].detail)
         raise _refuse("draft_set_invalid", f"{len(findings)} problem(s) in the draft set, first {findings[0].code}: {findings[0].detail}")
     if not record.entries:
         raise _refuse("empty_set", f"{set_id} has no entries")
@@ -128,8 +131,8 @@ def adopt_set(
             (record_path, source_bytes),
         ]
         adopted.append(SetAdoptedEntry(visual_key=entry.visual_key, detail=entry.detail, adoption_id=ad_id, intake_id=entry.draft_id))
-        lines.append(f"  {slot_name}{' (the key\'s default detail value)' if entry.detail is None and slot is not None else ''}: "
-                     f"{entry.source_asset_id} {revision} from {entry.draft_id}, the store's render MATCHES the draft preview")
+        remark = " (the key's default detail value)" if entry.detail is None and slot is not None else ""
+        lines.append(f"  {slot_name}{remark}: {entry.source_asset_id} {revision} from {entry.draft_id}, the store's render MATCHES the draft preview")
 
     try:
         sa_id = set_adoption_id_for(set_id, draft_set_hash)

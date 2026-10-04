@@ -283,6 +283,31 @@ def test_the_decision_arguments_are_checked_before_anything_else(two):
     assert err.value.code == "unknown_set"
 
 
+def plant_catalog_intake_revocation(env, intake_id):
+    """A catalog RevocationRecord with an IntakeTarget for `intake_id`, as a human revoke of an intake would leave (here planted directly)."""
+    from visual_assets.store.contracts import RevocationRecord
+
+    record = RevocationRecord.model_validate_json(json.dumps({
+        "record_type": "revocation_record", "schema_version": 1, "revocation_id": "rv-" + "7" * 16, "target": {"kind": "intake", "intake_id": intake_id},
+        "reason": "withdrawn after it was kept", "approver_name": "Pat Approver", "approver_role": "art lead", "decided_at": s.NOW}))
+    directory = env.catalog / "provenance" / "revocations"
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / f"{record.revocation_id}.json").write_bytes(canonical_json(record))
+
+
+def test_an_intake_revoked_after_it_was_kept_is_flagged_by_verify_and_refused_by_adopt_set(two):
+    plant_catalog_intake_revocation(two, two.a.draft_id)
+    assert codes(two) == ["intake_revoked"]
+    refused(two, "intake_revoked")
+    assert s.CALLS == []
+
+
+def test_an_intake_revoked_locally_on_this_machine_after_it_was_kept_is_refused_too(two):
+    revoke(two.b.draft_id, reason="withdrawn", approver="Pat", approver_role="lead", decided_at=s.NOW, confirm=s.yes)  # writes revocation.json into the quarantine
+    assert codes(two) == ["intake_revoked"]
+    refused(two, "intake_revoked")
+
+
 def test_two_entries_with_the_same_source_bytes_are_refused(drafting):
     first = s.make_intake(drafting.tmp, 16)
     second = s.make_intake_same_bytes(drafting.tmp, first)
