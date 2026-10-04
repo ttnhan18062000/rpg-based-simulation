@@ -25,6 +25,6 @@ tags: [engine, social, root-cause, observability]
 ### AC4
 - **level**: unit
 - **proof kind**: regression
-- **oracle source**: `docs/mechanics/07_social_political_dynamics.md` (`issue_party_command`)
+- **oracle source**: none for world behaviour (the Bible now states the method has no caller); this only proves the undefined name is gone
 - **expected effect**: returns a `StrategicUpdate` with one CRITICAL `DirectiveState`
 - **selected commands**: `pytest tests/unit/social/test_party_issue_command.py -q`
