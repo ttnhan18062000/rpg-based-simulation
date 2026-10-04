@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-PERF-OPTIMIZATION-PROOF-HONEST-CLAIMS
-phase: open
+phase: done
 date: 2026-10-04
 tags: [performance, benchmarking]
 ---
@@ -15,7 +15,7 @@ tags: [performance, benchmarking]
 Optimization proof report: no invented baseline values, no comparison across mismatched identity, and no conclusion text that the data didn't produce
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -69,13 +69,13 @@ Under the RPG-core entry gate, any number this tool produces is provisional, and
 - Adopting the full provisional schema, or the `REGRESSION`/`INCONCLUSIVE` outcome vocabulary (that is `PERF-M2-T03`/`T04`)
 
 ## Acceptance Criteria
-- [ ] No `1.0` (or other) fallback stands in for a measured value anywhere in `generate_optimization_proof.py`
-- [ ] Every scenario in the JSON output is `compared` or `not_comparable` with a reason; ratios exist only for `compared`
-- [ ] The two fixed-text claims are gone; every summary statement is computed from the comparison data, and a test checks the counts against the JSON
-- [ ] The report says, in its opening lines, that it is provisional and not a capacity claim
-- [ ] `pytest tests/perf/test_optimization_proof_claims.py tests/tools/test_test_scope_coverage_static.py tests/static -q` passes in well under a minute, with no benchmark executed
-- [ ] Each ledger or doc sentence that cited the report as proof is corrected or listed with a reason
-- [ ] No file under `reports/` or `data/runs/` is committed; `git diff` touches no file under `src/`
+- [x] No `1.0` (or other) fallback stands in for a measured value anywhere in `generate_optimization_proof.py`
+- [x] Every scenario in the JSON output is `compared` or `not_comparable` with a reason; ratios exist only for `compared`
+- [x] The two fixed-text claims are gone; every summary statement is computed from the comparison data, and a test checks the counts against the JSON
+- [x] The report says, in its opening lines, that it is provisional and not a capacity claim
+- [x] `pytest tests/perf/test_optimization_proof_claims.py tests/tools/test_test_scope_coverage_static.py tests/static -q` passes in well under a minute, with no benchmark executed
+- [x] Each ledger or doc sentence that cited the report as proof is corrected or listed with a reason
+- [x] No file under `reports/` or `data/runs/` is committed; `git diff` touches no file under `src/`
 
 ## Related Tickets
 - TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA (finding 1, row F9)
@@ -98,13 +98,21 @@ Under the RPG-core entry gate, any number this tool produces is provisional, and
 - Test owner: `tools/gate_checks/test_scope_coverage_static.py` already maps `generate_optimization_proof.py` to `tests/perf/`, which is where the new test goes. No map change is needed.
 
 ## Implementation Notes
-
+- `generate_optimization_proof.py` now has pure `compare_scenario()` and `summarize()`; `run_proof()` reuses `tools.perf.perf_baseline.validate_latest` for the baseline shape check (the import is stdlib-only, no cost or cycle) and exits 1 before building any harness. `main()` returns 1 when no scenario was compared; both reports are still written. JSON adds `metadata.provisional`, `metadata.run_flags`, `metadata.seeds` (read from the builder's default with `inspect`; null when not determinable), per-scenario `status`/`reason`, and a top-level `summary`. Ratios exist only on compared scenarios.
+- **As configured, every scenario is not_comparable** (profile): the proof uses PROD_DEFAULT/PROD_LARGE, the baseline run uses PERF_2GB_LOCAL/PERF_4GB_CONC. That is the intended honest result.
+- **What alignment would take** (left to perf-planner; `SCENARIO_CONFIGS` unchanged): same profile names on both sides; same warmup (proof 20, baseline run 10) and flags (proof sets no_replay and no_frame_pacing, baseline run uses defaults); and same workload. **New finding:** `RESOURCE_1000` is built with 700 entities and 300 nodes in the proof but 1000 and 500 in `run_perf_baseline.py`. The comparison cannot see that, because the harness dict carries no workload cardinality, so a matching profile and tick count would still not make it like for like. Fixing that needs cardinality in the result record (`workload.entity_count` in the provisional schema) or aligned counts.
+- Ledgers and docs: `docs/optimization_audit_ledger.md` and `docs/parity_ledger/infrastructure.yaml` have no entry citing this report; `docs/plans/scripts_tools_governance_epic.md` names the generator without presenting its output as evidence; `docs/archive/profiling_performance/perf_plan_v2.md` is archived and untouched. Nothing to correct.
+- `tests/perf/test_optimization_proof_report.py` (slow) assertions updated to the new shape; not run (it executes real benchmarks).
+- Schema doc: `Fixed by` lines under finding 1 and in the F9 row.
 
 ## Test Summary
-
+129 passed in 4.5 s: tests/perf/test_optimization_proof_claims.py (18 new, stub-only, not slow), test_test_scope_coverage_static.py, test_perf_baseline_tool.py, tests/static. No benchmark, baseline or proof was run.
 
 ## Files Changed
-
+- tools/release/generate_optimization_proof.py
+- tests/perf/test_optimization_proof_claims.py (new), tests/perf/test_optimization_proof_report.py (assertions only)
+- docs/performance/benchmark_identity_schema.md (two Fixed-by lines)
+- this ticket, its stored artifacts, docs/REGISTRY.yaml, monitoring shards
 
 ## Completion Summary
-
+The optimization proof report compares only like with like, defaults nothing, writes its text from the data, and says it is provisional.
