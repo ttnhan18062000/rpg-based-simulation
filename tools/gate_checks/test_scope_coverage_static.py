@@ -144,6 +144,8 @@ _TOOLS_PERF_BASENAME_MAP = {
     "perf_threshold_inventory.py": "tests/tools/",
     "wall_clock_inventory.py": "tests/tools/",
     "perf_baseline.py": "tests/tools/",
+    "check_perf_regression.py": "tests/tools/",
+    "perf_ci.py": "tests/tools/",
     "profile_tick.py": "tests/tools/",
     "profile_diff.py": "tests/tools/",
     "flag_attribution.py": "tests/tools/",

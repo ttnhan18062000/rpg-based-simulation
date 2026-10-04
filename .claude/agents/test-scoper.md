@@ -65,8 +65,8 @@ tools/semantic_control_plane/*.py  -> tests/unit/tools/       (NOT a same-name m
                                                                  above)
 tools/perf/*.py                    -> tests/static/           (default fallback for a module with no
                                                                  dedicated test: live_map_ws_payload_measure,
-                                                                 turbo_run, check_perf_regression,
-                                                                 perf_ci, perf_report,
+                                                                 turbo_run,
+                                                                 perf_report,
                                                                  profile_api_payload, run_benchmarks,
                                                                  run_perf_baseline, memory_probe.
                                                                  NOT a same-name mirror, and NOT
@@ -78,6 +78,8 @@ tools/perf/*.py                    -> tests/static/           (default fallback 
                                                                  phase_inventory.py,
                                                                  hash_callsite_inventory.py,
                                                                  perf_baseline.py,
+                                                                 check_perf_regression.py,
+                                                                 perf_ci.py,
                                                                  perf_threshold_inventory.py,
                                                                  wall_clock_inventory.py,
                                                                  profile_tick.py, profile_diff.py,

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-PERF-REGRESSION-CHECK-NO-SILENT-PASS
-phase: open
+phase: done
 date: 2026-10-04
 tags: [performance, benchmarking]
 ---
@@ -15,7 +15,7 @@ tags: [performance, benchmarking]
 `check_perf_regression.py`: refuse to compare runs of different length or profile, and stop passing when nothing was compared
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -63,11 +63,11 @@ The tool is not wired into CI, Make or any test (`docs/performance/performance_c
 - The live tripwire `tests/perf/test_perf_regression_baseline.py`: it has the same length mismatch, but fixing it means re-baselining, which waits for the entry gate
 
 ## Acceptance Criteria
-- [ ] The checker never prints `PASSED` or exits 0 unless every baseline was compared and none regressed
-- [ ] Length and profile mismatches are reported as not comparable, naming the field
-- [ ] Exit codes 0, 1 and 2 behave as specified, and the tests prove each
-- [ ] `pytest tests/tools/test_check_perf_regression.py tests/tools/test_test_scope_coverage_static.py tests/tools/test_tools_orphan_check.py tests/static -q` passes
-- [ ] `git diff` touches no file under `src/`, `reports/` or `tests/perf/baselines/`
+- [x] The checker never prints `PASSED` or exits 0 unless every baseline was compared and none regressed
+- [x] Length and profile mismatches are reported as not comparable, naming the field
+- [x] Exit codes 0, 1 and 2 behave as specified, and the tests prove each
+- [x] `pytest tests/tools/test_check_perf_regression.py tests/tools/test_test_scope_coverage_static.py tests/tools/test_tools_orphan_check.py tests/static -q` passes
+- [x] `git diff` touches no file under `src/`, `reports/` or `tests/perf/baselines/`
 
 ## Related Tickets
 - TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA (finding 3, row F6)
@@ -88,13 +88,20 @@ None.
 - Exit code 2 is a local convention for this unwired tool. `PERF-M2-T03` replaces it with the contract's outcome vocabulary.
 
 ## Implementation Notes
-
+- `check_regression(baseline_dir=None, report_dir=None)` now returns an exit code (0, 1, 2) instead of a bool; `__main__` does `sys.exit(check_regression())`. No other caller existed. Thresholds and improvement messages are unchanged. `not_comparable_reason()` checks profile, sample_ticks, warmup_ticks (only when both carry it), and numeric tick_ms.avg and mem_rss_mb.max on both sides. Missing report, unreadable or non-object JSON, and a missing baseline directory or no baselines are all exit 2. A regression wins over not-comparable (exit 1), and a mismatched scenario is never compared even if it would have regressed.
+- `perf_ci.py` now runs the checker without `check=True` and logs exit 2 as "not comparable". Because `run_benchmarks.py --smoke` writes `<scenario>_<scale>_<mode>.json` reports, the three `simq_corpus_*` baselines never have a matching report, so `perf_ci.py` will report not comparable until a lane produces them. That is the honest result and is not changed here.
+- Scope map: `check_perf_regression.py` and `perf_ci.py` added to `_TOOLS_PERF_BASENAME_MAP`, the test-scoper.md row and the parametrized pin test.
+- Schema doc: `Fixed by` lines in the F6 row and under finding 3 (the tripwire half is explicitly not fixed).
 
 ## Test Summary
-
+233 passed, 2 skipped, 1 xfailed: tests/tools/test_check_perf_regression.py (30 new: exit codes 0/1/2, each mismatch and missing-key case, perf_ci handling with subprocess patched), test_test_scope_coverage_static.py, test_tools_orphan_check.py, test_perf_baseline_tool.py, test_perf_tag_test_scoper_wiring.py, tests/static, tests/docs (not slow). No benchmark run.
 
 ## Files Changed
-
+- tools/perf/check_perf_regression.py, tools/perf/perf_ci.py
+- tests/tools/test_check_perf_regression.py (new), tests/tools/test_test_scope_coverage_static.py
+- tools/gate_checks/test_scope_coverage_static.py, .claude/agents/test-scoper.md
+- docs/performance/benchmark_identity_schema.md (two Fixed-by lines)
+- this ticket, docs/REGISTRY.yaml, monitoring shards
 
 ## Completion Summary
-
+check_perf_regression.py no longer passes unless every baseline was compared; exit codes 0, 1 and 2 are tested.
