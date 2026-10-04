@@ -338,3 +338,48 @@ imports only, so it does not depend on the contents of `relationships.py`, `appr
 files are `tests/unit/social/test_party_lifecycle.py` and `tests/unit/social/test_social_lifecycle.py` (the Party
 row includes `src.systems.party`, so the overlap is 2; an earlier plan note said 1 because it checked only
 `social_systems.party*`). The report is report-only and not a gate.
+
+## 7 · Addendum 2026-10-04: ledger evidence shape and two links (`TCK-20261004-TEST-ARCH-MAINT3-SOCIAL-LEDGER-LINKS-AND-FINDING`)
+
+(Numbered 7 because §6 above is the 2026-10-03 report-tool addendum.)
+
+**Ledger evidence shape, `docs/parity_ledger/social_narrative.yaml`.** Counted at `origin/main`
+`bec0b2b856e5f734346304296ecb9e490d5a241d`, the base of this change, by re-deriving every figure from the committed
+YAML and `git grep` over `tests/` at that SHA. The same script run at `3eae2e25058b36cdd6013d0491b155d7b6dad154`
+(where the reviewer measured) gave identical figures: no drift.
+
+| Figure | Value |
+|---|---|
+| Entries | 294 |
+| P0 entries | 227 |
+| P0 without `test_path` | **211** (verified 166, legacy_verified 44, missing 1) |
+| ...carrying the boilerplate `v2_evidence` "Implementation proven via exhaustive checklist audit Phase 1-11" | 210 |
+| ...naming a legacy test in backticks in `text` | 115 |
+| ......of which the name resolves to exactly one current `def test_` | 4 |
+| ......of which the name exists nowhere under `tests/` | 111 |
+| ...naming no test | 96 (for example SOC-103 to SOC-106, CLI arguments) |
+| ...mentioning a social keyword | about 90 (**an estimate**: a keyword regex over `text`, 91 with the regex used here; it measures wording, not ownership) |
+
+Reading it: for 210 of the 211 the recorded evidence is a statement that an audit happened, not a link a test run can
+check. Of the 115 named tests, 111 have no test of that name today, so the name is a legacy label and not a pointer.
+By the keyword estimate, about 120 of the 211 do not mention a social term and are largely arena,
+combat-regression, CLI or watchdog behaviour filed under social (not individually checked here); whether to re-verify them or move them is an owner decision (roadmap §11).
+
+**Links made.** Two of the four candidates were linked through `tools/parity_ledger_writer.py`; the other two were
+checked and left unlinked. Each test was read against its entry text and run (4 passed). No test, status or
+`v2_evidence` was changed, and the diff is the two `test_path` lines.
+
+| Entry | Decision | Reason |
+|---|---|---|
+| SOC-010 | linked to `tests/arena/test_arena_stop_conditions.py::test_arena_stop_condition_wipe` | The test builds a one-faction-alive state and asserts `stop_condition == ArenaStopCondition.WIPE`; that is the entry's claim |
+| SOC-011 | linked to `tests/arena/test_arena_stop_conditions.py::test_arena_stop_condition_timeout` | Both factions alive, `ticks=10`: asserts `TIMEOUT` and `final_state.tick == 110`; that is the `max_ticks` claim |
+| SOC-013 | **not linked** | The entry says the mutation "raises a RuntimeError". The test asserts `ReadOnlyError`, `TypeError`, `FrozenInstanceError` or `AttributeError` (`ReadOnlyError` subclasses `TypeError`, not `RuntimeError`), on `state.readonly_view()`. The behaviour is proven; the entry's stated exception is not. Linking needs the entry text corrected first (owner/ledger decision) |
+| SOC-058 | **not linked** | The entry says contract resolution returns the right updates "for all members". `resolve_contract_outcome` returns `[source_up, target_up]`; the test asserts only `social_ups[0]` (and `social_ups_b[0]`), never the target's update. The source side and the avenge directive are asserted; "all members" is not |
+
+After the two links the P0-without-`test_path` count is 209; the table above is the figure at the base.
+
+**`_appraise_position_swap` (0 of 38 mutants killed in §4).** This is a weak oracle, not a measurement fault. Its only
+selected use, `tests/unit/social/test_appraisal_logic.py::test_shared_gate_no_fallthrough_for_gated_kinds`, passes empty
+`terms` and asserts only `reason != UNKNOWN`. `POSITION_SWAP` is also dormant in production: no code under `src/`,
+`data/` or the content registries constructs a `ContractState` of that kind (checked statically at `3eae2e25058b36cdd6013d0491b155d7b6dad154`;
+only tests build one). Whether the kind is unfinished or dead is an open question held by `rpg-feature-planning`.
