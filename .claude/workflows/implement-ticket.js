@@ -434,7 +434,7 @@ const cleanFindings = (raw) => {
   return { findings, normalized }
 }
 
-const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, reasonCode, testQualityFindings) => {
+const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, reasonCode, testQualityFindings, testsRead) => {
   const event = {
     seq: events.length + 1 + seqOffset,
     phase: phaseLabel,
@@ -449,6 +449,11 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, re
   if (cleaned) {
     event.test_quality_findings = cleaned.findings
     if (cleaned.normalized > 0) event.test_quality_findings_normalized = cleaned.normalized
+  }
+  // Reviewer-declared changed test files it opened (TCK-20261004-ARCH-VERIFY-TESTS-READ-EVIDENCE); strings only,
+  // and the same single-quote swap as findings (the events JSON rides in one single-quoted shell argument).
+  if (Array.isArray(testsRead)) {
+    event.tests_read = testsRead.filter((p) => typeof p === 'string' && p !== '').map((p) => p.replace(/'/g, '’'))
   }
   events.push(event)
 }
@@ -1176,7 +1181,8 @@ print('ARCH_CHECK_JSON:' + json.dumps(run_architecture_checks(sys.argv[1:])))
       summary: { type: 'string', description: 'One sentence: verdict + key reason (≤200 chars)' },
       ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` at start of this phase' },
       verified_by: { type: 'array', items: { type: 'string' }, description: 'Agent self-report of which findings came from tools/gate_checks/architecture_reviewer_static.py vs. independent judgment, e.g. ["static:architecture_reviewer_static", "llm"].' },
-      test_quality_findings: { type: 'array', items: { type: 'string' }, description: 'Optional, advisory (no verdict effect): test-quality findings scoped to the changed test files; an empty list means the changed tests were read and are clean.' },
+      test_quality_findings: { type: 'array', items: { type: 'string' }, description: 'Optional, advisory (no verdict effect): test-quality findings scoped to the changed test files; an empty list is a claim about the test files you read, not proof they are clean.' },
+      tests_read: { type: 'array', items: { type: 'string' }, description: 'Optional: repo-relative path of every changed test file you opened before reporting (including uncommitted and untracked ones). Checked against the monitoring data; an empty test_quality_findings with an unread changed test is reported as unverified.' },
     },
   }
 
@@ -1290,7 +1296,7 @@ except Exception:
     if (archVerify.violations.length > 0) {
       log(`Violations: ${archVerify.violations.join(' | ')}`)
     }
-    pushEvent('Architecture-Verify', 'architecture-reviewer', 'failed', archVerify.summary || 'Architecture-Verify: ' + archVerify.verdict, archVerifyTs, null, null, archVerify.test_quality_findings)
+    pushEvent('Architecture-Verify', 'architecture-reviewer', 'failed', archVerify.summary || 'Architecture-Verify: ' + archVerify.verdict, archVerifyTs, null, null, archVerify.test_quality_findings, archVerify.tests_read)
     await writeMonitoring(archVerify.verdict)
     return {
       status: archVerify.verdict,
@@ -1300,7 +1306,7 @@ except Exception:
     }
   }
 
-  pushEvent('Architecture-Verify', 'architecture-reviewer', 'ok', archVerify.summary || 'Architecture-Verify: APPROVED', archVerifyTs, null, null, archVerify.test_quality_findings)
+  pushEvent('Architecture-Verify', 'architecture-reviewer', 'ok', archVerify.summary || 'Architecture-Verify: APPROVED', archVerifyTs, null, null, archVerify.test_quality_findings, archVerify.tests_read)
   log('Architecture-Verify: APPROVED')
 } else {
   pushEvent('Architecture-Verify', 'architecture-reviewer', 'skipped', 'Hotfix tier — architecture verify skipped')

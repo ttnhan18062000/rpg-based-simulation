@@ -121,6 +121,9 @@ Rules for this checklist:
 
 - **Advisory only.** It never changes the `APPROVED`/`NEEDS_CHANGES`/`BLOCKED` verdict and is not a
   new `NEEDS_CHANGES` trigger. Report findings in a separate `test_quality_findings` list.
+- **Open every changed test file** (committed, uncommitted and untracked) before reporting, and list each one
+  in `tests_read`. An empty `test_quality_findings` is a claim about files you read; the checker reports it as
+  unverified when a changed test is not in `tests_read`.
 - **A clean review is a valid outcome.** If nothing substantive turns up, return an empty list and
   say so. Do not manufacture findings.
 - Each substantive finding must be acted on by the implementer, or declined with a stated reason.

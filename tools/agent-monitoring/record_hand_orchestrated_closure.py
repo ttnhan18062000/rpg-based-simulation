@@ -184,6 +184,7 @@ def build_records(
             # the key is absent, never a false [], when the event has none
             **({"test_quality_findings": e["test_quality_findings"]} if e.get("test_quality_findings") is not None else {}),
             **({"test_quality_findings_normalized": e["test_quality_findings_normalized"]} if e.get("test_quality_findings_normalized") is not None else {}),
+            **({"tests_read": e["tests_read"]} if e.get("tests_read") is not None else {}),
         }
         for i, e in enumerate(events, start=1)
     ]
