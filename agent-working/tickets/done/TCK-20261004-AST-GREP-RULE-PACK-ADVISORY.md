@@ -84,6 +84,7 @@ None.
 - `seed --tool ast_grep` (new) seeds one tool and keeps every other row verbatim: +111 `ast_grep` rows (91 E3, 13 N3, 7 N4), 0 deleted, the other 3,617 rows byte-identical; a full `python3 -m codebase.health check` then reports 0 new, 0 worse, 3,728 unchanged.
 - Planner conditions: the staged hook runs ruff only and never looks for ast-grep (test); a missing binary is a `ToolUnavailableError` naming `ast-grep` (so `make code-health` and the advisory job's could-not-run path report it); module-level findings use `<module>`.
 - Flip interplay: `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING` already excludes tool `ast_grep` (planning commit); its key matches `TOOL_AST_GREP`. Own flip ticket filed: `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`.
+- CI found a pinning test I had not run: `tests/static/test_ci_uv_install.py` expected the `lint` group to be `{ruff, complexipy}`. Updated to include `ast-grep-cli` (decision 8.11; outbox Message 10 to the testing planner). The first PR run's `Architecture / docs / static` job failed on exactly that one test.
 - Follow-ups: SARIF changed-line feedback for ast_grep (`codebase/gates/sarif_feedback.py` builds ruff and complexipy SARIF only; a structural change); snapshot inclusion.
 - Folded in: the planner's ticket 4 nit (the `kernel.py` imports are function-local) in the import-linter record and outbox Message 9.
 
