@@ -313,6 +313,15 @@ Each follows §3.1 and is intentionally empty.
   `intentional_divergences.md` entry when implemented. Implementation edits `src/` and waits for the
   RPG-core entry gate: `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`.
 
+  **Update 2026-10-04 (owner decisions):**
+  - The salience fix moved out of the gate, into the RPG-core hard-bug queue at P1
+    (`performance_optimization_roadmap.md`, gate section).
+  - "Salience keeps the work-debt term" no longer holds. That term is always 0 in production:
+    nothing increases `state.work_debt` (`TCK-20261004-WORK-DEBT-NEVER-ACCUMULATES-IN-PRODUCTION`).
+  - The owner chose to retire work debt (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`). The salience
+    fix therefore drops `global_salience` and the buy-price multiplier entirely.
+  - The A1 rule itself is unchanged.
+
   **Inputs the Canonical proxy set must also cover** (same inventory; classification unchanged):
   the replay-backlog `DEGRADED` trigger in `ResourceGovernor` (depends on a background flush
   thread; recorded as a mode transition), and `PhaseBudgetGovernor`, which reads per-phase
