@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION
-phase: open
+phase: done
 date: 2026-09-09
 tags: [architecture, content]
 ---
@@ -21,7 +21,7 @@ decisions, with a directory cleanup only after those are made. Pulled out of the
 consolidated PR for exactly this reason — see the 2026-09-12 findings block.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
