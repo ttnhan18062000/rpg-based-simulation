@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-PR-STATUS-FALSE-GREEN-ON-STANDALONE-CHECK-RUNS
-phase: open
+phase: done
 date: 2026-10-04
 tags: [ai, process-improvement, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 `tools/delivery/pr_status.py` reports GREEN while a required standalone check run (`ruff`) is failing
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -57,7 +57,7 @@ Cause, confirmed from the code (`compute_pr_status`, lines 295-349): the only CI
 - `tools/delivery/pr_status.py` (module docstring), `docs/guides/delivery_process.md` ("CI Failure Triage")
 
 ## Related Stored Artifacts
-- none
+- `agent-working/stored_artifacts/TCK-20261004-PR-STATUS-FALSE-GREEN-ON-STANDALONE-CHECK-RUNS/` (plan, investigation, test_plan)
 
 ## Related Code Areas
 - `tools/delivery/pr_status.py`, its tests, `docs/guides/delivery_process.md`
@@ -81,4 +81,4 @@ Test change to flag: `test_no_git_or_gh_mutating_command_ever_issued` flagged th
 - `docs/guides/delivery_process.md`
 
 ## Completion Summary
-Implemented and verified live; not closed (bundle PR). Residual: required checks were unreadable on this repo's branches (no branch protection), so the required-check completeness branch is covered by tests only, not live.
+Implemented and verified live; closed in PR #316. Residual: required checks were unreadable on this repo's branches (no branch protection), so the required-check completeness branch is covered by tests only, not live.

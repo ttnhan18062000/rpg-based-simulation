@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-PLAN-GATE-NONE-BODY-MARKDOWN-EMPHASIS-FALSE-POSITIVE
-phase: open
+phase: done
 date: 2026-10-04
 tags: [ai, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement]
 `plan_gate_static` reads a bolded "**None.**" Unresolved Questions body as open
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -68,4 +68,4 @@ Draft by `agent-working-design`, 2026-10-04, from a relayed and verified report.
 - `tests/tools/test_plan_gate_static.py`
 
 ## Completion Summary
-Fixed and tested; not yet closed (ticket stays in inprogress until the bundle PR closes it).
+Fixed and tested (33 pass in tests/tools/test_plan_gate_static.py). Closed in PR #316.
