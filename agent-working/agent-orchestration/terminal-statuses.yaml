@@ -29,6 +29,11 @@
 # the top-level exception recorder when any phase throws; it can fire in any phase, so `phases` lists them all.
 # Non-breaking addition; terminal_status_schema_version stays 1.
 #
+# 2026-10-04 (TCK-20261004-IMPLEMENT-TICKET-NATIVE-REFUSE-UP-FRONT-WHEN-GATE-SITES-UNPORTED): added
+# NATIVE_GATE_SITES_UNPORTED (bypass) — a native, non-epic run is refused before Scope while gate sites still call the
+# bare bash(); written by a raw record_run.py --data payload (the SCOPE_AGENT_FAILED shape), so it never passes
+# writeMonitoring(). Non-breaking addition; terminal_status_schema_version stays 1.
+#
 # `kind` vocabulary:
 #   literal         — single writeMonitoring('STRING') call site (or more than one, for a
 #                     duplicated value like FINALIZE_INCOMPLETE).
@@ -88,3 +93,6 @@ statuses:
   - value: WORKFLOW_ERROR
     kind: literal
     phases: [Scope, Investigate, Plan, Review, Implement, Document-Update, Architecture-Verify, Test, Parity, Security-Review, Verify, Finalize]
+  - value: NATIVE_GATE_SITES_UNPORTED
+    kind: bypass
+    phases: [Scope]

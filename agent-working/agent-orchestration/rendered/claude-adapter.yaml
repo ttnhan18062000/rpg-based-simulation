@@ -148,3 +148,7 @@ terminal_statuses:
   - Security-Review
   - Verify
   - Finalize
+- value: NATIVE_GATE_SITES_UNPORTED
+  kind: bypass
+  phases:
+  - Scope
