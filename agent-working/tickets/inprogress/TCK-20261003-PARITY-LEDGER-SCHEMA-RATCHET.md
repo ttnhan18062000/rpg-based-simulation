@@ -4,7 +4,7 @@ layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-PARITY-LEDGER-SCHEMA-RATCHET
-phase: open
+phase: inprogress
 date: 2026-10-03
 tags: [delivery]
 ---
@@ -15,7 +15,7 @@ tags: [delivery]
 Validate the parity ledger data against schema.json in CI, with a non-increasing error baseline
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
