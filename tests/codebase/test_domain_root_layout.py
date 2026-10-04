@@ -49,8 +49,9 @@ def test_the_old_tool_locations_do_not_reappear():
     reappeared = [p for p in tracked if p.startswith("tools/code_health/")]
     reappeared += [p for p in (*_MOVED_FLAT_FILES, *_MOVED_HOOKS, *_MOVED_BASELINES) if p in tracked]
     assert not reappeared, f"these belong under codebase/ now (see codebase/README.md): {reappeared}"
-    on_disk = [p for p in ("tools/code_health", *_MOVED_FLAT_FILES, *_MOVED_HOOKS) if (_REPO_ROOT / p).is_file()]
-    assert not on_disk
+    on_disk = [p for p in (*_MOVED_FLAT_FILES, *_MOVED_HOOKS) if (_REPO_ROOT / p).is_file()]
+    on_disk += [str(p.relative_to(_REPO_ROOT)) for p in (_REPO_ROOT / "tools" / "code_health").glob("*.py")]
+    assert not on_disk, f"untracked leftovers of the old locations: {on_disk}"
 
 
 def test_codebase_resolves_to_this_repository_and_is_not_shadowed():
