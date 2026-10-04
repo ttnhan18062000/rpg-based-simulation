@@ -24,7 +24,31 @@ python -m visual_assets.drawing.server          # stdio MCP server (from the rep
 bash visual_assets/start_mcp.sh                 # same, via the launcher .mcp.json uses
 python -m pytest tests/visual_assets -q         # integration tests need aseprite + bwrap, else they skip
 python -m visual_assets.drawing.pin             # after a reviewed edit of backend/lua/ops.lua
+make visual-assets-aseprite-local               # strict real-Aseprite run, local only (ADR D10)
 ```
+
+### Timeouts and stray sandboxes
+
+Every Aseprite job runs under `bwrap` with a timeout (`config.JOB_TIMEOUT_S`). On a timeout `sandbox.kill_tree` freezes (SIGSTOP) the
+whole process tree and SIGKILLs it, because `bwrap --unshare-all` forks an inner process (the init of a new PID namespace) that
+ignores SIGTERM and, killed too early, could outlive the job holding a bind mount of its job directory. If a machine ever shows a stray
+anyway (a `bwrap --unshare-all ... aseprite -b --script /lua/ops.lua` with parent PID 1), list candidates with
+`pgrep -af 'bwrap .*--bind .*\.jobs/'` (not the broader `^bwrap --unshare-all`: GNOME's own image-loader sandboxes match that too).
+Kill only a process whose `--bind` names a `.jobs/` directory of a workspace you own, never another session's, with `kill -9 <pid>`;
+SIGTERM does nothing to it. The tests scope their leak checks to their own workspace, so a stray from elsewhere cannot fail them.
+
+### Strict local run (ADR D10)
+
+Real Aseprite runs only on the licence holder's own machine (`docs/assets/aseprite_licence_review.md`); CI never
+installs it, so every `needs_aseprite` test skips there and the CI job summary states how many.
+`make visual-assets-aseprite-local` runs `tests/visual_assets -m needs_aseprite` with
+`VISUAL_ASSETS_REQUIRE_ASEPRITE=1` under a 2 GB memory cap (`systemd-run`, when available). In that mode a missing
+binary or bwrap, or a binary whose `aseprite --version` is not `config.ASEPRITE_VERSION` (`1.3.18.6`), makes every
+`needs_aseprite` test **fail or error** (pytest reports it as an ERROR, raised in fixture setup) instead of skip, so a strict run can never pass or skip them, and the target exits non-zero on any failure, any skip or an empty run.
+It writes `reports/visual_assets/aseprite_local_run.json` (gitignored run output): `commit` (HEAD; a dirty tree is
+not reflected), `utc_time`, `aseprite_version`, `passed`, `failed`, `errors`, `skipped`, `total`, `duration_seconds`,
+`pytest_exit_code` and `ok`. A guard test (`tests/visual_assets/test_aseprite_licence_guard.py`) fails if a workflow
+names Aseprite or a tracked file is an Aseprite executable or package.
 
 The server is registered for this repository in `.mcp.json` as `aseprite-pixel-art`. Sprites live outside the
 repo in `~/.cache/rpg-aseprite-mcp` (override: `ASEPRITE_MCP_WORKSPACE`; binary override:

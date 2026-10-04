@@ -1,6 +1,6 @@
 """Command line for the store: `python -m visual_assets.store <command>`.
 
-Read-only or local: `intake <dir>`, `review <id>`, `list`, `show <id>`, `audit`. HUMAN-GATED (never run by an agent): `adopt` and
+Read-only or local: `intake <dir>`, `review <id>`, `list`, `show <id>`, `audit`, `verify`, `export-runtime` (reads committed candidates, writes a NEW directory outside the catalog). HUMAN-GATED (never run by an agent): `adopt` and
 `revoke`, which write the tracked catalog, refuse unless stdin is a terminal, and make the operator type the id after reading what
 they are about to decide. Exit codes: 0 success (a PASSED intake, a clean audit, a review whose preview matches or could not be checked here), 1 a QUARANTINED intake, a preview that does NOT match the source, or an audit with breaks,
 2 a refusal or error. This is the only module that reads the clock; library code takes timestamps as parameters.
@@ -13,7 +13,7 @@ import sys
 from collections.abc import Sequence
 from datetime import datetime, timezone
 
-from visual_assets.store import adoption, audit, gc, records, release, revoke, verify
+from visual_assets.store import adoption, audit, gc, records, release, revoke, runtime_export, verify
 from visual_assets.store import review as review_api
 from visual_assets.store.build import exporter
 from visual_assets.store import intake as intake_api
@@ -73,6 +73,10 @@ def _parser() -> argparse.ArgumentParser:
     rel = sub.add_parser("release", help="assemble an immutable release CANDIDATE manifest (there is no active release)")
     rel.add_argument("--catalog-id", required=True)
     rel.add_argument("--release-id", help="rc-NNNN; default is the next one")
+    exp = sub.add_parser("export-runtime", help="write the client's runtime manifest and PNGs for one release candidate into a NEW directory outside the catalog")
+    exp.add_argument("--catalog-id", required=True)
+    exp.add_argument("--release-id", required=True, help="rc-NNNN")
+    exp.add_argument("--out", required=True, help="a directory that does not exist yet")
     collect = sub.add_parser("gc", help="list files nothing needs; deletes only with --delete")
     collect.add_argument("--delete", action="store_true")
 
@@ -154,6 +158,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.command == "release":
             manifest = release.assemble_release(args.catalog_id, release_id=args.release_id)
             print(f"{manifest.catalog_id}/{manifest.release_id}: {len(manifest.entries)} entries (candidate only, nothing is active)")
+            return 0
+        if args.command == "export-runtime":
+            runtime = runtime_export.export_runtime(args.catalog_id, args.release_id, args.out)
+            print(f"{runtime.catalog_id}/{runtime.release_id}: {len(runtime.entries)} entries exported to {args.out}")
             return 0
         if args.command == "gc":
             for item in gc.gc(delete=args.delete):

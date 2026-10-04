@@ -9,6 +9,12 @@ tags: [assets, live-map, hud, accessibility, rehearsal]
 
 # AM-M5 — Surface Compatibility Rehearsal
 
+## Status note 2026-10-03
+
+An isolated rehearsal of this plan was authorized by the user and run on synthetic fixtures (map-only role, HUD recorded as out of scope): see
+`docs/assets/surface_rehearsal_result.md`. Overall result `INCONCLUSIVE` (W09, C06, C09 `BLOCKED`; W03, W05, W07, C05, C07 `INCONCLUSIVE`; W01, W02, W04, W06, W08 `PASS` within their
+stated scope). This plan's own authorization conditions (M4 passage, predeclared client matrix, named owners) were not all met; the run was a bounded rehearsal, not an M5 passage.
+
 ## Outcome
 
 Plan `ASSET-3`: test a disposable semantic asset snapshot at one or more explicitly declared participating

@@ -22,7 +22,7 @@ from visual_assets.store.identities import CandidateId, FileHash, SourceRevision
 HANDOFF_ASSERTION = "HANDOFF_IS_NOT_ADOPTION_PUBLICATION_OR_ACTIVATION"
 SOURCE_FILE_NAME = "source.aseprite"
 PREVIEW_FILE_NAME = "preview.png"
-MAX_LIMITATIONS = 16  # provisional (U-05)
+MAX_LIMITATIONS = 16  # budget: docs/assets/budgets.md
 
 
 class SourceFormat(str, Enum):

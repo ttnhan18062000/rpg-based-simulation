@@ -151,6 +151,92 @@ def test_party_only_imports_are_unowned_domain_not_a_candidate(repo):
     assert rec["class"] == "uncertain"
 
 
+# ── social: a reported, non-exclusive signal; never a class and never a core-RPG signal ──
+def _rec(repo, name):
+    return next(r for r in report.scan_tests(repo) if r["file"].endswith(name))
+
+
+@pytest.mark.parametrize("import_line", [
+    "from src.systems.social_systems.appraisal import x",
+    "from src.systems.social_systems import appraisal",
+    "import src.systems.social_systems.relationships",
+])
+def test_social_submodule_import_sets_the_signal_without_changing_the_class(repo, import_line):
+    _write(repo / "tests/unit/misc/test_soc.py", import_line + "\n")
+    rec = _rec(repo, "test_soc.py")
+    assert rec["social_import_signal"] is True
+    assert rec["import_signal"] is False  # social is not a gameplay signal
+    assert rec["class"] == "not-core-rpg"
+
+
+@pytest.mark.parametrize("import_line", [
+    "from src.systems.social_systems.party_manager import x",   # party* stays in the Party row
+    "from src.systems.social_systems.memory import x",          # dormant, excluded
+    "from src.systems.social_systems import party",
+    "import src.systems.social_systems",                        # the bare package alone is not a signal
+])
+def test_party_memory_and_bare_package_are_not_a_social_signal(repo, import_line):
+    _write(repo / "tests/unit/misc/test_ex.py", import_line + "\n")
+    assert _rec(repo, "test_ex.py")["social_import_signal"] is False
+
+
+def test_memory_only_and_party_overlap_are_counted_separately(repo):
+    _write(repo / "tests/unit/misc/test_mem.py", "from src.systems.social_systems.memory import M\n")
+    _write(repo / "tests/unit/misc/test_ov.py",
+           "from src.systems.social_systems.party_x import P\nfrom src.systems.social_systems.appraisal import a\n")
+    mem, ov = _rec(repo, "test_mem.py"), _rec(repo, "test_ov.py")
+    assert (mem["social_memory_only"], mem["social_import_signal"]) == (True, False)
+    assert (ov["social_party_overlap"], ov["social_import_signal"]) == (True, True)
+    assert ov["class"] == "unowned-domain"  # the Party row still wins; social never moves it
+    block = _build(repo)["layers"]["classification"]["social_domain"]
+    assert block["party_overlap_files"] == 1 and block["memory_only_files"] == 1
+    assert block["signal_files"] == 1
+
+
+def test_unparseable_file_has_no_social_verdict(repo):
+    _write(repo / "tests/unit/misc/test_bad.py", "def (:\n")
+    rec = _rec(repo, "test_bad.py")
+    assert rec["class"] == "parse-error"
+    assert (rec["social_import_signal"], rec["social_party_overlap"], rec["social_memory_only"]) == (None, None, None)
+
+
+def test_social_domain_block_has_denominator_by_class_and_a_non_class_rule(repo):
+    _write(repo / "tests/unit/misc/test_soc.py", "from src.systems.social_systems.appraisal import x\n")
+    # a social import inside a core directory keeps its own class (directory signal only -> uncertain)
+    _write(repo / "tests/unit/combat/test_soc2.py", "from src.systems.social_systems.appraisal import x\n")
+    block = _build(repo)["layers"]["classification"]["social_domain"]
+    assert block["denominator"] == {"test_files": 6}
+    assert block["signal_files"] == 2
+    assert block["by_class"] == {"classified": 0, "uncertain": 1, "unowned-domain": 0, "not-core-rpg": 1,
+                                 "parse-error": 0}
+    assert "not a class" in block["rule"]
+
+
+def test_adding_a_social_importer_never_moves_an_existing_class_or_the_candidate_set(repo):
+    """The invariance: social is mapped but not core-RPG, so it must not change any core-RPG figure."""
+    before = _build(repo)["layers"]
+    before_classes = {r["file"]: r["class"] for r in report.scan_tests(repo)}
+    _write(repo / "tests/unit/misc/test_soc.py", "from src.systems.social_systems.appraisal import x\n")
+    _write(repo / "tests/unit/other/test_soc2.py", "from src.systems.social_systems.relationships import r\n")
+    after = _build(repo)["layers"]
+    after_classes = {r["file"]: r["class"] for r in report.scan_tests(repo)}
+    assert {f: after_classes[f] for f in before_classes} == before_classes
+    assert {f for f in after_classes if f not in before_classes and after_classes[f] != "not-core-rpg"} == set()
+    b, a = before["classification"], after["classification"]
+    for key in ("classified", "uncertain", "unowned-domain", "parse-error"):
+        assert a["counts"][key] == b["counts"][key]
+    assert a["signal_disagreement"] == b["signal_disagreement"]
+    assert after["lanes"]["denominator"]["core_rpg_candidate_files"] == before["lanes"]["denominator"][
+        "core_rpg_candidate_files"]
+    assert after["execution"]["denominator"] == before["execution"]["denominator"]
+
+
+def test_social_is_not_a_gameplay_import_prefix():
+    assert not any(report._matches("src.systems.social_systems.appraisal", p)
+                   for p in report._GAMEPLAY_IMPORT_PREFIXES)
+    assert "social" not in report.DOMAIN_IMPORT_PREFIXES
+
+
 def test_unparseable_test_file_is_reported_not_dropped(repo):
     _write(repo / "tests/unit/combat/test_broken.py", "def (:\n")
     layer = _build(repo)["layers"]["classification"]
@@ -466,7 +552,21 @@ def test_smoke_on_the_live_repo_has_every_layer_and_a_denominator(tmp_path):
 
 # ── state naming: absent-from-supplied-runs is not "never executed" ──
 def test_schema_version_records_the_state_and_key_renames(repo):
-    assert _build(repo)["schema_version"] == 2
+    built = _build(repo)
+    assert built["schema_version"] == 3
+    # the v2 renames still hold: `scanned_inputs_dirty` (was `worktree_dirty`) and `not-in-supplied-runs`
+    assert "scanned_inputs_dirty" in built["manifest"] and "worktree_dirty" not in built["manifest"]
+    assert "not-in-supplied-runs" in " ".join(built["limits"])
+    # v3 added the non-exclusive social block
+    assert set(built["layers"]["classification"]["social_domain"]) == {
+        "denominator", "signal_files", "by_class", "party_overlap_files", "memory_only_files", "rule"}
+
+
+def test_limits_and_markdown_say_what_social_is(repo):
+    built = _build(repo)
+    limits = " ".join(built["limits"])
+    assert "unowned-domain" in limits and "`social_domain`" in limits and "not core-RPG" in limits
+    assert "social import signal (non-exclusive, not a class)" in report.render_markdown(built)
 
 
 def test_absent_file_state_says_supplied_runs_not_never_executed(repo, tmp_path):

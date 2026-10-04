@@ -462,12 +462,15 @@ jobs:
           pytest tests/observability -m "not slow and not extra_slow" --tb=short -q \
                  --junit-xml=reports/junit/api-cli-engine-observability.xml
       # TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT: the drawing tools' unit tests and the boundary guard run
-      # here; the Aseprite-backed integration tests skip cleanly (no Aseprite in CI, plan U-14).
+      # here; the Aseprite-backed integration tests skip cleanly (no Aseprite in CI, ADR D10).
       - name: "Run: tests/visual_assets"
         if: always()
         run: |
           pytest tests/visual_assets -m "not slow and not extra_slow" --tb=short -q \
                  --junit-xml=reports/junit/api-cli-engine-visual_assets.xml
+      - name: "Note: needs_aseprite skips (ADR D10)"
+        if: always()
+        run: python3 tools/ci_aseprite_skip_line.py reports/junit/api-cli-engine-visual_assets.xml >> "$GITHUB_STEP_SUMMARY"
       - name: Merge JUnit XML
         if: always()
         run: |
