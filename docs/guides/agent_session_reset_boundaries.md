@@ -67,6 +67,28 @@ Updated: <date>
 
 ## Reachability
 
-`.claude/handover/*.md` (gitignored, one file per role). A `SessionStart` hook (`source: "clear"`)
-lists file paths + first-line titles only — never injects the note bodies themselves, keeping the
-per-clear cost small regardless of how many roles have one.
+`.claude/handover/*.md` (gitignored, one file per role). The `SessionStart` hook
+`tools/sessions/session_start_hook.py` (`startup`, `resume`, `clear`, `compact`) resolves the session's role
+from the harness signals, binds the session to it and injects that role's card and **only that role's**
+handover note. A session that resolves no role (a plain `claude`, or disagreeing signals) gets the older
+fallback instead: file paths and first-line titles only, on `clear`, never the note bodies, plus one line
+saying how to launch with a role. Everything fails open.
+
+## Launching a role (`cc`)
+
+`python3 tools/sessions/launch.py <role>` resolves the role from `registries/session_roles.yaml`, makes sure
+its worktree exists (a missing one is recreated from the role's recorded branch, never from scratch), then
+`exec claude --name <role> --agent session-<role>` with `SESSION_ROLE=<role>`. A role with `max_sessions: N`
+may run `<role>-2` .. `<role>-N`. Runtime state lives in `<git-common-dir>/session-roles/` (see
+`tools/sessions/state.py`); liveness is computed from `/proc`, never stored.
+
+- a **live** role is refused; a **released** or unknown one starts fresh;
+- an **orphaned** role (its process is gone, no clean end) is never started or resumed silently: the launcher
+  prints the evidence (transcript age, dirty and unpushed state, any git operation left in progress, handover
+  age and "Awaiting", candidate transcripts) and asks for `--action resume|replace|inspect`; non-interactive
+  runs exit 3 instead of choosing. Resume is always by session id, and only of the dead holder's own session
+  by default; replace keeps the old transcript.
+- `--dry-run` prints the exact command and changes nothing.
+
+One-line shell alias (installing it is the owner's step): `alias cc='python3 tools/sessions/launch.py'`.
+
