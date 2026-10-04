@@ -18,7 +18,10 @@ class FakeRunner:
     tokens against a list of (predicate, result) rules, first match wins."""
 
     def __init__(self, rules):
-        self.rules = rules
+        # Built-in fallbacks for the context-enumeration calls (TCK-20261004-PR-STATUS-FALSE-GREEN-ON-
+        # STANDALONE-CHECK-RUNS): a test that does not care about standalone contexts sees none, exactly
+        # as before that stage existed. Supplied rules are tried first.
+        self.rules = list(rules) + _default_context_rules()
         self.calls = []
 
     def __call__(self, cmd, timeout=30):
@@ -27,6 +30,21 @@ class FakeRunner:
             if predicate(cmd):
                 return result
         raise AssertionError(f"FakeRunner: no rule matched command {cmd!r}")
+
+
+def _default_context_rules():
+    return [
+        (lambda cmd: cmd[:2] == ["gh", "api"] and "/check-runs?" in cmd[2], ok({"total_count": 0, "check_runs": []})),
+        (lambda cmd: cmd[:2] == ["gh", "api"] and "/status?" in cmd[2], ok({"total_count": 0, "statuses": []})),
+        (
+            lambda cmd: cmd[:3] == ["gh", "pr", "checks"] and "--required" in cmd,
+            pr_status.CommandResult(1, "", "no required checks reported on the 'x' branch"),
+        ),
+        (
+            lambda cmd: cmd[:3] == ["gh", "pr", "checks"],
+            pr_status.CommandResult(1, "", "no checks reported on the 'x' branch"),
+        ),
+    ]
 
 
 def _is(cmd, *tokens):
@@ -425,6 +443,11 @@ def test_no_git_or_gh_mutating_command_ever_issued():
     pr_status.compute_pr_status(run_command=runner)
     for cmd in runner.calls:
         rendered = " ".join(cmd)
+        if cmd[:2] == ["gh", "api"]:
+            # `commits/<sha>/check-runs` is a read endpoint whose path contains "commit"; for api calls the
+            # mutation test is "no write method/field flag", which is what actually makes a call a write.
+            assert not {"-X", "--method", "-f", "-F", "--field", "--raw-field", "--input"} & set(cmd), rendered
+            continue
         for bad in MUTATING_SUBSTRINGS:
             assert bad not in rendered, f"mutating command issued: {rendered}"
 
@@ -504,3 +527,220 @@ def test_no_sleep_or_retry_loop_present():
     assert "time.sleep" not in source
     assert not re.search(r"while\s+True\s*:", source)
     assert "import time" not in source
+
+
+# ---------------------------------------------------------------------------
+# Standalone check runs / commit statuses (TCK-20261004-PR-STATUS-FALSE-GREEN-ON-STANDALONE-CHECK-RUNS)
+# ---------------------------------------------------------------------------
+
+TARGET = ".github/workflows/test.yml"
+GREEN_RUN = {"id": 1, "head_sha": "abc123", "path": TARGET, "status": "completed", "conclusion": "success"}
+
+
+def _cr(name, status="completed", conclusion="success", run_id=None, cid=None):
+    url = (
+        f"https://github.com/o/r/actions/runs/{run_id}/job/{cid or 5}" if run_id
+        else f"https://github.com/o/r/runs/{cid or 5}"
+    )
+    return {"id": cid or 5, "name": name, "status": status, "conclusion": conclusion, "details_url": url}
+
+
+def _check_runs_rule(runs, page=None, total=None):
+    def pred(cmd):
+        return cmd[:2] == ["gh", "api"] and "/check-runs?" in cmd[2] and (page is None or cmd[2].endswith(f"&page={page}"))
+    return pred, ok({"total_count": len(runs) if total is None else total, "check_runs": runs})
+
+
+def _status_rule(statuses):
+    return (
+        lambda cmd: cmd[:2] == ["gh", "api"] and "/status?" in cmd[2],
+        ok({"total_count": len(statuses), "statuses": statuses}),
+    )
+
+
+def _gh_checks_rule(rows, required=False):
+    text = "".join(f"{n}\t{b}\t1s\thttps://x\n" for n, b in rows)
+    return (
+        lambda cmd: cmd[:3] == ["gh", "pr", "checks"] and (("--required" in cmd) == required),
+        pr_status.CommandResult(1 if any(b != "pass" for _, b in rows) else 0, text, ""),
+    )
+
+
+def _annotations_rule(check_id, annotations):
+    return (
+        lambda cmd: cmd[:2] == ["gh", "api"] and f"check-runs/{check_id}/annotations" in cmd[2],
+        ok(annotations),
+    )
+
+
+def _status_of(rules):
+    return pr_status.compute_pr_status(run_command=FakeRunner([_pr_view_rule(head_sha="abc123")] + rules))
+
+
+def _frozen_291_shaped_contexts():
+    """21 contexts shaped like PR #291: 19 jobs of the target workflow (run 1), one standalone passing
+    `complexipy`, one standalone FAILING `ruff` (conclusion failure)."""
+    jobs = [_cr(f"job-{i}", run_id=1, cid=100 + i) for i in range(19)]
+    return jobs + [_cr("complexipy", cid=900), _cr("ruff", conclusion="failure", cid=901)]
+
+
+def test_standalone_failing_ruff_makes_verdict_failing_not_green():
+    runner_rules = [
+        _runs_list_rule([GREEN_RUN]),
+        _check_runs_rule(_frozen_291_shaped_contexts()),
+        _annotations_rule(901, [{"path": "tools/x.py", "start_line": 3, "annotation_level": "failure", "message": "E501 line too long"}]),
+    ]
+    result = _status_of(runner_rules)
+    assert result["verdict"] == "FAILING"
+    assert result["contexts_examined"] == 21
+    assert [c["name"] for c in result["failing_contexts"]] == ["ruff"]
+    assert "ruff" in result["reason"]
+    assert result["failing_contexts"][0]["annotations"][0]["path"] == "tools/x.py"
+
+
+def test_same_fixture_without_the_context_stage_would_have_read_green():
+    """Positive control: the workflow-runs view alone (what the tool used before) is GREEN for this
+    fixture, so the FAILING above is produced by the new stage and not by the fixture."""
+    result = pr_status._verdict_from_applicable_runs([GREEN_RUN], "abc123", FakeRunner([]))
+    assert result["verdict"] == "GREEN"
+
+
+def test_failure_on_a_second_page_is_seen():
+    page1 = [_cr(f"ok-{i}", cid=i + 1) for i in range(100)]
+    page2 = [_cr(f"ok2-{i}", cid=200 + i) for i in range(49)] + [_cr("ruff", conclusion="failure", cid=999)]
+    result = _status_of([
+        _runs_list_rule([GREEN_RUN]),
+        _check_runs_rule(page1, page=1, total=150),
+        _check_runs_rule(page2, page=2, total=150),
+        _annotations_rule(999, []),
+    ])
+    assert result["verdict"] == "FAILING"
+    assert result["contexts_examined"] == 150
+
+
+def test_required_context_absent_from_examined_set_is_unknown_not_green():
+    result = _status_of([
+        _runs_list_rule([GREEN_RUN]),
+        _check_runs_rule([_cr("unit", run_id=1)]),
+        _gh_checks_rule([("unit", "pass")]),
+        _gh_checks_rule([("unit", "pass"), ("ruff", "pass")], required=True),
+    ])
+    assert result["verdict"] == "UNKNOWN"
+    assert "ruff" in result["reason"]
+
+
+def test_all_required_present_and_passing_stays_green_and_counts_contexts():
+    result = _status_of([
+        _runs_list_rule([GREEN_RUN]),
+        _check_runs_rule([_cr("unit", run_id=1), _cr("ruff")]),
+        _gh_checks_rule([("unit", "pass"), ("ruff", "pass")]),
+        _gh_checks_rule([("ruff", "pass")], required=True),
+    ])
+    assert result["verdict"] == "GREEN"
+    assert result["contexts_examined"] == 2
+    assert "1 required check(s) read" in result["context_notes"]
+
+
+def test_unreadable_required_checks_is_said_not_silently_green_or_blocking():
+    result = _status_of([
+        _runs_list_rule([GREEN_RUN]),
+        _check_runs_rule([_cr("ruff")]),
+        _gh_checks_rule([("ruff", "pass")]),
+    ])
+    assert result["verdict"] == "GREEN"
+    assert any("no required checks configured" in n for n in result["context_notes"])
+
+
+@pytest.mark.parametrize("bad", [fail(1, "boom"), fail(1, "x509: certificate signed by unknown authority"),
+                                 pr_status.CommandResult(0, "not json", ""),
+                                 pr_status.CommandResult(0, json.dumps({"unexpected": 1}), "")])
+def test_check_runs_fetch_error_or_malformed_payload_is_unknown_never_green(bad):
+    result = _status_of([
+        _runs_list_rule([GREEN_RUN]),
+        (lambda cmd: cmd[:2] == ["gh", "api"] and "/check-runs?" in cmd[2], bad),
+    ])
+    assert result["verdict"] == "UNKNOWN"
+    assert "incomplete" in result["reason"]
+
+
+def test_status_endpoint_error_is_unknown_never_green():
+    result = _status_of([
+        _runs_list_rule([GREEN_RUN]),
+        (lambda cmd: cmd[:2] == ["gh", "api"] and "/status?" in cmd[2], fail()),
+    ])
+    assert result["verdict"] == "UNKNOWN"
+
+
+def test_short_pagination_is_unknown_not_an_empty_pass():
+    result = _status_of([
+        _runs_list_rule([GREEN_RUN]),
+        _check_runs_rule([], total=7),
+    ])
+    assert result["verdict"] == "UNKNOWN"
+    assert "ran out of pages" in result["reason"]
+
+
+def test_pending_standalone_check_run_is_pending():
+    result = _status_of([
+        _runs_list_rule([GREEN_RUN]),
+        _check_runs_rule([_cr("ruff", status="in_progress", conclusion=None)]),
+    ])
+    assert result["verdict"] == "PENDING"
+
+
+def test_skipped_and_neutral_do_not_block_green():
+    result = _status_of([
+        _runs_list_rule([GREEN_RUN]),
+        _check_runs_rule([_cr("a", conclusion="skipped"), _cr("b", conclusion="neutral"), _cr("c")]),
+    ])
+    assert result["verdict"] == "GREEN"
+
+
+def test_failing_commit_status_is_failing_and_pending_status_is_pending():
+    failing = _status_of([_runs_list_rule([GREEN_RUN]), _status_rule([{"context": "ci/legacy", "state": "failure"}])])
+    assert failing["verdict"] == "FAILING" and failing["failing_contexts"][0]["source"] == "commit-status"
+    pending = _status_of([_runs_list_rule([GREEN_RUN]), _status_rule([{"context": "ci/legacy", "state": "pending"}])])
+    assert pending["verdict"] == "PENDING"
+
+
+def test_gh_pr_checks_failure_the_enumeration_missed_is_not_lost():
+    result = _status_of([
+        _runs_list_rule([GREEN_RUN]),
+        _check_runs_rule([_cr("unit", run_id=1)]),
+        _gh_checks_rule([("unit", "pass"), ("mystery-check", "fail")]),
+    ])
+    assert result["verdict"] == "FAILING"
+    assert result["failing_contexts"][0]["source"] == "gh pr checks only"
+
+
+def test_other_workflow_check_run_does_not_vote_even_when_gh_pr_checks_lists_it():
+    other = {"id": 2, "head_sha": "abc123", "path": ".github/workflows/docs.yml", "status": "completed", "conclusion": "failure"}
+    result = _status_of([
+        _runs_list_rule([GREEN_RUN, other]),
+        _check_runs_rule([_cr("unit", run_id=1), _cr("docs-publish", conclusion="failure", run_id=2, cid=77)]),
+        _gh_checks_rule([("unit", "pass"), ("docs-publish", "fail")]),
+    ])
+    assert result["verdict"] == "GREEN"
+    assert result["contexts_examined"] == 1
+
+
+def test_unavailable_gh_pr_checks_cross_check_is_noted_but_does_not_block():
+    result = _status_of([
+        _runs_list_rule([GREEN_RUN]),
+        _check_runs_rule([_cr("ruff")]),
+        (lambda cmd: cmd[:3] == ["gh", "pr", "checks"], pr_status.CommandResult(2, "", "boom")),
+    ])
+    assert result["verdict"] == "GREEN"
+    assert any("cross-check" in n and "unavailable" in n for n in result["context_notes"])
+
+
+def test_failing_workflow_verdict_is_kept_and_standalone_failure_is_added():
+    result = _status_of([
+        _runs_list_rule([{**GREEN_RUN, "conclusion": "failure"}]),
+        _run_jobs_rule(1, [{"id": 99, "name": "unit", "conclusion": "failure"}]),
+        _job_steps_rule(99, [{"name": "Run", "conclusion": "failure"}]),
+        _check_runs_rule([_cr("ruff", conclusion="failure", cid=901)]),
+        _annotations_rule(901, []),
+    ])
+    assert result["verdict"] == "FAILING"
+    assert len(result["failing_jobs"]) == 1 and len(result["failing_contexts"]) == 1

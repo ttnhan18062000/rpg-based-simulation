@@ -23,6 +23,14 @@ extracted ticket-ID citations before and after the move).
 otherwise describes. This guide states the *policy* — what a verdict means and what to do about it
 — the tool establishes the verdict itself; the two must not duplicate each other's logic in prose.
 
+**Completeness rule (`TCK-20261004-PR-STATUS-FALSE-GREEN-ON-STANDALONE-CHECK-RUNS`).** A verdict covers
+*every* context at the head SHA, not only the workflow's own jobs: all check runs and commit statuses
+(all pages), cross-checked against `gh pr checks`. Any failing context is `FAILING` and is named; a fetch
+error, a required check never examined, or a context only `gh pr checks` can see is `UNKNOWN`, never
+`GREEN`. The result prints `contexts_examined` so a reader can see how complete the view was. Before this
+rule a standalone `ruff` check run failing outside the target workflow read `GREEN`. `gh pr checks <N>`
+remains the ground truth for a human; do not relay a `GREEN` as fact without `contexts_examined` in it.
+
 ---
 
 ## Commit Contract

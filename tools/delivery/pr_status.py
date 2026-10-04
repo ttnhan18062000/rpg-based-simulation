@@ -34,6 +34,17 @@ failure is not a code regression"). A head SHA with runs from another workflow b
 the target workflow is `UNKNOWN`, not `FAILING` or `ABSENT` — the other workflow's outcome says
 nothing about the target workflow's state.
 
+**Complete context enumeration (TCK-20261004-PR-STATUS-FALSE-GREEN-ON-STANDALONE-CHECK-RUNS).**
+The workflow-runs source above never sees a standalone check run (another app, code scanning, a
+`ruff` job posted outside the target workflow), so a PR with a failing `ruff` read GREEN. After the
+workflow verdict, ``_evaluate_contexts`` therefore enumerates EVERY context for the head SHA:
+``commits/<sha>/check-runs`` (all pages), ``commits/<sha>/status`` (all pages), and cross-checks them
+against ``gh pr checks`` (text output: this ``gh`` has no ``--json`` for it). Any failing context
+-> FAILING naming it; a fetch/pagination error, a required check absent from the examined set, or a
+context only ``gh pr checks`` can see -> UNKNOWN, never GREEN. Check runs that belong to a *different*
+workflow's run keep their existing "reported separately, does not vote" treatment. The
+examined-context count is part of the result so a reader can see how complete the view was.
+
 Out of scope, deliberately (see the ticket's own Out of Scope section): polling/retry loops (one
 call in, one verdict out — the caller decides when to ask again), any write of any kind (read-only,
 no exceptions), classifying *why* a failure happened beyond job/step conclusions (that is
@@ -50,6 +61,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -62,7 +74,7 @@ DEFAULT_WORKFLOW_PATH = Path(".github/workflows/test.yml")
 # Run-level and job-level GitHub Actions `conclusion` values that mean "this did not pass",
 # distinct from PASSING_CONCLUSIONS below. `neutral`/`skipped` are treated as passing, matching
 # GitHub's own merge-requirement semantics for non-required checks.
-FAILURE_CONCLUSIONS = {"failure", "timed_out", "cancelled", "action_required"}
+FAILURE_CONCLUSIONS = {"failure", "timed_out", "cancelled", "action_required", "startup_failure"}
 PASSING_CONCLUSIONS = {"success", "neutral", "skipped"}
 IN_PROGRESS_STATUSES = {"in_progress", "queued", "waiting", "requested", "pending"}
 
@@ -292,6 +304,184 @@ def _absent_reason(
     )
 
 
+MAX_CONTEXT_PAGES = 20  # 2000 contexts; reaching it without a complete set is UNKNOWN, not "enough"
+_ACTIONS_RUN_ID_RE = re.compile(r"/actions/runs/(\d+)")
+STATUS_FAILURE_STATES = {"failure", "error"}
+GH_CHECKS_FAILING = {"fail", "cancel"}  # `gh pr checks` bucket words (text output)
+GH_CHECKS_PENDING = {"pending"}
+ANNOTATION_LIMIT = 5
+
+
+def _fetch_paginated(run_command: CommandRunner, path: str, list_key: str) -> tuple[Optional[list], Optional[str]]:
+    """All pages of an endpoint shaped ``{"total_count": N, <list_key>: [...]}``. Any fetch error,
+    malformed page, or short result (fewer items than ``total_count`` once pages run out, or the page
+    cap reached) is an error, never a partial list that reads as a complete pass."""
+    items: list = []
+    for page in range(1, MAX_CONTEXT_PAGES + 1):
+        payload, err = _gh_json(
+            run_command, ["api", f"repos/{{owner}}/{{repo}}/{path}?per_page=100&page={page}"]
+        )
+        if err is not None:
+            return None, err
+        if not isinstance(payload, dict) or not isinstance(payload.get(list_key), list) or not isinstance(
+            payload.get("total_count"), int
+        ):
+            return None, f"'{path}' page {page} had an unexpected shape (no total_count/{list_key})"
+        batch = payload[list_key]
+        items.extend(batch)
+        if len(items) >= payload["total_count"]:
+            return items, None
+        if not batch:
+            return None, f"'{path}' ran out of pages at {len(items)} of {payload['total_count']} items"
+    return None, f"'{path}' still incomplete after {MAX_CONTEXT_PAGES} pages"
+
+
+def _gh_pr_checks(run_command: CommandRunner, pr_number, required: bool) -> tuple[Optional[list], Optional[str]]:
+    """``gh pr checks`` text output as ``[(name, bucket)]``. It exits non-zero while any check fails or
+    is pending, so stdout is parsed regardless of the exit code. ``[]`` (with no error) means gh says
+    there are no (required) checks; an unparseable result is an error."""
+    cmd = ["gh", "pr", "checks", str(pr_number)] + (["--required"] if required else [])
+    result = run_command(cmd)
+    rows = []
+    for line in (result.stdout or "").splitlines():
+        parts = line.split("\t")
+        if len(parts) < 2:
+            return None, f"'{' '.join(cmd)}' produced a line that is not tab-separated: {line[:80]!r}"
+        rows.append((parts[0], parts[1].strip()))
+    if rows:
+        return rows, None
+    if "no required checks" in (result.stderr or "").lower() or "no checks reported" in (result.stderr or "").lower():
+        return [], None
+    return None, f"'{' '.join(cmd)}' returned nothing (exit {result.returncode}): {(result.stderr or '').strip()[:200]}"
+
+
+def _fetch_annotations(run_command: CommandRunner, check_run_id) -> list:
+    payload, err = _gh_json(
+        run_command, ["api", f"repos/{{owner}}/{{repo}}/check-runs/{check_run_id}/annotations"]
+    )
+    if err is not None or not isinstance(payload, list):
+        return [{"note": f"could not fetch annotations: {err or 'unexpected shape'}"}]
+    return [
+        {
+            "path": a.get("path"), "start_line": a.get("start_line"),
+            "level": a.get("annotation_level"), "message": (a.get("message") or "")[:200],
+        }
+        for a in payload[:ANNOTATION_LIMIT]
+    ]
+
+
+def _evaluate_contexts(
+    head_sha: str, pr_number, other_run_ids: set, run_command: CommandRunner,
+) -> dict:
+    """Every context at ``head_sha`` that is not part of another workflow's run. Returns failing /
+    pending / unknown lists plus ``examined`` and ``notes``; any fetch error lands in ``errors`` so the
+    caller can refuse GREEN."""
+    out = {"examined": 0, "failing": [], "pending": [], "unrecognized": [], "errors": [], "notes": [], "required": None}
+
+    check_runs, err = _fetch_paginated(run_command, f"commits/{head_sha}/check-runs", "check_runs")
+    if err:
+        out["errors"].append(f"check-runs: {err}")
+        check_runs = []
+    statuses, err = _fetch_paginated(run_command, f"commits/{head_sha}/status", "statuses")
+    if err:
+        out["errors"].append(f"commit status: {err}")
+        statuses = []
+
+    voting_names: set = set()
+    other_names: set = set()
+    for cr in check_runs:
+        name = cr.get("name")
+        m = _ACTIONS_RUN_ID_RE.search(cr.get("details_url") or "")
+        if m and int(m.group(1)) in other_run_ids:
+            other_names.add(name)
+            continue
+        voting_names.add(name)
+        out["examined"] += 1
+        if cr.get("status") != "completed":
+            out["pending"].append({"name": name, "source": "check-run"})
+        elif cr.get("conclusion") in FAILURE_CONCLUSIONS:
+            out["failing"].append({
+                "name": name, "source": "check-run", "conclusion": cr.get("conclusion"),
+                "annotations": _fetch_annotations(run_command, cr.get("id")),
+            })
+        elif cr.get("conclusion") not in PASSING_CONCLUSIONS:
+            out["unrecognized"].append({"name": name, "source": "check-run", "conclusion": cr.get("conclusion")})
+    for st in statuses:
+        name = st.get("context")
+        voting_names.add(name)
+        out["examined"] += 1
+        state = st.get("state")
+        if state in STATUS_FAILURE_STATES:
+            out["failing"].append({"name": name, "source": "commit-status", "conclusion": state, "annotations": []})
+        elif state == "pending":
+            out["pending"].append({"name": name, "source": "commit-status"})
+        elif state != "success":
+            out["unrecognized"].append({"name": name, "source": "commit-status", "conclusion": state})
+
+    known = voting_names | other_names
+    if pr_number is not None:
+        # Defence in depth against a third enumeration gap: anything gh itself reports that this
+        # enumeration did not see, or saw differently, must not be lost.
+        gh_all, err = _gh_pr_checks(run_command, pr_number, required=False)
+        if err:
+            out["notes"].append(f"cross-check with 'gh pr checks' unavailable: {err}")
+        else:
+            failing_names = {f["name"] for f in out["failing"]}
+            pending_names = {p["name"] for p in out["pending"]}
+            for name, bucket in gh_all:
+                if name in other_names:
+                    continue
+                if bucket in GH_CHECKS_FAILING and name not in failing_names:
+                    out["failing"].append({
+                        "name": name, "source": "gh pr checks only", "conclusion": bucket, "annotations": [],
+                    })
+                elif bucket in GH_CHECKS_PENDING and name not in pending_names:
+                    out["pending"].append({"name": name, "source": "gh pr checks only"})
+                if name not in known:
+                    out["unrecognized"].append({"name": name, "source": "gh pr checks only", "conclusion": bucket})
+
+        required, err = _gh_pr_checks(run_command, pr_number, required=True)
+        if err:
+            out["required"] = f"required checks unreadable ({err}); completeness rests on the all-contexts rule"
+        elif not required:
+            out["required"] = "no required checks configured on this branch; completeness rests on the all-contexts rule"
+        else:
+            missing = sorted({n for n, _ in required} - known)
+            out["required"] = f"{len(required)} required check(s) read"
+            if missing:
+                out["unrecognized"].extend(
+                    {"name": n, "source": "required but never examined", "conclusion": None} for n in missing
+                )
+    else:
+        out["notes"].append("no PR number: gh pr checks cross-check and required-check completeness skipped")
+    return out
+
+
+def _apply_contexts(result: dict, ctx: dict) -> dict:
+    """Fold the context evaluation into the workflow-derived verdict. Only ever makes it stricter."""
+    result["contexts_examined"] = ctx["examined"]
+    result["failing_contexts"] = ctx["failing"]
+    result["context_notes"] = ctx["notes"] + ([ctx["required"]] if ctx["required"] else [])
+
+    if ctx["failing"]:
+        names = ", ".join(f"{f['name']} ({f['source']})" for f in ctx["failing"])
+        prior = "" if result["verdict"] == "FAILING" else f" (workflow-run view said {result['verdict']})"
+        result["verdict"] = "FAILING"
+        result["reason"] = f"{len(ctx['failing'])} failing context(s): {names}{prior}"
+    elif result["verdict"] == "GREEN":
+        if ctx["errors"]:
+            result["verdict"], result["reason"] = "UNKNOWN", "workflow runs look green but the context list is incomplete: " + "; ".join(ctx["errors"])
+        elif ctx["pending"]:
+            names = ", ".join(p["name"] for p in ctx["pending"])
+            result["verdict"], result["reason"] = "PENDING", f"{len(ctx['pending'])} context(s) still pending: {names}"
+        elif ctx["unrecognized"]:
+            names = ", ".join(f"{u['name']} ({u['source']}: {u['conclusion']})" for u in ctx["unrecognized"])
+            result["verdict"], result["reason"] = "UNKNOWN", f"context(s) not confirmed passing: {names}"
+        else:
+            result["reason"] += f"; {ctx['examined']} context(s) examined, none failing"
+    return result
+
+
 def compute_pr_status(
     pr: Optional[str] = None,
     branch: Optional[str] = None,
@@ -346,7 +536,11 @@ def compute_pr_status(
         result = _absent_reason(pr_info, resolved_branch, head_sha, workflow_path, run_command)
 
     result["other_workflow_runs"] = other_workflow_runs
-    return result
+
+    other_run_ids = {r.get("id") for r in other_workflow_runs if r.get("id") is not None}
+    pr_number = pr or (pr_info.get("number") if isinstance(pr_info, dict) else None)
+    ctx = _evaluate_contexts(head_sha, pr_number, other_run_ids, run_command)
+    return _apply_contexts(result, ctx)
 
 
 def _print_human(result: dict) -> None:
@@ -358,6 +552,14 @@ def _print_human(result: dict) -> None:
         print(f"other_workflow_runs: {len(other)} (did not vote on this verdict)")
         for run in other:
             print(f"  {run.get('path')}: status={run.get('status')} conclusion={run.get('conclusion')}")
+    if "contexts_examined" in result:
+        print(f"contexts_examined: {result['contexts_examined']}")
+    for note in result.get("context_notes") or []:
+        print(f"note: {note}")
+    for ctx in result.get("failing_contexts") or []:
+        print(f"  failing context: {ctx['name']} [{ctx['source']}] {ctx['conclusion']}")
+        for a in ctx.get("annotations") or []:
+            print(f"    annotation: {a.get('path')}:{a.get('start_line')} {a.get('message') or a.get('note')}")
     for job in result["failing_jobs"]:
         print(f"  failing job: {job.get('job_name')} (run {job.get('run_id')}, job {job.get('job_id')})")
         for step in job.get("steps", []):
