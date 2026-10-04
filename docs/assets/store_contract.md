@@ -136,7 +136,30 @@ regeneration. Wiring the export into the real frontend build is `AM-M6` (dormant
 | `export-runtime` | none (reads committed candidates; writes outside the catalog) | a NEW directory given by `--out`: `runtime_manifest.json` and `<64 hex>.png` files (all-or-nothing, never into the catalog) | n/a |
 | `gc` | none; deletes only with `--delete` | removes only what it lists, under the quarantine, the review area and `generated/` | no (never `sources/`, `provenance/`, `manifests/`) |
 | `adopt` | **human only**: terminal on stdin and the typed id | `sources/<id>/rNNNN.aseprite` + `.source.json`, `provenance/adoptions/`, `provenance/intake/<in>.json` and `.review.json` | yes |
+| `draft` | `keep`: none (an agent may run it; it records no approval and is not an MCP tool). `verify`: none (read-only) | `visual_assets/drafts/<set_id>/` (outside the catalog): `draft_set.json` and one folder per entry (`package.json`, `source.aseprite`, `preview.png`, `intake_result.json`) | yes (drafts are tracked, never released) |
+| `adopt-set` | **human only**: terminal on stdin and the typed set id | per entry what `adopt` writes (`sources/`, `provenance/adoptions/`, `provenance/intake/<in>.json` and `.review.json`) plus `provenance/set-adoptions/<sa-id>.json` | yes |
 | `revoke` | **human only**: terminal on stdin and the typed id | `provenance/revocations/<id>.json` for a source revision; `revocation.json` in the quarantine for an un-adopted intake | revision: yes; intake: no |
+
+## Draft sets and `adopt-set`
+
+The user decided (2026-10-04, "Drafts now, batch review") that assets are drafted without adoption and reviewed as a whole set, then approved in one decision. Adoption stays the human gate (`AM-F01`); its unit becomes
+a reviewed set. A **draft set** is `visual_assets/drafts/<set_id>/`, tracked in git and OUTSIDE the catalog: `build`, `release`, `export-runtime` and the catalog's `verify` never read it, and `gc` never touches it (its 30-day
+rule is for local quarantine and review files, which drafts do not depend on). `draft_set.json` is a `DraftSet` (`contracts/draft.py`): entries `{visual_key, detail?, source_asset_id, draft_id, pixel_hash, intake_hash}`,
+unique per slot, sorted, at most `MAX_DRAFT_SET_ENTRIES` (256; no limit on the number of sets). `draft_id` is the intake id and the entry's folder, which holds the three staged files and the intake result of a PASSED intake.
+`pixel_hash` is the pixels-v1 hash of the preview, the image the human reviews. The source's hash is deliberately not repeated: it is bound through the chain (below), which keeps a full set under `MAX_RECORD_BYTES`.
+
+- `draft keep <intake_id> --set <set_id> --as <visual_key> [--detail <value>] [--source-asset-id <id>] [--replace]`: only from a PASSED, locally unrevoked intake, with a declared key and value. `source_asset_id` is the id the entry will be adopted under (default: the key with dots as
+  underscores plus `_<detail>`); it is refused if it already exists as a source asset in the catalog or is used by another entry of the set, so a collision shows when the draft is kept, not at adoption. A second draft for the same slot
+  (the key's default counts as its default value) is refused unless `--replace`. All-or-nothing writes (a staged `.tmp-*` directory renamed into place). Errors have stable codes (`DraftError`).
+- `draft verify [set_id]`: the full chain for every entry, declared keys and values, one entry per effective slot, no stray or leftover files. **The chain**, checked identically by `draft verify` and `adopt-set` (`drafts.read_entry`):
+  `source.aseprite` bytes -> the staged-file hash inside `intake_result.json`; `intake_result.json` bytes -> `intake_hash`; `preview.png` pixels -> `pixel_hash`.
+- `adopt-set <set_id> --approver ... --approver-role ... --licence CLEARED --licence-evidence ... --review-evidence ...` (`setadoption.py`): **human only** (terminal on stdin, one typed confirmation of the set id; the drawing server may not import it, and it is not an MCP tool).
+  For every entry it runs the checks `adopt` runs (shared code: staged bytes, the same bytes not adopted or revoked, key and slot declared and free, licence, approver; entries are always NEW source assets, so a held slot is refused and replacing means revoking first) and, instead of the
+  per-intake review area, **re-renders the draft's source with the store's own Aseprite now and requires the render to equal the draft's preview pixel for pixel** (a hard refusal on any mismatch: no stored check is trusted). It prints ONE notice listing every entry, the licence evidence,
+  the review evidence and the **DraftSet's file hash** (the preview page shows the same hash, so "what I reviewed" and "what I adopted" are the same bytes), then writes all files together or none: per entry the source, the intake result copy, a fresh `ReviewRenderCheck`, an ordinary `AdoptionRecord` (schema unchanged)
+  and a `SourceRecord`, then one `SetAdoptionRecord` in `provenance/set-adoptions/` (a folder of its own, because every reader parses `provenance/adoptions/*.json` as an `AdoptionRecord`). The catalog's `verify` checks each set record and that every entry points at an adoption of the same intake, key and slot.
+  A set adoption does not change the meaning of an adoption record, a release or the runtime manifest.
+- Layering (`tests/visual_assets/test_boundaries.py`): `drafts` is a store layer of its own (it writes outside the catalog and records no approval, so it is not a gate layer, but the drawing server may not import it); `setadoption` is a gate layer like `adoption` and `revoke`, never importable from `visual_assets/drawing/`, and the CLI is the only caller.
 
 ## MCP tools on the drawing server (restart the server for new tools to appear in a running session)
 

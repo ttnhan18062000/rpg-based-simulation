@@ -43,6 +43,11 @@ def adoptions_dir(root: Path | None = None) -> Path:
     return _root(root) / "provenance" / "adoptions"
 
 
+def set_adoptions_dir(root: Path | None = None) -> Path:
+    """Records of reviewed-set adoptions: a folder of their own, because every reader parses `adoptions/*.json` as an `AdoptionRecord`."""
+    return _root(root) / "provenance" / "set-adoptions"
+
+
 def intake_dir(root: Path | None = None) -> Path:
     return _root(root) / "provenance" / "intake"
 

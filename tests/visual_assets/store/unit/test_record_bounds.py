@@ -118,6 +118,30 @@ def _maximal_runtime(cls) -> dict:
     return data
 
 
+def _maximal_draft_set(cls) -> dict:
+    """MAX_DRAFT_SET_ENTRIES entries of maximum-length keys, detail values and source asset ids (the widest legal DraftSet)."""
+    data = _fixture(cls)
+    data["set_id"] = "s" * 64
+    data["entries"] = [
+        {"visual_key": _wide_key(i), "detail": f"{i % 100:02d}" + "d" * 30, "source_asset_id": "s" * 60 + f"{i:04d}", "draft_id": f"in-{i:016x}",
+         "pixel_hash": "pixels-v1:" + f"{i:064x}", "intake_hash": "sha256:" + f"{i + 1:064x}"}
+        for i in range(config.MAX_DRAFT_SET_ENTRIES)
+    ]
+    return data
+
+
+def _maximal_set_adoption(cls) -> dict:
+    """MAX_DRAFT_SET_ENTRIES entries and the longest 4-byte text in every free field: the widest legal SetAdoptionRecord."""
+    data = _fixture(cls)
+    data["set_id"] = "s" * 64
+    data["review_evidence_ref"], data["approver_name"], data["approver_role"] = FOUR_BYTE * 256, FOUR_BYTE * 128, FOUR_BYTE * 128
+    data["entries"] = [
+        {"visual_key": _wide_key(i), "detail": f"{i % 100:02d}" + "d" * 30, "adoption_id": f"ad-{i:016x}", "intake_id": f"in-{i:016x}"}
+        for i in range(config.MAX_DRAFT_SET_ENTRIES)
+    ]
+    return data
+
+
 def _maximal_registry(cls) -> dict:
     """MAX_VISUAL_KEYS keys of the realistic shape (2 axes x 4 values) and MAX_ALIASES aliases: the count bound is for this shape;
     wider keys are bounded by MAX_REGISTRY_BYTES first (the registry is a hand-edited file), see docs/assets/budgets.md."""
@@ -133,7 +157,8 @@ def _maximal_registry(cls) -> dict:
     return data
 
 
-MAXIMAL = {"IntakeResult": _maximal_intake_result, "CandidateHandoffPackage": _maximal_package, "ReleaseCandidateManifest": _maximal_manifest, "RuntimeManifest": _maximal_runtime, "VisualKeyRegistry": _maximal_registry}
+MAXIMAL = {"IntakeResult": _maximal_intake_result, "CandidateHandoffPackage": _maximal_package, "ReleaseCandidateManifest": _maximal_manifest, "RuntimeManifest": _maximal_runtime, "VisualKeyRegistry": _maximal_registry,
+           "DraftSet": _maximal_draft_set, "SetAdoptionRecord": _maximal_set_adoption}
 
 
 def maximal_instance(cls):

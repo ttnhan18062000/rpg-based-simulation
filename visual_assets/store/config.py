@@ -14,12 +14,14 @@ _VISUAL_ASSETS = Path(__file__).resolve().parents[1]
 CATALOG_ROOT = _VISUAL_ASSETS / "catalog"
 QUARANTINE_ROOT = CATALOG_ROOT / ".quarantine"
 REVIEW_ROOT = CATALOG_ROOT / ".review"
+DRAFTS_ROOT = _VISUAL_ASSETS / "drafts"  # tracked draft sets, OUTSIDE the catalog: `build`, `release`, `runtime_export` and catalog `verify` never read it
 
 MAX_RECORD_BYTES = 128 * 1024  # budget: docs/assets/budgets.md
 MAX_REGISTRY_BYTES = 7 * 64 * 1024  # budget: docs/assets/budgets.md
 MAX_MANIFEST_BYTES = 8 * 64 * 1024  # budget: docs/assets/budgets.md; the widest candidate or runtime manifest (MAX_VISUAL_KEYS entries, each with a detail value, plus the details block), rounded up to 64 KiB
 MAX_VISUAL_KEYS = 1024  # budget: docs/assets/budgets.md
 MAX_DETAIL_KEYS = 64  # budget: docs/assets/budgets.md; keys declaring a detail axis per registry (the runtime manifest repeats each one's declared values)
+MAX_DRAFT_SET_ENTRIES = 256  # budget: docs/assets/budgets.md; entries (slots) in one draft set and in one set adoption record; there is no limit on the number of sets
 MAX_ALIASES = 1024  # budget: docs/assets/budgets.md
 MAX_SOURCE_BYTES = 100 * 1024  # budget: docs/assets/budgets.md; the D2 (no Git LFS) reversal trigger
 MAX_DIM = 128  # budget: docs/assets/budgets.md

@@ -72,7 +72,7 @@ hex of the source's sha256 (it identifies the source bytes); `handoff_id` is `<c
 immutable: rebuilding with the same inputs is idempotent, and changing any input (a corrected brief, a different licence statement) for the same revision creates a new handoff,
 so several handoffs may exist for one candidate (intake tells them apart). Provenance is what the tools know (adapter version and Lua pin, Aseprite version, counts from Aseprite itself) and an explicit
 `UNAVAILABLE` / `NOT_APPLICABLE` otherwise, e.g. the creator. It is a **candidate, not an adoption**: nothing is written to the asset store, and the
-next step is the separate `python -m visual_assets.store intake <directory>`. The server has no adopt, build, release, revoke or gc tool.
+next step is the separate `python -m visual_assets.store intake <directory>`. The server has no adopt, adopt-set, build, release, revoke or gc tool. Agent flow for drafts: draw -> `export_handoff` -> `intake` -> `review` -> `python -m visual_assets.store draft keep <intake_id> --set <set_id> --as <key> [--detail <value>]` (not an MCP tool; it records no approval); a human later reviews the whole set and runs `adopt-set`.
 
 **Rule for agents: an agent never runs `adopt` or `revoke`** (`python -m visual_assets.store adopt|revoke`). They are human decisions that write the tracked catalog; they refuse to run without a terminal and make the operator type the id, and the drawing code cannot import them.
 

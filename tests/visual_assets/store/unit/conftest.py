@@ -22,6 +22,8 @@ RECORD_FILES = {
     "ReleaseCandidateManifest": "release_candidate_manifest.json",
     "VisualKeyRegistry": "visual_key_registry.json",
     "RuntimeManifest": "runtime_manifest.json",
+    "DraftSet": "draft_set.json",
+    "SetAdoptionRecord": "set_adoption_record.json",
 }
 
 
