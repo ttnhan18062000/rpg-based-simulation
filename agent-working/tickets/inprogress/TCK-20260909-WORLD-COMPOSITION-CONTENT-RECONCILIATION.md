@@ -1032,9 +1032,9 @@ file defines a world*, which still holds: the other four named tests (`:171`, `:
 `:224`) are byte-unchanged. These two changed because Step 11 legitimately changes `generate()`'s
 **signature** — Step 11's own surface, not the ADR's.
 
-### STILL RED — a real generator defect the injection surfaced, routed rather than decided
+### A real generator defect the injection surfaced — routed, filed, and xfail-marked
 
-With the real catalog injected, the same two tests now fail for a different and deeper reason:
+With the real catalog injected, the same two tests failed for a different and deeper reason:
 
 ```
 ValueError: Duplicate region ID collision 'hometown' detected during assembly merge.
@@ -1043,32 +1043,41 @@ src/worldassembly/resolver.py:359
 
 Measured, not inferred:
 
-- `frontier_village_core.yaml` and `trading_company_hub.yaml` **both declare region id
-  `hometown`**.
+- `frontier_village_core.yaml:9` and `trading_company_hub.yaml:19` **both declare region id
+  `hometown`** (line numbers independently confirmed by the coordinator before filing).
 - Today's `ModuleScorer` ranks them **1 and 2** for this intent (`generated_frontier_3_42`, seed
   42, `settlement_style="frontier"`), so the generator selects both.
 - The generator emits every `ModuleRefSpec` with `namespace=None` and never sets one; its Rule 5
   fail-fast guards duplicate **`provides`** strings only, not duplicate region ids.
-- The hand-authored `data/worlds/urban_political/world.yaml` composes the same two modules and
-  resolves this with `namespace: trading` — exactly as `test_urban_political_composition`'s
-  docstring says.
+- `data/worlds/urban_political/world.yaml:16` composes the same pair and resolves it with
+  `namespace: "trading"` — as `test_urban_political_composition`'s docstring states.
 - The **committed** `data/worlds/generated_frontier_3_42/world.yaml`, authored by the generator
   before this ticket, contains `frontier_village_core` but **not** `trading_company_hub`. The
   module corpus and/or scorer has moved since, so today's selection picks a colliding pair.
 
-**Pre-existing latent defect, newly surfaced rather than caused.** The selection code is
-byte-unchanged by this diff: `git diff c86fa3a21 HEAD -- src/worldgeneration/generator.py` shows no
-change to `ModuleScorer` use, the ranking, `selected_ids`, `BUDGET` or Rule 5 — the only matching
-diff lines are docstring text. It was invisible because nothing ever resolved what the generator
-authored; Step 11 item 4 made it visible, which is exactly what that item exists for.
+**Pre-existing latent defect, surfaced not caused.** The selection code is byte-unchanged by this
+diff: `git diff c86fa3a21 HEAD -- src/worldgeneration/generator.py` shows no change to
+`ModuleScorer` use, the ranking, `selected_ids`, `BUDGET` or Rule 5 — the only matching diff lines
+are docstring text. It was invisible because nothing ever resolved what the generator authored;
+Step 11 item 4 made it visible, which is exactly what that item exists for.
 
-**Not fixed here.** Every available fix changes *which world a given intent generates*:
-(a) auto-namespace colliding modules — changes region identity itself; (b) extend Rule 5 to reject
-region-id collisions and fall through to the next candidate; (c) filter colliding candidates during
-selection. All three are world-semantics decisions, which this repo routes to the rule owner rather
-than letting an implementer take. **The two tests stay red and the "Full scoped regression" AC
-stays unchecked.** This wants its own ticket:
-*the procedural composition generator can author a composition that cannot assemble.*
+**Filed and owned elsewhere:** `TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION` (P1,
+standard, committed at `a8910130c`). Fixing it here would mean deciding world semantics — which
+world a given intent generates, and under the auto-namespacing option region identity itself —
+without the rule owner.
+
+**Resolved in this ticket by marking, not fixing (coordinator decision).** Both
+`test_generated_composition_is_valid_worldcompositionspec` and
+`test_generated_composition_determinism` carry
+`@pytest.mark.xfail(strict=True, reason=...)` naming that ticket and the one-line cause. The marks
+are the whole change: no assertion inside either test was touched, and the other four
+Scope-Guard-3 tests are byte-unchanged. `strict=True` is mandatory — if the defect is fixed and
+these start passing, the xfail itself fails, so the marks cannot outlive the ticket. **AC-3 of
+TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION requires these marks to be
+removed when the defect is fixed.**
+
+Verified: both report **xfailed**, not xpassed, so the defect is deterministic rather than
+intermittent — which the new ticket's Assumptions depend on.
 
 ### Pre-existing failures, verified not caused by this ticket
 
@@ -1124,13 +1133,11 @@ provenance history, refuse-to-overwrite, resolve-failure cleanup). Deliberately 
 
 Every command was run in the foreground on the final tree.
 
-**Step 15 is therefore not satisfied**, and the AC stays unchecked. Exactly two tests fail for a
-reason attributable to this ticket's own work —
-`test_generated_composition_is_valid_worldcompositionspec` and
-`::test_generated_composition_determinism` — and they fail on a pre-existing generator-selection
-defect that Step 11's resolve surfaced (`Duplicate region ID collision 'hometown'`), whose fix is a
-world-semantics decision routed to the rule owner. Everything else in the plan's scoped commands is
-green apart from the enumerated pre-existing set.
+**All tests pass except two xfail-marked cases tracking a filed P1 defect**
+(TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION), plus the
+enumerated pre-existing set. The suite is NOT described as clean: those two marks encode a real
+defect that is now visible rather than silent. The "Full scoped regression" AC remains unchecked
+for that reason.
 
 ## Files Changed
 
@@ -1201,15 +1208,15 @@ generator was changed to author `data/worlds/<id>/world.yaml` directly with a hi
 provenance marker, refusing to overwrite and resolving before committing either write.
 `SUB-394` records the law with the guard as its `test_path`.
 
-**Not complete.** Step 15's all-green regression is not satisfied. Two tests remain red:
-`test_generated_composition_is_valid_worldcompositionspec` and
-`::test_generated_composition_determinism`. The first cause I reported — a cwd-dependent
-`CatalogRepository` I had added inside `generate()` — is **fixed**, by injecting the catalog as a
-required parameter with no default, per the coordinator's scope decision; my own earlier
-recommendation to relax Scope Guard 3 instead was wrong, and the guard was not weakened. What
-remains is a genuine, pre-existing generator defect the fix surfaced: today's `ModuleScorer` ranks
+**Not complete, and deliberately so.** All tests pass except two xfail-marked cases tracking a
+filed P1 defect — `TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION`
+(committed `a8910130c`) — so the "Full scoped regression" AC stays unchecked. The first cause I
+reported, a cwd-dependent `CatalogRepository` I had added inside `generate()`, is **fixed** by
+injecting the catalog as a required parameter with no default; my own earlier recommendation to
+relax Scope Guard 3 instead was wrong, and that guard was not weakened. What remains is a genuine
+pre-existing generator defect the fix made visible: today's `ModuleScorer` ranks
 `frontier_village_core` and `trading_company_hub` first and second, both declare region id
-`hometown`, and the generator never sets a `namespace` — so it authors a composition that cannot
-assemble. Every fix for that changes which world a given intent generates, so it is routed to the
-rule owner rather than decided here, and it wants its own ticket. AC-5's oracle stays `unresolved`
-for this ticket, which is correct rather than a gap.
+`hometown`, and the generator never sets a `namespace`, so it authors a composition that cannot
+assemble. Both affected tests are `xfail(strict=True)` against that ticket, whose AC-3 requires the
+marks removed when the defect is fixed. AC-5's oracle stays `unresolved` for this ticket, which is
+correct rather than a gap.

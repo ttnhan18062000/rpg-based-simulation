@@ -1109,3 +1109,33 @@ three change *which world a given intent generates* — region ids, hence world 
 changes region identity itself. Per this repo's rule-owner ordering, that is routed, not decided by
 the implementer. **The two tests therefore remain red, and the "Full scoped regression" AC stays
 unchecked.**
+
+### Deviation 12 — this ticket introduces two xfail-marked tests (coordinator decision)
+
+`test_generated_composition_is_valid_worldcompositionspec` and
+`test_generated_composition_determinism` are marked
+`@pytest.mark.xfail(strict=True, ...)`, with a reason naming
+`TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION` (P1, standard,
+filed and committed at `a8910130c`) and stating the failure in one line. **The marks are the whole
+change** — no assertion inside either test was touched, and the other four Scope-Guard-3 tests
+(`:171`, `:188`, `:205`, `:224`) remain byte-unchanged.
+
+`strict=True` is mandatory and deliberate: if the defect is fixed and these start passing, the
+xfail itself fails, so the marks cannot outlive the ticket that owns them. A bare `skip` or a
+non-strict `xfail` was explicitly ruled out.
+
+**These two marks encode a real, pre-existing defect that is now visible rather than silent.**
+Before this ticket the generator authored a composition that could not assemble and nothing ever
+resolved it, so the world was already broken and nobody could see it. Step 11 item 4 made it fail
+loudly. That is an improvement in visibility, not a behavioural regression, and it is exactly what
+that item exists for. Reverting item 4 to obtain a green suite would restore the silence and
+re-create the unloadable-world state review V3 was added to prevent. Fixing the defect here would
+mean deciding world semantics — which world a given intent generates, and under the
+auto-namespacing option region identity itself — without the rule owner.
+
+**AC-3 of `TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION`
+requires these two marks to be removed when that defect is fixed.**
+
+Verified on application: both report **xfailed**, not xpassed
+(`11 passed, 2 xfailed` for that file), so the defect is deterministic rather than intermittent —
+which is what the new ticket's Assumptions depend on.
