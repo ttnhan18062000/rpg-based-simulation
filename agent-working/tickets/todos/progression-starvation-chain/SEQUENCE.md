@@ -49,11 +49,21 @@ epic by dispatching a child whose prerequisite has not landed.
 **What landed is item (1)'s *investigation*, not its *fix*.** The distinction was blurred in the
 line above, which this correction replaces. The investigation closed with the verdict — `COMBAT_ENGAGE`
 wins the goal competition and the win is discarded at dispatch. The **fix** for that verdict is
-`TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND`, which is **PR #291, still
-open**, and which `rpg-feature-planning` **recommended holding** on determinism grounds: its AC6 is
-*contradicted*, not merely undemonstrated — **780 vs 1609 opportunity attacks on identical runs**, a
-divergence recorded as `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` and one
-that **survives `audit_mode=True` and a raised `max_tick_budget_ms`**, unlike the `INFRA-273` throttle.
+`TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND`, PR **#291**.
+
+> **UPDATE 2026-10-04: #291 IS NOW MERGED.** `mergedAt` 2026-10-04T10:33:12Z, merge commit
+> `f4146ddbb`, confirmed as the tip of `origin/main`. **The hold is lifted and the fix has landed**, so
+> the "held pending #291" half of this correction is spent. `rpg-feature-planning` withdrew its hold
+> before the merge on the ground below: the nondeterminism is **pre-existing** and #291 did not cause it,
+> so gating the fix on a bug it did not introduce was the wrong shape of caution. **What has NOT changed
+> is the determinism caveat** — read the next paragraph as a live constraint on *measurement*, not as a
+> reason the fix is still blocked.
+
+`rpg-feature-planning` originally **recommended holding** #291 on determinism grounds, and the
+underlying fact is unchanged by the merge: its AC6 landed **contradicted**, not merely undemonstrated —
+**780 vs 1609 opportunity attacks on identical runs**, a divergence recorded as
+`TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` and one that **survives
+`audit_mode=True` and a raised `max_tick_budget_ms`**, unlike the `INFRA-273` throttle.
 
 **Why that blocks item (2) specifically.** Item (2) is a corpus *measurement* ticket — it counts
 cross-faction hostile interaction. It runs on the same combat/tactical path the nondeterminism was
@@ -61,14 +71,28 @@ measured on. **Any count it takes before that divergence is settled is unreliabl
 ticket needs**, and dispatching it would produce numbers that look authoritative and are not. This is
 the same failure shape the epic's own closing section warns about for item (5).
 
-**So the real sequence head is now:** settle
-`TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` (or establish a different
-instrument), **then** land #291, **then** item (2). Items (3) and (5) are unaffected by this
-correction — (3) remains independently runnable, (5) remains last.
+**So the real sequence head is now** (revised 2026-10-04, #291 having merged): **#291 has landed**, so
+item (2) is no longer waiting on a fix. What remains ahead of it is
+`TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` — **settled, or a different
+instrument established** — because item (2) is a corpus *measurement* ticket and runs on exactly the path
+that divergence was measured on.
 
-Whether #291 lands as-is is **its own user's decision, not this epic's.** If it does land with AC6
-unmet, the one thing asked is that its ticket say AC6 is *failed and knowingly accepted*, with those
-two numbers.
+**The distinction that matters for whoever picks item (2) up:** it is **not blocked from running**; it is
+blocked from producing numbers it can *claim precision for*. If item (2)'s question can be answered at
+order-of-magnitude — e.g. "is cross-faction hostile interaction zero or non-zero" — it can run **now**
+against a post-#291 corpus and that is a genuine result. If it needs exact counts, the nondeterminism
+ticket comes first. **Decide which before dispatching**, and record the choice, rather than taking counts
+and discovering afterwards that they were not reproducible.
+
+Items (3) and (5) are unaffected by this correction — (3) remains independently runnable, (5) remains
+last.
+
+~~Whether #291 lands as-is is **its own user's decision, not this epic's.**~~ **It landed, 2026-10-04,
+with AC6 unmet.** The one thing asked of its ticket still stands and is **outstanding**: that it record
+AC6 as *failed and knowingly accepted*, with the 780-vs-1609 numbers and a pointer to
+`TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE`. **This is not this epic's to
+enforce** — it belongs to #291's own ticket and user — but it is noted here because a reader arriving at
+this chain later will see an AC that *looks* met on a merged PR, and the measurement says otherwise.
 
 ## Why This Order Matters
 
