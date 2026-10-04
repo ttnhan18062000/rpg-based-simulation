@@ -116,6 +116,27 @@ failure was a wall-clock `TimeoutError` from the pytest harness's own resource b
   the same already-breaching pattern — not inventoried here, left to this ticket's own scope.
 
 ## Implementation Notes
+### perf-planner dispatch notes, 2026-10-04
+
+- **Intended disposition: close as superseded (AC1's second branch).** No `hard=True` flip in this
+  ticket. Reasons to verify and cite, not assume:
+  1. The call-site inventory this ticket's Scope asks for already exists: `tools/perf/perf_threshold_inventory.py`
+     (M2-T01, PR #306) and `docs/performance/performance_clause_inventory.md` §7; checked in CI by
+     `tests/tools/test_perf_inventories_committed_in_sync.py`. Regenerate it with the tool and quote the
+     current counts (soft default, explicit `hard=False`, `hard=True`, pass-through wrappers).
+  2. The owner's gate decision (roadmap, "Gate definition and partial lift", item 2): "no soft check
+     becomes blocking" until the gate lifts. AC2 cannot be met now without breaking that.
+  3. The migration path is M4's own: tripwire calibration and selected hard checks
+     (`performance_m4_baseline_gate_a_epic.md` gap-table row + PERF-M4-T02/T07), under PERF-D4.
+     Name the M4 candidate IDs that own the work after reading the epic; do not guess them.
+- **The default question** (Scope item 3: should `hard=False` stay the default?) is recorded as an open
+  input to that M4 work, with the two options and their trade-off, not decided here.
+- **AC3.** Update the M4 gap-table row (line ~53) and the "Confirmed field evidence" note (~line 80) to
+  point at this ticket's disposition and the M4 owner IDs.
+- **Tier.** Stays `standard`. The staging artifacts can be short: `investigation.md` = the regenerated
+  inventory counts plus the metropolis breaching-green evidence; `plan.md` = the disposition and doc
+  edits; `test_plan.md` = the inventory sync test and `validate_frontmatter`. No `src/` or `tests/` edit.
+
 _(pending)_
 
 ## Test Summary

@@ -179,6 +179,35 @@ _(none yet — filed as a root-caused finding, not yet implemented)_
   for whoever implements this to choose based on what the actual call-site matrix requires.
 
 ## Implementation Notes
+### perf-planner dispatch notes, 2026-10-04
+
+- **Authorization.** The owner extended the partial lift to `src/perf/scenarios.py` for this ticket only
+  (`performance_optimization_roadmap.md`, gate item 4). No other `src/` file is in scope. Stop and tell
+  perf-planner if the fix seems to need one.
+- **Call-site matrix (grep done by the planner).** `build_metropolis_state` at 1000/50/20
+  (`tests/perf/test_perf_metropolis.py:40`, `src/perf/profile_governance.py:17`), at 500 and at 200
+  (`test_perf_metropolis.py:102,127`, default `region_count`). `build_mixed_state` standalone at 200
+  (`tests/perf/test_perf_stress.py`), 1000 (`tools/perf/run_perf_baseline.py`) and 100
+  (`tools/release/verify_production_profiles.py`). AC2 uses the 500 and 200 pairings. The Scope item on
+  `build_mixed_state` standalone must be answered for 100/200/1000 with a measured result.
+- **Fix shape (planner preference, not binding).** The formula is fully deterministic, so the simplest
+  fix is enough: give each entity a per-region slot index `i // region_count` on a grid that fits
+  inside the region, and raise a `ValueError` when `entity_count` exceeds the region capacity, instead
+  of wrapping silently. A per-entity occupancy set is only needed if the measured matrix shows the
+  slot scheme cannot cover it.
+- **Determinism.** AC3 compares the full position map from two calls. Also compare the state digest
+  from two calls (the `flat-sha256-v1` `ProofDigest`); do not invent a new digest.
+- **Remove the workaround.** Remove `METROPOLIS_WARNING` and the branch that adds it in
+  `tools/perf/_profiling_common.py`, and update any test that asserts it. Then run the fix: do not leave
+  a warning about a defect that is gone.
+- **Measurement.** The metropolis TPS/p99 thresholds are soft, and stay soft. Record before/after
+  avg TPS and p99 for `test_perf_metropolis_longevity` (500) once, marked provisional, in the ticket.
+  Do not retune thresholds here.
+- **Heavy runs.** `test_perf_metropolis_stress` (1000) is `extra_slow`: run it once, in the foreground,
+  under the `systemd-run` memory cap, or skip it and say so.
+- **Parity/docs.** Check `docs/parity_ledger/infrastructure.yaml` and `docs/observability/hard_law_monitor.md`
+  for a metropolis or perf-scenario entry; update one only if it exists and changes meaning.
+
 _(none yet — not yet implemented)_
 
 ## Test Summary
