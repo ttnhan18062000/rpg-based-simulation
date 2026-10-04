@@ -161,7 +161,7 @@ None. The evidence is in `codebase-planner`'s own handoff and re-verified in thi
 - `src/lab/orchestrator.py:184` — the live caller that makes Bug 1 reachable
 - `src/systems/social_systems/party.py:6-7` (`TYPE_CHECKING`), `:128` (annotation), `:132` (the
   function-local import that omits it), `:143` (the call)
-- `src/core/strategic.py` — where `StrategicUpdate` actually lives
+- `src/core/updates.py:515` — where `StrategicUpdate` actually lives (corrected at close: this line originally named `src/core/strategic.py`, which exists but does not define it; the wrong path survived because the module was matched by name, not traced)
 
 ## Assumptions / Open Questions
 
@@ -180,7 +180,7 @@ None. The evidence is in `codebase-planner`'s own handoff and re-verified in thi
 - Bug 1 (LIVE, silent): module-level `import json` in `src/engine/kernel.py`; the two function-local imports removed; `except Exception: pass` narrowed to `(OSError, ValueError)` with a `logger.warning` (a missing or corrupt manifest degrades fingerprints but must not abort a run, so it is logged, not raised).
 - Blast radius, measured: `prov_manifest_data` only feeds `RunManifest.catalog_fingerprint` and `module_fingerprints` as fallbacks; `src/lab/orchestrator.py` passes neither, so every lab-orchestrated run recorded the process-wide catalog fingerprint and `module_fingerprints=None` instead of the resolve-time values. Anything that read those from a lab run's manifest did not have provenance.
 - Bug 2 (DORMANT, zero callers): `StrategicUpdate` imported from `src/core/updates.py`. The ticket and the handoff named `src/core/strategic.py`, which does not define it; a first edit using that path failed the new test.
-- Decision for `issue_party_command`: kept and now tested, NOT wired and NOT removed. `docs/mechanics/07_social_political_dynamics.md` documents it as existing behavior (removal breaks doc-code parity) and wiring a caller is Lane A feature work; the dormancy is escalated to the planner. Cross-lane exception recorded in `docs/plans/rpg_design_roadmap/rpg_implementer_lane_split.md` section 5.
+- Decision for `issue_party_command`: kept and now tested, NOT wired and NOT removed; escalated to the rule owner (`world-rule-catalog-design`) via the planner, since a documented-but-unwired mechanic is a doc-vs-code divergence that resolves as either wire it or record it in `docs/guidelines/intentional_divergences.md`. `docs/mechanics/07_social_political_dynamics.md` documents it as existing behavior (removal breaks doc-code parity) and wiring a caller is Lane A feature work; the dormancy is escalated to the planner. Cross-lane exception recorded in `docs/plans/rpg_design_roadmap/rpg_implementer_lane_split.md` section 5.
 
 ## Test Summary
 
