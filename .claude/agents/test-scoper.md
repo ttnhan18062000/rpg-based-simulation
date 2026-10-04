@@ -101,6 +101,15 @@ tools/release/*.py                 -> tests/certification/    (default fallback 
 tools/maintenance/*.py             -> tests/tools/            (NOT a same-name mirror; no
                                                                  tests/maintenance/ directory exists)
 ```
+
+**`codebase/` (the codebase domain root, a third source tree: Python code-craft tooling, gates, hooks, reports, baselines):**
+```
+codebase/**                        -> tests/codebase/         (the codebase domain root: health/,
+                                                                 gates/, hooks/, reports/, baselines/,
+                                                                 config/. Run the whole dir; not under
+                                                                 tests/tools/ any more. codebase/README.md
+                                                                 is prose, no test requirement)
+```
 If a changed `tools/` path doesn't match any pattern above, check for a same-name directory
 under `tests/` before falling back to `tests/tools/`. This fallback does NOT apply to the six
 `tools/` subdirs listed above with an explicit non-mirror target — check those first.
