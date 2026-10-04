@@ -18,6 +18,24 @@ class ModuleRefSpec(BaseModel):
     namespace: Optional[str] = Field(None, description="Optional namespace prefix to isolate entity/region IDs")
 
 
+class GenerationProvenanceSpec(BaseModel):
+    """Origin history for a composition a generator authored.
+
+    This records HISTORY only — it is not an input contract. `world.yaml` is the source
+    definition from the moment it is written; nothing may re-derive it from this marker, because
+    that would make the recorded params the real definition and `world.yaml` a projection of
+    them (see `docs/architecture/world_repository_layout.md` §1).
+    """
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    generator: str = Field(..., min_length=1, description="Name of the generator that authored this definition")
+    generator_version: str = Field(..., min_length=1, description="Generator version at authoring time")
+    generation_id: str = Field(..., min_length=1, description="Identifier of the generation run")
+    seed: int = Field(..., description="Seed the generation run was driven with")
+    generated_at: str = Field(..., min_length=1, description="ISO-8601 UTC timestamp of the generation run")
+    intent_parameters: Dict[str, Any] = Field(default_factory=dict, description="Intent parameter values the run used")
+
+
 class WorldCompositionSpec(BaseModel):
     """Pydantic model representing compositional world scenarios (worldcomposition.v1)."""
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -36,6 +54,11 @@ class WorldCompositionSpec(BaseModel):
 
     global_parameters: Dict[str, Any] = Field(default_factory=dict, description="Global configuration variables")
     generation_seed: int = Field(42, description="Seed for deterministic procedural resolution")
+    generation_provenance: Optional[GenerationProvenanceSpec] = Field(
+        None,
+        description="Origin history for a generator-authored definition. History only — never an "
+                    "input contract, and never re-derived from. Absent on hand-authored definitions."
+    )
     validation_profile: str = Field("local_dev", description="Validation profile budget category (e.g. local_dev, ci)")
     faction_tension_overrides: Dict[str, float] = Field(
         default_factory=dict,
@@ -207,6 +230,8 @@ class WorldCompositionNormalizer:
             # pack_refs is a pre-assembly validation gate and is intentionally not
             # carried into the normalized compilation context.
             data.pop("pack_refs", None)
+            # generation_provenance is origin history, not a compilation input.
+            data.pop("generation_provenance", None)
         elif isinstance(composition, dict):
             modules = composition.get("modules")
             module_refs = composition.get("module_refs")
@@ -214,6 +239,7 @@ class WorldCompositionNormalizer:
                 raise ValueError("Cannot specify both 'modules' shorthand and 'module_refs' structured format in composition.")
 
             data = dict(composition)
+            data.pop("generation_provenance", None)
             if modules is not None:
                 normalized_refs = []
                 for mod_id in modules:

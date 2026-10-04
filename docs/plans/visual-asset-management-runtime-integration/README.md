@@ -59,21 +59,24 @@ One real terrain tile (`terrain.forest`) was adopted by the owner and is in rele
 (`docs/assets/surface_rehearsal_result.md`). Retention is approved (30 days, local only) and a rollback drill exists (`docs/assets/retention_and_rollback.md`). A charter **draft** is at `docs/assets/pilot_charter_am6.md`, marked not an authorization.
 `AM-M6` stays `NO-GO` (M1 open items, no M2 or M4 `PASS` record, M5 not `PASS`, no signed charter, no authorization); `AM-M7` stays dormant.
 
-## Status update 2026-10-04 (`AM-M1` result)
+## Status update 2026-10-04 (`AM-M1` result, re-derived)
 
-`TCK-20261004-EPIC-VISUAL-ASSET-M1-CONTRACTS` wrote the `AM-M1` contracts up as built, against each acceptance clause: `docs/assets/m1_contract_register.md` (68 clauses, 47 `MET`, 17 `GAP`, 4 `N/A`).
-**The `AM-M1` result is `BLOCKED`, not `PASS`** (no `AM-M0` result record exists, and owner and authority decisions are absent; reasoning against the "Result classification" table of
-`01_architecture_decisions_and_contracts_plan.md`, and the list of what would unblock it, are in the register). `AM-C01` is judged met on its own clause there.
+`TCK-20261004-EPIC-VISUAL-ASSET-M1-CONTRACTS` wrote the `AM-M1` contracts up as built, against each acceptance clause: `docs/assets/m1_contract_register.md`. The batch `TCK-20261004-EPIC-VISUAL-ASSET-M1-UNBLOCK` then wrote a
+retrospective `AM-M0` result record (`docs/assets/m0_discovery_result.md`: **`INCONCLUSIVE`**, kept so by the user, 2026-10-04; hosting, browser matrix and staleness stay open inputs for `AM-M6`) and recorded the owner's decisions
+(ADR `D13`-`D18`). The register now has 68 clauses: 55 `MET`, 7 `GAP`, 6 `N/A`.
+**The `AM-M1` result is still `BLOCKED`, not `PASS`, for a different reason than before:** `AM-M0` did not pass (the old reasons, no `AM-M0` record and absent owner decisions, are resolved). Even with an M0 `PASS` the remaining `GAP` rows
+(`W02.7`, `W03.1`, `W06.3` keep the contracts incoherent; `W07.4` does not; `W13.3`/`W13.4`/`W13.6` are carried to `AM-M6`) would not reach `PASS`. The register judges the M0 plan's "M1 does not start on M0 `INCONCLUSIVE`" line openly and
+lists what remains. `AM-C01` is judged met on its own clause there.
 
 | Item | Status | | Item | Status |
 |---|---|---|---|---|
-| `AM1-W01` deployment profile | closed (Profile A, ADR D8) | | `AM1-W08` trust/authority | partial (no signing, D9; roles open) |
-| `AM1-W02` registry | partial (derivation owner, class field) | | `AM1-W09` build boundary | closed |
-| `AM1-W03` descriptor | partial (variant axes, surface owners, ranges) | | `AM1-W10` retention/GC | partial (locks, deletion record, storage pressure) |
+| `AM1-W01` deployment profile | closed (Profile A, ADR D8) | | `AM1-W08` trust/authority | closed (no signing, D9; roles D13) |
+| `AM1-W02` registry | partial (class field; derivation owner D14) | | `AM1-W09` build boundary | closed |
+| `AM1-W03` descriptor | partial (variant axes enforcement; owners D13, ranges D16) | | `AM1-W10` retention/GC | closed (D18) |
 | `AM1-W04` runtime release contract | closed | | `AM1-W11` M2 evidence charter | closed (approved 2026-10-04, `docs/assets/m2_evidence_charter.md`) |
-| `AM1-W05` audit/provenance | partial (audit authority) | | `AM1-W12` handoff/intake | closed |
+| `AM1-W05` audit/provenance | closed (audit authority D13) | | `AM1-W12` handoff/intake | closed |
 | `AM1-W06` fallback safety | partial (approved 2026-10-04, `docs/assets/fallback_safety.md`; activation policy not built) | | `AM1-W13` recall | partial (distribution stop, stale/offline/cache, tested rollback) |
-| `AM1-W07` compatibility/rollback | partial (renderer, capability, retirement) | | | |
+| `AM1-W07` compatibility/rollback | partial (capability range; ranges D16, retirement D15) | | | |
 
 The owner approved the fallback-safety framework and the `AM-M2` evidence charter (with its rerun rule: old results count only when rerun unchanged on a named commit after approval) on 2026-10-04. `AM-M2` stays `BLOCKED`
 (`AM-M1` is not `PASS`, no implementation authorization); `AM-M6` stays `NO-GO`; `AM-M7` stays dormant. Nothing here is activated or authorized.

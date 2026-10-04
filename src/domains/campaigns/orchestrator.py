@@ -169,24 +169,12 @@ class CampaignOrchestrator:
         # to episode isolation, and avoids repeating the same directory-walk+YAML-parse load_all()
         # I/O on every episode of the same campaign.
         #
-        # compositions_dir is pointed at data/worlds/, NOT the default data/content/
-        # world_compositions/ -- per docs/architecture/world_repository_layout.md's own ADR
-        # ("Rather than creating separate directories for raw templates, specs, and compositions,
-        # we will maintain the existing unified world repository root at data/worlds/... The
-        # schema version within the YAML determines how the repository indexes it", naming
-        # worldcomposition.v1 as one of the accepted schema versions there) -- data/content/
-        # world_compositions/ is the anomaly, not data/worlds/. Confirmed by direct diff that they
-        # can genuinely drift: data/worlds/frontier_living_world/world.yaml has 7 modules
-        # (including trading_company_hub) via the richer module_refs form plus
-        # information_source_profiles/pending_information_responses; the data/content/ copy has
-        # only 6 modules via the plain `modules:` shorthand and neither of those two fields.
-        # WorldCompositionNormalizer.normalize() (called inside WorldAssemblyResolver.assemble())
-        # accepts either shape, so pointing here at the richer, ADR-correct location costs nothing.
-        # Scoped to Campaign's own resolution only -- see
-        # TCK-20260909-WORLD-COMPOSITION-DIRECTORY-CONSOLIDATION for the repo-wide migration this
-        # ADR still calls for but which this ticket deliberately does not do.
-        from pathlib import Path
-
+        # Campaign rides ScenarioSetupResolver's own default compositions_dir. It used to pass
+        # compositions_dir=Path("data/worlds") explicitly, as a Campaign-scoped workaround while
+        # the default still pointed at data/content/world_compositions/; that directory is retired
+        # and the default is now the authoritative location, so the override is gone. Authority
+        # lives in docs/architecture/world_repository_layout.md §1
+        # (TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION).
         from src.content.repository import CatalogRepository
         from src.scenarios.catalog_state_builder import CatalogScenarioStateBuilder
         from src.worldmodules.repository import WorldModuleRepository
@@ -195,9 +183,7 @@ class CampaignOrchestrator:
         catalog.load_all()
         module_repo = WorldModuleRepository()
         module_repo.load_all()
-        self._catalog_builder = CatalogScenarioStateBuilder(
-            catalog, module_repo, compositions_dir=Path("data/worlds")
-        )
+        self._catalog_builder = CatalogScenarioStateBuilder(catalog, module_repo)
 
     @property
     def state(self) -> CampaignState:

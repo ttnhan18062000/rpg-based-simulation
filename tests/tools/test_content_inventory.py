@@ -13,7 +13,6 @@ def test_all_categories_present():
     counts = generate()
     expected = set(_SINGLE_FILE_CATEGORIES.keys()) | {
         "Simulation scenarios", "World modules", "World compositions",
-        "World compositions (generated)",
     }
     assert set(counts.keys()) == expected
 
@@ -43,7 +42,8 @@ def test_counts_are_real_not_placeholder():
 def test_world_modules_and_compositions_counted_by_file():
     counts = generate()
     assert counts["World modules"] == len(glob.glob("data/content/world_modules/*.yaml"))
-    assert counts["World compositions"] == len(glob.glob("data/content/world_compositions/*.yaml"))
-    assert counts["World compositions (generated)"] == len(
-        glob.glob("data/content/world_compositions/generated/*.yaml")
-    )
+    expected_compositions = len(glob.glob("data/worlds/*/world.yaml"))
+    # Non-zero asserted explicitly: a bare equality between two globs of the same pattern reads
+    # 0 == 0 and passes while measuring nothing.
+    assert expected_compositions > 0
+    assert counts["World compositions"] == expected_compositions
