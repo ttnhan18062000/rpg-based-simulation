@@ -77,14 +77,14 @@ def test_unknown_commands_and_missing_arguments_are_usage_errors(capsys):
         assert err.value.code == 2
 
 
-def test_the_module_runs_as_a_script_and_only_adopt_and_revoke_are_human_only():
+def test_the_module_runs_as_a_script_and_only_adopt_adopt_set_and_revoke_are_human_only():
     env = {**os.environ, "PYTHONPATH": str(REPO)}  # inherit: user-site packages (pydantic) must stay importable
     run = subprocess.run([sys.executable, "-m", "visual_assets.store", "--help"], capture_output=True, text=True, env=env, cwd=REPO)
     assert run.returncode == 0
     commands = run.stdout.split("positional arguments")[-1].split("options")[0]
-    for command in ("intake", "review", "list", "show", "audit", "verify", "build", "release", "gc", "adopt", "revoke"):
+    for command in ("intake", "review", "list", "show", "audit", "verify", "build", "release", "gc", "adopt", "draft", "adopt-set", "revoke"):
         assert command in commands, command
-    assert commands.count("HUMAN ONLY") == 2  # adopt and revoke say so in their own help
+    assert commands.count("HUMAN ONLY") == 3  # adopt, adopt-set and revoke say so in their own help
     assert "activate" not in commands and "publish" not in commands  # nothing in this foundation activates anything (D6)
 
 

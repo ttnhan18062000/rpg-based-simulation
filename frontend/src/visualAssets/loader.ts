@@ -2,7 +2,7 @@
 // that belongs to a superseded View is dropped (its image is never stored and never reaches the newer View): a mounted view uses one
 // manifest generation, whatever order the loads finish in.
 import type { RuntimeSnapshot } from './manifest'
-import { resolveVisual, type ImageStatus, type Resolution } from './resolver'
+import { resolveVisual, type Cell, type ImageStatus, type Resolution } from './resolver'
 
 export interface Bitmap {
   readonly width: number
@@ -66,8 +66,8 @@ export class View {
     ).then(() => undefined)
   }
 
-  resolve(visualKey: string): Resolution {
-    return resolveVisual(this.snapshot, visualKey, { urlFor: this.urlFor, statusOf: (file) => this.statuses.get(file) })
+  resolve(visualKey: string, cell?: Cell): Resolution {
+    return resolveVisual(this.snapshot, visualKey, { urlFor: this.urlFor, statusOf: (file) => this.statuses.get(file) }, cell)
   }
 
   /** The decoded image of a file, only if it loaded in THIS view. */

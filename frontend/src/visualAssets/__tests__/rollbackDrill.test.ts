@@ -1,12 +1,13 @@
 // AM5-W09 / AM-C06 rollback drill (TCK-20261004-VISUAL-ASSETS-RETENTION-AND-ROLLBACK), under Profile A (ADR D8): a release is a whole frontend build.
-// "Previous release" = the previous build's runtime fixture set (the synthetic rehearsal export, catalog "rehearsal"); "new" = the pilot export (pilot/rc-0001).
+// "Previous release" = the previous build's runtime fixture set (the synthetic rehearsal export, catalog "rehearsal"); "new" = the pilot export (pilot/rc-0002: terrain.forest with its three detail slots).
 // Old client + new release is defence in depth against a mis-deploy: under Profile A an old client never receives a new manifest, because the manifest is bound to its build.
 // Whatever the combination, a cell shows its role or its fallback, never a mixed snapshot.
 import { describe, expect, it } from 'vitest'
 import { CELL_SIZE } from '../cell'
 import { fixtureManifestText, fixtureUrlFor } from '../fixtureSource'
 import { SnapshotLoader, type Bitmap, type Decode } from '../loader'
-import { parseManifest } from '../manifest'
+import { parseManifest, slotKey } from '../manifest'
+import { DETAIL_SEED, pickDetail } from '../pickDetail'
 import { pilotManifestText, pilotUrlFor } from '../pilotSource'
 import { PILOT_KEY, drawPilotScene, terrainAt, FOREST_CODE, PILOT_COLUMNS, PILOT_ROWS } from '../pilotScene'
 import { SCENE_COLUMNS, SCENE_ROWS, drawScene } from '../scene'
@@ -17,7 +18,7 @@ const FILL = '#1b3a1b'
 const FOREST_CELLS = Array.from({ length: PILOT_ROWS * PILOT_COLUMNS }, (_, i) => terrainAt(i % PILOT_COLUMNS, Math.floor(i / PILOT_COLUMNS))).filter((c) => c === FOREST_CODE).length
 
 const previousBuild = { name: 'previous build (rehearsal export)', manifestText: fixtureManifestText, urlFor: fixtureUrlFor }
-const newBuild = { name: 'new build (pilot/rc-0001)', manifestText: pilotManifestText, urlFor: pilotUrlFor }
+const newBuild = { name: 'new build (pilot/rc-0002)', manifestText: pilotManifestText, urlFor: pilotUrlFor }
 
 async function view(build: { manifestText: string; urlFor: (f: string) => string | undefined }, decode: Decode = async () => bitmap()) {
   const v = new SnapshotLoader(decode, build.urlFor).mount(parseManifest(build.manifestText))
@@ -34,6 +35,7 @@ describe('rollback drill: every combination renders the role or its fallback', (
 
   it('new client + old release: the key is not in the previous release, so every forest cell shows the flat fill', async () => {
     expect(parseManifest(previousBuild.manifestText).entries.has(PILOT_KEY)).toBe(false)
+    expect(parseManifest(previousBuild.manifestText).details.has(PILOT_KEY)).toBe(false)
     const ctx = new Recorder()
     drawPilotScene(ctx.asCtx(), await view(previousBuild), 'image')
     expect(ctx.of('drawImage')).toHaveLength(0)
@@ -50,8 +52,9 @@ describe('rollback drill: every combination renders the role or its fallback', (
   })
 
   it('recall: a release with the key removed shows the flat fill on every forest cell', async () => {
-    const raw = JSON.parse(pilotManifestText) as { entries: unknown[] }
+    const raw = JSON.parse(pilotManifestText) as { entries: unknown[]; details?: unknown }
     raw.entries = []
+    delete raw.details
     const recalled = { manifestText: JSON.stringify(raw), urlFor: pilotUrlFor }
     const ctx = new Recorder()
     drawPilotScene(ctx.asCtx(), await view(recalled), 'image')
@@ -85,13 +88,24 @@ describe('rollback drill: a mixed snapshot is never accepted', () => {
 
     expect(loader.dropped.length).toBeGreaterThan(0)
     expect(new Set(loader.dropped.map((d) => d.generation))).toEqual(new Set([previous.snapshot.generation]))
-    const pilotUrl = pilotUrlFor(parseManifest(newBuild.manifestText).entries.get(PILOT_KEY)!.file)
+    const currentSnapshot = parseManifest(newBuild.manifestText)
+    const pilotUrls = new Set([...currentSnapshot.entries.values()].map((e) => pilotUrlFor(e.file)))
+    // Per cell, row-major (the scene's drawing order): the URL of the slot `pickDetail` names for that cell.
+    const expectedPerCell: (string | undefined)[] = []
+    for (let y = 0; y < PILOT_ROWS; y++) {
+      for (let x = 0; x < PILOT_COLUMNS; x++) {
+        if (terrainAt(x, y) !== FOREST_CODE) continue
+        const picked = pickDetail(PILOT_KEY, x, y, DETAIL_SEED, currentSnapshot.details.get(PILOT_KEY)!.values)
+        expectedPerCell.push(pilotUrlFor(currentSnapshot.entries.get(slotKey(PILOT_KEY, picked))!.file))
+      }
+    }
 
     const fresh = new Recorder()
     drawPilotScene(fresh.asCtx(), current, 'image')
     const drawn = fresh.of('drawImage').map((c) => (c[1] as Tagged).from)
     expect(drawn).toHaveLength(FOREST_CELLS)
-    expect(new Set(drawn)).toEqual(new Set([pilotUrl])) // only the current release's own image
+    expect(drawn).toEqual(expectedPerCell) // every forest cell shows exactly the image its own pick names, in the current release
+    expect(drawn.every((url) => pilotUrls.has(url))).toBe(true) // and none of them is one of the previous release's images
 
     const stale = new Recorder()
     drawPilotScene(stale.asCtx(), previous, 'image') // drawing with the superseded view shows no image at all, not the late ones

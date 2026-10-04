@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Annotated, ClassVar, Literal
 
-from pydantic import Field, StringConstraints, model_validator
+from pydantic import Field, StringConstraints, model_serializer, model_validator
 
-from visual_assets.store.contracts.base import BoundedText, StoreRecord
+from visual_assets.store.contracts.base import BoundedText, StoreRecord, drop_absent
 from visual_assets.store.identities import VisualKey
 
 Family = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,31}$")]
@@ -15,6 +15,7 @@ AxisValue = Annotated[str, StringConstraints(pattern=r"^[a-z0-9][a-z0-9_]{0,31}$
 
 MAX_AXES = 8  # budget: docs/assets/budgets.md
 MAX_AXIS_VALUES = 64  # budget: docs/assets/budgets.md
+MAX_DETAIL_VALUES = 16  # budget: docs/assets/budgets.md; values on one key's detail axis (not MAX_AXIS_VALUES: the runtime manifest repeats them)
 
 
 class VariantAxis(StoreRecord):
@@ -28,12 +29,36 @@ class VariantAxis(StoreRecord):
         return self
 
 
+class DetailAxis(StoreRecord):
+    """A key's decorative detail axis: the only axis picked by a coordinate hash, and the only one with a mandatory default.
+
+    Not a `variant_axes` entry on purpose: those are context-selected with strict precedence (proposal 9.2), this one is chosen
+    per cell by the client, and its `default` is what an adoption without a `detail_value` fills.
+    """
+
+    values: Annotated[tuple[AxisValue, ...], Field(min_length=1, max_length=MAX_DETAIL_VALUES)]
+    default: AxisValue
+
+    @model_validator(mode="after")
+    def _rules(self) -> DetailAxis:
+        if len(set(self.values)) != len(self.values):
+            raise ValueError("detail values must be unique")
+        if self.default not in self.values:
+            raise ValueError("the detail default must be one of its values")
+        return self
+
+
 class VisualKeyDefinition(StoreRecord):
     key: VisualKey
     family: Family
     description: BoundedText
     variant_axes: Annotated[tuple[VariantAxis, ...], Field(max_length=MAX_AXES)]
     optional: bool = False  # a release may omit an optional key; every other registry key needs an artifact
+    detail: DetailAxis | None = None  # a slot is (key, detail value); a key without an axis has the single slot (key, None)
+
+    @model_serializer(mode="wrap")
+    def _omit_absent_detail(self, handler):  # type: ignore[no-untyped-def]
+        return drop_absent(handler(self), "detail")
 
     @model_validator(mode="after")
     def _unique_axes(self) -> VisualKeyDefinition:
@@ -41,6 +66,12 @@ class VisualKeyDefinition(StoreRecord):
         if len(set(names)) != len(names):
             raise ValueError("axis names must be unique")
         return self
+
+    def effective_detail(self, detail_value: str | None) -> str | None:
+        """The slot value an adoption or entry fills: `None` means this key's declared default, or no slot value for a key without an axis."""
+        if self.detail is None:
+            return None
+        return self.detail.default if detail_value is None else detail_value
 
 
 class AliasEntry(StoreRecord):

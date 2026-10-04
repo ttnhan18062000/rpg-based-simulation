@@ -101,7 +101,8 @@ def test_no_test_target_path_resolves_under_real_agent_monitoring_dir():
     module = sys.modules[__name__]
     this_function_name = "test_no_test_target_path_resolves_under_real_agent_monitoring_dir"
     real_dir = str((_REPO_ROOT / AGENT_MONITORING).resolve())
-    forbidden = [real_dir, "Path(" + '"agent-monitoring"' + ")", "Path(" + "'agent-monitoring'" + ")"]
+    real_history = str(chs.DEFAULT_HISTORY_PATH.resolve())  # moved here by TCK-20261004-CODEBASE-HEALTH-HISTORY-MOVE
+    forbidden = [real_dir, real_history, "Path(" + '"agent-monitoring"' + ")", "Path(" + "'agent-monitoring'" + ")"]
 
     for name, obj in inspect.getmembers(module, inspect.isfunction):
         if name == this_function_name or obj.__module__ != __name__:
@@ -109,6 +110,14 @@ def test_no_test_target_path_resolves_under_real_agent_monitoring_dir():
         source = inspect.getsource(obj)
         for pattern in forbidden:
             assert pattern not in source, f"{name} references a real-corpus-shaped path: {pattern!r}"
+
+
+def test_default_history_path_is_in_the_codebase_domain():
+    """The snapshot history lives next to its only writer, not in agent-working's data root
+    (TCK-20261004-CODEBASE-HEALTH-HISTORY-MOVE)."""
+    assert chs.DEFAULT_HISTORY_PATH == _REPO_ROOT / "codebase" / "reports" / "codebase_health_history.jsonl"
+    assert chs.DEFAULT_HISTORY_PATH.is_file()
+    assert not (_REPO_ROOT / AGENT_MONITORING / "codebase_health_history.jsonl").exists()
 
 
 # ---------------------------------------------------------------------------
