@@ -17,12 +17,13 @@ is meaningful on its own; the value is in the sequence. Since schema version 2
 (`TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS`) each record also carries Python craft
 metrics from a second source, `codebase/health/metrics.py` — see "Second metric source".
 
-**File path:** `agent-working/agent-monitoring/codebase_health_history.jsonl`
+**File path:** `codebase/reports/codebase_health_history.jsonl`
 
-This lives inside the same directory family as `runs.jsonl`/`events.jsonl`/
-`tools.jsonl` purely for writer/lock/diagnostic-infrastructure reuse — it is
-its own distinct file, joined to nothing else in that family, and shares no
-path constant with `RUNS_FILE`.
+The file lives in the codebase domain, next to its only writer. It moved there from
+`agent-working/agent-monitoring/` (TCK-20261004-CODEBASE-HEALTH-HISTORY-MOVE, with agent-working's
+agreement); it still reuses the same writer/lock/diagnostic infrastructure as `runs.jsonl`/`events.jsonl`/
+`tools.jsonl`, is its own distinct file, joined to nothing else in that family, and shares no path constant
+with `RUNS_FILE`. Citations of the old path in frozen history (`agent-monitoring/...` or `agent-working/agent-monitoring/...`) refer to the file now at `codebase/reports/`; `docs/guides/agent_working_path_map.md` does not translate this one file (a gap reported to agent-working).
 
 ```json
 {
@@ -62,7 +63,7 @@ path constant with `RUNS_FILE`.
 
 ## Append-only contract
 
-`agent-working/agent-monitoring/codebase_health_history.jsonl` is append-only for all
+`codebase/reports/codebase_health_history.jsonl` is append-only for all
 writes — mirroring `docs/agent-monitoring/schema.md`'s own wording for
 `runs.jsonl`. The writer
 (`codebase/reports/codebase_health_snapshot.py::write_snapshot`, via
@@ -159,7 +160,7 @@ manually incremented whenever `EXPECTED_SNAPSHOT_KEYS` changes.
 
 | Version | Keys |
 |---|---|
-| 1 | `build_report()`'s 14 keys. No record of this version has been written to `agent-working/agent-monitoring/codebase_health_history.jsonl`. |
+| 1 | `build_report()`'s 14 keys. No record of this version has been written to `codebase/reports/codebase_health_history.jsonl`. |
 | 2 | Version 1's keys plus the 14 `craft_*` keys above that are not `craft_ast_grep_*` (`TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS`). |
 | 3 | Version 2's keys plus the 3 `craft_ast_grep_*` keys (`TCK-20261004-AST-GREP-SARIF-AND-SNAPSHOT`). Version-2 lines already in the history file stay as written; a reader treats a key a record lacks as "not measured", never as 0. |
 

@@ -11,7 +11,7 @@ Standard the tools enforce: `docs/guidelines/python_code_standard.md`.
 | `gates/` | `mypy_gate` (baseline-filtered mypy), `sarif_feedback` (PR annotations and SARIF), `staged_ratchet` (the pre-commit hook's engine), `parity_ledger_schema` (ratchet over `docs/parity_ledger/*.yaml` against `schema.json`) | `python3 -m codebase.gates.<name>` |
 | `hooks/` | prek hook scripts for the code-health ratchet and the uv.lock check, and the opt-in installer | `make install-prek-hooks` |
 | `hooks/edit_ratchet_hook.py` | advisory Claude Code PostToolUse hook: after an Edit, Write or MultiEdit of a `src/**/*.py` file it reports a new or worse ruff finding to the agent; silent on pass, always exits 0 | wired in `.claude/settings.json` (agent-working's file) |
-| `reports/` | health baseline, snapshot and scorecard, impact, PR impact, unreachable-code audit | `python3 -m codebase.reports.<name>` (Makefile targets keep their names) |
+| `reports/` | health baseline, snapshot and scorecard, impact, PR impact, unreachable-code audit; also the snapshot history `codebase_health_history.jsonl` (append-only, written only by the snapshot) | `python3 -m codebase.reports.<name>` (Makefile targets keep their names) |
 | `structure/` | the package registry (`package_registry.jsonl`, one row per tracked top-level `src/` package), its loader and validator. After the 2026-10-04 seeding from `docs/plans/codebase_health/src_package_structure_audit.md` the registry is the source of truth; the audit table is a dated snapshot | `python3 -m codebase.structure.packages validate` |
 | `rules/` | the ast-grep rule pack for project rules the standard leaves to reviewers (N3, N4, E3): `sgconfig.yml`, `rules/*.yml`, `rule-tests/*-test.yml`. Findings enter the ratchet under tool key `ast_grep` through `health/adapters.py` | `ast-grep scan --config codebase/rules/sgconfig.yml src`; `ast-grep test --config codebase/rules/sgconfig.yml --skip-snapshot-tests` (binary `ast-grep`, never `sg`) |
 | `baselines/` | `code_health_exceptions.jsonl` (the grandfathered violations), `mypy_baseline.txt`, `parity_ledger_schema_baseline.json` | reseed only on main, see the standard; the parity baseline is shared, see below |
@@ -39,8 +39,6 @@ counts needs the codebase domain plus an owner decision. How to read the check: 
 
 - `pyproject.toml` (ruff, complexipy, mypy, `[tool.mypy_baseline]`) and `.pre-commit-config.yaml`: the tools read them from
   the repository root.
-- `agent-working/agent-monitoring/codebase_health_history.jsonl`: snapshot history, in agent-working's data root until that
-  domain agrees to move it. The snapshot keeps writing there.
 - `tools/hooks/post-commit-reindex.sh`, `registry_post_merge_regen.sh`: agent-working's hooks.
 - Cross-domain registries in `registries/` (tags, layers, mechanisms, ...).
 - Docs: `docs/guidelines/python_code_standard.md` and `docs/plans/codebase_health/`, as for every other domain.
