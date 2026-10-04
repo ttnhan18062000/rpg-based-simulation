@@ -31,7 +31,7 @@ Decision 8.5/8.10: advisory for a two-week soak, then blocking for new violation
 
 ## Scope
 - Soak review first: list false positives and baseline-sync events seen during the soak, the reviewed-row count, and **how many mypy-baseline syncs were needed**, and whether a same-repository PR that touched `src/` showed exactly its new finding(s) in code scanning (the live proof deferred from `TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK`) (and how often the code-health registry needed a reseed); propose fixes for any false-positive class before flipping
-- Remove `continue-on-error` from the `code-health` job (ratchet excluding jscpd), the SARIF step if separate, and the typecheck job's `mypy` step (the gate `tools.code_health.mypy_gate` already returns 1 on new errors and 2 if it cannot run); remove `|| true` from the `make typecheck-py` recipe
+- Remove `continue-on-error` from the `code-health` job (ratchet excluding jscpd), the SARIF step if separate, and the typecheck job's `mypy` step (the gate `codebase.gates.mypy_gate` already returns 1 on new errors and 2 if it cannot run); remove `|| true` from the `make typecheck-py` recipe
 - Ask the owner to mark the checks required in GitHub branch protection (owner action; record it)
 - Update INFRA-TYPE-001 text, the CI comment, environment guide and tests that pin advisory status
 
@@ -63,11 +63,11 @@ None.
 
 ## Related Code Areas
 - .github/workflows/test.yml
-- tests/static/test_typecheck_gate_configured.py
+- tests/codebase/test_typecheck_gate_configured.py
 
 ## Assumptions / Open Questions
-- **Explicit step: the real soak start (the merge date of PR #305) and end (start + 14 days) are written into this ticket, the epic and roadmap Section 7 in the first commit of the next codebase batch after the merge (no docs-only PR for it).**
-- Soak start: date of batch PR merge (the PR that carries the advisory CI job; the closure commit of TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB writes the real date). Soak end: start + 14 days
+- **Explicit step (done in `TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE`, the next codebase batch): the real soak start (the merge date of PR #305) and end (start + 14 days) are written into this ticket, the epic and roadmap Section 7.**
+- Soak start: 2026-10-03 (PR #305, the PR that carries the advisory CI job, merged 2026-10-03T16:47:13Z). Soak end: 2026-10-17 (start + 14 days)
 - Blocking gates affect every domain that edits src/; announce the date to other planners before flipping
 
 ## Implementation Notes

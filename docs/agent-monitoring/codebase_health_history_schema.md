@@ -8,14 +8,14 @@ tags: [agent-monitoring, schema]
 
 # Codebase Health History — Schema Reference
 
-One append-only JSONL file, written by `tools/codebase_health_snapshot.py`
+One append-only JSONL file, written by `codebase/reports/codebase_health_snapshot.py`
 (`TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD`, item 3 of
 `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC`). It persists
-`tools/codebase_health_baseline.py::build_report()`'s live metrics across
+`codebase/reports/codebase_health_baseline.py::build_report()`'s live metrics across
 runs so a scorecard can render per-dimension trends — no single record here
 is meaningful on its own; the value is in the sequence. Since schema version 2
 (`TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS`) each record also carries Python craft
-metrics from a second source, `tools/code_health/metrics.py` — see "Second metric source".
+metrics from a second source, `codebase/health/metrics.py` — see "Second metric source".
 
 **File path:** `agent-working/agent-monitoring/codebase_health_history.jsonl`
 
@@ -65,7 +65,7 @@ path constant with `RUNS_FILE`.
 `agent-working/agent-monitoring/codebase_health_history.jsonl` is append-only for all
 writes — mirroring `docs/agent-monitoring/schema.md`'s own wording for
 `runs.jsonl`. The writer
-(`tools/codebase_health_snapshot.py::write_snapshot`, via
+(`codebase/reports/codebase_health_snapshot.py::write_snapshot`, via
 `tools/agent-monitoring/writer.py::write_line`) only ever appends, never
 rewrites an existing line. There is no historical-correction exception
 documented for this file yet (unlike `runs.jsonl`'s one documented case,
@@ -78,7 +78,7 @@ audited, line-scoped substitution, never a bulk parse/re-serialize.
 ## Field table
 
 Every field in the first table below is one key from
-`tools/codebase_health_baseline.py::build_report()`'s own return dict, used exactly as
+`codebase/reports/codebase_health_baseline.py::build_report()`'s own return dict, used exactly as
 returned — this module never recomputes or re-derives any individual metric.
 `codebase_health_snapshot.py::EXPECTED_BASELINE_KEYS` is the enforced, frozen source of truth
 for that set, and `EXPECTED_SNAPSHOT_KEYS` is that set plus the craft keys below:
@@ -109,7 +109,7 @@ rename/add/remove is a visible breaking change here, never silent drift.
 
 ## Second metric source — craft metrics (schema version 2)
 
-These keys come from `tools/code_health/metrics.py::compute_craft_metrics`, not from
+These keys come from `codebase/health/metrics.py::compute_craft_metrics`, not from
 `build_report()`. `build_report()` and `make codebase-health-baseline` are unchanged, so the baseline
 target does not depend on the code-health tools. Every key is a plain integer and each trends on its
 own: there is no aggregate or combined craft number anywhere (D24 sections J and M).
@@ -132,7 +132,7 @@ snapshot never runs jscpd or needs the network.
 | `craft_highest_cognitive_complexity` | int | Highest cognitive complexity among functions over the limit, 0 if none. |
 
 **Registry-derived keys** (`craft_baseline_<thing>`) are read from
-`registries/code_health_exceptions.jsonl`. They describe the baselined state as of the last seed or
+`codebase/baselines/code_health_exceptions.jsonl`. They describe the baselined state as of the last seed or
 `tighten`, not a live measurement, and the scorecard labels them "(registry)". Duplication is
 reported this way because jscpd needs `npx`; it can become a live key once jscpd has a lockfile.
 
@@ -149,7 +149,7 @@ reported this way because jscpd needs `npx`; it can become a live key once jscpd
 
 `snapshot_schema_version` versions the snapshot record's shape itself — the
 set of keys captured, not any individual metric's computation. It starts at
-`1` (`tools/codebase_health_snapshot.py::SNAPSHOT_SCHEMA_VERSION`) and is
+`1` (`codebase/reports/codebase_health_snapshot.py::SNAPSHOT_SCHEMA_VERSION`) and is
 manually incremented whenever `EXPECTED_SNAPSHOT_KEYS` changes.
 
 | Version | Keys |
@@ -160,7 +160,7 @@ manually incremented whenever `EXPECTED_SNAPSHOT_KEYS` changes.
 A schema-version bump is always a **paired change**, landed in the same
 commit:
 
-1. Edit `EXPECTED_BASELINE_KEYS` (or the craft key set in `tools/code_health/metrics.py`) to
+1. Edit `EXPECTED_BASELINE_KEYS` (or the craft key set in `codebase/health/metrics.py`) to
    match the new shape, which updates `EXPECTED_SNAPSHOT_KEYS`.
 2. Increment `SNAPSHOT_SCHEMA_VERSION`.
 3. Update this doc's field tables to match.
@@ -176,7 +176,7 @@ the dimension is left out. The 14 baseline dimensions are required in every reco
 
 ## Scorecard read path
 
-`tools/codebase_health_snapshot.py::read_snapshots` / `build_scorecard` /
+`codebase/reports/codebase_health_snapshot.py::read_snapshots` / `build_scorecard` /
 `format_scorecard` render a per-dimension trend view over this file's
 records — 11 scalar dimensions get a Δ + `↑`/`↓`/`→` arrow, the registry-size
 fold renders `registry_size_lines` only, `unused_core_dependencies`

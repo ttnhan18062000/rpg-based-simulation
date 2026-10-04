@@ -111,8 +111,10 @@ def test_every_new_job_installs_with_uv_from_the_lockfile():
 
 def test_the_coverage_parser_reads_tests_tools_for_both_tools_jobs_and_ignores_the_glob_word():
     paths = parse_job_pytest_paths(_WORKFLOW.read_text(encoding="utf-8"))
+    # tools-a-e also runs tests/codebase (the lint group is installed there; TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE).
+    expected = {"tools-a-e": {"tests/tools", "tests/codebase"}, "tools-f-z": {"tests/tools"}}
     for job in _TOOLS_JOBS:
-        assert paths[job] == {"tests/tools"}, "a --ignore-glob word must not be collected as a covered path"
+        assert paths[job] == expected[job], "a --ignore-glob word must not be collected as a covered path"
     assert paths["api-cli-engine"] == {f"tests/{d}" for d in _OTHER_DIRS}
 
 

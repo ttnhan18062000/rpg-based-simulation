@@ -58,7 +58,7 @@ dev = [
     "mcp>=1.0.0",
     "websockets>=12.0",
     # Baseline filter for mypy (TCK-20261003-MYPY-BASELINE-ADVISORY): existing errors are held in
-    # registries/mypy_baseline.txt, so only new ones are reported. Pinned exactly like the code-health tools.
+    # codebase/baselines/mypy_baseline.txt, so only new ones are reported. Pinned exactly like the code-health tools.
     "mypy-baseline==0.7.4",
     # Git hook runner for the opt-in `make install-prek-hooks` (TCK-20261003-PREK-GIT-HOOKS-OPT-IN); a single
     # binary wheel. In `dev` so every CI job and the installer tests have it.
@@ -94,7 +94,7 @@ default-groups = ["dev", "lint"]
 # identical message in the same file) is reported. Run `sync` only on main, by the codebase domain, together
 # with the code-health registry reseed (`make typecheck-baseline-sync`), never to hide a new error.
 [tool.mypy_baseline]
-baseline_path = "registries/mypy_baseline.txt"
+baseline_path = "codebase/baselines/mypy_baseline.txt"
 # A baseline error that has been fixed but not yet re-synced must not turn the gate red: any domain may
 # fix a type error in src/ without touching the baseline.
 allow_unsynced = true
@@ -198,7 +198,7 @@ ignore = ["ANN401"]
 # selected by its exact code, so no other preview rule turns on. Note that `preview = true` also
 # switches the selected stable rules to their preview behaviour; with ruff pinned exactly in the
 # lint group that is stable, but a ruff version bump can change findings and needs a baseline
-# reseed (registries/code_health_exceptions.jsonl).
+# reseed (codebase/baselines/code_health_exceptions.jsonl).
 preview = true
 explicit-preview-rules = true
 
@@ -216,7 +216,7 @@ max-nested-blocks = 5
 paths = ["src"]
 max-complexity-allowed = 15
 
-# Length limits read by tools/code_health/line_count.py.
+# Length limits read by codebase/health/line_count.py.
 [tool.code_health.size]
 function-warn-lines = 50
 function-fail-lines = 80

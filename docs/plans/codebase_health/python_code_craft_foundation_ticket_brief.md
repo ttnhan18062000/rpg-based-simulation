@@ -23,8 +23,8 @@ parts become tickets now.
 - Governing files (`CLAUDE.md`, `.claude/settings.json`, hooks) are not edited by these tickets.
   `.claude/agents/`, `.claude/workflows/` and `.claude/skills/` belong to the `agent-working` domain
   and are not edited either.
-- New tooling goes in a `tools/code_health/` subpackage per `docs/guidelines/repo_tooling_layout.md`.
-- Reuse what exists (roadmap Section 4): extend `tools/codebase_health_snapshot.py`, do not build a
+- New tooling goes in a `codebase/health/` subpackage per `docs/guidelines/repo_tooling_layout.md`.
+- Reuse what exists (roadmap Section 4): extend `codebase/reports/codebase_health_snapshot.py`, do not build a
   second metrics tool; do not add a new dead-code detector; do not re-file the pairs in
   `TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS`.
 - Out of scope for this pass: roadmap milestones M4 (CI gates, mypy blocking, prek), M5 (package
@@ -63,14 +63,14 @@ Depends on Concern 2 for installing the tools. Deliver, with no `src/` edits:
 
 - Configuration for `ruff check` (no formatter), `complexipy`, `jscpd`, and a small line-count
   script for function, class and module length (no existing tool offers that with a baseline).
-- `tools/code_health/`: adapters that normalise each tool's JSON output, and one ratchet command
+- `codebase/health/`: adapters that normalise each tool's JSON output, and one ratchet command
   that fails only when a violation is new or worse than its baseline row. Matching is by file and
   symbol, not line number, so moved code does not resurface as new.
-- `registries/code_health_exceptions.jsonl` with a CLI and validator modelled on
+- `codebase/baselines/code_health_exceptions.jsonl` with a CLI and validator modelled on
   `tools/capability_envelope_baseline.py`, seeded from a full scan with `reviewed: false`. Unlike
   the tag and layer registries, rows are deleted when debt is paid.
 - A `make code-health` entry point (and `make lint-py`).
-- Craft metrics added to `tools/codebase_health_snapshot.py`, and the first snapshot taken.
+- Craft metrics added to `codebase/reports/codebase_health_snapshot.py`, and the first snapshot taken.
 - Tests for the adapters, the ratchet and the registry validator.
 
 Each tool must be confirmed to work on this repo or be dropped with the reason recorded; the

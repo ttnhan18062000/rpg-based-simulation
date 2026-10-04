@@ -52,7 +52,7 @@ recommendation, not a still-pending question:
 - Zero references to `graphify-out` across `.github/workflows/*.yml` (`grep -rn "graphify-out"
   .github/workflows/` returns no matches) — confirms this build output has zero CI dependency.
 - Zero git-tracked files under `graphify-out/` (`git ls-files graphify-out/` returns nothing).
-- `tests/tools/test_code_health_impact.py:26-40` already documents and enforces this directly: a code
+- `tests/codebase/test_code_health_impact.py:26-40` already documents and enforces this directly: a code
   comment states "graphify-out/ is entirely gitignored (never committed)", and a `_requires_graphify`
   skip marker (`shutil.which("graphify") is not None and (_REPO_ROOT / "graphify-out" /
   "graph.json").exists()`) gates 4 real-path tests so a fresh CI checkout without a prebuilt graph

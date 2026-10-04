@@ -35,6 +35,28 @@ def _by_file(results, rel_path):
 
 
 # ---------------------------------------------------------------------------
+# codebase/ domain root (TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE)
+# ---------------------------------------------------------------------------
+
+
+def test_codebase_root_code_files_are_classified_and_data_files_are_not(tmp_path):
+    _write(tmp_path, "codebase/reports/lonely_report.py", "def f(): pass\n")
+    _write(tmp_path, "codebase/reports/used_report.py", "def g(): pass\n")
+    _write(tmp_path, "Makefile", "r:\n\tpython3 -m codebase.reports.used_report\n")
+    _write(tmp_path, "codebase/baselines/exceptions.jsonl", "{}\n")
+    _write(tmp_path, "codebase/README.md", "# codebase\n")
+    _write(tmp_path, "codebase/health/__init__.py", "")
+    tracked = [
+        "codebase/reports/lonely_report.py", "codebase/reports/used_report.py", "Makefile",
+        "codebase/baselines/exceptions.jsonl", "codebase/README.md", "codebase/health/__init__.py",
+    ]
+    results = check_tools_orphans(repo_root=tmp_path, tracked_files=tracked)
+    assert [r["file"] for r in results] == ["codebase/reports/lonely_report.py", "codebase/reports/used_report.py"]
+    assert _by_file(results, "codebase/reports/lonely_report.py")["status"] == "NO_REFERENCES"
+    assert _by_file(results, "codebase/reports/used_report.py")["status"] == "LIVE"
+
+
+# ---------------------------------------------------------------------------
 # tmp_path test (a): bare-stem sibling import -> LIVE
 # ---------------------------------------------------------------------------
 
@@ -254,7 +276,7 @@ def test_real_corpus_run_completes_fast_with_correct_structure():
         assert set(r.keys()) == {"file", "status", "evidence"}
         assert r["status"] in valid_statuses
         assert isinstance(r["evidence"], list)
-        assert r["file"].startswith("tools/")
+        assert r["file"].startswith(("tools/", "codebase/"))
         assert not r["file"].endswith("__init__.py")
         assert "__pycache__" not in r["file"]
         if r["status"] == "excluded":

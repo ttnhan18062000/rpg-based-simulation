@@ -32,7 +32,7 @@ Roadmap milestone M4 (python_code_craft_roadmap.md Section 7). M1 to M3 closed u
 ## Scope
 - Track the six child tickets in SEQUENCE.md order
 - Record the soak start date (merge of the advisory CI job) and end date (start + 14 days) here and in the roadmap
-- Soak start: date of batch PR merge (the PR that carries TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB; the closure commit writes the real date). Soak end: start + 14 days.
+- Soak start: 2026-10-03 (PR #305, which carries TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB, merged 2026-10-03T16:47:13Z). Soak end: 2026-10-17 (start + 14 days). Recorded by `TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE`.
 
 ## Out of Scope
 - Any file under src/ (roadmap decision 8.7): no autofix, no reformat, no `# noqa` / `# type: ignore`
@@ -58,8 +58,8 @@ None.
 
 ## Related Code Areas
 - .github/workflows/test.yml
-- tools/code_health/
-- registries/code_health_exceptions.jsonl
+- codebase/health/
+- codebase/baselines/code_health_exceptions.jsonl
 - pyproject.toml, uv.lock, Makefile
 
 ## Assumptions / Open Questions
