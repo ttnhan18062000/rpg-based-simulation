@@ -246,6 +246,66 @@ catalog-only.** The 15 are `camp_maturity_calibration_pilot`, `crowded_frontier`
 before any redirect; Gaps 1-3 are untouched; the deletion is still gated on nothing reading *or writing*
 the directory. The ticket got cheaper and much more dispatchable, not smaller in its other obligations.
 
+## Rule-layer ruling, 2026-10-04 — where the normative sentence lives
+
+**Source:** `world-rule-catalog-design`, owner of `docs/world_rules/`, checked at `origin/main`. Asked
+before implementing, per the ordering this repo learned the hard way. `OWN-01` verified present at
+`docs/world_rules/foundations/state-ownership.md:23` ("One authoritative source of durable truth").
+
+- **No catalog Rule covers this, and none should be added.** World-definition *storage* is below the
+  catalog's scope by design — the catalog states semantics *inside* a simulated world (subjects, places,
+  causes). Which file defines a world before the simulation starts is content/configuration
+  architecture. `ID-01` is about a first-class simulated subject and a `world_id` is not one; `LOC-01`
+  is the analogous shape at the wrong scope.
+- **Cite the principle as "by analogy to `OWN-01`", never "`OWN-01` governs".** Two module sets for one
+  `world_id`, with a genuine value conflict, is that violation's shape — but saying it governs would
+  overstate the catalog's reach.
+- **The ONE normative sentence lives in the ADR,** `docs/architecture/world_repository_layout.md` §1,
+  which is already the storage-layout decision record. Make it explicit there, roughly: *"`data/worlds/
+  <world_id>/` is the sole authoritative definition of a `world_id`; no other location may define a
+  `world_id`."*
+- **Everything else points at the ADR, and must not restate the location** (Define information once):
+  - `docs/mechanics/06_worldbuilding_foundation.md` — the **integrity invariant only**: a `world_id`
+    resolves to exactly one definition, and integrity validation enforces it (AC-6's check). Cite the
+    ADR for *where*. Keeps the Bible from becoming a storage spec.
+  - `docs/guides/content_authoring.md` §4 — correct the teaching path and **link** the ADR.
+  - **Parity:** if Bible 06 gains the invariant sentence, add/update the matching ledger entry
+    (`substrate.yaml` or wherever worldbuilding integrity lives) with AC-6's new check as its
+    `test_path`.
+- Authority itself: **confirmed, not decided** — the owner explicitly accepted the measured evidence
+  rather than re-opening it.
+
+## 2026-10-04 — the test surface is ~4.5x larger than this ticket records
+
+**Found while running the catalog owner's own suggested check** ("if any test or doc cites the catalog's
+`2` as intended design, reconcile it in the same change, not silently"). It does, and the surrounding
+surface is much bigger than the 2026-09-12 block's "two real tests depend on the default".
+
+**`tests/integration/worldassembly/test_real_content_world_compositions.py` exists to test the directory
+this ticket deletes.** It hardcodes `Path("data/content/world_compositions/<id>.yaml")` at **seven** call
+sites (`:30`, `:44`, `:62`, `:86`, `:345`, `:385`, `:436`) across `frontier_living_world`,
+`wilderness_survival`, `urban_political` and `dungeon_crawl` — and at `:452` it asserts
+**`bandit_ref.parameters.get("danger_scale") == 2`**, i.e. it pins the catalog copy's losing value as
+expected design. That is the exact landmine the owner predicted.
+
+**Nine test files reference `world_compositions` in total**, not two:
+`tests/tools/test_content_inventory.py`, `tests/unit/content/test_content_usage_matrix.py`,
+`tests/unit/content/test_content_paths.py`, `tests/unit/worldassembly/test_assembly.py`,
+`tests/integration/content/test_swamp_border_pack.py`,
+`tests/integration/content/test_expansion_gate.py`,
+`tests/integration/worldassembly/test_real_content_world_compositions.py`,
+`tests/integration/worldassembly/test_e2e_smoke.py`,
+`tests/integration/scenarios/test_content_foundation.py`.
+How many genuinely *depend* on the directory versus merely mention a path is **not yet measured** — that
+is Investigate's job, and the nine is a reference count, deliberately not reported as nine breakages.
+
+**The real open question this raises, which is a decision and not a mechanical edit:**
+`test_real_content_world_compositions.py`'s whole subject is the catalog path. Repoint it at
+`data/worlds/` (it then duplicates coverage that may already exist), or delete it as testing a retired
+location? That is not pre-judged here. Note the direction of this correction is **opposite** to the
+content-decision collapse above: the content work shrank from 8 decisions to 1, and the test work grew.
+Both corrections came from measuring rather than from reading the ticket's own prose.
+
 ## Why this is now first, and why it is now P1
 
 **Raised P2 → P1, 2026-10-03.** `TCK-20261002-EPIC-SEMANTIC-FOUNDATION-COMPLETION` makes this ticket
@@ -327,7 +387,13 @@ slices already taken.
       separate decisions would be eight restatements of one.)*
 - [ ] `test_scenario_catalog_matrix.py`/`test_scenario_setup_resolver.py` (the two tests relying on
       the un-overridden default) are updated to match whatever content the reconciliation settles
-      on, confirmed passing.
+      on, confirmed passing. **Amended 2026-10-04: these two are necessary but NOT sufficient** — see
+      the test-surface section above. `test_real_content_world_compositions.py` pins the catalog path at
+      seven sites and asserts `danger_scale == 2`; nine test files reference the directory. Every test
+      that genuinely depends on it must be resolved, and the repoint-or-delete decision for
+      `test_real_content_world_compositions.py` recorded with its reasoning.
+- [ ] The `dungeon_crawl` `danger_scale` resolution is recorded as **"catalog value never drove a run;
+      running value (4) kept"**, and no test or doc is left asserting `2` as intended design.
 - [ ] Full scoped regression across every consumer of `ScenarioSetupResolver`/
       `CatalogScenarioStateBuilder`/`WorldAssemblyResolver` passes.
 - [ ] **AC-6 (merged):** a check fails when one `world_id` resolves to two different module sets. It
