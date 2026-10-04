@@ -11,9 +11,7 @@ import pytest
 import yaml
 
 from src.content.repository import CatalogRepository
-from src.worldassembly.resolver import WorldAssemblyResolver
-from src.worldassembly.schema import WorldCompositionSpec
-from src.worldbuilding.cli import render_resolved_world_yaml
+from src.worldassembly.resolve_io import load_composition_spec, resolve_composition
 from src.worldbuilding.repository import WorldRepository
 from src.worldmodules.repository import WorldModuleRepository
 
@@ -42,9 +40,9 @@ def repos():
 
 def _fresh_resolve(world_id: str, repos) -> str:
     cat, mod = repos
-    raw = yaml.safe_load((WORLDS_DIR / world_id / "world.yaml").read_text(encoding="utf-8"))
-    bundle = WorldAssemblyResolver(cat, mod).assemble(WorldCompositionSpec.model_validate(raw))
-    return render_resolved_world_yaml(bundle)
+    composition = load_composition_spec(WORLDS_DIR / world_id / "world.yaml")
+    _, rendered = resolve_composition(composition, cat, mod)
+    return rendered
 
 
 def test_composition_worlds_discovered():

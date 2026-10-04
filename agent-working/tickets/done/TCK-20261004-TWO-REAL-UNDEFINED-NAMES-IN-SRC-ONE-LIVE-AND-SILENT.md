@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-TWO-REAL-UNDEFINED-NAMES-IN-SRC-ONE-LIVE-AND-SILENT
-phase: open
+phase: done
 date: 2026-10-04
 tags: [engine, social, root-cause, observability]
 ---
@@ -19,7 +19,7 @@ provenance manifest on every lab run, and `party.py`'s missing `StrategicUpdate`
 
 ## Status
 
-INPROGRESS
+DONE
 
 ## Tier
 
@@ -194,4 +194,4 @@ None. The evidence is in `codebase-planner`'s own handoff and re-verified in thi
 
 ## Completion Summary
 
-_(not started)_
+kernel.py now imports json, so the provenance manifest loads on lab runs (it was silently never loaded); the swallow is narrowed to (OSError, ValueError) and logged. The dormant undefined name in party.py was resolved by removing the method (REMOVE-THE-DORMANT-PARTY-COMMAND-METHOD). Blast radius measured: lab runs recorded the process-wide catalog fingerprint and no module fingerprints instead of the resolve-time values.

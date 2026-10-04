@@ -1,11 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION
-phase: open
-date: 2026-10-04
+artifact_type: investigation
 tags: [world, content, root-cause]
 ---
 

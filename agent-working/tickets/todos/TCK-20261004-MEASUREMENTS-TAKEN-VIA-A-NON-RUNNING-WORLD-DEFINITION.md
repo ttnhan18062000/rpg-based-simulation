@@ -94,6 +94,35 @@ SUB-394's `support_boundary`.
 - For each: re-take against `world.yaml`, or annotate at its source as measured against a definition
   that never ran. **A measurement that cannot be re-taken cheaply is retired, not quietly kept.**
 
+### Already investigated — results to build on, not repeat
+
+**Cleared (2026-10-04, `rpg-implementer`, verified independently by the planner).** The
+`TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP` corpus measurements are **not** affected. Its
+probe loaded via `WorldRepository("data/worlds").load_world_with_context(world)` — the production path,
+not the catalog copy — and at `246ee09f7` the pre-#328
+`data/worlds/frontier_living_world/resolved/world.resolved.yaml` already contained
+`trading_company_hub`. So those numbers describe the 7-module world production actually ran. Its other
+measured world, `crowded_frontier`, has no catalog copy at all. Recorded in that sweep's own ticket at
+`4b0b6d2c5`. **Method worth reusing:** this was settled by reading the probe's loader call and the
+pre-change resolved file, with no re-run.
+
+**Unverifiable, and the first real instance of this ticket's "cannot be re-taken" category: #291's AC6
+numbers (780 vs 1609 opportunity attacks on identical runs).** The probe that produced them is no longer
+on disk, so which loader it used cannot be established by reading anything — only a re-run would settle
+it. Per this ticket's Scope, that means it is annotated as unverifiable or retired, **not quietly kept**.
+Decide which, and record the decision on `TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-
+OBJECTIVE-KIND`, whose AC6 is already recorded as failed-and-knowingly-accepted; "and the measurement
+behind it cannot be reproduced" is a material addition to that acceptance.
+
+**A hypothesis this ticket should NOT inherit.** The planner suggested that
+`frontier_living_world`'s observed bimodality (from the second stage on, in the hostility sweep) was
+explained by the two divergent definitions — 6 modules in the catalog copy vs 7 in `world.yaml`. That
+ranking is **wrong** and `rpg-implementer` corrected it: if every run in that measurement loaded the
+7-module resolved snapshot, two definitions cannot produce two modes *within* it. The catalog copy's
+6-module content is irrelevant to a measurement that never read it. Genuine nondeterminism is back to
+being the leading candidate, and the single-definition re-run on post-#328 main remains the clean
+discriminator.
+
 ## Out of Scope
 
 - Re-baselining `EXPECTED_DISTINCT_POPULATED_FACTIONS`. Verified sound; see the correction above.

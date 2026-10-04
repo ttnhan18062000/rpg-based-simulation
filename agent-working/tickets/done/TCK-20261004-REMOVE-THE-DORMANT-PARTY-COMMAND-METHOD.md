@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: systems
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-REMOVE-THE-DORMANT-PARTY-COMMAND-METHOD
-phase: open
+phase: done
 date: 2026-10-04
 tags: [social, documentation, investigation]
 ---
@@ -18,7 +18,7 @@ remaining disposition is removal, and keeping it now hides its own dormancy
 
 ## Status
 
-INPROGRESS
+DONE
 
 ## Tier
 
@@ -167,4 +167,4 @@ recorded for this file) and `docs/mechanics/07_social_political_dynamics.md` (co
 
 ## Completion Summary
 
-_(to be filled during implementation)_
+Removed the caller-less PartyCoordinationSystem.issue_party_command, its test, and its two inventory entries; dropped the Bible clause. Whole-repo grep shows no remaining reference outside historical records; tests/unit/social, engine and refactor pass.

@@ -1,11 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-TWO-REAL-UNDEFINED-NAMES-IN-SRC-ONE-LIVE-AND-SILENT
-phase: open
-date: 2026-10-04
+artifact_type: plan
 tags: [engine, social, root-cause, observability]
 ---
 

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: mechanics
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-BIBLE-07-DESCRIBES-PARTY-COMMAND-BEHAVIOUR-THAT-NEVER-OCCURS
-phase: open
+phase: done
 date: 2026-10-04
 tags: [social, documentation, investigation]
 ---
@@ -18,7 +18,7 @@ party-command behaviour occurs in the world (rule owner's ruling, verbatim repla
 
 ## Status
 
-INPROGRESS
+DONE
 
 ## Tier
 
@@ -172,4 +172,4 @@ Doc-only change; no test applies. `grep -rn issue_party_command docs/mechanics d
 
 ## Completion Summary
 
-_(to be filled during implementation)_
+Bible 07's issue_party_command sentence corrected in place with the rule owner's wording (the function has no caller, so no party-command behaviour occurs); no intentional_divergences or parity-ledger entry, per the ruling. Its first clause was later dropped when the method was removed.

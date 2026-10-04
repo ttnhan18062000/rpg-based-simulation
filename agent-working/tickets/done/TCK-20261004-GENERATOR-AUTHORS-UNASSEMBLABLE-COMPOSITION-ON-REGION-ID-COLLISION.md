@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION
-phase: open
+phase: done
 date: 2026-10-04
 tags: [world, content, root-cause]
 ---
@@ -19,7 +19,7 @@ modules declaring the same region id and never sets a `namespace`, so the resolv
 
 ## Status
 
-INPROGRESS
+DONE
 
 ## Tier
 
@@ -227,14 +227,13 @@ fallthrough — that would just be option 2 wearing a different hat.
 - Deviation from the authored precedent: authored worlds use `namespace: "trading"`; the generator uses the
   module id. Matching it would need a per-module default-namespace field (module content change, out of scope).
 - **Monitoring caveat (whole batch):** for roughly the first hour-plus of this batch, `.claude/current_run` still named another session's finished run (`TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`, seq 14, Verify), so the tool rows this session wrote in that period are mis-attributed to that ticket in `tools.jsonl`. They were not retro-attributed. Any tool-call-count or cost figure for the five tickets in this batch undercounts, and the other ticket's figure is inflated. Do not trust either as a cost measurement. The sidecar was rewritten with this batch's own run before closure.
-- **AC-3 not yet actionable**: the two `xfail(strict=True)` marks exist only on the #328 branch, not on
-  origin/main. They must be removed when #328 lands (strict xfail would XPASS-fail otherwise).
+- AC-3 done: after #328 merged and `origin/main` was merged here, the two `xfail(strict=True)` marks in `tests/integration/worldassembly/test_real_content_world_compositions.py` were removed; both tests now pass against the fix.
 
 ## Test Summary
 
 - New: 3 unit tests (`TestRegionIdNamespacing`) and 1 real-content integration test (assembles, and each module's population spawns in its own module's region). Fail on the unfixed generator, pass with the fix.
 - Scoped run on the final tree (rendering, worldassembly, worldgeneration, engine, social, cli, lab, simulation_quality and related): 1693 passed, 0 failed.
-- AC-3 DEFERRED, not met: the two `xfail(strict=True)` marks exist only on #328. Sequence ruled by the planner: #328 merges, `origin/main` is merged into this branch, the strict xfails XPASS against this fix, and they are removed in this PR.
+- AC-3 met: the two `xfail(strict=True)` marks (left by #328) were removed after #328 merged; both tests pass. The adapted integration tests and the namespacing unit tests were re-checked against the unfixed generator: all three real-content integration tests fail with the original duplicate-region error when the namespace emission is removed.
 
 ## Files Changed
 
@@ -242,4 +241,4 @@ fallthrough — that would just be option 2 wearing a different hat.
 
 ## Completion Summary
 
-_(not started)_
+Generated compositions now assemble: `ProceduralCompositionGenerator._assign_region_namespaces` gives a module that re-declares an already-claimed region id `namespace=<its module_id>`, as a function of the module set only (rule-owner option 1, both conditions tested). Tests fail without the fix and pass with it. AC-3 closed in this PR: the two strict xfail marks left by #328 were removed after #328 merged. DEV-008 and the substrate parity rule recorded. Sweep: 5 region ids collide across the 22 modules.

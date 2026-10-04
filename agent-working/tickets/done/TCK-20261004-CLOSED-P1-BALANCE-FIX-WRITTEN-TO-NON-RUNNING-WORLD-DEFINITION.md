@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION
-phase: open
+phase: done
 date: 2026-10-04
 tags: [world, content, root-cause]
 ---
@@ -19,7 +19,7 @@ reads DONE
 
 ## Status
 
-INPROGRESS
+DONE
 
 ## Tier
 
@@ -219,4 +219,4 @@ than making a new one.
 
 ## Completion Summary
 
-_(not started)_
+The accepted dungeon_crawl balance remedy (2 modules, danger_scale 2, 12 entities) now runs: world.yaml, resolved/ and world_compile_report.json are updated, and guards assert every composition world's snapshot equals a fresh resolve and every compile report's content-derived counts equal a fresh compile. Blast radius handled: census pin 4 to 2, corpus registry regenerated, six rendering-evidence tests moved to a frozen fixture (which no longer detects rendering regressions in the live world; follow-up filed). DEV-009 and SUB-395 recorded; the 2026-06-27 ticket annotated as inert until now.

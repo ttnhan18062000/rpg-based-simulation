@@ -436,48 +436,66 @@ class TestBudgetLimit:
 
 
 class TestRegionIdNamespacing:
-    """Two selected modules declaring one region id must be disambiguated by namespace."""
+    """Two selected modules declaring one region id must be disambiguated by namespace.
+
+    Tests the assignment directly: it is pure, so no catalog or resolve is needed. The end-to-end
+    behaviour (generate() output assembles, populations land in their own module's region) is
+    asserted against real content in tests/integration/worldassembly/test_real_content_world_compositions.py.
+    """
 
     @staticmethod
-    def _regional(module_id: str, module_type: str = "settlement"):
+    def _regional(module_id: str, *region_ids: str, module_type: str = "settlement"):
         from src.worldbuilding.recipe import RegionRecipeSpec
 
         mod = _make_module(module_id, module_type)
         return mod.model_copy(update={
-            "regions": [RegionRecipeSpec(id="hometown", type="town", grid_bounds=(0, 0, 5, 5))]
+            "regions": [
+                RegionRecipeSpec(id=rid, type="town", grid_bounds=(0, 0, 5, 5)) for rid in region_ids
+            ]
         })
 
-    def _generate(self, modules, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
-        path = ProceduralCompositionGenerator().generate(
-            _default_intent(), _make_repo(modules)
-        )
-        raw = yaml.safe_load(path.read_text())
-        return {r["module_id"]: r.get("namespace") for r in raw["module_refs"]}
+    @staticmethod
+    def _assign(modules, order=None):
+        by_id = {m.module_id: m for m in modules}
+        selected = order or [m.module_id for m in modules]
+        return ProceduralCompositionGenerator._assign_region_namespaces(selected, by_id)
 
-    def test_colliding_region_id_gets_namespace(self, tmp_path, monkeypatch):
-        refs = self._generate(
-            [self._regional("aaa_core"), self._regional("zzz_hub"), _make_module("terrain_basic", "terrain")],
-            tmp_path, monkeypatch,
-        )
-        assert refs  # non-vacuous
-        assert refs["aaa_core"] is None
-        assert refs["zzz_hub"] == "zzz_hub"
-        assert refs["terrain_basic"] is None
+    def test_colliding_region_id_gets_namespace(self):
+        result = self._assign([
+            self._regional("aaa_core", "hometown"),
+            self._regional("zzz_hub", "hometown"),
+            _make_module("terrain_basic", "terrain"),
+        ])
+        assert result == {"zzz_hub": "zzz_hub"}  # non-empty; the bare-id owner is absent
 
-    def test_bare_id_owner_is_independent_of_selection_order(self, tmp_path, monkeypatch):
+    def test_bare_id_owner_is_independent_of_selection_order(self):
         """Condition 1: the same module keeps the bare id however the modules are listed/ranked."""
-        a, z = self._regional("aaa_core"), self._regional("zzz_hub")
-        t = _make_module("terrain_basic", "terrain")
-        forward = self._generate([a, z, t], tmp_path, monkeypatch)
-        reverse = self._generate([t, z, a], tmp_path, monkeypatch)
-        assert forward == reverse
-        assert forward["aaa_core"] is None
+        modules = [
+            self._regional("aaa_core", "hometown"),
+            self._regional("zzz_hub", "hometown"),
+            self._regional("mmm_quarter", "hometown"),
+        ]
+        orders = [
+            ["aaa_core", "zzz_hub", "mmm_quarter"],
+            ["zzz_hub", "mmm_quarter", "aaa_core"],
+            ["mmm_quarter", "aaa_core", "zzz_hub"],
+        ]
+        results = [self._assign(modules, order) for order in orders]
+        assert results[0] == {"mmm_quarter": "mmm_quarter", "zzz_hub": "zzz_hub"}
+        assert all(r == results[0] for r in results)
+        assert "aaa_core" not in results[0]
 
-    def test_no_collision_leaves_namespace_unset(self, tmp_path, monkeypatch):
-        refs = self._generate(
-            [_make_module("terrain_basic", "terrain"), _make_module("village_core", "settlement")],
-            tmp_path, monkeypatch,
-        )
-        assert refs
-        assert all(ns is None for ns in refs.values())
+    def test_no_collision_assigns_no_namespace(self):
+        assert self._assign([
+            self._regional("aaa_core", "hometown"),
+            self._regional("zzz_hub", "market_square"),
+        ]) == {}
+
+    def test_residual_collision_after_namespacing_fails_fast(self):
+        """A namespaced id that lands on an earlier module's bare id is an error, never a silent override."""
+        modules = [
+            self._regional("a1", "x", "bbb_y"),
+            self._regional("bbb", "x", "y"),  # x collides -> namespaced; its y becomes bbb_y, a1's bare id
+        ]
+        with pytest.raises(GenerationCompositionError, match="bbb_y"):
+            self._assign(modules)

@@ -1,11 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION
-phase: open
-date: 2026-10-04
+artifact_type: test_plan
 tags: [world, content, root-cause]
 ---
 
