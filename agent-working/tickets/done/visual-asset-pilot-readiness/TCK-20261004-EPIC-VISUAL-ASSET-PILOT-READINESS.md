@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-EPIC-VISUAL-ASSET-PILOT-READINESS
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, mcp, testing, live-map, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, mcp, testing, live-map, planning]
 Visual assets toward an `AM-M6` pilot: close U-05 doc drift, adopt one real terrain tile, close the `AM-M5` gaps, retention and rollback, rerun M5 and draft the M6 charter
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -48,12 +48,12 @@ Tracks the child tickets in `SEQUENCE.md`. No direct implementation.
 - Reopening D2 (`MAX_SOURCE_BYTES`), D8-D10, or any approved budget row other than retention.
 
 ## Acceptance Criteria
-- [ ] Every child in `SEQUENCE.md` is closed.
-- [ ] No doc says U-05 numbers are awaiting approval; retention has an owner-approved value or a stated reason to stay unset.
-- [ ] Exactly one real visual key (a terrain tile) is adopted by the user through the CLI gate, built, in a release candidate and in the runtime manifest.
-- [ ] The rerun M5 result record classifies every `AM5-W*` deliverable and gate with evidence, never a pass by default.
-- [ ] An `AM6-W01` charter draft exists for the user to sign, with every field that needs a human named as such; `AM-M6` and `AM-M7` plan docs carry a dated status note.
-- [ ] Boundary tests stay green: no `src/` <-> `visual_assets` import; the normal frontend path does not import `frontend/src/visualAssets`.
+- [x] Every child in `SEQUENCE.md` is closed.
+- [x] No doc says U-05 numbers are awaiting approval; retention has an owner-approved value or a stated reason to stay unset.
+- [x] Exactly one real visual key (a terrain tile) is adopted by the user through the CLI gate, built, in a release candidate and in the runtime manifest.
+- [x] The rerun M5 result record classifies every `AM5-W*` deliverable and gate with evidence, never a pass by default.
+- [x] An `AM6-W01` charter draft exists for the user to sign, with every field that needs a human named as such; `AM-M6` and `AM-M7` plan docs carry a dated status note.
+- [x] Boundary tests stay green: no `src/` <-> `visual_assets` import; the normal frontend path does not import `frontend/src/visualAssets`.
 
 ## Related Tickets
 - TCK-20261003-EPIC-VISUAL-ASSET-HARDENING-AND-REHEARSAL (done; PR #309)
@@ -89,4 +89,4 @@ Per child.
 Per child.
 
 ## Completion Summary
-Open.
+All five children are done. U-05 doc drift is fixed; one real terrain tile (`terrain.forest`) was adopted by the owner and is in `pilot/rc-0001`; the M5 gaps for it were closed or honestly left `INCONCLUSIVE` (W05, W09, C05, C06, C07, C09; no M2/M4 PASS record exists); retention (30 days, local only) is approved and a rollback drill exists; a charter draft is ready for the owner. `AM-M6` stays `NO-GO`, `AM-M7` dormant; nothing was authorized, deployed or pushed. Follow-up filed separately: `TCK-20261004-VISUAL-ASSETS-TERRAIN-DETAIL-VARIANTS`.

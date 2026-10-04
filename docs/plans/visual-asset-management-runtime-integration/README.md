@@ -53,6 +53,12 @@ rehearsal** ran on synthetic fixtures with the normal Live Map, HUD and simulati
   the `AM-M5` gaps closed for that role, retention and rollback, an M5 rerun and an `AM6-W01` charter **draft**.
 - `AM-M6` execution stays `NO-GO` until the user signs the charter and gives a new explicit authorization. `AM-M7` stays dormant.
 
+### Results 2026-10-04 (ticket batch closed)
+
+One real terrain tile (`terrain.forest`) was adopted by the owner and is in release candidate `pilot/rc-0001`; the `AM-M5` gaps for it were rerun on commit `401921bdd`: `W03`, `W07` (within the approved matrix) `PASS`, `W05`, `W09`, `C05`, `C06`, `C07`, `C09` `INCONCLUSIVE`, overall `INCONCLUSIVE`
+(`docs/assets/surface_rehearsal_result.md`). Retention is approved (30 days, local only) and a rollback drill exists (`docs/assets/retention_and_rollback.md`). A charter **draft** is at `docs/assets/pilot_charter_am6.md`, marked not an authorization.
+`AM-M6` stays `NO-GO` (M1 open items, no M2 or M4 `PASS` record, M5 not `PASS`, no signed charter, no authorization); `AM-M7` stays dormant.
+
 ## Status and authorization boundary
 
 This package translates the P2
