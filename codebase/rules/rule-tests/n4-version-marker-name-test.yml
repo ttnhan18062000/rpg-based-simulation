@@ -1,0 +1,14 @@
+id: n4-version-marker-name
+valid:
+  - "def create_app(): pass"
+  - "class SpatialHash: pass"
+  - "def vec2(x, y): pass"
+  - "def renew(): pass"
+  - "def new_entity(): pass"
+  - "class Version2Policy: pass"
+invalid:
+  - "def create_v2_app(): pass"
+  - "def build_v2(): pass"
+  - "def make_thing_new(): pass"
+  - "class SpatialHashV2: pass"
+  - "class V2EngineManager: pass"
