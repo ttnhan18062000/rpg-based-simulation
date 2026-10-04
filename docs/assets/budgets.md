@@ -46,6 +46,7 @@ harsher than pixel art). Cost per operation means one decode, one render, one lo
 | `visual_assets.store.config` | `MAX_PREVIEW_DIM` | 1024 | decode + pixels-v1 of a 1024 px RGBA PNG, Paeth rows (worst): 1.73 s, 17.0 MiB; 1536 px: 5.06 s; 2048 px: 7.87 s, 68 MiB | `1024` | R2 would give 2048 (7.87 s, over 2 s): kept | F3 | APPROVED 2026-10-04 |
 | `visual_assets.store.config` | `MAX_DECODED_BYTES` | 25165824 | decoding at the old bound (2508 px square, Paeth): 13.72 s, 102 MiB; at 1024 px (4195328 B decoded): 1.73 s | `4195328` | R3 (1024 * (1024 * 4 + 1)). Now the decoded-size bound only (`pixels.py`); file reads use `MAX_PNG_FILE_BYTES` | F4 (resolved) | APPROVED 2026-10-04 |
 | `visual_assets.store.config` | `MAX_PNG_FILE_BYTES` | new (the five PNG file reads used `MAX_DECODED_BYTES`) | worst legal store PNG: 1024 px RGBA random noise, written without compression 4195716 B (zlib 0), at zlib 9 4196671 B (noise does not compress); the compressible 2508 px sample was 228094 B and is not the worst case | `4259840` | new bound: the worst legal PNG rounded up to 64 KiB (65 x 64 KiB). Read bound at `verify`, `release`, `exporter`, `adoption`, `intake.service` | F4 (resolved) | APPROVED 2026-10-04 |
+| `visual_assets.store.config` | `MAX_UNADOPTED_INTAKE_AGE_DAYS` | new (`gc` kept a PASSED never-adopted intake for ever) | one adopt+build+release adds about 4.4 KB of tracked files; a local intake with its review export about 6 KB (3.3-3.6 KB quarantine, 2.2-2.7 KB review); at the size bounds up to about 2.3 MB per intake (`MAX_SOURCE_BYTES` + two `MAX_PREVIEW_BYTES` renders + records); growth is too small to derive a number | `30` | R0, NOT DERIVED: a judgment, not a measurement. 30 days is long enough to review a candidate over a sprint and short enough that an agent drawing 10 candidates a day leaves at most ~700 MB worst case (~2 MB at real sizes) | | APPROVED 2026-10-04 |
 | `visual_assets.store.rendering` | `MAX_RENDER_SCALE` | 16 | Aseprite render of a 128 px noise source: scale 8 0.083 s, scale 16 0.258 s | `16` | R1 (realistic scale is 8) | F6 | APPROVED 2026-10-04 |
 | `visual_assets.store.contracts.handoff` | `MAX_LIMITATIONS` | 16 | 16 x 256-char limitations = 7057 B ASCII package; no real producer data | `16` | R0, NOT MEASURED (no real producer yet) | | APPROVED 2026-10-04 |
 | `visual_assets.store.contracts.definitions` | `MAX_AXES` | 8 | widest key (8 axes x 64 values) = 7471 B of YAML; no real registry | `8` | R0, NOT MEASURED (no real catalog yet) | | APPROVED 2026-10-04 |
@@ -71,9 +72,7 @@ harsher than pixel art). Cost per operation means one decode, one render, one lo
 
 ### Unset
 
-| Bound | Value | Reason | Status |
-|---|---|---|---|
-| Retention: age-based quarantine or review clean-up | UNSET | no real catalog yet; `gc` is reachability-only | UNSET |
+None. The retention row, the last one, was approved on 2026-10-04 (`MAX_UNADOPTED_INTAKE_AGE_DAYS` above): `gc` clean-up is age-based on the LOCAL quarantine and review dirs only and never deletes a tracked object or record.
 
 ## Measured operation times (128 px noise source, scale 8 preview)
 

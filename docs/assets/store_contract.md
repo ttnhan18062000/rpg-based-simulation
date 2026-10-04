@@ -12,7 +12,7 @@ tags: [architecture, mcp, documentation, rendering]
 **Status: built (`TCK-20261002-EPIC-VISUAL-ASSET-FOUNDATION`, children 1-6).** The drawing tools hand off a candidate, the store
 stages it into a quarantine, judges it independently, lets a human adopt it as an immutable source revision, exports pixel-hashed artifacts
 and assembles release CANDIDATES, and checks the whole store in pure Python. Nothing activates anything at runtime (`AM-M5`-`M7` are out of
-scope). The committed `visual_assets/catalog/` holds zero keys, sources, adoptions and artifacts: only layout, rules and synthetic fixtures.
+scope). The committed `visual_assets/catalog/` holds one real key, `terrain.forest` (the `AM-M6` pilot tile, `docs/assets/pilot_terrain_key.md`), with its one adopted source, adoption, artifact and release candidate; everything else is layout, rules and synthetic fixtures.
 This page says what each command and MCP tool does, who may run it and what it writes.
 
 Source of truth for vocabulary and gates: `docs/brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md`
@@ -41,7 +41,7 @@ release candidates are assembled but never activated (the last arrow is out of s
 ## What is built now
 
 - `visual_assets/store/` with `errors`, `config`, `identities`, `contracts/` and `catalog/registry.py` (read-only), and `visual_assets/catalog/`
-  (README, `STORE_FORMAT` = version 1, the zero-key `definitions/visual_keys.yaml`, synthetic `fixtures/contracts/`, other directories empty).
+  (README, `STORE_FORMAT` = version 1, the `definitions/visual_keys.yaml` (one real key, `terrain.forest`), synthetic `fixtures/contracts/`, other directories empty).
 - Typed records (`extra="forbid"`, frozen, strict, `record_type` + `schema_version`, no free-form field): `CandidateHandoffPackage`,
   `IntakeResult`, `AdoptionRecord`, `RevocationRecord`, `SourceRecord`, `ArtifactRecord`, `ReleaseCandidateManifest`,
   `VisualKeyRegistry`. Canonical JSON (`canonical_json`) and strict parsing (`parse_record`: oversize, UTF-8, duplicate keys, NaN,
@@ -80,7 +80,7 @@ release candidates are assembled but never activated (the last arrow is out of s
   D6) from the registry and the current artifacts; eligibility is decided by `is_build_eligible` alone, and a registry key with no artifact is refused unless marked `optional`. `verify` (pure Python, run
   on the committed catalog in CI) rebuilds the chain, re-hashes every artifact and checks every record against its bytes and name, follows every manifest entry, and flags anything unexpected;
   an artifact of a revoked revision is visible non-blocking history, a manifest entry for one is a blocking finding. `gc` lists, and only with `--delete` removes, quarantine directories with no
-  adoption and no pending review, review exports of adopted/revoked/gone intakes and unreferenced PNGs; deleting a locally revoked intake also deletes its local revocation record; it never touches
+  adoption and no pending review, review exports of adopted/revoked/gone/expired intakes, unreferenced PNGs and, as retention, a PASSED never-adopted intake older than `MAX_UNADOPTED_INTAKE_AGE_DAYS` (30, approved 2026-10-04; counted from the intake's own timestamp, strictly older); deleting a locally revoked intake also deletes its local revocation record; it never touches
   `sources/`, `provenance/` or `manifests/`.
 - Handoff builder (drawing side): `export_handoff` writes a candidate directory inside the experiment workspace (see `docs/assets/drawing_tools.md`); it never writes the store.
 - Intake (store side; `python -m visual_assets.store intake|review|list|show`): the package directory is opened without following symlinks and read
@@ -145,7 +145,7 @@ There is no MCP tool that adopts, revokes, builds, releases, deletes or activate
 Runtime activation, a resolver in the real client, Live Map and HUD consumption, signing, client compatibility ranges, more than one scale class, atlases and animation export
 (`AM-M6`/`M7`, `AM1-W08`). Built since: the runtime manifest and `export-runtime` (above) and an **isolated** `AM-M5` surface rehearsal on synthetic fixtures in
 `frontend/src/visualAssets/` (a strict parser, resolver, typed fallbacks and single-generation loader that nothing in the normal app imports); its per-gate result, overall
-`INCONCLUSIVE`, is `docs/assets/surface_rehearsal_result.md`. Open decisions are listed at the end of this page.
+`INCONCLUSIVE`, is `docs/assets/surface_rehearsal_result.md`; the pilot terrain tile's gap results (reviewer criteria, colour-vision check, client matrix) are in `docs/assets/pilot_terrain_m5_results.md`. Open decisions are listed at the end of this page.
 
 ## Known gaps (stated, not hidden)
 
@@ -155,6 +155,7 @@ Runtime activation, a resolver in the real client, Live Map and HUD consumption,
 - **A local intake revocation is local.** Revoking an un-adopted intake writes only into this machine's gitignored quarantine, so it covers other intakes of the same bytes
   on this machine only; another checkout does not see it. A revoked SOURCE REVISION is tracked and covers its bytes everywhere: `adopt` refuses the same bytes through any
   other intake (`source_bytes_revoked`) and refuses identical bytes already live under any asset (`duplicate_source`).
+- **`gc` never deletes a tracked object or record.** Retention is limited to the local quarantine and review dirs (and unreferenced untracked-style PNGs). A dry run also prints a report line, "kept: tracked history, never deleted", for each artifact record no committed release candidate refers to (`gc.tracked_unreferenced`). Retained releases are derived (every committed candidate under `manifests/candidates`), not declared; which frontend builds may still be in use is a deployment fact for the `AM-M6` charter, not store state. **If `gc` ever gains a deletion kind for tracked objects, a typed roots record (which releases, builds and evidence to keep) must exist first, in its own ticket.** `AM-C09` is judged as "`gc` removes no protected object", protected = all tracked state + young PASSED intakes + referenced review evidence (`docs/assets/retention_and_rollback.md`).
 - **Agents never run `adopt` or `revoke`.** They are absent from the MCP server and a boundary test forbids the drawing code from importing them.
 - **The preview is proven only where Aseprite is available.** Intake alone cannot prove a preview depicts its source, so adoption requires the store's own render (see above) and therefore refuses on a machine
   without Aseprite and bwrap. The comparison is by decoded pixels at the preview's scale, so it is exact for what the sandboxed Aseprite renders; it is not a statement about artistic intent.
@@ -166,10 +167,10 @@ Runtime activation, a resolver in the real client, Live Map and HUD consumption,
   (size = 1 + distinct opaque colours), which needs pixel decoding. Intake quarantines it with `PALETTE_UNVERIFIABLE`. Only a never-edited first revision
   carries one; any edit re-saves a palette with real entries. Every other palette is checked exactly against what Aseprite reports.
 - Intake accepts only 32-bit RGBA sources (`SOURCE_UNSUPPORTED_COLOR_DEPTH` otherwise); the package carries no colour-depth claim, so it is a support policy, not a claim check.
-- The unsupported-feature list (`unsupported:tilemap`, `...indexed_color`, `...grayscale`, `...linked_cels`, `...external_reference`) are a support list recorded in `docs/assets/budgets.md`. Every numeric bound (preview, file, record, registry, decode) is a **proposed** budget there, measured on 2026-10-03 and pinned to the code by a test; the owner approves the numbers in PR review. Rulings F1-F6 are recorded there. Size bounds are per record type (`StoreRecord.size_bound`, `record_bound(cls)`): the registry and the release manifest have their own bounds, and `tests/visual_assets/store/unit/test_record_bounds.py` proves every record a writer can produce under the contract bounds is readable by every reader. PNG files are bounded by `MAX_PNG_FILE_BYTES`; `MAX_DECODED_BYTES` bounds decoded size only.
+- The unsupported-feature list (`unsupported:tilemap`, `...indexed_color`, `...grayscale`, `...linked_cels`, `...external_reference`) are a support list recorded in `docs/assets/budgets.md`. Every numeric bound (preview, file, record, registry, decode) is a budget there, measured on 2026-10-03, pinned to the code by a test and `APPROVED 2026-10-04` by the owner (PR #309); retention is the one deliberately unset row. Rulings F1-F6 are recorded there. Size bounds are per record type (`StoreRecord.size_bound`, `record_bound(cls)`): the registry and the release manifest have their own bounds, and `tests/visual_assets/store/unit/test_record_bounds.py` proves every record a writer can produce under the contract bounds is readable by every reader. PNG files are bounded by `MAX_PNG_FILE_BYTES`; `MAX_DECODED_BYTES` bounds decoded size only.
 
 ## Decisions still open
 
 D2 (sources committed directly, no Git LFS), D3 (only adopted assets' PNGs committed; verified in CI by pixel hash) and D4
 (artifact identity is the decoded-pixel hash) are **decided** (`docs/architecture/visual_asset_foundation_adr.md`). Still open: deployment profile (`AM1-W01`), signing/trust channel (`AM1-W08`),
-retention numbers, the Aseprite licence review (`U-02`), numeric budgets (`U-05`: proposed, awaiting owner approval, `docs/assets/budgets.md`) and CI with Aseprite (decided against: ADR D10).
+retention numbers, the Aseprite licence review (`U-02`), numeric budgets (`U-05`: approved 2026-10-04 except the deliberately unset retention row, `docs/assets/budgets.md`) and CI with Aseprite (decided against: ADR D10).

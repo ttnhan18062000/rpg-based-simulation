@@ -231,6 +231,7 @@ def repo(tmp_path):
     (scan_dir / "ruff.json").write_text(ruff)
     shutil.copy(_FIXTURES / "complexipy.json", scan_dir / "complexipy.json")
     shutil.copy(_FIXTURES / "line_count.json", scan_dir / "line_count.json")
+    shutil.copy(_FIXTURES / "ast_grep.json", scan_dir / "ast_grep.json")
     shutil.copy(_FIXTURES / "jscpd-report.json", scan_dir / "jscpd" / "jscpd-report.json")
     return tmp_path
 

@@ -17,7 +17,7 @@ nothing beyond what a ticket authorizes. Register state of the unverified items:
 
 - **Decided by evidence:** `U-01` host is the Linux dev machine; `U-03` project-owned stdio adapter; `U-04` the `mcp` package is
   already pinned in `requirements.txt`; `U-06` bwrap confinement proven on the dev machine (spike-level).
-- **Still open:** `U-02` licence/provenance, `U-05` numeric budgets (proposed in `docs/assets/budgets.md`, awaiting owner approval), `U-07`..`U-14`.
+- **Still open:** `U-02` licence/provenance, `U-07`..`U-14`. `U-05` numeric budgets are approved 2026-10-04 (`docs/assets/budgets.md`); only the retention row is deliberately unset.
 
 ## Status update 2026-10-03
 
@@ -31,7 +31,7 @@ read the store (`submit_candidate`, `store_list`, `store_show`: 19 tools in all)
   `docs/assets/aseprite_licence_review.md`; Aseprite runs only on the licence holder's own machine (ADR `D10`).
 - `U-14` **decided: no** for GitHub-hosted CI (same record). Real-Aseprite tests stay local evidence through one strict make target
   (`TCK-20261003-VISUAL-ASSETS-LOCAL-ASEPRITE-EVIDENCE`).
-- `U-05` measurement and proposed values: `TCK-20261003-VISUAL-ASSETS-BUDGETS`, recorded in `docs/assets/budgets.md` (every row `PROPOSED`); the owner approves the numbers in PR review.
+- `U-05` measurement and proposed values: `TCK-20261003-VISUAL-ASSETS-BUDGETS`, recorded in `docs/assets/budgets.md` (every row `APPROVED 2026-10-04` by the owner on PR #309; retention is the one deliberately unset row).
 
 ## Status and decision boundary
 

@@ -113,8 +113,8 @@ Python identifier conventions that section does not state.
 |---|---|---|
 | N1 | Follow `docs/engine/architecture_reference.md` section 9 for what a name means. | reviewer |
 | N2 | Functions, methods, variables and modules are `snake_case`; classes are `PascalCase`; module-level constants are `UPPER_SNAKE_CASE`. | ruff `N` rules, configured |
-| N3 | A leading underscore marks a name as private to its module or class. Do not import a `_private` name from another module. | reviewer |
-| N4 | No version or sequence markers in new names (`V2` prefix or suffix, `_v2`, `2`, `_new`). Replace the old thing or name the difference. Existing `V2` names are not to be renamed. | reviewer |
+| N3 | A leading underscore marks a name as private to its module or class. Do not import a `_private` name from another module. | ast-grep rule `n3-private-name-import` (advisory, own soak) |
+| N4 | No version or sequence markers in new names (`V2` prefix or suffix, `_v2`, `2`, `_new`). Replace the old thing or name the difference. Existing `V2` names are not to be renamed. | ast-grep rule `n4-version-marker-name` (advisory, own soak): `V2` prefix or suffix, `_v2`, `_new` at the end of a def or class name; a trailing digit (`2`) is left to the reviewer |
 
 ## 6. Docstrings
 
@@ -140,7 +140,7 @@ Python identifier conventions that section does not state.
 |---|---|---|
 | E1 | No bare `except:`. | ruff `E722`, configured |
 | E2 | Catch the narrowest exception that the code can handle. A justified `except Exception` carries `# noqa: BLE001` and the reason. | ruff `BLE001`, configured; reviewer |
-| E3 | Do not swallow an exception silently. Handle it, log it with context, or re-raise. | reviewer |
+| E3 | Do not swallow an exception silently. Handle it, log it with context, or re-raise. | ast-grep rule `e3-silent-except` (advisory, own soak): an `except` whose body is only `pass` (comments allowed); other ways of swallowing stay with the reviewer |
 | E4 | When re-raising as a different type, chain it with `raise ... from err`. | ruff `B904`, configured |
 
 ## 9. Module layout
@@ -151,7 +151,7 @@ Python identifier conventions that section does not state.
 | M2 | No wildcard imports. | ruff `F403` (part of `F`), configured |
 | M3 | No I/O and no mutation of unrelated global state when a module is imported. Registering into an existing registry at import time, through that registry's established pattern, is allowed. | reviewer |
 | M4 | New repo tooling goes under `tools/` per `docs/guidelines/repo_tooling_layout.md`. | reviewer |
-| M5 | A new module belongs to the package whose responsibility it shares. Do not create a new top-level `src/` package without an owner decision. | reviewer |
+| M5 | A new module belongs to the package whose responsibility it shares. Do not create a new top-level `src/` package without an owner decision. | reviewer; `python3 -m codebase.structure.packages validate` reports a tracked top-level package with no row (advisory) |
 
 ## 10. Correctness
 

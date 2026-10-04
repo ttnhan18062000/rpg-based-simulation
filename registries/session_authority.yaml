@@ -1,0 +1,29 @@
+# GOVERNING FILE (plan section 10): a session must not silently rewrite the policy that constrains it.
+# Every change needs the user's confirmation of the LITERAL diff, like CLAUDE.md and settings.json.
+# Enforcement of these entries is M5; this file only declares them. Validated by tools/sessions/validate.py.
+governing_file: true
+version: 1
+
+# Defaults by function (plan section 10 table). `forbidden`: the role never does it (hands drafts).
+# `needs_user`: needs the user's explicit go each time unless a dated grant below covers it.
+function_defaults:
+  designer:
+    forbidden: [commit, push, open_pr]
+    needs_user: [merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data]
+  planner:
+    forbidden: [commit, push, open_pr]
+    needs_user: [merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data]
+  implementer:
+    forbidden: []
+    needs_user: [push, open_pr, merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data]
+
+# Per-role entries: only a role with a dated, quoted, revocable grant needs one. `needs_user` always wins
+# over a grant for merge, governing_file_edit, workflow_run and the delete classes.
+authority:
+  agent-working-implementer:
+    grants:
+      - action: [push, open_pr]
+        scope: "after a complete batch, on the batch's own branch"
+        date: 2026-10-04
+        quote: "after a batch you always need to push and open PR"
+        source: user, in the agent-working-implementer terminal
