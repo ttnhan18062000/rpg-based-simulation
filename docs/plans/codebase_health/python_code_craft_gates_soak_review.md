@@ -63,6 +63,19 @@ PR #313 (merged 2026-10-04T04:59:04Z), so mypy's advisory window runs 2026-10-04
 2026-10-17. Decision 8.18 merges the batch on or after 2026-10-18, so merging after 05:00Z on 2026-10-18 gives mypy its
 full 14 days as well. Reported to codebase-planner on 2026-10-04.
 
+## Live demos and the Ubuntu 26 pre-check
+
+Run links (throwaway draft PR #331, based on the #329 branch, never merged; job-level results read from check-run step conclusions and annotations; a run shows "cancelled" overall when the next push superseded it):
+- Step 1, clean, `Code health` and `Type check` on `ubuntu-26.04` (701bf7c8f): https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37210551134 , both jobs passed.
+- Step 2, one new ruff finding plus one new mypy error in `src/core/zz_demo_violation.py` (b1bd27209): https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37210796539 , `Code health` failed at the `Code health ratchet` step (`::error::code-health: 2 new/worse violations`), `Type check` failed at the `mypy` step (`::error::mypy-baseline: 1 new errors`).
+- Step 3, top-level package `src/zz_flip_demo` with no registry row (20386ff93): https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37211037495 , `Code health` failed only at `Package registry` (the ratchet step passed); in `Tools · a–e`, `test_committed_registry_loads_and_is_schema_valid_and_complete` failed with `[completeness] tracked top-level package has no row: src/zz_flip_demo`.
+- Step 4, the row added (ec6afd47e): https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37213113973 , `Code health` (both steps) and `Tools · a–e` passed.
+- Step 5, one silent `except OSError: pass` in `src/core/zz_demo_e3.py` (e3ee1784e): https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37213577739 , `Code health` failed at the `Code health ratchet` step (`::error::code-health: 1 new/worse violations`; the single finding is `ast_grep e3-silent-except`); `Type check` passed.
+
+**Ubuntu 26 pre-check:** step 1 set `runs-on: ubuntu-26.04` for `code-health` and `typecheck` on the throwaway branch only (the label is listed as generally available by the runner-images announcement, actions/runner-images issue 14748; `ubuntu-latest` begins migrating on 2026-10-19). Both jobs ran with that label and passed with no skip note and no error; nothing changed in PR #329.
+
+Side effect of the demo, not of the flip: adding any `src/` file bumps `tests/unit/tools/test_mechanism_registry_completeness_check.py::test_wider_scope_numbers_pinned` (`scope_files == 296`), so `Unit · infra / observability` failed on steps 2 and 5 of the demo; a real PR that adds a `src/` module must update that pin (testing / mechanism-registry owner).
+
 ## Decision: jscpd may fail to run without failing the check
 
 `scan.run_scan` raised `ToolUnavailableError` for any non-zero `npx` exit, which `check` turned into exit 2. With the

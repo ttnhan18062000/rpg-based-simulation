@@ -71,6 +71,7 @@ None.
 - `REPORT_ONLY_TOOLS` is now `{"jscpd"}`; `SKIPPABLE_TOOLS` is untouched (still a subset), and a missing `ast-grep` binary still exits 2. A new or worse `ast_grep` finding makes `check` exit 1 with the `::error::` annotation.
 - Flipped pins in `test_code_health_blocking_policy.py` (policy set, blocking parametrization with `ast_grep`, new-ast_grep test now exit 1). Mutation proof: re-adding `ast_grep` to the report-only set fails 3 tests on the assertions, not on imports.
 - Docs: N3, N4, E3 cells read "blocking in the `Code health` ratchet"; environment guide, Makefile help, CI comment and the `ratchet.py` comment name only jscpd as report-only.
+- Live demo (step 5): https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37213577739 : `Code health` failed at the `Code health ratchet` step on one `ast_grep e3-silent-except` finding; `Type check` passed. The E3 demo uses a typed silent `except OSError: pass` rather than a bare `except: pass`: a bare `except:` would also trip ruff `E722`, and the proof would not isolate ast-grep.
 - Precondition (2026-10-04, `origin/main` 053f459e4): `check` gives 0 new, 0 worse including the 111 `ast_grep` rows. Repeat right before merge; both runs are recorded in `python_code_craft_structure_soak_review.md`.
 
 ## Test Summary

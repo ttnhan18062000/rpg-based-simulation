@@ -57,6 +57,10 @@ or the flip stops and the planner is told.
 
 Rows deleted as debt was paid: none yet. Rows reseeded or added since #315: none.
 
+## Live demos
+
+Steps 3 to 5 of the demo PR #331 (details and the other links in the gates soak review): step 3 (no row) failed only at `Package registry` and in the one completeness test of `Tools · a–e`; step 4 (row added) passed both; step 5 (E3) failed `Code health` on one `ast_grep e3-silent-except` finding. The E3 demo uses a typed silent `except OSError: pass` rather than a bare `except: pass`: a bare `except:` would also trip ruff `E722`, and the proof would not isolate ast-grep.
+
 ## Verdict (draft)
 
 No false-positive class and no problem seen in the first hours. The flips are on track, subject to the final-day
