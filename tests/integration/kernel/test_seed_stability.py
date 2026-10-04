@@ -5,6 +5,7 @@ from src.config.profiles import RuntimeProfile, HardwareClass
 from src.core.state import AuthoritativeState, EntityState
 from src.platform.rng import DeterministicRNG
 from src.engine.kernel import Kernel
+from src.engine.checkpoint import CanonicalStateHasher
 from src.core.builder import V2EntityBuilder
 from src.core.enums import Faction
 
@@ -64,7 +65,7 @@ def test_simulation_seed_stability(test_profile):
     try:
         for _ in range(5):
             kernel_a.tick_once()
-            fingerprints_a.append(kernel_a.state.fingerprint()["state_hash"])
+            fingerprints_a.append(CanonicalStateHasher.get_hash(kernel_a.state))
     finally:
         kernel_a.shutdown()
 
@@ -75,7 +76,7 @@ def test_simulation_seed_stability(test_profile):
     try:
         for _ in range(5):
             kernel_b.tick_once()
-            fingerprints_b.append(kernel_b.state.fingerprint()["state_hash"])
+            fingerprints_b.append(CanonicalStateHasher.get_hash(kernel_b.state))
     finally:
         kernel_b.shutdown()
 
@@ -93,7 +94,7 @@ def test_simulation_seed_divergence(test_profile):
     kernel_a = Kernel(test_profile, state_a, rng_a)
     try:
         kernel_a.tick_once()
-        hash_a = kernel_a.state.fingerprint()["state_hash"]
+        hash_a = CanonicalStateHasher.get_hash(kernel_a.state)
     finally:
         kernel_a.shutdown()
 
@@ -101,7 +102,7 @@ def test_simulation_seed_divergence(test_profile):
     kernel_b = Kernel(test_profile, state_b, rng_b)
     try:
         kernel_b.tick_once()
-        hash_b = kernel_b.state.fingerprint()["state_hash"]
+        hash_b = CanonicalStateHasher.get_hash(kernel_b.state)
     finally:
         kernel_b.shutdown()
 

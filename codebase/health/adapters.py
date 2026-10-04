@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path, PurePosixPath
-from typing import Any, Mapping, Sequence
+from typing import Any, Callable, Mapping, Sequence
 
 from codebase.health.findings import (
     TOOL_AST_GREP,
@@ -146,24 +146,37 @@ def _enclosing_symbol(spans: Sequence[tuple[int, int, str]], line: int) -> str:
     return min(inside, key=lambda span: span[1] - span[0])[2] if inside else MODULE_SYMBOL
 
 
-def adapt_ast_grep(records: Sequence[Mapping[str, Any]], root: str | None = None) -> list[Finding]:
-    """`ast-grep scan --json=compact` -> one count per (file, enclosing symbol, rule id).
+def symbol_resolver(root: str | Path | None = None) -> Callable[[str, int], str]:
+    """A function `(repo-relative file, 1-based line) -> enclosing symbol` for files under `root`.
 
-    ast-grep gives a file, a rule id and a range but no enclosing symbol, so the symbol is found by parsing the
-    file under `root` with the stdlib `ast` (a def's own name finding belongs to that def). A file that cannot
-    be read or parsed falls back to `<module>`. The key never holds a line, so moving code keeps its key.
+    The symbol is the innermost def or class holding the line, found by parsing the file with the stdlib
+    `ast` (cached per file); a file that cannot be read or parsed gives `<module>`. This is the symbol the
+    registry's `ast_grep` rows are keyed on, for tools whose output has a line but no symbol.
     """
     spans: dict[str, list[tuple[int, int, str]]] = {}
-    findings: list[Finding] = []
-    for record in records:
-        file = _relative(str(record["file"]), root)
+
+    def resolve(file: str, line: int) -> str:
         if file not in spans:
             try:
                 spans[file] = _symbol_spans((Path(root or ".") / file).read_text(encoding="utf-8"))
             except OSError:
                 spans[file] = []
+        return _enclosing_symbol(spans[file], line)
+
+    return resolve
+
+
+def adapt_ast_grep(records: Sequence[Mapping[str, Any]], root: str | None = None) -> list[Finding]:
+    """`ast-grep scan --json=compact` -> one count per (file, enclosing symbol, rule id).
+
+    ast-grep gives a file, a rule id and a range but no enclosing symbol, so the symbol is found by parsing the
+    file under `root` (see `symbol_resolver`; a def's own name finding belongs to that def). A file that cannot
+    be read or parsed falls back to `<module>`. The key never holds a line, so moving code keeps its key.
+    """
+    resolve = symbol_resolver(root)
+    findings: list[Finding] = []
+    for record in records:
+        file = _relative(str(record["file"]), root)
         line = int(record["range"]["start"]["line"]) + 1
-        findings.append(
-            Finding(file, _enclosing_symbol(spans[file], line), TOOL_AST_GREP, str(record["ruleId"]), 1, line)
-        )
+        findings.append(Finding(file, resolve(file, line), TOOL_AST_GREP, str(record["ruleId"]), 1, line))
     return aggregate(findings, "sum")

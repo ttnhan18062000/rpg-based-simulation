@@ -90,8 +90,27 @@ Add one line to the PR description (or the closing ticket) when an RPG-core PR d
 | Adds any wall-clock or host-resource read in `src/` (`time.*`, `perf_counter`, `psutil`, ...) | PERF-D1 determinism contract | `python3 tools/perf/wall_clock_inventory.py --check docs/performance/wall_clock_inventory.json` (exit 1 = new read) |
 | Turns a feature flag on by default | Roadmap rule: such a change carries an on/off phase-attribution table | `python3 tools/perf/flag_attribution.py --flag <FLAG> --scenario mixed` (small entity count; label the result provisional) |
 
-None of these checks runs in CI yet. We are not asking you to add them as gates. Run under a memory cap on a
-small machine (`systemd-run --user --scope -p MemoryMax=...`).
+> **Update 2026-10-04 (owner decision):** since `TCK-20261004-PERF-M1-PHASE-INVENTORY-REGEN`,
+> `tests/tools/test_perf_inventories_committed_in_sync.py` runs the phase, wall-clock and hash-call-site
+> inventory checks in the Tools CI job, and the check is blocking. A PR that adds, removes or renames a
+> `run_phase()` call, a wall-clock or host-resource read in `src/`, or a hash call site fails until the
+> matching inventory is regenerated.
+>
+> The fix is to regenerate the report with the tool, never by hand:
+>
+> ```
+> python3 tools/perf/phase_inventory.py --format json > docs/performance/phase_inventory.json
+> python3 tools/perf/phase_inventory.py --format md > docs/performance/phase_inventory.md
+> python3 tools/perf/wall_clock_inventory.py --format json > docs/performance/wall_clock_inventory.json
+> python3 tools/perf/wall_clock_inventory.py --update-doc docs/performance/wall_clock_inventory.md
+> python3 tools/perf/hash_callsite_inventory.py --format json > docs/performance/hash_callsite_inventory.json
+> python3 tools/perf/hash_callsite_inventory.py --update-doc docs/performance/hash_callsite_inventory.md
+> ```
+>
+> Regenerating makes CI pass, but a new wall-clock read is still subject to PERF-D1 amendment A1 (Ask 3):
+> it must not feed a game value.
+
+Run the checks under a memory cap on a small machine (`systemd-run --user --scope -p MemoryMax=...`).
 
 ### Ask 3 — Keep game-facing values deterministic (PERF-D1 amendment A1)
 
@@ -130,7 +149,9 @@ catalog entry. Having this in your specs makes that a copy, not an investigation
 
 - Perf will not edit the four core files while RPG-core tickets are open against them, and will
   not edit `src/` at all until the gate and the freeze lift.
-- Perf will not turn any soft performance check into a blocking one until the gate lifts. When we
+- Perf will not turn any soft performance check into a blocking one until the gate lifts. (This means
+  timing and capacity checks. The inventory in-sync test that Ask 2's update describes is a structural
+  check, not a performance one. The owner made it blocking on 2026-10-04.) When we
   do, the `perf-cert-arena` CI job (runs `tests/perf` on PRs touching `src/core` or `src/engine`)
   will start to block RPG-core PRs on real regressions. We will announce it here first.
 - Perf will review, on request, any RPG-core PR that touches the kernel loop, hashing, the
@@ -286,3 +307,12 @@ stability entry gate"):
 - Perf's M1 under the partial lift touches `worker_manager.py`, `checkpoint.py`,
   `long_run_harness.py` and `protocol_validator.py`. Perf will flag it on the PR (Ask 2 in
   reverse) if any of those turns out to need a core-file change.
+
+### `perf-planner`, 2026-10-04 — salience ticket update (owner decision)
+
+Work debt is never produced in `src/`: nothing increases `state.work_debt`
+(`TCK-20261004-WORK-DEBT-NEVER-ACCUMULATES-IN-PRODUCTION`). The debt half of `global_salience` is
+therefore always 0, and today salience comes only from the wall-clock term. The owner chose to
+**retire** work debt. For `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`, this means: drop
+`global_salience` and the buy-price `1 + salience` multiplier entirely, instead of keeping a term
+that is always 0. The ticket's assumptions say so.

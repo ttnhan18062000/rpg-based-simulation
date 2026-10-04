@@ -3,9 +3,9 @@
     python3 -m codebase.gates.sarif_feedback --changed FILE --out SARIF [--summary-out PATH] [--annotate]
 
 `--changed` lists the paths a PR changed (one per line). Only existing `src/**/*.py` files are checked, because
-the code-health registry covers `src/` only. ruff and complexipy are run on those files with `--output-format
-sarif`, every result the registry already holds is dropped, and the rest are written to one SARIF 2.1.0 file
-for `github/codeql-action/upload-sarif`. The registry is never changed.
+the code-health registry covers `src/` only. ruff, complexipy and ast-grep (the rule pack in `codebase/rules/`) are run
+on those files with SARIF output, every result the registry already holds is dropped, and the rest are written to one
+SARIF 2.1.0 file for `github/codeql-action/upload-sarif`. The registry is never changed.
 
 SARIF results have no baseline identity, so the filter works per ratchet unit (the key in
 `codebase/baselines/code_health_exceptions.jsonl`):
@@ -14,6 +14,8 @@ SARIF results have no baseline identity, so the filter works per ratchet unit (t
   **whole** when it is above the ceiling or has no row. The SARIF cannot say which finding of an over-ceiling
   group is the new one, so older findings of that code in the same file are shown too; the job summary says so.
 - complexipy: a function is dropped when its cognitive complexity is at or below its row's ceiling.
+- ast-grep: a (file, enclosing symbol, rule id) group is dropped when its count is at or below the row's ceiling,
+  and kept whole otherwise (the symbol is found as the registry's own `ast_grep` keys find it).
 
 With no changed `src` Python file, a valid SARIF with an empty `results` array is still written, so the upload
 path (permission, code-scanning acceptance) is exercised on every same-repository PR.
@@ -43,8 +45,8 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 from codebase.health import registry, scan
-from codebase.health.adapters import RULE_COGNITIVE
-from codebase.health.findings import TOOL_COMPLEXIPY, TOOL_RUFF
+from codebase.health.adapters import RULE_COGNITIVE, symbol_resolver
+from codebase.health.findings import TOOL_AST_GREP, TOOL_COMPLEXIPY, TOOL_RUFF
 from codebase.health.registry import Row
 
 SARIF_VERSION = "2.1.0"
@@ -75,13 +77,17 @@ def _is_plain_file(root: Path, path: str) -> bool:
     return target.is_file() and not target.is_symlink() and target.resolve().is_relative_to(root.resolve())
 
 
-def parse_sarif(text: str, label: str) -> dict[str, Any]:
-    """Parse one tool's SARIF and check the shape this module relies on; raise `SarifError` otherwise."""
+def parse_sarif(text: str, label: str, check_version: bool = True) -> dict[str, Any]:
+    """Parse one tool's SARIF and check the shape this module relies on; raise `SarifError` otherwise.
+
+    `check_version=False` is for ast-grep, whose top-level `version` holds its own release (for example `0.45.3`)
+    instead of `2.1.0`. Only its `runs` and `results` are used; the uploaded document gets `SARIF_VERSION` from `build_sarif`.
+    """
     try:
         data = json.loads(text)
     except json.JSONDecodeError as exc:
         raise SarifError(f"{label}: not valid JSON ({exc})") from exc
-    if not isinstance(data, dict) or data.get("version") != SARIF_VERSION or not isinstance(data.get("runs"), list):
+    if not isinstance(data, dict) or not isinstance(data.get("runs"), list) or (check_version and data.get("version") != SARIF_VERSION):
         raise SarifError(f"{label}: not SARIF {SARIF_VERSION} with a runs array")
     for run in data["runs"]:
         if not isinstance(run, dict) or not isinstance(run.get("results", []), list):
@@ -160,6 +166,36 @@ def filter_complexipy(run: Mapping[str, Any], rows: Mapping[tuple, Row], root: P
     return kept, {"kept": len(kept), "dropped": dropped, "groups": 0}
 
 
+def filter_ast_grep(run: Mapping[str, Any], rows: Mapping[tuple, Row], root: Path) -> tuple[list[dict], dict[str, int]]:
+    """Keep the ast-grep results the registry does not hold; returns them with kept/dropped/groups counts.
+
+    A result has a line but no enclosing symbol, so the symbol is found as the registry's own `ast_grep` keys
+    find it (`symbol_resolver`). Like ruff, a (file, symbol, rule) group is dropped when its count is at or below
+    its row's ceiling and kept whole when above it or without a row.
+    """
+    resolve = symbol_resolver(root)
+    results = []
+    for result in run.get("results", []):
+        file = relative_uri(_result_uri(result), root)
+        try:
+            line = int(result["locations"][0]["physicalLocation"]["region"]["startLine"])
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
+            raise SarifError("an ast-grep result has no start line") from exc
+        results.append((file, resolve(file, line), result["ruleId"], result))
+    totals = Counter((file, symbol, rule) for file, symbol, rule, _ in results)
+    kept: list[dict] = []
+    over: set[tuple[str, str, str]] = set()
+    dropped = 0
+    for file, symbol, rule, result in results:
+        row = rows.get((file, symbol, TOOL_AST_GREP, rule))
+        if row is not None and totals[(file, symbol, rule)] <= row.ceiling:
+            dropped += 1
+            continue
+        over.add((file, symbol, rule))
+        kept.append(_with_uri(result, file))
+    return kept, {"kept": len(kept), "dropped": dropped, "groups": len(over)}
+
+
 def _run_of(source: Mapping[str, Any], results: list[dict]) -> dict[str, Any]:
     base = (source.get("runs") or [{}])[0]
     return {"tool": base.get("tool", {"driver": {"name": "code-health"}}), "results": results}
@@ -206,13 +242,13 @@ def ruff_rule_codes(root: Path) -> dict[str, str]:
         raise SarifError(f"ruff rule: unexpected output ({exc})") from exc
 
 
-def _tool_sarif(files: Sequence[str], root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+def _tool_sarif(files: Sequence[str], root: Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     ruff = _run_tool([sys.executable, "-m", "ruff", "check", *files, "--output-format", "sarif"], root, "ruff check")
     ruff_sarif = parse_sarif(ruff.stdout, "ruff")
     with tempfile.TemporaryDirectory() as tmp:
         target = Path(tmp) / "complexipy.sarif"
         try:
-            command = [scan._find("complexipy"), *files, "-q", "--output-format", "sarif", "--output", str(target)]
+            command = [scan.find_tool("complexipy"), *files, "-q", "--output-format", "sarif", "--output", str(target)]
         except scan.ToolUnavailableError as exc:
             raise SarifError(str(exc)) from exc
         _run_tool(command, root, "complexipy")
@@ -220,7 +256,11 @@ def _tool_sarif(files: Sequence[str], root: Path) -> tuple[dict[str, Any], dict[
             complexipy_text = target.read_text(encoding="utf-8")
         except OSError as exc:
             raise SarifError(f"complexipy wrote no SARIF: {exc}") from exc
-    return ruff_sarif, parse_sarif(complexipy_text, "complexipy")
+    try:
+        ast_grep = [scan.find_tool("ast-grep"), "scan", "--config", scan.AST_GREP_CONFIG, *files, "--format", "sarif"]
+    except scan.ToolUnavailableError as exc:
+        raise SarifError(str(exc)) from exc
+    return ruff_sarif, parse_sarif(complexipy_text, "complexipy"), parse_sarif(_run_tool(ast_grep, root, "ast-grep").stdout, "ast-grep", check_version=False)
 
 
 def _append(path: Path | None, text: str) -> None:
@@ -229,14 +269,16 @@ def _append(path: Path | None, text: str) -> None:
             handle.write(text + "\n")
 
 
-def _summary(ruff: dict[str, int], complexipy: dict[str, int], omitted: int) -> str:
-    kept = ruff["kept"] + complexipy["kept"]
+def _summary(ruff: dict[str, int], complexipy: dict[str, int], ast_grep: dict[str, int], omitted: int) -> str:
+    kept = ruff["kept"] + complexipy["kept"] + ast_grep["kept"]
     line = (
         f"**Code health SARIF (advisory):** {kept} findings not in the baseline in changed files "
-        f"(ruff {ruff['kept']} in {ruff['groups']} over-ceiling groups; complexipy {complexipy['kept']}). "
-        f"Dropped as already in the baseline: ruff {ruff['dropped']}, complexipy {complexipy['dropped']}. "
-        "Groups are shown whole: an over-ceiling (file, rule) group includes its older findings, so do not read every finding "
-        "of such a group as new."
+        f"(ruff {ruff['kept']} in {ruff['groups']} over-ceiling groups; complexipy {complexipy['kept']}; "
+        f"ast-grep {ast_grep['kept']} in {ast_grep['groups']} over-ceiling groups). "
+        f"Dropped as already in the baseline: ruff {ruff['dropped']}, complexipy {complexipy['dropped']}, "
+        f"ast-grep {ast_grep['dropped']}. "
+        "Groups are shown whole: an over-ceiling (file, rule) or (file, symbol, rule) group includes its older findings, "
+        "so do not read every finding of such a group as new."
     )
     return line + (f" {omitted} results were left out of the upload (cap {RESULT_CAP})." if omitted else "")
 
@@ -253,14 +295,15 @@ def run(root: Path, changed: Path, out: Path, summary_out: Path | None = None, a
         else:
             rows = {row.key: row for row in registry.load_rows(registry_file or registry.registry_path(root), root, check_files=False)}
             codes = ruff_rule_codes(root)
-            ruff_sarif, complexipy_sarif = _tool_sarif(files, root)
+            ruff_sarif, complexipy_sarif, ast_grep_sarif = _tool_sarif(files, root)
             ruff_results, ruff_stats = filter_ruff((ruff_sarif["runs"] or [{}])[0], rows, codes, root)
             cx_results, cx_stats = filter_complexipy((complexipy_sarif["runs"] or [{}])[0], rows, root)
-            runs = [_run_of(ruff_sarif, ruff_results), _run_of(complexipy_sarif, cx_results)]
+            ag_results, ag_stats = filter_ast_grep((ast_grep_sarif["runs"] or [{}])[0], rows, root)
+            runs = [_run_of(ruff_sarif, ruff_results), _run_of(complexipy_sarif, cx_results), _run_of(ast_grep_sarif, ag_results)]
             omitted = cap_results(runs)
             data = build_sarif(runs)
-            _append(summary_out, _summary(ruff_stats, cx_stats, omitted))
-            kept = ruff_stats["kept"] + cx_stats["kept"]
+            _append(summary_out, _summary(ruff_stats, cx_stats, ag_stats, omitted))
+            kept = ruff_stats["kept"] + cx_stats["kept"] + ag_stats["kept"]
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(data, indent=1), encoding="utf-8")
     except (SarifError, registry.RegistryError, OSError, KeyError, TypeError, AttributeError) as exc:

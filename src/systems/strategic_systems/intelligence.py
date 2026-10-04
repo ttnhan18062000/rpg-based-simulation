@@ -71,7 +71,7 @@ from src.engine.policy import GovernorPolicy
 from src.core.strategic import (
     BlockerState, LeadState, LeadCertainty,
     ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
-    CognitionProfile, ProjectKind, GoalKind
+    CognitionProfile, ProjectKind, GoalKind, ObjectiveKind
 )
 from src.engine.spatial_query import SpatialQueryService
 from src.strategy.cognition_capacity import CapacityService
@@ -1708,7 +1708,7 @@ class StrategicIntelligenceSystem:
                 cand_kind_str = getattr(best_candidate.kind, "value", best_candidate.kind)
                 obj = ObjectiveState(
                     id=f"{cand_kind_str}_{best_candidate.target_id}",
-                    kind="reach_location",
+                    kind=best_candidate.metadata.get("obj_kind") or ObjectiveKind.REACH_LOCATION,
                     target=best_candidate.target_id,
                     target_position=best_candidate.target_pos,
                     status=ObjectiveStatus.ACTIVE

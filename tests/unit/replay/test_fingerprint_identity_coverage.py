@@ -5,6 +5,9 @@ to replay-parity checks that rely on this (lighter-weight) fingerprint -- the sa
 class PR #128's architecture review caught for a different field. This is distinct from
 CanonicalStateHasher (src/engine/checkpoint.py), which already includes faction via
 IdentityComponent.to_canonical_dict() and is out of scope here.
+
+PERF-D5: these are stability-check coverage tests. They show what the fingerprint can see; they are not
+proof that two runs are equal (that is `CanonicalStateHasher.get_hash`).
 """
 from __future__ import annotations
 

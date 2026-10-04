@@ -30,17 +30,22 @@ def rejects(tmp_path: Path, body: str, match: str | None = None, **kw) -> None:
         load(tmp_path, body, **kw)
 
 
-def test_committed_registry_loads_with_zero_keys():
+def test_committed_registry_holds_exactly_the_pilot_key():
     registry = load_registry()
-    assert dict(registry.keys) == {} and dict(registry.aliases) == {}
+    assert list(registry.keys) == ["terrain.forest"] and dict(registry.aliases) == {}
+    forest = registry.keys["terrain.forest"]
+    assert forest.family == "terrain" and forest.variant_axes == () and not forest.optional
     data = (config.CATALOG_ROOT / "definitions" / "visual_keys.yaml").read_bytes()
     assert registry.file_hash == "sha256:" + hashlib.sha256(data).hexdigest()
 
 
-def test_committed_catalog_has_no_real_assets():
-    # zero keys (above); no sources, artifacts, provenance, candidates or manifests are committed
-    for sub in ("sources", "generated", "provenance", "manifests/candidates"):
-        assert [p.name for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep"] == [], sub
+def test_committed_catalog_holds_only_the_pilot_asset():
+    # one key (above), one adopted source and what was derived from it; exact contents: tests/visual_assets/test_catalog_integrity.py
+    expected = {"sources": ["terrain_forest"], "generated": ["terrain_forest--x1"], "manifests/candidates": ["pilot"]}
+    for sub, names in expected.items():
+        assert sorted(p.name for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep") == names, sub
+    for sub in ("provenance/adoptions", "provenance/intake"):
+        assert len([p for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep"]) == (1 if sub.endswith("adoptions") else 2), sub
     assert [p.name for p in (config.CATALOG_ROOT / "build-config").iterdir() if p.name != ".gitkeep"] == ["export.toml"]  # rules, not an asset
     assert {p.name for p in (config.CATALOG_ROOT / "fixtures").iterdir()} == {"contracts"}
     assert "fixture" not in [p.name for p in (config.CATALOG_ROOT / "definitions").iterdir()]

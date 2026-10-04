@@ -8,7 +8,7 @@ tags: [performance, architecture, engine]
 
 # Authoritative Pipeline Phase Inventory
 
-Generated from commit `fdc44f9581cfe49c59c953779998c4807e1e6e56` by `tools/perf/phase_inventory.py`.
+Generated from commit `262d7e57ba18a1ac17b66dffa7b0fa6f62d93e9e` by `tools/perf/phase_inventory.py`.
 Regenerate with:
 
 ```
@@ -111,10 +111,10 @@ nested function. A structural heuristic: it finds services wired in directly, wh
 
 | Source | Path | Stated count | Names listed | Executable phases with no entry | Entries matching no executable phase |
 |---|---|---|---|---|---|
-| authoritative_pipeline_md | `docs/engine/authoritative_pipeline.md` | 39 | 39 | `habit_bias_action_style`, `role_model_selection`, `information_propagation`, `belief_staleness_decay`, `clan_lifecycle`, `faction_sentiment` | `active_contracts` |
+| authoritative_pipeline_md | `docs/engine/authoritative_pipeline.md` | - | 39 | `habit_bias_action_style`, `role_model_selection`, `information_propagation`, `belief_staleness_decay`, `clan_lifecycle`, `faction_sentiment` | `active_contracts` |
 | d19_domain_phase_inventory | `docs/audits/D19_domain_phase_inventory.md` | 38 | 36 | `memory_update`, `habit_bias_action_style`, `role_model_selection`, `information_intent_execution`, `information_propagation`, `guild_visit`, `belief_staleness_decay`, `lead_contradiction`, `clan_lifecycle`, `faction_sentiment` | `adventure_decision`, `active_contracts` |
-| codex_generator_note | `tools/agent_orchestration_codex_adapter/generator.py` | 39 | 0 | n/a (count only) | n/a (count only) |
-| subphase_domain_contracts_epic | `docs/plans/design_enhancement/subphase_domain_contracts_epic.md` | 37 | 0 | n/a (count only) | n/a (count only) |
+| codex_generator_note | `tools/agent_orchestration_codex_adapter/generator.py` | - | 0 | n/a (count only) | n/a (count only) |
+| subphase_domain_contracts_epic | `docs/plans/design_enhancement/subphase_domain_contracts_epic.md` | - | 0 | n/a (count only) | n/a (count only) |
 
 Notes:
 

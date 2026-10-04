@@ -6,6 +6,7 @@ project so they prove the whole path: changed files -> tool SARIF -> registry fi
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 import textwrap
 from pathlib import Path
@@ -13,12 +14,13 @@ from pathlib import Path
 import pytest
 
 from codebase.gates import sarif_feedback
-from codebase.health import registry
+from codebase.health import registry, scan
 from codebase.health.registry import Row
 from codebase.gates.sarif_feedback import (
     SarifError,
     cap_results,
     changed_python_files,
+    filter_ast_grep,
     filter_complexipy,
     filter_ruff,
     parse_sarif,
@@ -27,6 +29,7 @@ from codebase.gates.sarif_feedback import (
 )
 
 _ROOT = Path("/repo")
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def _row(file, symbol, tool, rule, ceiling):
@@ -192,10 +195,12 @@ _COMPLEX = textwrap.dedent("""\
 def project(tmp_path):
     (tmp_path / "src").mkdir()
     (tmp_path / "codebase" / "baselines").mkdir(parents=True)
+    shutil.copytree(_REPO_ROOT / "codebase" / "rules", tmp_path / "codebase" / "rules", ignore=shutil.ignore_patterns("rule-tests"))
     (tmp_path / "pyproject.toml").write_text(_PYPROJECT)
     (tmp_path / "src" / "a.py").write_text(_BARE + "\n" + _COMPLEX)
     (tmp_path / "src" / "b.py").write_text("x = 1\n")
-    rows = [_row("src/a.py", None, "ruff", "E722", 1), _row("src/a.py", "tangled", "complexipy", "cognitive-complexity", 15)]
+    rows = [_row("src/a.py", None, "ruff", "E722", 1), _row("src/a.py", "tangled", "complexipy", "cognitive-complexity", 15),
+            _row("src/a.py", "f", "ast_grep", "e3-silent-except", 1)]  # _BARE's `except: pass` is also an E3 finding
     registry.write_rows(tmp_path / "codebase" / "baselines" / "code_health_exceptions.jsonl", rows)
     return tmp_path
 
@@ -229,10 +234,12 @@ def test_end_to_end_exactly_the_new_violation_is_reported(project, capsys):
     assert run(project, _changed(project, "src/a.py", "src/b.py"), out, summary, annotate=True) == 0
     results = _results(out)
     # ruff names a rule by its code (E722) or by its name (bare-except) depending on the rule; the filter handles both.
-    assert [(_code(r["ruleId"]), r["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]) for r in results] == [("E722", "src/b.py")]
+    # b.py's bare `except: pass` is one ruff E722 finding and one ast-grep E3 finding; neither has a row.
+    assert sorted((_code(r["ruleId"]), r["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]) for r in results) == [
+        ("E722", "src/b.py"), ("e3-silent-except", "src/b.py")]
     text = summary.read_text()
-    assert text.startswith("earlier step\n") and "1 findings not in the baseline" in text and "Groups are shown whole" in text
-    assert "::warning::code-health: 1 findings not in the baseline" in capsys.readouterr().out
+    assert text.startswith("earlier step\n") and "2 findings not in the baseline" in text and "Groups are shown whole" in text
+    assert "::warning::code-health: 2 findings not in the baseline" in capsys.readouterr().out
 
 
 def test_end_to_end_a_worse_group_and_a_worse_function_are_kept_whole(project):
@@ -240,7 +247,8 @@ def test_end_to_end_a_worse_group_and_a_worse_function_are_kept_whole(project):
     out = project / "out.sarif"
     assert run(project, _changed(project, "src/a.py"), out) == 0
     ids = sorted(_code(r["ruleId"]) for r in _results(out))
-    assert ids == ["CC001", "E722", "E722"], "both bare excepts (old one included) and the worse function"
+    assert ids == ["CC001", "E722", "E722", "e3-silent-except"], (
+        "both bare excepts (old one included), the worse function, and g's E3 (f's E3 is within its row)")
 
 
 def test_end_to_end_with_no_changed_src_python_an_empty_valid_sarif_is_still_written(project):
@@ -298,7 +306,7 @@ def test_end_to_end_a_missing_tool_is_reported_as_could_not_run(project, monkeyp
 def test_an_unexpected_shape_from_a_tool_exits_2_with_a_summary_line_instead_of_a_traceback(project, monkeypatch):
     broken = {"version": "2.1.0", "runs": [{"results": [{"ruleId": "x", "locations": [{"physicalLocation": 5}]}]}]}
     monkeypatch.setattr(sarif_feedback, "ruff_rule_codes", lambda root: _CODES)
-    monkeypatch.setattr(sarif_feedback, "_tool_sarif", lambda files, root: (broken, broken))
+    monkeypatch.setattr(sarif_feedback, "_tool_sarif", lambda files, root: (broken, broken, broken))
     summary = project / "summary.md"
     assert run(project, _changed(project, "src/a.py"), project / "out.sarif", summary) == 2
     assert "could not run:" in summary.read_text() and not (project / "out.sarif").exists()
@@ -308,3 +316,87 @@ def test_the_cli_entry_point_writes_the_same_file(project):
     out = project / "cli.sarif"
     assert sarif_feedback.main(["--root", str(project), "--changed", str(_changed(project, "src/a.py")), "--out", str(out)]) == 0
     assert out.exists() and sys.executable
+
+
+# ── ast-grep (TCK-20261004-AST-GREP-SARIF-AND-SNAPSHOT) ──────────────────────
+
+_SILENT = "def g():\n    try:\n        pass\n    except ValueError:\n        pass\n"
+_E3 = "e3-silent-except"
+
+
+def _ag_result(file, line, rule=_E3):
+    return {"ruleId": rule, "level": "warning", "message": {"text": "x"},
+            "locations": [{"physicalLocation": {"artifactLocation": {"uri": file}, "region": {"startLine": line}}}]}
+
+
+def _ag_root(tmp_path):
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "m.py").write_text("class K:\n    def a(self):\n        pass\n\n    def b(self):\n        pass\n\n\ndef top():\n    pass\n")
+    return tmp_path
+
+
+def test_an_ast_grep_group_within_its_ceiling_is_dropped_and_one_without_a_row_is_kept(tmp_path):
+    root = _ag_root(tmp_path)
+    run_ = {"results": [_ag_result("src/m.py", 3), _ag_result("src/m.py", 6), _ag_result("src/m.py", 10)]}
+    rows = _rows(_row("src/m.py", "K.a", "ast_grep", _E3, 1))
+    kept, stats = filter_ast_grep(run_, rows, root)
+    assert [r["locations"][0]["physicalLocation"]["region"]["startLine"] for r in kept] == [6, 10]
+    assert stats == {"kept": 2, "dropped": 1, "groups": 2}
+
+
+def test_an_ast_grep_group_above_its_ceiling_is_kept_whole(tmp_path):
+    root = _ag_root(tmp_path)
+    run_ = {"results": [_ag_result("src/m.py", 3), _ag_result("src/m.py", 3)]}
+    kept, stats = filter_ast_grep(run_, _rows(_row("src/m.py", "K.a", "ast_grep", _E3, 1)), root)
+    assert len(kept) == 2 and stats["groups"] == 1
+
+
+def test_an_ast_grep_row_for_another_rule_or_symbol_does_not_cover_a_finding(tmp_path):
+    root = _ag_root(tmp_path)
+    rows = _rows(_row("src/m.py", "K.a", "ast_grep", "n3-private-name-import", 9), _row("src/m.py", "K.b", "ast_grep", _E3, 9))
+    kept, _ = filter_ast_grep({"results": [_ag_result("src/m.py", 3)]}, rows, root)
+    assert len(kept) == 1
+
+
+def test_ast_grep_sarif_reports_its_own_release_as_the_version_and_is_accepted_only_when_asked():
+    text = json.dumps({"runs": [{"results": [], "tool": {"driver": {"name": "ast-grep"}}}], "version": "0.45.3"})
+    assert parse_sarif(text, "ast-grep", check_version=False)["runs"]
+    with pytest.raises(SarifError):
+        parse_sarif(text, "ast-grep")
+
+
+def test_an_ast_grep_result_without_a_start_line_is_an_error_not_swallowed(tmp_path):
+    bad = {"ruleId": _E3, "locations": [{"physicalLocation": {"artifactLocation": {"uri": "src/m.py"}}}]}
+    with pytest.raises(SarifError, match="no start line"):
+        filter_ast_grep({"results": [bad]}, {}, _ag_root(tmp_path))
+
+
+def test_end_to_end_a_new_ast_grep_finding_is_reported_and_a_grandfathered_one_is_not(project):
+    (project / "src" / "b.py").write_text(_SILENT)
+    (project / "src" / "c.py").write_text(_SILENT)
+    rows = [*registry.load_rows(project / "codebase" / "baselines" / "code_health_exceptions.jsonl", project, check_files=False),
+            _row("src/c.py", "g", "ast_grep", _E3, 1)]
+    registry.write_rows(project / "codebase" / "baselines" / "code_health_exceptions.jsonl", rows)
+    summary = project / "summary.md"
+    out = project / "out.sarif"
+    assert run(project, _changed(project, "src/b.py", "src/c.py"), out, summary) == 0
+    found = [(r["ruleId"], r["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]) for r in _results(out)]
+    assert found == [(_E3, "src/b.py")]
+    text = summary.read_text()
+    assert "ast-grep 1 in 1 over-ceiling groups" in text and "ast-grep 1, " not in text and "ast-grep 1." in text
+
+
+def test_end_to_end_a_missing_ast_grep_binary_is_could_not_run_with_no_sarif(project, monkeypatch, capsys):
+    real = scan.find_tool
+
+    def find(name):
+        if name == "ast-grep":
+            raise scan.ToolUnavailableError("ast-grep not found: install the project environment (uv sync)")
+        return real(name)
+
+    monkeypatch.setattr(scan, "find_tool", find)
+    summary = project / "summary.md"
+    out = project / "out.sarif"
+    assert run(project, _changed(project, "src/a.py"), out, summary, annotate=True) == 2
+    assert not out.exists() and "could not run: ast-grep not found" in summary.read_text()
+    assert "::warning::code-health SARIF could not run (advisory)" in capsys.readouterr().out

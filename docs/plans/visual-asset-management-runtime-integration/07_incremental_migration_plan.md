@@ -9,6 +9,10 @@ tags: [assets, migration, rendering, rollback, planning]
 
 # AM-M7 — Incremental Migration
 
+## Status 2026-10-04
+
+Still dormant. It needs `AM-M6` `PASS` and a recorded human disposition first; neither exists (`AM-M6` is `NO-GO`, see `06_bounded_activation_pilot_plan.md` and the charter draft `docs/assets/pilot_charter_am6.md`). Nothing here was planned or started.
+
 ## Status 2026-10-03
 
 Still dormant: depends on an `AM-M6` pilot pass, which has not started.

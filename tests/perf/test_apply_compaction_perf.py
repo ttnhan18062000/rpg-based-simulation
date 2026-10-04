@@ -5,6 +5,7 @@ from src.core.builder import V2EntityBuilder
 from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate
 from src.engine.compactor import StateUpdateCompactor
 from src.engine.apply import ApplyPath
+from src.engine.checkpoint import CanonicalStateHasher
 
 
 def test_apply_compaction_performance_gain():
@@ -73,5 +74,5 @@ def test_apply_compaction_performance_gain():
     print(f"Compacted (Compaction + ApplyPath) Duration: {compacted_ms:.2f}ms")
 
     # Verify semantic equivalence
-    assert raw_state.fingerprint() == compacted_state.fingerprint()
+    assert CanonicalStateHasher.get_hash(raw_state) == CanonicalStateHasher.get_hash(compacted_state)
     assert metrics.compacted_entity_updates == count // 5

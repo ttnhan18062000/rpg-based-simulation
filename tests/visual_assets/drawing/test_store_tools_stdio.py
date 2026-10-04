@@ -137,7 +137,7 @@ def test_store_list_and_show_read_the_store_and_change_nothing(world):
                                       ("store_list", {"kind": "intake", "limit": 1})])
     assert all(not r.isError for r in results)
     listed, sources, artifacts, releases, shown, limited = (data(r) for r in results)
-    assert [i["intake_id"] for i in listed["items"]] == [intake_id] and sources["count"] == artifacts["count"] == releases["count"] == 0
+    assert [i["intake_id"] for i in listed["items"]] == [intake_id] and sources["count"] == artifacts["count"] == releases["count"] == 1  # the pilot asset: one source, one artifact, one release candidate
     assert shown["verdict"] == "PASSED" and "unverified" in shown["claimed_by_producer"]["note"] and limited["count"] == 1
     for r in results:
         assert "/home/" not in text(r) and "/tmp/" not in text(r) and "pytest-of-" not in text(r)

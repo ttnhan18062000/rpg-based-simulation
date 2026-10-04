@@ -1,0 +1,91 @@
+---
+status: active
+layer: architecture
+authority: P2
+audience: agent
+ticket_id: TCK-20261004-VISUAL-ASSETS-TERRAIN-DETAIL-VARIANTS
+phase: open
+date: 2026-10-04
+tags: [architecture, mcp, live-map]
+---
+
+# TCK-20261004-VISUAL-ASSETS-TERRAIN-DETAIL-VARIANTS
+
+## Title
+Decorative detail variants for one visual key (forest: plain, bush, tree), picked deterministically from cell coordinates
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P2
+
+## Request Summary
+The user asked (2026-10-04) for sub-types of a terrain asset: "many kinds of a forest tile, tile with bush, tile with
+tree, tile has x, tile has y". Decided by the user the same day, through a blocking question each:
+- **Look only.** A detail variant is decoration. The client picks it deterministically from the cell's `(x, y)` (and a
+  fixed seed), so the same map always looks the same and replays match. It carries no gameplay meaning, the simulation
+  does not change, and the role's preserved fact stays "this cell is forest" (the fallback is unchanged).
+- **After the pilot.** `TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE` adopts one plain `terrain.forest` tile with no
+  axes; this ticket starts after the `visual-asset-pilot-readiness` batch closes. The pilot's adopted tile becomes the
+  `plain` variant.
+
+Gameplay-meaningful features (a harvestable bush, cover from trees) are **not** this ticket: if wanted, they are
+simulation truth with their own data path and keys, a separate initiative.
+
+## Scope
+- Contract: lift the stated limit "one visual key maps to one artifact" (`visual_assets/store/release.py`,
+  `docs/assets/store_contract.md`) for a declared **detail axis** on a key: one artifact per axis value, a declared
+  default value (`plain`), release candidate and runtime manifest listing each. Decide (and record in an ADR row) whether
+  this is a `variant_axes` entry with a reserved kind, or a separate field; keep `MAX_AXIS_VALUES` and `MAX_VISUAL_KEYS`
+  as the bounds and say how the value count is budgeted.
+- Evolving an adopted key: adding the axis must keep the pilot's adopted artifact valid as the default value without a
+  re-adoption, or state why not (and then the user re-adopts).
+- Client: a pure `pickDetail(key, x, y, seed, values)` with a fixed, documented hash (no `Math.random`, no global state),
+  tested for stability across runs and for a spread the user approves; a missing variant falls back to the default
+  value, then to the role fallback.
+- Art: 2-3 forest detail tiles (bush, tree, ...) drawn with the drawing tools, each tiling with the others; the user
+  adopts each through the CLI gate.
+- Rerun the affected M5 checks (crowded scene with mixed variants, colour-vision, fallback per variant).
+
+## Out of Scope
+- Any simulation, world-generation or API change; gameplay meaning for a variant.
+- Variants for other terrains (one family first); animation; scale classes other than x1.
+- The normal Live Map, unless an `AM-M6` authorization covering it exists by then.
+
+## Acceptance Criteria
+- [ ] Store contract, ADR and `store_contract.md` describe the detail axis; the one-key-one-artifact limit is replaced, not silently broken.
+- [ ] Same `(key, x, y, seed)` gives the same variant on every run and client (test); mutant "use Math.random" fails.
+- [ ] The pilot's adopted `terrain.forest` artifact is the default variant (or the re-adoption is recorded).
+- [ ] Each new variant adopted by the user; `verify` clean; runtime manifest lists every value.
+- [ ] Fallback order tested: missing variant -> default variant -> role fallback.
+
+## Related Tickets
+- TCK-20261004-EPIC-VISUAL-ASSET-PILOT-READINESS, TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE
+
+## Related Docs
+- docs/assets/store_contract.md, docs/architecture/visual_asset_foundation_adr.md
+- docs/brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md (9.2 variants, AM-U05)
+
+## Related Stored Artifacts
+- None yet.
+
+## Related Code Areas
+- visual_assets/store/contracts/definitions.py, visual_assets/store/release.py, visual_assets/catalog/, frontend/src/visualAssets/
+
+## Assumptions / Open Questions
+- Seed: a fixed constant per release is enough for "same map looks the same"; per-world seeds need world data in the client and are a later choice.
+
+## Implementation Notes
+
+## Test Summary
+
+## Files Changed
+
+## Completion Summary

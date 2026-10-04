@@ -21,12 +21,11 @@ SYNTHETIC = '''
 import hashlib
 from src.engine.checkpoint import CanonicalStateHasher, CanonicalHashScheduler as Sched
 from src.engine import checkpoint as cp
-from src.engine.checkpoint import BudgetedCanonicalHasher
 
 
 class Kernel:
     def __init__(self):
-        self._budget = BudgetedCanonicalHasher()
+        self._scheduler = Sched()
 
     def direct(self):
         return CanonicalStateHasher.get_hash(self._state)
@@ -45,7 +44,7 @@ class Kernel:
         return cp.CanonicalStateHasher.get_hash(self._state)
 
     def via_instance(self):
-        return self._budget.get_hash(self._state, current_tick=3)
+        return self._scheduler.compute_digest(self._state, tick=3)
 
     def fingerprinting(self):
         a = self._state.fingerprint() if self._audit_mode else None
@@ -76,7 +75,7 @@ class TestScanSource:
         assert sites["Kernel.direct"][0]["mechanism"] == "CanonicalStateHasher.get_hash"
         assert sites["Kernel.aliased"][0]["mechanism"] == "CanonicalHashScheduler.compute_hash"  # `as Sched`
         assert sites["Kernel.via_module"][0]["mechanism"] == "CanonicalStateHasher.get_hash"    # cp.Class.method
-        assert sites["Kernel.via_instance"][0]["mechanism"] == "BudgetedCanonicalHasher.get_hash"  # self._budget = Class()
+        assert sites["Kernel.via_instance"][0]["mechanism"] == "CanonicalHashScheduler.compute_digest"  # self._scheduler = Class()
 
     def test_guard_is_reported_as_written_and_unguarded_is_empty(self):
         sites = _by_function(hi.scan_source(SYNTHETIC, "x.py"))
