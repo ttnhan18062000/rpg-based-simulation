@@ -24,7 +24,7 @@ There are three content types you can author:
 | Type | Home directory | Schema |
 |---|---|---|
 | World module | `data/content/world_modules/` | `WorldModuleSpec` (Pydantic) |
-| World composition | `data/content/world_compositions/` | `WorldCompositionSpec` (Pydantic) |
+| World composition | `data/worlds/<world_id>/world.yaml` | `WorldCompositionSpec` (Pydantic) |
 | Simulation scenario | `data/content/simulation_scenarios/` | `SimulationScenarioDefinition` (Pydantic) |
 
 All three are YAML files discovered at load time. You do not register them anywhere — the
@@ -69,7 +69,7 @@ Schema errors (wrong field names, missing required fields) surface immediately.
 ### Step 4: Include in a composition
 
 Add your `module_id` to an existing composition's `modules` list (e.g.
-`data/content/world_compositions/frontier_living_world.yaml`), or create a new composition
+`data/worlds/frontier_living_world/world.yaml`), or create a new composition
 (Section 4).
 
 ### Step 5: Compile and inspect
@@ -164,7 +164,8 @@ observability_tags: ["settlement", "trade"]
 ## 4. Adding a World Composition
 
 A composition assembles a set of modules into a named world. File location:
-`data/content/world_compositions/<world_id>.yaml`.
+`data/worlds/<world_id>/world.yaml` — see `docs/architecture/world_repository_layout.md` for why that
+location is the only one that may define a `world_id`.
 
 ### Step 1: Create the composition file
 
@@ -289,7 +290,7 @@ to a module YAML raises `ValueError: extra inputs are not permitted`.
 provided_features: ["has_trade"]
 
 # CORRECT — put it on the composition file instead
-provided_features: ["has_trade"]   # in world_compositions/<id>.yaml
+provided_features: ["has_trade"]   # in data/worlds/<id>/world.yaml
 ```
 
 ### 7.3 Catalog ID constraints

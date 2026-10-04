@@ -112,3 +112,78 @@ def test_committed_resolved_projection_equals_a_fresh_resolve():
         "A committed projection that differs from a fresh resolve is a defect "
         "(docs/architecture/world_repository_layout.md §1):\n  " + "\n  ".join(failures)
     )
+
+
+ADR_PATH = Path("docs/architecture/world_repository_layout.md")
+BIBLE_06_PATH = Path("docs/mechanics/06_worldbuilding_foundation.md")
+CONTENT_AUTHORING_PATH = Path("docs/guides/content_authoring.md")
+AUTHORITY_SENTENCE = "is the sole authoritative definition of a `world_id`"
+AUTHORITY_INVARIANT = "The world the engine loads is the one its authored definition resolves to"
+ADR_CITATION = "docs/architecture/world_repository_layout.md"
+RETIRED_AUTHORING_PATH = "data/content/world_compositions"
+
+
+def test_authoritative_world_location_stated_once():
+    adr = ADR_PATH.read_text(encoding="utf-8")
+    assert AUTHORITY_SENTENCE in adr, (
+        f"{ADR_PATH} must carry the one normative authority sentence; it is the only place the "
+        "authoritative location is stated."
+    )
+
+    bible = BIBLE_06_PATH.read_text(encoding="utf-8")
+    assert "data/worlds/<world_id>" not in bible, (
+        f"{BIBLE_06_PATH} must not restate the authoritative path — it states the invariant and "
+        "cites the ADR for the location."
+    )
+    assert ADR_CITATION in bible, f"{BIBLE_06_PATH} must cite the ADR for the location."
+
+    authoring = CONTENT_AUTHORING_PATH.read_text(encoding="utf-8")
+    assert ADR_CITATION in authoring, (
+        f"{CONTENT_AUTHORING_PATH} teaches the authoring path and must link the ADR rather than "
+        "restating the rule."
+    )
+
+    offenders = [
+        str(path)
+        for path in sorted(Path("docs/guides").rglob("*.md"))
+        if RETIRED_AUTHORING_PATH in path.read_text(encoding="utf-8")
+    ]
+    assert not offenders, (
+        "These authoring guides still present the retired catalog directory as an authoring "
+        "target:\n  " + "\n  ".join(offenders)
+    )
+
+
+def test_bible_06_does_not_present_the_invariant_as_a_compile_gate():
+    """The invariant is enforced by an architecture guard, not by the compiler.
+
+    Promoting it into §7's severity-gate ladder would document a gate nothing aborts on — the
+    exact parity break the Authoritative Mechanics Rule forbids. A later editor tidying it into
+    the neighbouring ladder must trip a test, not merely contradict a plan.
+    """
+    lines = BIBLE_06_PATH.read_text(encoding="utf-8").splitlines()
+    invariant_idx = [i for i, line in enumerate(lines) if AUTHORITY_INVARIANT in line]
+    assert len(invariant_idx) == 1, (
+        f"Expected the one-definition invariant stated exactly once in {BIBLE_06_PATH}; "
+        f"found {len(invariant_idx)} occurrences."
+    )
+    idx = invariant_idx[0]
+
+    section_starts = [i for i, line in enumerate(lines) if line.startswith("## ")]
+    enclosing = max(i for i in section_starts if i < idx)
+    assert "Integrity Validation Laws & Severity Gates" not in lines[enclosing], (
+        "The one-definition invariant must not sit inside §7's gate ladder — it is a sibling "
+        "repository-layout law, not a build-time severity gate."
+    )
+
+    section_end = min([i for i in section_starts if i > enclosing], default=len(lines))
+    block = "\n".join(lines[enclosing:section_end])
+    assert "WORLD-" not in block, (
+        "The one-definition invariant must not carry a WORLD-* rule id — it is not a "
+        "WorldValidationRule."
+    )
+    for severity_word in ("ERROR", "WARNING", "Level 2"):
+        assert severity_word not in block, (
+            f"The one-definition invariant's block must not assign a severity ({severity_word!r}); "
+            "nothing aborts compilation on it."
+        )
