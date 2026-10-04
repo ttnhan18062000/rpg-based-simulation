@@ -86,3 +86,5 @@ Docs-only; nothing run for record. Every path and named test in the charter reso
 
 ## Completion Summary
 Done as DRAFT. Nothing is written as an owner decision; approval of the charter and its prior-evidence rule is the planner's blocking question at review. No code, fixture or test was added and nothing was run.
+
+Update 2026-10-04: the owner approved it in a blocking question, answering "Approve, with the rerun rule (Recommended)" (relayed by asset-planner). `m2_evidence_charter.md` is now `APPROVED 2026-10-04` with the prior-evidence rule approved (the alternative declined); `AM2-W04` moved from `BLOCKED` to `INCONCLUSIVE`; register W11.1 to W11.5 are `MET`; `AM-M2` stays `BLOCKED`. Recorded in the approval commit after review.

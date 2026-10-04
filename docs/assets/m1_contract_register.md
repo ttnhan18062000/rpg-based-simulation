@@ -21,7 +21,7 @@ note cites the decision that makes it so. Where a doc and the code disagree the 
 
 Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); real Aseprite on the licence holder's own machine only, `U-02` closed
 (`ADR D10`, `docs/assets/aseprite_licence_review.md`); the detail axis (`ADR D11`); draft sets (`ADR D12`); retention 30 days with the `gc` protected set
-(`docs/assets/retention_and_rollback.md`); every budget `APPROVED 2026-10-04` (`docs/assets/budgets.md`).
+(`docs/assets/retention_and_rollback.md`); the fallback-safety framework (`docs/assets/fallback_safety.md`) and the `AM-M2` evidence charter with its rerun rule (`docs/assets/m2_evidence_charter.md`), both approved 2026-10-04; every budget `APPROVED 2026-10-04` (`docs/assets/budgets.md`).
 
 ## Summary
 
@@ -32,17 +32,17 @@ Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); rea
 | `AM1-W03` | Surface descriptor contract | 2 | 3 | 0 | PARTIAL |
 | `AM1-W04` | Runtime release contract | 6 | 0 | 0 | CLOSED |
 | `AM1-W05` | Protected audit/provenance contract | 4 | 1 | 0 | PARTIAL |
-| `AM1-W06` | Fallback-safety framework | 0 | 3 | 0 | OPEN |
+| `AM1-W06` | Fallback-safety framework | 2 | 1 | 0 | PARTIAL |
 | `AM1-W07` | Compatibility/rollback contract | 3 | 3 | 1 | PARTIAL |
 | `AM1-W08` | Trust/authority model | 4 | 1 | 2 | PARTIAL |
 | `AM1-W09` | Build/provenance boundary | 3 | 0 | 0 | CLOSED |
 | `AM1-W10` | Retention/GC contract | 3 | 3 | 1 | PARTIAL |
-| `AM1-W11` | M2 evidence charter | 0 | 5 | 0 | OPEN |
+| `AM1-W11` | M2 evidence charter | 5 | 0 | 0 | CLOSED |
 | `AM1-W12` | Candidate handoff/intake contract | 4 | 0 | 0 | CLOSED |
 | `AM1-W13` | Rights/provenance recall contract | 3 | 3 | 0 | PARTIAL |
-| | **Total** | **40** | **24** | **4** | |
+| | **Total** | **47** | **17** | **4** | |
 
-`CLOSED` = no `GAP` row; `OPEN` = no `MET` row; `PARTIAL` = both. `W06` is written as `PROPOSED` and `W11` as `DRAFT`; both stay `OPEN` until the owner approves them.
+`CLOSED` = no `GAP` row; `OPEN` = no `MET` row; `PARTIAL` = both. The owner approved `W06` (`fallback_safety.md`) and `W11` (`m2_evidence_charter.md`) on 2026-10-04; `W06` stays `PARTIAL` (the activation policy is not built) and `W11` is `CLOSED`.
 
 ## `AM1-W01` Deployment-profile ADR
 
@@ -99,9 +99,9 @@ Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); rea
 
 | # | Clause | Evidence | Verdict | Note |
 |---|---|---|---|---|
-| W06.1 | Safety classes define preserved information | `docs/assets/fallback_safety.md#the-three-classes`; `docs/assets/fallback_safety.md#the-terrain-role-as-built`; `docs/assets/pilot_terrain_m5_criteria.md` | GAP | Written as `PROPOSED` in `fallback_safety.md`: three classes (`decorative`, `identifying`, `critical`), each with its preserved information, mapped onto the built terrain role. Not an owner decision, so not `MET`; the verdict changes only if the owner approves it. The registry still carries no class (W02.7). |
-| W06.2 | Allowed primitive/text/HUD alternatives | `docs/assets/fallback_safety.md#the-three-classes`; `docs/assets/fallback_safety.md#rule-for-new-kinds`; `frontend/src/visualAssets/fallback.ts::FAMILY_FALLBACKS`; `frontend/src/visualAssets/pilotScene.ts::hoverText` | GAP | Written as `PROPOSED`: per class, the allowed primitive, text or HUD alternative, and a rule that a new `identifying` or `critical` key names its alternative before adoption (policy only, no field). Built: the terrain flat fill plus hover text, and the family glyph in the rehearsal scene only. The HUD has no alternative; the colour-vision finding is an open risk against `identifying`. |
-| W06.3 | Activation/runtime failure policy | `docs/assets/fallback_safety.md#failure-policy`; `frontend/src/visualAssets/resolver.ts::resolveVisual`; `frontend/src/visualAssets/loader.ts::SnapshotLoader`; `visual_assets/store/release.py::assemble_release` | GAP | Runtime policy is written as built (typed fallbacks for every failure, `PROPOSED`). Activation policy is not built: `assemble_release` refuses a non-optional key with no artifact, but nothing checks that a key has its alternative, and under Profile A activation is the frontend deployment. |
+| W06.1 | Safety classes define preserved information | `docs/assets/fallback_safety.md#the-three-classes`; `docs/assets/fallback_safety.md#the-terrain-role-as-built`; `docs/assets/pilot_terrain_m5_criteria.md` | MET | `fallback_safety.md`, approved by the owner 2026-10-04: three classes (`decorative`, `identifying`, `critical`), each with its preserved information, mapped onto the built terrain role. The registry still carries no class field (W02.7). |
+| W06.2 | Allowed primitive/text/HUD alternatives | `docs/assets/fallback_safety.md#the-three-classes`; `docs/assets/fallback_safety.md#rule-for-new-kinds`; `frontend/src/visualAssets/fallback.ts::FAMILY_FALLBACKS`; `frontend/src/visualAssets/pilotScene.ts::hoverText` | MET | Approved 2026-10-04: per class, the allowed primitive, text or HUD alternative, and a rule that a new `identifying` or `critical` key names its alternative before adoption (policy only, no field). Built: the terrain flat fill plus hover text, and the family glyph in the rehearsal scene only. No HUD alternative is built; the colour-vision finding is an open risk against `identifying`. |
+| W06.3 | Activation/runtime failure policy | `docs/assets/fallback_safety.md#failure-policy`; `frontend/src/visualAssets/resolver.ts::resolveVisual`; `frontend/src/visualAssets/loader.ts::SnapshotLoader`; `visual_assets/store/release.py::assemble_release` | GAP | The runtime policy is approved and written as built (typed fallbacks for every failure). The activation policy is not built: `assemble_release` refuses a non-optional key with no artifact, but nothing checks that a key has its alternative, and under Profile A activation is the frontend deployment. |
 
 ## `AM1-W07` Compatibility/rollback contract
 
@@ -151,11 +151,11 @@ Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); rea
 
 | # | Clause | Evidence | Verdict | Note |
 |---|---|---|---|---|
-| W11.1 | Synthetic fixtures | `docs/assets/m2_evidence_charter.md#synthetic-fixtures`; `frontend/src/visualAssets/__fixtures__/rehearsal`; `tests/visual_assets/store/unit/test_runtime_fixture.py` | GAP | Written as `DRAFT` in `m2_evidence_charter.md`: the committed `fixture.*` fixtures an `AM-M2` run may use, with the pilot and draft fixtures excluded. Not an owner decision, so not `MET`. |
-| W11.2 | Supported conditions | `docs/assets/m2_evidence_charter.md#supported-conditions` | GAP | Written as `DRAFT`: the CI Python lane and jsdom vitest, Profile A, no client or browser claim, no Aseprite-needing test. Awaiting owner approval. |
-| W11.3 | Exact gate setup | `docs/assets/m2_evidence_charter.md#gate-setup`; `docs/assets/m2_evidence_charter.md#per-deliverable-what-exists-what-is-missing-the-allowed-conclusion` | GAP | Written as `DRAFT`: `AM-C02` in full, `AM-C05`/`C06`/`C07`/`C09` as contributing evidence only, ten `AM2-W` items mapped to existing paths and named gaps. Awaiting owner approval. |
-| W11.4 | Retained evidence | `docs/assets/m2_evidence_charter.md#retained-evidence-am2-w09`; `docs/assets/surface_rehearsal_result.md` | GAP | Written as `DRAFT`: what a run keeps and where, in the shape of the existing result record. Awaiting owner approval. |
-| W11.5 | Allowed conclusions | `docs/assets/m2_evidence_charter.md#allowed-conclusions-for-am-m2-as-a-whole`; `docs/assets/m2_evidence_charter.md#prior-evidence-rule-proposed` | GAP | Written as `DRAFT`: per item and for `AM-M2` as a whole (today `BLOCKED`), plus the prior-evidence rule as `PROPOSED`. Awaiting owner approval. |
+| W11.1 | Synthetic fixtures | `docs/assets/m2_evidence_charter.md#synthetic-fixtures`; `frontend/src/visualAssets/__fixtures__/rehearsal`; `tests/visual_assets/store/unit/test_runtime_fixture.py` | MET | `m2_evidence_charter.md`, approved by the owner 2026-10-04: the committed `fixture.*` fixtures an `AM-M2` run may use, with the pilot and draft fixtures excluded. |
+| W11.2 | Supported conditions | `docs/assets/m2_evidence_charter.md#supported-conditions` | MET | Approved 2026-10-04: the CI Python lane and jsdom vitest, Profile A, no client or browser claim, no Aseprite-needing test. |
+| W11.3 | Exact gate setup | `docs/assets/m2_evidence_charter.md#gate-setup`; `docs/assets/m2_evidence_charter.md#per-deliverable-what-exists-what-is-missing-the-allowed-conclusion` | MET | Approved 2026-10-04: `AM-C02` in full, `AM-C05`/`C06`/`C07`/`C09` as contributing evidence only, ten `AM2-W` items mapped to existing paths and named gaps. |
+| W11.4 | Retained evidence | `docs/assets/m2_evidence_charter.md#retained-evidence-am2-w09`; `docs/assets/surface_rehearsal_result.md` | MET | Approved 2026-10-04: what a run keeps and where, in the shape of the existing result record. |
+| W11.5 | Allowed conclusions | `docs/assets/m2_evidence_charter.md#allowed-conclusions-for-am-m2-as-a-whole`; `docs/assets/m2_evidence_charter.md#prior-evidence-rule-approved-2026-10-04` | MET | Approved 2026-10-04: per item and for `AM-M2` as a whole (today `BLOCKED`), plus the prior-evidence rule (rerun unchanged on a named commit after approval; the alternative was declined). |
 
 ## `AM1-W12` Candidate handoff/intake contract
 
@@ -182,14 +182,12 @@ Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); rea
 One line per `GAP`. Each needs code or an owner decision, so none is fixed here and none has a ticket.
 
 - `W02.2` Derivation owner: Name who derives a visual key from game state (an owner decision), then build the mapping outside the dev-only draft page. Needed before `AM-M6`.
-- `W02.7` Safety-class link: Add a safety-class field to `VisualKeyDefinition` once the W06 framework is approved (registry change plus parser and client mirror, in its own ticket). `fallback_safety.md` proposes the rule as policy only, so keys declare a class in their ticket until then.
+- `W02.7` Safety-class link: Add a safety-class field to `VisualKeyDefinition` now that the W06 framework is approved (registry change plus parser and client mirror, in its own ticket). `fallback_safety.md` (approved) states the rule as policy only, so keys declare a class in their ticket until then.
 - `W03.1` Deterministic variant axes/precedence: Define the context axes and their strict precedence, or remove `variant_axes` as unused (an owner decision, then code).
 - `W03.4` Live Map/HUD ownership: Name an owner per surface (Live Map, HUD) in the charter or an ADR row (owner decision).
 - `W03.5` Compatibility ranges: Decide whether a client or descriptor range is needed under Profile A; if so add it to `RuntimeManifest` and the client parser (code, bumps the manifest contract).
 - `W05.4` Approver/audit separation: Name an audit authority distinct from the approver, or record that one owner holds every role (owner decision).
-- `W06.1` Safety classes define preserved information: Approve `docs/assets/fallback_safety.md` (`PROPOSED`) as written, or change it (owner decision; the planner asks at review).
-- `W06.2` Allowed primitive/text/HUD alternatives: Same approval; the HUD alternative also needs a HUD fallback or text contract built (code, the HUD package owns it).
-- `W06.3` Activation/runtime failure policy: Same approval; requiring an alternative at activation is a check in `release`/`build`/`adopt` (code) and an activation policy needs `AM-M6`.
+- `W06.3` Activation/runtime failure policy: Requiring an alternative at activation is a check in `release`/`build`/`adopt` (code, a ticket of its own); an activation policy beyond that needs `AM-M6`.
 - `W07.3` Renderer range: Decide whether a renderer or protocol version is needed with one canvas renderer (owner decision).
 - `W07.4` Capability range: Add required capabilities to the manifest only when a capability exists (code, with the first capability).
 - `W07.7` Retirement rules: Write the rule for retiring old candidates, old client paths and primitive fallbacks (owner decision).
@@ -197,11 +195,6 @@ One line per `GAP`. Each needs code or an owner decision, so none is fixed here 
 - `W10.4` Locks: Decide whether to add a lock or to record single-operator use as the rule (owner decision, then code if a lock).
 - `W10.6` Deletion audit: Decide whether `gc --delete` must record what it removed (owner decision, then a typed record; code).
 - `W10.7` Storage-pressure disposition: Set a size or disk limit and who decides at it (owner decision).
-- `W11.1` Synthetic fixtures: Approve `docs/assets/m2_evidence_charter.md` (`DRAFT`) as written, or change it (owner decision; the planner asks at review).
-- `W11.2` Supported conditions: Same approval.
-- `W11.3` Exact gate setup: Same approval.
-- `W11.4` Retained evidence: Same approval.
-- `W11.5` Allowed conclusions: Same approval, which includes the owner's decision on the prior-evidence rule.
 - `W13.3` Distribution stop: Write and drill a real stop procedure for a deployed build (needs `AM-M6` authorization).
 - `W13.4` Stale/offline/cache handling: Define and test stale-client, offline and cache behaviour (needs `AM-M6`).
 - `W13.6` Tested rollback: Exercise a real rollback to a previous build (needs `AM-M6`).

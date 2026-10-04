@@ -9,9 +9,10 @@ tags: [architecture, documentation, live-map]
 
 # Fallback-safety framework (`AM1-W06`)
 
-**Status: PROPOSED.** Written by `TCK-20261004-VISUAL-ASSETS-FALLBACK-SAFETY-FRAMEWORK`. Nothing here is an owner decision: the owner has not approved it, and on approval this line
-becomes `APPROVED <date>` with their words. Until then `docs/assets/m1_contract_register.md` keeps the `AM1-W06` rows as `GAP`. This page adds no code, no schema field, no palette and
-no art, and it assigns no class to a kind that does not exist yet. It describes what is built, says what is not, and proposes a rule for what comes next.
+**Status: APPROVED 2026-10-04.** Written by `TCK-20261004-VISUAL-ASSETS-FALLBACK-SAFETY-FRAMEWORK`. The owner approved it as written on 2026-10-04 in a blocking question, answering "Approve as written (Recommended)"
+(relayed to the implementer by asset-planner). The approval covers this framework: the classes, the terrain mapping, the policy and the rule for new kinds. It builds nothing: the registry class field, an activation check and a
+HUD alternative are still not built (see "Failure policy" below). This page adds no code, no schema field, no palette and no art, and it assigns no class to a kind that does not exist yet. It describes what is built, says what is not,
+and sets the rule for what comes next.
 
 Why it exists: `AM1-W06` asks for safety classes that define the preserved information, the allowed primitive, text and HUD alternatives, and the activation and runtime failure policy
 (proposal section 13, "Failure policy"). The built system has one answer, for the terrain cell, spread over tests and result records. This page names it and states the general rule.
@@ -102,7 +103,7 @@ alternative. What is built is narrower: `assemble_release` refuses a registry ke
 
 ## Rule for new kinds
 
-Proposed policy for entities, buildings, items and UI when they are unparked. No schema field is added by this page.
+Approved policy for entities, buildings, items and UI when they are unparked. No schema field is added by this page.
 
 1. Every new visual key declares one class (`decorative`, `identifying` or `critical`) before its first adoption, in the ticket that introduces the key, until the registry can carry it.
 2. An `identifying` key names its non-image alternative before adoption: the primitive that carries the fact and the text that names it.
@@ -113,5 +114,5 @@ Proposed policy for entities, buildings, items and UI when they are unparked. No
 
 ## Not decided here
 
-Approving this framework, adding a class field to the registry, requiring alternatives at activation, a HUD alternative, and the colour-vision risk are owner decisions or later tickets. They are
+Adding a class field to the registry, requiring alternatives at activation, a HUD alternative, and the colour-vision risk are owner decisions or later tickets. They are
 listed in the register's follow-ups (`docs/assets/m1_contract_register.md`).

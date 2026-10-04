@@ -94,3 +94,5 @@ Docs-only. Every backticked path and symbol in the new doc exists, and each quot
 
 ## Completion Summary
 Done as PROPOSED. Nothing is written as an owner decision; approval is the planner's blocking question at review. No code, schema, palette, art or HUD change.
+
+Update 2026-10-04: the owner approved it in a blocking question, answering "Approve as written (Recommended)" (relayed by asset-planner). `fallback_safety.md` is now `APPROVED 2026-10-04`; register W06.1 and W06.2 are `MET`, W06.3 and W02.7 stay `GAP`. Recorded in the approval commit after review.
