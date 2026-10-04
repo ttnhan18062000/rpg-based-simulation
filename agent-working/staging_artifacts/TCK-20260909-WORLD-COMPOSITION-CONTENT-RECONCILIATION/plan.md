@@ -25,6 +25,14 @@ ticket's content decision** — it belongs to
 obligation there is to leave no test or doc asserting either `2` or `4` as intended design on its own
 authority.
 
+**No step is blocked.** The one open question — Gap 1, the generator's output location — was resolved
+by the rule owner on 2026-10-04 in favour of **Option A**: the generator writes
+`data/worlds/<id>/world.yaml` directly, with a history-only provenance marker, because "authored"
+names the file's role rather than who wrote the bytes. That ruling also **revised the ADR clause's
+first sentence** (Step 3 uses the new text) and supplies the condition carried as Step 11's three
+hard constraints. A second rule-owner correction tightened Step 2: the `resolved/` agreement guard is
+a **full fresh-resolve equality**, never a fingerprint comparison standing in for it.
+
 Context-search note: `mcp__knowledge-search__search_docs` returns `{"error":"index not found"}` and
 `graphify-out/` does not exist in this worktree (recorded in `investigation.md` §"Context-search
 provenance"). The sanctioned `tools/knowledge_search.py` fallback was used there; this plan builds on
@@ -94,6 +102,14 @@ composition→`resolved/` redirect (`src/worldbuilding/repository.py:74-81`); th
    resolve, never a field-by-field diff against `world.yaml`** (rule-owner constraint; the projection
    legitimately contains expanded content). Mark it `@pytest.mark.slow` if runtime demands, but do
    not reduce the corpus.
+   **The full equality is the check — a content fingerprint may not stand in for it.** Rule-owner
+   correction (2026-10-04), which overrides any earlier suggestion that a recorded fingerprint would
+   suffice: a `content_fingerprint` is computed from the resolver's *inputs*, so it detects a **stale**
+   snapshot but **cannot** detect a **hand-edited** `world.resolved.yaml` whose recorded fingerprint
+   still matches — and "never hand-edited" is half the ADR clause. A fingerprint comparison is
+   permitted only as a cheap first pass **in front of** the equality (skip-fast when it already
+   disagrees), never as a substitute for it. If the implementer finds a fingerprint-only variant
+   cheaper to write, that is not a reason to use it.
 
 **Record the red run.** Paste the guard's own failure output into the ticket's Implementation Notes:
 guard 1/2 must name the 9 catalog duplicates today; guard 3's result is unknown and unmeasured by
@@ -119,12 +135,21 @@ the YAML determines how the repository indexes it"), add **two** sentences as on
 new section):
 1. `data/worlds/<world_id>/` is the sole authoritative definition of a `world_id`; no other location
    may define a `world_id`.
-2. The rule owner's verbatim clause, quoted exactly from the ticket's BLOCKER section: *"Within that
-   directory, `world.yaml` is the authored definition. For a `worldcomposition.v1` world,
-   `resolved/world.resolved.yaml` is a generated projection of it: it is never hand-edited, and it
-   must equal what the resolver produces from the current `world.yaml` and the current module/catalog
-   content. A committed projection that differs from a fresh resolve is a defect. It is not an
-   alternative definition."*
+2. The rule owner's verbatim clause. **Use this wording, not the version quoted in the ticket's
+   BLOCKER section** — the rule owner revised the first sentence on 2026-10-04 when ruling UQ-1, so
+   that "authored" (which reads as a claim about *who typed the bytes*) cannot be misread as
+   excluding a generator. The rest of the clause is unchanged:
+
+   > *"Within that directory, `world.yaml` is the source definition, whether written by hand or by a
+   > generator; once written it is edited, not regenerated. For a `worldcomposition.v1` world,
+   > `resolved/world.resolved.yaml` is a generated projection of it: it is never hand-edited, and it
+   > must equal what the resolver produces from the current `world.yaml` and the current module/catalog
+   > content. A committed projection that differs from a fresh resolve is a defect. It is not an
+   > alternative definition."*
+
+   Do not paraphrase, re-order or "tidy" this text — it is the rule owner's, and Step 6's guard and
+   Step 11's whole design rest on its exact second clause ("once written it is edited, not
+   regenerated").
 
 Verified: the ADR is 54 lines, `ACCEPTED` (`:10-11`), and does **not** mention
 `data/content/world_compositions/` anywhere — so this is an amendment, not a citation. §2 already
@@ -144,7 +169,10 @@ changes.
 **Files:** `docs/mechanics/06_worldbuilding_foundation.md`.
 
 **Change:** In §7 "Integrity Validation Laws & Severity Gates", add the invariant — *"the world the
-engine loads is the one its authored definition resolves to"*, i.e. a `world_id` resolves to exactly
+engine loads is the one its authored definition resolves to"* (the ticket's own AC-8 wording, kept
+verbatim; "authored" here carries the **role** sense the ADR clause establishes — the source
+definition, whoever or whatever wrote the bytes — and must not be read as "hand-written"), i.e. a
+`world_id` resolves to exactly
 one definition, enforced as a **Level 2 structural ERROR** gate by that chapter's own taxonomy — and
 **cite** `docs/architecture/world_repository_layout.md` for the location. Follow the chapter's
 existing `WORLD-REACH-001` block formatting as the precedent for naming a rule.
@@ -379,47 +407,106 @@ writes the file at `:111-120`), so it must never be hand-edited — it regenerat
 
 ---
 
-### Step 11 — [BLOCKED on Unresolved Question 1] Give the generator a decided output location (Gap 1 / AC-9)
+### Step 11 — The generator writes the source definition directly (Gap 1 / AC-9) — Option A, RESOLVED
 
-**Files:** `src/worldgeneration/generator.py`, `src/worldbuilding/cli.py`,
-`tests/unit/worldgeneration/test_composition_generator.py`, `docs/world/generator_contract.md`.
+**Files:** `src/worldgeneration/generator.py`, `src/worldassembly/schema.py`,
+`src/worldbuilding/cli.py`, `tests/unit/worldgeneration/test_composition_generator.py`,
+`docs/world/generator_contract.md`.
 
-**Change:** Verified facts: `src/worldgeneration/generator.py:536-538` does
+**Decided by the rule owner, 2026-10-04 — Option A is conformant.** Cite the reasoning as theirs, do
+not restate it as the plan's own: *"authored" names the FILE'S ROLE, not who wrote the bytes.* The
+ADR clause splits the record-of-truth file from the derived projection, and **each is defined by an
+obligation, not by authorship**: a projection must equal a fresh derivation from other committed
+inputs, so it may never be edited independently; the definition file carries no such obligation — it
+is what everything else derives from. Who typed the bytes plays no part in either definition.
+Therefore the generator may write `data/worlds/<world_id>/world.yaml` directly, with a provenance
+marker. (Options B and C are closed: B measured out via `list_worlds()`, C unnecessary once
+authorship is irrelevant to the source/projection split.)
+
+**Verified facts this step changes:** `src/worldgeneration/generator.py:536-538` does
 `output_dir = Path("data/content/world_compositions/generated")`, `mkdir(parents=True,
 exist_ok=True)`, then writes `{world_id}.yaml`; the docstring at `:383` declares that path as the
-output contract; the **only production caller** is
-`src/worldbuilding/cli.py:421-422` (`generator.generate(intent, mod_repo)`), everything else is
-tests. `docs/world/generator_contract.md:27` and `:305` state the same path and must change in the
-same commit.
+output contract; the **only production caller** is `src/worldbuilding/cli.py:421-422`
+(`generator.generate(intent, mod_repo)`), everything else is tests.
+`docs/world/generator_contract.md:27` and `:305` state the same path and must change in the same
+commit. Because this is a **single writer** to the retired directory there is no ordering/race
+interaction — but **Step 12 cannot run until this step lands**: one generation run recreates the
+directory and silently re-opens the split.
 
-Because this is a **single writer** to the retired directory, no ordering/race interaction exists —
-but **Step 12 cannot run until this step lands**: a single generation run recreates the directory and
-silently re-opens the split.
+**The condition attached to the ruling, and the three hard constraints it imposes.** Once the
+generator writes `world.yaml`, that file **is** the definition; the generator acted as a one-time
+author, not a continuing projection. If the design ever expects `world.yaml` to be regenerable from a
+seed and params stored elsewhere, those params become the real definition and `world.yaml` degrades
+into a projection of them — re-creating a second definition location, i.e. Option C's problem by
+another route. So:
+1. **The provenance marker records HISTORY only** — generator name, version, seed, intent params — as
+   a fact about origin. It is not an input contract.
+2. **No check may assert `world.yaml == generate(marker)`.** That would convert the marker into a
+   re-derivation obligation and make `world.yaml` a projection. No test, guard, make target or CI job
+   may be shaped that way.
+3. **Nothing outside `data/worlds/<id>/` may hold generation inputs as a definition.** The
+   `GenerationIntentSpec` that drove a run is history inside the marker, not a stored definition
+   elsewhere.
 
-This step is a **placeholder pending Unresolved Question 1** (where generated worlds land). Both
-candidate shapes are fully worked out in `investigation.md` §"Measurement 4"; the implementer must
-not pick one. Once decided, the step is: parameterize `generate(..., output_dir: Path | None = None)`
-(option D) with the decided default, update `cli.py`'s `generate-composition` call site, update the
-docstring at `:383` and the two `generator_contract.md` lines, then:
-- replace (not sit beside) the `"generated" in str(output_path)` assertion at
-  `tests/unit/worldgeneration/test_composition_generator.py:198` if the chosen shape drops that path
-  segment — note it survives today only by accident, because the generated id itself begins with
-  `generated_`;
-- add `test_generation_run_does_not_create_data_content_world_compositions`, which runs `generate()`
-  under `tmp_path` (the file already uses `tmp_path` + `monkeypatch` chdir isolation) and asserts
-  `not (tmp_path / "data/content/world_compositions").exists()`. Assert the **absence** explicitly —
-  asserting only that the new path exists would pass a "wrote to both" implementation.
-- if the decision puts output under `data/worlds/<id>/`, two measured consequences must be handled:
-  `WorldRepository.load_world()` raises `WorldRepositoryError` for a composition world with no
-  `resolved/world.resolved.yaml` (`src/worldbuilding/repository.py:78-81`), and every generated world
-  becomes visible to `list_worlds()` (`:46-61`), so Step 2's guard must key on duplicate definitions
-  of one id — never on "a generated world exists".
+**Change:**
+1. **Typed provenance marker.** Add a frozen `GenerationProvenanceSpec` to
+   `src/worldassembly/schema.py` (generator name, generator version, `generation_id`, `seed`, the
+   intent's parameter values, timestamp) and an **optional** `generation_provenance` field on
+   `WorldCompositionSpec`. It must be a declared field: verified `WorldCompositionSpec.model_config`
+   is `ConfigDict(frozen=True, extra="forbid")` (`src/worldassembly/schema.py:23`), so an undeclared
+   marker key would make every generated file fail validation. `GenerationIntentSpec`
+   (`src/worldgeneration/schema.py:8-22`) is the source of the recorded params. Optional ⇒ all 24
+   existing `data/worlds/*/world.yaml` files stay valid, and because `handle_resolve` dumps with
+   `exclude_none=True` (`src/worldbuilding/cli.py:184`) the new field cannot perturb any existing
+   `resolved/` snapshot — which matters, because Step 2's guard 3 compares those bytes.
+   Note the existing `generation_seed` field (`:38`, default `42`) is the resolver's determinism seed,
+   **not** origin history — do not overload it as the marker.
+2. **Output location.** Parameterize `generate(..., output_dir: Path | None = None)` (option D's
+   shape, so the path stops being hard-coded) defaulting to `Path("data/worlds")`, write
+   `<output_dir>/<world_id>/world.yaml`, and populate `generation_provenance`. Update the docstring at
+   `:383` and `docs/world/generator_contract.md:27,305`.
+3. **Refuse to overwrite an existing definition.** If `<output_dir>/<world_id>/world.yaml` already
+   exists, raise `GenerationCompositionError` (already defined, `src/worldgeneration/generator.py:26`)
+   rather than rewriting it. This is constraint (1)/(2) enforced in code: a second generation run must
+   not silently re-derive a file that is now the definition and may have been edited since.
+4. **Produce the `resolved/` sibling.** After writing `world.yaml`, call Step 1's extracted helper so
+   the new world gets its `resolved/world.resolved.yaml` + four sidecars. Without it
+   `WorldRepository.load_world()` raises `WorldRepositoryError` for a composition world with no
+   snapshot (verified `src/worldbuilding/repository.py:78-81`), so a generated world would be
+   immediately unloadable and Step 2's guard 3 would fail on it. Reusing Step 1's helper also keeps
+   **single-writer discipline**: `resolved/` is still produced by exactly one code path, now reached
+   from two callers (the `resolve` CLI subcommand and the generator).
+5. **Tests** in `tests/unit/worldgeneration/test_composition_generator.py` (already `tmp_path` +
+   `monkeypatch`-chdir isolated):
+   - Replace — not sit beside — the `"generated" in str(output_path)` assertion at `:198` with an
+     exact `output_path == tmp_path / "data/worlds" / world_id / "world.yaml"`. The old assertion
+     survives Option A only by accident (the id itself starts with `generated_`), which is precisely
+     the fragility to remove.
+   - `test_generation_run_does_not_create_data_content_world_compositions` — asserts
+     `not (tmp_path / "data/content/world_compositions").exists()`. Assert the **absence** explicitly;
+     asserting only that the new path exists would pass a "wrote to both" implementation. This is the
+     test that discharges AC-9.
+   - `test_generated_world_records_provenance_history` — the marker is present and carries
+     generator/seed/params.
+   - `test_generate_refuses_to_overwrite_an_existing_definition` — second run raises.
+   - **No test asserting `world.yaml == generate(marker)`.** Constraint (2) is a design rule on this
+     step, not a suggestion; if a re-derivation-shaped test appears, it is wrong even if green.
 
-**Do NOT touch:** `WorldRepository`'s indexer. Option B
-(`data/worlds/generated/<id>/world.yaml`) was **measured out** — `list_worlds()` only indexes direct
-children, so the nested id is invisible; changing the indexer is a different ticket.
+**Engineering decisions taken here (explicitly mine, not routed to the rule owner):**
+- **`list_worlds()` does not distinguish generated worlds.** The in-YAML marker suffices as
+  provenance; no structural or indexer change. This also keeps scope guard #5 intact.
+- **`generate()` does run the resolve step** (item 4 above). The alternative — leaving the world
+  unresolved and expecting a follow-up `make world-resolve` — ships a definition that
+  `WorldRepository.load_world()` refuses, and would make Step 2's guard 3 red on arrival.
+- **Single-writer discipline on the authored side** is item 3: the generator authors `world.yaml`
+  once and never rewrites it; thereafter it is edited like any hand-authored definition.
 
-**Verify:** `pytest tests/unit/worldgeneration/ -q`.
+**Do NOT touch:** `WorldRepository`'s indexer or `list_worlds()`. Do not add a `generated/` grouping
+directory (Option B is measured out — `list_worlds()` indexes direct children only, so a nested id is
+invisible). Do not store the `GenerationIntentSpec` anywhere outside the marker.
+
+**Verify:** `pytest tests/unit/worldgeneration/ -q`; plus Step 2's guard 3 still green for a
+freshly generated world.
 
 ---
 
@@ -534,6 +621,63 @@ Never `pytest tests/`.
 
 ---
 
+## Resolved Decisions
+
+Decisions that were open while this plan was drafted and have since been ruled on. They are **not
+historical context** — Step 3's clause wording and Step 11's whole design rest on what follows, and
+scope guard #10 is what keeps it from being re-opened.
+
+### UQ-1 — RESOLVED 2026-10-04 by the rule owner: the generator writes the source definition (Option A)
+
+Was: *where do generated compositions land?* (Gap 1, `src/worldgeneration/generator.py:383,536`.) It
+blocked Step 11 and therefore Step 12 and AC-1/AC-9.
+
+**Ruling (the rule owner's reasoning, cited not restated):** *"authored" names the FILE'S ROLE, not
+who wrote the bytes*, so **Option A is conformant** — the generator may write
+`data/worlds/<id>/world.yaml` directly with a provenance marker. The ADR clause splits the
+record-of-truth file from the derived projection, and each is defined by an **obligation, not by
+authorship**: a projection must equal a fresh derivation from other committed inputs, so it may never
+be edited independently; the definition file carries no such obligation — it is what everything else
+derives from. Authorship plays no part in either definition.
+
+**The condition attached to the ruling.** Once the generator writes `world.yaml`, that file **is** the
+definition; the generator acted as a one-time author, not a continuing projection. If the design ever
+expects `world.yaml` to be regenerable from a seed and params stored elsewhere, those params become
+the real definition and `world.yaml` degrades into a projection of them — re-creating a second
+definition location, i.e. Option C's problem by another route. The three hard constraints this imposes
+are implemented in Step 11:
+1. the provenance marker records **history only** (generator, version, seed, params) as a fact about
+   origin;
+2. **no check may assert `world.yaml == generate(marker)`** — that would convert the marker into a
+   re-derivation obligation and make `world.yaml` a projection;
+3. nothing outside `data/worlds/<id>/` may hold generation inputs as a definition.
+
+**Consequences recorded elsewhere in this plan:**
+- The ADR clause's first sentence was **revised** with this ruling — Step 3 now uses *"`world.yaml`
+  is the source definition, whether written by hand or by a generator; once written it is edited, not
+  regenerated"*, superseding the "authored definition" wording quoted in the ticket's BLOCKER
+  section. The rest of the clause is unchanged.
+- Constraint 2 is why Step 11's test list deliberately contains **no** re-derivation test, and why the
+  AC-9 row of the Acceptance Criteria Map says so explicitly.
+- Option C is closed as unnecessary (authorship is irrelevant to the split); Option B stays closed by
+  measurement (`list_worlds()` indexes direct children only).
+- Three sub-questions were returned as **engineering-only** and are decided inside Step 11, not
+  escalated: `list_worlds()` does not distinguish generated worlds (the marker suffices);
+  `generate()` does also run resolve, so the new world has its `resolved/` sibling; single-writer
+  discipline on the authored side is enforced by refusing to overwrite an existing `world.yaml`.
+
+### Implementer flag — the provenance marker must be a declared typed field
+
+Not a style preference, and it fails late if missed: `WorldCompositionSpec.model_config` is
+`ConfigDict(frozen=True, extra="forbid")` (`src/worldassembly/schema.py:23`), so a plain comment or a
+loose YAML key will make **every generated file fail validation** after the code looks finished. Step
+11 therefore adds a frozen `GenerationProvenanceSpec` plus an **optional** `generation_provenance`
+field. Optional matters twice: all 24 existing `data/worlds/*/world.yaml` files stay valid, and
+because `handle_resolve` dumps with `exclude_none=True` (`src/worldbuilding/cli.py:184`) the new field
+cannot perturb any existing `resolved/` snapshot — which it must not, since Step 2's guard 3
+byte-compares those. **Do not overload `generation_seed`** (`src/worldassembly/schema.py:38`) as the
+marker: it is the resolver's determinism seed, not origin history.
+
 ## Scope Guards
 
 Named specifically, from the ticket's Out of Scope and the investigation's anti-drift hazards:
@@ -562,7 +706,10 @@ Named specifically, from the ticket's Out of Scope and the investigation's anti-
    `TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING`).
 9. **The two P0 ledger entries with `test_path: None`** (`SUBSTRATE-NEW-001`, `INFRA-187`) are
    reported, not fixed.
-10. **The generator's output location is not decided implicitly by whoever edits line 536.**
+10. **The generator's output location is settled (Option A) and is not re-litigated at line 536.**
+    Equally, the ruling's condition is not to be softened in code: no re-derivation check, no
+    generation inputs stored as a definition outside `data/worlds/<id>/`, no overwrite of an existing
+    `world.yaml`.
 11. **`docs/archive/`, `docs/audits/`, `docs/brainstorm/`,
     `docs/plans/world_generation_organic_terrain_epic.md`** are frozen historical records — not
     edited, and excluded from the docs guard.
@@ -581,7 +728,9 @@ Named specifically, from the ticket's Out of Scope and the investigation's anti-
 - **Step 3 → Steps 4, 5, 6** (the ADR sentence must exist before the others cite it and before the
   guard checks for it).
 - **Steps 7, 8, 9, 10 are independent of one another** and can be done in any order after Step 2.
-- **Step 11 blocked on Unresolved Question 1.** Independent of Steps 7-10.
+- **Step 11 is unblocked** (UQ-1 resolved — Option A). It depends on **Step 1** (it calls the
+  extracted resolve helper to write the new world's `resolved/` sibling) and is otherwise independent
+  of Steps 7-10.
 - **Step 12 depends on Steps 7, 8, 9, 10, 11** — every reader and the single writer must be off the
   directory first.
 - **Step 13 independent** (documentation; can run any time after Step 2).
@@ -597,36 +746,19 @@ Named specifically, from the ticket's Out of Scope and the investigation's anti-
 | AC-3 — ONE recorded evidenced authority decision + explicit `danger_scale` call-out | 13 (recorded in the ticket), 3 (the ADR sentence it rests on) | not testable — prose, grounded in the investigation's three measurements (24/24 valid; 15 running-only vs 0 catalog-only; zero catalog-only keys in 9/9) |
 | AC-4 — whole test surface resolved; repoint-or-delete decision recorded with reasoning | 7, 8 (+10 for the content-layer tests) | `pytest tests/integration/worldassembly/ tests/unit/worldassembly/ tests/integration/content/ -q`; `git diff` empty on the six out-of-reach sites |
 | AC-5 — `danger_scale`: carry neither value forward; no test/doc asserts either as intended design | 7 (de-assert `:437`/`:452` + docstring), 12 (the contradiction guard) | `test_no_test_contradicts_the_authoritative_danger_scale`; oracle stays `unresolved` for this ticket (correct, not a gap) |
-| AC-6 — one `world_id` → one module set, **and** committed `resolved/` equals a fresh resolve; must fail on today's content first | 1, 2 | the three guards in `tests/architecture/test_world_definition_single_source.py`; red run recorded in Implementation Notes as the mandatory negative control |
+| AC-6 — one `world_id` → one module set, **and** committed `resolved/` equals a fresh resolve; must fail on today's content first | 1, 2 | the three guards in `tests/architecture/test_world_definition_single_source.py`, guard 3 being a **full fresh-resolve equality** (a fingerprint cannot detect a hand-edited projection); red run recorded in Implementation Notes as the mandatory negative control |
 | AC-7 — written measurement-validity assessment, survivals stated as survivals | 13 | not testable — written section with a stated sweep bound |
 | AC-8 — ADR (2 sentences) + Bible 06 invariant + `content_authoring.md` 4 sites, all agreeing | 3, 4, 5 | `test_authoritative_world_location_stated_once` |
-| AC-9 — nothing writes into the retired directory; a generation run does not recreate it | 11, 12 | `test_generation_run_does_not_create_data_content_world_compositions`, `test_generator_output_lands_in_the_decided_location` |
+| AC-9 — nothing writes into the retired directory; a generation run does not recreate it | 11, 12 | `test_generation_run_does_not_create_data_content_world_compositions` (the explicit-absence test), plus the exact-output-path, provenance-history and refuse-to-overwrite tests. **No `world.yaml == generate(marker)` test** — forbidden by the ruling's condition |
 | AC-10 — parity ledger entry added/updated with AC-6's check as `test_path` | 14 | `make parity-index-check`; `SUB-394` carries the guard node id |
 | (ticket's "full scoped regression" bullet) | 15 | the seven scoped commands |
 
 ## Unresolved Questions
 
-**UQ-1 — Where do generated compositions land? (Gap 1, `src/worldgeneration/generator.py:383,536`.)**
-This is genuinely undecided and it **blocks Step 11, and therefore Step 12 and AC-1/AC-9**. It cannot
-be deferred past the deletion: the directory cannot be removed while the only writer still hard-codes
-it, and any default chosen inside `generate()` *is* the decision about where generated worlds land.
+None.
 
-The two live candidates (option B is measured out; full analysis in `investigation.md`
-§"Measurement 4"):
-- **A + D (the investigation's recommendation, and this plan's):** parameterize
-  `generate(..., output_dir)` and default to `data/worlds/<world_id>/world.yaml`, adding a
-  generated-provenance marker **inside the YAML** rather than in the path. ADR-conformant, no second
-  root. Costs: every generated run becomes visible to `WorldRepository.list_worlds()`; a `resolved/`
-  sibling must be produced or `load_world()` raises; the
-  `"generated" in str(output_path)` assertion at `test_composition_generator.py:198` survives only
-  because the id keeps its `generated_` prefix.
-- **C:** a separate non-authoritative staging root (e.g. `data/generated_worlds/`) with an explicit
-  promote step. Preserves provenance and keeps `data/worlds/` hand-authored, but re-creates a second
-  location holding `worldcomposition.v1` files — the exact shape being retired — so it needs an added
-  ADR clause scoping "authoritative definition" to promoted worlds, **and** Step 2's guard must
-  exempt the staging root.
-
-Steps 1-10 and 13 can proceed while this is open. **The implementer must not choose.**
+See "Resolved Decisions" above for UQ-1 (the generator's output location), which was open when this
+plan was first drafted and was ruled on by the rule owner before implementation began.
 
 ## Anti-Drift Notes
 
