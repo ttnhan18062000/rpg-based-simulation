@@ -107,8 +107,8 @@ Proposed policy for entities, buildings, items and UI when they are unparked. No
 1. Every new visual key declares one class (`decorative`, `identifying` or `critical`) before its first adoption, in the ticket that introduces the key, until the registry can carry it.
 2. An `identifying` key names its non-image alternative before adoption: the primitive that carries the fact and the text that names it.
 3. A `critical` key names a text or HUD alternative that works with no image at all, and that alternative is reviewed by the owner of the surface it appears on.
-4. A `decorative` key must sit on a declared default or on an `identifying` base, so its failure leaves a readable cell.
-5. A detail or variant value inherits its key's class; it can never be stricter or looser than the key it decorates.
+4. A `decorative` key must sit on a declared default or on an `identifying` base, so its failure leaves a readable cell. A detail or variant value is the usual case (rule 5).
+5. A detail or variant value is `decorative` over its key. Its failure falls back to the key's default value, and that default carries the key's own class, so a value can never weaken what the key preserves.
 6. A class is a statement about information, not about art quality: a beautiful image of a `critical` fact is still `critical`.
 
 ## Not decided here
