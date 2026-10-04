@@ -11,6 +11,7 @@ Standard the tools enforce: `docs/guidelines/python_code_standard.md`.
 | `gates/` | `mypy_gate` (baseline-filtered mypy), `sarif_feedback` (PR annotations and SARIF), `staged_ratchet` (the pre-commit hook's engine), `parity_ledger_schema` (ratchet over `docs/parity_ledger/*.yaml` against `schema.json`) | `python3 -m codebase.gates.<name>` |
 | `hooks/` | prek hook scripts for the code-health ratchet and the uv.lock check, and the opt-in installer | `make install-prek-hooks` |
 | `reports/` | health baseline, snapshot and scorecard, impact, PR impact, unreachable-code audit | `python3 -m codebase.reports.<name>` (Makefile targets keep their names) |
+| `structure/` | the package registry (`package_registry.jsonl`, one row per tracked top-level `src/` package), its loader and validator. After the 2026-10-04 seeding from `docs/plans/codebase_health/src_package_structure_audit.md` the registry is the source of truth; the audit table is a dated snapshot | `python3 -m codebase.structure.packages validate` |
 | `baselines/` | `code_health_exceptions.jsonl` (the grandfathered violations), `mypy_baseline.txt`, `parity_ledger_schema_baseline.json` | reseed only on main, see the standard; the parity baseline is shared, see below |
 | `config/` | `.jscpd.json` | read by `health/scan.py` and `make code-health` |
 

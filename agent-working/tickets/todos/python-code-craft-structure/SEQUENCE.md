@@ -14,3 +14,5 @@ alphabetical order. Filed 2026-10-04 by codebase-implementer from
 4. TCK-20261004-IMPORT-LINTER-EVALUATION  (depends on: 2; report only)
 
 Every ticket: no `src/` diff, nothing blocking, M4 soak rows untouched.
+
+Follow-up filed by ticket 2: TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING (BLOCKED until its soak ends; dates written at the validator's merge).

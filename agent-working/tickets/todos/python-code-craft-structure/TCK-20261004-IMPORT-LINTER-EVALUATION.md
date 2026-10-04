@@ -73,6 +73,7 @@ None.
 - tests/api/
 
 ## Assumptions / Open Questions
+- Namespace packages (from the audit, TCK-20261004-SRC-PACKAGE-STRUCTURE-AUDIT): `core`, `api`, `perf`, `certification`, `content_semantics` have no `__init__.py`, and a grimp build over `src` saw only 215 of 744 files. import-linter is built on grimp, so this ticket must MEASURE (not assume) (a) whether import-linter/grimp can cover those packages without adding `__init__.py` (a `src/` edit, out of scope), and (b) what coverage loss a `drop` or `add` recommendation would carry if it cannot. If full coverage needs `__init__.py` files, the record says so; that becomes an M7 / rpg decision, not part of this batch
 - Depends on ticket 2 (the layers contract reads the registry)
 - Heavy runs one at a time under systemd-run --user --scope -p MemoryMax=2G
 - Hand-written by codebase-planner brief (owner decisions 2026-10-04); filed by codebase-implementer 2026-10-04. Facts in the brief were measured on main b9251cf5; each ticket's Investigate phase re-verifies the ones it relies on

@@ -12,7 +12,8 @@ tags: [architecture, audit]
 Decision record for `TCK-20261004-SRC-PACKAGE-STRUCTURE-AUDIT` (M5 of `python_code_craft_roadmap.md`).
 It records decisions only. No file under `src/` is moved, merged or deleted by this audit, and nothing
 moves before the owner reopens `src/` (M7). It seeds the package registry
-(`TCK-20261004-PACKAGE-REGISTRY-VALIDATOR`).
+(`TCK-20261004-PACKAGE-REGISTRY-VALIDATOR`). **The table below is a dated snapshot (2026-10-04): after
+seeding, `codebase/structure/package_registry.jsonl` is the source of truth and this table is not updated.**
 
 ## Method
 

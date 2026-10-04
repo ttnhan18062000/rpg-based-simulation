@@ -195,8 +195,8 @@ The home-grown part, needed because ruff and ast-grep have no baseline.
 
 ### 6.4 Package registry
 
-`registries/package_registry.jsonl`: one row per `src/` package (purpose, layer, status
-`active | legacy | frozen`, strictness tier, exemplar modules, do-not-imitate files). It answers
+`codebase/structure/package_registry.jsonl` (owner decision 2026-10-04: `registries/` holds only cross-domain registries since the root move): one row per tracked top-level `src/` package (purpose, layer, status
+`active | legacy | frozen`, strictness tier, exemplar modules, do-not-imitate files). Validator: `python3 -m codebase.structure.packages validate` (advisory; `schema` and `completeness` problem classes). Seeded 2026-10-04 from `src_package_structure_audit.md`; the registry is the source of truth afterwards. It answers
 which of the 36 packages are live, and gives agents a named good example per package. Seeding it
 includes an audit of tiny and overlapping packages (`actions`, `logging`, `views`, `runtime`,
 `replay`, empty `social`; the `world*` family; `content` / `content_semantics`). The audit produces
