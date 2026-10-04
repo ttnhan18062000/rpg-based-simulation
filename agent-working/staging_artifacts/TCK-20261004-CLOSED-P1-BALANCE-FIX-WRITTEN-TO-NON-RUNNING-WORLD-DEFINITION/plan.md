@@ -20,7 +20,7 @@ Apply the accepted `TCK-20260627-P1I-WORLD-BALANCE-FIX` remedy to the authoritat
 3. Edit `data/worlds/dungeon_crawl/world.yaml` (2 modules, `danger_scale: 2`); regenerate `resolved/`, `world_compile_report.json`, corpus registry.
 4. Guards in `tests/integration/worldassembly/test_resolved_snapshot_freshness.py`: snapshot == fresh resolve for every composition world; content-derived counts of every committed compile report == fresh compile; dungeon_crawl remedy pinned at the loaded location.
 5. Shared renderer `render_resolved_world_yaml` in `src/worldbuilding/cli.py` so the guard cannot drift from `resolve`.
-6. Blast radius: repoint six rendering-evidence tests to a frozen fixture (planner ruling); census pin 4 -> 2; docs DEV-009, SUB-394; note on `TCK-20260627-P1I-WORLD-BALANCE-FIX`.
+6. Blast radius: repoint six rendering-evidence tests to a frozen fixture (planner ruling); census pin 4 -> 2; docs DEV-009, SUB-395; note on `TCK-20260627-P1I-WORLD-BALANCE-FIX`.
 
 ## Scope guards
 - Do not re-decide the balance target. Do not edit `src/rendering/` or `docs/visual_quality/` (assigned to neither lane).

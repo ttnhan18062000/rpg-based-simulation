@@ -215,7 +215,7 @@ than making a new one.
 
 ## Files Changed
 
-`data/worlds/dungeon_crawl/{world.yaml,world_compile_report.json,resolved/*}`; `config/simulation_quality/corpus_registry.yaml`; `src/worldbuilding/cli.py` (shared `render_resolved_world_yaml`); `tests/integration/worldassembly/test_resolved_snapshot_freshness.py`; `tests/unit/worldassembly/test_corpus_diversity.py`; `tests/unit/rendering/{test_connectivity,test_density,test_shape,test_variants,frozen_dungeon_crawl}.py`; `tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml`; `docs/guidelines/intentional_divergences.md` (DEV-009); `docs/parity_ledger/substrate.yaml` (SUB-394); `agent-working/tickets/done/TCK-20260627-P1I-WORLD-BALANCE-FIX.md` (AC-6 note).
+`data/worlds/dungeon_crawl/{world.yaml,world_compile_report.json,resolved/*}`; `config/simulation_quality/corpus_registry.yaml`; `src/worldbuilding/cli.py` (shared `render_resolved_world_yaml`); `tests/integration/worldassembly/test_resolved_snapshot_freshness.py`; `tests/unit/worldassembly/test_corpus_diversity.py`; `tests/unit/rendering/{test_connectivity,test_density,test_shape,test_variants,frozen_dungeon_crawl}.py`; `tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml`; `docs/guidelines/intentional_divergences.md` (DEV-009); `docs/parity_ledger/substrate.yaml` (SUB-395); `agent-working/tickets/done/TCK-20260627-P1I-WORLD-BALANCE-FIX.md` (AC-6 note).
 
 ## Completion Summary
 

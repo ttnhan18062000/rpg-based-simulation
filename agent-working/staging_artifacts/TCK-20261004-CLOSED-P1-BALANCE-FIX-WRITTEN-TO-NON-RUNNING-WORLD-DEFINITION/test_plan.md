@@ -19,13 +19,13 @@ tags: [world, content, root-cause]
 ### AC1 / AC2 / AC3
 - **level**: integration
 - **proof kind**: regression (fails on the old files)
-- **oracle source**: `docs/mechanics/06_worldbuilding_foundation.md`; `docs/architecture/world_repository_layout.md`; parity `SUB-394`
+- **oracle source**: `docs/mechanics/06_worldbuilding_foundation.md`; `docs/architecture/world_repository_layout.md`; parity `SUB-395`
 - **expected effect**: `world.yaml` has 2 modules and `danger_scale` 2; snapshot lacks the removed modules; `load_world` yields populations summing to 12
 - **selected commands**: `pytest tests/integration/worldassembly/test_resolved_snapshot_freshness.py -q -k dungeon_crawl`
 ### AC4 / AC4a
 - **level**: integration
 - **proof kind**: differential (committed vs fresh) / architecture guard
-- **oracle source**: Bible 06 invariant "the world the engine loads is the one its authored definition resolves to"; `SUB-394`
+- **oracle source**: Bible 06 invariant "the world the engine loads is the one its authored definition resolves to"; `SUB-395`
 - **expected effect**: equality against a fresh resolve for every composition world; determinism asserted
 - **selected commands**: `pytest tests/integration/worldassembly/test_resolved_snapshot_freshness.py -q`
 ### AC5 / AC6
@@ -38,5 +38,5 @@ tags: [world, content, root-cause]
 - **level**: docs + unit
 - **proof kind**: parity record
 - **oracle source**: `docs/guidelines/intentional_divergences.md`; parity `INFRA-373`
-- **expected effect**: DEV-009 and SUB-394 recorded; INFRA-373 anchor still reproduces on the frozen fixture
+- **expected effect**: DEV-009 and SUB-395 recorded; INFRA-373 anchor still reproduces on the frozen fixture
 - **selected commands**: `pytest tests/unit/rendering tests/unit/worldassembly/test_corpus_diversity.py tests/tools/test_corpus_registry.py -q -m "not slow"`

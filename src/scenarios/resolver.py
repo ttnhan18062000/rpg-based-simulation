@@ -31,7 +31,7 @@ class ResolvedScenarioSetup(BaseModel):
 
 
 class ScenarioSetupResolver:
-    _DEFAULT_COMPOSITIONS_DIR = Path("data/content/world_compositions")
+    _DEFAULT_COMPOSITIONS_DIR = Path("data/worlds")
 
     def __init__(
         self,
@@ -56,18 +56,12 @@ class ScenarioSetupResolver:
         )
 
     def _load_composition(self, scenario: SimulationScenarioDefinition) -> WorldCompositionSpec:
-        # TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING: two accepted layouts, tried in this
-        # order. (1) The unified, ADR-correct per-world directory layout
-        # (docs/architecture/world_repository_layout.md: "the existing unified world repository
-        # root at data/worlds/... The root source file inside a world folder is always
-        # world.yaml") -- `<compositions_dir>/<world_id>/world.yaml`. Tried first since it's the
-        # canonical layout going forward. (2) The flat, single-file layout
-        # `<compositions_dir>/<world_id>.yaml` -- this repo's existing default
-        # `compositions_dir` (`data/content/world_compositions/`) only has this shape, so this
-        # remains the fallback for every caller that hasn't opted into the per-world layout (i.e.
-        # everyone except CampaignOrchestrator, which points compositions_dir at data/worlds/).
-        # Nested-first is safe for existing callers: `data/content/world_compositions/<id>/`
-        # never exists, so the check falls through to the flat file exactly as before.
+        # Two accepted layouts, tried in this order. (1) The authoritative per-world directory
+        # layout `<compositions_dir>/<world_id>/world.yaml`, which the default
+        # `compositions_dir` (`data/worlds/`) uses -- see
+        # docs/architecture/world_repository_layout.md. (2) The flat, single-file layout
+        # `<compositions_dir>/<world_id>.yaml`, kept as a fallback for ad-hoc and third-party
+        # `compositions_dir` overrides that still carry that shape.
         nested_path = self._compositions_dir / scenario.world_composition / "world.yaml"
         flat_path = self._compositions_dir / f"{scenario.world_composition}.yaml"
         if nested_path.is_file():

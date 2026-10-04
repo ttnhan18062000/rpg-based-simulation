@@ -22,7 +22,7 @@ tags: [world, content, root-cause]
 
 ## Docs Requiring Update
 - `docs/guidelines/intentional_divergences.md` — DEV-009.
-- `docs/parity_ledger/substrate.yaml` — SUB-394.
+- `docs/parity_ledger/substrate.yaml` — SUB-395.
 
 ## Risks and Open Questions
 - Frozen rendering fixture no longer detects rendering regressions in the live dungeon_crawl; decision filed as `TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT`.

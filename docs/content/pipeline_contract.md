@@ -31,10 +31,11 @@ Defined in `src/content/paths.py` (WORLD-PATH-001):
 |---|---|
 | `content_root` | `data/content/` |
 | `world_modules_dir` | `data/content/world_modules/` |
-| `world_compositions_dir` | `data/content/world_compositions/` |
 | `simulation_scenarios_dir` | `data/content/simulation_scenarios/` |
 
 `ContentPathConfig` is a frozen dataclass. All content-loading code must obtain paths from it — never hardcode content paths.
+
+`ContentPathConfig` declares only children of `content_root`. World definitions live under `data/worlds/`, whose root is owned by the worldbuilding layer as `DEFAULT_WORLDS_ROOT` (`src/worldbuilding/repository.py`) and consumed from there — see `docs/architecture/world_repository_layout.md`. The retired `world_compositions_dir` field named `data/content/world_compositions/`, which no longer exists.
 
 ---
 

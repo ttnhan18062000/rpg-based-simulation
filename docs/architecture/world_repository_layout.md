@@ -20,6 +20,8 @@ Rather than creating separate directories for raw templates, specs, and composit
 
 The root source file inside a world folder is always `world.yaml`. The schema version within the YAML determines how the repository indexes it.
 
+`data/worlds/<world_id>/` is the sole authoritative definition of a `world_id`; no other location may define a `world_id`. Within that directory, `world.yaml` is the source definition, whether written by hand or by a generator; once written it is edited, not regenerated. For a `worldcomposition.v1` world, `resolved/world.resolved.yaml` is a generated projection of it: it is never hand-edited, and it must equal what the resolver produces from the current `world.yaml` and the current module/catalog content. A committed projection that differs from a fresh resolve is a defect. It is not an alternative definition.
+
 ```text
 data/worlds/<world_id>/world.yaml
 ```

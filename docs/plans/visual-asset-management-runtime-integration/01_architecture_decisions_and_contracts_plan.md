@@ -9,6 +9,8 @@ tags: [assets, architecture, contracts, deployment, planning]
 
 # AM-M1 — Architecture Decisions and Contracts
 
+> **Status 2026-10-04: the `AM-M1` result is `BLOCKED`, not `PASS`** (re-derived the same day). Profile A is selected (ADR D8), no signing is needed (D9) and the owner's role, key-derivation, retirement, range, variant-axis and retention decisions are recorded (D13-D18), but `AM-M0` has not passed: its retrospective record is `INCONCLUSIVE` (`docs/assets/m0_discovery_result.md`) and the user kept it so (2026-10-04); and code gaps remain. Per-clause evidence, the reasoning against this plan's own "Result classification" table, the judgment of this plan's "M1 does not start on M0 `INCONCLUSIVE`" rule and what remains: `docs/assets/m1_contract_register.md`. Nothing here is authorized by that result.
+
 ## Outcome
 
 Resolve `ASSET-0` from accepted M0 evidence: select exactly one deployment profile, define the minimum four

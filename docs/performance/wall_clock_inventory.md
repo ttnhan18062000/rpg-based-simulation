@@ -71,7 +71,7 @@ per module. §6 says how the scan was checked and what it cannot see.
 
 <!-- BEGIN GENERATED: tools/perf/wall_clock_inventory.py -->
 
-Generated from commit `0cc7d93e1814bbeb8f7f1736c0ed3934c245f97e` by `tools/perf/wall_clock_inventory.py`. Regenerate this block with:
+Generated from commit `48443627878c1af82decb36ba29c402c0eb8577f` by `tools/perf/wall_clock_inventory.py`. Regenerate this block with:
 
 ```
 python3 tools/perf/wall_clock_inventory.py --update-doc docs/performance/wall_clock_inventory.md
@@ -79,7 +79,7 @@ python3 tools/perf/wall_clock_inventory.py --format json > docs/performance/wall
 python3 tools/perf/wall_clock_inventory.py --check docs/performance/wall_clock_inventory.json
 ```
 
-Reads found: 363 (159 in modules reachable from `src.engine.kernel` through the import graph, 204 elsewhere). Modules reachable from the kernel: 418.
+Reads found: 364 (159 in modules reachable from `src.engine.kernel` through the import graph, 205 elsewhere). Modules reachable from the kernel: 418.
 
 ### G1. Reads in modules reachable from the kernel (guards are the conditions inside the enclosing function, as written)
 
@@ -241,9 +241,9 @@ Reads found: 363 (159 in modules reachable from `src.engine.kernel` through the 
 | 343 | `src/simulation_quality/quality_report.py` | 130 | `QualityReportBuilder.build` | datetime.datetime.now | wall-clock | - | none in this function |
 | 358 | `src/worldbuilding/compiler.py` | 343 | `WorldCompiler.compile` | time.perf_counter | wall-clock | - | none in this function |
 | 359 | `src/worldbuilding/compiler.py` | 806 | `WorldCompiler.compile` | time.perf_counter | wall-clock | - | none in this function |
-| 360 | `src/worldbuilding/repository.py` | 206 | `WorldRepository._update_index_entry` | datetime.datetime.now | wall-clock | - | none in this function |
-| 361 | `src/worldbuilding/repository.py` | 278 | `WorldRepository.rebuild_index` | datetime.datetime.now | wall-clock | - | try; if yaml_file.is_file(); if path.is_dir(); if self.worlds_dir.is_dir() |
-| 362 | `src/worldbuilding/repository.py` | 294 | `WorldRepository.rebuild_index` | datetime.datetime.now | wall-clock | - | if yaml_file.is_file(); if path.is_dir(); if self.worlds_dir.is_dir() |
+| 360 | `src/worldbuilding/repository.py` | 209 | `WorldRepository._update_index_entry` | datetime.datetime.now | wall-clock | - | none in this function |
+| 361 | `src/worldbuilding/repository.py` | 281 | `WorldRepository.rebuild_index` | datetime.datetime.now | wall-clock | - | try; if yaml_file.is_file(); if path.is_dir(); if self.worlds_dir.is_dir() |
+| 362 | `src/worldbuilding/repository.py` | 297 | `WorldRepository.rebuild_index` | datetime.datetime.now | wall-clock | - | if yaml_file.is_file(); if path.is_dir(); if self.worlds_dir.is_dir() |
 
 ### G2. Reads in modules not reachable from the kernel
 
@@ -452,7 +452,8 @@ Reads found: 363 (159 in modules reachable from `src.engine.kernel` through the 
 | 355 | `src/testing/scenario_runner.py` | 32 | `ScenarioRunner.execute` | time.perf_counter | wall-clock | - | none in this function |
 | 356 | `src/testing/scenario_runner.py` | 139 | `ScenarioRunner.execute` | time.perf_counter | wall-clock | - | none in this function |
 | 357 | `src/worldassembly/resolver.py` | 709 | `WorldAssemblyResolver.assemble` | datetime.datetime.now | wall-clock | - | none in this function |
-| 363 | `src/worldgeneration/generator.py` | 329 | `WorldProceduralGenerator.generate` | datetime.datetime.now | wall-clock | - | none in this function |
+| 363 | `src/worldgeneration/generator.py` | 332 | `WorldProceduralGenerator.generate` | datetime.datetime.now | wall-clock | - | none in this function |
+| 364 | `src/worldgeneration/generator.py` | 556 | `ProceduralCompositionGenerator.generate` | datetime.datetime.now | wall-clock | - | none in this function |
 
 ### G3. Counts by kind
 
@@ -463,7 +464,7 @@ Reads found: 363 (159 in modules reachable from `src.engine.kernel` through the 
 | entropy | 34 |
 | environment | 73 |
 | memory | 9 |
-| wall-clock | 235 |
+| wall-clock | 236 |
 
 ### G4. Calls whose receiver the scanner could not resolve by name
 
