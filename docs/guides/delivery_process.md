@@ -298,7 +298,10 @@ The steps above cover diagnosing a failure; this covers the surrounding push→P
 2a. **Refresh the handover-transit bundle** (before the final commit that precedes opening the PR):
    `python3 tools/handover_transit.py export`, then stage `agent-working/handover-transit/`. The
    bundle is rolling — one per source host, each export replaces that host's previous one, so the
-   tree holds one small current bundle per machine and git history keeps the old ones. See
+   tree holds one small current bundle per machine and git history keeps the old ones. The bundle
+   carries only OPEN handover state (role notes, unmerged drafts, memory): completed work, merged
+   drafts and probe evidence are never exported, and a role removes its own completed drafts from
+   `.claude/handover/drafts/` when closing its work. See
    `docs/guides/agent_session_reset_boundaries.md` ("Moving sessions between machines").
 3. **Push** the branch, then **create the PR** (`gh pr create`). The title and the generated body
    sections (`## What landed` through `## Verification`/`## Known gaps`, plus the `Closes:` line)

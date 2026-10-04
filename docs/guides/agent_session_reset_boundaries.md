@@ -48,12 +48,17 @@ never HARD — don't propose `/clear` for an uncovered case.
 ## Handover note format
 
 One file per **role name**, not `cwd` — several sessions share the main checkout (the same hazard
-shape as the confirmed `.claude/current_run` sidecar contamination). Target ~2k tokens. Standing
+shape as the confirmed `.claude/current_run` sidecar contamination). The three header lines under the
+title say what the note belongs to (role, domain and worktree, branch and PR); the title stays first so the
+SessionStart listing is unchanged, and `tools/handover_transit.py` records the same facts per file in its
+bundle (`belongs_to`: role, domain, ticket, branch, kind). Target ~2k tokens. Standing
 rules are never restated here; `CLAUDE.md` and memory already hold them — this is only *this
 session's* current open state.
 
 ```markdown
 # Handover — <role name>
+Role: <role id> · Domain/worktree: <domain> / <worktree>
+Branch / PR: <branch> · #<n> or none
 Updated: <date>
 
 ## Open
@@ -99,11 +104,21 @@ A transcript does not cross machines; the handover note is the only continuity t
 project memory through `agent-working/handover-transit/<host>/` (one rolling bundle per source
 host; files stored with a `.txt` suffix so registry and validators ignore them).
 
+**A transit bundle carries only OPEN handover state:** role notes, unmerged drafts and memory. Completed
+work, merged drafts and probe evidence are never exported. `export` skips a draft whose ticket is in
+`agent-working/tickets/done/` or tracked on `origin/main`, anything under an `evidence` directory, a folder
+whose ticket drafts are all finished, and a file whose bytes are already on `origin/main` (`--include-all`
+turns this off). A role also removes its own completed drafts from `.claude/handover/drafts/` when it closes
+the work, so the next export has nothing stale to skip. Every manifest row records what it belongs to
+(role, domain, ticket, branch, kind); drafts take the exporting session's role (`--role`, or `SESSION_ROLE`
+from the launcher, never guessed: unresolved is listed as `unattributed`).
+
 1. On the machine being left: `python3 tools/handover_transit.py export` (`--roles a,b`,
-   `--no-drafts`, `--no-memory` narrow it), commit and push the branch (a PR's own export step does
-   this already — see `delivery_process.md`).
-2. On the new machine: pull, then `python3 tools/handover_transit.py import <host>` (`--dry-run`
-   first if unsure). Every sha256 is verified before any write; a differing local file is backed up
+   `--no-drafts`, `--no-memory`, `--role <role>` narrow or attribute it), commit and push the branch (a
+   PR's own export step does this already — see `delivery_process.md`).
+2. On the new machine: pull, then `python3 tools/handover_transit.py import <host> --role <your role>`
+   (only that role's notes and drafts plus memory; unattributed and other roles' items are listed as
+   skipped, never silently dropped; `--dry-run` first if unsure). Every sha256 is verified before any write; a differing local file is backed up
    as `<name>.local-backup-<ts>` and reported.
 3. Start a fresh session per role and read its note. A `SessionStart` hook (`startup`, `resume`,
    `clear`) names any bundle this host has not imported.

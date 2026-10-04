@@ -1,0 +1,53 @@
+# Hotfix draft — pre-move residue after #289 (hand to agent-working-implementer to commit)
+
+Source: rpg-feature-planning, 2026-10-03, verified by me against origin/main 243e798ad and 6d630250d.
+
+## Verified
+- Before #289, `.gitignore` ignored `knowledge-index/` (line 278), `agent-monitoring-index/` (281), `parity-index/` (285).
+- After #289, those lines were REWRITTEN to `agent-working/.index/<name>/`. Nothing ignores the old paths. A worktree that
+  built an index before the move still has `knowledge-index/` (~102 MB in one worktree), `parity-index/` (~4.7 MB) and
+  per-branch `agent-monitoring/data/<week>/<branch>.tools.jsonl` shards untracked at the old root; `git add -A` would
+  commit ~107 MB of binary index.
+- origin/main tracks nothing under the old roots (0 files), so an old-root file is always residue.
+- docs/guides/agent_working_path_map.md has no cleanup section.
+- Same rewrite also dropped the old `reviews/*` and `stored_artifacts/**/*.json` rules; residue there is unlikely but
+  not checked.
+
+## Patch 1 — `.gitignore` (add after line 285, the parity-index rule)
+```
+# Pre-#289 residue: worktrees that built an index before the agent-working/ move still hold these at the old root.
+# Local-only; delete when no worktree has them. Never track them.
+/knowledge-index/
+/agent-monitoring-index/
+/parity-index/
+```
+Do NOT ignore the old `tickets/`, `stored_artifacts/`, `staging_artifacts/`, `agent-monitoring/`, `agent-orchestration/`,
+`pilot_requests/`, `reviews/` roots: a file appearing there means a tool still writes the old path, which should be loud,
+not hidden.
+
+## Patch 2 — guard test (new, in tests/tools/, next to test_agent_working_paths_guard.py)
+One test: `git ls-files` returns nothing under the seven old roots and the three old index roots (`tickets/`,
+`stored_artifacts/`, `staging_artifacts/`, `agent-monitoring/`, `agent-orchestration/`, `pilot_requests/`, `reviews/`,
+`knowledge-index/`, `agent-monitoring-index/`, `parity-index/`). Include `tools/agent-monitoring/` and
+`docs/agent-monitoring/` as exceptions (they did not move; match on the leading component only). Positive control: a
+temp git repo in the test fixture with one file at `tickets/x.md` makes the check fail.
+
+## Patch 3 — append to docs/guides/agent_working_path_map.md
+```
+## Cleaning up pre-move residue
+
+A worktree that had files at an old root before it merged #289 can still hold them. Old-root files are never tracked
+on main, so they are residue, but check before deleting:
+- Index folders (`knowledge-index/`, `agent-monitoring-index/`, `parity-index/`) are generated and git-ignored at the
+  old root; delete them and rebuild under `agent-working/.index/` (`make knowledge-index-update`).
+- A monitoring shard left at the old path (`agent-monitoring/data/<week>/<branch>.tools.jsonl`) is NOT necessarily a
+  subset of the new one: a tool can write a row before the merge that the rename does not carry. Diff the contents
+  by row; append only the rows whose exact content is absent from `agent-working/agent-monitoring/data/<week>/`
+  (never copy the whole file: the duplicate-run ratchet counts duplicates), then delete the old file.
+- Never `git add -A` in a worktree that still has old-root residue; review `git status --porcelain` first.
+```
+
+## Tier and path
+Hotfix-tier (self-evident, 3 small files). Test plan: the new guard test passes on the fixed tree and fails on its
+seeded fixture; `git check-ignore -v knowledge-index/x` matches the new rule. Run `make knowledge-index-update`
+after the doc edit. Do not touch .gitignore without it being listed in the PR (shared governing-style file).

@@ -26,7 +26,7 @@
 ## Session roles and coordination
 - [Semantic control plane role division](project_semantic_control_plane_role_division.md) — POINTER → domains/rpg.md; rpg-planner owns that epic
 - [Route work via rpg-feature-planning](feedback_route_work_via_rpg_feature_planning.md) — POINTER → domains/rpg.md; briefs go via the rpg planner
-- [Ask rpg-feature-planning before RPG logic](feedback_ask_rpg_feature_planning_before_touching_rpg_logic.md) — before changing product code/expected behaviour
+- [Ask rpg-feature-planning before RPG logic](feedback_ask_rpg_feature_planning_before_touching_rpg_logic.md) — before changing product code/expected behaviour; also RPG status/PR questions go to the planner, not either implementer
 - [Session role division](project_session_role_division.md) — applies to planning session 1320d448, not rpg-implementer
 - [Implementer owns all commits](feedback_implementer_owns_all_commits.md) — design hands drafts; one writer per branch
 - [Mechanism registry ownership split](project_mechanism_registry_ownership_split.md) — POINTER → session_roles.yaml routes; mechanisms.yaml content is rpg
@@ -89,6 +89,7 @@
 
 ## CI and testing
 - [Registry edit: full tools dir + all views](feedback_registry_edit_run_full_tools_dir_and_all_views.md) — regenerate territory/cross-domain views too; never a -k subset
+- [New local imports fail ruff PLC0415 in CI](feedback_new_local_imports_fail_ruff_plc0415_in_ci.md) — hit #291 and #333; module-top imports, check cycles; pr_status.py can't see ruff
 - [CI poll TLS block false green](project_ci_poll_tls_block_false_green.md) — require positive completion signal; also check `mergeable` — a conflicting PR runs no workflows at all
 - [Verify with the command CI runs](feedback_verify_with_the_command_ci_runs_not_the_authors_filter.md) — reproducing a peer's own filtered test command inherits their blind spot
 - [Trace the call, never name-match paths](feedback_trace_the_call_never_name_match_paths.md) — a shared identifier is not a shared path; grep the producer, not the handler

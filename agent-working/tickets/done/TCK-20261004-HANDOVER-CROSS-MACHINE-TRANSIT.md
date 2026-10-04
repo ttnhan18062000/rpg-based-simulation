@@ -81,8 +81,10 @@ none
 ## Implementation Notes
 Bundle layout: `<host>/MANIFEST.jsonl` plus `files/{handover,memory}/<path>.txt`. Import verifies all sha256 and rejects absolute/`..` manifest paths before any write. The hook matcher was already `*`, so widening to startup/resume/clear needed no settings.json edit; the note listing stays clear-only. Open question (M2 role-state dir as a bundle member) left for the M2 work.
 
+Amendments (owner, 2026-10-04, same PR): (1) the export carries only OPEN state: a draft is skipped when its ticket is in `done/` or tracked on `origin/main`, under an `evidence` directory, in a folder whose ticket drafts are all finished, or byte-identical to a file on `origin/main` (`--include-all` restores); (2) every manifest row records `belongs_to` {role, domain, ticket_id, branch, kind} plus the exporting worktree and branch, drafts take the exporting role (`--role`, or `SESSION_ROLE`, never guessed; unresolved is `unattributed` and flagged); (3) `import --role` copies only that role's items plus memory and lists the rest as skipped; `status` and the SessionStart line group by role. Result on the author's machine: 228 files -> 172 (40 handover, 132 memory); the remaining handover drafts are patches and READMEs with no ticket id that the tool cannot prove merged.
+
 ## Test Summary
-`tests/tools/test_handover_transit.py` (24 tests) + `tests/tools/test_session_start_handover_hook.py`: all pass. Real export of 223 files produced no registry row; registry regen clean.
+`tests/tools/test_handover_transit.py` (32 tests) + `tests/tools/test_session_start_handover_hook.py`: all pass. Real export of 223 files produced no registry row; registry regen clean.
 
 ## Files Changed
 tools/handover_transit.py (new); tools/agent-monitoring/session_start_handover_hook.py; tests/tools/test_handover_transit.py (new); docs/guides/agent_session_reset_boundaries.md; docs/guides/delivery_process.md; agent-working/handover-transit/ (first rolling bundle).

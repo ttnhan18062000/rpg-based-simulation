@@ -57,14 +57,18 @@ def build_transit_notice(transit_root: Path, local_host: str | None = None) -> s
     TCK-20261004-HANDOVER-CROSS-MACHINE-TRANSIT."""
     try:
         sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-        from handover_transit import pending_bundles
+        from handover_transit import bundle_summary, pending_bundles
         pending = pending_bundles(transit_root, local_host)
     except Exception:
         return ""
     if not pending:
         return ""
-    cmds = "; ".join(f"python3 tools/handover_transit.py import {h}" for h in pending)
-    return f"handover-transit: pending bundle(s) from another machine: {', '.join(pending)} — run: {cmds}"
+    def one(h: str) -> str:
+        summary = bundle_summary(h, transit_root)
+        return f"{h} [{summary}]" if summary else h
+    cmds = "; ".join(f"python3 tools/handover_transit.py import {h} --role <your role>" for h in pending)
+    return (f"handover-transit: pending bundle(s) from another machine: {', '.join(one(h) for h in pending)} — "
+            f"import only your own role's items: {cmds}")
 
 
 def main() -> int:

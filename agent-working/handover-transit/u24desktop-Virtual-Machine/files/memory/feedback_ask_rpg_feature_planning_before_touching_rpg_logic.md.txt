@@ -20,3 +20,8 @@ track must not change it on its own authority (see [[project-test-architecture-r
 to ask. Anything that changes what the simulation does, or what a test says it should do, waits for
 rpg-feature-planning's answer. Process problems go to agent-working-design instead
 ([[feedback-report-agent-process-issues-to-agent-working-design]]).
+
+**Also for status questions (user, 2026-10-04):** ask rpg-feature-planning about RPG features, tickets
+and PR timing too, not an rpg implementer. There are two rpg implementers (lane split, see
+[[project-two-rpg-implementers-lane-split]]), and the planner knows which lane holds what. Read an
+implementer's unsolicited FYI and verify it, but send my questions to the planner.

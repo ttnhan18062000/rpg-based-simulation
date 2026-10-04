@@ -1,0 +1,33 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20261003-AGENT-WORKING-ROOT-MOVE
+artifact_type: test_plan
+tags: [ai, process-improvement, governance]
+---
+
+# Test plan (retroactive)
+
+**Written after the fact**, from the ticket's acceptance criteria. For each criterion: what the check is, the result, and who
+established it. "Verified by design session" means checked against git or GitHub after the merge; "implementer-reported" means
+reported by the implementer session and not re-run here.
+
+| AC | Check | Result | Source |
+|---|---|---|---|
+| 1 | No live code names a moved root outside the constants module; guard test fails on a seeded hardcoded path | guard test `tests/tools/test_agent_working_paths_guard.py` added in Stage 1 | implementer-reported (test not re-run by the design session) |
+| 2 | No old root at the repo root; all under `agent-working/`; `git log --follow` works | tree root checked: only `agent-working/` of the old names; Stage 2a is 7,640 renames, all R100 | verified by design session; `--follow` not re-run |
+| 3 | No frozen file modified | nothing under `agent-working/tickets/done`, `agent-working/stored_artifacts`, `docs/archive` changed after the rename commit | verified by design session |
+| 4 | Pre-move path map resolves a sampled old citation from each folder; validators pass with frozen citations | `docs/guides/agent_working_path_map.md` and `resolve_legacy_citation()` exist on main; per-folder sampling not repeated | map and function seen by design session; sampling implementer-reported |
+| 5 | Validators pass; registry regenerated; indexes rebuilt; `search_docs` finds moved files | Stage 3 ran them; a registry regeneration was missed once when tickets were added (fixed) | implementer-reported |
+| 6 | Hook-recorded event and a closure-tool run land under `agent-working/agent-monitoring/data/YYYY-Www/` | shards for later tickets (`old-root-residue-guard.*`, `implement-ticket-js-use-before-define.*`) exist under that path in merged PRs | verified by design session from the PR file lists |
+| 7 | Make targets, CI and documented commands work on a clean clone at the PR head | clean clone at a real path at 9175b8770: 4,328 passed, 7 failures from missing `complexipy`, identical on the pre-move tree; CI on #289 had one failing shard at b8ee7db96 caused by a missing registry regeneration (fixed) | implementer-reported; CI state seen by design session |
+| 8 | Owner confirmed each governing-file diff | `CLAUDE.md`, `AGENTS.md`, `settings.json` | implementer-reported |
+| 9 | Config sweep closed; a hand-run `implement-ticket` hotfix on a throwaway ticket completes with records in the new location | sweep checklist closed in the ticket; throwaway ticket `TCK-20261003-PATH-MAP-INDEX-REBUILD-COMMANDS` is in `done/` (merged in #293) and states that purpose; its Verify result and records location were not re-checked by the design session. A native `Workflow` run was blocked by a use-before-define bug (fixed in #295) and is a separate, optional follow-up needing the owner's opt-in | partly verified (ticket exists); native run not performed |
+
+## Regression-prone paths named for later work
+
+Old-root residue in an existing worktree (covered by `tests/tools/test_no_tracked_old_root_files.py`), a stale monitoring shard
+at an old path that holds a row the new one lacks (documented in the path map), the `search_docs` server of a running session
+(restart required).
