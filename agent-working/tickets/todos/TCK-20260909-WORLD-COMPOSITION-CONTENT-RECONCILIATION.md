@@ -299,12 +299,42 @@ expected design. That is the exact landmine the owner predicted.
 How many genuinely *depend* on the directory versus merely mention a path is **not yet measured** — that
 is Investigate's job, and the nine is a reference count, deliberately not reported as nine breakages.
 
-**The real open question this raises, which is a decision and not a mechanical edit:**
-`test_real_content_world_compositions.py`'s whole subject is the catalog path. Repoint it at
-`data/worlds/` (it then duplicates coverage that may already exist), or delete it as testing a retired
-location? That is not pre-judged here. Note the direction of this correction is **opposite** to the
-content-decision collapse above: the content work shrank from 8 decisions to 1, and the test work grew.
-Both corrections came from measuring rather than from reading the ticket's own prose.
+**RESOLVED 2026-10-04 — REPOINT, and it is a consequence of the ADR, not a preference.** Ruled by
+`world-rule-catalog-design` on the narrow question of whether its own ADR sentence reaches these tests.
+It does, for some of them, and the file **survives**. The split is test-by-test:
+
+**Reached by the ADR — these MUST be repointed at `data/worlds/`.** Each loads a file by a world's name
+and asserts `spec.world_id == "<that world>"` plus design values. That is a claim about *what defines a
+world*, and the ADR says only `data/worlds/<world_id>/` may make it. They are **not** parser fixtures
+that merely sit in a non-authoritative file — their own docstrings say "the real composition" and their
+whole premise is real content:
+
+| site | test |
+|---|---|
+| `:28`, `:42`, `:59`, `:83` | `frontier_living_world` load / normalization / assembly / determinism-and-provenance |
+| `:333` | `test_wilderness_survival` |
+| `:374` | `test_urban_political` |
+| `:424` | `test_dungeon_crawl_composition` (this is the one whose `:452` asserts `danger_scale == 2`) |
+
+**NOT reached by the ADR — leave these alone.** They build their own specs and claim no authored
+`world_id`, so the ADR says nothing about them. They are also the second reason deleting the file would
+be wrong:
+
+| site | test | why out of reach |
+|---|---|---|
+| `:171`, `:188`, `:205` | `test_parametric_*` | synthetic specs |
+| `:224` | `test_pack_refs_disabled_pack_raises_at_assembly` | synthetic `world_id` `"pack_test_world"` |
+| `:265`, `:300` | `test_generated_composition_*` | generated ids |
+
+**Still open, and explicitly NOT world semantics — route to `test-architecture-reviewer`:**
+1. Once the named-world tests point at `data/worlds/`, do they duplicate coverage that already exists,
+   and should they be merged or moved?
+2. Does the authoritative layout being a **directory** (`data/worlds/<id>/world.yaml`) rather than a
+   single `<id>.yaml` change how those tests load their input?
+
+Note the direction of this whole correction is **opposite** to the content-decision collapse above: the
+content work shrank from 8 decisions to 1, and the test work grew. Both came from measuring rather than
+from reading the ticket's own prose, which was wrong in both directions.
 
 ## Why this is now first, and why it is now P1
 
