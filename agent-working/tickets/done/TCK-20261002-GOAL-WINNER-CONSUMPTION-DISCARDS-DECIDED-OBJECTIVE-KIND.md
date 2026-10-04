@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND
-phase: open
+phase: done
 date: 2026-10-02
 tags: [strategy, cognition, combat]
 ---
@@ -17,7 +17,7 @@ so a winning `COMBAT_ENGAGE` is dispatched as `MOVE_TO` instead of `ATTACK_TARGE
 layer's chosen action is silently replaced on the live path
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -545,7 +545,7 @@ run are in Implementation Notes.
 
 ## Files Changed
 
-Implementation has not started. The entries below are **docs this ticket's branch already carries and
+The entries in the first group below are **docs this ticket's branch already carries and
 that its commit subjects already name** — recorded here because `done_checker`'s
 `docs_to_update_coverage` reverse check correctly flagged them as touched-but-unrecorded, and the honest
 fix is to make the record true rather than to quiet the check.
@@ -576,4 +576,19 @@ Docs changed by the fix, per `plan.md` step 4:
 - `docs/parity_ledger/strategic_cognition.yaml` (new `STRAT-274`, written with `parity_ledger_writer.write_entry`)
 
 ## Completion Summary
-_(not started)_
+Landed in #291 (`f4146ddbb`). A winning `COMBAT_ENGAGE` now materialises a `DEFEAT_ENEMY` objective and `CombatEngageScorer` uses
+catalog hostility with the real distance (shared `content_semantics.faction.are_entities_hostile`, which `legality` now delegates to);
+every other goal kind still falls back to `REACH_LOCATION`. Parity entry `STRAT-274`; Mechanics Bible chapter 04 updated.
+
+**Acceptance status, stated plainly:**
+- AC1 (CE winner -> `DEFEAT_ENEMY`): met.
+- AC2/AC3 (CE holder actually attacks; `hostiles` non-empty): NOT met by this ticket. The planner moved them to the fixed-point ticket and
+  to `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP`; the cause is the raw-enum `cognition.py:44` saliency +200
+  (`crowded_frontier` 215 -> 1 `hostiles`-eligible targets).
+- AC6 (determinism / sweep green): **FAILED AND KNOWINGLY ACCEPTED** (780 vs 1609 opportunity attacks on identical audit-mode
+  `frontier_living_world` runs). Pre-existing combat/tactical nondeterminism, tracked in
+  `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE`.
+- Decision-path ATTACK volume was measured and is in Implementation Notes; T4 (real attack attributable to a CE holder) was not written because
+  it cannot pass until the sweep lands.
+
+Unblocks `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP`.

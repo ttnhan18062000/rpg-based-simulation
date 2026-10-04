@@ -1,7 +1,7 @@
 ---
-status: active
+status: historical
 layer: strategy
-authority: P1
+authority: P2
 audience: agent
 ticket_id: TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND
 artifact_type: investigation
