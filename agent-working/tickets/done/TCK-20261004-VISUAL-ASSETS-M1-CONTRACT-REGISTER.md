@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-VISUAL-ASSETS-M1-CONTRACT-REGISTER
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation]
 `AM-M1` contract register: every `AM1-W01`..`W13` acceptance clause mapped to as-built evidence, with a verdict
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -80,13 +80,18 @@ acceptance clauses. Write one register that does that, so a reader can see per c
   retirement), `W13` (distribution stop, stale/offline cache under Profile A). Confirm from the code; do not assume.
 
 ## Implementation Notes
-(implementer)
+Wrote `docs/assets/m1_contract_register.md`: 68 clause rows over `AM1-W01`..`W13`, a summary table, a follow-ups list (one line per `GAP`) and a "Where docs and code disagree" section. The page was generated from one table in a scratch script so the summary counts cannot drift from the rows (script not committed).
+Result: 40 `MET`, 23 `GAP`, 5 `N/A`. `CLOSED`: W01, W04, W09, W12. `PARTIAL`: W02, W03, W05, W07, W08, W10, W13. `OPEN`: W06, W11 (all `GAP`, updated by their own tickets).
+Differences from the ticket's assumptions: `W03` has `MET` rows (limits, fallback depth/cycles: depth is fixed and no fallback edges exist) alongside `GAP`; `W07` client range is `N/A` under Profile A, schema and fallback ranges are `MET` (exact-version match both sides), renderer, capability and retirement are `GAP`; `W13` distribution stop, stale/offline/cache and tested rollback are `GAP`. `W02` derivation owner is a `GAP` the ticket did not predict.
+Docs disagree with code in four places (listed in the register, not fixed): `store_contract.md` "Decisions still open", the ADR Status and Consequences, the plan README status lines (M1-STATUS-CLOSEOUT's), and the unsigned charter's `rc-0001`/no-detail facts. One link to the register added to `store_contract.md`.
 
 ## Test Summary
-(implementer)
+Docs-only; no code changed. Evidence check (scratch script): `checked 178 evidence entries`, none unresolved; a negative control with a broken heading and a broken symbol failed as it should (staging `test_plan.md`). `tools/validate_frontmatter.py` clean on the page, ticket and artifacts. `pytest tests/docs tests/static tests/visual_assets/store/unit/test_docs_commands.py` under a 2 GB cap: 129 passed, 2 skipped, 1 xfailed. `make knowledge-index-update` ran.
 
 ## Files Changed
-(implementer)
+- `docs/assets/m1_contract_register.md` (new)
+- `docs/assets/store_contract.md` (one link)
+- `agent-working/tickets/` (this ticket), `agent-working/stored_artifacts/TCK-20261004-VISUAL-ASSETS-M1-CONTRACT-REGISTER/`, `agent-working/tickets/working_log.csv`, `docs/REGISTRY.yaml`, monitoring shards
 
 ## Completion Summary
-(open)
+Done. The register exists with every evidence entry resolving on the branch. Nothing outside `docs/` and `agent-working/` changed. Owner decisions are not written as made; W06 and W11 rows are `GAP` for their tickets to update. Follow-ups are parked in the register with no tickets.

@@ -16,7 +16,7 @@ scope). The committed `visual_assets/catalog/` holds one real key, `terrain.fore
 This page says what each command and MCP tool does, who may run it and what it writes.
 
 Source of truth for vocabulary and gates: `docs/brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md`
-(sections 6-9) and `docs/plans/visual-asset-management-runtime-integration/`. Physical layout, layering rules and the
+(sections 6-9) and `docs/plans/visual-asset-management-runtime-integration/`. What each `AM1-W01`..`W13` acceptance clause has, as built: `docs/assets/m1_contract_register.md`. Physical layout, layering rules and the
 command table: `docs/plans/visual-asset-foundation/README.md`. Build order: `agent-working/tickets/todos/visual-asset-foundation/SEQUENCE.md`.
 
 ## Lifecycle and gates
