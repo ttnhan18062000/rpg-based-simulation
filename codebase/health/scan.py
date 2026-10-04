@@ -43,8 +43,9 @@ DEFAULT_COMPLEXITY_LIMIT = 15
 TOOL_JSCPD_NAME = "jscpd"
 TOOL_AST_GREP_NAME = "ast_grep"
 ALL_TOOLS = ("ruff", "complexipy", TOOL_JSCPD_NAME, "line_count", TOOL_AST_GREP_NAME)
-# ast_grep is not in the snapshot set yet: that is a follow-up, so the snapshot metrics do not change here.
-OFFLINE_TOOLS = ("ruff", "complexipy", "line_count")
+# ast-grep is a local binary from the `lint` dependency group, so it needs no network. A snapshot without it
+# fails (`ToolUnavailableError`); it must never record 0 for the ast-grep keys, which would read as debt paid.
+OFFLINE_TOOLS = ("ruff", "complexipy", "line_count", TOOL_AST_GREP_NAME)
 
 
 class ToolUnavailableError(RuntimeError):
@@ -68,7 +69,8 @@ def complexity_limit(pyproject: Path) -> int:
     return int(table.get("max-complexity-allowed", DEFAULT_COMPLEXITY_LIMIT))
 
 
-def _find(name: str) -> str:
+def find_tool(name: str) -> str:
+    """The path of the project-environment tool `name` (beside this Python, else on PATH); raises `ToolUnavailableError`."""
     beside = Path(sys.executable).parent / name
     found = str(beside) if beside.exists() else shutil.which(name)
     if found is None:
@@ -93,13 +95,13 @@ def _scan_ruff(root: Path, out_dir: Path) -> None:
 
 def _scan_complexipy(root: Path, out_dir: Path) -> None:
     # The path is given explicitly: complexipy stops with an error if neither it nor a config names one.
-    command = [_find("complexipy"), SCAN_ROOT, "-q", "--output-format", "json", "--output", str(out_dir / COMPLEXIPY_JSON)]
+    command = [find_tool("complexipy"), SCAN_ROOT, "-q", "--output-format", "json", "--output", str(out_dir / COMPLEXIPY_JSON)]
     _run(command, root, (0, 1))
 
 
 def _scan_ast_grep(root: Path, out_dir: Path) -> None:
     # The binary is `ast-grep`, never `sg` (on Linux `sg` is shadow-utils' switch-group command).
-    command = [_find("ast-grep"), "scan", "--config", AST_GREP_CONFIG, SCAN_ROOT, "--json=compact"]
+    command = [find_tool("ast-grep"), "scan", "--config", AST_GREP_CONFIG, SCAN_ROOT, "--json=compact"]
     done = _run(command, root, (0, 1))
     (out_dir / AST_GREP_JSON).write_text(done.stdout or "[]", encoding="utf-8")
 

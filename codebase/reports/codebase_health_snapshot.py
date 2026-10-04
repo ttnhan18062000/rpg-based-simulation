@@ -76,6 +76,7 @@ from codebase.health.metrics import (
     CRAFT_METRIC_KEYS,
     measure_craft_metrics,
 )
+from codebase.health.scan import ToolUnavailableError
 from codebase.reports.codebase_health_baseline import build_report
 from tools.agent_working_paths import AGENT_MONITORING
 
@@ -99,7 +100,7 @@ EXPECTED_BASELINE_KEYS = frozenset({
 })
 # build_report()'s keys plus the second metric source's (codebase/health/metrics.py).
 EXPECTED_SNAPSHOT_KEYS = EXPECTED_BASELINE_KEYS | frozenset(CRAFT_METRIC_KEYS)
-SNAPSHOT_SCHEMA_VERSION = 2
+SNAPSHOT_SCHEMA_VERSION = 3
 DEFAULT_HISTORY_PATH = _REPO_ROOT / AGENT_MONITORING / "codebase_health_history.jsonl"
 
 # The 11 scalar dimensions that get a Δ + arrow trend row.
@@ -361,7 +362,13 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     if args.mode == "snapshot":
-        ok = write_snapshot(args.repo_root, args.history_path)
+        try:
+            ok = write_snapshot(args.repo_root, args.history_path)
+        except ToolUnavailableError as exc:
+            # A snapshot needs every offline tool (ruff, complexipy, ast-grep). Without one nothing is written:
+            # a missing tool must never be recorded as 0 findings, which would read as debt paid in the trend.
+            print(f"ERROR: snapshot not written, a code-health tool is unavailable: {exc}", file=sys.stderr)
+            return 2
         if not ok:
             print(
                 f"WARNING: failed to append snapshot to {args.history_path}, "

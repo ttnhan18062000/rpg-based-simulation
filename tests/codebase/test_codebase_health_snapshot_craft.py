@@ -4,13 +4,18 @@ Every history path here is rooted in tmp_path, never the real agent-working/agen
 """
 import json
 import re
+import shutil
 import subprocess
+from pathlib import Path
 
 import pytest
 
+from codebase.health import scan
 from codebase.reports import codebase_health_baseline as chb
 from codebase.reports import codebase_health_snapshot as chs
 from codebase.health.metrics import CRAFT_METRIC_KEYS, REGISTRY_KEYS  # noqa: E402
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def _git(args, cwd):
@@ -28,6 +33,7 @@ def _minimal_repo(tmp_path):
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "readme.md").write_text("hello\n", encoding="utf-8")
     (tmp_path / "pyproject.toml").write_text("[project]\ndependencies = []\n", encoding="utf-8")
+    shutil.copytree(_REPO_ROOT / "codebase" / "rules", tmp_path / "codebase" / "rules", ignore=shutil.ignore_patterns("rule-tests"))  # ast-grep config
     _git(["add", "-A"], tmp_path)
     _git(["commit", "-q", "-m", "init"], tmp_path)
 
@@ -53,7 +59,7 @@ def _v2_record(**craft_overrides):
 
 
 def test_schema_version_is_bumped_and_expected_keys_are_baseline_plus_craft():
-    assert chs.SNAPSHOT_SCHEMA_VERSION == 2
+    assert chs.SNAPSHOT_SCHEMA_VERSION == 3
     assert chs.EXPECTED_SNAPSHOT_KEYS == chs.EXPECTED_BASELINE_KEYS | frozenset(CRAFT_METRIC_KEYS)
     assert chs.EXPECTED_BASELINE_KEYS.isdisjoint(CRAFT_METRIC_KEYS)
 
@@ -67,7 +73,7 @@ def test_record_carries_baseline_keys_and_every_craft_key_as_a_number(tmp_path):
     _minimal_repo(tmp_path)
     record = chs.build_snapshot_record(tmp_path, craft_metrics=_craft(craft_ruff_findings=42))
     assert set(record) - {"snapshot_schema_version"} == chs.EXPECTED_SNAPSHOT_KEYS
-    assert record["snapshot_schema_version"] == 2
+    assert record["snapshot_schema_version"] == 3
     assert record["craft_ruff_findings"] == 42
     for key in CRAFT_METRIC_KEYS:
         assert isinstance(record[key], (int, float)) and not isinstance(record[key], bool), key
@@ -82,7 +88,7 @@ def test_a_prepared_craft_dict_means_no_tool_is_run(tmp_path, monkeypatch):
     monkeypatch.setattr(chs, "measure_craft_metrics", boom)
     history = tmp_path / "h" / "history.jsonl"
     assert chs.write_snapshot(tmp_path, history, craft_metrics=_craft()) is True
-    assert json.loads(history.read_text())["snapshot_schema_version"] == 2
+    assert json.loads(history.read_text())["snapshot_schema_version"] == 3
 
 
 def test_without_a_prepared_dict_the_craft_metrics_are_measured_from_the_repository(tmp_path):
@@ -141,3 +147,61 @@ def test_the_first_snapshot_history_round_trips_through_the_scorecard(tmp_path):
     scorecard = chs.build_scorecard(chs.read_snapshots(history))
     assert scorecard["no_snapshots_yet"] is False
     assert scorecard["dimensions"]["craft_baseline_rows"]["trend_label"] == chs.NO_TREND_DATA_LABEL
+
+
+# ── Schema version 3: the ast-grep keys (TCK-20261004-AST-GREP-SARIF-AND-SNAPSHOT) ─────────────────────────────
+
+_AST_GREP_KEYS = (
+    "craft_ast_grep_private_name_imports",
+    "craft_ast_grep_version_marker_names",
+    "craft_ast_grep_silent_excepts",
+)
+
+
+def _v2_shaped_record(**craft_overrides):
+    """A version-2 line as already written to the history file: no ast-grep keys."""
+    record = _v2_record(**craft_overrides)
+    for key in _AST_GREP_KEYS:
+        del record[key]
+    record["snapshot_schema_version"] = 2
+    return record
+
+
+def test_a_history_mixing_v2_and_v3_lines_reads_and_treats_a_missing_key_as_not_measured(tmp_path):
+    history = tmp_path / "history.jsonl"
+    history.write_text(
+        json.dumps(_v2_shaped_record()) + "\n" + json.dumps(_v2_record(craft_ast_grep_silent_excepts=0)) + "\n"
+    )
+    snapshots = chs.read_snapshots(history)
+    assert [s["snapshot_schema_version"] for s in snapshots] == [2, 3]
+    row = chs.build_scorecard(snapshots)["dimensions"]["craft_ast_grep_silent_excepts"]
+    assert row["trend_label"] == chs.NO_TREND_DATA_LABEL and row["diff"] is None, "absent in v2 means not measured, not 0"
+    assert chs.build_scorecard(snapshots)["dimensions"]["craft_ruff_findings"]["arrow"] == "→"
+
+
+def test_a_v2_latest_line_after_a_v3_line_leaves_the_ast_grep_rows_out():
+    scorecard = chs.build_scorecard([_v2_record(), _v2_shaped_record()])
+    assert not set(_AST_GREP_KEYS) & set(scorecard["dimensions"])
+    assert "craft_ruff_findings" in scorecard["dimensions"]
+
+
+def test_two_v3_lines_trend_the_ast_grep_keys():
+    scorecard = chs.build_scorecard([_v2_record(craft_ast_grep_silent_excepts=9), _v2_record(craft_ast_grep_silent_excepts=7)])
+    row = scorecard["dimensions"]["craft_ast_grep_silent_excepts"]
+    assert (row["arrow"], row["diff"]) == ("↓", -2)
+
+
+def test_a_missing_ast_grep_binary_writes_no_snapshot_and_exits_2(tmp_path, monkeypatch, capsys):
+    _minimal_repo(tmp_path)
+    real = scan.find_tool
+
+    def find(name):
+        if name == "ast-grep":
+            raise scan.ToolUnavailableError("ast-grep not found: install the project environment (uv sync)")
+        return real(name)
+
+    monkeypatch.setattr(scan, "find_tool", find)
+    history = tmp_path / "h" / "history.jsonl"
+    assert chs.main(["snapshot", "--repo-root", str(tmp_path), "--history-path", str(history)]) == 2
+    assert not history.exists(), "a missing tool must never be recorded as 0 findings"
+    assert "snapshot not written" in capsys.readouterr().err

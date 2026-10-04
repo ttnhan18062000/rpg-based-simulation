@@ -27,6 +27,7 @@ from typing import Iterable, Sequence
 from codebase.health import registry, scan
 from codebase.health.adapters import RULE_DUPLICATE, RULE_SYNTAX_ERROR
 from codebase.health.findings import (
+    TOOL_AST_GREP,
     TOOL_COMPLEXIPY,
     TOOL_JSCPD,
     TOOL_LINE_COUNT,
@@ -46,6 +47,9 @@ LIVE_KEYS = (
     "craft_modules_over_length_limit",
     "craft_longest_function_lines",
     "craft_highest_cognitive_complexity",
+    "craft_ast_grep_private_name_imports",
+    "craft_ast_grep_version_marker_names",
+    "craft_ast_grep_silent_excepts",
 )
 REGISTRY_KEYS = (
     "craft_baseline_rows",
@@ -66,6 +70,9 @@ CRAFT_LABELS = {
     "craft_modules_over_length_limit": "Craft: modules over length limit",
     "craft_longest_function_lines": "Craft: longest function (lines)",
     "craft_highest_cognitive_complexity": "Craft: highest cognitive complexity",
+    "craft_ast_grep_private_name_imports": "Craft: private-name imports (ast-grep N3)",
+    "craft_ast_grep_version_marker_names": "Craft: version-marker names (ast-grep N4)",
+    "craft_ast_grep_silent_excepts": "Craft: silent excepts (ast-grep E3)",
     "craft_baseline_rows": "Craft: baseline rows (registry)",
     "craft_baseline_unreviewed_rows": "Craft: baseline rows not reviewed (registry)",
     "craft_baseline_duplicate_file_pairs": "Craft: duplicated file pairs (registry)",
@@ -90,6 +97,11 @@ def _count(findings: Iterable[Finding], tool: str, rule: str) -> int:
     return sum(1 for f in findings if f.tool == tool and f.rule == rule)
 
 
+def _total(findings: Iterable[Finding], tool: str, rule: str) -> int:
+    """The number of findings of `rule` (an ast-grep finding row's value counts its occurrences)."""
+    return sum(f.value for f in findings if f.tool == tool and f.rule == rule)
+
+
 def _largest(findings: Iterable[Finding], tool: str, rule: str) -> int:
     return max((f.value for f in findings if f.tool == tool and f.rule == rule), default=0)
 
@@ -108,6 +120,9 @@ def compute_craft_metrics(findings: Sequence[Finding], rows: Sequence[Row]) -> d
         "craft_modules_over_length_limit": _count(findings, TOOL_LINE_COUNT, "module-length"),
         "craft_longest_function_lines": _largest(findings, TOOL_LINE_COUNT, "function-length"),
         "craft_highest_cognitive_complexity": _largest(findings, TOOL_COMPLEXIPY, "cognitive-complexity"),
+        "craft_ast_grep_private_name_imports": _total(findings, TOOL_AST_GREP, "n3-private-name-import"),
+        "craft_ast_grep_version_marker_names": _total(findings, TOOL_AST_GREP, "n4-version-marker-name"),
+        "craft_ast_grep_silent_excepts": _total(findings, TOOL_AST_GREP, "e3-silent-except"),
         "craft_baseline_rows": len(rows),
         "craft_baseline_unreviewed_rows": sum(1 for row in rows if not row.reviewed),
         "craft_baseline_duplicate_file_pairs": len(duplicates),

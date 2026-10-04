@@ -107,16 +107,18 @@ rename/add/remove is a visible breaking change here, never silent drift.
 
 ---
 
-## Second metric source — craft metrics (schema version 2)
+## Second metric source — craft metrics (schema versions 2 and 3)
 
 These keys come from `codebase/health/metrics.py::compute_craft_metrics`, not from
 `build_report()`. `build_report()` and `make codebase-health-baseline` are unchanged, so the baseline
 target does not depend on the code-health tools. Every key is a plain integer and each trends on its
 own: there is no aggregate or combined craft number anywhere (D24 sections J and M).
 
-**Live keys** (`craft_<thing>`) are measured at snapshot time from ruff, complexipy and the line-count
-report over `src/` with the repository's own configuration. They are the offline Python tools; a
-snapshot never runs jscpd or needs the network.
+**Live keys** (`craft_<thing>`) are measured at snapshot time from ruff, complexipy, the line-count
+report and the ast-grep rule pack (`codebase/rules/`) over `src/` with the repository's own configuration. They are the
+offline tools; a snapshot never runs jscpd or needs the network. A snapshot needs every one of them: if a tool is missing
+(for example ast-grep, which is in the `lint` dependency group) `make codebase-health-snapshot` exits 2 and writes nothing,
+so a missing tool is never recorded as 0 findings.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -130,6 +132,9 @@ snapshot never runs jscpd or needs the network.
 | `craft_modules_over_length_limit` | int | Modules over the module length limit (1,000 lines). |
 | `craft_longest_function_lines` | int | Length of the longest function over the fail limit, 0 if none. |
 | `craft_highest_cognitive_complexity` | int | Highest cognitive complexity among functions over the limit, 0 if none. |
+| `craft_ast_grep_private_name_imports` | int | ast-grep rule `n3-private-name-import` findings (standard N3), added in version 3. |
+| `craft_ast_grep_version_marker_names` | int | ast-grep rule `n4-version-marker-name` findings (standard N4), added in version 3. |
+| `craft_ast_grep_silent_excepts` | int | ast-grep rule `e3-silent-except` findings (standard E3), added in version 3. |
 
 **Registry-derived keys** (`craft_baseline_<thing>`) are read from
 `codebase/baselines/code_health_exceptions.jsonl`. They describe the baselined state as of the last seed or
@@ -155,7 +160,8 @@ manually incremented whenever `EXPECTED_SNAPSHOT_KEYS` changes.
 | Version | Keys |
 |---|---|
 | 1 | `build_report()`'s 14 keys. No record of this version has been written to `agent-working/agent-monitoring/codebase_health_history.jsonl`. |
-| 2 | Version 1's keys plus the 14 `craft_*` keys above (`TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS`). |
+| 2 | Version 1's keys plus the 14 `craft_*` keys above that are not `craft_ast_grep_*` (`TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS`). |
+| 3 | Version 2's keys plus the 3 `craft_ast_grep_*` keys (`TCK-20261004-AST-GREP-SARIF-AND-SNAPSHOT`). Version-2 lines already in the history file stay as written; a reader treats a key a record lacks as "not measured", never as 0. |
 
 A schema-version bump is always a **paired change**, landed in the same
 commit:
