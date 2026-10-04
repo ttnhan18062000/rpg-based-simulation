@@ -32,12 +32,6 @@ PROVISIONAL_LINE = (
     "(RPG-core stability entry gate not yet lifted)."
 )
 
-METROPOLIS_WARNING = (
-    "WARNING: the 'metropolis' scenario is known defective: build_metropolis_state() stacks entities "
-    "on the same tile by construction (TCK-20260919-PERF-SCENARIO-METROPOLIS-SPAWN-COLLISION). "
-    "Treat its numbers as unreliable."
-)
-
 # Install hints, named in the missing-binary message.
 INSTALL_HINTS = {
     "py-spy": 'uv sync --group profiling   (the opt-in `profiling` dependency group in pyproject.toml)',
@@ -81,8 +75,6 @@ def header_lines(fields: Dict[str, Any], title: str) -> List[str]:
     """Header as plain lines (no comment marker)."""
     lines = [title, PROVISIONAL_LINE]
     lines += [f"{k}: {v}" for k, v in fields.items()]
-    if fields.get("scenario") == "metropolis":
-        lines.append(METROPOLIS_WARNING)
     return lines
 
 

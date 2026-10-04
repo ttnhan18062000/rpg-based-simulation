@@ -103,9 +103,6 @@ measurement aid, not a supported way to configure a run.
 
 - Entity counts are small on purpose: these tools run the kernel. Do not read a small-count profile as a
   statement about 1,000 entities.
-- The `metropolis` scenario is known defective (entities are stacked on the same tile by construction,
-  `TCK-20260919-PERF-SCENARIO-METROPOLIS-SPAWN-COLLISION`); selecting it prints a warning and the header
-  repeats it.
 - Phase costs come from `kernel._phase_costs`, a private attribute that
   `tools/perf/profile_engine.py` also reads; if a public accessor appears, switch to it. Some entries are
   sub-phases of another, so shares do not sum to 100%.

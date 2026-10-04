@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20260919-PERF-SCENARIO-METROPOLIS-SPAWN-COLLISION
-phase: open
+phase: done
 date: 2026-09-19
 tags: [performance, bug, determinism]
 ---
@@ -17,7 +17,7 @@ entities on the identical tile by construction — a real, structural defect in 
 scenario builder itself, distinct from the already-fixed `WorldCompiler` spawn-collision bug
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -127,17 +127,17 @@ overlap only; unrelated code.
   ticket is required once this is fixed.
 
 ## Acceptance Criteria
-- [ ] `HardLawMonitor.check_initial_placement()` (or an equivalent direct occupancy check) returns
+- [x] `HardLawMonitor.check_initial_placement()` (or an equivalent direct occupancy check) returns
   zero `LAW-SPAWN-OCCUPANCY` violations for `build_metropolis_state()` at its default parameters
   (`entity_count=1000, region_count=50, buildings_per_region=20, seed=42`).
-- [ ] Same check passes for at least one other real `entity_count`/`region_count` combination
+- [x] Same check passes for at least one other real `entity_count`/`region_count` combination
   actually used by `tests/perf/` or `tests/certification/` call sites.
-- [ ] Repeated calls with identical parameters produce a bit-identical entity-position map
+- [x] Repeated calls with identical parameters produce a bit-identical entity-position map
   (determinism preserved).
-- [ ] A real, short `Kernel.tick_once()` run (a handful of ticks, `LocalSequentialExecutor`)
+- [x] A real, short `Kernel.tick_once()` run (a handful of ticks, `LocalSequentialExecutor`)
   against the fixed `build_metropolis_state()` output produces no `hard_law_violations.jsonl`
   spawn/occupancy records.
-- [ ] Existing perf/cert tests that construct via `build_metropolis_state()` still pass unmodified.
+- [x] Existing perf/cert tests that construct via `build_metropolis_state()` still pass unmodified.
 
 ## Related Tickets
 - `TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE` (same violation signature,
@@ -179,15 +179,71 @@ _(none yet — filed as a root-caused finding, not yet implemented)_
   for whoever implements this to choose based on what the actual call-site matrix requires.
 
 ## Implementation Notes
-_(none yet — not yet implemented)_
+### perf-planner dispatch notes, 2026-10-04
+
+- **Authorization.** The owner extended the partial lift to `src/perf/scenarios.py` for this ticket only
+  (`performance_optimization_roadmap.md`, gate item 4). No other `src/` file is in scope. Stop and tell
+  perf-planner if the fix seems to need one.
+- **Call-site matrix (grep done by the planner).** `build_metropolis_state` at 1000/50/20
+  (`tests/perf/test_perf_metropolis.py:40`, `src/perf/profile_governance.py:17`), at 500 and at 200
+  (`test_perf_metropolis.py:102,127`, default `region_count`). `build_mixed_state` standalone at 200
+  (`tests/perf/test_perf_stress.py`), 1000 (`tools/perf/run_perf_baseline.py`) and 100
+  (`tools/release/verify_production_profiles.py`). AC2 uses the 500 and 200 pairings. The Scope item on
+  `build_mixed_state` standalone must be answered for 100/200/1000 with a measured result.
+- **Fix shape (planner preference, not binding).** The formula is fully deterministic, so the simplest
+  fix is enough: give each entity a per-region slot index `i // region_count` on a grid that fits
+  inside the region, and raise a `ValueError` when `entity_count` exceeds the region capacity, instead
+  of wrapping silently. A per-entity occupancy set is only needed if the measured matrix shows the
+  slot scheme cannot cover it.
+- **Determinism.** AC3 compares the full position map from two calls. Also compare the state digest
+  from two calls (the `flat-sha256-v1` `ProofDigest`); do not invent a new digest.
+- **Remove the workaround.** Remove `METROPOLIS_WARNING` and the branch that adds it in
+  `tools/perf/_profiling_common.py`, and update any test that asserts it. Then run the fix: do not leave
+  a warning about a defect that is gone.
+- **Measurement.** The metropolis TPS/p99 thresholds are soft, and stay soft. Record before/after
+  avg TPS and p99 for `test_perf_metropolis_longevity` (500) once, marked provisional, in the ticket.
+  Do not retune thresholds here.
+- **Heavy runs.** `test_perf_metropolis_stress` (1000) is `extra_slow`: run it once, in the foreground,
+  under the `systemd-run` memory cap, or skip it and say so.
+- **Parity/docs.** Check `docs/parity_ledger/infrastructure.yaml` and `docs/observability/hard_law_monitor.md`
+  for a metropolis or perf-scenario entry; update one only if it exists and changes meaning.
+
+**Implemented (perf-implementer, 2026-10-04).** Hotfix tier: no staging artifacts (repo rule); findings live here.
+- **Root cause was wider than the ticket said.** Besides the period-100 offset, the old step 5 also put entities on
+  building tiles (entity grid 5+5k collides with buildings at 5+10k) and on resource-node tiles (nodes sit at
+  `(id%100, id//100)`, y>=10, inside region 0). A pure per-region slot index would still have collided, so the fix
+  uses the planner's fallback: per-region slot cursor `i // region_count` over a 19x19 grid (5-tile pitch, 5..95)
+  with building and resource-node tiles removed; `ValueError("... raise region_count")` when a region runs out.
+  Deterministic, no RNG.
+- **Measured before -> after (`HardLawMonitor.check_initial_placement`, LAW-SPAWN-OCCUPANCY count):**
+  metropolis 200/50: 50 -> 0; 500/50: 100 -> 0; 1000/50: 100 -> 0.
+- **Scope item, `build_mixed_state` standalone: it DOES collide, not fixed here.** 100: 2, 200: 2, 1000: 7
+  violations (hero id%100==5 vs monsters at (5.0, i); heroes vs resource nodes, e.g. entity 51 vs node 1005 at
+  (5,10)). Callers: `tests/perf/test_perf_stress.py` (200), `tools/perf/run_perf_baseline.py` (1000),
+  `tools/release/verify_production_profiles.py` (100). Fixing it moves those baselines' positions, so it is left
+  for the planner to file; `build_idle_state`/`build_resource_state`/`build_movement_state` unchecked (out of scope).
+- **Workaround removed:** `METROPOLIS_WARNING`, its header branch and the two CLI prints
+  (`tools/perf/_profiling_common.py`, `profile_tick.py`, `flag_attribution.py`), the 3 tests asserting it, and the
+  "known defective" line in `docs/guides/performance_profiling.md`.
+- **Provisional measurement, `test_perf_metropolis_longevity` (500), soft threshold unchanged:** avg TPS 1.84 before,
+  1.84 after (limit 5.0, breached both times, as before). p99 was not captured on the before run, so no p99
+  comparison is claimed. Single run each, noisy machine.
+- **Not run:** `test_perf_metropolis_stress` (1000, extra_slow), skipped to protect the machine; the 1000/50
+  placement is covered by the zero-violation check instead.
+- Parity ledger and `hard_law_monitor.md`: no metropolis/perf-scenario entry exists, nothing updated.
 
 ## Test Summary
-_(none yet)_
+- New `tests/tools/test_perf_scenarios_placement.py`: zero LAW-SPAWN-OCCUPANCY at 1000/50, 500/50, 200/50, 100/7;
+  two-call position map and `CanonicalHashScheduler.compute_digest` (flat-sha256-v1) equal; ValueError on
+  overflow; 3 real `Kernel.tick_once()` ticks (LocalSequentialExecutor) record no spawn/occupancy violation.
+- `tests/tools/test_perf_scenarios_placement.py` + `tests/tools/test_profiling_toolkit.py`: 33 passed, 1 skipped.
+- `tests/perf/test_perf_metropolis.py -k "longevity or chaos"`: 2 passed (soft-threshold warnings only).
 
 ## Files Changed
-_(none yet)_
+- `src/perf/scenarios.py`, `tools/perf/_profiling_common.py`, `tools/perf/profile_tick.py`,
+  `tools/perf/flag_attribution.py`, `tests/tools/test_profiling_toolkit.py`,
+  `tests/tools/test_perf_scenarios_placement.py` (new), `docs/guides/performance_profiling.md`,
+  `docs/plans/design_enhancement/performance_optimization/performance_m4_baseline_gate_a_epic.md` (metropolis gap row)
 
 ## Completion Summary
-_(none yet — filed as a real, root-caused, ticket-worthy defect in the perf-harness scenario
-builder; a perf-harness scenario with hard-law violations in its own construction is a defect
-someone should own, even though it was not chased to a fix in the investigation that found it.)_
+`build_metropolis_state()` now places every entity on its own tile (zero LAW-SPAWN-OCCUPANCY at 200/500/1000 entities, was 50/100/100), deterministically, via helpers `_region_free_slots` and `_spread_entities_into_regions`; overflow raises ValueError. The known-defect warning workaround was removed. Code-health 0 new / 0 worse; typecheck baseline filter clean. Standalone `build_mixed_state` collisions split to TCK-20261004-PERF-SCENARIO-MIXED-STATE-SPAWN-COLLISION.

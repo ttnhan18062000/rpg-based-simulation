@@ -7,11 +7,16 @@ from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
 from src.core.models.inventory import ItemStack
 from src.core.movement_modes import MovementMode
-from src.core.state import AuthoritativeState, ResourceNodeState, EntityState
+from src.core.state import (
+    AuthoritativeState, BuildingState, EntityState, RegionState, ResourceNodeState,
+)
 from src.core.strategic import (
     ProjectState, BlockerState, LeadState, ConcernState, CognitionProfile,
     BlockerKind, ProjectKind, ConcernKind
 )
+
+# Entity grid per 100x100 metropolis region: 5-tile pitch from offset 5 (5..95) in each axis.
+_REGION_GRID_SIDE = 19
 
 
 def build_idle_state(
@@ -318,6 +323,53 @@ def build_mixed_state(
     )
 
 
+def _region_free_slots(region: RegionState, occupied: set[tuple[int, int]]) -> List[tuple[float, float]]:
+    """Grid tiles of one region not already held by a building or resource node, in row-major order."""
+    x0, y0 = region.bounds[:2]
+    slots = []
+    for row in range(_REGION_GRID_SIDE):
+        for col in range(_REGION_GRID_SIDE):
+            pos = (x0 + 5.0 + col * 5, y0 + 5.0 + row * 5)
+            if (int(pos[0]), int(pos[1])) not in occupied:
+                slots.append(pos)
+    return slots
+
+
+def _spread_entities_into_regions(
+    entities: Dict[int, EntityState],
+    regions: Dict[str, RegionState],
+    buildings: Dict[int, BuildingState],
+    resource_nodes: Dict[int, ResourceNodeState],
+    entity_count: int,
+) -> None:
+    """Move entity i to region i % region_count, onto that region's free slot i // region_count.
+
+    build_mixed_state positioned entities near 0,0; spreading them out makes a better test. Building and
+    resource-node tiles are skipped so no two objects share a tile. Mutates *entities* in place.
+    """
+    region_count = len(regions)
+    occupied = {(int(b.position[0]), int(b.position[1])) for b in buildings.values()}
+    occupied |= {(int(n.position[0]), int(n.position[1])) for n in resource_nodes.values()}
+    free_slots = {r_idx: _region_free_slots(regions[f"region_{r_idx}"], occupied) for r_idx in range(region_count)}
+    for i, entity in enumerate(list(entities.values())):
+        r_idx, slot = i % region_count, i // region_count
+        if slot >= len(free_slots[r_idx]):
+            raise ValueError(
+                f"build_metropolis_state: region_{r_idx} has {len(free_slots[r_idx])} free tiles but "
+                f"entity_count={entity_count} needs more; raise region_count"
+            )
+        entities[entity.id] = (
+            V2EntityBuilder(entity.id)
+            .replace_navigation(entity.navigation)
+            .replace_identity(entity.identity)
+            .replace_combat(entity.combat)
+            .replace_inventory(entity.inventory)
+            .replace_lifecycle(entity.lifecycle)
+            .location(*free_slots[r_idx][slot])
+            .build()
+        )
+
+
 def build_metropolis_state(
     *,
     entity_count: int = 1000,
@@ -328,8 +380,6 @@ def build_metropolis_state(
     """
     Build a massive metropolis state with governance, buildings, and mixed work.
     """
-    from src.core.state import RegionState, BuildingState
-    
     # 1. Base Mixed State
     state = build_mixed_state(entity_count=entity_count, seed=seed)
     entities = dict(state.entities) # Ensure mutable copy
@@ -370,26 +420,7 @@ def build_metropolis_state(
     }
     
     # 5. Distribute entities into regions
-    # Actually, build_mixed_state already positioned them near 0,0.
-    # We should spread them out for a better test.
-    for i, entity in enumerate(entities.values()):
-        r_idx = i % region_count
-        region = regions[f"region_{r_idx}"]
-        new_pos = (
-            region.bounds[0] + 5.0 + (i % 10) * 5,
-            region.bounds[1] + 5.0 + (i // 10) % 10 * 5
-        )
-        # We need to update the position in the builder or just replace it
-        entities[entity.id] = (
-            V2EntityBuilder(entity.id)
-            .replace_navigation(entity.navigation)
-            .replace_identity(entity.identity)
-            .replace_combat(entity.combat)
-            .replace_inventory(entity.inventory)
-            .replace_lifecycle(entity.lifecycle)
-            .location(*new_pos)
-            .build()
-        )
+    _spread_entities_into_regions(entities, regions, buildings, state.resource_nodes, entity_count)
 
     # 6. Mark town tiles
     town_tiles = set()
