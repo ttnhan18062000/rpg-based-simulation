@@ -1,0 +1,68 @@
+---
+name: project-slow-regression-determinism-root-cause
+description: "Confirmed root cause for TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2's flaky determinism failures — wall-clock-driven mid-tick throttle in Kernel breaks determinism when audit_mode is off"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: c0116e51-00f0-4ac7-8c88-b3add2b0f751
+  modified: 2026-09-21T09:03:52.273Z
+---
+
+Root cause confirmed (2026-08-26) for the long-run determinism/certification test failures
+investigated under `TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2` (still OPEN in
+`tickets/todos/`, not yet fixed — user said "let it sit, don't do slow regression now").
+
+**The bug:** `Kernel.tick_once()` (`src/engine/kernel.py:585-596`, also a softer check at line 435)
+checks real wall-clock elapsed time (`time.perf_counter_ns()`) mid-tick, every 10 processed entity
+results. If elapsed exceeds `profile.max_tick_budget_ms` **and `self._audit_mode` is False**
+(the default — only `True` if `Kernel(..., flags={"audit_mode": True})` is passed explicitly), it
+silently drops the remaining unprocessed entity results for that tick (`record_dropped_work`) and
+forces the governor into `DEGRADED` mode. None of the three affected test files
+(`tests/integration/kernel/test_long_run_determinism.py`,
+`tests/certification/test_cert_long_run_stability.py`,
+`tests/simulation_quality/test_grade_regression.py`) set `audit_mode=True` — confirmed via grep.
+
+Since real per-tick wall-clock timing is subject to host CPU scheduling noise (GC pauses, thread
+contention, thermal throttling — not seeded or reproducible), two runs from the identical seed can
+diverge in real timing purely by machine luck, causing one run to drop entity updates the other
+processes normally — producing genuinely different final entity states and thus different
+`CanonicalStateHasher` hashes.
+
+**Directly proven, not just theorized**: ran `test_1000_tick_determinism` twice in a row, identical
+command (`--resource-budget large`, matching real CI), same machine, same seed — attempt 1 FAILED
+(watchdog trip at tick 627, `governance_ecology` phase spiked to 36ms vs normal ~0.01-0.15ms),
+attempt 2 PASSED cleanly. Matches the real CI history (4/7 push-to-main runs failed with exit 2,
+most recent one passed) — same non-determinism, different runner load each time.
+
+**Why:** Do not act without validating context — this took an actual back-to-back repro to confirm,
+not just code reading; the watchdog-trip phase that spikes varies run to run (persistence one run,
+governance_ecology another), consistent with real scheduling jitter rather than a fixed logic bug.
+
+**Recommended fix (not yet applied):** narrow, test-only change — construct the `Kernel` in the
+three affected long-run test files with `flags={"audit_mode": True}` so wall-clock throttling is
+disabled during determinism verification, matching `audit_mode`'s existing sanctioned purpose
+elsewhere in the file (bypassing real-time-dependent shortcuts for audits/certification). No
+production behavior change implied.
+
+**How to apply:** When asked to resume work on this ticket, this write-up is the investigation
+artifact — skip re-deriving root cause, go straight to filing/implementing the fix (add
+`audit_mode=True` to Kernel construction in the 3 test files) unless the user indicates otherwise.
+
+**UPDATE 2026-09-13**: this finding was durably transcribed into
+`tickets/todos/TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2.md` itself (Request
+Summary/Scope/Acceptance Criteria) after being flagged as a known defect living only in this
+session-memory record, not in the ticket — the exact pattern this whole arc has spent weeks
+correcting for stale doc/comment reachability claims. The ticket is now the authoritative,
+up-to-date source; check it directly rather than this file when resuming. Also cross-referenced from `TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION` (done) as
+an independently-found downstream consequence of this same mechanism (movement-candidacy
+starvation, not just test non-determinism) — see that ticket's own stored artifacts for the full
+connection.
+
+**UPDATE 2026-09-21 — red `Slow regression` on main is PARKED, expected state.** The ticket has been
+BLOCKED since 2026-09-16 by user decision (dropped to P3), and it unblocks only when the engine
+re-architecture lands. The corpus-diversity step (`make simq-corpus-diversity-slow-isolated`) failing
+on every push to main is expected: don't report it as unhealthy, don't hand it off, don't
+re-investigate. On 2026-09-21 I reported "main red 40+ runs" as a problem and handed it to
+rpg-feature-planning without reading the ticket; they correctly pointed back to the parking.
+**How to apply:** before calling main CI unhealthy, check whether the failing job/step is this parked
+one. Only a *different* failing job or step is news.

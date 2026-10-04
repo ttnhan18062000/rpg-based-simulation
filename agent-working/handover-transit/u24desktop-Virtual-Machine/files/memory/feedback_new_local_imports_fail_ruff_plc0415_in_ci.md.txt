@@ -1,0 +1,15 @@
+---
+name: new-local-imports-fail-ruff-plc0415-in-ci
+description: Function-local imports I add under src/ fail the ruff PLC0415 check in CI; move them to module top and check cycles before pushing
+metadata:
+  node_type: memory
+  type: feedback
+  originSessionId: 13fe866e-a939-4c4c-877e-a4bcd9114093
+  modified: 2026-10-04T15:53:53.532Z
+---
+
+New function-local `import` statements in `src/` fail CI's `ruff` check (rule PLC0415, plus I001 for the import block). It hit #291 (4 errors) and #333 (4 errors), both from the habit of copying the surrounding file's local-import style.
+
+**Why:** pyproject selects PLC0415 and the code-health ratchet blocks new violations; existing local imports are baselined and do not count. `tools/delivery/pr_status.py` does not see `ruff` (a standalone check run), so it can report green while ruff fails; `gh pr checks N` is the ground truth, and `gh api repos/.../check-runs/<id>/annotations` lists the exact lines.
+
+**How to apply:** when adding an import in `src/`, put it at module top, then `python -c "import src.engine.kernel"` to catch cycles. Run `uvx ruff@0.16.10 check --output-format concise <files>` before and after and make sure the count of import-outside-top-level findings did not rise. A CI poll that exits on a `gh` TLS error is not a completion; require no pending jobs and no TLS error. Related: [[ci-poll-tls-block-false-green]].

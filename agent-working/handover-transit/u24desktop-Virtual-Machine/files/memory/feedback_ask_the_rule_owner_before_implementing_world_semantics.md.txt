@@ -1,0 +1,42 @@
+---
+name: feedback_ask_the_rule_owner_before_implementing_world_semantics
+description: "For anything touching world semantics, get world-rule-catalog-design's read BEFORE implementing, not after"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 446cf450-111a-4a73-a656-e780690720ad
+  modified: 2026-10-03T14:07:40.849Z
+---
+
+When a fix encodes **what something means in the world** — what a raid targets, what "safety" is, what
+counts as a legitimate destination, owner, or cause — get `world-rule-catalog-design`'s read **before
+writing code**. Accepted Rule IDs outrank my judgement
+([[reference_world_rules_catalog_governs_sim_semantics]]), so implementing first risks building a fix
+that encodes a wrong rule and then citing it as evidence later.
+
+**Confirmed 2026-10-03, the global raid.** I measured a real defect (`check_for_raid` spawned every
+raider on a radius-25 ring around hardcoded `(0,0)`, 12/12 outside every region, inert — it had never
+produced a raid), designed a fix (anchor on a `PlaceKind.CITY`, else a region's geometric centre),
+implemented it, unit-tested it green, committed it — **and only then asked.** The answer withdrew it:
+- **PLACE-01** says a Place is a declared subject "rather than remaining mere terrain or a bare
+  coordinate", so my region-centre fallback invented a destination the rule layer excludes.
+- **CAUSE-01 / ID-04 / ORG-03** require a raid to have a real causal and organizational origin; a world
+  clock is not one. The right answer was **retire the mechanic**, not re-anchor it.
+- Re-anchoring would have *activated* a behaviour the world never had — an Intentional Gameplay Change
+  parked by row 7 — so my `Bug Fix` rationale class was wrong too.
+
+Two measured facts also showed the fix wouldn't even have worked: 11 of 12 re-anchored spawns were
+**still** off-region (the ring radius exceeds the region half-width), and `tactical.py:141`
+`PANIC_RETREAT` overwrites the target with the same `(0,0)` within 15-38 ticks.
+
+**Why:** the cost is asymmetric. Asking first costs one message; asking after cost an implementation, a
+test suite, a divergence entry, a parity edit, and a full rewrite — plus the risk that a wrong rule
+ships and is cited as precedent. The rule owner answered in one exchange both times.
+
+**How to apply:** before implementing anything semantic, send the question with the measurement attached
+and the specific decision named, and say explicitly that I will rewrite if the direction is wrong.
+Follow-up tickets should carry this as an AC — `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN`
+AC-6 requires the rule-layer question be put **before** implementation, which is the corrected order.
+Raise my own doubts against my own work: flagging that the region-centre fallback was the part I was
+least comfortable with is what made the "no" fast and cheap. Relates to
+[[feedback_options_and_recommendation_on_concerns]].

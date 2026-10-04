@@ -1,0 +1,12 @@
+---
+name: check-pr-open-before-pushing-to-its-branch
+description: A PR can be merged by the user while I work; check state before pushing "into" it, else the push strands on a merged branch
+metadata:
+  type: feedback
+---
+
+Before pushing more commits to an open PR's branch (or editing its body), run `gh pr view N --json state`. If it is MERGED, branch fresh off origin/main and open a new PR.
+
+**Why:** 2026-10-02 the user merged #280 while I assembled a bundle meant to ride in it; my push landed on a merged branch and the bundle had to be re-cut as #283 from origin/main (cherry-pick).
+
+**How to apply:** check state at the start of every "fold into PR" step and again right before the push; a peer's "fold into #N" message can be stale. Related: [[feedback_push_to_open_pr_not_new_stacked_pr]], [[feedback_pr_creation_no_ask_after_batch]].

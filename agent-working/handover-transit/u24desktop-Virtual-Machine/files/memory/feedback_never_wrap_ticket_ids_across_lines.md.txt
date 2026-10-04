@@ -1,0 +1,19 @@
+---
+name: feedback-never-wrap-ticket-ids-across-lines
+description: "When citing a TCK-* ticket ID (or any hyphenated token meant to be grep/tooling-searchable) inside prose, never let markdown line-wrapping split it across a line break — let the line run long instead."
+metadata:
+  type: feedback
+  originSessionId: world-rule-catalog-design-2026-09-24
+  modified: 2026-09-24T08:21:51.152Z
+---
+
+Never wrap a ticket ID (or other hyphenated, grep-searched token) across a markdown line break, even though the render looks identical either way.
+
+**Why:** In a `conflict-combat.md` superseded-note I added citing `TCK-20260924-M3-TERRITORY-COMBAT-FINDING-TRIAGE`, standard prose wrapping broke the ID mid-string:
+```
+(`TCK-20260924-M3-TERRITORY-COMBAT-FINDING-
+TRIAGE`)
+```
+Because the ID itself already contains hyphens, the line break is invisible when rendered but splits the underlying string — `grep`/ticket-reference tooling can no longer match it as one token. A note whose entire purpose is to route a reader (or a script) to that ticket then silently fails at exactly that job. Caught by `rpg-feature-planning` during a peer review of a handoff commit (2026-09-24), fixed by `rpg-implementer` before merge.
+
+**How to apply:** Whenever writing or editing prose in this repo that cites a `TCK-*` ID, a `PR #`, a commit SHA, a registry key, or any other identifier meant to be machine-searchable, let the line run long rather than let an editor/formatter wrap it — check the rendered diff for any identifier split across a line break before committing. This applies to Rule Catalog notes, ticket bodies, review exports, and any other markdown prose in this repo, not just the specific file it was found in.

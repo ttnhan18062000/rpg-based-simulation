@@ -1,0 +1,39 @@
+---
+name: feedback_ci_repro_never_from_tmp
+description: "Reproduce CI failures from a real-path git clone, never /tmp or a tar extraction — both manufacture large fake failure sets"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 30620b73-9ab0-4d7e-b1a9-8818d0a413e8
+  modified: 2026-09-23T10:28:15.823Z
+---
+
+When CI logs are unreachable (the `blob.core.windows.net` TLS block, see
+[[project_ci_poll_tls_block_false_green]]) and you reproduce the failing job locally, the
+reproduction location itself decides whether the result means anything. Two traps, both hit for
+real on 2026-09-23 triaging PR #238:
+
+1. **A `git archive` / tar extraction has no `.git`.** ~28 tests fail with
+   `git ... returned non-zero exit status 128` (test_pr_impact_report, every
+   `*_causes_zero_diff_on_real_corpus`, test_cli_does_not_mutate_agent_monitoring,
+   test_capability_envelope_baseline). All fake.
+2. **A clone under `/tmp` is structurally blind to the agent-monitoring tests.**
+   `tests/tools/test_agent_monitoring_manifest.py` asserts `"tmp" not in str(path).lower()` on
+   purpose (so the zero-mutation guards aren't vacuous against a tmp copy). Those tests hard-fail
+   on location alone — and they are exactly the ones that matter when a batch touched
+   `agent-monitoring/`. From a real path all 41 pass.
+
+**Why:** both produce confident, plausible-looking failure lists that have nothing to do with the
+actual CI failure, and each one costs a full 6-minute test cycle to disprove.
+
+**How to apply:** clone to a non-`/tmp` path (`git clone --shared --no-checkout` to keep it small —
+a plain clone is ~650MB and this disk runs at ~95%), check out the exact failing SHA, confirm
+`git status --porcelain` is empty, then run the workflow's exact command. Delete the clone after.
+Always discriminate a suspected failure by running the same tests on `origin/main` in the same
+location before calling it a regression. And before blaming the batch, check whether the job passes
+on `main` at all — `main` carries a parked red `Slow regression`
+([[project_slow_regression_determinism_root_cause]]) that is not news.
+
+If local is fully green and logs are unobtainable, re-running the failed job is the remaining
+discriminator between flake and deterministic failure. That was the answer on #238: a flake, green
+on re-run, with the specific test never identified because the logs were unreachable.

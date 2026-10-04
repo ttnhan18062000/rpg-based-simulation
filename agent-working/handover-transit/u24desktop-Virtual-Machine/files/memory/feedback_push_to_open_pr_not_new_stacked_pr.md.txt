@@ -1,0 +1,17 @@
+---
+name: feedback-push-to-open-pr-not-new-stacked-pr
+description: "While a PR from this doc-work track is still open, push new commits onto that same branch — don't open another PR, even for a different file in the same brainstorm line of work."
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: f03f90f6-61b6-4eb5-ac09-f236114a0eb8
+  modified: 2026-08-23T07:34:09.593Z
+---
+
+If any PR from this session's ongoing documentation/brainstorm track is still open (unmerged), push new commits onto that PR's own branch and let it carry the accumulating work — don't branch again into a new PR, even when the new work touches a completely different file.
+
+**Why, round 1 (same file):** [[feedback_worktree_by_default]] established a new branch/worktree per unit of work to avoid the shared-working-directory collision problem — but taken too literally, it produced an unnecessary second PR (#56) stacked on top of a still-open first PR (#54) touching the same shared TOC/revision-anchor region of `rpg_feature_atlas.html`. First correction: "I think you can push to the previous PR, no need to create new."
+
+**Why, round 2 (generalized beyond same file):** immediately after round 1, a *different* atlas file (`design_merit_scorecard.html`, no overlapping content with `rpg_feature_atlas.html`) got its own new PR (#57) on the reasoning that "no other open PR touches this file, so it's safe." The user's stronger, more general correction: "stop creating new PR, just append to the existing one" — meaning whichever PR is currently open for this line of work, period, not scoped to same-file conflict risk. The worktree-per-unit-of-work rule is about isolating *where the work happens*, not about how many PRs the resulting commits should be split across. Default to one open PR for the whole ongoing track; only close it out by merging before starting the next round's PR.
+
+**How to apply:** Before creating a new branch/PR for any follow-up work in this documentation line, run `gh pr list --state open` and check for an already-open PR from this session's own track (regardless of which specific file the new work touches). If one exists: fetch its branch, do the new work in a fresh worktree based on that branch (or cherry-pick the new commit onto it if the work happened elsewhere first), and push to update the existing PR rather than opening a new one. Only open a genuinely new PR once the prior one has actually merged. Recovery path if a second PR gets created anyway: cherry-pick its commit onto the open PR's branch, push, and let GitHub auto-close the now-redundant PR — valid, but the better move is not creating it in the first place.

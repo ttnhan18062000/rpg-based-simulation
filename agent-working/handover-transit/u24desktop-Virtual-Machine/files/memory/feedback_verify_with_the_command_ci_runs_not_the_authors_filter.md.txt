@@ -1,0 +1,48 @@
+---
+name: feedback_verify_with_the_command_ci_runs_not_the_authors_filter
+description: "Reproducing a peer's own filtered test command is not verification; run the unfiltered scope CI runs"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 446cf450-111a-4a73-a656-e780690720ad
+  modified: 2026-10-03T07:35:53.677Z
+---
+
+When a peer hands over a commit with "I verified it: `<command>` gives N passed", **reproducing that
+exact command is not independent verification.** If their command is filtered (`-k`, a single file, a
+narrow path) it can pass while the scope CI actually runs fails. Run the unfiltered directory, or
+better, the exact invocation from `.github/workflows/test.yml`.
+
+**Confirmed 2026-10-03, PR #292.** `world-rule-catalog-design` handed over a `registries/mechanisms.yaml`
+re-verification with `pytest tests/unit/tools -k "mechanism or semantic or rule"` -> 326 passed. I
+reproduced it in my worktree, got 326, and reported it as confirmation — explicitly *because* I did not
+want to take their word for it. CI then failed: `Unit · infra / observability` -> step
+`Run: tests/unit/tools` (the whole directory, `-m "not slow and not extra_slow"`), with
+`test_real_territory_view_is_up_to_date` and `test_real_cross_domain_view_is_up_to_date` failing as
+stale. Their change regenerated the four `mechanism_*` views but not the two territory management views
+derived from the same registry. Full directory: 2 failed, 491 passed.
+
+**Why:** a filter chosen by the author traces what the author *thought* they touched. The whole point
+of independent verification is to cover what they did not think of, and inheriting their filter
+inherits their blind spot — while producing a matching number that feels like confirmation.
+
+**Second instance, same day, different shape — a DIRECTORY confusion, not a filter.** CI's failing step
+was `Run: tests/tools (f–z)`. I reproduced against **`tests/unit/tools`** (495 passed) and nearly
+reported "cannot reproduce". CI runs **`tests/tools`** — a different directory — with
+`--ignore-glob='tests/tools/test_[a-e]*.py'`. Running the workflow's actual command found the failure
+immediately (`test_generate_registry.py::test_check_flag_detects_no_drift_against_real_registry`: the
+docs registry had drifted after I edited docs and filed tickets post-regeneration). So "the obviously
+equivalent path" is as dangerous as a borrowed filter.
+
+**How to apply:** before accepting a handed-over commit, find the job that covers the changed paths in
+`.github/workflows/test.yml` and **copy its `run:` command verbatim** — not the author's filter, and not
+the path that looks equivalent. `grep -n -A6 '"<step name>"' .github/workflows/test.yml` gives it
+directly. For generated/derived
+artifacts, check whether *all* generators were re-run, not just the obviously related one
+(`make territory-control-view` and `make cross-domain-management-view` sit beside the mechanism views
+and are easy to miss). Relates to [[feedback_a_probe_is_an_instrument_that_can_be_wrong]] — a borrowed
+filter is a mis-calibrated instrument — and to
+[[feedback_verify_a_peer_finding_before_relaying_it_as_fact]], which this is the test-execution form of.
+When CI logs are TLS-blocked, the **step-level** conclusions in `tools/delivery/pr_status.py` still name
+the failing step, which is usually enough to reproduce locally
+([[project_ci_poll_tls_block_false_green]]).

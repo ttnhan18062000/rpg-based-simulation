@@ -1,0 +1,15 @@
+---
+name: hand-orchestration-format-sentence-is-a-prompt-modification
+description: "On the skill path, an output-format sentence the orchestrator appends to an agent prompt is a prompt modification; it confounded Epic C criterion 2 evidence"
+metadata:
+  node_type: memory
+  type: feedback
+  originSessionId: a4a8bc18-8ed1-4a91-b96b-9228569da38d
+  modified: 2026-10-02T03:46:11.963Z
+---
+
+When hand-orchestrating `/implement-ticket` for an experiment about unprompted reviewer behaviour (Epic C criterion 2), do not claim "prompts unmodified" if you appended any text to the JS prompts. On 2026-10-02 I appended "Return your answer as a single JSON object with keys: ..." to every agent prompt because the skill path does not enforce the schema. For Architecture-Verify the key list mirrored ARCH_VERIFY_SCHEMA, which had no `test_quality_findings`, and the reviewer put its remark in free-text `notes`. I first told the reviewer "verbatim, no added sentences", and had to correct Epic C, the INDEX, the ticket, the stored evidence and the PR body.
+
+**Why:** the user and reviewer judge criterion 2 on whether the checklist fired without being prompted; an improvised format tail is a second candidate cause for any misplaced output, so the record must state it.
+
+**How to apply:** before launching any measurement run, list every addition to the prompt text (format tail, "run in foreground" notes) and record them verbatim in the ticket/evidence. Use a tail generated mechanically from the schema key list (`tools/agent-monitoring/schema_format_tail.py`, once PR #282 merges); on the native runtime that enforces the schema, append nothing. See [[feedback_hand_orchestration_gate_patterns]] and [[feedback_a_probe_is_an_instrument_that_can_be_wrong]].

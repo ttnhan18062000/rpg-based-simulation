@@ -1,0 +1,10 @@
+---
+name: project_mechanism_registry_ownership_split
+description: "Pointer: mechanisms.yaml content is rpg-owned; only its tooling is agent-working's"
+metadata:
+  type: project
+---
+
+Pointer (M1d, 2026-10-04): this rule now lives in `registries/session_roles.yaml` (`owns`/`owns_not`, route `registries/mechanisms.yaml -> rpg-planner`), `domains/agent-working.md`, and plan 9.4 (route by commit subject or routing ticket, not authorship). Original: `agent-working/stored_artifacts/TCK-20261004-SESSION-LAYER-M1D-ROLE-MEMORY-TO-POINTERS/original_memory_files.md`.
+
+Related: [[feedback_report_agent_process_issues_to_agent_working_design]].

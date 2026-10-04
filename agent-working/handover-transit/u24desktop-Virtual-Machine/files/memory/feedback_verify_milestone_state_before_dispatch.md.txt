@@ -1,0 +1,39 @@
+---
+name: feedback-verify-milestone-state-before-dispatch
+description: User has twice named an already-closed milestone as the next one to build; verify against origin/main and dispatch the real next one with evidence instead of re-asking
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: f0193188-9396-4e33-8cd3-42212878afdf
+  modified: 2026-10-03T14:18:11.244Z
+---
+
+On the semantic control plane epic the user named a closed milestone as the next unit of work
+twice: "prepare for M1" (2026-09-23) and "implement the M1" (2026-09-24, *after* being told M1 was
+merged). Both times the real next milestone was the following one.
+
+**Why:** re-asking a third time burns a round-trip and reads as not listening, but dispatching the
+named milestone would redo merged work. The user is tracking milestones loosely by memory, not
+against the repo.
+
+**How to apply:** verify the milestone's actual state against `origin/main` directly — the ticket in
+`tickets/done/`, the registries it was supposed to populate, the `make` target it was supposed to
+wire — then scope and dispatch the genuine next milestone, state the verification evidence plainly
+in one short block, and offer to redirect if they meant something specific. Accepted without
+objection when done this way on 2026-09-24 (M1 named, M2 dispatched). Do not trust a handover note's
+milestone table alone for this; verify it yourself. See [[project_worktree_verification_traps]] and
+[[feedback_attribute_relayed_findings_to_source]].
+
+**2026-10-03 — the same trap, from my own handover rather than the user.** The handover said "Items
+5-7" of the `roadmap.md` §8 work order and then detailed only row 7 ((b) before (a), slice the rule
+map). On that basis I recommended scoping rule-map slices 1-2. Reading §8 at source showed **item 5 is
+a distinct prerequisite that goes first** — the world-definition split
+(`TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`), because every later slice gathers evidence
+by running worlds and a world id resolving to different module sets by entry point makes that evidence
+incomparable. The epic ticket itself had it right as "Child A, FIRST"; only my compressed handover
+dropped it.
+
+**The generalisation:** a handover's range shorthand ("items 5-7", "rows 3-4") silently drops ordering
+constraints *inside* the range. Re-read the authoritative work order at source before recommending
+which item to dispatch, even when the handover looks specific enough to act on — especially when the
+handover was written by me.

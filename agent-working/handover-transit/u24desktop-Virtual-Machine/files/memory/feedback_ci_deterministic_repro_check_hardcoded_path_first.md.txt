@@ -1,0 +1,35 @@
+---
+name: feedback-ci-deterministic-repro-check-hardcoded-path-first
+description: "When a CI failure is deterministic but never reproduces locally under any isolation model, check for a hardcoded local-machine path before reaching for a concurrency/environment hypothesis"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 400104e3-aab6-437a-84f1-90ef594c46be
+  modified: 2026-09-25T17:14:25.421Z
+---
+
+When a CI job fails **deterministically** (every run, not intermittently) but the exact same
+command **never reproduces locally** under any isolation model tried (standalone, sequential-step
+mimicry, even a fresh checkout at the exact tested SHA), check for a hardcoded absolute path
+specific to the local dev machine (e.g. `.venv/bin/python3` under a specific `/home/<user>/...`
+prefix) before spending further rounds chasing a concurrency, timing, or environment-difference
+hypothesis.
+
+**Why:** on 2026-09-25, two tests hardcoded this exact dev machine's venv path in a
+`subprocess.run([...])` call instead of `sys.executable`. That path exists only on `u24desktop`
+(never on CI, never on the project's other documented dev machine, `vboxuser`), so it failed with
+a plain `FileNotFoundError` on every CI run — 100% deterministic — while being un-reproducible
+locally on the one machine where the path happens to be valid. A `writer.py`-lock-retry
+concurrency hypothesis and a monitoring-corpus vocabulary-drift-ratchet-via-merge-ref hypothesis
+were each investigated first (both disconfirmed via direct evidence, several CI round-trips spent)
+before the boring hardcoded-path explanation was checked. agent-working-design explicitly named
+this the durable lesson afterward: "deterministic on CI, zero local repro" should prompt a check
+for a hardcoded local-machine path *before* anyone reaches for a concurrency story — the
+glamorous hypothesis is rarely the correct one.
+
+**How to apply:** the very first diagnostic step for this exact symptom shape (deterministic CI
+failure + zero local reproduction) should be `grep` the failing test/tool file(s) for
+`/home/<any-username>/` or a bare `.venv`/venv-path string used as a subprocess command argument,
+before writing new diagnostic tooling or chasing environment-specific theories. See also
+[[feedback_ci_repro_never_from_tmp]] for the adjacent lesson about reproducing at the real tested
+SHA rather than a synthetic extraction.

@@ -1,0 +1,26 @@
+---
+name: project_sidecar_cross_session_contamination
+description: RESOLVED 2026-08-24 by per-session scoped sidecars; the remaining ~24% unattributed tool rows are a different, accepted gap
+metadata:
+  type: project
+---
+
+`.claude/current_run` was a single shared file across concurrent sessions, causing tools.jsonl to
+log against the wrong (often already-closed) ticket. **This was fixed** by
+`TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE`: `tools/agent-monitoring/post_tool_hook.py` now prefers
+a per-session scoped file (`.claude/current_run.<session_id>`), prunes stale scoped sidecars, and
+falls back to the shared path only when the hook payload carries no `session_id`.
+
+Verified by reading the hook directly on 2026-09-15, after this session wrote the *stale* version
+of this claim into a ticket premise as though it were still live — an instance of
+[[feedback_verify_claims_with_the_settling_command]] and of the defect
+`TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE` describes.
+
+**Why:** the unattributed-tool-row gap (~24% of rows carrying no run_id/phase) is REAL but is NOT
+this cause. Direct sampling showed the rate is uniform across tool types (ruling out a timing
+race) and the rows contain real ticket-implementation content, not interactive noise. It was
+accepted with a ratcheted floor rather than fixed, since a structural fix is cross-cutting.
+
+**How to apply:** do not cite shared-sidecar contamination as the explanation for missing
+attribution. Cite the accepted floor instead, and re-read `post_tool_hook.py` before claiming any
+sidecar behaviour.

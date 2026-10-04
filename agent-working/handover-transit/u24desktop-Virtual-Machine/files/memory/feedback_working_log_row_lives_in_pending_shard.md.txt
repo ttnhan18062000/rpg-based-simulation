@@ -1,0 +1,50 @@
+---
+name: feedback_working_log_row_lives_in_pending_shard
+description: Reading tickets/working_log.csv no longer proves a closure lacks its row — append_working_log_row() writes a per-batch pending shard that consolidation folds in later
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: de6512a7-ccc0-47bd-8f72-10908b45e312
+  modified: 2026-10-01T17:47:12.519Z
+---
+
+**A just-closed ticket's working_log row is normally NOT in `tickets/working_log.csv` yet.** Since
+`TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET`, `append_working_log_row()` no longer writes the
+canonical CSV at all — it writes one JSON line to a per-batch shard,
+`agent-monitoring/data/<week>/<batch-id>.working_log.jsonl`. `consolidate_pending_rows()` (run via
+`python3 tools/agent-monitoring/monitoring_consolidation.py`, i.e. `make agent-monitoring-consolidate`)
+folds pending shards into the CSV later and deletes them.
+
+**Why:** `.gitattributes`' `merge=union` never engages under a GitHub squash merge, so two branches
+each appending a row at the bottom of one shared file produced a real ~1586-row duplication
+(`TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP`). Disjoint per-batch files remove the shared
+insertion point, the same fix already applied to the JSONL monitoring shards.
+
+**The SAME per-branch-shard shape applies to the monitoring records, not just the working_log.**
+`agent-monitoring/data/<week>/runs.jsonl` and `events.jsonl` also stay empty for a just-closed ticket;
+its rows sit in `<branch-id>.runs.jsonl` / `<branch-id>.events.jsonl` beside them. So grepping the
+consolidated `runs.jsonl` for a ticket id and getting 0 proves nothing either.
+
+**How to apply:** to check whether a closure recorded its row, run
+`python3 tools/gate_checks/done_checker_static.py --ticket-id <TCK-ID>` and read the **`[finalize]`**
+section's `working_log_exactly_one_row` — that check reads pending shards too, deliberately. Do NOT
+conclude "the row is missing" from a raw CSV read, a `runs.jsonl` grep, or a line-count diff against
+`origin/main`. Never "fix" a supposedly-missing row by calling `append_working_log_row()` again, or by
+re-running `record_hand_orchestrated_closure.py` — either creates the real duplicate the check exists
+to catch. Run consolidation instead.
+
+**I have now got this wrong TWICE the same way** — 2026-09-28 (working_log CSV) and **2026-10-02**,
+where I grepped both `tickets/working_log.csv` and `agent-monitoring/data/2026-W40/runs.jsonl` on a PR
+branch, read 0/0, and told `rpg-implementer` that two DoD records were missing and to run the closure
+tool again. It had already run it once at close; the rows were in
+`stats-dirty-recalc-species-base.{runs,events,working_log}.jsonl` (1 run, 6 events, 1 row) and
+`done_checker_static` reported `RESULT PASS`. **Had it complied instead of pushing back, I would have
+caused the exact duplication this file warns about.** The lesson is not new information — it is that
+having the right memory is worthless if I reach for `grep` before the prescribed instrument. When
+checking a DoD record, the FIRST command is `done_checker_static`, not a file read.
+
+**Also:** that CLI's **`[precheck]`** section assumes the ticket is still in `tickets/inprogress/`
+with `staging_artifacts/` present, so invoking it on an already-Finalized ticket emits stale
+location/artifact FAILs and an overall non-zero exit that mean nothing. Read the `[finalize]`
+section for a post-close check. Relates to [[feedback_verify_peer_commits_via_shared_object_store]]
+— verify peers' claims, but verify with an instrument that can actually see the thing being claimed.

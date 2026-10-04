@@ -93,7 +93,7 @@ roles:
     responsibility:
       accepts_dispatch_from: [user, rpg-planner]
     capability: {may_write: ["**"]}
-    placement: {worktree: rpg, max_sessions: 1}
+    placement: {worktree: rpg, max_sessions: 2}
     handover: .claude/handover/rpg-implementer.md
   - role: agent-working-designer
     identity: {domain: agent-working, function: designer, session_name: agent-working-designer,

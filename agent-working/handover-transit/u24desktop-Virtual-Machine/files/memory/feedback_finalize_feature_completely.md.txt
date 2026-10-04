@@ -1,0 +1,27 @@
+---
+name: finalize-feature-completely
+description: "finish a feature in one batch — its own follow-up tickets and optional scope items ship with it, not parked in tickets/todos/"
+metadata:
+  node_type: memory
+  type: feedback
+  originSessionId: b92b42a5-3012-4a46-9fd6-f2be9d3bb299
+  modified: 2026-09-30T07:24:11.984Z
+---
+
+Finish a feature in full. Its follow-up tickets (siblings found while implementing it, "optional if
+cheap" scope items, "file a follow-up if X" items) go into the same batch. Don't leave them in
+`tickets/todos/` for later.
+
+**Why:** the user said on 2026-09-30 that parked follow-ups go stale and cost context later. Each
+one must be re-verified and re-explained to a fresh session, and its premise can rot (see
+[[mechanisms-yaml-verdict-not-evidence]]).
+
+**How to apply:**
+- When briefing an implementer, include every follow-up of the feature in the same batch.
+- Turn "optional" scope items into required ones, or drop them explicitly in the ticket. Don't
+  leave them ambiguous.
+- If a follow-up is genuinely too big (for example a new epic), say so and get the user's call.
+  Don't silently file it to todos.
+
+Refines [[pr-after-a-complete-batch]]. Not an exception to [[epic-all-or-nothing]]; it's the same
+spirit.
