@@ -246,4 +246,4 @@ def test_the_decoded_size_bound_is_used_only_for_decoded_size():
 
 
 def test_every_png_file_read_site_uses_the_file_size_bound():
-    assert set(_attribute_uses("MAX_PNG_FILE_BYTES")) == {"adoption.py", "build/exporter.py", "intake/service.py", "release.py", "runtime_export.py", "verify.py"}
+    assert set(_attribute_uses("MAX_PNG_FILE_BYTES")) == {"adoption.py", "build/exporter.py", "intake/service.py", "release.py", "runtime_export.py", "verify.py", "draftexport.py"}

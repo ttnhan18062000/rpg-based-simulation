@@ -55,15 +55,15 @@ export function DraftHarness({ manifestText, urlFor, decode }: DraftHarnessProps
 
   const view = snapshot !== null && loaded !== null && loaded.snapshot.generation === snapshot.draftSetHash && loaded.snapshot.catalogId === snapshot.setId ? loaded : null
   const settled = snapshot === null || view !== null
-  const scales = useMemo(() => new Map((snapshot?.entries ?? []).map((e) => [e.file, e.scale] as const)), [snapshot])
+  const files = useMemo(() => new Map((snapshot?.entries ?? []).map((e) => [e.file, { scale: e.scale, adopted: e.adopted }] as const)), [snapshot])
 
   useEffect(() => {
     if (!settled) return
     const draftCtx = draft.current?.getContext('2d')
-    if (draftCtx) drawDraftMap(draftCtx, view, 'draft', scales)
+    if (draftCtx) drawDraftMap(draftCtx, view, 'draft', files)
     const flatCtx = flat.current?.getContext('2d')
-    if (flatCtx) drawDraftMap(flatCtx, view, 'flat', scales)
-  }, [settled, view, scales, showFlat])
+    if (flatCtx) drawDraftMap(flatCtx, view, 'flat', files)
+  }, [settled, view, files, showFlat])
 
   async function openFolder(files: FileList | null) {
     setPickError(null)
@@ -103,7 +103,7 @@ export function DraftHarness({ manifestText, urlFor, decode }: DraftHarnessProps
       </label>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 8 }}>
         <section aria-label="draft map">
-          <p>Draft map: every Live Map terrain code in patches; a diagonal marks a code with no draft.</p>
+          <p>Draft map: every Live Map terrain code in patches; a diagonal marks a code with no draft; a small amber square marks a reference to ADOPTED art (not a draft under review).</p>
           <canvas ref={draft} width={width} height={height} role="img" aria-label="sample map drawn from the draft set" style={PIXELATED} />
         </section>
         {showFlat && (

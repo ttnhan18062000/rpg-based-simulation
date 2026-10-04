@@ -27,6 +27,13 @@ export const TERRAIN_DRAFT_KEYS: Readonly<Record<number, string>> = Object.freez
 })
 export const TERRAIN_CODES: readonly number[] = Object.freeze(Object.keys(TILE_NAMES_COPY).map(Number).sort((a, b) => a - b))
 
+/** Per preview file: the scale to draw it at (1/scale) and whether it is an adopted reference. */
+export interface FileInfo {
+  readonly scale: number
+  readonly adopted: boolean
+}
+export const ADOPTED_MARK = '#fbbf24'
+
 export const MAP_COLUMNS = 40
 export const MAP_ROWS = 24
 
@@ -70,6 +77,7 @@ export type DraftCtx = Pick<
 export interface CellOutcome {
   readonly code: number
   readonly kind: 'draft' | 'fallback'
+  readonly adopted: boolean // a reference to adopted catalog art, not a draft
   readonly detail: string | null
   readonly picked: string | null
   readonly detailFallback: string | null
@@ -79,7 +87,7 @@ export interface CellOutcome {
  * Draw one terrain cell at pixel (px, py). A code whose key the draft set has shows the draft at its logical size (the preview drawn at 1/scale, smoothing off, so each
  * logical pixel is exact), the detail picked by `pickDetail` for the cell; a missing draft shows the flat fill with a diagonal line across it (the labelled role fallback).
  */
-export function drawDraftCell(ctx: DraftCtx, view: View | null, code: number, px: number, py: number, cell: Cell, scales: ReadonlyMap<string, number>): CellOutcome {
+export function drawDraftCell(ctx: DraftCtx, view: View | null, code: number, px: number, py: number, cell: Cell, files: ReadonlyMap<string, FileInfo>): CellOutcome {
   ctx.imageSmoothingEnabled = false
   const key = TERRAIN_DRAFT_KEYS[code]
   if (view !== null && key !== undefined) {
@@ -87,9 +95,13 @@ export function drawDraftCell(ctx: DraftCtx, view: View | null, code: number, px
     if (result.kind === 'image') {
       const bitmap = view.bitmapFor(result.file)
       if (bitmap) {
-        const scale = scales.get(result.file) ?? 1
-        ctx.drawImage(bitmap as unknown as CanvasImageSource, px, py, bitmap.width / scale, bitmap.height / scale)
-        return { code, kind: 'draft', detail: result.detail ?? null, picked: result.picked ?? null, detailFallback: result.detailFallback ?? null }
+        const info = files.get(result.file)
+        ctx.drawImage(bitmap as unknown as CanvasImageSource, px, py, bitmap.width / (info?.scale ?? 1), bitmap.height / (info?.scale ?? 1))
+        if (info?.adopted) {
+          ctx.fillStyle = ADOPTED_MARK // the mark of a reference to adopted art: never mistaken for a draft under review
+          ctx.fillRect(px + 1, py + 1, 3, 3)
+        }
+        return { code, kind: 'draft', adopted: info?.adopted === true, detail: result.detail ?? null, picked: result.picked ?? null, detailFallback: result.detailFallback ?? null }
       }
     }
   }
@@ -105,11 +117,11 @@ export function drawDraftCell(ctx: DraftCtx, view: View | null, code: number, px
     ctx.stroke()
     ctx.restore()
   }
-  return { code, kind: 'fallback', detail: null, picked: null, detailFallback: null }
+  return { code, kind: 'fallback', adopted: false, detail: null, picked: null, detailFallback: null }
 }
 
 /** The whole sample map: `mode` 'draft' draws the drafts (or the labelled fallback), 'flat' is the plain colour fills side by side for comparison. */
-export function drawDraftMap(ctx: DraftCtx, view: View | null, mode: 'draft' | 'flat', scales: ReadonlyMap<string, number>): CellOutcome[] {
+export function drawDraftMap(ctx: DraftCtx, view: View | null, mode: 'draft' | 'flat', files: ReadonlyMap<string, FileInfo>): CellOutcome[] {
   const outcomes: CellOutcome[] = []
   for (let y = 0; y < MAP_ROWS; y++) {
     for (let x = 0; x < MAP_COLUMNS; x++) {
@@ -118,7 +130,7 @@ export function drawDraftMap(ctx: DraftCtx, view: View | null, mode: 'draft' | '
         ctx.fillStyle = TILE_COLORS_COPY[code]
         ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
       } else {
-        outcomes.push(drawDraftCell(ctx, view, code, x * CELL_SIZE, y * CELL_SIZE, { x, y }, scales))
+        outcomes.push(drawDraftCell(ctx, view, code, x * CELL_SIZE, y * CELL_SIZE, { x, y }, files))
       }
     }
   }
@@ -131,7 +143,7 @@ export function statusOf(snapshot: DraftSnapshot | null, code: number): { key: s
   const entries = snapshot?.entries.filter((e) => e.visualKey === key) ?? []
   if (entries.length === 0) return { key, text: 'missing: the labelled role fallback (flat fill with a diagonal) is shown', missing: true }
   const axis = snapshot?.details.get(key)
-  const shown = entries.map((e) => `${e.detail ?? axis?.default ?? 'draft'}: ${e.sourceAssetId} (${e.draftId})`)
+  const shown = entries.map((e) => `${e.detail ?? axis?.default ?? 'draft'}: ${e.sourceAssetId} (${e.draftId})${e.adopted ? ' [adopted (reference)]' : ''}`)
   const absent = axis ? axis.values.filter((v) => !entries.some((e) => (e.detail ?? axis.default) === v)) : []
   return { key, text: [...shown, ...absent.map((v) => `${v}: missing, falls back to the default`)].join('; '), missing: false }
 }

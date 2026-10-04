@@ -134,3 +134,59 @@ def test_a_scale_must_be_a_whole_number_dividing_the_preview_exactly():
         data = json.loads(json.dumps(base))
         data["entries"][0][field] = value
         assert code_of(DraftPreviewManifest, json.dumps(data).encode()) == "invalid_record", (field, value)
+
+
+# ---- adopted references: a live adopted slot the set does not hold is shown, labelled, never part of the set -----------------------------------------------
+
+OTHER = s.key_for("other")
+
+
+@pytest.fixture
+def referenced(two):
+    """`two` (HERO [bush] and ROCK drafts) plus an ADOPTED and built asset for a third key, which the set does not hold."""
+    from visual_assets.store.build import exporter
+
+    two.other = s.do_adopt(s.make_intake(two.tmp, 20).intake_id, source_asset_id="other", visual_key=OTHER, registry=two.registry)
+    exporter.build(renderer=s.HashRenderer())
+    return two
+
+
+def test_a_live_adopted_slot_the_set_does_not_hold_is_added_as_a_labelled_reference_built_from_the_catalog_artifact(referenced):
+    manifest = export(referenced)
+    by_key = {e.visual_key: e for e in manifest.entries}
+    ref = by_key[OTHER]
+    assert ref.adopted is True and ref.scale == 1 and ref.source_asset_id == "other" and ref.draft_id == referenced.other.intake_id
+    artifact_png = next((referenced.catalog / "generated" / "other--x1").glob("*.png")).read_bytes()
+    assert (referenced.tmp / "out" / ref.file).read_bytes() == artifact_png  # the catalog's own artifact, byte for byte, nothing from a draft
+    assert (by_key[HERO].adopted, by_key[ROCK].adopted) == (None, None)  # draft entries carry no such field
+    assert b'"adopted"' not in canonical_json(manifest.model_copy(update={"entries": tuple(e for e in manifest.entries if e.adopted is None)}))
+
+
+def test_a_draft_for_the_slot_always_wins_so_no_reference_is_added(referenced):
+    keep(referenced, 18, visual_key=OTHER, source_asset_id="other_draft")
+    manifest = export(referenced)
+    entries = [e for e in manifest.entries if e.visual_key == OTHER]
+    assert [(e.adopted, e.source_asset_id) for e in entries] == [(None, "other_draft")]
+
+
+def test_references_never_reach_the_draft_set_draft_verify_or_adopt_set(referenced):
+    set_bytes = (referenced.drafts / SET / "draft_set.json").read_bytes()
+    manifest = export(referenced)
+    assert any(e.adopted for e in manifest.entries)
+    assert (referenced.drafts / SET / "draft_set.json").read_bytes() == set_bytes  # the set record is untouched
+    assert manifest.draft_set_hash == file_hash(set_bytes)  # and the reviewed hash is the set's, not the export's
+    assert drafts.verify_set(SET, registry=referenced.registry) == []  # `draft verify` never sees a reference
+    record = adopt_set(referenced)
+    assert sorted(e.visual_key for e in record.entries) == [HERO, ROCK]  # exactly the drafts; the adopted reference is not re-adopted
+    assert OTHER not in {e.visual_key for e in record.entries}
+
+
+def test_the_adopted_field_is_only_ever_the_literal_true():
+    data = json.loads(draft_bytes())
+    data["entries"][0]["adopted"] = True
+    assert parse_record(DraftPreviewManifest, json.dumps(data).encode()).entries[0].adopted is True
+    for bad in (False, 1, "true", None):
+        data["entries"][0]["adopted"] = bad
+        if bad is None:
+            continue  # an explicit null is the same as absent
+        assert code_of(DraftPreviewManifest, json.dumps(data).encode()) == "invalid_record", bad

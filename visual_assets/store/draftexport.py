@@ -3,7 +3,8 @@
 Read-only on the drafts and the catalog; the output goes to a NEW directory outside both (all-or-nothing: staged in a `.tmp-*` sibling, then renamed) and is deterministic.
 The manifest is a record type of its own (`draft_preview_manifest`), never a `runtime_manifest`. It carries the set id and `draft_set_hash`, the file hash of the exact
 `draft_set.json` bytes, which is the value `adopt-set` prints in its confirmation: a review record can name exactly the set that was reviewed and then adopted.
-The set is verified first (the whole chain of every entry, declared keys and values, and no revoked intake) and any finding refuses the export. Each entry's `preview.png` is copied
+The set is verified first (the whole chain of every entry, declared keys and values, and no revoked intake) and any finding refuses the export. A live ADOPTED slot
+the set does not hold is added as a labelled reference entry (`adopted: true`, from the catalog's artifact) so the map is complete; a draft for a slot always wins, and references exist only here, never in the DraftSet. Each entry's `preview.png` is copied
 byte for byte, named by its pixel hash; the page draws it at 1/`scale` with smoothing off. No Aseprite is needed. Refusals have stable codes (`DraftError`).
 """
 
@@ -14,12 +15,12 @@ import secrets
 import shutil
 from pathlib import Path
 
-from visual_assets.store import config, drafts, pixels
+from visual_assets.store import config, drafts, pixels, records
 from visual_assets.store.catalog.registry import Registry, load_registry
 from visual_assets.store.contracts import CandidateHandoffPackage, DraftPreviewManifest, canonical_json, parse_record
 from visual_assets.store.contracts.draft import DraftPreviewEntry
 from visual_assets.store.contracts.runtime import RuntimeDetail
-from visual_assets.store.errors import ContractError, DraftError, PngDecodeError, RegistryError
+from visual_assets.store.errors import ContractError, DraftError, PngDecodeError, RegistryError, StageError
 from visual_assets.store.intake import quarantine, validator
 
 MANIFEST_NAME = "draft_preview_manifest.json"
@@ -43,6 +44,41 @@ def _check_out(out_dir: Path | str, drafts_root: Path) -> Path:
     if not parent.is_dir():
         raise DraftError("out_parent_missing", "the output's parent directory does not exist")
     return parent / out.name
+
+
+def _adopted_references(known: Registry, record, files: dict[str, bytes]) -> list[DraftPreviewEntry]:
+    """A reference entry for each live ADOPTED slot of a registered key that the set does not hold (a draft for the slot always wins), so the preview map is complete.
+
+    Built from the catalog's 16 x 16 artifact (scale 1), never from a draft: nothing is copied into the drafts and `adopt-set` never sees it (it is not in the DraftSet).
+    """
+    held = {(e.visual_key, known.keys[e.visual_key].effective_detail(e.detail)) for e in record.entries if e.visual_key in known.keys}
+    out: list[DraftPreviewEntry] = []
+    try:
+        for key, definition in sorted(known.keys.items()):
+            for slot in ([None] if definition.detail is None else list(definition.detail.values)):
+                if (key, slot) in held:
+                    continue
+                holders = records.slot_holders(definition, slot)
+                if not holders:
+                    continue
+                sid = holders[0]
+                revision = [r for r in records.list_revisions(sid) if records.is_eligible(sid, r)][-1]
+                found = records.load_artifact_for(sid, revision, "x1")
+                if found is None:
+                    continue  # adopted but not built yet: nothing to show
+                artifact, _ = found
+                digest = artifact.pixel_hash[len(pixels.HASH_PREFIX):]
+                png = records.read_file(records.artifact_paths(artifact.artifact_id, digest, artifact.source_revision)[0], config.MAX_PNG_FILE_BYTES)
+                decoded = pixels.decode_png(png, max_dim=config.MAX_DIM)
+                adoption = records.load_adoption(records.load_source(sid, revision).adoption_id)
+                files[f"{digest}.png"] = png
+                out.append(DraftPreviewEntry(
+                    visual_key=key, family=definition.family, detail=slot, source_asset_id=sid, draft_id=adoption.intake_id, pixel_hash=artifact.pixel_hash,
+                    file=f"{digest}.png", width=decoded.width, height=decoded.height, scale=1, adopted=True,
+                ))
+    except (ContractError, StageError, PngDecodeError) as exc:
+        raise DraftError("catalog_unreadable", f"the adopted art could not be read ({getattr(exc, 'code', 'error')})") from None
+    return out
 
 
 def export_draft_preview(
@@ -77,6 +113,8 @@ def export_draft_preview(
             visual_key=entry.visual_key, family=known.keys[entry.visual_key].family, detail=entry.detail, source_asset_id=entry.source_asset_id,
             draft_id=entry.draft_id, pixel_hash=entry.pixel_hash, file=name, width=decoded.width, height=decoded.height, scale=decoded.width // package.width,
         ))
+    entries += _adopted_references(known, record, files)
+    entries.sort(key=lambda e: (e.visual_key, e.detail or ""))
     details = tuple(
         RuntimeDetail(visual_key=key, values=tuple(known.keys[key].detail.values), default=known.keys[key].detail.default)
         for key in sorted({e.visual_key for e in entries}) if known.keys[key].detail is not None

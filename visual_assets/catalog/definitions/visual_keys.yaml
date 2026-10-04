@@ -1,5 +1,6 @@
 # Semantic visual-key registry. Nothing registers keys dynamically: the namespace is finite and fixed by this hand-reviewed file.
-# One real key so far (the AM-M6 pilot role, TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE); everything else is a synthetic fixture.
+# `terrain.forest` is the one ADOPTED key (the AM-M6 pilot role, TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE). The other 22 Live Map terrain codes are registered `optional: true`
+# so draft set `terrain-v1` can name them (TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET); nothing is adopted for them and no release needs them. Key = `terrain.` + the snake_case name.
 record_type: visual_key_registry
 schema_version: 1
 keys:
@@ -8,4 +9,114 @@ keys:
     description: Live Map forest terrain cell (tile code 6), one 16x16 tile at scale x1; the colour fill is its fallback
     variant_axes: []
     detail: {values: [plain, bush, tree], default: plain}
+  - key: terrain.floor
+    family: terrain
+    description: Live Map Floor terrain cell (tile code 0), one 16x16 tile at scale x1; the colour fill #1a1d27 is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.wall
+    family: terrain
+    description: Live Map Wall terrain cell (tile code 1), one 16x16 tile at scale x1; the colour fill #555b73 is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.water
+    family: terrain
+    description: Live Map Water terrain cell (tile code 2), one 16x16 tile at scale x1; the colour fill #1e3a5f is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.town
+    family: terrain
+    description: Live Map Town terrain cell (tile code 3), one 16x16 tile at scale x1; the colour fill #2d4a3e is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.camp
+    family: terrain
+    description: Live Map Camp terrain cell (tile code 4), one 16x16 tile at scale x1; the colour fill #4a2d2d is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.sanctuary
+    family: terrain
+    description: Live Map Sanctuary terrain cell (tile code 5), one 16x16 tile at scale x1; the colour fill #2d3a4a is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.desert
+    family: terrain
+    description: Live Map Desert terrain cell (tile code 7), one 16x16 tile at scale x1; the colour fill #3a3420 is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.swamp
+    family: terrain
+    description: Live Map Swamp terrain cell (tile code 8), one 16x16 tile at scale x1; the colour fill #2a2a3a is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.mountain
+    family: terrain
+    description: Live Map Mountain terrain cell (tile code 9), one 16x16 tile at scale x1; the colour fill #3a3a3a is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.road
+    family: terrain
+    description: Live Map Road terrain cell (tile code 10), one 16x16 tile at scale x1; the colour fill #5a5040 is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.bridge
+    family: terrain
+    description: Live Map Bridge terrain cell (tile code 11), one 16x16 tile at scale x1; the colour fill #4a6050 is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.ruins
+    family: terrain
+    description: Live Map Ruins terrain cell (tile code 12), one 16x16 tile at scale x1; the colour fill #4a4035 is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.dungeon_entrance
+    family: terrain
+    description: Live Map Dungeon Entrance terrain cell (tile code 13), one 16x16 tile at scale x1; the colour fill #6a3040 is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.lava
+    family: terrain
+    description: Live Map Lava terrain cell (tile code 14), one 16x16 tile at scale x1; the colour fill #8a3000 is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.grassland
+    family: terrain
+    description: Live Map Grassland terrain cell (tile code 15), one 16x16 tile at scale x1; the colour fill #4a6030 is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.snow
+    family: terrain
+    description: Live Map Snow terrain cell (tile code 16), one 16x16 tile at scale x1; the colour fill #c8d8e8 is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.jungle
+    family: terrain
+    description: Live Map Jungle terrain cell (tile code 17), one 16x16 tile at scale x1; the colour fill #0a4a0a is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.shallow_water
+    family: terrain
+    description: Live Map Shallow Water terrain cell (tile code 18), one 16x16 tile at scale x1; the colour fill #2a5070 is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.farmland
+    family: terrain
+    description: Live Map Farmland terrain cell (tile code 19), one 16x16 tile at scale x1; the colour fill #6a7a40 is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.cave
+    family: terrain
+    description: Live Map Cave terrain cell (tile code 20), one 16x16 tile at scale x1; the colour fill #3a3040 is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.volcanic
+    family: terrain
+    description: Live Map Volcanic terrain cell (tile code 21), one 16x16 tile at scale x1; the colour fill #5a2a1a is its fallback
+    variant_axes: []
+    optional: true
+  - key: terrain.graveyard
+    family: terrain
+    description: Live Map Graveyard terrain cell (tile code 22), one 16x16 tile at scale x1; the colour fill #4a4050 is its fallback
+    variant_axes: []
+    optional: true
 aliases: []

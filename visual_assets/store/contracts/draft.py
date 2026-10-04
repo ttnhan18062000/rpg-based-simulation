@@ -112,6 +112,12 @@ def _preview_dim(value: int) -> int:
 PreviewDimension = Annotated[int, AfterValidator(_preview_dim)]
 
 
+def _only_true(value: bool) -> bool:
+    if value is not True:
+        raise ValueError("`adopted` is only ever the literal true")
+    return value
+
+
 class DraftPreviewEntry(StoreRecord):
     visual_key: VisualKey
     family: Family
@@ -123,10 +129,13 @@ class DraftPreviewEntry(StoreRecord):
     width: PreviewDimension  # of the preview PNG, in pixels
     height: PreviewDimension
     scale: Annotated[int, Field(ge=1, le=16)]  # the preview is the tile at this whole-number scale: the page draws it at 1/scale, smoothing off
+    # Only in this export, never in a DraftSet: a live ADOPTED slot the set does not hold, shown so the map is complete. It is a reference to catalog art, not a draft under
+    # review; the page labels it "adopted (reference)". Always the literal `true`, omitted otherwise.
+    adopted: Annotated[bool, AfterValidator(_only_true)] | None = None
 
     @model_serializer(mode="wrap")
     def _omit_absent_detail(self, handler):  # type: ignore[no-untyped-def]
-        return drop_absent(handler(self), "detail")
+        return drop_absent(handler(self), "detail", "adopted")
 
     @model_validator(mode="after")
     def _rules(self) -> DraftPreviewEntry:

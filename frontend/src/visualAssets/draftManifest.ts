@@ -23,6 +23,8 @@ export interface DraftEntry {
   readonly width: number
   readonly height: number
   readonly scale: number
+  // True only for a reference to a live ADOPTED slot the set does not hold (catalog art, not a draft under review). Never in a draft set; always the literal true.
+  readonly adopted: boolean
 }
 
 export interface DraftSnapshot {
@@ -39,7 +41,7 @@ const OPTIONAL_TOP_FIELDS = ['details'] as const
 const ENTRY_FIELDS = [
   'visual_key', 'family', 'source_asset_id', 'draft_id', 'pixel_hash', 'file', 'width', 'height', 'scale',
 ] as const
-const OPTIONAL_ENTRY_FIELDS = ['detail'] as const
+const OPTIONAL_ENTRY_FIELDS = ['detail', 'adopted'] as const
 const DRAFT_ID = /^in-[0-9a-f]{16}$/
 
 function previewDim(value: unknown, what: string): number {
@@ -47,6 +49,12 @@ function previewDim(value: unknown, what: string): number {
     throw new ManifestError('invalid_value', `${what} must be an integer 1..${MAX_PREVIEW_DIM}`)
   }
   return value
+}
+
+function adoptedFlag(value: unknown, index: number): boolean {
+  if (value === undefined || value === null) return false // absent or an explicit null
+  if (value !== true) throw new ManifestError('invalid_value', `entries[${index}].adopted is only ever the literal true`)
+  return true
 }
 
 function parseEntry(raw: Parameters<typeof object>[0], index: number): DraftEntry {
@@ -72,6 +80,7 @@ function parseEntry(raw: Parameters<typeof object>[0], index: number): DraftEntr
     sourceAssetId: text(o.source_asset_id, `entries[${index}].source_asset_id`, ID),
     draftId: text(o.draft_id, `entries[${index}].draft_id`, DRAFT_ID),
     pixelHash, file, width, height, scale,
+    adopted: adoptedFlag(o.adopted, index),
   })
 }
 

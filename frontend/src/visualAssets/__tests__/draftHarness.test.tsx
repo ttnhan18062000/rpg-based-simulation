@@ -7,12 +7,12 @@ import { SnapshotLoader, type Bitmap, type Decode } from '../loader'
 import { pickDetail, DETAIL_SEED } from '../pickDetail'
 import { CELL_SIZE } from '../cell'
 import {
-  MAP_COLUMNS, MAP_ROWS, TERRAIN_CODES, TERRAIN_DRAFT_KEYS, TILE_COLORS_COPY, drawDraftMap, mapCodes,
+  ADOPTED_MARK, MAP_COLUMNS, MAP_ROWS, TERRAIN_CODES, TERRAIN_DRAFT_KEYS, TILE_COLORS_COPY, drawDraftMap, mapCodes, statusOf,
 } from '../terrainDrafts'
 import { Recorder } from './pilotHelpers'
 
 const snapshot = parseDraftPreview(draftManifestText)
-const scales = new Map(snapshot.entries.map((e) => [e.file, e.scale] as const))
+const scales = new Map(snapshot.entries.map((e) => [e.file, { scale: e.scale, adopted: e.adopted }] as const))
 type Tagged = Bitmap & { url: string }
 const decode: Decode = async (url) => ({ width: 128, height: 128, url } as Tagged)
 
@@ -89,6 +89,26 @@ describe('drawing the sample map from the fixture draft set', () => {
     drawDraftMap(a.asCtx(), view, 'draft', scales)
     drawDraftMap(b.asCtx(), view, 'draft', scales)
     expect(b.calls).toEqual(a.calls)
+  })
+})
+
+describe('references to adopted art', () => {
+  it('are drawn with a mark and labelled "adopted (reference)" in the status, so they are never mistaken for drafts under review', async () => {
+    const raw = JSON.parse(draftManifestText)
+    raw.entries = raw.entries.map((e: Record<string, unknown>) => (e.visual_key === 'terrain.desert' ? { ...e, adopted: true } : e))
+    const withRef = parseDraftPreview(JSON.stringify(raw))
+    expect(statusOf(withRef, 7).text).toContain('[adopted (reference)]')
+    expect(statusOf(snapshot, 7).text).not.toContain('adopted')
+    const view = new SnapshotLoader(decode, draftUrlFor).mount(asRuntimeSnapshot(withRef))
+    await view.ready
+    const files = new Map(withRef.entries.map((e) => [e.file, { scale: e.scale, adopted: e.adopted }] as const))
+    const ctx = new Recorder()
+    const outcomes = drawDraftMap(ctx.asCtx(), view, 'draft', files)
+    const desert = outcomes.filter((o) => o.code === 7)
+    expect(desert.length).toBeGreaterThan(0)
+    expect(desert.every((o) => o.kind === 'draft' && o.adopted)).toBe(true)
+    expect(outcomes.filter((o) => o.code !== 7).every((o) => !o.adopted)).toBe(true)
+    expect(ctx.fills.filter((fill) => fill === ADOPTED_MARK)).toHaveLength(desert.length) // one mark per adopted-reference cell, none elsewhere
   })
 })
 

@@ -76,6 +76,18 @@ describe('parseDraftPreview', () => {
     expect(draftCode(change)).toBe(code)
   })
 
+  it('accepts `adopted` only as the literal true (a reference to adopted art), and an explicit null as absent', () => {
+    const parsed = (value: unknown) => {
+      const r = raw()
+      r.entries[0].adopted = value
+      return parseDraftPreview(JSON.stringify(r)).entries[0].adopted
+    }
+    expect(parsed(true)).toBe(true)
+    expect(parsed(null)).toBe(false)
+    expect(parseDraftPreview(draftManifestText).entries.every((e) => e.adopted === false)).toBe(true)
+    for (const bad of [false, 1, 'true', 0, {}]) expect(draftCode((r) => { r.entries[0].adopted = bad }), String(bad)).toBe('invalid_value')
+  })
+
   it('rejects more drafts than a set may hold', () => {
     const entry = raw().entries[0]
     expect(draftCode((r) => { r.entries = Array.from({ length: 257 }, () => ({ ...entry })) })).toBe('too_many_entries')

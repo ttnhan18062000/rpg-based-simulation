@@ -67,3 +67,6 @@ and asked why, so both were redrawn. The first drafts stay PASSED, reviewed and 
 
 `rc-0001` can no longer be exported (the registry changed since it was assembled, `registry_mismatch`); it is still read and `verify` tolerates its axis-less entry.
 
+**`pilot/rc-0003`** (`TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET`): registering the other 22 Live Map terrain keys (`optional: true`, for the draft set `terrain-v1`) changed the registry hash, so `rc-0002` can no longer be exported (`registry_mismatch`, by design). `rc-0003` was assembled from the new registry with exactly rc-0002's three entries
+(same slots, artifact ids and pixel hashes: tested) and is what the committed runtime fixture now exports (`registry_hash` `sha256:3d2eeeccc864b5a0dae9660075eba66e0f27940ab024f2a58740d229f0a41451`, `candidate_manifest_hash` `sha256:32c38266f10a1fb8b5e3d31d7b865e1fc350c00fde696d2ce6f2aa0c18eada19`). `rc-0001` and `rc-0002` stay committed as history.
+
