@@ -2233,30 +2233,33 @@
   divergence_note: null
   support_boundary: null
 - id: INFRA-196
-  text: 'BudgetedCanonicalHasher tracks full-hash call count per 100-tick window.
-    pressure_report() returns WARN when call count reaches >= 80% of max_full_hashes_per_100_ticks,
-    and DEGRADED at >= 100%. Over-budget calls to get_hash() return the last known
-    hash (stale); degradation_action contains "returning_stale_hash" to make the degraded
-    return value self-documenting. The underlying CanonicalStateHasher static class
-    is unchanged (INFRA-119 through INFRA-130 unaffected); BudgetedCanonicalHasher
-    is a thin wrapper. Window resets when current_tick - window_start_tick >= 100.
+  text: 'BudgetedCanonicalHasher (a rate-limited wrapper around CanonicalStateHasher that
+    returned a stale hash when over its per-100-tick budget) is retired. PERF-D5 point
+    3: a proof digest is either computed for the current state or reported as not computed,
+    never served stale. The class had no production caller.
 
     '
-  status: verified
+  status: unsupported
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/engine/checkpoint.py::BudgetedCanonicalHasher
+  v2_evidence: null
   proof_type: null
-  test_path: tests/unit/engine/test_resource_budget_gate.py::TestBudgetedCanonicalHasher::test_canonical_hasher_reports_warn_over_budget
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'Retired by TCK-20261004-PERF-M1-HASH-POLICY-CHECKPOINT-SLICE (PERF-D5, owner-approved
+    2026-10-03). BudgetedCanonicalHasher and its tests were removed from src/engine/checkpoint.py
+    and tests/unit/engine/test_resource_budget_gate.py. The hashing budget config (DEFAULT_HASHING_BUDGET)
+    remains in src/config/optimization_profiles.py with no consumer.'
 - id: INFRA-197
   text: 'CanonicalHashScheduler enforces sanctioned-boundary policy for full canonical
     state hashes. Full-hash calls are only allowed at tick=0, tick==run_end_tick,
-    or when reason is in {"certification","audit","replay"}. Any other call raises
-    HashScheduleViolation(RuntimeError). Light-hash (MD5 over tick+seed+entity/region
-    counts) is always allowed and never raises. HashMode enum values: FULL="full",
-    LIGHT="light". Both harness.py call sites updated to use CanonicalHashScheduler.compute_hash(...,
+    or when reason is in {"certification","audit","replay"}. compute_hash() raises
+    HashScheduleViolation(RuntimeError) for any other call and returns the flat SHA-256
+    value otherwise; compute_digest() returns a ProofDigest record (scheme "flat-sha256-v1",
+    tick, DigestStatus, value) and reports NOT_COMPUTED_UNSANCTIONED_BOUNDARY instead
+    of raising. HashMode has one member, FULL="full" (the LIGHT MD5 mode was retired by
+    PERF-D5 point 3); the mode parameter is kept only for src/certification/harness.py
+    (gated; PERF-M1-T03b). Both harness.py call sites use CanonicalHashScheduler.compute_hash(...,
     mode=FULL, reason="certification").
 
     '

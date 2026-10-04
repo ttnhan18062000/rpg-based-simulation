@@ -37,8 +37,10 @@ TEST_ROOT = "tests"
 # class name -> {method name -> mechanism label}
 MECHANISM_CLASSES: Dict[str, Dict[str, str]] = {
     "CanonicalStateHasher": {"get_hash": "CanonicalStateHasher.get_hash"},
-    "BudgetedCanonicalHasher": {"get_hash": "BudgetedCanonicalHasher.get_hash"},
-    "CanonicalHashScheduler": {"compute_hash": "CanonicalHashScheduler.compute_hash"},
+    "CanonicalHashScheduler": {
+        "compute_hash": "CanonicalHashScheduler.compute_hash",
+        "compute_digest": "CanonicalHashScheduler.compute_digest",
+    },
     "StateFingerprinter": {"get_fingerprint": "StateFingerprinter.get_fingerprint"},
 }
 FINGERPRINT_MECHANISM = "AuthoritativeState.fingerprint"
@@ -47,8 +49,8 @@ DIRECT_DIGEST_MECHANISM = "hashlib digest of canonical state data"
 # What each mechanism produces, stated once so the report does not repeat it per call site.
 SCHEMES: Dict[str, str] = {
     "CanonicalStateHasher.get_hash": "flat SHA-256 over compact canonical JSON of the whole state",
-    "BudgetedCanonicalHasher.get_hash": "same flat SHA-256, rate limited; returns a stale value when over budget",
-    "CanonicalHashScheduler.compute_hash": "FULL: same flat SHA-256 at a sanctioned boundary; LIGHT: MD5 of tick/seed/entity and region counts",
+    "CanonicalHashScheduler.compute_hash": "same flat SHA-256 (flat-sha256-v1) at a sanctioned boundary; raises elsewhere",
+    "CanonicalHashScheduler.compute_digest": "same flat SHA-256 as a typed record (scheme, tick, status, value); reports 'not computed' elsewhere",
     "StateFingerprinter.get_fingerprint": "dict whose 'state_hash' is an MD5 over a hand-built string of selected state domains",
     FINGERPRINT_MECHANISM: "delegates to StateFingerprinter.get_fingerprint (same dict, MD5 state_hash)",
     DIRECT_DIGEST_MECHANISM: "hashlib digest computed by the caller itself, not through CanonicalStateHasher.get_hash",

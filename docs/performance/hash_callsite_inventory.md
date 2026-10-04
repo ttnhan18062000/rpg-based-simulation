@@ -14,6 +14,12 @@ commit named in the generated block. It measures nothing (no kernel run, no timi
 policy, and edits none of the documents it compares; those findings are in §6. The cost half of
 PA-03A waits for the RPG-core stability entry gate in `performance_optimization_roadmap.md`.
 
+**Update 2026-10-04 (`TCK-20261004-PERF-M1-HASH-POLICY-CHECKPOINT-SLICE`):** `BudgetedCanonicalHasher` and
+`HashMode.LIGHT` were retired from `src/engine/checkpoint.py` (PERF-D5 point 3), and `CanonicalHashScheduler`
+gained `compute_digest`, which returns a typed record (scheme `flat-sha256-v1`, tick, status). The generated
+tables in §2 reflect the new tree. The prose in §1 and §3 to §7 below is the 2026-10-03 reading and still
+describes those two mechanisms as they were; read them as history.
+
 How to read it: §1 is the answer in short. §2 is the scanner's generated tables. §3 to §5 are
 hand-written from reading the code. §6 lists where three documents disagree with the code. §7 lists
 what the scan and the reading could not establish.
@@ -42,7 +48,7 @@ what the scan and the reading could not establish.
 
 <!-- BEGIN GENERATED: tools/perf/hash_callsite_inventory.py -->
 
-Generated from commit `58d6836c9b74713354b7526cd9b15b8bd9771f78` by `tools/perf/hash_callsite_inventory.py`. Regenerate this block with:
+Generated from commit `b4201b37a399998e236cd1ff42a0cd90530d4880` by `tools/perf/hash_callsite_inventory.py`. Regenerate this block with:
 
 ```
 python3 tools/perf/hash_callsite_inventory.py --update-doc docs/performance/hash_callsite_inventory.md
@@ -58,25 +64,24 @@ python3 tools/perf/hash_callsite_inventory.py --check docs/performance/hash_call
 | 2 | `src/certification/harness.py` | 257 | `CertificationHarness._write_full_evidence` | hashlib digest of canonical state data | caller | try |
 | 3 | `src/certification/harness.py` | 311 | `CertificationHarness._get_baseline_hash` | CanonicalHashScheduler.compute_hash | caller | try |
 | 4 | `src/core/state.py` | 1641 | `AuthoritativeState.fingerprint` | StateFingerprinter.get_fingerprint | delegation inside a mechanism | none in this function |
-| 5 | `src/engine/checkpoint.py` | 188 | `BudgetedCanonicalHasher.get_hash` | CanonicalStateHasher.get_hash | delegation inside a mechanism | unless: self._last_known_hash; if max_h is not None and self._call_count >= max_h |
-| 6 | `src/engine/checkpoint.py` | 191 | `BudgetedCanonicalHasher.get_hash` | CanonicalStateHasher.get_hash | delegation inside a mechanism | none in this function |
-| 7 | `src/engine/checkpoint.py` | 280 | `CanonicalHashScheduler.compute_hash` | CanonicalStateHasher.get_hash | delegation inside a mechanism | if mode is HashMode.FULL |
-| 8 | `src/engine/kernel.py` | 397 | `Kernel._tick_once_inner` | AuthoritativeState.fingerprint | caller | if self._audit_mode |
-| 9 | `src/engine/kernel.py` | 710 | `Kernel._phase_resolution` | AuthoritativeState.fingerprint | caller | if self._current_policy.replay_allowed |
-| 10 | `src/engine/kernel.py` | 1151 | `Kernel._guard_stability` | AuthoritativeState.fingerprint | caller | none in this function |
-| 11 | `src/engine/kernel.py` | 1186 | `Kernel._phase_persistence` | CanonicalStateHasher.get_hash | caller | if self._current_policy.replay_allowed and (self._audit_mode or self._current_policy.replay_richness == 'FULL') |
-| 12 | `src/engine/kernel.py` | 1255 | `Kernel.shutdown` | CanonicalStateHasher.get_hash | caller | none in this function |
-| 13 | `src/worldbuilding/compiler.py` | 792 | `WorldCompiler.compile` | StateFingerprinter.get_fingerprint | caller | none in this function |
-| 14 | `src/worldbuilding/compiler.py` | 803 | `WorldCompiler.compile` | CanonicalStateHasher.get_hash | caller | none in this function |
+| 5 | `src/engine/checkpoint.py` | 205 | `CanonicalHashScheduler.compute_digest` | CanonicalStateHasher.get_hash | delegation inside a mechanism | none in this function |
+| 6 | `src/engine/checkpoint.py` | 226 | `CanonicalHashScheduler.compute_hash` | CanonicalStateHasher.get_hash | delegation inside a mechanism | none in this function |
+| 7 | `src/engine/kernel.py` | 397 | `Kernel._tick_once_inner` | AuthoritativeState.fingerprint | caller | if self._audit_mode |
+| 8 | `src/engine/kernel.py` | 710 | `Kernel._phase_resolution` | AuthoritativeState.fingerprint | caller | if self._current_policy.replay_allowed |
+| 9 | `src/engine/kernel.py` | 1151 | `Kernel._guard_stability` | AuthoritativeState.fingerprint | caller | none in this function |
+| 10 | `src/engine/kernel.py` | 1186 | `Kernel._phase_persistence` | CanonicalStateHasher.get_hash | caller | if self._current_policy.replay_allowed and (self._audit_mode or self._current_policy.replay_richness == 'FULL') |
+| 11 | `src/engine/kernel.py` | 1255 | `Kernel.shutdown` | CanonicalStateHasher.get_hash | caller | none in this function |
+| 12 | `src/worldbuilding/compiler.py` | 792 | `WorldCompiler.compile` | StateFingerprinter.get_fingerprint | caller | none in this function |
+| 13 | `src/worldbuilding/compiler.py` | 803 | `WorldCompiler.compile` | CanonicalStateHasher.get_hash | caller | none in this function |
 
 ### G2. Functions that produce a digest or delegate to a mechanism
 
 | File | Line | Function | hashlib algorithms | Delegates to |
 |---|---|---|---|---|
 | `src/core/state.py` | 1635 | `AuthoritativeState.fingerprint` | - | StateFingerprinter.get_fingerprint |
-| `src/engine/checkpoint.py` | 45 | `CanonicalStateHasher.get_hash` | sha256 | - |
-| `src/engine/checkpoint.py` | 165 | `BudgetedCanonicalHasher.get_hash` | - | CanonicalStateHasher.get_hash |
-| `src/engine/checkpoint.py` | 259 | `CanonicalHashScheduler.compute_hash` | md5 | CanonicalStateHasher.get_hash |
+| `src/engine/checkpoint.py` | 71 | `CanonicalStateHasher.get_hash` | sha256 | - |
+| `src/engine/checkpoint.py` | 198 | `CanonicalHashScheduler.compute_digest` | - | CanonicalStateHasher.get_hash |
+| `src/engine/checkpoint.py` | 207 | `CanonicalHashScheduler.compute_hash` | - | CanonicalStateHasher.get_hash |
 | `src/replay/fingerprint.py` | 33 | `StateFingerprinter.get_fingerprint` | md5 | - |
 
 ### G3. Schemes
@@ -84,8 +89,8 @@ python3 tools/perf/hash_callsite_inventory.py --check docs/performance/hash_call
 | Mechanism | What it produces |
 |---|---|
 | CanonicalStateHasher.get_hash | flat SHA-256 over compact canonical JSON of the whole state |
-| BudgetedCanonicalHasher.get_hash | same flat SHA-256, rate limited; returns a stale value when over budget |
-| CanonicalHashScheduler.compute_hash | FULL: same flat SHA-256 at a sanctioned boundary; LIGHT: MD5 of tick/seed/entity and region counts |
+| CanonicalHashScheduler.compute_hash | same flat SHA-256 (flat-sha256-v1) at a sanctioned boundary; raises elsewhere |
+| CanonicalHashScheduler.compute_digest | same flat SHA-256 as a typed record (scheme, tick, status, value); reports 'not computed' elsewhere |
 | StateFingerprinter.get_fingerprint | dict whose 'state_hash' is an MD5 over a hand-built string of selected state domains |
 | AuthoritativeState.fingerprint | delegates to StateFingerprinter.get_fingerprint (same dict, MD5 state_hash) |
 | hashlib digest of canonical state data | hashlib digest computed by the caller itself, not through CanonicalStateHasher.get_hash |
@@ -134,8 +139,10 @@ None.
 | `tests/unit/domains/progression/test_progression_decision_canonical_hash.py` | CanonicalStateHasher.get_hash | 64 |
 | `tests/unit/economy/test_economy_health_monitor.py` | AuthoritativeState.fingerprint | 188, 190 |
 | `tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py` | CanonicalStateHasher.get_hash | 33, 34, 39, 40, 47, 48, 58, 59, 69, 70, 103, 103, 107, 108, 125, 126 |
-| `tests/unit/engine/test_hash_scheduler.py` | CanonicalHashScheduler.compute_hash | 44, 54, 64, 74, 84, 94, 103, 113, 121, 132, 143, 144, 157 |
+| `tests/unit/engine/test_hash_scheduler.py` | CanonicalHashScheduler.compute_digest | 138, 148, 149 |
+| `tests/unit/engine/test_hash_scheduler.py` | CanonicalHashScheduler.compute_hash | 48, 58, 68, 78, 88, 98, 107, 116, 123 |
 | `tests/unit/kernel/test_worker_equivalence.py` | CanonicalStateHasher.get_hash | 60, 61, 85, 85 |
+| `tests/unit/perf/test_long_run_harness_debt.py` | CanonicalStateHasher.get_hash | 58, 141 |
 | `tests/unit/progression/test_species_base_stats_preserved.py` | CanonicalStateHasher.get_hash | 261, 262 |
 | `tests/unit/replay/test_fingerprint_identity_coverage.py` | StateFingerprinter.get_fingerprint | 39, 40, 53, 54 |
 | `tests/unit/worldbuilding/test_place_wiring.py` | CanonicalStateHasher.get_hash | 118, 119, 322, 323 |

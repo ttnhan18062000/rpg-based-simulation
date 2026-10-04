@@ -5,26 +5,52 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import json
-import logging
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from src.config.optimization_profiles import SubsystemBudget, SubsystemPressureReport, DEFAULT_HASHING_BUDGET
 from src.core.state import AuthoritativeState
-
-logger = logging.getLogger(__name__)
 
 
 class HashMode(str, Enum):
-    """Controls whether a full or light canonical hash is computed.
+    """Hash mode accepted by CanonicalHashScheduler.compute_hash.
 
-    FULL  — delegates to CanonicalStateHasher.get_hash(); expensive, deterministic proof.
-            Only allowed at sanctioned boundaries (see CanonicalHashScheduler.allow_full_hash_at).
-    LIGHT — hashes (tick, seed, entity_count, region_count) via MD5; fast dirty signal only,
-            NOT a cryptographic proof and NOT suitable for determinism verification.
+    FULL — delegates to CanonicalStateHasher.get_hash(); expensive, deterministic proof.
+           Only allowed at sanctioned boundaries (see CanonicalHashScheduler.allow_full_hash_at).
+
+    PERF-D5 point 3: the MD5 LIGHT mode (a dirty signal that was never a proof and was never
+    requested in production) is retired. FULL stays as the only member because the certification
+    harness (gated, `src/certification/harness.py`) still passes `mode=HashMode.FULL`; the member and
+    the `mode` parameter go with that harness copy in PERF-M1-T03b.
     """
     FULL = "full"
-    LIGHT = "light"
+
+
+# PERF-D5 point 2: the proof digest is named and versioned. A stored or emitted digest of a
+# different scheme is never compared with this one.
+PROOF_DIGEST_SCHEME = "flat-sha256-v1"
+
+
+class DigestStatus(str, Enum):
+    """Whether a proof digest was computed, and if not, why. Replaces the bare string "SKIPPED"."""
+    COMPUTED = "computed"
+    NOT_COMPUTED_UNSANCTIONED_BOUNDARY = "not_computed_unsanctioned_boundary"
+    NOT_COMPUTED_LIVE_POLICY = "not_computed_live_policy"  # for the kernel's replay-richness skip (PERF-M1-T03b)
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class ProofDigest:
+    """A proof digest (or the report that none was computed) with its scheme, tick and status.
+
+    `value` is None exactly when `status` is not COMPUTED. A value is never served stale.
+    """
+    scheme: str
+    tick: int
+    status: DigestStatus
+    value: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        if (self.value is None) == (self.status is DigestStatus.COMPUTED):
+            raise ValueError("ProofDigest.value must be set if and only if status is COMPUTED")
 
 
 class HashScheduleViolation(RuntimeError):
@@ -138,92 +164,6 @@ class CanonicalStateHasher:
         return data
 
 
-class BudgetedCanonicalHasher:
-    """
-    Rate-limited wrapper around CanonicalStateHasher.
-
-    Tracks the number of full-hash calls within a 100-tick sliding window.
-    When the call count reaches the budget ceiling, a WARNING is logged and
-    the last known (stale) hash is returned instead of computing a new one.
-
-    Note: callers must handle the case where get_hash() is called before any
-    successful hash has been computed (first call at or above the limit); in
-    that case the stale hash fallback delegates to CanonicalStateHasher.get_hash()
-    to avoid returning None.
-
-    This class does NOT modify CanonicalStateHasher (INFRA-119–130 unaffected).
-    degradation_action "returning_stale_hash" is advisory — the Governor decides
-    how to react.
-    """
-
-    def __init__(self, budget: SubsystemBudget | None = None) -> None:
-        self._budget: SubsystemBudget = budget or DEFAULT_HASHING_BUDGET
-        self._call_count: int = 0
-        self._window_start_tick: int = 0
-        self._last_known_hash: Optional[str] = None
-
-    def get_hash(self, state: AuthoritativeState, current_tick: int = 0) -> str:
-        """
-        Return a canonical hash of *state*, subject to the rate budget.
-
-        Window resets every 100 ticks.  Over-budget calls return the last
-        known hash (stale).  The hash value itself is bit-identical to
-        CanonicalStateHasher.get_hash() on the normal path.
-        """
-        # Window reset: start a new 100-tick counting window.
-        if current_tick - self._window_start_tick >= 100:
-            self._call_count = 0
-            self._window_start_tick = current_tick
-
-        max_h = self._budget.max_full_hashes_per_100_ticks
-        if max_h is not None and self._call_count >= max_h:
-            logger.warning(
-                "BudgetedCanonicalHasher: rate limit reached (%d/%d per 100 ticks)"
-                " — returning stale hash",
-                self._call_count,
-                max_h,
-            )
-            # Return stale hash; fall back to a fresh hash if none is cached yet
-            # (first call over-budget, e.g. budget=0).
-            return self._last_known_hash or CanonicalStateHasher.get_hash(state)
-
-        self._call_count += 1
-        self._last_known_hash = CanonicalStateHasher.get_hash(state)
-        return self._last_known_hash
-
-    def pressure_report(self) -> SubsystemPressureReport:
-        """
-        Advisory pressure snapshot for the hashing subsystem.
-
-        Returns WARN when call_count exceeds max_full_hashes_per_100_ticks
-        (i.e. the rate limiter is active and stale hashes are being returned).
-        Returns OK when within budget or when budget is unlimited (None).
-        """
-        max_h = self._budget.max_full_hashes_per_100_ticks
-        if max_h is None:
-            return SubsystemPressureReport(
-                subsystem="hashing",
-                current_usage=float(self._call_count),
-                budget=None,
-                pressure_state="OK",
-                degradation_action=None,
-            )
-        pct = self._call_count / max_h
-        if pct < 0.8:
-            state, action = "OK", None
-        elif pct < 1.0:
-            state, action = "WARN", "reduce_hash_frequency"
-        else:
-            state, action = "DEGRADED", "returning_stale_hash"
-        return SubsystemPressureReport(
-            subsystem="hashing",
-            current_usage=float(self._call_count),
-            budget=float(max_h),
-            pressure_state=state,
-            degradation_action=action,
-        )
-
-
 # Sanctioned reasons that permit a FULL canonical hash outside tick 0 / run-end.
 _SANCTIONED_REASONS: frozenset = frozenset({"certification", "audit", "replay"})
 
@@ -237,10 +177,9 @@ class CanonicalHashScheduler:
       - tick == run_end_tick  (end-of-run final hash)
       - reason in {"certification", "audit", "replay"}  (explicit sanctioned call)
 
-    All other full-hash attempts raise HashScheduleViolation.
-
-    LIGHT hashing hashes (tick, seed, entity_count, region_count) via MD5 — a cheap
-    dirty signal. It is NOT a determinism proof and must not be used for certification.
+    All other full-hash attempts raise HashScheduleViolation (`compute_hash`) or are reported as
+    not computed (`compute_digest`). A digest is computed for the current state or reported as not
+    computed; it is never served stale (PERF-D5 point 3).
     """
 
     def __init__(self, run_end_tick: int = -1) -> None:
@@ -256,28 +195,32 @@ class CanonicalHashScheduler:
             return True
         return False
 
+    def compute_digest(self, state: AuthoritativeState, tick: int, reason: str = "") -> ProofDigest:
+        """Return the proof digest of *state* with its scheme, tick and status.
+
+        An unsanctioned boundary is reported as NOT_COMPUTED_UNSANCTIONED_BOUNDARY, not raised.
+        """
+        if not self.allow_full_hash_at(tick, reason):
+            return ProofDigest(PROOF_DIGEST_SCHEME, tick, DigestStatus.NOT_COMPUTED_UNSANCTIONED_BOUNDARY)
+        return ProofDigest(PROOF_DIGEST_SCHEME, tick, DigestStatus.COMPUTED, CanonicalStateHasher.get_hash(state))
+
     def compute_hash(
         self,
         state: AuthoritativeState,
         tick: int,
-        mode: HashMode = HashMode.LIGHT,
+        mode: HashMode = HashMode.FULL,
         reason: str = "",
     ) -> str:
-        """Compute a canonical hash according to *mode*.
+        """Compute the flat proof digest value of *state*.
 
-        FULL:  delegates to CanonicalStateHasher.get_hash(state). Raises
-               HashScheduleViolation if tick/reason is not sanctioned.
-        LIGHT: hashes (tick, seed, entity_count, region_count) via MD5.
-               Always allowed; no state-walk or JSON serialisation.
+        Delegates to CanonicalStateHasher.get_hash(state). Raises HashScheduleViolation if
+        tick/reason is not sanctioned. `mode` is accepted for the certification harness's call
+        (see HashMode) and has only one valid value.
         """
-        if mode is HashMode.FULL:
-            if not self.allow_full_hash_at(tick, reason):
-                raise HashScheduleViolation(
-                    f"Full canonical hash requested at tick={tick} reason={reason!r} "
-                    f"but this is not a sanctioned boundary. "
-                    f"Use reason='certification'|'audit'|'replay', or tick=0/run_end."
-                )
-            return CanonicalStateHasher.get_hash(state)
-        # LIGHT: fast non-cryptographic dirty signal
-        payload = f"{tick}:{state.seed}:{len(state.entities)}:{len(state.regions)}"
-        return hashlib.md5(payload.encode("utf-8"), usedforsecurity=False).hexdigest()
+        if not self.allow_full_hash_at(tick, reason):
+            raise HashScheduleViolation(
+                f"Full canonical hash requested at tick={tick} reason={reason!r} "
+                f"but this is not a sanctioned boundary. "
+                f"Use reason='certification'|'audit'|'replay', or tick=0/run_end."
+            )
+        return CanonicalStateHasher.get_hash(state)

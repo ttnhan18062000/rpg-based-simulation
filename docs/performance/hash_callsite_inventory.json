@@ -8,8 +8,8 @@
   },
   "schemes": {
     "CanonicalStateHasher.get_hash": "flat SHA-256 over compact canonical JSON of the whole state",
-    "BudgetedCanonicalHasher.get_hash": "same flat SHA-256, rate limited; returns a stale value when over budget",
-    "CanonicalHashScheduler.compute_hash": "FULL: same flat SHA-256 at a sanctioned boundary; LIGHT: MD5 of tick/seed/entity and region counts",
+    "CanonicalHashScheduler.compute_hash": "same flat SHA-256 (flat-sha256-v1) at a sanctioned boundary; raises elsewhere",
+    "CanonicalHashScheduler.compute_digest": "same flat SHA-256 as a typed record (scheme, tick, status, value); reports 'not computed' elsewhere",
     "StateFingerprinter.get_fingerprint": "dict whose 'state_hash' is an MD5 over a hand-built string of selected state domains",
     "AuthoritativeState.fingerprint": "delegates to StateFingerprinter.get_fingerprint (same dict, MD5 state_hash)",
     "hashlib digest of canonical state data": "hashlib digest computed by the caller itself, not through CanonicalStateHasher.get_hash"
@@ -73,43 +73,26 @@
     {
       "kind": "delegation inside a mechanism",
       "file": "src/engine/checkpoint.py",
-      "line": 188,
-      "enclosing_function": "BudgetedCanonicalHasher.get_hash",
+      "line": 205,
+      "enclosing_function": "CanonicalHashScheduler.compute_digest",
       "mechanism": "CanonicalStateHasher.get_hash",
       "call": "CanonicalStateHasher.get_hash",
       "receiver_resolved_by_name": true,
-      "guards": [
-        "unless: self._last_known_hash",
-        "if max_h is not None and self._call_count >= max_h"
-      ],
-      "guarded": true,
+      "guards": [],
+      "guarded": false,
       "ordinal": 5
     },
     {
       "kind": "delegation inside a mechanism",
       "file": "src/engine/checkpoint.py",
-      "line": 191,
-      "enclosing_function": "BudgetedCanonicalHasher.get_hash",
+      "line": 226,
+      "enclosing_function": "CanonicalHashScheduler.compute_hash",
       "mechanism": "CanonicalStateHasher.get_hash",
       "call": "CanonicalStateHasher.get_hash",
       "receiver_resolved_by_name": true,
       "guards": [],
       "guarded": false,
       "ordinal": 6
-    },
-    {
-      "kind": "delegation inside a mechanism",
-      "file": "src/engine/checkpoint.py",
-      "line": 280,
-      "enclosing_function": "CanonicalHashScheduler.compute_hash",
-      "mechanism": "CanonicalStateHasher.get_hash",
-      "call": "CanonicalStateHasher.get_hash",
-      "receiver_resolved_by_name": true,
-      "guards": [
-        "if mode is HashMode.FULL"
-      ],
-      "guarded": true,
-      "ordinal": 7
     },
     {
       "kind": "caller",
@@ -123,7 +106,7 @@
         "if self._audit_mode"
       ],
       "guarded": true,
-      "ordinal": 8
+      "ordinal": 7
     },
     {
       "kind": "caller",
@@ -137,7 +120,7 @@
         "if self._current_policy.replay_allowed"
       ],
       "guarded": true,
-      "ordinal": 9
+      "ordinal": 8
     },
     {
       "kind": "caller",
@@ -149,7 +132,7 @@
       "receiver_resolved_by_name": false,
       "guards": [],
       "guarded": false,
-      "ordinal": 10
+      "ordinal": 9
     },
     {
       "kind": "caller",
@@ -163,7 +146,7 @@
         "if self._current_policy.replay_allowed and (self._audit_mode or self._current_policy.replay_richness == 'FULL')"
       ],
       "guarded": true,
-      "ordinal": 11
+      "ordinal": 10
     },
     {
       "kind": "caller",
@@ -175,7 +158,7 @@
       "receiver_resolved_by_name": true,
       "guards": [],
       "guarded": false,
-      "ordinal": 12
+      "ordinal": 11
     },
     {
       "kind": "caller",
@@ -187,7 +170,7 @@
       "receiver_resolved_by_name": true,
       "guards": [],
       "guarded": false,
-      "ordinal": 13
+      "ordinal": 12
     },
     {
       "kind": "caller",
@@ -199,7 +182,7 @@
       "receiver_resolved_by_name": true,
       "guards": [],
       "guarded": false,
-      "ordinal": 14
+      "ordinal": 13
     }
   ],
   "unresolved_candidates": [],
@@ -215,7 +198,7 @@
     },
     {
       "file": "src/engine/checkpoint.py",
-      "line": 45,
+      "line": 71,
       "function": "CanonicalStateHasher.get_hash",
       "hashlib_algorithms": [
         "sha256"
@@ -224,8 +207,8 @@
     },
     {
       "file": "src/engine/checkpoint.py",
-      "line": 165,
-      "function": "BudgetedCanonicalHasher.get_hash",
+      "line": 198,
+      "function": "CanonicalHashScheduler.compute_digest",
       "hashlib_algorithms": [],
       "delegates_to": [
         "CanonicalStateHasher.get_hash"
@@ -233,11 +216,9 @@
     },
     {
       "file": "src/engine/checkpoint.py",
-      "line": 259,
+      "line": 207,
       "function": "CanonicalHashScheduler.compute_hash",
-      "hashlib_algorithms": [
-        "md5"
-      ],
+      "hashlib_algorithms": [],
       "delegates_to": [
         "CanonicalStateHasher.get_hash"
       ]
@@ -963,81 +944,75 @@
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 44,
+      "line": 48,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_at_tick_zero"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 54,
+      "line": 58,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_at_run_end_tick"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 64,
+      "line": 68,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_with_certification_reason"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 74,
+      "line": 78,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_with_audit_reason"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 84,
+      "line": 88,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_with_replay_reason"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 94,
+      "line": 98,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_raises_outside_sanctioned_boundary"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 103,
+      "line": 107,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_raises_with_unknown_reason"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 113,
+      "line": 116,
       "mechanism": "CanonicalHashScheduler.compute_hash",
-      "enclosing_function": "TestCanonicalHashSchedulerLightMode.test_light_hash_always_allowed"
+      "enclosing_function": "TestComputeHashIsFlatOnly.test_default_mode_is_the_sanctioned_flat_digest"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 121,
+      "line": 123,
       "mechanism": "CanonicalHashScheduler.compute_hash",
-      "enclosing_function": "TestCanonicalHashSchedulerLightMode.test_light_hash_default_mode"
+      "enclosing_function": "TestComputeHashIsFlatOnly.test_default_mode_off_boundary_raises_instead_of_approximating"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 132,
-      "mechanism": "CanonicalHashScheduler.compute_hash",
-      "enclosing_function": "TestCanonicalHashSchedulerLightMode.test_light_hash_is_fast"
+      "line": 138,
+      "mechanism": "CanonicalHashScheduler.compute_digest",
+      "enclosing_function": "TestProofDigest.test_computed_digest_carries_scheme_tick_status_and_value"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 143,
-      "mechanism": "CanonicalHashScheduler.compute_hash",
-      "enclosing_function": "TestCanonicalHashSchedulerLightMode.test_light_hash_changes_on_tick"
+      "line": 148,
+      "mechanism": "CanonicalHashScheduler.compute_digest",
+      "enclosing_function": "TestProofDigest.test_unsanctioned_boundary_is_reported_not_computed_and_not_served_stale"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 144,
-      "mechanism": "CanonicalHashScheduler.compute_hash",
-      "enclosing_function": "TestCanonicalHashSchedulerLightMode.test_light_hash_changes_on_tick"
-    },
-    {
-      "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 157,
-      "mechanism": "CanonicalHashScheduler.compute_hash",
-      "enclosing_function": "TestCanonicalHashSchedulerLightMode.test_light_hash_no_json_serialization"
+      "line": 149,
+      "mechanism": "CanonicalHashScheduler.compute_digest",
+      "enclosing_function": "TestProofDigest.test_unsanctioned_boundary_is_reported_not_computed_and_not_served_stale"
     },
     {
       "file": "tests/unit/kernel/test_worker_equivalence.py",
@@ -1062,6 +1037,18 @@
       "line": 85,
       "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_zero_worker_fallback_equivalence"
+    },
+    {
+      "file": "tests/unit/perf/test_long_run_harness_debt.py",
+      "line": 58,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "recorded.RecordingKernel.tick_once"
+    },
+    {
+      "file": "tests/unit/perf/test_long_run_harness_debt.py",
+      "line": 141,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_sampling_does_not_change_the_proof_digest"
     },
     {
       "file": "tests/unit/progression/test_species_base_stats_preserved.py",
