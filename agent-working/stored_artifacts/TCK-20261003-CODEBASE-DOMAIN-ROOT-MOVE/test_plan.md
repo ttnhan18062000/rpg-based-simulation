@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
@@ -21,3 +21,8 @@ Scoped runs only, one heavy command at a time under the memory cap.
 - Skip-count parity: run the moved test files on head before the move (in tests/tools, lint group synced) and after (tests/codebase); passed count equal, skipped count must not rise.
 - Real CLI runs from repo root (not pytest), results recorded below in Implementation Notes of the ticket: `python3 -m codebase.health check`, `-m codebase.gates.mypy_gate`, `-m codebase.gates.sarif_feedback`, `-m codebase.reports.<each of 5>`, `-m codebase.hooks.install_git_hooks` (guarded clone), both hook `.sh` scripts via their pre-commit entries.
 - Guard: no `tools/**/*.py` imports `codebase`.
+
+## Results (recorded at close)
+- Skip-count parity: before 235 passed / 6 failed / 0 skipped; after 235 passed / 6 failed / 0 skipped (+14 pr_impact_report tests passing).
+- Real CLI runs from the repo root: see the ticket's Implementation Notes (health check, mypy_gate, sarif_feedback, staged_ratchet, both hook scripts, baseline report, snapshot scorecard; `--help` for the rest). Not run for real: code_health_impact and pr_impact_report against the 510 MB graph.
+- Installer: exercised by `tests/codebase/test_code_health_install_git_hooks.py` in scratch repos with real prek (idempotent re-install, uninstall), not against the shared `.git`.
