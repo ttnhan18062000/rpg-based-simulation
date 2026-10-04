@@ -21,6 +21,7 @@ from visual_assets.store import config, records
 from visual_assets.store.contracts import ArtifactRecord, IntakeResult, ReleaseCandidateManifest, parse_record
 from visual_assets.store.contracts.base import IntakeVerdict
 from visual_assets.store.errors import ContractError, StageError
+from visual_assets.store.identities import UtcTimestamp, check
 from visual_assets.store.intake import quarantine
 
 _INTAKE = re.compile(r"in-[0-9a-f]{16}")
@@ -45,6 +46,7 @@ def _expired(result: IntakeResult, expire_before: str) -> bool:
 
 
 def collect(expire_before: str) -> list[GcItem]:
+    check(UtcTimestamp, expire_before)  # string order is time order only for the canonical fixed-width form: a malformed cutoff would silently change what expires
     items: list[GcItem] = []
     expired: set[str] = set()
     q = config.QUARANTINE_ROOT

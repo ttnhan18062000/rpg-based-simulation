@@ -12,6 +12,7 @@ from tests.visual_assets.store.unit.conftest import snapshot
 from visual_assets.store import config
 from visual_assets.store import gc as gc_mod
 from visual_assets.store import review as review_mod
+from visual_assets.store.errors import IdentityError
 from visual_assets.store.release import assemble_release
 from visual_assets.store.revoke import revoke
 
@@ -198,3 +199,19 @@ def test_without_any_release_every_artifact_is_reported(env):
     s.CALLS.clear()
     s.adopted_tree(env, widths=(16, 17))
     assert len(gc_mod.tracked_unreferenced()) == 2
+
+
+@pytest.mark.parametrize("cutoff", ["9999", "9999-12-31", "2026-10-4T00:00:00Z", "2026-10-04T00:00:00+07:00", "2026-10-04 00:00:00Z", "2026-02-30T00:00:00Z", "", "now"])
+def test_a_malformed_cutoff_is_refused_and_nothing_is_listed_or_deleted(env, cutoff):
+    s.make_intake(env.tmp, 17)  # a young PASSED intake that a bad cutoff such as "9999" would otherwise expire
+    before = (snapshot(env.catalog), snapshot(env.quarantine), snapshot(env.review))
+    for delete in (False, True):
+        with pytest.raises(IdentityError):
+            gc_mod.gc(delete=delete, expire_before=cutoff)
+    with pytest.raises(IdentityError):
+        gc_mod.collect(cutoff)
+    assert (snapshot(env.catalog), snapshot(env.quarantine), snapshot(env.review)) == before
+
+
+def test_a_canonical_cutoff_is_accepted(env):
+    assert gc_mod.gc(expire_before="2026-01-02T00:00:00Z") == []

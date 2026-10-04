@@ -94,3 +94,5 @@ gc tests 17 passed; four gc mutants and the mixed-snapshot mutant each fail a na
 
 ## Completion Summary
 The last unset U-05 row is approved; `gc` has an age rule and a tracked-history report and still never deletes a tracked object; the rollback drill covers new/old client and release combinations, a recall and a mid-load switch. Nothing is deployed.
+
+Follow-up commit (planner review): `gc` trusted an unvalidated `expire_before` string, and string order is time order only for the canonical fixed-width `UtcTimestamp`; a malformed cutoff such as "9999" would have expired every PASSED intake and `--delete` would have removed young pending ones. `collect()` (so `gc()`) now validates the cutoff against `UtcTimestamp` and raises `IdentityError`. Test: 8 malformed cutoffs are refused with nothing listed or deleted (snapshots equal), and a canonical one is accepted. Mutant: validation dropped, 8 tests fail; restored, 26 `test_gc.py` tests pass.
