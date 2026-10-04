@@ -9,6 +9,8 @@ tags: [assets, architecture, contracts, deployment, planning]
 
 # AM-M1 — Architecture Decisions and Contracts
 
+> **Status 2026-10-04: the `AM-M1` result is `BLOCKED`, not `PASS`.** Profile A is selected (ADR D8) and no signing is needed (D9), but owner and authority decisions are still absent and `AM-M0` has no result record. Per-clause evidence, the reasoning against this plan's own "Result classification" table, and what would unblock it: `docs/assets/m1_contract_register.md`. Nothing here is authorized by that result.
+
 ## Outcome
 
 Resolve `ASSET-0` from accepted M0 evidence: select exactly one deployment profile, define the minimum four
