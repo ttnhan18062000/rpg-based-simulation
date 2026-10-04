@@ -42,7 +42,7 @@ Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); rea
 | `AM1-W13` | Rights/provenance recall contract | 3 | 3 | 0 | PARTIAL |
 | | **Total** | **40** | **24** | **4** | |
 
-`CLOSED` = no `GAP` row; `OPEN` = no `MET` row; `PARTIAL` = both. `W06` and `W11` are `OPEN` until their own tickets write them; those tickets update their rows.
+`CLOSED` = no `GAP` row; `OPEN` = no `MET` row; `PARTIAL` = both. `W06` is written as `PROPOSED` and `W11` is still to be written; both stay `OPEN` until the owner approves them, and their tickets update their rows.
 
 ## `AM1-W01` Deployment-profile ADR
 
@@ -99,9 +99,9 @@ Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); rea
 
 | # | Clause | Evidence | Verdict | Note |
 |---|---|---|---|---|
-| W06.1 | Safety classes define preserved information | `docs/brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md#91-semantic-visual-registry` | GAP | Written by FALLBACK-SAFETY-FRAMEWORK. Today only one role has a preserved fact written down (`AM-U21` for the terrain cell, `docs/assets/pilot_terrain_m5_criteria.md`). |
-| W06.2 | Allowed primitive/text/HUD alternatives | `frontend/src/visualAssets/fallback.ts::FAMILY_FALLBACKS` | GAP | Written by FALLBACK-SAFETY-FRAMEWORK. Built: a per-family glyph and letter and the terrain flat fill; nothing classifies when each is allowed and the HUD has none. |
-| W06.3 | Activation/runtime failure policy | `frontend/src/visualAssets/resolver.ts::resolveVisual`; `frontend/src/visualAssets/loader.ts::SnapshotLoader` | GAP | Written by FALLBACK-SAFETY-FRAMEWORK. Built: runtime failures resolve to typed fallbacks (missing, undecodable, late, invalid manifest); no activation failure policy exists because nothing activates. |
+| W06.1 | Safety classes define preserved information | `docs/assets/fallback_safety.md#the-three-classes`; `docs/assets/fallback_safety.md#the-terrain-role-as-built`; `docs/assets/pilot_terrain_m5_criteria.md` | GAP | Written as `PROPOSED` in `fallback_safety.md`: three classes (`decorative`, `identifying`, `critical`), each with its preserved information, mapped onto the built terrain role. Not an owner decision, so not `MET`; the verdict changes only if the owner approves it. The registry still carries no class (W02.7). |
+| W06.2 | Allowed primitive/text/HUD alternatives | `docs/assets/fallback_safety.md#the-three-classes`; `docs/assets/fallback_safety.md#rule-for-new-kinds`; `frontend/src/visualAssets/fallback.ts::FAMILY_FALLBACKS`; `frontend/src/visualAssets/pilotScene.ts::hoverText` | GAP | Written as `PROPOSED`: per class, the allowed primitive, text or HUD alternative, and a rule that a new `identifying` or `critical` key names its alternative before adoption (policy only, no field). Built: the terrain flat fill plus hover text, and the family glyph in the rehearsal scene only. The HUD has no alternative; the colour-vision finding is an open risk against `identifying`. |
+| W06.3 | Activation/runtime failure policy | `docs/assets/fallback_safety.md#failure-policy`; `frontend/src/visualAssets/resolver.ts::resolveVisual`; `frontend/src/visualAssets/loader.ts::SnapshotLoader`; `visual_assets/store/release.py::assemble_release` | GAP | Runtime policy is written as built (typed fallbacks for every failure, `PROPOSED`). Activation policy is not built: `assemble_release` refuses a non-optional key with no artifact, but nothing checks that a key has its alternative, and under Profile A activation is the frontend deployment. |
 
 ## `AM1-W07` Compatibility/rollback contract
 
@@ -182,14 +182,14 @@ Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); rea
 One line per `GAP`. Each needs code or an owner decision, so none is fixed here and none has a ticket.
 
 - `W02.2` Derivation owner: Name who derives a visual key from game state (an owner decision), then build the mapping outside the dev-only draft page. Needed before `AM-M6`.
-- `W02.7` Safety-class link: Add a safety-class field to `VisualKeyDefinition` once the W06 framework is approved (registry change plus parser and client mirror, in its own ticket).
+- `W02.7` Safety-class link: Add a safety-class field to `VisualKeyDefinition` once the W06 framework is approved (registry change plus parser and client mirror, in its own ticket). `fallback_safety.md` proposes the rule as policy only, so keys declare a class in their ticket until then.
 - `W03.1` Deterministic variant axes/precedence: Define the context axes and their strict precedence, or remove `variant_axes` as unused (an owner decision, then code).
 - `W03.4` Live Map/HUD ownership: Name an owner per surface (Live Map, HUD) in the charter or an ADR row (owner decision).
 - `W03.5` Compatibility ranges: Decide whether a client or descriptor range is needed under Profile A; if so add it to `RuntimeManifest` and the client parser (code, bumps the manifest contract).
 - `W05.4` Approver/audit separation: Name an audit authority distinct from the approver, or record that one owner holds every role (owner decision).
-- `W06.1` Safety classes define preserved information: Approve the framework written by FALLBACK-SAFETY-FRAMEWORK (owner decision).
-- `W06.2` Allowed primitive/text/HUD alternatives: Same approval; the HUD alternative also needs a HUD fallback built (code).
-- `W06.3` Activation/runtime failure policy: Same approval; an activation failure policy needs `AM-M6`.
+- `W06.1` Safety classes define preserved information: Approve `docs/assets/fallback_safety.md` (`PROPOSED`) as written, or change it (owner decision; the planner asks at review).
+- `W06.2` Allowed primitive/text/HUD alternatives: Same approval; the HUD alternative also needs a HUD fallback or text contract built (code, the HUD package owns it).
+- `W06.3` Activation/runtime failure policy: Same approval; requiring an alternative at activation is a check in `release`/`build`/`adopt` (code) and an activation policy needs `AM-M6`.
 - `W07.3` Renderer range: Decide whether a renderer or protocol version is needed with one canvas renderer (owner decision).
 - `W07.4` Capability range: Add required capabilities to the manifest only when a capability exists (code, with the first capability).
 - `W07.7` Retirement rules: Write the rule for retiring old candidates, old client paths and primitive fallbacks (owner decision).

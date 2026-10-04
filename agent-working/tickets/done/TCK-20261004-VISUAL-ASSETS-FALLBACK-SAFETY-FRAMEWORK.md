@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-VISUAL-ASSETS-FALLBACK-SAFETY-FRAMEWORK
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, documentation, live-map]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation, live-map]
 `AM1-W06` fallback-safety framework: what each role must still show when its image fails, written from the built terrain behaviour
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -81,13 +81,16 @@ flat fill), but it is spread over tests and result docs and has no general rule 
   `contracts/definitions.py`; if it does, use its names instead of inventing new ones.
 
 ## Implementation Notes
-(implementer)
+Wrote `docs/assets/fallback_safety.md`, status `PROPOSED` (no owner approval exists): three classes (`decorative`, `identifying`, `critical`) each with preserved information, allowed alternatives and what failure means; the terrain role mapped onto them (Forest `identifying`, bush/tree `decorative` over it) with a code symbol or test title for every behaviour claim; the colour-vision finding (`cvd_pairs.txt`) as an open risk, not resolved; runtime failure policy as built; activation policy as a stated gap; a policy-only rule for new kinds.
+The assumption check came back negative: `VisualKeyDefinition` has no safety-class field, so the names are new. Findings worth the planner's eye: terrain's fallback is the flat fill plus hover text, while the typed family glyph (`fallbackFor`) is used only by the synthetic rehearsal scene; a still-loading terrain cell shows the fill; `assemble_release`'s `key_without_artifact` is an artifact requirement, not a fallback check. The register's `W06` rows now point at the doc and stay `GAP` (not approved); the register generator was rerun, counts unchanged (40/24/4).
 
 ## Test Summary
-(implementer)
+Docs-only. Every backticked path and symbol in the new doc exists, and each quoted test title is found in its cited test file; the register's 186 evidence entries resolve (scratch script). `tools/validate_frontmatter.py` clean; `pytest tests/docs tests/static` under a 2 GB cap: 124 passed, 2 skipped, 1 xfailed; `make knowledge-index-update` ran.
 
 ## Files Changed
-(implementer)
+- `docs/assets/fallback_safety.md` (new, PROPOSED)
+- `docs/assets/m1_contract_register.md` (W06 rows, W02.7 and W06 follow-ups)
+- `agent-working/` ticket, stored artifacts, monitoring shards; `docs/REGISTRY.yaml`
 
 ## Completion Summary
-(open)
+Done as PROPOSED. Nothing is written as an owner decision; approval is the planner's blocking question at review. No code, schema, palette, art or HUD change.
