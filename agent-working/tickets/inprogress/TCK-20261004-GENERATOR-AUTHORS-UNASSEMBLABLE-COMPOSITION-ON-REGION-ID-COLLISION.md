@@ -226,6 +226,7 @@ fallthrough — that would just be option 2 wearing a different hat.
   `wolf_den`, `bandit_road`) - a class, not one pair.
 - Deviation from the authored precedent: authored worlds use `namespace: "trading"`; the generator uses the
   module id. Matching it would need a per-module default-namespace field (module content change, out of scope).
+- **Monitoring caveat (whole batch):** for roughly the first hour-plus of this batch, `.claude/current_run` still named another session's finished run (`TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`, seq 14, Verify), so the tool rows this session wrote in that period are mis-attributed to that ticket in `tools.jsonl`. They were not retro-attributed. Any tool-call-count or cost figure for the five tickets in this batch undercounts, and the other ticket's figure is inflated. Do not trust either as a cost measurement. The sidecar was rewritten with this batch's own run before closure.
 - **AC-3 not yet actionable**: the two `xfail(strict=True)` marks exist only on the #328 branch, not on
   origin/main. They must be removed when #328 lands (strict xfail would XPASS-fail otherwise).
 
