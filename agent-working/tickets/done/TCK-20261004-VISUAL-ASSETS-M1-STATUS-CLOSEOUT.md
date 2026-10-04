@@ -86,7 +86,7 @@ Docs-only. The register's 190 evidence entries resolve (scratch script). `grep -
 `tools/validate_frontmatter.py` clean on every touched doc; `pytest tests/docs tests/static` under a 2 GB cap; `make knowledge-index-update` ran; `done_checker_static` run for all four children (see the commit).
 
 ## Files Changed
-- `docs/assets/m1_contract_register.md` (Result section, disagreement table), `docs/assets/store_contract.md`, `docs/assets/pilot_charter_am6.md` (sections 1 and 2)
+- `docs/assets/m1_contract_register.md` (Result section, disagreement table), `docs/assets/store_contract.md`, `docs/assets/pilot_charter_am6.md` (sections 1 and 2, and the `AM6-W02` row of section 4 in a review fix)
 - `docs/architecture/visual_asset_foundation_adr.md`, `docs/plans/visual-asset-foundation/README.md`, `docs/plans/visual-asset-management-runtime-integration/README.md`, `.../01_architecture_decisions_and_contracts_plan.md`
 - `agent-working/` tickets (this one, the epic, `SEQUENCE.md`, folder moved to `done/`), monitoring shards; `docs/REGISTRY.yaml`
 

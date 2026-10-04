@@ -61,7 +61,7 @@ tags: [mcp, live-map, planning]
 
 | ID | Deliverable | State | What exists / what is missing |
 |---|---|---|---|
-| `AM6-W02` | Reviewed release candidate | exists (authorization records absent) | immutable `pilot/rc-0001`, manifest and artifact hashes, provenance chain (`audit`: chain ok), adoption by the owner; no compatibility record against a real client, no authorization record |
+| `AM6-W02` | Reviewed release candidate | exists (authorization records absent) | immutable `pilot/rc-0003` is the current candidate (`rc-0001` and `rc-0002` are kept as history), manifest and artifact hashes, provenance chain (`audit`: chain ok), three adoptions by the owner (the forest `plain` slot, `bush` and `tree`); no compatibility record against a real client, no authorization record |
 | `AM6-W03` | Activation mechanism | absent | under Profile A it would be the normal reviewed deployment; no authenticated, auditable asset transition has been defined or tested |
 | `AM6-W04` | Cache/generation fence | harness-drill-only | single-generation loader and mid-load switch tested in the harness; no real cache, CDN, service worker, offline or stale-client case |
 | `AM6-W05` | Fault and rollback drill | harness-drill-only | new/old client and release combinations, recall (key removed) and fallback cases in the harness; no real rollback to a previous build, no objective time |
