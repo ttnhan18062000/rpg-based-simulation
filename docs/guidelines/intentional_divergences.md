@@ -2480,7 +2480,7 @@ The following legacy behaviors have been intentionally omitted or retired.
   `scalable_bandit_camp` with `danger_scale: 2`); `resolved/` and `world_compile_report.json` were regenerated.
   The live world is now 12 entities, 2 regions, 0 resource nodes, 0 buildings, 2 populated factions (was 32, 4, 3, 1, 4).
 - **Rationale**: **Bug Fix**. Restores an accepted, closed decision; it does not re-decide the balance target.
-- **Consequences recorded**: the `dungeon_crawl` entry of `EXPECTED_DISTINCT_POPULATED_FACTIONS` is now 2 (was 4, read from the stale report);
+- **Consequences recorded**: the `dungeon_crawl` entry of `EXPECTED_DISTINCT_POPULATED_FACTIONS` is now 2 (was 4, a faithful count of the unintended 4-module world that ran, not a measurement error);
   the generated corpus registry changed; rendering-evidence tests that reproduce documented measurements of the
   old terrain now run against a frozen fixture (`tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml`),
   so they no longer detect rendering regressions in the live `dungeon_crawl`.

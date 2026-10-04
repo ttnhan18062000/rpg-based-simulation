@@ -166,7 +166,7 @@ EXPECTED_DISTINCT_POPULATED_FACTIONS: dict[str, int] = {
     "sandbox_world": 3,
     "highland_traverse": 3,
     "urban_political": 4,
-    "dungeon_crawl": 2,  # TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION: the accepted 2-module remedy now runs; was 4 from a stale report
+    "dungeon_crawl": 2,  # TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION: the accepted 2-module remedy now runs; was 4, a faithful count of the unintended 4-module world that ran
     "swamp_border_world": 4,
     "simq_routing_test": 5,
     "frontier_living_world": 6,
