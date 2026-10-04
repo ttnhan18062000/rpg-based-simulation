@@ -31,7 +31,7 @@ Decision 8.5/8.10: advisory for a two-week soak, then blocking for new violation
 
 ## Scope
 - Soak review first: list false positives and baseline-sync events seen during the soak, the reviewed-row count, and **how many mypy-baseline syncs were needed**, and whether a same-repository PR that touched `src/` showed exactly its new finding(s) in code scanning (the live proof deferred from `TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK`) (and how often the code-health registry needed a reseed); propose fixes for any false-positive class before flipping
-- Remove `continue-on-error` from the `code-health` job (ratchet excluding jscpd), the SARIF step if separate, and the typecheck job's `mypy` step (the gate `codebase.gates.mypy_gate` already returns 1 on new errors and 2 if it cannot run); remove `|| true` from the `make typecheck-py` recipe
+- Remove `continue-on-error` from the `code-health` job (ratchet excluding jscpd and ast_grep: ast_grep has its own soak and flip ticket, owner decision 2026-10-04, excluded the same way jscpd is; any advisory step added to the job after the soak start, such as the M5 package-registry validator step, keeps its own step-level `continue-on-error`), the SARIF step if separate, and the typecheck job's `mypy` step (the gate `codebase.gates.mypy_gate` already returns 1 on new errors and 2 if it cannot run); remove `|| true` from the `make typecheck-py` recipe
 - Ask the owner to mark the checks required in GitHub branch protection (owner action; record it)
 - Update INFRA-TYPE-001 text, the CI comment, environment guide and tests that pin advisory status
 
@@ -48,6 +48,8 @@ Decision 8.5/8.10: advisory for a two-week soak, then blocking for new violation
 - [ ] `git diff --stat <base>...HEAD` lists no path under src/
 
 ## Related Tickets
+- TCK-20261004-AST-GREP-RULE-PACK-ADVISORY
+- TCK-20261004-PACKAGE-REGISTRY-VALIDATOR
 - TCK-20261003-PYTHON-CODE-CRAFT-GATES-EPIC
 - TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB
 - TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK
