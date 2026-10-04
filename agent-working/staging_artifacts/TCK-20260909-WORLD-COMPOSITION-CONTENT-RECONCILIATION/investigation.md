@@ -277,10 +277,39 @@ or the planner's; this investigation does not make it.
   whichever option AC-9 chooses, or it contradicts the code.
 - `docs/content/pipeline_contract.md`: references `world_compositions` as a pipeline input family;
   must reflect the retirement.
-- `docs/mechanics/content_usage_matrix.md`: documents the content families including
-  `world_compositions` (mirrors `src/content/matrix.py:550`), which this ticket changes.
+**Corrected 2026-10-04 — two misclassifications in this section, both found by the Document-Update
+verification pass. The bullet list above is the machine-parsed one; these two are stated here in prose
+deliberately, because one requires no edit and the other required one this section had excluded.**
 
-Considered and **not** required: `docs/world/compiler_contract.md` and
+**1. `docs/mechanics/content_usage_matrix.md` — REMOVED from the required list. It requires no update,
+and must never be hand-edited.** It is **generated** by
+`tests/unit/content/test_content_usage_matrix.py::test_generate_and_save_report` (`:111-120`) from
+`src/content/matrix.py`. Three pieces of positive evidence that no update is needed, not an assumption:
+`src/content/matrix.py` is **unchanged on this branch** (`git diff origin/main...HEAD` over it is empty);
+the file is **absent from the branch's `docs/` diffstat** entirely; and the generator test was **run in
+the foreground (24 passed)**, after which `git status` showed **zero drift** — the committed output is
+byte-identical to a fresh regeneration. The reason nothing became false: `matrix.py`'s
+`world_compositions` entry carries `file_path="world_compositions"`, a **family key**, not a
+`data/content/`-prefixed directory path, and the rendered row states no directory location. Listing it as
+requiring an update made `done_checker_static`'s `docs_to_update_coverage` demand a git change to a
+generated file — a check that could only have been satisfied by doing the one thing that is forbidden
+here.
+
+**2. `docs/world/compiler_contract.md` — this section's "not required" judgement was WRONG, and it is now
+updated.** The exclusion reasoned that the file mentions `world_compositions` "only as the name of a spec
+family or in an example id, with no claim about the directory's location". That does not hold for
+**`:176`**, which was a bare output-location assertion — *"Output: writes
+`data/content/world_compositions/generated/{world_id}.yaml`"* — in a `status: authoritative`, **P0** doc.
+The directory is deleted, so an authoritative contract asserted a false output path. The exclusion list
+was evidently built from **how the string appeared** rather than from reading each hit in context.
+`docs/world/raid_boss_camp_contract.md:101` was wrong for a related reason: it cited
+`data/content/world_compositions/frontier_living_world.yaml:8-9` as file-and-line evidence, and that file
+no longer exists, so a live citation stopped resolving (repointed to
+`data/worlds/frontier_living_world/world.yaml:9-11`, verified).
+
+Considered and **not** required (**the `compiler_contract.md` and `raid_boss_camp_contract.md` entries
+below are superseded by correction 2 above — both WERE required and have been updated**):
+`docs/world/compiler_contract.md` and
 `docs/world/raid_boss_camp_contract.md` mention `world_compositions` only as the name of a spec
 family or in an example id, with no claim about the directory's location, so nothing in them
 becomes false. `docs/testing/test_taxonomy.md` and `docs/testing/no_duplication_test_policy.md`

@@ -1174,13 +1174,18 @@ for that reason.
 - `tests/unit/worldgeneration/test_composition_generator.py`
 - `tests/unit/worldgeneration/test_seed_params.py`
 
-**Docs (6)**
+**Docs (8)**
 - `docs/architecture/world_repository_layout.md` — §1, the two normative sentences
 - `docs/mechanics/06_worldbuilding_foundation.md` — new §11 sibling law
 - `docs/guides/content_authoring.md` — four sites
 - `docs/content/pipeline_contract.md` — path-layout table row retired
 - `docs/world/generator_contract.md` — output contract, three constraints, determinism clause
 - `docs/parity_ledger/substrate.yaml` — `SUB-394` added; `SUBSTRATE-NEW-010`/`011` refreshed
+- `docs/world/compiler_contract.md` — the `generate` subcommand's stated output location
+  (`status: authoritative`; the investigation's "no claim about the directory's location" judgment
+  did not hold for this one line, found during the doc-verification sweep)
+- `docs/world/raid_boss_camp_contract.md` — the `frontier_living_world` module-ref evidence
+  citation repointed to the surviving file, same two modules, new line numbers
 
 **Data (9 deleted)**
 - `data/content/world_compositions/` — 7 top-level + 2 under `generated/`
