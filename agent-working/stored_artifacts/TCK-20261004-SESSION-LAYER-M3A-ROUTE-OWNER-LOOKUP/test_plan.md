@@ -12,7 +12,7 @@ tags: [ai]
 
 # test_plan — TCK-20261004-SESSION-LAYER-M3A-ROUTE-OWNER-LOOKUP
 
-`tests/tools/test_session_route.py` (22): manifest cases (mechanisms.yaml -> rpg-planner, tools/mechanism_registry -> agent-working, tests/architecture split, tools/sessions, src, unowned), longest-glob fixture, owns_not, split, `*` vs `**`, `--from`, no-liveness/no-sessions-import, read-only snapshot. Roster/cards/validator/generator suites green (76).
+`tests/tools/test_session_route.py` (18): manifest cases (mechanisms.yaml -> rpg-planner, tools/mechanism_registry -> agent-working, tests/architecture split, tools/sessions, src, unowned), longest-glob fixture, owns_not, split, `*` vs `**`, `--from`, no-liveness/no-sessions-import, read-only snapshot. Roster/cards/validator/generator suites green (76).
 
 ## Proof Plan
 - level: unit and integration with real temporary git repositories

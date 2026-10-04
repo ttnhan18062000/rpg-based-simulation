@@ -12,7 +12,7 @@ tags: [ai, process-improvement, governance]
 # TCK-20261004-SESSION-LAYER-M3A-ROUTE-OWNER-LOOKUP
 
 ## Title
-Session-layer M3a: `route.py` owner lookup by path and by route key
+Session-layer M3a: `route.py` owner lookup by path
 
 ## Status
 DONE
@@ -70,7 +70,7 @@ Child of `TCK-20261002-EPIC-SESSION-LAYER-COMMUNICATION-AND-AUTHORITY`. Hold rul
 **Owner decisions 2026-10-05 (literal diff confirmed in the terminal):** (1) `--route-key` and a `route_keys:` section are dropped for v1 (no evidence of a recurring subject paths cannot express); plan 9.1 records this. (2) `registries/session_roles.yaml` gains `- tools/mechanism_registry/**` under `domains.agent-working.owns`, so AC1's mechanism-registry case resolves to agent-working (before, that path was unowned). The generated `.claude/agents/session-agent-working-*.md` were regenerated for that line.
 
 ## Test Summary
-`tests/tools/test_session_route.py` (22): manifest cases (mechanisms.yaml -> rpg-planner, tools/mechanism_registry -> agent-working, tests/architecture split, tools/sessions, src, unowned), longest-glob fixture, owns_not, split, `*` vs `**`, `--from`, no-liveness/no-sessions-import, read-only snapshot. Roster/cards/validator/generator suites green (76).
+`tests/tools/test_session_route.py` (18): manifest cases (mechanisms.yaml -> rpg-planner, tools/mechanism_registry -> agent-working, tests/architecture split, tools/sessions, src, unowned), longest-glob fixture, owns_not, split, `*` vs `**`, `--from`, no-liveness/no-sessions-import, read-only snapshot. Roster/cards/validator/generator suites green (76).
 
 ## Files Changed
 `tools/sessions/route.py`, `tests/tools/test_session_route.py`, `registries/session_roles.yaml` (one owns line), `.claude/agents/session-agent-working-{designer,planner,implementer}.md` (regenerated), `docs/plans/agent_infrastructure/session_layer_working_process.md` (9.1), `docs/guides/delivery_process.md`.
