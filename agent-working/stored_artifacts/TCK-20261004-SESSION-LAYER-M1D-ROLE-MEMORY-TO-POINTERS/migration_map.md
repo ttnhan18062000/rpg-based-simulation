@@ -53,9 +53,9 @@ The owner confirmed the M1d list ("confirm the memory list", agent-working-desig
 
 - **Shortened to pointers** (every rule HOME EXISTS): `project_semantic_control_plane_role_division`, `project_mechanism_registry_ownership_split`, `feedback_planner_creates_epic_tickets_only`, `feedback_route_work_via_rpg_feature_planning`, `feedback_small_doc_changes_handoff_to_rpg_planner`, `feedback_report_agent_process_issues_to_agent_working_design`. Originals: `original_memory_files.md` in this folder.
 - **Kept as is until their gaps close**: `project_session_role_division` (GAP stay-in-scope, PARTIAL; obsolete only after M2), `feedback_implementer_owns_all_commits` (GAP branch-recovery), `feedback_ask_rpg_feature_planning_before_touching_rpg_logic` (GAP test-infra-no-ask), `project_test_architecture_reviewer_role` (PARTIAL).
-- **Gap homes accepted**: stay-in-scope = `owns_not`/routes plus plan section 10 advisory boundaries (no new text); branch-recovery = a short subsection in `docs/guides/delivery_process.md` (design drafts the text); test-infra-no-ask = testing `owns` in the registry (no card text).
+- **Gap homes accepted**: stay-in-scope = `owns_not`/routes plus plan section 10 advisory boundaries (no new text); branch-recovery = a short subsection in `docs/guides/delivery_process.md` (design drafts the text); test-infra-no-ask = homed by route absence, not by explicit text: `registries/session_roles.yaml` routes only `src/**` and `docs/mechanics/**` to rpg-planner for testing roles, and `domains/testing.md` says "Ask rpg-planner before any change touching RPG logic" (infrastructure is not RPG logic); no card text. Branch-recovery: `docs/guides/delivery_process.md` subsection "Recovering when a commit lands on a branch an implementer holds" (added in this batch).
 - M1d closes once the four kept files' gaps are homed or the owner accepts them staying in memory.
 
 ## Not done yet
 
-The four kept files and their gap homes (above). The ticket stays `INPROGRESS` until then.
+Nothing blocking. The four kept memory files are already homed or accepted; shortening them is a follow-up if the owner wants (`feedback_implementer_owns_all_commits` may become a pointer once the recovery subsection merges).
