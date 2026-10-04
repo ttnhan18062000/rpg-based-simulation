@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-EDIT-RATCHET-HOOK
-phase: inprogress
+phase: done
 date: 2026-10-04
 tags: [architecture, hooks]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, hooks]
 M6c: Advisory code-health PostToolUse edit hook
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -46,12 +46,12 @@ P2
 - Making any hook blocking
 
 ## Acceptance Criteria
-- [ ] Hook exits 0 in every tested case and is silent on pass
-- [ ] Owner confirmed the settings.json diff before commit
-- [ ] Wiring test extended and passing
-- [ ] Capability-envelope result recorded (row or finding)
-- [ ] Pre-commit ratchet tests unchanged and passing
-- [ ] `git diff --stat <base>...HEAD` lists no path under src/
+- [x] Hook exits 0 in every tested case and is silent on pass
+- [x] Owner confirmed the settings.json diff before commit
+- [x] Wiring test extended and passing
+- [x] Capability-envelope result recorded (row or finding)
+- [x] Pre-commit ratchet tests unchanged and passing
+- [x] `git diff --stat <base>...HEAD` lists no path under src/
 
 ## Related Tickets
 None.
@@ -87,3 +87,4 @@ None.
 codebase/hooks/edit_ratchet_hook.py (new), codebase/gates/staged_ratchet.py, .claude/settings.json (agent-working's), tests/codebase/test_edit_ratchet_hook.py (new), tests/tools/test_settings_json_hooks_wiring.py, codebase/README.md, docs/guidelines/python_code_standard.md, ticket and staging artifacts
 
 ## Completion Summary
+Advisory PostToolUse hook `codebase/hooks/edit_ratchet_hook.py` wired as the last PostToolUse group in `.claude/settings.json` after the owner confirmed the literal diff; reuses `staged_ratchet.check` (new python/timeout params; missing ruff or timeout is a skip). Always exits 0, silent on pass. Finding for agent-working: the capability envelope covers neither hooks nor settings.json (outbox Message 12).

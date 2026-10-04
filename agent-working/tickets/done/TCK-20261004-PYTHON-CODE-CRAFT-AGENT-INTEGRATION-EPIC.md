@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-PYTHON-CODE-CRAFT-AGENT-INTEGRATION-EPIC
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, planning]
 ---
@@ -41,9 +41,9 @@ Scope-only epic tracking five child tickets that put the Python code standard in
 - M4/ast-grep/package-registry flips, import-linter adoption, M7, `safe-refactor` skill
 
 ## Acceptance Criteria
-- [ ] All five child tickets done
-- [ ] PR body names agent-working as owner of `.claude/**` paths
-- [ ] No `src/` diff across the PR
+- [x] All five child tickets done
+- [x] PR body names agent-working as owner of `.claude/**` paths
+- [x] No `src/` diff across the PR
 
 ## Related Tickets
 - TCK-20261004-EXEMPLAR-MODULES
@@ -74,3 +74,4 @@ None.
 ## Files Changed
 
 ## Completion Summary
+M6 delivered with the M5 follow-ups: exemplar modules (3 picks), review rubric, advisory edit hook, `code-craft` skill with the implementer pointer, and ast-grep in SARIF and the snapshot (schema 3). No `src/` change; `.claude/**` edits (settings.json, implementer.md) were owner-confirmed by literal diff and belong to agent-working's paths (decision 8.17).

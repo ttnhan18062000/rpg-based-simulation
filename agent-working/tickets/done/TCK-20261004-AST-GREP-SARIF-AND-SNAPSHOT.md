@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-AST-GREP-SARIF-AND-SNAPSHOT
-phase: inprogress
+phase: done
 date: 2026-10-04
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 M5 follow-up: ast-grep in the SARIF feedback and the snapshot metrics
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -39,11 +39,11 @@ Add ast-grep to `codebase/gates/sarif_feedback.py` and one count per rule (n3, n
 - New rules
 
 ## Acceptance Criteria
-- [ ] SARIF reports a new ast-grep finding and omits a grandfathered one
-- [ ] Missing binary gives exit 2 with a warning
-- [ ] Three new snapshot dimensions; existing values identical on the fixture
-- [ ] No threshold, tool version or registry row changed
-- [ ] `git diff --stat <base>...HEAD` lists no path under src/
+- [x] SARIF reports a new ast-grep finding and omits a grandfathered one
+- [x] Missing binary gives exit 2 with a warning
+- [x] Three new snapshot dimensions; existing values identical on the fixture
+- [x] No threshold, tool version or registry row changed
+- [x] `git diff --stat <base>...HEAD` lists no path under src/
 
 ## Related Tickets
 - TCK-20261004-AST-GREP-RULE-PACK-ADVISORY
@@ -81,3 +81,4 @@ SARIF, metrics, snapshot-craft and ast-grep rule tests: 83 passed. Full `tests/c
 codebase/gates/sarif_feedback.py, codebase/health/{adapters,metrics,scan}.py, codebase/reports/codebase_health_snapshot.py, docs/agent-monitoring/codebase_health_history_schema.md (agent-working's area), tests/codebase/{test_code_health_sarif_feedback,test_code_health_metrics,test_codebase_health_snapshot,test_codebase_health_snapshot_craft}.py, ticket and staging artifacts
 
 ## Completion Summary
+ast-grep findings in the SARIF feedback (filtered per (file, symbol, rule), missing binary exits 2) and three snapshot keys (N3, N4, E3); SNAPSHOT_SCHEMA_VERSION 2 to 3 with the schema doc updated (agent-working told, outbox Message 13); a snapshot without ast-grep exits 2 and writes nothing; `scan._find` made public as `find_tool`.

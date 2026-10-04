@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-REVIEW-RUBRIC
-phase: inprogress
+phase: done
 date: 2026-10-04
 tags: [architecture, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, planning]
 M6b: Review rubric in the Python code standard
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -43,10 +43,10 @@ Add a short "Review rubric" section to `docs/guidelines/python_code_standard.md`
 - Examples
 
 ## Acceptance Criteria
-- [ ] Section present, within the length limit
-- [ ] Doc test passes
-- [ ] Frontmatter valid; `make knowledge-index-update` run
-- [ ] `git diff --stat <base>...HEAD` lists no path under src/
+- [x] Section present, within the length limit
+- [x] Doc test passes
+- [x] Frontmatter valid; `make knowledge-index-update` run
+- [x] `git diff --stat <base>...HEAD` lists no path under src/
 
 ## Related Tickets
 None.
@@ -77,3 +77,4 @@ New Section 11 "Review rubric" in the standard (one table, 5 bullets); old Secti
 docs/guidelines/python_code_standard.md, tests/codebase/test_review_rubric.py (new), ticket
 
 ## Completion Summary
+Section 11 Review rubric in the Python standard (Important blocks, max 3 Nits, Pre-existing never blocks, a correctness bug is Important by naming its concrete failure), pinned by tests.

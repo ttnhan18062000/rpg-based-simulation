@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-CODE-CRAFT-SKILL
-phase: inprogress
+phase: done
 date: 2026-10-04
 tags: [architecture, skills]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, skills]
 M6d: `code-craft` skill and the implementer pointer
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -42,11 +42,11 @@ A `code-craft` skill carrying the standard's reviewer rules with bad/good pairs 
 - Other agent files
 
 ## Acceptance Criteria
-- [ ] Skill present and catalogued; catalog test and content test pass
-- [ ] Owner confirmed the implementer.md diff before commit
-- [ ] Implementer pointer pinned by a test
-- [ ] No generated file hand-edited
-- [ ] `git diff --stat <base>...HEAD` lists no path under src/
+- [x] Skill present and catalogued; catalog test and content test pass
+- [x] Owner confirmed the implementer.md diff before commit
+- [x] Implementer pointer pinned by a test
+- [x] No generated file hand-edited
+- [x] `git diff --stat <base>...HEAD` lists no path under src/
 
 ## Related Tickets
 - TCK-20261004-EXEMPLAR-MODULES
@@ -81,3 +81,4 @@ None.
 .claude/skills/code-craft/SKILL.md (new), .claude/agents/implementer.md (agent-working's), .agents/skills/code-craft/SKILL.md (generated), AGENTS.md (generated), agent-working/agent-orchestration/skills.yaml, docs/ai/skills.md, tests/tools/test_code_craft_skill_content.py (new), ticket and staging artifacts
 
 ## Completion Summary
+`code-craft` skill (reviewer rules with examples, workflow, rubric pointer) with catalog entry, Codex mirror, docs/ai/skills.md row and content test; one pointer line in implementer.md after the owner confirmed the literal diff.

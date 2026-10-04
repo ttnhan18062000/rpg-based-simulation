@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-EXEMPLAR-MODULES
-phase: inprogress
+phase: done
 date: 2026-10-04
 tags: [architecture, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, planning]
 M6a: Exemplar modules in the package registry
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -42,11 +42,11 @@ Fill `exemplar_modules` (0 to 3 paths) in `codebase/structure/package_registry.j
 - `do_not_imitate` additions beyond what the measurement shows
 
 ## Acceptance Criteria
-- [ ] Every `active` package has `exemplar_modules` set by the criterion (possibly `[]`); `legacy`/`frozen` have none
-- [ ] Registry validator passes
-- [ ] Criterion and command documented in the audit
-- [ ] Pin test added and passes
-- [ ] `git diff --stat <base>...HEAD` lists no path under src/
+- [x] Every `active` package has `exemplar_modules` set by the criterion (possibly `[]`); `legacy`/`frozen` have none
+- [x] Registry validator passes
+- [x] Criterion and command documented in the audit
+- [x] Pin test added and passes
+- [x] `git diff --stat <base>...HEAD` lists no path under src/
 
 ## Related Tickets
 - TCK-20261004-PYTHON-CODE-CRAFT-STRUCTURE-EPIC
@@ -78,3 +78,4 @@ None.
 codebase/structure/exemplars.py (new), codebase/structure/package_registry.jsonl, tests/codebase/test_package_exemplars.py (new), docs/plans/codebase_health/src_package_structure_audit.md, ticket and staging artifacts
 
 ## Completion Summary
+`codebase/structure/exemplars.py` (measure/apply) fills `exemplar_modules` by a written criterion (no exceptions row, 60 to 400 lines, docstring whose first line is a sentence not a path, not in do_not_imitate; ranked by importers). Result: 3 of 36 packages (lab, systems, world); the rest get [] because 710 of 744 src files carry an exceptions row, and the D2 banner filter dropped 8 more. Criterion documented in the structure audit; reviewed stays false.
