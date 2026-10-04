@@ -47,9 +47,12 @@ if _REPO_ROOT_STR not in sys.path:
     sys.path.append(_REPO_ROOT_STR)
 from tools.agent_working_paths import KNOWLEDGE_INDEX, STORED_ARTIFACTS, TICKETS  # noqa: E402
 
-_DEFAULT_DB = KNOWLEDGE_INDEX / "knowledge.db"
-_MANIFEST_PATH = KNOWLEDGE_INDEX / "manifest.json"
-_CACHE_PATH = KNOWLEDGE_INDEX / "embeddings_cache.pkl"
+# Anchored to this file's checkout, not the process cwd: the MCP server can be started from any directory
+# and must still resolve the index of the worktree it belongs to.
+_INDEX_DIR = Path(_REPO_ROOT_STR) / KNOWLEDGE_INDEX
+_DEFAULT_DB = _INDEX_DIR / "knowledge.db"
+_MANIFEST_PATH = _INDEX_DIR / "manifest.json"
+_CACHE_PATH = _INDEX_DIR / "embeddings_cache.pkl"
 _MODEL_NAME = "all-MiniLM-L6-v2"
 
 
