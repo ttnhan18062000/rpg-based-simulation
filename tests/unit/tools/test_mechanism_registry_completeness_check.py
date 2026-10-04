@@ -136,13 +136,15 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     2026-09-30 (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION): `bound` 33 -> 36,
     `unbound` 28 -> 25. New targets: `domains/information` (`information_trust_deception` bound to
     `SourceTrustUpdateService`), `systems/social_systems/memory` (`social_memory`),
-    `systems/social_systems/relationships` (`affection_relationship_bonds`)."""
+    `systems/social_systems/relationships` (`affection_relationship_bonds`).
+    2026-10-05 (owner decision 8 / memo row 7 (b)): `bound` 36 -> 37, `unbound` 25 -> 24.
+    `domains/motivation` bound by the new `role_fit_preference` (`RoleFitEvaluator`)."""
     data = _real_registry_data()
     report = build_report(data)
     assert report.total_targets == 64
-    assert len(report.bound) == 36
+    assert len(report.bound) == 37
     assert len(report.excluded) == 3
-    assert len(report.unbound) == 25
+    assert len(report.unbound) == 24
 
 
 # --- state: gap is not a coverage hole (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION) ---
@@ -189,10 +191,12 @@ def test_wider_scope_every_wired_candidate_has_a_recorded_disposition():
 def test_wider_scope_numbers_pinned():
     wider = build_report(_real_registry_data()).wider
     assert wider["scope_files"] == 297  # 296 + src/worldassembly/resolve_io.py (one new module)
-    assert wider["unbound_files"] == 233  # files no implemented_by entry names; +1, same new module
-    assert wider["candidates"] == 73  # unbound mechanism-shaped classes, wired or not
-    assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package
-    assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 3
+    # 233 -> 232 on 2026-10-05: `src/world/perception/gate.py` is now named by
+    # `sense_gated_detection`'s implemented_by (owner decision 8).
+    assert wider["unbound_files"] == 232  # files no implemented_by entry names
+    assert wider["candidates"] == 72  # unbound mechanism-shaped classes, wired or not (73 -> 72: PerceptionGate)
+    assert len(wider["wired"]) == 20  # ... of which referenced from another top-level package (21 -> 20, same)
+    assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 2  # PerceptionGate bound 2026-10-05
 
 
 def test_wider_exclusions_and_pending_all_point_to_real_wired_candidates():

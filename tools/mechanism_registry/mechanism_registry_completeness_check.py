@@ -211,12 +211,6 @@ WIDER_PENDING: Dict[str, str] = {
         "that this class's only caller is never called; 0 calls at runtime. Bind decision deferred "
         "with the defect (TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS)."
     ),
-    "src/world/perception/gate.py::PerceptionGate": (
-        "Wired (engine/behavior_consumers.py), 1872 runtime calls, sole production call is combat "
-        "targeting at engine/tactical.py:199. Proposed `sense_gated_detection` (entity), scoped to "
-        "combat-targeting gating. Held by rpg-feature-planning until their perception-contract "
-        "relabelling lands, so the two records do not contradict on the day they are written."
-    ),
 }
 
 

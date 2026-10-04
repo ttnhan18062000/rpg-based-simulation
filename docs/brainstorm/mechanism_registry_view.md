@@ -2,11 +2,11 @@
 
 Generated from `registries/mechanisms.yaml` — regenerate with `make mechanism-registry-view`. Do not hand-edit.
 
-All 104 mechanisms, one row each, sorted by priority (`layer weight × transitive dependent-count`) descending. Deliberately not truncated — see `docs/brainstorm/mechanism_priority_view.md` for the focused, unverified-only, top-25 "verify next" ranking, and `docs/brainstorm/mechanism_verification_view.md` for the full verification ledger with notes. This view exists to answer a third, different question: what matters most, and do we know it works, in a single read.
+All 106 mechanisms, one row each, sorted by priority (`layer weight × transitive dependent-count`) descending. Deliberately not truncated — see `docs/brainstorm/mechanism_priority_view.md` for the focused, unverified-only, top-25 "verify next" ranking, and `docs/brainstorm/mechanism_verification_view.md` for the full verification ledger with notes. This view exists to answer a third, different question: what matters most, and do we know it works, in a single read.
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**46 runtime-verified, 49 static (`code_trace`)-verified, 9 unverified** — of 104 total.
+**47 runtime-verified, 50 static (`code_trace`)-verified, 9 unverified** — of 106 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
@@ -96,9 +96,11 @@ All 104 mechanisms, one row each, sorted by priority (`layer weight × transitiv
 | `reputation` | faction | done | static | observed | 0 | 0 |
 | `resource_ecology_regrowth` | world | done | runtime | observed | 0 | 0 |
 | `resource_harvesting` | world | orphan | static | observed | 0 | 0 |
+| `role_fit_preference` | entity | orphan | static | observed | 0 | 0 |
 | `role_model_imitation` | entity | gated | runtime | observed | 0 | 0 |
 | `ruins_mines_battlefields` | region | gap | static | observed | 0 | 0 |
 | `self_model` | entity | gated | runtime | observed | 0 | 0 |
+| `sense_gated_detection` | entity | done | runtime | observed | 0 | 0 |
 | `settlement_capacity_axis` | faction | gap | unverified | unverified | 0 | 0 |
 | `skill_unlocks` | entity | partial | static | observed | 0 | 0 |
 | `social_contracts` | faction | done | static | observed | 0 | 0 |

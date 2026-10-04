@@ -247,6 +247,10 @@ mechanisms:
         knows" is implicitly covered is exactly the kind of knowledge that decays. Not the same
         finding as `perception`'s own dormancy (a different, unrelated component under a similar
         directory name) -- see that entry's own note.
+        **Superseded in part, 2026-10-05 (owner decision 8):** `PerceptionGate` is now registered
+        as its own mechanism, `sense_gated_detection`. The reasoning above for keeping it out of
+        THIS entry's `implemented_by` still holds; only "NOT registered as its own mechanism" is
+        superseded.
   - id: combat_engagement
     layer: entity
     systems: [combat]
@@ -1208,6 +1212,46 @@ mechanisms:
         cognition). Not a same-name-different-thing misbinding risk for this entry -- a genuinely
         distinct, separately-scoped mechanism that happens to share a directory name, already
         implicitly covered by `tactical_decision`'s own (also `contradicted`) verified block.
+        **2026-10-05:** `PerceptionGate` is now registered as `sense_gated_detection` (owner
+        decision 8). Its runtime reach is measured there; its effect is not.
+  - id: sense_gated_detection
+    layer: entity
+    systems: [cognition]
+    depends_on: []
+    state: done
+    implemented_by: [src/world/perception/gate.py::PerceptionGate]
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-09-23"
+      note: >-
+        Introduced 2026-10-05 per owner decision 8 (docs/plans/systemic_world/owner_decision_memo.md
+        row 8), under the id this file's completeness check already proposed for it
+        (`WIDER_PENDING`, TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP). `PerceptionGate` is
+        the authoritative tactical sense-detection of one specific neighbour. Its scope is declared
+        distinct from, and not merged with, strategic situational awareness
+        (`SpatialQueryService.nearby_entities()`, see `goal_hierarchy`) and from the parked
+        `PerceptionModel` chain (`perception`, designed, not in effect). WHAT THIS BLOCK ASSERTS IS
+        REACH, NOT EFFECT. Reach, runtime: the positive-controlled call counter of
+        TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION (seed 42, PROD_SMALL, 1000 ticks)
+        counted `PerceptionGate.can_perceive` 1839 times on crowded_frontier, 528 on
+        frontier_living_world and 33 on quest_dense_frontier
+        (agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/runtime_probe/output_whole_classes_*_1000ticks.jsonl).
+        Its sole production call site is `TacticalDecisionSystem`'s hostile-target loop
+        (`src/engine/tactical.py:199` at 898c6f35a, through the singleton in
+        `src/engine/behavior_consumers.py`), which skips any neighbour reported unperceived. Those
+        counts predate #291 and #333, which changed combat targeting and hostility, so they show
+        that the gate is reached, not how often it is reached today. Effect, UNMEASURED: the counter
+        counts calls, not results. Nothing yet shows (1) how often the gate returns perceived=False,
+        i.e. whether it changes any targeting outcome or only executes, or (2) how often it raises.
+        The call sits inside a bare `except Exception: pass` ("Gate failure -> permissive
+        fallback"), so a gate that always raises cannot be told apart from one that always
+        perceives. Value-differential candidate for
+        TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP: count calls, rejections and
+        swallowed exceptions per world. `depends_on: []`: it reads catalog sense profiles and the
+        target's emitted signals, not another mechanism's output. `tactical_decision` is its caller
+        (execution order, header axis 2), not a functional dependent: with the permissive fallback,
+        targeting still produces a result without it.
   - id: emotion
     layer: entity
     systems: [cognition]
@@ -1309,8 +1353,23 @@ mechanisms:
     verified:
       instrument: code_trace
       verdict: observed
-      date: "2026-09-16"
+      date: "2026-10-05"
       note: >-
+        RETIRED (change-taxonomy kind Retire, docs/plans/mechanism_identity_and_change_taxonomy.md
+        §2: "entry -> gap, plus a verdict recording why").
+        TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN. This `gap` is
+        NOT an unbuilt capability awaiting work, unlike this file's other `gap` entries (`clan`,
+        `team_up`, ...). The doctrine/values bias on motivation was decided against and its code
+        deleted by TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT, disclosed in
+        docs/guidelines/intentional_divergences.md §2.53; `adventure_routing`'s live
+        personality_bias serves its role. Re-confirmed at 898c6f35a: `src/domains/motivation/` holds
+        only `__init__.py` and `evaluator.py`, and `src/core/cognition.py::MotivationModel` carries
+        no doctrine/values field. Retired, not renamed: the module's one surviving class,
+        `RoleFitEvaluator`, is a different capability (gear/skill/quest/party-role fit), so moving it
+        under this id would bind an unrelated mechanism to a dead one's history. It is registered
+        separately as `role_fit_preference`. The id is kept so the history stays findable; a future
+        doctrine/values feature is an Introduce (a new entry), not a revival of this one.
+        ---- earlier record (2026-09-16, edges note 2026-09-20), kept ----
         Found while tracing dependency edges for TCK-20260916-MECHANISM-DEPENDENCY-GRAPH-
         POPULATION, not this ticket's own target. src/domains/motivation/__init__.py's own
         docstring: DoctrineResolver and MotivationBiasService were DELETED
@@ -1336,6 +1395,38 @@ mechanisms:
         `docs/plans/mechanism_identity_and_change_taxonomy.md` §3. Removed rather than left
         unaudited on a `gap`-state mechanism whose own dependency claims can never be verified now
         that its code is gone.
+  - id: role_fit_preference
+    layer: entity
+    systems: [cognition]
+    depends_on: []
+    state: orphan
+    implemented_by:
+      - src/domains/motivation/evaluator.py::RoleFitEvaluator
+      - src/core/cognition.py::RoleFitPreference
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-10-05"
+      note: >-
+        Introduced 2026-10-05 to disposition `src/domains/motivation/`, one of the 25 core-tier
+        modules that `mechanism_registry_completeness_check` reported unbound (memo row 7 (b)). It
+        is a per-entity preference for gear, skill, quest and party-role tags (`RoleFitPreference`,
+        held as `MotivationModel.role_fit`) plus its scorer (`RoleFitEvaluator`, "Phase 14"). Bound,
+        not excluded: `EXCLUSIONS` is reserved for confirmed infrastructure, and this is a gameplay
+        capability someone intended. Orphan, backing (a) static and decisive at 898c6f35a. Nothing in
+        `src/` outside `src/domains/motivation/` imports or names `RoleFitEvaluator`; its only
+        consumer is `tests/unit/domains/motivation/test_phase14_role_fit_evaluator.py`. Nothing in
+        `src/` writes or reads `MotivationModel.role_fit` beyond its own definition and
+        `to_canonical_dict()`. With no importer there is no runtime path to probe, so this absence
+        verdict does not need the runtime corroboration that
+        TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE added for reachable-but-
+        unconstructed classes. The `role_fit` / `role_fit_score` locals in
+        `src/domains/cooperation/providers.py` are an unrelated literal scoring, not a consumer.
+        `mechanism_state_caller_check` reports `orphan_with_callers` (2 files) for this entry. Both
+        are definition-adjacent, not calls: `src/domains/motivation/__init__.py` re-exports
+        `RoleFitEvaluator` in `__all__`, and `evaluator.py` imports `RoleFitPreference` for its own
+        type annotations. That is the checker's known name-match shape, not a contradiction of
+        `orphan`. Whether to Wire it or Retire it is feature work, frozen by memo row 7.
   - id: commitment_betrayal
     layer: entity
     systems: [social]

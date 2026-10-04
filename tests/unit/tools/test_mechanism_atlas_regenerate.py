@@ -110,7 +110,9 @@ def test_mapping_covers_exactly_73_of_the_atlas_carded_mechanisms():
         "production_role_vacancy", "veterancy_rank", "quest_lifecycle_resolution",
         "intent_requirement_gating", "regional_hazard_drain", "humanoid_reproduction",
         "role_model_imitation", "faction_raid", "refugee_displacement",
-    }, f"expected exactly these 32 to be unmapped (no atlas card), got {unmapped}"
+        # 2026-10-05 (memo row 7 (b)): registered from code, no atlas card.
+        "sense_gated_detection", "role_fit_preference",
+    }, f"expected exactly these 34 to be unmapped (no atlas card), got {unmapped}"
     assert len(mapped) == 72  # 73 until `xp_leveling` merged into `evolution` (two cards, one id)
 
 

@@ -265,4 +265,9 @@ def test_real_registry_findings_pinned():
         # worlds x 2000 ticks. Same understood blind spot as `perception` / `chronicle` above (an
         # import is not a call); the runtime probe, not this static count, is the evidence.
         ("social_memory", "orphan_with_callers"),
+        # 2026-10-05 (memo row 7 (b)): `role_fit_preference` registered orphan. The 2 "caller" files
+        # are definition-adjacent, not calls: `src/domains/motivation/__init__.py` re-exports
+        # `RoleFitEvaluator`, and `evaluator.py` imports `RoleFitPreference` for type annotations.
+        # Nothing outside src/domains/motivation/ imports either symbol. Same blind spot as above.
+        ("role_fit_preference", "orphan_with_callers"),
     }
