@@ -213,11 +213,13 @@ def _collect(roles: list[str] | None, drafts: bool, memory: bool,
 
 
 def export_bundle(*, roles: list[str] | None = None, drafts: bool = True, memory: bool = True,
-                  root: Path = TRANSIT_ROOT, handover_dir: Path = HANDOVER_DIR,
+                  root: Path | None = None, handover_dir: Path | None = None,
                   memory_dir: Path | None = None, host: str | None = None,
                   draft_filter: DraftFilter | None = None, role: str | None = None, roster=None,
                   worktree: str | None = None, branch: str | None = None) -> Path:
     """`draft_filter=None` exports every draft (`--include-all`); main() passes `load_draft_filter()`."""
+    root = root if root is not None else TRANSIT_ROOT
+    handover_dir = handover_dir if handover_dir is not None else HANDOVER_DIR
     host = host or host_id()
     memory_dir = memory_dir if memory_dir is not None else default_memory_dir()
     items = _collect(roles, drafts, memory, handover_dir, memory_dir, draft_filter)
@@ -281,13 +283,15 @@ def summarize_groups(rows: list[dict]) -> str:
     return ", ".join(f"{k}: {len(groups[k])}" for k in order)
 
 
-def import_bundle(host: str, *, dry_run: bool = False, root: Path = TRANSIT_ROOT,
-                  handover_dir: Path = HANDOVER_DIR, memory_dir: Path | None = None,
+def import_bundle(host: str, *, dry_run: bool = False, root: Path | None = None,
+                  handover_dir: Path | None = None, memory_dir: Path | None = None,
                   local_host: str | None = None, role: str | None = None, no_memory: bool = False) -> list[str]:
     """Verify every hash first (abort before any write), then copy. Returns action lines.
 
     `role` limits the copy to that role's notes and drafts; memory is still imported unless `no_memory`. Items with
     no role are never copied by a role-limited import and never silently dropped: they are listed as skipped."""
+    root = root if root is not None else TRANSIT_ROOT
+    handover_dir = handover_dir if handover_dir is not None else HANDOVER_DIR
     bundle = root / host
     memory_dir = memory_dir if memory_dir is not None else default_memory_dir()
     rows = _read_manifest(bundle)
@@ -330,8 +334,9 @@ def _bundles(root: Path) -> list[Path]:
     return sorted(p for p in root.iterdir() if p.is_dir()) if root.is_dir() else []
 
 
-def pending_bundles(root: Path = TRANSIT_ROOT, local_host: str | None = None) -> list[str]:
+def pending_bundles(root: Path | None = None, local_host: str | None = None) -> list[str]:
     """Bundle ids from other hosts this machine has not imported (the hook's input)."""
+    root = root if root is not None else TRANSIT_ROOT
     local = local_host or host_id()
     return [
         b.name for b in _bundles(root)
@@ -339,15 +344,17 @@ def pending_bundles(root: Path = TRANSIT_ROOT, local_host: str | None = None) ->
     ]
 
 
-def bundle_summary(bundle_id: str, root: Path = TRANSIT_ROOT) -> str:
+def bundle_summary(bundle_id: str, root: Path | None = None) -> str:
     """`role: n, ..., unattributed: n, memory: n` for one bundle ("" when unreadable)."""
+    root = root if root is not None else TRANSIT_ROOT
     try:
         return summarize_groups(_read_manifest(root / bundle_id))
     except (TransitError, ValueError, OSError):
         return ""
 
 
-def status_lines(root: Path = TRANSIT_ROOT, local_host: str | None = None) -> list[str]:
+def status_lines(root: Path | None = None, local_host: str | None = None) -> list[str]:
+    root = root if root is not None else TRANSIT_ROOT
     local = local_host or host_id()
     lines = []
     for b in _bundles(root):
@@ -364,7 +371,8 @@ def status_lines(root: Path = TRANSIT_ROOT, local_host: str | None = None) -> li
     return lines
 
 
-def discard_bundle(host: str, *, force: bool = False, root: Path = TRANSIT_ROOT) -> None:
+def discard_bundle(host: str, *, force: bool = False, root: Path | None = None) -> None:
+    root = root if root is not None else TRANSIT_ROOT
     bundle = root / host
     if not bundle.is_dir():
         raise TransitError(f"no bundle for host {host!r}")

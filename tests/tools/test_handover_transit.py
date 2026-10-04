@@ -375,3 +375,14 @@ def test_import_no_memory_skips_memory_and_a_tampered_unselected_file_still_abor
     with pytest.raises(ht.TransitError, match="sha256"):
         ht.import_bundle("hostA", root=root, handover_dir=tmp_path / "d3" / "h", memory_dir=tmp_path / "d3" / "m",
                          local_host="b", role=_WRITER, no_memory=True)
+
+
+@pytest.fixture(autouse=True)
+def _tests_never_write_the_real_transit_tree():
+    """Regression: a monkeypatched TRANSIT_ROOT once had no effect (defaults bound at definition time), and a test
+    bundle named `hostA` was committed to the real tree."""
+    real = _REPO_ROOT / "agent-working" / "handover-transit"
+    before = {p.name for p in real.iterdir()} if real.is_dir() else set()
+    yield
+    after = {p.name for p in real.iterdir()} if real.is_dir() else set()
+    assert after == before, f"a test wrote to the real transit tree: {sorted(after - before)}"
