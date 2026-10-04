@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-SESSION-LAYER-M0-HARNESS-SPIKE
-phase: open
+phase: done
 date: 2026-10-03
 tags: [ai, process-improvement, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 Session-layer M0: verify the Claude Code harness facts the session-layer design depends on, with positive controls, and decide go / adjust on plan sections 5, 9.5 and 10
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -104,7 +104,7 @@ owner's working sessions.
 - `docs/guides/agent_session_reset_boundaries.md`
 
 ## Related Stored Artifacts
-(Created by this ticket.)
+`agent-working/stored_artifacts/TCK-20261003-SESSION-LAYER-M0-HARNESS-SPIKE/` (investigation.md, plan.md, test_plan.md, evidence/*.jsonl).
 
 ## Related Code Areas
 `tools/agent-monitoring/session_start_handover_hook.py` (read only); `.claude/settings.json` (read only).
@@ -122,7 +122,9 @@ Investigation-only; the implementer commits the record and the plan edits. No `W
 No code. Positive controls are the verification; a re-run script (if any) stays under the record.
 
 ## Files Changed
-(Open.)
+- `docs/plans/agent_infrastructure/session_layer_working_process.md` (7 edits, sections 5, 6.1, 10, 12.1)
+- `agent-working/stored_artifacts/TCK-20261003-SESSION-LAYER-M0-HARNESS-SPIKE/**` (new)
+- ticket moved todos/session-layer -> done
 
 ## Completion Summary
-(Open.)
+Class-1 record landed. Decision: ADJUST plan sections 5, 6.1, 10; HOLD 9.5. Verified: a (resume part), b, e, f, h, j, n, p, q. Partial: d, i, m, o, r. **Explicitly not verified (owner decision 2026-10-03: close as unprobed, no follow-up filed):** c, g, k, l, interactive ask, agent_type on sub-agent tool calls, power loss, crash mid-rebase; q/r raw kill logs were not saved (the record says so). AC 1 is met for items listed with a reason; the M0c inbox question stays open until c and l run. Findings that changed the plan: hook crash (exit 1 / unparseable) fails open; `agent_type`/env absent on `SessionStart(resume)`; socket file outlives a killed process; transcript path after cross-cwd resume is misleading. No M1/M2 child before the owner decides on class 2 vs proceeding on the adjusted plan.

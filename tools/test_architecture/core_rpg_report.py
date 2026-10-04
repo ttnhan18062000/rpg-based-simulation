@@ -8,6 +8,10 @@ Honest states: missing, skipped, stale, not-in-supplied-runs and uncertain data 
 or pass. Every count carries its denominator. The output regenerates byte-identically from the same
 inputs: no wall clock (`sha` and `as_of` are inputs), no absolute paths, stable ordering.
 
+Schema v3 added a non-exclusive `social_domain` block to the classification layer (and three per-file social
+keys). It is a reported signal, not a class: no file's `class`, no count and no core-RPG candidate set moved.
+v2 had renamed `worktree_dirty` to `scanned_inputs_dirty` and the absent-file state to `not-in-supplied-runs`.
+
 Usage:
     python3 tools/test_architecture/core_rpg_report.py --as-of 2026-09-30 \
         [--sha SHA] [--junit run1.xml ...] [--coverage coverage.json] [--repo-root DIR] [--out-dir DIR]
@@ -35,7 +39,7 @@ if _REPO_ROOT_STR not in sys.path:
     sys.path.append(_REPO_ROOT_STR)
 from tools.agent_working_paths import TICKETS, posix  # noqa: E402
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 # ── classification rules (v0 heuristics) ────────────────────────────────────────────────────────
 # Directory signal: the planner's directory list, docs/plans/test_architecture/reference/
@@ -77,6 +81,12 @@ _GAMEPLAY_IMPORT_PREFIXES = tuple(p for prefixes in DOMAIN_IMPORT_PREFIXES.value
 _UNOWNED_DOMAIN_IMPORT_PREFIXES = (  # "Party / group" row: no oracle and no owner (decision D-P, deferred)
     "src.systems.party*", "src.systems.social_systems.party*",
 )
+# "Social / narrative" row of the same map (Phase 2 batch): mapped, but NOT core-RPG, so it is reported as its
+# own non-exclusive signal and deliberately kept out of DOMAIN_IMPORT_PREFIXES (which feeds the core-RPG candidate
+# set, impact_report, marker_check and the `domain` marker vocabulary). `party*.py` stays in the Party row and
+# `memory.py` is excluded as dormant (TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS).
+_SOCIAL_PACKAGE = "src.systems.social_systems"
+_SOCIAL_EXCLUDED_IMPORT_PREFIXES = ("src.systems.social_systems.party*", "src.systems.social_systems.memory")
 
 V0_LIMITS = (
     "Execution data is a supplied input: in CI only the three jobs split from the former `api-tools` job "
@@ -90,6 +100,9 @@ V0_LIMITS = (
     "Import signals follow the ownership map in architecture_design_notes.md §3.1; party/group code has no "
     "oracle or owner (decision D-P, deferred), so files that only import it are `unowned-domain`, outside the "
     "core-RPG candidate set.",
+    "Social code (`src.systems.social_systems`, excluding `party*` and the dormant `memory.py`) is mapped in §3.1 "
+    "but is not core-RPG: it is reported as a separate, non-exclusive `social_domain` signal and never changes a "
+    "file's class or the core-RPG candidate set. The bare package name alone is not a social signal.",
     "The manifest hashes the supplied artifacts, the workflow, the tag registry and the mutation records; the "
     "scanned tests/, agent-working/tickets/ and parity ledger are covered only by the `scanned_inputs_dirty` flag, which needs a git checkout. "
     "That flag covers only those scanned inputs, not the whole repository (renamed from `worktree_dirty` in schema_version 2).",
@@ -170,11 +183,22 @@ def declared_markers(path: Path) -> Dict[str, List[str]]:
     return out
 
 
+def _social_signal(names: Iterable[str]) -> bool:
+    """A social submodule import that is neither `party*` nor the dormant `memory`.
+
+    The bare package name is not a signal: `from pkg import x` adds both `pkg` and `pkg.x` to the list."""
+    return any(n.startswith(_SOCIAL_PACKAGE + ".") and not _has_prefix([n], _SOCIAL_EXCLUDED_IMPORT_PREFIXES)
+               for n in names)
+
+
 def classify_file(rel_path: str, imports: Optional[List[str]]) -> Dict[str, Any]:
     dir_signal = any(rel_path.startswith(p) for p in _CORE_RPG_PREFIXES)
     if imports is None:
         return {"file": rel_path, "class": "parse-error", "directory_signal": dir_signal,
-                "import_signal": None, "substrate_only_import": None}
+                "import_signal": None, "substrate_only_import": None,
+                "social_import_signal": None, "social_party_overlap": None, "social_memory_only": None}
+    social = _social_signal(imports)
+    party = _has_prefix(imports, _UNOWNED_DOMAIN_IMPORT_PREFIXES)
     import_signal = _has_prefix(imports, _GAMEPLAY_IMPORT_PREFIXES)
     substrate_only = (not import_signal) and _has_prefix(imports, _SUBSTRATE_IMPORT_PREFIXES)
     if dir_signal and import_signal:
@@ -186,7 +210,9 @@ def classify_file(rel_path: str, imports: Optional[List[str]]) -> Dict[str, Any]
     else:
         cls = "not-core-rpg"
     return {"file": rel_path, "class": cls, "directory_signal": dir_signal,
-            "import_signal": import_signal, "substrate_only_import": substrate_only}
+            "import_signal": import_signal, "substrate_only_import": substrate_only,
+            "social_import_signal": social, "social_party_overlap": social and party,
+            "social_memory_only": (not social) and _has_prefix(imports, [_SOCIAL_PACKAGE + ".memory"])}
 
 
 def scan_tests(repo_root: Path) -> List[Dict[str, Any]]:
@@ -219,12 +245,25 @@ def classification_layer(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         counts[r["class"]] += 1
     directory_only = sum(1 for r in records if r["directory_signal"] and r["import_signal"] is False)
     import_only = sum(1 for r in records if r["import_signal"] and not r["directory_signal"])
+    social_by_class = {k: 0 for k in counts}
+    for r in records:
+        if r["social_import_signal"]:
+            social_by_class[r["class"]] += 1
     return {
         "state": "heuristic",
         "denominator": {"test_files": total},
         "counts": counts,
         "signal_disagreement": {"directory_only": directory_only, "import_only": import_only},
         "substrate_only_import_files": sum(1 for r in records if r["substrate_only_import"]),
+        "social_domain": {
+            "denominator": {"test_files": total},
+            "signal_files": sum(1 for r in records if r["social_import_signal"]),
+            "by_class": social_by_class,
+            "party_overlap_files": sum(1 for r in records if r["social_party_overlap"]),
+            "memory_only_files": sum(1 for r in records if r["social_memory_only"]),
+            "rule": "non-exclusive signal, not a class: a src.systems.social_systems submodule import that is "
+                    "neither party* nor memory; a file keeps its class and the core-RPG candidate set is unchanged",
+        },
         "declared_markers": _declared_marker_summary(records),
         "rules": {
             "classified": "directory signal and gameplay-import signal both present",
@@ -740,6 +779,10 @@ def render_markdown(report: Dict[str, Any]) -> str:
     out += [f"- {k}: {v} / {d}" for k, v in c["counts"].items()]
     out += [f"- directory-only signal: {c['signal_disagreement']['directory_only']}, "
             f"import-only signal: {c['signal_disagreement']['import_only']}"]
+    sd = c["social_domain"]
+    out += [f"- social import signal (non-exclusive, not a class): {sd['signal_files']} / {d} "
+            f"(by class: {', '.join(f'{k} {v}' for k, v in sd['by_class'].items())}); "
+            f"party overlap {sd['party_overlap_files']}, memory-only (excluded) {sd['memory_only_files']}"]
 
     ln = layers["lanes"]
     nd = ln["denominator"]["core_rpg_candidate_files"]
