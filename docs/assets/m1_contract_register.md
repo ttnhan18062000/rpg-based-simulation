@@ -38,7 +38,8 @@ check, not an owner decision, and it authorizes nothing: `AM-M2` cannot start wi
 
 **Why `BLOCKED`.**
 
-1. **No `AM-M0` result record exists.** The plan lists "M0 `PASS` and human acceptance of its evidence as M1 input" as a prerequisite. A search of `docs/` and `agent-working/tickets/done/` for an `AM-M0` or `AM0-W` result finds only the plan text and
+1. **No `AM-M0` result record existed** when this was written. One now exists, retrospective, result `INCONCLUSIVE` (`docs/assets/m0_discovery_result.md`, `TCK-20261004-VISUAL-ASSETS-M0-RESULT`); this register's result is re-derived by `TCK-20261004-VISUAL-ASSETS-M1-RECLASSIFY`, not here. The text below is the original finding:
+  (original) **No `AM-M0` result record exists.** The plan lists "M0 `PASS` and human acceptance of its evidence as M1 input" as a prerequisite. A search of `docs/` and `agent-working/tickets/done/` for an `AM-M0` or `AM0-W` result finds only the plan text and
    the roadmaps, no result record. The proposal's rule is that no missing result defaults to a pass (section 17), so the prerequisite is unmet. The foundation was built on the owner's own decisions (Profile A, D8; no signing, D9) instead.
 2. **Required owner and authority decisions are absent.** These register rows are `GAP` because a person has not decided, not because evidence is missing:
    `W02.2` (who derives a visual key from game state), `W03.4` (Live Map and HUD ownership), `W05.4` (an audit authority distinct from the approver), `W08.5` (build, publish and activate roles), and `W07.7` (retirement rules).

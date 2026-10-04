@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-VISUAL-ASSETS-M0-RESULT
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, documentation, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation, planning]
 Write the `AM-M0` result record for visual assets (repository-grounded discovery), retrospectively and read-only
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -57,10 +57,10 @@ read-only repository inspection and a docs record, nothing else.
 - The `AM-M1` result itself (child 3).
 
 ## Acceptance Criteria
-- [ ] Every `AM0-W01`..`W09` clause has evidence that resolves on the branch, or an explicit `UNVERIFIED`.
-- [ ] All 22 `AM-U` items have a disposition.
-- [ ] The result follows the M0 table, with the retrospective sequencing stated; the planner re-derives it at review.
-- [ ] Frontmatter valid; `make knowledge-index-update` run (worktree: `PYTHON_KNOWLEDGE=/home/vboxuser/Work/rpg-based-simulation/.venv-knowledge/bin/python3`).
+- [x] Every `AM0-W01`..`W09` clause has evidence that resolves on the branch, or an explicit `UNVERIFIED`.
+- [x] All 22 `AM-U` items have a disposition.
+- [x] The result follows the M0 table, with the retrospective sequencing stated; the planner re-derives it at review.
+- [x] Frontmatter valid; `make knowledge-index-update` run (worktree: `PYTHON_KNOWLEDGE=/home/vboxuser/Work/rpg-based-simulation/.venv-knowledge/bin/python3`).
 
 ## Related Tickets
 - Parent: TCK-20261004-EPIC-VISUAL-ASSET-M1-UNBLOCK
@@ -70,7 +70,7 @@ read-only repository inspection and a docs record, nothing else.
 - docs/assets/m1_contract_register.md, docs/architecture/visual_asset_foundation_adr.md
 
 ## Related Stored Artifacts
-- None.
+- agent-working/stored_artifacts/TCK-20261004-VISUAL-ASSETS-M0-RESULT/ (plan, investigation, test_plan)
 
 ## Related Code Areas
 - Read only: frontend/ (Vite config, package/lock files), .github/workflows/, visual_assets/, .gitattributes/.gitignore
@@ -79,9 +79,17 @@ read-only repository inspection and a docs record, nothing else.
 - Hosting, CDN and Service Worker facts (`AM0-W03`) may be `UNVERIFIED` from the repository alone; that is allowed.
 
 ## Implementation Notes
+Wrote `docs/assets/m0_discovery_result.md`: one section per `AM0-W01`..`W09`, retained-evidence table, dispositions for all 23 `AM-U` items, contradiction log and a Result. Revision `f389ab5a8`.
+Result **`INCONCLUSIVE`** (the plan's own table): production hosting, CDN and cache behaviour, the supported client matrix and staleness are `UNVERIFIED` from the repository, owners besides the approver were unnamed, and the record is retrospective. The record states the `PASS` reading (explicit missing facts are allowed) and what moving to it would take. "Neither profile was selected" was judged on what M0 itself does: it selects nothing, so that condition holds and is not why the result is not `PASS`.
+Disagreements with the ticket, reported to the planner: the proposal has 23 `AM-U` items, not 22 (all 23 disposed); `U-02`/`U-05`/`U-14` are the Aseprite package's own list, not `AM-U` items. Register "Why `BLOCKED`" item 1 now points at the record (one edit, no reclassification).
 
 ## Test Summary
+Docs-only; no code changed. Every backticked path in the record resolves (scratch script, 73 checked; the 16 reported are named absent-path search results, ignored directories, or bare file names under a named directory). `tools/validate_frontmatter.py` and `make knowledge-index-update`: see the commit.
 
 ## Files Changed
+- `docs/assets/m0_discovery_result.md` (new)
+- `docs/assets/m1_contract_register.md` (one pointer, "Why `BLOCKED`" item 1)
+- `agent-working/tickets/`, `agent-working/stored_artifacts/TCK-20261004-VISUAL-ASSETS-M0-RESULT/`, `docs/REGISTRY.yaml`, monitoring shards
 
 ## Completion Summary
+Done. `AM-M0` result record exists, `INCONCLUSIVE`, retrospective, nothing reworded to reach it. Nothing outside `docs/` and `agent-working/` changed. `AM-M1`'s own result is child 3's.
