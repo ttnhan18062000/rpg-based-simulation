@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-VISUAL-ASSETS-M2-EVIDENCE-CHARTER
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, documentation, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation, testing]
 `AM1-W11` M2 evidence charter (draft): what synthetic evidence M2 needs, and which existing `REHEARSAL_ONLY` evidence could count
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -73,13 +73,16 @@ harness (`AM2-W01`..`W10`) was in effect built by the foundation and hardening b
 - None beyond the prior-evidence rule, which is the owner's.
 
 ## Implementation Notes
-(implementer)
+Wrote `docs/assets/m2_evidence_charter.md`, status `DRAFT` (no owner approval): where `AM-M2` stands (a run today is `BLOCKED`), supported conditions, synthetic fixtures, a per-deliverable table for `AM2-W01`..`W10` (existing paths and test names, missing coverage, allowed conclusion today), gate setup (`AM-C02` in full; `C05`/`C06`/`C07`/`C09` as contributing evidence only), the evidence bundle, allowed conclusions for `AM-M2` as a whole, and the prior-evidence rule as `PROPOSED` (rerun unchanged on a named commit after approval; the owner decides).
+Findings worth the planner's eye: nothing resolves `variant_axes`, so variant precedence has no fixture; the client manifest reader has no input byte bound (Python bounds bytes first), so "reject before allocation" is shown for Python only; the store's unknown-key message echoes the caller's key and no test bounds diagnostics; no cache exists (cache keys and disposal untested); no test shows a prior snapshot survives an incompatible manifest; origins, redirects and MIME have no tests under Profile A; no removal-without-residue proof. No item has an allowed conclusion above `INCONCLUSIVE`; `W04` and `W09` are `BLOCKED`. The register's `W11` rows now point at the doc and stay `GAP`; counts unchanged (40/24/4).
 
 ## Test Summary
-(implementer)
+Docs-only; nothing run for record. Every path and named test in the charter resolves, and the register's 190 evidence entries resolve (scratch script). `tools/validate_frontmatter.py` clean; `pytest tests/docs tests/static` under a 2 GB cap: 124 passed, 2 skipped, 1 xfailed; `make knowledge-index-update` ran.
 
 ## Files Changed
-(implementer)
+- `docs/assets/m2_evidence_charter.md` (new, DRAFT)
+- `docs/assets/m1_contract_register.md` (W11 rows and follow-ups)
+- `agent-working/` ticket, stored artifacts, monitoring shards; `docs/REGISTRY.yaml`
 
 ## Completion Summary
-(open)
+Done as DRAFT. Nothing is written as an owner decision; approval of the charter and its prior-evidence rule is the planner's blocking question at review. No code, fixture or test was added and nothing was run.

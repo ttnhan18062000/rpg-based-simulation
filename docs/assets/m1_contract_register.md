@@ -42,7 +42,7 @@ Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); rea
 | `AM1-W13` | Rights/provenance recall contract | 3 | 3 | 0 | PARTIAL |
 | | **Total** | **40** | **24** | **4** | |
 
-`CLOSED` = no `GAP` row; `OPEN` = no `MET` row; `PARTIAL` = both. `W06` is written as `PROPOSED` and `W11` is still to be written; both stay `OPEN` until the owner approves them, and their tickets update their rows.
+`CLOSED` = no `GAP` row; `OPEN` = no `MET` row; `PARTIAL` = both. `W06` is written as `PROPOSED` and `W11` as `DRAFT`; both stay `OPEN` until the owner approves them.
 
 ## `AM1-W01` Deployment-profile ADR
 
@@ -151,11 +151,11 @@ Decided facts the rows rely on: Profile A (`ADR D8`); no signing (`ADR D9`); rea
 
 | # | Clause | Evidence | Verdict | Note |
 |---|---|---|---|---|
-| W11.1 | Synthetic fixtures | `frontend/src/visualAssets/__fixtures__/rehearsal`; `tests/visual_assets/store/unit/test_runtime_fixture.py` | GAP | Written by M2-EVIDENCE-CHARTER. Synthetic export fixtures exist (three `fixture.rehearsal.*` images) but no `AM-M2` charter predeclares them. |
-| W11.2 | Supported conditions | `docs/assets/surface_rehearsal_result.md` | GAP | Written by M2-EVIDENCE-CHARTER. No supported-condition list is predeclared for `AM-M2`. |
-| W11.3 | Exact gate setup | `docs/assets/surface_rehearsal_result.md` | GAP | Written by M2-EVIDENCE-CHARTER. No `AM-M2` gate setup is written down; no `AM-M2` result record exists. |
-| W11.4 | Retained evidence | `docs/assets/surface_rehearsal_result.md` | GAP | Written by M2-EVIDENCE-CHARTER. No `AM-M2` retention rule for evidence exists. |
-| W11.5 | Allowed conclusions | `docs/assets/surface_rehearsal_result.md` | GAP | Written by M2-EVIDENCE-CHARTER. No `AM-M2` allowed-conclusions list is predeclared. |
+| W11.1 | Synthetic fixtures | `docs/assets/m2_evidence_charter.md#synthetic-fixtures`; `frontend/src/visualAssets/__fixtures__/rehearsal`; `tests/visual_assets/store/unit/test_runtime_fixture.py` | GAP | Written as `DRAFT` in `m2_evidence_charter.md`: the committed `fixture.*` fixtures an `AM-M2` run may use, with the pilot and draft fixtures excluded. Not an owner decision, so not `MET`. |
+| W11.2 | Supported conditions | `docs/assets/m2_evidence_charter.md#supported-conditions` | GAP | Written as `DRAFT`: the CI Python lane and jsdom vitest, Profile A, no client or browser claim, no Aseprite-needing test. Awaiting owner approval. |
+| W11.3 | Exact gate setup | `docs/assets/m2_evidence_charter.md#gate-setup`; `docs/assets/m2_evidence_charter.md#per-deliverable-what-exists-what-is-missing-the-allowed-conclusion` | GAP | Written as `DRAFT`: `AM-C02` in full, `AM-C05`/`C06`/`C07`/`C09` as contributing evidence only, ten `AM2-W` items mapped to existing paths and named gaps. Awaiting owner approval. |
+| W11.4 | Retained evidence | `docs/assets/m2_evidence_charter.md#retained-evidence-am2-w09`; `docs/assets/surface_rehearsal_result.md` | GAP | Written as `DRAFT`: what a run keeps and where, in the shape of the existing result record. Awaiting owner approval. |
+| W11.5 | Allowed conclusions | `docs/assets/m2_evidence_charter.md#allowed-conclusions-for-am-m2-as-a-whole`; `docs/assets/m2_evidence_charter.md#prior-evidence-rule-proposed` | GAP | Written as `DRAFT`: per item and for `AM-M2` as a whole (today `BLOCKED`), plus the prior-evidence rule as `PROPOSED`. Awaiting owner approval. |
 
 ## `AM1-W12` Candidate handoff/intake contract
 
@@ -197,11 +197,11 @@ One line per `GAP`. Each needs code or an owner decision, so none is fixed here 
 - `W10.4` Locks: Decide whether to add a lock or to record single-operator use as the rule (owner decision, then code if a lock).
 - `W10.6` Deletion audit: Decide whether `gc --delete` must record what it removed (owner decision, then a typed record; code).
 - `W10.7` Storage-pressure disposition: Set a size or disk limit and who decides at it (owner decision).
-- `W11.1` Synthetic fixtures: Closed by writing the M2 evidence charter (`TCK-20261004-VISUAL-ASSETS-M2-EVIDENCE-CHARTER`), which needs the owner's approval.
-- `W11.2` Supported conditions: Same.
-- `W11.3` Exact gate setup: Same.
-- `W11.4` Retained evidence: Same.
-- `W11.5` Allowed conclusions: Same.
+- `W11.1` Synthetic fixtures: Approve `docs/assets/m2_evidence_charter.md` (`DRAFT`) as written, or change it (owner decision; the planner asks at review).
+- `W11.2` Supported conditions: Same approval.
+- `W11.3` Exact gate setup: Same approval.
+- `W11.4` Retained evidence: Same approval.
+- `W11.5` Allowed conclusions: Same approval, which includes the owner's decision on the prior-evidence rule.
 - `W13.3` Distribution stop: Write and drill a real stop procedure for a deployed build (needs `AM-M6` authorization).
 - `W13.4` Stale/offline/cache handling: Define and test stale-client, offline and cache behaviour (needs `AM-M6`).
 - `W13.6` Tested rollback: Exercise a real rollback to a previous build (needs `AM-M6`).
