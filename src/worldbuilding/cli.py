@@ -132,6 +132,11 @@ def handle_validate(args) -> int:
 
 
 
+def render_resolved_world_yaml(bundle) -> str:
+    """Serialize a resolved bundle's WorldSpec exactly as `resolve` writes world.resolved.yaml."""
+    return yaml.safe_dump(bundle.world_spec.model_dump(exclude_none=True), sort_keys=False, allow_unicode=True)
+
+
 def handle_resolve(args) -> int:
     """Resolves a compositional world into standard resolved assets and sidecars."""
     world_id = args.world_id
@@ -182,7 +187,7 @@ def handle_resolve(args) -> int:
 
         # Write world.resolved.yaml
         with open(resolved_world_path, "w", encoding="utf-8") as f:
-            yaml.safe_dump(bundle.world_spec.model_dump(exclude_none=True), f, sort_keys=False, allow_unicode=True)
+            f.write(render_resolved_world_yaml(bundle))
 
         # Write compile_context.json
         with open(compile_context_path, "w", encoding="utf-8") as f:

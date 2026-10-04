@@ -4,43 +4,10 @@ name: Dungeon Crawl
 description: Quest-dense danger world with ruins and conflict modules. No settlement
   — pure dungeon exploration with escalating bandit threat.
 topology:
-  width: 126
+  width: 101
   height: 121
   coordinate_system: grid
 regions:
-- id: goblin_camp
-  type: wilderness
-  bounds:
-  - 95
-  - 20
-  - 125
-  - 55
-  terrain: forest
-  hazard_level: 3.0
-  hazard_kind: NATURAL_TERRAIN
-  tags:
-  - forest
-  places:
-  - id: goblin_camp_place
-    kind: CAMP
-    position:
-    - 110
-    - 38
-    creature_kind: goblin
-- id: old_mine
-  type: wilderness
-  bounds:
-  - 20
-  - 60
-  - 60
-  - 105
-  terrain: cave
-  hazard_level: 2.0
-  hazard_kind: NATURAL_TERRAIN
-  tags:
-  - mine
-  - underground
-  places: []
 - id: haunted_battlefield
   type: wilderness
   bounds:
@@ -126,36 +93,6 @@ information_source_profiles: []
 pending_information_responses: []
 pending_self_model_information_events: []
 entities:
-- id: goblin_raiding_party_goblin_scout
-  count: 2
-  role: scout
-  faction: goblin_warband
-  spawn_region: goblin_camp
-  archetype_id: goblin_scout
-- id: goblin_raiding_party_goblin_raider
-  count: 4
-  role: raider
-  faction: goblin_warband
-  spawn_region: goblin_camp
-  archetype_id: goblin_raider
-- id: goblin_raiding_party_goblin_archer
-  count: 2
-  role: scout
-  faction: goblin_warband
-  spawn_region: goblin_camp
-  archetype_id: goblin_archer
-- id: goblin_raiding_party_goblin_warlord
-  count: 1
-  role: leader
-  faction: goblin_warband
-  spawn_region: goblin_camp
-  archetype_id: goblin_warlord
-- id: old_mine_spider_cluster_cave_spider
-  count: 5
-  role: predator_hunter
-  faction: wild_beast_pack
-  spawn_region: old_mine
-  archetype_id: cave_spider
 - id: undead_battlefield_patrol_undead_sentinel
   count: 6
   role: sentinel
@@ -163,94 +100,13 @@ entities:
   spawn_region: haunted_battlefield
   archetype_id: undead_sentinel
 - id: pop_0
-  count: 12
+  count: 6
   role: scout
   faction: bandit_company
   spawn_region: bandit_road
-resources:
-- id: old_mine_resource_loop__iron_vein_0
-  resource_type: iron_vein
-  count: 8
-  region: old_mine
-  regen_rate: 1
-- id: old_mine_resource_loop__crystal_outcrop_1
-  resource_type: crystal_outcrop
-  count: 4
-  region: old_mine
-  regen_rate: 1
-- id: old_mine_resource_loop__silver_vein_2
-  resource_type: silver_vein
-  count: 2
-  region: old_mine
-  regen_rate: 1
-buildings:
-- id: mine_entrance_0
-  type: mine_entrance
-  region: old_mine
+resources: []
+buildings: []
 quest_definitions:
-- id: goblin_hunt_warlord
-  type: hunt
-  required_participant_tags:
-  - humanoid
-  - opportunistic
-  required_location_tags:
-  - wilderness
-  - forest
-  reward_budget: 150
-  procedural_hints:
-    difficulty: 3
-    escalation: true
-  tags:
-  - goblin
-  - conflict
-  - bounty
-  source_module: goblin_camp_conflict
-- id: goblin_fetch_stolen_goods
-  type: fetch
-  required_participant_tags:
-  - humanoid
-  - opportunistic
-  required_location_tags:
-  - wilderness
-  - forest
-  reward_budget: 100
-  procedural_hints:
-    difficulty: 2
-    escalation: false
-  tags:
-  - goblin
-  - conflict
-  - loot
-  source_module: goblin_camp_conflict
-- id: goblin_defend_village_perimeter
-  type: defend
-  required_participant_tags:
-  - humanoid
-  - opportunistic
-  required_location_tags:
-  - wilderness
-  - forest
-  reward_budget: 120
-  procedural_hints:
-    difficulty: 2
-    escalation: true
-  tags:
-  - goblin
-  - conflict
-  - defense
-  source_module: goblin_camp_conflict
-- id: mine_fetch_ore
-  type: fetch
-  required_participant_tags: []
-  required_location_tags:
-  - mine
-  - underground
-  reward_budget: 80
-  procedural_hints: {}
-  tags:
-  - resource
-  - economy
-  source_module: old_mine_resource_loop
 - id: ruins_first_contact
   type: investigate
   required_participant_tags:
