@@ -16,7 +16,7 @@ from visual_assets.store.errors import PngDecodeError, RenderError
 from visual_assets.store.intake import aseprite
 from visual_assets.store.intake.validator import file_hash
 
-MAX_RENDER_SCALE = 16  # provisional (U-05): the drawing tools' own maximum preview scale
+MAX_RENDER_SCALE = 16  # budget: docs/assets/budgets.md; the drawing tools' own maximum preview scale
 
 
 class RenderTool(Protocol):

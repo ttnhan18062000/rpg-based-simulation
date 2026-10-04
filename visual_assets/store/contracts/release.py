@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import ClassVar, Literal
 
 from pydantic import model_validator
 
@@ -25,6 +25,7 @@ class ReleaseCandidateManifest(StoreRecord):
     registry_hash: FileHash
     entries: tuple[ReleaseEntry, ...]
     status: Literal["CANDIDATE"]
+    size_bound: ClassVar[str] = "MAX_MANIFEST_BYTES"  # up to MAX_VISUAL_KEYS entries: far bigger than a small record
 
     @model_validator(mode="after")
     def _entries(self) -> ReleaseCandidateManifest:
