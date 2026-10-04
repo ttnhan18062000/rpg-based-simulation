@@ -225,13 +225,13 @@ Each is separately closable. None before M6 modifies `src/`.
 | M2 | Environment | uv as the single dependency source: refreshed `uv.lock`, dev tools in a dependency group, CI on `uv sync`, Python version aligned, environment guide updated | codebase |
 | M3 | Measure and baseline | Ruff, complexipy, jscpd and the line-count script configured; `codebase/health/` adapters and ratchet; registry seeded from a full scan; first health snapshot taken | codebase |
 | M4 | Gates | Ratchet as an advisory CI job with changed-line PR feedback, blocking after a clean soak; mypy blocking through `mypy-baseline` with ledger and static-test updates; prek hooks; type-checker trial (basedpyright vs Pyrefly) reported | codebase |
-| M5 | Structure | Package registry seeded; structure audit decisions; ast-grep rule pack for project rules; import-linter evaluation | codebase |
+| M5 | Structure | Package registry seeded; structure audit decisions; ast-grep rule pack for project rules; import-linter evaluation. **done 2026-10-04 (PR to be filled), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (blocked on owner and testing planner), plus follow-ups: ast-grep SARIF feedback and snapshot inclusion, `exemplar_modules` (M6 or owner)** | codebase |
 | M6 | Agent integration | Skill, edit hook, implementer pointer, review rubric | request to agent-working |
 | M7 | Refactor lane | **Deferred until the owner reopens `src/`.** Standing batch folder, one file per batch, fed by the registry; first targets `api/server.py` and `observability/event_extractor.py` | codebase, with rpg-planner for engine files |
 
 **M4 soak:** start = 2026-10-03 (PR #305, which added the advisory `Code health (advisory)` CI job, merged 2026-10-03T16:47:13Z), end = 2026-10-17 (start + 14 days). The flip ticket `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING` carries the same dates.
 
-Order: M1, M2, M3, M4. M5 and M6 can start after M3. M7 is a lane, not an epic, and never closes.
+Order: M1, M2, M3, M4, M5 (done 2026-10-04 (PR to be filled), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (blocked on owner and testing planner), plus follow-ups: ast-grep SARIF feedback and snapshot inclusion, `exemplar_modules` (M6 or owner)). M6 can start after M3. M7 is a lane, not an epic, and never closes.
 
 ## 8. Owner decisions
 
@@ -268,7 +268,7 @@ Recorded 2026-10-02:
 
 Tickets: M1 to M3 in `agent-working/tickets/done/python-code-craft/` (closed 2026-10-03, PRs #288,
 #297, #298). M4 in `agent-working/tickets/todos/python-code-craft-gates/` (epic plus six children,
-order in `SEQUENCE.md`; brief `python_code_craft_m4_gates_ticket_brief.md`).
+order in `SEQUENCE.md`; brief `python_code_craft_m4_gates_ticket_brief.md`). M5 in `agent-working/tickets/todos/python-code-craft-structure/` (epic `TCK-20261004-PYTHON-CODE-CRAFT-STRUCTURE-EPIC` and four children done 2026-10-04, three blocked follow-ups still there; brief `python_code_craft_m5_structure_ticket_brief.md`; results in `src_package_structure_audit.md` and `import_linter_evaluation.md`).
 
 ## 9. Risks
 
