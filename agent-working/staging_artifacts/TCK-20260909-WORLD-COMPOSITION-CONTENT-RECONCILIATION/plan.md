@@ -60,6 +60,19 @@ Extract exactly that sequence into a helper returning the bundle **and** the ren
 have `handle_resolve` call it so the CLI and the guard cannot drift in serialization (a byte
 comparison is worthless if the two sides dump differently).
 
+**REQUIRED SIGNATURE SHAPE (re-review advisory A1, folded in 2026-10-04 — this is load-bearing for
+Step 11).** The helper **takes an already-validated `WorldCompositionSpec`, not a path.** The sequence
+above begins by reading `world.yaml` off disk (`src/worldbuilding/cli.py:140-148`), and a path-in helper
+makes Step 11's chosen option (a) — *resolve from the in-memory spec, commit both only on success* —
+**not implementable**, which would silently push Step 11 onto its fallback (b). The clean seam already
+exists: `handle_resolve` validates at `:157` (`WorldCompositionSpec.model_validate(raw_data)`) and only
+then loads repos and assembles (`:162-170`). So:
+- helper signature: `(spec: WorldCompositionSpec, ...) -> (bundle, rendered_yaml_text)`;
+- a **thin path-loading wrapper** for the CLI does the `:140-157` read-and-validate, then calls the
+  helper;
+- Step 11 calls the helper directly with its in-memory spec, which makes option (a) the natural path
+  rather than the awkward one.
+
 **Other writers to this shared resource** (`data/worlds/<id>/resolved/*`), enumerated — grep over
 `src/` and `tools/` for `world.resolved.yaml` returns exactly one writer and five readers:
 - **Writer (only):** `src/worldbuilding/cli.py:177-205` (`make world-resolve WORLD=<id>`,
@@ -87,11 +100,18 @@ composition→`resolved/` redirect (`src/worldbuilding/repository.py:74-81`); th
 **Files:** `tests/architecture/test_world_definition_single_source.py` (new).
 
 **Change:** Two guards, per `test_plan.md` §"AC-6 / AC-10":
-1. `test_world_id_resolves_to_exactly_one_definition` — walk the repo for any YAML whose
-   `schema_version` contains `worldcomposition` that is **not** at `data/worlds/<id>/world.yaml`, and
-   fail naming every offender. Key on **existence of a second definition, not on difference** —
+1. `test_world_id_resolves_to_exactly_one_definition` — walk for any YAML whose `schema_version` is a
+   `worldcomposition` version and that is **not** at `data/worlds/<id>/world.yaml`, and fail naming
+   every offender. Key on **existence of a second definition, not on difference** —
    `simq_scale_stress_seed42` is a byte-identical pair and a difference-based check would pass there
    while the duplicate still exists.
+   **Implementation constraints (architecture review V5), both of which a grep-shaped version gets
+   wrong:** (a) key on the **parsed** `schema_version` value — `yaml.safe_load` the candidate and read
+   the field — never on the presence of the substring `worldcomposition` in the file text; (b) **bound
+   the walk to data roots and exclude `docs/`**. Verified false offenders under a text-matching,
+   unbounded implementation: `docs/parity_ledger/progression.yaml` and `docs/REGISTRY.yaml` both
+   contain the string in prose, as do `docs/testing/test_taxonomy.md`,
+   `docs/guidelines/intentional_divergences.md` and the ADR itself.
 2. `test_no_source_outside_data_worlds_defines_a_known_world_id` — for every id in
    `WorldRepository("data/worlds").list_worlds()` (verified to index only direct children holding a
    `world.yaml`, `src/worldbuilding/repository.py:46-61`), assert no other path declares that
@@ -117,11 +137,26 @@ Investigate. **If guard 3 fails for any world, or a fresh resolve is not byte-de
 that as a new finding ticket and leave the guard strict — do not weaken it to a subset and do not
 regenerate snapshots to make it green** (see Scope Guards).
 
+**The red state must be reconstructible, not just asserted (architecture review V5).** AC-6 makes
+this the ticket's mandatory negative control, and pasted prose is not evidence — an implementer who
+never ran the guard against the untouched tree produces Implementation Notes indistinguishable from
+one who did. So: **this guard file lands in its own commit, before any `data/` or test change in
+Steps 7-12.** Anyone can then check out that commit and re-run the guard to reproduce the red. (The
+mutual independence of Steps 7-10 does not threaten this — the constraint is only that the guard
+commit precedes all of them.)
+
+**Expect guards 1 and 2 to stay red from here until Step 12.** That is the intended state for the
+whole middle of the plan, not a defect to chase: the duplicates are not gone until the directory is
+deleted. Guard 3 should be green throughout (or red with a filed finding). Note this in the ticket so
+a later reader of a mid-stream CI run does not misdiagnose it.
+
 **Do NOT touch:** any `data/` content in this step. The guard must be red against the untouched tree
 or it proves nothing (AC-6's own wording).
 
-**Verify:** `pytest tests/architecture/test_world_definition_single_source.py -q` **fails**, and the
-failure message names the offending ids. This red observation is the deliverable of this step.
+**Verify:** `pytest tests/architecture/test_world_definition_single_source.py -q` **fails**, the
+failure message names the offending ids, and the guard file is committed on its own — `git log` shows
+that commit touching nothing under `data/` or `tests/` other than the new guard file. This red
+observation, reproducible from that commit, is the deliverable of this step.
 
 ---
 
@@ -168,20 +203,43 @@ changes.
 
 **Files:** `docs/mechanics/06_worldbuilding_foundation.md`.
 
-**Change:** In §7 "Integrity Validation Laws & Severity Gates", add the invariant — *"the world the
-engine loads is the one its authored definition resolves to"* (the ticket's own AC-8 wording, kept
-verbatim; "authored" here carries the **role** sense the ADR clause establishes — the source
-definition, whoever or whatever wrote the bytes — and must not be read as "hand-written"), i.e. a
-`world_id` resolves to exactly
-one definition, enforced as a **Level 2 structural ERROR** gate by that chapter's own taxonomy — and
-**cite** `docs/architecture/world_repository_layout.md` for the location. Follow the chapter's
-existing `WORLD-REACH-001` block formatting as the precedent for naming a rule.
+**Change:** Add the invariant — *"the world the engine loads is the one its authored definition
+resolves to"* (the ticket's own AC-8 wording, kept verbatim; "authored" here carries the **role**
+sense the ADR clause establishes — the source definition, whoever or whatever wrote the bytes — and
+must not be read as "hand-written") — i.e. a `world_id` resolves to exactly one definition, and
+**cite** `docs/architecture/world_repository_layout.md` for the location.
+
+**It must NOT be written as a §7 severity-gate rule, and NOT in `WORLD-REACH-001`'s block shape.**
+This corrects the plan's first draft (architecture review V1, verified against the chapter):
+- §7's ladder is a **real compile-time** mechanism. `docs/mechanics/06_worldbuilding_foundation.md:93`
+  opens "Integrity Validation Laws & Severity Gates"; `:114` defines **ERROR** as a failure that
+  *"abort[s] the compilation pipeline immediately"*; `:118-119`'s Level 2 example is an actual
+  `ParticipantReachabilityRule` whose `rule_id = "WORLD-REACH-001"` is a live class attribute at
+  `src/worldbuilding/validator.py:337-338`. Chapter 06 is **Certified Level 1 (Authoritative)**
+  (`:255`).
+- This invariant is enforced by a **pytest architecture guard** (Step 2), not by the compiler, and it
+  structurally **cannot** be a `WorldValidationRule`: whether a second definition of the same
+  `world_id` exists somewhere else in the repo is unknowable to a validator handed one spec.
+- Writing it in as a "Level 2 structural ERROR gate" would therefore document a gate nothing aborts
+  on — the exact parity break the Authoritative Mechanics Rule forbids — and would be
+  self-contradictory, since ERROR aborts compilation yet all 24 worlds compile cleanly today **with**
+  the duplicate definitions present.
+
+**Follow the chapter's own existing distinction instead.** It already separates the build-time ladder
+from invariants enforced elsewhere, twice: `:198-202` ("This gate runs inside `WorldEmergencePhase` …
+not the WorldSpec → Compile pipeline described in §7. It is a distinct, sibling gate — not an
+extension of §7's build-time gate ladder or the `WORLD-REACH-001` rule") and `:230-235` (the same
+build-time-vs-live split; corrected from `:233-237` per re-review advisory A4 — `:237-239` is the
+determinism/purity paragraph, not the split). Write **one sentence** in that shape: explicitly a **repository-layout
+law**, enforced by the ADR plus the Step 2 architecture guard, and explicitly **not** a
+compile-pipeline gate. Place it as its own short sibling note, not inside §7's ladder.
 
 **Do NOT touch:** do not restate the path `data/worlds/<world_id>/` or any freshness mechanics here.
 One normative sentence, in the ADR; this chapter points at it. Restating it is how three sources
 drift, and Step 6's guard will fail on a restatement. Do not add a catalog Rule under
 `docs/world_rules/` — the rule owner explicitly declined (storage/build is below catalog scope; cite
-"by analogy to `OWN-01`", never "`OWN-01` governs").
+"by analogy to `OWN-01`", never "`OWN-01` governs"). Do not give the invariant a `WORLD-*` rule id, do
+not assign it a severity, and do not add it to §7's rule list.
 
 **Verify:** Step 6's docs guard.
 
@@ -216,6 +274,14 @@ nothing.
 (b) neither `docs/mechanics/06_worldbuilding_foundation.md` nor `docs/guides/content_authoring.md`
 restates the authoritative path without citing the ADR, (c) no file under `docs/guides/` presents
 `data/content/world_compositions/<world_id>.yaml` as an authoring target.
+
+Plus a second guard (architecture review V1): `test_bible_06_does_not_present_the_invariant_as_a_compile_gate`
+— asserts the one-definition invariant sentence in `docs/mechanics/06_worldbuilding_foundation.md` is
+**not** presented as a §7 Level-2/ERROR severity-gate rule (no `WORLD-*` rule id attached to it, no
+`ERROR`/`Level 2` severity wording in its sentence or block, and it does not sit inside §7's rule
+list). This exists because the temptation to "tidy" the invariant into the neighbouring gate ladder is
+exactly how a documented-but-unenforced gate gets created; a later editor promoting it must trip a
+test, not merely contradict a plan.
 
 **Do NOT touch:** `docs/archive/`, `docs/audits/`, `docs/brainstorm/`,
 `docs/plans/world_generation_organic_terrain_epic.md` — frozen historical records; the guard must
@@ -324,7 +390,8 @@ breaks).
    shape still appears in third-party/ad-hoc `compositions_dir` overrides; record that choice in the
    ticket. Update the now-stale explanatory comment at `:59-72` (it describes
    `data/content/world_compositions/` as "this repo's existing default").
-2. `src/domains/campaigns/orchestrator.py:199-201`: drop `compositions_dir=Path("data/worlds")` from
+2. **Only after 9.1 has landed** (see the hard ordering constraint below):
+   `src/domains/campaigns/orchestrator.py:199-201`: drop `compositions_dir=Path("data/worlds")` from
    the `CatalogScenarioStateBuilder(...)` construction so Campaign rides the now-unified default, and
    rewrite the comment block at `:172-188` — it both carries the "data/content/world_compositions/ is
    the anomaly" interpretation (`:178`, the real origin of the mis-attribution the ticket corrects)
@@ -345,10 +412,34 @@ breaks).
    `data/worlds/frontier_living_world/world.yaml`), and append
    `test_campaign_orchestrator_uses_resolver_default_not_an_override` to the campaign orchestrator
    test — proving the revert happened and was not replaced by a second hard-coded path.
+   **Plus a content oracle (architecture review V4):** assert the default-resolved
+   `frontier_living_world` carries the **7-module** definition — compare
+   `len(spec.module_refs)` against the module count parsed from
+   `data/worlds/frontier_living_world/world.yaml` rather than hard-coding `7`, so the assertion
+   survives a legitimate later edit to that world. Without this, the 6-vs-7-module fallback described
+   below is **undetectable by the whole Step 9 verify command**, because none of the existing
+   scenario tests carry a module-count oracle.
+   **Non-zero guard REQUIRED (re-review advisory A2, folded in 2026-10-04):** also assert the parsed
+   count is `> 0` before comparing. `module_refs` is `Field(default_factory=list)`
+   (`src/worldassembly/schema.py:32`), so an empty module list is schema-valid and a
+   parsed-count-vs-spec-count comparison is structurally capable of degrading to `0 == 0` — passing
+   while testing nothing. Step 10 item 5 already applies exactly this discipline to the inventory
+   counter; apply it here for the same reason. (A vacuous-pass assertion has already shipped green in
+   this repo once, on a position test whose fixture produced no entities.)
+
+**Hard ordering constraint inside this step: 9.1 MUST land before 9.2.** If the Campaign override is
+dropped while the default still points at `data/content/world_compositions/`, Campaign silently falls
+back to the retired flat directory and runs the **6-module** `frontier_living_world` instead of the
+7-module one — and **the Step 9 verify command stays GREEN**, because those tests assert only ids,
+perspectives and modifier non-emptiness. The window is transient (Step 12's deletion closes it by
+making the fallback raise), but a silent wrong-world run is worse than a loud failure, and this is the
+one place in the plan where doing the right edits in the wrong order produces no signal. Recorded
+again in the Dependency Map so it is not read as mere list position.
 
 **Do NOT touch:** `CatalogScenarioStateBuilder`'s own signature; the legacy
 `build_scenario_state()` / `ArenaInjector` / `V2EngineManager` spawn paths (explicitly out of scope);
-`WorldRepository`'s production load path.
+`WorldRepository`'s production load path. Do **not** remove the flat-layout fallback in
+`_load_composition()` — three lines, and it is the seam third-party `compositions_dir` overrides use.
 
 **Verify:** `pytest tests/integration/scenarios/ tests/unit/scenarios/ tests/unit/domains/campaigns/test_campaign_orchestrator.py tests/integration/campaigns/ -q`.
 
@@ -362,26 +453,60 @@ breaks).
 
 **Change:** The decision the planner owes here — **repoint the loader, retire the
 `data/content/`-relative path field**:
-1. `src/content/paths.py:8`: remove `world_compositions_dir: str = "data/content/world_compositions"`
-   and add `world_definitions_dir: str = "data/worlds"`. `ContentPathConfig` documents paths under
-   `data/content/` (`:6` `content_root`), and the retired path is no longer one of them. Verified the
-   field has exactly two production consumers: `src/content/validator.py:38` and `:153`.
-2. `src/content/validator.py:38`: `load_all_compositions(worlds_dir=ContentPathConfig().world_definitions_dir)`,
-   and `:153` likewise. This is safe without changing the glob: verified at `:43-58` it globs
+1. `src/content/paths.py:8`: remove `world_compositions_dir: str = "data/content/world_compositions"`.
+   **Do not add a `world_definitions_dir` field in its place** — this corrects the plan's first draft
+   (architecture review V2, independently verified): `ContentPathConfig` declares only children of its
+   own root (`src/content/paths.py:6`, `content_root = "data/content"`), its pinning test is literally
+   named `test_default_content_paths_point_to_data_content`
+   (`tests/unit/content/test_content_paths.py:8-13`), and
+   `test_non_catalog_dirs_constant_matches_path_config` (`:164-175`) **derives** its expected set from
+   three `ContentPathConfig` basenames. A `data/worlds` field would make the content-path registry
+   declare another layer's root, falsify that test's name, and force a hand-trim of the derivation —
+   after which the guard still passes but stops catching the next field anyone adds. That weakening is
+   the part the plan's earlier "deliberate and recorded, not a literal edited to go green" note did
+   **not** cover: it was true of the removal, not of the mechanism.
+   Verified the removed field has exactly **two** production consumers —
+   `src/content/validator.py:38` and `:153` — plus two test pins
+   (`tests/unit/content/test_content_paths.py:12`, `:169`) and one doc row
+   (`docs/content/pipeline_contract.md:34`).
+2. **Source the validator's default from the layer that owns `data/worlds/`.**
+   `src/content/validator.py:38` becomes
+   `load_all_compositions(worlds_dir: str = DEFAULT_WORLDS_ROOT)` importing from
+   `src/worldbuilding/repository.py`, and `:153` passes the same constant instead of a
+   `ContentPathConfig` field — the content layer consumes the owner's constant rather than
+   re-declaring another layer's root.
+   **One correction to the review's own prescription, flagged rather than papered over:** it says to
+   use "the existing `WorldRepository` default root", but **no such default exists** — verified
+   `WorldRepository.__init__(self, worlds_dir: str | Path)` at `src/worldbuilding/repository.py:22`
+   takes a **required** argument, and all 10+ call sites pass the literal `"data/worlds"`
+   (`src/worldbuilding/cli.py:59,88,140,227,311,347`, `src/cli/entry.py:220`,
+   `src/domains/campaigns/orchestrator.py:745`, `src/api/engine_manager.py:134`). So this step must
+   **introduce** `DEFAULT_WORLDS_ROOT = "data/worlds"` as a module-level constant in
+   `src/worldbuilding/repository.py` (the owning layer) and import it. The review's intent is
+   satisfied exactly; only its premise about an existing constant was wrong.
+   **Scope bound:** define the constant and use it in the two `validator.py` sites only. Do **not**
+   sweep the 10+ existing `WorldRepository("data/worlds")` literals onto it — that is unrelated
+   cleanup and would inflate this ticket's diff across `src/api/`, `src/cli/` and `src/domains/`.
+   The repoint is safe without changing the glob: verified at `src/content/validator.py:43-58` it globs
    `**/*.yaml` and `**/*.yml` but only appends entries whose `schema_version` contains
    `worldcomposition` (`:46`), so the `resolved/world.resolved.yaml` sidecars (tagged
    `worldspec.v1`) are skipped and the nested `<id>/world.yaml` layout is found.
 3. `src/content/repository.py:150`: drop `"world_compositions"` from `NON_CATALOG_DIRS`. That
    frozenset names directories **inside `data/content/`** managed by other loaders; after the
    deletion there is no such directory. It must change in lockstep with
-   `tests/unit/content/test_content_paths.py:164-174`, which derives the expected set from
-   `ContentPathConfig` basenames — leaving either side alone breaks that invariant test.
-4. `tests/unit/content/test_content_paths.py:12`: replace the
-   `world_compositions_dir == "data/content/world_compositions"` pin with a
-   `world_definitions_dir == "data/worlds"` pin **plus** an explicit assertion that
-   `ContentPathConfig` no longer exposes `world_compositions_dir`. Update `:169` to drop the member.
-   This file is an intentional anti-drift guard — the change is deliberate and recorded here, not a
-   literal edited to go green.
+   `tests/unit/content/test_content_paths.py:164-175`, which derives the expected set from
+   `ContentPathConfig` basenames — leaving either side alone breaks that invariant test. After this
+   step the derivation is over **two** fields (`world_modules_dir`, `simulation_scenarios_dir`)
+   instead of three, and it stays **fully derived** — no hand-written member, no trimmed expectation,
+   so it still fails if someone adds a fourth content directory without registering it.
+4. `tests/unit/content/test_content_paths.py:12`: **delete** the
+   `world_compositions_dir == "data/content/world_compositions"` pin and add an explicit assertion
+   that `ContentPathConfig` no longer exposes a `world_compositions_dir` attribute (so the field
+   cannot quietly return). Do **not** substitute a `data/worlds` pin here — that is what V2 forbids;
+   the worlds root is pinned in the worldbuilding layer's own tests, next to `DEFAULT_WORLDS_ROOT`.
+   Update `:169` to drop the member, leaving the set derived from the two remaining fields.
+   The test's name (`test_default_content_paths_point_to_data_content`) stays accurate, which is the
+   point: every field it checks is still a child of `content_root`.
 5. `tools/generate_content_inventory.py:91-94`: replace the two counters
    `"World compositions"` = `glob("data/content/world_compositions/*.yaml")` and
    `"World compositions (generated)"` = `glob(".../generated/*.yaml")` with a single
@@ -469,13 +594,31 @@ another route. So:
    exists, raise `GenerationCompositionError` (already defined, `src/worldgeneration/generator.py:26`)
    rather than rewriting it. This is constraint (1)/(2) enforced in code: a second generation run must
    not silently re-derive a file that is now the definition and may have been edited since.
-4. **Produce the `resolved/` sibling.** After writing `world.yaml`, call Step 1's extracted helper so
-   the new world gets its `resolved/world.resolved.yaml` + four sidecars. Without it
-   `WorldRepository.load_world()` raises `WorldRepositoryError` for a composition world with no
-   snapshot (verified `src/worldbuilding/repository.py:78-81`), so a generated world would be
-   immediately unloadable and Step 2's guard 3 would fail on it. Reusing Step 1's helper also keeps
+4. **Produce the `resolved/` sibling — and commit both writes atomically.** The new world needs
+   `resolved/world.resolved.yaml` + four sidecars, because `WorldRepository.load_world()` raises
+   `WorldRepositoryError` for a composition world with no snapshot (verified
+   `src/worldbuilding/repository.py:78-81`), so a generated world would otherwise be immediately
+   unloadable and Step 2's guard 3 would fail on it. Reusing Step 1's helper also keeps
    **single-writer discipline**: `resolved/` is still produced by exactly one code path, now reached
    from two callers (the `resolve` CLI subcommand and the generator).
+
+   **The coupling is right and must not be split, but the failure path must be handled** —
+   architecture review V3, and it is a real unrecoverable state, not a theoretical one. Naively
+   sequenced, these are **two durable writes with no atomicity**: if resolve fails *after*
+   `world.yaml` has landed, `repository.py:78-81` raises on every load **and** item 3's
+   refuse-to-overwrite makes a retry raise too — the world is simultaneously unloadable and
+   un-regenerable, and guard 3 goes red on it. Resolve it with **(a)**: resolve from the
+   **in-memory** `WorldCompositionSpec` first and commit `world.yaml` + `resolved/` only once the
+   resolve has succeeded. If (a) proves awkward against Step 1's helper signature, **(b)** is
+   acceptable: remove the just-written `world.yaml` (and any partial `resolved/`) on resolve failure
+   so a retry starts clean.
+   **Do not take option (c)** — exempting the "`world.yaml` exists but `resolved/` is absent" case
+   from item 3's refusal. It would widen exactly the overwrite seam the rule owner's condition
+   narrows, and "a definition with no projection" is precisely the state an interrupted hand-edit
+   also produces, so the exemption cannot tell a failed generation from a real definition.
+   Either way, nothing here touches the three hard constraints: the marker still records history
+   only, there is still no re-derivation check, and no generation inputs live outside
+   `data/worlds/<id>/`.
 5. **Tests** in `tests/unit/worldgeneration/test_composition_generator.py` (already `tmp_path` +
    `monkeypatch`-chdir isolated):
    - Replace — not sit beside — the `"generated" in str(output_path)` assertion at `:198` with an
@@ -489,6 +632,13 @@ another route. So:
    - `test_generated_world_records_provenance_history` — the marker is present and carries
      generator/seed/params.
    - `test_generate_refuses_to_overwrite_an_existing_definition` — second run raises.
+   - `test_resolve_failure_leaves_no_half_written_world` — **the sixth test, added by review V3**:
+     force the resolve to fail (e.g. monkeypatch the helper to raise, or feed an intent whose module
+     selection cannot assemble), then assert that either no `world.yaml` was committed (option a) or
+     it was removed (option b) — and that a subsequent successful `generate()` for the same
+     `world_id` works rather than hitting item 3's refusal. The other five tests cover happy path,
+     absence, provenance, exact output path and refuse-to-overwrite; **none of them covers cleanup**,
+     which is the one path that produces the unrecoverable state.
    - **No test asserting `world.yaml == generate(marker)`.** Constraint (2) is a design rule on this
      step, not a suggestion; if a re-derivation-shaped test appears, it is wrong even if green.
 
@@ -569,7 +719,8 @@ written in this ticket.
 
 **Change:**
 1. Add **`SUB-394`** to `docs/parity_ledger/substrate.yaml` — re-verified the max existing numeric id
-   is `SUB-393`; do **not** extend the legacy `SUBSTRATE-NEW-0NN` series. Entry asserts
+   is `SUB-393` at `docs/parity_ledger/substrate.yaml:5081` (confirmed independently by the
+   architecture review); do **not** extend the legacy `SUBSTRATE-NEW-0NN` series. Entry asserts
    one-`world_id`-one-definition; `test_path` = Step 2's
    `tests/architecture/test_world_definition_single_source.py::test_world_id_resolves_to_exactly_one_definition`
    node id; priority P1; `v2_evidence` cites the ADR §1 amendment and the guard.
@@ -590,7 +741,10 @@ written in this ticket.
 
 **Do NOT touch:** `SUBSTRATE-NEW-001` and `INFRA-187` — both are P0 with `test_path: None`, a
 pre-existing ledger violation reported by the investigation. Filling them is **not** this ticket's
-obligation; note them, do not fix them here. Do not hand-edit `docs/mechanics/content_usage_matrix.md`
+obligation; note them, do not fix them here. State them in the ticket as **reported, not fixed**, with
+the ticket that would own them left unfiled-or-filed separately, so the **Parity phase does not read
+them as this ticket's debt** and block on a gap that predates it. `INFRA-373` is likewise listed as a
+**tripwire that must not move**, not as an entry to update. Do not hand-edit `docs/mechanics/content_usage_matrix.md`
 (generated — see Step 10). Prefer `parity_ledger_writer.py` over a full-file rewrite and check
 `git diff --stat` before committing.
 
@@ -722,12 +876,19 @@ Named specifically, from the ticket's Out of Scope and the investigation's anti-
 ## Dependency Map
 
 - **Step 1 → Step 2** (guard 3 needs the extracted helper).
-- **Step 2 must precede any `data/` or test change** — it has to be observed red on the untouched
-  tree. This is the rule owner's sequencing advice: run the agreement check across every composition
-  world before anything is re-applied.
+- **Step 2 must precede any `data/` or test change**, and must land **in its own commit** — it has to
+  be observed red on the untouched tree, and the red state has to be reconstructible from git history
+  rather than only from pasted prose (review V5). This is the rule owner's sequencing advice: run the
+  agreement check across every composition world before anything is re-applied.
 - **Step 3 → Steps 4, 5, 6** (the ADR sentence must exist before the others cite it and before the
   guard checks for it).
 - **Steps 7, 8, 9, 10 are independent of one another** and can be done in any order after Step 2.
+- **HARD ordering *inside* Step 9: 9.1 (flip the resolver default) → 9.2 (drop the Campaign
+  override).** Not list position — a real constraint (review V4). Reversed, Campaign silently falls
+  back to the retired flat directory and runs the 6-module `frontier_living_world` instead of the
+  7-module one, **and Step 9's verify command stays green** because no existing scenario test carries
+  a module-count oracle. Step 9.4's new content-oracle assertion is what makes that regression
+  detectable at all; the ordering is what stops it happening.
 - **Step 11 is unblocked** (UQ-1 resolved — Option A). It depends on **Step 1** (it calls the
   extracted resolve helper to write the new world's `resolved/` sibling) and is otherwise independent
   of Steps 7-10.
@@ -783,3 +944,87 @@ plan was first drafted and was ruled on by the rule owner before implementation 
 - Finalize note (not an implementation step): a duplicate copy of this ticket still exists at
   `agent-working/tickets/todos/TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION.md`; it must be
   removed before the Verify/done-checker gate, per the folder-cleanup rule.
+
+## Deviations
+
+Recorded during Implement. Nothing here was changed silently.
+
+1. **Step 1 — the helper takes the repositories, not a catalog root.** As planned, the core helper
+   takes an already-validated `WorldCompositionSpec` (advisory A1 honoured). But repository loading
+   was split out into `load_content_repositories()`, so the signature is
+   `resolve_composition(composition, catalog, module_repo)`. Forced by Step 11: the generator
+   already holds the `WorldModuleRepository` it selected modules from, and re-loading one from disk
+   inside the helper would both discard it and make the generator's own unit tests unable to supply
+   modules at all. `resolve_composition_file()` is the path-loading wrapper the CLI and the guard
+   use. The anti-drift property the step exists for is unaffected — there is still exactly one
+   renderer (`render_resolved_world_yaml`).
+
+2. **Step 2 — guard 3 is not marked `@pytest.mark.slow`.** The step permits the marker "if runtime
+   demands"; measured, all three guards together run in ~10s for the full 24-world corpus, and a
+   `slow`-marked guard is deselected by the PR-blocking job. No fingerprint fast path was added,
+   for the same reason. The walk is bounded to `data/` **and** `content/` (a second real content
+   root at the repository top level), both excluding `docs/`.
+
+3. **Step 4 — placed as a numbered section, `## 11`, after §10.** The step says "its own short
+   sibling note, not inside §7's ladder". An unnumbered block between §7 and §8 would have read as
+   section-less, and inserting a numbered section there would have renumbered §8-§10 and broken
+   external citations to them. Placing it after §10 — itself the chapter's precedent sibling gate —
+   satisfies the intent and renumbers nothing. The Step 6 guard checks the enclosing section is not
+   §7, so the placement is pinned.
+
+4. **Step 7 — two extra edits in files the step already names.**
+   `test_real_composition_normalization_preserves_perspectives` (`tests/unit/worldassembly/test_assembly.py`)
+   needed its count 6 → 7 **and** its mixed-shorthand-conflict case now sets `mixed["modules"]`
+   explicitly: the authoritative definition carries only the structured form, so the
+   both-forms-present conflict the test asserts could no longer arise and `pytest.raises` was
+   DID-NOT-RAISE. Neither was in the step's measured delta list.
+
+5. **Step 8 — Gates 08 and 11 needed a `schema_version` filter.** Iterating
+   `data/worlds/*/world.yaml` would otherwise validate `worldspec.v1` worlds against
+   `WorldCompositionSpec`. All 24 worlds are compositions today so nothing fails yet; the filter
+   plus a non-zero assertion keeps Gate 08 measuring compositions rather than breaking on the 25th
+   world. Gate 11 picks the first composition rather than the first file.
+
+6. **Step 10 — one extra test updated.** `tests/tools/test_content_inventory.py::test_all_categories_present`
+   also pinned the now-absent `"World compositions (generated)"` key; the step named only `:46-49`.
+
+7. **Step 11 — three things the step's test list did not anticipate.**
+   (a) `_make_repo` in `test_composition_generator.py` and `test_seed_params.py` returned a
+   `MagicMock`, which a real resolve cannot traverse. It is now an in-memory-populated real
+   `WorldModuleRepository` — no file I/O and no mock, which is strictly better than what it
+   replaced.
+   (b) `generation_provenance.generated_at` makes the authored YAML no longer byte-identical across
+   runs, contradicting `generator_contract.md`'s determinism clause and
+   `test_two_calls_produce_identical_output`. Resolved exactly as this repo already resolves the
+   same problem for `provenance_manifest.created_at`: the timestamp is legitimate provenance
+   outside the artifact's identity, so the test and the doc exclude that one field. The timestamp
+   was not deleted to make a comparison easy.
+   (c) `test_no_bounds_no_default_leaves_absent` now observes the same fact through the resolve
+   (`AssemblyParameterError` naming the absent param), because leaving a required param absent is
+   precisely what makes the composition unassemblable.
+   One test was added beyond the step's list, `test_generated_world_has_its_resolved_sibling`,
+   because item 4's whole justification is that `WorldRepository.load_world()` refuses a world with
+   no snapshot and nothing else asserted the snapshot exists.
+   Also: the marker is popped in `WorldCompositionNormalizer`, since
+   `NormalizedWorldComposition` is `extra="forbid"` too and origin history is not a compilation
+   input — the same treatment `pack_refs` already gets. The step did not mention this, and without
+   it every generated composition fails normalization.
+
+8. **Step 14 — `SUB-394` was validated through `parity_ledger_writer.validate_entry()` but appended
+   by hand.** `write_entry()` re-dumps the entire shard, which would have produced a ~5000-line
+   diff on `substrate.yaml`. The step itself says to check `git diff --stat`; the hand-append keeps
+   it at 40 lines, the validator still gated the entry, and `tools/parity_index.py build` was run
+   so the derived index reports FRESH. `SUB-390`, `FAC-012`, `INFRA-256` and `INFRA-257` were
+   reviewed and found not stale, so item 3 produced no edits.
+
+9. **Step 15 — NOT satisfied. Blocking conflict between Step 11 item 4 and Scope Guard 3.**
+   `generate()` running the resolve breaks
+   `test_real_content_world_compositions.py::test_generated_composition_is_valid_worldcompositionspec`
+   and `::test_generated_composition_determinism` — two of the six tests Scope Guard 3 names
+   byte-unchanged. Both `monkeypatch.chdir(tmp_path)` and pass no catalog, so the cwd-relative
+   `CatalogRepository("data/content")` load inside `generate()` comes back empty and the resolver
+   raises on a region the real module references. Step 11 enumerated only
+   `tests/unit/worldgeneration/test_composition_generator.py` as the generator's test surface and
+   did not notice these two integration tests also call `generate()`. The two tests were left
+   untouched; four options are recorded in the ticket's Implementation Notes for whoever owns the
+   scope decision.

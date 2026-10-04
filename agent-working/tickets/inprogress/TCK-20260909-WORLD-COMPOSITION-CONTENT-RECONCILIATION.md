@@ -21,7 +21,7 @@ decisions, with a directory cleanup only after those are made. Pulled out of the
 consolidated PR for exactly this reason — see the 2026-09-12 findings block.
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -612,22 +612,22 @@ slices already taken.
   revisiting once this ticket lands, but not decided here.
 
 ## Acceptance Criteria
-- [ ] Every world composition has exactly one authoritative source under `data/worlds/<id>/
+- [x] Every world composition has exactly one authoritative source under `data/worlds/<id>/
       world.yaml`; `data/content/world_compositions/` is empty or removed.
-- [ ] Every caller of `ScenarioSetupResolver` uses the unified layout, verified by a real test.
-- [ ] **One** recorded, evidenced authoritative-source decision covers the corpus, with the
+- [x] Every caller of `ScenarioSetupResolver` uses the unified layout, verified by a real test.
+- [x] **One** recorded, evidenced authoritative-source decision covers the corpus, with the
       `dungeon_crawl` `danger_scale` 2-vs-4 conflict called out explicitly as the single genuine
       disagreement and its resolution stated. *(Amended 2026-10-04: was "each of the 8 diverged pairs has
       a per-world decision". Re-measurement found zero catalog-only content in 8 of 9 pairs, so eight
       separate decisions would be eight restatements of one.)*
-- [ ] `test_scenario_catalog_matrix.py`/`test_scenario_setup_resolver.py` (the two tests relying on
+- [x] `test_scenario_catalog_matrix.py`/`test_scenario_setup_resolver.py` (the two tests relying on
       the un-overridden default) are updated to match whatever content the reconciliation settles
       on, confirmed passing. **Amended 2026-10-04: these two are necessary but NOT sufficient** — see
       the test-surface section above. `test_real_content_world_compositions.py` pins the catalog path at
       seven sites and asserts `danger_scale == 2`; nine test files reference the directory. Every test
       that genuinely depends on it must be resolved, and the repoint-or-delete decision for
       `test_real_content_world_compositions.py` recorded with its reasoning.
-- [ ] **AC-5 — RESOLVED 2026-10-04 (owner decision), and REVERSED from what it said.** It previously read
+- [x] **AC-5 — RESOLVED 2026-10-04 (owner decision), and REVERSED from what it said.** It previously read
       *"catalog value never drove a run; running value (4) kept"*. **That is wrong and must not be
       implemented** — see the BLOCKER section: the catalog's `2` is the delivered remedy of a closed P1
       ticket, so keeping `4` would re-ratify a measured 94–97% extinction configuration.
@@ -653,7 +653,7 @@ slices already taken.
         file.** Deleting the test must not quietly relocate the wrong expectation.
 - [ ] Full scoped regression across every consumer of `ScenarioSetupResolver`/
       `CatalogScenarioStateBuilder`/`WorldAssemblyResolver` passes.
-- [ ] **AC-6 (merged; AMENDED 2026-10-04 by the rule owner):** a check fails when one `world_id` resolves
+- [x] **AC-6 (merged; AMENDED 2026-10-04 by the rule owner):** a check fails when one `world_id` resolves
       to two different module sets. It must fail on today's content before the reconciliation lands, or it
       is not testing anything. **It must ALSO assert that re-resolving each composition world
       deterministically reproduces its committed `resolved/world.resolved.yaml`** — equality against a
@@ -661,10 +661,10 @@ slices already taken.
       compares two authored files while production loads a third and **passes green on exactly the
       `dungeon_crawl` failure recorded above**, i.e. it does not test its own invariant. If a fresh
       resolve is not byte-deterministic today, **file that as a finding — do not weaken the check**.
-- [ ] **AC-7 (merged):** a written assessment of which prior measurements used the non-running
+- [x] **AC-7 (merged):** a written assessment of which prior measurements used the non-running
       definition, and whether any recorded conclusion changes. Conclusions that survive are stated as
       survivals, with what was re-checked.
-- [ ] **AC-8 (merged, amended twice):** `docs/mechanics/06_worldbuilding_foundation.md` **and**
+- [x] **AC-8 (merged, amended twice):** `docs/mechanics/06_worldbuilding_foundation.md` **and**
       `docs/architecture/world_repository_layout.md` state which location is authoritative. The ADR is
       amended rather than merely cited, because it does not currently say this (see the attribution
       correction above), and `docs/guides/content_authoring.md` teaches the other way. All three must
@@ -676,9 +676,9 @@ slices already taken.
       **Also 2026-10-04:** `content_authoring.md` teaches the retired path at **four** sites — `:27`,
       `:72`, `:164-167`, `:292` — not only §4. Fixing §4 alone leaves three live instructions pointing at
       a deleted directory.
-- [ ] **AC-9 (from Gap 1):** no code path writes into a retired `data/content/world_compositions/`. A
+- [x] **AC-9 (from Gap 1):** no code path writes into a retired `data/content/world_compositions/`. A
       world-generation run does not recreate it.
-- [ ] **AC-10 (parity ledger, made explicit 2026-10-04):** the matching `docs/parity_ledger/` entry is
+- [x] **AC-10 (parity ledger, made explicit 2026-10-04):** the matching `docs/parity_ledger/` entry is
       added or updated — `substrate.yaml`, or wherever worldbuilding integrity actually lives — carrying
       **AC-6's new one-`world_id`-one-module-set check as its `test_path`**. The rule-layer ruling implied
       this (it is the consequence of Bible 06 gaining the integrity-invariant sentence) but AC-8 named
@@ -753,13 +753,396 @@ None yet — created when this ticket is picked up.
   because it changes where generated worlds land.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+
+Implemented against `agent-working/staging_artifacts/TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION/plan.md`,
+Steps 1-14. **Step 15 (full scoped regression, all green) is NOT satisfied** — see "Blocking
+conflict" below. Nine commits, one per step group; the Step 2 guard commit is deliberately
+standalone.
+
+### Step 1 — the shared resolve path
+
+`handle_resolve`'s inline load → validate → assemble → dump sequence is now
+`src/worldassembly/resolve_io.py`. `resolve_composition(composition, catalog, module_repo)` takes
+an **already-validated** `WorldCompositionSpec` and returns `(bundle, rendered_yaml_text)`;
+`load_composition_spec` + `resolve_composition_file` are the thin path-loading wrappers the CLI
+uses; `write_resolved_artifacts` writes the five sidecars. One renderer, so the CLI, the guard and
+the generator cannot drift in serialization. Three now-unused imports (`CatalogRepository`,
+`WorldAssemblyResolver`, `WorldCompositionSpec`) were dropped from `cli.py`.
+
+Measured: a fresh resolve of `wilderness_survival` through the new helper is **byte-identical** to
+the committed `resolved/world.resolved.yaml`, and writes all five sidecars.
+
+### Step 2 — the AC-6 guard, observed RED on the untouched tree
+
+Landed in its own commit (`2e9bc2fe3`), touching nothing under `data/` and no other test, so the
+red state is reproducible from history. Verbatim from that run:
+
+```
+E       AssertionError: World composition definitions found outside data/worlds/<world_id>/world.yaml —
+        data/worlds/<world_id>/ is the sole authoritative definition of a world_id
+        (docs/architecture/world_repository_layout.md §1):
+E           data/content/world_compositions/dungeon_crawl.yaml
+E           data/content/world_compositions/frontier_extended.yaml
+E           data/content/world_compositions/frontier_living_world.yaml
+E           data/content/world_compositions/generated/generated_frontier_3_42.yaml
+E           data/content/world_compositions/generated/simq_scale_stress_seed42.yaml
+E           data/content/world_compositions/highland_traverse.yaml
+E           data/content/world_compositions/swamp_border_world.yaml
+E           data/content/world_compositions/urban_political.yaml
+E           data/content/world_compositions/wilderness_survival.yaml
+
+E       AssertionError: These world_ids already have an authoritative definition under data/worlds/
+        and are defined a second time elsewhere:
+E           dungeon_crawl redefined at data/content/world_compositions/dungeon_crawl.yaml
+E           frontier_extended redefined at data/content/world_compositions/frontier_extended.yaml
+E           frontier_living_world redefined at data/content/world_compositions/frontier_living_world.yaml
+E           generated_frontier_3_42 redefined at data/content/world_compositions/generated/generated_frontier_3_42.yaml
+E           simq_scale_stress_seed42 redefined at data/content/world_compositions/generated/simq_scale_stress_seed42.yaml
+E           highland_traverse redefined at data/content/world_compositions/highland_traverse.yaml
+E           swamp_border_world redefined at data/content/world_compositions/swamp_border_world.yaml
+E           urban_political redefined at data/content/world_compositions/urban_political.yaml
+E           wilderness_survival redefined at data/content/world_compositions/wilderness_survival.yaml
+
+2 failed, 1 passed in 9.68s
+```
+
+The guard walks only `data/` and `content/` and keys on the **parsed** `schema_version`, never on
+the substring — `docs/` holds a dozen prose mentions including the ADR itself.
+
+**Guard 3 was GREEN from the start**, for all 24 composition worlds: every committed
+`resolved/world.resolved.yaml` byte-equals a fresh resolve, and a fresh resolve is
+byte-deterministic. **No determinism or staleness finding to file, and no snapshot was
+regenerated.** The guard is a full fresh-resolve equality, not a fingerprint comparison; no
+fingerprint fast path was added, since the full run costs ~10s for the whole corpus.
+
+Guards 1 and 2 stayed red from `2e9bc2fe3` until the Step 12 deletion — the intended state for the
+middle of this ticket, noted here so a mid-stream CI run is not misdiagnosed.
+
+### Steps 3-6 — the law stated once
+
+ADR §1 carries the authority sentence plus the rule owner's verbatim source/projection clause, in
+the revised *"source definition, whether written by hand or by a generator"* wording. Bible 06
+gains **§11**, placed after §10 (itself the chapter's precedent sibling gate) so nothing is
+renumbered: one invariant sentence, a citation to the ADR, and an explicit statement that it is
+**not** a compile-pipeline gate — no rule id, no severity, nothing aborts on it. It is not in §7's
+ladder. `content_authoring.md` was corrected at all four sites (`:27`, `:72`, `:167`, `:292`) and §4
+links the ADR; the `make world-validate`/`world-compile` workflow block was left alone because it
+already drives `data/worlds/`.
+
+Two docs guards pin this: `test_authoritative_world_location_stated_once` (ADR has the sentence,
+Bible 06 does not restate the path and does cite the ADR, no `docs/guides/` file still teaches the
+retired directory) and `test_bible_06_does_not_present_the_invariant_as_a_compile_gate` (the
+invariant's enclosing section is not §7, carries no `WORLD-*` id and no `ERROR`/`WARNING`/`Level 2`
+wording).
+
+### Steps 7-8 — the test surface
+
+Seven named-world sites repointed. Measured assertion deltas applied: `frontier_living_world`
+module/fingerprint counts 6 → 7, `urban_political` 3 → 4, `wilderness_survival` 4 unchanged.
+`test_real_world_compositions_normalization` had no subject left (every authoritative definition
+uses structured `module_refs` with explicit orders), so it became
+`test_shorthand_modules_normalization` against a **synthetic** shorthand fixture — option (b);
+`WorldCompositionNormalizer` still supports both shapes, so the coverage is kept, not silently
+dropped. `test_dungeon_crawl_composition` lost both content-value assertions and its balance
+docstring, with a comment naming
+`TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION` as the oracle's owner;
+the `scalable_bandit_camp` lookup is kept as that ticket's seam. Neither `2` nor `4` is carried
+forward. The six out-of-reach tests were not edited.
+
+`test_e2e_smoke.py`'s two helpers collapsed into one (the `generated/` special case disappears —
+both generated ids are real `data/worlds/` directories) and its numeric docstring prose was made
+non-numeric. `test_assembly.py`'s two real-composition sites repointed; `:1185`/`:1190` left alone.
+`test_swamp_border_pack.py` and `test_expansion_gate.py`'s Gates 08 and 11 iterate
+`data/worlds/*/world.yaml`.
+
+**Two consequences the plan did not predict, both fixed rather than relaxed:**
+`test_real_composition_normalization_preserves_perspectives` needed 6 → 7 **and** its
+mixed-shorthand-conflict case now adds the `modules` key explicitly, because the authoritative file
+carries only the structured form and the conflict could no longer arise. Gate 08/11 needed a
+`schema_version` filter plus a non-zero assertion: iterating all of `data/worlds/` would otherwise
+validate non-composition worlds against `WorldCompositionSpec` (all 24 are compositions today, so
+this is a correctness guard against the 25th).
+
+### Step 9 — the resolver default, in the mandated order
+
+9.1 landed in its own commit (`fa1be2047`) **before** 9.2 (`4995dac08`). No loader change was
+needed; the flat-layout fallback is kept and its stale comment rewritten. 9.2 dropped Campaign's
+`compositions_dir=Path("data/worlds")` override, removed the now-dead `from pathlib import Path`,
+replaced the dead
+`TCK-20260909-WORLD-COMPOSITION-DIRECTORY-CONSOLIDATION` citation, and removed the
+"`data/content/world_compositions/` is the anomaly" mis-attribution (which originated in that very
+comment, not in the ADR) in favour of pointing at ADR §1 as amended.
+
+`tests/unit/scenarios/test_resolver_defaults.py` asserts the constant and that an unoverridden
+resolver loads the authoritative `frontier_living_world`, comparing `len(module_refs)` against the
+count **parsed from the file** with a `> 0` guard first — `module_refs` is
+`Field(default_factory=list)`, so the comparison is structurally capable of degrading to `0 == 0`.
+`test_campaign_orchestrator_uses_resolver_default_not_an_override` asserts at the AST level that no
+second hard-coded path replaced the override.
+
+### Step 10 — the content-layer path registration
+
+`ContentPathConfig.world_compositions_dir` **removed, not repointed** — that registry declares only
+children of its own `content_root`, and
+`test_non_catalog_dirs_constant_matches_path_config` *derives* its expectation from those
+basenames. `DEFAULT_WORLDS_ROOT = "data/worlds"` was **introduced** in
+`src/worldbuilding/repository.py` (the review's premise that a `WorldRepository` default already
+existed was wrong — `__init__` takes a required `worlds_dir`) and is consumed at
+`src/content/validator.py`'s two sites only. The 10+ existing literals were deliberately not swept.
+`NON_CATALOG_DIRS` dropped `world_compositions` in lockstep, leaving the derivation fully derived
+over two fields. The inventory tool's two counters collapsed to one over `data/worlds/*/world.yaml`
+with a non-zero assertion; `test_all_categories_present` lost the now-absent
+`"World compositions (generated)"` key. `docs/content/pipeline_contract.md`'s table row is retired
+with a note on where the worlds root lives.
+
+### Step 11 — Option A, the generator authors the source definition
+
+`GenerationProvenanceSpec` is a frozen, **declared**, **optional** field on `WorldCompositionSpec`
+(declared because the model is `extra="forbid"`; optional so all 24 existing definitions stay valid
+and `exclude_none=True` leaves every committed snapshot byte-identical — which guard 3
+byte-compares). `generation_seed` was not overloaded. The marker is popped in
+`WorldCompositionNormalizer` because `NormalizedWorldComposition` is also `extra="forbid"` and
+origin history is not a compilation input — the same treatment `pack_refs` already gets.
+
+`generate(..., output_dir=None)` writes `<root>/<world_id>/world.yaml`, refuses to overwrite an
+existing definition, and **resolves from the in-memory composition before committing either
+write** (option (a), not (b), and not the forbidden (c)). No re-derivation check exists anywhere;
+the test class says so explicitly so a later author does not add one.
+
+**Two things the plan did not anticipate, both handled rather than papered over:**
+
+1. `_make_repo` in both `tests/unit/worldgeneration/` files returned a `MagicMock`, which a real
+   resolve cannot traverse (`TypeError: Expected dict or list for resources, got MagicMock`). It is
+   now an in-memory-populated real `WorldModuleRepository` — no file I/O, and no mock at all. This
+   is strictly better than the mock it replaced.
+2. `generation_provenance.generated_at` makes the authored YAML no longer byte-identical across
+   runs, which contradicted `generator_contract.md`'s determinism clause and
+   `test_two_calls_produce_identical_output`. Resolved the way this repo already resolves the
+   identical problem for `provenance_manifest.created_at`: the timestamp is legitimate provenance
+   outside the artifact's identity, so the determinism test and the contract doc exclude that one
+   field. The timestamp was **not** deleted to make a comparison easy.
+   `test_no_bounds_no_default_leaves_absent` now observes the same fact through the resolve
+   (`AssemblyParameterError` naming the absent param), since leaving a required param absent is
+   exactly what makes the composition unassemblable.
+
+### Step 12 — the deletion
+
+`git rm -r data/content/world_compositions/` (7 top-level + 2 under `generated/`), after Step 11
+stopped the single writer. `test_catalog_world_compositions_directory_is_absent` and
+`test_no_test_contradicts_the_authoritative_danger_scale` added; the latter compares every
+`danger_scale ==` literal under `tests/` against whatever
+`data/worlds/dungeon_crawl/world.yaml` actually holds, with a not-None guard first, so it is
+correct in **either** landing order of this ticket and the balance-fix ticket. All seven guards in
+the file are green.
+
+### Step 14 — parity
+
+`SUB-394` added (max live id was `SUB-393`; the legacy `SUBSTRATE-NEW-0NN` series was not
+extended), P1, `test_path` = the one-definition guard's node id. Validated through
+`parity_ledger_writer.validate_entry()` but appended by hand so the diff is 40 lines rather than a
+full-file `safe_dump` rewrite of a 5000-line shard; `tools/parity_index.py build` then reports
+**FRESH**. `SUBSTRATE-NEW-010`/`011` updated for the new output location, the provenance marker and
+the one run-varying field.
+
+Reviewed and deliberately unchanged: `SUB-390` and `FAC-012` describe mechanisms and already cite
+`data/worlds/` paths — neither carries stale wording; `INFRA-256`/`INFRA-257`'s `test_path`s still
+resolve.
+
+**`INFRA-373` is a tripwire, and it did not move.** `pytest tests/unit/rendering/test_variants.py`
+is 13/13 green, so `TVD(sandbox_world, dungeon_crawl) == 0.23161981243456373` is intact —
+independent confirmation that this ticket edited no `data/worlds/` content.
+
+**Reported, NOT fixed:** `SUBSTRATE-NEW-001` and `INFRA-187` are both P0 with `test_path: None`.
+That is a pre-existing ledger violation which predates this ticket; it is **not this ticket's
+debt** and the Parity phase must not read it as such.
+
+### Recorded decisions
+
+- **The one authority decision (AC-3).** `data/worlds/<id>/world.yaml` is authoritative, on three
+  independent grounds: the ADR's unified-root decision; the catalog path never drove a production
+  run; and zero catalog-only content exists in 9 of 9 pairs (15 running-only `world_id`s vs 0
+  catalog-only).
+- **`dungeon_crawl`'s `danger_scale` (AC-5).** The catalog copy held `2`, the running definition
+  `4`. This ticket carries **neither** forward: not `2` as authoritative, not `4` as
+  confirmed-correct. The value is owned by
+  `TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION`.
+  `data/worlds/dungeon_crawl/` was not touched.
+- **The dual layout in `_load_composition()` is kept** as permanent back-compat — three lines, and
+  it is the seam ad-hoc/third-party `compositions_dir` overrides use.
+- **`list_worlds()` does not distinguish generated worlds**; the in-YAML marker suffices.
+
+### AC-7 — measurement-validity assessment, with its sweep bound stated
+
+**Method and bound.** `agent-working/stored_artifacts/` was grepped for `world_compositions` (34
+files) and for `WorldAssemblyResolver`, then narrowed to the files that cite the catalog **path**
+specifically: 34 files across 34 ticket artifact sets. This is a *bounded* sweep, not an exhaustive
+re-audit — a path citation in a plan or test_plan is usually a work instruction, not a measurement,
+and only measurements can be invalidated. The general case remains unbounded; this is what was
+actually re-checked.
+
+- **One confirmed affected artifact:**
+  `agent-working/stored_artifacts/TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED/investigation.md`
+  compiled via `data/content/world_compositions/frontier_living_world.yaml` — the 6-module copy,
+  not the 7-module definition production loads. Its verdicts inherit that ambiguity.
+- **First sweep: the five sibling `UNREACHABLE-CLASSIFY-*` artifact sets** (`DEAD-GUARD`,
+  `WAVE-CONFIRM`, `ZERO-CALLER`, `PERCEPTION-AUTHORITY`, `ROLLUP`). Measured: **none of the five
+  cites the catalog path at all.** `NEVER-SEEDED` is the only one of the six, so the defect did not
+  spread across that family.
+- **Two conclusions re-checked and recorded as SURVIVING** (not re-litigated):
+  - the **demographic-cohort truncation** finding — its decisive probe used
+    `load_world_with_context` across 21 worlds, i.e. the production path, so it never read the
+    catalog copy. **Survives.**
+  - the camp **`STALE-PREMISE`** closure — both modules it turns on are present in *both*
+    definitions of `frontier_living_world`. **Survives.**
+
+### Blocking conflict — reported, not worked around
+
+**Step 11's decision that `generate()` also runs the resolve breaks two of the six tests Scope
+Guard 3 names byte-unchanged, and I did not edit them.**
+
+- Failing: `tests/integration/worldassembly/test_real_content_world_compositions.py::test_generated_composition_is_valid_worldcompositionspec`
+  and `::test_generated_composition_determinism` (plan line references `:265` and `:300`).
+- Root cause, measured: both `monkeypatch.chdir(tmp_path)` and call `gen.generate(intent, mod)`
+  with the real module repo but **no catalog**. `generate()` loads
+  `CatalogRepository("data/content")`, which is cwd-relative, so under `tmp_path` it loads an
+  **empty** catalog; the resolver then raises
+  `ResolverError: [region] 'judgement_arena' not found in catalog — referenced by module 'combat_judgement_arena'`.
+  This is not a latent content defect — against the real catalog the same composition resolves.
+- The plan's Step 11 enumerated only `tests/unit/worldgeneration/test_composition_generator.py` as
+  the generator's test surface and did not notice these two integration tests also call
+  `generate()`. Scope Guard 3's own rationale is about the ADR's reach over *which file defines a
+  world*; Step 11 changes the generator's **contract**, a different axis. The guard nevertheless
+  names both tests by line, so resolving it is a scope decision I do not own.
+- **Options, none of which I applied:**
+  1. Let the two tests pass a catalog (or stop chdir-ing) — a byte change to a
+     Scope-Guard-3-protected file; smallest fix, needs the guard relaxed for this axis.
+  2. Make `generate()` take `catalog` and skip the resolve when it is `None` — keeps the two tests
+     byte-unchanged but introduces a silent "authored but unresolved" degradation path, which is
+     exactly the half-finished shape Step 11 item 4 exists to prevent.
+  3. Move the resolve to the CLI's `generate` handler — restores the unrecoverable
+     `world.yaml`-written-but-resolve-failed state that option (a) was chosen to prevent.
+  4. Anchor the catalog load on a repo root rather than cwd — a new cross-cutting concept, and
+     every other loader in this repo is cwd-relative by convention.
+
+  My own reading is that (1) is correct and cheap, and that the guard was simply not written with
+  this axis in mind — but it is a scope decision, so it is reported rather than taken.
+
+### Pre-existing failures, verified not caused by this ticket
+
+- **17 failures in `tests/unit/worldassembly/test_corpus_diversity.py` and
+  `test_hero_guild_routing_population_stability.py`.** `test_corpus_diversity.py`'s own module
+  docstring documents 13 failures + 1 error as an accepted consequence of
+  `TCK-20260824-TOWN-CENTER-POINTER-FIX`, with 10 of 13 deliberately left. Neither file imports
+  anything this ticket changed.
+- **`tests/integration/content/test_swamp_border_pack.py::test_base_strict_matrix_unaffected_by_pack_content`**
+  errors only when run in the same process as those failing stability tests; the content suite is
+  109/109 green on its own.
+- **`tests/integration/scenarios/test_entity_differentiation.py::test_bravery_quartile_combat_rate_2x`**
+  — builds its own spec and never constructs a `ScenarioSetupResolver`.
+- **`tests/integration/campaigns/test_catalog_entity_spawn_wiring.py::test_real_campaign_episode_event_stream_is_plausible_not_degenerate`**
+  — reproduced identically (`combat_initiated 0 >= 3`) with `orchestrator.py` and `resolver.py`
+  checked out at `c86fa3a21`, i.e. before any of this ticket's commits.
 
 ## Test Summary
-_(pending)_
+
+New: `tests/architecture/test_world_definition_single_source.py` (7 guards),
+`tests/unit/scenarios/test_resolver_defaults.py`,
+`test_campaign_orchestrator_uses_resolver_default_not_an_override`,
+`test_default_worlds_root_is_the_authoritative_world_location`, and a five-test
+`TestAuthoritativeOutputLocation` class in
+`tests/unit/worldgeneration/test_composition_generator.py` (explicit-absence, resolved sibling,
+provenance history, refuse-to-overwrite, resolve-failure cleanup). Deliberately **absent**: any
+`world.yaml == generate(marker)` test.
+
+| command | result |
+|---|---|
+| `pytest tests/architecture/test_world_definition_single_source.py -q` | **7 passed** (2 of them red before Step 12, as designed) |
+| `pytest tests/unit/worldbuilding/ -q` | 225 passed |
+| `pytest tests/integration/worldassembly/ tests/unit/worldassembly/ tests/integration/content/ tests/unit/content/ tests/tools/test_content_inventory.py tests/unit/worldgeneration/ tests/unit/worldbuilding/ -q` (minus the two pre-existing stability families) | **756 passed, 2 failed** — the two Scope-Guard-3 tests in the blocking conflict |
+| `pytest tests/integration/scenarios/ -q` | 172 passed, 2 skipped, 1 xfailed, 1 pre-existing failure |
+| `pytest tests/unit/scenarios/ tests/unit/domains/campaigns/test_campaign_orchestrator.py -q` | 84 passed |
+| `pytest tests/integration/campaigns/ -q` | 21 passed, 1 pre-existing failure (reproduced at `c86fa3a21`) |
+| `pytest tests/unit/rendering/test_variants.py -q` | 13 passed — the `INFRA-373` tripwire did not move |
+| `tools/parity_index.py check-staleness` | FRESH |
+
+**Step 15 is therefore not satisfied.** Everything in the plan's five scoped commands is green
+except the two tests named in the blocking conflict, which cannot be fixed without crossing Scope
+Guard 3.
 
 ## Files Changed
-_(pending)_
+
+**Source (11)**
+- `src/worldassembly/resolve_io.py` *(new)* — the single resolve/render/write path
+- `src/worldassembly/schema.py` — `GenerationProvenanceSpec`, optional `generation_provenance`, normalizer pops
+- `src/worldbuilding/cli.py` — `handle_resolve` calls the helper; three dead imports removed
+- `src/worldbuilding/repository.py` — `DEFAULT_WORLDS_ROOT`
+- `src/worldgeneration/generator.py` — authors `data/worlds/<id>/world.yaml` + `resolved/`, provenance marker, refuse-to-overwrite, resolve-before-commit
+- `src/scenarios/resolver.py` — default `compositions_dir` → `data/worlds`
+- `src/domains/campaigns/orchestrator.py` — override dropped, dead citation and mis-attribution removed
+- `src/content/paths.py` — `world_compositions_dir` removed
+- `src/content/validator.py` — consumes `DEFAULT_WORLDS_ROOT`
+- `src/content/repository.py` — `NON_CATALOG_DIRS`
+- `tools/generate_content_inventory.py` — two counters collapse to one
+
+**Tests (13)**
+- `tests/architecture/test_world_definition_single_source.py` *(new)*
+- `tests/unit/scenarios/test_resolver_defaults.py` *(new)*
+- `tests/integration/worldassembly/test_real_content_world_compositions.py`
+- `tests/integration/worldassembly/test_e2e_smoke.py`
+- `tests/unit/worldassembly/test_assembly.py`
+- `tests/integration/content/test_swamp_border_pack.py`
+- `tests/integration/content/test_expansion_gate.py`
+- `tests/unit/content/test_content_paths.py`
+- `tests/tools/test_content_inventory.py`
+- `tests/unit/domains/campaigns/test_campaign_orchestrator.py`
+- `tests/unit/worldbuilding/test_world_repository.py`
+- `tests/unit/worldgeneration/test_composition_generator.py`
+- `tests/unit/worldgeneration/test_seed_params.py`
+
+**Docs (6)**
+- `docs/architecture/world_repository_layout.md` — §1, the two normative sentences
+- `docs/mechanics/06_worldbuilding_foundation.md` — new §11 sibling law
+- `docs/guides/content_authoring.md` — four sites
+- `docs/content/pipeline_contract.md` — path-layout table row retired
+- `docs/world/generator_contract.md` — output contract, three constraints, determinism clause
+- `docs/parity_ledger/substrate.yaml` — `SUB-394` added; `SUBSTRATE-NEW-010`/`011` refreshed
+
+**Data (9 deleted)**
+- `data/content/world_compositions/` — 7 top-level + 2 under `generated/`
+
+**Ticket and staging artifacts (4)**
+- `agent-working/tickets/inprogress/TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION.md`
+- `agent-working/staging_artifacts/TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION/investigation.md`
+- `agent-working/staging_artifacts/TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION/plan.md`
+- `agent-working/staging_artifacts/TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION/test_plan.md`
+
+Not touched, on purpose: `data/worlds/` (including `dungeon_crawl/` and every `resolved/`
+snapshot), the six out-of-reach tests in `test_real_content_world_compositions.py`, the
+flat-layout fallback in `_load_composition()`, the 10+ existing `"data/worlds"` literals,
+`docs/mechanics/content_usage_matrix.md` (generated), `docs/archive|audits|brainstorm/`.
 
 ## Completion Summary
-_(pending)_
+
+`data/worlds/<world_id>/` is now the sole authoritative definition of a `world_id`, stated once in
+`docs/architecture/world_repository_layout.md` §1 with the rule owner's verbatim source/projection
+clause, cited (not restated) by Bible 06's new §11 and by `content_authoring.md`. Seven
+architecture guards enforce both halves — one definition per `world_id`, and every committed
+`resolved/world.resolved.yaml` byte-equal to a fresh resolve across all 24 composition worlds. The
+one-definition guards were observed RED on the untouched tree in their own commit, naming all 9
+catalog duplicates, which is AC-6's mandatory negative control; the projection guard was green from
+the start, so no determinism finding was filed and no snapshot was regenerated.
+`data/content/world_compositions/` is deleted, after every reader was repointed, the resolver
+default was flipped ahead of the Campaign override being dropped, the `data/content`-relative path
+field was retired in favour of a `DEFAULT_WORLDS_ROOT` owned by the worldbuilding layer, and the
+generator was changed to author `data/worlds/<id>/world.yaml` directly with a history-only
+provenance marker, refusing to overwrite and resolving before committing either write.
+`SUB-394` records the law with the guard as its `test_path`.
+
+**Not complete.** Step 15's all-green regression is not satisfied: Step 11's decision that
+`generate()` also runs the resolve breaks two of the six tests Scope Guard 3 names byte-unchanged
+(`test_generated_composition_is_valid_worldcompositionspec`,
+`test_generated_composition_determinism`), because they chdir to `tmp_path` and pass no catalog, so
+the cwd-relative catalog load comes back empty. Those two tests were left untouched and the
+conflict is reported with four options in the Implementation Notes rather than resolved on this
+ticket's authority. AC-5's oracle stays `unresolved` for this ticket, which is correct rather than a
+gap.
