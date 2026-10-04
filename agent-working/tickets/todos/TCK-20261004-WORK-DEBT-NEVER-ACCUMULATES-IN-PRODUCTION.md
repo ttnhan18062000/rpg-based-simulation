@@ -15,7 +15,7 @@ tags: [performance, engine, bug]
 `AuthoritativeState.work_debt` has no production writer that increases it, so every debt-driven signal is permanently zero
 
 ## Status
-BLOCKED
+OPEN
 
 ## Tier
 standard
@@ -81,7 +81,7 @@ meant to be the debt.
 ## Acceptance Criteria
 1. A test shows `state.work_debt` stays empty across real runs in which dropped work is non-zero
 2. The ticket lists every reader of `work_debt` and says which behaviour is dead because of it
-3. An owner decision is recorded: producer, retire, or certification-only
+3. A recommendation (producer, retire, or certification-only) with evidence is recorded in the ticket and sent to perf-planner for the owner; the decision itself is out of scope
 
 ## Related Tickets
 - `TCK-20261004-PERF-M1-DEBT-HARNESS-CORRECTNESS` (where it was found)
@@ -101,8 +101,7 @@ meant to be the debt.
   `src/engine/phase_governor.py`, `src/certification/scenarios.py`
 
 ## Assumptions / Open Questions
-- BLOCKED on the RPG-core entry gate for any `src/` change. The investigation and the confirming
-  test need no `src/` edit and can run under the partial lift if the owner wants them earlier
+- **Owner decision 2026-10-04: investigate first.** This ticket now runs as investigation only, under the partial lift: the confirming test (AC1), the reader list (AC2), and a history/doc search for the intended producer. No `src/` edit at all. AC3 becomes: a written recommendation (producer / retire / certification-only), with evidence, put to the owner. The chosen change is a separate ticket that waits for the gate if it touches gated files
 - This trace is a code read plus a keyword search, not a proof. The confirming test is AC1
 
 ## Implementation Notes
