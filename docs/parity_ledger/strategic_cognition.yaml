@@ -4340,3 +4340,29 @@
     dormant code this entry tracks completion of.'
   support_boundary: null
   evidence_kind: null
+- id: STRAT-274
+  text: The objective kind a goal scorer decides is the objective kind the winning
+    project carries. A scorer may publish metadata["obj_kind"]; the generic tier-5
+    materialization branch of StrategicIntelligenceSystem.evaluate_strategic_intent()
+    reads it, falling back to ObjectiveKind.REACH_LOCATION when none is published
+    (so every scorer that publishes nothing is unchanged). CombatEngageScorer publishes
+    DEFEAT_ENEMY and selects its targets with the same content-catalog hostility test
+    the tactical layer uses (content_semantics.faction.are_entities_hostile, real
+    distance, combat_engaged=True) rather than the raw four-value Faction enum. ProjectState.kind
+    stays the GoalKind and score stays the 100-scale utility.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/ai/goals/scorers.py (CombatEngageScorer: catalog hostility + metadata
+    obj_kind=DEFEAT_ENEMY); src/systems/strategic_systems/intelligence.py (generic
+    branch: kind=metadata.get(''obj_kind'') or ObjectiveKind.REACH_LOCATION); src/content_semantics/faction.py
+    (are_entities_hostile, shared with LegalityServiceV2._is_engagement_hostile).
+    Real-kernel proof: both entities of the combat_judgement_withdrawal scenario world
+    materialize combat_engage objectives of kind DEFEAT_ENEMY targeting each other.
+    Does NOT claim the objective is then pursued to an attack: see TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES.'
+  proof_type: parity
+  test_path: tests/mechanic_scenarios/test_combat_engage_objective_kind_through_kernel.py::test_won_combat_engage_materialises_a_defeat_enemy_objective_targeting_the_hostile;
+    tests/unit/strategic/test_goal_winner_objective_kind.py
+  divergence_note: null
+  support_boundary: null
+  evidence_kind: null
