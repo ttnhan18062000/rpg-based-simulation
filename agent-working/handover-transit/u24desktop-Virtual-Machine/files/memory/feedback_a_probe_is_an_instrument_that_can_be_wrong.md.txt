@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: 734bdb4d-8d7d-46b9-bf76-89e45e8a2d75
-  modified: 2026-09-30T09:27:41.298Z
+  modified: 2026-10-04T13:52:34.731Z
 ---
 
 Runtime measurement is the right instrument for a reachability or absence claim — and a probe is
@@ -50,5 +50,18 @@ concede only the part actually contradicted. My ticket had two claims ("never em
   strong; a 1-world zero is the overgeneralisation that got a whole pattern document retired the
   same day.
 
+**2026-10-04 — the check that never ran at all.** A new instance with a different mechanism: in a
+chained `cmd_a && grep -c X && cmd_b && grep Y`, the `grep -c` returned `0` — which is **exit status
+1** — so the `&&` chain short-circuited and `grep Y` silently never ran. I read the empty output as
+"the second check found nothing" and concluded four ticket files were untracked and invisible to a
+peer implementer. They were committed all along. So: a probe can be wrong, *and* a probe can be
+absent while still producing output that looks like a negative result.
+
+**How to apply:** never put a counting command (`grep -c`, `wc -l`-style tests, anything that exits
+non-zero on a legitimate zero) in the middle of an `&&` chain — use `;` between independent checks,
+or print an explicit sentinel after each one. When a chained check yields nothing, confirm the
+command ran before interpreting the silence.
+
 Related: [[feedback_check_ancestry_before_citing_pr_lines]],
-[[feedback_check_recorded_decision_before_filing_defect]].
+[[feedback_check_recorded_decision_before_filing_defect]],
+[[feedback_absent_from_sample_is_not_unreachable]].

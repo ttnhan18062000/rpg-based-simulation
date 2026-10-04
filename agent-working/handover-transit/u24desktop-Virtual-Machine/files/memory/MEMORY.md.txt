@@ -42,6 +42,9 @@
 
 ## Worktrees and git
 - [Worktree by default](feedback_worktree_by_default.md) — one per domain; paired sessions share it, implementer alone runs git
+- [Two rpg implementers, lane split](project_two_rpg_implementers_lane_split.md) — 2026-10-04: goal/combat lane vs world-assembly lane; pick the lane before dispatching
+- [Verify both implementers' orchestration](feedback_verify_both_implementers_orchestration.md) — owner duty: check repo state, not just status reports; found uncommitted work + a stale shared sidecar
+- [REGISTRY conflict blocks CI and recurs](project_registry_conflict_blocks_ci_and_reconflicts.md) — a CONFLICTING PR runs zero CI; driver-only conflict returns on every main advance; sync→push→merge back-to-back
 - [Worktree verification traps](project_worktree_verification_traps.md) — verify against origin/main, check authors
 - [Verify peer commits via shared object store](feedback_verify_peer_commits_via_shared_object_store.md) — git show works before push
 - [Fetch before recommending a ticket](feedback_fetch_before_recommending_a_ticket.md) — worktree tickets/ is pinned to an old origin/main; I recommended an already-DONE ticket

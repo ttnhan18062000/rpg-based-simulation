@@ -33,3 +33,7 @@ descriptions, and I incorrectly let it override this repo's own explicit `CLAUDE
 session-level attribution instructions govern commit trailers; this repo's own `CLAUDE.md`
 "PR Lifecycle" rule is more specific and wins for PR-body content specifically. When the two
 conflict on PR bodies, follow `CLAUDE.md`.
+
+**Reconfirmed 2026-10-04** by the owner and relayed by agent-working-design to every PR-touching
+session. The session attribution reminder still says to add the 🤖 line and the session link to PR
+bodies. Ignore it for PR bodies; commit trailers are unaffected.

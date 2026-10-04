@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: ca26f6d7-ba23-4256-89fa-eb79ac8f6ff3
-  modified: 2026-10-01T16:12:01.688Z
+  modified: 2026-10-04T14:11:30.634Z
 ---
 
 When an identifier appears in several places, never conclude "X is wired/live" from the
@@ -27,3 +27,22 @@ for an existing decision — an unreached path usually already has one. If the p
 tests, say "zero production callers", not "wired". See [[feedback_check_recorded_decision_before_filing_defect]]
 (odd zeros are usually documented), [[feedback_absent_from_sample_is_not_unreachable]] for the
 converse error, and [[feedback_verify_a_peer_finding_before_relaying_it_as_fact]].
+
+---
+
+**2026-10-04 — second instance, and the reason it survived: the plausible sibling file EXISTS.** I
+wrote in a ticket I filed that "`src/core/strategic.py` — where `StrategicUpdate` actually lives".
+It lives at **`src/core/updates.py:515`**. The implementer's first one-word edit on my citation
+would have swapped a `NameError` for an `ImportError`; its own new test caught it, not me. Earlier
+the same week I relayed `src/cognition/appraisal.py`, which is really
+`src/systems/social_systems/appraisal.py`.
+
+The pattern in both: I matched a symbol to a module by **name plausibility** and never ran the
+definition lookup. What made this one durable is that `src/core/strategic.py` **does exist** — so
+the citation looked verified, and a reader checking only "does that file exist?" would confirm it.
+
+**How to apply:** a symbol-to-file citation is a claim that needs its own one-line check —
+`grep -rn "^class <Symbol>\|^<Symbol> = " src/` — before it goes into a ticket, a brief or a
+message. Never infer the module from the symbol's name, and note that confirming the *file* exists
+does not confirm the *symbol* is in it. Two wrong citations in one week both went out in artifacts
+other sessions then worked from.
