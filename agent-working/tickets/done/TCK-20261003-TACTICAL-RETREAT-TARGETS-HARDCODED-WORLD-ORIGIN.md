@@ -250,6 +250,10 @@ defect, and was withdrawn in full.
   60 s resource-limit `TimeoutError` and fails **identically on the base `tactical.py`**, so it is not caused
   by this change (and not a behaviour comparison: it never reaches its assertions).
 - No recorded-hash fixture moved.
+- **Environment gap:** `ruff`, `mypy`, `complexipy`, `ast-grep` and `prek` are absent from the local venv, so
+  the `tests/codebase` failures in the wider run are tool-missing, not real, and lint could not be run locally.
+  No function-local imports were added under `src/` (module-top imports only, no load-order cycle), and one
+  unannotated parameter introduced here (`_perceived_threats(neighbors)`) was annotated after review.
 
 ## Files Changed
 

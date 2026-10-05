@@ -7,13 +7,14 @@ can never disagree about when an objective has ended.
 """
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING, Optional
 
 from src.core.strategic import ObjectiveStatus, ProjectStatus
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
-    from src.core.strategic import ObjectiveState
+    from src.core.strategic import ObjectiveState, ProjectState
 
 # Perception radius an entity-targeted objective is held to: the radius CombatEngageScorer chooses its
 # target within (get_neighbor_view radius), so an objective ends when its target leaves the neighbourhood
@@ -42,3 +43,26 @@ def entity_target_outcome(
     if abs(tx - hx) + abs(ty - hy) > ENTITY_TARGET_PERCEPTION_RADIUS:
         return ObjectiveStatus.FAILED, ProjectStatus.ABANDONED
     return None
+
+
+def close_entity_target_project(
+    hero: "EntityState", state: "AuthoritativeState", project: "ProjectState"
+) -> Optional["ProjectState"]:
+    """The project with its entity-targeted active objective closed, or None while the objective holds.
+
+    Kept out of ``evaluate_strategic_intent`` (already far over the complexity limits): the caller only
+    wraps the returned project in its ``StrategicUpdate``.
+    """
+    objective = next((o for o in project.objectives if o.id == project.active_objective_id), None)
+    if objective is None:
+        return None
+    outcome = entity_target_outcome(hero, state, objective)
+    if outcome is None:
+        return None
+    objective_status, project_status = outcome
+    closed = replace(objective, status=objective_status)
+    return replace(
+        project,
+        objectives=[closed if o.id == closed.id else o for o in project.objectives],
+        status=project_status,
+    )

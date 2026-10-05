@@ -66,7 +66,7 @@ def _combined_wound_scar_distress(wounds, scars) -> float:
     return _wound_distress(wounds) + _scar_distress(scars)
 
 
-def _perceived_threats(entity: "EntityState", neighbors) -> List["EntityState"]:
+def _perceived_threats(entity: "EntityState", neighbors: List["EntityState"]) -> List["EntityState"]:
     """Perceived neighbors the entity's appraisal counts as hostile (same predicate as
     AppraisalSystem.evaluate_emotional_state), so a retreat flees what the panic gate saw."""
     sx, sy = entity.navigation.position

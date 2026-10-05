@@ -229,6 +229,22 @@ measurement traps (objective ids name the target; dead holders keep strategic st
   identically with the base `tactical.py` (control arm), it is also seen on the retreat ticket, and
   `tests/regression/` is the push-to-main "Slow regression" job, skipped on PRs. Not chased.
 - No recorded-hash fixture moved.
+- **Environment gap, not a defect of this ticket:** `ruff`, `mypy`, `complexipy`, `ast-grep` and `prek` are
+  absent from the local venv, so the 49 `tests/codebase` failures in the wider run are tool-missing
+  (`complexipy not found`, `prek not found`, `ast-grep not found`) rather than real, and lint / the code-health
+  ratchet could not be run locally; CI is the first lint run.
+- **Function-local imports (PLC0415):** none added under `src/` by this ticket. New imports are at module top in
+  `tactical.py`, `scorers.py`, `score_modifiers.py`, `intelligence.py` and `work_queue.py`; `entity_target_objective.py`
+  imports only `src.core.strategic` (types otherwise under `TYPE_CHECKING`), so `src/ai/goals/scorers.py` can
+  import it at module top without the load-order cycle that `adventure_scorer.py` and `social_contract_scorer.py`
+  document. Tests (not linted by ruff, which checks `src`) do use function-local imports. The lifecycle block was
+  moved out of `evaluate_strategic_intent` into `close_entity_target_project` to avoid growing a function already
+  over the complexity limits.
+- **Mechanism-registry pin dependency:** the bumps in `tests/unit/tools/test_mechanism_registry_completeness_check.py`
+  (`total_targets` 64 to 65, `unbound` 25 to 26, `scope_files` 297 to 298, `unbound_files` 233 to 234) were
+  measured against 233 / 297 at this branch's base commit. Parked branches (`semantic-foundation-registry-drafts`
+  and `world-assembly-registry-split`) move the same pins in other directions; whoever lands last must
+  **re-measure the pins by running the check**, not reconcile the deltas arithmetically.
 
 ## Files Changed
 `src/core/strategic.py`, `src/core/state.py` (objectives canonical region only), `src/ai/goals/base.py`,
