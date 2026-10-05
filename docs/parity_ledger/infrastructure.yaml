@@ -12736,3 +12736,21 @@
     8-tick trials, none diverged, against 8 of 96 on unfixed main), not a proof. A
     second id()-keyed cache, get_frozen in src/engine/executor.py, showed no stale
     hit in 300 ticks and is not proven safe.
+- id: INFRA-422
+  text: 'TCK-20261005-PERF-M1-ZERO-CAPACITY-SIGNAL (PERF-D1): WorkerManager follows the zero-capacity
+    contract. Zero workers is synchronous execution (worker utilization 0.0); zero workers with
+    zero queue depth means no queue exists (queue utilization 0.0); zero queue depth with one or
+    more workers, and any negative capacity, is rejected with ValueError at construction. Idle is
+    0.0 and saturated is 1.0: local fallback runs on the caller thread and is not counted as an
+    active worker, so worker utilization never exceeds 1.0. "Unavailable" is not encoded as a
+    utilization value (no unavailable state exists).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/worker_manager.py (WorkerManager.__init__, _wrap_work, get_stats)
+  proof_type: contract
+  test_path: tests/unit/kernel/test_worker_capacity_semantics.py
+  divergence_note: null
+  support_boundary: Threaded pool and local fallback. The process-pool path does not count active workers
+    at all (unchanged, not covered). The kernel builds its manager from RuntimeProfile (queue depth
+    gt=0), so the rejection guards a latent path.

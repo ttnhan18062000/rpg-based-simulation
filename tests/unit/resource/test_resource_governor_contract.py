@@ -93,3 +93,96 @@ def test_real_kernel_with_workers_disabled_stays_normal_absent_real_pressure():
             assert kernel.status.current_mode == RuntimeMode.NORMAL
     finally:
         kernel.shutdown()
+
+
+# TCK-20261005-PERF-M1-ZERO-CAPACITY-SIGNAL: governor reading of WorkerManager capacity signals (PERF-D1).
+@pytest.mark.parametrize("workers,queue_depth", [(0, 0), (0, 100)])
+def test_disabled_and_no_queue_stats_alone_stay_normal(base_profile, workers, queue_depth):
+    """PERF-D1: zero workers (and no queue) report 0.0, so they do not move the governor out of NORMAL."""
+    from src.engine.worker_manager import WorkerManager
+
+    manager = WorkerManager(max_workers=workers, max_queue_depth=queue_depth)
+    stats = manager.get_stats()
+    manager.shutdown()
+    gov = ResourceGovernor()
+    status = RuntimeStatus()
+    signals = PressureSignals(
+        tick_compute_ms=1.0,
+        worker_utilization=stats["worker_utilization"],
+        queue_utilization=stats["queue_utilization"],
+    )
+    for tick in range(3):
+        gov.evaluate(base_profile, signals, status, tick)
+        assert status.current_mode == RuntimeMode.NORMAL
+
+
+def test_saturated_worker_stats_still_reach_degraded(base_profile):
+    """PERF-D1: saturated is 1.0 and the governor still reads it as DEGRADED."""
+    from src.engine.worker_manager import WorkerManager
+
+    manager = WorkerManager(max_workers=4, max_queue_depth=100)
+    with manager._stats_lock:
+        manager._peak_active = 4
+        manager._peak_queued = 100
+    stats = manager.get_stats()
+    manager.shutdown()
+    gov = ResourceGovernor()
+    status = RuntimeStatus()
+    signals = PressureSignals(
+        tick_compute_ms=1.0,
+        worker_utilization=stats["worker_utilization"],
+        queue_utilization=stats["queue_utilization"],
+    )
+    gov.evaluate(base_profile, signals, status, 0)
+    assert status.current_mode == RuntimeMode.DEGRADED
+
+
+def test_overloaded_run_with_local_fallback_reaches_degraded(base_profile):
+    """
+    PERF-D1 / T01 guard rail: a run that overfills the queue (forcing local fallback) is saturated
+    and reaches DEGRADED. Local fallback is not pool capacity, so counting it differently must not
+    change this mode decision.
+    """
+    import time
+    from unittest.mock import MagicMock
+
+    from src.core.work import WorkClass
+    from src.core.worker_protocol import WorkerPacket, WorkerResult
+    from src.engine.worker_manager import WorkerManager
+
+    def slow(packet):
+        time.sleep(0.05)
+        return WorkerResult(
+            source_packet_id=packet.packet_id,
+            work_id=packet.work_id,
+            entity_id=packet.subject.id,
+            work_class=packet.work_class,
+            update=MagicMock(),
+        )
+
+    packets = [
+        WorkerPacket(
+            packet_id=f"ov:{i}", work_id=f"w:{i}", tick=0, world_time=0, seed=i,
+            work_class=WorkClass.CRITICAL, subject=MagicMock(id=i), neighbor_view=[],
+            work_kind="ACT", payload={},
+        )
+        for i in range(200)
+    ]
+    manager = WorkerManager(max_workers=1, max_queue_depth=1)
+    manager.execute_batch(packets, slow)
+    stats = manager.get_stats()
+    manager.shutdown()
+
+    gov = ResourceGovernor()
+    status = RuntimeStatus()
+    gov.evaluate(
+        base_profile,
+        PressureSignals(
+            tick_compute_ms=1.0,
+            worker_utilization=stats["worker_utilization"],
+            queue_utilization=stats["queue_utilization"],
+        ),
+        status,
+        0,
+    )
+    assert status.current_mode == RuntimeMode.DEGRADED
