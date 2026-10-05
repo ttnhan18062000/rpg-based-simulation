@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION
-phase: open
+phase: done
 date: 2026-10-04
 tags: [world, content, root-cause]
 ---
@@ -19,7 +19,7 @@ modules declaring the same region id and never sets a `namespace`, so the resolv
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -216,16 +216,29 @@ fallthrough — that would just be option 2 wearing a different hat.
 
 ## Implementation Notes
 
-_(not started)_
+- `ProceduralCompositionGenerator._assign_region_namespaces` (src/worldgeneration/generator.py): modules walked in
+  `module_id` order; a module declaring a region id already claimed gets `namespace=<module_id>`.
+  Function of the module set only (Condition 1). Residual collision raises `GenerationCompositionError`
+  (validation, not a selection fallthrough).
+- Condition 2: the resolver already prefixes region, place, `spawn_region` and recipe ids from the namespace;
+  the integration test asserts population placement by bounds against the module's own region.
+- Sweep: 5 region ids collide across the 22 modules (`hometown` x3, `haunted_battlefield`, `near_forest`,
+  `wolf_den`, `bandit_road`) - a class, not one pair.
+- Deviation from the authored precedent: authored worlds use `namespace: "trading"`; the generator uses the
+  module id. Matching it would need a per-module default-namespace field (module content change, out of scope).
+- **Monitoring caveat (whole batch):** for roughly the first hour-plus of this batch, `.claude/current_run` still named another session's finished run (`TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`, seq 14, Verify), so the tool rows this session wrote in that period are mis-attributed to that ticket in `tools.jsonl`. They were not retro-attributed. Any tool-call-count or cost figure for the five tickets in this batch undercounts, and the other ticket's figure is inflated. Do not trust either as a cost measurement. The sidecar was rewritten with this batch's own run before closure.
+- AC-3 done: after #328 merged and `origin/main` was merged here, the two `xfail(strict=True)` marks in `tests/integration/worldassembly/test_real_content_world_compositions.py` were removed; both tests now pass against the fix.
 
 ## Test Summary
 
-_(not started)_
+- New: 3 unit tests (`TestRegionIdNamespacing`) and 1 real-content integration test (assembles, and each module's population spawns in its own module's region). Fail on the unfixed generator, pass with the fix.
+- Final-tree run (after merging `origin/main` at `ad194bec4`, #328 included): scoped suites over rendering, worldassembly, worldgeneration, architecture, engine, social, cli, lab, simulation_quality, scenarios, content and related = 2547 passed, 1 failed; full `tests/tools` plus `tests/unit/tools` = 4243 passed, 0 failed after removing the three resurrected `todos/` ticket copies the merge brought back. The one failure, `tests/integration/scenarios/test_entity_differentiation.py::test_bravery_quartile_combat_rate_2x` (population guard), is not from this batch: it fails identically on a clean `origin/main` (`1c59e01f4`).
+- AC-3 met: the two `xfail(strict=True)` marks (left by #328) were removed after #328 merged; both tests pass. After adapting to #328's `generate()` signature, the tests were re-checked against the unfixed generator by removing the namespace emission: all three real-content integration tests fail with the original `Duplicate region ID collision 'hometown'` error and pass again with it restored. Precision on what proves what: the `TestRegionIdNamespacing` unit tests now call `_assign_region_namespaces` directly (a stub catalog has no `hometown` region, so a stubbed `generate()` cannot resolve), so they prove the assignment rule (set-determinism, 3-way collision, residual-collision error) but would still pass if the emission into `ModuleRefSpec` were removed; the behavioural link to `generate()` is carried by the real-content integration tests and by one more unit case, `test_generate_emits_the_namespace_on_the_authored_module_refs`, which goes through `generate()` with the resolve step intercepted (a stub catalog cannot resolve a stubbed `hometown`) and asserts the authored `module_refs` carry the namespace. That case was verified to fail when the emission is deleted and pass when restored, so the control is a committed test, not a one-off measurement.
 
 ## Files Changed
 
-_(not started)_
+`src/worldgeneration/generator.py`; `tests/unit/worldgeneration/test_composition_generator.py`; `tests/integration/worldassembly/test_real_content_world_compositions.py`; `docs/guidelines/intentional_divergences.md` (DEV-008); `docs/parity_ledger/substrate.yaml` (SUBSTRATE-NEW-010).
 
 ## Completion Summary
 
-_(not started)_
+Generated compositions now assemble: `ProceduralCompositionGenerator._assign_region_namespaces` gives a module that re-declares an already-claimed region id `namespace=<its module_id>`, as a function of the module set only (rule-owner option 1, both conditions tested). Tests fail without the fix and pass with it. AC-3 closed in this PR: the two strict xfail marks left by #328 were removed after #328 merged. DEV-008 and the substrate parity rule recorded. Sweep: 5 region ids collide across the 22 modules.

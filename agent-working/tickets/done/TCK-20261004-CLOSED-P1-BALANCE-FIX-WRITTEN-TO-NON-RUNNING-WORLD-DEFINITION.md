@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION
-phase: open
+phase: done
 date: 2026-10-04
 tags: [world, content, root-cause]
 ---
@@ -19,7 +19,7 @@ reads DONE
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -200,16 +200,24 @@ than making a new one.
 
 ## Implementation Notes
 
-_(not started)_
+- AC-4a result (run BEFORE any change): all 24 composition worlds' committed `resolved/world.resolved.yaml` equal a fresh resolve of their own `world.yaml`, and resolve is byte-deterministic. No snapshot was stale against its source; `dungeon_crawl`'s `world.yaml` itself never got the fix. Positive control: the catalog copy resolves to a different world than the snapshot.
+- AC-5 result: catalog copy vs `world.yaml` differs for `dungeon_crawl`, `frontier_extended`, `frontier_living_world`, `swamp_border_world` (catalog lacks `trading_company_hub`) and `urban_political` (catalog lacks `hero_adventurers`); `highland_traverse` and `wilderness_survival` are identical (so wilderness_survival's half of the fix reached production). Measurements taken via a non-running definition are tracked in `TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION`.
+- A fourth stale artifact: `world_compile_report.json` still said 32 entities; `test_distinct_populated_factions` and the corpus registry read it. Regenerated, and a guard added for its content-derived counts. Hashes and `place_count` are NOT guarded (stale in ~20 worlds from compiler changes; known as `TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS`).
+- Census table: only `dungeon_crawl` (4 -> 2) changed, because the running world changed (the 4 was a faithful measurement of the unintended world); the entries for the other four catalog-divergent worlds (9, 6, 4, 4) match fresh compiles.
+- Live world after the fix: 12 entities, 2 regions, 0 resource nodes, 0 buildings, 2 populated factions. `faction_tension_overrides` left as is.
+- Blast radius, handled per planner ruling: six rendering-evidence tests now use a frozen copy of the old snapshot (`tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml`; assertions unchanged). **A frozen fixture no longer detects rendering regressions in the live corpus.** Follow-up decision: `TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT`. `INFRA-373` is therefore not moved; it reproduces on the fixture. `src/rendering/` and `docs/visual_quality/` untouched (assigned to neither lane).
+- **Missed blast radius, found by CI on PR #335 (my scoped runs never included `tests/unit/worldbuilding`):** `tests/unit/worldbuilding/test_corpus_reachability_baseline.py::test_full_corpus_reachability_regression` failed, which turned `Unit · core / world` and `Migration lanes` red (the test carries the `worldassembly` marker, so `make lane-all-fast` runs it too). Cause: the WORLD-REACH-001 baseline `tests/fixtures/world_grammar_reachability_baseline.json` lists, for `dungeon_crawl`, the quests whose participants are unreachable. Three of them (`goblin_defend_village_perimeter`, `goblin_fetch_stolen_goods`, `goblin_hunt_warlord`) are defined only in `data/content/world_modules/goblin_camp_conflict.yaml`, the module the accepted remedy removed, so `dungeon_crawl` no longer contains those quests and cannot violate anything for them. The fresh violation set is a strict subset of the old one: the same four remaining entries (`sbandit_defend_road_checkpoint`, `sbandit_fetch_stolen_cache`, `sbandit_hunt_camp_leader`, `spirit_source_trace`) and nothing new. The baseline was updated by deleting exactly those three lines for `dungeon_crawl` (a three-line diff; the file's own header requires a deliberate reviewed diff). This is a consequence of the world changing, not a loosened check: no other world's entry moved, and a new reachability violation would still fail.
 
 ## Test Summary
 
-_(not started)_
+- New `tests/integration/worldassembly/test_resolved_snapshot_freshness.py` (49 cases): snapshot == fresh resolve per composition world, resolve determinism, compile-report counts == fresh compile per world, dungeon_crawl remedy at the loaded location (12 entities, non-empty first). Positive controls: the compile-report guard fails on the old report; the catalog copy differs from the snapshot.
+- Updated: census pin (`dungeon_crawl` 4 -> 2), corpus registry regenerated, six rendering tests repointed.
+- Final-tree run (after merging `origin/main` at `ad194bec4`, #328 included): scoped suites over rendering, worldassembly, worldgeneration, architecture, engine, social, cli, lab, simulation_quality, scenarios, content and related = 2547 passed, 1 failed; full `tests/tools` plus `tests/unit/tools` = 4243 passed, 0 failed after removing the three resurrected `todos/` ticket copies the merge brought back. The one failure, `tests/integration/scenarios/test_entity_differentiation.py::test_bravery_quartile_combat_rate_2x` (population guard), is not from this batch: it fails identically on a clean `origin/main` (`1c59e01f4`).
 
 ## Files Changed
 
-_(not started)_
+`data/worlds/dungeon_crawl/{world.yaml,world_compile_report.json,resolved/*}`; `config/simulation_quality/corpus_registry.yaml`; `src/worldbuilding/cli.py` (shared `render_resolved_world_yaml`); `tests/integration/worldassembly/test_resolved_snapshot_freshness.py`; `tests/unit/worldassembly/test_corpus_diversity.py`; `tests/unit/rendering/{test_connectivity,test_density,test_shape,test_variants,frozen_dungeon_crawl}.py`; `tests/fixtures/world_grammar_reachability_baseline.json` (three `dungeon_crawl` lines removed); `tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml`; `docs/guidelines/intentional_divergences.md` (DEV-009); `docs/parity_ledger/substrate.yaml` (SUB-395); `agent-working/tickets/done/TCK-20260627-P1I-WORLD-BALANCE-FIX.md` (AC-6 note).
 
 ## Completion Summary
 
-_(not started)_
+The accepted dungeon_crawl balance remedy (2 modules, danger_scale 2, 12 entities) now runs: world.yaml, resolved/ and world_compile_report.json are updated, and guards assert every composition world's snapshot equals a fresh resolve and every compile report's content-derived counts equal a fresh compile. Blast radius handled: census pin 4 to 2, corpus registry regenerated, six rendering-evidence tests moved to a frozen fixture (which no longer detects rendering regressions in the live world; follow-up filed). DEV-009 and SUB-395 recorded; the 2026-06-27 ticket annotated as inert until now.

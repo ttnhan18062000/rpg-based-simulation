@@ -1,18 +1,16 @@
 {
-  "manifest_id": "prov_9cecbf3e5bdd46c3",
+  "manifest_id": "prov_68a9084f1c031e75",
   "world_id": "dungeon_crawl",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "ecc8ccad1b576536f1f6ed32acd81366bb733ca54063de00721f2848081e410a",
   "module_fingerprints": {
-    "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
-    "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71",
     "scalable_bandit_camp": "082f8715e9546c290140e123b62fcbc252117e4322c2324d3b728ab8a5daf9c1"
   },
-  "composition_fingerprint": "1fe2f95e42b219274f5089f6edb01f8a508bc377b1df48e08a9a53d375cebaa3",
+  "composition_fingerprint": "87d70919a83e39a11067e3ef9a37002552c7008b2bf03cfbf0d1d7be238f0ef4",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "9cecbf3e5bdd46c343e31bc75a09b19fef0df8ad64d9299280831d58a05711df",
-  "created_at": "2026-09-08T02:50:41.928756Z",
+  "content_fingerprint": "68a9084f1c031e75017eed64b062c0aac2bf9653ffb4b6b8442982e96e15003f",
+  "created_at": "2026-10-04T13:54:38.804698Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -206,337 +204,6 @@
         "description": "Spirit faction protecting sacred or haunted territories."
       }
     },
-    "goblin_camp": {
-      "element_id": "goblin_camp",
-      "element_type": "region",
-      "source_module": "goblin_camp_conflict",
-      "recipe_type": "region",
-      "parameters": {},
-      "profiles": {
-        "biome": "goblin_camp"
-      },
-      "details": {
-        "bounds": [
-          95,
-          20,
-          125,
-          55
-        ],
-        "terrain": "forest",
-        "hazard_level": 3.0,
-        "ecology_source": [
-          "goblin_camp_ecology"
-        ]
-      }
-    },
-    "goblin_raiding_party_goblin_scout": {
-      "element_id": "goblin_raiding_party_goblin_scout",
-      "element_type": "population",
-      "source_module": "goblin_camp_conflict",
-      "recipe_type": "population_recipe",
-      "parameters": {},
-      "profiles": {
-        "role": "scout",
-        "faction": "goblin_warband",
-        "stats_profile": "goblin_scout_base",
-        "inventory_profile": "goblin_looter_pouch",
-        "cognition_profile": "opportunistic_humanoid",
-        "compatibility_projection": {
-          "legacy_engine_role": "GUARD",
-          "legacy_engine_bucket": "MONSTER_HORDE"
-        }
-      },
-      "details": {
-        "count": 2,
-        "spawn_region": "goblin_camp",
-        "archetype_source": "goblin_scout",
-        "population_recipe_source": "goblin_raiding_party"
-      }
-    },
-    "goblin_raiding_party_goblin_raider": {
-      "element_id": "goblin_raiding_party_goblin_raider",
-      "element_type": "population",
-      "source_module": "goblin_camp_conflict",
-      "recipe_type": "population_recipe",
-      "parameters": {},
-      "profiles": {
-        "role": "raider",
-        "faction": "goblin_warband",
-        "stats_profile": "goblin_raider_base",
-        "inventory_profile": "goblin_looter_pouch",
-        "cognition_profile": "opportunistic_humanoid",
-        "compatibility_projection": {
-          "legacy_engine_role": "MONSTER",
-          "legacy_engine_bucket": "MONSTER_HORDE"
-        }
-      },
-      "details": {
-        "count": 4,
-        "spawn_region": "goblin_camp",
-        "archetype_source": "goblin_raider",
-        "population_recipe_source": "goblin_raiding_party"
-      }
-    },
-    "goblin_raiding_party_goblin_archer": {
-      "element_id": "goblin_raiding_party_goblin_archer",
-      "element_type": "population",
-      "source_module": "goblin_camp_conflict",
-      "recipe_type": "population_recipe",
-      "parameters": {},
-      "profiles": {
-        "role": "scout",
-        "faction": "goblin_warband",
-        "stats_profile": "goblin_archer_base",
-        "inventory_profile": "goblin_looter_pouch",
-        "cognition_profile": "opportunistic_humanoid",
-        "compatibility_projection": {
-          "legacy_engine_role": "GUARD",
-          "legacy_engine_bucket": "MONSTER_HORDE"
-        }
-      },
-      "details": {
-        "count": 2,
-        "spawn_region": "goblin_camp",
-        "archetype_source": "goblin_archer",
-        "population_recipe_source": "goblin_raiding_party"
-      }
-    },
-    "goblin_raiding_party_goblin_warlord": {
-      "element_id": "goblin_raiding_party_goblin_warlord",
-      "element_type": "population",
-      "source_module": "goblin_camp_conflict",
-      "recipe_type": "population_recipe",
-      "parameters": {},
-      "profiles": {
-        "role": "leader",
-        "faction": "goblin_warband",
-        "stats_profile": "warlord_base",
-        "inventory_profile": "boss_hoard_token",
-        "cognition_profile": "opportunistic_humanoid",
-        "compatibility_projection": {
-          "legacy_engine_role": "MONSTER",
-          "legacy_engine_bucket": "MONSTER_HORDE"
-        }
-      },
-      "details": {
-        "count": 1,
-        "spawn_region": "goblin_camp",
-        "archetype_source": "goblin_warlord",
-        "population_recipe_source": "goblin_raiding_party"
-      }
-    },
-    "rel_town_to_goblin_warband": {
-      "element_id": "rel_town_to_goblin_warband",
-      "element_type": "faction",
-      "source_module": "goblin_camp_conflict",
-      "recipe_type": "relationship",
-      "parameters": {},
-      "profiles": {
-        "source_faction": "town_council",
-        "target_faction": "goblin_warband",
-        "relationship_model": "security_hostility"
-      },
-      "details": {}
-    },
-    "rel_goblin_warband_to_town": {
-      "element_id": "rel_goblin_warband_to_town",
-      "element_type": "faction",
-      "source_module": "goblin_camp_conflict",
-      "recipe_type": "relationship",
-      "parameters": {},
-      "profiles": {
-        "source_faction": "goblin_warband",
-        "target_faction": "town_council",
-        "relationship_model": "raider_opportunity"
-      },
-      "details": {}
-    },
-    "quest_goblin_hunt_warlord": {
-      "element_id": "quest_goblin_hunt_warlord",
-      "element_type": "quest_definition",
-      "source_module": "goblin_camp_conflict",
-      "recipe_type": "quest_definition",
-      "parameters": {},
-      "profiles": {
-        "quest_type": "hunt"
-      },
-      "details": {
-        "tags": [
-          "goblin",
-          "conflict",
-          "bounty"
-        ],
-        "reward_budget": 150
-      }
-    },
-    "quest_goblin_fetch_stolen_goods": {
-      "element_id": "quest_goblin_fetch_stolen_goods",
-      "element_type": "quest_definition",
-      "source_module": "goblin_camp_conflict",
-      "recipe_type": "quest_definition",
-      "parameters": {},
-      "profiles": {
-        "quest_type": "fetch"
-      },
-      "details": {
-        "tags": [
-          "goblin",
-          "conflict",
-          "loot"
-        ],
-        "reward_budget": 100
-      }
-    },
-    "quest_goblin_defend_village_perimeter": {
-      "element_id": "quest_goblin_defend_village_perimeter",
-      "element_type": "quest_definition",
-      "source_module": "goblin_camp_conflict",
-      "recipe_type": "quest_definition",
-      "parameters": {},
-      "profiles": {
-        "quest_type": "defend"
-      },
-      "details": {
-        "tags": [
-          "goblin",
-          "conflict",
-          "defense"
-        ],
-        "reward_budget": 120
-      }
-    },
-    "old_mine": {
-      "element_id": "old_mine",
-      "element_type": "region",
-      "source_module": "old_mine_resource_loop",
-      "recipe_type": "region",
-      "parameters": {},
-      "profiles": {
-        "biome": "old_mine"
-      },
-      "details": {
-        "bounds": [
-          20,
-          60,
-          60,
-          105
-        ],
-        "terrain": "cave",
-        "hazard_level": 2.0,
-        "ecology_source": [
-          "old_mine_resource_ecology"
-        ]
-      }
-    },
-    "old_mine_spider_cluster_cave_spider": {
-      "element_id": "old_mine_spider_cluster_cave_spider",
-      "element_type": "population",
-      "source_module": "old_mine_resource_loop",
-      "recipe_type": "population_recipe",
-      "parameters": {},
-      "profiles": {
-        "role": "predator_hunter",
-        "faction": "wild_beast_pack",
-        "stats_profile": "cave_spider_base",
-        "inventory_profile": "empty_animal_inventory",
-        "cognition_profile": "instinctive_animal",
-        "compatibility_projection": {
-          "legacy_engine_role": "MONSTER",
-          "legacy_engine_bucket": "MONSTER_HORDE"
-        }
-      },
-      "details": {
-        "count": 5,
-        "spawn_region": "old_mine",
-        "archetype_source": "cave_spider",
-        "population_recipe_source": "old_mine_spider_cluster"
-      }
-    },
-    "old_mine_resource_loop__iron_vein_0": {
-      "element_id": "old_mine_resource_loop__iron_vein_0",
-      "element_type": "resource",
-      "source_module": "old_mine_resource_loop",
-      "recipe_type": "resource_layout",
-      "parameters": {},
-      "profiles": {
-        "resource_type": "iron_vein"
-      },
-      "details": {
-        "count": 8,
-        "region": "old_mine"
-      }
-    },
-    "old_mine_resource_loop__crystal_outcrop_1": {
-      "element_id": "old_mine_resource_loop__crystal_outcrop_1",
-      "element_type": "resource",
-      "source_module": "old_mine_resource_loop",
-      "recipe_type": "resource_layout",
-      "parameters": {},
-      "profiles": {
-        "resource_type": "crystal_outcrop"
-      },
-      "details": {
-        "count": 4,
-        "region": "old_mine"
-      }
-    },
-    "old_mine_resource_loop__silver_vein_2": {
-      "element_id": "old_mine_resource_loop__silver_vein_2",
-      "element_type": "resource",
-      "source_module": "old_mine_resource_loop",
-      "recipe_type": "resource_layout",
-      "parameters": {},
-      "profiles": {
-        "resource_type": "silver_vein"
-      },
-      "details": {
-        "count": 2,
-        "region": "old_mine"
-      }
-    },
-    "mine_entrance_0": {
-      "element_id": "mine_entrance_0",
-      "element_type": "building",
-      "source_module": "old_mine_resource_loop",
-      "recipe_type": "building_layout",
-      "parameters": {},
-      "profiles": {
-        "building_type": "mine_entrance"
-      },
-      "details": {
-        "region": "old_mine"
-      }
-    },
-    "rel_dwarves_to_goblins": {
-      "element_id": "rel_dwarves_to_goblins",
-      "element_type": "faction",
-      "source_module": "old_mine_resource_loop",
-      "recipe_type": "relationship",
-      "parameters": {},
-      "profiles": {
-        "source_faction": "dwarven_mine_clan",
-        "target_faction": "goblin_warband",
-        "relationship_model": "resource_security_hostility"
-      },
-      "details": {}
-    },
-    "quest_mine_fetch_ore": {
-      "element_id": "quest_mine_fetch_ore",
-      "element_type": "quest_definition",
-      "source_module": "old_mine_resource_loop",
-      "recipe_type": "quest_definition",
-      "parameters": {},
-      "profiles": {
-        "quest_type": "fetch"
-      },
-      "details": {
-        "tags": [
-          "resource",
-          "economy"
-        ],
-        "reward_budget": 80
-      }
-    },
     "haunted_battlefield": {
       "element_id": "haunted_battlefield",
       "element_type": "region",
@@ -625,7 +292,7 @@
       "source_module": "scalable_bandit_camp",
       "recipe_type": "region",
       "parameters": {
-        "danger_scale": 4
+        "danger_scale": 2
       },
       "profiles": {
         "biome": "bandit_road"
@@ -650,7 +317,7 @@
       "source_module": "scalable_bandit_camp",
       "recipe_type": "population",
       "parameters": {
-        "danger_scale": 4
+        "danger_scale": 2
       },
       "profiles": {
         "role": "scout",
@@ -658,7 +325,7 @@
         "stats_profile": null
       },
       "details": {
-        "count": 12,
+        "count": 6,
         "spawn_region": "bandit_road"
       }
     },
@@ -668,7 +335,7 @@
       "source_module": "scalable_bandit_camp",
       "recipe_type": "relationship",
       "parameters": {
-        "danger_scale": 4
+        "danger_scale": 2
       },
       "profiles": {
         "source_faction": "town_council",
@@ -683,7 +350,7 @@
       "source_module": "scalable_bandit_camp",
       "recipe_type": "relationship",
       "parameters": {
-        "danger_scale": 4
+        "danger_scale": 2
       },
       "profiles": {
         "source_faction": "bandit_company",
@@ -698,7 +365,7 @@
       "source_module": "scalable_bandit_camp",
       "recipe_type": "quest_definition",
       "parameters": {
-        "danger_scale": 4
+        "danger_scale": 2
       },
       "profiles": {
         "quest_type": "hunt"
@@ -718,7 +385,7 @@
       "source_module": "scalable_bandit_camp",
       "recipe_type": "quest_definition",
       "parameters": {
-        "danger_scale": 4
+        "danger_scale": 2
       },
       "profiles": {
         "quest_type": "fetch"
@@ -738,7 +405,7 @@
       "source_module": "scalable_bandit_camp",
       "recipe_type": "quest_definition",
       "parameters": {
-        "danger_scale": 4
+        "danger_scale": 2
       },
       "profiles": {
         "quest_type": "defend"
