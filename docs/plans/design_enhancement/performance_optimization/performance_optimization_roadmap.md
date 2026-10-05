@@ -171,6 +171,17 @@ decided:
    file is a perf scenario builder, not one of the four core files, and no open RPG-core ticket
    edits it. Metropolis numbers taken before the fix are not comparable with numbers taken after
    it, and both stay provisional.
+5. **`src/engine/governor.py` released (owner decision, 2026-10-05).** Item 2 held the governor
+   until the combat nondeterminism root cause was known. It is known:
+   `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` measured the divergence
+   with the governor in `NORMAL` throughout, and
+   `TCK-20261005-DIRTY-SET-DEDUPES-UPDATES-BY-ID-SO-RECYCLED-ADDRESSES-DROP-WORK` (PR #344) traced it
+   to `id()`-keyed de-duplication in `src/core/dirty.py` and removed it. The governor's
+   `RuntimeMode` transitions are cleared as a suspect, so the partial lift now covers
+   `governor.py` for `PERF-M1-T01`. The four core files stay gated, measurements stay provisional,
+   and no soft check becomes blocking. Full-lift progress on that date: criterion 1 still has the
+   salience ticket open; criterion 2 has Child A landed (PR #328) but row 7 (b) unconfirmed;
+   criterion 3 is unmet.
 
 ### Foundation slice that may start now
 

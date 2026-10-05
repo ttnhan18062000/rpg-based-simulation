@@ -44,7 +44,10 @@ filed in `agent-working/tickets/todos/perf-m1-partial-lift/`:
   half, is unfiled and gated.
 - An inventory refresh, `TCK-20261004-PERF-M1-PHASE-INVENTORY-REGEN`.
 
-T01 waits for `governor.py`. T05 waits for T01–T04.
+T01 waited for `governor.py`, which the owner released on 2026-10-05 (roadmap, "Gate definition
+and partial lift", item 5). It is filed as `TCK-20261005-PERF-M1-ZERO-CAPACITY-SIGNAL` in
+`agent-working/tickets/todos/perf-m1-zero-capacity/`. T05 waits for T01–T04, and T03b is still
+gated on `kernel.py`.
 
 T03 may close as a documented no-change result. T04 is verification-first: it must not modify the
 commit key unless its investigation proves a defect and a separately approved correction scope
