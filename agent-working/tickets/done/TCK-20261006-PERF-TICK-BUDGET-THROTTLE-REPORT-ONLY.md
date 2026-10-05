@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY
-phase: implement
+phase: done
 date: 2026-10-06
 tags: [performance, determinism, engine, testing]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, engine, testing]
 The kernel's wall-clock tick-budget checks report overruns instead of dropping results or forcing DEGRADED (PERF-D1 inputs 2 and 3)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -148,7 +148,7 @@ host-dependent through the governor. That half waits for the full no-touch windo
 - `docs/plans/design_enhancement/performance_optimization/rpg_core_handoff.md` (Responses, 2026-10-06)
 
 ## Related Stored Artifacts
-- none
+- `agent-working/stored_artifacts/TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY/` (investigation, plan, test_plan)
 
 ## Related Code Areas
 - `src/engine/kernel.py` (`_phase_resolution`, the end-of-tick check)
@@ -221,3 +221,9 @@ host-dependent through the governor. That half waits for the full no-touch windo
 - `docs/performance/wall_clock_inventory.{json,md}` (regenerated)
 
 ## Completion Summary
+The kernel's two wall-clock budget checks are report-only (PERF-D1 inputs 2 and 3): no mid-tick drop, no forced
+DEGRADED, no 9999 sentinel. Overruns are `RuntimeStatus.budget_overrun_*` telemetry that nothing in the governor or
+`AuthoritativeState` reads. Tests that leaned on the old behaviour were fixed (camp-raid reaches DEGRADED through a
+governor seam; work-debt sheds through a real non-authoritative periodic task). DEV-010, INFRA-423 and the wall-clock
+inventory are updated. Findings and follow-ups are recorded in Implementation Notes. Not verified locally:
+`test_milestone_b_closure` (fails the same on `main`) and the two long-run stability tests (CI-skipped).
