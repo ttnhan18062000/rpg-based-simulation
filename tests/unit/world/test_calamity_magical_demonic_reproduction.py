@@ -19,7 +19,8 @@ def _trigger_state(regions=None, feature_flags=None, tick=5000):
         tick=tick, seed=42,
         last_calamity_tick=0,
         regions=regions or {"wild": _region()},
-        feature_flags=feature_flags or {},
+        # decision 14: the calamity boss these tests assert alongside is inert unless this flag is ON
+        feature_flags={"ENABLE_WORLD_BOSS_SPAWN": "ON", **(feature_flags or {})},
     )
 
 

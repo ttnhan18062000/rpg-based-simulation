@@ -137,7 +137,7 @@ uv export --frozen --no-hashes --no-emit-project -o requirements.txt
 
 **After the Python Code Craft branch merges, every existing environment (the main checkout's
 `.venv`, other worktrees) must re-run `uv sync --system-certs` or `pip install -r requirements.txt`.**
-`ruff` and `complexipy` are now `lint` dependencies (the advisory `Code health (advisory)` and `Code health SARIF (advisory)` jobs sync them too), and the codebase-health snapshot measures with them
+`ruff` and `complexipy` are now `lint` dependencies (the `Code health` and `Code health SARIF (advisory)` jobs sync them too), and the codebase-health snapshot measures with them
 live, so tests such as `tests/codebase/test_codebase_health_snapshot.py`'s throwaway-repository tests fail
 in an older environment with `complexipy not found: install the project environment (uv sync)`. That
 failure is deliberate: the snapshot never silently skips its craft metrics. CI is unaffected because
@@ -148,17 +148,27 @@ export on an unchanged lock produces no diff. The export leaves out extras, so `
 `sentence-transformers`, `sqlite-vec` and `rank-bm25` never reach `requirements.txt`
 (`tests/static/test_ci_requirements_no_ml_stack.py` pins this).
 
-### Reading code-health results on a PR (advisory soak)
+### Reading code-health results on a PR
 
-Three advisory CI jobs report on a pull request; none of them can fail it during the soak (roadmap M4,
-`TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING` flips them after two weeks).
+Three CI jobs report on a pull request. Two block it since `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING`
+(roadmap decisions 8.5, 8.10, 8.18): `Code health` and `Type check`. The third, `Code health SARIF (advisory)`,
+is changed-line feedback only and stays advisory permanently (decision 8.19).
 
 1. **Job summary first** (the run's Summary page, which agents can read without special access):
-   `Code health (advisory)` (the ratchet over `src/`, new or worse violations, those in files the PR
-   changed first), `Code health SARIF (advisory)` (what the SARIF filter kept and dropped) and the typecheck
-   job's `mypy` step (new mypy errors and the baseline size). A failing check also leaves one
-   `::warning::` annotation; a tool that could not run says "could not run" in the summary and warning
-   instead of looking like a pass.
+   `Code health` (the ratchet over `src/`, new or worse violations, those in files the PR
+   changed first), `Code health SARIF (advisory)` (what the SARIF filter kept and dropped) and the
+   `Type check` job's `mypy` step (new mypy errors and the baseline size). A new or worse violation of ruff,
+   complexipy or a line count, a new mypy error, or a check that cannot run fails the job and leaves one
+   `::error::` annotation; a tool that could not run says "could not run" in the summary. A new or worse
+   ast-grep finding (rules N3, N4, E3, `codebase/rules/`) blocks too since
+   `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`. jscpd findings are **report-only**: listed and labelled in the
+   summary, never failing. The `Code health` job also runs `python3 -m codebase.structure.packages validate`: a
+   new top-level `src/` package without a row in `codebase/structure/package_registry.jsonl` (or a row for a
+   package that is gone) fails it; run that command locally to reproduce it. The one tolerated failure is jscpd
+   itself (it needs `npx` and
+   the npm registry): if it cannot run, the check says "jscpd could not run (report-only); its findings were not
+   measured" in the summary and as a `::warning::`, leaves its registry rows alone and still exits 0, so a local
+   `make code-health` without network prints that note instead of exiting 2. `seed` and `tighten` never skip a tool.
 2. **Code scanning second** (the PR's Files view and the Security tab, category `code-health`):
    `Code health SARIF (advisory)` uploads findings in the PR's changed `src/**/*.py` files that the
    registry does not already hold. SARIF results have no identity, so the filter works per ratchet unit: a
@@ -167,12 +177,36 @@ Three advisory CI jobs report on a pull request; none of them can fail it during
    shown when its cognitive complexity is above its row's ceiling. The job runs only for pull requests from
    this repository (a fork's token is read-only) and uploads an empty SARIF when no `src` Python file
    changed, so the upload path is exercised on every such PR. If the upload is rejected, enabling code
-   scanning for the repository is an owner setting; the job stays green either way. Security note: this job
+   scanning for the repository is an owner setting; the job stays green either way (decision 8.19). Security note: this job
    runs the PR's own `uv.lock`, `pyproject.toml` and `tools/` while it holds `security-events: write`; that is
    accepted only because the `if` keeps fork PRs out and a same-repository author already has write access.
    Do not widen that `if` (for example to `pull_request_target`) without a new security review.
 3. Locally: `make code-health` (ratchet), `make typecheck-py` (mypy through the baseline) and
    `python3 -m codebase.gates.sarif_feedback --changed FILE --out SARIF` (the SARIF the job would upload).
+
+### Reading the import-contract result (advisory)
+
+The `Import contracts` step is the last step of the `code-health` CI job. It runs the import-linter contracts in
+`codebase/structure/importlinter.toml` (`TCK-20261004-IMPORT-LINTER-ADOPTION`) and can never fail the job: the
+command exits 0 whatever it finds and the step has its own `continue-on-error`. `Code health` is a required check
+(`TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING`), but this step stays advisory: a broken contract is a summary line
+and a `::warning::`, never a red required check. Blocking is a separate, later step
+(`TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`).
+
+- **Job summary:** one line `Import contracts (advisory): N kept, M broken` (plus stale ignored imports), then each
+  broken contract by name. One `::warning::` annotation appears when a contract is broken, stale or could not
+  run ("could not run" is shown instead of looking like a pass).
+- **A broken contract** means a new import crosses a boundary: the `layers` contract (order from
+  `codebase/structure/package_registry.jsonl`, 135 existing upward imports held in
+  `codebase/structure/import_layers_baseline.txt`) or one of the class E and loophole contracts. Run locally for the
+  import lines. **A stale ignored import** means an excepted import no longer exists: delete its entry.
+- **Locally:** `make import-contracts` (the same step), or for the full import lines
+  `uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml` (`lint-imports` is in
+  the `lint` group). After a registry change: `python3 -m codebase.structure.import_contracts` rewrites the
+  generated `layers` block, `--check` reports a stale one; `seed-baseline` accepts the current violations (a
+  deliberate reseed, never to hide a new import).
+- The existing `tests/architecture/` import tests still run beside the contracts; nothing is retired until
+  `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`.
 
 ### Git hooks (opt-in)
 
@@ -207,7 +241,7 @@ automatically (no make target, script, CI step or session hook), and CI stays th
   want exactly that. `post-merge` (from `make setup-merge-drivers`) and every other hook are never touched.
 - **Bypass.** `git commit --no-verify` skips the hooks. Use it only with the owner's say-so (for example
   owner-approved debt, or fixing the gate itself), never to get a new violation past the ratchet; CI runs the
-  same check advisory during the soak and will report it anyway.
+  same check as a required check and will fail the PR anyway.
 - **Uninstall.** `make uninstall-prek-hooks` removes prek's pre-commit shim (restoring a legacy hook, if
   any) and removes `post-commit` only if it is byte-identical to the repository's reindex hook.
 - **Verify in a scratch clone, never here.** To try the hooks, `git clone --no-hardlinks` the repository into a

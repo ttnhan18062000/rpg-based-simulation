@@ -216,8 +216,93 @@ mechanism's own design doesn't have to re-derive this boundary.
 
 ---
 
+## LOC-08 — Where region bounds overlap, a point belongs to the region with the higher authored precedence, and that one answer serves every consumer
+
+> Region bounds may overlap. Where they do, a contested point belongs to exactly one region: the
+> one with the higher **authored precedence**. Precedence is declared in content, is fixed for the
+> world's lifetime, and is the same answer for every consumer that asks "which region is this
+> point in": event credit (trauma and every other per-region tally), terrain paint, and the
+> region's environment (its hazard kind and level, per ENV-02). It is never derived from area,
+> distance to a region's centre, processing order, or any mutable region state (region `kind`,
+> trauma, owner).
+>
+> 1. A module may order its own regions against each other.
+> 2. Order between regions from different modules is declared at the world composition level
+>    (`world.yaml`), because a module cannot see the neighbours it will be composed with.
+> 3. A composition declaration overrides a module declaration for the pairs it names. Where
+>    nothing is declared:
+>    - **(a)** if one region's bounds fully contain the other's, the contained region wins;
+>    - **(b)** any other undeclared overlap falls back to the resolved world's declaration
+>      order, deterministically;
+>    - **(c)** every undeclared partial overlap is reported (advisory), and a region that no
+>      point resolves to is an error: a declared region that contains nothing breaks LOC-01 and
+>      LOC-03.
+> 4. The resolved world (`resolved/`) carries the final total order. Every consumer reads that
+>    one order.
+
+**Disposition: ACCEPT — ratified by the owner, 2026-10-05** (owner decision 13; decision 11
+had already permitted overlap and declined enforcing disjointness). Passes the admission test:
+LOC-01 requires one answer per point under the declared model but does not say how a contested
+point resolves, and nothing else in the catalog did. Without this Rule, two consumers held
+opposite answers on the same tiles: terrain paint let the last-processed region win (an
+alphabetical accident of module sorting across modules), while the region lookup let the
+smallest-area region win.
+
+**Why authored, not derived.** Each derived candidate failed against the repository:
+- *Smallest area* was implemented and measured, and failed. The overlaps are partial, not
+  nested, so area is not specificity: the thin `bandit_road` strip won every point it touched.
+  Full nesting (3a) is the one case where "the smaller region *is* the place" holds.
+- *Region type* cannot rank most pairs: 19 of 23 module regions are `wilderness`. It is also not
+  identity-stable. The compiler sets `RegionState.kind = r_spec.type.upper()`
+  (`compiler.py:476`), and `TransformationService` rewrites `kind` at runtime, so a point's
+  region would move when the land burns.
+- *Nearest centre* is geometry by another name (against LOC-03), and it misbehaves for linear
+  regions such as roads.
+- *Sharing credit* across every containing region breaks LOC-01 under today's one-region-per-point
+  model. A layered model (one answer per layer: landscape, route, settlement) would be the
+  principled form of multiple membership. It is future feature work, parked by memo row 7.
+
+**Why it changes behaviour, not only bookkeeping.** The hazard that drains an entity is read
+through the same point-to-region lookup, so precedence decides exposure. Under the ratified
+frontier declarations, undead on battlefield ground stop dying of a neighbouring region's
+hazard, travellers on the road through `near_forest` take the road's hazard rather than the
+forest's, and a town nested in a forest applies the town's lower hazard.
+
+**Authoring vocabulary (guidance, not law).** The ratified declarations follow one ordering by
+authored role: settlement, then occupied site, then event site, then route, then
+territory/landscape. That is a way to choose declarations. It is not a schema field and it is
+not the region `type`. The ratified pair list lives in owner decision 13.
+
+**Region ids are not places.** Five ids (`bandit_road`, `haunted_battlefield`, `hometown`,
+`near_forest`, `wolf_den`) name different bounds in different worlds. That is why declarations
+live where the geometry is composed (clause 2), not on bare ids.
+
+**Repository evidence: CONFLICTING, at `544b1d341`.** Measured over all 24 resolved worlds:
+15 have overlapping regions, 14 beyond one-tile edges, and every overlapping pair has one
+geometry wherever it occurs. Under the bare fallback (3b), `trading_hometown` (nested in
+`near_forest`) owns 0 of its 1296 tiles in three worlds, which is why 3a exists. The terrain
+painter already behaves that way today. Bible 06 claimed regions are "strictly disjoint by
+default, enforced" behind `allow_overlapping_regions`, a field every world sets `false` and no
+production code reads. That claim was false, and the field is to be deleted.
+
+**How this Rule is refuted.**
+1. *Consistency:* on any corpus world, a tile whose terrain-owning region differs from its
+   lookup region.
+2. *Fiction:* contested-zone deaths dominated by the declared loser's population (for example,
+   pass travellers dying where the battlefield is declared winner). That declaration should then
+   flip, or its geometry is a content defect.
+3. *Shadowing:* a region left with zero owned tiles.
+4. *Stability:* a fixed point whose region changes across a runtime transformation.
+
+**Scenarios:** none traced yet. One is owed when the lookup and painter are unified: a road
+crossing a forest, a town nested in a forest, and an undeclared partial overlap.
+
+---
+
 ## Cross-domain links recorded here
 
+- LOC-08 → Environment (ENV-02: the resolved region's environment is the exposure), World
+  dynamics (per-region event credit), Places (TERR-05: region geometry is not territory)
 - LOC-01 → Identity (ID-01, location as ordinary state that doesn't affect identity)
 - LOC-02 → Reach (REACH-01/REACH-02, the same "connection ≠ distance" discipline restated
   spatially). **Corrected 2026-09-21:** Magic/supernatural and Groups/organizations &

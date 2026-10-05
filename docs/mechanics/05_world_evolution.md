@@ -27,13 +27,27 @@ The simulation operates on a fixed-rate tick system. Every action and biological
 Regions are not static. They react to the violence and activity within their borders through the **Trauma Score**.
 
 ### The Trauma Cycle
-1.  **Event**: Every entity death in a region adds **+1.0** to the regional `Trauma Score`
-    (`src/engine/world_dynamics.py:54-55`, confirmed 2026-09-02).
+1.  **Event**: Every entity death **with a violent cause** in a region adds **+1.0** to the regional `Trauma Score`
+    (`src/engine/world_dynamics.py`, rule `ENV-07`, owner decision 15, 2026-10-05; **implemented**, DEV-011).
+    A death is violent when its recorded combat outcome is a terminal combat result (`KILL`, `DEFEAT`;
+    `VIOLENT_DEATH_OUTCOME_KINDS` in `src/core/violent_cause.py`). **Ambient attrition does not count**:
+    environmental hazard drain (`HAZARD`), starvation and other passive drain, and natural death are exposure,
+    not unrest. The test is the recorded cause, not whether a killer exists; a future declared catastrophe
+    (a plague) is admitted by its own owner decision, by adding its cause to that one set. Measured basis: of
+    2,144 deaths across the 24 corpus worlds (10,000 ticks, `audit_mode`), 2,112 were `HAZARD` and 31 `DEFEAT`.
+    **Decided, not yet implemented (owner, 2026-10-05; catalog ENV-07): a wounded-then-drained death still
+    counts.** The implemented rule judges a death by the cause recorded on its lethal update, so a death that
+    hazard drain finishes after combat wounded the entity is recorded `HAZARD` and does not count yet. No
+    authoritative record of an entity's recent attacker damage exists (the engine keeps none), so counting it
+    needs one; measured, it changes nothing today: 0 of the 2,112 corpus `HAZARD` deaths had taken attacker
+    damage at any earlier tick.
 2.  **Threshold**: If `Trauma Score > 50.0`, the region enters an unstable state.
 
-**Flagged, not yet resolved, 2026-09-02:** `src/engine/apply_plan.py:218` applies a separate `+2.0` trauma
-increment in a context this section's death-only narrative doesn't cover. Not confirmed wrong — just
-undocumented; needs its own follow-up check before this cycle description can be called complete.
+**Building destruction (resolved, 2026-10-05):** `src/engine/apply_plan.py` adds a separate **+2.0** when a
+functional building's HP reaches 0, **only when the destruction is violent** (`is_violent_building_destruction`:
+the update carries a damaging `hp_delta`). The cause was verified at implementation: the only producer of a
+negative building `hp_delta` is `SabotageService` (`src/engine/sabotage.py`), an actor deliberately damaging the
+building; maintenance insolvency only clears `functional`.
 3.  **Hazard Scaling**: Unstable regions gain **+0.01** `Hazard Level` per world cycle.
 
 > For how per-entity Hazard Level drain is actually resolved against an entity standing in
@@ -321,7 +335,7 @@ demographic signal, and this path already never *reads* the population-pressure 
 
 ## 6. Calamities & World Threats
 When the global `Maturity` and regional `Trauma` scores are sufficiently high, the simulation triggers "Macro Events."
-*   **Boss Spawns**: Unique, high-threat entities appear in traumatized regions.
+*   **Boss Spawns**: Unique, high-threat entities appear in traumatized regions. **Inert while the feature is deferred** (owner decision 14, 2026-10-05): all three branches (`BossService.check_for_boss_spawn`, `BossService.check_for_lair_spawn`, and the calamity boss in `CalamityService.process_world_dynamics`) spawn only when `ENABLE_WORLD_BOSS_SPAWN` is `ON` (default `OFF`). The code, gates and thresholds are unchanged; the calamity trigger still advances `last_calamity_tick` either way.
 *   **Raids**: Faction-based attacks on town centers or resource hubs.
 *   **Threat Evolution**: Monsters in high-hazard regions evolve to higher `Evolution Levels`, becoming deadlier and granting better rewards.
 
