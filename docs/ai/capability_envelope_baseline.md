@@ -98,6 +98,12 @@ python3 tools/capability_envelope_baseline.py diff --settings-path <path>
   entry it appends. `--settings-path` defaults to `.claude/settings.local.json` under the repo
   root; always pass it explicitly when auditing a different machine's file.
 - `list` — print every registered entry.
+- **Hooks** (`field` = `hooks`): `seed` and `diff` also read the `hooks` of the shared
+  `.claude/settings.json` (`--hooks-path`, default that file; nothing else in it is audited).
+  One row per configured hook command, value `<event>|<matcher>|<command>` (matcher empty when the
+  group has none). A new hook shows in `diff` as an `out_of_envelope` value, a removed one in the hooks-only `not_in_live` list, and an edited one as both.
+  A missing or unreadable file, or a missing `hooks` key, yields no rows and never raises. Still
+  audit-only and read-only: no `settings*.json` is ever written.
 - `diff` — compare a live `settings.local.json` against the registry, printing a JSON report with
   one section per field: `in_envelope` and `out_of_envelope` value lists. If the target file
   doesn't exist, reports `{"status": "no_local_file", "fields": {}}` rather than raising.
