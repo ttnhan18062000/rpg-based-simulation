@@ -2234,6 +2234,12 @@ mechanisms:
         the class's other method is live and binding the class would read as a live mechanism. The
         fix stays with TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES. Consumer of the dead
         input: `refugee_displacement`. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/
+        **Rule ratified 2026-10-05 (owner decision 10, catalog ENV-06):** calamity is the escalation
+        of PROLONGED instability (trauma held above the instability threshold), not a per-event
+        increment. The method bound above (a single hero death in a hazard > 0.5 region) is
+        therefore NOT the producer to wire. When the escalation producer is implemented, rebind
+        `implemented_by` to it and move `state`. World-boss emergence is deferred by the owner and is
+        not evidence for this entry.
   - id: world_boss_spawn
     layer: world
     systems: [world]
