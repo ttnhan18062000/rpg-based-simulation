@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from src.core.updates import StateUpdate, EntityUpdate
     from src.engine.cadence import SystemCadence
 
+from src.core.violent_cause import is_violent_building_destruction
 from src.core.enums import ReasonCode
 from src.core.state import CorpseState
 from src.core.updates import decode_owner_faction_id_set
@@ -223,7 +224,7 @@ class ApplyPlanBuilder:
                     if b_upd.inventory:
                         new_inv = InventoryService.apply_update(new_inv, b_upd.inventory)
                     new_prc = b_upd.price_modifiers_set if b_upd.price_modifiers_set is not None else bld.price_modifiers
-                    is_death = bld.functional and new_hp == 0
+                    is_death = bld.functional and new_hp == 0 and is_violent_building_destruction(b_upd.hp_delta)  # ENV-07: only violent destruction is unrest
                     new_buildings[b_id] = replace(bld, hp=new_hp, functional=False if new_hp == 0 else new_func, inventory=new_inv, price_modifiers=new_prc)
                     if is_death:
                         cols.add("regions")

@@ -183,7 +183,7 @@ host-dependent through the governor. That half waits for the full no-touch windo
   `PeriodicDefinition`, and nothing in `src/` registers one, so `dropped_count` is always 0 in shipped runs. The
   throttle and the 9999 sentinel were the only source of `dropped_work`. After this change `total_dropped_work` is
   0 in shipped runs; the planner's assumption "the scheduler still sheds under DEGRADED" holds only for a
-  scheduler that has a non-authoritative periodic task. Recorded in DEV-010.
+  scheduler that has a non-authoritative periodic task. Recorded in DEV-012.
 - **Follow-ups (perf-planner files them):** (1) surfacing `budget_overrun_*` in engine_manager, the live snapshot and Prometheus; (2) `test_milestone_b_closure` failing on `origin/main` (164 ms lands in SURVIVAL, mock clock-read count drift); (3) no `src/` path registers a `PeriodicDefinition`, so governor shedding is a no-op in shipped runs (feeds PERF-M1-T05 and the governor-half design).
 - **Not done.** Surfacing `budget_overrun_*` where `dropped_work_delta` is surfaced (engine_manager,
   live snapshot, Prometheus, `observability.py`): not small, left out. The overrun is visible in
@@ -217,13 +217,13 @@ host-dependent through the governor. That half waits for the full no-touch windo
 - `src/engine/kernel.py`, `src/engine/runtime_status.py`, `src/engine/governor.py` (comment only)
 - `tests/integration/kernel/test_tick_budget_report_only.py` (new)
 - `tests/integration/world/test_camp_raid_targeting.py`, `tests/integration/kernel/test_work_debt_stays_empty_in_production.py`
-- `docs/engine/deterministic_execution.md`, `docs/guidelines/intentional_divergences.md` (DEV-010), `docs/parity_ledger/infrastructure.yaml` (INFRA-423)
+- `docs/engine/deterministic_execution.md`, `docs/guidelines/intentional_divergences.md` (DEV-012), `docs/parity_ledger/infrastructure.yaml` (INFRA-423)
 - `docs/performance/wall_clock_inventory.{json,md}` (regenerated)
 
 ## Completion Summary
 The kernel's two wall-clock budget checks are report-only (PERF-D1 inputs 2 and 3): no mid-tick drop, no forced
 DEGRADED, no 9999 sentinel. Overruns are `RuntimeStatus.budget_overrun_*` telemetry that nothing in the governor or
 `AuthoritativeState` reads. Tests that leaned on the old behaviour were fixed (camp-raid reaches DEGRADED through a
-governor seam; work-debt sheds through a real non-authoritative periodic task). DEV-010, INFRA-423 and the wall-clock
+governor seam; work-debt sheds through a real non-authoritative periodic task). DEV-012, INFRA-423 and the wall-clock
 inventory are updated. Findings and follow-ups are recorded in Implementation Notes. Not verified locally:
 `test_milestone_b_closure` (fails the same on `main`) and the two long-run stability tests (CI-skipped).

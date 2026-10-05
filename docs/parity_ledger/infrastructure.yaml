@@ -12768,7 +12768,7 @@
   v2_evidence: src/engine/kernel.py (Kernel._phase_resolution, Kernel._report_budget_overrun); src/engine/runtime_status.py (RuntimeStatus.record_budget_overrun)
   proof_type: regression
   test_path: tests/integration/kernel/test_tick_budget_report_only.py
-  divergence_note: DEV-010 in docs/guidelines/intentional_divergences.md
+  divergence_note: DEV-012 in docs/guidelines/intentional_divergences.md
   support_boundary: The governor's tick_compute_ms input (PERF-D1 input 1) still moves the mode by host speed;
     runs with audit_mode off stay host-dependent through it. Overrun telemetry is not yet surfaced in
     engine_manager, the live snapshot or Prometheus.
