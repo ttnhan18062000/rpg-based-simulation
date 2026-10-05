@@ -9,6 +9,8 @@ not just that it runs without error.
 
 import subprocess
 from pathlib import Path
+
+import pytest
 from tools.agent_working_paths import AGENT_MONITORING, TICKETS
 
 from codebase.reports import codebase_health_baseline as chb
@@ -223,6 +225,9 @@ def test_dependency_import_name_override():
 # ---------------------------------------------------------------------------
 
 
+# The `git log --shortstat` churn walk costs about 28 s per call and this test pays it twice (in-process and via make):
+# ~59-65 s against the 60 s default budget (TCK-20261005-CODE-HEALTH-MAKE-TARGET-TESTS-LOCAL-TIMEOUT).
+@pytest.mark.resource_budget_large
 def test_make_target_runs_successfully_with_plausible_values():
     result = subprocess.run(
         ["make", "codebase-health-baseline"],

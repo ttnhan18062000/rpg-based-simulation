@@ -325,6 +325,9 @@ def test_scorecard_with_zero_snapshots_does_not_crash():
 # ---------------------------------------------------------------------------
 
 
+# The `git log --shortstat` churn walk costs about 28 s per call and this test pays it twice (in-process and via make):
+# ~59-65 s against the 60 s default budget (TCK-20261005-CODE-HEALTH-MAKE-TARGET-TESTS-LOCAL-TIMEOUT).
+@pytest.mark.resource_budget_large
 def test_make_target_runs_successfully_end_to_end(tmp_path):
     history_path = tmp_path / "history.jsonl"
 
