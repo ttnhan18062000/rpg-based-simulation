@@ -31,6 +31,10 @@ Regions are not static. They react to the violence and activity within their bor
     (`src/engine/world_dynamics.py:54-55`, confirmed 2026-09-02).
     The region is the one the death position resolves to (`06_worldbuilding_foundation.md`, Region Overlap Resolution):
     one death credits exactly one region, and a death in unclaimed space credits none.
+    **Decided, not yet implemented (owner, 2026-10-05; catalog ENV-07):** only deaths with a
+    violent cause count. Deaths from ambient attrition do not: hazard drain, starvation and
+    other passive drain, natural death. A wounded-then-drained death still counts. The line
+    above describes the code until that change lands.
 2.  **Threshold**: If `Trauma Score > 50.0`, the region enters an unstable state.
 
 **Flagged, not yet resolved, 2026-09-02:** `src/engine/apply_plan.py:218` applies a separate `+2.0` trauma
