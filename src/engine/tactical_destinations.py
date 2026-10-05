@@ -56,6 +56,27 @@ def _clamp_into(region: "RegionState", pos: Position) -> Position:
     return (min(max(pos[0], float(xmin)), float(xmax)), min(max(pos[1], float(ymin)), float(ymax)))
 
 
+def _away_destination(
+    region: "RegionState", here: Position, threat_positions: list[Position]
+) -> Optional[Position]:
+    """The point one RETREAT_STEP directly away from the threats, clamped into ``region``.
+
+    None when the threats give no direction (they cancel out) or the clamped point is no farther from the
+    nearest threat than the entity already is (cornered).
+    """
+    away_x = sum(here[0] - p[0] for p in threat_positions)
+    away_y = sum(here[1] - p[1] for p in threat_positions)
+    norm = math.hypot(away_x, away_y)
+    if norm <= _EPSILON:
+        return None
+    candidate = _clamp_into(
+        region, (here[0] + away_x / norm * RETREAT_STEP, here[1] + away_y / norm * RETREAT_STEP)
+    )
+    nearest_now = min(_manhattan(here, p) for p in threat_positions)
+    nearest_then = min(_manhattan(candidate, p) for p in threat_positions)
+    return candidate if nearest_then > nearest_now + _EPSILON else None
+
+
 def retreat_destination(
     state: "AuthoritativeState",
     entity: "EntityState",
@@ -74,24 +95,13 @@ def retreat_destination(
     threat_positions = sorted(t.navigation.position for t in threats)
 
     if region is not None and threat_positions:
-        away_x = sum(here[0] - p[0] for p in threat_positions)
-        away_y = sum(here[1] - p[1] for p in threat_positions)
-        norm = math.hypot(away_x, away_y)
-        if norm > _EPSILON:
-            candidate = _clamp_into(
-                region,
-                (here[0] + away_x / norm * RETREAT_STEP, here[1] + away_y / norm * RETREAT_STEP),
-            )
-            nearest_now = min(_manhattan(here, p) for p in threat_positions)
-            nearest_then = min(_manhattan(candidate, p) for p in threat_positions)
-            if nearest_then > nearest_now + _EPSILON:
-                return candidate
+        away = _away_destination(region, here, threat_positions)
+        if away is not None:
+            return away
 
     home_id = entity.strategic.home_region_id
     home = state.regions.get(home_id) if home_id else None
-    if home is not None:
-        return home.center
-    return None
+    return home.center if home is not None else None
 
 
 def wander_destination(state: "AuthoritativeState", entity: "EntityState") -> Optional[Position]:
