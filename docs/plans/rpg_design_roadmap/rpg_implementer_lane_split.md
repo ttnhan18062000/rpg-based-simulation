@@ -40,7 +40,7 @@ src/domains/{perception,motivation,emotion,memory,information,belief_institution
 src/systems/{social_systems,strategic_systems}/
 src/systems/{narrative,social_contract,social_memory,learning,routine,redirection}.py
 src/engine/{combat,combat_rewards,cognition,legality,faction_decision,faction_constants,
-            interaction,behavior_consumers,candidate_selector,tactical}.py
+            interaction,behavior_consumers,candidate_selector,tactical,worker_logic}.py
 ```
 
 Bible chapters **02** (combat laws) and **04** (strategic cognition). Parity ledger
@@ -97,6 +97,7 @@ conflict risk, and they are governed by a claim, not by a boundary:
 src/core/**                      (state, entities, registries, conservation)
 src/engine/kernel.py             and the 7-phase loop contract
 src/engine/{apply,apply_plan,executor,governor}.py   (the authoritative mutation path)
+src/engine/scheduler.py          (sequences both lanes' work and implements the Sticky-Task Law of docs/engine/kernel.md)
 src/engine/checkpoint.py         (`CanonicalStateHasher` — the determinism instrument both lanes measure with)
 src/observability/**             src/api/**
 docs/mechanics/**                docs/engine/**
@@ -111,7 +112,9 @@ ticket. `tests/architecture/**` additionally routes to `testing-planner` — ask
 **An unlisted `src/engine/` file is a documentation defect, not a free-for-all.** §2's `src/engine/`
 enumerations are explicit lists, not prefixes. Three files were found unlisted on 2026-10-05 while
 dispatching tickets that name them (`tactical.py`, `world_dynamics.py`, `checkpoint.py`) and were
-ruled into Lane A, Lane B and the contested surface respectively. If a fourth appears, get a planner
+ruled into Lane A, Lane B and the contested surface respectively. Two more were ruled on 2026-10-05 while fixing
+`TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK`: `worker_logic.py` is Lane A (agent-side
+execution dispatch, the same seam as `tactical.py`) and `scheduler.py` is contested (it sequences both lanes' work). If a fourth appears, get a planner
 ruling and add it here in the same batch — do not infer ownership from the directory.
 
 ## 4. The rules that actually prevent the collisions

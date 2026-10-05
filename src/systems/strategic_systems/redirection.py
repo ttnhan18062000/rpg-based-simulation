@@ -112,14 +112,22 @@ class StrategicRedirectionSystem:
                     active_obj = next((o for o in project.objectives if o.id == obj_id), None)
                     if active_obj and active_obj.status == ObjectiveStatus.ACTIVE:
                         # If the objective has a target (e.g. harvesting node)
-                        target_pos = getattr(active_obj, 'target_position', None)
-                        if target_pos:
-                             has_nav_update = True
-                             if entity.navigation.target != target_pos:
-                                 existing_nav = ent_upd.navigation or NavigationUpdate()
-                                 new_nav = replace(existing_nav, target_set=target_pos)
-                                 ent_upd = replace(ent_upd, navigation=new_nav)
-                                 refined_entity_updates[e_id] = ent_upd
+                        # Entity-typed objective (TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK):
+                        # strategy names WHICH entity; the tactical pass resolves WHERE to step this tick. Writing the
+                        # creation-time `target_position` snapshot here dragged the entity back to a stale point one
+                        # strategic pass after its pursuit ended. The objective still owns the direction, so the
+                        # "no other navigation update" fallbacks below stay suppressed, but no point is set.
+                        if getattr(active_obj, 'target_entity_id', None) is not None:
+                            has_nav_update = True
+                        else:
+                            target_pos = getattr(active_obj, 'target_position', None)
+                            if target_pos:
+                                 has_nav_update = True
+                                 if entity.navigation.target != target_pos:
+                                     existing_nav = ent_upd.navigation or NavigationUpdate()
+                                     new_nav = replace(existing_nav, target_set=target_pos)
+                                     ent_upd = replace(ent_upd, navigation=new_nav)
+                                     refined_entity_updates[e_id] = ent_upd
             
             # 3. Case: Return to Town (Fallback if no blockers or no leads)
             # Only if no navigation target was set in this tick and we have items

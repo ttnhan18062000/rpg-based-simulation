@@ -4496,3 +4496,34 @@
   support_boundary: The target-absent-from-state branch was never observed (dead entities
     stay in state.entities) and is covered by a unit test only. SocialContractScorer
     also puts an entity id in target_id and is not typed here (TCK-20261005-SOCIAL-CONTRACT-OBJECTIVE-TARGETS-A-MOVING-COUNTERPARTY-AS-A-FIXED-POINT).
+- id: COMB-329
+  text: 'TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK:
+    a pursuit ENTITY_MOVE (movement mode PURSUE, payload target_id) ends when the
+    live target is within the entity''s attack reach: both ENTITY_MOVE dispatchers
+    return the task to the idle encoding (ENTITY_ACT, empty payload) and clear the
+    navigation target, so the decision pass runs at the entity''s next brain cadence
+    instead of never. Non-PURSUE moves carrying a target_id and dead or missing targets
+    are unchanged. For an objective with target_entity_id the strategic redirection
+    writers set no navigation point (they still claim the navigation); the tactical
+    pass resolves the live position.'
+  v2_evidence: src/engine/candidate_selector.py (pursuit_reached_attack_range, pursuit_completion_update),
+    src/engine/executor.py and src/engine/worker_logic.py (ENTITY_MOVE branches),
+    src/systems/strategic_systems/intelligence.py and redirection.py (entity-typed
+    objective branch).
+  test_path: tests/unit/engine/test_pursuit_completion.py::TestDispatchers::test_local_executor_ends_a_pursuit_that_reached_range;
+    tests/unit/strategic/test_redirection_entity_objective.py::test_entity_typed_objective_writes_no_navigation_point
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  proof_type: regression
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.68.
+  support_boundary: 'Effect sizes were taken on origin/main 544b1d341 (dirty-set determinism
+    fix included): after-fix counts repeat exactly across two runs (values), the
+    clean-main control is one run (a sample). Tile-swap ticks fall by two orders of
+    magnitude on crowded_frontier, frontier_living_world and urban_political, but
+    decision-path attacks barely move (frontier_living_world 5 to 7) and crowded_frontier
+    stays at 0 (the brain cadence, the flee gate and BRACKETING repositioning moves,
+    which this change deliberately does not end, are the next gates). Opportunity-attack
+    counts on frontier_living_world (38 to 644) and crowded_frontier (488 to 283)
+    moved in opposite directions and are unexplained. The intelligence.py redirection
+    branch has no direct unit test; only redirection.py does.'
