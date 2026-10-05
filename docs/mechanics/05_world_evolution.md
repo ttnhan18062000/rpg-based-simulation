@@ -29,6 +29,10 @@ Regions are not static. They react to the violence and activity within their bor
 ### The Trauma Cycle
 1.  **Event**: Every entity death in a region adds **+1.0** to the regional `Trauma Score`
     (`src/engine/world_dynamics.py:54-55`, confirmed 2026-09-02).
+    **Decided, not yet implemented (owner, 2026-10-05; catalog ENV-07):** only deaths with a
+    violent cause count. Deaths from ambient attrition do not: hazard drain, starvation and
+    other passive drain, natural death. A wounded-then-drained death still counts. The line
+    above describes the code until that change lands.
 2.  **Threshold**: If `Trauma Score > 50.0`, the region enters an unstable state.
 
 **Flagged, not yet resolved, 2026-09-02:** `src/engine/apply_plan.py:218` applies a separate `+2.0` trauma
