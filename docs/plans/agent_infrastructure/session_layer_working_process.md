@@ -607,7 +607,7 @@ problem (sandboxing, separate OS users) outside this plan; nothing here is an ad
   (no lease recorded -> ask); merge, governing-file, authority-file and remote-deletion -> ask for every role;
   push/open_pr -> ask without a grant; uncertain -> ask. `workflow_run` is not enforced here (the Workflow tool is not
   Bash/Edit/Write) and `delete_worktree_or_data` stays with the M5A permission rules. Wired last in `PreToolUse` with
-  matcher `Bash|Edit|Write|MultiEdit|NotebookEdit` behind a wrapper that treats a missing script as a pass: a bare
+  matcher `Bash|Edit|Write|MultiEdit|NotebookEdit|SendMessage` (SendMessage added by M5C for the advisory message-class check) behind a wrapper that treats a missing script as a pass: a bare
   `python3` on a missing file exits 2 and would block every tool call.
 - **Authority-file integrity: governing-file class, no external pin in v1.** Changes to
   `registries/session_authority.yaml` go through the user's literal-diff confirmation (as `CLAUDE.md`

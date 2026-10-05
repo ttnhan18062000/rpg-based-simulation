@@ -43,6 +43,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 try:
+    from tools.sessions import boundary as bd
     from tools.sessions import classify as cl
     from tools.sessions import state as st
     from tools.sessions.resolve import AGENT_PREFIX
@@ -167,11 +168,31 @@ def _emit(stdout, decision: str, reason: str) -> None:
     }}) + "\n")
 
 
+def _emit_advisory(stdout, text: str) -> None:
+    stdout.write(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": text}}) + "\n")
+
+
+def _advise(payload: dict, stdout) -> None:
+    """M5C advisory `role_boundary` warning for a call the guard let through. Never a decision, never raises."""
+    try:
+        if _IMPORT_ERROR is not None or str(payload.get("tool_name", "")) not in (*bd.EDIT_TOOLS, bd.MESSAGE_TOOL):
+            return
+        root = st.state_root(str(payload.get("cwd") or "."))
+        roster = load_roster()
+        caller = resolve_caller(payload, roster, root)
+        text = bd.advise(payload, caller, roster, root)
+        if text:
+            _emit_advisory(stdout, text)
+    except Exception:  # noqa: BLE001 - advisory only: a failure here must not touch the tool call
+        return
+
+
 def _guard(payload: dict, stdout) -> int:
     if _IMPORT_ERROR is not None:
         raise _IMPORT_ERROR
     classification = cl.classify(str(payload.get("tool_name", "")), payload.get("tool_input") or {})
     if not classification.is_authority:
+        _advise(payload, stdout)
         return 0
     cwd = str(payload.get("cwd") or ".")
     root = st.state_root(cwd)
