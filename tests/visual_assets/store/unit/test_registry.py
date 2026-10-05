@@ -55,14 +55,16 @@ def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_ot
     assert registry.file_hash == "sha256:" + hashlib.sha256(data).hexdigest()
 
 
-def test_committed_catalog_holds_only_the_pilot_asset():
-    # one key (above), its three adopted slot sources and what was derived from them; exact contents: tests/visual_assets/test_catalog_integrity.py
-    expected = {"sources": ["terrain_forest", "terrain_forest_bush", "terrain_forest_tree"],
-                "generated": ["terrain_forest--x1", "terrain_forest_bush--x1", "terrain_forest_tree--x1"], "manifests/candidates": ["pilot"]}
+def test_committed_catalog_holds_the_pilot_forest_and_the_adopted_terrain_v1_sources():
+    # the forest's three slot sources and what was derived from them (artifacts and release candidates: forest only) plus the 31 sources of the owner's adoption of terrain-v1 on 2026-10-05T18:17:03Z;
+    # exact contents: tests/visual_assets/adopted_facts.py and test_catalog_integrity.py
+    from tests.visual_assets import adopted_facts as af
+
+    expected = {"sources": af.ADOPTED_SOURCES, "generated": af.GENERATED, "manifests/candidates": ["pilot"]}
     for sub, names in expected.items():
         assert sorted(p.name for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep") == names, sub
     for sub in ("provenance/adoptions", "provenance/intake"):
-        assert len([p for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep"]) == (3 if sub.endswith("adoptions") else 6), sub
+        assert len([p for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep"]) == (af.ADOPTION_COUNT if sub.endswith("adoptions") else af.INTAKE_FILE_COUNT), sub
     assert [p.name for p in (config.CATALOG_ROOT / "build-config").iterdir() if p.name != ".gitkeep"] == ["export.toml"]  # rules, not an asset
     assert {p.name for p in (config.CATALOG_ROOT / "fixtures").iterdir()} == {"contracts"}
     assert "fixture" not in [p.name for p in (config.CATALOG_ROOT / "definitions").iterdir()]

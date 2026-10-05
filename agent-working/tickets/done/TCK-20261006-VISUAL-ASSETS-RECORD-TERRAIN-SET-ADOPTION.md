@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-VISUAL-ASSETS-RECORD-TERRAIN-SET-ADOPTION
-phase: open
+phase: done
 date: 2026-10-06
 tags: [architecture, testing, live-map]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing, live-map]
 Record the user's adoption of draft set terrain-v1 and re-point the seven guards that described the pre-adoption catalog
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -47,10 +47,10 @@ pre-adoption world ("the catalog holds only the forest", "nothing is adopted") n
 - Changing any adopted art, the registry, the compositor or the AM5 rules. Revocation. Any `src/` change.
 
 ## Acceptance Criteria
-- [ ] Adoption files committed unchanged (the committed bytes equal what the store wrote; catalog `verify` clean, `draft verify` clean).
-- [ ] The seven guards pass, each pinned to exact facts (adoption id, hash, counts, per-slot facts); none loosened or skipped; the snapshot guard compares file list and hashes.
-- [ ] Docs say what is adopted and that no release candidate covers the new slots.
-- [ ] Commit message names the changed assertions and the adoption timestamp.
+- [x] Adoption files committed unchanged (the committed bytes equal what the store wrote; catalog `verify` clean, `draft verify` clean).
+- [x] The seven guards pass, each pinned to exact facts (adoption id, hash, counts, per-slot facts); none loosened or skipped; the snapshot guard compares file list and hashes.
+- [x] Docs say what is adopted and that no release candidate covers the new slots.
+- [x] Commit message names the changed assertions and the adoption timestamp.
 
 ## Related Tickets
 - TCK-20261005-EPIC-VISUAL-ASSET-TERRAIN-SET-REVIEW (epic), TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-MASKS (previous), TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN (next)
@@ -68,9 +68,15 @@ pre-adoption world ("the catalog holds only the forest", "nothing is adopted") n
 - The gitignored quarantine is untouched by this ticket.
 
 ## Implementation Notes
+156 files written by `adopt-set` committed unchanged (hashes in `adoption_files_sha256.txt`, checked against the committed blobs). `tests/visual_assets/adopted_facts.py` holds the exact facts; the seven guards compare with equality only. Changed assertions, and why (the user adopted terrain-v1 on 2026-10-05T18:17:03Z): catalog integrity (sources are the 34 adopted; one more test pins the set adoption record), `test_registry` (catalog contents, 34 adoptions, 68 intake files), `test_detail_axis` (the per-source detail map now includes 22 tiles with no detail and 9 masks with v1-v3), `test_adoption::test_the_committed_catalog_is_never_touched_by_these_tests` (counts 34/34/68/1 set adoption/0 revocations and the exact names; it was a count test, so only the expectation moved), `test_terrain_draft_set` (drafts as history: `draft_set.json` still hashes to the adopted hash and every entry has its adoption), `test_store_tools_stdio` (34 sources, 3 artifacts, 4 release candidates) and `test_server_stdio` (sources equal the 34). No assertion loosened or skipped.
+Docs: store_contract, fallback_safety (the 30-case finding is now history, the re-tint and the AM5-S result are stated with their honest meaning), pilot_terrain_key. Stated plainly everywhere: no release candidate or runtime export covers the 31 new slots (rc-0004 is the forest only).
+Not done here (by design): `rc-0005`, a build of the new sources, the `session_handoff` snapshots (the rerun ticket refreshes them), the m1 register and charter (no clause's evidence changed).
 
 ## Test Summary
+`tests/visual_assets` 1543 passed (foreground, 2 GB cap); catalog `verify` store ok; `draft verify` drafts ok.
 
 ## Files Changed
+visual_assets/catalog/ (156 new files: 31 adoptions, 31 sources, 62 intake provenance files, 1 set adoption, plus their companions); tests/visual_assets/{adopted_facts.py (new),test_catalog_integrity.py,test_terrain_draft_set.py,store/unit/test_registry.py,store/unit/test_adoption.py,store/unit/test_detail_axis.py,drawing/test_store_tools_stdio.py,drawing/integration/test_server_stdio.py}; docs/assets/{store_contract,fallback_safety,pilot_terrain_key}.md; agent-working/.
 
 ## Completion Summary
+The owner's adoption of `terrain-v1` (tiles and border masks) is recorded in the repository byte for byte, the guards describe the new truth with exact equality, and the docs say what is adopted and that no release candidate covers it. Next: the M5 rerun.

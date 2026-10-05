@@ -74,8 +74,10 @@ a style note. The known findings, all open and none resolved here:
 - Even the flat fills are close under some vision types. The smallest differences between flat fills, simulated for protanopia, deuteranopia and tritanopia, include `terrain.lava` / `terrain.jungle`
   (dE 0.8, protan), `terrain.forest` / `terrain.desert` (1.5, deutan) and `terrain.forest` / `terrain.volcanic` (2.8, protan)
   (`agent-working/stored_artifacts/TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET/cvd_pairs.txt`).
-- The 22 unadopted terrain drafts of set `terrain-v1` have 30 pair-and-vision cases that are more than 2.0 dE closer than the flat fills and under dE 10, the worst involving
-  `terrain.dungeon_entrance` (the same file). These are drafts, not shipped art; the finding is that adopting them as they are would make some pairs harder to tell apart than the fallback is.
+- The first 22 terrain drafts of set `terrain-v1` had 30 pair-and-vision cases that were more than 2.0 dE closer than the flat fills and under dE 10, the worst involving
+  `terrain.dungeon_entrance` (the same file). `TCK-20261005-VISUAL-ASSETS-TERRAIN-V1-COLOUR-VISION-REDRAW` re-tinted all 22 onto their fills; the set as adopted by the owner on 2026-10-05T18:17:03Z passes the
+  `AM5-S` rule (0 of 1012 pair-visions fail), which by construction means only "no worse than the flat fills". The closest pair-vision is still 0.86 dE because the fills themselves are that close (lava/jungle, protan),
+  so a pass is not "every terrain is told apart by shape". No release candidate covers these slots yet, so none of this art reaches the game.
 - `AM5-W05` for the one adopted tile is `INCONCLUSIVE` for the same reason: terrain types are told apart by hue on the normal map, and Forest and Desert are nearly identical under deuteranopia
   with the fill as well (`docs/assets/surface_rehearsal_result.md`).
 
