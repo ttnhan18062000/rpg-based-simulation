@@ -67,7 +67,7 @@ absent result as information and it carries none.
 3. **Policy (owner decision):** steps 6 and 7 run whether step 5 passes or fails. Both get `if: ${{ !cancelled() }}`, not `always()`, so a cancelled run stays cancelled. The upload step keeps its `if: always()`.
 4. **Make it loud:** a closing step (`if: ${{ !cancelled() }}`) writes one line per test step to `$GITHUB_STEP_SUMMARY`, read from `steps.<id>.outcome`.
 5. **Pin it:** `tests/static/test_ci_slow_job_step_gating.py`, mutation-checked.
-6. **Measurement after merge:** the first `main` push run's real outcome for steps 6-7 is recorded in this ticket by the reviewer (it may be red; that is information).
+6. **Measurement after merge:** the first `main` push run's real outcome for steps 6-7 is measured by `test-architecture-reviewer` on the first `main` push run after merge; the record is committed by `test-architecture-implementer` in the next test-architecture batch (it may be red; that is information).
 
 ## Out of Scope
 - Fixing `test_bravery_quartile_combat_rate_2x` (closed 2026-10-05, test-file-only fix),
@@ -83,7 +83,7 @@ absent result as information and it carries none.
 - [x] The skip mechanism for steps 6-7 is named (`.github/workflows/test.yml`, `slow` job, steps without `if:`).
 - [x] Steps 6 and 7 carry `!cancelled()`; none of steps 5-7 uses `always()` or `continue-on-error`; a summary step reports the three outcomes (pinned by `tests/static/test_ci_slow_job_step_gating.py`; removing step 6's `if:` fails it).
 - [x] The gating-policy decision is recorded with who decided: the owner, 2026-10-05, relayed by `test-architecture-reviewer`.
-- [ ] Step 6's real result on the first `main` push after merge: **post-merge, recorded by the reviewer**; cannot be known before the merge by construction. Whatever it is, a red result files its own ticket.
+- [ ] Step 6's real result on the first `main` push after merge: **post-merge, measured by `test-architecture-reviewer` on the first `main` push run after merge; the record is committed by `test-architecture-implementer` in the next test-architecture batch**; cannot be known before the merge by construction. Whatever it is, a red result files its own ticket.
 
 ## Related Tickets
 - `TCK-20261005-BRAVERY-QUARTILE-GUARD-RED-ON-MAIN-UNOWNED` (closed 2026-10-05) — produced this
@@ -145,4 +145,4 @@ _(none yet)_
 - the record-only edits listed under Implementation Notes
 
 ## Completion Summary
-Steps 6 (slow tests incl. 5k behavioral regression) and 7 (legacy regression) of the `slow` job now run unless the run is cancelled (`if: ${{ !cancelled() }}`), and a closing step writes the outcome of steps 5-7 to the job summary. Shape pinned by `tests/static/test_ci_slow_job_step_gating.py` (6 tests, mutation-checked) and the updated whole-job pin. Step 5's failure cause was not investigated (parked by the owner). **Known gap stated, not hidden:** the last acceptance criterion, step 6's real result on the first `main` push after merge, cannot be known before the merge; the reviewer records it in this ticket, and a red result files its own ticket. The batch also carried the hotfix and sibling tickets, the maintenance-4 record paragraphs and the SIMQ correction listed under Implementation Notes.
+Steps 6 (slow tests incl. 5k behavioral regression) and 7 (legacy regression) of the `slow` job now run unless the run is cancelled (`if: ${{ !cancelled() }}`), and a closing step writes the outcome of steps 5-7 to the job summary. Shape pinned by `tests/static/test_ci_slow_job_step_gating.py` (6 tests, mutation-checked) and the updated whole-job pin. Step 5's failure cause was not investigated (parked by the owner). **Known gap stated, not hidden:** the last acceptance criterion, step 6's real result on the first `main` push after merge, cannot be known before the merge; it is measured by `test-architecture-reviewer` on the first `main` push run after merge; the record is committed by `test-architecture-implementer` in the next test-architecture batch, and a red result files its own ticket. The batch also carried the hotfix and sibling tickets, the maintenance-4 record paragraphs and the SIMQ correction listed under Implementation Notes.
