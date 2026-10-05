@@ -12,19 +12,19 @@ Generated from `registries/mechanisms.yaml` + `registries/system_registry.jsonl`
 
 **"Bound, Unverified" is this view's most actionable column.** It splits `unverified` into two problems with different costs that the per-mechanism view doesn't separate: *bound-but-unverified* (a real `implemented_by` binding exists — the expensive part, locating the code, is already done, so this is the cheapest verification target available) versus *unbound-and-unverified* (`unverified` minus this column — we don't even know where to look yet, and investigation has to happen before verification can start).
 
-**Baseline (all 104 mechanisms)**: 93 bound (89.4%), 95 verified (91.3% — 46 runtime, 49 static, 48.4% of verified is runtime), 9 unverified (0 of those bound-but-unverified). State breakdown: done 54, partial 14, gap 11, orphan 16, gated 9, skeleton 0.
+**Baseline (all 108 mechanisms)**: 97 bound (89.8%), 99 verified (91.7% — 50 runtime, 49 static, 50.5% of verified is runtime), 9 unverified (0 of those bound-but-unverified). State breakdown: done 58, partial 14, gap 11, orphan 16, gated 9, skeleton 0.
 
-**Runtime Share is a property of the verification method, not of coverage — track it separately.** `Verified` counts mechanisms confirmed by *any* instrument; `code_trace` (the code says it should work) and `scenario`/`corpus_run` (the simulation actually did it) are not interchangeable evidence, and a batch of code_trace-only re-confirmations can raise `Verified` while silently lowering `Runtime Share` — exactly what happened in `TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN` (batch 3 of the unbound-claims program), whose 20 new `code_trace` verifications moved the registry-wide runtime share from 27% to 48.4% while `Verified` itself grew. Neither number tells the whole story alone.
+**Runtime Share is a property of the verification method, not of coverage — track it separately.** `Verified` counts mechanisms confirmed by *any* instrument; `code_trace` (the code says it should work) and `scenario`/`corpus_run` (the simulation actually did it) are not interchangeable evidence, and a batch of code_trace-only re-confirmations can raise `Verified` while silently lowering `Runtime Share` — exactly what happened in `TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN` (batch 3 of the unbound-claims program), whose 20 new `code_trace` verifications moved the registry-wide runtime share from 27% to 50.5% while `Verified` itself grew. Neither number tells the whole story alone.
 
 | System | Mechanisms | Bound (vs baseline) | Verified (vs baseline) | Runtime Share of Verified (vs baseline) | Bound, Unverified | done | partial | gap | orphan | gated | skeleton |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `cognition` | 22 | 21/22 (95.5%, +6.0pt vs baseline) | 22/22 (100.0%, +8.7pt vs baseline) [14 runtime, 8 static] | 14/22 (63.6%, +15.2pt vs baseline) | 0 | 10 | 0 | 1 | 6 | 5 | 0 |
-| `combat` | 8 | 8/8 (100.0%, +10.6pt vs baseline) | 8/8 (100.0%, +8.7pt vs baseline) [4 runtime, 4 static] | 4/8 (50.0%, +1.6pt vs baseline) | 0 | 6 | 1 | 0 | 1 | 0 | 0 |
-| `economy` | 12 | 11/12 (91.7%, +2.2pt vs baseline) | 11/12 (91.7%, +0.3pt vs baseline) [5 runtime, 6 static] | 5/11 (45.5%, -3.0pt vs baseline) | 0 | 8 | 1 | 1 | 2 | 0 | 0 |
-| `faction` | 14 | 11/14 (78.6%, -10.9pt vs baseline) | 11/14 (78.6%, -12.8pt vs baseline) [4 runtime, 7 static] | 4/11 (36.4%, -12.1pt vs baseline) | 0 | 7 | 3 | 3 | 1 | 0 | 0 |
-| `progression` | 15 | 15/15 (100.0%, +10.6pt vs baseline) | 15/15 (100.0%, +8.7pt vs baseline) [8 runtime, 7 static] | 8/15 (53.3%, +4.9pt vs baseline) | 0 | 8 | 5 | 0 | 0 | 2 | 0 |
-| `social` | 12 | 9/12 (75.0%, -14.4pt vs baseline) | 9/12 (75.0%, -16.3pt vs baseline) [2 runtime, 7 static] | 2/9 (22.2%, -26.2pt vs baseline) | 0 | 5 | 2 | 3 | 2 | 0 | 0 |
-| `world` | 34 | 30/34 (88.2%, -1.2pt vs baseline) | 31/34 (91.2%, -0.2pt vs baseline) [16 runtime, 15 static] | 16/31 (51.6%, +3.2pt vs baseline) | 0 | 20 | 3 | 4 | 5 | 2 | 0 |
+| `cognition` | 22 | 21/22 (95.5%, +5.6pt vs baseline) | 22/22 (100.0%, +8.3pt vs baseline) [14 runtime, 8 static] | 14/22 (63.6%, +13.1pt vs baseline) | 0 | 10 | 0 | 1 | 6 | 5 | 0 |
+| `combat` | 8 | 8/8 (100.0%, +10.2pt vs baseline) | 8/8 (100.0%, +8.3pt vs baseline) [4 runtime, 4 static] | 4/8 (50.0%, -0.5pt vs baseline) | 0 | 6 | 1 | 0 | 1 | 0 | 0 |
+| `economy` | 12 | 11/12 (91.7%, +1.9pt vs baseline) | 11/12 (91.7%, +0.0pt vs baseline) [5 runtime, 6 static] | 5/11 (45.5%, -5.1pt vs baseline) | 0 | 8 | 1 | 1 | 2 | 0 | 0 |
+| `faction` | 14 | 11/14 (78.6%, -11.2pt vs baseline) | 11/14 (78.6%, -13.1pt vs baseline) [4 runtime, 7 static] | 4/11 (36.4%, -14.1pt vs baseline) | 0 | 7 | 3 | 3 | 1 | 0 | 0 |
+| `progression` | 15 | 15/15 (100.0%, +10.2pt vs baseline) | 15/15 (100.0%, +8.3pt vs baseline) [8 runtime, 7 static] | 8/15 (53.3%, +2.8pt vs baseline) | 0 | 8 | 5 | 0 | 0 | 2 | 0 |
+| `social` | 12 | 9/12 (75.0%, -14.8pt vs baseline) | 9/12 (75.0%, -16.7pt vs baseline) [2 runtime, 7 static] | 2/9 (22.2%, -28.3pt vs baseline) | 0 | 5 | 2 | 3 | 2 | 0 | 0 |
+| `world` | 38 | 34/38 (89.5%, -0.3pt vs baseline) | 35/38 (92.1%, +0.4pt vs baseline) [20 runtime, 15 static] | 20/35 (57.1%, +6.6pt vs baseline) | 0 | 24 | 3 | 4 | 5 | 2 | 0 |
 | `unassigned` | 0 | 0/0 (n/a) | 0/0 (n/a) | 0/0 (n/a) | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 `unassigned` mechanism count is 0 — a mechanism with no declared system renders here explicitly rather than being silently dropped, same discipline as `mechanisms_by_system()`'s own `"unassigned"` key.
