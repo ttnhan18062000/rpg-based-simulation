@@ -112,6 +112,20 @@ The CLI is a read-only gate: it never writes a tracked file. The registry check 
 rewriting it. The Finalize step that does regenerate it is `--regenerate-registry` on the CLI
 (or `make docs-registry`); the formal pipeline's own call regenerates by default.
 
+Every regeneration (`generate_registry.py`, `make docs-registry`, the post-merge hook, the closure
+tool, Finalize) indexes only files git tracks or has staged, so an untracked draft under `docs/` or
+`agent-working/tickets/` never reaches a committed registry. A `git archive` export or any root that
+is not a git top level is indexed as before. A closing ticket that is not yet committed reaches the
+registry in two ways: the closure tool and the Finalize check pass it (and its stored artifacts) as
+`include`, and `generate_registry.py --include-untracked PATH` does the same by hand. For a bare
+`make docs-registry`, `git add` the closing ticket first.
+
+Closing a ticket also leaves no stale copy behind: `check_ticket_finalized` fails naming a
+same-basename file under `agent-working/tickets/todos/` (any subfolder), and
+`record_hand_orchestrated_closure.py` deletes the `todos/` and `inprogress/` copies of the ticket it
+closes and prints which. This covers tickets filed directly into `todos/`, which CLAUDE.md "After Work"
+does not mention; the CLAUDE.md wording is unchanged because the tooling makes the omission loud.
+
 The CLI also prints `[advisory]` lines from `run_advisory_checks()`, currently two (`OK`/`WARN`/`NA`):
 `test_plan_proof_fields` lists the mandatory `## Proof Plan` fields (defined in
 `.claude/agents/investigator.md`) missing from a standard ticket's `test_plan.md`; and

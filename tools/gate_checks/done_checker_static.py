@@ -1185,6 +1185,13 @@ def check_ticket_finalized(ticket_id: str) -> tuple[str, str]:
         problems.append(f"{flat_done_path} does not exist (flat or one-level-deep under agent-working/tickets/done/)")
     if inprogress_path.exists():
         problems.append(f"{inprogress_path} still exists")
+    todos_dir = TICKETS / "todos"
+    if todos_dir.is_dir() and done_path.exists():
+        # TCK-20261005-CLOSE-LEAVES-STALE-TODOS-COPY-FOR-DIRECTLY-FILED-TICKETS: a ticket filed straight into
+        # todos/ keeps its copy unless someone deletes it; the PR-time resurrection corpus test would catch it
+        # only after the close is done.
+        for stale in sorted(todos_dir.rglob(f"{ticket_id}.md")):
+            problems.append(f"stale copy {stale} still exists under todos/ (delete it; the closure tool removes it)")
 
     if problems:
         return ("FAIL", "; ".join(problems))
@@ -1349,7 +1356,11 @@ def check_registry_entry_regenerated(
     regen_note = ""
     if regenerate:
         try:
-            exit_code = generate_registry(resolved_root, output_path)
+            exit_code = generate_registry(
+                resolved_root, output_path,
+                include=[posix(TICKETS / "done" / f"{ticket_id}.md"), posix(TICKETS / "done" / "*" / f"{ticket_id}.md"),
+                         posix(STORED_ARTIFACTS / ticket_id)],
+            )
             if exit_code != 0:
                 regen_note = f"generate_registry() exited {exit_code} (unrelated doc frontmatter gap)"
         except Exception as exc:  # noqa: BLE001 - regen must never block ticket close
