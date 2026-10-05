@@ -1,4 +1,4 @@
-"""The colour-vision check of a whole draft set, as predeclared in `docs/assets/pilot_terrain_m5_criteria.md` (section "Set colour-vision rule").
+"""The colour-vision check of a whole draft set, as predeclared in `docs/assets/pilot_terrain_m5_criteria.md` (section "AM5-S: the set colour-vision rule").
 
 Reuses the pilot check's Machado simulation, Lab and CIE76 code (`pilot_colour_vision`); nothing is copied. For every unordered pair of terrain keys and each
 vision it compares the distance between the two tiles' mean colours (`dE_tile`) with the distance between the two flat fills (`dE_fill`). Pure Python, read-only.

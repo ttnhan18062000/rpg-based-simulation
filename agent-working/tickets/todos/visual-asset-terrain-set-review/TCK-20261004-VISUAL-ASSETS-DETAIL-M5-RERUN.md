@@ -55,6 +55,7 @@ child and re-scoped against the adopted `terrain-v1` set. Starts only after the 
 - Redrawing (child 2); changing any rule or criterion.
 
 ## Acceptance Criteria
+- [ ] The whole-map scene code lands with a test asserting the layout predeclared in `docs/assets/pilot_terrain_m5_criteria.md` (AM5-W03-SET): every one of the 23 codes present, a 3 x 3 patch per code, forest cells include plain, bush and tree. The W05 result is quoted together with forest bush/tree's protan/deutan closeness to other tiles (informational, not in the verdict).
 - [ ] Each affected check rerun on the adopted set and recorded with its result; unaffected checks listed with the reason.
 - [ ] User review of the whole-map scene recorded (their own answers).
 - [ ] Overall M5 verdict stated as measured (it may stay INCONCLUSIVE).

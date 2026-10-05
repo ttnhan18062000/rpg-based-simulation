@@ -111,4 +111,4 @@ The reviewer is the user (owner), looking at native-scale captures (device pixel
 Predeclared layout: the draft preview page's 40 x 24 map (`terrainAt(x, y)` in `frontend/src/visualAssets/terrainDrafts.ts`, every one of the 23 codes in patches), native 16-pixel
 cells, smoothing off. Forest cells take their slot through the client's own `pickDetail` (FNV-1a, seed 1), so plain, bush and tree are mixed as in the Live Map. Markers (copied constants as in
 the pilot scene, identical in both canvases): in row-major order the first six Forest cells carry hero, goblin, wolf, store, inn, goblin_warrior; the first Swamp cell carries a goblin and the first
-Mountain cell a hero. A test asserts that the layout contains every code, that every code has a 3 x 3 patch, and that forest cells include all three slots.
+Mountain cell a hero. A test, added with the scene code in `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN` (not yet written), asserts that the layout contains every code, that every code has a 3 x 3 patch, and that forest cells include all three slots.
