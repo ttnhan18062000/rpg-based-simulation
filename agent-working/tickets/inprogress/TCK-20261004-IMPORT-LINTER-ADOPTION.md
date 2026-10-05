@@ -75,7 +75,7 @@ None.
 ## Assumptions / Open Questions
 - The `exclude_type_checking_imports` option is global, while the tests differ on `TYPE_CHECKING`: decide the single setting and accept the changed semantics for the rules that disagree (decision recorded in Implementation Notes)
 - `src/engine/intent` has no `__init__.py` inside a regular package and stays uncovered (accepted by the owner, 2026-10-04)
-- Conflicts with PR #329 (merge 2026-10-18): `.github/workflows/test.yml`, roadmap, `agent_working_environment.md`, possibly `pyproject.toml`, and this ticket file; the planner is told which files conflict before any resolution
+- Conflicts with PR #329 (merge 2026-10-18): `.github/workflows/test.yml`, roadmap, `agent_working_environment.md`, possibly `pyproject.toml`, and this ticket file; the planner is told which files conflict before any resolution. The roadmap's decision 20 sits directly below #329's decisions 18 and 19 (an adjacent-hunk conflict on merge day); the `Import contracts` step sits right after the `Package registry` step that #329 also touches
 
 ## Implementation Notes
 ### Decision: `exclude_type_checking_imports = false` (global, 2026-10-05)
