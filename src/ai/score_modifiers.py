@@ -1,5 +1,6 @@
 # Compliance IDs: COMB-093, COMB-094, COMB-095, COMB-096, COMB-097, COMB-098, COMB-099
 from __future__ import annotations
+from dataclasses import replace
 from typing import List
 from src.ai.goals.base import GoalScore
 from src.core.state import EntityState, AuthoritativeState
@@ -63,12 +64,7 @@ class ScoreModifierSystem:
             else:
                  utility = max(0.0, utility)
             
-            modified_scores.append(GoalScore(
-                kind=score.kind,
-                utility=utility,
-                target_id=score.target_id,
-                target_pos=score.target_pos,
-                metadata=score.metadata
-            ))
+            # replace(), not a field-by-field rebuild: a rebuild silently dropped target_entity_id.
+            modified_scores.append(replace(score, utility=utility))
             
         return modified_scores

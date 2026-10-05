@@ -44,12 +44,12 @@ this helper) — confirmed via a repo-wide reference search finding no productio
 
 ## 4. Retreat & Disengage Rules (GAP-T03)
 - **Retreat Threshold**: Triggered when `hp < max_hp * 0.2`.
-- **Behavior**: Entity clears current combat intent and moves towards the defined "Safe Zone" (Default: (0,0)).
+- **Behavior**: Entity clears current combat intent and moves away from the perceived threats, clamped to stay inside its current region (`src/engine/tactical_destinations.py::retreat_destination`, one perception radius of 10 beyond itself). If no away-vector keeps it inside the region (cornered, or no threat vector), it heads for the centre of its own `strategic.home_region_id` region when set; otherwise it **holds position**. The destination is never a sentinel coordinate: the previous "Safe Zone (0,0)" was outside every region in the corpus worlds (World Rules `MOV-01`, `LOC-01`, `LOC-03`, `MOV-03`; `docs/guidelines/intentional_divergences.md` §2.66, `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN`). The same derivation serves the `PANIC_RETREAT` and `SAFETY_PRESSURE_RETREAT` reasons.
 
 ## 5. Anti-Stalemate Rules (GAP-T05)
 - **Deadlock Detection**: Tracks `stale_ticks` in the task payload.
 - **Trigger**: If `stale_ticks > 10` without a target change or outcome, the entity forces a `STALEMATE_BREAK`.
-- **Behavior**: Same as Retreat.
+- **Behavior**: A different semantic from Retreat: a `WANDER` to a seeded (`DeterministicRNG`, `Domain.TACTICAL`, scoped by tick and entity id), nearby (half-width 5), region-contained point (`wander_destination`). An entity that is itself outside every region holds position.
 
 ## 6. Known Exclusions
 - **Group Coordination**: Entities currently act as individuals (group coordination not yet implemented).
@@ -75,6 +75,19 @@ branch (`evaluate_entity_intent`). Resolution order:
    the real target position was already known and carried on `target_position` all along.
    Mirrors `StrategicIntelligenceSystem._resolve_active_objective()`'s own "detour" case, which
    already prefers `target_position` this same way.
+
+**Typed entity target (`TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES`).**
+When `obj.target_entity_id` is set, resolution **precedes** steps 1-3 and replaces them: the position is the
+live entity's `navigation.position` from `state.entities`; a dead or missing entity yields
+`(None, None, None)` with **no** `target_position` fallback (the snapshot is exactly the stale value the
+typed field exists to avoid, and the int-cast in step 1 could resolve an entity id equal to a node or
+building id to the wrong place). The strategic pass ends such an objective
+(`StrategicIntelligenceSystem._entity_target_outcome`): target dead -> objective `RESOLVED`, project
+`COMPLETED`; target gone from state or beyond `ENTITY_TARGET_PERCEPTION_RADIUS` (10, Manhattan) -> objective
+`FAILED`, project `ABANDONED`. Every objective without the field takes steps 1-3 unchanged. In the live
+tree a combat objective is `defeat_enemy`, which neither pursuit branch handles (engagement is the hostile
+branch), so the typed resolve is exercised by `reach_location` objectives that carry the field, such as a
+resumed `COMBAT_ENGAGE` committed intention.
 
 **Node 3 never yields `node_id`/`building_id`** — an objective resolved only via the
 `target_position` fallback still navigates to the position, but arrival dispatches to a bare

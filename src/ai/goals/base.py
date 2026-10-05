@@ -12,6 +12,9 @@ class GoalScore:
     target_id: Optional[str] = None
     target_pos: Optional[tuple[float, float]] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
+    # Set only by a scorer whose goal is about a specific moving entity; copied into
+    # ObjectiveState.target_entity_id at objective creation.
+    target_entity_id: Optional[int] = None
 
 class GoalScorer(Protocol):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:

@@ -19,7 +19,7 @@ from types import SimpleNamespace
 from src.content.repository import CatalogRepository
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
-from src.core.state import AuthoritativeState
+from src.core.state import AuthoritativeState, RegionState
 from src.engine.behavior_consumers import configure_behavior_consumers, reset_behavior_consumers
 from src.engine.tactical import TacticalDecisionSystem
 
@@ -163,6 +163,24 @@ def test_safety_pressure_above_threshold_triggers_retreat():
     reason = (update.task.payload_set or {}).get("reason", "")
     assert reason == "SAFETY_PRESSURE_RETREAT", \
         f"Expected SAFETY_PRESSURE_RETREAT, got {reason!r}"
+
+
+def test_safety_pressure_retreat_target_is_inside_a_region_and_away_from_the_threat():
+    """The retreat destination is region-contained (MOV-01/LOC-01), not the world origin."""
+    merchant = _hero(1, pos=(20.0, 20.0), drive_profile_id="cautious_commoner")
+    attacker = _monster(2, pos=(20.0, 19.0))
+    region = RegionState(id="field", name="Field", bounds=(5, 5, 40, 40))
+
+    state = AuthoritativeState(
+        tick=1, seed=1, entities={1: merchant, 2: attacker}, regions={"field": region}
+    )
+    update = TacticalDecisionSystem.evaluate_entity_intent(state, merchant)
+
+    assert update.task.payload_set["reason"] == "SAFETY_PRESSURE_RETREAT"
+    target = update.task.payload_set["target_position"]
+    assert target == update.navigation.target_set
+    assert target == (20.0, 30.0)  # RETREAT_STEP beyond the merchant, directly away from y=19
+    assert target != (0.0, 0.0)
 
 
 def test_low_safety_pressure_does_not_trigger_retreat():
