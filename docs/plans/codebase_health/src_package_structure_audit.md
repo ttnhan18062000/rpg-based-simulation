@@ -140,3 +140,51 @@ when a test reports that an exemplar gained an exceptions row, or after a baseli
 Non-`keep` decisions go to the owning planner as notes in `.claude/handover/codebase-planner-outbox.md`
 (status: pending): `actions`, `economy`, `logging`, `quests`, `replay`, `runtime`, `strategy`, `views` to `rpg-planner`;
 `testing` to the `testing` planner. Nothing moves in M5.
+
+## Addendum 2026-10-04: cycle edge kinds
+
+Answers rpg's #322 note (`handoffs/handoff_to_rpg.md` Responses §3): are the findings 1 and 4 cycles real runtime closures, or static only?
+
+**Method.** Read-only AST scan of `origin/main` `bec0b2b85` (`git archive`, scratch copy); re-checked on the gates-flip batch base `053f459e4` (2026-10-04): `git diff bec0b2b85 053f459e4 -- src` is empty, so every number below holds. Every `src.*` import is
+classed **module-level** (runs when the module is imported), **TYPE_CHECKING** (never runs) or **function-local**
+(runs only when the function is called). Relative imports are resolved, and each name maps to the longest matching
+`src` module. Script: planner scratchpad `cycles.py`; rerun it with the same rules if this is restated.
+
+**No package cycle is an import-time failure.** Over module-level edges at module granularity, there is exactly one
+import-time module cycle: `src.domains.world_emergence` (`__init__`) ↔ `.phase`. `phase` imports the sibling submodule
+`quest_grammar` through the package, which Python resolves; it is benign. So every cycle below is a **dependency-
+direction (layering) problem, not a load-order bug**. This is also why rpg found content↔worldbuilding "not reachable":
+package cycles here never close at load time.
+
+**Edge counts per cycle** (from → to: module-level / TYPE_CHECKING / function-local):
+
+| Audit cycle | Edges | Verdict |
+|---|---|---|
+| `worldbuilding` ↔ `worldmodules` (finding 4) | wb→wm 2/0/0 (`worldbuilding.cli`); wm→wb 14/0/0 (e.g. `worldmodules.schema`→`worldbuilding.recipe`) | **Real** module-level both ways. wb's side is only its `cli`. |
+| `worldbuilding` → `worldassembly` → … (finding 4) | wb→wa 6/0/4; wa→wb 20/0/11; wg→wa 7/0/2; wg→wb 11/0/0; wb→wg 5/0/0; wa→wg 0 | **Real** module-level. The closing edges from wb come from `worldbuilding.cli` (sample edges: `cli`→`worldassembly.schema`, `cli`→`worldgeneration.schema`). The cycle is the CLI living inside `worldbuilding`. |
+| `content` ↔ `content_semantics` (table row) | content→cs 0/0/**5**; cs→content 8/0/2 | **Function-local only** on content's side. |
+| `core` ↔ `replay` (table row) | core→replay 0/0/**2**; replay→core 2/0/0 | **Function-local only** on core's side. |
+| `content` ↔ `worldbuilding` (rpg's example) | content→wb **0**; wb→content 8/0/0 | **No cycle** at all: one direction. |
+
+**Finding 1 (`core` imports upward), by kind:**
+- `core`→`engine` 0/**4**/0 and `core`→`domains` 0/**8**/0: **TYPE_CHECKING only**. With import-linter's
+  `exclude_type_checking_imports = true` they vanish.
+- `core`→`content` 0/0/7 and `core`→`replay` 0/0/2: **function-local only**.
+- `core`→`systems` **9/0/0: real module-level**. `core/state.py:24` and `core/updates.py:26` import
+  `GeneticProfile` from `systems.lifecycle_systems.genetics`; `core/builder.py:54-55` imports `GeneticsSystem` and
+  `ReputationService`. The central state model depends on a system package: the one genuine inversion in finding 1.
+
+**Package-level picture.** Counting module-level edges only, 26 of the ~36 top-level packages still form one
+strongly connected component (with all edges, 28). The layering problem is broad, which matches the import-linter
+evaluation's 99–113 `layers` violations. It is not a handful of cycles.
+
+**Consequences:**
+- **Import-linter** (`TCK-20261004-IMPORT-LINTER-ADOPTION`): grimp counts function-local imports. Setting
+  `exclude_type_checking_imports = true` drops finding 1's engine/domains edges. The function-local edges
+  (content→cs, core→replay, core→content) stay as violations, carried in the advisory baseline like the rest. That is
+  the honest reading, since they do run when called. Record the setting choice in that ticket.
+- **M7 / rpg:** the cheapest real fixes are both moves, not merges.
+  - Move the world CLI out of `worldbuilding`, which breaks the wb→wa/wg and wb→wm closing edges.
+  - Move `GeneticProfile`, a data type, from `systems.lifecycle_systems.genetics` into `core`, or a neutral types
+    module, which removes `core`→`systems` at the state model.
+  - Both are `src/` changes, so they wait for M7 and are rpg's to decide. Both are sent to rpg in `handoffs/handoff_to_rpg.md` (2026-10-04 update).

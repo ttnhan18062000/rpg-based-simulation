@@ -290,15 +290,15 @@ import-contracts: ## Run the import-linter contracts in codebase/structure/impor
 
 # `code-health` is the Python craft-debt ratchet (codebase/health/, codebase/baselines/code_health_exceptions.jsonl).
 # It is unrelated to the codebase-health-* targets, which belong to codebase/reports/codebase_health_*.py.
-code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than codebase/baselines/code_health_exceptions.jsonl (also the advisory `Code health (advisory)` CI job during the soak: reports, never fails the PR)
+code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than codebase/baselines/code_health_exceptions.jsonl (also the blocking `Code health` CI job; ruff, complexipy, ast-grep and line-count findings block while jscpd findings are listed but report-only, and a jscpd that cannot run, for example offline, is noted and skipped)
 	python3 -m codebase.health check
 
 # Ratchet over docs/parity_ledger/*.yaml against docs/parity_ledger/schema.json (TCK-20261003-PARITY-LEDGER-SCHEMA-RATCHET).
 parity-ledger-schema-check: ## Fail when any parity-ledger schema error count rose or a new error rule appeared against codebase/baselines/parity_ledger_schema_baseline.json (blocking; the tests/codebase live test runs it in CI)
 	python3 -m codebase.gates.parity_ledger_schema check
 
-typecheck-py: ## Run mypy over src/ and show only errors not in codebase/baselines/mypy_baseline.txt (advisory during the soak: never fails)
-	python3 -m mypy src/ --config-file pyproject.toml --no-error-summary | python3 -m mypy_baseline filter || true
+typecheck-py: ## Run mypy over src/ and show only errors not in codebase/baselines/mypy_baseline.txt (also the blocking `Type check` CI job: exits non-zero on a new error)
+	python3 -m mypy src/ --config-file pyproject.toml --no-error-summary | python3 -m mypy_baseline filter
 
 typecheck-baseline-sync: ## Rewrite codebase/baselines/mypy_baseline.txt from a fresh mypy run. Codebase domain only, on main, together with the code-health reseed (make code-health seed); never to hide a new error
 	python3 -m mypy src/ --config-file pyproject.toml --no-error-summary | python3 -m mypy_baseline sync
