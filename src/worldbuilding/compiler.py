@@ -27,7 +27,7 @@ from src.core.registries import ResourceRegistry
 from src.core.enums import EntityRole, Faction
 from src.replay.fingerprint import StateFingerprinter
 from src.engine.checkpoint import CanonicalStateHasher
-from src.worldbuilding.schema import WorldSpec
+from src.worldbuilding.schema import InvalidWorldSpecError, WorldSpec
 from src.core.quests import QuestState, QuestStatus, QuestKind, RewardState
 from src.core.strategic import ProjectKind
 from src.domains.demographics.cohort import PopulationCohort
@@ -228,6 +228,32 @@ def _seed_population_cohorts(declared_population: int) -> Dict[str, "PopulationC
     }
 
 
+def _assert_region_references_resolve(spec: WorldSpec) -> None:
+    """
+    Fails compilation when a population, resource node, or building names a region the spec
+    does not define.
+
+    Each placement loop in `WorldCompiler.compile` is guarded by `if region:`, so an unresolved id
+    would otherwise drop the whole population/node/building without any error or warning.
+    """
+    region_ids = {r.id for r in spec.regions}
+    dangling: List[str] = []
+    for pop in spec.entities:
+        if pop.spawn_region not in region_ids:
+            dangling.append(f"population '{pop.id}' spawn_region '{pop.spawn_region}'")
+    for res in spec.resources:
+        if res.region not in region_ids:
+            dangling.append(f"resource node '{res.id}' region '{res.region}'")
+    for bld in spec.buildings:
+        if bld.region not in region_ids:
+            dangling.append(f"building '{bld.id}' region '{bld.region}'")
+    if dangling:
+        raise InvalidWorldSpecError(
+            f"World '{spec.world_id}' references regions it does not define "
+            f"(defined: {sorted(region_ids)}): " + "; ".join(dangling)
+        )
+
+
 class WorldCompiler:
     """
     Deterministic World Compiler that transforms a validated WorldSpec into
@@ -341,6 +367,8 @@ class WorldCompiler:
             A tuple of (AuthoritativeState, report_dict)
         """
         start_time = time.perf_counter()
+
+        _assert_region_references_resolve(spec)
 
         # 0. Initialize deterministic RNG and load class table
         rng = DeterministicRNG(seed)
