@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261005-PERF-M1-ZERO-CAPACITY-SIGNAL
-phase: implement
+phase: done
 date: 2026-10-05
 tags: [performance, determinism, testing, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, testing, engine]
 PERF-M1-T01: zero-capacity worker and queue signals follow PERF-D1, with specification tests and a baseline disposition
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -130,7 +130,7 @@ worker fix landed went DEGRADED from tick 1.
 - `docs/engine/deterministic_execution.md`, `docs/engine/runtime_profiles.md`
 
 ## Related Stored Artifacts
-- None yet.
+- `agent-working/stored_artifacts/TCK-20261005-PERF-M1-ZERO-CAPACITY-SIGNAL/` (investigation, plan, test_plan)
 
 ## Related Code Areas
 - `src/engine/worker_manager.py` (edit)
@@ -220,3 +220,9 @@ timestamps (epoch 1778820924 = 2026-05-15, 1779190619 = 2026-05-19, 1786131441 =
 - `agent-working/staging_artifacts/TCK-20261005-PERF-M1-ZERO-CAPACITY-SIGNAL/` (investigation, plan, test_plan)
 
 ## Completion Summary
+WorkerManager now follows PERF-D1: construction rejects negative capacities and workers>=1 with queue<=0;
+queue utilization is 0.0 when no queue exists; local fallback is no longer counted as an active worker
+(worker utilization was 2.0 under fallback, now 1.0). Specification tests, governor guard rail (DEGRADED
+before and after), parity ledger INFRA-422 and the baseline disposition list are in. `governor.py` is
+unchanged. Not verified locally: `test_behavioral_5k` (60 s conftest limit); CI is the check. Known
+limitation: process-pool route never counts active workers (unreachable from the kernel).
