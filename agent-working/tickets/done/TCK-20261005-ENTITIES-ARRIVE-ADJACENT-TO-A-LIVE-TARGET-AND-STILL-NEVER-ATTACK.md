@@ -12,9 +12,7 @@ tags: [combat, strategy, cognition]
 # TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK
 
 ## Title
-`crowded_frontier` navigates within 1 tile of a live hostile in 3779 of 3839 combat-objective samples
-and dispatches **zero** decision-path attacks — the starvation chain's headline symptom survives both
-#291 and the entity-target fix
+A pursuit move ends when its live target is in attack reach, so entities that arrive adjacent re-enter the decision pass (filed as: entities arrive adjacent to a live target and still never attack)
 
 ## Status
 DONE
@@ -29,7 +27,9 @@ bug
 P1
 
 ## Request Summary
-**The measurement in this ticket is `rpg-implementer`'s**, taken as the A/B control for
+**What landed:** entities adjacent to a live target never attacked because the attack was never attempted, not rejected: a pursuit `ENTITY_MOVE` had no completion condition, so the decision pass was never called again. A pursuit now ends when its live target is within attack reach, and strategy writes no stale navigation point for an entity-typed objective. Mutual tile swapping falls by two orders of magnitude on three worlds (975 to 2, 1809 to 1, 978 to 3). Decision-path attacks barely move and no engagement improvement is claimed: the brain cadence, the flee gate and `BRACKETING` moves are the remaining gates, each with its own ticket.
+
+**Filed text (historical, from the first pass; pre-`#344` numbers superseded by `investigation.md`):** **The measurement in this ticket is `rpg-implementer`'s**, taken as the A/B control for
 `TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES` and reported to
 `rpg-planner` on 2026-10-05. Filed separately because it is not that ticket's defect and would
 survive its fix intact — the planner's call, not the implementer's.
@@ -169,7 +169,12 @@ value or sample. One first-pass claim died on the re-measurement: `PANIC_RETREAT
 `tests/unit/engine/test_pursuit_completion.py` (13) and `tests/unit/strategic/test_redirection_entity_objective.py` (3), each with a
 disabling control; all pass on the rebased tree. Wide sweep as in Acceptance Criteria. Base-red and not caused here:
 `test_behavioral_5k_regression` and `test_long_run_stability` (60 s conftest timeout; 60.25 s here, 60.23 s on a clean
-`origin/main` worktree). Lint tools (ruff, mypy, complexipy, ast-grep, prek) are absent locally; CI is the first lint run.
+`origin/main` worktree).
+- FAIL tests/regression/test_behavioral_5k.py::test_behavioral_5k_regression: 60 s conftest timeout, red on clean `origin/main`, not caused here.
+- FAIL tests/integration/world/test_long_run_stability.py::test_long_run_stability: 60 s conftest timeout (60.25 s here, 60.23 s on a clean `origin/main` worktree), not caused here, routed by the planner.
+- Unexplained, not a failure: opportunity attacks `frontier_living_world` 38 to 644 and `crowded_frontier` 488 to 283; 10 `LAW-OCCUPANCY-COLLISION` errors on both clean and fixed trees (ticket filed by the planner).
+
+Lint tools (ruff, mypy, complexipy, ast-grep, prek) are absent locally; CI is the first lint run.
 
 ## Files Changed
 `src/engine/candidate_selector.py`, `src/engine/executor.py`, `src/engine/worker_logic.py`,
