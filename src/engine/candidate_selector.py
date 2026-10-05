@@ -1,7 +1,7 @@
 # Compliance IDs: COMB-028, PERF-009, PERF-017
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterable, Optional
+from typing import TYPE_CHECKING, Iterable, Mapping, Optional
 from src.core.movement_modes import MovementMode
 from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
 from src.engine.phase_governor import ScanPolicy
@@ -75,7 +75,7 @@ class MovementCandidateSelector:
         return fallback_target
 
     @staticmethod
-    def pursuit_reached_attack_range(entity: "EntityState", entities) -> bool:
+    def pursuit_reached_attack_range(entity: "EntityState", entities: Mapping[int, "EntityState"]) -> bool:
         """True when ``entity`` is on a pursuit move whose LIVE target is already within its attack reach.
 
         TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK: a pursuit
