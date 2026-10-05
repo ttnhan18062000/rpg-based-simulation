@@ -3,21 +3,13 @@ TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING).
 
 `format_summary` and the `check --summary-for/--summary-out/--annotate` flags turn the ratchet's result
 into a GitHub job summary and a warning annotation; the exit code stays the ratchet's own. The CLI tests
-reuse the scratch-repository fixtures of test_code_health_ratchet_registry.py.
+reuse the scratch-repository fixtures of tests/codebase/conftest.py.
 """
 from __future__ import annotations
 
 import json
 
-from tests.codebase.test_code_health_ratchet_registry import (  # noqa: F401  (pytest fixtures)
-    _edit_ruff,
-    _f,
-    _rows,
-    _run,
-    _scan_arg,
-    repo,
-    seeded,
-)
+from tests.codebase.conftest import _edit_ruff, _f, _rows, _run, _scan_arg
 from codebase.health.ratchet import DEFAULT_REPORT_LIMIT, compare, format_summary
 
 

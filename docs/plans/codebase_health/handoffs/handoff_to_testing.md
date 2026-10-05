@@ -97,4 +97,4 @@ workflow and `tools/test_architecture/scenario_lane_paths.py` in sync; the scena
 ruleset change names only `Code health` and `Type check`. Your four import-linter conditions are recorded in
 `TCK-20261004-IMPORT-LINTER-ADOPTION` (still BLOCKED; condition 3 is routed to rpg in `handoff_to_rpg.md`).
 
-FYI (cc): `tests/unit/tools/test_mechanism_registry_completeness_check.py:191` pins `scope_files == 296`, so any PR that adds a `src/` file fails `Unit · infra / observability` until it is edited. The question goes to agent-working (`handoff_to_agent_working.md`, same update); it is in your test tree.
+FYI (cc): `tests/unit/tools/test_mechanism_registry_completeness_check.py:191` pins an exact `scope_files` count (296 at #331's runs; main has since moved it), so any PR that adds a `src/` file fails `Unit · infra / observability` until it is edited. The question goes to agent-working (`handoff_to_agent_working.md`, same update); it is in your test tree.

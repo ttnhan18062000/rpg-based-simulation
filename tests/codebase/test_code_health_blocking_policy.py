@@ -2,7 +2,7 @@
 
 `REPORT_ONLY_TOOLS` findings are listed but never fail `check`; `SKIPPABLE_TOOLS` may fail to run without failing it,
 and a skipped tool is "not measured", never "gone". The CLI tests reuse the scratch-repository fixtures of
-test_code_health_ratchet_registry.py; the skip tests replace the tool runners with copies of the captured output.
+tests/codebase/conftest.py; the skip tests replace the tool runners with copies of the captured output.
 """
 from __future__ import annotations
 
@@ -11,14 +11,7 @@ import shutil
 
 import pytest
 
-from tests.codebase.test_code_health_ratchet_registry import (  # noqa: F401  (pytest fixtures)
-    _f,
-    _rows,
-    _run,
-    _scan_arg,
-    repo,
-    seeded,
-)
+from tests.codebase.conftest import _f, _rows, _run, _scan_arg
 from codebase.health import ratchet, registry, scan
 from codebase.health.ratchet import REPORT_ONLY_TOOLS, SKIPPABLE_TOOLS, compare, format_report, format_summary
 
@@ -29,6 +22,18 @@ _FILES = {
     "ast_grep": "ast_grep.json",
     "jscpd": "jscpd",
 }
+
+
+# Every scanned tool that is not report-only blocks. Derived, so a tool added to `scan.ALL_TOOLS` is covered by the
+# parametrized tests below without anyone remembering to extend a list (testing review of PR #329).
+BLOCKING = sorted(set(scan.ALL_TOOLS) - REPORT_ONLY_TOOLS)
+
+
+def test_every_scanned_tool_is_either_report_only_or_in_the_blocking_list_and_has_a_fixture_file():
+    """A new tool in `scan.ALL_TOOLS` needs a captured-output file in `_FILES`, or the fake runners cannot cover it."""
+    assert set(BLOCKING) | REPORT_ONLY_TOOLS == set(scan.ALL_TOOLS)
+    assert set(BLOCKING) == {"ruff", "complexipy", "line_count", "ast_grep"}, "a new blocking tool: add it here on purpose"
+    assert set(_FILES) == set(scan.ALL_TOOLS)
 
 
 def _drop_rows(repo, tool: str) -> int:
@@ -82,7 +87,7 @@ def test_a_new_report_only_finding_is_listed_and_does_not_block(tool):
     assert "Report-only findings" in format_summary(result)
 
 
-@pytest.mark.parametrize("tool", ["ruff", "complexipy", "line_count", "ast_grep"])
+@pytest.mark.parametrize("tool", BLOCKING)
 def test_a_new_blocking_finding_blocks(tool):
     result = compare([_f("a.py", "R1", 2, tool=tool)], [])
     assert result.blocking_failed and format_report(result).splitlines()[-1].startswith("FAIL:")
@@ -119,7 +124,8 @@ def test_check_exits_1_on_a_new_ast_grep_finding(seeded, capsys):
     assert "ast_grep E3" in out and "(report-only)" not in out and "::error::code-health:" in out
 
 
-@pytest.mark.parametrize("tool", ["ruff", "complexipy", "line_count"])
+# ast_grep has its own CLI test (test_check_exits_1_on_a_new_ast_grep_finding): this one edits the ruff scan file.
+@pytest.mark.parametrize("tool", [t for t in BLOCKING if t != "ast_grep"])
 def test_check_exits_1_on_a_new_blocking_tool_finding(seeded, tool, capsys):
     assert _drop_rows(seeded, tool)
     assert _run(seeded, "check", *_scan_arg(seeded), "--annotate") == 1
@@ -161,7 +167,7 @@ def test_jscpd_unavailable_leaves_its_rows_out_of_gone_and_still_checks_the_rest
     assert _run(seeded, "check") == 1
 
 
-@pytest.mark.parametrize("tool", ["ruff", "complexipy", "line_count", "ast_grep"])
+@pytest.mark.parametrize("tool", BLOCKING)
 def test_any_other_tool_unavailable_exits_2(seeded, monkeypatch, capsys, tool):
     _fake_tools(monkeypatch, seeded, failing={tool})
     summary = seeded / "summary.md"

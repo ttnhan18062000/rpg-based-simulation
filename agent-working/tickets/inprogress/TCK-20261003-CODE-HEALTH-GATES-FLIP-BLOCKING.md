@@ -93,11 +93,12 @@ None.
   - Step 4, the row added (ec6afd47e): https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37213113973 , `Code health` (both steps) and `Tools · a–e` passed.
   - Step 5, one silent `except OSError: pass` in `src/core/zz_demo_e3.py` (e3ee1784e): https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37213577739 , `Code health` failed at the `Code health ratchet` step (`::error::code-health: 1 new/worse violations`; the single finding is `ast_grep e3-silent-except`); `Type check` passed.
 - Ubuntu 26 pre-check: step 1's jobs ran with the label `ubuntu-26.04` (listed as generally available by the runner-images announcement, actions/runner-images issue 14748, whose `ubuntu-latest` migration begins 2026-10-19) and passed; nothing changed in the PR.
-- Side effect of the demo, not of the flip: adding any `src/` file bumps `tests/unit/tools/test_mechanism_registry_completeness_check.py::test_wider_scope_numbers_pinned` (`scope_files == 296`), so `Unit · infra / observability` failed on steps 2 and 5 of the demo; a real PR that adds a `src/` module must update that pin (testing / mechanism-registry owner).
+- Side effect of the demo, not of the flip: adding any `src/` file bumps `tests/unit/tools/test_mechanism_registry_completeness_check.py::test_wider_scope_numbers_pinned` (an exact `scope_files` count; 296 at #331's runs, main has since moved it), so `Unit · infra / observability` failed on steps 2 and 5 of the demo; a real PR that adds a `src/` module must update that pin (testing / mechanism-registry owner).
 - Authorization record: each demo push followed a direct owner yes (AskUserQuestion). For step 3 the push command ran after the yes, but its output was lost in a session interruption; the retried command reported "Everything up-to-date", so the push had already happened. That the first execution of the same command did it is an inference, not something the record shows.
 - The mypy gate first reached `main` in PR #313 (2026-10-04T04:59Z), so its window ends 2026-10-18T04:59Z; the merge is on or after 2026-10-18 05:00Z.
 
 ## Test Summary
+- Two `tests/codebase` tests fail on this machine only (a 60 s test budget, identical on clean `main`, green in CI): `tests/codebase/test_codebase_health_baseline.py::test_make_target_runs_successfully_with_plausible_values` and `tests/codebase/test_codebase_health_snapshot.py::test_make_target_runs_successfully_end_to_end`. Tracked by `TCK-20261005-CODE-HEALTH-MAKE-TARGET-TESTS-LOCAL-TIMEOUT` (`agent-working/tickets/todos/`); not a result of this flip.
 
 ## Files Changed
 
