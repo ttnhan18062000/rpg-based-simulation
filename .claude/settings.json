@@ -201,6 +201,16 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "R=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; test -f \"$R/tools/agent-monitoring/manual_actions.py\" || exit 0; python3 \"$R/tools/agent-monitoring/manual_actions.py\" hook 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "matcher": "*",

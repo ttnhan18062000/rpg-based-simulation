@@ -653,7 +653,38 @@ Emitted for a **resolved** role only, once per `(kind, path class or target)` pe
 Common fields: `ts`, `event` (`"role_boundary"`), `kind`, `session_id`, `session_role` (the resolved role
 instance; never the `agent` vocabulary), `function`, `domain`, `tool`. Covered by the existing
 `agent-working/agent-monitoring/data/*/*.jsonl merge=union` glob. Harden only what recurs after a measured
-window (plan section 10; M7).
+window (plan section 10; M7). "Unusual route" is deliberately not its own kind: a routed path is still an edit in another domain, so it is
+folded into `edit_outside_owns` (`owner_seats` shows where it should have gone); M7 can split it if the data shows it recurs.
+
+## Session-layer fields and files (`session_role`, `manual_actions`)
+
+`TCK-20261004-SESSION-LAYER-M6A-MINIMUM-MEASUREMENT` (plan `docs/plans/agent_infrastructure/
+session_layer_working_process.md` section 11).
+
+**`session_role` on `runs` and `events`** (additive, string, never null): the role instance bound to the writing
+session, read by session id from the per-session binding record (`tools/agent-monitoring/session_role.py`), never
+from the shared unscoped `.claude/current_run`. `unresolved` means no binding names the session (a plain session,
+no session id, or a failure to read state); records written before M6a simply lack the field and the retro counts
+them `unresolved`. It is a separate field from `agent`: the `agent` vocabulary and the `vocabulary_drift` ratchet
+are untouched. Stamped by `record_run.py`, `record_events.py` and `record_hand_orchestrated_closure.py`; a value
+the caller already supplied is kept. `tools` rows are deliberately not stamped.
+
+**`manual_actions`** (`agent-working/agent-monitoring/data/YYYY-Www/manual_actions.jsonl`, own file family): the
+headline metric, repeated instructions per category (`role_reminder`, `routing_correction`, `manual_wake`,
+`worktree_correction`, `boundary_reminder`, `handover_recovery`). Fields: `ts`, `category`, `source` (`sample` or
+`tally`), `session_id`, `session_role`, `batch`, `count`. Never records the prompt text. `sample` rows come from the
+`UserPromptSubmit` hook (`manual_actions.py hook`): a conservative tagger that counts only short imperative
+messages matching a category phrase, so decisions, design feedback, questions and requirements are untagged and it
+under-counts. `tally` rows are the owner's own line per batch (`manual_actions.py tally <category> --batch <id>`),
+authoritative. Report-only; no gate reads it.
+
+**Batch latency** is derived on demand (`tools/agent-monitoring/batch_latency.py <PR...>`, or `generate_retro.py
+--latency-prs`), with no batch registry and no stored file: implementation (dispatch to PR green), finalization (PR
+green to finalized = merged) and cycle time. Dispatch is the batch's first commit unless given; an unavailable
+timestamp, a red or unfinished check, an unmerged PR or a negative span is `unknown`, never zero.
+
+The retro report gains one section, `Session-Layer Measures` (`session_layer_report.py`): manual actions, runs by
+`session_role`, `role_boundary` warnings and the latency rows.
 
 ## Join Example
 
