@@ -76,7 +76,9 @@ def test_existing_hook_writers_untouched():
     # TCK-20260923-CD-PREFIX-ADVISORY-HOOK PreToolUse[5] entry, and the later, purely-additive
     # TCK-20260924-DELIVERY-PRE-PUSH-ADVISORY PreToolUse[6] entry. PostToolUse count 5 includes the purely
     # additive, last-appended TCK-20261004-EDIT-RATCHET-HOOK entry (the first four are unchanged).
-    assert len(settings["hooks"]["PreToolUse"]) == 7
+    # 8 since TCK-20261004-SESSION-LAYER-M5B-ROLE-CONDITIONAL-PRETOOLUSE-HOOK: the role-conditional guard is the
+    # purely-additive, last-appended PreToolUse[7] entry (matcher Bash|Edit|Write|MultiEdit|NotebookEdit).
+    assert len(settings["hooks"]["PreToolUse"]) == 8
     assert len(settings["hooks"]["PostToolUse"]) == 5
     assert "permissions" in settings
     assert "allow" in settings["permissions"]

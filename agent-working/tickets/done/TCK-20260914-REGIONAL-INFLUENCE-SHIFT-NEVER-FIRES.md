@@ -1,0 +1,252 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES
+phase: done
+date: 2026-09-14
+tags: [world, faction]
+---
+
+# TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES
+
+## Title
+`RegionState.influence` (regional sovereignty's own driver) never moves off `0.0` for any "wild"
+region, in any of 4 real corpus worlds across 12,000 combined ticks — despite real, independently
+confirmed combat deaths happening in those same regions — meaning dynamic region conquest/liberation
+has never fired in this codebase's history, only compile-time-authored starting ownership has ever
+been observed
+
+## Status
+DONE
+
+## Tier
+standard
+
+## Type
+repair
+
+## Priority
+P1
+
+## Request Summary
+Found while drafting the design proposal for `TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION`
+(user decided to build real pre-war drivers for faction war reachability, reusing the existing
+regional sovereignty system where possible). Regional sovereignty
+(`docs/mechanics/regional_sovereignty.md`, `RegionState.owner_faction_id`/`.influence`,
+`FactionInfluenceService.process_influence_shift()`) is real, live, wired code — called from
+`src/systems/lifecycle_systems/lifecycle.py::resolve_lifecycle()` with a real `recent_deaths` list
+on every tick that has deaths.
+
+A real, instrumented probe across four unmodified corpus worlds (`urban_political`,
+`frontier_living_world`, `dungeon_crawl`, `generated_frontier_3_42`, 3000 ticks each, 12,000
+combined real ticks) found: **`region.owner_faction_id` never changed once, for any region, in any
+world.** Every "wild"/unowned region (e.g. `goblin_camp`, `bandit_road`, `old_mine` — regions
+independently confirmed elsewhere this batch to have real combat, via `region.trauma_score`
+movement in the same runs) showed `region.influence` frozen at exactly `0.0` for the entire run, in
+all four worlds — not slow, not partial, exactly zero movement, despite real monster/hero deaths
+happening there. The only nonzero influence anywhere came from two regions with
+compile-time-authored starting ownership (`hometown`/`trading_hometown`, pre-seeded to
+`Faction.HERO_GUILD`/`influence=100.0`), and even those never moved past their starting value.
+
+This means **dynamic region conquest/liberation — the entire point of the mechanism described in
+`docs/mechanics/regional_sovereignty.md` §1 — has apparently never fired in any real run in this
+codebase's history.** Only static, compile-time-authored ownership has ever been observed to exist
+or generate taxation revenue.
+
+## Scope
+- Find the real root cause of why `process_influence_shift()` doesn't move `influence` for real
+  deaths in wild regions, despite a code-level trace (done in the sibling design proposal,
+  `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` §2.1) suggesting the classification path
+  (`get_faction_id_str()` → `FactionSemanticsService.is_invader()`/`is_protector()`) should
+  correctly resolve a spawned monster's death as an "invader" death. Candidates not yet checked:
+  - Does `LegalityServiceV2.get_region_for_position()` correctly resolve the death position to the
+    wild region for these specific entities, or does it silently return `None` (the function
+    `continue`s past any death whose region can't be resolved)?
+  - Does `resolve_lifecycle()`'s own death-detection (`ent_upd.combat.outcome_kind in ("KILL",
+    "PERMADEATH")`) actually fire for the same deaths `world_dynamics.py`'s separate
+    "Death-triggered Trauma" block sees (which independently confirms real deaths happen in these
+    regions) — or do the two death-detection paths diverge in what they each observe?
+  - Is `resolve_lifecycle()` itself being called every tick in the real pipeline, with a non-empty
+    `recent_deaths`, for these worlds? (Confirmed wired via grep; not confirmed executing with real
+    data via direct instrumentation.)
+- Determine whether this is a single root cause or multiple independent ones.
+- Bring findings + a proposed fix to peer/user review before implementing, matching this week's
+  established pattern for reachability defects of this size.
+
+## Out of Scope
+- The faction-war-declaration design itself (`TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION`)
+  — this ticket's fix is a prerequisite for that design's military-strength driver (§3.2 of the
+  proposal), not a replacement for it.
+- Any change to `CONQUEST_THRESHOLD`/`LIBERATION_THRESHOLD`/`DEATH_INFLUENCE_SHIFT` values — this
+  is about the mechanism never firing at all, not about the threshold values once it does.
+
+## Acceptance Criteria
+- [ ] A real, evidence-backed root cause for why `region.influence` never moves in wild regions
+      despite real combat deaths occurring there.
+- [ ] A proposed fix (not yet built without review).
+- [ ] Findings brought to peer/user review before implementation.
+
+## Related Tickets
+- `TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION` (the design work that surfaced this;
+  its own §3.2 military-strength driver is blocked on this ticket resolving)
+- `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` (checked against that ticket's own named
+  pattern — this ticket's own root cause does not share it; see that ticket's own notes and
+  `docs/plans/world_composition_precondition_gap_finding.md` for the comparison)
+- `TCK-20260914-ITEM-REGISTRY-DUAL-CLASS-DIVERGENT-FAILURE-SEMANTICS` (same shape as this
+  ticket's own real root cause: two independent readers of one thing — a combat-outcome event
+  here, an item id there — disagreeing about what counts, with no error surfaced either time)
+
+## Related Docs
+- `docs/mechanics/regional_sovereignty.md` (the mechanism this ticket investigates)
+- `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` §2.1, §5 (the investigation that found this)
+
+## Related Stored Artifacts
+None yet — standard tier, staging artifacts created when picked up.
+
+## Related Code Areas
+- `src/world/influence.py` (`FactionInfluenceService.process_influence_shift()`)
+- `src/systems/lifecycle_systems/lifecycle.py` (`resolve_lifecycle()`, the real caller with
+  `recent_deaths`)
+- `src/content_semantics/faction.py` (`FactionSemanticsService`, `get_faction_id_str()`)
+- `src/engine/world_dynamics.py` (the separate Death-triggered Trauma block, for comparison — it
+  independently confirms real deaths happen in these same regions)
+
+## Assumptions / Open Questions
+- Whether this is one root cause or several (e.g. a region-resolution bug AND a death-detection
+  divergence) is not yet known.
+
+## Implementation Notes
+**2026-09-15, checked against the "world geometry that nothing validates" pattern named in
+`TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` — this ticket does NOT share it. A clean
+counter-example, with its own real, fully-confirmed root cause.**
+
+Instrumented `FactionInfluenceService.process_influence_shift()` directly across a real 3000-tick
+run of `frontier_living_world`: **called zero times.** Since the call is guarded by `if
+recent_deaths:` in `resolve_lifecycle()`, this means `recent_deaths` was empty on every tick,
+despite `world_dynamics.py`'s own trauma block independently confirming real deaths occur in this
+same run (this ticket's own Request Summary already established that).
+
+**Ruled out first, per the same discipline as the lair/calamity checks**: confirmed
+`src/systems/lifecycle.py` is a legitimate one-line re-export shim
+(`from src.systems.lifecycle_systems.lifecycle import LifecycleSystem`), not a duplicate/dead
+module — `resolve_lifecycle()` genuinely is the function the real pipeline calls
+(`src/engine/pipeline.py:414`).
+
+**Found the real divergence via direct code read, then confirmed it empirically — this ticket's
+own second candidate, exactly**: `resolve_lifecycle()`'s death filter
+(`src/systems/lifecycle_systems/lifecycle.py:202`) checks `ent_upd.combat.outcome_kind in ("KILL",
+"PERMADEATH")`. But `world_dynamics.py`'s own trauma block (`src/engine/world_dynamics.py:47`)
+checks `ent_upd.combat.alive_set is False` directly — a different, broader condition. Real combat
+resolution (`src/engine/combat.py:499-500`) sets `alive_set=not is_kill` (False whenever the
+target is killed) but `outcome_kind="KILL" if is_kill and is_lethal else ("DEFEAT" if is_kill else
+"SURVIVE")` — **a target can be killed (`alive_set=False`) with `outcome_kind="DEFEAT"`**, which
+`resolve_lifecycle()`'s narrower filter does not recognize as a death at all.
+
+**Confirmed empirically, not just theoretically**: instrumented the real outcome_kind
+distribution across the same 3000-tick run. **20 real combat deaths occurred (`alive_set=False`),
+and all 20 were `outcome_kind="DEFEAT"` — zero were `"KILL"`.** This fully and exactly explains
+the zero calls to `process_influence_shift()`: every real death in this run's sample used the
+outcome value `resolve_lifecycle()`'s filter doesn't check for.
+
+`is_lethal` (which gates whether a kill resolves as `"KILL"` vs `"DEFEAT"`) is set False for at
+least one real condition found by a quick read (`combat.py:136`:
+`is_lethal = is_lethal and (defender.identity.role != EntityRole.HERO)` — heroes get a
+recoverable "DEFEAT" rather than a lethal "KILL" by design). Whether that specific condition, or a
+different one, explains all 20 real DEFEAT events in this sample was not traced further — the
+"check first" question this session set out to answer is fully answered without needing that
+detail.
+
+**This is not the same pattern as the lair/calamity tickets.** Entities ARE correctly co-located
+(deaths genuinely happen where the mechanic needs them to), the region resolves correctly, and the
+death IS detected — by one consumer. The defect is a real, single-cause classification divergence
+between two independent readers of the same combat-outcome event, each checking a different field/
+value for "did something die here." A clean, useful counter-example: it protects the geometry
+pattern's own credibility by showing it doesn't explain everything, and it comes with its own full,
+confirmed root cause rather than an open question.
+
+**Parked here, per the same investment cap as the sibling tickets — not proposing or building a
+fix.** The likely fix shape (widen `resolve_lifecycle()`'s own filter to also treat `"DEFEAT"` as a
+death for influence-shift purposes, or route influence-shift off `alive_set is False` directly like
+`world_dynamics.py` already does) is a real design decision (does a non-lethal "DEFEAT" really
+mean the same thing for regional sovereignty as a lethal "KILL"?), left for review rather than
+assumed and built.
+
+### 2026-09-30 — classified via `TCK-20260929-UNREACHABLE-CLASSIFY-DEAD-GUARD` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T03`): verdict `DEFECT`
+
+**Known cause recorded, not re-investigated; confirmed still true at HEAD.** The cause is this ticket's own
+2026-09-15 finding above (also the wave's, which explicitly tested and rejected a shared root cause with
+`LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`): `resolve_lifecycle()` counts a death only when
+`outcome_kind in ("KILL", "PERMADEATH")`, while `world_dynamics.py` counts `alive_set is False`, and combat resolves
+a non-lethal kill as `"DEFEAT"`. Checked at branch tip `3dbdff48a`:
+- `src/systems/lifecycle_systems/lifecycle.py:202` — filter unchanged: `("KILL", "PERMADEATH")`.
+- `src/engine/world_dynamics.py:47` — still `alive_set is False`.
+- `src/engine/combat.py:172,273` — `outcome = "KILL" if is_lethal else "DEFEAT"` (line numbers moved from the ticket's
+  `499-500`; behaviour is the same).
+- The cited files have no commit that touches this path since filing apart from `6dd2ccd12` on the filing day
+  (2026-09-14), which predates the 2026-09-15 investigation.
+
+**Fresh runtime confirmation, one extra check.** Real `Kernel.tick_once()`, `frontier_living_world`, seed 42,
+`PROD_SMALL`, 1,500 ticks, with `FactionInfluenceService.process_influence_shift` wrapped to count calls:
+**59 alive->dead transitions, 0 calls to `process_influence_shift`, no region influence ever off `0.0`/`100.0`.**
+The call is guarded by `if recent_deaths:` in `resolve_lifecycle()`, so zero calls means the filter saw none of
+the 59 deaths. (The 59 include non-combat deaths, so this does not itself show they were `DEFEAT`; the
+`DEFEAT`-vs-`KILL` mechanism rests on the code reads above and the ticket's own 20/20 instrumentation.)
+
+**Verdict `DEFECT`, not `CONDITION`.** The reader is wired and correct for the inputs it recognises; a real
+filter divergence between two readers of the same event keeps it from ever running. No content or run-length
+change fixes it. The consequence worth naming: `RegionState.influence` has never
+moved in this codebase's history, so the threshold unification in the sovereignty-threshold ticket
+(`TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT`) tuned constants on a path that this ticket keeps from
+firing. Whether a non-lethal `DEFEAT` should count as a sovereignty-relevant death is the fix's open design
+question, left where the ticket parked it.
+
+### 2026-10-05 — `rpg-implementer-2` re-measurement at `fb0c1c318`: the defect no longer exists; closed by disposition `SUPERSEDED`
+
+The filter divergence this ticket recorded was removed by `786f9ee9b` (PR #276, 2026-10-01, "record passive, DEFEAT and
+hazard deaths via resolve_lifecycle; retire hero rebirth"). At the current tip `resolve_lifecycle`
+(`src/systems/lifecycle_systems/lifecycle.py`) appends every entity it classifies dead, whatever the reason
+(`KILL`, `DEFEAT`, `HAZARD`, passive), to `recent_deaths` (L234), and `process_influence_shift` is called when that
+list is non-empty (L294-298). The `("KILL", "PERMADEATH")` filter the 2026-09-15 and 2026-09-30 notes cite is gone.
+
+**Measured, not read.** Real `Kernel.tick_once()` (`PROD_SMALL`, seed 42, 1,500 ticks per world) with
+`FactionInfluenceService.process_influence_shift` wrapped to record every call and its returned `world_updates`, and
+region `influence`/`owner_faction_id` sampled every tick. Positive control: the same wrapper recorded 0 calls at the
+2026-09-30 tip for the identical 59 deaths in `frontier_living_world`.
+
+| world | deaths passed | calls | calls returning a world update | max \|influence\| in a region that started at 0.0 | owner change |
+|---|---|---|---|---|---|
+| frontier_living_world | 59 | 43 | 22 | goblin_camp 50, bandit_road 25, haunted_battlefield 5 | goblin_camp None -> HERO_GUILD |
+| urban_political | 30 | 14 | 6 | bandit_road 10 | none |
+| dungeon_crawl | 12 | 5 | 2 | haunted_battlefield 25, bandit_road 20 | none |
+| generated_frontier_3_42 | 46 | 29 | 15 | goblin_camp 40, bandit_road 10 | none |
+
+So the mechanism both executes and has an effect: influence moves in wild regions in all four worlds, and dynamic
+liberation (an unowned region taken by `HERO_GUILD`) has fired in `frontier_living_world`. **Not shown by this
+measurement:** monster conquest of a hero-owned region (no such owner change occurred), or that the thresholds are
+balanced. The ticket's two open design questions (does a non-lethal `DEFEAT` count as a sovereignty death) are moot:
+`DEFEAT` deaths are counted by the lifecycle authority.
+
+No code, test, doc or ledger change; `src/content_semantics/faction.py` was not touched.
+
+## Test Summary
+No new tests: nothing was built. Evidence is the four runs above. The probe was a throwaway wrapper around the real kernel and is not committed.
+
+## Files Changed
+Ticket only (`todos/` -> `done/`).
+
+## Completion Summary
+Closed by disposition `SUPERSEDED`. `RegionState.influence` now moves and ownership now changes in real runs, because
+`786f9ee9b` made the lifecycle authority count `DEFEAT` and other non-`KILL` deaths. See the 2026-10-05 note for the
+four-world measurement and what it does not show.
+
+## Disposition
+SUPERSEDED
+
+## Disposition Rationale
+The defect (`resolve_lifecycle` counting only `KILL`/`PERMADEATH` deaths, so `process_influence_shift` was never called)
+was removed by commit `786f9ee9b` (#276, 2026-10-01). Re-measured at `fb0c1c318` with the real kernel: 43 calls for 59
+deaths in `frontier_living_world` where the 2026-09-30 tip recorded 0 calls for the same 59, region influence reaches
+50 (`goblin_camp`) and 25 (`bandit_road`), and `goblin_camp` changes owner to `HERO_GUILD`; the other three named worlds
+also show influence moving (`src/systems/lifecycle_systems/lifecycle.py:234,294-298`).

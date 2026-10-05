@@ -272,7 +272,7 @@ class TestInprogressNotTouched:
         monkeypatch.setattr(aft, "TICKET_DIR", done_dir)
         monkeypatch.setattr(aft, "ARTIFACT_DIR", artifacts_dir)
 
-        aft.main()
+        aft.main(["--apply"])
 
         # done ticket was modified
         assert done_ticket.read_text().startswith("---")
@@ -415,3 +415,61 @@ class TestValidateFrontmatterAcceptsOutput:
         assert result.returncode == 0, (
             f"validate_frontmatter.py failed:\nstdout={result.stdout}\nstderr={result.stderr}"
         )
+
+
+# ---------------------------------------------------------------------------
+# 10. dry run, atomic write, --ticket-id scope
+# ---------------------------------------------------------------------------
+
+class TestSweepSafety:
+    @staticmethod
+    def _setup(tmp_path, monkeypatch, names):
+        import add_frontmatter_tickets as aft
+
+        done_dir = tmp_path / TICKETS / "done"
+        done_dir.mkdir(parents=True)
+        artifacts_dir = tmp_path / STORED_ARTIFACTS
+        artifacts_dir.mkdir(parents=True)
+        for name in names:
+            (done_dir / f"{name}.md").write_text(f"# {name}\n")
+            sub = artifacts_dir / name
+            sub.mkdir()
+            (sub / "plan.md").write_text("# plan\n")
+        monkeypatch.setattr(aft, "TICKET_DIR", done_dir)
+        monkeypatch.setattr(aft, "ARTIFACT_DIR", artifacts_dir)
+        return aft, done_dir, artifacts_dir
+
+    @staticmethod
+    def _snapshot(*dirs):
+        return {p: p.read_bytes() for d in dirs for p in sorted(d.rglob("*.md"))}
+
+    def test_no_flags_is_a_dry_run(self, tmp_path, monkeypatch, capsys):
+        aft, done_dir, artifacts_dir = self._setup(tmp_path, monkeypatch, ["TCK-20260606-A", "TCK-20260606-B"])
+        before = self._snapshot(done_dir, artifacts_dir)
+        aft.main([])
+        out = capsys.readouterr().out
+        assert self._snapshot(done_dir, artifacts_dir) == before
+        assert "would modify" in out and "4 files would be modified" in out
+
+    def test_failure_on_a_later_file_leaves_every_file_unchanged(self, tmp_path, monkeypatch):
+        aft, done_dir, artifacts_dir = self._setup(tmp_path, monkeypatch, ["TCK-20260606-A", "TCK-20260606-B"])
+        before = self._snapshot(done_dir, artifacts_dir)
+        real = aft.compute_artifact_file
+
+        def boom(path, ticket_id):
+            if ticket_id == "TCK-20260606-B":
+                raise RuntimeError("injected failure")
+            return real(path, ticket_id)
+
+        monkeypatch.setattr(aft, "compute_artifact_file", boom)
+        with pytest.raises(RuntimeError):
+            aft.main(["--apply"])
+        assert self._snapshot(done_dir, artifacts_dir) == before
+
+    def test_ticket_id_restricts_both_walks(self, tmp_path, monkeypatch):
+        aft, done_dir, artifacts_dir = self._setup(tmp_path, monkeypatch, ["TCK-20260606-A", "TCK-20260606-B"])
+        aft.main(["--apply", "--ticket-id", "TCK-20260606-A"])
+        assert (done_dir / "TCK-20260606-A.md").read_text().startswith("---")
+        assert (artifacts_dir / "TCK-20260606-A" / "plan.md").read_text().startswith("---")
+        assert (done_dir / "TCK-20260606-B.md").read_text() == "# TCK-20260606-B\n"
+        assert (artifacts_dir / "TCK-20260606-B" / "plan.md").read_text() == "# plan\n"

@@ -81,6 +81,7 @@ All sub-specs are validated by Pydantic at construction time. `InvalidWorldSpecE
 **Entry point:** `WorldCompiler.compile(world_spec, catalog_repo=None, context=None) → AuthoritativeState`
 
 **Compilation sequence:**
+0. Reject a spec whose `PopulationSpec.spawn_region`, `ResourceNodeSpec.region`, or `BuildingSpec.region` names a region the spec does not define (see **Region reference check** below)
 1. Create empty `AuthoritativeState`
 2. Instantiate `RegionState` objects from `TopologySpec` and `List[RegionSpec]`
 2a. Derive `town_center` as the centroid of the first `RegionSpec` with `type == "town"` encountered in `spec.regions` order; left at the `AuthoritativeState` default `(0.0, 0.0)` if no town-type region exists.
@@ -90,6 +91,8 @@ All sub-specs are validated by Pydantic at construction time. `InvalidWorldSpecE
 6. Assign faction and role enums via `get_role_enum()` / `RoleSemanticsService`
 7. Generate initial `QuestState` for hero entities
 8. Compute `StateFingerprinter` hash
+
+**Region reference check (step 0):** `_assert_region_references_resolve(spec)` runs before any placement and raises `InvalidWorldSpecError` listing every population, resource node, and building whose region id is not in `spec.regions`, plus the region ids that are defined. It is a hard error, not a compile-report warning: each placement loop below is guarded by `if region:`, so an unresolved id would otherwise drop the whole population, node, or building with no error. This matches the assembly path, where `WorldAssemblyResolver` already raises `ResolverError` for a population recipe's `preferred_regions` entry absent from the module's regions (after the documented `trade_road` → `bandit_road` migration mapping). Quest `required_location_tags` stay warnings, because an unmatched tag drops no authoritative state.
 
 **Role resolution (`get_role_enum`):**
 Priority order:

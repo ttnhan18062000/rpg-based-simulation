@@ -10,6 +10,7 @@ from __future__ import annotations
 from src.rendering.connectivity import analyze_connectivity
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
+from tests.unit.rendering.frozen_dungeon_crawl import load_frozen_dungeon_crawl
 
 
 def test_connected_map_is_one_component_fully_reachable():
@@ -104,8 +105,8 @@ def test_does_not_mutate_authoritative_state():
 
 
 def test_dungeon_crawl_matches_documented_evidence():
-    repo = WorldRepository("data/worlds")
-    spec = repo.load_world("dungeon_crawl")
+    # Frozen pre-balance-fix snapshot (see tests/fixtures/rendering/*.yaml): the live world no longer has this terrain.
+    spec = load_frozen_dungeon_crawl()
     state, _report = WorldCompiler.compile(spec, seed=42)
 
     result = analyze_connectivity(state.terrain, state.blocked_tiles)

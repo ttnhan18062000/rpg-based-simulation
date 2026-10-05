@@ -42,14 +42,27 @@ this helper) — confirmed via a repo-wide reference search finding no productio
 - **Stickiness**: Entities retain their current `target_id` if the target is still alive and within a **Stickiness Radius** (Default: 15.0).
 - **Pursuit**: If a target is outside combat range but within visibility, the entity sets its navigation target to the target's current position. Tactical re-evaluation itself is cadence-gated (`SystemCadence.strategic_intelligence`, default every ~10 ticks); movement execution runs every tick and, while a real `target_id` is active in the entity's own task payload, re-derives the live target position each tick rather than walking to a stale snapshot from the last tactical decision (`TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`). This live-retargeting logic is centralized in `MovementCandidateSelector.resolve_live_tracking_target()` (`src/engine/candidate_selector.py`) and is applied at **all four** real places a stale `navigation.target`/`payload["target_position"]` snapshot can otherwise leak through unrefreshed: `MovementPhase.route_movement_intent()`'s own per-entity movement step, `MovementCandidateSelector.select()`'s own, separate movement-candidacy gate (which has its own independent "already at target" check and, pre-fix, silently excluded a pursuer that had "arrived" at a stale snapshot from candidacy before `route_movement_intent`'s live-retarget logic ever got a chance to run for it), and both real `ENTITY_MOVE` work-item dispatchers (`src/engine/executor.py`, `src/engine/worker_logic.py`'s `default_simulation_worker`) — both of which re-emit `NavigationUpdate(target_set=...)` from the same static `task.payload["target_position"]` snapshot every tick a pursuit task is scheduled, which `route_movement_intent`'s own `has_fresh_decision` check (`target_set is not None`) misreads as a genuine new tactical decision, silently defeating its own live-retarget fallback (`TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS`). Confirmed via live corpus trace: two mutually-pursuing entities were frozen at a fixed Manhattan distance for 990+ consecutive ticks despite `TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`'s own fix already being merged, because that fix's own retargeting logic never actually engaged for them. With that gap closed, the same specific pair still does not converge — it enters a real, deterministic diagonal-orbit deadlock instead, a known, disclosed, low-prevalence limitation of `NavigationSystem.get_next_step()`'s own single-axis stepping — see `docs/engine/known_limitations.md` §1.1 (`TCK-20260810-NAVIGATION-SINGLE-AXIS-STEPPING-DIAGONAL-PURSUIT-DEADLOCK`) for the full mechanism and real, measured corpus prevalence.
 
+**Pursuit completion (`TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK`).** A pursuit
+`ENTITY_MOVE` (movement mode `PURSUE`, `payload["target_id"]` set) **ends when the live target is within the entity's attack
+reach** (Manhattan; a melee entity needs distance 1; no weather multiplier, legality still arbitrates the attack itself).
+Both `ENTITY_MOVE` dispatchers (`executor.py`, `worker_logic.py`, via
+`MovementCandidateSelector.pursuit_reached_attack_range`) then emit `pursuit_completion_update`: the task returns to the idle
+encoding (`ENTITY_ACT` with an empty payload, which the scheduler reclassifies as a brain tick) **and the navigation target is
+cleared**, because movement is driven by `navigation.target`. Before this nothing ended a pursuit move, so under the Sticky-Task
+Law (`docs/engine/kernel.md`) the decision pass was never re-run and an entity adjacent to a live target at full readiness never
+chose `ATTACK`. Other moves that also carry a `target_id` (guard, cover, reposition, retreat) keep their own lifecycle. The idle
+entity is then decided at its next brain cadence (`strategic_intelligence`, 10 ticks); that wait is not changed here. Strategy does
+not write a navigation point for an entity-typed objective (`ObjectiveState.target_entity_id`): the redirection writers in
+`intelligence.py` and `redirection.py` leave the point unset and tactics resolve the live position.
+
 ## 4. Retreat & Disengage Rules (GAP-T03)
 - **Retreat Threshold**: Triggered when `hp < max_hp * 0.2`.
-- **Behavior**: Entity clears current combat intent and moves towards the defined "Safe Zone" (Default: (0,0)).
+- **Behavior**: Entity clears current combat intent and moves away from the perceived threats, clamped to stay inside its current region (`src/engine/tactical_destinations.py::retreat_destination`, one perception radius of 10 beyond itself). If no away-vector keeps it inside the region (cornered, or no threat vector), it heads for the centre of its own `strategic.home_region_id` region when set; otherwise it **holds position**. The destination is never a sentinel coordinate: the previous "Safe Zone (0,0)" was outside every region in the corpus worlds (World Rules `MOV-01`, `LOC-01`, `LOC-03`, `MOV-03`; `docs/guidelines/intentional_divergences.md` §2.66, `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN`). The same derivation serves the `PANIC_RETREAT` and `SAFETY_PRESSURE_RETREAT` reasons.
 
 ## 5. Anti-Stalemate Rules (GAP-T05)
 - **Deadlock Detection**: Tracks `stale_ticks` in the task payload.
 - **Trigger**: If `stale_ticks > 10` without a target change or outcome, the entity forces a `STALEMATE_BREAK`.
-- **Behavior**: Same as Retreat.
+- **Behavior**: A different semantic from Retreat: a `WANDER` to a seeded (`DeterministicRNG`, `Domain.TACTICAL`, scoped by tick and entity id), nearby (half-width 5), region-contained point (`wander_destination`). An entity that is itself outside every region holds position.
 
 ## 6. Known Exclusions
 - **Group Coordination**: Entities currently act as individuals (group coordination not yet implemented).
@@ -75,6 +88,19 @@ branch (`evaluate_entity_intent`). Resolution order:
    the real target position was already known and carried on `target_position` all along.
    Mirrors `StrategicIntelligenceSystem._resolve_active_objective()`'s own "detour" case, which
    already prefers `target_position` this same way.
+
+**Typed entity target (`TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES`).**
+When `obj.target_entity_id` is set, resolution **precedes** steps 1-3 and replaces them: the position is the
+live entity's `navigation.position` from `state.entities`; a dead or missing entity yields
+`(None, None, None)` with **no** `target_position` fallback (the snapshot is exactly the stale value the
+typed field exists to avoid, and the int-cast in step 1 could resolve an entity id equal to a node or
+building id to the wrong place). The strategic pass ends such an objective
+(`StrategicIntelligenceSystem._entity_target_outcome`): target dead -> objective `RESOLVED`, project
+`COMPLETED`; target gone from state or beyond `ENTITY_TARGET_PERCEPTION_RADIUS` (10, Manhattan) -> objective
+`FAILED`, project `ABANDONED`. Every objective without the field takes steps 1-3 unchanged. In the live
+tree a combat objective is `defeat_enemy`, which neither pursuit branch handles (engagement is the hostile
+branch), so the typed resolve is exercised by `reach_location` objectives that carry the field, such as a
+resumed `COMBAT_ENGAGE` committed intention.
 
 **Node 3 never yields `node_id`/`building_id`** — an objective resolved only via the
 `target_position` fallback still navigates to the position, but arrival dispatches to a bare

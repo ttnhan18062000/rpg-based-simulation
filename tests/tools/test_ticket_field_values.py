@@ -153,8 +153,36 @@ _DISPOSITION_BODY = (
 )
 
 
-def test_disposition_values_are_the_five_documented_ones():
-    assert DISPOSITION_VALUES == {"STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO"}
+def test_disposition_values_are_the_six_documented_ones():
+    assert DISPOSITION_VALUES == {
+        "STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO", "DECISION-RECORDED",
+    }
+
+
+def _decision(rationale):
+    return check_disposition_fields(_DISPOSITION_BODY.format(value="DECISION-RECORDED", rationale=rationale))
+
+
+def test_decision_recorded_accepts_a_dated_record_in_each_evidence_form():
+    for rationale in (
+        "Owner decision 2026-10-05 recorded in 791e6bf6b.",
+        "Owner decision 2026-10-05 in docs/decisions/perception.md:12.",
+        "Owner message 2026-10-05:\n```\nkeep it as is\n```",
+    ):
+        assert _decision(rationale)[0] == "PASS", rationale
+
+
+def test_decision_recorded_rejects_uncited_undated_and_code_only_rationales():
+    status, evidence = _decision("The owner said it is intended on 2026-10-05.")
+    assert status == "FAIL" and "cites no evidence" in evidence
+    status, evidence = _decision("Owner decision recorded in 791e6bf6b.")
+    assert status == "FAIL" and "ISO date" in evidence
+    status, evidence = _decision("Decided 2026-10-05; see src/domains/x/y.py:377.")
+    assert status == "FAIL" and "not a src/ or tests/ file:line" in evidence
+
+
+def test_decision_recorded_code_ref_beside_a_real_record_still_passes():
+    assert _decision("Decided 2026-10-05 in 791e6bf6b; behaviour at src/domains/x/y.py:377.")[0] == "PASS"
 
 
 def test_disposition_and_rationale_sections_parse_independently():

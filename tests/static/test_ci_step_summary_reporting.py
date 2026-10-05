@@ -54,8 +54,8 @@ _BANNED_MARKETPLACE_ACTION_SUBSTRINGS = ("dorny/test-reporter", "EnricoMi/publis
 _EXPECTED_MIGRATION_LANES_YAML = """
 name: "Migration lanes"
 runs-on: ubuntu-latest
-needs: [changed-files]
-if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') }}
+needs: [changed-files, resync-gate]
+if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
 steps:
   - uses: actions/checkout@v5
   - uses: astral-sh/setup-uv@v10.2.0
@@ -454,6 +454,8 @@ def test_no_cross_job_aggregate_step_or_job_added() -> None:
         "code-health",
         # TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK: the changed-line SARIF upload job (no pytest).
         "code-health-sarif",
+        # TCK-20261005-CI-SKIP-HEAVY-JOBS-ON-REGISTRY-ONLY-RESYNC: the re-sync skip gate (no pytest).
+        "resync-gate",
     }
     assert set(_jobs().keys()) == expected_job_names, (
         "job set changed -- a new CI job must be added to this expected set deliberately (no cross-job "

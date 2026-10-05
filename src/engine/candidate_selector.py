@@ -1,8 +1,9 @@
 # Compliance IDs: COMB-028, PERF-009, PERF-017
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterable, Optional
+from typing import TYPE_CHECKING, Iterable, Mapping, Optional
 from src.core.movement_modes import MovementMode
+from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
 from src.engine.phase_governor import ScanPolicy
 
 if TYPE_CHECKING:
@@ -72,6 +73,51 @@ class MovementCandidateSelector:
         if tracked_entity is not None and tracked_entity.lifecycle.active and tracked_entity.combat.alive:
             return tracked_entity.navigation.position
         return fallback_target
+
+    @staticmethod
+    def pursuit_reached_attack_range(entity: "EntityState", entities: Mapping[int, "EntityState"]) -> bool:
+        """True when ``entity`` is on a pursuit move whose LIVE target is already within its attack reach.
+
+        TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK: a pursuit
+        ``ENTITY_MOVE`` is created by the tactical pass once and re-scheduled as movement every tick
+        without re-entering the decision (docs/engine/kernel.md, the Sticky-Task Law), and nothing
+        ended it, so an entity next to its target at full readiness never got to choose ATTACK.
+        This is the missing completion condition: the pursuit has done its job once the live target is
+        in reach. Keyed on the target ENTITY's current position (``payload["target_id"]``), never on
+        the navigation destination, which is a snapshot.
+
+        Only ``MovementMode.PURSUE`` moves qualify: other moves also carry a ``target_id`` (guarding a
+        leader, seeking cover) and must keep their own lifecycle. Reach mirrors the distance part of
+        ``LegalityServiceV2.verify_attack_legality`` (Manhattan, melee needs distance 1) without its
+        weather multiplier; legality still arbitrates the actual attack when the brain re-decides.
+        """
+        if entity.navigation.movement_mode != MovementMode.PURSUE:
+            return False
+        tracked_id = entity.task.payload.get("target_id")
+        if tracked_id is None:
+            return False
+        target = entities.get(tracked_id)
+        if target is None or not target.lifecycle.active or not target.combat.alive:
+            return False
+        ex, ey = entity.navigation.position
+        tx, ty = target.navigation.position
+        dist = abs(ex - tx) + abs(ey - ty)
+        reach = entity.combat.range
+        if dist > reach:
+            return False
+        return not (reach <= 1.5 and dist > 1)
+
+    @staticmethod
+    def pursuit_completion_update(entity: "EntityState") -> EntityUpdate:
+        """The update that ends a pursuit move: back to the idle task so the brain decides next, and no
+        navigation target, because movement is driven by ``navigation.target`` and would otherwise keep
+        walking the entity onto its target's tile. An empty payload on ``ENTITY_ACT`` is the existing
+        idle-task encoding (scheduler.py ``is_idle_act``; pipeline_phases/actions.py)."""
+        return EntityUpdate(
+            entity_id=entity.id,
+            navigation=NavigationUpdate(target_clear=True),
+            task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={}),
+        )
 
     @staticmethod
     def select(

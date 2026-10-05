@@ -53,6 +53,28 @@ if stop_hook_active:
     # (CLAUDE_CODE_STOP_HOOK_BLOCK_CAP) instead of a clean allow.
     sys.exit(0)
 
+if payload.get("hook_event_name") == "SubagentStop":
+    # TCK-20261004-SUBAGENT-STOP-GUARD-COUNTS-PARENT-SESSION-SUBSCRIPTIONS: a real SubagentStop
+    # payload (live capture, tests/fixtures/claude_hook_payloads/subagent_stop_parent_subscription.jsonl)
+    # lists two things a stopping subagent cannot drain or wait on: its own registry entry
+    # (type "subagent", id == its agent_id) and the PARENT session's artifact live-update
+    # subscription (type "monitor", description "live updates for artifact ... (auto-armed on
+    # publish)"). Both are ignored for SubagentStop only; every shell/monitor/workflow task the
+    # subagent started still blocks, and the main-session Stop hook is unchanged.
+    own_id = payload.get("agent_id")
+
+    def _not_ours_to_drain(task):
+        if not isinstance(task, dict):
+            return True
+        if own_id and task.get("id") == own_id and task.get("type") == "subagent":
+            return False
+        description = task.get("description") or ""
+        if task.get("type") == "monitor" and description.startswith("live updates for artifact"):
+            return False
+        return True
+
+    background_tasks = [t for t in background_tasks if _not_ours_to_drain(t)]
+
 if not background_tasks:
     sys.exit(0)
 

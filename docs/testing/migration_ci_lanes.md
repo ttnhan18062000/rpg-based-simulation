@@ -130,6 +130,67 @@ set is much simpler than the other two — `frontend/**` plus `.github/workflows
 coverage from (unlike `perf-cert-arena`/`migration-lanes`, whose trigger sets are re-derived live
 from what `src/` dirs their tests actually import). Same fail-open guarantees apply.
 
+### Registry re-sync skip (`TCK-20261005-CI-SKIP-HEAVY-JOBS-ON-REGISTRY-ONLY-RESYNC`)
+
+The path-based skips above compare the whole PR with its base, so they cannot tell what the *latest push*
+changed. A PR that goes CONFLICTING on `docs/REGISTRY.yaml` alone is fixed by a sync merge from `main` plus a
+regenerated REGISTRY, which reran every job although the PR's own code was identical. The `resync-gate` job
+(`tools/test_architecture/registry_resync_skip.py`) now answers one question, `pr_content_unchanged`, and
+`true` makes the jobs below skip. Owner direction 2026-10-05: "skip if the previous commit passed".
+
+`pr_content_unchanged` is `true` only when ALL hold; anything else, any error or missing data is `false` and
+everything runs:
+
+1. The event is `pull_request` / `synchronize` and `github.event.before` exists in the clone (a force-push or
+   rebase can drop it).
+2. The PR's own patch, ignoring `docs/REGISTRY.yaml`, has the same `git patch-id --stable` before and after
+   (diff from `merge-base(base, commit)` to the commit). If `main` changed lines next to the PR's lines the
+   context differs and the answer is `false`; that is deliberate.
+3. Every `Tests` workflow run on the BEFORE commit has completed and every job in it is `success`, `skipped` or
+   `neutral`. A failure, a cancellation (a concurrency-group cancel included), a timeout, a run still in
+   progress, no run, or an API error gives `false`. Read through the Actions runs/jobs REST API (`actions: read`),
+   not `commits/{sha}/check-runs`, because a check run does not name its workflow. A chain of re-syncs is fine:
+   each push compares with its own BEFORE, itself green or validly skipped.
+
+The job summary names the rule that decided and the BEFORE SHA it compared against.
+
+**Which jobs skip, and why.** A job skips only if its result depends on nothing but the PR content. Which tests
+read the *real* `docs/REGISTRY.yaml` was measured, not guessed: a Python audit hook (`sys.addaudithook`,
+`open` events, injected into every process and subprocess through `sitecustomize`, tagged with
+`PYTEST_CURRENT_TEST`) ran each job's pytest scope on 2026-10-05 at `origin/main` `9bf34765b`, with a positive
+control that logged a known read. Result: every real read is in `tests/tools/` or `tests/codebase/` (for example
+`test_generate_registry.py::TestRealDocsTree`, `test_premise_staleness_check.py`, `test_post_native_run_check.py`,
+`test_registry_query.py`, `test_tools_orphan_check.py`, `test_codebase_health_baseline.py`,
+`test_codebase_health_snapshot.py`). `tests/integrity/test_registry_merge_driver.py` and the other test files that
+name the file read a temp copy or a fixture (none logged a real read). The audit covers pytest only: the Makefile
+targets that `arch-docs` and `code-health` run outside pytest were not audited, which is one more reason those
+two jobs keep running.
+
+| Job | Skips | Measured duration (3 PR runs, s) | Reason |
+|---|---|---|---|
+| Unit · core / world | yes | 134, 113, 130 | no real REGISTRY read |
+| Unit · gameplay | yes | 42, 41, 38 | no real read |
+| Unit · infra / observability | yes | 201, 163, 163 | no real read (`tests/unit/tools`, `tests/unit/docs` use fixtures) |
+| Integration | yes | 408, 419, 349 | no real read |
+| API / CLI / engine / logging | yes | 170, 174, 197 | no real read |
+| Agent orchestration / codex / replay | yes | 42, 43, 41 | no real read |
+| Simulation quality | yes | 36, 39, 47 | no real read |
+| Perf / cert / arena, Migration lanes, Scenario lane, Frontend | yes, on top of their own path rule | 113, 123, 28 (Frontend about 2) | no real read |
+| Tools · a–e, Tools · f–z | **no** | 195/197/160, 225/258/265 | hold the real readers |
+| Architecture / docs / static | **no** | 74, 72, 63 | the cheap docs/registry checks; kept on purpose |
+| Type check, Code health (+ SARIF) | **no** | 34, 133, 118 | lint-class; code-health reads the registry |
+
+Skipped runner time is about 1,270 job-seconds (about 21 minutes) per re-sync push. Wall time drops by about
+2–3 minutes: the jobs run in parallel, Integration (about 7 minutes, the longest job) no longer runs, and Tools f–z
+(about 4–4.5 minutes) becomes the longest. `resync-gate` is its own job, not
+a step in `changed-files`, so the heavy jobs do not wait for that gate's full clone; its own duration is
+recorded in the live-run evidence in `TCK-20261005-CI-SKIP-HEAVY-JOBS-ON-REGISTRY-ONLY-RESYNC`.
+
+**Accepted risk (owner-accepted 2026-10-05).** On a skipped re-sync the PR's code combined with the new `main`
+commits is **not tested before merge**. A clash between them surfaces on the full post-merge run on `main`, which
+always runs everything (the event is `push`, not `pull_request`). A skipped job is not a blocking failure either
+way: branch protection on `main` is disabled.
+
 ---
 
 ## Running Locally

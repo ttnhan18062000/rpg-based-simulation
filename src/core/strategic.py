@@ -308,6 +308,13 @@ class ObjectiveState:
     target_position: Optional[tuple[float, float]] = None
     status: ObjectiveStatus = ObjectiveStatus.UNRESOLVED
     blocker_ids: List[str] = field(default_factory=list)
+    # Typed entity target (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-
+    # TERMINATES). `target` overloads "resource node id | building id | town_center | entity id" into
+    # one string; when the objective's subject is a *moving entity* this names it unambiguously, so
+    # position is read live from state.entities and the objective can end when the entity dies, is gone
+    # or leaves perception. None for every place-targeted objective, and then omitted from the
+    # canonical dict (EntityState.to_canonical_dict) so unrelated state hashes do not move.
+    target_entity_id: Optional[int] = None
 
 
 @dataclass(frozen=True, slots=True)

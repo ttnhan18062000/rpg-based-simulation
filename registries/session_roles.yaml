@@ -36,6 +36,7 @@ domains:
       - tools/gate_checks/**
       - tools/agent_orchestration/**
       - tools/sessions/**
+      - tools/mechanism_registry/**
       - docs/agent-monitoring/**
       - docs/plans/agent_infrastructure/**
       - agent-working/agent-orchestration/**
@@ -49,6 +50,19 @@ domains:
     routes:
       "registries/mechanisms.yaml": rpg-planner
       "src/**": rpg-planner
+      "tests/architecture/**": testing-planner
+  codebase:
+    owns:
+      - codebase/**
+      - docs/plans/codebase_health/**
+      - docs/guidelines/python_code_standard.md
+      - .pre-commit-config.yaml
+      - tests/codebase/**
+    owns_not: []
+    routes:
+      "src/**": rpg-planner                   # ask before touching RPG logic
+      "agent-working/**": agent-working-designer   # process problems
+      "tools/**": agent-working-designer
       "tests/architecture/**": testing-planner
   testing:
     owns:
@@ -69,6 +83,9 @@ ownership_splits:
      reason: "rpg owns tests/** generally; the testing domain owns the architecture and mutation suites"}
   - {paths: ["tests/tools/**", "tests/docs/**"], domains: [rpg, agent-working],
      reason: "rpg owns tests/** generally; agent-working owns the tooling and docs suites"}
+
+  - {paths: ["tests/codebase/**"], domains: [rpg, codebase],
+     reason: "rpg owns tests/** generally; the codebase domain owns the code-health suites"}
 
 roles:
   - role: rpg-designer
@@ -146,6 +163,34 @@ roles:
     placement: {worktree: testing, max_sessions: 1}
     handover: .claude/handover/testing-implementer.md
 
+  - role: codebase-designer
+    identity: {domain: codebase, function: designer, session_name: codebase-designer,
+               legacy_session_name: null, seat_status: unstaffed,
+               interim_holder: agent-working-designer}   # no codebase session exists yet
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/codebase_health/**"]}
+    placement: {worktree: codebase, max_sessions: 1}
+    handover: .claude/handover/codebase-designer.md
+  - role: codebase-planner
+    identity: {domain: codebase, function: planner, session_name: codebase-planner,
+               legacy_session_name: codebase-planner, seat_status: unstaffed,
+               interim_holder: agent-working-planner}   # no codebase session exists yet
+    responsibility:
+      accepts_dispatch_from: [user, codebase-designer]
+    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/codebase_health/**", "agent-working/tickets/**"]}
+    placement: {worktree: codebase, max_sessions: 1}
+    handover: .claude/handover/codebase-planner.md
+  - role: codebase-implementer
+    identity: {domain: codebase, function: implementer, session_name: codebase-implementer,
+               legacy_session_name: codebase-implementer, seat_status: unstaffed,
+               interim_holder: agent-working-implementer}   # no codebase session exists yet
+    responsibility:
+      accepts_dispatch_from: [user, codebase-planner]
+    capability: {may_write: ["**"]}
+    placement: {worktree: codebase, max_sessions: 1}
+    handover: .claude/handover/codebase-implementer.md
+
 # Exclusive resources. The writer slot belongs to the worktree, not to a role; the holder must have
 # the implementer function (designers and planners hand drafts, as today). The lease itself is taken
 # at SessionStart by M2 and is runtime state.
@@ -153,3 +198,4 @@ worktrees:
   rpg: {writer: rpg-implementer}
   agent-working: {writer: agent-working-implementer}
   testing: {writer: testing-implementer}
+  codebase: {writer: codebase-implementer}

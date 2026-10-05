@@ -28,12 +28,12 @@ _worlds:
   dungeon_crawl:
     archetype: monster_only_gauntlet
     density:
-      building_density: 0.25
-      entity_density_per_area: 0.002099
-      entity_density_per_region: 8.0
+      building_density: 0.0
+      entity_density_per_area: 0.000982
+      entity_density_per_region: 6.0
       faction_density: 1.0
-      quest_density: 0.2812
-      resource_density: 0.75
+      quest_density: 0.4167
+      resource_density: 0.0
     run_keys:
     - dungeon_crawl_seed123_1000t
     - dungeon_crawl_seed123_2000t
@@ -46,12 +46,12 @@ _worlds:
     - dungeon_crawl_seed456_2000t
     - dungeon_crawl_seed456_500t
     scale:
-      building_count: 1
-      distinct_populated_factions: 4
-      entity_count: 32
-      quest_count: 9
-      region_count: 4
-      resource_node_count: 3
+      building_count: 0
+      distinct_populated_factions: 2
+      entity_count: 12
+      quest_count: 5
+      region_count: 2
+      resource_node_count: 0
     tier: end_to_end
   frontier_extended:
     archetype: civilian_settlement
@@ -509,12 +509,12 @@ dungeon_crawl_seed123_1000t:
   active_feature_flags: {}
   profile_name: dungeon_crawl
   scale:
-    building_count: 1
-    distinct_populated_factions: 4
-    entity_count: 32
-    quest_count: 9
-    region_count: 4
-    resource_node_count: 3
+    building_count: 0
+    distinct_populated_factions: 2
+    entity_count: 12
+    quest_count: 5
+    region_count: 2
+    resource_node_count: 0
   seed: 123
   ticks: 1000
   tier: end_to_end
@@ -523,12 +523,12 @@ dungeon_crawl_seed123_2000t:
   active_feature_flags: {}
   profile_name: dungeon_crawl
   scale:
-    building_count: 1
-    distinct_populated_factions: 4
-    entity_count: 32
-    quest_count: 9
-    region_count: 4
-    resource_node_count: 3
+    building_count: 0
+    distinct_populated_factions: 2
+    entity_count: 12
+    quest_count: 5
+    region_count: 2
+    resource_node_count: 0
   seed: 123
   ticks: 2000
   tier: end_to_end
@@ -537,12 +537,12 @@ dungeon_crawl_seed123_500t:
   active_feature_flags: {}
   profile_name: dungeon_crawl
   scale:
-    building_count: 1
-    distinct_populated_factions: 4
-    entity_count: 32
-    quest_count: 9
-    region_count: 4
-    resource_node_count: 3
+    building_count: 0
+    distinct_populated_factions: 2
+    entity_count: 12
+    quest_count: 5
+    region_count: 2
+    resource_node_count: 0
   seed: 123
   ticks: 500
   tier: end_to_end
@@ -551,12 +551,12 @@ dungeon_crawl_seed42_1000t:
   active_feature_flags: {}
   profile_name: dungeon_crawl
   scale:
-    building_count: 1
-    distinct_populated_factions: 4
-    entity_count: 32
-    quest_count: 9
-    region_count: 4
-    resource_node_count: 3
+    building_count: 0
+    distinct_populated_factions: 2
+    entity_count: 12
+    quest_count: 5
+    region_count: 2
+    resource_node_count: 0
   seed: 42
   ticks: 1000
   tier: end_to_end
@@ -565,12 +565,12 @@ dungeon_crawl_seed42_2000t:
   active_feature_flags: {}
   profile_name: dungeon_crawl
   scale:
-    building_count: 1
-    distinct_populated_factions: 4
-    entity_count: 32
-    quest_count: 9
-    region_count: 4
-    resource_node_count: 3
+    building_count: 0
+    distinct_populated_factions: 2
+    entity_count: 12
+    quest_count: 5
+    region_count: 2
+    resource_node_count: 0
   seed: 42
   ticks: 2000
   tier: end_to_end
@@ -579,12 +579,12 @@ dungeon_crawl_seed42_200t:
   active_feature_flags: {}
   profile_name: dungeon_crawl
   scale:
-    building_count: 1
-    distinct_populated_factions: 4
-    entity_count: 32
-    quest_count: 9
-    region_count: 4
-    resource_node_count: 3
+    building_count: 0
+    distinct_populated_factions: 2
+    entity_count: 12
+    quest_count: 5
+    region_count: 2
+    resource_node_count: 0
   seed: 42
   ticks: 200
   tier: end_to_end
@@ -593,12 +593,12 @@ dungeon_crawl_seed42_500t:
   active_feature_flags: {}
   profile_name: dungeon_crawl
   scale:
-    building_count: 1
-    distinct_populated_factions: 4
-    entity_count: 32
-    quest_count: 9
-    region_count: 4
-    resource_node_count: 3
+    building_count: 0
+    distinct_populated_factions: 2
+    entity_count: 12
+    quest_count: 5
+    region_count: 2
+    resource_node_count: 0
   seed: 42
   ticks: 500
   tier: end_to_end
@@ -607,12 +607,12 @@ dungeon_crawl_seed456_1000t:
   active_feature_flags: {}
   profile_name: dungeon_crawl
   scale:
-    building_count: 1
-    distinct_populated_factions: 4
-    entity_count: 32
-    quest_count: 9
-    region_count: 4
-    resource_node_count: 3
+    building_count: 0
+    distinct_populated_factions: 2
+    entity_count: 12
+    quest_count: 5
+    region_count: 2
+    resource_node_count: 0
   seed: 456
   ticks: 1000
   tier: end_to_end
@@ -621,12 +621,12 @@ dungeon_crawl_seed456_2000t:
   active_feature_flags: {}
   profile_name: dungeon_crawl
   scale:
-    building_count: 1
-    distinct_populated_factions: 4
-    entity_count: 32
-    quest_count: 9
-    region_count: 4
-    resource_node_count: 3
+    building_count: 0
+    distinct_populated_factions: 2
+    entity_count: 12
+    quest_count: 5
+    region_count: 2
+    resource_node_count: 0
   seed: 456
   ticks: 2000
   tier: end_to_end
@@ -635,12 +635,12 @@ dungeon_crawl_seed456_500t:
   active_feature_flags: {}
   profile_name: dungeon_crawl
   scale:
-    building_count: 1
-    distinct_populated_factions: 4
-    entity_count: 32
-    quest_count: 9
-    region_count: 4
-    resource_node_count: 3
+    building_count: 0
+    distinct_populated_factions: 2
+    entity_count: 12
+    quest_count: 5
+    region_count: 2
+    resource_node_count: 0
   seed: 456
   ticks: 500
   tier: end_to_end
