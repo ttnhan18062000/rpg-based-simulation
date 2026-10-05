@@ -186,8 +186,9 @@ posture reporting removed fails exactly the 6 withheld-clears tests (21 others p
 removed fails exactly 6 (19 pass). Must-not-change pins: 4 risk-accepted postures dispatch, absent and other-target posture do not
 withhold, decision-time `reason` kept, dead-target branch unchanged. Regression
 (`tests/unit/actions tests/unit/combat tests/unit/engine tests/mechanic_scenarios tests/architecture -m "not slow"`): 629 passed,
-1 skipped, 4 deselected. `tests/tools/test_generate_registry.py::...test_check_flag_detects_no_drift_against_real_registry` fails
-**locally only**: it regenerates in place and this worktree carries Lane B's untracked contested-zone ticket file; CI has no such file.
+1 skipped, 4 deselected. `tests/tools/test_generate_registry.py::...test_check_flag_detects_no_drift_against_real_registry` failed locally before main's #350
+(the registry regenerated in place and indexed Lane B's untracked ticket file); after merging main it passes, and a clean-export
+`generate_registry.py --check` also reported "In sync". `tests/codebase` needs `ast-grep`/`mypy`, which this environment lacks (see Review notes).
 
 ## Files Changed
 - `src/core/enums.py`, `src/engine/domain/action_router.py`, `src/engine/pipeline_phases/actions.py`
