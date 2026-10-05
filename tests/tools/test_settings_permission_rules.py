@@ -18,7 +18,8 @@ def _rules(kind):
     out = []
     for rule in permissions.get(kind, []):
         match = re.fullmatch(r"Bash\((.*)\)", rule)
-        assert match, f"{kind} rule {rule!r} is not a Bash(...) rule"
+        if not match:
+            continue  # a bare tool-name rule such as "Workflow"; covered by its own test below
         out.append(re.compile("^" + ".*".join(re.escape(part) for part in match.group(1).split("*")) + "$"))
     return out
 
@@ -29,10 +30,11 @@ def _hits(kind, command):
 
 MUST_ASK = {
     "merge": ["gh pr merge 5", "gh pr merge 5 --squash"],
+    # `git push origin :branch` has no permission rule: the harness reads `Bash(git push * :*)` as a literal
+    # prefix (it warns and never matches), so that form is covered by the guard hook (see test_session_classify.py).
     "remote branch deletion": [
         "git push origin --delete old-branch",
         "git push --delete origin old-branch",
-        "git push origin :old-branch",
         "gh api -X DELETE repos/o/r/git/refs/heads/old",
         "gh api --method DELETE repos/o/r/git/refs/heads/old",
     ],
@@ -104,3 +106,18 @@ def test_admin_flag_directly_after_merge_is_denied():
 
 def test_rm_without_flags_on_monitoring_data_is_asked():
     assert _hits("ask", "rm agent-working/agent-monitoring/data/2026-W41/x.runs.jsonl")
+
+
+def test_no_rule_mixes_a_wildcard_with_the_trailing_colon_star_prefix_syntax():
+    """The harness warns at every session start about `Bash(... * ...:*)` and matches it as a literal prefix."""
+    permissions = json.loads(_SETTINGS_PATH.read_text(encoding="utf-8"))["permissions"]
+    for kind in ("allow", "ask", "deny"):
+        for rule in permissions.get(kind, []):
+            inner = re.fullmatch(r"Bash\((.*)\)", rule)
+            if inner and inner.group(1).endswith(":*"):
+                assert "*" not in inner.group(1)[:-2], rule
+
+
+def test_workflow_tool_needs_the_users_go():
+    # Owner decision 2026-10-05: workflow_run is not visible to the Bash/Edit/Write guard, so it is asked here.
+    assert "Workflow" in json.loads(_SETTINGS_PATH.read_text(encoding="utf-8"))["permissions"]["ask"]

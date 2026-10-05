@@ -1,0 +1,1 @@
+{"session_id":"103a7673-29f8-4ed3-a610-d0ab7ebe4aba","run_id":null,"seq":null,"phase":null,"agent":null,"ts":"2026-10-05T07:29:31.225544Z","tool":"Bash","input_summary":"git status --short | head -1","read_ranged":null,"status":"ok","duration_ms":236,"execution_id":null,"provider":null,"ticket_id":null}
