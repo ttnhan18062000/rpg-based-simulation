@@ -4,6 +4,7 @@ from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.core.state import EntityState, AuthoritativeState
 from src.core.strategic import GoalKind, ObjectiveKind
+from src.systems.strategic_systems.entity_target_objective import ENTITY_TARGET_PERCEPTION_RADIUS
 
 class HarvestScorer(GoalScorer):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
@@ -104,8 +105,10 @@ class CombatEngageScorer(GoalScorer):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
         from src.engine.domain_logic import SimulationDomainLogic
         from src.engine.cognition import SensoryFilter
-        
-        raw_neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0)
+
+        # The objective this scorer creates ends when its target leaves this same radius
+        # (entity_target_outcome), so both read one named constant.
+        raw_neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=ENTITY_TARGET_PERCEPTION_RADIUS)
         neighbors = SensoryFilter.filter_saliency(entity, raw_neighbors, max_targets=5)
         # Catalog hostility with the real distance, not the raw 4-value Faction enum (which collapses content
         # factions): the tactical layer decides whether to engage with the same test, so a target chosen here
@@ -140,6 +143,7 @@ class CombatEngageScorer(GoalScorer):
             utility=utility,
             target_id=str(nearest_hostile.id),
             target_pos=nearest_hostile.navigation.position,
+            target_entity_id=nearest_hostile.id,
             metadata={"obj_kind": ObjectiveKind.DEFEAT_ENEMY},
         )
 

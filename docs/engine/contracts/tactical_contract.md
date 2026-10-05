@@ -76,6 +76,19 @@ branch (`evaluate_entity_intent`). Resolution order:
    Mirrors `StrategicIntelligenceSystem._resolve_active_objective()`'s own "detour" case, which
    already prefers `target_position` this same way.
 
+**Typed entity target (`TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES`).**
+When `obj.target_entity_id` is set, resolution **precedes** steps 1-3 and replaces them: the position is the
+live entity's `navigation.position` from `state.entities`; a dead or missing entity yields
+`(None, None, None)` with **no** `target_position` fallback (the snapshot is exactly the stale value the
+typed field exists to avoid, and the int-cast in step 1 could resolve an entity id equal to a node or
+building id to the wrong place). The strategic pass ends such an objective
+(`StrategicIntelligenceSystem._entity_target_outcome`): target dead -> objective `RESOLVED`, project
+`COMPLETED`; target gone from state or beyond `ENTITY_TARGET_PERCEPTION_RADIUS` (10, Manhattan) -> objective
+`FAILED`, project `ABANDONED`. Every objective without the field takes steps 1-3 unchanged. In the live
+tree a combat objective is `defeat_enemy`, which neither pursuit branch handles (engagement is the hostile
+branch), so the typed resolve is exercised by `reach_location` objectives that carry the field, such as a
+resumed `COMBAT_ENGAGE` committed intention.
+
 **Node 3 never yields `node_id`/`building_id`** — an objective resolved only via the
 `target_position` fallback still navigates to the position, but arrival dispatches to a bare
 idle `EntityUpdate` rather than INTERACT/EAT/REST (no ID to act on). This is accepted, disclosed

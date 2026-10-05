@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN
-phase: open
+phase: done
 date: 2026-10-03
 tags: [combat, world, root-cause]
 ---
@@ -18,7 +18,7 @@ parking it outside every region permanently
 
 ## Status
 
-INPROGRESS
+DONE
 
 ## Tier
 

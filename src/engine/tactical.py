@@ -845,6 +845,16 @@ class TacticalDecisionSystem:
         stay `None` anyway. Mirrors `StrategicIntelligenceSystem._resolve_active_objective()`'s
         own "detour" case, which already prefers `target_position` this same way.
         """
+        # Typed entity target: the position is the live entity's, never a node/building looked up by an
+        # int-cast of the entity id (which could collide with a node or building id) and never the
+        # `target_position` snapshot frozen at goal-win time. A dead or missing entity has no position;
+        # the strategic pass ends the objective (StrategicIntelligenceSystem entity-target termination).
+        if getattr(obj, "target_entity_id", None) is not None:
+            target_entity = state.entities.get(obj.target_entity_id)
+            if target_entity is None or not target_entity.combat.alive:
+                return None, None, None
+            return target_entity.navigation.position, None, None
+
         target_pos = None
         node_id = None
         building_id = None

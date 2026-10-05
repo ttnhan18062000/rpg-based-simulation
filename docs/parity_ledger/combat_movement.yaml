@@ -4474,3 +4474,25 @@
   proof_type: regression
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.66.
   support_boundary: null
+- id: COMB-328
+  text: 'TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES:
+    an objective whose subject is a moving entity carries a typed ObjectiveState.target_entity_id
+    (set by CombatEngageScorer and a resumed COMBAT_ENGAGE committed intention), resolves
+    to the entity''s live position, and ends: target dead -> RESOLVED/COMPLETED; target
+    beyond 10 tiles Manhattan or absent -> FAILED/ABANDONED. StrategicWorkQueue schedules
+    an ended entity-targeted objective as a tier-3 transition. The field is omitted
+    from the canonical dict when None. Every untyped objective resolves as before.'
+  v2_evidence: src/core/strategic.py (ObjectiveState.target_entity_id), src/systems/strategic_systems/entity_target_objective.py
+    (entity_target_outcome), src/systems/strategic_systems/intelligence.py (lifecycle
+    block), src/systems/strategic_systems/work_queue.py (tier 3), src/engine/tactical.py
+    (_resolve_target_position typed branch).
+  test_path: tests/unit/strategic/test_entity_target_objective.py::TestLifecycleThroughStrategicIntent::test_dead_target_completes_the_project_and_frees_the_slot;
+    tests/unit/strategic/test_entity_target_objective.py::TestWorkQueueSchedulesTheTermination::test_dead_target_schedules_the_holder
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  proof_type: regression
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.67.
+  support_boundary: The target-absent-from-state branch was never observed (dead entities
+    stay in state.entities) and is covered by a unit test only. SocialContractScorer
+    also puts an entity id in target_id and is not typed here (TCK-20261005-SOCIAL-CONTRACT-OBJECTIVE-TARGETS-A-MOVING-COUNTERPARTY-AS-A-FIXED-POINT).
