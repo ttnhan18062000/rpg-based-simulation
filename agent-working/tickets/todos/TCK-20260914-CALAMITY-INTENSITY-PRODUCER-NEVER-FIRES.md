@@ -297,6 +297,26 @@ Decision requested from the rule owner (via the planner), per this ticket's own 
 `calamity_intensity`, or retire the chain. Options and a recommendation are in the message that accompanied this note.
 No code was changed.
 
+### 2026-10-05 (later) — CORRECTION by `rpg-implementer-2` to the note above: trauma is not "dead", it stops short of the threshold
+
+The note above says the `world_dynamics.py:119-123` hazard growth (trauma > 50) "is starved by
+`TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`", and the planner relayed "(c) is blocked by (e)". **That was wrong as
+stated.** Measured (real `Kernel.tick_once`, `PROD_SMALL`, seed 42, 5,000 ticks, per-region `trauma_score` and
+`hazard_level` sampled every tick):
+
+| world | region max `trauma_score` | any region above 50 | any `hazard_level` growth |
+|---|---|---|---|
+| frontier_living_world | bandit_road 47.1, goblin_camp 47.1, hometown 1.0, others 0.0 | no | none |
+| generated_frontier_3_42 | goblin_camp 36.1, bandit_road 2.5, hometown 1.9, moon_cave 0.0, others 0.0 | no | none |
+
+So trauma **does** accumulate in regions with combat (+1.0 per death, decay only `-0.0005`/tick at
+`src/world/consequences.py:42`); it just did not exceed the Bible 05 §2 instability threshold of `50.0` within 5,000 ticks
+in either world, so hazard never grew. The starvation is "threshold not reached in the measured run length", not (e)'s
+moon_cave isolation, and fixing (e) would not change it. **Consequence for `ENV-06`** (which reuses `trauma_score > 50.0`):
+on these two worlds at 5,000 ticks the escalation condition would never be met; the window, the threshold reuse and the
+run length are the implementation's engineering choices and need that fact. Unverified hypothesis: the identical 47.1 in
+`bandit_road` and `goblin_camp` comes from their overlapping bounds counting one death in both regions.
+
 ## Test Summary
 _(not started)_
 

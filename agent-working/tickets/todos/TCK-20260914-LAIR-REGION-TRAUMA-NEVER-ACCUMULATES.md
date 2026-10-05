@@ -230,6 +230,23 @@ This also settles this ticket's own open framing (its Title): the threshold is n
 explicitly tested and rejected a shared root cause with `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`
 (a death-outcome-kind filter, `T03`); the two share a symptom, not a cause.
 
+### 2026-10-05 — `rpg-implementer-2` re-measurement before any build: the ticket's claim holds for `moon_cave`, but its framing is narrower than "trauma never accumulates"
+
+Real `Kernel.tick_once`, `PROD_SMALL`, seed 42, 5,000 ticks, `generated_frontier_3_42`; per-region `trauma_score` sampled
+every tick, and live entity positions mapped to regions every 25 ticks:
+- `moon_cave`: `max trauma_score` **0.0**, `hazard_level` 4.0 throughout, and entities **are present** (154 region-presence
+  samples). So the region is not empty: its own population lives there and nobody dies there. That matches the 2026-09-15
+  spatial-isolation finding (no hostile faction composed within range) and answers the open "do any entities path in"
+  question: its own population does.
+- The only region above the lair gate's `BOSS_SPAWN_TRAUMA_THRESHOLD = 8.0` is `goblin_camp` (36.1); no other region reaches it,
+  so `check_for_lair_spawn()` for `moon_cave_lair` cannot open here at any run length that matches this one.
+- **Scope correction:** trauma accumulates normally where combat happens (`goblin_camp` 36.1; `bandit_road` and `goblin_camp`
+  47.1 in `frontier_living_world`). This ticket is about one isolated lair region, not a world-wide trauma failure. No region in
+  either world exceeded the `> 50.0` threshold in 5,000 ticks (see the correction in
+  `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`).
+- No code, content or test change was made. The two fix directions already recorded above (compose hostile presence near the
+  lair, or give Lair occupants their own trigger) remain open design decisions; neither is chosen here.
+
 ## Test Summary
 _(not started)_
 
