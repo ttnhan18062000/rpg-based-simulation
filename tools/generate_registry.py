@@ -567,10 +567,63 @@ def _check_drift(output: Path, output_entries: list) -> int:
     return 2
 
 
-def generate_registry(root: Path, output: Path, *, check: bool = False) -> int:
-    """Generate docs/REGISTRY.yaml. Returns exit code (0=ok, 1=doc errors, 2=drift in --check mode)."""
+def indexable_paths(root: Path) -> set | None:
+    """Root-relative posix paths git tracks or has staged (`git ls-files`), or None when `root` is not the top
+    level of a git checkout (a plain directory or a `git archive` export is indexed as-is).
+
+    TCK-20261005-REGISTRY-REGEN-INDEXES-UNTRACKED-FILES-FROM-THE-WORKING-TREE: the registry is compared in CI
+    against the committed tree, so a deliberately untracked file (another lane's draft ticket, a planner's
+    todos/ file) must never reach it. Untracked files are excluded unless the caller names them via `include`.
+    """
+    import subprocess
+
+    try:
+        top = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=30)
+        if top.returncode != 0 or Path(top.stdout.strip()).resolve() != Path(root).resolve():
+            return None
+        out = subprocess.run(["git", "-C", str(root), "ls-files", "-z"], capture_output=True, text=True, timeout=60)
+        if out.returncode != 0:
+            return None
+        return {p for p in out.stdout.split("\0") if p}
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def _drop_unindexable(entries: list, root: Path, allowed: set | None, include: set) -> list:
+    """Entries whose file is tracked/staged (or named in `include`); `artifact_files` filtered the same way."""
+    if allowed is None:
+        return entries
+    keep = allowed | include
+    out = []
+    for e in entries:
+        if e.get("path") not in keep:
+            continue
+        if e.get("artifact_files"):
+            e = {**e, "artifact_files": [f for f in e["artifact_files"] if f in keep]}
+        out.append(e)
+    return out
+
+
+def generate_registry(root: Path, output: Path, *, check: bool = False, include=()) -> int:
+    """Generate docs/REGISTRY.yaml. Returns exit code (0=ok, 1=doc errors, 2=drift in --check mode).
+
+    Only files git tracks or has staged are indexed (see `indexable_paths`); `include` is an iterable of
+    root-relative paths (or directories, taken recursively) to index even though untracked, which is how a
+    ticket being closed right now reaches the registry before it is committed."""
     doc_entries, doc_errors = collect_docs(root)
     ticket_entries = collect_tickets(root)
+    allowed = indexable_paths(root)
+    extra = set()
+    for item in include:
+        rel = Path(item)
+        rel = rel.relative_to(root) if rel.is_absolute() else rel
+        if any(c in str(rel) for c in "*?["):  # a glob, e.g. a nested epic ticket under done/<folder>/
+            extra |= {f.relative_to(root).as_posix() for f in root.glob(str(rel))}
+            continue
+        target = root / rel
+        extra |= {f.relative_to(root).as_posix() for f in target.rglob("*")} if target.is_dir() else {rel.as_posix()}
+    doc_entries = _drop_unindexable(doc_entries, root, allowed, extra)
+    ticket_entries = _drop_unindexable(ticket_entries, root, allowed, extra)
 
     all_entries = sort_entries(doc_entries + ticket_entries)
 
@@ -635,6 +688,11 @@ def main() -> None:
         help="Dry-run: diff in-memory regeneration against on-disk output, write nothing, "
              "exit 0 (in sync) / 1 (doc frontmatter errors) / 2 (drift detected)",
     )
+    parser.add_argument(
+        "--include-untracked", action="append", default=[], metavar="PATH",
+        help="Root-relative file or directory to index although untracked (repeatable); the closing ticket's "
+             "done/ file and stored_artifacts/ folder. Every other untracked file is excluded.",
+    )
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
@@ -642,7 +700,7 @@ def main() -> None:
     if not output.is_absolute():
         output = root / output
 
-    sys.exit(generate_registry(root, output, check=args.check))
+    sys.exit(generate_registry(root, output, check=args.check, include=args.include_untracked))
 
 
 if __name__ == "__main__":

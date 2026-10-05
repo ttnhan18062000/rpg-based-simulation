@@ -632,6 +632,60 @@ Already covered by the existing `agent-working/agent-monitoring/data/*/*.jsonl m
 
 ---
 
+## `role_boundary` (`agent-working/agent-monitoring/data/YYYY-Www/role_boundary.jsonl`)
+
+Advisory, log-only session-layer boundary events (`TCK-20261004-SESSION-LAYER-M5C-READ-ONLY-ALLOWLISTS-AND-ROLE-BOUNDARY-EVENTS`;
+plan `docs/plans/agent_infrastructure/session_layer_working_process.md` sections 9.0 and 10). Like
+`claim_detections`, this is its own file family: it is not an `events` row, so it carries no `agent`,
+`phase` or `run_id`, never reaches the `vocabulary_drift` ratchet, and no gate reads it. Written by
+`tools/sessions/boundary.py`, called from `tools/sessions/guard.py` only for a tool call the guard has
+already allowed, through the shared `writer.py::write_line()` (own `role_boundary.jsonl.lock`). It warns the
+session (hook `additionalContext`) and logs; it never denies or asks. A write failure is swallowed.
+
+Emitted for a **resolved** role only, once per `(kind, path class or target)` per session
+(seen-state under the session-role state root, `_boundary/<session_id>.json`):
+
+| `kind` | Fires when | Extra fields |
+|---|---|---|
+| `edit_outside_owns` | an Edit/Write/MultiEdit/NotebookEdit path that another domain owns per `tools/sessions/route.py` (`from_domain` = the caller's domain; a split path fires when it does not include the caller's domain), and the role's narrow `may_write` or `owns` globs do not cover it. An unowned path never fires; a `may_write` of `**` (implementers) exempts nothing. | `path` (repo-relative), `owner_domains`, `owner_seats` |
+| `message_class_mismatch` | a `SendMessage` whose first line begins `dispatch`, `handoff` or `request` to a role whose `accepts_dispatch_from` lists neither the sender's instance nor its base role. Message content is never recorded. Active only when `SendMessage` is in the guard hook's matcher. | `target`, `message_class`, `accepts_dispatch_from` |
+
+Common fields: `ts`, `event` (`"role_boundary"`), `kind`, `session_id`, `session_role` (the resolved role
+instance; never the `agent` vocabulary), `function`, `domain`, `tool`. Covered by the existing
+`agent-working/agent-monitoring/data/*/*.jsonl merge=union` glob. Harden only what recurs after a measured
+window (plan section 10; M7). "Unusual route" is deliberately not its own kind: a routed path is still an edit in another domain, so it is
+folded into `edit_outside_owns` (`owner_seats` shows where it should have gone); M7 can split it if the data shows it recurs.
+
+## Session-layer fields and files (`session_role`, `manual_actions`)
+
+`TCK-20261004-SESSION-LAYER-M6A-MINIMUM-MEASUREMENT` (plan `docs/plans/agent_infrastructure/
+session_layer_working_process.md` section 11).
+
+**`session_role` on `runs` and `events`** (additive, string, never null): the role instance bound to the writing
+session, read by session id from the per-session binding record (`tools/agent-monitoring/session_role.py`), never
+from the shared unscoped `.claude/current_run`. `unresolved` means no binding names the session (a plain session,
+no session id, or a failure to read state); records written before M6a simply lack the field and the retro counts
+them `unresolved`. It is a separate field from `agent`: the `agent` vocabulary and the `vocabulary_drift` ratchet
+are untouched. Stamped by `record_run.py`, `record_events.py` and `record_hand_orchestrated_closure.py`; a value
+the caller already supplied is kept. `tools` rows are deliberately not stamped.
+
+**`manual_actions`** (`agent-working/agent-monitoring/data/YYYY-Www/manual_actions.jsonl`, own file family): the
+headline metric, repeated instructions per category (`role_reminder`, `routing_correction`, `manual_wake`,
+`worktree_correction`, `boundary_reminder`, `handover_recovery`). Fields: `ts`, `category`, `source` (`sample` or
+`tally`), `session_id`, `session_role`, `batch`, `count`. Never records the prompt text. `sample` rows come from the
+`UserPromptSubmit` hook (`manual_actions.py hook`): a conservative tagger that counts only short imperative
+messages matching a category phrase, so decisions, design feedback, questions and requirements are untagged and it
+under-counts. `tally` rows are the owner's own line per batch (`manual_actions.py tally <category> --batch <id>`),
+authoritative. Report-only; no gate reads it.
+
+**Batch latency** is derived on demand (`tools/agent-monitoring/batch_latency.py <PR...>`, or `generate_retro.py
+--latency-prs`), with no batch registry and no stored file: implementation (dispatch to PR green), finalization (PR
+green to finalized = merged) and cycle time. Dispatch is the batch's first commit unless given; an unavailable
+timestamp, a red or unfinished check, an unmerged PR or a negative span is `unknown`, never zero.
+
+The retro report gains one section, `Session-Layer Measures` (`session_layer_report.py`): manual actions, runs by
+`session_role`, `role_boundary` warnings and the latency rows.
+
 ## Join Example
 
 ```python

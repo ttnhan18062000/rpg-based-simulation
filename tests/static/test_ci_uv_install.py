@@ -13,7 +13,7 @@ _JOBS = yaml.safe_load((_ROOT / ".github" / "workflows" / "test.yml").read_text(
 # resync-gate (TCK-20261005-CI-SKIP-HEAVY-JOBS-ON-REGISTRY-ONLY-RESYNC) runs one stdlib-only module on the
 # runner's own python3, like changed-files, so it installs nothing.
 _NO_PYTHON_INSTALL = {"changed-files", "frontend", "resync-gate"}
-# code-health runs the ratchet itself (ruff, complexipy, ast-grep), so it syncs `lint` too.
+# code-health runs the ratchet itself (ruff, complexipy, ast-grep, import-linter), so it syncs `lint` too.
 _LINT_JOBS = {"tools-a-e", "code-health", "code-health-sarif"}
 
 
@@ -47,7 +47,7 @@ def test_lint_group_holds_the_code_health_tools_and_is_a_default_group() -> None
     data = tomllib.loads((_ROOT / "pyproject.toml").read_text())
     groups = data["dependency-groups"]
     lint = {d.split("==")[0] for d in groups["lint"]}
-    assert lint == {"ruff", "complexipy", "ast-grep-cli"}
+    assert lint == {"ruff", "complexipy", "ast-grep-cli", "import-linter"}
     assert not any(d.split("==")[0] in lint for d in groups["dev"])
     assert data["tool"]["uv"]["default-groups"] == ["dev", "lint"]
 
