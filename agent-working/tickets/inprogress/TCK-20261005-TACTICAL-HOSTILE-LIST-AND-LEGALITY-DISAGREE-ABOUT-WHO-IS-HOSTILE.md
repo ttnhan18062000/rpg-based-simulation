@@ -4,7 +4,7 @@ layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-TACTICAL-HOSTILE-LIST-AND-LEGALITY-DISAGREE-ABOUT-WHO-IS-HOSTILE
-phase: open
+phase: inprogress
 date: 2026-10-05
 tags: [engine, combat, investigation]
 ---
@@ -17,7 +17,7 @@ a target with one hostility predicate while legality gates on a *different* pred
 whether clean faction data happens to exist — three hostility call sites, no single authority
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
