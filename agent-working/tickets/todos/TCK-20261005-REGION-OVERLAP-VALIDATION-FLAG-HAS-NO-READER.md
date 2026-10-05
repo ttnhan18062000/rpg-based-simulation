@@ -161,8 +161,51 @@ _(none yet — Scope 1's audit will produce the first)_
   "which region is this" anywhere, this is a live correctness bug and not a documentation defect.
   **So Scope 1 is the whole of the first pass. Do not propose a direction in the same breath as the
   audit — report the audit, then ask.**
-- **A candidate measured consequence on a durable field — 2026-10-05, UNVERIFIED, and it would change
-  this ticket's priority if it holds.** `rpg-implementer-2`, measuring trauma for
+- **RESOLVED, 2026-10-05: the double-count hypothesis below is FALSIFIED, and overlap's real measured
+  effect is the opposite — it *shadows* regions.** `rpg-implementer-2` compared the two trauma series
+  tick-by-tick over 10000 ticks (`frontier_living_world`, seed 42, `PROD_SMALL`) rather than the
+  maxima. The series are **not** identical (max |diff| 2.0005) and the two regions **never jump on the
+  same tick**: each has exactly 116 jumps totalling 116.9, every `goblin_camp` jump matched by an equal
+  `bandit_road` jump exactly **one tick later**, and the deaths on those ticks are **distinct
+  entities**, each counted once. So no shared accumulation. My hypothesis was wrong and the
+  discriminator settled it.
+
+  **Scope 1's central question is therefore already answered: FIRST MATCH.**
+  `SpatialQueryService.get_region_at` (`src/engine/spatial_query.py:168-190`) walks the spatial index
+  cell's region list and `return`s the **first** region whose half-open bounds contain the point. With
+  overlap, exactly one region is credited and the rest get nothing.
+
+  **The measured consequence, on `frontier_living_world` over 10000 ticks:** `near_forest` had **118**
+  deaths inside its bounds, `wolf_den` **93**, `trading_hometown` **15** — and **all three ended at
+  `trauma_score` 0.0**. Death positions genuinely lie in several overlapping regions at once (one death
+  at tick 3 was inside `bandit_road`, `near_forest` and `wolf_den` by bounds). Overlap does not inflate
+  a region's trauma; it **starves the shadowed region of its own events**.
+
+  That is a wrong-world-truth defect, not untidiness, and it **reaches the lair gate**: a lair region
+  shadowed by a neighbour can never accrue the trauma its own gate reads. See the `(e)` link below.
+
+  Two caveats the measurement names and this ticket keeps: the shadowing was **inferred** from zero
+  trauma beside deaths-in-bounds using a closed-bounds check against the lookup's half-open bounds, so
+  the counts are approximate and **no individual lookup was traced**. Scope 1 should trace one.
+
+- **New sub-question raised by that answer, and it is sharp.** `get_region_at` returns the first match
+  in the **spatial index cell's** list order. Bible `06_worldbuilding_foundation.md:37` states that for
+  overlapping regions **declaration order** is "the deliberate priority mechanism" for terrain writes.
+  **Does the index's order equal declaration order?** If it does not, the Bible's documented priority
+  mechanism does not govern region *lookups* at all, and which region is credited for a death is
+  deterministic but arbitrary. Answer this in Scope 1 — it decides whether shadowing is a documented
+  consequence authors can control or an undocumented one they cannot.
+
+- **Superseded hypothesis, kept as the record.** The paragraph below was my reading of the same
+  measurement before the series comparison existed. It was wrong, and the shape of the error is worth
+  keeping: two regions holding equal *maxima* looked like shared accumulation and was in fact a
+  mirrored death pattern one tick apart. `rpg-implementer-2` also flagged, and did **not** explain, a
+  periodic death pattern roughly every 300 ticks (entities 52/53 and 54/55 dying at ticks 302/303 and
+  602/603, with no check of whether they die on the tick they spawn). Treat that as an unexplained
+  observation, not a finding — it is not this ticket's subject.
+
+- ~~**A candidate measured consequence on a durable field — 2026-10-05, UNVERIFIED, and it would change
+  this ticket's priority if it holds.**~~ `rpg-implementer-2`, measuring trauma for
   `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`, found `bandit_road` and `goblin_camp` on
   `frontier_living_world` reading **exactly the same** `trauma_score` max of **47.1** at 5000 ticks.
   Its own hypothesis, which it flagged as unverified and did **not** check: their bounds overlap, so
