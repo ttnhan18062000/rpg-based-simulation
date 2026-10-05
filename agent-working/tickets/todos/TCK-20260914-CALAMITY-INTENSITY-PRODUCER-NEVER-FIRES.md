@@ -56,6 +56,61 @@ This is a separate, deeper finding than the `world_boss` spawn path's own gate
 requirement were made reachable, the intensity value it checks would still never be nonzero.
 
 ## Scope
+
+> **SCOPE SUPERSEDED BY OWNER DECISION 10 / CATALOG RULE `ENV-06`, 2026-10-05.** The bullets below
+> are kept as the record of the original diagnosis — they were a correct investigation of the wrong
+> producer. Read this block first; where it conflicts with a bullet below, this block wins.
+>
+> Lane B's investigation (findings committed at `d2724b1bb`, no code change) established that
+> `CalamityService.apply_calamity_consequences` has **zero callers**, and that nothing in Bible 05
+> L457 or `environment.md:51` said what *raises* `calamity_intensity` — both only read it. The
+> planner ruled against wiring the existing method, because doing so would invent the rule by
+> implication and its only visible effect would be flipping
+> `tests/architecture/test_calamity_intensity_producer_unwired.py` with no behavioural change. The
+> question went to `world-rule-catalog-design`, which drafted four options; the owner chose one.
+>
+> **`ENV-06` (`docs/world_rules/space-environment/environment.md`, commit `043ebb30d`, parked on
+> `origin/calamity-rule-decision`):**
+> - Calamity intensity rises **only while a region stays above the instability threshold for a
+>   sustained period**. The threshold reuses Bible 05 §2's `trauma_score > 50.0`.
+> - It **decays slowly** once the region calms.
+> - **No single event raises it directly** — not a death, not a hero's death, not one battle.
+> - Trauma is the acute per-event measure; calamity measures its **persistence**. No double
+>   counting, and "deaths raise calamity" is **explicitly not adopted**.
+> - Window, rise rate, decay rate and cap are engineering choices, to be recorded in Bible 05 and the
+>   parity ledger **at implementation**.
+> - Seasonal propagation is kept.
+> - `CALAMITY_RANDOM_CHANCE` **stays unwired**; any later probabilistic onset must be conditioned on
+>   this escalation (`CAUSE-01`).
+>
+> **So the existing single-`kind=="hero"`-death method is NOT the producer to wire.** The producer is
+> the escalation. `test_calamity_intensity_producer_unwired.py`'s welcome failure flips when that
+> lands, legitimately.
+>
+> **Sequencing: `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` goes first.** `ENV-06` is
+> observable only once trauma accumulates, and the Rule records that order deliberately. Do not start
+> this ticket before that one lands.
+>
+> **WORLD BOSS IS DEFERRED** (owner, mid-decision, 2026-10-05). `ENV-06` does not list world-boss
+> emergence as a consumer. The boss filter at `calamity.py:42` and the magical/demonic spawn riding
+> on it (flag OFF) **stay untouched**. Implementing `ENV-06` must **not** use a boss spawn as
+> evidence, and must neither tune nor retire the boss branch.
+>
+> **The owed evidence is a scenario, not a boss spawn:** a region held above threshold escalates; a
+> single death spike does **not**; a calmed region decays. Three assertions.
+>
+> **Two stale claims to fix in the same pass.** `docs/world/ecology_and_calamity_contract.md:92`
+> still reads "Hero death in a region with `hazard_level > 0.5` raises that region's
+> `calamity_intensity` by **+0.05** per death. Intensity decays naturally if the region stabilises" —
+> the first half is now **contradicted by `ENV-06`** and the second describes decay code that does
+> not exist. The contract also claims calamity **increases** `trauma_score`, which
+> `process_world_dynamics` does not do; that second claim is UNCONFIRMED beyond `calamity.py` itself
+> and should be verified before being corrected or removed.
+>
+> **Registry:** `calamity_intensity`'s entry carries a pointer to rebind `implemented_by` once the
+> producer exists. `registries/mechanisms.yaml` content is not this ticket's to edit — report the
+> rebind to the planner.
+
 - Confirm directly (not inferred) whether any hero ever died in a `hazard_level > 0.5` region
   during a real run of realistic length — check `region.hazard_level` distributions across the
   corpus's real worlds, and whether hero deaths in high-hazard regions are themselves rare/absent

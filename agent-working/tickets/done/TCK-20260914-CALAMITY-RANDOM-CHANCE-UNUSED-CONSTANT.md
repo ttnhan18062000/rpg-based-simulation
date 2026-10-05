@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260914-CALAMITY-RANDOM-CHANCE-UNUSED-CONSTANT
-phase: open
+phase: done
 date: 2026-09-14
 tags: [world]
 ---
@@ -17,7 +17,7 @@ random-chance-shaped constant sitting inert beside the real, fully-deterministic
 like it should influence
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -82,7 +82,8 @@ None yet — hotfix tier, no staging artifacts required.
   up.
 
 ## Implementation Notes
-_(not started)_
+Not implemented: the wire-or-delete choice was answered "neither" by owner decision 10 (catalog Rule `ENV-06`, commit
+`043ebb30d`, 2026-10-05). The constant stays unwired and is not deleted; see the Disposition Rationale.
 
 ### 2026-09-30 — classified via `TCK-20260929-UNREACHABLE-CLASSIFY-ZERO-CALLER` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T01`): fifth outcome `NO-MECHANISM` (AC-7)
 
@@ -103,12 +104,26 @@ forced into the nearest bucket. The residual wire-vs-delete choice is this ticke
 untouched by the classification.
 
 ## Test Summary
-_(not started)_
+None: no code, test or doc was changed.
 
 ## Files Changed
-_(not started)_
+Ticket only (`todos/` -> `done/`).
 
 ## Completion Summary
-_(not started)_
+Closed `WONT-DO`: `CALAMITY_RANDOM_CHANCE` stays as is. Neither of the ticket's two options (wire it, delete it) is taken.
 
 **Verdict as of 2026-09-30: fifth outcome `NO-MECHANISM` (AC-7)** — a dead constant, not an unreachable mechanism; see Implementation Notes. Still `OPEN`; wire-vs-delete decision unchanged.
+
+## Disposition
+WONT-DO
+
+## Disposition Rationale
+Owner decision 10 (commit `043ebb30d`, catalog Rule `ENV-06`) makes calamity the escalation of prolonged regional
+instability and states that `CALAMITY_RANDOM_CHANCE` "stays unwired; any later probabilistic onset must be
+conditioned on this escalation (`CAUSE-01`)". That answers both of this ticket's options with "neither": wiring it now
+would add a probabilistic onset to a producer that does not exist yet, and deleting it would discard the constant a
+later conditioned onset may use. `docs/world/ecology_and_calamity_contract.md:81` and `:176` already label it deliberate
+dead code awaiting wiring, so they stay correct and are not edited. The constant's only occurrence is its declaration at
+`src/world/calamity.py:19` (zero other usages, re-run 2026-09-30). **Caveat:** `043ebb30d` sits on
+`origin/calamity-rule-decision` and was not on `origin/main` when this ticket was closed (checked with
+`git merge-base --is-ancestor`); `ENV-06` is not citable from `main` until that branch lands.
