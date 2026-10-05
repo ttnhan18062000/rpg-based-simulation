@@ -39,6 +39,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Combat-Cognition** | Hostility and Allegiance Read From the Content Catalog, Not the Legacy `Faction` Enum, at Eight More Sites (§2.65) | **Bug Fix** | RATIFIED |
 | **Engine / Tactical** | Retreat and Stalemate-Break Destinations Are Region-Contained, Never the World Origin (§2.66) | **Bug Fix** | RATIFIED |
 | **Strategic Cognition / Tactical** | Entity-Targeted Objective Is Typed, Resolved Live, and Ends With Its Target (§2.67) | **Bug Fix** | RATIFIED |
+| **Tactical / Strategic Cognition** | A Pursuit Move Ends in Attack Reach; No Strategic Navigation Point for an Entity-Typed Objective (§2.68) | **Bug Fix** | RATIFIED |
 | **Knowledge Gateway MCP / Packet Cache** | Level 2 Packet-Cache Freshness/Verification Column Co-location | **Bounded** | RATIFIED |
 | **Engine / Progression** | ALLOCATE_AP Action-Router Branch Kept Dormant | **Bounded** | ACTIVE |
 | **Engine / Combat** | Wounds Permanent; `heal_wound()`/`get_diagnosis_quality()` Removed | **Bug Fix** | ACTIVE |
@@ -2309,6 +2310,41 @@ untouched by §2.57's fix (out of that ticket's scope).
   rule, live resolve, the node-id collision, the unchanged `town_center`/node/coordinate cases, canonical
   omission), `tests/mechanic_scenarios/test_entity_target_navigation_tracks_live_position_through_kernel.py`
   (regression guard that the live path tracks the target's current position).
+- **Status**: RATIFIED
+
+### 2.68 A Pursuit Move Ends When Its Live Target Is in Attack Reach, and Strategy Writes No Navigation Point for an Entity-Typed Objective (TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK)
+- **Subsystem**: Tactical AI (`ENTITY_MOVE` dispatch) / Strategic Cognition (objective redirection)
+- **Old Behavior**: a pursuit `ENTITY_MOVE` was created once by the tactical pass and then re-scheduled as movement every tick
+  without re-entering the decision (the Sticky-Task Law, `docs/engine/kernel.md`); nothing ended it. An entity that reached its
+  live target at full readiness therefore never had `evaluate_entity_intent` called again and never chose `ATTACK`
+  (`crowded_frontier`, 2000 ticks: 1953 of 1953 adjacent-to-a-live-target samples with the tactical pass not called, readiness 100,
+  no attack-legality verdict ever issued). In addition the strategic pass wrote the active objective's creation-time
+  `target_position` snapshot as the navigation target whenever no other navigation update was pending, so a cleared target
+  reappeared one pass later. Two entities pursuing each other swapped tiles every tick.
+- **New Behavior**: both `ENTITY_MOVE` dispatchers (`executor.py`, `worker_logic.py`) end a `PURSUE` move whose `payload["target_id"]`
+  names a live target within attack reach (Manhattan; melee needs distance 1; no weather multiplier): the task returns to the idle
+  encoding (`ENTITY_ACT`, empty payload) and the navigation target is cleared
+  (`MovementCandidateSelector.pursuit_reached_attack_range` / `pursuit_completion_update`). For an objective with
+  `target_entity_id`, `intelligence.py` and `redirection.py` set no navigation point (they still claim the navigation, so the
+  return-to-town fallback stays suppressed); the tactical pass resolves the live position.
+- **Not behavior-neutral; measured** (real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`, `LocalSequentialExecutor`; taken on
+  `origin/main` `544b1d341`, which contains the `DirtySet` determinism fix. Before = a clean `origin/main` worktree, one run, a
+  sample; after = this change, two identical runs per world, a value): tick-pairs in which two entities exchanged tiles:
+  `crowded_frontier` 975 to 2, `frontier_living_world` 1809 to 1, `urban_political` 978 to 3; `dungeon_crawl` unchanged (1 to 1).
+  Decision-path `execute_attack` calls, `frontier_living_world`: 5 to 7 (non-opportunity `resolve_attack` 1 to 3); `dungeon_crawl`
+  4 to 4; `crowded_frontier` 0 to 0. **`crowded_frontier` decision-path attacks remain 0**, and the tactical pass is still not called in
+  281 of 281 adjacent-to-live-target samples (1953 of 1953 before). The next gates are the 10-tick brain cadence, the flee gate
+  (forced read-only decisions with a live hostile adjacent, `crowded_frontier`, one run: 141 of 353 `PANIC_RETREAT`, 194 `BRACKETING`,
+  15 `ATTACK`; regional trauma is present in every recomputed flee), and `BRACKETING` repositioning moves, which this change
+  deliberately does not end (see the ticket and `TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION`).
+  Incidental opportunity attacks (`resolve_multi_attack(..., is_opportunity_attack=True)`): `urban_political` 71 to 72 and
+  `dungeon_crawl` 24 to 24 are unchanged, but `frontier_living_world` 38 to 644 and `crowded_frontier` 488 to 283 moved, in opposite
+  directions, and **the mechanism is unexplained**.
+- **Rationale**: **Bug Fix** (a task with no termination condition, and a writer re-asserting a stale snapshot), with **Unified** for the
+  single completion helper shared by both dispatchers.
+- **Verification**: `tests/unit/engine/test_pursuit_completion.py` (the helper, both dispatchers, and the cases that must not change:
+  non-`PURSUE` modes, dead or missing targets, live-versus-snapshot), `tests/unit/strategic/test_redirection_entity_objective.py`
+  (control: an untyped objective still gets its point; a carrying entity is not sent home).
 - **Status**: RATIFIED
 ---
 
