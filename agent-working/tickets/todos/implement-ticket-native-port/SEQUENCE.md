@@ -21,6 +21,8 @@ remaining work.
 
 **Release of items 4-5 (owner, 2026-10-06, batch answer "Native-port children 4-5"):** the owner released both without waiting for the cheap children's measured cost. The backstop child (3) has landed, so the item 4 order condition holds. Item 5 still needs the owner's Workflow opt-in just before its run.
 
+**Status after 2026-10-06:** items 1-4 are done. Item 5 (SMALL-TICKET-NATIVE-RUN) is still the remaining work: its native run was blocked by the environment (see that ticket's Assumptions / Open Questions). The parent epic `TCK-20260930-IMPLEMENT-TICKET-NATIVE-PORT` stays OPEN.
+
 ## Why This Order Matters
 
 Written by hand. The attestation design found a nonce-hash gate result forgeable by an agent told to cheat, so the
