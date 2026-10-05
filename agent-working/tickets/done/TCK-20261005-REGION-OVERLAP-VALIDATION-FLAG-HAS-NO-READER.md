@@ -408,3 +408,8 @@ The two position-to-region lookups are unified under one rule (inclusive edges, 
 
 ### 2026-10-05 (final) — landed with corrected claims, by `rpg-implementer-2`
 Planner ruling premise ("smallest area = most specific") was refuted by the geometry: all three overlapping pairs are partial, none nested (near_forest∩wolf_den 500, near_forest∩bandit_road 675, wolf_den∩bandit_road 600). The planner independently verified this and withdrew the premise in writing. Result stated in the Completion Summary above; evidence in `investigation.md`. `allow_overlapping_regions` handled per planner ruling (declared, not enforced, reserved; unread pin; no reader, no deletion). Full lane set re-run after the move into `core`.
+
+**Mechanism-registry changed-code advisory (report-only), and the judgement on it.** The check flagged `attributes_biology` (`src/engine/apply.py`) and `social_memory` (`src/systems/social_systems/memory.py`) as having cited code changed without their registry entries changing. Judgement (planner concurred): neither entry's claim changes. Both only *call* the region lookup; neither describes region resolution. The behaviour change is recorded in DEV-010 and SUB-397.
+
+**Window mismatch when citing both measurements.** The unification runs (`frontier_living_world` and `generated_frontier_3_42`) are 10,000 ticks; the hazard-growth ticket's earlier `generated_frontier_3_42` evidence is 5,000 ticks. State the window wherever both are cited.
+
