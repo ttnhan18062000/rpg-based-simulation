@@ -37,6 +37,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Cognition-Strategy** | Adventure-Route Defer-Reason Observability Gap | **Bounded** | RATIFIED |
 | **Strategic Cognition / Regional Danger** | Regional-Danger Stabilization No Longer Unconditionally Wins the Project Slot | **Enforced** | RATIFIED |
 | **Engine / Combat-Cognition** | Hostility and Allegiance Read From the Content Catalog, Not the Legacy `Faction` Enum, at Eight More Sites (§2.65) | **Bug Fix** | RATIFIED |
+| **Engine / Tactical** | Retreat and Stalemate-Break Destinations Are Region-Contained, Never the World Origin (§2.66) | **Bug Fix** | RATIFIED |
 | **Knowledge Gateway MCP / Packet Cache** | Level 2 Packet-Cache Freshness/Verification Column Co-location | **Bounded** | RATIFIED |
 | **Engine / Progression** | ALLOCATE_AP Action-Router Branch Kept Dormant | **Bounded** | ACTIVE |
 | **Engine / Combat** | Wounds Permanent; `heal_wound()`/`get_diagnosis_quality()` Removed | **Bug Fix** | ACTIVE |
@@ -2245,6 +2246,33 @@ untouched by §2.57's fix (out of that ticket's scope).
   single shared helper.
 - **Verification**: `tests/unit/combat/test_catalog_hostility_sweep.py` (both error directions per site, a
   neutral case, helper uniqueness).
+- **Status**: RATIFIED
+
+### 2.66 Retreat and Stalemate-Break Destinations Are Region-Contained, Never the Literal World Origin (TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN)
+- **Subsystem**: Tactical AI (`src/engine/tactical.py`)
+- **Old Behavior**: four branches set the entity's navigation target to the literal `(0.0, 0.0)`:
+  the `emotion.is_fleeing` gate (`PANIC_RETREAT`), the very-low-HP engaged branch (`PANIC_RETREAT`, the
+  same reason tag, not listed in the ticket's three-row table), `SAFETY_PRESSURE_RETREAT`, and the
+  `STALEMATE_BREAK` `WANDER`. In the corpus worlds `(0, 0)` is outside every region, so an entity that
+  reached one of these branches walked out of the declared spatial model and idled there with
+  `region_id=None`.
+- **New Behavior**: `src/engine/tactical_destinations.py` derives the destination, per the rule owner's
+  2026-10-03 ruling (`MOV-01`, `LOC-01`, `LOC-03`, `MOV-03`). Retreat: away from the perceived threats by
+  one perception radius, clamped to stay inside the entity's current region (strict bounds, no
+  nearest-centre fallback); else the entity's own `strategic.home_region_id` region centre when set; else
+  **hold position** (the entity's current position). Stalemate-break: a seeded
+  (`DeterministicRNG`, `Domain.TACTICAL`, tick and entity scoped), nearby (half-width 5), region-contained
+  point; hold when the entity is itself outside every region. A different semantic from retreat, so it
+  shares no derivation. Rejected by the ruling and not used: nearest settlement, nearest friendly region,
+  any literal coordinate.
+- **Not behavior-neutral**: a retreating entity now moves away from its threats instead of toward the
+  world origin, and a cornered one stops instead of continuing. Firing rates per branch were not changed.
+- **Rationale**: **Bug Fix** (the old target violated `MOV-01`/`LOC-01`), per the ticket's ruling.
+- **Verification**: `tests/unit/combat/test_tactical_destinations.py` (pure derivation and each branch
+  through `evaluate_entity_intent`, which fail on the literal-origin code),
+  `tests/unit/engine/test_pressure_perception_consumers.py::test_safety_pressure_retreat_target_is_inside_a_region_and_away_from_the_threat`,
+  `tests/unit/combat/test_engagement_behavior.py::test_retreat_behavior`,
+  `tests/unit/combat/test_anti_stalemate.py::test_stalemate_break`.
 - **Status**: RATIFIED
 ---
 

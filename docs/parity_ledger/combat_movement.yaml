@@ -4454,3 +4454,23 @@
   proof_type: regression
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.65.
   support_boundary: null
+- id: COMB-327
+  text: 'TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN: the four tactical
+    branches that previously sent an entity to the literal world origin (the is_fleeing
+    PANIC_RETREAT gate, the low-HP engaged PANIC_RETREAT, SAFETY_PRESSURE_RETREAT,
+    and the STALEMATE_BREAK WANDER) target a region-contained destination. Retreat
+    goes away from the perceived threats clamped inside the entity''s current region,
+    else its own home region, else holds position; stalemate-break wanders to a seeded
+    nearby in-region point, or holds when the entity is outside every region. Never
+    a sentinel coordinate (World Rules MOV-01, LOC-01, LOC-03, MOV-03).'
+  v2_evidence: src/engine/tactical_destinations.py (retreat_destination, wander_destination,
+    containing_region), src/engine/tactical.py (_perceived_threats, _destination_or_hold
+    and the four call sites).
+  test_path: tests/unit/combat/test_tactical_destinations.py::TestBranchesNeverTargetTheOrigin::test_panic_gate_retreat;
+    tests/unit/combat/test_tactical_destinations.py::TestBranchesNeverTargetTheOrigin::test_stalemate_break
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  proof_type: regression
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.66.
+  support_boundary: null
