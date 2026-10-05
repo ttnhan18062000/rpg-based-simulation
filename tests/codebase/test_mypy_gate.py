@@ -91,6 +91,31 @@ def test_a_genuinely_new_error_is_reported_alone_with_a_warning(project, capsys)
     assert "1 new errors (baseline holds 1 entries)" in (project / "summary.md").read_text()
 
 
+def test_several_new_errors_are_new_errors_not_a_tool_that_could_not_run(project, capsys):
+    """`mypy-baseline filter` exits with the NUMBER of new errors: three of them must read as exit 1, never as exit 2."""
+    _sync(project, _ERROR.format(line=3) + "\n")
+    new = [f'src/b.py:{n}: error: Name "x{n}" is not defined  [name-defined]' for n in (4, 5, 6)]
+    assert _gate(project, _ERROR.format(line=3) + "\n" + "\n".join(new) + "\n", "summary", "annotate") == 1
+    out = capsys.readouterr().out
+    assert "::error::mypy-baseline: 3 new errors; see job summary" in out and "could not run" not in out
+    assert "3 new errors (baseline holds 1 entries)" in (project / "summary.md").read_text()
+
+
+def test_more_than_a_hundred_new_errors_still_exit_1(project):
+    """The filter caps its own exit code at 100; the gate stays at 1 however many there are."""
+    _sync(project, _ERROR.format(line=3) + "\n")
+    many = "\n".join(f'src/b.py:{n}: error: Name "x{n}" is not defined  [name-defined]' for n in range(1, 131))
+    assert _gate(project, _ERROR.format(line=3) + "\n" + many + "\n") == 1
+
+
+def test_a_non_zero_filter_exit_with_no_error_line_is_could_not_run(project, capsys):
+    """An unparseable baseline makes the filter exit 1 with a message and no `error:` line: that is a broken tool."""
+    (project / "codebase" / "baselines" / "mypy_baseline.txt").write_text("this is not a mypy line\n")
+    assert _gate(project, "", "summary", "annotate") == 2
+    out = capsys.readouterr().out
+    assert "::error::mypy-baseline could not run: mypy_baseline filter exited 1 with no error line" in out
+
+
 def test_a_repeated_identical_message_in_the_same_file_is_new(project):
     _sync(project, _ERROR.format(line=3) + "\n")
     assert _gate(project, _ERROR.format(line=3) + "\n" + _ERROR.format(line=8) + "\n") == 1

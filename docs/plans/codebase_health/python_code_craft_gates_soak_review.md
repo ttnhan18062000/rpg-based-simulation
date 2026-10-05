@@ -27,8 +27,8 @@ from the annotation counts and the PR it ran on, not from the job summary.
 | Runs with new mypy errors / mypy could not run | 0 / 0 (no `mypy-baseline` warning on any `Type check (informational)` job) | |
 | Registry reseeds on `main` | 1: #315 added 111 `ast_grep` rows with the rule pack (new tool rows, no existing row reseeded) | |
 | mypy-baseline syncs | 0 after the first commit of the baseline | |
-| Rows reviewed (`reviewed: true`) / total rows | 0 / 3724 | |
-| Rows tightened or deleted by the flip | 6 tightened, 4 deleted (all paid-off debt, evidence below) | |
+| Rows reviewed (`reviewed: true`) / total rows | 27 / 3723 (the 27 accepted violations below; 0 / 3724 before 2026-10-05) | |
+| Rows tightened or deleted by the flip | 6 tightened, 4 deleted (all paid-off debt, evidence below); then on 2026-10-05 17 more lowered and 2 deleted | |
 
 ## Findings and dispositions
 
@@ -92,8 +92,65 @@ Tightened: `engine/legality.py` I001 3->2 and PLC0415 5->4; `perf/scenarios.py` 
 Deleted: `ProtocolValidator.validate_result_batch` complexipy; `engine/checkpoint.py` I001; `perf/scenarios.py` PLC0415;
 `build_metropolis_state` function-length. After `tighten --yes`: `OK: 0 new, 0 worse, 0 improved, 0 gone, 3724 unchanged`.
 
+## Violations other domains added during the window, accepted as reviewed rows (2026-10-05)
+
+`origin/main` at the merge into this branch carried **27 ratchet violations (1 new, 26 worse)** that `src/` PRs of other
+domains added while the ratchet was advisory. They are real findings (no false positive: each value was measured on the
+changed file at the PR's commit and its parent with ruff, complexipy and the line-count tool, and the delta sits in that PR's
+diff). The owner decided on 2026-10-05 to accept all 27 as debt: they are recorded in `codebase/baselines/code_health_exceptions.jsonl`
+as **reviewed** rows (`reviewed: true`, value = ceiling = the measurement), in the same commit that tightened the improved rows
+and deleted the gone ones. This is the evidence the window was meant to produce: a blocking ratchet would have stopped each of
+these PRs at its own CI. The registry schema has no `reason` field, so the reason for each row (the PR and the owning domain) lives
+in this table and in `handoffs/handoff_to_rpg.md`; `check` after the commit reads `OK: 0 new, 0 worse`.
+
+| PR | domain | row | before -> after |
+|---|---|---|---|
+| #328 | architecture / world | `worldgeneration/generator.py` ProceduralCompositionGenerator.generate `complexipy cognitive-complexity` | 62 -> 63 |
+| #328 | architecture / world | `worldgeneration/generator.py` ProceduralCompositionGenerator.generate `line_count function-length` | 161 -> 191 |
+| #333 | combat | `domains/cooperation/providers.py` PartnerCandidateProvider.get_candidates `line_count function-length` | 92 -> 93 |
+| #333 | combat | `engine/combat.py` `ruff I001` | 6 -> 7 |
+| #333 | combat | `systems/strategic_systems/intelligence.py` `line_count module-length` | 1788 -> 1798 |
+| #333 | combat | `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem `line_count class-length` | 1634 -> 1639 |
+| #333 | combat | `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem.fused_strategic_pass `line_count function-length` | 394 -> 399 |
+| #335 | world | `engine/kernel.py` Kernel `line_count class-length` | 1381 -> 1384 |
+| #335 | world | `engine/kernel.py` Kernel.__init__ `line_count function-length` | 302 -> 307 |
+| #335 | world | `engine/kernel.py` `line_count module-length` | 1415 -> 1419 |
+| #335 | world | `worldgeneration/generator.py` ProceduralCompositionGenerator._assign_region_namespaces `complexipy cognitive-complexity` | new -> 18 |
+| #335 | world | `worldgeneration/generator.py` ProceduralCompositionGenerator.generate `line_count function-length` | 191 -> 198 |
+| #341 | world | `worldbuilding/compiler.py` WorldCompiler `line_count class-length` | 602 -> 604 |
+| #341 | world | `worldbuilding/compiler.py` WorldCompiler.compile `line_count function-length` | 509 -> 511 |
+| #342 | combat | `core/state.py` EntityState.to_canonical_dict `complexipy cognitive-complexity` | 27 -> 32 |
+| #342 | combat | `core/state.py` EntityState.to_canonical_dict `line_count function-length` | 97 -> 100 |
+| #342 | combat | `core/state.py` `line_count module-length` | 1705 -> 1708 |
+| #342 | combat | `engine/tactical.py` TacticalDecisionSystem `line_count class-length` | 800 -> 816 |
+| #342 | combat | `engine/tactical.py` TacticalDecisionSystem.evaluate_entity_intent `line_count function-length` | 714 -> 720 |
+| #342 | combat | `systems/strategic_systems/intelligence.py` `line_count module-length` | 1798 -> 1824 |
+| #342 | combat | `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem `line_count class-length` | 1639 -> 1664 |
+| #342 | combat | `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem.evaluate_strategic_intent `complexipy cognitive-complexity` | 220 -> 233 |
+| #342 | combat | `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem.evaluate_strategic_intent `line_count function-length` | 542 -> 567 |
+| #342 | combat | `systems/strategic_systems/work_queue.py` StrategicWorkQueue.build `complexipy cognitive-complexity` | 81 -> 83 |
+| #342 | combat | `systems/strategic_systems/work_queue.py` StrategicWorkQueue.build `line_count function-length` | 107 -> 112 |
+| #345 | world | `worldbuilding/compiler.py` WorldCompiler `line_count class-length` | 604 -> 607 |
+| #345 | world | `worldbuilding/compiler.py` WorldCompiler.compile `line_count function-length` | 511 -> 514 |
+| #347 | combat | `engine/executor.py` LocalSequentialExecutor.execute `complexipy cognitive-complexity` | 27 -> 29 |
+| #347 | combat | `engine/executor.py` LocalSequentialExecutor.execute `line_count function-length` | 132 -> 138 |
+| #347 | combat | `systems/strategic_systems/intelligence.py` `line_count module-length` | 1824 -> 1832 |
+| #347 | combat | `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem `line_count class-length` | 1664 -> 1672 |
+| #347 | combat | `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem.fused_strategic_pass `complexipy cognitive-complexity` | 425 -> 433 |
+| #347 | combat | `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem.fused_strategic_pass `line_count function-length` | 399 -> 407 |
+| #347 | combat | `systems/strategic_systems/redirection.py` StrategicRedirectionSystem.enforce `complexipy cognitive-complexity` | 94 -> 102 |
+| #347 | combat | `systems/strategic_systems/redirection.py` StrategicRedirectionSystem.enforce `line_count function-length` | 126 -> 134 |
+
+Tightened in the same commit (improved on `main`): `core/dirty.py` `mark_from_update` complexipy 41->39; `campaigns/orchestrator.py` module 1138->1124, class 1016->1002, PLC0415 25->24; `engine/executor.py` PLC0415 20->19; `engine/kernel.py` BLE001 12->11, F821 3->2, I001 19->17, PLC0415 85->83, e3 2->1, `_run_initial_placement_check` 84->83, jscpd 31->30; `engine/legality.py` PLC0415 4->2; `engine/worker_logic.py` PLC0415 4->3; `party.py` I001 3->2; `intake.py` `evaluate_salience` 20->17; `worldassembly/schema.py` jscpd 38->35. Deleted (gone): `systems/social_systems/party.py` F821 and PLC0415. 17 lowered, 2 deleted.
+
+## Mypy errors other domains added during the window (accepted 2026-10-05)
+
+`python3 -m codebase.gates.mypy_gate` on the merged tree found 3 errors not in the baseline: `worldassembly/resolve_io.py:30` no-any-return (#328, architecture / world), `engine/tactical.py:853` arg-type (#342, combat), `systems/strategic_systems/intelligence.py:1823` boredom_delta arg-type (#342, combat; 15 -> 16 call sites). Accepted by the owner as debt and added to `codebase/baselines/mypy_baseline.txt` with `mypy_baseline sync`; the same sync dropped 9 entries that other PRs had fixed (kernel `json` NameError, party `StrategicUpdate` NameError twice, and 6 others). Baseline: 1569 -> 1563 entries. The baseline format has no reason field, so the reasons live here and in `handoffs/handoff_to_rpg.md`.
+
+**A real defect in the gate, found by this:** `mypy-baseline filter` exits with the NUMBER of new errors (capped at 100), but the gate accepted only 0 and 1, so two or more new errors were reported as "mypy-baseline could not run ... exited 3" (exit 2). That is what `main` showed on 58aa22f67 and #351. Fixed in this branch: the gate returns 1 for any number of new errors and 2 only when the tool cannot run (a non-zero filter exit with no `error:` line, e.g. an unparseable baseline); three new tests pin it. Before the flip this only produced a confusing advisory message; after it, a contributor with two errors would have been told the tool was broken.
+
 ## Verdict (draft)
 
 No false-positive class and no exit-2 run in the first part of the window; every failing run was a real new or worse
-violation. The flip is on track, subject to the final-day re-measurement and the precondition that `main` is
+violation, including the 27 that other domains' PRs added to `main` and the owner accepted as reviewed rows on 2026-10-05 (evidence for the flip: the blocking ratchet would have stopped each at its own CI). The flip is on track, subject to the final-day re-measurement and the precondition that `main` is
 ratchet-clean and mypy-gate-clean at the flip commit (re-run right before merge).

@@ -4,7 +4,9 @@
 
 It runs the repository's mypy command, pipes the output through `mypy-baseline filter` (configured in
 `[tool.mypy_baseline]` in pyproject.toml; the baseline is `codebase/baselines/mypy_baseline.txt`), prints the errors
-that are new, and returns the filter's exit code: 0 for none, 1 for at least one new error. On every run it
+that are new, and returns 0 for none and 1 for at least one new error. (`mypy-baseline filter` itself exits with the
+NUMBER of new errors, capped at 100, so any filter exit code from 1 to 100 that comes with `error:` lines is a normal "new
+errors" result here; a non-zero filter exit with no error line, such as an unparseable baseline, is "could not run".) On every run it
 appends one Markdown summary to `--summary-out` ($GITHUB_STEP_SUMMARY in CI) that states the new-error count
 and the current baseline size, so the trend stays visible without a snapshot metric. With `--annotate` a
 failure also prints one GitHub `::error::` line.
@@ -29,6 +31,8 @@ from codebase.health import registry
 
 MYPY_COMMAND = ("-m", "mypy", "src/", "--config-file", "pyproject.toml", "--no-error-summary")
 FILTER_COMMAND = ("-m", "mypy_baseline", "filter")
+# `mypy-baseline filter` exits with the number of new errors, at most 100 (see its commands/_filter.py): 0 means none.
+FILTER_EXIT_CODES = tuple(range(101))
 DEFAULT_BASELINE = "codebase/baselines/mypy_baseline.txt"
 LIST_LIMIT = 25
 
@@ -93,7 +97,10 @@ def run(root: Path, summary_out: Path | None = None, annotate: bool = False, myp
             raw = mypy_output.read_text(encoding="utf-8")
         else:
             raw = _run([sys.executable, *MYPY_COMMAND], root, (0, 1)).stdout
-        filtered = _run([sys.executable, *FILTER_COMMAND], root, (0, 1), stdin=raw)
+        filtered = _run([sys.executable, *FILTER_COMMAND], root, FILTER_EXIT_CODES, stdin=raw)
+        new = new_error_lines(filtered.stdout)
+        if filtered.returncode and not new:
+            raise GateCannotRun(f"mypy_baseline filter exited {filtered.returncode} with no error line: {filtered.stdout.strip()}")
     except (GateCannotRun, OSError, tomllib.TOMLDecodeError) as exc:
         reason = " ".join(f"{exc}".split())[:300] or type(exc).__name__
         _append(summary_out, f"**mypy:** could not run: {reason}")
@@ -101,13 +108,12 @@ def run(root: Path, summary_out: Path | None = None, annotate: bool = False, myp
             print(f"::error::mypy-baseline could not run: {reason}")
         print(f"error: {reason}", file=sys.stderr)
         return 2
-    new = new_error_lines(filtered.stdout)
     if filtered.stdout.strip():
         print(filtered.stdout.rstrip())
     _append(summary_out, format_summary(new, entries))
     if new and annotate:
         print(f"::error::mypy-baseline: {len(new)} new errors; see job summary")
-    return filtered.returncode
+    return 1 if new else 0
 
 
 def main(argv: Sequence[str] | None = None) -> int:
