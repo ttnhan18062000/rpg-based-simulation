@@ -74,7 +74,7 @@ lint = [
     "complexipy==8.0.1",
     # TCK-20261004-AST-GREP-RULE-PACK-ADVISORY: project rules in codebase/rules/ (binary: `ast-grep`, never `sg`).
     "ast-grep-cli==0.45.3",
-    # TCK-20261004-IMPORT-LINTER-ADOPTION: import contracts in [tool.importlinter] (advisory; binary: `lint-imports`).
+    # TCK-20261004-IMPORT-LINTER-ADOPTION: contracts in codebase/structure/importlinter.toml (advisory; binary: `lint-imports --config <file>`).
     "import-linter==2.15",
 ]
 profiling = [
@@ -226,35 +226,3 @@ function-warn-lines = 50
 function-fail-lines = 80
 class-lines = 500
 module-lines = 1000
-
-# import-linter (TCK-20261004-IMPORT-LINTER-ADOPTION, advisory; docs/plans/codebase_health/import_linter_adoption_ticket_brief.md).
-# `src` has 20 namespace packages without `__init__.py`; import-linter only sees them when each is its own root
-# (`src.<pkg>`), so every one is listed here (registry sync: tests/codebase). `src/engine/intent` stays uncovered.
-# `exclude_type_checking_imports` is global and false: a TYPE_CHECKING import counts, so no contract is looser than
-# the test it will replace; the contracts whose tests skip TYPE_CHECKING pin those lines in `ignore_imports`.
-[tool.importlinter]
-root_packages = [
-    "src",
-    "src.actions",
-    "src.ai",
-    "src.api",
-    "src.certification",
-    "src.content",
-    "src.content_semantics",
-    "src.core",
-    "src.domains",
-    "src.logging",
-    "src.observability",
-    "src.perf",
-    "src.strategy",
-    "src.systems",
-    "src.testing",
-    "src.town",
-    "src.views",
-    "src.world",
-    "src.worldassembly",
-    "src.worldgeneration",
-    "src.worldmodules",
-]
-include_external_packages = true
-exclude_type_checking_imports = false

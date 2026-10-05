@@ -91,7 +91,16 @@ Per-contract semantic change (tests that skip TC today; the contract flags a NEW
 Unchanged semantics: `c06`, `c09`, `c11`, `c12`, `c13`. The exact pinned lines are written with the contracts, and `unmatched_ignore_imports_alerting` makes a fixed one show as stale.
 
 ### Pin and config (first implementation commit)
-`import-linter==2.15` (grimp 3.17) added to the `lint` group; `uv.lock` re-locked (adds only those two packages). The `requirements.txt` export is unchanged: it is built from the default dependency set without `lint`. `tests/static/test_ci_uv_install.py` (lint group membership) updated to include `import-linter`; `tests/static` plus the scenario-lane pin pass (82 passed). `[tool.importlinter]` holds `src` plus the 20 `src.<pkg>` roots, `include_external_packages = true`; no contracts yet (they follow). Local runs use `uvx --from import-linter==2.15 lint-imports` until `uv sync` is run in a worktree.
+`import-linter==2.15` (grimp 3.17) added to the `lint` group; `uv.lock` re-locked (adds only those two packages). The `requirements.txt` export is unchanged: it is built from the default dependency set without `lint`. `tests/static/test_ci_uv_install.py` (lint group membership) updated to include `import-linter`; `tests/static` plus the scenario-lane pin pass (82 passed). Local runs: `uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml`, or `lint-imports` from the `lint` group after `uv sync`.
+
+### Placement (planner review of 37b317e87, 2026-10-05)
+The whole config lives in `codebase/structure/importlinter.toml` (codebase domain root), not in `pyproject.toml`: a generator must not rewrite a hand-edited pyproject, and the pyproject conflict with #329 drops to the one pin line. Verified on 2.15: `--config` reads a `.toml` file with `[tool.importlinter]` tables. `[tool.importlinter]` was removed from pyproject in this commit; the pin stays there.
+
+### Roots: `src` and the 20 `src.<pkg>` together (checked 2026-10-05)
+`src` is needed: a config without it fails with `Missing layer 'src.lab': module src.lab does not exist.` (the 16 regular packages are only reachable through `src`). With `src` plus the 20 roots listed together (overlapping roots) the graph builds: `Analyzed 849 files, 4555 dependencies.`
+
+### Layers contract and baseline
+`python3 -m codebase.structure.import_contracts` writes the generated block (layer order from the registry's `layer` column; siblings in one layer joined with `:` so they may import each other; order consumer, simulation-systems, engine, domain, content-pipeline, foundation); `--check` exits 1 if it is stale; `seed-baseline` reruns lint-imports with an empty baseline and rewrites `codebase/structure/import_layers_baseline.txt`. On `898c6f35a` the contract reports **135 module pairs** (all direct imports, TYPE_CHECKING counted), not the evaluation's 113 import lines: main moved 16 commits and the evaluation counted lines, not pairs. `unmatched_ignore_imports_alerting = "warn"` marks a fixed import as stale. `tests/codebase/test_import_contracts.py` pins: block up to date, roots equal `{src}` plus every registry package without an `__init__.py` (a 21st namespace package fails), every registry package in the contract. The sync test never looks for an unregistered package in `src/` (the registry validator reports those), so it cannot fail another domain's PR.
 
 ## Test Summary
 
