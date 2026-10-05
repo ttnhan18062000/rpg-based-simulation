@@ -247,6 +247,30 @@ every tick, and live entity positions mapped to regions every 25 ticks:
 - No code, content or test change was made. The two fix directions already recorded above (compose hostile presence near the
   lair, or give Lair occupants their own trigger) remain open design decisions; neither is chosen here.
 
+### 2026-10-05 (later) — CORRECTION by `rpg-implementer-2`: `moon_cave` is not empty of deaths and not shadowed; its deaths are starvation, which the trauma block does not count
+
+The block above concluded "nobody dies there because no hostile faction is composed in range". **That conclusion was wrong.** Re-run
+on `generated_frontier_3_42`, seed 42, `PROD_SMALL`, recording every death with its end-of-tick position, the region
+`SpatialQueryService.get_region_at` credits it to, and the lifecycle death cause:
+- **Three deaths occur inside `moon_cave`'s bounds, all at tick 984, all `mage` (the module's own `apprentice_mage`
+  population, 3 of its 4), all `death_reason=None`, `passive_death_cause=PassiveDeathCause.STARVATION`, `hp=0.0`,
+  `age_ticks=985` of `max_age_ticks=20,160,000`.** `get_region_at` credits all three to `moon_cave` itself, and no other
+  region's bounds overlap `moon_cave`'s in the resolved world, so this is **not** the overlap-shadowing effect recorded in
+  `TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER`.
+- **`moon_cave`'s `trauma_score` stays at exactly 0.0 anyway**, over 5,000 ticks (also 0.0 on ticks 983-986).
+- **Why:** the Death-triggered Trauma block (`src/engine/world_dynamics.py:57-76`) adds `+1.0` only for an entity update with
+  `combat.alive_set is False`. A passive starvation death is recorded by `resolve_lifecycle` from the persisted
+  `passive_death_cause` and never carries that flag, so it adds nothing. (`TCK-20261001-...` / #276 made `resolve_lifecycle` the
+  authority that records passive deaths; the trauma block was not updated to read it.)
+- **Rule question, not decided here:** `docs/mechanics/05_world_evolution.md` §2 says "Every entity death in a region adds +1.0"
+  citing this block, but also frames trauma as a reaction to "the violence and activity within their borders". Whether a
+  starvation death is trauma is a world-semantics choice for the rule owner. The code is narrower than the Bible's "every".
+- **Even if starvation counted, the lair gate would not open here:** the population is 4, so the region would reach at most
+  4.0, below `BOSS_SPAWN_TRAUMA_THRESHOLD = 8.0`.
+- The 2026-09-15 spatial-isolation finding still describes the composition (no hostile faction in range, which is why nobody
+  is *killed*). What the composition does is let the isolated population starve with no effect on the region.
+- No code, content or test change was made.
+
 ## Test Summary
 _(not started)_
 
