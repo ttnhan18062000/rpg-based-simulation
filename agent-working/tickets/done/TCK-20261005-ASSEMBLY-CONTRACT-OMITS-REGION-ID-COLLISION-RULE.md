@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-ASSEMBLY-CONTRACT-OMITS-REGION-ID-COLLISION-RULE
-phase: open
+phase: done
 date: 2026-10-05
 tags: [world, documentation]
 ---
@@ -16,7 +16,7 @@ tags: [world, documentation]
 namespace-prefix rule — the newest assembly-abort condition is undocumented
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -136,13 +136,30 @@ _(none)_
   code question, not this ticket's. Note it if it looks right; do not change it here.
 
 ## Implementation Notes
-_(not started)_
+Inserted the ticket's verbatim `## Region Id Collision Contract` section into `docs/world/assembly_contract.md`, immediately before
+`## WorldAssemblyValidator Parametric Contract (WORLD-ASM-013)` (anchor checked unique), using the file's own `---` separators.
+Text unchanged. Claims verified against `src/` at `94f7a3fe3`:
+- Prefix rule: `src/worldassembly/resolver.py:347` builds `prefix = f"{ref.namespace}_" if ref.namespace else ""` and `:805` applies
+  `id=f"{prefix}{reg.id}"` to every region id; the same prefix is applied to region references inside the module (`:474`, `:506`, `:563`, `:899`).
+- Unnamespaced ids stay bare: with no namespace the prefix is the empty string (`:347`), so the "inferred from `frontier_living_world`"
+  claim is now confirmed from the code. There is no default namespace derived from the module id in the assembly resolver.
+- Abort: `resolver.py:359` (`Duplicate region ID collision '<id>' detected during assembly merge.`) and `src/worldbuilding/schema.py:319`
+  (`Duplicate region ID found`), unchanged from `fb0c1c318`; neither line number appears in the inserted text.
+- A distinct rule exists one layer up and is NOT in this section: the world generator assigns namespaces itself
+  (`src/worldgeneration/generator.py:396` `_assign_region_namespaces`: modules walked in `module_id` order, a module whose region id
+  is already claimed is namespaced with its own `module_id`). That is the generator's authoring contract, not the assembly resolver's.
+- **Compliance id: none added.** Nothing consumes the `WORLD-ASM-0xx` ids mechanically (no tool or test parses them from docs; `tests/docs/test_doc_integrity.py`
+  checks document structure only). They are a convention: a header comment per source file plus this file's index table. A new id would need a matching
+  marker in `resolver.py` and would be unenforced, so none was invented. The section is cross-referenced by title only.
+- `ValueError` vs an `AssemblyCollisionError` for symmetry with the quest case: looks reasonable, a code question, not changed here.
 
 ## Test Summary
-_(not started)_
+`pytest tests/docs`: 70 passed, 1 skipped, 1 xfailed. No code or behaviour change.
 
 ## Files Changed
-_(not started)_
+- `docs/world/assembly_contract.md` (+26 lines, one new section)
 
 ## Completion Summary
-_(not started)_
+`docs/world/assembly_contract.md` now documents the region-id collision rule and the namespace-prefix lever, with every claim checked against the
+resolver. No compliance id was added (nothing consumes them). `make knowledge-index-update` could not be run here (the search tooling is not installed in this
+environment), so the docs index is not refreshed by this change.

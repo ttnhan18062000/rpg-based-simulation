@@ -432,8 +432,11 @@ class WorldCompiler:
 
             # Idea 66 (TCK-20260902-WORLDCOMPILER-PLACE-WIRING): construct real PlaceState
             # instances from any Place-shaped content declared on this region (r_spec.places,
-            # RegionSpec's new field). Empty for all existing content today -- new, opt-in
-            # only; existing worlds compile with places=[] exactly as before this ticket.
+            # RegionSpec's field). Not empty any more: at least nine world modules declare region
+            # places, and 52 places across 23 of the 24 corpus worlds reach this loop (measured by
+            # tools/world_composition_corpus_probe.py). The write below is a bare dict assignment, so a
+            # second place with an already-seen id would silently replace the first; the probe found no
+            # such duplicate in the corpus.
             for p_spec in getattr(r_spec, "places", []):
                 places[p_spec.id] = PlaceState(
                     place_id=p_spec.id,
