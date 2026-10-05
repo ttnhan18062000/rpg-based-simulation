@@ -2794,7 +2794,6 @@ def test_decision_recorded_closure_passes_without_staging_artifacts(tmp_path, mo
 
 def test_decision_recorded_standard_ticket_passes_precheck_and_finalize_without_staging(tmp_path, monkeypatch):
     """Both conditions that demand staging artifacts honour a valid Disposition."""
-    from tools.gate_checks.done_checker_static import check_staging_artifacts_complete
     _init_repo_with_origin_main(tmp_path)
     _write_disposition_ticket(tmp_path, value="DECISION-RECORDED",
                               rationale="Owner decision 2026-10-05 recorded in 791e6bf6b.")
@@ -2804,7 +2803,6 @@ def test_decision_recorded_standard_ticket_passes_precheck_and_finalize_without_
 
 
 def test_invalid_disposition_still_fails_the_staging_precheck(tmp_path, monkeypatch):
-    from tools.gate_checks.done_checker_static import check_staging_artifacts_complete
     _init_repo_with_origin_main(tmp_path)
     _write_disposition_ticket(tmp_path, value="DECISION-RECORDED", rationale="The owner decided.")
     monkeypatch.chdir(tmp_path)

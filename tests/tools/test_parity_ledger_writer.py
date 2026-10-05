@@ -1,5 +1,6 @@
 """Tests for tools/parity_ledger_writer.py (TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL)."""
 
+import difflib
 import inspect
 import sys
 from pathlib import Path
@@ -517,7 +518,6 @@ class TestEntryLocalWrites:
 
     @staticmethod
     def _changed_lines(before: str, after: str) -> int:
-        import difflib
         return sum(
             1 for line in difflib.unified_diff(before.splitlines(), after.splitlines(), lineterm="", n=0)
             if line[:1] in "+-" and line[:3] not in ("+++", "---")

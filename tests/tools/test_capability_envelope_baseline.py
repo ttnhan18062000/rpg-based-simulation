@@ -266,9 +266,8 @@ def test_missing_or_malformed_hooks_degrade_without_raising(tmp_path):
 
 
 def test_seed_registers_hooks_idempotently_and_diff_reports_added_and_changed_hook(tmp_path):
-    import json as _json
     hooks_file = tmp_path / "settings.json"
-    hooks_file.write_text(_json.dumps(_HOOKS_SETTINGS), encoding="utf-8")
+    hooks_file.write_text(json.dumps(_HOOKS_SETTINGS), encoding="utf-8")
     missing_local = tmp_path / "settings.local.json"
 
     first = seed_registry(missing_local, root=tmp_path, note="n", hooks_path=hooks_file)
@@ -278,10 +277,10 @@ def test_seed_registers_hooks_idempotently_and_diff_reports_added_and_changed_ho
     clean = build_report(missing_local, root=tmp_path, hooks_path=hooks_file)
     assert clean["fields"]["hooks"]["out_of_envelope"] == []
 
-    changed = _json.loads(hooks_file.read_text(encoding="utf-8"))
+    changed = json.loads(hooks_file.read_text(encoding="utf-8"))
     changed["hooks"]["PreToolUse"][1]["hooks"][0]["command"] = "echo CHANGED"
     changed["hooks"]["Stop"] = [{"hooks": [{"type": "command", "command": "echo new"}]}]
-    hooks_file.write_text(_json.dumps(changed), encoding="utf-8")
+    hooks_file.write_text(json.dumps(changed), encoding="utf-8")
     report = build_report(missing_local, root=tmp_path, hooks_path=hooks_file)
     assert report["fields"]["hooks"]["out_of_envelope"] == [
         "PreToolUse|Bash|echo CHANGED",
