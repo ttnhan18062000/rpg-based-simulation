@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-STICKY-ATTACK-TASK-SURVIVES-OUT-OF-RANGE-AFTER-THE-TARGET-MOVES
-phase: inprogress
+phase: done
 date: 2026-10-05
 tags: [engine, combat]
 ---
@@ -17,7 +17,7 @@ the attacker re-dispatches the same out-of-range attack instead of re-deciding â
 family again, one task kind over from the pursuit defect fixed in the attack-path ticket
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -159,11 +159,26 @@ not traced: why the held task does not re-dispatch at all while in reach with re
 Scope 2 rule: the scale-down-to-nothing outcome is **withdrawn**; scopes 3-5 apply (see `investigation.md`). Open
 question answered: "left reach" is judged against the multiplied range (`legality.py:284`).
 
+**Mechanism (later the same session, `probes/posture_check.py`, a sample).** The 851-tick hold is **not** the missing `OUT_OF_RANGE`
+reset. At t157 attacker 34's posture toward target 11 was `probe` (risk-accepted), so the `OUT_OF_RANGE` was a legitimate attack
+failure. The posture flipped to `avoid` at t161 and `retreat` at t165, and from t161 the action router's posture gate
+(`action_router.py`) returned a bare no-op every tick: no failure, so the payload was annotated `outcome: SUCCESS` (with the stale
+`reason: OUT_OF_RANGE`), the task was kept, and the scheduler re-dispatched it until the target died. That defect, which this ticket's
+measurement discovered, is fixed under `TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS`.
+The planner ruled (a) closes as a measured non-defect for its own premise and that the `actions.py:221-230` comment is left alone
+(nothing showed the `OUT_OF_RANGE` non-reset holding a task). Frequency caveat kept: one entity, one episode.
+
 ## Test Summary
-(pending: tests with a disabling control, per scope 4)
+No tests: nothing was changed under this ticket's own premise. Evidence is the verdict-count measurement (values, 4 worlds x 2 runs
+matched) and the task trace (`oor_follow.py`, `posture_check.py`, samples). The existing `test_attack_out_of_range_does_not_reset_task`
+still pins the un-reset `OUT_OF_RANGE` behaviour and passes.
 
 ## Files Changed
-(pending)
+- `agent-working/stored_artifacts/.../probes/`: `oor_probe.py`, `measure.sh`, `oor_follow.py`, `posture_check.py` (measurement only)
+- no `src/`, `tests/` or `docs/engine/` change under this ticket
 
 ## Completion Summary
-(pending)
+Closed as a measured non-defect for its own premise (the missing `OUT_OF_RANGE` reset is not what holds sticky `ATTACK` tasks on `main`).
+Its measurement found a different, real defect (a posture-withheld dispatch is a silent success that keeps the task, held ~851 ticks in
+one world), fixed in `TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS`. Not established:
+whether an `OUT_OF_RANGE` task can be held by any other route; the 11 `execute_attack` calls in the sample cannot show that it cannot.

@@ -63,8 +63,11 @@ substance. An `OUT_OF_RANGE` reset in `actions.py` would not have prevented this
 hold began after the posture changed). The fix belongs at the withheld-attack return in `action_router.py` (or in how
 `actions.py` treats a no-op), not at the `OUT_OF_RANGE` branch. `action_router.py` is not in the granted hold.
 
-## Decision
-The scale-down-to-nothing outcome is **withdrawn**. The ticket's scopes 3-5 apply: reset the task on `OUT_OF_RANGE` when the
-target is a live entity that has left reach (judged against `legality.py:284`'s multiplied range), correct the
-`actions.py:221-230` comment, and add tests with a disabling control. Whether the reset alone fixes the silent hold, or
-the missing re-dispatch is a second defect, depends on the unexplained item above.
+## Decision (final)
+Closed as a **measured non-defect for the ticket's own premise**. The missing `OUT_OF_RANGE` reset is not what held entity 34's task
+(its `OUT_OF_RANGE` at t157 was legitimate, under an accepted `probe` posture), so no `OUT_OF_RANGE` reset is added and the
+`actions.py:221-230` comment is left alone (planner ruling: nothing showed the non-reset holding a task). The defect the
+measurement found is a posture-withheld dispatch being a silent success that keeps the task; it is fixed under
+`TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS`. The "unexplained" item above is
+explained by Result 3. If a "left reach" rule is ever needed, judge it against `legality.py:284`'s multiplied range, not the base
+range (weather would otherwise re-introduce the sticky task). Frequency caveat: one entity, one episode.

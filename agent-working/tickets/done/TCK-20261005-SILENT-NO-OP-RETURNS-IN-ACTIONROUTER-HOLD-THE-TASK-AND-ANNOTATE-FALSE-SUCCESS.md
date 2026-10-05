@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS
-phase: inprogress
+phase: done
 date: 2026-10-05
 tags: [engine, combat, observability]
 ---
@@ -18,7 +18,7 @@ scheduler re-dispatches a payload-bearing `ENTITY_ACT` that does nothing — mea
 task for ~851 ticks until its target died
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -99,17 +99,17 @@ one episode.
 - Re-opening `TCK-20261005-STICKY-ATTACK-...OUT-OF-RANGE`. Its premise was tested and not reproduced.
 
 ## Acceptance Criteria
-- [ ] Complete list of non-failure return paths in `ActionRouter.execute_action`.
-- [ ] The suspected readiness no-op confirmed or refuted on the t158-t160 window.
-- [ ] A withheld action reports a typed `ReasonCode`; the task is cleared by the existing unrecoverable branch.
-- [ ] `actions.py` no longer annotates `SUCCESS` when nothing executed, and no longer carries a stale `reason`
+- [x] Complete list of non-failure return paths in `ActionRouter.execute_action`.
+- [x] The suspected readiness no-op confirmed or refuted on the t158-t160 window.
+- [x] A withheld action reports a typed `ReasonCode`; the task is cleared by the existing unrecoverable branch.
+- [x] `actions.py` no longer annotates `SUCCESS` when nothing executed, and no longer carries a stale `reason`
       across ticks.
-- [ ] A risk-ACCEPTED posture still dispatches; absence of a recorded posture still does not withhold. Both
+- [x] A risk-ACCEPTED posture still dispatches; absence of a recorded posture still does not withhold. Both
       pinned by test.
-- [ ] Disabling-control result recorded.
-- [ ] Held-task exposure measured before and after, corpus-wide, under `audit_mode` with the budget disabled.
-- [ ] `docs/engine/` + `docs/parity_ledger/` updated; divergence recorded.
-- [ ] The 851-tick episode re-measured after the fix and reported.
+- [x] Disabling-control result recorded.
+- [x] Held-task exposure measured before and after, corpus-wide, under `audit_mode` with the budget disabled.
+- [x] `docs/engine/` + `docs/parity_ledger/` updated; divergence recorded.
+- [x] The 851-tick episode re-measured after the fix and reported.
 
 ## Related Tickets
 - `TCK-20261005-STICKY-ATTACK-TASK-SURVIVES-OUT-OF-RANGE-AFTER-THE-TARGET-MOVES` — the ticket whose
@@ -154,13 +154,50 @@ one episode.
   investigated.
 
 ## Implementation Notes
-(to be filled by the implementer)
+Planner-ruled direction followed: a typed `ReasonCode`, reusing `actions.py`'s existing unrecoverable-clear branch rather than a
+second termination path. `ReasonCode` gains `ACTION_WITHHELD_BY_POSTURE` and `UNSUPPORTED_ACTION` (no gate or registry pins the
+enum). The router's two bare no-op returns (the posture gate, the fall-through) now return
+`NavigationUpdate(failure_reason=...)` with `readiness_delta=0.0`, the shape the readiness check and `execute_attack`'s rejections already
+use. `route()` clears the task for either reason whatever the action kind (the branch was `ATTACK`+`TARGET_INCAPACITATED` only), the
+rejection is counted and audited, and a `reason` sitting beside an `outcome` is dropped before the new annotation is written (a
+decision-time `reason` with no `outcome` is kept). The posture gate's policy is untouched.
+
+Answers recorded in `investigation.md`: the router has exactly two bare no-op returns, both fixed; **handler-internal no-ops were not
+enumerated**. The suspected readiness no-op on t158-t160 is **refuted** (readiness 60-80, so `scheduler.py:73` never dispatched the
+entity; there was no return path). No consumer treats an `ATTACK`/`SKILL` payload `outcome` as a real attack (`clan_lifecycle.py:55` reads
+it for `JOIN_CLAN`/`LEAVE_CLAN` only). A stale posture toward the same target persists until `CombatEngagementPhase` rewrites it: not
+investigated further. The fall-through was reached by no action in four corpus worlds (sample).
+
+Exposure (values, matched pairs, seed 42, 2000 ticks, `audit_mode`, budget disabled), before to after: `frontier_living_world` withheld
+entity-ticks 844 to 2, longest held run 839 to 1, `ATTACK` dispatches 1693 to 8, total dispatches 2862 to 1177; `dungeon_crawl` 4 to 2,
+longest run 4 to 1; `crowded_frontier` and `urban_political` 0 `ATTACK` dispatches both ways. **One world carries the effect; this is not
+a rate elsewhere, and the "93.7%" in the router comment is a different measurement that these figures do not imply.** The original
+episode re-traced (sample): attacker 34 attacks target 11 legally at t166, target incapacitated at t177 (before: alive until t1008).
+Side note: every dispatch is seen twice per tick by the documented two-pass design (`COMB-307`), unchanged.
+
+Strategic intelligence and the inspector read `navigation.last_failure_reason`, so a withheld attack now sets it once per dispatch (the
+task is then cleared); `execute_attack`'s own rejections already did the same, and the regression sweep is green, but the strategic
+side effect was not measured separately.
 
 ## Test Summary
-(to be filled by the implementer)
+`tests/unit/actions/test_action_routing_withheld_action.py`: 16 tests. Three disabling controls, each restored with `git checkout`:
+posture reporting removed fails exactly the 6 withheld-clears tests (21 others pass, including
+`tests/mechanic_scenarios/test_combat_judgement_withdrawal.py`); stale-reason filter removed fails exactly 1 (24 pass); any-action clear
+removed fails exactly 6 (19 pass). Must-not-change pins: 4 risk-accepted postures dispatch, absent and other-target posture do not
+withhold, decision-time `reason` kept, dead-target branch unchanged. Regression
+(`tests/unit/actions tests/unit/combat tests/unit/engine tests/mechanic_scenarios tests/architecture -m "not slow"`): 629 passed,
+1 skipped, 4 deselected. `tests/tools/test_generate_registry.py::...test_check_flag_detects_no_drift_against_real_registry` fails
+**locally only**: it regenerates in place and this worktree carries Lane B's untracked contested-zone ticket file; CI has no such file.
 
 ## Files Changed
-(to be filled by the implementer)
+- `src/core/enums.py`, `src/engine/domain/action_router.py`, `src/engine/pipeline_phases/actions.py`
+- `tests/unit/actions/test_action_routing_withheld_action.py` (new)
+- `docs/mechanics/02_combat_laws.md`, `docs/engine/kernel.md`, `docs/guidelines/intentional_divergences.md` (2.69),
+  `docs/parity_ledger/combat_movement.yaml` (`COMB-330`), `docs/REGISTRY.yaml`
+- probes and records under `agent-working/stored_artifacts/` (`withheld_exposure.py`, `exposure.sh`, `fallthrough_actions.py`, `regress.sh`)
 
 ## Completion Summary
-(to be filled by the implementer)
+A dispatched action that did nothing (the combat-posture gate, an unrecognised action) is now reported as a typed failure and ends its
+task, so the brain re-decides; the annotation no longer says SUCCESS for it or carries a stale reason. The held-task exposure in
+`frontier_living_world` fell from 844 entity-ticks (one run of 839) to 2. Not established: the rate outside the four corpus worlds, and
+whether handler-internal paths return the same bare no-op.
