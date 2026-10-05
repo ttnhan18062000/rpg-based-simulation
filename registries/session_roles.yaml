@@ -36,6 +36,7 @@ domains:
       - tools/gate_checks/**
       - tools/agent_orchestration/**
       - tools/sessions/**
+      - tools/mechanism_registry/**
       - docs/agent-monitoring/**
       - docs/plans/agent_infrastructure/**
       - agent-working/agent-orchestration/**
