@@ -210,6 +210,32 @@ randomness in this pipeline, and it is `DeterministicRNG`-based, not entropy-bas
 
 ---
 
+## Region Id Collision Contract
+
+`WorldModuleSpec` region contributions are merged into `WorldSpec.regions` during module traversal.
+Unlike quest definitions, region ids are **namespaced before** the duplicate check rather than
+colliding on the authored id.
+
+**Merge rules:**
+
+1. Each region id is prefixed with `"<namespace>_"` per module ref, where the namespace comes from
+   the composition's own module ref. A module authored with region `hometown`, composed under
+   namespace `trading`, contributes `trading_hometown`.
+2. A module ref with no namespace contributes its region ids unprefixed.
+3. A duplicate region id that survives prefixing aborts assembly with
+   `ValueError("Duplicate region ID collision ...")`. Not recoverable.
+
+**Author guidance:** two modules may both author a region called `hometown`; they are composable
+only if at least one is given a distinct namespace in the composition. The namespace, not the
+authored id, is the disambiguation lever. A composition that gives two modules the same namespace
+and the same authored region id is invalid and will abort.
+
+**Not covered by this rule:** region *bounds*. Namespacing makes ids distinct; it does not make the
+regions spatially disjoint, and two differently-named regions may occupy overlapping tiles. The
+overlap policy is a separate contract — see `docs/mechanics/06_worldbuilding_foundation.md`.
+
+---
+
 ## WorldAssemblyValidator Parametric Contract (WORLD-ASM-013)
 
 `WorldAssemblyValidator.validate(module, params)` runs pre-assembly validation on a module's recipe fields. For parametric recipe counts (e.g. `count: "{merchant_count}"`), it resolves the expression using the **module's default parameter values** rather than an empty dict.

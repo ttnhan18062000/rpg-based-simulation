@@ -1364,7 +1364,7 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
 
 def generate(
     runs, events, label, week_str=None, tickets_root=None, tools=None, all_tools=None,
-    raw_run_count=None, deduped_run_count=None, real_token_report=None,
+    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None,
 ):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -2037,6 +2037,12 @@ def generate(
         lines.append(real_token_usage.render_markdown(real_token_report))
         lines.append("")
 
+    # Session-layer measures (TCK-20261004-SESSION-LAYER-M6A-MINIMUM-MEASUREMENT): additive, gated like
+    # the token section: omitted entirely unless the caller passes the rendered section.
+    if session_layer:
+        lines.append(session_layer.rstrip("\n"))
+        lines.append("")
+
     # Notes (human-written)
     lines.append("## Notes")
     lines.append("")
@@ -2097,6 +2103,26 @@ def _write_report_preserving_notes(report: str, out_path: Path, force: bool) -> 
     )
 
 
+def _session_layer_section(runs, week_str, cutoff, latency_prs):
+    """The rendered session-layer section, or None when it cannot be built (never fails the retro)."""
+    try:
+        import batch_latency
+        import session_layer_report as slr
+
+        data_dir = DEFAULT_TOOLS_FILE if DEFAULT_TOOLS_FILE.is_dir() else DEFAULT_TOOLS_FILE.parent
+        manual = slr.in_period(slr.load_family(data_dir, "manual_actions.jsonl"), week_str, cutoff)
+        boundary = slr.in_period(slr.load_family(data_dir, "role_boundary.jsonl"), week_str, cutoff)
+        rows = []
+        for n in latency_prs:
+            try:
+                rows.append((f"#{n}", batch_latency.from_pr(batch_latency.fetch_pr(n))))
+            except Exception:  # noqa: BLE001 - an unavailable PR is `unknown`, not a failed retro
+                rows.append((f"#{n}", batch_latency.latencies(None, None, None) | {"dispatch_source": "unavailable"}))
+        return slr.render(manual, runs, boundary, rows or None)
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate agent monitoring retro report")
     parser.add_argument("--days", type=int, help="Include runs from the last N days")
@@ -2111,6 +2137,11 @@ def main():
         help="Also collect real token usage from local ~/.claude/projects/ transcripts "
         "(TCK-20260921-REAL-TOKEN-TELEMETRY). Developer-machine-only, and streams the real local "
         "transcript corpus (can be ~1GB+) -- opt-in, not part of the default report.",
+    )
+    parser.add_argument(
+        "--latency-prs", type=int, nargs="*", default=[],
+        help="Merged PR numbers whose implementation/finalization/cycle latency to derive via `gh` "
+        "(TCK-20261004-SESSION-LAYER-M6A-MINIMUM-MEASUREMENT).",
     )
     args = parser.parse_args()
 
@@ -2169,10 +2200,12 @@ def main():
             tr_records, tr_tool_stats, tr_session_meta, tr_compacts,
         )
 
+    session_layer = _session_layer_section(runs, week_str, cutoff if args.days else None, args.latency_prs)
+
     report = generate(
         runs, events, label, week_str, tools=tools, all_tools=all_tools,
         raw_run_count=raw_run_count, deduped_run_count=deduped_run_count,
-        real_token_report=real_token_report,
+        real_token_report=real_token_report, session_layer=session_layer,
     )
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)

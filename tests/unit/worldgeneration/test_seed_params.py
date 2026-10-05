@@ -15,10 +15,11 @@ from __future__ import annotations
 import yaml
 import pytest
 from pathlib import Path
-from unittest.mock import MagicMock
 
 from src.worldgeneration.generator import ProceduralCompositionGenerator
 from src.worldgeneration.schema import GenerationIntentSpec
+from src.content.repository import CatalogRepository
+from src.worldmodules.repository import WorldModuleRepository
 from src.worldmodules.schema import WorldModuleSpec, ModuleParameterSpec
 from src.worldassembly.schema import WorldCompositionSpec
 
@@ -61,9 +62,26 @@ def _make_module(
     )
 
 
-def _make_repo(modules: list[WorldModuleSpec]) -> MagicMock:
-    repo = MagicMock()
-    repo.list_modules.return_value = modules
+def _make_catalog() -> CatalogRepository:
+    """An explicitly empty catalog: these fixtures' modules reference no catalog records.
+
+    Explicit rather than a cwd-relative load, which is exactly the hidden dependency the
+    generator's injected catalog_repo exists to remove.
+    """
+    repo = CatalogRepository("tests/fixtures/__nonexistent_catalog__")
+    repo.load_all()
+    return repo
+
+
+def _make_repo(modules: list[WorldModuleSpec]) -> WorldModuleRepository:
+    """Return a WorldModuleRepository populated in memory, with no file I/O.
+
+    A real repository rather than a mock: generate() now resolves the composition it authored,
+    and the resolver looks modules up by id through get_module()/module_fingerprint().
+    """
+    repo = WorldModuleRepository(modules_dir="tests/fixtures/__nonexistent_world_modules__")
+    repo.modules = {m.module_id: m for m in modules}
+    repo.raw_data = {m.module_id: m.model_dump() for m in modules}
     return repo
 
 
@@ -91,7 +109,7 @@ def _generate_and_load(
     monkeypatch.chdir(tmp_path)
     repo = _make_repo(modules)
     gen = ProceduralCompositionGenerator()
-    output_path = gen.generate(intent, repo)
+    output_path = gen.generate(intent, repo, _make_catalog())
     raw = yaml.safe_load(output_path.read_text())
     return WorldCompositionSpec.model_validate(raw)
 
@@ -209,15 +227,19 @@ class TestNoBoundsUsesDefault:
         )
 
     def test_no_bounds_no_default_leaves_absent(self, tmp_path, monkeypatch):
-        """A required param with no default and no bounds must be absent from parameters dict."""
+        """A required param with no default and no bounds must be absent from parameters dict.
+
+        Observed through the resolve that generate() now runs: leaving the param absent is
+        exactly what makes the composition unassemblable, and the evaluator names the param.
+        """
+        from src.worldmodules.evaluator import AssemblyParameterError
+
         params = [_make_param("external_id", "id_reference", required=True)]
         modules = [_make_module("terrain_basic", "terrain", parameters=params)]
         intent = _default_intent(seed=42)
 
-        spec = _generate_and_load(intent, modules, tmp_path, monkeypatch)
-        assert "external_id" not in spec.module_refs[0].parameters, (
-            "Required param with no default and no bounds must be left absent"
-        )
+        with pytest.raises(AssemblyParameterError, match="external_id"):
+            _generate_and_load(intent, modules, tmp_path, monkeypatch)
 
 
 class TestAllowedValuesSampling:

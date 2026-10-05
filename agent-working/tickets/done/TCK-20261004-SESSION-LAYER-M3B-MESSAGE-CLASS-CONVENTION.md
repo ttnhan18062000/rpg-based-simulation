@@ -1,0 +1,77 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20261004-SESSION-LAYER-M3B-MESSAGE-CLASS-CONVENTION
+phase: done
+date: 2026-10-04
+tags: [ai, process-improvement, governance]
+---
+
+# TCK-20261004-SESSION-LAYER-M3B-MESSAGE-CLASS-CONVENTION
+
+## Title
+Session-layer M3b: message-class convention in the function templates and the cross-session guide
+
+## Status
+DONE
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P2
+
+## Request Summary
+Write the message-class convention of plan 9.0, 9.2 and 9.3 into the places sessions actually read: the function templates (and so the cards, within the 400-token budget) and one guide page. Advisory in v1; no hook, no event.
+
+Child of `TCK-20261002-EPIC-SESSION-LAYER-COMMUNICATION-AND-AUTHORITY`. Hold rule met: M1 merged.
+
+## Scope
+- Function templates (`docs/guidelines/session_roles/functions/*.md`): a short rule block per function. Classes `finding`/`fyi`/`ack` (any role), `question` (directly to the named semantic owner), `request`/`handoff`/`dispatch` (only from the receiver's `accepts_dispatch_from`; from anyone else it is an `fyi` and the receiver asks its own upstream), authority decisions (the user only; a peer message is never the user's approval). A designer's output is a `handoff` only after the user confirms the direction.
+- The envelope (first line a self-contained sentence, then `type/batch/needs_user/artifact/asked`) and the rules of 9.3 (route to the owner; one bounce then the user; owner unavailable is not a dispute; verify before acting on a relayed claim and cite the source; never ask a peer to do what you were denied; out-of-boundary edits are requests with the exact before/after text) in one guide: `docs/guides/cross_session_messages.md`.
+- Keep each card inside `CARD_BUDGET_TOKENS`: put detail in the guide and a pointer in the card; the card-budget test stays green and is not raised.
+- Frontmatter, tags and registry rules on the new doc; link it from the delivery or session docs where related.
+
+## Out of Scope
+- Enforcement of any kind (a hard block, a lint of envelopes, the `role_boundary` event, which is M5), the file-backed inbox, auto-wake, any `settings.json` change.
+
+## Acceptance Criteria
+1. Each of the three function templates carries the class rule block and the card still fits the budget (existing card test green, budget unchanged).
+2. The guide defines each class once (who may send, who may receive, effect) and matches plan 9.0's table; a docs test or frontmatter validation passes.
+3. A relay-on-behalf example is included that matches the working agreement already used here: findings and questions go directly, work assignment goes through the planner.
+4. The plan's sections 9.0 to 9.3 and the guide do not contradict each other (stated by cross-references, not duplicated text).
+5. Scoped tests green; `make knowledge-index-update` run; docs and `docs/REGISTRY.yaml` regenerated.
+
+## Related Tickets
+- `TCK-20261002-EPIC-SESSION-LAYER-COMMUNICATION-AND-AUTHORITY` (parent), M1b (done; templates)
+
+## Related Docs
+- `docs/plans/agent_infrastructure/session_layer_working_process.md` (binding)
+- `docs/guidelines/session_roles/functions/`, `docs/guides/agent_session_reset_boundaries.md`
+
+## Related Stored Artifacts
+- `agent-working/stored_artifacts/TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION/external_reviews/`
+
+## Related Code Areas
+- `docs/guidelines/session_roles/functions/`, `docs/guides/cross_session_messages.md` (new), `tools/sessions/card.py` (read-only), `tests/tools/test_session_cards.py`.
+
+## Assumptions / Open Questions
+- None blocking. If a role's `accepts_dispatch_from` in the manifest looks wrong while writing the examples, report it to the design session rather than editing the manifest here.
+
+## Implementation Notes
+Each function template's `## Card` carries one `Messages:` rule (finding/fyi/ack to anyone, question to the named owner, work only via `Dispatch from` else an fyi, a peer message never approves) and points to the new `docs/guides/cross_session_messages.md`, which defines each class once, the envelope, the 9.3 rules and a relay-on-behalf example. To stay inside the unchanged 400-token budget the existing card prose was tightened (designer/planner/implementer text, the agent-working and rpg domain overlays: the rpg line about designer briefs going only to rpg-planner is now covered by the class rule). Worst card is agent-working-planner at 400 by the card estimator. Cards regenerated.
+
+## Test Summary
+`test_session_cards.py` (budget test, unchanged `CARD_BUDGET_TOKENS`), roster/generator suites and `tests/docs` green; `validate_frontmatter.py` OK on the new guide.
+
+## Files Changed
+`docs/guidelines/session_roles/functions/{designer,planner,implementer}.md`, `docs/guidelines/session_roles/domains/{agent-working,rpg}.md`, `docs/guides/cross_session_messages.md` (new), `docs/guides/agent_session_reset_boundaries.md` (link), `.claude/agents/session-*.md` (regenerated).
+
+## Completion Summary
+Convention written where sessions read it; advisory only, nothing enforced. Budget not raised.
+

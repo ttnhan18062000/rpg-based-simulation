@@ -3,6 +3,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Tuple, Dict
+from src.content_semantics.faction import are_entities_allied, are_entities_hostile
+from src.content_semantics.relation import RelationContext
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -41,7 +43,7 @@ class SensoryFilter:
             score += 100.0 / dist
             
             # 2. Hostility
-            if ent.identity.faction != subject.identity.faction:
+            if are_entities_hostile(subject, ent, RelationContext(distance=dist, combat_engaged=True)):
                 score += 200.0
                 # Nemesis modifier (Domain 4)
                 if ent.id in subject.social.nemesis_ids:
@@ -113,10 +115,14 @@ class AppraisalSystem:
         # 2. Faction Ratio (Outnumbered)
         allies = 1 # Subject is their own ally
         hostiles = 0
+        sx, sy = subject.navigation.position
         for ent in neighbors:
-            if ent.identity.faction == subject.identity.faction:
+            if are_entities_allied(subject, ent):
                 allies += 1
-            else:
+            elif are_entities_hostile(subject, ent, RelationContext(
+                distance=abs(ent.navigation.position[0] - sx) + abs(ent.navigation.position[1] - sy),
+                combat_engaged=True,
+            )):
                 hostiles += 1
                 
         if hostiles > allies * 2:

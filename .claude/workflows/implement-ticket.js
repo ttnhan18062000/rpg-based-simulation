@@ -477,7 +477,7 @@ const cleanFindings = (raw) => {
   return { findings, normalized }
 }
 
-const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, reasonCode, testQualityFindings) => {
+const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, reasonCode, testQualityFindings, testsRead) => {
   const event = {
     seq: events.length + 1 + seqOffset,
     phase: phaseLabel,
@@ -492,6 +492,11 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, re
   if (cleaned) {
     event.test_quality_findings = cleaned.findings
     if (cleaned.normalized > 0) event.test_quality_findings_normalized = cleaned.normalized
+  }
+  // Reviewer-declared changed test files it opened (TCK-20261004-ARCH-VERIFY-TESTS-READ-EVIDENCE); strings only,
+  // and the same single-quote swap as findings (the events JSON rides in one single-quoted shell argument).
+  if (Array.isArray(testsRead)) {
+    event.tests_read = testsRead.filter((p) => typeof p === 'string' && p !== '').map((p) => p.replace(/'/g, '’'))
   }
   events.push(event)
 }
@@ -1219,7 +1224,8 @@ print('ARCH_CHECK_JSON:' + json.dumps(run_architecture_checks(sys.argv[1:])))
       summary: { type: 'string', description: 'One sentence: verdict + key reason (≤200 chars)' },
       ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` at start of this phase' },
       verified_by: { type: 'array', items: { type: 'string' }, description: 'Agent self-report of which findings came from tools/gate_checks/architecture_reviewer_static.py vs. independent judgment, e.g. ["static:architecture_reviewer_static", "llm"].' },
-      test_quality_findings: { type: 'array', items: { type: 'string' }, description: 'Optional, advisory (no verdict effect): test-quality findings scoped to the changed test files; an empty list means the changed tests were read and are clean.' },
+      test_quality_findings: { type: 'array', items: { type: 'string' }, description: 'Optional, advisory (no verdict effect): test-quality findings scoped to the changed test files; an empty list is a claim about the test files you read, not proof they are clean.' },
+      tests_read: { type: 'array', items: { type: 'string' }, description: 'Optional: repo-relative path of every changed test file you opened before reporting (including uncommitted and untracked ones). Checked against the monitoring data; an empty test_quality_findings with an unread changed test is reported as unverified.' },
     },
   }
 
@@ -1333,7 +1339,7 @@ except Exception:
     if (archVerify.violations.length > 0) {
       log(`Violations: ${archVerify.violations.join(' | ')}`)
     }
-    pushEvent('Architecture-Verify', 'architecture-reviewer', 'failed', archVerify.summary || 'Architecture-Verify: ' + archVerify.verdict, archVerifyTs, null, null, archVerify.test_quality_findings)
+    pushEvent('Architecture-Verify', 'architecture-reviewer', 'failed', archVerify.summary || 'Architecture-Verify: ' + archVerify.verdict, archVerifyTs, null, null, archVerify.test_quality_findings, archVerify.tests_read)
     await writeMonitoring(archVerify.verdict)
     return {
       status: archVerify.verdict,
@@ -1343,7 +1349,7 @@ except Exception:
     }
   }
 
-  pushEvent('Architecture-Verify', 'architecture-reviewer', 'ok', archVerify.summary || 'Architecture-Verify: APPROVED', archVerifyTs, null, null, archVerify.test_quality_findings)
+  pushEvent('Architecture-Verify', 'architecture-reviewer', 'ok', archVerify.summary || 'Architecture-Verify: APPROVED', archVerifyTs, null, null, archVerify.test_quality_findings, archVerify.tests_read)
   log('Architecture-Verify: APPROVED')
 } else {
   pushEvent('Architecture-Verify', 'architecture-reviewer', 'skipped', 'Hotfix tier — architecture verify skipped')
@@ -1495,13 +1501,12 @@ if (testResult.coverage_gaps.length > 0) {
 // Closes the ordering gap where done-checker's data_runs_clean check (Verify, phase 8) ran
 // before Finalize (phase 9) — the only phase that actually cleaned these dirs — making the
 // check structurally guaranteed to fail whenever Test phase (test-scoper) generated run
-// artifacts, which is nearly every standard-tier run touching simulation code. Auto-cleans this
-// session's own artifacts (mtime >= startTs only — never a blind rm) immediately after Test,
-// before Parity/Verify ever see them stale. This only guarantees no deletion of artifacts from
-// sessions that STARTED BEFORE startTs (mtime lower-bound only) — it does NOT protect against a
-// second session concurrently/overlapping in progress at this moment, since data/runs/ and
-// reports/release_proof/ have no session/PID partitioning (accepted residual risk — see plan.md
-// Anti-Drift Notes, "Residual Risk: Concurrent-Session Overlap Window"). Orchestrator-run bash()
+// artifacts, which is nearly every standard-tier run touching simulation code. Since
+// TCK-20261004-DATA-RUNS-CLEAN-NOT-SESSION-SCOPED this checkpoint is REPORT-ONLY: it lists the
+// files at/after startTs and deletes nothing, because data/runs/ and reports/release_proof/ have no
+// session partitioning and the old auto-delete removed other sessions' files (3684 files across 14
+// sessions in one run). Deletion is an explicit, scoped opt-in (--clean-data-runs --path <run_id>).
+// The Verify check downgrades leftovers to an advisory WARN. Orchestrator-run bash()
 // call, not an agent prompt instruction, so it can't be silently skipped
 // (TCK-20260708-DATA-RUNS-CLEANUP-TIMING). Finalize step 6's own cleanup and done-checker's
 // data_runs_clean check both remain in place as backstops — see docs/ai/ticket-lifecycle.md.
@@ -1530,7 +1535,9 @@ if (cleanupStatus === 'FAIL') {
   }
 }
 
-if (cleanupStatus === 'CLEANED') {
+if (cleanupStatus === 'REPORTED') {
+  log(`Post-Test cleanup is report-only: data/runs/ + reports/release_proof/ files at/after start were NOT deleted (they cannot be attributed to one session) — ${cleanupEvidence}. Delete only your own with: python3 tools/gate_checks/done_checker_static.py --clean-data-runs --path <run_id>`)
+} else if (cleanupStatus === 'CLEANED') {
   log(`Post-Test cleanup: removed leftover data/runs/ + reports/release_proof/ artifacts — ${cleanupEvidence}`)
 } else {
   log('Post-Test cleanup: data/runs/ and reports/release_proof/ already clean.')

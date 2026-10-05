@@ -1,0 +1,48 @@
+---
+name: feedback_trace_the_call_never_name_match_paths
+description: Two code paths sharing an identifier are not the same path — trace the call before claiming reachability
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: ca26f6d7-ba23-4256-89fa-eb79ac8f6ff3
+  modified: 2026-10-04T14:11:30.634Z
+---
+
+When an identifier appears in several places, never conclude "X is wired/live" from the
+co-occurrence. Trace the actual call. On 2026-10-01 I reported `execute_allocate_ap`'s double-count
+as live because `action_router.py` dispatched `"ALLOCATE_AP"` *and* `generator.py` emitted
+`ConversionKind.ALLOCATE_AP`. They are **unrelated paths**: the enum resolves to a decrement-only
+no-op returned directly as an `EntityUpdate`, never through `ActionRouter`, and no `src/` code builds
+the router payload at all (only two test cases). The branch was dormant by a recorded decision
+(`DEV-004`) with a 4-leg corpus trial and a passing dormancy test.
+
+**Why:** a shared name is the weakest possible evidence of a shared path, and reachability claims are
+exactly where a false positive does damage — it escalates severity, reaches peers, and hardens into
+their PRs. Mine reached a pilot report and a PR body before I caught it.
+
+**How to apply:** before writing "wired", "live", "reachable" or "the re-raise condition is met",
+(1) grep for the *payload/producer*, not the handler, and confirm a non-test caller exists;
+(2) check feature-flag gating; (3) search `intentional_divergences.md` and the parity/event ledgers
+for an existing decision — an unreached path usually already has one. If the producers are only
+tests, say "zero production callers", not "wired". See [[feedback_check_recorded_decision_before_filing_defect]]
+(odd zeros are usually documented), [[feedback_absent_from_sample_is_not_unreachable]] for the
+converse error, and [[feedback_verify_a_peer_finding_before_relaying_it_as_fact]].
+
+---
+
+**2026-10-04 — second instance, and the reason it survived: the plausible sibling file EXISTS.** I
+wrote in a ticket I filed that "`src/core/strategic.py` — where `StrategicUpdate` actually lives".
+It lives at **`src/core/updates.py:515`**. The implementer's first one-word edit on my citation
+would have swapped a `NameError` for an `ImportError`; its own new test caught it, not me. Earlier
+the same week I relayed `src/cognition/appraisal.py`, which is really
+`src/systems/social_systems/appraisal.py`.
+
+The pattern in both: I matched a symbol to a module by **name plausibility** and never ran the
+definition lookup. What made this one durable is that `src/core/strategic.py` **does exist** — so
+the citation looked verified, and a reader checking only "does that file exist?" would confirm it.
+
+**How to apply:** a symbol-to-file citation is a claim that needs its own one-line check —
+`grep -rn "^class <Symbol>\|^<Symbol> = " src/` — before it goes into a ticket, a brief or a
+message. Never infer the module from the symbol's name, and note that confirming the *file* exists
+does not confirm the *symbol* is in it. Two wrong citations in one week both went out in artifacts
+other sessions then worked from.

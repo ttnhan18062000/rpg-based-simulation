@@ -2012,16 +2012,34 @@
     Content is read-only after load_all(); no tick-path code writes to it. Compliance
     namespace: WORLD-CAT-*, WORLD-PATH-*.
 
+    UPDATE 2026-10-04 (TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION): world
+    definitions are no longer addressed as content at all. ContentPathConfig no longer
+    declares a world_compositions_dir field, data/content/world_compositions/ is deleted,
+    and world_compositions is removed from CatalogRepository.NON_CATALOG_DIRS -- the
+    exemption existed only to stop strict mode reporting that directory''s files as
+    "ignored", and with the directory gone the exemption would be dead config. CatalogValidator''s
+    composition-loading path (load_all_compositions) now defaults to DEFAULT_WORLDS_ROOT
+    ("data/worlds"), owned by src/worldbuilding/repository.py, instead of a ContentPathConfig
+    field. Content families under data/content/ (world_modules, simulation_scenarios,
+    and the catalog families proper) are unchanged; only the world-definition location
+    moved out from under the content root. The authoritative one-definition law itself
+    is docs/parity_ledger/substrate.yaml::SUB-394, not this entry -- this entry records
+    only the content-pipeline side of the move.
+
     '
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: 'docs/content/pipeline_contract.md + src/content/schema.py:1 + src/content/repository.py:1
     + src/content/validator.py:1 + src/content/resolver.py:1 + src/content/paths.py:1
+    + src/content/repository.py (NON_CATALOG_DIRS, world_compositions removed) + src/content/validator.py
+    (load_all_compositions default = DEFAULT_WORLDS_ROOT) + src/worldbuilding/repository.py
+    (DEFAULT_WORLDS_ROOT = "data/worlds", the owning module)
 
     '
   proof_type: null
-  test_path: tests/unit/content/test_content_usage_evidence.py::test_all_matrix_evidence_paths_exist
+  test_path: tests/unit/content/test_content_usage_evidence.py::test_all_matrix_evidence_paths_exist;
+    tests/architecture/test_world_definition_single_source.py::test_catalog_world_compositions_directory_is_absent
   divergence_note: null
   support_boundary: "Content pipeline \u2014 preprocessing only, not simulation state."
 - id: INFRA-185
@@ -12700,3 +12718,22 @@
     validate_result_batch (TCK-20261004-PERF-M1-VALIDATOR-ONE-SYSTEM-RESULT-PER-SUBSYSTEM); the
     divergent case is only constructible below the validator, in the mutation test.
     Non-combat scenarios, audit_mode on, five ticks, local/thread/process routes only.'
+- id: INFRA-421
+  text: 'TCK-20261005-DIRTY-SET-DEDUPES-UPDATES-BY-ID-SO-RECYCLED-ADDRESSES-DROP-WORK:
+    DirtySetBuilder.mark_from_update marks every entity update it is given and keeps
+    no identity-keyed registry of updates already seen. It previously skipped an update
+    whose id() it had seen, so an update allocated at a recycled address was dropped
+    and its entity never marked dirty, making StrategicWorkQueue scheduling allocation-dependent
+    and audit_mode runs diverge (distinct from INFRA-273''s wall-clock throttle).
+    Marking is idempotent for one entity''s own update, so re-marking is harmless.'
+  v2_evidence: src/core/dirty.py (DirtySetBuilder.mark_from_update).
+  test_path: tests/unit/core/test_dirty_set_builder_identity.py::test_every_entity_update_is_marked_even_when_all_ids_collide
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  proof_type: regression
+  divergence_note: null
+  support_boundary: Determinism after the fix is a measurement over short runs (144
+    8-tick trials, none diverged, against 8 of 96 on unfixed main), not a proof. A
+    second id()-keyed cache, get_frozen in src/engine/executor.py, showed no stale
+    hit in 300 ticks and is not proven safe.

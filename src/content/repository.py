@@ -145,9 +145,9 @@ CANONICAL_FAMILIES: List[ContentFamilySpec] = [
 from src.content.paths import ContentPathConfig
 
 # Directories inside data/content/ that are managed by loaders other than CatalogRepository
-# (WorldModuleRepository, composition loader, ScenarioLabOrchestrator). Files in these
+# (WorldModuleRepository, ScenarioLabOrchestrator). Files in these
 # directories must not be reported as "ignored" by strict mode.
-NON_CATALOG_DIRS: frozenset = frozenset({"world_modules", "world_compositions", "simulation_scenarios"})
+NON_CATALOG_DIRS: frozenset = frozenset({"world_modules", "simulation_scenarios"})
 
 # Individual YAML files that are DESIGN_ONLY (schema=None in content_usage_matrix.md) and are
 # intentionally not validated by CatalogRepository. These are human/tooling reference files,

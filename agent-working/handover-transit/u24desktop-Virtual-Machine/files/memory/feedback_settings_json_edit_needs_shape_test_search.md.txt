@@ -1,0 +1,33 @@
+---
+name: feedback-settings-json-edit-needs-shape-test-search
+description: "Before editing .claude/settings.json's hooks list, grep tests/ for pinned shape/count assertions on that file, not just the new hook's own test file"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 85db116d-e592-47c1-80ba-e260a280db08
+  modified: 2026-09-24T02:47:20.011Z
+---
+
+Before adding or editing a `.claude/settings.json` `PreToolUse`/`PostToolUse` hook entry, run
+`grep -rl "settings.json\|hooks\[.PreToolUse" tests/` and check every match, not just the new
+hook's own dedicated test file plus a hand-picked regression list.
+
+**Why:** During Batch B (context/token cost reduction, 2026-09-23/24, session
+`session_01R6qK28EjtCtUQmohUDgC2a`), two settings.json edits (a new `PreToolUse` Bash-matcher
+entry for a `cd`-prefix advisory hook, and a message-text change to an existing grep-triggered
+hook) each ran their own new test file plus a small hand-picked regression list before committing,
+and both went green locally. Neither edit's local test run caught that 3 pre-existing tests in
+*unrelated* files (from earlier, unrelated tickets `TCK-20260904-BASH-SECRET-SCAN-HOOK` and
+`TCK-20260904-TEST-SCOPER-HANG-GUARD`) pin the exact `PreToolUse` array length and literal message
+substrings of that same file. Real CI (the `API / tools / logging` job, which runs the full
+`tests/tools/` directory) was the only thing that actually caught the break — a broader local
+scope would have caught it before push, for free.
+
+**How to apply:** Treat `.claude/settings.json` like any other file with cross-file pinned
+invariants (similar to `docs/REGISTRY.yaml` or `tickets/working_log.csv`) — before editing its
+`hooks` block, search test files for hardcoded index positions, array-length assertions, or
+literal substring checks against it, and update every one found to the new, correct, still-
+meaningful shape (never loosen an assertion just to pass — see
+`[[feedback_prefer_popular_skills_over_custom]]`-adjacent principle of never silently routing
+around a gate). This generalizes beyond settings.json to any config file this repo checks in that
+multiple independent tickets' tests assert exact structure against.

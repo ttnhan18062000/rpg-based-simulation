@@ -456,6 +456,18 @@ unmodified worlds — `urban_political`, `frontier_living_world`, `dungeon_crawl
 only nonzero influence anywhere came from two regions with compile-time-authored starting
 ownership, and even those never moved past their starting `100.0`.
 
+> **SUPERSEDED, 2026-10-05.** The result above was true when measured and is false now. #276
+> (`786f9ee9b`, 2026-10-01) made `resolve_lifecycle` record DEFEAT/HAZARD/passive deaths, so
+> `recent_deaths` carries them and `process_influence_shift` both runs and has an effect. Re-measured
+> at 1500 ticks, seed 42, `PROD_SMALL`: `frontier_living_world` 59 deaths → 43 calls → 22 non-empty
+> updates, with `goblin_camp` influence reaching 50 and changing owner `None → HERO_GUILD`; three
+> other worlds likewise nonzero. The 59 deaths are the same 59 this batch recorded with 0 calls, which
+> is the positive control. **So "zero ownership changes, ever" and "`influence` frozen at exactly
+> `0.0`" no longer describe the engine, and §3.3's downgrade rested on a cause that has since been
+> removed.** What is still unmeasured: monster conquest of a hero-owned region, and whether the
+> thresholds are balanced. Evidence: `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`, closed
+> SUPERSEDED, commit `9fba1df76`.
+
 This is not "the design needs different values" — `FactionInfluenceService.process_influence_shift()`
 appears, on a code-level trace, like it should fire (see §2.1's classification trace), but
 empirically does not, for a reason not yet found. That is now `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`,

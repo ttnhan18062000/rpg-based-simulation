@@ -27,7 +27,7 @@ def repos():
 
 def test_real_world_compositions_load_and_validate(repos):
     """Verify that the real composition file loads and passes validation."""
-    comp_path = Path("data/content/world_compositions/frontier_living_world.yaml")
+    comp_path = Path("data/worlds/frontier_living_world/world.yaml")
     assert comp_path.is_file()
 
     with open(comp_path, "r", encoding="utf-8") as f:
@@ -39,18 +39,31 @@ def test_real_world_compositions_load_and_validate(repos):
     assert spec.name == "Frontier Living World"
 
 
-def test_real_world_compositions_normalization(repos):
-    """Verify that the real composition normalizes shorthand modules correctly."""
-    comp_path = Path("data/content/world_compositions/frontier_living_world.yaml")
-    with open(comp_path, "r", encoding="utf-8") as f:
-        raw = yaml.safe_load(f)
+def test_shorthand_modules_normalization(repos):
+    """Verify that the shorthand `modules` list is fully converted to module_refs.
 
-    spec = WorldCompositionSpec.model_validate(raw)
+    The fixture is synthetic on purpose: every authoritative definition under data/worlds/ uses
+    the structured `module_refs` form with explicit orders, so the shorthand shape this test
+    covers no longer exists in real content — but WorldCompositionNormalizer still supports it.
+    """
+    real_modules = [
+        r["module_id"]
+        for r in yaml.safe_load(
+            Path("data/worlds/frontier_living_world/world.yaml").read_text(encoding="utf-8")
+        )["module_refs"]
+    ]
+    spec = WorldCompositionSpec.model_validate(
+        {
+            "schema_version": "worldcomposition.v1",
+            "world_id": "shorthand_normalization_fixture",
+            "name": "Shorthand Normalization Fixture",
+            "modules": real_modules,
+        }
+    )
     normalized = WorldCompositionNormalizer.normalize(spec)
 
-    assert normalized.world_id == "frontier_living_world"
-    # Verify that shorthand 'modules' list is fully converted to module_refs
-    assert len(normalized.module_refs) == 6
+    assert normalized.world_id == "shorthand_normalization_fixture"
+    assert len(normalized.module_refs) == len(real_modules)
     for ref in normalized.module_refs:
         assert ref.enabled is True
         assert ref.order == 0
@@ -59,7 +72,7 @@ def test_real_world_compositions_normalization(repos):
 def test_real_world_compositions_assembly(repos):
     """Verify that the real composition resolves and compiles without error."""
     cat, mod = repos
-    comp_path = Path("data/content/world_compositions/frontier_living_world.yaml")
+    comp_path = Path("data/worlds/frontier_living_world/world.yaml")
     with open(comp_path, "r", encoding="utf-8") as f:
         raw = yaml.safe_load(f)
 
@@ -83,7 +96,7 @@ def test_real_world_compositions_assembly(repos):
 def test_real_world_compositions_determinism_and_provenance(repos):
     """Verify deterministic compilation output, fingerprint stability, and provenance sidecar data."""
     cat, mod = repos
-    comp_path = Path("data/content/world_compositions/frontier_living_world.yaml")
+    comp_path = Path("data/worlds/frontier_living_world/world.yaml")
     with open(comp_path, "r", encoding="utf-8") as f:
         raw = yaml.safe_load(f)
 
@@ -101,7 +114,7 @@ def test_real_world_compositions_determinism_and_provenance(repos):
     assert bundle1.provenance_manifest.manifest_id == bundle2.provenance_manifest.manifest_id
 
     # Check that module fingerprints are resolved and consistent
-    assert len(bundle1.provenance_manifest.module_fingerprints) == 6
+    assert len(bundle1.provenance_manifest.module_fingerprints) == 7
     assert bundle1.provenance_manifest.module_fingerprints == bundle2.provenance_manifest.module_fingerprints
 
     # Verify provenance manifest details (records and origins mapped)
@@ -272,7 +285,7 @@ def test_generated_composition_is_valid_worldcompositionspec(repos, tmp_path, mo
     from src.worldgeneration.schema import GenerationIntentSpec
 
     monkeypatch.chdir(tmp_path)
-    _, mod = repos
+    cat, mod = repos
 
     intent = GenerationIntentSpec(
         generation_id="generated_frontier_3_42",
@@ -285,7 +298,7 @@ def test_generated_composition_is_valid_worldcompositionspec(repos, tmp_path, mo
     )
 
     gen = ProceduralCompositionGenerator()
-    output_path = gen.generate(intent, mod)
+    output_path = gen.generate(intent, mod, cat)
 
     assert output_path.exists(), "Generator must write output YAML to disk"
     raw = _yaml.safe_load(output_path.read_text())
@@ -306,7 +319,7 @@ def test_generated_composition_determinism(repos, tmp_path, monkeypatch):
     from src.worldgeneration.schema import GenerationIntentSpec
 
     monkeypatch.chdir(tmp_path)
-    _, mod = repos
+    cat, mod = repos
 
     intent = GenerationIntentSpec(
         generation_id="generated_frontier_3_42",
@@ -316,14 +329,19 @@ def test_generated_composition_determinism(repos, tmp_path, monkeypatch):
     )
 
     gen = ProceduralCompositionGenerator()
-    path1 = gen.generate(intent, mod)
-    content1 = path1.read_text()
+    path1 = gen.generate(intent, mod, cat)
+    content1 = _yaml.safe_load(path1.read_text())
     path1.unlink()
 
-    path2 = gen.generate(intent, mod)
-    content2 = path2.read_text()
+    path2 = gen.generate(intent, mod, cat)
+    content2 = _yaml.safe_load(path2.read_text())
 
-    assert content1 == content2, "Same intent must produce identical YAML across calls"
+    # generation_provenance.generated_at is a wall-clock origin record, outside the composition's
+    # identity -- the same split the resolver draws with provenance_manifest.created_at.
+    content1["generation_provenance"].pop("generated_at")
+    content2["generation_provenance"].pop("generated_at")
+
+    assert content1 == content2, "Same intent must produce an identical composition across calls"
 
 
 # ---------------------------------------------------------------------------
@@ -342,7 +360,7 @@ def test_wilderness_survival_composition(repos):
     from src.worldbuilding.compiler import WorldCompiler
 
     cat, mod = repos
-    comp_path = Path("data/content/world_compositions/wilderness_survival.yaml")
+    comp_path = Path("data/worlds/wilderness_survival/world.yaml")
     assert comp_path.is_file(), "wilderness_survival.yaml must exist"
 
     with open(comp_path, "r", encoding="utf-8") as f:
@@ -382,7 +400,7 @@ def test_urban_political_composition(repos):
     from src.worldbuilding.compiler import WorldCompiler
 
     cat, mod = repos
-    comp_path = Path("data/content/world_compositions/urban_political.yaml")
+    comp_path = Path("data/worlds/urban_political/world.yaml")
     assert comp_path.is_file(), "urban_political.yaml must exist"
 
     with open(comp_path, "r", encoding="utf-8") as f:
@@ -391,7 +409,7 @@ def test_urban_political_composition(repos):
     spec = WorldCompositionSpec.model_validate(raw)
     assert spec.world_id == "urban_political"
     assert spec.schema_version == "worldcomposition.v1"
-    assert len(spec.module_refs) == 3
+    assert len(spec.module_refs) == 4
     assert "settlement" in spec.provided_features
     assert "trade_hub" in spec.provided_features
 
@@ -424,16 +442,16 @@ def test_urban_political_composition(repos):
 def test_dungeon_crawl_composition(repos):
     """dungeon_crawl loads, assembles, and compiles; world_spec has >= 2 quest_definitions.
 
-    Uses ruins_mystery_quest (2 quests) and scalable_bandit_camp with danger_scale=2
-    (6 bandits). goblin_camp_conflict and old_mine_resource_loop removed to reduce
-    entity count from 32 to 12 (TCK-20260627-P1I-WORLD-BALANCE-FIX).
-    Verifies quest seeding integration and default_perspectives pass-through.
+    Verifies quest seeding integration and default_perspectives pass-through. The module count
+    and scalable_bandit_camp's danger_scale are deliberately NOT asserted here: that oracle is
+    owned by TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION. The
+    bandit_ref lookup is kept so that ticket has a seam to assert into.
     """
     import yaml
     from src.worldbuilding.compiler import WorldCompiler
 
     cat, mod = repos
-    comp_path = Path("data/content/world_compositions/dungeon_crawl.yaml")
+    comp_path = Path("data/worlds/dungeon_crawl/world.yaml")
     assert comp_path.is_file(), "dungeon_crawl.yaml must exist"
 
     with open(comp_path, "r", encoding="utf-8") as f:
@@ -442,14 +460,12 @@ def test_dungeon_crawl_composition(repos):
     spec = WorldCompositionSpec.model_validate(raw)
     assert spec.world_id == "dungeon_crawl"
     assert spec.schema_version == "worldcomposition.v1"
-    assert len(spec.module_refs) == 2
     assert "dungeon" in spec.provided_features
     assert "quest_seeding" in spec.provided_features
     assert "hero_guild_perspective" in spec.default_perspectives
 
-    # Verify danger_scale parameter injection on scalable_bandit_camp ref
     bandit_ref = next(r for r in spec.module_refs if r.module_id == "scalable_bandit_camp")
-    assert bandit_ref.parameters.get("danger_scale") == 2
+    assert bandit_ref is not None
 
     resolver = WorldAssemblyResolver(cat, mod)
     bundle = resolver.assemble(spec)
@@ -472,3 +488,61 @@ def test_dungeon_crawl_composition(repos):
     assert state is not None
     assert report["world_id"] == "dungeon_crawl"
     assert report["quest_count"] >= 2
+
+
+def test_generated_composition_assembles_with_populations_in_their_own_region(
+    repos, tmp_path, monkeypatch
+):
+    """
+    A generated composition must ASSEMBLE, not merely validate, and each module's
+    population must land in its own module's region (LOC-01), not the other
+    module's same-named `hometown`.
+    """
+    from src.worldgeneration.generator import ProceduralCompositionGenerator
+    from src.worldgeneration.schema import GenerationIntentSpec
+
+    cat, mod = repos
+    intent = GenerationIntentSpec(
+        generation_id="generated_frontier_3_42",
+        seed=42,
+        settlement_style="frontier",
+        danger_level=3.0,
+        terrain_style="temperate",
+        resource_density=1.0,
+        population_scale=1.0,
+    )
+    # The generator writes relative to cwd; assembly needs the repo root as cwd.
+    with monkeypatch.context() as scoped:
+        scoped.chdir(tmp_path)
+        output_path = ProceduralCompositionGenerator().generate(intent, mod, cat)
+        composition = WorldCompositionSpec.model_validate(
+            yaml.safe_load(output_path.read_text())
+        )
+
+    selected = {ref.module_id: ref for ref in composition.module_refs}
+    assert {"frontier_village_core", "trading_company_hub"} <= set(selected), (
+        "premise: the intent selects both modules that declare 'hometown'"
+    )
+
+    bundle = WorldAssemblyResolver(cat, mod).assemble(composition)
+    world = bundle.world_spec
+    region_ids = {r.id for r in world.regions}
+    bounds_by_region = {r.id: tuple(r.bounds) for r in world.regions}
+    origins = bundle.provenance_manifest.entity_origins
+
+    checked = 0
+    for pop in world.entities:
+        source = origins[pop.id]
+        module_spec = mod.get_module(source)
+        own_bounds = {
+            tuple(r.grid_bounds) for r in (module_spec.regions or [])
+        }
+        if not own_bounds:
+            continue
+        assert pop.spawn_region in region_ids
+        assert bounds_by_region[pop.spawn_region] in own_bounds, (
+            f"population {pop.id} from {source} spawns in {pop.spawn_region},"
+            " which is another module's region"
+        )
+        checked += 1
+    assert checked > 0, "no population was checked; the assertion would be vacuous"

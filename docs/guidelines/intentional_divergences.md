@@ -36,6 +36,10 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Combat-Progression** | Hero's Journey Rebirth Orphaned in the Real Dominant Kill Path | **Bug Fix** | **SUPERSEDED** 2026-10-01 by §2.63 |
 | **Engine / Cognition-Strategy** | Adventure-Route Defer-Reason Observability Gap | **Bounded** | RATIFIED |
 | **Strategic Cognition / Regional Danger** | Regional-Danger Stabilization No Longer Unconditionally Wins the Project Slot | **Enforced** | RATIFIED |
+| **Engine / Combat-Cognition** | Hostility and Allegiance Read From the Content Catalog, Not the Legacy `Faction` Enum, at Eight More Sites (§2.65) | **Bug Fix** | RATIFIED |
+| **Engine / Tactical** | Retreat and Stalemate-Break Destinations Are Region-Contained, Never the World Origin (§2.66) | **Bug Fix** | RATIFIED |
+| **Strategic Cognition / Tactical** | Entity-Targeted Objective Is Typed, Resolved Live, and Ends With Its Target (§2.67) | **Bug Fix** | RATIFIED |
+| **Tactical / Strategic Cognition** | A Pursuit Move Ends in Attack Reach; No Strategic Navigation Point for an Entity-Typed Objective (§2.68) | **Bug Fix** | RATIFIED |
 | **Knowledge Gateway MCP / Packet Cache** | Level 2 Packet-Cache Freshness/Verification Column Co-location | **Bounded** | RATIFIED |
 | **Engine / Progression** | ALLOCATE_AP Action-Router Branch Kept Dormant | **Bounded** | ACTIVE |
 | **Engine / Combat** | Wounds Permanent; `heal_wound()`/`get_diagnosis_quality()` Removed | **Bug Fix** | ACTIVE |
@@ -2215,6 +2219,133 @@ untouched by §2.57's fix (out of that ticket's scope).
   `tests/unit/world/` + `tests/integration/world/` + `tests/unit/engine` + `tests/unit/ai` = 638
   passed, 1 skipped.
 - **Status**: RATIFIED
+
+### 2.65 Hostility and Allegiance Are Read From the Content Catalog, Not the Four-Value Legacy `Faction` Enum, at Eight More Sites (TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP)
+- **Subsystem**: Combat (splash, flanking) / Strategic Cognition (concern intake, saliency, morale) / Cooperation / Strategic Intelligence
+- **Old Behavior**: `a.identity.faction != b.identity.faction` was used as "hostile" and `==` as "ally" at
+  `combat.py` splash, `legality.py` `check_flanking`, `intake.py` (`danger`, `trauma_dead_ally`),
+  `cognition.py` (`filter_saliency`, outnumbered ratio), `cooperation/providers.py`, and `intelligence.py`
+  (`_threat_resolved`, lead-observation). The enum has four values; `bandit_company`, `goblin_warband` and
+  `orc_clan` all map to `MONSTER_HORDE`, so same-bucket enemies were invisible to every one of these and
+  different-bucket allies (`hero_guild`/`town_council`) were treated as enemies.
+- **New Behavior**: each site asks `content_semantics.faction.are_entities_hostile` (the helper
+  `TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND` established; this ticket added
+  `are_entities_allied`, same resolved catalog faction) with the real distance and `combat_engaged=True`.
+  Consequences: splash hits catalog-hostile victims only (neutrals and allies are spared); `danger`
+  concerns only for catalog-hostile neighbours; `trauma_dead_ally` only for a dead member of the entity's
+  own catalog faction (the record id still reads `trauma_dead_ally_<id>` and is now true); cooperation
+  partner pools exclude catalog-hostile entities rather than every other-bucket entity (so catalog-friendly
+  or neutral other-bucket entities are now eligible).
+- **Not behavior-neutral; measured** (real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`,
+  `max_tick_budget_ms=1e9`, `LocalSequentialExecutor`, repeat-identical entity hashes unless stated):
+  with all groups applied, `danger` concerns emitted 1025 to 485 (crowded_frontier) and 2078 to 2091
+  (frontier_living_world); `trauma_dead_ally` 742 to 100 and 1315 to 42; cooperation contracts held at end
+  110 to 554 and 825 to 537 (frontier_living_world is bimodal across repeats from Group B on, see the
+  ticket; the figure is the modal outcome);
+  the splash site was **never evaluated** in either world (0 AoE attacks), so its effect is proven by unit
+  test only. Raw-vs-catalog disagreement per site is in the ticket's Implementation Notes.
+- **Rationale**: **Bug Fix** (the enum cannot represent the catalog's factions), with **Unified** for the
+  single shared helper.
+- **Verification**: `tests/unit/combat/test_catalog_hostility_sweep.py` (both error directions per site, a
+  neutral case, helper uniqueness).
+- **Status**: RATIFIED
+
+### 2.66 Retreat and Stalemate-Break Destinations Are Region-Contained, Never the Literal World Origin (TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN)
+- **Subsystem**: Tactical AI (`src/engine/tactical.py`)
+- **Old Behavior**: four branches set the entity's navigation target to the literal `(0.0, 0.0)`:
+  the `emotion.is_fleeing` gate (`PANIC_RETREAT`), the very-low-HP engaged branch (`PANIC_RETREAT`, the
+  same reason tag, not listed in the ticket's three-row table), `SAFETY_PRESSURE_RETREAT`, and the
+  `STALEMATE_BREAK` `WANDER`. In the corpus worlds `(0, 0)` is outside every region, so an entity that
+  reached one of these branches walked out of the declared spatial model and idled there with
+  `region_id=None`.
+- **New Behavior**: `src/engine/tactical_destinations.py` derives the destination, per the rule owner's
+  2026-10-03 ruling (`MOV-01`, `LOC-01`, `LOC-03`, `MOV-03`). Retreat: away from the perceived threats by
+  one perception radius, clamped to stay inside the entity's current region (strict bounds, no
+  nearest-centre fallback); else the entity's own `strategic.home_region_id` region centre when set; else
+  **hold position** (the entity's current position). Stalemate-break: a seeded
+  (`DeterministicRNG`, `Domain.TACTICAL`, tick and entity scoped), nearby (half-width 5), region-contained
+  point; hold when the entity is itself outside every region. A different semantic from retreat, so it
+  shares no derivation. Rejected by the ruling and not used: nearest settlement, nearest friendly region,
+  any literal coordinate.
+- **Not behavior-neutral**: a retreating entity now moves away from its threats instead of toward the
+  world origin, and a cornered one stops instead of continuing. Firing rates per branch were not changed.
+- **Rationale**: **Bug Fix** (the old target violated `MOV-01`/`LOC-01`), per the ticket's ruling.
+- **Verification**: `tests/unit/combat/test_tactical_destinations.py` (pure derivation and each branch
+  through `evaluate_entity_intent`, which fail on the literal-origin code),
+  `tests/unit/engine/test_pressure_perception_consumers.py::test_safety_pressure_retreat_target_is_inside_a_region_and_away_from_the_threat`,
+  `tests/unit/combat/test_engagement_behavior.py::test_retreat_behavior`,
+  `tests/unit/combat/test_anti_stalemate.py::test_stalemate_break`.
+- **Status**: RATIFIED
+
+### 2.67 An Entity-Targeted Objective Is Typed, Resolved Live, and Ends When Its Target Dies or Leaves Perception (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES)
+- **Subsystem**: Strategic Cognition (`ObjectiveState`, `StrategicIntelligenceSystem`, `StrategicWorkQueue`) / Tactical AI
+- **Old Behavior**: an objective whose subject is a moving entity carried that entity's id in the
+  overloaded string `target` (shared with resource-node ids, building ids and `town_center`). A combat
+  project never left `ACTIVE` unless something unrelated closed it: in the control arm below 0 of 13
+  `frontier_living_world` combat projects ever reached a terminal status. The int-cast in
+  `_resolve_target_position` could resolve an entity id equal to a node or building id to the wrong place.
+- **New Behavior**: `ObjectiveState.target_entity_id` (typed, `Optional[int]`, copied from
+  `GoalScore.target_entity_id`, set by `CombatEngageScorer` and by a resumed `COMBAT_ENGAGE` committed
+  intention). It is omitted from the canonical dict when `None`, so no state without an entity-typed
+  objective changes hash. A typed target resolves to the live entity position (dead or missing: none, no
+  `target_position` fallback). The strategic pass ends the objective (`entity_target_outcome`): target
+  dead -> `RESOLVED`/project `COMPLETED`; target beyond 10 tiles Manhattan (the radius
+  `CombatEngageScorer` chooses within) -> `FAILED`/`ABANDONED`; target absent from state -> `FAILED`/
+  `ABANDONED` (never observed, dead entities stay in state). `StrategicWorkQueue` treats such an ended
+  objective as a tier-3 transition so it is evaluated promptly, not at the next sweep.
+  `ScoreModifierSystem` now copies a `GoalScore` with `dataclasses.replace` (a field-by-field rebuild had
+  silently dropped any new field).
+- **Not behavior-neutral; measured** (real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`,
+  `LocalSequentialExecutor`, live holders only; control arm disables only the termination hook):
+  `frontier_living_world` projects ever terminal 0 of 13 (control) vs 37 of 44 (fixed: 2 completed, 35
+  abandoned); live holder with target out of radius 4266 to 670, with target dead 980 to 39; combat
+  projects 13 to 44 because an abandoned objective is re-won against a new target. `crowded_frontier`: 0 of
+  5 vs 1 of 5, live-holder dead target 28 in both arms, out of radius 0: almost nothing to end there. The
+  entity state hash differs between arms in both worlds (so recorded hashes of runs with combat objectives
+  move; see the ticket's Test Summary for which and why).
+- **Rationale**: **Bug Fix** (the lifecycle gap and the id collision), with **Unified** for the single
+  predicate shared by the strategic pass and the work queue.
+- **Verification**: `tests/unit/strategic/test_entity_target_objective.py` (typed field through scorer to
+  objective, each termination condition directly and through `evaluate_strategic_intent`, the work-queue
+  rule, live resolve, the node-id collision, the unchanged `town_center`/node/coordinate cases, canonical
+  omission), `tests/mechanic_scenarios/test_entity_target_navigation_tracks_live_position_through_kernel.py`
+  (regression guard that the live path tracks the target's current position).
+- **Status**: RATIFIED
+
+### 2.68 A Pursuit Move Ends When Its Live Target Is in Attack Reach, and Strategy Writes No Navigation Point for an Entity-Typed Objective (TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK)
+- **Subsystem**: Tactical AI (`ENTITY_MOVE` dispatch) / Strategic Cognition (objective redirection)
+- **Old Behavior**: a pursuit `ENTITY_MOVE` was created once by the tactical pass and then re-scheduled as movement every tick
+  without re-entering the decision (the Sticky-Task Law, `docs/engine/kernel.md`); nothing ended it. An entity that reached its
+  live target at full readiness therefore never had `evaluate_entity_intent` called again and never chose `ATTACK`
+  (`crowded_frontier`, 2000 ticks: 1953 of 1953 adjacent-to-a-live-target samples with the tactical pass not called, readiness 100,
+  no attack-legality verdict ever issued). In addition the strategic pass wrote the active objective's creation-time
+  `target_position` snapshot as the navigation target whenever no other navigation update was pending, so a cleared target
+  reappeared one pass later. Two entities pursuing each other swapped tiles every tick.
+- **New Behavior**: both `ENTITY_MOVE` dispatchers (`executor.py`, `worker_logic.py`) end a `PURSUE` move whose `payload["target_id"]`
+  names a live target within attack reach (Manhattan; melee needs distance 1; no weather multiplier): the task returns to the idle
+  encoding (`ENTITY_ACT`, empty payload) and the navigation target is cleared
+  (`MovementCandidateSelector.pursuit_reached_attack_range` / `pursuit_completion_update`). For an objective with
+  `target_entity_id`, `intelligence.py` and `redirection.py` set no navigation point (they still claim the navigation, so the
+  return-to-town fallback stays suppressed); the tactical pass resolves the live position.
+- **Not behavior-neutral; measured** (real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`, `LocalSequentialExecutor`; taken on
+  `origin/main` `544b1d341`, which contains the `DirtySet` determinism fix. Before = a clean `origin/main` worktree, one run, a
+  sample; after = this change, two identical runs per world, a value): tick-pairs in which two entities exchanged tiles:
+  `crowded_frontier` 975 to 2, `frontier_living_world` 1809 to 1, `urban_political` 978 to 3; `dungeon_crawl` unchanged (1 to 1).
+  Decision-path `execute_attack` calls, `frontier_living_world`: 5 to 7 (non-opportunity `resolve_attack` 1 to 3); `dungeon_crawl`
+  4 to 4; `crowded_frontier` 0 to 0. **`crowded_frontier` decision-path attacks remain 0**, and the tactical pass is still not called in
+  281 of 281 adjacent-to-live-target samples (1953 of 1953 before). The next gates are the 10-tick brain cadence, the flee gate
+  (forced read-only decisions with a live hostile adjacent, `crowded_frontier`, one run: 141 of 353 `PANIC_RETREAT`, 194 `BRACKETING`,
+  15 `ATTACK`; regional trauma is present in every recomputed flee), and `BRACKETING` repositioning moves, which this change
+  deliberately does not end (see the ticket and `TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION`).
+  Incidental opportunity attacks (`resolve_multi_attack(..., is_opportunity_attack=True)`): `urban_political` 71 to 72 and
+  `dungeon_crawl` 24 to 24 are unchanged, but `frontier_living_world` 38 to 644 and `crowded_frontier` 488 to 283 moved, in opposite
+  directions, and **the mechanism is unexplained**.
+- **Rationale**: **Bug Fix** (a task with no termination condition, and a writer re-asserting a stale snapshot), with **Unified** for the
+  single completion helper shared by both dispatchers.
+- **Verification**: `tests/unit/engine/test_pursuit_completion.py` (the helper, both dispatchers, and the cases that must not change:
+  non-`PURSUE` modes, dead or missing targets, live-versus-snapshot), `tests/unit/strategic/test_redirection_entity_objective.py`
+  (control: an untyped objective still gets its point; a carrying entity is not sent home).
+- **Status**: RATIFIED
 ---
 
 ## 3. Unsupported / Retired Behavior
@@ -2445,6 +2576,48 @@ The following legacy behaviors have been intentionally omitted or retired.
   `tests/unit/social/test_appraisal_logic.py::test_teach_kind_appraisal_accepts_once_prelude_passes`,
   `tests/unit/resource/test_resource_v2_boundary.py::test_class_hall_train_refactor` (full-pipeline
   regression, updated for the two-party/no-gold shape).
+- **Status**: ACTIVE
+
+### DEV-008 — Generated Compositions Namespace Colliding Region Ids (TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION)
+
+- **Situation**: `ProceduralCompositionGenerator` emitted every `ModuleRefSpec` with
+  `namespace=None`. When two selected modules declared the same region id (`hometown` in
+  `frontier_village_core` and `trading_company_hub`), the resolver failed fast at assembly
+  (`Duplicate region ID collision`), so the generated composition could not be assembled. Five
+  region ids collide across the 22 modules today (`hometown` three ways, `haunted_battlefield`,
+  `near_forest`, `wolf_den`, `bandit_road`), so this is a class, not one pair.
+- **Decision** (rule owner `world-rule-catalog-design`, 2026-10-04, option 1): the generator namespaces
+  the colliding module instead of changing the selected module set. Modules are walked in
+  `module_id` order; one declaring a region id already claimed by an earlier module gets
+  `namespace=<its module_id>`. Which module keeps the bare id depends on the module set only, never
+  on rank. The resolver already rewrites region, place, `spawn_region` and recipe ids from the
+  namespace, so each module's population lands in its own region (`LOC-01`).
+- **Visible change**: region ids in generated worlds change (`trading_company_hub_hometown`, not
+  `hometown`). No generated world had previously run, so no live region identity is renamed.
+  Hand-authored worlds are unchanged; they use short namespaces such as `trading`, which the
+  generator does not reproduce.
+- **Rationale**: **Bug Fix**. Two distinct places sharing one identifier violated `ID-01`/`LOC-01`.
+- **Verification**: `tests/integration/worldassembly/test_real_content_world_compositions.py::test_generated_composition_assembles_with_populations_in_their_own_region`,
+  `tests/unit/worldgeneration/test_composition_generator.py::TestRegionIdNamespacing`.
+- **Status**: ACTIVE
+
+### DEV-009 — dungeon_crawl Runs the Accepted Balance Remedy It Was Always Meant To (TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION)
+
+- **Situation**: `TCK-20260627-P1I-WORLD-BALANCE-FIX` cut `dungeon_crawl` from 32 to 12 entities to fix a
+  measured 94-97% extinction rate, but wrote it only to `data/content/world_compositions/dungeon_crawl.yaml`.
+  Production loads `data/worlds/dungeon_crawl/resolved/world.resolved.yaml` (via `WorldRepository.load_world`),
+  so the extinction configuration kept running until now.
+- **Change**: `data/worlds/dungeon_crawl/world.yaml` now composes 2 modules (`ruins_mystery_quest`,
+  `scalable_bandit_camp` with `danger_scale: 2`); `resolved/` and `world_compile_report.json` were regenerated.
+  The live world is now 12 entities, 2 regions, 0 resource nodes, 0 buildings, 2 populated factions (was 32, 4, 3, 1, 4).
+- **Rationale**: **Bug Fix**. Restores an accepted, closed decision; it does not re-decide the balance target.
+- **Consequences recorded**: the `dungeon_crawl` entry of `EXPECTED_DISTINCT_POPULATED_FACTIONS` is now 2 (was 4, a faithful count of the unintended 4-module world that ran, not a measurement error);
+  the generated corpus registry changed; rendering-evidence tests that reproduce documented measurements of the
+  old terrain now run against a frozen fixture (`tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml`),
+  so they no longer detect rendering regressions in the live `dungeon_crawl`.
+- **Verification**: `tests/integration/worldassembly/test_resolved_snapshot_freshness.py`
+  (`test_dungeon_crawl_runs_the_accepted_balance_remedy`, `test_committed_snapshot_equals_fresh_resolve`,
+  `test_committed_compile_report_counts_equal_fresh_compile`).
 - **Status**: ACTIVE
 
 ---

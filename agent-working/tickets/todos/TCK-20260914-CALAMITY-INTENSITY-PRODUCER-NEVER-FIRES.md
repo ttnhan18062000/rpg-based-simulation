@@ -56,6 +56,61 @@ This is a separate, deeper finding than the `world_boss` spawn path's own gate
 requirement were made reachable, the intensity value it checks would still never be nonzero.
 
 ## Scope
+
+> **SCOPE SUPERSEDED BY OWNER DECISION 10 / CATALOG RULE `ENV-06`, 2026-10-05.** The bullets below
+> are kept as the record of the original diagnosis — they were a correct investigation of the wrong
+> producer. Read this block first; where it conflicts with a bullet below, this block wins.
+>
+> Lane B's investigation (findings committed at `d2724b1bb`, no code change) established that
+> `CalamityService.apply_calamity_consequences` has **zero callers**, and that nothing in Bible 05
+> L457 or `environment.md:51` said what *raises* `calamity_intensity` — both only read it. The
+> planner ruled against wiring the existing method, because doing so would invent the rule by
+> implication and its only visible effect would be flipping
+> `tests/architecture/test_calamity_intensity_producer_unwired.py` with no behavioural change. The
+> question went to `world-rule-catalog-design`, which drafted four options; the owner chose one.
+>
+> **`ENV-06` (`docs/world_rules/space-environment/environment.md`, commit `043ebb30d`, parked on
+> `origin/calamity-rule-decision`):**
+> - Calamity intensity rises **only while a region stays above the instability threshold for a
+>   sustained period**. The threshold reuses Bible 05 §2's `trauma_score > 50.0`.
+> - It **decays slowly** once the region calms.
+> - **No single event raises it directly** — not a death, not a hero's death, not one battle.
+> - Trauma is the acute per-event measure; calamity measures its **persistence**. No double
+>   counting, and "deaths raise calamity" is **explicitly not adopted**.
+> - Window, rise rate, decay rate and cap are engineering choices, to be recorded in Bible 05 and the
+>   parity ledger **at implementation**.
+> - Seasonal propagation is kept.
+> - `CALAMITY_RANDOM_CHANCE` **stays unwired**; any later probabilistic onset must be conditioned on
+>   this escalation (`CAUSE-01`).
+>
+> **So the existing single-`kind=="hero"`-death method is NOT the producer to wire.** The producer is
+> the escalation. `test_calamity_intensity_producer_unwired.py`'s welcome failure flips when that
+> lands, legitimately.
+>
+> **Sequencing: `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` goes first.** `ENV-06` is
+> observable only once trauma accumulates, and the Rule records that order deliberately. Do not start
+> this ticket before that one lands.
+>
+> **WORLD BOSS IS DEFERRED** (owner, mid-decision, 2026-10-05). `ENV-06` does not list world-boss
+> emergence as a consumer. The boss filter at `calamity.py:42` and the magical/demonic spawn riding
+> on it (flag OFF) **stay untouched**. Implementing `ENV-06` must **not** use a boss spawn as
+> evidence, and must neither tune nor retire the boss branch.
+>
+> **The owed evidence is a scenario, not a boss spawn:** a region held above threshold escalates; a
+> single death spike does **not**; a calmed region decays. Three assertions.
+>
+> **Two stale claims to fix in the same pass.** `docs/world/ecology_and_calamity_contract.md:92`
+> still reads "Hero death in a region with `hazard_level > 0.5` raises that region's
+> `calamity_intensity` by **+0.05** per death. Intensity decays naturally if the region stabilises" —
+> the first half is now **contradicted by `ENV-06`** and the second describes decay code that does
+> not exist. The contract also claims calamity **increases** `trauma_score`, which
+> `process_world_dynamics` does not do; that second claim is UNCONFIRMED beyond `calamity.py` itself
+> and should be verified before being corrected or removed.
+>
+> **Registry:** `calamity_intensity`'s entry carries a pointer to rebind `implemented_by` once the
+> producer exists. `registries/mechanisms.yaml` content is not this ticket's to edit — report the
+> rebind to the planner.
+
 - Confirm directly (not inferred) whether any hero ever died in a `hazard_level > 0.5` region
   during a real run of realistic length — check `region.hazard_level` distributions across the
   corpus's real worlds, and whether hero deaths in high-hazard regions are themselves rare/absent
@@ -217,6 +272,50 @@ touches `registries/mechanisms.yaml`.
 
 `T01` lists this ticket by shape (zero-caller group) but does **not** classify it; this note is its single
 disposition.
+
+### 2026-10-05 — `rpg-implementer-2` re-check before any build: stopped at the rule owner, nothing implemented
+
+Dispatched with "first locate where `region.hazard_level` is set". Located, and re-verified the producer on the current tree:
+- **`hazard_level` is set in three places:** authored on the region spec and copied by `src/worldbuilding/compiler.py:476`
+  (`hazard_level=getattr(r_spec, "hazard_level", 0.0)`); generated worlds scale it by `danger_level`
+  (`src/worldgeneration/generator.py:107,114`); and `src/engine/world_dynamics.py:119-123` raises it by `+0.01`
+  (cap `1.0`) **only while the region's trauma exceeds 50**. Authored values above `0.5` are common (the 2026-09-15
+  note), so the `> 0.5` half of the producer's condition is reachable from authoring alone.
+- **The runtime growth path is itself starved by the sibling ticket:** trauma above 50 is what
+  `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` says never happens, so hazard does not grow at runtime either.
+- **Producer still has zero callers:** `grep -rn apply_calamity_consequences src/` returns only its definition
+  (`src/world/calamity.py:80`) and one comment (`src/world/displacement.py:27`).
+- **No governing rule exists for the producer.** `docs/mechanics/05_world_evolution.md` mentions `calamity_intensity` only
+  as the `> 0.3` spawn filter (L457); `docs/world_rules/space-environment/environment.md:51` only *reads* it for the
+  hazard drain; no accepted catalog Rule says what raises it. So "wire the dead method" would be inventing a
+  world-semantics rule, and wiring the narrow `hero death in hazard > 0.5` trigger would still leave it starved in the
+  worlds measured (no heroes composed, or heroes hard-coded to a zero-hazard `hometown`).
+- `tests/architecture/test_calamity_intensity_producer_unwired.py` is a deliberate "welcome failure": wiring a caller
+  flips it and obliges the registry-label correction owned by `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION`.
+
+Decision requested from the rule owner (via the planner), per this ticket's own acceptance criteria: define what raises
+`calamity_intensity`, or retire the chain. Options and a recommendation are in the message that accompanied this note.
+No code was changed.
+
+### 2026-10-05 (later) — CORRECTION by `rpg-implementer-2` to the note above: trauma is not "dead", it stops short of the threshold
+
+The note above says the `world_dynamics.py:119-123` hazard growth (trauma > 50) "is starved by
+`TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`", and the planner relayed "(c) is blocked by (e)". **That was wrong as
+stated.** Measured (real `Kernel.tick_once`, `PROD_SMALL`, seed 42, 5,000 ticks, per-region `trauma_score` and
+`hazard_level` sampled every tick):
+
+| world | region max `trauma_score` | any region above 50 | any `hazard_level` growth |
+|---|---|---|---|
+| frontier_living_world | bandit_road 47.1, goblin_camp 47.1, hometown 1.0, others 0.0 | no | none |
+| generated_frontier_3_42 | goblin_camp 36.1, bandit_road 2.5, hometown 1.9, moon_cave 0.0, others 0.0 | no | none |
+
+So trauma **does** accumulate in regions with combat (+1.0 per death, decay only `-0.0005`/tick at
+`src/world/consequences.py:42`); it just did not exceed the Bible 05 §2 instability threshold of `50.0` within 5,000 ticks
+in either world, so hazard never grew. The starvation is "threshold not reached in the measured run length", not (e)'s
+moon_cave isolation, and fixing (e) would not change it. **Consequence for `ENV-06`** (which reuses `trauma_score > 50.0`):
+on these two worlds at 5,000 ticks the escalation condition would never be met; the window, the threshold reuse and the
+run length are the implementation's engineering choices and need that fact. Unverified hypothesis: the identical 47.1 in
+`bandit_road` and `goblin_camp` comes from their overlapping bounds counting one death in both regions.
 
 ## Test Summary
 _(not started)_

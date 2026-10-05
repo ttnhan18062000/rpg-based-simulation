@@ -1,0 +1,35 @@
+---
+name: feedback_fetch_before_recommending_a_ticket
+description: "A worktree's tickets/ is pinned to an old origin/main — git fetch and ls-tree origin/main before recommending or citing any ticket's state"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 2d7fab86-87a9-4377-85dd-a9c051ab220c
+  modified: 2026-10-02T04:20:22.959Z
+---
+
+**Before recommending a ticket to anyone, or citing its status, `git fetch origin main` and check
+`git ls-tree -r origin/main --name-only | grep <TICKET-ID>`.** A worktree's `tickets/` tree reflects the
+`origin/main` it was cut from, not the live one.
+
+Confirmed 2026-10-02: I recommended `TCK-20260914-BOSS-KINDS-OBSERVABILITY-CONSTANT-DRIFT` to
+`test-architecture-implementer` as a test-architecture pilot surface, describing it as "already stopped at
+your Plan gate". It was **already DONE** — in `tickets/done/` on `origin/main` with full
+`stored_artifacts/` including both Architecture-Verify verbatim records, merged in PR #278, and it had
+*been* pilot run 1. The peer corrected me.
+
+Two stale inputs combined, which is why neither alone looked wrong:
+1. My worktree was pinned at `origin/main` = `78ea7c465`, where the file still sat in `tickets/todos/`
+   with `## Status: OPEN`. Reading the file "confirmed" it was open.
+2. My own handover note said it was stopped at a Plan gate — true when written, overtaken since.
+
+**Why:** recommending already-finished work wastes a peer's round-trip and, worse, a peer may act on it.
+It also silently inverts the usual trust direction — I was the one with the stale view while the peer had
+the current one. The same staleness invalidates any count or claim read from the worktree
+(see [[project_worktree_corpus_measurement_staleness]]).
+
+**How to apply:** fetch first, then verify against a named ref, and say which SHA you checked. Also merge
+`origin/main` into the working branch when you notice it has moved — the post-merge hook regenerates
+`docs/REGISTRY.yaml`, so diff that against `origin/main` afterwards to confirm it indexed only your own
+files ([[feedback_registry_post_merge_hook_indexes_untracked]]). Related:
+[[feedback_verify_milestone_state_before_dispatch]], [[feedback_check_recorded_decision_before_filing_defect]].

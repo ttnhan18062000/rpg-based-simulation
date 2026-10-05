@@ -50,25 +50,49 @@ evidence**, so the 14 rows rest on 8 distinct derivations. 18 rule→mechanism e
 mechanisms, and the 14 edge-bearing Rules are exactly the 14 classified ones.
 
 ## Scope
-1. **Child A — world-definition split, FIRST.** `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`,
-   with `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` merged **toward the older ticket**.
+1. **Child A — world-definition split, FIRST.** `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`.
    It goes first because every later probe and rule-map slice gathers evidence by running worlds, and a
    world id that resolves to different module sets by entry point makes that evidence incomparable.
+
+   **Merge done, 2026-10-03.** `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` is folded into the
+   older ticket and its file removed from `agent-working/tickets/todos/`; the surviving ticket carries
+   its measurement-validity framing and three new ACs (6, 7, 8). Child A is now **one ticket, raised
+   P2 → P1**, and is ready to dispatch. Three further gaps were found while merging and are in its
+   Scope: live code **writes** into the directory being retired
+   (`src/worldgeneration/generator.py:536`), `docs/guides/content_authoring.md` §4 still **teaches**
+   that path, and an attribution both tickets carried was wrong — the ADR does not name the catalog
+   path as the anomaly, so AC-8 **amends** the ADR rather than citing it.
 2. **Child B — registry bindings (row 7 (b)), BEFORE the rule map.** Each of the 25 core-tier modules
    `mechanism_registry_completeness_check` reports unbound is either bound via `implemented_by` or
    recorded as an exclusion with a reason. Includes registering `PerceptionGate`
    (`src/world/perception/gate.py`) as its own mechanism per owner decision 8 row 8, and the
    `MOTIVATION-DOCTRINE` entry retire/rename — both of those registry entries are drafted by
    `world-rule-catalog-design`, which owns `registries/mechanisms.yaml` content.
-3. **Children C… — the rule map (row 7 (a)), sliced by MECHANISM CLUSTER**, 3-5 mechanisms per
+3. **Child B2 — the "executes" vs "has an effect" instrument, ALONGSIDE child B and BEFORE the rule
+   map.** `TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP`, moved from parked feature
+   into this foundation scope by the owner on **2026-10-03** (`roadmap.md` §8 work-order item 6
+   addendum). **Sequencing was left to the planner; it is placed here, alongside (b) and before (a),
+   2026-10-03.** The reason it cannot wait until after the rule map: a rule-map verdict that can only
+   show a mechanism *runs* will record it as realised even when it changes no world state, so every
+   slice taken before this instrument exists **overstates what is realised** and would need redoing.
+   Three measured instances already exist, none of them inferred:
+   - `FactionInfluenceService` — ~230 calls, **zero** ownership writes;
+   - the region-owner `-1` sentinel path — reachable, **never reached**;
+   - the world-clock raid — **12 of 12** raiders inert (memo row 9).
+
+   `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN` is a **fourth instance of the same
+   shape** and is in the hard-bug queue, not this epic: `PANIC_RETREAT` fired 62–591 times per raider
+   while parking every one of them outside the world. It is a usable validation case for this
+   instrument, not a child of it.
+4. **Children C… — the rule map (row 7 (a)), sliced by MECHANISM CLUSTER**, 3-5 mechanisms per
    standard-tier ticket. For every mechanism carrying `implemented_by`, each catalog Rule that
    constrains it is classified in `registries/rule_classifications.yaml` with a
    `rule_mechanism_edges.yaml` edge behind the verdict, **or** the mechanism is recorded as constrained
    by no catalog Rule.
-4. **Yield checkpoint after the first two rule-map slices.** Report defects found per mechanism. **If
+5. **Yield checkpoint after the first two rule-map slices.** Report defects found per mechanism. **If
    both slices read zero, re-scope before continuing** — this is a real stop condition, not a
    formality. See Assumptions.
-5. Every child runs through the formal `implement-ticket` pipeline, per row 7 (c), so its cost is
+6. Every child runs through the formal `implement-ticket` pipeline, per row 7 (c), so its cost is
    measured.
 
 ## Out of Scope
@@ -91,7 +115,11 @@ mechanisms, and the 14 edge-bearing Rules are exactly the 14 classified ones.
 - [ ] Child A has landed and a world id resolves to one module set regardless of entry point.
 - [ ] Row 7 (b) holds: all 25 core-tier modules bound or excluded-with-reason, and
       `mechanism_registry_completeness_check` reports zero undispositioned core-tier modules.
-- [ ] Row 7 (a) holds over every mechanism carrying `implemented_by`, by the definition in Scope 3.
+- [ ] Child B2's instrument exists and can distinguish "executes" from "has an effect" on at least the
+      three measured instances in Scope 3, **before the first rule-map slice is taken.** A slice taken
+      without it is not accepted as complete.
+- [ ] Row 7 (a) holds over every mechanism carrying `implemented_by`, by the definition in Scope 4.
+      Every verdict of "realised" rests on an effect, not only on a call count.
 - [ ] `tools/semantic_control_plane/registry.py` validates all three registries at each child's close.
 - [ ] The yield checkpoint ran after the second rule-map slice and its numbers are recorded in this
       epic — **including if they were zero and the epic was re-scoped as a result.**
@@ -101,7 +129,13 @@ mechanisms, and the 14 edge-bearing Rules are exactly the 14 classified ones.
 
 ## Related Tickets
 - `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION` — child A (the older, owning ticket)
-- `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` — to be merged into child A, not run separately
+- `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` — **merged into child A 2026-10-03 and removed
+  from `todos/`;** git history holds it. Do not re-file
+- `TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP` — **child B2**, moved into this scope by
+  the owner 2026-10-03; sequenced alongside child B, before any rule-map slice
+- `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN` — **not a child.** A fourth measured
+  instance of the "executes without effect" shape, usable as a validation case for child B2's
+  instrument. It belongs to the hard-bug queue and carries its own rule-owner ruling
 - `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED` — BLOCKED; decision 8 answered its design
   question, and registering `PerceptionGate` is child B's
 - `TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN` — only its registry
@@ -151,12 +185,30 @@ mechanisms, and the 14 edge-bearing Rules are exactly the 14 classified ones.
 - Of the 25 core-tier modules, the tool says they are "not yet checkable, NOT asserted to be gaps", so
   an unknown fraction resolve to exclusions rather than bindings. Child B is therefore cheaper than 25
   bindings, by an amount nobody has measured.
-- Whether a "classified, no code needed" child can reach `DONE` is **an open process question, not
-  rhetorical**: `done_checker`'s `migration_complete` requires `plan.md`/`investigation.md`/
-  `test_plan.md` in `agent-working/stored_artifacts/`, and `## Status` offers no superseded-style value. It already
-  blocked `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED` from closing. Children that
-  classify Rules without changing code may hit it. Owned by `agent-working-design`, not filed yet —
-  waiting for a second instance so it arrives with evidence rather than one anecdote.
+- ~~Whether a "classified, no code needed" child can reach `DONE` is **an open process question**~~
+  **RESOLVED — the mechanism already exists, 2026-10-03.** A child that classifies Rules without
+  changing code closes with the **`## Disposition`** pair, not by fabricating staging artifacts:
+  `## Disposition` holds one bare value of `STALE-PREMISE` / `NO-MECHANISM` / `DUPLICATE` /
+  `SUPERSEDED` / `WONT-DO`, and `## Disposition Rationale` is prose that must cite a commit SHA, a
+  `file:line`, or fenced run output. With both valid and no `src/` change attributed to the ticket,
+  `done_checker_static.py`'s `migration_complete` passes without
+  `plan.md`/`investigation.md`/`test_plan.md`.
+  - Built by `TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES`. Enum at
+    `tools/ticket_field_values.py:57`; waiver at
+    `tools/gate_checks/done_checker_static.py:1071` (`_disposition_migration_result`); guide at
+    `docs/guides/delivery_process.md:77`. `grep -A1 '^## Disposition$' agent-working/tickets/done/*.md`
+    lists every existing use.
+  - **The trap that made this look unresolved, worth knowing before repeating it:** `## Disposition`
+    is a **separate body section, not a `## Status` value**, by design. Checking the `## Status` enum
+    and finding no superseded-style value there says nothing about whether a retirement path exists.
+    This epic's note asserted the gap on exactly that reasoning, and so did a 2026-10-03 session that
+    deleted a duplicate ticket outright rather than closing it — corrected, and the ticket is now at
+    `agent-working/tickets/done/TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS.md` as a
+    `DUPLICATE` closure.
+  - **Still to check, not assumed:** whether
+    `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED` — recorded above as blocked from closing
+    for this reason — can now close as a disposition. Its blocker was plausibly this same stale view,
+    but that is untested.
 
 ## Implementation Notes
 _(epic — not implemented directly; children carry implementation)_

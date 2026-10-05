@@ -251,7 +251,7 @@ CARD_TO_MECHANISM_ID: Dict[Tuple[str, int], str] = {
     # calamities_boss_spawns -> world_boss_spawn (this card's own desc leads with "spawn a
     # powerful boss monster"); calamity_intensity has no capabilities-page citation.
     ("world", 4): "world_boss_spawn",
-    ("world", 5): "world_generation",
+    ("world", 5): "world_composition_assembly",  # was world_generation; split 2026-10-05, the card describes assembly
     # -- legacy (8 cards; #1, #3, #4, #5, #6, #7 unmapped -- see Judgment Call 7 and module
     # docstring; lowest-coverage section, each decision evidence-based)
     ("legacy", 0): "reputation",  # second card -- birth-echo facet

@@ -9,6 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from writer import write_line  # noqa: E402
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
+from session_role import stamp as stamp_session_role  # noqa: E402
 
 REQUIRED = {"run_id", "start_ts", "workflow", "tier", "final_status", "agent_count"}
 
@@ -82,6 +83,7 @@ def main():
         sys.exit(1)
 
     record["duration_s"] = compute_duration_s(record)
+    record = stamp_session_role(record)  # M6a: resolved session role, separate from `agent`
 
     # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: per-PR/batch write target (superseding the
     # prior per-ticket key) -- see monitoring_batch_identifier.py for the full rationale.

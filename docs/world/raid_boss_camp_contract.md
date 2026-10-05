@@ -98,7 +98,7 @@ set (`{goblin, orc, wolf, spider, troll, slime}`) from
 **Real content sets it, as of `cb0b23b07` (2026-09-08).** `data/content/world_modules/
 goblin_camp_conflict.yaml:29` and `wolf_den_near_forest.yaml:66` each declare `creature_kind` on a
 `CAMP`/`NEST`-kind `PlaceSpec`, and both modules are composed into `frontier_living_world`
-(`data/content/world_compositions/frontier_living_world.yaml:8-9`). A real
+(`data/worlds/frontier_living_world/world.yaml:9-11`). A real
 `WorldCompiler.compile()` of that composition yields **2 fully-constructed `CampState` entries** —
 `goblin_camp_place` (`kind='goblin'`) and `wolf_den_nest` (`kind='wolf'`). So
 `CampService`/`CreatureTerritoryService` do receive non-empty `state.camps` in a real compiled

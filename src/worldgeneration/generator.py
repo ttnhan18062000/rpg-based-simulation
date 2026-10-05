@@ -13,11 +13,14 @@ from src.content.repository import CatalogRepository
 from src.worldmodules.repository import WorldModuleRepository
 from src.worldgeneration.schema import GenerationIntentSpec
 from src.worldassembly.schema import (
+    GenerationProvenanceSpec,
     ProvenanceManifest,
     ProvenanceRecord,
     WorldCompositionSpec,
     ModuleRefSpec,
 )
+from src.worldassembly.resolve_io import resolve_composition, write_resolved_artifacts
+from src.worldbuilding.repository import DEFAULT_WORLDS_ROOT
 from src.worldassembly.resolver import ResolvedWorldBundle
 
 
@@ -380,15 +383,57 @@ class ProceduralCompositionGenerator:
     4. Auto-add dependency modules required by selected modules (BFS).
     5. Fail-fast if two selected modules claim the same `provides` string.
 
-    Output: `data/content/world_compositions/generated/{world_id}.yaml`
+    Output: `<output_dir>/{world_id}/world.yaml` plus its `resolved/` sibling, where
+    `output_dir` defaults to the authoritative world root. The generator acts as a one-time
+    author: what it writes IS the definition from that moment on, carrying a
+    `generation_provenance` marker that records origin history only.
     """
 
     BUDGET: int = 6
+    VERSION: str = "1.0"
+
+    @staticmethod
+    def _assign_region_namespaces(
+        selected_ids: list[str],
+        mod_by_id: dict,
+    ) -> dict[str, str]:
+        """
+        Disambiguate region ids declared by more than one selected module.
+
+        Which module keeps the bare id is a function of the module SET only:
+        modules are walked in `module_id` order, and a module that declares a
+        region id already claimed by an earlier module is namespaced with its own
+        `module_id`. Selection rank and order never decide, so a scorer change
+        cannot swap which module's place owns a bare id.
+
+        Raises GenerationCompositionError if ids still collide after namespacing
+        (validation only — never a reason to change the selected module set).
+        """
+        claimed: set[str] = set()
+        namespaces: dict[str, str] = {}
+        for mid in sorted(selected_ids):
+            mod = mod_by_id.get(mid)
+            if mod is None:
+                continue
+            region_ids = [r.id for r in (mod.regions or [])]
+            if any(rid in claimed for rid in region_ids):
+                namespaces[mid] = mid
+                region_ids = [f"{mid}_{rid}" for rid in region_ids]
+            for rid in region_ids:
+                if rid in claimed:
+                    raise GenerationCompositionError(
+                        f"Region id '{rid}' from module '{mid}' is still declared"
+                        " by another selected module after namespacing"
+                    )
+                claimed.add(rid)
+        return namespaces
 
     def generate(
         self,
         intent: GenerationIntentSpec,
         module_repo: WorldModuleRepository,
+        catalog_repo: CatalogRepository,
+        output_dir: Path | None = None,
     ) -> Path:
         """
         Execute the procedural composition pipeline.
@@ -399,16 +444,25 @@ class ProceduralCompositionGenerator:
             High-level generation parameters (seed, danger_level, settlement_style, etc.)
         module_repo : WorldModuleRepository
             Loaded repository of available WorldModuleSpec candidates.
+        catalog_repo : CatalogRepository
+            Loaded catalog the authored composition is resolved against. Injected rather than
+            constructed here, and deliberately without a default: constructing one inside this
+            function would read the filesystem relative to the CALLER'S cwd, which is a hidden
+            dependency in a library function, and a default would re-introduce it less visibly.
+            Matches WorldProceduralGenerator's own constructor-injection convention.
+        output_dir : Path | None
+            World root to author into; defaults to the authoritative one.
 
         Returns
         -------
         Path
-            Absolute path to the written WorldCompositionSpec YAML.
+            Path to the written world.yaml source definition.
 
         Raises
         ------
         GenerationCompositionError
-            If two selected modules claim the same feature in their `provides` list.
+            If two selected modules claim the same feature in their `provides` list, or if a
+            definition already exists for the generated world_id.
         """
         from src.worldgeneration.scorer import ModuleScorer
 
@@ -479,6 +533,7 @@ class ProceduralCompositionGenerator:
                     )
                 feature_owners[feature] = mid
 
+        namespaces = self._assign_region_namespaces(selected_ids, mod_by_id)
 
         # Build WorldCompositionSpec
         world_id = (
@@ -522,7 +577,13 @@ class ProceduralCompositionGenerator:
                             sampled_params[param_spec.name] = param_spec.default
                         # required params with no default and no bounds: left absent
             module_refs.append(
-                ModuleRefSpec(module_id=mid, enabled=True, order=i, parameters=sampled_params)
+                ModuleRefSpec(
+                    module_id=mid,
+                    enabled=True,
+                    order=i,
+                    namespace=namespaces.get(mid),
+                    parameters=sampled_params,
+                )
             )
         composition = WorldCompositionSpec(
             schema_version="worldcomposition.v1",
@@ -530,12 +591,30 @@ class ProceduralCompositionGenerator:
             name=f"Generated {intent.settlement_style} world (seed={intent.seed})",
             module_refs=module_refs,
             generation_seed=intent.seed,
+            generation_provenance=GenerationProvenanceSpec(
+                generator=type(self).__name__,
+                generator_version=self.VERSION,
+                generation_id=intent.generation_id,
+                seed=intent.seed,
+                generated_at=datetime.now(timezone.utc).isoformat(),
+                intent_parameters=intent.model_dump(mode="json"),
+            ),
         )
 
-        # Write YAML to disk
-        output_dir = Path("data/content/world_compositions/generated")
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / f"{world_id}.yaml"
+        world_dir = (output_dir or Path(DEFAULT_WORLDS_ROOT)) / world_id
+        output_path = world_dir / "world.yaml"
+        if output_path.exists():
+            raise GenerationCompositionError(
+                f"A definition already exists at '{output_path}'. Once written, a world.yaml is "
+                f"edited, not regenerated."
+            )
+
+        # Resolve BEFORE committing either write. These are two durable writes with no atomicity:
+        # a resolve that fails after world.yaml has landed leaves a world that
+        # WorldRepository.load_world() refuses AND that the refusal above makes un-regenerable.
+        bundle, rendered_world_yaml = resolve_composition(composition, catalog_repo, module_repo)
+
+        world_dir.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
             yaml.dump(
                 composition.model_dump(exclude_none=True),
@@ -544,5 +623,6 @@ class ProceduralCompositionGenerator:
                 allow_unicode=True,
             )
         )
+        write_resolved_artifacts(world_dir, bundle, rendered_world_yaml)
 
         return output_path

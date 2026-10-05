@@ -187,8 +187,9 @@ The per-record schema is unaffected by this change; only where a record physical
 | `tool_call_count` | int | Yes | Total number of tool calls made by this agent. Computed deterministically by `record_events.py` at write time from `tools.jsonl` (counts entries matching `run_id` + `seq`) — see below. Since `TCK-20260904-COST-PROXY-EPIC-TICKETS`, computed for `implement-ticket` (all real call sites), `implement-epic` (all 4 real top-level call sites), and `create-tickets` (4 of 7 real call sites — `comprehend`, `structure`, `write-sequence`, `link-epic`; `monitoring-write` and the 2 `pipeline()`-fan-out sites `investigate:`/`write:` per-item are excluded and stay `null`/absent, see below). `null` for runs produced before this field was added, for the excluded `create-tickets` sites above, and for any `implement-epic` event at a positive `seq` (child-ticket batch rows, and the `NOTHING_TO_DO`/`EPIC_CREATED` early-exit rows) — those never have a sidecar of their own (a child's work runs under its own `run_id`; the epic's top-level sidecar sites, Discover included, use the disjoint negative `seq` range and have no events row), so recording `0`/`0.0` there would be a false zero (`TCK-20260911-COST-PROXY-EPIC-TICKETS-RUN-CONFIRMATION`, widened by `TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT`'s real native run, where the early-exit row read `0` although Discover made 9 tool calls at `seq` -1; the epic-level tool calls stay queryable in `tools.jsonl` at `seq` -1..-4). **Authoritative source (`TCK-20260915-TOOL-CALL-COUNT-MISMATCH`): `tools.jsonl`'s own real, `(run_id, seq)`-filtered row count is authoritative, not this field.** `tool_call_count` is a write-time SNAPSHOT of that count, not an independently-measured value — it goes stale exactly when `tools.jsonl` itself was incomplete or misattributed at the moment the event was written: before `TCK-20260719-COST-PROXY-WRITE-PATH` (no ground-truth computation existed at all — pre-dates this field's real meaning) and during the pre-`TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE` cross-session-contamination window (see below) both produce a real, permanent, unbackfilled mismatch between the two. When the two disagree, trust a fresh `tools.jsonl` scan over the recorded field. |
 | `reason_code` | string | Yes | Machine-parseable sub-cause code. Populated for `Scope`/`ticket-scoper` and `Verify`/`done-checker` `failed` events; `null` everywhere else, and `null` for all records predating `TCK-20260706-MONITORING-REASON-CODE`/`TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`. See below for why only those two phases get one. |
 | `cost_proxy_score` | float | Yes | Monotonic, unitless spend-proxy score computed deterministically by `record_events.py` at write time from `tools.jsonl`, for `implement-ticket`, `implement-epic`, and `create-tickets` workflow records (see the `tool_call_count` row above for `create-tickets`'/`implement-epic`'s own partial-coverage caveat). `null`/absent for all records predating `TCK-20260708-AGENT-COST-OBSERVABILITY` (no backfill) or falling on an excluded `create-tickets` site. See below for the formula. |
-| `test_quality_findings` | array of string | Yes (key absent only when the reviewer returned no list; an empty list is carried as `[]`) | Optional, advisory (`TCK-20261002-ARCH-VERIFY-TEST-QUALITY-FINDINGS`): the architecture-reviewer's test-quality findings scoped to the changed test files, carried from its `ARCH_VERIFY_SCHEMA` reply on the `Architecture-Verify` event so a later run does not hand-copy them. Never part of the verdict. **No item is dropped.** A string item is kept as is; any other item (e.g. an object `{severity, file, finding}`) is kept as its JSON string; a non-array reply becomes a one-item list; a single quote `'` becomes a typographic `’` (the events JSON is embedded in one single-quoted shell argument by the monitoring write). Only an empty or null item is dropped. The key is absent when the reviewer returned no list at all (an empty list `[]` means the reviewer read the changed tests and found nothing). `record_events.py` rejects a value that is not a list of strings. `summary` is unchanged (still <= 200 chars). |
+| `test_quality_findings` | array of string | Yes (key absent only when the reviewer returned no list; an empty list is carried as `[]`) | Optional, advisory (`TCK-20261002-ARCH-VERIFY-TEST-QUALITY-FINDINGS`): the architecture-reviewer's test-quality findings scoped to the changed test files, carried from its `ARCH_VERIFY_SCHEMA` reply on the `Architecture-Verify` event so a later run does not hand-copy them. Never part of the verdict. **No item is dropped.** A string item is kept as is; any other item (e.g. an object `{severity, file, finding}`) is kept as its JSON string; a non-array reply becomes a one-item list; a single quote `'` becomes a typographic `’` (the events JSON is embedded in one single-quoted shell argument by the monitoring write). Only an empty or null item is dropped. The key is absent when the reviewer returned no list at all (an empty list `[]` is a claim about the test files the reviewer read, checked against `tests_read` and the Read rows by `arch_verify_read_check.py`). `record_events.py` rejects a value that is not a list of strings. `summary` is unchanged (still <= 200 chars). |
 | `test_quality_findings_normalized` | int | Yes (key absent when verbatim) | Present only beside a `test_quality_findings` list that was not carried verbatim: the number of items serialized to JSON, wrapped, quote-swapped, or dropped (an item counts once per kind of change). Its absence means the list is exactly what the reviewer returned. Must be a non-negative integer. |
+| `tests_read` | array of string | Yes (key absent when the reviewer returned none) | Optional (`TCK-20261004-ARCH-VERIFY-TESTS-READ-EVIDENCE`): repo-relative paths of every changed test file the architecture-reviewer says it opened (committed, uncommitted and untracked). Carried on the `Architecture-Verify` event beside `test_quality_findings`. `arch_verify_read_check.py` reports an empty `test_quality_findings` with a changed test absent from this list and from the exact Read rows as UNVERIFIED, never as clean. Advisory only: no verdict or workflow effect. `record_events.py` rejects a value that is not a list of strings. |
 
 ### `status` values
 
@@ -630,6 +631,60 @@ Already covered by the existing `agent-working/agent-monitoring/data/*/*.jsonl m
 `.gitattributes` entry was needed for this new file (confirmed by direct pattern match).
 
 ---
+
+## `role_boundary` (`agent-working/agent-monitoring/data/YYYY-Www/role_boundary.jsonl`)
+
+Advisory, log-only session-layer boundary events (`TCK-20261004-SESSION-LAYER-M5C-READ-ONLY-ALLOWLISTS-AND-ROLE-BOUNDARY-EVENTS`;
+plan `docs/plans/agent_infrastructure/session_layer_working_process.md` sections 9.0 and 10). Like
+`claim_detections`, this is its own file family: it is not an `events` row, so it carries no `agent`,
+`phase` or `run_id`, never reaches the `vocabulary_drift` ratchet, and no gate reads it. Written by
+`tools/sessions/boundary.py`, called from `tools/sessions/guard.py` only for a tool call the guard has
+already allowed, through the shared `writer.py::write_line()` (own `role_boundary.jsonl.lock`). It warns the
+session (hook `additionalContext`) and logs; it never denies or asks. A write failure is swallowed.
+
+Emitted for a **resolved** role only, once per `(kind, path class or target)` per session
+(seen-state under the session-role state root, `_boundary/<session_id>.json`):
+
+| `kind` | Fires when | Extra fields |
+|---|---|---|
+| `edit_outside_owns` | an Edit/Write/MultiEdit/NotebookEdit path that another domain owns per `tools/sessions/route.py` (`from_domain` = the caller's domain; a split path fires when it does not include the caller's domain), and the role's narrow `may_write` or `owns` globs do not cover it. An unowned path never fires; a `may_write` of `**` (implementers) exempts nothing. | `path` (repo-relative), `owner_domains`, `owner_seats` |
+| `message_class_mismatch` | a `SendMessage` whose first line begins `dispatch`, `handoff` or `request` to a role whose `accepts_dispatch_from` lists neither the sender's instance nor its base role. Message content is never recorded. Active only when `SendMessage` is in the guard hook's matcher. | `target`, `message_class`, `accepts_dispatch_from` |
+
+Common fields: `ts`, `event` (`"role_boundary"`), `kind`, `session_id`, `session_role` (the resolved role
+instance; never the `agent` vocabulary), `function`, `domain`, `tool`. Covered by the existing
+`agent-working/agent-monitoring/data/*/*.jsonl merge=union` glob. Harden only what recurs after a measured
+window (plan section 10; M7). "Unusual route" is deliberately not its own kind: a routed path is still an edit in another domain, so it is
+folded into `edit_outside_owns` (`owner_seats` shows where it should have gone); M7 can split it if the data shows it recurs.
+
+## Session-layer fields and files (`session_role`, `manual_actions`)
+
+`TCK-20261004-SESSION-LAYER-M6A-MINIMUM-MEASUREMENT` (plan `docs/plans/agent_infrastructure/
+session_layer_working_process.md` section 11).
+
+**`session_role` on `runs` and `events`** (additive, string, never null): the role instance bound to the writing
+session, read by session id from the per-session binding record (`tools/agent-monitoring/session_role.py`), never
+from the shared unscoped `.claude/current_run`. `unresolved` means no binding names the session (a plain session,
+no session id, or a failure to read state); records written before M6a simply lack the field and the retro counts
+them `unresolved`. It is a separate field from `agent`: the `agent` vocabulary and the `vocabulary_drift` ratchet
+are untouched. Stamped by `record_run.py`, `record_events.py` and `record_hand_orchestrated_closure.py`; a value
+the caller already supplied is kept. `tools` rows are deliberately not stamped.
+
+**`manual_actions`** (`agent-working/agent-monitoring/data/YYYY-Www/manual_actions.jsonl`, own file family): the
+headline metric, repeated instructions per category (`role_reminder`, `routing_correction`, `manual_wake`,
+`worktree_correction`, `boundary_reminder`, `handover_recovery`). Fields: `ts`, `category`, `source` (`sample` or
+`tally`), `session_id`, `session_role`, `batch`, `count`. Never records the prompt text. `sample` rows come from the
+`UserPromptSubmit` hook (`manual_actions.py hook`): a conservative tagger that counts only short imperative
+messages matching a category phrase, so decisions, design feedback, questions and requirements are untagged and it
+under-counts. `tally` rows are the owner's own line per batch (`manual_actions.py tally <category> --batch <id>`),
+authoritative. Report-only; no gate reads it.
+
+**Batch latency** is derived on demand (`tools/agent-monitoring/batch_latency.py <PR...>`, or `generate_retro.py
+--latency-prs`), with no batch registry and no stored file: implementation (dispatch to PR green), finalization (PR
+green to finalized = merged) and cycle time. Dispatch is the batch's first commit unless given; an unavailable
+timestamp, a red or unfinished check, an unmerged PR or a negative span is `unknown`, never zero.
+
+The retro report gains one section, `Session-Layer Measures` (`session_layer_report.py`): manual actions, runs by
+`session_role`, `role_boundary` warnings and the latency rows.
 
 ## Join Example
 

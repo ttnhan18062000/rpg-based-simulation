@@ -150,3 +150,43 @@ def test_hook_respects_stop_hook_active_loop_prevention(tmp_path):
 
     assert result.returncode == 0
     assert result.stdout.strip() == ""
+
+
+_CAPTURED = _REPO_ROOT / "tests" / "fixtures" / "claude_hook_payloads" / "subagent_stop_parent_subscription.jsonl"
+
+
+def _captured_payload():
+    return json.loads(_CAPTURED.read_text(encoding="utf-8").splitlines()[0])
+
+
+def test_captured_subagent_stop_with_parent_subscription_is_allowed(tmp_path):
+    """Real payload: only the subagent's own entry and the parent's artifact subscription are listed."""
+    payload = _captured_payload()
+    assert {t["type"] for t in payload["background_tasks"]} == {"monitor", "subagent"}
+    result = _run_hook(tmp_path, payload)
+    assert result.returncode == 0 and result.stdout == ""
+
+
+def test_captured_shape_plus_a_real_shell_task_of_its_own_still_blocks(tmp_path):
+    payload = _captured_payload()
+    payload["background_tasks"].append(
+        {"id": "shell1", "type": "shell", "status": "running", "description": "pytest tests/x"}
+    )
+    result = _run_hook(tmp_path, payload)
+    assert result.returncode == 2
+    assert "pytest tests/x" in result.stdout and "live updates" not in result.stdout
+
+
+def test_other_monitor_task_still_blocks_a_subagent(tmp_path):
+    payload = _captured_payload()
+    payload["background_tasks"].append(
+        {"id": "m2", "type": "monitor", "status": "running", "description": "wait for CI"}
+    )
+    assert _run_hook(tmp_path, payload).returncode == 2
+
+
+def test_main_session_stop_is_unchanged_by_the_subagent_filter(tmp_path):
+    payload = _captured_payload()
+    payload["hook_event_name"] = "Stop"
+    result = _run_hook(tmp_path, payload)
+    assert result.returncode == 2

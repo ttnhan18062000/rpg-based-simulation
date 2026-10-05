@@ -18,6 +18,7 @@ from src.core.state import EntityState, LifecycleComponent, NavigationComponent
 from src.rendering.density import compute_density_cv, compute_terrain_histogram
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
+from tests.unit.rendering.frozen_dungeon_crawl import load_frozen_dungeon_crawl
 
 _DENSITY_MODULE_PATH = Path(__file__).resolve().parents[3] / "src" / "rendering" / "density.py"
 
@@ -42,8 +43,8 @@ def test_sandbox_world_reproduces_documented_cv():
 
 
 def test_dungeon_crawl_reproduces_documented_cv():
-    repo = WorldRepository("data/worlds")
-    spec = repo.load_world("dungeon_crawl")
+    # Frozen pre-balance-fix snapshot (see tests/fixtures/rendering/*.yaml): the live world no longer has this terrain.
+    spec = load_frozen_dungeon_crawl()
     state, _report = WorldCompiler.compile(spec, seed=42)
 
     result = compute_density_cv(state.entities)

@@ -32,6 +32,7 @@ import argparse
 import csv
 import json
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -232,6 +233,12 @@ def check_staging_artifacts_complete(
     if tier == "hotfix":
         return ("NA", "hotfix tier — staging artifacts not required")
 
+    # A valid `## Disposition` closure implements nothing, so it has no staging artifacts; the
+    # Finalize-side migration check already accepts it, and this pre-check must agree with it.
+    disposition_result = _disposition_migration_result(ticket_id)
+    if disposition_result is not None and disposition_result[0] == "PASS":
+        return ("NA", f"valid ## Disposition closure — staging artifacts not required ({disposition_result[1]})")
+
     directory = base_dir / ticket_id
     ok, problems = _files_complete(directory, REQUIRED_ARTIFACT_FILES)
     if ok:
@@ -279,7 +286,12 @@ def check_data_runs_clean(
     proof_dir: Path = Path("reports/release_proof"),
     data_root: Path = AGENT_MONITORING / "data",
 ) -> tuple[str, str]:
-    """`start_ts` given (whether it parses or not) is unchanged, existing behavior (AC4) — an
+    """Leftover files are an advisory `WARN`, never `FAIL` (TCK-20261004-DATA-RUNS-CLEAN-NOT-SESSION-
+    SCOPED, owner-approved 2026-10-05): nothing deletes them automatically any more, and the files in
+    these directories cannot be attributed to one session, so blocking a ticket on them would punish
+    it for another session's output. The list is still printed so a human can act on it.
+
+    `start_ts` given (whether it parses or not) is unchanged, existing behavior (AC4) — an
     explicit-but-unparsable value still flags every file, the pipeline path's fail-closed rule.
 
     When `start_ts` is absent (the hand-orchestrated CLI path, which has never had a source for
@@ -309,9 +321,9 @@ def check_data_runs_clean(
             )
             if flagged:
                 return (
-                    "FAIL",
-                    f"File(s) at/after start_ts (source: {source}): "
-                    f"{', '.join(str(f) for f in flagged)}",
+                    "WARN",
+                    f"File(s) at/after start_ts (source: {source}), left in place -- delete only "
+                    f"what is yours with --clean-data-runs: {', '.join(str(f) for f in flagged)}",
                 )
             return ("PASS", f"{runs_dir} and {proof_dir} clean of this session's artifacts (source: {source})")
         return (
@@ -332,9 +344,9 @@ def check_data_runs_clean(
     flagged = _find_flagged_data_run_files(start_ts, runs_dir, proof_dir)
     if flagged:
         return (
-            "FAIL",
-            f"File(s) at/after start_ts (or start_ts unparsable): "
-            f"{', '.join(str(f) for f in flagged)}",
+            "WARN",
+            f"File(s) at/after start_ts (or start_ts unparsable), left in place -- delete only "
+            f"what is yours with --clean-data-runs: {', '.join(str(f) for f in flagged)}",
         )
     return ("PASS", f"{runs_dir} and {proof_dir} clean of this session's artifacts")
 
@@ -344,50 +356,66 @@ def clean_data_runs_early(
     runs_dir: Path = Path("data/runs"),
     proof_dir: Path = Path("reports/release_proof"),
 ) -> tuple[str, str]:
-    """Auto-clean this session's own data/runs/ + reports/release_proof/ artifacts immediately
-    after Test phase, before Parity/Verify ever see them.
+    """REPORT-ONLY post-Test checkpoint over data/runs/ + reports/release_proof/: lists what
+    `_find_flagged_data_run_files` flags and deletes nothing.
 
-    Built for TCK-20260708-DATA-RUNS-CLEANUP-TIMING: closes the ordering gap where
-    check_data_runs_clean (Verify, phase 8) ran before Finalize (phase 9, the only prior cleanup
-    step) had a chance to remove anything Test phase (test-scoper) had just generated via its own
-    pytest run. Invoked directly by the orchestrator (bash() call in implement-ticket.js) between
-    Test and Parity — not from within an agent prompt — so it cannot be silently skipped the way
-    Finalize step 6's prose cleanup instruction has been.
+    TCK-20261004-DATA-RUNS-CLEAN-NOT-SESSION-SCOPED: this used to unlink every flagged file. Files
+    in these directories carry no owner (many independent writers, none marking its output), so an
+    `mtime >= start_ts` file is indistinguishable from another concurrent session's, and one run
+    removed 3684 files across 14 sessions. Marking every writer was rejected (six-plus writers,
+    mostly rpg/observability code, and legacy files stay unmarked); deferring leaves the window open
+    on every pipeline run. Deletion is now an explicit, scoped act: `delete_data_run_paths`.
 
-    Reuses _find_flagged_data_run_files's exact mtime>=start_ts / None-is-flagged definition (the
-    same primitive check_data_runs_clean uses) so the two functions can never diverge on what
-    counts as "this session's own file." Never a blind rm -rf: only deletes paths that definition
-    flags. This guarantees only that artifacts from a session that STARTED BEFORE this session's
-    start_ts are left untouched (mtime lower-bound only) — it does NOT protect against a second
-    session that is concurrently/overlapping in progress at the moment this checkpoint fires,
-    since data/runs/ and reports/release_proof/ have no session/PID partitioning; a file that
-    other session writes with mtime >= this session's start_ts is indistinguishable from this
-    session's own output and will be deleted. See "Residual Risk: Concurrent-Session Overlap
-    Window" in the Anti-Drift Notes below — this is a documented, accepted tradeoff, not a
-    mitigated one.
+    Reuses `_find_flagged_data_run_files`'s exact definition (the same primitive
+    `check_data_runs_clean` uses) so the two can never diverge on what counts as flagged.
 
-    Returns ("PASS", ...) if nothing needed cleaning, ("CLEANED", "<n> file(s) removed: ...") on
-    successful auto-clean, or ("FAIL", "<error>") if deletion itself raised (e.g. permission
-    error) — the one case the orchestrator escalates to a new blocking status
-    (DATA_RUNS_CLEAN_FAILED) instead of silently continuing.
+    Returns ("PASS", ...) if nothing is flagged or ("REPORTED", "<n> file(s) flagged, none
+    deleted: ...") otherwise. It never returns "FAIL": there is no deletion to fail.
     """
     flagged = _find_flagged_data_run_files(start_ts, runs_dir, proof_dir)
     if not flagged:
         return ("PASS", f"{runs_dir} and {proof_dir} already clean of this session's artifacts")
+    return (
+        "REPORTED",
+        f"{len(flagged)} file(s) flagged, none deleted: {', '.join(str(f) for f in flagged)}",
+    )
 
+
+def delete_data_run_paths(
+    names: list[str],
+    runs_dir: Path = Path("data/runs"),
+    proof_dir: Path = Path("reports/release_proof"),
+) -> tuple[str, str]:
+    """Opt-in scoped delete: removes only the named entries, each a path relative to `runs_dir` or
+    `proof_dir` (a run id or run directory). Never a sweep: an empty list, `*`/`.`/`..`, an absolute
+    path, a path that resolves outside both directories (including via a symlink), and the
+    directories themselves are all refused before anything is deleted. Returns ("DELETED", ...) or
+    ("REFUSED", reason)."""
+    if not names:
+        return ("REFUSED", "no path named; name the run directory or file to delete")
+    roots = [Path(runs_dir).resolve(), Path(proof_dir).resolve()]
+    targets: list[Path] = []
+    for name in names:
+        if not name.strip() or any(ch in name for ch in "*?[") or name.strip(".") == "" or Path(name).is_absolute():
+            return ("REFUSED", f"{name!r} is not a specific run directory or file (no blanket, empty or absolute paths)")
+        match = None
+        for root in roots:
+            candidate = (root / name)
+            resolved = candidate.resolve()
+            if resolved != root and root in resolved.parents and (candidate.exists() or candidate.is_symlink()):
+                match = candidate
+                break
+        if match is None:
+            return ("REFUSED", f"{name!r} does not name an existing entry strictly inside {runs_dir} or {proof_dir}")
+        targets.append(match)
     removed = []
-    try:
-        for f in flagged:
-            f.unlink()
-            removed.append(str(f))
-    except OSError as e:
-        remaining = [str(f) for f in flagged if str(f) not in removed]
-        return (
-            "FAIL",
-            f"Auto-clean failed after removing {len(removed)}/{len(flagged)} file(s): {e}. "
-            f"Remaining flagged: {', '.join(remaining)}",
-        )
-    return ("CLEANED", f"{len(removed)} file(s) removed: {', '.join(removed)}")
+    for target in targets:
+        if target.is_dir() and not target.is_symlink():
+            shutil.rmtree(target)
+        else:
+            target.unlink()
+        removed.append(str(target))
+    return ("DELETED", f"{len(removed)} entr{'y' if len(removed) == 1 else 'ies'} removed: {', '.join(removed)}")
 
 
 def check_ticket_location(
@@ -1468,7 +1496,16 @@ def main(argv=None) -> int:
         "ticket. Prints one readable PASS/FAIL/NA line per condition and exits non-zero if any "
         "condition FAILed."
     )
-    parser.add_argument("--ticket-id", required=True)
+    parser.add_argument("--ticket-id", default=None, help="Required unless --clean-data-runs is given.")
+    parser.add_argument(
+        "--clean-data-runs", action="store_true",
+        help="Opt-in scoped delete: remove only the entries named with --path (relative to data/runs/ "
+        "or reports/release_proof/). Never a sweep; refuses empty, wildcard and absolute paths.",
+    )
+    parser.add_argument(
+        "--path", action="append", default=[], metavar="RUN_ID_OR_DIR",
+        help="With --clean-data-runs: a run id or run directory to delete (repeatable).",
+    )
     parser.add_argument(
         "--tier", choices=sorted(TIER_VALUES), default=None,
         help="Auto-detected from the ticket's own '## Tier' body field if omitted.",
@@ -1494,6 +1531,13 @@ def main(argv=None) -> int:
         "without it, the registry is generated to a temp path and the on-disk file is only read.",
     )
     args = parser.parse_args(argv)
+
+    if args.clean_data_runs:
+        status, evidence = delete_data_run_paths(args.path)
+        print(f"{status}: {evidence}")
+        return 0 if status == "DELETED" else 1
+    if not args.ticket_id:
+        parser.error("--ticket-id is required unless --clean-data-runs is given")
 
     tier = _resolve_tier(args.ticket_id, args.tier)
 

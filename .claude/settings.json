@@ -49,6 +49,23 @@
       "Bash(rm -rf reports/release_proof*)",
       "Bash(rm -rf data/runs/*)",
       "Bash(rm -rf reports/release_proof/*)"
+    ],
+    "ask": [
+      "Bash(gh pr merge *)",
+      "Bash(git push --delete *)",
+      "Bash(git push * --delete *)",
+      "Bash(gh api -X DELETE *)",
+      "Bash(gh api --method DELETE *)",
+      "Bash(git push --force*)",
+      "Bash(git push * --force*)",
+      "Bash(git push -f *)",
+      "Bash(git push * -f*)",
+      "Bash(git worktree remove *)",
+      "Bash(rm *agent-working/agent-monitoring/*)",
+      "Workflow"
+    ],
+    "deny": [
+      "Bash(gh pr merge*--admin*)"
     ]
   },
   "hooks": {
@@ -115,6 +132,15 @@
             "command": "python3 tools/delivery/pre_push_advisory_hook.py 2>/dev/null || true"
           }
         ]
+      },
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit|SendMessage",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "R=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; test -f \"$R/tools/sessions/guard.py\" || exit 0; python3 \"$R/tools/sessions/guard.py\""
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -175,13 +201,23 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "R=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; test -f \"$R/tools/agent-monitoring/manual_actions.py\" || exit 0; python3 \"$R/tools/agent-monitoring/manual_actions.py\" hook 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 tools/agent-monitoring/session_start_handover_hook.py 2>/dev/null || true"
+            "command": "python3 tools/sessions/session_start_hook.py 2>/dev/null || true"
           }
         ]
       }

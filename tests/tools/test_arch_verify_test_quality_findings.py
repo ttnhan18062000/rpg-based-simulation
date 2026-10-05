@@ -37,7 +37,7 @@ def _real_keys() -> list:
 # ---- AC1: the schema key ---------------------------------------------------------------------
 
 def test_arch_verify_schema_has_optional_test_quality_findings_after_the_existing_keys():
-    assert _real_keys() == ["verdict", "violations", "summary", "ts", "verified_by", "test_quality_findings"]
+    assert _real_keys() == ["verdict", "violations", "summary", "ts", "verified_by", "test_quality_findings", "tests_read"]
 
 
 def test_test_quality_findings_is_not_a_required_key():
@@ -45,7 +45,7 @@ def test_test_quality_findings_is_not_a_required_key():
     start = text.index("const ARCH_VERIFY_SCHEMA = {")
     block = text[start:text.index("properties:", start)]
     assert "required: ['verdict', 'violations', 'summary']" in block
-    assert "test_quality_findings" not in block
+    assert "test_quality_findings" not in block and "tests_read" not in block
 
 
 def test_the_architecture_verify_prompt_wording_is_untouched():
@@ -133,7 +133,7 @@ def test_both_architecture_verify_outcomes_pass_the_findings_to_push_event():
     text = _WORKFLOW.read_text(encoding="utf-8")
     pushes = [ln for ln in text.splitlines() if "pushEvent('Architecture-Verify', 'architecture-reviewer', '" in ln and "archVerify" in ln]
     assert len(pushes) == 2
-    assert all(ln.rstrip().endswith("archVerify.test_quality_findings)") for ln in pushes), pushes
+    assert all(ln.rstrip().endswith("archVerify.test_quality_findings, archVerify.tests_read)") for ln in pushes), pushes
 
 
 # ---- AC3: validator and closure tool ---------------------------------------------------------
@@ -212,7 +212,7 @@ def test_helper_sentence_lists_every_key_in_schema_order():
 def test_helper_pins_the_real_arch_verify_schema():
     tail = sft.format_tail(_real_keys())
     assert tail == ("Return your answer as a single JSON object with keys: "
-                    "verdict, violations, summary, ts, verified_by, test_quality_findings.")
+                    "verdict, violations, summary, ts, verified_by, test_quality_findings, tests_read.")
 
 
 def test_helper_cli_prints_the_sentence_and_fails_loudly_on_an_unknown_schema():
@@ -238,3 +238,44 @@ def test_schema_md_documents_the_optional_event_field():
     text = (_REPO_ROOT / "docs" / "agent-monitoring" / "schema.md").read_text(encoding="utf-8")
     assert "`test_quality_findings`" in text and "`test_quality_findings_normalized`" in text
     assert "No item is dropped" in text
+
+
+# ---- TCK-20261004-ARCH-VERIFY-TESTS-READ-EVIDENCE: tests_read ------------------------------------
+
+@pytest.mark.skipif(_NODE is None, reason="node not installed")
+def test_push_event_carries_tests_read_and_omits_the_key_when_none():
+    base = ["Architecture-Verify", "architecture-reviewer", "ok", "APPROVED", "2026-10-02T00:00:00Z", None, None]
+    events = _run_push_event([
+        base + [[], ["tests/a.py", "tests/it's.py", "", 3]],
+        base + [[], []],
+        base + [[], None],
+        base + [None],
+    ])
+    assert events[0]["tests_read"] == ["tests/a.py", "tests/it’s.py"]
+    assert events[1]["tests_read"] == []
+    assert "tests_read" not in events[2] and "tests_read" not in events[3]
+
+
+def test_record_events_validates_tests_read():
+    assert validate_event(_event(tests_read=[])) == []
+    assert validate_event(_event(tests_read=["tests/a.py"])) == []
+    for bad in ("tests/a.py", [1], {"a": 1}):
+        errs = validate_event(_event(tests_read=bad))
+        assert errs and "tests_read must be a list of strings" in errs[0]
+
+
+def test_closure_tool_carries_tests_read_and_omits_the_key_when_absent():
+    recs = _closure_events([
+        {"phase": "Architecture-Verify", "status": "ok", "summary": "s", "tests_read": ["tests/a.py"]},
+        {"phase": "Verify", "status": "ok", "summary": "s"},
+    ])
+    assert recs[0]["tests_read"] == ["tests/a.py"] and validate_event(recs[0]) == []
+    assert "tests_read" not in recs[1]
+
+
+def test_reviewer_prompt_and_schema_ask_for_tests_read_and_do_not_claim_clean():
+    text = _WORKFLOW.read_text(encoding="utf-8")
+    assert "an empty list means the changed tests were read and are clean" not in text
+    assert "claim about the test files you read" in text
+    agent = (_REPO_ROOT / ".claude" / "agents" / "architecture-reviewer.md").read_text(encoding="utf-8")
+    assert "Open every changed test file" in agent and "`tests_read`" in agent

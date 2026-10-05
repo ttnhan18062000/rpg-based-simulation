@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, List, Dict, Any, Protocol, Callable
 
 from src.core.worker_protocol import WorkerResult, ResultStatus, WorkerPacket
 from src.core.work import WorkClass
+from src.engine.candidate_selector import MovementCandidateSelector
 
 if TYPE_CHECKING:
     from src.core.work import WorkItem
@@ -111,7 +112,14 @@ class LocalSequentialExecutor:
 
                 frozen_subject = subject
 
-                if item.work_kind == "ENTITY_MOVE":
+                if item.work_kind == "ENTITY_MOVE" and MovementCandidateSelector.pursuit_reached_attack_range(
+                    frozen_subject, readonly_state.entities
+                ):
+                    # Pursuit complete: the live target is in reach, so end the move and let the brain
+                    # choose (TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK).
+                    updates = {frozen_subject.id: MovementCandidateSelector.pursuit_completion_update(frozen_subject)}
+
+                elif item.work_kind == "ENTITY_MOVE":
                     target = item.payload.get(
                         "target_position",
                         frozen_subject.navigation.position,
@@ -127,7 +135,6 @@ class LocalSequentialExecutor:
                     # the "always reaffirm target_set" contract non-pursuit ENTITY_MOVE work
                     # (WANDER/RETREAT/objective movement) relies on, while fixing pursuit at its
                     # own real origin.
-                    from src.engine.candidate_selector import MovementCandidateSelector
                     target = MovementCandidateSelector.resolve_live_tracking_target(
                         frozen_subject, readonly_state.entities, target
                     )

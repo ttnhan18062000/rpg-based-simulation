@@ -74,6 +74,8 @@ from src.core.strategic import (
     CognitionProfile, ProjectKind, GoalKind, ObjectiveKind
 )
 from src.engine.spatial_query import SpatialQueryService
+from src.content_semantics.faction import are_entities_hostile
+from src.content_semantics.relation import RelationContext
 from src.strategy.cognition_capacity import CapacityService
 from src.core.inventory import InventoryService
 from src.engine.cadence import should_run, SystemCadence
@@ -88,6 +90,7 @@ from src.ai.score_modifiers import ScoreModifierSystem
 from src.domains.adventure.mapper import RouteToProjectMapper
 from src.systems.party import PartyCoordinationSystem
 from src.systems.strategic_systems.detour import DetourSuggestionSystem
+from src.systems.strategic_systems.entity_target_objective import close_entity_target_project
 from src.systems.strategic_systems.work_queue import StrategicWorkQueue
 from src.core.dirty import get_dirty_set
 from src.systems.strategic_systems.belief import BeliefCycleSystem
@@ -146,7 +149,10 @@ def _threat_resolved(hero: EntityState, state: AuthoritativeState) -> bool:
         eid != hero.id
         and (e := state.entities.get(eid)) is not None
         and e.combat.alive
-        and e.identity.faction != hero.identity.faction
+        and are_entities_hostile(hero, e, RelationContext(
+            distance=abs(e.navigation.position[0] - hero.navigation.position[0]) + abs(e.navigation.position[1] - hero.navigation.position[1]),
+            combat_engaged=True,
+        ))
         for eid in nearby_ids
     )
     return not has_hostile
@@ -436,7 +442,12 @@ class StrategicIntelligenceSystem:
                         dist = ((px - coords[0])**2 + (py - coords[1])**2)**0.5
                         if dist < 1.0:
                             raw_neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0)
-                            hostiles = [n[1] for n in raw_neighbors if n[1].identity.faction != entity.identity.faction and n[1].combat.alive]
+                            hostiles = [
+                                n[1] for n in raw_neighbors
+                                if n[1].combat.alive and are_entities_hostile(entity, n[1], RelationContext(
+                                    distance=abs(px - n[1].navigation.position[0]) + abs(py - n[1].navigation.position[1]),
+                                    combat_engaged=True))
+                            ]
 
                             if hostiles:
                                 confirm_up = BeliefCycleSystem.process_observation(entity, lead.subject, lead.detail, state.tick)
@@ -641,11 +652,19 @@ class StrategicIntelligenceSystem:
                     obj_id = strat_up.current_objective_id_set if strat_up.current_objective_id_set is not None else project.active_objective_id
                     active_obj = next((o for o in project.objectives if o.id == obj_id), None)
                     if active_obj and active_obj.status == ObjectiveStatus.ACTIVE:
-                        target_pos = getattr(active_obj, 'target_position', None)
-                        if target_pos:
-                             has_nav_update = True
-                             if entity.navigation.target != target_pos:
-                                 ent_upd = replace(ent_upd, navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=target_pos))
+                        # Entity-typed objective (TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK):
+                        # strategy names WHICH entity; the tactical pass resolves WHERE to step this tick. Writing the
+                        # creation-time `target_position` snapshot here dragged the entity back to a stale point one
+                        # strategic pass after its pursuit ended. The objective still owns the direction, so the
+                        # "no other navigation update" fallbacks below stay suppressed, but no point is set.
+                        if getattr(active_obj, 'target_entity_id', None) is not None:
+                            has_nav_update = True
+                        else:
+                            target_pos = getattr(active_obj, 'target_position', None)
+                            if target_pos:
+                                 has_nav_update = True
+                                 if entity.navigation.target != target_pos:
+                                     ent_upd = replace(ent_upd, navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=target_pos))
             
             if not has_nav_update:
                 town_target = nearest_town_tile(state.town_tiles, entity.navigation.position) or state.town_center
@@ -1373,6 +1392,19 @@ class StrategicIntelligenceSystem:
                         leads_remove=memory_upd.leads_remove
                     )
 
+                # Entity-targeted objective (typed target_entity_id): ends when its target dies, is
+                # gone, or leaves perception, instead of holding the project slot forever.
+                _closed_project = close_entity_target_project(entity, state, project)
+                if _closed_project is not None:
+                    return StrategicUpdate(
+                        projects_add_or_update=[_closed_project],
+                        current_project_id_set="",
+                        current_objective_id_set="",
+                        boredom_delta=boredom_upd,
+                        leads_add_or_update=memory_upd.leads_add_or_update,
+                        leads_remove=memory_upd.leads_remove
+                    )
+
                 if project.kind == "harvesting" and project.active_objective_id:
                     target_id_str = project.active_objective_id.split("_")[-1]
                     try:
@@ -1521,12 +1553,23 @@ class StrategicIntelligenceSystem:
                 except ValueError:
                     head_kind = None
                 if head_kind in _COMMITTED_INTENTION_ELIGIBLE_KINDS:
+                    # A resumed COMBAT_ENGAGE intention's target_hint is an entity id; carry it as the
+                    # typed target so the objective it materialises into gets live position and a
+                    # lifecycle too (otherwise it would be the untyped REACH_LOCATION-on-an-entity-id
+                    # shape this ticket removes).
+                    _hint_entity_id = None
+                    if head_kind == GoalKind.COMBAT_ENGAGE and head.target_hint:
+                        try:
+                            _hint_entity_id = int(head.target_hint)
+                        except ValueError:
+                            _hint_entity_id = None
                     all_scores = all_scores + [GoalScore(
                         kind=head_kind,
                         utility=_COMMITTED_INTENTION_BASE_UTILITY,
                         target_id=head.target_hint,
                         target_pos=None,
                         metadata={"committed_intention_id": head.intention_id},
+                        target_entity_id=_hint_entity_id,
                     )]
 
         # PH9: Routine & Life-Rhythm Biasing
@@ -1711,6 +1754,7 @@ class StrategicIntelligenceSystem:
                     kind=best_candidate.metadata.get("obj_kind") or ObjectiveKind.REACH_LOCATION,
                     target=best_candidate.target_id,
                     target_position=best_candidate.target_pos,
+                    target_entity_id=best_candidate.target_entity_id,
                     status=ObjectiveStatus.ACTIVE
                 )
                 candidate_proj = ProjectState(

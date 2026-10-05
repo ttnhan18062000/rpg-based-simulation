@@ -1,0 +1,32 @@
+---
+name: feedback_date_sources_before_applying_precedence
+description: "precedence rules can't resolve a split inside the authority itself — date the competing sections before applying \"X wins on precedence\""
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 6945a717-f64e-4393-be99-3b3497f3e912
+  modified: 2026-09-24T10:30:04.571Z
+---
+
+Before settling a doc-vs-code disagreement with "the Mechanics Bible wins on precedence," check
+whether the authority is split *against itself*, and get the last-changed date of each competing
+section (`git log -1 -L <start>,<end>:<file>`). A precedence rule is useless when both sides are
+authoritative.
+
+**Why:** on 2026-09-24 `TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT` was decided as
+±100 on the reasoning "Bible wins over the runtime contract." The ticket never named
+`docs/mechanics/05_world_evolution.md`, which is also a P0 Bible chapter and states ±50 while
+explicitly rebutting ±100 as only the clamp bound, with code citations. Dating the two sections
+settled it one-sidedly: the ±50 section changed 2026-09-02, the ±100 section changed 2026-05-18, and
+the older one's `> 100.0` phrasing was provably unreachable against the `[-100, 100]` clamp. The
+user reversed the decision to ±50 once shown this, and the fix got *smaller* — the code needed no
+change at all.
+
+**How to apply:** when a ticket's decision rests on precedence, enumerate every doc in the
+authoritative set that speaks to the rule, not just the two the ticket happens to name. Date the
+competing statements. A newer, code-cited section that argues against the older one is a deliberate
+correction, not drift. And when a decision's *basis* turns out to be incomplete, take it back to the
+user rather than interpreting around it — even a decision marked "SETTLED, do not re-open," because
+what was settled was the conclusion from the old evidence. Keep the superseded section verbatim in
+the ticket for provenance and mark it superseded; don't overwrite it. Related:
+[[feedback_options_and_recommendation_on_concerns]], [[feedback_rebuild_when_baseline_is_better]].

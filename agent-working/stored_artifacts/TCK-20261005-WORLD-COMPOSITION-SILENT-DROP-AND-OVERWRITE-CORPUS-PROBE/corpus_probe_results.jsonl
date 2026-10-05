@@ -1,0 +1,120 @@
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 3, "places_in_compiled_state": 3, "places_lost_at_compile": 0, "world": "camp_maturity_calibration_pilot"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "camp_maturity_calibration_pilot"}
+{"check": "faction_merge", "contributions": 3, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "camp_maturity_calibration_pilot"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 2, "world": "camp_maturity_calibration_pilot"}
+{"check": "validator_residue", "count": 0, "errors": 0, "per_rule": {}, "world": "camp_maturity_calibration_pilot"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 2, "places_in_compiled_state": 2, "places_lost_at_compile": 0, "world": "crowded_frontier"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "crowded_frontier"}
+{"check": "faction_merge", "contributions": 7, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "crowded_frontier"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 4, "world": "crowded_frontier"}
+{"check": "validator_residue", "count": 5, "errors": 0, "per_rule": {"WORLD-REACH-001": 5}, "world": "crowded_frontier"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 1, "places_in_compiled_state": 1, "places_lost_at_compile": 0, "world": "dungeon_crawl"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "dungeon_crawl"}
+{"check": "faction_merge", "contributions": 3, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "dungeon_crawl"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 2, "world": "dungeon_crawl"}
+{"check": "validator_residue", "count": 5, "errors": 0, "per_rule": {"WORLD-REACH-001": 4, "WORLD-WARN-001": 1}, "world": "dungeon_crawl"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 4, "places_in_compiled_state": 4, "places_lost_at_compile": 0, "world": "frontier_extended"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "frontier_extended"}
+{"check": "faction_merge", "contributions": 15, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "frontier_extended"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 1, "regions_checked": 11, "world": "frontier_extended"}
+{"check": "validator_residue", "count": 7, "errors": 0, "per_rule": {"WORLD-REACH-001": 7}, "world": "frontier_extended"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 4, "places_in_compiled_state": 4, "places_lost_at_compile": 0, "world": "frontier_living_world"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "frontier_living_world"}
+{"check": "faction_merge", "contributions": 12, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "frontier_living_world"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 1, "regions_checked": 8, "world": "frontier_living_world"}
+{"check": "validator_residue", "count": 8, "errors": 0, "per_rule": {"WORLD-REACH-001": 8}, "world": "frontier_living_world"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 4, "places_in_compiled_state": 4, "places_lost_at_compile": 0, "world": "frontier_marches"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "frontier_marches"}
+{"check": "faction_merge", "contributions": 14, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "frontier_marches"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 9, "world": "frontier_marches"}
+{"check": "validator_residue", "count": 8, "errors": 0, "per_rule": {"WORLD-REACH-001": 8}, "world": "frontier_marches"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 3, "places_in_compiled_state": 3, "places_lost_at_compile": 0, "world": "generated_frontier_3_42"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "generated_frontier_3_42"}
+{"check": "faction_merge", "contributions": 10, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "generated_frontier_3_42"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 6, "world": "generated_frontier_3_42"}
+{"check": "validator_residue", "count": 5, "errors": 0, "per_rule": {"WORLD-REACH-001": 5}, "world": "generated_frontier_3_42"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 3, "places_in_compiled_state": 3, "places_lost_at_compile": 0, "world": "hero_guild_routing"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "hero_guild_routing"}
+{"check": "faction_merge", "contributions": 6, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "hero_guild_routing"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 4, "world": "hero_guild_routing"}
+{"check": "validator_residue", "count": 4, "errors": 0, "per_rule": {"WORLD-REACH-001": 4}, "world": "hero_guild_routing"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 1, "places_in_compiled_state": 1, "places_lost_at_compile": 0, "world": "highland_traverse"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "highland_traverse"}
+{"check": "faction_merge", "contributions": 2, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "highland_traverse"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 5, "world": "highland_traverse"}
+{"check": "validator_residue", "count": 0, "errors": 0, "per_rule": {}, "world": "highland_traverse"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 4, "places_in_compiled_state": 4, "places_lost_at_compile": 0, "world": "lifecycle_full_coverage_world"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "lifecycle_full_coverage_world"}
+{"check": "faction_merge", "contributions": 8, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "lifecycle_full_coverage_world"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 8, "world": "lifecycle_full_coverage_world"}
+{"check": "validator_residue", "count": 6, "errors": 0, "per_rule": {"WORLD-REACH-001": 6}, "world": "lifecycle_full_coverage_world"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 0, "places_in_compiled_state": 0, "places_lost_at_compile": 0, "world": "mechanic_scenario_combat_judgement_withdrawal"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "mechanic_scenario_combat_judgement_withdrawal"}
+{"check": "faction_merge", "contributions": 2, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "mechanic_scenario_combat_judgement_withdrawal"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 1, "world": "mechanic_scenario_combat_judgement_withdrawal"}
+{"check": "validator_residue", "count": 1, "errors": 0, "per_rule": {"WORLD-WARN-001": 1}, "world": "mechanic_scenario_combat_judgement_withdrawal"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 1, "places_in_compiled_state": 1, "places_lost_at_compile": 0, "world": "quest_dense_frontier"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "quest_dense_frontier"}
+{"check": "faction_merge", "contributions": 2, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "quest_dense_frontier"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 3, "world": "quest_dense_frontier"}
+{"check": "validator_residue", "count": 4, "errors": 0, "per_rule": {"WORLD-REACH-001": 4}, "world": "quest_dense_frontier"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 1, "places_in_compiled_state": 1, "places_lost_at_compile": 0, "world": "resource_dense_basin"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "resource_dense_basin"}
+{"check": "faction_merge", "contributions": 5, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "resource_dense_basin"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 3, "world": "resource_dense_basin"}
+{"check": "validator_residue", "count": 0, "errors": 0, "per_rule": {}, "world": "resource_dense_basin"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 2, "places_in_compiled_state": 2, "places_lost_at_compile": 0, "world": "sandbox_world"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "sandbox_world"}
+{"check": "faction_merge", "contributions": 3, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "sandbox_world"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 3, "world": "sandbox_world"}
+{"check": "validator_residue", "count": 2, "errors": 0, "per_rule": {"WORLD-REACH-001": 2}, "world": "sandbox_world"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 2, "places_in_compiled_state": 2, "places_lost_at_compile": 0, "world": "simq_routing_test"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "simq_routing_test"}
+{"check": "faction_merge", "contributions": 6, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "simq_routing_test"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 3, "world": "simq_routing_test"}
+{"check": "validator_residue", "count": 3, "errors": 0, "per_rule": {"WORLD-REACH-001": 3}, "world": "simq_routing_test"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 5, "places_in_compiled_state": 5, "places_lost_at_compile": 0, "world": "simq_scale_stress_seed42"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "simq_scale_stress_seed42"}
+{"check": "faction_merge", "contributions": 17, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "simq_scale_stress_seed42"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 13, "world": "simq_scale_stress_seed42"}
+{"check": "validator_residue", "count": 7, "errors": 0, "per_rule": {"WORLD-REACH-001": 7}, "world": "simq_scale_stress_seed42"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 2, "places_in_compiled_state": 2, "places_lost_at_compile": 0, "world": "swamp_border_world"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "swamp_border_world"}
+{"check": "faction_merge", "contributions": 7, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "swamp_border_world"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 1, "regions_checked": 5, "world": "swamp_border_world"}
+{"check": "validator_residue", "count": 2, "errors": 0, "per_rule": {"WORLD-REACH-001": 2}, "world": "swamp_border_world"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 2, "places_in_compiled_state": 2, "places_lost_at_compile": 0, "world": "unit_faction_tension"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "unit_faction_tension"}
+{"check": "faction_merge", "contributions": 3, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "unit_faction_tension"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 3, "world": "unit_faction_tension"}
+{"check": "validator_residue", "count": 2, "errors": 0, "per_rule": {"WORLD-REACH-001": 2}, "world": "unit_faction_tension"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 1, "places_in_compiled_state": 1, "places_lost_at_compile": 0, "world": "unit_information_density"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "unit_information_density"}
+{"check": "faction_merge", "contributions": 3, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "unit_information_density"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 1, "world": "unit_information_density"}
+{"check": "validator_residue", "count": 0, "errors": 0, "per_rule": {}, "world": "unit_information_density"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 1, "places_in_compiled_state": 1, "places_lost_at_compile": 0, "world": "unit_information_routing_pilot"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "unit_information_routing_pilot"}
+{"check": "faction_merge", "contributions": 3, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "unit_information_routing_pilot"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 1, "world": "unit_information_routing_pilot"}
+{"check": "validator_residue", "count": 0, "errors": 0, "per_rule": {}, "world": "unit_information_routing_pilot"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 1, "places_in_compiled_state": 1, "places_lost_at_compile": 0, "world": "unit_information_source"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "unit_information_source"}
+{"check": "faction_merge", "contributions": 3, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "unit_information_source"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 1, "world": "unit_information_source"}
+{"check": "validator_residue", "count": 0, "errors": 0, "per_rule": {}, "world": "unit_information_source"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 1, "places_in_compiled_state": 1, "places_lost_at_compile": 0, "world": "unit_selfmodel_pilot"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "unit_selfmodel_pilot"}
+{"check": "faction_merge", "contributions": 3, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "unit_selfmodel_pilot"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 1, "world": "unit_selfmodel_pilot"}
+{"check": "validator_residue", "count": 0, "errors": 0, "per_rule": {}, "world": "unit_selfmodel_pilot"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 1, "places_in_compiled_state": 1, "places_lost_at_compile": 0, "world": "urban_political"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "urban_political"}
+{"check": "faction_merge", "contributions": 7, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "urban_political"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 1, "regions_checked": 3, "world": "urban_political"}
+{"check": "validator_residue", "count": 2, "errors": 0, "per_rule": {"WORLD-REACH-001": 2}, "world": "urban_political"}
+{"check": "duplicate_place_ids", "compile_error": null, "count": 0, "duplicate_ids": [], "places_declared": 3, "places_in_compiled_state": 3, "places_lost_at_compile": 0, "world": "wilderness_survival"}
+{"check": "dropped_placements", "count": 0, "dangling": [], "world": "wilderness_survival"}
+{"check": "faction_merge", "contributions": 3, "count": 0, "differing_definitions": [], "faction_records_with_a_source_module": [], "not_pre_seeded": [], "world": "wilderness_survival"}
+{"check": "biome_provenance", "count": 0, "mismatches": [], "namespaced_regions": 0, "regions_checked": 4, "world": "wilderness_survival"}
+{"check": "validator_residue", "count": 3, "errors": 0, "per_rule": {"WORLD-REACH-001": 3}, "world": "wilderness_survival"}

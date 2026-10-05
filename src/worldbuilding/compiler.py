@@ -27,7 +27,7 @@ from src.core.registries import ResourceRegistry
 from src.core.enums import EntityRole, Faction
 from src.replay.fingerprint import StateFingerprinter
 from src.engine.checkpoint import CanonicalStateHasher
-from src.worldbuilding.schema import WorldSpec
+from src.worldbuilding.schema import InvalidWorldSpecError, WorldSpec
 from src.core.quests import QuestState, QuestStatus, QuestKind, RewardState
 from src.core.strategic import ProjectKind
 from src.domains.demographics.cohort import PopulationCohort
@@ -228,6 +228,32 @@ def _seed_population_cohorts(declared_population: int) -> Dict[str, "PopulationC
     }
 
 
+def _assert_region_references_resolve(spec: WorldSpec) -> None:
+    """
+    Fails compilation when a population, resource node, or building names a region the spec
+    does not define.
+
+    Each placement loop in `WorldCompiler.compile` is guarded by `if region:`, so an unresolved id
+    would otherwise drop the whole population/node/building without any error or warning.
+    """
+    region_ids = {r.id for r in spec.regions}
+    dangling: List[str] = []
+    for pop in spec.entities:
+        if pop.spawn_region not in region_ids:
+            dangling.append(f"population '{pop.id}' spawn_region '{pop.spawn_region}'")
+    for res in spec.resources:
+        if res.region not in region_ids:
+            dangling.append(f"resource node '{res.id}' region '{res.region}'")
+    for bld in spec.buildings:
+        if bld.region not in region_ids:
+            dangling.append(f"building '{bld.id}' region '{bld.region}'")
+    if dangling:
+        raise InvalidWorldSpecError(
+            f"World '{spec.world_id}' references regions it does not define "
+            f"(defined: {sorted(region_ids)}): " + "; ".join(dangling)
+        )
+
+
 class WorldCompiler:
     """
     Deterministic World Compiler that transforms a validated WorldSpec into
@@ -342,6 +368,8 @@ class WorldCompiler:
         """
         start_time = time.perf_counter()
 
+        _assert_region_references_resolve(spec)
+
         # 0. Initialize deterministic RNG and load class table
         rng = DeterministicRNG(seed)
         class_table = _load_class_table()
@@ -404,8 +432,11 @@ class WorldCompiler:
 
             # Idea 66 (TCK-20260902-WORLDCOMPILER-PLACE-WIRING): construct real PlaceState
             # instances from any Place-shaped content declared on this region (r_spec.places,
-            # RegionSpec's new field). Empty for all existing content today -- new, opt-in
-            # only; existing worlds compile with places=[] exactly as before this ticket.
+            # RegionSpec's field). Not empty any more: at least nine world modules declare region
+            # places, and 52 places across 23 of the 24 corpus worlds reach this loop (measured by
+            # tools/world_composition_corpus_probe.py). The write below is a bare dict assignment, so a
+            # second place with an already-seen id would silently replace the first; the probe found no
+            # such duplicate in the corpus.
             for p_spec in getattr(r_spec, "places", []):
                 places[p_spec.id] = PlaceState(
                     place_id=p_spec.id,

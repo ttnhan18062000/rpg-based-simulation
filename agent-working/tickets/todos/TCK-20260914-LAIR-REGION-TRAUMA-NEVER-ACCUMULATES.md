@@ -230,6 +230,47 @@ This also settles this ticket's own open framing (its Title): the threshold is n
 explicitly tested and rejected a shared root cause with `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`
 (a death-outcome-kind filter, `T03`); the two share a symptom, not a cause.
 
+### 2026-10-05 — `rpg-implementer-2` re-measurement before any build: the ticket's claim holds for `moon_cave`, but its framing is narrower than "trauma never accumulates"
+
+Real `Kernel.tick_once`, `PROD_SMALL`, seed 42, 5,000 ticks, `generated_frontier_3_42`; per-region `trauma_score` sampled
+every tick, and live entity positions mapped to regions every 25 ticks:
+- `moon_cave`: `max trauma_score` **0.0**, `hazard_level` 4.0 throughout, and entities **are present** (154 region-presence
+  samples). So the region is not empty: its own population lives there and nobody dies there. That matches the 2026-09-15
+  spatial-isolation finding (no hostile faction composed within range) and answers the open "do any entities path in"
+  question: its own population does.
+- The only region above the lair gate's `BOSS_SPAWN_TRAUMA_THRESHOLD = 8.0` is `goblin_camp` (36.1); no other region reaches it,
+  so `check_for_lair_spawn()` for `moon_cave_lair` cannot open here at any run length that matches this one.
+- **Scope correction:** trauma accumulates normally where combat happens (`goblin_camp` 36.1; `bandit_road` and `goblin_camp`
+  47.1 in `frontier_living_world`). This ticket is about one isolated lair region, not a world-wide trauma failure. No region in
+  either world exceeded the `> 50.0` threshold in 5,000 ticks (see the correction in
+  `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`).
+- No code, content or test change was made. The two fix directions already recorded above (compose hostile presence near the
+  lair, or give Lair occupants their own trigger) remain open design decisions; neither is chosen here.
+
+### 2026-10-05 (later) — CORRECTION by `rpg-implementer-2`: `moon_cave` is not empty of deaths and not shadowed; its deaths are starvation, which the trauma block does not count
+
+The block above concluded "nobody dies there because no hostile faction is composed in range". **That conclusion was wrong.** Re-run
+on `generated_frontier_3_42`, seed 42, `PROD_SMALL`, recording every death with its end-of-tick position, the region
+`SpatialQueryService.get_region_at` credits it to, and the lifecycle death cause:
+- **Three deaths occur inside `moon_cave`'s bounds, all at tick 984, all `mage` (the module's own `apprentice_mage`
+  population, 3 of its 4), all `death_reason=None`, `passive_death_cause=PassiveDeathCause.STARVATION`, `hp=0.0`,
+  `age_ticks=985` of `max_age_ticks=20,160,000`.** `get_region_at` credits all three to `moon_cave` itself, and no other
+  region's bounds overlap `moon_cave`'s in the resolved world, so this is **not** the overlap-shadowing effect recorded in
+  `TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER`.
+- **`moon_cave`'s `trauma_score` stays at exactly 0.0 anyway**, over 5,000 ticks (also 0.0 on ticks 983-986).
+- **Why:** the Death-triggered Trauma block (`src/engine/world_dynamics.py:57-76`) adds `+1.0` only for an entity update with
+  `combat.alive_set is False`. A passive starvation death is recorded by `resolve_lifecycle` from the persisted
+  `passive_death_cause` and never carries that flag, so it adds nothing. (`TCK-20261001-...` / #276 made `resolve_lifecycle` the
+  authority that records passive deaths; the trauma block was not updated to read it.)
+- **Rule question, not decided here:** `docs/mechanics/05_world_evolution.md` §2 says "Every entity death in a region adds +1.0"
+  citing this block, but also frames trauma as a reaction to "the violence and activity within their borders". Whether a
+  starvation death is trauma is a world-semantics choice for the rule owner. The code is narrower than the Bible's "every".
+- **Even if starvation counted, the lair gate would not open here:** the population is 4, so the region would reach at most
+  4.0, below `BOSS_SPAWN_TRAUMA_THRESHOLD = 8.0`.
+- The 2026-09-15 spatial-isolation finding still describes the composition (no hostile faction in range, which is why nobody
+  is *killed*). What the composition does is let the isolated population starve with no effect on the region.
+- No code, content or test change was made.
+
 ## Test Summary
 _(not started)_
 

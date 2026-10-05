@@ -4531,19 +4531,6 @@
   {
     "tier": 2,
     "kind": "method",
-    "class": "PartyCoordinationSystem",
-    "name": "issue_party_command",
-    "file": "src/systems/social_systems/party.py",
-    "line": 123,
-    "decorators": [
-      "staticmethod"
-    ],
-    "exclusion": "real",
-    "has_test_coverage": false
-  },
-  {
-    "tier": 2,
-    "kind": "method",
     "class": "RelationshipService",
     "name": "prune_low_salience",
     "file": "src/systems/social_systems/relationships.py",

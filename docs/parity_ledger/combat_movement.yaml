@@ -377,9 +377,12 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: 'Implementation proven via exhaustive checklist audit Phase 1-11 TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP:
+    resolve_aoe_attack in src/engine/combat.py now skips victims the content catalog
+    calls not hostile (are_entities_hostile).'
   proof_type: null
-  test_path: null
+  test_path: tests/unit/combat/test_catalog_hostility_sweep.py::TestSplashFriendlyFire::test_same_bucket_catalog_hostile_victim_is_splashed;
+    tests/unit/combat/test_catalog_hostility_sweep.py::TestSplashFriendlyFire::test_different_bucket_catalog_friendly_victim_is_not_splashed
   divergence_note: null
   support_boundary: null
 - id: COMB-031
@@ -428,9 +431,11 @@
   status: legacy_verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: 'Implementation proven via exhaustive checklist audit Phase 1-11 TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP:
+    flanking in src/engine/legality.py check_flanking uses catalog are_entities_hostile.'
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/combat/test_catalog_hostility_sweep.py::TestFlanking::test_same_bucket_catalog_hostile_flankers_flank;
+    tests/unit/combat/test_catalog_hostility_sweep.py::TestFlanking::test_different_bucket_catalog_friendly_neighbours_do_not_flank
   divergence_note: null
   support_boundary: null
 - id: COMB-036
@@ -2794,9 +2799,12 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: 'Implementation proven via exhaustive checklist audit Phase 1-11 TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP:
+    AoE friendly-fire decided by catalog hostility in src/engine/combat.py resolve_aoe_attack;
+    own faction and neutrals never splashed.'
   proof_type: null
-  test_path: null
+  test_path: tests/unit/combat/test_catalog_hostility_sweep.py::TestSplashFriendlyFire::test_own_faction_and_neutral_are_never_splashed;
+    tests/unit/combat/test_catalog_hostility_sweep.py::TestSplashFriendlyFire::test_different_bucket_catalog_friendly_victim_is_not_splashed
   divergence_note: null
   support_boundary: null
 - id: COMB-262
@@ -3372,7 +3380,6 @@
     \ test_path was deleted and test_path now points at the replacement test of the\
     \ opposite behaviour. See intentional_divergences.md \xA72.34 (SUPERSEDED) and\
     \ \xA72.63."
-
   support_boundary: null
 - id: COMB-298
   text: 'TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION -- Passive
@@ -3612,9 +3619,9 @@
     distances 2-12) -- a distinct, downstream pursuit-convergence bottleneck, not
     this bug, filed separately as TCK-20260809-COMBAT-PURSUIT-NEVER-CLOSES-TO-MELEE-RANGE.
     combat_damage/entity_killed remain zero in this specific 2000-tick window -- not
-    claimed as fully resolved.
-
-    '
+    claimed as fully resolved. TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP:
+    remaining raw-legacy-enum hostility sites downstream of identity resolution (splash,
+    flanking) now use the same catalog helper; see COMB-326.'
   proof_type: regression
   test_path: tests/unit/entities/test_entity_identity_resolver.py::test_faction_id_alone_resolves_clean_not_collapsed_to_neutral;
     tests/unit/entities/test_entity_identity_resolver.py::test_faction_id_alone_with_unmappable_legacy_role_gets_unresolved_role;
@@ -3954,14 +3961,14 @@
   text: 'TCK-20260826-HOTFIX-PERMADEATH-LIFECYCLE-FIX, revised by TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION
     -- `LifecycleSystem.resolve_lifecycle()`''s combat-death check (COMB-309''s own
     cited authoritative `death_reason=="COMBAT"` writer) matches exactly `outcome_kind=="KILL"`.
-    History: it once matched only `"KILL"` and missed `"PERMADEATH"` (the more final outcome
-    a rebirth-eligible Hero got at `generation >= 4`), fixed by checking `in ("KILL",
-    "PERMADEATH")`. Hero rebirth/permadeath were retired and the `PERMADEATH` label folded
-    into `KILL`, so the tuple is reduced back to `"KILL"` and the original requirement
-    now reads: every lethal combat outcome is a plain `KILL` that routes through the
-    deactivation/`death_reason="COMBAT"` path, and a retired outcome kind is not a death
-    trigger. COMB-309''s fallback event-crediting gate (`death_reason=="COMBAT"`) is
-    unchanged; `CombatShaper` keeps its own `outcome_kind=="KILL"` ownership boundary.
+    History: it once matched only `"KILL"` and missed `"PERMADEATH"` (the more final
+    outcome a rebirth-eligible Hero got at `generation >= 4`), fixed by checking `in
+    ("KILL", "PERMADEATH")`. Hero rebirth/permadeath were retired and the `PERMADEATH`
+    label folded into `KILL`, so the tuple is reduced back to `"KILL"` and the original
+    requirement now reads: every lethal combat outcome is a plain `KILL` that routes
+    through the deactivation/`death_reason="COMBAT"` path, and a retired outcome kind
+    is not a death trigger. COMB-309''s fallback event-crediting gate (`death_reason=="COMBAT"`)
+    is unchanged; `CombatShaper` keeps its own `outcome_kind=="KILL"` ownership boundary.
 
     '
   status: verified
@@ -4398,35 +4405,125 @@
     an external pre-merge review, see docs/world/affiliation_mutation.md).
 - id: COMB-324
   text: 'TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE: a terminal
-    DEFEAT outcome (non-lethal zeroing of any defender) is a recorded
-    death: resolve_lifecycle reads the persisted outcome_kind and records death_reason="DEFEAT"
-    (distinct from COMBAT), is_permadeath, death_tick and the succession dispatch,
-    and is the sole authority that deactivates the entity. No role is exempt: a lethal hit on a Hero is a plain KILL (hero rebirth/permadeath
-    retired, intentional_divergences.md 2.63).'
+    DEFEAT outcome (non-lethal zeroing of any defender) is a recorded death: resolve_lifecycle
+    reads the persisted outcome_kind and records death_reason="DEFEAT" (distinct from
+    COMBAT), is_permadeath, death_tick and the succession dispatch, and is the sole
+    authority that deactivates the entity. No role is exempt: a lethal hit on a Hero
+    is a plain KILL (hero rebirth/permadeath retired, intentional_divergences.md 2.63).'
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'src/systems/lifecycle_systems/lifecycle.py (DEFEAT branch).
-    docs/guidelines/intentional_divergences.md Section 2.61.'
+  v2_evidence: src/systems/lifecycle_systems/lifecycle.py (DEFEAT branch). docs/guidelines/intentional_divergences.md
+    Section 2.61.
   proof_type: regression
   test_path: tests/mechanic_scenarios/test_passive_death_cause_and_rebirth_defeat_lifecycle.py::test_terminal_defeat_is_recorded_with_its_own_reason_and_deactivated
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.61.
   support_boundary: null
 - id: COMB-325
   text: 'TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND: a death records
-    exactly one death_reason -- the first cause in pipeline phase order whose own effect
-    was sufficient to take the subject from hp > 0 to hp <= 0 (Mechanics Bible 01
-    Section 4, Death Attribution). A terminal combat outcome (KILL/DEFEAT)
-    stands over same-tick hazard drain, which stays observable via CombatUpdate.hazard_damage;
+    exactly one death_reason -- the first cause in pipeline phase order whose own
+    effect was sufficient to take the subject from hp > 0 to hp <= 0 (Mechanics Bible
+    01 Section 4, Death Attribution). A terminal combat outcome (KILL/DEFEAT) stands
+    over same-tick hazard drain, which stays observable via CombatUpdate.hazard_damage;
     a non-lethal combat result followed by a decisive hazard drain records HAZARD.'
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'src/engine/world_dynamics.py (resolve_dynamics hazard block), src/core/updates.py
+  v2_evidence: src/engine/world_dynamics.py (resolve_dynamics hazard block), src/core/updates.py
     (CombatUpdate.hazard_damage), src/core/combat_constants.py (TERMINAL_COMBAT_OUTCOME_KINDS),
     src/systems/lifecycle_systems/lifecycle.py (HAZARD branch), src/observability/event_extractor.py
-    + event_shapers.py (hazard_drain_applied keyed on hazard_damage).'
+    + event_shapers.py (hazard_drain_applied keyed on hazard_damage).
   proof_type: regression
   test_path: tests/mechanic_scenarios/test_hazard_same_tick_death_attribution.py::test_combat_kill_plus_hazard_records_the_combat_death_and_keeps_hazard_observable
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.62.
   support_boundary: null
+- id: COMB-326
+  text: 'TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP: splash damage (resolve_aoe_attack)
+    and the flanking check (LegalityServiceV2.check_flanking) decide hostility with
+    the content catalog (content_semantics.faction.are_entities_hostile, real distance,
+    combat_engaged=True), not the four-value legacy Faction enum. Same-bucket catalog-hostile
+    victims are splashed and flank; different-bucket catalog-allies and neutrals are
+    neither splashed nor counted as flankers (Mechanics Bible 02 Section 6).'
+  v2_evidence: src/engine/combat.py (resolve_aoe_attack), src/engine/legality.py (check_flanking.has_hostile_at),
+    src/content_semantics/faction.py (are_entities_hostile, are_entities_allied).
+  test_path: tests/unit/combat/test_catalog_hostility_sweep.py::TestSplashFriendlyFire::test_same_bucket_catalog_hostile_victim_is_splashed;
+    tests/unit/combat/test_catalog_hostility_sweep.py::TestFlanking::test_same_bucket_catalog_hostile_flankers_flank
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  proof_type: regression
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.65.
+  support_boundary: null
+- id: COMB-327
+  text: 'TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN: the four tactical
+    branches that previously sent an entity to the literal world origin (the is_fleeing
+    PANIC_RETREAT gate, the low-HP engaged PANIC_RETREAT, SAFETY_PRESSURE_RETREAT,
+    and the STALEMATE_BREAK WANDER) target a region-contained destination. Retreat
+    goes away from the perceived threats clamped inside the entity''s current region,
+    else its own home region, else holds position; stalemate-break wanders to a seeded
+    nearby in-region point, or holds when the entity is outside every region. Never
+    a sentinel coordinate (World Rules MOV-01, LOC-01, LOC-03, MOV-03).'
+  v2_evidence: src/engine/tactical_destinations.py (retreat_destination, wander_destination,
+    containing_region), src/engine/tactical.py (_perceived_threats, _destination_or_hold
+    and the four call sites).
+  test_path: tests/unit/combat/test_tactical_destinations.py::TestBranchesNeverTargetTheOrigin::test_panic_gate_retreat;
+    tests/unit/combat/test_tactical_destinations.py::TestBranchesNeverTargetTheOrigin::test_stalemate_break
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  proof_type: regression
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.66.
+  support_boundary: null
+- id: COMB-328
+  text: 'TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES:
+    an objective whose subject is a moving entity carries a typed ObjectiveState.target_entity_id
+    (set by CombatEngageScorer and a resumed COMBAT_ENGAGE committed intention), resolves
+    to the entity''s live position, and ends: target dead -> RESOLVED/COMPLETED; target
+    beyond 10 tiles Manhattan or absent -> FAILED/ABANDONED. StrategicWorkQueue schedules
+    an ended entity-targeted objective as a tier-3 transition. The field is omitted
+    from the canonical dict when None. Every untyped objective resolves as before.'
+  v2_evidence: src/core/strategic.py (ObjectiveState.target_entity_id), src/systems/strategic_systems/entity_target_objective.py
+    (entity_target_outcome), src/systems/strategic_systems/intelligence.py (lifecycle
+    block), src/systems/strategic_systems/work_queue.py (tier 3), src/engine/tactical.py
+    (_resolve_target_position typed branch).
+  test_path: tests/unit/strategic/test_entity_target_objective.py::TestLifecycleThroughStrategicIntent::test_dead_target_completes_the_project_and_frees_the_slot;
+    tests/unit/strategic/test_entity_target_objective.py::TestWorkQueueSchedulesTheTermination::test_dead_target_schedules_the_holder
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  proof_type: regression
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.67.
+  support_boundary: The target-absent-from-state branch was never observed (dead entities
+    stay in state.entities) and is covered by a unit test only. SocialContractScorer
+    also puts an entity id in target_id and is not typed here (TCK-20261005-SOCIAL-CONTRACT-OBJECTIVE-TARGETS-A-MOVING-COUNTERPARTY-AS-A-FIXED-POINT).
+- id: COMB-329
+  text: 'TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK:
+    a pursuit ENTITY_MOVE (movement mode PURSUE, payload target_id) ends when the
+    live target is within the entity''s attack reach: both ENTITY_MOVE dispatchers
+    return the task to the idle encoding (ENTITY_ACT, empty payload) and clear the
+    navigation target, so the decision pass runs at the entity''s next brain cadence
+    instead of never. Non-PURSUE moves carrying a target_id and dead or missing targets
+    are unchanged. For an objective with target_entity_id the strategic redirection
+    writers set no navigation point (they still claim the navigation); the tactical
+    pass resolves the live position.'
+  v2_evidence: src/engine/candidate_selector.py (pursuit_reached_attack_range, pursuit_completion_update),
+    src/engine/executor.py and src/engine/worker_logic.py (ENTITY_MOVE branches),
+    src/systems/strategic_systems/intelligence.py and redirection.py (entity-typed
+    objective branch).
+  test_path: tests/unit/engine/test_pursuit_completion.py::TestDispatchers::test_local_executor_ends_a_pursuit_that_reached_range;
+    tests/unit/strategic/test_redirection_entity_objective.py::test_entity_typed_objective_writes_no_navigation_point
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  proof_type: regression
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.68.
+  support_boundary: 'Effect sizes were taken on origin/main 544b1d341 (dirty-set determinism
+    fix included): after-fix counts repeat exactly across two runs (values), the
+    clean-main control is one run (a sample). Tile-swap ticks fall by two orders of
+    magnitude on crowded_frontier, frontier_living_world and urban_political, but
+    decision-path attacks barely move (frontier_living_world 5 to 7) and crowded_frontier
+    stays at 0 (the brain cadence, the flee gate and BRACKETING repositioning moves,
+    which this change deliberately does not end, are the next gates). Opportunity-attack
+    counts on frontier_living_world (38 to 644) and crowded_frontier (488 to 283)
+    moved in opposite directions and are unexplained. The intelligence.py redirection
+    branch has no direct unit test; only redirection.py does.'

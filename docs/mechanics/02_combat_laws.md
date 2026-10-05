@@ -111,7 +111,7 @@ For skills with a `splash_radius`:
 1.  **Primary Target**: Receives 100% of the calculated skill damage.
 2.  **Splash Victims**: All other entities in the radius receive **50%** of the attacker's base ATK as damage.
 3.  **Line of Sight**: Splash damage is blocked by solid walls/terrain.
-4.  **Friendly Fire**: Faction allies do not take splash damage from their teammates.
+4.  **Friendly Fire**: A splash victim is hit only if the content catalog calls it hostile to the attacker (`content_semantics.faction.are_entities_hostile`, real distance, `combat_engaged=True`) -- the same test the primary-target Friendly-Fire Law below uses. It is not decided by the four-value legacy `Faction` enum, which collapses content factions (`goblin_warband` and `orc_clan` share `MONSTER_HORDE`): same-bucket enemies are splashed, different-bucket allies and neutrals are not (`TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP`).
 
 ---
 

@@ -7,9 +7,6 @@
     "goblin_hunt_warlord"
   ],
   "dungeon_crawl": [
-    "goblin_defend_village_perimeter",
-    "goblin_fetch_stolen_goods",
-    "goblin_hunt_warlord",
     "sbandit_defend_road_checkpoint",
     "sbandit_fetch_stolen_cache",
     "sbandit_hunt_camp_leader",

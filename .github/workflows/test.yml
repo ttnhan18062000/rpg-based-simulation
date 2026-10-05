@@ -24,6 +24,8 @@ jobs:
   unit-core-world:
     name: "Unit · core / world"
     runs-on: ubuntu-latest
+    needs: [resync-gate]
+    if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v10.2.0
@@ -88,6 +90,8 @@ jobs:
   unit-gameplay:
     name: "Unit · gameplay"
     runs-on: ubuntu-latest
+    needs: [resync-gate]
+    if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v10.2.0
@@ -150,6 +154,8 @@ jobs:
   unit-infra:
     name: "Unit · infra / observability"
     runs-on: ubuntu-latest
+    needs: [resync-gate]
+    if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v10.2.0
@@ -292,6 +298,8 @@ jobs:
   integration:
     name: "Integration"
     runs-on: ubuntu-latest
+    needs: [resync-gate]
+    if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v10.2.0
@@ -423,6 +431,8 @@ jobs:
   api-cli-engine:
     name: "API / CLI / engine / logging"
     runs-on: ubuntu-latest
+    needs: [resync-gate]
+    if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v10.2.0
@@ -528,6 +538,8 @@ jobs:
   agent-orchestration:
     name: "Agent orchestration / codex / replay"
     runs-on: ubuntu-latest
+    needs: [resync-gate]
+    if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v10.2.0
@@ -586,6 +598,8 @@ jobs:
   simulation-quality:
     name: "Simulation quality"
     runs-on: ubuntu-latest
+    needs: [resync-gate]
+    if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
       - uses: actions/checkout@v5
       # Every Python job installs from uv.lock (TCK-20261002-UV-FIRST-CI-JOB,
@@ -705,8 +719,8 @@ jobs:
     # TCK-20260906-CI-FRONTEND-PATH-FILTER: path-filtered via the changed-files gate below --
     # frontend/ is a fully separate toolchain (no Python import graph), so unlike the 9 explicitly
     # out-of-scope Python jobs, a path-based skip here carries no false-negative risk.
-    needs: [changed-files]
-    if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_frontend == 'true') }}
+    needs: [changed-files, resync-gate]
+    if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_frontend == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
@@ -778,12 +792,45 @@ jobs:
             echo "run_scenario_lane=true" >> "$GITHUB_OUTPUT"
           fi
 
+  # ── Registry re-sync skip gate ───────────────────────────────────────────
+  # TCK-20261005-CI-SKIP-HEAVY-JOBS-ON-REGISTRY-ONLY-RESYNC: on a pull_request `synchronize` push whose
+  # own patch (docs/REGISTRY.yaml excluded) is identical to the previous push's and whose previous commit
+  # ran green, pr_content_unchanged=true and the jobs listed in docs/testing/migration_ci_lanes.md skip.
+  # Its own job (blobless full-history clone, seconds) so the heavy jobs do not wait for the full clone
+  # of changed-files. Any error, missing data or other event gives false, so everything runs. Decision
+  # logic and the accepted risk: tools/test_architecture/registry_resync_skip.py.
+  resync-gate:
+    name: "Registry re-sync gate"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      pr_content_unchanged: ${{ steps.decide.outputs.pr_content_unchanged }}
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0, filter: "blob:none" }
+      - id: decide
+        continue-on-error: true
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ACTION: ${{ github.event.action }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.event.pull_request.head.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          OUT=$(python3 -m tools.test_architecture.registry_resync_skip 2>&1) || true
+          FLAG=$(echo "$OUT" | grep -m1 -E '^pr_content_unchanged=(true|false)$' || echo "pr_content_unchanged=false")
+          echo "$FLAG" >> "$GITHUB_OUTPUT"
+          echo "$OUT" | grep -vE '^pr_content_unchanged=(true|false)$' >> "$GITHUB_STEP_SUMMARY" || true
+
   # ── Perf / certification / arena ─────────────────────────────────────────
   perf-cert-arena:
     name: "Perf / cert / arena"
     runs-on: ubuntu-latest
-    needs: [changed-files]
-    if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_perf_cert_arena == 'true') }}
+    needs: [changed-files, resync-gate]
+    if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_perf_cert_arena == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v10.2.0
@@ -829,8 +876,8 @@ jobs:
   scenario-lane:
     name: "Scenario lane"
     runs-on: ubuntu-latest
-    needs: [changed-files]
-    if: ${{ !cancelled() && (needs.changed-files.result != 'success' || (needs.changed-files.outputs.run_scenario_lane == 'true' && needs.changed-files.outputs.run_perf_cert_arena != 'true')) }}
+    needs: [changed-files, resync-gate]
+    if: ${{ !cancelled() && (needs.changed-files.result != 'success' || (needs.changed-files.outputs.run_scenario_lane == 'true' && needs.changed-files.outputs.run_perf_cert_arena != 'true')) && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v10.2.0
@@ -854,8 +901,8 @@ jobs:
   migration-lanes:
     name: "Migration lanes"
     runs-on: ubuntu-latest
-    needs: [changed-files]
-    if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') }}
+    needs: [changed-files, resync-gate]
+    if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v10.2.0

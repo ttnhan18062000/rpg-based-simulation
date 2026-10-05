@@ -12,6 +12,7 @@ from cost_proxy import compute_cost_proxy_score  # noqa: E402
 from vocabulary import WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: E402
 from writer import write_lines  # noqa: E402
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
+from session_role import stamp as stamp_session_role  # noqa: E402
 from monitoring_shard_paths import shard_paths  # noqa: E402
 _REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
 if _REPO_ROOT_STR not in sys.path:
@@ -44,6 +45,10 @@ def validate_record(record: dict) -> list[str]:
     normalized = record.get("test_quality_findings_normalized")
     if normalized is not None and not (isinstance(normalized, int) and not isinstance(normalized, bool) and normalized >= 0):
         errors.append("test_quality_findings_normalized must be a non-negative integer")
+    # Optional reviewer-declared list of changed test files it opened (TCK-20261004-ARCH-VERIFY-TESTS-READ-EVIDENCE).
+    tests_read = record.get("tests_read")
+    if tests_read is not None and not (isinstance(tests_read, list) and all(isinstance(x, str) for x in tests_read)):
+        errors.append("tests_read must be a list of strings")
     return errors
 
 
@@ -256,7 +261,7 @@ def main():
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
     events_file = resolve_write_target("events", iso_week=iso_week)
     events_file.parent.mkdir(parents=True, exist_ok=True)
-    lines = [json.dumps(record, separators=(",", ":")) for record in records]
+    lines = [json.dumps(stamp_session_role(record), separators=(",", ":")) for record in records]  # M6a
     ok = write_lines(events_file, lines)
     if not ok:
         print(

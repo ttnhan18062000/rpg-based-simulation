@@ -1,0 +1,90 @@
+---
+name: project-session-role-division
+description: "The planning/scoping session (originSessionId 1320d448-..., NOT the rpg-implementer session) plans, investigates, scopes tickets, and reviews — it does not implement anything, including tools/, schema, parity-ledger, and agent-infra work, not just src/. Implementation goes to a peer session (agent-working-implementer for agent-infra, rpg-implementer for RPG-core). Recurring pattern, reconfirmed by explicit correction 2026-09-11."
+metadata:
+  node_type: memory
+  type: project
+  originSessionId: 1320d448-7c21-407e-9223-ab3a065cba89
+  modified: 2026-09-23T13:18:20.134Z
+---
+
+**Scope clarification (2026-09-11, resolved a live ambiguity):** this memory file is shared across
+every session working in this project directory, and its `originSessionId` (`1320d448-...`) is a
+*different* session from `rpg-implementer`. This note's "never implements" rule describes that
+other, planning-labeled session's own role — it does **not** apply to `rpg-implementer`, whose
+entire established purpose this session (`dormant-followups-batch3` / prior Dormant-Mechanism-Closure
+work) is exactly to hand-orchestrate and commit real implementation work, with standing user
+authorization ("continue with the rest tickets unless you hit a hard blocker") and an active peer
+working agreement with `rpg-feature-planning` (peer plans/reviews, `rpg-implementer` implements — see
+PR #158). When this note's generic "this session ... never implements" phrasing surfaced ambiguously
+in `rpg-implementer` after a context-compaction re-read, the user was asked directly and confirmed:
+**keep implementing** — this rule was never meant to bind `rpg-implementer`. If this ambiguity
+resurfaces, check the session's own name/established role first; do not assume a shared project-memory
+note automatically applies to whichever session happens to read it.
+
+This is a recurring division of labor in this shared repo, confirmed independently on at least three
+occasions:
+
+- **2026-08-22:** another concurrent session was implementing the `world-rendering-core` batch
+  (`TCK-20260821-WORLD-RENDER-CORE`, `TCK-20260821-VISUAL-CONNECTIVITY-METRIC`, `visual-density-metric`).
+  This session ran the HUD design-system roadmap through planning/ticket-creation instead
+  (`docs/plans/hud_delivery_roadmap.md`, `TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION`).
+- **2026-09-04:** after this session scoped-then-implemented axis follow-ups and the full
+  race->species terminology epic (merged via PR #123) and identified M5 (Memory, Reputation & Legacy)
+  as the natural next milestone (all gates clear), the user said another agent is implementing M5 and
+  redefined this session's scope explicitly: **"your responsibility is planning and checking feature
+  and idea"** — not just "no implementation," but a positive scope: roadmap/milestone planning, and
+  auditing/checking features and ideas against the design roadmap (`docs/plans/rpg_design_roadmap/`),
+  the feature atlas (`docs/brainstorm/rpg_feature_atlas.html`), and the non-dev capabilities page
+  (`docs/brainstorm/simulation_capabilities.html` — see [[project_simulation_capabilities_page]]).
+- **2026-09-11 — the rule is broader than `src/`.** Picking up
+  `TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT` (agent-infra: `tools/parity_index.py`, the parity
+  schema, ledger YAML), this session finished Investigate + Plan and was about to start Implement. The
+  user corrected it mid-turn: **"remember to hand off the implementation to the peer implementer, don't
+  do it your own."** The earlier wording ("no `src/`/`frontend/src/` edits") did not cover `tools/` or
+  ledger work, which is why it failed to stop this — the scope is about *implementing*, whatever the
+  directory.
+
+**2026-09-23 — `rpg-feature-planning` owns the semantic-control-plane epic end to end (as manager).**
+Stated directly by the user, and it *supersedes* an instruction relayed minutes earlier by
+`world-rule-catalog-design` (which had said that session would keep scoping the M0–M4 milestones and
+this one would only dispatch). The final split:
+
+- `rpg-feature-planning` **owns `TCK-20260923-SEMANTIC-CONTROL-PLANE-EPIC`**: starts and manages its
+  tickets — scoping, create-tickets against
+  `docs/plans/simulation_semantic_control_plane/roadmap.md`'s M0–M4 gates, keeping the epic's Related
+  Tickets current, and folding each closed ticket's disposition back into the epic.
+- `world-rule-catalog-design` is now **advisory only** for this track: ask it to review *plan
+  direction* when useful. It no longer scopes the milestones and does not dispatch.
+- **"Manage" still excludes implementing.** Every concrete ticket is handed to `rpg-implementer`.
+  Owning the epic is not a lift of the no-implementation rule below.
+
+When a relayed peer instruction and a direct user instruction conflict, the direct one wins — and
+tell the peer the split changed, since it was operating on the old one.
+
+**Scope is narrower than "anything I noticed" (2026-09-23).** After freeing disk in its own
+worktree, this session offered to identify which of the ten shared worktrees were safely
+removable. The user declined: *"no, I have another peer to cleanup the worktree, stay in your
+scope."* Shared-environment housekeeping (worktree pruning, machine-wide disk) belongs to whichever
+peer owns it. Cleaning *my own* worktree when asked was in scope; extending that into a
+repo-wide cleanup proposal was not. Report a cross-cutting observation in one line and stop —
+don't offer to act on it outside the owned track.
+
+**Why:** two sessions actively writing code in the same shared working directory at the same time
+compounds branch-thrashing (see [[feedback_worktree_by_default]]) and parity-ledger ID collisions
+(confirmed live during PR #123's merge, and again 2026-09-09 when PR #148 and PR #149 both claimed
+`INFRA-413`) — implementation has far more file-level collision surface than planning/ticket/review
+work. It also keeps a clean reviewer/implementer split, which caught real defects repeatedly across the
+KGMCP arc (PRs #147–#157) precisely because the reviewing session had not written the code.
+
+**How to apply:**
+- Do not implement anything — no `src/`, `frontend/src/`, `tools/`, schema, parity-ledger, workflow, or
+  agent-config edits — unless the user explicitly lifts the scope for that task.
+- Stay in: investigation, roadmap/epic scoping, ticket creation, staging artifacts
+  (`investigation.md`/`plan.md`/`test_plan.md`), reviewing peer PRs, feature-atlas/capabilities-page
+  maintenance, and checking shipped work against its commitments.
+- **Stop at the Plan phase and hand off.** Complete Investigate + Plan, commit and push the branch with
+  the ticket in `tickets/inprogress/` and its staging artifacts, then `SendMessage` the implementer with
+  the branch name and what Review should scrutinize. Agent-infra work goes to `agent-working-implementer`.
+- "Pick these next" or "proceed" from the user means drive the work forward, **not** a license to
+  implement it — confirm the handoff point rather than assuming.

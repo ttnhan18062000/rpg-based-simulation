@@ -287,14 +287,17 @@ def test_detached_head_git_failure_degrades_to_no_finding():
 def test_settings_json_new_hook_appended_at_end_not_inserted():
     settings = json.loads(Path(".claude/settings.json").read_text(encoding="utf-8"))
     pre_tool_use = settings["hooks"]["PreToolUse"]
-    assert len(pre_tool_use) == 7
-    last = pre_tool_use[-1]
-    assert last["matcher"] == "Bash"
-    commands = [h["command"] for h in last["hooks"]]
+    # Count is 8 since TCK-20261004-SESSION-LAYER-M5B-ROLE-CONDITIONAL-PRETOOLUSE-HOOK appended the role guard
+    # as PreToolUse[7]; this hook stays where it was appended, at PreToolUse[6], unmoved.
+    assert len(pre_tool_use) == 8
+    entry = pre_tool_use[6]
+    assert entry["matcher"] == "Bash"
+    commands = [h["command"] for h in entry["hooks"]]
     assert any("pre_push_advisory_hook.py" in c for c in commands)
+    assert "guard.py" in pre_tool_use[-1]["hooks"][0]["command"]
 
 
 def test_settings_json_hooks_wiring_count_bumped():
     text = Path("tests/tools/test_settings_json_hooks_wiring.py").read_text(encoding="utf-8")
-    assert 'len(settings["hooks"]["PreToolUse"]) == 7' in text
+    assert 'len(settings["hooks"]["PreToolUse"]) == 8' in text  # 8 since the M5B role guard was appended
     assert 'len(settings["hooks"]["PreToolUse"]) == 6' not in text

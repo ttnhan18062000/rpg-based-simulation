@@ -4106,17 +4106,26 @@
     "none"; (3) remaining budget slots (default BUDGET=6) filled by highest-scoring
     non-settlement candidates when settlement_style="none"; (4) dependency modules
     auto-added via BFS on WorldModuleSpec.requires; (5) fail-fast GenerationCompositionError
-    raised if two selected modules share a provides string. Output written to data/content/world_compositions/generated/{world_id}.yaml.
-    world_id = f"generated_{settlement_style}_{int(danger_level)}_{seed}". Sort is
-    deterministic: (-score, module_id) for tie-breaking.
+    raised if two selected modules share a provides string. Output written to data/worlds/{world_id}/world.yaml
+    (the authoritative source definition, overridable via generate(output_dir=...)),
+    with its resolved/ projection and a history-only generation_provenance marker
+    (TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION). world_id = f"generated_{settlement_style}_{int(danger_level)}_{seed}".
+    Sort is deterministic: (-score, module_id) for tie-breaking. (6) region ids declared
+    by more than one selected module are disambiguated by namespace: walking selected
+    modules in module_id order, a module declaring a region id already claimed by
+    an earlier module gets namespace=<its module_id> on its ModuleRefSpec, so which
+    module owns the bare id depends only on the module set, never on rank. Residual
+    collisions after namespacing raise GenerationCompositionError.
 
     '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/worldgeneration/generator.py (ProceduralCompositionGenerator,
+  v2_evidence: 'src/worldgeneration/generator.py (ProceduralCompositionGenerator._assign_region_namespaces,
     GenerationCompositionError) + src/worldgeneration/scorer.py (ModuleScorer.score)
-    + src/worldassembly/schema.py (WorldCompositionSpec, ModuleRefSpec)
+    + src/worldassembly/schema.py (WorldCompositionSpec, ModuleRefSpec, GenerationProvenanceSpec)
+    + src/worldassembly/resolve_io.py (the single resolve/write path the generator
+    shares with the resolve CLI) + src/worldbuilding/repository.py (DEFAULT_WORLDS_ROOT)
 
     '
   proof_type: null
@@ -4140,7 +4149,9 @@
   v2_evidence: 'src/worldgeneration/generator.py:452 (param_rng = DeterministicRNG(intent.seed))
     + src/worldmodules/schema.py (ModuleParameterSpec) + src/worldassembly/schema.py
     (ModuleRefSpec.parameters) + TCK-20260619-P0-DETERMINISM (replaced bare random.Random
-    with DeterministicRNG)
+    with DeterministicRNG). Parameter sampling remains fully deterministic; the only
+    run-varying field in the authored YAML is generation_provenance.generated_at,
+    a wall-clock origin record outside the composition identity (TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION)
 
     '
   proof_type: null
@@ -5095,3 +5106,79 @@
   test_path: tests/unit/entities/test_entity_identity_resolver.py::test_clean_archetype_contract_resolves_clean_identity
   divergence_note: null
   support_boundary: null
+- id: SUB-394
+  text: 'data/worlds/<world_id>/ is the sole authoritative definition of a world_id;
+    no other location may define one. Within it, world.yaml is the source definition,
+    whether written by hand or by a generator, and once written it is edited, not
+    regenerated. For a worldcomposition.v1 world, resolved/world.resolved.yaml is
+    a generated projection: never hand-edited, and it must equal what the resolver
+    produces from the current world.yaml and the current module/catalog content. A
+    committed projection that differs from a fresh resolve is a defect, not an alternative
+    definition. Enforced by architecture guards rather than by the compile pipeline:
+    whether a second definition of the same world_id exists elsewhere in the repository
+    is unknowable to a WorldValidator handed one spec, so this is a repository-layout
+    law and deliberately carries no WORLD-* rule id and no severity (TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION).
+    The retired second location, data/content/world_compositions/, held 9 duplicate
+    definitions and had never driven a production run.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "docs/architecture/world_repository_layout.md \xA71 (the normative\
+    \ authority sentence plus the source/projection clause) + docs/mechanics/06_worldbuilding_foundation.md\
+    \ \xA711 (the invariant, stated as a sibling law and explicitly not a compile\
+    \ gate) + tests/architecture/test_world_definition_single_source.py (seven guards:\
+    \ one-definition, no-redefinition-of-a-known-world_id, fresh-resolve equality\
+    \ across all 24 composition worlds, docs-stated-once, not-a-compile-gate, catalog-directory-absent,\
+    \ no-contradicting-danger_scale) + src/scenarios/resolver.py (ScenarioSetupResolver._DEFAULT_COMPOSITIONS_DIR\
+    \ = Path(\"data/worlds\"), the runtime lookup root every scenario caller now inherits;\
+    \ the per-world nested <world_id>/world.yaml layout is tried first and the flat\
+    \ <world_id>.yaml form survives only as a fallback for explicit compositions_dir\
+    \ overrides, so no caller needs its own override to reach the authoritative location\
+    \ -- CampaignOrchestrator's former data/worlds override was reverted as redundant)\
+    \ + src/content/validator.py (load_all_compositions default = DEFAULT_WORLDS_ROOT,\
+    \ the validation-side consumer; see docs/parity_ledger/infrastructure.yaml::INFRA-184)"
+  proof_type: parity
+  test_path: tests/architecture/test_world_definition_single_source.py::test_world_id_resolves_to_exactly_one_definition
+  divergence_note: null
+  support_boundary: World definition storage and freshness only. The dungeon_crawl
+    danger_scale value is owned by TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION,
+    not by this entry.
+- id: SUB-395
+  text: The world the engine loads is the one its authored definition resolves to.
+    For a worldcomposition.v1 world, WorldRepository.load_world() reads the committed
+    resolved/world.resolved.yaml, never world.yaml, so that snapshot must equal a
+    fresh resolve of world.yaml, and the content-derived counts in world_compile_report.json
+    (entity_count, region_count, resource_node_count, building_count, quest_count,
+    distinct_populated_factions) must equal a fresh compile. dungeon_crawl's accepted
+    2026-06-27 balance remedy (4 modules to 2, danger_scale 4 to 2, 32 to 12 entities)
+    was written only to the unread catalog copy and was inert until TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: data/worlds/dungeon_crawl/world.yaml (2 modules, danger_scale 2); src/worldassembly/resolve_io.py
+    render_resolved_world_yaml (shared by `resolve` and the freshness guard)
+  proof_type: null
+  test_path: tests/integration/worldassembly/test_resolved_snapshot_freshness.py
+  divergence_note: null
+  support_boundary: 'Compile-report state_hash, canonical_state_hash and place_count
+    are NOT guarded: they are stale in about 20 worlds from compiler changes since
+    the report baselines were written (see TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS).'
+- id: SUB-396
+  text: A world spec compiles only if every population spawn_region, resource-node
+    region and building region names a region the spec defines. WorldCompiler.compile
+    raises InvalidWorldSpecError listing each dangling reference before any placement;
+    the placement loops' `if region:` guards would otherwise drop the whole population,
+    node or building without an error. Mechanics Bible 06 models populations as depending
+    on their target regions (referential DAG edges).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/worldbuilding/compiler.py _assert_region_references_resolve (called
+    first in WorldCompiler.compile); docs/world/compiler_contract.md Region reference
+    check
+  proof_type: null
+  test_path: tests/unit/worldbuilding/test_world_compiler.py::test_compiler_rejects_dangling_region_reference
+  divergence_note: null
+  support_boundary: Covers the direct WorldSpec compile path. The assembly path's
+    separate preferred_regions check (worldassembly/resolver.py) is unchanged. Region
+    BOUNDS overlapping is not covered (TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER).

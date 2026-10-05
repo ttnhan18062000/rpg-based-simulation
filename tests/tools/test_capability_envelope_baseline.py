@@ -16,6 +16,8 @@ from capability_envelope_baseline import (  # noqa: E402
     FIELDS,
     add_entry,
     build_report,
+    extract_hook_entries,
+    seed_registry,
     compute_diff,
     extract_entries,
     load_registry,
@@ -45,7 +47,7 @@ def test_baseline_schema_covers_all_four_settings_local_fields():
     entries = extract_entries(settings)
     fields_seen = {field for field, _ in entries}
 
-    assert fields_seen == FIELDS
+    assert fields_seen == FIELDS - {"hooks"}  # hooks come from settings.json via extract_hook_entries
     assert ("permissions.allow", "Bash(git *)") in entries
     assert ("enableAllProjectMcpServers", True) in entries
     assert ("enabledMcpjsonServers", "knowledge-search") in entries
@@ -225,3 +227,63 @@ def test_seeded_entries_marked_unreviewed_and_manual_adds_marked_reviewed(tmp_pa
 
     registry_after = load_registry(tmp_path)
     assert registry_after[("permissions.allow", "Bash(some-new-command *)")]["reviewed"] is True
+
+
+# ---------------------------------------------------------------------------
+# Hooks (settings.json) — TCK-20261004-CAPABILITY-ENVELOPE-COVER-HOOKS
+# ---------------------------------------------------------------------------
+
+_HOOKS_SETTINGS = {
+    "hooks": {
+        "PreToolUse": [
+            {"matcher": "*", "hooks": [{"type": "command", "command": "python3 a.py"}]},
+            {"matcher": "Bash", "hooks": [{"type": "command", "command": "echo b"}]},
+        ],
+        "SessionStart": [{"hooks": [{"type": "command", "command": "echo c"}]}],
+    }
+}
+
+
+def test_extract_hook_entries_one_per_event_matcher_command():
+    assert extract_hook_entries(_HOOKS_SETTINGS) == [
+        ("hooks", "PreToolUse|*|python3 a.py"),
+        ("hooks", "PreToolUse|Bash|echo b"),
+        ("hooks", "SessionStart||echo c"),
+    ]
+
+
+def test_missing_or_malformed_hooks_degrade_without_raising(tmp_path):
+    assert extract_hook_entries(None) == []
+    assert extract_hook_entries({}) == []
+    assert extract_hook_entries({"hooks": "nope"}) == []
+    assert extract_hook_entries({"hooks": {"E": [None, {"hooks": 3}, {"hooks": [{"type": "command"}]}]}}) == []
+    bad = tmp_path / "settings.json"
+    bad.write_text("{not json", encoding="utf-8")
+    report = build_report(tmp_path / "missing.json", root=tmp_path, hooks_path=bad)
+    assert report["status"] == "no_local_file"
+    report = build_report(tmp_path / "missing.json", root=tmp_path, hooks_path=tmp_path / "absent.json")
+    assert report["status"] == "no_local_file"
+
+
+def test_seed_registers_hooks_idempotently_and_diff_reports_added_and_changed_hook(tmp_path):
+    hooks_file = tmp_path / "settings.json"
+    hooks_file.write_text(json.dumps(_HOOKS_SETTINGS), encoding="utf-8")
+    missing_local = tmp_path / "settings.local.json"
+
+    first = seed_registry(missing_local, root=tmp_path, note="n", hooks_path=hooks_file)
+    assert len(first) == 3 and all(e["field"] == "hooks" and e["reviewed"] is False for e in first)
+    assert seed_registry(missing_local, root=tmp_path, note="n", hooks_path=hooks_file) == []
+
+    clean = build_report(missing_local, root=tmp_path, hooks_path=hooks_file)
+    assert clean["fields"]["hooks"]["out_of_envelope"] == []
+
+    changed = json.loads(hooks_file.read_text(encoding="utf-8"))
+    changed["hooks"]["PreToolUse"][1]["hooks"][0]["command"] = "echo CHANGED"
+    changed["hooks"]["Stop"] = [{"hooks": [{"type": "command", "command": "echo new"}]}]
+    hooks_file.write_text(json.dumps(changed), encoding="utf-8")
+    report = build_report(missing_local, root=tmp_path, hooks_path=hooks_file)
+    assert report["fields"]["hooks"]["out_of_envelope"] == [
+        "PreToolUse|Bash|echo CHANGED",
+        "Stop||echo new",
+    ]
+    assert report["fields"]["hooks"]["not_in_live"] == ["PreToolUse|Bash|echo b"]

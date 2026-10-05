@@ -218,6 +218,39 @@ class TestCLIWritesRealRecords:
         assert "missing required fields" in result.stderr
         assert not (tmp_path / AGENT_MONITORING).exists()
 
+    def test_unregistered_default_agent_rejected_before_any_write(self, tmp_path):
+        _init_git_repo_on_test_branch(tmp_path)
+        result = self._run(
+            ["--ticket-id", "TCK-FAKE-CLI", "--tier", "hotfix", "--agent", "bogus-implementer",
+             "--events", json.dumps(_MINIMAL_EVENTS), *_TITLE_ARGS],
+            tmp_path,
+        )
+        assert result.returncode == 1
+        assert "bogus-implementer" in result.stderr and "claude" in result.stderr
+        assert not (tmp_path / AGENT_MONITORING).exists()
+        assert not (tmp_path / TICKETS / "working_log.csv").exists()
+
+    def test_unregistered_per_event_agent_rejected_before_any_write(self, tmp_path):
+        _init_git_repo_on_test_branch(tmp_path)
+        events = [{**_MINIMAL_EVENTS[0], "agent": "bogus-implementer"}, *_MINIMAL_EVENTS[1:]]
+        result = self._run(
+            ["--ticket-id", "TCK-FAKE-CLI", "--tier", "hotfix", "--events", json.dumps(events), *_TITLE_ARGS],
+            tmp_path,
+        )
+        assert result.returncode == 1
+        assert "bogus-implementer" in result.stderr
+        assert not (tmp_path / AGENT_MONITORING).exists()
+
+    def test_registered_agent_records_and_prints_the_advisory_validator_result(self, tmp_path):
+        _init_git_repo_on_test_branch(tmp_path)
+        result = self._run(
+            ["--ticket-id", "TCK-FAKE-CLI", "--tier", "hotfix", "--agent", "claude",
+             "--events", json.dumps(_MINIMAL_EVENTS), *_TITLE_ARGS],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+        assert "monitoring_anomaly_validator" in result.stdout + result.stderr
+
     def test_empty_events_array_rejected(self, tmp_path):
         result = self._run(
             ["--ticket-id", "TCK-FAKE-CLI", "--tier", "hotfix", "--events", "[]", *_TITLE_ARGS],

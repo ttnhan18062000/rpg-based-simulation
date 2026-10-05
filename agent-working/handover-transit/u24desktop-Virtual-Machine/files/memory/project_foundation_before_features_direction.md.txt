@@ -1,0 +1,26 @@
+---
+name: project_foundation_before_features_direction
+description: "User direction 2026-10-02 — fix only hard RPG bugs; defer balance and feature work until the mechanism registry, rule map and foundation are complete"
+metadata:
+  node_type: memory
+  type: project
+  originSessionId: 33223835-8fe8-4045-a973-7bed4fcef10f
+  modified: 2026-10-02T03:00:50.336Z
+---
+
+On 2026-10-02 the user set the direction: "only fix hard RPG bug, leave logic like balancing feature later, we need to craft the complete registry, rule map and foundation before planning actual implementation of RPG features."
+
+**Why:** recent batches were mostly code-vs-rule parity on dormant paths, such as the stats_dirty recalculation that never fires in corpus play. They didn't change play, and Epic K (recovery and survivable defeat) hadn't started. The user would rather finish the semantic foundation first.
+
+**How to apply:**
+- A "hard RPG bug" is a live-path defect that produces wrong world truth in corpus play: a wrong cause, owner or outcome, a conservation break, a crash, or a determinism break. It is not a dormant-path parity gap, a balance issue, or a missing feature.
+- Park the following until the foundation is done:
+  - Epic K (`TCK-20261001-EPIC-BODY-RECOVERY-AND-SURVIVABLE-DEFEAT-FOUNDATION`);
+  - `TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS` (its AC6 tripwire makes waiting safe);
+  - the SimQ balance work.
+- Foundation measured on 2026-10-02:
+  - The catalog has 172 rules, with every batch drafted and many "ready to freeze" but not frozen.
+  - `registries/rule_classifications.yaml` covers 14 of 172 rules.
+  - `rule_mechanism_edges.yaml` has 18 edges spanning 14 rules and 7 of 104 mechanisms.
+- Conflict to keep in view: the SCP `rollout_plan.md` says the rule mapping has no completion point (Stage D), and `architecture.md` §7 says "Unknown is permanent". "Complete" has to be defined compatibly, for example every rule classified, without the full rule × mechanism product.
+- Related: [[project_semantic_control_plane_role_division]], [[project_mechanism_registry_ownership_split]], [[feedback_bottom_up_rpg_feature_priority]].
