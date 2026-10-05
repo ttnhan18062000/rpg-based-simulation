@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from src.core.worker_protocol import WorkerPacket, WorkerResult, ResultStatus
+from src.engine.candidate_selector import MovementCandidateSelector
 from src.engine.domain_logic import SimulationDomainLogic
 
 
@@ -11,7 +12,12 @@ def default_simulation_worker(packet: WorkerPacket) -> List[WorkerResult]:
     Law: Pure simulation logic. No whole-world access.
     M8 Logic path for concurrent entity processing.
     """
-    if packet.work_kind == "ENTITY_MOVE":
+    if packet.work_kind == "ENTITY_MOVE" and MovementCandidateSelector.pursuit_reached_attack_range(
+        packet.subject, packet.all_entities
+    ):
+        # Pursuit complete (see executor.py's identical branch): the live target is in reach.
+        updates = {packet.subject.id: MovementCandidateSelector.pursuit_completion_update(packet.subject)}
+    elif packet.work_kind == "ENTITY_MOVE":
         target = packet.payload.get("target_position", packet.subject.navigation.position)
         # Live-refresh a stale entity-tracking target
         # (TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS) -- see the
@@ -19,7 +25,6 @@ def default_simulation_worker(packet: WorkerPacket) -> List[WorkerResult]:
         # MovementCandidateSelector.resolve_live_tracking_target's own docstring for the full
         # explanation. `packet.all_entities` is the bounded, read-only equivalent of
         # `state.entities` this WorkerPacket already carries.
-        from src.engine.candidate_selector import MovementCandidateSelector
         target = MovementCandidateSelector.resolve_live_tracking_target(
             packet.subject, packet.all_entities, target
         )

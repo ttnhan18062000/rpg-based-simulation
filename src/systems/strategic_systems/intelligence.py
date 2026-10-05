@@ -652,11 +652,19 @@ class StrategicIntelligenceSystem:
                     obj_id = strat_up.current_objective_id_set if strat_up.current_objective_id_set is not None else project.active_objective_id
                     active_obj = next((o for o in project.objectives if o.id == obj_id), None)
                     if active_obj and active_obj.status == ObjectiveStatus.ACTIVE:
-                        target_pos = getattr(active_obj, 'target_position', None)
-                        if target_pos:
-                             has_nav_update = True
-                             if entity.navigation.target != target_pos:
-                                 ent_upd = replace(ent_upd, navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=target_pos))
+                        # Entity-typed objective (TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK):
+                        # strategy names WHICH entity; the tactical pass resolves WHERE to step this tick. Writing the
+                        # creation-time `target_position` snapshot here dragged the entity back to a stale point one
+                        # strategic pass after its pursuit ended. The objective still owns the direction, so the
+                        # "no other navigation update" fallbacks below stay suppressed, but no point is set.
+                        if getattr(active_obj, 'target_entity_id', None) is not None:
+                            has_nav_update = True
+                        else:
+                            target_pos = getattr(active_obj, 'target_position', None)
+                            if target_pos:
+                                 has_nav_update = True
+                                 if entity.navigation.target != target_pos:
+                                     ent_upd = replace(ent_upd, navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=target_pos))
             
             if not has_nav_update:
                 town_target = nearest_town_tile(state.town_tiles, entity.navigation.position) or state.town_center
