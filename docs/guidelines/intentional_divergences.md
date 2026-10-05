@@ -2620,6 +2620,25 @@ The following legacy behaviors have been intentionally omitted or retired.
   `test_committed_compile_report_counts_equal_fresh_compile`).
 - **Status**: ACTIVE
 
+### DEV-010 — A Slow Host No Longer Sheds Work Mid-Tick (TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY)
+
+- **Situation**: With `audit_mode` off, `Kernel._phase_resolution` dropped the remaining sorted results once a tick
+  ran past `max_tick_budget_ms`, forced `RuntimeMode.DEGRADED`, and the end-of-tick check recorded a `9999`
+  dropped-work sentinel. Two runs of the same seed on hosts of different speed therefore computed different
+  worlds (`frontier_living_world`: 8 vs 10 deaths at tick 500).
+- **Change**: both checks are report-only. An overrun is recorded as `RuntimeStatus.budget_overrun_ms` /
+  `budget_overrun_tick` / `total_budget_overruns` and raises the watchdog alert; every result is processed and
+  the mode is not forced. `dropped_work` counts only work the scheduler shed.
+- **Rationale**: **Stabilized**. PERF-D1: under the Canonical contract the cutoff is driven by a work-unit
+  budget or is off, and under Live a decision that changes what is computed needs a control trace that does not
+  exist yet. Report-only satisfies both.
+- **Consequences recorded**: `dropped_work` is now 0 in shipped runs, because the default scheduler registers no
+  periodic task to shed (the throttle was the only source). The governor's own `tick_compute_ms` input still
+  moves the mode (PERF-D1 input 1, not changed here). The two CI skips for the throttle are left for
+  `test-architecture-reviewer` to re-evaluate.
+- **Verification**: `tests/integration/kernel/test_tick_budget_report_only.py`.
+- **Status**: ACTIVE
+
 ---
 *Last updated: 2026-09-02 (DEV-007 addendum, TCK-20260902-CLASSHALL-DEAD-CODE — deferred
 `ClassHallAction.train()` cleanup landed).*

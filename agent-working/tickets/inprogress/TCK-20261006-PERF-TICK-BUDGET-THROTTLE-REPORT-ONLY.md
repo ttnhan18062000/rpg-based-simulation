@@ -4,7 +4,7 @@ layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY
-phase: open
+phase: implement
 date: 2026-10-06
 tags: [performance, determinism, engine, testing]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, engine, testing]
 The kernel's wall-clock tick-budget checks report overruns instead of dropping results or forcing DEGRADED (PERF-D1 inputs 2 and 3)
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -162,9 +162,62 @@ host-dependent through the governor. That half waits for the full no-touch windo
   adding a field to `PressureSignals` that `AuthoritativeState` stores, because that path is gated.
 
 ## Implementation Notes
+- **Change.** `Kernel._report_budget_overrun(elapsed_ms, threshold_ms, site, tick)` replaces both blocks. The
+  mid-tick check (`_phase_resolution`) detects the overrun once per tick, records it, logs, raises the watchdog
+  alert and keeps processing every result: no `break`, no `record_dropped_work`, no `force_mode`. The
+  end-of-tick check records the same signal instead of `record_dropped_work(9999)`. The two sites use one
+  helper, so `kernel.py` shrank (module 1419 -> 1393 lines; `_phase_resolution` and `_tick_once_inner`
+  complexity down).
+- **Typed signal.** `RuntimeStatus.budget_overrun_ms`, `budget_overrun_tick`, `total_budget_overruns`, set by
+  `RuntimeStatus.record_budget_overrun(overrun_ms, tick)` (once per tick; a second report in the same tick keeps
+  the larger). It is NOT on `PressureSignals`, so the governor's inputs and the signal history do not carry it,
+  and no gated path (`state.py`) is touched. Tests assert the governor, `governance.py` and `state.py` sources do
+  not mention it.
+- **Tick number.** The end-of-tick check runs after `_phase_advancement` has moved `state.tick` on, so the first
+  version counted one tick twice (9 overruns in 8 ticks). The helper now takes the tick explicitly and the end of
+  tick passes the tick captured at its start (`tick_no`). The watchdog alert's `tick` for the end-of-tick check is
+  therefore the tick that overran, where before it was the next one.
+- **`ResourceGovernor.force_mode`** now has no caller in `src/`. Left in place (not asked to remove; tests
+  and `governor.py` stay otherwise untouched). Only a comment in `governor.py` changed.
+- **Finding: the default scheduler sheds nothing.** `DeterministicScheduler()` is built with no
+  `PeriodicDefinition`, and nothing in `src/` registers one, so `dropped_count` is always 0 in shipped runs. The
+  throttle and the 9999 sentinel were the only source of `dropped_work`. After this change `total_dropped_work` is
+  0 in shipped runs; the planner's assumption "the scheduler still sheds under DEGRADED" holds only for a
+  scheduler that has a non-authoritative periodic task. Recorded in DEV-010.
+- **Follow-ups (perf-planner files them):** (1) surfacing `budget_overrun_*` in engine_manager, the live snapshot and Prometheus; (2) `test_milestone_b_closure` failing on `origin/main` (164 ms lands in SURVIVAL, mock clock-read count drift); (3) no `src/` path registers a `PeriodicDefinition`, so governor shedding is a no-op in shipped runs (feeds PERF-M1-T05 and the governor-half design).
+- **Not done.** Surfacing `budget_overrun_*` where `dropped_work_delta` is surfaced (engine_manager,
+  live snapshot, Prometheus, `observability.py`): not small, left out. The overrun is visible in
+  `RuntimeStatus` and as the watchdog alert.
+
+### Scope 4: each test run
+| Test | Result |
+|---|---|
+| `tests/integration/world/test_camp_raid_targeting.py` | **fixed**: it reached DEGRADED only by accident through the throttle. It now uses `_DegradedGovernor` (indicated mode DEGRADED, a seam through the governor) and asserts `kernel.status.current_mode is DEGRADED`; raiders still move. rpg-planner reviews this change (relayed by perf-planner). |
+| `tests/integration/kernel/test_work_debt_stays_empty_in_production.py` | **fixed**: the precondition `total_dropped_work > 0` failed (0) because the throttle was the only source. The runs now pass a scheduler with one non-authoritative periodic task, which the governor's SURVIVAL policy sheds. The precondition is unchanged and holds; the claim is unchanged. |
+| `tests/integration/kernel/test_milestone_b_closure.py` | **fails the same on `origin/main`** (checked in a throwaway worktree of `origin/main`): under its mock clock a tick takes 164 ms (82 clock reads at 2 ms; its comment says ~63 and ~126 ms), which is SURVIVAL, not DEGRADED. Governor-driven, not the throttle, so this ticket does not cause it. Marked `slow`. Not changed. |
+| `tests/certification/test_allowed_failure_truth.py`, `test_envelope_violations.py`, `test_harness_contract.py`, `test_resilience_recovery.py` | **unaffected**: pass. `test_harness_contract.py::test_certification_detects_semantic_drift` failed once in a large parallel-load batch and passed 3 of 3 alone and in a 86-test rerun; not reproduced, wall-clock flake (10 ms budget), not attributed. |
+| `tests/unit/engine/test_resource_budget_gate.py`, `tests/unit/api/test_engine_manager.py`, `tests/unit/observability/test_obs_backpressure.py`, `tests/integration/test_observatory_stream_outage.py`, `tests/unit/core/test_watchdog.py` | **unaffected**: pass; none depends on the throttle or the sentinel (they set dropped-work values directly). |
+| `tests/unit/kernel/`, `tests/unit/core/test_signal_truth.py`, `test_signal_hardening.py`, the two inventory sync test files | pass |
 
 ## Test Summary
+- New: `tests/integration/kernel/test_tick_budget_report_only.py` (4 tests). Its first two fail on `main` before
+  the change: `force_mode` called every tick, no overrun field.
+  No end-to-end determinism test: I wrote one (two overrunning runs, same canonical hash at every tick) and it diverged
+  in 1 of 3 runs, at tick index 2. Cause: `PhaseBudgetGovernor` (`src/engine/phase_governor.py`) still reads per-phase
+  wall-clock costs and `tick_compute_ms` in every mode, a remaining input already listed in `deterministic_execution.md`
+  and out of scope here, so a non-audit hash-equality test cannot be reliable until that input goes. Removed rather
+  than loosened. The first two tests are the proof that the throttle no longer changes outcomes (they fail on `main`).
+- Scope 4 list: see the table above. 178 passed in the combined run, plus the one flake.
+- `make code-health`: 0 new, 0 worse, 9 improved (kernel.py). `make typecheck-py`: no new error.
+- `wall_clock_inventory --check` passes after regenerating with the tool.
+- Not run locally: `tests/integration/world/test_long_run_stability.py` and `tests/certification/test_cert_long_run_stability.py`
+  (CI-skipped for the throttle; AC 9 hands them to `test-architecture-reviewer`).
 
 ## Files Changed
+- `src/engine/kernel.py`, `src/engine/runtime_status.py`, `src/engine/governor.py` (comment only)
+- `tests/integration/kernel/test_tick_budget_report_only.py` (new)
+- `tests/integration/world/test_camp_raid_targeting.py`, `tests/integration/kernel/test_work_debt_stays_empty_in_production.py`
+- `docs/engine/deterministic_execution.md`, `docs/guidelines/intentional_divergences.md` (DEV-010), `docs/parity_ledger/infrastructure.yaml` (INFRA-423)
+- `docs/performance/wall_clock_inventory.{json,md}` (regenerated)
 
 ## Completion Summary

@@ -35,6 +35,8 @@ from __future__ import annotations
 import dataclasses
 
 from src.config.profiles import HardwareClass, RuntimeProfile
+from src.core.governance import RuntimeMode
+from src.engine.governor import ResourceGovernor
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.worldbuilding.compiler import WorldCompiler
@@ -44,6 +46,20 @@ _SEED = 42
 _WORLD_ID = "camp_maturity_calibration_pilot"
 _CITY_POS = (25, 25)
 _CAMP_ID = "calibration_goblin_camp"
+
+
+class _DegradedGovernor(ResourceGovernor):
+    """Holds the governor's indicated mode at DEGRADED.
+
+    This test covers the non-urgent-movement starvation that DEGRADED's EXACT_DIRTY scan policy caused
+    (TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION). It used to reach DEGRADED by accident,
+    through the kernel's wall-clock tick-budget throttle; that throttle now only reports
+    (TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY), so under NORMAL the test would pass without
+    covering that path. The mode is driven through the governor instead, and asserted below.
+    """
+
+    def _get_indicated_mode(self, profile, signals):
+        return RuntimeMode.DEGRADED
 
 
 def _build_kernel() -> Kernel:
@@ -63,7 +79,7 @@ def _build_kernel() -> Kernel:
         max_observability_budget_percent=5.0,
     )
     rng = DeterministicRNG(_SEED)
-    return Kernel(profile=profile, state=state, rng=rng, world_id=_WORLD_ID)
+    return Kernel(profile=profile, state=state, rng=rng, world_id=_WORLD_ID, governor=_DegradedGovernor())
 
 
 def test_camp_triggered_raid_spawns_real_raiders_anchored_and_targeted_correctly():
@@ -123,6 +139,9 @@ def test_camp_triggered_raid_spawns_real_raiders_anchored_and_targeted_correctly
         for _ in range(modulo + 5):
             kernel.tick_once()
 
+        assert kernel.status.current_mode is RuntimeMode.DEGRADED, (
+            "the run must be in DEGRADED; under NORMAL this test would not cover the starvation path"
+        )
         moved = [
             eid
             for eid in raider_ids

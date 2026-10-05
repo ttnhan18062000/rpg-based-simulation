@@ -89,11 +89,9 @@ class ResourceGovernor:
         # a genuine, permanent starvation loop for any entity that could never satisfy a
         # change-driven urgency condition on its own (fixed in candidate_selector.py's own
         # EXACT_DIRTY branch). This signal is a real, sustained-load-driven wall-clock
-        # measurement, same underlying condition class as (but a structurally separate code
-        # path from) _phase_resolution()'s own mid-tick `should_throttle` abort in kernel.py,
-        # a previously-identified, still-deferred determinism-breaking mechanism -- a future
-        # reader revisiting either should know both reach real gameplay consequences, not only
-        # tick timing.
+        # measurement, so it is PERF-D1 input 1: it still makes the mode depend on host speed. The
+        # kernel's mid-tick and end-of-tick budget checks no longer feed the mode or drop work
+        # (report-only, TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY); this is the one that remains.
         if signals.tick_compute_ms >= profile.max_tick_budget_ms:
             return RuntimeMode.DEGRADED
         if signals.worker_utilization >= 0.9 or signals.queue_utilization >= 0.9:

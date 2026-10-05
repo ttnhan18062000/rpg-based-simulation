@@ -12755,3 +12755,21 @@
   support_boundary: Threaded pool and local fallback. The process-pool path does not count active workers
     at all (unchanged, not covered). The kernel builds its manager from RuntimeProfile (queue depth
     gt=0), so the rejection guards a latent path.
+- id: INFRA-423
+  text: 'TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY: the kernel wall-clock tick-budget checks are report-only
+    (PERF-D1 inputs 2 and 3). With audit_mode off, a tick that overruns max_tick_budget_ms
+    still processes every result and does not force RuntimeMode.DEGRADED; the overrun is
+    recorded as RuntimeStatus.budget_overrun_ms / budget_overrun_tick / total_budget_overruns
+    (telemetry that nothing in the governor or AuthoritativeState reads) and raises the watchdog
+    alert. The 9999 dropped-work sentinel is gone, so dropped_work counts only work the scheduler
+    shed.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/kernel.py (Kernel._phase_resolution, Kernel._report_budget_overrun); src/engine/runtime_status.py (RuntimeStatus.record_budget_overrun)
+  proof_type: regression
+  test_path: tests/integration/kernel/test_tick_budget_report_only.py
+  divergence_note: DEV-010 in docs/guidelines/intentional_divergences.md
+  support_boundary: The governor's tick_compute_ms input (PERF-D1 input 1) still moves the mode by host speed;
+    runs with audit_mode off stay host-dependent through it. Overrun telemetry is not yet surfaced in
+    engine_manager, the live snapshot or Prometheus.
