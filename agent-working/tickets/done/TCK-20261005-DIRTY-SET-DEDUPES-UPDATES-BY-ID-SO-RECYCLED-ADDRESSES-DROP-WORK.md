@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-DIRTY-SET-DEDUPES-UPDATES-BY-ID-SO-RECYCLED-ADDRESSES-DROP-WORK
-phase: implement
+phase: done
 date: 2026-10-05
 tags: [engine, determinism]
 ---
@@ -17,7 +17,7 @@ recycled address is silently skipped — the leading candidate cause of a confir
 determinism break
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -108,18 +108,18 @@ caches frozen world views keyed on `id(obj)` (`CORE-PERF-020`). Same reuse risk,
   would change what the canonical contract means. If it looks necessary, bring it to the planner.
 
 ## Acceptance Criteria
-- [ ] Scope 1's strong-reference discriminator is run and its result stated. **"Divergence survived, so
+- [x] Scope 1's strong-reference discriminator is run and its result stated. **"Divergence survived, so
       the `id()` de-dup is not the cause" is a valid and valuable outcome** — report it rather than
       hunting for a way to confirm the hypothesis.
-- [ ] Scope 2's bare-`main` comparison is reported, with the commit named.
-- [ ] If fixed: the de-dup key no longer depends on object identity, and no production code retains
+- [x] Scope 2's bare-`main` comparison is reported, with the commit named.
+- [x] If fixed: the de-dup key no longer depends on object identity, and no production code retains
       references to keep `id()` unique.
-- [ ] `get_frozen` is probed and the result recorded either way.
-- [ ] A regression test exists that fails deterministically on the old keying — not a flaky
+- [x] `get_frozen` is probed and the result recorded either way.
+- [x] A regression test exists that fails deterministically on the old keying — not a flaky
       run-twice-and-compare.
-- [ ] `deterministic_execution.md:69` is corrected, or the investigation records why it still stands.
-- [ ] `docs/parity_ledger/infrastructure.yaml` updated (determinism/replay is its subsystem).
-- [ ] The ~56-skipped-updates-per-8-tick figure is re-measured after the fix and reported.
+- [x] `deterministic_execution.md:69` is corrected, or the investigation records why it still stands.
+- [x] `docs/parity_ledger/infrastructure.yaml` updated (determinism/replay is its subsystem).
+- [x] The ~56-skipped-updates-per-8-tick figure is re-measured after the fix and reported.
 
 ## Related Tickets
 - `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` (closed 2026-10-05) — the
@@ -161,13 +161,36 @@ caches frozen world views keyed on `id(obj)` (`CORE-PERF-020`). Same reuse risk,
 - Line numbers are at `da064fe78`.
 
 ## Implementation Notes
-_(not started)_
+- **Scope 1 (discriminator):** on bare `origin/main` `820329124`, 24 trials x 8 ticks per process, four processes:
+  plain 8 of 96 trials diverged (3 of 4 processes), strong references kept 0 of 96 with 0 `id()` skips. The
+  premise holds; full table in `investigation.md`. Caveat: short windows, one world.
+- **Scope 2:** bare `main` diverges on its own, so the break predates and is independent of this week's tickets.
+- **Fix:** `DirtySetBuilder.mark_from_update` keeps no identity-keyed registry (`src/core/dirty.py`); marking is
+  idempotent for one entity's own update. No references are retained and no replacement key was introduced.
+  Fixed tree: 0 of 144 trials diverged (six processes), on the same trace as the unfixed majority.
+- **Scope 4 (`get_frozen`):** 300 ticks, 0 id matches, 0 stale hits; not live on this evidence, not proven safe
+  (and its hit rate looks near zero, not investigated). No change.
+- **Doc:** `docs/engine/deterministic_execution.md` `audit_mode` sentence corrected to say it is necessary but was
+  not sufficient, with the measured scope. Parity: `INFRA-421`. No intentional-divergence entry: the determinism
+  claim was documentation, not a recorded divergence.
+- **Re-measurement of the "~56 skips per 8-tick trial":** that figure belongs to the removed code, so after the
+  fix the equivalent statement is the 0 of 144 above.
+- Holds on `src/core/dirty.py`, `src/engine/executor.py`, `src/engine/checkpoint.py` granted; only `dirty.py` was
+  edited. No function-local imports added; `ruff` and the other code-health tools are absent locally (CI first).
 
 ## Test Summary
-_(not started)_
+New `tests/unit/core/test_dirty_set_builder_identity.py` (3 tests, forced `id()` collision; 2 of 3 fail on the old
+code, verified by restoring it). Sweep (certification, regression, architecture, engine, integrity,
+mechanic_scenarios, scenarios, integration/optimization, unit core/engine/domains/strategic/combat/world/systems,
+`-m "not slow"`): 2717 passed, 3 skipped, 1 xfailed, 1 failed: the known local 60 s `test_behavioral_5k_regression`
+conftest timeout. Not run: 2000-tick runs after the fix; other worlds.
 
 ## Files Changed
-_(not started)_
+`src/core/dirty.py`, `tests/unit/core/test_dirty_set_builder_identity.py` (new),
+`docs/engine/deterministic_execution.md`, `docs/parity_ledger/infrastructure.yaml`, this ticket and its artifacts.
 
 ## Completion Summary
-_(not started)_
+The `id()`-keyed de-duplication in `DirtySetBuilder` was the cause of the `audit_mode` run-to-run divergence on
+the window measured (8 of 96 trials diverged on bare `main`, 0 of 96 with address reuse made impossible, 0 of 144
+after the fix). It is removed without retaining references. Single-run measurements taken before this lands remain
+samples. Open: full-length post-fix runs, other worlds, and `get_frozen`'s untested but so-far-clean hazard.

@@ -60,7 +60,6 @@ class DirtySetBuilder:
     Mutable builder for DirtySet to avoid excessive object creation and set copying.
     """
     def __init__(self, base: Optional[DirtySet] = None):
-        self._processed_upd_ids = set()
         if base:
             self.movement = set(base.movement_entities)
             self.combat = set(base.combat_entities)
@@ -139,11 +138,13 @@ class DirtySetBuilder:
         self.camps.update(update.camp_updates.keys())
 
         # Entity updates
+        # No identity-keyed de-duplication here (TCK-20261005-DIRTY-SET-DEDUPES-UPDATES-BY-ID-...): the
+        # builder used to skip an update whose `id()` it had seen, but `id()` is unique only among live
+        # objects, so an update allocated at a recycled address was silently skipped and its entity never
+        # marked dirty, making strategic scheduling allocation-dependent. Every mark below is idempotent
+        # for one entity's own update (set adds; the town flag follows that update alone), so re-marking
+        # an update seen on an earlier call changes nothing and needs no memory of it.
         for e_id, e_upd in update.entity_updates.items():
-            upd_id = id(e_upd)
-            if upd_id in self._processed_upd_ids:
-                continue
-            self._processed_upd_ids.add(upd_id)
             if e_upd.new_position or e_upd.navigation:
                 self.movement.add(e_id)
                 if e_upd.new_position:
