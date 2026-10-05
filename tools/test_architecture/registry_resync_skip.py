@@ -18,6 +18,9 @@ A chain of re-syncs works: each push compares against its own BEFORE, which was 
 skipped. The accepted risk is that the PR's code combined with the new main commits goes untested before
 merge; the push to main always runs everything and surfaces a clash there.
 
+The `resync-gate` job that calls this takes about 15 s (blobless full-history clone), so the heavy jobs wait
+on seconds, not on the roughly 100 s `changed-files` clone.
+
 Run: `python3 -m tools.test_architecture.registry_resync_skip` with the inputs in the environment
 (`EVENT_NAME`, `EVENT_ACTION`, `BASE_SHA`, `BEFORE_SHA`, `AFTER_SHA`, `GITHUB_REPOSITORY`, `GITHUB_TOKEN`).
 Prints `pr_content_unchanged=<bool>` on the first line and a markdown summary after it; the workflow
