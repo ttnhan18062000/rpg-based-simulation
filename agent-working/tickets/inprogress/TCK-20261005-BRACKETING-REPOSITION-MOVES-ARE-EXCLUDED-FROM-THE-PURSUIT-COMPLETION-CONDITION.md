@@ -4,7 +4,7 @@ layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION
-phase: open
+phase: inprogress
 date: 2026-10-05
 tags: [engine, combat]
 ---
@@ -17,7 +17,7 @@ tags: [engine, combat]
 mode but `PURSUE` — so the sticky-task defect may be fixed for one movement mode and live in the bigger one
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
