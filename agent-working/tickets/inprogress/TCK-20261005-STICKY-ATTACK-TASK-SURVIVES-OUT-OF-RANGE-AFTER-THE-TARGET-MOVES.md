@@ -141,13 +141,35 @@ closes, so it is worth doing and is not the headline.
   general pattern. The scope-1 measurement settles that; do not generalise from it beforehand.
 
 ## Implementation Notes
-(to be filled by the implementer)
+Scope 1 measured on `origin/main` `7a9f302db` (contains #344 and #347; source identical, only ticket files differ):
+`audit_mode=True`, tick budget disabled, seed 42, 2000 ticks, one simulation at a time, every world run twice and the
+pairs matched exactly, so the figures are **values**. `execute_attack` calls / `OUT_OF_RANGE` / repeats: crowded_frontier
+0/0/0, urban_political 0/0/0, dungeon_crawl 4/0/0, frontier_living_world 7/2/1. The one repeat is two verdicts for one
+pair inside a single tick; no streak crosses a tick boundary in any world. Lane A's "three of four" was a pre-fix sample
+and is not reproduced.
+
+Scope 2 rule, recorded: **no change to the action pipeline.** The repeat is bounded (the pursuit fix already re-closes
+range), which is the scale-down-to-nothing outcome the ticket permits. Scopes 3-5 therefore do not apply: no source,
+comment, test, control, engine-doc or parity-ledger change, and there is no after-change figure to take. The "multiplied
+vs base range" question is moot with no change; the answer for a future reset is the multiplied range
+(`legality.py:284`), recorded in `investigation.md`.
+
+Caveat stated plainly: 11 `execute_attack` calls in 4 x 2000 ticks cannot show the repeat is impossible, only that none
+occurs on current main. The decision-driven attack path is still mostly closed by the flee gate. **Re-open trigger:**
+re-run `probes/measure.sh` after the flee-gate ticket (`TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-...`) lands; if any
+streak crosses a tick boundary, implement the `OUT_OF_RANGE` reset with a disabling control.
 
 ## Test Summary
-(to be filled by the implementer)
+No behaviour changed, so no tests were added. Evidence is the matched-pair measurement above. Instrument check:
+`frontier_living_world` records the event the probe counts (2 `OUT_OF_RANGE`, 1 repeat). `test_validate_frontmatter` and
+`test_generate_registry`: 173 passed; the one failure, `test_check_flag_detects_no_drift_against_real_registry`, is a local
+artefact (it regenerates in place from this worktree, which carries Lane B's untracked ticket file) and was not reproduced
+from a clean tree.
 
 ## Files Changed
-(to be filled by the implementer)
+- `agent-working/staging_artifacts/.../probes/oor_probe.py`, `measure.sh` (new; moved to stored_artifacts at close)
+- `docs/REGISTRY.yaml` (regenerated from a clean export)
+- no `src/`, `tests/` or `docs/engine/` change
 
 ## Completion Summary
-(to be filled by the implementer)
+Measured, bounded, closed without a code change per scope 2. Re-open trigger recorded above.
