@@ -38,7 +38,7 @@ Regions are not static. They react to the violence and activity within their bor
 **Flagged, not yet resolved, 2026-09-02:** `src/engine/apply_plan.py:218` applies a separate `+2.0` trauma
 increment in a context this section's death-only narrative doesn't cover. Not confirmed wrong — just
 undocumented; needs its own follow-up check before this cycle description can be called complete.
-3.  **Hazard Scaling**: Unstable regions gain **+0.01** `Hazard Level` per world cycle.
+3.  **Hazard Scaling**: Unstable regions gain **+0.01** `Hazard Level` each time the world-dynamics step runs while `Trauma Score > 50.0`. `Hazard Level` is **open-ended** (owner decision 12, 2026-10-05): there is no ceiling on this growth, so a region that stays above the threshold keeps gaining hazard, linearly, for as long as it does. No ceiling is invented here; adding one needs its own reason and owner decision.
 
 > For how per-entity Hazard Level drain is actually resolved against an entity standing in
 > the region (including faction-based endurance to a region's hazard kind), see
@@ -75,7 +75,7 @@ Conquest and liberation trigger at `CONQUEST_THRESHOLD = -50.0` / `LIBERATION_TH
 **Impact of Ownership**: Faction-owned regions may provide safe zones for allies, trigger reinforcement spawns, or apply special economic modifiers to local trade.
 
 ### Hazard Impacts
-As `Hazard Level` (0.0 to 1.0) increases, entities within the region suffer:
+As `Hazard Level` increases, entities within the region suffer (`Hazard Level` is open-ended: authored values run to 4.0 and the generator authors above 1.0; owner decision 12):
 *   **Passive HP Drain**: Health is lost every tick based on the hazard's intensity.
 *   **Environmental Fatigue**: Sleep Debt increases by **+1.0** (extra exhaustion) due to extreme conditions.
 *   **Suppression**: If a region is "Suppressed," entities lose **-5.0 Readiness** per tick, significantly slowing down their action frequency.
