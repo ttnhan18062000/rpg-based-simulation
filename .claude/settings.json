@@ -134,7 +134,7 @@
         ]
       },
       {
-        "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit",
+        "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit|SendMessage",
         "hooks": [
           {
             "type": "command",

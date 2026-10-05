@@ -632,6 +632,29 @@ Already covered by the existing `agent-working/agent-monitoring/data/*/*.jsonl m
 
 ---
 
+## `role_boundary` (`agent-working/agent-monitoring/data/YYYY-Www/role_boundary.jsonl`)
+
+Advisory, log-only session-layer boundary events (`TCK-20261004-SESSION-LAYER-M5C-READ-ONLY-ALLOWLISTS-AND-ROLE-BOUNDARY-EVENTS`;
+plan `docs/plans/agent_infrastructure/session_layer_working_process.md` sections 9.0 and 10). Like
+`claim_detections`, this is its own file family: it is not an `events` row, so it carries no `agent`,
+`phase` or `run_id`, never reaches the `vocabulary_drift` ratchet, and no gate reads it. Written by
+`tools/sessions/boundary.py`, called from `tools/sessions/guard.py` only for a tool call the guard has
+already allowed, through the shared `writer.py::write_line()` (own `role_boundary.jsonl.lock`). It warns the
+session (hook `additionalContext`) and logs; it never denies or asks. A write failure is swallowed.
+
+Emitted for a **resolved** role only, once per `(kind, path class or target)` per session
+(seen-state under the session-role state root, `_boundary/<session_id>.json`):
+
+| `kind` | Fires when | Extra fields |
+|---|---|---|
+| `edit_outside_owns` | an Edit/Write/MultiEdit/NotebookEdit path that another domain owns per `tools/sessions/route.py` (`from_domain` = the caller's domain; a split path fires when it does not include the caller's domain), and the role's narrow `may_write` or `owns` globs do not cover it. An unowned path never fires; a `may_write` of `**` (implementers) exempts nothing. | `path` (repo-relative), `owner_domains`, `owner_seats` |
+| `message_class_mismatch` | a `SendMessage` whose first line begins `dispatch`, `handoff` or `request` to a role whose `accepts_dispatch_from` lists neither the sender's instance nor its base role. Message content is never recorded. Active only when `SendMessage` is in the guard hook's matcher. | `target`, `message_class`, `accepts_dispatch_from` |
+
+Common fields: `ts`, `event` (`"role_boundary"`), `kind`, `session_id`, `session_role` (the resolved role
+instance; never the `agent` vocabulary), `function`, `domain`, `tool`. Covered by the existing
+`agent-working/agent-monitoring/data/*/*.jsonl merge=union` glob. Harden only what recurs after a measured
+window (plan section 10; M7).
+
 ## Join Example
 
 ```python
