@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-CONTRACT
-phase: open
+phase: done
 date: 2026-10-06
 tags: [architecture, live-map]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, live-map]
 Layered terrain borders: a priority order, a shared fringe-mask key family and a pure client compositor (contract and code, no final art)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -69,11 +69,11 @@ whole map once, with borders.
 - Changing tiles, the fills, the `AM5-S` rule or the approved W03-SET criteria C1-C5.
 
 ## Acceptance Criteria
-- [ ] Priority order and `crisp` set approved by the user (own answer, dated), written in the criteria doc and as one code table with a test equal to the doc.
-- [ ] C6 approved and recorded in a new dated section; C1-C5 and `AM5-S` unchanged.
-- [ ] Compositor tests: no overlay between equal codes; higher-ranked neighbour fringes onto lower only; `crisp` neither gives nor takes; inner corner replaces two edges; draw order; same `(x, y)` gives the same overlays every run; a missing mask gives no overlay; the 4 px cap holds.
-- [ ] Mutant proof: reverse the order comparison, or drop the `crisp` check, and a test fails for the right reason.
-- [ ] Mask key family registered (optional keys), ADR row and `store_contract.md` updated; catalog `verify` clean.
+- [x] Priority order and `crisp` set approved by the user (own answer, dated), written in the criteria doc and as one code table with a test equal to the doc.
+- [x] C6 approved and recorded in a new dated section; C1-C5 and `AM5-S` unchanged.
+- [x] Compositor tests: no overlay between equal codes; higher-ranked neighbour fringes onto lower only; `crisp` neither gives nor takes; inner corner replaces two edges; draw order; same `(x, y)` gives the same overlays every run; a missing mask gives no overlay; the 4 px cap holds.
+- [x] Mutant proof: reverse the order comparison, or drop the `crisp` check, and a test fails for the right reason.
+- [x] Mask key family registered (optional keys), ADR row and `store_contract.md` updated; catalog `verify` clean.
 
 ## Related Tickets
 - TCK-20261005-EPIC-VISUAL-ASSET-TERRAIN-SET-REVIEW (epic), TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-MASKS (next)
@@ -95,9 +95,16 @@ whole map once, with borders.
 - The 4 px cap is a proposal (a quarter of the cell); ask with the order if it seems wrong.
 
 ## Implementation Notes
+User answers (blocking questions, 2026-10-06): priority order and `crisp` set as proposed, depth cap 4 px, criterion C6 as worded; and (for the registry hash move) assembling `pilot/rc-0004`. Written in `docs/assets/pilot_terrain_m5_criteria.md` (AM5-B, AM5-W03-SET C6) before any art; AM5-S and C1-C5 unchanged.
+Code: `frontend/src/visualAssets/terrainBorders.ts` (table, `borderOverlays`, `rotate`, `maskCapViolation`, `composeCell`). Rules fixed there: neighbours are 4 sides and 4 diagonals; two adjacent sides of the same higher terrain give one inner corner (greedy NE, SE, SW, NW, a side used once; four sides give two inner corners); an outer corner only when neither adjacent side is that terrain; a missing mask leaves that piece out (a missing inner corner falls back to its two edges); variants by the detail hash under `border:<key>:<neighbour>:<rotation>`; cap enforced in `composeCell` whatever a mask holds.
+Registry: `border.edge`, `border.outer_corner`, `border.inner_corner` (optional, `v1`-`v3`), ADR D19, store_contract section, fallback_safety (decorative). `pilot/rc-0004` assembled (candidate only; same entries as rc-0003, test asserts it), fixture re-exported, guards re-pointed.
+Findings: draft sets accept the family and a transparent mask (probed in a guarded scratch copy; nothing real changed); `adopt-set`'s Aseprite re-render match with alpha is unproven until the first mask set; the `crisp` check in `higher()` is an equivalent mutant (rank absence covers it), the invariant is guarded by the exclusivity and doc tests.
 
 ## Test Summary
+`tests/visual_assets` 1534 passed (foreground, 2 GB cap); `vitest src/visualAssets` 207 passed; `tsc -b`, `eslint src/visualAssets` clean; catalog `verify` ok. Mutants caught: reversed order comparison, cap removed, depth 5, wall in the order.
 
 ## Files Changed
+frontend/src/visualAssets/{terrainBorders.ts,__tests__/terrainBorders.test.ts,__fixtures__/pilot/runtime_manifest.json}; visual_assets/catalog/definitions/visual_keys.yaml, manifests/candidates/pilot/rc-0004.json; tests/visual_assets/{test_pilot_fixture,test_catalog_integrity}.py, store/unit/test_registry.py, drawing/test_store_tools_stdio.py; docs/assets/{pilot_terrain_m5_criteria,store_contract,fallback_safety,pilot_terrain_key,retention_and_rollback}.md, docs/architecture/visual_asset_foundation_adr.md; agent-working/.
 
 ## Completion Summary
+Border contract fixed with the user's approvals before any art: priority order, crisp set, 4 px cap, C6; a tested pure compositor with the cap enforced in code; the `border.*` mask family registered with its ADR row and docs; `pilot/rc-0004` assembled with the user's approval. No masks drawn, nothing adopted. Next: child 4 draws the masks.

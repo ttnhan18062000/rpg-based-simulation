@@ -60,6 +60,12 @@ The behaviour, with the code and tests that show it:
 What is not covered by that evidence: no assistive technology was run, one reviewer judged the tile, and the real Live Map's hover text and a real deployment were not exercised
 (`docs/assets/surface_rehearsal_result.md`, `AM5-W05`, `AM-C07` are `INCONCLUSIVE`).
 
+## Terrain borders (D19)
+
+Border masks (`border.*`) and the fringes they draw are `decorative`: the fringe adds look between two terrains and carries no fact. A missing, corrupt or unavailable mask leaves no fringe for that piece
+(a missing inner-corner mask falls back to its two edges), which is exactly the hard edge the map showed before borders existed. The role's preserved fact, "this cell is X", is protected twice: a fringe covers
+at most the outer 4 px of a 16 px cell, enforced by the compositor whatever a mask holds, so the cell centre always shows its own terrain; and built terrains (`crisp`) get no fringe at all.
+
 ## Colour vision: an open risk against `identifying`
 
 The fallback for terrain is the flat fill, and terrain types are told apart by flat hue. So a pair of fallbacks that are hard to tell apart is a safety question for the `identifying` class, not

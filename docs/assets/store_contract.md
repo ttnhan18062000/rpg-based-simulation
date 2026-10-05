@@ -166,6 +166,13 @@ unique per slot, sorted, at most `MAX_DRAFT_SET_ENTRIES` (256; no limit on the n
   unknown-field rejection; tested in Python and in the client). The isolated page that shows it is documented in `docs/assets/drawing_tools.md`.
 - Layering (`tests/visual_assets/test_boundaries.py`): `drafts` is a store layer of its own (it writes outside the catalog and records no approval, so it is not a gate layer, but the drawing server may not import it); `setadoption` is a gate layer like `adoption` and `revoke`, never importable from `visual_assets/drawing/`, and the CLI is the only caller.
 
+### Non-terrain families in a draft set: border masks (D19)
+
+A draft set accepts any registered key: `Family` is a free `[a-z][a-z0-9_]{0,31}` string and `draft keep` checks only that the key and detail value are declared. The `border.*` keys (`border.edge`,
+`border.outer_corner`, `border.inner_corner`, each optional with a detail axis `v1`-`v3`) therefore live in `terrain-v1` beside the tiles, and one `adopt-set` covers both. A mask is a 16x16 image whose alpha channel is a
+1-bit shape, authored for one orientation (`edge`: north, rows 0-3; `outer_corner`: north-east; `inner_corner`: north plus east) and rotated by the client in 90-degree steps; rotation is client-side and the store records
+no orientation. The store does not check shape, depth or orientation: the 4 px cap is enforced by the client compositor and checked on every committed mask by a test. See `docs/assets/pilot_terrain_m5_criteria.md` (AM5-B).
+
 ## MCP tools on the drawing server (restart the server for new tools to appear in a running session)
 
 | Tool | What it does | Writes |

@@ -12,7 +12,7 @@ def test_the_committed_catalog_has_no_findings():
 
 def test_the_committed_catalog_holds_exactly_the_pilot_asset():
     # TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE (plain) + TCK-20261004-VISUAL-ASSETS-FOREST-DETAIL-TILES (bush, tree): three adopted tiles of one key,
-    # one artifact each (+ its record), three release candidates (rc-0001 and rc-0002 are retained history; rc-0003 follows the registry change that added the other terrain keys)
+    # one artifact each (+ its record), four release candidates (rc-0001 and rc-0002 are retained history; rc-0003 follows the registry change that added the other terrain keys, rc-0004 the one that added the border mask keys)
     assert records.list_source_ids() == ["terrain_forest", "terrain_forest_bush", "terrain_forest_tree"]
     generated = sorted(p.name for p in (config.CATALOG_ROOT / "generated").iterdir() if p.name != ".gitkeep")
     assert generated == ["terrain_forest--x1", "terrain_forest_bush--x1", "terrain_forest_tree--x1"]
@@ -20,4 +20,4 @@ def test_the_committed_catalog_holds_exactly_the_pilot_asset():
         assert len([p for p in (config.CATALOG_ROOT / "generated" / directory).iterdir() if p.suffix == ".png"]) == 1
     candidates = sorted(p.name for p in (config.CATALOG_ROOT / "manifests" / "candidates").iterdir() if p.name != ".gitkeep")
     assert candidates == ["pilot"]
-    assert sorted(p.name for p in (config.CATALOG_ROOT / "manifests" / "candidates" / "pilot").iterdir()) == ["rc-0001.json", "rc-0002.json", "rc-0003.json"]
+    assert sorted(p.name for p in (config.CATALOG_ROOT / "manifests" / "candidates" / "pilot").iterdir()) == ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json"]
