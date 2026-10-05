@@ -78,6 +78,20 @@ None.
 - Conflicts with PR #329 (merge 2026-10-18): `.github/workflows/test.yml`, roadmap, `agent_working_environment.md`, possibly `pyproject.toml`, and this ticket file; the planner is told which files conflict before any resolution
 
 ## Implementation Notes
+### Decision: `exclude_type_checking_imports = false` (global, 2026-10-05)
+import-linter has one global TYPE_CHECKING switch; the tests disagree (evaluation Section 3). Options measured there:
+- **false (chosen):** a `TYPE_CHECKING` import counts. No contract is looser than the test it will replace: the four whose tests count TC (`c09` admission, `c11` rendering, `c12` entities, `c13` campaign state) stay exact; `c06` is unchanged. Layers baseline is 113 import lines.
+- true: layers baseline 99, and `c01/c04/c08` need no pins, but `c09/c11/c12/c13` would miss a TC injection (the evaluation's "missed" rows), so retiring those tests in ticket 2 would lose coverage.
+
+Per-contract semantic change (tests that skip TC today; the contract flags a NEW `TYPE_CHECKING` import in these where the test would not):
+- `c01_core_not_domains`: 4 existing TC imports pinned in `ignore_imports`
+- `c04_domains_not_obs_pinned`: 2 pinned
+- `c08_domain_models_pure` (belief/fame/fidelity): 1 pinned
+- `c02`, `c03`, `c05` (phase18) and `c07` (api guard): baseline 0 with TC counted, no pin; same change for new TC imports
+Unchanged semantics: `c06`, `c09`, `c11`, `c12`, `c13`. The exact pinned lines are written with the contracts, and `unmatched_ignore_imports_alerting` makes a fixed one show as stale.
+
+### Pin and config (first implementation commit)
+`import-linter==2.15` (grimp 3.17) added to the `lint` group; `uv.lock` re-locked (adds only those two packages). The `requirements.txt` export is unchanged: it is built from the default dependency set without `lint`. `tests/static/test_ci_uv_install.py` (lint group membership) updated to include `import-linter`; `tests/static` plus the scenario-lane pin pass (82 passed). `[tool.importlinter]` holds `src` plus the 20 `src.<pkg>` roots, `include_external_packages = true`; no contracts yet (they follow). Local runs use `uvx --from import-linter==2.15 lint-imports` until `uv sync` is run in a worktree.
 
 ## Test Summary
 
