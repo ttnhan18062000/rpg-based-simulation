@@ -66,11 +66,11 @@ Child of `TCK-20261002-EPIC-SESSION-LAYER-COMMUNICATION-AND-AUTHORITY`. **Hold r
 - **Landed (owner approved the literal diff directly in this terminal, 2026-10-05):** `.claude/settings.json` `permissions` gained an `ask` list (`gh pr merge *`; remote-branch deletion via `git push --delete`, `git push * :*`, `gh api -X/--method DELETE`; force push `--force*` and `-f`; `git worktree remove *`; `rm * agent-working/agent-monitoring/*`) and a `deny` list (`gh pr merge * --admin*`). No `allow` rule changed. No ask rule for `data/runs` removal, by owner decision (the close-out uses it).
 - Settings-shape test search: `tests/tools/test_settings_json_hooks_wiring.py` pins hooks counts and that `permissions.allow` exists; nothing pins the permissions block beyond that, so no test change was needed.
 - Rule test harness: `tests/tools/test_settings_permission_rules.py` (must-match and near-miss fixtures per authority class).
-- **Gaps in the approved pattern text, found by the harness (strict xfails, not hidden):** `git push origin main -f` (bare trailing `-f`), `gh pr merge --admin 5` (flag directly after `merge` is only asked, not denied) and bare `rm agent-working/agent-monitoring/...` (no flag word) are not matched. A corrected text needs the owner's confirmation: `Bash(git push * -f*)`, `Bash(gh pr merge*--admin*)` and `Bash(rm *agent-working/agent-monitoring/*)`. M5B's hook is the intended second layer.
+- **Gaps found by the harness, then closed (owner approved the corrected text directly, 2026-10-05):** the first approved text missed a bare trailing `-f`, `gh pr merge --admin 5` (only asked, not denied) and bare `rm agent-working/agent-monitoring/...`. Patterns are now `Bash(git push * -f*)`, `Bash(gh pr merge*--admin*)` and `Bash(rm *agent-working/agent-monitoring/*)`; the three strict xfails became normal passing tests.
 - **Still open:** acceptance criterion 1's live probe with a positive control (harness blocks or asks without the hook installed) has not been run, so this ticket stays INPROGRESS.
 
 ## Test Summary
-`tests/tools/test_settings_permission_rules.py`: 3 xfail (the gaps above, strict) and the must-match, near-miss, deny-admin, no-widened-allow and data-runs-no-ask tests pass. The live harness probe is not done.
+`tests/tools/test_settings_permission_rules.py`: all pass (must-match and near-miss fixtures per class, deny-admin, no widened allow, no data-runs ask, and the three formerly-xfail gap cases). The live harness probe is not done.
 
 ## Files Changed
 None yet.

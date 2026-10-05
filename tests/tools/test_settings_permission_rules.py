@@ -10,8 +10,6 @@ import json
 import re
 from pathlib import Path
 
-import pytest
-
 _SETTINGS_PATH = Path(__file__).parent.parent.parent / ".claude" / "settings.json"
 
 
@@ -94,20 +92,15 @@ def test_data_runs_removal_has_no_ask_rule_by_owner_decision():
     assert not _hits("ask", "rm -rf reports/release_proof/some_run")
 
 
-# Known gaps in the owner-approved pattern text (found by this harness, 2026-10-05). Each is a strict
-# xfail: it documents the behaviour that should hold, and flips to a failure the moment a corrected
-# pattern lands, so the gap cannot be forgotten and the harness is not weakened to hide it.
-# M5B's role-conditional hook is the intended second layer for these.
-@pytest.mark.xfail(strict=True, reason="`git push * -f *` needs a trailing space, so a bare trailing -f is not asked")
+# The three gaps the first version of this harness found were closed by the owner-approved corrected
+# patterns (2026-10-05, confirmed directly in the implementer terminal).
 def test_force_push_with_trailing_f_flag_is_asked():
     assert _hits("ask", "git push origin main -f")
 
 
-@pytest.mark.xfail(strict=True, reason="`gh pr merge * --admin*` needs a word before --admin, so `merge --admin 5` is only asked")
 def test_admin_flag_directly_after_merge_is_denied():
     assert _hits("deny", "gh pr merge --admin 5")
 
 
-@pytest.mark.xfail(strict=True, reason="`rm * agent-working/...` needs a flag word, so a bare `rm agent-working/...` is not asked")
 def test_rm_without_flags_on_monitoring_data_is_asked():
     assert _hits("ask", "rm agent-working/agent-monitoring/data/2026-W41/x.runs.jsonl")

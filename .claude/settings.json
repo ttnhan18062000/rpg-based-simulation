@@ -60,12 +60,12 @@
       "Bash(git push --force*)",
       "Bash(git push * --force*)",
       "Bash(git push -f *)",
-      "Bash(git push * -f *)",
+      "Bash(git push * -f*)",
       "Bash(git worktree remove *)",
-      "Bash(rm * agent-working/agent-monitoring/*)"
+      "Bash(rm *agent-working/agent-monitoring/*)"
     ],
     "deny": [
-      "Bash(gh pr merge * --admin*)"
+      "Bash(gh pr merge*--admin*)"
     ]
   },
   "hooks": {
