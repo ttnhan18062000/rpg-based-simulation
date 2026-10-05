@@ -1159,17 +1159,19 @@ class Kernel:
             )
 
     def _phase_persistence(self) -> None:
-        tick_hash = "SKIPPED"
+        from src.engine.checkpoint import CanonicalHashScheduler
+        tick = self._state.tick
         if self._current_policy.replay_allowed and (self._audit_mode or self._current_policy.replay_richness == "FULL"):
-            from src.engine.checkpoint import CanonicalStateHasher
-            tick_hash = CanonicalStateHasher.get_hash(self._state)
-            
+            digest = CanonicalHashScheduler().compute_digest(self._state, tick, reason="replay")
+        else:
+            digest = CanonicalHashScheduler.not_computed_by_policy(tick)
+
         if self._current_policy.replay_allowed:
             self._replay.emit(TraceEvent(
-                tick=self._state.tick,
+                tick=tick,
                 system="KERNEL",
                 event_type="TICK_END",
-                payload={"hash": tick_hash}
+                payload={"hash": digest.value, "scheme": digest.scheme, "digest_status": digest.status.value}
             ), self._current_policy)
             
         self._replay.on_tick_end(self._state.tick)
@@ -1230,8 +1232,8 @@ class Kernel:
                     report.warnings.append(f"behavior-normalization-worker did not stop within 1s")
                     report.outcome = "PARTIAL"
 
-        from src.engine.checkpoint import CanonicalStateHasher
-        final_hash = CanonicalStateHasher.get_hash(self._state)
+        from src.engine.checkpoint import CanonicalHashScheduler
+        final_hash = CanonicalHashScheduler(self._state.tick).compute_digest(self._state, self._state.tick).require_value()
         logger.info(f"Final Auth Hash: {final_hash}")
         replay_outcome = self._replay.finalize(timeout_s=timeout_s)
 

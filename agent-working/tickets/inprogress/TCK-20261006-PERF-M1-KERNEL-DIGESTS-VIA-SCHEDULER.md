@@ -4,7 +4,7 @@ layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PERF-M1-KERNEL-DIGESTS-VIA-SCHEDULER
-phase: open
+phase: implement
 date: 2026-10-06
 tags: [performance, determinism, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, engine]
 PERF-M1-T03b: kernel and certification-harness digests go through CanonicalHashScheduler with a typed status, and HashMode is removed
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -109,9 +109,51 @@ were left.
   check it against the lift before editing.
 
 ## Implementation Notes
+- **Kernel.** `_phase_persistence` takes the per-tick digest with `CanonicalHashScheduler().compute_digest(state, tick,
+  reason="replay")` under the same condition as before (replay allowed and (`audit_mode` or richness FULL)), so when hashing
+  happens is unchanged. Otherwise it builds the record with the new `CanonicalHashScheduler.not_computed_by_policy(tick)`
+  (`NOT_COMPUTED_LIVE_POLICY`, first producer). `shutdown` takes its digest at the run-end boundary
+  (`CanonicalHashScheduler(run_end_tick).compute_digest(...).require_value()`); `ShutdownResult.final_hash` stays a string.
+  `ProofDigest.require_value()` is new: it returns the value or raises if it was not computed.
+- **TICK_END payload** (planner-approved 2026-10-06): `{"hash": value-or-null, "scheme": "flat-sha256-v1", "digest_status":
+  "<enum value>"}`. Plain JSON. Schema note (old vs new shape and the rule for readers) is in `deterministic_execution.md`
+  ("The canonical hash").
+- **Trace-hash consumers (AC 6).** None in code: grep of `TICK_END`, `payload["hash"]`, `get("hash")` over `src/`, `tools/`,
+  `frontend/src/` finds only the producer (`kernel.py`). `src/replay/fingerprint.py`, `perf/long_run_harness.py` and the
+  certification code read `ShutdownResult.final_hash` / `state_hash`, not the trace (unchanged). Readers that exist are
+  documentation (`known_limitations.md` 2.4, `kernel.md`, `deterministic_execution.md`, `hash_callsite_inventory.md`, parity
+  ledger; updated) and two tests: `tests/unit/engine/test_hash_scheduler.py` (asserted `"SKIPPED"`; now asserts the typed
+  status) and `tests/unit/kernel/test_verification_level.py` (scans the TICK_END trail, never the hash; unaffected, passes).
+  Replays on disk carry `"hash": "SKIPPED"` with no scheme or status; the schema note says a reader treats that and the new
+  `null` as "not computed" and never as equal evidence. No replay consumer outside the lifted files needed an edit.
+- **Harness.** One helper, `CertificationHarness._certification_digest(state)`, calls `compute_digest(..., reason="certification")`.
+  All three sites use it: the secondary-run hash, `_get_baseline_hash`, and `_write_full_evidence` (which no longer hashes the
+  compact JSON by hand, and `hashlib` is no longer imported there).
+- **Removed.** `HashMode` and the `mode` parameter (no hits in `src/`, `tests/`, `tools/` outside the test that asserts they
+  are gone). `DEFAULT_HASHING_BUDGET`, the `"hashing"` entries (production and debug) and the `max_full_hashes_per_100_ticks`
+  field: the field had no reader except the budget-gate test once the entry went, so I removed it too (a small step past the
+  ticket text; say if it should come back). `INFRA-196` updated, `INFRA-197` updated, new `INFRA-424`.
+- **Hash values unchanged:** a test compares the kernel's computed digest, the shutdown digest and the harness digest with
+  `CanonicalStateHasher.get_hash`, and `test_proof_digest_contract.py` (fixed-fixture digest) and the cross-run parity tests pass.
 
 ## Test Summary
+- New `tests/unit/engine/test_kernel_digest_via_scheduler.py` (10 tests): computed and not-computed payloads, audit mode, no
+  `"SKIPPED"` or direct `get_hash` in `kernel.py`, shutdown through the scheduler, harness through the scheduler,
+  `HashMode` gone, no `mode` parameter. Written first; the ones about the typed payload, the missing `"SKIPPED"`, the scheduler calls and `HashMode` failed before the change.
+- Updated: `test_hash_scheduler.py` (DEGRADED typed status, `HashMode` tests removed), `test_proof_digest_contract.py`
+  (wording), `test_resource_budget_gate.py` (hashing budget removed), `test_hash_callsite_inventory.py` (kernel now maps to
+  `compute_digest`).
+- Run: `tests/unit/engine`, `tests/unit/kernel`, the three inventory tests: 378 passed, 1 skipped. `tests/certification` minus
+  `test_cert_long_run_stability.py`: 71 passed, 1 skipped. `tests/integration/kernel` (not slow) plus the signal tests: 134 passed.
+- Not run locally: `tests/certification/test_cert_long_run_stability.py` (60 s conftest limit, known local gap; CI is the check).
+- `make code-health`: 0 new, 0 worse, 11 improved. `make typecheck-py`: no new error. `hash_callsite_inventory --check` and
+  `wall_clock_inventory --check` pass.
 
 ## Files Changed
+- `src/engine/kernel.py`, `src/engine/checkpoint.py`, `src/certification/harness.py`, `src/config/optimization_profiles.py`
+- `tests/unit/engine/test_kernel_digest_via_scheduler.py` (new), `test_hash_scheduler.py`, `test_proof_digest_contract.py`,
+  `test_resource_budget_gate.py`, `tests/tools/test_hash_callsite_inventory.py`
+- `docs/engine/deterministic_execution.md`, `known_limitations.md`, `kernel.md`, `docs/architecture/performance_optimization_decisions.md`,
+  `docs/parity_ledger/infrastructure.yaml` (INFRA-196, 197, 424), `docs/performance/hash_callsite_inventory.{json,md}` (regenerated)
 
 ## Completion Summary

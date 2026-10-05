@@ -2,7 +2,7 @@
 
 Covers three things the PERF-D5 policy relies on:
   1. the flat hash values did not change when the scheme was named (byte-identity);
-  2. the certification harness's hand-written copy of the flat hash equals `get_hash`
+  2. the certification harness's digest (now taken through the scheduler) equals `get_hash`
      (until PERF-M1-T03b replaces the copy with a call);
   3. no cached canonical dict is stale: the only path by which a stale value can reach the flat hash.
 """
@@ -69,12 +69,12 @@ def test_flat_hash_of_fixed_fixture_is_unchanged_from_main():
 
 
 # ---------------------------------------------------------------------------
-# 2. The harness's copy of the flat hash equals get_hash
+# 2. The harness's digest equals get_hash
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize("scenario", ["movement", "resource"])
 def test_certification_harness_digest_equals_get_hash(tmp_path: Path, scenario: str):
-    """`CertificationHarness._write_full_evidence` re-implements the flat hash by hand (gated file, T03b)."""
+    """`CertificationHarness._write_full_evidence` takes its digest through the scheduler (PERF-M1-T03b)."""
     state = _evolved_state(scenario)
     harness = CertificationHarness.__new__(CertificationHarness)  # only `_output_dir` is read
     harness._output_dir = tmp_path

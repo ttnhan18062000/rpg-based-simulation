@@ -166,11 +166,11 @@ still attempted after its file handle has closed. See
 ## State Hashing in Phase 7 (Persistence)
 
 Phase 7 emits a `TICK_END` replay event whose `hash` field is either a SHA-256 canonical
-hash or the sentinel string `"SKIPPED"`, depending on the active `GovernorPolicy`:
+hash or `null` (with a `digest_status`), depending on the active `GovernorPolicy`:
 
 ```
 NORMAL / CONSTRAINED  →  replay_richness = "FULL"   →  TICK_END.hash = SHA-256
-DEGRADED              →  replay_richness = "MINIMAL" →  TICK_END.hash = "SKIPPED"
+DEGRADED              →  replay_richness = "MINIMAL" →  TICK_END.hash = null (not_computed_live_policy)
 SURVIVAL              →  replay_allowed  = False      →  no TICK_END event
 ```
 
