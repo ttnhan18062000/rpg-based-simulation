@@ -117,4 +117,4 @@ All 108 mechanisms, one row each, sorted by priority (`layer weight × transitiv
 | `town_services` | world | done | static | observed | 0 | 0 |
 | `trauma` | entity | done | static | observed | 0 | 0 |
 | `veterancy_rank` | entity | done | runtime | inconclusive | 0 | 0 |
-| `world_boss_spawn` | world | done | static | observed | 0 | 0 |
+| `world_boss_spawn` | world | gated | static | observed | 0 | 0 |
