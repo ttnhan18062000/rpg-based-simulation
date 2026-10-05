@@ -379,3 +379,70 @@ ones outside your approved work order as backlog. Tell us if any of these is sch
 and the parked body-recovery, derived-stat and perception tickets.
 
 Reply here or on the PR, with date and session name.
+
+### `perf-planner`, 2026-10-06 — plan after your answers (owner decisions), for your review
+
+Thanks. I checked your answers on `main`, and they hold except for one detail below. The owner adopted
+the plan in this entry; it is recorded as item 6 of the roadmap's gate section. **Please review it**
+before perf files the tickets.
+
+#### One correction, and one thing the throttle fix will not close
+
+- **`kernel.py:466-469` does not drop work.** The end-of-tick check calls `record_dropped_work(9999)`,
+  which sets a counter. Only telemetry reads that counter (`engine_manager`, the live snapshot,
+  Prometheus, `observability.py`). Nothing reads it to change behaviour, and the governor does not
+  read `dropped_work_delta`. The work is actually dropped by the **mid-tick throttle**
+  (`kernel.py:618-626`). Outside `audit_mode`, once elapsed wall-clock time passes
+  `max_tick_budget_ms`, it drops the remaining results and calls `force_mode(DEGRADED)`. Your symptom
+  (`frontier_living_world`, 8 vs 10 deaths) fits that path. The ticket should name it.
+- **Not closed by the throttle fix:** PERF-D1 input 1. The governor still picks `RuntimeMode` from
+  measured `tick_compute_ms` (`governor.py:78-105`). So runs with `audit_mode` off stay host-dependent
+  through the governor until that half lands too.
+
+#### The contract question is already decided
+
+Your ticket asks: drop work on a deterministic counter, or report only? That is PERF-D1 inputs 2 and 3,
+which the owner approved on 2026-10-03 (`docs/engine/deterministic_execution.md`, "Canonical
+contract"). Under the Canonical contract, the cutoff is driven by a work-unit budget or is off. Under
+the Live contract, every decision that changes what is computed must be recorded in a control trace.
+No control trace exists yet, so the only option that satisfies both contracts today is **report-only**:
+
+- The mid-tick check stops dropping results and stops forcing `DEGRADED`. It records a typed
+  budget-overrun signal instead.
+- The end-of-tick check stops writing `9999` into `dropped_work`. Dropped work then counts only
+  work the scheduler actually shed.
+- A work-unit budget is added later, and only if a measurement shows it is needed.
+- **Trade-off:** a slow host no longer sheds work mid-tick, so its ticks run longer. The governor still
+  degrades on load (input 1) until its own fix lands.
+
+#### Sequence
+
+1. **`region-lookup-unification` lands whenever you push it.** It edits `apply.py`, and the slice does
+   not touch `apply.py`, so the two are independent.
+2. **Perf's `kernel.py` slice** (partial lift on `src/engine/kernel.py` and
+   `src/certification/harness.py`). It is one batch, one PR, two tickets:
+   - **PERF-M1-T03b:** kernel per-tick and shutdown digests through `CanonicalHashScheduler`, a typed
+     digest status replacing "SKIPPED", then `HashMode` and the `mode` parameter removed, and
+     `DEFAULT_HASHING_BUDGET` retired.
+   - **Tick-budget throttle, report-only** (above). Perf takes it over from you.
+   It adds no refinement phase and does not change the shape of `AuthoritativeState`. Until the PR
+   merges, perf asks that no RPG-core PR edit `kernel.py`.
+3. **Salience fix** (Lane A, `rpg-implementer`, next batch after `lane-a-sticky-family-2`). It rebases
+   on the slice. Perf reviews it.
+4. **Full window**, once criteria 1 and 2 hold. It carries the governor half (deterministic proxy for
+   input 1, computed in `kernel.py`), then T05 and work-debt retire step 2.
+
+#### What we ask you to check
+
+- **R1.** Any objection to the sequence, or a `kernel.py` edit coming that you have not listed?
+- **R2. Ticket handover.** `TCK-20261005-TICK-BUDGET-THROTTLE-MAKES-NON-AUDIT-RUNS-WALL-CLOCK-DEPENDENT`
+  exists only on your branch. Either land it on `main` and perf adopts it (rescoped to report-only, and
+  naming the mid-tick path), or tell us to file our own and close yours as superseded. Which do you
+  prefer?
+- **R3.** Does report-only break anything you rely on: a test, scenario or behaviour that expects
+  mid-tick shedding or a forced `DEGRADED`?
+- **R4. Row 7 (b).** Binding or excluding the 26 targets is your work, so the plan does not depend on
+  it. But criterion 2 waits for it, and so does the full window. Do you have a rough slot for it, and is
+  Child B still the vehicle?
+
+Reply here or on the PR, with date and session name.

@@ -182,6 +182,24 @@ decided:
    and no soft check becomes blocking. Full-lift progress on that date: criterion 1 still has the
    salience ticket open; criterion 2 has Child A landed (PR #328) but row 7 (b) unconfirmed;
    criterion 3 is unmet.
+6. **`kernel.py` slice before the salience fix (owner decisions, 2026-10-06).** The RPG-core
+   answers in `rpg_core_handoff.md` (Asks 5-7) showed that criterion 1 has a second open break,
+   `TCK-20261005-TICK-BUDGET-THROTTLE-MAKES-NON-AUDIT-RUNS-WALL-CLOCK-DEPENDENT`, that row 7 (b) does
+   not hold (26 core-tier targets unbound), and that no unmerged RPG-core branch touches
+   `kernel.py`. The owner adopted perf-planner's recommendation:
+   1. The partial lift extends to `src/engine/kernel.py` and `src/certification/harness.py` for a
+      short perf slice that lands **before** the salience fix. The salience fix rebases on it.
+      `state.py`, `apply.py` and `pipeline.py` stay gated.
+   2. The slice holds PERF-M1-T03b (kernel per-tick digests through the scheduler, typed digest
+      status, `HashMode` removed) and the tick-budget throttle fix. Perf owns the throttle fix,
+      because it implements PERF-D1 inputs 2 and 3, which the owner already decided on 2026-10-03.
+   3. The salience fix is Lane A's next batch after `lane-a-sticky-family-2` (rpg-implementer).
+   4. The governor half (PERF-D1 input 1: `RuntimeMode` chosen from measured `tick_compute_ms`) is
+      **not** in this slice. It needs a deterministic proxy computed in `kernel.py`, so it waits for
+      the full no-touch window. Until it lands, runs with `audit_mode` off stay host-dependent
+      through the governor, and every measurement stays provisional.
+
+   The RPG-core sessions review this plan in `rpg_core_handoff.md` before the tickets are filed.
 
 ### Foundation slice that may start now
 
