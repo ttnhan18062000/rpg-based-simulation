@@ -295,6 +295,13 @@ _(not started)_
 
 Read-only. All simulation numbers are real `Kernel.tick_once()` runs, `PROD_SMALL`, seed 42.
 
+**Headline (sets this ticket's priority): one first-match lookup silently decides roughly 40 subsystems' notion of where things are.**
+`SpatialQueryService.get_region_at`, reached mostly through `LegalityServiceV2.get_region_for_position`, is the only live position-to-region
+lookup, and every consumer of it credits only the **first-declared** region at an ambiguous point: trauma, influence (`influence.py:42,103`),
+ecology, spawn, camps, displacement, creature territory, boss, routine, market, vacancy, coming-of-age, goal scorers, lead location,
+`apply_plan`, legality and movement (about 40 call sites, table below). The trauma shadowing measured on `frontier_living_world` is one
+visible instance of that, not the whole of it.
+
 **1. Position-to-region lookups (src/, excluding api/).** Five implementations exist; one is the live path.
 | function | bounds | on ambiguous point | outside all regions | production callers |
 |---|---|---|---|---|
@@ -309,6 +316,16 @@ and the trauma readers (closed) use different boundary conventions for the same 
 differ in a run. `RegionalSovereigntyService` (`regional_sovereignty.py:46,67`) calls `.id` on a lookup that can be `None`, but nothing calls
 that class, so it is latent.
 
+**Separate defect, independent of overlap: the trauma writer and its readers disagree about region membership at a boundary.** The writer
+(`WorldDynamicsSystem._get_region_for_pos` -> `SpatialQueryService.get_region_at`) uses **half-open** `[min,max)` bounds; the readers
+(`get_region_trauma` -> `DomainView.get_region_for_position`, used by goal scorers, `tactical.py`, `shop.py`, `cognition.py`) use **closed**
+`[min,max]` bounds. One field, two membership conventions. It would survive whatever this ticket decides about overlap. Not measured to differ in a run.
+
+**Dead and latent paths, recorded so they are not rediscovered (recorded here, not in `TCK-20261005-WORLD-ASSEMBLY-LATENT-AND-DEAD-PATHS`):**
+- `RegionService.find_region_at` (`src/world/regions.py:16`): closed bounds **plus a nearest-region-centre fallback** (never `None`), zero callers. That
+  fallback is a **third membership convention** alongside the half-open and closed lookups.
+- `RegionalSovereigntyService` (`src/world/regional_sovereignty.py:46,67`) calls `.id` on a lookup that can return `None`; nothing calls the class, so it is latent.
+
 **2. One real trauma-block call, traced** (`frontier_living_world`, 1,500 ticks, `_get_region_for_pos` wrapped, call site identified by
 line, compared to the trauma delta that landed): at state tick 3 an entity at `(87.0, 50.0)`, a point inside `bandit_road`, `near_forest` and
 `wolf_den` by bounds, goes through the trauma block's lookup, which returns `bandit_road`; the next tick's delta is `bandit_road +1.0` and
@@ -316,14 +333,25 @@ nothing for the other two. Of 30 trauma-block lookups in the run, 12 hit a point
 the first-declared region**; 10 of 30 returned `None`. This removes the "inferred from an end-of-tick position" caveat on the 49-of-51
 finding for this mechanism, and it uses the tick-start position the block really uses.
 
-**3. Deaths credited to no region.** `frontier_living_world`, 5,000 ticks: 20 of 141 deaths (14%); 10,000 ticks: 23 of 275 (8%) have no
-containing region by a **closed** bounds test. **Neither candidate is the cause:** these are not far-edge cases (a closed test finds no region for
-any of them), and the global-bounds quick exit is not the mechanism for points this far inside. The points are outside every region:
-`(5,2) (3,3) (6,8) (0,1) (1,-1) (-3,0) (9,10)`, i.e. around the map origin west and south of `hometown` (which starts at 10,10). They are 20 initial
-entities (ids 1-49) of nine kinds, dying at ticks 115-280 and 951-1003, 10 `DEFEAT` and 10 passive `STARVATION`. `town_center` is `(25,25)` in
-both audited worlds, so this is not entities retreating to a default `(0,0)` town centre. **Why entities are at the origin is not explained.**
-Trauma from these deaths is lost entirely (not shadowed). The unused `RegionService.find_region_at` would have credited them to the nearest
-region; the live lookup does not.
+**3. Deaths credited to no region: explained, and mostly not this ticket's.** `frontier_living_world`, 5,000 ticks, 141 deaths: **20 (14%)** are
+credited to no region on `origin/main` (`94f7a3fe3`); 10,000 ticks: 23 of 275 (8%). They lie outside every region even under a closed-bounds test,
+clustered around the map origin (`(5,2) (3,3) (6,8) (0,1) (1,-1) (-3,0) (9,10)`), 10 `DEFEAT` and 10 passive `STARVATION`. My two original
+candidates (far-edge half-open bound, global-bounds quick exit) were wrong, and `town_center` is `(25,25)` so it is not a default town centre.
+**Cause, tested (suggested by the planner): the four hardcoded `(0.0, 0.0)` retreat/wander targets in `src/engine/tactical.py`**
+(`:141`, `:247`, `:483`, `:542` on `main`) that `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN` removes in PR #342.
+Same world, seed and tick count, three trees:
+| tree | deaths | credited to no region | near origin | causes of the uncredited |
+|---|---|---|---|---|
+| `main` `94f7a3fe3` | 141 | **20** | 20 | 10 DEFEAT, 10 STARVATION |
+| Lane A tip `1cadb5fa1` (based exactly on `94f7a3fe3`) | 141 | **1** | 0 | 1 DEFEAT |
+| Lane A tip with **only** `src/engine/tactical.py` reverted to `main` | 141 | **21** | 21 | 10 DEFEAT, 11 STARVATION |
+The third row isolates the effect: with the rest of Lane A's 16 commits kept, restoring only the four origin targets brings the cluster straight back,
+and the all-death cause mix then equals `main` exactly (98 HAZARD, 14 DEFEAT, 29 STARVATION). So the origin cluster is a **stranding defect owned
+by that ticket**, not an overlap or bounds defect, and it gives that ticket corpus evidence it had to downgrade. One seed, one world, 5,000 ticks.
+What remains is relevant here: **trauma from deaths in no region is lost outright** (not shadowed), and the one surviving uncredited death on the
+fixed tree is at `(29, 40)`, which is exactly `hometown`'s `y=40` exclusive upper edge (`[10,10,40,40]`, half-open): a genuine far-edge case of
+the half-open bound, one death in 141. That, and nothing else, is the measured instance of the "falls off the far edge" candidate. Also, 10 of 30
+traced trauma-block lookups on `main` returned `None` because of the same cluster, so that figure is inflated by the stranding defect.
 
 **4. Declaration-order contradiction (finding against Bible 06 line 37).** The paint-order rule gives a shared tile's **terrain** to the
 **later**-declared region. The live region lookup returns the **earlier**-declared one. For the same tile, terrain priority and region-credit
