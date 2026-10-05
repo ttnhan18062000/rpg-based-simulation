@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-BRAVERY-QUARTILE-GUARD-RED-ON-MAIN-UNOWNED
-phase: open
+phase: done
 date: 2026-10-05
 tags: [combat, testing, investigation]
 ---
@@ -18,7 +18,7 @@ quartile size collapses to 1, so the guard's own precondition is unmet
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -138,16 +138,54 @@ before concluding anything about differentiation.
 
 ## Implementation Notes
 
-_(to be filled during implementation)_
+Full evidence in `investigation.md`. Summary against the acceptance criteria:
+
+1. **AC1 (measured).** The test builds its own spec, `differentiation_arena`: 16 heroes + 8 monsters, one 45x45
+   arena, never the production loader. Live heroes at tick 400 across seeds 1..24:
+   `[7, 8, 8, 9, 9, 9, 10, 11, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 13, 14, 14, 15, 15, 15]`.
+2. **AC2 (explanation).** Neither candidate as posed. Differentiation has not stopped: the top/bottom bravery
+   quartile combat-engage ratio is **2.40** over all 24 seeds and **2.40** over the 23 populated ones
+   (asserted threshold 1.5; recorded at calibration 1.74). The population did not shrink by content: the spec is
+   the test's own. What changed is survivor count: the calibration recorded `n_alive >= 8` at all 24 seeds and
+   seed 9 now ends with 7, deterministically (three identical repeats), so `q_size` is 1. **The cause of the
+   extra attrition is not established.** A candidate, the retired hero rebirth (divergence 2.63), is
+   unverified because the same seed was not run before that change.
+3. **Two failures were hiding as one.** Locally the test never reached that assertion: it is `extra_slow`
+   (about 90 to 270 s here) without `resource_budget_large`, so conftest's default 60 s budget raised
+   `TimeoutError` first. That is the local "known base failure". CI's slow job passes `--resource-budget large`.
+4. **UQ-2 (ever passed in CI).** Not answerable from recent history, and the history is a finding: in the 40
+   most recent `push` runs on `main` the `Slow regression` job's corpus-diversity step failed or was cancelled
+   and the step that runs this guard (step 6) was `skipped` in all 35 runs that carry step data (5 carry none).
+   This guard has not executed in CI in that window. Why step 5 fails is not this ticket's.
+5. **The change.** Only `tests/integration/scenarios/test_entity_differentiation.py`: the per-seed hard
+   `assert q_size >= 2` became an explicit precondition. A seed whose survivors cannot fill two-hero quartiles is
+   excluded from the aggregate (selection by survivor count only, never by a rate); fewer than
+   `MIN_QUALIFYING_SEEDS = 20` qualifying seeds **skips loudly**, naming the shortfall and the excluded
+   `(seed, n_alive)` pairs. `resource_budget_large` added. The 1.5x assertion, the seed list and the spec are
+   untouched, and `src/entities/` (the hold granted for this ticket) was **not** edited.
+6. Sensitivity of the exclusion: ratio 2.403 with seed 9 included vs 2.399 without.
 
 ## Test Summary
 
-_(to be filled during implementation)_
+- Before: `--resource-budget off` fails at seed 9 (`quartile size collapsed to 1 (n_alive=7)`); default budget
+  fails with the conftest 60 s `TimeoutError`.
+- After: `pytest tests/integration/scenarios/test_entity_differentiation.py -rsf` runs under its own large
+  budget: 2 passed in 273 s (the guard evaluated the hypothesis on 23 seeds); the new fast skip-path test
+  `test_bravery_quartile_skips_loudly_below_min_qualifying_seeds` passes in 0.25 s and proves the skip message
+  names the shortfall and the excluded seeds. CI's 600 s large budget leaves room for the 273 s measured on a
+  loaded machine.
+- Environment: ruff/mypy/complexipy/ast-grep/prek are absent locally (tests are not ruff-checked in any case).
+- Not covered: why survivors fell below the calibrated floor.
 
 ## Files Changed
 
-_(to be filled during implementation)_
+`tests/integration/scenarios/test_entity_differentiation.py` only (plus the ticket and its artifacts).
 
 ## Completion Summary
 
-_(to be filled during implementation)_
+The guard is no longer an unowned "known base failure". It now states its population precondition, excludes
+the one seed that cannot form quartiles (seed 9: 7 live heroes), skips with the shortfall named if fewer than 20
+seeds qualify, and runs under the budget it needs. On the 23 populated seeds the bravery hypothesis holds with
+margin (2.40 vs the asserted 1.5), so this was a precondition and budget problem, not a differentiation
+regression. Open: the cause of the survivor-count drop below the calibrated floor, and the fact that this guard
+has not run in CI in the last 40 main pushes because the slow job's earlier corpus-diversity step fails.

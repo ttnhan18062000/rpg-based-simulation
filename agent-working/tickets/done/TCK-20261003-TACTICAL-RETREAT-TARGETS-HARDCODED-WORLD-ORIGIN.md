@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN
-phase: open
+phase: done
 date: 2026-10-03
 tags: [combat, world, root-cause]
 ---
@@ -18,7 +18,7 @@ parking it outside every region permanently
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -219,16 +219,57 @@ defect, and was withdrawn in full.
 
 ## Implementation Notes
 
-_To be completed by the implementer._
+- New pure module `src/engine/tactical_destinations.py` (`containing_region` strict bounds,
+  `retreat_destination`, `wander_destination`); `src/engine/tactical.py` calls it at four sites with a
+  `_destination_or_hold` fallback (the entity's own position, MOV-03). Retreat order is the ruling's:
+  away-vector clamped into the current region, then `strategic.home_region_id` centre, then hold.
+- **Ticket correction: four branches, not three.** The low-HP engaged branch (`hp_percent < 0.15`) also
+  set `(0.0, 0.0)` with reason `PANIC_RETREAT`. Same defect, same file, same ruling; fixed here.
+- **Ticket correction: the `:483` wander is not untagged.** It carries `reason: "STALEMATE_BREAK"`.
+- The PANIC gate's threat list reuses the appraisal's hostility predicate (`are_entities_hostile`, same
+  `RelationContext`), because `is_fleeing` can trip with no hostile present (low HP, regional trauma);
+  with no threat vector the entity goes home or holds.
+- Not done: AC-1 corpus firing rates per branch and entity kind, and AC-4's corpus run. The ticket's own
+  2026-10-03 downgrade lets the fix proceed on the constructed-scenario instrument. Corpus numbers from
+  this path stay unreliable until `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE`
+  (batch item d) settles, and none was taken.
+- Behaviour change recorded: `docs/guidelines/intentional_divergences.md` §2.66 (`Bug Fix`); parity entry
+  `COMB-327`; `docs/engine/contracts/tactical_contract.md` §4 and §5.
+- `ruff` is not installed in this environment, so lint was not run. No function-local imports were added
+  (PLC0415).
 
 ## Test Summary
 
-_To be completed by the implementer._
+- New `tests/unit/combat/test_tactical_destinations.py` (15 tests). With the base `tactical.py` restored
+  and the new module present, 4 of them fail (the branch tests); the pure-derivation tests pass.
+- Updated the two tests that pinned the literal, and added a region-bearing `SAFETY_PRESSURE_RETREAT` test.
+- `tests/unit/combat` plus `test_pressure_perception_consumers.py`: 151 passed.
+- Wider sweep (`tests/certification tests/regression tests/architecture tests/engine tests/integrity
+  tests/mechanic_scenarios tests/scenarios`, `-m "not slow"`): 327 passed, 2 skipped, 1 xfailed, 1 failed.
+  The failure, `tests/regression/test_behavioral_5k.py::test_behavioral_5k_regression`, is the conftest
+  60 s resource-limit `TimeoutError` and fails **identically on the base `tactical.py`**, so it is not caused
+  by this change (and not a behaviour comparison: it never reaches its assertions).
+- No recorded-hash fixture moved.
+- **Environment gap:** `ruff`, `mypy`, `complexipy`, `ast-grep` and `prek` are absent from the local venv, so
+  the `tests/codebase` failures in the wider run are tool-missing, not real, and lint could not be run locally.
+  No function-local imports were added under `src/` (module-top imports only, no load-order cycle), and one
+  unannotated parameter introduced here (`_perceived_threats(neighbors)`) was annotated after review.
 
 ## Files Changed
 
-_To be completed by the implementer._
+`src/engine/tactical_destinations.py` (new), `src/engine/tactical.py`,
+`tests/unit/combat/{test_tactical_destinations,test_anti_stalemate,test_engagement_behavior}.py`,
+`tests/unit/engine/test_pressure_perception_consumers.py`, `docs/engine/contracts/tactical_contract.md`,
+`docs/guidelines/intentional_divergences.md`, `docs/parity_ledger/combat_movement.yaml`.
 
 ## Completion Summary
 
-_To be completed by the implementer._
+Retreat and stalemate-break entities no longer walk to the literal world origin. They move away from the
+threats inside their own region, fall back to their home region, or hold position; a stalemate-breaking
+entity wanders to a seeded nearby in-region point. Four branches were fixed (the ticket listed three). The
+corpus firing-rate and parked-at-origin measurements (AC-1, AC-4) were not taken and remain open pending the
+nondeterminism ticket; the containment guarantee (AC-3) is proven by tests that fail on the old code.
+`TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` has since confirmed that the protocol those
+counts would have used (`audit_mode`, raised budget, sequential) does not make a run reproducible, so skipping
+them was correct; they become takeable when `TCK-20261005-DIRTY-SET-DEDUPES-UPDATES-BY-ID-SO-RECYCLED-ADDRESSES-DROP-WORK`
+lands.

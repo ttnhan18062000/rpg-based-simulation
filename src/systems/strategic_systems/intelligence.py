@@ -90,6 +90,7 @@ from src.ai.score_modifiers import ScoreModifierSystem
 from src.domains.adventure.mapper import RouteToProjectMapper
 from src.systems.party import PartyCoordinationSystem
 from src.systems.strategic_systems.detour import DetourSuggestionSystem
+from src.systems.strategic_systems.entity_target_objective import close_entity_target_project
 from src.systems.strategic_systems.work_queue import StrategicWorkQueue
 from src.core.dirty import get_dirty_set
 from src.systems.strategic_systems.belief import BeliefCycleSystem
@@ -1383,6 +1384,19 @@ class StrategicIntelligenceSystem:
                         leads_remove=memory_upd.leads_remove
                     )
 
+                # Entity-targeted objective (typed target_entity_id): ends when its target dies, is
+                # gone, or leaves perception, instead of holding the project slot forever.
+                _closed_project = close_entity_target_project(entity, state, project)
+                if _closed_project is not None:
+                    return StrategicUpdate(
+                        projects_add_or_update=[_closed_project],
+                        current_project_id_set="",
+                        current_objective_id_set="",
+                        boredom_delta=boredom_upd,
+                        leads_add_or_update=memory_upd.leads_add_or_update,
+                        leads_remove=memory_upd.leads_remove
+                    )
+
                 if project.kind == "harvesting" and project.active_objective_id:
                     target_id_str = project.active_objective_id.split("_")[-1]
                     try:
@@ -1531,12 +1545,23 @@ class StrategicIntelligenceSystem:
                 except ValueError:
                     head_kind = None
                 if head_kind in _COMMITTED_INTENTION_ELIGIBLE_KINDS:
+                    # A resumed COMBAT_ENGAGE intention's target_hint is an entity id; carry it as the
+                    # typed target so the objective it materialises into gets live position and a
+                    # lifecycle too (otherwise it would be the untyped REACH_LOCATION-on-an-entity-id
+                    # shape this ticket removes).
+                    _hint_entity_id = None
+                    if head_kind == GoalKind.COMBAT_ENGAGE and head.target_hint:
+                        try:
+                            _hint_entity_id = int(head.target_hint)
+                        except ValueError:
+                            _hint_entity_id = None
                     all_scores = all_scores + [GoalScore(
                         kind=head_kind,
                         utility=_COMMITTED_INTENTION_BASE_UTILITY,
                         target_id=head.target_hint,
                         target_pos=None,
                         metadata={"committed_intention_id": head.intention_id},
+                        target_entity_id=_hint_entity_id,
                     )]
 
         # PH9: Routine & Life-Rhythm Biasing
@@ -1721,6 +1746,7 @@ class StrategicIntelligenceSystem:
                     kind=best_candidate.metadata.get("obj_kind") or ObjectiveKind.REACH_LOCATION,
                     target=best_candidate.target_id,
                     target_position=best_candidate.target_pos,
+                    target_entity_id=best_candidate.target_entity_id,
                     status=ObjectiveStatus.ACTIVE
                 )
                 candidate_proj = ProjectState(
