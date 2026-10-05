@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261002-EPIC-SESSION-LAYER-FOUNDATION
-phase: open
+phase: done
 date: 2026-10-02
 tags: [ai, process-improvement, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 Epic A — Session-layer foundation: verified harness facts, a repo-versioned role registry, and a launcher that starts, resumes and recovers a session by role id
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -168,4 +168,4 @@ Defined by child tickets.
 (Child tickets.)
 
 ## Completion Summary
-(Open.)
+Children M-1 (root move), M0 (harness spike, ADJUST), M1A-D, M2A-C done. AC1 met with the owner's 2026-10-03 decision to close items c, g, k, l, interactive ask, power loss and mid-rebase as unprobed. AC2 met: the registry has 12 seats (5 unstaffed), a superset of the nine. AC3 met with recorded deviations: by owner decision, plain `claude` gets the all-roles listing plus a launch hint; `/clear` was not re-probed live; `--resume --name --agent` was dry-run only. AC4: the crash cases not covered are M0's not-verifiable list (see `agent-working/stored_artifacts/TCK-20261003-SESSION-LAYER-M0-HARNESS-SPIKE/investigation.md`). AC5-7 met.
