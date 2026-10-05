@@ -2034,6 +2034,15 @@ mechanisms:
         **Bound 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-
         RESOLUTION): `RegionalConsequenceService.process_recovery()`, the natural-decay half this
         note already cites, confirmed real caller at `src/engine/apply_plan.py:101`.
+        **Rule ratified 2026-10-05 (owner, catalog ENV-07):** trauma counts only violently caused
+        deaths; ambient attrition (hazard drain, passive biological drain, natural death) does not.
+        The producer at `src/engine/world_dynamics.py:59-75` still adds 1.0 for every death,
+        whatever the cause. Measured on frontier_living_world (base 54c31ee73), 232 of 233 deaths
+        were hazard drain, 158 of them a world-boss respawn-and-die loop. Re-measured on a
+        post-fix base (06a0ce1cb), confirmed: across all 24 worlds, 0 of 2,112 hazard deaths had
+        prior attacker damage, and defeats were 31 before the fix and 30 after. Rebind and re-verify when the producer
+        change lands (TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-
+        LOOP-NOT-BY-FIGHTING). Its point-to-region attribution follows LOC-08.
   - id: regional_sovereignty
     layer: region
     systems: [world, faction]
@@ -2260,6 +2269,14 @@ mechanisms:
         **Bound 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-
         RESOLUTION): method-level, since `BossService` also defines `check_for_lair_spawn()`/
         `resolve_boss_death()`, separate concerns this entry's own note does not describe.
+        **Deferred and to be made INERT (owner, 2026-10-05; catalog ENV-06):** the boss branches
+        (this method, `check_for_lair_spawn()`, and the calamity-gated spawn at calamity.py:42-53,
+        the last confirmed by the owner 2026-10-05) go behind a flag that defaults OFF, with the code
+        kept. While live, this branch spawned a boss with no hazard endurance at the region centre,
+        and it died of drain within ticks every ~100 ticks. That produced 68% of
+        frontier_living_world's deaths (base 54c31ee73). With bosses removed, trauma never
+        crosses 50 in any world. Its spawns are never evidence for any decision. Move
+        `state` when the flag lands.
   # ── World building, SPLIT 2026-10-05 from the former single `world_generation` entry ──────
   # (change taxonomy kind Split, docs/plans/mechanism_identity_and_change_taxonomy.md §2). The
   # former entry bound four classes as one mechanism. These stages failed independently in

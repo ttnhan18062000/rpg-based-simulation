@@ -192,7 +192,7 @@ regional trauma is "sufficiently high", and `docs/world/ecology_and_calamity_con
 describes calamity as escalation "when trauma reaches critical levels".
 
 **How it divides the work with regional trauma (no collision).** Trauma is the acute, per-event
-measure: every death in a region adds to it, and it recovers (Bible 05 §2). Calamity is the
+measure: every violently caused death in a region adds to it (ENV-07), and it recovers (Bible 05 §2). Calamity is the
 chronic measure derived from trauma's *persistence* above the instability threshold. They are
 two distinct facts about one region, not two counters of the same deaths. A "deaths raise
 calamity" rule would have double-counted the cause trauma already owns, and is not adopted.
@@ -213,16 +213,36 @@ implemented. This Rule fixes only their direction and what drives them.
   requirements (`transformation.py:57-59`), and seasonal propagation to neighbours
   (`CalamityPressurePropagator`, `calamity.py:103-162`). Propagation is the declared spread
   process this Rule permits and is kept.
-- *World-boss emergence is DEFERRED, not a consumer this Rule commits to* (owner, 2026-10-05:
-  "world boss is a very abstract and later feature"). The existing boss filter
-  `calamity_intensity > 0.3` (`calamity.py:42`), and the magical/demonic spawn that rides on the
-  same trigger (flag `ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH`, default OFF), are left as they
-  are. Implementing this Rule must not use a boss spawn as its evidence, and must neither tune
-  nor retire the boss branch. What a world boss is, and what calls one forth, is later feature
-  design, parked by memo row 7.
+- *World-boss emergence is DEFERRED and INERT* (owner, 2026-10-05). The owner first
+  deferred it ("world boss is a very abstract and later feature"), then, the same day, made
+  the deferred branches inert. There are three, all behind a flag that defaults OFF, with the
+  code kept:
+  1. the calamity-gated boss (`calamity.py:42-53`, `calamity_intensity > 0.3`);
+  2. `BossService`'s region boss (`boss.py:~100`);
+  3. its lair occupant (`boss.py:226`).
+  The ratification named (2) and (3). (1) belongs to the same deferred feature (row 10's
+  original text names it) and was included to match the owner's intent. **The owner
+  confirmed (1), 2026-10-05.** (1) does not fire today because calamity is always 0.0, but it would fire as
+  soon as this Rule's escalation is implemented. The precedent is the magical/demonic spawn on the same
+  trigger (`ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH`, default OFF).
+  - *Why inert, not just uncited:* while live, the region boss produced 68% of the deaths on
+    `frontier_living_world` (158 of 233). It spawned at a region's centre with no hazard
+    endurance and died of drain within ticks, every ~100 ticks (base `54c31ee73`). With bosses
+    removed, the instability threshold of 50 is never crossed in any of the 24 worlds. So the deferred feature was the
+    evidence every trauma figure rested on. The lair occupant (3) never fired in 48 runs: it is
+    dormant, not looping.
+  - *What it reverses:* the lair boss had been "live and untouched".
+  - *Still holds:* implementing this Rule must not use a boss spawn as evidence. What a world
+    boss is, what calls one forth, where it may spawn, and what it endures is later feature
+    design, parked by memo row 7.
 - *Upstream dependency:* this Rule is observable only once trauma actually accumulates, which
   it does not today (`TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`). That ordering is
   deliberate: the meaning was chosen for correctness, not for how soon it becomes visible.
+  Under ENV-07 this Rule is **correct but latent** on the current corpus: the only regions above
+  the threshold got there through the boss loop and ambient drain, which ENV-07 excludes. Per
+  ENV-05, that is an unexercised rule, not a wrong one. This is measured, not only argued: with
+  bosses removed, the threshold is never crossed in any world, and under ENV-07 the series is
+  0 in every world (see ENV-07's measurement).
 - *Not part of this Rule:* `CALAMITY_RANDOM_CHANCE` (declared, unwired; the calamity contract
   L81/L176). A purely random onset would have no causal path (CAUSE-01). Any later probabilistic
   branch must be conditioned on this escalation, not replace it.
@@ -233,10 +253,85 @@ decays.
 
 ---
 
+## ENV-07 — Regional trauma counts violently caused deaths; ambient attrition is exposure, not unrest
+
+> A region's trauma is the acute measure of unrest within it. A death adds to it only when the
+> death has a violent cause: combat, an attack, an execution, or another act of violence by an
+> agent. Deaths from ambient attrition do not add to it: environmental drain from the region's
+> own hazard, starvation and other passive biological drain, natural death. Ambient attrition is
+> exposure (ENV-02), and its consequences belong to the bodies that suffer it, not to the
+> region's record of unrest. A death caused by violence still counts when an ambient process
+> delivers the final blow, for example an entity wounded in a fight and then finished by drain.
+> Admitting any other kind of death (a declared catastrophe such as a plague) is its own
+> decision, not a reading of this Rule.
+
+**Disposition: ACCEPT — ratified by the owner, 2026-10-05.** Passes the admission test: no
+earlier Rule said which deaths trauma counts.
+- Bible 05 §2 described regions reacting to "the violence and activity within their borders",
+  yet added +1.0 for "every entity death".
+- ENV-06 calls the result "unrest".
+- The two readings came apart once measured: on `frontier_living_world` (10,000 ticks, seed 42,
+  audit_mode, base `54c31ee73`), 232 of 233 deaths were hazard drain with no killer, and 1 was a
+  defeat.
+
+**Why this meaning (fiction).** Trauma at the instability threshold transforms a region (a
+FOREST burns) and feeds calamity (ENV-06). A forest burning because creatures died of the
+forest's own drain contradicts ENV-06's "prolonged unrest". Unrest is violence; attrition is the
+environment doing what ENV-02 already says it does.
+
+**Why this meaning (dynamics).** Hazard drain grows with trauma above the threshold, and owner
+decision 12 removed its cap. Under the old meaning, that was an unbounded positive feedback
+loop: drain kills, the deaths raise trauma, trauma raises hazard, and hazard drains harder.
+Excluding attrition breaks the loop structurally.
+
+**Alternatives not taken.**
+- *Every death counts:* the status quo, the forest incoherence above, and the loop above.
+- *Hazard deaths at a reduced weight:* keeps the loop, only slower, and keeps attrition as unrest.
+- *Give the dying population hazard endurance instead:* the boss that died most has no catalog
+  faction, only the `MONSTER_HORDE` legacy bucket. Endurance is declared per faction, for that
+  faction's own in-fiction reason, never derived from location or hostility (owner, 2026-07,
+  `TCK-20260701-HAZARD-NATIVE-IMMUNITY`), so granting it to a bucket is not available.
+
+**Consequence, stated plainly (measured).** Trauma falls to roughly zero on the current
+corpus, and ENV-06's threshold is unreachable without the boss loop. Three readings were
+tested (Lane B, all 24 worlds, 10,000 ticks, seed 42, audit_mode, deaths only, on two bases: `54c31ee73` (includes #347) and `06a0ce1cb` (that base plus the fix for TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS)):
+- *"The world fights but misattributes"* (wounded, then drain finishes): **not supported.** 0
+  of 2,112 hazard deaths took attacker damage at any earlier time, checked with windows of 50
+  and 200 ticks and with no window, on both bases. Control: all 17 defeat deaths checked carry
+  a last-hit record.
+- *"The world was prevented from fighting"* (combat suppressed by defects): **not supported.**
+  Defeats were 31 on the first base and 30 on the second, although the fix cut withheld attacks
+  on `frontier_living_world` from 844 to 2.
+- *"The world barely fights"*: **supported.**
+This Rule does not change with lethality. If the world needs more trauma, the answer is more
+violent deaths in the world, not counting more kinds of death.
+
+**Repository evidence: CONFLICTING, at `544b1d341`.** `WorldDynamicsSystem` adds 1.0 to the
+containing region for every entity whose `alive_set` becomes false, whatever its cause
+(`world_dynamics.py:59-75`, "Each death adds 1.0 trauma"). Hazard deaths carry
+`outcome_kind == HAZARD` on the same update, so the cause is available at the writer.
+Separately, `apply_plan.py:235` adds 2.0 when a building is destroyed. That is in scope only
+when the destruction is violent, and its cause is to be verified when this Rule is implemented.
+
+**How this Rule is refuted.** Cause misattribution: deaths recorded as ambient attrition
+whose real cause was violence. Tested at ratification and not found (0 of 2,112, above). It
+stays the acceptance test when the producer is implemented
+(`TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING`).
+If a material share of hazard deaths ever shows prior attacker damage, the implementation must
+count a violent cause within a window, not only a recorded killer.
+
+**Scenarios:** none traced yet. One is owed when implemented: a battle in a region raises its
+trauma, the same number of drain deaths does not, and a wounded-then-drained death counts.
+
+---
+
 ## Cross-domain links recorded here
 
 - ENV-06 → World dynamics / regional trauma (Bible 05 §2: trauma is the acute input calamity
   escalates from), Ecology & population (displacement), Places (regional transformation)
+- ENV-07 → World dynamics / regional trauma (what the counter admits), Conflict & combat (the
+  violent causes), Life/body/survival (attrition's consequences stay with the body), ENV-06
+  (its only input)
 - ENV-01, ENV-05 → all future domains that add environmental state (a standing standard to check
   new fields against)
 - ENV-02, ENV-03 → Life/body/survival, Capability & progression (plausible future owners of

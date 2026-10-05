@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261002-EPIC-SESSION-LAYER-COMMUNICATION-AND-AUTHORITY
-phase: open
+phase: done
 date: 2026-10-02
 tags: [ai, process-improvement, governance, hooks]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance, hooks]
 Epic B — Session-layer communication and authority: owner lookup, message classes, and deterministic guardrails for authority-class actions
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -145,4 +145,4 @@ Defined by child tickets.
 (Child tickets.)
 
 ## Completion Summary
-(Open.)
+Children M3A (`route.py`), M3B (message classes), M5A (permission rules), M5B (guard hook) and M5C (`role_boundary` events) are done. AC1 met; `--route-key` withdrawn (owner, 2026-10-05). AC2-5 and AC8 met (`test_session_route.py`, `test_session_boundary.py`, `test_session_classify.py`, `test_session_guard.py`, `test_settings_permission_rules.py`; threat-model sentence in plan section 10, `tools/sessions/classify.py`, `guard.py`). AC6: no seat is read-only and no `--agent` allowlist is set; deferred to M7 (owner-delegated decision, taken by agent-working-design). AC7: no inbox in v1 (owner, 2026-10-05; plan 9.5). Open notes: a fresh-session guard probe with a RESOLVED role has not been run (needs the owner); the seeded grant in `registries/session_authority.yaml` is dated 2026-10-04 and covers push/open_pr, not the 2026-09-30 grant the scope names.
