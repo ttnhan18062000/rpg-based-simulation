@@ -1,19 +1,21 @@
-"""The advisory mypy gate: report only the mypy errors that are not in the committed baseline.
+"""The mypy gate: report only the mypy errors that are not in the committed baseline.
 
     python3 -m codebase.gates.mypy_gate [--summary-out PATH] [--annotate] [--mypy-output FILE]
 
 It runs the repository's mypy command, pipes the output through `mypy-baseline filter` (configured in
 `[tool.mypy_baseline]` in pyproject.toml; the baseline is `codebase/baselines/mypy_baseline.txt`), prints the errors
-that are new, and returns the filter's exit code: 0 for none, 1 for at least one new error. On every run it
+that are new, and returns 0 for none and 1 for at least one new error. (`mypy-baseline filter` itself exits with the
+NUMBER of new errors, capped at 100, so any filter exit code from 1 to 100 that comes with `error:` lines is a normal "new
+errors" result here; a non-zero filter exit with no error line, such as an unparseable baseline, is "could not run".) On every run it
 appends one Markdown summary to `--summary-out` ($GITHUB_STEP_SUMMARY in CI) that states the new-error count
 and the current baseline size, so the trend stays visible without a snapshot metric. With `--annotate` a
-failure also prints one GitHub `::warning::` line.
+failure also prints one GitHub `::error::` line.
 
 If mypy or the filter cannot run (a crash, a missing tool, a missing baseline) it still writes a "could not
-run" summary line and warning and returns 2, so a broken tool never looks like a clean pass in the
-`continue-on-error` CI step (the same rule as `codebase.health check`).
+run" summary line and error annotation and returns 2, so a broken tool fails the required check instead of
+looking like a clean pass (the same rule as `codebase.health check`).
 
-Advisory for the roadmap M4 soak: nothing blocks on the result yet.
+Blocking in CI since TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING: the exit code (1 or 2) fails the `Type check` job.
 """
 
 from __future__ import annotations
@@ -29,6 +31,8 @@ from codebase.health import registry
 
 MYPY_COMMAND = ("-m", "mypy", "src/", "--config-file", "pyproject.toml", "--no-error-summary")
 FILTER_COMMAND = ("-m", "mypy_baseline", "filter")
+# `mypy-baseline filter` exits with the number of new errors, at most 100 (see its commands/_filter.py): 0 means none.
+FILTER_EXIT_CODES = tuple(range(101))
 DEFAULT_BASELINE = "codebase/baselines/mypy_baseline.txt"
 LIST_LIMIT = 25
 
@@ -72,11 +76,11 @@ def format_summary(new: Sequence[str], entries: int) -> str:
     """The job summary: one line when nothing is new, otherwise the count and the first errors."""
     size = f"baseline holds {entries} entries"
     if not new:
-        return f"**mypy (advisory):** 0 new errors ({size})."
+        return f"**mypy:** 0 new errors ({size})."
     shown = list(new[:LIST_LIMIT])
     more = [f"... and {len(new) - LIST_LIMIT} more"] if len(new) > LIST_LIMIT else []
     body = "\n".join([*shown, *more])
-    return f"**mypy (advisory):** {len(new)} new errors ({size}).\n\n```\n{body}\n```"
+    return f"**mypy:** {len(new)} new errors ({size}).\n\n```\n{body}\n```"
 
 
 def _append(path: Path | None, text: str) -> None:
@@ -93,21 +97,23 @@ def run(root: Path, summary_out: Path | None = None, annotate: bool = False, myp
             raw = mypy_output.read_text(encoding="utf-8")
         else:
             raw = _run([sys.executable, *MYPY_COMMAND], root, (0, 1)).stdout
-        filtered = _run([sys.executable, *FILTER_COMMAND], root, (0, 1), stdin=raw)
+        filtered = _run([sys.executable, *FILTER_COMMAND], root, FILTER_EXIT_CODES, stdin=raw)
+        new = new_error_lines(filtered.stdout)
+        if filtered.returncode and not new:
+            raise GateCannotRun(f"mypy_baseline filter exited {filtered.returncode} with no error line: {filtered.stdout.strip()}")
     except (GateCannotRun, OSError, tomllib.TOMLDecodeError) as exc:
         reason = " ".join(f"{exc}".split())[:300] or type(exc).__name__
-        _append(summary_out, f"**mypy (advisory):** could not run: {reason}")
+        _append(summary_out, f"**mypy:** could not run: {reason}")
         if annotate:
-            print(f"::warning::mypy-baseline could not run (advisory): {reason}")
+            print(f"::error::mypy-baseline could not run: {reason}")
         print(f"error: {reason}", file=sys.stderr)
         return 2
-    new = new_error_lines(filtered.stdout)
     if filtered.stdout.strip():
         print(filtered.stdout.rstrip())
     _append(summary_out, format_summary(new, entries))
     if new and annotate:
-        print(f"::warning::mypy-baseline: {len(new)} new errors (advisory); see job summary")
-    return filtered.returncode
+        print(f"::error::mypy-baseline: {len(new)} new errors; see job summary")
+    return 1 if new else 0
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -115,7 +121,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python3 -m codebase.gates.mypy_gate", description=__doc__)
     parser.add_argument("--root", type=Path, default=registry.REPO_ROOT, help=argparse.SUPPRESS)
     parser.add_argument("--summary-out", type=Path, help="append a Markdown summary here ($GITHUB_STEP_SUMMARY)")
-    parser.add_argument("--annotate", action="store_true", help="print a GitHub ::warning:: line on a failure")
+    parser.add_argument("--annotate", action="store_true", help="print a GitHub ::error:: line on a failure")
     parser.add_argument("--mypy-output", type=Path, help="filter this saved mypy output instead of running mypy")
     args = parser.parse_args(argv)
     return run(args.root, args.summary_out, args.annotate, args.mypy_output)

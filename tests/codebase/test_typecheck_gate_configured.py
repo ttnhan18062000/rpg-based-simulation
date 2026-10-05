@@ -62,20 +62,22 @@ def test_pyproject_configures_mypy_baseline_with_the_committed_baseline_and_tole
     assert baseline == sorted(baseline), "the committed baseline is sorted (sort_baseline = true)"
 
 
-def test_makefile_typecheck_py_filters_through_the_baseline_and_stays_advisory():
+def test_makefile_typecheck_py_filters_through_the_baseline_and_is_blocking():
     text = (_REPO_ROOT / "Makefile").read_text(encoding="utf-8")
     match = re.search(r"^typecheck-py:.*\n(\t.*\n)+", text, re.MULTILINE)
     assert match is not None
-    assert "mypy_baseline filter" in match.group(0) and match.group(0).rstrip().endswith("|| true")
+    assert "mypy_baseline filter" in match.group(0) and not match.group(0).rstrip().endswith("|| true")
     sync = re.search(r"^typecheck-baseline-sync:.*\n(\t.*\n)+", text, re.MULTILINE)
     assert sync is not None and "mypy_baseline sync" in sync.group(0)
     assert "Codebase domain only" in sync.group(0).splitlines()[0]
 
 
-def test_ci_mypy_step_runs_the_advisory_gate_and_is_not_blocking():
+def test_ci_mypy_step_runs_the_gate_and_is_blocking():
     import yaml
 
     steps = yaml.safe_load((_REPO_ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8"))["jobs"]["typecheck"]["steps"]
     step = next(s for s in steps if s.get("name") == "mypy")
     assert "codebase.gates.mypy_gate" in step["run"] and "--annotate" in step["run"]
-    assert step["continue-on-error"] is True, "advisory until TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING"
+    job = yaml.safe_load((_REPO_ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8"))["jobs"]["typecheck"]
+    assert job["name"] == "Type check", "branch protection lists this name"
+    assert "continue-on-error" not in step and "continue-on-error" not in job, "a required check must be able to fail"

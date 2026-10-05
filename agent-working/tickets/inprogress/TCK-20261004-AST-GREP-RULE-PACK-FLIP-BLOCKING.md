@@ -4,7 +4,7 @@ layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING
-phase: blocked
+phase: inprogress
 date: 2026-10-04
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 M5f: After its own two-week soak, make the ast-grep rules (N3, N4, E3) block new violations
 
 ## Status
-BLOCKED
+INPROGRESS
 
 ## Tier
 standard
@@ -34,7 +34,6 @@ Roadmap decision 8.10: a new check is advisory for two weeks before it blocks. T
 - Remove the exclusion of `ast_grep` from the blocking set the M4 flip created (the ratchet then fails a PR on a new or worse `ast_grep` finding)
 - Ask the owner to confirm the required-check setting (owner action; record it)
 - Announce the date to the other planners before flipping: it makes N3, N4 and E3 violations in new code fail a PR for every domain that edits `src/`
-- Decide whether the SARIF changed-line feedback should include `ast_grep` (it builds ruff and complexipy only today; a structural change)
 
 ## Out of Scope
 - Any file under src/
@@ -65,10 +64,15 @@ None.
 - .github/workflows/test.yml
 
 ## Assumptions / Open Questions
-- Soak start and end: unknown until the rule pack's PR merges; written here at that merge
+- Soak start 2026-10-04 (PR #315 merged 2026-10-04T06:26:43Z), end 2026-10-18 (start + 14 days). Roadmap decision 8.18: ships in the one flip batch, merged on or after 2026-10-18; the soak review is drafted now and finalized after the window
 - N4 leaves a trailing digit to the reviewer; the standard's Enforcement cell says so
 
 ## Implementation Notes
+- `REPORT_ONLY_TOOLS` is now `{"jscpd"}`; `SKIPPABLE_TOOLS` is untouched (still a subset), and a missing `ast-grep` binary still exits 2. A new or worse `ast_grep` finding makes `check` exit 1 with the `::error::` annotation.
+- Flipped pins in `test_code_health_blocking_policy.py` (policy set, blocking parametrization with `ast_grep`, new-ast_grep test now exit 1). Mutation proof: re-adding `ast_grep` to the report-only set fails 3 tests on the assertions, not on imports.
+- Docs: N3, N4, E3 cells read "blocking in the `Code health` ratchet"; environment guide, Makefile help, CI comment and the `ratchet.py` comment name only jscpd as report-only.
+- Live demo (step 5): https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37213577739 : `Code health` failed at the `Code health ratchet` step on one `ast_grep e3-silent-except` finding; `Type check` passed. The E3 demo uses a typed silent `except OSError: pass` rather than a bare `except: pass`: a bare `except:` would also trip ruff `E722`, and the proof would not isolate ast-grep.
+- Precondition (2026-10-04, `origin/main` 053f459e4): `check` gives 0 new, 0 worse including the 111 `ast_grep` rows. Repeat right before merge; both runs are recorded in `python_code_craft_structure_soak_review.md`.
 
 ## Test Summary
 

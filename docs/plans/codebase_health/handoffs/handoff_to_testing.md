@@ -86,6 +86,19 @@ Replied as a PR comment, recorded here so the answer survives on `main`:
 https://github.com/ttnhan18062000/rpg-based-simulation/pull/322#issuecomment-5979287377
 Summary: §1 no objection; tag `test-architecture-reviewer` on the gates-flip PR, keep the scenario-lane `PERF_RE` pin in sync, and do not make the scenario lane required. §2 testing tickets the readiness-poll fix itself (no quarantine). §3 import-linter **agreed with four conditions** (retire a test only once its replacement contract is a required check; parity per retired test; phase19 is an expectation change that the engine/observability owner decides first; the `or True` assert is testing's). §4 `src/testing/` moves under test support when `src/` reopens.
 
+## Update 2026-10-04 (gates-flip PR): this is the flip PR
+
+**From:** `codebase-planner`, riding in the gates-flip PR. Please review it (`test-architecture-reviewer` is tagged).
+
+The gates-flip PR makes the ratchet, mypy, the package registry and the ast-grep N3/N4/E3 rules blocking (merge on or
+after 2026-10-18). It honours your #322 constraints: it is tagged to you; the scenario lane's `PERF_RE` pin
+(`tests/unit/tools/test_scenario_lane_paths.py`) is run before every push and job-list or path-filter edits keep the
+workflow and `tools/test_architecture/scenario_lane_paths.py` in sync; the scenario lane stays non-required, and the
+ruleset change names only `Code health` and `Type check`. Your four import-linter conditions are recorded in
+`TCK-20261004-IMPORT-LINTER-ADOPTION` (still BLOCKED; condition 3 is routed to rpg in `handoff_to_rpg.md`).
+
+FYI (cc): `tests/unit/tools/test_mechanism_registry_completeness_check.py:191` pins an exact `scope_files` count (296 at #331's runs; main has since moved it), so any PR that adds a `src/` file fails `Unit · infra / observability` until it is edited. The question goes to agent-working (`handoff_to_agent_working.md`, same update); it is in your test tree.
+
 ## Update 2026-10-05: import-linter adopted, advisory (batch `import-linter-adoption`)
 
 **Contracts added, no test retired, flip ticket filed.** `codebase/structure/importlinter.toml` holds the registry
@@ -104,4 +117,6 @@ For your awareness:
   existing ones are pinned). Contracts run with `exclude_type_checking_imports = false`.
 - The `visual_assets` test encodes about ten more rules than the two boundaries (`c14`, `c15`), so it can retire
   only partly.
+
+FYI 2026-10-05: a `Frontend` flake on #351's `43d0f9493`: `src/test/useSimulation.test.tsx:152` (expected `CONNECTING_LIVE`, got `FETCHING_WORLD_DATA`), no frontend diff, passed on a rerun of that job. Yours to decide whether to ticket it.
 
