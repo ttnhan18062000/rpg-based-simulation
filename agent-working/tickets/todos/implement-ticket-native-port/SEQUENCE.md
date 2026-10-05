@@ -19,6 +19,8 @@ seeing the cheap children's measured cost. The epic stays OPEN; this is a record
 not a violation of it. Do not run `implement-epic` on this folder expecting items 4-5 to be skipped silently: they are the
 remaining work.
 
+**Release of items 4-5 (owner, 2026-10-06, batch answer "Native-port children 4-5"):** the owner released both without waiting for the cheap children's measured cost. The backstop child (3) has landed, so the item 4 order condition holds. Item 5 still needs the owner's Workflow opt-in just before its run.
+
 ## Why This Order Matters
 
 Written by hand. The attestation design found a nonce-hash gate result forgeable by an agent told to cheat, so the
