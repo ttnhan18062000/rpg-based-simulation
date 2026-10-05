@@ -234,6 +234,25 @@ def build_records(
     return run_record, event_records
 
 
+def remove_stale_active_copies(ticket_id: str, tickets_root: Path = Path("agent-working/tickets")) -> list[str]:
+    """Delete same-basename copies of a CLOSED ticket under `todos/` (recursively) and `inprogress/`, returning
+    the removed paths. Only when the ticket's own `done/` file exists, so an unclosed ticket is never touched.
+    A ticket filed directly into `todos/` is the normal planner hand-off and CLAUDE.md only tells a lane to delete
+    a `todos/{folder}/` source, so the stale copy otherwise survives and the closed-ticket-resurrection corpus test
+    fails at PR time (TCK-20261005-CLOSE-LEAVES-STALE-TODOS-COPY-FOR-DIRECTLY-FILED-TICKETS)."""
+    name = f"{ticket_id}.md"
+    done = tickets_root / "done"
+    if not (done / name).exists() and not any(done.glob(f"*/{name}")):
+        return []
+    removed = []
+    for active in ("todos", "inprogress"):
+        base = tickets_root / active
+        for path in sorted(base.rglob(name)) if base.is_dir() else []:
+            path.unlink()
+            removed.append(path.as_posix())
+    return removed
+
+
 def check_sidecar_matches_ticket(ticket_id: str) -> str | None:
     """Advisory-only: warns (returns a message, never raises) when `.claude/current_run`'s own
     `run_id` doesn't match the ticket about to be closed.
@@ -481,8 +500,15 @@ def main() -> None:
     if not log_ok:
         print("WARNING: working_log.csv was not updated — append it manually", file=sys.stderr)
 
+    for stale in remove_stale_active_copies(args.ticket_id):
+        print(f"REMOVED stale active-directory copy of {args.ticket_id}: {stale}")
+
     try:
-        generate_registry(Path(".").resolve(), Path("docs/REGISTRY.yaml").resolve())
+        generate_registry(
+            Path(".").resolve(), Path("docs/REGISTRY.yaml").resolve(),
+            include=[f"agent-working/tickets/done/{args.ticket_id}.md", f"agent-working/tickets/done/*/{args.ticket_id}.md",
+                     f"agent-working/stored_artifacts/{args.ticket_id}"],
+        )
     except Exception as e:  # noqa: BLE001 - registry regeneration must never fail a closure
         print(f"WARNING: docs/REGISTRY.yaml regeneration failed: {e}", file=sys.stderr)
 

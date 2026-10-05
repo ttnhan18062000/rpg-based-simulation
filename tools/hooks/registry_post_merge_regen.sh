@@ -12,6 +12,9 @@
 #
 # No-op if generate_registry.py is missing (e.g. a stripped-down checkout).
 #
+# generate_registry.py indexes only files git tracks or has staged (no --include-untracked here),
+# so an untracked draft ticket or doc on disk never reaches the registry this hook writes.
+#
 # REQUIRED BACKSTOP -- this driver+hook pair is only safe because a separate CI test exists:
 # tests/tools/test_generate_registry.py::TestRealDocsTree::
 # test_check_flag_detects_no_drift_against_real_registry (already running in the "API / tools
