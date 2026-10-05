@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-APPRAISAL-READS-REPUTATION-WITHOUT-A-KNOWLEDGE-GATE
-phase: open
+phase: done
 date: 2026-10-03
 tags: [social, strategy, determinism]
 ---
@@ -18,7 +18,7 @@ catalog-CONFLICTING against PERC-01/KNOW-01, and blocked on what `public_reputat
 
 ## Status
 
-BLOCKED
+DONE
 
 ## Tier
 
@@ -162,18 +162,68 @@ missing), against CLAUDE.md's rule that P0 requires a passing one. `SOC-052` (mi
   append-only and irreversible, and that is not a call to make incidentally on a blocked ticket. Worth
   the registry owner's attention, since at least one doc already carries `layer: social`.
 
+- **Why this ticket sat open after the decision was taken.** The close was **blocked by tooling**, not
+  by substance. A standard-tier ticket with no implementation failed `done_checker_static`'s
+  `staging_artifacts_complete` (precheck) and `migration_complete`, both demanding
+  `plan.md`/`investigation.md`/`test_plan.md`, and no `## Disposition` value meant
+  "intended behaviour, owner decided". The only compliant-looking routes were fabricating three
+  artifacts for work never done, or writing a false Disposition value — both forbidden by the
+  project's own rules. The shape was reported to `agent-working-design`, which confirmed the gap was
+  pre-existing across all five prior values; `DECISION-RECORDED` was added and reached `origin/main`
+  in **PR #339** (merge commit `da064fe78`, 2026-10-05). This ticket is its first real user.
+
 ## Implementation Notes
 
-_Blocked. Nothing to implement until memo row 4 is decided._
+**None, by decision.** Owner decision 4 (2026-10-05) settled the semantics rather than requiring a
+gate, so there is no code to write. The reads this ticket questioned are correct as they stand.
 
 ## Test Summary
 
-_Blocked. The pin list above is the test-side record._
+**No test change.** All six pinned tests in "The pin list" above stay correct **unchanged** — they
+were written as expected failures *if* these reads were ever gated, and the decision is that they are
+not gated. Re-verified as the expected-pass set rather than rewritten.
 
 ## Files Changed
 
-_None yet._
+**none — decision-only.** The decision's own record lives outside this ticket, in
+`world-rule-catalog-design`'s commit `d7705e397` (parked on `origin/reputation-scope-decision`):
+`docs/plans/systemic_world/owner_decision_memo.md` row 4, the `social-relations.md` reputation-reach
+entry, `social-lineage-batch-09.md` SL-S15, and `roadmap.md` §10 item 4.
 
 ## Completion Summary
 
-_Blocked on owner decision memo row 4._
+Closed **decision-only** under `## Disposition: DECISION-RECORDED`. Owner decision 4, taken
+**2026-10-05**: public reputation is a **publicly known fact held per scope**. Within a scope, being
+in the scope *is* the declared channel, so no perception or knowledge event is required — which is
+why no gate is wanted and why the reads this ticket flagged are correct. Each scope carries its own
+value (world, plus narrower geographic or political scopes); the read rule is **the narrowest scope
+the consumer is acting in that holds a value, falling back outward, ending at world**. Today only the
+world scope exists, and `SocialComponent.public_reputation` is that world-scope value.
+`clan_reputation` follows the same rule as the clan's own public fact. Personal facts — identity,
+lineage, private relationships — still require a declared channel, so this decision does not
+generalise to them.
+
+Parity entry `SOC-134` is now true of the Rule as well as of the code; read the "Parity-ledger
+caveat" section above before citing it.
+
+**Narrower scopes (region, realm) are feature work and are parked by owner decision 7**
+("foundation before features"). There is a dormant start:
+`SocialComponent.regional_reputation` (`Dict[RegionID, float]`) is already in the canonical dict and
+the replay fingerprint, but nothing produces a delta and nothing reads it — so the first producer
+will move hashes. It also inherits
+`TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER`'s open question, since a region-scoped
+read needs a position to belong to one region.
+
+## Disposition
+
+DECISION-RECORDED
+
+## Disposition Rationale
+
+Owner decision 4, taken **2026-10-05**, recorded in `world-rule-catalog-design`'s commit
+`d7705e397` — `docs/plans/systemic_world/owner_decision_memo.md` row 4, with the catalog side in
+`docs/world_rules/social-lineage/social-relations.md` (the reputation-reach entry, now `SUPPORTED`
+for the world scope and `MISSING` for narrower scopes) and `roadmap.md` §10 item 4 marked decided.
+The decision is that public reputation is a publicly known fact held per scope, so the ungated reads
+this ticket flagged are **correct** and no knowledge gate is wanted. No `src/` change and no test
+change is attributable to this ticket; the six pinned tests stay correct unchanged.

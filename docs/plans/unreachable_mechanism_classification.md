@@ -93,6 +93,18 @@ Totals: `DEFECT` 4, `UNDECLARED` 5, `CONDITION` 2, `STALE-PREMISE` 2, `NO-MECHAN
 The four `DEFECT`s are **not one kind of fix**, so they are not forced onto one list. Nothing here is scheduled by this document.
 
 **Track A — the diagnosis is complete; the change is small.**
+> **Track A item 1 is spent, 2026-10-05.** `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES` closed
+> **SUPERSEDED**: #276 (`786f9ee9b`) made DEFEAT/HAZARD/passive deaths reach `recent_deaths`, and
+> `process_influence_shift` now both executes and has an effect (43 calls / 22 non-empty updates on
+> `frontier_living_world` at 1500 ticks; `goblin_camp` owner `None → HERO_GUILD`). So the item below
+> is kept as the record of the diagnosis, but two of its claims are now false: `RegionState.influence`
+> **has** moved, and "it would make dynamic conquest and liberation fire for the first time in this
+> codebase's history" **has already happened**, without the one-line filter fix and without the design
+> question being answered first. The caveat's substance survives in a changed form: the blast radius
+> did land, so the **SimQ re-baseline it called for is now owed retrospectively**, not prospectively.
+> `TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT`'s framing inherits the same staleness and
+> needs its own re-read. Evidence: commit `9fba1df76`.
+
 1. `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES` — first, because it has the most waiting consumers: `RegionState.influence`
    has never moved, and the sovereignty-threshold unification (`TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT`) already
    tuned constants against it. **Caveat on "one-line filter fix":** the code change is small but the blast radius is not. It would
