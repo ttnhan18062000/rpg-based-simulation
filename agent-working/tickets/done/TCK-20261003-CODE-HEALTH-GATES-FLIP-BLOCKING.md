@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING
-phase: open
+phase: done
 date: 2026-10-03
 tags: [delivery]
 ---
@@ -15,7 +15,7 @@ tags: [delivery]
 M4f: After the two-week soak, make the code-health ratchet, SARIF step and mypy baseline block new violations
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -99,7 +99,15 @@ None.
 
 ## Test Summary
 - Two `tests/codebase` tests fail on this machine only (a 60 s test budget, identical on clean `main`, green in CI): `tests/codebase/test_codebase_health_baseline.py::test_make_target_runs_successfully_with_plausible_values` and `tests/codebase/test_codebase_health_snapshot.py::test_make_target_runs_successfully_end_to_end`. Tracked by `TCK-20261005-CODE-HEALTH-MAKE-TARGET-TESTS-LOCAL-TIMEOUT` (`agent-working/tickets/todos/`); not a result of this flip.
+- PR #329's CI at merge: 19 checks pass, 3 skipped (Scenario lane, SimQ grade-anchor drift, Slow regression), none failing. Final soak measurement and the local `check`/`validate`/`mypy_gate` runs on `c8c355459` (all exit 0) are in the soak reviews.
 
 ## Files Changed
+- `.github/workflows/test.yml`, `Makefile` (ratchet, SARIF-excluded, mypy steps blocking; check names `Code health`, `Type check`)
+- `codebase/health/{__main__,ratchet,scan}.py`, `codebase/gates/mypy_gate.py`
+- `codebase/baselines/code_health_exceptions.jsonl`, `codebase/baselines/mypy_baseline.txt`
+- `tests/codebase/test_code_health_blocking_policy.py` (new), `conftest.py`, `test_mypy_gate.py` and four sibling tests; `tests/static/test_ci_uv_install.py`
+- `docs/guidelines/{agent_working_environment,python_code_standard}.md`, `docs/parity_ledger/infrastructure.yaml`
+- soak review, roadmap, handoffs under `docs/plans/codebase_health/`
 
 ## Completion Summary
+The ratchet (minus jscpd), the SARIF-excluded steps and the mypy gate are blocking and merged to `main` by the owner on 2026-10-05T14:47:13Z (PR #329, `c8c355459`), 13 days before the planned 2026-10-18, so the 14-day soak was cut short to about 2 days (mypy about 1). The soak review records the shortened window, 75 ratchet-failing runs (mostly the 27 accepted rows persisting), the `mypy_gate` exit-code defect fixed before the flip, 0 false positives, and the 27 ratchet rows and 3 mypy errors other domains added during the window, accepted as reviewed debt. Adding `Code health` and `Type check` as required checks in ruleset 14220945 is the owner's separate step, not done here.

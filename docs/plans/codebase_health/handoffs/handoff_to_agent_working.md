@@ -132,3 +132,9 @@ deliberate ratchet; its sibling `test_wider_scope_every_wired_candidate_has_a_re
 unseen. What would help is a better assertion message that names what to update: the pin, its comment, and `unbound_files`, so a
 domain that adds a `src/` file can fix it without reading the tool.
 
+
+## Update 2026-10-05 (gates-flip closure): the gates are blocking on `main` since 2026-10-05 (#329)
+
+The flip merged early on 2026-10-05T14:47Z. For you: `.claude` edit hook `codebase.hooks.edit_ratchet_hook` stays advisory and
+always exits 0 (unchanged); CI is now where a new or worse finding stops a PR. Agents opening a `src/` PR should run
+`make code-health` and `make typecheck-py` first. Nothing in this update asks for a `.claude/**` change.
