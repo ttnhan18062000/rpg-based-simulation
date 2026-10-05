@@ -142,14 +142,20 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     `total_targets` 64 -> 65 and `unbound` 25 -> 26. The new target is
     `systems/strategic_systems/entity_target_objective` (a pure predicate module with no class, shared by
     `intelligence.py` and `work_queue.py`). It is a lifecycle rule of the existing `goal_hierarchy` /
-    `strategic_intelligence_core` mechanisms, not a mechanism of its own, so it is left unbound rather than
-    given a registry entry (registry ownership is `rpg-feature-planning`'s)."""
+    `strategic_intelligence_core` mechanisms, not a mechanism of its own, so it was first left unbound rather than
+    given a registry entry (registry ownership is `rpg-feature-planning`'s).
+
+    2026-10-06 (TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION, at
+    the planner's request): `bound` 36 -> 37 and `unbound` 26 -> 25, `total_targets` unchanged at 65. The module
+    is now cited under `goal_hierarchy`'s `implemented_by` (`entity_target_outcome`,
+    `close_entity_target_project`), directly after `evaluate_strategic_intent`, whose docstring names it. The
+    counts were taken by running the check, not by subtracting one."""
     data = _real_registry_data()
     report = build_report(data)
     assert report.total_targets == 65
-    assert len(report.bound) == 36
+    assert len(report.bound) == 37
     assert len(report.excluded) == 3
-    assert len(report.unbound) == 26
+    assert len(report.unbound) == 25
 
 
 # --- state: gap is not a coverage hole (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION) ---

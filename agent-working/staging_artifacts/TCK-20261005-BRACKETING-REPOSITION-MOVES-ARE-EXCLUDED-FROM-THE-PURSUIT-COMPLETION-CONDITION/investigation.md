@@ -41,7 +41,7 @@ overridden by live tracking toward the target after the first tick.**
 | PURSUE | 13 (4, 6, 2, 1) | 2 | 2 | **2** (1876 and 1998 ticks); the other 11 ended in median 3 ticks |
 | REPOSITION / BRACKETING | 1 | 1 | 1 | **1** (1682 ticks) |
 | GUARD / CONTRACT_OBLIGATION_GUARD | 1 | 1 | 1 | 1 (1010 ticks) |
-10 of 21 target-carrying moves (48%) were held for hundreds to ~2000 ticks after their target died. The existing pursuit completion
+10 of 21 target-carrying move RECORDS persisted to the end of the run (see 3b: in all 10 the mover itself was dead or inactive at its last sighting, so most were corpses carrying a stale task, not live entities held in place). The existing pursuit completion
 (`pursuit_reached_attack_range`, #347) requires a **live** target in reach, so a dead or gone target returns False and nothing ends the
 move. INTERCEPT has no completion at all in the corpus: every INTERCEPT move in every world was still running at the end.
 KITING: no instance in the corpus (0 moves), so it is checked and unobserved, not shown safe.
@@ -61,3 +61,21 @@ Combat-positioning modes = {PURSUE, INTERCEPT, KITING, REPOSITION/BRACKETING}. (
 of them (the existing idle-task encoding, `pursuit_completion_update`), in both dispatchers (`executor.py`, `worker_logic.py`). (2) The in-reach
 condition extends to INTERCEPT and BRACKETING, not KITING (which intends to hold range). Guarding and cover-seeking untouched. A BRACKETING move
 that actually walks to `bracket_pos` rather than to the target is a separate defect (the live-tracking helper's mode blindness).
+
+## 3b. Correction (same session): count LIVE movers only (value, 4 worlds x 2 runs per arm, every pair matched)
+My first probe counted any entity that still carried the move, including corpses (a dead or inactive entity keeps its stale task and is never
+scheduled again: the dispatch check showed the completion check and the LOD gate stop being called for entity 8 after it died at ~t322).
+`probes/target_move_lifetimes.py` now records the mover's own status and counts only ticks where the mover is alive and active while the
+target is gone (`live_mover_dead_target_ticks`); `probes/before_after.sh` runs a `legacy` arm (the pre-fix logic swapped in by the probe) and the fix.
+**Legacy arm:** all 10 persisted-to-end moves had a dead mover at the last sighting. The harm is the live-mover time:
+- `frontier_living_world`, entity 18, PURSUE of target 51 which died at **t4**: held by a live mover for **986 ticks** (the worst case).
+- `crowded_frontier`, INTERCEPT entities 33 and 12 (target 26 died t972): 30 and 20 live ticks. GUARD entity 10: 16.
+- `dungeon_crawl`, BRACKETING entity 12: not a dead-target hold. The mover circled a LIVE target at distance ~1 for the move's life and was
+  eventually killed (corpse): a live-target, in-reach case, ended only by the in-reach extension (fixed arm: 5 ticks).
+**Fixed arm:** no live-mover dead-target hold above 20 ticks anywhere; the INTERCEPT moves end in 6-27 ticks and the BRACKETING move in 5. The only
+remaining persisted records are corpses and the GUARD move, which is untouched by design (the guard mover had 16 live ticks before it died).
+So the defect is real but much smaller than the first count suggested: one 986-tick live hold, two ~20-30-tick live holds, one BRACKETING circle.
+**PURSUE "must stay unchanged" check:** by construction a PURSUE move whose target stays alive takes the unchanged branch (unit-pinned:
+out-of-reach keeps pursuing, in-reach ends). At corpus level the per-move comparison is not available because freeing a held entity changes the
+trajectory afterwards (`frontier_living_world` PURSUE 6 -> 19 moves, median 3 -> 1; `crowded_frontier` 4 -> 3, median 6 -> 3; `urban_political`
+identical at 2 moves, median 3; `dungeon_crawl` 1 move). These are population comparisons, not per-move identity.

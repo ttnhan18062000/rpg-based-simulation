@@ -12,9 +12,10 @@ tags: [engine, combat]
 # TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION
 
 ## Title
-`BRACKETING` is the single largest forced-decision outcome at 55%, it issues an entity-targeted
-`ENTITY_MOVE` in `REPOSITION` mode, and the pursuit completion condition deliberately excludes every
-mode but `PURSUE` — so the sticky-task defect may be fixed for one movement mode and live in the bigger one
+Entity-tracking combat moves (pursuit, intercept, bracketing, kiting) have no completion condition when their
+target is dead, inactive or gone, so a live entity can hold a do-nothing move (measured worst case: 986 ticks
+after the target died at tick 4). (Retitled from "`BRACKETING` is the single largest forced-decision outcome ...": the original premise
+was true but the smaller half of the story; see the Request Summary.)
 
 ## Status
 INPROGRESS
@@ -29,6 +30,21 @@ bug
 P1
 
 ## Request Summary
+**Rescoped by the measurement (planner-ruled, same session).** The class defect is: *an entity-tracking combat
+`ENTITY_MOVE` has no completion condition when its target dies, goes inactive or is gone*, so the entity holds a
+do-nothing move (`probes/target_move_lifetimes.py`, values over 4 worlds x 2 runs). **Measured size, corrected in the
+investigation (3b):** 10 of 21 target-carrying move records persisted to the end of a run, but in all 10 the *mover* was
+dead (a corpse keeps its stale task and is never scheduled again), so the harm is the live-mover time: one `PURSUE` held
+986 ticks by a live entity after its target died at tick 4 (`frontier_living_world`), two `INTERCEPT` movers held 30 and 20
+ticks (`crowded_frontier`), and one `BRACKETING` mover that circled a LIVE target in reach until it was killed. The
+discovery path is below: the 55% `BRACKETING` share was a property of the forced read-only probe (real `BRACKETING`
+issuance is 0 in three worlds and 1 in `dungeon_crawl`), and the one real instance circled a LIVE target in reach (ended only by
+extending the in-reach condition to `BRACKETING`), while the dead-target holds need the new dead/gone-target condition,
+which the ticket's own candidate fix (widening the `PURSUE`-only gate for the in-reach condition) would not have supplied. One condition is added through `tracked_move_complete` / `tracked_move_completion_update`, in both dispatchers
+(`executor.py`, `worker_logic.py`). `KITING` is included **on design grounds**, not observed (0 corpus moves); it has a
+constructed test. Guarding and cover-seeking are untouched.
+
+**Original request summary, kept as the discovery path:**
 **This ticket exists because the three-gate map's answer changed when it was re-measured.** Gate 3 (the
 flee gate) was recorded as the dominant gate at `PANIC_RETREAT` 143 of 147 (97%). Re-run post-#344 by
 `rpg-implementer` on the same read-only forced-decision probe: **353 calls, `PANIC_RETREAT` 141 (40%),

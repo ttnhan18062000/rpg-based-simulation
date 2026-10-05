@@ -265,7 +265,11 @@ def test_real_registry_findings_pinned():
         ("class_assignment", "state_with_zero_callers"),
         ("campaigns", "state_with_zero_callers"),
         ("chronicle", "orphan_with_callers"),
-        ("goal_hierarchy", "state_with_zero_callers"),
+        # `goal_hierarchy` no longer fires (2026-10-06, TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-
+        # THE-PURSUIT-COMPLETION-CONDITION): binding `entity_target_objective.py::entity_target_outcome` /
+        # `close_entity_target_project` gave it callers in OTHER files (`intelligence.py`, `work_queue.py`), which
+        # `_real_callers()` counts. The blind spot described in the docstring above is unchanged: the five
+        # `StrategicIntelligenceSystem` bindings are still called only from inside `intelligence.py`.
         ("commitment_betrayal", "orphan_with_callers"),
         ("perception", "orphan_with_callers"),
         # 2026-09-30 (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION): `social_memory` was
