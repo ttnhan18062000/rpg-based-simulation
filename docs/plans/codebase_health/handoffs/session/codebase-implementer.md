@@ -1,3 +1,11 @@
+---
+status: active
+layer: testing
+authority: P2
+audience: agent
+date: 2026-10-05
+tags: [planning, delivery]
+---
 # Handover — codebase-implementer
 Updated: 2026-10-05 night (gates-flip-closure built in rpg-gates-closure, uncommitted; see Open)
 

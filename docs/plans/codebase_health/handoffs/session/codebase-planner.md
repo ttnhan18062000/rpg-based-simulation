@@ -1,3 +1,11 @@
+---
+status: active
+layer: testing
+authority: P2
+audience: agent
+date: 2026-10-05
+tags: [planning, delivery]
+---
 # Handover — codebase-planner
 Updated: 2026-10-05 ~15:00Z (#351 and #329 both MERGED; closure batch handed to the implementer; safe to /clear)
 

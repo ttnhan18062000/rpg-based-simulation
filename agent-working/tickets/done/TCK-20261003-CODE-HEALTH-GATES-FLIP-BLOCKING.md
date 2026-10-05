@@ -4,7 +4,7 @@ layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING
-phase: open
+phase: done
 date: 2026-10-03
 tags: [delivery]
 ---
