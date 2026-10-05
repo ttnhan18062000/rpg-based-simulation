@@ -74,6 +74,8 @@ lint = [
     "complexipy==8.0.1",
     # TCK-20261004-AST-GREP-RULE-PACK-ADVISORY: project rules in codebase/rules/ (binary: `ast-grep`, never `sg`).
     "ast-grep-cli==0.45.3",
+    # TCK-20261004-IMPORT-LINTER-ADOPTION: contracts in codebase/structure/importlinter.toml (advisory; binary: `lint-imports --config <file>`).
+    "import-linter==2.15",
 ]
 profiling = [
     "memray>=1.0.0",

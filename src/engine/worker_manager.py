@@ -54,6 +54,19 @@ class WorkerManager:
     """
 
     def __init__(self, max_workers: int = 1, max_queue_depth: int = 100, use_processes: bool = False):
+        # PERF-D1 (zero-capacity semantics): zero workers is synchronous execution, zero workers with
+        # zero queue depth means no queue exists, and zero queue depth with workers is a
+        # configuration error. Negative values are never a "disabled" signal.
+        if max_workers < 0 or max_queue_depth < 0:
+            raise ValueError(
+                f"WorkerManager capacities must not be negative "
+                f"(max_workers={max_workers}, max_queue_depth={max_queue_depth})"
+            )
+        if max_workers >= 1 and max_queue_depth <= 0:
+            raise ValueError(
+                f"WorkerManager needs a positive queue depth when workers exist "
+                f"(max_workers={max_workers}, max_queue_depth={max_queue_depth})"
+            )
         self._max_workers = max_workers
         self._max_queue_depth = max_queue_depth
         self._use_processes = use_processes
@@ -176,19 +189,28 @@ class WorkerManager:
         """Strictly synchronous execution fallback."""
         all_results = []
         for p in packets:
-            res = self._wrap_work(p, worker_fn)
+            res = self._wrap_work(p, worker_fn, pooled=False)
             if isinstance(res, list): all_results.extend(res)
             else: all_results.append(res)
         return all_results
 
-    def _wrap_work(self, packet: WorkerPacket, fn: Callable) -> List[WorkerResult] | WorkerResult:
-        """Helper to capture compute time and handle errors inside the pool."""
+    def _wrap_work(
+        self, packet: WorkerPacket, fn: Callable, pooled: bool = True
+    ) -> List[WorkerResult] | WorkerResult:
+        """
+        Helper to capture compute time and handle errors inside the pool.
+
+        PERF-D1: only pool threads count as active workers. Local fallback runs on the caller
+        thread and is not pool capacity (same reasoning as zero workers meaning synchronous
+        execution), so it must not push peak_active above max_workers.
+        """
         from src.core.worker_protocol import ResultStatus, WorkerResult
         from src.core.updates import EntityUpdate
         
-        with self._stats_lock:
-            self._active_count += 1
-            self._peak_active = max(self._peak_active, self._active_count)
+        if pooled:
+            with self._stats_lock:
+                self._active_count += 1
+                self._peak_active = max(self._peak_active, self._active_count)
         
         start = time.perf_counter_ns()
         try:
@@ -211,8 +233,9 @@ class WorkerManager:
                 status=ResultStatus.FAILURE
             )
         finally:
-            with self._stats_lock:
-                self._active_count -= 1
+            if pooled:
+                with self._stats_lock:
+                    self._active_count -= 1
 
     def get_stats(self) -> Dict[str, Any]:
         """
@@ -238,10 +261,12 @@ class WorkerManager:
             if self._max_workers > 0 else 0.0
         )
         
-        # Queue utilization is PEAK depth observed relative to limit.
+        # Queue utilization is PEAK depth observed relative to limit. PERF-D1: a zero limit is only
+        # constructible with zero workers (no queue exists), so there is no pressure to report (0.0),
+        # never the former 1.0 sentinel that ResourceGovernor read as saturation.
         queue_utilization = (
             peak_queued / self._max_queue_depth
-            if self._max_queue_depth > 0 else 1.0
+            if self._max_queue_depth > 0 else 0.0
         )
         
         return {

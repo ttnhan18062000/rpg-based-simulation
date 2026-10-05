@@ -13,7 +13,7 @@ _JOBS = yaml.safe_load((_ROOT / ".github" / "workflows" / "test.yml").read_text(
 # resync-gate (TCK-20261005-CI-SKIP-HEAVY-JOBS-ON-REGISTRY-ONLY-RESYNC) runs one stdlib-only module on the
 # runner's own python3, like changed-files, so it installs nothing.
 _NO_PYTHON_INSTALL = {"changed-files", "frontend", "resync-gate"}
-# code-health runs the ratchet itself (ruff, complexipy, ast-grep), so it syncs `lint` too.
+# code-health runs the ratchet itself (ruff, complexipy, ast-grep, import-linter), so it syncs `lint` too.
 _LINT_JOBS = {"tools-a-e", "code-health", "code-health-sarif"}
 
 
@@ -47,17 +47,27 @@ def test_lint_group_holds_the_code_health_tools_and_is_a_default_group() -> None
     data = tomllib.loads((_ROOT / "pyproject.toml").read_text())
     groups = data["dependency-groups"]
     lint = {d.split("==")[0] for d in groups["lint"]}
-    assert lint == {"ruff", "complexipy", "ast-grep-cli"}
+    assert lint == {"ruff", "complexipy", "ast-grep-cli", "import-linter"}
     assert not any(d.split("==")[0] in lint for d in groups["dev"])
     assert data["tool"]["uv"]["default-groups"] == ["dev", "lint"]
 
 
-def test_code_health_job_is_advisory_and_keeps_the_ratchet_step_non_blocking() -> None:
-    """TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB: the soak job must never fail the PR."""
+def test_code_health_job_is_blocking_and_the_ratchet_step_can_fail_it() -> None:
+    """TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING: a required check must be able to fail the PR.
+
+    Branch protection lists the job by its name. Two steps keep a step-level `continue-on-error`: the changed-paths step and
+    the advisory `Import contracts` step (TCK-20261004-IMPORT-LINTER-ADOPTION: it exits 0 whatever it finds and must never turn the
+    required check red). The ratchet step, the package-registry step (blocking since
+    TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING) and the job carry none.
+    """
     job = _JOBS["code-health"]
-    assert job["name"].endswith("(advisory)")
-    assert job["continue-on-error"] is True, "backstop for setup failures"
+    assert job["name"] == "Code health"
+    assert "continue-on-error" not in job, "a broken setup must not read as a pass for a required check"
     assert "if" not in job and "needs" not in job, "runs on every trigger, not behind the path-filter gate"
     step = next(s for s in job["steps"] if "codebase.health check" in s.get("run", ""))
-    assert step["continue-on-error"] is True, "the step carries the behaviour: exit 1 or 2 leaves the job green"
+    assert "continue-on-error" not in step, "exit 1 or 2 must fail the job"
     assert "--annotate" in step["run"] and "--summary-out" in step["run"] and "$GITHUB_STEP_SUMMARY" in step["run"]
+    assert job["timeout-minutes"] == 20 and _JOBS["typecheck"]["timeout-minutes"] == 10, "a hang must not hold a required check"
+    tolerant = {s["name"] for s in job["steps"] if s.get("continue-on-error")}
+    assert tolerant == {"Paths this PR changed", "Import contracts"}
+    assert job["steps"][-1]["name"] == "Import contracts", "the advisory step stays last, after every blocking one"

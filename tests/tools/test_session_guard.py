@@ -200,7 +200,7 @@ def test_script_run_end_to_end_is_silent_for_a_non_authority_call():
 def _wired_command():
     settings = json.loads((_REPO_ROOT / ".claude" / "settings.json").read_text(encoding="utf-8"))
     entries = [e for e in settings["hooks"]["PreToolUse"] if "guard.py" in json.dumps(e)]
-    assert len(entries) == 1 and entries[0]["matcher"] == "Bash|Edit|Write|MultiEdit|NotebookEdit"
+    assert len(entries) == 1 and entries[0]["matcher"] == "Bash|Edit|Write|MultiEdit|NotebookEdit|SendMessage"
     assert settings["hooks"]["PreToolUse"][-1] is entries[0] or settings["hooks"]["PreToolUse"][-1] == entries[0]
     return entries[0]["hooks"][0]["command"]
 

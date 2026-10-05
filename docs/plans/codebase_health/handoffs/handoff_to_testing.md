@@ -85,3 +85,47 @@ moves while `src/` is frozen. **Asked:** decide whether it moves under `tests/` 
 Replied as a PR comment, recorded here so the answer survives on `main`:
 https://github.com/ttnhan18062000/rpg-based-simulation/pull/322#issuecomment-5979287377
 Summary: §1 no objection; tag `test-architecture-reviewer` on the gates-flip PR, keep the scenario-lane `PERF_RE` pin in sync, and do not make the scenario lane required. §2 testing tickets the readiness-poll fix itself (no quarantine). §3 import-linter **agreed with four conditions** (retire a test only once its replacement contract is a required check; parity per retired test; phase19 is an expectation change that the engine/observability owner decides first; the `or True` assert is testing's). §4 `src/testing/` moves under test support when `src/` reopens.
+
+## Update 2026-10-04 (gates-flip PR): this is the flip PR
+
+**From:** `codebase-planner`, riding in the gates-flip PR. Please review it (`test-architecture-reviewer` is tagged).
+
+The gates-flip PR makes the ratchet, mypy, the package registry and the ast-grep N3/N4/E3 rules blocking (merge on or
+after 2026-10-18). It honours your #322 constraints: it is tagged to you; the scenario lane's `PERF_RE` pin
+(`tests/unit/tools/test_scenario_lane_paths.py`) is run before every push and job-list or path-filter edits keep the
+workflow and `tools/test_architecture/scenario_lane_paths.py` in sync; the scenario lane stays non-required, and the
+ruleset change names only `Code health` and `Type check`. Your four import-linter conditions are recorded in
+`TCK-20261004-IMPORT-LINTER-ADOPTION` (still BLOCKED; condition 3 is routed to rpg in `handoff_to_rpg.md`).
+
+FYI (cc): `tests/unit/tools/test_mechanism_registry_completeness_check.py:191` pins an exact `scope_files` count (296 at #331's runs; main has since moved it), so any PR that adds a `src/` file fails `Unit · infra / observability` until it is edited. The question goes to agent-working (`handoff_to_agent_working.md`, same update); it is in your test tree.
+
+## Update 2026-10-05: import-linter adopted, advisory (batch `import-linter-adoption`)
+
+**Contracts added, no test retired, flip ticket filed.** `codebase/structure/importlinter.toml` holds the registry
+`layers` contract and 16 contracts for the class E rules and the loopholes of the evaluation (Sections 3 and 4); an
+advisory `Import contracts` step runs them in the `code-health` job. Your condition 1 holds: every existing
+`tests/architecture/` test still runs; retirement is `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT` (BLOCKED
+until a two-week soak and the required check). Condition 2: the per-test parity table (34 injections, the contract
+caught all 34, the test missed 11) is in `TCK-20261004-IMPORT-LINTER-ADOPTION`'s Test Summary. Condition 3: phase19's
+five `kernel.py` imports are in `c06_hot_path_not_heavy`'s `ignore_imports`; its test is untouched. Condition 4: the
+blind spots and the stale phase18 allowlist entry are covered; the `or True` assert is untouched.
+For your awareness:
+- **Decision 8.11 notice:** `tests/static/test_ci_uv_install.py` edited (the `lint` group now includes `import-linter`);
+  the gates-flip PR (#329) edits the same file.
+- Correction to the evaluation: only the belief test skips `TYPE_CHECKING`; the fame and fidelity tests count it.
+- The contracts are stricter than the tests for a NEW `TYPE_CHECKING` import in core, phase18 and belief (the 7
+  existing ones are pinned). Contracts run with `exclude_type_checking_imports = false`.
+- The `visual_assets` test encodes about ten more rules than the two boundaries (`c14`, `c15`), so it can retire
+  only partly.
+
+FYI 2026-10-05: a `Frontend` flake on #351's `43d0f9493`: `src/test/useSimulation.test.tsx:152` (expected `CONNECTING_LIVE`, got `FETCHING_WORLD_DATA`), no frontend diff, passed on a rerun of that job. Yours to decide whether to ticket it.
+
+
+## Update 2026-10-05 (gates-flip closure): the gates are blocking on `main` since 2026-10-05 (#329)
+
+The flip merged early, by owner decision, on 2026-10-05T14:47Z (not on or after 2026-10-18 as stated above). The tests that
+pinned advisory status were updated in that batch as listed in the earlier update. `Code health` and `Type check` now fail
+the job on new findings; the two local `make`-target tests that exceed the 60 s budget are tracked by
+`TCK-20261005-CODE-HEALTH-MAKE-TARGET-TESTS-LOCAL-TIMEOUT`. Adding the checks to ruleset 14220945 as required is the owner's
+step. The import-linter flip and class E test retirement stay on `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`
+(soak ends 2026-10-19, your four conditions attached).
