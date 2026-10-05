@@ -2786,10 +2786,29 @@ def test_disposition_closure_passes_full_finalize_selfcheck(tmp_path, monkeypatc
 def test_decision_recorded_closure_passes_without_staging_artifacts(tmp_path, monkeypatch):
     _init_repo_with_origin_main(tmp_path)
     _write_disposition_ticket(tmp_path, value="DECISION-RECORDED",
-                              rationale="Owner decision recorded in docs/decisions.md:12 on 2026-10-05.")
+                              rationale="Owner decision 2026-10-05 recorded in docs/decisions.md:12.")
     monkeypatch.chdir(tmp_path)
     status, evidence = check_migration_complete("TCK-DISP", "standard")
     assert status == "PASS" and "DECISION-RECORDED" in evidence
+
+
+def test_decision_recorded_standard_ticket_passes_precheck_and_finalize_without_staging(tmp_path, monkeypatch):
+    """Both conditions that demand staging artifacts honour a valid Disposition."""
+    from tools.gate_checks.done_checker_static import check_staging_artifacts_complete
+    _init_repo_with_origin_main(tmp_path)
+    _write_disposition_ticket(tmp_path, value="DECISION-RECORDED",
+                              rationale="Owner decision 2026-10-05 recorded in 791e6bf6b.")
+    monkeypatch.chdir(tmp_path)
+    assert check_staging_artifacts_complete("TCK-DISP", "standard", base_dir=tmp_path / "none")[0] == "NA"
+    assert check_migration_complete("TCK-DISP", "standard")[0] == "PASS"
+
+
+def test_invalid_disposition_still_fails_the_staging_precheck(tmp_path, monkeypatch):
+    from tools.gate_checks.done_checker_static import check_staging_artifacts_complete
+    _init_repo_with_origin_main(tmp_path)
+    _write_disposition_ticket(tmp_path, value="DECISION-RECORDED", rationale="The owner decided.")
+    monkeypatch.chdir(tmp_path)
+    assert check_staging_artifacts_complete("TCK-DISP", "standard", base_dir=tmp_path / "none")[0] == "FAIL"
 
 
 def test_decision_recorded_with_uncited_rationale_fails(tmp_path, monkeypatch):
@@ -2802,7 +2821,7 @@ def test_decision_recorded_with_uncited_rationale_fails(tmp_path, monkeypatch):
 
 def test_decision_recorded_with_committed_src_change_fails(tmp_path, monkeypatch):
     _init_repo_with_origin_main(tmp_path)
-    _write_disposition_ticket(tmp_path, value="DECISION-RECORDED", rationale="Decision in 791e6bf6b.")
+    _write_disposition_ticket(tmp_path, value="DECISION-RECORDED", rationale="Decided 2026-10-05 in 791e6bf6b.")
     (tmp_path / "src").mkdir()
     (tmp_path / "src" / "x.py").write_text("x = 1\n", encoding="utf-8")
     _git(tmp_path, "add", "-A")

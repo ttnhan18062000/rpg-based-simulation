@@ -1,0 +1,72 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20261004-CLOSURE-RECORDER-AGENT-LITERAL-GUARD
+phase: done
+date: 2026-10-04
+tags: [ai, process-improvement]
+---
+
+# TCK-20261004-CLOSURE-RECORDER-AGENT-LITERAL-GUARD
+
+## Title
+Closure recorder rejects an unregistered `--agent` and prints the anomaly-validator result
+
+## Status
+DONE
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P2
+
+## Request Summary
+`record_hand_orchestrated_closure.py` accepted `--agent perf-implementer` (PR #287, 12 events) and `--agent codebase-implementer` (PR #288, 8 events) with only a warning; both pushed the `vocabulary_drift` ratchet over its ceiling and failed a tools CI job, and the repair needed the owner's yes because a shard edit counts as audit tampering. Verified: `warn_vocabulary_drift()` in `record_events.py` is warn-only by design.
+
+Source: `docs/plans/codebase_health/handoffs/handoff_to_agent_working.md` (PR #322, codebase-planner, 2026-10-04); structure re-read on `origin/main` by `agent-working-design`.
+
+## Scope
+- In `record_hand_orchestrated_closure.py` only: reject an unregistered `--agent` (and any per-event `agent` override) at argument parsing, before any write, exit non-zero, naming the allowed values from the existing `is_known_agent` source (no second list). `record_events.py` and the pipeline path stay warn-only (CLAUDE.md: monitoring write failure must never fail the workflow; this is a hand-run CLI rejecting bad input, not a failed write).
+- After a successful record, run `python3 tools/gate_checks/monitoring_anomaly_validator.py` and print its result; advisory, never changes the exit code.
+- Register `perf-implementer` and `codebase-implementer` as agent literals only if they are legitimate session roles (see the codebase-domain registration ticket); otherwise the error tells the caller to use `--agent claude`.
+
+## Out of Scope
+- Rewriting existing shards, raising the ratchet ceiling (never), changing the pipeline's warn-only path.
+
+## Acceptance Criteria
+1. `--agent bogus` exits non-zero, names the allowed values, and leaves every shard and the working log byte-identical (positive control: the old tool wrote the rows).
+2. A registered agent still records; the validator result is printed after success and a breach does not change the exit code.
+3. `record_events.py` behaviour is unchanged (existing warn tests green). Scoped tests green; docs and `docs/REGISTRY.yaml` regenerated.
+
+## Related Tickets
+- PR #322 handoff; `TCK-20260904-*` monitoring-anomaly ratchet tickets where cited in the validator
+
+## Related Docs
+- `docs/plans/codebase_health/handoffs/handoff_to_agent_working.md`
+
+## Related Stored Artifacts
+- none
+
+## Related Code Areas
+- `tools/agent-monitoring/record_hand_orchestrated_closure.py`, `record_events.py` (read-only), `tools/gate_checks/monitoring_anomaly_validator.py`, tests.
+
+## Assumptions / Open Questions
+- The CLAUDE.md closure example uses `--events` with its own agent values; check they all pass the guard.
+
+## Implementation Notes
+Draft by `agent-working-design`, 2026-10-04. Not activated; the implementer commits it.
+
+## Test Summary
+Not started.
+
+## Files Changed
+None yet.
+
+## Completion Summary
+Not started.

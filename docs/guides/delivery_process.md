@@ -98,9 +98,12 @@ disposition closure.
 
 `DECISION-RECORDED` is for a ticket whose correct outcome is an owner decision, with no code and no
 test change (the behaviour is intended, or the question was settled). Its rationale must name the
-decision (who decided and when) through the same evidence forms: a decision-doc `file:line`, the
-commit SHA that recorded it, or a fenced block quoting the dated owner message. A decision-only
-ticket's `## Files Changed` reads `none — decision-only`.
+decision through the same evidence forms (a decision-doc `file:line`, the commit SHA that recorded
+it, or a fenced block quoting the owner message), plus two extra rules the checker enforces: the
+rationale carries the decision's ISO date, and a `src/` or `tests/` `file:line` alone does not count,
+because code shows behaviour, not who decided it. Naming who decided stays a reviewer's judgement. A
+decision-only ticket's `## Files Changed` reads `none — decision-only`. A valid Disposition also makes
+the precheck's `staging_artifacts_complete` NA, in step with `migration_complete`.
 
 ### Running `done_checker_static.py` by hand
 
