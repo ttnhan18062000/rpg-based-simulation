@@ -77,7 +77,7 @@ Finding: the mechanism the report asks about already exists (`### Closing a tick
 - Decision on the open question: sixth value, per the ticket's recommendation (a convention alone leaves `migration_complete` demanding staging artifacts).
 
 ## Test Summary
-`tests/tools/test_ticket_field_values.py` + `tests/tools/test_done_checker_static.py` (the disposition, decision and guide tests): 196 pass over both files. New: value set pinned at six; cited vs uncited `DECISION-RECORDED` rationale; `migration_complete` PASS without staging artifacts, FAIL on an uncited rationale, FAIL on an attributed `src/` change; guide test now requires `DECISION-RECORDED`. The five old values' tests are unchanged.
+`tests/tools/test_ticket_field_values.py` + `tests/tools/test_done_checker_static.py` (the disposition, decision and guide tests): 196 pass over both files. New: value set pinned at six; cited vs uncited `DECISION-RECORDED` rationale; `migration_complete` passes without staging artifacts, fails on an uncited rationale, fails on an attributed `src/` change; guide test now requires `DECISION-RECORDED`. The five old values' tests are unchanged.
 
 ## Files Changed
 - tools/ticket_field_values.py
