@@ -127,3 +127,5 @@ from the launcher, never guessed: unresolved is listed as `unattributed`).
 
 Export on the machine you are leaving, then import on the new one; importing an older bundle over
 a newer local note is the one way to lose work, which is why differing files are backed up.
+
+Message conventions between sessions: `docs/guides/cross_session_messages.md`.

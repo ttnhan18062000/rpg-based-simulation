@@ -185,6 +185,18 @@ alongside the main checkout, each independently on its own branch.
     ride into that commit and the tree is clean for the next step. A different session appending to
     the same worktree's shard mid-command is not covered by this; only a hook-level fix removes that.
 
+### Seeing what is in flight, and pruning branches (read-only helpers)
+
+- `python3 -m tools.sessions.status`: per worktree (branch, dirty state, a merge/rebase left in progress, open PR,
+  size, last commit and activity) and per seat (instance state). It warns past 85% disk use naming the largest
+  worktrees, and *reports* worktrees that look removable with the exact `git worktree remove` command. It
+  removes nothing; `pr: unknown` means `gh` failed, not that there is no PR.
+- `python3 -m tools.sessions.prune_branches`: a dry-run classification of local branches (`merged-PR` is the only
+  deletable class; `hint-only` and `unique-commits` are listed, never deleted). `--execute` writes a name-to-SHA
+  backup first and deletes only branches whose tip still equals the merged PR head; remote deletion needs
+  `--remote` as well and stays the owner's call.
+- `python3 -m tools.sessions.route <path> [--from <domain>]`: who owns a path (a seat, never a liveness claim).
+
 ### Recovering when a commit lands on a branch an implementer holds
 
 One writer per branch: only the implementer role commits or pushes on a branch it holds, and that includes a

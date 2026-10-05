@@ -433,3 +433,102 @@ class TestBudgetLimit:
         assert len(spec.module_refs) <= ProceduralCompositionGenerator.BUDGET + 5, (
             "Module count should be near budget (deps can add a few extra)"
         )
+
+
+class TestRegionIdNamespacing:
+    """Two selected modules declaring one region id must be disambiguated by namespace.
+
+    Tests the assignment directly: it is pure, so no catalog or resolve is needed. The end-to-end
+    behaviour (generate() output assembles, populations land in their own module's region) is
+    asserted against real content in tests/integration/worldassembly/test_real_content_world_compositions.py.
+    """
+
+    @staticmethod
+    def _regional(module_id: str, *region_ids: str, module_type: str = "settlement"):
+        from src.worldbuilding.recipe import RegionRecipeSpec
+
+        mod = _make_module(module_id, module_type)
+        return mod.model_copy(update={
+            "regions": [
+                RegionRecipeSpec(id=rid, type="town", grid_bounds=(0, 0, 5, 5)) for rid in region_ids
+            ]
+        })
+
+    @staticmethod
+    def _assign(modules, order=None):
+        by_id = {m.module_id: m for m in modules}
+        selected = order or [m.module_id for m in modules]
+        return ProceduralCompositionGenerator._assign_region_namespaces(selected, by_id)
+
+    def test_colliding_region_id_gets_namespace(self):
+        result = self._assign([
+            self._regional("aaa_core", "hometown"),
+            self._regional("zzz_hub", "hometown"),
+            _make_module("terrain_basic", "terrain"),
+        ])
+        assert result == {"zzz_hub": "zzz_hub"}  # non-empty; the bare-id owner is absent
+
+    def test_bare_id_owner_is_independent_of_selection_order(self):
+        """Condition 1: the same module keeps the bare id however the modules are listed/ranked."""
+        modules = [
+            self._regional("aaa_core", "hometown"),
+            self._regional("zzz_hub", "hometown"),
+            self._regional("mmm_quarter", "hometown"),
+        ]
+        orders = [
+            ["aaa_core", "zzz_hub", "mmm_quarter"],
+            ["zzz_hub", "mmm_quarter", "aaa_core"],
+            ["mmm_quarter", "aaa_core", "zzz_hub"],
+        ]
+        results = [self._assign(modules, order) for order in orders]
+        assert results[0] == {"mmm_quarter": "mmm_quarter", "zzz_hub": "zzz_hub"}
+        assert all(r == results[0] for r in results)
+        assert "aaa_core" not in results[0]
+
+    def test_no_collision_assigns_no_namespace(self):
+        assert self._assign([
+            self._regional("aaa_core", "hometown"),
+            self._regional("zzz_hub", "market_square"),
+        ]) == {}
+
+    def test_residual_collision_after_namespacing_fails_fast(self):
+        """A namespaced id that lands on an earlier module's bare id is an error, never a silent override."""
+        modules = [
+            self._regional("a1", "x", "bbb_y"),
+            self._regional("bbb", "x", "y"),  # x collides -> namespaced; its y becomes bbb_y, a1's bare id
+        ]
+        with pytest.raises(GenerationCompositionError, match="bbb_y"):
+            self._assign(modules)
+
+    def test_generate_emits_the_namespace_on_the_authored_module_refs(self, tmp_path, monkeypatch):
+        """Goes through generate(), not the helper: deleting the emission turns this red.
+
+        The resolve step is intercepted so the authored composition can be read directly; a stub
+        catalog cannot resolve a stubbed `hometown` region, and the real-content integration test
+        covers the full resolve.
+        """
+        monkeypatch.chdir(tmp_path)
+        captured: dict = {}
+
+        class _Stop(Exception):
+            pass
+
+        def _capture(composition, catalog, module_repo):
+            captured["refs"] = {r.module_id: r.namespace for r in composition.module_refs}
+            raise _Stop
+
+        monkeypatch.setattr("src.worldgeneration.generator.resolve_composition", _capture)
+        modules = [
+            self._regional("aaa_core", "hometown"),
+            self._regional("zzz_hub", "hometown"),
+            _make_module("terrain_basic", "terrain"),
+        ]
+        with pytest.raises(_Stop):
+            ProceduralCompositionGenerator().generate(
+                _default_intent(), _make_repo(modules), _make_catalog(), output_dir=tmp_path / "out"
+            )
+
+        assert captured["refs"]  # non-vacuous
+        assert captured["refs"]["zzz_hub"] == "zzz_hub"
+        assert captured["refs"]["aaa_core"] is None
+        assert captured["refs"]["terrain_basic"] is None

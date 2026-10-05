@@ -1,0 +1,347 @@
+# FROZEN REFERENCE FIXTURE -- do not regenerate, do not "refresh" to match the live world.
+#
+# What it is: the verbatim `resolved/world.resolved.yaml` of `dungeon_crawl` as it ran from 2026-06-27 until
+# TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION (4 modules, danger_scale 4,
+# 32 entities -- the 94-97% extinction configuration).
+# Why it is frozen: the rendering-evidence tests (connectivity, density CV, shape components, TVD anchor)
+# reproduce measurements documented in docs/visual_quality/ for THIS terrain. The live dungeon_crawl
+# legitimately no longer contains the second forest or the cave (they came from the removed
+# goblin_camp_conflict / old_mine_resource_loop modules), so those tests lost their subject.
+# Cost: tests pointed at this fixture no longer detect rendering regressions in the LIVE dungeon_crawl.
+# Retirement: TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT decides rebaseline-vs-fixture.
+schema_version: worldspec.v1
+world_id: dungeon_crawl
+name: Dungeon Crawl
+description: Quest-dense danger world with ruins and conflict modules. No settlement
+  — pure dungeon exploration with escalating bandit threat.
+topology:
+  width: 126
+  height: 121
+  coordinate_system: grid
+regions:
+- id: goblin_camp
+  type: wilderness
+  bounds:
+  - 95
+  - 20
+  - 125
+  - 55
+  terrain: forest
+  hazard_level: 3.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - forest
+  places:
+  - id: goblin_camp_place
+    kind: CAMP
+    position:
+    - 110
+    - 38
+    creature_kind: goblin
+- id: old_mine
+  type: wilderness
+  bounds:
+  - 20
+  - 60
+  - 60
+  - 105
+  terrain: cave
+  hazard_level: 2.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - mine
+  - underground
+  places: []
+- id: haunted_battlefield
+  type: wilderness
+  bounds:
+  - 60
+  - 80
+  - 100
+  - 120
+  terrain: ruin
+  hazard_level: 3.5
+  hazard_kind: UNDEAD_CORRUPTION
+  tags:
+  - ruins
+  places:
+  - id: haunted_battlefield_ruin
+    kind: RUIN
+    position:
+    - 80
+    - 100
+    hazard_level: 3.5
+- id: bandit_road
+  type: wilderness
+  bounds:
+  - 50
+  - 30
+  - 85
+  - 60
+  terrain: forest
+  hazard_level: 2.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - forest
+  places: []
+factions:
+- id: hero_guild
+  type: defender
+  initial_tension_level: 0.0
+- id: town_council
+  type: defender
+  initial_tension_level: 0.0
+- id: neutral
+  type: neutral
+  initial_tension_level: 0.0
+- id: wild_beast_pack
+  type: wild
+  initial_tension_level: 0.0
+- id: goblin_warband
+  type: invader
+  initial_tension_level: 0.5
+- id: merchant_league
+  type: neutral
+  initial_tension_level: 0.0
+- id: bandit_company
+  type: invader
+  initial_tension_level: 0.5
+- id: forest_wardens
+  type: defender
+  initial_tension_level: 0.0
+- id: orc_clan
+  type: rival
+  initial_tension_level: 0.0
+- id: dwarven_mine_clan
+  type: defender
+  initial_tension_level: 0.0
+- id: moon_cult
+  type: invader
+  initial_tension_level: 0.0
+- id: undead_remnants
+  type: invader
+  initial_tension_level: 0.0
+- id: arcane_circle
+  type: neutral
+  initial_tension_level: 0.0
+- id: swamp_tribe
+  type: rival
+  initial_tension_level: 0.0
+- id: dragon_cult
+  type: invader
+  initial_tension_level: 0.0
+- id: spirit_court
+  type: neutral
+  initial_tension_level: 0.0
+information_source_profiles: []
+pending_information_responses: []
+pending_self_model_information_events: []
+entities:
+- id: goblin_raiding_party_goblin_scout
+  count: 2
+  role: scout
+  faction: goblin_warband
+  spawn_region: goblin_camp
+  archetype_id: goblin_scout
+- id: goblin_raiding_party_goblin_raider
+  count: 4
+  role: raider
+  faction: goblin_warband
+  spawn_region: goblin_camp
+  archetype_id: goblin_raider
+- id: goblin_raiding_party_goblin_archer
+  count: 2
+  role: scout
+  faction: goblin_warband
+  spawn_region: goblin_camp
+  archetype_id: goblin_archer
+- id: goblin_raiding_party_goblin_warlord
+  count: 1
+  role: leader
+  faction: goblin_warband
+  spawn_region: goblin_camp
+  archetype_id: goblin_warlord
+- id: old_mine_spider_cluster_cave_spider
+  count: 5
+  role: predator_hunter
+  faction: wild_beast_pack
+  spawn_region: old_mine
+  archetype_id: cave_spider
+- id: undead_battlefield_patrol_undead_sentinel
+  count: 6
+  role: sentinel
+  faction: undead_remnants
+  spawn_region: haunted_battlefield
+  archetype_id: undead_sentinel
+- id: pop_0
+  count: 12
+  role: scout
+  faction: bandit_company
+  spawn_region: bandit_road
+resources:
+- id: old_mine_resource_loop__iron_vein_0
+  resource_type: iron_vein
+  count: 8
+  region: old_mine
+  regen_rate: 1
+- id: old_mine_resource_loop__crystal_outcrop_1
+  resource_type: crystal_outcrop
+  count: 4
+  region: old_mine
+  regen_rate: 1
+- id: old_mine_resource_loop__silver_vein_2
+  resource_type: silver_vein
+  count: 2
+  region: old_mine
+  regen_rate: 1
+buildings:
+- id: mine_entrance_0
+  type: mine_entrance
+  region: old_mine
+quest_definitions:
+- id: goblin_hunt_warlord
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - goblin
+  - conflict
+  - bounty
+  source_module: goblin_camp_conflict
+- id: goblin_fetch_stolen_goods
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - goblin
+  - conflict
+  - loot
+  source_module: goblin_camp_conflict
+- id: goblin_defend_village_perimeter
+  type: defend
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - goblin
+  - conflict
+  - defense
+  source_module: goblin_camp_conflict
+- id: mine_fetch_ore
+  type: fetch
+  required_participant_tags: []
+  required_location_tags:
+  - mine
+  - underground
+  reward_budget: 80
+  procedural_hints: {}
+  tags:
+  - resource
+  - economy
+  source_module: old_mine_resource_loop
+- id: ruins_first_contact
+  type: investigate
+  required_participant_tags:
+  - undead
+  required_location_tags:
+  - ruins
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - mystery
+  - ruins
+  source_module: ruins_mystery_quest
+- id: spirit_source_trace
+  type: investigate
+  required_participant_tags:
+  - spiritual
+  required_location_tags:
+  - ruins
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - mystery
+  - ruins
+  - spirit
+  source_module: ruins_mystery_quest
+- id: sbandit_hunt_camp_leader
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - bandit
+  - conflict
+  - bounty
+  source_module: scalable_bandit_camp
+- id: sbandit_fetch_stolen_cache
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - bandit
+  - conflict
+  - loot
+  source_module: scalable_bandit_camp
+- id: sbandit_defend_road_checkpoint
+  type: defend
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - bandit
+  - conflict
+  - defense
+  source_module: scalable_bandit_camp
+validation:
+  expected_min_entities: 1
+  allow_overlapping_regions: false
