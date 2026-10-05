@@ -78,7 +78,7 @@ Live demonstration, PR #338, REST jobs API as ground truth (`actions/runs/{id}/j
 - (b) a code-file change (module docstring): run 37257718796 (commit 7f4c2bbd8). A snapshot after the gate finished showed Unit core/world, Simulation quality, Unit infra, API/CLI/engine, Agent orchestration, Integration and Unit gameplay in_progress, none skipped. That run was then cancelled by the push for (c), so it has no completed conclusion.
 - (c) identical patch after a cancelled run: run 37257781454 (commit 7ed7727de, an empty commit after the cancelled run on 7f4c2bbd8): every heavy job ran, green.
 - Not demonstrated live: a true REGISTRY-changing re-sync merge (origin/main had not advanced after the sync at ce6266f5b), and a red (not cancelled) previous run with an unchanged patch. The unit tests cover red, cancelled, timed out, in progress, API error and missing BEFORE.
-- Measured savings: about 1,270 runner-seconds per skipped push; wall time barely moves (longest skipped job, Integration, about 7 min; the kept Tools jobs take 3-4.5 min).
+- Measured savings: about 1,270 runner-seconds per skipped push; wall time drops by about 2-3 min (Integration, about 7 min, no longer runs; Tools f-z, 3.5-4.5 min, becomes the longest job). The first version of this note said wall time "barely moves"; the reviewer corrected it.
 
 ## Test Summary
 - tests/unit/tools/test_registry_resync_skip.py: 18 passed (temp git repo).
@@ -89,6 +89,7 @@ Live demonstration, PR #338, REST jobs API as ground truth (`actions/runs/{id}/j
 ## Files Changed
 - tools/test_architecture/registry_resync_skip.py, tests/unit/tools/test_registry_resync_skip.py
 - .github/workflows/test.yml
+- tests/static/test_ci_registry_resync_skip_jobs.py (added after review: pins the 11-job skip set and the keep set)
 - tests/static/test_ci_narrow_path_filtered_jobs.py, tests/static/test_ci_step_summary_reporting.py, tests/static/test_ci_uv_install.py
 - docs/testing/migration_ci_lanes.md, docs/plans/test_architecture/roadmap.md
 - agent-working/tickets/done/test-architecture/TCK-20260929-EPIC-TEST-WORKFLOW-FAILURE-HANDLING.md

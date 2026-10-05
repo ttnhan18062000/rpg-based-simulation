@@ -180,8 +180,9 @@ two jobs keep running.
 | Architecture / docs / static | **no** | 74, 72, 63 | the cheap docs/registry checks; kept on purpose |
 | Type check, Code health (+ SARIF) | **no** | 34, 133, 118 | lint-class; code-health reads the registry |
 
-Skipped runner time is about 1,270 job-seconds (about 21 minutes) per re-sync push; wall time barely moves, since
-the jobs ran in parallel and the longest one, Integration, is about 7 minutes. `resync-gate` is its own job, not
+Skipped runner time is about 1,270 job-seconds (about 21 minutes) per re-sync push. Wall time drops by about
+2–3 minutes: the jobs run in parallel, Integration (about 7 minutes, the longest job) no longer runs, and Tools f–z
+(about 4–4.5 minutes) becomes the longest. `resync-gate` is its own job, not
 a step in `changed-files`, so the heavy jobs do not wait for that gate's full clone; its own duration is
 recorded in the live-run evidence in `TCK-20261005-CI-SKIP-HEAVY-JOBS-ON-REGISTRY-ONLY-RESYNC`.
 
