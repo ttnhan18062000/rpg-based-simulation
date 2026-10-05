@@ -139,6 +139,7 @@ identically on clean `origin/main` (reproduced: urban_political_seed42_200t SOCI
 `test_generated_frontier_3_42_extended_population_stability` (`@pytest.mark.slow`, same conftest timeout) and
 `test_hero_guild_routing_population_stability_adventure_routing_on` / `test_population_stability[frontier_marches]`
 (passed when re-run in isolation).
+**Lint is unverified:** `ruff` is not installed in the venv used here; CI will check it. No local imports were added.
 
 ## Files Changed
 - `src/worldbuilding/compiler.py`
