@@ -153,6 +153,85 @@ re-trigger CI to check (that destroys the evidence); and if you add tickets, run
 `python3 tools/generate_registry.py --output docs/REGISTRY.yaml` before pushing or `Tools · f–z` fails
 on the drift.
 
+## Update 2026-10-04 (gates-flip PR)
+
+**From:** `codebase-planner`, riding in the gates-flip PR. The cycle scan behind (a) is the "Addendum 2026-10-04" in
+`src_package_structure_audit.md`.
+
+**(a) Two M7 move ideas (ideas only: `src/` stays frozen).** Both are moves, not merges.
+1. Take the world CLI (`worldbuilding.cli`) out of `worldbuilding`. It carries the module-level edges that close the
+   `worldbuilding`/`worldassembly`/`worldgeneration`/`worldmodules` cycles.
+2. Move `GeneticProfile` (a data type, today in `systems.lifecycle_systems.genetics`) into `core` or a neutral types
+   module. `core/state.py:24` and `core/updates.py:26` are the only real module-level `core`->`systems` edge in the
+   state model (`core/builder.py:54-55` adds two more).
+
+**(b) Decision requested for import-linter condition 3** (testing's condition on `TCK-20261004-IMPORT-LINTER-ADOPTION`):
+`src/engine/kernel.py` has function-local imports from `src.observability` heavy analyzers at lines 149, 304, 305,
+316 and 1241 (re-checked on `053f459e4`). The phase19 test `test_hot_path_does_not_import_heavy_analyzers` pins
+this area. Are these **allowed, with a stated reason** (allowlist entry), or **violations needing an engine ticket**?
+The adoption ticket stays blocked on your answer.
+
+## Ratchet debt accepted 2026-10-05 (owner decision), for you to pay down
+
+While the code-health ratchet soaked, `src/` PRs from the world, combat and strategy domains added 27 violations to `main`
+(1 new, 26 worse than their baseline rows; measured per PR with the same tools on the changed file, not guessed). The owner
+accepted them on 2026-10-05 and the gates-flip PR (#329) records each as a **reviewed** baseline row (`reviewed: true`, value
+= ceiling = today's measurement), so the blocking `Code health` job passes. This is accepted debt, not a clean bill:
+**please pay it down.** After 2026-10-18 any new or worse violation blocks your PR; run `make code-health` before opening one.
+
+- **#328** (architecture / world): One source for a world definition (8 composition pairs reconciled). 2 row(s):
+  - `worldgeneration/generator.py` ProceduralCompositionGenerator.generate `complexipy cognitive-complexity`: 62 -> 63
+  - `worldgeneration/generator.py` ProceduralCompositionGenerator.generate `line_count function-length`: 161 -> 191
+- **#333** (combat): Hostility sweep: eight raw-enum sites use the catalog helper. 5 row(s):
+  - `domains/cooperation/providers.py` PartnerCandidateProvider.get_candidates `line_count function-length`: 92 -> 93
+  - `engine/combat.py` `ruff I001`: 6 -> 7
+  - `systems/strategic_systems/intelligence.py` `line_count module-length`: 1788 -> 1798
+  - `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem `line_count class-length`: 1634 -> 1639
+  - `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem.fused_strategic_pass `line_count function-length`: 394 -> 399
+- **#335** (world): World definition correctness: generated compositions assemble. 5 row(s):
+  - `engine/kernel.py` Kernel `line_count class-length`: 1381 -> 1384
+  - `engine/kernel.py` Kernel.__init__ `line_count function-length`: 302 -> 307
+  - `engine/kernel.py` `line_count module-length`: 1415 -> 1419
+  - `worldgeneration/generator.py` ProceduralCompositionGenerator._assign_region_namespaces `complexipy cognitive-complexity`: new -> 18
+  - `worldgeneration/generator.py` ProceduralCompositionGenerator.generate `line_count function-length`: 191 -> 198
+- **#341** (world): World semantics batch: region references fail loudly. 2 row(s):
+  - `worldbuilding/compiler.py` WorldCompiler `line_count class-length`: 602 -> 604
+  - `worldbuilding/compiler.py` WorldCompiler.compile `line_count function-length`: 509 -> 511
+- **#342** (combat): Tactical-path hard bugs: region-contained retreat, typed entity-target objectives. 11 row(s):
+  - `core/state.py` EntityState.to_canonical_dict `complexipy cognitive-complexity`: 27 -> 32
+  - `core/state.py` EntityState.to_canonical_dict `line_count function-length`: 97 -> 100
+  - `core/state.py` `line_count module-length`: 1705 -> 1708
+  - `engine/tactical.py` TacticalDecisionSystem `line_count class-length`: 800 -> 816
+  - `engine/tactical.py` TacticalDecisionSystem.evaluate_entity_intent `line_count function-length`: 714 -> 720
+  - `systems/strategic_systems/intelligence.py` `line_count module-length`: 1798 -> 1824
+  - `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem `line_count class-length`: 1639 -> 1664
+  - `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem.evaluate_strategic_intent `complexipy cognitive-complexity`: 220 -> 233
+  - `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem.evaluate_strategic_intent `line_count function-length`: 542 -> 567
+  - `systems/strategic_systems/work_queue.py` StrategicWorkQueue.build `complexipy cognitive-complexity`: 81 -> 83
+  - `systems/strategic_systems/work_queue.py` StrategicWorkQueue.build `line_count function-length`: 107 -> 112
+- **#345** (world): Region-bounds audit, composition corpus probe, assembly-contract rule. 2 row(s):
+  - `worldbuilding/compiler.py` WorldCompiler `line_count class-length`: 604 -> 607
+  - `worldbuilding/compiler.py` WorldCompiler.compile `line_count function-length`: 511 -> 514
+- **#347** (combat): A pursuit move ends when its live target is in attack reach. 8 row(s):
+  - `engine/executor.py` LocalSequentialExecutor.execute `complexipy cognitive-complexity`: 27 -> 29
+  - `engine/executor.py` LocalSequentialExecutor.execute `line_count function-length`: 132 -> 138
+  - `systems/strategic_systems/intelligence.py` `line_count module-length`: 1824 -> 1832
+  - `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem `line_count class-length`: 1664 -> 1672
+  - `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem.fused_strategic_pass `complexipy cognitive-complexity`: 425 -> 433
+  - `systems/strategic_systems/intelligence.py` StrategicIntelligenceSystem.fused_strategic_pass `line_count function-length`: 399 -> 407
+  - `systems/strategic_systems/redirection.py` StrategicRedirectionSystem.enforce `complexipy cognitive-complexity`: 94 -> 102
+  - `systems/strategic_systems/redirection.py` StrategicRedirectionSystem.enforce `line_count function-length`: 126 -> 134
+
+Largest items: `systems/strategic_systems/intelligence.py` (module 1788 -> 1832 lines, `fused_strategic_pass` cognitive complexity 433, `evaluate_strategic_intent` 233 and 567 lines), `engine/tactical.py` (class 816 lines), `engine/kernel.py`, `engine/executor.py`, `core/state.py`, `worldbuilding/compiler.py`, and the one NEW row, `ProceduralCompositionGenerator._assign_region_namespaces` (cognitive complexity 18, #335). Paying a row down: fix it, then `python3 -m codebase.health tighten` lowers the ceiling.
+
+### Mypy debt accepted the same day (3 new errors in `codebase/baselines/mypy_baseline.txt`)
+
+`mypy src/` on `main` reported 3 errors that are not in the baseline; the owner accepted them as debt and #329 adds them to the baseline (and drops 9 baseline entries that other PRs fixed, see the soak review). Verified by `git blame` and by counting call sites at the PR's parent and head:
+- `src/worldassembly/resolve_io.py:30` `no-any-return` (`return yaml.safe_dump(...)`): **#328** (architecture / world), the line is new in that PR.
+- `src/engine/tactical.py:853` `arg-type`, `dict.get` with `int | None` (`state.entities.get(obj.target_entity_id)`): **#342** (combat), the line is from that PR. **Please check it.** The statement is guarded by `getattr(obj, "target_entity_id", None) is not None` two lines above, so on this path a `None` cannot reach `.get` at runtime; mypy cannot narrow through `getattr`. If another path can reach the `.get` with `None`, a `None` key is legal and silently returns the default, so that would be a behaviour bug, not only a typing one.
+- `src/systems/strategic_systems/intelligence.py:1823` `arg-type`, `boredom_delta` is `dict[ProjectKind, float]` but `StrategicUpdate.boredom_delta` is `dict[str, float]`: **#342** (combat) added one more `StrategicUpdate(boredom_delta=boredom_upd)` call (15 -> 16 sites; the baseline already held 16 copies of this message and now holds 17). The line mypy reports is an old one; the count rose by one.
+- Good news for the earlier outbox message 3: the two runtime `NameError`s are gone from `main` (`src/engine/kernel.py` `json`, and `src/systems/social_systems/party.py` `StrategicUpdate`).
+
 ## Update 2026-10-05: kernel.py imports are allowlisted, still your decision (import-linter adoption)
 
 Condition 3 of the testing planner is still open: whether `src/engine/kernel.py`'s function-local imports of

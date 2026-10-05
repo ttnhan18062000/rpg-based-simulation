@@ -225,13 +225,15 @@ Each is separately closable. None before M6 modifies `src/`.
 | M2 | Environment | uv as the single dependency source: refreshed `uv.lock`, dev tools in a dependency group, CI on `uv sync`, Python version aligned, environment guide updated | codebase |
 | M3 | Measure and baseline | Ruff, complexipy, jscpd and the line-count script configured; `codebase/health/` adapters and ratchet; registry seeded from a full scan; first health snapshot taken | codebase |
 | M4 | Gates | Ratchet as an advisory CI job with changed-line PR feedback, blocking after a clean soak; mypy blocking through `mypy-baseline` with ledger and static-test updates; prek hooks; type-checker trial (basedpyright vs Pyrefly) reported | codebase |
-| M5 | Structure | Package registry seeded; structure audit decisions; ast-grep rule pack for project rules; import-linter evaluation. **done 2026-10-04 (PR #315), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (owner yes 2026-10-04, advisory, batch `import-linter-adoption`; its flip and test retirement are `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`), plus follow-ups: ast-grep SARIF feedback and snapshot inclusion, `exemplar_modules` (M6 or owner)** | codebase |
-| M6 | Agent integration | Skill, edit hook, implementer pointer, review rubric; batched with the M5 follow-ups (exemplar modules, ast-grep SARIF and snapshot). Brief `python_code_craft_m6_agent_integration_ticket_brief.md` (2026-10-04) | codebase, by owner decision 17 (paths under `.claude/**` stay agent-working's) |
+| M5 | Structure | Package registry seeded; structure audit decisions; ast-grep rule pack for project rules; import-linter evaluation. **done 2026-10-04 (PR #315), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (done 2026-10-05, PR #351, advisory; its flip and test retirement are `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`); the ast-grep SARIF and snapshot follow-ups and `exemplar_modules` were delivered by #318** | codebase |
+| M6 | Agent integration | Skill, edit hook, implementer pointer, review rubric; batched with the M5 follow-ups (exemplar modules, ast-grep SARIF and snapshot). Brief `python_code_craft_m6_agent_integration_ticket_brief.md` (2026-10-04). **done 2026-10-04 (PR #318)** | codebase, by owner decision 17 (paths under `.claude/**` stay agent-working's) |
 | M7 | Refactor lane | **Deferred until the owner reopens `src/`.** Standing batch folder, one file per batch, fed by the registry; first targets `api/server.py` and `observability/event_extractor.py` | codebase, with rpg-planner for engine files |
 
 **M4 soak:** start = 2026-10-03 (PR #305, which added the advisory `Code health (advisory)` CI job, merged 2026-10-03T16:47:13Z), end = 2026-10-17 (start + 14 days). The flip ticket `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING` carries the same dates.
 
-Order: M1, M2, M3, M4, M5 (done 2026-10-04 (PR #315), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (blocked on owner and testing planner), plus follow-ups: ast-grep SARIF feedback and snapshot inclusion, `exemplar_modules` (M6 or owner)). M6 can start after M3. M7 is a lane, not an epic, and never closes.
+**M5 soaks:** start = 2026-10-04 (PR #315, which added the advisory package-registry and ast-grep checks, merged 2026-10-04T06:26:43Z), end = 2026-10-18 (start + 14 days). The flip tickets `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING` and `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING` carry the same dates.
+
+Order: M1, M2, M3, M4, M5 (done 2026-10-04 (PR #315), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (blocked on owner and testing planner)). M6 (done 2026-10-04 (PR #318)) can start after M3. M7 is a lane, not an epic, and never closes.
 
 ## 8. Owner decisions
 
@@ -268,6 +270,13 @@ Recorded 2026-10-02:
 17. **The codebase domain implements M6 itself** (2026-10-04), although `.claude/**` is routed to
     agent-working and no agent-working session is running. The owner confirms the literal diff of
     `.claude/settings.json` and `.claude/agents/implementer.md`; agent-working is told through the outbox.
+18. **One flip batch** (2026-10-04). The M4 flip (soak ends 2026-10-17) and both M5 flips (soaks end 2026-10-18)
+    ship in one branch and one PR, merged on or after 2026-10-18: one announcement to the other planners, one
+    branch-protection change. Work and soak-review drafts start 2026-10-04; each review is finalized after its
+    window ends. Brief `python_code_craft_gates_flip_ticket_brief.md`.
+19. **SARIF stays advisory** (2026-10-04). The `code-health-sarif` job is changed-line feedback only: it exits 0 on
+    findings by design, skips fork PRs, and the ratchet already blocks new violations. Its `continue-on-error`
+    stays permanently; it is not one of the gates the flip makes blocking.
 20. **import-linter adopted, advisory first** (2026-10-04), with the 20 `src.<pkg>` namespace roots accepted
     (no `__init__.py` is added to `src/`; `src/engine/intent` stays uncovered). No test is retired by the
     adoption batch (the testing planner's condition 1): contracts and tests both run during a two-week soak,
