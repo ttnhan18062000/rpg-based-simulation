@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE
-phase: open
+phase: done
 date: 2026-10-03
 tags: [engine, combat, determinism, root-cause]
 ---
@@ -18,7 +18,7 @@ Run-to-run divergence on the combat/tactical path that `audit_mode=True` and a r
 
 ## Status
 
-INPROGRESS
+DONE
 
 ## Tier
 
@@ -163,9 +163,10 @@ claim one; neither does this ticket.
 
 ## Implementation Notes
 
-**Status: re-measured and partly isolated by `rpg-implementer` on 2026-10-05; NOT closed.** Stopped at the
-planner's guardrail (the upstream cause is unproven and the candidate fix is on the contested surface), with the
-evidence below. Measured on branch `worktree-lane-a-tactical-path-batch` (`origin/main` `054b49146` plus the
+**Status: re-measured and partly isolated by `rpg-implementer` on 2026-10-05; closed as a characterisation
+ticket** (its six ACs never asked for a fix; the planner confirmed the reading). Stopped at the planner's
+guardrail (the upstream cause is unproven and the candidate fix is on the contested surface); the fix is
+`TCK-20261005-DIRTY-SET-DEDUPES-UPDATES-BY-ID-SO-RECYCLED-ADDRESSES-DROP-WORK`. Evidence below. Measured on branch `worktree-lane-a-tactical-path-batch` (`origin/main` `054b49146` plus the
 retreat, entity-target and bravery-guard tickets); **not run on bare `origin/main`**, so "is main clean or
 masked" (Scope, last bullet) is still open. None of the probes is in the repo (scratch scripts:
 `det_probe.py`, `early_trials.py`).
@@ -228,6 +229,21 @@ None (ticket only).
 
 ## Completion Summary
 
-_Open. Re-measured, positively controlled, first divergent tick and fields named, verdict recorded; the
-upstream cause is a strong lead (`id()`-keyed dedup in `src/core/dirty.py`), not a proven cause. Left in
-`inprogress/` for the planner to split into a fix ticket._
+The divergence is confirmed under the documented protocol, with a positive control, canonical hashes, zero dropped
+work and the governor in mode 0 (AC1-AC3). The first divergent tick is 5 and the diverging fields are named
+(AC4). Verdict: **distinct from `INFRA-273`** (AC5), and **a hard bug** (AC6). The measured proximate mechanism is
+strategic work-queue scheduling: entity 16's `dirty.strategic_entities` membership differs, which changes the
+tier-7 sweep selection. The upstream cause is a strong lead, **not proven**: `id()`-keyed de-duplication in
+`src/core/dirty.py:142-146` (about 56 skipped updates per 8-tick trial); the second `id()`-keyed cache in
+`src/engine/executor.py:257` is untested. The fix, the strong-reference discriminator and the bare-`main`
+comparison belong to `TCK-20261005-DIRTY-SET-DEDUPES-UPDATES-BY-ID-SO-RECYCLED-ADDRESSES-DROP-WORK`.
+
+**Doc contradiction, named and not edited here:** `docs/engine/deterministic_execution.md:69` says `audit_mode`
+"is the current way to get a deterministic run". The divergence happened with `audit_mode` on and the measured
+mechanism reads no clock, so that sentence is false; the correction is in the new ticket.
+
+**`## Blocks` stands and is stronger.** `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN` AC-1 and
+AC-4 (corpus firing-rate and parked-at-origin counts) were not taken, on that ticket's own downgrade. This ticket
+has now confirmed the protocol those counts would have used (`audit_mode`, raised budget, sequential) does not
+make a run reproducible, so the downgrade was correct, and the counts become takeable when the fix lands. Any
+single-run measurement on this engine is a sample, not a value; order-of-magnitude conclusions survive.

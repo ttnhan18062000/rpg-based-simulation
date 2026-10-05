@@ -269,3 +269,7 @@ threats inside their own region, fall back to their home region, or hold positio
 entity wanders to a seeded nearby in-region point. Four branches were fixed (the ticket listed three). The
 corpus firing-rate and parked-at-origin measurements (AC-1, AC-4) were not taken and remain open pending the
 nondeterminism ticket; the containment guarantee (AC-3) is proven by tests that fail on the old code.
+`TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` has since confirmed that the protocol those
+counts would have used (`audit_mode`, raised budget, sequential) does not make a run reproducible, so skipping
+them was correct; they become takeable when `TCK-20261005-DIRTY-SET-DEDUPES-UPDATES-BY-ID-SO-RECYCLED-ADDRESSES-DROP-WORK`
+lands.
