@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-TICK-BUDGET-THROTTLE-MAKES-NON-AUDIT-RUNS-WALL-CLOCK-DEPENDENT
-phase: open
+phase: done
 date: 2026-10-05
 tags: [engine, determinism, measurement]
 ---
@@ -17,7 +17,7 @@ enough to trip it is nondeterministic as a function of machine load — and ever
 takes outside `audit_mode` is therefore load-dependent
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -49,6 +49,17 @@ if not self._audit_mode and self._state.tick > 5 and self._final_compute_ms > mi
     logger.warning(f"Tick {...} exceeded budget: {self._final_compute_ms:.2f}ms vs limit {...}. Aborting next tick if sustained.")
     self._status.record_dropped_work(9999)
 ```
+
+> **CORRECTION (2026-10-06, perf review on PR #355; this ticket was filed with two errors, both the planner's):**
+> 1. `kernel.py:466-469` does **not** drop work. It is the *end-of-tick* check; it only sets a telemetry counter (the `9999`
+>    sentinel) that nothing reads to change behaviour. **The work is dropped by the mid-tick throttle at `kernel.py:618-626`**:
+>    every 10 results it checks wall-clock time and, outside `audit_mode`, sheds the rest of the tick and forces `DEGRADED`.
+>    The "Three facts" below describe the right symptom but cite the wrong lines for the work-dropping.
+> 2. "Deterministic counter vs report-only" is **not** an open contract question. It was decided on 2026-10-03
+>    (PERF-D1 inputs 2 and 3; `docs/engine/deterministic_execution.md`, "Canonical contract"): report-only is the answer under
+>    both contracts today. Scope 3 below is therefore settled, not pending.
+> The evidence stands and is kept: `frontier_living_world` 8 vs 10 deaths at tick 500, same seed; `generated_frontier_3_42` stable; and
+> the `audit_mode` runs as the control arm, repeating exactly.
 
 Three facts combine into the defect:
 1. The guard is **skipped entirely in `audit_mode`** (`not self._audit_mode`).
@@ -167,13 +178,24 @@ a simulation. Decision 13's evidence base is geometric and survives intact. Like
   as a claim about cause.
 
 ## Implementation Notes
-(to be filled by the implementer)
+**Closed as superseded; no implementation under this ticket.** Perf took the work over: the owner adopted perf's plan on PR #355 (a
+short perf `kernel.py` slice, PERF-M1-T03b, plus the tick-budget throttle made report-only, lands before the salience fix). Perf's own
+report-only ticket was **not yet filed** when this closed, so the handover record is PR #355, comment `6000452921`. `src/engine/kernel.py`
+is not edited by rpg until that slice merges.
+
+Evidence kept (see the correction block in the Request Summary): `frontier_living_world` seed 42, 8 vs 10 deaths at tick 500 on
+identical code; `generated_frontier_3_42` stable; the `audit_mode` + `max_tick_budget_ms=1e9` runs (this session's measurement standard)
+repeat exactly and serve as the control arm. That measurement standard is already how every Lane A figure labelled a "value" in the
+batch this closed under was taken. Not verified by this closure: the mid-tick throttle's behaviour at `kernel.py:618-626` was taken from
+perf's review, not re-read or re-run here.
 
 ## Test Summary
-(to be filled by the implementer)
+No tests: nothing changed under this ticket.
 
 ## Files Changed
-(to be filled by the implementer)
+- none under this ticket (the ticket file moved to `done/`)
 
 ## Completion Summary
-(to be filled by the implementer)
+Superseded by perf's report-only ticket (handed over on PR #355, comment `6000452921`). Record corrected: the work is dropped by the
+mid-tick throttle at `kernel.py:618-626`, not by `kernel.py:466-469` (a telemetry counter), and report-only was already decided on
+2026-10-03. Acceptance criteria are left unchecked because the work moved to perf, not because it was done.
