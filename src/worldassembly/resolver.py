@@ -1,6 +1,5 @@
 # Compliance IDs: WORLD-ASM-008, WORLD-ASM-009, WORLD-ASM-010
 from __future__ import annotations
-from types import SimpleNamespace
 
 import hashlib
 import logging
@@ -38,7 +37,7 @@ from src.content.resolver import (
 from src.worldbuilding.recipe import PopulationRecipeSpec
 from src.worldmodules.evaluator import AssemblyParameterError, ModuleParameterEvaluator
 from src.content.pack_manifest import ContentPackManifest
-
+from src.worldassembly.region_precedence import precedence_advisories, precedence_ordered_regions
 
 from src.worldbuilding.schema import (
     WorldSpec,
@@ -305,7 +304,6 @@ class WorldAssemblyResolver:
 
         # 3. Merge components top-down while avoiding silent overwrite collision
         regions: Dict[str, RegionSpec] = {}
-        module_precedence: List[Any] = []
         factions: Dict[str, FactionSpec] = {}
         entities: Dict[str, PopulationSpec] = {}
         resources: Dict[str, ResourceNodeSpec] = {}
@@ -354,12 +352,6 @@ class WorldAssemblyResolver:
 
             # Resolve using component resolvers
             contribution = self.resolve_module_contribution(spec, prefix, param_vals)
-
-            # Module-level precedence (LOC-08 clause 1): carry this module's own declarations with the
-            # namespace prefix its region ids get in this composition.
-            for decl in getattr(spec, "region_precedence", ()):
-                module_precedence.append(SimpleNamespace(
-                    winner=f"{prefix}{decl.winner}", over=[f"{prefix}{o}" for o in decl.over]))
 
             # Merge regions
             for reg in contribution.regions:
@@ -681,11 +673,6 @@ class WorldAssemblyResolver:
         width = normalized_comp.global_parameters.get("topology_width", max_region_x)
         height = normalized_comp.global_parameters.get("topology_height", max_region_y)
 
-        # 3b. Resolve region precedence (LOC-08): the resolved region list order IS the precedence order.
-        from src.worldassembly.region_precedence import order_regions
-        ordered_regions, precedence_report = order_regions(list(regions.values()), normalized_comp.region_precedence, module_precedence)
-        regions = {r.id: r for r in ordered_regions}
-
         # 4. Assembled clean worldspec.v1
         world_spec = WorldSpec(
             schema_version="worldspec.v1",
@@ -693,7 +680,7 @@ class WorldAssemblyResolver:
             name=normalized_comp.name,
             description=normalized_comp.description,
             topology=TopologySpec(width=width, height=height, coordinate_system="grid"),
-            regions=list(regions.values()),
+            regions=precedence_ordered_regions(regions, normalized_comp, graph_map, ref_by_id),
             factions=list(factions.values()),
             information_source_profiles=list(normalized_comp.information_source_profiles),
             pending_information_responses=list(normalized_comp.pending_information_responses),
@@ -745,12 +732,6 @@ class WorldAssemblyResolver:
             height=height
         )
 
-        for earlier, later, tiles in precedence_report.undeclared_partial_overlaps:
-            warnings.append({
-                "rule_id": "LOC-08", "severity": "WARNING", "path": "regions",
-                "message": f"Regions '{earlier}' and '{later}' partially overlap ({tiles} tiles) with no declared "
-                           f"precedence; '{earlier}' wins by resolved declaration order (LOC-08 3b)."})
-
         if blocking_errors:
             msgs = "; ".join(f"[{err.get('rule_id', 'ERROR')}] {err.get('message')}" for err in blocking_errors)
             from src.worldbuilding.schema import InvalidWorldSpecError
@@ -763,7 +744,7 @@ class WorldAssemblyResolver:
             regions_count=len(regions),
             entities_count=len(entities),
             blocking_errors=blocking_errors,
-            warnings=warnings,
+            warnings=warnings + precedence_advisories(regions, normalized_comp, graph_map, ref_by_id),
             validation_reports=validation_reports,
             catalog_fingerprint=self.catalog_repo.fingerprint,
             module_fingerprints=module_fingerprints
