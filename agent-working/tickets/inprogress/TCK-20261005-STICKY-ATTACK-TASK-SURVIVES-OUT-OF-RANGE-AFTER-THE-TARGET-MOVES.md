@@ -4,7 +4,7 @@ layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-STICKY-ATTACK-TASK-SURVIVES-OUT-OF-RANGE-AFTER-THE-TARGET-MOVES
-phase: open
+phase: inprogress
 date: 2026-10-05
 tags: [engine, combat]
 ---
@@ -17,7 +17,7 @@ the attacker re-dispatches the same out-of-range attack instead of re-deciding â
 family again, one task kind over from the pursuit defect fixed in the attack-path ticket
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
