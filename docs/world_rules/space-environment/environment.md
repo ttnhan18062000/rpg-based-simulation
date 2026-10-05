@@ -220,6 +220,9 @@ implemented. This Rule fixes only their direction and what drives them.
   are. Implementing this Rule must not use a boss spawn as its evidence, and must neither tune
   nor retire the boss branch. What a world boss is, and what calls one forth, is later feature
   design, parked by memo row 7.
+  The deferral covers the lair world boss too (owner, 2026-10-05): `BossService`'s
+  maturity gate (`boss.py:100`/`:226`) is live but likewise untouched, and its spawns are not
+  evidence either.
 - *Upstream dependency:* this Rule is observable only once trauma actually accumulates, which
   it does not today (`TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`). That ordering is
   deliberate: the meaning was chosen for correctness, not for how soon it becomes visible.
