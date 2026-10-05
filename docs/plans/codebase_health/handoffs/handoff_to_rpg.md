@@ -152,3 +152,13 @@ applies, then push. Two things worth knowing: a `CONFLICTING` PR runs **no workf
 re-trigger CI to check (that destroys the evidence); and if you add tickets, run
 `python3 tools/generate_registry.py --output docs/REGISTRY.yaml` before pushing or `Tools · f–z` fails
 on the drift.
+
+## Update 2026-10-05: kernel.py imports are allowlisted, still your decision (import-linter adoption)
+
+Condition 3 of the testing planner is still open: whether `src/engine/kernel.py`'s function-local imports of
+`src.observability.reporting.*` and `.cognition.*` (lines 149, 304, 305, 316, 1241) stay. The import-linter contract
+`c06_hot_path_not_heavy` ships with those five imports in `ignore_imports`, reason "pending rpg decision,
+handoff_to_rpg.md", so the advisory step is quiet today. If you keep them, say so and they stay allowlisted; if you
+move them, delete the four `src.engine.kernel -> ...` entries (four pairs for five lines: lines 316 and 1241 share one pair, `-> src.observability.cognition.decision_trace_writer`; 149 is `reporting.artifact_repository`, 304 `reporting.metric_recorder`, 305 `cognition.recorder`) in `codebase/structure/importlinter.toml` (a stale
+entry shows as a warning). Nothing in `src/` changes in this batch.
+
