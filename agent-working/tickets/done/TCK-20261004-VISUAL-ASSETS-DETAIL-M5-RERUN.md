@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, testing, live-map]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing, live-map]
 Rerun M5 against the adopted terrain-v1 set (whole map, forest variants mixed), record the results, close the batch
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -60,15 +60,15 @@ Updated 2026-10-06 after the re-check against what landed (asset-planner approve
 - Redrawing (child 2); changing any rule or criterion.
 
 ## Acceptance Criteria
-- [ ] `build` + `pilot/rc-0005` + `terrainset` fixture export done with the user's approval (2026-10-06); `verify` clean; the stdio, catalog and fixture guards re-pointed by equality; rc-0001..rc-0004 and the pilot fixture untouched.
-- [ ] W03-SET includes C6 (borders, as approved by the user in `TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-CONTRACT`) and the scene is judged with borders on.
-- [ ] A fallback check (test and capture) shows that a missing border mask gives today's hard edge, never a blank or broken cell.
-- [ ] The whole-map scene code lands with a test asserting the layout predeclared in `docs/assets/pilot_terrain_m5_criteria.md` (AM5-W03-SET): every one of the 23 codes present, a 3 x 3 patch per code, forest cells include plain, bush and tree. The W05 result is quoted together with forest bush/tree's protan/deutan closeness to other tiles (informational, not in the verdict).
-- [ ] Each affected check rerun on the adopted set and recorded with its result; unaffected checks listed with the reason.
-- [ ] User review of the whole-map scene recorded: every capture shown first; per criterion C1..C6 the same neutral options in the same order, verbatim answers plus the per-terrain expansion.
-- [ ] Fallback checks per variant, per key (22) and for a missing mask; rollback drill with the client/release pairs run and not run recorded.
-- [ ] Overall M5 verdict stated as measured (it may stay INCONCLUSIVE).
-- [ ] Handoff snapshots refreshed; batch folder in `done/`.
+- [x] `build` + `pilot/rc-0005` + `terrainset` fixture export done with the user's approval (2026-10-06); `verify` clean; the stdio, catalog and fixture guards re-pointed by equality; rc-0001..rc-0004 and the pilot fixture untouched.
+- [x] W03-SET includes C6 (borders, as approved by the user in `TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-CONTRACT`) and the scene is judged with borders on.
+- [x] A fallback check (test and capture) shows that a missing border mask gives today's hard edge, never a blank or broken cell.
+- [x] The whole-map scene code lands with a test asserting the layout predeclared in `docs/assets/pilot_terrain_m5_criteria.md` (AM5-W03-SET): every one of the 23 codes present, a 3 x 3 patch per code, forest cells include plain, bush and tree. The W05 result is quoted together with forest bush/tree's protan/deutan closeness to other tiles (informational, not in the verdict).
+- [x] Each affected check rerun on the adopted set and recorded with its result; unaffected checks listed with the reason.
+- [x] User review of the whole-map scene recorded: every capture shown first; per criterion C1..C6 the same neutral options in the same order, verbatim answers plus the per-terrain expansion.
+- [x] Fallback checks per variant, per key (22) and for a missing mask; rollback drill with the client/release pairs run and not run recorded.
+- [x] Overall M5 verdict stated as measured (it may stay INCONCLUSIVE).
+- [x] Handoff snapshots refreshed; batch folder in `done/`.
 
 ## Related Tickets
 - TCK-20261005-EPIC-VISUAL-ASSET-TERRAIN-SET-REVIEW (epic), TCK-20261005-VISUAL-ASSETS-SET-COLOUR-VISION-RULE,
@@ -89,13 +89,20 @@ Updated 2026-10-06 after the re-check against what landed (asset-planner approve
 - Whether a new release is needed (asked of the user if yes).
 
 ## Implementation Notes
+(Closing notes first; the original deferral notes follow.)
+Done 2026-10-06. Code commit `2c793286f81c907711a39a3fa84cdc3013ef7ef7`; every check ran on that clean commit. Results: `docs/assets/pilot_terrain_m5_results.md` section "Result 2026-10-06" and `docs/assets/surface_rehearsal_result.md`. W03-SET `PASS` (user: "Yes for all 23 terrains" on C1..C6, neutral options), W07 `PASS` in the matrix (16/16), W05 gate stays `INCONCLUSIVE` (unmet: "no critical distinction is hue-only", the non-hue route is the Live Map's hover text, which this harness does not render), overall M5 `INCONCLUSIVE` unchanged. User-approved build + `pilot/rc-0005` + fixture export. Findings: the missing-mask fringe over-count (fixed, tested); `tile_pixels()` fragility (noted, not fixed). Handoff snapshots refreshed from both notes (2026-10-06). `rc-0001`..`rc-0004` and the pilot fixture untouched.
+
+(Original notes:)
 DEFERRED by the user, 2026-10-04 (blocking question): rerun M5 once a full draft set has been reviewed and adopted
 (`adopt-set`), so one review covers a whole map. Moved out of the detail-variants batch.
 Re-scoped 2026-10-05 by asset-planner after the user chose "fix the set, then rerun" (blocking question): moved into
 `visual-asset-terrain-set-review`, scope widened from forest variants to the adopted whole set.
 
 ## Test Summary
+On commit 2c793286f: `tests/visual_assets` 1548 passed, `vitest src/visualAssets` 230 passed, `tsc -b` and `eslint` clean, catalog `verify` store ok, `draft verify` drafts ok, `AM5-S` PASS (0/1012), Playwright capture 16/16 (Chromium 148 and Chrome 151, DPR 1 and 2). Unaffected checks and why: see the results doc.
 
 ## Files Changed
+visual_assets/catalog/ (31 generated artifact dirs, rc-0005); frontend/src/visualAssets/ (mapScene, MapHarness, mapMain, terrainsetSource, borderRender fix, fixtures/terrainset, tests), frontend/{rehearsal-map.html,playwright.map.config.ts,rehearsal-capture/map.capture.ts}; tests/visual_assets/ (adopted_facts, test_terrainset_fixture, stdio and integrity guards); docs/assets/{pilot_terrain_m5_results,surface_rehearsal_result}.md, session_handoff/*; agent-working/.
 
 ## Completion Summary
+The M5 checks were rerun on the whole adopted terrain set through the real release path and recorded as measured: whole-map review `PASS`, client matrix `PASS`, colour vision gate `INCONCLUSIVE` with its exact unmet condition stated, overall `INCONCLUSIVE` unchanged. Nothing was reworded; no charter note was needed. The batch is ready for the planner's final review and the user's push decision.

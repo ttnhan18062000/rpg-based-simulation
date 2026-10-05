@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261005-EPIC-VISUAL-ASSET-TERRAIN-SET-REVIEW
-phase: open
+phase: done
 date: 2026-10-05
 tags: [architecture, live-map, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, live-map, planning]
 Terrain set review: a predeclared colour-vision rule for whole sets, terrain-v1 redrawn to it, the owner's adopt-set, then the deferred M5 rerun
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -61,8 +61,8 @@ Children (order and gates in `SEQUENCE.md`):
 - Icons, entities, buildings, items, UI (parked, no tickets).
 
 ## Acceptance Criteria
-- [ ] All children done or explicitly deferred by the user; `SEQUENCE.md` status line states the outcome.
-- [ ] Every gate result recorded as measured (rule never reworded to pass).
+- [x] All children done or explicitly deferred by the user; `SEQUENCE.md` status line states the outcome.
+- [x] Every gate result recorded as measured (rule never reworded to pass).
 
 ## Related Tickets
 - TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET (done; the set and the finding)
@@ -89,7 +89,13 @@ Children (order and gates in `SEQUENCE.md`):
 Epic-tier: not implemented directly.
 
 ## Test Summary
+Per child (see each ticket). Final checks on code commit `2c793286f`: `tests/visual_assets` 1548 passed, vitest 230, tsc/eslint clean, `verify` and `draft verify` clean, AM5-S PASS, Playwright 16/16.
 
 ## Files Changed
+See the children.
 
 ## Completion Summary
+Outcome (2026-10-06): all children done. The set colour-vision rule and the whole-map criteria were fixed first with the user's answers; terrain-v1 was re-tinted so the set passes the rule (honestly: no worse than the flat fills); the user chose layered border fringes, which were contracted, drawn and previewed; the user adopted `terrain-v1` (22 tiles + 9 masks) themselves on 2026-10-05T18:17:03Z; the adoption was recorded and the guards re-pointed by exact equality;
+the deferred M5 rerun ran on the whole set through the real path (build, `pilot/rc-0005`, export): W03-SET `PASS` (all six criteria, all 23 terrains, one reviewer), W07 `PASS` in the matrix, W05 gate `INCONCLUSIVE` with its exact unmet condition stated, overall M5 `INCONCLUSIVE` unchanged. No rule or gate was reworded.
+Children: TCK-20261005-VISUAL-ASSETS-SET-COLOUR-VISION-RULE, ...-TERRAIN-V1-COLOUR-VISION-REDRAW, TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-CONTRACT, ...-TERRAIN-BORDER-MASKS, ...-RECORD-TERRAIN-SET-ADOPTION, TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN. Not pushed; the user decides push and PR.
+

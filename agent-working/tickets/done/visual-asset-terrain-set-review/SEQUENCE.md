@@ -44,4 +44,4 @@ Strictly sequential.
 
 ## Status
 
-Open (2026-10-05); children 1-4 done; the user adopted `terrain-v1` (tiles and masks) after reviewing the whole map with borders; recording ticket next, then the M5 rerun.
+DONE (2026-10-06): all children done and recorded; the user adopted `terrain-v1` (tiles and masks) on 2026-10-05T18:17:03Z; the M5 rerun ran on `pilot/rc-0005` (W03-SET PASS, W07 PASS, W05 gate and overall M5 INCONCLUSIVE, unchanged). Branch `visual-asset-terrain-set-review` is not pushed; the user decides.
