@@ -1,4 +1,4 @@
-"""Exact facts about what the committed catalog holds (TCK-20261006-VISUAL-ASSETS-RECORD-TERRAIN-SET-ADOPTION).
+"""Exact facts about what the committed catalog holds (TCK-20261006-VISUAL-ASSETS-RECORD-TERRAIN-SET-ADOPTION; build and rc-0005 added by TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN).
 
 The owner adopted draft set `terrain-v1` themselves on 2026-10-05T18:17:03Z (UTC): one `adopt-set`, tiles and border masks together. These constants pin the committed truth: the guards that
 used to say "the catalog holds only the pilot forest" compare against them with equality, never `>=`, so a stray adoption or a missing file still fails. If the catalog changes again (a new
@@ -27,6 +27,7 @@ SET_SOURCES = sorted(TERRAIN_SOURCES + BORDER_SOURCES)  # the 31 the set adoptio
 # Counts under the committed catalog: one adoption per source, two intake provenance files (record and review) per adoption.
 ADOPTION_COUNT = 34
 INTAKE_FILE_COUNT = 68
-# What was NOT derived from the new sources: artifacts (`build`) and release candidates (`release`) cover the forest only; rc-0004 holds the forest's three slots.
-GENERATED = ["terrain_forest--x1", "terrain_forest_bush--x1", "terrain_forest_tree--x1"]
-RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json"]
+# `build` and `release` (TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN, approved by the user on 2026-10-06): one generated artifact directory per adopted source, and the candidate pilot/rc-0005 holds all 34 slots.
+# rc-0004 still holds the forest's three slots only.
+GENERATED = sorted(f"{source}--x1" for source in ADOPTED_SOURCES)
+RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json", "rc-0005.json"]

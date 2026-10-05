@@ -46,7 +46,12 @@ export function composeBorderedCells(view: View, files: ReadonlyMap<string, File
     const result = view.resolve(key, { x, y })
     return result.kind === 'image' ? raster(result.file) : undefined
   }
-  const available = (maskKey: string): string[] => (view.snapshot.details.get(maskKey)?.values ?? []).filter((v) => view.snapshot.entries.has(slotKey(maskKey, v)))
+  // A variant is available only when its image is really loaded in this view: a mask that is missing from the build, undecodable or late is no mask at all (no fringe, today's hard edge).
+  const available = (maskKey: string): string[] =>
+    (view.snapshot.details.get(maskKey)?.values ?? []).filter((v) => {
+      const entry = view.snapshot.entries.get(slotKey(maskKey, v))
+      return entry !== undefined && view.bitmapFor(entry.file) !== undefined
+    })
   const masks: MaskAvailability = { variants: available }
   const maskOf = (maskKey: string, detail: string): Rgba | undefined => {
     const entry = view.snapshot.entries.get(slotKey(maskKey, detail))
