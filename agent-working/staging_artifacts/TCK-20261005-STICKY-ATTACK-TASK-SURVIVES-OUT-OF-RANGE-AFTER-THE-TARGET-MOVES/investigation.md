@@ -48,6 +48,21 @@ So the attacker held an `ENTITY_ACT ATTACK` task for about 851 ticks without re-
   inference ("no streak crosses a tick, so something already ends it") was wrong for the same reason this file's first
   version was: verdict streaks do not see a silent task.
 
+## Result 3: the mechanism (sample: `probes/posture_check.py`, entity 34, t155-t175)
+The hold is **not** caused by the `OUT_OF_RANGE` reset gap. `ActionRouter.execute_action` (`domain/action_router.py:94-102`)
+withholds an `ATTACK` whenever the entity's `last_combat_posture` toward that exact target is not in
+`(engage, probe, skirmish, vengeance_engage)`, returning a no-op `EntityUpdate(readiness_delta=0.0)` with no failure.
+Entity 34's posture toward target 11 was `probe` at t156-t160 (so the t157 `OUT_OF_RANGE` was a real, legitimate attack
+failure), flipped to `avoid` at t161 and `retreat` at t165, and stayed non-accepted afterwards. From t161 the gate returns
+the no-op every tick; `actions.py` sees no failure so it annotates the payload `outcome: SUCCESS` (with the stale
+`reason: OUT_OF_RANGE` carried along), does not clear it, and the scheduler keeps dispatching a payload-bearing
+`ENTITY_ACT` that does nothing. No `execute_attack` is reached, hence no verdicts. The task is only released when the
+target dies (t1008).
+Consequence: **a posture-withheld attack is a silent success that keeps the task**, which is the planner's hypothesis in
+substance. An `OUT_OF_RANGE` reset in `actions.py` would not have prevented this episode (the failure was at `probe`; the
+hold began after the posture changed). The fix belongs at the withheld-attack return in `action_router.py` (or in how
+`actions.py` treats a no-op), not at the `OUT_OF_RANGE` branch. `action_router.py` is not in the granted hold.
+
 ## Decision
 The scale-down-to-nothing outcome is **withdrawn**. The ticket's scopes 3-5 apply: reset the task on `OUT_OF_RANGE` when the
 target is a live entity that has left reach (judged against `legality.py:284`'s multiplied range), correct the
