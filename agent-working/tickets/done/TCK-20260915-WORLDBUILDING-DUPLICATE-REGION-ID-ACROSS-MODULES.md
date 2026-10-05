@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P2
 audience: agent
 ticket_id: TCK-20260915-WORLDBUILDING-DUPLICATE-REGION-ID-ACROSS-MODULES
-phase: open
+phase: done
 date: 2026-09-15
 tags: [world]
 ---
@@ -17,7 +17,7 @@ both define a region literally named `"hometown"` with different bounds — uncl
 compiler keeps them distinct, merges them, or one silently wins
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -101,13 +101,52 @@ _(none yet — filed as a finding, not yet investigated)_
   bug) describes the actual current behavior — read the compiler before assuming.
 
 ## Implementation Notes
-_(none — filed as a finding, not yet investigated)_
+Disposition close — no code change. Scenario (a) of Scope: intentional behaviour with a real resolution rule.
+
+- **Composition path** (`src/worldassembly/resolver.py` ~L345-360): each module ref's `namespace` becomes a
+  `<namespace>_` prefix applied to that module's region ids *before* the merge. If two modules still contribute the
+  same id, the merge raises `ValueError("Duplicate region ID collision '<id>' detected during assembly merge.")`.
+  Nothing is merged, overridden, or silently won.
+- **Direct `WorldSpec` path** (`src/worldbuilding/schema.py` ~L316-319): `validate_unique_identifiers` raises
+  `Duplicate region ID found: '<id>'`.
+- **The ticket's own example is resolved by authoring**, not by a collision: `data/worlds/frontier_living_world/world.yaml`
+  composes `trading_company_hub` with `namespace: "trading"`, so the resolved world holds two distinct regions,
+  `hometown` (`frontier_village_core`) and `trading_hometown` (`trading_company_hub`) — see
+  `data/worlds/frontier_living_world/resolved/world.resolved.yaml`.
+- **Corpus audit:** assembled all 24 `data/worlds/*/world.yaml` compositions with `WorldAssemblyResolver` against the
+  real catalog and module repository (`load_all()` on both): 24 assembled, 0 collisions. The generator-side
+  authoring of colliding compositions was already fixed by `_assign_region_namespaces`
+  (`TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION`, #335).
+- **Probe check:** a first audit run used the repositories without `load_all()` and reported 0/24 assembled
+  ("module not found"), which showed the probe discriminates; the corrected run is the one reported above.
+- **Known doc gap, not fixed here:** `docs/world/assembly_contract.md` documents the quest-id collision
+  (`AssemblyCollisionError`) but not the region-id collision or the namespace-prefix rule. Handed to the planner as
+  exact text rather than edited by me.
 
 ## Test Summary
-_(none yet)_
+No new tests: both fail-fast paths already have them and the corpus audit above is the new evidence.
+- `tests/unit/worldassembly/test_assembly.py` (un-namespaced `hometown` across two modules raises
+  `Duplicate region ID collision 'hometown' detected`)
+- `tests/unit/worldbuilding/test_worldspec_schema.py` (`Duplicate region ID` on a direct `WorldSpec`)
 
 ## Files Changed
-_(none yet)_
+Ticket only (`todos/` -> `done/`); no source, test, or doc change.
 
 ## Completion Summary
-_(not started)_
+Definitive answer: duplicate region ids across composed modules are never merged or overridden. A module author
+disambiguates with `namespace` on the module ref; an un-namespaced duplicate is a fatal, tested error at assembly
+time, and a duplicate inside one `WorldSpec` is a fatal, tested validation error. The frontier composition the ticket
+cited uses `namespace: "trading"` and resolves to `hometown` + `trading_hometown`. All 24 corpus compositions
+assemble. Remaining gap is documentation in `docs/world/assembly_contract.md`, routed to the planner.
+
+## Disposition
+STALE-PREMISE
+
+## Disposition Rationale
+The ticket's premise was that duplicate region ids across composed modules might merge, or one silently win. Neither
+happens: `src/worldassembly/resolver.py:359` raises `ValueError("Duplicate region ID collision ...")` on an
+un-namespaced duplicate, and `src/worldbuilding/schema.py:319` raises `Duplicate region ID found` inside one
+`WorldSpec`. The cited example is authored apart: `data/worlds/frontier_living_world/world.yaml` gives
+`trading_company_hub` `namespace: "trading"`, so the resolved world has `hometown` and `trading_hometown`. Corpus
+audit through `WorldAssemblyResolver` (catalog and module repository `load_all()`ed): `24 0 0` (assembled, failed,
+skipped) across all `data/worlds/*/world.yaml`.

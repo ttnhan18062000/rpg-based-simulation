@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES
-phase: open
+phase: done
 date: 2026-09-14
 tags: [world, faction]
 ---
@@ -19,7 +19,7 @@ has never fired in this codebase's history, only compile-time-authored starting 
 been observed
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -202,28 +202,51 @@ moved in this codebase's history, so the threshold unification in the sovereignt
 firing. Whether a non-lethal `DEFEAT` should count as a sovereignty-relevant death is the fix's open design
 question, left where the ticket parked it.
 
+### 2026-10-05 — `rpg-implementer-2` re-measurement at `fb0c1c318`: the defect no longer exists; closed by disposition `SUPERSEDED`
+
+The filter divergence this ticket recorded was removed by `786f9ee9b` (PR #276, 2026-10-01, "record passive, DEFEAT and
+hazard deaths via resolve_lifecycle; retire hero rebirth"). At the current tip `resolve_lifecycle`
+(`src/systems/lifecycle_systems/lifecycle.py`) appends every entity it classifies dead, whatever the reason
+(`KILL`, `DEFEAT`, `HAZARD`, passive), to `recent_deaths` (L234), and `process_influence_shift` is called when that
+list is non-empty (L294-298). The `("KILL", "PERMADEATH")` filter the 2026-09-15 and 2026-09-30 notes cite is gone.
+
+**Measured, not read.** Real `Kernel.tick_once()` (`PROD_SMALL`, seed 42, 1,500 ticks per world) with
+`FactionInfluenceService.process_influence_shift` wrapped to record every call and its returned `world_updates`, and
+region `influence`/`owner_faction_id` sampled every tick. Positive control: the same wrapper recorded 0 calls at the
+2026-09-30 tip for the identical 59 deaths in `frontier_living_world`.
+
+| world | deaths passed | calls | calls returning a world update | max \|influence\| in a region that started at 0.0 | owner change |
+|---|---|---|---|---|---|
+| frontier_living_world | 59 | 43 | 22 | goblin_camp 50, bandit_road 25, haunted_battlefield 5 | goblin_camp None -> HERO_GUILD |
+| urban_political | 30 | 14 | 6 | bandit_road 10 | none |
+| dungeon_crawl | 12 | 5 | 2 | haunted_battlefield 25, bandit_road 20 | none |
+| generated_frontier_3_42 | 46 | 29 | 15 | goblin_camp 40, bandit_road 10 | none |
+
+So the mechanism both executes and has an effect: influence moves in wild regions in all four worlds, and dynamic
+liberation (an unowned region taken by `HERO_GUILD`) has fired in `frontier_living_world`. **Not shown by this
+measurement:** monster conquest of a hero-owned region (no such owner change occurred), or that the thresholds are
+balanced. The ticket's two open design questions (does a non-lethal `DEFEAT` count as a sovereignty death) are moot:
+`DEFEAT` deaths are counted by the lifecycle authority.
+
+No code, test, doc or ledger change; `src/content_semantics/faction.py` was not touched.
+
 ## Test Summary
-_(not started)_
+No new tests: nothing was built. Evidence is the four runs above. The probe was a throwaway wrapper around the real kernel and is not committed.
 
 ## Files Changed
-_(not started)_
+Ticket only (`todos/` -> `done/`).
 
 ## Completion Summary
-**Parked by explicit user decision, not abandoned or unresolved — and a real, standalone bug in
-its own right, not merely a counter-example inside someone else's finding.** The root cause is
-fully known and empirically confirmed (20 of 20 real deaths in the sampled run were classified
-`"DEFEAT"`, zero `"KILL"`): two independent readers of the same combat-outcome event disagree
-about what counts as a death — `resolve_lifecycle()` checks `outcome_kind in ("KILL",
-"PERMADEATH")`, `world_dynamics.py`'s own trauma block checks `alive_set is False` directly. This
-is the same shape as `TCK-20260914-ITEM-REGISTRY-DUAL-CLASS-DIVERGENT-FAILURE-SEMANTICS` — two
-readers of one thing, disagreeing about what counts — not the world-composition-precondition
-pattern this ticket was checked against and found not to share (see
-`docs/plans/world_composition_precondition_gap_finding.md` for that comparison). Two real
-candidate fix directions are recorded above (widen `resolve_lifecycle()`'s own filter to include
-`"DEFEAT"`, or route influence-shift off `alive_set is False` directly). The user's explicit
-decision, given the investment cap on this cluster, was to record the finding and not build a fix
-now — this ticket's own root cause is exactly as complete and actionable as the other two in this
-cluster, just a different class of cause (a code-level classification divergence, not a
-composition/geometry gap).
+Closed by disposition `SUPERSEDED`. `RegionState.influence` now moves and ownership now changes in real runs, because
+`786f9ee9b` made the lifecycle authority count `DEFEAT` and other non-`KILL` deaths. See the 2026-10-05 note for the
+four-world measurement and what it does not show.
 
-**Verdict as of 2026-09-30: `DEFECT`** — death-outcome-kind filter divergence, re-confirmed at HEAD and by a 1,500-tick run (59 deaths, 0 influence-shift calls); see Implementation Notes. Still `OPEN`.
+## Disposition
+SUPERSEDED
+
+## Disposition Rationale
+The defect (`resolve_lifecycle` counting only `KILL`/`PERMADEATH` deaths, so `process_influence_shift` was never called)
+was removed by commit `786f9ee9b` (#276, 2026-10-01). Re-measured at `fb0c1c318` with the real kernel: 43 calls for 59
+deaths in `frontier_living_world` where the 2026-09-30 tip recorded 0 calls for the same 59, region influence reaches
+50 (`goblin_camp`) and 25 (`bandit_road`), and `goblin_camp` changes owner to `HERO_GUILD`; the other three named worlds
+also show influence moving (`src/systems/lifecycle_systems/lifecycle.py:234,294-298`).
