@@ -195,9 +195,12 @@ def test_wider_scope_every_wired_candidate_has_a_recorded_disposition():
 
 def test_wider_scope_numbers_pinned():
     wider = build_report(_real_registry_data()).wider
-    # 296 + src/worldassembly/resolve_io.py (one new module) + src/systems/strategic_systems/entity_target_objective.py
+    # 296 + src/worldassembly/resolve_io.py + src/systems/strategic_systems/entity_target_objective.py (two new modules)
     assert wider["scope_files"] == 298
-    assert wider["unbound_files"] == 234  # files no implemented_by entry names; +1 each, same two new modules
+    # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
+    # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
+    # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
+    assert wider["unbound_files"] == 228  # measured on the merge of 6202678a6 and this branch
     assert wider["candidates"] == 73  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package
     assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 3
