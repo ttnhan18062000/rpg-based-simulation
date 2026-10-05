@@ -4,7 +4,7 @@ layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261005-PERF-M1-ZERO-CAPACITY-SIGNAL
-phase: open
+phase: implement
 date: 2026-10-05
 tags: [performance, determinism, testing, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, testing, engine]
 PERF-M1-T01: zero-capacity worker and queue signals follow PERF-D1, with specification tests and a baseline disposition
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -143,9 +143,80 @@ worker fix landed went DEGRADED from tick 1.
 - Open: whether an "unavailable" state exists at all (Scope 2).
 
 ## Implementation Notes
+- **Reachability verified.** The only `WorkerManager(` in `src/` is `src/engine/kernel.py:133`, built from
+  `RuntimeProfile.max_worker_count` / `max_queue_depth` (`src/config/profiles.py:30`, `gt=0`; perf
+  profiles default queue 1000, `src/perf/profiles.py`). The four other callers named above do not
+  construct it; they reach it through the kernel. No test or tool constructs a zero or negative
+  capacity. The queue half is latent: no shipped run and no baseline was affected by it.
+- **Negative inputs:** rejected (`ValueError`), not clamped. `max_workers >= 1` with `max_queue_depth <= 0`
+  is rejected naming both values. Zero workers with zero or positive queue stays valid.
+- **"Unavailable":** no such state exists. After `shutdown()` the pool is `None`, `execute_batch` runs
+  locally and `get_stats()` still returns numbers; the small-batch process-pool fallback is also local
+  execution. Neither is signalled through a utilization value; no typed field added.
+- **Finding and fix (planner decision 2026-10-05, in scope as the "local" state):** local fallback ran
+  on the caller thread through `_wrap_work`, which counted it as an active worker. With workers=1,
+  queue=1, 200 packets, `get_stats()` returned `worker_utilization` **2.0** (`peak_workers` 2); after
+  `shutdown()` a 4-worker manager reported **0.25** for purely local work. PERF-D1 says saturated is
+  1.0. Fix: `_wrap_work(..., pooled=True)`; `_execute_locally` passes `pooled=False`, so only pool
+  threads count as active. Not a clamp. Now: the same run gives 1.0 (`peak_workers` 1), post-shutdown
+  local work gives 0.0. The strict xfail became the passing
+  `test_local_fallback_never_reports_more_than_saturated`.
+- **Mode guard rail:** `test_overloaded_run_with_local_fallback_reaches_degraded` (governor contract
+  tests) feeds the overloaded run's stats to `ResourceGovernor`: DEGRADED before the fix (utilization
+  2.0) and after (1.0). `governor.py` is unchanged. `tests/perf/test_concurrency_parity.py` passes.
+  No existing test changed its RuntimeMode sequence.
+- **Not verified here:** `tests/regression/test_behavioral_5k.py` hits the 60 s conftest limit
+  (`TimeoutError`, not an assertion) on this machine, like the known certification long-run gap; it was
+  not run to completion, so its 5k mode sequence is unchecked locally. CI is the check for it.
+- **Docs:** `docs/engine/runtime_profiles.md` and `docs/engine/deterministic_execution.md` state no
+  zero-capacity or utilization-range semantics (only that the governor reads utilization), so nothing
+  was wrong or missing to edit; PERF-D1 in the decisions doc remains the statement. Parity ledger:
+  `INFRA-422`.
+
+- **Known limitation (process-pool route):** `_process_chunk_wrapper` runs in the child process and never
+  touches `_active_count`, so on the process-pool route `worker_utilization` stays 0.0 even when that
+  pool is saturated. This change affects one case there: before it, a process manager with
+  `max_workers=1` sent small batches (`< 10 * workers`) to local execution and reported 1.0 (a false
+  DEGRADED); now it reports 0.0. Neither is reachable from the kernel: `src/engine/kernel.py:133`
+  builds `WorkerManager(max_workers=..., max_queue_depth=...)` with threads (`use_processes` unset)
+  and never passes `force_local`. No follow-up ticket unless a shipped path ever enables processes.
+
+### Baseline disposition (input to PERF-M1-T05; nothing rerun)
+Worker fix landed in git 2026-09-13 (`bc00caa1a`, PR #175). Queue half never affected any run.
+No committed baseline stores a utilization value (checked the metric keys), so none could have
+recorded a value above 1.0 from the local-fallback miscount: that part changes nothing.
+
+| Baseline | Profile (workers) | Captured | Disposition | Reason |
+|---|---|---|---|---|
+| `tests/perf/baselines/*_local.json` (idle, movement, resource, combat, strategic, mixed) | `PERF_*_LOCAL` (0) | 2026-05-15 | rerun | Captured before the worker fix: DEGRADED from tick 1, so timings reflect DEGRADED-mode cadence |
+| `docs/observability/baselines/*_local.json`, `test_perf_idle_baseline.json` | `PERF_*_LOCAL` (0) | 2026-05-19 | rerun | Same |
+| `docs/observability/baselines/matrix_full.json` (local rows) | `PERF_*_LOCAL` (0) | 2026-05-26 | rerun | Same; concurrent rows retain |
+| `docs/observability/baselines/latest.json` IDLE_100..IDLE_5000, MOVEMENT_1000, RESOURCE_1000, COMBAT_100, STRATEGIC_500 | `PERF_*_LOCAL` (0) | 2026-05-26 | rerun | Same |
+| `*_concurrent.json` in both dirs, `latest.json` MIXED_1000, `matrix_full.json` concurrent rows | `PERF_*_CONC` (4, queue 1000) | 2026-05-15 / 05-19 / 05-26 | retain | Workers > 0, queue > 0: neither half applies. Local-fallback miscount touches no stored value |
+| `tests/perf/baselines/simq_corpus_*.json` | `PERF_512MB_LOCAL` (0) | 2026-08-07 | rerun | Zero workers; captured before 2026-09-13 |
+| `perf_baselines.json` | none | n/a | retain | Zero entries |
+
+Caveat: the `*_local` rows are `rerun`, not `incomparable`, because a rerun on current code is
+possible; whether T05 reruns or retires them is the planner's call. Capture dates read from file
+timestamps (epoch 1778820924 = 2026-05-15, 1779190619 = 2026-05-19, 1786131441 = 2026-08-07) and
+`git log` for the matrix and latest files.
 
 ## Test Summary
+- New: `tests/unit/kernel/test_worker_capacity_semantics.py` (15 pass). Governor: 3 new tests in
+  `tests/unit/resource/test_resource_governor_contract.py`.
+- AC 8 set plus the new governor tests: 62 passed (includes `tests/perf/test_concurrency_parity.py`).
+  Kernel milestone A/B/D closure, `test_signal_truth`, `test_metric_window_recorder`: pass.
+- `tests/regression/test_behavioral_5k.py` was NOT run to completion locally: it hits the 60 s conftest
+  time limit (`TimeoutError`, not an assertion). CI is the check; perf-planner reads that job on the PR.
+- `make code-health` / `make typecheck-py`: no finding in `src/engine/worker_manager.py`. The branch
+  shows 1 new / 26 worse code-health findings and 3 unbaselined mypy errors in files this ticket does
+  not touch (main over its ceilings; forwarded to codebase-planner by perf-planner).
 
 ## Files Changed
+- `src/engine/worker_manager.py`
+- `tests/unit/kernel/test_worker_capacity_semantics.py` (new)
+- `tests/unit/resource/test_resource_governor_contract.py`
+- `docs/parity_ledger/infrastructure.yaml` (INFRA-422)
+- `agent-working/staging_artifacts/TCK-20261005-PERF-M1-ZERO-CAPACITY-SIGNAL/` (investigation, plan, test_plan)
 
 ## Completion Summary
