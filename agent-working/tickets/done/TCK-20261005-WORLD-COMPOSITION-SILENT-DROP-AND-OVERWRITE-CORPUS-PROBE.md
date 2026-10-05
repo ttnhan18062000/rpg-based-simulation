@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-WORLD-COMPOSITION-SILENT-DROP-AND-OVERWRITE-CORPUS-PROBE
-phase: open
+phase: done
 date: 2026-10-05
 tags: [world, investigation]
 ---
@@ -17,7 +17,7 @@ unvalidated compiles dropping populations/resources/buildings, first-wins factio
 namespace-stripped biome provenance — and report which actually fire
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -141,7 +141,7 @@ Sites are at `405cbd77b`. **Re-derive every line number** at the commit this sta
 - `docs/parity_ledger/substrate.yaml`
 
 ## Related Stored Artifacts
-_(the probe output will be the first)_
+- `agent-working/stored_artifacts/TCK-20261005-WORLD-COMPOSITION-SILENT-DROP-AND-OVERWRITE-CORPUS-PROBE/corpus_probe_results.jsonl` (120 rows, 24 worlds x 5 checks), with `investigation.md`, `plan.md`, `test_plan.md`
 
 ## Related Code Areas
 - `src/worldbuilding/compiler.py:409-410` (a), `:406-409` (the stale comment), `:498-499`, `:537-538`,
@@ -159,13 +159,28 @@ _(the probe output will be the first)_
   an unknown-region reference is unchecked. If it would not, (b) is a different defect than it looks.
 
 ## Implementation Notes
-_(not started)_
+Full write-up: `agent-working/stored_artifacts/TCK-20261005-WORLD-COMPOSITION-SILENT-DROP-AND-OVERWRITE-CORPUS-PROBE/investigation.md`. Summary:
+- **All four suspicions fire zero times on the 24 corpus worlds**, and the output says so per world: places 52 declared / 23 worlds / 0 duplicates / 0 lost at compile; placements 0 dangling;
+  factions 147 contributions / 0 not pre-seeded / 0 differing; biome provenance 104 regions / 4 namespaced / 0 mismatches. Every detector was shown able to fire on a deliberate instance.
+- **(a)** reachable, world-truth if it fired (a place vanishes), no instance found. **(b)** region drops are fixed by the compile pre-pass; the ticket's open assumption is answered: `WorldValidator`
+  rules `WORLD-REF-002/003/004` would catch an unknown region. The residue the three unvalidated paths still skip is not empty: measured 74 warnings, 0 errors, across 17 of 24 worlds (`WORLD-REACH-001` 72,
+  `WORLD-WARN-001` 2). **(c)** structurally unreachable: the resolver pre-seeds every catalog faction (`resolver.py:322-326`) and builds module contributions from the same catalog, so the first-wins branch
+  never runs (0 faction provenance records carry a source module): dead code, not a defect. **(f)** reproduced with a synthetic underscore namespace (`moon_cult`), but on the corpus the four namespaced regions all use
+  the single-word namespace `trading`; provenance-only effect (`biome_source` feeds only the provenance record), no world truth.
+- Stale comment at `compiler.py:433-439` corrected; it claimed places were empty for all existing content, which stopped being true when modules began declaring them (52 places in 23 worlds now).
+- No behaviour change. Not touched: `src/cli/`, `src/api/`, the resolver, the three compile paths.
+- Follow-ups: **none ticketed, and that is recorded, not assumed**: each check fired zero times; (c) is dead code (a candidate line for `TCK-20261005-WORLD-ASSEMBLY-LATENT-AND-DEAD-PATHS`); (f) is latent. The
+  `WorldValidator` residue is reported for the planner to route; adding the call to the three paths is explicitly out of scope.
 
 ## Test Summary
-_(not started)_
+`pytest tests/tools/test_world_composition_corpus_probe.py`: 15 passed (a firing and a quiet case per detector). `pytest tests/unit/worldbuilding/test_world_compiler.py tests/unit/worldbuilding/test_place_wiring.py`: 71 passed after the comment change. Lint (`ruff`) not run: not installed in this environment.
 
 ## Files Changed
-_(not started)_
+- `tools/world_composition_corpus_probe.py` (new, read-only measurement tool)
+- `tests/tools/test_world_composition_corpus_probe.py` (new, 15 tests)
+- `src/worldbuilding/compiler.py` (comment only, lines 433-439)
+- `agent-working/stored_artifacts/TCK-20261005-WORLD-COMPOSITION-SILENT-DROP-AND-OVERWRITE-CORPUS-PROBE/` (evidence `.jsonl` and the three artifacts)
 
 ## Completion Summary
-_(not started)_
+The four suspected silent world-composition failures were measured on all 24 corpus worlds with a positive-controlled probe: zero fire. The one real correction is the stale compiler comment. The probe also showed two things worth routing:
+the faction first-wins merge is dead code, and the three unvalidated compile paths skip `WorldValidator` rules that would add 74 warnings (0 errors) on the corpus. No behaviour change.
