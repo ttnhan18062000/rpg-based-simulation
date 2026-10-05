@@ -2,7 +2,11 @@
 """Bulk-apply minimal frontmatter to agent-working/tickets/done/ and agent-working/stored_artifacts/.
 
 Run from repo root:
-    python3 tools/add_frontmatter_tickets.py
+    python3 tools/add_frontmatter_tickets.py                       # dry run: lists what would change
+    python3 tools/add_frontmatter_tickets.py --apply --ticket-id X # write, for ticket X only
+
+Every edit is computed in memory first; nothing is written unless --apply is given and the whole
+pass succeeded, so a crash can never leave some files rewritten and others not.
 
 Idempotency:
 - Ticket files: skip if already starts with '---' AND contains 'status: historical'
@@ -13,6 +17,7 @@ Idempotency:
   (validator scans them all; non-standard filenames get artifact_type: misc).
 """
 
+import argparse
 import re
 import sys
 from pathlib import Path
@@ -189,28 +194,28 @@ def build_artifact_frontmatter(ticket_id: str, artifact_type: str | None) -> str
     return "\n".join(lines) + "\n"
 
 
-def process_ticket_file(path: Path) -> str:
-    """Prepend ticket frontmatter to path. Returns 'modified' or 'skipped'."""
+def compute_ticket_file(path: Path) -> str | None:
+    """Return the new content for a ticket file, or None if it is already conformant. Writes nothing."""
     content = path.read_text(encoding="utf-8")
     if has_conformant_frontmatter(content, "status: historical"):
         # Also rewrite if an invalid layer value is present (e.g. 'movement' was
         # written in a prior pass before LAYER_KEYWORDS was corrected)
         if "layer: movement" not in content:
-            return "skipped"
+            return None
     stem = path.stem
     body = strip_frontmatter(content) if content.startswith("---") else content
     frontmatter = build_ticket_frontmatter(stem)
-    path.write_text(frontmatter + "\n" + body, encoding="utf-8")
-    return "modified"
+    return frontmatter + "\n" + body
 
 
-def process_artifact_file(path: Path, ticket_id: str) -> str:
-    """Apply artifact frontmatter to path. Returns 'modified' or 'skipped'.
+def compute_artifact_file(path: Path, ticket_id: str) -> str | None:
+    """Return the new content for an artifact file, or None if it is already conformant.
 
     All .md files under agent-working/stored_artifacts/ receive frontmatter.
     Files whose stem is in ARTIFACT_TYPED_NAMES get the full artifact schema with
     a typed artifact_type field.  All other files (legacy walkthroughs, task specs,
     etc.) get content_type: doc frontmatter so the validator routes them correctly.
+    Writes nothing.
     """
     content = path.read_text(encoding="utf-8")
     stem = path.stem
@@ -222,36 +227,54 @@ def process_artifact_file(path: Path, ticket_id: str) -> str:
     if has_conformant_frontmatter(content, conformance_key):
         # Rewrite if an invalid layer value is present
         if "layer: movement" not in content:
-            return "skipped"
+            return None
 
     artifact_type = stem if is_typed else None
     body = strip_frontmatter(content) if content.startswith("---") else content
     frontmatter = build_artifact_frontmatter(ticket_id, artifact_type)
-    path.write_text(frontmatter + "\n" + body, encoding="utf-8")
+    return frontmatter + "\n" + body
+
+
+def process_ticket_file(path: Path) -> str:
+    """Prepend ticket frontmatter to path. Returns 'modified' or 'skipped'."""
+    new_content = compute_ticket_file(path)
+    if new_content is None:
+        return "skipped"
+    path.write_text(new_content, encoding="utf-8")
     return "modified"
 
 
-def main() -> None:
-    ticket_modified = 0
-    ticket_skipped = 0
-    ticket_misc = 0
+def process_artifact_file(path: Path, ticket_id: str) -> str:
+    """Apply artifact frontmatter to path. Returns 'modified' or 'skipped'."""
+    new_content = compute_artifact_file(path, ticket_id)
+    if new_content is None:
+        return "skipped"
+    path.write_text(new_content, encoding="utf-8")
+    return "modified"
 
-    artifact_modified = 0
-    artifact_skipped = 0
-    artifact_misc = 0
+
+def plan_edits(ticket_ids: frozenset[str] | None = None) -> tuple[list[tuple[Path, str, str]], dict[str, int]]:
+    """Compute every edit in memory. Returns ([(path, kind, new_content)], counts); writes nothing.
+
+    Any exception propagates before the caller has written a single file. `ticket_ids`, when given,
+    restricts both walks to those tickets (a done ticket's stem, an artifact folder's name).
+    """
+    edits: list[tuple[Path, str, str]] = []
+    counts = {"ticket_skipped": 0, "artifact_skipped": 0, "ticket_misc": 0, "artifact_misc": 0}
 
     if not TICKET_DIR.exists():
         print(f"WARNING: {TICKET_DIR} does not exist, skipping tickets", file=sys.stderr)
     else:
         for md_file in sorted(TICKET_DIR.rglob("*.md")):
-            result = process_ticket_file(md_file)
-            layer = infer_layer(md_file.stem)
-            if result == "modified":
-                ticket_modified += 1
-                if layer == "misc":
-                    ticket_misc += 1
-            else:
-                ticket_skipped += 1
+            if ticket_ids is not None and md_file.stem not in ticket_ids:
+                continue
+            new_content = compute_ticket_file(md_file)
+            if new_content is None:
+                counts["ticket_skipped"] += 1
+                continue
+            edits.append((md_file, "ticket", new_content))
+            if infer_layer(md_file.stem) == "misc":
+                counts["ticket_misc"] += 1
 
     if not ARTIFACT_DIR.exists():
         print(f"WARNING: {ARTIFACT_DIR} does not exist, skipping artifacts", file=sys.stderr)
@@ -259,20 +282,44 @@ def main() -> None:
         for subdir in sorted(ARTIFACT_DIR.iterdir()):
             if not subdir.is_dir():
                 continue
-            ticket_id = subdir.name
+            if ticket_ids is not None and subdir.name not in ticket_ids:
+                continue
             for md_file in sorted(subdir.rglob("*.md")):
-                result = process_artifact_file(md_file, ticket_id)
-                if result == "modified":
-                    artifact_modified += 1
-                    if infer_layer(ticket_id) == "misc":
-                        artifact_misc += 1
-                else:
-                    artifact_skipped += 1
+                new_content = compute_artifact_file(md_file, subdir.name)
+                if new_content is None:
+                    counts["artifact_skipped"] += 1
+                    continue
+                edits.append((md_file, "artifact", new_content))
+                if infer_layer(subdir.name) == "misc":
+                    counts["artifact_misc"] += 1
+    return edits, counts
 
-    print(f"Done: {ticket_modified} tickets modified, {ticket_skipped} tickets skipped")
-    print(f"Done: {artifact_modified} artifacts modified, {artifact_skipped} artifacts skipped")
-    print(f"Tickets with layer=misc: {ticket_misc}")
-    print(f"Artifacts with layer=misc: {artifact_misc}")
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--apply", action="store_true",
+                        help="write the edits (default: dry run, print what would change and write nothing)")
+    parser.add_argument("--ticket-id", action="append", dest="ticket_ids", metavar="ID",
+                        help="restrict to this ticket (repeatable); without it every ticket and artifact is walked")
+    args = parser.parse_args(argv)
+
+    edits, counts = plan_edits(frozenset(args.ticket_ids) if args.ticket_ids else None)
+
+    ticket_modified = sum(1 for _, kind, _ in edits if kind == "ticket")
+    artifact_modified = sum(1 for _, kind, _ in edits if kind == "artifact")
+
+    if not args.apply:
+        for path, _kind, _content in edits:
+            print(f"would modify: {path}")
+        print(f"DRY RUN: {len(edits)} files would be modified; nothing written (pass --apply to write)")
+    else:
+        for path, _kind, content in edits:
+            path.write_text(content, encoding="utf-8")
+
+    print(f"Done: {ticket_modified} tickets modified, {counts['ticket_skipped']} tickets skipped")
+    print(f"Done: {artifact_modified} artifacts modified, {counts['artifact_skipped']} artifacts skipped")
+    print(f"Tickets with layer=misc: {counts['ticket_misc']}")
+    print(f"Artifacts with layer=misc: {counts['artifact_misc']}")
 
 
 if __name__ == "__main__":

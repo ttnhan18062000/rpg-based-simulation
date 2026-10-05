@@ -55,11 +55,13 @@ WORKFLOW_STATUS_VALUES: FrozenSet[str] = frozenset(
 # normal implementation closure. Two sections rather than one so every body field keeps the same
 # single parsing convention (`parse_body_section` returns a whole section, never a first line).
 DISPOSITION_VALUES: FrozenSet[str] = frozenset(
-    {"STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO"}
+    {"STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO", "DECISION-RECORDED"}
 )
 
 _COMMIT_SHA_RE = re.compile(r"\b(?=[0-9a-f]*\d)(?=[0-9a-f]*[a-f])[0-9a-f]{7,40}\b")
 _FILE_LINE_RE = re.compile(r"[\w./-]+\.\w+:\d+")
+_ISO_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+_CODE_FILE_LINE_RE = re.compile(r"(?:^|[\s(`])(?:src|tests)/[\w./-]+\.\w+:\d+")
 _FENCED_OUTPUT_RE = re.compile(r"```[^\n]*\n\s*\S.*?```", re.DOTALL)
 
 
@@ -91,6 +93,29 @@ def check_disposition_rationale(body: str) -> Tuple[str, str]:
     )
 
 
+def check_decision_recorded_rationale(rationale: str) -> Tuple[str, str]:
+    """Extra rule for `DECISION-RECORDED` on top of the shared evidence rule: the rationale must
+    carry an ISO date (the decision's own date), and a bare `src/` or `tests/` `file:line` does not
+    count as the decision's record (code shows behaviour, not who decided it). A SHA, a doc
+    `file:line` or a fenced quote of the owner message still satisfies it; that the cited record
+    really is the decision stays a reviewer's judgement."""
+    if not _ISO_DATE_RE.search(rationale):
+        return ("FAIL", "DECISION-RECORDED rationale must carry the decision's ISO date (YYYY-MM-DD)")
+    without_code_refs = _CODE_FILE_LINE_RE.sub(" ", rationale)
+    if (
+        _COMMIT_SHA_RE.search(without_code_refs)
+        or _FILE_LINE_RE.search(without_code_refs)
+        or _FENCED_OUTPUT_RE.search(rationale)
+    ):
+        return ("PASS", "DECISION-RECORDED rationale is dated and cites a decision record")
+    return (
+        "FAIL",
+        "DECISION-RECORDED rationale must cite the decision's own record "
+        "(a commit SHA, a doc file:line, or a fenced quote of the dated owner message), "
+        "not a src/ or tests/ file:line",
+    )
+
+
 def check_disposition_fields(body: str) -> Tuple[str, str]:
     """Validate `## Disposition` (enum, via `check_body_field_enum` unchanged) and, when it is
     present, `## Disposition Rationale`. Returns ("NA", ...) when the ticket has no Disposition."""
@@ -101,6 +126,10 @@ def check_disposition_fields(body: str) -> Tuple[str, str]:
         return ("FAIL", "## Disposition is present but empty")
     enum_status, enum_evidence = check_body_field_enum(body, "Disposition", DISPOSITION_VALUES)
     rationale_status, rationale_evidence = check_disposition_rationale(body)
+    if value == "DECISION-RECORDED" and rationale_status == "PASS":
+        rationale_status, rationale_evidence = check_decision_recorded_rationale(
+            parse_body_section(body, "Disposition Rationale")
+        )
     status = "PASS" if enum_status == "PASS" and rationale_status == "PASS" else "FAIL"
     return (status, f"{enum_evidence}; {rationale_evidence}")
 
