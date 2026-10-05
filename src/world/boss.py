@@ -1,8 +1,9 @@
 # Compliance IDs: WORLD-035, WORLD-036, WORLD-037
 # src/world/boss.py
 from __future__ import annotations
+import functools
 import math
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Callable, List, Optional
 from src.core.enums import Domain, EntityRole
 from src.core.state import PlaceKind
 from src.core.updates import StateUpdate
@@ -21,7 +22,20 @@ WORLD_BOSS_SPAWN_FLAG = "ENABLE_WORLD_BOSS_SPAWN"
 def world_boss_spawn_enabled(state: "AuthoritativeState") -> bool:
     """True only when ENABLE_WORLD_BOSS_SPAWN is explicitly "ON" in the state's feature flags."""
     flags = getattr(state, "feature_flags", None) or {}
-    return flags.get(WORLD_BOSS_SPAWN_FLAG, "OFF") == "ON"
+    return bool(flags.get(WORLD_BOSS_SPAWN_FLAG, "OFF") == "ON")
+
+
+def _gated_static_by_world_boss_flag(
+    spawn: Callable[["AuthoritativeState", "EntityGenerator"], StateUpdate],
+) -> "staticmethod[..., StateUpdate]":
+    """Replace ``@staticmethod`` on a boss spawn branch: it returns an empty update unless ENABLE_WORLD_BOSS_SPAWN is ON
+    (owner decision 14)."""
+    @functools.wraps(spawn)
+    def gated(state: "AuthoritativeState", generator: "EntityGenerator") -> StateUpdate:
+        if not world_boss_spawn_enabled(state):
+            return StateUpdate()
+        return spawn(state, generator)
+    return staticmethod(gated)
 
 
 class BossService:
@@ -39,9 +53,9 @@ class BossService:
     BOSS_SPAWN_THRESHOLD = 2.0 # Maturity threshold
     BOSS_SPAWN_TRAUMA_THRESHOLD = 8.0 # Regional trauma threshold
     
-    @staticmethod
+    @_gated_static_by_world_boss_flag
     def check_for_boss_spawn(
-        state: AuthoritativeState,
+        state: AuthoritativeState,  # noqa: N805  (a static method: the decorator replaces @staticmethod)
         generator: EntityGenerator,
     ) -> StateUpdate:
         """
@@ -62,9 +76,6 @@ class BossService:
             3. fallback: current position region
         """
         from dataclasses import replace
-
-        if not world_boss_spawn_enabled(state):
-            return StateUpdate()
 
         from src.core.state import ItemStack
         from src.engine.legality import LegalityServiceV2
@@ -178,9 +189,9 @@ class BossService:
             entities_add=entities_add,
         )
 
-    @staticmethod
+    @_gated_static_by_world_boss_flag
     def check_for_lair_spawn(
-        state: AuthoritativeState,
+        state: AuthoritativeState,  # noqa: N805  (a static method: the decorator replaces @staticmethod)
         generator: EntityGenerator,
     ) -> StateUpdate:
         """
@@ -200,9 +211,6 @@ class BossService:
         the Place.
         """
         from dataclasses import replace
-
-        if not world_boss_spawn_enabled(state):
-            return StateUpdate()
 
         def _is_active_living_lair_occupant(entity) -> bool:
             return (

@@ -61,9 +61,7 @@ class WorldDynamicsSystem:
         # 2.1 Death-triggered Trauma & Sovereignty (LEG-RPG-071/139)
         from src.core.enums import Faction
         for e_id, ent_upd in update.entity_updates.items():
-            # Rule ENV-07 (owner decision 15): only a death with a violent cause counts as unrest.
-            if (ent_upd.combat and ent_upd.combat.alive_set is False
-                    and is_violent_death_cause(ent_upd.combat.outcome_kind)):
+            if ent_upd.combat and ent_upd.combat.alive_set is False and is_violent_death_cause(ent_upd.combat.outcome_kind):  # ENV-07
                 entity = state.entities.get(e_id)
                 if entity:
                     region = WorldDynamicsSystem._get_region_for_pos(state, entity.navigation.position)
