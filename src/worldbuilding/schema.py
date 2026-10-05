@@ -242,7 +242,15 @@ class ValidationSpec(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     expected_min_entities: int = Field(1, ge=0, description="Ceiling check for combined entity populations")
-    allow_overlapping_regions: bool = Field(False, description="Whether regional overlap is tolerated")
+    allow_overlapping_regions: bool = Field(
+        False,
+        description=(
+            "Declared, not enforced, reserved: no production code reads this field. Region overlap is "
+            "permitted regardless of its value and is resolved by core.region_resolution.resolve_region_among "
+            "(Mechanics Bible 06, Region Overlap Resolution). Its removal or renaming is tied to the owner's "
+            "partial-overlap decision."
+        ),
+    )
 
 class QuestDefinition(BaseModel):
     """Authoring-time blueprint for a procedural quest seed. Not a runtime quest instance."""

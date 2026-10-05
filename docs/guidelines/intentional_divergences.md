@@ -2584,6 +2584,15 @@ The following legacy behaviors have been intentionally omitted or retired.
   `test_committed_compile_report_counts_equal_fresh_compile`).
 - **Status**: ACTIVE
 
+### DEV-010 — One Position-to-Region Rule for Every Lookup: Inclusive Edges, Smallest Area Wins (TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER)
+
+- **Situation**: Five position-to-region lookups existed with three membership conventions (half-open `[min,max)`, closed `[min,max]`, and a nearest-centre fallback), and each credited only the first-declared region at a point inside several. The trauma writer (`SpatialQueryService.get_region_at`, half-open) and its readers (`DomainView.get_region_for_position`, closed) disagreed about the same field. The Bible's "strictly disjoint, enforced" overlap policy was enforced by nothing.
+- **Change**: `core.region_resolution.resolve_region_among` defines the rule once: inclusive edges, smallest area wins, ties to declaration order, `None` for unclaimed space. `SpatialQueryService.get_region_at`, `DomainView.get_region_for_position`, `ApplyPath` region maintenance and the social-memory fallback all apply it. Overlap is permitted and does not abort assembly (owner decision 11).
+- **Rationale**: **Unified**. Two lookups that disagreed now agree, and the far-edge/inclusive-edge disagreement is repaired (`hometown` 12 deaths credited, was 7, on `frontier_living_world`, 10,000 ticks, seed 42).
+- **Consequences recorded**: the rule does **not** un-shadow `near_forest`, `wolf_den` or `trading_hometown` on this corpus. The corpus regions overlap partially rather than nesting, so the thin `bandit_road` strip (area 1,200) still wins every shared point, and terrain fill (later region wins) runs the opposite way to region credit. Partial-overlap precedence is an open owner decision. `allow_overlapping_regions` is declared, not enforced, and reserved.
+- **Verification**: `tests/unit/engine/test_region_lookup_policy.py`; `tests/unit/worldbuilding/test_allow_overlapping_regions_unread.py`.
+- **Status**: ACTIVE
+
 ---
 *Last updated: 2026-09-02 (DEV-007 addendum, TCK-20260902-CLASSHALL-DEAD-CODE — deferred
 `ClassHallAction.train()` cleanup landed).*
