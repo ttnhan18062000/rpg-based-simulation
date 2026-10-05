@@ -17,4 +17,4 @@ Every ticket: no `src/` diff, nothing blocking, M4 soak rows untouched.
 
 Follow-up filed by ticket 2: TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING (BLOCKED until its soak ends; dates written at the validator's merge).
 
-Follow-up filed 2026-10-05 by the import-linter adoption batch: `TCK-20261004-IMPORT-LINTER-ADOPTION` is OPEN again (owner yes 2026-10-04) and runs on branch `import-linter-adoption`; it files `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT` (BLOCKED until a two-week soak from its merge; dates written at merge).
+Follow-up filed 2026-10-05 by the import-linter adoption batch: `TCK-20261004-IMPORT-LINTER-ADOPTION` is DONE (2026-10-05, PR #351; moved to `done/`); it filed `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT` (BLOCKED until a two-week soak from its merge; dates written at merge).

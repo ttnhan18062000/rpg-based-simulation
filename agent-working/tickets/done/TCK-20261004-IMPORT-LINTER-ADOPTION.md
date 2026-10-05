@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-IMPORT-LINTER-ADOPTION
-phase: open
+phase: done
 date: 2026-10-04
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 Adopt import-linter (advisory): layer contract from the package registry, loophole and class E contracts, registry sync, one advisory CI step
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -47,11 +47,11 @@ P3
 - Making the step blocking or a required check (ticket 2)
 
 ## Acceptance Criteria
-- [ ] Contracts run locally and in an advisory CI step with a step summary and one warning annotation on a broken contract; the step can never fail the job (tested explicitly, also for the `Code health` job after #329)
-- [ ] Parity table for all 8 class E rules (injected violation, test result, contract result), made in a scratch copy, in Test Summary
-- [ ] Registry-sync test and generator `--check` pass; `tests/static` green after the pin
-- [ ] No test retired or edited; `git diff --stat origin/main...HEAD` lists no path under `src/`
-- [ ] Ticket 2 filed BLOCKED and in `SEQUENCE.md`; handoffs updated; `docs/REGISTRY.yaml` regenerated
+- [x] Contracts run locally and in an advisory CI step with a step summary and one warning annotation on a broken contract; the step can never fail the job (tested explicitly, also for the `Code health` job after #329)
+- [x] Parity table for all 8 class E rules (injected violation, test result, contract result), made in a scratch copy, in Test Summary
+- [x] Registry-sync test and generator `--check` pass; `tests/static` green after the pin
+- [x] No test retired or edited; `git diff --stat origin/main...HEAD` lists no path under `src/`
+- [x] Ticket 2 filed BLOCKED and in `SEQUENCE.md`; handoffs updated; `docs/REGISTRY.yaml` regenerated
 
 ## Related Tickets
 - TCK-20261004-IMPORT-LINTER-EVALUATION
@@ -63,9 +63,15 @@ P3
 - docs/plans/codebase_health/import_linter_adoption_ticket_brief.md
 - docs/plans/codebase_health/import_linter_evaluation.md
 - docs/plans/codebase_health/src_package_structure_audit.md
+- docs/plans/codebase_health/python_code_craft_roadmap.md
+- docs/plans/codebase_health/handoffs/handoff_to_testing.md
+- docs/plans/codebase_health/handoffs/handoff_to_rpg.md
+- docs/plans/codebase_health/handoffs/session/
+- docs/guidelines/agent_working_environment.md
+- docs/REGISTRY.yaml (regenerated)
 
 ## Related Stored Artifacts
-None.
+- agent-working/stored_artifacts/TCK-20261004-IMPORT-LINTER-ADOPTION/ (plan.md, investigation.md, test_plan.md; written at closure from the brief and this ticket)
 
 ## Related Code Areas
 - pyproject.toml, uv.lock
@@ -163,6 +169,8 @@ Reading (34 of 34 injections: the contract caught every one; 11 of them the test
 - `codebase/structure/importlinter.toml`, `codebase/structure/import_layers_baseline.txt`, `codebase/structure/import_contracts.py`, `tests/codebase/test_import_contracts.py`
 - `.github/workflows/test.yml` (one step), `Makefile` (`import-contracts`)
 - `docs/guidelines/agent_working_environment.md`, `docs/plans/codebase_health/import_linter_evaluation.md`, `python_code_craft_roadmap.md` (M5 row, decision 20), `handoffs/handoff_to_testing.md`, `handoffs/handoff_to_rpg.md`
+- Closure: `agent-working/stored_artifacts/TCK-20261004-IMPORT-LINTER-ADOPTION/`, `docs/REGISTRY.yaml` (regenerated), `docs/plans/codebase_health/handoffs/session/*.md` (handover copies)
 - Planning: `docs/plans/codebase_health/import_linter_adoption_ticket_brief.md`, `handoffs/session/*.md`, ticket 2, `SEQUENCE.md`
 
 ## Completion Summary
+import-linter 2.15 is adopted, advisory. `codebase/structure/importlinter.toml` holds the registry-generated `layers` contract (135 baseline pairs) and 16 contracts for the class E rules and the evaluation's loopholes (17 contracts, all kept), with `exclude_type_checking_imports = false`; `python3 -m codebase.structure.import_contracts` generates, checks, seeds and runs the contracts; the `Import contracts` step is the last step of the `code-health` job and can never fail it; `make import-contracts` is the local twin. No test is retired (testing condition 1) and nothing under `src/` changed. Parity: 34 injections, the contract caught all 34, the tests missed 11. Follow-up `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT` stays BLOCKED in `todos/python-code-craft-structure/` (two-week soak from the merge, the owner's required check, then retirement; soak dates are written at merge). Owed: `make knowledge-index-update` (killed by its timeout under the 2 GB cap). Not done: a live CI demo of a broken contract (needs a throwaway PR and the owner's yes). Docs and handoffs updated; planner reviewed every commit; PR #351.
