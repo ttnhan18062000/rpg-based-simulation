@@ -149,6 +149,10 @@ Tightened in the same commit (improved on `main`): `core/dirty.py` `mark_from_up
 
 **A real defect in the gate, found by this:** `mypy-baseline filter` exits with the NUMBER of new errors (capped at 100), but the gate accepted only 0 and 1, so two or more new errors were reported as "mypy-baseline could not run ... exited 3" (exit 2). That is what `main` showed on 58aa22f67 and #351. Fixed in this branch: the gate returns 1 for any number of new errors and 2 only when the tool cannot run (a non-zero filter exit with no `error:` line, e.g. an unparseable baseline); three new tests pin it. Before the flip this only produced a confusing advisory message; after it, a contributor with two errors would have been told the tool was broken.
 
+## Open ideas (follow-ups, not tickets)
+
+- A `reason` field on registry rows (and a reviewed-row command that takes it): this window's 27 accepted rows keep their PR and domain only in this document and `handoffs/handoff_to_rpg.md`. The planner judged the docs enough for a one-off (2026-10-05); revisit if accepting debt becomes routine.
+
 ## Verdict (draft)
 
 No false-positive class and no exit-2 run in the first part of the window; every failing run was a real new or worse
