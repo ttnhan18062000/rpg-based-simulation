@@ -161,6 +161,25 @@ _(none yet — Scope 1's audit will produce the first)_
   "which region is this" anywhere, this is a live correctness bug and not a documentation defect.
   **So Scope 1 is the whole of the first pass. Do not propose a direction in the same breath as the
   audit — report the audit, then ask.**
+- **A candidate measured consequence on a durable field — 2026-10-05, UNVERIFIED, and it would change
+  this ticket's priority if it holds.** `rpg-implementer-2`, measuring trauma for
+  `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`, found `bandit_road` and `goblin_camp` on
+  `frontier_living_world` reading **exactly the same** `trauma_score` max of **47.1** at 5000 ticks.
+  Its own hypothesis, which it flagged as unverified and did **not** check: their bounds overlap, so
+  **one death counts in both regions**. Two regions holding bit-identical values for a field driven by
+  per-event accumulation is not what independent accumulation looks like.
+
+  If that holds, overlap is not an untidy-geometry question — it **corrupts a durable, authoritative
+  field** that `world_dynamics.py:119-123` reads to drive `hazard_level`, that catalog Rule `ENV-06`
+  reuses as its instability threshold, and that the lair-spawn gate reads at `8.0`. **This is Scope 1's
+  first and cheapest check**, and it has a clean discriminator: are the two regions' trauma series
+  identical tick-by-tick (shared accumulation), or merely equal at the maximum (coincidence)? Sample
+  both per tick and compare the series, not the maxima.
+
+  Do not treat it as established until that is done — it is a peer's unverified hypothesis about its
+  own measurement, and the equality may be an artefact of the death-attribution path rather than of
+  geometry. But if confirmed, raise this ticket's priority and say so, because a double-counted
+  per-event measure is a wrong-world-truth defect rather than a missing validator.
 - One concrete consumer to include in Scope 1, which is not obvious from a grep for "region":
   `SocialComponent.regional_reputation` is `Dict[RegionID, float]` (`src/core/models/social.py:48`)
   and is already in both the canonical dict (`src/core/state.py:987`) and the replay fingerprint
