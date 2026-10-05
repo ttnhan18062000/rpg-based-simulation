@@ -30,3 +30,6 @@ Outputs are `.jsonl` because `.gitignore` drops `stored_artifacts/*.json`.
 `death` lines: `{"kind":"death","row":[tick, entity_id, regions_by_closed_bounds, credited_region_or_null, [x, y], kind, death_reason, passive_cause, age_ticks, max_age_ticks, hp]}`;
 the earliest runs carry only the first five or six fields.
 `*_checkpoints.jsonl`: one line per 500 ticks with the watched regions' trauma, first tick over 50, per-region maxima and the running death count.
+
+## Added after the rule landed
+`trauma2.py` now watches every region of the world (`watch=list(st.regions)`), so a world with different region names no longer crashes at the end of the run. `after_smallest_area_gf342_10000_checkpoints.jsonl` and `after_smallest_area_gf342_10000_deaths_and_series.jsonl` are the `generated_frontier_3_42` run (10,000 ticks, seed 42): trauma crosses 50 only in `goblin_camp` (tick 6911); 3 of 138 deaths lie in two regions; there is no before-run.

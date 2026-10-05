@@ -7,7 +7,7 @@ from src.engine.spatial_query import SpatialQueryService
 world=sys.argv[1]; ticks=int(sys.argv[2]); out=sys.argv[3]
 st=compile_world(world, DEFAULT_SEED)
 k=Kernel(profile=PROD_SMALL,state=st,rng=DeterministicRNG(DEFAULT_SEED),flags=dict(DEFAULT_FLAGS))
-watch=["bandit_road","goblin_camp","near_forest","wolf_den"]
+watch=list(st.regions)  # every region of the world, so a world with different region names cannot KeyError
 bounds={r:g.bounds for r,g in st.regions.items()}
 series={r:[] for r in watch}; allmax=collections.defaultdict(float); first50={}
 alive_prev={e.id:e.combat.alive for e in st.entities.values()}

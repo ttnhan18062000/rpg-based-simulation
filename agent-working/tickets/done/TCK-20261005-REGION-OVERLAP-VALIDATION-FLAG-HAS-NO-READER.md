@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER
-phase: open
+phase: done
 date: 2026-10-05
 tags: [world, documentation]
 ---
@@ -17,7 +17,7 @@ production code — the Mechanics Bible's "strictly disjoint by default, enforce
 nowhere, and `frontier_living_world` resolves with 9 overlapping region pairs
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -101,22 +101,14 @@ nobody, so every world in the corpus carries a false assurance.
 - The lab mutation engine's use of the field as a mutation target.
 
 ## Acceptance Criteria
-- [ ] Scope 1's position-to-region audit is recorded in `investigation.md`, naming every call site and
-      its behaviour on an ambiguous point. "Nothing maps a position to a region" is a valid and very
-      important answer if true.
-- [ ] The chosen direction is the **owner's**, recorded with who decided and when, before any code or
-      Bible edit lands.
-- [ ] `allow_overlapping_regions` is either read by a real check or gone. It does not survive this
-      ticket as a declared-and-unread field.
-- [ ] If enforcement is implemented: the 9 `frontier_living_world` pairs are resolved or the world
-      explicitly opts in, and **every** corpus world is checked, not just that one — a check that
-      aborts assembly on worlds the whole corpus is measured against is a blast radius that must be
-      reported before it lands, not discovered by CI.
-- [ ] If the Bible is amended instead: `:32` states what the code does, the divergence is recorded in
-      `intentional_divergences.md` with a rationale class and a verification path, and `:37`'s
-      paint-order rule is checked for consistency with the amended text.
-- [ ] `docs/parity_ledger/substrate.yaml` reflects the outcome.
-- [ ] `make knowledge-index-update` run, since `docs/` changed.
+- [x] Scope 1's position-to-region audit is recorded (Implementation Notes and `investigation.md`): one live first-match lookup governed ~40 consumers; five implementations used three membership conventions.
+- [x] The direction is the owner's, recorded: owner decision 11 (2026-10-05) fixes the lookup, leaves bounds overlapping, amends the Bible and declines enforcement.
+- [x] `allow_overlapping_regions` is **not read by a check and not removed**: the owner declined enforcement and the deletion-or-rename rides with the owner's partial-overlap decision (planner ruling, 2026-10-05). It is documented in the schema and Bible 06 as declared, not enforced, reserved, and `tests/unit/worldbuilding/test_allow_overlapping_regions_unread.py` pins that no production code reads it.
+- [x] The Bible is amended: 06 Overlap Policy, a new Region Overlap Resolution subsection, and 05; DEV-010 (`Unified`) records it with a verification path.
+- [x] `docs/parity_ledger/substrate.yaml` has SUB-397.
+- [x] The one position-to-region rule is defined once and applied by every lookup; the far-edge/inclusive-edge disagreement between the trauma writer and its readers is repaired.
+- [ ] **NOT ACHIEVED, and not claimed: un-shadowing `near_forest`, `wolf_den` and `trading_hometown`.** On `frontier_living_world` they stay at 0.0 trauma, because the regions overlap partially rather than nest. Partial-overlap precedence is an open owner decision (nearest centre, share the credit, fix the content geometry, authored precedence by region `type`) and is out of scope here.
+- [x] `generated_frontier_3_42` measured after the change only; the other 22 corpus worlds were not re-measured here.
 
 ## Related Tickets
 - `TCK-20260915-WORLDBUILDING-DUPLICATE-REGION-ID-ACROSS-MODULES` — closed stale-premise by #335's
@@ -136,7 +128,7 @@ nobody, so every world in the corpus carries a false assurance.
 - `docs/guidelines/intentional_divergences.md`
 
 ## Related Stored Artifacts
-_(none yet — Scope 1's audit will produce the first)_
+- `agent-working/stored_artifacts/TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER/` (`plan.md`, `investigation.md`, `test_plan.md`, `probes/`)
 
 ## Related Code Areas
 - `src/worldbuilding/schema.py:245` — the unread field
@@ -289,8 +281,6 @@ _(none yet — Scope 1's audit will produce the first)_
   unchecked. If it is, the Bible contradicts itself in one chapter and that is its own small finding.
 
 ## Implementation Notes
-_(not started)_
-
 ### 2026-10-05 — Scope 1 audit by `rpg-implementer-2`: findings only, no direction proposed
 
 Read-only. All simulation numbers are real `Kernel.tick_once()` runs, `PROD_SMALL`, seed 42.
@@ -407,10 +397,14 @@ different rule (nearest centre, share the credit, or fix the content geometry) i
 the `allow_overlapping_regions` field is untouched (Scope 4: read by a check or removed — ask the planner, the owner chose not to enforce); `make knowledge-index-update` cannot run here; the ticket is not closed.
 
 ## Test Summary
-_(not started)_
+New: `tests/unit/engine/test_region_lookup_policy.py` (18, 9 fail on old code); `tests/unit/worldbuilding/test_allow_overlapping_regions_unread.py` (4). Full CI lane set green on the final tree: core 1698, gameplay 1372, integration 1057, simulation_quality 504, mechanic_scenarios 89, domains et al. 2350, api/cli/logging/engine/architecture/perf/certification 450, `make lane-all-fast` 431, `make gate-expansion` 12, mechanism registry checks OK.
 
 ## Files Changed
-_(not started)_
+`src/core/region_resolution.py` (new), `src/engine/spatial_query.py`, `src/engine/domain/view.py`, the `ApplyPath` and social-memory callers, `src/worldbuilding/schema.py` (field description), Bible 05 and 06, `docs/guidelines/intentional_divergences.md` (DEV-010), `docs/parity_ledger/substrate.yaml` (SUB-397), the two test files above, stored artifacts and probes.
 
 ## Completion Summary
-_(not started)_
+The two position-to-region lookups are unified under one rule (inclusive edges, smallest area wins, ties to declaration order, `None` for unclaimed space), which repairs the writer/reader edge disagreement. **It does not un-shadow `near_forest`, `wolf_den` or `trading_hometown` on this corpus**, because the regions overlap partially rather than nest: `bandit_road`'s thin strip (area 1,200) still wins every shared point. Two opposite precedence rules now coexist for the same tiles (terrain fill: later-processed `near_forest`/`wolf_den` win, `wolf_den_near_forest.yaml:24-31`; region credit: smallest area, `bandit_road` wins), which is the strongest argument that precedence must be authored. The partial-overlap rule is the owner's decision and is not made here. `allow_overlapping_regions` stays declared, not enforced, reserved, pinned unread. `generated_frontier_3_42`: measured after only (overlap nearly absent there); 22 other worlds not re-measured.
+
+
+### 2026-10-05 (final) — landed with corrected claims, by `rpg-implementer-2`
+Planner ruling premise ("smallest area = most specific") was refuted by the geometry: all three overlapping pairs are partial, none nested (near_forest∩wolf_den 500, near_forest∩bandit_road 675, wolf_den∩bandit_road 600). The planner independently verified this and withdrew the premise in writing. Result stated in the Completion Summary above; evidence in `investigation.md`. `allow_overlapping_regions` handled per planner ruling (declared, not enforced, reserved; unread pin; no reader, no deletion). Full lane set re-run after the move into `core`.
