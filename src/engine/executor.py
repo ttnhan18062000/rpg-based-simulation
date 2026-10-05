@@ -112,12 +112,14 @@ class LocalSequentialExecutor:
 
                 frozen_subject = subject
 
-                if item.work_kind == "ENTITY_MOVE" and MovementCandidateSelector.pursuit_reached_attack_range(
+                if item.work_kind == "ENTITY_MOVE" and MovementCandidateSelector.tracked_move_complete(
                     frozen_subject, readonly_state.entities
                 ):
-                    # Pursuit complete: the live target is in reach, so end the move and let the brain
-                    # choose (TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK).
-                    updates = {frozen_subject.id: MovementCandidateSelector.pursuit_completion_update(frozen_subject)}
+                    # Tracked combat move complete: the live target is in reach, or it is dead/gone, so end
+                    # the move and let the brain choose (TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-
+                    # TARGET-AND-STILL-NEVER-ATTACK; TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-
+                    # FROM-THE-PURSUIT-COMPLETION-CONDITION).
+                    updates = {frozen_subject.id: MovementCandidateSelector.tracked_move_completion_update(frozen_subject)}
 
                 elif item.work_kind == "ENTITY_MOVE":
                     target = item.payload.get(

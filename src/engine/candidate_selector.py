@@ -75,29 +75,37 @@ class MovementCandidateSelector:
         return fallback_target
 
     @staticmethod
-    def pursuit_reached_attack_range(entity: "EntityState", entities: Mapping[int, "EntityState"]) -> bool:
-        """True when ``entity`` is on a pursuit move whose LIVE target is already within its attack reach.
+    def tracked_move_complete(entity: "EntityState", entities: Mapping[int, "EntityState"]) -> bool:
+        """True when ``entity`` is on an entity-tracking combat move that has done its job or lost its target.
 
-        TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK: a pursuit
-        ``ENTITY_MOVE`` is created by the tactical pass once and re-scheduled as movement every tick
-        without re-entering the decision (docs/engine/kernel.md, the Sticky-Task Law), and nothing
-        ended it, so an entity next to its target at full readiness never got to choose ATTACK.
-        This is the missing completion condition: the pursuit has done its job once the live target is
-        in reach. Keyed on the target ENTITY's current position (``payload["target_id"]``), never on
-        the navigation destination, which is a snapshot.
+        An entity-tracking combat move is created by the tactical pass once and re-scheduled as movement
+        every tick without re-entering the decision (docs/engine/kernel.md, the Sticky-Task Law), so it
+        needs a completion condition of its own. Two things end it, keyed on the target ENTITY's current
+        state (``payload["target_id"]``), never on the navigation destination, which is a snapshot:
 
-        Only ``MovementMode.PURSUE`` moves qualify: other moves also carry a ``target_id`` (guarding a
-        leader, seeking cover) and must keep their own lifecycle. Reach mirrors the distance part of
-        ``LegalityServiceV2.verify_attack_legality`` (Manhattan, melee needs distance 1) without its
-        weather multiplier; legality still arbitrates the actual attack when the brain re-decides.
+        * the live target is already within the entity's attack reach, so the entity can choose ATTACK
+          (TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK) -- for pursuit,
+          intercept and bracketing, not kiting, which intends to hold range;
+        * the target is dead, inactive or gone, so there is nothing left to track: left in place the move
+          outlived its target by up to ~2000 ticks (measured, 10 of 21 target-carrying moves,
+          TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION).
+
+        Which moves qualify is decided by ``_combat_positioning_kind``: pursuit, intercept, bracketing and
+        kiting. Other moves also carry a ``target_id`` (guarding a leader, seeking cover) and keep their own
+        lifecycle. Reach mirrors the distance part of ``LegalityServiceV2.verify_attack_legality`` (Manhattan,
+        melee needs distance 1) without its weather multiplier; legality still arbitrates the actual attack
+        when the brain re-decides.
         """
-        if entity.navigation.movement_mode != MovementMode.PURSUE:
+        kind = MovementCandidateSelector._combat_positioning_kind(entity)
+        if kind is None:
             return False
         tracked_id = entity.task.payload.get("target_id")
         if tracked_id is None:
             return False
         target = entities.get(tracked_id)
         if target is None or not target.lifecycle.active or not target.combat.alive:
+            return True
+        if kind == "kiting":
             return False
         ex, ey = entity.navigation.position
         tx, ty = target.navigation.position
@@ -108,8 +116,28 @@ class MovementCandidateSelector:
         return not (reach <= 1.5 and dist > 1)
 
     @staticmethod
-    def pursuit_completion_update(entity: "EntityState") -> EntityUpdate:
-        """The update that ends a pursuit move: back to the idle task so the brain decides next, and no
+    def _combat_positioning_kind(entity: "EntityState") -> Optional[str]:
+        """The combat-positioning kind of ``entity``'s current move, or None when it is not one.
+
+        Keyed on (movement mode, payload reason) because the tactical pass encodes bracketing as
+        ``REPOSITION`` + reason ``BRACKETING`` and kiting as ``RETREAT`` + reason ``KITING``: the mode alone
+        also covers cover-seeking (``REPOSITION``) and plain retreats (``RETREAT``), which must keep their
+        own lifecycle."""
+        mode = entity.navigation.movement_mode
+        reason = entity.task.payload.get("reason")
+        if mode == MovementMode.PURSUE:
+            return "pursuit"
+        if mode == MovementMode.INTERCEPT:
+            return "intercept"
+        if mode == MovementMode.REPOSITION and reason == "BRACKETING":
+            return "bracketing"
+        if mode == MovementMode.RETREAT and reason == "KITING":
+            return "kiting"
+        return None
+
+    @staticmethod
+    def tracked_move_completion_update(entity: "EntityState") -> EntityUpdate:
+        """The update that ends a tracked combat move: back to the idle task so the brain decides next, and no
         navigation target, because movement is driven by ``navigation.target`` and would otherwise keep
         walking the entity onto its target's tile. An empty payload on ``ENTITY_ACT`` is the existing
         idle-task encoding (scheduler.py ``is_idle_act``; pipeline_phases/actions.py)."""
