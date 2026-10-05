@@ -49,6 +49,23 @@
       "Bash(rm -rf reports/release_proof*)",
       "Bash(rm -rf data/runs/*)",
       "Bash(rm -rf reports/release_proof/*)"
+    ],
+    "ask": [
+      "Bash(gh pr merge *)",
+      "Bash(git push --delete *)",
+      "Bash(git push * --delete *)",
+      "Bash(git push * :*)",
+      "Bash(gh api -X DELETE *)",
+      "Bash(gh api --method DELETE *)",
+      "Bash(git push --force*)",
+      "Bash(git push * --force*)",
+      "Bash(git push -f *)",
+      "Bash(git push * -f *)",
+      "Bash(git worktree remove *)",
+      "Bash(rm * agent-working/agent-monitoring/*)"
+    ],
+    "deny": [
+      "Bash(gh pr merge * --admin*)"
     ]
   },
   "hooks": {

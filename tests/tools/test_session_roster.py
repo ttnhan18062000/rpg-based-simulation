@@ -89,11 +89,18 @@ def test_real_registry_validates():
     assert validate(REAL_ROOT) == []
 
 
-def test_real_registry_has_nine_seats_two_unstaffed():
+def test_real_registry_has_twelve_seats_five_unstaffed():
+    # Changed from nine seats / two unstaffed: the owner approved registering the codebase domain
+    # (2026-10-05) with all three of its seats unstaffed, since no codebase session exists yet.
     roster = load_roster(REAL_ROOT)
-    assert len(roster.roles) == 9
-    assert {r.role for r in roster.roles if r.seat_status == "unstaffed"} == {"agent-working-planner", "testing-designer"}
-    assert {(r.domain, r.function) for r in roster.roles} == {(d, f) for d in ("rpg", "agent-working", "testing") for f in ("designer", "planner", "implementer")}
+    assert len(roster.roles) == 12
+    assert {r.role for r in roster.roles if r.seat_status == "unstaffed"} == {
+        "agent-working-planner", "testing-designer",
+        "codebase-designer", "codebase-planner", "codebase-implementer",
+    }
+    assert {(r.domain, r.function) for r in roster.roles} == {
+        (d, f) for d in ("rpg", "agent-working", "testing", "codebase") for f in ("designer", "planner", "implementer")
+    }
 
 
 def test_glob_matches_nothing(fixture_root):
