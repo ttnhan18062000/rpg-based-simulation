@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING
-phase: inprogress
+phase: done
 date: 2026-10-04
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 M5f: After its own two-week soak, make the package-registry completeness check block a new top-level `src/` package without a row
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -78,7 +78,12 @@ None.
 - Precondition: `validate` on `origin/main` 053f459e4 gives 0 problems over 36 rows (2026-10-04). Repeat right before merge.
 
 ## Test Summary
+- PR #329's CI at merge: 19 checks pass, 3 skipped (Scenario lane, SimQ grade-anchor drift, Slow regression), none failing. Final soak measurement and the local `check`/`validate`/`mypy_gate` runs on `c8c355459` (all exit 0) are in the soak reviews.
 
 ## Files Changed
+- `codebase/structure/packages.py`, `.github/workflows/test.yml`
+- `tests/codebase/test_package_registry.py`, `tests/codebase/test_code_health_blocking_policy.py`
+- `docs/guidelines/python_code_standard.md`, `docs/plans/codebase_health/python_code_craft_structure_soak_review.md`
 
 ## Completion Summary
+The package-registry validator is blocking in `Code health` and merged to `main` early by owner decision on 2026-10-05T14:47:13Z (PR #329), about 1 of the planned 14 soak days. The structure soak review says so, records the precondition (validate exit 0, 0 problems on `c8c355459`) and the demo runs (PR #331 step 3 fails only at `Package registry`, step 4 passes).

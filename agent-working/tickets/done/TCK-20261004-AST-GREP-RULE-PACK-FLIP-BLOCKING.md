@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING
-phase: inprogress
+phase: done
 date: 2026-10-04
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 M5f: After its own two-week soak, make the ast-grep rules (N3, N4, E3) block new violations
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -75,7 +75,13 @@ None.
 - Precondition (2026-10-04, `origin/main` 053f459e4): `check` gives 0 new, 0 worse including the 111 `ast_grep` rows. Repeat right before merge; both runs are recorded in `python_code_craft_structure_soak_review.md`.
 
 ## Test Summary
+- PR #329's CI at merge: 19 checks pass, 3 skipped (Scenario lane, SimQ grade-anchor drift, Slow regression), none failing. Final soak measurement and the local `check`/`validate`/`mypy_gate` runs on `c8c355459` (all exit 0) are in the soak reviews.
 
 ## Files Changed
+- `codebase/health/ratchet.py`, `codebase/health/scan.py`, `.github/workflows/test.yml`, `Makefile`
+- `tests/codebase/test_code_health_blocking_policy.py`
+- `docs/guidelines/python_code_standard.md` (N3, N4, E3 cells), `docs/guidelines/agent_working_environment.md`
+- `docs/plans/codebase_health/python_code_craft_structure_soak_review.md`
 
 ## Completion Summary
+The ast-grep rules N3, N4 and E3 are blocking in the `Code health` ratchet and merged early by owner decision on 2026-10-05T14:47:13Z (PR #329), about 1 of the planned 14 soak days. `REPORT_ONLY_TOOLS` is `{jscpd}`. The soak review notes the per-rule spot-check was not re-filled (annotations carry counts, not rule names); the 111 `ast_grep` rows were 0 new or worse on `c8c355459`; demo step 5 (PR #331) failed `Code health` on one `e3-silent-except` finding.

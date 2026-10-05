@@ -7,11 +7,14 @@ date: 2026-10-04
 tags: [delivery, planning]
 ---
 
-# Python Code Craft: M5 structure soak review (DRAFT, finalize after 2026-10-18)
+# Python Code Craft: M5 structure soak review (FINAL, window cut short by the early merge)
 
 Covers `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING` and `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`.
-Window for both: 2026-10-04T06:26:43Z (PR #315 merged) to 2026-10-18 (start + 14 days). **Drafted on 2026-10-04, a few
-hours into the window.** Every count is re-measured on the final day. Method as in
+Planned window for both: 2026-10-04T06:26:43Z (PR #315 merged) to 2026-10-18 (start + 14 days). **The window was not
+completed:** the owner merged the flip batch (PR #329, squash `c8c355459`) on 2026-10-05T14:47:13Z, 13 days early, so
+the measured window is about 1 day of the planned 14. The #329 squash title says "merge on or after 2026-10-18"; that
+is wrong as history and is left as is. The draft columns are the 2026-10-04 reading; the final values were measured on
+2026-10-05. Method as in
 `python_code_craft_gates_soak_review.md`: run logs are not readable from this environment, so a run's outcome comes
 from check-run annotations and the PR it ran on, not from the job summary.
 
@@ -20,7 +23,7 @@ from check-run annotations and the PR it ran on, not from the job summary.
 | When | Commit | `codebase.health check` (includes `ast_grep`) | `codebase.structure.packages validate` | `mypy_gate` |
 |---|---|---|---|---|
 | 2026-10-04 (draft) | `origin/main` 053f459e4 | exit 0, 0 new, 0 worse (ast_grep: 0 new or worse of 111 rows) | exit 0, 0 problems over 36 rows | exit 0 |
-| Before merge (on or after 2026-10-18 05:00Z) | to fill | to fill | to fill | to fill |
+| 2026-10-05 (final) | `origin/main` c8c355459 (the #329 merge commit), checked in a worktree of that commit | exit 0, `OK: 0 new, 0 worse, 0 improved, 0 gone, 3723 unchanged` | exit 0, 0 problems | exit 0 |
 
 `ast_grep` was report-only until now, so a non-zero count would not have failed a run before; the explicit check
 above is why its zero is worth recording.
@@ -61,7 +64,10 @@ Rows deleted as debt was paid: none yet. Rows reseeded or added since #315: none
 
 Steps 3 to 5 of the demo PR #331 (details and the other links in the gates soak review): step 3 (no row) failed only at `Package registry` and in the one completeness test of `Tools · a–e`; step 4 (row added) passed both; step 5 (E3) failed `Code health` on one `ast_grep e3-silent-except` finding. The E3 demo uses a typed silent `except OSError: pass` rather than a bare `except: pass`: a bare `except:` would also trip ruff `E722`, and the proof would not isolate ast-grep.
 
-## Verdict (draft)
+## Verdict (final)
 
-No false-positive class and no problem seen in the first hours. The flips are on track, subject to the final-day
-re-measurement and the pre-merge precondition run above.
+About 1 day of the planned 14 was observed, so this is weak evidence. In that day: no false-positive class, no completeness
+or schema problem, no new top-level `src/` package, and no new `ast_grep` finding named in any run annotation (the ratchet
+annotations carry counts, not rule names, so the per-rule spot-check column above was not re-filled; the 111 rows were
+0 new or worse at the merge commit). The three flips are live on `main` by owner decision; the demo runs (PR #331) are
+the stronger evidence that each gate blocks what it should. Revisit if a false-positive class appears after the flip.

@@ -120,3 +120,12 @@ For your awareness:
 
 FYI 2026-10-05: a `Frontend` flake on #351's `43d0f9493`: `src/test/useSimulation.test.tsx:152` (expected `CONNECTING_LIVE`, got `FETCHING_WORLD_DATA`), no frontend diff, passed on a rerun of that job. Yours to decide whether to ticket it.
 
+
+## Update 2026-10-05 (gates-flip closure): the gates are blocking on `main` since 2026-10-05 (#329)
+
+The flip merged early, by owner decision, on 2026-10-05T14:47Z (not on or after 2026-10-18 as stated above). The tests that
+pinned advisory status were updated in that batch as listed in the earlier update. `Code health` and `Type check` now fail
+the job on new findings; the two local `make`-target tests that exceed the 60 s budget are tracked by
+`TCK-20261005-CODE-HEALTH-MAKE-TARGET-TESTS-LOCAL-TIMEOUT`. Adding the checks to ruleset 14220945 as required is the owner's
+step. The import-linter flip and class E test retirement stay on `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`
+(soak ends 2026-10-19, your four conditions attached).
