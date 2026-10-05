@@ -1,0 +1,12 @@
+# Probes for the contested-zone death split (rpg-implementer-2, 2026-10-05)
+Run from a worktree root: `PYTHONPATH=. <venv>/bin/python probes/zones.py <world> <ticks> <out.jsonl>`. **`audit_mode` on and `max_tick_budget_ms=1e9`** (otherwise the kernel drops work on wall-clock overrun, `kernel.py:466-469`, and slow worlds are not reproducible; `TCK-20261005-TICK-BUDGET-THROTTLE-...`).
+- `geometry.py` -> `geometry.jsonl`: per resolved corpus world, each region's inclusive area and owned-tile count under `resolve_region_among`, and every overlapping pair's tile count. No simulation.
+- `zones.py`: one row per death (first line is a header with bounds, hazard level and hazard kind per region). Fields: `tick`, `pos` (tick-start position, as the trauma block uses), `zone` (regions containing it by inclusive bounds), `credited` (unified lookup), `victim` and `killer` (`faction`, `species`, `role`, `spawn_region`), `outcome` (`HAZARD` = environmental drain, no killer), `hazard_damage`, `passive`. Wraps `ApplyPath.apply_generation` and reads the update it is about to commit.
+- `analyse.py <zones.jsonl>`: per-zone counts with credited region, victim and killer factions.
+## Outputs
+- `zones_frontier_living_world_BASE_54c31ee73.jsonl`: **the primary run**: main `7a9f302db` (#347) plus the region-lookup unification, no hazard-growth change.
+- `zones_*_hazardtip_198145e00.jsonl`: earlier runs on the hazard-growth branch tip, which descends from #346 (before #347) and has the 1.0 hazard cap removed. `frontier_living_world` run twice there: the two outputs are byte-identical (one kept).
+- Per-zone counts differ between the two `frontier_living_world` bases (where the world bosses die moves with the base) but every conclusion in `investigation.md` holds on both.
+
+## Added for the P0 contamination split
+`zones.py` now also writes `cp` rows (real per-region trauma every 100 ticks), `spawn` rows (every entity that appears after tick 0, with position, containing regions and identity properties) and a `last_hit` field on each death (most recent attacker damage to that victim). `contamination.py <dir>` produces one JSON line per world (cause enum, wounded-within-window split, boss/dragonkin counts and cadence, spawn tiles, victim provenance, four replayed trauma series with a control against the real checkpoints). Outputs: `agent-working/stored_artifacts/TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING/probes/`.
