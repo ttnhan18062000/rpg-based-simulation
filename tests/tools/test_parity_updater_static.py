@@ -280,7 +280,10 @@ def test_next_available_id_against_real_world_dynamics_shard():
     # entry). Previously WORLD-BELIEF-003, when the shard's last entry was still WORLD-BELIEF-002
     # (added by TCK-20260905-BELIEF-INSTITUTION-DESIGN); TCK-20260905-HOME-EXILE-REFUGEE-THREADS
     # then appended WORLD-DISPLACE-001 after it.
-    assert next_available_id("world_dynamics.yaml", ledger_dir="docs/parity_ledger") == "WORLD-DISPLACE-002"
+    # 2026-10-05 (TCK-20261005-HAZARD-GROWTH-CAPPED-BELOW-EVERY-AUTHORED-COMBAT-REGION): the shard's last entry is now
+    # WORLD-127 (hazard growth is open-ended; ids 125 and 126 are reserved by the violent-cause and boss-flag work), so
+    # the last entry's family is the bare WORLD-NNN family again and the next id is WORLD-128.
+    assert next_available_id("world_dynamics.yaml", ledger_dir="docs/parity_ledger") == "WORLD-128"
 
 
 # ---------------------------------------------------------------------------
