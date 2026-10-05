@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PERF-M1-KERNEL-DIGESTS-VIA-SCHEDULER
-phase: implement
+phase: done
 date: 2026-10-06
 tags: [performance, determinism, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, engine]
 PERF-M1-T03b: kernel and certification-harness digests go through CanonicalHashScheduler with a typed status, and HashMode is removed
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -94,6 +94,7 @@ were left.
 - `docs/performance/hash_callsite_inventory.md`
 
 ## Related Stored Artifacts
+- `agent-working/stored_artifacts/TCK-20261006-PERF-M1-KERNEL-DIGESTS-VIA-SCHEDULER/` (investigation, plan, test_plan)
 - T03a's stored artifacts under `agent-working/stored_artifacts/TCK-20261004-PERF-M1-HASH-POLICY-CHECKPOINT-SLICE/`
 
 ## Related Code Areas
@@ -157,3 +158,9 @@ were left.
   `docs/parity_ledger/infrastructure.yaml` (INFRA-196, 197, 424), `docs/performance/hash_callsite_inventory.{json,md}` (regenerated)
 
 ## Completion Summary
+The kernel's per-tick and shutdown digests and the certification harness's digests go through
+`CanonicalHashScheduler.compute_digest`. `TICK_END` carries `{hash, scheme, digest_status}`; `"SKIPPED"` is gone and
+`NOT_COMPUTED_LIVE_POLICY` has its first producer. When Live runs hash, and the hash values, are unchanged. `HashMode`, the
+`mode` parameter, `DEFAULT_HASHING_BUDGET`, the `"hashing"` entries and `max_full_hashes_per_100_ticks` are removed. No code reads
+the trace hash; the schema note in `deterministic_execution.md` says how readers treat old and new shapes. Not verified locally:
+`test_cert_long_run_stability.py` (60 s limit; CI is the check).
