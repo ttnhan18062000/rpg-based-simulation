@@ -171,8 +171,72 @@ ENV-01).
 
 ---
 
+## ENV-06 — A region's calamity is the escalation of prolonged instability, not a count of events
+
+> A region's calamity intensity measures how long the region has remained unstable, not how
+> many things have happened in it. It rises only while the region stays above the declared
+> instability threshold for a sustained period. It falls back slowly once the region stays
+> below that threshold. No single event raises it directly: not a death, not a hero's death, not
+> one battle. Single events are already counted by regional trauma; calamity measures their
+> persistence, not their occurrence. Calamity may spread to adjacent regions through a declared
+> propagation process, and anything that consumes it (hazard amplification, displacement,
+> regional transformation) reacts to this escalation, never to raw event counts.
+
+**Disposition: ACCEPT — ratified by the owner, 2026-10-05** (owner decision 10,
+`docs/plans/systemic_world/owner_decision_memo.md`). Passes the admission test: no earlier Rule
+says what raises `calamity_intensity`. Bible 05 L457 and ENV-01's own evidence only *read* it,
+so before this Rule, wiring any producer would have invented the law by implication
+(`TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`, 2026-10-05 re-check). The meaning
+chosen is the one the existing prose already implied: Bible 05 §6 triggers macro events when
+regional trauma is "sufficiently high", and `docs/world/ecology_and_calamity_contract.md`
+describes calamity as escalation "when trauma reaches critical levels".
+
+**How it divides the work with regional trauma (no collision).** Trauma is the acute, per-event
+measure: every death in a region adds to it, and it recovers (Bible 05 §2). Calamity is the
+chronic measure derived from trauma's *persistence* above the instability threshold. They are
+two distinct facts about one region, not two counters of the same deaths. A "deaths raise
+calamity" rule would have double-counted the cause trauma already owns, and is not adopted.
+
+**Parameters are engineering, not law.** The instability threshold reuses Bible 05 §2's
+existing `trauma_score > 50.0`. The persistence window, rise rate, decay rate and cap are
+planner and implementer choices, recorded in the mechanics Bible and the parity ledger when
+implemented. This Rule fixes only their direction and what drives them.
+
+**Repository evidence: MISSING (producer), SUPPORTED (consumers), at `405cbd77b`.**
+- *Producer missing:* the only writer, `CalamityService.apply_calamity_consequences()`
+  (`src/world/calamity.py:80`), has zero callers, and its trigger (a `kind == "hero"` death in a
+  region with `hazard_level > 0.5`) is the single-event, classification-keyed shape this Rule
+  excludes, so it is not the producer to wire. Nothing decays the field either, despite the
+  calamity contract's "decays naturally" line.
+- *Consumers live, all reading a value that is always 0.0:* the hazard-drain multiplier
+  (`environment.py:36`), refugee displacement (`displacement.py:38`), regional transformation
+  requirements (`transformation.py:57-59`), and seasonal propagation to neighbours
+  (`CalamityPressurePropagator`, `calamity.py:103-162`). Propagation is the declared spread
+  process this Rule permits and is kept.
+- *World-boss emergence is DEFERRED, not a consumer this Rule commits to* (owner, 2026-10-05:
+  "world boss is a very abstract and later feature"). The existing boss filter
+  `calamity_intensity > 0.3` (`calamity.py:42`), and the magical/demonic spawn that rides on the
+  same trigger (flag `ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH`, default OFF), are left as they
+  are. Implementing this Rule must not use a boss spawn as its evidence, and must neither tune
+  nor retire the boss branch. What a world boss is, and what calls one forth, is later feature
+  design, parked by memo row 7.
+- *Upstream dependency:* this Rule is observable only once trauma actually accumulates, which
+  it does not today (`TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`). That ordering is
+  deliberate: the meaning was chosen for correctness, not for how soon it becomes visible.
+- *Not part of this Rule:* `CALAMITY_RANDOM_CHANCE` (declared, unwired; the calamity contract
+  L81/L176). A purely random onset would have no causal path (CAUSE-01). Any later probabilistic
+  branch must be conditioned on this escalation, not replace it.
+
+**Scenarios:** none traced yet. A scenario is owed when the producer is implemented: a region
+held above the threshold escalates, a single death spike does not, and a region that calms
+decays.
+
+---
+
 ## Cross-domain links recorded here
 
+- ENV-06 → World dynamics / regional trauma (Bible 05 §2: trauma is the acute input calamity
+  escalates from), Ecology & population (displacement), Places (regional transformation)
 - ENV-01, ENV-05 → all future domains that add environmental state (a standing standard to check
   new fields against)
 - ENV-02, ENV-03 → Life/body/survival, Capability & progression (plausible future owners of

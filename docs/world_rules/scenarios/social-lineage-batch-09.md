@@ -226,6 +226,12 @@ child is; the stranger must not react as though personally informed.
   Batch 06's own PERC-01 (perception bounded by declared constraints, default of partiality)
   as applied to reputation-reach — the same class of finding as Batch 06's own CONFLICTING
   `ResourceOpportunityProvider` finding, now confirmed for reputation specifically.
+- **Re-read under owner decision 4, 2026-10-05:** public reputation is a publicly known fact
+  within its scope, so a stranger's use of the descendant's world-scope `public_reputation` is no
+  longer a contradiction. The probe's guard still holds for everything beyond that score: a
+  stranger must not act on who the child is, their lineage, or private relationships without a
+  declared channel. Reputation narrower than world (a region where the parent was famous) does
+  not exist yet; see `social-relations.md`'s reputation-reach entry.
 
 ## SL-S16 — Family feud
 

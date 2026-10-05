@@ -819,17 +819,18 @@ question above already has a working answer today.
 
 ## 10. Owner decisions
 
-Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has nine
+Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has ten
 entries:
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
 3. whether individual and institutional standing are distinct concepts;
-4. what `public_reputation` means;
+4. what `public_reputation` means (decided 2026-10-05: a publicly known fact, held per scope);
 5. how world time scale relates to feasible run length;
 6. where player-inference evidence will come from;
 7. whether RPG features wait for the semantic foundation (decided 2026-10-02: they do);
 8. which perception is authoritative (decided 2026-10-02: the perception that runs today);
-9. whether the global world-clock raid exists (decided 2026-10-03: retired).
+9. whether the global world-clock raid exists (decided 2026-10-03: retired);
+10. what raises a region's calamity intensity (decided 2026-10-05: prolonged unrest, catalog ENV-06; world bosses deferred).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
