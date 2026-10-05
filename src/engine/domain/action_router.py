@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from src.core.enums import ReasonCode
 from src.core.updates import EntityUpdate, NavigationUpdate
 from src.engine.domain.combat_actions import CombatActions
 from src.engine.domain.skill_actions import SkillActions
@@ -99,7 +100,17 @@ class ActionRouter:
                 else None
             )
             if _posture is not None and _posture not in _RISK_ACCEPTED_POSTURES:
-                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
+                # Reported, not a bare no-op: a bare no-op carries no failure, so the task is annotated
+                # SUCCESS and never cleared, and the scheduler re-dispatches this withheld action every
+                # tick until the target dies (measured: one entity held ~851 ticks). The typed reason
+                # lets pipeline_phases/actions.py's unrecoverable-failure branch end the task so the
+                # brain re-decides, and puts the withheld attack in the rejection stream. The gate's
+                # policy is unchanged; only its return shape. readiness_delta stays 0.0: nothing was spent.
+                return {entity.id: EntityUpdate(
+                    entity_id=entity.id,
+                    readiness_delta=0.0,
+                    navigation=NavigationUpdate(failure_reason=ReasonCode.ACTION_WITHHELD_BY_POSTURE),
+                )}
 
         if action == "ATTACK":
             return CombatActions.execute_attack(entity, payload, current_tick, neighbor_view, context)
@@ -110,7 +121,10 @@ class ActionRouter:
         if action == "AOE_ATTACK":
             return AoeActions.execute_aoe_attack(entity, payload, current_tick, neighbor_view, context)
             
+        # An action no handler recognises can never succeed on retry: report it so the task ends
+        # (see the ACTION_WITHHELD_BY_POSTURE note above) instead of holding a do-nothing payload.
         return {entity.id: EntityUpdate(
             entity_id=entity.id,
-            readiness_delta=0.0
+            readiness_delta=0.0,
+            navigation=NavigationUpdate(failure_reason=ReasonCode.UNSUPPORTED_ACTION),
         )}
