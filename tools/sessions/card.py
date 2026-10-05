@@ -36,14 +36,14 @@ def _card_section(path: Path) -> str:
 
 
 _DIR_GLOB = re.compile(r"^(?P<parent>.+)/(?P<leaf>[^/*]+)/\*\*$")
+_FIRST_SEGMENT_GLOB = re.compile(r"^(?P<parent>[^/*]+)/(?P<leaf>[^*]+?)/\*\*$")
 
 
-def _compact_globs(globs: list[str] | tuple[str, ...]) -> str:
-    """`docs/a/**, docs/b/**` -> `docs/{a,b}/**`: a shared parent is named once."""
+def _group_globs(globs: list[str] | tuple[str, ...], pattern: re.Pattern[str]) -> str:
     groups: dict[str, list[str]] = {}
     order: list[str] = []
     for g in globs:
-        m = _DIR_GLOB.match(g)
+        m = pattern.match(g)
         key = m.group("parent") if m else g
         if key not in groups:
             groups[key] = []
@@ -59,6 +59,18 @@ def _compact_globs(globs: list[str] | tuple[str, ...]) -> str:
         else:
             out.append(f"{key}/{{{','.join(leaves)}}}/**")
     return ", ".join(out)
+
+
+def _compact_globs(globs: list[str] | tuple[str, ...]) -> str:
+    """`docs/a/**, docs/b/**` -> `docs/{a,b}/**`: a shared parent is named once.
+
+    Two groupings are tried, by shared full parent and by shared first segment
+    (`docs/{a,b/c}/**`); the shorter string wins, the full-parent one on a tie, so
+    no card grows against the older grouping.
+    """
+    by_parent = _group_globs(globs, _DIR_GLOB)
+    by_first = _group_globs(globs, _FIRST_SEGMENT_GLOB)
+    return by_first if len(by_first) < len(by_parent) else by_parent
 
 
 def _routes_text(role: Role) -> str:

@@ -86,3 +86,25 @@ def test_define_once_templates_do_not_restate_authority_classes():
         text = path.read_text(encoding="utf-8")
         for cls in classes:
             assert not re.search(rf"\b{re.escape(cls)}\b", text),  f"{path.name} restates authority class {cls!r}"
+
+
+def test_compact_globs_names_a_shared_first_segment_once_for_multi_segment_leaves():
+    from tools.sessions.card import _compact_globs
+
+    globs = ["docs/agent-monitoring/**", "docs/plans/agent_infrastructure/**", "docs/guidelines/session_roles/**"]
+    assert _compact_globs(globs) == "docs/{agent-monitoring,plans/agent_infrastructure,guidelines/session_roles}/**"
+
+
+@pytest.mark.parametrize(
+    "globs",
+    [
+        ["docs/plans/a/**", "docs/plans/b/**", "docs/plans/c/**"],
+        ["docs/a/**", "docs/b/**"],
+        ["src/x/**", "docs/plans/a/**", "docs/plans/b/**", "tools/y.py"],
+        ["docs/a/**"],
+    ],
+)
+def test_compact_globs_is_never_longer_than_the_full_parent_grouping(globs):
+    from tools.sessions.card import _DIR_GLOB, _compact_globs, _group_globs
+
+    assert len(_compact_globs(globs)) <= len(_group_globs(globs, _DIR_GLOB))

@@ -39,6 +39,7 @@ domains:
       - tools/mechanism_registry/**
       - docs/agent-monitoring/**
       - docs/plans/agent_infrastructure/**
+      - docs/guidelines/session_roles/**
       - agent-working/agent-orchestration/**
       - registries/session_roles.yaml
       - registries/session_authority.yaml
