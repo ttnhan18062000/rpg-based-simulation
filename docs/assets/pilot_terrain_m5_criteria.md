@@ -149,6 +149,11 @@ Lowest first. A terrain draws a fringe onto an adjacent terrain of **lower** ran
 
 - Neighbours are the 4 sides and 4 diagonal corners of a cell. A side or corner gets a fringe only from a neighbour that is not `crisp`, outranks the cell, and is on the map.
 - Pieces: `edge` (a side), `outer_corner` (a diagonal whose two adjacent sides are not the same higher terrain), `inner_corner` (two adjacent sides with the same higher terrain; it replaces those two edges).
+- Contract v1 details (fixed in `terrainBorders.ts`, tested): (1) **8 neighbours**: the 4 sides and the 4 diagonals are all looked at. (2) **Greedy inner corners**: corners are taken in the order NE, SE, SW, NW; a corner
+  becomes an inner corner when both of its adjacent sides carry the same higher terrain and neither side is already used; each side is used once (four matching sides give two inner corners, NE and SW; three give one inner
+  corner and one edge). (3) **Outer-corner condition**: a diagonal neighbour gives an outer corner only when neither of its two adjacent sides is that same terrain (otherwise the side's piece already covers it).
+  (4) **Missing masks**: a missing mask leaves that piece out; the one exception is a missing `inner_corner` mask, which falls back to its two edges. Draw order: neighbours by ascending rank, and per neighbour edges (N E S W),
+  then inner corners, then outer corners (NE SE SW NW). Mask orientation: `edge` authored for north (rows 0-3), corners for north-east, `inner_corner` for north plus east; rotations are clockwise quarter turns.
 - The fringe pixels are the neighbour terrain's own tile pixels at the same in-cell coordinates, shown where the mask is opaque; lower-ranked neighbours are drawn first. Variant per piece is picked
   by the detail hash (FNV-1a, seed 1) so borders are deterministic per cell.
 - **Depth cap: 4 px.** A fringe never covers more than the outer 4 px of a 16 px cell, so the cell centre always shows its own terrain (the role's preserved fact). The compositor enforces it on every
