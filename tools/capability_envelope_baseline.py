@@ -2,7 +2,7 @@
 """
 Manage the append-only capability-envelope baseline registry
 (registries/capability_envelope_registry.jsonl) and audit the live
-`.claude/settings.local.json` against it.
+`.claude/settings.local.json` (and the `hooks` of `.claude/settings.json`) against it.
 
 Built for TCK-20260904-CAPABILITY-ENVELOPE-BASELINE. Mirrors `tools/tag_registry.py` /
 `tools/layer_registry.py`'s registry convention exactly: JSONL, one entry per line, keyed on a
@@ -55,6 +55,7 @@ FIELDS = frozenset(
         "enableAllProjectMcpServers",
         "enabledMcpjsonServers",
         "disabledMcpjsonServers",
+        "hooks",
     }
 )
 
@@ -64,6 +65,9 @@ AUDIT_ONLY_DISCLAIMER = (
 )
 
 DEFAULT_SETTINGS_PATH = REPO_ROOT / ".claude" / "settings.local.json"
+# Hooks live in the shared settings file, not settings.local.json (roadmap 5.8). Only the `hooks`
+# key is read from it: its other fields are outside this envelope and stay unaudited here.
+DEFAULT_HOOKS_PATH = REPO_ROOT / ".claude" / "settings.json"
 
 
 # ---------------------------------------------------------------------------
@@ -192,7 +196,44 @@ def extract_entries(settings: dict) -> list:
     return entries
 
 
-def seed_registry(settings_path: Path | str, root: Path | str | None = None, note: str = "") -> list:
+def load_hook_settings(path: Path | str | None) -> dict | None:
+    """Like `load_settings_local` for the shared settings file, but also degrades to None on an
+    unreadable or non-object file: a hook audit must never raise because settings.json is odd."""
+    if path is None:
+        return None
+    try:
+        data = load_settings_local(path)
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def extract_hook_entries(settings: dict | None) -> list:
+    """One ("hooks", "<event>|<matcher>|<command>") tuple per configured hook command. A missing
+    or malformed `hooks` key yields no entries. The matcher is empty when the group has none."""
+    entries: list = []
+    hooks = (settings or {}).get("hooks")
+    if not isinstance(hooks, dict):
+        return entries
+    for event, groups in hooks.items():
+        if not isinstance(groups, list):
+            continue
+        for group in groups:
+            if not isinstance(group, dict):
+                continue
+            matcher = group.get("matcher", "")
+            for hook in group.get("hooks", []) if isinstance(group.get("hooks"), list) else []:
+                if isinstance(hook, dict) and isinstance(hook.get("command"), str):
+                    entries.append(("hooks", f"{event}|{matcher}|{hook['command']}"))
+    return entries
+
+
+def seed_registry(
+    settings_path: Path | str,
+    root: Path | str | None = None,
+    note: str = "",
+    hooks_path: Path | str | None = None,
+) -> list:
     """Bulk-register every entry found in the live settings file, skipping any (field, value)
     pair already registered. Returns only the entries actually appended.
 
@@ -206,11 +247,11 @@ def seed_registry(settings_path: Path | str, root: Path | str | None = None, not
     snapshot of an ungoverned live file, never individually reviewed one at a time.
     """
     settings = load_settings_local(settings_path)
-    if settings is None:
-        return []
+    to_seed = extract_entries(settings) if settings is not None else []
+    to_seed += extract_hook_entries(load_hook_settings(hooks_path))
 
     appended = []
-    for field, value in extract_entries(settings):
+    for field, value in to_seed:
         try:
             appended.append(add_entry(field, value, note=note, reviewed=False, root=root))
         except ValueError:
@@ -223,15 +264,16 @@ def seed_registry(settings_path: Path | str, root: Path | str | None = None, not
 # ---------------------------------------------------------------------------
 
 
-def compute_diff(live_settings: dict | None, registry: dict) -> dict:
+def compute_diff(live_settings: dict | None, registry: dict, hook_settings: dict | None = None) -> dict:
     """Per-field live-vs-baseline set diff. Treats every field uniformly, including the
     scalar-shaped `enableAllProjectMcpServers` (compared as a one-element set) — no special-cased
     boolean branch.
     """
-    if live_settings is None:
+    if live_settings is None and hook_settings is None:
         return {"status": "no_local_file", "fields": {}}
 
-    live_entries = extract_entries(live_settings)
+    live_entries = extract_entries(live_settings) if live_settings is not None else []
+    live_entries += extract_hook_entries(hook_settings)
     fields_report = {}
     for field in FIELDS:
         live_values = {value for f, value in live_entries if f == field}
@@ -240,14 +282,21 @@ def compute_diff(live_settings: dict | None, registry: dict) -> dict:
             "in_envelope": sorted(live_values & baseline_values, key=str),
             "out_of_envelope": sorted(live_values - baseline_values, key=str),
         }
+        if field == "hooks":
+            # A removed hook is a security-relevant change too (a hook can be a guard); an edited
+            # hook shows as one out_of_envelope plus one not_in_live. Hooks only: the permission
+            # and MCP fields keep their original report shape.
+            fields_report[field]["not_in_live"] = sorted(baseline_values - live_values, key=str)
 
     return {"status": "ok", "fields": fields_report}
 
 
-def build_report(settings_path: Path | str, root: Path | str | None = None) -> dict:
+def build_report(
+    settings_path: Path | str, root: Path | str | None = None, hooks_path: Path | str | None = None
+) -> dict:
     live_settings = load_settings_local(settings_path)
     registry = load_registry(root)
-    report = compute_diff(live_settings, registry)
+    report = compute_diff(live_settings, registry, load_hook_settings(hooks_path))
     report["audit_only_disclaimer"] = AUDIT_ONLY_DISCLAIMER
     return report
 
@@ -273,6 +322,8 @@ def main(argv=None) -> None:
         "seed", help="Bulk-register every entry found in a live settings.local.json (idempotent)"
     )
     seed_p.add_argument("--settings-path", default=str(DEFAULT_SETTINGS_PATH))
+    seed_p.add_argument("--hooks-path", default=str(DEFAULT_HOOKS_PATH),
+                        help="shared settings file whose `hooks` are registered (default .claude/settings.json)")
     seed_p.add_argument("--note", default="", help="Why this seed batch is being added")
     seed_p.add_argument("--root", default=None)
 
@@ -283,6 +334,8 @@ def main(argv=None) -> None:
         "diff", help="Compare a live settings.local.json against the registered baseline"
     )
     diff_p.add_argument("--settings-path", default=str(DEFAULT_SETTINGS_PATH))
+    diff_p.add_argument("--hooks-path", default=str(DEFAULT_HOOKS_PATH),
+                        help="shared settings file whose `hooks` are audited (default .claude/settings.json)")
     diff_p.add_argument("--root", default=None)
 
     args = parser.parse_args(argv)
@@ -297,7 +350,7 @@ def main(argv=None) -> None:
         return
 
     if args.command == "seed":
-        appended = seed_registry(args.settings_path, root=args.root, note=args.note)
+        appended = seed_registry(args.settings_path, root=args.root, note=args.note, hooks_path=args.hooks_path)
         print(f"Seeded {len(appended)} new entr{'y' if len(appended) == 1 else 'ies'}.")
         return
 
@@ -312,7 +365,7 @@ def main(argv=None) -> None:
         return
 
     if args.command == "diff":
-        report = build_report(args.settings_path, root=args.root)
+        report = build_report(args.settings_path, root=args.root, hooks_path=args.hooks_path)
         print(json.dumps(report, indent=2, sort_keys=True))
         return
 

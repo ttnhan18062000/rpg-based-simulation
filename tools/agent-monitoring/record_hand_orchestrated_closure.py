@@ -67,6 +67,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 import time
 from datetime import datetime, timezone
@@ -75,7 +76,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import record_events  # noqa: E402
 import record_run  # noqa: E402
-from vocabulary import CANONICAL_TIERS  # noqa: E402
+from vocabulary import (  # noqa: E402
+    CANONICAL_TIERS, WORKFLOW_AGENT_PREFIXES, WORKFLOW_AGENTS, infer_workflow, is_known_agent,
+)
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -86,6 +89,45 @@ _REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
 if _REPO_ROOT_STR not in sys.path:
     sys.path.append(_REPO_ROOT_STR)
 from tools.agent_working_paths import AGENT_MONITORING, STORED_ARTIFACTS, TICKETS, posix  # noqa: E402
+
+
+def unregistered_agents(ticket_id: str, default_agent: str, events: list) -> list[str]:
+    """Agent literals (the `--agent` default plus any per-event `agent` override) that the registry
+    does not know for the workflow inferred from `ticket_id`, in first-seen order. A ticket id that
+    maps to no known workflow is never rejected (same skip as `warn_vocabulary_drift`)."""
+    workflow = infer_workflow(ticket_id)
+    if workflow is None:
+        return []
+    seen: list[str] = []
+    for agent in [default_agent, *(e.get("agent") for e in events if isinstance(e, dict))]:
+        if agent is not None and agent not in seen and not is_known_agent(workflow, agent):
+            seen.append(agent)
+    return seen
+
+
+def _allowed_agents_text(ticket_id: str) -> str:
+    workflow = infer_workflow(ticket_id)
+    literals = sorted(WORKFLOW_AGENTS.get(workflow, set()))
+    prefixes = [f"{p}*" for p in WORKFLOW_AGENT_PREFIXES.get(workflow, ())]
+    return ", ".join(literals + prefixes)
+
+
+def _print_anomaly_validator_result() -> None:
+    """Advisory only: run the monitoring anomaly validator after a successful record and print a
+    one-line verdict. Never changes the exit code; any failure to run it just says so."""
+    validator = Path(__file__).resolve().parent.parent / "gate_checks" / "monitoring_anomaly_validator.py"
+    try:
+        proc = subprocess.run([sys.executable, str(validator)], capture_output=True, text=True, timeout=120)
+        marker = next((l for l in proc.stdout.splitlines() if l.startswith("MARKER:")), None)
+        results = json.loads(marker[len("MARKER:"):]) if marker else []
+        failing = sorted({r["check"] for r in results if r.get("status") == "FAIL"})
+    except (OSError, subprocess.SubprocessError, ValueError, KeyError) as e:
+        print(f"ADVISORY: monitoring_anomaly_validator did not run: {e}", file=sys.stderr)
+        return
+    if failing:
+        print(f"ADVISORY: monitoring_anomaly_validator reports FAIL in: {', '.join(failing)}", file=sys.stderr)
+    else:
+        print("ADVISORY: monitoring_anomaly_validator: no FAIL")
 
 
 def _existing_row_for(
@@ -334,6 +376,16 @@ def main() -> None:
             print(f"ERROR: events[{i}] missing required fields {sorted(missing)}", file=sys.stderr)
             sys.exit(1)
 
+    bad_agents = unregistered_agents(args.ticket_id, args.agent, events)
+    if bad_agents:
+        print(
+            f"ERROR: unregistered agent literal(s) {bad_agents}; nothing was written. Allowed: "
+            f"{_allowed_agents_text(args.ticket_id)}. A hand-orchestrated close normally uses "
+            "--agent claude.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     run_record, event_records = build_records(
         args.ticket_id, args.tier, args.final_status, events,
         args.start_ts, args.end_ts, args.workflow, args.provider, args.agent,
@@ -435,6 +487,7 @@ def main() -> None:
     clear_sidecar_if_matches(args.ticket_id)
 
     print(f"DONE: recorded 1 run + {len(event_records)} event record(s) for {args.ticket_id}")
+    _print_anomaly_validator_result()
 
 
 if __name__ == "__main__":

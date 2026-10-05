@@ -232,6 +232,12 @@ def check_staging_artifacts_complete(
     if tier == "hotfix":
         return ("NA", "hotfix tier — staging artifacts not required")
 
+    # A valid `## Disposition` closure implements nothing, so it has no staging artifacts; the
+    # Finalize-side migration check already accepts it, and this pre-check must agree with it.
+    disposition_result = _disposition_migration_result(ticket_id)
+    if disposition_result is not None and disposition_result[0] == "PASS":
+        return ("NA", f"valid ## Disposition closure — staging artifacts not required ({disposition_result[1]})")
+
     directory = base_dir / ticket_id
     ok, problems = _files_complete(directory, REQUIRED_ARTIFACT_FILES)
     if ok:

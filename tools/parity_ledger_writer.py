@@ -125,27 +125,67 @@ def validate_entry(entry: dict) -> None:
             )
 
 
+def _dump(items: list) -> str:
+    """The one place this module serialises YAML. A list of one entry dumps as a `- id: ...` block."""
+    return yaml.safe_dump(items, sort_keys=False)
+
+
+_TOP_LEVEL_ITEM = re.compile(r"^-(?:\s|$)")
+
+
+def _splice_entry(text: str, entries: list, entry: dict) -> str:
+    """Return `text` with `entry` upserted by `id`, touching only that entry's own lines.
+
+    Entry-local instead of a whole-shard dump: a `yaml.safe_dump` round-trip of the unmodified real
+    shards reformats hundreds of lines (hand-written quoting and wrapping), which made agents
+    deviate from the mandated writer (TCK-20261004-PARITY-LEDGER-WRITER-WHOLE-SHARD-REWRITE-CHURN).
+    The i-th column-0 `- ` line starts the i-th entry; an update replaces that block, an add appends
+    one. Anything unexpected (item count mismatch, or the spliced text not parsing back to exactly
+    the intended entries) falls back to a whole-shard dump, so the result is always correct."""
+    lines = text.splitlines(keepends=True)
+    starts = [i for i, line in enumerate(lines) if _TOP_LEVEL_ITEM.match(line)]
+    expected = [dict(e) for e in entries]
+    position = next((i for i, e in enumerate(entries) if e.get("id") == entry["id"]), None)
+    if position is None:
+        expected.append(entry)
+    else:
+        expected[position] = entry
+
+    if len(starts) == len(entries):
+        block = _dump([entry])
+        if position is None:
+            body = text if text.endswith("\n") or not text else text + "\n"
+            candidate = body + block
+        else:
+            end = starts[position + 1] if position + 1 < len(starts) else len(lines)
+            # keep blank/comment lines that trail the old block: they belong to the gap, not the entry
+            while end - 1 > starts[position] and (not lines[end - 1].strip() or lines[end - 1].lstrip().startswith("#")):
+                end -= 1
+            candidate = "".join(lines[: starts[position]]) + block + "".join(lines[end:])
+        try:
+            if yaml.safe_load(candidate) == expected:
+                return candidate
+        except yaml.YAMLError:
+            pass
+    return _dump(expected)
+
+
 def write_entry(shard_filename: str, entry: dict, ledger_dir=None, db_path=None) -> dict:
     """Validate `entry` against validate_entry(), then upsert it (by `id`) into
-    `ledger_dir/shard_filename`, creating the shard if it does not yet exist. On success,
-    rebuilds the derived parity index in-process at `db_path` before returning."""
+    `ledger_dir/shard_filename`, creating the shard if it does not yet exist. Only the target
+    entry's own lines change (see `_splice_entry`). On success, rebuilds the derived parity index
+    in-process at `db_path` before returning."""
     validate_entry(entry)
 
     resolved_ledger_dir = Path(ledger_dir) if ledger_dir is not None else DEFAULT_LEDGER_DIR
     resolved_db_path = Path(db_path) if db_path is not None else DEFAULT_DB_PATH
     shard_path = resolved_ledger_dir / shard_filename
 
-    entries = yaml.safe_load(shard_path.read_text()) if shard_path.exists() else []
+    text = shard_path.read_text() if shard_path.exists() else ""
+    entries = yaml.safe_load(text) if text else []
     entries = entries or []
 
-    for index, existing in enumerate(entries):
-        if existing.get("id") == entry["id"]:
-            entries[index] = entry
-            break
-    else:
-        entries.append(entry)
-
-    shard_path.write_text(yaml.safe_dump(entries, sort_keys=False))
+    shard_path.write_text(_splice_entry(text, entries, entry))
 
     build_report = build(ledger_dir=resolved_ledger_dir, db_path=resolved_db_path)
 
