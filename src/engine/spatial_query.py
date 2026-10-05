@@ -183,8 +183,8 @@ class SpatialQueryService:
              cx = int(pos[0] // cell_size)
              cy = int(pos[1] // cell_size)
              r_ids = index.get((cx, cy), [])
-             # r_ids is in declaration order (the index is built by iterating state.regions), which is
-             # what resolve_region_among's tie-break relies on.
+             # r_ids is in resolved precedence order (the index is built by iterating state.regions), which is
+             # what resolve_region_among relies on: the first containing region wins.
              return resolve_region_among(
                  (state.regions[r_id] for r_id in r_ids if r_id in state.regions), pos[0], pos[1]
              )

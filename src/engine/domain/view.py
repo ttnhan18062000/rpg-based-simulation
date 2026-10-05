@@ -55,8 +55,8 @@ class DomainView:
         """
         Lookup for the region containing a position. Same answer as
         ``SpatialQueryService.get_region_at``: both apply the one rule in
-        ``src.core.region_resolution.resolve_region_among`` (inclusive edges, smallest area wins, ties to the earlier
-        declaration), so a region's trauma is read from the same region it was credited to.
+        ``src.core.region_resolution.resolve_region_among`` (inclusive edges, first region in the resolved precedence
+        order that contains it, LOC-08), so a region's trauma is read from the same region it was credited to.
         """
         region_list = getattr(state, "_region_list_cache", None)
         if region_list is None:

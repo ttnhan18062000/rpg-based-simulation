@@ -190,10 +190,10 @@ class ApplyPath:
         
         # --- C. Region Maintenance ---
         # A moved entity's region_id is re-resolved by the one position-to-region rule
-        # (src.core.region_resolution.resolve_region_among: inclusive edges, smallest area wins, ties to the earlier
-        # declaration). It is not kept while the entity is merely still inside its old region: with
-        # overlapping regions a smaller region may now contain it, and region_id must agree with the
-        # lookup the rest of the engine uses.
+        # (src.core.region_resolution.resolve_region_among: inclusive edges, first region in the resolved
+        # precedence order that contains it, LOC-08). It is not kept while the entity is merely still inside its
+        # old region: with overlapping regions a higher-precedence region may now contain it, and region_id must
+        # agree with the lookup the rest of the engine uses.
         if "navigation" in changes:
             nav = changes["navigation"]
             if nav.position != entity.navigation.position and has_regions:

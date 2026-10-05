@@ -329,7 +329,7 @@ class GenerateSimulationSetupWorkflow:
             resources=resource_specs,
             buildings=building_specs,
             quests=[],
-            validation=ValidationSpec(expected_min_entities=1, allow_overlapping_regions=False)
+            validation=ValidationSpec(expected_min_entities=1)
         )
 
     def _build_scenario_spec(self, session_id: str, params: Dict[str, Any]) -> ScenarioSpec:

@@ -397,6 +397,10 @@ class WorldCompiler:
         places: Dict[str, PlaceState] = {}  # Idea 66
         camps: Dict[str, CampState] = {}  # TCK-20260904-CAMPSTATE-PLACE-BRIDGE
         town_tiles: Set[tuple[int, int]] = set()
+        # LOC-08: spec.regions is in resolved precedence order (highest first), so the FIRST region to reach a
+        # tile owns its terrain. Painting skips tiles an earlier region already painted; this is the same
+        # order the runtime region lookup uses, so a tile's terrain and its region agree.
+        painted: Set[tuple[int, int]] = set()
 
         for r_spec in spec.regions:
             min_x, min_y, max_x, max_y = r_spec.bounds
@@ -409,7 +413,8 @@ class WorldCompiler:
                     region_hash = (region_hash * 31 + ord(ch)) & 0xFFFFFFFF
             for x in range(min_x, max_x + 1):
                 for y in range(min_y, max_y + 1):
-                    if 0 <= x < spec.topology.width and 0 <= y < spec.topology.height:
+                    if 0 <= x < spec.topology.width and 0 <= y < spec.topology.height and (x, y) not in painted:
+                        painted.add((x, y))
                         if r_spec.terrain_variants:
                             tile_offset = ((x & 0xFFFF) << 16) | (y & 0xFFFF)
                             entity_id = (region_hash ^ tile_offset) & 0xFFFFFFFF

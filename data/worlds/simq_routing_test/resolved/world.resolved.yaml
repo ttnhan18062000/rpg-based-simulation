@@ -347,4 +347,3 @@ quest_definitions:
   source_module: old_mine_resource_loop
 validation:
   expected_min_entities: 1
-  allow_overlapping_regions: false
