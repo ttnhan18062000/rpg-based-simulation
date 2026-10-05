@@ -43,6 +43,8 @@ from gate_checks.done_checker_static import (  # noqa: E402
     check_working_log_no_row_yet,
     classify_checklist_failure,
     clean_data_runs_early,
+    delete_data_run_paths,
+    main,
     run_finalize_selfcheck,
     run_static_precheck,
 )
@@ -209,7 +211,9 @@ def test_data_runs_clean_file_before_start_ts_passes(tmp_path):
     assert status == "PASS"
 
 
-def test_data_runs_clean_file_at_or_after_start_ts_fails_naming_path(tmp_path):
+def test_data_runs_clean_file_at_or_after_start_ts_warns_naming_path(tmp_path):
+    """Meaning changed: leftovers are an advisory WARN, not FAIL (nothing deletes them any more and
+    they cannot be attributed to one session). The path is still named."""
     runs_dir = tmp_path / "data" / "runs"
     proof_dir = tmp_path / "reports" / "release_proof"
     runs_dir.mkdir(parents=True)
@@ -221,7 +225,7 @@ def test_data_runs_clean_file_at_or_after_start_ts_fails_naming_path(tmp_path):
     os.utime(leaked, (new_epoch, new_epoch))
 
     status, evidence = check_data_runs_clean("2026-07-05T00:00:00Z", runs_dir=runs_dir, proof_dir=proof_dir)
-    assert status == "FAIL"
+    assert status == "WARN"
     assert str(leaked) in evidence
 
 
@@ -246,7 +250,8 @@ def test_data_runs_clean_absent_start_ts_no_ticket_context_is_indeterminate(tmp_
 
 def test_data_runs_clean_present_garbage_start_ts_still_flags_any_file(tmp_path):
     """AC4/pipeline fail-closed rule: an explicit-but-unparsable start_ts (not merely absent)
-    still flags every file, unchanged from before this ticket."""
+    still flags every file; the result is now an advisory WARN rather than FAIL (see
+    test_data_runs_clean_file_at_or_after_start_ts_warns_naming_path)."""
     runs_dir = tmp_path / "data" / "runs"
     proof_dir = tmp_path / "reports" / "release_proof"
     runs_dir.mkdir(parents=True)
@@ -258,7 +263,7 @@ def test_data_runs_clean_present_garbage_start_ts_still_flags_any_file(tmp_path)
     os.utime(old, (old_epoch, old_epoch))
 
     status, _ = check_data_runs_clean("not-a-date", runs_dir=runs_dir, proof_dir=proof_dir)
-    assert status == "FAIL"
+    assert status == "WARN"
 
 
 def test_data_runs_clean_resolves_start_ts_from_own_run_record_pass(tmp_path):
@@ -285,7 +290,7 @@ def test_data_runs_clean_resolves_start_ts_from_own_run_record_pass(tmp_path):
     assert "run record" in evidence
 
 
-def test_data_runs_clean_resolves_start_ts_from_own_run_record_fail(tmp_path):
+def test_data_runs_clean_resolves_start_ts_from_own_run_record_warns(tmp_path):
     runs_dir = tmp_path / "data" / "runs"
     proof_dir = tmp_path / "reports" / "release_proof"
     data_root = tmp_path / AGENT_MONITORING / "data"
@@ -305,7 +310,7 @@ def test_data_runs_clean_resolves_start_ts_from_own_run_record_fail(tmp_path):
     status, evidence = check_data_runs_clean(
         None, ticket_id="TCK-FAKE", runs_dir=runs_dir, proof_dir=proof_dir, data_root=data_root
     )
-    assert status == "FAIL"
+    assert status == "WARN"
     assert str(leaked) in evidence
 
 
@@ -329,7 +334,9 @@ def test_data_runs_clean_ticket_id_with_no_matching_run_record_is_indeterminate(
 # ---------------------------------------------------------------------------
 
 
-def test_clean_data_runs_early_detects_and_removes_leftover_artifacts(tmp_path):
+def test_clean_data_runs_early_reports_leftover_artifacts_and_deletes_nothing(tmp_path):
+    """Meaning changed: it used to unlink the flagged files (status CLEANED). It now only reports
+    them (REPORTED) because a file in these directories cannot be attributed to this session."""
     runs_dir = tmp_path / "data" / "runs"
     proof_dir = tmp_path / "reports" / "release_proof"
     runs_dir.mkdir(parents=True)
@@ -341,12 +348,27 @@ def test_clean_data_runs_early_detects_and_removes_leftover_artifacts(tmp_path):
     os.utime(leaked, (new_epoch, new_epoch))
 
     status, evidence = clean_data_runs_early("2026-07-05T00:00:00Z", runs_dir=runs_dir, proof_dir=proof_dir)
-    assert status == "CLEANED"
-    assert str(leaked) in evidence
-    assert not leaked.exists()
+    assert status == "REPORTED"
+    assert str(leaked) in evidence and "1 file(s) flagged, none deleted" in evidence
+    assert leaked.exists()
 
-    followup_status, _ = check_data_runs_clean("2026-07-05T00:00:00Z", runs_dir=runs_dir, proof_dir=proof_dir)
-    assert followup_status == "PASS"
+
+def test_clean_data_runs_early_as_session_a_leaves_session_bs_overlapping_files(tmp_path):
+    """Two sessions with overlapping mtimes: neither's files are removed (positive control: the old
+    cleaner deleted both sessions' files, the 3684-files-across-14-sessions incident)."""
+    runs_dir = tmp_path / "data" / "runs"
+    proof_dir = tmp_path / "reports" / "release_proof"
+    (runs_dir / "run_a_111").mkdir(parents=True)
+    (runs_dir / "run_b_222").mkdir(parents=True)
+    proof_dir.mkdir(parents=True)
+    epoch = time.mktime(time.strptime("2026-07-06T00:00:00", "%Y-%m-%dT%H:%M:%S"))
+    mine, theirs = runs_dir / "run_a_111" / "a.json", runs_dir / "run_b_222" / "b.json"
+    for f in (mine, theirs):
+        f.write_text("{}", encoding="utf-8")
+        os.utime(f, (epoch, epoch))
+    status, evidence = clean_data_runs_early("2026-07-05T00:00:00Z", runs_dir=runs_dir, proof_dir=proof_dir)
+    assert status == "REPORTED" and str(mine) in evidence and str(theirs) in evidence
+    assert mine.exists() and theirs.exists()
 
 
 def test_clean_data_runs_early_preserves_files_older_than_start_ts(tmp_path):
@@ -399,39 +421,63 @@ def test_clean_data_runs_early_reuses_check_data_runs_clean_definition(tmp_path)
     assert canonical_flagged == {str(at_start), str(after)}
 
     check_status, check_evidence = check_data_runs_clean(start_ts, runs_dir=runs_dir, proof_dir=proof_dir)
-    assert check_status == "FAIL"
+    assert check_status == "WARN"
     for f in canonical_flagged:
         assert f in check_evidence
 
     clean_status, clean_evidence = clean_data_runs_early(start_ts, runs_dir=runs_dir, proof_dir=proof_dir)
-    assert clean_status == "CLEANED"
+    assert clean_status == "REPORTED"
     for f in canonical_flagged:
         assert f in clean_evidence
-    assert before.exists()
-    assert not at_start.exists()
-    assert not after.exists()
+    # report-only: nothing is deleted, including the flagged files
+    assert before.exists() and at_start.exists() and after.exists()
 
 
-def test_clean_data_runs_early_returns_fail_on_deletion_error(tmp_path, monkeypatch):
+def _scoped_dirs(tmp_path):
     runs_dir = tmp_path / "data" / "runs"
     proof_dir = tmp_path / "reports" / "release_proof"
     runs_dir.mkdir(parents=True)
     proof_dir.mkdir(parents=True)
+    return runs_dir, proof_dir
 
-    leaked = runs_dir / "leaked_run.json"
-    leaked.write_text("{}", encoding="utf-8")
-    new_epoch = time.mktime(time.strptime("2026-07-06T00:00:00", "%Y-%m-%dT%H:%M:%S"))
-    os.utime(leaked, (new_epoch, new_epoch))
 
-    def _raise_unlink(self):
-        raise OSError("permission denied")
+def test_scoped_delete_removes_only_the_named_run_directory(tmp_path):
+    runs_dir, proof_dir = _scoped_dirs(tmp_path)
+    (runs_dir / "mine").mkdir()
+    (runs_dir / "mine" / "x.json").write_text("{}", encoding="utf-8")
+    (runs_dir / "theirs").mkdir()
+    (runs_dir / "theirs" / "y.json").write_text("{}", encoding="utf-8")
+    status, evidence = delete_data_run_paths(["mine"], runs_dir=runs_dir, proof_dir=proof_dir)
+    assert status == "DELETED" and "mine" in evidence
+    assert not (runs_dir / "mine").exists() and (runs_dir / "theirs" / "y.json").exists()
 
-    monkeypatch.setattr(Path, "unlink", _raise_unlink)
 
-    status, evidence = clean_data_runs_early("2026-07-05T00:00:00Z", runs_dir=runs_dir, proof_dir=proof_dir)
-    assert status == "FAIL"
-    assert "permission denied" in evidence
-    assert str(leaked) in evidence
+def test_scoped_delete_refuses_blanket_empty_absolute_and_escaping_paths(tmp_path):
+    runs_dir, proof_dir = _scoped_dirs(tmp_path)
+    (runs_dir / "keep.json").write_text("{}", encoding="utf-8")
+    outside = tmp_path / "outside.txt"
+    outside.write_text("x", encoding="utf-8")
+    for bad in ([], [""], ["*"], ["."], [".."], ["../outside.txt"], [str(outside)], ["missing"]):
+        status, _ = delete_data_run_paths(bad, runs_dir=runs_dir, proof_dir=proof_dir)
+        assert status == "REFUSED", bad
+    assert (runs_dir / "keep.json").exists() and outside.exists()
+
+
+def test_scoped_delete_refuses_a_symlink_that_escapes_the_directory(tmp_path):
+    runs_dir, proof_dir = _scoped_dirs(tmp_path)
+    target = tmp_path / "elsewhere"
+    target.mkdir()
+    (target / "z.txt").write_text("x", encoding="utf-8")
+    (runs_dir / "link").symlink_to(target, target_is_directory=True)
+    status, _ = delete_data_run_paths(["link"], runs_dir=runs_dir, proof_dir=proof_dir)
+    assert status == "REFUSED" and (target / "z.txt").exists()
+
+
+def test_scoped_delete_refuses_everything_when_one_name_is_bad(tmp_path):
+    runs_dir, proof_dir = _scoped_dirs(tmp_path)
+    (runs_dir / "ok").mkdir()
+    status, _ = delete_data_run_paths(["ok", "*"], runs_dir=runs_dir, proof_dir=proof_dir)
+    assert status == "REFUSED" and (runs_dir / "ok").exists()
 
 
 def test_data_runs_clean_status_appears_in_failure_recovery_reference_table():
@@ -2940,3 +2986,10 @@ def test_delivery_process_guide_carries_disposition_rule_exactly_once():
     for value in ("STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO", "DECISION-RECORDED"):
         assert value in guide
     assert "--regenerate-registry" in guide
+
+
+def test_clean_data_runs_cli_needs_no_ticket_id_and_refuses_a_blanket_path(capsys):
+    assert main(["--clean-data-runs"]) == 1
+    assert "REFUSED" in capsys.readouterr().out
+    assert main(["--clean-data-runs", "--path", "*"]) == 1
+    assert "REFUSED" in capsys.readouterr().out

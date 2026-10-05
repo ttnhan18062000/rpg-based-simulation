@@ -448,13 +448,15 @@ the Test phase to include the missing directory and re-runs with `ticket_id`.
 
 **Post-Test cleanup checkpoint:** Immediately after Test phase completes (before Parity), the
 orchestrator runs `tools/gate_checks/done_checker_static.py::clean_data_runs_early(start_ts)`
-directly via `bash()` — not an agent prompt step. This auto-cleans any `data/runs/*` /
-`reports/release_proof/*` files this session's own Test-phase pytest run produced
-(`mtime >= start_ts`), closing the gap where Verify's `data_runs_clean` check (below) used to
-run before Finalize's cleanup ever had a chance to execute. On success (nothing to clean, or
-cleaned successfully) the workflow proceeds silently to Parity. **Gate:** Returns
-`DATA_RUNS_CLEAN_FAILED` only if deletion itself errors (e.g. permission/lock) — the user
-resolves manually and re-runs with `ticket_id`.
+directly via `bash()` — not an agent prompt step. **Report-only since
+TCK-20261004-DATA-RUNS-CLEAN-NOT-SESSION-SCOPED:** it lists the `data/runs/*` /
+`reports/release_proof/*` files at/after `start_ts` and deletes nothing, because those directories
+carry no owner and the old auto-delete removed other sessions' files (3684 files across 14
+sessions in one run). Deleting is an explicit, scoped act:
+`python3 tools/gate_checks/done_checker_static.py --clean-data-runs --path <run_id>` removes only the
+named entries and refuses empty, wildcard and absolute paths. The workflow always proceeds to Parity;
+Verify's `data_runs_clean` reports leftovers as an advisory `WARN`, never `FAIL`.
+`DATA_RUNS_CLEAN_FAILED` is no longer produced by this checkpoint (there is no deletion to fail).
 
 **Reliability caveat (added by TCK-20260714-DATA-RUNS-VERIFY-REGEN):** direct evidence from
 `agent-working/agent-monitoring/tools.jsonl` across 5+ weeks of runs found this checkpoint's own `bash()` call
@@ -514,11 +516,10 @@ no P0 entry's `v2_evidence` depends on a changed file; if it does, the full agen
 **Agent:** `done-checker`
 
 **Step 0a (added by TCK-20260714-DATA-RUNS-VERIFY-REGEN):** before anything else, `done-checker`
-runs `tools/gate_checks/done_checker_static.py::clean_data_runs_early(start_ts)` and auto-cleans
-any `data/runs/*` / `reports/release_proof/*` this session has produced up to this point —
-including artifacts Parity's or `done-checker`'s own re-verification pytest runs regenerated after
-the post-Test checkpoint (above) ran or was skipped. A deletion-error result here is folded
-directly into condition 10 rather than raising a separate blocking status.
+runs `tools/gate_checks/done_checker_static.py::clean_data_runs_early(start_ts)`, which now only
+REPORTS any `data/runs/*` / `reports/release_proof/*` files at/after `start_ts` (including ones
+Parity's or `done-checker`'s own re-verification pytest runs regenerated) and deletes nothing. The
+result is folded into condition 10's evidence; leftovers are a `WARN`, not a `FAIL`.
 
 **Step 0b:** Before judging conditions 3, 4, 6, 7, 10 (if not already marked `FAIL` by Step 0a), 12
 by hand, `done-checker` runs
@@ -753,7 +754,7 @@ their own.
 | `NEEDS_CHANGES` | Architecture violations in plan | Fix `plan.md` per violation list | Re-run with `ticket_id` |
 | `BLOCKED` | Fundamental architectural conflict | Revisit scope, possibly split ticket | Re-run with `ticket_id` or new `request` |
 | `TESTS_FAILED` | Tests failing after implementation | Fix the code or tests | Re-run with `ticket_id` |
-| `DATA_RUNS_CLEAN_FAILED` | Post-Test auto-clean of `data/runs/*`/`reports/release_proof/*` failed (deletion error, e.g. permission/lock) | Resolve the underlying error manually (check file permissions/locks), then confirm the flagged files are removable | Re-run with `ticket_id` |
+| `DATA_RUNS_CLEAN_FAILED` | Legacy status: the post-Test checkpoint no longer deletes (TCK-20261004-DATA-RUNS-CLEAN-NOT-SESSION-SCOPED), so it no longer produces this. Kept so older runs' records stay readable | None | — |
 | `SECURITY_BLOCKED` | Security review found a vulnerability | Fix the flagged code | Re-run with `ticket_id` |
 | `DOD_BLOCKED` | DoD condition(s) not met | Fix each failing item listed | Re-run with `ticket_id` |
 | `FINALIZE_INCOMPLETE` | Finalize's own migration self-check found a discrepancy after moving artifacts | Fix each item in `failing_items` (e.g. incomplete `agent-working/stored_artifacts/`, `agent-working/staging_artifacts/` not cleaned, duplicate working_log row) | Re-run with `ticket_id` |
