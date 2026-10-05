@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-TACTICAL-HOSTILE-LIST-AND-LEGALITY-DISAGREE-ABOUT-WHO-IS-HOSTILE
-phase: inprogress
+phase: done
 date: 2026-10-05
 tags: [engine, combat, investigation]
 ---
@@ -17,7 +17,7 @@ a target with one hostility predicate while legality gates on a *different* pred
 whether clean faction data happens to exist — three hostility call sites, no single authority
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -92,15 +92,15 @@ checks, and `legality.py`'s fallback is exactly such a raw check, still in place
 - The flee gate (P0, blocked on ratification) and the `OUT_OF_RANGE` sticky task (its own ticket).
 
 ## Acceptance Criteria
-- [ ] The three call sites' predicates are recorded with the disagreeing pairs, counted as **pairs** and
+- [x] The three call sites' predicates are recorded with the disagreeing pairs, counted as **pairs** and
       as verdicts, on post-#344 `main`.
-- [ ] Whether `has_clean` is ever false on corpus content is answered with evidence, per world.
-- [ ] The asymmetry of the `has_clean` relationship probe (source→target only) is confirmed or refuted
+- [x] Whether `has_clean` is ever false on corpus content is answered with evidence, per world.
+- [x] The asymmetry of the `has_clean` relationship probe (source→target only) is confirmed or refuted
       by measurement, not by reading alone.
-- [ ] The 751 figure is re-taken and labelled sample or value.
-- [ ] A recommendation on the authoritative predicate reaches the planner **with** what the Bible says
+- [x] The 751 figure is re-taken and labelled sample or value.
+- [x] A recommendation on the authoritative predicate reaches the planner **with** what the Bible says
       or an explicit statement that it is silent. **No unification lands before ratification.**
-- [ ] If the fallback is dead on this corpus, that is stated and a test pins it.
+- [ ] If the fallback is dead on this corpus, that is stated and a test pins it. (Stated: dead on all four worlds. NOT done: no test pins it; planner ruled no hardening in this batch and filed TCK-20261005-LEGALITY-RAW-FACTION-EQUALITY-FALLBACK-IS-DEAD-BUT-LATENT.)
 
 ## Related Tickets
 - `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP` (#333) — the earlier sweep; this is a site it
@@ -131,13 +131,39 @@ checks, and `legality.py`'s fallback is exactly such a raw check, still in place
   there are three predicates and not two, and the appraisal/selection split is a second defect.
 
 ## Implementation Notes
-(to be filled by the implementer)
+Investigation only, no source change. Full record in `investigation.md`. Measured on the Lane A branch (`origin/main` `7a9f302db` plus
+the router fix of `TCK-20261005-SILENT-NO-OP-RETURNS-...`), real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`, budget
+disabled, each world run twice with matched results (values):
+
+- **0 distinct entity pairs where the tactical and legality predicates disagree**, in all four corpus worlds.
+- `FRIENDLY_FIRE_ILLEGAL`: `crowded_frontier` 211 calls (2 distinct pairs), `frontier_living_world` 372 (3 distinct pairs),
+  `urban_political` 0, `dungeon_crawl` 0. The 751 was re-taken as **583 on a different tree, so the two are not like-for-like**.
+- **`has_clean` was never false** on corpus content: legality's raw faction-equality fallback is dead code on this corpus. The
+  source-to-target-only edge asymmetry is real in the code and fired in 1 of 1126 calls (both predicates agreed).
+- **100% of the friendly-fire verdicts (372 of 372, 211 of 211) are requested by `CombatResolutionSystem.resolve_multi_attack` from
+  `resolve_move`**: the opportunity-attack scan during movement, task `ENTITY_MOVE` (367 of 372 with reason `REGROUP`) or idle
+  `ENTITY_ACT`. No objective targets any of these entities and tactical target selection is not the caller. A mover passing a
+  non-hostile neighbour is refused "not hostile": the filter working, not a failed attack.
+- Hypotheses tested and refuted: runtime-spawned monsters sharing the `MONSTER_HORDE` bucket (the dominant row,
+  `wild_beast_pack -> merchant_league`, has catalog identity on both sides); an objective `target_entity_id` driving the attack.
+
+Conclusion recorded: **the predicates agree on corpus content, and the 751 verdicts are the OA scan's routine filter, not failed
+attacks.** No Mechanics Bible citation is needed because nothing is unified; `docs/mechanics/02_combat_laws.md` section 7 is the stated
+authority if reopened. The latent hazard (the dead fallback would diverge from tactics for a faction with no perspective and no edge) is
+filed separately as `TCK-20261005-LEGALITY-RAW-FACTION-EQUALITY-FALLBACK-IS-DEAD-BUT-LATENT` (P3). The opportunity-attack scan's cost
+(583 refusals over 4 x 2000 ticks, about 0.07 per tick per world) was not measured as cost and is recorded there, not ticketed.
 
 ## Test Summary
-(to be filled by the implementer)
+No behaviour changed, so no tests were added. Evidence is the matched-pair measurement. Instrument checks: the probe recomputes both
+predicates from the same `RelationContext` legality builds and reproduced the legality verdict reasons exactly (FRIENDLY_FIRE count equals the
+counted verdicts); my first-run `legality_pred_differs_by_direction` counter compared the reverse direction's hostility, which differs by
+design, and is ignored.
 
 ## Files Changed
-(to be filled by the implementer)
+- `agent-working/stored_artifacts/.../probes/`: `hostility_probe.py`, `measure.sh`, `ff_origin.py` (measurement only)
+- no `src/`, `tests/` or `docs/engine/` change
 
 ## Completion Summary
-(to be filled by the implementer)
+Closed as a measured non-defect: the predicates agree on corpus content (0 disagreeing pairs, `has_clean` never false) and the
+friendly-fire verdicts are the opportunity-attack scan's routine filter. Not established: behaviour on content with a faction that lacks
+a perspective and an edge (the dead fallback), the OA scan's cost, and the rate outside the four corpus worlds.
