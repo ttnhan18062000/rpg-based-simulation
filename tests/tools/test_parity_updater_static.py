@@ -280,7 +280,11 @@ def test_next_available_id_against_real_world_dynamics_shard():
     # entry). Previously WORLD-BELIEF-003, when the shard's last entry was still WORLD-BELIEF-002
     # (added by TCK-20260905-BELIEF-INSTITUTION-DESIGN); TCK-20260905-HOME-EXILE-REFUGEE-THREADS
     # then appended WORLD-DISPLACE-001 after it.
-    assert next_available_id("world_dynamics.yaml", ledger_dir="docs/parity_ledger") == "WORLD-DISPLACE-002"
+    # 2026-10-05 (TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING):
+    # the shard's last entries are now WORLD-125 and WORLD-126 (owner decisions 14 and 15), so the last
+    # entry's family is the bare WORLD-NNN family again and the next id is WORLD-127. Same per-family
+    # design as above, new tail.
+    assert next_available_id("world_dynamics.yaml", ledger_dir="docs/parity_ledger") == "WORLD-127"
 
 
 # ---------------------------------------------------------------------------
