@@ -378,7 +378,6 @@ tier,kind,class,name,file,line,decorators,exclusion,has_test_coverage
 2,method,GroupService,assign_role,src/systems/social_systems/group_service.py,35,staticmethod,real,False
 2,method,SocialMemoryService,tick_place_attachment,src/systems/social_systems/memory.py,13,staticmethod,real,True
 2,method,PartyCoordinationSystem,coordinate_party_objectives,src/systems/social_systems/party.py,84,staticmethod,real,False
-2,method,PartyCoordinationSystem,issue_party_command,src/systems/social_systems/party.py,123,staticmethod,real,False
 2,method,RelationshipService,prune_low_salience,src/systems/social_systems/relationships.py,137,staticmethod,real,True
 2,method,ReputationService,get_impact,src/systems/social_systems/reputation.py,18,staticmethod,real,False
 2,method,ReputationService,calculate_caution_modifier,src/systems/social_systems/reputation.py,22,staticmethod,real,False

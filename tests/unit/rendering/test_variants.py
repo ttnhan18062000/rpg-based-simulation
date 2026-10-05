@@ -28,6 +28,7 @@ from src.rendering.variants import (
 )
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
+from tests.unit.rendering.frozen_dungeon_crawl import load_frozen_dungeon_crawl
 
 _VARIANTS_MODULE_PATH = Path(__file__).resolve().parents[3] / "src" / "rendering" / "variants.py"
 
@@ -48,7 +49,8 @@ def test_total_variation_distance_reproduces_sandbox_dungeon_anchor():
     repo = WorldRepository("data/worlds")
     sandbox_spec = repo.load_world("sandbox_world")
     sandbox_state, _report = WorldCompiler.compile(sandbox_spec, seed=42)
-    dungeon_spec = repo.load_world("dungeon_crawl")
+    # Frozen pre-balance-fix snapshot (see tests/fixtures/rendering/*.yaml): the live world no longer has this terrain.
+    dungeon_spec = load_frozen_dungeon_crawl()
     dungeon_state, _report = WorldCompiler.compile(dungeon_spec, seed=42)
 
     h1 = normalize_histogram(compute_terrain_histogram(sandbox_state.terrain))

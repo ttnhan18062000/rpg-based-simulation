@@ -9,14 +9,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -663,12 +663,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Archetype 'orc_warchief' is active but never consumed by any downstream component",
-      "target": "orc_warchief"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Archetype 'dwarven_hunter' is active but never consumed by any downstream component",
       "target": "dwarven_hunter"
     },
@@ -759,6 +753,12 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Item 'ancient_core' is active but never consumed by any downstream component",
+      "target": "ancient_core"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Ecology 'dragon_cult_volcanic_ecology' is active but never consumed by any downstream component",
       "target": "dragon_cult_volcanic_ecology"
     },
@@ -803,12 +803,22 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
       "target": "hero_adventurers"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'camp_maturity_calibration_pilot' is active but never consumed by any downstream component",
+      "target": "camp_maturity_calibration_pilot"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'combat_judgement_arena' is active but never consumed by any downstream component",
+      "target": "combat_judgement_arena"
     }
   ],
   "module_validation": {
     "ruins_mystery_quest": [],
-    "goblin_camp_conflict": [],
-    "old_mine_resource_loop": [],
     "scalable_bandit_camp": []
   },
   "composition_validation": [],
@@ -816,32 +826,8 @@
     {
       "severity": "WARNING",
       "rule_id": "WORLD-REACH-001",
-      "message": "Quest 'goblin_hunt_warlord' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
-      "path": "quest_definitions.0.required_participant_tags",
-      "source_entity": "goblin_hunt_warlord",
-      "source_file": "goblin_camp_conflict"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "WORLD-REACH-001",
-      "message": "Quest 'goblin_fetch_stolen_goods' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
-      "path": "quest_definitions.1.required_participant_tags",
-      "source_entity": "goblin_fetch_stolen_goods",
-      "source_file": "goblin_camp_conflict"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "WORLD-REACH-001",
-      "message": "Quest 'goblin_defend_village_perimeter' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
-      "path": "quest_definitions.2.required_participant_tags",
-      "source_entity": "goblin_defend_village_perimeter",
-      "source_file": "goblin_camp_conflict"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "WORLD-REACH-001",
       "message": "Quest 'spirit_source_trace' required_participant_tags ['spiritual'] not satisfiable by any reachable population's compatible_traits.",
-      "path": "quest_definitions.5.required_participant_tags",
+      "path": "quest_definitions.1.required_participant_tags",
       "source_entity": "spirit_source_trace",
       "source_file": "ruins_mystery_quest"
     },
@@ -849,7 +835,7 @@
       "severity": "WARNING",
       "rule_id": "WORLD-REACH-001",
       "message": "Quest 'sbandit_hunt_camp_leader' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
-      "path": "quest_definitions.6.required_participant_tags",
+      "path": "quest_definitions.2.required_participant_tags",
       "source_entity": "sbandit_hunt_camp_leader",
       "source_file": "scalable_bandit_camp"
     },
@@ -857,7 +843,7 @@
       "severity": "WARNING",
       "rule_id": "WORLD-REACH-001",
       "message": "Quest 'sbandit_fetch_stolen_cache' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
-      "path": "quest_definitions.7.required_participant_tags",
+      "path": "quest_definitions.3.required_participant_tags",
       "source_entity": "sbandit_fetch_stolen_cache",
       "source_file": "scalable_bandit_camp"
     },
@@ -865,9 +851,17 @@
       "severity": "WARNING",
       "rule_id": "WORLD-REACH-001",
       "message": "Quest 'sbandit_defend_road_checkpoint' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
-      "path": "quest_definitions.8.required_participant_tags",
+      "path": "quest_definitions.4.required_participant_tags",
       "source_entity": "sbandit_defend_road_checkpoint",
       "source_file": "scalable_bandit_camp"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-WARN-001",
+      "message": "World spec defines zero resource nodes.",
+      "path": "resources",
+      "source_entity": null,
+      "source_file": null
     }
   ]
 }

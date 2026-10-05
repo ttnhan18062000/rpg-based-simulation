@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from typing import TYPE_CHECKING, List, Dict, Optional, Any
+import json
 import time
 import logging
 import gc
@@ -155,8 +156,13 @@ class Kernel:
                 try:
                     with open(provenance_manifest_path, "r", encoding="utf-8") as f:
                         prov_manifest_data = json.load(f)
-                except Exception:
-                    pass
+                except (OSError, ValueError) as prov_err:
+                    # ValueError covers json.JSONDecodeError. A missing/corrupt manifest degrades the
+                    # RunManifest's fingerprints but must not abort the run, so log it instead of hiding it.
+                    logger.warning(
+                        "Could not load provenance manifest %s (non-fatal): %s",
+                        provenance_manifest_path, prov_err,
+                    )
 
             catalog_fp = catalog_fingerprint
             if not catalog_fp and prov_manifest_data:
@@ -891,7 +897,6 @@ class Kernel:
         if self._artifact_repo and self._run_id:
             try:
                 import os
-                import json
                 v_path = self._artifact_repo.resolve_path(self._run_id, "violations")
                 os.makedirs(os.path.dirname(v_path), exist_ok=True)
                 with open(v_path, "a", encoding="utf-8") as f:
@@ -976,7 +981,6 @@ class Kernel:
         if self._artifact_repo and self._run_id:
             try:
                 import os
-                import json
                 v_path = self._artifact_repo.resolve_path(self._run_id, "violations")
                 os.makedirs(os.path.dirname(v_path), exist_ok=True)
                 with open(v_path, "a", encoding="utf-8") as f:
