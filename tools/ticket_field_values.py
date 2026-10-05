@@ -55,7 +55,7 @@ WORKFLOW_STATUS_VALUES: FrozenSet[str] = frozenset(
 # normal implementation closure. Two sections rather than one so every body field keeps the same
 # single parsing convention (`parse_body_section` returns a whole section, never a first line).
 DISPOSITION_VALUES: FrozenSet[str] = frozenset(
-    {"STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO"}
+    {"STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO", "DECISION-RECORDED"}
 )
 
 _COMMIT_SHA_RE = re.compile(r"\b(?=[0-9a-f]*\d)(?=[0-9a-f]*[a-f])[0-9a-f]{7,40}\b")

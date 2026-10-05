@@ -153,8 +153,18 @@ _DISPOSITION_BODY = (
 )
 
 
-def test_disposition_values_are_the_five_documented_ones():
-    assert DISPOSITION_VALUES == {"STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO"}
+def test_disposition_values_are_the_six_documented_ones():
+    assert DISPOSITION_VALUES == {
+        "STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO", "DECISION-RECORDED",
+    }
+
+
+def test_decision_recorded_needs_a_cited_rationale():
+    cited = _DISPOSITION_BODY.format(value="DECISION-RECORDED", rationale="Owner decision recorded in 791e6bf6b.")
+    assert check_disposition_fields(cited)[0] == "PASS"
+    uncited = _DISPOSITION_BODY.format(value="DECISION-RECORDED", rationale="The owner said it is intended.")
+    status, evidence = check_disposition_fields(uncited)
+    assert status == "FAIL" and "cites no evidence" in evidence
 
 
 def test_disposition_and_rationale_sections_parse_independently():

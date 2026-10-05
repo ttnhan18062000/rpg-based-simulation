@@ -2783,6 +2783,35 @@ def test_disposition_closure_passes_full_finalize_selfcheck(tmp_path, monkeypatc
     assert all(r["status"] in ("PASS", "NA") for r in results), results
 
 
+def test_decision_recorded_closure_passes_without_staging_artifacts(tmp_path, monkeypatch):
+    _init_repo_with_origin_main(tmp_path)
+    _write_disposition_ticket(tmp_path, value="DECISION-RECORDED",
+                              rationale="Owner decision recorded in docs/decisions.md:12 on 2026-10-05.")
+    monkeypatch.chdir(tmp_path)
+    status, evidence = check_migration_complete("TCK-DISP", "standard")
+    assert status == "PASS" and "DECISION-RECORDED" in evidence
+
+
+def test_decision_recorded_with_uncited_rationale_fails(tmp_path, monkeypatch):
+    _init_repo_with_origin_main(tmp_path)
+    _write_disposition_ticket(tmp_path, value="DECISION-RECORDED", rationale="The owner decided.")
+    monkeypatch.chdir(tmp_path)
+    status, evidence = check_migration_complete("TCK-DISP", "standard")
+    assert status == "FAIL" and "cites no evidence" in evidence
+
+
+def test_decision_recorded_with_committed_src_change_fails(tmp_path, monkeypatch):
+    _init_repo_with_origin_main(tmp_path)
+    _write_disposition_ticket(tmp_path, value="DECISION-RECORDED", rationale="Decision in 791e6bf6b.")
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "x.py").write_text("x = 1\n", encoding="utf-8")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-q", "-m", "TCK-DISP: change")
+    monkeypatch.chdir(tmp_path)
+    status, evidence = check_migration_complete("TCK-DISP", "standard")
+    assert status == "FAIL" and "src/" in evidence
+
+
 def test_disposition_with_uncited_rationale_fails_naming_the_requirement(tmp_path, monkeypatch):
     _init_repo_with_origin_main(tmp_path)
     _write_disposition_ticket(tmp_path, rationale="Trust me, nothing to build here.")
@@ -2891,6 +2920,6 @@ def test_cli_does_not_write_registry_without_flag_and_does_with_it(tmp_path, mon
 def test_delivery_process_guide_carries_disposition_rule_exactly_once():
     guide = (_REPO_ROOT / "docs" / "guides" / "delivery_process.md").read_text(encoding="utf-8")
     assert guide.count("### Closing a ticket with no implementation") == 1
-    for value in ("STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO"):
+    for value in ("STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO", "DECISION-RECORDED"):
         assert value in guide
     assert "--regenerate-registry" in guide

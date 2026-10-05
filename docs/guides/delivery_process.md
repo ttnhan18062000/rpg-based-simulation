@@ -87,7 +87,7 @@ subdirectory.
 A ticket of any tier can turn out to need nothing built (its premise was already false, it is a
 duplicate, and so on). Record that with two body sections instead of fabricating staging
 artifacts: `## Disposition`, holding only one of `STALE-PREMISE`, `NO-MECHANISM`, `DUPLICATE`,
-`SUPERSEDED`, `WONT-DO`, and `## Disposition Rationale`, prose that cites at least one piece of
+`SUPERSEDED`, `WONT-DO`, `DECISION-RECORDED`, and `## Disposition Rationale`, prose that cites at least one piece of
 evidence (a commit SHA, a `file:line` reference, or a fenced block of pasted run output). With both
 present and valid, and no `src/` change attributed to the ticket (its own commits or anything
 uncommitted), `done_checker_static.py`'s `migration_complete` passes without
@@ -95,6 +95,12 @@ uncommitted), `done_checker_static.py`'s `migration_complete` passes without
 uncited rationale, or an attributed `src/` change fails it and names which. Absent `## Disposition`
 means a normal implementation closure. `grep -A1 '^## Disposition$' agent-working/tickets/done/*.md` lists every
 disposition closure.
+
+`DECISION-RECORDED` is for a ticket whose correct outcome is an owner decision, with no code and no
+test change (the behaviour is intended, or the question was settled). Its rationale must name the
+decision (who decided and when) through the same evidence forms: a decision-doc `file:line`, the
+commit SHA that recorded it, or a fenced block quoting the dated owner message. A decision-only
+ticket's `## Files Changed` reads `none — decision-only`.
 
 ### Running `done_checker_static.py` by hand
 
@@ -361,5 +367,13 @@ The steps above cover diagnosing a failure; this covers the surrounding push→P
    step 3, not a fresh authorization ask.
 5. **Monitor CI** per the Triage steps above until every check is green or a failure is triaged and fixed.
 6. Report the PR link and CI status back to the user — landing the PR (merge) is their call, not something to do automatically once CI is green.
+6a. **Why `gh pr merge` refuses, and why the usual check misleads.** `main` is protected by a repository
+   ruleset named `protect_branches` (id 14220945) whose `update` rule has an admin-only bypass, not by
+   classic branch protection. Two consequences:
+   - `gh api repos/{owner}/{repo}/branches/main/protection` returns 404. That 404 does not mean `main`
+     is unprotected; read `gh api repos/{owner}/{repo}/rulesets/14220945` instead.
+   - `gh pr merge` is refused for any actor without the bypass, even with every check green. An agent
+     that gets this refusal reports it and hands the merge back to the user. It does not retry with
+     `--admin` or route around it.
 7. **After the user reports a merge**: `git checkout main && git pull` to sync. If local `main` is already ahead of `origin/main` by a commit you didn't make, that's another concurrent session's unpushed local work — leave it alone, don't push it for them and don't rebase/reset over it. Once synced with nothing in flight, evaluate the reset boundary per `docs/guides/agent_session_reset_boundaries.md` — a merged batch is the most common HARD boundary.
 8. **This repo's PRs land as squash merges** — GitHub creates one new commit on `main` whose parent is `main`'s prior tip, not a merge of your branch's own commit history. Your branch's individual commits (and any local merge commit you made into it) are never ancestors of `main` after this, even though their *content* is fully present. **If you push further commits to the same branch after its PR has merged, those commits have no path to `main`** — a plain `git log origin/main..HEAD` or a naive re-open of the same PR will look like it's re-submitting the entire original diff, because ancestor-based diffing can't see the content is already there. The tell is a suspiciously large `git diff origin/main...HEAD` (three-dot, ancestor-based) right after a merge you know landed cleanly — confirm with `git diff origin/main HEAD` (plain two-ref, content-based) instead, which will show only the real new changes. Fix: merge `origin/main` into the branch again (resolving any "add/add" conflicts this ancestor-loss can spuriously create — check whether the `origin/main` side of such a conflict is genuinely new content or empty/stale before assuming a real concurrent edit), then open a **new** PR rather than trying to reuse or reopen the merged one. **A second symptom of the same root cause, visible even when you get the merge right**: a PR opened from that same already-squashed branch (even after a correct `origin/main` merge) shows GitHub's *own* commit count as the branch's full original history — dozens of commits against what might be a handful of real new files — because GitHub still can't recognize the squashed commit as an ancestor. The diff itself is correct (git compares trees, so already-landed content contributes nothing), but the commit list is genuinely misleading to a reviewer. The visible warning sign (an inflated commit count on an otherwise-small PR) and the invisible one (stranded commits with no path to `main`) are the same underlying cause — recognize either, and treat it the same way: **a squash-merged branch is finished.** Never push further work to it, not even after resyncing it with `origin/main`. Cut a fresh branch off `origin/main` for the next piece of work and copy or cherry-pick just the new commits onto it (`git checkout <old-branch> -- <changed paths>` on the new branch is usually simplest when the new work is a handful of files), so the resulting PR's commit count actually matches its diff.
