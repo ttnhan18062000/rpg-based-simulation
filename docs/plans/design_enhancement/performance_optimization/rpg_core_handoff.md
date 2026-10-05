@@ -316,3 +316,66 @@ therefore always 0, and today salience comes only from the wall-clock term. The 
 **retire** work debt. For `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`, this means: drop
 `global_salience` and the buy-price `1 + salience` multiplier entirely, instead of keeping a term
 that is always 0. The ticket's assumptions say so.
+
+### `perf-planner`, 2026-10-06 — status, and three asks to close the full lift
+
+**What changed since 2026-10-04.**
+
+- **Combat nondeterminism closed.** The root cause was the `id()`-keyed dirty-set de-duplication
+  in `src/core/dirty.py` (PR #344), and the governor stayed in NORMAL throughout. On that evidence the owner
+  released `governor.py` into the partial lift on 2026-10-05 (roadmap gate item 5). Perf used it
+  for PERF-M1-T01 (zero-capacity signal, PR #352).
+- **Child A landed** (PR #328).
+- **Code-health gates are blocking on `main`** since 2026-10-05 (PR #329). This applies to every
+  `src/` PR, yours and ours. Only violations a PR adds block it.
+- **Perf is idle again.** Everything the partial lift allows is merged. The rest of M1 needs
+  `src/engine/kernel.py` (T03b: kernel per-tick digests through the scheduler) or the full lift
+  (T05 invalidation ledger, work-debt retire step 2).
+
+**Full-lift criteria today:**
+
+| # | Criterion | State |
+|---|---|---|
+| 1 | No open determinism break on the measured path | **Open:** `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING` is P1 in the hard-bug queue but still in `todos/`, not started |
+| 2 | Child A landed and memo row 7 (b) holds | Child A done; **row 7 (b) unconfirmed** |
+| 3 | Named no-touch window on `state.py` / `apply.py` / `pipeline.py` / `kernel.py` | **Not named** |
+
+#### Ask 5 — When does the salience fix start, and who owns it?
+
+It is the long pole: criterion 1 waits on it, and it must land before the window opens (your
+sequencing: salience fix → window → M1's `kernel.py` work). Please give a slot in your work order and
+the session that implements it. Reminder from the 2026-10-04 update: the fix drops `global_salience`
+and the buy-price `1 + salience` multiplier entirely, and needs a regression test that fails with
+`audit_mode=False`. Perf reviews the PR.
+
+#### Ask 6 — Does memo row 7 (b) hold now?
+
+Row 7 (b) means all 25 core-tier modules bound or excluded with a reason. Child A has landed. Please
+state yes or no and cite the evidence (a test, report or ticket). If no, say what is left.
+
+#### Ask 7 — Name the no-touch window, or agree to a `kernel.py`-only slice first
+
+Option A, the window as planned: a start condition (for example "salience fix merged") and an end
+condition or date. During the window no RPG-core PR edits the four core files.
+
+Option B, a narrower slice, if the salience fix is weeks away: perf takes **`kernel.py` only**
+(plus `src/certification/harness.py`, which still passes `HashMode.FULL`) for PERF-M1-T03b. The
+change adds per-tick and shutdown digests through `CanonicalHashScheduler`, replaces the "SKIPPED"
+string with a typed status, and then removes `HashMode`. It adds no refinement phase and does not
+change the shape of `AuthoritativeState`. The cost: it collides with the salience fix, which also
+edits `kernel.py`. So B needs one of these two orders, and you choose:
+- the salience fix lands first, and T03b starts right after; or
+- T03b lands first in a short window, about one PR, and the salience fix rebases on it.
+
+Either way the owner decides. We are asking for your view and any conflict we cannot see.
+
+**Check for us:** open tickets that name one of the four core files in `todos/`. We read the
+ones outside your approved work order as backlog. Tell us if any of these is scheduled:
+`TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-ENTITIES`,
+`TCK-20260921-COGNITION-CAPACITY-ENFORCEMENT-CONDITIONAL-ON-OTHER-UPDATES`,
+`TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER`,
+`TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS`,
+`TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE`, the `pressure-propagation-economy/` folder,
+and the parked body-recovery, derived-stat and perception tickets.
+
+Reply here or on the PR, with date and session name.
