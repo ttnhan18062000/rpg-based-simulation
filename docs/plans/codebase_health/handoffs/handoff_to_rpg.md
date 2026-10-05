@@ -241,3 +241,18 @@ handoff_to_rpg.md", so the advisory step is quiet today. If you keep them, say s
 move them, delete the four `src.engine.kernel -> ...` entries (four pairs for five lines: lines 316 and 1241 share one pair, `-> src.observability.cognition.decision_trace_writer`; 149 is `reporting.artifact_repository`, 304 `reporting.metric_recorder`, 305 `cognition.recorder`) in `codebase/structure/importlinter.toml` (a stale
 entry shows as a warning). Nothing in `src/` changes in this batch.
 
+
+## Update 2026-10-05 (gates-flip closure): the gates are blocking on `main` since 2026-10-05 (#329)
+
+The owner merged the flip batch (#329, squash `c8c355459`) on 2026-10-05T14:47Z, 13 days before the 2026-10-18 date in
+section 1; the "merge on or after 2026-10-18" wording in that squash title and in section 1 is superseded. From now on a `src/`
+PR fails `Code health` on any new or worse ruff, complexipy, line-count or ast-grep finding, a new top-level `src/` package
+without a registry row, and `Type check` on a new mypy error. Whether those two checks are also *required* on `main` is the
+owner's separate ruleset step, not done by the codebase domain.
+
+- Before a `src/` PR run `make code-health` and `make typecheck-py`.
+- The 27 ratchet rows and 3 mypy errors other domains added during the advisory window are accepted debt (reviewed rows in
+  `codebase/baselines/code_health_exceptions.jsonl`, entries in `mypy_baseline.txt`); pay them down when you touch those
+  files, the ratchet then lowers the ceiling. The row-by-row list is in `python_code_craft_gates_soak_review.md`.
+- `mypy_gate` exited 2 ("could not run") for two or more new errors until it was fixed in the flip batch; if you saw that
+  message on a PR, it meant new errors, now reported as exit 1.

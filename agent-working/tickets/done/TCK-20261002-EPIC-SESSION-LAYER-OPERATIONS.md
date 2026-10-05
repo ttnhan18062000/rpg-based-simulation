@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261002-EPIC-SESSION-LAYER-OPERATIONS
-phase: open
+phase: done
 date: 2026-10-02
 tags: [ai, process-improvement, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, delivery]
 Epic C — Session-layer operations: a read-only view of what is in flight, and conservative worktree, branch and disk hygiene
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -125,4 +125,4 @@ Defined by child tickets.
 (Child tickets.)
 
 ## Completion Summary
-(Open.)
+Children M4A (`status.py`, retirement report, disk warning) and M4B (`prune_branches.py`) are done. AC1-6 met by `tests/tools/test_session_status.py` and `tests/tools/test_session_prune_branches.py`. AC6 reproduction: 241 branches → 65 merged-PR, 6 hint-only, 169 unique-commits, 1 skipped; more conservative than the 2026-10-02 hand run, by design. Not done, and outside this epic: a real `--execute` / `--remote` run, which is the owner's step.
