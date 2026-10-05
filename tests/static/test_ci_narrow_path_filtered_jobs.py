@@ -83,8 +83,11 @@ def _gate_job_name(jobs: dict) -> str:
     )
     if isinstance(needs, str):
         return needs
-    assert len(needs) == 1, f"expected perf-cert-arena to need exactly one gate job, got {needs!r}"
-    return needs[0]
+    # TCK-20261005-CI-SKIP-HEAVY-JOBS-ON-REGISTRY-ONLY-RESYNC added the independent `resync-gate`
+    # job to the gated jobs' needs; the path-filter gate under test here is still `changed-files`.
+    path_gates = [name for name in needs if name != "resync-gate"]
+    assert len(path_gates) == 1, f"expected perf-cert-arena to need exactly one path-filter gate job, got {needs!r}"
+    return path_gates[0]
 
 
 def _gate_job(jobs: dict) -> dict:
@@ -144,9 +147,14 @@ def test_no_other_fast_lane_job_gained_an_if_condition() -> None:
     jobs = _jobs()
     for job_name in _OUT_OF_SCOPE_JOBS:
         assert job_name in jobs, f"expected job {job_name!r} to still exist"
-        assert "if" not in jobs[job_name], (
+        condition = jobs[job_name].get("if")
+        if condition is None:
+            continue
+        # TCK-20261005-CI-SKIP-HEAVY-JOBS-ON-REGISTRY-ONLY-RESYNC: the only `if` an out-of-scope job may
+        # carry is the re-sync skip, which reads the `resync-gate` output and never the path-filter gate.
+        assert "resync-gate" in condition and "changed-files" not in condition, (
             f"job {job_name!r} is out of scope for this ticket but gained an 'if' condition "
-            f"({jobs[job_name].get('if')!r})"
+            f"({condition!r})"
         )
 
 
