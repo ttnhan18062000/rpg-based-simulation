@@ -3,8 +3,11 @@
 Scratch measurement scripts, kept so the numbers in `../investigation.md` can be reproduced (the ticket asked for them to
 be kept rather than rewritten). They hard-code the absolute worktree and scratchpad paths of the session that wrote them
 (`/mnt/data/Working/rpg-based-simulation/...`, `/tmp/claude-1000/...`); edit the `ROOT`/`S`/`OLD`/`NEW` variables first. Run
-one simulation at a time. Every number they produced is a **single run** on a tree without the dirty-set determinism fix, so
-treat counts as samples.
+one simulation at a time. The numbers cited in `../investigation.md` were re-taken on `origin/main` `544b1d341` (which contains the
+dirty-set determinism fix) with `remeasure.sh` (edit its path variables), plus `adj_probe.py` and `forced_brain.py` run by hand; a
+count is a "value" only where the identical run was repeated and matched, otherwise a "sample". The older scripts that still hard-code
+the first session's paths (`ab.sh`, `after_fix.sh`, `volume_arms.sh`, `oa_control.sh`) were run pre-fix and are kept for reference
+only; `remeasure.sh` supersedes `volume_arms.sh` and `oa_control.sh`.
 
 Trace and gates (this ticket):
 - `adj_probe.py <root> <world> <ticks>`: per tick, live entities holding an ACTIVE `defeat_enemy` objective within one tile

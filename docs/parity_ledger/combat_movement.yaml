@@ -4517,9 +4517,13 @@
   legacy_evidence: null
   proof_type: regression
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.68.
-  support_boundary: 'Effect sizes are single runs on a tree without the dirty-set
-    determinism fix: tile-swap ticks fall by two orders of magnitude on crowded_frontier,
-    frontier_living_world and urban_political, but decision-path attack counts are
-    noisy and crowded_frontier stays at 0 (the brain cadence and the flee gate are
-    the next gates). The intelligence.py redirection branch has no direct unit test;
-    only redirection.py does.'
+  support_boundary: 'Effect sizes were taken on origin/main 544b1d341 (dirty-set determinism
+    fix included): after-fix counts repeat exactly across two runs (values), the
+    clean-main control is one run (a sample). Tile-swap ticks fall by two orders of
+    magnitude on crowded_frontier, frontier_living_world and urban_political, but
+    decision-path attacks barely move (frontier_living_world 5 to 7) and crowded_frontier
+    stays at 0 (the brain cadence, the flee gate and BRACKETING repositioning moves,
+    which this change deliberately does not end, are the next gates). Opportunity-attack
+    counts on frontier_living_world (38 to 644) and crowded_frontier (488 to 283)
+    moved in opposite directions and are unexplained. The intelligence.py redirection
+    branch has no direct unit test; only redirection.py does.'

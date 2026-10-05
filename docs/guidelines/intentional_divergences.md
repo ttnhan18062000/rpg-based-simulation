@@ -2327,15 +2327,19 @@ untouched by §2.57's fix (out of that ticket's scope).
   (`MovementCandidateSelector.pursuit_reached_attack_range` / `pursuit_completion_update`). For an objective with
   `target_entity_id`, `intelligence.py` and `redirection.py` set no navigation point (they still claim the navigation, so the
   return-to-town fallback stays suppressed); the tactical pass resolves the live position.
-- **Not behavior-neutral; measured** (real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`, `LocalSequentialExecutor`; **single
-  runs on a branch without the `DirtySet` determinism fix, so every count is a sample**): tick-pairs in which two entities
-  exchanged tiles: `crowded_frontier` 975 to 2, `frontier_living_world` 1809 to 2, `urban_political` 978 to 3; `dungeon_crawl` unchanged
-  (1 to 1). Decision-path `execute_attack` / `resolve_attack`, `frontier_living_world`: 5 / 1 before, 9 / 7 with the dispatch change alone,
-  4 / 4 with the redirection change added (the two runs differ by more than the change can explain, so no trend is claimed).
-  **`crowded_frontier` decision-path attacks remain 0**: the next gates are the 10-tick brain cadence and, measured, the flee gate
-  (143 of 147 forced decisions with a live hostile adjacent were `PANIC_RETREAT`, driven entirely by regional trauma; see the ticket).
-  Incidental opportunity attacks (`resolve_multi_attack(..., is_opportunity_attack=True)`), unchanged by this change:
-  `urban_political` 71 / 72, `dungeon_crawl` 24 / 24.
+- **Not behavior-neutral; measured** (real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`, `LocalSequentialExecutor`; taken on
+  `origin/main` `544b1d341`, which contains the `DirtySet` determinism fix. Before = a clean `origin/main` worktree, one run, a
+  sample; after = this change, two identical runs per world, a value): tick-pairs in which two entities exchanged tiles:
+  `crowded_frontier` 975 to 2, `frontier_living_world` 1809 to 1, `urban_political` 978 to 3; `dungeon_crawl` unchanged (1 to 1).
+  Decision-path `execute_attack` calls, `frontier_living_world`: 5 to 7 (non-opportunity `resolve_attack` 1 to 3); `dungeon_crawl`
+  4 to 4; `crowded_frontier` 0 to 0. **`crowded_frontier` decision-path attacks remain 0**, and the tactical pass is still not called in
+  281 of 281 adjacent-to-live-target samples (1953 of 1953 before). The next gates are the 10-tick brain cadence, the flee gate
+  (forced read-only decisions with a live hostile adjacent, `crowded_frontier`, one run: 141 of 353 `PANIC_RETREAT`, 194 `BRACKETING`,
+  15 `ATTACK`; regional trauma is present in every recomputed flee), and `BRACKETING` repositioning moves, which this change
+  deliberately does not end (see the ticket and `TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION`).
+  Incidental opportunity attacks (`resolve_multi_attack(..., is_opportunity_attack=True)`): `urban_political` 71 to 72 and
+  `dungeon_crawl` 24 to 24 are unchanged, but `frontier_living_world` 38 to 644 and `crowded_frontier` 488 to 283 moved, in opposite
+  directions, and **the mechanism is unexplained**.
 - **Rationale**: **Bug Fix** (a task with no termination condition, and a writer re-asserting a stale snapshot), with **Unified** for the
   single completion helper shared by both dispatchers.
 - **Verification**: `tests/unit/engine/test_pursuit_completion.py` (the helper, both dispatchers, and the cases that must not change:

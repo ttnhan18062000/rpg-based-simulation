@@ -19,7 +19,7 @@ tags: [combat, strategy, cognition]
   `has_nav_update` claim fails exactly the last test. The `intelligence.py` redirection branch has no direct unit test.
 - Wide sweep (certification, regression, architecture, engine, integrity, mechanic_scenarios, scenarios, integration/optimization,
   unit core/engine/domains/strategic/combat/tactical/world/systems, `-m "not slow"`) on the final tree.
-- Measurement: the probes in `probes/` before and after, on five worlds, single runs, caveat stated.
+- Measurement: the probes in `probes/` before (clean `origin/main`) and after, on four worlds, re-taken on `origin/main` `544b1d341` (determinism fix included); after-fix runs repeated twice (values), control and read-only probes one run (samples), labelled in `investigation.md`.
 
 ## Proof Plan
 

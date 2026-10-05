@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK
-phase: implement
+phase: done
 date: 2026-10-05
 tags: [combat, strategy, cognition]
 ---
@@ -17,7 +17,7 @@ and dispatches **zero** decision-path attacks — the starvation chain's headlin
 #291 and the entity-target fix
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -90,20 +90,27 @@ enough to trace exactly and may be a different defect from the zero-dispatch cas
   while that is open. Claim before editing.
 
 ## Acceptance Criteria
-- [ ] One `crowded_frontier` sample traced end-to-end from "entity within 1 tile of live target with
-      an ACTIVE `defeat_enemy` objective" to the tactical pass's actual return value, with the
-      branch that terminates it named by `file:line` at a stated commit.
-- [ ] Scope 3's distinction is answered explicitly: the attack is **rejected by X**, or **never
-      attempted because Y**. An answer of "never attempted" must name the condition that was not met.
-- [ ] Scope 2 answered: one defect or two, with the evidence.
-- [ ] The decision-path attack count is re-measured after any fix, on both worlds, both reported
-      whatever they are — including if the count stays at zero.
-- [ ] The measurement uses live holders only and a counter whose scope is stated. The existing
-      counter counts decision-path dispatches and `resolve_attack` calls and is **silent on the
-      incidental mechanic**, so it cannot speak to total combat volume; any claim about total volume
-      needs a counter that says so.
-- [ ] Determinism: canonical/replay/fingerprint sweep green, any moved hash explained not
-      regenerated.
+- [x] One `crowded_frontier` sample traced end-to-end (entity 19 against 15: tactical pass at tick 1, sticky pursuit
+      `ENTITY_MOVE` from tick 3, pass never called again, tile swap every tick), with the terminating branch named
+      (`DeterministicScheduler.select_work` sticky-task law plus the two `ENTITY_MOVE` dispatchers, `executor.py` and
+      `worker_logic.py`); see `investigation.md`. Line numbers are in the investigation at this branch's commit.
+- [x] Scope 3 answered: **never attempted**, not rejected. The unmet condition is that `evaluate_entity_intent` is not called
+      (1953 of 1953 adjacent-to-live-target samples on clean `origin/main`, readiness at least 100, re-taken post-`#344`).
+- [x] Scope 2 answered: two defects. The `OUT_OF_RANGE` sticky `ATTACK` re-dispatch and the friendly-fire verdict mismatch are
+      first-pass, pre-`#344` leads, filed as their own tickets by the planner (measure first, not carried as values).
+- [x] The decision-path attack count re-measured after the fix on both worlds, reported as measured: `crowded_frontier` 0 to 0,
+      `frontier_living_world` 5 to 7 (non-opportunity `resolve_attack` 1 to 3). The count stays at zero on `crowded_frontier`;
+      no engagement improvement is claimed.
+- [x] Counter scope stated: decision-path `execute_attack` calls, `resolve_attack` split by opportunity or not, and mutual tile-swap
+      tick-pairs; the opportunity-attack counter is reported separately and is not total combat volume. Live holders only for
+      the adjacency probe.
+- [x] Determinism: the wide sweep (certification, regression, architecture, engine, integrity, mechanic_scenarios, scenarios,
+      integration, unit core/engine/domains/strategic/combat/tactical/world/systems/tools, `tests/tools`; `-m "not slow"`) ran on
+      the tree rebased onto `bfe7b19dc` and gave 4 failed, 8271 passed; the failures were the 60 s conftest timeout on
+      `test_behavioral_5k_regression` and `test_long_run_stability` (both red on clean `origin/main`, the latter
+      measured), a `REGISTRY.yaml` drift (regenerated), and `test_aggressive_budget_warning` (passes after the rebase onto
+      `544b1d341`). No hash was regenerated. The final rebase onto `544b1d341` brought in a comment-only `src/` edit and
+      agent tooling, and the three non-timeout tests were re-run on that tree; the whole sweep was not repeated.
 
 ## Related Tickets
 - `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` — **this sits on the chain's critical path.** The
@@ -148,13 +155,35 @@ enough to trace exactly and may be a different defect from the zero-dispatch cas
   about what blocks it.
 
 ## Implementation Notes
-_(not started)_
+The question's answer is a three-gate chain, now four (`investigation.md`): (1) a sticky pursuit `ENTITY_MOVE` with no completion
+condition (fixed here); (2) the 10-tick brain cadence in `scheduler.py` (contested, untouched); (3) the flee gate, regional trauma
+fed into panic (own ticket, not changed); (4) `BRACKETING` repositioning moves, which the fix deliberately does not end (own ticket).
+Fix: `MovementCandidateSelector.pursuit_reached_attack_range` / `pursuit_completion_update` end a `PURSUE` `ENTITY_MOVE` whose live
+target is in attack reach (idle encoding, navigation target cleared), wired into both dispatchers; the strategic redirection writers set
+no navigation point for an entity-typed objective (they still claim the navigation). Non-`PURSUE` modes, dead and missing targets
+are unchanged. The first-pass measurements were pre-`#344`; every figure cited was re-taken on `origin/main` `544b1d341` and labelled
+value or sample. One first-pass claim died on the re-measurement: `PANIC_RETREAT` 143 of 147 (97%) became 141 of 353 (40%) with
+194 `BRACKETING`; the planner withdrew "everyone flees" and "dominant gate" accordingly.
 
 ## Test Summary
-_(not started)_
+`tests/unit/engine/test_pursuit_completion.py` (13) and `tests/unit/strategic/test_redirection_entity_objective.py` (3), each with a
+disabling control; all pass on the rebased tree. Wide sweep as in Acceptance Criteria. Base-red and not caused here:
+`test_behavioral_5k_regression` and `test_long_run_stability` (60 s conftest timeout; 60.25 s here, 60.23 s on a clean
+`origin/main` worktree). Lint tools (ruff, mypy, complexipy, ast-grep, prek) are absent locally; CI is the first lint run.
 
 ## Files Changed
-_(not started)_
+`src/engine/candidate_selector.py`, `src/engine/executor.py`, `src/engine/worker_logic.py`,
+`src/systems/strategic_systems/intelligence.py`, `src/systems/strategic_systems/redirection.py`;
+tests `tests/unit/engine/test_pursuit_completion.py`, `tests/unit/strategic/test_redirection_entity_objective.py`;
+docs `docs/engine/contracts/tactical_contract.md`, `docs/engine/kernel.md`, `docs/guidelines/intentional_divergences.md` (2.68),
+`docs/parity_ledger/combat_movement.yaml` (`COMB-329`), `docs/plans/rpg_design_roadmap/rpg_implementer_lane_split.md`,
+`docs/REGISTRY.yaml` (regenerated); staging artifacts moved to `agent-working/stored_artifacts/`.
 
 ## Completion Summary
-_(not started)_
+Entities that reached a live target no longer sit in a pursuit move that never ends: tile-swap tick-pairs fall from 975 to 2
+(`crowded_frontier`), 1809 to 1 (`frontier_living_world`), 978 to 3 (`urban_political`), unchanged where there was none to fix.
+Decision-path attacks barely move (`frontier_living_world` 5 to 7, `crowded_frontier` 0 to 0), so **no engagement improvement is
+claimed**: gates 2 to 4 remain. Unexplained and reported as such: opportunity attacks `frontier_living_world` 38 to 644 and
+`crowded_frontier` 488 to 283. Pre-existing on main, not caused here: 10 `LAW-OCCUPANCY-COLLISION` errors on both trees. Follow-ups filed
+by the planner: sticky `ATTACK` out of range, hostile-list/legality disagreement, social-contract objective target, the
+trauma-to-panic mapping, `BRACKETING` moves, the occupancy-collision hard law.
