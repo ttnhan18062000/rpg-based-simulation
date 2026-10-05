@@ -218,6 +218,30 @@ touches `registries/mechanisms.yaml`.
 `T01` lists this ticket by shape (zero-caller group) but does **not** classify it; this note is its single
 disposition.
 
+### 2026-10-05 — `rpg-implementer-2` re-check before any build: stopped at the rule owner, nothing implemented
+
+Dispatched with "first locate where `region.hazard_level` is set". Located, and re-verified the producer on the current tree:
+- **`hazard_level` is set in three places:** authored on the region spec and copied by `src/worldbuilding/compiler.py:476`
+  (`hazard_level=getattr(r_spec, "hazard_level", 0.0)`); generated worlds scale it by `danger_level`
+  (`src/worldgeneration/generator.py:107,114`); and `src/engine/world_dynamics.py:119-123` raises it by `+0.01`
+  (cap `1.0`) **only while the region's trauma exceeds 50**. Authored values above `0.5` are common (the 2026-09-15
+  note), so the `> 0.5` half of the producer's condition is reachable from authoring alone.
+- **The runtime growth path is itself starved by the sibling ticket:** trauma above 50 is what
+  `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` says never happens, so hazard does not grow at runtime either.
+- **Producer still has zero callers:** `grep -rn apply_calamity_consequences src/` returns only its definition
+  (`src/world/calamity.py:80`) and one comment (`src/world/displacement.py:27`).
+- **No governing rule exists for the producer.** `docs/mechanics/05_world_evolution.md` mentions `calamity_intensity` only
+  as the `> 0.3` spawn filter (L457); `docs/world_rules/space-environment/environment.md:51` only *reads* it for the
+  hazard drain; no accepted catalog Rule says what raises it. So "wire the dead method" would be inventing a
+  world-semantics rule, and wiring the narrow `hero death in hazard > 0.5` trigger would still leave it starved in the
+  worlds measured (no heroes composed, or heroes hard-coded to a zero-hazard `hometown`).
+- `tests/architecture/test_calamity_intensity_producer_unwired.py` is a deliberate "welcome failure": wiring a caller
+  flips it and obliges the registry-label correction owned by `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION`.
+
+Decision requested from the rule owner (via the planner), per this ticket's own acceptance criteria: define what raises
+`calamity_intensity`, or retire the chain. Options and a recommendation are in the message that accompanied this note.
+No code was changed.
+
 ## Test Summary
 _(not started)_
 
