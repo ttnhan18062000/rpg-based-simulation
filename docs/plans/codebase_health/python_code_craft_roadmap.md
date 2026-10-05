@@ -274,6 +274,11 @@ Recorded 2026-10-02:
     ship in one branch and one PR, merged on or after 2026-10-18: one announcement to the other planners, one
     branch-protection change. Work and soak-review drafts start 2026-10-04; each review is finalized after its
     window ends. Brief `python_code_craft_gates_flip_ticket_brief.md`.
+    **Outcome (2026-10-05):** the owner merged the flip batch (PR #329, squash `c8c355459`) at 2026-10-05T14:47:13Z,
+    13 days before the planned 2026-10-18, so the gates are blocking on `main` from that date and the soak windows
+    were cut short (about 2 days of the planned 14 for the ratchet, about 1 day for the M5 checks). The #329 squash
+    title still says "merge on or after 2026-10-18"; that is wrong as history and is not rewritten. The soak reviews
+    record what was measured and say plainly that the window was not completed.
 19. **SARIF stays advisory** (2026-10-04). The `code-health-sarif` job is changed-line feedback only: it exits 0 on
     findings by design, skips fork PRs, and the ratchet already blocks new violations. Its `continue-on-error`
     stays permanently; it is not one of the gates the flip makes blocking.

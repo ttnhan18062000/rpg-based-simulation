@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-PYTHON-CODE-CRAFT-GATES-EPIC
-phase: open
+phase: done
 date: 2026-10-03
 tags: [delivery, planning]
 ---
@@ -15,7 +15,7 @@ tags: [delivery, planning]
 M4: Python Code Craft gates — advisory CI ratchet, SARIF feedback, mypy baseline, prek, type-checker trial
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -40,9 +40,9 @@ Roadmap milestone M4 (python_code_craft_roadmap.md Section 7). M1 to M3 closed u
 - Roadmap M5, M6, M7
 
 ## Acceptance Criteria
-- [ ] Children 1 to 5 in agent-working/tickets/done/
-- [ ] Child 6 (flip) is filed with the soak end date and either done or explicitly carried forward by the owner
-- [ ] Roadmap Section 7 marks M4 done or names what carries forward
+- [x] Children 1 to 5 in agent-working/tickets/done/
+- [x] Child 6 (flip) is filed with the soak end date and either done or explicitly carried forward by the owner
+- [x] Roadmap Section 7 marks M4 done or names what carries forward
 
 ## Related Tickets
 - TCK-20261002-PYTHON-CODE-CRAFT-EPIC
@@ -71,7 +71,14 @@ None.
 - **Progress (PR #305, CI run 37134889219 green):** children 1 to 5 are done (`CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB`, `MYPY-BASELINE-ADVISORY`, `CODE-HEALTH-SARIF-PR-FEEDBACK`, `PREK-GIT-HOOKS-OPT-IN`, `TYPE-CHECKER-TRIAL`). Child 6 (`CODE-HEALTH-GATES-FLIP-BLOCKING`) stays BLOCKED until the soak ends; this epic closes after it. Open follow-up: write the real soak start (the PR #305 merge date) and end (+14 days) into this epic, roadmap Section 7 and the flip ticket in the first commit of the next codebase batch.
 
 ## Test Summary
+Scope-only epic: no code of its own. Its children's tests ran in their own PRs; the flip child's CI at merge (PR #329) was 19 checks pass, 3 skipped, none failing.
 
 ## Files Changed
+None directly (see the children).
 
 ## Completion Summary
+Closed 2026-10-05 after all six M4 children reached `agent-working/tickets/done/`:
+- `TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB`, `-SARIF-PR-FEEDBACK`, `MYPY-BASELINE-ADVISORY`, `PREK-GIT-HOOKS-OPT-IN`, `TYPE-CHECKER-TRIAL` (PR #305 and follow-ups, 2026-10-03/04)
+- `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING` (PR #329, merged by the owner 2026-10-05T14:47:13Z, with the two M5 flip tickets)
+
+The soak was planned as 14 days (to 2026-10-17); the flip merged after about 2, by owner decision, so the gates are blocking from 2026-10-05. The soak review says so plainly. Roadmap Section 7/8 records the outcome. Adding `Code health` and `Type check` as required checks in ruleset 14220945 is the owner's separate step.

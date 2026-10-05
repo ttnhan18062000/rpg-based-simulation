@@ -7,11 +7,15 @@ date: 2026-10-04
 tags: [delivery, planning]
 ---
 
-# Python Code Craft: M4 gates soak review (DRAFT, finalize after 2026-10-17)
+# Python Code Craft: M4 gates soak review (FINAL, window cut short by the early merge)
 
-Ticket `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING`. Window for the ratchet: 2026-10-03T16:47:13Z (PR #305 merged) to
-2026-10-17. **This is a draft written on 2026-10-04 from the first ~12 hours of the window; every count below is
-re-measured on the final day and the "Final" column filled in before the flip PR merges.** Method: `gh run list` for
+Ticket `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING`. Planned window for the ratchet: 2026-10-03T16:47:13Z (PR #305
+merged) to 2026-10-17. **The window was not completed.** The owner merged the flip batch (PR #329, squash `c8c355459`) on
+2026-10-05T14:47:13Z, 13 days early, so the measured window is about 2 of the planned 14 days (about 1 day for mypy,
+whose window began 2026-10-04T04:59Z). The #329 squash title says "merge on or after 2026-10-18"; that is wrong as
+history and is left as is. The "Draft" column below is the 2026-10-04 reading; the "Final" column was measured on
+2026-10-05 over the runs that exist (see "Final measurement"). The verdict is therefore about a short window, not the
+two weeks the plan asked for. Method: `gh run list` for
 `test.yml` runs created since #305's merge; per run, the check-run warning annotations of the `Code health (advisory)`
 and `Type check (informational)` jobs (step conclusions are useless here: a `continue-on-error` step reports
 `success`). Run logs are not readable from this environment (log hosts blocked), so a finding's identity is taken
@@ -21,14 +25,14 @@ from the annotation counts and the PR it ran on, not from the job summary.
 
 | Measure | Draft | Final |
 |---|---|---|
-| `test.yml` runs in the window (PR + main pushes) | 69, of which 68 ran the `code-health` job (1 skipped) | |
-| Runs where the ratchet step exited 1 (new/worse violations) | 4: goal-dispatch-impl (PR #291) 3 violations; perf-m1-partial-lift (PR #319) 2 violations on two pushes; `main` after #319 merged, 2 violations | |
-| Runs where the ratchet could not run (exit 2, "could not run" warning) | 0 | |
-| Runs with new mypy errors / mypy could not run | 0 / 0 (no `mypy-baseline` warning on any `Type check (informational)` job) | |
-| Registry reseeds on `main` | 1: #315 added 111 `ast_grep` rows with the rule pack (new tool rows, no existing row reseeded) | |
-| mypy-baseline syncs | 0 after the first commit of the baseline | |
-| Rows reviewed (`reviewed: true`) / total rows | 27 / 3723 (the 27 accepted violations below; 0 / 3724 before 2026-10-05) | |
-| Rows tightened or deleted by the flip | 6 tightened, 4 deleted (all paid-off debt, evidence below); then on 2026-10-05 17 more lowered and 2 deleted | |
+| `test.yml` runs in the window (PR + main pushes) | 69, of which 68 ran the `code-health` job (1 skipped) | 163 runs created 2026-10-03T16:47Z to 2026-10-05T14:47Z (116 pull_request, 45 push, 2 schedule); 162 of them have job rows (2 job-list calls returned HTTP 502 and were not retried) |
+| Runs where the ratchet step exited 1 (new/worse violations) | 4: goal-dispatch-impl (PR #291) 3 violations; perf-m1-partial-lift (PR #319) 2 violations on two pushes; `main` after #319 merged, 2 violations | 75 runs reported new/worse violations (53 on 23 pull-request branches, 22 on `main`; the throwaway demo branch excluded). Most are the 27 rows other domains added and the owner accepted (below), which stayed on `main` and so re-failed every later run |
+| Runs where the ratchet could not run (exit 2, "could not run" warning) | 0 | 0 for the ratchet. 30 runs showed `mypy-baseline could not run ... exited 3` (the `mypy_gate` exit-code defect, below), 2026-10-05T04:52Z to 14:16Z |
+| Runs with new mypy errors / mypy could not run | 0 / 0 (no `mypy-baseline` warning on any `Type check (informational)` job) | 41 / 30 (see the two later sections) |
+| Registry reseeds on `main` | 1: #315 added 111 `ast_grep` rows with the rule pack (new tool rows, no existing row reseeded) | 1 (unchanged) |
+| mypy-baseline syncs | 0 after the first commit of the baseline | 1, in the flip branch on 2026-10-05 (3 added, 9 dropped) |
+| Rows reviewed (`reviewed: true`) / total rows | 27 / 3723 (the 27 accepted violations below; 0 / 3724 before 2026-10-05) | 27 / 3723 |
+| Rows tightened or deleted by the flip | 6 tightened, 4 deleted (all paid-off debt, evidence below); then on 2026-10-05 17 more lowered and 2 deleted | 23 lowered and 6 deleted in total |
 
 ## Findings and dispositions
 
@@ -40,7 +44,7 @@ from the annotation counts and the PR it ran on, not from the job summary.
    Disposition: real. Fixed by perf in #320 (`c049b9d65`); the row for `validate_result_batch` is now "gone" and is
    deleted by this flip. `main` was red on the advisory job between the two merges, which a required check would have
    prevented; this is the argument for fixing before the flip, not a false positive.
-3. **False-positive classes found: none so far.** To confirm at the end of the window.
+3. **False-positive classes found: none** in the measured window (about 2 days). Not confirmed over the planned 14: a rare false positive would not have had time to appear.
 4. **Tool noise:** the `Node.js 20 is deprecated` annotation on 68 runs (`actions/setup-node@v4`); a one-off
    `setup-uv` cache-reservation warning on one `Type check` run. Neither changes a result.
 
@@ -153,8 +157,21 @@ Tightened in the same commit (improved on `main`): `core/dirty.py` `mark_from_up
 
 - A `reason` field on registry rows (and a reviewed-row command that takes it): this window's 27 accepted rows keep their PR and domain only in this document and `handoffs/handoff_to_rpg.md`. The planner judged the docs enough for a one-off (2026-10-05); revisit if accepting debt becomes routine.
 
-## Verdict (draft)
+## Final measurement (2026-10-05)
 
-No false-positive class and no exit-2 run in the first part of the window; every failing run was a real new or worse
+Source: `gh run list --workflow test.yml` for runs created 2026-10-03T16:47:13Z to 2026-10-05T14:47:13Z, then per run the
+`Code health` and `Type check` job annotations (warning level) via the check-runs API. Counts are runs, not distinct
+findings. The 75 ratchet-failing runs are dominated by the 27 accepted rows persisting on `main`; the 22 `main` runs
+and the pull-request runs that inherited them are the same debt seen repeatedly, not 75 independent defects. The
+41 mypy runs with new errors are runs that reported `mypy-baseline: N new errors` (N=1 before the 3 accepted errors landed; not
+broken down further); the 30
+"could not run" runs are the `mypy_gate` exit-code defect, which only produced a misleading advisory message.
+
+## Verdict (final)
+
+Short window, so weak evidence for "no false positives" and strong evidence for "the ratchet and mypy gate catch real
+regressions": 0 false positives and 0 ratchet exit-2 runs in about 2 days, 1 real tool defect (`mypy_gate` exit code,
+fixed before the flip), and 27 + 3 real violations that other domains added while the gates were advisory.
+First-draft verdict follows. No false-positive class and no exit-2 run in the first part of the window; every failing run was a real new or worse
 violation, including the 27 that other domains' PRs added to `main` and the owner accepted as reviewed rows on 2026-10-05 (evidence for the flip: the blocking ratchet would have stopped each at its own CI). The flip is on track, subject to the final-day re-measurement and the precondition that `main` is
 ratchet-clean and mypy-gate-clean at the flip commit (re-run right before merge).
