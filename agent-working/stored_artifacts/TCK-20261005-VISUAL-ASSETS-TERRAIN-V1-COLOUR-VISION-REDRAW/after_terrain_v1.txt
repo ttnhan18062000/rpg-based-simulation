@@ -1,0 +1,7273 @@
+{
+  "rule": {
+    "s1": "dE_tile >= dE_fill - 2.0 or dE_tile >= 10.0",
+    "s2": "texture >= 2.0"
+  },
+  "tiles": 23,
+  "pairs": 253,
+  "pair_visions": 1012,
+  "s1": true,
+  "s2": true,
+  "result": "PASS",
+  "wording": "better",
+  "failing_pair_visions": [],
+  "tiles_below_texture": [],
+  "min_dE_tile": 0.857,
+  "textures": {
+    "terrain.bridge": {
+      "normal": 11.145,
+      "protan": 11.173,
+      "deutan": 11.128,
+      "tritan": 11.144
+    },
+    "terrain.camp": {
+      "normal": 7.06,
+      "protan": 6.853,
+      "deutan": 7.189,
+      "tritan": 7.042
+    },
+    "terrain.cave": {
+      "normal": 6.184,
+      "protan": 6.182,
+      "deutan": 6.186,
+      "tritan": 6.183
+    },
+    "terrain.desert": {
+      "normal": 7.534,
+      "protan": 7.562,
+      "deutan": 7.517,
+      "tritan": 7.534
+    },
+    "terrain.dungeon_entrance": {
+      "normal": 12.882,
+      "protan": 11.793,
+      "deutan": 13.525,
+      "tritan": 12.897
+    },
+    "terrain.farmland": {
+      "normal": 17.971,
+      "protan": 18.744,
+      "deutan": 17.445,
+      "tritan": 17.843
+    },
+    "terrain.floor": {
+      "normal": 9.273,
+      "protan": 9.296,
+      "deutan": 9.258,
+      "tritan": 9.275
+    },
+    "terrain.forest": {
+      "normal": 5.25,
+      "protan": 5.384,
+      "deutan": 5.151,
+      "tritan": 5.218
+    },
+    "terrain.grassland": {
+      "normal": 8.037,
+      "protan": 7.938,
+      "deutan": 8.103,
+      "tritan": 8.039
+    },
+    "terrain.graveyard": {
+      "normal": 5.447,
+      "protan": 5.357,
+      "deutan": 5.499,
+      "tritan": 5.41
+    },
+    "terrain.jungle": {
+      "normal": 8.644,
+      "protan": 8.745,
+      "deutan": 8.564,
+      "tritan": 8.556
+    },
+    "terrain.lava": {
+      "normal": 15.291,
+      "protan": 13.924,
+      "deutan": 16.098,
+      "tritan": 15.206
+    },
+    "terrain.mountain": {
+      "normal": 10.157,
+      "protan": 10.179,
+      "deutan": 10.144,
+      "tritan": 10.162
+    },
+    "terrain.road": {
+      "normal": 8.091,
+      "protan": 8.081,
+      "deutan": 8.097,
+      "tritan": 8.085
+    },
+    "terrain.ruins": {
+      "normal": 9.182,
+      "protan": 9.194,
+      "deutan": 9.174,
+      "tritan": 9.166
+    },
+    "terrain.sanctuary": {
+      "normal": 5.761,
+      "protan": 5.736,
+      "deutan": 5.778,
+      "tritan": 5.751
+    },
+    "terrain.shallow_water": {
+      "normal": 7.308,
+      "protan": 7.061,
+      "deutan": 7.475,
+      "tritan": 7.009
+    },
+    "terrain.snow": {
+      "normal": 7.463,
+      "protan": 7.396,
+      "deutan": 7.508,
+      "tritan": 7.452
+    },
+    "terrain.swamp": {
+      "normal": 5.859,
+      "protan": 5.909,
+      "deutan": 5.816,
+      "tritan": 5.809
+    },
+    "terrain.town": {
+      "normal": 13.316,
+      "protan": 13.354,
+      "deutan": 13.295,
+      "tritan": 13.315
+    },
+    "terrain.volcanic": {
+      "normal": 10.411,
+      "protan": 9.53,
+      "deutan": 10.918,
+      "tritan": 10.253
+    },
+    "terrain.wall": {
+      "normal": 12.845,
+      "protan": 12.83,
+      "deutan": 12.855,
+      "tritan": 12.837
+    },
+    "terrain.water": {
+      "normal": 7.101,
+      "protan": 6.996,
+      "deutan": 7.175,
+      "tritan": 6.842
+    }
+  },
+  "pair_table": [
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.camp",
+      "normal": {
+        "dE_tile": 30.693,
+        "dE_fill": 30.246,
+        "margin": 0.447,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 19.685,
+        "dE_fill": 19.4,
+        "margin": 0.285,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 15.347,
+        "dE_fill": 15.188,
+        "margin": 0.159,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 33.525,
+        "dE_fill": 33.138,
+        "margin": 0.387,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.cave",
+      "normal": {
+        "dE_tile": 30.518,
+        "dE_fill": 30.221,
+        "margin": 0.297,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 25.244,
+        "dE_fill": 25.056,
+        "margin": 0.188,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 21.369,
+        "dE_fill": 21.265,
+        "margin": 0.105,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 22.324,
+        "dE_fill": 22.074,
+        "margin": 0.25,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.desert",
+      "normal": {
+        "dE_tile": 21.451,
+        "dE_fill": 21.303,
+        "margin": 0.148,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 18.804,
+        "dE_fill": 18.806,
+        "margin": -0.002,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 17.861,
+        "dE_fill": 17.94,
+        "margin": -0.079,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 23.443,
+        "dE_fill": 23.225,
+        "margin": 0.218,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.dungeon_entrance",
+      "normal": {
+        "dE_tile": 41.443,
+        "dE_fill": 41.204,
+        "margin": 0.239,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 18.147,
+        "dE_fill": 17.973,
+        "margin": 0.173,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 8.085,
+        "dE_fill": 8.062,
+        "margin": 0.023,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 45.254,
+        "dE_fill": 45.125,
+        "margin": 0.129,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.farmland",
+      "normal": {
+        "dE_tile": 25.298,
+        "dE_fill": 25.656,
+        "margin": -0.359,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 26.194,
+        "dE_fill": 26.563,
+        "margin": -0.369,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 24.852,
+        "dE_fill": 25.138,
+        "margin": -0.286,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 12.464,
+        "dE_fill": 12.452,
+        "margin": 0.012,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.floor",
+      "normal": {
+        "dE_tile": 33.591,
+        "dE_fill": 33.692,
+        "margin": -0.1,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 31.902,
+        "dE_fill": 31.919,
+        "margin": -0.016,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 30.37,
+        "dE_fill": 30.348,
+        "margin": 0.022,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 28.404,
+        "dE_fill": 28.351,
+        "margin": 0.053,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.forest",
+      "normal": {
+        "dE_tile": 20.58,
+        "dE_fill": 20.893,
+        "margin": -0.314,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 19.664,
+        "dE_fill": 20.144,
+        "margin": -0.48,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 18.807,
+        "dE_fill": 19.396,
+        "margin": -0.589,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 17.022,
+        "dE_fill": 17.724,
+        "margin": -0.702,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.grassland",
+      "normal": {
+        "dE_tile": 18.566,
+        "dE_fill": 19.035,
+        "margin": -0.469,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 19.319,
+        "dE_fill": 19.826,
+        "margin": -0.508,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 17.233,
+        "dE_fill": 17.699,
+        "margin": -0.466,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 3.564,
+        "dE_fill": 3.69,
+        "margin": -0.126,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.graveyard",
+      "normal": {
+        "dE_tile": 26.487,
+        "dE_fill": 26.42,
+        "margin": 0.068,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 20.42,
+        "dE_fill": 20.287,
+        "margin": 0.133,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 16.305,
+        "dE_fill": 16.15,
+        "margin": 0.155,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 17.069,
+        "dE_fill": 17.155,
+        "margin": -0.086,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.jungle",
+      "normal": {
+        "dE_tile": 33.645,
+        "dE_fill": 33.778,
+        "margin": -0.132,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 30.787,
+        "dE_fill": 30.933,
+        "margin": -0.146,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 24.905,
+        "dE_fill": 24.975,
+        "margin": -0.07,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 17.201,
+        "dE_fill": 17.217,
+        "margin": -0.017,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.lava",
+      "normal": {
+        "dE_tile": 61.961,
+        "dE_fill": 62.048,
+        "margin": -0.087,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 30.478,
+        "dE_fill": 30.65,
+        "margin": -0.172,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 38.368,
+        "dE_fill": 38.541,
+        "margin": -0.172,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 67.905,
+        "dE_fill": 67.692,
+        "margin": 0.214,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.mountain",
+      "normal": {
+        "dE_tile": 19.458,
+        "dE_fill": 19.594,
+        "margin": -0.136,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 16.718,
+        "dE_fill": 16.874,
+        "margin": -0.156,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 14.623,
+        "dE_fill": 14.771,
+        "margin": -0.148,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 17.386,
+        "dE_fill": 17.315,
+        "margin": 0.071,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.road",
+      "normal": {
+        "dE_tile": 14.628,
+        "dE_fill": 14.526,
+        "margin": 0.102,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 5.923,
+        "dE_fill": 5.832,
+        "margin": 0.092,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 6.585,
+        "dE_fill": 6.541,
+        "margin": 0.044,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 18.244,
+        "dE_fill": 18.154,
+        "margin": 0.09,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 18.145,
+        "dE_fill": 17.924,
+        "margin": 0.222,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 12.04,
+        "dE_fill": 11.995,
+        "margin": 0.045,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 10.369,
+        "dE_fill": 10.43,
+        "margin": -0.061,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 20.645,
+        "dE_fill": 20.478,
+        "margin": 0.167,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 26.287,
+        "dE_fill": 25.762,
+        "margin": 0.525,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 24.381,
+        "dE_fill": 23.972,
+        "margin": 0.409,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 23.326,
+        "dE_fill": 23.035,
+        "margin": 0.291,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 15.058,
+        "dE_fill": 14.811,
+        "margin": 0.247,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 31.287,
+        "dE_fill": 30.848,
+        "margin": 0.439,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 29.792,
+        "dE_fill": 29.391,
+        "margin": 0.401,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 30.86,
+        "dE_fill": 30.494,
+        "margin": 0.366,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 14.179,
+        "dE_fill": 14.207,
+        "margin": -0.028,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 50.648,
+        "dE_fill": 50.695,
+        "margin": -0.046,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 50.126,
+        "dE_fill": 50.206,
+        "margin": -0.081,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 49.556,
+        "dE_fill": 49.637,
+        "margin": -0.081,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 47.275,
+        "dE_fill": 47.386,
+        "margin": -0.111,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 31.582,
+        "dE_fill": 31.25,
+        "margin": 0.332,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 28.481,
+        "dE_fill": 28.218,
+        "margin": 0.263,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 26.198,
+        "dE_fill": 25.978,
+        "margin": 0.22,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 22.235,
+        "dE_fill": 22.207,
+        "margin": 0.028,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 10.348,
+        "dE_fill": 10.232,
+        "margin": 0.116,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 9.869,
+        "dE_fill": 9.689,
+        "margin": 0.18,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 10.417,
+        "dE_fill": 10.254,
+        "margin": 0.163,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 10.53,
+        "dE_fill": 10.498,
+        "margin": 0.033,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 38.615,
+        "dE_fill": 38.493,
+        "margin": 0.122,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 20.683,
+        "dE_fill": 20.662,
+        "margin": 0.021,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 21.032,
+        "dE_fill": 21.194,
+        "margin": -0.162,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 45.332,
+        "dE_fill": 45.213,
+        "margin": 0.119,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 26.318,
+        "dE_fill": 25.945,
+        "margin": 0.373,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 22.783,
+        "dE_fill": 22.517,
+        "margin": 0.265,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 20.532,
+        "dE_fill": 20.344,
+        "margin": 0.188,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 5.773,
+        "dE_fill": 5.585,
+        "margin": 0.188,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.bridge",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 38.148,
+        "dE_fill": 37.733,
+        "margin": 0.415,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 35.228,
+        "dE_fill": 34.845,
+        "margin": 0.384,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 36.124,
+        "dE_fill": 35.737,
+        "margin": 0.387,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 16.777,
+        "dE_fill": 16.745,
+        "margin": 0.032,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.cave",
+      "normal": {
+        "dE_tile": 14.839,
+        "dE_fill": 14.889,
+        "margin": -0.049,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 12.391,
+        "dE_fill": 12.49,
+        "margin": -0.098,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 14.922,
+        "dE_fill": 15.016,
+        "margin": -0.093,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 15.28,
+        "dE_fill": 15.245,
+        "margin": 0.035,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.desert",
+      "normal": {
+        "dE_tile": 16.242,
+        "dE_fill": 16.405,
+        "margin": -0.163,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 10.467,
+        "dE_fill": 10.887,
+        "margin": -0.42,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 6.317,
+        "dE_fill": 6.727,
+        "margin": -0.411,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 12.982,
+        "dE_fill": 12.764,
+        "margin": 0.218,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.dungeon_entrance",
+      "normal": {
+        "dE_tile": 15.892,
+        "dE_fill": 15.983,
+        "margin": -0.091,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 7.925,
+        "dE_fill": 7.831,
+        "margin": 0.094,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 7.436,
+        "dE_fill": 7.273,
+        "margin": 0.163,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 16.335,
+        "dE_fill": 16.46,
+        "margin": -0.125,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.farmland",
+      "normal": {
+        "dE_tile": 46.414,
+        "dE_fill": 46.376,
+        "margin": 0.038,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 41.154,
+        "dE_fill": 41.147,
+        "margin": 0.007,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 33.36,
+        "dE_fill": 33.372,
+        "margin": -0.012,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 34.634,
+        "dE_fill": 34.516,
+        "margin": 0.118,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.floor",
+      "normal": {
+        "dE_tile": 20.798,
+        "dE_fill": 20.681,
+        "margin": 0.116,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 13.39,
+        "dE_fill": 13.824,
+        "margin": -0.434,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 18.682,
+        "dE_fill": 18.983,
+        "margin": -0.301,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 25.525,
+        "dE_fill": 25.129,
+        "margin": 0.396,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.forest",
+      "normal": {
+        "dE_tile": 35.321,
+        "dE_fill": 34.236,
+        "margin": 1.084,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 16.758,
+        "dE_fill": 15.894,
+        "margin": 0.864,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 7.838,
+        "dE_fill": 7.6,
+        "margin": 0.239,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 33.238,
+        "dE_fill": 32.428,
+        "margin": 0.81,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.grassland",
+      "normal": {
+        "dE_tile": 39.79,
+        "dE_fill": 39.62,
+        "margin": 0.17,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 30.488,
+        "dE_fill": 30.612,
+        "margin": -0.124,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 21.669,
+        "dE_fill": 21.853,
+        "margin": -0.184,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 31.06,
+        "dE_fill": 30.601,
+        "margin": 0.459,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.graveyard",
+      "normal": {
+        "dE_tile": 16.309,
+        "dE_fill": 16.137,
+        "margin": 0.173,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 14.501,
+        "dE_fill": 14.506,
+        "margin": -0.005,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 15.8,
+        "dE_fill": 15.767,
+        "margin": 0.034,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 17.261,
+        "dE_fill": 16.774,
+        "margin": 0.487,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.jungle",
+      "normal": {
+        "dE_tile": 52.855,
+        "dE_fill": 52.552,
+        "margin": 0.303,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 34.834,
+        "dE_fill": 34.708,
+        "margin": 0.126,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 20.535,
+        "dE_fill": 20.461,
+        "margin": 0.073,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 41.352,
+        "dE_fill": 41.076,
+        "margin": 0.277,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.lava",
+      "normal": {
+        "dE_tile": 46.497,
+        "dE_fill": 46.826,
+        "margin": -0.329,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 34.135,
+        "dE_fill": 34.079,
+        "margin": 0.056,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 39.304,
+        "dE_fill": 39.281,
+        "margin": 0.023,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 40.822,
+        "dE_fill": 40.914,
+        "margin": -0.091,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.mountain",
+      "normal": {
+        "dE_tile": 14.934,
+        "dE_fill": 14.684,
+        "margin": 0.25,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 4.888,
+        "dE_fill": 5.018,
+        "margin": -0.13,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 6.728,
+        "dE_fill": 7.151,
+        "margin": -0.423,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 19.138,
+        "dE_fill": 18.946,
+        "margin": 0.192,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.road",
+      "normal": {
+        "dE_tile": 18.566,
+        "dE_fill": 18.236,
+        "margin": 0.33,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 15.703,
+        "dE_fill": 15.477,
+        "margin": 0.226,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 12.831,
+        "dE_fill": 12.706,
+        "margin": 0.125,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 16.906,
+        "dE_fill": 16.663,
+        "margin": 0.243,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 12.966,
+        "dE_fill": 12.812,
+        "margin": 0.154,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 8.398,
+        "dE_fill": 8.271,
+        "margin": 0.127,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 5.577,
+        "dE_fill": 5.448,
+        "margin": 0.129,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 12.903,
+        "dE_fill": 12.689,
+        "margin": 0.214,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 22.157,
+        "dE_fill": 22.2,
+        "margin": -0.043,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 14.662,
+        "dE_fill": 14.635,
+        "margin": 0.027,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 19.239,
+        "dE_fill": 19.21,
+        "margin": 0.029,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 28.895,
+        "dE_fill": 29.026,
+        "margin": -0.131,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 34.33,
+        "dE_fill": 34.101,
+        "margin": 0.229,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 27.876,
+        "dE_fill": 27.694,
+        "margin": 0.182,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 32.59,
+        "dE_fill": 32.379,
+        "margin": 0.211,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 43.071,
+        "dE_fill": 42.789,
+        "margin": 0.282,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 67.309,
+        "dE_fill": 67.213,
+        "margin": 0.096,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 67.047,
+        "dE_fill": 66.985,
+        "margin": 0.062,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 64.557,
+        "dE_fill": 64.52,
+        "margin": 0.036,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 69.855,
+        "dE_fill": 69.723,
+        "margin": 0.132,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 18.856,
+        "dE_fill": 18.697,
+        "margin": 0.159,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 13.831,
+        "dE_fill": 13.754,
+        "margin": 0.077,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 18.291,
+        "dE_fill": 18.168,
+        "margin": 0.123,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 22.279,
+        "dE_fill": 22.026,
+        "margin": 0.253,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 28.494,
+        "dE_fill": 28.328,
+        "margin": 0.166,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 9.817,
+        "dE_fill": 9.712,
+        "margin": 0.105,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 7.006,
+        "dE_fill": 6.874,
+        "margin": 0.132,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 33.896,
+        "dE_fill": 33.668,
+        "margin": 0.228,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 16.267,
+        "dE_fill": 16.526,
+        "margin": -0.259,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 13.49,
+        "dE_fill": 13.66,
+        "margin": -0.169,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 15.2,
+        "dE_fill": 15.411,
+        "margin": -0.21,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 13.984,
+        "dE_fill": 14.268,
+        "margin": -0.284,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 28.032,
+        "dE_fill": 27.976,
+        "margin": 0.056,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 25.892,
+        "dE_fill": 25.859,
+        "margin": 0.033,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 26.856,
+        "dE_fill": 26.82,
+        "margin": 0.036,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 31.072,
+        "dE_fill": 30.992,
+        "margin": 0.079,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.camp",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 32.807,
+        "dE_fill": 32.575,
+        "margin": 0.232,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 27.664,
+        "dE_fill": 27.539,
+        "margin": 0.125,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 34.057,
+        "dE_fill": 33.853,
+        "margin": 0.204,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 37.488,
+        "dE_fill": 37.225,
+        "margin": 0.263,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.desert",
+      "normal": {
+        "dE_tile": 23.295,
+        "dE_fill": 23.787,
+        "margin": -0.492,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 22.783,
+        "dE_fill": 23.312,
+        "margin": -0.529,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 21.125,
+        "dE_fill": 21.629,
+        "margin": -0.504,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 4.549,
+        "dE_fill": 4.7,
+        "margin": -0.151,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.dungeon_entrance",
+      "normal": {
+        "dE_tile": 23.226,
+        "dE_fill": 23.315,
+        "margin": -0.09,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 7.343,
+        "dE_fill": 7.367,
+        "margin": -0.024,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 15.578,
+        "dE_fill": 15.645,
+        "margin": -0.067,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 30.878,
+        "dE_fill": 31.033,
+        "margin": -0.155,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.farmland",
+      "normal": {
+        "dE_tile": 52.419,
+        "dE_fill": 52.585,
+        "margin": -0.166,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 50.279,
+        "dE_fill": 50.447,
+        "margin": -0.168,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 45.055,
+        "dE_fill": 45.226,
+        "margin": -0.171,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 28.43,
+        "dE_fill": 28.465,
+        "margin": -0.035,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.floor",
+      "normal": {
+        "dE_tile": 12.913,
+        "dE_fill": 12.563,
+        "margin": 0.35,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 10.41,
+        "dE_fill": 10.341,
+        "margin": 0.069,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 11.057,
+        "dE_fill": 11.006,
+        "margin": 0.051,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 13.356,
+        "dE_fill": 13.065,
+        "margin": 0.291,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.forest",
+      "normal": {
+        "dE_tile": 37.503,
+        "dE_fill": 36.541,
+        "margin": 0.962,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 28.93,
+        "dE_fill": 28.271,
+        "margin": 0.659,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 22.614,
+        "dE_fill": 22.245,
+        "margin": 0.369,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 18.964,
+        "dE_fill": 18.192,
+        "margin": 0.772,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.grassland",
+      "normal": {
+        "dE_tile": 44.762,
+        "dE_fill": 44.904,
+        "margin": -0.142,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 40.707,
+        "dE_fill": 41.023,
+        "margin": -0.315,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 34.656,
+        "dE_fill": 35.023,
+        "margin": -0.367,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 20.68,
+        "dE_fill": 20.465,
+        "margin": 0.215,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.graveyard",
+      "normal": {
+        "dE_tile": 7.205,
+        "dE_fill": 7.144,
+        "margin": 0.061,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 7.217,
+        "dE_fill": 7.144,
+        "margin": 0.073,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 7.143,
+        "dE_fill": 7.129,
+        "margin": 0.014,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 7.182,
+        "dE_fill": 7.123,
+        "margin": 0.059,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.jungle",
+      "normal": {
+        "dE_tile": 56.635,
+        "dE_fill": 56.504,
+        "margin": 0.131,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 46.798,
+        "dE_fill": 46.806,
+        "margin": -0.008,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 35.425,
+        "dE_fill": 35.45,
+        "margin": -0.026,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 27.369,
+        "dE_fill": 27.152,
+        "margin": 0.217,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.lava",
+      "normal": {
+        "dE_tile": 60.924,
+        "dE_fill": 61.316,
+        "margin": -0.392,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 46.134,
+        "dE_fill": 46.206,
+        "margin": -0.072,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 53.83,
+        "dE_fill": 53.923,
+        "margin": -0.093,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 55.707,
+        "dE_fill": 55.793,
+        "margin": -0.087,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.mountain",
+      "normal": {
+        "dE_tile": 12.569,
+        "dE_fill": 12.033,
+        "margin": 0.536,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 10.362,
+        "dE_fill": 9.884,
+        "margin": 0.478,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 8.821,
+        "dE_fill": 8.412,
+        "margin": 0.408,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 5.314,
+        "dE_fill": 5.129,
+        "margin": 0.185,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.road",
+      "normal": {
+        "dE_tile": 24.436,
+        "dE_fill": 24.305,
+        "margin": 0.131,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 23.849,
+        "dE_fill": 23.725,
+        "margin": 0.124,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 23.413,
+        "dE_fill": 23.368,
+        "margin": 0.045,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 13.814,
+        "dE_fill": 13.898,
+        "margin": -0.084,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 18.648,
+        "dE_fill": 18.77,
+        "margin": -0.122,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 18.124,
+        "dE_fill": 18.247,
+        "margin": -0.123,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 17.737,
+        "dE_fill": 17.874,
+        "margin": -0.136,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 7.774,
+        "dE_fill": 7.794,
+        "margin": -0.02,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 9.484,
+        "dE_fill": 9.673,
+        "margin": -0.19,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 3.65,
+        "dE_fill": 3.73,
+        "margin": -0.08,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 4.646,
+        "dE_fill": 4.593,
+        "margin": 0.053,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 13.886,
+        "dE_fill": 14.082,
+        "margin": -0.196,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 21.273,
+        "dE_fill": 21.092,
+        "margin": 0.182,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 17.598,
+        "dE_fill": 17.422,
+        "margin": 0.176,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 19.266,
+        "dE_fill": 19.033,
+        "margin": 0.233,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 28.829,
+        "dE_fill": 28.623,
+        "margin": 0.206,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 64.914,
+        "dE_fill": 64.934,
+        "margin": -0.02,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 65.009,
+        "dE_fill": 65.037,
+        "margin": -0.029,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 63.46,
+        "dE_fill": 63.505,
+        "margin": -0.045,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 65.419,
+        "dE_fill": 65.432,
+        "margin": -0.014,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 5.77,
+        "dE_fill": 5.71,
+        "margin": 0.06,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 3.479,
+        "dE_fill": 3.491,
+        "margin": -0.013,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 4.855,
+        "dE_fill": 4.768,
+        "margin": 0.088,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 7.676,
+        "dE_fill": 7.495,
+        "margin": 0.181,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 26.288,
+        "dE_fill": 26.341,
+        "margin": -0.053,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 17.208,
+        "dE_fill": 17.344,
+        "margin": -0.136,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 12.296,
+        "dE_fill": 12.464,
+        "margin": -0.168,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 19.883,
+        "dE_fill": 19.733,
+        "margin": 0.149,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 31.071,
+        "dE_fill": 31.373,
+        "margin": -0.302,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 25.857,
+        "dE_fill": 26.129,
+        "margin": -0.272,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 30.1,
+        "dE_fill": 30.406,
+        "margin": -0.306,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 29.227,
+        "dE_fill": 29.481,
+        "margin": -0.254,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 18.999,
+        "dE_fill": 19.045,
+        "margin": -0.046,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 18.889,
+        "dE_fill": 18.931,
+        "margin": -0.041,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 18.237,
+        "dE_fill": 18.269,
+        "margin": -0.032,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 20.446,
+        "dE_fill": 20.493,
+        "margin": -0.047,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.cave",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 18.094,
+        "dE_fill": 17.825,
+        "margin": 0.269,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 15.433,
+        "dE_fill": 15.23,
+        "margin": 0.203,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 19.249,
+        "dE_fill": 18.964,
+        "margin": 0.284,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 22.375,
+        "dE_fill": 22.16,
+        "margin": 0.215,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.dungeon_entrance",
+      "normal": {
+        "dE_tile": 31.231,
+        "dE_fill": 31.462,
+        "margin": -0.231,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 17.125,
+        "dE_fill": 17.524,
+        "margin": -0.399,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 11.415,
+        "dE_fill": 11.565,
+        "margin": -0.15,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 28.766,
+        "dE_fill": 28.71,
+        "margin": 0.056,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.farmland",
+      "normal": {
+        "dE_tile": 34.959,
+        "dE_fill": 34.734,
+        "margin": 0.225,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 33.678,
+        "dE_fill": 33.42,
+        "margin": 0.258,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 30.54,
+        "dE_fill": 30.308,
+        "margin": 0.232,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 28.433,
+        "dE_fill": 28.397,
+        "margin": 0.036,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.floor",
+      "normal": {
+        "dE_tile": 22.871,
+        "dE_fill": 23.676,
+        "margin": -0.805,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 22.544,
+        "dE_fill": 23.396,
+        "margin": -0.852,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 23.311,
+        "dE_fill": 24.015,
+        "margin": -0.705,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 14.951,
+        "dE_fill": 14.881,
+        "margin": 0.07,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.forest",
+      "normal": {
+        "dE_tile": 19.574,
+        "dE_fill": 18.522,
+        "margin": 1.052,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 6.393,
+        "dE_fill": 5.023,
+        "margin": 1.369,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 1.524,
+        "dE_fill": 1.458,
+        "margin": 0.066,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 20.268,
+        "dE_fill": 19.668,
+        "margin": 0.6,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.grassland",
+      "normal": {
+        "dE_tile": 25.929,
+        "dE_fill": 25.616,
+        "margin": 0.313,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 22.242,
+        "dE_fill": 22.043,
+        "margin": 0.199,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 18.345,
+        "dE_fill": 18.217,
+        "margin": 0.129,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 21.195,
+        "dE_fill": 20.952,
+        "margin": 0.243,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.graveyard",
+      "normal": {
+        "dE_tile": 23.83,
+        "dE_fill": 24.344,
+        "margin": -0.514,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 23.582,
+        "dE_fill": 24.057,
+        "margin": -0.475,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 21.981,
+        "dE_fill": 22.347,
+        "margin": -0.366,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 8.668,
+        "dE_fill": 8.501,
+        "margin": 0.167,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.jungle",
+      "normal": {
+        "dE_tile": 36.743,
+        "dE_fill": 36.279,
+        "margin": 0.464,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 24.52,
+        "dE_fill": 23.984,
+        "margin": 0.536,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 14.583,
+        "dE_fill": 14.088,
+        "margin": 0.496,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 28.559,
+        "dE_fill": 28.487,
+        "margin": 0.072,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.lava",
+      "normal": {
+        "dE_tile": 50.0,
+        "dE_fill": 49.97,
+        "margin": 0.03,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 23.798,
+        "dE_fill": 23.334,
+        "margin": 0.465,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 33.847,
+        "dE_fill": 33.427,
+        "margin": 0.42,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 52.887,
+        "dE_fill": 52.755,
+        "margin": 0.132,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.mountain",
+      "normal": {
+        "dE_tile": 13.032,
+        "dE_fill": 13.908,
+        "margin": -0.876,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 13.374,
+        "dE_fill": 14.288,
+        "margin": -0.914,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 13.026,
+        "dE_fill": 13.868,
+        "margin": -0.842,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 6.982,
+        "dE_fill": 6.984,
+        "margin": -0.003,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.road",
+      "normal": {
+        "dE_tile": 13.165,
+        "dE_fill": 13.222,
+        "margin": -0.057,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 13.0,
+        "dE_fill": 13.055,
+        "margin": -0.055,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 13.065,
+        "dE_fill": 13.063,
+        "margin": 0.002,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 12.982,
+        "dE_fill": 12.897,
+        "margin": 0.084,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 8.511,
+        "dE_fill": 8.613,
+        "margin": -0.102,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 8.316,
+        "dE_fill": 8.454,
+        "margin": -0.138,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 7.772,
+        "dE_fill": 7.833,
+        "margin": -0.061,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 6.434,
+        "dE_fill": 6.251,
+        "margin": 0.183,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 24.856,
+        "dE_fill": 25.235,
+        "margin": -0.379,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 24.707,
+        "dE_fill": 25.092,
+        "margin": -0.385,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 25.514,
+        "dE_fill": 25.902,
+        "margin": -0.387,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 16.407,
+        "dE_fill": 16.761,
+        "margin": -0.354,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 37.537,
+        "dE_fill": 37.736,
+        "margin": -0.199,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 36.931,
+        "dE_fill": 37.161,
+        "margin": -0.23,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 38.852,
+        "dE_fill": 39.041,
+        "margin": -0.189,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 31.171,
+        "dE_fill": 31.097,
+        "margin": 0.074,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 67.848,
+        "dE_fill": 67.946,
+        "margin": -0.097,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 68.884,
+        "dE_fill": 69.001,
+        "margin": -0.116,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 67.338,
+        "dE_fill": 67.437,
+        "margin": -0.099,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 66.06,
+        "dE_fill": 65.999,
+        "margin": 0.06,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 24.442,
+        "dE_fill": 24.746,
+        "margin": -0.304,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 24.27,
+        "dE_fill": 24.599,
+        "margin": -0.329,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 24.161,
+        "dE_fill": 24.429,
+        "margin": -0.268,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 10.377,
+        "dE_fill": 10.405,
+        "margin": -0.028,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 17.841,
+        "dE_fill": 17.906,
+        "margin": -0.065,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 11.654,
+        "dE_fill": 11.828,
+        "margin": -0.174,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 12.441,
+        "dE_fill": 12.661,
+        "margin": -0.22,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 21.514,
+        "dE_fill": 21.49,
+        "margin": 0.024,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 22.494,
+        "dE_fill": 22.567,
+        "margin": -0.073,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 3.19,
+        "dE_fill": 2.945,
+        "margin": 0.245,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 9.292,
+        "dE_fill": 9.098,
+        "margin": 0.194,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 26.543,
+        "dE_fill": 26.598,
+        "margin": -0.055,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 32.84,
+        "dE_fill": 33.157,
+        "margin": -0.317,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 33.334,
+        "dE_fill": 33.672,
+        "margin": -0.338,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 32.584,
+        "dE_fill": 32.898,
+        "margin": -0.313,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 22.18,
+        "dE_fill": 22.243,
+        "margin": -0.063,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.desert",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 38.757,
+        "dE_fill": 39.021,
+        "margin": -0.264,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 37.828,
+        "dE_fill": 38.131,
+        "margin": -0.303,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 40.304,
+        "dE_fill": 40.515,
+        "margin": -0.211,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 25.108,
+        "dE_fill": 25.075,
+        "margin": 0.033,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.farmland",
+      "normal": {
+        "dE_tile": 55.255,
+        "dE_fill": 55.42,
+        "margin": -0.165,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 42.943,
+        "dE_fill": 43.088,
+        "margin": -0.145,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 29.538,
+        "dE_fill": 29.652,
+        "margin": -0.114,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 42.233,
+        "dE_fill": 42.369,
+        "margin": -0.136,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.floor",
+      "normal": {
+        "dE_tile": 33.171,
+        "dE_fill": 32.843,
+        "margin": 0.328,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 14.534,
+        "dE_fill": 14.59,
+        "margin": -0.056,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 23.044,
+        "dE_fill": 23.166,
+        "margin": -0.122,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 41.82,
+        "dE_fill": 41.532,
+        "margin": 0.287,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.forest",
+      "normal": {
+        "dE_tile": 50.195,
+        "dE_fill": 49.403,
+        "margin": 0.793,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 22.823,
+        "dE_fill": 22.242,
+        "margin": 0.581,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 12.709,
+        "dE_fill": 12.927,
+        "margin": -0.218,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 48.61,
+        "dE_fill": 48.124,
+        "margin": 0.486,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.grassland",
+      "normal": {
+        "dE_tile": 51.375,
+        "dE_fill": 51.362,
+        "margin": 0.012,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 33.465,
+        "dE_fill": 33.744,
+        "margin": -0.279,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 19.213,
+        "dE_fill": 19.505,
+        "margin": -0.292,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 42.724,
+        "dE_fill": 42.467,
+        "margin": 0.256,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.graveyard",
+      "normal": {
+        "dE_tile": 22.691,
+        "dE_fill": 22.491,
+        "margin": 0.201,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 6.627,
+        "dE_fill": 6.717,
+        "margin": -0.09,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 12.937,
+        "dE_fill": 12.975,
+        "margin": -0.038,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 30.697,
+        "dE_fill": 30.434,
+        "margin": 0.263,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.jungle",
+      "normal": {
+        "dE_tile": 66.806,
+        "dE_fill": 66.67,
+        "margin": 0.135,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 40.261,
+        "dE_fill": 40.202,
+        "margin": 0.059,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 22.51,
+        "dE_fill": 22.419,
+        "margin": 0.091,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 56.043,
+        "dE_fill": 55.984,
+        "margin": 0.058,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.lava",
+      "normal": {
+        "dE_tile": 43.232,
+        "dE_fill": 43.582,
+        "margin": -0.35,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 39.64,
+        "dE_fill": 39.641,
+        "margin": -0.0,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 39.249,
+        "dE_fill": 39.241,
+        "margin": 0.009,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 25.615,
+        "dE_fill": 25.55,
+        "margin": 0.065,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.mountain",
+      "normal": {
+        "dE_tile": 28.302,
+        "dE_fill": 28.1,
+        "margin": 0.202,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 3.756,
+        "dE_fill": 3.238,
+        "margin": 0.518,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 7.333,
+        "dE_fill": 7.709,
+        "margin": -0.377,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 34.164,
+        "dE_fill": 34.211,
+        "margin": -0.047,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.road",
+      "normal": {
+        "dE_tile": 28.708,
+        "dE_fill": 28.538,
+        "margin": 0.171,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 16.511,
+        "dE_fill": 16.361,
+        "margin": 0.15,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 7.858,
+        "dE_fill": 7.762,
+        "margin": 0.095,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 27.013,
+        "dE_fill": 26.975,
+        "margin": 0.039,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 26.08,
+        "dE_fill": 26.167,
+        "margin": -0.087,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 11.13,
+        "dE_fill": 11.208,
+        "margin": -0.078,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 3.873,
+        "dE_fill": 3.922,
+        "margin": -0.049,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 26.488,
+        "dE_fill": 26.543,
+        "margin": -0.055,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 31.692,
+        "dE_fill": 31.905,
+        "margin": -0.213,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 7.897,
+        "dE_fill": 7.805,
+        "margin": 0.092,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 18.753,
+        "dE_fill": 18.678,
+        "margin": 0.075,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 44.003,
+        "dE_fill": 44.32,
+        "margin": -0.317,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 39.688,
+        "dE_fill": 39.643,
+        "margin": 0.045,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 20.067,
+        "dE_fill": 19.949,
+        "margin": 0.118,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 29.689,
+        "dE_fill": 29.529,
+        "margin": 0.16,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 56.693,
+        "dE_fill": 56.652,
+        "margin": 0.041,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 65.717,
+        "dE_fill": 65.807,
+        "margin": -0.09,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 61.293,
+        "dE_fill": 61.407,
+        "margin": -0.114,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 57.125,
+        "dE_fill": 57.251,
+        "margin": -0.126,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 71.916,
+        "dE_fill": 72.026,
+        "margin": -0.11,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 28.613,
+        "dE_fill": 28.584,
+        "margin": 0.029,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 10.377,
+        "dE_fill": 10.286,
+        "margin": 0.091,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 20.101,
+        "dE_fill": 19.987,
+        "margin": 0.115,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 38.287,
+        "dE_fill": 38.212,
+        "margin": 0.075,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 41.769,
+        "dE_fill": 41.812,
+        "margin": -0.043,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 9.888,
+        "dE_fill": 9.993,
+        "margin": -0.105,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 3.284,
+        "dE_fill": 3.182,
+        "margin": 0.102,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 48.177,
+        "dE_fill": 48.174,
+        "margin": 0.003,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 19.915,
+        "dE_fill": 20.03,
+        "margin": -0.115,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 20.31,
+        "dE_fill": 20.459,
+        "margin": -0.149,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 17.603,
+        "dE_fill": 17.718,
+        "margin": -0.115,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 6.548,
+        "dE_fill": 6.386,
+        "margin": 0.163,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 31.198,
+        "dE_fill": 31.329,
+        "margin": -0.132,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 18.11,
+        "dE_fill": 18.207,
+        "margin": -0.098,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 21.751,
+        "dE_fill": 21.807,
+        "margin": -0.056,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 42.162,
+        "dE_fill": 42.334,
+        "margin": -0.171,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.dungeon_entrance",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 37.544,
+        "dE_fill": 37.39,
+        "margin": 0.153,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 20.961,
+        "dE_fill": 20.827,
+        "margin": 0.133,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 33.068,
+        "dE_fill": 32.874,
+        "margin": 0.194,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 52.369,
+        "dE_fill": 52.322,
+        "margin": 0.047,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.floor",
+      "normal": {
+        "dE_tile": 55.148,
+        "dE_fill": 55.661,
+        "margin": -0.513,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 54.537,
+        "dE_fill": 54.962,
+        "margin": -0.424,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 51.874,
+        "dE_fill": 52.174,
+        "margin": -0.301,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 37.882,
+        "dE_fill": 37.921,
+        "margin": -0.039,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.forest",
+      "normal": {
+        "dE_tile": 29.854,
+        "dE_fill": 30.883,
+        "margin": -1.028,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 28.863,
+        "dE_fill": 30.124,
+        "margin": -1.261,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 30.105,
+        "dE_fill": 31.198,
+        "margin": -1.093,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 28.564,
+        "dE_fill": 29.202,
+        "margin": -0.637,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.grassland",
+      "normal": {
+        "dE_tile": 12.13,
+        "dE_fill": 12.019,
+        "margin": 0.11,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 11.651,
+        "dE_fill": 11.611,
+        "margin": 0.04,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 12.234,
+        "dE_fill": 12.14,
+        "margin": 0.094,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 11.692,
+        "dE_fill": 11.561,
+        "margin": 0.131,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.graveyard",
+      "normal": {
+        "dE_tile": 48.542,
+        "dE_fill": 48.864,
+        "margin": -0.322,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 46.405,
+        "dE_fill": 46.635,
+        "margin": -0.23,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 40.992,
+        "dE_fill": 41.117,
+        "margin": -0.125,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 21.633,
+        "dE_fill": 21.835,
+        "margin": -0.202,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.jungle",
+      "normal": {
+        "dE_tile": 27.833,
+        "dE_fill": 27.75,
+        "margin": 0.083,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 21.2,
+        "dE_fill": 21.246,
+        "margin": -0.046,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 22.789,
+        "dE_fill": 22.856,
+        "margin": -0.066,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 28.824,
+        "dE_fill": 28.777,
+        "margin": 0.047,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.lava",
+      "normal": {
+        "dE_tile": 56.724,
+        "dE_fill": 56.808,
+        "margin": -0.085,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 21.691,
+        "dE_fill": 21.694,
+        "margin": -0.003,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 20.11,
+        "dE_fill": 20.065,
+        "margin": 0.046,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 62.238,
+        "dE_fill": 62.253,
+        "margin": -0.014,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.mountain",
+      "normal": {
+        "dE_tile": 40.867,
+        "dE_fill": 41.516,
+        "margin": -0.649,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 40.36,
+        "dE_fill": 40.966,
+        "margin": -0.606,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 36.764,
+        "dE_fill": 37.298,
+        "margin": -0.534,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 24.479,
+        "dE_fill": 24.654,
+        "margin": -0.175,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.road",
+      "normal": {
+        "dE_tile": 28.747,
+        "dE_fill": 29.084,
+        "margin": -0.337,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 26.446,
+        "dE_fill": 26.735,
+        "margin": -0.289,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 21.683,
+        "dE_fill": 21.891,
+        "margin": -0.208,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 17.82,
+        "dE_fill": 17.937,
+        "margin": -0.118,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 34.896,
+        "dE_fill": 34.986,
+        "margin": -0.09,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 32.98,
+        "dE_fill": 33.066,
+        "margin": -0.086,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 28.303,
+        "dE_fill": 28.382,
+        "margin": -0.08,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 23.387,
+        "dE_fill": 23.499,
+        "margin": -0.112,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 50.497,
+        "dE_fill": 50.428,
+        "margin": 0.07,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 50.067,
+        "dE_fill": 50.031,
+        "margin": 0.035,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 47.756,
+        "dE_fill": 47.755,
+        "margin": 0.001,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 26.17,
+        "dE_fill": 26.132,
+        "margin": 0.038,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 56.109,
+        "dE_fill": 56.064,
+        "margin": 0.046,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 55.664,
+        "dE_fill": 55.63,
+        "margin": 0.034,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 55.364,
+        "dE_fill": 55.285,
+        "margin": 0.079,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 25.709,
+        "dE_fill": 25.642,
+        "margin": 0.067,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 55.498,
+        "dE_fill": 55.671,
+        "margin": -0.173,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 56.187,
+        "dE_fill": 56.347,
+        "margin": -0.16,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 53.078,
+        "dE_fill": 53.212,
+        "margin": -0.134,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 38.373,
+        "dE_fill": 38.361,
+        "margin": 0.011,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 54.375,
+        "dE_fill": 54.417,
+        "margin": -0.042,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 53.157,
+        "dE_fill": 53.195,
+        "margin": -0.038,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 49.63,
+        "dE_fill": 49.629,
+        "margin": 0.001,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 31.197,
+        "dE_fill": 31.318,
+        "margin": -0.121,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 32.651,
+        "dE_fill": 32.675,
+        "margin": -0.025,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 33.127,
+        "dE_fill": 33.166,
+        "margin": -0.038,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 32.813,
+        "dE_fill": 32.823,
+        "margin": -0.01,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 22.711,
+        "dE_fill": 22.694,
+        "margin": 0.017,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 45.354,
+        "dE_fill": 45.379,
+        "margin": -0.025,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 32.807,
+        "dE_fill": 32.688,
+        "margin": 0.119,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 24.432,
+        "dE_fill": 24.307,
+        "margin": 0.125,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 43.53,
+        "dE_fill": 43.616,
+        "margin": -0.086,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 49.067,
+        "dE_fill": 49.123,
+        "margin": -0.055,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 48.091,
+        "dE_fill": 48.158,
+        "margin": -0.066,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 44.239,
+        "dE_fill": 44.301,
+        "margin": -0.062,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 12.434,
+        "dE_fill": 12.431,
+        "margin": 0.004,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.farmland",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 62.947,
+        "dE_fill": 62.932,
+        "margin": 0.015,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 61.383,
+        "dE_fill": 61.367,
+        "margin": 0.016,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 60.932,
+        "dE_fill": 60.831,
+        "margin": 0.101,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 29.154,
+        "dE_fill": 29.132,
+        "margin": 0.022,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.forest",
+      "normal": {
+        "dE_tile": 33.378,
+        "dE_fill": 32.758,
+        "margin": 0.62,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 28.876,
+        "dE_fill": 28.258,
+        "margin": 0.618,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 24.486,
+        "dE_fill": 23.958,
+        "margin": 0.528,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 15.789,
+        "dE_fill": 14.929,
+        "margin": 0.861,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.grassland",
+      "normal": {
+        "dE_tile": 45.338,
+        "dE_fill": 45.934,
+        "margin": -0.597,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 43.803,
+        "dE_fill": 44.368,
+        "margin": -0.565,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 40.341,
+        "dE_fill": 40.827,
+        "margin": -0.486,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 27.436,
+        "dE_fill": 27.474,
+        "margin": -0.038,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.graveyard",
+      "normal": {
+        "dE_tile": 18.992,
+        "dE_fill": 18.845,
+        "margin": 0.147,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 17.436,
+        "dE_fill": 17.34,
+        "margin": 0.097,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 18.178,
+        "dE_fill": 18.118,
+        "margin": 0.059,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 19.333,
+        "dE_fill": 19.268,
+        "margin": 0.065,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.jungle",
+      "normal": {
+        "dE_tile": 52.788,
+        "dE_fill": 53.231,
+        "margin": -0.443,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 46.862,
+        "dE_fill": 47.2,
+        "margin": -0.338,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 37.617,
+        "dE_fill": 37.851,
+        "margin": -0.234,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 24.661,
+        "dE_fill": 24.829,
+        "margin": -0.168,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.lava",
+      "normal": {
+        "dE_tile": 66.185,
+        "dE_fill": 66.448,
+        "margin": -0.263,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 46.1,
+        "dE_fill": 46.513,
+        "margin": -0.413,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 57.091,
+        "dE_fill": 57.388,
+        "margin": -0.297,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 65.883,
+        "dE_fill": 65.559,
+        "margin": 0.324,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.mountain",
+      "normal": {
+        "dE_tile": 15.577,
+        "dE_fill": 15.429,
+        "margin": 0.148,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 15.186,
+        "dE_fill": 15.046,
+        "margin": 0.14,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 15.817,
+        "dE_fill": 15.624,
+        "margin": 0.192,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 14.208,
+        "dE_fill": 14.002,
+        "margin": 0.206,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.road",
+      "normal": {
+        "dE_tile": 29.746,
+        "dE_fill": 29.863,
+        "margin": -0.118,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 28.779,
+        "dE_fill": 28.924,
+        "margin": -0.145,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 30.553,
+        "dE_fill": 30.656,
+        "margin": -0.103,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 26.365,
+        "dE_fill": 26.281,
+        "margin": 0.085,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 22.767,
+        "dE_fill": 22.986,
+        "margin": -0.219,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 21.665,
+        "dE_fill": 21.974,
+        "margin": -0.309,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 23.586,
+        "dE_fill": 23.801,
+        "margin": -0.215,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 20.507,
+        "dE_fill": 20.268,
+        "margin": 0.239,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 13.808,
+        "dE_fill": 13.909,
+        "margin": -0.101,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 13.986,
+        "dE_fill": 14.009,
+        "margin": -0.023,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 13.624,
+        "dE_fill": 13.597,
+        "margin": 0.027,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 14.188,
+        "dE_fill": 14.564,
+        "margin": -0.377,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 27.204,
+        "dE_fill": 26.961,
+        "margin": 0.243,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 27.266,
+        "dE_fill": 26.947,
+        "margin": 0.319,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 27.122,
+        "dE_fill": 26.766,
+        "margin": 0.357,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 28.995,
+        "dE_fill": 29.107,
+        "margin": -0.111,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 74.827,
+        "dE_fill": 74.862,
+        "margin": -0.035,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 75.13,
+        "dE_fill": 75.164,
+        "margin": -0.034,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 74.512,
+        "dE_fill": 74.511,
+        "margin": 0.001,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 74.918,
+        "dE_fill": 74.96,
+        "margin": -0.042,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 8.423,
+        "dE_fill": 7.94,
+        "margin": 0.483,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 7.867,
+        "dE_fill": 7.526,
+        "margin": 0.341,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 7.743,
+        "dE_fill": 7.443,
+        "margin": 0.3,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 7.143,
+        "dE_fill": 6.996,
+        "margin": 0.147,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 25.745,
+        "dE_fill": 26.248,
+        "margin": -0.503,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 22.35,
+        "dE_fill": 22.65,
+        "margin": -0.3,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 20.074,
+        "dE_fill": 20.274,
+        "margin": -0.199,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 20.772,
+        "dE_fill": 20.922,
+        "margin": -0.15,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 35.559,
+        "dE_fill": 35.775,
+        "margin": -0.217,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 24.975,
+        "dE_fill": 25.615,
+        "margin": -0.64,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 32.484,
+        "dE_fill": 33.018,
+        "margin": -0.535,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 38.82,
+        "dE_fill": 38.679,
+        "margin": 0.142,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 29.15,
+        "dE_fill": 29.062,
+        "margin": 0.088,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 29.298,
+        "dE_fill": 29.263,
+        "margin": 0.035,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 28.937,
+        "dE_fill": 28.885,
+        "margin": 0.053,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 28.314,
+        "dE_fill": 28.402,
+        "margin": -0.088,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.floor",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 22.746,
+        "dE_fill": 22.291,
+        "margin": 0.455,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 22.601,
+        "dE_fill": 22.173,
+        "margin": 0.429,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 23.457,
+        "dE_fill": 23.008,
+        "margin": 0.449,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 20.077,
+        "dE_fill": 20.206,
+        "margin": -0.129,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.grassland",
+      "normal": {
+        "dE_tile": 17.728,
+        "dE_fill": 18.88,
+        "margin": -1.152,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 17.217,
+        "dE_fill": 18.531,
+        "margin": -1.314,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 17.873,
+        "dE_fill": 19.068,
+        "margin": -1.195,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 16.873,
+        "dE_fill": 17.641,
+        "margin": -0.769,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.graveyard",
+      "normal": {
+        "dE_tile": 37.348,
+        "dE_fill": 36.798,
+        "margin": 0.549,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 29.014,
+        "dE_fill": 28.62,
+        "margin": 0.394,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 23.494,
+        "dE_fill": 23.344,
+        "margin": 0.15,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 19.575,
+        "dE_fill": 19.569,
+        "margin": 0.006,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.jungle",
+      "normal": {
+        "dE_tile": 19.497,
+        "dE_fill": 20.498,
+        "margin": -1.001,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 18.131,
+        "dE_fill": 19.001,
+        "margin": -0.87,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 13.24,
+        "dE_fill": 13.925,
+        "margin": -0.685,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 9.133,
+        "dE_fill": 10.07,
+        "margin": -0.937,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.lava",
+      "normal": {
+        "dE_tile": 64.215,
+        "dE_fill": 64.001,
+        "margin": 0.215,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 17.416,
+        "dE_fill": 18.341,
+        "margin": -0.925,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 32.629,
+        "dE_fill": 33.465,
+        "margin": -0.836,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 72.254,
+        "dE_fill": 71.733,
+        "margin": 0.521,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.mountain",
+      "normal": {
+        "dE_tile": 25.463,
+        "dE_fill": 25.102,
+        "margin": 0.36,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 19.094,
+        "dE_fill": 19.028,
+        "margin": 0.066,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 14.55,
+        "dE_fill": 14.733,
+        "margin": -0.183,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 14.803,
+        "dE_fill": 14.342,
+        "margin": 0.461,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.road",
+      "normal": {
+        "dE_tile": 25.056,
+        "dE_fill": 24.924,
+        "margin": 0.132,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 13.855,
+        "dE_fill": 14.363,
+        "margin": -0.508,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 13.649,
+        "dE_fill": 14.482,
+        "margin": -0.833,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 25.135,
+        "dE_fill": 25.142,
+        "margin": -0.007,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 24.482,
+        "dE_fill": 23.71,
+        "margin": 0.772,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 12.481,
+        "dE_fill": 12.108,
+        "margin": 0.373,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 8.965,
+        "dE_fill": 9.249,
+        "margin": -0.284,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 22.503,
+        "dE_fill": 22.093,
+        "margin": 0.409,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 34.155,
+        "dE_fill": 33.123,
+        "margin": 1.032,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 30.603,
+        "dE_fill": 29.916,
+        "margin": 0.687,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 27.02,
+        "dE_fill": 26.602,
+        "margin": 0.418,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 7.181,
+        "dE_fill": 6.885,
+        "margin": 0.296,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 43.834,
+        "dE_fill": 43.099,
+        "margin": 0.735,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 42.108,
+        "dE_fill": 41.563,
+        "margin": 0.544,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 40.371,
+        "dE_fill": 39.961,
+        "margin": 0.409,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 15.384,
+        "dE_fill": 16.279,
+        "margin": -0.895,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 70.675,
+        "dE_fill": 71.197,
+        "margin": -0.522,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 69.344,
+        "dE_fill": 70.028,
+        "margin": -0.684,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 68.156,
+        "dE_fill": 68.892,
+        "margin": -0.736,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 63.975,
+        "dE_fill": 64.871,
+        "margin": -0.895,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 36.459,
+        "dE_fill": 35.289,
+        "margin": 1.17,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 30.577,
+        "dE_fill": 29.615,
+        "margin": 0.962,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 25.579,
+        "dE_fill": 24.813,
+        "margin": 0.766,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 13.398,
+        "dE_fill": 12.642,
+        "margin": 0.756,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 15.513,
+        "dE_fill": 15.128,
+        "margin": 0.385,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 15.458,
+        "dE_fill": 15.23,
+        "margin": 0.228,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 13.891,
+        "dE_fill": 13.861,
+        "margin": 0.031,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 6.988,
+        "dE_fill": 7.881,
+        "margin": -0.892,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 40.843,
+        "dE_fill": 40.188,
+        "margin": 0.655,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 4.156,
+        "dE_fill": 2.767,
+        "margin": 1.389,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 8.01,
+        "dE_fill": 9.078,
+        "margin": -1.068,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 46.612,
+        "dE_fill": 46.12,
+        "margin": 0.492,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 42.213,
+        "dE_fill": 41.709,
+        "margin": 0.504,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 37.692,
+        "dE_fill": 37.52,
+        "margin": 0.171,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 34.026,
+        "dE_fill": 34.095,
+        "margin": -0.069,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 19.639,
+        "dE_fill": 20.196,
+        "margin": -0.557,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.forest",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 47.483,
+        "dE_fill": 46.547,
+        "margin": 0.936,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 43.717,
+        "dE_fill": 42.963,
+        "margin": 0.754,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 41.799,
+        "dE_fill": 41.166,
+        "margin": 0.633,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 9.06,
+        "dE_fill": 9.526,
+        "margin": -0.466,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.graveyard",
+      "normal": {
+        "dE_tile": 42.038,
+        "dE_fill": 42.366,
+        "margin": -0.327,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 37.909,
+        "dE_fill": 38.288,
+        "margin": -0.379,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 31.796,
+        "dE_fill": 32.118,
+        "margin": -0.322,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 15.366,
+        "dE_fill": 15.412,
+        "margin": -0.046,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.jungle",
+      "normal": {
+        "dE_tile": 19.797,
+        "dE_fill": 19.768,
+        "margin": 0.028,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 13.922,
+        "dE_fill": 13.731,
+        "margin": 0.191,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 12.562,
+        "dE_fill": 12.503,
+        "margin": 0.06,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 18.093,
+        "dE_fill": 18.306,
+        "margin": -0.212,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.lava",
+      "normal": {
+        "dE_tile": 58.111,
+        "dE_fill": 57.887,
+        "margin": 0.224,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 14.009,
+        "dE_fill": 13.824,
+        "margin": 0.185,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 21.154,
+        "dE_fill": 20.866,
+        "margin": 0.288,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 65.05,
+        "dE_fill": 64.68,
+        "margin": 0.37,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.mountain",
+      "normal": {
+        "dE_tile": 32.419,
+        "dE_fill": 33.1,
+        "margin": -0.682,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 30.442,
+        "dE_fill": 31.22,
+        "margin": -0.778,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 25.971,
+        "dE_fill": 26.727,
+        "margin": -0.755,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 15.705,
+        "dE_fill": 15.694,
+        "margin": 0.011,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.road",
+      "normal": {
+        "dE_tile": 23.231,
+        "dE_fill": 23.481,
+        "margin": -0.25,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 17.329,
+        "dE_fill": 17.81,
+        "margin": -0.481,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 11.798,
+        "dE_fill": 12.255,
+        "margin": -0.457,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 15.793,
+        "dE_fill": 15.584,
+        "margin": 0.21,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 27.585,
+        "dE_fill": 27.566,
+        "margin": 0.019,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 22.74,
+        "dE_fill": 22.942,
+        "margin": -0.202,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 17.1,
+        "dE_fill": 17.341,
+        "margin": -0.24,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 18.268,
+        "dE_fill": 18.039,
+        "margin": 0.229,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 42.285,
+        "dE_fill": 42.265,
+        "margin": 0.02,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 41.061,
+        "dE_fill": 41.195,
+        "margin": -0.134,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 37.951,
+        "dE_fill": 38.165,
+        "margin": -0.214,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 15.1,
+        "dE_fill": 15.086,
+        "margin": 0.015,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 49.541,
+        "dE_fill": 49.586,
+        "margin": -0.044,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 48.816,
+        "dE_fill": 48.936,
+        "margin": -0.12,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 47.713,
+        "dE_fill": 47.828,
+        "margin": -0.115,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 16.991,
+        "dE_fill": 17.21,
+        "margin": -0.219,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 60.54,
+        "dE_fill": 60.732,
+        "margin": -0.193,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 60.41,
+        "dE_fill": 60.674,
+        "margin": -0.263,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 57.952,
+        "dE_fill": 58.172,
+        "margin": -0.22,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 48.435,
+        "dE_fill": 48.457,
+        "margin": -0.022,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 45.777,
+        "dE_fill": 45.817,
+        "margin": -0.04,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 43.29,
+        "dE_fill": 43.443,
+        "margin": -0.153,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 38.942,
+        "dE_fill": 39.102,
+        "margin": -0.161,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 21.24,
+        "dE_fill": 21.294,
+        "margin": -0.053,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 22.862,
+        "dE_fill": 23.013,
+        "margin": -0.151,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 23.622,
+        "dE_fill": 23.8,
+        "margin": -0.178,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 22.442,
+        "dE_fill": 22.637,
+        "margin": -0.195,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 11.271,
+        "dE_fill": 11.456,
+        "margin": -0.185,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 41.149,
+        "dE_fill": 40.977,
+        "margin": 0.172,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 21.193,
+        "dE_fill": 21.13,
+        "margin": 0.063,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 12.655,
+        "dE_fill": 12.568,
+        "margin": 0.087,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 42.585,
+        "dE_fill": 42.351,
+        "margin": 0.234,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 44.244,
+        "dE_fill": 44.34,
+        "margin": -0.097,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 42.077,
+        "dE_fill": 42.325,
+        "margin": -0.247,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 37.75,
+        "dE_fill": 38.029,
+        "margin": -0.278,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 7.157,
+        "dE_fill": 7.122,
+        "margin": 0.036,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.grassland",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 55.446,
+        "dE_fill": 55.506,
+        "margin": -0.059,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 53.267,
+        "dE_fill": 53.401,
+        "margin": -0.134,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 52.039,
+        "dE_fill": 52.133,
+        "margin": -0.093,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 18.368,
+        "dE_fill": 18.539,
+        "margin": -0.171,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.graveyard",
+      "b": "terrain.jungle",
+      "normal": {
+        "dE_tile": 55.738,
+        "dE_fill": 55.828,
+        "margin": -0.09,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 45.956,
+        "dE_fill": 45.996,
+        "margin": -0.04,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 35.083,
+        "dE_fill": 35.04,
+        "margin": 0.043,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 26.451,
+        "dE_fill": 26.655,
+        "margin": -0.204,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.graveyard",
+      "b": "terrain.lava",
+      "normal": {
+        "dE_tile": 60.076,
+        "dE_fill": 60.284,
+        "margin": -0.207,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 45.38,
+        "dE_fill": 45.475,
+        "margin": -0.095,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 52.147,
+        "dE_fill": 52.173,
+        "margin": -0.027,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 55.249,
+        "dE_fill": 54.917,
+        "margin": 0.332,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.graveyard",
+      "b": "terrain.mountain",
+      "normal": {
+        "dE_tile": 12.254,
+        "dE_fill": 11.977,
+        "margin": 0.278,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 10.272,
+        "dE_fill": 9.886,
+        "margin": 0.386,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 9.186,
+        "dE_fill": 8.818,
+        "margin": 0.368,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 5.807,
+        "dE_fill": 6.013,
+        "margin": -0.206,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.graveyard",
+      "b": "terrain.road",
+      "normal": {
+        "dE_tile": 21.018,
+        "dE_fill": 20.947,
+        "margin": 0.071,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 20.59,
+        "dE_fill": 20.491,
+        "margin": 0.099,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 20.03,
+        "dE_fill": 19.904,
+        "margin": 0.126,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 7.924,
+        "dE_fill": 7.859,
+        "margin": 0.065,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.graveyard",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 17.074,
+        "dE_fill": 17.299,
+        "margin": -0.225,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 16.793,
+        "dE_fill": 16.972,
+        "margin": -0.179,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 16.267,
+        "dE_fill": 16.365,
+        "margin": -0.098,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 5.259,
+        "dE_fill": 5.041,
+        "margin": 0.217,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.graveyard",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 9.979,
+        "dE_fill": 10.297,
+        "margin": -0.318,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 4.481,
+        "dE_fill": 4.194,
+        "margin": 0.288,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 7.201,
+        "dE_fill": 7.045,
+        "margin": 0.156,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 14.006,
+        "dE_fill": 14.518,
+        "margin": -0.511,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.graveyard",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 18.358,
+        "dE_fill": 18.374,
+        "margin": -0.016,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 13.446,
+        "dE_fill": 13.235,
+        "margin": 0.211,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 17.008,
+        "dE_fill": 16.81,
+        "margin": 0.199,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 26.19,
+        "dE_fill": 26.411,
+        "margin": -0.221,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.graveyard",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 57.74,
+        "dE_fill": 57.855,
+        "margin": -0.115,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 57.8,
+        "dE_fill": 57.901,
+        "margin": -0.101,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 56.336,
+        "dE_fill": 56.402,
+        "margin": -0.065,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 58.301,
+        "dE_fill": 58.447,
+        "margin": -0.146,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.graveyard",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 11.605,
+        "dE_fill": 11.681,
+        "margin": -0.076,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 10.57,
+        "dE_fill": 10.555,
+        "margin": 0.014,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 11.574,
+        "dE_fill": 11.569,
+        "margin": 0.005,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 12.494,
+        "dE_fill": 12.62,
+        "margin": -0.125,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.graveyard",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 24.495,
+        "dE_fill": 24.824,
+        "margin": -0.329,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 14.645,
+        "dE_fill": 14.835,
+        "margin": -0.19,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 10.17,
+        "dE_fill": 10.283,
+        "margin": -0.113,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 17.964,
+        "dE_fill": 18.231,
+        "margin": -0.267,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.graveyard",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 31.525,
+        "dE_fill": 31.619,
+        "margin": -0.093,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 26.768,
+        "dE_fill": 26.999,
+        "margin": -0.231,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 29.944,
+        "dE_fill": 30.143,
+        "margin": -0.199,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 30.261,
+        "dE_fill": 30.054,
+        "margin": 0.207,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.graveyard",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 12.678,
+        "dE_fill": 12.855,
+        "margin": -0.177,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 12.261,
+        "dE_fill": 12.333,
+        "margin": -0.072,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 12.086,
+        "dE_fill": 12.14,
+        "margin": -0.055,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 14.412,
+        "dE_fill": 14.777,
+        "margin": -0.365,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.graveyard",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 18.571,
+        "dE_fill": 18.409,
+        "margin": 0.162,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 15.427,
+        "dE_fill": 15.182,
+        "margin": 0.245,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 20.296,
+        "dE_fill": 20.068,
+        "margin": 0.228,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 21.901,
+        "dE_fill": 22.112,
+        "margin": -0.211,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.jungle",
+      "b": "terrain.lava",
+      "normal": {
+        "dE_tile": 71.246,
+        "dE_fill": 71.128,
+        "margin": 0.118,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 0.857,
+        "dE_fill": 0.784,
+        "margin": 0.073,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 19.607,
+        "dE_fill": 19.678,
+        "margin": -0.071,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 79.15,
+        "dE_fill": 79.012,
+        "margin": 0.139,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.jungle",
+      "b": "terrain.mountain",
+      "normal": {
+        "dE_tile": 44.266,
+        "dE_fill": 44.66,
+        "margin": -0.394,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 36.658,
+        "dE_fill": 37.142,
+        "margin": -0.484,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 26.877,
+        "dE_fill": 27.305,
+        "margin": -0.428,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 22.659,
+        "dE_fill": 22.595,
+        "margin": 0.064,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.jungle",
+      "b": "terrain.road",
+      "normal": {
+        "dE_tile": 39.841,
+        "dE_fill": 39.93,
+        "margin": -0.089,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 26.784,
+        "dE_fill": 26.957,
+        "margin": -0.172,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 18.323,
+        "dE_fill": 18.438,
+        "margin": -0.115,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 30.789,
+        "dE_fill": 30.808,
+        "margin": -0.018,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.jungle",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 41.598,
+        "dE_fill": 41.362,
+        "margin": 0.236,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 29.239,
+        "dE_fill": 29.1,
+        "margin": 0.139,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 18.869,
+        "dE_fill": 18.724,
+        "margin": 0.144,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 29.688,
+        "dE_fill": 29.573,
+        "margin": 0.115,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.jungle",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 53.094,
+        "dE_fill": 52.745,
+        "margin": 0.348,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 48.136,
+        "dE_fill": 47.988,
+        "margin": 0.147,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 39.618,
+        "dE_fill": 39.52,
+        "margin": 0.097,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 14.475,
+        "dE_fill": 14.084,
+        "margin": 0.391,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.jungle",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 61.173,
+        "dE_fill": 60.876,
+        "margin": 0.297,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 58.339,
+        "dE_fill": 58.127,
+        "margin": 0.212,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 52.016,
+        "dE_fill": 51.772,
+        "margin": 0.244,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 11.043,
+        "dE_fill": 11.006,
+        "margin": 0.037,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.jungle",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 77.433,
+        "dE_fill": 77.468,
+        "margin": -0.034,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 74.274,
+        "dE_fill": 74.368,
+        "margin": -0.093,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 70.179,
+        "dE_fill": 70.246,
+        "margin": -0.068,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 60.86,
+        "dE_fill": 60.897,
+        "margin": -0.037,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.jungle",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 55.884,
+        "dE_fill": 55.62,
+        "margin": 0.264,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 48.623,
+        "dE_fill": 48.429,
+        "margin": 0.193,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 38.696,
+        "dE_fill": 38.475,
+        "margin": 0.222,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 22.348,
+        "dE_fill": 22.376,
+        "margin": -0.028,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.jungle",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 32.744,
+        "dE_fill": 32.524,
+        "margin": 0.22,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 31.442,
+        "dE_fill": 31.301,
+        "margin": 0.141,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 24.933,
+        "dE_fill": 24.779,
+        "margin": 0.154,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 8.914,
+        "dE_fill": 8.865,
+        "margin": 0.049,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.jungle",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 54.515,
+        "dE_fill": 54.362,
+        "margin": 0.154,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 21.903,
+        "dE_fill": 21.602,
+        "margin": 0.302,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 5.337,
+        "dE_fill": 5.052,
+        "margin": 0.285,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 54.39,
+        "dE_fill": 54.397,
+        "margin": -0.007,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.jungle",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 59.013,
+        "dE_fill": 58.82,
+        "margin": 0.193,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 52.657,
+        "dE_fill": 52.596,
+        "margin": 0.06,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 44.002,
+        "dE_fill": 43.952,
+        "margin": 0.05,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 21.439,
+        "dE_fill": 21.343,
+        "margin": 0.097,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.jungle",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 66.1,
+        "dE_fill": 65.856,
+        "margin": 0.244,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 61.103,
+        "dE_fill": 60.907,
+        "margin": 0.196,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 54.39,
+        "dE_fill": 54.128,
+        "margin": 0.263,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 10.607,
+        "dE_fill": 10.575,
+        "margin": 0.032,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.lava",
+      "b": "terrain.mountain",
+      "normal": {
+        "dE_tile": 57.949,
+        "dE_fill": 58.413,
+        "margin": -0.465,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 36.024,
+        "dE_fill": 36.569,
+        "margin": -0.544,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 45.047,
+        "dE_fill": 45.55,
+        "margin": -0.503,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 58.539,
+        "dE_fill": 58.53,
+        "margin": 0.01,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.lava",
+      "b": "terrain.road",
+      "normal": {
+        "dE_tile": 48.664,
+        "dE_fill": 48.877,
+        "margin": -0.213,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 26.361,
+        "dE_fill": 26.574,
+        "margin": -0.213,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 32.612,
+        "dE_fill": 32.783,
+        "margin": -0.171,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 50.185,
+        "dE_fill": 50.048,
+        "margin": 0.136,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.lava",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 50.089,
+        "dE_fill": 50.295,
+        "margin": -0.205,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 28.648,
+        "dE_fill": 28.566,
+        "margin": 0.082,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 36.272,
+        "dE_fill": 36.215,
+        "margin": 0.058,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 50.666,
+        "dE_fill": 50.64,
+        "margin": 0.026,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.lava",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 67.713,
+        "dE_fill": 68.074,
+        "margin": -0.361,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 47.51,
+        "dE_fill": 47.424,
+        "margin": 0.086,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 57.656,
+        "dE_fill": 57.604,
+        "margin": 0.051,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 68.471,
+        "dE_fill": 68.694,
+        "margin": -0.223,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.lava",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 77.756,
+        "dE_fill": 77.918,
+        "margin": -0.162,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 57.824,
+        "dE_fill": 57.66,
+        "margin": 0.164,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 68.511,
+        "dE_fill": 68.331,
+        "margin": 0.181,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 80.547,
+        "dE_fill": 80.412,
+        "margin": 0.134,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.lava",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 84.795,
+        "dE_fill": 85.058,
+        "margin": -0.263,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 74.389,
+        "dE_fill": 74.469,
+        "margin": -0.08,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 73.098,
+        "dE_fill": 73.193,
+        "margin": -0.095,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 85.768,
+        "dE_fill": 85.756,
+        "margin": 0.012,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.lava",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 65.349,
+        "dE_fill": 65.522,
+        "margin": -0.172,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 47.927,
+        "dE_fill": 47.8,
+        "margin": 0.128,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 57.544,
+        "dE_fill": 57.406,
+        "margin": 0.138,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 62.914,
+        "dE_fill": 62.771,
+        "margin": 0.143,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.lava",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 65.124,
+        "dE_fill": 65.252,
+        "margin": -0.128,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 30.902,
+        "dE_fill": 30.814,
+        "margin": 0.088,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 42.236,
+        "dE_fill": 42.144,
+        "margin": 0.092,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 71.833,
+        "dE_fill": 71.741,
+        "margin": 0.092,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.lava",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 30.644,
+        "dE_fill": 30.688,
+        "margin": -0.044,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 21.151,
+        "dE_fill": 20.924,
+        "margin": 0.226,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 24.627,
+        "dE_fill": 24.391,
+        "margin": 0.236,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 27.192,
+        "dE_fill": 26.998,
+        "margin": 0.194,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.lava",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 67.679,
+        "dE_fill": 68.005,
+        "margin": -0.326,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 52.22,
+        "dE_fill": 52.201,
+        "margin": 0.018,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 58.846,
+        "dE_fill": 58.834,
+        "margin": 0.012,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 65.375,
+        "dE_fill": 65.432,
+        "margin": -0.057,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.lava",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 78.037,
+        "dE_fill": 78.164,
+        "margin": -0.127,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 60.493,
+        "dE_fill": 60.354,
+        "margin": 0.139,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 72.166,
+        "dE_fill": 71.967,
+        "margin": 0.198,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 76.909,
+        "dE_fill": 76.782,
+        "margin": 0.127,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.mountain",
+      "b": "terrain.road",
+      "normal": {
+        "dE_tile": 14.679,
+        "dE_fill": 14.986,
+        "margin": -0.307,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 14.005,
+        "dE_fill": 14.321,
+        "margin": -0.316,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 15.11,
+        "dE_fill": 15.436,
+        "margin": -0.326,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 12.606,
+        "dE_fill": 12.776,
+        "margin": -0.17,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.mountain",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 8.815,
+        "dE_fill": 9.259,
+        "margin": -0.444,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 7.767,
+        "dE_fill": 8.366,
+        "margin": -0.598,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 8.94,
+        "dE_fill": 9.476,
+        "margin": -0.536,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 8.215,
+        "dE_fill": 8.235,
+        "margin": -0.02,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.mountain",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 12.085,
+        "dE_fill": 11.546,
+        "margin": 0.538,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 11.54,
+        "dE_fill": 10.93,
+        "margin": 0.61,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 12.774,
+        "dE_fill": 12.242,
+        "margin": 0.532,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 9.96,
+        "dE_fill": 10.221,
+        "margin": -0.26,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.mountain",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 24.655,
+        "dE_fill": 24.097,
+        "margin": 0.558,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 23.705,
+        "dE_fill": 23.111,
+        "margin": 0.593,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 25.872,
+        "dE_fill": 25.256,
+        "margin": 0.615,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 24.27,
+        "dE_fill": 24.206,
+        "margin": 0.064,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.mountain",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 61.9,
+        "dE_fill": 61.989,
+        "margin": -0.089,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 62.495,
+        "dE_fill": 62.576,
+        "margin": -0.081,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 61.514,
+        "dE_fill": 61.593,
+        "margin": -0.079,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 61.904,
+        "dE_fill": 62.042,
+        "margin": -0.138,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.mountain",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 13.602,
+        "dE_fill": 12.961,
+        "margin": 0.64,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 12.874,
+        "dE_fill": 12.273,
+        "margin": 0.602,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 12.986,
+        "dE_fill": 12.407,
+        "margin": 0.579,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 7.49,
+        "dE_fill": 7.386,
+        "margin": 0.103,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.mountain",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 14.773,
+        "dE_fill": 15.212,
+        "margin": -0.439,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 7.345,
+        "dE_fill": 7.869,
+        "margin": -0.523,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 4.258,
+        "dE_fill": 4.667,
+        "margin": -0.409,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 14.951,
+        "dE_fill": 14.955,
+        "margin": -0.004,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.mountain",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 28.671,
+        "dE_fill": 28.977,
+        "margin": -0.306,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 16.561,
+        "dE_fill": 17.222,
+        "margin": -0.661,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 21.586,
+        "dE_fill": 22.28,
+        "margin": -0.694,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 32.724,
+        "dE_fill": 32.843,
+        "margin": -0.12,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.mountain",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 21.069,
+        "dE_fill": 20.767,
+        "margin": 0.302,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 21.122,
+        "dE_fill": 20.86,
+        "margin": 0.262,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 20.749,
+        "dE_fill": 20.505,
+        "margin": 0.244,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 16.289,
+        "dE_fill": 16.468,
+        "margin": -0.18,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.mountain",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 25.995,
+        "dE_fill": 25.306,
+        "margin": 0.689,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 24.661,
+        "dE_fill": 23.992,
+        "margin": 0.669,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 27.588,
+        "dE_fill": 26.897,
+        "margin": 0.692,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 18.574,
+        "dE_fill": 18.47,
+        "margin": 0.104,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.road",
+      "b": "terrain.ruins",
+      "normal": {
+        "dE_tile": 7.39,
+        "dE_fill": 7.335,
+        "margin": 0.056,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 7.359,
+        "dE_fill": 7.304,
+        "margin": 0.055,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 7.272,
+        "dE_fill": 7.262,
+        "margin": 0.01,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 6.677,
+        "dE_fill": 6.764,
+        "margin": -0.086,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.road",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 25.176,
+        "dE_fill": 24.94,
+        "margin": 0.235,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 23.857,
+        "dE_fill": 23.521,
+        "margin": 0.336,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 26.379,
+        "dE_fill": 26.155,
+        "margin": 0.224,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 20.613,
+        "dE_fill": 20.879,
+        "margin": -0.266,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.road",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 34.044,
+        "dE_fill": 33.715,
+        "margin": 0.329,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 31.92,
+        "dE_fill": 31.539,
+        "margin": 0.381,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 36.013,
+        "dE_fill": 35.664,
+        "margin": 0.349,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 30.423,
+        "dE_fill": 30.43,
+        "margin": -0.008,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.road",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 55.181,
+        "dE_fill": 55.17,
+        "margin": 0.011,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 56.029,
+        "dE_fill": 56.012,
+        "margin": 0.017,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 54.653,
+        "dE_fill": 54.635,
+        "margin": 0.018,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 54.114,
+        "dE_fill": 54.157,
+        "margin": -0.044,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.road",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 27.464,
+        "dE_fill": 27.23,
+        "margin": 0.234,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 26.731,
+        "dE_fill": 26.492,
+        "margin": 0.24,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 27.956,
+        "dE_fill": 27.746,
+        "margin": 0.21,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 19.877,
+        "dE_fill": 19.941,
+        "margin": -0.064,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.road",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 17.812,
+        "dE_fill": 17.853,
+        "margin": -0.041,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 6.694,
+        "dE_fill": 6.459,
+        "margin": 0.234,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 11.137,
+        "dE_fill": 10.935,
+        "margin": 0.202,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 22.564,
+        "dE_fill": 22.622,
+        "margin": -0.058,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.road",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 24.221,
+        "dE_fill": 24.216,
+        "margin": 0.005,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 14.766,
+        "dE_fill": 14.833,
+        "margin": -0.067,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 14.576,
+        "dE_fill": 14.773,
+        "margin": -0.197,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 27.374,
+        "dE_fill": 27.348,
+        "margin": 0.026,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.road",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 26.038,
+        "dE_fill": 25.819,
+        "margin": 0.22,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 25.907,
+        "dE_fill": 25.674,
+        "margin": 0.233,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 26.5,
+        "dE_fill": 26.322,
+        "margin": 0.178,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 15.689,
+        "dE_fill": 15.873,
+        "margin": -0.185,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.road",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 37.977,
+        "dE_fill": 37.63,
+        "margin": 0.347,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 35.971,
+        "dE_fill": 35.622,
+        "margin": 0.349,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 40.296,
+        "dE_fill": 39.941,
+        "margin": 0.355,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 27.997,
+        "dE_fill": 28.016,
+        "margin": -0.018,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.ruins",
+      "b": "terrain.sanctuary",
+      "normal": {
+        "dE_tile": 20.402,
+        "dE_fill": 20.422,
+        "margin": -0.02,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 19.009,
+        "dE_fill": 18.982,
+        "margin": 0.026,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 21.427,
+        "dE_fill": 21.432,
+        "margin": -0.005,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 17.902,
+        "dE_fill": 18.131,
+        "margin": -0.229,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.ruins",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 31.664,
+        "dE_fill": 31.579,
+        "margin": 0.085,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 29.684,
+        "dE_fill": 29.619,
+        "margin": 0.065,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 33.199,
+        "dE_fill": 33.098,
+        "margin": 0.101,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 30.672,
+        "dE_fill": 30.58,
+        "margin": 0.092,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.ruins",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 60.582,
+        "dE_fill": 60.72,
+        "margin": -0.138,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 61.381,
+        "dE_fill": 61.529,
+        "margin": -0.148,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 59.917,
+        "dE_fill": 60.066,
+        "margin": -0.149,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 60.387,
+        "dE_fill": 60.48,
+        "margin": -0.093,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.ruins",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 21.261,
+        "dE_fill": 21.196,
+        "margin": 0.064,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 20.571,
+        "dE_fill": 20.52,
+        "margin": 0.05,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 21.875,
+        "dE_fill": 21.792,
+        "margin": 0.082,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 14.591,
+        "dE_fill": 14.504,
+        "margin": 0.086,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.ruins",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 17.012,
+        "dE_fill": 16.979,
+        "margin": 0.033,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 3.341,
+        "dE_fill": 3.388,
+        "margin": -0.047,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 6.103,
+        "dE_fill": 6.086,
+        "margin": 0.017,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 21.72,
+        "dE_fill": 21.665,
+        "margin": 0.055,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.ruins",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 22.263,
+        "dE_fill": 22.36,
+        "margin": -0.097,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 11.184,
+        "dE_fill": 11.167,
+        "margin": 0.018,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 13.84,
+        "dE_fill": 13.915,
+        "margin": -0.075,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 25.577,
+        "dE_fill": 25.669,
+        "margin": -0.092,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.ruins",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 25.234,
+        "dE_fill": 25.341,
+        "margin": -0.107,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 25.335,
+        "dE_fill": 25.447,
+        "margin": -0.112,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 25.603,
+        "dE_fill": 25.711,
+        "margin": -0.108,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 18.548,
+        "dE_fill": 18.695,
+        "margin": -0.147,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.ruins",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 33.782,
+        "dE_fill": 33.682,
+        "margin": 0.099,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 31.938,
+        "dE_fill": 31.878,
+        "margin": 0.06,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 36.051,
+        "dE_fill": 35.916,
+        "margin": 0.135,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 26.244,
+        "dE_fill": 26.143,
+        "margin": 0.101,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.sanctuary",
+      "b": "terrain.shallow_water",
+      "normal": {
+        "dE_tile": 14.422,
+        "dE_fill": 14.186,
+        "margin": 0.236,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 14.083,
+        "dE_fill": 13.888,
+        "margin": 0.194,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 14.726,
+        "dE_fill": 14.512,
+        "margin": 0.214,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 15.798,
+        "dE_fill": 15.386,
+        "margin": 0.412,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.sanctuary",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 61.861,
+        "dE_fill": 61.731,
+        "margin": 0.13,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 61.81,
+        "dE_fill": 61.671,
+        "margin": 0.139,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 61.853,
+        "dE_fill": 61.744,
+        "margin": 0.108,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 61.758,
+        "dE_fill": 61.647,
+        "margin": 0.111,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.sanctuary",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 7.735,
+        "dE_fill": 8.083,
+        "margin": -0.349,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 6.475,
+        "dE_fill": 6.736,
+        "margin": -0.261,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 5.924,
+        "dE_fill": 6.168,
+        "margin": -0.244,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 9.207,
+        "dE_fill": 9.678,
+        "margin": -0.471,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.sanctuary",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 21.055,
+        "dE_fill": 20.894,
+        "margin": 0.161,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 17.469,
+        "dE_fill": 17.429,
+        "margin": 0.04,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 15.568,
+        "dE_fill": 15.595,
+        "margin": -0.026,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 7.499,
+        "dE_fill": 7.192,
+        "margin": 0.307,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.sanctuary",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 38.034,
+        "dE_fill": 38.331,
+        "margin": -0.296,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 27.86,
+        "dE_fill": 27.994,
+        "margin": -0.134,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 34.319,
+        "dE_fill": 34.495,
+        "margin": -0.176,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 42.63,
+        "dE_fill": 43.04,
+        "margin": -0.41,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.sanctuary",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 15.918,
+        "dE_fill": 15.891,
+        "margin": 0.027,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 15.34,
+        "dE_fill": 15.262,
+        "margin": 0.079,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 15.484,
+        "dE_fill": 15.415,
+        "margin": 0.069,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 15.521,
+        "dE_fill": 15.486,
+        "margin": 0.035,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.sanctuary",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 14.107,
+        "dE_fill": 14.061,
+        "margin": 0.046,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 13.151,
+        "dE_fill": 13.076,
+        "margin": 0.076,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 14.847,
+        "dE_fill": 14.676,
+        "margin": 0.171,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 8.705,
+        "dE_fill": 8.324,
+        "margin": 0.381,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.shallow_water",
+      "b": "terrain.snow",
+      "normal": {
+        "dE_tile": 54.457,
+        "dE_fill": 54.44,
+        "margin": 0.017,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 53.233,
+        "dE_fill": 53.23,
+        "margin": 0.003,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 55.419,
+        "dE_fill": 55.386,
+        "margin": 0.033,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 53.97,
+        "dE_fill": 54.007,
+        "margin": -0.036,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.shallow_water",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 20.597,
+        "dE_fill": 20.646,
+        "margin": -0.049,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 19.407,
+        "dE_fill": 19.456,
+        "margin": -0.049,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 19.684,
+        "dE_fill": 19.722,
+        "margin": -0.039,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 24.955,
+        "dE_fill": 25.018,
+        "margin": -0.063,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.shallow_water",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 28.81,
+        "dE_fill": 28.726,
+        "margin": 0.084,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 27.043,
+        "dE_fill": 26.967,
+        "margin": 0.076,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 27.137,
+        "dE_fill": 27.046,
+        "margin": 0.091,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 10.453,
+        "dE_fill": 10.399,
+        "margin": 0.054,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.shallow_water",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 49.683,
+        "dE_fill": 49.716,
+        "margin": -0.033,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 40.106,
+        "dE_fill": 40.097,
+        "margin": 0.009,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 46.912,
+        "dE_fill": 46.909,
+        "margin": 0.003,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 56.247,
+        "dE_fill": 56.247,
+        "margin": -0.0,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.shallow_water",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 12.149,
+        "dE_fill": 12.065,
+        "margin": 0.085,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 8.323,
+        "dE_fill": 8.285,
+        "margin": 0.038,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 11.905,
+        "dE_fill": 11.814,
+        "margin": 0.091,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 16.766,
+        "dE_fill": 16.625,
+        "margin": 0.141,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.shallow_water",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 10.606,
+        "dE_fill": 10.631,
+        "margin": -0.025,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 9.307,
+        "dE_fill": 9.288,
+        "margin": 0.02,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 8.958,
+        "dE_fill": 8.91,
+        "margin": 0.048,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 9.435,
+        "dE_fill": 9.428,
+        "margin": 0.008,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.snow",
+      "b": "terrain.swamp",
+      "normal": {
+        "dE_tile": 68.117,
+        "dE_fill": 68.218,
+        "margin": -0.101,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 68.258,
+        "dE_fill": 68.375,
+        "margin": -0.117,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 67.489,
+        "dE_fill": 67.593,
+        "margin": -0.104,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 68.081,
+        "dE_fill": 68.208,
+        "margin": -0.128,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.snow",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 59.379,
+        "dE_fill": 59.464,
+        "margin": -0.085,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 58.355,
+        "dE_fill": 58.438,
+        "margin": -0.082,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 58.246,
+        "dE_fill": 58.313,
+        "margin": -0.066,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 57.149,
+        "dE_fill": 57.174,
+        "margin": -0.024,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.snow",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 72.747,
+        "dE_fill": 72.78,
+        "margin": -0.034,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 70.788,
+        "dE_fill": 70.822,
+        "margin": -0.034,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 68.267,
+        "dE_fill": 68.32,
+        "margin": -0.053,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 75.501,
+        "dE_fill": 75.491,
+        "margin": 0.01,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.snow",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 47.278,
+        "dE_fill": 47.209,
+        "margin": 0.068,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 47.124,
+        "dE_fill": 47.065,
+        "margin": 0.059,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 46.778,
+        "dE_fill": 46.734,
+        "margin": 0.044,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 46.672,
+        "dE_fill": 46.632,
+        "margin": 0.04,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.snow",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 63.689,
+        "dE_fill": 63.633,
+        "margin": 0.057,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 62.487,
+        "dE_fill": 62.457,
+        "margin": 0.03,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 64.364,
+        "dE_fill": 64.282,
+        "margin": 0.083,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 61.353,
+        "dE_fill": 61.389,
+        "margin": -0.036,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.swamp",
+      "b": "terrain.town",
+      "normal": {
+        "dE_tile": 25.644,
+        "dE_fill": 25.642,
+        "margin": 0.002,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 20.043,
+        "dE_fill": 20.043,
+        "margin": -0.0,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 16.829,
+        "dE_fill": 16.819,
+        "margin": 0.01,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 16.26,
+        "dE_fill": 16.37,
+        "margin": -0.11,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.swamp",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 35.011,
+        "dE_fill": 35.1,
+        "margin": -0.09,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 27.212,
+        "dE_fill": 27.283,
+        "margin": -0.071,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 33.375,
+        "dE_fill": 33.448,
+        "margin": -0.072,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 36.163,
+        "dE_fill": 36.187,
+        "margin": -0.024,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.swamp",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 21.523,
+        "dE_fill": 21.698,
+        "margin": -0.175,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 21.758,
+        "dE_fill": 21.942,
+        "margin": -0.184,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 21.373,
+        "dE_fill": 21.54,
+        "margin": -0.167,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 21.542,
+        "dE_fill": 21.731,
+        "margin": -0.189,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.swamp",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 16.301,
+        "dE_fill": 16.326,
+        "margin": -0.025,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 15.506,
+        "dE_fill": 15.562,
+        "margin": -0.056,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 17.412,
+        "dE_fill": 17.424,
+        "margin": -0.012,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 16.977,
+        "dE_fill": 17.04,
+        "margin": -0.063,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.town",
+      "b": "terrain.volcanic",
+      "normal": {
+        "dE_tile": 38.725,
+        "dE_fill": 38.799,
+        "margin": -0.074,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 14.478,
+        "dE_fill": 14.489,
+        "margin": -0.011,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 19.826,
+        "dE_fill": 19.91,
+        "margin": -0.084,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 47.06,
+        "dE_fill": 47.115,
+        "margin": -0.055,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.town",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 27.156,
+        "dE_fill": 27.176,
+        "margin": -0.02,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 22.245,
+        "dE_fill": 22.327,
+        "margin": -0.082,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 20.151,
+        "dE_fill": 20.247,
+        "margin": -0.097,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 13.508,
+        "dE_fill": 13.473,
+        "margin": 0.035,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.town",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 33.797,
+        "dE_fill": 33.769,
+        "margin": 0.028,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 30.027,
+        "dE_fill": 29.975,
+        "margin": 0.052,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 30.046,
+        "dE_fill": 29.939,
+        "margin": 0.107,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 7.947,
+        "dE_fill": 7.94,
+        "margin": 0.008,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.volcanic",
+      "b": "terrain.wall",
+      "normal": {
+        "dE_tile": 41.579,
+        "dE_fill": 41.757,
+        "margin": -0.178,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 36.397,
+        "dE_fill": 36.52,
+        "margin": -0.124,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 39.288,
+        "dE_fill": 39.437,
+        "margin": -0.149,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 42.83,
+        "dE_fill": 43.006,
+        "margin": -0.176,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.volcanic",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 48.895,
+        "dE_fill": 48.911,
+        "margin": -0.016,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 40.967,
+        "dE_fill": 41.017,
+        "margin": -0.05,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 49.109,
+        "dE_fill": 49.117,
+        "margin": -0.007,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 51.243,
+        "dE_fill": 51.269,
+        "margin": -0.027,
+        "s1": true
+      }
+    },
+    {
+      "a": "terrain.wall",
+      "b": "terrain.water",
+      "normal": {
+        "dE_tile": 18.457,
+        "dE_fill": 18.402,
+        "margin": 0.056,
+        "s1": true
+      },
+      "protan": {
+        "dE_tile": 16.896,
+        "dE_fill": 16.896,
+        "margin": 0.0,
+        "s1": true
+      },
+      "deutan": {
+        "dE_tile": 19.821,
+        "dE_fill": 19.731,
+        "margin": 0.09,
+        "s1": true
+      },
+      "tritan": {
+        "dE_tile": 18.199,
+        "dE_fill": 18.149,
+        "margin": 0.05,
+        "s1": true
+      }
+    }
+  ],
+  "note": "The flat-fill baseline is hue-only, not colour-vision safe: a pass means the tiles are not worse than it (or are at least 10 dE apart).",
+  "forest_variants": {
+    "bush": {
+      "texture": {
+        "normal": 6.076,
+        "protan": 5.959,
+        "deutan": 6.18,
+        "tritan": 6.051
+      },
+      "min_dE_to_others": {
+        "normal": 14.953,
+        "protan": 4.292,
+        "deutan": 1.512,
+        "tritan": 6.443
+      }
+    },
+    "tree": {
+      "texture": {
+        "normal": 5.398,
+        "protan": 5.527,
+        "deutan": 5.301,
+        "tritan": 5.365
+      },
+      "min_dE_to_others": {
+        "normal": 15.566,
+        "protan": 3.754,
+        "deutan": 1.604,
+        "tritan": 7.196
+      }
+    }
+  }
+}
