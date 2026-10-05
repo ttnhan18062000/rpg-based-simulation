@@ -95,7 +95,7 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
   tool now refuses the second write with a non-zero exit rather than silently duplicating it).
 - **Standard/epic only:** Move staging artifacts to `agent-working/stored_artifacts/`.
 - Update related docs.
-- Clean up: `rm -rf data/runs/* reports/release_proof/*`.
+- Clean up only the run data your own session wrote: `python3 tools/gate_checks/done_checker_static.py --clean-data-runs --path <run_id>` (repeat `--path` per run; paths are relative to `data/runs/` or `reports/release_proof/`; it refuses empty, wildcard and absolute paths). Never `rm -rf data/runs/*`: other sessions write there concurrently, and `clean_data_runs_early` now only reports, it deletes nothing.
 - Verify no leftover staging/temp files remain.
 - If any files under `docs/` were created or modified: run `make knowledge-index-update` to keep the agent context search index current.
 - `docs/REGISTRY.yaml` is regenerated unconditionally as part of Finalize's post-migration self-check (all tiers, including hotfix) — no manual `make docs-registry` step is needed. Always stage the regenerated file (`git add docs/REGISTRY.yaml`) as part of ticket close, alongside `agent-working/agent-monitoring/`. Run `make setup-merge-drivers` once (repo-wide, not per-worktree — see `TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX`) so a `docs/REGISTRY.yaml` merge conflict between two concurrently-closed tickets regenerates automatically instead of needing the manual "take either side + rerun `make docs-registry`" resolution — that manual path still works and is still the fallback if the driver isn't installed. **This driver only helps local `git merge`/rebase/cherry-pick operations run through your own worktree — it has no effect on GitHub's own server-side PR merge-ref computation** (`refs/pull/N/merge`), which never sees your local `.git/config` driver registration. A `docs/REGISTRY.yaml`-only PR going `CONFLICTING` is expected and normal in that case, not a sign the driver failed — fetch and merge `origin/main` locally (where the driver *does* apply) and push, same as any other conflict.
@@ -242,7 +242,7 @@ A task is not done unless all are true:
 - Working log entry was added (`agent-working/tickets/working_log.csv`)
 - No important decision is undocumented
 - Repo state is consistent
-- Temporary run data cleaned: `data/runs/`, `reports/release_proof/`
+- Run data this session wrote under `data/runs/` and `reports/release_proof/` is cleaned by run id (the Verify check `data_runs_clean` is advisory and lists what remains; it does not fail the close)
 - No known material gap is left unstated
 - Agent monitoring records written: run entry in `agent-working/agent-monitoring/data/YYYY-Www/runs.jsonl`, at least one event in `agent-working/agent-monitoring/data/YYYY-Www/events.jsonl` _(guaranteed by workflow — not verified by done-checker)_
 - Frontmatter valid in the ticket and its staging artifacts (script-checked by `done-checker`'s `frontmatter_valid` condition)
