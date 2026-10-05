@@ -1,8 +1,10 @@
 from __future__ import annotations
 from typing import List, Tuple, Optional, TYPE_CHECKING, Dict
 
+from src.core.region_resolution import resolve_region_among
+
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState, EntityState, ResourceNodeState, BuildingState
+    from src.core.state import AuthoritativeState, EntityState, ResourceNodeState, BuildingState, RegionState
 
 class SpatialQueryService:
     """
@@ -166,27 +168,26 @@ class SpatialQueryService:
 
     @staticmethod
     def get_region_at(state: AuthoritativeState, pos: tuple[float, float]) -> Optional[RegionState]:
-        """Returns the region containing the given position."""
+        """Returns the region a position belongs to, by the rule in ``src.core.region_resolution.resolve_region_among``."""
         if not state.regions:
             return None
         # Quick exit if outside all regions
         bounds = SpatialQueryService._get_regions_global_bounds(state)
         if bounds:
-             if not (bounds[0] <= pos[0] < bounds[2] and bounds[1] <= pos[1] < bounds[3]):
+             if not (bounds[0] <= pos[0] <= bounds[2] and bounds[1] <= pos[1] <= bounds[3]):
                  return None
-                 
+
         index = SpatialQueryService._get_region_index(state)
         if index:
              cell_size = 50.0
              cx = int(pos[0] // cell_size)
              cy = int(pos[1] // cell_size)
              r_ids = index.get((cx, cy), [])
-             for r_id in r_ids:
-                 r = state.regions.get(r_id)
-                 if r:
-                     x_min, y_min, x_max, y_max = r.bounds
-                     if x_min <= pos[0] < x_max and y_min <= pos[1] < y_max:
-                         return r
+             # r_ids is in declaration order (the index is built by iterating state.regions), which is
+             # what resolve_region_among's tie-break relies on.
+             return resolve_region_among(
+                 (state.regions[r_id] for r_id in r_ids if r_id in state.regions), pos[0], pos[1]
+             )
         return None
 
     @staticmethod

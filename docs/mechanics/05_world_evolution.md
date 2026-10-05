@@ -29,6 +29,8 @@ Regions are not static. They react to the violence and activity within their bor
 ### The Trauma Cycle
 1.  **Event**: Every entity death in a region adds **+1.0** to the regional `Trauma Score`
     (`src/engine/world_dynamics.py:54-55`, confirmed 2026-09-02).
+    The region is the one the death position resolves to (`06_worldbuilding_foundation.md`, Region Overlap Resolution):
+    one death credits exactly one region, and a death in unclaimed space credits none.
 2.  **Threshold**: If `Trauma Score > 50.0`, the region enters an unstable state.
 
 **Flagged, not yet resolved, 2026-09-02:** `src/engine/apply_plan.py:218` applies a separate `+2.0` trauma

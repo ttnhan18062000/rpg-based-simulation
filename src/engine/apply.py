@@ -42,6 +42,7 @@ from src.core.enums import EntityRole, Faction, ReasonCode, DiplomaticState, Pas
 from src.core.movement_modes import MovementMode
 from src.core.updates import StateUpdate, EntityUpdate, SocialUpdate, StrategicUpdate, StaminaUpdate, NavigationUpdate
 from src.engine.legality import LegalityServiceV2
+from src.engine.spatial_query import SpatialQueryService
 from src.engine.rpg_depth import StaminaService, SkillScalingService
 from src.systems.social_memory import SocialMemoryService
 from src.systems.social_systems.relationships import RelationshipService
@@ -157,7 +158,6 @@ class ApplyPath:
             # --- World Dynamics (Hazard/Environment Impact) ---
             region = None
             if has_regions:
-                from src.engine.spatial_query import SpatialQueryService
                 region = SpatialQueryService.get_region_at(prior_state, entity.navigation.position)
             
             if region:
@@ -188,26 +188,20 @@ class ApplyPath:
         if u_ent:
             changes = ApplyPath._apply_entity_update_to_dict(entity, u_ent, changes)
         
-        # --- C. Region Maintenance (Optimized) ---
+        # --- C. Region Maintenance ---
+        # A moved entity's region_id is re-resolved by the one position-to-region rule
+        # (src.core.region_resolution.resolve_region_among: inclusive edges, smallest area wins, ties to the earlier
+        # declaration). It is not kept while the entity is merely still inside its old region: with
+        # overlapping regions a smaller region may now contain it, and region_id must agree with the
+        # lookup the rest of the engine uses.
         if "navigation" in changes:
             nav = changes["navigation"]
-            if nav.position != entity.navigation.position:
-                curr_reg_id = nav.region_id
-                is_in_region = False
-                if curr_reg_id and curr_reg_id in prior_state.regions:
-                    r = prior_state.regions[curr_reg_id]
-                    xb = r.bounds
-                    if xb[0] <= nav.position[0] <= xb[2] and xb[1] <= nav.position[1] <= xb[3]:
-                        is_in_region = True
-                if not is_in_region and has_regions:
-                    nav = replace(nav, region_id=None)
-                    for r in region_list:
-                        xb = r.bounds
-                        if xb[0] <= nav.position[0] <= xb[2] and xb[1] <= nav.position[1] <= xb[3]:
-                            nav = replace(nav, region_id=r.id)
-                            break
-                    changes["navigation"] = nav
-        
+            if nav.position != entity.navigation.position and has_regions:
+                new_region = SpatialQueryService.get_region_at(prior_state, nav.position)
+                new_region_id = new_region.id if new_region is not None else None
+                if nav.region_id != new_region_id:
+                    changes["navigation"] = replace(nav, region_id=new_region_id)
+
         return changes
 
     @staticmethod

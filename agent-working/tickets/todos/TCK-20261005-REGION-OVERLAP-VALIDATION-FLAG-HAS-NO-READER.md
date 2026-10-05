@@ -376,6 +376,36 @@ later in the run. One world, one seed.
 
 **Not done:** no fix direction chosen; nothing in `src/` changed; `src/core/state.py` not touched; `allow_overlapping_regions` untouched.
 
+### 2026-10-05 (later) — Scope 3 implementation, IN PROGRESS on branch `region-lookup-policy` (local, not pushed); read before continuing
+
+**Owner decision 11:** fix the lookup, leave bounds overlapping, amend the Bible. **Planner's resolution ruling:** smallest-area containing region, ties by declaration order, defined once on the lookup.
+**Related P0, read together with this ticket:** `TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE`. `AppraisalSystem` adds `region_trauma * 0.5` to a 0-1 panic score with a flee
+threshold of 0.4, and those trauma values are the ones this ticket shows are misattributed across overlapping regions. So **which region claims a death decides who flees**, and the appraisal reads trauma through
+`DomainView.get_region_for_position` while the producer wrote through `SpatialQueryService.get_region_at`; before this work those two lookups disagreed (closed vs half-open edges). Neither measurement is stable until both land.
+
+**Done in the working tree (committed locally as WIP):**
+- `src/core/region_resolution.py::resolve_region_among` — the one rule: inclusive edges, smallest `(max_x-min_x)*(max_y-min_y)` wins, ties to the earlier candidate (declaration order), `None` for unclaimed space. It lives in `core` because
+  `tests/architecture/test_phase18_import_boundaries.py` pins `systems -> engine` imports as a closed grandfathered list; a first version in `engine/spatial_query.py` made `systems/.../memory.py` import the engine and failed that guard.
+- `SpatialQueryService.get_region_at` and `DomainView.get_region_for_position` both apply it (so a region's trauma is read from the region it was credited to). `ApplyPath` now re-resolves `navigation.region_id` through the lookup
+  (it used a closed-bounds first-match loop that also kept an entity in its old region while still inside it). `SocialMemoryService.tick_place_attachment`'s inline loop now uses the rule.
+- `tests/unit/engine/test_region_lookup_policy.py` (18 tests; 9 fail on the old code, including the measured `(29, 40)` death crediting `{}`).
+- Bible amended: `06_worldbuilding_foundation.md` Overlap Policy bullet, new "Region Overlap Resolution" subsection, paint-order cross-reference; `05_world_evolution.md` trauma-cycle credit sentence.
+- Edge convention chosen: **inclusive on all four edges**, because `WorldCompiler` paints terrain with `range(min, max + 1)` and places entities with `get_int(min, max)`, so the world's own tiles are inclusive; the half-open lookup lost the far-edge tile row.
+- Unclaimed space (`None`): **not an error and not a warning** — it is legitimate world space; a death there adds no regional trauma (stated in Bible 05/06 and pinned by a test). Planner may overrule.
+- Verified: CI's own lane commands (`tests/unit/{core,kernel,engine,config,runtime,platform,world,worldassembly,worldbuilding,worldgeneration,worldmodules,content,content_semantics,replay}`, gameplay unit lane, `tests/integration`, `tests/simulation_quality`,
+  `tests/mechanic_scenarios`, `tests/unit/domains|observability|entity|entities|cognition|certification`, `tests/api|cli|logging|engine|perf|certification`, `make lane-all-fast`, `make gate-expansion`) all green on the tree BEFORE the core-module refactor;
+  after it only `tests/unit/engine/test_region_lookup_policy.py` and `tests/architecture` were re-run (137 passed). **The full lane set must be re-run before pushing.**
+
+**MEASURED, and it undercuts the ruling's premise.** Re-run of `frontier_living_world`, 10,000 ticks, after the change (`probes/after_smallest_area_*`): `near_forest` and `wolf_den` are STILL 0.0 trauma; `bandit_road` is credited 121 deaths (about what
+it was); `goblin_camp` 118; `hometown` 12 (was 7, edge fix); credited to no region 16 (was 23). Trauma crosses 50 at tick 5211 (`goblin_camp`) and **5317** (`bandit_road`, was 5217). Reason: the three overlapping regions are **not nested**:
+`bandit_road` `[40,40,100,60]` is a thin strip of area 1,200, smaller than `wolf_den` (1,400) and `near_forest` (2,025), so smallest-area still picks `bandit_road` at every shared point. The rule repairs the far-edge deaths and makes lookups
+consistent, but **it does not un-shadow `near_forest`, `wolf_den`, `trading_hometown` on this corpus**. The ruling assumed `wolf_den` inside `near_forest` inside `bandit_road`; the data says partial overlap. Whether partial overlap needs a
+different rule (nearest centre, share the credit, or fix the content geometry) is the owner's/planner's call, NOT made here. `ENV-06`'s `> 50` threshold stays reachable (two regions cross it).
+`generated_frontier_3_42` was not re-measured (my probe's watch list named regions that world lacks; it crashed at the end).
+
+**Not done yet:** `docs/guidelines/intentional_divergences.md` entry (next id `DEV-010`, class `Unified`; verification `tests/unit/engine/test_region_lookup_policy.py`); parity-ledger entry (`substrate.yaml`, next id `SUB-397`, via `parity_ledger_writer.write_entry`);
+the `allow_overlapping_regions` field is untouched (Scope 4: read by a check or removed — ask the planner, the owner chose not to enforce); `make knowledge-index-update` cannot run here; the ticket is not closed.
+
 ## Test Summary
 _(not started)_
 
