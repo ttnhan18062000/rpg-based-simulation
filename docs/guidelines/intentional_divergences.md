@@ -37,6 +37,8 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Cognition-Strategy** | Adventure-Route Defer-Reason Observability Gap | **Bounded** | RATIFIED |
 | **Strategic Cognition / Regional Danger** | Regional-Danger Stabilization No Longer Unconditionally Wins the Project Slot | **Enforced** | RATIFIED |
 | **Engine / Combat-Cognition** | Hostility and Allegiance Read From the Content Catalog, Not the Legacy `Faction` Enum, at Eight More Sites (§2.65) | **Bug Fix** | RATIFIED |
+| **Engine / Tactical** | Retreat and Stalemate-Break Destinations Are Region-Contained, Never the World Origin (§2.66) | **Bug Fix** | RATIFIED |
+| **Strategic Cognition / Tactical** | Entity-Targeted Objective Is Typed, Resolved Live, and Ends With Its Target (§2.67) | **Bug Fix** | RATIFIED |
 | **Knowledge Gateway MCP / Packet Cache** | Level 2 Packet-Cache Freshness/Verification Column Co-location | **Bounded** | RATIFIED |
 | **Engine / Progression** | ALLOCATE_AP Action-Router Branch Kept Dormant | **Bounded** | ACTIVE |
 | **Engine / Combat** | Wounds Permanent; `heal_wound()`/`get_diagnosis_quality()` Removed | **Bug Fix** | ACTIVE |
@@ -2245,6 +2247,68 @@ untouched by §2.57's fix (out of that ticket's scope).
   single shared helper.
 - **Verification**: `tests/unit/combat/test_catalog_hostility_sweep.py` (both error directions per site, a
   neutral case, helper uniqueness).
+- **Status**: RATIFIED
+
+### 2.66 Retreat and Stalemate-Break Destinations Are Region-Contained, Never the Literal World Origin (TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN)
+- **Subsystem**: Tactical AI (`src/engine/tactical.py`)
+- **Old Behavior**: four branches set the entity's navigation target to the literal `(0.0, 0.0)`:
+  the `emotion.is_fleeing` gate (`PANIC_RETREAT`), the very-low-HP engaged branch (`PANIC_RETREAT`, the
+  same reason tag, not listed in the ticket's three-row table), `SAFETY_PRESSURE_RETREAT`, and the
+  `STALEMATE_BREAK` `WANDER`. In the corpus worlds `(0, 0)` is outside every region, so an entity that
+  reached one of these branches walked out of the declared spatial model and idled there with
+  `region_id=None`.
+- **New Behavior**: `src/engine/tactical_destinations.py` derives the destination, per the rule owner's
+  2026-10-03 ruling (`MOV-01`, `LOC-01`, `LOC-03`, `MOV-03`). Retreat: away from the perceived threats by
+  one perception radius, clamped to stay inside the entity's current region (strict bounds, no
+  nearest-centre fallback); else the entity's own `strategic.home_region_id` region centre when set; else
+  **hold position** (the entity's current position). Stalemate-break: a seeded
+  (`DeterministicRNG`, `Domain.TACTICAL`, tick and entity scoped), nearby (half-width 5), region-contained
+  point; hold when the entity is itself outside every region. A different semantic from retreat, so it
+  shares no derivation. Rejected by the ruling and not used: nearest settlement, nearest friendly region,
+  any literal coordinate.
+- **Not behavior-neutral**: a retreating entity now moves away from its threats instead of toward the
+  world origin, and a cornered one stops instead of continuing. Firing rates per branch were not changed.
+- **Rationale**: **Bug Fix** (the old target violated `MOV-01`/`LOC-01`), per the ticket's ruling.
+- **Verification**: `tests/unit/combat/test_tactical_destinations.py` (pure derivation and each branch
+  through `evaluate_entity_intent`, which fail on the literal-origin code),
+  `tests/unit/engine/test_pressure_perception_consumers.py::test_safety_pressure_retreat_target_is_inside_a_region_and_away_from_the_threat`,
+  `tests/unit/combat/test_engagement_behavior.py::test_retreat_behavior`,
+  `tests/unit/combat/test_anti_stalemate.py::test_stalemate_break`.
+- **Status**: RATIFIED
+
+### 2.67 An Entity-Targeted Objective Is Typed, Resolved Live, and Ends When Its Target Dies or Leaves Perception (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES)
+- **Subsystem**: Strategic Cognition (`ObjectiveState`, `StrategicIntelligenceSystem`, `StrategicWorkQueue`) / Tactical AI
+- **Old Behavior**: an objective whose subject is a moving entity carried that entity's id in the
+  overloaded string `target` (shared with resource-node ids, building ids and `town_center`). A combat
+  project never left `ACTIVE` unless something unrelated closed it: in the control arm below 0 of 13
+  `frontier_living_world` combat projects ever reached a terminal status. The int-cast in
+  `_resolve_target_position` could resolve an entity id equal to a node or building id to the wrong place.
+- **New Behavior**: `ObjectiveState.target_entity_id` (typed, `Optional[int]`, copied from
+  `GoalScore.target_entity_id`, set by `CombatEngageScorer` and by a resumed `COMBAT_ENGAGE` committed
+  intention). It is omitted from the canonical dict when `None`, so no state without an entity-typed
+  objective changes hash. A typed target resolves to the live entity position (dead or missing: none, no
+  `target_position` fallback). The strategic pass ends the objective (`entity_target_outcome`): target
+  dead -> `RESOLVED`/project `COMPLETED`; target beyond 10 tiles Manhattan (the radius
+  `CombatEngageScorer` chooses within) -> `FAILED`/`ABANDONED`; target absent from state -> `FAILED`/
+  `ABANDONED` (never observed, dead entities stay in state). `StrategicWorkQueue` treats such an ended
+  objective as a tier-3 transition so it is evaluated promptly, not at the next sweep.
+  `ScoreModifierSystem` now copies a `GoalScore` with `dataclasses.replace` (a field-by-field rebuild had
+  silently dropped any new field).
+- **Not behavior-neutral; measured** (real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`,
+  `LocalSequentialExecutor`, live holders only; control arm disables only the termination hook):
+  `frontier_living_world` projects ever terminal 0 of 13 (control) vs 37 of 44 (fixed: 2 completed, 35
+  abandoned); live holder with target out of radius 4266 to 670, with target dead 980 to 39; combat
+  projects 13 to 44 because an abandoned objective is re-won against a new target. `crowded_frontier`: 0 of
+  5 vs 1 of 5, live-holder dead target 28 in both arms, out of radius 0: almost nothing to end there. The
+  entity state hash differs between arms in both worlds (so recorded hashes of runs with combat objectives
+  move; see the ticket's Test Summary for which and why).
+- **Rationale**: **Bug Fix** (the lifecycle gap and the id collision), with **Unified** for the single
+  predicate shared by the strategic pass and the work queue.
+- **Verification**: `tests/unit/strategic/test_entity_target_objective.py` (typed field through scorer to
+  objective, each termination condition directly and through `evaluate_strategic_intent`, the work-queue
+  rule, live resolve, the node-id collision, the unchanged `town_center`/node/coordinate cases, canonical
+  omission), `tests/mechanic_scenarios/test_entity_target_navigation_tracks_live_position_through_kernel.py`
+  (regression guard that the live path tracks the target's current position).
 - **Status**: RATIFIED
 ---
 

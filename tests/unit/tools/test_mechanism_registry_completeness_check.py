@@ -136,13 +136,20 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     2026-09-30 (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION): `bound` 33 -> 36,
     `unbound` 28 -> 25. New targets: `domains/information` (`information_trust_deception` bound to
     `SourceTrustUpdateService`), `systems/social_systems/memory` (`social_memory`),
-    `systems/social_systems/relationships` (`affection_relationship_bonds`)."""
+    `systems/social_systems/relationships` (`affection_relationship_bonds`).
+
+    2026-10-05 (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES):
+    `total_targets` 64 -> 65 and `unbound` 25 -> 26. The new target is
+    `systems/strategic_systems/entity_target_objective` (a pure predicate module with no class, shared by
+    `intelligence.py` and `work_queue.py`). It is a lifecycle rule of the existing `goal_hierarchy` /
+    `strategic_intelligence_core` mechanisms, not a mechanism of its own, so it is left unbound rather than
+    given a registry entry (registry ownership is `rpg-feature-planning`'s)."""
     data = _real_registry_data()
     report = build_report(data)
-    assert report.total_targets == 64
+    assert report.total_targets == 65
     assert len(report.bound) == 36
     assert len(report.excluded) == 3
-    assert len(report.unbound) == 25
+    assert len(report.unbound) == 26
 
 
 # --- state: gap is not a coverage hole (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION) ---
@@ -188,8 +195,12 @@ def test_wider_scope_every_wired_candidate_has_a_recorded_disposition():
 
 def test_wider_scope_numbers_pinned():
     wider = build_report(_real_registry_data()).wider
-    assert wider["scope_files"] == 297  # 296 + src/worldassembly/resolve_io.py (one new module)
-    assert wider["unbound_files"] == 233  # files no implemented_by entry names; +1, same new module
+    # 296 + src/worldassembly/resolve_io.py + src/systems/strategic_systems/entity_target_objective.py (two new modules)
+    assert wider["scope_files"] == 298
+    # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
+    # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
+    # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
+    assert wider["unbound_files"] == 228  # measured on the merge of 6202678a6 and this branch
     assert wider["candidates"] == 73  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package
     assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 3

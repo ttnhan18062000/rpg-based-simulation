@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE
-phase: open
+phase: done
 date: 2026-10-03
 tags: [engine, combat, determinism, root-cause]
 ---
@@ -18,7 +18,7 @@ Run-to-run divergence on the combat/tactical path that `audit_mode=True` and a r
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -163,16 +163,87 @@ claim one; neither does this ticket.
 
 ## Implementation Notes
 
-_To be completed by the implementer. Start with a confirm-or-refute probe, not a fix._
+**Status: re-measured and partly isolated by `rpg-implementer` on 2026-10-05; closed as a characterisation
+ticket** (its six ACs never asked for a fix; the planner confirmed the reading). Stopped at the planner's
+guardrail (the upstream cause is unproven and the candidate fix is on the contested surface); the fix is
+`TCK-20261005-DIRTY-SET-DEDUPES-UPDATES-BY-ID-SO-RECYCLED-ADDRESSES-DROP-WORK`. Evidence below. Measured on branch `worktree-lane-a-tactical-path-batch` (`origin/main` `054b49146` plus the
+retreat, entity-target and bravery-guard tickets); **not run on bare `origin/main`**, so "is main clean or
+masked" (Scope, last bullet) is still open. None of the probes is in the repo (scratch scripts:
+`det_probe.py`, `early_trials.py`).
+
+**1. Reproduced, with a positive control (AC1-AC3).** `frontier_living_world`, 2000 ticks, `audit_mode=True`,
+`max_tick_budget_ms=1e9`, `LocalSequentialExecutor`, canonical state hash (`CanonicalStateHasher.get_hash`)
+every tick, `total_dropped_work == 0` and governor `RuntimeMode` 0 on every tick of every run. Four identical
+seed-42 runs in four fresh processes: final hashes `cc17cd69…` (runs 1, 2, 4) and `a76fb7bf…` (run 3). Run 2
+also differs from run 1 at tick 512 (entity 9) and **re-converges**, so a divergence can heal. Positive control:
+seed 43 differs from every seed-42 run at tick 1 in every entity.
+
+**2. First divergent tick and fields (AC4).** Run 3 vs run 1: tick 5 (index 4), entities 16 and 36. Differing
+fields: `navigation.target`, `strategic.current_project_id`, `strategic.current_objective_id` and a whole
+`strategic.projects[...]` entry. In one trace, entity 16 starts `project_stabilize_bandit_road_t4` and entity 36
+`proj_guild_4` at tick 4; in the other neither does. Short 8-tick runs reproduce exactly this split and fall into
+the same two traces.
+
+**3. The proximate mechanism, measured.** At the first differing `StrategicWorkQueue.build` call (tick 4) the
+budget (10), sweep interval (5), `dirty is None` and `force_full_scan` are identical. The candidate lists differ
+(trace A has 16 and 36, trace B has 31). The only per-entity scheduling input that differs is **entity 16's
+membership in `dirty.strategic_entities`: present in A, absent in B.** Entity 16 therefore sits in tier 6 in A
+and in the tier-7 background sweep in B; the sweep's rotation then selects different entities under the budget.
+The dirty set is not part of the canonical state hash, which is why hashes match until the project is created
+at tick 5.
+
+**4. Upstream cause: NOT established. A strong, specific lead.** `DirtySetBuilder.mark_from_update`
+(`src/core/dirty.py:142-146`) de-duplicates entity updates with `id(e_upd)` in `_processed_upd_ids`. `id()` is
+unique only among live objects, so an update allocated at a recycled address is silently skipped and its entity
+never marked dirty. A shadow check (same `id`, different update content) found about **56 such skipped updates
+per 8-tick trial in every trial, from tick 0**, with run-to-run variation (53 to 60), which is what an
+allocation-dependent mechanism looks like. **Not shown:** that entity 16's update was among the skipped ones in a
+diverging run; the diverging trace did not reproduce in the last two probe runs (it appeared in three of five
+instrumented experiments, and in every experiment that showed it the switch came after trial 7, which is
+unexplained). A second `id()`-keyed cache, `get_frozen` in `src/engine/executor.py:257` (frozen world views keyed
+on `id(state.regions)` and similar), has the same reuse hazard and was **not tested**.
+
+**5. Verdict on `INFRA-273` (AC5): distinct.** `audit_mode` was on, `dropped_work_total` was 0 and the governor
+stayed in mode 0 on every tick, so neither the mid-tick throttle nor a mode transition can be involved; the
+measured mechanism contains no wall-clock read. This contradicts `docs/engine/deterministic_execution.md`'s
+statement that `audit_mode` is "the current way to get a deterministic run".
+
+**6. Classification (AC6).** A determinism break on a path that runs in ordinary corpus play: a **hard bug**
+(row 7), not parked.
+
+**7. Ticket assumptions checked.** `tactical.py` is **not** the source: the divergence appears in strategic
+scheduling at tick 4 before any tactical decision differs. `kernel.py:612-620` and `governor.py:78-105` are not
+implicated on this evidence (nothing dropped, mode 0), so the exclusive hold on them was not used.
+
+**Not done:** a fix (the candidate, `src/core/dirty.py`, is contested-surface and needs the planner); proof of
+the entity-16 link; the `get_frozen` hazard; bare-`main` comparison; why the switch to the second trace came
+after trial 7 in three experiments and never in two.
 
 ## Test Summary
 
-_To be completed by the implementer._
+No code changed; no test added. Evidence is probe output only (not in the repo).
 
 ## Files Changed
 
-_To be completed by the implementer._
+None (ticket only).
 
 ## Completion Summary
 
-_To be completed by the implementer._
+The divergence is confirmed under the documented protocol, with a positive control, canonical hashes, zero dropped
+work and the governor in mode 0 (AC1-AC3). The first divergent tick is 5 and the diverging fields are named
+(AC4). Verdict: **distinct from `INFRA-273`** (AC5), and **a hard bug** (AC6). The measured proximate mechanism is
+strategic work-queue scheduling: entity 16's `dirty.strategic_entities` membership differs, which changes the
+tier-7 sweep selection. The upstream cause is a strong lead, **not proven**: `id()`-keyed de-duplication in
+`src/core/dirty.py:142-146` (about 56 skipped updates per 8-tick trial); the second `id()`-keyed cache in
+`src/engine/executor.py:257` is untested. The fix, the strong-reference discriminator and the bare-`main`
+comparison belong to `TCK-20261005-DIRTY-SET-DEDUPES-UPDATES-BY-ID-SO-RECYCLED-ADDRESSES-DROP-WORK`.
+
+**Doc contradiction, named and not edited here:** `docs/engine/deterministic_execution.md:69` says `audit_mode`
+"is the current way to get a deterministic run". The divergence happened with `audit_mode` on and the measured
+mechanism reads no clock, so that sentence is false; the correction is in the new ticket.
+
+**`## Blocks` stands and is stronger.** `TCK-20261003-TACTICAL-RETREAT-TARGETS-HARDCODED-WORLD-ORIGIN` AC-1 and
+AC-4 (corpus firing-rate and parked-at-origin counts) were not taken, on that ticket's own downgrade. This ticket
+has now confirmed the protocol those counts would have used (`audit_mode`, raised budget, sequential) does not
+make a run reproducible, so the downgrade was correct, and the counts become takeable when the fix lands. Any
+single-run measurement on this engine is a sample, not a value; order-of-magnitude conclusions survive.

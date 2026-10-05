@@ -17,6 +17,9 @@ from src.core.enums import ActionStyle, ReasonCode, EntityRole, Faction
 from src.core.skills import SKILL_REGISTRY
 from src.engine.rpg_depth import WoundService
 from src.cognition.capability_estimate import CapabilityEstimateService, CapabilityContext
+from src.content_semantics.faction import are_entities_hostile
+from src.content_semantics.relation import RelationContext
+from src.engine.tactical_destinations import retreat_destination, wander_destination
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -61,6 +64,24 @@ def _combined_wound_scar_distress(wounds, scars) -> float:
     """Combined wound + scar distress signal, used only by the PROTECTOR guard
     branch (AC #2's 'ally wound/scar severity as an additional signal')."""
     return _wound_distress(wounds) + _scar_distress(scars)
+
+
+def _perceived_threats(entity: "EntityState", neighbors: List["EntityState"]) -> List["EntityState"]:
+    """Perceived neighbors the entity's appraisal counts as hostile (same predicate as
+    AppraisalSystem.evaluate_emotional_state), so a retreat flees what the panic gate saw."""
+    sx, sy = entity.navigation.position
+    return [
+        n for n in neighbors
+        if are_entities_hostile(entity, n, RelationContext(
+            distance=abs(n.navigation.position[0] - sx) + abs(n.navigation.position[1] - sy),
+            combat_engaged=True,
+        ))
+    ]
+
+
+def _destination_or_hold(entity: "EntityState", destination: Optional[Tuple[float, float]]) -> Tuple[float, float]:
+    """MOV-03: with no valid destination the entity holds position; never a sentinel coordinate."""
+    return destination if destination is not None else entity.navigation.position
 
 
 class TacticalDecisionSystem:
@@ -135,13 +156,17 @@ class TacticalDecisionSystem:
         )
         
         if emotion.is_fleeing:
-             # PANIC: Move to safe origin
+             # PANIC: Move away from the perceived threats, inside the current region
+             # (MOV-01 / LOC-01); hold position when no valid destination exists (MOV-03).
+             retreat_to = _destination_or_hold(
+                 entity, retreat_destination(state, entity, _perceived_threats(entity, neighbors))
+             )
              return EntityUpdate(
                  entity_id=entity.id,
-                 navigation=NavigationUpdate(target_set=(0.0, 0.0), movement_mode_set=MovementMode.RETREAT),
+                 navigation=NavigationUpdate(target_set=retreat_to, movement_mode_set=MovementMode.RETREAT),
                  task=TaskUpdate(
                      work_kind_set="ENTITY_MOVE",
-                     payload_set={"target_position": (0.0, 0.0), "reason": "PANIC_RETREAT"}
+                     payload_set={"target_position": retreat_to, "reason": "PANIC_RETREAT"}
                  )
              )
 
@@ -241,13 +266,14 @@ class TacticalDecisionSystem:
 
         # Safety pressure: high-safety entities retreat from threats rather than engage
         if hostiles and entity_pressures.safety_pressure > 0.75:
+            retreat_to = _destination_or_hold(entity, retreat_destination(state, entity, hostiles))
             return EntityUpdate(
                 entity_id=entity.id,
                 strategic=strat_up,
-                navigation=NavigationUpdate(target_set=(0.0, 0.0), movement_mode_set=MovementMode.RETREAT),
+                navigation=NavigationUpdate(target_set=retreat_to, movement_mode_set=MovementMode.RETREAT),
                 task=TaskUpdate(
                     work_kind_set="ENTITY_MOVE",
-                    payload_set={"target_position": (0.0, 0.0), "reason": "SAFETY_PRESSURE_RETREAT"}
+                    payload_set={"target_position": retreat_to, "reason": "SAFETY_PRESSURE_RETREAT"}
                 )
             )
 
@@ -477,13 +503,14 @@ class TacticalDecisionSystem:
 
         if stale_ticks > 10:
              # Logic ID: COMB-277 (Anti-stalemate does not force illegal movement)
+             wander_to = _destination_or_hold(entity, wander_destination(state, entity))
              return EntityUpdate(
                  entity_id=entity.id,
                  strategic=strat_up,
-                 navigation=NavigationUpdate(target_set=(0.0, 0.0), movement_mode_set=MovementMode.WANDER),
+                 navigation=NavigationUpdate(target_set=wander_to, movement_mode_set=MovementMode.WANDER),
                  task=TaskUpdate(
                      work_kind_set="ENTITY_MOVE",
-                     payload_set={"target_position": (0.0, 0.0), "reason": "STALEMATE_BREAK"}
+                     payload_set={"target_position": wander_to, "reason": "STALEMATE_BREAK"}
                  )
              )
 
@@ -538,8 +565,8 @@ class TacticalDecisionSystem:
              
              # Pure Retreat if HP is very low and engaged
              if hp_percent < 0.15:
-                  # Move to safe origin or away from all hostiles
-                  retreat_pos = (0.0, 0.0) # Simple fallback to origin for now
+                  # Away from all hostiles, inside the current region; hold when none is valid.
+                  retreat_pos = _destination_or_hold(entity, retreat_destination(state, entity, hostiles))
                   return EntityUpdate(
                       entity_id=entity.id,
                       navigation=NavigationUpdate(target_set=retreat_pos, movement_mode_set=MovementMode.RETREAT),
@@ -818,6 +845,16 @@ class TacticalDecisionSystem:
         stay `None` anyway. Mirrors `StrategicIntelligenceSystem._resolve_active_objective()`'s
         own "detour" case, which already prefers `target_position` this same way.
         """
+        # Typed entity target: the position is the live entity's, never a node/building looked up by an
+        # int-cast of the entity id (which could collide with a node or building id) and never the
+        # `target_position` snapshot frozen at goal-win time. A dead or missing entity has no position;
+        # the strategic pass ends the objective (StrategicIntelligenceSystem entity-target termination).
+        if getattr(obj, "target_entity_id", None) is not None:
+            target_entity = state.entities.get(obj.target_entity_id)
+            if target_entity is None or not target_entity.combat.alive:
+                return None, None, None
+            return target_entity.navigation.position, None, None
+
         target_pos = None
         node_id = None
         building_id = None

@@ -1,6 +1,6 @@
 import pytest
 from dataclasses import replace
-from src.core.state import EntityState, IdentityComponent, CombatComponent, AuthoritativeState, TaskComponent
+from src.core.state import EntityState, IdentityComponent, CombatComponent, AuthoritativeState, TaskComponent, RegionState
 from src.engine.tactical import TacticalDecisionSystem
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
@@ -48,12 +48,16 @@ def test_retreat_behavior():
     attacker = create_mock_entity(1, Faction.HERO_GUILD, hp=10, pos=(10.0, 10.0))
     target = create_mock_entity(2, Faction.MONSTER_HORDE, pos=(10.0, 11.0))
     
-    state = AuthoritativeState(tick=1, seed=42, world_time=1, entities={1: attacker, 2: target})
-    
+    region = RegionState(id="field", name="Field", bounds=(5, 5, 30, 30))
+    state = AuthoritativeState(tick=1, seed=42, world_time=1, entities={1: attacker, 2: target}, regions={"field": region})
+
     update = TacticalDecisionSystem.evaluate_entity_intent(state, attacker)
     assert update.task.work_kind_set == "ENTITY_MOVE"
     assert update.task.payload_set["reason"] == "PANIC_RETREAT"
-    assert update.task.payload_set["target_position"] == (0.0, 0.0)
+    # Retreats away from the hostile (it sits at y=11, the attacker at y=10) and stays in-region.
+    retreat_to = update.task.payload_set["target_position"]
+    assert update.navigation.target_set == retreat_to
+    assert retreat_to == (10.0, 5.0)
 
 def test_target_stickiness():
     attacker = create_mock_entity(1, Faction.HERO_GUILD, pos=(10.0, 10.0))

@@ -98,7 +98,7 @@ CARD_TO_MECHANISM_ID: Dict[Tuple[str, int], str] = {
     # ("boss spawns... in high-hazard regions") centers on the boss-spawn half -- repointed at
     # world_boss_spawn. calamity_intensity has no atlas card citation.
     ("world-layer", 4): "world_boss_spawn",
-    ("world-layer", 5): "world_generation",
+    ("world-layer", 5): "world_composition_assembly",  # was world_generation; split 2026-10-05, the card describes assembly
     ("world-layer", 6): "gods_pantheon_blessings",
     ("worldobject-layer", 0): "equipment_scoring",
     ("worldobject-layer", 1): "inventory_trade_conservation",
