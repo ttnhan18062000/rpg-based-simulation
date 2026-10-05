@@ -145,31 +145,25 @@ Scope 1 measured on `origin/main` `7a9f302db` (contains #344 and #347; source id
 `audit_mode=True`, tick budget disabled, seed 42, 2000 ticks, one simulation at a time, every world run twice and the
 pairs matched exactly, so the figures are **values**. `execute_attack` calls / `OUT_OF_RANGE` / repeats: crowded_frontier
 0/0/0, urban_political 0/0/0, dungeon_crawl 4/0/0, frontier_living_world 7/2/1. The one repeat is two verdicts for one
-pair inside a single tick; no streak crosses a tick boundary in any world. Lane A's "three of four" was a pre-fix sample
-and is not reproduced.
+pair inside a single tick. That table counts verdicts only. Lane A's "three of four" was a pre-fix sample and is not
+reproduced.
 
-Scope 2 rule, recorded: **no change to the action pipeline.** The repeat is bounded (the pursuit fix already re-closes
-range), which is the scale-down-to-nothing outcome the ticket permits. Scopes 3-5 therefore do not apply: no source,
-comment, test, control, engine-doc or parity-ledger change, and there is no after-change figure to take. The "multiplied
-vs base range" question is moot with no change; the answer for a future reset is the multiplied range
-(`legality.py:284`), recorded in `investigation.md`.
+**Correction (same session).** The first reading of that table, "bounded, close with no change", was wrong: a task held
+after `OUT_OF_RANGE` that never re-dispatches produces no further verdicts, so verdict streaks cannot see it. Following
+the attacker's task (`probes/oor_follow.py`, `frontier_living_world`): attacker 34 failed `OUT_OF_RANGE` against target 11
+at t157, then held `ENTITY_ACT ATTACK` on target 11 until the target died at t1008 (about 851 ticks), through readiness back
+at 100, the target adjacent (t158-t166) and the target 7 tiles away (t172+), with no further `execute_attack` verdict.
+Nothing ends the task. One entity, one event: the defect is real on main, its frequency is not established. Unexplained,
+not traced: why the held task does not re-dispatch at all while in reach with readiness 100.
 
-Caveat stated plainly: 11 `execute_attack` calls in 4 x 2000 ticks cannot show the repeat is impossible, only that none
-occurs on current main. The decision-driven attack path is still mostly closed by the flee gate. **Re-open trigger:**
-re-run `probes/measure.sh` after the flee-gate ticket (`TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-...`) lands; if any
-streak crosses a tick boundary, implement the `OUT_OF_RANGE` reset with a disabling control.
+Scope 2 rule: the scale-down-to-nothing outcome is **withdrawn**; scopes 3-5 apply (see `investigation.md`). Open
+question answered: "left reach" is judged against the multiplied range (`legality.py:284`).
 
 ## Test Summary
-No behaviour changed, so no tests were added. Evidence is the matched-pair measurement above. Instrument check:
-`frontier_living_world` records the event the probe counts (2 `OUT_OF_RANGE`, 1 repeat). `test_validate_frontmatter` and
-`test_generate_registry`: 173 passed; the one failure, `test_check_flag_detects_no_drift_against_real_registry`, is a local
-artefact (it regenerates in place from this worktree, which carries Lane B's untracked ticket file) and was not reproduced
-from a clean tree.
+(pending: tests with a disabling control, per scope 4)
 
 ## Files Changed
-- `agent-working/staging_artifacts/.../probes/oor_probe.py`, `measure.sh` (new; moved to stored_artifacts at close)
-- `docs/REGISTRY.yaml` (regenerated from a clean export)
-- no `src/`, `tests/` or `docs/engine/` change
+(pending)
 
 ## Completion Summary
-Measured, bounded, closed without a code change per scope 2. Re-open trigger recorded above.
+(pending)

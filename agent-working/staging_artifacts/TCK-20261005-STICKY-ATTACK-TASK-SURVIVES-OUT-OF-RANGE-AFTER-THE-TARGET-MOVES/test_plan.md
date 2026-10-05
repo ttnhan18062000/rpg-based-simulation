@@ -10,10 +10,12 @@ tags: [engine, combat]
 
 # Test plan
 
-No behaviour changes, so no new tests and no disabling control. Verification is the measurement itself:
+House style: tests with a disabling control (with the new condition disabled, exactly the "task ends when the target leaves
+reach" tests fail and every "must not change" test passes).
 
-- `probes/measure.sh`: 4 worlds x 2 runs, 2000 ticks, `audit_mode=True`, budget disabled. Matched pairs, so values.
-- Positive control for the instrument: `frontier_living_world` records 2 `OUT_OF_RANGE` verdicts and 1 repeat, so the
-  probe can see the event it counts. Worlds with 0 calls were not instrument failures: `dungeon_crawl` and
-  `frontier_living_world` show the wrapper firing on the same code path.
-- Regression scope: none (no source touched). The registry/frontmatter tests are run for the ticket and registry edits.
+- Target moves out of reach after an `OUT_OF_RANGE` failure: the task ends and the entity re-decides.
+- `INSUFFICIENT_READINESS` at the same range: the task survives, unchanged.
+- Target dies: the `TARGET_INCAPACITATED` reset is unchanged.
+- Reach is judged against the multiplied range: a weather multiplier that shrinks reach must not leave a sticky task.
+- Instrument: `oor_follow.py` reproduces the 851-tick hold before the change (positive control) and shows the task ending after.
+- Regression scope: the `actions.py` / tactical / legality test dirs plus the registry and frontmatter tests.
