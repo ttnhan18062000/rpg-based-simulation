@@ -85,3 +85,23 @@ moves while `src/` is frozen. **Asked:** decide whether it moves under `tests/` 
 Replied as a PR comment, recorded here so the answer survives on `main`:
 https://github.com/ttnhan18062000/rpg-based-simulation/pull/322#issuecomment-5979287377
 Summary: §1 no objection; tag `test-architecture-reviewer` on the gates-flip PR, keep the scenario-lane `PERF_RE` pin in sync, and do not make the scenario lane required. §2 testing tickets the readiness-poll fix itself (no quarantine). §3 import-linter **agreed with four conditions** (retire a test only once its replacement contract is a required check; parity per retired test; phase19 is an expectation change that the engine/observability owner decides first; the `or True` assert is testing's). §4 `src/testing/` moves under test support when `src/` reopens.
+
+## Update 2026-10-05: import-linter adopted, advisory (batch `import-linter-adoption`)
+
+**Contracts added, no test retired, flip ticket filed.** `codebase/structure/importlinter.toml` holds the registry
+`layers` contract and 16 contracts for the class E rules and the loopholes of the evaluation (Sections 3 and 4); an
+advisory `Import contracts` step runs them in the `code-health` job. Your condition 1 holds: every existing
+`tests/architecture/` test still runs; retirement is `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT` (BLOCKED
+until a two-week soak and the required check). Condition 2: the per-test parity table (34 injections, the contract
+caught all 34, the test missed 11) is in `TCK-20261004-IMPORT-LINTER-ADOPTION`'s Test Summary. Condition 3: phase19's
+five `kernel.py` imports are in `c06_hot_path_not_heavy`'s `ignore_imports`; its test is untouched. Condition 4: the
+blind spots and the stale phase18 allowlist entry are covered; the `or True` assert is untouched.
+For your awareness:
+- **Decision 8.11 notice:** `tests/static/test_ci_uv_install.py` edited (the `lint` group now includes `import-linter`);
+  the gates-flip PR (#329) edits the same file.
+- Correction to the evaluation: only the belief test skips `TYPE_CHECKING`; the fame and fidelity tests count it.
+- The contracts are stricter than the tests for a NEW `TYPE_CHECKING` import in core, phase18 and belief (the 7
+  existing ones are pinned). Contracts run with `exclude_type_checking_imports = false`.
+- The `visual_assets` test encodes about ten more rules than the two boundaries (`c14`, `c15`), so it can retire
+  only partly.
+
