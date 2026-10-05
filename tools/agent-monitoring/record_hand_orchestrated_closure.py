@@ -451,8 +451,10 @@ def main() -> None:
 
     from writer import write_line, write_lines  # noqa: E402
 
-    run_ok = write_line(runs_file, json.dumps(run_record, separators=(",", ":")))
-    lines = [json.dumps(record, separators=(",", ":")) for record in event_records]
+    from session_role import stamp as stamp_session_role  # noqa: E402
+
+    run_ok = write_line(runs_file, json.dumps(stamp_session_role(run_record), separators=(",", ":")))
+    lines = [json.dumps(stamp_session_role(record), separators=(",", ":")) for record in event_records]
     events_ok = write_lines(events_file, lines)
 
     if not run_ok:
