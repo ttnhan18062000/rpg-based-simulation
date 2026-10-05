@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261005-VISUAL-ASSETS-SET-COLOUR-VISION-RULE
-phase: open
+phase: done
 date: 2026-10-05
 tags: [architecture, testing, live-map]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing, live-map]
 A committed colour-vision check for a whole draft set, with its pass rule and the whole-map M5 scene predeclared before any redraw
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -58,12 +58,12 @@ must be fixed, approved and committed, so it cannot be tuned to the result.
 - An assistive-technology claim.
 
 ## Acceptance Criteria
-- [ ] The rule and the scene criteria are recorded with the user's own answer and date, and written in the criteria doc
+- [x] The rule and the scene criteria are recorded with the user's own answer and date, and written in the criteria doc
       before any `terrain-v1` file changes in this batch.
-- [ ] Check tested: a known-close pair fails S1, a known-far pair passes, the `>= 10.0` branch, texture below 2.0, forest
+- [x] Check tested: a known-close pair fails S1, a known-far pair passes, the `>= 10.0` branch, texture below 2.0, forest
       read from its adopted slot; deterministic (same input, same report).
-- [ ] Mutant proof: drop the `- 2.0` margin or the vision loop and a test fails for the right reason.
-- [ ] Baseline on `terrain-v1` recorded as measured.
+- [x] Mutant proof: drop the `- 2.0` margin or the vision loop and a test fails for the right reason.
+- [x] Baseline on `terrain-v1` recorded as measured.
 
 ## Related Tickets
 - TCK-20261005-EPIC-VISUAL-ASSET-TERRAIN-SET-REVIEW (epic), TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET
@@ -82,9 +82,16 @@ must be fixed, approved and committed, so it cannot be tuned to the result.
 - Thresholds 2.0 / 10.0 are proposals from the scratch run, not decided; the user's answer governs.
 
 ## Implementation Notes
+User answers (blocking question, 2026-10-05): S1 `dE_tile >= dE_fill - 2.0` or `>= 10`; all 253 pairs; S2 texture >= 2.0; W03 wording adapted to each terrain, all as proposed. Written into
+`docs/assets/pilot_terrain_m5_criteria.md` (sections AM5-S and AM5-W03-SET) before any terrain-v1 file was touched (none was). `tests/visual_assets/set_colour_vision.py` reuses the pilot functions;
+forest is its adopted `plain` slot, bush/tree are reported only. Wording follows the pilot: PASS iff S1; "better" when S2 also holds.
 
 ## Test Summary
+`tests/visual_assets/test_set_colour_vision.py` 10 passed; guards (boundaries, no_ignored_files, py311_fstrings, pilot_colour_vision) 278 passed together. Mutants (margin 0, margin 4, one vision, no floor, texture 0) each fail the expected tests.
+Baseline on terrain-v1 (stored artifacts `baseline_terrain_v1.txt`): `FAIL`, 30 of 1012 pair-visions fail S1 (worst -7.97 dungeon_entrance/floor protan), S2 holds everywhere, min dE_tile 1.65.
 
 ## Files Changed
+docs/assets/pilot_terrain_m5_criteria.md; tests/visual_assets/set_colour_vision.py; tests/visual_assets/test_set_colour_vision.py; agent-working/ (ticket, stored artifacts, monitoring).
 
 ## Completion Summary
+Rule and scene criteria fixed with the user's answers and committed first; check built and tested; baseline FAIL recorded as measured, the "before" for the redraw ticket. Not done here: any redraw, adoption, the whole-map scene code itself (its layout is predeclared; the rerun ticket builds it).
