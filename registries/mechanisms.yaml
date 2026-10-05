@@ -2037,7 +2037,7 @@ mechanisms:
   - id: regional_sovereignty
     layer: region
     systems: [world, faction]
-    depends_on: [world_generation]
+    depends_on: [world_compilation]  # was world_generation, split 2026-10-05
     state: done
     implemented_by: [src/engine/world_dynamics.py::WorldDynamicsSystem, src/world/influence.py::FactionInfluenceService]
     verified:
@@ -2260,21 +2260,150 @@ mechanisms:
         **Bound 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-
         RESOLUTION): method-level, since `BossService` also defines `check_for_lair_spawn()`/
         `resolve_boss_death()`, separate concerns this entry's own note does not describe.
-  - id: world_generation
+  # ── World building, SPLIT 2026-10-05 from the former single `world_generation` entry ──────
+  # (change taxonomy kind Split, docs/plans/mechanism_identity_and_change_taxonomy.md §2). The
+  # former entry bound four classes as one mechanism. These stages failed independently in
+  # practice (#328, #335): the resolver worked while the generator's output never assembled, and
+  # assembly enforced duplicate region ids while nothing checked region overlap. By the identity
+  # rule (§1), parts that can sit in different states are separate mechanisms. Each entry below
+  # records which composition invariants its stage ENFORCES (raises) and which it only DECLARES
+  # or silently tolerates, all at 405cbd77b. Survey evidence: an Explore read of src/worldmodules/,
+  # src/worldassembly/, src/worldbuilding/ and src/worldgeneration/; the sharpest claims were
+  # re-read directly by world-rule-catalog-design.
+  - id: world_module_parameterization
     layer: world
     systems: [world]
     depends_on: []
     state: done
     implemented_by:
-      - src/worldbuilding/compiler.py::WorldCompiler
-      - src/worldassembly/resolver.py::WorldAssemblyResolver
-      - src/worldassembly/resolver.py::CompileProfileResolver
+      - src/worldmodules/normalizer.py::WorldModuleAuthoringNormalizer
       - src/worldmodules/evaluator.py::ModuleParameterEvaluator
     verified:
-      instrument: code_trace
+      instrument: corpus_run
       verdict: observed
-      date: "2026-09-20"
+      date: "2026-10-05"
       note: >-
+        A reusable world module (village, trading hub, goblin camp...) is normalized from its
+        authored form, then its declared parameters (e.g. `danger_scale`) are evaluated into the
+        values its contribution uses (`evaluate_field` template math for counts). Reached on every
+        composition resolve: `WorldAssemblyResolver.assemble` normalizes each module
+        (resolver.py:299) and `resolve_module_contribution` evaluates its parameters
+        (resolver.py:781-786). Runtime evidence is the same as `world_composition_assembly`'s:
+        all 24 composition worlds re-resolve byte-identically in
+        tests/integration/worldassembly/test_resolved_snapshot_freshness.py (run 2026-10-05, pass).
+        ENFORCED: required parameter, `allowed_values`, min/max, unresolved template key, unsafe
+        expression (evaluator.py:41-100); count-map shape (normalizer.py:158-203); ref items
+        without an id (normalizer.py:136-144). NOT ENFORCED: an unknown injected parameter name is
+        accepted silently (evaluator.py:36); region ids are not checked for uniqueness within one
+        module; `requires`/`provides` targets are not checked at load. Module loading itself
+        (`WorldModuleRepository`, duplicate-module-id and schema checks) is infrastructure under
+        this entry, not a separate mechanism.
+  - id: world_composition_assembly
+    layer: world
+    systems: [world]
+    depends_on: [world_module_parameterization]
+    state: done
+    implemented_by:
+      - src/worldassembly/resolver.py::WorldAssemblyResolver
+      - src/worldassembly/resolver.py::CompileProfileResolver
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-10-05"
+      note: >-
+        The Lego step: snaps a world's selected modules together into one world (topological
+        order, per-module merge of regions, places, populations, resources, buildings and quests,
+        faction-tension overrides, perspectives, provenance, validation, compile profile).
+        Production reach: `resolve_composition` (resolve_io.py:62), and the live Campaign path
+        assembles on every episode-0 build (`ScenarioSetupResolver.resolve`, reached from
+        orchestrator.py:759). Runtime evidence: all 24 composition worlds re-resolve
+        byte-identically against their committed snapshots
+        (tests/integration/worldassembly/test_resolved_snapshot_freshness.py, run 2026-10-05,
+        pass; in CI since #335). ENFORCED (raises): duplicate region, population, resource,
+        building and quest ids across modules (resolver.py:358-359, 397, 467, 503, 534, 560, 586,
+        634; and again in the `WorldSpec` validator, schema.py:313-348); a missing module
+        (:298); `requires` cycles (utils.py:41-42); spawn/resource/building region references,
+        through the assembly validator (WORLD-REF-002/003/004, resolver.py:141); a population's
+        preferred region missing from its module (:886-891). NAMESPACING (`namespace:` on a module
+        ref, prefix `<ns>_`) rewrites region, place, population, resource and building ids and
+        their region references (:347, 465-584, 805-905), but NOT faction ids, place
+        `owner_faction_id`, or quest ids. NOT ENFORCED, silently tolerated: faction ids merge
+        first-wins (:382); a module listed twice in `module_refs` collapses to the last ref
+        (:300-301), so composing one module twice under two namespaces (the intent stated at
+        :813-815) cannot work; a dangling `requires` is ignored (utils.py:18); the `order` field is
+        overridden by alphabetical topological sort (utils.py:26, 39). The duplicate-`provides`
+        check ("Rule 5") exists only in the generator (generator.py:522-534), not here. Region
+        OVERLAP is not checked anywhere; see `world_compilation`. Two UNCONFIRMED candidate
+        defects, not measured: (1) biome provenance strips a namespace with `split("_", 1)`
+        (:366-367), so a namespace containing `_` (the generator's module-id namespaces) would
+        look up the wrong catalog region; (2) ASM-COMP-001 (:131-138) loops over all
+        `module_refs` while `graph_map` holds only enabled ones, so an `enabled: false` ref would
+        raise a false "not found" (no world uses `enabled: false` today).
+  - id: resolved_world_snapshot
+    layer: world
+    systems: [world]
+    depends_on: [world_composition_assembly]
+    state: done
+    implemented_by:
+      - src/worldassembly/resolve_io.py::write_resolved_artifacts
+      - src/worldbuilding/repository.py::WorldRepository::load_world
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-10-05"
+      note: >-
+        A composition world's authored `world.yaml` is never what the engine loads:
+        `WorldRepository.load_world` redirects to the committed generated projection
+        `resolved/world.resolved.yaml` (repository.py:77-84; `load_world_with_context` also reads
+        `resolved/compile_context.json`, :135-141), written by `make world-resolve` through
+        `write_resolved_artifacts` (resolve_io.py:98, five sidecars). Governed by the ADR rule
+        (docs/architecture/world_repository_layout.md §1): the projection must equal a fresh
+        resolve and is never hand-edited. ENFORCED, in CI: every composition world's
+        `world.resolved.yaml` byte-equals a fresh resolve, and committed compile-report counts
+        equal a fresh compile (test_resolved_snapshot_freshness.py:52-59, 106-120; run
+        2026-10-05, pass); a second world-definition location is guarded
+        (tests/architecture/test_world_definition_single_source.py). NOT ENFORCED: staleness of
+        the other sidecars. `compile_context.json` is read at load time (role and faction
+        resolution, TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION) but is not compared
+        against a fresh resolve. No freshness check runs at load time; a missing snapshot raises
+        (:84, :137). History: before #328/#335 a balance fix was written to a copy nothing loaded
+        and stayed inert for three months, which is the failure this stage now guards.
+  - id: world_compilation
+    layer: world
+    systems: [world]
+    depends_on: [resolved_world_snapshot]
+    state: done
+    implemented_by:
+      - src/worldbuilding/compiler.py::WorldCompiler
+      - src/worldbuilding/validator.py::WorldValidator
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-10-05"
+      note: >-
+        Turns a resolved world spec into the running world: regions, places, resource nodes,
+        buildings and placed entities. Production callers: Campaign (orchestrator.py:733),
+        src/lab/orchestrator.py:198, src/cli/entry.py:228, src/api/engine_manager.py:136, the
+        worldbuilding CLI (cli.py:230), plus three tools. Runtime evidence: fresh compiles of the
+        committed composition worlds match their committed compile-report counts
+        (test_resolved_snapshot_freshness.py:106-120, run 2026-10-05, pass); every corpus
+        simulation in this registry's corpus_run evidence starts here. `WorldValidator` ENFORCES,
+        when it runs: faction, spawn-region, resource-region and building-region references
+        (WORLD-REF-001..004, validator.py:58-138), topology and budget (:164, :248); reachability
+        is a warning only (:337). NOT ENFORCED: (1) the compiler never calls the validator; the
+        Campaign, cli/entry and engine_manager paths compile without validating, and on those paths
+        a population, resource or building whose region is unknown is skipped with no warning
+        (compiler.py:498-499, 537-538, 575-576); (2) place ids are not checked for uniqueness, and a
+        duplicate silently overwrites (compiler.py:409-410); (3) region OVERLAP: the
+        `allow_overlapping_regions` flag is declared (schema.py:245) and set false by the corpus,
+        but nothing reads it and no overlap check exists anywhere. frontier_living_world resolves
+        with 9 overlapping region pairs, as reported by
+        TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER (filed by rpg-feature-planning;
+        not yet on main at 405cbd77b). PENDING that ticket: the owner's direction is to
+        audit every position-to-region lookup before choosing a fix, and where an overlap check
+        belongs (assembly or compilation) is part of that audit. This note's overlap clause will
+        be re-stated when the audit lands.
+        ---- earlier record (2026-09-20, as `world_generation`), kept ----
         TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION.
         `WorldCompiler.compile()` (called as a static method, not via instantiation -- an initial
         `WorldCompiler(` grep found nothing for this reason) is real and live, called from
@@ -2282,6 +2411,36 @@ mechanisms:
         `src/worldbuilding/cli.py:282` and `src/lab/orchestrator.py`. Places real `BuildingState`
         instances (see `buildings`' own binding below), confirming this is the real world-setup
         entry point.
+  - id: procedural_world_generation
+    layer: world
+    systems: [world]
+    depends_on: [world_composition_assembly]
+    state: done
+    implemented_by:
+      - src/worldgeneration/generator.py::ProceduralCompositionGenerator
+      - src/worldgeneration/scorer.py::ModuleScorer
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-10-05"
+      note: >-
+        Authors a new composition from a generation intent: `ModuleScorer` ranks modules,
+        `ProceduralCompositionGenerator.generate` (generator.py:431-628) selects them, follows
+        `requires`, auto-namespaces region-id collisions, then resolves its own output before
+        writing it (:615, :626). An AUTHORING tool, not a runtime mechanism: its only production
+        caller is the worldbuilding CLI (`handle_generate`, cli.py:341-382), and no simulation
+        run path calls it. A generated world then lives on as an ordinary composition world (the
+        corpus's `generated_frontier_3_42`), covered by the stages above. Exercised by
+        tests/unit/worldgeneration/ (passing 2026-10-05) and test_e2e_smoke.py; static plus unit
+        evidence only, hence `code_trace`. Namespacing rule (#335, owner ruling 2026-10-04): the
+        bare region id goes to a module chosen by the module SET, never by rank (modules walked
+        in id order, later colliders namespaced with their own module id, :396-429). ENFORCED:
+        the duplicate-`provides` check (:522-534); a collision left after namespacing raises
+        (:424). NOT ENFORCED: building and quest id collisions are not pre-namespaced (they surface
+        as resolver errors); a missing `requires` target is skipped silently (:513-515). Dead
+        code inside: the legacy `WorldProceduralGenerator` (:59-370) has no production caller.
+        Before #335 this stage authored compositions that could not assemble, invisible because
+        nothing resolved its output.
   - id: gods_pantheon_blessings
     layer: world
     systems: [world]
@@ -2376,8 +2535,8 @@ mechanisms:
         not `src/town/buildings.py::BuildingRegistry` (a template-lookup registry that turned out
         to have zero real callers repo-wide -- an orphan finding in its own right, not filed as its
         own mechanism here since no registry entry names it). Real `BuildingState` construction
-        confirmed at `src/worldbuilding/compiler.py:538` (`WorldCompiler`, see `world_generation`'s
-        own binding above) and in performance-scenario generators.
+        confirmed at `src/worldbuilding/compiler.py:538` (`WorldCompiler`, see `world_compilation`'s
+        own binding above; `world_generation` before the 2026-10-05 split) and in performance-scenario generators.
   - id: town_services
     layer: world
     systems: [economy]
@@ -2883,7 +3042,7 @@ mechanisms:
       date: "2026-09-30"
       note: >-
         TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `TransformationService.get_potential_transformation` was evaluated 15000 times; whether any region actually changed kind was not measured. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
-        Shifts RegionState.kind by biome thresholds (atlas idea 48). `world_generation` is compile-time only.
+        Shifts RegionState.kind by biome thresholds (atlas idea 48). `world_compilation` (formerly `world_generation`) is compile-time only.
 
   - id: production_role_vacancy
     layer: region
