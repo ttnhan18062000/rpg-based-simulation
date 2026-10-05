@@ -63,6 +63,11 @@ None.
 - pyproject.toml
 
 ## Assumptions / Open Questions
+- Testing's agreement and four conditions (#322 comment, 2026-10-04; copied from `TCK-20261004-IMPORT-LINTER-ADOPTION`, where they are recorded). They govern this ticket:
+  1. a class E test is retired only in or after the PR that makes its replacement contract a required check;
+  2. parity is shown per retired test (the injected violation, and the contract failing on it);
+  3. phase19 `test_hot_path_does_not_import_heavy_analyzers` is an expectation change, not a retirement: the engine/observability owner first decides whether `kernel.py`'s function-local imports at 149/304/305/316/1241 are allowed (allowlist with a reason) or violations (an engine ticket);
+  4. the blind spots and the stale allowlist are covered by contracts. The `or True` assert (`tests/unit/observability/test_decision_trace.py:376`) is testing's, not one of the eight.
 - phase19 waits on rpg (`handoff_to_rpg.md`)
 - Soak dates are unknown until the adoption batch merges
 
