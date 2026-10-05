@@ -29,12 +29,14 @@ class _FakeConfig:
 
 
 class _FakeItem:
-    def __init__(self, budget: str, marked: bool) -> None:
+    def __init__(self, budget: str, marked: bool, extra_markers: tuple[str, ...] = ()) -> None:
         self.config = _FakeConfig(budget)
-        self._marked = marked
+        self._names = set(extra_markers)
+        if marked:
+            self._names.add("resource_budget_large")
 
     def get_closest_marker(self, name: str):
-        if self._marked and name == "resource_budget_large":
+        if name in self._names:
             return _FakeMarker()
         return None
 
@@ -109,3 +111,36 @@ def test_resource_budget_off_short_circuits_regardless_of_marker(monkeypatch):
     conftest_module.pytest_runtest_setup(item)
 
     assert not alarm_called["called"]
+
+
+def _alarm_seconds_for(monkeypatch, item) -> int:
+    captured = {}
+    real_alarm = signal.alarm
+
+    def _spy_alarm(seconds):
+        captured["time_limit"] = seconds
+        return real_alarm(seconds)
+
+    monkeypatch.setattr(signal, "alarm", _spy_alarm)
+    conftest_module.pytest_runtest_setup(item)
+    return captured["time_limit"]
+
+
+def test_extra_slow_marker_gets_the_large_budget_under_the_default(monkeypatch):
+    """TCK-20261006-EXTRA-SLOW-TESTS-LOCAL-RESOURCE-BUDGET: extra_slow means ">60s", so under the
+    default (medium) budget an extra_slow item gets 600 s, like a resource_budget_large item."""
+    item = _FakeItem(budget="medium", marked=False, extra_markers=("extra_slow",))
+    assert _alarm_seconds_for(monkeypatch, item) == 600
+
+
+def test_unmarked_item_still_gets_the_default_budget_next_to_extra_slow(monkeypatch):
+    """The extra_slow rule must not widen the budget of an ordinary test."""
+    item = _FakeItem(budget="medium", marked=False, extra_markers=("slow",))
+    assert _alarm_seconds_for(monkeypatch, item) == 60
+
+
+def test_resource_budget_off_still_wins_over_extra_slow(monkeypatch):
+    called = {"called": False}
+    monkeypatch.setattr(signal, "alarm", lambda seconds: called.update(called=True))
+    conftest_module.pytest_runtest_setup(_FakeItem(budget="off", marked=False, extra_markers=("extra_slow",)))
+    assert not called["called"]

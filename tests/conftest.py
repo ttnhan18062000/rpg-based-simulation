@@ -102,7 +102,13 @@ def pytest_runtest_setup(item):
     # runs) cannot complete under any budget shorter than "large" regardless of the
     # CLI default — force it here rather than relying on callers to remember an
     # explicit --resource-budget large flag.
-    if item.get_closest_marker("resource_budget_large") is not None:
+    # extra_slow is defined as ">60s" (pyproject.toml markers), so it gets the same treatment: CI's
+    # slow job already passes --resource-budget large, and a bare local run would otherwise time
+    # out at the medium 60 s budget (TCK-20261006-EXTRA-SLOW-TESTS-LOCAL-RESOURCE-BUDGET).
+    if (
+        item.get_closest_marker("resource_budget_large") is not None
+        or item.get_closest_marker("extra_slow") is not None
+    ):
         budget = "large"
 
     # Define limits based on selection
