@@ -3,7 +3,7 @@ import pytest
 import os
 import tempfile
 import json
-from src.worldbuilding.schema import WorldSpec
+from src.worldbuilding.schema import InvalidWorldSpecError, WorldSpec
 from src.worldbuilding.compiler import WorldCompiler, get_role_enum, get_faction_enum, get_quest_kind, get_bravery_bias, get_action_style_for_bravery, _seed_population_cohorts
 from src.core.enums import EntityRole, Faction, ActionStyle
 from src.core.quests import QuestKind
@@ -1161,3 +1161,43 @@ def test_canonical_state_hasher_serializes_seeded_population_cohorts():
             "mortality_rate": 0.01,
             "migration_threshold": 0.7,
         }
+
+
+@pytest.mark.parametrize(
+    "section, field, index, expected",
+    [
+        ("entities", "spawn_region", 0, "population 'citizen_group' spawn_region 'trade_road'"),
+        ("resources", "region", 0, "resource node 'ore_node' region 'trade_road'"),
+        ("buildings", "region", 0, "building 'tavern' region 'trade_road'"),
+    ],
+)
+def test_compiler_rejects_dangling_region_reference(section, field, index, expected):
+    """An unresolved region id must fail loudly, not drop the population/node/building."""
+    data = create_base_valid_spec()
+    data[section][index][field] = "trade_road"
+    spec = WorldSpec.model_validate(data)
+
+    with pytest.raises(InvalidWorldSpecError) as exc_info:
+        WorldCompiler.compile(spec, seed=42)
+
+    assert expected in str(exc_info.value)
+    assert "town_square" in str(exc_info.value)  # names the regions that are defined
+
+
+def test_compiler_reports_every_dangling_region_reference_at_once():
+    data = create_base_valid_spec()
+    data["entities"][0]["spawn_region"] = "nowhere_a"
+    data["buildings"][0]["region"] = "nowhere_b"
+    spec = WorldSpec.model_validate(data)
+
+    with pytest.raises(InvalidWorldSpecError) as exc_info:
+        WorldCompiler.compile(spec, seed=42)
+
+    assert "nowhere_a" in str(exc_info.value)
+    assert "nowhere_b" in str(exc_info.value)
+
+
+def test_compiler_accepts_world_whose_region_references_all_resolve():
+    spec = WorldSpec.model_validate(create_base_valid_spec())
+    state, _ = WorldCompiler.compile(spec, seed=42)
+    assert len(state.entities) == 7

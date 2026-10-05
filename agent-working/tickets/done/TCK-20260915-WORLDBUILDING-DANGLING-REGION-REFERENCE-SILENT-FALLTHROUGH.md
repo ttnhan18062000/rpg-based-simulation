@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260915-WORLDBUILDING-DANGLING-REGION-REFERENCE-SILENT-FALLTHROUGH
-phase: open
+phase: done
 date: 2026-09-15
 tags: [world]
 ---
@@ -17,7 +17,7 @@ and silently falls through to the next listed preference with no error — a con
 of defect, not a single-string typo
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -109,13 +109,46 @@ _(none yet — filed as a finding, not yet investigated)_
   should surface this, not be assumed to be a single instance.
 
 ## Implementation Notes
-_(none — filed as a finding, not yet investigated)_
+**The ticket's premise was partly stale; the real defect was different and worse.** See
+`agent-working/stored_artifacts/TCK-20260915-WORLDBUILDING-DANGLING-REGION-REFERENCE-SILENT-FALLTHROUGH/investigation.md`.
+- `trade_road` is not a silent fallthrough: `src/worldassembly/resolver.py` maps it to `bandit_road` via the documented
+  `REGION_MIGRATION_MAP` (`compat_projected` in `migration_map.yaml`) and raises `ResolverError` for any
+  `preferred_regions` entry absent from the module's regions. The resolved `frontier_living_world` spawns
+  `merchant_caravan_*` in `bandit_road`, not `hometown`. No content change was made.
+- The real silent path: each placement loop in `WorldCompiler.compile` is wrapped in `if region:` with no `else`, so a
+  population / resource node / building naming an undefined region was dropped with no error or warning.
+- Fix: `_assert_region_references_resolve(spec)` runs first in `WorldCompiler.compile` and raises
+  `InvalidWorldSpecError` listing every dangling reference and the defined regions.
+- **Decision (recorded per Acceptance Criteria): hard error, not a warning.** The silent path discards authoritative
+  state; 0 of 24 corpus worlds dangle, so the cost is nil; it matches the assembly path's fail-fast. Quest
+  `required_location_tags` remain warnings (no authoritative state is dropped).
+- Corpus audit: 24 resolved worlds, 0 dangling placement references (positive control: probe reads non-zero counts).
+- Parity ledger: new `SUB-396` (via `parity_ledger_writer.write_entry`; parsed ledger differs from before only by that entry).
+- Docs: `docs/world/compiler_contract.md` (step 0 and Region reference check).
 
 ## Test Summary
-_(none yet)_
+New in `tests/unit/worldbuilding/test_world_compiler.py`: dangling `spawn_region` / resource `region` / building
+`region` (3 parametrized), all-dangling-at-once reporting, resolving world compiles. Negative control: with the guard
+disabled the 4 rejecting tests fail; restored, 55/55 pass in that file.
+Regression: `tests/unit/worldbuilding`, `tests/unit/worldassembly`, `tests/certification/test_world_compile_determinism.py`
+(383 passed) and the 66 other test files referencing `WorldCompiler` with `-m "not slow"` (426 passed).
+**Failures, all shown independent of this change:** `test_corpus_diversity.py` stability-anchor tests (15) fail
+identically on clean `origin/main` (reproduced: urban_political_seed42_200t SOCIAL mean 65.27 vs anchor 16.8);
+`tests/regression/test_behavioral_5k.py` hits the conftest 60s resource limit identically on clean `origin/main`;
+`test_bravery_quartile_combat_rate_2x` is the known red on main. Not baseline-verified individually:
+`test_generated_frontier_3_42_extended_population_stability` (`@pytest.mark.slow`, same conftest timeout) and
+`test_hero_guild_routing_population_stability_adventure_routing_on` / `test_population_stability[frontier_marches]`
+(passed when re-run in isolation).
+**Lint is unverified:** `ruff` is not installed in the venv used here; CI will check it. No local imports were added.
 
 ## Files Changed
-_(none yet)_
+- `src/worldbuilding/compiler.py`
+- `tests/unit/worldbuilding/test_world_compiler.py`
+- `docs/world/compiler_contract.md`
+- `docs/parity_ledger/substrate.yaml` (SUB-396)
 
 ## Completion Summary
-_(not started)_
+`WorldCompiler.compile` now rejects a spec whose populations, resource nodes or buildings name an undefined region,
+instead of silently dropping them. Hard error by decision. The ticket's `trade_road` example was already handled by a
+documented migration mapping and fail-fast on the assembly path, so no content change. Region BOUNDS overlap is a
+separate defect (`TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER`).
