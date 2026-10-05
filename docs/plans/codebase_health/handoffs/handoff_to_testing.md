@@ -98,3 +98,25 @@ ruleset change names only `Code health` and `Type check`. Your four import-linte
 `TCK-20261004-IMPORT-LINTER-ADOPTION` (still BLOCKED; condition 3 is routed to rpg in `handoff_to_rpg.md`).
 
 FYI (cc): `tests/unit/tools/test_mechanism_registry_completeness_check.py:191` pins an exact `scope_files` count (296 at #331's runs; main has since moved it), so any PR that adds a `src/` file fails `Unit · infra / observability` until it is edited. The question goes to agent-working (`handoff_to_agent_working.md`, same update); it is in your test tree.
+
+## Update 2026-10-05: import-linter adopted, advisory (batch `import-linter-adoption`)
+
+**Contracts added, no test retired, flip ticket filed.** `codebase/structure/importlinter.toml` holds the registry
+`layers` contract and 16 contracts for the class E rules and the loopholes of the evaluation (Sections 3 and 4); an
+advisory `Import contracts` step runs them in the `code-health` job. Your condition 1 holds: every existing
+`tests/architecture/` test still runs; retirement is `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT` (BLOCKED
+until a two-week soak and the required check). Condition 2: the per-test parity table (34 injections, the contract
+caught all 34, the test missed 11) is in `TCK-20261004-IMPORT-LINTER-ADOPTION`'s Test Summary. Condition 3: phase19's
+five `kernel.py` imports are in `c06_hot_path_not_heavy`'s `ignore_imports`; its test is untouched. Condition 4: the
+blind spots and the stale phase18 allowlist entry are covered; the `or True` assert is untouched.
+For your awareness:
+- **Decision 8.11 notice:** `tests/static/test_ci_uv_install.py` edited (the `lint` group now includes `import-linter`);
+  the gates-flip PR (#329) edits the same file.
+- Correction to the evaluation: only the belief test skips `TYPE_CHECKING`; the fame and fidelity tests count it.
+- The contracts are stricter than the tests for a NEW `TYPE_CHECKING` import in core, phase18 and belief (the 7
+  existing ones are pinned). Contracts run with `exclude_type_checking_imports = false`.
+- The `visual_assets` test encodes about ten more rules than the two boundaries (`c14`, `c15`), so it can retire
+  only partly.
+
+FYI 2026-10-05: a `Frontend` flake on #351's `43d0f9493`: `src/test/useSimulation.test.tsx:152` (expected `CONNECTING_LIVE`, got `FETCHING_WORLD_DATA`), no frontend diff, passed on a rerun of that job. Yours to decide whether to ticket it.
+

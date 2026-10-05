@@ -231,3 +231,13 @@ Largest items: `systems/strategic_systems/intelligence.py` (module 1788 -> 1832 
 - `src/engine/tactical.py:853` `arg-type`, `dict.get` with `int | None` (`state.entities.get(obj.target_entity_id)`): **#342** (combat), the line is from that PR. **Please check it.** The statement is guarded by `getattr(obj, "target_entity_id", None) is not None` two lines above, so on this path a `None` cannot reach `.get` at runtime; mypy cannot narrow through `getattr`. If another path can reach the `.get` with `None`, a `None` key is legal and silently returns the default, so that would be a behaviour bug, not only a typing one.
 - `src/systems/strategic_systems/intelligence.py:1823` `arg-type`, `boredom_delta` is `dict[ProjectKind, float]` but `StrategicUpdate.boredom_delta` is `dict[str, float]`: **#342** (combat) added one more `StrategicUpdate(boredom_delta=boredom_upd)` call (15 -> 16 sites; the baseline already held 16 copies of this message and now holds 17). The line mypy reports is an old one; the count rose by one.
 - Good news for the earlier outbox message 3: the two runtime `NameError`s are gone from `main` (`src/engine/kernel.py` `json`, and `src/systems/social_systems/party.py` `StrategicUpdate`).
+
+## Update 2026-10-05: kernel.py imports are allowlisted, still your decision (import-linter adoption)
+
+Condition 3 of the testing planner is still open: whether `src/engine/kernel.py`'s function-local imports of
+`src.observability.reporting.*` and `.cognition.*` (lines 149, 304, 305, 316, 1241) stay. The import-linter contract
+`c06_hot_path_not_heavy` ships with those five imports in `ignore_imports`, reason "pending rpg decision,
+handoff_to_rpg.md", so the advisory step is quiet today. If you keep them, say so and they stay allowlisted; if you
+move them, delete the four `src.engine.kernel -> ...` entries (four pairs for five lines: lines 316 and 1241 share one pair, `-> src.observability.cognition.decision_trace_writer`; 149 is `reporting.artifact_repository`, 304 `reporting.metric_recorder`, 305 `cognition.recorder`) in `codebase/structure/importlinter.toml` (a stale
+entry shows as a warning). Nothing in `src/` changes in this batch.
+

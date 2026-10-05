@@ -225,7 +225,7 @@ Each is separately closable. None before M6 modifies `src/`.
 | M2 | Environment | uv as the single dependency source: refreshed `uv.lock`, dev tools in a dependency group, CI on `uv sync`, Python version aligned, environment guide updated | codebase |
 | M3 | Measure and baseline | Ruff, complexipy, jscpd and the line-count script configured; `codebase/health/` adapters and ratchet; registry seeded from a full scan; first health snapshot taken | codebase |
 | M4 | Gates | Ratchet as an advisory CI job with changed-line PR feedback, blocking after a clean soak; mypy blocking through `mypy-baseline` with ledger and static-test updates; prek hooks; type-checker trial (basedpyright vs Pyrefly) reported | codebase |
-| M5 | Structure | Package registry seeded; structure audit decisions; ast-grep rule pack for project rules; import-linter evaluation. **done 2026-10-04 (PR #315), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (blocked on owner and testing planner); the ast-grep SARIF and snapshot follow-ups and `exemplar_modules` were delivered by #318** | codebase |
+| M5 | Structure | Package registry seeded; structure audit decisions; ast-grep rule pack for project rules; import-linter evaluation. **done 2026-10-04 (PR #315), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (done 2026-10-05, PR #351, advisory; its flip and test retirement are `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`); the ast-grep SARIF and snapshot follow-ups and `exemplar_modules` were delivered by #318** | codebase |
 | M6 | Agent integration | Skill, edit hook, implementer pointer, review rubric; batched with the M5 follow-ups (exemplar modules, ast-grep SARIF and snapshot). Brief `python_code_craft_m6_agent_integration_ticket_brief.md` (2026-10-04). **done 2026-10-04 (PR #318)** | codebase, by owner decision 17 (paths under `.claude/**` stay agent-working's) |
 | M7 | Refactor lane | **Deferred until the owner reopens `src/`.** Standing batch folder, one file per batch, fed by the registry; first targets `api/server.py` and `observability/event_extractor.py` | codebase, with rpg-planner for engine files |
 
@@ -277,6 +277,12 @@ Recorded 2026-10-02:
 19. **SARIF stays advisory** (2026-10-04). The `code-health-sarif` job is changed-line feedback only: it exits 0 on
     findings by design, skips fork PRs, and the ratchet already blocks new violations. Its `continue-on-error`
     stays permanently; it is not one of the gates the flip makes blocking.
+20. **import-linter adopted, advisory first** (2026-10-04), with the 20 `src.<pkg>` namespace roots accepted
+    (no `__init__.py` is added to `src/`; `src/engine/intent` stays uncovered). No test is retired by the
+    adoption batch (the testing planner's condition 1): contracts and tests both run during a two-week soak,
+    then `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT` makes the step blocking and retires the class E
+    tests whose contract is required. `exclude_type_checking_imports` is false (recorded in
+    `TCK-20261004-IMPORT-LINTER-ADOPTION`).
 
 Tickets: M1 to M3 in `agent-working/tickets/done/python-code-craft/` (closed 2026-10-03, PRs #288,
 #297, #298). M4 in `agent-working/tickets/todos/python-code-craft-gates/` (epic plus six children,

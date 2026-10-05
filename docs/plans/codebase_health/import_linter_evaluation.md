@@ -205,6 +205,14 @@ express cross-package reachability or the layer order; that stays with import-li
 - The adoption ticket (to file if the owner agrees): the `layers` contract with a 99-line `ignore_imports` baseline, the
   loophole contracts, and the retirement of the 8 class E tests with the testing planner. Not started here.
 
+**Answered 2026-10-05** (owner decision 2026-10-04, roadmap decision 20): no `__init__.py` is added to `src/`; the
+20 `src.<pkg>` root entries are accepted and `src/engine/intent` stays uncovered. The adoption is advisory first
+(`TCK-20261004-IMPORT-LINTER-ADOPTION`, config `codebase/structure/importlinter.toml`); against recommendation 5 it
+retires **no** test (the testing planner's condition 1): contracts and tests run together until
+`TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`. Measured on `898c6f35a`: the `layers` baseline is 135 module
+pairs (170 import lines), not 113; the same config at the evaluation's commit gives 134 pairs, so the evaluation's
+own layers config (not preserved) differed.
+
 ## Appendix A: contract bodies (as run)
 
 ```ini

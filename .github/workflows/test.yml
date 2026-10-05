@@ -1008,6 +1008,12 @@ jobs:
       # setting exists or is needed. Add the row in codebase/structure/package_registry.jsonl in the same PR.
       - name: Package registry
         run: python3 -m codebase.structure.packages validate --summary-out "$GITHUB_STEP_SUMMARY" --annotate
+      # TCK-20261004-IMPORT-LINTER-ADOPTION: import-linter contracts, advisory and never blocking: the command exits 0
+      # whatever it finds, and the step keeps its own continue-on-error so it stays advisory now that this job is a required check
+      # ("Code health"): a broken contract is a summary line and a warning, never a red required check.
+      - name: Import contracts
+        run: python3 -m codebase.structure.import_contracts advisory --summary-out "$GITHUB_STEP_SUMMARY" --annotate
+        continue-on-error: true
 
   # ── Code health SARIF feedback (advisory, permanently) ─────────────────────
   # TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK: findings in the PR's changed src/*.py files that the code-health
