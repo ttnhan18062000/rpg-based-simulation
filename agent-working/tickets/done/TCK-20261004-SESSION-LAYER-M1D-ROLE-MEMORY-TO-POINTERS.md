@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-SESSION-LAYER-M1D-ROLE-MEMORY-TO-POINTERS
-phase: open
+phase: done
 date: 2026-10-04
 tags: [ai, process-improvement, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 Session-layer M1d: reduce role-defining memory files to pointers
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

@@ -533,6 +533,12 @@ fields: id, from, to, type, artifact, request, status pending|acknowledged|resol
 role-aware `SessionStart` hook lists that role's pending items. It reuses the handover mechanism's
 shape and is not a queue service.
 
+**Decision (owner, 2026-10-05): no inbox in v1.** M0 items c and l (wake and queueing across
+`/clear`) were closed as unprobed (owner, 2026-10-03), so the file-backed mailbox above is not
+built. Durable pending work is carried by the sender's and receiver's handover files plus the
+"needs a prompt in <role>'s terminal" convention. Revisit at M7 with the measurement data: build
+the mailbox only if M7 shows a cross-session request was lost.
+
 **What the official docs add (read 2026-10-02; still to be verified live in M0c).** A message to an
 idle session *does* start a new turn, but the receiving session first applies **inbound controls**:
 `crossSessionInbound` = `accept` / `hold` / `refuse`; with no value set, the default depends on both
