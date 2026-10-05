@@ -7,6 +7,7 @@
 # `src` has 20 namespace packages without `__init__.py`; import-linter only sees them when each is its own
 # root (`src.<pkg>`), and `src` stays listed for the regular packages (without it `src.lab` does not exist).
 # tests/codebase/test_import_contracts.py pins this list to codebase/structure/package_registry.jsonl.
+# `visual_assets` (repo root, has `__init__.py`) is a root so c14/c15 can pin its boundary with `src`.
 # `src/engine/intent` stays uncovered (no `__init__.py` inside a regular package; a `src/` decision).
 # `exclude_type_checking_imports` is global and false: a TYPE_CHECKING import counts, so no contract is looser
 # than the test it will replace; contracts whose tests skip TYPE_CHECKING pin those lines in `ignore_imports`.
@@ -33,6 +34,7 @@ root_packages = [
     "src.worldassembly",
     "src.worldgeneration",
     "src.worldmodules",
+    "visual_assets",
 ]
 include_external_packages = true
 exclude_type_checking_imports = false
@@ -189,3 +191,289 @@ ignore_imports = [
     "src.worldbuilding.compiler -> src.world.providers.information",
 ]
 # END GENERATED: layers contract
+
+# Hand-edited contracts (TCK-20261004-IMPORT-LINTER-ADOPTION). Each one stands beside the test it will replace in
+# TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT; no test is retired yet. `allow_indirect_imports = true`
+# because the tests look at direct imports only. Comments name every `ignore_imports` group and why it is there.
+
+[[tool.importlinter.contracts]]
+id = "c01_core_not_domains"
+name = "core must not import domains (test_entity_models_do_not_import_domain_services)"
+type = "forbidden"
+source_modules = [
+    "src.core",
+]
+forbidden_modules = [
+    "src.domains",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+ignore_imports = [
+    # TYPE_CHECKING import: the phase18/belief test skips it, the contract counts it (exclude_type_checking_imports = false)
+    "src.core.cognition -> src.domains.combat_engagement.schema",
+    "src.core.state -> src.domains.belief_institution.model",
+    "src.core.state -> src.domains.culture.model",
+    "src.core.state -> src.domains.fame.legend",
+]
+
+[[tool.importlinter.contracts]]
+id = "c02_obs_engine_via_kernel"
+name = "observability reaches engine only through the kernel facade (phase18)"
+type = "forbidden"
+source_modules = [
+    "src.observability",
+]
+forbidden_modules = [
+    "src.engine",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+ignore_imports = [
+    # phase18 pin: observability reaches engine only through the Kernel facade
+    "src.observability.** -> src.engine.kernel",
+]
+
+[[tool.importlinter.contracts]]
+id = "c03_obs_domains_systems_allowlist"
+name = "observability imports domains/systems only in the pinned modules (phase18)"
+type = "forbidden"
+source_modules = [
+    "src.observability",
+]
+forbidden_modules = [
+    "src.domains",
+    "src.systems",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+ignore_imports = [
+    # phase18 allowlist: event_extractor, event_shapers and cognition/recorder. The test also allows recorder -> domains, which the recorder no longer imports (stale; evaluation Section 3), so that one entry is left out here
+    "src.observability.event_extractor -> src.domains.**",
+    "src.observability.event_extractor -> src.systems.**",
+    "src.observability.event_shapers -> src.domains.**",
+    "src.observability.event_shapers -> src.systems.**",
+    "src.observability.cognition.recorder -> src.systems.**",
+]
+
+[[tool.importlinter.contracts]]
+id = "c04_domains_not_obs_pinned"
+name = "domains do not import observability outside the pinned exceptions (phase18)"
+type = "forbidden"
+source_modules = [
+    "src.domains",
+]
+forbidden_modules = [
+    "src.observability",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+ignore_imports = [
+    # phase18 pin: two campaign modules may import observability.events
+    "src.domains.campaigns.narrative_ledger -> src.observability.events",
+    "src.domains.campaigns.orchestrator -> src.observability.events",
+    # TYPE_CHECKING import: the phase18/belief test skips it, the contract counts it (exclude_type_checking_imports = false)
+    "src.domains.campaigns.narrative_ledger -> src.observability.event_recorder",
+    "src.domains.campaigns.orchestrator -> src.observability.event_recorder",
+]
+
+[[tool.importlinter.contracts]]
+id = "c05_systems_not_engine_pinned"
+name = "systems do not import engine outside the pinned exceptions (phase18)"
+type = "forbidden"
+source_modules = [
+    "src.systems",
+]
+forbidden_modules = [
+    "src.engine",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+ignore_imports = [
+    # phase18 pins: nine systems modules may import the named engine modules
+    "src.systems.strategic_systems.intelligence -> src.engine.policy",
+    "src.systems.strategic_systems.intelligence -> src.engine.spatial_query",
+    "src.systems.strategic_systems.intelligence -> src.engine.cadence",
+    "src.systems.strategic_systems.intelligence -> src.engine.domain_logic",
+    "src.systems.strategic_systems.intelligence -> src.engine.cognition",
+    "src.systems.strategic_systems.detour -> src.engine.domain.lead_routing",
+    "src.systems.strategic_systems.redirection -> src.engine.cadence",
+    "src.systems.economy_systems.market -> src.engine.legality",
+    "src.systems.world_systems.routine -> src.engine.legality",
+]
+
+[[tool.importlinter.contracts]]
+id = "c06_hot_path_not_heavy"
+name = "engine and the three hot observability modules do not import the heavy analyzers (phase19)"
+type = "forbidden"
+source_modules = [
+    "src.engine",
+    "src.observability.config",
+    "src.observability.event_extractor",
+    "src.observability.event_recorder",
+]
+forbidden_modules = [
+    "src.observability.anomaly",
+    "src.observability.cognition",
+    "src.observability.reporting",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+ignore_imports = [
+    # pending rpg decision, handoff_to_rpg.md: kernel.py function-local imports at lines 149, 304, 305, 316 and 1241 (the violations the phase19 test was written for; the test itself is a no-op)
+    "src.engine.kernel -> src.observability.cognition.decision_trace_writer",
+    "src.engine.kernel -> src.observability.cognition.recorder",
+    "src.engine.kernel -> src.observability.reporting.artifact_repository",
+    "src.engine.kernel -> src.observability.reporting.metric_recorder",
+]
+
+[[tool.importlinter.contracts]]
+id = "c07_api_not_core_state"
+name = "api routes, ws and server do not import core.state (api read-model guard)"
+type = "forbidden"
+source_modules = [
+    "src.api.routes",
+    "src.api.ws",
+    "src.api.server",
+]
+forbidden_modules = [
+    "src.core.state",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+
+[[tool.importlinter.contracts]]
+id = "c08_belief_model_pure"
+name = "belief_institution model and deriver import no engine or core.state"
+type = "forbidden"
+source_modules = [
+    "src.domains.belief_institution.model",
+    "src.domains.belief_institution.deriver",
+]
+forbidden_modules = [
+    "src.engine",
+    "src.core.state",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+ignore_imports = [
+    # TYPE_CHECKING import: the phase18/belief test skips it, the contract counts it (exclude_type_checking_imports = false)
+    "src.domains.belief_institution.deriver -> src.core.state",
+]
+
+[[tool.importlinter.contracts]]
+id = "c08_fame_model_pure"
+name = "fame model and deriver import no engine or core.state"
+type = "forbidden"
+source_modules = [
+    "src.domains.fame.model",
+    "src.domains.fame.deriver",
+]
+forbidden_modules = [
+    "src.engine",
+    "src.core.state",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+
+[[tool.importlinter.contracts]]
+id = "c08_fidelity_model_pure"
+name = "fidelity model and deriver import no engine or core.state"
+type = "forbidden"
+source_modules = [
+    "src.domains.fidelity.model",
+    "src.domains.fidelity.deriver",
+]
+forbidden_modules = [
+    "src.engine",
+    "src.core.state",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+
+[[tool.importlinter.contracts]]
+id = "c09_admission_governor"
+name = "admission_control does not reach into the governor internals"
+type = "forbidden"
+source_modules = [
+    "src.api.admission_control",
+]
+forbidden_modules = [
+    "src.engine.governor",
+    "src.engine.phase_governor",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+
+[[tool.importlinter.contracts]]
+id = "c11_rendering_pure"
+name = "pure rendering modules do not import the renderers, simulation_quality or observability events"
+type = "forbidden"
+source_modules = [
+    "src.rendering.density",
+    "src.rendering.variants",
+    "src.rendering.grading",
+    "src.rendering.shape",
+]
+forbidden_modules = [
+    "src.rendering.render",
+    "src.rendering.incremental",
+    "src.rendering.png_writer",
+    "src.simulation_quality",
+    "src.observability.events",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+
+[[tool.importlinter.contracts]]
+id = "c12_entities_no_catalog"
+name = "entities.runtime_contract does not import the catalog repository"
+type = "forbidden"
+source_modules = [
+    "src.entities.runtime_contract",
+]
+forbidden_modules = [
+    "src.content.repository",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+
+[[tool.importlinter.contracts]]
+id = "c13_campaign_state"
+name = "campaign state imports no engine or systems"
+type = "forbidden"
+source_modules = [
+    "src.domains.campaigns.state",
+]
+forbidden_modules = [
+    "src.engine",
+    "src.systems",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+
+[[tool.importlinter.contracts]]
+id = "c14_visual_assets_no_src"
+name = "visual_assets imports nothing from src"
+type = "forbidden"
+source_modules = [
+    "visual_assets",
+]
+forbidden_modules = [
+    "src",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+
+[[tool.importlinter.contracts]]
+id = "c15_src_no_visual_assets"
+name = "src imports nothing from visual_assets"
+type = "forbidden"
+source_modules = [
+    "src",
+]
+forbidden_modules = [
+    "visual_assets",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+

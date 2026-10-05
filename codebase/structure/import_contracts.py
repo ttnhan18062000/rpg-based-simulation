@@ -71,12 +71,20 @@ def read_baseline(path: Path) -> list[str]:
 
 
 def parse_violations(output: str) -> list[str]:
-    """`importer -> imported` pairs from `lint-imports` text (entries are wrapped by the terminal width)."""
+    """`importer -> imported` pairs from `lint-imports` text (entries are wrapped by the terminal width).
+
+    An entry that is not exactly one direct `a -> b (l.N)` import (a chain of several edges) raises: its first
+    edge need not be a violation itself, so accepting it could allow other paths. Baseline such a chain by hand.
+    """
     pairs = set()
     for block in re.split(r"\n\s*\n", _ANSI_RE.sub("", output)):
-        match = _ENTRY_RE.match(" ".join(block.split()))
-        if match:
-            pairs.add(f"{match.group(1)} -> {match.group(2)}")
+        entry = " ".join(block.split())
+        if not entry.startswith("- "):
+            continue
+        match = _ENTRY_RE.match(entry)
+        if match is None or entry.count(" -> ") != 1:
+            raise ValueError(f"indirect chain, baseline by hand: {entry[:200]}")
+        pairs.add(f"{match.group(1)} -> {match.group(2)}")
     return sorted(pairs)
 
 
@@ -85,7 +93,8 @@ def splice_block(config: str, block: str) -> str:
     start, end = config.find(BEGIN_MARKER), config.find(END_MARKER)
     if start < 0 or end < start:
         raise ValueError("generated-block markers missing or out of order in the config")
-    return config[:start] + block + config[end + len(END_MARKER):].lstrip("\n")
+    tail = config[end + len(END_MARKER):]
+    return config[:start] + block + (tail[1:] if tail.startswith("\n") else tail)
 
 
 def _expected_config(root: Path) -> tuple[str, str]:

@@ -64,6 +64,26 @@ def test_parse_violations_reads_ansi_and_terminal_wrapped_entries() -> None:
     ]
 
 
+def test_parse_violations_refuses_an_indirect_chain() -> None:
+    """A block with more than one edge is never seeded; `seed-baseline` exits 2 for it."""
+    chain = "src.a is not allowed to import src.b:\n\n- src.a.x -> src.m.y (l.3)\n  src.m.y -> src.b.z (l.9)\n"
+    with pytest.raises(ValueError, match="indirect chain, baseline by hand"):
+        ic.parse_violations(chain)
+
+
+def test_seed_baseline_exits_2_on_an_indirect_chain(tmp_path: Path) -> None:
+    """The CLI turns the refusal into exit 2 and leaves the baseline file untouched."""
+    (tmp_path / "codebase/structure").mkdir(parents=True)
+    for rel in (ic.CONFIG_REL_PATH, ic.BASELINE_REL_PATH, Path("codebase/structure/package_registry.jsonl")):
+        (tmp_path / rel).write_text((_REPO_ROOT / rel).read_text())
+    fake = tmp_path / "fake-lint-imports"
+    fake.write_text("#!/bin/sh\nprintf 'Analyzed 1 files, 1 dependencies.\\n\\n- src.a.x -> src.m.y (l.3)\\n  src.m.y -> src.b.z (l.9)\\n'\n")
+    fake.chmod(0o755)
+    before = (tmp_path / ic.BASELINE_REL_PATH).read_text()
+    assert ic.main(["--root", str(tmp_path), "seed-baseline", "--lint-imports", str(fake)]) == 2
+    assert (tmp_path / ic.BASELINE_REL_PATH).read_text() == before
+
+
 def test_splice_block_replaces_only_the_generated_region() -> None:
     """Hand-edited text outside the markers survives and a second splice is a no-op."""
     config = f"head = 1\n{ic.BEGIN_MARKER}\nold\n{ic.END_MARKER}\n\n[[tool.importlinter.contracts]]\nname = 'hand'\n"
@@ -109,11 +129,11 @@ def test_committed_baseline_is_sorted_unique_module_pairs() -> None:
 
 
 def test_every_registry_namespace_package_is_a_root_package_in_the_config() -> None:
-    """A registry row for a package with no `__init__.py` needs its own `src.<pkg>` root (a 21st fails here)."""
+    """A registry row for a package with no `__init__.py` needs its own `src.<pkg>` root (a 21st fails here); `visual_assets` is the one root outside `src`."""
     roots = set(tomllib.loads(_CONFIG.read_text())["tool"]["importlinter"]["root_packages"])
     rows = load_rows(_REPO_ROOT / "codebase/structure/package_registry.jsonl", _REPO_ROOT)
     namespace = {f"src.{row['package']}" for row in rows if not (_REPO_ROOT / "src" / row["package"] / "__init__.py").exists()}
-    assert roots == {"src"} | namespace
+    assert roots == {"src", "visual_assets"} | namespace
 
 
 def test_every_registry_package_sits_in_the_generated_layers_contract() -> None:
@@ -123,3 +143,12 @@ def test_every_registry_package_sits_in_the_generated_layers_contract() -> None:
     listed = {name.strip() for line in layers for name in line.split(":")}
     rows = load_rows(_REPO_ROOT / "codebase/structure/package_registry.jsonl", _REPO_ROOT)
     assert listed == {f"src.{row['package']}" for row in rows}
+
+
+def test_contract_ids_are_unique_and_every_forbidden_contract_allows_indirect_imports() -> None:
+    """Parity rows name contracts by id; the tests look at direct imports only, so indirect chains are allowed."""
+    contracts = tomllib.loads(_CONFIG.read_text())["tool"]["importlinter"]["contracts"]
+    ids = [c["id"] for c in contracts]
+    assert len(ids) == len(set(ids)) and "layers" in ids
+    assert all(c.get("allow_indirect_imports") is True for c in contracts if c["type"] == "forbidden")
+    assert all(c.get("unmatched_ignore_imports_alerting") == "warn" for c in contracts)
