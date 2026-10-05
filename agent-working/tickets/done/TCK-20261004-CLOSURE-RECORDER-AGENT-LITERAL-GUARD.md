@@ -60,13 +60,16 @@ Source: `docs/plans/codebase_health/handoffs/handoff_to_agent_working.md` (PR #3
 - The CLAUDE.md closure example uses `--events` with its own agent values; check they all pass the guard.
 
 ## Implementation Notes
-Draft by `agent-working-design`, 2026-10-04. Not activated; the implementer commits it.
+- `record_hand_orchestrated_closure.py`: `unregistered_agents()` checks the `--agent` default and every per-event `agent` against `is_known_agent` for the workflow inferred from the ticket id (the same inference `warn_vocabulary_drift` uses; an id mapping to no workflow is never rejected). It runs right after the events are parsed and before `build_records`, so a rejection exits 1 with nothing written. The error names the allowed literals from `WORKFLOW_AGENTS` (no second list) and says hand closes use `--agent claude`.
+- After a successful record the tool runs `monitoring_anomaly_validator.py` as a subprocess and prints a one-line ADVISORY; any failure to run it is also only an advisory, the exit code is untouched.
+- `perf-implementer` / `codebase-implementer` were not registered as literals: the codebase-domain role registration is a separate ticket that needs the owner's literal-diff confirmation on `registries/session_authority.yaml`, so for now the error points callers at `--agent claude`. `record_events.py` and the pipeline path stay warn-only.
 
 ## Test Summary
-Not started.
+`tests/tools/test_record_hand_orchestrated_closure.py`: 43 pass. New: a bogus `--agent` and a bogus per-event `agent` both exit 1, name the literal and `claude`, and leave no monitoring dir or working log (AC1); a registered agent records and the validator advisory line is printed (AC2); `record_events` warn tests untouched (AC3).
 
 ## Files Changed
-None yet.
+- tools/agent-monitoring/record_hand_orchestrated_closure.py
+- tests/tools/test_record_hand_orchestrated_closure.py
 
 ## Completion Summary
-Not started.
+The hand-closure recorder now rejects unregistered agent literals before any write and prints the anomaly validator's verdict after a successful record.
