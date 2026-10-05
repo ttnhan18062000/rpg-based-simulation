@@ -8,13 +8,15 @@
     python3 -m codebase.health delete FILE TOOL RULE [--symbol S]
     python3 -m codebase.health tighten [--from DIR] [--yes]
 
-`check` exits 1 if a violation is new or worse than its row, 2 if a tool or the registry is
-unusable, 0 otherwise. This is the entry point behind `make code-health` and the advisory
-`code-health` CI job (which turns the exit code into a job summary and a warning annotation, and
-never fails the PR). `check` also takes `--summary-for FILE` (paths the PR changed, one per line),
-`--summary-out PATH` (append a Markdown summary, changed files first) and `--annotate` (print a
-GitHub `::warning::` line when the exit code is non-zero). If the check cannot run (a tool or the
-registry is unusable) it still writes one "could not run" summary line and warning, then exits 2.
+`check` exits 1 if a violation of a blocking tool is new or worse than its row, 2 if a tool or the registry is
+unusable, 0 otherwise. This is the entry point behind `make code-health` and the blocking `code-health` CI job.
+Findings of the report-only tools (`ratchet.REPORT_ONLY_TOOLS`) are listed and labelled but never fail it. A tool
+in `ratchet.SKIPPABLE_TOOLS` (jscpd: it needs npx and the npm registry) that cannot run is skipped: the check says
+so ("not measured"), leaves that tool's rows alone, and carries on; `check --from DIR`, `seed` and `tighten` never
+skip. `check` also takes `--summary-for FILE` (paths the PR changed, one per line), `--summary-out PATH` (append a
+Markdown summary, changed files first) and `--annotate` (print a GitHub `::error::` line on a failure and a
+`::warning::` line for a skipped tool). If the check cannot run (a tool or the registry is unusable) it still
+writes one "could not run" summary line and an error annotation, then exits 2.
 """
 
 from __future__ import annotations
@@ -23,7 +25,7 @@ import argparse
 import sys
 from datetime import date
 from pathlib import Path
-from typing import Callable, Sequence
+from typing import Callable, Collection, Sequence
 
 from codebase.health import ratchet, registry, scan
 from codebase.health.findings import Finding
@@ -31,43 +33,61 @@ from codebase.health.findings import Finding
 DEFAULT_SCAN_DIR = Path("reports/code_health/scan")
 
 
-def _findings(args: argparse.Namespace, root: Path, tools: Sequence[str] = scan.ALL_TOOLS) -> list[Finding]:
+def _scan_findings(
+    args: argparse.Namespace, root: Path, tools: Sequence[str] = scan.ALL_TOOLS, skippable: Collection[str] = ()
+) -> tuple[list[Finding], tuple[str, ...]]:
+    """The findings of `tools` and the tools of `skippable` that could not run (their findings are absent)."""
     out_dir = args.source if args.source else root / DEFAULT_SCAN_DIR
+    skipped: tuple[str, ...] = ()
     if not args.source:
-        scan.run_scan(root, out_dir) if tools == scan.ALL_TOOLS else scan.run_scan(root, out_dir, tools)
-    return scan.collect_findings(out_dir, root, args.scan_root, tools)
+        skipped = scan.run_scan(root, out_dir, tools, skippable)
+    measured = tuple(name for name in tools if name not in skipped)
+    return scan.collect_findings(out_dir, root, args.scan_root, measured), skipped
+
+
+def _findings(args: argparse.Namespace, root: Path, tools: Sequence[str] = scan.ALL_TOOLS) -> list[Finding]:
+    """The findings of `tools`; no tool may be skipped (`seed` and `tighten` must never act on a partial scan)."""
+    return _scan_findings(args, root, tools)[0]
 
 
 def _report_could_not_run(args: argparse.Namespace, exc: Exception) -> None:
-    """Say so in the job summary and with a warning when `check` cannot run, then let the error propagate.
+    """Say so in the job summary and with an error annotation when `check` cannot run, then let the error propagate.
 
-    Without this a broken tool (npx, a missing complexipy, a bad registry) would exit 2 with only stderr, and
-    the advisory CI job, whose step is `continue-on-error`, would look exactly like a clean pass.
+    Without this a broken tool (a missing complexipy, a bad registry) would exit 2 with only stderr, and a
+    reader of the job summary would see no reason.
     """
     reason = " ".join(f"{exc}".split())[:300] or type(exc).__name__
     if args.summary_out:
         with args.summary_out.open("a", encoding="utf-8") as handle:
-            handle.write(f"**Code health (advisory):** could not run: {reason}\n")
+            handle.write(f"**Code health:** could not run: {reason}\n")
     if args.annotate:
-        print(f"::warning::code-health could not run (advisory): {reason}")
+        print(f"::error::code-health could not run: {reason}")
 
 
 def _cmd_check(args: argparse.Namespace, root: Path, path: Path) -> int:
     try:
         rows = registry.load_rows(path, root, check_files=False)
-        findings = _findings(args, root)
+        # Only `check` against a fresh scan may skip a tool; `--from DIR` is an explicit, complete source.
+        findings, skipped = _scan_findings(args, root, scan.ALL_TOOLS, ratchet.SKIPPABLE_TOOLS)
     except Exception as exc:
         _report_could_not_run(args, exc)
         raise
-    result = ratchet.compare(findings, rows)
+    # A skipped tool was not measured: its rows are neither "gone" nor "improved", so they stay out of the comparison.
+    result = ratchet.compare(findings, [row for row in rows if row.tool not in skipped])
     print(ratchet.format_report(result, args.limit))
+    if skipped:
+        print(ratchet.skipped_note(skipped))
     if args.summary_out:
         changed = args.summary_for.read_text(encoding="utf-8").split() if args.summary_for else []
         with args.summary_out.open("a", encoding="utf-8") as handle:
-            handle.write(ratchet.format_summary(result, changed, args.limit) + "\n")
-    if args.annotate and result.failed:
-        print(f"::warning::code-health: {len(result.new) + len(result.worse)} new/worse violations (advisory); see job summary")
-    return 1 if result.failed else 0
+            handle.write(ratchet.format_summary(result, changed, args.limit, skipped) + "\n")
+    if args.annotate:
+        if result.blocking_failed:
+            blocking = len(result.new) + len(result.worse) - len(result.report_only)
+            print(f"::error::code-health: {blocking} new/worse violations; see job summary")
+        if skipped:
+            print(f"::warning::code-health: {ratchet.skipped_note(skipped)}")
+    return 1 if result.blocking_failed else 0
 
 
 def _cmd_scan(args: argparse.Namespace, root: Path, path: Path) -> int:
@@ -168,7 +188,7 @@ def build_parser() -> argparse.ArgumentParser:
             sp.add_argument("--limit", type=int, default=ratchet.DEFAULT_REPORT_LIMIT)
             sp.add_argument("--summary-for", type=Path, help="file listing the paths a PR changed, one per line")
             sp.add_argument("--summary-out", type=Path, help="append a Markdown summary here ($GITHUB_STEP_SUMMARY)")
-            sp.add_argument("--annotate", action="store_true", help="print a GitHub ::warning:: line on a failure")
+            sp.add_argument("--annotate", action="store_true", help="print GitHub ::error:: / ::warning:: lines for a failure or a skipped tool")
         if name == "seed":
             sp.add_argument("--force", action="store_true", help="reseed an existing registry (keeps review data)")
             sp.add_argument("--tool", choices=scan.ALL_TOOLS, help="seed only this tool's rows; other tools' rows are kept as they are")

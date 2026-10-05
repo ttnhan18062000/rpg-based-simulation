@@ -913,23 +913,26 @@ jobs:
       - name: Expansion gate
         run: make gate-expansion
 
-  # ── Type check (informational) ────────────────────────────────────────────
+  # ── Type check (blocking) ─────────────────────────────────────────────────
   typecheck:
-    name: "Type check (informational)"
+    name: "Type check"
     runs-on: ubuntu-latest
+    # Backstop so a stalled step cannot hold the required check for GitHub's 6 h default. Recent runs took at most
+    # 96 s (average 34 s, 40 runs of 2026-10-03/04), so 10 minutes leaves wide headroom.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
-      # TCK-20261003-MYPY-BASELINE-ADVISORY: runs `mypy src/ --config-file pyproject.toml` through
-      # mypy-baseline (codebase/baselines/mypy_baseline.txt) so only errors not in the baseline are reported. Advisory
-      # for the two-week soak: the gate returns 1 on new errors and 2 if it cannot run, and the step's
-      # continue-on-error keeps the job green; the job summary states the new-error count and the baseline
-      # size, and a ::warning:: annotation marks a failure. Blocking is TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING.
+      # TCK-20261003-MYPY-BASELINE-ADVISORY, blocking since TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING: runs
+      # `mypy src/ --config-file pyproject.toml` through mypy-baseline (codebase/baselines/mypy_baseline.txt) so only
+      # errors not in the baseline are reported. The gate returns 1 on new errors and 2 if it cannot run, and either
+      # fails this step and the job (a required check: branch protection lists "Type check"); the job summary states
+      # the new-error count and the baseline size. There is no job-level or step-level continue-on-error here, on
+      # purpose: a broken setup must not read as a pass for a required check.
       - name: mypy
         run: python3 -m codebase.gates.mypy_gate --summary-out "$GITHUB_STEP_SUMMARY" --annotate
-        continue-on-error: true
 
   # ── SimQ grade-anchor drift (informational) ──────────────────────────────
   simq-grade-drift:
@@ -961,19 +964,23 @@ jobs:
         run: make simq-full-audit-full || true
         continue-on-error: true
 
-  # ── Code health ratchet (advisory soak) ────────────────────────────────────
-  # TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB: runs `python3 -m codebase.health check`
-  # (ruff, complexipy, jscpd, line counts against codebase/baselines/code_health_exceptions.jsonl) on every PR,
-  # push to main, schedule and dispatch -- no job-level `if` and no path-filter gate, because the ratchet
-  # reads all of src/. Advisory for the two-week soak (roadmap decision 8.10): the check step has
-  # `continue-on-error`, so a ratchet exit of 1 or 2 leaves this job green and the result lands in the job
-  # summary (changed files first) and one ::warning:: annotation. The job-level `continue-on-error` is only
-  # a backstop for setup failures (runner, uv, Node, npx). Flipping it to blocking is
-  # TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING, after the soak.
+  # ── Code health ratchet (blocking) ─────────────────────────────────────────
+  # TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB added this job; TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING
+  # made it blocking (roadmap decisions 8.5, 8.10, 8.18). It runs `python3 -m codebase.health check` (ruff, complexipy,
+  # jscpd, ast-grep and line counts against codebase/baselines/code_health_exceptions.jsonl) on every PR, push to
+  # main, schedule and dispatch -- no job-level `if` and no path-filter gate, because the ratchet reads all of src/
+  # and a required check that is skipped would hang in "expected". Exit 1 (a new or worse violation of ruff,
+  # complexipy or line counts) and exit 2 (the check cannot run) fail the job; the result lands in the job summary
+  # (changed files first) and an ::error:: annotation. jscpd is report-only: listed, never failing. A
+  # jscpd that cannot run (npx, the npm registry) is skipped with a summary line and a ::warning::, never exit 2.
+  # Branch protection lists this job as "Code health". There is no job-level continue-on-error: a broken setup
+  # (runner, uv, Node) must not read as a pass for a required check.
   code-health:
-    name: "Code health (advisory)"
+    name: "Code health"
     runs-on: ubuntu-latest
-    continue-on-error: true
+    # Backstop for a hang (for example a stalled `npx` download that jscpd's own 300 s limit did not catch). Recent
+    # runs took at most 183 s (average 118 s, 40 runs of 2026-10-03/04), so 20 minutes leaves wide headroom.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
@@ -984,6 +991,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      # Keep this step's continue-on-error: it truncates /tmp/changed.txt first, and a failed diff only changes the
+      # order of the job summary (changed files first), so it must never fail the required check.
       - name: Paths this PR changed
         run: |
           : > /tmp/changed.txt
@@ -993,26 +1002,28 @@ jobs:
         continue-on-error: true
       - name: Code health ratchet
         run: python3 -m codebase.health check --summary-for /tmp/changed.txt --summary-out "$GITHUB_STEP_SUMMARY" --annotate
-        continue-on-error: true
-      # TCK-20261004-PACKAGE-REGISTRY-VALIDATOR: advisory like the ratchet, with its own continue-on-error so it
-      # stays advisory when the ratchet step above flips to blocking (TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING).
+      # TCK-20261004-PACKAGE-REGISTRY-VALIDATOR, blocking since TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING:
+      # exit 1 (a tracked top-level `src/` package with no registry row, a row for a package that is gone, or a schema
+      # problem) and exit 2 (cannot run) fail this job. It is part of "Code health", so no separate required-check
+      # setting exists or is needed. Add the row in codebase/structure/package_registry.jsonl in the same PR.
       - name: Package registry
         run: python3 -m codebase.structure.packages validate --summary-out "$GITHUB_STEP_SUMMARY" --annotate
-        continue-on-error: true
       # TCK-20261004-IMPORT-LINTER-ADOPTION: import-linter contracts, advisory and never blocking: the command exits 0
-      # whatever it finds, and the step keeps its own continue-on-error so it stays advisory once this job is required.
+      # whatever it finds, and the step keeps its own continue-on-error so it stays advisory now that this job is a required check
+      # ("Code health"): a broken contract is a summary line and a warning, never a red required check.
       - name: Import contracts
         run: python3 -m codebase.structure.import_contracts advisory --summary-out "$GITHUB_STEP_SUMMARY" --annotate
         continue-on-error: true
 
-  # ── Code health SARIF feedback (advisory soak) ────────────────────────────
+  # ── Code health SARIF feedback (advisory, permanently) ─────────────────────
   # TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK: findings in the PR's changed src/*.py files that the code-health
   # registry does not already hold, as SARIF for GitHub code scanning (changed-line feedback in the PR). A separate job
   # so that `security-events: write` is granted here and nowhere else; the repository default token stays read-only.
   # Same-repository PRs only: a fork's token is read-only and the upload would fail. The upload also runs when no
   # src Python file changed (an empty SARIF), so the permission and code-scanning acceptance are exercised on every
   # such PR. Advisory: job and steps are continue-on-error. Read the result in the job summary first, the code-scanning
-  # results second (docs/guidelines/agent_working_environment.md). Blocking is TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING.
+  # results second (docs/guidelines/agent_working_environment.md). Advisory permanently (roadmap decision 8.19): this job
+  # is changed-line feedback only, it exits 0 on findings by design, and the blocking ratchet above is what stops new violations.
   # Accepted residual risk (Security-Review): this job runs the PR's own uv.lock, pyproject.toml and tools/ while it
   # holds `security-events: write`. A same-repository author already has write access and the token can only upload
   # code-scanning data and read contents; the fork guard is what keeps untrusted authors out. Do not widen the `if`.

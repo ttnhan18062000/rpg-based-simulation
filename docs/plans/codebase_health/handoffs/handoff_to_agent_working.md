@@ -106,3 +106,29 @@ roadmap note, not in the registry. Any `settings.json` edit still needs the owne
 **5. Notice — no conflict.** #313 and #318 edits are inside paths we own and break none of our rules. Two follow-ups for
 you, not us: the `code-craft` skill's hook is advisory and always exits 0, which matches the plan's "context hooks fail open";
 please keep it that way.
+
+## Update 2026-10-04 (gates-flip PR): per-file entry for the moved snapshot history
+
+**From:** `codebase-planner`, riding in the gates-flip PR (no standalone handoff PR, owner decision 2026-10-04).
+
+`docs/guides/agent_working_path_map.md` is prefix-only, so frozen citations of the old codebase-health snapshot
+history path resolve to a missing file after #326 moved the file to `codebase/reports/codebase_health_history.jsonl`.
+Request: add a per-file entry mapping the old path to the new one. The codebase domain edits no `agent-working` path.
+
+### Question: the `scope_files` pin fails every PR that adds a `src/` file
+
+`tests/unit/tools/test_mechanism_registry_completeness_check.py:191` pins an exact `wider["scope_files"]` count (296 at #331's runs; main has since moved it), the size of
+`tools/mechanism_registry`'s wider-scope tier (`TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP`). Any PR that adds a
+`src/` file fails `Unit · infra / observability` with a count mismatch (`297 == 296` at #331's runs) until the pin is edited. The gates-flip demo PR
+(#331, throwaway) hit it twice (runs 37210796539 and 37213577739). Facts and the question only, no fix from the codebase
+domain: should the pin become a range or lower bound, be derived from the live tree, or stay exact with a message that
+tells the author what to update? (The codebase domain's own gates never add a `src/` file; this matters to every other
+domain that does.)
+
+Testing's view, forwarded (`test-architecture-reviewer`, pre-review of #329, 2026-10-05; the decision stays agent-working's, it owns
+`tools/mechanism_registry` and that test file, so the codebase domain edits neither): **keep the pin exact.** The test is a
+deliberate ratchet; its sibling `test_wider_scope_every_wired_candidate_has_a_recorded_disposition` is marked load-bearing, and
+#328's bump comment shows the edit-with-a-reason pattern working. A range or lower bound would let unbound modules accumulate
+unseen. What would help is a better assertion message that names what to update: the pin, its comment, and `unbound_files`, so a
+domain that adds a `src/` file can fix it without reading the tool.
+

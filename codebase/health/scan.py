@@ -21,7 +21,7 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Collection, Sequence
 
 from codebase.health import adapters
 from codebase.health.findings import Finding
@@ -36,6 +36,12 @@ AST_GREP_CONFIG = "codebase/rules/sgconfig.yml"
 JSCPD_DIR = "jscpd"
 JSCPD_REPORT = "jscpd-report.json"
 JSCPD_CONFIG = "codebase/config/.jscpd.json"
+# A stalled `npx` download never fails, it just waits; without a limit the required check would sit until the job
+# limit. Recent CI runs finish the whole code-health job in at most 183 s, so 300 s is far above jscpd's own share.
+# Only jscpd gets a limit: the local tools have no network to stall on. 300 s is not a hard bound: on a timeout
+# `subprocess.run` kills only the direct child and then waits on its pipes again, which can block while npx's node
+# grandchild holds them; the job's `timeout-minutes` is the real backstop.
+JSCPD_TIMEOUT_S = 300.0
 DEFAULT_COMPLEXITY_LIMIT = 15
 
 # jscpd needs npx and the npm registry; the others are Python tools in the project environment.
@@ -78,9 +84,13 @@ def find_tool(name: str) -> str:
     return found
 
 
-def _run(command: Sequence[str], root: Path, ok_codes: Sequence[int]) -> subprocess.CompletedProcess[str]:
+def _run(
+    command: Sequence[str], root: Path, ok_codes: Sequence[int], timeout: float | None = None
+) -> subprocess.CompletedProcess[str]:
     try:
-        done = subprocess.run(command, cwd=root, capture_output=True, text=True, check=False)
+        done = subprocess.run(command, cwd=root, capture_output=True, text=True, check=False, timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        raise ToolUnavailableError(f"{' '.join(command)} timed out after {timeout:g}s") from exc
     except OSError as exc:
         raise ToolUnavailableError(f"{command[0]}: {exc}") from exc
     if done.returncode not in ok_codes:
@@ -109,7 +119,7 @@ def _scan_ast_grep(root: Path, out_dir: Path) -> None:
 def _scan_jscpd(root: Path, out_dir: Path) -> None:
     version = jscpd_version(root / "Makefile")
     command = ["npx", "--yes", f"jscpd@{version}", SCAN_ROOT, "--config", JSCPD_CONFIG, "--output", str(out_dir / JSCPD_DIR)]
-    _run(command, root, (0,))
+    _run(command, root, (0,), timeout=JSCPD_TIMEOUT_S)
 
 
 def _scan_line_count(root: Path, out_dir: Path) -> None:
@@ -126,11 +136,24 @@ _SCANNERS = {
 }
 
 
-def run_scan(root: Path, out_dir: Path, tools: Sequence[str] = ALL_TOOLS) -> None:
-    """Run `tools` (default: all five) over `src/`, writing each one's raw JSON to `out_dir`."""
+def run_scan(
+    root: Path, out_dir: Path, tools: Sequence[str] = ALL_TOOLS, skippable: Collection[str] = ()
+) -> tuple[str, ...]:
+    """Run `tools` (default: all five) over `src/`, writing each one's raw JSON to `out_dir`.
+
+    A tool in `skippable` that cannot run is skipped, not fatal: its name is returned (callers must treat it as
+    "not measured") and the scan goes on. Any other tool that cannot run raises `ToolUnavailableError`.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
+    skipped: list[str] = []
     for name in tools:
-        _SCANNERS[name](root, out_dir)
+        try:
+            _SCANNERS[name](root, out_dir)
+        except ToolUnavailableError:
+            if name not in skippable:
+                raise
+            skipped.append(name)
+    return tuple(skipped)
 
 
 def _load(path: Path) -> Any:

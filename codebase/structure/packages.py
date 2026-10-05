@@ -2,7 +2,9 @@
 
 Answers which packages are live, which layer each sits in, and which files agents must not imitate.
 It makes the standard's rule M5 (no new top-level `src/` package without an owner decision) checkable:
-a tracked top-level package with no row is reported. Advisory: nothing here fails a PR.
+a tracked top-level package with no row is reported. Blocking in CI since
+TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING: a problem (exit 1) or a failure to run (exit 2) fails the
+`Code health` job.
 
 After seeding from `docs/plans/codebase_health/src_package_structure_audit.md` (a dated 2026-10-04
 snapshot) this file is the source of truth; the audit table is not updated.
@@ -25,8 +27,8 @@ Problems come in two classes so a later ticket can promote one without rewriting
     python3 -m codebase.structure.packages validate [--root DIR] [--schema-only] [--summary-out PATH] [--annotate]
 
 Exit 0 clean, 1 problems, 2 could not run. `--summary-out` appends the result (and each problem) to a
-Markdown file and `--annotate` prints one `::warning::` line, as the code-health ratchet does, so an
-advisory step is never silent in CI.
+Markdown file and `--annotate` prints one `::error::` line, as the code-health ratchet does, so a failing
+step is never silent in CI.
 """
 
 from __future__ import annotations
@@ -262,7 +264,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     check.add_argument("--root", type=Path, default=REPO_ROOT)
     check.add_argument("--schema-only", action="store_true", help="skip the completeness class")
     check.add_argument("--summary-out", type=Path, help="append a Markdown result to this file (GITHUB_STEP_SUMMARY)")
-    check.add_argument("--annotate", action="store_true", help="print a GitHub ::warning:: line on problems or a failure to run")
+    check.add_argument("--annotate", action="store_true", help="print a GitHub ::error:: line on problems or a failure to run")
     args = parser.parse_args(argv)
     kinds = (SCHEMA,) if args.schema_only else (SCHEMA, COMPLETENESS)
     notes: list[str] = []
@@ -270,9 +272,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         problems = validate_file(registry_path(args.root), args.root, kinds, notes)
     except (OSError, ValueError, TypeError, KeyError, AttributeError, RuntimeError) as exc:  # a crash is reported, never silent
         reason = f"{exc.__class__.__name__}: {exc}"
-        _write_summary(args.summary_out, f"**Package registry (advisory):** could not run ({reason})")
+        _write_summary(args.summary_out, f"**Package registry:** could not run ({reason})")
         if args.annotate:
-            print(f"::warning::package registry could not run (advisory): {reason}")
+            print(f"::error::package registry could not run: {reason}")
         print(f"package registry: could not run ({reason})")
         return 2
     for problem in problems:
@@ -281,12 +283,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"note: {note}")
     result = f"package registry: {len(problems)} problem(s)"
     print(result)
-    lines = [f"**Package registry (advisory):** {result}"]
+    lines = [f"**Package registry:** {result}"]
     lines += [f"- `{problem}`" for problem in problems]
     lines += [f"- note: {note}" for note in notes]
     _write_summary(args.summary_out, "\n".join(lines))
     if args.annotate and problems:
-        print(f"::warning::package registry: {len(problems)} problem(s) (advisory); see job summary")
+        print(f"::error::package registry: {len(problems)} problem(s); see job summary")
     return 1 if problems else 0
 
 
