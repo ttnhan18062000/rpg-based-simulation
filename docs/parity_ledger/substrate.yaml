@@ -4112,12 +4112,17 @@
     (TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION).
     world_id = f"generated_{settlement_style}_{int(danger_level)}_{seed}". Sort is
     deterministic: (-score, module_id) for tie-breaking.
+    (6) region ids declared by more than one selected module are disambiguated by
+    namespace: walking selected modules in module_id order, a module declaring a
+    region id already claimed by an earlier module gets namespace=<its module_id>
+    on its ModuleRefSpec, so which module owns the bare id depends only on the module set, never
+    on rank. Residual collisions after namespacing raise GenerationCompositionError.
 
     '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/worldgeneration/generator.py (ProceduralCompositionGenerator,
+  v2_evidence: 'src/worldgeneration/generator.py (ProceduralCompositionGenerator._assign_region_namespaces,
     GenerationCompositionError) + src/worldgeneration/scorer.py (ModuleScorer.score)
     + src/worldassembly/schema.py (WorldCompositionSpec, ModuleRefSpec, GenerationProvenanceSpec)
     + src/worldassembly/resolve_io.py (the single resolve/write path the generator shares with
@@ -5139,3 +5144,24 @@
   support_boundary: World definition storage and freshness only. The dungeon_crawl
     danger_scale value is owned by TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION,
     not by this entry.
+- id: SUB-395
+  text: The world the engine loads is the one its authored definition resolves to. For a
+    worldcomposition.v1 world, WorldRepository.load_world() reads the committed
+    resolved/world.resolved.yaml, never world.yaml, so that snapshot must equal a fresh
+    resolve of world.yaml, and the content-derived counts in world_compile_report.json
+    (entity_count, region_count, resource_node_count, building_count, quest_count,
+    distinct_populated_factions) must equal a fresh compile. dungeon_crawl's accepted
+    2026-06-27 balance remedy (4 modules to 2, danger_scale 4 to 2, 32 to 12 entities) was
+    written only to the unread catalog copy and was inert until
+    TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: data/worlds/dungeon_crawl/world.yaml (2 modules, danger_scale 2); src/worldassembly/resolve_io.py
+    render_resolved_world_yaml (shared by `resolve` and the freshness guard)
+  proof_type: null
+  test_path: tests/integration/worldassembly/test_resolved_snapshot_freshness.py
+  divergence_note: null
+  support_boundary: 'Compile-report state_hash, canonical_state_hash and place_count are NOT
+    guarded: they are stale in about 20 worlds from compiler changes since the report
+    baselines were written (see TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS).'

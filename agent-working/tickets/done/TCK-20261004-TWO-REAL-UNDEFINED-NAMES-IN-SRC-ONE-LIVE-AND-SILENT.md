@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-TWO-REAL-UNDEFINED-NAMES-IN-SRC-ONE-LIVE-AND-SILENT
-phase: open
+phase: done
 date: 2026-10-04
 tags: [engine, social, root-cause, observability]
 ---
@@ -19,7 +19,7 @@ provenance manifest on every lab run, and `party.py`'s missing `StrategicUpdate`
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -161,7 +161,7 @@ None. The evidence is in `codebase-planner`'s own handoff and re-verified in thi
 - `src/lab/orchestrator.py:184` — the live caller that makes Bug 1 reachable
 - `src/systems/social_systems/party.py:6-7` (`TYPE_CHECKING`), `:128` (annotation), `:132` (the
   function-local import that omits it), `:143` (the call)
-- `src/core/strategic.py` — where `StrategicUpdate` actually lives
+- `src/core/updates.py:515` — where `StrategicUpdate` actually lives (corrected at close: this line originally named `src/core/strategic.py`, which exists but does not define it; the wrong path survived because the module was matched by name, not traced)
 
 ## Assumptions / Open Questions
 
@@ -177,16 +177,21 @@ None. The evidence is in `codebase-planner`'s own handoff and re-verified in thi
 
 ## Implementation Notes
 
-_(not started)_
+- Bug 1 (LIVE, silent): module-level `import json` in `src/engine/kernel.py`; the two function-local imports removed; `except Exception: pass` narrowed to `(OSError, ValueError)` with a `logger.warning` (a missing or corrupt manifest degrades fingerprints but must not abort a run, so it is logged, not raised).
+- Blast radius, measured: `prov_manifest_data` only feeds `RunManifest.catalog_fingerprint` and `module_fingerprints` as fallbacks; `src/lab/orchestrator.py` passes neither, so every lab-orchestrated run recorded the process-wide catalog fingerprint and `module_fingerprints=None` instead of the resolve-time values. Anything that read those from a lab run's manifest did not have provenance.
+- Bug 2 (DORMANT, zero callers): `StrategicUpdate` imported from `src/core/updates.py`. The ticket and the handoff named `src/core/strategic.py`, which does not define it; a first edit using that path failed the new test.
+- Decision for `issue_party_command`: first kept and tested while escalated; the rule owner then ruled wiring out permanently and the Bible wrong (`TCK-20261004-BIBLE-07-DESCRIBES-PARTY-COMMAND-BEHAVIOUR-THAT-NEVER-OCCURS`), and the planner ruled removal (`TCK-20261004-REMOVE-THE-DORMANT-PARTY-COMMAND-METHOD`). The method, the `StrategicUpdate` import added for it, and its test were removed, so Bug 2's `NameError` is gone because the method is gone. The import fix was made first and verified by a test that failed before it (the `StrategicUpdate` module path was learned that way), then superseded. Cross-lane exception recorded in `docs/plans/rpg_design_roadmap/rpg_implementer_lane_split.md` section 5.
 
 ## Test Summary
 
-_(not started)_
+- `tests/unit/engine/test_kernel_provenance_manifest_load.py` (2): both fail on the old code, pass on the fix. A third test, for `issue_party_command`, failed on the old code too but was deleted with the method (`TCK-20261004-REMOVE-THE-DORMANT-PARTY-COMMAND-METHOD`).
+- AC-5: `uvx ruff@0.16.10 check --select F821`: `kernel.py` went from 3 undefined-name findings on `origin/main` to 2 (the `json` one is gone; the two left are `EntityState` inside quoted annotations, the harmless class the ticket scoped out); `party.py` has 0. The mypy baseline was not regenerated or reduced here (not measured).
+- Final-tree run (after merging `origin/main` at `ad194bec4`, #328 included): scoped suites over rendering, worldassembly, worldgeneration, architecture, engine, social, cli, lab, simulation_quality, scenarios, content and related = 2547 passed, 1 failed; full `tests/tools` plus `tests/unit/tools` = 4243 passed, 0 failed after removing the three resurrected `todos/` ticket copies the merge brought back. The one failure, `tests/integration/scenarios/test_entity_differentiation.py::test_bravery_quartile_combat_rate_2x` (population guard), is not from this batch: it fails identically on a clean `origin/main` (`1c59e01f4`).
 
 ## Files Changed
 
-_(not started)_
+`src/engine/kernel.py`; `tests/unit/engine/test_kernel_provenance_manifest_load.py`. (`src/systems/social_systems/party.py` and its test were touched and then removed under `TCK-20261004-REMOVE-THE-DORMANT-PARTY-COMMAND-METHOD`; net diff for them from this ticket is nil.)
 
 ## Completion Summary
 
-_(not started)_
+kernel.py now imports json, so the provenance manifest loads on lab runs (it was silently never loaded); the swallow is narrowed to (OSError, ValueError) and logged. The dormant undefined name in party.py was resolved by removing the method (REMOVE-THE-DORMANT-PARTY-COMMAND-METHOD). Blast radius measured: lab runs recorded the process-wide catalog fingerprint and no module fingerprints instead of the resolve-time values.

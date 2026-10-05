@@ -475,8 +475,10 @@ message as dispatch or information is a semantic judgement, so a hard block woul
 harm first. `crossSessionInbound = accept` fixes *delivery only*; it does not authorize anything.
 
 ### 9.1 Who owns this?
-`tools/sessions/route.py <path>` (or `--route-key <key>` for a named entry in `routes:`) answers from
-the manifest: longest matching `owns` glob
+`tools/sessions/route.py <path> [--from <domain>]` answers from
+the manifest (`--from` applies the asking domain's `routes` to a path it does not own). The `--route-key <key>`
+flag and a `route_keys:` section were **not built in v1** (owner decision 2026-10-05: no recurring subject
+exists that paths cannot express; add both on evidence). Longest matching `owns` glob
 wins; `owns_not` and `routes` carry the content-vs-tooling splits (`mechanisms.yaml` content ->
 rpg, the advisory tooling -> agent-working). Liveness stays a model-side `ListAgents` call (a tool,
 not a CLI). If the owner is not live, the session says so and asks the user once, rather than

@@ -30,6 +30,7 @@ from src.rendering.shape import (
 )
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
+from tests.unit.rendering.frozen_dungeon_crawl import load_frozen_dungeon_crawl
 
 _SHAPE_MODULE_PATH = Path(__file__).resolve().parents[3] / "src" / "rendering" / "shape.py"
 
@@ -69,8 +70,8 @@ def test_connected_component_labeling_splits_disjoint_same_type_patches():
 
 
 def test_dungeon_crawl_forest_is_two_components_of_1116_tiles_each():
-    repo = WorldRepository("data/worlds")
-    spec = repo.load_world("dungeon_crawl")
+    # Frozen pre-balance-fix snapshot (see tests/fixtures/rendering/*.yaml): the live world no longer has this terrain.
+    spec = load_frozen_dungeon_crawl()
     state, _report = WorldCompiler.compile(spec, seed=42)
 
     components = connected_components(state.terrain)
@@ -81,8 +82,8 @@ def test_dungeon_crawl_forest_is_two_components_of_1116_tiles_each():
 
 
 def test_dungeon_crawl_per_component_fill_ratios_match_documented_evidence():
-    repo = WorldRepository("data/worlds")
-    spec = repo.load_world("dungeon_crawl")
+    # Frozen pre-balance-fix snapshot (see tests/fixtures/rendering/*.yaml): the live world no longer has this terrain.
+    spec = load_frozen_dungeon_crawl()
     state, _report = WorldCompiler.compile(spec, seed=42)
 
     components = connected_components(state.terrain)
@@ -119,8 +120,8 @@ def test_fill_ratio_formula_on_synthetic_shapes():
 
 
 def test_forest_components_detected_as_90_degree_rotation():
-    repo = WorldRepository("data/worlds")
-    spec = repo.load_world("dungeon_crawl")
+    # Frozen pre-balance-fix snapshot (see tests/fixtures/rendering/*.yaml): the live world no longer has this terrain.
+    spec = load_frozen_dungeon_crawl()
     state, _report = WorldCompiler.compile(spec, seed=42)
 
     components = connected_components(state.terrain)
