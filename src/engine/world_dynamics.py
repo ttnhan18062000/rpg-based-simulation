@@ -6,6 +6,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate
 from src.core.combat_constants import TERMINAL_COMBAT_OUTCOME_KINDS
+from src.core.violent_cause import is_violent_death_cause
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, RegionState, EntityState
@@ -60,14 +61,16 @@ class WorldDynamicsSystem:
         # 2.1 Death-triggered Trauma & Sovereignty (LEG-RPG-071/139)
         from src.core.enums import Faction
         for e_id, ent_upd in update.entity_updates.items():
-            if ent_upd.combat and ent_upd.combat.alive_set is False:
+            # Rule ENV-07 (owner decision 15): only a death with a violent cause counts as unrest.
+            if (ent_upd.combat and ent_upd.combat.alive_set is False
+                    and is_violent_death_cause(ent_upd.combat.outcome_kind)):
                 entity = state.entities.get(e_id)
                 if entity:
                     region = WorldDynamicsSystem._get_region_for_pos(state, entity.navigation.position)
                     if region:
                         world_upd = update.world_updates.get(region.id, WorldUpdate(region_id=region.id))
                         
-                        # Each death adds 1.0 trauma
+                        # Each violent death adds 1.0 trauma
                         new_trauma_delta = world_upd.trauma_delta + 1.0
                             
                         update.world_updates[region.id] = replace(

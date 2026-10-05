@@ -11,6 +11,19 @@ if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, RegionState
     from src.systems.world_systems.generator import EntityGenerator
 
+# Owner decision 14: every world-boss spawn branch is inert unless this flag is "ON" (default OFF,
+# registered in src/domains/optimization/feature_flags.py). The deferred boss feature is kept, not
+# retired or tuned: no spawn rule, gate or threshold changed. Covers BossService.check_for_boss_spawn,
+# BossService.check_for_lair_spawn and the calamity boss in CalamityService.process_world_dynamics.
+WORLD_BOSS_SPAWN_FLAG = "ENABLE_WORLD_BOSS_SPAWN"
+
+
+def world_boss_spawn_enabled(state: "AuthoritativeState") -> bool:
+    """True only when ENABLE_WORLD_BOSS_SPAWN is explicitly "ON" in the state's feature flags."""
+    flags = getattr(state, "feature_flags", None) or {}
+    return flags.get(WORLD_BOSS_SPAWN_FLAG, "OFF") == "ON"
+
+
 class BossService:
     """
     Manages world boss spawning and resolution.
@@ -49,6 +62,9 @@ class BossService:
             3. fallback: current position region
         """
         from dataclasses import replace
+
+        if not world_boss_spawn_enabled(state):
+            return StateUpdate()
 
         from src.core.state import ItemStack
         from src.engine.legality import LegalityServiceV2
@@ -184,6 +200,9 @@ class BossService:
         the Place.
         """
         from dataclasses import replace
+
+        if not world_boss_spawn_enabled(state):
+            return StateUpdate()
 
         def _is_active_living_lair_occupant(entity) -> bool:
             return (

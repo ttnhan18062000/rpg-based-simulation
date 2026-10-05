@@ -214,6 +214,7 @@ class ApplyPlanBuilder:
             from src.engine.apply import replace
             from src.core.inventory import InventoryService
             from src.engine.legality import LegalityServiceV2
+            from src.core.violent_cause import is_violent_building_destruction
             for b_id, b_upd in update.building_updates.items():
                 if b_id in new_buildings:
                     bld = new_buildings[b_id]
@@ -225,7 +226,8 @@ class ApplyPlanBuilder:
                     new_prc = b_upd.price_modifiers_set if b_upd.price_modifiers_set is not None else bld.price_modifiers
                     is_death = bld.functional and new_hp == 0
                     new_buildings[b_id] = replace(bld, hp=new_hp, functional=False if new_hp == 0 else new_func, inventory=new_inv, price_modifiers=new_prc)
-                    if is_death:
+                    # Rule ENV-07: building destruction counts as unrest only when violent (sabotage).
+                    if is_death and is_violent_building_destruction(b_upd.hp_delta):
                         cols.add("regions")
                         if plan.world_collection_changes["regions"] is prior_state.regions:
                             plan.world_collection_changes["regions"] = dict(prior_state.regions)

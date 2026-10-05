@@ -169,6 +169,14 @@ class FeatureFlagManager:
             # default-OFF policy applies -- brand-new mechanic, no corpus profile turns this on
             # and no SHADOW-validation history exists.
             "ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH": FeatureMode.OFF,
+            # Owner decision 14 (TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING):
+            # makes all three world-boss spawn branches inert while the boss feature is deferred --
+            # BossService.check_for_boss_spawn and check_for_lair_spawn (src/world/boss.py) and the
+            # calamity boss in CalamityService.process_world_dynamics (src/world/calamity.py). The
+            # code is kept, no gate or threshold changed. Read through state.feature_flags like its
+            # ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH sibling on the same calamity trigger. DEV-002
+            # default-OFF policy applies.
+            "ENABLE_WORLD_BOSS_SPAWN": FeatureMode.OFF,
             # New gameplay behavior (TCK-20260902-REPRODUCTION-HUMANOID-CADENCE-PHASE): adds a
             # new cadence-gated sub-phase ("3.10 Humanoid Reproduction") to
             # WorldDynamicsSystem.resolve_dynamics() (src/engine/world_dynamics.py), driven by

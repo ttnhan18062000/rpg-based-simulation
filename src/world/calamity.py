@@ -44,16 +44,20 @@ class CalamityService:
                 # Sort by intensity
                 target_region = max(high_intensity_regions, key=lambda r: r.calamity_intensity)
                 
-                # Spawn a boss
-                boss = generator.spawn_monster(
-                    state=state,
-                    kind="world_boss",
-                    pos=target_region.center,
-                    difficulty_tier=4
-                )
-                
+                # Spawn a boss (owner decision 14: inert unless ENABLE_WORLD_BOSS_SPAWN is "ON").
+                # The calamity trigger itself is unchanged: last_calamity_tick advances either way.
+                from src.world.boss import world_boss_spawn_enabled
+                boss_entities = []
+                if world_boss_spawn_enabled(state):
+                    boss_entities = [generator.spawn_monster(
+                        state=state,
+                        kind="world_boss",
+                        pos=target_region.center,
+                        difficulty_tier=4
+                    )]
+
                 updates = updates.replace(
-                    entities_add=[boss],
+                    entities_add=boss_entities,
                     last_calamity_tick_set=state.tick
                 )
 
