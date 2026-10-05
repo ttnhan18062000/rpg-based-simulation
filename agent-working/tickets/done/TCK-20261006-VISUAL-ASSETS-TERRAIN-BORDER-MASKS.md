@@ -72,6 +72,8 @@ Preview page: `borderRender.ts` composes fringes with the contract's compositor 
 AM5-S rerun: byte-identical report to the re-tint ticket (PASS, 0 of 1012); `draft_tiles` now reads only `terrain.` entries because the rule is about tiles. Fringes are outside AM5-S. Honest wording unchanged: PASS means no worse than the flat fills.
 Set hash with masks (draft export): sha256:287ab36c0299f9180b2ebf47afc84c95babf612818f80af3e0eeb78457023eb2. The 9 mask intakes and the 22 replaced tile intakes of the earlier ticket remain in the gitignored quarantine.
 
+Planner question (close-up row 4, right panel): the reddish patch at the top right is Camp (code 4), not volcanic. Camp is `crisp`, so it neither gives nor takes a fringe: the road/camp boundary is correctly straight. Checked with `borderOverlays` on the crop (cols 22-28, rows 4-7): the only overlays are mountain (rank 13) fringing onto road cells (27,6) outer corner and (27,7) west edge; volcanic (code 21) is not in that crop. Expected behaviour, no bug.
+
 ## Test Summary
 `tests/visual_assets` 1541 passed (foreground, 2 GB cap); `vitest src/visualAssets` 213 passed; `tsc -b` and `eslint src/visualAssets` clean; `draft verify` ok; catalog `verify` ok; render match 31/31.
 
