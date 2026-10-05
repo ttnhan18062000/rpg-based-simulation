@@ -130,6 +130,21 @@ _(none)_
 ## Implementation Notes
 _(not started)_
 
+### 2026-10-05 — three more dead or latent paths routed in by `rpg-implementer-2` (evidence only; not yet in Scope; the planner approved editing this ticket)
+
+Found while closing `TCK-20261005-WORLD-COMPOSITION-SILENT-DROP-AND-OVERWRITE-CORPUS-PROBE` and auditing `TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER`. Sites at `94f7a3fe3`.
+Per this ticket's own rule, any one of them that fires on corpus content leaves for its own ticket; none does today.
+- **(j) The faction first-wins merge is structurally unreachable** (`src/worldassembly/resolver.py:381-390`). `:322-326` pre-seeds `factions` with every catalog faction; each module's faction
+  contribution is built from the same catalog (`:833-838`, `FactionSpec(id, type=alignment_bucket)`); a module naming a faction outside the catalog raises `ResolverError` (`:836`). So
+  `if fac.id not in factions` is never true for a valid composition, a "differing definition" cannot exist, and the provenance records that branch would write never appear. Measured over the 24
+  corpus worlds: 147 module faction contributions, 0 not pre-seeded, 0 differing, 0 faction provenance records with a `source_module`
+  (`agent-working/stored_artifacts/TCK-20261005-WORLD-COMPOSITION-SILENT-DROP-AND-OVERWRITE-CORPUS-PROBE/corpus_probe_results.jsonl`; `tests/tools/test_world_composition_corpus_probe.py` pins the `ResolverError`).
+  Dead code, not a defect; options are to delete the branch or to keep it as a guard for a future module-defined faction, which is a design choice.
+- **(k) `RegionService.find_region_at`** (`src/world/regions.py:16`): closed bounds, first match in `state.regions` order, then a **nearest-region-centre fallback** that never returns `None`. Zero production callers.
+  It is a third position-to-region membership convention alongside the live lookup and `DomainView.get_region_for_position`; leaving it risks someone wiring it up and reintroducing a different answer for points outside every region.
+- **(l) `RegionalSovereigntyService`** (`src/world/regional_sovereignty.py:24` `process_taxation`, `:78` `apply_sovereignty_debuffs`): calls `.id` directly on `LegalityServiceV2.get_region_for_position(...)` at `:46` and `:67`, which returns `None`
+  for a point outside every region (AttributeError). Nothing outside the file references the class, so it is latent.
+
 ## Test Summary
 _(not started)_
 
