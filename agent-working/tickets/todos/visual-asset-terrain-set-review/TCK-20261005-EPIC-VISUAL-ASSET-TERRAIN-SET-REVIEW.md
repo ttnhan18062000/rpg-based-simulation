@@ -50,7 +50,8 @@ Children (order and gates in `SEQUENCE.md`):
    preview-page borders toggle, evidence.
 5. **Owner gate (no ticket), held until borders exist:** the user reviews the whole map with borders and runs `adopt-set`
    (tiles and masks) themselves.
-6. `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN` (moved here, re-scoped): rerun M5 against the adopted set (W03-SET with C6 and a
+6. `TCK-20261006-VISUAL-ASSETS-RECORD-TERRAIN-SET-ADOPTION` (added 2026-10-06): record the user's adoption of `terrain-v1` (31 adoptions) and re-point the guards that described the pre-adoption catalog.
+7. `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN` (moved here, re-scoped): rerun M5 against the adopted set (W03-SET with C6 and a
    missing-mask fallback check), record, refresh the handoff snapshots, close the batch.
 
 ## Out of Scope

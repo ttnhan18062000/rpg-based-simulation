@@ -18,11 +18,13 @@ user authorizes the push; merging needs the user's `--admin`.
    ADR row and store_contract; decorative fallback; 4 px cap.
 4. `TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-MASKS` (standard): draw the masks, keep them in `terrain-v1` (one
    `adopt-set` covers tiles and masks), borders on/off toggle on the preview page, evidence sheets.
-5. **Owner gate, no ticket:** the user reviews the whole map WITH borders on the preview page once, then runs
+5. **Owner gate, no ticket (done 2026-10-05T18:17:03Z: the user adopted `terrain-v1`, set adoption `sa-f4c541f25f112221`):** the user reviews the whole map WITH borders on the preview page once, then runs
    `adopt-set` themselves (it covers tiles and masks). The implementer hands them the exact command (absolute venv
    interpreter path) and waits. If the user does not adopt, the batch stops here: child 6 stays open and the PR carries
    children 1-4 only, by the user's choice.
-6. `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN` (P2, standard; moved here from todos/ root, re-scoped): M5 rerun on the
+6. `TCK-20261006-VISUAL-ASSETS-RECORD-TERRAIN-SET-ADOPTION` (standard, repair; added 2026-10-06 after the user adopted): commit the user's adoption files byte for byte and re-point the seven guards that described
+   the pre-adoption catalog, pinned to exact facts, never loosened; docs state that no release candidate covers the 31 new slots.
+7. `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN` (P2, standard; moved here from todos/ root, re-scoped): M5 rerun on the
    adopted set (W03-SET includes C6 and a missing-mask fallback check), record, refresh handoff snapshots, close the batch.
 
 Strictly sequential.
@@ -42,4 +44,4 @@ Strictly sequential.
 
 ## Status
 
-Open (2026-10-05); children 1-2 done; owner gate held 2026-10-06 until borders exist (children 3-4).
+Open (2026-10-05); children 1-4 done; the user adopted `terrain-v1` (tiles and masks) after reviewing the whole map with borders; recording ticket next, then the M5 rerun.
