@@ -508,3 +508,88 @@ class TestInfra352DocumentsChangedPathsIntegrationDecision:
 
         assert entry["status"] == "unsupported"
         assert entry["test_path"] is None
+
+
+class TestEntryLocalWrites:
+    """TCK-20261004-PARITY-LEDGER-WRITER-WHOLE-SHARD-REWRITE-CHURN: only the target entry's lines change."""
+
+    _REAL_SHARD = _MODULE_PATH.parent.parent / "docs" / "parity_ledger" / "infrastructure.yaml"
+
+    @staticmethod
+    def _changed_lines(before: str, after: str) -> int:
+        import difflib
+        return sum(
+            1 for line in difflib.unified_diff(before.splitlines(), after.splitlines(), lineterm="", n=0)
+            if line[:1] in "+-" and line[:3] not in ("+++", "---")
+        )
+
+    def _real_copy(self, tmp_path):
+        ledger_dir = tmp_path / "ledger"
+        ledger_dir.mkdir()
+        before = self._REAL_SHARD.read_text()
+        (ledger_dir / "infrastructure.yaml").write_text(before)
+        return ledger_dir, before
+
+    def test_updating_one_real_entry_changes_only_that_entrys_lines(self, tmp_path):
+        ledger_dir, before = self._real_copy(tmp_path)
+        entries = yaml.safe_load(before)
+        index = None
+        for i, candidate in enumerate(entries):  # first real entry that passes the writer's own validation
+            try:
+                validate_entry({**candidate, "v2_evidence": "x"})
+                index = i
+                break
+            except Exception:
+                continue
+        assert index is not None
+        target = dict(entries[index])
+        target["v2_evidence"] = "Updated evidence for the entry-local writer test"
+        span = len(yaml.safe_dump([entries[index]], sort_keys=False).splitlines())
+
+        write_entry("infrastructure.yaml", target, ledger_dir=ledger_dir, db_path=tmp_path / "p.db")
+
+        after = (ledger_dir / "infrastructure.yaml").read_text()
+        assert yaml.safe_load(after)[index] == target
+        assert self._changed_lines(before, after) <= 2 * span
+        # positive control: a whole-shard dump of the same input rewrites far more
+        entries[index] = target
+        whole = yaml.safe_dump(entries, sort_keys=False)
+        assert self._changed_lines(before, whole) > 10 * self._changed_lines(before, after)
+
+    def test_adding_an_entry_appends_without_touching_other_lines(self, tmp_path):
+        ledger_dir, before = self._real_copy(tmp_path)
+        new = _entry(entry_id="INFRA-999", status="verified")
+        write_entry("infrastructure.yaml", new, ledger_dir=ledger_dir, db_path=tmp_path / "p.db")
+        after = (ledger_dir / "infrastructure.yaml").read_text()
+        assert after.startswith(before)
+        assert yaml.safe_load(after)[-1] == new
+
+    def test_invalid_entry_leaves_shard_byte_identical(self, tmp_path):
+        ledger_dir, before = self._real_copy(tmp_path)
+        bad = _entry(entry_id="not an id", status="verified")
+        with pytest.raises(Exception):
+            write_entry("infrastructure.yaml", bad, ledger_dir=ledger_dir, db_path=tmp_path / "p.db")
+        assert (ledger_dir / "infrastructure.yaml").read_text() == before
+
+    def test_untouched_entries_keep_their_hand_formatting(self, tmp_path):
+        ledger_dir = tmp_path / "ledger"
+        ledger_dir.mkdir()
+        a = _entry(entry_id="SUB-001", status="verified")
+        b = _entry(entry_id="SUB-002", status="verified")
+        text = "# header comment\n" + yaml.safe_dump([a], sort_keys=False).replace("SUB-001", '"SUB-001"') \
+            + "\n# between\n" + yaml.safe_dump([b], sort_keys=False)
+        (ledger_dir / "substrate.yaml").write_text(text)
+        b2 = {**b, "v2_evidence": "changed"}
+        write_entry("substrate.yaml", b2, ledger_dir=ledger_dir, db_path=tmp_path / "p.db")
+        after = (ledger_dir / "substrate.yaml").read_text()
+        assert after.startswith(text[: text.index("# between")])
+        assert "# between" in after and yaml.safe_load(after) == [a, b2]
+
+    def test_unexpected_shard_shape_falls_back_to_a_correct_whole_dump(self, tmp_path):
+        ledger_dir = tmp_path / "ledger"
+        ledger_dir.mkdir()
+        a = _entry(entry_id="SUB-001", status="verified")
+        (ledger_dir / "substrate.yaml").write_text("  - " + yaml.safe_dump(a, sort_keys=False).replace("\n", "\n    "))
+        a2 = {**a, "v2_evidence": "changed"}
+        write_entry("substrate.yaml", a2, ledger_dir=ledger_dir, db_path=tmp_path / "p.db")
+        assert yaml.safe_load((ledger_dir / "substrate.yaml").read_text()) == [a2]
