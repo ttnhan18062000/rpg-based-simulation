@@ -824,7 +824,7 @@ entries:
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
 3. whether individual and institutional standing are distinct concepts;
-4. what `public_reputation` means;
+4. what `public_reputation` means (decided 2026-10-05: a publicly known fact, held per scope);
 5. how world time scale relates to feasible run length;
 6. where player-inference evidence will come from;
 7. whether RPG features wait for the semantic foundation (decided 2026-10-02: they do);

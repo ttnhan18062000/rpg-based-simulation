@@ -273,7 +273,8 @@ declared constraints, default of partiality) and KNOW-01 (certainty permitted wh
 (re-investigating a question the original draft explicitly left unchecked). No new claim
 beyond instantiating an already-settled boundary for this specific kind of fact.**
 
-**Repository evidence: CONFLICTING — every consumer checked reads reputation as directly,
+**Repository evidence: SUPPORTED for the world scope since owner decision 4 (2026-10-05, see
+below). Originally recorded as CONFLICTING — every consumer checked reads reputation as directly,
 globally available truth; no perception/knowledge-mediated channel gates it anywhere.**
 Checked directly: `SocialAppraisalSystem.appraise_contract()` (`src/systems/social_systems/
 appraisal.py`) reads `source_entity.social.public_reputation` straight off the *other* party's
@@ -293,18 +294,33 @@ gate), now confirmed for reputation specifically. Cross-referenced in depth from
 `lineage-descent.md`'s own LIN-02 evidence, where this same gap collapses two causal steps this
 follow-up's own §8 requires kept distinct.
 
-**Tracked, 2026-10-03:** `TCK-20261003-APPRAISAL-READS-REPUTATION-WITHOUT-A-KNOWLEDGE-GATE`
-(BLOCKED). The conflict's resolution waits on owner decision 4 (row 4 of
-`docs/plans/systemic_world/owner_decision_memo.md`, what `public_reputation` is):
-- If the owner rules it a publicly knowable fact, this entry is re-stated and the CONFLICTING
-  evidence dissolves with no code change.
-- Otherwise, resolving it needs a reputation knowledge channel, which is perception-foundation
-  feature work.
+**Resolved by owner decision 4, 2026-10-05** (row 4 of
+`docs/plans/systemic_world/owner_decision_memo.md`): public reputation is a publicly known fact,
+held per scope. That decision is the "declared social/information semantics" this entry's own Rule
+text asks for, so it re-states the entry rather than replacing it:
+- **Within a scope, being in the scope is the declared channel.** Any subject may act on another
+  subject's reputation in a scope it is acting in, with no perception or knowledge event. Each
+  scope holds its own value: world, and narrower geographic or political scopes (region; realm or
+  country where the world models one). A consumer reads the narrowest scope it is acting in that
+  holds a value, else the next wider one, ending at world.
+- **Re-classified: CONFLICTING → SUPPORTED for the world scope.** The reads above
+  (`appraise_contract()`'s `public_reputation` and `clan_reputation`, the shop discount) read the
+  world-scope value, which is the only scope that exists today. They are legitimate under this
+  decision, and no code or test changes.
+- **Still bounded by PERC-01/KNOW-01:** a scoped public reputation is not personal knowledge.
+  Who the subject is, their lineage and their private relationships still need a declared channel
+  (see SL-S15).
+- **Narrower scopes are MISSING,** which is feature work parked by memo row 7.
+  `SocialComponent.regional_reputation` (RegionID → score) is a dormant start: the apply path
+  merges its deltas, but it has no producer and no reader at `898c6f35a`.
+
+**Tracked, 2026-10-03:** `TCK-20261003-APPRAISAL-READS-REPUTATION-WITHOUT-A-KNOWLEDGE-GATE`.
+Under this resolution it closes decision-only.
 
 A 2026-10-03 mutation baseline killed 7 of 7 mutants on the two ungated reads
 (`appraisal.py:46` and `:64`). The ticket lists the tests that pin today's read and would fail by
-design if it is ever gated. Parity entry `SOC-134` records this behaviour as verified. That is true
-of the code, not of this Rule.
+design if it is ever gated. Parity entry `SOC-134` records this behaviour as verified. Since
+2026-10-05 that is true of this Rule as well, for the world scope.
 
 **Scenarios:** [SL-S15](../scenarios/social-lineage-batch-09.md#sl-s15) (extended — famous
 ancestor, uninformed stranger).
