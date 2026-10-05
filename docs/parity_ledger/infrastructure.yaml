@@ -12717,3 +12717,22 @@
     validate_result_batch (TCK-20261004-PERF-M1-VALIDATOR-ONE-SYSTEM-RESULT-PER-SUBSYSTEM); the
     divergent case is only constructible below the validator, in the mutation test.
     Non-combat scenarios, audit_mode on, five ticks, local/thread/process routes only.'
+- id: INFRA-421
+  text: 'TCK-20261005-DIRTY-SET-DEDUPES-UPDATES-BY-ID-SO-RECYCLED-ADDRESSES-DROP-WORK:
+    DirtySetBuilder.mark_from_update marks every entity update it is given and keeps
+    no identity-keyed registry of updates already seen. It previously skipped an update
+    whose id() it had seen, so an update allocated at a recycled address was dropped
+    and its entity never marked dirty, making StrategicWorkQueue scheduling allocation-dependent
+    and audit_mode runs diverge (distinct from INFRA-273''s wall-clock throttle).
+    Marking is idempotent for one entity''s own update, so re-marking is harmless.'
+  v2_evidence: src/core/dirty.py (DirtySetBuilder.mark_from_update).
+  test_path: tests/unit/core/test_dirty_set_builder_identity.py::test_every_entity_update_is_marked_even_when_all_ids_collide
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  proof_type: regression
+  divergence_note: null
+  support_boundary: Determinism after the fix is a measurement over short runs (144
+    8-tick trials, none diverged, against 8 of 96 on unfixed main), not a proof. A
+    second id()-keyed cache, get_frozen in src/engine/executor.py, showed no stale
+    hit in 300 ticks and is not proven safe.
