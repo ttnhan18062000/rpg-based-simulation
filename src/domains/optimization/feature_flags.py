@@ -7,10 +7,18 @@ class FeatureMode(str, Enum):
     ON = "ON"
     STRICT = "STRICT"
 
+# Owner decision 14 (TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING):
+# ENABLE_WORLD_BOSS_SPAWN makes all three world-boss spawn branches inert while the boss feature is deferred --
+# BossService.check_for_boss_spawn and check_for_lair_spawn (src/world/boss.py) and the calamity boss in
+# CalamityService.process_world_dynamics (src/world/calamity.py). The code is kept, no gate or threshold changed.
+# Read through state.feature_flags like its ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH sibling on the same calamity
+# trigger. DEV-002 default-OFF policy applies. Merged into FeatureFlagManager's defaults below.
+_DEFERRED_FEATURE_FLAGS = {"ENABLE_WORLD_BOSS_SPAWN": "OFF"}
+
 class FeatureFlagManager:
     """Manages Phase 10 feature rollout modes."""
     def __init__(self, overrides: Dict[str, FeatureMode] = None) -> None:
-        self._flags: Dict[str, FeatureMode] = {
+        self._flags: Dict[str, FeatureMode] = {**{k: FeatureMode(v) for k, v in _DEFERRED_FEATURE_FLAGS.items()},
             "ENABLE_WORLD_CAPABILITY_LAYER": FeatureMode.OFF,
             # Keep OFF, deferred (TCK-20260824-ROLLOUT-FLAG-DECISIONS): real call site
             # (self_model_phase.py) and 10 test files, but no corpus profile turns this on and

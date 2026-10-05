@@ -2620,6 +2620,23 @@ The following legacy behaviors have been intentionally omitted or retired.
   `test_committed_compile_report_counts_equal_fresh_compile`).
 - **Status**: ACTIVE
 
+### DEV-010 — World-Boss Spawn Branches Are Inert Behind a Default-OFF Flag (TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING)
+
+- **Situation**: The boss spawn gate was lowered to maturity 2.0 / trauma 8.0 as a reachability fix (D-05) and that turned on a respawn-and-die loop: a boss spawned at its region centre every 100 ticks, was drained by hazard (no catalog faction, so no declared endurance) and died within ticks, and its death raised the trauma that re-opened the spawn. Measured over the 24 corpus worlds (10,000 ticks, `audit_mode`): 1,392 of 2,144 deaths (65%) were boss deaths; the loop ran in 15 worlds. The owner deferred the boss feature, but the deferred feature was producing most of the deaths every trauma measurement rested on.
+- **Change**: `ENABLE_WORLD_BOSS_SPAWN` (default OFF) gates all three spawn branches: `BossService.check_for_boss_spawn`, `BossService.check_for_lair_spawn` and the calamity boss in `CalamityService.process_world_dynamics`. Code kept; no gate, threshold or siting changed (owner decision 14). The calamity trigger still advances `last_calamity_tick`. Seven tests that asserted a boss spawn now set the flag ON explicitly.
+- **Rationale**: **Intentional Gameplay Change**. A reversal of "the lair boss stays live", recorded as such; it makes the deferral honest rather than retiring the feature.
+- **Consequences recorded**: no boss, no lair occupant and no calamity boss spawn in default runs. Consumers of `world_boss`/`ancient_sentinel`/`dragonkin` (`world/threat.py`, `systems/world_systems/navigation.py`, observability kind constants, `quests/generator.py`) see none; none broke. The warrior hazard deaths (no catalog faction on runtime spawns) are separate and unchanged.
+- **Verification**: `tests/unit/world/test_world_boss_spawn_flag.py`.
+- **Status**: ACTIVE
+
+### DEV-011 — Regional Trauma Counts Only Deaths With a Violent Cause (rule ENV-07; TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING)
+
+- **Situation**: Every entity death added +1.0 regional trauma, and a building destroyed added +2.0, whatever the cause. On the corpus 2,112 of 2,144 deaths were environmental hazard drain against 31 combat deaths, so trauma recorded exposure, not unrest, and the Bible's "violence and activity" described something the number did not measure.
+- **Change**: a death counts only when its recorded combat outcome is a terminal combat result (`VIOLENT_DEATH_OUTCOME_KINDS`, `src/core/violent_cause.py`); a building destruction counts only when it carries a damaging `hp_delta` (the cause, verified: sabotage is the only producer). Worded as "violent cause", not "has a killer", so a declared catastrophe can be admitted by its own decision in one place (owner decision 15).
+- **Rationale**: **Intentional Gameplay Change**.
+- **Consequences recorded**: measured under `audit_mode`, seed 42, 10,000 ticks: `frontier_living_world` trauma 110.0 to 0 (peak 4.42) and `simq_scale_stress_seed42` 104.0 to 0 (peak 1.96), identical with the boss flag ON, because the boss gate (trauma >= 8.0) no longer opens. The 50 instability threshold, and everything that reads it (hazard growth, `ENV-06` calamity reachability, panic appraisal), is no longer crossed in default runs. The runtime-spawned warriors' hazard deaths remain but no longer feed trauma. **Not implemented:** the ratified clause that a wounded-then-drained death still counts; the engine keeps no record of recent attacker damage to judge it by, and 0 of 2,112 corpus `HAZARD` deaths had taken attacker damage at any earlier tick.
+- **Verification**: `tests/unit/engine/test_trauma_counts_violent_cause_only.py`, `tests/unit/core/test_violent_cause.py`.
+
 ### DEV-013 — Hazard Level Is Open-Ended and Trauma-Driven Growth Has No Ceiling (TCK-20261005-HAZARD-GROWTH-CAPPED-BELOW-EVERY-AUTHORED-COMBAT-REGION)
 
 - **Situation**: The growth step was `min(1.0, hazard + 0.01)`, written only when greater than the current value. Authored hazard runs to 4.0 (79 of 104 corpus region instances are authored at or above 1.0, including every combat region) and the generator authors above 1.0 by contract, so the step could never fire for any region that accumulates trauma. Bible 05 said "0.0 to 1.0" in one sentence; the generator contract, the ratified divergence record and the schema (no bounds) said otherwise. The `1.0` cap was not a recorded legacy divergence.
