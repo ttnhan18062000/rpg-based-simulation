@@ -600,6 +600,15 @@ problem (sandboxing, separate OS users) outside this plan; nothing here is an ad
   primary backstop for command patterns rather than an extra); the hook adds the role-conditional logic
   (who is the writer, which grants exist) on top. Any edit that touches `settings.json` needs the
   user's literal-text confirmation.
+
+  *Implemented (TCK-20261004-SESSION-LAYER-M5B-ROLE-CONDITIONAL-PRETOOLUSE-HOOK):* `tools/sessions/classify.py` (pure
+  classifier) and `tools/sessions/guard.py` (role resolution by session id from the binding records, `agent_type`
+  fallback; writer lease; grants are print-only). Decision order: forbidden -> deny; not the worktree's writer -> deny
+  (no lease recorded -> ask); merge, governing-file, authority-file and remote-deletion -> ask for every role;
+  push/open_pr -> ask without a grant; uncertain -> ask. `workflow_run` is not enforced here (the Workflow tool is not
+  Bash/Edit/Write) and `delete_worktree_or_data` stays with the M5A permission rules. Wired last in `PreToolUse` with
+  matcher `Bash|Edit|Write|MultiEdit|NotebookEdit` behind a wrapper that treats a missing script as a pass: a bare
+  `python3` on a missing file exits 2 and would block every tool call.
 - **Authority-file integrity: governing-file class, no external pin in v1.** Changes to
   `registries/session_authority.yaml` go through the user's literal-diff confirmation (as `CLAUDE.md`
   and `settings.json` do today), a hook deny or ask on any Edit, Write or Bash touching it, and normal
