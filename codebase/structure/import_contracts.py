@@ -11,9 +11,12 @@ Advisory: nothing here fails a PR (TCK-20261004-IMPORT-LINTER-ADOPTION).
     python3 -m codebase.structure.import_contracts seed-baseline [--lint-imports PATH]
                                                              rerun lint-imports with an empty baseline,
                                                              rewrite the baseline file and the block
+    python3 -m codebase.structure.import_contracts advisory [--summary-out PATH] [--annotate] [--lint-imports PATH]
+                                                             run every contract; write the result to a Markdown
+                                                             summary and one ::warning:: line; ALWAYS exit 0
 
 `seed-baseline` accepts every current layer violation, like a ratchet reseed: use it only on purpose.
-Exit 0 clean, 1 out of date, 2 could not run.
+Exit 0 clean, 1 out of date, 2 could not run (`advisory` exits 0 whatever happens: it is the CI step).
 """
 
 from __future__ import annotations
@@ -40,6 +43,9 @@ LAYER_ORDER = ("consumer", "simulation-systems", "engine", "domain", "content-pi
 
 _ENTRY_RE = re.compile(r"^- (\S+) -> (\S+) \(l\.")
 _ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
+_TOTALS_RE = re.compile(r"Contracts: (\d+) kept, (\d+) broken")
+_BROKEN_RE = re.compile(r"^(.+?) BROKEN(?: \(\d+ ignored imports\))?$", re.M)
+_STALE_RE = re.compile(r"No matches for ignored import")
 
 
 def layer_packages(rows: Sequence[dict]) -> list[tuple[str, list[str]]]:
@@ -116,6 +122,48 @@ def seed_baseline(root: Path, lint_imports: str) -> list[str]:
     return parse_violations(result.stdout)
 
 
+def advisory_report(root: Path, lint_imports: str) -> tuple[str, bool]:
+    """Run every contract; return `(Markdown summary, needs_warning)`. Never raises: a crash is the summary."""
+    lines = []
+    stale_block = False
+    try:
+        config, expected = _expected_config(root)
+        stale_block = config != expected
+        if stale_block:
+            lines.append("- the generated `layers` block is out of date: run `python3 -m codebase.structure.import_contracts`")
+        result = subprocess.run([lint_imports, "--config", str(root / CONFIG_REL_PATH)], cwd=root, capture_output=True, text=True, check=False, timeout=300)
+    except (OSError, ValueError, KeyError, RuntimeError, subprocess.SubprocessError) as exc:
+        return f"**Import contracts (advisory):** could not run ({exc.__class__.__name__}: {exc})", True
+    text = _ANSI_RE.sub("", result.stdout)
+    totals = _TOTALS_RE.search(text)
+    if totals is None:
+        return f"**Import contracts (advisory):** could not run ({(result.stderr or text).strip()[-200:]})", True
+    kept, broken = int(totals.group(1)), int(totals.group(2))
+    names = sorted({" ".join(name.split()) for name in _BROKEN_RE.findall(text)})
+    stale = len(_STALE_RE.findall(text))
+    head = f"**Import contracts (advisory):** {kept} kept, {broken} broken"
+    lines = [head + (f", {stale} stale ignored import(s)" if stale else "")] + lines
+    lines += [f"- broken: `{name}`" for name in names]
+    if broken:
+        lines.append("- run `uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml` for the import lines")
+    return "\n".join(lines), bool(broken or stale or stale_block)
+
+
+def run_advisory(root: Path, lint_imports: str, summary_out: Path | None, annotate: bool) -> int:
+    """The CI step: print and summarise the result; always return 0."""
+    summary, warn = advisory_report(root, lint_imports)
+    print(summary)
+    if summary_out is not None:
+        try:
+            with summary_out.open("a", encoding="utf-8") as handle:
+                handle.write(summary + "\n\n")
+        except OSError as exc:  # a summary that cannot be written must never fail the step
+            print(f"note: summary not written ({exc})")
+    if annotate and warn:
+        print("::warning::import contracts (advisory): a contract is broken, stale or could not run; see the job summary")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """CLI entry point; returns the process exit code (0 clean, 1 out of date, 2 could not run)."""
     parser = argparse.ArgumentParser(prog="python3 -m codebase.structure.import_contracts", description=__doc__.split("\n")[0])
@@ -124,7 +172,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command")
     seed = sub.add_parser("seed-baseline", help="accept every current layer violation into the baseline file")
     seed.add_argument("--lint-imports", default=shutil.which("lint-imports") or "lint-imports")
+    advisory = sub.add_parser("advisory", help="run every contract for the CI step; always exits 0")
+    advisory.add_argument("--lint-imports", default=shutil.which("lint-imports") or "lint-imports")
+    advisory.add_argument("--summary-out", type=Path, help="append the result to this Markdown file (GITHUB_STEP_SUMMARY)")
+    advisory.add_argument("--annotate", action="store_true", help="print one GitHub ::warning:: line when a contract is broken or stale")
     args = parser.parse_args(argv)
+    if args.command == "advisory":
+        return run_advisory(args.root, args.lint_imports, args.summary_out, args.annotate)
     try:
         if args.command == "seed-baseline":
             pairs = seed_baseline(args.root, args.lint_imports)

@@ -284,6 +284,10 @@ JSCPD_VERSION ?= 5.4.0
 code-health-dup: ## Report duplicated Python blocks under src/ with jscpd (report-only; JSON in reports/code_health/jscpd/)
 	npx --yes jscpd@$(JSCPD_VERSION) src --config codebase/config/.jscpd.json
 
+.PHONY: import-contracts
+import-contracts: ## Run the import-linter contracts in codebase/structure/importlinter.toml (advisory; also the `Import contracts` step of the code-health CI job). Prints the result, always exits 0
+	python3 -m codebase.structure.import_contracts advisory --annotate
+
 # `code-health` is the Python craft-debt ratchet (codebase/health/, codebase/baselines/code_health_exceptions.jsonl).
 # It is unrelated to the codebase-health-* targets, which belong to codebase/reports/codebase_health_*.py.
 code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than codebase/baselines/code_health_exceptions.jsonl (also the advisory `Code health (advisory)` CI job during the soak: reports, never fails the PR)

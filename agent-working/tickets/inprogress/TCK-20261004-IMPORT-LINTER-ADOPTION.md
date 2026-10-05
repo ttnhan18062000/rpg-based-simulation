@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 Adopt import-linter (advisory): layer contract from the package registry, loophole and class E contracts, registry sync, one advisory CI step
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -102,8 +102,65 @@ The whole config lives in `codebase/structure/importlinter.toml` (codebase domai
 ### Layers contract and baseline
 `python3 -m codebase.structure.import_contracts` writes the generated block (layer order from the registry's `layer` column; siblings in one layer joined with `:` so they may import each other; order consumer, simulation-systems, engine, domain, content-pipeline, foundation); `--check` exits 1 if it is stale; `seed-baseline` reruns lint-imports with an empty baseline and rewrites `codebase/structure/import_layers_baseline.txt`. On `898c6f35a` the contract reports **135 module pairs** (170 import lines, all direct, TYPE_CHECKING counted). Reconciliation with the evaluation's 113 lines (99 with TC excluded), measured 2026-10-05 with this same config: at the evaluation's commit `c4304a7a3` it reports 134 pairs / 169 lines (151 lines with TC excluded), so the 6 `src/` commits since then add 1 pair and 1 line; the remaining gap (169 vs 113) is not `src/` drift. The evaluation's own layers config is not preserved (its Appendix A omits it), so its 113 is not reproducible; it must have used a different layer or root set. This ticket's number is the one reproduced by `import_contracts --check` and `seed-baseline`. `unmatched_ignore_imports_alerting = "warn"` marks a fixed import as stale. `tests/codebase/test_import_contracts.py` pins: block up to date, roots equal `{src}` plus every registry package without an `__init__.py` (a 21st namespace package fails), every registry package in the contract. The sync test never looks for an unregistered package in `src/` (the registry validator reports those), so it cannot fail another domain's PR.
 
+### Contracts, CI step and docs (2026-10-05)
+17 contracts in `codebase/structure/importlinter.toml`, all KEPT on `7d1c76743` (934 files, 5,097 dependencies, no stale entry): `layers` (generated), c01 core, c02 to c05 phase18, c06 phase19 hot path, c07 api guard, c08 belief/fame/fidelity (three contracts), c09 admission, c11 rendering, c12 entities, c13 campaign state, c14/c15 `visual_assets` boundary (`visual_assets` is a root: it is a top-level package with an `__init__.py`, no file added to `src/`). c10 (`random` ban) is not expressible. Pins: c01 4 + c04 2 + c08 belief 1 `TYPE_CHECKING` imports (verified at their source lines), the phase18 pins from the evaluation's Appendix A (c02 1, c03 5, c04 2, c05 9), and the 4 module pairs (5 import lines) of `kernel.py` in c06, reason "pending rpg decision, handoff_to_rpg.md". c03 drops the stale phase18 entry `recorder -> domains` (the recorder still imports `systems`, so that entry stays).
+CI: `Import contracts` is the last step of the `code-health` job (the job that runs the package-registry validator): `python3 -m codebase.structure.import_contracts advisory --summary-out ... --annotate`, which always exits 0 (also on a missing binary, garbage output or an unwritable summary) and prints one `::warning::` when a contract is broken, stale or could not run; the step has its own `continue-on-error`, so it stays non-blocking once #329 removes the job-level one (tests pin both). The workflow diff is that one step. `make import-contracts` is the local twin (own `.PHONY` line, so the long one is untouched). The parity ledger: only the mypy gate has an `infrastructure.yaml` entry among the codebase gates (the package registry and ast-grep have none), so no entry was added.
+Not shown by a live demo: a broken-contract run in CI needs a throwaway PR with an injected import, which needs the owner's yes; shown locally and by the step's unit tests (broken, stale, could not run, stale block, unwritable summary).
+
 ## Test Summary
+### Parity table (testing condition 2; scratch copy, 2026-10-05)
+Made in a scratch copy outside the repo (`git archive 7d1c76743 src tests codebase visual_assets pyproject.toml registries`, one injection at a time, each file restored afterwards); this checkout was not touched. Baseline on the clean copy: all 9 tests PASS and all 9 contracts KEPT. Existing test run as `PYTHONPATH=<scratch> python -m pytest <node id> -o addopts=` from the scratch root; contract run as `lint-imports --config codebase/structure/importlinter.toml` (pinned exceptions in place). Test ids: rule 1 `tests/architecture/test_phase18_import_boundaries.py::test_entity_models_do_not_import_domain_services`; 2 `tests/architecture/test_phase19_observability_boundaries.py::test_hot_path_does_not_import_heavy_analyzers`; 3 `tests/architecture/test_belief_institution_write_paths.py::test_belief_institution_module_no_engine_or_core_state_imports`; 4 `tests/architecture/test_fame_legend_fact_distinctness.py::test_fame_deriver_and_model_no_engine_or_core_state_imports`; 5 `tests/architecture/test_fidelity_write_paths.py::test_fidelity_deriver_and_model_no_engine_or_core_state_imports`; 6 `tests/api/test_admission_control.py::test_admission_control_does_not_reach_into_governor_internals`; 7 `tests/unit/domains/campaigns/test_campaign_state.py::test_campaign_state_module_has_no_engine_imports`; 8a `tests/visual_assets/test_boundaries.py::test_visual_assets_module_respects_the_boundaries[visual_assets/drawing/colors.py]`; 8b `tests/visual_assets/test_boundaries.py::test_src_never_imports_visual_assets`.
+
+| rule | contract | injected (into one file) | existing test | contract |
+|---|---|---|---|---|
+| 1 core not domains | `c01_core_not_domains` | top: import src.domains.campaigns.state | **FAIL** (caught) | BROKEN (caught) |
+| 1 core not domains | `c01_core_not_domains` | local: import src.domains.campaigns.state | **FAIL** (caught) | BROKEN (caught) |
+| 1 core not domains | `c01_core_not_domains` | tc: import src.domains.campaigns.state | PASS (missed) | BROKEN (caught) |
+| 1 core not domains | `c01_core_not_domains` | top: from src.domains.campaigns import state as _s | **FAIL** (caught) | BROKEN (caught) |
+| 2 phase19 hot path | `c06_hot_path_not_heavy` | top: import src.observability.reporting | PASS (missed) | BROKEN (caught) |
+| 2 phase19 hot path | `c06_hot_path_not_heavy` | local: import src.observability.reporting | PASS (missed) | BROKEN (caught) |
+| 2 phase19 hot path | `c06_hot_path_not_heavy` | tc: import src.observability.reporting | PASS (missed) | BROKEN (caught) |
+| 2 phase19 hot path | `c06_hot_path_not_heavy` | top: from src.observability.reporting import retention | PASS (missed) | BROKEN (caught) |
+| 3 belief model/deriver | `c08_belief_model_pure` | top: import src.engine.cadence | **FAIL** (caught) | BROKEN (caught) |
+| 3 belief model/deriver | `c08_belief_model_pure` | local: import src.engine.cadence | **FAIL** (caught) | BROKEN (caught) |
+| 3 belief model/deriver | `c08_belief_model_pure` | tc: import src.engine.cadence | PASS (missed) | BROKEN (caught) |
+| 3 belief model/deriver | `c08_belief_model_pure` | top: from src.core import state as _s | PASS (missed) | BROKEN (caught) |
+| 4 fame model/deriver | `c08_fame_model_pure` | top: import src.engine.cadence | **FAIL** (caught) | BROKEN (caught) |
+| 4 fame model/deriver | `c08_fame_model_pure` | local: import src.engine.cadence | **FAIL** (caught) | BROKEN (caught) |
+| 4 fame model/deriver | `c08_fame_model_pure` | tc: import src.engine.cadence | **FAIL** (caught) | BROKEN (caught) |
+| 4 fame model/deriver | `c08_fame_model_pure` | top: from src.core import state as _s | PASS (missed) | BROKEN (caught) |
+| 5 fidelity model/deriver | `c08_fidelity_model_pure` | top: import src.engine.cadence | **FAIL** (caught) | BROKEN (caught) |
+| 5 fidelity model/deriver | `c08_fidelity_model_pure` | local: import src.engine.cadence | **FAIL** (caught) | BROKEN (caught) |
+| 5 fidelity model/deriver | `c08_fidelity_model_pure` | tc: import src.engine.cadence | **FAIL** (caught) | BROKEN (caught) |
+| 5 fidelity model/deriver | `c08_fidelity_model_pure` | top: from src.core import state as _s | PASS (missed) | BROKEN (caught) |
+| 6 admission control | `c09_admission_governor` | top: from src.engine.governor import GovernorPolicy | **FAIL** (caught) | BROKEN (caught) |
+| 6 admission control | `c09_admission_governor` | local: from src.engine.governor import GovernorPolicy | **FAIL** (caught) | BROKEN (caught) |
+| 6 admission control | `c09_admission_governor` | tc: from src.engine.governor import GovernorPolicy | **FAIL** (caught) | BROKEN (caught) |
+| 6 admission control | `c09_admission_governor` | top: import src.engine.governor | PASS (missed) | BROKEN (caught) |
+| 6 admission control | `c09_admission_governor` | top: from src.engine import governor as _g | PASS (missed) | BROKEN (caught) |
+| 7 campaign state | `c13_campaign_state` | top: import src.engine.cadence | **FAIL** (caught) | BROKEN (caught) |
+| 7 campaign state | `c13_campaign_state` | local: import src.engine.cadence | **FAIL** (caught) | BROKEN (caught) |
+| 7 campaign state | `c13_campaign_state` | tc: import src.engine.cadence | **FAIL** (caught) | BROKEN (caught) |
+| 8a visual_assets must not import src | `c14_visual_assets_no_src` | top: import src.core.state | **FAIL** (caught) | BROKEN (caught) |
+| 8a visual_assets must not import src | `c14_visual_assets_no_src` | local: import src.core.state | **FAIL** (caught) | BROKEN (caught) |
+| 8a visual_assets must not import src | `c14_visual_assets_no_src` | tc: import src.core.state | **FAIL** (caught) | BROKEN (caught) |
+| 8b src must not import visual_assets | `c15_src_no_visual_assets` | top: import visual_assets.store.contracts | **FAIL** (caught) | BROKEN (caught) |
+| 8b src must not import visual_assets | `c15_src_no_visual_assets` | local: import visual_assets.store.contracts | **FAIL** (caught) | BROKEN (caught) |
+| 8b src must not import visual_assets | `c15_src_no_visual_assets` | tc: import visual_assets.store.contracts | **FAIL** (caught) | BROKEN (caught) |
+
+Reading (34 of 34 injections: the contract caught every one; 11 of them the test missed):
+- **Test missed, contract caught (11):** TYPE_CHECKING imports where the test skips them (rule 1 tc; rule 3 tc), the phase19 test in all 4 forms (it is a no-op: bare-prefix match), and the loopholes `from src.core import state` into belief/fame/fidelity, plain `import src.engine.governor` and `from src.engine import governor` into admission_control. Those are the evaluation's blind spots, now confirmed on `898c6f35a`.
+- **Where the tests count TYPE_CHECKING** (fame, fidelity, admission, campaign state, visual_assets) test and contract agree on all three forms.
+- Correction to the evaluation (Section 3 text): only the belief test skips TYPE_CHECKING; the fame and fidelity tests count it (read from the test source, confirmed here by `tc` FAIL on rules 4 and 5).
+- Rule 8 is partial: the `visual_assets` tests encode ~10 more rules (per-layer allowlists in `drawing/`, store layers, string-literal bans) that no contract expresses, so those tests cannot retire fully; c14 and c15 cover only the two `src`/`visual_assets` boundary rules.
+- Behaviour difference the testing domain should see: for `c01` to `c05`, `c07` and `c08_belief` (tests that skip TYPE_CHECKING) the contracts are STRICTER for a NEW TYPE_CHECKING import; the 7 existing ones are pinned.
+- Not run: relative imports (grimp resolves them, the `src.`-prefix tests do not match them).
 
 ## Files Changed
+- `pyproject.toml`, `uv.lock` (pin `import-linter==2.15`), `tests/static/test_ci_uv_install.py` (lint group members; decision 8.11 notice, #329 edits the same file)
+- `codebase/structure/importlinter.toml`, `codebase/structure/import_layers_baseline.txt`, `codebase/structure/import_contracts.py`, `tests/codebase/test_import_contracts.py`
+- `.github/workflows/test.yml` (one step), `Makefile` (`import-contracts`)
+- `docs/guidelines/agent_working_environment.md`, `docs/plans/codebase_health/import_linter_evaluation.md`, `python_code_craft_roadmap.md` (M5 row, decision 20), `handoffs/handoff_to_testing.md`, `handoffs/handoff_to_rpg.md`
+- Planning: `docs/plans/codebase_health/import_linter_adoption_ticket_brief.md`, `handoffs/session/*.md`, ticket 2, `SEQUENCE.md`
 
 ## Completion Summary
