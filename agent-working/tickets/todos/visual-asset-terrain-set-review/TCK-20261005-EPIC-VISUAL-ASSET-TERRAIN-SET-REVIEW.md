@@ -44,9 +44,14 @@ Children (order and gates in `SEQUENCE.md`):
    measured on today's `terrain-v1`.
 2. `TCK-20261005-VISUAL-ASSETS-TERRAIN-V1-COLOUR-VISION-REDRAW`: redraw the failing drafts (`draft keep --replace`),
    re-measure, record the result as measured.
-3. **Owner gate (no ticket):** the user reviews `terrain-v1` on the preview page and runs `adopt-set` themselves.
-4. `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN` (moved here, re-scoped): rerun M5 against the adopted set, record,
-   refresh the handoff snapshots, close the batch.
+3. `TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-CONTRACT` (added 2026-10-06 by the user's choice): terrain priority, `crisp` set,
+   C6 borders criterion, pure compositor `borderOverlays`, `border.*` mask key family, decorative fallback.
+4. `TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-MASKS` (added 2026-10-06): draw the shared masks, keep them in `terrain-v1`,
+   preview-page borders toggle, evidence.
+5. **Owner gate (no ticket), held until borders exist:** the user reviews the whole map with borders and runs `adopt-set`
+   (tiles and masks) themselves.
+6. `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN` (moved here, re-scoped): rerun M5 against the adopted set (W03-SET with C6 and a
+   missing-mask fallback check), record, refresh the handoff snapshots, close the batch.
 
 ## Out of Scope
 - Adoption by an agent (adopt, adopt-set, revoke are the user's). Charter signing, any `AM-M6` authorization.

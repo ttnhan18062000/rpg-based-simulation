@@ -55,6 +55,8 @@ child and re-scoped against the adopted `terrain-v1` set. Starts only after the 
 - Redrawing (child 2); changing any rule or criterion.
 
 ## Acceptance Criteria
+- [ ] W03-SET includes C6 (borders, as approved by the user in `TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-CONTRACT`) and the scene is judged with borders on.
+- [ ] A fallback check (test and capture) shows that a missing border mask gives today's hard edge, never a blank or broken cell.
 - [ ] The whole-map scene code lands with a test asserting the layout predeclared in `docs/assets/pilot_terrain_m5_criteria.md` (AM5-W03-SET): every one of the 23 codes present, a 3 x 3 patch per code, forest cells include plain, bush and tree. The W05 result is quoted together with forest bush/tree's protan/deutan closeness to other tiles (informational, not in the verdict).
 - [ ] Each affected check rerun on the adopted set and recorded with its result; unaffected checks listed with the reason.
 - [ ] User review of the whole-map scene recorded (their own answers).
