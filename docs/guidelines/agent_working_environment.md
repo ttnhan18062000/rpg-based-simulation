@@ -174,6 +174,28 @@ Three advisory CI jobs report on a pull request; none of them can fail it during
 3. Locally: `make code-health` (ratchet), `make typecheck-py` (mypy through the baseline) and
    `python3 -m codebase.gates.sarif_feedback --changed FILE --out SARIF` (the SARIF the job would upload).
 
+### Reading the import-contract result (advisory)
+
+The `Import contracts` step is the last step of the `code-health` CI job. It runs the import-linter contracts in
+`codebase/structure/importlinter.toml` (`TCK-20261004-IMPORT-LINTER-ADOPTION`) and can never fail the job: the
+command exits 0 whatever it finds and the step has its own `continue-on-error`, so it stays advisory when the job
+becomes a required check.
+
+- **Job summary:** one line `Import contracts (advisory): N kept, M broken` (plus stale ignored imports), then each
+  broken contract by name. One `::warning::` annotation appears when a contract is broken, stale or could not
+  run ("could not run" is shown instead of looking like a pass).
+- **A broken contract** means a new import crosses a boundary: the `layers` contract (order from
+  `codebase/structure/package_registry.jsonl`, 135 existing upward imports held in
+  `codebase/structure/import_layers_baseline.txt`) or one of the class E and loophole contracts. Run locally for the
+  import lines. **A stale ignored import** means an excepted import no longer exists: delete its entry.
+- **Locally:** `make import-contracts` (the same step), or for the full import lines
+  `uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml` (`lint-imports` is in
+  the `lint` group). After a registry change: `python3 -m codebase.structure.import_contracts` rewrites the
+  generated `layers` block, `--check` reports a stale one; `seed-baseline` accepts the current violations (a
+  deliberate reseed, never to hide a new import).
+- The existing `tests/architecture/` import tests still run beside the contracts; nothing is retired until
+  `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`.
+
 ### Git hooks (opt-in)
 
 The hook scripts and the installer live in `codebase/hooks/` (moved from `tools/hooks/` by `TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE`; `post-commit-reindex.sh` stays in `tools/hooks/`). prek's generated shim reads `.pre-commit-config.yaml` when a commit runs, so an existing install picks up the new paths by itself; re-running `make install-prek-hooks` is idempotent and safe if you want to be sure.
