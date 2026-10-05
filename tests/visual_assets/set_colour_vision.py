@@ -67,9 +67,10 @@ def tile_from_preview(png: bytes) -> Tile:
 
 
 def draft_tiles(set_id: str, root: Path = DRAFTS) -> dict[str, Tile]:
-    """visual key -> tile for every entry of a committed draft set (the set's own forest entry, if any, is under its key like the rest)."""
+    """visual key -> tile for every `terrain.` entry of a committed draft set (the set's own forest entry, if any, is under its key like the rest)."""
     entries = json.loads((root / set_id / "draft_set.json").read_text())["entries"]
-    return {e["visual_key"]: tile_from_preview((root / set_id / e["draft_id"] / "preview.png").read_bytes()) for e in entries}
+    # AM5-S is a rule about terrain tiles; the `border.*` mask drafts in the same set are transparent shapes, not tiles, and are checked by test_border_masks.py.
+    return {e["visual_key"]: tile_from_preview((root / set_id / e["draft_id"] / "preview.png").read_bytes()) for e in entries if e["visual_key"].startswith("terrain.")}
 
 
 def adopted_forest(export: Path = EXPORT) -> dict[str, Tile]:
