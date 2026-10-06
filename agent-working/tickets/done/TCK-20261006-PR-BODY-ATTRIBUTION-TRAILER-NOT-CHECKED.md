@@ -96,7 +96,7 @@ still gives `matches: True`.
 Drafted by `agent-working-design` on 2026-10-06 from origin/main, at the owner's request.
 
 ## Test Summary
-`tests/tools/test_pr_body_lint.py` (new, 9 pass): a Generated-with line, a session-link-only line and a Co-Authored-By line are each found; a clean body and prose that only mentions the rule are not; `main` exits 1 with an `::error::` line on a hit and 0 otherwise; `check_against_live` gives `matches: False` plus `attribution_found` for either trailer and is unchanged for a clean body; the workflow file triggers on opened/edited/synchronize and passes the body through `env`, never shell text. `test_delivery_pr_render.py` (59) and the CI-workflow coverage and split tests stay green.
+`tests/tools/test_pr_body_lint.py` (new, 10 pass): a Generated-with line, a session-link-only line and a Co-Authored-By line are each found; a clean body, prose that only mentions the rule and prose that quotes the trailer mid-sentence (this ticket's own summary reached its PR body that way) are not; `main` exits 1 with an `::error::` line on a hit and 0 otherwise; `check_against_live` gives `matches: False` plus `attribution_found` for either trailer and is unchanged for a clean body; the workflow file triggers on opened/edited/synchronize and passes the body through `env`, never shell text. `test_delivery_pr_render.py` (59) and the CI-workflow coverage and split tests stay green.
 
 ## Files Changed
 - `tools/delivery/pr_body_lint.py` (new, the one pattern list)

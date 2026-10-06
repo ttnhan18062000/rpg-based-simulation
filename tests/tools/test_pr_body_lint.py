@@ -33,6 +33,16 @@ def test_clean_body_is_clean_and_prose_about_the_rule_is_not_a_hit():
     assert pr_body_lint.find_attribution(None) == []
 
 
+def test_prose_that_quotes_the_trailer_mid_sentence_is_not_a_hit():
+    """This ticket's own Request Summary reaches the PR body through `## What landed`."""
+    quoted = (
+        'no "\U0001F916 Generated with [Claude Code](...)" line, no\n'
+        "`https://claude.ai/code/session_...` link, and no `Co-Authored-By`. It still happens. #369 merged with the\n"
+        'the "Generated with" line, and #372 carries both lines.'
+    )
+    assert pr_body_lint.find_attribution(quoted) == []
+
+
 def test_main_exit_codes_and_message(capsys):
     assert pr_body_lint.main(environ={"PR_BODY": "clean"}) == 0
     assert pr_body_lint.main(environ={"PR_BODY": f"x\n{_GENERATED}"}) == 1

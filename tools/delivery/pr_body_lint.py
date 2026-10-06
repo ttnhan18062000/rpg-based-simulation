@@ -17,11 +17,14 @@ import re
 import sys
 from typing import List, Optional
 
+# A trailer is its own line: the robot emoji and markdown punctuation may precede "Generated with", but prose that
+# quotes the phrase mid-sentence is not one. The session link needs a real id character after `session_`
+# (a literal `session_...` in prose does not match).
 ATTRIBUTION_PATTERNS = (
-    re.compile(r"Generated with \[?Claude Code", re.IGNORECASE),
-    re.compile(r"claude\.ai/code/session_", re.IGNORECASE),
+    re.compile(r"^[\W_]*Generated with \[?Claude Code", re.IGNORECASE),
+    re.compile(r"claude\.ai/code/session_[A-Za-z0-9]", re.IGNORECASE),
     re.compile(r"^\s*Co-Authored-By:", re.IGNORECASE),
-    re.compile("\U0001F916\\s*Generated", re.IGNORECASE),
+    re.compile("^[\\W_]*\U0001F916\\s*Generated", re.IGNORECASE),
 )
 
 
