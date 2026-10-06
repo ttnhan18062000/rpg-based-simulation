@@ -96,6 +96,8 @@ Four children (see `SEQUENCE.md`):
 ## Implementation Notes
 Drafted by `agent-working-design` on 2026-10-06 from a read-only investigation of `origin/main` @ `c41446c86`.
 
+Progress 2026-10-06 (`agent-working-implementer`): children 1 to 3 closed in one batch (`GATE-VERDICT-RECORD-AND-HAND-SITES`, `GATE-VERDICT-OUTCOME-AND-ADJUDICATION`, `GATE-PRECISION-REPORT-AND-RETRO`). `GATE-VERDICT-PIPELINE-SITES` (P3) is still open. The only pipeline touches so far: `implement-ticket.js` passes `--execution-mode pipeline` to the doc-staleness CLI and `--ticket-id` to the attest wrapper. The epic stays OPEN: AC2 is read from the first full ISO week after the merge.
+
 ## Test Summary
 
 ## Files Changed

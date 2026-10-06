@@ -156,3 +156,97 @@ class TestBackstop:
         monkeypatch.setattr(post_native_run_check.gate_verdicts, "record_gate_verdict", lambda **kw: None)
         assert post_native_run_check.run("TCK-5", repo=tmp_path, out=lambda *_: None) == 1
         assert calls == [("TCK-5", "done_checker_static")]
+
+
+# ---------------------------------------------------------------------------
+# TCK-20261006-GATE-PRECISION-REPORT-AND-RETRO
+# ---------------------------------------------------------------------------
+
+import generate_retro  # noqa: E402
+
+TS = "2026-10-06T01:00:00Z"  # ISO week 2026-W41
+
+
+def _fixture_ledger(root: Path) -> None:
+    """3 gates: `cli:big` has 6 adjudicated verdicts (2 false blocks), `cli:small` 2, `cli:none` none."""
+    rows = []
+    for i in range(6):
+        rows.append(_verdict(f"big{i}", TS, True, ticket=f"TCK-B{i}", gate="cli:big"))
+    for i in range(2):
+        rows.append(_verdict(f"small{i}", TS, True, ticket=f"TCK-S{i}", gate="cli:small", mode="workflow"))
+    rows.append(_verdict("none0", TS, False, ticket="TCK-N", gate="cli:none"))
+    _put(root, *rows)
+    for i in range(6):
+        gate_ledger.record_adjudication(f"big{i}", "false_block" if i < 2 else "true_block", "owner", "ruled", data_root=root)
+    gate_ledger.record_adjudication("small0", "true_block", "owner", "ruled", data_root=root)
+    gate_ledger.record_adjudication("small1", "false_pass", "orchestrator-backstop", "ruled", data_root=root)
+
+
+class TestReport:
+    def test_per_gate_cells_follow_the_adjudicated_count(self, tmp_path):
+        _fixture_ledger(tmp_path)
+        text = gate_ledger.render_section(gate_ledger.load_rows(tmp_path), "2026-W41", 9)
+        big = next(line for line in text.splitlines() if "`cli:big`" in line)
+        small = next(line for line in text.splitlines() if "`cli:small`" in line)
+        none = next(line for line in text.splitlines() if "`cli:none`" in line)
+        assert "2/6 (33%)" in big
+        assert "too few adjudicated (n=2, false blocks 0)" in small and "%" not in small
+        assert "not adjudicated" in none
+
+    def test_counts_modes_outcomes_and_unresolved(self, tmp_path):
+        _put(tmp_path, _verdict("a", "2026-10-06T01:00:00Z", True), _verdict("b", "2026-10-06T02:00:00Z", False),
+             _verdict("c", "2026-10-06T03:00:00Z", True, ticket="TCK-2", mode="workflow"))
+        gate_ledger.record_outcome("c", "overridden", data_root=tmp_path)
+        (g,) = gate_ledger.report(gate_ledger.load_rows(tmp_path))
+        assert (g["verdicts"], g["blocking"], g["unresolved"]) == (3, 2, 0)
+        assert dict(g["by_mode"]) == {"hand": 2, "workflow": 1}
+        assert dict(g["outcomes_derived"]) == {"fixed_and_rerun": 1} and dict(g["outcomes_recorded"]) == {"overridden": 1}
+
+    def test_unknown_ruling_is_not_counted_as_adjudicated(self, tmp_path):
+        _put(tmp_path, _verdict("a", TS, True))
+        gate_ledger.record_adjudication("a", "unknown", "owner", "cannot tell", data_root=tmp_path)
+        assert gate_ledger.report(gate_ledger.load_rows(tmp_path))[0]["adjudicated"] == 0
+
+    def test_week_filter_uses_the_verdict_timestamp(self, tmp_path):
+        _put(tmp_path, _verdict("a", TS, True), _verdict("b", "2026-09-01T01:00:00Z", True, ticket="TCK-2"))
+        assert gate_ledger.report(gate_ledger.load_rows(tmp_path), "2026-W41")[0]["verdicts"] == 1
+
+    def test_report_cli_prints_the_section(self, tmp_path, capsys):
+        _fixture_ledger(tmp_path)
+        assert gate_ledger.main(["--data-root", str(tmp_path), "report", "--week", "2026-W41"]) == 0
+        assert "2/6 (33%)" in capsys.readouterr().out
+
+
+class TestRetroGatesSection:
+    def test_dark_instrument_and_zero_rows_wording(self):
+        assert "Instrument not running" in gate_ledger.render_section([], "2026-W41", 0)
+        quiet = gate_ledger.render_section([_verdict("a", "2026-09-01T00:00:00Z", True)], "2026-W41", 1)
+        assert "No gate verdicts this period" in quiet and "1 records outside" in quiet and "Instrument not running" not in quiet
+
+    def test_retro_without_gate_shards_renders_the_dark_wording(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", tmp_path)
+        section = generate_retro._gates_section("2026-W41")
+        assert "## Gates" in section and "Instrument not running" in section
+
+    def test_retro_with_the_fixture_renders_the_table(self, tmp_path, monkeypatch):
+        _fixture_ledger(tmp_path)
+        monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", tmp_path)
+        section = generate_retro._gates_section("2026-W41")
+        assert "| gate_id |" in section and "2/6 (33%)" in section
+        assert "## Gates" in generate_retro.generate([], [], "2026-W41", "2026-W41", gates=section)
+
+    def test_regenerating_keeps_hand_written_notes_without_force(self, tmp_path, monkeypatch):
+        _fixture_ledger(tmp_path)
+        monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", tmp_path)
+        section = generate_retro._gates_section("2026-W41")
+        out = tmp_path / "RETRO.md"
+        out.write_text("# old\n\n## Notes\n\nhand written finding\n")
+        report = generate_retro.generate([], [], "2026-W41", "2026-W41", gates=section)
+        status = generate_retro._write_report_preserving_notes(report, out, force=False)
+        text = out.read_text()
+        assert "preserved" in status and "hand written finding" in text and "## Gates" in text
+        assert text.index("## Gates") < text.index("hand written finding")
+
+    def test_a_failing_ledger_read_never_fails_the_retro(self, monkeypatch):
+        monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", None)
+        assert generate_retro._gates_section("2026-W41") is None

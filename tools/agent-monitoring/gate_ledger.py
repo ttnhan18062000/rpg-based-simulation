@@ -20,13 +20,14 @@ native run attested as PASS for the same ticket, the native verdict is a `false_
 backstop as the authoritative re-run). `true_pass` is only ever recorded by someone who checked a pass on
 purpose; an unchecked pass is not assumed true.
 
-CLI: `gate_ledger.py outcome|adjudicate|list`. An unknown `gate_verdict_id` is refused with exit 2.
+CLI: `gate_ledger.py outcome|adjudicate|list|report`. An unknown `gate_verdict_id` is refused with exit 2.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import sys
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -40,6 +41,9 @@ from writer import write_line  # noqa: E402
 
 DEFAULT_DATA_ROOT = Path("agent-working/agent-monitoring/data")
 BACKSTOP_ACTOR = "orchestrator-backstop"
+# Below this many adjudicated verdicts a gate prints counts and a label, never a share. A starting value
+# (TCK-20261006-GATE-PRECISION-REPORT-AND-RETRO); change it at a retro if the data says so.
+MIN_ADJUDICATED = 5
 # Backstop check -> the attested native gate ids it re-derives (design.md: the orchestrator re-runs
 # done_checker_static after the run returns). Other native gates have no backstop counterpart.
 BACKSTOP_COVERS = {"done_checker_static": ("finalize_selfcheck",)}
@@ -196,6 +200,74 @@ def backstop_adjudicate(ticket_id: str, backstop_check: str, data_root: Path = D
         return []
 
 
+def _week_of(ts: object) -> str | None:
+    try:
+        return datetime.fromisoformat(str(ts).replace("Z", "+00:00")).strftime("%G-W%V")
+    except ValueError:
+        return None
+
+
+def report(rows: list[dict], week: str | None = None) -> list[dict]:
+    """One reading per `gate_id` over the verdicts of `week` (all rows when None), sorted by gate_id.
+
+    Outcomes and adjudications are read through `resolved_view`, so they count whenever they were recorded.
+    `adjudicated` excludes an `unknown` ruling: it is not a judgement. Shares are over adjudicated verdicts only;
+    an unadjudicated pass or block is never assumed right."""
+    gates: dict[str, dict] = {}
+    for v in resolved_view(rows):
+        if week is not None and _week_of(v.get("ts")) != week:
+            continue
+        g = gates.setdefault(v["gate_id"], {
+            "gate_id": v["gate_id"], "verdicts": 0, "by_mode": Counter(), "blocking": 0, "outcomes_recorded": Counter(),
+            "outcomes_derived": Counter(), "unresolved": 0, "adjudicated": 0, "adjudications": Counter()})
+        g["verdicts"] += 1
+        g["by_mode"][v.get("execution_mode") or "?"] += 1
+        g["blocking"] += bool(v.get("blocking"))
+        if v["outcome"] is not None:
+            g["outcomes_recorded" if v["outcome_source"] == "explicit" else "outcomes_derived"][v["outcome"]] += 1
+        elif v.get("blocking"):
+            g["unresolved"] += 1
+        if v["adjudication"] not in (None, "unknown"):
+            g["adjudicated"] += 1
+            g["adjudications"][v["adjudication"]] += 1
+    return [gates[k] for k in sorted(gates)]
+
+
+def _mix(counter: Counter) -> str:
+    return ", ".join(f"{k} {n}" for k, n in sorted(counter.items())) or "-"
+
+
+def _false_block_cell(g: dict) -> str:
+    n, fb = g["adjudicated"], g["adjudications"]["false_block"]
+    if n == 0:
+        return "not adjudicated"
+    if n < MIN_ADJUDICATED:
+        return f"too few adjudicated (n={n}, false blocks {fb})"
+    return f"{fb}/{n} ({round(100 * fb / n)}%)"
+
+
+def render_section(rows: list[dict], week: str | None = None, total_rows: int | None = None) -> str:
+    """The retro's `## Gates` section. `total_rows` is the count of verdict rows in any week: 0 means the instrument
+    is not running (zeros would mean nothing); rows elsewhere but none in the period read as "no gate verdicts"."""
+    lines = ["## Gates", "",
+             "_Gate precision from the `gate_verdicts` ledger (`tools/agent-monitoring/gate_ledger.py`). Report only: "
+             "nothing here changes a gate. Shares are over adjudicated verdicts; an unadjudicated verdict is not assumed right._", ""]
+    if total_rows == 0:
+        return "\n".join(lines + ["_Instrument not running: no gate_verdicts records exist in any week. "
+                                  "Zeros below would be meaningless, so the table is omitted._", ""])
+    readings = report(rows, week)
+    if not readings:
+        outside = f" ({total_rows} records outside this period)" if total_rows else ""
+        return "\n".join(lines + [f"_No gate verdicts this period{outside}._", ""])
+    lines += ["| gate_id | verdicts (by mode) | blocking | outcomes recorded | outcomes derived | unresolved blocks | adjudicated | false blocks | false passes |",
+              "|---|---|---|---|---|---|---|---|---|"]
+    for g in readings:
+        fp = g["adjudications"]["false_pass"] if g["adjudicated"] else "-"
+        lines.append(f"| `{g['gate_id']}` | {g['verdicts']} ({_mix(g['by_mode'])}) | {g['blocking']} | {_mix(g['outcomes_recorded'])} | "
+                     f"{_mix(g['outcomes_derived'])} | {g['unresolved']} | {g['adjudicated']} | {_false_block_cell(g)} | {fp} |")
+    return "\n".join(lines + ["", f"_\"too few adjudicated\" below {MIN_ADJUDICATED} rulings: counts only, no share._", ""])
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--data-root", default=str(DEFAULT_DATA_ROOT))
@@ -210,6 +282,8 @@ def build_parser() -> argparse.ArgumentParser:
     adj.add_argument("--adjudication", required=True, choices=gate_verdicts.ADJUDICATIONS)
     adj.add_argument("--by", required=True, help="a role, or `owner`")
     adj.add_argument("--reason", required=True)
+    rep = sub.add_parser("report", help="per-gate precision reading (report only)")
+    rep.add_argument("--week", help="ISO week YYYY-Www of the verdicts; default all weeks")
     lst = sub.add_parser("list", help="show verdicts with their resolved outcome and adjudication")
     lst.add_argument("--unresolved", action="store_true", help="only blocking verdicts with no outcome")
     return parser
@@ -225,6 +299,9 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "adjudicate":
             row = record_adjudication(args.gate_verdict_id, args.adjudication, args.by, args.reason, data_root)
             print(f"recorded adjudication {row['adjudication']} for {row['gate_verdict_id']}")
+        elif args.command == "report":
+            rows = load_rows(data_root)
+            print(render_section(rows, args.week, len(_split(rows)[0])))
         else:
             view = resolved_view(load_rows(data_root))
             for v in (unresolved(view) if args.unresolved else view):
