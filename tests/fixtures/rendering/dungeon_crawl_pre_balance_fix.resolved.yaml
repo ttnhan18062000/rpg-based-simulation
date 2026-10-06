@@ -9,6 +9,10 @@
 # goblin_camp_conflict / old_mine_resource_loop modules), so those tests lost their subject.
 # Cost: tests pointed at this fixture no longer detect rendering regressions in the LIVE dungeon_crawl.
 # Retirement: TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT decides rebaseline-vs-fixture.
+# Region list order (LOC-08, owner decision 13): the `regions:` list below is the ORIGINAL list REVERSED, and nothing
+# else in this file changed. WorldCompiler used to let the LAST region win a shared tile; it now lets the FIRST (the
+# resolved region list is the precedence order). Reversing the list keeps every tile's winner, so the terrain these
+# tests reproduce is exactly the terrain the documented measurements were taken on. Not a refresh to the live world.
 schema_version: worldspec.v1
 world_id: dungeon_crawl
 name: Dungeon Crawl
@@ -19,38 +23,18 @@ topology:
   height: 121
   coordinate_system: grid
 regions:
-- id: goblin_camp
+- id: bandit_road
   type: wilderness
   bounds:
-  - 95
-  - 20
-  - 125
-  - 55
+  - 50
+  - 30
+  - 85
+  - 60
   terrain: forest
-  hazard_level: 3.0
-  hazard_kind: NATURAL_TERRAIN
-  tags:
-  - forest
-  places:
-  - id: goblin_camp_place
-    kind: CAMP
-    position:
-    - 110
-    - 38
-    creature_kind: goblin
-- id: old_mine
-  type: wilderness
-  bounds:
-  - 20
-  - 60
-  - 60
-  - 105
-  terrain: cave
   hazard_level: 2.0
   hazard_kind: NATURAL_TERRAIN
   tags:
-  - mine
-  - underground
+  - forest
   places: []
 - id: haunted_battlefield
   type: wilderness
@@ -71,19 +55,39 @@ regions:
     - 80
     - 100
     hazard_level: 3.5
-- id: bandit_road
+- id: old_mine
   type: wilderness
   bounds:
-  - 50
-  - 30
-  - 85
+  - 20
   - 60
-  terrain: forest
+  - 60
+  - 105
+  terrain: cave
   hazard_level: 2.0
   hazard_kind: NATURAL_TERRAIN
   tags:
-  - forest
+  - mine
+  - underground
   places: []
+- id: goblin_camp
+  type: wilderness
+  bounds:
+  - 95
+  - 20
+  - 125
+  - 55
+  terrain: forest
+  hazard_level: 3.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - forest
+  places:
+  - id: goblin_camp_place
+    kind: CAMP
+    position:
+    - 110
+    - 38
+    creature_kind: goblin
 factions:
 - id: hero_guild
   type: defender

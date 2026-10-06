@@ -48,7 +48,7 @@ def test_multi_seed_flow_all_succeed(temp_repos_dir):
         ],
         "factions": [{"id": "villagers", "type": "civilian"}],
         "entities": [{"id": "pop1", "count": 2, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"}],
-        "validation": {"expected_min_entities": 1, "allow_overlapping_regions": False}
+        "validation": {"expected_min_entities": 1}
     }
     world_repo.save_world(WorldSpec(**world_dict))
 
@@ -128,7 +128,7 @@ def test_multi_seed_flow_partial_failure(temp_repos_dir):
         ],
         "factions": [{"id": "villagers", "type": "civilian"}],
         "entities": [{"id": "pop1", "count": 2, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"}],
-        "validation": {"expected_min_entities": 1, "allow_overlapping_regions": False}
+        "validation": {"expected_min_entities": 1}
     }
     world_repo.save_world(WorldSpec(**world_dict))
 

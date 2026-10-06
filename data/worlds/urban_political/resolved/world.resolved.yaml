@@ -28,19 +28,6 @@ regions:
     position:
     - 25
     - 25
-- id: bandit_road
-  type: road
-  bounds:
-  - 40
-  - 40
-  - 100
-  - 60
-  terrain: road
-  hazard_level: 2.0
-  hazard_kind: NATURAL_TERRAIN
-  tags:
-  - wilderness
-  places: []
 - id: trading_hometown
   type: town
   bounds:
@@ -54,6 +41,19 @@ regions:
   tags:
   - plain
   - trade_route
+  places: []
+- id: bandit_road
+  type: road
+  bounds:
+  - 40
+  - 40
+  - 100
+  - 60
+  terrain: road
+  hazard_level: 2.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - wilderness
   places: []
 factions:
 - id: hero_guild
@@ -399,4 +399,3 @@ quest_definitions:
   source_module: trading_company_hub
 validation:
   expected_min_entities: 1
-  allow_overlapping_regions: false

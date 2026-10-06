@@ -250,4 +250,3 @@ quest_definitions:
   source_module: frontier_village_core
 validation:
   expected_min_entities: 1
-  allow_overlapping_regions: false

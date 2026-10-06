@@ -5182,3 +5182,32 @@
   support_boundary: Covers the direct WorldSpec compile path. The assembly path's
     separate preferred_regions check (worldassembly/resolver.py) is unchanged. Region
     BOUNDS overlapping is not covered (TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER).
+- id: SUB-397
+  text: A position resolves to at most one region by authored precedence (LOC-08,
+    owner decision 13), and that one answer serves event credit, terrain paint and
+    the region's hazard. Module and composition `region_precedence` declarations,
+    contained-region-wins for undeclared nesting and resolved declaration order for
+    other undeclared overlaps are resolved by src/worldassembly/region_precedence.py::order_regions
+    into one total order carried as the resolved world's region-list order; a region
+    owning no tile is an error. core.region_resolution.resolve_region_among takes
+    the first region in that order that contains the point (inclusive edges); SpatialQueryService.get_region_at,
+    DomainView.get_region_for_position, ApplyPath region maintenance and the social-memory
+    fallback apply it, and WorldCompiler paints terrain in the same order. Overlapping
+    bounds are permitted; ValidationSpec.allow_overlapping_regions is deleted.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/worldassembly/region_precedence.py order_regions; src/core/region_resolution.py
+    resolve_region_among; src/worldbuilding/compiler.py terrain paint; data/worlds/*/world.yaml
+    and data/content/world_modules/{wolf_den_near_forest,nomadic_herd}.yaml region_precedence;
+    docs/mechanics/06_worldbuilding_foundation.md Region Overlap Resolution
+  proof_type: null
+  test_path: tests/unit/worldassembly/test_region_precedence.py
+  divergence_note: DEV-012 (Unified, Enforced)
+  support_boundary: Declarations exist only for the 15 ratified pairs; other overlaps
+    (bandit_road/old_mine, orc_stronghold/haunted_battlefield, moon_cave/wolf_den,
+    moon_cave/river_ford, orc_stronghold/river_ford, wolf_den/sacred_grove, sacred_grove/deep_forest,
+    hometown/bandit_road edge) resolve by contained-wins or declaration order with
+    an advisory. The resolved region-list order is the carrier (src/core/state.py
+    is untouched). The old smallest-area rule was measured and failed for partial
+    overlaps (the thin bandit_road strip won every contested point).

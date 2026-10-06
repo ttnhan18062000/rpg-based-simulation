@@ -37,7 +37,7 @@ from src.content.resolver import (
 from src.worldbuilding.recipe import PopulationRecipeSpec
 from src.worldmodules.evaluator import AssemblyParameterError, ModuleParameterEvaluator
 from src.content.pack_manifest import ContentPackManifest
-
+from src.worldassembly.region_precedence import precedence_advisories, precedence_ordered_regions
 
 from src.worldbuilding.schema import (
     WorldSpec,
@@ -680,7 +680,7 @@ class WorldAssemblyResolver:
             name=normalized_comp.name,
             description=normalized_comp.description,
             topology=TopologySpec(width=width, height=height, coordinate_system="grid"),
-            regions=list(regions.values()),
+            regions=precedence_ordered_regions(regions, normalized_comp, graph_map, ref_by_id),
             factions=list(factions.values()),
             information_source_profiles=list(normalized_comp.information_source_profiles),
             pending_information_responses=list(normalized_comp.pending_information_responses),
@@ -744,7 +744,7 @@ class WorldAssemblyResolver:
             regions_count=len(regions),
             entities_count=len(entities),
             blocking_errors=blocking_errors,
-            warnings=warnings,
+            warnings=warnings + precedence_advisories(regions, normalized_comp, graph_map, ref_by_id),
             validation_reports=validation_reports,
             catalog_fingerprint=self.catalog_repo.fingerprint,
             module_fingerprints=module_fingerprints

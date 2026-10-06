@@ -27,38 +27,6 @@ regions:
     position:
     - 25
     - 25
-- id: bandit_road
-  type: road
-  bounds:
-  - 40
-  - 40
-  - 100
-  - 60
-  terrain: road
-  hazard_level: 2.0
-  hazard_kind: NATURAL_TERRAIN
-  tags:
-  - wilderness
-  places: []
-- id: goblin_camp
-  type: wilderness
-  bounds:
-  - 95
-  - 20
-  - 125
-  - 55
-  terrain: forest
-  hazard_level: 3.0
-  hazard_kind: NATURAL_TERRAIN
-  tags:
-  - forest
-  places:
-  - id: goblin_camp_place
-    kind: CAMP
-    position:
-    - 110
-    - 38
-    creature_kind: goblin
 - id: old_mine
   type: wilderness
   bounds:
@@ -118,23 +86,37 @@ regions:
     - 140
     - 40
     hazard_level: 4.0
-- id: near_forest
+- id: goblin_camp
   type: wilderness
   bounds:
-  - 45
-  - 10
-  - 90
+  - 95
+  - 20
+  - 125
   - 55
   terrain: forest
-  hazard_level: 1.0
+  hazard_level: 3.0
   hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
-  terrain_variants:
-  - terrain: forest
-    weight: 3.0
-  - terrain: swamp
-    weight: 1.0
+  places:
+  - id: goblin_camp_place
+    kind: CAMP
+    position:
+    - 110
+    - 38
+    creature_kind: goblin
+- id: bandit_road
+  type: road
+  bounds:
+  - 40
+  - 40
+  - 100
+  - 60
+  terrain: road
+  hazard_level: 2.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - wilderness
   places: []
 - id: wolf_den
   type: wilderness
@@ -160,6 +142,24 @@ regions:
     - 87
     - 50
     creature_kind: wolf
+- id: near_forest
+  type: wilderness
+  bounds:
+  - 45
+  - 10
+  - 90
+  - 55
+  terrain: forest
+  hazard_level: 1.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - forest
+  terrain_variants:
+  - terrain: forest
+    weight: 3.0
+  - terrain: swamp
+    weight: 1.0
+  places: []
 - id: sacred_grove
   type: wilderness
   bounds:
@@ -876,4 +876,3 @@ quest_definitions:
   source_module: forest_warden_grove
 validation:
   expected_min_entities: 1
-  allow_overlapping_regions: false
