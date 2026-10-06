@@ -596,7 +596,7 @@ const pushGate = (gateId, gateType, phase, verdict, blocking, evidence) => {
   try {
     gateRows.push({
       gate_id: gateId, gate_type: gateType, phase, verdict: String(verdict), blocking: Boolean(blocking),
-      inputs_ref: { phase, evidence: String(evidence || '').slice(0, 200).replace(/['"\\]/g, '’') },
+      inputs_ref: { phase, evidence: truncateSummary(evidence).replace(/['"\\]/g, '’') },
     })
   } catch (e) { /* monitoring must never fail the workflow */ }
 }
