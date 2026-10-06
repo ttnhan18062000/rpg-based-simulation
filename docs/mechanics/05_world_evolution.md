@@ -36,13 +36,15 @@ Regions are not static. They react to the violence and activity within their bor
     environmental hazard drain (`HAZARD`), starvation and other passive drain, and natural death are exposure,
     not unrest. The test is the recorded cause, not whether a killer exists; a future declared catastrophe
     (a plague) is admitted by its own owner decision, by adding its cause to that one set. Measured basis: of
-    2,144 deaths across the 24 corpus worlds (10,000 ticks, `audit_mode`), 2,112 were `HAZARD` and 31 `DEFEAT`.
+    2,144 deaths across the 24 corpus worlds (10,000 ticks, `audit_mode`), 2,112 were `HAZARD` and 31 `DEFEAT`
+    (ratification-time base, dominated by the boss loop). Re-baselined with bosses inert and runtime spawns carrying
+    their catalog faction (DEV-014): 84 deaths, 46 `HAZARD` and 38 `DEFEAT`.
     **Decided, not yet implemented (owner, 2026-10-05; catalog ENV-07): a wounded-then-drained death still
     counts.** The implemented rule judges a death by the cause recorded on its lethal update, so a death that
     hazard drain finishes after combat wounded the entity is recorded `HAZARD` and does not count yet. No
     authoritative record of an entity's recent attacker damage exists (the engine keeps none), so counting it
     needs one; measured, it changes nothing today: 0 of the 2,112 corpus `HAZARD` deaths had taken attacker
-    damage at any earlier tick.
+    damage at any earlier tick (re-measured after DEV-014: 0 of 46).
 2.  **Threshold**: If `Trauma Score > 50.0`, the region enters an unstable state.
 
 **Building destruction (resolved, 2026-10-05):** `src/engine/apply_plan.py` adds a separate **+2.0** when a

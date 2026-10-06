@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION-FROM-EVERY-RUNTIME-SPAWNED-MONSTER
-phase: open
+phase: done
 date: 2026-10-05
 tags: [world, combat]
 ---
@@ -16,7 +16,7 @@ tags: [world, combat]
 orcs and bosses lose their catalog faction — and with it the hazard endurance the catalog declares for them
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -70,6 +70,8 @@ feature design, deferred by owner decisions 10 and 14. This ticket fixes monster
 4. Check every consumer of a spawned monster's faction — legality, hostility, appraisal, targeting — for
    behaviour that changes once it stops being the bucket. **Report changes; do not suppress them.**
 5. Disabling-control test; divergence entry; parity-ledger update.
+6. (Added during implementation, planner ruling 2026-10-06.) `spawn_goblin`, same file, hard-codes the same bucket; it gets the same restoration.
+7. (Owner ruling 2026-10-06.) Every unmapped kind but wild kinds: dragonkin -> `dragon_cult`; bear/harpy/golem -> `wild_beast_pack` was ruled, then HELD OUT (owner option a) because it makes wild->hero attacks `FRIENDLY_FIRE_ILLEGAL`; see the wild-beast-pack legality ticket.
 
 ## Out of Scope
 - World bosses (deferred, decisions 10 and 14).
@@ -77,12 +79,12 @@ feature design, deferred by owner decisions 10 and 14. This ticket fixes monster
 - Retiring the legacy bucket. Separate, larger migration.
 
 ## Acceptance Criteria
-- [ ] Every spawned `kind` mapped to its catalog faction, or reported as having none.
-- [ ] Runtime-spawned monsters with a catalog faction carry it; bosses unchanged.
-- [ ] Runtime goblin/orc hazard deaths re-measured as values, before and after.
-- [ ] Every faction consumer checked; behaviour changes reported.
-- [ ] Disabling control; divergence; parity ledger.
-- [ ] **Re-baseline every figure that cites the 2,112 hazard deaths** (and the per-world death counts) from
+- [x] Every spawned `kind` mapped to its catalog faction, or reported as having none.
+- [x] Runtime-spawned monsters with a catalog faction carry it; bosses unchanged.
+- [x] Runtime goblin/orc hazard deaths re-measured as values, before and after.
+- [x] Every faction consumer checked; behaviour changes reported.
+- [x] Disabling control; divergence; parity ledger.
+- [x] **Re-baseline every figure that cites the 2,112 hazard deaths** (and the per-world death counts) from
       `TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING`. Once
       runtime goblins and orcs carry their catalog faction they stop dying of their own terrain, so those counts
       fall. `ENV-07` is unaffected, because drain deaths do not count toward trauma anyway, but any document
@@ -117,13 +119,17 @@ feature design, deferred by owner decisions 10 and 14. This ticket fixes monster
 - Open: is `MONSTER_HORDE` meant to mean anything at all now, or is it purely a pre-catalog residue?
 
 ## Implementation Notes
-(to be filled by the implementer)
+- `src/systems/world_systems/generator.py`: `SPAWN_KIND_CATALOG_FACTION` + `_catalog_faction_properties`; `spawn_monster` and `spawn_goblin` carry `properties={"faction_id": ...}`. Mapped: goblin, goblin_warrior, goblin_raider -> goblin_warband; orc_warrior -> orc_clan; bandit -> bandit_company; dragonkin -> dragon_cult. Legacy bucket stays `MONSTER_HORDE` everywhere (hostility keeps coming from it). Bosses unchanged.
+- HELD OUT (owner-confirmed gap, DEV-014): wolf, slime, bear, harpy, golem. Mapping them to `wild_beast_pack` makes a spawned wild creature unable to attack a hero (`legality.py:252-272`, `FRIENDLY_FIRE_ILLEGAL`); compiled wolves are already one-way on main. Filed `TCK-20261006-WILD-BEAST-PACK-LEGALITY-IS-ONE-WAY-HERO-CAN-ATTACK-IT-IT-CANNOT-ATTACK-HERO`.
+- Consumer check: `get_faction_id_str` readers (hazard endurance, influence protector/invader, intelligence, legality, engagement cache). Behaviour changes: runtime goblins/orcs/bandits/dragonkin now resolve `goblin_warband`/`orc_clan`/`bandit_company`/`dragon_cult`, so they take no NATURAL_TERRAIN drain and count as invaders for influence; hero<->monster legality is unchanged (pinned by test). Reported, not suppressed.
+- Landed with the occupancy ticket: restoring the faction makes spawns survive, which exposes the spawn-tile stack (2 -> 837 collisions).
+- Measurement, mechanism and the ENV-07 trigger re-run: `agent-working/stored_artifacts/TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION-FROM-EVERY-RUNTIME-SPAWNED-MONSTER/investigation.md`.
 
 ## Test Summary
-(to be filled by the implementer)
+`tests/unit/world/test_spawn_monster_catalog_faction.py` (22 tests: mapping, endurance, unchanged kinds, disabling control, hostility pins hero<->goblin/orc/dragonkin/bandit/wolf/bear/golem, placement, same-tick, loud failure). World + integration/world suites: 376 passed; `test_long_run_simulation_ph9` and `test_long_run_stability` fail identically on an untouched main control (own ticket). Code-health gates not run here: CI is the first real run unless the PR notes say otherwise.
 
 ## Files Changed
-(to be filled by the implementer)
+`src/systems/world_systems/generator.py`; `tests/unit/world/test_spawn_monster_catalog_faction.py`; `docs/guidelines/intentional_divergences.md` (DEV-014); `docs/parity_ledger/world_dynamics.yaml` (WORLD-128); `docs/mechanics/05_world_evolution.md`; stored artifacts.
 
 ## Completion Summary
-(to be filled by the implementer)
+Runtime goblins/orcs/bandits/dragonkin carry their catalog faction. 24 worlds, seed 42, 10,000 ticks, audit_mode, budget off: runtime goblin/orc HAZARD deaths 637 -> 0, total deaths 734 -> 84, collisions 3 -> 0 (with the occupancy placement). The "2,112 hazard deaths" figures cited in docs are re-baselined in `05_world_evolution.md` and WORLD-126.
