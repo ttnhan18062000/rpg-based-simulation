@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PERF-SHEDDING-DOCS-MATCH-SHIPPED-BEHAVIOUR
-phase: implement
+phase: done
 date: 2026-10-06
 tags: [performance, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, engine]
 Engine docs say what degradation really does: modes shed replay richness, traces, cadence, budgets and concurrency, not work; the periodic and opportunistic shedding path is documented as designed but unused
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -129,3 +129,7 @@ Docs only; each correction cites the code it rests on. Citations were re-checked
 - The seven docs in the table above. Ticket and monitoring records.
 
 ## Completion Summary
+Seven P1 engine docs now state what degradation does in shipped runs: a mode change reduces replay richness, traces, cadence, phase
+budgets and concurrency, and drops no work items. The periodic and opportunistic shedding path is documented as designed but unused
+(scheduler work model matrix), with removal folded into `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`. `FORCE_DEGRADED` is documented
+as not implemented and no mode forces local execution. No `src/` or `tests/` file changed. Not checked: the other `FORCE_*` flags.
