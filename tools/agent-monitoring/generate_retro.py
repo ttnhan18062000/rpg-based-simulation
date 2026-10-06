@@ -2126,15 +2126,17 @@ def _session_layer_section(runs, week_str, cutoff, latency_prs):
         import session_layer_report as slr
 
         data_dir = DEFAULT_TOOLS_FILE if DEFAULT_TOOLS_FILE.is_dir() else DEFAULT_TOOLS_FILE.parent
-        manual = slr.in_period(slr.load_family(data_dir, "manual_actions.jsonl"), week_str, cutoff)
-        boundary = slr.in_period(slr.load_family(data_dir, "role_boundary.jsonl"), week_str, cutoff)
+        all_manual = slr.load_family(data_dir, "manual_actions.jsonl")
+        all_boundary = slr.load_family(data_dir, "role_boundary.jsonl")
+        manual = slr.in_period(all_manual, week_str, cutoff)
+        boundary = slr.in_period(all_boundary, week_str, cutoff)
         rows = []
         for n in latency_prs:
             try:
                 rows.append((f"#{n}", batch_latency.from_pr(batch_latency.fetch_pr(n))))
             except Exception:  # noqa: BLE001 - an unavailable PR is `unknown`, not a failed retro
                 rows.append((f"#{n}", batch_latency.latencies(None, None, None) | {"dispatch_source": "unavailable"}))
-        return slr.render(manual, runs, boundary, rows or None)
+        return slr.render(manual, runs, boundary, rows or None, len(all_manual), len(all_boundary))
     except Exception:  # noqa: BLE001
         return None
 

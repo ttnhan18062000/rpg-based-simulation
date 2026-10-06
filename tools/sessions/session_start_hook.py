@@ -43,6 +43,11 @@ def _git(cwd: str, *args: str) -> str:
     return out.stdout.strip() if out.returncode == 0 else ""
 
 
+def _same_process(recorded, current) -> bool:
+    """True when both are known and name the same process (same pid AND start time; the command line is not compared)."""
+    return recorded is not None and current is not None and (recorded.pid, recorded.start) == (current.pid, current.start)
+
+
 def find_claude_pid(environ=os.environ, proc_root: Path = Path("/proc")) -> int | None:
     """`CLAUDE_PID` when the launcher or harness supplies it, else the nearest ancestor that looks like claude."""
     from tools.sessions.state import process_identity
@@ -118,8 +123,10 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
         parts.append(f"session-roles: you are instance `{instance_id}` of role `{role.role}` (a second holder; the first is `{role.role}`).")
     notes: list[str] = []
 
+    # TCK-20261006-SESSION-START-CLEAR-FALSE-LIVE-HOLDER-WARNING: a `/clear` gives the SAME process a new session id, so the prior holder
+    # recorded in this very process is this session's own superseded predecessor, not a second writer.
     if prior_instance is not None and not prior_instance.released and prior_instance.holder.session_id != binding.session_id \
-            and st.liveness(prior_instance, proc_root) == st.LIVE:
+            and not _same_process(prior_instance.holder.process, proc) and st.liveness(prior_instance, proc_root) == st.LIVE:
         notes.append(f"session-roles: another LIVE instance already holds role `{instance_id}` "
                      f"(session {prior_instance.holder.session_id}); two writers on one role is not supported.")
     if source in ("resume", "clear") and previous and previous[-1].manifest_digest != digest and prior_snapshot:

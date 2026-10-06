@@ -218,6 +218,55 @@ def test_a_second_live_holder_is_flagged(world):
         live.kill(); live.wait()
 
 
+def _holder(state_root, repo, session_id, process):
+    st.record_start(state_root, st.Binding(session_id, WRITER, "startup", str(repo), "b", "", process, "d", "2026-10-04T00:00:00Z"))
+
+
+def test_clear_in_the_same_process_does_not_warn_about_the_superseded_session(world):
+    """TCK-20261006-SESSION-START-CLEAR-FALSE-LIVE-HOLDER-WARNING (a): same ProcessId, new session id -> no warning."""
+    root, repo, state_root = world
+    live = subprocess.Popen(["sleep", "30"])
+    try:
+        _holder(state_root, repo, "before-clear", st.process_identity(live.pid))
+        out = _ctx(world, _payload(repo, session_id="after-clear", source="clear"), {"CLAUDE_PID": str(live.pid)})
+        assert "another LIVE instance" not in out and f"You are `{WRITER}`" in out
+        assert st.read_instance(state_root, WRITER).holder.session_id == "after-clear"  # supersession still recorded
+    finally:
+        live.kill(); live.wait()
+
+
+def test_a_different_live_process_still_warns_even_when_a_process_is_known(world):
+    """(b): the prior holder is another live process; the current session has its own, different process."""
+    root, repo, state_root = world
+    prior, mine = subprocess.Popen(["sleep", "30"]), subprocess.Popen(["sleep", "30"])
+    try:
+        _holder(state_root, repo, "other-sess", st.process_identity(prior.pid))
+        out = _ctx(world, _payload(repo, session_id="new", source="startup"), {"CLAUDE_PID": str(mine.pid)})
+        assert "another LIVE instance already holds role" in out and "other-sess" in out
+    finally:
+        for p in (prior, mine):
+            p.kill(); p.wait()
+
+
+def test_a_dead_prior_process_does_not_warn(world):
+    """(c): an orphaned prior holder is not a live second writer (existing behaviour)."""
+    root, repo, state_root = world
+    dead = subprocess.Popen(["sleep", "30"])
+    ident = st.process_identity(dead.pid)
+    dead.kill(); dead.wait()
+    _holder(state_root, repo, "dead-sess", ident)
+    assert "another LIVE instance" not in _ctx(world, _payload(repo, session_id="new"))
+
+
+def test_replaying_the_recorded_rpg_implementer_clear_binding_yields_no_warning():
+    """AC2: 2026-10-06T02:26:56Z `clear`, pid 2366257 holding prior session af245d7d: the predicate sees the same process."""
+    recorded = st.ProcessId(pid=2366257, start="257703023", cmdline="claude --name rpg-implementer --agent session-rpg-implementer")
+    current = st.ProcessId(pid=2366257, start="257703023", cmdline="claude --name rpg-implementer --agent session-rpg-implementer")
+    assert hook._same_process(recorded, current)
+    assert not hook._same_process(recorded, st.ProcessId(pid=2366257, start="999", cmdline=recorded.cmdline))  # pid reuse
+    assert not hook._same_process(recorded, None) and not hook._same_process(None, current)
+
+
 # ---- AC3: fail open ----------------------------------------------------------------------------
 
 def _run_main(stdin, cwd):
