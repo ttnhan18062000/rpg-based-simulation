@@ -15,6 +15,17 @@ implement-ticket's Architecture-Verify phase) before this module was written.
 
 CANONICAL_TIERS = {"hotfix", "standard", "epic", "n/a"}
 
+# TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD: why a ticket took the path it did (run field `path_reason`)
+# and why a recorded phase was skipped (event field `skip_reason`). `unstated` is the writers' default and means
+# "nobody said", never "no reason existed"; `other` on a run requires a `path_note`.
+PATH_REASONS = (
+    "pipeline_default", "pipeline_unavailable", "native_port_blocked", "small_change",
+    "owner_directed", "batch_hand_close", "investigation_only", "other", "unstated",
+)
+SKIP_REASONS = (
+    "tier_plan", "condition_false", "not_applicable", "no_hand_tool", "deferred", "other", "unstated",
+)
+
 # Keyed by workflow name. Built from each workflow's actual phase(...)/pushEvent(...)
 # call sites (grepped directly), not from schema.md's already-drifted prose tables.
 WORKFLOW_PHASES = {

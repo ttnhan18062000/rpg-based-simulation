@@ -558,7 +558,9 @@ const cleanFindings = (raw) => {
   return { findings, normalized }
 }
 
-const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, reasonCode, testQualityFindings, testsRead) => {
+// skipReason (TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD): why a 'skipped' event was skipped; one of
+// tier_plan | condition_false (the pipeline's own skip sites), carried only on status 'skipped'.
+const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, reasonCode, testQualityFindings, testsRead, skipReason) => {
   const event = {
     seq: events.length + 1 + seqOffset,
     phase: phaseLabel,
@@ -569,6 +571,7 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, re
     tool_call_count: toolCallCount != null ? toolCallCount : null,
     reason_code: reasonCode || null,
   }
+  if (status === 'skipped' && skipReason) event.skip_reason = skipReason
   const cleaned = cleanFindings(testQualityFindings)
   if (cleaned) {
     event.test_quality_findings = cleaned.findings
@@ -694,8 +697,13 @@ Step 2 — build and write events:
   (--default-ts is a safety net for exactly the "ts is null or missing" case above — it never overrides
   a ts an event already has, and without it a missing ts aborts the whole batch.)
 
+Step 2b — planned phases with no event (TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD):
+  Run: python3 tools/agent-monitoring/path_record.py --tier ${tier} --phases ${[...new Set(events.map((e) => e.phase))].join(',')}
+  Save its stdout (a JSON list) as OMITTED and add it to the run JSON below as the key "phases_omitted":OMITTED.
+  If this command fails, leave the key out entirely.
+
 Step 3 — write run record (replace <END_TS> with the value from Step 1):
-  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${tid}","execution_id":"${executionId}","provider":"${PROVIDER}","ticket_id":"${tid}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"implement-ticket","tier":"${tier}","final_status":"${finalStatus}","agent_count":${eventsCount},"execution_mode":"pipeline"}'
+  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${tid}","execution_id":"${executionId}","provider":"${PROVIDER}","ticket_id":"${tid}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"implement-ticket","tier":"${tier}","final_status":"${finalStatus}","agent_count":${eventsCount},"execution_mode":"pipeline","path_reason":"pipeline_default"}'
 
 If any command fails, print "WARNING: monitoring write failed: <error>" and continue — do NOT raise.
 Return "monitoring written" or "monitoring write failed: <reason>".`,
@@ -1068,9 +1076,9 @@ summary (one sentence: verdict + key reason, ≤200 chars).`,
   log('Architecture review: APPROVED')
 } else {
   log('Hotfix tier: skipping Investigate, Plan, and Architecture Review.')
-  pushEvent('Investigate', 'investigator', 'skipped', 'Hotfix tier — investigation skipped')
-  pushEvent('Plan', 'planner', 'skipped', 'Hotfix tier — plan skipped')
-  pushEvent('Review', 'architecture-reviewer', 'skipped', 'Hotfix tier — architecture review skipped')
+  pushEvent('Investigate', 'investigator', 'skipped', 'Hotfix tier — investigation skipped', null, null, null, null, null, 'tier_plan')
+  pushEvent('Plan', 'planner', 'skipped', 'Hotfix tier — plan skipped', null, null, null, null, null, 'tier_plan')
+  pushEvent('Review', 'architecture-reviewer', 'skipped', 'Hotfix tier — architecture review skipped', null, null, null, null, null, 'tier_plan')
 }
 
 // ─── Phase 5: Implement ───────────────────────────────────────────────────────
@@ -1436,7 +1444,7 @@ except Exception:
   pushEvent('Architecture-Verify', 'architecture-reviewer', 'ok', archVerify.summary || 'Architecture-Verify: APPROVED', archVerifyTs, null, null, archVerify.test_quality_findings, archVerify.tests_read)
   log('Architecture-Verify: APPROVED')
 } else {
-  pushEvent('Architecture-Verify', 'architecture-reviewer', 'skipped', 'Hotfix tier — architecture verify skipped')
+  pushEvent('Architecture-Verify', 'architecture-reviewer', 'skipped', 'Hotfix tier — architecture verify skipped', null, null, null, null, null, 'tier_plan')
 }
 
 // ─── Phase 6: Test ────────────────────────────────────────────────────────────
@@ -1668,7 +1676,7 @@ if hits: print(hits)
 
 if (paritySkipEligible && !parityForceFullRun) {
   log('Parity: no src/ changes and no reported behavior change — skipping parity-updater agent call.')
-  pushEvent('Parity', 'parity-updater', 'skipped', 'No src/ changes and behavior_changed=false — parity ledger unaffected')
+  pushEvent('Parity', 'parity-updater', 'skipped', 'No src/ changes and behavior_changed=false — parity ledger unaffected', null, null, null, null, null, 'condition_false')
 } else {
   const PARITY_SCHEMA = {
     type: 'object',

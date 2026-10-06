@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from writer import write_line  # noqa: E402
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 from session_role import stamp as stamp_session_role  # noqa: E402
+from vocabulary import PATH_REASONS  # noqa: E402
 
 REQUIRED = {"run_id", "start_ts", "workflow", "tier", "final_status", "agent_count"}
 
@@ -39,6 +40,17 @@ def _optional_field_errors(record: dict) -> list[str]:
     peers = record.get("claim_peers")
     if peers is not None and not (isinstance(peers, int) and not isinstance(peers, bool) and peers >= 0):
         errors.append("claim_peers must be a non-negative integer")
+    # TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD: why this path was taken, and which planned phases have no event
+    reason = record.get("path_reason")
+    if reason is not None and reason not in PATH_REASONS:
+        errors.append(f"path_reason must be one of {PATH_REASONS}")
+    if reason == "other" and not record.get("path_note"):
+        errors.append("path_reason 'other' requires a non-empty path_note")
+    if record.get("path_note") is not None and not isinstance(record["path_note"], str):
+        errors.append("path_note must be a string or null")
+    omitted = record.get("phases_omitted")
+    if omitted is not None and not (isinstance(omitted, list) and all(isinstance(x, str) for x in omitted)):
+        errors.append("phases_omitted must be a list of strings")
     return errors
 
 
