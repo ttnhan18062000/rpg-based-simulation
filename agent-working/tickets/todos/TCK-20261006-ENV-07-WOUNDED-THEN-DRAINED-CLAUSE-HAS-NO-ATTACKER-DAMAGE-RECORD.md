@@ -60,6 +60,9 @@ combat lethality changes materially — in particular after
 trauma→panic mapping ticket land. **If any corpus `HAZARD` death had earlier attacker damage, the clause is no
 longer a no-op and this ticket becomes P1.**
 
+## Known instances (2026-10-06, `rpg-implementer-2`, spawn-faction batch)
+24 worlds, seed 42, 10,000 ticks, `audit_mode`, budget off. HAZARD deaths whose victim took attacker damage: **2 of 686 on `origin/main` `9299891a9` (before the spawn fix); 0 of 46 on the spawn-faction branch (that base plus DEV-015).** Both are `undead_remnants` sentinels: `frontier_living_world` t906 and `simq_scale_stress_seed42` t230, lethal update carrying hazard 30 and attacker damage in the same tick (`ago` 0, goblin attacker). Designer ruling (ratified text, `environment.md:263-264`): a same-tick mix counts as a violent death, so these are instances of this gap. Whatever window the owner later picks, attacker damage in the same lethal update always counts; only the "how long before" length stays open (designer and owner). Detail: the spawn ticket's `investigation.md`.
+
 ## Scope (when triggered)
 1. Get the window length from the rule owner (`world-rule-catalog-design`), with what would refute it.
 2. Add a typed, durable attacker-damage record per the Durable State Rule: typed model, stable location, defined
