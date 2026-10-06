@@ -11,4 +11,4 @@ Function: implementer. Sole writer to your domain's worktree. One PR per batch; 
 
 Domain: testing (test architecture roadmap, architecture and mutation suites). The planner holds roadmap direction and reviews batch PRs against roadmap and epic criteria, blocking and non-blocking apart; `HOLD` work stays held until the user approves. The Bible and parity ledger, not tests, define behaviour. Ask `rpg-planner` before any change touching RPG logic.
 
-Needs the user: push, open_pr, merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data.
+Needs the user: push_default_branch, merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data.

@@ -40,7 +40,7 @@ phase('Scope')
 //            meaningless), per-phase wall-clock stamps, and the deferred shadow-reviewer paths.
 //            Batching decision: ~13 writeSidecar + 11 captureTs dispatches per full-tier run are
 //            dropped natively; event ts then comes from the agents' own reported `ts` fields.
-// Gate, control and input sites still call bash() until their own port tickets land.
+// Gate and control sites run through shAttested() below (TCK-20260930-NATIVE-PORT-ATTESTED-GATE-SITES).
 const legacyBash = typeof bash === 'function' ? bash : null
 const RUN_COMMAND_SCHEMA = {
   type: 'object',
@@ -69,7 +69,98 @@ const sh = async (cmd, label) => {
 }
 const shOmit = async (cmd) => (legacyBash ? legacyBash(cmd) : '')
 
-// Gate, control and input sites that still call the runtime's bare `bash()` (TCK-20261004-IMPLEMENT-TICKET-NATIVE-
+// Attested gate results (TCK-20260930-NATIVE-PORT-ATTESTED-GATE-SITES). Gate and control commands decide a blocking
+// status or skip required work, so natively they run through tools/gate_checks/attest_gate.py, which prints one
+// `ATTEST:{...}` line (a SHA-256 mac over nonce|gate|cmd|exit_code|stdout_sha) before the command's stdout, and the
+// script verifies that line instead of trusting the agent's prose. The nonce, gate id and expected command all come
+// from this script. ANTI-MISREPORT, NOT TAMPER-PROOF: the agent must be handed the nonce to call the wrapper, so an
+// agent set on cheating can compute a valid mac without running anything (forged in 3 tool calls, see
+// agent-working/stored_artifacts/TCK-20260930-NATIVE-GATE-RESULT-ATTESTATION-DESIGN/design.md). It catches a missing,
+// malformed, wrong-gate, wrong-command or hand-edited line. The unforgeable check is the orchestrator re-run of
+// done_checker_static.py before commit, and CI; a native gate verdict is advisory to those. Inline because the native
+// runtime has no crypto, fs or Buffer; tests/tools/test_attest_gate.py runs this exact block under node.
+// ATTEST-VERIFIER-BEGIN
+const utf8Bytes = (text) => {
+  const bytes = []
+  for (const ch of text) {
+    const cp = ch.codePointAt(0)
+    if (cp < 0x80) bytes.push(cp)
+    else if (cp < 0x800) bytes.push(0xc0 | (cp >> 6), 0x80 | (cp & 0x3f))
+    else if (cp < 0x10000) bytes.push(0xe0 | (cp >> 12), 0x80 | ((cp >> 6) & 0x3f), 0x80 | (cp & 0x3f))
+    else bytes.push(0xf0 | (cp >> 18), 0x80 | ((cp >> 12) & 0x3f), 0x80 | ((cp >> 6) & 0x3f), 0x80 | (cp & 0x3f))
+  }
+  return bytes
+}
+const base64Utf8 = (text) => {
+  const table = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+  const bytes = utf8Bytes(text)
+  let out = ''
+  for (let i = 0; i < bytes.length; i += 3) {
+    const n = (bytes[i] << 16) | ((bytes[i + 1] || 0) << 8) | (bytes[i + 2] || 0)
+    out += table[(n >> 18) & 63] + table[(n >> 12) & 63]
+    out += i + 1 < bytes.length ? table[(n >> 6) & 63] : '='
+    out += i + 2 < bytes.length ? table[n & 63] : '='
+  }
+  return out
+}
+const sha256Hex = (text) => {
+  const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]
+  const bytes = utf8Bytes(text)
+  const bitLen = bytes.length * 8
+  bytes.push(0x80)
+  while (bytes.length % 64 !== 56) bytes.push(0)
+  for (let i = 7; i >= 0; i--) bytes.push(i >= 4 ? Math.floor(bitLen / 4294967296) >>> ((i - 4) * 8) & 0xff : (bitLen >>> (i * 8)) & 0xff)
+  let H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]
+  const rr = (x, n) => (x >>> n) | (x << (32 - n))
+  for (let o = 0; o < bytes.length; o += 64) {
+    const w = new Array(64)
+    for (let i = 0; i < 16; i++) w[i] = (bytes[o + 4 * i] << 24) | (bytes[o + 4 * i + 1] << 16) | (bytes[o + 4 * i + 2] << 8) | bytes[o + 4 * i + 3]
+    for (let i = 16; i < 64; i++) {
+      const s0 = rr(w[i - 15], 7) ^ rr(w[i - 15], 18) ^ (w[i - 15] >>> 3)
+      const s1 = rr(w[i - 2], 17) ^ rr(w[i - 2], 19) ^ (w[i - 2] >>> 10)
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0
+    }
+    let [a, b, c, d, e, f, g, h] = H
+    for (let i = 0; i < 64; i++) {
+      const t1 = (h + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0
+      const t2 = ((rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0
+      h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0
+    }
+    H = [a, b, c, d, e, f, g, h].map((v, i) => (H[i] + v) | 0)
+  }
+  return H.map((v) => (v >>> 0).toString(16).padStart(8, '0')).join('')
+}
+// -> {ok, reason, exit_code?}. nonce, gate and expectedCmd come from the script, never from the agent's prose.
+const verifyAttestation = (agentOutput, { nonce, gate, expectedCmd }) => {
+  const m = /ATTEST:(\{.*\})/.exec(agentOutput || '')
+  if (!m) return { ok: false, reason: 'no ATTEST line' }
+  let r
+  try { r = JSON.parse(m[1]) } catch (e) { return { ok: false, reason: 'unparseable' } }
+  if (r.gate !== gate) return { ok: false, reason: 'wrong gate' }
+  if (r.cmd !== expectedCmd) return { ok: false, reason: 'wrong command' }
+  const mac = sha256Hex([nonce, r.gate, r.cmd, String(r.exit_code), r.stdout_sha].join('|'))
+  if (mac !== r.mac) return { ok: false, reason: 'bad mac' }
+  return { ok: r.exit_code === 0, reason: r.exit_code === 0 ? 'pass' : 'command exited ' + r.exit_code, exit_code: r.exit_code }
+}
+// ATTEST-VERIFIER-END
+// Legacy runtime: the runtime's own bash(), unchanged. Native: attested dispatch, fail closed. An unverified or
+// non-zero result throws, so a gate can never fall through its marker-absent default (several of these sites treat a
+// missing marker as "no problem"); the catch at the bottom of this file records WORKFLOW_ERROR and rethrows.
+const shAttested = async (cmd, gate, label) => {
+  if (legacyBash) return legacyBash(cmd)
+  const nonce = String(args.execution_id_suffix)
+  if (!/^[A-Za-z0-9_.-]+$/.test(nonce)) throw new Error(`GATE_ATTESTATION_FAILED ${gate}: execution_id_suffix must match [A-Za-z0-9_.-]+`)
+  const result = await runCommand(
+    `python3 tools/gate_checks/attest_gate.py --nonce ${nonce} --gate-id ${gate} --cmd-b64 ${base64Utf8(cmd)}`,
+    label || gate
+  )
+  const out = result && typeof result.stdout === 'string' ? result.stdout : ''
+  const verdict = verifyAttestation(out, { nonce, gate, expectedCmd: cmd })
+  if (!verdict.ok) throw new Error(`GATE_ATTESTATION_FAILED ${gate}: ${verdict.reason}`)
+  return out.split('\n').filter((line) => !line.startsWith('ATTEST:')).join('\n')
+}
+
+// Gate and control sites that still call the runtime's bare `bash()` (TCK-20261004-IMPLEMENT-TICKET-NATIVE-
 // REFUSE-UP-FRONT-WHEN-GATE-SITES-UNPORTED). Natively `bash` is undefined, so a non-epic native run dies with
 // `ReferenceError: bash is not defined` at the first of these sites, after Scope has already spent its agents (one run
 // burned ~277k tokens). While this list is non-empty a native non-epic run is refused before any pipeline agent is
@@ -77,17 +168,7 @@ const shOmit = async (cmd) => (legacyBash ? legacyBash(cmd) : '')
 // sh()/shOmit(); the refusal lifts when the list is empty. tests/tools/test_implement_ticket_native_refusal.py ties
 // this list to the actual bare `bash(` call sites, so adding one without listing it (or porting one without removing
 // it) fails the test.
-const NATIVE_UNPORTED_GATE_SITES = [
-  'tagCheckOutput',
-  'unresolvedCheckOutput',
-  'docStalenessOutput',
-  'testScopeCheckOutput',
-  'cleanupOutput',
-  'p0ScanOutput',
-  'touchedOutput',
-  'crossRefOutput',
-  'finalizeCheckOutput',
-]
+const NATIVE_UNPORTED_GATE_SITES = []
 
 // Uncaught-exception recorder (TCK-20261003-IMPLEMENT-TICKET-JS-NO-MONITORING-ON-EXCEPTION). Every run must record a
 // run entry and an event; writeMonitoring() is otherwise only reached on named terminal statuses, so an exception
@@ -639,13 +720,14 @@ workflowErrorHook = async (err) => {
 // self-report correctly. Catches an unregistered tag here, at Scope, instead of only 6+ phases
 // later at Verify (done-checker's frontmatter_valid condition, TCK-20260706-TAG-REGISTRY-DATA).
 const tagsArgs = (ticketInfo.tags || []).map(t => `"${t}"`).join(' ')
-const tagCheckOutput = tagsArgs ? await bash(
+const tagCheckOutput = tagsArgs ? await shAttested(
   `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
 from tag_registry import check_tags_registered
 print('TAG_CHECK_JSON:' + json.dumps(check_tags_registered(sys.argv[1:])))
-" ${tagsArgs}`
+" ${tagsArgs}`,
+  'tag_check'
 ) : 'TAG_CHECK_JSON:[]'
 let unregisteredTags = []
 const tagCheckMarkerIndex = tagCheckOutput.indexOf('TAG_CHECK_JSON:')
@@ -891,13 +973,14 @@ Then return: ordered step list (one line per step) + any unresolved questions.`,
   // tagCheckOutput/archCheckOutput orchestrator-run bash() marker-prefix convention, and calls a
   // real importable function (unit-tested in tests/tools/test_plan_gate_static.py) rather than
   // inlining regex logic in the -c string.
-  const unresolvedCheckOutput = await bash(
+  const unresolvedCheckOutput = await shAttested(
     `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
 from gate_checks.plan_gate_static import plan_has_unresolved_questions_heading
 print('UNRESOLVED_CHECK_JSON:' + json.dumps(plan_has_unresolved_questions_heading(sys.argv[1])))
-" "agent-working/staging_artifacts/${tid}/plan.md"`
+" "agent-working/staging_artifacts/${tid}/plan.md"`,
+    'plan_unresolved_questions'
   )
 
   let hasUnresolvedQuestions = false
@@ -1128,8 +1211,9 @@ const combinedFilesChanged = Array.from(new Set([
 
 const docStalenessFilesArgs = combinedFilesChanged.map(f => `"${f}"`).join(' ')
 const docsToUpdateArgs = docsToUpdate.length > 0 ? `--docs-to-update ${docsToUpdate.map(d => `"${d}"`).join(' ')}` : ''
-const docStalenessOutput = await bash(
-  `python3 tools/gate_checks/doc_staleness_check.py ${implementation.behavior_changed} ${docStalenessFilesArgs} ${docsToUpdateArgs}`
+const docStalenessOutput = await shAttested(
+  `python3 tools/gate_checks/doc_staleness_check.py ${implementation.behavior_changed} ${docStalenessFilesArgs} ${docsToUpdateArgs}`,
+  'doc_staleness'
 )
 let docStalenessResults = null
 const docStalenessMarkerIndex = docStalenessOutput.indexOf('MARKER:')
@@ -1447,13 +1531,14 @@ Step 5 — Report: pytest_command used, pass_count, fail_count, failed_tests (em
 // actual pytest_command really does cover every directory implicated by files_changed. Runs
 // regardless of testResult.passed: a reported PASS with an uncovered directory is a false PASS.
 const filesChangedArgsForTestScope = implementation.files_changed.map(f => `"${f}"`).join(' ')
-const testScopeCheckOutput = await bash(
+const testScopeCheckOutput = await shAttested(
   `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
 from gate_checks.test_scope_coverage_static import check_test_scope_coverage
 print('TEST_SCOPE_CHECK_JSON:' + json.dumps(check_test_scope_coverage(sys.argv[1:], '''${(testResult.pytest_command || '').replace(/'/g, "\\'")}''')))
-" ${filesChangedArgsForTestScope}`
+" ${filesChangedArgsForTestScope}`,
+  'test_scope_coverage'
 )
 let testScopeCheckResults = []
 const testScopeMarkerIndex = testScopeCheckOutput.indexOf('TEST_SCOPE_CHECK_JSON:')
@@ -1510,14 +1595,15 @@ if (testResult.coverage_gaps.length > 0) {
 // call, not an agent prompt instruction, so it can't be silently skipped
 // (TCK-20260708-DATA-RUNS-CLEANUP-TIMING). Finalize step 6's own cleanup and done-checker's
 // data_runs_clean check both remain in place as backstops — see docs/ai/ticket-lifecycle.md.
-const cleanupOutput = await bash(
+const cleanupOutput = await shAttested(
   `python3 -c "
 import sys
 sys.path.insert(0, 'tools')
 from gate_checks.done_checker_static import clean_data_runs_early
 status, evidence = clean_data_runs_early(${JSON.stringify(startTs || null)})
 print(status + '|' + evidence)
-"`
+"`,
+  'data_runs_cleanup'
 )
 const cleanupSepIdx = cleanupOutput.indexOf('|')
 const cleanupStatus = cleanupSepIdx === -1 ? cleanupOutput.trim() : cleanupOutput.slice(0, cleanupSepIdx).trim()
@@ -1566,7 +1652,7 @@ if (paritySkipEligible) {
   // script into a Python NameError and causing this check to silently fail open. Passing paths as
   // trailing argv elements (each independently shell-quoted) avoids that collision entirely.
   const filesChangedArgs = implementation.files_changed.map(f => `"${f}"`).join(' ')
-  const p0ScanOutput = await bash(
+  const p0ScanOutput = await shAttested(
     `python3 -c "
 import sys
 sys.path.insert(0, 'tools')
@@ -1574,7 +1660,8 @@ from parity_ledger_scan import find_p0_intersection
 hits = find_p0_intersection(sys.argv[1:])
 print('P0_INTERSECTION_FOUND' if hits else 'P0_NO_INTERSECTION')
 if hits: print(hits)
-" ${filesChangedArgs}`
+" ${filesChangedArgs}`,
+    'parity_p0_scan'
   )
   parityForceFullRun = p0ScanOutput.includes('P0_INTERSECTION_FOUND')
 }
@@ -1657,8 +1744,8 @@ Then report: entries updated (by ID and what changed), any P0 entries missing a 
   // Orchestrator-run, after the agent() call returns — mirrors run_finalize_selfcheck's
   // JSON-marker-prefix + try/catch-with-fallback parsing pattern, since there is no established
   // contract in this repo that bash() output is safe for a bare JSON.parse().
-  const touchedOutput = await bash(`git status --porcelain -- docs/parity_ledger/`)
-  const crossRefOutput = await bash(
+  const touchedOutput = await shAttested(`git status --porcelain -- docs/parity_ledger/`, 'parity_touched_ledger')
+  const crossRefOutput = await shAttested(
     `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
@@ -1667,7 +1754,8 @@ files_changed = json.loads(sys.argv[1])
 touched = sys.argv[2].splitlines()
 results = cross_reference_touched(files_changed, touched)
 print('PARITY_CHECK_JSON:' + json.dumps(results))
-" '${JSON.stringify(implementation.files_changed)}' "${touchedOutput}"`
+" '${JSON.stringify(implementation.files_changed)}' "${touchedOutput}"`,
+    'parity_cross_reference'
   )
   let parityCrossRef = null
   const parityMarkerIndex = crossRefOutput.indexOf('PARITY_CHECK_JSON:')
@@ -2003,14 +2091,15 @@ Report each step: DONE / SKIPPED (reason).`,
 // the closing ticket's entry landed in it — this call site now mutates a tracked file, not just
 // reads state, and any FAIL (including a missing registry entry) is handled below by the same
 // generic finalizeFailures logic as the other 3 conditions.
-const finalizeCheckOutput = await bash(
+const finalizeCheckOutput = await shAttested(
   `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
 from gate_checks.done_checker_static import run_finalize_selfcheck
 results = run_finalize_selfcheck(sys.argv[1], sys.argv[2])
 print('FINALIZE_CHECK_JSON:' + json.dumps(results))
-" "${tid}" "${tier}"`
+" "${tid}" "${tier}"`,
+  'finalize_selfcheck'
 )
 
 // No established contract in this repo that bash() output is safe for a bare JSON.parse() — the
