@@ -60,8 +60,8 @@ Status values: `shipped`, `in flight`, `next`, `idea`, `held`.
 
 | Direction | Status | Tickets / notes |
 |---|---|---|
-| Record which path each ticket took and why | idea | invisible today |
-| Tier-based routing for phases that are almost always skipped | idea | depends on the path record and on trustworthy data |
+| Record which path each ticket took and why | shipped (code) | `TCK-20261006-EPIC-TICKET-PATH-RECORD` (`TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD`, `TCK-20261006-PATH-AND-PHASE-REPORT-AND-RETRO`): a run records `path_reason` (the closer's reason for not using the pipeline, `unstated` when none is given) and `phases_omitted` (planned `full` phases with no event, derived from `implement-ticket.yaml` at write time), a skipped event records `skip_reason`; `path_report.py` and a retro `## Paths` section read them per tier and mode, counting older runs as "predates", never as `unstated`. Baseline before landing, origin/main `b15fef405`, W40-W41, 327 runs, 282 hand: of 222 standard closures only 43 carry Investigate, 32 Plan, 15 Review and 15 Architecture-Verify; Parity is skipped in 176 of 210 standard and 75 of 76 hotfix events with no reason recorded. The epic's AC2 (the first full ISO week after the merge, read from `path_report.py --week`) is recorded here |
+| Tier-based routing for phases that are almost always skipped | idea | depends on the Paths retro reading (>=1 full week); routing is considered only for a phase the report flags (80% skipped or omitted, 10+ runs, `unstated` at most 25%) |
 | Session-layer working process (roles, launch, routing, recovery) | planned | plan `docs/plans/agent_infrastructure/session_layer_working_process.md` and epics A-D in `agent-working/tickets/todos/session-layer/` (scoped 2026-10-02); M0 harness spike first, nothing built yet |
 
 ## Rules this track keeps
@@ -85,8 +85,7 @@ Status values: `shipped`, `in flight`, `next`, `idea`, `held`.
 
 ## Decisions pending
 
-- When the close runs: manual plus a report-only nudge (recommended), or scheduled.
-- Whether the first real close is W40, at the start of W41.
+None open. The two week-close timing questions (when the close runs; whether W40 is the first real close) were resolved once the W41 retro ran, per `agent-working-design` on 2026-10-06.
 
 ## Update protocol
 
