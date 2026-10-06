@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261006-TOOLS-SHARDS-MISSING-FROM-WORKTREES
-phase: open
+phase: done
 date: 2026-10-06
 tags: [agent-monitoring, hooks]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, hooks]
 About 43% of hand closures have no tools.jsonl shard, which caps derived time and cost coverage
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -86,9 +86,15 @@ agent-monitoring" rule.
   could not be classified.
 
 ## Implementation Notes
+Cause split (AC1, details and method in investigation.md): 35 of 116 sessions since 2026-09-28 wrote no tools row (14.4% of 21,119 tool calls). 17 of the 35 started in /mnt/data/Working (outside the repo, 61% of the lost calls), 5 in the stale main checkout, 5 in older worktrees, 5 scratch probes, 3 in other projects. Cwd-relative hooks are real but small (131 calls, 0.6%). Written-but-unstaged is not a cause (7 sessions, all unmerged work).
+Scope 4: the dominant cause (outside the repo) is handed to TCK-20261006-LIVE-SESSIONS-RUN-STALE-OR-NO-PROJECT-HOOKS, not duplicated.
+Scope 2: the owner confirmed a literal diff on 2026-10-06 (resolve the top level for 5 hooks). Testing showed that diff makes the hook write stray `agent-working/` and `.claude/` folders inside the subdirectory, so I reverted it and the owner confirmed a second diff the same day that adds `cd "$R" &&`. Applied to pre_tool_hook, cd_prefix_advisory_hook, post_tool_hook, retro_nudge_hook and epic_staleness_check --hook; the SubagentStop guard (no `|| true`) is untouched.
 
 ## Test Summary
+`tests/tools/test_monitoring_hook_subdirectory_cwd.py` (8 new, including the real hook run from three directories in a throwaway worktree) plus every test that reads settings.json: all pass.
 
 ## Files Changed
+`.claude/settings.json`, `tests/tools/test_monitoring_hook_subdirectory_cwd.py` (new), stored artifacts (classify_sessions.py, sessions.csv, investigation/plan/test_plan).
 
 ## Completion Summary
+The missing tools rows are mostly sessions started outside the repo (fixed by the LIVE-SESSIONS preflight, not here); the cwd-relative hook commands are fixed with a top-level resolve plus cd, tested from subdirectories.

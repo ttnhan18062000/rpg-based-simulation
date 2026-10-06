@@ -72,7 +72,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 tools/agent-monitoring/pre_tool_hook.py 2>/dev/null || true"
+            "command": "R=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; test -f \"$R/tools/agent-monitoring/pre_tool_hook.py\" || exit 0; cd \"$R\" && python3 tools/agent-monitoring/pre_tool_hook.py 2>/dev/null || true"
           }
         ]
       },
@@ -117,7 +117,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 tools/agent-monitoring/cd_prefix_advisory_hook.py 2>/dev/null || true"
+            "command": "R=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; test -f \"$R/tools/agent-monitoring/cd_prefix_advisory_hook.py\" || exit 0; cd \"$R\" && python3 tools/agent-monitoring/cd_prefix_advisory_hook.py 2>/dev/null || true"
           }
         ]
       },
@@ -146,7 +146,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 tools/agent-monitoring/post_tool_hook.py 2>/dev/null || true"
+            "command": "R=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; test -f \"$R/tools/agent-monitoring/post_tool_hook.py\" || exit 0; cd \"$R\" && python3 tools/agent-monitoring/post_tool_hook.py 2>/dev/null || true"
           }
         ]
       },
@@ -164,7 +164,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 tools/agent-monitoring/retro_nudge_hook.py 2>/dev/null || true"
+            "command": "R=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; test -f \"$R/tools/agent-monitoring/retro_nudge_hook.py\" || exit 0; cd \"$R\" && python3 tools/agent-monitoring/retro_nudge_hook.py 2>/dev/null || true"
           }
         ]
       },
@@ -173,7 +173,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 tools/agent-monitoring/epic_staleness_check.py --hook 2>/dev/null || true"
+            "command": "R=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; test -f \"$R/tools/agent-monitoring/epic_staleness_check.py\" || exit 0; cd \"$R\" && python3 tools/agent-monitoring/epic_staleness_check.py --hook 2>/dev/null || true"
           }
         ]
       },
