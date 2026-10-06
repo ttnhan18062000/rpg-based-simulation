@@ -34,6 +34,7 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+from tools.handover_home import handover_base  # noqa: E402
 
 from tools.sessions import state as st  # noqa: E402
 from tools.sessions.resolve import instance_ids  # noqa: E402
@@ -288,7 +289,7 @@ def plan_launch(target: Target, root: Path, state_root: Path, worktree: Path, pd
                 session_id: str | None, interactive: bool, resume_flag: bool, input_fn=input) -> tuple[int, list[str], str | None]:
     """Decide what to do. Returns (exit code, lines to print, session id to resume or None). Exit 0 = go."""
     instance = st.read_instance(state_root, target.instance)
-    handover = root / target.role.handover
+    handover = handover_base(root) / target.role.handover
     if instance is None or st.liveness(instance) == st.RELEASED:
         stub = [] if handover.is_file() else ["no handover note yet: a stub will be created"]
         return 0, stub, None
@@ -369,7 +370,7 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
         print("DRY RUN: " + " ".join(f"{k}={shlex.quote(v)}" for k, v in env.items()) + " " + " ".join(shlex.quote(c) for c in cmd)
               + f"   (cwd {wt})")
         return 0
-    handover = root / role.handover
+    handover = handover_base(root) / role.handover
     if not handover.is_file():
         handover.parent.mkdir(parents=True, exist_ok=True)
         handover.write_text(HANDOVER_STUB.format(role=target.instance, date=time.strftime("%Y-%m-%d")), encoding="utf-8")

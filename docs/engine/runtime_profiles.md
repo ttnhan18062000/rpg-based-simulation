@@ -39,9 +39,11 @@ Every runtime profile must explicitly define the following fields:
 ## 5. Runtime Modes
 Profiles define the thresholds for switching between:
 - `NORMAL`
-- `CONSTRAINED` (Early shedding of non-authoritative metrics)
-- `DEGRADED` (Significant shedding of replay and diagnostics)
+- `CONSTRAINED` (Drops subsystem traces and widens system cadence. No metric is shed: `metrics_detail` has no reader in `src/`)
+- `DEGRADED` (Minimal replay richness, half the worker concurrency, wider cadence and tighter phase budgets. Diagnostic verbosity is set but never read)
 - `SURVIVAL` (Authoritative only, minimal observability)
+
+The per-mode levers are those of `GovernorPolicy.from_mode` (`src/engine/policy.py`); `docs/engine/matrices/resource_governor_degradation_matrix.md` ("Shipped behaviour") says which have a reader.
 
 ## 6. Non-Goals
 - Real-time governor logic.

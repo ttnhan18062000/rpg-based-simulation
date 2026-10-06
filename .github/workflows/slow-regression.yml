@@ -1,0 +1,88 @@
+name: Slow regression
+
+# TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED (Reporting-Path Design, P1/P2):
+# the slow suite (~2 h) used to be a job of `Tests`, whose cancel-in-progress group evicted it on
+# nearly every main push, and nothing reported its result. It now has a workflow of its own:
+#   - schedule + manual dispatch only, no `push` trigger (owner decision D3);
+#   - a non-cancelling concurrency group, so every run that starts also finishes;
+#   - no `needs:` on the fast jobs (the slow suite is informational);
+#   - a final report step that keeps ONE rolling GitHub issue and comments only when the set of
+#     failing tests changes.
+
+on:
+  schedule:
+    # Every 6 hours (owner decision D2): about 4 x 2 runner-hours a day.
+    - cron: "0 3,9,15,21 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: slow-regression-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  slow:
+    name: "Slow regression"
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    # Job-level permissions drop everything not listed: checkout needs contents, the report step
+    # needs issues.
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
+      - name: Slow tests — corpus diversity (isolated per-test, TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
+        id: corpus_diversity
+        run: make simq-corpus-diversity-slow-isolated
+      # TCK-20261005-SLOW-REGRESSION-GATE-SKIPS-ITS-ONLY-TEST-STEP-ON-MAIN: the two steps below
+      # test unrelated things from step 5, so a step-5 failure must not skip them (the default
+      # `success()` did, on every main run where step 5 failed). `!cancelled()` and not `always()`:
+      # a cancelled run must stay cancelled.
+      - name: Slow tests (includes 5k behavioral regression)
+        id: slow_tests
+        if: ${{ !cancelled() }}
+        run: |
+          pytest tests/ -m "slow or extra_slow" --resource-budget large --tb=short -q --ignore=tests/unit/worldassembly/test_corpus_diversity.py --junitxml=reports/slow/slow_tests.xml
+      - name: Legacy regression
+        id: legacy_regression
+        if: ${{ !cancelled() }}
+        env:
+          PYTEST_ADDOPTS: --junitxml=reports/slow/legacy_regression.xml
+        run: make lane-legacy-regression
+      - name: Slow regression step outcomes
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "### Slow regression step outcomes"
+            echo "- corpus diversity: ${{ steps.corpus_diversity.outcome }}"
+            echo "- slow tests: ${{ steps.slow_tests.outcome }}"
+            echo "- legacy regression: ${{ steps.legacy_regression.outcome }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Report failing-set changes
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 tools/test_architecture/slow_regression_report.py \
+            --junit-dir reports/slow \
+            --repo "${{ github.repository }}" \
+            --run-id "${{ github.run_id }}" \
+            --sha "${{ github.sha }}" \
+            --known-reds tools/test_architecture/slow_known_reds.yaml
+      - name: Upload certification report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: certification-report-${{ github.sha }}
+          path: reports/certification/
+          retention-days: 30
+      - name: Upload slow JUnit reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: slow-junit-${{ github.sha }}
+          path: reports/slow/
+          retention-days: 30

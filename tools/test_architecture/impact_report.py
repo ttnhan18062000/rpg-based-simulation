@@ -166,7 +166,12 @@ class _Index:
 def build_impact_report(repo_root: Path, changed: Sequence[str], junit_paths: Sequence[Path] = ()) -> Dict[str, Any]:
     changed = sorted(set(changed))
     index = _Index(repo_root)
-    lanes = report.parse_lanes(repo_root / ".github" / "workflows" / "test.yml")
+    lanes = list(report.parse_lanes(repo_root / ".github" / "workflows" / "test.yml"))
+    # The slow suite lives in its own workflow (TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED);
+    # its lane is still reported as nightly/main-only.
+    slow_workflow = repo_root / ".github" / "workflows" / "slow-regression.yml"
+    if slow_workflow.is_file():
+        lanes += report.parse_lanes(slow_workflow)
     filters = path_filters(repo_root / ".github" / "workflows" / "test.yml")
     known_files = set(index.test_imports)
     runs = [report.parse_junit(p, known_files) for p in junit_paths]

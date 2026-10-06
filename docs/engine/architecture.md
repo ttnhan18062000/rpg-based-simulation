@@ -69,7 +69,7 @@ The engine is governed by three primary laws to ensure it survives pathological 
 
 1.  **Law of Bounded State**: No authoritative collection may grow without limit. Every entity, event buffer, and replay stream must have an explicit retention policy.
 2.  **Law of Non-Blocking Persistence**: Replay and observability are "Non-Authoritative." Failures in tracing or persistence must never stall the kernel.
-3.  **Law of Progressive Degradation**: The engine must shed optional load (traces, then diagnostics, then AI fidelity) before it crashes due to resource exhaustion.
+3.  **Law of Progressive Degradation**: The engine must shed optional load (traces, then diagnostics, then AI fidelity) before it crashes due to resource exhaustion. Shipped today: traces (`allow_subsystem_traces`, `src/engine/replay_manager.py`) and replay richness are shed, and AI fidelity is reduced through `PhaseBudgetGovernor` budgets and cadence; the diagnostics step has no effect (`diagnostic_verbosity` has no reader in `src/`). See `docs/engine/matrices/resource_governor_degradation_matrix.md` ("Shipped behaviour").
 
 ---
 

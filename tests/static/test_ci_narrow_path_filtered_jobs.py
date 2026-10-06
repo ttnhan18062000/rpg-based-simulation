@@ -35,26 +35,6 @@ _OUT_OF_SCOPE_JOBS = [
     "typecheck",
 ]
 
-_EXPECTED_SLOW_IF = (
-    "github.ref == 'refs/heads/main' || github.event_name == 'schedule' || "
-    "github.event_name == 'workflow_dispatch'"
-)
-_EXPECTED_SLOW_NEEDS = [
-    "unit-core-world",
-    "unit-gameplay",
-    "unit-infra",
-    "integration",
-    "tools-a-e",
-    "tools-f-z",
-    "api-cli-engine",
-    "agent-orchestration",
-    "simulation-quality",
-    "arch-docs",
-    "frontend",
-    "perf-cert-arena",
-    "migration-lanes",
-]
-
 _MARKER_RE = re.compile(
     r"pytest\.mark\.(catalog|content_graph|worldassembly|registry_projection|scenario_setup|architecture)\b"
 )
@@ -158,16 +138,9 @@ def test_no_other_fast_lane_job_gained_an_if_condition() -> None:
         )
 
 
-# 3. slow job's if:/needs: are byte-identical to the pre-ticket values.
-def test_slow_job_if_condition_is_unchanged() -> None:
-    jobs = _jobs()
-    slow = jobs["slow"]
-    assert slow["if"] == _EXPECTED_SLOW_IF, (
-        f"slow job's 'if' condition changed -- expected {_EXPECTED_SLOW_IF!r}, got {slow['if']!r}"
-    )
-    assert slow["needs"] == _EXPECTED_SLOW_NEEDS, (
-        f"slow job's 'needs' list changed -- expected {_EXPECTED_SLOW_NEEDS!r}, got {slow['needs']!r}"
-    )
+# 3. The slow job left this workflow for slow-regression.yml (pinned by test_ci_slow_workflow_shape.py).
+def test_slow_job_is_no_longer_in_the_pr_workflow() -> None:
+    assert "slow" not in _jobs()
 
 
 # 4. The gate job itself (located dynamically via perf-cert-arena's needs:) must have no `if:`.

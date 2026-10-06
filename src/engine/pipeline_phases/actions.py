@@ -26,10 +26,22 @@ _UNRECOVERABLE_ANY_ACTION_REASONS = frozenset({
 })
 
 
-def _is_unrecoverable_action_failure(action: str, outcome: str, reason_value: object) -> bool:
-    """True when a failed action can never succeed on retry, so its task must end (the caller clears it).
+# Failure reasons that end a held ATTACK: retrying the same swing cannot land. The target is dead or inactive, or it
+# is out of reach, and only a fresh decision (the brain pursues when an attack is not legal) can change either.
+_ENDS_HELD_ATTACK_REASONS = frozenset({
+    ReasonCode.TARGET_INCAPACITATED.value,
+    ReasonCode.OUT_OF_RANGE.value,
+})
 
-    ``TARGET_INCAPACITATED`` ends an ``ATTACK`` only (the target is dead or inactive). The router's
+
+def _is_unrecoverable_action_failure(action: str, outcome: str, reason_value: object) -> bool:
+    """True when retrying the same held task can never succeed, so the task must end (the caller clears it).
+
+    ``TARGET_INCAPACITATED`` ends an ``ATTACK`` (the target is dead or inactive), and so does ``OUT_OF_RANGE``:
+    the held payload is non-empty, so the scheduler never re-runs the brain for it, and re-dispatching the same
+    swing every few ticks while the pair stays put never closes the range (a diagonal melee pair held 267 swings in
+    one run, TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED). Clearing it hands the
+    entity back to the brain, whose tactical pass pursues whenever an attack is not legal. The router's
     ``ACTION_WITHHELD_BY_POSTURE`` / ``UNSUPPORTED_ACTION`` end the task for ANY action: the router reports
     them when it dispatched an action that did nothing (the combat-posture gate, an unrecognised action).
     Left as a payload-bearing ``ENTITY_ACT`` the scheduler re-dispatches the same do-nothing action every
@@ -40,7 +52,7 @@ def _is_unrecoverable_action_failure(action: str, outcome: str, reason_value: ob
         return False
     if reason_value in _UNRECOVERABLE_ANY_ACTION_REASONS:
         return True
-    return action == "ATTACK" and reason_value == ReasonCode.TARGET_INCAPACITATED.value
+    return action == "ATTACK" and reason_value in _ENDS_HELD_ATTACK_REASONS
 
 
 def _annotation_base_payload(payload: dict) -> dict:
@@ -253,10 +265,10 @@ class ActionRoutingPhase:
             # every tick readiness recovers (readiness regens from execute_attack's own -50.0
             # illegal-target penalty in ~5 real ticks), forever, confirmed via live corpus trace to
             # repeat for 180+ real ticks against the same dead target with no natural end
-            # (TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET). INSUFFICIENT_READINESS/
-            # OUT_OF_RANGE are deliberately NOT reset here -- both are real, recoverable
-            # conditions (readiness regens; range may close via a fresh pursuit decision), unlike
-            # a dead target which can never become legal again.
+            # (TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET). OUT_OF_RANGE is reset too (a held
+            # swing never closes the range: TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-
+            # TARGET-IS-NEVER-RE-DECIDED); INSUFFICIENT_READINESS is NOT, because readiness regens
+            # and the same swing can then land.
             is_unrecoverable_attack_failure = _is_unrecoverable_action_failure(action, outcome, reason_value)
             if (is_survival and outcome == "SUCCESS") or is_unrecoverable_attack_failure:
                 # Wholesale-empty payload_set is required, not merely clearing action/target_id:

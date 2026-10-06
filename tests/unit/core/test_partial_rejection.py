@@ -51,10 +51,14 @@ def test_partial_rejection_occupancy_vs_combat(base_state):
     assert refined.entity_updates[1].new_position != (0.0, 0.0)
     assert refined.entity_updates[1].moved_this_tick is True
     
-    # 4. Verify combat is rejected for RANGE, not faction
-    task_res = refined.entity_updates[1].task
-    assert task_res.payload_set.get("outcome") == "FAILURE"
-    assert task_res.payload_set.get("reason") == ReasonCode.OUT_OF_RANGE
+    # 4. Verify combat is rejected for RANGE, not faction. The rejection is reported in the audit trail, and the
+    #    task ends (an empty payload) instead of being kept annotated FAILURE/OUT_OF_RANGE: a kept payload was
+    #    never re-decided (TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED).
+    assert refined.rejections_delta.get(ReasonCode.OUT_OF_RANGE.value) == 1
+    [event] = [e for e in refined.rejection_events if e.actor_id == 1]
+    assert event.reason == ReasonCode.OUT_OF_RANGE
+    assert event.action_kind == "ATTACK"
+    assert refined.entity_updates[1].task.payload_set == {}
 
 def test_partial_rejection_occupancy_vs_readiness(base_state):
     """

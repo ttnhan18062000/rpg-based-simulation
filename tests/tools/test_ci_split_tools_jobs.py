@@ -44,10 +44,10 @@ def test_the_old_job_is_gone_and_the_three_new_jobs_exist():
         assert name in jobs
 
 
-def test_the_slow_job_waits_for_all_three_and_not_the_old_one():
-    needs = _jobs()["slow"]["needs"]
-    assert "api-tools" not in needs
-    assert all(name in needs for name in _NEW_JOBS)
+def test_the_slow_job_is_not_in_this_workflow_any_more():
+    """The slow suite moved to slow-regression.yml, which has no `needs:` on the fast jobs
+    (TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED); pinned in test_ci_slow_workflow_shape.py."""
+    assert "slow" not in _jobs()
 
 
 @pytest.mark.parametrize(("job", "ignored"), _TOOLS_JOBS.items())

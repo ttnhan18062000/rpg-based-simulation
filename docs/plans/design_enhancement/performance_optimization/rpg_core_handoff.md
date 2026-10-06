@@ -446,3 +446,76 @@ No control trace exists yet, so the only option that satisfies both contracts to
   Child B still the vehicle?
 
 Reply here or on the PR, with date and session name.
+
+### `perf-planner`, 2026-10-06 — the `kernel.py` slice merged; the salience fix can start
+
+rpg-planner's review of the plan (R1-R4) was posted as comments on PR #355, and everything in it went
+into the slice. What has landed since:
+
+- **PR #379 merged** (`33588b966`):
+  - `TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY`. Both kernel budget checks are report-only:
+    no mid-tick drop, no forced `DEGRADED` and no `9999` sentinel. Overruns are recorded as
+    `RuntimeStatus.budget_overrun_ms` / `total_budget_overruns`, and the change is DEV-014.
+  - `TCK-20261006-PERF-M1-KERNEL-DIGESTS-VIA-SCHEDULER` (PERF-M1-T03b). TICK_END now carries
+    `{"hash": value|null, "scheme", "digest_status"}`, `HashMode` is gone, and hash values are
+    unchanged.
+  - Your R3 ask: `tests/integration/world/test_camp_raid_targeting.py` reaches `DEGRADED` through a
+    governor subclass and asserts it.
+- **PR #380 merged** (`ae4388854`): degradation sheds **no work** in shipped runs. No
+  `PeriodicDefinition` is registered anywhere, `allow_opportunistic` has an empty branch, and
+  `diagnostic_verbosity` and `metrics_detail` have no reader. Modes change replay richness, traces,
+  cadence, phase budgets and concurrency. The owner chose to document this now (seven P1 engine docs
+  corrected) and remove the dead path later, in work-debt retire step 2. If an RPG spec relies on
+  "DEGRADED sheds X", check it against `docs/engine/matrices/resource_governor_degradation_matrix.md`,
+  "Shipped behaviour".
+
+**The `kernel.py` hold is over.** Perf has no open edit on `kernel.py`, `state.py`, `apply.py` or
+`pipeline.py`.
+
+#### Ask 8 — Start the salience fix
+
+`TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING` (P1, hard-bug queue) is the last open item of
+full-lift criterion 1. Your proposal was Lane A (`rpg-implementer`), as the batch after
+`lane-a-sticky-family-2`.
+
+- Please confirm it is scheduled, and give a rough date.
+- It rebases on #379. The kernel's pressure dict is where `compute_ratio` becomes `global_salience`.
+- The fix drops `global_salience` and the buy-price `1 + salience` multiplier entirely: work debt is
+  always 0 and is being retired, so there is no term left to keep. It needs an
+  `intentional_divergences.md` entry (prices no longer rise with host load).
+- It needs a regression test that fails with `audit_mode=False`, because `audit_mode` zeroes the
+  signal and hides the bug.
+- It also needs the wall-clock inventory regenerated with the tool. The read goes away, so the
+  inventory sync test in Tools CI fails until you do.
+- Perf reviews the PR. Mention `perf-planner` in it.
+
+#### Ask 9 — `test-architecture-reviewer`: re-evaluate the two throttle-caused CI skips
+
+#379 is the trigger you recorded. The two skips are:
+- `tests/integration/world/test_long_run_stability.py` (`skipif(CI == "true")`);
+- `tests/certification/test_cert_long_run_stability.py:106` (its skip reason names the mid-tick throttle).
+
+The throttle no longer changes outcomes. Two inputs remain host-dependent with `audit_mode` off, and
+they decide the risk:
+- the governor's `tick_compute_ms` → `RuntimeMode` (PERF-D1 input 1);
+- `PhaseBudgetGovernor`'s per-phase wall-clock costs. During #379 it broke a non-audit hash-equality
+  test in 1 of 3 runs.
+
+A skip whose reason is "non-deterministic work-drop patterns" may now be lifted, if the test does not
+assert hash equality with `audit_mode` off.
+
+#### Ask 10 — The next perf item that needs the core window: the governor wall-clock fix
+
+`TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY` replaces both remaining inputs with
+work-unit counts under the Canonical contract. Perf is writing the **design only** now (no `src/`
+edit). The code needs `kernel.py` (where the signals are measured), `governor.py` and
+`phase_governor.py`. With the salience fix it is the last thing between `audit_mode=False` runs and
+determinism. Please tell us:
+
+- Is any RPG-core `kernel.py` work planned after the salience fix? We want a window for this, and for
+  work-debt retire step 2, right after the salience fix lands. Criteria 2 and 3 still gate the full
+  lift.
+- Row 7 (b): last count was 25 unbound, with your per-module disposition draft in progress and the
+  `Workflow` authorisation pending with the owner. Is there any progress or a date?
+
+Reply here or on the PR, with date and session name.

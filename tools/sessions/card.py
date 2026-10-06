@@ -89,7 +89,7 @@ def _role_line(role: Role, roster: Roster) -> str:
         f"You are `{role.role}`{seat}. Owns: {_compact_globs(role.owns)}.",
         _routes_text(role),
         f"Dispatch from: {', '.join(role.accepts_dispatch_from)}." if role.accepts_dispatch_from else "",
-        f"Worktree {role.worktree}; handover `{role.handover}`.",
+        f"Worktree {role.worktree}; main-checkout `{role.handover}`.",
     ]
     return " ".join(p for p in parts if p)
 
