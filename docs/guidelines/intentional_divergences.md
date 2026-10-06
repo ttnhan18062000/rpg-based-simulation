@@ -2324,7 +2324,7 @@ untouched by §2.57's fix (out of that ticket's scope).
 - **New Behavior**: both `ENTITY_MOVE` dispatchers (`executor.py`, `worker_logic.py`) end a `PURSUE` move whose `payload["target_id"]`
   names a live target within attack reach (Manhattan; melee needs distance 1; no weather multiplier): the task returns to the idle
   encoding (`ENTITY_ACT`, empty payload) and the navigation target is cleared
-  (`MovementCandidateSelector.pursuit_reached_attack_range` / `pursuit_completion_update`). For an objective with
+  (`MovementCandidateSelector.tracked_move_complete` / `tracked_move_completion_update`). For an objective with
   `target_entity_id`, `intelligence.py` and `redirection.py` set no navigation point (they still claim the navigation, so the
   return-to-town fallback stays suppressed); the tactical pass resolves the live position.
 - **Not behavior-neutral; measured** (real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`, `LocalSequentialExecutor`; taken on
@@ -2690,3 +2690,20 @@ The following legacy behaviors have been intentionally omitted or retired.
 ---
 *Last updated: 2026-09-02 (DEV-007 addendum, TCK-20260902-CLASSHALL-DEAD-CODE — deferred
 `ClassHallAction.train()` cleanup landed).*
+
+### 2.70 An Entity-Tracking Combat Move Ends When Its Target Is Dead, Inactive or Gone, and the In-Reach End Covers Intercept and Bracketing (TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION)
+
+- **Legacy Behavior**: only a `PURSUE` move had a completion condition (2.68), and only for a live target in reach. An `INTERCEPT`, a
+  `BRACKETING` reposition or a `PURSUE` whose target had died kept its sticky task and kept being dispatched as movement.
+- **Observed**: a live entity held one `PURSUE` for 986 ticks after its target died at tick 4 (`frontier_living_world`); two `INTERCEPT`
+  moves were held 30 and 20 ticks (`crowded_frontier`); one `BRACKETING` move circled a live target in reach until it was killed. (The
+  first count, 10 of 21 target-carrying moves, counted task records of dead movers and is not the live harm.)
+- **New Behavior**: `MovementCandidateSelector.tracked_move_complete` / `tracked_move_completion_update`, used by both `ENTITY_MOVE`
+  dispatchers, end `PURSUE`, `INTERCEPT`, `REPOSITION`+`BRACKETING` and `RETREAT`+`KITING` moves when the target entity is dead, inactive
+  or gone; pursuit, intercept and bracketing also end when the live target is in attack reach (kiting holds range). Guard and
+  cover-seeking moves are unchanged.
+- **Not behavior-neutral; measured**: legacy vs fixed arms, 4 worlds x 2 runs, all pairs matched. Per-move identity for `PURSUE` cannot be
+  compared on the corpus once an entity is freed (trajectories diverge); "unchanged" there rests on construction and the unit pins.
+- **Rationale**: **Bug Fix** (a sticky task with no completion condition), with **Unified** (one helper for four move kinds).
+- **Verification**: `tests/unit/engine/test_pursuit_completion.py` (21; with the dead-target condition disabled exactly 6 fail, with the
+  extra modes disabled exactly 5 fail).

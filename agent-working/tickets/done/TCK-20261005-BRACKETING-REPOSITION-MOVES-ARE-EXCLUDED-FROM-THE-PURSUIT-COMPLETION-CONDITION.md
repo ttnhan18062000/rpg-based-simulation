@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION
-phase: inprogress
+phase: done
 date: 2026-10-05
 tags: [engine, combat]
 ---
@@ -18,7 +18,7 @@ after the target died at tick 4). (Retitled from "`BRACKETING` is the single lar
 was true but the smaller half of the story; see the Request Summary.)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -110,15 +110,13 @@ right outcome is to record that and close.
   observation in the attack-path ticket.
 
 ## Acceptance Criteria
-- [ ] `BRACKETING` move lifetimes measured on post-#344 `main` with the attack-path fix landed, reported
-      as a distribution.
-- [ ] Outcome (a) or (b) stated explicitly with the numbers that chose it.
-- [ ] If (b): the mode gate is widened only to combat-positioning entity-tracking modes, with guarding
-      and cover-seeking shown unchanged by test.
-- [ ] `INTERCEPT` and `KITING` checked for the same defect and the finding recorded, even if not fixed here.
-- [ ] Disabling-control result recorded.
-- [ ] Post-fix forced-decision split re-measured and reported.
-- [ ] `docs/engine/` and `docs/parity_ledger/` updated if behaviour changes, per the standing ruling.
+- [x] `BRACKETING` move lifetimes measured on post-#344 `main` with the attack-path fix landed (investigation section 1; real issuance 0 in three worlds, 1 in `dungeon_crawl`).
+- [x] Outcome stated with the numbers that chose it: outcome (b), widened, but keyed on the target's death as well as reach, because the measured live harm was a held `PURSUE` (986 ticks), two `INTERCEPT`s (30 and 20 ticks) and one `BRACKETING` in reach.
+- [x] The gate is widened only to combat-positioning entity-tracking kinds (`PURSUE`, `INTERCEPT`, `REPOSITION`+`BRACKETING`, `RETREAT`+`KITING`); guard and cover-seeking shown unchanged by test.
+- [x] `INTERCEPT` and `KITING` checked for the same defect and fixed here (`KITING` by a constructed test only: 0 corpus moves).
+- [x] Disabling-control result recorded: dead-target condition off fails exactly 6 tests, extra modes off fails exactly 5.
+- [ ] Post-fix forced-decision split re-measured: **not done, and no longer meaningful.** The 55% share was a property of the forced read-only probe, not of real issuance, so a post-fix forced split would not measure the fix.
+- [x] `docs/engine/` (kernel, tactical contract section 3), `docs/parity_ledger/` (COMB-329 evidence, COMB-331) and `docs/guidelines/intentional_divergences.md` (2.70) updated.
 
 ## Related Tickets
 - `TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK` — gate 1, the pursuit
@@ -151,13 +149,15 @@ right outcome is to record that and close.
   from one world.
 
 ## Implementation Notes
-(to be filled by the implementer)
+`MovementCandidateSelector.tracked_move_complete` / `_combat_positioning_kind` / `tracked_move_completion_update` in `src/engine/candidate_selector.py` replace the PURSUE-only helpers and are used by both `ENTITY_MOVE` dispatchers (`executor.py`, `worker_logic.py`). Kinds are keyed on (movement mode, payload reason). A dead, inactive or gone target ends all four kinds; the in-reach end applies to all but kiting. `entity_target_objective.py` is bound under `goal_hierarchy` in `registries/mechanisms.yaml` (completeness pins 36 to 37 bound, 26 to 25 unbound, re-measured after the rebase onto main).
+
+Measurement correction: "10 of 21 held moves" counted task records, and in all 10 the mover was dead. The live harm is the four moves named in the Acceptance Criteria. `bracket_pos` is a one-tick snapshot; a BRACKETING move is de facto a pursuit of the live target (the live-tracking helper ignores movement mode, filed separately as `TCK-20261006-LIVE-TRACKING-TARGET-HELPER-IGNORES-MOVEMENT-MODE`).
 
 ## Test Summary
-(to be filled by the implementer)
+`tests/unit/engine/test_pursuit_completion.py` (21), `tests/unit/tools/test_mechanism_registry_completeness_check.py`, `tests/unit/tools/test_mechanism_state_caller_check.py`: 46 passed after the rebase onto `origin/main` `9299891a9`. Legacy vs fixed corpus arms, 4 worlds x 2 runs, all pairs matched (values). PURSUE "unchanged" rests on construction and unit pins: corpus per-move identity is lost once an entity is freed.
 
 ## Files Changed
-(to be filled by the implementer)
+`src/engine/candidate_selector.py`, `src/engine/executor.py`, `src/engine/worker_logic.py`, `registries/mechanisms.yaml`, `tests/unit/engine/test_pursuit_completion.py`, `tests/unit/tools/test_mechanism_registry_completeness_check.py`, `tests/unit/tools/test_mechanism_state_caller_check.py`, `docs/engine/kernel.md`, `docs/engine/contracts/tactical_contract.md`, `docs/guidelines/intentional_divergences.md` (2.70), `docs/parity_ledger/combat_movement.yaml` (COMB-329, COMB-331).
 
 ## Completion Summary
-(to be filled by the implementer)
+Entity-tracking combat moves now end when their target is dead, inactive or gone, and the in-reach end covers intercept and bracketing. Known gap: the post-fix forced-decision split was not re-measured (premise withdrawn, see the Acceptance Criteria). The BRACKETING move chasing the target rather than walking to `bracket_pos` is a separate, filed defect.

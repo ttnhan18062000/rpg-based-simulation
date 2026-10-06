@@ -54,7 +54,8 @@ this reason, even though the policy it implemented was correct.
 **A sticky task needs a completion condition.** The law means a task that nothing ends is never re-decided. A pursuit
 `ENTITY_MOVE` had none, so entities adjacent to a live target at full readiness never reached the decision pass
 (`TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK`, 1953 of 1953 sampled). A pursuit now ends when its
-live target is in attack reach (`docs/engine/contracts/tactical_contract.md` section 3), returning the entity to the idle task so the
+live target is in attack reach, and any entity-tracking combat move (pursuit, intercept, bracketing, kiting) also ends when its target is
+dead, inactive or gone (`docs/engine/contracts/tactical_contract.md` section 3), returning the entity to the idle task so the
 brain decides at its next cadence. Any new task kind that persists across ticks must define how it ends.
 
 **A dispatch that does nothing must say so.** A gate at the per-execution dispatch point (the action router's combat-posture

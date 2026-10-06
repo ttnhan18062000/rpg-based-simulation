@@ -46,11 +46,15 @@ this helper) — confirmed via a repo-wide reference search finding no productio
 `ENTITY_MOVE` (movement mode `PURSUE`, `payload["target_id"]` set) **ends when the live target is within the entity's attack
 reach** (Manhattan; a melee entity needs distance 1; no weather multiplier, legality still arbitrates the attack itself).
 Both `ENTITY_MOVE` dispatchers (`executor.py`, `worker_logic.py`, via
-`MovementCandidateSelector.pursuit_reached_attack_range`) then emit `pursuit_completion_update`: the task returns to the idle
+`MovementCandidateSelector.tracked_move_complete`) then emit `tracked_move_completion_update`: the task returns to the idle
 encoding (`ENTITY_ACT` with an empty payload, which the scheduler reclassifies as a brain tick) **and the navigation target is
 cleared**, because movement is driven by `navigation.target`. Before this nothing ended a pursuit move, so under the Sticky-Task
 Law (`docs/engine/kernel.md`) the decision pass was never re-run and an entity adjacent to a live target at full readiness never
-chose `ATTACK`. Other moves that also carry a `target_id` (guard, cover, reposition, retreat) keep their own lifecycle. The idle
+chose `ATTACK`. The same condition covers every entity-tracking combat move, keyed on (movement mode, payload `reason`): `PURSUE`, `INTERCEPT`,
+`REPOSITION` with reason `BRACKETING`, and `RETREAT` with reason `KITING`. **A dead, inactive or missing target ends all four**
+(`TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION`; measured: one `PURSUE` held 986 ticks
+by a live entity after its target died at tick 4); the in-reach end applies to all but kiting, which intends to hold range. Guard and
+cover-seeking moves also carry a `target_id` and keep their own lifecycle. The idle
 entity is then decided at its next brain cadence (`strategic_intelligence`, 10 ticks); that wait is not changed here. Strategy does
 not write a navigation point for an entity-typed objective (`ObjectiveState.target_entity_id`): the redirection writers in
 `intelligence.py` and `redirection.py` leave the point unset and tactics resolve the live position.

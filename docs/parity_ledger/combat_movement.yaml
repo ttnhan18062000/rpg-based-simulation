@@ -4506,7 +4506,7 @@
     are unchanged. For an objective with target_entity_id the strategic redirection
     writers set no navigation point (they still claim the navigation); the tactical
     pass resolves the live position.'
-  v2_evidence: src/engine/candidate_selector.py (pursuit_reached_attack_range, pursuit_completion_update),
+  v2_evidence: src/engine/candidate_selector.py (tracked_move_complete, tracked_move_completion_update),
     src/engine/executor.py and src/engine/worker_logic.py (ENTITY_MOVE branches),
     src/systems/strategic_systems/intelligence.py and redirection.py (entity-typed
     objective branch).
@@ -4518,12 +4518,12 @@
   proof_type: regression
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.68.
   support_boundary: 'Effect sizes were taken on origin/main 544b1d341 (dirty-set determinism
-    fix included): after-fix counts repeat exactly across two runs (values), the
-    clean-main control is one run (a sample). Tile-swap ticks fall by two orders of
-    magnitude on crowded_frontier, frontier_living_world and urban_political, but
-    decision-path attacks barely move (frontier_living_world 5 to 7) and crowded_frontier
-    stays at 0 (the brain cadence, the flee gate and BRACKETING repositioning moves,
-    which this change deliberately does not end, are the next gates). Opportunity-attack
+    fix included): after-fix counts repeat exactly across two runs (values), the clean-main
+    control is one run (a sample). Tile-swap ticks fall by two orders of magnitude
+    on crowded_frontier, frontier_living_world and urban_political, but decision-path
+    attacks barely move (frontier_living_world 5 to 7) and crowded_frontier stays
+    at 0 (the brain cadence, the flee gate and BRACKETING repositioning moves, which
+    this change deliberately does not end, are the next gates). Opportunity-attack
     counts on frontier_living_world (38 to 644) and crowded_frontier (488 to 283)
     moved in opposite directions and are unexplained. The intelligence.py redirection
     branch has no direct unit test; only redirection.py does.'
@@ -4564,3 +4564,28 @@
     (COMB-307), unchanged. NavigationUpdate.failure_reason is the shape the readiness
     check and execute_attack's rejections already use; it sets navigation.last_failure_reason,
     which strategic intelligence and the inspector read.
+- id: COMB-331
+  text: 'TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION:
+    an entity-tracking combat move (PURSUE, INTERCEPT, REPOSITION with reason BRACKETING,
+    RETREAT with reason KITING) ends when its target entity is dead, inactive or gone;
+    pursuit, intercept and bracketing also end when the live target is in attack reach
+    (kiting holds range). Both ENTITY_MOVE dispatchers return the task to the idle
+    encoding and clear the navigation target. Guard and cover-seeking moves keep their
+    own lifecycle.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/candidate_selector.py (tracked_move_complete, _combat_positioning_kind,
+    tracked_move_completion_update), src/engine/executor.py and src/engine/worker_logic.py
+    (ENTITY_MOVE branches). Real corpus (Kernel.tick_once(), 4 worlds x 2 runs, legacy
+    vs fixed arms, all pairs matched): one PURSUE held 986 ticks after its target
+    died at tick 4 (frontier_living_world), two INTERCEPTs held 30 and 20 ticks (crowded_frontier).'
+  proof_type: regression
+  test_path: tests/unit/engine/test_pursuit_completion.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.70.
+  support_boundary: 'The initial 10-of-21 held-move count was task records of dead
+    movers; the live harm is the four moves above. BRACKETING real issuance is 0 in
+    three worlds and 1 in dungeon_crawl (the 55% share was a forced-probe artefact).
+    PURSUE unchanged-ness rests on construction and unit pins: corpus per-move identity
+    is lost once an entity is freed. KITING is covered by a constructed test only
+    (0 corpus moves).'
