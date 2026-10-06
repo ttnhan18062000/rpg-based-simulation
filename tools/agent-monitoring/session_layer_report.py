@@ -12,6 +12,8 @@ from batch_latency import render_row
 from manual_actions import CATEGORIES, count_by_category
 from session_role import UNRESOLVED
 
+PREDATES = "predates field"
+
 _LABELS = {
     "role_reminder": "role reminder", "routing_correction": "routing correction", "manual_wake": "manual wake",
     "worktree_correction": "worktree correction", "boundary_reminder": "boundary reminder",
@@ -84,15 +86,18 @@ def render(manual: list[dict], runs: list[dict], boundary: list[dict], latency_r
              "section 11. Counts are repeated instructions, never decisions, design feedback or requirements. "
              "`sample` is the conservative prompt tagger (under-counts); `tally` is the owner's own line per batch._", ""]
     lines += _manual_lines(manual, manual_total)
-    roles = Counter(str(r.get("session_role") or UNRESOLVED) for r in runs)
+    # TCK-20261006-SESSION-START-CLEAR-FALSE-LIVE-HOLDER-WARNING (Scope 3): a run with no `session_role` key predates the field, which
+    # is not the same as a run stamped `unresolved` because no binding named its closing session.
+    roles = Counter(PREDATES if "session_role" not in r else str(r.get("session_role") or UNRESOLVED) for r in runs)
     lines += ["### Runs by session role", ""]
     if roles:
         lines += ["| session_role | runs |", "|---|---|"] + [f"| {k} | {v} |" for k, v in sorted(roles.items())]
     else:
         lines.append("No runs in this period.")
-    if roles and set(roles) == {UNRESOLVED}:
+    if set(roles) - {PREDATES} == {UNRESOLVED}:
         lines += ["", "_No run in this period had a resolved role, so role binding was not active._"]
-    lines += ["", "_`unresolved` = no binding names the session (plain session) or the record predates `session_role`._", ""]
+    lines += ["", f"_`{PREDATES}` = recorded before `session_role` existed (no key); `{UNRESOLVED}` = stamped, but no binding named the closing "
+              "session (a plain session, or one started outside a current worktree)._", ""]
     kinds = Counter(str(b.get("kind") or "unknown") for b in boundary)
     lines += ["### `role_boundary` warnings (advisory)", ""]
     note = _dark("role_boundary", boundary_total, len(boundary))

@@ -222,7 +222,7 @@ def test_a_negative_span_is_unknown():
 # ---- retro section -----------------------------------------------------------------------------
 
 def test_section_renders_zeros_unresolved_and_unknown():
-    text = slr.render([], [{"session_role": "rpg-implementer"}, {}], [{"kind": "edit_outside_owns"}],
+    text = slr.render([], [{"session_role": "rpg-implementer"}, {"session_role": "unresolved"}], [{"kind": "edit_outside_owns"}],
                       [("#9", bl.latencies(None, None, None) | {"dispatch_source": "unavailable"})])
     assert "| role reminder | 0 | 0 |" in text and "| unresolved | 1 |" in text and "| rpg-implementer | 1 |" in text
     assert "edit_outside_owns: 1" in text and "unknown" in text and "never zero" in text
@@ -252,6 +252,18 @@ def test_all_unresolved_runs_say_role_binding_was_not_active_and_a_mixed_set_doe
     assert "role binding was not active" in slr.render([], [{}, {"session_role": "unresolved"}], [])
     assert "role binding was not active" not in slr.render([], [{}, {"session_role": "rpg-implementer"}], [])
     assert "role binding was not active" not in slr.render([], [], [])
+
+
+def test_runs_with_no_field_unresolved_runs_and_resolved_runs_are_three_distinct_rows():
+    text = slr.render([], [{}, {}, {"session_role": "unresolved"}, {"session_role": None}, {"session_role": "rpg-implementer"}], [])
+    assert "| predates field | 2 |" in text and "| unresolved | 2 |" in text and "| rpg-implementer | 1 |" in text
+    assert "recorded before `session_role` existed (no key)" in text and "stamped, but no binding named the closing session" in text
+
+
+def test_the_all_unresolved_line_ignores_runs_that_predate_the_field():
+    assert "role binding was not active" in slr.render([], [{}, {"session_role": "unresolved"}], [])
+    assert "role binding was not active" not in slr.render([], [{}, {}], [])  # nothing was stamped: nothing to say
+    assert "role binding was not active" not in slr.render([], [{}, {"session_role": "unresolved"}, {"session_role": "rpg-implementer"}], [])
 
 
 def test_load_family_and_period_filter(tmp_path):
