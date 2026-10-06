@@ -49,7 +49,7 @@ def test_observatory_integration_successful_sweep(temp_repos_dir):
         ],
         "factions": [{"id": "villagers", "type": "civilian"}],
         "entities": [{"id": "pop1", "count": 2, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"}],
-        "validation": {"expected_min_entities": 1, "allow_overlapping_regions": False}
+        "validation": {"expected_min_entities": 1}
     }
     world_repo.save_world(WorldSpec(**world_dict))
 
@@ -188,7 +188,7 @@ def test_observatory_integration_partial_failure(temp_repos_dir):
         ],
         "factions": [{"id": "villagers", "type": "civilian"}],
         "entities": [{"id": "pop1", "count": 2, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"}],
-        "validation": {"expected_min_entities": 1, "allow_overlapping_regions": False}
+        "validation": {"expected_min_entities": 1}
     }
     world_repo.save_world(WorldSpec(**world_dict))
 
@@ -316,7 +316,7 @@ def test_observatory_integration_complete_failure(temp_repos_dir):
         ],
         "factions": [{"id": "villagers", "type": "civilian"}],
         "entities": [{"id": "pop1", "count": 2, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"}],
-        "validation": {"expected_min_entities": 1, "allow_overlapping_regions": False}
+        "validation": {"expected_min_entities": 1}
     }
     world_repo.save_world(WorldSpec(**world_dict))
 

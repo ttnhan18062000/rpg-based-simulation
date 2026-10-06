@@ -64,8 +64,7 @@ def test_single_run_flow_end_to_end(temp_repos_dir):
             {"id": "tavern", "type": "inn", "region": "town_square"}
         ],
         "validation": {
-            "expected_min_entities": 1,
-            "allow_overlapping_regions": False
+            "expected_min_entities": 1
         }
     }
     world_spec = WorldSpec(**world_dict)

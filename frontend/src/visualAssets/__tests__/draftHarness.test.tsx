@@ -148,8 +148,19 @@ describe('DraftHarness', () => {
     const canvases = [...document.querySelectorAll('canvas')]
     expect(canvases.map((c) => [c.width, c.height])).toEqual([[MAP_COLUMNS * CELL_SIZE, MAP_ROWS * CELL_SIZE], [MAP_COLUMNS * CELL_SIZE, MAP_ROWS * CELL_SIZE]])
     expect(canvases.every((c) => c.style.imageRendering === 'pixelated')).toBe(true)
-    fireEvent.click(screen.getByRole('checkbox'))
+    fireEvent.click(screen.getByLabelText(/plain colour fills/))
     expect(document.querySelectorAll('canvas')).toHaveLength(1)
+  })
+
+  it('has a borders toggle, on by default, that switches the status line and leaves the map canvas in place', async () => {
+    render(<DraftHarness manifestText={draftManifestText} urlFor={draftUrlFor} decode={decode} />)
+    await settled()
+    const toggle = screen.getByTestId('draft-borders') as HTMLInputElement
+    expect(toggle.checked).toBe(true)
+    expect(screen.getByTestId('draft-borders-status').textContent).toMatch(/^Borders on: 0 map cells carry a fringe\./) // the fixture set holds no border masks: today's hard edge
+    fireEvent.click(toggle)
+    expect(screen.getByTestId('draft-borders-status').textContent).toMatch(/^Borders off/)
+    expect(document.querySelectorAll('canvas').length).toBeGreaterThan(0)
   })
 
   it('shows an alert and no set for a manifest that is not a draft preview manifest (a runtime manifest is refused)', async () => {

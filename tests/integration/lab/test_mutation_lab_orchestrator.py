@@ -74,8 +74,7 @@ def test_mutation_lab_orchestrator_end_to_end(temp_mutation_lab_repos):
         ],
         "buildings": [],
         "validation": {
-            "expected_min_entities": 1,
-            "allow_overlapping_regions": False
+            "expected_min_entities": 1
         }
     }
     world_spec = WorldSpec(**world_dict)
@@ -246,7 +245,7 @@ def test_mutation_lab_budget_blocked(temp_mutation_lab_repos):
         "entities": [{"id": "citizen_group", "count": 5, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"}],
         "resources": [{"id": "wood_zone", "resource_type": "wood", "count": 5, "region": "town_square"}],
         "buildings": [],
-        "validation": {"expected_min_entities": 1, "allow_overlapping_regions": False}
+        "validation": {"expected_min_entities": 1}
     }
     world_repo.save_world(WorldSpec(**world_dict))
 
@@ -329,7 +328,7 @@ def test_mutation_lab_invalid_spec_blocked(temp_mutation_lab_repos):
         "entities": [{"id": "citizen_group", "count": 5, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"}],
         "resources": [{"id": "wood_zone", "resource_type": "wood", "count": 5, "region": "town_square"}],
         "buildings": [],
-        "validation": {"expected_min_entities": 1, "allow_overlapping_regions": False}
+        "validation": {"expected_min_entities": 1}
     }
     world_repo.save_world(WorldSpec(**world_dict))
 
