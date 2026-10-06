@@ -326,7 +326,7 @@ def test_unresolved_role_gives_null_role_and_the_cli_flags_it(tmp_path, monkeypa
     draft = next(r for r in _rows(root) if r["path"].endswith("TCK-2-OPEN.md"))["belongs_to"]
     assert draft["role"] is None and draft["ticket_id"] == "TCK-2-OPEN"
     h, m = tmp_path / "h", tmp_path / "m"
-    monkeypatch.setattr(ht, "HANDOVER_DIR", h)
+    monkeypatch.setattr(ht, "_main_handover_dir", lambda: h)
     monkeypatch.setattr(ht, "TRANSIT_ROOT", tmp_path / "t2")
     monkeypatch.setattr(ht, "default_memory_dir", lambda: m)
     monkeypatch.setattr(ht, "load_draft_filter", lambda *a, **k: _flt(tmp_path))
@@ -467,10 +467,31 @@ def test_dry_run_prints_counts_and_writes_nothing(tmp_path, monkeypatch, capsys)
     before = (root / "hostA" / ht.MANIFEST).read_text()
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(ht, "TRANSIT_ROOT", root)
-    monkeypatch.setattr(ht, "HANDOVER_DIR", h)
+    monkeypatch.setattr(ht, "_main_handover_dir", lambda: h)
     monkeypatch.setattr(ht, "host_id", lambda: "hostA")
     monkeypatch.setattr(ht, "load_draft_filter", lambda: None)
     assert ht.main(["export", "--dry-run", "--memory-dir", str(m), "--role", "r"]) == 0
     out = capsys.readouterr().out
     assert "memory: 8 new, 7 existing" in out and "notes: 2 new, 2 existing" in out
     assert (root / "hostA" / ht.MANIFEST).read_text() == before
+
+
+def test_default_handover_dir_and_dry_run_export_resolve_from_the_main_checkout(tmp_path):
+    main = tmp_path / "main"
+    main.mkdir()
+    env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t", "PATH": os.environ["PATH"], "HOME": str(tmp_path)}
+    for args in (["init", "-q", "-b", "main"], ["commit", "-q", "--allow-empty", "-m", "i"],
+                 ["worktree", "add", "-q", "-b", "seat", str(tmp_path / "seat")]):
+        subprocess.run(["git", *args], cwd=main, check=True, capture_output=True, env=env)
+    h = main / ".claude" / "handover"
+    (h / "drafts").mkdir(parents=True)
+    (h / "role-a.md").write_text("# Handover — role-a\n- Branch: `b` · PR: none\n")
+    (h / "drafts" / "TCK-9-OPEN.md").write_text("draft\n")
+    seat = tmp_path / "seat"
+    code = ("import sys; sys.path.insert(0, %r); import handover_transit as ht; "
+            "print(ht._main_handover_dir().resolve())" % str(_REPO_ROOT / "tools"))
+    out = subprocess.run([sys.executable, "-c", code], cwd=seat, capture_output=True, text=True, check=True)
+    assert Path(out.stdout.strip()) == h.resolve()
+    files = ht._collect(None, True, False, h, tmp_path / "m", None)
+    assert files

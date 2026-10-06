@@ -103,3 +103,9 @@ def test_generation_writes_only_under_the_agents_dir(tmp_path):
     after = {p.relative_to(root) for p in root.rglob("*") if p.is_file()}
     assert after - before == set(written)
     assert all(p.parent == gen.AGENT_DIR for p in written)
+
+
+def test_generated_agent_names_the_main_checkout_handover_location():
+    # TCK-20261006-HANDOVER-NOTES-RESOLVE-FROM-MAIN-CHECKOUT: the gitignored notes are not in a seat's worktree
+    text = (ROOT / ".claude" / "agents" / "session-agent-working-implementer.md").read_text()
+    assert "main-checkout `.claude/handover/agent-working-implementer.md`" in text
