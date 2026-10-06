@@ -53,6 +53,21 @@ python3 tools/agent-monitoring/generate_retro.py --days 30
 python3 tools/agent-monitoring/generate_retro.py --all
 ```
 
+### Duration and cost provenance (`TCK-20261006-HAND-CLOSURE-RETRO-PROVENANCE`)
+
+A hand closure carries `duration_source` (`declared`, `tool_activity` or `unknown`; absent = predates the field) and its
+events may carry `cost_source` (`sidecar` or `session_window`); see `docs/agent-monitoring/schema.md`. When a window contains
+runs with `duration_source`, the report says so once at the top (with the first week) and then:
+
+- the headline "Avg duration" uses measured and declared durations only; the derived (`tool_activity`) average is a separate
+  row with its n, and unknown runs are counted next to every average and never averaged (owner decision 2026-10-06);
+- "Hand-closed runs by duration source" lists the counts per source and the share of hand closures with a known duration and
+  with a cost value (the coverage instrument);
+- derived runs are left out of Slow Runs and Duration outliers; a `session_window` cost is one ticket-level total, not
+  phase-resolved, so it stays out of the Spend Proxy tables and gets its own line.
+
+Reports for windows with no such field render exactly as before.
+
 Reports are written to `agent-working/agent-monitoring/retro/RETRO-<label>.md`.  
 The index at `agent-working/agent-monitoring/retro/index.md` is updated automatically.
 

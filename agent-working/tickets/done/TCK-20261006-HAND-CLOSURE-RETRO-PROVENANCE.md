@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261006-HAND-CLOSURE-RETRO-PROVENANCE
-phase: open
+phase: done
 date: 2026-10-06
 tags: [observability, agent-monitoring, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [observability, agent-monitoring, process-improvement]
 The retro reports duration and cost by provenance and states which tables changed meaning in the week the change landed
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -82,10 +82,10 @@ Hand-filed by agent-working-design (interim planner), 2026-10-06.
 Owner decision recorded in `TCK-20261006-HAND-CLOSURE-TIME-SOURCE-DESIGN` (2026-10-06): derived durations are not in the headline average; shown beside it with n; unknowns counted, never averaged. This ticket is unblocked and runs after children 2 and 3.
 
 ## Test Summary
-(Open.)
+8 new tests in `tests/tools/test_retro_provenance.py`; sweep over monitoring/retro tests 1,827 passed, 6 skipped, 1 xfailed (the frozen-output tests in test_generate_retro.py are unchanged).
 
 ## Files Changed
-(Open.)
+`tools/agent-monitoring/retro_provenance.py` (new), `tools/agent-monitoring/generate_retro.py`, `tests/tools/test_retro_provenance.py` (new), `docs/guides/agent_monitoring.md`, `docs/plans/agent_infrastructure/agent_working_direction.md`.
 
 ## Completion Summary
-(Open.)
+The retro now reports hand closures by duration source, keeps derived durations out of the headline average (shown beside it with n), counts unknowns without averaging them, shows duration and cost coverage for hand closures, and states once at the top which week the tables changed meaning. The measured coverage after landing is the epic's remaining step.

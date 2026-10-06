@@ -133,6 +133,8 @@ None yet.
 - Inferred, not verified per row: hand closers almost never pass `--start-ts`. The design child measures this.
 
 ## Implementation Notes
+2026-10-06, agent-working-implementer: all four children are closed in `agent-working/tickets/done/` (design, recorder, cost attribution, retro). AC3 is pinned by `tests/tools/test_hand_closure_time.py`; the direction-doc row is moved to "shipped (code)" with the baseline coverage. **The epic stays open for AC2 and the measured part of AC4:** the first full ISO week after the PR merges must show, for hand-closed runs, the share with a duration and with a cost value per provenance (the retro prints this in "Hand-closed runs by duration source"). Expected ceiling from the design: about 55% duration coverage, because many sessions write no tools rows (`TCK-20261006-TOOLS-SHARDS-MISSING-FROM-WORKTREES`).
+
 Drafted by agent-working-design (interim planner), 2026-10-06, after the owner picked this direction. The facts
 come from a read-only sweep of `origin/main` at `40ab9857e`.
 
