@@ -563,8 +563,9 @@ Default authority by function; the manifest overrides per role, with `needs_user
 |---|---|---|---|
 | Edit files in own `owns` | drafts only | ticket and plan drafts, review notes | yes |
 | Edit outside own `owns` | request to owner | request to owner | request to owner |
-| Commit / push own branch | no (hands drafts) | no (hands drafts to the implementer) | yes, with grant |
-| Open / update PR | no | no (comments on PRs) | yes, with grant |
+| Commit / push own (non-default) branch | no (hands drafts) | no (hands drafts to the implementer) | yes, no grant needed (owner, 2026-10-06) |
+| Push to the default branch, or commit on it | **user** | **user** | **user** |
+| Open / update PR | no | no (comments on PRs) | yes, no grant needed |
 | Review a PR, answer implementer questions | no | **yes** (comment; the merge stays with the user) | no |
 | Merge | **user** | **user** | **user** |
 | Governing files (`CLAUDE.md`, `settings.json`, hooks) | **user, literal diff** | same | same |
@@ -611,7 +612,8 @@ problem (sandboxing, separate OS users) outside this plan; nothing here is an ad
   classifier) and `tools/sessions/guard.py` (role resolution by session id from the binding records, `agent_type`
   fallback; writer lease; grants are print-only). Decision order: forbidden -> deny; not the worktree's writer -> deny
   (no lease recorded -> ask); merge, governing-file, authority-file and remote-deletion -> ask for every role;
-  push/open_pr -> ask without a grant; uncertain -> ask. `workflow_run` is not enforced here (the Workflow tool is not
+  push/open_pr -> ask without a grant; uncertain -> ask.
+  **Superseded by TCK-20261006-GUARD-OWN-BRANCH-GIT-ALLOWED (owner, 2026-10-06: "only block the merge branch to main, every action on their own branch is allowed"):** commit, push (force-push included), local merge and `gh pr create` on a non-default branch are allowed with or without a lease or grant; the lease only matters when another role holds it (deny). `push_default_branch` (an explicit refspec naming the default branch, `--all`/`--mirror`, or a bare `git push` while on it), `gh pr merge` and a commit while on the default branch ask for every role. The default branch is `main` plus whatever `origin/HEAD` names. A command that switches branch or uses `git -C`/`--git-dir` in the same call, or whose branch cannot be read, is uncertain and asks. `workflow_run` is not enforced here (the Workflow tool is not
   Bash/Edit/Write) and `delete_worktree_or_data` stays with the M5A permission rules. Wired last in `PreToolUse` with
   matcher `Bash|Edit|Write|MultiEdit|NotebookEdit|SendMessage` (SendMessage added by M5C for the advisory message-class check) behind a wrapper that treats a missing script as a pass: a bare
   `python3` on a missing file exits 2 and would block every tool call.

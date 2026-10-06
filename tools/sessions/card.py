@@ -94,12 +94,19 @@ def _role_line(role: Role, roster: Roster) -> str:
     return " ".join(p for p in parts if p)
 
 
+# An action the card need not print under "Needs the user" because "Never" already covers its parent: a role that
+# never pushes does not need telling that a push to the default branch needs the user (TCK-20261006-GUARD-OWN-BRANCH-
+# GIT-ALLOWED; keeps the designer and planner cards inside the budget without changing their text).
+_IMPLIED_BY = {"push_default_branch": "push"}
+
+
 def _authority_line(role: Role, authority: Authority) -> str:
     base = authority.for_function(role.function)
     if base is None:
         raise ValueError(f"no authority default for function {role.function!r}")
     line = f"Never: {', '.join(base.forbidden)}. " if base.forbidden else ""
-    line += f"Needs the user: {', '.join(base.needs_user)}."
+    needs_user = [a for a in base.needs_user if _IMPLIED_BY.get(a) not in base.forbidden]
+    line += f"Needs the user: {', '.join(needs_user)}."
     grants = authority.grants_for(role.role)
     if grants:
         line += " Granted: " + "; ".join(f"{'/'.join(g.actions)} ({g.date})" for g in grants) + "."

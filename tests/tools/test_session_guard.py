@@ -28,9 +28,9 @@ def _caller(role_id):
     return guard.Caller(True, role_id, role.role, role.function, "binding")
 
 
-def _decide(command, role_id, lease_role=None, lease_found=True, tool="Bash", tool_input=None):
+def _decide(command, role_id, lease_role=None, lease_found=True, tool="Bash", tool_input=None, on_default=False):
     c = classify(tool, tool_input if tool_input is not None else {"command": command})
-    return guard.decide(c, _caller(role_id), AUTHORITY, lease_role, lease_found)
+    return guard.decide(c, _caller(role_id), AUTHORITY, lease_role, lease_found, on_default)
 
 
 # ---- decision table ---------------------------------------------------------------------------
@@ -52,18 +52,58 @@ def test_writer_implementer_with_a_grant_pushes_without_asking():
     assert _decide("gh pr create --title t", "agent-working-implementer", lease_role="agent-working-implementer")[0] is None
 
 
-def test_writer_implementer_without_a_grant_is_asked_to_push():
-    decision, reason = _decide("git push origin b", "rpg-implementer", lease_role="rpg-implementer")
-    assert decision == guard.ASK and "no grant" in reason
+@pytest.mark.parametrize("role_id", ["agent-working-implementer", "rpg-implementer", "testing-implementer"])
+@pytest.mark.parametrize("lease", [None, "self"])
+@pytest.mark.parametrize("command", [
+    "git commit -m x", "git push", "git push -u origin feature-x", "git push --force-with-lease",
+    "git push --force origin feature-x", "git merge origin/main", "gh pr create --title t",
+])
+def test_own_branch_actions_are_allowed_with_or_without_a_lease(role_id, lease, command):
+    """TCK-20261006-GUARD-OWN-BRANCH-GIT-ALLOWED: every action on a non-default branch, lease or not, grant or not."""
+    decision, _ = _decide(command, role_id, lease_role=role_id if lease else None, lease_found=bool(lease), on_default=False)
+    assert decision is None
 
 
-def test_writer_commit_is_allowed_because_commit_is_not_in_needs_user():
-    assert _decide("git commit -m x", "rpg-implementer", lease_role="rpg-implementer")[0] is None
+@pytest.mark.parametrize("role_id", ["agent-working-implementer", "rpg-implementer"])
+@pytest.mark.parametrize("lease", [None, "self"])
+@pytest.mark.parametrize("command,on_default", [
+    ("gh pr merge 1", False),
+    ("git push origin HEAD:main", False),
+    ("git push origin main", False),
+    ("git push", True),
+    ("git push origin", True),
+    ("git commit -m x", True),
+])
+def test_landing_on_the_default_branch_asks_for_every_role(role_id, lease, command, on_default):
+    decision, _ = _decide(command, role_id, lease_role=role_id if lease else None, lease_found=bool(lease), on_default=on_default)
+    assert decision == guard.ASK
 
 
-def test_missing_lease_asks_for_an_implementer():
-    decision, reason = _decide("git commit -m x", "agent-working-implementer", lease_found=False)
-    assert decision == guard.ASK and "no writer lease" in reason
+def test_a_commit_or_implicit_push_with_an_unknown_branch_asks():
+    for command in ("git commit -m x", "git push"):
+        decision, reason = _decide(command, "rpg-implementer", lease_found=False, on_default=None)
+        assert decision == guard.ASK and "could not be determined" in reason
+
+
+def test_another_roles_lease_still_denies_on_a_feature_branch():
+    for command in ("git commit -m x", "git push -u origin feature-x", "gh pr create --title t"):
+        decision, reason = _decide(command, "rpg-implementer", lease_role="rpg-implementer-2", on_default=False)
+        assert decision == guard.DENY and "writer is rpg-implementer-2" in reason
+
+
+def test_unchanged_rules_still_hold_on_a_feature_branch():
+    assert _decide("git commit -m x", "rpg-designer", lease_role="rpg-implementer")[0] == guard.DENY
+    assert _decide("git push origin --delete old", "rpg-implementer", lease_found=False)[0] == guard.ASK
+    assert _decide("bash -c 'git push'", "rpg-implementer", lease_found=False)[0] == guard.ASK
+    assert _decide("", "rpg-implementer", tool="Edit", tool_input={"file_path": ".claude/settings.json"})[0] == guard.ASK
+
+
+def test_default_branch_helpers_read_git(tmp_path):
+    subprocess.run(["git", "init", "-q", "-b", "feature-x", str(tmp_path)], check=True)
+    assert guard.current_branch(str(tmp_path)) == "feature-x"
+    assert guard.default_branches(str(tmp_path)) == ("main",)
+    subprocess.run(["git", "-C", str(tmp_path), "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/trunk"], check=True)
+    assert guard.default_branches(str(tmp_path)) == ("main", "trunk")
 
 
 @pytest.mark.parametrize("role_id", ["agent-working-implementer", "rpg-implementer"])
@@ -234,3 +274,26 @@ def test_wired_command_runs_the_real_guard_in_this_repo():
     payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": "ls"}, "cwd": str(_REPO_ROOT)})
     result = _run_wired(_REPO_ROOT, payload)
     assert (result.returncode, result.stdout) == (0, "")
+
+
+@pytest.mark.parametrize("branch,command,expected", [
+    ("feature-x", "git commit -m x", None),
+    ("feature-x", "git push", None),
+    ("feature-x", "git push --force-with-lease", None),
+    ("feature-x", "git push origin HEAD:main", "ask"),
+    ("feature-x", "gh pr merge 1", "ask"),
+    ("main", "git commit -m x", "ask"),
+    ("main", "git push", "ask"),
+    ("main", "git push origin", "ask"),
+])
+def test_end_to_end_in_a_real_repo_with_no_lease(tmp_path, branch, command, expected):
+    """The cwd's real branch decides a commit and a bare push; an implementer with no lease and no grant."""
+    subprocess.run(["git", "init", "-q", "-b", branch, str(tmp_path)], check=True)
+    payload = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(tmp_path),
+               "session_id": "unbound", "agent_type": "session-rpg-implementer"}
+    code, out, _ = _run_main(payload)
+    assert code == 0
+    if expected is None:
+        assert out == ""
+    else:
+        assert json.loads(out)["hookSpecificOutput"]["permissionDecision"] == expected

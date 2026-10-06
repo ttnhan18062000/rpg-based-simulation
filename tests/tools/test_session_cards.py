@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from tools.sessions.card import CARD_BUDGET_TOKENS, TEMPLATE_DIR, compose_card, estimate_tokens
+from tools.sessions.card import _IMPLIED_BY, CARD_BUDGET_TOKENS, TEMPLATE_DIR, compose_card, estimate_tokens
 from tools.sessions.roster import FUNCTIONS, load_authority, load_roster
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -38,7 +38,10 @@ def test_budget_estimate_is_conservative_for_a_known_string():
 def test_card_authority_matches_session_authority_file(role):
     card = compose_card(role.role, ROSTER, AUTHORITY, ROOT)
     base = AUTHORITY.for_function(role.function)
-    assert f"Needs the user: {', '.join(base.needs_user)}." in card
+    # an action whose parent the role never does (push_default_branch when push is forbidden) is not repeated
+    shown = [a for a in base.needs_user if _IMPLIED_BY.get(a) not in base.forbidden]
+    assert f"Needs the user: {', '.join(shown)}." in card
+    assert set(base.needs_user) - set(shown) <= set(_IMPLIED_BY), "only the declared implied actions may be elided"
     if base.forbidden:
         assert f"Never: {', '.join(base.forbidden)}." in card
     for grant in AUTHORITY.grants_for(role.role):
@@ -108,3 +111,10 @@ def test_compact_globs_is_never_longer_than_the_full_parent_grouping(globs):
     from tools.sessions.card import _DIR_GLOB, _compact_globs, _group_globs
 
     assert len(_compact_globs(globs)) <= len(_group_globs(globs, _DIR_GLOB))
+
+
+def test_designer_and_planner_cards_do_not_list_a_push_to_main_under_needs_the_user_because_push_is_never():
+    for role_id in ("rpg-designer", "agent-working-planner"):
+        card = compose_card(role_id, ROSTER, AUTHORITY, ROOT)
+        assert "Never: commit, push, open_pr." in card and "push_default_branch" not in card
+    assert "push_default_branch" in compose_card("rpg-implementer", ROSTER, AUTHORITY, ROOT)

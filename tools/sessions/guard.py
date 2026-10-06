@@ -8,10 +8,14 @@ function's authority (`registries/session_authority.yaml`) and the worktree's wr
 
 Decision, per action, most severe wins (deny > ask > allow):
   1. the role's function lists the action as `forbidden`          -> deny
-  2. commit/push/open_pr by a role that does not hold the worktree's writer lease -> deny; no lease -> ask
-  3. the action is in `needs_user`: merge, governing-file and authority-file edits, remote-branch deletion
-     are ask for every role (a grant never overrides them); push/open_pr are ask unless the role has a
-     grant naming the action
+  2. commit/push/open_pr in a worktree whose writer lease belongs to ANOTHER role -> deny. No lease at all is not
+     a reason to ask (TCK-20261006-GUARD-OWN-BRANCH-GIT-ALLOWED): sessions started outside the role launcher
+     never get one
+  3. the action is in `needs_user`: merge, a push to the default branch (`push_default_branch`, from an explicit
+     refspec or, for a bare `git push`, the cwd's current branch), a commit while the current branch is the default
+     branch, governing-file and authority-file edits, remote-branch deletion are ask for every role (a grant never
+     overrides them). Owner rule, 2026-10-06: "only block the merge branch to main, every action on their own
+     branch is allowed": commit, push, force-push, local merge and `gh pr create` on a non-default branch are allowed
   4. an uncertain classification (shell indirection, unparseable text)  -> ask, never a silent allow
   5. otherwise allow (exit 0, no output)
 An unresolved role (a plain `claude` session) is not role-governed in v1: ask for authority classes, allow the rest.
@@ -55,7 +59,7 @@ except Exception as _exc:  # noqa: BLE001 - a broken import must become a caught
 
 DENY, ASK = "deny", "ask"
 # Needing the user always wins over a grant (plan section 10).
-_ALWAYS_ASK = frozenset({"merge", "governing_file_edit", "authority_file_edit", "delete_remote_branch"})
+_ALWAYS_ASK = frozenset({"merge", "push_default_branch", "governing_file_edit", "authority_file_edit", "delete_remote_branch"})
 _WRITER_ACTIONS = frozenset({"commit", "push", "open_pr"})
 _EDIT_TOOL_NAMES = ("Edit", "Write", "MultiEdit", "NotebookEdit")  # kept local: `cl` may have failed to import
 _AUTHORITY_TEXT = re.compile(
@@ -124,11 +128,33 @@ def resolve_caller(payload: dict, roster, root: Path) -> Caller:
     return Caller(True, instance, role.role, role.function, source)
 
 
-def decide(classification, caller: Caller, authority, lease_role: str | None, lease_found: bool):
-    """Pure decision: (DENY | ASK | None, reason). None means allow."""
+def _git_out(cwd: str, *args: str) -> str:
+    out = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, timeout=10)
+    return out.stdout.strip() if out.returncode == 0 else ""
+
+
+def current_branch(cwd: str) -> str:
+    """The cwd's checked-out branch; empty for a detached HEAD or a failure."""
+    return _git_out(cwd, "symbolic-ref", "--short", "-q", "HEAD")
+
+
+def default_branches(cwd: str) -> tuple[str, ...]:
+    """`main` plus whatever `origin/HEAD` names, so a repo whose default differs is protected too."""
+    named = _git_out(cwd, "symbolic-ref", "--short", "-q", "refs/remotes/origin/HEAD").removeprefix("origin/")
+    return tuple(dict.fromkeys(("main", named))) if named else ("main",)
+
+
+def decide(classification, caller: Caller, authority, lease_role: str | None, lease_found: bool, on_default: bool | None = False):
+    """Pure decision: (DENY | ASK | None, reason). None means allow.
+
+    `on_default` is whether the call's current branch is the default branch: True, False, or None when it could not
+    be determined (detached HEAD, git failure). It only matters for a commit and for a push with no explicit target."""
     if not classification.is_authority:
         return None, ""
-    actions = sorted(classification.actions)
+    action_set = set(classification.actions)
+    if "push" in action_set and classification.push_implicit and on_default:
+        action_set.add("push_default_branch")
+    actions = sorted(action_set)
     label = ", ".join(actions) or "an uncertain command"
     if not caller.resolved:
         return ASK, f"role not resolved for this session; {label} is an authority-class operation. {classification.detail}".strip()
@@ -143,11 +169,12 @@ def decide(classification, caller: Caller, authority, lease_role: str | None, le
         if action in forbidden:
             return DENY, f"{caller.role_id} ({caller.function}) must not {action}: it hands drafts to the implementer"
     for action in actions:
-        if action in _WRITER_ACTIONS:
-            if not lease_found:
-                ask.append(f"{action}: no writer lease is recorded for this worktree, so {caller.instance} cannot be shown to be its writer")
-            elif lease_role != caller.instance:
-                return DENY, f"{action} refused: this worktree's writer is {lease_role}, not {caller.instance}"
+        if action in _WRITER_ACTIONS and lease_found and lease_role != caller.instance:
+            return DENY, f"{action} refused: this worktree's writer is {lease_role}, not {caller.instance}"
+    if on_default is None and ("commit" in action_set or ("push" in action_set and classification.push_implicit)):
+        ask.append("the current branch could not be determined, so it cannot be shown not to be the default branch")
+    elif on_default and "commit" in action_set:
+        ask.append("commit while on the default branch needs the user (land work on a branch, not on main)")
     for action in actions:
         if action in _ALWAYS_ASK:
             ask.append(f"{action} needs the user (a grant never overrides this)")
@@ -198,12 +225,22 @@ def _guard(payload: dict, stdout) -> int:
     root = st.state_root(cwd)
     roster, authority = load_roster(), load_authority()
     caller = resolve_caller(payload, roster, root)
+    if cl.PUSH in classification.actions:
+        defaults = default_branches(cwd)
+        if defaults != cl.DEFAULT_BRANCHES:
+            classification = cl.classify(str(payload.get("tool_name", "")), payload.get("tool_input") or {}, defaults)
+    else:
+        defaults = cl.DEFAULT_BRANCHES
+    on_default: bool | None = False
+    if cl.COMMIT in classification.actions or (cl.PUSH in classification.actions and classification.push_implicit):
+        branch = current_branch(cwd)
+        on_default = (branch in defaults) if branch else None
     lease_role, lease_found = None, False
     if caller.resolved and _WRITER_ACTIONS & classification.actions:
         toplevel = _git_toplevel(cwd)
         lease = st.read_lease(root, toplevel) if toplevel else None
         lease_role, lease_found = (lease.role if lease else None), lease is not None
-    decision, reason = decide(classification, caller, authority, lease_role, lease_found)
+    decision, reason = decide(classification, caller, authority, lease_role, lease_found, on_default)
     if decision is None:
         return 0
     _emit(stdout, decision, reason)
