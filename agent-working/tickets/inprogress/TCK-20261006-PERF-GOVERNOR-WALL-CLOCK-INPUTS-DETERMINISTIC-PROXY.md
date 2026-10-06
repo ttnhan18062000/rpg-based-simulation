@@ -4,7 +4,7 @@ layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY
-phase: open
+phase: inprogress
 date: 2026-10-06
 tags: [performance, determinism, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, engine]
 Design (then implement) the Canonical contract's deterministic proxy for the governor's wall-clock inputs: ResourceGovernor's tick_compute_ms (PERF-D1 input 1) and PhaseBudgetGovernor's per-phase costs
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -114,6 +114,7 @@ the design (Scope 1); whether they are implemented here or split out is the desi
 ## Related Stored Artifacts
 - `agent-working/stored_artifacts/TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY/` (the removed
   hash test and its 1-in-3 divergence)
+- `agent-working/staging_artifacts/TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY/` (design: investigation, plan, test_plan, probes; moves to stored when the ticket closes)
 
 ## Related Code Areas
 - `src/engine/governor.py`, `src/engine/phase_governor.py`, `src/engine/kernel.py`
@@ -127,6 +128,24 @@ the design (Scope 1); whether they are implemented here or split out is the desi
   plan as a question.
 
 ## Implementation Notes
+- **2026-10-06, design written (Scope 1, AC 1 draft):** `investigation.md` (inventory of every signal that reaches the two governors, with
+  the decision each drives, verified against the tree and `wall_clock_inventory --check`; a read-only probe), `plan.md` (a proxy for each
+  input, threshold mapping, contract selection as an OWNER QUESTION with three options and a recommendation, the Live half as a follow-up,
+  fate of the tests that drive modes, per-file size estimate) and `test_plan.md` (the Canonical hash-equality test, 10 of 10; the test that
+  varies `perf_counter_ns`). No `src/` or `tests/` file was touched. The ticket stays INPROGRESS: AC 1 needs perf-planner's approval and
+  the owner's answers, and the code waits for the full no-touch window (AC 2).
+- **Owner decisions 2026-10-06 (recorded by perf-planner in `performance_optimization_decisions.md`, PERF-D1 "Update 2026-10-06"):**
+  Option 1 (`signal_contract` on `RuntimeProfile`, default `LIVE`, `audit_mode` unchanged); Q-A accepted (memory and replay backlog are not inputs
+  under Canonical); Q-B accepted (thresholds keep their ms meaning as reference-host ms). The Live half is a separate ticket,
+  `TCK-20261006-PERF-LIVE-CONTROL-TRACE`. Design commit `8fc5e711a`; `plan.md` section 3 carries the decision line. The ticket stays INPROGRESS:
+  the code waits for the full no-touch window (AC 2) and `plan.md` step 1 (calibration) comes first.
+- **rpg-planner review of PR #384, four points accepted (mirrored from `plan.md`):** (1) step 1 calibration has preconditions: the two RPG-core bench
+  defects (`TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK`, `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP`)
+  merged first, or the `cooperation` and `combat_engagement` buckets excluded from the fit; the artifact records the RPG-core base commit; re-check the
+  error band after the salience fix, Lane B's spawn-faction batch and CONFLICT-03; a risk line says the probe's x2.7 error may partly come from the
+  quadratic. (2) step 2 rebases on the salience fix (same `_phase_init` region), re-measure `kernel.py` headroom, no parallel work. (3) if Option 2 ever
+  makes CANONICAL the default for tests, `test_catalog_entity_spawn_wiring` (#367) must set `signal_contract=LIVE` explicitly, as must any other
+  governor-pinned test that relies on the default.
 
 ## Test Summary
 

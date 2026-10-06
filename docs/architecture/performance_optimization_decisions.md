@@ -341,6 +341,19 @@ Each follows §3.1 and is intentionally empty.
   or sort keys; its limits are in its §6.
 - Related dispositions: C-03, C-04, C-05.
 
+- **Update 2026-10-06 (owner decisions on the governor design, `TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY`):**
+  - **How a contract is selected: option 1.** `RuntimeProfile` gains `signal_contract: LIVE | CANONICAL`,
+    default `LIVE` (today's behaviour, bit-identical). `audit_mode` keeps its meaning and wins when set.
+    Canonical is opt-in, for tests, calibration and deterministic coverage of degraded-mode gameplay.
+    Options 2 (Canonical replaces `audit_mode`'s zeroing) and 3 (Canonical by default) are deferred until
+    calibration data and the Live trace exist.
+  - **Q-A:** memory (RSS) and the replay backlog are not inputs under Canonical.
+  - **Q-B:** Canonical keeps the existing millisecond thresholds, read as modelled reference-host
+    milliseconds. The cost is computed from pre-policy demand counts with frozen, versioned weights
+    (`WORK_MODEL_V1`), recorded in the run manifest. There are no new threshold fields.
+  - The Live half (control trace) is a separate ticket: `TCK-20261006-PERF-LIVE-CONTROL-TRACE`.
+  - The code waits for the full no-touch window (it needs `kernel.py`).
+
 #### PERF-D2 — Portability
 
 - **Status:** **approved by the repository owner on 2026-10-03** as drafted by `perf-planner`.
