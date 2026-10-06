@@ -136,7 +136,15 @@ from the launcher, never guessed: unresolved is listed as `unattributed`).
 
 1. On the machine being left: `python3 tools/handover_transit.py export` (`--roles a,b`,
    `--no-drafts`, `--no-memory`, `--role <role>` narrow or attribute it), commit and push the branch (a
-   PR's own export step does this already — see `delivery_process.md`).
+   PR's own export step does this already — see `delivery_process.md`). **An export replaces the host's whole
+   bundle, so it has two guards.** Memory is read from the one candidate `~/.claude/projects/<slug>/memory` that
+   holds files (the resolved checkout path, the path a session started through a symlink such as `~/Working`
+   would use, and home-symlink aliases); two non-empty candidates refuse with both named, and `--memory-dir <dir>`
+   settles it. An export that would drop any memory entry, or more than 25% of the bundle's entries, refuses and
+   changes nothing unless `--allow-shrink` is passed (so `--no-memory` on a bundle that has memory needs it too).
+   `export --dry-run` prints the new and existing counts per kind (notes, drafts, memory) and writes nothing.
+   (`TCK-20261006-HANDOVER-TRANSIT-EXPORT-WIPES-BUNDLE-VIA-SYMLINK-MEMORY-PATH`: an export found no memory under
+   the symlink-resolved slug and replaced a 148-entry bundle with 2.)
 2. On the new machine: pull, then `python3 tools/handover_transit.py import <host> --role <your role>`
    (only that role's notes and drafts plus memory; unattributed and other roles' items are listed as
    skipped, never silently dropped; `--dry-run` first if unsure). Every sha256 is verified before any write; a differing local file is backed up
