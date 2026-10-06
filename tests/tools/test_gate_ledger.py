@@ -252,3 +252,55 @@ class TestRetroGatesSection:
     def test_a_failing_ledger_read_never_fails_the_retro(self, monkeypatch):
         monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", None)
         assert generate_retro._gates_section("2026-W41") is None
+
+
+def _attested(vid, ts, gate, sha, ticket="TCK-1", blocking=False) -> dict:
+    return {"ts": ts, "gate_verdict_id": vid, "execution_mode": "workflow", "ticket_id": ticket, "gate_id": gate,
+            "gate_type": "attested_command", "verdict": "FAIL" if blocking else "PASS", "blocking": blocking,
+            "inputs_ref": {"cmd_sha": "c", "stdout_sha": sha, "exit_code": 1 if blocking else 0}}
+
+
+def _pipeline(vid, ts, gate, blocking, sha=None, ticket="TCK-1") -> dict:
+    row = _verdict(vid, ts, blocking, ticket=ticket, gate=gate, mode="workflow", inputs={"phase": "Test", "evidence": "e"})
+    if sha:
+        row["inputs_ref"]["stdout_sha"] = sha
+    return row
+
+
+class TestAttestedRowsAreEvidence:
+    """TCK-20261006-GATE-LEDGER-NATIVE-ATTESTED-ROWS-DOUBLE-COUNT."""
+
+    def test_three_attested_gates_with_three_pipeline_rows_are_three_verdicts(self, tmp_path):
+        rows = []
+        for i, (att, pol) in enumerate([("tag_check", "Scope:a.b"), ("doc_staleness", "Implement:c.d"), ("finalize_selfcheck", "Finalize:e.f")]):
+            rows += [_attested(f"a{i}", f"2026-10-05T10:0{i}:00Z", att, f"sha{i}"),
+                     _pipeline(f"p{i}", f"2026-10-05T10:0{i}:01Z", pol, False, sha=f"sha{i}")]
+        _put(tmp_path, *rows)
+        readings = gate_ledger.report(gate_ledger.load_rows(tmp_path))
+        assert sorted(g["gate_id"] for g in readings) == ["Finalize:e.f", "Implement:c.d", "Scope:a.b"]
+        assert sum(g["verdicts"] for g in readings) == 3
+        assert gate_ledger.attested_without_verdict(gate_ledger.load_rows(tmp_path)) == []
+
+    def test_attested_fail_then_pass_derives_one_fixed_and_rerun_on_the_policy_id(self, tmp_path):
+        gate = "Test:gate_checks.x.y"
+        _put(tmp_path,
+             _attested("a1", "2026-10-05T10:00:00Z", "x", "s1", blocking=True), _pipeline("p1", "2026-10-05T10:00:01Z", gate, True, sha="s1"),
+             _attested("a2", "2026-10-05T11:00:00Z", "x", "s2"), _pipeline("p2", "2026-10-05T11:00:01Z", gate, False, sha="s2"))
+        view = _view(tmp_path)
+        assert set(view) == {"p1", "p2"}
+        assert [v["outcome"] for v in view.values() if v["outcome"]] == ["fixed_and_rerun"]
+        assert view["p1"]["followup_verdict_id"] == "p2"
+
+    def test_an_attested_row_with_no_pipeline_row_is_listed_not_dropped(self, tmp_path):
+        _put(tmp_path, _attested("a1", "2026-10-05T10:00:00Z", "parity_touched_ledger", "lonely"),
+             _attested("a2", "2026-10-05T10:01:00Z", "tag_check", "s2"), _pipeline("p2", "2026-10-05T10:01:01Z", "Scope:a.b", False, sha="s2"),
+             _attested("a3", "2026-10-05T10:02:00Z", "tag_check", "s2", ticket="TCK-2"))
+        rows = gate_ledger.load_rows(tmp_path)
+        assert [r["gate_verdict_id"] for r in gate_ledger.attested_without_verdict(rows)] == ["a1", "a3"]
+        section = gate_ledger.render_section(rows, week=WEEK, total_rows=len(rows))
+        assert "Attested, no verdict row: 2" in section and "parity_touched_ledger 1" in section
+
+    def test_attested_only_period_still_names_the_orphans(self, tmp_path):
+        _put(tmp_path, _attested("a1", "2026-10-05T10:00:00Z", "tag_check", "s"))
+        section = gate_ledger.render_section(gate_ledger.load_rows(tmp_path), week=WEEK, total_rows=1)
+        assert "No gate verdicts this period" in section and "Attested, no verdict row: 1" in section
