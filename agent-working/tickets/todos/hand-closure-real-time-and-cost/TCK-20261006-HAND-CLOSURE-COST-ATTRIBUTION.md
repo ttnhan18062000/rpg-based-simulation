@@ -34,8 +34,7 @@ Hand closures have no sidecar, so their keys are left out. This is the main reas
 is 18.3% (W40).
 
 ## Scope
-1. Use the join key chosen by the design child, either `session_id` with a time window or ticket ID with a time
-   window, to collect the `tools.jsonl` rows that belong to a hand closure. That includes rows with
+1. Use the join key chosen by the design child (`session_id` plus the claim window in `design.md` section 2; ticket ID cannot select rows) to collect the `tools.jsonl` rows that belong to a hand closure. That includes rows with
    `run_id: null`.
 2. Compute `tool_call_count` and `cost_proxy_score` with the unchanged `cost_proxy.py` formula. Attach them with a
    provenance marker that says they are derived rather than sidecar-attributed.
@@ -55,7 +54,8 @@ is 18.3% (W40).
 3. A fixture with no joinable rows leaves both keys absent. Tested; this is the regression guard for
    `TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP`.
 4. A sidecar-attributed row is never re-claimed by the derived join. Tested.
-5. The design child's two acceptance criteria for this child are added here and pass.
+5. (design AC) Two hand closures by one session in one activity block: rows before the first closure's end go to it, later rows to the second, and the union has no repeated row. Tested.
+6. (design AC) Claimed events carry `cost_source: "session_window"`; sidecar-attributed events carry `cost_source: "sidecar"` or no field, and a row with a sidecar `run_id` is never in a claim. Tested.
 
 ## Related Tickets
 - `TCK-20261006-EPIC-HAND-CLOSURE-REAL-TIME-AND-COST` (parent), `TCK-20261006-HAND-CLOSURE-RECORDER-REAL-TIMESTAMPS` (dependency)

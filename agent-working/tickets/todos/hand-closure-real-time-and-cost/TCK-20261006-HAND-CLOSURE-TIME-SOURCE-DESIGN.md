@@ -77,6 +77,7 @@ on real data.
 - `docs/plans/agent_infrastructure/agent_working_direction.md`
 
 ## Related Stored Artifacts
+- `agent-working/stored_artifacts/TCK-20261006-HAND-CLOSURE-TIME-SOURCE-DESIGN/` (design.md, coverage_by_run.csv, measure_sources.py)
 - `agent-working/stored_artifacts/TCK-20260929-RUN-EXECUTION-MODE-FIELD/`
 
 ## Related Code Areas
@@ -90,6 +91,12 @@ on real data.
 ## Implementation Notes
 Hand-filed by agent-working-design (interim planner) on 2026-10-06. `/create-tickets` could not run its
 investigators in this session (see the epic's Implementation Notes), and the owner chose to hand-file.
+
+2026-10-06, agent-working-implementer: AC1-3 and AC5 done in `design.md`. Chosen: precedence declared > tool_activity > unknown;
+join key `session_id` plus a sequential claim window (no row claimed twice). Measured over 238 hand closures (W40-W41): declared
+14 (5.9%), tool activity 130 (54.6%), git 235 (98.7%, rejected as calendar span). **AC4 is waiting for the owner's answer** on
+derived durations in averages (recommendation: no, show beside measured). Owner's answer, quoted: (pending). The ticket stays open
+until it is recorded; child 4 must not start before then.
 
 ## Test Summary
 (Open.)

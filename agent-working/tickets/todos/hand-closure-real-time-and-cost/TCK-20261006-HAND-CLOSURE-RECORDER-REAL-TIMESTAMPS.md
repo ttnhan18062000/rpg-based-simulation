@@ -40,7 +40,7 @@ Today `build_records` in `record_hand_orchestrated_closure.py` sets `now` once (
    `end_ts`, as the design specifies.
 3. When the design adds `session_id` to runs and events, stamp it from `CLAUDE_CODE_SESSION_ID`. RHC already
    reads that variable at :280 and :332.
-4. Event `ts` values come from evidence where the source provides them. Otherwise they keep the closure time,
+4. Event `ts` values keep the closure time unless the closer passes one (design decision: per-event times are not derived),
    with the provenance recorded.
 5. Update `docs/agent-monitoring/schema.md` (runs and events field tables) and `record_run.py`/`record_events.py`
    validation for the new fields. Keep old rows valid: the new fields are optional on read.
@@ -57,7 +57,8 @@ Today `build_records` in `record_hand_orchestrated_closure.py` sets `now` once (
 3. With derived evidence, provenance names the source and the duration matches a fixture. Tested.
 4. A negative or inverted span is never written as a duration. It follows `TCK-20260810-MONITORING-NEGATIVE-DURATION-TIMESTAMP-BUG`'s rule (null). Tested.
 5. Existing rows without the new fields still load in `generate_retro.py` and in the integrity report. Tested.
-6. The design child's two acceptance criteria for this child are added here and pass.
+6. (design AC) With no declared times and fewer than 3 claimable rows, a hand closure writes `duration_source: "unknown"`, `duration_s: null`, `start_ts == end_ts`. Tested.
+7. (design AC) A fixture `tools.jsonl` with 5 rows of the closing session writes `duration_source: "tool_activity"`, `start_ts` = the first row's `ts` and `duration_s` = the span; a row of another `session_id` or with a non-null `run_id` is ignored. Tested.
 
 ## Related Tickets
 - `TCK-20261006-EPIC-HAND-CLOSURE-REAL-TIME-AND-COST` (parent), `TCK-20261006-HAND-CLOSURE-TIME-SOURCE-DESIGN` (dependency)

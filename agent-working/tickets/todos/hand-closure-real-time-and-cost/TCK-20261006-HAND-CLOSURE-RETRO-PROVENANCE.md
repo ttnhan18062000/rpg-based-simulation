@@ -57,7 +57,8 @@ meaning.
 2. The unknown count is shown wherever a duration average is shown. Tested.
 3. The coverage line renders, with a test.
 4. The "tables changed meaning from week X" note renders once. Tested.
-5. The design child's two acceptance criteria for this child are added here and pass.
+5. (design AC) The Run Summary reports hand closures grouped by `duration_source` (declared / tool_activity / unknown / unlabelled) with counts. Tested.
+6. (design AC) The headline average duration follows the owner's recorded answer; with "no", a run whose `duration_source` is not measured or declared is excluded from it and appears only in the derived group. Tested.
 
 ## Related Tickets
 - `TCK-20261006-EPIC-HAND-CLOSURE-REAL-TIME-AND-COST` (parent), `TCK-20261006-HAND-CLOSURE-COST-ATTRIBUTION` (dependency)
