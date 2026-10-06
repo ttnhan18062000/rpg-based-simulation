@@ -2266,8 +2266,8 @@
   divergence_note: null
   support_boundary: 'Retired by TCK-20261004-PERF-M1-HASH-POLICY-CHECKPOINT-SLICE (PERF-D5, owner-approved
     2026-10-03). BudgetedCanonicalHasher and its tests were removed from src/engine/checkpoint.py
-    and tests/unit/engine/test_resource_budget_gate.py. The hashing budget config (DEFAULT_HASHING_BUDGET)
-    remains in src/config/optimization_profiles.py with no consumer.'
+    and tests/unit/engine/test_resource_budget_gate.py. The hashing budget config (DEFAULT_HASHING_BUDGET,
+    the "hashing" entry and the max_full_hashes_per_100_ticks field) was removed by TCK-20261006-PERF-M1-KERNEL-DIGESTS-VIA-SCHEDULER.'
 - id: INFRA-197
   text: 'CanonicalHashScheduler enforces sanctioned-boundary policy for full canonical
     state hashes. Full-hash calls are only allowed at tick=0, tick==run_end_tick,
@@ -2275,10 +2275,9 @@
     HashScheduleViolation(RuntimeError) for any other call and returns the flat SHA-256
     value otherwise; compute_digest() returns a ProofDigest record (scheme "flat-sha256-v1",
     tick, DigestStatus, value) and reports NOT_COMPUTED_UNSANCTIONED_BOUNDARY instead
-    of raising. HashMode has one member, FULL="full" (the LIGHT MD5 mode was retired by
-    PERF-D5 point 3); the mode parameter is kept only for src/certification/harness.py
-    (gated; PERF-M1-T03b). Both harness.py call sites use CanonicalHashScheduler.compute_hash(...,
-    mode=FULL, reason="certification").
+    of raising. HashMode and the mode parameter were removed (TCK-20261006-PERF-M1-KERNEL-DIGESTS-VIA-SCHEDULER; the LIGHT MD5 mode
+    went earlier, PERF-D5 point 3). src/certification/harness.py takes its digests through
+    compute_digest(..., reason="certification").
 
     '
   status: verified
@@ -12755,3 +12754,38 @@
   support_boundary: Threaded pool and local fallback. The process-pool path does not count active workers
     at all (unchanged, not covered). The kernel builds its manager from RuntimeProfile (queue depth
     gt=0), so the rejection guards a latent path.
+- id: INFRA-423
+  text: 'TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY: the kernel wall-clock tick-budget checks are report-only
+    (PERF-D1 inputs 2 and 3). With audit_mode off, a tick that overruns max_tick_budget_ms
+    still processes every result and does not force RuntimeMode.DEGRADED; the overrun is
+    recorded as RuntimeStatus.budget_overrun_ms / budget_overrun_tick / total_budget_overruns
+    (telemetry that nothing in the governor or AuthoritativeState reads) and raises the watchdog
+    alert. The 9999 dropped-work sentinel is gone, so dropped_work counts only work the scheduler
+    shed.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/kernel.py (Kernel._phase_resolution, Kernel._report_budget_overrun); src/engine/runtime_status.py (RuntimeStatus.record_budget_overrun)
+  proof_type: regression
+  test_path: tests/integration/kernel/test_tick_budget_report_only.py
+  divergence_note: DEV-014 in docs/guidelines/intentional_divergences.md
+  support_boundary: The governor's tick_compute_ms input (PERF-D1 input 1) still moves the mode by host speed;
+    runs with audit_mode off stay host-dependent through it. Overrun telemetry is not yet surfaced in
+    engine_manager, the live snapshot or Prometheus.
+- id: INFRA-424
+  text: 'TCK-20261006-PERF-M1-KERNEL-DIGESTS-VIA-SCHEDULER: the kernel takes its per-tick and shutdown proof digests through
+    CanonicalHashScheduler.compute_digest. The TICK_END payload is {"hash": value-or-null,
+    "scheme": "flat-sha256-v1", "digest_status": "computed" | "not_computed_live_policy" |
+    "not_computed_unsanctioned_boundary"}; the string "SKIPPED" is gone, and a policy that does not
+    hash reports NOT_COMPUTED_LIVE_POLICY. When Live runs hash is unchanged (PERF-D5 point 4), and the
+    hash values are unchanged: the computed value equals CanonicalStateHasher.get_hash of the same
+    state. The certification harness calls the scheduler instead of holding a hand-written copy.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/kernel.py (Kernel._phase_persistence, Kernel.shutdown); src/certification/harness.py (CertificationHarness._certification_digest); src/engine/checkpoint.py (ProofDigest.require_value)
+  proof_type: contract
+  test_path: tests/unit/engine/test_kernel_digest_via_scheduler.py
+  divergence_note: null
+  support_boundary: Replays recorded before this ticket carry the string "SKIPPED" with no scheme or status; no
+    reader in src/ compares the TICK_END hash, so none needed changing. When Live runs hash is not decided here.

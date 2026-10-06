@@ -67,62 +67,6 @@ steps:
     run: make gate-expansion
 """
 
-# Updated by TCK-20261005-SLOW-REGRESSION-GATE-SKIPS-ITS-ONLY-TEST-STEP-ON-MAIN: step ids, `!cancelled()` on the two
-# later test steps, and the closing outcome-summary step (pinned in detail by test_ci_slow_job_step_gating.py).
-_EXPECTED_SLOW_YAML = """
-name: "Slow regression"
-runs-on: ubuntu-latest
-if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-needs:
-  - unit-core-world
-  - unit-gameplay
-  - unit-infra
-  - integration
-  - tools-a-e
-  - tools-f-z
-  - api-cli-engine
-  - agent-orchestration
-  - simulation-quality
-  - arch-docs
-  - frontend
-  - perf-cert-arena
-  - migration-lanes
-steps:
-  - uses: actions/checkout@v5
-  - uses: astral-sh/setup-uv@v10.2.0
-    with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
-  - run: uv sync --locked --no-install-project --no-group lint
-  - name: Slow tests — corpus diversity (isolated per-test, TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
-    id: corpus_diversity
-    run: make simq-corpus-diversity-slow-isolated
-  - name: Slow tests (includes 5k behavioral regression)
-    id: slow_tests
-    if: ${{ !cancelled() }}
-    run: |
-      pytest tests/ -m "slow or extra_slow" --resource-budget large --tb=short -q --ignore=tests/unit/worldassembly/test_corpus_diversity.py
-  - name: Legacy regression
-    id: legacy_regression
-    if: ${{ !cancelled() }}
-    run: make lane-legacy-regression
-  - name: Slow regression step outcomes
-    if: ${{ !cancelled() }}
-    run: |
-      {
-        echo "### Slow regression step outcomes"
-        echo "- corpus diversity: ${{ steps.corpus_diversity.outcome }}"
-        echo "- slow tests: ${{ steps.slow_tests.outcome }}"
-        echo "- legacy regression: ${{ steps.legacy_regression.outcome }}"
-      } >> "$GITHUB_STEP_SUMMARY"
-  - name: Upload certification report
-    uses: actions/upload-artifact@v4
-    if: always()
-    with:
-      name: certification-report-${{ github.sha }}
-      path: reports/certification/
-      retention-days: 30
-"""
-
-
 def _workflow() -> dict:
     return yaml.safe_load(_WORKFLOW_PATH.read_text())
 
@@ -281,15 +225,14 @@ def test_no_new_requirements_txt_entry_and_no_new_marketplace_action() -> None:
 def test_slow_and_migration_lanes_jobs_unchanged_by_this_ticket() -> None:
     jobs = _jobs()
     expected_migration_lanes = yaml.safe_load(_EXPECTED_MIGRATION_LANES_YAML)
-    expected_slow = yaml.safe_load(_EXPECTED_SLOW_YAML)
 
     assert jobs["migration-lanes"] == expected_migration_lanes, (
         "migration-lanes job changed -- this ticket explicitly defers --junit-xml/summary "
         "reporting for this job (see plan.md 'Decisions Made by This Plan')"
     )
-    assert jobs["slow"] == expected_slow, (
-        "slow job changed -- this ticket explicitly defers --junit-xml/summary reporting for "
-        "this job (see plan.md 'Decisions Made by This Plan')"
+    assert "slow" not in jobs, (
+        "the slow job moved to .github/workflows/slow-regression.yml "
+        "(TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED); see test_ci_slow_workflow_shape.py"
     )
 
 
@@ -462,7 +405,6 @@ def test_no_cross_job_aggregate_step_or_job_added() -> None:
         "perf-cert-arena",
         "migration-lanes",
         "typecheck",
-        "slow",
         "frontend",
         "simq-grade-drift",
         # TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB: the advisory ratchet job (no pytest, so it is

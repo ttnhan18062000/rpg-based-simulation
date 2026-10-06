@@ -18,86 +18,55 @@
     {
       "kind": "caller",
       "file": "src/certification/harness.py",
-      "line": 186,
-      "enclosing_function": "CertificationHarness.run_scenario",
-      "mechanism": "CanonicalHashScheduler.compute_hash",
-      "call": "CanonicalHashScheduler().compute_hash",
+      "line": 239,
+      "enclosing_function": "CertificationHarness._certification_digest",
+      "mechanism": "CanonicalHashScheduler.compute_digest",
+      "call": "CanonicalHashScheduler().compute_digest",
       "receiver_resolved_by_name": true,
-      "guards": [
-        "try",
-        "if expectations.reproducibility_required"
-      ],
-      "guarded": true,
+      "guards": [],
+      "guarded": false,
       "ordinal": 1
-    },
-    {
-      "kind": "caller",
-      "file": "src/certification/harness.py",
-      "line": 257,
-      "enclosing_function": "CertificationHarness._write_full_evidence",
-      "mechanism": "hashlib digest of canonical state data",
-      "call": "hashlib.sha256",
-      "receiver_resolved_by_name": true,
-      "guards": [
-        "try"
-      ],
-      "guarded": true,
-      "ordinal": 2
-    },
-    {
-      "kind": "caller",
-      "file": "src/certification/harness.py",
-      "line": 311,
-      "enclosing_function": "CertificationHarness._get_baseline_hash",
-      "mechanism": "CanonicalHashScheduler.compute_hash",
-      "call": "CanonicalHashScheduler().compute_hash",
-      "receiver_resolved_by_name": true,
-      "guards": [
-        "try"
-      ],
-      "guarded": true,
-      "ordinal": 3
     },
     {
       "kind": "delegation inside a mechanism",
       "file": "src/core/state.py",
-      "line": 1641,
+      "line": 1644,
       "enclosing_function": "AuthoritativeState.fingerprint",
       "mechanism": "StateFingerprinter.get_fingerprint",
       "call": "StateFingerprinter.get_fingerprint",
       "receiver_resolved_by_name": true,
       "guards": [],
       "guarded": false,
-      "ordinal": 4
+      "ordinal": 2
     },
     {
       "kind": "delegation inside a mechanism",
       "file": "src/engine/checkpoint.py",
-      "line": 205,
+      "line": 197,
       "enclosing_function": "CanonicalHashScheduler.compute_digest",
       "mechanism": "CanonicalStateHasher.get_hash",
       "call": "CanonicalStateHasher.get_hash",
       "receiver_resolved_by_name": true,
       "guards": [],
       "guarded": false,
-      "ordinal": 5
+      "ordinal": 3
     },
     {
       "kind": "delegation inside a mechanism",
       "file": "src/engine/checkpoint.py",
-      "line": 226,
+      "line": 216,
       "enclosing_function": "CanonicalHashScheduler.compute_hash",
       "mechanism": "CanonicalStateHasher.get_hash",
       "call": "CanonicalStateHasher.get_hash",
       "receiver_resolved_by_name": true,
       "guards": [],
       "guarded": false,
-      "ordinal": 6
+      "ordinal": 4
     },
     {
       "kind": "caller",
       "file": "src/engine/kernel.py",
-      "line": 397,
+      "line": 404,
       "enclosing_function": "Kernel._tick_once_inner",
       "mechanism": "AuthoritativeState.fingerprint",
       "call": "self._state.fingerprint",
@@ -106,12 +75,12 @@
         "if self._audit_mode"
       ],
       "guarded": true,
-      "ordinal": 7
+      "ordinal": 5
     },
     {
       "kind": "caller",
       "file": "src/engine/kernel.py",
-      "line": 710,
+      "line": 691,
       "enclosing_function": "Kernel._phase_resolution",
       "mechanism": "AuthoritativeState.fingerprint",
       "call": "self._state.fingerprint",
@@ -120,76 +89,76 @@
         "if self._current_policy.replay_allowed"
       ],
       "guarded": true,
-      "ordinal": 8
+      "ordinal": 6
     },
     {
       "kind": "caller",
       "file": "src/engine/kernel.py",
-      "line": 1151,
+      "line": 1130,
       "enclosing_function": "Kernel._guard_stability",
       "mechanism": "AuthoritativeState.fingerprint",
       "call": "self._state.fingerprint",
       "receiver_resolved_by_name": false,
       "guards": [],
       "guarded": false,
-      "ordinal": 9
+      "ordinal": 7
     },
     {
       "kind": "caller",
       "file": "src/engine/kernel.py",
-      "line": 1186,
+      "line": 1165,
       "enclosing_function": "Kernel._phase_persistence",
-      "mechanism": "CanonicalStateHasher.get_hash",
-      "call": "CanonicalStateHasher.get_hash",
+      "mechanism": "CanonicalHashScheduler.compute_digest",
+      "call": "CanonicalHashScheduler().compute_digest",
       "receiver_resolved_by_name": true,
       "guards": [
         "if self._current_policy.replay_allowed and (self._audit_mode or self._current_policy.replay_richness == 'FULL')"
       ],
       "guarded": true,
-      "ordinal": 10
+      "ordinal": 8
     },
     {
       "kind": "caller",
       "file": "src/engine/kernel.py",
-      "line": 1255,
+      "line": 1236,
       "enclosing_function": "Kernel.shutdown",
-      "mechanism": "CanonicalStateHasher.get_hash",
-      "call": "CanonicalStateHasher.get_hash",
+      "mechanism": "CanonicalHashScheduler.compute_digest",
+      "call": "CanonicalHashScheduler(run_end_tick=self._state.tick).compute_digest",
       "receiver_resolved_by_name": true,
       "guards": [],
       "guarded": false,
-      "ordinal": 11
+      "ordinal": 9
     },
     {
       "kind": "caller",
       "file": "src/worldbuilding/compiler.py",
-      "line": 792,
+      "line": 823,
       "enclosing_function": "WorldCompiler.compile",
       "mechanism": "StateFingerprinter.get_fingerprint",
       "call": "StateFingerprinter.get_fingerprint",
       "receiver_resolved_by_name": true,
       "guards": [],
       "guarded": false,
-      "ordinal": 12
+      "ordinal": 10
     },
     {
       "kind": "caller",
       "file": "src/worldbuilding/compiler.py",
-      "line": 803,
+      "line": 834,
       "enclosing_function": "WorldCompiler.compile",
       "mechanism": "CanonicalStateHasher.get_hash",
       "call": "CanonicalStateHasher.get_hash",
       "receiver_resolved_by_name": true,
       "guards": [],
       "guarded": false,
-      "ordinal": 13
+      "ordinal": 11
     }
   ],
   "unresolved_candidates": [],
   "digest_producers": [
     {
       "file": "src/core/state.py",
-      "line": 1635,
+      "line": 1638,
       "function": "AuthoritativeState.fingerprint",
       "hashlib_algorithms": [],
       "delegates_to": [
@@ -198,7 +167,7 @@
     },
     {
       "file": "src/engine/checkpoint.py",
-      "line": 71,
+      "line": 63,
       "function": "CanonicalStateHasher.get_hash",
       "hashlib_algorithms": [
         "sha256"
@@ -207,7 +176,7 @@
     },
     {
       "file": "src/engine/checkpoint.py",
-      "line": 198,
+      "line": 190,
       "function": "CanonicalHashScheduler.compute_digest",
       "hashlib_algorithms": [],
       "delegates_to": [
@@ -216,7 +185,7 @@
     },
     {
       "file": "src/engine/checkpoint.py",
-      "line": 207,
+      "line": 199,
       "function": "CanonicalHashScheduler.compute_hash",
       "hashlib_algorithms": [],
       "delegates_to": [
@@ -260,14 +229,14 @@
     },
     {
       "file": "tests/integration/campaigns/test_phase9_campaign_runner.py",
-      "line": 81,
-      "mechanism": "AuthoritativeState.fingerprint",
+      "line": 82,
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_campaign_runner_is_deterministic_for_same_seed"
     },
     {
       "file": "tests/integration/campaigns/test_phase9_campaign_runner.py",
-      "line": 81,
-      "mechanism": "AuthoritativeState.fingerprint",
+      "line": 82,
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_campaign_runner_is_deterministic_for_same_seed"
     },
     {
@@ -392,25 +361,25 @@
     },
     {
       "file": "tests/integration/kernel/test_executor_determinism.py",
-      "line": 60,
-      "mechanism": "AuthoritativeState.fingerprint",
+      "line": 61,
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_sequential_vs_concurrent_determinism"
     },
     {
       "file": "tests/integration/kernel/test_executor_determinism.py",
-      "line": 71,
-      "mechanism": "AuthoritativeState.fingerprint",
+      "line": 72,
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_sequential_vs_concurrent_determinism"
     },
     {
       "file": "tests/integration/kernel/test_executor_determinism.py",
-      "line": 89,
+      "line": 90,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_concurrency_limit_stability"
     },
     {
       "file": "tests/integration/kernel/test_executor_determinism.py",
-      "line": 99,
+      "line": 100,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_concurrency_limit_stability"
     },
@@ -452,92 +421,92 @@
     },
     {
       "file": "tests/integration/kernel/test_replay_fidelity.py",
-      "line": 16,
+      "line": 21,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_fingerprint_captures_inventory_changes"
     },
     {
       "file": "tests/integration/kernel/test_replay_fidelity.py",
-      "line": 24,
+      "line": 29,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_fingerprint_captures_inventory_changes"
     },
     {
       "file": "tests/integration/kernel/test_replay_fidelity.py",
-      "line": 37,
+      "line": 42,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_fingerprint_captures_strategic_changes"
     },
     {
       "file": "tests/integration/kernel/test_replay_fidelity.py",
-      "line": 45,
+      "line": 50,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_fingerprint_captures_strategic_changes"
     },
     {
       "file": "tests/integration/kernel/test_replay_fidelity.py",
-      "line": 101,
+      "line": 106,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_fingerprint_captures_project_id_changes"
     },
     {
       "file": "tests/integration/kernel/test_replay_fidelity.py",
-      "line": 101,
+      "line": 106,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_fingerprint_captures_project_id_changes"
     },
     {
       "file": "tests/integration/kernel/test_replay_fidelity.py",
-      "line": 108,
+      "line": 113,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_fingerprint_captures_world_dynamics"
     },
     {
       "file": "tests/integration/kernel/test_replay_fidelity.py",
-      "line": 116,
+      "line": 121,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_fingerprint_captures_world_dynamics"
     },
     {
       "file": "tests/integration/kernel/test_replay_fidelity.py",
-      "line": 133,
+      "line": 138,
       "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_determinism_same_seed_same_hash"
     },
     {
       "file": "tests/integration/kernel/test_replay_fidelity.py",
-      "line": 134,
+      "line": 139,
       "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_determinism_same_seed_same_hash"
     },
     {
       "file": "tests/integration/kernel/test_replay_fidelity.py",
-      "line": 140,
+      "line": 145,
       "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_determinism_same_seed_same_hash"
     },
     {
       "file": "tests/integration/kernel/test_seed_stability.py",
-      "line": 67,
-      "mechanism": "AuthoritativeState.fingerprint",
+      "line": 68,
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_simulation_seed_stability"
     },
     {
       "file": "tests/integration/kernel/test_seed_stability.py",
-      "line": 78,
-      "mechanism": "AuthoritativeState.fingerprint",
+      "line": 79,
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_simulation_seed_stability"
     },
     {
       "file": "tests/integration/kernel/test_seed_stability.py",
-      "line": 96,
-      "mechanism": "AuthoritativeState.fingerprint",
+      "line": 97,
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_simulation_seed_divergence"
     },
     {
       "file": "tests/integration/kernel/test_seed_stability.py",
-      "line": 104,
-      "mechanism": "AuthoritativeState.fingerprint",
+      "line": 105,
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_simulation_seed_divergence"
     },
     {
@@ -551,6 +520,12 @@
       "line": 20,
       "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_hash_stability_with_dict_order"
+    },
+    {
+      "file": "tests/integration/kernel/test_tied_worker_result_order.py",
+      "line": 137,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "PermutingKernel.tick_once"
     },
     {
       "file": "tests/integration/observability/test_cognition_snapshot_artifact.py",
@@ -632,38 +607,38 @@
     },
     {
       "file": "tests/perf/test_apply_compaction_perf.py",
-      "line": 76,
-      "mechanism": "AuthoritativeState.fingerprint",
+      "line": 77,
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_apply_compaction_performance_gain"
     },
     {
       "file": "tests/perf/test_apply_compaction_perf.py",
-      "line": 76,
-      "mechanism": "AuthoritativeState.fingerprint",
+      "line": 77,
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_apply_compaction_performance_gain"
     },
     {
       "file": "tests/perf/test_concurrency_parity.py",
       "line": 32,
-      "mechanism": "StateFingerprinter.get_fingerprint",
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "run_parity_check"
     },
     {
       "file": "tests/perf/test_concurrency_parity.py",
       "line": 49,
-      "mechanism": "StateFingerprinter.get_fingerprint",
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "run_parity_check"
     },
     {
       "file": "tests/perf/test_dirty_parity.py",
       "line": 77,
-      "mechanism": "StateFingerprinter.get_fingerprint",
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_dirty_set_vs_full_scan_parity"
     },
     {
       "file": "tests/perf/test_dirty_parity.py",
       "line": 84,
-      "mechanism": "StateFingerprinter.get_fingerprint",
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_dirty_set_vs_full_scan_parity"
     },
     {
@@ -818,14 +793,14 @@
     },
     {
       "file": "tests/unit/domains/optimization/test_state_update_compactor.py",
-      "line": 89,
-      "mechanism": "AuthoritativeState.fingerprint",
+      "line": 90,
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_compacted_update_applies_same_as_uncompacted_update"
     },
     {
       "file": "tests/unit/domains/optimization/test_state_update_compactor.py",
-      "line": 89,
-      "mechanism": "AuthoritativeState.fingerprint",
+      "line": 90,
+      "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_compacted_update_applies_same_as_uncompacted_update"
     },
     {
@@ -944,75 +919,117 @@
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 48,
+      "line": 36,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_at_tick_zero"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 58,
+      "line": 46,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_at_run_end_tick"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 68,
+      "line": 56,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_with_certification_reason"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 78,
+      "line": 66,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_with_audit_reason"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 88,
+      "line": 76,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_allowed_with_replay_reason"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 98,
+      "line": 86,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_raises_outside_sanctioned_boundary"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 107,
+      "line": 95,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestCanonicalHashSchedulerFullMode.test_full_hash_raises_with_unknown_reason"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 116,
+      "line": 104,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestComputeHashIsFlatOnly.test_default_mode_is_the_sanctioned_flat_digest"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 123,
+      "line": 111,
       "mechanism": "CanonicalHashScheduler.compute_hash",
       "enclosing_function": "TestComputeHashIsFlatOnly.test_default_mode_off_boundary_raises_instead_of_approximating"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 138,
+      "line": 126,
       "mechanism": "CanonicalHashScheduler.compute_digest",
       "enclosing_function": "TestProofDigest.test_computed_digest_carries_scheme_tick_status_and_value"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 148,
+      "line": 136,
       "mechanism": "CanonicalHashScheduler.compute_digest",
       "enclosing_function": "TestProofDigest.test_unsanctioned_boundary_is_reported_not_computed_and_not_served_stale"
     },
     {
       "file": "tests/unit/engine/test_hash_scheduler.py",
-      "line": 149,
+      "line": 137,
       "mechanism": "CanonicalHashScheduler.compute_digest",
       "enclosing_function": "TestProofDigest.test_unsanctioned_boundary_is_reported_not_computed_and_not_served_stale"
+    },
+    {
+      "file": "tests/unit/engine/test_kernel_digest_via_scheduler.py",
+      "line": 54,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "_tick_end_payload"
+    },
+    {
+      "file": "tests/unit/engine/test_kernel_digest_via_scheduler.py",
+      "line": 88,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_shutdown_digest_goes_through_the_scheduler_and_keeps_its_value"
+    },
+    {
+      "file": "tests/unit/engine/test_kernel_digest_via_scheduler.py",
+      "line": 117,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_certification_harness_takes_its_digests_from_the_scheduler"
+    },
+    {
+      "file": "tests/unit/engine/test_proof_digest_contract.py",
+      "line": 68,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_flat_hash_of_fixed_fixture_is_unchanged_from_main"
+    },
+    {
+      "file": "tests/unit/engine/test_proof_digest_contract.py",
+      "line": 85,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_certification_harness_digest_equals_get_hash"
+    },
+    {
+      "file": "tests/unit/engine/test_proof_digest_contract.py",
+      "line": 144,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_no_cached_canonical_dict_is_stale_after_a_real_run"
+    },
+    {
+      "file": "tests/unit/engine/test_proof_digest_contract.py",
+      "line": 152,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_audit_detects_a_cached_dict_mutated_in_place"
     },
     {
       "file": "tests/unit/kernel/test_worker_equivalence.py",
@@ -1064,25 +1081,25 @@
     },
     {
       "file": "tests/unit/replay/test_fingerprint_identity_coverage.py",
-      "line": 39,
+      "line": 42,
       "mechanism": "StateFingerprinter.get_fingerprint",
       "enclosing_function": "test_fingerprint_changes_when_faction_changes"
     },
     {
       "file": "tests/unit/replay/test_fingerprint_identity_coverage.py",
-      "line": 40,
+      "line": 43,
       "mechanism": "StateFingerprinter.get_fingerprint",
       "enclosing_function": "test_fingerprint_changes_when_faction_changes"
     },
     {
       "file": "tests/unit/replay/test_fingerprint_identity_coverage.py",
-      "line": 53,
+      "line": 56,
       "mechanism": "StateFingerprinter.get_fingerprint",
       "enclosing_function": "test_fingerprint_changes_when_role_changes"
     },
     {
       "file": "tests/unit/replay/test_fingerprint_identity_coverage.py",
-      "line": 54,
+      "line": 57,
       "mechanism": "StateFingerprinter.get_fingerprint",
       "enclosing_function": "test_fingerprint_changes_when_role_changes"
     },
