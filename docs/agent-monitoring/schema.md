@@ -710,6 +710,14 @@ Opt out with `--no-record` or `GATE_VERDICT_NO_RECORD=1` (`tests/conftest.py` se
 real data root). A write failure prints one `WARNING` to stderr and never changes the CLI's stdout or exit code.
 `validate.py` checks every row against `gate_verdicts.validate_record()` and exits non-zero on an invalid one.
 
+**Pipeline rows** (`TCK-20261006-GATE-VERDICT-PIPELINE-SITES`). `implement-ticket.js` buffers one row per gate it reaches, on pass
+and on fail, and `writeMonitoring()` flushes them once with `gate_verdicts.py record-batch` (a failure there is a warning and never
+changes `final_status` or the events). A gate never reached has no row. The `gate_id` of a `gate-policy.yaml` entry is
+`gate_verdicts.policy_gate_id()`: `<phase>:<check_module>.<check_function>` (static), `<phase>:verdict` (agent verdict) or
+`<phase>:<result_field>` (agent result field); `tests/tools/test_gate_verdict_pipeline_sites.py` fails when an entry has no emit
+site. A static gate is pushed by the script only on the legacy runtime, because on the native runtime `attest_gate.py` already
+records it (under the attestation's own gate name), so one verdict is one row.
+
 ### Outcome and adjudication rows (`TCK-20261006-GATE-VERDICT-OUTCOME-AND-ADJUDICATION`)
 
 Two more append-only row kinds share the family, keyed by `gate_verdict_id` and told apart by `row_kind`
