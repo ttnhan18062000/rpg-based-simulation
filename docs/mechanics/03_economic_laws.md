@@ -79,6 +79,7 @@ Trading with shops (Buildings) is governed by liquidity and stock availability.
 ### Buying from Shops
 *   **Rule**: The building must have the item in its stock.
 *   **Cost**: `Price = Item_Base_Value * Market_Multiplier`.
+    *   **Pressure term removed (`TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`)**: `DynamicPriceService.calculate_buy_price(base_value)` returns `max(1, int(base_value))`. The former `min(3.0, 1 + global_salience)` multiplier is gone, so a buy price never depends on host timing or on a pressure signal. `Market_Multiplier` is only what `MarketSystem` derives from region and building modifiers. Recorded in `docs/guidelines/intentional_divergences.md` §2.75.
 *   **Outcome**: Gold is transferred from Entity to Building; Item is transferred from Building to Entity.
 
 #### §4.1 Reputation Discount

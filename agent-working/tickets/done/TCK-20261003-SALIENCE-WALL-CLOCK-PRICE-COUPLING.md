@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING
-phase: open
+phase: done
 date: 2026-10-03
 tags: [determinism, economy, engine, bug]
 ---
@@ -15,7 +15,7 @@ tags: [determinism, economy, engine, bug]
 Remove wall-clock compute time from `global_salience` so host speed no longer changes shop prices (PERF-D1 amendment A1)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -45,10 +45,10 @@ The owner decided on 2026-10-03 (PERF-D1 amendment A1, `docs/architecture/perfor
 - Any change to `audit_mode` behavior
 
 ## Acceptance Criteria
-- [ ] `global_salience` has no input derived from wall-clock time or host resources; a test injects extreme `tick_compute_ms` and shows identical salience and prices
-- [ ] No system reads a wall-clock-derived value from `AuthoritativeState.pressure_signals` (enforced by a test)
-- [ ] `intentional_divergences.md`, the mechanics chapter (if affected), the parity ledger entry, and the governor contract are updated in the same change
-- [ ] Scoped economy, engine, and determinism tests pass; SimQ economy calibration is checked for drift and any drift is reported, not tuned away
+- [x] `global_salience` no longer exists (owner decision 2026-10-04 supersedes keeping a work-debt term); a test injects extreme `tick_compute_ms` with `audit_mode=False` and shows identical buy prices
+- [x] No system reads a wall-clock-derived value from `AuthoritativeState.pressure_signals`: the kernel no longer writes it, and the price function reads no state (enforced by `test_buy_price_independent_of_host_timing.py` and `test_buy_price_ignores_a_stale_salience_entry`)
+- [x] `intentional_divergences.md` §2.75, Bible 03 §4, parity entry TOWN-196 and the governor contract are updated in the same change
+- [x] Scoped economy, engine and determinism tests pass (the CI jobs' exact directory lists). SimQ economy calibration drift is **not measured** (the calibration reports are absent locally and `test_grade_regression.py` skips 82 of 89 tests); stated in §2.75, not tuned away
 - [x] **Removed 2026-10-06 (rpg-feature-planning).** The measured-contact deliberate-attack AC that stood here does not belong on a price-coupling fix: the standard worlds are no longer attack-starved (re-measure at `b15fef405`, `TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE`). It stays on `TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-BECAUSE-NO-DELIBERATE-ATTACK-ONLY-OPPORTUNITY-ATTACKS`.
 
 ## Related Tickets
@@ -76,9 +76,21 @@ The owner decided on 2026-10-03 (PERF-D1 amendment A1, `docs/architecture/perfor
 - Whether economy calibration worlds were tuned while salience moved with host timing is unknown; calibration drift after the fix is expected to be small because the compute term is near zero on fast hosts, but this is unmeasured
 
 ## Implementation Notes
+- `src/engine/kernel.py`: removed the `debt_ratio` / `compute_ratio` / `global_salience` computation and the `pressure_signals_set=` write. `StateUpdate.pressure_signals_set` is now never set by the kernel (a generic field, left); `apply.py` keeps the prior dict, so production `pressure_signals` stays `{}`.
+- `src/systems/economy_systems/economy.py`: `DynamicPriceService.calculate_buy_price(base_value)` returns `max(1, int(base_value))`; the cap constant and the `state` / `governor_mode` parameters are gone. `src/town/shop.py` call updated.
+- Docs: divergence 2.75, Bible 03 §4, `resource_governor_contract.md`, `resource_conservation_contract.md`, PERF-D1 amendment A1 update, `deterministic_execution.md`, `wall_clock_inventory.md` (regenerated with `tools/perf/wall_clock_inventory.py --update-doc`), `compliance/checklist.md` ECON-095, parity entry TOWN-196.
+- Finding, not changed (PERF-D5): `pressure_signals` is outside the proof digest; with the kernel no longer writing it, no live value hides there.
+- A test that pinned the defect (`test_pressure_scaling`, `test_price_cap_enforcement`) was replaced with the reason in its docstring, not loosened.
 
 ## Test Summary
+- New `tests/unit/resource/test_buy_price_independent_of_host_timing.py` (4 tests, `audit_mode=False`, faked clock): all 4 fail on pre-fix `origin/main`, pass after.
+- `tests/unit/resource/test_economy_hardening.py` rewritten for the new price.
+- CI jobs' exact directory lists, run locally with `-m "not slow and not extra_slow"`: unit-core 1799 passed, 1 skipped; unit-domain 1451 passed, 1 skipped; unit-infra/observability 2379 passed, 1 skipped; integration plus `tests/integrity` plus `tests/architecture` 1225 passed, 7 skipped, 1 xfailed (the strict deliberate-attack xfail, untouched). Tools sync tests (`test_perf_inventories_committed_in_sync.py`, `test_wall_clock_inventory.py`, parity/registry/frontmatter subset) passed after the inventory and registry were regenerated.
+- Not run locally: the full Tools job (`tests/tools` a-z) and the slow suites; CI covers them.
+- Gates (scratch venv): code-health ratchet 0 new, 0 worse; parity-ledger schema 0 rose, 0 new; mypy baseline: no line in `kernel.py`, `economy.py` or `shop.py`. CI is the first real run.
 
 ## Files Changed
+`src/engine/kernel.py`, `src/systems/economy_systems/economy.py`, `src/town/shop.py`; tests `tests/unit/resource/test_buy_price_independent_of_host_timing.py` (new), `tests/unit/resource/test_economy_hardening.py`; docs listed under Implementation Notes; `docs/parity_ledger/town_resource.yaml`; this ticket and its stored artifacts.
 
 ## Completion Summary
+Buy prices no longer depend on host timing: `global_salience`, the `pressure_signals` write and the `1 + salience` multiplier are removed (divergence 2.75). SimQ economy drift is not measured (stated). PERF-D5 digest coverage is recorded as a finding. `perf-planner` reviews in the PR.

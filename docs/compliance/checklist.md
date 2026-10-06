@@ -776,7 +776,7 @@ Each checkbox below is derived from one original test. Keep the original test na
     - Building and regional modifiers scale price based on local economic state.
     - TEST: `tests/unit/systems/economy_systems/test_market_pricing.py`
 - [x] **ECON-095**: Regional wealth propagates through successful trade and resource harvesting [economy.py:27](file:///home/vboxuser/Work/rpg-based-simulation/src/systems/economy_systems/economy.py#L27)
-    - `DynamicPriceService` scales with `global_salience` (pressure) reflecting regional wealth/scarcity.
+    - `DynamicPriceService.calculate_buy_price` no longer scales with `global_salience` (removed by `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`, divergence 2.75): the buy price is the item's base value, and regional pressure reaches prices only through `MarketSystem`'s region and building modifiers.
     - TEST: `tests/unit/systems/economy_systems/test_economy_pressure.py`
 - [x] **ECON-096**: Resource scarcity (Hunger/Exhaustion) influences AI strategic concern weight [intake.py:56](file:///home/vboxuser/Work/rpg-based-simulation/src/systems/world_systems/intake.py#L56)
     - `StrategicSalienceService` checks biological pressure to prioritize survival tasks.
