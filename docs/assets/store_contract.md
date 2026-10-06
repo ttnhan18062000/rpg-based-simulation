@@ -12,7 +12,7 @@ tags: [architecture, mcp, documentation, rendering]
 **Status: built (`TCK-20261002-EPIC-VISUAL-ASSET-FOUNDATION`, children 1-6).** The drawing tools hand off a candidate, the store
 stages it into a quarantine, judges it independently, lets a human adopt it as an immutable source revision, exports pixel-hashed artifacts
 and assembles release CANDIDATES, and checks the whole store in pure Python. Nothing activates anything at runtime (`AM-M5`-`M7` are out of
-scope). The committed `visual_assets/catalog/` holds one real key, `terrain.forest` (the `AM-M6` pilot tile, `docs/assets/pilot_terrain_key.md`), with its one adopted source, adoption, artifact and release candidate; everything else is layout, rules and synthetic fixtures.
+scope). The committed `visual_assets/catalog/` holds one real key, `terrain.forest` (the `AM-M6` pilot tile, `docs/assets/pilot_terrain_key.md`), with its three adopted slot sources, adoptions, artifacts and the release candidates (`pilot/rc-0001` to `rc-0004`), plus the owner's adoption of draft set `terrain-v1` on 2026-10-05T18:17:03Z (`sa-f4c541f25f112221`): 31 more sources, 22 terrain tiles and 9 `border.*` masks. **No release candidate or runtime export covers those 31 slots yet** (`rc-0004` holds the forest only; no `build` has produced artifacts for them); everything else is layout, rules and synthetic fixtures.
 This page says what each command and MCP tool does, who may run it and what it writes.
 
 Source of truth for vocabulary and gates: `docs/brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md`
@@ -165,6 +165,13 @@ unique per slot, sorted, at most `MAX_DRAFT_SET_ENTRIES` (256; no limit on the n
   never copied into the drafts); a draft for the slot always wins, and a reference exists only in this export, never in a `DraftSet`, so `draft verify` and `adopt-set` never see one. The page labels it "adopted (reference)". It is **never parseable as a runtime manifest and a runtime manifest never as it** (record type, required set fields, strict
   unknown-field rejection; tested in Python and in the client). The isolated page that shows it is documented in `docs/assets/drawing_tools.md`.
 - Layering (`tests/visual_assets/test_boundaries.py`): `drafts` is a store layer of its own (it writes outside the catalog and records no approval, so it is not a gate layer, but the drawing server may not import it); `setadoption` is a gate layer like `adoption` and `revoke`, never importable from `visual_assets/drawing/`, and the CLI is the only caller.
+
+### Non-terrain families in a draft set: border masks (D19)
+
+A draft set accepts any registered key: `Family` is a free `[a-z][a-z0-9_]{0,31}` string and `draft keep` checks only that the key and detail value are declared. The `border.*` keys (`border.edge`,
+`border.outer_corner`, `border.inner_corner`, each optional with a detail axis `v1`-`v3`) therefore live in `terrain-v1` beside the tiles, and one `adopt-set` covers both. A mask is a 16x16 image whose alpha channel is a
+1-bit shape, authored for one orientation (`edge`: north, rows 0-3; `outer_corner`: north-east; `inner_corner`: north plus east) and rotated by the client in 90-degree steps; rotation is client-side and the store records
+no orientation. The store does not check shape, depth or orientation: the 4 px cap is enforced by the client compositor and checked on every committed mask by a test. See `docs/assets/pilot_terrain_m5_criteria.md` (AM5-B).
 
 ## MCP tools on the drawing server (restart the server for new tools to appear in a running session)
 
