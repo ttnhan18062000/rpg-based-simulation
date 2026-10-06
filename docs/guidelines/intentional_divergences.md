@@ -2687,7 +2687,7 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Verification**: `tests/unit/engine/test_hazard_growth_open_ended.py`.
 - **Status**: ACTIVE
 
-### DEV-012 — A Slow Host No Longer Sheds Work Mid-Tick (TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY)
+### DEV-014 — A Slow Host No Longer Sheds Work Mid-Tick (TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY)
 
 - **Situation**: With `audit_mode` off, `Kernel._phase_resolution` dropped the remaining sorted results once a tick
   ran past `max_tick_budget_ms`, forced `RuntimeMode.DEGRADED`, and the end-of-tick check recorded a `9999`
