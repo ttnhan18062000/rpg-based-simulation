@@ -150,3 +150,30 @@ def test_branch_switch_in_the_same_command_makes_commit_or_push_uncertain():
     assert classify(BASH, {"command": "git checkout main && git commit -m x"}).uncertain
     assert classify(BASH, {"command": "git switch main; git push"}).uncertain
     assert not classify(BASH, {"command": "git checkout -b x"}).is_authority
+
+
+@pytest.mark.parametrize("command,chain", [
+    ("cd ../wt && git push", ("../wt",)),
+    ("cd a && cd b && git commit -m x", ("a", "b")),
+    ("pushd ../wt && git push", ("../wt",)),
+    ("( cd ../wt && git push )", ("../wt",)),
+    ("cd && git push", ("~",)),
+    ("cd -P ../wt && git push", ("../wt",)),
+    ("git push", ()),
+])
+def test_literal_cd_before_a_commit_or_push_is_recorded_for_the_guard_to_resolve(command, chain):
+    result = classify(BASH, {"command": command})
+    assert result.cd_chain == chain and not result.uncertain
+
+
+@pytest.mark.parametrize("command", [
+    "cd $WT && git push", "cd `pwd`/x && git push", "cd - && git push", "cd ~other && git push", "cd wt-* && git commit -m x",
+    "git commit -m x && cd ../wt && git push",  # the cd follows the commit: the commit and push ran in different places
+    "pushd && git push",
+])
+def test_cd_that_cannot_be_resolved_or_follows_the_action_is_uncertain(command):
+    assert classify(BASH, {"command": command}).uncertain
+
+
+def test_cd_alone_is_not_an_authority_class_command():
+    assert not classify(BASH, {"command": "cd ../wt && ls"}).is_authority

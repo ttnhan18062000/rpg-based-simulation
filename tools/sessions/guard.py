@@ -36,6 +36,7 @@ call, so the settings.json command must treat a missing script as a pass, e.g.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -138,6 +139,18 @@ def current_branch(cwd: str) -> str:
     return _git_out(cwd, "symbolic-ref", "--short", "-q", "HEAD")
 
 
+def effective_cwd(cwd: str, chain: tuple[str, ...]) -> str | None:
+    """Where a command that starts with literal `cd` targets actually runs; None if a target is not a directory."""
+    current = cwd
+    for target in chain:
+        path = Path(target).expanduser()
+        path = path if path.is_absolute() else Path(current) / path
+        current = os.path.normpath(str(path))
+        if not os.path.isdir(current):
+            return None
+    return current
+
+
 def default_branches(cwd: str) -> tuple[str, ...]:
     """`main` plus whatever `origin/HEAD` names, so a repo whose default differs is protected too."""
     named = _git_out(cwd, "symbolic-ref", "--short", "-q", "refs/remotes/origin/HEAD").removeprefix("origin/")
@@ -226,18 +239,19 @@ def _guard(payload: dict, stdout) -> int:
     roster, authority = load_roster(), load_authority()
     caller = resolve_caller(payload, roster, root)
     if cl.PUSH in classification.actions:
-        defaults = default_branches(cwd)
+        defaults = default_branches(cwd)  # origin/HEAD is shared by a clone's worktrees
         if defaults != cl.DEFAULT_BRANCHES:
             classification = cl.classify(str(payload.get("tool_name", "")), payload.get("tool_input") or {}, defaults)
     else:
         defaults = cl.DEFAULT_BRANCHES
     on_default: bool | None = False
+    acts_in = effective_cwd(cwd, classification.cd_chain) if classification.cd_chain else cwd
     if cl.COMMIT in classification.actions or (cl.PUSH in classification.actions and classification.push_implicit):
-        branch = current_branch(cwd)
+        branch = current_branch(acts_in) if acts_in else ""
         on_default = (branch in defaults) if branch else None
     lease_role, lease_found = None, False
     if caller.resolved and _WRITER_ACTIONS & classification.actions:
-        toplevel = _git_toplevel(cwd)
+        toplevel = _git_toplevel(acts_in or cwd)
         lease = st.read_lease(root, toplevel) if toplevel else None
         lease_role, lease_found = (lease.role if lease else None), lease is not None
     decision, reason = decide(classification, caller, authority, lease_role, lease_found, on_default)

@@ -20,4 +20,6 @@ tags: [ai, process-improvement, governance]
 | 6 session tests, cards <= 400 | `tests/tools/test_session_*.py` 456 passed; cards below | pass |
 | 7 live probe | not done | open |
 
+Added after review: two-real-worktree tests for `cd`/`pushd` (ask on main's worktree, allow on a feature worktree, ask when unresolvable or after the action), classify tests for `cd_chain`, `effective_cwd` unit test.
+
 Cards before (PR #359 head) -> after: rpg 398/386/382 -> 398/386/383; agent-working 391/395/394 -> 391/395/396; testing 377/356/351 -> 377/356/352; codebase 377/366/363 -> 377/366/364. All at most 400.

@@ -297,3 +297,54 @@ def test_end_to_end_in_a_real_repo_with_no_lease(tmp_path, branch, command, expe
         assert out == ""
     else:
         assert json.loads(out)["hookSpecificOutput"]["permissionDecision"] == expected
+
+
+def _git(*args, cwd):
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *args], cwd=cwd, check=True, capture_output=True)
+
+
+@pytest.fixture
+def two_worktrees(tmp_path):
+    """`repo` has main checked out; `wt` is a linked worktree on feature-x."""
+    repo = tmp_path / "repo"
+    subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
+    _git("commit", "--allow-empty", "-m", "i", cwd=repo)
+    _git("worktree", "add", "-q", "-b", "feature-x", str(tmp_path / "wt"), cwd=repo)
+    return tmp_path
+
+
+def _decision_in(cwd, command):
+    payload = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(cwd),
+               "session_id": "unbound", "agent_type": "session-rpg-implementer"}
+    code, out, _ = _run_main(payload)
+    assert code == 0
+    return json.loads(out)["hookSpecificOutput"]["permissionDecision"] if out else None
+
+
+@pytest.mark.parametrize("session_cwd,command,expected", [
+    # session on a feature branch, command moves to the worktree that has main: the cd target's branch decides
+    ("wt", "cd ../repo && git push", "ask"),
+    ("wt", "cd ../repo && git commit -m x", "ask"),
+    ("wt", "cd ../repo && git push origin", "ask"),
+    ("wt", "pushd ../repo && git push", "ask"),
+    ("wt", "git commit -m x && cd ../repo && git push", "ask"),
+    ("wt", "cd ../wt && git commit -m x", None),
+    ("wt", "cd . && git push", None),
+    # session on main, command moves to the feature worktree: allowed, the target is not main
+    ("repo", "cd ../wt && git push", None),
+    ("repo", "cd ../wt && git commit -m x", None),
+    ("repo", "git push", "ask"),
+    # not resolvable: ask
+    ("wt", "cd ../does-not-exist && git push", "ask"),
+    ("wt", "cd $SOMEWHERE && git push", "ask"),
+])
+def test_cd_before_a_commit_or_push_is_checked_against_the_directory_it_moves_to(two_worktrees, session_cwd, command, expected):
+    assert _decision_in(two_worktrees / session_cwd, command) == expected
+
+
+def test_effective_cwd_applies_relative_and_absolute_targets_in_order(tmp_path):
+    (tmp_path / "a" / "b").mkdir(parents=True)
+    assert guard.effective_cwd(str(tmp_path), ("a", "b")) == str(tmp_path / "a" / "b")
+    assert guard.effective_cwd(str(tmp_path / "a"), ("..", "a")) == str(tmp_path / "a")
+    assert guard.effective_cwd(str(tmp_path), (str(tmp_path / "a"),)) == str(tmp_path / "a")
+    assert guard.effective_cwd(str(tmp_path), ("missing",)) is None

@@ -53,6 +53,7 @@ class Classification:
     uncertain: bool = False
     detail: str = ""
     push_implicit: bool = False  # a push with no explicit destination: it goes to the call's current branch
+    cd_chain: tuple[str, ...] = ()  # literal `cd`/`pushd` targets that precede the first commit/push, in order
 
     @property
     def is_authority(self) -> bool:
@@ -194,6 +195,27 @@ def _is_read_only(tokens: list[str]) -> bool:
     return False
 
 
+_UNRESOLVABLE_CD = re.compile(r"[$`*?\[]|^-$|^~[^/]")
+
+
+def _cd_target(tokens: list[str]) -> tuple[bool, str | None]:
+    """(is_cd, literal target). A target is None when it cannot be resolved without running the shell: a variable,
+    command substitution, glob, `cd -` or `~user`. A bare `cd` is the home directory."""
+    while tokens and tokens[0] in ("(", "{"):  # `( cd x && ... )`
+        tokens = tokens[1:]
+    if not tokens:
+        return False, None
+    head = tokens[0].lstrip("(")
+    if head not in ("cd", "pushd"):
+        return False, None
+    args = [t for t in tokens[1:] if t == "-" or not t.startswith("-")]
+    if not args:
+        return True, "~" if head == "cd" else None
+    if len(args) != 1 or _UNRESOLVABLE_CD.search(args[0]):
+        return True, None
+    return True, args[0]
+
+
 def _switches_branch(tokens: list[str]) -> bool:
     if not tokens or tokens[0].rsplit("/", 1)[-1] != "git":
         return False
@@ -208,6 +230,8 @@ def classify_command(command: str, default_branches: tuple[str, ...] = DEFAULT_B
     uncertain = False
     push_implicit = False
     switches_branch = False
+    cd_chain: list[str] = []
+    bad_cd = cd_after_action = False
     mentions_governed = any(f in command for f in (AUTHORITY_FILE, *GOVERNING_FILES))
 
     if _INDIRECTION.search(command) and _AUTHORITY_WORDS.search(command):
@@ -222,6 +246,15 @@ def classify_command(command: str, default_branches: tuple[str, ...] = DEFAULT_B
             if _AUTHORITY_WORDS.search(segment):
                 uncertain = True
                 details.append("unparseable command containing an authority-class word")
+            continue
+        is_cd, cd_to = _cd_target(tokens)
+        if is_cd:
+            if {COMMIT, PUSH} & actions:
+                cd_after_action = True
+            elif cd_to is None:
+                bad_cd = True
+            else:
+                cd_chain.append(cd_to)
             continue
         seg_actions, seg_implicit, seg_redirected = _segment_actions(tokens, default_branches)
         actions |= seg_actions
@@ -239,9 +272,12 @@ def classify_command(command: str, default_branches: tuple[str, ...] = DEFAULT_B
                 actions.add(GOVERNING_FILE_EDIT)
                 details.append("non-read-only command touching a governing file")
 
+    if {COMMIT, PUSH} & actions and (bad_cd or cd_after_action):
+        uncertain = True
+        details.append("a cd/pushd that cannot be resolved, or that follows the commit or push: the branch acted on is not known")
     if switches_branch and ({COMMIT, PUSH} & actions):
         uncertain = True
         details.append("a branch switch in the same command: the branch committed or pushed is not the cwd's current one")
     if DELETE_REMOTE_BRANCH in actions:
         details.append("remote branch deletion")
-    return Classification(frozenset(actions), uncertain, "; ".join(dict.fromkeys(details)), push_implicit)
+    return Classification(frozenset(actions), uncertain, "; ".join(dict.fromkeys(details)), push_implicit, tuple(cd_chain))
