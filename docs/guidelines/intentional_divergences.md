@@ -2687,7 +2687,25 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Verification**: `tests/unit/engine/test_hazard_growth_open_ended.py`.
 - **Status**: ACTIVE
 
-### DEV-014 — Runtime-Spawned Monsters Carry Their Catalog Faction, and Spawns Land on a Clear Tile (TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION-FROM-EVERY-RUNTIME-SPAWNED-MONSTER; TCK-20261005-LAW-OCCUPANCY-COLLISION-HARD-LAW-ERRORS-ON-MAIN)
+### DEV-014 — A Slow Host No Longer Sheds Work Mid-Tick (TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY)
+
+- **Situation**: With `audit_mode` off, `Kernel._phase_resolution` dropped the remaining sorted results once a tick
+  ran past `max_tick_budget_ms`, forced `RuntimeMode.DEGRADED`, and the end-of-tick check recorded a `9999`
+  dropped-work sentinel. Two runs of the same seed on hosts of different speed therefore computed different
+  worlds (`frontier_living_world`: 8 vs 10 deaths at tick 500).
+- **Change**: both checks are report-only. An overrun is recorded as `RuntimeStatus.budget_overrun_ms` /
+  `budget_overrun_tick` / `total_budget_overruns` and raises the watchdog alert; every result is processed and
+  the mode is not forced. `dropped_work` counts only work the scheduler shed.
+- **Rationale**: **Stabilized**. PERF-D1: under the Canonical contract the cutoff is driven by a work-unit
+  budget or is off, and under Live a decision that changes what is computed needs a control trace that does not
+  exist yet. Report-only satisfies both.
+- **Consequences recorded**: `dropped_work` is now 0 in shipped runs, because the default scheduler registers no
+  periodic task to shed (the throttle was the only source). The governor's own `tick_compute_ms` input still
+  moves the mode (PERF-D1 input 1, not changed here). The two CI skips for the throttle are left for
+  `test-architecture-reviewer` to re-evaluate.
+- **Verification**: `tests/integration/kernel/test_tick_budget_report_only.py`.
+
+### DEV-015 — Runtime-Spawned Monsters Carry Their Catalog Faction, and Spawns Land on a Clear Tile (TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION-FROM-EVERY-RUNTIME-SPAWNED-MONSTER; TCK-20261005-LAW-OCCUPANCY-COLLISION-HARD-LAW-ERRORS-ON-MAIN)
 
 - **Situation**: `spawn_monster` and `spawn_goblin` built every runtime-spawned monster with only the legacy `MONSTER_HORDE` bucket and no catalog `faction_id`, so `get_faction_id_str` returned `monster_horde`, which has no catalog definition and no declared hazard endurance. Runtime goblins and orcs took drain from their own camp's `NATURAL_TERRAIN` region and died of it. Spawns were also placed at a fixed tile without an occupancy check.
 - **Change**: `SPAWN_KIND_CATALOG_FACTION` (`src/systems/world_systems/generator.py`) restores the catalog faction the kind already has in content: goblin, goblin_warrior, goblin_raider -> `goblin_warband`; orc_warrior -> `orc_clan`; bandit -> `bandit_company`; dragonkin -> `dragon_cult` (owner ruling 2026-10-06). The legacy bucket is unchanged, so hostility keeps coming from it; the bucket is never granted immunity (2026-07 ruling). World bosses are unchanged (deferred, decisions 10 and 14). `free_spawn_position` places a spawn on the nearest tile with no live entity or same-tick spawn within one tile (ring, y, x order, no RNG, radius 5) and raises when none is clear.
@@ -2752,3 +2770,13 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Left as is**: for the other holder (the recruit, whose counterparty is the recruiter) Design Decision #8's captured position remains; nothing in `src` produces that holder today (`execute_recruit` would, but nothing issues RECRUIT). Whether a requester should walk to the helper, or the helper to the requester, was a world-semantics question sent to the world-rules owner, non-blocking. Answered 2026-10-06 (owner, via world-rule-catalog-design): the helper joins the task; the contract is social, never spatial; it binds when RECRUIT is wired.
 - **Rationale**: **Bug Fix** (an entity pursuing its own old position, and a project outliving its contract).
 - **Verification**: `tests/unit/strategic/test_contract_objective.py` (31; with the scorer guard removed 3 fail, with the contract predicate disabled 13 fail, with the work queue reverted to entity-only 1 fails).
+
+### 2.73 Regional Dread Scales With Trauma / 50.0, Saturates, and Never Decides Flight Alone (TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE)
+
+- **Legacy Behavior**: `AppraisalSystem.evaluate_emotional_state` added `region_trauma * 0.5` to panic, feeding the uncapped `+1.0`-per-death `trauma_score` (Bible 05 §2) straight into a 0-1 dread score whose flee threshold is `0.4`. One death in a region added `+0.5` (fled unless bravery > 0.33); two deaths added `+1.0` (fled at any bravery, any HP). No document defined the mapping.
+- **Observed** (`b15fef405` / `7daef8075`, seed 42, 2000 ticks, `audit_mode`, budget off, run twice, every counter identical across runs): fleeing entities with a live hostile adjacent had the trauma term present in 13 of 27 (`crowded_frontier`) and 20 of 28 (`frontier_living_world`); trauma alone crossed the flee threshold in 3 (`crowded_frontier`, `hometown` trauma 1.9) and 0.
+- **New Behavior** (world rule `AGENCY-06`, owner decision 17): `regional_dread(trauma) = 0.3 * min(1, max(0, trauma) / 50.0)`, `50.0` being the Bible 05 §2 instability threshold. The `0.3` ceiling is strictly below the `0.4` flee threshold (regional dread alone never flees) and above the weakest threat-to-self term (`0.2`, health below 40%), so it can still tip a wounded subject. The "never alone" clause covers regional dread only: a threat to the subject itself (health below 10% or 20%, a wounded subject's nemesis or grudge) still decides flight alone.
+- **Not behavior-neutral; measured** (same probes, before `7daef8075` vs after, both runs identical within an arm): trauma-alone flees 3 to 0 in `crowded_frontier` and 0 to 0 in `frontier_living_world`; fleeing 27 to 16 and 28 to 19; `PANIC_RETREAT` decisions with a hostile adjacent 30 to 19 (of 193 calls) and 25 to 22 (of 232 to 264 calls). Trajectories diverge once a flee changes (forced-call totals are not like-for-like), `execute_attack` calls 41 to 32 and 30 to 298 (`frontier_living_world`: 274 of the 298 are `OUT_OF_RANGE` and 267 come from one entity re-issuing an ATTACK on a target it is not in range of; reported to the planner as a separate observation, not attributed to this change's mechanism).
+- **Re-baseline, disclosed**: entities flee less in regions with trauma, on every world, so combat trajectories and any SimQ pillar reading combat, flee or survival can move. The committed `tests/simulation_quality/fixtures/grade_anchors.json` movement is **not measured here**: `tests/simulation_quality/test_grade_regression.py` skips 82 of 89 tests locally because its calibration reports (`data/calibration/*/quality_report.json`) are not present, identically on both arms.
+- **Rationale**: **Enforced** (the units of two documented scales now agree and the Rule's invariant is asserted).
+- **Verification**: `tests/unit/strategic/test_regional_dread_appraisal.py` (13 cases; with the old `region_trauma * 0.5` term restored 8 fail), `tests/unit/strategic/test_cognition_immediate_fixes.py` (the near-death and bravery baselines are unchanged).

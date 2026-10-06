@@ -85,6 +85,8 @@ from vocabulary import (  # noqa: E402
 )
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 import hand_closure_time  # noqa: E402
+from path_record import phases_omitted as compute_phases_omitted  # noqa: E402
+from vocabulary import PATH_REASONS  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import append_working_log_row  # noqa: E402
@@ -196,6 +198,8 @@ def build_records(
     now: str | None = None,
     session_id: str | None = None,
     resolution: "hand_closure_time.Resolution | None" = None,
+    path_reason: str = "unstated",
+    path_note: str | None = None,
 ) -> tuple[dict, list[dict]]:
     """Expands a minimal `events` list (phase/status/summary per entry) into a full run record
     plus a full event-record batch, both matching record_run.py's/record_events.py's own REQUIRED
@@ -216,6 +220,11 @@ def build_records(
         "final_status": final_status,
         "agent_count": len(events),
         "execution_mode": "hand",
+        # TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD: why this was closed by hand, and the planned phases with no
+        # event (read from implement-ticket.yaml at write time; the key is absent when that file cannot be read)
+        "path_reason": path_reason,
+        **({"path_note": path_note} if path_note else {}),
+        **({"phases_omitted": omitted} if (omitted := compute_phases_omitted(tier, [e["phase"] for e in events])) is not None else {}),
         # TCK-20261006-HAND-CLOSURE-RECORDER-REAL-TIMESTAMPS: provenance of start/end (declared | tool_activity | unknown)
         # and the closing session; absent on rows that predate the fields
         **({"duration_source": resolution.duration_source} if resolution else {}),
@@ -235,6 +244,8 @@ def build_records(
             "agent": e.get("agent", default_agent),
             "status": e["status"],
             "summary": e["summary"],
+            # a skipped event always says why; `unstated` when the closer did not (TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD)
+            **({"skip_reason": e.get("skip_reason") or "unstated"} if e["status"] == "skipped" else {}),
             "ts": e.get("ts", now),
             # optional advisory list carried verbatim (TCK-20261002-ARCH-VERIFY-TEST-QUALITY-FINDINGS);
             # the key is absent, never a false [], when the event has none
@@ -404,7 +415,19 @@ def main() -> None:
         help="Defaults to agent-working/stored_artifacts/<ticket-id> for standard/epic tier, "
         "'none (hotfix — no staging artifacts)' for hotfix",
     )
+    parser.add_argument(
+        "--path-reason", default="unstated", choices=PATH_REASONS,
+        help="Why this ticket was closed by hand rather than by the pipeline; 'other' needs --path-note",
+    )
+    parser.add_argument("--path-note", default=None, help="Free-text detail; required with --path-reason other")
     args = parser.parse_args()
+
+    if args.path_reason == "other" and not args.path_note:
+        print("ERROR: --path-reason other requires --path-note; nothing was written.", file=sys.stderr)
+        sys.exit(1)
+    if args.path_reason == "unstated":
+        print("HINT: no --path-reason given, recorded as 'unstated'. Say why this was not the pipeline: "
+              f"{', '.join(r for r in PATH_REASONS if r != 'unstated')}.", file=sys.stderr)
 
     sidecar_warning = check_sidecar_matches_ticket(args.ticket_id)
     if sidecar_warning:
@@ -443,6 +466,7 @@ def main() -> None:
         args.ticket_id, args.tier, args.final_status, events,
         args.start_ts, args.end_ts, args.workflow, args.provider, args.agent,
         now=now, session_id=os.environ.get("CLAUDE_CODE_SESSION_ID") or None, resolution=resolution,
+        path_reason=args.path_reason, path_note=args.path_note,
     )
 
     run_errors = record_run.validate_record(run_record)

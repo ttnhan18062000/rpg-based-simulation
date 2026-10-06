@@ -48,7 +48,6 @@ class SubsystemBudget:
     max_pending_flushes: int | None = None
     max_queue_items: int | None = None
     max_tracked_entities: int | None = None
-    max_full_hashes_per_100_ticks: int | None = None
     max_inflight_chunks: int | None = None
     max_hot_path_loads: int | None = None
 
@@ -114,10 +113,6 @@ DEFAULT_COGNITION_BUDGET = SubsystemBudget(
     subsystem="cognition",
     max_tracked_entities=5000,
 )
-DEFAULT_HASHING_BUDGET = SubsystemBudget(
-    subsystem="hashing",
-    max_full_hashes_per_100_ticks=10,
-)
 DEFAULT_WORKER_BUDGET = SubsystemBudget(
     subsystem="worker",
     max_queue_items=5000,
@@ -133,7 +128,6 @@ DEFAULT_SUBSYSTEM_BUDGETS: Dict[str, SubsystemBudget] = {
     "replay": DEFAULT_REPLAY_BUDGET,
     "observability": DEFAULT_OBSERVABILITY_BUDGET,
     "cognition": DEFAULT_COGNITION_BUDGET,
-    "hashing": DEFAULT_HASHING_BUDGET,
     "worker": DEFAULT_WORKER_BUDGET,
     "content": DEFAULT_CONTENT_BUDGET,
 }
@@ -144,7 +138,6 @@ _DEBUG_SUBSYSTEM_BUDGETS: Dict[str, SubsystemBudget] = {
     "replay": SubsystemBudget(subsystem="replay"),
     "observability": SubsystemBudget(subsystem="observability"),
     "cognition": SubsystemBudget(subsystem="cognition"),
-    "hashing": SubsystemBudget(subsystem="hashing"),
     "worker": SubsystemBudget(subsystem="worker"),
     "content": SubsystemBudget(subsystem="content"),
 }

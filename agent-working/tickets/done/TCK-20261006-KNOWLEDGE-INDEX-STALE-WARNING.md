@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-KNOWLEDGE-INDEX-STALE-WARNING
-phase: open
+phase: done
 date: 2026-10-06
 tags: [ai, knowledge-store, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, knowledge-store, process-improvement]
 A knowledge search says when its worktree's index is stale
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -80,7 +80,13 @@ results from an older corpus. The owner chose on 2026-10-06 to close the parent 
 Drafted by `agent-working-design` on 2026-10-06.
 
 ## Test Summary
+`tests/tools/test_knowledge_index_staleness.py` (14 pass): a touched file is 1 changed, an added and a removed file are counted apart, a docs/archive file never counts, the stat walk covers exactly the paths a build indexed, a current index is silent, a missing, unparseable or malformed manifest is `unknown` and never raises, CLI `query` prints one stale line, MCP `_run_search(with_staleness=True)` returns results plus `stale`, a current index and a call without the flag return the bare list, an error dict is never wrapped. `test_search_mcp.py` and `test_knowledge_search.py` stay green (108 pass, 35 skipped for missing embedding packages). AC4: measured against a real built index (another worktree's, 4,630 corpus files, warm cache): 80-95 ms, after replacing `Path.glob` with `os.scandir` (the first version took about 220 ms).
 
 ## Files Changed
+- `tools/knowledge_search.py` (`_iter_doc_files` shared with the build, `_corpus_source_paths`, `index_staleness`, `stale_warning`, `cmd_query`)
+- `tools/search_mcp.py` (`_run_search(with_staleness=)`, `search_docs` passes it)
+- `tests/tools/test_knowledge_index_staleness.py` (new)
+- `docs/guidelines/agent_working_environment.md`
 
 ## Completion Summary
+Closed 2026-10-06. All six acceptance criteria met; AC4 measured at 80-95 ms warm. One shape choice: `_run_search` returns a bare list, so `stale` rides in `{"results": [...], "stale": {...}}` only when the index is stale or unknown and only when `search_docs` asks (`with_staleness=True`); a current index still returns the bare list, so existing callers are unaffected. A file that yields no document (empty body, a ticket with no Request Summary) can count as `new` indefinitely. Not done: auto-rebuild, the monitoring and parity indexes (out of scope).

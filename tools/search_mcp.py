@@ -80,8 +80,22 @@ def _ensure_loaded() -> bool:
 # ── Core search logic (shared by MCP tools and --test mode) ──────────────────
 
 def _run_search(query: str, top_k: int = 8, section: str | None = None,
-                mode: str = "hybrid") -> list[dict] | dict:
-    """Run hybrid search and return ranked results. Returns error dict if index missing."""
+                mode: str = "hybrid", with_staleness: bool = False) -> list[dict] | dict:
+    """Run hybrid search and return ranked results. Returns error dict if index missing.
+
+    With `with_staleness` (what the `search_docs` tool passes), a stale index returns
+    `{"results": [...], "stale": {"changed": n, "new": n, "removed": n}}` instead of the bare list, and an index whose
+    manifest cannot be read gets `"stale": {"unknown": true}`; a current index still returns the bare list
+    (TCK-20261006-KNOWLEDGE-INDEX-STALE-WARNING). The results are returned either way; the warning never blocks."""
+    results = _search(query, top_k=top_k, section=section, mode=mode)
+    if not with_staleness or not isinstance(results, list):
+        return results
+    stale = _ks.index_staleness(_DB_PATH)
+    return {"results": results, "stale": stale} if stale else results
+
+
+def _search(query: str, top_k: int = 8, section: str | None = None,
+            mode: str = "hybrid") -> list[dict] | dict:
     if not _ensure_loaded():
         return {"error": "index not found", "action": "run make knowledge-index"}
 
@@ -241,7 +255,7 @@ def _run_mcp_server() -> int:
             section: Filter to a section (e.g. "mechanics", "engine", "core", "strategy").
             mode: "hybrid" (default), "vector", or "keyword".
         """
-        return _run_search(query, top_k=top_k, section=section or None, mode=mode)
+        return _run_search(query, top_k=top_k, section=section or None, mode=mode, with_staleness=True)
 
     @server.tool()
     def search_health() -> dict:

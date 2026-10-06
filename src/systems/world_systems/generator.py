@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 # TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION: runtime-spawned kinds whose catalog faction is declared in
 # content (entity_archetypes.yaml `faction`, factions.yaml `common_species`) or ruled by the owner (2026-10-06:
 # dragonkin is dragon_cult). world_boss is absent on purpose (boss feature design is deferred). wolf/slime/bear/
-# harpy/golem are HELD OUT (owner-confirmed gap, DEV-014): wild_beast_pack's catalog alignment is `wild`, so
+# harpy/golem are HELD OUT (owner-confirmed gap, DEV-015): wild_beast_pack's catalog alignment is `wild`, so
 # `verify_attack_legality` rejects a spawned wolf attacking a hero as FRIENDLY_FIRE_ILLEGAL. Hostility stays on
 # the legacy bucket (every faction here has legacy_engine_bucket MONSTER_HORDE); nothing may route a spawned
 # monster's hostility through catalog alignment.

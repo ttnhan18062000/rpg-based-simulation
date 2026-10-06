@@ -10,21 +10,6 @@ from typing import Any, Dict, Optional
 
 from src.core.state import AuthoritativeState
 
-
-class HashMode(str, Enum):
-    """Hash mode accepted by CanonicalHashScheduler.compute_hash.
-
-    FULL — delegates to CanonicalStateHasher.get_hash(); expensive, deterministic proof.
-           Only allowed at sanctioned boundaries (see CanonicalHashScheduler.allow_full_hash_at).
-
-    PERF-D5 point 3: the MD5 LIGHT mode (a dirty signal that was never a proof and was never
-    requested in production) is retired. FULL stays as the only member because the certification
-    harness (gated, `src/certification/harness.py`) still passes `mode=HashMode.FULL`; the member and
-    the `mode` parameter go with that harness copy in PERF-M1-T03b.
-    """
-    FULL = "full"
-
-
 # PERF-D5 point 2: the proof digest is named and versioned. A stored or emitted digest of a
 # different scheme is never compared with this one.
 PROOF_DIGEST_SCHEME = "flat-sha256-v1"
@@ -34,7 +19,7 @@ class DigestStatus(str, Enum):
     """Whether a proof digest was computed, and if not, why. Replaces the bare string "SKIPPED"."""
     COMPUTED = "computed"
     NOT_COMPUTED_UNSANCTIONED_BOUNDARY = "not_computed_unsanctioned_boundary"
-    NOT_COMPUTED_LIVE_POLICY = "not_computed_live_policy"  # for the kernel's replay-richness skip (PERF-M1-T03b)
+    NOT_COMPUTED_LIVE_POLICY = "not_computed_live_policy"  # the kernel's replay-richness skip
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -51,6 +36,12 @@ class ProofDigest:
     def __post_init__(self) -> None:
         if (self.value is None) == (self.status is DigestStatus.COMPUTED):
             raise ValueError("ProofDigest.value must be set if and only if status is COMPUTED")
+
+    def require_value(self) -> str:
+        """The digest value, for a caller at a boundary that is always sanctioned. Raises if it was not computed."""
+        if self.value is None:
+            raise ValueError(f"proof digest at tick {self.tick} was not computed ({self.status.value})")
+        return self.value
 
 
 class HashScheduleViolation(RuntimeError):
@@ -195,6 +186,11 @@ class CanonicalHashScheduler:
             return True
         return False
 
+    @staticmethod
+    def not_computed_by_policy(tick: int) -> ProofDigest:
+        """The digest record for a tick whose live policy does not hash (PERF-D5 point 4: the cadence is unchanged)."""
+        return ProofDigest(PROOF_DIGEST_SCHEME, tick, DigestStatus.NOT_COMPUTED_LIVE_POLICY)
+
     def compute_digest(self, state: AuthoritativeState, tick: int, reason: str = "") -> ProofDigest:
         """Return the proof digest of *state* with its scheme, tick and status.
 
@@ -208,14 +204,12 @@ class CanonicalHashScheduler:
         self,
         state: AuthoritativeState,
         tick: int,
-        mode: HashMode = HashMode.FULL,
         reason: str = "",
     ) -> str:
         """Compute the flat proof digest value of *state*.
 
         Delegates to CanonicalStateHasher.get_hash(state). Raises HashScheduleViolation if
-        tick/reason is not sanctioned. `mode` is accepted for the certification harness's call
-        (see HashMode) and has only one valid value.
+        tick/reason is not sanctioned.
         """
         if not self.allow_full_hash_at(tick, reason):
             raise HashScheduleViolation(

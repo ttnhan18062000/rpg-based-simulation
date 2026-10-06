@@ -52,7 +52,7 @@ Routing spawned-monster hostility through catalog alignment without the above ru
 - [ ] Held-out kinds mapped, pin test green.
 
 ## Related Tickets
-- `TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION-FROM-EVERY-RUNTIME-SPAWNED-MONSTER` (DEV-014 records the held-out kinds)
+- `TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION-FROM-EVERY-RUNTIME-SPAWNED-MONSTER` (DEV-015 records the held-out kinds)
 - `TCK-20261005-TACTICAL-HOSTILE-LIST-AND-LEGALITY-DISAGREE-ABOUT-WHO-IS-HOSTILE`
 
 ## Related Code Areas

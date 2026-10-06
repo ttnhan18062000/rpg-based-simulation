@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-03"
+last_verified: "2026-10-06"
 ---
 
 # World Rule Family: Social Relations
@@ -137,6 +137,44 @@ further.
 **Scenarios:** [SL-S06](../scenarios/social-lineage-batch-09.md#sl-s06) (separation does not
 erase relationship), [SL-S07](../scenarios/social-lineage-batch-09.md#sl-s07) (death does not
 erase social history).
+
+## SOC-05 — A recruitment contract is social, not spatial: the helper joins the requester's task, and no party is sent to the other party's position
+
+> A recruitment contract (one subject asks another for help, or hires them) binds the helper to
+> the requester's task. It never creates an objective to travel to the other party. Movement
+> comes from the work: the helper takes on the requester's objective and goes where that job
+> is, while the requester keeps pursuing its own objective. Help travels to the need. A
+> contract never gives either party the other party's position, current or remembered, as a
+> destination.
+
+**Disposition: ACCEPT — ratified by the owner, 2026-10-06** (row 16 of
+`docs/plans/systemic_world/owner_decision_memo.md`). Passes the admission test: no earlier Rule
+said which way a contract moves its parties. SOC-01 separates the structural relation from each
+party's attitude, and the inherited decision-layer entry below says a relationship affects
+behaviour only through the agent's own decisions. Neither says whether a contract is spatial.
+**Alternatives not taken:** the helper walks to the requester (needs live position tracking, and
+a remembered position goes stale); the requester walks to the helper (the one in trouble has to
+travel); no ruling until RECRUIT is wired.
+
+**Repository evidence: LATENT — no two-party recruitment path runs today.**
+- **One producer.** `src/domains/cooperation/services.py:233`, postures REQUEST_HELP and
+  HIRE_SUPPORT, creates a RECRUITMENT contract with `source_id` set to the requester and gives it
+  only to that requester.
+- **The self-target defect.** The objective scorer targeted `contract.source_id`, so the
+  requester was sent to its own old position. Measured: 2 projects in 8,000 world-ticks across 4
+  worlds.
+- **The fix is consistent with this Rule.** `TCK-20261005-SOCIAL-CONTRACT-OBJECTIVE-TARGETS-A-MOVING-COUNTERPARTY-AS-A-FIXED-POINT`
+  (#368, `b15fef405`) withholds a contract objective from the contract's own source, and ends a
+  contract-serving project when its contract is no longer ACTIVE. It chooses no direction itself;
+  this Rule supplies one. The fix is recorded as divergence 2.72
+  (`docs/guidelines/intentional_divergences.md`).
+- **The second-party path is dead.** `execute_recruit` (`src/engine/domain/core_actions.py:56`)
+  has a two-party mirror, but nothing in `src` issues RECRUIT
+  (`src/ai/goals/social_contract_scorer.py:88`). This Rule binds when someone wires it.
+
+**Scenarios:** none traced yet. One is owed when RECRUIT is wired: a requester asks a distant
+helper for help, the helper accepts and goes to the requester's task site, and neither party's
+objective ever targets the other's position.
 
 ---
 
@@ -384,6 +422,8 @@ this repository's own current implementation does or does not realize them.
 - SOC-01, SOC-02 → Perception/Knowledge (Batch 06's KNOW-02, OWN-06), Reach (REACH-03,
   related but distinct)
 - SOC-03 → History/Provenance (HP-01, related but distinct), Identity (LIFE-03, Batch 05)
+- SOC-05 → Agency/Decision (AGENCY-01/02, Batch 06: the helper's movement comes from an adopted
+  objective, never from the contract itself), Organizations (ORG-02: employment is not membership)
 - Inherited causal-path entry → Causality (CAUSE-01)
 - Inherited decision-layer entry → Agency/Decision (AGENCY-01/02, Batch 06)
 - Inherited reputation-representations entry → Ecology/Population (ECOL-01/02, Batch 05),

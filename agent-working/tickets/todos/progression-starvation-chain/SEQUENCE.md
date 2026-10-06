@@ -113,6 +113,17 @@ already reframed its remaining question into (1)'s exact scope, so (2) should be
 (`src/ai/goals/`, `src/systems/strategic_systems/`), not in progression or combat resolution. Any
 fix routed from this chain lands there, which is worth knowing before picking up (2) or (3).
 
+**Correction 2026-10-06 (rpg-feature-planning rulings, re-measure by rpg-implementer).** The dispatch
+discard was the first of three gates, not the whole root: a sticky task (fixed) and brain cadence
+(deliberately not fixed) sit beside it, and the regional-dread flee gate was the third candidate.
+`TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE` re-measured at
+`b15fef405` (seed 42, 2000 ticks, `audit_mode`, budget off, runs identical): neither standard world is
+attack-starved any more (decision-path `execute_attack` 30 to 41 per run against 0 to 2), `PANIC_RETREAT` is
+11 to 16% of adjacent-hostile decisions, and the AGENCY-06 dread fix (trauma alone no longer flees) is a
+smaller effect than first billed. The remaining starvation sits with
+`TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-BECAUSE-NO-DELIBERATE-ATTACK-ONLY-OPPORTUNITY-ATTACKS`
+(SAFETY_PRESSURE retreat at full HP).
+
 **(3)'s boss-gate half is real but lower-stakes and less coupled to the rest of the chain** — it
 checks whether an already-confirmed-correct gate further starves a different, unrelated downstream
 system (the world-boss maturity trigger), not whether the gate is wrong. **It is parked (2026-10-05):

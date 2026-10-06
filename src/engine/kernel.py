@@ -394,6 +394,7 @@ class Kernel:
         """Inner tick body — never call directly, use tick_once()."""
         t0 = time.perf_counter_ns()
         self._start_perf_ts = t0
+        tick_no = self._state.tick  # advancement moves state.tick on; the overrun belongs to this tick
         self._phase_init()
         t1 = time.perf_counter_ns()
         self._phase_costs["init"] = (t1 - t0) / 1e6
@@ -465,25 +466,7 @@ class Kernel:
         limit_ms = max(20.0, avg_ms * 2.0)
         hard_cap = self._profile.max_tick_budget_ms
         if not self._audit_mode and self._state.tick > 5 and self._final_compute_ms > min(hard_cap, limit_ms):
-             logger.warning(f"Tick {self._state.tick} exceeded budget: {self._final_compute_ms:.2f}ms vs limit {min(hard_cap, limit_ms):.2f}ms. Aborting next tick if sustained.")
-             self._status.record_dropped_work(9999)
-             try:
-                 from src.observability.alerts.manager import AlertsManager
-                 from src.observability.alerts.models import AlertEvent
-                 router = AlertsManager.get_router()
-                 event = AlertEvent.create_watchdog_trip(
-                     run_id=self._run_id,
-                     tick=self._state.tick,
-                     message=f"Tick compute time {self._final_compute_ms:.2f}ms exceeded watchdog threshold of {min(hard_cap, limit_ms):.2f}ms",
-                     details={
-                         "compute_ms": self._final_compute_ms,
-                         "threshold_ms": min(hard_cap, limit_ms),
-                         "phase_costs": self._phase_costs.copy()
-                     }
-                 )
-                 router.route(event)
-             except Exception:
-                 logger.exception("Failed to route watchdog budget alert")
+            self._report_budget_overrun(self._final_compute_ms, min(hard_cap, limit_ms), "end_of_tick", tick_no)
         
         self._record_runtime_signals()
 
@@ -605,6 +588,23 @@ class Kernel:
         from src.core.protocol_validator import ProtocolValidator
         ProtocolValidator.validate_result_batch(self._final_results, getattr(self._executor, "_source_packets", {}))
 
+    def _report_budget_overrun(self, elapsed_ms: float, threshold_ms: float, site: str, tick: int) -> None:
+        """Record a wall-clock budget overrun as telemetry and raise the watchdog alert. Never changes outcomes."""
+        logger.warning(f"Tick {tick} exceeded budget at {site}: {elapsed_ms:.2f}ms vs limit {threshold_ms:.2f}ms.")
+        self._status.record_budget_overrun(elapsed_ms - threshold_ms, tick)
+        try:
+            from src.observability.alerts.manager import AlertsManager
+            from src.observability.alerts.models import AlertEvent
+            AlertsManager.get_router().route(AlertEvent.create_watchdog_trip(
+                run_id=self._run_id,
+                tick=tick,
+                message=f"Tick compute time {elapsed_ms:.2f}ms exceeded watchdog threshold of {threshold_ms:.2f}ms ({site})",
+                details={"compute_ms": elapsed_ms, "threshold_ms": threshold_ms, "site": site,
+                         "phase_costs": self._phase_costs.copy()},
+            ))
+        except Exception:
+            logger.exception("Failed to route watchdog budget alert")
+
     def _phase_resolution(self) -> None:
         from src.core.worker_protocol import ResultStatus
         from src.core.updates import StateUpdate, EntityUpdate
@@ -615,40 +615,15 @@ class Kernel:
         
         work_debt_updates: Dict[str, int] = {}
         entity_updates: Dict[int, EntityUpdate] = {}
+        overrun_reported = False
         for i, res in enumerate(self._final_results):
-            if i % 10 == 0:
+            if not overrun_reported and i % 10 == 0 and not self._audit_mode:
                 elapsed = (time.perf_counter_ns() - self._start_perf_ts) / 1e6
-                hard_cap = self._profile.max_tick_budget_ms
-                should_throttle = not self._audit_mode and elapsed > hard_cap
-                
-                if should_throttle:
-                    logger.warning(f"Mid-tick emergency throttle triggered at {elapsed:.2f}ms. Dropping {len(self._final_results) - i} items.")
-                    self._status.record_dropped_work(len(self._final_results) - i)
-                    from src.core.governance import RuntimeMode
-                    # This wall-clock-dependent throttle (known, still-deferred determinism
-                    # issue under audit_mode=False) directly forces RuntimeMode.DEGRADED, same
-                    # as ResourceGovernor._get_indicated_mode()'s own tick_compute_ms signal
-                    # (governor.py) -- see that comment for the real movement-candidacy
-                    # consequence this reaches (TCK-20260908-DEGRADED-POLICY-NONURGENT-
-                    # MOVEMENT-STARVATION).
-                    self._governor.force_mode(RuntimeMode.DEGRADED, self._status, self._state.tick)
-                    try:
-                        from src.observability.alerts.manager import AlertsManager
-                        from src.observability.alerts.models import AlertEvent
-                        router = AlertsManager.get_router()
-                        event = AlertEvent.create_watchdog_trip(
-                            run_id=self._run_id,
-                            tick=self._state.tick,
-                            message=f"Mid-tick emergency throttle triggered: tick compute took {elapsed:.2f}ms, forced governor DEGRADED",
-                            details={
-                                "elapsed_ms": elapsed,
-                                "dropped_count": len(self._final_results) - i
-                            }
-                        )
-                        router.route(event)
-                    except Exception:
-                        logger.exception("Failed to route emergency throttle alert")
-                    break
+                if elapsed > self._profile.max_tick_budget_ms:
+                    # Report only (PERF-D1 inputs 2 and 3): no result is dropped and no mode is forced,
+                    # so what a run computes does not depend on how fast the host is.
+                    overrun_reported = True
+                    self._report_budget_overrun(elapsed, self._profile.max_tick_budget_ms, "mid_tick", self._state.tick)
 
             if res.work_debt_update is not None and res.subsystem_id:
                 work_debt_updates[res.subsystem_id] = res.work_debt_update
@@ -1184,17 +1159,19 @@ class Kernel:
             )
 
     def _phase_persistence(self) -> None:
-        tick_hash = "SKIPPED"
+        from src.engine.checkpoint import CanonicalHashScheduler
+        tick = self._state.tick
         if self._current_policy.replay_allowed and (self._audit_mode or self._current_policy.replay_richness == "FULL"):
-            from src.engine.checkpoint import CanonicalStateHasher
-            tick_hash = CanonicalStateHasher.get_hash(self._state)
-            
+            digest = CanonicalHashScheduler().compute_digest(self._state, tick, reason="replay")
+        else:
+            digest = CanonicalHashScheduler.not_computed_by_policy(tick)
+
         if self._current_policy.replay_allowed:
             self._replay.emit(TraceEvent(
-                tick=self._state.tick,
+                tick=tick,
                 system="KERNEL",
                 event_type="TICK_END",
-                payload={"hash": tick_hash}
+                payload={"hash": digest.value, "scheme": digest.scheme, "digest_status": digest.status.value}
             ), self._current_policy)
             
         self._replay.on_tick_end(self._state.tick)
@@ -1255,8 +1232,8 @@ class Kernel:
                     report.warnings.append(f"behavior-normalization-worker did not stop within 1s")
                     report.outcome = "PARTIAL"
 
-        from src.engine.checkpoint import CanonicalStateHasher
-        final_hash = CanonicalStateHasher.get_hash(self._state)
+        from src.engine.checkpoint import CanonicalHashScheduler
+        final_hash = CanonicalHashScheduler(self._state.tick).compute_digest(self._state, self._state.tick).require_value()
         logger.info(f"Final Auth Hash: {final_hash}")
         replay_outcome = self._replay.finalize(timeout_s=timeout_s)
 

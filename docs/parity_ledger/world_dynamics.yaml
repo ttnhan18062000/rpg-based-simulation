@@ -2306,7 +2306,7 @@
     EntityGenerator.free_spawn_position)
   proof_type: null
   test_path: tests/unit/world/test_spawn_monster_catalog_faction.py
-  divergence_note: DEV-014 (Bug Fix / Intentional Gameplay Change)
+  divergence_note: DEV-015 (Bug Fix / Intentional Gameplay Change)
   support_boundary: 'Held out (owner-confirmed gap): wolf, slime, bear, harpy, golem
     keep the bucket only, because a wild_beast_pack attacker cannot legally attack a
     hero. World bosses are unchanged. Placement avoids the same-tick spawn/move race;

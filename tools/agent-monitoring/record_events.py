@@ -19,6 +19,8 @@ if _REPO_ROOT_STR not in sys.path:
     sys.path.append(_REPO_ROOT_STR)
 from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
+from vocabulary import SKIP_REASONS  # noqa: E402
+
 REQUIRED = {"run_id", "seq", "ts", "phase", "agent", "summary", "status"}
 VALID_STATUS = {"ok", "failed", "blocked", "skipped"}
 
@@ -41,6 +43,13 @@ def validate_record(record: dict) -> list[str]:
         errors.append("session_id must be a string or null")
     if record.get("cost_source") is not None and record["cost_source"] not in ("sidecar", "session_window"):
         errors.append("cost_source must be 'sidecar' or 'session_window'")
+    # Why a phase was skipped (TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD); only meaningful on a skipped event.
+    skip_reason = record.get("skip_reason")
+    if skip_reason is not None:
+        if skip_reason not in SKIP_REASONS:
+            errors.append(f"skip_reason must be one of {SKIP_REASONS}")
+        elif record.get("status") != "skipped":
+            errors.append("skip_reason is only valid on a status 'skipped' event")
     findings = record.get("test_quality_findings")
     if findings is not None and not (isinstance(findings, list) and all(isinstance(x, str) for x in findings)):
         errors.append("test_quality_findings must be a list of strings")

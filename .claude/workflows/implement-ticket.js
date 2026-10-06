@@ -146,6 +146,7 @@ const verifyAttestation = (agentOutput, { nonce, gate, expectedCmd }) => {
 // Legacy runtime: the runtime's own bash(), unchanged. Native: attested dispatch, fail closed. An unverified or
 // non-zero result throws, so a gate can never fall through its marker-absent default (several of these sites treat a
 // missing marker as "no problem"); the catch at the bottom of this file records WORKFLOW_ERROR and rethrows.
+let lastAttestedStdoutSha = null // the attestation the next pushStaticGate row links to (gate_verdicts inputs_ref.stdout_sha)
 const shAttested = async (cmd, gate, label) => {
   if (legacyBash) return legacyBash(cmd)
   const nonce = String(args.execution_id_suffix)
@@ -157,6 +158,7 @@ const shAttested = async (cmd, gate, label) => {
   const out = result && typeof result.stdout === 'string' ? result.stdout : ''
   const verdict = verifyAttestation(out, { nonce, gate, expectedCmd: cmd })
   if (!verdict.ok) throw new Error(`GATE_ATTESTATION_FAILED ${gate}: ${verdict.reason}`)
+  try { lastAttestedStdoutSha = JSON.parse(/ATTEST:(\{.*\})/.exec(out)[1]).stdout_sha || null } catch (e) { lastAttestedStdoutSha = null }
   return out.split('\n').filter((line) => !line.startsWith('ATTEST:')).join('\n')
 }
 
@@ -558,7 +560,9 @@ const cleanFindings = (raw) => {
   return { findings, normalized }
 }
 
-const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, reasonCode, testQualityFindings, testsRead) => {
+// skipReason (TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD): why a 'skipped' event was skipped; one of
+// tier_plan | condition_false (the pipeline's own skip sites), carried only on status 'skipped'.
+const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, reasonCode, testQualityFindings, testsRead, skipReason) => {
   const event = {
     seq: events.length + 1 + seqOffset,
     phase: phaseLabel,
@@ -569,6 +573,7 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, re
     tool_call_count: toolCallCount != null ? toolCallCount : null,
     reason_code: reasonCode || null,
   }
+  if (status === 'skipped' && skipReason) event.skip_reason = skipReason
   const cleaned = cleanFindings(testQualityFindings)
   if (cleaned) {
     event.test_quality_findings = cleaned.findings
@@ -581,6 +586,26 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, re
   }
   events.push(event)
 }
+
+// Gate verdict buffer (TCK-20261006-GATE-VERDICT-PIPELINE-SITES). Every gate in gate-policy.yaml pushes one row when it
+// is reached, on pass and on fail, so a false pass can be found later. Rows are flushed once by writeMonitoring()
+// through gate_verdicts.py, like the events, so a write failure never changes final_status or the event stream.
+// gate_id is `<phase>:<check_module>.<check_function>` for a static_check, `<phase>:verdict` for an agent_verdict and
+// `<phase>:<result_field>` for an agent_result_field (gate_verdicts.policy_gate_id); a conformance test ties every
+// gate-policy.yaml entry to one of these literals below.
+const gateRows = []
+const pushGate = (gateId, gateType, phase, verdict, blocking, evidence, linkedStdoutSha) => {
+  try {
+    gateRows.push({
+      gate_id: gateId, gate_type: gateType, phase, verdict: String(verdict), blocking: Boolean(blocking),
+      inputs_ref: { phase, evidence: truncateSummary(evidence).replace(/['"\\]/g, '’'), ...(linkedStdoutSha ? { stdout_sha: linkedStdoutSha } : {}) },
+    })
+  } catch (e) { /* monitoring must never fail the workflow */ }
+}
+// A static gate behind shAttested has two rows on the native runtime (TCK-20261006-GATE-LEDGER-NATIVE-ATTESTED-ROWS-DOUBLE-COUNT):
+// attest_gate.py's `attested_command` row is the evidence, and this row is the verdict under the gate-policy id. It carries the
+// attestation's stdout_sha so the two link; gate_ledger.py counts verdicts from the non-attested rows only. Legacy: this row only.
+const pushStaticGate = (...gateArgs) => pushGate(...gateArgs, legacyBash ? null : lastAttestedStdoutSha)
 
 // Orchestrator-side sidecar write — replaces the former per-prompt "Step 0b" (and Finalize's combined
 // "Step 0") agent-prompt-text instruction. Call this once, immediately before each corresponding
@@ -694,8 +719,18 @@ Step 2 — build and write events:
   (--default-ts is a safety net for exactly the "ts is null or missing" case above — it never overrides
   a ts an event already has, and without it a missing ts aborts the whole batch.)
 
+Step 2b — planned phases with no event (TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD):
+  Run: python3 tools/agent-monitoring/path_record.py --tier ${tier} --phases ${[...new Set(events.map((e) => e.phase))].join(',')}
+  Save its stdout (a JSON list) as OMITTED and add it to the run JSON below as the key "phases_omitted":OMITTED.
+  If this command fails, leave the key out entirely.
+
+Step 2c — write gate verdict rows (TCK-20261006-GATE-VERDICT-PIPELINE-SITES; skip this step when the list below is []):
+  Gate rows: ${JSON.stringify(gateRows.map((g) => ({ ...g, run_id: tid, execution_id: executionId, ticket_id: tid, execution_mode: legacyBash ? 'pipeline' : 'workflow' }))).replace(/'/g, '’')}
+  Run: python3 tools/agent-monitoring/gate_verdicts.py record-batch --data '<the gate rows JSON above, unchanged>'
+  A failure here is only a warning; never retry it and never let it change the run.
+
 Step 3 — write run record (replace <END_TS> with the value from Step 1):
-  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${tid}","execution_id":"${executionId}","provider":"${PROVIDER}","ticket_id":"${tid}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"implement-ticket","tier":"${tier}","final_status":"${finalStatus}","agent_count":${eventsCount},"execution_mode":"pipeline"}'
+  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${tid}","execution_id":"${executionId}","provider":"${PROVIDER}","ticket_id":"${tid}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"implement-ticket","tier":"${tier}","final_status":"${finalStatus}","agent_count":${eventsCount},"execution_mode":"pipeline","path_reason":"pipeline_default"}'
 
 If any command fails, print "WARNING: monitoring write failed: <error>" and continue — do NOT raise.
 Return "monitoring written" or "monitoring write failed: <reason>".`,
@@ -735,6 +770,7 @@ if (tagCheckMarkerIndex !== -1) {
   try { unregisteredTags = JSON.parse(tagCheckOutput.slice(tagCheckMarkerIndex + 'TAG_CHECK_JSON:'.length).trim()) }
   catch (e) { unregisteredTags = [] }
 }
+if (tagsArgs) pushStaticGate('Scope:tag_registry.check_tags_registered', 'static_check', 'Scope', unregisteredTags.length > 0 ? 'FAIL' : 'PASS', unregisteredTags.length > 0, `unregistered=${unregisteredTags.length}`)
 
 // Push scope event. reason_code (TCK-20260706-MONITORING-REASON-CODE convention, reused here):
 // Scope now has 2 distinct failure causes (conflicts, unregistered tags) — the same
@@ -758,6 +794,7 @@ if (ticketInfo.related_context && ticketInfo.related_context.length > 0) {
   log(`Related context (non-blocking): ${ticketInfo.related_context.join(' | ')}`)
 }
 
+pushGate('Scope:conflicts', 'agent_result_field', 'Scope', (ticketInfo.conflicts && ticketInfo.conflicts.length > 0) ? 'FAIL' : 'PASS', ticketInfo.conflicts && ticketInfo.conflicts.length > 0, `conflicts=${(ticketInfo.conflicts || []).length}`)
 if (ticketInfo.conflicts && ticketInfo.conflicts.length > 0) {
   log(`Conflicts detected: ${ticketInfo.conflicts.join(' | ')}`)
   log('Review conflicts before proceeding. Re-run with ticket_id to continue from existing ticket.')
@@ -990,6 +1027,7 @@ print('UNRESOLVED_CHECK_JSON:' + json.dumps(plan_has_unresolved_questions_headin
     catch (e) { hasUnresolvedQuestions = false }
   }
 
+  pushStaticGate('Plan:gate_checks.plan_gate_static.plan_has_unresolved_questions_heading', 'static_check', 'Plan', hasUnresolvedQuestions ? 'FAIL' : 'PASS', hasUnresolvedQuestions, `unresolved_heading=${hasUnresolvedQuestions}`)
   if (hasUnresolvedQuestions) {
     pushEvent('Plan', 'planner', 'blocked', 'Plan contains unresolved questions — human review required', planTs)
     log('Plan contains unresolved questions — human review required before implementation.')
@@ -1049,6 +1087,7 @@ summary (one sentence: verdict + key reason, ≤200 chars).`,
     { label: 'architecture-review', schema: REVIEW_SCHEMA, agentType: 'architecture-reviewer' }
   )
 
+  pushGate('Review:verdict', 'agent_verdict', 'Review', review.verdict, review.verdict !== 'APPROVED', review.summary)
   if (review.verdict !== 'APPROVED') {
     log(`Architecture review: ${review.verdict}`)
     if (review.violations.length > 0) {
@@ -1068,9 +1107,9 @@ summary (one sentence: verdict + key reason, ≤200 chars).`,
   log('Architecture review: APPROVED')
 } else {
   log('Hotfix tier: skipping Investigate, Plan, and Architecture Review.')
-  pushEvent('Investigate', 'investigator', 'skipped', 'Hotfix tier — investigation skipped')
-  pushEvent('Plan', 'planner', 'skipped', 'Hotfix tier — plan skipped')
-  pushEvent('Review', 'architecture-reviewer', 'skipped', 'Hotfix tier — architecture review skipped')
+  pushEvent('Investigate', 'investigator', 'skipped', 'Hotfix tier — investigation skipped', null, null, null, null, null, 'tier_plan')
+  pushEvent('Plan', 'planner', 'skipped', 'Hotfix tier — plan skipped', null, null, null, null, null, 'tier_plan')
+  pushEvent('Review', 'architecture-reviewer', 'skipped', 'Hotfix tier — architecture review skipped', null, null, null, null, null, 'tier_plan')
 }
 
 // ─── Phase 5: Implement ───────────────────────────────────────────────────────
@@ -1223,6 +1262,7 @@ if (docStalenessMarkerIndex !== -1) {
 }
 const docStalenessFailure = docStalenessResults && docStalenessResults.find(r => r.status === 'FAIL')
 const docStalenessAdvisory = docStalenessResults && docStalenessResults.find(r => r.status === 'ADVISORY')
+if (docStalenessResults) pushStaticGate('Implement:gate_checks.doc_staleness_check.check_doc_staleness', 'static_check', 'Implement', docStalenessFailure ? 'FAIL' : 'PASS', Boolean(docStalenessFailure), docStalenessFailure ? docStalenessFailure.evidence : '')
 
 // Files-Changed-omission early warning (TCK-20260831-HOTFIX-FILES-CHANGED-DOC-OMISSION-EARLY-
 // WARNING, agent-working/agent-monitoring/retro/RETRO-2026-W35.md § "What to change?" item 1): a ticket's own
@@ -1418,6 +1458,7 @@ except Exception:
     }
   }
 
+  pushGate('Architecture-Verify:verdict', 'agent_verdict', 'Architecture-Verify', archVerify.verdict, archVerify.verdict !== 'APPROVED', archVerify.summary)
   if (archVerify.verdict !== 'APPROVED') {
     log(`Architecture-Verify: ${archVerify.verdict}`)
     if (archVerify.violations.length > 0) {
@@ -1436,7 +1477,7 @@ except Exception:
   pushEvent('Architecture-Verify', 'architecture-reviewer', 'ok', archVerify.summary || 'Architecture-Verify: APPROVED', archVerifyTs, null, null, archVerify.test_quality_findings, archVerify.tests_read)
   log('Architecture-Verify: APPROVED')
 } else {
-  pushEvent('Architecture-Verify', 'architecture-reviewer', 'skipped', 'Hotfix tier — architecture verify skipped')
+  pushEvent('Architecture-Verify', 'architecture-reviewer', 'skipped', 'Hotfix tier — architecture verify skipped', null, null, null, null, null, 'tier_plan')
 }
 
 // ─── Phase 6: Test ────────────────────────────────────────────────────────────
@@ -1547,6 +1588,7 @@ if (testScopeMarkerIndex !== -1) {
   catch (e) { testScopeCheckResults = [] }
 }
 const testScopeGaps = testScopeCheckResults.filter(r => r.status === 'FAIL')
+pushStaticGate('Test:gate_checks.test_scope_coverage_static.check_test_scope_coverage', 'static_check', 'Test', testScopeGaps.length > 0 ? 'FAIL' : 'PASS', testScopeGaps.length > 0, `gaps=${testScopeGaps.length}`)
 
 if (testScopeGaps.length > 0) {
   const gapDirs = testScopeGaps.map(g => g.condition.replace('test_scope_covers:', '')).join(', ')
@@ -1562,6 +1604,7 @@ if (testScopeGaps.length > 0) {
   }
 }
 
+pushGate('Test:passed', 'agent_result_field', 'Test', testResult.passed ? 'PASS' : 'FAIL', !testResult.passed, `fail_count=${testResult.fail_count}`)
 if (!testResult.passed) {
   pushEvent('Test', 'test-scoper', 'failed', testResult.summary || testResult.fail_count + ' tests failing: ' + testResult.failed_tests.slice(0, 3).join(', '), testTs)
   log(`Tests FAILED: ${testResult.fail_count} failing — ${testResult.failed_tests.join(', ')}`)
@@ -1609,6 +1652,7 @@ const cleanupSepIdx = cleanupOutput.indexOf('|')
 const cleanupStatus = cleanupSepIdx === -1 ? cleanupOutput.trim() : cleanupOutput.slice(0, cleanupSepIdx).trim()
 const cleanupEvidence = cleanupSepIdx === -1 ? '' : cleanupOutput.slice(cleanupSepIdx + 1).trim()
 
+pushStaticGate('Test:gate_checks.done_checker_static.clean_data_runs_early', 'static_check', 'Test', cleanupStatus === 'FAIL' ? 'FAIL' : 'PASS', cleanupStatus === 'FAIL', cleanupEvidence)
 if (cleanupStatus === 'FAIL') {
   pushEvent('Test', 'implement-ticket-orchestrator', 'failed', `Post-Test data/runs cleanup failed: ${cleanupEvidence}`, testTs)
   log(`Post-Test data/runs cleanup FAILED: ${cleanupEvidence}`)
@@ -1668,7 +1712,7 @@ if hits: print(hits)
 
 if (paritySkipEligible && !parityForceFullRun) {
   log('Parity: no src/ changes and no reported behavior change — skipping parity-updater agent call.')
-  pushEvent('Parity', 'parity-updater', 'skipped', 'No src/ changes and behavior_changed=false — parity ledger unaffected')
+  pushEvent('Parity', 'parity-updater', 'skipped', 'No src/ changes and behavior_changed=false — parity ledger unaffected', null, null, null, null, null, 'condition_false')
 } else {
   const PARITY_SCHEMA = {
     type: 'object',
@@ -1764,6 +1808,7 @@ print('PARITY_CHECK_JSON:' + json.dumps(results))
     catch (e) { parityCrossRef = null }
   }
   const parityCrossRefFailures = (parityCrossRef || []).filter(r => r.status === 'FAIL')
+  if (parityCrossRef !== null) pushStaticGate('Parity:gate_checks.parity_updater_static.cross_reference_touched', 'static_check', 'Parity', parityCrossRefFailures.length > 0 ? 'FAIL' : 'PASS', parityCrossRefFailures.length > 0, `failures=${parityCrossRefFailures.length}`)
 
   // Reverses TCK-20260705-GATE-DET-PARITY-UPDATER's explicit "visibility-only, no new blocking
   // status" decision (agent-working/stored_artifacts/TCK-20260705-GATE-DET-PARITY-UPDATER/plan.md lines 222-227) —
@@ -1898,6 +1943,7 @@ except Exception:
     }
   }
 
+  pushGate('Security-Review:verdict', 'agent_verdict', 'Security-Review', securityReview.verdict, securityReview.verdict !== 'APPROVED', securityReview.summary)
   if (securityReview.verdict !== 'APPROVED') {
     log(`Security review: ${securityReview.verdict}`)
     if (securityReview.violations.length > 0) {
@@ -1991,6 +2037,7 @@ Return: verdict, failing_items, checklist, summary (one sentence: READY_TO_CLOSE
   { label: 'done-check', schema: DONE_SCHEMA, agentType: 'done-checker' }
 )
 
+pushGate('Verify:verdict', 'agent_verdict', 'Verify', doneCheck.verdict, doneCheck.verdict !== 'READY_TO_CLOSE', doneCheck.summary)
 if (doneCheck.verdict !== 'READY_TO_CLOSE') {
   const reasonCode = await classifyChecklistFailure(doneCheck.checklist, tid, tier)
   pushEvent('Verify', 'done-checker', 'failed', doneCheck.summary || 'DoD BLOCKED — ' + doneCheck.failing_items.length + ' items failing', doneCheckTs, null, reasonCode)
@@ -2129,6 +2176,7 @@ if (finalizeResults === null) {
 }
 
 const finalizeFailures = finalizeResults.filter(r => r.status === 'FAIL')
+pushStaticGate('Finalize:gate_checks.done_checker_static.run_finalize_selfcheck', 'static_check', 'Finalize', finalizeFailures.length > 0 ? 'FAIL' : 'PASS', finalizeFailures.length > 0, `failures=${finalizeFailures.length}`)
 if (finalizeFailures.length > 0) {
   pushEvent('Finalize', 'finalizer', 'failed', finalizeFailures.map(f => f.condition + ': ' + f.evidence).join(' | '))
   await writeMonitoring('FINALIZE_INCOMPLETE')

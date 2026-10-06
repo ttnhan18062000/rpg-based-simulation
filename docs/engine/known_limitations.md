@@ -112,27 +112,28 @@ Source: D09 Finding 5 (Risk 11/15). Ticket: TCK-20260627-P1G-STABILITY-GUARD.
 
 `_phase_persistence()` in `src/engine/kernel.py` records a per-tick digest value under the payload
 key `"hash"` of the `TICK_END` replay event. Whether that value is a real SHA-256 (the proof
-digest, `flat-sha256-v1`; see `docs/engine/deterministic_execution.md`) or the sentinel string
-`"SKIPPED"` depends on the active `GovernorPolicy`, and on `audit_mode`:
+digest, `flat-sha256-v1`; see `docs/engine/deterministic_execution.md`) or not computed (`null` with a
+`digest_status`) depends on the active `GovernorPolicy`, and on `audit_mode`. Replays recorded before
+`TCK-20261006-PERF-M1-KERNEL-DIGESTS-VIA-SCHEDULER` carry the string `"SKIPPED"` instead; see the `TICK_END` schema note in `deterministic_execution.md`:
 
 | RuntimeMode | `replay_richness` | `replay_allowed` | TICK_END `hash` value |
 |---|---|---|---|
 | NORMAL | "FULL" | True | SHA-256 canonical hash |
 | CONSTRAINED | "FULL" | True | SHA-256 canonical hash |
-| DEGRADED | "MINIMAL" | True | `"SKIPPED"`, unless `audit_mode` is on (audit mode forces the SHA-256 hash in every mode that allows replay) |
+| DEGRADED | "MINIMAL" | True | `null` (`digest_status` `not_computed_live_policy`), unless `audit_mode` is on (audit mode forces the SHA-256 hash in every mode that allows replay) |
 | SURVIVAL | "OFF" | False | no TICK_END event emitted |
 
 In **NORMAL** and **CONSTRAINED** modes — the two most common runtime configurations —
-`replay_richness == "FULL"`, so `CanonicalStateHasher.get_hash()` runs on every tick
+`replay_richness == "FULL"`, so the proof digest is computed on every tick (`CanonicalHashScheduler.compute_digest`)
 and the canonical SHA-256 is present in every `TICK_END` event.
 
 In **DEGRADED** mode, `replay_richness` drops to `"MINIMAL"` to shed hashing overhead.
-The `TICK_END` event is still emitted, but `hash` is the literal string `"SKIPPED"`.
-Consumers inspecting TICK_END sequences in DEGRADED-mode runs must handle this sentinel.
+The `TICK_END` event is still emitted, but `hash` is `null` and `digest_status` is `not_computed_live_policy`.
+Consumers inspecting TICK_END sequences in DEGRADED-mode runs must treat that as "not computed", never as a match.
 
 In **SURVIVAL** mode, `replay_allowed = False`: no TICK_END event is emitted at all.
 
-The **final canonical hash** (`CanonicalStateHasher.get_hash()` called in `Kernel.shutdown()`)
+The **final canonical hash** (`CanonicalHashScheduler.compute_digest` at the run-end boundary in `Kernel.shutdown()`)
 is always computed regardless of mode — it is not gated on `replay_richness`.
 
 #### Lightweight fingerprint (`StateFingerprinter`)

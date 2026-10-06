@@ -16,13 +16,13 @@ Defines the resource boundaries for the concurrent worker pool. Every bound is s
 | **Worker Count** | Limit parallel threads. | `max_worker_count` | `ThreadPool` size ceiling. |
 | **Queue Depth** | Bound the work backlog. | `max_queue_depth` | **Immediate local execution.** |
 | **Payload Scale** | Prevent RAM blowup. | `max_neighborhood_size` | Truncate distant neighbors. |
-| **Tick Budget** | Limit overall latency. | `max_tick_budget_ms` | `ResourceGovernor` shedding. |
+| **Tick Budget** | Limit overall latency. | `max_tick_budget_ms` | `ResourceGovernor` mode change (cadence, phase budgets, concurrency, replay); no work is shed. An overrun is only reported (`RuntimeStatus.budget_overrun_*`, DEV-014 in `docs/guidelines/intentional_divergences.md`). |
 
 ## Local Fallback Triggers
 
 Workers fall back to local execution when:
 1. **Queue Saturated**: Submitting the (N+1)-th task where N = `max_queue_depth`.
-2. **Resource Pressure**: Governor sets mode to DEGRADED or SURVIVAL (optimization to reduce thread context switching).
+2. **Resource Pressure**: Not implemented as a trigger. No mode forces local execution: `force_local` (`src/engine/worker_manager.py` lines 97 and 104) has no caller in `src/`. DEGRADED and SURVIVAL only lower `concurrency_limit` (0.5 and 0.25; `Kernel` calls `set_concurrency_limit(self._current_policy.concurrency_limit)`, `src/engine/kernel.py`), which caps the workers used per batch.
 3. **Profile Disability**: `max_worker_count` set to 0.
 
 ## Forbidden Behavior
