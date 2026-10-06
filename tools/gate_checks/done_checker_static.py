@@ -68,6 +68,7 @@ if str(_MONITORING_DIR) not in sys.path:
 
 from verify_temporal_week_consistency import compute_temporal_week_consistency_report  # noqa: E402
 from monitoring_shard_paths import shard_paths  # noqa: E402
+import gate_verdicts  # noqa: E402
 from gate_checks.proof_plan_advisory import check_proof_plan_fields  # noqa: E402
 from gate_checks.cited_evidence_advisory import check_cited_evidence_paths  # noqa: E402
 _REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
@@ -1541,6 +1542,10 @@ def main(argv=None) -> int:
         "closing ticket's entry. Off by default so a gate check never writes a tracked file; "
         "without it, the registry is generated to a temp path and the on-disk file is only read.",
     )
+    parser.add_argument(
+        "--no-record", action="store_true",
+        help="Do not write this verdict to the gate_verdicts shard (TCK-20261006-GATE-VERDICT-RECORD-AND-HAND-SITES).",
+    )
     args = parser.parse_args(argv)
 
     if args.clean_data_runs:
@@ -1566,21 +1571,34 @@ def main(argv=None) -> int:
             part = "both"
 
     any_fail = False
+    sub_results: dict[str, str] = {}
     if part in ("precheck", "both"):
-        any_fail = _render_results(
-            "precheck", run_static_precheck(args.ticket_id, tier, args.start_ts)
-        ) or any_fail
+        results = run_static_precheck(args.ticket_id, tier, args.start_ts)
+        sub_results.update({f"precheck.{r['condition']}": r["status"] for r in results})
+        any_fail = _render_results("precheck", results) or any_fail
     if part in ("finalize", "both"):
-        any_fail = _render_results(
-            "finalize",
-            run_finalize_selfcheck(args.ticket_id, tier, regenerate_registry=args.regenerate_registry),
-        ) or any_fail
+        results = run_finalize_selfcheck(args.ticket_id, tier, regenerate_registry=args.regenerate_registry)
+        sub_results.update({f"finalize.{r['condition']}": r["status"] for r in results})
+        any_fail = _render_results("finalize", results) or any_fail
 
     # Advisories print but never feed any_fail / the exit code.
     for r in run_advisory_checks(args.ticket_id, tier):
         print(f"[advisory] {r['condition']}: {r['status']} — {r['evidence']}")
 
     print(f"RESULT: {'FAIL' if any_fail else 'PASS'} for {args.ticket_id} (tier={tier})")
+    gate_verdicts.record_gate_verdict(
+        enabled=not args.no_record,
+        gate_id=gate_verdicts.gate_id_for(
+            "done_checker_static", "run_static_precheck" if part == "precheck" else "run_finalize_selfcheck"),
+        gate_type="static_check",
+        phase="Verify" if part == "precheck" else "Finalize",
+        verdict="FAIL" if any_fail else "PASS",
+        blocking=any_fail,
+        ticket_id=args.ticket_id,
+        sub_results=sub_results,
+        inputs_ref={"head_sha": gate_verdicts.head_sha(),
+                    "cmd_sha": gate_verdicts.sha256_hex(f"{args.ticket_id}|{tier}|{part}")},
+    )
     return 1 if any_fail else 0
 
 

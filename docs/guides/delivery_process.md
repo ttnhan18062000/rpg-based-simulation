@@ -151,6 +151,17 @@ It re-runs `done_checker_static.py`, `validate_frontmatter.py` and `ticket_field
 `PASS`/`FAIL` per check, and exits non-zero on any failure. Read-only. CI re-runs the same gates on the
 PR as the second backstop. The legacy path does not need it: its gates run in the orchestrator itself.
 
+### Recording what you did about a gate verdict (the gate override ledger)
+
+The gate CLIs write one `gate_verdicts` row per verdict (`docs/agent-monitoring/schema.md`). When you
+override or stop on a blocking verdict instead of fixing and re-running it, record that with
+`python3 tools/agent-monitoring/gate_ledger.py outcome --gate-verdict-id <id> --outcome overridden|stopped [--note ...]`;
+`gate_ledger.py list --unresolved` shows the ids still open. A fix and re-run is derived without any entry
+(a later pass on the same ticket and gate is `fixed_and_rerun`; the same block on the same inputs is
+`rerun_no_change`). When someone rules on whether a verdict was right, `gate_ledger.py adjudicate`. When
+`post_native_run_check.py` fails a gate that the native run attested as PASS, it records the `false_pass`
+itself. Recording an override is bookkeeping, not permission: never edit an artifact to make a gate pass.
+
 ---
 
 ## Branch Naming

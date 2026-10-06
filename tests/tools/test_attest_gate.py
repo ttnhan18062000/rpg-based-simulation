@@ -161,6 +161,7 @@ const agent = async (prompt) => {
 const bashCalls = [];
 const bash = scenario.legacy ? async (c) => { bashCalls.push(c); return 'LEGACY'; } : undefined;
 const args = { execution_id_suffix: scenario.suffix || 'abc123' };
+const ticketId = scenario.ticket_id || '';
 const make = new Function('agent', 'bash', 'args', helpers + '; return { shAttested };');
 (async () => {
   let out = null, err = null;
@@ -210,3 +211,10 @@ def test_shAttested_native_refuses_a_nonce_that_is_unsafe_in_a_shell_command():
 def test_shAttested_legacy_runtime_runs_the_bare_bash_unchanged():
     got = _e2e(cmd="echo x", legacy=True)
     assert got == {"out": "LEGACY", "err": None, "bashCalls": ["echo x"]}
+
+
+def test_shAttested_passes_the_ticket_id_to_the_wrapper_so_native_verdict_rows_carry_it():
+    text = SCRIPT.read_text(encoding="utf-8")
+    shatt = text[text.index("const shAttested"):]
+    wrapper_call = shatt[:shatt.index("label || gate")]
+    assert "${ticketId ? ` --ticket-id ${ticketId}` : ''}" in wrapper_call

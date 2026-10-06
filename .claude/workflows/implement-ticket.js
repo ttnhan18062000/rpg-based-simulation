@@ -151,7 +151,7 @@ const shAttested = async (cmd, gate, label) => {
   const nonce = String(args.execution_id_suffix)
   if (!/^[A-Za-z0-9_.-]+$/.test(nonce)) throw new Error(`GATE_ATTESTATION_FAILED ${gate}: execution_id_suffix must match [A-Za-z0-9_.-]+`)
   const result = await runCommand(
-    `python3 tools/gate_checks/attest_gate.py --nonce ${nonce} --gate-id ${gate} --cmd-b64 ${base64Utf8(cmd)}`,
+    `python3 tools/gate_checks/attest_gate.py --nonce ${nonce} --gate-id ${gate} --cmd-b64 ${base64Utf8(cmd)}${ticketId ? ` --ticket-id ${ticketId}` : ''}`,
     label || gate
   )
   const out = result && typeof result.stdout === 'string' ? result.stdout : ''
@@ -1212,7 +1212,7 @@ const combinedFilesChanged = Array.from(new Set([
 const docStalenessFilesArgs = combinedFilesChanged.map(f => `"${f}"`).join(' ')
 const docsToUpdateArgs = docsToUpdate.length > 0 ? `--docs-to-update ${docsToUpdate.map(d => `"${d}"`).join(' ')}` : ''
 const docStalenessOutput = await shAttested(
-  `python3 tools/gate_checks/doc_staleness_check.py ${implementation.behavior_changed} ${docStalenessFilesArgs} ${docsToUpdateArgs}`,
+  `python3 tools/gate_checks/doc_staleness_check.py ${implementation.behavior_changed} ${docStalenessFilesArgs} ${docsToUpdateArgs} --execution-mode pipeline`,
   'doc_staleness'
 )
 let docStalenessResults = null
