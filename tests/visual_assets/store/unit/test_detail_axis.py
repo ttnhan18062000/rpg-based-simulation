@@ -345,6 +345,8 @@ def test_the_committed_catalog_fills_each_declared_slot_of_terrain_forest_once_a
     expected = {"terrain_forest": None, "terrain_forest_bush": "bush", "terrain_forest_tree": "tree"}
     expected.update({source: None for source in af.TERRAIN_SOURCES})
     expected.update({source: source.rsplit("_", 1)[1] for source in af.BORDER_SOURCES})
+    # and the owner's adoption of icons-key-v1 (2026-10-06T15:21:47Z) added 14 icon sources, none with a detail axis
+    expected.update({source: None for source in af.ICON_SOURCES})
     assert {a.source_asset_id: a.detail_value for a in (records.load_adoption(p.stem) for p in sorted(records.adoptions_dir().glob("*.json")))} == expected
 
 

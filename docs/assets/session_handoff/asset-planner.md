@@ -9,17 +9,41 @@ tags: [architecture, documentation]
 
 # Handover — asset-planner
 
-> Snapshot of the gitignored `.claude/handover/asset-planner.md` on 2026-10-06 at 2c793286f (the batch's code commit; the closing docs commit follows it); on a new machine copy it to `.claude/handover/asset-planner.md`.
-Updated: 2026-10-06 (terrain set review batch built; final review and PR next)
+> Snapshot of the gitignored `.claude/handover/asset-planner.md` on 2026-10-06 at 91949ef96 (the icon batch's last code commit; the closing docs commit follows it); on a new machine copy it to `.claude/handover/asset-planner.md`.
+
+Updated: 2026-10-06 (icon key-set batch filed and handed off)
 
 ## Open
-- Batch `visual-asset-terrain-set-review` (epic TCK-20261005-EPIC-VISUAL-ASSET-TERRAIN-SET-REVIEW), branch of the same name
-  in rpg-aseprite-mcp, NOT pushed. All children built; asset-implementer closes the folder, then asks me for the final review.
-  Then: merge origin/main (code-health gates are blocking since 2026-10-05; batch has no src/), pr_render, and push/PR/--admin
-  merge only on the user's own answers to blocking questions.
-- Open question for the final review: the implementer reported W05 "gate stays INCONCLUSIVE" next to AM5-S PASS and forest
-  rule PASS; confirm in the results doc why (it must be a stated reason, never a reworded gate).
-- ASSET WORK PAUSED again after this batch (user 2026-10-04 pause, lifted for this batch only). Parked, no tickets: icons and
+- 2026-10-06 (later): user lifted the pause for ICONS only and asked for deep research first. Research done
+  (scratchpad of session cdf02383: research_games.md, research_icon_craft.md, research_packs_palettes.md,
+  icon_research_synthesis.md; copy them into the batch as docs, scratchpad is not durable).
+  User decisions (blocking question, 2026-10-06): style B + tier badges (16px map glyph on per-category plate,
+  24px panel icons, 8px shape-escalating tier badge, status frames with up/down chevrons); palette = terrain-v1
+  base + ramps + small accent set, sheet-level icon colour-vision rule; outside art REFERENCE ONLY (recorded
+  TASL), no AI generators; map zoom snaps to whole-number scales (frontend ticket). Batch FILED: branch visual-asset-icon-key-set in rpg-aseprite-mcp, planning commit 657c552e3 (local,
+  not pushed); epic TCK-20261006-EPIC-VISUAL-ASSET-ICON-KEY-SET + 6 children in todos/visual-asset-icon-key-set/;
+  research committed in child 1's staging folder. Handed to asset-implementer 2026-10-06. Awaiting: review requests.
+  Child 1 approved (123f7b20d). Rulings: plate+glyph separate 16x16 keys, glyph live 12x12; ticket's tier ladder kept.
+  Child 2: registry_hash move breaks rc-0005 fixture guards (my ticket was wrong); user chose (a) assemble rc-0006
+  (blocking question 2026-10-06). Child 2 APPROVED (6a855754b): rc-0006 = rc-0005's 34 entries on the new registry;
+  pilot fixture guard = forest slots of fresh rc-0006 export + equality with stored rc-0004 (planner ruling). Child 3 APPROVED
+  (amended to e7bfcf631, notes only): user answers I1 3/6 px (E,D may share silhouette), I2 L* 6 (interior mean), I3 L* 12; palette icons-v1 52
+  colours. Planner accepted LIGHT plate rim #9ea4b6 (dark rim can't clear dark terrain) -> name it to the user at the gate.
+  Confirmed: the user saw interior-mean numbers. Child 4 APPROVED as f8751f0d8, final d11cdde78 (monitoring shard only): user chose (blocking
+  question 2026-10-06) a FLAT-COLOUR OVERVIEW level at 0.5x (snapping alone removed it at DPR 1); asked implementer to add
+  one overview level + pure isOverviewZoom() for the wiring batch's art path (done). Child 5 in progress: 14 drafts kept as icons-key-v1;
+  rule measured I1 min 4 px, I2 8.74/14.2, I3 18.0. Deviations to NAME AT THE GATE: light plate rim; S/SS/SSS are
+  diamonds with 0/1/2 pip cut-outs (true stars don't fit 8x8 with outline); 0.5x overview = flat colours. Icon fixture
+  guard ignores registry_hash only (planner ruling). Child 5 APPROVED as 5d2792464 (debuff redrawn as
+  a down arrow, I2 frames 7.66; draft set hash sha256:29854e8b...). User ADOPTED icons-key-v1 (sa-b4bb738d6b5526f0,
+  2026-10-06T15:21:47Z, own terminal; adopt-set refuses without a TTY so agents can't run it). Child 6 handed off.
+  Preview server tip: Vite listens on [::1] only -> http://[::1]:5173/rehearsal-icons.html. For the wiring batch: frontend fallback.ts has no `icon` family glyph (gets "?").
+- Nothing in flight. Last: PR #361 (terrain set review, 7 tickets) squash-merged as 47931fa54 on 2026-10-06 (--admin, the user's
+  own answer). Branch visual-asset-terrain-set-review finished; rpg-aseprite-mcp detached at origin/main. Awaiting: nothing.
+- W05 stays INCONCLUSIVE because the gate is "no critical distinction is hue-only" (the hover-text route is unexercised, AM-M6),
+  not the colour-vision rule (which passes).
+- The tracked snapshots in docs/assets/session_handoff/ are the 2026-10-06 copy (#361); refresh them in the next asset batch PR.
+- ASSET WORK PAUSED again (user 2026-10-04 pause, lifted for this batch only). Parked, no tickets: icons and
   other kinds (entities, buildings, items, UI; reuse draft sets + adopt-set), charter signing, AM-M6.
 - Ignore (user, 2026-10-04): the agent-monitoring retro hook and the TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN staleness nag.
 - FYI codebase-planner (2026-10-05): advisory import contracts c14/c15 (visual_assets <-> src, no imports either way) in
@@ -55,5 +79,5 @@ Updated: 2026-10-06 (terrain set review batch built; final review and PR next)
 - Criteria + results: `docs/assets/pilot_terrain_m5_criteria.md` (AM5-S, AM5-B, AM5-W03-SET), `docs/assets/pilot_terrain_m5_results.md`
 - Contract: `docs/assets/store_contract.md`; ADR: `docs/architecture/visual_asset_foundation_adr.md`; register: `docs/assets/m1_contract_register.md`
 - Charter draft: `docs/assets/pilot_charter_am6.md`; M5: `docs/assets/surface_rehearsal_result.md`
-- Done batches: `agent-working/tickets/done/visual-asset-m1-unblock/`, `.../visual-asset-terrain-set-review/` (once closed)
+- Done batches: `agent-working/tickets/done/visual-asset-m1-unblock/`, `.../visual-asset-terrain-set-review/`
 - Delivery rules: `docs/guides/delivery_process.md`

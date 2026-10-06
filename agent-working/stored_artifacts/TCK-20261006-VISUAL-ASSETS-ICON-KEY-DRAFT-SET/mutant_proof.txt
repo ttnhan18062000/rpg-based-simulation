@@ -1,0 +1,6 @@
+Guards of the icon preview fixture (tests/visual_assets/test_icon_draft_fixture.py), each a test that plants the change in a copy and checks icon_draft_fixture.differences():
+flipped PNG byte ............. caught (the PNG's name is reported)
+changed manifest entry ....... caught (draft_preview_manifest.json differs, registry_hash ignored)
+missing PNG .................. caught (files differ)
+changed registry_hash alone .. NOT caught, by design (planner-approved): a key registration must not break an art guard; draft_set_hash is the file hash of draft_set.json and holds no registry hash.
+Preview-page tests (IconHarness.test.tsx, iconScene.test.ts, pixelFit.test.ts) pin: plate-then-glyph order, whole device-pixel sizes at DPR 1.25, the approximation label, the recorded result display, the colour matrices equal to pilot_colour_vision.py, the key sizes equal to the registry descriptions, and the fit function equal to src/lib/pixelScale.ts.

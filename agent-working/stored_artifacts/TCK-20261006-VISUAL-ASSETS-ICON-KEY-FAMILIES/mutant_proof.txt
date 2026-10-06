@@ -1,0 +1,5 @@
+Mutants against tests/visual_assets/test_pilot_fixture.py::check_fixture_against_fresh_export (fresh export of pilot/rc-0006 vs a copy of the fixture):
+baseline ok
+byte flipped (one byte of a forest PNG)  -> caught: <hash>.png differs from a fresh export
+slot dropped (one entry removed from the manifest) -> caught: the fixture's forest slots differ from a fresh export
+nothing moved (release_id and registry_hash set equal to the fresh export) -> caught: only the release id, the registry hash and the manifest hash derived from them may differ

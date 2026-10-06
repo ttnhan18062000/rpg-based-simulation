@@ -1,0 +1,46 @@
+import json, sys
+SPR = {}
+def ops(rows, legend):
+    """Run-length rects: merge equal horizontal runs, then merge identical runs stacked vertically."""
+    runs = []
+    for y, row in enumerate(rows):
+        x = 0
+        while x < len(row):
+            ch = row[x]
+            if ch == '.':
+                x += 1; continue
+            x2 = x
+            while x2 < len(row) and row[x2] == ch: x2 += 1
+            runs.append([x, y, x2 - x, 1, legend[ch]])
+            x = x2
+    merged = []
+    for r in runs:
+        for m in merged:
+            if m[0] == r[0] and m[2] == r[2] and m[4] == r[4] and m[1] + m[3] == r[1]:
+                m[3] += 1; break
+        else:
+            merged.append(r)
+    return [{"op": "rect", "x": x, "y": y, "width": w, "height": h, "color": c} for x, y, w, h, c in merged]
+
+# plate: rim r (uniform), fill f, light edge h (top and left inside), shadow l (bottom and right inside)
+def plate():
+    rows = []
+    for y in range(16):
+        row = ""
+        for x in range(16):
+            edge = x in (0, 15) or y in (0, 15)
+            corner = x in (0, 15) and y in (0, 15)
+            if corner: row += "."
+            elif edge: row += "r"
+            elif y == 1 or x == 1: row += "h"
+            elif y == 14 or x == 14: row += "l"
+            else: row += "f"
+        rows.append(row)
+    return rows
+SPR["plate"] = (plate(), {"r": "#9ea4b6", "f": "#555b73", "h": "#717e8f", "l": "#252530"})
+
+if __name__ == "__main__":
+    rows, legend = SPR[sys.argv[1]]
+    w = {len(r) for r in rows}; assert len(w) == 1, w
+    print("\n".join(rows), file=sys.stderr)
+    print(json.dumps(ops(rows, legend), separators=(",", ":")))

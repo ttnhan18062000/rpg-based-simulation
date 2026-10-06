@@ -1,0 +1,60 @@
+import sys, json, itertools
+sys.path.insert(0, "/home/vboxuser/Work/rpg-aseprite-mcp")
+from art import ops
+OCT = ["..####..", ".######.", "########", "########", "########", "########", ".######.", "..####.."]
+DIA = ["...##...", "..####..", ".######.", "########", "########", ".######.", "..####..", "...##..."]
+def mask(rows): return {(x, y) for y, r in enumerate(rows) for x, c in enumerate(r) if c == "#"}
+def holes(shell, rects): return shell - {(x, y) for x0, y0, w, h in rects for x in range(x0, x0 + w) for y in range(y0, y0 + h)}
+SHAPES = {"e": mask(OCT), "d": mask(OCT), "c": holes(mask(OCT), [(3, 3, 2, 2)]), "b": holes(mask(OCT), [(1, 3, 2, 2), (5, 3, 2, 2)]),
+          "a": holes(mask(OCT), [(2, 3, 4, 2)]), "s": mask(DIA), "ss": holes(mask(DIA), [(3, 3, 2, 2)]), "sss": holes(mask(DIA), [(1, 3, 2, 2), (5, 3, 2, 2)])}
+FILL = {"e": "#28331d", "d": "#2d4a3e", "c": "#4a6050", "b": "#6a7a40", "a": "#8e8c75", "s": "#9ea4b6", "ss": "#e8c040", "sss": "#d9ecf3"}
+def outer_background(shape, w, h):
+    """Transparent pixels connected to the canvas edge (enclosed holes are NOT outer background)."""
+    seen, stack = set(), [(x, y) for x in range(-1, w + 1) for y in (-1, h)] + [(x, y) for y in range(-1, h + 1) for x in (-1, w)]
+    while stack:
+        p = stack.pop()
+        if p in seen or p in shape or not (-1 <= p[0] <= w and -1 <= p[1] <= h): continue
+        seen.add(p)
+        stack += [(p[0] + 1, p[1]), (p[0] - 1, p[1]), (p[0], p[1] + 1), (p[0], p[1] - 1)]
+    return seen
+def rows_of(shape, w=8, h=8):
+    bg = outer_background(shape, w, h)
+    out = []
+    for y in range(h):
+        row = ""
+        for x in range(w):
+            if (x, y) not in shape: row += "."; continue
+            edge = any((x + dx, y + dy) in bg for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+            row += "k" if edge else "f"
+        out.append(row)
+    return out
+SPR = {g: (rows_of(SHAPES[g]), {"k": "#0e1018", "f": FILL[g]}) for g in SHAPES}
+
+# status frames, 16x16
+def disc(): return {(x, y) for x in range(16) for y in range(16) if (x - 7.5) ** 2 + (y - 7.5) ** 2 <= 7.6 ** 2}
+def tri(): return {(x, y) for y in range(16) for x in range(16) if abs(x - 7.5) <= (15.5 - y) * 0.5 + 0.5}
+def frame_rows(shape, rim, chev_rows, chev_colour, inner="#252530"):
+    inside = shape
+    def edge(p): return any((p[0] + dx, p[1] + dy) not in inside for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+    # 'k' outline = boundary, 'r' rim = pixels adjacent to the boundary ring, 'i' inner dark, 'c' chevron
+    ring1 = {p for p in inside if edge(p)}
+    ring2 = {p for p in inside - ring1 if any((p[0] + dx, p[1] + dy) in ring1 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))}
+    chev = {(x, y) for y, r in chev_rows.items() for x in r}
+    out = []
+    for y in range(16):
+        row = ""
+        for x in range(16):
+            p = (x, y)
+            row += "." if p not in inside else "k" if p in ring1 else "c" if p in chev else "r" if p in ring2 else "i"
+        out.append(row)
+    return out
+UP = {3: [7, 8], 4: [6, 9], 5: [5, 10]}       # up chevron near the top
+DOWN = {4: [5, 10], 5: [6, 9], 6: [7, 8]}  # down chevron in the upper, wide part of the triangle
+SPR["frame_buff"] = (frame_rows(disc(), "#48b858", UP, "#f0ecd8"), {"k": "#0e1018", "r": "#48b858", "i": "#4a6050", "c": "#f0ecd8"})
+ARROW = {3: [7, 8], 4: [7, 8], 5: [7, 8], 6: [7, 8], 7: [5, 6, 7, 8, 9, 10], 8: [6, 7, 8, 9], 9: [7, 8]}  # solid down arrow, 2 px shaft
+SPR["frame_debuff"] = (frame_rows(tri(), "#d04030", ARROW, "#d04030"), {"k": "#0e1018", "r": "#d04030", "i": "#2d1722", "c": "#d04030"})
+if __name__ == "__main__":
+    name = sys.argv[1]
+    rows, legend = SPR[name]
+    print("\n".join(rows), file=sys.stderr)
+    print(json.dumps(ops(rows, legend), separators=(",", ":")))

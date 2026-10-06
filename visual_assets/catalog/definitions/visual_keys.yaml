@@ -1,6 +1,7 @@
 # Semantic visual-key registry. Nothing registers keys dynamically: the namespace is finite and fixed by this hand-reviewed file.
 # `terrain.forest` is the one ADOPTED key (the AM-M6 pilot role, TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE). The other 22 Live Map terrain codes are registered `optional: true`
 # so draft set `terrain-v1` can name them (TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET); nothing is adopted for them and no release needs them. Key = `terrain.` + the snake_case name.
+# The `icon.*` family (14 optional keys, D20) is the icon key set; see the comment above it.
 # The `border.*` family (3 optional keys, D19) is not terrain: shared mask shapes for the fringes between terrains, kept in the same draft set so one `adopt-set` covers tiles and masks.
 record_type: visual_key_registry
 schema_version: 1
@@ -139,5 +140,77 @@ keys:
     description: Terrain border mask for two adjacent sides of the same higher terrain, authored for north plus east (an L within the outer 4 px), rotated 90 degrees per corner by the client; missing falls back to two edges
     variant_axes: []
     detail: {values: [v1, v2, v3], default: v1}
+    optional: true
+  # Icon key set `icons-key-v1` (TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES, D20): 14 optional keys, no variant axis (D17: tier and marker state are separate keys). Each description gives size, scale x1, its
+  # fallback-safety class (docs/assets/fallback_safety.md) and its fallback. Nothing is adopted; a missing image leaves today's emoji, Lucide icon or colour chip.
+  - key: icon.plate.location
+    family: icon
+    description: Map plate for every location marker, one 16x16 image at scale x1, drawn first with the glyph over it (the plate rim stays visible all round); decorative class, the fallback is the bare glyph with no plate
+    variant_axes: []
+    optional: true
+  - key: icon.marker.enemy_camp
+    family: icon
+    description: Map glyph for an enemy camp location, one 16x16 image at scale x1, live area 12x12 centred (2 px margin) on the location plate; identifying class, the fallback is today's emoji label (swords, #f87171) plus the location name as hover text
+    variant_axes: []
+    optional: true
+  - key: icon.building.blacksmith
+    family: icon
+    description: Panel icon for the blacksmith building, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Hammer icon (#f59e0b) plus the building name as text
+    variant_axes: []
+    optional: true
+  - key: icon.class.warrior
+    family: icon
+    description: Panel icon for the warrior class, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Shield icon plus the class name as text
+    variant_axes: []
+    optional: true
+  - key: icon.tier.e
+    family: icon
+    description: Tier badge for grade E, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#6b7280) plus the letter E as text, which the badge never replaces
+    variant_axes: []
+    optional: true
+  - key: icon.tier.d
+    family: icon
+    description: Tier badge for grade D, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#94a3b8) plus the letter D as text, which the badge never replaces
+    variant_axes: []
+    optional: true
+  - key: icon.tier.c
+    family: icon
+    description: Tier badge for grade C, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#34d399) plus the letter C as text, which the badge never replaces
+    variant_axes: []
+    optional: true
+  - key: icon.tier.b
+    family: icon
+    description: Tier badge for grade B, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#60a5fa) plus the letter B as text, which the badge never replaces
+    variant_axes: []
+    optional: true
+  - key: icon.tier.a
+    family: icon
+    description: Tier badge for grade A, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#fb923c) plus the letter A as text, which the badge never replaces
+    variant_axes: []
+    optional: true
+  - key: icon.tier.s
+    family: icon
+    description: Tier badge for grade S, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#f87171) plus the letter S as text, which the badge never replaces
+    variant_axes: []
+    optional: true
+  - key: icon.tier.ss
+    family: icon
+    description: Tier badge for grade SS, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#f59e0b) plus the letter SS as text, which the badge never replaces
+    variant_axes: []
+    optional: true
+  - key: icon.tier.sss
+    family: icon
+    description: Tier badge for grade SSS, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#ffd700) plus the letter SSS as text, which the badge never replaces
+    variant_axes: []
+    optional: true
+  - key: icon.status.frame_buff
+    family: icon
+    description: Status frame for a beneficial effect, one 16x16 image at scale x1, a rounded frame with an up chevron whose shape (not hue) marks a buff; identifying class, the fallback is the effect's name as text in the Effects tab, which has no icon today
+    variant_axes: []
+    optional: true
+  - key: icon.status.frame_debuff
+    family: icon
+    description: Status frame for a harmful effect, one 16x16 image at scale x1, a spiked frame with a down chevron whose shape (not hue) marks a debuff; identifying class, the fallback is the effect's name as text in the Effects tab, which has no icon today
+    variant_axes: []
     optional: true
 aliases: []

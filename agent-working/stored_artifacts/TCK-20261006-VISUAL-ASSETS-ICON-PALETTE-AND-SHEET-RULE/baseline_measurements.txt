@@ -1,0 +1,324 @@
+{
+ "palette_best_8_step_ladder_gap_dL": 8.74,
+ "ladder_fills": {
+  "e": "#28331d",
+  "d": "#2d4a3e",
+  "c": "#4a6050",
+  "b": "#6a7a40",
+  "a": "#8e8c75",
+  "s": "#9ea4b6",
+  "ss": "#e8c040",
+  "sss": "#d9ecf3"
+ },
+ "i1_ladder_pair_px": {
+  "e-d": 0,
+  "e-c": 4,
+  "e-b": 8,
+  "e-a": 16,
+  "e-s": 12,
+  "e-ss": 16,
+  "e-sss": 20,
+  "d-c": 4,
+  "d-b": 8,
+  "d-a": 16,
+  "d-s": 12,
+  "d-ss": 16,
+  "d-sss": 20,
+  "c-b": 12,
+  "c-a": 12,
+  "c-s": 16,
+  "c-ss": 12,
+  "c-sss": 24,
+  "b-a": 16,
+  "b-s": 20,
+  "b-ss": 24,
+  "b-sss": 12,
+  "a-s": 28,
+  "a-ss": 24,
+  "a-sss": 28,
+  "s-ss": 4,
+  "s-sss": 8,
+  "ss-sss": 12
+ },
+ "i1_ladder_min_across_classes": 4,
+ "i1_one_pixel_difference_px": 1,
+ "i1_buff_vs_debuff_px": 80,
+ "i1_recoloured_only_px": 0,
+ "i2_ladder_min_dL_by_vision": {
+  "normal": 9.24,
+  "protan": 8.81,
+  "deutan": 8.79,
+  "tritan": 9.31
+ },
+ "i2_todays_grade_chips_min_dL_by_vision": {
+  "normal": 0.26,
+  "protan": 0.25,
+  "deutan": 1.28,
+  "tritan": 1.6
+ },
+ "i2_todays_grade_chips_pairs_below_8": {
+  "normal": 6,
+  "protan": 4,
+  "deutan": 7,
+  "tritan": 7
+ },
+ "i2_buff_vs_debuff_dL_by_vision": {
+  "normal": 18.17,
+  "protan": 28.52,
+  "deutan": 12.16,
+  "tritan": 17.85
+ },
+ "terrain_tile_L": {
+  "terrain.bridge": {
+   "mean": 38.7,
+   "min": 22.6,
+   "max": 63.5
+  },
+  "terrain.camp": {
+   "mean": 22.0,
+   "min": 11.8,
+   "max": 59.2
+  },
+  "terrain.cave": {
+   "mean": 21.6,
+   "min": 6.5,
+   "max": 37.0
+  },
+  "terrain.desert": {
+   "mean": 21.7,
+   "min": 9.0,
+   "max": 35.7
+  },
+  "terrain.dungeon_entrance": {
+   "mean": 28.4,
+   "min": 4.3,
+   "max": 48.3
+  },
+  "terrain.farmland": {
+   "mean": 48.7,
+   "min": 26.9,
+   "max": 72.8
+  },
+  "terrain.floor": {
+   "mean": 10.9,
+   "min": 3.0,
+   "max": 27.0
+  },
+  "terrain.forest": {
+   "mean": 22.3,
+   "min": 12.5,
+   "max": 31.7
+  },
+  "terrain.grassland": {
+   "mean": 37.9,
+   "min": 28.9,
+   "max": 82.3
+  },
+  "terrain.graveyard": {
+   "mean": 28.7,
+   "min": 15.8,
+   "max": 42.9
+  },
+  "terrain.jungle": {
+   "mean": 26.8,
+   "min": 13.6,
+   "max": 58.4
+  },
+  "terrain.lava": {
+   "mean": 33.0,
+   "min": 11.5,
+   "max": 77.6
+  },
+  "terrain.mountain": {
+   "mean": 24.6,
+   "min": 11.7,
+   "max": 71.6
+  },
+  "terrain.road": {
+   "mean": 34.6,
+   "min": 19.4,
+   "max": 47.6
+  },
+  "terrain.ruins": {
+   "mean": 27.9,
+   "min": 17.4,
+   "max": 44.0
+  },
+  "terrain.sanctuary": {
+   "mean": 23.8,
+   "min": 17.7,
+   "max": 54.7
+  },
+  "terrain.shallow_water": {
+   "mean": 32.8,
+   "min": 29.8,
+   "max": 56.7
+  },
+  "terrain.snow": {
+   "mean": 85.6,
+   "min": 62.6,
+   "max": 100.0
+  },
+  "terrain.swamp": {
+   "mean": 17.8,
+   "min": 7.9,
+   "max": 47.7
+  },
+  "terrain.town": {
+   "mean": 28.9,
+   "min": 16.2,
+   "max": 58.0
+  },
+  "terrain.volcanic": {
+   "mean": 23.3,
+   "min": 9.9,
+   "max": 77.6
+  },
+  "terrain.wall": {
+   "mean": 39.0,
+   "min": 24.3,
+   "max": 65.0
+  },
+  "terrain.water": {
+   "mean": 24.1,
+   "min": 16.9,
+   "max": 53.3
+  }
+ },
+ "i3_rim_min_dL_by_vision": {
+  "outline_near_black": {
+   "normal": {
+    "dL": 6.129,
+    "tile": "terrain.floor"
+   },
+   "protan": {
+    "dL": 6.276,
+    "tile": "terrain.floor"
+   },
+   "deutan": {
+    "dL": 6.035,
+    "tile": "terrain.floor"
+   },
+   "tritan": {
+    "dL": 6.161,
+    "tile": "terrain.floor"
+   }
+  },
+  "plate_rim_proposed": {
+   "normal": {
+    "dL": 18.198,
+    "tile": "terrain.snow"
+   },
+   "protan": {
+    "dL": 18.48,
+    "tile": "terrain.snow"
+   },
+   "deutan": {
+    "dL": 18.005,
+    "tile": "terrain.snow"
+   },
+   "tritan": {
+    "dL": 18.181,
+    "tile": "terrain.snow"
+   }
+  },
+  "light_rim_a9aebf": {
+   "normal": {
+    "dL": 14.43,
+    "tile": "terrain.snow"
+   },
+   "protan": {
+    "dL": 14.765,
+    "tile": "terrain.snow"
+   },
+   "deutan": {
+    "dL": 14.204,
+    "tile": "terrain.snow"
+   },
+   "tritan": {
+    "dL": 14.423,
+    "tile": "terrain.snow"
+   }
+  },
+  "mid_rim_8e94a6": {
+   "normal": {
+    "dL": 12.681,
+    "tile": "terrain.farmland"
+   },
+   "protan": {
+    "dL": 13.072,
+    "tile": "terrain.farmland"
+   },
+   "deutan": {
+    "dL": 12.513,
+    "tile": "terrain.farmland"
+   },
+   "tritan": {
+    "dL": 13.112,
+    "tile": "terrain.farmland"
+   }
+  },
+  "bone": {
+   "normal": {
+    "dL": 7.599,
+    "tile": "terrain.snow"
+   },
+   "protan": {
+    "dL": 6.531,
+    "tile": "terrain.snow"
+   },
+   "deutan": {
+    "dL": 8.26,
+    "tile": "terrain.snow"
+   },
+   "tritan": {
+    "dL": 7.372,
+    "tile": "terrain.snow"
+   }
+  }
+ },
+ "palette_ramp_L": {
+  "terrain.wall": [
+   15.1,
+   39.0,
+   52.3,
+   65.6
+  ],
+  "terrain.farmland": [
+   19.7,
+   48.7,
+   61.0,
+   70.8
+  ],
+  "terrain.shallow_water": [
+   10.9,
+   32.7,
+   49.0,
+   64.8
+  ],
+  "terrain.lava": [
+   10.4,
+   33.0,
+   51.9,
+   72.1
+  ],
+  "terrain.dungeon_entrance": [
+   11.2,
+   28.2,
+   38.8,
+   53.6
+  ],
+  "terrain.road": [
+   12.8,
+   34.6,
+   47.0,
+   57.8
+  ],
+  "terrain.snow": [
+   37.7,
+   85.6,
+   92.2,
+   98.3
+  ]
+ }
+}
