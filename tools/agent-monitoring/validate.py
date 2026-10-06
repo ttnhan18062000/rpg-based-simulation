@@ -27,12 +27,13 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from vocabulary import CANONICAL_TIERS, WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: E402
+from vocabulary import CANONICAL_TIERS, PATH_REASONS, SKIP_REASONS, WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: E402
 from monitoring_shard_paths import shard_paths  # noqa: E402
+import gate_verdicts  # noqa: E402
 _REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
 if _REPO_ROOT_STR not in sys.path:
     sys.path.append(_REPO_ROOT_STR)
-from tools.agent_working_paths import AGENT_MONITORING_INDEX, TICKETS  # noqa: E402
+from tools.agent_working_paths import AGENT_MONITORING, AGENT_MONITORING_INDEX, TICKETS  # noqa: E402
 
 LOG_FILE = TICKETS / "working_log.csv"
 # Only validate working_log entries on or after this date (ISO prefix match)
@@ -341,11 +342,34 @@ def load_data_glob(data_dir: Path, source: str) -> list:
     return records
 
 
+def check_gate_verdicts(data_dir: Path) -> list[str]:
+    """One error line per invalid `gate_verdicts` row under `data_dir` (TCK-20261006-GATE-VERDICT-RECORD-AND-HAND-SITES)."""
+    errors = []
+    for shard in shard_paths(data_dir, gate_verdicts.KIND):
+        rows, _ = load_jsonl_with_line_count(shard)
+        for i, row in enumerate(rows, 1):
+            problems = gate_verdicts.validate_record(row)
+            if problems:
+                errors.append(f"Invalid gate_verdicts row {shard.name}#{i}: {'; '.join(problems)}")
+    return errors
+
+
+def check_path_record(runs: list, events: list) -> list[str]:
+    """One error line per run with an unknown `path_reason` and per event with an unknown `skip_reason`
+    (TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD). Absent fields are valid: rows before the fields have neither."""
+    errors = [f"Unknown path_reason {r['path_reason']!r}: {r.get('run_id')}"
+              for r in runs if r.get("path_reason") is not None and r["path_reason"] not in PATH_REASONS]
+    errors += [f"Unknown skip_reason {e['skip_reason']!r}: {e.get('run_id')}#{e.get('seq')}"
+               for e in events if e.get("skip_reason") is not None and e["skip_reason"] not in SKIP_REASONS]
+    return errors
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         description="Cross-check agent-monitoring integrity against agent-working/tickets/working_log.csv"
     )
     parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH), help="Path to the agent-monitoring SQLite index")
+    parser.add_argument("--data-dir", default=str(AGENT_MONITORING / "data"), help="Shard root for the gate_verdicts check")
     return parser
 
 
@@ -411,6 +435,9 @@ def main(argv=None):
                 warnings.append(f"Run marked DONE has no working_log entry: {run_id}")
     else:
         warnings.append(f"{LOG_FILE} not found — skipping working_log cross-check")
+
+    errors.extend(check_gate_verdicts(Path(args.data_dir)))
+    errors.extend(check_path_record(runs, events))
 
     for w in warnings:
         print(f"WARNING: {w}")

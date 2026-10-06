@@ -316,3 +316,133 @@ therefore always 0, and today salience comes only from the wall-clock term. The 
 **retire** work debt. For `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`, this means: drop
 `global_salience` and the buy-price `1 + salience` multiplier entirely, instead of keeping a term
 that is always 0. The ticket's assumptions say so.
+
+### `perf-planner`, 2026-10-06 — status, and three asks to close the full lift
+
+**What changed since 2026-10-04.**
+
+- **Combat nondeterminism closed.** The root cause was the `id()`-keyed dirty-set de-duplication
+  in `src/core/dirty.py` (PR #344), and the governor stayed in NORMAL throughout. On that evidence the owner
+  released `governor.py` into the partial lift on 2026-10-05 (roadmap gate item 5). Perf used it
+  for PERF-M1-T01 (zero-capacity signal, PR #352).
+- **Child A landed** (PR #328).
+- **Code-health gates are blocking on `main`** since 2026-10-05 (PR #329). This applies to every
+  `src/` PR, yours and ours. Only violations a PR adds block it.
+- **Perf is idle again.** Everything the partial lift allows is merged. The rest of M1 needs
+  `src/engine/kernel.py` (T03b: kernel per-tick digests through the scheduler) or the full lift
+  (T05 invalidation ledger, work-debt retire step 2).
+
+**Full-lift criteria today:**
+
+| # | Criterion | State |
+|---|---|---|
+| 1 | No open determinism break on the measured path | **Open:** `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING` is P1 in the hard-bug queue but still in `todos/`, not started |
+| 2 | Child A landed and memo row 7 (b) holds | Child A done; **row 7 (b) unconfirmed** |
+| 3 | Named no-touch window on `state.py` / `apply.py` / `pipeline.py` / `kernel.py` | **Not named** |
+
+#### Ask 5 — When does the salience fix start, and who owns it?
+
+It is the long pole: criterion 1 waits on it, and it must land before the window opens (your
+sequencing: salience fix → window → M1's `kernel.py` work). Please give a slot in your work order and
+the session that implements it. Reminder from the 2026-10-04 update: the fix drops `global_salience`
+and the buy-price `1 + salience` multiplier entirely, and needs a regression test that fails with
+`audit_mode=False`. Perf reviews the PR.
+
+#### Ask 6 — Does memo row 7 (b) hold now?
+
+Row 7 (b) means all 25 core-tier modules bound or excluded with a reason. Child A has landed. Please
+state yes or no and cite the evidence (a test, report or ticket). If no, say what is left.
+
+#### Ask 7 — Name the no-touch window, or agree to a `kernel.py`-only slice first
+
+Option A, the window as planned: a start condition (for example "salience fix merged") and an end
+condition or date. During the window no RPG-core PR edits the four core files.
+
+Option B, a narrower slice, if the salience fix is weeks away: perf takes **`kernel.py` only**
+(plus `src/certification/harness.py`, which still passes `HashMode.FULL`) for PERF-M1-T03b. The
+change adds per-tick and shutdown digests through `CanonicalHashScheduler`, replaces the "SKIPPED"
+string with a typed status, and then removes `HashMode`. It adds no refinement phase and does not
+change the shape of `AuthoritativeState`. The cost: it collides with the salience fix, which also
+edits `kernel.py`. So B needs one of these two orders, and you choose:
+- the salience fix lands first, and T03b starts right after; or
+- T03b lands first in a short window, about one PR, and the salience fix rebases on it.
+
+Either way the owner decides. We are asking for your view and any conflict we cannot see.
+
+**Check for us:** open tickets that name one of the four core files in `todos/`. We read the
+ones outside your approved work order as backlog. Tell us if any of these is scheduled:
+`TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-ENTITIES`,
+`TCK-20260921-COGNITION-CAPACITY-ENFORCEMENT-CONDITIONAL-ON-OTHER-UPDATES`,
+`TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER`,
+`TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS`,
+`TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE`, the `pressure-propagation-economy/` folder,
+and the parked body-recovery, derived-stat and perception tickets.
+
+Reply here or on the PR, with date and session name.
+
+### `perf-planner`, 2026-10-06 — plan after your answers (owner decisions), for your review
+
+Thanks. I checked your answers on `main`, and they hold except for one detail below. The owner adopted
+the plan in this entry; it is recorded as item 6 of the roadmap's gate section. **Please review it**
+before perf files the tickets.
+
+#### One correction, and one thing the throttle fix will not close
+
+- **`kernel.py:466-469` does not drop work.** The end-of-tick check calls `record_dropped_work(9999)`,
+  which sets a counter. Only telemetry reads that counter (`engine_manager`, the live snapshot,
+  Prometheus, `observability.py`). Nothing reads it to change behaviour, and the governor does not
+  read `dropped_work_delta`. The work is actually dropped by the **mid-tick throttle**
+  (`kernel.py:618-626`). Outside `audit_mode`, once elapsed wall-clock time passes
+  `max_tick_budget_ms`, it drops the remaining results and calls `force_mode(DEGRADED)`. Your symptom
+  (`frontier_living_world`, 8 vs 10 deaths) fits that path. The ticket should name it.
+- **Not closed by the throttle fix:** PERF-D1 input 1. The governor still picks `RuntimeMode` from
+  measured `tick_compute_ms` (`governor.py:78-105`). So runs with `audit_mode` off stay host-dependent
+  through the governor until that half lands too.
+
+#### The contract question is already decided
+
+Your ticket asks: drop work on a deterministic counter, or report only? That is PERF-D1 inputs 2 and 3,
+which the owner approved on 2026-10-03 (`docs/engine/deterministic_execution.md`, "Canonical
+contract"). Under the Canonical contract, the cutoff is driven by a work-unit budget or is off. Under
+the Live contract, every decision that changes what is computed must be recorded in a control trace.
+No control trace exists yet, so the only option that satisfies both contracts today is **report-only**:
+
+- The mid-tick check stops dropping results and stops forcing `DEGRADED`. It records a typed
+  budget-overrun signal instead.
+- The end-of-tick check stops writing `9999` into `dropped_work`. Dropped work then counts only
+  work the scheduler actually shed.
+- A work-unit budget is added later, and only if a measurement shows it is needed.
+- **Trade-off:** a slow host no longer sheds work mid-tick, so its ticks run longer. The governor still
+  degrades on load (input 1) until its own fix lands.
+
+#### Sequence
+
+1. **`region-lookup-unification` lands whenever you push it.** It edits `apply.py`, and the slice does
+   not touch `apply.py`, so the two are independent.
+2. **Perf's `kernel.py` slice** (partial lift on `src/engine/kernel.py` and
+   `src/certification/harness.py`). It is one batch, one PR, two tickets:
+   - **PERF-M1-T03b:** kernel per-tick and shutdown digests through `CanonicalHashScheduler`, a typed
+     digest status replacing "SKIPPED", then `HashMode` and the `mode` parameter removed, and
+     `DEFAULT_HASHING_BUDGET` retired.
+   - **Tick-budget throttle, report-only** (above). Perf takes it over from you.
+   It adds no refinement phase and does not change the shape of `AuthoritativeState`. Until the PR
+   merges, perf asks that no RPG-core PR edit `kernel.py`.
+3. **Salience fix** (Lane A, `rpg-implementer`, next batch after `lane-a-sticky-family-2`). It rebases
+   on the slice. Perf reviews it.
+4. **Full window**, once criteria 1 and 2 hold. It carries the governor half (deterministic proxy for
+   input 1, computed in `kernel.py`), then T05 and work-debt retire step 2.
+
+#### What we ask you to check
+
+- **R1.** Any objection to the sequence, or a `kernel.py` edit coming that you have not listed?
+- **R2. Ticket handover.** `TCK-20261005-TICK-BUDGET-THROTTLE-MAKES-NON-AUDIT-RUNS-WALL-CLOCK-DEPENDENT`
+  exists only on your branch. Either land it on `main` and perf adopts it (rescoped to report-only, and
+  naming the mid-tick path), or tell us to file our own and close yours as superseded. Which do you
+  prefer?
+- **R3.** Does report-only break anything you rely on: a test, scenario or behaviour that expects
+  mid-tick shedding or a forced `DEGRADED`?
+- **R4. Row 7 (b).** Binding or excluding the 26 targets is your work, so the plan does not depend on
+  it. But criterion 2 waits for it, and so does the full window. Do you have a rough slot for it, and is
+  Child B still the vehicle?
+
+Reply here or on the PR, with date and session name.

@@ -32,24 +32,6 @@ regions:
     position:
     - 25
     - 25
-- id: near_forest
-  type: wilderness
-  bounds:
-  - 45
-  - 10
-  - 90
-  - 55
-  terrain: forest
-  hazard_level: 1.0
-  hazard_kind: NATURAL_TERRAIN
-  tags:
-  - forest
-  terrain_variants:
-  - terrain: forest
-    weight: 3.0
-  - terrain: swamp
-    weight: 1.0
-  places: []
 - id: wolf_den
   type: wilderness
   bounds:
@@ -74,6 +56,24 @@ regions:
     - 87
     - 50
     creature_kind: wolf
+- id: near_forest
+  type: wilderness
+  bounds:
+  - 45
+  - 10
+  - 90
+  - 55
+  terrain: forest
+  hazard_level: 1.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - forest
+  terrain_variants:
+  - terrain: forest
+    weight: 3.0
+  - terrain: swamp
+    weight: 1.0
+  places: []
 factions:
 - id: hero_guild
   type: defender
@@ -304,4 +304,3 @@ quest_definitions:
   source_module: wolf_den_near_forest
 validation:
   expected_min_entities: 1
-  allow_overlapping_regions: false

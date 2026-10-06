@@ -42,7 +42,7 @@ Status values: `shipped`, `in flight`, `next`, `idea`, `held`.
 | Week-close: fold a finished week's shards into the three canonical files, explicitly | shipped | `TCK-20261001-MONITORING-WEEK-CLOSE-COMMAND` (PR #274): `make agent-monitoring-close-week WEEK=...`, report-only nudge via the retro hook; W40 is not closed yet, that is the user's call |
 | Retro report is read-only | shipped | `TCK-20261001-RETRO-REPORT-READ-ONLY` (PR #274): the retro no longer folds shards; consolidation is the week-close command's job |
 | Post-merge integrity check against `origin/main` | shipped | `TCK-20261001-POST-MERGE-MAIN-INTEGRITY-REPORT` (PR #274): `make agent-monitoring-main-integrity`, on demand and report-only; wiring it into a post-merge hook stays open. First real triage 2026-10-02: 311 findings on `fe6a2f564` (probe as shipped in #274), 263 after PR #277 (`TCK-20261001-WORKING-LOG-BYTE-DUPLICATE-DEBT` removed 56 byte-identical working_log lines and the pair ceiling went 46 to 19; `TCK-20261001-INTEGRITY-REPORT-EPIC-TIER-FALSE-POSITIVES` stopped flagging epics that close as EPIC_SCOPED); 263 re-measured on `78ea7c465`. What remains is known: 119 historical `event_seq` findings (multi-invocation restarts, already explained by `TCK-20260915-EVENT-SEQ-INTEGRITY`), 13 cited-evidence (one real, a gitignored `.json` for `TCK-20260907-FILTERED-REPLAY-EVAL-PILOT`), 7 epics with no working_log row (not backfilled: a hand-written row would be invented history), and 124 "no DONE row" tickets, 122 of them pre-September. `TCK-20261002-INTEGRITY-REPORT-INPROGRESS-ON-MAIN` (PR #280) adds an `inprogress` check, one finding per ticket still under `agent-working/tickets/inprogress/` on the ref (squash merges leave only the PR title, so commit subjects cannot show it): 5 on `origin/main` at `78ea7c465`, 268 findings in all |
-| Real time and cost for hand-closed work | idea | changes how every later retro reads, so it needs its own design |
+| Real time and cost for hand-closed work | shipped (code) | `TCK-20261006-EPIC-HAND-CLOSURE-REAL-TIME-AND-COST`: a hand closure records its start's source (`duration_source`: declared, tool_activity or unknown), the closing `session_id`, a null duration instead of 0 when there is no evidence, and a labelled `session_window` cost total with each tool row claimed once; the retro averages derived durations beside, never in, the headline (owner decision 2026-10-06). Baseline before landing, W40-W41: 224 of 238 hand closures at duration 0; tool-activity evidence for at most 130 (54.6%) because 102 closures have no tools shard (sessions started outside the repo). The post-landing coverage measurement (epic AC4) is taken on the first full week after the PR merges and recorded here |
 
 ### Self-diagnosing
 
@@ -51,7 +51,8 @@ Status values: `shipped`, `in flight`, `next`, `idea`, `held`.
 | Cited evidence must be tracked in git | shipped | `TCK-20260930-CITED-EVIDENCE-PATH-GITIGNORE-CHECK` (PR #272), advisory only |
 | Planning-doc staleness sweep, Proof Plan advisory | shipped | PR #268 |
 | Delivery rework rate (first-pass CI, failure class) | shipped on fixtures; no real reading yet | `TCK-20261001-DELIVERY-REWORK-RATE-MEASUREMENT` (PR #274): `delivery_cost_measurement.py --rework`, baseline only; the real-corpus run timed out on `gh` twice, retry from a healthier network |
-| Gate override ledger (verdict, inputs, human stop) | idea | measures gate precision without waiting for a person to notice |
+| Gate override ledger (verdict, inputs, human stop) | shipped (code) | `TCK-20261006-EPIC-GATE-OVERRIDE-LEDGER` (children: `GATE-VERDICT-RECORD-AND-HAND-SITES`, `GATE-VERDICT-OUTCOME-AND-ADJUDICATION`, `GATE-PRECISION-REPORT-AND-RETRO`): the gate CLIs a hand closure runs (`done_checker_static`, `post_native_run_check`, `doc_staleness_check`, `plan_gate_static`, `attest_gate`) write a `gate_verdicts` row; `gate_ledger.py` records outcomes and adjudications, derives `fixed_and_rerun` and `rerun_no_change`, and the retro has a Gates section (shares only from 5 or more adjudicated rulings). Chosen over real hand-closure cost by the owner on 2026-10-06. The epic stays open: its AC2 reads the first full ISO week after the merge. The formal pipeline's own gate sites (`GATE-VERDICT-PIPELINE-SITES`) are not wired yet |
+| CI and code-health gate ingest into the gate ledger | idea | the CI jobs and the code-health ratchet are gates too; their verdicts are not in `gate_verdicts` yet |
 | Finding-to-ticket-to-merge funnel | held | needs a stable finding-id convention first |
 | PR body `Closes:` must reflect ticket location | shipped | `TCK-20261002-PR-RENDER-CLOSES-LISTS-FILED-FOLLOWUPS` (PR #280): a ticket under `todos/` or `inprogress/` is left out of `Closes:` with a warning, so a PR that files a follow-up no longer claims to close it; found twice by a peer reading the body (PRs #276, #279), not by `--check` |
 
@@ -59,8 +60,8 @@ Status values: `shipped`, `in flight`, `next`, `idea`, `held`.
 
 | Direction | Status | Tickets / notes |
 |---|---|---|
-| Record which path each ticket took and why | idea | invisible today |
-| Tier-based routing for phases that are almost always skipped | idea | depends on the path record and on trustworthy data |
+| Record which path each ticket took and why | shipped (code) | `TCK-20261006-EPIC-TICKET-PATH-RECORD` (`TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD`, `TCK-20261006-PATH-AND-PHASE-REPORT-AND-RETRO`): a run records `path_reason` (the closer's reason for not using the pipeline, `unstated` when none is given) and `phases_omitted` (planned `full` phases with no event, derived from `implement-ticket.yaml` at write time), a skipped event records `skip_reason`; `path_report.py` and a retro `## Paths` section read them per tier and mode, counting older runs as "predates", never as `unstated`. Baseline before landing, origin/main `b15fef405`, W40-W41, 327 runs, 282 hand: of 222 standard closures only 43 carry Investigate, 32 Plan, 15 Review and 15 Architecture-Verify; Parity is skipped in 176 of 210 standard and 75 of 76 hotfix events with no reason recorded. The epic's AC2 (the first full ISO week after the merge, read from `path_report.py --week`) is recorded here |
+| Tier-based routing for phases that are almost always skipped | idea | depends on the Paths retro reading (>=1 full week); routing is considered only for a phase the report flags (80% skipped or omitted, 10+ runs, `unstated` at most 25%) |
 | Session-layer working process (roles, launch, routing, recovery) | planned | plan `docs/plans/agent_infrastructure/session_layer_working_process.md` and epics A-D in `agent-working/tickets/todos/session-layer/` (scoped 2026-10-02); M0 harness spike first, nothing built yet |
 
 ## Rules this track keeps
@@ -84,9 +85,7 @@ Status values: `shipped`, `in flight`, `next`, `idea`, `held`.
 
 ## Decisions pending
 
-- When the close runs: manual plus a report-only nudge (recommended), or scheduled.
-- Whether the first real close is W40, at the start of W41.
-- Which comes after the hygiene batch: real cost for hand closures, or the gate override ledger.
+None open. The two week-close timing questions (when the close runs; whether W40 is the first real close) were resolved once the W41 retro ran, per `agent-working-design` on 2026-10-06.
 
 ## Update protocol
 

@@ -120,6 +120,14 @@ Scope.
 recommendation of `world-rule-catalog-design`. Single run per anchor — **flakiness was not
 re-tested here**, so class (c) remains open for every one of the 13.
 
+## Diagnosis Correction — 2026-10-05 (test-architecture-reviewer)
+
+**The "ungated" diagnosis above is wrong: these anchors are executed on every `main` push and nightly, and nobody reads the result.** Step 5 of the `Slow regression` job in `.github/workflows/test.yml` is `make simq-corpus-diversity-slow-isolated`. It runs exactly the `tests/unit/worldassembly/test_corpus_diversity.py -m slow` anchors as isolated subprocesses, on push to `main`, on the nightly schedule and on manual dispatch. Over the 40 `main` push runs of `Tests` up to run 37278526329 (REST jobs API, 2026-10-05), step 5 **failed in 19** and was cancelled in 17 (a newer push to `main` evicted the running job via the workflow's `cancel-in-progress`), with 4 runs having no step-5 outcome. The nightlies show the same pattern. The red never reaches anyone, because the job runs only after merge and the owner has parked its step-5 cause as expected state (`TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2`, 2026-09-16, reconfirmed 2026-10-05).
+
+**Relationship to `TCK-20261005-SLOW-REGRESSION-GATE-SKIPS-ITS-ONLY-TEST-STEP-ON-MAIN`: sibling, not child, and neither supersedes the other.** This ticket owns the anchors' red (step 5). The gate ticket restores steps 6–7, which have been skipped after every step-5 failure, and makes each step's outcome visible in the job summary. When the gate ticket lands, this ticket's "reporting path" requirement is partly met by that summary line for step 5. The summary is visibility, not a notification. Re-read the Scope against it before closing.
+
+**Ownership (owner decision 2026-10-06, relayed by `test-architecture-reviewer`):** testing adopts this ticket's remaining scope, limited to **reporting and triage**; holder: `test-architecture-implementer`. Fixes stay with the owning domains, and the step-5 determinism cause stays parked under `TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2`. Per Scope bullet: (1) **Measure:** done on run 37403688489 (head 9299891a916c93d5047b999bc16b371ba78939d4, job 112078415756): step 5 ran 32 isolated anchor invocations, 10 failed and 22 passed. That supersedes the 11-of-16 and is recorded in `TCK-20261005-SLOW-REGRESSION-GATE-SKIPS-ITS-ONLY-TEST-STEP-ON-MAIN`. (2) **How long red:** answered from CI history. Step 5 failed on 19 of 40 main pushes up to run 37278526329, and the further bracket is still owed. (3) **Classify (a)/(b)/(c):** testing classifies with evidence and routes (a)/(b) to the owning domain via rpg-feature-planning. Class (c) (non-determinism) is the parked cause and is recorded, not investigated. (4) **Reporting path:** the #360 step-outcome summary gives visibility only. A mechanism that surfaces a newly-red anchor without a human, proven against a seeded failure, is still owed and is testing's to design. (5) **Other `@slow` families:** answered **yes**. Step 6 (`slow or extra_slow`) had the same blind spot. It went from green on 2026-08-26 to 8 failures, unseen (the green-to-red bracket holds for 7 of the 8; the campaign test was added 2026-09-09 and first went bad at #175), and is tracked in `TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX`. The reporting path in (4) must therefore cover the whole `slow` job (steps 5–7), not just the anchors.
+
 ## Scope
 - Re-run the 16 sampled anchors on current `origin/main` and record which fail, with counts and
   conditions (seed, flags, world, tick budget). Establish the real number rather than inheriting 11.
@@ -164,6 +172,7 @@ re-tested here**, so class (c) remains open for every one of the 13.
 - A statement on whether other `@slow` families share the blind spot.
 
 ## Related Tickets
+- `TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX` (the step-6 reds unmasked by the #360 gate fix)
 - `TCK-20260930-RESOURCE-NODE-YIELDS-ITEM-COLLIDES-WITH-RESOURCE-KIND` (PR #269 — the batch whose
   control run surfaced this)
 - `TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE` (the one real fix-caused

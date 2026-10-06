@@ -16,7 +16,10 @@ false-triggered `NEEDS_HUMAN_INPUT`. `plan_has_unresolved_questions_heading` is 
 it inspects the text of the section under the heading (up to the next `##` H2 heading or EOF), not
 just the heading's presence.
 """
+import argparse
 import re
+import sys
+from pathlib import Path
 
 # The heading may carry a qualifier introduced by punctuation, e.g. "## Unresolved Questions (decide
 # before the implementer runs; do not decide in-plan)" or "## Unresolved Questions: owner decisions"
@@ -81,3 +84,35 @@ def plan_has_unresolved_questions_heading(plan_path: str) -> bool:
     # Heading present but the section body is empty/whitespace-only all the way to the next
     # heading (or EOF) — same as a genuine "None." body: no real unresolved question.
     return False
+
+
+def main(argv=None) -> int:
+    """Thin CLI so a hand closure can run the Plan gate and have the verdict recorded
+    (TCK-20261006-GATE-VERDICT-RECORD-AND-HAND-SITES). Exit 1 when the plan has unresolved questions."""
+    parser = argparse.ArgumentParser(description="Plan gate: does plan.md carry a genuine `## Unresolved Questions` section?")
+    parser.add_argument("--plan-path", required=True)
+    parser.add_argument("--ticket-id", default=None)
+    parser.add_argument("--no-record", action="store_true", help="Do not write this verdict to the gate_verdicts shard.")
+    args = parser.parse_args(argv)
+    unresolved = plan_has_unresolved_questions_heading(args.plan_path)
+    print(f"{'FAIL' if unresolved else 'PASS'}: {args.plan_path} "
+          f"{'has' if unresolved else 'has no'} unresolved questions")
+    monitoring_dir = str(Path(__file__).resolve().parents[1] / "agent-monitoring")
+    if monitoring_dir not in sys.path:
+        sys.path.insert(0, monitoring_dir)
+    import gate_verdicts  # noqa: PLC0415 - kept out of module import: the gate function is imported by the pipeline
+    gate_verdicts.record_gate_verdict(
+        enabled=not args.no_record,
+        gate_id=gate_verdicts.gate_id_for("plan_gate_static", "plan_has_unresolved_questions_heading"),
+        gate_type="static_check",
+        phase="Plan",
+        verdict="FAIL" if unresolved else "PASS",
+        blocking=unresolved,
+        ticket_id=args.ticket_id,
+        inputs_ref={"head_sha": gate_verdicts.head_sha(), "cmd_sha": gate_verdicts.sha256_hex(args.plan_path)},
+    )
+    return 1 if unresolved else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

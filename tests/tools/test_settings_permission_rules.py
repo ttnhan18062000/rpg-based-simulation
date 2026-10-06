@@ -38,11 +38,9 @@ MUST_ASK = {
         "gh api -X DELETE repos/o/r/git/refs/heads/old",
         "gh api --method DELETE repos/o/r/git/refs/heads/old",
     ],
-    "force push": [
-        "git push --force",
-        "git push origin main --force-with-lease",
-        "git push -f origin main",
-    ],
+    # Force push has no static ask rule since TCK-20261006-SETTINGS-OWN-BRANCH-PERMISSION-PROMPTS (owner-confirmed
+    # 2026-10-06): an own-branch force push runs without a prompt and a force push to the default branch is asked by the
+    # session guard (tests/tools/test_session_guard.py).
     "worktree removal": ["git worktree remove ../other"],
     "shard removal": ["rm -f agent-working/agent-monitoring/data/2026-W41/x.runs.jsonl"],
 }
@@ -96,8 +94,9 @@ def test_data_runs_removal_has_no_ask_rule_by_owner_decision():
 
 # The three gaps the first version of this harness found were closed by the owner-approved corrected
 # patterns (2026-10-05, confirmed directly in the implementer terminal).
-def test_force_push_with_trailing_f_flag_is_asked():
-    assert _hits("ask", "git push origin main -f")
+def test_force_push_has_no_static_ask_rule_so_an_own_branch_force_push_is_not_prompted():
+    for command in ("git push origin main -f", "git push --force origin feature-x", "git push -f origin feature-x"):
+        assert not _hits("ask", command), command
 
 
 def test_admin_flag_directly_after_merge_is_denied():

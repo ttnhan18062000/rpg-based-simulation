@@ -26,14 +26,18 @@ Usage:
 Each event object only needs `phase`/`status`/`summary` (plus an optional per-event `ts`, `agent`
 override) -- `run_id`, `execution_id`, `provider`, `ticket_id`, and `seq` (1-indexed, in array
 order) are filled in automatically and shared across the whole batch, matching a single real
-`Workflow` run's own shape. `--start-ts`/`--end-ts` default to "now" (matching this project's own
-existing hand-orchestrated `runs.jsonl` precedent of using an identical start/end timestamp when
-real elapsed wall-clock time wasn't tracked) but accept explicit ISO-8601 values when known.
+`Workflow` run's own shape. `--start-ts`/`--end-ts` accept explicit ISO-8601 values when known
+(`duration_source: "declared"`). Without `--start-ts` the start is derived from the closing session's own
+`tools.jsonl` rows (`duration_source: "tool_activity"`, see `hand_closure_time.py`); with no evidence the run records
+`duration_source: "unknown"`, `start_ts == end_ts` and `duration_s: null`, never a 0 that reads as a measurement
+(TCK-20261006-HAND-CLOSURE-RECORDER-REAL-TIMESTAMPS). Runs and events also carry the closing `session_id`.
 
 `tool_call_count`/`cost_proxy_score` are only ever added when real `tools.jsonl` rows are found
 for a given (run_id, seq) -- a hand-orchestrating session never has a live per-phase sidecar
 during the actual work, so an unattributed phase correctly gets no such keys at all (never a
-false `0`/`0.0`).
+false `0`/`0.0`). TCK-20261006-HAND-CLOSURE-COST-ATTRIBUTION adds the closing session's own unattributed rows
+(`hand_closure_time.Resolution.claimed`, each row claimed by at most one closure) as one ticket-level total on the final
+event, marked `cost_source: "session_window"` (`"sidecar"` for the sidecar path); nothing claimed -> still no keys.
 
 The run record's `workflow` field stays `implement-ticket` by default (see `--workflow` below,
 TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP's recorded rationale) so existing
@@ -80,6 +84,9 @@ from vocabulary import (  # noqa: E402
     CANONICAL_TIERS, WORKFLOW_AGENT_PREFIXES, WORKFLOW_AGENTS, infer_workflow, is_known_agent,
 )
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
+import hand_closure_time  # noqa: E402
+from path_record import phases_omitted as compute_phases_omitted  # noqa: E402
+from vocabulary import PATH_REASONS  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import append_working_log_row  # noqa: E402
@@ -188,12 +195,17 @@ def build_records(
     workflow: str,
     provider: str,
     default_agent: str,
+    now: str | None = None,
+    session_id: str | None = None,
+    resolution: "hand_closure_time.Resolution | None" = None,
+    path_reason: str = "unstated",
+    path_note: str | None = None,
 ) -> tuple[dict, list[dict]]:
     """Expands a minimal `events` list (phase/status/summary per entry) into a full run record
     plus a full event-record batch, both matching record_run.py's/record_events.py's own REQUIRED
     field sets exactly -- so the two modules' own `validate_record()` accepts the output unchanged.
     """
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = now or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     execution_id = f"{provider}-{ticket_id}-{int(time.time() * 1000)}"
 
     run_record = {
@@ -201,13 +213,23 @@ def build_records(
         "execution_id": execution_id,
         "provider": provider,
         "ticket_id": ticket_id,
-        "start_ts": start_ts or now,
-        "end_ts": end_ts or now,
+        "start_ts": resolution.start_ts if resolution else start_ts or now,
+        "end_ts": resolution.end_ts if resolution else end_ts or now,
         "workflow": workflow,
         "tier": tier,
         "final_status": final_status,
         "agent_count": len(events),
         "execution_mode": "hand",
+        # TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD: why this was closed by hand, and the planned phases with no
+        # event (read from implement-ticket.yaml at write time; the key is absent when that file cannot be read)
+        "path_reason": path_reason,
+        **({"path_note": path_note} if path_note else {}),
+        **({"phases_omitted": omitted} if (omitted := compute_phases_omitted(tier, [e["phase"] for e in events])) is not None else {}),
+        # TCK-20261006-HAND-CLOSURE-RECORDER-REAL-TIMESTAMPS: provenance of start/end (declared | tool_activity | unknown)
+        # and the closing session; absent on rows that predate the fields
+        **({"duration_source": resolution.duration_source} if resolution else {}),
+        **({"session_id": session_id} if resolution else {}),
+        **({"claim_peers": resolution.claim_peers} if resolution and resolution.claim_peers is not None else {}),
     }
 
     event_records = [
@@ -217,10 +239,13 @@ def build_records(
             "provider": provider,
             "ticket_id": ticket_id,
             "seq": i,
+            **({"session_id": session_id} if resolution else {}),
             "phase": e["phase"],
             "agent": e.get("agent", default_agent),
             "status": e["status"],
             "summary": e["summary"],
+            # a skipped event always says why; `unstated` when the closer did not (TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD)
+            **({"skip_reason": e.get("skip_reason") or "unstated"} if e["status"] == "skipped" else {}),
             "ts": e.get("ts", now),
             # optional advisory list carried verbatim (TCK-20261002-ARCH-VERIFY-TEST-QUALITY-FINDINGS);
             # the key is absent, never a false [], when the event has none
@@ -232,6 +257,23 @@ def build_records(
     ]
 
     return run_record, event_records
+
+
+def attach_session_window_cost(event_records: list[dict], claimed: tuple[dict, ...] | list[dict]) -> list[dict]:
+    """TCK-20261006-HAND-CLOSURE-COST-ATTRIBUTION: put the cost of the rows this closure claimed (the closing session's
+    unattributed `tools.jsonl` rows, see `hand_closure_time`) on the FINAL event that has no sidecar attribution, with
+    `cost_source: "session_window"`. The claim is one ticket-level total: phases are not resolved (the events share the
+    closure time), so consumers must read `cost_source` before using a per-phase figure. Nothing claimed -> the keys stay
+    absent, never a 0; a row with a sidecar `run_id` is never in `claimed`."""
+    if not claimed:
+        return event_records
+    target = next((i for i in range(len(event_records) - 1, -1, -1) if "cost_source" not in event_records[i]), None)
+    if target is None:
+        return event_records
+    out = list(event_records)
+    out[target] = {**out[target], "tool_call_count": len(claimed),
+                   "cost_proxy_score": record_events.compute_cost_proxy_score(list(claimed)), "cost_source": "session_window"}
+    return out
 
 
 def remove_stale_active_copies(ticket_id: str, tickets_root: Path = Path("agent-working/tickets")) -> list[str]:
@@ -373,7 +415,19 @@ def main() -> None:
         help="Defaults to agent-working/stored_artifacts/<ticket-id> for standard/epic tier, "
         "'none (hotfix — no staging artifacts)' for hotfix",
     )
+    parser.add_argument(
+        "--path-reason", default="unstated", choices=PATH_REASONS,
+        help="Why this ticket was closed by hand rather than by the pipeline; 'other' needs --path-note",
+    )
+    parser.add_argument("--path-note", default=None, help="Free-text detail; required with --path-reason other")
     args = parser.parse_args()
+
+    if args.path_reason == "other" and not args.path_note:
+        print("ERROR: --path-reason other requires --path-note; nothing was written.", file=sys.stderr)
+        sys.exit(1)
+    if args.path_reason == "unstated":
+        print("HINT: no --path-reason given, recorded as 'unstated'. Say why this was not the pipeline: "
+              f"{', '.join(r for r in PATH_REASONS if r != 'unstated')}.", file=sys.stderr)
 
     sidecar_warning = check_sidecar_matches_ticket(args.ticket_id)
     if sidecar_warning:
@@ -405,9 +459,14 @@ def main() -> None:
         )
         sys.exit(1)
 
+    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    resolution = hand_closure_time.resolve_for_session(
+        now, args.start_ts, args.end_ts, os.environ.get("CLAUDE_CODE_SESSION_ID") or None, AGENT_MONITORING / "data")
     run_record, event_records = build_records(
         args.ticket_id, args.tier, args.final_status, events,
         args.start_ts, args.end_ts, args.workflow, args.provider, args.agent,
+        now=now, session_id=os.environ.get("CLAUDE_CODE_SESSION_ID") or None, resolution=resolution,
+        path_reason=args.path_reason, path_note=args.path_note,
     )
 
     run_errors = record_run.validate_record(run_record)
@@ -428,14 +487,20 @@ def main() -> None:
     for record in event_records:
         record_events.warn_vocabulary_drift(record)
 
-    run_record["duration_s"] = record_run.compute_duration_s(run_record)
+    run_record["duration_s"] = (
+        None if run_record["duration_source"] == hand_closure_time.UNKNOWN else record_run.compute_duration_s(run_record))
+    if run_record["duration_s"] is None:  # unknown, or an inverted declared span: never a duration, never 0
+        run_record["duration_source"] = hand_closure_time.UNKNOWN
+        run_record.pop("claim_peers", None)
 
     tool_stats = record_events.compute_tool_stats(event_records, omit_when_unattributed=True)
     for i, record in enumerate(event_records):
         key = (record.get("run_id"), record.get("seq"))
         if key in tool_stats:
             tool_call_count, cost_proxy_score = tool_stats[key]
-            event_records[i] = {**record, "tool_call_count": tool_call_count, "cost_proxy_score": cost_proxy_score}
+            event_records[i] = {**record, "tool_call_count": tool_call_count, "cost_proxy_score": cost_proxy_score,
+                                "cost_source": "sidecar"}
+    event_records = attach_session_window_cost(event_records, resolution.claimed)
 
     # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: this was the headline bug -- this wrapper
     # (the one CLAUDE.md instructs every hand-orchestrated close to use) hardcoded the shared

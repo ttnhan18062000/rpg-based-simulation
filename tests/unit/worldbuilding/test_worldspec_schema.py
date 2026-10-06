@@ -48,7 +48,7 @@ def test_valid_minimal_world_spec_loads(tmp_path):
     assert spec.buildings == []
     assert spec.quest_definitions == []
     assert spec.validation.expected_min_entities == 1
-    assert spec.validation.allow_overlapping_regions is False
+    assert not hasattr(spec.validation, "allow_overlapping_regions")  # deleted with LOC-08; overlap is resolved by authored precedence
 
 def test_missing_schema_version_rejected(tmp_path):
     data = {

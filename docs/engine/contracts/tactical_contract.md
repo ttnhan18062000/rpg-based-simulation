@@ -46,11 +46,25 @@ this helper) — confirmed via a repo-wide reference search finding no productio
 `ENTITY_MOVE` (movement mode `PURSUE`, `payload["target_id"]` set) **ends when the live target is within the entity's attack
 reach** (Manhattan; a melee entity needs distance 1; no weather multiplier, legality still arbitrates the attack itself).
 Both `ENTITY_MOVE` dispatchers (`executor.py`, `worker_logic.py`, via
-`MovementCandidateSelector.pursuit_reached_attack_range`) then emit `pursuit_completion_update`: the task returns to the idle
+`MovementCandidateSelector.tracked_move_complete`) then emit `tracked_move_completion_update`: the task returns to the idle
 encoding (`ENTITY_ACT` with an empty payload, which the scheduler reclassifies as a brain tick) **and the navigation target is
 cleared**, because movement is driven by `navigation.target`. Before this nothing ended a pursuit move, so under the Sticky-Task
 Law (`docs/engine/kernel.md`) the decision pass was never re-run and an entity adjacent to a live target at full readiness never
-chose `ATTACK`. Other moves that also carry a `target_id` (guard, cover, reposition, retreat) keep their own lifecycle. The idle
+chose `ATTACK`. The same condition covers every entity-tracking combat move, keyed on (movement mode, payload `reason`): `PURSUE`, `INTERCEPT`,
+`REPOSITION` with reason `BRACKETING`, and `RETREAT` with reason `KITING`. **A dead, inactive or missing target ends all four**
+(`TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION`; measured: one `PURSUE` held 986 ticks
+by a live entity after its target died at tick 4); the in-reach end applies to all but kiting, which intends to hold range. A group guard
+move ends under the same dead-target rule (`TCK-20261006-GROUP-GUARD-OBLIGATION-MOVE-OUTLIVES-ITS-LEADER`): `GUARD` with reason
+`CONTRACT_OBLIGATION_GUARD` (a hireling guarding its leader) also ends when the mover no longer shares the leader's group, and `GUARD`
+with reason `GUARDING_ALLY` ends only when the ally is dead, inactive or gone; neither ends on reach, and a leader merely pausing between
+interactions does not end the obligation (INTERACT runs have gaps of up to 11 ticks). **`BRACKETING` is de-facto pursuit** (`TCK-20261006-LIVE-TRACKING-TARGET-HELPER-IGNORES-MOVEMENT-MODE`, planner ruling 2026-10-06): the
+flank tile `bracket_pos` gates whether the move is issued (walkable, not the current tile) and is the destination on the issuing tick only; from
+the next tick `MovementCandidateSelector.resolve_live_tracking_target` replaces it with the live position of `payload["target_id"]`, and
+a comment at `pipeline_phases/movement.py:242-243` names `BRACKETING` among the entity-tracking modes. It is left that way on purpose: a flank tile is one step past
+the target, so a diagonal flank is Manhattan distance 2, outside a melee entity's reach of 1, and since arriving never ends a move a
+fixed-point `BRACKETING` move would hold at the tile. Cover-seeking moves also carry a `target_id` and keep
+their own lifecycle; by the same helper a `SEEK_COVER` move would head toward its threat, which is latent (0 corpus moves) and parked as
+`TCK-20261006-SEEK-COVER-LIVE-TRACKED-TOWARD-ITS-THREAT-LATENT-TRIGGER`. The idle
 entity is then decided at its next brain cadence (`strategic_intelligence`, 10 ticks); that wait is not changed here. Strategy does
 not write a navigation point for an entity-typed objective (`ObjectiveState.target_entity_id`): the redirection writers in
 `intelligence.py` and `redirection.py` leave the point unset and tactics resolve the live position.

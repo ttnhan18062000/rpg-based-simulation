@@ -27,6 +27,7 @@ from src.core.registries import ResourceRegistry
 from src.core.enums import EntityRole, Faction
 from src.replay.fingerprint import StateFingerprinter
 from src.engine.checkpoint import CanonicalStateHasher
+from src.worldassembly.region_precedence import first_region_at
 from src.worldbuilding.schema import InvalidWorldSpecError, WorldSpec
 from src.core.quests import QuestState, QuestStatus, QuestKind, RewardState
 from src.core.strategic import ProjectKind
@@ -409,7 +410,7 @@ class WorldCompiler:
                     region_hash = (region_hash * 31 + ord(ch)) & 0xFFFFFFFF
             for x in range(min_x, max_x + 1):
                 for y in range(min_y, max_y + 1):
-                    if 0 <= x < spec.topology.width and 0 <= y < spec.topology.height:
+                    if 0 <= x < spec.topology.width and 0 <= y < spec.topology.height and first_region_at(spec.regions, x, y) is r_spec:
                         if r_spec.terrain_variants:
                             tile_offset = ((x & 0xFFFF) << 16) | (y & 0xFFFF)
                             entity_id = (region_hash ^ tile_offset) & 0xFFFFFFFF

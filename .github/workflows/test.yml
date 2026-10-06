@@ -1096,12 +1096,30 @@ jobs:
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Slow tests — corpus diversity (isolated per-test, TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
+        id: corpus_diversity
         run: make simq-corpus-diversity-slow-isolated
+      # TCK-20261005-SLOW-REGRESSION-GATE-SKIPS-ITS-ONLY-TEST-STEP-ON-MAIN: the two steps below
+      # test unrelated things from step 5, so a step-5 failure must not skip them (the default
+      # `success()` did, on every main run where step 5 failed). `!cancelled()` and not `always()`:
+      # a cancelled run (a newer push evicted it via the concurrency group) must stay cancelled.
       - name: Slow tests (includes 5k behavioral regression)
+        id: slow_tests
+        if: ${{ !cancelled() }}
         run: |
           pytest tests/ -m "slow or extra_slow" --resource-budget large --tb=short -q --ignore=tests/unit/worldassembly/test_corpus_diversity.py
       - name: Legacy regression
+        id: legacy_regression
+        if: ${{ !cancelled() }}
         run: make lane-legacy-regression
+      - name: Slow regression step outcomes
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "### Slow regression step outcomes"
+            echo "- corpus diversity: ${{ steps.corpus_diversity.outcome }}"
+            echo "- slow tests: ${{ steps.slow_tests.outcome }}"
+            echo "- legacy regression: ${{ steps.legacy_regression.outcome }}"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload certification report
         uses: actions/upload-artifact@v4
         if: always()

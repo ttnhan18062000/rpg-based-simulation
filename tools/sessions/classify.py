@@ -7,7 +7,9 @@ because that depends on the caller's role.
 
 Action names reuse `registries/session_authority.yaml`'s: commit, push, open_pr, merge,
 delete_remote_branch, governing_file_edit, plus `authority_file_edit` (a role must not rewrite the policy that
-constrains it). `delete_worktree_or_data` and `workflow_run` are deliberately not classified here: the
+constrains it) and `push_default_branch` (TCK-20261006-GUARD-OWN-BRANCH-GIT-ALLOWED: a push whose destination is the
+default branch; a push to any other branch is a plain `push`). A push with no explicit destination goes to the
+current branch, which a pure function cannot know: it is flagged `push_implicit` and the guard resolves the branch. `delete_worktree_or_data` and `workflow_run` are deliberately not classified here: the
 Bash-visible deletes are covered by the M5A permission rules, and the Workflow tool is not Bash/Edit/Write.
 
 Uncertainty is never silently allowed: a command that partly matches an authority pattern, or hides it behind
@@ -22,6 +24,8 @@ import shlex
 from dataclasses import dataclass
 
 COMMIT, PUSH, OPEN_PR, MERGE = "commit", "push", "open_pr", "merge"
+PUSH_DEFAULT_BRANCH = "push_default_branch"
+DEFAULT_BRANCHES = ("main",)
 DELETE_REMOTE_BRANCH = "delete_remote_branch"
 GOVERNING_FILE_EDIT, AUTHORITY_FILE_EDIT = "governing_file_edit", "authority_file_edit"
 
@@ -48,6 +52,8 @@ class Classification:
     actions: frozenset[str]
     uncertain: bool = False
     detail: str = ""
+    push_implicit: bool = False  # a push with no explicit destination: it goes to the call's current branch
+    cd_chain: tuple[str, ...] = ()  # literal `cd`/`pushd` targets that precede the first commit/push, in order
 
     @property
     def is_authority(self) -> bool:
@@ -57,10 +63,10 @@ class Classification:
 NONE = Classification(frozenset())
 
 
-def classify(tool_name: str, tool_input: dict) -> Classification:
+def classify(tool_name: str, tool_input: dict, default_branches: tuple[str, ...] = DEFAULT_BRANCHES) -> Classification:
     """Classify one tool call. Never reads files or state."""
     if tool_name == "Bash":
-        return classify_command(str((tool_input or {}).get("command", "")))
+        return classify_command(str((tool_input or {}).get("command", "")), default_branches)
     if tool_name in _EDIT_TOOLS:
         path = (tool_input or {}).get("file_path") or (tool_input or {}).get("notebook_path") or ""
         return classify_path(str(path))
@@ -107,28 +113,74 @@ def _is_delete_push(args: list[str]) -> bool:
     return False
 
 
-def _segment_actions(tokens: list[str]) -> set[str]:
+_PUSH_OPTS_WITH_ARG = frozenset({"-o", "--push-option", "--repo", "--receive-pack", "--exec"})
+_REPO_REDIRECTING_GIT_OPTS = frozenset({"-C", "--git-dir", "--work-tree"})
+
+
+def _push_destinations(args: list[str]) -> tuple[list[str], bool, bool]:
+    """(explicit destination branches, implicit, all_refs) for `git push` arguments.
+
+    `--all`/`--mirror` may include the default branch (all_refs). Refspecs are the positionals after the remote:
+    `+src:dst` pushes to dst, a bare `x` to x, and a bare `HEAD` to the current branch (implicit). No refspec means the
+    current branch (implicit). `--tags` with no refspec pushes no branch."""
+    positionals: list[str] = []
+    all_refs = tags_only = False
+    skip = False
+    for a in args:
+        if skip:
+            skip = False
+        elif a in _PUSH_OPTS_WITH_ARG:
+            skip = True
+        elif a in ("--all", "--mirror"):
+            all_refs = True
+        elif a == "--tags":
+            tags_only = True
+        elif not a.startswith("-"):
+            positionals.append(a)
+    refspecs = positionals[1:]
+    if not refspecs:
+        return [], not tags_only, all_refs
+    explicit: list[str] = []
+    implicit = False
+    for spec in refspecs:
+        dst = spec.lstrip("+").split(":", 1)[-1]
+        dst = dst.removeprefix("refs/heads/")
+        if dst in ("", "HEAD", "@"):
+            implicit = True
+        else:
+            explicit.append(dst)
+    return explicit, implicit, all_refs
+
+
+def _segment_actions(tokens: list[str], default_branches: tuple[str, ...] = DEFAULT_BRANCHES) -> tuple[set[str], bool, bool]:
+    """(actions, push_implicit, uncertain_repo) for one segment."""
     if not tokens:
-        return set()
+        return set(), False, False
     verb = tokens[0].rsplit("/", 1)[-1]
     if verb == "git":
         sub, args = _git_subcommand(tokens)
+        redirected = any(t in _REPO_REDIRECTING_GIT_OPTS or t.startswith("--git-dir=") or t.startswith("--work-tree=")
+                         for t in tokens[1:tokens.index(sub) if sub in tokens else len(tokens)])
         if sub == "commit":
-            return {COMMIT}
+            return {COMMIT}, False, redirected
         if sub == "push":
-            return {PUSH, DELETE_REMOTE_BRANCH} if _is_delete_push(args) else {PUSH}
-        return set()
+            actions = {PUSH, DELETE_REMOTE_BRANCH} if _is_delete_push(args) else {PUSH}
+            explicit, implicit, all_refs = _push_destinations(args)
+            if all_refs or any(dst in default_branches for dst in explicit):
+                actions.add(PUSH_DEFAULT_BRANCH)
+            return actions, implicit, redirected
+        return set(), False, False
     if verb == "gh":
         rest = [t for t in tokens[1:] if not t.startswith("-")]
         if rest[:2] == ["pr", "create"]:
-            return {OPEN_PR}
+            return {OPEN_PR}, False, False
         if rest[:2] == ["pr", "merge"]:
-            return {MERGE}
+            return {MERGE}, False, False
         if rest[:1] == ["api"]:
             joined = " ".join(tokens)
             if re.search(r"(?:-X|--method)[ =]DELETE\b", joined, re.IGNORECASE):
-                return {DELETE_REMOTE_BRANCH}
-    return set()
+                return {DELETE_REMOTE_BRANCH}, False, False
+    return set(), False, False
 
 
 def _is_read_only(tokens: list[str]) -> bool:
@@ -143,11 +195,43 @@ def _is_read_only(tokens: list[str]) -> bool:
     return False
 
 
-def classify_command(command: str) -> Classification:
+_UNRESOLVABLE_CD = re.compile(r"[$`*?\[]|^-$|^~[^/]")
+
+
+def _cd_target(tokens: list[str]) -> tuple[bool, str | None]:
+    """(is_cd, literal target). A target is None when it cannot be resolved without running the shell: a variable,
+    command substitution, glob, `cd -` or `~user`. A bare `cd` is the home directory."""
+    while tokens and tokens[0] in ("(", "{"):  # `( cd x && ... )`
+        tokens = tokens[1:]
+    if not tokens:
+        return False, None
+    head = tokens[0].lstrip("(")
+    if head not in ("cd", "pushd"):
+        return False, None
+    args = [t for t in tokens[1:] if t == "-" or not t.startswith("-")]
+    if not args:
+        return True, "~" if head == "cd" else None
+    if len(args) != 1 or _UNRESOLVABLE_CD.search(args[0]):
+        return True, None
+    return True, args[0]
+
+
+def _switches_branch(tokens: list[str]) -> bool:
+    if not tokens or tokens[0].rsplit("/", 1)[-1] != "git":
+        return False
+    sub, _ = _git_subcommand(tokens)
+    return sub in ("checkout", "switch")
+
+
+def classify_command(command: str, default_branches: tuple[str, ...] = DEFAULT_BRANCHES) -> Classification:
     """Classify a Bash command, splitting compound commands and checking every segment."""
     actions: set[str] = set()
     details: list[str] = []
     uncertain = False
+    push_implicit = False
+    switches_branch = False
+    cd_chain: list[str] = []
+    bad_cd = cd_after_action = False
     mentions_governed = any(f in command for f in (AUTHORITY_FILE, *GOVERNING_FILES))
 
     if _INDIRECTION.search(command) and _AUTHORITY_WORDS.search(command):
@@ -163,7 +247,22 @@ def classify_command(command: str) -> Classification:
                 uncertain = True
                 details.append("unparseable command containing an authority-class word")
             continue
-        actions |= _segment_actions(tokens)
+        is_cd, cd_to = _cd_target(tokens)
+        if is_cd:
+            if {COMMIT, PUSH} & actions:
+                cd_after_action = True
+            elif cd_to is None:
+                bad_cd = True
+            else:
+                cd_chain.append(cd_to)
+            continue
+        seg_actions, seg_implicit, seg_redirected = _segment_actions(tokens, default_branches)
+        actions |= seg_actions
+        push_implicit = push_implicit or seg_implicit
+        switches_branch = switches_branch or _switches_branch(tokens)
+        if seg_redirected and ({COMMIT, PUSH} & seg_actions):
+            uncertain = True
+            details.append("git -C/--git-dir/--work-tree: the branch of the repository acted on is not the call's cwd")
         if mentions_governed and not _is_read_only(tokens):
             seg = segment
             if AUTHORITY_FILE in seg:
@@ -173,6 +272,12 @@ def classify_command(command: str) -> Classification:
                 actions.add(GOVERNING_FILE_EDIT)
                 details.append("non-read-only command touching a governing file")
 
+    if {COMMIT, PUSH} & actions and (bad_cd or cd_after_action):
+        uncertain = True
+        details.append("a cd/pushd that cannot be resolved, or that follows the commit or push: the branch acted on is not known")
+    if switches_branch and ({COMMIT, PUSH} & actions):
+        uncertain = True
+        details.append("a branch switch in the same command: the branch committed or pushed is not the cwd's current one")
     if DELETE_REMOTE_BRANCH in actions:
         details.append("remote branch deletion")
-    return Classification(frozenset(actions), uncertain, "; ".join(dict.fromkeys(details)))
+    return Classification(frozenset(actions), uncertain, "; ".join(dict.fromkeys(details)), push_implicit, tuple(cd_chain))

@@ -12,6 +12,12 @@ tags: [live-map, rendering, testing, architecture]
 Two dated results: **2026-10-04** (the terrain pilot role, `terrain.forest`; this section) and, below it as history, the unchanged **2026-10-03** synthetic-fixture result.
 Plan: `docs/plans/visual-asset-management-runtime-integration/05_surface_compatibility_rehearsal_plan.md`; gates: the proposal's gate table.
 
+## Result 2026-10-06: the adopted terrain set (`pilot/rc-0005`)
+
+Detail: `docs/assets/pilot_terrain_m5_results.md` (section "Result 2026-10-06"), ticket `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN`, all checks on commit `2c793286f81c907711a39a3fa84cdc3013ef7ef7`. Scope: the 22 terrain tiles and nine border masks the owner adopted on 2026-10-05T18:17:03Z, drawn from the `rc-0005` export.
+`AM5-W03` (whole-map scene, criteria C1-C6 incl. borders): `PASS`, one reviewer, all six `Yes for all 23 terrains`. `AM5-W07`: `PASS` within the approved matrix, all four clients ran, 16 of 16 tests. `AM5-W05`: stays `INCONCLUSIVE` (the set rule passes only "by construction": no worse than the flat fills; closest pair-vision 0.857 dE;
+reasons of 2026-10-04 unchanged). `AM5-W09`, `AM-C05`, `AM-C06`, `AM-C07`, `AM-C09`: unchanged `INCONCLUSIVE`. **Overall M5 classification: `INCONCLUSIVE` (unchanged).** No gate was reworded.
+
 ## Result 2026-10-04: terrain pilot role
 
 Ticket `TCK-20261004-VISUAL-ASSETS-M5-RERUN-AND-M6-CHARTER`. Every check below was run on one clean commit, **`401921bdd165722712a63a2dc5be3204ca2d73e4`** (tree clean before and after), isolated and local: the

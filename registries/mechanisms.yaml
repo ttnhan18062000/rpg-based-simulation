@@ -1419,6 +1419,10 @@ mechanisms:
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::process_project_outcome
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::_resolve_active_objective
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::evaluate_strategic_intent
+      - src/systems/strategic_systems/entity_target_objective.py::entity_target_outcome
+      - src/systems/strategic_systems/entity_target_objective.py::close_entity_target_project
+      - src/systems/strategic_systems/entity_target_objective.py::objective_outcome
+      - src/systems/strategic_systems/entity_target_objective.py::contract_objective_outcome
     verified:
       instrument: scenario
       verdict: observed
@@ -2338,6 +2342,7 @@ mechanisms:
     implemented_by:
       - src/worldassembly/resolver.py::WorldAssemblyResolver
       - src/worldassembly/resolver.py::CompileProfileResolver
+      - src/worldassembly/region_precedence.py::order_regions
     verified:
       instrument: corpus_run
       verdict: observed
@@ -2371,6 +2376,13 @@ mechanisms:
         look up the wrong catalog region; (2) ASM-COMP-001 (:131-138) loops over all
         `module_refs` while `graph_map` holds only enabled ones, so an `enabled: false` ref would
         raise a false "not found" (no world uses `enabled: false` today).
+        **Update 2026-10-05 (LOC-08, owner decision 13; DEV-012, SUB-397):** region OVERLAP is now
+        resolved at assembly. `src/worldassembly/region_precedence.py::order_regions` (called from
+        `resolver.py` after the module merge) turns module and composition `region_precedence`
+        declarations, contained-region-wins and declaration order into one total order carried as the
+        order of `WorldSpec.regions`; it RAISES on an unknown id, a self-declaration, a cycle, or a
+        region that owns no tile, and reports each undeclared partial overlap as a `LOC-08` warning.
+        The "Region OVERLAP is not checked anywhere" sentence above is superseded.
   - id: resolved_world_snapshot
     layer: world
     systems: [world]
@@ -2408,6 +2420,7 @@ mechanisms:
     implemented_by:
       - src/worldbuilding/compiler.py::WorldCompiler
       - src/worldbuilding/validator.py::WorldValidator
+      - src/core/region_resolution.py::resolve_region_among
     verified:
       instrument: corpus_run
       verdict: observed
@@ -2435,6 +2448,16 @@ mechanisms:
         audit every position-to-region lookup before choosing a fix, and where an overlap check
         belongs (assembly or compilation) is part of that audit. This note's overlap clause will
         be re-stated when the audit lands.
+        **Re-stated 2026-10-05 (LOC-08, owner decision 13; DEV-012, SUB-397):** the audit landed and
+        the rule is authored precedence. Region OVERLAP is permitted and resolved: one total order
+        (`src/worldassembly/region_precedence.py::order_regions`, bound under `world_composition_assembly`)
+        is the order of `WorldSpec.regions`; `WorldCompiler.compile()` paints terrain in that order with
+        the FIRST region owning a tile (no longer last-wins), and every position-to-region lookup reads
+        the same order, so terrain, credit and the hazard a tile applies agree. A region that owns no
+        tile raises at assembly (`resolve_region_among` in `src/core/region_resolution.py` is bound here as
+        the shared point-to-region rule that reads the compiled order; no separate mechanism entry exists for
+        it). `ValidationSpec.allow_overlapping_regions` is deleted. Clause (3)
+        above is superseded; the compiler line references in it are historical.
         ---- earlier record (2026-09-20, as `world_generation`), kept ----
         TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION.
         `WorldCompiler.compile()` (called as a static method, not via instantiation -- an initial

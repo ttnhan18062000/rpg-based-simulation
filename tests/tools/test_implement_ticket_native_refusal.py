@@ -51,13 +51,29 @@ vm.createContext(sandbox);
 """
 
 
-def _run(**scenario) -> dict:
+def _run(script=SCRIPT, **scenario) -> dict:
     proc = subprocess.run(
-        [_NODE, "-e", _HARNESS, str(SCRIPT), json.dumps(scenario)],
+        [_NODE, "-e", _HARNESS, str(script), json.dumps(scenario)],
         capture_output=True, text=True, cwd=str(REPO_ROOT), timeout=60,
     )
     assert proc.returncode == 0, proc.stderr
     return json.loads(proc.stdout)
+
+
+def _run_with_unported_list(**scenario) -> dict:
+    """Run the script with the (now empty) refusal list re-populated, so the refusal mechanism itself stays tested
+    for the next gate site someone adds before porting it."""
+    source = SCRIPT.read_text(encoding="utf-8")
+    populated = re.sub(
+        r"const NATIVE_UNPORTED_GATE_SITES = \[.*?\]", "const NATIVE_UNPORTED_GATE_SITES = ['someGateOutput']", source, count=1, flags=re.S
+    )
+    assert populated != source
+    tmp = SCRIPT.parent / "_tmp_refusal_populated.js"
+    tmp.write_text(populated, encoding="utf-8")
+    try:
+        return _run(tmp, **scenario)
+    finally:
+        tmp.unlink()
 
 
 def _pipeline_dispatches(result: dict) -> list:
@@ -66,30 +82,19 @@ def _pipeline_dispatches(result: dict) -> list:
 
 @pytest.mark.parametrize("args", [{"tier": "standard"}, {"tier": "hotfix"}, {}])
 def test_native_non_epic_or_unknown_tier_is_refused_with_no_pipeline_agent(args):
-    result = _run(native=True, args=args)
+    result = _run_with_unported_list(native=True, args=args)
     assert result["thrown"] is None
     assert result["returned"]["status"] == "NATIVE_GATE_SITES_UNPORTED"
     assert "legacy runtime" in result["returned"]["message"]
     assert _pipeline_dispatches(result) == []
 
 
-def test_positive_control_same_input_reaches_scope_when_the_refusal_is_absent():
-    """Without the refusal list the same native input would dispatch Scope: prove the counter can see it by running
-    the script with the list emptied (what the port tickets will eventually do)."""
-    source = SCRIPT.read_text(encoding="utf-8")
-    emptied = re.sub(r"const NATIVE_UNPORTED_GATE_SITES = \[.*?\n\]", "const NATIVE_UNPORTED_GATE_SITES = []", source, flags=re.S)
-    assert emptied != source
-    tmp = SCRIPT.parent / "_tmp_refusal_control.js"
-    tmp.write_text(emptied, encoding="utf-8")
-    try:
-        proc = subprocess.run(
-            [_NODE, "-e", _HARNESS, str(tmp), json.dumps({"native": True, "args": {"tier": "standard"}})],
-            capture_output=True, text=True, cwd=str(REPO_ROOT), timeout=60,
-        )
-    finally:
-        tmp.unlink()
-    result = json.loads(proc.stdout)
-    assert any(d["label"] == "scope" for d in result["dispatches"]), "control: Scope must be reachable without the refusal"
+def test_native_non_epic_run_reaches_scope_now_that_every_gate_site_is_ported():
+    """The refusal list is empty (TCK-20260930-NATIVE-PORT-ATTESTED-GATE-SITES), so the same input the refusal tests
+    refuse reaches Scope; the counter can see it because the refusal tests above dispatch nothing."""
+    result = _run(native=True, args={"tier": "standard"})
+    assert (result["returned"] or {}).get("status") != "NATIVE_GATE_SITES_UNPORTED"
+    assert any(d["label"] == "scope" for d in result["dispatches"])
 
 
 def test_native_epic_tier_is_not_refused():
@@ -105,7 +110,7 @@ def test_legacy_runtime_is_unaffected():
 
 
 def test_refusal_writes_a_run_row_and_event_best_effort():
-    result = _run(native=True, args={"tier": "standard"})
+    result = _run_with_unported_list(native=True, args={"tier": "standard"})
     recorder = [d["prompt"] for d in result["dispatches"] if d["label"] == "refusal-record"]
     assert len(recorder) == 2
     assert any('"final_status":"NATIVE_GATE_SITES_UNPORTED"' in p and "record_run.py" in p for p in recorder)
@@ -113,7 +118,7 @@ def test_refusal_writes_a_run_row_and_event_best_effort():
 
 
 def test_recorder_failure_never_changes_the_refusal_status():
-    result = _run(native=True, args={"tier": "standard"}, recorderThrows=True)
+    result = _run_with_unported_list(native=True, args={"tier": "standard"}, recorderThrows=True)
     assert result["thrown"] is None
     assert result["returned"]["status"] == "NATIVE_GATE_SITES_UNPORTED"
 
@@ -134,7 +139,7 @@ def _bare_bash_sites(source: str) -> set[str]:
 
 def test_unported_site_list_equals_the_actual_bare_bash_call_sites():
     source = SCRIPT.read_text(encoding="utf-8")
-    listed = set(re.search(r"const NATIVE_UNPORTED_GATE_SITES = \[(.*?)\n\]", source, re.S).group(1).replace("'", "").replace(",", " ").split())
+    listed = set(re.search(r"const NATIVE_UNPORTED_GATE_SITES = \[(.*?)\]", source, re.S).group(1).replace("'", "").replace(",", " ").split())
     assert listed == _bare_bash_sites(source), (
         "NATIVE_UNPORTED_GATE_SITES must list exactly the variables assigned from a bare `bash(` call: add a new "
         "site to the list, or remove a site you ported to sh()/shOmit()"

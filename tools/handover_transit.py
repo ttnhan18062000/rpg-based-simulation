@@ -66,9 +66,32 @@ def _git_head() -> str:
         return ""
 
 
-def default_memory_dir() -> Path:
-    """`~/.claude/projects/<slug>/memory` for this checkout; slug is the main checkout path with
-    `/` replaced by `-`, matching how Claude Code keys project memory."""
+def _memory_slug_dir(root: Path) -> Path:
+    return Path.home() / ".claude" / "projects" / str(root).replace("/", "-") / "memory"
+
+
+def _root_aliases(root: Path) -> list[Path]:
+    """Other spellings of `root` reachable through a symlink directly under the home directory (`~/Working` ->
+    `/mnt/data/Working`). Claude Code keys project memory by the path a session was started from, unresolved."""
+    aliases: list[Path] = []
+    try:
+        entries = sorted(Path.home().iterdir())
+    except OSError:
+        return aliases
+    for entry in entries:
+        try:
+            if not entry.is_symlink():
+                continue
+            target = entry.resolve()
+            aliases.append(entry / root.relative_to(target))
+        except (OSError, ValueError):
+            continue
+    return aliases
+
+
+def memory_dir_candidates() -> list[Path]:
+    """Every `~/.claude/projects/<slug>/memory` this checkout could be keyed under: the resolved main checkout path,
+    the logical one a session started through a symlink would use, and the home-symlink aliases."""
     try:
         common = subprocess.run(
             ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
@@ -77,8 +100,34 @@ def default_memory_dir() -> Path:
         root = Path(common).parent
     except Exception:
         root = Path.cwd()
-    slug = str(root.resolve()).replace("/", "-")
-    return Path.home() / ".claude" / "projects" / slug / "memory"
+    resolved = root.resolve()
+    roots = [resolved, *_root_aliases(resolved)]
+    pwd = os.environ.get("PWD")
+    if pwd and Path(pwd).resolve() == Path.cwd().resolve():
+        try:
+            rel = Path.cwd().resolve().relative_to(resolved)
+            roots.append(Path(pwd).joinpath(*([".."] * len(rel.parts))))
+            roots[-1] = Path(os.path.normpath(roots[-1]))
+        except ValueError:
+            pass
+    seen: list[Path] = []
+    for r in roots:
+        d = _memory_slug_dir(r)
+        if d not in seen:
+            seen.append(d)
+    return seen
+
+
+def default_memory_dir() -> Path:
+    """The candidate `memory/` that holds files. Two non-empty candidates raise (never guess; pass `--memory-dir`);
+    none non-empty returns the resolved-path one, which `export` reports as empty rather than dropping silently
+    (TCK-20261006-HANDOVER-TRANSIT-EXPORT-WIPES-BUNDLE-VIA-SYMLINK-MEMORY-PATH)."""
+    candidates = memory_dir_candidates()
+    filled = [c for c in candidates if _list_files(c)]
+    if len(filled) > 1:
+        raise TransitError("more than one project memory directory holds files, so the right one is ambiguous: "
+                           + ", ".join(str(c) for c in filled) + "; pass --memory-dir <dir>")
+    return filled[0] if filled else candidates[0]
 
 
 _BRANCH_LINE = re.compile(r"^\s*[-*]?\s*\**Branch\**\s*:\s*`?([A-Za-z0-9._/-]+)`?", re.MULTILINE)
@@ -212,12 +261,50 @@ def _collect(roles: list[str] | None, drafts: bool, memory: bool,
     return out
 
 
+SHRINK_LIMIT = 0.25  # a starting value (TCK-20261006-HANDOVER-TRANSIT-EXPORT-WIPES-BUNDLE-VIA-SYMLINK-MEMORY-PATH)
+
+
+def _existing_rows(bundle: Path) -> list[dict]:
+    try:
+        return _read_manifest(bundle)
+    except (TransitError, ValueError, KeyError, OSError):
+        return []  # no readable previous bundle: nothing to shrink
+
+
+def _refuse_shrink(bundle: Path, items: list[tuple[str, str, Path]], allow_shrink: bool) -> None:
+    existing = {(r["kind"], r["path"]) for r in _existing_rows(bundle)}
+    dropped = existing - {(kind, rel) for kind, rel, _ in items}
+    dropped_memory = sum(1 for kind, _ in dropped if kind == "memory")
+    if allow_shrink or not dropped or not (dropped_memory or len(dropped) > SHRINK_LIMIT * len(existing)):
+        return
+    raise TransitError(
+        f"export would shrink the bundle {bundle}: {len(existing)} existing entries, {len(items)} to write, "
+        f"{len(dropped)} dropped ({dropped_memory} memory). Nothing was changed. Check the memory directory "
+        f"(--memory-dir) and the handover directory, or pass --allow-shrink if this is intended.")
+
+
+def export_counts(items: list[tuple[str, str, Path]], bundle: Path) -> dict[str, dict[str, int]]:
+    """`{"notes"|"drafts"|"memory": {"new": n, "existing": n}}` for `export --dry-run`."""
+    def bucket(kind: str, rel: str) -> str:
+        return "memory" if kind == "memory" else ("drafts" if rel.startswith("drafts/") else "notes")
+    counts = {b: {"new": 0, "existing": 0} for b in ("notes", "drafts", "memory")}
+    for kind, rel, _ in items:
+        counts[bucket(kind, rel)]["new"] += 1
+    for r in _existing_rows(bundle):
+        counts[bucket(r["kind"], r["path"])]["existing"] += 1
+    return counts
+
+
 def export_bundle(*, roles: list[str] | None = None, drafts: bool = True, memory: bool = True,
                   root: Path | None = None, handover_dir: Path | None = None,
                   memory_dir: Path | None = None, host: str | None = None,
                   draft_filter: DraftFilter | None = None, role: str | None = None, roster=None,
-                  worktree: str | None = None, branch: str | None = None) -> Path:
-    """`draft_filter=None` exports every draft (`--include-all`); main() passes `load_draft_filter()`."""
+                  worktree: str | None = None, branch: str | None = None,
+                  allow_shrink: bool = False, dry_run: bool = False) -> Path:
+    """`draft_filter=None` exports every draft (`--include-all`); main() passes `load_draft_filter()`.
+
+    Refuses (`TransitError`, bundle untouched) when the new bundle would drop any memory entry or more than
+    `SHRINK_LIMIT` of the existing entries, unless `allow_shrink`. `dry_run` checks nothing and writes nothing."""
     root = root if root is not None else TRANSIT_ROOT
     handover_dir = handover_dir if handover_dir is not None else HANDOVER_DIR
     host = host or host_id()
@@ -226,6 +313,9 @@ def export_bundle(*, roles: list[str] | None = None, drafts: bool = True, memory
     if not items:
         raise TransitError("nothing to export (no handover notes, drafts or memory found)")
     bundle = root / host
+    if dry_run:
+        return bundle
+    _refuse_shrink(bundle, items, allow_shrink)
     if bundle.exists():
         shutil.rmtree(bundle)  # rolling: replace this host's previous bundle wholesale
     head, stamp = _git_head(), _now()
@@ -401,6 +491,10 @@ def main(argv: list[str] | None = None) -> int:
     e.add_argument("--roles", help="comma-separated role names (default: all notes)")
     e.add_argument("--no-drafts", action="store_true")
     e.add_argument("--no-memory", action="store_true")
+    e.add_argument("--memory-dir", help="project memory directory (default: the one candidate that holds files)")
+    e.add_argument("--allow-shrink", action="store_true",
+                   help="replace the bundle even when it drops memory entries or more than 25%% of its entries")
+    e.add_argument("--dry-run", action="store_true", help="print new vs existing counts per kind; write nothing")
     e.add_argument("--include-all", action="store_true",
                    help="also export completed or merged drafts and evidence directories")
     i = sub.add_parser("import")
@@ -408,6 +502,7 @@ def main(argv: list[str] | None = None) -> int:
     i.add_argument("--dry-run", action="store_true")
     i.add_argument("--role", help="import only this role's notes and drafts (memory still comes along)")
     i.add_argument("--no-memory", action="store_true")
+    i.add_argument("--memory-dir", help="project memory directory (default: the one candidate that holds files)")
     e.add_argument("--role", help="role of the exporting session (default: resolved from SESSION_ROLE; never guessed)")
     sub.add_parser("status")
     d = sub.add_parser("discard")
@@ -422,15 +517,25 @@ def main(argv: list[str] | None = None) -> int:
             role = exporting_role(roster=roster, explicit=a.role)
             wt = str(Path.cwd().resolve())
             br = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True).stdout.strip() or None
+            memory_dir = Path(a.memory_dir) if a.memory_dir else default_memory_dir()
+            if not a.no_memory and not _list_files(memory_dir):
+                print(f"NOTE: no memory files found under {memory_dir}; the bundle will carry no memory", file=sys.stderr)
+            if a.dry_run:
+                items = _collect(roles, not a.no_drafts, not a.no_memory, HANDOVER_DIR, memory_dir, flt)
+                for bucket, c in export_counts(items, TRANSIT_ROOT / host_id()).items():
+                    print(f"{bucket}: {c['new']} new, {c['existing']} existing")
+                return 0
             b = export_bundle(roles=roles, drafts=not a.no_drafts, memory=not a.no_memory, draft_filter=flt,
-                              role=role, roster=roster, worktree=wt, branch=br)
+                              role=role, roster=roster, worktree=wt, branch=br, memory_dir=memory_dir,
+                              allow_shrink=a.allow_shrink)
             rows = _read_manifest(b)
             print(f"exported to {b} ({len(rows)} files: {summarize_groups(rows)}) from {wt} on {br}")
             if role is None and any(r["kind"] == "handover" and (r["belongs_to"]["kind"] == "draft") for r in rows):
                 print("WARNING: the exporting role is unresolved (no --role, no SESSION_ROLE): drafts are listed as "
                       "unattributed. Pass --role <role> to attribute them.", file=sys.stderr)
         elif a.cmd == "import":
-            for line in import_bundle(a.host, dry_run=a.dry_run, role=a.role, no_memory=a.no_memory):
+            for line in import_bundle(a.host, dry_run=a.dry_run, role=a.role, no_memory=a.no_memory,
+                                       memory_dir=Path(a.memory_dir) if a.memory_dir else None):
                 print(line)
         elif a.cmd == "status":
             for line in status_lines() or ["no transit bundles"]:

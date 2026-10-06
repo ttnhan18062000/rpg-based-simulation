@@ -326,12 +326,15 @@ def test_a_symlinked_catalog_directory_is_refused_without_writing_through_it(env
 
 
 def test_the_committed_catalog_is_never_touched_by_these_tests():
-    # only the terrain.forest slots' own records are there (the pilot plain tile, TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE, and its bush and tree,
-    # TCK-20261004-VISUAL-ASSETS-FOREST-DETAIL-TILES): three sources, three adoptions, two intake files each; a test adoption would add a fourth
+    # The committed records are exactly the owner's: the forest's three slots (TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE, ...-FOREST-DETAIL-TILES) and the 31 sources of the adoption of terrain-v1 on
+    # 2026-10-05T18:17:03Z: 34 sources, 34 adoptions, two intake files each, one set adoption, no revocations. A test adoption would add one more; the equality makes that fail.
+    from tests.visual_assets import adopted_facts as af
+
     committed = config.CATALOG_ROOT
-    for name, count in (("sources", 3), ("provenance/adoptions", 3), ("provenance/intake", 6), ("provenance/revocations", 0)):
+    for name, count in (("sources", af.ADOPTION_COUNT), ("provenance/adoptions", af.ADOPTION_COUNT), ("provenance/intake", af.INTAKE_FILE_COUNT), ("provenance/set-adoptions", 1), ("provenance/revocations", 0)):
         found = [p.name for p in (committed / name).iterdir() if p.name != ".gitkeep"] if (committed / name).exists() else []
         assert len(found) == count, (name, found)
+    assert sorted(p.name for p in (committed / "sources").iterdir() if p.name != ".gitkeep") == af.ADOPTED_SOURCES
 
 
 # --------------------------------------------------------------------------- R4: the same bytes through another intake

@@ -78,6 +78,12 @@ One record per workflow invocation.
 | `agent_count` | int | No | Total number of agent calls that produced events. |
 | `duration_s` | int | Yes | Wall-clock seconds from start to end. `null` for crashed runs. |
 | `execution_mode` | string | Yes (optional, not in `record_run.py`'s `REQUIRED` set) | `pipeline` (a `.claude/workflows/*.js` script's phases followed by hand-narration — an LLM reading the script and manually issuing the equivalent tool calls, never actually executing the JS), `workflow` (the same script actually executed by the native Claude Code `Workflow` tool — `TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT`, `create-tickets.js` first), or `hand` (written exclusively by `tools/agent-monitoring/record_hand_orchestrated_closure.py`, no script followed at all). A separate field from `workflow` — `workflow` values are unchanged by this field's existence, so anything already reading `workflow` sees no change in meaning. A row with no `execution_mode` key (every row from before `TCK-20260929-RUN-EXECUTION-MODE-FIELD`, and any legacy row that instead used a non-canonical `workflow` value like `"hand-orchestrated"`, W36) is not backfilled or inferred — treat its absence as "unlabelled: predates this field," never as "must be pipeline." `generate_retro.py`'s Run Summary reports these as four distinct groups for exactly this reason. |
+| `duration_source` | string | Yes (optional) | Provenance of `start_ts`/`end_ts`/`duration_s` on a hand closure (`TCK-20261006-HAND-CLOSURE-RECORDER-REAL-TIMESTAMPS`; design `agent-working/stored_artifacts/TCK-20261006-HAND-CLOSURE-TIME-SOURCE-DESIGN/design.md`). `declared`: the closer passed `--start-ts` (measured). `tool_activity`: derived from the closing session's own unattributed `tools.jsonl` rows since the later of its previous hand closure's end and the start of the current activity block (a gap over 1800 s ends a block; at least 3 rows), so a row is claimed by at most one closure. `unknown`: no evidence, or an inverted declared span; `start_ts` equals `end_ts` (the field is required) and `duration_s` is `null`, never 0. Written only by `record_hand_orchestrated_closure.py`. A row without the key predates it: treat as "unlabelled", not as measured. Retro averaging of derived values is the retro child's decision. |
+| `session_id` | string | Yes (optional) | `CLAUDE_CODE_SESSION_ID` of the session that recorded the closure, `null` when unset. Written with `duration_source`; the join key to that session's `tools.jsonl` rows. Absent on older rows. |
+| `claim_peers` | int >= 0 | Yes (optional) | Only with `duration_source: tool_activity`: how many earlier hand closures by the same session ended inside the same activity block. `0` means the block was not shared. |
+| `path_reason` | string | Yes (optional) | Why the ticket took its path (`TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD`, epic `TCK-20261006-EPIC-TICKET-PATH-RECORD`). One of `pipeline_default` (the pipeline's own run write sets it), `pipeline_unavailable`, `native_port_blocked`, `small_change`, `owner_directed`, `batch_hand_close`, `investigation_only`, `other` (requires `path_note`), `unstated` (the writers' default when nobody said: not a reason, a gap). Set on a hand closure with `record_hand_orchestrated_closure.py --path-reason`. Absent on a row that predates the field. |
+| `path_note` | string | Yes (optional) | Free text beside `path_reason`; required when it is `other`. |
+| `phases_omitted` | array of string | Yes (optional) | Phases the run's tier marks `full` in `agent-working/agent-orchestration/workflows/implement-ticket.yaml` that have no event in the run, derived at write time by `tools/agent-monitoring/path_record.py` (never a hard-coded copy, so editing the plan changes it with no code change). `conditional` and `skipped_event` phases are never counted; a tier the plan does not list (epic, n/a) records `[]`. Absent when the plan could not be read or the row predates the field: read absence as "unknown", never as `[]`. Note a phase with a `skipped` event is NOT omitted: it was logged, and its `skip_reason` says why. |
 
 ### What is not recorded
 
@@ -98,7 +104,7 @@ One record per workflow invocation.
 | `IN_PROGRESS` | Run-start record written; end record not yet written. Should not appear in completed runs. |
 | `DONE` | Workflow completed successfully. |
 | `WORKFLOW_ERROR` | An uncaught exception ended the run in any phase. One error event (phase = the last phase an event was pushed for, agent `implement-ticket-orchestrator`, summary starts `WORKFLOW_ERROR after <phase>:` with the bounded error text) and the run row are written best-effort, then the original exception is rethrown; before Scope finishes a minimal fallback record is written the way `SCOPE_AGENT_FAILED` is (`TCK-20261003-IMPLEMENT-TICKET-JS-NO-MONITORING-ON-EXCEPTION`). |
-| `NATIVE_GATE_SITES_UNPORTED` | A native-runtime run for a non-epic (or unspecified-tier) ticket was refused before Scope, because the native runtime has no `bash` and gate sites still call it (`NATIVE_UNPORTED_GATE_SITES` in `implement-ticket.js`); otherwise it would crash after Scope. No pipeline agent ran. A run row (`agent_count` 0) and one event are written best-effort under `NATIVE-REFUSED-<digits of start_ts>` (or the given ticket id); a write failure never changes the status (`TCK-20261004-IMPLEMENT-TICKET-NATIVE-REFUSE-UP-FRONT-WHEN-GATE-SITES-UNPORTED`). |
+| `NATIVE_GATE_SITES_UNPORTED` | A native-runtime run for a non-epic (or unspecified-tier) ticket was refused before Scope, because the native runtime has no `bash` and gate sites still call it (`NATIVE_UNPORTED_GATE_SITES` in `implement-ticket.js`); otherwise it would crash after Scope. No pipeline agent ran. A run row (`agent_count` 0) and one event are written best-effort under `NATIVE-REFUSED-<digits of start_ts>` (or the given ticket id); a write failure never changes the status (`TCK-20261004-IMPLEMENT-TICKET-NATIVE-REFUSE-UP-FRONT-WHEN-GATE-SITES-UNPORTED`). **Dormant since `TCK-20260930-NATIVE-PORT-ATTESTED-GATE-SITES`:** the nine gate/control sites now run natively through `shAttested()` (`tools/gate_checks/attest_gate.py` prints an `ATTEST:` line with a SHA-256 mac; `verifyAttestation` in `implement-ticket.js` checks it against a script-held nonce, gate id and command), so `NATIVE_UNPORTED_GATE_SITES` is empty and this status is returned only if a bare-`bash(` site is added and listed. A missing, malformed, wrong-command or non-zero attested result throws `GATE_ATTESTATION_FAILED <gate>: <reason>` (recorded as `WORKFLOW_ERROR`, fail closed). The attestation is anti-misreport, not tamper-proof: an agent handed the nonce can forge a pass, so the unforgeable check is the orchestrator re-run of `done_checker_static.py` before commit, and CI. |
 | `EPIC_SCOPED` | Epic tier — ticket scoped, no implementation. |
 | `CONFLICTS_DETECTED` | Duplicate or conflicting ticket found at Scope gate. |
 | `TAGS_NOT_REGISTERED` | A ticket's tag isn't in `registries/tag_registry.jsonl` — caught at Scope, before the rest of the pipeline runs (`TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`). |
@@ -114,6 +120,8 @@ One record per workflow invocation.
 | `DOD_BLOCKED` | Definition-of-Done conditions not met. |
 | `FINALIZE_INCOMPLETE` | Finalize's self-check (`run_finalize_selfcheck`) found the migration/move/log-append/registry-regen steps did not fully land, or its own output was unparseable. |
 | `NOTHING_TO_CREATE` | `create-tickets` only — no actionable concerns, all concerns were duplicates of existing tickets, or no tasks survived structuring. |
+| `INVESTIGATION_FAILED` | `create-tickets` only — nothing could be created and at least one concern's investigator returned null (typically a session launched outside the repo root, agents not loaded); never reported as `NOTHING_TO_CREATE` (`TCK-20261006-CREATE-TICKETS-FAILED-INVESTIGATIONS-REPORTED-AS-COVERED`). |
+| `WRITE_FAILED` | `create-tickets` only — tasks were planned but every write agent returned null (typically agents not loaded: session launched outside the repo root); partial failure stays `DONE` with `failed_writes` in the return value (`TCK-20261006-CREATE-TICKETS-FAILED-WRITES-REPORTED-AS-DONE`). |
 | `CRASHED` | Synthetic status set by `validate.py` for runs with `start_ts` but no `end_ts`. |
 
 Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, new run records are no longer appended to a
@@ -190,6 +198,9 @@ The per-record schema is unaffected by this change; only where a record physical
 | `test_quality_findings` | array of string | Yes (key absent only when the reviewer returned no list; an empty list is carried as `[]`) | Optional, advisory (`TCK-20261002-ARCH-VERIFY-TEST-QUALITY-FINDINGS`): the architecture-reviewer's test-quality findings scoped to the changed test files, carried from its `ARCH_VERIFY_SCHEMA` reply on the `Architecture-Verify` event so a later run does not hand-copy them. Never part of the verdict. **No item is dropped.** A string item is kept as is; any other item (e.g. an object `{severity, file, finding}`) is kept as its JSON string; a non-array reply becomes a one-item list; a single quote `'` becomes a typographic `’` (the events JSON is embedded in one single-quoted shell argument by the monitoring write). Only an empty or null item is dropped. The key is absent when the reviewer returned no list at all (an empty list `[]` is a claim about the test files the reviewer read, checked against `tests_read` and the Read rows by `arch_verify_read_check.py`). `record_events.py` rejects a value that is not a list of strings. `summary` is unchanged (still <= 200 chars). |
 | `test_quality_findings_normalized` | int | Yes (key absent when verbatim) | Present only beside a `test_quality_findings` list that was not carried verbatim: the number of items serialized to JSON, wrapped, quote-swapped, or dropped (an item counts once per kind of change). Its absence means the list is exactly what the reviewer returned. Must be a non-negative integer. |
 | `tests_read` | array of string | Yes (key absent when the reviewer returned none) | Optional (`TCK-20261004-ARCH-VERIFY-TESTS-READ-EVIDENCE`): repo-relative paths of every changed test file the architecture-reviewer says it opened (committed, uncommitted and untracked). Carried on the `Architecture-Verify` event beside `test_quality_findings`. `arch_verify_read_check.py` reports an empty `test_quality_findings` with a changed test absent from this list and from the exact Read rows as UNVERIFIED, never as clean. Advisory only: no verdict or workflow effect. `record_events.py` rejects a value that is not a list of strings. |
+| `session_id` | string | Yes (optional) | Same value as the run's `session_id` on a hand-closure event (`TCK-20261006-HAND-CLOSURE-RECORDER-REAL-TIMESTAMPS`); `null` when the variable was unset; absent on older rows. Event `ts` keeps the closure time: per-event times are not derived. |
+| `cost_source` | string | Yes (optional) | Where `tool_call_count`/`cost_proxy_score` came from (`TCK-20261006-HAND-CLOSURE-COST-ATTRIBUTION`). `sidecar`: rows carrying this event's `(run_id, seq)` from a live sidecar. `session_window`: a hand closure's claim of the closing session's own unattributed `tools.jsonl` rows (`run_id` null, claimed by at most one closure, see `duration_source` on the run), carried as one ticket-level total on the final event, so it is NOT phase-resolved: read `cost_source` before using a per-phase figure. Absent: no attribution (keys absent too, never 0), or a row that predates the field. |
+| `skip_reason` | string | Yes (optional) | Only on a `status: skipped` event (`TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD`): `tier_plan` (the tier marks the phase `skipped_event`), `condition_false` (e.g. Parity's `src_change_and_behavior_changed`), `not_applicable`, `no_hand_tool`, `deferred`, `other`, `unstated` (default when a hand closure does not say). The pipeline sets `tier_plan` and `condition_false` at its own skip sites. Rejected on any other status. |
 
 ### `status` values
 
@@ -655,6 +666,78 @@ instance; never the `agent` vocabulary), `function`, `domain`, `tool`. Covered b
 `agent-working/agent-monitoring/data/*/*.jsonl merge=union` glob. Harden only what recurs after a measured
 window (plan section 10; M7). "Unusual route" is deliberately not its own kind: a routed path is still an edit in another domain, so it is
 folded into `edit_outside_owns` (`owner_seats` shows where it should have gone); M7 can split it if the data shows it recurs.
+
+## `gate_verdicts` (`agent-working/agent-monitoring/data/YYYY-Www/<identifier>.gate_verdicts.jsonl`)
+
+One row per verdict a gate CLI prints (`TCK-20261006-GATE-VERDICT-RECORD-AND-HAND-SITES`, child 1 of
+`TCK-20261006-EPIC-GATE-OVERRIDE-LEDGER`). Gate CLIs used to print PASS/FAIL to stdout and keep nothing, so a
+wrong verdict was only found if a person noticed. Like `claim_detections` this is its own file family, not an
+`events` row: it carries no `agent`, `seq` or `vocabulary_drift` obligation. Written by
+`tools/agent-monitoring/gate_verdicts.py::record_gate_verdict()` through the shared `writer.py::write_line()` and
+`resolve_write_target()`, so the per-branch shard key and the `merge=union` data glob apply unchanged.
+
+Emitted by (all hand-reachable): `done_checker_static.py` (per-condition `sub_results`), `post_native_run_check.py`
+(`sub_results` per re-run check; nested checkers are labelled `workflow`), `doc_staleness_check.py`,
+`plan_gate_static.py` (new `--plan-path` CLI) and `attest_gate.py` (the ATTEST line's gate, command hash, exit code
+and stdout hash; never the mac; the wrapped command is kept from writing a second row).
+
+```json
+{"ts":"2026-10-06T09:00:00Z","gate_verdict_id":"gv-3f2a9c1d0b7e4a55","run_id":null,"execution_id":null,
+ "session_id":"sess-abc123","execution_mode":"hand","ticket_id":"TCK-20261006-EXAMPLE",
+ "gate_id":"Finalize:gate_checks.done_checker_static.run_finalize_selfcheck","gate_type":"static_check",
+ "phase":"Finalize","verdict":"PASS","blocking":false,
+ "sub_results":{"finalize.ticket_finalized":"PASS"},
+ "inputs_ref":{"head_sha":"c41446c86...","cmd_sha":"9b1c..."}}
+```
+
+| Field | Type | Nullable | Description |
+|---|---|---|---|
+| `ts` | ISO 8601 | No | UTC, `Z`-suffixed, when the verdict was recorded. |
+| `gate_verdict_id` | string | No | Unique, `gv-` plus 16 hex digits. Later children key outcomes and adjudication on it. |
+| `run_id`, `execution_id` | string | Yes | The run the verdict belongs to; `null` for a CLI run by hand outside a recorded run. |
+| `session_id` | string | Yes | `CLAUDE_CODE_SESSION_ID`, the same source `record_hand_orchestrated_closure.py` uses. |
+| `execution_mode` | string | No | `pipeline`, `workflow` or `hand`, as on `runs`. A CLI defaults to `hand`; `--execution-mode` (doc_staleness) or `GATE_VERDICT_EXECUTION_MODE` overrides it. |
+| `ticket_id` | string | Yes | Absent for a gate that is not about one ticket (`attest_gate`, a doc-staleness check). |
+| `gate_id` | string | No | `<phase>:<check_module>.<check_function>` from `agent-working/agent-orchestration/gate-policy.yaml` when the gate is registered there, else `cli:<module>`; `attest_gate` records the id the caller passed. |
+| `gate_type` | string | No | `static_check`, or `attested_command` for `attest_gate`. An `attested_command` row is evidence that a native gate command ran, not a verdict: `gate_ledger.py` never counts it. The pipeline-site row for the same gate (gate-policy id) is the verdict and carries the attestation's `inputs_ref.stdout_sha`; an attested row with no such row is listed as "attested, no verdict row". |
+| `phase` | string | Yes | The workflow phase the gate guards, when it has one. |
+| `verdict` | string | No | `PASS` or `FAIL` for these CLIs; an agent-verdict gate records its raw enum. |
+| `blocking` | bool | No | `true` when the verdict stopped the work (the CLI exited non-zero). |
+| `sub_results` | object | Yes | `{condition: PASS\|FAIL\|NA}`, e.g. the done-checker checklist. |
+| `inputs_ref` | object | No | What the gate looked at: `head_sha`, `cmd_sha` or `files_sha` (a hash of the command or file list), and `stdout_sha`/`exit_code` for an attested command. |
+
+Opt out with `--no-record` or `GATE_VERDICT_NO_RECORD=1` (`tests/conftest.py` sets it so no test writes into the
+real data root). A write failure prints one `WARNING` to stderr and never changes the CLI's stdout or exit code.
+`validate.py` checks every row against `gate_verdicts.validate_record()` and exits non-zero on an invalid one.
+
+**Pipeline rows** (`TCK-20261006-GATE-VERDICT-PIPELINE-SITES`). `implement-ticket.js` buffers one row per gate it reaches, on pass
+and on fail, and `writeMonitoring()` flushes them once with `gate_verdicts.py record-batch` (a failure there is a warning and never
+changes `final_status` or the events). A gate never reached has no row. The `gate_id` of a `gate-policy.yaml` entry is
+`gate_verdicts.policy_gate_id()`: `<phase>:<check_module>.<check_function>` (static), `<phase>:verdict` (agent verdict) or
+`<phase>:<result_field>` (agent result field); `tests/tools/test_gate_verdict_pipeline_sites.py` fails when an entry has no emit
+site. A static gate is pushed by the script only on the legacy runtime, because on the native runtime `attest_gate.py` already
+records it (under the attestation's own gate name), so one verdict is one row.
+
+### Outcome and adjudication rows (`TCK-20261006-GATE-VERDICT-OUTCOME-AND-ADJUDICATION`)
+
+Two more append-only row kinds share the family, keyed by `gate_verdict_id` and told apart by `row_kind`
+(a verdict row has no `row_kind`). Nothing is edited in place. Written by `tools/agent-monitoring/gate_ledger.py`;
+an unknown `gate_verdict_id` is refused (exit 2).
+
+| `row_kind` | Fields | Values |
+|---|---|---|
+| `outcome` | `ts`, `gate_verdict_id`, `outcome`, `followup_verdict_id` (nullable), `note` (nullable) | `accepted`, `fixed_and_rerun`, `rerun_no_change`, `overridden`, `stopped` |
+| `adjudication` | `ts`, `gate_verdict_id`, `adjudication`, `adjudicated_by` (a role or `owner`), `reason` | `true_block`, `false_block`, `true_pass`, `false_pass`, `unknown` |
+
+Reads (`gate_ledger.resolved_view()`): an explicit outcome beats a derived one (`outcome_source` says which). Derived,
+never stored: a blocking verdict whose next verdict on the same `(ticket_id, gate_id)` is a pass is `fixed_and_rerun`;
+followed by a block with an equal `inputs_ref` it is `rerun_no_change`; any other blocking verdict has no outcome and
+shows in `gate_ledger.py list --unresolved`. The latest adjudication for a verdict wins; the earlier rows stay.
+`true_pass` is recorded only when someone checked a pass on purpose; an unchecked pass is never assumed true.
+The one automatic adjudication: `post_native_run_check.py` fails a check whose gate a native run attested PASS for the
+same ticket (`done_checker_static` against `finalize_selfcheck`), so it writes `false_pass` with
+`adjudicated_by: orchestrator-backstop`, at most once per native verdict. For this the native run's `attest_gate.py`
+rows carry the ticket id (`--ticket-id`, passed by `implement-ticket.js`).
 
 ## Session-layer fields and files (`session_role`, `manual_actions`)
 
