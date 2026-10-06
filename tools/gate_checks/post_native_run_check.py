@@ -17,6 +17,7 @@ Read-only: runs the existing checkers, writes nothing. Exit 0 only if all three 
 the failing check. Usage: python3 tools/gate_checks/post_native_run_check.py --ticket-id TCK-...
 """
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -24,6 +25,12 @@ _REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
 if _REPO_ROOT_STR not in sys.path:
     sys.path.append(_REPO_ROOT_STR)
 from tools.agent_working_paths import TICKETS  # noqa: E402
+
+_MONITORING_DIR = str(Path(__file__).resolve().parents[1] / "agent-monitoring")
+if _MONITORING_DIR not in sys.path:
+    sys.path.insert(0, _MONITORING_DIR)
+import gate_ledger  # noqa: E402
+import gate_verdicts  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 TICKET_DIRS = ("inprogress", "done")
@@ -49,15 +56,19 @@ def build_checks(ticket_id, ticket_path, repo=REPO):
     ]
 
 
-def run(ticket_id, repo=REPO, out=print):
+def run(ticket_id, repo=REPO, out=print, record=True):
     ticket = find_ticket(ticket_id, repo)
     if ticket is None:
         out(f"FAIL ticket_location: no agent-working/tickets/inprogress|done[/<folder>]/{ticket_id}.md")
         return 1
     failed = []
+    sub_results = {}
+    # A nested checker records its own row; label it as this native run's, not a hand closure's.
+    env = {**os.environ, gate_verdicts.ENV_EXECUTION_MODE: "workflow"}
     for name, cmd in build_checks(ticket_id, ticket, repo):
-        proc = subprocess.run(cmd, cwd=repo, capture_output=True, text=True)
+        proc = subprocess.run(cmd, cwd=repo, capture_output=True, text=True, env=env)
         status = "PASS" if proc.returncode == 0 else "FAIL"
+        sub_results[name] = status
         out(f"{status} {name}")
         if proc.returncode != 0:
             failed.append(name)
@@ -65,14 +76,30 @@ def run(ticket_id, repo=REPO, out=print):
             for line in tail:
                 out(f"    {line}")
     out(f"RESULT: {'FAIL (' + ', '.join(failed) + ')' if failed else 'PASS'} for {ticket_id}")
+    gate_verdicts.record_gate_verdict(
+        enabled=record,
+        gate_id=gate_verdicts.gate_id_for("post_native_run_check"),
+        gate_type="static_check",
+        phase="Finalize",
+        verdict="FAIL" if failed else "PASS",
+        blocking=bool(failed),
+        ticket_id=ticket_id,
+        sub_results=sub_results,
+        execution_mode="workflow",
+        inputs_ref={"head_sha": gate_verdicts.head_sha(), "cmd_sha": gate_verdicts.sha256_hex(ticket_id)},
+    )
+    if record:
+        for name in failed:
+            gate_ledger.backstop_adjudicate(ticket_id, name)
     return 1 if failed else 0
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--ticket-id", required=True)
+    ap.add_argument("--no-record", action="store_true", help="Do not write this verdict to the gate_verdicts shard.")
     args = ap.parse_args(argv)
-    return run(args.ticket_id)
+    return run(args.ticket_id, record=not args.no_record)
 
 
 if __name__ == "__main__":

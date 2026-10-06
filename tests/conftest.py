@@ -248,6 +248,13 @@ def _reset_catalog_registries():
     _restore_catalog_registries()
 
 
+@pytest.fixture(autouse=True)
+def _no_gate_verdict_recording(monkeypatch):
+    """Keep gate CLIs from appending to the real agent-monitoring data root during tests
+    (TCK-20261006-GATE-VERDICT-RECORD-AND-HAND-SITES). A test of the recorder itself deletes this env var."""
+    monkeypatch.setenv("GATE_VERDICT_NO_RECORD", "1")
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _observability_worker_thread_sentinel():
     """Session-scoped sentinel that fails the suite if QueueDrainWorker threads accumulate.

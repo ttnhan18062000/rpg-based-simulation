@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-WORKTREE-INDEX-DUPLICATION
-phase: open
+phase: done
 date: 2026-10-04
 tags: [ai, process-improvement, performance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, performance]
 Stop duplicating the derived `agent-working/.index/` in every git worktree
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -46,6 +46,7 @@ Every worktree builds its own `agent-working/.index/` (about 103M knowledge inde
 
 ## Related Tickets
 - `TCK-20261002-EPIC-SESSION-LAYER-OPERATIONS` (M4 hygiene tooling may host the prune step)
+- `TCK-20261006-KNOWLEDGE-INDEX-STALE-WARNING` (AC2 follow-up)
 
 ## Related Docs
 - `docs/guidelines/agent_working_environment.md`
@@ -76,4 +77,4 @@ Changes: `tools/prune_worktree_indexes.py` (dry run default, `--apply`, skips cu
 - `docs/guidelines/agent_working_environment.md`
 
 ## Completion Summary
-Implemented, not closed. AC1 recorded (474.4M across 4 index folders in 3 other worktrees, no deletions made). AC3 done (MCP and CLI resolve one repo-anchored index; reproduced and fixed). AC4 scoped tests green apart from the timing failures above; docs updated. **AC2 is only partly met**: a worktree's own index is the one it searches, but a stale-index warning is not implemented. File a follow-up or accept before closing.
+Closed 2026-10-06 by owner decision, with one acceptance criterion only partly met. AC1 recorded (474.4M across 4 index folders in 3 other worktrees, no deletions made). AC3 done (MCP and CLI resolve one repo-anchored index; reproduced and fixed). AC4 scoped tests green apart from the timing failures above; docs updated. **AC2 is only partly met and is left as a stated gap**: a worktree searches its own index, but nothing says when that index is stale for the worktree's current docs. The gap is tracked by `TCK-20261006-KNOWLEDGE-INDEX-STALE-WARNING` (hotfix, P3, filed under `todos/`).

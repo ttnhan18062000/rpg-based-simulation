@@ -51,7 +51,8 @@ Status values: `shipped`, `in flight`, `next`, `idea`, `held`.
 | Cited evidence must be tracked in git | shipped | `TCK-20260930-CITED-EVIDENCE-PATH-GITIGNORE-CHECK` (PR #272), advisory only |
 | Planning-doc staleness sweep, Proof Plan advisory | shipped | PR #268 |
 | Delivery rework rate (first-pass CI, failure class) | shipped on fixtures; no real reading yet | `TCK-20261001-DELIVERY-REWORK-RATE-MEASUREMENT` (PR #274): `delivery_cost_measurement.py --rework`, baseline only; the real-corpus run timed out on `gh` twice, retry from a healthier network |
-| Gate override ledger (verdict, inputs, human stop) | idea | measures gate precision without waiting for a person to notice |
+| Gate override ledger (verdict, inputs, human stop) | shipped (code) | `TCK-20261006-EPIC-GATE-OVERRIDE-LEDGER` (children: `GATE-VERDICT-RECORD-AND-HAND-SITES`, `GATE-VERDICT-OUTCOME-AND-ADJUDICATION`, `GATE-PRECISION-REPORT-AND-RETRO`): the gate CLIs a hand closure runs (`done_checker_static`, `post_native_run_check`, `doc_staleness_check`, `plan_gate_static`, `attest_gate`) write a `gate_verdicts` row; `gate_ledger.py` records outcomes and adjudications, derives `fixed_and_rerun` and `rerun_no_change`, and the retro has a Gates section (shares only from 5 or more adjudicated rulings). Chosen over real hand-closure cost by the owner on 2026-10-06. The epic stays open: its AC2 reads the first full ISO week after the merge. The formal pipeline's own gate sites (`GATE-VERDICT-PIPELINE-SITES`) are not wired yet |
+| CI and code-health gate ingest into the gate ledger | idea | the CI jobs and the code-health ratchet are gates too; their verdicts are not in `gate_verdicts` yet |
 | Finding-to-ticket-to-merge funnel | held | needs a stable finding-id convention first |
 | PR body `Closes:` must reflect ticket location | shipped | `TCK-20261002-PR-RENDER-CLOSES-LISTS-FILED-FOLLOWUPS` (PR #280): a ticket under `todos/` or `inprogress/` is left out of `Closes:` with a warning, so a PR that files a follow-up no longer claims to close it; found twice by a peer reading the body (PRs #276, #279), not by `--check` |
 
@@ -86,7 +87,6 @@ Status values: `shipped`, `in flight`, `next`, `idea`, `held`.
 
 - When the close runs: manual plus a report-only nudge (recommended), or scheduled.
 - Whether the first real close is W40, at the start of W41.
-- Which comes after the hygiene batch: real cost for hand closures, or the gate override ledger.
 
 ## Update protocol
 
