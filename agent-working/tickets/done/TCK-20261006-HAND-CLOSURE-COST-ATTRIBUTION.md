@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261006-HAND-CLOSURE-COST-ATTRIBUTION
-phase: open
+phase: done
 date: 2026-10-06
 tags: [observability, agent-monitoring, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [observability, agent-monitoring, process-improvement]
 Hand closures get `cost_proxy_score` and `tool_call_count` from the tools.jsonl rows that join to them, labelled with provenance
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -76,13 +76,14 @@ is 18.3% (W40).
   tickets and no ticket-ID evidence. Those rows stay unclaimed, and the retro counts them.
 
 ## Implementation Notes
+Built on child 2's claim window. The total is carried on the final event that has no sidecar attribution (phases are not resolved; see investigation.md), with `cost_source: "session_window"`; a sidecar path event gets `cost_source: "sidecar"`. Spend-proxy coverage is still capped by the sessions that write no tools rows (TCK-20261006-TOOLS-SHARDS-MISSING-FROM-WORKTREES).
 Hand-filed by agent-working-design (interim planner), 2026-10-06.
 
 ## Test Summary
-(Open.)
+7 new tests in `tests/tools/test_hand_closure_time.py` (32 pass); monitoring sweep 1,517 passed, 1 xfailed.
 
 ## Files Changed
-(Open.)
+`tools/agent-monitoring/hand_closure_time.py`, `record_hand_orchestrated_closure.py`, `record_events.py`, `docs/agent-monitoring/schema.md`, `tests/tools/test_hand_closure_time.py`.
 
 ## Completion Summary
-(Open.)
+A hand closure now carries the cost of its own session's unattributed tool rows as a labelled ticket-level total (session_window), never claiming a row twice and never writing 0 when nothing joins.

@@ -11,8 +11,8 @@ measurement. This module resolves one of three sources, in this precedence:
                    (a gap above `PAUSE_THRESHOLD_SECONDS` ends a block); at least `MIN_CLAIMED_ROWS` rows
     unknown        otherwise: `start_ts == end_ts` (the field is required) and `duration_s` is null, never 0
 
-Each closure claims only the rows after the previous closure's end, so a row is claimed by at most one closure (the cost
-join of the next child reuses `claim_rows`). Pure functions over lists of dicts plus two thin readers; never raises.
+Each closure claims only the rows after the previous closure's end, so a row is claimed by at most one closure. The
+claimed rows are also the cost join (TCK-20261006-HAND-CLOSURE-COST-ATTRIBUTION): `Resolution.claimed`. Pure functions over lists of dicts plus two thin readers; never raises.
 """
 from __future__ import annotations
 
@@ -114,12 +114,21 @@ def claim_rows(rows: list[dict], end_ts: str, prior_ends: list[str], gap_s: floa
     return claimed, len(peers)
 
 
+def _declared_claim(rows: list[dict], start: str, end: str, prior_ends: list[str]) -> list[dict]:
+    """With a declared start the closer names the window: the session's rows in [start, end] after its previous closure."""
+    lo, hi = _parse(start), _parse(end)
+    lower = _parse(max(prior_ends, key=_parse)) if prior_ends else None
+    if lo is None or hi is None:
+        return []
+    return [r for r in rows if lo <= _parse(r["ts"]) <= hi and (lower is None or _parse(r["ts"]) > lower)]
+
+
 def resolve(now: str, declared_start: str | None, declared_end: str | None, session_id: str | None,
             rows: list[dict], prior_ends: list[str]) -> Resolution:
     """The closure's start/end/provenance. `now` is the closure time; `declared_end` replaces it when given."""
     end = declared_end or now
     if declared_start:
-        return Resolution(DECLARED, declared_start, end)
+        return Resolution(DECLARED, declared_start, end, None, tuple(_declared_claim(rows, declared_start, end, prior_ends)))
     claimed, peers = claim_rows(rows, end, prior_ends)
     if len(claimed) >= MIN_CLAIMED_ROWS:
         return Resolution(TOOL_ACTIVITY, claimed[0]["ts"], end, peers, tuple(claimed))
@@ -132,8 +141,8 @@ def resolve_for_session(now: str, declared_start: str | None, declared_end: str 
     try:
         end = declared_end or now
         sid = session_id or ""
-        rows = [] if declared_start else session_tool_rows(sid, data_dir)
-        prior = [] if declared_start else prior_closure_ends(sid, data_dir, end)
+        rows = session_tool_rows(sid, data_dir)
+        prior = prior_closure_ends(sid, data_dir, end)
         return resolve(now, declared_start, declared_end, session_id, rows, prior)
     except Exception:  # noqa: BLE001 - monitoring must never fail a closure
         return Resolution(UNKNOWN, declared_end or now, declared_end or now)

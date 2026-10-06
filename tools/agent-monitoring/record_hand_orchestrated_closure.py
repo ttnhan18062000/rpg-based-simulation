@@ -35,7 +35,9 @@ order) are filled in automatically and shared across the whole batch, matching a
 `tool_call_count`/`cost_proxy_score` are only ever added when real `tools.jsonl` rows are found
 for a given (run_id, seq) -- a hand-orchestrating session never has a live per-phase sidecar
 during the actual work, so an unattributed phase correctly gets no such keys at all (never a
-false `0`/`0.0`).
+false `0`/`0.0`). TCK-20261006-HAND-CLOSURE-COST-ATTRIBUTION adds the closing session's own unattributed rows
+(`hand_closure_time.Resolution.claimed`, each row claimed by at most one closure) as one ticket-level total on the final
+event, marked `cost_source: "session_window"` (`"sidecar"` for the sidecar path); nothing claimed -> still no keys.
 
 The run record's `workflow` field stays `implement-ticket` by default (see `--workflow` below,
 TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP's recorded rationale) so existing
@@ -244,6 +246,23 @@ def build_records(
     ]
 
     return run_record, event_records
+
+
+def attach_session_window_cost(event_records: list[dict], claimed: tuple[dict, ...] | list[dict]) -> list[dict]:
+    """TCK-20261006-HAND-CLOSURE-COST-ATTRIBUTION: put the cost of the rows this closure claimed (the closing session's
+    unattributed `tools.jsonl` rows, see `hand_closure_time`) on the FINAL event that has no sidecar attribution, with
+    `cost_source: "session_window"`. The claim is one ticket-level total: phases are not resolved (the events share the
+    closure time), so consumers must read `cost_source` before using a per-phase figure. Nothing claimed -> the keys stay
+    absent, never a 0; a row with a sidecar `run_id` is never in `claimed`."""
+    if not claimed:
+        return event_records
+    target = next((i for i in range(len(event_records) - 1, -1, -1) if "cost_source" not in event_records[i]), None)
+    if target is None:
+        return event_records
+    out = list(event_records)
+    out[target] = {**out[target], "tool_call_count": len(claimed),
+                   "cost_proxy_score": record_events.compute_cost_proxy_score(list(claimed)), "cost_source": "session_window"}
+    return out
 
 
 def remove_stale_active_copies(ticket_id: str, tickets_root: Path = Path("agent-working/tickets")) -> list[str]:
@@ -455,7 +474,9 @@ def main() -> None:
         key = (record.get("run_id"), record.get("seq"))
         if key in tool_stats:
             tool_call_count, cost_proxy_score = tool_stats[key]
-            event_records[i] = {**record, "tool_call_count": tool_call_count, "cost_proxy_score": cost_proxy_score}
+            event_records[i] = {**record, "tool_call_count": tool_call_count, "cost_proxy_score": cost_proxy_score,
+                                "cost_source": "sidecar"}
+    event_records = attach_session_window_cost(event_records, resolution.claimed)
 
     # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: this was the headline bug -- this wrapper
     # (the one CLAUDE.md instructs every hand-orchestrated close to use) hardcoded the shared

@@ -236,3 +236,73 @@ def test_the_integrity_report_checks_still_load_rows_with_the_new_fields():
 
     rows = [_run_row(duration_s=None, duration_source="unknown", session_id=SID), _run_row(run_id="TCK-D", ticket_id="TCK-D")]
     assert all(r["status"] == "PASS" for r in check_duplicate_run_records(runs=rows))
+
+
+# ---- cost attribution (TCK-20261006-HAND-CLOSURE-COST-ATTRIBUTION) -----------------------------------
+
+from record_hand_orchestrated_closure import attach_session_window_cost  # noqa: E402
+from cost_proxy import compute_cost_proxy_score  # noqa: E402
+
+
+def _events(n=3):
+    return [{"run_id": "TCK-X", "seq": i, "phase": "Scope", "summary": "s"} for i in range(1, n + 1)]
+
+
+def test_claimed_rows_give_the_hand_computed_count_and_score_on_the_final_event():
+    claimed = _rows(10, 20, 30, 40)
+    out = attach_session_window_cost(_events(), claimed)
+    assert [("tool_call_count" in e) for e in out] == [False, False, True]
+    assert out[2]["tool_call_count"] == 4 and out[2]["cost_proxy_score"] == compute_cost_proxy_score(claimed)
+    assert out[2]["cost_source"] == "session_window"
+
+
+def test_nothing_claimed_leaves_the_keys_absent_never_zero():
+    out = attach_session_window_cost(_events(), ())
+    assert all("tool_call_count" not in e and "cost_proxy_score" not in e and "cost_source" not in e for e in out)
+
+
+def test_a_sidecar_attributed_final_event_is_never_overwritten():
+    events = _events(2)
+    events[1] = {**events[1], "tool_call_count": 7, "cost_proxy_score": 1.5, "cost_source": "sidecar"}
+    out = attach_session_window_cost(events, _rows(1, 2, 3))
+    assert out[1]["tool_call_count"] == 7 and out[0]["cost_source"] == "session_window" and out[0]["tool_call_count"] == 3
+
+
+def test_a_declared_window_claims_the_session_rows_inside_it_after_the_previous_closure():
+    rows = _rows(5, 10, 20, 30, 40)
+    res = hct.resolve(_iso(45), _iso(15), None, SID, rows, [_iso(25)])
+    assert res.duration_source == "declared" and [r["ts"] for r in res.claimed] == [_iso(30), _iso(40)]
+
+
+def test_two_concurrent_closures_in_one_session_attribute_no_row_twice_via_the_cli(tmp_path):
+    _repo(tmp_path)
+    _seed_recent(tmp_path, [50, 45, 40, 35, 30, 25, 20, 15, 10, 5])
+    first = _run(tmp_path, "--end-ts", (datetime.now(timezone.utc) - timedelta(minutes=22)).isoformat().replace("+00:00", "Z"))
+    assert first.returncode == 0, first.stderr
+    second = subprocess.run([sys.executable, str(_RECORD), "--ticket-id", "TCK-FAKE-TIME-2", "--tier", "hotfix", "--events", _EVENTS, *_TITLE],
+                            capture_output=True, text=True, cwd=tmp_path, env={**os.environ, "CLAUDE_CODE_SESSION_ID": SID})
+    assert second.returncode == 0, second.stderr
+    week = datetime.now(timezone.utc).strftime("%G-W%V")
+    events = [json.loads(l) for l in (tmp_path / AGENT_MONITORING / "data" / week / "test-branch.events.jsonl").read_text().splitlines()]
+    counts = {e["run_id"]: e["tool_call_count"] for e in events if "tool_call_count" in e}
+    assert counts == {"TCK-FAKE-TIME": 6, "TCK-FAKE-TIME-2": 4} and sum(counts.values()) == 10
+    assert all(e["cost_source"] == "session_window" for e in events if "tool_call_count" in e)
+
+
+def test_a_row_with_a_sidecar_run_id_is_never_claimed(tmp_path):
+    _repo(tmp_path)
+    now = datetime.now(timezone.utc)
+    rows = [{"session_id": SID, "run_id": "TCK-OTHER" if m == 20 else None, "seq": 1 if m == 20 else None,
+             "ts": (now - timedelta(minutes=m)).isoformat().replace("+00:00", "Z"), "tool": "Bash"} for m in (30, 25, 20, 15, 10)]
+    _write(tmp_path / AGENT_MONITORING / "data" / now.strftime("%G-W%V") / "seed.tools.jsonl", rows, junk=False)
+    assert _run(tmp_path).returncode == 0
+    week = now.strftime("%G-W%V")
+    events = [json.loads(l) for l in (tmp_path / AGENT_MONITORING / "data" / week / "test-branch.events.jsonl").read_text().splitlines()]
+    assert [e["tool_call_count"] for e in events if "tool_call_count" in e] == [4]
+
+
+def test_no_joinable_rows_leave_both_keys_absent_via_the_cli(tmp_path):
+    _repo(tmp_path)
+    assert _run(tmp_path).returncode == 0
+    _, events = _records(tmp_path)
+    assert all("tool_call_count" not in e and "cost_proxy_score" not in e for e in events)
