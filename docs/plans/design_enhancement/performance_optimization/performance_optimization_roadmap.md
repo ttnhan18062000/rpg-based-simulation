@@ -201,6 +201,12 @@ decided:
 
    The RPG-core sessions review this plan in `rpg_core_handoff.md` before the tickets are filed.
 
+   Note: rpg-planner reviewed the plan on PR #355 with no objection. The slice
+   (`todos/perf-m1-kernel-slice/`) also edited two support files that its tickets name and that no open
+   RPG-core ticket touches: `src/engine/runtime_status.py` (the typed budget-overrun signal) and
+   `src/config/optimization_profiles.py` (the retired hashing budget). `src/engine/governor.py` got a
+   comment-only edit; it has been lifted since item 5.
+
 ### Foundation slice that may start now
 
 Documents, tickets, and read-only tooling only — no `src/` edit, no baseline:
