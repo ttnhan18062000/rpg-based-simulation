@@ -156,6 +156,8 @@ Measurement correction: "10 of 21 held moves" counted task records, and in all 1
 ## Test Summary
 `tests/unit/engine/test_pursuit_completion.py` (21), `tests/unit/tools/test_mechanism_registry_completeness_check.py`, `tests/unit/tools/test_mechanism_state_caller_check.py`: 46 passed after the rebase onto `origin/main` `9299891a9`. Legacy vs fixed corpus arms, 4 worlds x 2 runs, all pairs matched (values). PURSUE "unchanged" rests on construction and unit pins: corpus per-move identity is lost once an entity is freed.
 
+Ratchet note (found after close, scratch-venv `codebase.health check`): this ticket's comment in `src/engine/executor.py` grew `LocalSequentialExecutor.execute` to 140 lines against a ceiling of 138; the comment was trimmed back to 2 lines in the commit that records it, and the check then reported 0 worse.
+
 ## Files Changed
 `src/engine/candidate_selector.py`, `src/engine/executor.py`, `src/engine/worker_logic.py`, `registries/mechanisms.yaml`, `tests/unit/engine/test_pursuit_completion.py`, `tests/unit/tools/test_mechanism_registry_completeness_check.py`, `tests/unit/tools/test_mechanism_state_caller_check.py`, `docs/engine/kernel.md`, `docs/engine/contracts/tactical_contract.md`, `docs/guidelines/intentional_divergences.md` (2.70), `docs/parity_ledger/combat_movement.yaml` (COMB-329, COMB-331).
 

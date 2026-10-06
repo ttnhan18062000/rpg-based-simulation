@@ -23,6 +23,10 @@ tags: [engine, combat]
 - Expected effect: a guard move ends when its leader is dead, inactive, gone, or no longer in the mover's group; recognised combat moves and cover-seeking are unchanged.
 - Selected commands: `pytest tests/unit/engine/test_pursuit_completion.py`; `probes/measure.sh <label> [legacy]`.
 
-## Not run here
+## Code-health gates (run in a scratch venv at the uv.lock versions)
 
-`ast-grep`, `mypy`, `prek` and `ruff` are not installed in this venv, so `tests/codebase` ratchet, mypy and hook tests (44 failures, all "tool not found") could not run. `ruff` was run through `uvx` with the project config on the changed file: no findings on any line changed in `candidate_selector.py`.
+`ast-grep`, `mypy`, `prek` and `ruff` are not installed in the project venv, so `tests/codebase` cannot run there (44 "tool not found" failures). The blocking gates were reproduced in a scratch venv (`mypy==2.1.0 mypy-baseline==0.7.4 ruff==0.16.10 ast-grep-cli==0.45.3`, first on PATH, project venv behind it):
+- `python3 -m codebase.health check`: first run **FAIL, 1 worse**: `src/engine/executor.py LocalSequentialExecutor.execute` function-length 140 > ceiling 138, from gate 4's comment growing from 2 lines to 4. Fixed by trimming the comment back to 2 lines; re-run **OK: 0 new, 0 worse**.
+- `python3 -m codebase.structure.packages validate`: 0 problems.
+- `mypy src/ | mypy_baseline filter`: 10 lines, all `Returning Any` in files this batch does not touch (`worldbuilding`, `lab`, `observability`, `worldassembly`, `scenarios`); none in `candidate_selector.py`, `executor.py` or `worker_logic.py`.
+CI remains the first run in the real environment.
