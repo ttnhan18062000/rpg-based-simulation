@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from tools.agent_working_paths import TICKETS
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "tools"))
 sys.path.insert(0, str(REPO_ROOT / "tools" / "agent-monitoring"))
@@ -145,7 +147,7 @@ class TestBackstop:
         assert gate_ledger.backstop_adjudicate("TCK-5", "done_checker_static", data_root=tmp_path) == []
 
     def test_post_native_run_check_calls_the_backstop_for_each_failed_check(self, tmp_path, monkeypatch):
-        ticket = tmp_path / "agent-working" / "tickets" / "inprogress" / "TCK-5.md"
+        ticket = tmp_path / TICKETS / "inprogress" / "TCK-5.md"
         ticket.parent.mkdir(parents=True)
         ticket.write_text("x")
         outcomes = iter([1, 0, 0])

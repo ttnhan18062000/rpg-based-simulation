@@ -33,6 +33,11 @@ if str(_HERE) not in sys.path:
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 from writer import write_line  # noqa: E402
 
+_REPO_ROOT = _HERE.parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.append(str(_REPO_ROOT))
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
+
 KIND = "gate_verdicts"
 EXECUTION_MODES = ("pipeline", "workflow", "hand")
 SUB_RESULT_VALUES = ("PASS", "FAIL", "NA")
@@ -44,8 +49,7 @@ OUTCOMES = ("accepted", "fixed_and_rerun", "rerun_no_change", "overridden", "sto
 ADJUDICATIONS = ("true_block", "false_block", "true_pass", "false_pass", "unknown")
 REQUIRED_FIELDS = ("ts", "gate_verdict_id", "execution_mode", "gate_id", "gate_type", "verdict", "blocking", "inputs_ref")
 
-_REPO_ROOT = _HERE.parents[1]
-_POLICY_PATH = _REPO_ROOT / "agent-working" / "agent-orchestration" / "gate-policy.yaml"
+_POLICY_PATH = _REPO_ROOT / AGENT_ORCHESTRATION / "gate-policy.yaml"
 
 
 def sha256_hex(text: str) -> str:

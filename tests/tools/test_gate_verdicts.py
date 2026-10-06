@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pytest
 
+from tools.agent_working_paths import TICKETS
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "tools"))
 sys.path.insert(0, str(REPO_ROOT / "tools" / "agent-monitoring"))
@@ -142,7 +144,7 @@ class TestCliSites:
         assert failing["gate_id"].startswith("Plan:")
 
     def test_post_native_run_check_records_one_row_with_sub_results(self, scratch, monkeypatch):
-        ticket = scratch / "agent-working" / "tickets" / "inprogress" / "TCK-5.md"
+        ticket = scratch / TICKETS / "inprogress" / "TCK-5.md"
         ticket.parent.mkdir(parents=True)
         ticket.write_text("x")
         outcomes = iter([0, 1, 0])
