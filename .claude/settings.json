@@ -45,6 +45,7 @@
       "Bash(pkill *)",
       "Bash(docker *)",
       "Bash(timeout *)",
+      "Bash(gh pr create *)",
       "Bash(rm -rf data/runs*)",
       "Bash(rm -rf reports/release_proof*)",
       "Bash(rm -rf data/runs/*)",
@@ -56,10 +57,6 @@
       "Bash(git push * --delete *)",
       "Bash(gh api -X DELETE *)",
       "Bash(gh api --method DELETE *)",
-      "Bash(git push --force*)",
-      "Bash(git push * --force*)",
-      "Bash(git push -f *)",
-      "Bash(git push * -f*)",
       "Bash(git worktree remove *)",
       "Bash(rm *agent-working/agent-monitoring/*)",
       "Workflow"

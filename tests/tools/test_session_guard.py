@@ -79,6 +79,23 @@ def test_landing_on_the_default_branch_asks_for_every_role(role_id, lease, comma
     assert decision == guard.ASK
 
 
+@pytest.mark.parametrize("command", [
+    "git push --force origin main", "git push -f origin main", "git push --force-with-lease origin main",
+    "git push --force origin HEAD:main",
+])
+def test_force_push_to_the_default_branch_asks_now_that_the_static_ask_list_no_longer_does(command):
+    """TCK-20261006-SETTINGS-OWN-BRANCH-PERMISSION-PROMPTS: the protection lives in the guard, not in settings.json."""
+    decision, _ = _decide(command, "rpg-implementer", lease_role="rpg-implementer", on_default=False)
+    assert decision == guard.ASK
+
+
+def test_settings_json_allows_pr_create_and_has_no_force_push_ask_patterns():
+    perms = json.loads((_REPO_ROOT / ".claude" / "settings.json").read_text())["permissions"]
+    assert "Bash(gh pr create *)" in perms["allow"]
+    assert not [p for p in perms["ask"] if p.startswith("Bash(git push") and ("force" in p or "-f" in p)]
+    assert "Bash(gh pr merge *)" in perms["ask"] and "Bash(gh pr merge*--admin*)" in perms["deny"]
+
+
 def test_a_commit_or_implicit_push_with_an_unknown_branch_asks():
     for command in ("git commit -m x", "git push"):
         decision, reason = _decide(command, "rpg-implementer", lease_found=False, on_default=None)
