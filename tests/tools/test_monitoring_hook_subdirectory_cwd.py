@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pytest
 
+from tools.agent_working_paths import AGENT_MONITORING
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SETTINGS = json.loads((REPO_ROOT / ".claude" / "settings.json").read_text())["hooks"]
 PAYLOAD = json.dumps({"tool_name": "Bash", "tool_input": {"command": "ls"}, "tool_response": {}, "session_id": "subdir-probe"})
@@ -42,7 +44,7 @@ def worktree(tmp_path):
 
 
 def _tools_shards(wt: Path) -> set[Path]:
-    return set((wt / "agent-working" / "agent-monitoring" / "data").glob("*/*tools.jsonl"))
+    return set((wt / AGENT_MONITORING / "data").glob("*/*tools.jsonl"))
 
 
 @pytest.mark.parametrize("subdir", ["", "docs", "tools/agent-monitoring"])
