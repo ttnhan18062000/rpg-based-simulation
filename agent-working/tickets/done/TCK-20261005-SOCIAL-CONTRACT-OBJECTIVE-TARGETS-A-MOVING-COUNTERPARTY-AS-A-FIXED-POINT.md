@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-SOCIAL-CONTRACT-OBJECTIVE-TARGETS-A-MOVING-COUNTERPARTY-AS-A-FIXED-POINT
-phase: open
+phase: done
 date: 2026-10-05
 tags: [strategy, cognition]
 ---
@@ -16,7 +16,7 @@ tags: [strategy, cognition]
 position at goal-win time — the second and last live instance of the entity-as-fixed-point shape
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -62,6 +62,8 @@ two put an entity id there: `CombatEngageScorer` (owned by `TCK-20261002`) and t
 blocker id, or an `"adventure:<family>"` string. **This is a complete sweep with a negative result,
 not a spot check** — there is no third case to find in that package.
 
+**Premise corrected by measurement (2026-10-06).** The defect is not a moving counterparty frozen at a point. Every contract the cooperation domain creates (`domains/cooperation/services.py:233`, REQUEST_HELP / HIRE_SUPPORT) has `source_id` equal to the requesting entity and is added only to that entity, so the scorer's target (`contract.source_id`) is the **holder itself**: both contract projects the four corpus worlds produced were self-targeted, and the "captured position" was the entity's own old position. Ruled by `rpg-feature-planning`: option A (no rule ratification needed); Scope 1 below (typed `target_entity_id`) is **dropped** because for a self-sourced holder it would make the entity target itself and `entity_target_outcome` would never end it. See `investigation.md`.
+
 ## Scope
 1. Move `SocialContractScorer`'s counterparty target onto the typed `target_entity_id` that
    `TCK-20261002` adds to `ObjectiveState`, so the pursuit path resolves the counterparty's current
@@ -91,20 +93,12 @@ not a spot check** — there is no third case to find in that package.
 - The lazy-import pattern at `:46-53`. Documented and deliberate; leave it.
 
 ## Acceptance Criteria
-- [ ] A social-contract objective navigates toward the counterparty's **current** position, asserted
-      end-to-end through a real `Kernel.tick_once()` loop with a counterparty that moves after the
-      objective is created.
-- [ ] Design Decision #8's workaround is removed and the superseding reason is recorded in the code,
-      not only in this ticket.
-- [ ] Every termination condition enumerated under Scope 3 has a test, and the enumeration itself is
-      justified against the contract lifecycle rather than copied from the combat case.
-- [ ] Scope 4's two measurements are reported with the world, seed and tick count, whatever the
-      numbers are.
-- [ ] Determinism: canonical/replay/fingerprint sweep green. Any recorded-hash fixture that moves is
-      explained, not regenerated.
-- [ ] The `accept_contract()` path mentioned at `:58` is checked — the comment says its *original*
-      `ObjectiveState` used a bare stringified entity id. Confirm whether that path still constructs
-      objectives and, if so, whether it has the same defect. A negative result is a valid answer.
+- [ ] **Dropped by the ruling (Scope 1):** a social-contract objective navigates toward the counterparty's current position through the typed `target_entity_id`. Not done, on purpose: it would turn the self-target artefact into a permanent hold. Nothing in `src` produces a holder that is not the contract's source today.
+- [ ] **Not done, kept on purpose:** Design Decision #8's position-capture workaround is not removed; it still applies to the other holder (the recruit), and the reason it exists and why it stays is recorded in `_is_active_with_a_counterparty`'s docstring.
+- [x] Every termination condition has a test, justified against the contract lifecycle rather than copied from the combat case (investigation section 3): FULFILLED, each other status (FAILED, BETRAYED, EXPIRED, CANCELLED, OFFERED, ACCEPTED, COUNTERED), the contract gone, and a project that serves no contract left alone; closed through the real `evaluate_strategic_intent`, and scheduled by the work queue.
+- [x] Scope 4's two measurements are reported with world, seed and ticks, before and after (investigation sections 2 and 6): before, 2 contract projects, both self-targeted, captured != live on 18 of 40 project-ticks and ACTIVE after the contract was not ACTIVE on 16 of 40; after, 0 projects, so both are 0 **because the projects no longer form**, not because termination was exercised on the corpus.
+- [x] Determinism, as far as it ran: scoped sweep of the strategic, social, AI, work-queue, cooperation, architecture, regression and certification suites plus the two mechanism-registry checks: 1092 passed, 1 failed. The failure is `tests/regression/test_behavioral_5k.py`, **red on a clean `origin/main` with identical numbers** (alive 5.52, gold 0.0, quest 1.02), tracked by `TCK-20261006-BEHAVIORAL-5K-REGRESSION-URBAN-POLITICAL-DRIFTED-FROM-THE-2026-08-19-BASELINE-ATTRIBUTE-EACH-METRIC` (Lane B); no recorded-hash fixture moved because of this change. The full canonical/replay/fingerprint sweep was not run.
+- [x] The `accept_contract()` path was checked: it has no production caller, so it constructs no objectives in production; negative result, nothing to fix.
 
 ## Related Tickets
 - `TCK-20261002-COMBAT-OBJECTIVE-TARGETS-ENTITY-VIA-FIXED-POINT-AND-NEVER-TERMINATES` — **the
@@ -140,13 +134,17 @@ _(none yet — Scope 4's measurement will produce the first)_
   through — report it to the planner.
 
 ## Implementation Notes
-_(not started)_
+Ruled option A (`rpg-feature-planning`, 2026-10-06). (1) `SocialContractGoalScorer` ignores a contract the holder itself sourced, through `_is_active_with_a_counterparty`, which replaces the old status check so `score()` does not grow; its docstring cites `domains/cooperation/services.py:233` as the only producer. (2) `entity_target_objective.py` gains `contract_project_id` / `contract_id_of_project` (the evaluator builds the project id through the first, so the pair cannot drift), `contract_objective_outcome` and the combined `objective_outcome`; `close_entity_target_project` (the name predates the contract case and is kept because the mechanism registry cites it) and the work queue both call `objective_outcome`, each by replacing one line, so neither ceilinged function grew. FULFILLED completes the project; any other status, or a missing contract, abandons it.
+
+Findings, not fixed (planner): nothing in `src` issues RECRUIT, so `execute_recruit`'s two-party mirror is a dead path; the scorer won with utility > 0 195 times across the four worlds but only 2 projects materialized (not investigated). The question of whether a requester should walk to the helper or the helper to the requester went to the world-rules owner, non-blocking.
+
+Fix found by the gates: `contract_project_id` is typed `object`, because the evaluator reads the id from untyped goal metadata and a `str` parameter was a new mypy error.
 
 ## Test Summary
-_(not started)_
+`tests/unit/strategic/test_contract_objective.py` 31 passed; with the scorer guard removed 3 fail, with the contract predicate disabled 13 fail, with the work queue reverted to entity-only 1 fails; the existing `test_entity_target_objective.py` still passes (55 together). Scoped sweep: 1092 passed, 1 failed (the pre-existing 5k regression, identical on `origin/main`). Code-health gates in a scratch venv at the `uv.lock` versions: ratchet OK (0 new, 0 worse), package registry 0 problems, mypy-baseline filter 10 unrelated lines none in a changed file (one new error was found and fixed). CI is the first run in the real environment.
 
 ## Files Changed
-_(not started)_
+`src/ai/goals/social_contract_scorer.py`, `src/systems/strategic_systems/entity_target_objective.py`, `src/systems/strategic_systems/intelligence.py`, `src/systems/strategic_systems/work_queue.py`, `tests/unit/strategic/test_contract_objective.py`, `docs/mechanics/04_strategic_cognition.md`, `docs/guidelines/intentional_divergences.md` (2.72), `docs/parity_ledger/strategic_cognition.yaml` (STRAT-276).
 
 ## Completion Summary
-_(not started)_
+A contract objective is no longer created for the contract's own source, and a project that serves a contract now ends when its contract is no longer ACTIVE. Known gaps: the corpus numbers after the change are 0 because the two self-targeted projects no longer form, so termination is exercised only by constructed cases; Scope 1 and the removal of Design Decision #8 were dropped or kept by the ruling; the other holder (the recruit) has no production producer and its semantics are with the world-rules owner; the 195-versus-2 gap is not investigated; the full determinism sweep was not run and one scoped regression test is red on `main` independently of this change.
