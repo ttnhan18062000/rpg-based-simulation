@@ -27,7 +27,6 @@ from src.config.optimization_profiles import (
     DEFAULT_PROFILE,
     SubsystemBudget,
     SubsystemPressureReport,
-    DEFAULT_HASHING_BUDGET,
     DEFAULT_OBSERVABILITY_BUDGET,
     DEFAULT_REPLAY_BUDGET,
 )
@@ -89,13 +88,12 @@ class TestSubsystemBudgetDefaults:
         "replay",
         "observability",
         "cognition",
-        "hashing",
         "worker",
         "content",
     }
 
     def test_subsystem_budget_defaults_are_sane(self):
-        """All 7 default subsystem budgets exist and have at least one non-None field."""
+        """All 6 default subsystem budgets exist and have at least one non-None field."""
         assert set(DEFAULT_SUBSYSTEM_BUDGETS.keys()) == self.EXPECTED_SUBSYSTEMS, (
             f"Missing subsystems: {self.EXPECTED_SUBSYSTEMS - set(DEFAULT_SUBSYSTEM_BUDGETS.keys())}"
         )
@@ -108,7 +106,6 @@ class TestSubsystemBudgetDefaults:
                     budget.max_pending_flushes,
                     budget.max_queue_items,
                     budget.max_tracked_entities,
-                    budget.max_full_hashes_per_100_ticks,
                     budget.max_inflight_chunks,
                     budget.max_hot_path_loads,
                 )
@@ -127,9 +124,6 @@ class TestSubsystemBudgetDefaults:
             assert budget.max_pending_flushes is None, f"{name}.max_pending_flushes should be None"
             assert budget.max_queue_items is None, f"{name}.max_queue_items should be None"
             assert budget.max_tracked_entities is None, f"{name}.max_tracked_entities should be None"
-            assert budget.max_full_hashes_per_100_ticks is None, (
-                f"{name}.max_full_hashes_per_100_ticks should be None"
-            )
             assert budget.max_inflight_chunks is None, f"{name}.max_inflight_chunks should be None"
             assert budget.max_hot_path_loads is None, f"{name}.max_hot_path_loads should be None"
 

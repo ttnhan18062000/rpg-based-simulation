@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-06"
 ---
 
 # World Rule Family: Agency / Decision
@@ -221,6 +221,56 @@ entity infers another's motive from its observed behavior.
 **Scenarios:** [KA-S17](../scenarios/knowledge-agency-batch-06.md#ka-s17) (hidden motive,
 visible consequence).
 
+## AGENCY-06 — Dread from a region's unrest scales with the region's instability and never triggers flight on its own
+
+> A region's unrest (its trauma, ENV-07) weighs on the subjects within it as dread: one input to
+> the panic response, alongside threats to the subject itself. Dread grows as the region
+> approaches the world's instability threshold (Bible 05 §2) and is at its fullest there. It
+> does not keep growing with every further death. Dread alone never makes a subject flee. Unrest
+> makes a subject uneasy, and only a present threat to the subject (its wounds, an adjacent
+> enemy, a nemesis) makes it run. Dread can tip such a threat over the line, but it can never be
+> the whole of the reason.
+
+**Disposition: ACCEPT — ratified by the owner, 2026-10-06** (row 17 of
+`docs/plans/systemic_world/owner_decision_memo.md`). This is the explicit panic-response
+declaration that AGENCY-02's carve-out anticipates, for its regional-dread input only. Passes
+the admission test: no earlier Rule said how a region's unrest reaches a subject's decisions.
+ENV-07 says what trauma counts, and ENV-06 says what prolonged trauma does to the region. Neither
+says what trauma does to the people in it.
+- **Scope of the "never alone" clause:** it applies to regional dread, not to every panic input.
+  A threat to the subject itself may still decide flight on its own. Today's near-death input is
+  one example (`src/engine/cognition.py`, health below 10%).
+- **Owned by Bible 04:** it already documents the panic and bravery terms and the flee check.
+  The scale is cited from Bible 05 §2. The curve and the weights are engineering, not this Rule.
+- **Alternatives not taken:** capping today's term below the flee threshold (dread would then
+  saturate at about one death's worth, which means nothing in the fiction); parking the
+  mismatch as a known gap; changing only trauma's producer (not a fix: the units mismatch is in
+  the consumer).
+
+**Repository evidence: CONFLICTING — the consumer reads trauma as if it were already 0-1.**
+- **Today's formula:** `AppraisalSystem.evaluate_emotional_state()` (`src/engine/cognition.py:91`)
+  adds `region_trauma * 0.5` to panic, uncapped. Bravery subtracts `0.3 * bravery`, and the
+  subject flees when panic exceeds 0.4 (Bible 04, the bravery section). Trauma counts violent
+  deaths, with an instability threshold of 50.0 (Bible 05 §2). So trauma 1.0 makes a subject
+  flee unless its bravery exceeds 0.33, and trauma 2.0 makes it flee at any bravery: two deaths'
+  worth, where instability is fifty.
+- **Measured on main `b15fef405`** (contains ENV-07's violent-only producer, #356; seed 42, 2,000
+  ticks, audit_mode, budget off, identical across 2 runs):
+  - Flight is no longer dominant. With a hostile adjacent, crowded_frontier chose
+    PANIC_RETREAT 30 of 193 times (16%) and frontier_living_world 25 of 232 (11%). Most of those
+    subjects were already below 40% health.
+  - The trauma term contributed in 13 of 27 and 20 of 28 fleeing evaluations.
+  - It crossed the flee threshold ALONE in 3 of 55: all in crowded_frontier's hometown, at
+    trauma 1.9, adding 0.97 panic to a full-health subject. This Rule forbids exactly that.
+  - Control with trauma forced to 0: flights fell from 27 to 18 and from 28 to 11.
+- **Tracked:** `TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE`
+  (P2 since the re-measure). Bible 04 is flagged "decided, not yet implemented" when that ticket
+  lands.
+
+**Scenarios:** none traced yet. Two are owed when implemented: a full-health subject in a town
+with a little recent bloodshed stays put; the same subject, wounded and facing an enemy there,
+flees sooner than it would in a calm region.
+
 ---
 
 ## Inherited / Applied Foundational Rules
@@ -364,6 +414,8 @@ mechanism never built at all).
 - AGENCY-05 → Reach (REACH-03, inherited above, for the general asymmetry precedent), Knowledge
   (`knowledge-information.md`'s KNOW-02, the information-opacity invariant this Rule extends to
   cognition specifically)
+- AGENCY-06 → Environment (`environment.md`'s ENV-07 for what trauma counts and ENV-06 for the
+  instability scale), this family's own AGENCY-02 (the panic-response carve-out it declares)
 
 ## Open questions carried forward
 

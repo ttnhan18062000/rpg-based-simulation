@@ -33,6 +33,12 @@ class RuntimeStatus:
     max_mode_reached: RuntimeMode = RuntimeMode.NORMAL
     force_full_scan: bool = False
 
+    # Wall-clock budget overruns (PERF-D1 inputs 2 and 3). Telemetry only: nothing in the governor or in
+    # AuthoritativeState reads these, so a slow host reports an overrun without changing any outcome.
+    budget_overrun_ms: float = 0.0   # Largest overrun seen in `budget_overrun_tick`
+    budget_overrun_tick: int = -1    # Tick of the latest overrun, -1 when none
+    total_budget_overruns: int = 0   # Ticks that overran the budget
+
     def record_signals(self, signals: PressureSignals) -> None:
         """Append fresh signals and calculate trends."""
         # 1. Calculate computed trending fields (Law: 5-tick rolling window)
@@ -73,6 +79,15 @@ class RuntimeStatus:
         """Accumulate work shed due to degradation policy."""
         self.total_dropped_work += count
         self.dropped_work_delta = count
+
+    def record_budget_overrun(self, overrun_ms: float, tick: int) -> None:
+        """Record a wall-clock budget overrun. Once per tick: a later report in the same tick keeps the larger."""
+        if tick != self.budget_overrun_tick:
+            self.budget_overrun_tick = tick
+            self.budget_overrun_ms = overrun_ms
+            self.total_budget_overruns += 1
+        else:
+            self.budget_overrun_ms = max(self.budget_overrun_ms, overrun_ms)
 
     def increment_dwell(self) -> None:
         """Track how long we've stayed in the current mode."""

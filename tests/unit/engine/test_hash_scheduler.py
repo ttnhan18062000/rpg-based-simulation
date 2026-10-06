@@ -1,4 +1,4 @@
-"""Tests for CanonicalHashScheduler, HashMode, and HashScheduleViolation.
+"""Tests for CanonicalHashScheduler and HashScheduleViolation.
 
 Compliance: INFRA-197 — Full canonical hashing must only occur at sanctioned boundaries.
 """
@@ -18,18 +18,6 @@ def _make_mock_state(tick: int = 0, seed: int = 42, n_entities: int = 5, n_regio
     return state
 
 
-class TestHashMode:
-    def test_hash_mode_values(self):
-        from src.engine.checkpoint import HashMode
-        assert HashMode.FULL == "full"
-
-    def test_light_mode_is_retired(self):
-        """PERF-D5 point 3: a proof digest is computed or reported as not computed, never approximated."""
-        from src.engine.checkpoint import HashMode
-        assert [m.name for m in HashMode] == ["FULL"]
-        assert not hasattr(HashMode, "LIGHT")
-
-
 class TestHashScheduleViolation:
     def test_is_runtime_error(self):
         from src.engine.checkpoint import HashScheduleViolation
@@ -39,72 +27,72 @@ class TestHashScheduleViolation:
 
 class TestCanonicalHashSchedulerFullMode:
     def test_full_hash_allowed_at_tick_zero(self):
-        from src.engine.checkpoint import CanonicalHashScheduler, HashMode
+        from src.engine.checkpoint import CanonicalHashScheduler
 
         scheduler = CanonicalHashScheduler(run_end_tick=100)
         state = _make_mock_state(tick=0)
 
         with patch("src.engine.checkpoint.CanonicalStateHasher.get_hash", return_value="abc123"):
-            result = scheduler.compute_hash(state, tick=0, mode=HashMode.FULL, reason="")
+            result = scheduler.compute_hash(state, tick=0, reason="")
         assert result == "abc123"
 
     def test_full_hash_allowed_at_run_end_tick(self):
-        from src.engine.checkpoint import CanonicalHashScheduler, HashMode
+        from src.engine.checkpoint import CanonicalHashScheduler
 
         scheduler = CanonicalHashScheduler(run_end_tick=200)
         state = _make_mock_state(tick=200)
 
         with patch("src.engine.checkpoint.CanonicalStateHasher.get_hash", return_value="end_hash"):
-            result = scheduler.compute_hash(state, tick=200, mode=HashMode.FULL, reason="")
+            result = scheduler.compute_hash(state, tick=200, reason="")
         assert result == "end_hash"
 
     def test_full_hash_allowed_with_certification_reason(self):
-        from src.engine.checkpoint import CanonicalHashScheduler, HashMode
+        from src.engine.checkpoint import CanonicalHashScheduler
 
         scheduler = CanonicalHashScheduler()
         state = _make_mock_state(tick=50)
 
         with patch("src.engine.checkpoint.CanonicalStateHasher.get_hash", return_value="cert_hash"):
-            result = scheduler.compute_hash(state, tick=50, mode=HashMode.FULL, reason="certification")
+            result = scheduler.compute_hash(state, tick=50, reason="certification")
         assert result == "cert_hash"
 
     def test_full_hash_allowed_with_audit_reason(self):
-        from src.engine.checkpoint import CanonicalHashScheduler, HashMode
+        from src.engine.checkpoint import CanonicalHashScheduler
 
         scheduler = CanonicalHashScheduler()
         state = _make_mock_state(tick=10)
 
         with patch("src.engine.checkpoint.CanonicalStateHasher.get_hash", return_value="audit_hash"):
-            result = scheduler.compute_hash(state, tick=10, mode=HashMode.FULL, reason="audit")
+            result = scheduler.compute_hash(state, tick=10, reason="audit")
         assert result == "audit_hash"
 
     def test_full_hash_allowed_with_replay_reason(self):
-        from src.engine.checkpoint import CanonicalHashScheduler, HashMode
+        from src.engine.checkpoint import CanonicalHashScheduler
 
         scheduler = CanonicalHashScheduler()
         state = _make_mock_state(tick=5)
 
         with patch("src.engine.checkpoint.CanonicalStateHasher.get_hash", return_value="replay_hash"):
-            result = scheduler.compute_hash(state, tick=5, mode=HashMode.FULL, reason="replay")
+            result = scheduler.compute_hash(state, tick=5, reason="replay")
         assert result == "replay_hash"
 
     def test_full_hash_raises_outside_sanctioned_boundary(self):
-        from src.engine.checkpoint import CanonicalHashScheduler, HashMode, HashScheduleViolation
+        from src.engine.checkpoint import CanonicalHashScheduler, HashScheduleViolation
 
         scheduler = CanonicalHashScheduler(run_end_tick=100)
         state = _make_mock_state(tick=42)
 
         with pytest.raises(HashScheduleViolation, match="tick=42"):
-            scheduler.compute_hash(state, tick=42, mode=HashMode.FULL, reason="")
+            scheduler.compute_hash(state, tick=42, reason="")
 
     def test_full_hash_raises_with_unknown_reason(self):
-        from src.engine.checkpoint import CanonicalHashScheduler, HashMode, HashScheduleViolation
+        from src.engine.checkpoint import CanonicalHashScheduler, HashScheduleViolation
 
         scheduler = CanonicalHashScheduler()
         state = _make_mock_state(tick=7)
 
         with pytest.raises(HashScheduleViolation, match="unknown"):
-            scheduler.compute_hash(state, tick=7, mode=HashMode.FULL, reason="unknown")
+            scheduler.compute_hash(state, tick=7, reason="unknown")
 
 
 class TestComputeHashIsFlatOnly:
@@ -222,8 +210,8 @@ class TestArchitectureNoDirectHashInNormalTickPath:
         """Architecture guard (TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC): the
         verification_level reporting field added on top of ShutdownResult/RunManifest
         must not have widened _phase_persistence()'s hash-computation gate itself.
-        DEGRADED mode must still emit the literal "SKIPPED" sentinel (never a real
-        hash), and SURVIVAL mode must still emit no TICK_END event at all."""
+        DEGRADED mode must still not compute a hash: the payload carries a typed
+        NOT_COMPUTED_LIVE_POLICY status (never the old "SKIPPED" string, never a real hash), and SURVIVAL mode must still emit no TICK_END event at all."""
         from src.core.state import AuthoritativeState, RegionState
         from src.core.governance import RuntimeMode
         from src.engine.kernel import Kernel
@@ -254,7 +242,7 @@ class TestArchitectureNoDirectHashInNormalTickPath:
             terrain={(x, y): "FLOOR" for x in range(0, 10) for y in range(0, 10)}
         )
 
-        # DEGRADED: hash computation must still be skipped (literal "SKIPPED").
+        # DEGRADED: hash computation must still be skipped (typed status, no value).
         rng = DeterministicRNG(state.seed)
         kernel = Kernel(profile, state, rng)
         kernel._current_policy = GovernorPolicy.from_mode(RuntimeMode.DEGRADED)
@@ -264,7 +252,8 @@ class TestArchitectureNoDirectHashInNormalTickPath:
             kernel._phase_persistence()
         mock_get_hash.assert_not_called()
         assert len(emitted) == 1
-        assert emitted[0].payload["hash"] == "SKIPPED"
+        assert emitted[0].payload["hash"] is None
+        assert emitted[0].payload["digest_status"] == "not_computed_live_policy"
         kernel.shutdown()
 
         # SURVIVAL: no TICK_END event at all (replay_allowed=False).

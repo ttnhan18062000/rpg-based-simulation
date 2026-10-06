@@ -52,6 +52,16 @@ The reader list is in the investigation ticket, AC2. Remove:
   root-cause rule
 - Replace the guard test `test_work_debt_stays_empty_in_production.py` with a test that the field
   is gone
+- **Added 2026-10-06 (owner decision, option (c) of `TCK-20261006-PERF-SCHEDULER-SHEDS-NOTHING-IN-SHIPPED-RUNS`):**
+  the same PERF-D5 scheme bump also removes the never-wired periodic/opportunistic shedding path. That
+  means: `state.periodic_due_ticks` (hashed, `checkpoint.py` about 116) and `StateUpdate.periodic_updates`
+  (no producer), `PeriodicDefinition` and the periodic branch of `DeterministicScheduler.select_work`
+  (unless a real task has been registered by then), the empty `allow_opportunistic` branch, and the
+  unread `diagnostic_verbosity` / `metrics_detail` policy fields. It also fixes two misleading comments,
+  `src/engine/observability.py:32` and `src/core/governance.py:45`: the counter counts only scheduler
+  drops. Update the mechanism tests that register test-only periodic definitions (`test_degradation_order`,
+  `test_scheduler_contract`, `test_work_classes`, `test_signal_truth`, `test_deferred_work_debt`, the
+  work-debt guard) to match. The evidence is in that ticket's stored investigation.
 
 ## Out of Scope
 - Any producer, or any new deferred-work design (PERF-D3: needs its own feature contract)

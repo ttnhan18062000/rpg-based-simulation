@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import uuid
 import time
 import logging
@@ -182,10 +181,7 @@ class CertificationHarness:
                     kernel2.tick_once()
                 # We don't necessarily need a clean shutdown for the 2nd run's hash,
                 # but we use the state hash directly for performance.
-                from src.engine.checkpoint import CanonicalHashScheduler, HashMode
-                secondary_hash = CanonicalHashScheduler().compute_hash(
-                    kernel2.state, tick=kernel2.state.tick, mode=HashMode.FULL, reason="certification"
-                )
+                secondary_hash = self._certification_digest(kernel2.state)
             finally:
                 kernel2.shutdown(timeout_s=expectations.shutdown_timeout_s)
 
@@ -236,6 +232,12 @@ class CertificationHarness:
         
         return result
 
+    @staticmethod
+    def _certification_digest(state: AuthoritativeState) -> str:
+        """The flat proof digest of *state*, taken through the scheduler at a sanctioned (certification) boundary."""
+        from src.engine.checkpoint import CanonicalHashScheduler
+        return CanonicalHashScheduler().compute_digest(state, state.tick, reason="certification").require_value()
+
     def _write_full_evidence(self, result: CertificationResult) -> "Optional[Tuple[str, str]]":
         """Write canonical state to <output_dir>/state/<run_id>.final_state.canonical.json.
 
@@ -253,8 +255,7 @@ class CertificationHarness:
             canonical_data = CanonicalStateHasher.to_canonical_data(result.final_state)
             # Pretty for human readability; compact for hash (matching get_hash())
             pretty_json = json.dumps(canonical_data, sort_keys=True, indent=2)
-            compact_json = json.dumps(canonical_data, sort_keys=True, separators=(",", ":"))
-            final_state_hash = hashlib.sha256(compact_json.encode("utf-8")).hexdigest()
+            final_state_hash = self._certification_digest(result.final_state)
             state_path.write_text(pretty_json, encoding="utf-8")
             relative_path = f"state/{result.run_id}.final_state.canonical.json"
             logger.info(f"Full canonical state written to {state_path}")
@@ -307,10 +308,7 @@ class CertificationHarness:
 
                 kernel.tick_once()
 
-            from src.engine.checkpoint import CanonicalHashScheduler, HashMode
-            return CanonicalHashScheduler().compute_hash(
-                kernel.state, tick=kernel.state.tick, mode=HashMode.FULL, reason="certification"
-            )
+            return self._certification_digest(kernel.state)
         finally:
             kernel.shutdown(timeout_s=0.0)
 

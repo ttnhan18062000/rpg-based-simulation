@@ -5,7 +5,7 @@
     "source_root": "src",
     "unparsed_files": [],
     "kernel_module": "src.engine.kernel",
-    "modules_reachable_from_kernel": 418
+    "modules_reachable_from_kernel": 420
   },
   "reads": [
     {
@@ -657,7 +657,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 143,
+      "line": 144,
       "enclosing_function": "Kernel.__init__",
       "source": "time.time",
       "kind": "wall-clock",
@@ -674,7 +674,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 180,
+      "line": 186,
       "enclosing_function": "Kernel.__init__",
       "source": "datetime.datetime.now",
       "kind": "wall-clock",
@@ -691,7 +691,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 240,
+      "line": 246,
       "enclosing_function": "Kernel.__init__",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -706,7 +706,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 269,
+      "line": 275,
       "enclosing_function": "Kernel.__init__",
       "source": "os.environ.get",
       "kind": "environment",
@@ -726,7 +726,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 389,
+      "line": 395,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -741,7 +741,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 392,
+      "line": 398,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -756,7 +756,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 407,
+      "line": 413,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -771,7 +771,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 416,
+      "line": 422,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -786,7 +786,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 425,
+      "line": 431,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -801,7 +801,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 431,
+      "line": 437,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -816,7 +816,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 435,
+      "line": 441,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -831,7 +831,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 440,
+      "line": 446,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -848,7 +848,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 444,
+      "line": 450,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -866,7 +866,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 452,
+      "line": 458,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -881,7 +881,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 454,
+      "line": 460,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -896,7 +896,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 614,
+      "line": 620,
       "enclosing_function": "Kernel._phase_resolution",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -904,7 +904,7 @@
       "env_var": null,
       "receiver_resolved_by_name": true,
       "guards": [
-        "if i % 10 == 0"
+        "if not overrun_reported and i % 10 == 0 and (not self._audit_mode)"
       ],
       "guarded": true,
       "note": "",
@@ -913,7 +913,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 805,
+      "line": 785,
       "enclosing_function": "Kernel._phase_cleanup",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -928,7 +928,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 1277,
+      "line": 1255,
       "enclosing_function": "Kernel.shutdown",
       "source": "psutil.Process",
       "kind": "CPU/host topology",
@@ -945,7 +945,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 1306,
+      "line": 1284,
       "enclosing_function": "Kernel.shutdown",
       "source": "datetime.datetime.now",
       "kind": "wall-clock",
@@ -1946,7 +1946,7 @@
     },
     {
       "file": "src/engine/worker_manager.py",
-      "line": 193,
+      "line": 215,
       "enclosing_function": "WorkerManager._wrap_work",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1961,7 +1961,7 @@
     },
     {
       "file": "src/engine/worker_manager.py",
-      "line": 196,
+      "line": 218,
       "enclosing_function": "WorkerManager._wrap_work",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -5655,7 +5655,7 @@
     },
     {
       "file": "src/worldbuilding/compiler.py",
-      "line": 343,
+      "line": 369,
       "enclosing_function": "WorldCompiler.compile",
       "source": "time.perf_counter",
       "kind": "wall-clock",
@@ -5670,7 +5670,7 @@
     },
     {
       "file": "src/worldbuilding/compiler.py",
-      "line": 806,
+      "line": 837,
       "enclosing_function": "WorldCompiler.compile",
       "source": "time.perf_counter",
       "kind": "wall-clock",
@@ -5754,7 +5754,7 @@
     },
     {
       "file": "src/worldgeneration/generator.py",
-      "line": 556,
+      "line": 599,
       "enclosing_function": "ProceduralCompositionGenerator.generate",
       "source": "datetime.datetime.now",
       "kind": "wall-clock",
@@ -5779,7 +5779,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 534,
+      "line": 522,
       "enclosing_function": "Kernel._phase_init",
       "call": "self._worker_manager.get_stats",
       "reason": "method name matches a clock or host source but the receiver is not a known module by name",
@@ -5787,7 +5787,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 535,
+      "line": 523,
       "enclosing_function": "Kernel._phase_init",
       "call": "self._replay.get_stats",
       "reason": "method name matches a clock or host source but the receiver is not a known module by name",
@@ -5795,7 +5795,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 808,
+      "line": 788,
       "enclosing_function": "Kernel._record_runtime_signals",
       "call": "self._worker_manager.get_stats",
       "reason": "method name matches a clock or host source but the receiver is not a known module by name",
@@ -5803,7 +5803,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 809,
+      "line": 789,
       "enclosing_function": "Kernel._record_runtime_signals",
       "call": "self._replay.get_stats",
       "reason": "method name matches a clock or host source but the receiver is not a known module by name",
