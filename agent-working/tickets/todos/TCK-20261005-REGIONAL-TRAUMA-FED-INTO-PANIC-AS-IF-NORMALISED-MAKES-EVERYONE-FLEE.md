@@ -171,6 +171,7 @@ conflated early and never reconciled.
 - [ ] The behavioural consequence is stated, with the SimQ anchor movement named rather than
       discovered later.
 - [ ] Determinism sweep green; any moved fixture explained, not regenerated.
+- [ ] A deliberate-attack test (a tactical decision that sets an offensive ENTITY_ACT) on a world or seed with MEASURED hostile contact, i.e. an in-reach count K > 0 stated in the test, shows >= N deliberate attacks after the fix and fewer before (control arm). N is left for this ticket's investigation to set from the measured contact. K in reach must come from approach, not spawn adjacency (checked by the first in-reach decision's tick relative to spawn), or the test would skip the very gate under suspicion. The campaign episode test (`TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-BECAUSE-NO-DELIBERATE-ATTACK-ONLY-OPPORTUNITY-ATTACKS`) is NOT this signal; its XPASS is a bonus. The landing PR also re-measures that test's attempts, K and in-reach and records them in the campaign ticket (its revisit trigger).
 
 ## Related Tickets
 - `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` — **this is the chain's root cause.** Its
@@ -250,6 +251,7 @@ rewriting one)_
   counts are not load-bearing.
 - Why this survived so long: nothing in the Bible defines the mapping, so there was no document for a
   parity check to disagree with, and no test asserted a bound on any single term's contribution.
+- **Hypothesis (n=1, one seed; from the campaign-test grid, `TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-BECAUSE-NO-DELIBERATE-ATTACK-ONLY-OPPORTUNITY-ATTACKS`):** in seed 1337 the only in-reach decision (entity 18, tick 32, hp 1.0) chose SAFETY_PRESSURE_RETREAT, and the only ATTACK decision (entity 47, tick 33) was made from outside combat range; contact came at ticks 32 to 33, by approach. So in that campaign the defect looks like "entities never close to reach because they retreat at full HP" rather than "entities in reach do not attack". It matches the earlier flee-gate finding on the standard worlds (PANIC_RETREAT on 97% of contact evaluations), but this is one seed and 10 to 14 perceived-hostile decisions per run, not a rate.
 
 ## Implementation Notes
 _(not started)_
