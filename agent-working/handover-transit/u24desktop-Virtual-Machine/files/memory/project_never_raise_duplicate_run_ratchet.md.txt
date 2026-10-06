@@ -1,0 +1,31 @@
+---
+name: project_never_raise_duplicate_run_ratchet
+description: "tools/gate_checks/duplicate_run_record_check.py's IDENTICAL_OUTCOME_CEILING (currently 1) must never be raised to paper over a newly-introduced accidental duplicate runs.jsonl row — delete the duplicate instead, confirmed by the ticket owner 2026-09-29."
+metadata: 
+  node_type: memory
+  type: project
+  status: active
+  originSessionId: b45ddb62-e7b1-4c35-8f61-f84f98389312
+  modified: 2026-09-29T15:17:36.968Z
+---
+
+`tools/gate_checks/duplicate_run_record_check.py`'s `IDENTICAL_OUTCOME_CEILING` constant (currently
+`1`) is a ratchet, not a budget: its own comment says "May only decrease. Raising it to paper over
+a newly-introduced accidental duplicate defeats the entire point of this check." rpg-feature-planning
+explicitly confirmed and reinforced this 2026-09-29 when I asked whether to raise it after
+accidentally introducing a duplicate `runs.jsonl` row — the answer was no, remove the duplicate row
+instead. See [[feedback_never_reuse_end_ts_across_record_run_calls]] for the concrete mistake shape
+that produces this situation, and how to fix it correctly (delete the stale uncommitted line, never
+touch a pushed/merged row).
+
+**Why:** raising the ceiling is the "my case is special" failure mode the constant exists to resist
+— it always feels locally reasonable in the moment (a legitimate-looking correction call happened
+to produce this shape) but structurally indistinguishable from ignoring a genuine accidental
+duplicate write.
+
+**How to apply:** if `duplicate_run_record_check.py` or its companion pytest
+(`tests/tools/test_duplicate_run_record_check.py::test_real_corpus_is_at_or_below_the_ratchet_ceiling`)
+fails with a new identical-outcome group, first identify whether it's a still-uncommitted mistake of
+your own (fix by deleting the stale line) before ever considering the ceiling itself negotiable —
+and even then, don't decide unilaterally; this is exactly the kind of call that goes back to the
+ticket owner.

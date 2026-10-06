@@ -1,0 +1,20 @@
+---
+name: feedback-sync-capabilities-with-atlas
+description: Every edit to docs/brainstorm/rpg_feature_atlas.html must be mirrored into docs/brainstorm/simulation_capabilities.html
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: f03f90f6-61b6-4eb5-ac09-f236114a0eb8
+  modified: 2026-08-21T08:15:20.302Z
+---
+
+Whenever `docs/brainstorm/rpg_feature_atlas.html` (the dev-facing engineering atlas) is updated, `docs/brainstorm/simulation_capabilities.html` (the plain-language, non-developer companion page) must also be updated in the same turn — not left to drift or be batched later.
+
+**Why:** explicit standing instruction from the user, given right after `simulation_capabilities.html` was created as a full translation of the atlas (see [[project_simulation_capabilities_page]]). The whole point of the companion page is that a non-technical stakeholder can trust it as current without cross-checking the atlas themselves; if it silently falls behind, it becomes actively misleading rather than merely incomplete.
+
+**How to apply:**
+- Any atlas change with a gameplay-visible consequence (a new feature, a corrected claim, a badge/status change such as `done`→`orphan`, a design idea substantial enough to already appear as a "planned" card) needs a mirrored edit in `simulation_capabilities.html`.
+- Translate using the same conventions established when the page was built: three-tier status (`live` / `built` / `planned`, not the atlas's six-tier badge scheme), no code references (no class names, file paths, function names), no implementation rationale or investigation narrative — only what the feature is and does in gameplay.
+- Purely technical/internal findings with no player-visible consequence (e.g. a dead code path, a cross-reference between two internal mechanisms, an internal seeding/wiring bug with no observable gameplay effect) do **not** need a mirrored entry — the page is scoped to gameplay-visible capabilities, not full technical parity.
+- Verify the JS `SECTIONS` array the same way the atlas's `CARD_SECTIONS` is verified before publishing (render-harness check, since this page uses the identical data-driven card-rendering pattern).
+- Publish this page as its own Artifact update after editing (it has its own URL, separate from the atlas's).

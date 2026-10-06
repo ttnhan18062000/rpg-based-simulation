@@ -1,0 +1,29 @@
+---
+name: feedback-reset-boundaries-in-every-process
+description: "Context reset (/clear) boundaries are a first-class step in every agent-working process; at each HARD boundary, write a handover and tell the user it's safe to /clear"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: d40de24b-2429-4d3f-b227-9ddb9189078f
+  modified: 2026-09-21T10:35:22.893Z
+---
+
+Treat context-reset boundaries as a real step in every agent-working process: PR lifecycle, tickets,
+Workflow runs, epics, planning, investigation/retro, cross-session waits, CI triage, and simulation
+runs. Don't treat them as an afterthought at "batch landed" only. Stated by the user 2026-09-21,
+after the token retro.
+
+**Why:** a 14-day transcript measurement showed ~78% of cost is cache reads of long contexts. The
+average request carried 481k tokens, with peaks at ~967k and only 69 compactions across 40k requests.
+Neither the model nor a hook can run /clear; only the user can. So the session must get the reset
+ready and ask for it.
+
+**How to apply:** at a HARD boundary, where everything durable is on disk and pushed, nothing is in
+flight, and no user question is open:
+1. Move any chat-only findings or lessons into a ticket, artifact or memory.
+2. Write a short handover note for the role.
+3. Tell the user in one line that it's safe to /clear.
+
+Deferred follow-up tickets don't block. The per-process boundary map and the handover format are
+being built under ticket 2 of the token-efficiency batch; once it lands, the doc it creates is the
+source, not this file. Related: [[feedback-token-efficiency-over-speed]].

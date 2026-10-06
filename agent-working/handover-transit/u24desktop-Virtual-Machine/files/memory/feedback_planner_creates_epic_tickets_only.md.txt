@@ -1,0 +1,10 @@
+---
+name: feedback-planner-creates-epic-tickets-only
+description: "Pointer: a roadmap session files epic tickets only; child tickets belong to detail planner and implementer"
+metadata:
+  type: feedback
+---
+
+Pointer (M1d, 2026-10-04): this rule now lives in `docs/guidelines/session_roles/functions/designer.md` ("File epic tickets only") and `functions/planner.md`. Original: `agent-working/stored_artifacts/TCK-20261004-SESSION-LAYER-M1D-ROLE-MEMORY-TO-POINTERS/original_memory_files.md`.
+
+Related: [[feedback-route-work-via-rpg-feature-planning]], [[feedback-no-plan-only-prs]], [[feedback-epic-all-or-nothing]].

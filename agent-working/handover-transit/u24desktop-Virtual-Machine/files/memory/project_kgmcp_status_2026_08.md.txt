@@ -1,0 +1,53 @@
+---
+name: project-kgmcp-status-2026-08
+description: KGMCP (Knowledge Gateway MCP) built through Phase 0-5 + an efficiency-remediation epic; final honest verdict as of 2026-08-18 is it works correctly but is NOT cost-competitive with calling search_docs/graphify directly.
+metadata: 
+  node_type: memory
+  type: project
+  modified: 2026-08-24T03:51:59.484Z
+  originSessionId: c0116e51-00f0-4ac7-8c88-b3add2b0f751
+---
+
+KGMCP = a thin routing/coordination facade + SQLite cache in front of Context Search
+(`search_docs`), Graphify, and the Parity Ledger, meant to speed up/cheapen agent context
+retrieval. Built via `docs/plans/knowledge-gateway-mcp-proposal.md`, phases 0-5, all in
+`tickets/done/` (epics: `knowledge-gateway-mcp{,-phase1..5}`), plus a follow-up
+`kgmcp-efficiency-remediation` epic (2026-08-18). No KGMCP work has landed since 2026-08-18 as of
+this writing — the epic below is the current, final state.
+
+**Final measured verdict (post cache-write-cap fix, warm-path, live 7-entry corpus,
+`TCK-20260818-KGMCP-EFFICIENCY-REMEDIATION-EPIC`):**
+- Caching mechanism itself now genuinely works: cache-write-size-cap bug (was 8192 bytes, rejected
+  every real payload → 0/7 hits) fixed same-day by a hotfix; re-verified 7/7 genuine cache hits.
+- Budget-tolerance accounting fixed structurally: 2/7 → 7/7 PASS on live re-measurement.
+- **Even fully warm, the gateway still loses to calling the underlying tools directly, on all 7/7
+  corpus entries, on both axes**: latency 1.06x-1.34x slower (down from 1.31x-3.76x cold), tokens
+  1.05x-1.98x heavier (down from 1.04x-2.93x cold). Direct-tool quality judged equal-or-better 6/7
+  times.
+- Phase 5 (canonical entity IDs / semantic-match cache-hit broadening) was evaluated and
+  explicitly NOT built: real repeated-question demand in this repo's own history is real but small
+  (5.8%-18.5% of tickets show any repeat signal, mostly incremental not literal repeats) — recorded
+  recommendation is "wait, not now, not never," gated on Phase 3's still-open accounting gaps
+  closing first (which the remediation epic then did close).
+- Net stated conclusion: "the mechanisms now work correctly as designed, but the gateway's own
+  routing/assembly overhead is large enough that it is not yet cost-competitive with an agent
+  calling the underlying tools directly" — disclosed plainly as a finding for a human to act on,
+  not a decision to keep or deprecate it made by any ticket itself.
+
+**Why this matters / how to apply:** every KGMCP ticket in this project has been unusually
+disciplined about NOT overclaiming or shipping infra ahead of measurement (multiple honest
+negative findings accepted as complete, valid outcomes rather than being routed around) — this is
+a genuine strength of this project's process, worth recognizing if asked to work on KGMCP again.
+When asked "how's KGMCP going" or whether to invest further: cite the 7/7 warm-path loss above,
+not an assumption that caching = automatically faster. Don't propose building Phase 5's semantic
+matching or canonical entity IDs without first checking whether Phase 3's dedup/budget gaps (now
+closed) and the Phase 4 warm comparison have been re-run since — if a future session finds newer
+KGMCP tickets postdating 2026-08-18, this memory is stale and should be re-verified/updated.
+See also [[project_kgmcp_cache_attribution_deferred_ticket]] for the cache-attribution/dashboard
+side-quest that came out of this same investigation thread.
+
+Also note: `mcp__knowledge-search__search_docs` returned "index not found — run make
+knowledge-index" when tried live on 2026-08-24 in this session — matches the exact CI gap
+described in `TCK-20260817-KGMCP-SEARCH-MCP-TEST-REQUIRES-UNBUILT-CI-INDEX` (the knowledge-index
+is a local dev artifact, deliberately excluded from CI, and evidently not built in this session's
+environment either at the time it was checked).

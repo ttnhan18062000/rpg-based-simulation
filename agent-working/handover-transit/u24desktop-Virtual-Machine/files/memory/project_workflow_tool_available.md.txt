@@ -1,0 +1,25 @@
+---
+name: project-workflow-tool-available
+description: "The Workflow tool exists here, but repo .claude/workflows/*.js scripts can't run in it yet (bash() calls, syntax); a create-tickets pilot port was approved 2026-09-29"
+metadata:
+  node_type: memory
+  type: project
+  originSessionId: 4bd5e989-de42-4e58-b280-241399f119ef
+  modified: 2026-09-29T15:11:04.756Z
+---
+
+Since at least 2026-09-29, the Claude Code `Workflow` tool is available in this environment. The
+repo's docs (docs/ai/skills.md, TCK-20260708-SKILL-CREATE-TICKETS-WORKFLOW-TOOL-STALE) still say
+it isn't, and the skills hand-translate `.claude/workflows/*.js`.
+
+The repo scripts do NOT run in it as written:
+- they call `bash()`, which the runtime doesn't provide
+- 3 files have unescaped template backticks
+- `Workflow({name})` resolves the MAIN checkout's copy, not the worktree's
+
+**Why:** the user wants to use Workflow more if it proves good. They approved porting
+create-tickets.js first as a measured pilot against a recorded hand run.
+
+**How to apply:** until a script has been ported, hand-execute the skill and don't offer "run the
+workflow" for these scripts. Details and the baseline run are in the agent-working-design handover.
+Related: [[feedback-agent-infra-scope-openness]].

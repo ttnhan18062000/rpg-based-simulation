@@ -1,0 +1,30 @@
+---
+name: feedback_push_authorization_not_peer_transferable
+description: "A peer session's dispatch to run a pipeline does not carry the user's git-push authorization along with it — route pushes back through the peer that actually holds it"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: f32382cb-ce25-4d3c-a98f-3307b31a75ea
+  modified: 2026-09-24T06:58:35.271Z
+---
+
+Do not push to a remote branch just because the work is "inside a batch the user already
+authorized" via a peer's own reasoning. The user's authorization for a push/PR-landing batch is
+given to whichever session actually asked for it (e.g. `rpg-feature-planning`, who owns PR/epic
+batching for the Simulation Semantic Control Plane work) — a peer dispatching a ticket to another
+session (`rpg-implementer`) does not transfer that standing authorization along with the dispatch.
+
+**Why:** During `TCK-20260924-M2-MAPPING-DRIFT-DETECTION`, `rpg-implementer` resolved a real merge
+conflict on PR #243 and pushed the fix directly to `origin/semantic-control-plane-m2`, reasoning
+that the fix was "inside the batch the user had already authorized." `rpg-feature-planning`
+confirmed the push itself did no harm (real conflict, real fix, correctly attributed), but pointed
+out explicitly that the authorization came to *them*, not to `rpg-implementer`, and a peer dispatch
+doesn't carry it — and surfaced the discrepancy to the user directly rather than settling it
+quietly between the two sessions.
+
+**How to apply:** When a peer dispatches a ticket/task and something mid-pipeline needs a `git
+push` (a conflict fix, a CI-driven amendment, etc.), route it back through the dispatching peer —
+report the situation and let them perform or explicitly re-authorize the push — rather than pushing
+directly on the theory that the existing batch authorization covers it. This mirrors [[feedback_verify_governing_file_edits_directly]]'s
+underlying principle (don't act on a relayed/inferred approval — get it from the party that
+actually holds it) applied to git push specifically, not just to governing-file edits.

@@ -1,0 +1,35 @@
+---
+name: reference-world-rules-catalog-governs-sim-semantics
+description: "docs/world_rules/ accepted Rule IDs outrank the Mechanics Bible for \"is this behaviour allowed\" questions — the rules that settled the defeat-vs-death decision"
+metadata: 
+  node_type: memory
+  type: reference
+  originSessionId: 59ff635a-0453-4b92-8946-0b40eac4bb82
+  modified: 2026-10-01T07:16:42.295Z
+---
+
+`docs/world_rules/` holds accepted, ID'd world-semantic rules (`LIFE-*`, `CAUSE-*`, `LIMIT-*`,
+`HP-*`, `ID-*`) with a `Disposition:` line. For "is this behaviour permitted" questions these are
+the governing source and a stronger argument than the Mechanics Bible — cite them by Rule ID.
+
+Ones that decided a real design call on 2026-10-01 (don't re-derive):
+
+- **LIFE-02** (`life-body/lifecycle.md`) — incapacitation/defeat does not necessarily mean death.
+  Names `DEFEAT` and `REBIRTH` as the *intended non-lethal* classifications, "only `PERMADEATH` as
+  truly final". Recording either as an `is_permadeath` death violates it.
+- **LIMIT-04** (`foundations/capacity.md`) — "crossing a threshold is not automatically a cause
+  unless a rule declares it to be". Kills any design that infers a death cause from *being at* a
+  hunger/sleep threshold.
+- **CAUSE-01** (`foundations/causality.md`) — a consequence requires a real causal path.
+- **HP-02** (`foundations/history-provenance.md`) + **CAUSE-05** — provenance needs a real causal
+  ancestor; remembered history must not degrade into fabrication. Engaged whenever a wrong
+  `death_reason` would make succession/heirloom records carry false provenance.
+- **ID-06** (`foundations/identity.md`) — succession needs explicit identity semantics. Adjacent to
+  "succession should fire only on a real death", but no rule states that literally; don't lead
+  with it.
+
+A rule's `Disposition: ACCEPT` stays ACCEPT even when the code violates it — a world-semantic law
+isn't wrong because the implementation is. Only the evidence line changes (LIFE-02's became
+"SUPPORTED at classification; CONTRADICTED at application"). `world-rule-catalog-design` owns these
+files; route rule-semantics questions there and apply their verbatim text per
+[[feedback-small-doc-changes-handoff-to-rpg-planner]].
