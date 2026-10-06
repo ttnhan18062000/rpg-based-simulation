@@ -14,6 +14,12 @@ if TYPE_CHECKING:
     from src.systems.world_systems.generator import EntityGenerator
     from src.engine.cadence import SystemCadence
 
+# Trauma above this value (Mechanics Bible 05, regional trauma) drives hazard growth. Not adjustable here.
+HAZARD_GROWTH_TRAUMA_THRESHOLD = 50.0
+# Hazard added per application while trauma stays above the threshold (LEG-RPG-139).
+HAZARD_GROWTH_STEP = 0.01
+
+
 class WorldDynamicsSystem:
     """
     Law: World-level consequences apply to all entities.
@@ -117,12 +123,11 @@ class WorldDynamicsSystem:
                     payload={"influence": round(current_influence, 2), "prev_owner": owner_fid or "none"},
                 ))
 
-            # Hazard scaling (LEG-RPG-139)
-            if current_trauma > 50.0:
-                new_hazard = min(1.0, region.hazard_level + 0.01)
-                if new_hazard > region.hazard_level:
-                    world_upd = replace(world_upd, hazard_level_set=new_hazard)
-                    changed = True
+            # Hazard scaling (LEG-RPG-139). hazard_level is open-ended (owner decision 12): authored
+            # values run to 4.0 and the generator authors above 1.0, so growth has no ceiling here.
+            if current_trauma > HAZARD_GROWTH_TRAUMA_THRESHOLD:
+                world_upd = replace(world_upd, hazard_level_set=region.hazard_level + HAZARD_GROWTH_STEP)
+                changed = True
 
             if changed or w_upd:
                 update.world_updates[r_id] = world_upd
