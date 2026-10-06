@@ -16,19 +16,6 @@ topology:
   height: 121
   coordinate_system: grid
 regions:
-- id: mountain_pass_zone
-  type: wilderness
-  bounds:
-  - 80
-  - 80
-  - 120
-  - 120
-  terrain: mountain
-  hazard_level: 2.5
-  hazard_kind: PHYSICAL
-  tags:
-  - mountain
-  places: []
 - id: river_ford
   type: wilderness
   bounds:
@@ -60,6 +47,19 @@ regions:
     - 80
     - 100
     hazard_level: 3.5
+- id: mountain_pass_zone
+  type: wilderness
+  bounds:
+  - 80
+  - 80
+  - 120
+  - 120
+  terrain: mountain
+  hazard_level: 2.5
+  hazard_kind: PHYSICAL
+  tags:
+  - mountain
+  places: []
 factions:
 - id: hero_guild
   type: defender
@@ -232,4 +232,3 @@ quest_definitions:
   source_module: ruins_mystery_quest
 validation:
   expected_min_entities: 1
-  allow_overlapping_regions: false

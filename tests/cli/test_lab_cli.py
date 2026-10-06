@@ -30,7 +30,7 @@ def lab_setup(tmp_path: Path):
         "factions": [{"id": "test_faction", "type": "basic"}],
         "entities": [{"id": "pop1", "count": 5, "role": "worker", "faction": "test_faction", "spawn_region": "spawn_region"}],
         "resources": [],
-        "validation": {"expected_min_entities": 1, "allow_overlapping_regions": False}
+        "validation": {"expected_min_entities": 1}
     }
     world_spec_dir = worlds_dir / world_id
     world_spec_dir.mkdir()

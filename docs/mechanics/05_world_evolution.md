@@ -29,6 +29,8 @@ Regions are not static. They react to the violence and activity within their bor
 ### The Trauma Cycle
 1.  **Event**: Every entity death **with a violent cause** in a region adds **+1.0** to the regional `Trauma Score`
     (`src/engine/world_dynamics.py`, rule `ENV-07`, owner decision 15, 2026-10-05; **implemented**, DEV-011).
+    The region is the one the death position resolves to (`06_worldbuilding_foundation.md`, Region Overlap Resolution):
+    one death credits exactly one region, and a death in unclaimed space credits none.
     A death is violent when its recorded combat outcome is a terminal combat result (`KILL`, `DEFEAT`;
     `VIOLENT_DEATH_OUTCOME_KINDS` in `src/core/violent_cause.py`). **Ambient attrition does not count**:
     environmental hazard drain (`HAZARD`), starvation and other passive drain, and natural death are exposure,

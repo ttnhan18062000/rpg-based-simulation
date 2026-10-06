@@ -198,7 +198,9 @@ def test_wider_scope_numbers_pinned():
     # 296 + src/worldassembly/resolve_io.py + src/systems/strategic_systems/entity_target_objective.py (two new modules)
     # 298 -> 299 on 2026-10-05: +src/core/violent_cause.py (rule ENV-07's one set of violent death causes;
     # constants and two predicates, no class, so it adds no unbound candidate).
-    assert wider["scope_files"] == 299
+    # 299 -> 301 on 2026-10-05: +src/worldassembly/region_precedence.py (LOC-08, bound under world_composition_assembly)
+    # and +src/core/region_resolution.py (the one position-to-region lookup rule).
+    assert wider["scope_files"] == 301
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).

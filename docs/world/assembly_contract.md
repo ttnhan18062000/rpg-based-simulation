@@ -236,6 +236,13 @@ overlap policy is a separate contract — see `docs/mechanics/06_worldbuilding_f
 
 ---
 
+## Region Precedence Contract (LOC-08)
+Where region bounds overlap, a point belongs to the region with the higher authored precedence (owner decision 13; `docs/mechanics/06_worldbuilding_foundation.md` Region Overlap Resolution).
+- **Declarations.** A module may carry `region_precedence` (`winner` over `over`, ids of its own regions, namespace prefix applied at assembly); a composition (`world.yaml`) may carry `region_precedence` over ids as they appear in the composition. A composition declaration overrides a module declaration for the pair it names.
+- **Resolution.** After the module merge, `resolver.py` calls `src/worldassembly/region_precedence.py::order_regions`: declared pairs, then contained-region-wins (3a) for undeclared nesting, then the resolved declaration order (3b) for other undeclared overlaps. The result is one total order (stable topological: unconstrained regions keep their order) that becomes the order of `WorldSpec.regions`, and so of the resolved snapshot and of `state.regions`. It is the only carrier: the lookup, terrain paint and the hazard a tile applies all read it.
+- **Failures.** An unknown id, a self-declaration, a precedence cycle, or a region that owns no tile (3c) raises `InvalidWorldSpecError` at assembly.
+- **Advisories.** Each undeclared partial overlap is reported as a `LOC-08` warning in the assembly report, naming the pair, the tile count and which region wins by declaration order.
+
 ## WorldAssemblyValidator Parametric Contract (WORLD-ASM-013)
 
 `WorldAssemblyValidator.validate(module, params)` runs pre-assembly validation on a module's recipe fields. For parametric recipe counts (e.g. `count: "{merchant_count}"`), it resolves the expression using the **module's default parameter values** rather than an empty dict.

@@ -30,17 +30,22 @@ def rejects(tmp_path: Path, body: str, match: str | None = None, **kw) -> None:
         load(tmp_path, body, **kw)
 
 
-def test_committed_registry_holds_the_adopted_forest_key_and_one_optional_key_per_other_terrain_code():
+def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_other_terrain_code_and_the_three_border_mask_keys():
     """`terrain.forest` is the one adopted key; the other 22 Live Map terrain codes are registered `optional: true` for the draft set `terrain-v1`
-    (`TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET`). The expected keys are read from the page's explicit code-to-key table, the contract both sides share."""
+    (`TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET`), and the `border.*` mask family (D19, `TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-CONTRACT`) adds three optional keys
+    with a v1-v3 detail axis. The expected terrain keys are read from the page's explicit code-to-key table, the contract both sides share."""
     import re
 
     table = (Path(__file__).resolve().parents[4] / "frontend" / "src" / "visualAssets" / "terrainDrafts.ts").read_text()
     expected = re.findall(r"'(terrain\.[a-z_]+)'", table[table.index("TERRAIN_DRAFT_KEYS"):table.index("TERRAIN_CODES")])
     assert len(expected) == 23 and len(set(expected)) == 23
     registry = load_registry()
-    assert sorted(registry.keys) == sorted(expected) and dict(registry.aliases) == {}
-    others = [d for k, d in registry.keys.items() if k != "terrain.forest"]
+    borders = ["border.edge", "border.inner_corner", "border.outer_corner"]
+    assert sorted(registry.keys) == sorted(expected + borders) and dict(registry.aliases) == {}
+    for key in borders:
+        d = registry.keys[key]
+        assert d.optional and d.family == "border" and d.variant_axes == () and d.detail.values == ("v1", "v2", "v3") and d.detail.default == "v1"
+    others = [d for k, d in registry.keys.items() if k != "terrain.forest" and k not in borders]
     assert len(others) == 22 and all(d.optional and d.family == "terrain" and d.detail is None and d.variant_axes == () for d in others)
     forest = registry.keys["terrain.forest"]
     assert forest.family == "terrain" and forest.variant_axes == () and not forest.optional
@@ -50,14 +55,16 @@ def test_committed_registry_holds_the_adopted_forest_key_and_one_optional_key_pe
     assert registry.file_hash == "sha256:" + hashlib.sha256(data).hexdigest()
 
 
-def test_committed_catalog_holds_only_the_pilot_asset():
-    # one key (above), its three adopted slot sources and what was derived from them; exact contents: tests/visual_assets/test_catalog_integrity.py
-    expected = {"sources": ["terrain_forest", "terrain_forest_bush", "terrain_forest_tree"],
-                "generated": ["terrain_forest--x1", "terrain_forest_bush--x1", "terrain_forest_tree--x1"], "manifests/candidates": ["pilot"]}
+def test_committed_catalog_holds_the_pilot_forest_and_the_adopted_terrain_v1_sources():
+    # the forest's three slot sources and what was derived from them (artifacts and release candidates: forest only) plus the 31 sources of the owner's adoption of terrain-v1 on 2026-10-05T18:17:03Z;
+    # exact contents: tests/visual_assets/adopted_facts.py and test_catalog_integrity.py
+    from tests.visual_assets import adopted_facts as af
+
+    expected = {"sources": af.ADOPTED_SOURCES, "generated": af.GENERATED, "manifests/candidates": ["pilot"]}
     for sub, names in expected.items():
         assert sorted(p.name for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep") == names, sub
     for sub in ("provenance/adoptions", "provenance/intake"):
-        assert len([p for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep"]) == (3 if sub.endswith("adoptions") else 6), sub
+        assert len([p for p in (config.CATALOG_ROOT / sub).iterdir() if p.name != ".gitkeep"]) == (af.ADOPTION_COUNT if sub.endswith("adoptions") else af.INTAKE_FILE_COUNT), sub
     assert [p.name for p in (config.CATALOG_ROOT / "build-config").iterdir() if p.name != ".gitkeep"] == ["export.toml"]  # rules, not an asset
     assert {p.name for p in (config.CATALOG_ROOT / "fixtures").iterdir()} == {"contracts"}
     assert "fixture" not in [p.name for p in (config.CATALOG_ROOT / "definitions").iterdir()]
