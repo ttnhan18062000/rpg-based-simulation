@@ -717,7 +717,7 @@ the interactive `ask`, power-loss and crash-mid-rebase cases are not run. Record
 | M5 | Authority guardrails + advisory semantic boundaries | harness permission rules for authority-class commands, role-conditional `PreToolUse` hook (deny / ask), `--agent` allowlists for read-only roles, advisory `role_boundary` events | M2 |
 | M6a | Minimum measurement | resolved `session_role` on monitoring events, headline-metric categories, the batch-latency triplet | M2, M5 |
 | M6b | Analytics and roster check | expanded retro analytics, roster staleness report | M6a (optional; after M7) |
-| M7 | Review of the first month | harden or retire advisory rules on measured evidence | M6a + 4 weeks |
+| M7 | Review of the first month | harden or retire advisory rules on measured evidence | first real `manual_actions.jsonl` record + 4 weeks (re-baselined 2026-10-06; M6a merged with no live data) |
 
 M1 + M2 are the value core (they remove most of what the user types and fix the stale-note class).
 M4 can start immediately after M1 and is independently useful (the 2026-10-02 disk incident).

@@ -81,7 +81,7 @@ Binding plan: `docs/plans/agent_infrastructure/session_layer_working_process.md`
    Finalize shows as *not done*.
 4. The analytics and roster check run report-only and exit 0; a seeded orphaned instance and a session
    holding two seats are reported.
-5. **M7:** a written review at least four weeks after M6a data begins, covering for each advisory rule its
+5. **M7:** a written review at least four weeks after the first real `manual_actions.jsonl` record (not the M6a merge: the instruments recorded nothing until live sessions loaded the project hooks, W41 retro, 2026-10-06), covering for each advisory rule its
    recurrence and a harden / keep / retire decision, and an explicit decision on each deferred item, with the
    evidence cited.
 
@@ -110,8 +110,8 @@ None.
 
 - Whether a prompt-submit hook payload allows tagging repeated instructions, or the owner tally is used, is an
   M0 result in Epic A.
-- The four-week window starts when Epics A and B are both landed and `session_role` data exists; the epic
-  stays open until M7 reports.
+- The four-week window starts at the first real `manual_actions.jsonl` record (re-baselined 2026-10-06: Epics A and B
+  landed, but no live session loaded the hooks, so no data existed); the epic stays open until M7 reports.
 
 ## Implementation Notes
 

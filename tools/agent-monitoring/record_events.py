@@ -37,6 +37,10 @@ def validate_record(record: dict) -> list[str]:
         errors.append(f"invalid status '{record.get('status')}' — must be one of {VALID_STATUS}")
     # Optional advisory list (TCK-20261002-ARCH-VERIFY-TEST-QUALITY-FINDINGS): absent is fine, null is
     # treated as absent by the writers, anything else must be a list of strings.
+    if record.get("session_id") is not None and not isinstance(record["session_id"], str):
+        errors.append("session_id must be a string or null")
+    if record.get("cost_source") is not None and record["cost_source"] not in ("sidecar", "session_window"):
+        errors.append("cost_source must be 'sidecar' or 'session_window'")
     findings = record.get("test_quality_findings")
     if findings is not None and not (isinstance(findings, list) and all(isinstance(x, str) for x in findings)):
         errors.append("test_quality_findings must be a list of strings")
