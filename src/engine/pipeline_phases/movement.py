@@ -22,6 +22,18 @@ if TYPE_CHECKING:
     from src.core.updates import StateUpdate
 
 
+def _already_settled_this_tick(ent_upd: EntityUpdate | None) -> bool:
+    """True when a prior phase moved the entity, or this tick's update ends its walk (``navigation.target_clear``).
+
+    A tracked combat move that reaches its target ends in ``MovementCandidateSelector.tracked_move_completion_update``,
+    which clears the navigation target. This phase reads the tick-start ``entity.navigation.target``, so without this
+    check the entity still took one more step toward a target it had just reached: a pursuer that arrived orthogonally
+    adjacent sidestepped off adjacency on the completion tick, took an opportunity attack, and idled to the next brain
+    cadence (TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED)."""
+    nav = ent_upd.navigation if ent_upd else None
+    return bool(ent_upd) and (ent_upd.moved_this_tick or bool(nav and nav.target_clear and nav.target_set is None))
+
+
 class MovementPhase:
     """
     Resolves position swap and movement routing.
@@ -227,8 +239,8 @@ class MovementPhase:
             if not entity or not entity.lifecycle.active:
                 continue
             
-            # Already moved by a prior phase or position swap?
-            if ent_upd and ent_upd.moved_this_tick:
+            # Already moved by a prior phase or position swap, or its walk ends this tick?
+            if _already_settled_this_tick(ent_upd):
                 continue
                 
             # Determine target and mode (prefer update if present)

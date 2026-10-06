@@ -90,7 +90,12 @@ def test_attack_with_insufficient_readiness_does_not_reset_task():
     assert upd.task.payload_set.get("reason") == "INSUFFICIENT_READINESS"
 
 
-def test_attack_out_of_range_does_not_reset_task():
+def test_attack_out_of_range_resets_task_to_idle():
+    """Reversed by TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED. This test
+    used to assert the task is KEPT ("range may close via a fresh pursuit decision"), but a kept non-empty payload
+    is never re-decided (the scheduler re-runs the brain only for an empty ENTITY_ACT payload), so the same swing
+    was re-dispatched every ~5 ticks for as long as the pair stayed put (267 swings measured in one run). An
+    out-of-range attack now ends its task like a dead target, and the brain re-decides."""
     attacker = _attacker_entity(1, attack_range=1, pos=(0.0, 0.0))
     far_target = _target_entity(2, alive=True, active=True, pos=(50.0, 50.0))
     state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: far_target})
@@ -99,8 +104,7 @@ def test_attack_out_of_range_does_not_reset_task():
 
     upd = refined.entity_updates.get(1)
     assert upd is not None
-    assert upd.task.payload_set.get("target_id") == 2
-    assert upd.task.payload_set.get("reason") == "OUT_OF_RANGE"
+    assert upd.task.payload_set == {}
 
 
 def test_missing_action_kind_is_untouched():
