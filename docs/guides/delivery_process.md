@@ -386,7 +386,10 @@ The steps above cover diagnosing a failure; this covers the surrounding push→P
      `python3 tools/delivery/pr_render.py --check --pr <N>`. It prints `matches: True`/`False`,
      and on a mismatch names the differing pieces (`title differs: live=... rendered=...`,
      `generated sections differ: [...]`) — it never exits non-zero for a real difference, only for
-     a genuine internal error, so check the printed `matches` value, not the exit code. Treat
+     a genuine internal error, so check the printed `matches` value, not the exit code. It also
+     reports an attribution trailer (`attribution trailer found: <line>`, `attribution_found` in `--json`) and
+     forces `matches: False`; the patterns live in `tools/delivery/pr_body_lint.py`, and the
+     `PR body lint` workflow (`.github/workflows/pr-body-lint.yml`) fails a PR on the same hit. Treat
      `matches: False` as the write having failed — re-render (plain or `--json`, same as step 3)
      and PATCH again, then re-check. Missing this step is exactly how PR #252 merged with a title
      reading "(1 ticket)" while its squash commit actually closed two, and how the `gh pr edit`

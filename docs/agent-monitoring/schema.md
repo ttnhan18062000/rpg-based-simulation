@@ -699,7 +699,7 @@ and stdout hash; never the mac; the wrapped command is kept from writing a secon
 | `execution_mode` | string | No | `pipeline`, `workflow` or `hand`, as on `runs`. A CLI defaults to `hand`; `--execution-mode` (doc_staleness) or `GATE_VERDICT_EXECUTION_MODE` overrides it. |
 | `ticket_id` | string | Yes | Absent for a gate that is not about one ticket (`attest_gate`, a doc-staleness check). |
 | `gate_id` | string | No | `<phase>:<check_module>.<check_function>` from `agent-working/agent-orchestration/gate-policy.yaml` when the gate is registered there, else `cli:<module>`; `attest_gate` records the id the caller passed. |
-| `gate_type` | string | No | `static_check`, or `attested_command` for `attest_gate`. |
+| `gate_type` | string | No | `static_check`, or `attested_command` for `attest_gate`. An `attested_command` row is evidence that a native gate command ran, not a verdict: `gate_ledger.py` never counts it. The pipeline-site row for the same gate (gate-policy id) is the verdict and carries the attestation's `inputs_ref.stdout_sha`; an attested row with no such row is listed as "attested, no verdict row". |
 | `phase` | string | Yes | The workflow phase the gate guards, when it has one. |
 | `verdict` | string | No | `PASS` or `FAIL` for these CLIs; an agent-verdict gate records its raw enum. |
 | `blocking` | bool | No | `true` when the verdict stopped the work (the CLI exited non-zero). |
