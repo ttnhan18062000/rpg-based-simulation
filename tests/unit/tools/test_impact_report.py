@@ -24,6 +24,7 @@ def repo(tmp_path):
     root = tmp_path / "repo"
     (root / ".github/workflows").mkdir(parents=True)
     shutil.copy(REPO_ROOT / ".github/workflows/test.yml", root / ".github/workflows/test.yml")
+    shutil.copy(REPO_ROOT / ".github/workflows/slow-regression.yml", root / ".github/workflows/slow-regression.yml")
     _write(root / "src/core/state.py", "X = 1\n")
     _write(root / "src/progression/leveling.py", "from src.core.state import X\n")
     _write(root / "src/engine/combat.py", "from src.core.state import X\n")
