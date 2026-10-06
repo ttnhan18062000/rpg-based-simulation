@@ -322,6 +322,17 @@ Each follows §3.1 and is intentionally empty.
     fix therefore drops `global_salience` and the buy-price multiplier entirely.
   - The A1 rule itself is unchanged.
 
+  **Update 2026-10-06 (implemented, `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`):** input 4 is
+  closed. The kernel no longer computes `debt_ratio`, `compute_ratio` or `global_salience` and no longer
+  writes `pressure_signals`; `DynamicPriceService.calculate_buy_price(base_value)` returns
+  `max(1, int(base_value))` and reads no state. Buy prices therefore no longer vary with host load, with or
+  without `audit_mode`. The regression test `tests/unit/resource/test_buy_price_independent_of_host_timing.py`
+  runs with `audit_mode=False` and a faked clock, and fails on the pre-fix tree. In production the salience
+  term was already 0 (`work_debt` never accumulates), so the observable effect is the `compute_ratio` term
+  only (`docs/guidelines/intentional_divergences.md` §2.75). The coverage question (`pressure_signals` is
+  outside the proof digest, PERF-D5) is recorded as a finding and left open: after this change the dict
+  stays at its initial `{}` in production, so no digest gap remains for it to hide a difference in.
+
   **Inputs the Canonical proxy set must also cover** (same inventory; classification unchanged):
   the replay-backlog `DEGRADED` trigger in `ResourceGovernor` (depends on a background flush
   thread; recorded as a mode transition), and `PhaseBudgetGovernor`, which reads per-phase
