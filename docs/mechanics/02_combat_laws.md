@@ -169,10 +169,14 @@ disengaging while adjacent to a hostile) bypass this specific check.
     — so the same failing attack was re-dispatched every tick readiness recovered from the real
     illegal-target penalty (`-50.0`, ~5 ticks to regen), confirmed via live corpus trace to
     repeat for 180+ real ticks against the same dead target with no natural end
-    (`TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET`). `INSUFFICIENT_READINESS`/
-    `OUT_OF_RANGE` failures are deliberately **not** reset — both are real, recoverable
-    conditions (readiness regens; range may close via a fresh pursuit decision), unlike a dead
-    target which can never become legal again.
+    (`TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET`). `OUT_OF_RANGE` is reset the same way
+    (`TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED`): it was
+    once left in place on the reasoning that range may close via a fresh pursuit decision, but the
+    held payload is non-empty so no fresh decision ever came, and a melee pair that stayed
+    diagonal (Manhattan 2: melee adjacency is orthogonal, world rule MOV-07) re-swung 267 times in
+    one run. Clearing it returns the entity to the brain, whose tactical pass pursues whenever an
+    attack is not legal. `INSUFFICIENT_READINESS` is deliberately **not** reset: readiness regens
+    and the same swing can then land.
 *   **Withheld-Action Task Reset**: The action router (`ActionRouter.execute_action`,
     `src/engine/domain/action_router.py`) reports `ReasonCode.ACTION_WITHHELD_BY_POSTURE` when its
     combat-posture gate withholds an `ATTACK`/`SKILL` (the attacker's recorded

@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-06"
 ---
 
 # World Rule Family: Movement / Navigation
@@ -164,6 +164,43 @@ concretely," not an independent claim.
 **Scenarios:** [SPC-S01](../scenarios/space-environment-batch-04.md#spc-s01) (same scenario as
 LOC-02 — reach and topology are both probed by the same near-but-unreachable case).
 
+## MOV-07 — Adjacency is orthogonal, and every spatial check that asks "is it adjacent?" uses that same adjacency
+
+> On the world grid, two positions are adjacent when they share an edge: the four cardinal
+> neighbours. A diagonal neighbour is not adjacent. Melee reach, engagement, the end of a
+> pursuit, and movement itself all use this one adjacency, so a subject that can step to a
+> tile in one move is exactly a subject that could strike from it. A subject standing diagonal
+> to its target must first step to an adjacent tile.
+
+**Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-06**
+(row 20 of `docs/plans/systemic_world/owner_decision_memo.md`). This is MOV-06's adjacency fact
+made explicit, because three call sites were found to depend on it at once. It adopts the
+existing authoritative definition rather than inventing one:
+`docs/combat/combat_movement_overhaul_spec.md:17-18` says "All distance checks (weapon range,
+vision, movement) use L1 distance… Adjacency is strictly defined as cardinal neighbors…
+Diagonal movement and adjacency are not supported."
+- **Alternatives not taken:** Chebyshev melee reach (the 8-neighbourhood). Melee would then
+  disagree with movement, which steps one axis at a time, and with the spec's orthogonal
+  engagement and opportunity-attack definitions.
+- **Scope:** this Rule fixes adjacency only. Ranges beyond adjacency, line of sight and
+  perception falloff are unchanged.
+
+**Repository evidence: SUPPORTED, with two known side-effect exceptions.**
+- **Supported:** melee legality uses Manhattan reach (`src/engine/legality.py`), and so does
+  pursuit completion (#366). Movement steps orthogonally (`NavigationSystem.get_next_step`,
+  `src/systems/world_systems/navigation.py:100-103`).
+- **Exceptions (implementation, not semantics):** the yield push may displace an occupant to any
+  of 8 neighbours (`src/engine/movement.py:123`), and the bracketing flank can land at distance
+  2 on a diagonal. Both can leave a subject diagonal to its target, which this Rule handles: the
+  subject steps first.
+- **The defect this exposed is engineering:**
+  `TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED`. A held
+  ATTACK task against an OUT_OF_RANGE target was never re-decided, and one entity re-swung at a
+  diagonal target 267 times. OUT_OF_RANGE must lead to a re-decision or a closing step.
+
+**Scenarios:** none traced yet. One is owed when the ticket lands: an attacker diagonal to its
+target steps one orthogonal tile, then strikes, and never swings from the diagonal.
+
 ---
 
 ## Cross-domain links recorded here
@@ -173,6 +210,8 @@ LOC-02 — reach and topology are both probed by the same near-but-unreachable c
 - MOV-02, MOV-03 → Causality (CAUSE-01), Capability (CAP-04, directly reused)
 - MOV-04 → Cost (COST-03, directly reused)
 - MOV-05 → Magic/supernatural (the most plausible future domain to fill this gap)
+- MOV-07 → Reach (REACH-01/02, through MOV-06), Conflict/Combat (`conflict-combat.md`: melee reach
+  is this adjacency)
 - MOV-06 → Reach (REACH-01–06, explicit deference, not a new link)
 
 ## Open questions carried forward
