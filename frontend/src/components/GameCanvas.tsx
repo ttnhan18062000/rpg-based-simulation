@@ -4,6 +4,8 @@ import type { Entity, EntitySlim, GroundItem, Building, ResourceNode, Region } f
 import type { DecodedMapData } from '@/hooks/useSimulation';
 import { useCanvas } from '@/hooks/useCanvas';
 import { CELL_SIZE, TILE_COLORS, TILE_COLORS_DIM, KIND_COLORS } from '@/constants/colors';
+import { useDevicePixelRatio } from '@/hooks/useDevicePixelRatio';
+import { WORLD_DEFAULT_ZOOM, WORLD_MAX_ZOOM, WORLD_MIN_ZOOM, snapToDevicePixel, snapZoom, stepZoom, zoomLevels } from '@/lib/pixelScale';
 
 interface GameCanvasProps {
   mapData: DecodedMapData | null;
@@ -30,9 +32,12 @@ const BUILDING_COLORS: Record<string, string> = {
   hero_house: '#34d399',
 };
 
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 3.0;
-const ZOOM_STEP = 0.15;
+// World zoom snaps to whole-number pixel scales (D20): the reachable zooms are `n / devicePixelRatio` inside [MIN_ZOOM, MAX_ZOOM] (lib/pixelScale.ts), so one art pixel is always a whole
+// number of device pixels. At DPR 1 that is 1x, 2x and 3x, plus ONE overview level at the bottom (0.5x) where art pixels are not whole: `isOverviewZoom(zoom, dpr)` is true there and the art path
+// must draw the flat TILE_COLORS fill instead (this canvas draws only flat fills, so it already does).
+const MIN_ZOOM = WORLD_MIN_ZOOM;
+const MAX_ZOOM = WORLD_MAX_ZOOM;
+const DEFAULT_ZOOM = WORLD_DEFAULT_ZOOM;
 
 const MM_DEFAULT_W = 180;
 const MM_DEFAULT_H = 180;
@@ -89,7 +94,10 @@ export function GameCanvas({ mapData, entities, selectedEntity, groundItems, bui
 
   // State — zoom declared before useCanvas so it can be passed
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1.0);
+  const dpr = useDevicePixelRatio();
+  const zoomSteps = useMemo(() => zoomLevels(dpr, MIN_ZOOM, MAX_ZOOM), [dpr]);
+  const [requestedZoom, setRequestedZoom] = useState(DEFAULT_ZOOM);
+  const zoom = useMemo(() => snapZoom(requestedZoom, zoomSteps), [requestedZoom, zoomSteps]); // the zoom in force: always a reachable level
   const [mmZoom, setMmZoom] = useState(1.0);
   const [mmSize, setMmSize] = useState({ w: MM_DEFAULT_W, h: MM_DEFAULT_H });
   const [locationsOpen, setLocationsOpen] = useState(false);
@@ -187,9 +195,9 @@ export function GameCanvas({ mapData, entities, selectedEntity, groundItems, bui
     if (mmEl && mmEl.contains(e.target as Node)) {
       setMmZoom(prev => Math.min(MM_MAX_ZOOM, Math.max(MM_MIN_ZOOM, prev + (e.deltaY < 0 ? MM_ZOOM_STEP : -MM_ZOOM_STEP))));
     } else {
-      setZoom(prev => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + (e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP))));
+      setRequestedZoom(prev => stepZoom(prev, e.deltaY < 0 ? 1 : -1, zoomSteps));
     }
-  }, []);
+  }, [zoomSteps]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -425,7 +433,7 @@ export function GameCanvas({ mapData, entities, selectedEntity, groundItems, bui
       ) : (
         <div
           className="absolute"
-          style={{ width: width * zoom, height: height * zoom, transform: `translate(${pan.x}px, ${pan.y}px)` }}
+          style={{ width: width * zoom, height: height * zoom, transform: `translate(${snapToDevicePixel(pan.x, dpr)}px, ${snapToDevicePixel(pan.y, dpr)}px)` }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -544,7 +552,7 @@ export function GameCanvas({ mapData, entities, selectedEntity, groundItems, bui
       {/* Zoom controls */}
       <div className="absolute bottom-2 left-2 flex flex-col gap-1 z-40">
         <button
-          onClick={() => setZoom(prev => Math.min(MAX_ZOOM, prev + ZOOM_STEP))}
+          onClick={() => setRequestedZoom(prev => stepZoom(prev, 1, zoomSteps))}
           className="w-7 h-7 flex items-center justify-center bg-bg-tertiary border border-border rounded
                      text-text-secondary hover:text-text-primary hover:bg-bg-secondary transition-colors cursor-pointer"
           title="Zoom In"
@@ -552,7 +560,7 @@ export function GameCanvas({ mapData, entities, selectedEntity, groundItems, bui
           <ZoomIn className="w-4 h-4" />
         </button>
         <button
-          onClick={() => setZoom(1.0)}
+          onClick={() => setRequestedZoom(DEFAULT_ZOOM)}
           className="w-7 h-7 flex items-center justify-center bg-bg-tertiary border border-border rounded
                      text-text-secondary hover:text-text-primary hover:bg-bg-secondary transition-colors cursor-pointer
                      text-[9px] font-bold"
@@ -561,7 +569,7 @@ export function GameCanvas({ mapData, entities, selectedEntity, groundItems, bui
           <Maximize2 className="w-3.5 h-3.5" />
         </button>
         <button
-          onClick={() => setZoom(prev => Math.max(MIN_ZOOM, prev - ZOOM_STEP))}
+          onClick={() => setRequestedZoom(prev => stepZoom(prev, -1, zoomSteps))}
           className="w-7 h-7 flex items-center justify-center bg-bg-tertiary border border-border rounded
                      text-text-secondary hover:text-text-primary hover:bg-bg-secondary transition-colors cursor-pointer"
           title="Zoom Out"

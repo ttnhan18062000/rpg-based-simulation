@@ -124,7 +124,10 @@ From `craft`'s checklist, adjusted to the sizes above.
 - [ ] A contact sheet at 1x and 2x on light, dark and real terrain backgrounds, and in greyscale, was reviewed by the
   owner (`craft §7`, step 5).
 - [ ] Web rendering at an integer scale relative to `devicePixelRatio`, `image-rendering: pixelated`, whole-device-pixel
-  positions, pixel layer separate from vector text (`craft §1`; child 4).
+  positions, pixel layer separate from vector text (`craft §1`; child 4). Built: `frontend/src/lib/pixelScale.ts` (levels `n / devicePixelRatio`, `fitScale`, device-pixel snapping),
+  the Live Map zoom (`GameCanvas.tsx`) and `frontend/src/components/PixelIcon.tsx`.
+  The zoom has one **overview level** at the bottom (0.5x at DPR 1; none at DPR 2, where 0.5 is already an art level) where art pixels are not whole: the user decided (2026-10-06) that it
+  draws plain terrain colours instead of pixel art. The art path of the wiring batch must check `isOverviewZoom(zoom, dpr)` and draw the flat fill there; the Live Map draws only fills today.
 - [ ] The key icons were approved before the rest of the set was drawn, and this guide records any rule they changed
   (`craft §7`, step 2).
 
