@@ -1,0 +1,11 @@
+COMMIT 2c793286f81c907711a39a3fa84cdc3013ef7ef7
+TRACKED-DIRTY 0
+== verify
+store ok
+drafts ok
+== pytest
+....................................                                     [100%]
+1548 passed in 93.77s (0:01:33)
+== AM5-S
+/tmp/claude-1000/-home-vboxuser-Work-rpg-based-simulation/f13d50ac-3424-4925-a21d-6df128c1deea/scratchpad/final_checks.sh: line 9: S: unbound variable
+/tmp/claude-1000/-home-vboxuser-Work-rpg-based-simulation/f13d50ac-3424-4925-a21d-6df128c1deea/scratchpad/final_checks.sh: line 9: S: unbound variable
