@@ -85,6 +85,18 @@ def gate_id_for(module: str, function: str | None = None, policy_path: Path = _P
     return f"cli:{short}"
 
 
+def policy_gate_id(gate: dict) -> str:
+    """The gate_id a gate-policy.yaml entry is recorded under by implement-ticket.js
+    (TCK-20261006-GATE-VERDICT-PIPELINE-SITES): `<phase>:<check_module>.<check_function>` for a static_check (the same
+    shape `gate_id_for` returns), `<phase>:verdict` for an agent_verdict, `<phase>:<result_field>` for an agent_result_field."""
+    phase, gate_type = gate["phase"], gate["gate_type"]
+    if gate_type == "static_check":
+        return f"{phase}:{gate['check_module']}.{gate['check_function']}"
+    if gate_type == "agent_verdict":
+        return f"{phase}:verdict"
+    return f"{phase}:{gate['result_field']}"
+
+
 def head_sha() -> str | None:
     try:
         proc = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10)
@@ -188,3 +200,40 @@ def record_gate_verdict(*, enabled: bool = True, target: Path | None = None, **f
     except Exception as exc:  # noqa: BLE001 - monitoring must never fail a gate
         print(f"WARNING: gate verdict not recorded: {type(exc).__name__}: {exc}", file=sys.stderr)
         return None
+
+
+def record_batch(rows: list, *, target: Path | None = None) -> int:
+    """Write each pipeline gate row (`gate_id`, `gate_type`, `phase`, `verdict`, `blocking`, `inputs_ref` plus the run
+    identity); returns how many were written. One bad row never stops the others."""
+    written = 0
+    for row in rows if isinstance(rows, list) else []:
+        if isinstance(row, dict) and record_gate_verdict(target=target, **{k: v for k, v in row.items() if k in _BATCH_FIELDS}):
+            written += 1
+    return written
+
+
+_BATCH_FIELDS = (
+    "gate_id", "gate_type", "phase", "verdict", "blocking", "inputs_ref",
+    "run_id", "execution_id", "ticket_id", "execution_mode",
+)
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse  # noqa: PLC0415
+
+    parser = argparse.ArgumentParser(description="Record gate verdict rows (pipeline use).")
+    sub = parser.add_subparsers(dest="command", required=True)
+    batch = sub.add_parser("record-batch", help="append the rows of a JSON array")
+    batch.add_argument("--data", required=True, help="JSON array of gate rows")
+    args = parser.parse_args(argv)
+    try:
+        rows = json.loads(args.data)
+    except json.JSONDecodeError as exc:
+        print(f"WARNING: gate verdict rows not recorded: invalid JSON: {exc}", file=sys.stderr)
+        return 0
+    print(f"DONE: recorded {record_batch(rows)} gate verdict row(s)")
+    return 0  # monitoring never fails a run
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1368,7 +1368,7 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
 
 def generate(
     runs, events, label, week_str=None, tickets_root=None, tools=None, all_tools=None,
-    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None, gates=None,
+    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None, gates=None, paths=None,
 ):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -2061,6 +2061,10 @@ def generate(
         lines.append("")
         lines.append(gates.rstrip("\n"))
         lines.append("")
+    if paths:
+        lines.append("")
+        lines.append(paths.rstrip("\n"))
+        lines.append("")
 
     # Notes (human-written)
     lines.append("## Notes")
@@ -2158,6 +2162,18 @@ def _gates_section(week_str):
         return None
 
 
+def _paths_section(runs, events, all_runs):
+    """The rendered Paths section (TCK-20261006-PATH-AND-PHASE-REPORT-AND-RETRO), or None when it cannot be built (never
+    fails the retro). `all_runs` is every week's runs, so a period with none of the fields is told from an instrument that
+    is not running at all."""
+    try:
+        import path_report
+
+        return path_report.render_section(runs, events, sum(1 for r in dedupe_to_latest_per_execution(all_runs) if path_report.has_path_fields(r)))
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate agent monitoring retro report")
     parser.add_argument("--days", type=int, help="Include runs from the last N days")
@@ -2237,11 +2253,12 @@ def main():
 
     session_layer = _session_layer_section(runs, week_str, cutoff if args.days else None, args.latency_prs)
     gates = _gates_section(None if (args.all or args.days) else week_str)
+    paths = _paths_section(runs, events, all_runs)
 
     report = generate(
         runs, events, label, week_str, tools=tools, all_tools=all_tools,
         raw_run_count=raw_run_count, deduped_run_count=deduped_run_count,
-        real_token_report=real_token_report, session_layer=session_layer, gates=gates,
+        real_token_report=real_token_report, session_layer=session_layer, gates=gates, paths=paths,
     )
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)

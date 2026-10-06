@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-GATE-VERDICT-PIPELINE-SITES
-phase: open
+phase: done
 date: 2026-10-06
 tags: [ai, agent-monitoring, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring, process-improvement]
 Every implement-ticket.js gate writes a gate_verdicts row on pass and on fail
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -86,7 +86,12 @@ cannot be found if passes are never recorded. This is P3 because the formal pipe
 Drafted by `agent-working-design` on 2026-10-06.
 
 ## Test Summary
+`tests/tools/test_gate_verdict_pipeline_sites.py` (33 pass): 13 gate-policy entries each have an emit site and their site precedes the stop; removing a site fails the conformance check; `record_batch` writes one non-blocking row per reached gate, a Review block writes `NEEDS_CHANGES, blocking: true` and nothing later, one bad row does not stop the others, and the CLI exits 0 on bad JSON. Related workflow, conformance and native-refusal tests stay green (142 pass in the selected sweep).
 
 ## Files Changed
+- `.claude/workflows/implement-ticket.js`, `tools/agent-monitoring/gate_verdicts.py`
+- `tests/tools/test_gate_verdict_pipeline_sites.py` (new)
+- `docs/agent-monitoring/schema.md`
 
 ## Completion Summary
+Closed 2026-10-06. AC3, AC4 and AC5 met; AC1 and AC2 are proven at source and function level, not by a live pipeline run (the script cannot run in a test), so the first real pipeline run is their live check. Observed, not changed: on the native runtime a static gate's row carries the attestation's own gate name, not the `gate-policy.yaml` id, so the two spellings do not join in the ledger. Not done: any gate's logic or order (out of scope).
