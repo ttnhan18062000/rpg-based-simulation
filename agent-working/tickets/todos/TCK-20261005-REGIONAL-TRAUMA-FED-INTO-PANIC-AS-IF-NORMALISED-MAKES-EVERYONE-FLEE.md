@@ -11,10 +11,77 @@ tags: [strategy, cognition, combat]
 
 # TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE
 
+> **CORRECTION 2026-10-06, rpg-implementer, rulings by `rpg-feature-planning`. This block supersedes
+> every figure and headline below it that it contradicts. Priority P1 -> P2.**
+>
+> **Config.** Commit `b15fef405` (origin/main at the time). Detached throwaway worktree, seed 42,
+> `PROD_SMALL` with `max_tick_budget_ms=1e9`, flags `no_frame_pacing`, `no_replay`, `audit_mode`,
+> `LocalSequentialExecutor`, 2000 ticks, one simulation at a time. Probes: the
+> `TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK` probe set
+> (`forced_brain.py`, `panic_terms.py`, `combat_volume.py`, `trauma_ticks.py`). Every counter was
+> IDENTICAL across two runs on both worlds, so these are values, not samples. Not re-run on a later
+> main.
+>
+> **(a) Decision mix, forced read-only `evaluate_entity_intent`, live hostile at Manhattan <= 1**
+> (calls are entity-ticks, not distinct decisions):
+>
+> | | `crowded_frontier` (193 calls) | `frontier_living_world` (232 calls) |
+> |---|---|---|
+> | `ATTACK` | 76 (39%) | 169 (73%) + 3 `OUT_OF_RANGE` |
+> | `BRACKETING` | 41 (21%) | 1 |
+> | `INTERCEPTING` | 1 | 1 |
+> | plain move | 45 (23%) | 32 (14%) |
+> | `PANIC_RETREAT` | 30 (16%): 24 at hp < 0.4, 6 at hp >= 0.4 | 25 (11%): all 25 at hp < 0.4 |
+> | none | 0 | 1 |
+>
+> **(b) Terms present in fleeing entities** (recompute of the `AppraisalSystem` terms on the
+> 5-neighbour saliency window; the fleeing count differs slightly from the `PANIC_RETREAT` count
+> because the windows differ):
+>
+> | | `crowded_frontier` (27 fleeing) | `frontier_living_world` (28 fleeing) |
+> |---|---|---|
+> | trauma term present | 13 | 20 |
+> | trauma alone over the threshold | 3 (hometown, trauma 1.9 -> +0.97) | 0 |
+> | trauma + low hp | 2 | 16 (+0.41 each) |
+> | low hp alone | 7 (+7 with nemesis/grudge) | 6 |
+> | outnumbered present | 8, never alone | 5, never alone |
+>
+> **(c) Combat volume, per run:**
+>
+> | | `crowded_frontier` | `frontier_living_world` |
+> |---|---|---|
+> | `execute_attack` (decision path) | 41 | 30 |
+> | `resolve_attack` non-opportunity | 25 | 18 |
+> | opportunity via `resolve_multi_attack` | 113 calls / 116 attackers | 106 calls / 106 attackers |
+>
+> A plain `resolve_attack` with `is_opportunity_attack=True` never fired (key absent = 0).
+>
+> **(d) Regional `trauma_score` at tick 2000** (end state after decay; peak and per-tick trajectory not
+> captured, and not needed per the planner): `crowded_frontier` hometown 1.9, bandit_road 0.85,
+> goblin_camp 0.0, orc_stronghold 0.0. `frontier_living_world` hometown 0.96, the other seven regions 0.0.
+>
+> **Controls.** Trauma forced to 0 (`get_region_trauma` patched to return 0.0): fleeing 27 -> 18 and
+> 28 -> 11, `PANIC_RETREAT` decisions 30 -> 21 and 25 -> 13, `ATTACK` 76 -> 82 and 169 -> 172. The
+> trauma term is live on the decision path and removes a third to a half of the flees. Both combat
+> counters are nonzero in the two worlds, so they fire; `dungeon_crawl` shows `execute_attack` absent
+> (0) with 24 opportunity attackers, so a zero reads as zero.
+>
+> **Rulings.** (1) The "root cause of the progression-starvation chain" headline is retired: neither
+> standard world is attack-starved at this commit (decision-path `execute_attack` 30-41 against the
+> 0-2 below), and `PANIC_RETREAT` is 11-16% of adjacent-hostile decisions, mostly at hp < 0.4, which
+> is appropriate fleeing. (2) The defect stays open as a units mismatch with a measured, smaller
+> impact: trauma is on 13 of 27 and 20 of 28 flees and crosses the threshold alone in 3 of 55. The
+> ratification request stands, at normal priority. (3) Do not implement before ratification, unchanged.
+>
+> **Superseded below:** "97% `PANIC_RETREAT`", the 353-call 40% / 55% mix, "one death makes most
+> entities flee and two makes all of them", "everyone flees", and "the progression-starvation chain's
+> root cause". The units-mismatch arithmetic is unchanged.
+
 ## Title
 `panic += region_trauma * 0.5` feeds an uncapped per-death counter into a 0-1 dread score with a 0.4
-flee threshold — so **one death in a region makes most entities flee and two makes all of them**,
-at any HP and any bravery. This is the progression-starvation chain's root cause.
+flee threshold. The units disagree (a +1.0-per-death counter against a 0.4 flee threshold), so
+trauma alone can cross the threshold in a region with two deaths; measured impact at `b15fef405` is
+smaller than first claimed (see the CORRECTION block above).
 
 ## Status
 OPEN
@@ -26,11 +93,11 @@ standard
 bug
 
 ## Priority
-P1
+P2
 
 ## Request Summary
 
-> **CORRECTION 2026-10-05, planner. The headline evidence in this ticket did not reproduce, and the
+> **[SUPERSEDED by the 2026-10-06 CORRECTION at the top] CORRECTION 2026-10-05, planner. The headline evidence in this ticket did not reproduce, and the
 > priority is lowered from P0 to P1 on that basis. The defect is still real; the claim that it is the
 > dominant gate is withdrawn.**
 >
@@ -79,6 +146,9 @@ real sequence:
 3. **This ticket.**
 
 ### The finding
+
+> **[SUPERSEDED: the 97% / 143-of-147 figures below do not reproduce at `b15fef405`; see the
+> 2026-10-06 CORRECTION at the top.]**
 
 Forced read-only `evaluate_entity_intent` on real `crowded_frontier` states, every entity with a live
 catalog-hostile at Manhattan ≤ 1, 2000 ticks — **147 calls**:
