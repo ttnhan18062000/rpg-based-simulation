@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PATH-AND-PHASE-REPORT-AND-RETRO
-phase: open
+phase: done
 date: 2026-10-06
 tags: [ai, agent-monitoring, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring, process-improvement]
 A report-only path and phase-coverage reading per tier, and a Paths section in the weekly retro
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -78,7 +78,12 @@ logging habits.
 Drafted by `agent-working-design` on 2026-10-06.
 
 ## Test Summary
+`tests/tools/test_path_report.py` (10 pass) covers AC1 (Plan flagged with 10 of 12 reasons stated), AC2 (not flagged with 4 stated; the held-back line names the `unstated` 67%), AC3 (old runs are `predates`; an all-old period shows only predates rows and no candidate), AC4 (the section renders before Notes; Notes survive a regeneration without `--force`; no section when not passed). A real run, `path_report.py --week 2026-W41`, shows 84 implement-ticket runs, all predating the fields, and no candidate. `test_generate_retro.py` and `test_gate_ledger.py` stay green (221 pass together).
 
 ## Files Changed
+- `tools/agent-monitoring/path_report.py` (new), `tools/agent-monitoring/generate_retro.py`
+- `tests/tools/test_path_report.py` (new)
+- `docs/plans/agent_infrastructure/agent_working_direction.md`
 
 ## Completion Summary
+Closed 2026-10-06. All five acceptance criteria met on fixtures and on the real W41 data (every run predates the fields, so the section shows the dark wording plus a predates table, no candidate). Thresholds are the ticket's starting values. Not done: acting on the reading (no routing, out of scope); the real reading needs the first full week after the merge.

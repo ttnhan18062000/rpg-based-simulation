@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD
-phase: open
+phase: done
 date: 2026-10-06
 tags: [ai, agent-monitoring, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring, process-improvement]
 A run records why it took its path and which planned phases it left out; a skipped phase says why
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -112,7 +112,13 @@ Plan event.
 Drafted by `agent-working-design` on 2026-10-06.
 
 ## Test Summary
+`tests/tools/test_path_reason_and_phase_coverage.py` (23 pass): standard closure gives `phases_omitted == [Investigate, Plan, Review, Document-Update, Architecture-Verify]`, the given `path_reason` and Parity's `skip_reason`; a hotfix whose events cover every planned phase gives `[]`; epic gives `[]`; a skipped event without a reason is `unstated`; editing a tmp plan changes the result with no code change; an unreadable plan gives no field; every enum value validates and unknown ones are rejected; CLI: reason written, no flag gives `unstated` with exactly one hint and exit 0, a bad value or `other` without `--path-note` exits non-zero and writes nothing; `validate.py` flags unknown stored values and accepts absent ones; a source-level fixture checks the pipeline's `pipeline_default` and `tier_plan` / `condition_false` sites. The existing closure, run, event and validate suites stay green (161 pass together).
 
 ## Files Changed
+- `tools/agent-monitoring/path_record.py` (new), `vocabulary.py`, `record_run.py`, `record_events.py`, `record_hand_orchestrated_closure.py`, `validate.py`
+- `.claude/workflows/implement-ticket.js`
+- `tests/tools/test_path_reason_and_phase_coverage.py` (new)
+- `docs/agent-monitoring/schema.md`, `agent-working/agent-orchestration/monitoring-schema.yaml`, `CLAUDE.md` (closure example only, owner-approved diff)
 
 ## Completion Summary
+Closed 2026-10-06. AC1, AC3, AC4 and AC6 met as written. AC2: a hotfix closure gives `[]` when its events cover every phase the plan marks `full` for hotfix; the usual six-phase hand hotfix shape omits Document-Update (the plan marks it `full` for hotfix), so it records `phases_omitted: [Document-Update]`. That is the ticket's own open question surfacing, left for the Paths reading. AC5 is proven at source level only (the pipeline script cannot run in a test); the next real pipeline run is its first live check. Not done: backfilling reasons for past runs (out of scope).
