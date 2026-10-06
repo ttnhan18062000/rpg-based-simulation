@@ -2,8 +2,9 @@
 spent on it while its target was no longer interacting and while it no longer shared the target's group.
 
 usage: guard_move_lifetimes.py <root> <world> <ticks> [legacy]
-`legacy` patches tracked_move_complete back to the pre-gate-4 PURSUE-only logic (what origin/main 9299891a9 has); a `git archive`
-export of main cannot be used because it omits untracked data the ResourceRegistry needs.
+`legacy` patches tracked_move_complete back to the pre-gate-4 PURSUE-only logic (what origin/main 9299891a9 has). A `git archive`
+export of main also works, if the probe is run from that export's own root (content seeds from the cwd-relative data/content);
+the first attempt crashed only because it ran from the wrong directory.
 
 A "move" starts the first tick an entity shows ENTITY_MOVE with a target_id and ends when its (work kind, mode, reason, target id)
 signature changes or the entity task stops being that move. Per group: moves, lifetime median/p90/max, how many were still running at
