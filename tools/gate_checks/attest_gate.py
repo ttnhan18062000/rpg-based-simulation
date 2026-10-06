@@ -61,7 +61,7 @@ def attest(nonce: str, gate_id: str, cmd: str) -> tuple[str, str]:
     return "ATTEST:" + json.dumps(record), proc.stdout
 
 
-def _record(gate_id: str, cmd: str, line: str, stdout: str, enabled: bool) -> None:
+def _record(gate_id: str, cmd: str, line: str, stdout: str, enabled: bool, ticket_id: str | None = None) -> None:
     """Persist what the ATTEST line already prints (gate, cmd hash, exit code, stdout hash), never the mac."""
     import gate_verdicts  # noqa: PLC0415 - monitoring must never break the wrapper
     attested = json.loads(line[len("ATTEST:"):])
@@ -73,6 +73,7 @@ def _record(gate_id: str, cmd: str, line: str, stdout: str, enabled: bool) -> No
         verdict="FAIL" if failed else "PASS",
         blocking=failed,
         execution_mode="workflow",
+        ticket_id=ticket_id,
         inputs_ref={"head_sha": gate_verdicts.head_sha(), "cmd_sha": gate_verdicts.sha256_hex(cmd),
                     "stdout_sha": attested["stdout_sha"], "exit_code": attested["exit_code"]},
     )
@@ -83,6 +84,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--nonce", required=True)
     parser.add_argument("--gate-id", required=True)
     parser.add_argument("--cmd-b64", required=True)
+    parser.add_argument("--ticket-id", default=None, help="The ticket the run is for; recorded on the gate_verdicts row.")
     parser.add_argument("--no-record", action="store_true", help="Do not write this verdict to the gate_verdicts shard.")
     args = parser.parse_args(argv)
     cmd = base64.b64decode(args.cmd_b64).decode("utf-8")
@@ -90,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
     print(line)
     sys.stdout.write(stdout)
     try:
-        _record(args.gate_id, cmd, line, stdout, enabled=not args.no_record)
+        _record(args.gate_id, cmd, line, stdout, enabled=not args.no_record, ticket_id=args.ticket_id)
     except Exception as exc:  # noqa: BLE001 - monitoring must never change the wrapper's output or exit code
         print(f"WARNING: gate verdict not recorded: {type(exc).__name__}: {exc}", file=sys.stderr)
     return 0

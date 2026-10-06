@@ -38,6 +38,10 @@ EXECUTION_MODES = ("pipeline", "workflow", "hand")
 SUB_RESULT_VALUES = ("PASS", "FAIL", "NA")
 ENV_NO_RECORD = "GATE_VERDICT_NO_RECORD"
 ENV_EXECUTION_MODE = "GATE_VERDICT_EXECUTION_MODE"
+ROW_KIND_OUTCOME = "outcome"
+ROW_KIND_ADJUDICATION = "adjudication"
+OUTCOMES = ("accepted", "fixed_and_rerun", "rerun_no_change", "overridden", "stopped")
+ADJUDICATIONS = ("true_block", "false_block", "true_pass", "false_pass", "unknown")
 REQUIRED_FIELDS = ("ts", "gate_verdict_id", "execution_mode", "gate_id", "gate_type", "verdict", "blocking", "inputs_ref")
 
 _REPO_ROOT = _HERE.parents[1]
@@ -121,10 +125,28 @@ def build_record(
     return record
 
 
+def validate_ledger_row(record: dict) -> list[str]:
+    """Problems with an `outcome` or `adjudication` row (TCK-20261006-GATE-VERDICT-OUTCOME-AND-ADJUDICATION)."""
+    kind = record["row_kind"]
+    if kind == ROW_KIND_OUTCOME:
+        value_field, allowed, required = "outcome", OUTCOMES, ("ts", "gate_verdict_id", "outcome")
+    elif kind == ROW_KIND_ADJUDICATION:
+        value_field, allowed = "adjudication", ADJUDICATIONS
+        required = ("ts", "gate_verdict_id", "adjudication", "adjudicated_by", "reason")
+    else:
+        return [f"row_kind {kind!r} not in {(ROW_KIND_OUTCOME, ROW_KIND_ADJUDICATION)}"]
+    problems = [f"missing {f}" for f in required if record.get(f) in (None, "")]
+    if record.get(value_field) not in (None, "") and record[value_field] not in allowed:
+        problems.append(f"{value_field} {record[value_field]!r} not in {allowed}")
+    return problems
+
+
 def validate_record(record: object) -> list[str]:
     """Problems with one row, empty when it is valid. Never raises."""
     if not isinstance(record, dict):
         return ["row is not an object"]
+    if "row_kind" in record:
+        return validate_ledger_row(record)
     problems = [f"missing {f}" for f in REQUIRED_FIELDS if record.get(f) in (None, "")]
     if "blocking" in record and not isinstance(record["blocking"], bool):
         problems.append("blocking is not a bool")

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-GATE-VERDICT-OUTCOME-AND-ADJUDICATION
-phase: open
+phase: done
 date: 2026-10-06
 tags: [ai, agent-monitoring, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring, process-improvement]
 Record what followed a blocking gate verdict, and whether the verdict was right
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -94,8 +94,25 @@ Re-runs exist only implicitly, as `run_dedup.py` checkpoint groups.
 ## Implementation Notes
 Drafted by `agent-working-design` on 2026-10-06.
 
+New `tools/agent-monitoring/gate_ledger.py` (CLI `outcome | adjudicate | list [--unresolved]`, plus `load_rows`, `derive_outcomes`, `resolved_view`, `unresolved`, `record_outcome`, `record_adjudication`, `backstop_adjudicate`). `outcome` and `adjudication` rows share the `gate_verdicts` shard family and are told apart by `row_kind`; `gate_verdicts.validate_record` dispatches on it, so `validate.py` checks them unchanged.
+
+Decisions, each visible in the code:
+- Derivation is read-time and never stored: only the next verdict on the same (ticket, gate) is compared. A block followed by a block with different inputs gets no derived outcome (not guessed).
+- `run_dedup.py` was not reused: it groups run rows by execution identity, not verdicts by ticket and gate.
+- The backstop needs the native verdict to carry its ticket, so `attest_gate.py` takes `--ticket-id` and `implement-ticket.js` passes it. The mapping is one entry, `done_checker_static` against the native `finalize_selfcheck`; no other native gate has a backstop counterpart, so none is adjudicated automatically.
+- `backstop_adjudicate` writes at most one `false_pass` per native verdict and honours `GATE_VERDICT_NO_RECORD`.
+- CLAUDE.md "After Work" gained one bullet, added with the owner's approval (asked with the literal text on 2026-10-06); `delivery_process.md` and `schema.md` carry the detail.
+
 ## Test Summary
+`tests/tools/test_gate_ledger.py` (17 pass): block-then-pass gives `fixed_and_rerun`; block-then-same-inputs-block gives `rerun_no_change`; different inputs, other tickets and other gates give no derived outcome; a lone block is in `list --unresolved`; explicit beats derived; unknown id refused (library and CLI exit 2); invalid values refused; latest adjudication wins with both rows kept; native PASS plus backstop FAIL writes exactly one `false_pass` (a repeat writes none, hand rows and other tickets are untouched); the env guard disables it; `post_native_run_check.run` calls it once per failed check. `test_attest_gate.py` gained a check that `shAttested` passes the ticket id (14 pass there, node harness defines `ticketId`).
+
+Touched-module suites green together (338 pass): gate_ledger, gate_verdicts, attest_gate, post_native_run_check, doc_staleness wiring, done_checker_static, validate_agent_monitoring, writer single-source, native refusal, claude_adapter conformance.
 
 ## Files Changed
+- `tools/agent-monitoring/gate_ledger.py` (new), `tools/agent-monitoring/gate_verdicts.py`
+- `tools/gate_checks/post_native_run_check.py`, `tools/gate_checks/attest_gate.py`, `.claude/workflows/implement-ticket.js`
+- `tests/tools/test_gate_ledger.py` (new), `tests/tools/test_attest_gate.py`
+- `CLAUDE.md`, `docs/guides/delivery_process.md`, `docs/agent-monitoring/schema.md`
 
 ## Completion Summary
+Closed 2026-10-06. All five acceptance criteria met: `outcome` and `adjudicate` append valid rows and an unknown `gate_verdict_id` exits 2 (AC1); derivation on fixtures gives `fixed_and_rerun`, `rerun_no_change`, and an unresolved lone block (AC2); a native PASS contradicted by the backstop writes exactly one `false_pass` (AC3); the latest adjudication wins and both rows are kept (AC4); CLAUDE.md and `delivery_process.md` carry the instruction and scoped tests are green (AC5). Not done: any other automatic adjudication, and backfill of history (both out of scope). Until a native run's rows exist in a real week, the backstop path is proven on fixtures only.

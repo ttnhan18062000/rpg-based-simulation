@@ -29,6 +29,7 @@ from tools.agent_working_paths import TICKETS  # noqa: E402
 _MONITORING_DIR = str(Path(__file__).resolve().parents[1] / "agent-monitoring")
 if _MONITORING_DIR not in sys.path:
     sys.path.insert(0, _MONITORING_DIR)
+import gate_ledger  # noqa: E402
 import gate_verdicts  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
@@ -87,6 +88,9 @@ def run(ticket_id, repo=REPO, out=print, record=True):
         execution_mode="workflow",
         inputs_ref={"head_sha": gate_verdicts.head_sha(), "cmd_sha": gate_verdicts.sha256_hex(ticket_id)},
     )
+    if record:
+        for name in failed:
+            gate_ledger.backstop_adjudicate(ticket_id, name)
     return 1 if failed else 0
 
 

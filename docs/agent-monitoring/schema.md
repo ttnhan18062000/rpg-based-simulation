@@ -706,6 +706,27 @@ Opt out with `--no-record` or `GATE_VERDICT_NO_RECORD=1` (`tests/conftest.py` se
 real data root). A write failure prints one `WARNING` to stderr and never changes the CLI's stdout or exit code.
 `validate.py` checks every row against `gate_verdicts.validate_record()` and exits non-zero on an invalid one.
 
+### Outcome and adjudication rows (`TCK-20261006-GATE-VERDICT-OUTCOME-AND-ADJUDICATION`)
+
+Two more append-only row kinds share the family, keyed by `gate_verdict_id` and told apart by `row_kind`
+(a verdict row has no `row_kind`). Nothing is edited in place. Written by `tools/agent-monitoring/gate_ledger.py`;
+an unknown `gate_verdict_id` is refused (exit 2).
+
+| `row_kind` | Fields | Values |
+|---|---|---|
+| `outcome` | `ts`, `gate_verdict_id`, `outcome`, `followup_verdict_id` (nullable), `note` (nullable) | `accepted`, `fixed_and_rerun`, `rerun_no_change`, `overridden`, `stopped` |
+| `adjudication` | `ts`, `gate_verdict_id`, `adjudication`, `adjudicated_by` (a role or `owner`), `reason` | `true_block`, `false_block`, `true_pass`, `false_pass`, `unknown` |
+
+Reads (`gate_ledger.resolved_view()`): an explicit outcome beats a derived one (`outcome_source` says which). Derived,
+never stored: a blocking verdict whose next verdict on the same `(ticket_id, gate_id)` is a pass is `fixed_and_rerun`;
+followed by a block with an equal `inputs_ref` it is `rerun_no_change`; any other blocking verdict has no outcome and
+shows in `gate_ledger.py list --unresolved`. The latest adjudication for a verdict wins; the earlier rows stay.
+`true_pass` is recorded only when someone checked a pass on purpose; an unchecked pass is never assumed true.
+The one automatic adjudication: `post_native_run_check.py` fails a check whose gate a native run attested PASS for the
+same ticket (`done_checker_static` against `finalize_selfcheck`), so it writes `false_pass` with
+`adjudicated_by: orchestrator-backstop`, at most once per native verdict. For this the native run's `attest_gate.py`
+rows carry the ticket id (`--ticket-id`, passed by `implement-ticket.js`).
+
 ## Session-layer fields and files (`session_role`, `manual_actions`)
 
 `TCK-20261004-SESSION-LAYER-M6A-MINIMUM-MEASUREMENT` (plan `docs/plans/agent_infrastructure/
