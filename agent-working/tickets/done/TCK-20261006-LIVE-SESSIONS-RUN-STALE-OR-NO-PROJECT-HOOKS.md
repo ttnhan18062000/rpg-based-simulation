@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261006-LIVE-SESSIONS-RUN-STALE-OR-NO-PROJECT-HOOKS
-phase: open
+phase: done
 date: 2026-10-06
 tags: [ai, hooks, agent-monitoring, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, hooks, agent-monitoring, process-improvement]
 Live role sessions run with stale or no project hooks, so the session guard, manual-action sampler and session_role stamping never fire
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -130,9 +130,15 @@ to day: the `cc` alias install is an open owner step.
   linked above.
 
 ## Implementation Notes
+Verified against origin/main 9299891a9: `launch.py` main() order (ensure_worktree, plan_launch, exec) held; the preflight is inserted after the plan and before the exec line. New: `tools/sessions/settings_freshness.py`, `launch.preflight()`, `--allow-stale`.
+Real-directory check (see investigation.md): `/mnt/data/Working` and the main checkout report MISMATCH.
+**AC5 is open: the live probe is an owner step, not yet run.** Run it in one session started with `python3 tools/sessions/launch.py <role>` from a fresh role worktree: (a) a role-reminder prompt writes a `manual_actions.jsonl` row; (b) a run records a resolved `session_role`; (c) own-branch commit and push run without prompt and `gh pr merge --help` classifies as MERGE. Record the date and session id here; it also closes AC7 of TCK-20261006-GUARD-OWN-BRANCH-GIT-ALLOWED.
 
 ## Test Summary
+`tests/tools/test_session_settings_freshness.py` (11 new) and `tests/tools/test_session_launch.py`: 32 passed. Docs and the M7 clock edits verified by grep (no other "about 2026-11-02" in the session-layer docs).
 
 ## Files Changed
+`tools/sessions/settings_freshness.py` (new), `tools/sessions/launch.py`, `tests/tools/test_session_settings_freshness.py` (new), `docs/guides/agent_session_reset_boundaries.md`, `docs/plans/agent_infrastructure/session_layer_working_process.md`, `agent-working/tickets/todos/session-layer/INDEX.md` and epic D.
 
 ## Completion Summary
+A read-only freshness check and a launcher preflight now refuse a role session that would run without the project hooks and agent types; the guide states the launch rule and symptoms; the M7 clock starts at the first real `manual_actions.jsonl` record. The live probe (AC5) remains the owner's step.

@@ -93,9 +93,29 @@ may run `<role>-2` .. `<role>-N`. Runtime state lives in `<git-common-dir>/sessi
   age and "Awaiting", candidate transcripts) and asks for `--action resume|replace|inspect`; non-interactive
   runs exit 3 instead of choosing. Resume is always by session id, and only of the dead holder's own session
   by default; replace keeps the old transcript.
-- `--dry-run` prints the exact command and changes nothing.
+- `--dry-run` prints the exact command and changes nothing;
+- a worktree outside the repo or behind `origin/main` is refused (exit 4) before the exec line is printed, unless
+  `--allow-stale`; an unverifiable ref (no fetch yet) only warns.
 
 One-line shell alias (installing it is the owner's step): `alias cc='python3 tools/sessions/launch.py'`.
+
+### Where a session must start (the launch rule)
+
+Start a role session **through the launcher, from its worktree** (the launcher refuses a worktree whose
+`.claude/settings.json` or `.claude/agents/` differ from `origin/main`, and never execs from outside the repo).
+A session started any other way runs without the project hooks and agent types:
+
+- from the parent directory (`/mnt/data/Working`, not a git repo): no settings, agents or workflows load. Symptom:
+  `agent type 'ticket-scoper' not found` (W41 probe run; create-tickets run `wf_4a572e02-40e`, about 240k tokens lost);
+- from a stale checkout (the main checkout 57 commits behind, carrying uncommitted changes): the session-roles guard,
+  the manual-action sampler and the SessionStart hook are missing. Symptom: `session_role: unresolved` on every run
+  and no `manual_actions*.jsonl` or `role_boundary*.jsonl` file anywhere (RETRO-2026-W41: 59/59 runs unresolved).
+
+Check any directory without launching: `python3 tools/sessions/settings_freshness.py <dir>` (exit 0 match, 1 mismatch,
+2 cannot verify; it reads `origin/main` without fetching, so `git fetch origin` first). It compares content, not
+commit distance, so a branch that itself edits `.claude/settings.json` reports a difference; `launch.py --allow-stale`
+overrides that, but never a directory outside the repo. **A `/clear` resume note should include this check** (run it,
+and relaunch through the launcher if it reports a mismatch).
 
 ## Moving sessions between machines
 
