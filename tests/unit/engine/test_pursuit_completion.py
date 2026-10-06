@@ -1,4 +1,4 @@
-"""An entity-tracking combat ENTITY_MOVE ends when its live target is in attack reach, or is dead or gone.
+"""An entity-tracking ENTITY_MOVE ends when its live target is in attack reach, or is dead or gone.
 
 TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK: the tactical pass creates a pursuit
 move once, the scheduler re-runs it as movement without re-deciding (Sticky-Task Law), and nothing ended it, so an
@@ -53,6 +53,18 @@ BRACKETING = (MovementMode.REPOSITION, "BRACKETING")
 KITING = (MovementMode.RETREAT, "KITING")  # constructed: the corpus has no kiting move
 COMBAT_POSITIONING = (PURSUIT, INTERCEPT, BRACKETING, KITING)
 IN_REACH_ENDS = (PURSUIT, INTERCEPT, BRACKETING)  # kiting intends to hold range
+GUARD_OBLIGATION = (MovementMode.GUARD, "CONTRACT_OBLIGATION_GUARD")  # a group hireling guarding its leader
+GUARD_ALLY = (MovementMode.GUARD, "GUARDING_ALLY")  # guarding a wounded ally; constructed: 0 corpus moves
+GROUP = 7
+
+
+def _guard_pair(kind, *, leader_hp=100, group=GROUP, mover_group=GROUP, leader_pos=(10.0, 11.0)):
+    """A hireling on a guard move (``kind``) and its target, each in the given group (None = no group)."""
+    p = _pursuer(mode=kind[0], reason=kind[1])
+    p = replace(p, identity=replace(p.identity, group_id=mover_group))
+    t = _entity(2, leader_pos, faction=Faction.HERO_GUILD, hp=leader_hp)
+    t = replace(t, identity=replace(t.identity, group_id=group))
+    return p, t
 
 
 def _entities(pursuer, target):
@@ -121,11 +133,10 @@ class TestTrackedMoveComplete:
         t = _entity(2, (10.0, 11.0), faction=Faction.MONSTER_HORDE)
         assert REACH(p, _entities(p, t)) is False
 
-    def test_moves_that_are_not_combat_positioning_keep_their_own_lifecycle(self):
-        # guarding a leader, seeking cover, a plain retreat or a wander that carries a target_id: untouched even
-        # when the target is adjacent, dead or gone (their lifecycles are their own tickets')
+    def test_moves_that_are_not_tracked_kinds_keep_their_own_lifecycle(self):
+        # a guard with no recognised reason, seeking cover, a plain retreat or a wander that carries a target_id:
+        # untouched even when the target is adjacent, dead or gone (their lifecycles are their own tickets')
         cases = [
-            (MovementMode.GUARD, "CONTRACT_OBLIGATION_GUARD"),
             (MovementMode.GUARD, None),
             (MovementMode.REPOSITION, "SEEK_COVER"),
             (MovementMode.REPOSITION, None),
@@ -153,6 +164,44 @@ def _assert_completion(update):
     assert update.task.work_kind_set == "ENTITY_ACT"
     assert update.task.payload_set == {}  # the idle-task encoding the scheduler reclassifies back to the brain
     assert update.navigation.target_clear is True
+
+
+class TestGuardMoves:
+    """TCK-20261006-GROUP-GUARD-OBLIGATION-MOVE-OUTLIVES-ITS-LEADER: a guard move ends when its obligation is gone."""
+
+    def test_obligation_guard_ends_when_the_leader_is_dead_inactive_or_gone(self):
+        p, dead = _guard_pair(GUARD_OBLIGATION, leader_hp=0)
+        assert REACH(p, _entities(p, dead)) is True
+        p, live = _guard_pair(GUARD_OBLIGATION)
+        inactive = replace(live, lifecycle=replace(live.lifecycle, active=False))
+        assert REACH(p, _entities(p, inactive)) is True
+        assert REACH(p, {p.id: p}) is True
+
+    def test_obligation_guard_ends_when_the_mover_no_longer_shares_the_leaders_group(self):
+        p, other_group = _guard_pair(GUARD_OBLIGATION, group=GROUP + 1)
+        assert REACH(p, _entities(p, other_group)) is True
+        p, ungrouped = _guard_pair(GUARD_OBLIGATION, mover_group=None)
+        assert REACH(p, _entities(p, ungrouped)) is True
+
+    def test_obligation_guard_continues_for_a_live_leader_in_the_same_group_at_any_distance(self):
+        # the guard holds position beside the leader, so being adjacent must NOT end it (unlike pursuit)
+        for pos in ((10.0, 11.0), (10.0, 30.0)):
+            p, leader = _guard_pair(GUARD_OBLIGATION, leader_pos=pos)
+            assert REACH(p, _entities(p, leader)) is False, pos
+
+    def test_obligation_guard_does_not_end_when_the_leader_merely_stops_interacting(self):
+        # INTERACT runs have gaps of up to 11 ticks (measured); ending on a pause would make the hireling flap
+        p, leader = _guard_pair(GUARD_OBLIGATION)
+        paused = replace(leader, task=TaskComponent(work_kind="ENTITY_MOVE", payload={"target_position": (1.0, 1.0)}))
+        assert REACH(p, _entities(p, paused)) is False
+
+    def test_guarding_an_ally_ends_only_when_the_ally_is_dead_inactive_or_gone(self):
+        p, dead = _guard_pair(GUARD_ALLY, leader_hp=0)
+        assert REACH(p, _entities(p, dead)) is True
+        assert REACH(p, {p.id: p}) is True
+        for pos in ((10.0, 11.0), (10.0, 30.0)):
+            p, ally = _guard_pair(GUARD_ALLY, leader_pos=pos, group=GROUP + 1)  # group is irrelevant to this kind
+            assert REACH(p, _entities(p, ally)) is False, pos
 
 
 class TestDispatchers:
@@ -218,13 +267,36 @@ class TestDispatchers:
         results = default_simulation_worker(packet)
         _assert_completion(results[0].update)
 
-    def test_local_executor_keeps_a_guard_move_whose_target_died(self):
-        p = _pursuer(mode=MovementMode.GUARD, reason="CONTRACT_OBLIGATION_GUARD")
+    def test_local_executor_keeps_a_guard_move_with_no_recognised_reason(self):
+        p = _pursuer(mode=MovementMode.GUARD, reason=None)
         t = _entity(2, (10.0, 30.0), faction=Faction.MONSTER_HORDE, hp=0)
         item = WorkItem(owner_id=1, work_id="5:1:ENTITY_MOVE", work_class=WorkClass.CRITICAL,
                         work_kind="ENTITY_MOVE", payload=p.task.payload)
         results = LocalSequentialExecutor().execute([item], self._state(p, t), DeterministicRNG(42), PROD_SMALL)
-        assert results[0].update.task is None  # not ended: guarding keeps its own lifecycle
+        assert results[0].update.task is None  # not ended: only the recognised guard reasons are tracked
+
+    def test_local_executor_ends_a_guard_obligation_whose_leader_died(self):
+        p, leader = _guard_pair(GUARD_OBLIGATION, leader_hp=0)
+        item = WorkItem(owner_id=1, work_id="5:1:ENTITY_MOVE", work_class=WorkClass.CRITICAL,
+                        work_kind="ENTITY_MOVE", payload=p.task.payload)
+        results = LocalSequentialExecutor().execute([item], self._state(p, leader), DeterministicRNG(42), PROD_SMALL)
+        _assert_completion(results[0].update)
+
+    def test_concurrent_worker_ends_a_guard_obligation_whose_leader_died(self):
+        p, leader = _guard_pair(GUARD_OBLIGATION, leader_hp=0)
+        packet = SimpleNamespace(
+            packet_id="pk", work_id="w", work_class=WorkClass.CRITICAL, class_priority=0, local_priority=0,
+            work_kind="ENTITY_MOVE", payload=p.task.payload, subject=p, all_entities=_entities(p, leader),
+        )
+        results = default_simulation_worker(packet)
+        _assert_completion(results[0].update)
+
+    def test_local_executor_keeps_a_guard_obligation_with_a_live_leader(self):
+        p, leader = _guard_pair(GUARD_OBLIGATION)
+        item = WorkItem(owner_id=1, work_id="5:1:ENTITY_MOVE", work_class=WorkClass.CRITICAL,
+                        work_kind="ENTITY_MOVE", payload=p.task.payload)
+        results = LocalSequentialExecutor().execute([item], self._state(p, leader), DeterministicRNG(42), PROD_SMALL)
+        assert results[0].update.task is None
 
 
 def test_completion_update_names_its_entity():

@@ -44,6 +44,10 @@ A held task is an `ENTITY_ACT` whose payload carries an `action`. In `src/`, onl
 
 `probes/classify_control.py` feeds the probe's own `classify` a constructed bare update (`readiness_delta` 0.0 and -10.0), a typed failure, an effect and `None`: it returns `BARE`, `BARE`, `FAIL:UNSUPPORTED_ACTION`, `EFFECT`, `FAIL:NO_ACTION_UPDATE`. The zero bare count is therefore a measured zero, not a classifier that cannot see one.
 
+## 3b. Reproduction note: working directory
+
+`src/core/registries.py` seeds content from the cwd-relative `data/content`, so a probe's result depends on the directory it is started from. The first run of `probes/exposure_before.log` was launched through a script that inherited the harness cwd, a different worktree whose `data/content` differs (`world_modules/*.yaml`). It was re-run with the cwd set to this worktree (`probes/measure.sh` now `cd`s first; `probes/exposure_before_rerun_correct_cwd.log`): **all 14 result lines are identical** to the first run, so the numbers in section 3 stand.
+
 ## 4. Limits
 
 - Handlers the corpus never dispatches are cleared by code reading (no `src/` producer), not by measurement.

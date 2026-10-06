@@ -53,8 +53,12 @@ Law (`docs/engine/kernel.md`) the decision pass was never re-run and an entity a
 chose `ATTACK`. The same condition covers every entity-tracking combat move, keyed on (movement mode, payload `reason`): `PURSUE`, `INTERCEPT`,
 `REPOSITION` with reason `BRACKETING`, and `RETREAT` with reason `KITING`. **A dead, inactive or missing target ends all four**
 (`TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION`; measured: one `PURSUE` held 986 ticks
-by a live entity after its target died at tick 4); the in-reach end applies to all but kiting, which intends to hold range. Guard and
-cover-seeking moves also carry a `target_id` and keep their own lifecycle. The idle
+by a live entity after its target died at tick 4); the in-reach end applies to all but kiting, which intends to hold range. A group guard
+move ends under the same dead-target rule (`TCK-20261006-GROUP-GUARD-OBLIGATION-MOVE-OUTLIVES-ITS-LEADER`): `GUARD` with reason
+`CONTRACT_OBLIGATION_GUARD` (a hireling guarding its leader) also ends when the mover no longer shares the leader's group, and `GUARD`
+with reason `GUARDING_ALLY` ends only when the ally is dead, inactive or gone; neither ends on reach, and a leader merely pausing between
+interactions does not end the obligation (INTERACT runs have gaps of up to 11 ticks). Cover-seeking moves also carry a `target_id` and keep
+their own lifecycle. The idle
 entity is then decided at its next brain cadence (`strategic_intelligence`, 10 ticks); that wait is not changed here. Strategy does
 not write a navigation point for an entity-typed objective (`ObjectiveState.target_entity_id`): the redirection writers in
 `intelligence.py` and `redirection.py` leave the point unset and tactics resolve the live position.

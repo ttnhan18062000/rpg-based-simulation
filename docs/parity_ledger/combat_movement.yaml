@@ -4570,12 +4570,13 @@
     RETREAT with reason KITING) ends when its target entity is dead, inactive or gone;
     pursuit, intercept and bracketing also end when the live target is in attack reach
     (kiting holds range). Both ENTITY_MOVE dispatchers return the task to the idle
-    encoding and clear the navigation target. Guard and cover-seeking moves keep their
-    own lifecycle.'
+    encoding and clear the navigation target. Cover-seeking moves and a guard move
+    with no recognised reason keep their own lifecycle; the two recognised guard moves
+    are COMB-332.'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/engine/candidate_selector.py (tracked_move_complete, _combat_positioning_kind,
+  v2_evidence: 'src/engine/candidate_selector.py (tracked_move_complete, _tracked_move_kind,
     tracked_move_completion_update), src/engine/executor.py and src/engine/worker_logic.py
     (ENTITY_MOVE branches). Real corpus (Kernel.tick_once(), 4 worlds x 2 runs, legacy
     vs fixed arms, all pairs matched): one PURSUE held 986 ticks after its target
@@ -4589,3 +4590,28 @@
     PURSUE unchanged-ness rests on construction and unit pins: corpus per-move identity
     is lost once an entity is freed. KITING is covered by a constructed test only
     (0 corpus moves).'
+- id: COMB-332
+  text: 'TCK-20261006-GROUP-GUARD-OBLIGATION-MOVE-OUTLIVES-ITS-LEADER: a group guard
+    ENTITY_MOVE (GUARD with reason CONTRACT_OBLIGATION_GUARD, a hireling guarding
+    its leader, or GUARDING_ALLY) ends when its target entity is dead, inactive or
+    gone; a CONTRACT_OBLIGATION_GUARD also ends when the mover is ungrouped or no
+    longer shares the leader''s group. Neither ends on reach, and a leader merely
+    pausing between interactions does not end it (INTERACT runs have gaps of up to
+    11 ticks). Both ENTITY_MOVE dispatchers return the task to the idle encoding and
+    clear the navigation target.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/engine/candidate_selector.py (tracked_move_complete, _tracked_move_kind,
+    _target_in_attack_reach), src/engine/executor.py and src/engine/worker_logic.py
+    (ENTITY_MOVE branches). Real corpus (Kernel.tick_once(), 4 worlds x 2 runs, legacy
+    vs after arms): legacy arm has one CONTRACT_OBLIGATION_GUARD move (urban_political,
+    1004 ticks, mover already dead); after arm has 0 guard moves.'
+  proof_type: regression
+  test_path: tests/unit/engine/test_pursuit_completion.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.71.
+  support_boundary: 'The corpus cannot show the live harm: the one legacy instance
+    had a dead mover (0 live-mover ticks with a dead leader, 3 with the group gone),
+    and freeing entities diverges trajectories so no per-move before and after exists.
+    The defect is structural (arriving does not end a move) and is pinned by construction
+    and unit tests. GUARDING_ALLY has 0 corpus moves (constructed test only).'

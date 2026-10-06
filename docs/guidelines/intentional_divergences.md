@@ -2700,10 +2700,32 @@ The following legacy behaviors have been intentionally omitted or retired.
   first count, 10 of 21 target-carrying moves, counted task records of dead movers and is not the live harm.)
 - **New Behavior**: `MovementCandidateSelector.tracked_move_complete` / `tracked_move_completion_update`, used by both `ENTITY_MOVE`
   dispatchers, end `PURSUE`, `INTERCEPT`, `REPOSITION`+`BRACKETING` and `RETREAT`+`KITING` moves when the target entity is dead, inactive
-  or gone; pursuit, intercept and bracketing also end when the live target is in attack reach (kiting holds range). Guard and
-  cover-seeking moves are unchanged.
+  or gone; pursuit, intercept and bracketing also end when the live target is in attack reach (kiting holds range). Cover-seeking moves
+  and a guard move with no recognised reason are unchanged; the two recognised guard moves are 2.71.
 - **Not behavior-neutral; measured**: legacy vs fixed arms, 4 worlds x 2 runs, all pairs matched. Per-move identity for `PURSUE` cannot be
   compared on the corpus once an entity is freed (trajectories diverge); "unchanged" there rests on construction and the unit pins.
 - **Rationale**: **Bug Fix** (a sticky task with no completion condition), with **Unified** (one helper for four move kinds).
 - **Verification**: `tests/unit/engine/test_pursuit_completion.py` (21; with the dead-target condition disabled exactly 6 fail, with the
   extra modes disabled exactly 5 fail).
+
+### 2.71 A Group Guard Move Ends When Its Target Is Dead, Inactive or Gone, and a Guard Obligation Also Ends When the Mover Leaves the Leader's Group (TCK-20261006-GROUP-GUARD-OBLIGATION-MOVE-OUTLIVES-ITS-LEADER)
+
+- **Legacy Behavior**: a `GUARD` move created by `tactical.py` (a hireling guarding its leader, reason `CONTRACT_OBLIGATION_GUARD`, or
+  guarding a wounded ally, reason `GUARDING_ALLY`) had no completion condition. The leader's liveness and group were checked when the guard
+  was decided only, and arriving does not end a move (the movement phase just stops moving), so the entity stood on a guard move for a
+  leader that had died or a group it was no longer in, never reaching the decision pass.
+- **Observed**: legacy arm, 4 worlds x 2 runs (pairs matched): one `CONTRACT_OBLIGATION_GUARD` move, `urban_political`, held 1004 ticks
+  (leader dead at tick 1003), but its mover was already dead (a corpse's stale task), so **0 live-mover ticks were observed with a dead
+  leader** and 3 with the group gone. The earlier "16 live ticks in two worlds" is not reproduced by this probe. The corpus therefore cannot
+  show the live harm; the defect is structural (nothing ends the move) and is pinned by construction and unit tests.
+- **New Behavior**: `MovementCandidateSelector.tracked_move_complete` (the helper of 2.70) tracks two more kinds, keyed on `GUARD` + reason:
+  `CONTRACT_OBLIGATION_GUARD` ends when the leader is dead, inactive or gone, or the mover is ungrouped or in another group;
+  `GUARDING_ALLY` ends only when the ally is dead, inactive or gone. Neither ends on reach. **Decision recorded:** a leader merely
+  pausing between interactions does not end the obligation, because INTERACT runs have gaps of up to 11 ticks (measured) and ending on a
+  pause would make the hireling flap. Cover-seeking and a guard with no recognised reason are unchanged.
+- **Not behavior-neutral; measured**: after arm, 4 worlds x 2 runs: 0 guard moves in every run, against 1 in `urban_political` on the
+  legacy arm. A per-move before and after is not available: freeing entities diverges the trajectories, so the single legacy instance does
+  not recur.
+- **Rationale**: **Bug Fix** (a sticky task with no completion condition), with **Unified** (the same helper as 2.70).
+- **Verification**: `tests/unit/engine/test_pursuit_completion.py` (29; with guard tracking disabled exactly 5 fail, with the group
+  condition disabled exactly 1 fails).

@@ -76,37 +76,44 @@ class MovementCandidateSelector:
 
     @staticmethod
     def tracked_move_complete(entity: "EntityState", entities: Mapping[int, "EntityState"]) -> bool:
-        """True when ``entity`` is on an entity-tracking combat move that has done its job or lost its target.
+        """True when ``entity`` is on an entity-tracking move that has done its job or lost its target.
 
-        An entity-tracking combat move is created by the tactical pass once and re-scheduled as movement
-        every tick without re-entering the decision (docs/engine/kernel.md, the Sticky-Task Law), so it
-        needs a completion condition of its own. Two things end it, keyed on the target ENTITY's current
-        state (``payload["target_id"]``), never on the navigation destination, which is a snapshot:
+        An entity-tracking move is created by the tactical pass once and re-scheduled as movement every tick
+        without re-entering the decision (docs/engine/kernel.md, the Sticky-Task Law), and arriving does not end
+        it (the movement phase just stops moving), so it needs a completion condition of its own. Keyed on the
+        target ENTITY's current state (``payload["target_id"]``), never on the navigation destination, which is a
+        snapshot:
 
-        * the live target is already within the entity's attack reach, so the entity can choose ATTACK
-          (TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK) -- for pursuit,
-          intercept and bracketing, not kiting, which intends to hold range;
         * the target is dead, inactive or gone, so there is nothing left to track: left in place the move
           outlived its target by up to ~2000 ticks (measured, 10 of 21 target-carrying moves,
-          TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION).
+          TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION);
+        * combat positioning only (pursuit, intercept, bracketing, not kiting, which intends to hold range): the
+          live target is already within the entity's attack reach, so the entity can choose ATTACK
+          (TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK);
+        * a group guard-obligation move only: the mover no longer shares the leader's group, so the obligation that
+          created the move is gone (TCK-20261006-GROUP-GUARD-OBLIGATION-MOVE-OUTLIVES-ITS-LEADER). A leader merely
+          pausing between interactions does not end it: INTERACT runs have gaps of up to 11 ticks, so that would flap.
 
-        Which moves qualify is decided by ``_combat_positioning_kind``: pursuit, intercept, bracketing and
-        kiting. Other moves also carry a ``target_id`` (guarding a leader, seeking cover) and keep their own
-        lifecycle. Reach mirrors the distance part of ``LegalityServiceV2.verify_attack_legality`` (Manhattan,
-        melee needs distance 1) without its weather multiplier; legality still arbitrates the actual attack
-        when the brain re-decides.
+        Which moves qualify is decided by ``_tracked_move_kind``. Other moves also carry a ``target_id`` (seeking
+        cover) and keep their own lifecycle. Reach mirrors the distance part of
+        ``LegalityServiceV2.verify_attack_legality`` (Manhattan, melee needs distance 1) without its weather
+        multiplier; legality still arbitrates the actual attack when the brain re-decides.
         """
-        kind = MovementCandidateSelector._combat_positioning_kind(entity)
-        if kind is None:
-            return False
+        kind = MovementCandidateSelector._tracked_move_kind(entity)
         tracked_id = entity.task.payload.get("target_id")
-        if tracked_id is None:
+        if kind is None or tracked_id is None:
             return False
         target = entities.get(tracked_id)
         if target is None or not target.lifecycle.active or not target.combat.alive:
             return True
-        if kind == "kiting":
+        if kind == "guard_obligation":
+            return entity.identity.group_id is None or entity.identity.group_id != target.identity.group_id
+        if kind in ("kiting", "guard_ally"):
             return False
+        return MovementCandidateSelector._target_in_attack_reach(entity, target)
+
+    @staticmethod
+    def _target_in_attack_reach(entity: "EntityState", target: "EntityState") -> bool:
         ex, ey = entity.navigation.position
         tx, ty = target.navigation.position
         dist = abs(ex - tx) + abs(ey - ty)
@@ -116,13 +123,14 @@ class MovementCandidateSelector:
         return not (reach <= 1.5 and dist > 1)
 
     @staticmethod
-    def _combat_positioning_kind(entity: "EntityState") -> Optional[str]:
-        """The combat-positioning kind of ``entity``'s current move, or None when it is not one.
+    def _tracked_move_kind(entity: "EntityState") -> Optional[str]:
+        """The entity-tracking kind of ``entity``'s current move, or None when it is not one.
 
         Keyed on (movement mode, payload reason) because the tactical pass encodes bracketing as
-        ``REPOSITION`` + reason ``BRACKETING`` and kiting as ``RETREAT`` + reason ``KITING``: the mode alone
-        also covers cover-seeking (``REPOSITION``) and plain retreats (``RETREAT``), which must keep their
-        own lifecycle."""
+        ``REPOSITION`` + reason ``BRACKETING``, kiting as ``RETREAT`` + reason ``KITING``, the group guard
+        obligation as ``GUARD`` + reason ``CONTRACT_OBLIGATION_GUARD`` and guarding a wounded ally as ``GUARD`` +
+        reason ``GUARDING_ALLY``: the mode alone also covers cover-seeking (``REPOSITION``) and plain retreats
+        (``RETREAT``), which must keep their own lifecycle."""
         mode = entity.navigation.movement_mode
         reason = entity.task.payload.get("reason")
         if mode == MovementMode.PURSUE:
@@ -133,6 +141,10 @@ class MovementCandidateSelector:
             return "bracketing"
         if mode == MovementMode.RETREAT and reason == "KITING":
             return "kiting"
+        if mode == MovementMode.GUARD and reason == "CONTRACT_OBLIGATION_GUARD":
+            return "guard_obligation"
+        if mode == MovementMode.GUARD and reason == "GUARDING_ALLY":
+            return "guard_ally"
         return None
 
     @staticmethod
