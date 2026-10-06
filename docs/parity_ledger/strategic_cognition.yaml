@@ -4388,3 +4388,28 @@
   proof_type: regression
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.65.
   support_boundary: null
+- id: STRAT-276
+  text: 'TCK-20261005-SOCIAL-CONTRACT-OBJECTIVE-TARGETS-A-MOVING-COUNTERPARTY-AS-A-FIXED-POINT:
+    SocialContractGoalScorer ignores a contract the holder itself sourced (its objective
+    would target the holder''s own position; the cooperation domain, the only production
+    producer, creates its contracts that way), and a project that serves a contract
+    (proj_contract_<id>_t<tick>) ends when its contract is no longer ACTIVE: FULFILLED
+    completes it, any other status or a missing contract abandons it. One shared predicate
+    (objective_outcome) is used by evaluate_strategic_intent and the strategic work
+    queue. The typed target_entity_id is not used.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/ai/goals/social_contract_scorer.py (_is_active_with_a_counterparty),
+    src/systems/strategic_systems/entity_target_objective.py (contract_project_id,
+    contract_id_of_project, contract_objective_outcome, objective_outcome), src/systems/strategic_systems/intelligence.py
+    and work_queue.py (call sites). Corpus (Kernel.tick_once(), 4 worlds x 2000 ticks,
+    run twice identical): before, 2 contract projects, both self-targeted, 16 of 40
+    project-ticks active after the contract was FULFILLED; after, 0 projects.'
+  proof_type: regression
+  test_path: tests/unit/strategic/test_contract_objective.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.72.
+  support_boundary: The corpus measure after the change is 0 because the self-targeted
+    projects no longer form; termination is exercised only by constructed cases, and
+    the other holder (the recruit) has no production producer. 195 scorer wins versus
+    2 materialized projects was not investigated.

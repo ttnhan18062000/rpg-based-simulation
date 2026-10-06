@@ -90,7 +90,7 @@ from src.ai.score_modifiers import ScoreModifierSystem
 from src.domains.adventure.mapper import RouteToProjectMapper
 from src.systems.party import PartyCoordinationSystem
 from src.systems.strategic_systems.detour import DetourSuggestionSystem
-from src.systems.strategic_systems.entity_target_objective import close_entity_target_project
+from src.systems.strategic_systems.entity_target_objective import close_entity_target_project, contract_project_id
 from src.systems.strategic_systems.work_queue import StrategicWorkQueue
 from src.core.dirty import get_dirty_set
 from src.systems.strategic_systems.belief import BeliefCycleSystem
@@ -1663,7 +1663,7 @@ class StrategicIntelligenceSystem:
                     status=ObjectiveStatus.ACTIVE,
                 )
                 candidate_proj = ProjectState(
-                    id=f"proj_contract_{contract_id}_t{current_tick}",
+                    id=contract_project_id(contract_id, current_tick),
                     kind=proj_kind,
                     status=ProjectStatus.ACTIVE,
                     objectives=[obj],

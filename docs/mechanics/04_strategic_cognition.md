@@ -724,6 +724,8 @@ materialization branch for a winning `SOCIAL_CONTRACT` candidate (`intelligence.
 `elif best_candidate.kind == GoalKind.SOCIAL_CONTRACT:` branch) commits `ProjectState.score` from
 `metadata["raw_score"]`, never from `best_candidate.utility`.
 
+A winning `SOCIAL_CONTRACT` candidate is held to two further rules (`TCK-20261005-SOCIAL-CONTRACT-OBJECTIVE-TARGETS-A-MOVING-COUNTERPARTY-AS-A-FIXED-POINT`). **Whose contract it is:** the scorer ignores a contract the holder itself sourced, because the objective targets `contract.source_id` and for such a contract that is the holder's own position. The cooperation domain (`domains/cooperation/services.py`, REQUEST_HELP and HIRE_SUPPORT) is the only production producer and creates its contracts that way, so none of them materializes an objective (the corpus previously produced two, both self-targeted). **When it ends:** a project that serves a contract (`proj_contract_<contract id>_t<tick>`) ends when its contract is no longer `ACTIVE`: `FULFILLED` completes it; any other status, or the contract gone from the entity, abandons it (`entity_target_objective.contract_objective_outcome`, applied by `evaluate_strategic_intent` and scheduled by the strategic work queue through the shared `objective_outcome`).
+
 The same constant has a fourth consumer as of `TCK-20260811-REGION-STABILIZATION-GOAL-SCORER`:
 `RegionStabilizationGoalScorer` normalizes `urgency * _ADVENTURE_ROUTE_SCORE_MAX` (itself
 recalibrated from the pre-migration `interpret_regional_danger()`'s `urgency * 100`, which was only
