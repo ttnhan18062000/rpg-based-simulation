@@ -124,6 +124,9 @@ _EPISODE_TICKS = 70
 _CAMPAIGN_TICKET = "TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-BECAUSE-NO-DELIBERATE-ATTACK-ONLY-OPPORTUNITY-ATTACKS"
 _SHARE_TICKET = "TCK-20261006-CAMPAIGN-EPISODE-COOPERATION-SHARE-ABOVE-HALF-UNDER-A-PINNED-NORMAL-GOVERNOR"
 _OFFENSIVE_ACTIONS = ("ATTACK", "AOE_ATTACK", "SKILL")
+# Copied from TacticalDecisionSystem.evaluate_entity_intent's neighbour scan (tactical.py); pinned by test_perception_scan_constants_match_tactical.
+_PERCEPTION_RADIUS = 10.0
+_MAX_SALIENT_TARGETS = 5
 
 
 class _PinnedNormalGovernor(ResourceGovernor):
@@ -164,7 +167,9 @@ def _hostiles_perceived(state, entity, neighbors):
     from src.entities.identity_resolver import EntityIdentityResolver, IdentityResolutionError
 
     if neighbors is None:
-        neighbors = SensoryFilter.filter_saliency(entity, SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0), max_targets=5)
+        neighbors = SensoryFilter.filter_saliency(
+            entity, SimulationDomainLogic.get_neighbor_view(state, entity, radius=_PERCEPTION_RADIUS), max_targets=_MAX_SALIENT_TARGETS
+        )
     resolver, gate, semantics = EntityIdentityResolver(), get_perception_gate(), get_faction_semantics_service()
     try:
         src_faction = resolver.resolve(entity).faction_id
@@ -279,8 +284,9 @@ def test_real_campaign_episode_has_no_hard_law_violation(episode):
 @pytest.mark.slow
 @pytest.mark.xfail(
     strict=True,
-    reason=f"{_SHARE_TICKET}: cooperation_event is 56% of the stream (0.404 at 24920f912, 0.563 at 4311e7fc5, 0.5629 under the "
-           f"NORMAL pin, 0.5828 under the DEGRADED pin); cause not isolated; threshold unchanged",
+    reason=f"{_SHARE_TICKET}: as measured on 0c89bd390 (seed 42, 70 ticks): cooperation_event is 56% of the stream (0.404 at "
+           f"24920f912, 0.563 unpinned, 0.5629 under the NORMAL pin, 0.5828 under the DEGRADED pin); cause not isolated; "
+           f"threshold unchanged",
 )
 def test_real_campaign_episode_event_mix_is_not_dominated_by_cooperation(episode):
     """A real, spread-out episode should not be dominated by cooperation_event (co-located entities inflate it to ~79%)."""
@@ -293,9 +299,9 @@ def test_real_campaign_episode_event_mix_is_not_dominated_by_cooperation(episode
 @pytest.mark.slow
 @pytest.mark.xfail(
     strict=True,
-    reason=f"{_CAMPAIGN_TICKET}: 0 deliberate attacks among 250 decisions; 11 perceived a hostile (10 of 11 "
-           f"SAFETY_PRESSURE_RETREAT at full HP, 1 pursued), none in reach; 70 ticks, seed 42. Not the attack fix's "
-           f"acceptance signal: an XPASS is a bonus",
+    reason=f"{_CAMPAIGN_TICKET}: as measured on 0c89bd390 (seed 42, 70 ticks): 0 deliberate attacks among 250 decisions; "
+           f"11 perceived a hostile (10 of 11 SAFETY_PRESSURE_RETREAT at full HP, 1 pursued), none in reach. Not the "
+           f"attack fix's acceptance signal: an XPASS is a bonus",
 )
 def test_real_campaign_episode_makes_deliberate_attacks(episode):
     """>= 3 deliberate attacks attempted (decisions that set an offensive ENTITY_ACT), not combat_initiated: the latter was
@@ -374,3 +380,22 @@ def test_tactical_has_exactly_one_skill_writer():
                 for k, v in zip(node.keys, node.values))
     ]
     assert len(writers) == 1, f"tactical.py writes a SKILL action in {len(writers)} places; review them for offensiveness"
+
+
+def test_perception_scan_constants_match_tactical():
+    """_hostiles_perceived copies the decision's neighbour radius and saliency cap; if tactical.py changes them, K would silently
+    measure a different scan than the one the decision reads."""
+    source = (Path(__file__).resolve().parents[3] / "src" / "engine" / "tactical.py").read_text()
+    decision = next(
+        n for n in ast.walk(ast.parse(source)) if isinstance(n, ast.FunctionDef) and n.name == "evaluate_entity_intent"
+    )
+    found = {}
+    for call in ast.walk(decision):
+        if isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute) and call.func.attr in ("get_neighbor_view", "filter_saliency"):
+            for kw in call.keywords:
+                if kw.arg in ("radius", "max_targets") and isinstance(kw.value, ast.Constant):
+                    found[(call.func.attr, kw.arg)] = kw.value.value
+    assert found == {
+        ("get_neighbor_view", "radius"): _PERCEPTION_RADIUS,
+        ("filter_saliency", "max_targets"): _MAX_SALIENT_TARGETS,
+    }, f"tactical.py's neighbour scan changed: {found}"
