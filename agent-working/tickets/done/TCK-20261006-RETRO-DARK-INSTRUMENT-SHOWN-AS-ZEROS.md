@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261006-RETRO-DARK-INSTRUMENT-SHOWN-AS-ZEROS
-phase: open
+phase: done
 date: 2026-10-06
 tags: [agent-monitoring, retro]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, retro]
 Retro Session-Layer section prints a table of zeros when its instrument has never recorded anything
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -75,9 +75,13 @@ list in both cases. `render()` (:53) then prints the zero table.
 - None.
 
 ## Implementation Notes
+Verified locations against origin/main 9299891a9 (load_family :22, render :53 held). `render()` takes optional `manual_total`/`boundary_total` (records in any week; None keeps the old output); `generate_retro._session_layer_section` passes them. The manual and boundary blocks moved into helpers (`_manual_lines`, `_dark`) so `render` did not grow.
 
 ## Test Summary
+`tests/tools/test_session_layer_measures.py`: 43 passed (4 new: never-recorded, nothing-in-period, uncounted totals, all-unresolved vs mixed). `python -m codebase.health check` in a scratch venv: 0 new, 0 worse. AC3 verified by generating W41 here (not committed, since RETRO-2026-W41.md lives on branch agent-working-retro-w41): both families print "Instrument not running" and the all-unresolved line renders. Regenerate the committed W41 without --force after both branches merge.
 
 ## Files Changed
+`tools/agent-monitoring/session_layer_report.py`, `tools/agent-monitoring/generate_retro.py`, `tests/tools/test_session_layer_measures.py`.
 
 ## Completion Summary
+A family with no records in any week now renders an "Instrument not running" line instead of a zero table; a family with records only outside the period keeps its zeros plus an "instrument active; N records outside" note; an all-unresolved role table says role binding was not active.

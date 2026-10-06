@@ -228,6 +228,32 @@ def test_section_renders_zeros_unresolved_and_unknown():
     assert "edit_outside_owns: 1" in text and "unknown" in text and "never zero" in text
 
 
+def test_never_recorded_family_renders_the_dark_line_and_no_zero_table():
+    text = slr.render([], [], [], None, manual_total=0, boundary_total=0)
+    assert text.count("_Instrument not running: no manual_actions records exist in any week.") == 1
+    assert "_Instrument not running: no role_boundary records exist in any week." in text
+    assert "| role reminder |" not in text and "Total: 0" not in text and "None in this period." not in text
+
+
+def test_nothing_in_period_keeps_the_zero_table_and_says_the_instrument_is_active():
+    text = slr.render([], [], [], None, manual_total=7, boundary_total=2)
+    assert "| role reminder | 0 | 0 |" in text and "Total: 0." in text
+    assert "(instrument active; 7 records outside this period)" in text
+    assert "(instrument active; 2 records outside this period)" in text
+    assert "Instrument not running" not in text
+
+
+def test_uncounted_totals_keep_the_old_output():
+    text = slr.render([], [], [])
+    assert "| role reminder | 0 | 0 |" in text and "instrument" not in text.lower().replace("instrument.", "")
+
+
+def test_all_unresolved_runs_say_role_binding_was_not_active_and_a_mixed_set_does_not():
+    assert "role binding was not active" in slr.render([], [{}, {"session_role": "unresolved"}], [])
+    assert "role binding was not active" not in slr.render([], [{}, {"session_role": "rpg-implementer"}], [])
+    assert "role binding was not active" not in slr.render([], [], [])
+
+
 def test_load_family_and_period_filter(tmp_path):
     (tmp_path / "2026-W41").mkdir()
     (tmp_path / "2026-W41" / "manual_actions.jsonl").write_text(
