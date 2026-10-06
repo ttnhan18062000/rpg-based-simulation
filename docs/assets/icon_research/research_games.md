@@ -1,3 +1,12 @@
+---
+status: active
+layer: architecture
+authority: P2
+audience: agent
+date: 2026-10-06
+tags: [architecture, documentation, hud]
+---
+
 # Visual language and icon systems in comparable games: research for a 16px observer-sim icon set
 
 Research date: 2026-10-06. Every factual claim has a source URL. Anything I could not confirm from a source is marked **UNVERIFIED**. Pixel sizes for commercial games often come only from modding docs or fan wikis, so treat them as "authoring size" rather than "guaranteed on-screen size".

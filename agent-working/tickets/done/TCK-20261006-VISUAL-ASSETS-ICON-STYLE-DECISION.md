@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-VISUAL-ASSETS-ICON-STYLE-DECISION
-phase: open
+phase: done
 date: 2026-10-06
 tags: [architecture, documentation, hud]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation, hud]
 Icon style decision: the research in the repo, ADR D20 and an icon style guide
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -62,7 +62,7 @@ Record the decisions and their evidence before anything is drawn, so later ticke
 - docs/architecture/visual_asset_foundation_adr.md, docs/assets/pixel_art_technique.md
 
 ## Related Stored Artifacts
-
+- agent-working/stored_artifacts/TCK-20261006-VISUAL-ASSETS-ICON-STYLE-DECISION/ (plan, investigation, test_plan)
 
 ## Related Code Areas
 - docs/ only
@@ -71,13 +71,16 @@ Record the decisions and their evidence before anything is drawn, so later ticke
 - The tier ladder's exact pip/frame/star split is the planner's proposal from the research; the user confirmed the direction, and child 5's art is reviewed against it.
 
 ## Implementation Notes
-
+- Research moved with `git mv`-equivalent into `docs/assets/icon_research/` (frontmatter added; one path note added to the synthesis; UNVERIFIED mark counts equal the originals: 7, 9, 5, 1).
+- D20 added to the ADR with the user's decisions as given; the tier ladder and the rule thresholds are explicitly not part of the row.
+- Style guide fixes sizes and margins and leaves glyph/plate layering to child 2; the tier ladder follows the ticket and notes the research's different proposal.
 
 ## Test Summary
-
+- `tools/validate_frontmatter.py`: research, guide, artifacts, ticket clean.
+- `pytest tests/docs tests/static`: 134 passed, 2 skipped, 1 xfailed.
 
 ## Files Changed
-
+- docs/assets/icon_research/*.md (4, moved), docs/assets/icon_style_guide.md, docs/architecture/visual_asset_foundation_adr.md, ticket and stored artifacts.
 
 ## Completion Summary
-
+Research committed under docs/assets/icon_research/, ADR D20 and docs/assets/icon_style_guide.md written, no art/key/palette/code. Open for the planner: glyph/plate layering (child 2) and the ladder split (child 5 review).

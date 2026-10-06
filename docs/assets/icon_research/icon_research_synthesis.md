@@ -1,6 +1,15 @@
+---
+status: active
+layer: architecture
+authority: P2
+audience: agent
+date: 2026-10-06
+tags: [architecture, documentation, hud]
+---
+
 # Icon set: research synthesis (asset-planner, 2026-10-06)
 
-Inputs: research_games.md, research_icon_craft.md, research_packs_palettes.md (same folder; every claim
+Inputs: research_games.md, research_icon_craft.md, research_packs_palettes.md (same folder, `docs/assets/icon_research/`; every claim
 sourced there). This file is the planner's reading of them plus repo facts.
 
 ## What needs icons (repo facts)

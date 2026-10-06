@@ -1,3 +1,12 @@
+---
+status: active
+layer: architecture
+authority: P2
+audience: agent
+date: 2026-10-06
+tags: [architecture, documentation, hud]
+---
+
 # The Craft of Small Pixel-Art Icons: Research Report
 
 Prepared 2026-10-06 for the RPG simulation's icon set (16x16 terrain map, React web UI, drawn in Aseprite through the pixel-art MCP tools).

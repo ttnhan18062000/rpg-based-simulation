@@ -1,3 +1,12 @@
+---
+status: active
+layer: architecture
+authority: P2
+audience: agent
+date: 2026-10-06
+tags: [architecture, documentation, hud]
+---
+
 # Fantasy pixel-art icon packs, palettes, and licensing: research notes
 
 Date: 2026-10-06. Web research only; nothing was downloaded. Each claim cites the page it came from. **UNVERIFIED** marks anything I could not confirm on a primary page. This is not legal advice.
