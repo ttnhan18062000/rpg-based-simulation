@@ -23,6 +23,16 @@ HANDOVER_DIR = Path(".claude/handover")
 TRANSIT_SOURCES = ("startup", "resume", "clear")
 
 
+def _main_handover_dir() -> Path:
+    """The main checkout's handover dir (notes are gitignored, so a worktree cwd sees none); cwd-relative without git."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        from handover_home import handover_dir
+        return handover_dir()
+    except Exception:
+        return HANDOVER_DIR
+
+
 def _first_line_title(path: Path) -> str:
     try:
         with open(path, "r", encoding="utf-8", errors="replace") as f:
@@ -83,7 +93,7 @@ def main() -> int:
 
     parts = []
     if source == "clear":
-        parts.append(build_additional_context(HANDOVER_DIR))
+        parts.append(build_additional_context(_main_handover_dir()))
     parts.append(build_transit_notice(Path("agent-working/handover-transit")))
     context = "\n".join(p for p in parts if p)
     if not context:
