@@ -79,10 +79,10 @@ returns `allow`. Prompts are therefore still decided by the static lists in `.cl
 Owner confirmed the literal diff through AskUserQuestion on 2026-10-06 ("Apply as shown"): `Bash(gh pr create *)` added to allow; the four force-push patterns removed from ask. Kept on ask: gh pr merge, push --delete, gh api DELETE, git worktree remove, rm in agent-monitoring, Workflow; kept deny: gh pr merge --admin. Verified against origin/main 9299891a9 (`guard.py` DENY/ASK at :61).
 
 ## Test Summary
-`tests/tools/test_session_guard.py`: 133 passed (5 new: four force-push-to-main forms ask, settings.json parse/allow/ask contents). Own-branch force-push no-ask was already covered by test_own_branch_actions_are_allowed_with_or_without_a_lease.
+`tests/tools/test_session_guard.py`: 133 passed (5 new: four force-push-to-main forms ask, settings.json parse/allow/ask contents). Own-branch force-push no-ask was already covered by test_own_branch_actions_are_allowed_with_or_without_a_lease. Correction: the first closure missed `tests/tools/test_settings_permission_rules.py`, which pinned the removed force-push ask rules and failed; it now asserts no static ask rule for force-push (the guard test covers the default branch). Found when running every test that reads settings.json (381 passed, 1 skipped).
 
 ## Files Changed
-`.claude/settings.json`, `tests/tools/test_session_guard.py`.
+`.claude/settings.json`, `tests/tools/test_session_guard.py`, `tests/tools/test_settings_permission_rules.py`.
 
 ## Completion Summary
 Own-branch `gh pr create` and force-push no longer prompt from the static lists; force-push to the default branch is still asked by the guard (tested). The relaxed lists load together with the guard hook, but only in sessions that load the project settings (see TCK-20261006-LIVE-SESSIONS-RUN-STALE-OR-NO-PROJECT-HOOKS).
