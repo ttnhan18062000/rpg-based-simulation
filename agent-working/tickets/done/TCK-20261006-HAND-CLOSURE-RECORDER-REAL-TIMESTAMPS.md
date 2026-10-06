@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261006-HAND-CLOSURE-RECORDER-REAL-TIMESTAMPS
-phase: open
+phase: done
 date: 2026-10-06
 tags: [observability, agent-monitoring, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [observability, agent-monitoring, process-improvement]
 The hand-closure recorder writes real start and end times with a provenance field, and null rather than 0 when there is no evidence
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -78,13 +78,14 @@ Today `build_records` in `record_hand_orchestrated_closure.py` sets `now` once (
 - The exact field names and vocabulary come from the design child. The names used here are working names.
 
 ## Implementation Notes
+Implemented from the design child's `design.md`: new `hand_closure_time.py`, stamping in `record_hand_orchestrated_closure.py`, optional-field validation in `record_run.py`/`record_events.py`, schema.md rows. `MIN_CLAIMED_ROWS = 3`; `--end-ts` alone bounds the derivation. Decision beyond the design: a declared span that is negative degrades to `unknown`, so a null duration never carries a `declared` label.
 Hand-filed by agent-working-design (interim planner), 2026-10-06.
 
 ## Test Summary
-(Open.)
+`tests/tools/test_hand_closure_time.py` 25 passed; sweep over monitoring/record/retro tests 1,303 passed, 1 xfailed.
 
 ## Files Changed
-(Open.)
+`tools/agent-monitoring/hand_closure_time.py` (new), `record_hand_orchestrated_closure.py`, `record_run.py`, `record_events.py`, `docs/agent-monitoring/schema.md`, `tests/tools/test_hand_closure_time.py` (new).
 
 ## Completion Summary
-(Open.)
+Hand closures now record the closing session, the source of their start (declared, tool_activity or unknown) and a null duration when there is no evidence, instead of a 0 that reads as a measurement.

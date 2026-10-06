@@ -26,9 +26,11 @@ Usage:
 Each event object only needs `phase`/`status`/`summary` (plus an optional per-event `ts`, `agent`
 override) -- `run_id`, `execution_id`, `provider`, `ticket_id`, and `seq` (1-indexed, in array
 order) are filled in automatically and shared across the whole batch, matching a single real
-`Workflow` run's own shape. `--start-ts`/`--end-ts` default to "now" (matching this project's own
-existing hand-orchestrated `runs.jsonl` precedent of using an identical start/end timestamp when
-real elapsed wall-clock time wasn't tracked) but accept explicit ISO-8601 values when known.
+`Workflow` run's own shape. `--start-ts`/`--end-ts` accept explicit ISO-8601 values when known
+(`duration_source: "declared"`). Without `--start-ts` the start is derived from the closing session's own
+`tools.jsonl` rows (`duration_source: "tool_activity"`, see `hand_closure_time.py`); with no evidence the run records
+`duration_source: "unknown"`, `start_ts == end_ts` and `duration_s: null`, never a 0 that reads as a measurement
+(TCK-20261006-HAND-CLOSURE-RECORDER-REAL-TIMESTAMPS). Runs and events also carry the closing `session_id`.
 
 `tool_call_count`/`cost_proxy_score` are only ever added when real `tools.jsonl` rows are found
 for a given (run_id, seq) -- a hand-orchestrating session never has a live per-phase sidecar
@@ -80,6 +82,7 @@ from vocabulary import (  # noqa: E402
     CANONICAL_TIERS, WORKFLOW_AGENT_PREFIXES, WORKFLOW_AGENTS, infer_workflow, is_known_agent,
 )
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
+import hand_closure_time  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import append_working_log_row  # noqa: E402
@@ -188,12 +191,15 @@ def build_records(
     workflow: str,
     provider: str,
     default_agent: str,
+    now: str | None = None,
+    session_id: str | None = None,
+    resolution: "hand_closure_time.Resolution | None" = None,
 ) -> tuple[dict, list[dict]]:
     """Expands a minimal `events` list (phase/status/summary per entry) into a full run record
     plus a full event-record batch, both matching record_run.py's/record_events.py's own REQUIRED
     field sets exactly -- so the two modules' own `validate_record()` accepts the output unchanged.
     """
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = now or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     execution_id = f"{provider}-{ticket_id}-{int(time.time() * 1000)}"
 
     run_record = {
@@ -201,13 +207,18 @@ def build_records(
         "execution_id": execution_id,
         "provider": provider,
         "ticket_id": ticket_id,
-        "start_ts": start_ts or now,
-        "end_ts": end_ts or now,
+        "start_ts": resolution.start_ts if resolution else start_ts or now,
+        "end_ts": resolution.end_ts if resolution else end_ts or now,
         "workflow": workflow,
         "tier": tier,
         "final_status": final_status,
         "agent_count": len(events),
         "execution_mode": "hand",
+        # TCK-20261006-HAND-CLOSURE-RECORDER-REAL-TIMESTAMPS: provenance of start/end (declared | tool_activity | unknown)
+        # and the closing session; absent on rows that predate the fields
+        **({"duration_source": resolution.duration_source} if resolution else {}),
+        **({"session_id": session_id} if resolution else {}),
+        **({"claim_peers": resolution.claim_peers} if resolution and resolution.claim_peers is not None else {}),
     }
 
     event_records = [
@@ -217,6 +228,7 @@ def build_records(
             "provider": provider,
             "ticket_id": ticket_id,
             "seq": i,
+            **({"session_id": session_id} if resolution else {}),
             "phase": e["phase"],
             "agent": e.get("agent", default_agent),
             "status": e["status"],
@@ -405,9 +417,13 @@ def main() -> None:
         )
         sys.exit(1)
 
+    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    resolution = hand_closure_time.resolve_for_session(
+        now, args.start_ts, args.end_ts, os.environ.get("CLAUDE_CODE_SESSION_ID") or None, AGENT_MONITORING / "data")
     run_record, event_records = build_records(
         args.ticket_id, args.tier, args.final_status, events,
         args.start_ts, args.end_ts, args.workflow, args.provider, args.agent,
+        now=now, session_id=os.environ.get("CLAUDE_CODE_SESSION_ID") or None, resolution=resolution,
     )
 
     run_errors = record_run.validate_record(run_record)
@@ -428,7 +444,11 @@ def main() -> None:
     for record in event_records:
         record_events.warn_vocabulary_drift(record)
 
-    run_record["duration_s"] = record_run.compute_duration_s(run_record)
+    run_record["duration_s"] = (
+        None if run_record["duration_source"] == hand_closure_time.UNKNOWN else record_run.compute_duration_s(run_record))
+    if run_record["duration_s"] is None:  # unknown, or an inverted declared span: never a duration, never 0
+        run_record["duration_source"] = hand_closure_time.UNKNOWN
+        run_record.pop("claim_peers", None)
 
     tool_stats = record_events.compute_tool_stats(event_records, omit_when_unattributed=True)
     for i, record in enumerate(event_records):
