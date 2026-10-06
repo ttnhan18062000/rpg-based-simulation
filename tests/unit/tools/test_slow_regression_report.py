@@ -3,6 +3,7 @@
 Proves the mechanism reports a seeded failure: JUnit fixtures go in, a fake client records what would
 have been posted to GitHub."""
 
+import subprocess
 from pathlib import Path
 
 from tools.test_architecture import slow_regression_report as srr
@@ -136,7 +137,7 @@ def test_junit_failure_error_and_strict_xpass_are_red_but_skip_xfail_and_pass_ar
         ("c", "t_fail", "fail"), ("c", "t_error", "error"), ("c", "t_xpass", "xpass"),
         ("c", "t_skip", "skip"), ("c", "t_ok", "pass"),
     ])
-    failing, seen = srr.parse_junit_dir(tmp_path)
+    failing, seen, _measured = srr.parse_junit_dir(tmp_path)
     assert sorted(failing) == ["c::t_error", "c::t_fail", "c::t_xpass"]
     assert seen == {"slow tests"}
     assert set(failing.values()) == {"slow tests"}
@@ -146,7 +147,7 @@ def test_per_invocation_corpus_files_map_to_one_step(tmp_path):
     _junit(tmp_path / "corpus_1.xml", [("w", "a", "fail")])
     _junit(tmp_path / "corpus_2.xml", [("w", "b", "pass")])
     _junit(tmp_path / "legacy_regression.xml", [("l", "c", "fail")])
-    failing, seen = srr.parse_junit_dir(tmp_path)
+    failing, seen, _measured = srr.parse_junit_dir(tmp_path)
     assert failing == {"w::a": "corpus diversity", "l::c": "legacy regression"}
     assert seen == {"corpus diversity", "legacy regression"}
 
@@ -164,7 +165,7 @@ def test_missing_step_carries_its_failures_over_and_never_closes_the_issue():
 
 def test_truncated_junit_file_counts_as_a_missing_step(tmp_path):
     (tmp_path / "slow_tests.xml").write_text("<testsuites><testsuite>", encoding="utf-8")
-    failing, seen = srr.parse_junit_dir(tmp_path)
+    failing, seen, _measured = srr.parse_junit_dir(tmp_path)
     assert failing == {} and seen == set()
 
 
@@ -177,3 +178,56 @@ def test_unreadable_state_block_refreshes_without_comments():
 def test_known_reds_file_is_loadable_and_every_entry_has_a_ticket():
     known = srr.load_known_reds(Path(srr.__file__).with_name("slow_known_reds.yaml"))
     assert known and all(e["match"] and e["ticket"].startswith("TCK-") for e in known)
+
+
+def test_expected_node_ids_map_to_junit_ids():
+    assert srr.node_to_junit_id("tests/unit/worldassembly/test_corpus_diversity.py::test_a") == (
+        "tests.unit.worldassembly.test_corpus_diversity::test_a"
+    )
+    assert srr.node_to_junit_id("tests/x/test_y.py::TestC::test_f[p-1]") == "tests.x.test_y.TestC::test_f[p-1]"
+
+
+def test_expected_anchor_without_a_result_is_neither_fixed_nor_dropped(tmp_path):
+    """3 expected anchors, 2 XMLs written; the third (red in the issue) has no result this run."""
+    mod = "tests/unit/worldassembly/test_corpus_diversity.py"
+    (tmp_path / "corpus_expected.txt").write_text(
+        "\n".join(f"{mod}::test_{n}" for n in "abc") + "\n", encoding="utf-8"
+    )
+    _junit(tmp_path / "corpus_1.xml", [("tests.unit.worldassembly.test_corpus_diversity", "test_a", "pass")])
+    _junit(tmp_path / "corpus_2.xml", [("tests.unit.worldassembly.test_corpus_diversity", "test_b", "fail")])
+    failing, seen, measured = srr.parse_junit_dir(tmp_path)
+    unmeasured = srr.load_expected_ids(tmp_path) - measured
+    assert unmeasured == {"tests.unit.worldassembly.test_corpus_diversity::test_c"}
+
+    previous = {
+        "tests.unit.worldassembly.test_corpus_diversity::test_b": "corpus diversity",
+        "tests.unit.worldassembly.test_corpus_diversity::test_c": "corpus diversity",
+    }
+    client = FakeClient(_issue_with(previous))
+    srr.run_report(client, failing, ALL_STEPS, KNOWN, unmeasured=unmeasured, **ARGS)
+    assert client.comments == []  # nothing new, nothing FIXED
+    assert _state(client) == previous  # test_c carried over, not dropped
+    assert client.closed == []
+
+
+def test_unmeasured_ids_keep_an_otherwise_empty_issue_open():
+    previous = {"w::c": "corpus diversity"}
+    client = FakeClient(_issue_with(previous))
+    srr.run_report(client, {}, ALL_STEPS, KNOWN, unmeasured={"w::c"}, **ARGS)
+    assert client.closed == [] and _state(client) == previous
+
+
+class RaisingClient(FakeClient):
+    def find_open_issue(self):
+        raise subprocess.CalledProcessError(1, ["gh"], stderr="HTTP 403: Resource not accessible by integration")
+
+
+def test_a_github_error_is_not_swallowed(tmp_path, capsys):
+    _junit(tmp_path / "slow_tests.xml", [("c", "t", "fail")])
+    code = srr.main(
+        ["--junit-dir", str(tmp_path), "--repo", "o/r", "--run-id", "1", "--sha", "a" * 40],
+        client_factory=lambda repo: RaisingClient(),
+    )
+    out = capsys.readouterr().out
+    assert code == 1
+    assert out.startswith("::error title=slow_regression_report::") and "HTTP 403" in out

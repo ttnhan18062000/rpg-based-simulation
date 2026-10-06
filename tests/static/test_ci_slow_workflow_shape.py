@@ -145,6 +145,7 @@ def test_isolated_corpus_loop_still_runs_every_id_and_keeps_its_floor() -> None:
     text = _MAKEFILE_PATH.read_text(encoding="utf-8")
     start = text.index("simq-corpus-diversity-slow-isolated: ##")
     recipe = text[start : text.index("\n\n", start)]
+    assert 'echo "$$nodeids" > reports/slow/corpus_expected.txt' in recipe  # lets the reporter spot a dead subprocess
     assert '-lt 32' in recipe and "exit 1" in recipe
     assert "for nodeid in $$nodeids" in recipe
     assert '--junitxml="reports/slow/corpus_$$n.xml"' in recipe

@@ -14,7 +14,14 @@ Rules:
   comments.
 - A step that produced no JUnit file is "missing": its previously recorded failures are carried
   over (not reported FIXED) and the issue is not closed, because an empty set would be unproven.
+- `corpus_expected.txt` (written by the Makefile loop) lists the node ids step 5 meant to run. An
+  expected id with no testcase in any corpus XML is "unmeasured" (its subprocess died before writing
+  one): its previous state is carried over, never reported FIXED, and the issue is not closed.
 - An id in the known-reds mapping that is not failing is listed as a "stale mapping" in the body.
+- A closed issue is not reopened: if the set turns red again after the issue was closed, a NEW issue is
+  created (first-run rule, no per-test comments). This is by design.
+- A GitHub error is NOT swallowed: the script prints a `::error` annotation and exits 1, so a broken
+  token or missing permission turns the report step red instead of silently dropping the alert.
 
 GitHub access goes through a small client object (`GhClient` shells out to the `gh` CLI), so the
 logic is tested with a fake client.
@@ -51,10 +58,28 @@ def step_for_file(name: str) -> Optional[str]:
     return None
 
 
-def parse_junit_dir(junit_dir: Path) -> Tuple[Dict[str, str], Set[str]]:
-    """Return ({test id: step} for every red test, steps that produced at least one file)."""
+def node_to_junit_id(nodeid: str) -> str:
+    """`a/b/test_x.py::Cls::test_f[p]` -> `a.b.test_x.Cls::test_f[p]` (pytest's JUnit classname::name)."""
+    path, _, rest = nodeid.partition("::")
+    parts = rest.split("::") if rest else []
+    module = path[:-3].replace("/", ".") if path.endswith(".py") else path.replace("/", ".")
+    if not parts:
+        return module
+    return ".".join([module, *parts[:-1]]) + "::" + parts[-1]
+
+
+def load_expected_ids(junit_dir: Path) -> Set[str]:
+    path = Path(junit_dir) / "corpus_expected.txt"
+    if not path.exists():
+        return set()
+    return {node_to_junit_id(line.strip()) for line in path.read_text(encoding="utf-8").splitlines() if "::" in line}
+
+
+def parse_junit_dir(junit_dir: Path) -> Tuple[Dict[str, str], Set[str], Set[str]]:
+    """Return ({test id: step} for every red test, steps that produced at least one file, every measured id)."""
     failing: Dict[str, str] = {}
     seen: Set[str] = set()
+    measured: Set[str] = set()
     for path in sorted(Path(junit_dir).glob("*.xml")):
         step = step_for_file(path.name)
         if step is None:
@@ -65,9 +90,10 @@ def parse_junit_dir(junit_dir: Path) -> Tuple[Dict[str, str], Set[str]]:
             continue  # a truncated file proves nothing: the step stays "missing"
         seen.add(step)
         for case in root.iter("testcase"):
+            measured.add(f"{case.get('classname', '')}::{case.get('name', '')}")
             if case.find("failure") is not None or case.find("error") is not None:
                 failing[f"{case.get('classname', '')}::{case.get('name', '')}"] = step
-    return failing, seen
+    return failing, seen, measured
 
 
 def load_known_reds(path: Optional[Path]) -> List[dict]:
@@ -138,16 +164,18 @@ def run_report(
     repo: str,
     run_id: str,
     sha: str,
+    unmeasured: Optional[Set[str]] = None,
 ) -> str:
     """Apply one run's result to the rolling issue. Returns a one-line description of what was done."""
+    unmeasured = unmeasured or set()
     issue = client.find_open_issue()
     missing = [s for s in EXPECTED_STEPS if s not in seen_steps]
     previous = parse_state(issue["body"]) if issue else None
 
-    if previous is not None and missing:
-        # Carry over what we cannot re-measure this run.
+    if previous is not None and (missing or unmeasured):
+        # Carry over what we cannot re-measure this run (a missing step, or an expected anchor with no result).
         for test_id, step in previous.items():
-            if step in missing:
+            if test_id not in failing and (step in missing or test_id in unmeasured):
                 failing = {**failing, test_id: step}
 
     if issue is None:
@@ -170,12 +198,14 @@ def run_report(
         comment_lines.append("FIXED: " + ", ".join(f"`{t}`" for t in fixed))
     if missing:
         comment_lines.append("Steps with no result this run: " + ", ".join(missing))
+    if unmeasured:
+        comment_lines.append(f"Expected tests with no result this run: {len(unmeasured)} (previous state carried over)")
     changed = bool(new or fixed)
     if changed:
         comment_lines.append(f"Run {run_id}, head `{sha}`.")
         client.comment(issue["number"], "\n".join(comment_lines))
 
-    if not failing and not missing:
+    if not failing and not missing and not unmeasured:
         client.update_issue(issue["number"], title_for(0), body)
         client.close_issue(issue["number"])
         return "failing set is empty: closed the issue"
@@ -213,7 +243,7 @@ class GhClient:
         self._gh("issue", "close", str(number), "--comment", "Failing set is empty.")
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Optional[Sequence[str]] = None, client_factory=GhClient) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--junit-dir", required=True, type=Path)
     ap.add_argument("--repo", required=True)
@@ -222,14 +252,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--known-reds", type=Path, default=None)
     args = ap.parse_args(argv)
 
-    failing, seen = parse_junit_dir(args.junit_dir)
+    failing, seen, measured = parse_junit_dir(args.junit_dir)
+    unmeasured = load_expected_ids(args.junit_dir) - measured
     known = load_known_reds(args.known_reds)
     try:
-        message = run_report(GhClient(args.repo), failing, seen, known, args.repo, args.run_id, args.sha)
+        message = run_report(
+            client_factory(args.repo), failing, seen, known, args.repo, args.run_id, args.sha, unmeasured
+        )
     except (subprocess.CalledProcessError, OSError) as exc:
-        # Reporting is informational: a GitHub failure must not turn the run's own result into a different one.
-        print(f"slow_regression_report: could not update the issue: {exc}", file=sys.stderr)
-        return 0
+        # Not swallowed: a broken token or permission must not silently drop the alert.
+        detail = getattr(exc, "stderr", None) or exc
+        print(f"::error title=slow_regression_report::could not update the issue: {detail}")
+        return 1
     print(f"slow_regression_report: {message}")
     return 0
 
