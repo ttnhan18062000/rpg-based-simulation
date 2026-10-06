@@ -58,6 +58,14 @@ live target is in attack reach, and any entity-tracking move (pursuit, intercept
 dead, inactive or gone (`docs/engine/contracts/tactical_contract.md` section 3), returning the entity to the idle task so the
 brain decides at its next cadence. Any new task kind that persists across ticks must define how it ends.
 
+**An ending task must also stop the walk in the same tick.** The completion update clears the navigation target, but
+`MovementPhase.route_movement_intent` (`src/engine/pipeline_phases/movement.py`) reads the tick-start target, so until
+`TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED` the pursuer still took one more step on
+the completion tick: it stepped orthogonally adjacent, then sidestepped off adjacency, took an opportunity attack and waited a whole
+extra brain cadence. The movement phase now skips an entity whose update carries `navigation.target_clear` with no new target.
+A held `ATTACK` that comes back `OUT_OF_RANGE` likewise ends (`docs/mechanics/02_combat_laws.md` section 7), since its non-empty payload
+would never be re-decided.
+
 **A dispatch that does nothing must say so.** A gate at the per-execution dispatch point (the action router's combat-posture
 gate) is correct, but if it returns a bare no-op the task is annotated `SUCCESS` and kept, and the scheduler re-dispatches it every
 tick until the target dies (one entity held about 851 ticks). The router instead reports a typed failure

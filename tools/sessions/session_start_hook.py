@@ -28,6 +28,7 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 for _p in (str(_REPO_ROOT), str(_REPO_ROOT / "tools" / "agent-monitoring")):
     if _p not in sys.path:
         sys.path.insert(0, _p)
+from tools.handover_home import handover_base  # noqa: E402
 
 SOURCES = ("startup", "resume", "clear", "compact")
 HANDOVER_CAP_CHARS = 8000
@@ -72,7 +73,7 @@ def find_claude_pid(environ=os.environ, proc_root: Path = Path("/proc")) -> int 
 
 
 def _handover_text(role, root: Path) -> str:
-    path = root / role.handover
+    path = handover_base(root) / role.handover
     if not path.is_file():
         return f"(no handover note yet at {role.handover}; create one at the first HARD reset boundary)"
     text = path.read_text(encoding="utf-8", errors="replace").strip()
@@ -168,7 +169,7 @@ def build_context(payload: dict, environ=os.environ, root: Path = _REPO_ROOT, st
     state_root = state_root or st.state_root(payload.get("cwd") or ".")
     context = bind(payload, environ, root, state_root, proc_root)
     if not context:
-        fallback = build_additional_context(root / HANDOVER_DIR) if payload.get("source") == "clear" else ""
+        fallback = build_additional_context(handover_base(root) / HANDOVER_DIR) if payload.get("source") == "clear" else ""
         context = "\n".join(p for p in (fallback, LAUNCH_HINT) if p)
     notice = build_transit_notice(root / "agent-working" / "handover-transit")
     return "\n".join(p for p in (context, notice) if p)

@@ -1,0 +1,9 @@
+##### before crowded_frontier 2000 42
+{'oor_max_consecutive_per_entity': 4, 'oor_streaks_ge3': 1, 'oor_open_streaks_ge3_at_end': 0, 'execute_attack.total': 32}
+##### before frontier_living_world 2000 42
+{'oor_max_consecutive_per_entity': 258, 'oor_streaks_ge3': 2, 'oor_open_streaks_ge3_at_end': 1, 'execute_attack.total': 298}
+##### after crowded_frontier 2000 42
+{'oor_max_consecutive_per_entity': 2, 'oor_streaks_ge3': 0, 'oor_open_streaks_ge3_at_end': 0, 'execute_attack.total': 55}
+##### after frontier_living_world 2000 42
+{'oor_max_consecutive_per_entity': 2, 'oor_streaks_ge3': 0, 'oor_open_streaks_ge3_at_end': 0, 'execute_attack.total': 61}
+ALL-DONE
