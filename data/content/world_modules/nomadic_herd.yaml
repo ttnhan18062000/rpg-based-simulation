@@ -21,6 +21,10 @@ regions:
     terrain: "forest"
     hazard_level: 2.0
     hazard_kind: "NATURAL_TERRAIN"
+# LOC-08 clause 1 (owner decision 13): this module orders its own regions; wolf_den wins its overlap with near_forest.
+region_precedence:
+  - winner: "wolf_den"
+    over: ["near_forest"]
 factions: ["wild_beast_pack"]
 populations: ["wolf_pack_small"]
 resources: {}

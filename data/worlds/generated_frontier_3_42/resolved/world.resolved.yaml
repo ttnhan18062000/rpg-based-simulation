@@ -25,19 +25,6 @@ regions:
     position:
     - 25
     - 25
-- id: bandit_road
-  type: road
-  bounds:
-  - 40
-  - 40
-  - 100
-  - 60
-  terrain: road
-  hazard_level: 2.0
-  hazard_kind: NATURAL_TERRAIN
-  tags:
-  - wilderness
-  places: []
 - id: goblin_camp
   type: wilderness
   bounds:
@@ -57,6 +44,19 @@ regions:
     - 110
     - 38
     creature_kind: goblin
+- id: bandit_road
+  type: road
+  bounds:
+  - 40
+  - 40
+  - 100
+  - 60
+  terrain: road
+  hazard_level: 2.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - wilderness
+  places: []
 - id: moon_cave
   type: wilderness
   bounds:
@@ -588,4 +588,3 @@ quest_definitions:
   source_module: orc_clan_territory
 validation:
   expected_min_entities: 1
-  allow_overlapping_regions: false

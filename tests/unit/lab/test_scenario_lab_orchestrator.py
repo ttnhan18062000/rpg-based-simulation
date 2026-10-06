@@ -56,8 +56,7 @@ def valid_specs():
             {"id": "node1", "resource_type": "wood", "count": 100, "region": "resource_region"}
         ],
         "validation": {
-            "expected_min_entities": 1,
-            "allow_overlapping_regions": False
+            "expected_min_entities": 1
         }
     }
     

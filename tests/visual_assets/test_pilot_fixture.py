@@ -1,4 +1,4 @@
-"""The frontend's committed copy of the pilot terrain export equals a fresh `export-runtime` of `pilot/rc-0003` (pure Python, no Aseprite).
+"""The frontend's committed copy of the pilot terrain export equals a fresh `export-runtime` of `pilot/rc-0004` (pure Python, no Aseprite).
 
 The only link between `visual_assets` and `frontend/` is this file-level copy (`TCK-20261004-VISUAL-ASSETS-M5-GAP-CLOSURE`): no import either way.
 """
@@ -14,14 +14,14 @@ from visual_assets.store.runtime_export import export_runtime
 REPO = Path(__file__).resolve().parents[2]
 COMMITTED = REPO / "frontend" / "src" / "visualAssets" / "__fixtures__" / "pilot"
 REGENERATE = (
-    "regenerate the committed pilot export: `python -m visual_assets.store export-runtime --catalog-id pilot --release-id rc-0003 --out /tmp/pilot_export`, "
+    "regenerate the committed pilot export: `python -m visual_assets.store export-runtime --catalog-id pilot --release-id rc-0004 --out /tmp/pilot_export`, "
     "then replace the files in frontend/src/visualAssets/__fixtures__/pilot/ with its content"
 )
 
 
 def test_the_committed_pilot_export_equals_a_fresh_export_of_the_release(tmp_path):
     fresh = tmp_path / "export"
-    export_runtime("pilot", "rc-0003", fresh)
+    export_runtime("pilot", "rc-0004", fresh)
     names = sorted(p.name for p in fresh.iterdir())
     committed = sorted(p.name for p in COMMITTED.iterdir())
     assert committed == names, f"the pilot fixture's files differ from a fresh export ({committed} vs {names}); {REGENERATE}"
@@ -36,7 +36,7 @@ def test_the_pilot_export_holds_the_three_declared_slots_of_terrain_forest():
     ]
     # the declared order is what the client picks over (the approved 64 x 64 spread was computed for [plain, bush, tree])
     assert manifest["details"] == [{"visual_key": "terrain.forest", "values": ["plain", "bush", "tree"], "default": "plain"}]
-    assert manifest["catalog_id"] == "pilot" and manifest["release_id"] == "rc-0003"
+    assert manifest["catalog_id"] == "pilot" and manifest["release_id"] == "rc-0004"
 
 
 def test_rc_0003_lists_exactly_the_entries_of_rc_0002_so_only_the_registry_moved():
@@ -46,3 +46,12 @@ def test_rc_0003_lists_exactly_the_entries_of_rc_0002_so_only_the_registry_moved
     old, new = (json.loads((base / f"{rc}.json").read_text()) for rc in ("rc-0002", "rc-0003"))
     assert new["entries"] == old["entries"] and len(new["entries"]) == 3
     assert new["registry_hash"] != old["registry_hash"] and new["release_id"] == "rc-0003" and new["catalog_id"] == old["catalog_id"]
+
+
+def test_rc_0004_lists_exactly_the_entries_of_rc_0003_so_only_the_registry_moved():
+    """`pilot/rc-0004` was assembled only because registering the three `border.*` mask keys changed the registry hash (`TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-CONTRACT`, D19;
+    the user approved assembling it on 2026-10-06). Same slots, artifact ids and pixel hashes as rc-0003's, so "the release content is unchanged" is a checked fact."""
+    base = REPO / "visual_assets" / "catalog" / "manifests" / "candidates" / "pilot"
+    old, new = (json.loads((base / f"{rc}.json").read_text()) for rc in ("rc-0003", "rc-0004"))
+    assert new["entries"] == old["entries"] and len(new["entries"]) == 3
+    assert new["registry_hash"] != old["registry_hash"] and new["release_id"] == "rc-0004" and new["catalog_id"] == old["catalog_id"]

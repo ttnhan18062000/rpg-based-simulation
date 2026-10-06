@@ -1,9 +1,10 @@
 # Compliance IDs: SUB-006, WORLD-023, WORLD-024, WORLD-025, WORLD-026, WORLD-027, WORLD-028, WORLD-063
 from __future__ import annotations
 from typing import List, Optional, TYPE_CHECKING, Dict
-from src.core.state import AuthoritativeState, EntityState
+from src.core.state import AuthoritativeState, EntityState, RegionState
 from src.core.updates import StateUpdate, WorldUpdate
 from src.core.enums import Domain
+from src.world.boss import world_boss_spawn_enabled
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -44,16 +45,10 @@ class CalamityService:
                 # Sort by intensity
                 target_region = max(high_intensity_regions, key=lambda r: r.calamity_intensity)
                 
-                # Spawn a boss
-                boss = generator.spawn_monster(
-                    state=state,
-                    kind="world_boss",
-                    pos=target_region.center,
-                    difficulty_tier=4
-                )
-                
+                boss_entities = CalamityService._spawn_world_boss(state, generator, target_region)
+
                 updates = updates.replace(
-                    entities_add=[boss],
+                    entities_add=boss_entities,
                     last_calamity_tick_set=state.tick
                 )
 
@@ -75,6 +70,18 @@ class CalamityService:
                     )
 
         return updates
+
+    @staticmethod
+    def _spawn_world_boss(state: AuthoritativeState, generator: EntityGenerator, target_region: RegionState) -> List[EntityState]:
+        """The calamity boss, or nothing: inert unless ENABLE_WORLD_BOSS_SPAWN is ON (owner decision 14).
+
+        The calamity trigger itself is unchanged: the caller still advances last_calamity_tick either way.
+        """
+        if not world_boss_spawn_enabled(state):
+            return []
+        return [generator.spawn_monster(
+            state=state, kind="world_boss", pos=target_region.center, difficulty_tier=4
+        )]
 
     @staticmethod
     def apply_calamity_consequences(state: AuthoritativeState, recent_deaths: List[EntityState]) -> StateUpdate:

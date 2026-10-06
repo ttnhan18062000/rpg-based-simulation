@@ -92,4 +92,3 @@ buildings: []
 quest_definitions: []
 validation:
   expected_min_entities: 1
-  allow_overlapping_regions: false

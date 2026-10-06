@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Optional, Any, Dict, List
 from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
 
-from src.worldbuilding.schema import RegionSpec, FactionSpec, PopulationSpec, QuestDefinition, InformationSourceProfileSpec, PendingInformationResponseSpec, PendingSelfModelInformationEventSpec
+from src.worldbuilding.schema import RegionPrecedenceSpec, RegionSpec, FactionSpec, PopulationSpec, QuestDefinition, InformationSourceProfileSpec, PendingInformationResponseSpec, PendingSelfModelInformationEventSpec
 
 
 class ModuleRefSpec(BaseModel):
@@ -50,6 +50,12 @@ class WorldCompositionSpec(BaseModel):
     module_refs: List[ModuleRefSpec] = Field(default_factory=list, description="Modular components making up the composition")
     modules: Optional[List[str]] = Field(None, description="Shorthand list of module IDs")
     default_perspectives: List[str] = Field(default_factory=list, description="Default perspective IDs")
+    region_precedence: List[RegionPrecedenceSpec] = Field(
+        default_factory=list,
+        description="Authored precedence for overlapping region bounds (LOC-08, owner decision 13). Each entry says "
+                    "which region wins over which; undeclared nested regions resolve contained-wins, other undeclared "
+                    "overlaps fall back to resolved declaration order. The resolved world carries the final order."
+    )
     provided_features: List[str] = Field(default_factory=list, description="Declarative feature tags this composition provides (e.g. ecology_module, trade_route, settlement). Used by ScenarioWorldFeatureValidator.")
 
     global_parameters: Dict[str, Any] = Field(default_factory=dict, description="Global configuration variables")
@@ -183,6 +189,10 @@ class NormalizedWorldComposition(BaseModel):
     catalog_refs: List[str] = Field(default_factory=list, description="Associated static catalog paths relative to data/content/")
     module_refs: List[ModuleRefSpec] = Field(default_factory=list, description="Modular components making up the composition")
     default_perspectives: List[str] = Field(default_factory=list, description="Default perspective IDs")
+    region_precedence: List[RegionPrecedenceSpec] = Field(
+        default_factory=list,
+        description="Authored precedence for overlapping region bounds (LOC-08); consumed by region_precedence.order_regions at assembly."
+    )
     provided_features: List[str] = Field(default_factory=list, description="Declarative feature tags this composition provides.")
 
     global_parameters: Dict[str, Any] = Field(default_factory=dict, description="Global configuration variables")

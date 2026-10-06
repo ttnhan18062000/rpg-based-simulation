@@ -333,15 +333,19 @@ def test_verify_reports_a_manifest_with_a_duplicate_slot_as_unreadable(tree):
 
 
 def test_the_committed_catalog_fills_each_declared_slot_of_terrain_forest_once_and_the_pilot_adoption_still_names_none():
+    from tests.visual_assets import adopted_facts as af
+
     forest = load_registry().keys["terrain.forest"]
     assert [(detail, records.slot_holders(forest, detail)) for detail in forest.detail.values] == [
         ("plain", ["terrain_forest"]), ("bush", ["terrain_forest_bush"]), ("tree", ["terrain_forest_tree"]),
     ]
     # the pilot adoption was made before the axis existed: it names no detail value and fills the default, with no re-adoption
     assert records.load_adoption("ad-caf09a15bd89d2af").detail_value is None
-    assert {a.source_asset_id: a.detail_value for a in (records.load_adoption(p.stem) for p in sorted(records.adoptions_dir().glob("*.json")))} == {
-        "terrain_forest": None, "terrain_forest_bush": "bush", "terrain_forest_tree": "tree",
-    }
+    # the owner's adoption of terrain-v1 (2026-10-05T18:17:03Z) added 22 terrain tiles (no detail axis: None) and 9 border masks, each naming its v1-v3 value
+    expected = {"terrain_forest": None, "terrain_forest_bush": "bush", "terrain_forest_tree": "tree"}
+    expected.update({source: None for source in af.TERRAIN_SOURCES})
+    expected.update({source: source.rsplit("_", 1)[1] for source in af.BORDER_SOURCES})
+    assert {a.source_asset_id: a.detail_value for a in (records.load_adoption(p.stem) for p in sorted(records.adoptions_dir().glob("*.json")))} == expected
 
 
 # ---- the client parser accepts and rejects the same manifests -----------------------------------------------------------------------
