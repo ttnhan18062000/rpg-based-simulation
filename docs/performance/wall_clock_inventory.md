@@ -21,6 +21,7 @@ per module. §6 says how the scan was checked and what it cannot see.
 
 ## 1. Summary
 
+- **Resolved 2026-10-06 (`TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`): the salience path below no longer exists.** The kernel computes and writes no `pressure_signals`, and the buy price reads no state, so the file and line references in this finding and in §3 row 6-7 and §4.1 describe the code as inventoried (commit `8fcdc4fec`), not as it is now. The generated tables are regenerated from the fixed tree.
 - **PERF-D1's revisit condition is met: there is a fourth input that reaches authoritative state.**
   `Kernel._phase_resolution` derives `compute_ratio` from the previous tick's wall-clock
   `tick_compute_ms` (`src/engine/kernel.py:666`), folds it into `global_salience` (`:667`), and writes it
@@ -71,7 +72,7 @@ per module. §6 says how the scan was checked and what it cannot see.
 
 <!-- BEGIN GENERATED: tools/perf/wall_clock_inventory.py -->
 
-Generated from commit `8fcdc4fec3d4b0d2bfc215340b54c5b93810d091` by `tools/perf/wall_clock_inventory.py`. Regenerate this block with:
+Generated from commit `ba001151635c51815c27b0909d208889fe604e55` by `tools/perf/wall_clock_inventory.py`. Regenerate this block with:
 
 ```
 python3 tools/perf/wall_clock_inventory.py --update-doc docs/performance/wall_clock_inventory.md
@@ -79,7 +80,7 @@ python3 tools/perf/wall_clock_inventory.py --format json > docs/performance/wall
 python3 tools/perf/wall_clock_inventory.py --check docs/performance/wall_clock_inventory.json
 ```
 
-Reads found: 364 (159 in modules reachable from `src.engine.kernel` through the import graph, 205 elsewhere). Modules reachable from the kernel: 420.
+Reads found: 364 (159 in modules reachable from `src.engine.kernel` through the import graph, 205 elsewhere). Modules reachable from the kernel: 423.
 
 ### G1. Reads in modules reachable from the kernel (guards are the conditions inside the enclosing function, as written)
 
@@ -94,20 +95,20 @@ Reads found: 364 (159 in modules reachable from `src.engine.kernel` through the 
 | 45 | `src/engine/kernel.py` | 246 | `Kernel.__init__` | time.perf_counter_ns | wall-clock | - | none in this function |
 | 46 | `src/engine/kernel.py` | 275 | `Kernel.__init__` | os.environ.get | environment | QUALITY_PROFILE | try; if not isinstance(_feed, BrokerQualityFeed); if _feed is not None; if obs_mode != ObservabilityMode.OFF |
 | 47 | `src/engine/kernel.py` | 395 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 48 | `src/engine/kernel.py` | 398 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 49 | `src/engine/kernel.py` | 413 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 50 | `src/engine/kernel.py` | 422 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 51 | `src/engine/kernel.py` | 431 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 52 | `src/engine/kernel.py` | 437 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 53 | `src/engine/kernel.py` | 441 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 54 | `src/engine/kernel.py` | 446 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | if target_ms > 0 and (not self._no_frame_pacing) |
-| 55 | `src/engine/kernel.py` | 450 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | if sleep_ms > 5.0; if target_ms > 0 and (not self._no_frame_pacing) |
-| 56 | `src/engine/kernel.py` | 458 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 57 | `src/engine/kernel.py` | 460 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 58 | `src/engine/kernel.py` | 620 | `Kernel._phase_resolution` | time.perf_counter_ns | wall-clock | - | if not overrun_reported and i % 10 == 0 and (not self._audit_mode) |
-| 59 | `src/engine/kernel.py` | 785 | `Kernel._phase_cleanup` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 60 | `src/engine/kernel.py` | 1255 | `Kernel.shutdown` | psutil.Process | CPU/host topology | - | try |
-| 61 | `src/engine/kernel.py` | 1284 | `Kernel.shutdown` | datetime.datetime.now | wall-clock | - | if hasattr(self, '_artifact_repo') and self._artifact_repo and self._run_id |
+| 48 | `src/engine/kernel.py` | 399 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 49 | `src/engine/kernel.py` | 414 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 50 | `src/engine/kernel.py` | 423 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 51 | `src/engine/kernel.py` | 432 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 52 | `src/engine/kernel.py` | 438 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 53 | `src/engine/kernel.py` | 442 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 54 | `src/engine/kernel.py` | 447 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | if target_ms > 0 and (not self._no_frame_pacing) |
+| 55 | `src/engine/kernel.py` | 451 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | if sleep_ms > 5.0; if target_ms > 0 and (not self._no_frame_pacing) |
+| 56 | `src/engine/kernel.py` | 459 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 57 | `src/engine/kernel.py` | 461 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 58 | `src/engine/kernel.py` | 621 | `Kernel._phase_resolution` | time.perf_counter_ns | wall-clock | - | if not overrun_reported and i % 10 == 0 and (not self._audit_mode) |
+| 59 | `src/engine/kernel.py` | 774 | `Kernel._phase_cleanup` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 60 | `src/engine/kernel.py` | 1246 | `Kernel.shutdown` | psutil.Process | CPU/host topology | - | try |
+| 61 | `src/engine/kernel.py` | 1275 | `Kernel.shutdown` | datetime.datetime.now | wall-clock | - | if hasattr(self, '_artifact_repo') and self._artifact_repo and self._run_id |
 | 62 | `src/engine/observability.py` | 47 | `SignalCollector.__init__` | psutil.Process | CPU/host topology | - | none in this function |
 | 63 | `src/engine/observability.py` | 48 | `SignalCollector.__init__` | time.perf_counter | wall-clock | - | none in this function |
 | 64 | `src/engine/observability.py` | 69 | `SignalCollector.collect_platform_signals` | psutil.Process.memory_info | memory | - | try; if tick % interval == 0 |
@@ -239,8 +240,8 @@ Reads found: 364 (159 in modules reachable from `src.engine.kernel` through the 
 | 341 | `src/simulation_quality/feed.py` | 138 | `build_feed_from_env` | os.environ.get | environment | QUALITY_CONSUMER_GROUP | if mode == 'broker' |
 | 342 | `src/simulation_quality/quality_hub.py` | 117 | `QualityHub.__init__` | os.environ.get | environment | QUALITY_SCORING_DISABLED | none in this function |
 | 343 | `src/simulation_quality/quality_report.py` | 130 | `QualityReportBuilder.build` | datetime.datetime.now | wall-clock | - | none in this function |
-| 358 | `src/worldbuilding/compiler.py` | 369 | `WorldCompiler.compile` | time.perf_counter | wall-clock | - | none in this function |
-| 359 | `src/worldbuilding/compiler.py` | 837 | `WorldCompiler.compile` | time.perf_counter | wall-clock | - | none in this function |
+| 358 | `src/worldbuilding/compiler.py` | 370 | `WorldCompiler.compile` | time.perf_counter | wall-clock | - | none in this function |
+| 359 | `src/worldbuilding/compiler.py` | 838 | `WorldCompiler.compile` | time.perf_counter | wall-clock | - | none in this function |
 | 360 | `src/worldbuilding/repository.py` | 209 | `WorldRepository._update_index_entry` | datetime.datetime.now | wall-clock | - | none in this function |
 | 361 | `src/worldbuilding/repository.py` | 281 | `WorldRepository.rebuild_index` | datetime.datetime.now | wall-clock | - | try; if yaml_file.is_file(); if path.is_dir(); if self.worlds_dir.is_dir() |
 | 362 | `src/worldbuilding/repository.py` | 297 | `WorldRepository.rebuild_index` | datetime.datetime.now | wall-clock | - | if yaml_file.is_file(); if path.is_dir(); if self.worlds_dir.is_dir() |
@@ -264,11 +265,11 @@ Reads found: 364 (159 in modules reachable from `src.engine.kernel` through the 
 | 13 | `src/certification/hardware.py` | 40 | `HardwareClassifier.get_detailed_telemetry` | psutil.virtual_memory | memory | - | none in this function |
 | 14 | `src/certification/hardware.py` | 41 | `HardwareClassifier.get_detailed_telemetry` | psutil.cpu_freq | CPU/host topology | - | none in this function |
 | 15 | `src/certification/hardware.py` | 41 | `HardwareClassifier.get_detailed_telemetry` | psutil.cpu_freq | CPU/host topology | - | if psutil.cpu_freq() (conditional expression) |
-| 16 | `src/certification/harness.py` | 75 | `CertificationHarness.run_scenario` | uuid.uuid4 | entropy | - | none in this function |
-| 17 | `src/certification/harness.py` | 76 | `CertificationHarness.run_scenario` | time.time | wall-clock | - | none in this function |
-| 18 | `src/certification/harness.py` | 84 | `CertificationHarness.run_scenario` | time.time | wall-clock | - | none in this function |
-| 19 | `src/certification/harness.py` | 111 | `CertificationHarness.run_scenario` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 20 | `src/certification/harness.py` | 130 | `CertificationHarness.run_scenario` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 16 | `src/certification/harness.py` | 74 | `CertificationHarness.run_scenario` | uuid.uuid4 | entropy | - | none in this function |
+| 17 | `src/certification/harness.py` | 75 | `CertificationHarness.run_scenario` | time.time | wall-clock | - | none in this function |
+| 18 | `src/certification/harness.py` | 83 | `CertificationHarness.run_scenario` | time.time | wall-clock | - | none in this function |
+| 19 | `src/certification/harness.py` | 110 | `CertificationHarness.run_scenario` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 20 | `src/certification/harness.py` | 129 | `CertificationHarness.run_scenario` | time.perf_counter_ns | wall-clock | - | none in this function |
 | 21 | `src/cli/entry.py` | 248 | `_run_cli` | time.time | wall-clock | - | none in this function |
 | 22 | `src/cli/entry.py` | 262 | `_run_cli` | time.time | wall-clock | - | none in this function |
 | 23 | `src/config/loader.py` | 56 | `ConfigLoader.load_profile` | os.environ (whole mapping) | environment | - | none in this function |
@@ -470,11 +471,11 @@ Reads found: 364 (159 in modules reachable from `src.engine.kernel` through the 
 
 | File | Line | Enclosing function | Call | Reachable from kernel |
 |---|---|---|---|---|
-| `src/certification/harness.py` | 146 | `CertificationHarness.run_scenario` | `kernel._replay.get_stats` | no |
-| `src/engine/kernel.py` | 522 | `Kernel._phase_init` | `self._worker_manager.get_stats` | yes |
-| `src/engine/kernel.py` | 523 | `Kernel._phase_init` | `self._replay.get_stats` | yes |
-| `src/engine/kernel.py` | 788 | `Kernel._record_runtime_signals` | `self._worker_manager.get_stats` | yes |
-| `src/engine/kernel.py` | 789 | `Kernel._record_runtime_signals` | `self._replay.get_stats` | yes |
+| `src/certification/harness.py` | 145 | `CertificationHarness.run_scenario` | `kernel._replay.get_stats` | no |
+| `src/engine/kernel.py` | 523 | `Kernel._phase_init` | `self._worker_manager.get_stats` | yes |
+| `src/engine/kernel.py` | 524 | `Kernel._phase_init` | `self._replay.get_stats` | yes |
+| `src/engine/kernel.py` | 777 | `Kernel._record_runtime_signals` | `self._worker_manager.get_stats` | yes |
+| `src/engine/kernel.py` | 778 | `Kernel._record_runtime_signals` | `self._replay.get_stats` | yes |
 | `src/engine/observability.py` | 116 | `SignalCollector.get_snapshot` | `kernel._worker_manager.get_stats` | yes |
 | `src/engine/observability.py` | 117 | `SignalCollector.get_snapshot` | `kernel._replay.get_stats` | yes |
 | `src/engine/replay_manager.py` | 117 | `ReplayManager.on_tick_end` | `self.get_stats` | yes |
@@ -533,6 +534,8 @@ that implements them. Rows 6 to 8 are not in it.
 ## 4. The fourth-input candidates
 
 ### 4.1 Wall-clock into `AuthoritativeState.pressure_signals`, read by the shop price
+
+*Closed 2026-10-06 (`TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`). The path below is kept as the finding; it was removed, not guarded.*
 
 Path, each hop read in the code named:
 

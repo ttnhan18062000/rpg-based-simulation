@@ -2378,3 +2378,20 @@
   test_path: '`tests/unit/engine/test_interaction_unknown_item_diagnostic.py`'
   divergence_note: null
   support_boundary: 'Covers the interaction call site (`can_add_items` via `InteractionSystem.enforce`) only. The other `src.core.items` consumers (equipment, shop, leveling, possession) still return None silently on an unknown id.'
+- id: TOWN-196
+  text: 'A shop buy price is the item''s base value, `max(1, int(base_value))`: it
+    carries no salience multiplier and does not vary with host timing or a pressure
+    signal, with or without `audit_mode`. The kernel derives no `global_salience`
+    and writes no `pressure_signals`.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "`src/systems/economy_systems/economy.py` (`DynamicPriceService.calculate_buy_price`),\
+    \ `src/town/shop.py` (`ShopService.buy_item`), `src/engine/kernel.py` (`Kernel._phase_resolution`:\
+    \ no pressure dict); `docs/guidelines/intentional_divergences.md` \xA72.75; `docs/mechanics/03_economic_laws.md`\
+    \ \xA74"
+  proof_type: parity
+  test_path: tests/unit/resource/test_buy_price_independent_of_host_timing.py
+  divergence_note: 'Intentional divergence 2.75 (Enforced): the previous `1 + global_salience`
+    buy-price multiplier is removed (PERF-D1 amendment A1).'
+  support_boundary: null

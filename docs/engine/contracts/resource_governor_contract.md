@@ -29,7 +29,7 @@ The Resource Governor is the engine's authoritative safety-control layer. It pro
 
 ## Pressure Signal Semantics
 - `work_debt`: Sum of the per-system integer debt counters in `AuthoritativeState.work_debt`. The design was a count of postponed authoritative items, but nothing produces debt. As of 2026-10-04 `work_debt` is never increased in production: nothing converts overflowed or dropped work into debt, `DRAIN_DEBT` only consumes debt that already exists, and `PressureInjector.inject_work_debt` has no caller, so every reader sees 0 (guard: `tests/integration/kernel/test_work_debt_stays_empty_in_production.py`). The field is scheduled for retirement (owner decision 2026-10-04; `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`, which waits for the RPG-core entry gate).
-- `tick_compute_ms`: Wall-clock time of the previous kernel loop.
+- `tick_compute_ms`: Wall-clock time of the previous kernel loop. It is a control signal and a report value only, never a gameplay input: since `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING` nothing derives `compute_ratio`, `global_salience` or a price from it, and `AuthoritativeState.pressure_signals` is no longer written by the kernel (PERF-D1 amendment A1).
 - `queue_utilization`: % of bounded buffer capacity used.
 
 ## Safety Guarantees
