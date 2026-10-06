@@ -79,6 +79,7 @@ One 8x8 badge; the letter stays as text beside it (D20; `craft §4`: grades "alr
 
 Frame complexity, pip count and brightness all increase monotonically up the ladder (`craft` checklist). Animation is
 not used in the key set; if added later it is reserved for the top tiers and stays subtle (`craft §4`, Slynyrd).
+As built (`icons-key-v1`): S, SS and SSS are a diamond with 0, 1 and 2 pip cut-outs in silver, gold and platinum, not stars, because a true 1/2/3-star badge does not fit 8x8 under the dark outline (one outlined four-point sparkle is 5x5 and three need more than 8 px); see `docs/assets/icon_key_set_review.md`.
 The research's own proposal differed in detail (E and D a plain square, C and B bevelled, A a shield; `craft §4`); the
 split above follows the ticket, and child 5's art is where it is judged.
 
@@ -88,6 +89,7 @@ split above follows the ticket, and child 5's art is where it is judged.
   chevron (`craft §5`; Darkest Dungeon uses arrow direction without colour).
 - Stack count: a 3x5 pixel-font digit, bottom-right, on a dark backplate. Duration: a drain overlay from the top or a
   turns digit at top-left. These two overlays are not drawn in the key set.
+- As built (`icons-key-v1`): the buff frame is a rounded frame with an up chevron; the debuff frame is the inverted triangle with a **solid down arrow** (2 px shaft). A first debuff drawing with a down chevron and two dots read as a smiling face and was redrawn before the owner gate (`docs/assets/icon_key_set_review.md`).
 - Dispel-type colouring (hue only) is not copied (`craft §5`, WoW).
 
 ## Map markers

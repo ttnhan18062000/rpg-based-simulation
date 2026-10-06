@@ -1,0 +1,27 @@
+import sys, json
+sys.path.insert(0, "/home/vboxuser/Work/rpg-aseprite-mcp")
+import tiers, art
+from tests.visual_assets import icon_sheet_rule as r, icon_sheet_synthetic as syn
+from tests.visual_assets.pilot_colour_vision import mean
+def run(verbose=True, extra=None):
+    icons = {}
+    for g in "e d c b a s ss sss".split():
+        rows, leg = tiers.SPR[g]; icons[g] = r.from_rows(rows, leg)
+    for n in ("frame_buff", "frame_debuff"):
+        rows, leg = tiers.SPR[n]; icons[n] = r.from_rows(rows, leg)
+    prow, pleg = art.SPR["plate"]
+    means = {k: mean(t) for k, t in syn.real_tiles().items()}
+    groups = {"tiers": syn.LADDER_CLASSES, "status": [["frame_buff"], ["frame_debuff"]]}
+    rep = r.evaluate_sheet(icons, groups, {"plate_location": r.from_rows(prow, pleg)}, means, palette=r.committed_palette(syn.icon_palette.PALETTE_FILE))
+    if verbose:
+        print(rep["result"], "I1", rep["i1"], "I2", rep["i2"], "I3", rep["i3"])
+        print("tiers", rep["groups"]["tiers"]["min_shape_px_across_classes"], rep["groups"]["tiers"]["min_dL_by_vision"])
+        print("status", rep["groups"]["status"]["min_shape_px_across_classes"], rep["groups"]["status"]["min_dL_by_vision"])
+        seen = set()
+        for f in rep["failing"]["i2"]:
+            k = (f["group"], f["a"], f["b"])
+            if k not in seen: seen.add(k); print("  I2 fail", k, f["vision"], f["dL"])
+        print("off palette", rep.get("off_palette_pixels"))
+    return rep
+if __name__ == "__main__":
+    run()

@@ -1,0 +1,228 @@
+{
+ "draft_set_hash": "sha256:29854e8b32bcd9701f5e717a2e01dce5934cc04af63d4c6e3bc156c78ce5cbbd",
+ "failing": {
+  "i1": [],
+  "i2": [],
+  "i3": []
+ },
+ "glyph_live_area": {
+  "bbox": [
+   2,
+   2,
+   13,
+   13
+  ],
+  "margin": [
+   2,
+   2,
+   2,
+   2
+  ]
+ },
+ "groups": {
+  "status": {
+   "min_dL_by_vision": {
+    "deutan": 7.663,
+    "normal": 10.563,
+    "protan": 15.237,
+    "tritan": 10.42
+   },
+   "min_shape_px_across_classes": 92,
+   "pairs": 1,
+   "size": 16
+  },
+  "tiers": {
+   "min_dL_by_vision": {
+    "deutan": 8.786,
+    "normal": 9.136,
+    "protan": 8.742,
+    "tritan": 9.297
+   },
+   "min_shape_px_across_classes": 4,
+   "pairs": 28,
+   "size": 8
+  }
+ },
+ "i1": true,
+ "i2": true,
+ "i3": true,
+ "lint": {
+  "icon.building.blacksmith": {
+   "color_budget": 12,
+   "colors": 9,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.class.warrior": {
+   "color_budget": 12,
+   "colors": 9,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.marker.enemy_camp": {
+   "color_budget": 8,
+   "colors": 6,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.plate.location": {
+   "color_budget": 8,
+   "colors": 4,
+   "findings": [
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.status.frame_buff": {
+   "color_budget": 8,
+   "colors": 4,
+   "findings": [
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.status.frame_debuff": {
+   "color_budget": 8,
+   "colors": 4,
+   "findings": [
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.tier.a": {
+   "color_budget": 8,
+   "colors": 2,
+   "findings": [
+    "mixed_outline",
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.tier.b": {
+   "color_budget": 8,
+   "colors": 2,
+   "findings": [
+    "mixed_outline",
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.tier.c": {
+   "color_budget": 8,
+   "colors": 2,
+   "findings": [
+    "mixed_outline",
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.tier.d": {
+   "color_budget": 8,
+   "colors": 2,
+   "findings": [
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.tier.e": {
+   "color_budget": 8,
+   "colors": 2,
+   "findings": [
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.tier.s": {
+   "color_budget": 8,
+   "colors": 2,
+   "findings": [
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.tier.ss": {
+   "color_budget": 8,
+   "colors": 2,
+   "findings": [
+    "mixed_outline",
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.tier.sss": {
+   "color_budget": 8,
+   "colors": 2,
+   "findings": [
+    "mixed_outline",
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  }
+ },
+ "off_palette_pixels": {},
+ "plates": {
+  "icon.plate.location": {
+   "closest_by_vision": {
+    "deutan": {
+     "dL": 18.005,
+     "rim": "#9ea4b6",
+     "tile": "terrain.snow"
+    },
+    "normal": {
+     "dL": 18.198,
+     "rim": "#9ea4b6",
+     "tile": "terrain.snow"
+    },
+    "protan": {
+     "dL": 18.48,
+     "rim": "#9ea4b6",
+     "tile": "terrain.snow"
+    },
+    "tritan": {
+     "dL": 18.181,
+     "rim": "#9ea4b6",
+     "tile": "terrain.snow"
+    }
+   },
+   "rim_colours": [
+    "#9ea4b6"
+   ]
+  }
+ },
+ "result": "PASS",
+ "rule": {
+  "i1": "silhouette pixels differing >= {8: 3, 16: 6} (by canvas side) across classes",
+  "i2": "dL* of mean colours >= 6.0 in ['normal', 'protan', 'deutan', 'tritan']",
+  "i3": "plate rim colour vs terrain tile mean, dL* >= 12.0 in ['normal', 'protan', 'deutan', 'tritan']"
+ },
+ "set_id": "icons-key-v1"
+}
