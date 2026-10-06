@@ -138,6 +138,9 @@ Until it exists, a LIVE run keeps the `verification_level = REDUCED` label (INFR
 - `test_resilience_recovery` (patches `ResourceGovernor.evaluate`): unchanged.
 - `test_long_run_stability` and `test_cert_long_run_stability` (CI skips): with a Canonical profile they could run reliably; re-evaluating the
   skips stays with `test-architecture-reviewer` (AC 9 of #379).
+- If a later step ever makes CANONICAL the default for tests (Option 2), `tests/integration/campaigns/test_catalog_entity_spawn_wiring.py` (#367) must set
+  `signal_contract=LIVE` explicitly: its pinned `NORMAL` stream needs K > 0 perceived hostiles. The same applies to any other governor-pinned test that
+  relies on the default.
 - New tests are listed in `test_plan.md`.
 
 ## 6. Order of the eventual work and size of the change
@@ -147,7 +150,17 @@ Steps (each is a commit):
    process executors; two hosts), read the dirty-set size inside `refine`, fit and freeze `WORK_MODEL_V1`, and decide the `final_integrity`
    fallback. Output: a stored artifact with the fit and its error per family. Acceptance: pooled R^2 >= 0.85 and per-family actual-to-predicted
    within 0.5 to 2.0 (the probe got 0.87 and 0.48 to 1.30), or the model is revised.
+   **Preconditions (rpg-planner review of PR #384, accepted):**
+   - Both performance defects in the RPG-core bench are merged first: `TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK`
+     (the quadratic found by #172, about 11 s per tick at 5,000 entities) and `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP`
+     (about 3.3 s per tick). Fallback if they are not merged: exclude the `cooperation` and `combat_engagement` cost buckets from the fit and say so
+     in the stored artifact.
+   - The calibration artifact records the RPG-core base commit it was measured on.
+   - Re-fit, or at least re-check the error band, after the salience fix, Lane B's spawn-faction batch and symmetric attack legality
+     (CONFLICT-03) land, because they change population and movement demand.
 2. `signal_source.py`, `work_units.py`, `PressureSignals` optional fields, `RuntimeProfile.signal_contract`; Live source is a code move. This step touches `src/engine/pipeline.py` only if step 1 found a `final_integrity` counter that has to be produced inside `refine`. `pipeline.py` is one of the four core files, so it is inside the full no-touch window anyway; the other files in this table are lifted or in the same window.
+   Step 2 rebases on the salience fix: it edits the same kernel signal-building region (`_phase_init`, about lines 530-560), and salience goes first by
+   agreement. Re-measure `kernel.py` headroom after the salience fix lands, and do not work on the two in parallel.
 3. Canonical source and the governor reading `tick_cost`; the proof tests (`test_plan.md`).
 4. Docs, parity ledger, divergence entry, `wall_clock_inventory` regeneration.
 
@@ -173,6 +186,8 @@ the governor's branches.
 
 ## 7. Risks and what this design does not decide
 - **Feedback and thrash.** Even with demand-based cost (section 2), the mode changes scan policy and budgets, which change how state evolves, which changes demand. A scenario near a threshold could oscillate. The dwell time, confidence window and recovery watermark bound it, and `test_plan.md` section 9 tests the bound; if a scenario still thrashes, the fix is in the thresholds or the watermark, not in the proxy.
+- The probe's per-family error (up to a factor of 2.7) may partly come from the quadratic cooperation defect, which grows faster than entity count; the
+  re-fit in step 1 happens after that defect is fixed, so the real error band may be smaller.
 - The reference-millisecond model is an approximation (per-family error up to a factor of 2.7 in the probe). It models overload; it does not measure it.
 - `final_integrity` may have no good proxy; the fallback is an owner-visible divergence.
 - Option 1 leaves the live server reproducible only under `audit_mode`. The Live half closes that.

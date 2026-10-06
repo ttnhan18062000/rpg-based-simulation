@@ -139,6 +139,13 @@ the design (Scope 1); whether they are implemented here or split out is the desi
   under Canonical); Q-B accepted (thresholds keep their ms meaning as reference-host ms). The Live half is a separate ticket,
   `TCK-20261006-PERF-LIVE-CONTROL-TRACE`. Design commit `8fc5e711a`; `plan.md` section 3 carries the decision line. The ticket stays INPROGRESS:
   the code waits for the full no-touch window (AC 2) and `plan.md` step 1 (calibration) comes first.
+- **rpg-planner review of PR #384, four points accepted (mirrored from `plan.md`):** (1) step 1 calibration has preconditions: the two RPG-core bench
+  defects (`TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK`, `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP`)
+  merged first, or the `cooperation` and `combat_engagement` buckets excluded from the fit; the artifact records the RPG-core base commit; re-check the
+  error band after the salience fix, Lane B's spawn-faction batch and CONFLICT-03; a risk line says the probe's x2.7 error may partly come from the
+  quadratic. (2) step 2 rebases on the salience fix (same `_phase_init` region), re-measure `kernel.py` headroom, no parallel work. (3) if Option 2 ever
+  makes CANONICAL the default for tests, `test_catalog_entity_spawn_wiring` (#367) must set `signal_contract=LIVE` explicitly, as must any other
+  governor-pinned test that relies on the default.
 
 ## Test Summary
 
