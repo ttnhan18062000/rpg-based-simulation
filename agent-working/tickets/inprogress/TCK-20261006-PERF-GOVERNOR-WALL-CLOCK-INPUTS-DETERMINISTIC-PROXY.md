@@ -4,7 +4,7 @@ layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY
-phase: open
+phase: inprogress
 date: 2026-10-06
 tags: [performance, determinism, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, engine]
 Design (then implement) the Canonical contract's deterministic proxy for the governor's wall-clock inputs: ResourceGovernor's tick_compute_ms (PERF-D1 input 1) and PhaseBudgetGovernor's per-phase costs
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -114,6 +114,7 @@ the design (Scope 1); whether they are implemented here or split out is the desi
 ## Related Stored Artifacts
 - `agent-working/stored_artifacts/TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY/` (the removed
   hash test and its 1-in-3 divergence)
+- `agent-working/staging_artifacts/TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY/` (design: investigation, plan, test_plan, probes; moves to stored when the ticket closes)
 
 ## Related Code Areas
 - `src/engine/governor.py`, `src/engine/phase_governor.py`, `src/engine/kernel.py`
@@ -127,6 +128,14 @@ the design (Scope 1); whether they are implemented here or split out is the desi
   plan as a question.
 
 ## Implementation Notes
+- **2026-10-06, design written (Scope 1, AC 1 draft):** `investigation.md` (inventory of every signal that reaches the two governors, with
+  the decision each drives, verified against the tree and `wall_clock_inventory --check`; a read-only probe), `plan.md` (a proxy for each
+  input, threshold mapping, contract selection as an OWNER QUESTION with three options and a recommendation, the Live half as a follow-up,
+  fate of the tests that drive modes, per-file size estimate) and `test_plan.md` (the Canonical hash-equality test, 10 of 10; the test that
+  varies `perf_counter_ns`). No `src/` or `tests/` file was touched. The ticket stays INPROGRESS: AC 1 needs perf-planner's approval and
+  the owner's answers, and the code waits for the full no-touch window (AC 2).
+- **Status of the questions:** owner questions are in `plan.md` section 3 (contract selection and `audit_mode`; Q-A memory and replay backlog
+  excluded under Canonical; Q-B thresholds keep their ms meaning as reference-host ms). PENDING.
 
 ## Test Summary
 
