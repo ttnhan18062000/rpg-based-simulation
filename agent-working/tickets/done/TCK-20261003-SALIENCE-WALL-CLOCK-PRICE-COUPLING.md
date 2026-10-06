@@ -85,7 +85,8 @@ The owner decided on 2026-10-03 (PERF-D1 amendment A1, `docs/architecture/perfor
 ## Test Summary
 - New `tests/unit/resource/test_buy_price_independent_of_host_timing.py` (4 tests, `audit_mode=False`, faked clock): all 4 fail on pre-fix `origin/main`, pass after.
 - `tests/unit/resource/test_economy_hardening.py` rewritten for the new price.
-- CI jobs' exact lists, locally: unit-core 1799 passed; unit-domain 1451 passed; see Completion Summary for integration/integrity/architecture and the Tools sync tests.
+- CI jobs' exact directory lists, run locally with `-m "not slow and not extra_slow"`: unit-core 1799 passed, 1 skipped; unit-domain 1451 passed, 1 skipped; unit-infra/observability 2379 passed, 1 skipped; integration plus `tests/integrity` plus `tests/architecture` 1225 passed, 7 skipped, 1 xfailed (the strict deliberate-attack xfail, untouched). Tools sync tests (`test_perf_inventories_committed_in_sync.py`, `test_wall_clock_inventory.py`, parity/registry/frontmatter subset) passed after the inventory and registry were regenerated.
+- Not run locally: the full Tools job (`tests/tools` a-z) and the slow suites; CI covers them.
 - Gates (scratch venv): code-health ratchet 0 new, 0 worse; parity-ledger schema 0 rose, 0 new; mypy baseline: no line in `kernel.py`, `economy.py` or `shop.py`. CI is the first real run.
 
 ## Files Changed
