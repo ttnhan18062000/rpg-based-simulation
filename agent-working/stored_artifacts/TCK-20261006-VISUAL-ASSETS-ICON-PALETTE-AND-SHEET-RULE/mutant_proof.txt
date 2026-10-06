@@ -1,0 +1,8 @@
+Mutants against tests/visual_assets/test_icon_sheet_rule.py (each applied to the source of icon_sheet_rule.py, tests run, source restored and diffed identical):
+A  I1 thresholds 3/6 -> 0/0 .................. caught by test_i1_identical_silhouette..., test_i1_boundary_at_the_users_threshold[8-3] and [16-6], test_buff_and_debuff_frames..., test_the_rule_constants...
+B  I2 threshold 6.0 -> 0.0 ................... caught by test_i2_boundary_between_two_greys, test_i2_a_pair_that_collapses_only_under_one_vision..., test_i1_skips_pairs_inside_one_class_but_i2_still_separates_them, test_the_mock_ladder..., constants
+C  I3 loops over normal vision only .......... FIRST RUN NOT CAUGHT (20 passed): no test planted a rim that collapses under one vision. Added test_i3_a_rim_that_collapses_only_under_one_vision_fails_there_and_only_there; rerun: caught by it alone.
+D  I3 threshold 12.0 -> 0.0 .................. caught by test_i3_a_low_contrast_plate..., test_i3_a_rim_that_collapses..., test_i3_boundary_of_the_threshold_on_one_planted_tile, constants
+E  I2 loop over normal vision only ........... caught by test_i2_a_pair_that_collapses_only_under_one_vision_fails_there_and_only_there
+F  protan dropped from rule.VISIONS (monkeypatch) .. caught by the same test as E
+Note: a first attempt at A patched the module constant after the default argument had been bound, so only the constants test failed; it was redone at the source, which is the table above.

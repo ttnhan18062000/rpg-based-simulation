@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-VISUAL-ASSETS-ICON-PALETTE-AND-SHEET-RULE
-phase: open
+phase: done
 date: 2026-10-06
 tags: [architecture, testing, hud]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing, hud]
 An icon palette from the terrain colours, and a sheet-level colour-vision and shape rule predeclared before any icon art
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -64,22 +64,28 @@ states or a buff/debuff pair differ by more than hue. As with AM5-S, the rule mu
 - docs/assets/pilot_terrain_m5_criteria.md (AM5-S), docs/assets/pixel_art_technique.md (rules 3, 11)
 
 ## Related Stored Artifacts
-
+- agent-working/stored_artifacts/TCK-20261006-VISUAL-ASSETS-ICON-PALETTE-AND-SHEET-RULE/ (plan, investigation, test_plan, baseline_measurements.txt, mutant_proof.txt)
 
 ## Related Code Areas
 - tests/visual_assets/set_colour_vision.py, tests/visual_assets/pilot_colour_vision.py, visual_assets/drawing/technique
 
 ## Assumptions / Open Questions
-- I1's pixel thresholds are guesses until measured on synthetic sprites; measure first, then ask.
+- I1's pixel thresholds are guesses until measured on synthetic sprites; measure first, then ask. Done: baselines measured, one blocking question asked, answers recorded in docs/assets/icon_criteria.md (2026-10-06).
+- Resolved by the user's answer: E and D may share a silhouette (classes in a group); I2 measures the interior mean (an 8x8 badge is more than half outline).
 
 ## Implementation Notes
-
+- Palette `visual_assets/palettes/icons-v1.json` (52 colours) is exactly `icon_palette.build_palette()` (tested): 23 terrain fills (each checked against its adopted tile, forest 2.42 off), 7 four-step ramps from terrain seeds (`make_ramp`, base_index 1), 8 accents.
+- Rule in `tests/visual_assets/icon_sheet_rule.py` (reuses `pilot_colour_vision`); thresholds are the user's answers: I1 3/6 px, I2 L* 6, I3 L* 12; E and D may share a silhouette.
+- Finding reported: the style guide's dark-outline policy cannot hold for plates (a dark rim reaches 6.0 L* against the floor tile). The guide's outline row now makes plates the exception (mid-light `plate_rim`).
+- Confirmed (planner's question): the numbers the user saw in the blocking question were already INTERIOR-mean numbers (best 8-step ladder 8.74, today's chips 0.25 to 1.6, buff vs debuff 12 to 29). The whole-sprite run (ladder about 1.4, chips 0.06 to 1.6) was measured earlier and never shown, so the user answered the measure the rule uses.
+- Mutant C (I3 over normal vision only) was not caught at first; a test was added (see mutant_proof.txt).
 
 ## Test Summary
-
+- `pytest tests/visual_assets/test_icon_sheet_rule.py`: 21 passed; whole `tests/visual_assets`, `tests/docs`, `tests/static`: 1708 passed, 2 skipped, 1 xfailed.
+- Mutants A-F caught for the right reasons (`mutant_proof.txt`).
 
 ## Files Changed
-
+- visual_assets/palettes/icons-v1.json, tests/visual_assets/{icon_palette,icon_sheet_rule,icon_sheet_synthetic,test_icon_sheet_rule}.py, docs/assets/icon_criteria.md, docs/assets/icon_style_guide.md, ticket and stored artifacts.
 
 ## Completion Summary
-
+Palette icons-v1 (52 colours, derivation in code) and the sheet rule I1-I3 committed with the user's thresholds (3/6 px, L* 6, L* 12; E and D may share a silhouette) before any icon art. Style guide amended: plates take a mid-light rim.

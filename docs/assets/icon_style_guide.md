@@ -51,9 +51,9 @@ key names are in `visual_assets/catalog/definitions/visual_keys.yaml` (`icon.pla
 ## One set of conventions
 
 - **Light** comes from the top-left, always (`craft §2`, "one light direction").
-- **Outline policy:** one full dark outline, darker than both the object and the busiest terrain behind it (`craft §2`,
-  Lospec rule; `craft §3`). Selective outlining is not used **(proposal)**: map backgrounds vary, so the outline is the
-  separation guarantee.
+- **Outline policy:** one full dark outline on glyphs and badges, darker than the object (`craft §2`, Lospec rule). Selective outlining is not used **(proposal)**.
+  **Plates are the exception:** the terrain is dark (22 of 23 tile means under L* 49), so a plate's rim is the mid-light palette colour `plate_rim` and not a dark outline; `docs/assets/icon_criteria.md` (I3) measures why.
+  The glyph's dark outline separates it from its plate.
 - **View angle, one per family** (`craft §2`, inference): buildings and map markers in 3/4 front view, items in a 3/4
   diagonal inventory pose, tab and class glyphs flat and front-on **(proposal)**.
 - **Colours:** only palette colours; at most 8 at 16 px and ideally 6 or fewer (`craft §1`, Slynyrd; `craft §2`).
