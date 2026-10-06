@@ -198,39 +198,21 @@ def test_multiply_operation_works(base_world_dict, base_scenario_dict):
     assert mutated_world.resources[0].count == 250
 
 
-def test_toggle_operation_works(base_world_dict, base_scenario_dict):
-    """Verify boolean toggle switches behave properly."""
-    world = WorldSpec(**base_world_dict)
-    scenario = ScenarioSpec(**base_scenario_dict)
+def test_toggle_operation_works():
+    """Verify boolean toggle switches behave properly.
 
-    mutation_dict = {
-        "schema_version": "mutationspec.v1",
-        "mutation_id": "test_sweep",
-        "name": "Test sweep matrix",
-        "base_world_id": "test_world",
-        "base_scenario_id": "test_scenario",
-        "mutations": [
-            {
-                "id": "toggle_bounds",
-                "target": "validation.allow_overlapping_regions",
-                "operation": "toggle"
-            }
-        ],
-        "matrix": {
-            "mode": "one_at_a_time",
-            "max_variants": 10
-        }
-    }
-    mutation_spec = MutationSpec(**mutation_dict)
+    The world spec no longer carries a boolean field (``validation.allow_overlapping_regions`` was the
+    only one and was deleted with LOC-08), so the toggle operation is exercised directly on the nested
+    dict it mutates, the same function ``MutationEngine.apply_mutations`` calls.
+    """
+    from src.lab.mutation import modify_nested_dict
 
-    engine = MutationEngine()
-    mutated_world, mutated_scenario, reports = engine.apply_mutations(world, scenario, mutation_spec)
-
-    assert len(reports) == 1
-    assert reports[0].status == "SUCCESS"
-    assert reports[0].old_value is False
-    assert reports[0].new_value is True
-    assert mutated_world.validation.allow_overlapping_regions is True
+    data = {"validation": {"some_flag": False}}
+    old, new = modify_nested_dict(data, ["validation", "some_flag"], "toggle", None)
+    assert (old, new) == (False, True)
+    assert data["validation"]["some_flag"] is True
+    old, new = modify_nested_dict(data, ["validation", "some_flag"], "toggle", False)
+    assert (old, new) == (True, False)
 
 
 def test_remove_operation_works(base_world_dict, base_scenario_dict):

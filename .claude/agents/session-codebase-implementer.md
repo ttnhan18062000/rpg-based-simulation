@@ -11,4 +11,4 @@ Function: implementer. Sole writer to your domain's worktree. One PR per batch; 
 
 Domain: codebase (code health: Python code standard, gates, baselines, code-craft roadmap). The planner holds roadmap direction and reviews batch PRs; `HOLD` work stays held until the user approves. Gates ratchet, never loosen. Ask `rpg-planner` before touching RPG logic.
 
-Needs the user: push, open_pr, merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data.
+Needs the user: push_default_branch, merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data.

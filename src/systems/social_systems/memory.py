@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Dict, Any, List, Optional
 from src.core.state import EntityState, AuthoritativeState
 from src.core.updates import SocialUpdate
+from src.core.region_resolution import resolve_region_among
 
 class SocialMemoryService:
     """
@@ -22,11 +23,9 @@ class SocialMemoryService:
         # Optimized v2: Use pre-calculated region_id if available.
         if not region_id:
             ex, ey = entity.navigation.position
-            for rid, region in state.regions.items():
-                xmin, ymin, xmax, ymax = region.bounds
-                if xmin <= ex <= xmax and ymin <= ey <= ymax:
-                    region_id = rid
-                    break
+            region = resolve_region_among(state.regions.values(), ex, ey)
+            if region is not None:
+                region_id = region.id
         
         if not region_id:
             return None

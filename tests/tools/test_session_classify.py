@@ -16,8 +16,8 @@ def _actions(command):
 
 @pytest.mark.parametrize("command,expected", [
     ("git commit -m x", {"commit"}),
-    ("git -C ../other commit -m x", {"commit"}),
     ("git push origin branch", {"push"}),
+    ("git push -u origin feature-x", {"push"}),
     ("git -c user.name=x push", {"push"}),
     ("git push --delete origin old", {"push", "delete_remote_branch"}),
     ("git push origin :old", {"push", "delete_remote_branch"}),
@@ -108,3 +108,72 @@ def test_classifier_never_raises_on_odd_input():
     for tool_input in (None, {}, {"command": None}, {"command": 5}, {"file_path": None}):
         classify(BASH, tool_input)
         classify("Edit", tool_input)
+
+
+def test_git_C_still_classifies_the_subcommand_but_is_uncertain_about_the_branch():
+    """`git -C ../other commit` acts on a repository whose branch is not the call's cwd (TCK-20261006-GUARD-OWN-
+    BRANCH-GIT-ALLOWED), so the guard must ask instead of trusting the cwd's branch."""
+    result = classify(BASH, {"command": "git -C ../other commit -m x"})
+    assert set(result.actions) == {"commit"} and result.uncertain
+
+
+@pytest.mark.parametrize("command", [
+    "git push origin main", "git push origin HEAD:main", "git push origin +x:main", "git push origin refs/heads/main",
+    "git push --all", "git push --mirror", "git push -u origin main",
+])
+def test_push_to_the_default_branch_is_push_default_branch(command):
+    result = classify(BASH, {"command": command})
+    assert {"push", "push_default_branch"} <= set(result.actions) and not result.uncertain
+
+
+@pytest.mark.parametrize("command", [
+    "git push -u origin feature-x", "git push origin HEAD:feature-x", "git push --force-with-lease origin feature-x",
+    "git push -o ci.skip origin feature-x", "git push --tags", "git push origin feature-x:other",
+])
+def test_push_to_another_branch_is_a_plain_push(command):
+    result = classify(BASH, {"command": command})
+    assert set(result.actions) == {"push"} and not result.push_implicit and not result.uncertain
+
+
+@pytest.mark.parametrize("command", ["git push", "git push origin", "git push origin HEAD", "git push --force-with-lease", "git push -u origin"])
+def test_push_without_an_explicit_target_is_flagged_for_the_guard_to_resolve(command):
+    result = classify(BASH, {"command": command})
+    assert set(result.actions) == {"push"} and result.push_implicit
+
+
+def test_default_branches_parameter_widens_what_counts_as_default():
+    assert "push_default_branch" not in classify(BASH, {"command": "git push origin trunk"}).actions
+    assert "push_default_branch" in classify(BASH, {"command": "git push origin trunk"}, ("main", "trunk")).actions
+
+
+def test_branch_switch_in_the_same_command_makes_commit_or_push_uncertain():
+    assert classify(BASH, {"command": "git checkout main && git commit -m x"}).uncertain
+    assert classify(BASH, {"command": "git switch main; git push"}).uncertain
+    assert not classify(BASH, {"command": "git checkout -b x"}).is_authority
+
+
+@pytest.mark.parametrize("command,chain", [
+    ("cd ../wt && git push", ("../wt",)),
+    ("cd a && cd b && git commit -m x", ("a", "b")),
+    ("pushd ../wt && git push", ("../wt",)),
+    ("( cd ../wt && git push )", ("../wt",)),
+    ("cd && git push", ("~",)),
+    ("cd -P ../wt && git push", ("../wt",)),
+    ("git push", ()),
+])
+def test_literal_cd_before_a_commit_or_push_is_recorded_for_the_guard_to_resolve(command, chain):
+    result = classify(BASH, {"command": command})
+    assert result.cd_chain == chain and not result.uncertain
+
+
+@pytest.mark.parametrize("command", [
+    "cd $WT && git push", "cd `pwd`/x && git push", "cd - && git push", "cd ~other && git push", "cd wt-* && git commit -m x",
+    "git commit -m x && cd ../wt && git push",  # the cd follows the commit: the commit and push ran in different places
+    "pushd && git push",
+])
+def test_cd_that_cannot_be_resolved_or_follows_the_action_is_uncertain(command):
+    assert classify(BASH, {"command": command}).uncertain
+
+
+def test_cd_alone_is_not_an_authority_class_command():
+    assert not classify(BASH, {"command": "cd ../wt && ls"}).is_authority

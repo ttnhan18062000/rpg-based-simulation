@@ -10,7 +10,7 @@ from src.worldbuilding.recipe import (
     ResourceRecipeSpec,
     BuildingRecipeSpec,
 )
-from src.worldbuilding.schema import QuestDefinition
+from src.worldbuilding.schema import QuestDefinition, RegionPrecedenceSpec
 
 
 class ModuleParameterSpec(BaseModel):
@@ -66,6 +66,10 @@ class WorldModuleSpec(BaseModel):
 
     # Partial structural contributions
     regions: List[RegionRecipeSpec] = Field(default_factory=list, description="Associated region layout recipes")
+    region_precedence: List[RegionPrecedenceSpec] = Field(
+        default_factory=list,
+        description="Authored precedence among THIS module's own regions where their bounds overlap (LOC-08 clause 1). Cross-module order is declared in the composition."
+    )
     population_recipes: List[PopulationRecipeSpec] = Field(default_factory=list, description="Entity spawning recipes")
     resource_recipes: List[ResourceRecipeSpec] = Field(default_factory=list, description="Resource node recipes")
     building_recipes: List[BuildingRecipeSpec] = Field(default_factory=list, description="Building construct recipes")

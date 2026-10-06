@@ -120,6 +120,14 @@ Scope.
 recommendation of `world-rule-catalog-design`. Single run per anchor — **flakiness was not
 re-tested here**, so class (c) remains open for every one of the 13.
 
+## Diagnosis Correction — 2026-10-05 (test-architecture-reviewer)
+
+**The "ungated" diagnosis above is wrong: these anchors are executed on every `main` push and nightly, and nobody reads the result.** Step 5 of the `Slow regression` job in `.github/workflows/test.yml` is `make simq-corpus-diversity-slow-isolated`. It runs exactly the `tests/unit/worldassembly/test_corpus_diversity.py -m slow` anchors as isolated subprocesses, on push to `main`, on the nightly schedule and on manual dispatch. Over the 40 `main` push runs of `Tests` up to run 37278526329 (REST jobs API, 2026-10-05), step 5 **failed in 19** and was cancelled in 17 (a newer push to `main` evicted the running job via the workflow's `cancel-in-progress`), with 4 runs having no step-5 outcome. The nightlies show the same pattern. The red never reaches anyone, because the job runs only after merge and the owner has parked its step-5 cause as expected state (`TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2`, 2026-09-16, reconfirmed 2026-10-05).
+
+**Relationship to `TCK-20261005-SLOW-REGRESSION-GATE-SKIPS-ITS-ONLY-TEST-STEP-ON-MAIN`: sibling, not child, and neither supersedes the other.** This ticket owns the anchors' red (step 5). The gate ticket restores steps 6–7, which have been skipped after every step-5 failure, and makes each step's outcome visible in the job summary. When the gate ticket lands, this ticket's "reporting path" requirement is partly met by that summary line for step 5. The summary is visibility, not a notification. Re-read the Scope against it before closing.
+
+**Ownership:** this ticket has had no holder since 2026-10-01. It is in the testing domain; whether testing adopts its remaining scope is an open owner decision, recorded as of 2026-10-05.
+
 ## Scope
 - Re-run the 16 sampled anchors on current `origin/main` and record which fail, with counts and
   conditions (seed, flags, world, tick budget). Establish the real number rather than inheriting 11.

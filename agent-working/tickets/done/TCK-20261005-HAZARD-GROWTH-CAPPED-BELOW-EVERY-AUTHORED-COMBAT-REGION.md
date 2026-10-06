@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-HAZARD-GROWTH-CAPPED-BELOW-EVERY-AUTHORED-COMBAT-REGION
-phase: open
+phase: done
 date: 2026-10-05
 tags: [world, investigation]
 ---
@@ -16,7 +16,7 @@ Trauma-driven `hazard_level` growth is capped at `1.0` while authored hazard val
 so the growth path is dead for exactly the regions that accumulate trauma
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -90,17 +90,14 @@ arithmetic one.
 - Balance of the `0.01` step or the `50.0` threshold. `50.0` is a Bible-stated law; do not adjust it.
 
 ## Acceptance Criteria
-- [ ] `hazard_level`'s intended domain is stated with a Bible or schema citation, not inferred from
-      the code.
-- [ ] Scope 2's counts are reported, including zero. "No corpus region is authored below 1.0" would
-      mean the growth path is dead everywhere and is a complete answer.
-- [ ] Every `hazard_level` reader is listed with the range it assumes.
-- [ ] The fix direction is recorded with its rationale; if it is a content change, the affected worlds
-      are named and the measurement consequence stated.
-- [ ] A test asserts growth actually occurs for a region in the intended domain with trauma above
-      threshold — the current code has no such test, which is why the dead branch survived.
-- [ ] `docs/parity_ledger/world_dynamics.yaml` updated; determinism sweep green with any moved hash
-      explained.
+- [x] `hazard_level`'s intended domain is stated: open-ended (owner decision 12), with the citations in Implementation Notes (generator contract, ratified divergence record, schema without bounds) against the Bible's one "0.0 to 1.0" sentence, which is amended.
+- [x] Scope 2's counts are reported (25 of 104 below 1.0; none exceed trauma 50) and **re-taken under the unified region lookup**: `hometown` and `trading_hometown` stay at or below 12 (credited-death upper bound) against a threshold of 50, a margin of at least 38. Two worlds only.
+- [x] Every `hazard_level` reader is listed with the range it assumes (Implementation Notes).
+- [x] The fix direction is recorded with its rationale: DEV-013.
+- [x] A test asserts growth occurs for a region in the intended domain with trauma above threshold, including authored values at and above 1.0 (`tests/unit/engine/test_hazard_growth_open_ended.py`); it fails on the old code for those values.
+- [x] `docs/parity_ledger/world_dynamics.yaml` has WORLD-127. Determinism sweep: see Test Summary.
+- [ ] **NOT DONE, deliberately: the danger-urgency reader (`events.py:49-51`) still saturates at hazard 1.0.** Its output is an urgency in [0, 1]; any other mapping is a new curve with no stated reason. Open question for the owner, not changed here.
+- [ ] **NOT ESTABLISHED: any consequence for deaths.** On the one deterministic world, death count and cause mix are identical with and without the cap over 10,000 ticks. The 70% `HAZARD` share of deaths on `frontier_living_world` is not reproducible run to run, so no comparison on it is claimed.
 
 ## Related Tickets
 - `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` — produced this finding. **Not blocked by
@@ -119,8 +116,7 @@ arithmetic one.
 - `docs/parity_ledger/world_dynamics.yaml`
 
 ## Related Stored Artifacts
-_(`rpg-implementer-2`'s 10000-tick trauma probe is in its scratchpad and **not committed** — ask for it
-before re-writing one)_
+- `agent-working/stored_artifacts/TCK-20261005-HAZARD-GROWTH-CAPPED-BELOW-EVERY-AUTHORED-COMBAT-REGION/` (`plan.md`, `investigation.md`, `test_plan.md`, `probes/`)
 
 ## Related Code Areas
 - `src/engine/world_dynamics.py:119-123` — the capped growth (`LEG-RPG-139`). **Lane B's surface** per
@@ -189,10 +185,15 @@ a factor of 2-4 in every combat region, so a content-side fix would move the dom
 the Bible and the test (Acceptance Criteria 4-6) are untouched until a direction exists. `ENV-06` does not read `hazard_level` and is not blocked by this.
 
 ## Test Summary
-_(not started)_
+New: `tests/unit/engine/test_hazard_growth_open_ended.py` (10; 6 fail on the old code, the 4 below-1.0 cases pass on both). Full CI lane set: see the closing note below.
 
 ## Files Changed
-_(not started)_
+`src/engine/world_dynamics.py` (cap removed; `HAZARD_GROWTH_STEP`, `HAZARD_GROWTH_TRAUMA_THRESHOLD`), `docs/mechanics/05_world_evolution.md`, `docs/guidelines/intentional_divergences.md` (DEV-013), `docs/parity_ledger/world_dynamics.yaml` (WORLD-127), the test file, stored artifacts and probes.
 
 ## Completion Summary
-_(not started)_
+The `min(1.0, ...)` cap is removed: hazard is open-ended (owner decision 12) and grows +0.01 per application while trauma > 50, for every authored value. **Behavioural consequence, stated plainly:** growth is unbounded and linear, so a region that stays above trauma 50 reaches hazard 34-50 within 10,000 ticks, draining hundreds of HP per tick from entities without the matching immunity. On the one deterministic world (`generated_frontier_3_42`) deaths were identical with and without the cap; `frontier_living_world` cannot support a comparison because it is **not reproducible run to run** (8 vs 10 deaths at tick 500 on identical code), cause not established, which also means that world's single-run figures elsewhere are indications, not measurements. The Scope 2 premise (no region authored below 1.0 reaches trauma 50) holds under the unified lookup with a margin of at least 38. The danger-urgency reader still saturates at 1.0 and is left for the owner. No ceiling was invented.
+
+### 2026-10-05 (final) — implemented by `rpg-implementer-2`, stacked on `region-lookup-unification`
+Direction from owner decision 12. Evidence: `investigation.md`. The ticket's own Scope 1-3 first pass above stands; the Related Stored Artifacts line that said the probe was uncommitted is superseded by the overlap ticket's committed probes.
+
+**Qualification (2026-10-05): the cause of the `frontier_living_world` non-reproducibility is now known.** `Kernel` drops work when wall-clock compute time exceeds the tick budget, and skips that guard only in `audit_mode` (`kernel.py:466-469`); these runs were not taken under `audit_mode`, so slower worlds depend on machine load. Filed as `TCK-20261005-TICK-BUDGET-THROTTLE-MAKES-NON-AUDIT-RUNS-WALL-CLOCK-DEPENDENT` (the planner's; not started here). Every `frontier_living_world` figure here (growth starting near tick 5,211/5,217, about 50 by tick 10,000, 265 vs 275 deaths, `hometown` 12 credited deaths, the 70% `HAZARD` share) is an **indication, not a reproducible value**. The `generated_frontier_3_42` pair is deterministic and stands as a value. The hazard ceiling question goes to the owner as its own decision; none was added here (no ceiling, soft cap or clamp).

@@ -59,7 +59,7 @@ class TownResolutionSystem:
         is_tax_tick = (state.tick % (cadence.town_resolution * 2) == 0)
         
         # Pre-cache faction keys for faster resource lookup
-        faction_keys = {f: f"faction_{f.name.lower()}_gold" for f in Faction}
+        faction_keys: Dict[int, str] = {f: f"faction_{f.name.lower()}_gold" for f in Faction}  # RegionState.owner_faction_id is an int
         
         # Pre-filter regions with effects
         regions_with_effects = [r for r in state.regions.values() if r.owner_faction_id is not None or r.suppression_active]
@@ -160,8 +160,8 @@ class TownResolutionSystem:
             
             # Building Maintenance
             MAINTENANCE_COST = 5.0
-            faction_maintenance: Dict[Faction, float] = {}
-            faction_buildings: Dict[Faction, List[int]] = {}
+            faction_maintenance: Dict[int, float] = {}
+            faction_buildings: Dict[int, List[int]] = {}
             
             for b_id, building in state.buildings.items():
                 if not building.functional: continue

@@ -67,3 +67,20 @@ faction_tension_overrides:
 information_source_profiles: []
 pending_information_responses: []
 pending_self_model_information_events: []
+
+# LOC-08 (owner decision 13): authored precedence where region bounds overlap; winner first. The resolved region
+# list order is the precedence order every consumer reads. Cross-module pairs are declared here, at composition
+# level, because the same bare region id names different bounds in different worlds; a module declares its own
+# internal pairs. Undeclared nested regions resolve contained-wins; other undeclared overlaps fall back to
+# resolved declaration order and are reported as advisories.
+region_precedence:
+  - winner: "bandit_road"
+    over: ["near_forest", "wolf_den"]
+  - winner: "goblin_camp"
+    over: ["bandit_road", "wolf_den"]
+  - winner: "orc_stronghold"
+    over: ["swamp_border_territory"]
+  - winner: "haunted_battlefield"
+    over: ["river_ford", "goblin_camp"]
+  - winner: "old_mine"
+    over: ["sacred_grove", "deep_forest"]
