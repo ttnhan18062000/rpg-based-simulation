@@ -26,6 +26,7 @@ def test_calamity_boss_spawn():
     )
     # FORCE_INTERVAL is 5000
     state = AuthoritativeState(
+        feature_flags={"ENABLE_WORLD_BOSS_SPAWN": "ON"},  # decision 14: boss branches are inert unless ON
         tick=5000, 
         seed=42, 
         regions={"badlands": region},
@@ -129,6 +130,7 @@ def test_boss_spawn_is_idempotent_even_if_existing_boss_left_region():
     )
 
     state = AuthoritativeState(
+        feature_flags={"ENABLE_WORLD_BOSS_SPAWN": "ON"},  # decision 14: boss branches are inert unless ON
         tick=853,
         seed=42,
         maturity=90,
@@ -173,6 +175,7 @@ def test_lair_spawn_fills_empty_lair_place_when_no_occupant_exists():
     )
 
     state = AuthoritativeState(
+        feature_flags={"ENABLE_WORLD_BOSS_SPAWN": "ON"},  # decision 14: boss branches are inert unless ON
         tick=853,
         seed=42,
         maturity=90,
@@ -247,6 +250,7 @@ def test_lair_spawn_is_idempotent_per_place_with_multiple_lairs_in_one_region():
     occupant_2 = _make_occupant(201, "lair_2")
 
     state = AuthoritativeState(
+        feature_flags={"ENABLE_WORLD_BOSS_SPAWN": "ON"},  # decision 14: boss branches are inert unless ON
         tick=853,
         seed=42,
         maturity=90,
@@ -316,6 +320,7 @@ def test_lair_spawn_does_not_double_spawn_when_one_of_two_lairs_already_occupied
     )
 
     state = AuthoritativeState(
+        feature_flags={"ENABLE_WORLD_BOSS_SPAWN": "ON"},  # decision 14: boss branches are inert unless ON
         tick=853,
         seed=42,
         maturity=90,
@@ -382,6 +387,7 @@ def test_lair_occupant_death_does_not_dissolve_or_transform_the_lair_place():
     )
 
     state = AuthoritativeState(
+        feature_flags={"ENABLE_WORLD_BOSS_SPAWN": "ON"},  # decision 14: boss branches are inert unless ON
         tick=900,
         seed=42,
         maturity=90,

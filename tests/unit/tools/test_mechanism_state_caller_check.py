@@ -251,6 +251,16 @@ def test_real_registry_findings_pinned():
         ("knowledge_model", "gated_without_flag_context"),
         ("opportunity_rumor_seeds", "gated_without_flag_context"),
         ("temporal_pressure", "gated_without_flag_context"),
+        # 2026-10-05 (TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-
+        # NOT-BY-FIGHTING, owner decision 14): `world_boss_spawn` was moved `done` -> `gated` because all
+        # three boss branches now spawn only when ENABLE_WORLD_BOSS_SPAWN is ON (default OFF). The tool
+        # fires `gated_without_flag_context` (low confidence) because the real caller,
+        # `src/engine/world_dynamics.py`'s `BossService.check_for_boss_spawn(...)`, has no ENABLE_* flag
+        # within 5 lines: the check is the callee's own first statement (`world_boss_spawn_enabled(state)`
+        # in `src/world/boss.py`), same shape as `temporal_pressure` above. Investigated: the gating is
+        # real, and `tests/unit/world/test_world_boss_spawn_flag.py` is the differential proof (flag OFF
+        # inert, flag ON spawns) on all three branches.
+        ("world_boss_spawn", "gated_without_flag_context"),
         ("attributes_biology", "state_with_zero_callers"),
         ("class_assignment", "state_with_zero_callers"),
         ("campaigns", "state_with_zero_callers"),

@@ -81,6 +81,7 @@ def test_boss_spawn_gate_reachable_at_lowered_thresholds():
         trauma_score=BossService.BOSS_SPAWN_TRAUMA_THRESHOLD,
     )
     state = AuthoritativeState(
+        feature_flags={"ENABLE_WORLD_BOSS_SPAWN": "ON"},  # decision 14: boss branches are inert unless ON
         tick=2000,
         seed=42,
         maturity=BossService.BOSS_SPAWN_THRESHOLD,
@@ -110,6 +111,7 @@ def test_boss_spawn_gate_still_closed_just_below_lowered_thresholds():
         trauma_score=BossService.BOSS_SPAWN_TRAUMA_THRESHOLD - 0.01,
     )
     state = AuthoritativeState(
+        feature_flags={"ENABLE_WORLD_BOSS_SPAWN": "ON"},  # decision 14: boss branches are inert unless ON
         tick=2000,
         seed=42,
         maturity=BossService.BOSS_SPAWN_THRESHOLD,
@@ -138,6 +140,7 @@ def test_lair_spawn_gate_reachable_at_lowered_thresholds_and_is_formidable():
         position=(50.0, 50.0),
     )
     state = AuthoritativeState(
+        feature_flags={"ENABLE_WORLD_BOSS_SPAWN": "ON"},  # decision 14: boss branches are inert unless ON
         tick=2000,
         seed=42,
         maturity=BossService.BOSS_SPAWN_THRESHOLD,

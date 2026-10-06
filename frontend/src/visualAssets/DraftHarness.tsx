@@ -6,6 +6,7 @@ import { CELL_SIZE } from './cell'
 import { asRuntimeSnapshot, parseDraftPreview, type DraftSnapshot } from './draftManifest'
 import { SnapshotLoader, type Decode, type View } from './loader'
 import { ManifestError } from './manifest'
+import { browserRasterize, composeBorderedCells, drawComposedCells } from './borderRender'
 import { MAP_COLUMNS, MAP_ROWS, TERRAIN_CODES, TILE_NAMES_COPY, drawDraftMap, statusOf } from './terrainDrafts'
 
 export interface DraftSource {
@@ -32,6 +33,7 @@ export function DraftHarness({ manifestText, urlFor, decode }: DraftHarnessProps
   const [source, setSource] = useState<DraftSource>({ manifestText, urlFor })
   const [pickError, setPickError] = useState<string | null>(null)
   const [showFlat, setShowFlat] = useState(true)
+  const [showBorders, setShowBorders] = useState(true)
   const { snapshot, error } = useMemo(() => tryParse(source.manifestText), [source.manifestText])
   const [loaded, setLoaded] = useState<View | null>(null)
   const draft = useRef<HTMLCanvasElement | null>(null)
@@ -57,13 +59,18 @@ export function DraftHarness({ manifestText, urlFor, decode }: DraftHarnessProps
   const settled = snapshot === null || view !== null
   const files = useMemo(() => new Map((snapshot?.entries ?? []).map((e) => [e.file, { scale: e.scale, adopted: e.adopted }] as const)), [snapshot])
 
+  const fringedCells = useMemo(() => (showBorders && view !== null ? composeBorderedCells(view, files, browserRasterize) : []), [showBorders, view, files])
+
   useEffect(() => {
     if (!settled) return
     const draftCtx = draft.current?.getContext('2d')
-    if (draftCtx) drawDraftMap(draftCtx, view, 'draft', files)
+    if (draftCtx) {
+      drawDraftMap(draftCtx, view, 'draft', files)
+      if (view !== null) drawComposedCells(draftCtx, view, files, fringedCells)
+    }
     const flatCtx = flat.current?.getContext('2d')
     if (flatCtx) drawDraftMap(flatCtx, view, 'flat', files)
-  }, [settled, view, files, showFlat])
+  }, [settled, view, files, showFlat, fringedCells])
 
   async function openFolder(files: FileList | null) {
     setPickError(null)
@@ -101,6 +108,12 @@ export function DraftHarness({ manifestText, urlFor, decode }: DraftHarnessProps
       <label>
         <input type="checkbox" checked={showFlat} onChange={(e) => setShowFlat(e.target.checked)} /> Show the plain colour fills beside the drafts
       </label>
+      <label style={{ marginLeft: 16 }}>
+        <input type="checkbox" data-testid="draft-borders" checked={showBorders} onChange={(e) => setShowBorders(e.target.checked)} /> Show terrain borders (fringes from the <code>border.*</code> masks)
+      </label>
+      <p data-testid="draft-borders-status">
+        {showBorders ? `Borders on: ${fringedCells.length} map cells carry a fringe.` : 'Borders off: every cell is one terrain with a hard edge, as before.'}
+      </p>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 8 }}>
         <section aria-label="draft map">
           <p>Draft map: every Live Map terrain code in patches; a diagonal marks a code with no draft; a small amber square marks a reference to ADOPTED art (not a draft under review).</p>
