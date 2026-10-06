@@ -146,6 +146,7 @@ const verifyAttestation = (agentOutput, { nonce, gate, expectedCmd }) => {
 // Legacy runtime: the runtime's own bash(), unchanged. Native: attested dispatch, fail closed. An unverified or
 // non-zero result throws, so a gate can never fall through its marker-absent default (several of these sites treat a
 // missing marker as "no problem"); the catch at the bottom of this file records WORKFLOW_ERROR and rethrows.
+let lastAttestedStdoutSha = null // the attestation the next pushStaticGate row links to (gate_verdicts inputs_ref.stdout_sha)
 const shAttested = async (cmd, gate, label) => {
   if (legacyBash) return legacyBash(cmd)
   const nonce = String(args.execution_id_suffix)
@@ -157,6 +158,7 @@ const shAttested = async (cmd, gate, label) => {
   const out = result && typeof result.stdout === 'string' ? result.stdout : ''
   const verdict = verifyAttestation(out, { nonce, gate, expectedCmd: cmd })
   if (!verdict.ok) throw new Error(`GATE_ATTESTATION_FAILED ${gate}: ${verdict.reason}`)
+  try { lastAttestedStdoutSha = JSON.parse(/ATTEST:(\{.*\})/.exec(out)[1]).stdout_sha || null } catch (e) { lastAttestedStdoutSha = null }
   return out.split('\n').filter((line) => !line.startsWith('ATTEST:')).join('\n')
 }
 
@@ -592,17 +594,18 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, re
 // `<phase>:<result_field>` for an agent_result_field (gate_verdicts.policy_gate_id); a conformance test ties every
 // gate-policy.yaml entry to one of these literals below.
 const gateRows = []
-const pushGate = (gateId, gateType, phase, verdict, blocking, evidence) => {
+const pushGate = (gateId, gateType, phase, verdict, blocking, evidence, linkedStdoutSha) => {
   try {
     gateRows.push({
       gate_id: gateId, gate_type: gateType, phase, verdict: String(verdict), blocking: Boolean(blocking),
-      inputs_ref: { phase, evidence: truncateSummary(evidence).replace(/['"\\]/g, '’') },
+      inputs_ref: { phase, evidence: truncateSummary(evidence).replace(/['"\\]/g, '’'), ...(linkedStdoutSha ? { stdout_sha: linkedStdoutSha } : {}) },
     })
   } catch (e) { /* monitoring must never fail the workflow */ }
 }
-// A static gate behind shAttested is already recorded by attest_gate.py on the native runtime; record it here only on the
-// legacy runtime, so one verdict writes one row.
-const pushStaticGate = (...gateArgs) => { if (legacyBash) pushGate(...gateArgs) }
+// A static gate behind shAttested has two rows on the native runtime (TCK-20261006-GATE-LEDGER-NATIVE-ATTESTED-ROWS-DOUBLE-COUNT):
+// attest_gate.py's `attested_command` row is the evidence, and this row is the verdict under the gate-policy id. It carries the
+// attestation's stdout_sha so the two link; gate_ledger.py counts verdicts from the non-attested rows only. Legacy: this row only.
+const pushStaticGate = (...gateArgs) => pushGate(...gateArgs, legacyBash ? null : lastAttestedStdoutSha)
 
 // Orchestrator-side sidecar write — replaces the former per-prompt "Step 0b" (and Finalize's combined
 // "Step 0") agent-prompt-text instruction. Call this once, immediately before each corresponding

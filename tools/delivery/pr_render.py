@@ -50,6 +50,7 @@ try:
     from tools.validate_frontmatter import extract_frontmatter
     from tools.generate_registry import parse_body_section, _strip_frontmatter
     from tools.delivery.pr_status import CommandResult, default_run_command
+    from tools.delivery.pr_body_lint import find_attribution
 except ImportError:
     # Fallback for direct script execution (`python3 tools/delivery/pr_render.py`), where `tools/`
     # has no __init__.py and isn't a namespace package relative to the invocation's own sys.path[0].
@@ -61,6 +62,7 @@ except ImportError:
     from validate_frontmatter import extract_frontmatter  # noqa: E402
     from generate_registry import parse_body_section, _strip_frontmatter  # noqa: E402
     from pr_status import CommandResult, default_run_command  # noqa: E402
+    from pr_body_lint import find_attribution  # noqa: E402
 _REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
 if _REPO_ROOT_STR not in sys.path:
     sys.path.append(_REPO_ROOT_STR)
@@ -633,9 +635,11 @@ def check_against_live(pr: Optional[str] = None, run_command=default_run_command
     spec = json.loads(Path(spec_path).read_text(encoding="utf-8"))
     comparison = compare_generated_body(live.get("body") or "", rendered["body"] or "", spec)
 
-    matches = title_diff is None and not comparison["differing_sections"]
+    attribution_found = find_attribution(live.get("body"))
+    matches = title_diff is None and not comparison["differing_sections"] and not attribution_found
     return {
         "matches": matches,
+        "attribution_found": attribution_found,
         "title_diff": title_diff,
         "differing_sections": comparison["differing_sections"],
         "review_notes_hand_filled": comparison["review_notes_hand_filled"],
@@ -691,6 +695,8 @@ def main(argv=None) -> int:
         print(f"matches: {result['matches']}")
         if result.get("title_diff"):
             print(f"title differs: live={result['title_diff'][0]!r} rendered={result['title_diff'][1]!r}")
+        for line in result.get("attribution_found") or []:
+            print(f"attribution trailer found: {line} \u2014 remove it and PATCH again")
         if "differing_sections" in result:
             if result["differing_sections"]:
                 print(f"generated sections differ: {result['differing_sections']}")
