@@ -23,7 +23,7 @@ tags: [engine, combat]
 
 The pre-gate-4 current-tree arm (before this change, gate 4 only) also shows 0 guard moves in all 8 runs.
 
-**What the corpus cannot show.** The only instance had a dead mover, so there is no live-mover harm in this corpus, and no per-move before and after. The earlier handover note ("16 live ticks in two worlds") is **not reproduced** by this probe; it came from a different run and is not used as evidence. The defect is real by construction (section 1) and rests on that plus the unit tests.
+**What the corpus cannot show.** On this tree the only instance had a dead mover, so there is no live-mover harm here, and no per-move before and after. Gate 4's investigation (3b) measured 16 live ticks of one guard mover (`crowded_frontier`, legacy arm) on the **earlier** tree (`origin/main` `7a9f302db` + #347 + the router fix); this probe, on `origin/main` `9299891a9` (15 commits later, with world and hazard changes), finds no guard move in that world. The earlier figure was a valid measurement then; it does not reproduce now, and why was not isolated. The defect is real by construction (section 1) and rests on that plus the unit tests.
 
 ## 3. Decision: the end condition
 

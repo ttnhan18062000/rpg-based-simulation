@@ -2720,7 +2720,7 @@ The following legacy behaviors have been intentionally omitted or retired.
   leader that had died or a group it was no longer in, never reaching the decision pass.
 - **Observed**: legacy arm, 4 worlds x 2 runs (pairs matched): one `CONTRACT_OBLIGATION_GUARD` move, `urban_political`, held 1004 ticks
   (leader dead at tick 1003), but its mover was already dead (a corpse's stale task), so **0 live-mover ticks were observed with a dead
-  leader** and 3 with the group gone. The earlier "16 live ticks in two worlds" is not reproduced by this probe. The corpus therefore cannot
+  leader** and 3 with the group gone. Gate 4's investigation measured 16 live ticks of one guard mover (`crowded_frontier`) on the earlier tree (`origin/main` `7a9f302db` + #347 + the router fix); this probe, on `9299891a9` (15 commits later), finds no guard move there, so that figure does not reproduce on this tree and its cause was not isolated. The corpus therefore cannot
   show the live harm; the defect is structural (nothing ends the move) and is pinned by construction and unit tests.
 - **New Behavior**: `MovementCandidateSelector.tracked_move_complete` (the helper of 2.70) tracks two more kinds, keyed on `GUARD` + reason:
   `CONTRACT_OBLIGATION_GUARD` ends when the leader is dead, inactive or gone, or the mover is ungrouped or in another group;

@@ -73,7 +73,7 @@ target is gone (`live_mover_dead_target_ticks`); `probes/before_after.sh` runs a
 - `dungeon_crawl`, BRACKETING entity 12: not a dead-target hold. The mover circled a LIVE target at distance ~1 for the move's life and was
   eventually killed (corpse): a live-target, in-reach case, ended only by the in-reach extension (fixed arm: 5 ticks).
 **Fixed arm:** no live-mover dead-target hold above 20 ticks anywhere; the INTERCEPT moves end in 6-27 ticks and the BRACKETING move in 5. The only
-remaining persisted records are corpses and the GUARD move, which is untouched by design (the guard mover had 16 live ticks before it died).
+remaining persisted records are corpses and the GUARD move, which is untouched by design (the guard mover had 16 live ticks before it died; measured on the tree named above. A later probe on `origin/main` `9299891a9`, 15 commits on, finds no guard move in the legacy arm: see the group-guard ticket's investigation, section 2).
 So the defect is real but much smaller than the first count suggested: one 986-tick live hold, two ~20-30-tick live holds, one BRACKETING circle.
 **PURSUE "must stay unchanged" check:** by construction a PURSUE move whose target stays alive takes the unchanged branch (unit-pinned:
 out-of-reach keeps pursuing, in-reach ends). At corpus level the per-move comparison is not available because freeing a held entity changes the

@@ -42,6 +42,7 @@ leader's liveness (`leader.combat.alive`) is checked **at decision time only**; 
 
 **Why P3:** measured as a live mover guarding a dead leader for only **16 ticks** before the mover itself died, in
 two worlds. Real, but brief and rare.
+(Correction at close: that measurement came from gate 4's investigation 3b, on the earlier tree; it does not reproduce on `origin/main` `9299891a9`. See Implementation Notes.)
 
 ## Scope
 1. Decide the guard's intended end: leader dead, leader no longer interacting, or the group dissolved.
@@ -79,7 +80,7 @@ two worlds. Real, but brief and rare.
 
 Scope: `GUARDING_ALLY` was not in the ticket's text. It has the same structure and the same one-line dead-target condition, so it is included for that end only; it has 0 corpus moves and is covered by a constructed test.
 
-The handover note's "16 live ticks in two worlds" is **not reproduced** by the probe (0 live-mover ticks with a dead leader) and is not used as evidence. Arriving does not end a move (the movement phase just stops moving), which is what makes the defect structural. Measurements were taken with the cwd set to this worktree; `src/core/registries.py` seeds content from the cwd-relative `data/content`, and a first attempt from another worktree crashed with `KeyError: stone_outcrop` and was discarded.
+Gate 4's investigation (3b) measured 16 live ticks of one guard mover (`crowded_frontier`, legacy arm) on the earlier tree (`origin/main` `7a9f302db` + #347 + the router fix). The probe on `origin/main` `9299891a9`, 15 commits later and including world and hazard changes, finds no guard move in that world (0 live-mover ticks with a dead leader), so the figure **does not reproduce on this tree**; it was a valid measurement then, and the cause of the difference was not isolated. It is not used as evidence here. Arriving does not end a move (the movement phase just stops moving), which is what makes the defect structural. Measurements were taken with the cwd set to this worktree; `src/core/registries.py` seeds content from the cwd-relative `data/content`, and a first attempt from another worktree crashed with `KeyError: stone_outcrop` and was discarded.
 
 ## Test Summary
 `tests/unit/engine/test_pursuit_completion.py` 29 passed (8 new, 2 updated: the gate-4 pins that said guard moves are untouched); `tests/unit/engine` plus the two mechanism-registry checks 330 passed, 1 skipped. Code-health gates, reproduced in a scratch venv at the `uv.lock` versions (they cannot run in the project venv): `codebase.health check` first failed with 1 worse (`LocalSequentialExecutor.execute` 140 > ceiling 138, from gate 4's comment; fixed by trimming it), then **OK: 0 new, 0 worse**; `codebase.structure.packages validate` 0 problems; the mypy-baseline filter shows 10 `Returning Any` lines, none in a file this batch changed. CI is still the first run in the real environment. `ruff` via `uvx` with the project config: no findings on any line changed in `candidate_selector.py`.

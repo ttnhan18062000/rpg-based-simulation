@@ -84,8 +84,8 @@ class MovementCandidateSelector:
         target ENTITY's current state (``payload["target_id"]``), never on the navigation destination, which is a
         snapshot:
 
-        * the target is dead, inactive or gone, so there is nothing left to track: left in place the move
-          outlived its target by up to ~2000 ticks (measured, 10 of 21 target-carrying moves,
+        * the target is dead, inactive or gone, so there is nothing left to track: left in place a live mover held
+          the move for 16 to 986 ticks (measured; see the investigation of
           TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION);
         * combat positioning only (pursuit, intercept, bracketing, not kiting, which intends to hold range): the
           live target is already within the entity's attack reach, so the entity can choose ATTACK
