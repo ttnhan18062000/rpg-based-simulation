@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-01"
+last_verified: "2026-10-06"
 ---
 
 # World Rule Family: Conflict / Combat
@@ -55,6 +55,44 @@ migration/yielding, never a fight.
 
 **Scenarios:** [CP-S09](../scenarios/capability-progression-batch-07.md#cp-s09) (conflict
 without combat).
+
+## CONFLICT-03 — Permission to attack is symmetric between two parties; whether a party starts a fight is its own decision
+
+> Whether one subject may attack another is a fact about the pair, and it holds in both
+> directions: if A may attack B, then B may attack A. Permission is not intent. A "contextual
+> threat" (a creature that is dangerous when intruded on or provoked, not an enemy by race)
+> differs from an enemy in when it CHOOSES to fight, which belongs to its own decision-making
+> layer (AGENCY-02). It never differs in whether it is ALLOWED to fight back or strike first.
+
+**Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-06**
+(row 18 of `docs/plans/systemic_world/owner_decision_memo.md`; the owner confirmed the
+delegation directly the same day). Passes the admission test: no earlier Rule said whether
+attack permission may be one-way. The number CONFLICT-02 is retired (that entry was reclassified
+to Inherited).
+- **Why symmetric:** legality answers "may", and the decision layer answers "will". One-way
+  permission makes the target a creature that can be attacked but can never answer, which no
+  fiction of "contextual threat" intends. It would also hide intent inside a permission check,
+  where the decision layer (AGENCY-01/02) can neither weigh it nor show it.
+- **Alternatives not taken:** keep one-way legality for wild creatures (today's accident);
+  make wild creatures non-hostile both ways (removes them as a threat entirely).
+- **Contextual engagement (attack when intruded on or provoked) is feature work,** parked by
+  memo row 7. Until it exists, a wild creature's decision layer engages like any other hostile,
+  as the spawned kinds already do on the `MONSTER_HORDE` bucket.
+
+**Repository evidence: CONFLICTING — legality is one-way for catalog-wild factions.**
+`verify_attack_legality` (`src/engine/legality.py:252-272`) routes through
+`FactionSemanticsService.is_hostile_compat` and the catalog relationship whenever the attacker's
+faction has a perspective or relationship row. hero→wild is legal; wild→hero returns
+`FRIENDLY_FIRE_ILLEGAL`, because the catalog hostility law (`faction.py:146-171`) makes only
+"invader" factions hostile and `wild_beast_pack`'s alignment is "wild". 85 compiled
+`wild_beast_pack` entities across 13 corpus worlds are affected today.
+- **Tracked:** `TCK-20261006-WILD-BEAST-PACK-LEGALITY-IS-ONE-WAY-HERO-CAN-ATTACK-IT-IT-CANNOT-ATTACK-HERO`.
+- **Unblocks** owner decision 2026-10-06's narrowed spawn mapping (see the memo, row 18): once
+  legality is symmetric, wolf, slime, bear, harpy and golem may move from `MONSTER_HORDE` to
+  `wild_beast_pack`, as originally ruled.
+
+**Scenarios:** none traced yet. One is owed when implemented: a hero attacks a wolf and the wolf
+fights back; a wolf next to a hero may attack it, and whether it does is the wolf's own decision.
 
 ---
 
@@ -213,6 +251,8 @@ evidence for this same inherited entry.
 ## Cross-domain links recorded here
 
 - CONFLICT-01 → Resource (RES-*, Batch 03), Ecology/Population (ECOL-04, Batch 05)
+- CONFLICT-03 → Agency/Decision (AGENCY-01/02, Batch 06: intent lives in the decision layer),
+  Organizations / factions (`organizations.md`; the faction catalog's hostility law)
 - Inherited perception/knowledge entry (formerly CONFLICT-02) → Perception (PERC-01, KNOW-01,
   Batch 06), Agency/Decision (AGENCY-01/02, Batch 06), Capability/Progression
   (`capability-progression.md`, the same ad hoc `CapabilityEstimateService` finding)

@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-06"
 ---
 
 # World Rule Family: Environment
@@ -319,6 +319,23 @@ stays the acceptance test when the producer is implemented
 (`TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING`).
 If a material share of hazard deaths ever shows prior attacker damage, the implementation must
 count a violent cause within a window, not only a recorded killer.
+
+**The window, decided by world-rule-catalog-design under owner delegation, 2026-10-06** (row 19
+of `docs/plans/systemic_world/owner_decision_memo.md`). This states what "caused by violence"
+means for the ratified sentence. It does not change that sentence.
+- **Meaning:** a death is caused by violence while the subject has not recovered from violent
+  harm. The harm must still be part of why it died.
+- **Floor:** attacker damage in the same lethal update as ambient drain always counts. Measured
+  (Lane B, 24 worlds, seed 42, 10,000 ticks, audit_mode): 2 of 686 HAZARD deaths before the spawn
+  fix, both `undead_remnants` sentinels, and 0 of 46 after.
+- **Engineering may approximate "not recovered" with a recency window in ticks.** No such window
+  exists in the simulation today; the only "last damage" tracking is offline anomaly
+  observability (`src/observability/anomaly/rules.py`). So the value is engineering-tunable, set
+  when the clause is implemented, and recorded in Bible 05 §2 and the parity ledger. The
+  ratification test already found 0 deaths with prior attacker damage at windows of 50 and 200
+  ticks and with no window, so the choice has no measured effect today.
+- **Tracked:** `TCK-20261006-ENV-07-WOUNDED-THEN-DRAINED-CLAUSE-HAS-NO-ATTACKER-DAMAGE-RECORD`.
+  It stays parked on its trigger.
 
 **Scenarios:** none traced yet. One is owed when implemented: a battle in a region raises its
 trauma, the same number of drain deaths does not, and a wounded-then-drained death counts.
