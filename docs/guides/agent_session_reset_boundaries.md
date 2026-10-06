@@ -108,8 +108,9 @@ A session started any other way runs without the project hooks and agent types:
 - from the parent directory (`/mnt/data/Working`, not a git repo): no settings, agents or workflows load. Symptom:
   `agent type 'ticket-scoper' not found` (W41 probe run; create-tickets run `wf_4a572e02-40e`, about 240k tokens lost);
 - from a stale checkout (the main checkout 57 commits behind, carrying uncommitted changes): the session-roles guard,
-  the manual-action sampler and the SessionStart hook are missing. Symptom: `session_role: unresolved` on every run
-  and no `manual_actions*.jsonl` or `role_boundary*.jsonl` file anywhere (RETRO-2026-W41: 59/59 runs unresolved).
+  the manual-action sampler and the SessionStart hook can be missing (hours-old worktrees already lack the sampler).
+  Symptom: `session_role: unresolved` on a run recorded after the stamp shipped (2026-10-05) and no `manual_actions*.jsonl`
+  or `role_boundary*.jsonl` file anywhere (RETRO-2026-W41: 30 of 63 runs stamped, all `unresolved`; the other 33 predate the field).
 
 Check any directory without launching: `python3 tools/sessions/settings_freshness.py <dir>` (exit 0 match, 1 mismatch,
 2 cannot verify; it reads `origin/main` without fetching, so `git fetch origin` first). It compares content, not

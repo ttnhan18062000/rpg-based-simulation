@@ -10,3 +10,7 @@ Design choices:
 - A branch that itself edits settings.json reports a difference (e.g. the branch carrying TCK-20261006-SETTINGS-OWN-BRANCH-PERMISSION-PROMPTS until it merges); `--allow-stale` covers it.
 - The ref is never fetched: an offline or never-fetched checkout gets exit 2 / a warning, not a refusal.
 - The preflight skips a worktree directory that does not exist (self-heal creates it from the role's branch).
+
+## (b) manual_actions and session_role dark where SessionStart binds a role (Scope 6, added 2026-10-06)
+
+Evidence list is in the ticket's Implementation Notes. Commands: `git log -S'manual_actions.py' -- .claude/settings.json` (landed 58aa22f67, 2026-10-05T17:43+07); the settings.json UserPromptSubmit command run with a sample payload from a current worktree (wrote a row); `resolve_session_role(<bound session id>, <worktree>)` (returns the role) versus cwd `/mnt/data/Working` (unresolved); stamped versus absent `session_role` in W41 runs on origin/main (30 stamped, all unresolved; 33 absent); a settings and `manual_actions.py` presence check over the 20 local worktrees (9 lack the sampler).

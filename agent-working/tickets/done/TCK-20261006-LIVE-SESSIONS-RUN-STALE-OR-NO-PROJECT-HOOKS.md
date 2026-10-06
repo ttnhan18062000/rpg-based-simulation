@@ -27,8 +27,11 @@ bug
 P1
 
 ## Request Summary
-The deep retro RETRO-2026-W41 (2026-10-06, owner-requested) found the session-layer instruments dark in every live
-session:
+The deep retro RETRO-2026-W41 (2026-10-06, owner-requested) found the session-layer instruments dark: the project hooks and agent
+types are dark in sessions started outside a current worktree, and `manual_actions` and `session_role` are dark everywhere.
+Correction 2026-10-06 (planner): the SessionStart hook DOES fire in sessions that run inside a worktree new enough to have it
+(bindings exist for agent-working-implementer, rpg-implementer and rpg-planner), so "never fire in live sessions" is too
+strong. Scope 6 and `investigation.md` section (b) explain the rest. The retro found:
 - zero `manual_actions*.jsonl` and zero `role_boundary*.jsonl` files exist in any week folder or any worktree (the
   files are not gitignored);
 - `session_role` is `unresolved` on 59/59 W41 runs and missing on all 1321 W41 tool rows;
@@ -79,6 +82,9 @@ to day: the `cc` alias install is an open owner step.
    - (c) the guard's AC7: own-branch commit and push run without prompt, and a `gh pr merge --help`-style probe
      classifies as MERGE.
    This also closes TCK-20261006-GUARD-OWN-BRANCH-GIT-ALLOWED AC7; note it in that ticket's done file.
+
+6. **Explain why `manual_actions` and `session_role` are dark even where SessionStart binds a role** (added 2026-10-06 at the
+   planner's request). Done: see Implementation Notes and `investigation.md` section (b).
 
 ## Out of Scope
 - Changing `.claude/settings.json` content. That is TCK-20261006-SETTINGS-OWN-BRANCH-PERMISSION-PROMPTS, and any
@@ -132,6 +138,13 @@ to day: the `cc` alias install is an open owner step.
 ## Implementation Notes
 Verified against origin/main 9299891a9: `launch.py` main() order (ensure_worktree, plan_launch, exec) held; the preflight is inserted after the plan and before the exec line. New: `tools/sessions/settings_freshness.py`, `launch.preflight()`, `--allow-stale`.
 Real-directory check (see investigation.md): `/mnt/data/Working` and the main checkout report MISMATCH.
+**(b) Why manual_actions and session_role are dark (Scope 6), measured on origin/main 9299891a9 and the local transcripts:**
+- The sampler (`manual_actions.py hook`) and role stamping both landed on main in 58aa22f67 at 2026-10-05T17:43+07, about one day before the retro, so no record could exist earlier. 108 historical user prompts match the tagger (nearly all `handover_recovery`, "continue as <role>"); the ones sent before that commit, or in worktrees without the hook, could not be recorded.
+- The sampler works: running the settings.json UserPromptSubmit command from a current worktree with a "wake up the implementer" payload wrote a `manual_actions.jsonl` row (the test row was deleted). It is a conservative regex tagger, so only the listed phrasings are recorded.
+- 9 of 20 local worktrees (for example `lane-a-tactical-path-batch`, `dirty-set-id-dedup`, `m2-foundational-systems-tickets`, `test-arch-*`) lack the sampler hook or `manual_actions.py`. lane-a has the SessionStart hook (it bound rpg-implementer at 2026-10-06T02:34Z) but not the sampler, because it is hours behind. That is the staleness this ticket's check reports.
+- `session_role` resolves correctly when a binding exists and the cwd is inside the repo: `resolve_session_role("c3c03123-...", <worktree>)` returns `rpg-implementer`. From `/mnt/data/Working` (no git) it returns `unresolved`, because `state_root(".")` fails. The closure recorder reads `CLAUDE_CODE_SESSION_ID`, which the harness sets in the Bash tool environment (checked in this session); `SESSION_ROLE`, which only the launcher sets, is not read, so that is not the cause.
+- "59/59 unresolved" conflates two cases: of 63 W41 runs on origin/main, 33 have no `session_role` field (recorded before the stamp shipped) and 30 are stamped `unresolved` because the closing session had no binding (started outside a current worktree or without the launcher). The retro prints an absent field as `unresolved`. Follow-up for the planner: separate "predates the field" from "no binding".
+- Verdict: no separate hook bug found for (b). It is the shipping date, stale worktrees, sessions started outside the repo, and the retro's labelling. This ticket's freshness check and preflight address the staleness and outside-the-repo cases.
 **AC5 is open: the live probe is an owner step, not yet run.** Run it in one session started with `python3 tools/sessions/launch.py <role>` from a fresh role worktree: (a) a role-reminder prompt writes a `manual_actions.jsonl` row; (b) a run records a resolved `session_role`; (c) own-branch commit and push run without prompt and `gh pr merge --help` classifies as MERGE. Record the date and session id here; it also closes AC7 of TCK-20261006-GUARD-OWN-BRANCH-GIT-ALLOWED.
 
 ## Test Summary
