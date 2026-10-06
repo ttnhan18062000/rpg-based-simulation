@@ -4506,7 +4506,7 @@
     are unchanged. For an objective with target_entity_id the strategic redirection
     writers set no navigation point (they still claim the navigation); the tactical
     pass resolves the live position.'
-  v2_evidence: src/engine/candidate_selector.py (pursuit_reached_attack_range, pursuit_completion_update),
+  v2_evidence: src/engine/candidate_selector.py (tracked_move_complete, tracked_move_completion_update),
     src/engine/executor.py and src/engine/worker_logic.py (ENTITY_MOVE branches),
     src/systems/strategic_systems/intelligence.py and redirection.py (entity-typed
     objective branch).
@@ -4518,12 +4518,103 @@
   proof_type: regression
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.68.
   support_boundary: 'Effect sizes were taken on origin/main 544b1d341 (dirty-set determinism
-    fix included): after-fix counts repeat exactly across two runs (values), the
-    clean-main control is one run (a sample). Tile-swap ticks fall by two orders of
-    magnitude on crowded_frontier, frontier_living_world and urban_political, but
-    decision-path attacks barely move (frontier_living_world 5 to 7) and crowded_frontier
-    stays at 0 (the brain cadence, the flee gate and BRACKETING repositioning moves,
-    which this change deliberately does not end, are the next gates). Opportunity-attack
+    fix included): after-fix counts repeat exactly across two runs (values), the clean-main
+    control is one run (a sample). Tile-swap ticks fall by two orders of magnitude
+    on crowded_frontier, frontier_living_world and urban_political, but decision-path
+    attacks barely move (frontier_living_world 5 to 7) and crowded_frontier stays
+    at 0 (the brain cadence, the flee gate and BRACKETING repositioning moves, which
+    this change deliberately does not end, are the next gates). Opportunity-attack
     counts on frontier_living_world (38 to 644) and crowded_frontier (488 to 283)
     moved in opposite directions and are unexplained. The intelligence.py redirection
     branch has no direct unit test; only redirection.py does.'
+- id: COMB-330
+  text: 'TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS:
+    ActionRouter.execute_action reports an action it dispatched but did nothing with
+    as a typed failure instead of a bare no-op: the combat-posture gate (an ATTACK/SKILL
+    whose attacker has a recorded, risk-rejected last_combat_posture toward that exact
+    target) reports ACTION_WITHHELD_BY_POSTURE, and the final fall-through for an
+    unrecognised action reports UNSUPPORTED_ACTION. ActionRoutingPhase.route() clears
+    the task to idle for either reason whatever the action kind, so the brain re-decides
+    at its next cadence; previously the no-op carried no failure, the payload was
+    annotated outcome SUCCESS, the task was kept and the scheduler re-dispatched it
+    every tick until the target died. The annotation also drops the previous tick''s
+    reason (a reason beside an outcome is an earlier annotation); a decision-time
+    reason with no outcome beside it is kept. The gate''s policy is unchanged.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/domain/action_router.py (posture gate and fall-through
+    return NavigationUpdate.failure_reason with readiness_delta 0.0), src/engine/pipeline_phases/actions.py
+    (_UNRECOVERABLE_ANY_ACTION_REASONS clear branch; stale-reason filter in the annotation),
+    src/core/enums.py (ACTION_WITHHELD_BY_POSTURE, UNSUPPORTED_ACTION). Real corpus
+    (Kernel.tick_once(), seed 42, 2000 ticks, audit_mode, budget disabled, each world
+    run twice with matched results): frontier_living_world withheld entity-ticks 844
+    to 2, longest held run 839 to 1 ticks, ATTACK dispatches 1693 to 8; dungeon_crawl
+    4 to 2 and 4 to 1; crowded_frontier and urban_political 0 ATTACK dispatches before
+    and after.'
+  proof_type: regression
+  test_path: tests/unit/actions/test_action_routing_withheld_action.py; tests/mechanic_scenarios/test_combat_judgement_withdrawal.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.69.
+  support_boundary: One held episode was traced end to end (attacker 34 against target
+    11, frontier_living_world, 839 consecutive withheld ticks); the exposure counts
+    are four corpus worlds at 2000 ticks, not a rate elsewhere. The fall-through was
+    never reached in the corpus (one run each). Whether other handlers (execute_interact,
+    execute_repair, ...) return the same bare no-op on their own paths was not enumerated.
+    The same withheld dispatch is seen twice per tick by the documented two-pass design
+    (COMB-307), unchanged. NavigationUpdate.failure_reason is the shape the readiness
+    check and execute_attack's rejections already use; it sets navigation.last_failure_reason,
+    which strategic intelligence and the inspector read.
+- id: COMB-331
+  text: 'TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION:
+    an entity-tracking combat move (PURSUE, INTERCEPT, REPOSITION with reason BRACKETING,
+    RETREAT with reason KITING) ends when its target entity is dead, inactive or gone;
+    pursuit, intercept and bracketing also end when the live target is in attack reach
+    (kiting holds range). Both ENTITY_MOVE dispatchers return the task to the idle
+    encoding and clear the navigation target. Cover-seeking moves and a guard move
+    with no recognised reason keep their own lifecycle; the two recognised guard moves
+    are COMB-332.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/candidate_selector.py (tracked_move_complete, _tracked_move_kind,
+    tracked_move_completion_update), src/engine/executor.py and src/engine/worker_logic.py
+    (ENTITY_MOVE branches). Real corpus (Kernel.tick_once(), 4 worlds x 2 runs, legacy
+    vs fixed arms, all pairs matched): one PURSUE held 986 ticks after its target
+    died at tick 4 (frontier_living_world), two INTERCEPTs held 30 and 20 ticks (crowded_frontier).'
+  proof_type: regression
+  test_path: tests/unit/engine/test_pursuit_completion.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.70.
+  support_boundary: 'The initial 10-of-21 held-move count was task records of dead
+    movers; the live harm is the four moves above. BRACKETING real issuance is 0 in
+    three worlds and 1 in dungeon_crawl (the 55% share was a forced-probe artefact).
+    PURSUE unchanged-ness rests on construction and unit pins: corpus per-move identity
+    is lost once an entity is freed. KITING is covered by a constructed test only
+    (0 corpus moves). A BRACKETING move is de-facto pursuit by design (planner ruling
+    2026-10-06): bracket_pos gates issuance and is the destination on the issuing
+    tick only, then live tracking of target_id overrides it; a SEEK_COVER move would
+    head toward its threat by the same helper (0 corpus moves, parked as TCK-20261006-SEEK-COVER-LIVE-TRACKED-TOWARD-ITS-THREAT-LATENT-TRIGGER).'
+- id: COMB-332
+  text: 'TCK-20261006-GROUP-GUARD-OBLIGATION-MOVE-OUTLIVES-ITS-LEADER: a group guard
+    ENTITY_MOVE (GUARD with reason CONTRACT_OBLIGATION_GUARD, a hireling guarding
+    its leader, or GUARDING_ALLY) ends when its target entity is dead, inactive or
+    gone; a CONTRACT_OBLIGATION_GUARD also ends when the mover is ungrouped or no
+    longer shares the leader''s group. Neither ends on reach, and a leader merely
+    pausing between interactions does not end it (INTERACT runs have gaps of up to
+    11 ticks). Both ENTITY_MOVE dispatchers return the task to the idle encoding and
+    clear the navigation target.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/engine/candidate_selector.py (tracked_move_complete, _tracked_move_kind,
+    _target_in_attack_reach), src/engine/executor.py and src/engine/worker_logic.py
+    (ENTITY_MOVE branches). Real corpus (Kernel.tick_once(), 4 worlds x 2 runs, legacy
+    vs after arms): legacy arm has one CONTRACT_OBLIGATION_GUARD move (urban_political,
+    1004 ticks, mover already dead); after arm has 0 guard moves.'
+  proof_type: regression
+  test_path: tests/unit/engine/test_pursuit_completion.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.71.
+  support_boundary: 'The corpus cannot show the live harm: the one legacy instance
+    had a dead mover (0 live-mover ticks with a dead leader, 3 with the group gone),
+    and freeing entities diverges trajectories so no per-move before and after exists.
+    The defect is structural (arriving does not end a move) and is pinned by construction
+    and unit tests. GUARDING_ALLY has 0 corpus moves (constructed test only).'

@@ -151,6 +151,17 @@ It re-runs `done_checker_static.py`, `validate_frontmatter.py` and `ticket_field
 `PASS`/`FAIL` per check, and exits non-zero on any failure. Read-only. CI re-runs the same gates on the
 PR as the second backstop. The legacy path does not need it: its gates run in the orchestrator itself.
 
+### Recording what you did about a gate verdict (the gate override ledger)
+
+The gate CLIs write one `gate_verdicts` row per verdict (`docs/agent-monitoring/schema.md`). When you
+override or stop on a blocking verdict instead of fixing and re-running it, record that with
+`python3 tools/agent-monitoring/gate_ledger.py outcome --gate-verdict-id <id> --outcome overridden|stopped [--note ...]`;
+`gate_ledger.py list --unresolved` shows the ids still open. A fix and re-run is derived without any entry
+(a later pass on the same ticket and gate is `fixed_and_rerun`; the same block on the same inputs is
+`rerun_no_change`). When someone rules on whether a verdict was right, `gate_ledger.py adjudicate`. When
+`post_native_run_check.py` fails a gate that the native run attested as PASS, it records the `false_pass`
+itself. Recording an override is bookkeeping, not permission: never edit an artifact to make a gate pass.
+
 ---
 
 ## Branch Naming
@@ -375,7 +386,10 @@ The steps above cover diagnosing a failure; this covers the surrounding push→P
      `python3 tools/delivery/pr_render.py --check --pr <N>`. It prints `matches: True`/`False`,
      and on a mismatch names the differing pieces (`title differs: live=... rendered=...`,
      `generated sections differ: [...]`) — it never exits non-zero for a real difference, only for
-     a genuine internal error, so check the printed `matches` value, not the exit code. Treat
+     a genuine internal error, so check the printed `matches` value, not the exit code. It also
+     reports an attribution trailer (`attribution trailer found: <line>`, `attribution_found` in `--json`) and
+     forces `matches: False`; the patterns live in `tools/delivery/pr_body_lint.py`, and the
+     `PR body lint` workflow (`.github/workflows/pr-body-lint.yml`) fails a PR on the same hit. Treat
      `matches: False` as the write having failed — re-render (plain or `--json`, same as step 3)
      and PATCH again, then re-check. Missing this step is exactly how PR #252 merged with a title
      reading "(1 ticket)" while its squash commit actually closed two, and how the `gh pr edit`

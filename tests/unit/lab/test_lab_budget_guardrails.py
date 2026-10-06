@@ -67,7 +67,7 @@ def base_world_spec() -> WorldSpec:
         factions=[{"id": "test_faction", "type": "basic"}],
         entities=[{"id": "pop1", "count": 5, "role": "worker", "faction": "test_faction", "spawn_region": "spawn_region"}],
         resources=[],
-        validation={"expected_min_entities": 1, "allow_overlapping_regions": False}
+        validation={"expected_min_entities": 1}
     )
 
 @pytest.fixture

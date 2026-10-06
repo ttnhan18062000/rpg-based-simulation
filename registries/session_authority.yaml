@@ -9,18 +9,22 @@ version: 1
 function_defaults:
   designer:
     forbidden: [commit, push, open_pr]
-    needs_user: [merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data]
+    needs_user: [merge, push_default_branch, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data]
   planner:
     forbidden: [commit, push, open_pr]
-    needs_user: [merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data]
+    needs_user: [merge, push_default_branch, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data]
   implementer:
     forbidden: []
-    needs_user: [push, open_pr, merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data]
+    needs_user: [push_default_branch, merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data]
 
+# Own-branch rule (owner, 2026-10-06: "only block the merge branch to main, every action on their own branch is
+# allowed"): commit, push, force-push, local merge and open_pr on a non-default branch are not listed in
+# needs_user. `push_default_branch` (a push whose destination is main) and `merge` (gh pr merge) always ask.
 # Per-role entries: only a role with a dated, quoted, revocable grant needs one. `needs_user` always wins
-# over a grant for merge, governing_file_edit, workflow_run and the delete classes.
+# over a grant for merge, push_default_branch, governing_file_edit, workflow_run and the delete classes.
 authority:
   agent-working-implementer:
+    # SUPERSEDED 2026-10-06 by the own-branch rule above: push/open_pr no longer need a grant. Kept for its quote.
     grants:
       - action: [push, open_pr]
         scope: "after a complete batch, on the batch's own branch"

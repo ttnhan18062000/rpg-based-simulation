@@ -140,4 +140,6 @@ def test_export_handoff_then_submit_candidate_over_stdio_for_a_real_revision(tmp
     after = snapshot(catalog)
     changed = {k for k in set(pristine) | set(after) if pristine.get(k) != after.get(k)}
     assert changed and all(k == ".quarantine" or k.startswith(".quarantine/") for k in changed), changed  # ONLY the quarantine was written
-    assert sorted(p.name for p in (catalog / "sources").iterdir() if p.name != ".gitkeep") == ["terrain_forest", "terrain_forest_bush", "terrain_forest_tree"]  # nothing new was adopted (the three terrain.forest slot tiles only)
+    from tests.visual_assets import adopted_facts as af
+
+    assert sorted(p.name for p in (catalog / "sources").iterdir() if p.name != ".gitkeep") == af.ADOPTED_SOURCES  # nothing NEW was adopted: the committed 34 (forest's three + the owner's terrain-v1 adoption of 2026-10-05T18:17:03Z)

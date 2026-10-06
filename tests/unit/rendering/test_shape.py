@@ -224,14 +224,26 @@ def test_corpus_wide_sweep_every_below_threshold_component_is_forest():
     assert len(world_ids) > 0
 
     below_threshold: list[ShapeComponent] = []
+    non_forest: list[tuple[str, str, int]] = []
     for world_id in world_ids:
         spec = repo.load_world(world_id)
         state, _report = WorldCompiler.compile(spec, seed=42)
         components = connected_components(state.terrain)
-        below_threshold.extend(c for c in components if c.fill_ratio < 0.95)
+        for c in components:
+            if c.fill_ratio < 0.95:
+                below_threshold.append(c)
+                if c.terrain_type.upper() != "FOREST":
+                    non_forest.append((world_id, c.terrain_type, c.size))
 
     assert len(below_threshold) > 0
-    assert all(c.terrain_type.upper() == "FOREST" for c in below_threshold)
+    # LOC-08 (owner decision 13) ratified `orc_stronghold` over `swamp_border_territory`, so the stronghold now owns
+    # its overlap with the swamp and the swamp component has a notch (fill 0.738, 1240 tiles) in the two worlds that
+    # compose both. That is a declared precedence carve-out, not noise fill; every OTHER below-threshold component in
+    # the corpus is still forest noise, and this exact set is pinned so a new non-forest fragment still fails here.
+    assert non_forest == [
+        ("frontier_marches", "swamp", 1240),
+        ("simq_scale_stress_seed42", "swamp", 1240),
+    ]
 
 
 def test_shape_module_does_not_subclass_pillar_scorer_or_import_simq_event_pipeline():

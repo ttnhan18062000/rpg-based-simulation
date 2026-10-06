@@ -2324,7 +2324,7 @@ untouched by §2.57's fix (out of that ticket's scope).
 - **New Behavior**: both `ENTITY_MOVE` dispatchers (`executor.py`, `worker_logic.py`) end a `PURSUE` move whose `payload["target_id"]`
   names a live target within attack reach (Manhattan; melee needs distance 1; no weather multiplier): the task returns to the idle
   encoding (`ENTITY_ACT`, empty payload) and the navigation target is cleared
-  (`MovementCandidateSelector.pursuit_reached_attack_range` / `pursuit_completion_update`). For an objective with
+  (`MovementCandidateSelector.tracked_move_complete` / `tracked_move_completion_update`). For an objective with
   `target_entity_id`, `intelligence.py` and `redirection.py` set no navigation point (they still claim the navigation, so the
   return-to-town fallback stays suppressed); the tactical pass resolves the live position.
 - **Not behavior-neutral; measured** (real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`, `LocalSequentialExecutor`; taken on
@@ -2345,6 +2345,39 @@ untouched by §2.57's fix (out of that ticket's scope).
 - **Verification**: `tests/unit/engine/test_pursuit_completion.py` (the helper, both dispatchers, and the cases that must not change:
   non-`PURSUE` modes, dead or missing targets, live-versus-snapshot), `tests/unit/strategic/test_redirection_entity_objective.py`
   (control: an untyped objective still gets its point; a carrying entity is not sent home).
+- **Status**: RATIFIED
+
+### 2.69 A Posture-Withheld or Unsupported Action Is Reported as a Typed Failure and Ends Its Task; the Task Annotation No Longer Carries a Stale Reason (TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS)
+- **Subsystem**: Combat / action dispatch (`ActionRouter.execute_action`, `ActionRoutingPhase.route()`)
+- **Old Behavior**: when the combat-posture gate withheld an `ATTACK`/`SKILL` (`action_router.py`), or no handler recognised an action,
+  the router returned a bare no-op `EntityUpdate` with no failure. `ActionRoutingPhase.route()` saw no failure, annotated
+  `outcome: SUCCESS`, kept the payload, and the scheduler re-dispatched the payload-bearing `ENTITY_ACT` every tick (the Sticky-Task
+  Law working as designed) until the target died. The annotation also kept the previous tick's `reason` beside the new `outcome`.
+  Measured on `origin/main` `7a9f302db` (real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`, budget disabled, each world run
+  twice with matched results, so values): `frontier_living_world` 1686 of 1693 `ATTACK` dispatches withheld, 844 distinct
+  entity-ticks across 2 entities, **one run of 839 consecutive ticks** (the `OUT_OF_RANGE`-looking episode of attacker 34 against target
+  11, t161 to t1008); `dungeon_crawl` 4 entity-ticks, longest run 4; `crowded_frontier` and `urban_political` 0 `ATTACK` dispatches.
+- **New Behavior**: the gate reports `ReasonCode.ACTION_WITHHELD_BY_POSTURE` and the fall-through reports `ReasonCode.UNSUPPORTED_ACTION`
+  (both as `NavigationUpdate.failure_reason`, the shape the readiness check and `execute_attack`'s rejections already use, with
+  `readiness_delta` 0.0: nothing was spent). `route()` clears the task to idle for either reason whatever the action kind (the
+  existing unrecoverable branch, widened from `ATTACK`+`TARGET_INCAPACITATED` only), the rejection is counted and audited, and the brain
+  re-decides at its cadence. A `reason` beside an `outcome` in the incoming payload is dropped before the new annotation; a decision-time
+  `reason` with no `outcome` beside it is kept. The posture gate's policy is unchanged (risk-accepted postures dispatch; an absent or
+  other-target posture never withholds).
+- **Not behavior-neutral; measured** (same settings, after this change, two identical runs per world, values): `frontier_living_world`
+  withheld entity-ticks 844 to 2, longest run 839 to 1, `ATTACK` dispatches 1693 to 8, total action dispatches 2862 to 1177;
+  `dungeon_crawl` withheld entity-ticks 4 to 2, longest run 4 to 1; `crowded_frontier`/`urban_political` unchanged (0). Trajectories
+  diverge once an entity re-decides, so these are population comparisons: the same attacker (34) now attacks target 11 legally at
+  t166 and the target is incapacitated at t177 (one sample). The fall-through was never reached in any corpus world (one run each),
+  so no recognised action relies on it. Each withheld attack is dispatched twice per tick by the documented two-pass
+  Collection/refinement design (`COMB-307`), not a defect. **Not established**: how often the posture gate holds a task outside these
+  four worlds, and whether other handlers (`execute_interact`, `execute_repair`, ...) return the same bare no-op on their own paths.
+- **Rationale**: **Bug Fix** (a dispatched action that did nothing was reported as success and never ended), with **Enforced** for the
+  verdict stream now showing a withheld attack at its busiest checkpoint.
+- **Verification**: `tests/unit/actions/test_action_routing_withheld_action.py` (withheld clears and is reported for every rejected
+  posture and for `SKILL`; every accepted posture still dispatches; absent and other-target postures do not withhold; unsupported action;
+  readiness untouched; stale-reason and decision-reason cases; dead-target branch unchanged), with
+  `tests/mechanic_scenarios/test_combat_judgement_withdrawal.py` as the real-world differential for the gate itself.
 - **Status**: RATIFIED
 ---
 
@@ -2620,6 +2653,93 @@ The following legacy behaviors have been intentionally omitted or retired.
   `test_committed_compile_report_counts_equal_fresh_compile`).
 - **Status**: ACTIVE
 
+### DEV-010 — World-Boss Spawn Branches Are Inert Behind a Default-OFF Flag (TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING)
+
+- **Situation**: The boss spawn gate was lowered to maturity 2.0 / trauma 8.0 as a reachability fix (D-05) and that turned on a respawn-and-die loop: a boss spawned at its region centre every 100 ticks, was drained by hazard (no catalog faction, so no declared endurance) and died within ticks, and its death raised the trauma that re-opened the spawn. Measured over the 24 corpus worlds (10,000 ticks, `audit_mode`): 1,392 of 2,144 deaths (65%) were boss deaths; the loop ran in 15 worlds. The owner deferred the boss feature, but the deferred feature was producing most of the deaths every trauma measurement rested on.
+- **Change**: `ENABLE_WORLD_BOSS_SPAWN` (default OFF) gates all three spawn branches: `BossService.check_for_boss_spawn`, `BossService.check_for_lair_spawn` and the calamity boss in `CalamityService.process_world_dynamics`. Code kept; no gate, threshold or siting changed (owner decision 14). The calamity trigger still advances `last_calamity_tick`. Seven tests that asserted a boss spawn now set the flag ON explicitly.
+- **Rationale**: **Intentional Gameplay Change**. A reversal of "the lair boss stays live", recorded as such; it makes the deferral honest rather than retiring the feature.
+- **Consequences recorded**: no boss, no lair occupant and no calamity boss spawn in default runs. Consumers of `world_boss`/`ancient_sentinel`/`dragonkin` (`world/threat.py`, `systems/world_systems/navigation.py`, observability kind constants, `quests/generator.py`) see none; none broke. The warrior hazard deaths (no catalog faction on runtime spawns) are separate and unchanged.
+- **Verification**: `tests/unit/world/test_world_boss_spawn_flag.py`.
+- **Status**: ACTIVE
+
+### DEV-011 — Regional Trauma Counts Only Deaths With a Violent Cause (rule ENV-07; TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING)
+
+- **Situation**: Every entity death added +1.0 regional trauma, and a building destroyed added +2.0, whatever the cause. On the corpus 2,112 of 2,144 deaths were environmental hazard drain against 31 combat deaths, so trauma recorded exposure, not unrest, and the Bible's "violence and activity" described something the number did not measure.
+- **Change**: a death counts only when its recorded combat outcome is a terminal combat result (`VIOLENT_DEATH_OUTCOME_KINDS`, `src/core/violent_cause.py`); a building destruction counts only when it carries a damaging `hp_delta` (the cause, verified: sabotage is the only producer). Worded as "violent cause", not "has a killer", so a declared catastrophe can be admitted by its own decision in one place (owner decision 15).
+- **Rationale**: **Intentional Gameplay Change**.
+- **Consequences recorded**: measured under `audit_mode`, seed 42, 10,000 ticks: `frontier_living_world` trauma 110.0 to 0 (peak 4.42) and `simq_scale_stress_seed42` 104.0 to 0 (peak 1.96), identical with the boss flag ON, because the boss gate (trauma >= 8.0) no longer opens. The 50 instability threshold, and everything that reads it (hazard growth, `ENV-06` calamity reachability, panic appraisal), is no longer crossed in default runs. The runtime-spawned warriors' hazard deaths remain but no longer feed trauma. **Not implemented:** the ratified clause that a wounded-then-drained death still counts; the engine keeps no record of recent attacker damage to judge it by, and 0 of 2,112 corpus `HAZARD` deaths had taken attacker damage at any earlier tick.
+- **Verification**: `tests/unit/engine/test_trauma_counts_violent_cause_only.py`, `tests/unit/core/test_violent_cause.py`.
+
+### DEV-012 — One Position-to-Region Rule for Every Lookup: Authored Precedence, Inclusive Edges (TCK-20261005-REGION-OVERLAP-VALIDATION-FLAG-HAS-NO-READER; LOC-08)
+
+- **Situation**: Five position-to-region lookups existed with three membership conventions (half-open `[min,max)`, closed `[min,max]`, and a nearest-centre fallback), and each credited only the first-declared region at a point inside several. The trauma writer (`SpatialQueryService.get_region_at`, half-open) and its readers (`DomainView.get_region_for_position`, closed) disagreed about the same field, terrain paint let the last-processed region win while the lookup let the first-declared one win, and the Bible's "strictly disjoint, enforced" overlap policy was enforced by nothing (`ValidationSpec.allow_overlapping_regions`, set `false` by all 24 worlds, was read by no code). A first version of the unified rule picked the smallest-area containing region; measured, it failed: the corpus overlaps are partial, not nested, so a thin road strip won every contested point by being small.
+- **Change**: owner decision 13 (rule `LOC-08`): **authored precedence**. `src/worldassembly/region_precedence.py::order_regions` resolves module and composition `region_precedence` declarations (plus contained-region-wins for undeclared nesting, and resolved declaration order for other undeclared overlaps, reported as an advisory) into one total order carried as the resolved world's region-list order; a region that owns no tile is an error. `core.region_resolution.resolve_region_among` takes the first region in that order that contains the point, inclusive on all four edges; `SpatialQueryService.get_region_at`, `DomainView.get_region_for_position`, `ApplyPath` region maintenance and the social-memory fallback apply it, and `WorldCompiler.compile()` paints terrain in that same order (first region wins, later regions skip painted tiles). The 15 ratified pairs are declared (`wolf_den` over `near_forest` in the two modules that contain both, the other 14 per composition); `allow_overlapping_regions` is deleted.
+- **Rationale**: **Unified** (one rule serves event credit, terrain and the region's hazard) and **Enforced** (3c). The hazard a tile applies is read through the same lookup, so precedence decides exposure: contested-zone deaths on battlefield ground were 100% `undead_remnants` dying of a neighbour's hazard, which the ratified `haunted_battlefield` wins reverse.
+- **Consequences recorded**: the resolved region-list order of the 15 corpus worlds with declarations changed (winners move ahead of losers only as far as needed), so region iteration order and, through it, which tile's terrain and hazard apply on shared tiles changed in those worlds; the `resolved/world.resolved.yaml` snapshots were regenerated (the other `resolved/*.json` carry only reorderings and timestamps and were left). Overlaps outside the 15 ratified pairs fall to contained-wins or declaration order with an advisory. Module-level declarations are supported (clause 1) and used by `wolf_den_near_forest` and `nomadic_herd`.
+- **Verification**: `tests/unit/worldassembly/test_region_precedence.py` (including every ratified pair holding in every resolved world); `tests/unit/engine/test_region_lookup_policy.py`; `tests/unit/worldbuilding/test_region_precedence_compile.py` (terrain-owning region equals lookup region); `tests/integration/worldassembly/test_resolved_snapshot_freshness.py`.
+
+### DEV-013 — Hazard Level Is Open-Ended and Trauma-Driven Growth Has No Ceiling (TCK-20261005-HAZARD-GROWTH-CAPPED-BELOW-EVERY-AUTHORED-COMBAT-REGION)
+
+- **Situation**: The growth step was `min(1.0, hazard + 0.01)`, written only when greater than the current value. Authored hazard runs to 4.0 (79 of 104 corpus region instances are authored at or above 1.0, including every combat region) and the generator authors above 1.0 by contract, so the step could never fire for any region that accumulates trauma. Bible 05 said "0.0 to 1.0" in one sentence; the generator contract, the ratified divergence record and the schema (no bounds) said otherwise. The `1.0` cap was not a recorded legacy divergence.
+- **Change**: `hazard_level` is open-ended (owner decision 12). Growth is `hazard + 0.01` each time the world-dynamics step runs while `trauma > 50.0`, with no ceiling (`HAZARD_GROWTH_STEP`, `HAZARD_GROWTH_TRAUMA_THRESHOLD` in `src/engine/world_dynamics.py`). Bible 05 is amended.
+- **Rationale**: **Bug Fix** for the dead branch, plus an **Intentional Gameplay Change** in its consequence: hazard now grows in regions where it never did. No ceiling was invented because none had a reason.
+- **Consequences recorded**: growth is about +0.01 per tick, linear and unbounded while trauma stays above 50 (it decays at 0.0005 per tick, so a region that reached 50 stays there). Measured, `generated_frontier_3_42`, seed 42, 10,000 ticks, deterministic: `goblin_camp` starts growing at tick 6911 and reaches 33.89 by tick 10,000 (authored 3.0); death count and cause mix are identical to the capped run (138 deaths, 96 `HAZARD`). `frontier_living_world` (single non-audit runs, so indications only: see `TCK-20261005-TICK-BUDGET-THROTTLE-MAKES-NON-AUDIT-RUNS-WALL-CLOCK-DEPENDENT`): `bandit_road` and `goblin_camp` start growing near tick 5,200 and reach about 50 by tick 10,000. Drain is `hazard * (1 + calamity) * 10` HP per tick, so those regions drain hundreds of HP per tick for any entity without the matching hazard immunity. The danger-urgency reader (`events.py`) still saturates at 1.0 and was not changed (see the ticket).
+- **Verification**: `tests/unit/engine/test_hazard_growth_open_ended.py`.
+- **Status**: ACTIVE
+
 ---
 *Last updated: 2026-09-02 (DEV-007 addendum, TCK-20260902-CLASSHALL-DEAD-CODE — deferred
 `ClassHallAction.train()` cleanup landed).*
+
+### 2.70 An Entity-Tracking Combat Move Ends When Its Target Is Dead, Inactive or Gone, and the In-Reach End Covers Intercept and Bracketing (TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION)
+
+- **Legacy Behavior**: only a `PURSUE` move had a completion condition (2.68), and only for a live target in reach. An `INTERCEPT`, a
+  `BRACKETING` reposition or a `PURSUE` whose target had died kept its sticky task and kept being dispatched as movement.
+- **Observed**: a live entity held one `PURSUE` for 986 ticks after its target died at tick 4 (`frontier_living_world`); two `INTERCEPT`
+  moves were held 30 and 20 ticks (`crowded_frontier`); one `BRACKETING` move circled a live target in reach until it was killed. (The
+  first count, 10 of 21 target-carrying moves, counted task records of dead movers and is not the live harm.)
+- **New Behavior**: `MovementCandidateSelector.tracked_move_complete` / `tracked_move_completion_update`, used by both `ENTITY_MOVE`
+  dispatchers, end `PURSUE`, `INTERCEPT`, `REPOSITION`+`BRACKETING` and `RETREAT`+`KITING` moves when the target entity is dead, inactive
+  or gone; pursuit, intercept and bracketing also end when the live target is in attack reach (kiting holds range). Cover-seeking moves
+  and a guard move with no recognised reason are unchanged; the two recognised guard moves are 2.71.
+- **Left as is, on purpose**: a `BRACKETING` move is de-facto pursuit. `bracket_pos` gates issuance and is the destination on the issuing tick only,
+  then live tracking of `target_id` overrides it (a comment at `pipeline_phases/movement.py:242-243` names `BRACKETING` among the entity-tracking modes). Exempting it
+  would make the move hold: a diagonal flank is distance 2 outside a melee reach of 1, and arriving never ends a move. Planner ruling 2026-10-06
+  (`TCK-20261006-LIVE-TRACKING-TARGET-HELPER-IGNORES-MOVEMENT-MODE`); the latent `SEEK_COVER` case is `TCK-20261006-SEEK-COVER-LIVE-TRACKED-TOWARD-ITS-THREAT-LATENT-TRIGGER`.
+- **Not behavior-neutral; measured**: legacy vs fixed arms, 4 worlds x 2 runs, all pairs matched. Per-move identity for `PURSUE` cannot be
+  compared on the corpus once an entity is freed (trajectories diverge); "unchanged" there rests on construction and the unit pins.
+- **Rationale**: **Bug Fix** (a sticky task with no completion condition), with **Unified** (one helper for four move kinds).
+- **Verification**: `tests/unit/engine/test_pursuit_completion.py` (21; with the dead-target condition disabled exactly 6 fail, with the
+  extra modes disabled exactly 5 fail).
+
+### 2.71 A Group Guard Move Ends When Its Target Is Dead, Inactive or Gone, and a Guard Obligation Also Ends When the Mover Leaves the Leader's Group (TCK-20261006-GROUP-GUARD-OBLIGATION-MOVE-OUTLIVES-ITS-LEADER)
+
+- **Legacy Behavior**: a `GUARD` move created by `tactical.py` (a hireling guarding its leader, reason `CONTRACT_OBLIGATION_GUARD`, or
+  guarding a wounded ally, reason `GUARDING_ALLY`) had no completion condition. The leader's liveness and group were checked when the guard
+  was decided only, and arriving does not end a move (the movement phase just stops moving), so the entity stood on a guard move for a
+  leader that had died or a group it was no longer in, never reaching the decision pass.
+- **Observed**: legacy arm, 4 worlds x 2 runs (pairs matched): one `CONTRACT_OBLIGATION_GUARD` move, `urban_political`, held 1004 ticks
+  (leader dead at tick 1003), but its mover was already dead (a corpse's stale task), so **0 live-mover ticks were observed with a dead
+  leader** and 3 with the group gone. Gate 4's investigation measured 16 live ticks of one guard mover (`crowded_frontier`) on the earlier tree (`origin/main` `7a9f302db` + #347 + the router fix); this probe, on `9299891a9` (15 commits later), finds no guard move there, so that figure does not reproduce on this tree and its cause was not isolated. The corpus therefore cannot
+  show the live harm; the defect is structural (nothing ends the move) and is pinned by construction and unit tests.
+- **New Behavior**: `MovementCandidateSelector.tracked_move_complete` (the helper of 2.70) tracks two more kinds, keyed on `GUARD` + reason:
+  `CONTRACT_OBLIGATION_GUARD` ends when the leader is dead, inactive or gone, or the mover is ungrouped or in another group;
+  `GUARDING_ALLY` ends only when the ally is dead, inactive or gone. Neither ends on reach. **Decision recorded:** a leader merely
+  pausing between interactions does not end the obligation, because INTERACT runs have gaps of up to 11 ticks (measured) and ending on a
+  pause would make the hireling flap. Cover-seeking and a guard with no recognised reason are unchanged.
+- **Not behavior-neutral; measured**: after arm, 4 worlds x 2 runs: 0 guard moves in every run, against 1 in `urban_political` on the
+  legacy arm. A per-move before and after is not available: freeing entities diverges the trajectories, so the single legacy instance does
+  not recur.
+- **Rationale**: **Bug Fix** (a sticky task with no completion condition), with **Unified** (the same helper as 2.70).
+- **Verification**: `tests/unit/engine/test_pursuit_completion.py` (29; with guard tracking disabled exactly 5 fail, with the group
+  condition disabled exactly 1 fails).
+
+### 2.72 A Contract Objective Is Withheld From the Contract's Own Source and Ends When Its Contract Is No Longer ACTIVE (TCK-20261005-SOCIAL-CONTRACT-OBJECTIVE-TARGETS-A-MOVING-COUNTERPARTY-AS-A-FIXED-POINT)
+
+- **Legacy Behavior**: `SocialContractGoalScorer` targeted `contract.source_id` for whoever held an ACTIVE RECRUITMENT or LOAN contract and captured that entity's position when the goal won. The cooperation domain (`domains/cooperation/services.py:233`) creates its contracts with `source_id` equal to the requesting entity and adds them only to that entity, so the holder was always the target. Nothing ended the resulting project when its contract stopped being ACTIVE.
+- **Observed**: 4 worlds x 2000 ticks, seed 42, run twice with identical results: 2 contract projects formed (`crowded_frontier` 1, `urban_political` 1), each live 20 ticks, **both self-targeted**; in `urban_political` the captured position differed from the holder's live position on 18 of 20 ticks (max gap 2) and the project stayed ACTIVE for 16 ticks after its contract was FULFILLED. The scorer had a winning (utility > 0) contract score 195 times across the four worlds; only 2 became projects, and that gap was not investigated.
+- **New Behavior**: the scorer ignores a contract the holder itself sourced (`_is_active_with_a_counterparty`); a project serving a contract (`proj_contract_<id>_t<tick>`) ends when its contract is no longer ACTIVE: FULFILLED completes it, any other status or a missing contract abandons it (`contract_objective_outcome`, via the shared `objective_outcome`, in both `evaluate_strategic_intent` and the strategic work queue). The typed `target_entity_id` is deliberately **not** used: for a self-sourced holder it would make the entity target itself, and `entity_target_outcome` would never end it.
+- **Not behavior-neutral; measured**: after the change no contract project forms in any of the four worlds, so both Scope 4 numbers are 0 (they are 0 because the self-targeted projects no longer exist, not because termination was exercised on the corpus: termination is covered by constructed cases). Trajectories move because those two entities no longer pursue their own old positions: `crowded_frontier` scorer calls 1352 to 1235, `urban_political` 983 to 982, the other two worlds unchanged.
+- **Left as is**: for the other holder (the recruit, whose counterparty is the recruiter) Design Decision #8's captured position remains; nothing in `src` produces that holder today (`execute_recruit` would, but nothing issues RECRUIT). Whether a requester should walk to the helper, or the helper to the requester, was a world-semantics question sent to the world-rules owner, non-blocking. Answered 2026-10-06 (owner, via world-rule-catalog-design): the helper joins the task; the contract is social, never spatial; it binds when RECRUIT is wired.
+- **Rationale**: **Bug Fix** (an entity pursuing its own old position, and a project outliving its contract).
+- **Verification**: `tests/unit/strategic/test_contract_objective.py` (31; with the scorer guard removed 3 fail, with the contract predicate disabled 13 fail, with the work queue reverted to entity-only 1 fails).

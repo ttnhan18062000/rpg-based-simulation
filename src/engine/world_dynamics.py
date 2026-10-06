@@ -6,12 +6,19 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate
 from src.core.combat_constants import TERMINAL_COMBAT_OUTCOME_KINDS
+from src.core.violent_cause import is_violent_death_cause
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, RegionState, EntityState
     from src.core.updates import StateUpdate
     from src.systems.world_systems.generator import EntityGenerator
     from src.engine.cadence import SystemCadence
+
+# Trauma above this value (Mechanics Bible 05, regional trauma) drives hazard growth. Not adjustable here.
+HAZARD_GROWTH_TRAUMA_THRESHOLD = 50.0
+# Hazard added per application while trauma stays above the threshold (LEG-RPG-139).
+HAZARD_GROWTH_STEP = 0.01
+
 
 class WorldDynamicsSystem:
     """
@@ -60,14 +67,14 @@ class WorldDynamicsSystem:
         # 2.1 Death-triggered Trauma & Sovereignty (LEG-RPG-071/139)
         from src.core.enums import Faction
         for e_id, ent_upd in update.entity_updates.items():
-            if ent_upd.combat and ent_upd.combat.alive_set is False:
+            if ent_upd.combat and ent_upd.combat.alive_set is False and is_violent_death_cause(ent_upd.combat.outcome_kind):  # ENV-07
                 entity = state.entities.get(e_id)
                 if entity:
                     region = WorldDynamicsSystem._get_region_for_pos(state, entity.navigation.position)
                     if region:
                         world_upd = update.world_updates.get(region.id, WorldUpdate(region_id=region.id))
                         
-                        # Each death adds 1.0 trauma
+                        # Each violent death adds 1.0 trauma
                         new_trauma_delta = world_upd.trauma_delta + 1.0
                             
                         update.world_updates[region.id] = replace(
@@ -116,12 +123,11 @@ class WorldDynamicsSystem:
                     payload={"influence": round(current_influence, 2), "prev_owner": owner_fid or "none"},
                 ))
 
-            # Hazard scaling (LEG-RPG-139)
-            if current_trauma > 50.0:
-                new_hazard = min(1.0, region.hazard_level + 0.01)
-                if new_hazard > region.hazard_level:
-                    world_upd = replace(world_upd, hazard_level_set=new_hazard)
-                    changed = True
+            # Hazard scaling (LEG-RPG-139). hazard_level is open-ended (owner decision 12): authored
+            # values run to 4.0 and the generator authors above 1.0, so growth has no ceiling here.
+            if current_trauma > HAZARD_GROWTH_TRAUMA_THRESHOLD:
+                world_upd = replace(world_upd, hazard_level_set=region.hazard_level + HAZARD_GROWTH_STEP)
+                changed = True
 
             if changed or w_upd:
                 update.world_updates[r_id] = world_upd

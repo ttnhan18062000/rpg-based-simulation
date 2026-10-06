@@ -1419,6 +1419,10 @@ mechanisms:
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::process_project_outcome
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::_resolve_active_objective
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::evaluate_strategic_intent
+      - src/systems/strategic_systems/entity_target_objective.py::entity_target_outcome
+      - src/systems/strategic_systems/entity_target_objective.py::close_entity_target_project
+      - src/systems/strategic_systems/entity_target_objective.py::objective_outcome
+      - src/systems/strategic_systems/entity_target_objective.py::contract_objective_outcome
     verified:
       instrument: scenario
       verdict: observed
@@ -2016,6 +2020,7 @@ mechanisms:
     implemented_by:
       - src/world/consequences.py::RegionalConsequenceService
       - src/world/threat.py::ThreatService
+      - src/core/violent_cause.py::is_violent_death_cause
     verified:
       instrument: corpus_run
       verdict: contradicted
@@ -2034,15 +2039,18 @@ mechanisms:
         **Bound 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-
         RESOLUTION): `RegionalConsequenceService.process_recovery()`, the natural-decay half this
         note already cites, confirmed real caller at `src/engine/apply_plan.py:101`.
-        **Rule ratified 2026-10-05 (owner, catalog ENV-07):** trauma counts only violently caused
-        deaths; ambient attrition (hazard drain, passive biological drain, natural death) does not.
-        The producer at `src/engine/world_dynamics.py:59-75` still adds 1.0 for every death,
-        whatever the cause. Measured on frontier_living_world (base 54c31ee73), 232 of 233 deaths
+        **Rule ratified 2026-10-05 (owner, catalog ENV-07) and implemented (decision 15, DEV-011):**
+        trauma counts only violently caused deaths; ambient attrition (hazard drain, passive
+        biological drain, natural death) does not. The producer at `src/engine/world_dynamics.py`
+        now adds 1.0 only for a death whose recorded combat outcome is violent
+        (`src/core/violent_cause.py`), and a building destruction adds its +2.0 only when violent
+        (sabotage). Measured on frontier_living_world (base 54c31ee73), 232 of 233 deaths
         were hazard drain, 158 of them a world-boss respawn-and-die loop. Re-measured on a
         post-fix base (06a0ce1cb), confirmed: across all 24 worlds, 0 of 2,112 hazard deaths had
-        prior attacker damage, and defeats were 31 before the fix and 30 after. Rebind and re-verify when the producer
-        change lands (TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-
-        LOOP-NOT-BY-FIGHTING). Its point-to-region attribution follows LOC-08.
+        prior attacker damage, and defeats were 31 before the fix and 30 after. After the change
+        (audit_mode, seed 42, 10,000 ticks) frontier_living_world trauma is 0 in every region (peak
+        4.42). The ratified "wounded-then-drained still counts" clause is NOT yet implemented: the
+        engine keeps no record of recent attacker damage (see Bible 05 section 2). Its point-to-region attribution follows LOC-08.
   - id: regional_sovereignty
     layer: region
     systems: [world, faction]
@@ -2253,7 +2261,7 @@ mechanisms:
     layer: world
     systems: [world]
     depends_on: [regional_trauma]
-    state: done
+    state: gated
     implemented_by:
       - src/world/boss.py::BossService::check_for_boss_spawn
     verified:
@@ -2269,14 +2277,25 @@ mechanisms:
         **Bound 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-
         RESOLUTION): method-level, since `BossService` also defines `check_for_lair_spawn()`/
         `resolve_boss_death()`, separate concerns this entry's own note does not describe.
-        **Deferred and to be made INERT (owner, 2026-10-05; catalog ENV-06):** the boss branches
+        **Deferred and made INERT (owner, 2026-10-05; catalog ENV-06; decision 14):** the boss branches
         (this method, `check_for_lair_spawn()`, and the calamity-gated spawn at calamity.py:42-53,
-        the last confirmed by the owner 2026-10-05) go behind a flag that defaults OFF, with the code
-        kept. While live, this branch spawned a boss with no hazard endurance at the region centre,
-        and it died of drain within ticks every ~100 ticks. That produced 68% of
+        the last confirmed by the owner 2026-10-05) now sit behind `ENABLE_WORLD_BOSS_SPAWN`, default OFF,
+        with the code kept. While live, this branch spawned a boss with no hazard endurance at the region
+        centre, and it died of drain within ticks every ~100 ticks. That produced 68% of
         frontier_living_world's deaths (base 54c31ee73). With bosses removed, trauma never
-        crosses 50 in any world. Its spawns are never evidence for any decision. Move
-        `state` when the flag lands.
+        crosses 50 in any world. Its spawns are never evidence for any decision.
+        **State corrected `done` to `gated` 2026-10-05** (TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING,
+        owner decision 14, DEV-010): this branch, `check_for_lair_spawn()` and the calamity boss in
+        `CalamityService.process_world_dynamics()` now spawn only when `ENABLE_WORLD_BOSS_SPAWN` is ON
+        (default OFF, `feature_flags.py`). The code, gates and the 2026-09-17 proof above are unchanged
+        and describe the flag-ON path; default runs spawn no boss.
+        **Correction 2026-10-05:** lowering `BOSS_SPAWN_THRESHOLD` / `BOSS_SPAWN_TRAUMA_THRESHOLD` from
+        50/20 to 2.0/8.0 under `TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY` made the gate
+        reachable, and that reachability is what turned on the boss respawn-and-hazard-death loop
+        (`TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING`).
+        "Fixed" and "proven end-to-end" above are accurate about reachability only; they are not
+        evidence that the spawn behaviour is correct. Under owner decision 15 violent-only trauma peaks
+        at 4.42, below the 8.0 gate, so the gate does not open on the current corpus whatever the flag.
   # ── World building, SPLIT 2026-10-05 from the former single `world_generation` entry ──────
   # (change taxonomy kind Split, docs/plans/mechanism_identity_and_change_taxonomy.md §2). The
   # former entry bound four classes as one mechanism. These stages failed independently in
@@ -2323,6 +2342,7 @@ mechanisms:
     implemented_by:
       - src/worldassembly/resolver.py::WorldAssemblyResolver
       - src/worldassembly/resolver.py::CompileProfileResolver
+      - src/worldassembly/region_precedence.py::order_regions
     verified:
       instrument: corpus_run
       verdict: observed
@@ -2356,6 +2376,13 @@ mechanisms:
         look up the wrong catalog region; (2) ASM-COMP-001 (:131-138) loops over all
         `module_refs` while `graph_map` holds only enabled ones, so an `enabled: false` ref would
         raise a false "not found" (no world uses `enabled: false` today).
+        **Update 2026-10-05 (LOC-08, owner decision 13; DEV-012, SUB-397):** region OVERLAP is now
+        resolved at assembly. `src/worldassembly/region_precedence.py::order_regions` (called from
+        `resolver.py` after the module merge) turns module and composition `region_precedence`
+        declarations, contained-region-wins and declaration order into one total order carried as the
+        order of `WorldSpec.regions`; it RAISES on an unknown id, a self-declaration, a cycle, or a
+        region that owns no tile, and reports each undeclared partial overlap as a `LOC-08` warning.
+        The "Region OVERLAP is not checked anywhere" sentence above is superseded.
   - id: resolved_world_snapshot
     layer: world
     systems: [world]
@@ -2393,6 +2420,7 @@ mechanisms:
     implemented_by:
       - src/worldbuilding/compiler.py::WorldCompiler
       - src/worldbuilding/validator.py::WorldValidator
+      - src/core/region_resolution.py::resolve_region_among
     verified:
       instrument: corpus_run
       verdict: observed
@@ -2420,6 +2448,16 @@ mechanisms:
         audit every position-to-region lookup before choosing a fix, and where an overlap check
         belongs (assembly or compilation) is part of that audit. This note's overlap clause will
         be re-stated when the audit lands.
+        **Re-stated 2026-10-05 (LOC-08, owner decision 13; DEV-012, SUB-397):** the audit landed and
+        the rule is authored precedence. Region OVERLAP is permitted and resolved: one total order
+        (`src/worldassembly/region_precedence.py::order_regions`, bound under `world_composition_assembly`)
+        is the order of `WorldSpec.regions`; `WorldCompiler.compile()` paints terrain in that order with
+        the FIRST region owning a tile (no longer last-wins), and every position-to-region lookup reads
+        the same order, so terrain, credit and the hazard a tile applies agree. A region that owns no
+        tile raises at assembly (`resolve_region_among` in `src/core/region_resolution.py` is bound here as
+        the shared point-to-region rule that reads the compiled order; no separate mechanism entry exists for
+        it). `ValidationSpec.allow_overlapping_regions` is deleted. Clause (3)
+        above is superseded; the compiler line references in it are historical.
         ---- earlier record (2026-09-20, as `world_generation`), kept ----
         TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION.
         `WorldCompiler.compile()` (called as a static method, not via instantiation -- an initial

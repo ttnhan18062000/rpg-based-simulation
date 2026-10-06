@@ -1,0 +1,23 @@
+name: PR body lint
+
+# TCK-20261006-PR-BODY-ATTRIBUTION-TRAILER-NOT-CHECKED: fails a PR whose body carries an attribution
+# trailer, so the rule does not depend on a session remembering `pr_render.py --check`.
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  pr-body-lint:
+    name: "PR body · no attribution trailer"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: tools/delivery/pr_body_lint.py
+      - name: Lint the PR body
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: python3 tools/delivery/pr_body_lint.py

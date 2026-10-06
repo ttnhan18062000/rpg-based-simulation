@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, List, Tuple, Optional, Any
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
 from src.engine.spatial import SpatialGrid
+from src.core.region_resolution import resolve_region_among
+from src.engine.spatial_query import SpatialQueryService
 
 class DomainView:
     """
@@ -51,8 +53,10 @@ class DomainView:
         pos: Tuple[float, float]
     ) -> Optional[Any]:
         """
-        Fast lookup for the region containing a position.
-        Uses a per-object regional list cache for isolation and safety.
+        Lookup for the region containing a position. Same answer as
+        ``SpatialQueryService.get_region_at``: both apply the one rule in
+        ``src.core.region_resolution.resolve_region_among`` (inclusive edges, first region in the resolved precedence
+        order that contains it, LOC-08), so a region's trauma is read from the same region it was credited to.
         """
         region_list = getattr(state, "_region_list_cache", None)
         if region_list is None:
@@ -61,13 +65,11 @@ class DomainView:
             else:
                 region_list = list(state.regions.values())
                 object.__setattr__(state, "_region_list_cache", region_list)
-            
-        px, py = pos
-        for region in region_list:
-            x_min, y_min, x_max, y_max = region.bounds
-            if x_min <= px <= x_max and y_min <= py <= y_max:
-                return region
-        return None
+
+        if getattr(state, "regions", None):
+            return SpatialQueryService.get_region_at(state, pos)
+        # A state that carries only a pre-built region list (no regions mapping): same rule over it.
+        return resolve_region_among(region_list, pos[0], pos[1])
 
     @staticmethod
     def get_region_trauma(

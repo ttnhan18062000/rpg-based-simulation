@@ -238,11 +238,24 @@ class BudgetSpec(BaseModel):
     max_buildings: Optional[int] = Field(None, ge=0, description="Maximum total buildings allowed")
     max_expected_artifact_mb: Optional[float] = Field(None, ge=0.0, description="Maximum expected artifact size in MB")
 
+class RegionPrecedenceSpec(BaseModel):
+    """One authored precedence declaration (LOC-08): `winner` beats every region id in `over`.
+
+    In a module the ids are that module's own region ids (clause 1: a module orders its own regions); in a
+    composition they are ids as they appear in THAT composition, after any module namespace prefix (clause 2:
+    cross-module order is declared where the geometry is composed, because the same bare id names different
+    bounds in different worlds).
+    """
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    winner: str = Field(..., min_length=1, description="Region id that owns the contested points")
+    over: List[str] = Field(..., min_length=1, description="Region ids that lose to the winner where bounds overlap")
+
+
 class ValidationSpec(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     expected_min_entities: int = Field(1, ge=0, description="Ceiling check for combined entity populations")
-    allow_overlapping_regions: bool = Field(False, description="Whether regional overlap is tolerated")
 
 class QuestDefinition(BaseModel):
     """Authoring-time blueprint for a procedural quest seed. Not a runtime quest instance."""

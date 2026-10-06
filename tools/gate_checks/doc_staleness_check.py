@@ -91,9 +91,47 @@ def check_doc_staleness(
     return results
 
 
+def _record(results, behavior_changed, files_changed, enabled, execution_mode):
+    """Write the verdict to the gate_verdicts shard (TCK-20261006-GATE-VERDICT-RECORD-AND-HAND-SITES)."""
+    import sys  # noqa: PLC0415
+    from pathlib import Path  # noqa: PLC0415
+    monitoring_dir = str(Path(__file__).resolve().parents[1] / "agent-monitoring")
+    if monitoring_dir not in sys.path:
+        sys.path.insert(0, monitoring_dir)
+    import gate_verdicts  # noqa: PLC0415
+    failed = any(r["status"] == "FAIL" for r in results)
+    gate_verdicts.record_gate_verdict(
+        enabled=enabled,
+        gate_id=gate_verdicts.gate_id_for("doc_staleness_check", "check_doc_staleness"),
+        gate_type="static_check",
+        phase="Document-Update",
+        verdict="FAIL" if failed else "PASS",
+        blocking=failed,
+        execution_mode=execution_mode,
+        inputs_ref={"head_sha": gate_verdicts.head_sha(),
+                    "files_sha": gate_verdicts.sha256_hex(f"{behavior_changed}|" + "\n".join(sorted(files_changed)))},
+    )
+
+
+def _pop_option(args, flag, takes_value):
+    """Remove `flag` (and its value) from `args`; return the value (True for a bare flag), else None."""
+    if flag not in args:
+        return None
+    idx = args.index(flag)
+    if not takes_value:
+        del args[idx]
+        return True
+    value = args[idx + 1] if idx + 1 < len(args) else None
+    del args[idx:idx + 2]
+    return value
+
+
 if __name__ == "__main__":
-    behavior_changed_arg = sys.argv[1].lower() == "true"
-    rest_args = sys.argv[2:]
+    argv = sys.argv[1:]
+    no_record = bool(_pop_option(argv, "--no-record", False))
+    mode_arg = _pop_option(argv, "--execution-mode", True)
+    behavior_changed_arg = argv[0].lower() == "true"
+    rest_args = argv[1:]
     if "--docs-to-update" in rest_args:
         split_idx = rest_args.index("--docs-to-update")
         files_changed_arg = rest_args[:split_idx]
@@ -103,3 +141,4 @@ if __name__ == "__main__":
         docs_to_update_arg = []
     result = check_doc_staleness(files_changed_arg, behavior_changed_arg, docs_to_update_arg)
     print("MARKER:" + json.dumps(result))
+    _record(result, behavior_changed_arg, files_changed_arg, not no_record, mode_arg)

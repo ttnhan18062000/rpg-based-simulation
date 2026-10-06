@@ -407,6 +407,19 @@ search_health()
 
 No curl. No bash. Results arrive as a structured tool response directly in context.
 
+### When the index is stale
+
+Each worktree searches its own index (`agent-working/.index/knowledge-index/`), so a worktree on another branch, or one whose docs
+and tickets changed since the last `make knowledge-index-update`, quietly searches an older corpus. Both search paths now compare
+the index's `manifest.json` (source path to mtime) with the files on disk, by `stat` only (about 0.1 s on the real corpus), and say so:
+
+- CLI `tools/knowledge_search.py query` prints one stderr line, `knowledge index is stale: N changed, N new, N removed -- run make knowledge-index-update`.
+- MCP `search_docs` returns `{"results": [...], "stale": {"changed": N, "new": N, "removed": N}}` instead of the bare list. A current index still returns the bare list.
+- A missing or unreadable `manifest.json` gives `staleness unknown` (CLI) or `"stale": {"unknown": true}` (MCP).
+
+Results are returned either way; the warning never blocks and nothing is rebuilt for you. Run `make knowledge-index-update`, then search again.
+A file that yields no document (an empty body, a ticket without a Request Summary) can count as `new` forever, so a small non-zero `new` is not by itself a problem.
+
 ### Priority order for agents
 
 | Priority | Method | When |

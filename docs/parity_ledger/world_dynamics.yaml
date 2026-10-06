@@ -2227,3 +2227,65 @@
     tier above CalamityService.apply_calamity_consequences()'s existing hazard_level
     > 0.5 growth gate -- deliberately distinct events on the same underlying signal,
     not a shared threshold.
+- id: WORLD-125
+  text: 'All three world-boss spawn branches are inert unless ENABLE_WORLD_BOSS_SPAWN
+    is explicitly ON in state.feature_flags (default OFF; owner decision 14): BossService.check_for_boss_spawn
+    (region boss), BossService.check_for_lair_spawn (Lair occupant) and the calamity
+    boss in CalamityService.process_world_dynamics. The code, gates (maturity 2.0,
+    trauma 8.0) and siting are unchanged; the calamity trigger still advances last_calamity_tick
+    whether or not a boss spawns.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/world/boss.py world_boss_spawn_enabled (WORLD_BOSS_SPAWN_FLAG);
+    src/world/calamity.py process_world_dynamics; src/domains/optimization/feature_flags.py
+    ENABLE_WORLD_BOSS_SPAWN
+  proof_type: null
+  test_path: tests/unit/world/test_world_boss_spawn_flag.py
+  divergence_note: DEV-010 (Intentional Gameplay Change)
+  support_boundary: 'Inertness only: spawn siting, the origin-radius town guard in
+    boss.py, boss faction identity and the lair-region trauma gate are deliberately
+    untouched (deferred feature design). Seven tests that asserted a boss spawn now
+    set the flag ON.'
+- id: WORLD-126
+  text: 'Regional trauma counts only deaths with a violent cause (rule ENV-07, owner
+    decision 15): a death adds +1.0 only when its recorded combat outcome is in VIOLENT_DEATH_OUTCOME_KINDS
+    (the terminal combat results, KILL and DEFEAT); environmental hazard drain, natural
+    death and passive starvation add nothing. A building destruction adds +2.0 only
+    when it carries a damaging hp_delta (sabotage is the only producer of one). The
+    test is the recorded cause, not the presence of a killer.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/violent_cause.py; src/engine/world_dynamics.py resolve_dynamics
+    death block; src/engine/apply_plan.py building destruction; docs/mechanics/05_world_evolution.md
+    Trauma Cycle
+  proof_type: null
+  test_path: tests/unit/engine/test_trauma_counts_violent_cause_only.py
+  divergence_note: DEV-011 (Intentional Gameplay Change)
+  support_boundary: 'No window rule for ''wounded then drained'': 0 of 2,112 corpus
+    HAZARD deaths had taken attacker damage at any earlier tick. Decay (-0.0005 per
+    tick) and the 50.0 threshold are unchanged. A declared catastrophe is admitted
+    by adding its cause to VIOLENT_DEATH_OUTCOME_KINDS under its own owner decision.'
+- id: WORLD-127
+  text: 'Trauma-driven hazard scaling (LEG-RPG-139): while a region''s trauma_score
+    (including the trauma proposed this tick) exceeds 50.0, its hazard_level gains
+    +0.01 each time the world-dynamics step runs. hazard_level is open-ended (owner
+    decision 12): the growth has no ceiling and works for every authored value, including
+    the 2.0-4.0 authored on every combat region. It previously capped at min(1.0,
+    h + 0.01) written only when greater, so it could never fire for a region authored
+    at 1.0 or above.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/world_dynamics.py WorldDynamicsSystem.resolve_dynamics (HAZARD_GROWTH_STEP,
+    HAZARD_GROWTH_TRAUMA_THRESHOLD); docs/mechanics/05_world_evolution.md Hazard Scaling
+    and Hazard Impacts
+  proof_type: null
+  test_path: tests/unit/engine/test_hazard_growth_open_ended.py
+  divergence_note: DEV-013 (Bug Fix / Intentional Gameplay Change)
+  support_boundary: 'Unbounded: a region that stays above trauma 50 keeps gaining
+    hazard linearly (about +0.01 per tick). The danger-urgency reader (systems/world_systems/events.py)
+    still saturates at hazard 1.0 and was not changed. Behavioural consequence measured
+    on generated_frontier_3_42 (deterministic) and frontier_living_world (not reproducible
+    run to run), 10,000 ticks.'

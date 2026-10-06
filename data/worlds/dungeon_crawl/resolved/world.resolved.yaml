@@ -189,4 +189,3 @@ quest_definitions:
   source_module: scalable_bandit_camp
 validation:
   expected_min_entities: 1
-  allow_overlapping_regions: false

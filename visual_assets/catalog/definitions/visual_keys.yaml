@@ -1,6 +1,7 @@
 # Semantic visual-key registry. Nothing registers keys dynamically: the namespace is finite and fixed by this hand-reviewed file.
 # `terrain.forest` is the one ADOPTED key (the AM-M6 pilot role, TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE). The other 22 Live Map terrain codes are registered `optional: true`
 # so draft set `terrain-v1` can name them (TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET); nothing is adopted for them and no release needs them. Key = `terrain.` + the snake_case name.
+# The `border.*` family (3 optional keys, D19) is not terrain: shared mask shapes for the fringes between terrains, kept in the same draft set so one `adopt-set` covers tiles and masks.
 record_type: visual_key_registry
 schema_version: 1
 keys:
@@ -118,5 +119,25 @@ keys:
     family: terrain
     description: Live Map Graveyard terrain cell (tile code 22), one 16x16 tile at scale x1; the colour fill #4a4050 is its fallback
     variant_axes: []
+    optional: true
+  # Terrain border masks (TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-CONTRACT, D19): shared 16x16 shapes, authored for ONE orientation and rotated by the client in 90-degree steps; the
+  # alpha channel is the shape (1-bit), the fringe shows the higher neighbour's own tile pixels where it is opaque. Decorative; a missing mask means today's hard edge.
+  - key: border.edge
+    family: border
+    description: Terrain border mask for one cell side, authored for the north side (rows 0-3), rotated 90 degrees per side by the client; a missing mask means a hard edge
+    variant_axes: []
+    detail: {values: [v1, v2, v3], default: v1}
+    optional: true
+  - key: border.outer_corner
+    family: border
+    description: Terrain border mask for one diagonal corner, authored for the north-east corner (x 12-15, y 0-3), rotated 90 degrees per corner by the client; a missing mask means a hard corner
+    variant_axes: []
+    detail: {values: [v1, v2, v3], default: v1}
+    optional: true
+  - key: border.inner_corner
+    family: border
+    description: Terrain border mask for two adjacent sides of the same higher terrain, authored for north plus east (an L within the outer 4 px), rotated 90 degrees per corner by the client; missing falls back to two edges
+    variant_axes: []
+    detail: {values: [v1, v2, v3], default: v1}
     optional: true
 aliases: []

@@ -57,6 +57,7 @@ Epic AC1 and AC3: no `bash(` in implement-ticket.js and one native run of a smal
 
 ## Assumptions / Open Questions
 - None beyond the parent epic's.
+- **2026-10-06, blocked by the environment, not run.** The owner approved this run on 2026-10-06 (answering "Run it"). Two attempts never reached Scope: the named workflow resolved the main checkout's `implement-ticket.js` (no attested sites) and returned the old `NATIVE_GATE_SITES_UNPORTED` refusal; a `scriptPath` run of the worktree file died with `agent type 'ticket-scoper' not found`, because the session was launched from `/mnt/data/Working` and the repo's `.claude/agents` were not registered. About 240k tokens were spent; no gate was reached and no repo state changed. A rerun needs a session started in a repo worktree, after the PR that lands `TCK-20260930-NATIVE-PORT-ATTESTED-GATE-SITES` merges, with `scriptPath` pointing at that tree's `implement-ticket.js`. The refusal run rows stay in the monitoring shard as a true record.
 
 ## Implementation Notes
 

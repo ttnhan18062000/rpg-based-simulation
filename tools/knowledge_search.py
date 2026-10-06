@@ -275,6 +275,24 @@ def _strip_frontmatter(text: str) -> str:
     return re.sub(r"^\s*---.*?---\s*", "", text, flags=re.DOTALL).strip()
 
 
+def _iter_doc_files(docs_root: Path):
+    """The *.md files under docs_root that are indexed, sorted: docs/archive/ and docs/lab/ subtrees are never indexed.
+    Shared by the corpus build and the stat-only staleness check so the two cannot disagree on what the corpus is."""
+    for md_file in sorted(docs_root.rglob("*.md")):
+        md_str = str(md_file).replace("\\", "/")
+        if "/docs/archive/" in md_str or md_str.endswith("/docs/archive"):
+            continue
+        if "/docs/lab/" in md_str or md_str.endswith("/docs/lab"):
+            continue
+        try:
+            rel = md_file.relative_to(docs_root)
+        except ValueError:
+            continue
+        if rel.parts and rel.parts[0] in ("archive", "lab"):
+            continue
+        yield md_file
+
+
 def _collect_docs_chunks(docs_root: Path, corpus_root: Path) -> list[dict]:
     """Walk docs_root for *.md files and return heading-aware chunks.
 
@@ -292,21 +310,9 @@ def _collect_docs_chunks(docs_root: Path, corpus_root: Path) -> list[dict]:
     """
     chunks: list[dict] = []
 
-    for md_file in sorted(docs_root.rglob("*.md")):
-        # Exclusion guard: skip docs/archive/ and docs/lab/ subtrees
-        md_str = str(md_file).replace("\\", "/")
-        if "/docs/archive/" in md_str or md_str.endswith("/docs/archive"):
-            continue
-        if "/docs/lab/" in md_str or md_str.endswith("/docs/lab"):
-            continue
-        # Also handle relative path checks for robustness
-        try:
-            rel = md_file.relative_to(docs_root)
-        except ValueError:
-            continue
+    for md_file in _iter_doc_files(docs_root):
+        rel = md_file.relative_to(docs_root)
         rel_parts = rel.parts
-        if rel_parts and rel_parts[0] in ("archive", "lab"):
-            continue
 
         try:
             raw = md_file.read_text(encoding="utf-8", errors="replace")
@@ -638,6 +644,70 @@ def _load_manifest(db_path: Path) -> dict[str, float]:
         return dict(data.get("paths", {}))
     except Exception:
         return {}
+
+
+def _corpus_source_paths(corpus_root: Path) -> list[str]:
+    """Stat-only twin of `_collect_corpus`: the source path of every file it reads, spelled relative to `corpus_root` as the
+    manifest spells it (a build runs with corpus root "."), with no file read and no extraction. A file that yields no
+    document (an empty body, a ticket without a Request Summary) still appears here, so it can count as `new` in
+    `index_staleness`; that overcount is small and the warning stays advisory."""
+    prefix = len(str(corpus_root)) + 1
+    paths: list[str] = []
+    done_dir = corpus_root / TICKETS / "done"
+    if done_dir.is_dir():
+        with os.scandir(done_dir) as entries:
+            paths.extend(f"{TICKETS.as_posix()}/done/{e.name}" for e in entries if e.name.startswith("TCK-") and e.name.endswith(".md"))
+    artifacts_root = corpus_root / STORED_ARTIFACTS
+    if artifacts_root.is_dir():
+        with os.scandir(artifacts_root) as entries:
+            paths.extend(f"{STORED_ARTIFACTS.as_posix()}/{e.name}/investigation.md" for e in entries
+                         if os.path.isfile(f"{e.path}/investigation.md"))
+    if (corpus_root / TICKETS / "working_log.csv").exists():
+        paths.append(str(TICKETS / "working_log.csv"))
+    docs_dir = corpus_root / "docs"
+    if docs_dir.is_dir():
+        paths.extend(str(p)[prefix:] for p in _iter_doc_files(docs_dir))
+    return paths
+
+
+def index_staleness(db_path: Path, corpus_root: Path | None = None) -> dict | None:
+    """How far the index at `db_path` is behind the corpus, by manifest mtimes (TCK-20261006-KNOWLEDGE-INDEX-STALE-WARNING).
+
+    `corpus_root` defaults to this checkout's root, the same anchor as the index. Returns None when current,
+    {"changed": n, "new": n, "removed": n} when not, or {"unknown": True} when the manifest is missing or unreadable. Stat
+    only: no embedding, no file read. Never raises. The CLI `query` and MCP `search_docs` both call this, so the two paths
+    cannot disagree."""
+    try:
+        root = corpus_root if corpus_root is not None else Path(_REPO_ROOT_STR)
+        paths = json.loads((db_path.parent / "manifest.json").read_text()).get("paths")
+        if not isinstance(paths, dict):
+            return {"unknown": True}
+        current = _corpus_source_paths(root)
+        changed = new = 0
+        for p in current:
+            if p not in paths:
+                new += 1
+                continue
+            try:
+                mtime = os.path.getmtime(root / p)
+            except OSError:
+                mtime = 0.0
+            if abs(mtime - paths[p]) > 0.01:
+                changed += 1
+        removed = len(set(paths) - set(current))
+        return {"changed": changed, "new": new, "removed": removed} if changed or new or removed else None
+    except Exception:  # noqa: BLE001 - a staleness check must never break a search
+        return {"unknown": True}
+
+
+def stale_warning(stale: dict | None) -> str | None:
+    """The one stderr line for `index_staleness` output, or None when current."""
+    if not stale:
+        return None
+    if stale.get("unknown"):
+        return "knowledge index staleness unknown (manifest.json missing or unreadable) -- run make knowledge-index-update"
+    return (f"knowledge index is stale: {stale['changed']} changed, {stale['new']} new, {stale['removed']} removed "
+            "-- run make knowledge-index-update")
 
 
 def _load_embedding_cache(db_path: Path) -> dict[str, list]:
@@ -997,6 +1067,10 @@ def cmd_query(args) -> int:
             file=sys.stderr,
         )
         return 0
+
+    warning = stale_warning(index_staleness(db_path, Path(args.corpus_root) if getattr(args, "corpus_root", None) else None))
+    if warning:
+        print(warning, file=sys.stderr)
 
     mode = getattr(args, "mode", "hybrid")
     query_text = args.query

@@ -21,3 +21,22 @@ fields:
       Stable cross-run join key. All records for all executions of the same ticket, by any
       provider, share the same ticket_id value.
     source: docs/ai/monitoring_writer_decision.md#execution-identity-model
+  # Path-record fields (TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD). Not identity fields: they say how a run
+  # got its path, so that a phase that never ran can be told from one that was never logged.
+  path_reason:
+    description: >
+      Run field. Why the ticket took its path: pipeline_default (the formal pipeline ran, set by the pipeline itself),
+      pipeline_unavailable, native_port_blocked, small_change, owner_directed, batch_hand_close, investigation_only,
+      other (needs a path_note) or unstated (the writers' default when nobody said).
+    source: tools/agent-monitoring/vocabulary.py#PATH_REASONS
+  phases_omitted:
+    description: >
+      Run field. Phases the run's tier marks `full` in workflows/implement-ticket.yaml that have no event in the run.
+      Derived at write time from that file, never hard-coded; conditional and skipped_event phases are never counted,
+      and a tier the file does not list records an empty list.
+    source: tools/agent-monitoring/path_record.py
+  skip_reason:
+    description: >
+      Event field, only on status `skipped`: tier_plan, condition_false, not_applicable, no_hand_tool, deferred, other
+      or unstated (the default).
+    source: tools/agent-monitoring/vocabulary.py#SKIP_REASONS

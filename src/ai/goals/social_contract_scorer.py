@@ -24,7 +24,7 @@ class SocialContractGoalScorer(GoalScorer):
 
         candidates: List[Tuple[float, ContractState, Tuple[Any, Any, str]]] = []
         for contract in entity.strategic.contracts.values():
-            if contract.status != ContractStatus.ACTIVE:
+            if not SocialContractGoalScorer._is_active_with_a_counterparty(entity, contract):
                 continue
             mapping = ContractService.get_project_mapping(contract)
             if mapping is None:
@@ -76,6 +76,20 @@ class SocialContractGoalScorer(GoalScorer):
                 "obj_id_prefix": obj_id_prefix,
             },
         )
+
+    @staticmethod
+    def _is_active_with_a_counterparty(entity: EntityState, contract: ContractState) -> bool:
+        """True for an ACTIVE contract whose counterparty is someone other than the holder.
+
+        The objective targets ``contract.source_id``. A contract the holder itself sourced has the holder as that id, so its
+        objective would send the entity to its own position. Every contract the cooperation domain creates is of that kind:
+        ``domains/cooperation/services.py`` (REQUEST_HELP / HIRE_SUPPORT) builds it with ``source_id=entity.id`` and adds it
+        only to that entity, and it is the only production producer (``execute_recruit`` would also give the recruit a copy,
+        but nothing in ``src`` issues RECRUIT). Measured: both contract projects the corpus produced were self-targeted
+        (TCK-20261005-SOCIAL-CONTRACT-OBJECTIVE-TARGETS-A-MOVING-COUNTERPARTY-AS-A-FIXED-POINT). Design Decision #8's capture
+        of the counterparty's position still applies to the other holder, which nothing in ``src`` produces today.
+        """
+        return contract.status == ContractStatus.ACTIVE and contract.source_id != entity.id
 
     @staticmethod
     def _raw_score(entity: EntityState, contract: ContractState, current_tick: int) -> float:

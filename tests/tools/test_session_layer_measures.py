@@ -222,10 +222,48 @@ def test_a_negative_span_is_unknown():
 # ---- retro section -----------------------------------------------------------------------------
 
 def test_section_renders_zeros_unresolved_and_unknown():
-    text = slr.render([], [{"session_role": "rpg-implementer"}, {}], [{"kind": "edit_outside_owns"}],
+    text = slr.render([], [{"session_role": "rpg-implementer"}, {"session_role": "unresolved"}], [{"kind": "edit_outside_owns"}],
                       [("#9", bl.latencies(None, None, None) | {"dispatch_source": "unavailable"})])
     assert "| role reminder | 0 | 0 |" in text and "| unresolved | 1 |" in text and "| rpg-implementer | 1 |" in text
     assert "edit_outside_owns: 1" in text and "unknown" in text and "never zero" in text
+
+
+def test_never_recorded_family_renders_the_dark_line_and_no_zero_table():
+    text = slr.render([], [], [], None, manual_total=0, boundary_total=0)
+    assert text.count("_Instrument not running: no manual_actions records exist in any week.") == 1
+    assert "_Instrument not running: no role_boundary records exist in any week." in text
+    assert "| role reminder |" not in text and "Total: 0" not in text and "None in this period." not in text
+
+
+def test_nothing_in_period_keeps_the_zero_table_and_says_the_instrument_is_active():
+    text = slr.render([], [], [], None, manual_total=7, boundary_total=2)
+    assert "| role reminder | 0 | 0 |" in text and "Total: 0." in text
+    assert "(instrument active; 7 records outside this period)" in text
+    assert "(instrument active; 2 records outside this period)" in text
+    assert "Instrument not running" not in text
+
+
+def test_uncounted_totals_keep_the_old_output():
+    text = slr.render([], [], [])
+    assert "| role reminder | 0 | 0 |" in text and "instrument" not in text.lower().replace("instrument.", "")
+
+
+def test_all_unresolved_runs_say_role_binding_was_not_active_and_a_mixed_set_does_not():
+    assert "role binding was not active" in slr.render([], [{}, {"session_role": "unresolved"}], [])
+    assert "role binding was not active" not in slr.render([], [{}, {"session_role": "rpg-implementer"}], [])
+    assert "role binding was not active" not in slr.render([], [], [])
+
+
+def test_runs_with_no_field_unresolved_runs_and_resolved_runs_are_three_distinct_rows():
+    text = slr.render([], [{}, {}, {"session_role": "unresolved"}, {"session_role": None}, {"session_role": "rpg-implementer"}], [])
+    assert "| predates field | 2 |" in text and "| unresolved | 2 |" in text and "| rpg-implementer | 1 |" in text
+    assert "recorded before `session_role` existed (no key)" in text and "stamped, but no binding named the closing session" in text
+
+
+def test_the_all_unresolved_line_ignores_runs_that_predate_the_field():
+    assert "role binding was not active" in slr.render([], [{}, {"session_role": "unresolved"}], [])
+    assert "role binding was not active" not in slr.render([], [{}, {}], [])  # nothing was stamped: nothing to say
+    assert "role binding was not active" not in slr.render([], [{}, {"session_role": "unresolved"}, {"session_role": "rpg-implementer"}], [])
 
 
 def test_load_family_and_period_filter(tmp_path):

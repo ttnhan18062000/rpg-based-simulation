@@ -83,8 +83,10 @@ def test_ported_rows_route_through_sh_helpers_and_legacy_bash_is_kept():
     assert "if (legacyBash) return legacyBash(cmd)" in text
     assert "const shOmit = async (cmd) => (legacyBash ? legacyBash(cmd) : '')" in text
     ported = [r for r in _rows() if r.get("ported_by")]
-    assert len(ported) == 29 and {r["ported_by"] for r in ported} == {
-        "TCK-20260930-NATIVE-PORT-BOOKKEEPING-ADVISORY-SITES", "TCK-20260930-NATIVE-PORT-INPUT-SITES"}
+    assert len(ported) == 38 and {r["ported_by"] for r in ported} == {
+        "TCK-20260930-NATIVE-PORT-BOOKKEEPING-ADVISORY-SITES", "TCK-20260930-NATIVE-PORT-INPUT-SITES",
+        "TCK-20260930-NATIVE-PORT-ATTESTED-GATE-SITES"}
+    assert not _unported_rows() and not find_bash_call_sites(SCRIPT), "AC1: no gate-class site calls bash()"
 
 
 def test_sh_helpers_behave_per_runtime_under_node():

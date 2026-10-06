@@ -119,7 +119,10 @@ class ReasonCode(str, Enum):
     SKILL_NOT_LEARNED = "SKILL_NOT_LEARNED"
     REGIONAL_SUPPRESSION = "REGIONAL_SUPPRESSION"
     ATTACKER_STATUS_BLOCKED = "ATTACKER_STATUS_BLOCKED"
-    
+    # Action router: a dispatched action that did nothing, reported instead of returned as a bare no-op
+    ACTION_WITHHELD_BY_POSTURE = "ACTION_WITHHELD_BY_POSTURE"
+    UNSUPPORTED_ACTION = "UNSUPPORTED_ACTION"
+
     # Tactical AI
     NO_TARGET = "no_target"
     LOW_HP_RETREAT = "low_hp_retreat"
