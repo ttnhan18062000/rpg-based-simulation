@@ -79,6 +79,31 @@ to Inherited).
   memo row 7. Until it exists, a wild creature's decision layer engages like any other hostile,
   as the spawned kinds already do on the `MONSTER_HORDE` bucket.
 
+**How a pair's permission is resolved: declared hostility decides, and missing data declares
+nothing.** Decided by world-rule-catalog-design under owner delegation, 2026-10-06 (memo row 18).
+A faction "declares" when the catalog holds a perspective or a relationship row for it.
+1. **Both factions declare:** attack is permitted in both directions if either side declares the
+   other hostile.
+2. **Exactly one faction declares:** that side's verdict decides both directions.
+3. **Neither declares:** the legacy fallback applies, which is already symmetric (only an attack on
+   one's own faction is refused).
+- **Why:** the permissive fallback (with no catalog data, only the same-faction check applies) is
+  not a judgement that two parties are enemies; it is the absence of any judgement. Letting that
+  absence override the other side's declared peace would make "no data" mean "at war".
+- **Consequence for `neutral` (no catalog data):** hero ↔ neutral is refused in both directions.
+  `hero_guild`'s perspective does not declare neutral hostile, and neutral declares nothing. A
+  neutral subject is not at war with the defenders. It remains exposed to invaders, whose declared
+  data makes them hostile to it.
+  - The existing pin (`test_legality_faction_mutation`: a hero may not attack an entity that
+    defected to NEUTRAL) stands.
+  - The change is that a neutral subject may no longer attack a hero.
+- **Alternatives not taken:** union in every case (would let heroes attack neutrals and revise the
+  pin); a stated NEUTRAL exception to symmetry (unneeded, since the general rule already settles it).
+- **Measured at the decision:** Lane B's either-side rule over 16 factions × engaged/not (512
+  directed verdicts) flipped 16 to legal and none to illegal (10 `wild_beast_pack` pairs and 6
+  non-wild reverses), and left 58 asymmetric on the neutral and legacy-fallback side. Clause 2
+  resolves those 58; re-measuring them is owed with the implementation.
+
 **Repository evidence: CONFLICTING — legality is one-way for catalog-wild factions.**
 `verify_attack_legality` (`src/engine/legality.py:252-272`) routes through
 `FactionSemanticsService.is_hostile_compat` and the catalog relationship whenever the attacker's
