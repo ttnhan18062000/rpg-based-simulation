@@ -253,7 +253,8 @@ def test_reexport_deletes_the_stale_files_of_the_rolling_bundle(tmp_path):
     root = tmp_path / "t"
     ht.export_bundle(root=root, handover_dir=h, memory_dir=m, host="hostA", draft_filter=None)
     assert "drafts/done-folder/TCK-1-DONE.md" in _paths(root)
-    ht.export_bundle(root=root, handover_dir=h, memory_dir=m, host="hostA", draft_filter=_flt(tmp_path))
+    ht.export_bundle(root=root, handover_dir=h, memory_dir=m, host="hostA", draft_filter=_flt(tmp_path),
+                     allow_shrink=True)  # dropping the finished drafts is more than a quarter of the bundle
     assert "drafts/done-folder/TCK-1-DONE.md" not in _paths(root)
     assert not list((root / "hostA" / "files").rglob("TCK-1-DONE*"))
 
@@ -386,3 +387,90 @@ def _tests_never_write_the_real_transit_tree():
     yield
     after = {p.name for p in real.iterdir()} if real.is_dir() else set()
     assert after == before, f"a test wrote to the real transit tree: {sorted(after - before)}"
+
+
+# TCK-20261006-HANDOVER-TRANSIT-EXPORT-WIPES-BUNDLE-VIA-SYMLINK-MEMORY-PATH
+
+
+def _memory_candidates(monkeypatch, tmp_path, *, logical_files=0, resolved_files=0):
+    logical, resolved = tmp_path / "logical" / "memory", tmp_path / "resolved" / "memory"
+    for d, n in ((logical, logical_files), (resolved, resolved_files)):
+        d.mkdir(parents=True)
+        for i in range(n):
+            (d / f"m{i}.md").write_text("x")
+    monkeypatch.setattr(ht, "memory_dir_candidates", lambda: [resolved, logical])
+    return logical, resolved
+
+
+def test_memory_dir_picks_the_candidate_that_holds_files(monkeypatch, tmp_path):
+    logical, _ = _memory_candidates(monkeypatch, tmp_path, logical_files=3)
+    assert ht.default_memory_dir() == logical
+
+
+def test_memory_dir_with_two_filled_candidates_refuses_and_names_both(monkeypatch, tmp_path):
+    logical, resolved = _memory_candidates(monkeypatch, tmp_path, logical_files=1, resolved_files=1)
+    with pytest.raises(ht.TransitError) as err:
+        ht.default_memory_dir()
+    assert str(logical) in str(err.value) and str(resolved) in str(err.value) and "--memory-dir" in str(err.value)
+
+
+def test_memory_dir_with_no_filled_candidate_returns_the_first(monkeypatch, tmp_path):
+    _, resolved = _memory_candidates(monkeypatch, tmp_path)
+    assert ht.default_memory_dir() == resolved
+
+
+def test_candidates_include_a_home_symlink_alias(monkeypatch, tmp_path):
+    real = tmp_path / "mnt" / "Working" / "repo"
+    real.mkdir(parents=True)
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / "Working").symlink_to(tmp_path / "mnt" / "Working")
+    monkeypatch.setattr(ht.Path, "home", classmethod(lambda cls: home))
+    assert ht._root_aliases(real.resolve()) == [home / "Working" / "repo"]
+
+
+def _big_bundle(tmp_path, memory_files=6):
+    h, m = _src(tmp_path)
+    for i in range(memory_files):
+        (m / f"m{i}.md").write_text(f"mem {i}")
+    root = tmp_path / "transit"
+    ht.export_bundle(root=root, handover_dir=h, memory_dir=m, host="hostA")
+    return root, h, m
+
+
+def test_shrinking_export_is_refused_and_leaves_the_bundle_untouched(tmp_path):
+    root, h, m = _big_bundle(tmp_path)
+    before = (root / "hostA" / ht.MANIFEST).read_text()
+    with pytest.raises(ht.TransitError, match="would shrink"):
+        ht.export_bundle(root=root, handover_dir=h, memory_dir=tmp_path / "empty", host="hostA")
+    assert (root / "hostA" / ht.MANIFEST).read_text() == before
+    assert list((root / "hostA" / "files" / "memory").glob("m*"))
+
+
+def test_allow_shrink_replaces_the_bundle(tmp_path):
+    root, h, _ = _big_bundle(tmp_path)
+    ht.export_bundle(root=root, handover_dir=h, memory_dir=tmp_path / "empty", host="hostA", allow_shrink=True)
+    assert not list((root / "hostA" / "files").glob("memory/*"))
+
+
+def test_an_export_that_only_adds_or_updates_proceeds(tmp_path):
+    root, h, m = _big_bundle(tmp_path)
+    (m / "new.md").write_text("n")
+    (m / "m0.md").write_text("changed")
+    ht.export_bundle(root=root, handover_dir=h, memory_dir=m, host="hostA")
+    assert "new.md" in _paths(root)
+
+
+def test_dry_run_prints_counts_and_writes_nothing(tmp_path, monkeypatch, capsys):
+    root, h, m = _big_bundle(tmp_path)
+    (m / "new.md").write_text("n")
+    before = (root / "hostA" / ht.MANIFEST).read_text()
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(ht, "TRANSIT_ROOT", root)
+    monkeypatch.setattr(ht, "HANDOVER_DIR", h)
+    monkeypatch.setattr(ht, "host_id", lambda: "hostA")
+    monkeypatch.setattr(ht, "load_draft_filter", lambda: None)
+    assert ht.main(["export", "--dry-run", "--memory-dir", str(m), "--role", "r"]) == 0
+    out = capsys.readouterr().out
+    assert "memory: 8 new, 7 existing" in out and "notes: 2 new, 2 existing" in out
+    assert (root / "hostA" / ht.MANIFEST).read_text() == before

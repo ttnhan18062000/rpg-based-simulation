@@ -20,6 +20,12 @@ native run attested as PASS for the same ticket, the native verdict is a `false_
 backstop as the authoritative re-run). `true_pass` is only ever recorded by someone who checked a pass on
 purpose; an unchecked pass is not assumed true.
 
+An `attested_command` row (`attest_gate.py`, the native runtime's evidence that a gate command ran) is not a verdict: it
+is kept as the input trail and never counted, so a native gate behind `shAttested` is one verdict (the pipeline-site row
+under the gate-policy id) and not two. The two link through `inputs_ref.stdout_sha` on the same ticket;
+`attested_without_verdict()` lists an attested row whose run never reached a pipeline-site row.
+(TCK-20261006-GATE-LEDGER-NATIVE-ATTESTED-ROWS-DOUBLE-COUNT.)
+
 CLI: `gate_ledger.py outcome|adjudicate|list|report`. An unknown `gate_verdict_id` is refused with exit 2.
 """
 from __future__ import annotations
@@ -71,8 +77,11 @@ def load_rows(data_root: Path = DEFAULT_DATA_ROOT) -> list[dict]:
     return rows
 
 
+ATTESTED_GATE_TYPE = "attested_command"
+
+
 def _split(rows: list[dict]) -> tuple[list[dict], list[dict], list[dict]]:
-    verdicts = [r for r in rows if "row_kind" not in r]
+    verdicts = [r for r in rows if "row_kind" not in r and r.get("gate_type") != ATTESTED_GATE_TYPE]
     outcomes = [r for r in rows if r.get("row_kind") == gate_verdicts.ROW_KIND_OUTCOME]
     adjudications = [r for r in rows if r.get("row_kind") == gate_verdicts.ROW_KIND_ADJUDICATION]
     return verdicts, outcomes, adjudications
@@ -82,6 +91,17 @@ def _latest_by_verdict(rows: list[dict]) -> dict[str, dict]:
     """Latest row per gate_verdict_id by (ts, read order); the earlier rows stay on disk."""
     ordered = sorted(enumerate(rows), key=lambda pair: (str(pair[1].get("ts", "")), pair[0]))
     return {r["gate_verdict_id"]: r for _, r in ordered if r.get("gate_verdict_id")}
+
+
+def attested_without_verdict(rows: list[dict], week: str | None = None) -> list[dict]:
+    """Attested rows (of `week`, all when None) with no verdict row on the same ticket carrying their `stdout_sha`:
+    the run died before the pipeline site recorded it, or the gate has no pipeline site. Listed, never dropped."""
+    linked = {(r.get("ticket_id"), (r.get("inputs_ref") or {}).get("stdout_sha"))
+              for r in rows if "row_kind" not in r and r.get("gate_type") != ATTESTED_GATE_TYPE}
+    return [r for r in rows
+            if "row_kind" not in r and r.get("gate_type") == ATTESTED_GATE_TYPE
+            and (week is None or _week_of(r.get("ts")) == week)
+            and (r.get("ticket_id"), (r.get("inputs_ref") or {}).get("stdout_sha")) not in linked]
 
 
 def derive_outcomes(verdicts: list[dict]) -> dict[str, dict]:
@@ -246,6 +266,14 @@ def _false_block_cell(g: dict) -> str:
     return f"{fb}/{n} ({round(100 * fb / n)}%)"
 
 
+def _attested_note(rows: list[dict], week: str | None) -> list[str]:
+    orphans = attested_without_verdict(rows, week)
+    if not orphans:
+        return []
+    names = _mix(Counter(r.get("gate_id") or "?" for r in orphans))
+    return [f"_Attested, no verdict row: {len(orphans)} ({names}). Attested rows are evidence, not counted as verdicts._"]
+
+
 def render_section(rows: list[dict], week: str | None = None, total_rows: int | None = None) -> str:
     """The retro's `## Gates` section. `total_rows` is the count of verdict rows in any week: 0 means the instrument
     is not running (zeros would mean nothing); rows elsewhere but none in the period read as "no gate verdicts"."""
@@ -258,14 +286,15 @@ def render_section(rows: list[dict], week: str | None = None, total_rows: int | 
     readings = report(rows, week)
     if not readings:
         outside = f" ({total_rows} records outside this period)" if total_rows else ""
-        return "\n".join(lines + [f"_No gate verdicts this period{outside}._", ""])
+        return "\n".join(lines + [f"_No gate verdicts this period{outside}._"] + _attested_note(rows, week) + [""])
     lines += ["| gate_id | verdicts (by mode) | blocking | outcomes recorded | outcomes derived | unresolved blocks | adjudicated | false blocks | false passes |",
               "|---|---|---|---|---|---|---|---|---|"]
     for g in readings:
         fp = g["adjudications"]["false_pass"] if g["adjudicated"] else "-"
         lines.append(f"| `{g['gate_id']}` | {g['verdicts']} ({_mix(g['by_mode'])}) | {g['blocking']} | {_mix(g['outcomes_recorded'])} | "
                      f"{_mix(g['outcomes_derived'])} | {g['unresolved']} | {g['adjudicated']} | {_false_block_cell(g)} | {fp} |")
-    return "\n".join(lines + ["", f"_\"too few adjudicated\" below {MIN_ADJUDICATED} rulings: counts only, no share._", ""])
+    lines += ["", f"_\"too few adjudicated\" below {MIN_ADJUDICATED} rulings: counts only, no share._"]
+    return "\n".join(lines + _attested_note(rows, week) + [""])
 
 
 def build_parser() -> argparse.ArgumentParser:
