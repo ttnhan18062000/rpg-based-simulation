@@ -5,6 +5,7 @@ Real git repositories, real child processes and a real `kill -9`; only the `clau
 from __future__ import annotations
 
 import dataclasses
+import shutil
 import json
 import os
 import signal
@@ -26,6 +27,7 @@ from tools.sessions.roster import load_roster  # noqa: E402
 ROSTER = load_roster(REAL_ROOT)
 ROLE = "agent-working-implementer"
 TARGET = ln.Target(ROSTER.role(ROLE), ROLE)
+ROLE_HANDOVER = Path(ROSTER.role(ROLE).handover)
 _ENV = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
         "GIT_COMMITTER_EMAIL": "t@t", "PATH": os.environ["PATH"], "HOME": os.environ.get("HOME", "/")}
 
@@ -266,3 +268,46 @@ def test_handover_summary_reads_the_awaiting_line(tmp_path):
     h.write_text("# H\n\n## Awaiting\n- the owner's go on the push\n\n## Next\n- x\n")
     assert ln.handover_summary(h)[1] == "- the owner's go on the push"
     assert ln.handover_summary(tmp_path / "none.md") == (None, "no handover note")
+
+
+# ---- TCK-20261006-HANDOVER-NOTES-RESOLVE-FROM-MAIN-CHECKOUT ------------------------------------
+
+@pytest.fixture
+def seat_worktree(repo, tmp_path):
+    for rel in ("registries", "docs/guidelines/session_roles", ".claude/agents"):
+        shutil.copytree(REAL_ROOT / rel, repo / rel)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "roster")
+    wt = tmp_path / "seat"
+    git(repo, "worktree", "add", "-q", "-b", "seat", str(wt))
+    return wt
+
+
+def test_dry_run_from_a_secondary_worktree_sees_the_main_checkout_note(repo, seat_worktree, tmp_path, monkeypatch, capsys):
+    note = repo / ROLE_HANDOVER
+    note.parent.mkdir(parents=True)
+    note.write_text("# Handover\n")
+    monkeypatch.setattr(os, "execvpe", lambda *a, **k: pytest.fail("must not exec in a dry run"))
+    assert ln.main([ROLE, "--dry-run", "--worktree", str(seat_worktree)], root=seat_worktree) == 0
+    assert "no handover note yet" not in capsys.readouterr().out
+    assert not (seat_worktree / ".claude" / "handover").exists()
+
+
+def test_real_launch_from_a_secondary_worktree_writes_no_stub_there(repo, seat_worktree, monkeypatch):
+    note = repo / ROLE_HANDOVER
+    note.parent.mkdir(parents=True)
+    note.write_text("# Handover\n")
+    monkeypatch.setattr(os, "execvpe", lambda *a, **k: None)
+    monkeypatch.setattr(os, "chdir", lambda *_: None)
+    ln.main([ROLE, "--worktree", str(seat_worktree)], root=seat_worktree)
+    assert not (seat_worktree / ".claude" / "handover").exists()
+    assert note.read_text() == "# Handover\n"
+
+
+def test_plan_launch_reports_a_missing_note_against_the_main_checkout(repo, seat_worktree, tmp_path):
+    code, lines, _ = _plan(repo, tmp_path, root=seat_worktree)
+    assert code == 0 and lines == ["no handover note yet: a stub will be created"]
+    note = repo / ROLE_HANDOVER
+    note.parent.mkdir(parents=True)
+    note.write_text("# Handover\n")
+    assert _plan(repo, tmp_path, root=seat_worktree)[1] == []
