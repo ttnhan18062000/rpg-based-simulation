@@ -2702,6 +2702,10 @@ The following legacy behaviors have been intentionally omitted or retired.
   dispatchers, end `PURSUE`, `INTERCEPT`, `REPOSITION`+`BRACKETING` and `RETREAT`+`KITING` moves when the target entity is dead, inactive
   or gone; pursuit, intercept and bracketing also end when the live target is in attack reach (kiting holds range). Cover-seeking moves
   and a guard move with no recognised reason are unchanged; the two recognised guard moves are 2.71.
+- **Left as is, on purpose**: a `BRACKETING` move is de-facto pursuit. `bracket_pos` gates issuance and is the destination on the issuing tick only,
+  then live tracking of `target_id` overrides it (a comment at `pipeline_phases/movement.py:242-243` names `BRACKETING` among the entity-tracking modes). Exempting it
+  would make the move hold: a diagonal flank is distance 2 outside a melee reach of 1, and arriving never ends a move. Planner ruling 2026-10-06
+  (`TCK-20261006-LIVE-TRACKING-TARGET-HELPER-IGNORES-MOVEMENT-MODE`); the latent `SEEK_COVER` case is `TCK-20261006-SEEK-COVER-LIVE-TRACKED-TOWARD-ITS-THREAT-LATENT-TRIGGER`.
 - **Not behavior-neutral; measured**: legacy vs fixed arms, 4 worlds x 2 runs, all pairs matched. Per-move identity for `PURSUE` cannot be
   compared on the corpus once an entity is freed (trajectories diverge); "unchanged" there rests on construction and the unit pins.
 - **Rationale**: **Bug Fix** (a sticky task with no completion condition), with **Unified** (one helper for four move kinds).

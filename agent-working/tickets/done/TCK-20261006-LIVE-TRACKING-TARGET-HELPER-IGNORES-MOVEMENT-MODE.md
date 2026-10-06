@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P3
 audience: agent
 ticket_id: TCK-20261006-LIVE-TRACKING-TARGET-HELPER-IGNORES-MOVEMENT-MODE
-phase: open
+phase: done
 date: 2026-10-06
 tags: [engine, combat]
 ---
@@ -17,7 +17,7 @@ tags: [engine, combat]
 threat it is meant to avoid
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -60,9 +60,9 @@ target, is a tactical-design question that fix does not answer. `SEEK_COVER` has
 - Guard-move lifecycles.
 
 ## Acceptance Criteria
-- [ ] Per-mode intent recorded.
-- [ ] Fixed-point modes no longer live-tracked; a disabling-control test for each.
-- [ ] A `SEEK_COVER` scenario test moves away from the threat.
+- [x] Per-mode intent recorded (investigation section 2): `PURSUE` and `INTERCEPT` track; `BRACKETING` is de-facto pursuit by the code's own comment; `SEEK_COVER` and `KITING` aim for a point or a range but are live-tracked by the helper; guard unchanged.
+- [ ] **Not done, superseded by the planner's ruling (option C, 2026-10-06):** fixed-point modes are not exempted from live tracking, because exempting alone makes a bracketing move hold at its tile and the complete fix (arrival ends a fixed-point move) widens the Sticky-Task Law, which is the owner's call. The candidate fix is carried by `TCK-20261006-SEEK-COVER-LIVE-TRACKED-TOWARD-ITS-THREAT-LATENT-TRIGGER`.
+- [ ] **Not done, moved to the same trigger ticket:** a constructed `SEEK_COVER` scenario test; with no helper change there is nothing for it to pin yet.
 
 ## Related Tickets
 - `TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION` (gate 4).
@@ -80,13 +80,17 @@ target, is a tactical-design question that fix does not answer. `SEEK_COVER` has
 - **Lane.** Lane A, after gate 4.
 
 ## Implementation Notes
-(to be filled by the implementer)
+No source change. The planner ruled option C: leave `resolve_live_tracking_target` unchanged and record BRACKETING as de-facto pursuit in `docs/engine/contracts/tactical_contract.md` section 3, divergence 2.70 and parity COMB-331, citing the comment at `pipeline_phases/movement.py:242-243` and the diagonal-flank fact (distance 2 > melee reach 1, and arriving never ends a move).
+
+The planner also asked to drop `bracket_pos` in `tactical.py` if nothing else reads it. **It is read**, in the same block: the walkability and `!= current position` checks gate whether a bracketing move is issued, and it is the issuing tick's destination and the payload `target_position`. Removing it would change which moves are issued, so it was kept (the planner's own condition), and the planner was told.
+
+The latent `SEEK_COVER` case (and, by the same helper, `KITING`) is parked as `TCK-20261006-SEEK-COVER-LIVE-TRACKED-TOWARD-ITS-THREAT-LATENT-TRIGGER`, with the arrival-end rule as the candidate fix needing an owner decision.
 
 ## Test Summary
-(to be filled by the implementer)
+No behavior changed, so no tests were added or run for this ticket; the existing helper tests are unaffected because the helper is untouched. Nothing about `SEEK_COVER` or `KITING` was measured: the corpus has no such move.
 
 ## Files Changed
-(to be filled by the implementer)
+`docs/engine/contracts/tactical_contract.md`, `docs/guidelines/intentional_divergences.md` (2.70), `docs/parity_ledger/combat_movement.yaml` (COMB-331 support boundary); new parked ticket `agent-working/tickets/todos/TCK-20261006-SEEK-COVER-LIVE-TRACKED-TOWARD-ITS-THREAT-LATENT-TRIGGER.md`.
 
 ## Completion Summary
-(to be filled by the implementer)
+Resolved by recording, per the planner's ruling. BRACKETING is documented as de-facto pursuit; `bracket_pos` is kept because it gates issuance; the latent `SEEK_COVER` live-tracking case is parked as `TCK-20261006-SEEK-COVER-LIVE-TRACKED-TOWARD-ITS-THREAT-LATENT-TRIGGER` (fires when any corpus world produces a `SEEK_COVER` move). Known gaps: no behavior was measured for `SEEK_COVER` or `KITING` (0 corpus moves, by reading only); whether bracketing should walk to its tile is left to the owner.

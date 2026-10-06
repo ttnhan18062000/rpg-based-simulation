@@ -4589,7 +4589,10 @@
     three worlds and 1 in dungeon_crawl (the 55% share was a forced-probe artefact).
     PURSUE unchanged-ness rests on construction and unit pins: corpus per-move identity
     is lost once an entity is freed. KITING is covered by a constructed test only
-    (0 corpus moves).'
+    (0 corpus moves). A BRACKETING move is de-facto pursuit by design (planner ruling
+    2026-10-06): bracket_pos gates issuance and is the destination on the issuing
+    tick only, then live tracking of target_id overrides it; a SEEK_COVER move would
+    head toward its threat by the same helper (0 corpus moves, parked as TCK-20261006-SEEK-COVER-LIVE-TRACKED-TOWARD-ITS-THREAT-LATENT-TRIGGER).'
 - id: COMB-332
   text: 'TCK-20261006-GROUP-GUARD-OBLIGATION-MOVE-OUTLIVES-ITS-LEADER: a group guard
     ENTITY_MOVE (GUARD with reason CONTRACT_OBLIGATION_GUARD, a hireling guarding
