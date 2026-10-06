@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20261005-ACTION-HANDLERS-MAY-RETURN-BARE-NO-OPS-THAT-HOLD-THE-TASK
-phase: open
+phase: done
 date: 2026-10-05
 tags: [engine, investigation]
 ---
@@ -16,7 +16,7 @@ The silent-no-op fix covered `ActionRouter.execute_action`'s own returns; whethe
 (`execute_interact`, `execute_repair`, ...) return the same bare no-op that holds a task was not enumerated
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -57,10 +57,10 @@ instance has been observed. This ticket establishes whether one exists.
 - `scheduler.py` (CONTESTED, not granted).
 
 ## Acceptance Criteria
-- [ ] Complete list of handler-internal non-failure returns, each marked reachable-on-held-task or not.
-- [ ] Held-task exposure per action kind, as values.
-- [ ] Reachable instances fixed with typed reasons and a disabling-control test; unreachable ones recorded.
-- [ ] If nothing is reachable, stated plainly and the ticket closed as a measured non-defect.
+- [x] Complete list of handler-internal non-failure returns, each marked reachable-on-held-task or not (investigation section 2).
+- [x] Held-task exposure per action kind, as values (investigation section 3: 4 worlds x 2 runs, all pairs matched).
+- [x] Reachable instances fixed: there are none, so nothing was changed; unreachable ones are recorded.
+- [x] Nothing is reachable, stated plainly, and the ticket closed as a measured non-defect.
 
 ## Related Tickets
 - `TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS` — parent.
@@ -79,13 +79,13 @@ instance has been observed. This ticket establishes whether one exists.
 - **Lane.** Lane A, after its current batch.
 
 ## Implementation Notes
-(to be filled by the implementer)
+No source change. Only `tactical.py` writes a held `action` payload (`INTERACT`, `EAT`, `REST`, `HOLD`, `SKILL`, `ATTACK`). `HOLD` had no handler and is the router fall-through the parent ticket already fixed. `INTERACT` recurs but always as a real effect; `SKILL` has typed failures only; `ATTACK`'s one bare return needs a falsy `context`, which no production dispatcher passes. The remaining bare returns (repair with nothing to repair, join/leave clan success, the `ActionIntentAdapter` decision-time returns) have no held-task producer. A first probe defined a run as consecutive ticks and would have hidden a task repeating every ~5 ticks; it was discarded and rerun with a run defined as consecutive same (action, target) dispatches by one entity.
 
 ## Test Summary
-(to be filled by the implementer)
+No behaviour changed, so no tests were added. Evidence: `probes/handler_exposure.py` over `crowded_frontier`, `frontier_living_world`, `urban_political`, `dungeon_crawl` (2000 ticks, seed 42, `audit_mode`, 2 runs each, all pairs matched): 0 bare dispatches on any action kind; `probes/classify_control.py` shows the classifier does flag a bare update.
 
 ## Files Changed
-(to be filled by the implementer)
+None under `src/`, `tests/` or `docs/`. Staging artifacts moved to `stored_artifacts/`: `investigation.md`, `plan.md`, `test_plan.md`, `probes/`.
 
 ## Completion Summary
-(to be filled by the implementer)
+Closed as a measured non-defect: no action handler can return a bare no-op on a held task in the shipped code. Limits (also in the investigation): handlers the corpus never dispatches are cleared by reading the code (no `src/` producer), not by measurement; the concurrent worker path was not run; the apply path's handling of an `INTERACT` against a depleted or missing node was not traced. If a producer for `REPAIR`, `TRADE`, `AOE_ATTACK` or the clan actions is ever added as a held task, its handler's bare returns (repair with nothing to repair, the AOE result missing the actor) become reachable and need a typed reason then.

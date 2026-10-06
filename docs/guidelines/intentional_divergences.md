@@ -2324,7 +2324,7 @@ untouched by §2.57's fix (out of that ticket's scope).
 - **New Behavior**: both `ENTITY_MOVE` dispatchers (`executor.py`, `worker_logic.py`) end a `PURSUE` move whose `payload["target_id"]`
   names a live target within attack reach (Manhattan; melee needs distance 1; no weather multiplier): the task returns to the idle
   encoding (`ENTITY_ACT`, empty payload) and the navigation target is cleared
-  (`MovementCandidateSelector.pursuit_reached_attack_range` / `pursuit_completion_update`). For an objective with
+  (`MovementCandidateSelector.tracked_move_complete` / `tracked_move_completion_update`). For an objective with
   `target_entity_id`, `intelligence.py` and `redirection.py` set no navigation point (they still claim the navigation, so the
   return-to-town fallback stays suppressed); the tactical pass resolves the live position.
 - **Not behavior-neutral; measured** (real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`, `LocalSequentialExecutor`; taken on
@@ -2690,3 +2690,46 @@ The following legacy behaviors have been intentionally omitted or retired.
 ---
 *Last updated: 2026-09-02 (DEV-007 addendum, TCK-20260902-CLASSHALL-DEAD-CODE — deferred
 `ClassHallAction.train()` cleanup landed).*
+
+### 2.70 An Entity-Tracking Combat Move Ends When Its Target Is Dead, Inactive or Gone, and the In-Reach End Covers Intercept and Bracketing (TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION)
+
+- **Legacy Behavior**: only a `PURSUE` move had a completion condition (2.68), and only for a live target in reach. An `INTERCEPT`, a
+  `BRACKETING` reposition or a `PURSUE` whose target had died kept its sticky task and kept being dispatched as movement.
+- **Observed**: a live entity held one `PURSUE` for 986 ticks after its target died at tick 4 (`frontier_living_world`); two `INTERCEPT`
+  moves were held 30 and 20 ticks (`crowded_frontier`); one `BRACKETING` move circled a live target in reach until it was killed. (The
+  first count, 10 of 21 target-carrying moves, counted task records of dead movers and is not the live harm.)
+- **New Behavior**: `MovementCandidateSelector.tracked_move_complete` / `tracked_move_completion_update`, used by both `ENTITY_MOVE`
+  dispatchers, end `PURSUE`, `INTERCEPT`, `REPOSITION`+`BRACKETING` and `RETREAT`+`KITING` moves when the target entity is dead, inactive
+  or gone; pursuit, intercept and bracketing also end when the live target is in attack reach (kiting holds range). Cover-seeking moves
+  and a guard move with no recognised reason are unchanged; the two recognised guard moves are 2.71.
+- **Left as is, on purpose**: a `BRACKETING` move is de-facto pursuit. `bracket_pos` gates issuance and is the destination on the issuing tick only,
+  then live tracking of `target_id` overrides it (a comment at `pipeline_phases/movement.py:242-243` names `BRACKETING` among the entity-tracking modes). Exempting it
+  would make the move hold: a diagonal flank is distance 2 outside a melee reach of 1, and arriving never ends a move. Planner ruling 2026-10-06
+  (`TCK-20261006-LIVE-TRACKING-TARGET-HELPER-IGNORES-MOVEMENT-MODE`); the latent `SEEK_COVER` case is `TCK-20261006-SEEK-COVER-LIVE-TRACKED-TOWARD-ITS-THREAT-LATENT-TRIGGER`.
+- **Not behavior-neutral; measured**: legacy vs fixed arms, 4 worlds x 2 runs, all pairs matched. Per-move identity for `PURSUE` cannot be
+  compared on the corpus once an entity is freed (trajectories diverge); "unchanged" there rests on construction and the unit pins.
+- **Rationale**: **Bug Fix** (a sticky task with no completion condition), with **Unified** (one helper for four move kinds).
+- **Verification**: `tests/unit/engine/test_pursuit_completion.py` (21; with the dead-target condition disabled exactly 6 fail, with the
+  extra modes disabled exactly 5 fail).
+
+### 2.71 A Group Guard Move Ends When Its Target Is Dead, Inactive or Gone, and a Guard Obligation Also Ends When the Mover Leaves the Leader's Group (TCK-20261006-GROUP-GUARD-OBLIGATION-MOVE-OUTLIVES-ITS-LEADER)
+
+- **Legacy Behavior**: a `GUARD` move created by `tactical.py` (a hireling guarding its leader, reason `CONTRACT_OBLIGATION_GUARD`, or
+  guarding a wounded ally, reason `GUARDING_ALLY`) had no completion condition. The leader's liveness and group were checked when the guard
+  was decided only, and arriving does not end a move (the movement phase just stops moving), so the entity stood on a guard move for a
+  leader that had died or a group it was no longer in, never reaching the decision pass.
+- **Observed**: legacy arm, 4 worlds x 2 runs (pairs matched): one `CONTRACT_OBLIGATION_GUARD` move, `urban_political`, held 1004 ticks
+  (leader dead at tick 1003), but its mover was already dead (a corpse's stale task), so **0 live-mover ticks were observed with a dead
+  leader** and 3 with the group gone. Gate 4's investigation measured 16 live ticks of one guard mover (`crowded_frontier`) on the earlier tree (`origin/main` `7a9f302db` + #347 + the router fix); this probe, on `9299891a9` (15 commits later), finds no guard move there, so that figure does not reproduce on this tree and its cause was not isolated. The corpus therefore cannot
+  show the live harm; the defect is structural (nothing ends the move) and is pinned by construction and unit tests.
+- **New Behavior**: `MovementCandidateSelector.tracked_move_complete` (the helper of 2.70) tracks two more kinds, keyed on `GUARD` + reason:
+  `CONTRACT_OBLIGATION_GUARD` ends when the leader is dead, inactive or gone, or the mover is ungrouped or in another group;
+  `GUARDING_ALLY` ends only when the ally is dead, inactive or gone. Neither ends on reach. **Decision recorded:** a leader merely
+  pausing between interactions does not end the obligation, because INTERACT runs have gaps of up to 11 ticks (measured) and ending on a
+  pause would make the hireling flap. Cover-seeking and a guard with no recognised reason are unchanged.
+- **Not behavior-neutral; measured**: after arm, 4 worlds x 2 runs: 0 guard moves in every run, against 1 in `urban_political` on the
+  legacy arm. A per-move before and after is not available: freeing entities diverges the trajectories, so the single legacy instance does
+  not recur.
+- **Rationale**: **Bug Fix** (a sticky task with no completion condition), with **Unified** (the same helper as 2.70).
+- **Verification**: `tests/unit/engine/test_pursuit_completion.py` (29; with guard tracking disabled exactly 5 fail, with the group
+  condition disabled exactly 1 fails).

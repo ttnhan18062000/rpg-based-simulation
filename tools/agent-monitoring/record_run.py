@@ -23,7 +23,23 @@ def validate_record(record: dict) -> list[str]:
     missing = {f for f in REQUIRED if f not in record or record[f] is None}
     if missing:
         return [f"Missing required fields: {sorted(missing)}"]
-    return []
+    return _optional_field_errors(record)
+
+
+DURATION_SOURCES = ("declared", "tool_activity", "unknown")
+
+
+def _optional_field_errors(record: dict) -> list[str]:
+    """TCK-20261006-HAND-CLOSURE-RECORDER-REAL-TIMESTAMPS: optional provenance fields; absent (old rows) is always valid."""
+    errors = []
+    if record.get("duration_source") is not None and record["duration_source"] not in DURATION_SOURCES:
+        errors.append(f"duration_source must be one of {DURATION_SOURCES}")
+    if record.get("session_id") is not None and not isinstance(record["session_id"], str):
+        errors.append("session_id must be a string or null")
+    peers = record.get("claim_peers")
+    if peers is not None and not (isinstance(peers, int) and not isinstance(peers, bool) and peers >= 0):
+        errors.append("claim_peers must be a non-negative integer")
+    return errors
 
 
 def compute_duration_s(record: dict) -> int | None:

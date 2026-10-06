@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from src.scenarios.schema import SimulationScenarioDefinition
     from src.core.state import AuthoritativeState
     from src.observability.event_recorder import EventRecorder
+    from src.engine.governor import ResourceGovernor
 
 # ---------------------------------------------------------------------------
 # Module-level constants
@@ -126,6 +127,7 @@ class ScenarioRuntimeService:
         "_last_event_tick",
         "_initial_state",
         "_scenario_event_recorder",
+        "_governor",
     )
 
     def __init__(
@@ -133,8 +135,12 @@ class ScenarioRuntimeService:
         spec: "SimulationScenarioDefinition",
         initial_state: Optional["AuthoritativeState"] = None,
         scenario_event_recorder: Optional["EventRecorder"] = None,
+        governor: Optional["ResourceGovernor"] = None,
     ) -> None:
         """
+        `governor`, when given, is handed to the `Kernel` this service builds (None keeps the kernel's own default),
+        so a test can pin the runtime mode without hand-building the kernel.
+
         `scenario_event_recorder` is a narrow, scenario-bookkeeping-only side channel —
         it only ever receives `scenario_objective_completed`/`progressed`/`stalled`
         (TCK-20260909-CAMPAIGN-EVENT-RECORDER-SCENARIO-EVENTS-ONLY). It is NOT the real
@@ -148,6 +154,7 @@ class ScenarioRuntimeService:
         self._kernel = None
         self._initial_state = initial_state
         self._scenario_event_recorder = scenario_event_recorder
+        self._governor = governor
         self._state: ScenarioObjectiveState = ScenarioObjectiveState.RUNNING
         self._tick: int = 0
         self._paused: bool = False
@@ -414,7 +421,7 @@ class ScenarioRuntimeService:
         else:
             state = AuthoritativeState(tick=0, seed=0)
             rng = DeterministicRNG(base_seed=0)
-        return Kernel(profile, state, rng, flags={"no_replay": True})
+        return Kernel(profile, state, rng, flags={"no_replay": True}, governor=self._governor)
 
 
 # E31C: re-export so callers can do `from src.engine.scenario_runtime import ScenarioCheckpointer`

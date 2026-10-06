@@ -1,0 +1,3 @@
+# Test Plan — TCK-20261006-HAND-CLOSURE-RETRO-PROVENANCE
+
+`tests/tools/test_retro_provenance.py` (8): headline excludes derived and the derived average sits beside it with n; the unknown count appears next to every average (run summary and by-mode); the by-source table and coverage line; the note renders once at the top with the first week; derived runs are not Slow Runs; `session_window` cost is out of the spend tables and on its own line; a window without the fields renders exactly as before; coverage counts come from hand runs only. Sweep: 1,827 tests across monitoring/retro files pass (incl. the 188 in test_generate_retro.py).
