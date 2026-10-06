@@ -18,6 +18,52 @@ if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
     from src.systems.lifecycle_systems.genetics import GeneticProfile
 
+# TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION: runtime-spawned kinds whose catalog faction is declared in
+# content (entity_archetypes.yaml `faction`, factions.yaml `common_species`) or ruled by the owner (2026-10-06:
+# dragonkin is dragon_cult). world_boss is absent on purpose (boss feature design is deferred). wolf/slime/bear/
+# harpy/golem are HELD OUT (owner-confirmed gap, DEV-015): wild_beast_pack's catalog alignment is `wild`, so
+# `verify_attack_legality` rejects a spawned wolf attacking a hero as FRIENDLY_FIRE_ILLEGAL. Hostility stays on
+# the legacy bucket (every faction here has legacy_engine_bucket MONSTER_HORDE); nothing may route a spawned
+# monster's hostility through catalog alignment.
+SPAWN_KIND_CATALOG_FACTION: Dict[str, str] = {
+    "goblin_warrior": "goblin_warband",
+    "goblin_raider": "goblin_warband",
+    "orc_warrior": "orc_clan",
+    "bandit": "bandit_company",
+    "goblin": "goblin_warband",
+    "dragonkin": "dragon_cult",
+}
+
+
+_SPAWN_FREE_TILE_RADIUS = 5
+_SPAWN_REACH = 1  # tiles an entity can move in one tick
+
+
+def _reach_tiles(tile: tuple[int, int]) -> set[tuple[int, int]]:
+    return {(tile[0] + dx, tile[1] + dy) for dx in range(-_SPAWN_REACH, _SPAWN_REACH + 1)
+            for dy in range(-_SPAWN_REACH, _SPAWN_REACH + 1)}
+
+
+def _tiles_near_live_entities(state: AuthoritativeState) -> set[tuple[int, int]]:
+    blocked: set[tuple[int, int]] = set()
+    for e in state.entities.values():
+        if e.lifecycle.active and e.combat.alive:
+            blocked |= _reach_tiles((int(e.navigation.position[0]), int(e.navigation.position[1])))
+    return blocked
+
+
+_SPAWN_OFFSETS = sorted(
+    ((dx, dy) for dx in range(-_SPAWN_FREE_TILE_RADIUS, _SPAWN_FREE_TILE_RADIUS + 1)
+     for dy in range(-_SPAWN_FREE_TILE_RADIUS, _SPAWN_FREE_TILE_RADIUS + 1)),
+    key=lambda o: (max(abs(o[0]), abs(o[1])), o[1], o[0]),
+)
+
+
+def _catalog_faction_properties(kind: str) -> Dict[str, Any]:
+    faction_id = SPAWN_KIND_CATALOG_FACTION.get(kind)
+    return {"faction_id": faction_id} if faction_id else {}
+
+
 class EntityGenerator:
     """
     Authoritative factory for creating new entity generations.
@@ -27,7 +73,27 @@ class EntityGenerator:
     def __init__(self, seed: int):
         self.rng = DeterministicRNG(seed)
         self._last_id = 0
-        
+        self._claimed_tiles: tuple[int, set[tuple[int, int]]] = (-1, set())
+
+    def free_spawn_position(self, pos: tuple[float, float], state: AuthoritativeState | None) -> tuple[float, float]:
+        """LAW-OCCUPANCY-COLLISION: `pos` itself when its tile is clear, else the nearest clear tile (ring order,
+        then y, then x: deterministic, no RNG). A tile is clear when no live entity is within `_SPAWN_REACH` tiles and no spawn
+        earlier in the same tick holds it: a live entity can step onto a tile in the very tick a spawn
+        lands there (both are computed from the prior state), so exact-tile occupancy is not enough.
+        Raises when nothing in the search radius is clear: a silent stack would trip the hard law every tick."""
+        if state is None:
+            return pos
+        if self._claimed_tiles[0] != state.tick:
+            self._claimed_tiles = (state.tick, set())
+        claimed = self._claimed_tiles[1]
+        blocked = claimed | _tiles_near_live_entities(state)
+        bx, by = int(pos[0]), int(pos[1])
+        for dx, dy in _SPAWN_OFFSETS:
+            if (bx + dx, by + dy) not in blocked:
+                claimed.add((bx + dx, by + dy))
+                return pos if (dx, dy) == (0, 0) else (float(bx + dx), float(by + dy))
+        raise RuntimeError(f"no clear spawn tile within {_SPAWN_FREE_TILE_RADIUS} of {pos} at tick {state.tick}")
+
     def get_next_id(self) -> int:
         self._last_id += 1
         return self._last_id
@@ -77,8 +143,8 @@ class EntityGenerator:
         from src.core.builder import V2EntityBuilder
         return (V2EntityBuilder(entity_id)
             .kind(kind)
-            .location(*pos)
-            .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=evolution_level)
+            .location(*self.free_spawn_position(pos, state))
+            .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=evolution_level, properties=_catalog_faction_properties(kind))
             .navigation(home_position=pos, leash_radius=10.0)
             .combat(hp=int(base_hp), max_hp=int(base_hp), atk=int(base_atk), def_stat=int(base_def), readiness=100.0)
             .inventory(gold=int(base_gold))
@@ -233,8 +299,8 @@ class EntityGenerator:
         from src.core.builder import V2EntityBuilder
         return (V2EntityBuilder(entity_id)
             .kind("goblin")
-            .location(*pos)
-            .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=evolution_level)
+            .location(*self.free_spawn_position(pos, state))
+            .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=evolution_level, properties=_catalog_faction_properties("goblin"))
             .navigation(home_position=pos, leash_radius=8.0)
             .combat(hp=int(base_hp), max_hp=int(base_hp), atk=int(base_atk), def_stat=int(base_def), readiness=100.0)
             .inventory(gold=int(base_gold))

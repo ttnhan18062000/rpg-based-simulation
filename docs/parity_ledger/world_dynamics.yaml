@@ -2264,7 +2264,9 @@
   test_path: tests/unit/engine/test_trauma_counts_violent_cause_only.py
   divergence_note: DEV-011 (Intentional Gameplay Change)
   support_boundary: 'No window rule for ''wounded then drained'': 0 of 2,112 corpus
-    HAZARD deaths had taken attacker damage at any earlier tick. Decay (-0.0005 per
+    HAZARD deaths had taken attacker damage at any earlier tick (ratification-time
+    base; re-measured after the spawn-faction fix: 0 of 46, and 2 of 686 on the pre-fix
+    base, both a same-tick mix). Decay (-0.0005 per
     tick) and the 50.0 threshold are unchanged. A declared catastrophe is admitted
     by adding its cause to VIOLENT_DEATH_OUTCOME_KINDS under its own owner decision.'
 - id: WORLD-127
@@ -2289,3 +2291,23 @@
     still saturates at hazard 1.0 and was not changed. Behavioural consequence measured
     on generated_frontier_3_42 (deterministic) and frontier_living_world (not reproducible
     run to run), 10,000 ticks.'
+- id: WORLD-128
+  text: 'A runtime-spawned monster carries the catalog faction its kind has in content
+    (SPAWN_KIND_CATALOG_FACTION: goblin, goblin_warrior, goblin_raider -> goblin_warband;
+    orc_warrior -> orc_clan; bandit -> bandit_company; dragonkin -> dragon_cult), so
+    the hazard endurance that faction declares applies to it. The legacy MONSTER_HORDE
+    bucket is unchanged and still carries hostility; it is never granted immunity.
+    A spawn lands on the nearest tile with no live entity or same-tick spawn within
+    one tile, and spawning fails loudly when none is clear within radius 5.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/systems/world_systems/generator.py (SPAWN_KIND_CATALOG_FACTION,
+    EntityGenerator.free_spawn_position)
+  proof_type: null
+  test_path: tests/unit/world/test_spawn_monster_catalog_faction.py
+  divergence_note: DEV-015 (Bug Fix / Intentional Gameplay Change)
+  support_boundary: 'Held out (owner-confirmed gap): wolf, slime, bear, harpy, golem
+    keep the bucket only, because a wild_beast_pack attacker cannot legally attack a
+    hero. World bosses are unchanged. Placement avoids the same-tick spawn/move race;
+    it does not reorder movement and spawning.'
