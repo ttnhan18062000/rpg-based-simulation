@@ -1,6 +1,6 @@
 ---
 status: historical
-layer: engine
+layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-LAW-OCCUPANCY-COLLISION-HARD-LAW-ERRORS-ON-MAIN

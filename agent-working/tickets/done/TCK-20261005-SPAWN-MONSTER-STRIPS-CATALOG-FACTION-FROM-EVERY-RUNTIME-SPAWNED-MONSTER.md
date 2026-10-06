@@ -126,7 +126,7 @@ feature design, deferred by owner decisions 10 and 14. This ticket fixes monster
 - Measurement, mechanism and the ENV-07 trigger re-run: `agent-working/stored_artifacts/TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION-FROM-EVERY-RUNTIME-SPAWNED-MONSTER/investigation.md`.
 
 ## Test Summary
-`tests/unit/world/test_spawn_monster_catalog_faction.py` (22 tests: mapping, endurance, unchanged kinds, disabling control, hostility pins hero<->goblin/orc/dragonkin/bandit/wolf/bear/golem, placement, same-tick, loud failure). World + integration/world suites: 376 passed; `test_long_run_simulation_ph9` and `test_long_run_stability` fail identically on an untouched main control (own ticket). Code-health gates not run here: CI is the first real run unless the PR notes say otherwise.
+`tests/unit/world/test_spawn_monster_catalog_faction.py` (22 tests: mapping, endurance, unchanged kinds, disabling control, hostility pins hero<->goblin/orc/dragonkin/bandit/wolf/bear/golem, placement, same-tick, loud failure). World + integration/world suites: 376 passed (pre-rebase); `test_long_run_simulation_ph9` and `test_long_run_stability` fail identically on an untouched main control (own ticket). Code-health gates ran in a scratch venv at the locked versions (ratchet 0 new, 0 worse; mypy-baseline clean for generator.py; package registry valid); CI is the first real run.
 
 ## Files Changed
 `src/systems/world_systems/generator.py`; `tests/unit/world/test_spawn_monster_catalog_faction.py`; `docs/guidelines/intentional_divergences.md` (DEV-015); `docs/parity_ledger/world_dynamics.yaml` (WORLD-128); `docs/mechanics/05_world_evolution.md`; stored artifacts.
