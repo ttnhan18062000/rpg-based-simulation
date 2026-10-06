@@ -7,7 +7,9 @@ from typing import TYPE_CHECKING, Tuple, Optional, Any, List, Dict
 
 from src.engine.domain.view import DomainView
 from src.core.enums import ReasonCode, EntityRole
-from src.content_semantics.faction import are_entities_hostile
+from src.content_semantics.faction import (
+    are_entities_hostile, get_faction_id_str, get_faction_semantics_service, get_species_id_str,
+)
 from src.content_semantics.relation import RelationContext
 from src.engine.spatial_query import SpatialQueryService
 from src.engine.rpg_depth import TerrainCostService
@@ -184,6 +186,28 @@ class LegalityServiceV2:
             
         return True, ReasonCode.LEGAL
 
+    @staticmethod
+    def _declares(repo: Any, source: str, target: str) -> bool:
+        """True when the catalog declares data for `source`: a perspective, or a relationship row toward `target`."""
+        return any(p.chosen_faction == source or p.id == source for p in repo.perspectives.values()) or any(
+            r.source_faction == source and r.target_faction == target for r in repo.faction_relationships.values())
+
+    @staticmethod
+    def _attack_permitted(attacker: EntityState, target: EntityState, context: Any) -> bool:
+        """CONFLICT-03: permission follows declared hostility and is symmetric; missing data declares nothing.
+        Both sides declared: legal both ways if either declares the other hostile. Exactly one side declared: its verdict decides both
+        directions. Neither declared: the legacy fallback (only the same legacy faction is illegal). A contextual threat differs only in
+        when it chooses to fight."""
+        service = get_faction_semantics_service()
+        source, target_fac = get_faction_id_str(attacker), get_faction_id_str(target)
+        forward = LegalityServiceV2._declares(service.repo, source, target_fac)
+        backward = LegalityServiceV2._declares(service.repo, target_fac, source)
+        if not (forward or backward):
+            return bool(attacker.identity.faction != target.identity.faction)
+        reverse = context.model_copy(update={"source_species": context.target_species, "target_species": context.source_species})
+        return bool((forward and service.is_hostile_compat(source, target_fac, context))
+                    or (backward and service.is_hostile_compat(target_fac, source, reverse)))
+
     # VERIFIED v2: melee_engagement_rules
     @staticmethod
     def verify_attack_legality(
@@ -221,12 +245,6 @@ class LegalityServiceV2:
             return False, ReasonCode.ATTACKER_STATUS_BLOCKED
 
         # 3. Faction Validity (Friendly Fire Law / Dynamic Relationship Check)
-        from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_species_id_str
-        from src.content_semantics.relation import RelationContext
-
-        attacker_faction_str = get_faction_id_str(attacker)
-        target_faction_str = get_faction_id_str(target)
-
         dist = LegalityServiceV2.get_manhattan_dist(attacker.navigation.position, target.navigation.position)
         # Check if they are already engaged in combat
         combat_engaged = False
@@ -249,27 +267,8 @@ class LegalityServiceV2:
             target_species=get_species_id_str(target),
         )
 
-        semantics_service = get_faction_semantics_service()
-        # Verify if clean relationship or perspective data exists
-        has_clean = False
-        source = attacker_faction_str
-        target_fac = target_faction_str
-        for p in semantics_service.repo.perspectives.values():
-            if p.chosen_faction == source or p.id == source:
-                has_clean = True
-                break
-        if not has_clean:
-            for rel in semantics_service.repo.faction_relationships.values():
-                if rel.source_faction == source and rel.target_faction == target_fac:
-                    has_clean = True
-                    break
-
-        if has_clean:
-            if not semantics_service.is_hostile_compat(attacker_faction_str, target_faction_str, context):
-                return False, ReasonCode.FRIENDLY_FIRE_ILLEGAL
-        else:
-            if attacker.identity.faction == target.identity.faction:
-                return False, ReasonCode.FRIENDLY_FIRE_ILLEGAL
+        if not LegalityServiceV2._attack_permitted(attacker, target, context):
+            return False, ReasonCode.FRIENDLY_FIRE_ILLEGAL
 
         # 4. Range Validity
         dist = LegalityServiceV2.get_manhattan_dist(attacker.navigation.position, target.navigation.position)
