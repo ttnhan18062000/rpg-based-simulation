@@ -30,8 +30,10 @@ def _already_settled_this_tick(ent_upd: EntityUpdate | None) -> bool:
     check the entity still took one more step toward a target it had just reached: a pursuer that arrived orthogonally
     adjacent sidestepped off adjacency on the completion tick, took an opportunity attack, and idled to the next brain
     cadence (TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED)."""
-    nav = ent_upd.navigation if ent_upd else None
-    return bool(ent_upd) and (ent_upd.moved_this_tick or bool(nav and nav.target_clear and nav.target_set is None))
+    if ent_upd is None:
+        return False
+    nav = ent_upd.navigation
+    return ent_upd.moved_this_tick or bool(nav and nav.target_clear and nav.target_set is None)
 
 
 class MovementPhase:
