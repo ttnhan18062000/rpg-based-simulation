@@ -33,7 +33,7 @@ class ShopService:
             return None
             
         from src.systems.economy import DynamicPriceService
-        unit_price = DynamicPriceService.calculate_buy_price(item_def.value, state)
+        unit_price = DynamicPriceService.calculate_buy_price(item_def.value)
         total_cost = unit_price * quantity
         total_cost = apply_reputation_discount(total_cost, entity.social.public_reputation)
         price_multiplier = unit_price / item_def.value if item_def.value > 0 else 1.0
