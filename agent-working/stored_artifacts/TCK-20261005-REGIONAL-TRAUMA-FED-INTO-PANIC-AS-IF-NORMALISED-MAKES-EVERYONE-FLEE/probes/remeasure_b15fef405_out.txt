@@ -1,0 +1,294 @@
+b15fef405
+##### crowded_frontier run1 forced_brain
+FORCED-BRAIN crowded_frontier 2000 {
+ "calls": 193,
+ "decision.ENTITY_ACT/ATTACK/None": 76,
+ "decision.ENTITY_MOVE/None/BRACKETING": 41,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 45,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 30,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 2,
+ "decision_by_hp.low.ENTITY_MOVE/None/BRACKETING": 7,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 8,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 24,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 74,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 34,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 37,
+ "decision_by_hp.ok.ENTITY_MOVE/None/PANIC_RETREAT": 6,
+ "hp_ge_0.4": 152,
+ "hp_lt_0.4": 41
+}
+EX {"tick": 4, "entity": 15, "hp": 1.0, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_ACT/ATTACK/None"}
+EX {"tick": 4, "entity": 19, "hp": 1.0, "bravery": 0.84, "readiness": 100.0, "adj": [15], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 6, "entity": 15, "hp": 1.0, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 6, "entity": 19, "hp": 0.81, "bravery": 0.84, "readiness": 100.0, "adj": [15], "decision": "ENTITY_ACT/ATTACK/None"}
+EX {"tick": 8, "entity": 18, "hp": 1.0, "bravery": 0.2, "readiness": 100.0, "adj": [29], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 12, "entity": 15, "hp": 0.99, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_ACT/ATTACK/None"}
+##### crowded_frontier run1 panic_terms
+PANIC-TERMS crowded_frontier 2000 {
+ "fleeing": 27,
+ "not_fleeing": 166,
+ "terms.low_hp": 7,
+ "terms.low_hp+nemesis_or_grudge": 7,
+ "terms.trauma(0.44)+low_hp": 1,
+ "terms.trauma(0.47)+low_hp+outnumbered(5h/1a)+nemesis_or_grudge": 1,
+ "terms.trauma(0.48)+low_hp+outnumbered(5h/1a)": 1,
+ "terms.trauma(0.48)+outnumbered(5h/1a)": 3,
+ "terms.trauma(0.49)+low_hp+nemesis_or_grudge": 1,
+ "terms.trauma(0.97)": 3,
+ "terms.trauma(0.97)+low_hp+outnumbered(5h/1a)+nemesis_or_grudge": 3,
+ "trauma_ge_0.8": 13,
+ "trauma_lt_0.8": 14
+}
+EX {"tick": 46, "entity": 19, "hp": 0.06, "trauma": 0.0, "panic": 0.55, "bravery": 0.84, "allies": 1, "hostiles": 1, "terms": ["low_hp"]}
+EX {"tick": 54, "entity": 17, "hp": 0.37, "trauma": 0.0, "panic": 0.95, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp", "nemesis_or_grudge"]}
+EX {"tick": 56, "entity": 17, "hp": 0.31, "trauma": 0.0, "panic": 1.0, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp", "nemesis_or_grudge"]}
+EX {"tick": 57, "entity": 17, "hp": 0.26, "trauma": 0.0, "panic": 1.0, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp", "nemesis_or_grudge"]}
+EX {"tick": 58, "entity": 17, "hp": 0.2, "trauma": 0.0, "panic": 1.0, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp", "nemesis_or_grudge"]}
+##### crowded_frontier run1 combat_volume
+COMBAT-VOLUME crowded_frontier 2000 {"decision_path.execute_attack_calls": 41, "resolve_attack.non_opportunity": 25, "resolve_multi_attack.opportunity.attackers": 116, "resolve_multi_attack.opportunity.calls": 113, "swap_pairs_ticks": 5}
+##### crowded_frontier run1 trauma_final
+T 2000 {'hometown': 1.9, 'goblin_camp': 0.0, 'bandit_road': 0.85, 'orc_stronghold': 0.0} died [] stability 
+##### crowded_frontier run2 forced_brain
+FORCED-BRAIN crowded_frontier 2000 {
+ "calls": 193,
+ "decision.ENTITY_ACT/ATTACK/None": 76,
+ "decision.ENTITY_MOVE/None/BRACKETING": 41,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 45,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 30,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 2,
+ "decision_by_hp.low.ENTITY_MOVE/None/BRACKETING": 7,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 8,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 24,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 74,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 34,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 37,
+ "decision_by_hp.ok.ENTITY_MOVE/None/PANIC_RETREAT": 6,
+ "hp_ge_0.4": 152,
+ "hp_lt_0.4": 41
+}
+EX {"tick": 4, "entity": 15, "hp": 1.0, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_ACT/ATTACK/None"}
+EX {"tick": 4, "entity": 19, "hp": 1.0, "bravery": 0.84, "readiness": 100.0, "adj": [15], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 6, "entity": 15, "hp": 1.0, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 6, "entity": 19, "hp": 0.81, "bravery": 0.84, "readiness": 100.0, "adj": [15], "decision": "ENTITY_ACT/ATTACK/None"}
+EX {"tick": 8, "entity": 18, "hp": 1.0, "bravery": 0.2, "readiness": 100.0, "adj": [29], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 12, "entity": 15, "hp": 0.99, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_ACT/ATTACK/None"}
+##### crowded_frontier run2 panic_terms
+PANIC-TERMS crowded_frontier 2000 {
+ "fleeing": 27,
+ "not_fleeing": 166,
+ "terms.low_hp": 7,
+ "terms.low_hp+nemesis_or_grudge": 7,
+ "terms.trauma(0.44)+low_hp": 1,
+ "terms.trauma(0.47)+low_hp+outnumbered(5h/1a)+nemesis_or_grudge": 1,
+ "terms.trauma(0.48)+low_hp+outnumbered(5h/1a)": 1,
+ "terms.trauma(0.48)+outnumbered(5h/1a)": 3,
+ "terms.trauma(0.49)+low_hp+nemesis_or_grudge": 1,
+ "terms.trauma(0.97)": 3,
+ "terms.trauma(0.97)+low_hp+outnumbered(5h/1a)+nemesis_or_grudge": 3,
+ "trauma_ge_0.8": 13,
+ "trauma_lt_0.8": 14
+}
+EX {"tick": 46, "entity": 19, "hp": 0.06, "trauma": 0.0, "panic": 0.55, "bravery": 0.84, "allies": 1, "hostiles": 1, "terms": ["low_hp"]}
+EX {"tick": 54, "entity": 17, "hp": 0.37, "trauma": 0.0, "panic": 0.95, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp", "nemesis_or_grudge"]}
+EX {"tick": 56, "entity": 17, "hp": 0.31, "trauma": 0.0, "panic": 1.0, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp", "nemesis_or_grudge"]}
+EX {"tick": 57, "entity": 17, "hp": 0.26, "trauma": 0.0, "panic": 1.0, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp", "nemesis_or_grudge"]}
+EX {"tick": 58, "entity": 17, "hp": 0.2, "trauma": 0.0, "panic": 1.0, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp", "nemesis_or_grudge"]}
+##### crowded_frontier run2 combat_volume
+COMBAT-VOLUME crowded_frontier 2000 {"decision_path.execute_attack_calls": 41, "resolve_attack.non_opportunity": 25, "resolve_multi_attack.opportunity.attackers": 116, "resolve_multi_attack.opportunity.calls": 113, "swap_pairs_ticks": 5}
+##### crowded_frontier run2 trauma_final
+T 2000 {'hometown': 1.9, 'goblin_camp': 0.0, 'bandit_road': 0.85, 'orc_stronghold': 0.0} died [] stability 
+##### crowded_frontier CONTROL trauma-off forced_brain
+FORCED-BRAIN crowded_frontier 2000 {
+ "calls": 193,
+ "decision.ENTITY_ACT/ATTACK/None": 82,
+ "decision.ENTITY_MOVE/None/BRACKETING": 43,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 46,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 21,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 4,
+ "decision_by_hp.low.ENTITY_MOVE/None/BRACKETING": 8,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 8,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 21,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 78,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 35,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 38,
+ "hp_ge_0.4": 152,
+ "hp_lt_0.4": 41
+}
+EX {"tick": 4, "entity": 15, "hp": 1.0, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_ACT/ATTACK/None"}
+EX {"tick": 4, "entity": 19, "hp": 1.0, "bravery": 0.84, "readiness": 100.0, "adj": [15], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 6, "entity": 15, "hp": 1.0, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 6, "entity": 19, "hp": 0.81, "bravery": 0.84, "readiness": 100.0, "adj": [15], "decision": "ENTITY_ACT/ATTACK/None"}
+EX {"tick": 8, "entity": 18, "hp": 1.0, "bravery": 0.2, "readiness": 100.0, "adj": [29], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 12, "entity": 15, "hp": 0.99, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_ACT/ATTACK/None"}
+##### crowded_frontier CONTROL trauma-off panic_terms
+PANIC-TERMS crowded_frontier 2000 {
+ "fleeing": 18,
+ "not_fleeing": 175,
+ "terms.low_hp": 7,
+ "terms.low_hp+nemesis_or_grudge": 7,
+ "terms.low_hp+outnumbered(5h/1a)+nemesis_or_grudge": 4,
+ "trauma_lt_0.8": 18
+}
+EX {"tick": 46, "entity": 19, "hp": 0.06, "trauma": 0.0, "panic": 0.55, "bravery": 0.84, "allies": 1, "hostiles": 1, "terms": ["low_hp"]}
+EX {"tick": 54, "entity": 17, "hp": 0.37, "trauma": 0.0, "panic": 0.95, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp", "nemesis_or_grudge"]}
+EX {"tick": 56, "entity": 17, "hp": 0.31, "trauma": 0.0, "panic": 1.0, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp", "nemesis_or_grudge"]}
+EX {"tick": 57, "entity": 17, "hp": 0.26, "trauma": 0.0, "panic": 1.0, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp", "nemesis_or_grudge"]}
+EX {"tick": 58, "entity": 17, "hp": 0.2, "trauma": 0.0, "panic": 1.0, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp", "nemesis_or_grudge"]}
+##### frontier_living_world run1 forced_brain
+FORCED-BRAIN frontier_living_world 2000 {
+ "calls": 232,
+ "decision.ENTITY_ACT/ATTACK/None": 169,
+ "decision.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision.ENTITY_MOVE/None/BRACKETING": 1,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 32,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 25,
+ "decision.None/None/None": 1,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 19,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 3,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 25,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 150,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 29,
+ "decision_by_hp.ok.None/None/None": 1,
+ "hp_ge_0.4": 182,
+ "hp_lt_0.4": 50
+}
+EX {"tick": 4, "entity": 15, "hp": 1.0, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_ACT/ATTACK/None"}
+EX {"tick": 4, "entity": 17, "hp": 1.0, "bravery": 1.0, "readiness": 100.0, "adj": [46], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 4, "entity": 19, "hp": 1.0, "bravery": 0.84, "readiness": 100.0, "adj": [15], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 4, "entity": 46, "hp": 1.0, "bravery": 1.0, "readiness": 100.0, "adj": [17], "decision": "ENTITY_ACT/ATTACK/None"}
+EX {"tick": 6, "entity": 15, "hp": 1.0, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 6, "entity": 19, "hp": 0.81, "bravery": 0.84, "readiness": 100.0, "adj": [15], "decision": "ENTITY_ACT/ATTACK/None"}
+##### frontier_living_world run1 panic_terms
+PANIC-TERMS frontier_living_world 2000 {
+ "fleeing": 28,
+ "not_fleeing": 204,
+ "terms.low_hp": 6,
+ "terms.low_hp+outnumbered(3h/1a)": 1,
+ "terms.low_hp+outnumbered(5h/1a)": 1,
+ "terms.trauma(0.41)+low_hp": 16,
+ "terms.trauma(0.47)+low_hp+nemesis_or_grudge": 1,
+ "terms.trauma(0.47)+low_hp+outnumbered(3h/1a)+nemesis_or_grudge": 1,
+ "terms.trauma(0.47)+low_hp+outnumbered(4h/1a)+nemesis_or_grudge": 1,
+ "terms.trauma(0.5)+low_hp": 1,
+ "trauma_ge_0.8": 20,
+ "trauma_lt_0.8": 8
+}
+EX {"tick": 36, "entity": 19, "hp": 0.25, "trauma": 0.99, "panic": 0.45, "bravery": 0.84, "allies": 2, "hostiles": 1, "terms": ["trauma(0.5)", "low_hp"]}
+EX {"tick": 68, "entity": 19, "hp": 0.07, "trauma": 0.0, "panic": 0.55, "bravery": 0.84, "allies": 2, "hostiles": 1, "terms": ["low_hp"]}
+EX {"tick": 73, "entity": 17, "hp": 0.17, "trauma": 0.0, "panic": 0.5, "bravery": 1.0, "allies": 1, "hostiles": 3, "terms": ["low_hp", "outnumbered(3h/1a)"]}
+EX {"tick": 75, "entity": 17, "hp": 0.05, "trauma": 0.0, "panic": 0.5, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp"]}
+EX {"tick": 77, "entity": 17, "hp": 0.05, "trauma": 0.0, "panic": 0.5, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp"]}
+##### frontier_living_world run1 combat_volume
+COMBAT-VOLUME frontier_living_world 2000 {"decision_path.execute_attack_calls": 30, "resolve_attack.non_opportunity": 18, "resolve_multi_attack.opportunity.attackers": 106, "resolve_multi_attack.opportunity.calls": 106, "swap_pairs_ticks": 3}
+##### frontier_living_world run1 trauma_final
+T 2000 {'hometown': 0.96, 'old_mine': 0.0, 'trading_hometown': 0.0, 'haunted_battlefield': 0.0, 'goblin_camp': 0.0, 'bandit_road': 0.0, 'wolf_den': 0.0, 'near_forest': 0.0} died [] stability 
+##### frontier_living_world run2 forced_brain
+FORCED-BRAIN frontier_living_world 2000 {
+ "calls": 232,
+ "decision.ENTITY_ACT/ATTACK/None": 169,
+ "decision.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision.ENTITY_MOVE/None/BRACKETING": 1,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 32,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 25,
+ "decision.None/None/None": 1,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 19,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 3,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 25,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 150,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 29,
+ "decision_by_hp.ok.None/None/None": 1,
+ "hp_ge_0.4": 182,
+ "hp_lt_0.4": 50
+}
+EX {"tick": 4, "entity": 15, "hp": 1.0, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_ACT/ATTACK/None"}
+EX {"tick": 4, "entity": 17, "hp": 1.0, "bravery": 1.0, "readiness": 100.0, "adj": [46], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 4, "entity": 19, "hp": 1.0, "bravery": 0.84, "readiness": 100.0, "adj": [15], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 4, "entity": 46, "hp": 1.0, "bravery": 1.0, "readiness": 100.0, "adj": [17], "decision": "ENTITY_ACT/ATTACK/None"}
+EX {"tick": 6, "entity": 15, "hp": 1.0, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 6, "entity": 19, "hp": 0.81, "bravery": 0.84, "readiness": 100.0, "adj": [15], "decision": "ENTITY_ACT/ATTACK/None"}
+##### frontier_living_world run2 panic_terms
+PANIC-TERMS frontier_living_world 2000 {
+ "fleeing": 28,
+ "not_fleeing": 204,
+ "terms.low_hp": 6,
+ "terms.low_hp+outnumbered(3h/1a)": 1,
+ "terms.low_hp+outnumbered(5h/1a)": 1,
+ "terms.trauma(0.41)+low_hp": 16,
+ "terms.trauma(0.47)+low_hp+nemesis_or_grudge": 1,
+ "terms.trauma(0.47)+low_hp+outnumbered(3h/1a)+nemesis_or_grudge": 1,
+ "terms.trauma(0.47)+low_hp+outnumbered(4h/1a)+nemesis_or_grudge": 1,
+ "terms.trauma(0.5)+low_hp": 1,
+ "trauma_ge_0.8": 20,
+ "trauma_lt_0.8": 8
+}
+EX {"tick": 36, "entity": 19, "hp": 0.25, "trauma": 0.99, "panic": 0.45, "bravery": 0.84, "allies": 2, "hostiles": 1, "terms": ["trauma(0.5)", "low_hp"]}
+EX {"tick": 68, "entity": 19, "hp": 0.07, "trauma": 0.0, "panic": 0.55, "bravery": 0.84, "allies": 2, "hostiles": 1, "terms": ["low_hp"]}
+EX {"tick": 73, "entity": 17, "hp": 0.17, "trauma": 0.0, "panic": 0.5, "bravery": 1.0, "allies": 1, "hostiles": 3, "terms": ["low_hp", "outnumbered(3h/1a)"]}
+EX {"tick": 75, "entity": 17, "hp": 0.05, "trauma": 0.0, "panic": 0.5, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp"]}
+EX {"tick": 77, "entity": 17, "hp": 0.05, "trauma": 0.0, "panic": 0.5, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp"]}
+##### frontier_living_world run2 combat_volume
+COMBAT-VOLUME frontier_living_world 2000 {"decision_path.execute_attack_calls": 30, "resolve_attack.non_opportunity": 18, "resolve_multi_attack.opportunity.attackers": 106, "resolve_multi_attack.opportunity.calls": 106, "swap_pairs_ticks": 3}
+##### frontier_living_world run2 trauma_final
+T 2000 {'hometown': 0.96, 'old_mine': 0.0, 'trading_hometown': 0.0, 'haunted_battlefield': 0.0, 'goblin_camp': 0.0, 'bandit_road': 0.0, 'wolf_den': 0.0, 'near_forest': 0.0} died [] stability 
+##### frontier_living_world CONTROL trauma-off forced_brain
+FORCED-BRAIN frontier_living_world 2000 {
+ "calls": 232,
+ "decision.ENTITY_ACT/ATTACK/None": 172,
+ "decision.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision.ENTITY_MOVE/None/BRACKETING": 1,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 41,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 13,
+ "decision.None/None/None": 1,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 22,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 12,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 13,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 150,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 29,
+ "decision_by_hp.ok.None/None/None": 1,
+ "hp_ge_0.4": 182,
+ "hp_lt_0.4": 50
+}
+EX {"tick": 4, "entity": 15, "hp": 1.0, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_ACT/ATTACK/None"}
+EX {"tick": 4, "entity": 17, "hp": 1.0, "bravery": 1.0, "readiness": 100.0, "adj": [46], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 4, "entity": 19, "hp": 1.0, "bravery": 0.84, "readiness": 100.0, "adj": [15], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 4, "entity": 46, "hp": 1.0, "bravery": 1.0, "readiness": 100.0, "adj": [17], "decision": "ENTITY_ACT/ATTACK/None"}
+EX {"tick": 6, "entity": 15, "hp": 1.0, "bravery": 0.52, "readiness": 100.0, "adj": [19], "decision": "ENTITY_MOVE/None/None"}
+EX {"tick": 6, "entity": 19, "hp": 0.81, "bravery": 0.84, "readiness": 100.0, "adj": [15], "decision": "ENTITY_ACT/ATTACK/None"}
+##### frontier_living_world CONTROL trauma-off panic_terms
+PANIC-TERMS frontier_living_world 2000 {
+ "fleeing": 11,
+ "not_fleeing": 221,
+ "terms.low_hp": 6,
+ "terms.low_hp+nemesis_or_grudge": 1,
+ "terms.low_hp+outnumbered(3h/1a)": 1,
+ "terms.low_hp+outnumbered(3h/1a)+nemesis_or_grudge": 1,
+ "terms.low_hp+outnumbered(4h/1a)+nemesis_or_grudge": 1,
+ "terms.low_hp+outnumbered(5h/1a)": 1,
+ "trauma_lt_0.8": 11
+}
+EX {"tick": 68, "entity": 19, "hp": 0.07, "trauma": 0.0, "panic": 0.55, "bravery": 0.84, "allies": 2, "hostiles": 1, "terms": ["low_hp"]}
+EX {"tick": 73, "entity": 17, "hp": 0.17, "trauma": 0.0, "panic": 0.5, "bravery": 1.0, "allies": 1, "hostiles": 3, "terms": ["low_hp", "outnumbered(3h/1a)"]}
+EX {"tick": 75, "entity": 17, "hp": 0.05, "trauma": 0.0, "panic": 0.5, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp"]}
+EX {"tick": 77, "entity": 17, "hp": 0.05, "trauma": 0.0, "panic": 0.5, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp"]}
+EX {"tick": 79, "entity": 17, "hp": 0.05, "trauma": 0.0, "panic": 0.5, "bravery": 1.0, "allies": 1, "hostiles": 2, "terms": ["low_hp"]}
+##### CONTROL combat_volume dungeon_crawl (nonzero expected)
+COMBAT-VOLUME dungeon_crawl 2000 {"resolve_multi_attack.opportunity.attackers": 24, "resolve_multi_attack.opportunity.calls": 24, "swap_pairs_ticks": 1}
+ALL-DONE

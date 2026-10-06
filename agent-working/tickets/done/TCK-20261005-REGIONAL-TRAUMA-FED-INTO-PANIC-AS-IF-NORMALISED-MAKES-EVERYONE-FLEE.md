@@ -1,23 +1,90 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE
-phase: open
+phase: done
 date: 2026-10-05
 tags: [strategy, cognition, combat]
 ---
 
 # TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE
 
+> **CORRECTION 2026-10-06, rpg-implementer, rulings by `rpg-feature-planning`. This block supersedes
+> every figure and headline below it that it contradicts. Priority P1 -> P2.**
+>
+> **Config.** Commit `b15fef405` (origin/main at the time). Detached throwaway worktree, seed 42,
+> `PROD_SMALL` with `max_tick_budget_ms=1e9`, flags `no_frame_pacing`, `no_replay`, `audit_mode`,
+> `LocalSequentialExecutor`, 2000 ticks, one simulation at a time. Probes: the
+> `TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK` probe set
+> (`forced_brain.py`, `panic_terms.py`, `combat_volume.py`, `trauma_ticks.py`). Every counter was
+> IDENTICAL across two runs on both worlds, so these are values, not samples. Not re-run on a later
+> main.
+>
+> **(a) Decision mix, forced read-only `evaluate_entity_intent`, live hostile at Manhattan <= 1**
+> (calls are entity-ticks, not distinct decisions):
+>
+> | | `crowded_frontier` (193 calls) | `frontier_living_world` (232 calls) |
+> |---|---|---|
+> | `ATTACK` | 76 (39%) | 169 (73%) + 3 `OUT_OF_RANGE` |
+> | `BRACKETING` | 41 (21%) | 1 |
+> | `INTERCEPTING` | 1 | 1 |
+> | plain move | 45 (23%) | 32 (14%) |
+> | `PANIC_RETREAT` | 30 (16%): 24 at hp < 0.4, 6 at hp >= 0.4 | 25 (11%): all 25 at hp < 0.4 |
+> | none | 0 | 1 |
+>
+> **(b) Terms present in fleeing entities** (recompute of the `AppraisalSystem` terms on the
+> 5-neighbour saliency window; the fleeing count differs slightly from the `PANIC_RETREAT` count
+> because the windows differ):
+>
+> | | `crowded_frontier` (27 fleeing) | `frontier_living_world` (28 fleeing) |
+> |---|---|---|
+> | trauma term present | 13 | 20 |
+> | trauma alone over the threshold | 3 (hometown, trauma 1.9 -> +0.97) | 0 |
+> | trauma + low hp | 2 | 16 (+0.41 each) |
+> | low hp alone | 7 (+7 with nemesis/grudge) | 6 |
+> | outnumbered present | 8, never alone | 5, never alone |
+>
+> **(c) Combat volume, per run:**
+>
+> | | `crowded_frontier` | `frontier_living_world` |
+> |---|---|---|
+> | `execute_attack` (decision path) | 41 | 30 |
+> | `resolve_attack` non-opportunity | 25 | 18 |
+> | opportunity via `resolve_multi_attack` | 113 calls / 116 attackers | 106 calls / 106 attackers |
+>
+> A plain `resolve_attack` with `is_opportunity_attack=True` never fired (key absent = 0).
+>
+> **(d) Regional `trauma_score` at tick 2000** (end state after decay; peak and per-tick trajectory not
+> captured, and not needed per the planner): `crowded_frontier` hometown 1.9, bandit_road 0.85,
+> goblin_camp 0.0, orc_stronghold 0.0. `frontier_living_world` hometown 0.96, the other seven regions 0.0.
+>
+> **Controls.** Trauma forced to 0 (`get_region_trauma` patched to return 0.0): fleeing 27 -> 18 and
+> 28 -> 11, `PANIC_RETREAT` decisions 30 -> 21 and 25 -> 13, `ATTACK` 76 -> 82 and 169 -> 172. The
+> trauma term is live on the decision path and removes a third to a half of the flees. Both combat
+> counters are nonzero in the two worlds, so they fire; `dungeon_crawl` shows `execute_attack` absent
+> (0) with 24 opportunity attackers, so a zero reads as zero.
+>
+> **Rulings.** (1) The "root cause of the progression-starvation chain" headline is retired: neither
+> standard world is attack-starved at this commit (decision-path `execute_attack` 30-41 against the
+> 0-2 below), and `PANIC_RETREAT` is 11-16% of adjacent-hostile decisions, mostly at hp < 0.4, which
+> is appropriate fleeing. (2) The defect stays open as a units mismatch with a measured, smaller
+> impact: trauma is on 13 of 27 and 20 of 28 flees and crosses the threshold alone in 3 of 55. The
+> ratification request stands, at normal priority. (3) Do not implement before ratification, unchanged.
+>
+> **Superseded below:** "97% `PANIC_RETREAT`", the 353-call 40% / 55% mix, "one death makes most
+> entities flee and two makes all of them", "everyone flees", and "the progression-starvation chain's
+> root cause". The units-mismatch arithmetic is unchanged.
+
 ## Title
 `panic += region_trauma * 0.5` feeds an uncapped per-death counter into a 0-1 dread score with a 0.4
-flee threshold — so **one death in a region makes most entities flee and two makes all of them**,
-at any HP and any bravery. This is the progression-starvation chain's root cause.
+flee threshold. The units disagree (a +1.0-per-death counter against a 0.4 flee threshold), so
+trauma alone can cross the threshold in a region with two deaths; measured impact at `b15fef405` is
+smaller than first claimed (see the CORRECTION block above).
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -26,11 +93,13 @@ standard
 bug
 
 ## Priority
-P1
+P2
 
 ## Request Summary
 
-> **CORRECTION 2026-10-05, planner. The headline evidence in this ticket did not reproduce, and the
+Regional dread, the part of panic that comes from a region's trauma, now scales with trauma / 50.0 (the Bible 05 section 2 instability threshold), saturates at 0.3 and alone never makes a subject flee (world rule AGENCY-06, owner decision 17); a threat to the subject itself still can. Before, the raw uncapped per-death counter was added as `trauma * 0.5` against a 0.4 flee threshold. The ticket's own first-draft claims (97% of adjacent-hostile decisions flee, "the progression-starvation chain's root cause") did not reproduce at `b15fef405` and are superseded by the CORRECTION block at the top of this file.
+
+> **[SUPERSEDED by the 2026-10-06 CORRECTION at the top] CORRECTION 2026-10-05, planner. The headline evidence in this ticket did not reproduce, and the
 > priority is lowered from P0 to P1 on that basis. The defect is still real; the claim that it is the
 > dominant gate is withdrawn.**
 >
@@ -79,6 +148,9 @@ real sequence:
 3. **This ticket.**
 
 ### The finding
+
+> **[SUPERSEDED: the 97% / 143-of-147 figures below do not reproduce at `b15fef405`; see the
+> 2026-10-06 CORRECTION at the top.]**
 
 Forced read-only `evaluate_entity_intent` on real `crowded_frontier` states, every entity with a live
 catalog-hostile at Manhattan ≤ 1, 2000 ticks — **147 calls**:
@@ -146,9 +218,10 @@ conflated early and never reconciled.
    anchors will move.
 5. Document the mapping in the Mechanics Bible (04 or 05, wherever dread belongs) so the next reader
    cannot re-conflate the scales, and update `docs/parity_ledger/strategic_cognition.yaml`.
-6. Add an invariant test that no **single** appraisal term can cross the flee threshold on its own,
-   whatever the ratified mapping is. See Assumptions — this is worth having independently of option 1
-   versus 2.
+6. Add an invariant test that **regional dread alone** can never cross the flee threshold, whatever
+   the ratified mapping is. **Narrowed 2026-10-06 (rpg-feature-planning, AGENCY-06):** the invariant
+   covers regional dread only; a threat to the subject itself (health below 10%, wounds, a nemesis)
+   may still decide flight alone, and the test keeps a near-death control that flees alone.
 
 ## Out of Scope
 - **Tuning the flee threshold (0.4) or bravery's weight.** Owner decision 7 parks tuning. This ticket
@@ -162,16 +235,17 @@ conflated early and never reconciled.
 - `scheduler.py`. Contested, and not implicated.
 
 ## Acceptance Criteria
-- [ ] The mapping is ratified by the owner or the rule owner **before** implementation, recorded with
+- [x] The mapping is ratified by the owner or the rule owner **before** implementation, recorded with
       who decided and when.
-- [ ] Scope 3's re-measurement is reported for both worlds, including zeros, on a tree that has
+- [x] Scope 3's re-measurement is reported for both worlds, including zeros, on a tree that has
       `TCK-20261005-DIRTY-SET-…` (PR #344) so the numbers are reproducible rather than samples.
-- [ ] The no-single-term-decides invariant has a test.
-- [ ] The Bible records the mapping; `strategic_cognition.yaml` updated.
-- [ ] The behavioural consequence is stated, with the SimQ anchor movement named rather than
+- [x] The regional-dread-never-decides-alone invariant has a test (with a near-death control that
+      still flees alone).
+- [x] The Bible records the mapping; `strategic_cognition.yaml` updated.
+- [x] The behavioural consequence is stated, with the SimQ anchor movement named rather than
       discovered later.
-- [ ] Determinism sweep green; any moved fixture explained, not regenerated.
-- [ ] A deliberate-attack test (a tactical decision that sets an offensive ENTITY_ACT) on a world or seed with MEASURED hostile contact, i.e. an in-reach count K > 0 stated in the test, shows >= N deliberate attacks after the fix and fewer before (control arm). N is left for this ticket's investigation to set from the measured contact. K in reach must come from approach, not spawn adjacency (checked by the first in-reach decision's tick relative to spawn), or the test would skip the very gate under suspicion. The campaign episode test (`TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-BECAUSE-NO-DELIBERATE-ATTACK-ONLY-OPPORTUNITY-ATTACKS`) is NOT this signal; its XPASS is a bonus. The landing PR also re-measures that test's attempts, K and in-reach and records them in the campaign ticket (its revisit trigger).
+- [x] Determinism sweep green; any moved fixture explained, not regenerated.
+- [x] **Reworded 2026-10-06 (rpg-feature-planning, after the re-measure).** This ticket is not the attack-starvation fix. Its acceptance is the AGENCY-06 invariant (13-case test with a disabling control), trauma-alone flees = 0 on both worlds, and the flee and attack mix reported before and after. The measured-contact deliberate-attack AC that stood here moved to `TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-BECAUSE-NO-DELIBERATE-ATTACK-ONLY-OPPORTUNITY-ATTACKS`: it was added while this ticket was billed as the attack-chain root cause, and the re-measure retired that billing.
 
 ## Related Tickets
 - `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` — **this is the chain's root cause.** Its
@@ -195,8 +269,7 @@ conflated early and never reconciled.
 - `docs/parity_ledger/strategic_cognition.yaml`
 
 ## Related Stored Artifacts
-_(the three probes were run by `rpg-implementer` and are not committed — ask for them rather than
-rewriting one)_
+`agent-working/stored_artifacts/TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE/` (plan, investigation, test plan, and `probes/` with the before/after and control outputs and scripts).
 
 ## Related Code Areas
 - `src/engine/cognition.py::AppraisalSystem.evaluate_emotional_state` — the `panic += region_trauma *
@@ -254,13 +327,17 @@ rewriting one)_
 - **Hypothesis (n=1, one seed; from the campaign-test grid, `TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-BECAUSE-NO-DELIBERATE-ATTACK-ONLY-OPPORTUNITY-ATTACKS`):** in seed 1337 the only in-reach decision (entity 18, tick 32, hp 1.0) chose SAFETY_PRESSURE_RETREAT, and the only ATTACK decision (entity 47, tick 33) was made from outside combat range; contact came at ticks 32 to 33, by approach. So in that campaign the defect looks like "entities never close to reach because they retreat at full HP" rather than "entities in reach do not attack". It matches the earlier flee-gate finding on the standard worlds (PANIC_RETREAT on 97% of contact evaluations), but this is one seed and 10 to 14 perceived-hostile decisions per run, not a rate.
 
 ## Implementation Notes
-_(not started)_
+Ratified 2026-10-06: owner decision 17, world rule `AGENCY-06` (`docs/world_rules/knowledge-agency/agency-decision.md`, docs PR #375). `AppraisalSystem.evaluate_emotional_state` now adds `regional_dread(region_trauma) = REGIONAL_DREAD_MAX * min(1, max(0, trauma) / HAZARD_GROWTH_TRAUMA_THRESHOLD)` instead of `region_trauma * 0.5`; `REGIONAL_DREAD_MAX = 0.3`, `FLEE_PANIC_THRESHOLD = 0.4` named. The ceiling is chosen from the constraint: strictly below the flee threshold (dread alone never flees) and above the weakest threat-to-self term (0.2, health below 40%), so it can tip a wounded subject; 0.3 leaves a 0.1 margin. The 50.0 saturation point reuses `HAZARD_GROWTH_TRAUMA_THRESHOLD` (Bible 05 section 2). Scope 6 was narrowed to regional dread only (threats to the subject itself still decide flight alone).
+
+Before (`7daef8075`, identical to `b15fef405`) against after, seed 42, 2000 ticks, `audit_mode`, budget off, each arm twice with identical results, `crowded_frontier` / `frontier_living_world`: trauma-alone flees 3 to 0 / 0 to 0; fleeing with a hostile adjacent 27 to 16 / 28 to 19; `PANIC_RETREAT` decisions 30 to 19 of 193 / 25 to 22 of 232 to 264; `ATTACK` decisions 76 to 81 / 169 to 190 (trajectories diverge, so forced-call totals are not like-for-like).
+
+Findings, not fixed: in `frontier_living_world` after the change 267 of 298 `execute_attack` calls come from one entity re-issuing an `ATTACK` held against an out-of-reach (diagonal) target. Traced and shown independent of the dread term by a constructed reproduction on `7daef8075`; filed as `TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED`. Deliberate attacks there are about 31, flat. The measured-contact deliberate-attack AC moved to the campaign ticket (planner ruling: this ticket is not the attack-starvation fix).
 
 ## Test Summary
-_(not started)_
+`tests/unit/strategic/test_regional_dread_appraisal.py` 13 passed; with the old `region_trauma * 0.5` term restored 8 fail. `tests/unit/strategic`, `tests/unit/combat`, `tests/unit/engine` green (scoped sweep); determinism tests (`test_replay_determinism`, `test_decision_trace_determinism`, `test_executor_determinism`, `test_world_compile_determinism`) 7 passed. Code-health ratchet (scratch venv with ruff, mypy, complexipy, ast-grep): 0 new, 0 worse. ruff on `cognition.py`: same 9 pre-existing findings as `main`. Parity ledger schema ratchet: 0 rose, 0 new. Not measured: SimQ grade-anchor movement (`tests/simulation_quality/test_grade_regression.py` skips 82 of 89 locally, calibration reports absent on both arms).
 
 ## Files Changed
-_(not started)_
+`src/engine/cognition.py`, `tests/unit/strategic/test_regional_dread_appraisal.py`, `docs/mechanics/04_strategic_cognition.md`, `docs/parity_ledger/strategic_cognition.yaml` (STRAT-277 new, STRAT-251 evidence note), `docs/guidelines/intentional_divergences.md` (2.73), `docs/REGISTRY.yaml`, this ticket (title, priority P2, CORRECTION block, Scope 6 and ACs reworded), `agent-working/tickets/todos/TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-BECAUSE-NO-DELIBERATE-ATTACK-ONLY-OPPORTUNITY-ATTACKS.md` (AC moved in), `agent-working/tickets/todos/progression-starvation-chain/SEQUENCE.md` (correction note), the new `TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED.md`, and the stored artifacts directory.
 
 ## Completion Summary
-_(not started)_
+Regional dread now scales with trauma / 50.0, saturates at 0.3 and alone never makes a subject flee (AGENCY-06); a threat to the subject itself still can. Disclosed re-baseline: entities flee less in traumatised regions on every world, so combat trajectories and any SimQ pillar reading flee, combat or survival can move. Known gaps: the SimQ grade-anchor movement is stated, not measured (calibration reports absent locally); the held out-of-range `ATTACK` loop that the changed trajectory exposed in `frontier_living_world` is untraced beyond its mechanism and is filed as its own ticket (why the target also stays put was not established); the mechanism-registry advisory flagged `emotion` and I judged its entry (a near-death hardening verification) unaffected, no change made.

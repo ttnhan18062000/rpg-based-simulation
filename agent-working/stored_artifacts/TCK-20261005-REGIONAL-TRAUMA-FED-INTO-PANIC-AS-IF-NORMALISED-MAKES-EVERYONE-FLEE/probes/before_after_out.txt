@@ -1,0 +1,297 @@
+=== ARM before 7daef8075 /mnt/data/Working/rpg-based-simulation/.claude/worktrees/remeasure-trauma-panic
+##### before crowded_frontier run1 forced_brain
+FORCED-BRAIN crowded_frontier 2000 {
+ "calls": 193,
+ "decision.ENTITY_ACT/ATTACK/None": 76,
+ "decision.ENTITY_MOVE/None/BRACKETING": 41,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 45,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 30,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 2,
+ "decision_by_hp.low.ENTITY_MOVE/None/BRACKETING": 7,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 8,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 24,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 74,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 34,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 37,
+ "decision_by_hp.ok.ENTITY_MOVE/None/PANIC_RETREAT": 6,
+ "hp_ge_0.4": 152,
+ "hp_lt_0.4": 41
+}
+##### before crowded_frontier run1 panic_terms
+PANIC-TERMS crowded_frontier 2000 {
+ "fleeing": 27,
+ "not_fleeing": 166,
+ "terms.low_hp": 7,
+ "terms.low_hp+nemesis_or_grudge": 7,
+ "terms.trauma(0.44)+low_hp": 1,
+ "terms.trauma(0.47)+low_hp+outnumbered(5h/1a)+nemesis_or_grudge": 1,
+ "terms.trauma(0.48)+low_hp+outnumbered(5h/1a)": 1,
+ "terms.trauma(0.48)+outnumbered(5h/1a)": 3,
+ "terms.trauma(0.49)+low_hp+nemesis_or_grudge": 1,
+ "terms.trauma(0.97)": 3,
+ "terms.trauma(0.97)+low_hp+outnumbered(5h/1a)+nemesis_or_grudge": 3,
+ "trauma_ge_0.8": 13,
+ "trauma_lt_0.8": 14
+}
+##### before crowded_frontier run1 combat_volume
+COMBAT-VOLUME crowded_frontier 2000 {"decision_path.execute_attack_calls": 41, "resolve_attack.non_opportunity": 25, "resolve_multi_attack.opportunity.attackers": 116, "resolve_multi_attack.opportunity.calls": 113, "swap_pairs_ticks": 5}
+##### before crowded_frontier run2 forced_brain
+FORCED-BRAIN crowded_frontier 2000 {
+ "calls": 193,
+ "decision.ENTITY_ACT/ATTACK/None": 76,
+ "decision.ENTITY_MOVE/None/BRACKETING": 41,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 45,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 30,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 2,
+ "decision_by_hp.low.ENTITY_MOVE/None/BRACKETING": 7,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 8,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 24,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 74,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 34,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 37,
+ "decision_by_hp.ok.ENTITY_MOVE/None/PANIC_RETREAT": 6,
+ "hp_ge_0.4": 152,
+ "hp_lt_0.4": 41
+}
+##### before crowded_frontier run2 panic_terms
+PANIC-TERMS crowded_frontier 2000 {
+ "fleeing": 27,
+ "not_fleeing": 166,
+ "terms.low_hp": 7,
+ "terms.low_hp+nemesis_or_grudge": 7,
+ "terms.trauma(0.44)+low_hp": 1,
+ "terms.trauma(0.47)+low_hp+outnumbered(5h/1a)+nemesis_or_grudge": 1,
+ "terms.trauma(0.48)+low_hp+outnumbered(5h/1a)": 1,
+ "terms.trauma(0.48)+outnumbered(5h/1a)": 3,
+ "terms.trauma(0.49)+low_hp+nemesis_or_grudge": 1,
+ "terms.trauma(0.97)": 3,
+ "terms.trauma(0.97)+low_hp+outnumbered(5h/1a)+nemesis_or_grudge": 3,
+ "trauma_ge_0.8": 13,
+ "trauma_lt_0.8": 14
+}
+##### before crowded_frontier run2 combat_volume
+COMBAT-VOLUME crowded_frontier 2000 {"decision_path.execute_attack_calls": 41, "resolve_attack.non_opportunity": 25, "resolve_multi_attack.opportunity.attackers": 116, "resolve_multi_attack.opportunity.calls": 113, "swap_pairs_ticks": 5}
+##### before frontier_living_world run1 forced_brain
+FORCED-BRAIN frontier_living_world 2000 {
+ "calls": 232,
+ "decision.ENTITY_ACT/ATTACK/None": 169,
+ "decision.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision.ENTITY_MOVE/None/BRACKETING": 1,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 32,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 25,
+ "decision.None/None/None": 1,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 19,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 3,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 25,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 150,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 29,
+ "decision_by_hp.ok.None/None/None": 1,
+ "hp_ge_0.4": 182,
+ "hp_lt_0.4": 50
+}
+##### before frontier_living_world run1 panic_terms
+PANIC-TERMS frontier_living_world 2000 {
+ "fleeing": 28,
+ "not_fleeing": 204,
+ "terms.low_hp": 6,
+ "terms.low_hp+outnumbered(3h/1a)": 1,
+ "terms.low_hp+outnumbered(5h/1a)": 1,
+ "terms.trauma(0.41)+low_hp": 16,
+ "terms.trauma(0.47)+low_hp+nemesis_or_grudge": 1,
+ "terms.trauma(0.47)+low_hp+outnumbered(3h/1a)+nemesis_or_grudge": 1,
+ "terms.trauma(0.47)+low_hp+outnumbered(4h/1a)+nemesis_or_grudge": 1,
+ "terms.trauma(0.5)+low_hp": 1,
+ "trauma_ge_0.8": 20,
+ "trauma_lt_0.8": 8
+}
+##### before frontier_living_world run1 combat_volume
+COMBAT-VOLUME frontier_living_world 2000 {"decision_path.execute_attack_calls": 30, "resolve_attack.non_opportunity": 18, "resolve_multi_attack.opportunity.attackers": 106, "resolve_multi_attack.opportunity.calls": 106, "swap_pairs_ticks": 3}
+##### before frontier_living_world run2 forced_brain
+FORCED-BRAIN frontier_living_world 2000 {
+ "calls": 232,
+ "decision.ENTITY_ACT/ATTACK/None": 169,
+ "decision.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision.ENTITY_MOVE/None/BRACKETING": 1,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 32,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 25,
+ "decision.None/None/None": 1,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 19,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 3,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 25,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 150,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 29,
+ "decision_by_hp.ok.None/None/None": 1,
+ "hp_ge_0.4": 182,
+ "hp_lt_0.4": 50
+}
+##### before frontier_living_world run2 panic_terms
+PANIC-TERMS frontier_living_world 2000 {
+ "fleeing": 28,
+ "not_fleeing": 204,
+ "terms.low_hp": 6,
+ "terms.low_hp+outnumbered(3h/1a)": 1,
+ "terms.low_hp+outnumbered(5h/1a)": 1,
+ "terms.trauma(0.41)+low_hp": 16,
+ "terms.trauma(0.47)+low_hp+nemesis_or_grudge": 1,
+ "terms.trauma(0.47)+low_hp+outnumbered(3h/1a)+nemesis_or_grudge": 1,
+ "terms.trauma(0.47)+low_hp+outnumbered(4h/1a)+nemesis_or_grudge": 1,
+ "terms.trauma(0.5)+low_hp": 1,
+ "trauma_ge_0.8": 20,
+ "trauma_lt_0.8": 8
+}
+##### before frontier_living_world run2 combat_volume
+COMBAT-VOLUME frontier_living_world 2000 {"decision_path.execute_attack_calls": 30, "resolve_attack.non_opportunity": 18, "resolve_multi_attack.opportunity.attackers": 106, "resolve_multi_attack.opportunity.calls": 106, "swap_pairs_ticks": 3}
+=== ARM after 93256fc16 /mnt/data/Working/rpg-based-simulation/.claude/worktrees/trauma-panic-correction
+##### after crowded_frontier run1 forced_brain
+FORCED-BRAIN crowded_frontier 2000 {
+ "calls": 193,
+ "decision.ENTITY_ACT/ATTACK/None": 81,
+ "decision.ENTITY_MOVE/None/BRACKETING": 47,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 45,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 19,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 6,
+ "decision_by_hp.low.ENTITY_MOVE/None/BRACKETING": 9,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 8,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 19,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 75,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 38,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 37,
+ "hp_ge_0.4": 151,
+ "hp_lt_0.4": 42
+}
+##### after crowded_frontier run1 panic_terms
+PANIC-TERMS crowded_frontier 2000 {
+ "fleeing": 16,
+ "not_fleeing": 177,
+ "terms.low_hp": 7,
+ "terms.low_hp+nemesis_or_grudge": 7,
+ "terms.trauma(0.006)+low_hp+outnumbered(3h/1a)": 1,
+ "terms.trauma(0.012)+low_hp+outnumbered(5h/1a)": 1,
+ "trauma_ge_0.8": 2,
+ "trauma_lt_0.8": 14
+}
+##### after crowded_frontier run1 combat_volume
+COMBAT-VOLUME crowded_frontier 2000 {"decision_path.execute_attack_calls": 32, "resolve_attack.non_opportunity": 22, "resolve_multi_attack.opportunity.attackers": 110, "resolve_multi_attack.opportunity.calls": 105, "swap_pairs_ticks": 10}
+##### after crowded_frontier run2 forced_brain
+FORCED-BRAIN crowded_frontier 2000 {
+ "calls": 193,
+ "decision.ENTITY_ACT/ATTACK/None": 81,
+ "decision.ENTITY_MOVE/None/BRACKETING": 47,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 45,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 19,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 6,
+ "decision_by_hp.low.ENTITY_MOVE/None/BRACKETING": 9,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 8,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 19,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 75,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 38,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 37,
+ "hp_ge_0.4": 151,
+ "hp_lt_0.4": 42
+}
+##### after crowded_frontier run2 panic_terms
+PANIC-TERMS crowded_frontier 2000 {
+ "fleeing": 16,
+ "not_fleeing": 177,
+ "terms.low_hp": 7,
+ "terms.low_hp+nemesis_or_grudge": 7,
+ "terms.trauma(0.006)+low_hp+outnumbered(3h/1a)": 1,
+ "terms.trauma(0.012)+low_hp+outnumbered(5h/1a)": 1,
+ "trauma_ge_0.8": 2,
+ "trauma_lt_0.8": 14
+}
+##### after crowded_frontier run2 combat_volume
+COMBAT-VOLUME crowded_frontier 2000 {"decision_path.execute_attack_calls": 32, "resolve_attack.non_opportunity": 22, "resolve_multi_attack.opportunity.attackers": 110, "resolve_multi_attack.opportunity.calls": 105, "swap_pairs_ticks": 10}
+##### after frontier_living_world run1 forced_brain
+FORCED-BRAIN frontier_living_world 2000 {
+ "calls": 264,
+ "decision.ENTITY_ACT/ATTACK/None": 190,
+ "decision.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision.ENTITY_MOVE/None/BRACKETING": 4,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 43,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 22,
+ "decision.None/None/None": 1,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 29,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 11,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 22,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 161,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 4,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 32,
+ "decision_by_hp.ok.None/None/None": 1,
+ "hp_ge_0.4": 199,
+ "hp_lt_0.4": 65
+}
+##### after frontier_living_world run1 panic_terms
+PANIC-TERMS frontier_living_world 2000 {
+ "fleeing": 19,
+ "not_fleeing": 245,
+ "terms.low_hp": 12,
+ "terms.low_hp+outnumbered(3h/1a)": 1,
+ "terms.trauma(0.005)+low_hp": 1,
+ "terms.trauma(0.005)+low_hp+outnumbered(4h/1a)": 1,
+ "terms.trauma(0.006)+low_hp": 2,
+ "terms.trauma(0.011)+low_hp+outnumbered(3h/1a)": 1,
+ "terms.trauma(0.012)+low_hp+outnumbered(3h/1a)": 1,
+ "trauma_ge_0.8": 6,
+ "trauma_lt_0.8": 13
+}
+##### after frontier_living_world run1 combat_volume
+COMBAT-VOLUME frontier_living_world 2000 {"decision_path.execute_attack_calls": 298, "resolve_attack.non_opportunity": 22, "resolve_multi_attack.opportunity.attackers": 131, "resolve_multi_attack.opportunity.calls": 130, "swap_pairs_ticks": 4}
+##### after frontier_living_world run2 forced_brain
+FORCED-BRAIN frontier_living_world 2000 {
+ "calls": 264,
+ "decision.ENTITY_ACT/ATTACK/None": 190,
+ "decision.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision.ENTITY_MOVE/None/BRACKETING": 4,
+ "decision.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision.ENTITY_MOVE/None/None": 43,
+ "decision.ENTITY_MOVE/None/PANIC_RETREAT": 22,
+ "decision.None/None/None": 1,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/None": 29,
+ "decision_by_hp.low.ENTITY_ACT/ATTACK/OUT_OF_RANGE": 3,
+ "decision_by_hp.low.ENTITY_MOVE/None/None": 11,
+ "decision_by_hp.low.ENTITY_MOVE/None/PANIC_RETREAT": 22,
+ "decision_by_hp.ok.ENTITY_ACT/ATTACK/None": 161,
+ "decision_by_hp.ok.ENTITY_MOVE/None/BRACKETING": 4,
+ "decision_by_hp.ok.ENTITY_MOVE/None/INTERCEPTING": 1,
+ "decision_by_hp.ok.ENTITY_MOVE/None/None": 32,
+ "decision_by_hp.ok.None/None/None": 1,
+ "hp_ge_0.4": 199,
+ "hp_lt_0.4": 65
+}
+##### after frontier_living_world run2 panic_terms
+PANIC-TERMS frontier_living_world 2000 {
+ "fleeing": 19,
+ "not_fleeing": 245,
+ "terms.low_hp": 12,
+ "terms.low_hp+outnumbered(3h/1a)": 1,
+ "terms.trauma(0.005)+low_hp": 1,
+ "terms.trauma(0.005)+low_hp+outnumbered(4h/1a)": 1,
+ "terms.trauma(0.006)+low_hp": 2,
+ "terms.trauma(0.011)+low_hp+outnumbered(3h/1a)": 1,
+ "terms.trauma(0.012)+low_hp+outnumbered(3h/1a)": 1,
+ "trauma_ge_0.8": 6,
+ "trauma_lt_0.8": 13
+}
+##### after frontier_living_world run2 combat_volume
+COMBAT-VOLUME frontier_living_world 2000 {"decision_path.execute_attack_calls": 298, "resolve_attack.non_opportunity": 22, "resolve_multi_attack.opportunity.attackers": 131, "resolve_multi_attack.opportunity.calls": 130, "swap_pairs_ticks": 4}
+ALL-DONE
