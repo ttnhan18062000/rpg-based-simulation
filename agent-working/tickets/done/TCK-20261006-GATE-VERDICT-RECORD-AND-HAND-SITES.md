@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-GATE-VERDICT-RECORD-AND-HAND-SITES
-phase: open
+phase: done
 date: 2026-10-06
 tags: [ai, agent-monitoring, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring, process-improvement]
 A gate_verdicts record, written by the gate CLIs that hand closures run
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -79,7 +79,7 @@ the 37 W41 runs that carry `execution_mode`.
 - `agent-working/agent-orchestration/gate-policy.yaml`
 
 ## Related Stored Artifacts
-- None.
+- `agent-working/stored_artifacts/TCK-20261006-GATE-VERDICT-RECORD-AND-HAND-SITES/` (plan, investigation, test_plan)
 
 ## Related Code Areas
 - `tools/agent-monitoring/writer.py`, `monitoring_shard_paths.py`, `validate.py`,
@@ -93,8 +93,27 @@ the 37 W41 runs that carry `execution_mode`.
 ## Implementation Notes
 Drafted by `agent-working-design` on 2026-10-06.
 
+New module `tools/agent-monitoring/gate_verdicts.py`: `build_record`, `validate_record`, `record_gate_verdict` (never raises, one stderr warning on a failed write), `gate_id_for` (gate-policy.yaml id, else `cli:<module>`). Rows go through `writer.write_line` and `resolve_write_target("gate_verdicts")`, so the per-branch shard key and the `merge=union` glob apply.
+
+Decisions made while building, each visible in the rows:
+- `attest_gate.py` runs its wrapped command with `GATE_VERDICT_NO_RECORD=1`, so a gate CLI inside the wrapper does not write a second row for the same verdict; the wrapper's own row (mode `workflow`, `gate_type: attested_command`) carries gate, command hash, exit code and stdout hash, never the mac.
+- `post_native_run_check.py` runs its three checkers with `GATE_VERDICT_EXECUTION_MODE=workflow`, so their rows are labelled as the native run's, not as a hand closure's.
+- `plan_gate_static.py` gained a thin CLI (`--plan-path`, `--ticket-id`, exit 1 on unresolved questions).
+- `doc_staleness_check.py` strips `--no-record` and `--execution-mode` from argv before its positional parse. `implement-ticket.js` now passes `--execution-mode pipeline` on its one invocation, so a pipeline run is not mislabelled `hand`; the rest of the pipeline sites stay with `TCK-20261006-GATE-VERDICT-PIPELINE-SITES`.
+- `tests/conftest.py` sets `GATE_VERDICT_NO_RECORD=1` for every test.
+- `validate.py` gained `--data-dir` and an error per invalid row.
+
 ## Test Summary
+`tests/tools/test_gate_verdicts.py` (25 pass): record validity and uniqueness, each required field rejected when missing, gate_id from gate-policy, writer (one row, env guard, `enabled=False`, execution-mode env, unwritable root warns once and returns None, invalid row not written), every CLI site for a passing and a failing case (done_checker with per-condition `sub_results`, plan gate, post_native_run_check, doc_staleness, attest_gate), and `validate.check_gate_verdicts`.
+
+Touched-module suites also green: `test_attest_gate`, `test_post_native_run_check`, `test_doc_staleness_check`, `test_doc_staleness_gate_wiring`, `test_plan_gate_static`, `test_done_checker_static`, `test_validate_agent_monitoring`, `test_monitoring_writer_single_source`, `tests/agent_orchestration_claude_adapter` (362 pass together with the new file). `python3 -m codebase.health check` in the scratch venv: 0 new, 0 worse. No `gate_verdicts` shard exists in the real data root after the runs.
 
 ## Files Changed
+- `tools/agent-monitoring/gate_verdicts.py` (new), `tools/agent-monitoring/validate.py`
+- `tools/gate_checks/done_checker_static.py`, `post_native_run_check.py`, `doc_staleness_check.py`, `plan_gate_static.py`, `attest_gate.py`
+- `.claude/workflows/implement-ticket.js` (one flag on the doc-staleness invocation)
+- `tests/conftest.py`, `tests/tools/test_gate_verdicts.py` (new)
+- `docs/agent-monitoring/schema.md`
 
 ## Completion Summary
+Closed 2026-10-06. All six acceptance criteria met: each listed CLI writes exactly one valid `gate_verdicts` row for a passing and a failing case (AC1), done-checker rows carry the printed per-condition `sub_results` (AC2), a write failure leaves exit code and output unchanged with one stderr warning (AC3), `--no-record` and the env guard write nothing and tests never reach the real data root (AC4), `validate.py` accepts valid rows and rejects one missing `verdict` or `gate_id`, and `schema.md` documents the family (AC5), scoped tests green (AC6). Not covered: `execution_id`/`run_id` stay null for a CLI run outside a recorded run, and the formal pipeline's other gate sites are child 4.

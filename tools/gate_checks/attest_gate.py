@@ -27,8 +27,14 @@ import argparse
 import base64
 import hashlib
 import json
+import os
 import subprocess
 import sys
+from pathlib import Path
+
+_MONITORING_DIR = str(Path(__file__).resolve().parents[1] / "agent-monitoring")
+if _MONITORING_DIR not in sys.path:
+    sys.path.insert(0, _MONITORING_DIR)
 
 
 def sha256_hex(text: str) -> str:
@@ -41,7 +47,9 @@ def compute_mac(nonce: str, gate: str, cmd: str, exit_code: int, stdout_sha: str
 
 def attest(nonce: str, gate_id: str, cmd: str) -> tuple[str, str]:
     """Run ``cmd`` and return ``(attest_line, stdout)``."""
-    proc = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True)
+    # The wrapper records the one row for this verdict; keep a gate CLI inside it from writing a second.
+    env = {**os.environ, "GATE_VERDICT_NO_RECORD": "1"}
+    proc = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, env=env)
     stdout_sha = sha256_hex(proc.stdout)
     record = {
         "gate": gate_id,
@@ -53,16 +61,38 @@ def attest(nonce: str, gate_id: str, cmd: str) -> tuple[str, str]:
     return "ATTEST:" + json.dumps(record), proc.stdout
 
 
+def _record(gate_id: str, cmd: str, line: str, stdout: str, enabled: bool) -> None:
+    """Persist what the ATTEST line already prints (gate, cmd hash, exit code, stdout hash), never the mac."""
+    import gate_verdicts  # noqa: PLC0415 - monitoring must never break the wrapper
+    attested = json.loads(line[len("ATTEST:"):])
+    failed = attested["exit_code"] != 0
+    gate_verdicts.record_gate_verdict(
+        enabled=enabled,
+        gate_id=gate_id,
+        gate_type="attested_command",
+        verdict="FAIL" if failed else "PASS",
+        blocking=failed,
+        execution_mode="workflow",
+        inputs_ref={"head_sha": gate_verdicts.head_sha(), "cmd_sha": gate_verdicts.sha256_hex(cmd),
+                    "stdout_sha": attested["stdout_sha"], "exit_code": attested["exit_code"]},
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--nonce", required=True)
     parser.add_argument("--gate-id", required=True)
     parser.add_argument("--cmd-b64", required=True)
+    parser.add_argument("--no-record", action="store_true", help="Do not write this verdict to the gate_verdicts shard.")
     args = parser.parse_args(argv)
     cmd = base64.b64decode(args.cmd_b64).decode("utf-8")
     line, stdout = attest(args.nonce, args.gate_id, cmd)
     print(line)
     sys.stdout.write(stdout)
+    try:
+        _record(args.gate_id, cmd, line, stdout, enabled=not args.no_record)
+    except Exception as exc:  # noqa: BLE001 - monitoring must never change the wrapper's output or exit code
+        print(f"WARNING: gate verdict not recorded: {type(exc).__name__}: {exc}", file=sys.stderr)
     return 0
 
 

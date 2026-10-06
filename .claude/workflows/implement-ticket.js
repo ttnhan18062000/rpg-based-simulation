@@ -1212,7 +1212,7 @@ const combinedFilesChanged = Array.from(new Set([
 const docStalenessFilesArgs = combinedFilesChanged.map(f => `"${f}"`).join(' ')
 const docsToUpdateArgs = docsToUpdate.length > 0 ? `--docs-to-update ${docsToUpdate.map(d => `"${d}"`).join(' ')}` : ''
 const docStalenessOutput = await shAttested(
-  `python3 tools/gate_checks/doc_staleness_check.py ${implementation.behavior_changed} ${docStalenessFilesArgs} ${docsToUpdateArgs}`,
+  `python3 tools/gate_checks/doc_staleness_check.py ${implementation.behavior_changed} ${docStalenessFilesArgs} ${docsToUpdateArgs} --execution-mode pipeline`,
   'doc_staleness'
 )
 let docStalenessResults = null

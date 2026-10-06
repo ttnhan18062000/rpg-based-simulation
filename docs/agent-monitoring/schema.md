@@ -663,6 +663,49 @@ instance; never the `agent` vocabulary), `function`, `domain`, `tool`. Covered b
 window (plan section 10; M7). "Unusual route" is deliberately not its own kind: a routed path is still an edit in another domain, so it is
 folded into `edit_outside_owns` (`owner_seats` shows where it should have gone); M7 can split it if the data shows it recurs.
 
+## `gate_verdicts` (`agent-working/agent-monitoring/data/YYYY-Www/<identifier>.gate_verdicts.jsonl`)
+
+One row per verdict a gate CLI prints (`TCK-20261006-GATE-VERDICT-RECORD-AND-HAND-SITES`, child 1 of
+`TCK-20261006-EPIC-GATE-OVERRIDE-LEDGER`). Gate CLIs used to print PASS/FAIL to stdout and keep nothing, so a
+wrong verdict was only found if a person noticed. Like `claim_detections` this is its own file family, not an
+`events` row: it carries no `agent`, `seq` or `vocabulary_drift` obligation. Written by
+`tools/agent-monitoring/gate_verdicts.py::record_gate_verdict()` through the shared `writer.py::write_line()` and
+`resolve_write_target()`, so the per-branch shard key and the `merge=union` data glob apply unchanged.
+
+Emitted by (all hand-reachable): `done_checker_static.py` (per-condition `sub_results`), `post_native_run_check.py`
+(`sub_results` per re-run check; nested checkers are labelled `workflow`), `doc_staleness_check.py`,
+`plan_gate_static.py` (new `--plan-path` CLI) and `attest_gate.py` (the ATTEST line's gate, command hash, exit code
+and stdout hash; never the mac; the wrapped command is kept from writing a second row).
+
+```json
+{"ts":"2026-10-06T09:00:00Z","gate_verdict_id":"gv-3f2a9c1d0b7e4a55","run_id":null,"execution_id":null,
+ "session_id":"sess-abc123","execution_mode":"hand","ticket_id":"TCK-20261006-EXAMPLE",
+ "gate_id":"Finalize:gate_checks.done_checker_static.run_finalize_selfcheck","gate_type":"static_check",
+ "phase":"Finalize","verdict":"PASS","blocking":false,
+ "sub_results":{"finalize.ticket_finalized":"PASS"},
+ "inputs_ref":{"head_sha":"c41446c86...","cmd_sha":"9b1c..."}}
+```
+
+| Field | Type | Nullable | Description |
+|---|---|---|---|
+| `ts` | ISO 8601 | No | UTC, `Z`-suffixed, when the verdict was recorded. |
+| `gate_verdict_id` | string | No | Unique, `gv-` plus 16 hex digits. Later children key outcomes and adjudication on it. |
+| `run_id`, `execution_id` | string | Yes | The run the verdict belongs to; `null` for a CLI run by hand outside a recorded run. |
+| `session_id` | string | Yes | `CLAUDE_CODE_SESSION_ID`, the same source `record_hand_orchestrated_closure.py` uses. |
+| `execution_mode` | string | No | `pipeline`, `workflow` or `hand`, as on `runs`. A CLI defaults to `hand`; `--execution-mode` (doc_staleness) or `GATE_VERDICT_EXECUTION_MODE` overrides it. |
+| `ticket_id` | string | Yes | Absent for a gate that is not about one ticket (`attest_gate`, a doc-staleness check). |
+| `gate_id` | string | No | `<phase>:<check_module>.<check_function>` from `agent-working/agent-orchestration/gate-policy.yaml` when the gate is registered there, else `cli:<module>`; `attest_gate` records the id the caller passed. |
+| `gate_type` | string | No | `static_check`, or `attested_command` for `attest_gate`. |
+| `phase` | string | Yes | The workflow phase the gate guards, when it has one. |
+| `verdict` | string | No | `PASS` or `FAIL` for these CLIs; an agent-verdict gate records its raw enum. |
+| `blocking` | bool | No | `true` when the verdict stopped the work (the CLI exited non-zero). |
+| `sub_results` | object | Yes | `{condition: PASS\|FAIL\|NA}`, e.g. the done-checker checklist. |
+| `inputs_ref` | object | No | What the gate looked at: `head_sha`, `cmd_sha` or `files_sha` (a hash of the command or file list), and `stdout_sha`/`exit_code` for an attested command. |
+
+Opt out with `--no-record` or `GATE_VERDICT_NO_RECORD=1` (`tests/conftest.py` sets it so no test writes into the
+real data root). A write failure prints one `WARNING` to stderr and never changes the CLI's stdout or exit code.
+`validate.py` checks every row against `gate_verdicts.validate_record()` and exits non-zero on an invalid one.
+
 ## Session-layer fields and files (`session_role`, `manual_actions`)
 
 `TCK-20261004-SESSION-LAYER-M6A-MINIMUM-MEASUREMENT` (plan `docs/plans/agent_infrastructure/
