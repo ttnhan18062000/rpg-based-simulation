@@ -466,6 +466,10 @@ Return: concern_id="${concern.id}", plus all other INVESTIGATION_SCHEMA fields p
 )
 
 const validInvestigations = investigations.filter(Boolean)
+// TCK-20261006-CREATE-TICKETS-FAILED-INVESTIGATIONS-REPORTED-AS-COVERED: a concern whose investigator returned null was
+// NOT investigated, so it must never be reported as covered. Identified by id, not position.
+const investigatedIds = new Set(validInvestigations.map(i => i.concern_id))
+const failedConcerns = comprehension.concerns.filter(c => !investigatedIds.has(c.id)).map(c => c.id)
 log(`Investigate: ${validInvestigations.length}/${comprehension.concerns.length} concerns investigated`)
 
 for (const inv of validInvestigations) {
@@ -481,6 +485,24 @@ if (duplicates.length > 0) {
 }
 
 const activeInvestigations = validInvestigations.filter(i => !i.is_duplicate)
+
+// Nothing could be created AND at least one concern was never investigated: report the failure, not "covered".
+// The runtime hands back null for a failed agent, so the error text is not available here; the usual cause is a session
+// launched outside the repo root, where `.claude/agents/` is not loaded ("agent type 'concern-investigator' not found").
+// No pre-flight agentType lookup exists in the runtime (skipped by design, see the ticket).
+if (activeInvestigations.length === 0 && failedConcerns.length > 0) {
+  await writeMonitoring('INVESTIGATION_FAILED')
+  return {
+    status: 'INVESTIGATION_FAILED',
+    source,
+    failed_concerns: failedConcerns,
+    failed_count: failedConcerns.length,
+    investigated_count: validInvestigations.length,
+    duplicates_skipped: duplicates.map(d => `${d.concern_id}: ${d.duplicate_of}`),
+    message: `${failedConcerns.length} of ${comprehension.concerns.length} concern(s) could not be investigated (${failedConcerns.join(', ')}), so nothing is known to be covered. ` +
+      'Most likely cause: the session was launched outside the repo root, so the project agents (concern-investigator, ticket-scoper) are not loaded. Relaunch from the repo root or a role worktree and rerun.',
+  }
+}
 
 if (activeInvestigations.length === 0) {
   await writeMonitoring('NOTHING_TO_CREATE')
@@ -1011,6 +1033,7 @@ return {
   ticket_count: succeeded.length,
   ticket_ids: ticketIds,
   duplicates_skipped: duplicates.map(d => `${d.concern_id} → ${d.duplicate_of}`),
+  failed_concerns: failedConcerns,
   skipped: structured.skipped,
   scope_dupes_dropped: droppedScopes,
   tags_not_registered: tasksWithUnregisteredTags,

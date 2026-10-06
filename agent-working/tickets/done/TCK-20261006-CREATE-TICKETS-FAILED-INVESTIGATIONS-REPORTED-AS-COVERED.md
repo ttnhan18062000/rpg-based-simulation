@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261006-CREATE-TICKETS-FAILED-INVESTIGATIONS-REPORTED-AS-COVERED
-phase: open
+phase: done
 date: 2026-10-06
 tags: [ai, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement]
 create-tickets reports NOTHING_TO_CREATE ("all concerns are already covered") when every investigator agent failed
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -76,13 +76,16 @@ None.
 - Route check: `.claude/**` routes to agent-working per the rpg domain's `routes`, so this is agent-working's.
 
 ## Implementation Notes
+Verified the quoted lines against the tree (the filter at the old :468, the NOTHING_TO_CREATE exit). Failed concerns are found by id (comprehension ids minus investigated ids), not by position. New status `INVESTIGATION_FAILED` is returned, with `failed_concerns`, `failed_count`, `investigated_count`, `duplicates_skipped` and the likely cause, whenever nothing can be created and at least one concern was not investigated (all failed, or the rest were duplicates); the "already covered" message is now reachable only with no failed concern. With partial failure and tickets created, the final `DONE` return lists `failed_concerns`.
+Not done, as the ticket allows: (1) "the first error": the runtime returns null for a failed agent, so no error text exists; the message names the usual cause instead. (2) Scope 2 pre-flight `agentType` check: the runtime offers no cheap lookup, so it is skipped; the failure is caught after the fact and named.
+Finding (out of scope): `create-tickets.js` has a second silent-filter shape at the write phase (`written.filter(Boolean)`; "No tickets written" is the only signal). `implement-ticket.js` already has `SCOPE_AGENT_FAILED`; `implement-epic.js` was not examined.
 Filed by agent-working-design (interim planner), 2026-10-06, from the run's own task notification.
 
 ## Test Summary
-(Open.)
+`tests/tools/test_create_tickets_failed_investigations.py` (6, static source-text tests like the repo's other workflow tests; no JS runner exists) plus the existing create-tickets and workflow tests (355 passed). Manual reproduction for the runtime path: run /create-tickets from the repo's parent directory; expect INVESTIGATION_FAILED.
 
 ## Files Changed
-(Open.)
+`.claude/workflows/create-tickets.js`, `.claude/skills/create-tickets/SKILL.md`, `docs/agent-monitoring/schema.md`, `tests/tools/test_create_tickets_failed_investigations.py`.
 
 ## Completion Summary
-(Open.)
+create-tickets no longer reports a never-investigated concern as covered: it returns INVESTIGATION_FAILED (monitoring final_status the same) with the failed concerns and the likely cause.

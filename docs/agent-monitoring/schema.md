@@ -117,6 +117,7 @@ One record per workflow invocation.
 | `DOD_BLOCKED` | Definition-of-Done conditions not met. |
 | `FINALIZE_INCOMPLETE` | Finalize's self-check (`run_finalize_selfcheck`) found the migration/move/log-append/registry-regen steps did not fully land, or its own output was unparseable. |
 | `NOTHING_TO_CREATE` | `create-tickets` only — no actionable concerns, all concerns were duplicates of existing tickets, or no tasks survived structuring. |
+| `INVESTIGATION_FAILED` | `create-tickets` only — nothing could be created and at least one concern's investigator returned null (typically a session launched outside the repo root, agents not loaded); never reported as `NOTHING_TO_CREATE` (`TCK-20261006-CREATE-TICKETS-FAILED-INVESTIGATIONS-REPORTED-AS-COVERED`). |
 | `CRASHED` | Synthetic status set by `validate.py` for runs with `start_ts` but no `end_ts`. |
 
 Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, new run records are no longer appended to a
