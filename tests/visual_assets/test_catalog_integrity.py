@@ -17,7 +17,7 @@ def test_the_committed_catalog_holds_exactly_the_pilot_forest_and_the_adopted_te
     # TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE (plain) + TCK-20261004-VISUAL-ASSETS-FOREST-DETAIL-TILES (bush, tree): three adopted tiles of one key,
     # one artifact each (+ its record), four release candidates (rc-0001 and rc-0002 are retained history; rc-0003 follows the registry change that added the other terrain keys, rc-0004 the one that added the border mask keys)
     # The owner adopted draft set terrain-v1 on 2026-10-05T18:17:03Z (`adopted_facts`): 31 more sources (22 terrain tiles, 9 border masks) next to the forest's three. No `build` or `release` has covered them yet, so
-    # the generated artifacts and the release candidates were forest-only until `build` and the candidate pilot/rc-0005 covered all 34 slots (the user approved both on 2026-10-06).
+    # the generated artifacts and the release candidates were forest-only until `build` and the candidate pilot/rc-0005 covered all 34 slots (the user approved both on 2026-10-06); rc-0006 is the same 34 slots after the `icon.*` keys moved the registry hash (the user approved it on 2026-10-06).
     assert records.list_source_ids() == af.ADOPTED_SOURCES
     generated = sorted(p.name for p in (config.CATALOG_ROOT / "generated").iterdir() if p.name != ".gitkeep")
     assert generated == af.GENERATED

@@ -30,10 +30,10 @@ def rejects(tmp_path: Path, body: str, match: str | None = None, **kw) -> None:
         load(tmp_path, body, **kw)
 
 
-def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_other_terrain_code_and_the_three_border_mask_keys():
+def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_other_terrain_code_the_three_border_mask_keys_and_the_14_icon_keys():
     """`terrain.forest` is the one adopted key; the other 22 Live Map terrain codes are registered `optional: true` for the draft set `terrain-v1`
     (`TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET`), and the `border.*` mask family (D19, `TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-CONTRACT`) adds three optional keys
-    with a v1-v3 detail axis. The expected terrain keys are read from the page's explicit code-to-key table, the contract both sides share."""
+    with a v1-v3 detail axis; the `icon.*` key set (D20, `TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`) adds 14 optional keys with no axis. The expected terrain keys are read from the page's explicit code-to-key table, the contract both sides share."""
     import re
 
     table = (Path(__file__).resolve().parents[4] / "frontend" / "src" / "visualAssets" / "terrainDrafts.ts").read_text()
@@ -41,11 +41,18 @@ def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_ot
     assert len(expected) == 23 and len(set(expected)) == 23
     registry = load_registry()
     borders = ["border.edge", "border.inner_corner", "border.outer_corner"]
-    assert sorted(registry.keys) == sorted(expected + borders) and dict(registry.aliases) == {}
+    tiers = [f"icon.tier.{g}" for g in ("e", "d", "c", "b", "a", "s", "ss", "sss")]
+    icons = ["icon.plate.location", "icon.marker.enemy_camp", "icon.building.blacksmith", "icon.class.warrior", *tiers, "icon.status.frame_buff", "icon.status.frame_debuff"]
+    assert sorted(registry.keys) == sorted(expected + borders + icons) and dict(registry.aliases) == {}
+    sizes = {"icon.plate.location": 16, "icon.marker.enemy_camp": 16, "icon.building.blacksmith": 24, "icon.class.warrior": 24, "icon.status.frame_buff": 16, "icon.status.frame_debuff": 16, **dict.fromkeys(tiers, 8)}
+    for key, size in sizes.items():
+        d = registry.keys[key]
+        assert d.optional and d.family == "icon" and d.variant_axes == () and d.detail is None  # D17: tier and marker state are separate keys, never axes
+        assert f"{size}x{size}" in d.description and "scale x1" in d.description and "fallback" in d.description and " class" in d.description
     for key in borders:
         d = registry.keys[key]
         assert d.optional and d.family == "border" and d.variant_axes == () and d.detail.values == ("v1", "v2", "v3") and d.detail.default == "v1"
-    others = [d for k, d in registry.keys.items() if k != "terrain.forest" and k not in borders]
+    others = [d for k, d in registry.keys.items() if k != "terrain.forest" and k not in borders and k not in icons]
     assert len(others) == 22 and all(d.optional and d.family == "terrain" and d.detail is None and d.variant_axes == () for d in others)
     forest = registry.keys["terrain.forest"]
     assert forest.family == "terrain" and forest.variant_axes == () and not forest.optional

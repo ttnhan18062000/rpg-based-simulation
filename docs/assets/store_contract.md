@@ -173,6 +173,8 @@ A draft set accepts any registered key: `Family` is a free `[a-z][a-z0-9_]{0,31}
 1-bit shape, authored for one orientation (`edge`: north, rows 0-3; `outer_corner`: north-east; `inner_corner`: north plus east) and rotated by the client in 90-degree steps; rotation is client-side and the store records
 no orientation. The store does not check shape, depth or orientation: the 4 px cap is enforced by the client compositor and checked on every committed mask by a test. See `docs/assets/pilot_terrain_m5_criteria.md` (AM5-B).
 
+The `icon.*` family (14 optional keys, D20, `TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`) is the icon key set: `icon.plate.location` and `icon.marker.enemy_camp` (16x16), `icon.building.blacksmith` and `icon.class.warrior` (24x24), `icon.tier.e` to `icon.tier.sss` (eight 8x8 badges) and `icon.status.frame_buff` and `icon.status.frame_debuff` (16x16). Every key has `variant_axes: []` (D17: tier and marker state are separate keys) and no detail axis, and its description states its size, scale x1, fallback-safety class and fallback. Registering them moved `registry_hash`, so `pilot/rc-0006` was assembled (same 34 slots as `rc-0005`; `docs/assets/pilot_terrain_key.md`). No icon has art yet.
+
 ## MCP tools on the drawing server (restart the server for new tools to appear in a running session)
 
 | Tool | What it does | Writes |

@@ -28,6 +28,6 @@ SET_SOURCES = sorted(TERRAIN_SOURCES + BORDER_SOURCES)  # the 31 the set adoptio
 ADOPTION_COUNT = 34
 INTAKE_FILE_COUNT = 68
 # `build` and `release` (TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN, approved by the user on 2026-10-06): one generated artifact directory per adopted source, and the candidate pilot/rc-0005 holds all 34 slots.
-# rc-0004 still holds the forest's three slots only.
+# rc-0004 still holds the forest's three slots only. rc-0006 (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, approved by the user on 2026-10-06) is rc-0005's 34 slots on the registry that added the 14 `icon.*` keys.
 GENERATED = sorted(f"{source}--x1" for source in ADOPTED_SOURCES)
-RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json", "rc-0005.json"]
+RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json", "rc-0005.json", "rc-0006.json"]

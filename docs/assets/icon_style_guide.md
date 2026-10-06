@@ -38,15 +38,15 @@ Every icon is drawn natively at its size; nothing is scaled down from a larger d
 
 | Family | Canvas | Margin rule | Live area | Notes |
 |---|---|---|---|---|
-| Map glyph | 16x16 | 1 px | 14x14 | the glyph sits on the plate; `craft §2` (keyline translation) |
-| Category plate | 16x16 | none: the plate is the frame | 16x16 | `touches_edge` is allowed for a plate or frame only (`craft` checklist) **(proposal)** |
+| Map glyph | 16x16 | 2 px | 12x12, centred | drawn over the plate; the 2 px margin keeps the plate's rim visible all round (planner ruling, 2026-10-06) |
+| Category plate | 16x16 | none: the plate is the frame | 16x16 | `touches_edge` is allowed for a plate or frame only (planner ruling, 2026-10-06; `craft` checklist) |
 | Panel icon | 24x24 | 2 px | 20x20 | the Material 24 dp / 20 dp live area, `craft §2` |
 | Tier badge | 8x8 | 0 px, a mark not a pictogram | 8x8 | letters, pips, arrows and stars fit at 8 px (`craft §1`) **(proposal)** |
 | Status frame | 16x16 | 1 px | 14x14, effect glyph in the central 10x10 | `craft §5` "glyph space" |
 
-How the 16 px plate and glyph share a canvas (a plate fills the 16x16 and the glyph is at most 12x12 inside it, or the
-plate is a 16x16 key and the glyph a second key drawn over it) is the open layout question for child 2, which names the
-keys. This guide fixes the sizes, not the layering.
+Plate and glyph are **separate keys**, both on 16x16 canvases, composited by the client: the plate first, the glyph over it
+(planner ruling, 2026-10-06). The plate fills the full 16x16, so `touches_edge` is allowed for plates and frames only. The
+key names are in `visual_assets/catalog/definitions/visual_keys.yaml` (`icon.plate.location`, `icon.marker.enemy_camp`, ...).
 
 ## One set of conventions
 
