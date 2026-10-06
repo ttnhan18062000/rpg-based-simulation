@@ -25,7 +25,7 @@ The Project Lawbook is the canonical authority on the simulation engine's archit
 ### 3. Graceful Degradation
 - **Law**: The system must degrade before it fails.
 - **Enforcement**: The `ResourceGovernor` triggers mode transitions (`NORMAL` -> `CONSTRAINED` -> `DEGRADED` -> `SURVIVAL`) based on pressure signals.
-- **Shedding**: Work must be shed in a defined order (Telemetry -> Sampling -> Fidelity -> Stall).
+- **Shedding**: Work must be shed in a defined order (Telemetry -> Sampling -> Fidelity -> Stall). Shipped today the governor changes the mode, which reduces replay and traces, cadence, phase budgets and concurrency; it drops no work items, because no sheddable (non-authoritative periodic or opportunistic) work exists in shipped runs (`docs/engine/matrices/resource_governor_degradation_matrix.md`, "Shipped behaviour").
 
 ### 4. Deterministic Proof
 - **Law**: Simulation must be bit-identical across different execution contexts (Concurrent vs Sequential).

@@ -24,7 +24,7 @@ Defines the engine's startup validation rules, runtime operational flags, gracef
 | :--- | :--- | :--- | :--- |
 | `FORCE_REPLAY_OFF` | Emergency stop of persistence sink. | Safe | Non-authoritative only. |
 | `SELECT_PROFILE` | Switch active envelope. | Safe | Only allowed at startup/reset. |
-| `FORCE_DEGRADED` | Manual pressure simulation. | Safe | Accelerates shedding. |
+| `FORCE_DEGRADED` | Manual pressure simulation. Not implemented: no code in `src/` reads this flag. | Safe | A forced mode would change the mode only (cadence, phase budgets, concurrency, replay); it sheds no work. `ResourceGovernor.force_mode` (`src/engine/governor.py`) has no caller since `TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY`. |
 | `FORCE_NORMAL` | Bypass governor. | **FORBIDDEN** | Violates resource law. |
 
 ## 3. Graceful Shutdown Lifecycle
