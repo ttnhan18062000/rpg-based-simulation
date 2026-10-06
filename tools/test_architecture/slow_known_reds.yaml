@@ -1,0 +1,27 @@
+# Known reds of the `Slow regression` workflow: test id pattern (fnmatch on `classname::name`
+# from the JUnit XML) -> the ticket that owns it. An id with no match is shown as UNOWNED in the
+# rolling issue; a pattern that matches nothing failing is listed as a stale mapping.
+# Accurate as of origin/main 7daef8075 (2026-10-06; #373 fixed the milestone-B gate, so it has no entry). Lane B's tickets for the 5k and ph9 tests are
+# not on main yet, so both map to the triage ticket.
+known_reds:
+  - match: "tests.unit.worldassembly.test_corpus_diversity*"
+    ticket: TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED
+    note: "testing owns triage; the determinism cause is parked under TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2"
+  - match: "tests.regression.test_behavioral_5k*"
+    ticket: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
+    note: "row 1; Lane B's attribution ticket not on main at this base"
+  - match: "tests.integration.world.test_living_world_ph9*"
+    ticket: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
+    note: "row 2; cause #356 / decision 14; Lane B's ticket not on main at this base"
+  - match: "tests.perf.test_perf_combat*"
+    ticket: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
+    note: "row 5-8; perf classification open on #355"
+  - match: "tests.perf.test_perf_movement*"
+    ticket: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
+    note: "row 5-8; perf classification open on #355"
+  - match: "tests.perf.test_perf_passive_scaling*"
+    ticket: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
+    note: "row 5-8; perf classification open on #355"
+  - match: "tests.perf.test_perf_strategic*"
+    ticket: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
+    note: "row 5-8; perf classification open on #355"

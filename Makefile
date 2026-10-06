@@ -590,9 +590,11 @@ simq-corpus-diversity-slow-isolated: ## [slow] Run test_corpus_diversity.py's -m
 	  exit 1; \
 	fi; \
 	status=0; \
+	n=0; \
 	for nodeid in $$nodeids; do \
+	  n=$$((n+1)); \
 	  echo "[isolated] $$nodeid"; \
-	  $(PYTHON) -m pytest "$$nodeid" --resource-budget large --tb=short -q || status=1; \
+	  $(PYTHON) -m pytest "$$nodeid" --resource-budget large --tb=short -q --junitxml="reports/slow/corpus_$$n.xml" || status=1; \
 	done; \
 	exit $$status
 
