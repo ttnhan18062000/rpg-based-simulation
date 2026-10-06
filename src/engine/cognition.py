@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Tuple, Dict
 from src.content_semantics.faction import are_entities_allied, are_entities_hostile
 from src.content_semantics.relation import RelationContext
+from src.engine.world_dynamics import HAZARD_GROWTH_TRAUMA_THRESHOLD
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -68,6 +69,20 @@ class SensoryFilter:
         
         return [ent for _, ent in scored[:max_targets]]
 
+FLEE_PANIC_THRESHOLD = 0.4
+# Fullest regional dread, reached at the instability threshold. AGENCY-06 requires it to stay strictly
+# below FLEE_PANIC_THRESHOLD (dread alone never flees) yet above the smallest threat-to-self term
+# (0.2, health below 40%) so it can still tip that threat over the line: any value in (0.2, 0.4)
+# satisfies both, 0.3 leaves a 0.1 margin to the flee line.
+REGIONAL_DREAD_MAX = 0.3
+
+
+def regional_dread(region_trauma: float) -> float:
+    """Dread a region's trauma weighs on a subject: linear in trauma / the Bible 05 §2 instability
+    threshold, saturating at REGIONAL_DREAD_MAX there instead of growing with every further death."""
+    return REGIONAL_DREAD_MAX * min(1.0, max(0.0, region_trauma) / HAZARD_GROWTH_TRAUMA_THRESHOLD)
+
+
 class AppraisalSystem:
     """
     Pillar 1.1: Emotional Spikes.
@@ -87,8 +102,8 @@ class AppraisalSystem:
         panic = 0.0
         aggression = 0.0
         
-        # 0. Regional Dread (Pillar 4.2)
-        panic += region_trauma * 0.5
+        # 0. Regional Dread (Pillar 4.2, AGENCY-06): bounded, never decides flight alone.
+        panic += regional_dread(region_trauma)
         
         # 0.5 Social Context (Pillar 4.1 Nemesis System)
         if social_context:
@@ -139,7 +154,7 @@ class AppraisalSystem:
         panic -= subject.identity.personality.bravery * 0.3
 
         # 3. Decision
-        is_fleeing = panic > 0.4
+        is_fleeing = panic > FLEE_PANIC_THRESHOLD
         
         return EmotionalProfile(
             panic_level=min(1.0, panic),

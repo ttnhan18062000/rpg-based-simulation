@@ -45,13 +45,16 @@ def test_parses_real_workflow_fastlane_job_paths():
     assert "tests/tools" in job_paths["tools-f-z"]
 
 
+_SLOW_WORKFLOW_PATH = _REAL_WORKFLOW_PATH.with_name("slow-regression.yml")
+
+
 def test_parses_real_workflow_slow_job_blanket():
-    job_paths = parse_job_pytest_paths(_REAL_WORKFLOW_PATH.read_text(encoding="utf-8"))
+    job_paths = parse_job_pytest_paths(_SLOW_WORKFLOW_PATH.read_text(encoding="utf-8"))
     assert "tests" in job_paths["slow"]
 
 
 def test_ignore_flag_token_is_not_collected_as_a_covered_path():
-    job_paths = parse_job_pytest_paths(_REAL_WORKFLOW_PATH.read_text(encoding="utf-8"))
+    job_paths = parse_job_pytest_paths(_SLOW_WORKFLOW_PATH.read_text(encoding="utf-8"))
     assert "tests/unit/worldassembly/test_corpus_diversity.py" not in job_paths["slow"]
 
 

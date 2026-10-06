@@ -16,7 +16,7 @@ _ISOLATED_LANE_TARGET = "make simq-corpus-diversity-slow-isolated"
 
 
 def _slow_job_steps() -> list[dict]:
-    workflow = yaml.safe_load((_ROOT / ".github" / "workflows" / "test.yml").read_text())
+    workflow = yaml.safe_load((_ROOT / ".github" / "workflows" / "slow-regression.yml").read_text())
     return workflow["jobs"]["slow"]["steps"]
 
 

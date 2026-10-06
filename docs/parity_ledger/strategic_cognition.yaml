@@ -3433,10 +3433,11 @@
   v2_evidence: 'panic -= subject.identity.personality.bravery * 0.3 added before the
     panic > 0.4 is_fleeing decision (src/engine/cognition.py). Coefficient chosen
     to match the function''s own existing modifier magnitudes (HP thresholds 0.2/0.5/0.8,
-    outnumbered +0.3, region_trauma*0.5). Verified: a zero-bravery entity at HP=15%
-    is unaffected (panic stays 0.5, still flees, matching the pre-existing test_near_death_panic_progression
-    baseline exactly); a bravery=1.0 entity at the same HP drops to panic=0.2 and
-    no longer crosses the 0.4 flee threshold.'
+    outnumbered +0.3, region_trauma*0.5, since replaced by regional_dread, STRAT-277).
+    Verified: a zero-bravery entity at HP=15% is unaffected (panic stays 0.5, still
+    flees, matching the pre-existing test_near_death_panic_progression baseline exactly);
+    a bravery=1.0 entity at the same HP drops to panic=0.2 and no longer crosses the
+    0.4 flee threshold.'
   proof_type: regression
   test_path: 'tests/unit/strategic/test_cognition_immediate_fixes.py:: test_bravery_dampens_panic_and_raises_flee_threshold
 
@@ -4413,3 +4414,29 @@
     projects no longer form; termination is exercised only by constructed cases, and
     the other holder (the recruit) has no production producer. 195 scorer wins versus
     2 materialized projects was not investigated.
+- id: STRAT-277
+  text: 'TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE
+    (world rule AGENCY-06, owner decision 17): a region''s trauma reaches AppraisalSystem.evaluate_emotional_state
+    as regional dread = 0.3 * min(1, max(0, trauma) / 50.0), 50.0 being the Bible
+    05 section 2 instability threshold. Dread is at its fullest (0.3) at the threshold
+    and does not grow with further deaths; 0.3 is strictly below the 0.4 flee threshold,
+    so regional dread alone never makes a subject flee, and above the weakest threat-to-self
+    term (0.2, health below 40%), so it can tip a wounded subject. A threat to the
+    subject itself still decides flight alone. Previously the raw uncapped per-death
+    counter was added as trauma * 0.5.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/cognition.py (regional_dread, REGIONAL_DREAD_MAX, FLEE_PANIC_THRESHOLD;
+    the saturation point is HAZARD_GROWTH_TRAUMA_THRESHOLD from src/engine/world_dynamics.py).
+    Corpus (Kernel.tick_once(), seed 42, 2000 ticks, audit_mode, budget off, each
+    arm run twice identical, forced read-only evaluate_entity_intent with a live hostile
+    adjacent): trauma alone crossed the flee threshold in 3 flees before (crowded_frontier)
+    and 0 after; fleeing 27 to 16 and 28 to 19; PANIC_RETREAT decisions 30 to 19 and
+    25 to 22.'
+  proof_type: regression
+  test_path: tests/unit/strategic/test_regional_dread_appraisal.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.73.
+  support_boundary: 'The SimQ grade-anchor movement is not measured locally: tests/simulation_quality/test_grade_regression.py
+    skips 82 of 89 tests without its calibration reports. Corpus trajectories diverge
+    once a flee changes, so forced-call totals are not like-for-like across arms.'

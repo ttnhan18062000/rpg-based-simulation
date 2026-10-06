@@ -5,9 +5,10 @@ on:
   push:
     branches: [main]
   schedule:
-    # Nightly, low-traffic UTC hour — catches slow-lane regressions without
-    # blocking every PR iteration on the ~45-90min slow suite (TCK-20260818-
-    # STANDARD-SLOW-REGRESSION-OFF-PR-PATH).
+    # Nightly, low-traffic UTC hour. The slow suite no longer runs here: it moved to
+    # .github/workflows/slow-regression.yml (TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED),
+    # because this workflow's cancel-in-progress group evicted it. The jobs below whose `if:` names
+    # `schedule` still run nightly from here.
     - cron: "0 3 * * *"
   workflow_dispatch: {}
 
@@ -1065,65 +1066,3 @@ jobs:
           sarif_file: reports/code_health/code-health.sarif
           category: code-health
         continue-on-error: true
-
-  # ── Slow regression (main + PRs targeting main) ──────────────────────────
-  slow:
-    name: "Slow regression"
-    runs-on: ubuntu-latest
-    # TCK-20260818-STANDARD-SLOW-REGRESSION-OFF-PR-PATH: no longer runs on every PR push
-    # (github.base_ref == 'main') -- the ~45-90min slow suite (9021-deselected-tests-heavy)
-    # blocked fast development iteration on every commit. Still runs as a real safety net:
-    # (a) on push to main itself (post-merge), (b) on the nightly schedule, (c) on manual
-    # dispatch when a developer/agent wants pre-merge confidence.
-    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    needs:
-      - unit-core-world
-      - unit-gameplay
-      - unit-infra
-      - integration
-      - tools-a-e
-      - tools-f-z
-      - api-cli-engine
-      - agent-orchestration
-      - simulation-quality
-      - arch-docs
-      - frontend
-      - perf-cert-arena
-      - migration-lanes
-    steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
-        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
-      - run: uv sync --locked --no-install-project --no-group lint
-      - name: Slow tests — corpus diversity (isolated per-test, TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
-        id: corpus_diversity
-        run: make simq-corpus-diversity-slow-isolated
-      # TCK-20261005-SLOW-REGRESSION-GATE-SKIPS-ITS-ONLY-TEST-STEP-ON-MAIN: the two steps below
-      # test unrelated things from step 5, so a step-5 failure must not skip them (the default
-      # `success()` did, on every main run where step 5 failed). `!cancelled()` and not `always()`:
-      # a cancelled run (a newer push evicted it via the concurrency group) must stay cancelled.
-      - name: Slow tests (includes 5k behavioral regression)
-        id: slow_tests
-        if: ${{ !cancelled() }}
-        run: |
-          pytest tests/ -m "slow or extra_slow" --resource-budget large --tb=short -q --ignore=tests/unit/worldassembly/test_corpus_diversity.py
-      - name: Legacy regression
-        id: legacy_regression
-        if: ${{ !cancelled() }}
-        run: make lane-legacy-regression
-      - name: Slow regression step outcomes
-        if: ${{ !cancelled() }}
-        run: |
-          {
-            echo "### Slow regression step outcomes"
-            echo "- corpus diversity: ${{ steps.corpus_diversity.outcome }}"
-            echo "- slow tests: ${{ steps.slow_tests.outcome }}"
-            echo "- legacy regression: ${{ steps.legacy_regression.outcome }}"
-          } >> "$GITHUB_STEP_SUMMARY"
-      - name: Upload certification report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: certification-report-${{ github.sha }}
-          path: reports/certification/
-          retention-days: 30
