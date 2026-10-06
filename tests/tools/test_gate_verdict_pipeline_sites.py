@@ -106,3 +106,11 @@ def test_cli_records_rows_and_never_fails_the_run(tmp_path):
     assert len(list((tmp_path / AGENT_MONITORING / "data" / week).glob("*.gate_verdicts.jsonl"))) == 1
     broken = run("{not json")
     assert broken.returncode == 0 and "WARNING" in broken.stderr
+
+
+def test_static_gate_row_is_written_natively_too_and_carries_the_attested_stdout_sha():
+    """TCK-20261006-GATE-LEDGER-NATIVE-ATTESTED-ROWS-DOUBLE-COUNT: the attested_command row is evidence; this row is the verdict."""
+    source = (_REPO / ".claude/workflows/implement-ticket.js").read_text(encoding="utf-8")
+    assert "const pushStaticGate = (...gateArgs) => pushGate(...gateArgs, legacyBash ? null : lastAttestedStdoutSha)" in source
+    assert "stdout_sha: linkedStdoutSha" in source
+    assert "lastAttestedStdoutSha = JSON.parse(" in source
