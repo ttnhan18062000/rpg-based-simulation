@@ -4,7 +4,7 @@ layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PERF-SCHEDULER-SHEDS-NOTHING-IN-SHIPPED-RUNS
-phase: open
+phase: implement
 date: 2026-10-06
 tags: [performance, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, engine]
 No shipped run registers a sheddable periodic task, so the governor's DEGRADED and SURVIVAL work shedding is a no-op: investigate and give the owner a decision
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -90,6 +90,7 @@ block it.
 
 ## Related Stored Artifacts
 - `agent-working/stored_artifacts/TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY/`
+- `agent-working/stored_artifacts/TCK-20261006-PERF-SCHEDULER-SHEDS-NOTHING-IN-SHIPPED-RUNS/` (investigation with the citations, plan, test_plan)
 
 ## Related Code Areas
 - `src/engine/scheduler.py`, `src/engine/kernel.py` (`_phase_scheduling`), `src/engine/governor.py`,
@@ -100,9 +101,34 @@ block it.
   content). Verify this; a dynamic registration would change the finding.
 
 ## Implementation Notes
+Full evidence with file:line citations is in `investigation.md`. Summary:
+- **Confirmed and wider.** `select_work` can shed nothing in shipped runs: `kernel.py:127` builds the scheduler with no
+  `PeriodicDefinition`, and `scheduler.py:31` is the only place `_periodic_defs` is ever assigned. Three of the four rungs of
+  the documented shedding waterfall (diagnostic verbosity, opportunistic work, non-authoritative periodic work) have no
+  effect: `diagnostic_verbosity` and `metrics_detail` have no reader, `allow_opportunistic` is read only by an empty branch
+  (`scheduler.py:138-139`). Degradation still works through phase budgets, cadence, concurrency, replay richness and traces.
+- **Planner's assumption holds:** nothing registers periodic work dynamically; no `scheduler=` is passed to `Kernel(`, no
+  mutator exists, and no code loads definitions from world content.
+- **History:** `PeriodicDefinition(` was never instantiated outside tests on any branch (only `tests_v2`, `tests_legacy`, `tests`).
+  The mechanism was added in `562116889` (2026-05-18) with no registration. It was designed and never wired, not removed.
+- **Second dead path found:** `periodic_updates` has no producer, so `periodic_due_ticks` (in the canonical hash) never advances,
+  and the executor has no branch for periodic work kinds, so even a registered task would do nothing.
+- **Promises:** 12 doc/code statements classified true/false/partly in `investigation.md` (matrix, runtime_profiles, architecture,
+  lawbook, scheduler matrix, observability matrix, worker bounds, two code comments). No parity-ledger entry claims scheduler
+  shedding as verified. The unit tests are valid specs of the mechanism with test-registered definitions only.
+- **Baselines (input to PERF-M1-T05):** no committed baseline file carries `dropped_work`. Before #379 the live value summed throttle
+  drops and a `9999` sentinel per overrun; since #379 it is 0. Any externally stored series from before 2026-10-06 is
+  incomparable and must not be read as a degradation measure.
+- **Options and recommendation:** (a) register real non-authoritative tasks (no candidate exists; needs executor branch,
+  `periodic_updates` producer and gated state edits); (b) remove the dead path (touches the canonical hash scheme and gated files);
+  (c) keep, document as unused, correct the docs. **Recommendation: (c) now, and fold the removal part of (b) into work-debt retire
+  step 2**, which already needs a PERF-D5 scheme bump for the hashed `work_debt` field; `periodic_due_ticks` can ride the same bump.
+- **Decision:** the owner's. **PENDING.** Nothing was implemented.
 
 ## Test Summary
+No tests added or changed (read-only). The read-only checks run are listed in `test_plan.md`.
 
 ## Files Changed
+- No `src/` file. Ticket, staging artifacts (moved to stored on close), working log and monitoring records only.
 
 ## Completion Summary
