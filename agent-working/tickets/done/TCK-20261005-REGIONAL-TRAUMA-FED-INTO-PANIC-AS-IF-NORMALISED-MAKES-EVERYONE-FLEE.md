@@ -97,6 +97,8 @@ P2
 
 ## Request Summary
 
+Regional dread, the part of panic that comes from a region's trauma, now scales with trauma / 50.0 (the Bible 05 section 2 instability threshold), saturates at 0.3 and alone never makes a subject flee (world rule AGENCY-06, owner decision 17); a threat to the subject itself still can. Before, the raw uncapped per-death counter was added as `trauma * 0.5` against a 0.4 flee threshold. The ticket's own first-draft claims (97% of adjacent-hostile decisions flee, "the progression-starvation chain's root cause") did not reproduce at `b15fef405` and are superseded by the CORRECTION block at the top of this file.
+
 > **[SUPERSEDED by the 2026-10-06 CORRECTION at the top] CORRECTION 2026-10-05, planner. The headline evidence in this ticket did not reproduce, and the
 > priority is lowered from P0 to P1 on that basis. The defect is still real; the claim that it is the
 > dominant gate is withdrawn.**
