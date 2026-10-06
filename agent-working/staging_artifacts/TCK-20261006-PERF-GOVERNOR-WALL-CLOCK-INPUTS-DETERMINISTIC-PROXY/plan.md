@@ -107,12 +107,16 @@ Two smaller questions for the owner:
   Agree? Recommended: yes; it avoids new profile fields and keeps every existing profile valid. The reference host class and the weights'
   provenance are recorded in the manifest.
 
-Precedence if Option 1 is chosen: `audit_mode` set -> zeroed signals (today). Else `signal_contract == CANONICAL` -> modelled. Else live.
+**Owner decision 2026-10-06:** Option 1 (`signal_contract` on `RuntimeProfile`, default `LIVE`, `audit_mode` unchanged); Q-A yes (memory and
+replay backlog are not inputs under Canonical); Q-B yes (thresholds keep their millisecond meaning, as reference-host milliseconds); the Live half
+is `TCK-20261006-PERF-LIVE-CONTROL-TRACE`. Recorded by perf-planner in `performance_optimization_decisions.md` (PERF-D1, "Update 2026-10-06").
+
+Precedence under Option 1: `audit_mode` set -> zeroed signals (today). Else `signal_contract == CANONICAL` -> modelled. Else live.
 A kernel flag may not override the profile's contract, so a run's contract is always readable from its profile.
 
 ## 4. The Live half: a follow-up ticket, not this one
 
-Recommend a separate ticket, filed now by perf-planner: `PERF-LIVE-CONTROL-TRACE`. Reasons:
+A separate ticket, `TCK-20261006-PERF-LIVE-CONTROL-TRACE` (filed by perf-planner, owner-approved 2026-10-06). Reasons:
 - Different deliverable: a versioned, bounded control-trace format (mode transitions with tick, from, to; the emitted phase budgets;
   the kernel's report-only overrun records), a writer in `ReplayManager`, and a Canonical-mode replay that consumes the trace and
   reproduces the hashes (PERF-D1 "Verification": a trace-replay test).

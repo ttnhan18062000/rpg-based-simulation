@@ -134,8 +134,11 @@ the design (Scope 1); whether they are implemented here or split out is the desi
   fate of the tests that drive modes, per-file size estimate) and `test_plan.md` (the Canonical hash-equality test, 10 of 10; the test that
   varies `perf_counter_ns`). No `src/` or `tests/` file was touched. The ticket stays INPROGRESS: AC 1 needs perf-planner's approval and
   the owner's answers, and the code waits for the full no-touch window (AC 2).
-- **Status of the questions:** owner questions are in `plan.md` section 3 (contract selection and `audit_mode`; Q-A memory and replay backlog
-  excluded under Canonical; Q-B thresholds keep their ms meaning as reference-host ms). PENDING.
+- **Owner decisions 2026-10-06 (recorded by perf-planner in `performance_optimization_decisions.md`, PERF-D1 "Update 2026-10-06"):**
+  Option 1 (`signal_contract` on `RuntimeProfile`, default `LIVE`, `audit_mode` unchanged); Q-A accepted (memory and replay backlog are not inputs
+  under Canonical); Q-B accepted (thresholds keep their ms meaning as reference-host ms). The Live half is a separate ticket,
+  `TCK-20261006-PERF-LIVE-CONTROL-TRACE`. Design commit `8fc5e711a`; `plan.md` section 3 carries the decision line. The ticket stays INPROGRESS:
+  the code waits for the full no-touch window (AC 2) and `plan.md` step 1 (calibration) comes first.
 
 ## Test Summary
 
