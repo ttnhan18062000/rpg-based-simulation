@@ -1,10 +1,10 @@
 ---
-status: active
-layer: engine
+status: historical
+layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-LAW-OCCUPANCY-COLLISION-HARD-LAW-ERRORS-ON-MAIN
-phase: open
+phase: done
 date: 2026-10-05
 tags: [engine, determinism]
 ---
@@ -16,7 +16,7 @@ Ten `LAW-OCCUPANCY-COLLISION` hard-law errors fire on untouched `origin/main` on
 `frontier_living_world` — four entities occupying one tile, a hard-law violation nothing currently owns
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -76,13 +76,13 @@ persists, and whether entity 18's write path differs from 53/55/57's. All of tha
   artifact to make a gate pass.
 
 ## Acceptance Criteria
-- [ ] Reproduced on untouched `origin/main` with per-tick detail for all four entities.
-- [ ] A stated verdict on whether enforcement or detection is at fault, with the evidence.
-- [ ] Tile (87,50)'s relationship to the contested region area answered either way.
-- [ ] Other corpus worlds measured.
-- [ ] Fix applied to the correct side, with a disabling control, or a recorded explanation if the correct
+- [x] Reproduced on untouched `origin/main` with per-tick detail for all four entities.
+- [x] A stated verdict on whether enforcement or detection is at fault, with the evidence.
+- [x] Tile (87,50)'s relationship to the contested region area answered either way.
+- [x] Other corpus worlds measured.
+- [x] Fix applied to the correct side, with a disabling control, or a recorded explanation if the correct
       outcome is to change the law.
-- [ ] `docs/engine/` and `docs/parity_ledger/` updated if law semantics change.
+- [x] `docs/engine/` and `docs/parity_ledger/` updated if law semantics change.
 
 ## Related Tickets
 - `TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK` — the ticket whose
@@ -112,13 +112,13 @@ persists, and whether entity 18's write path differs from 53/55/57's. All of tha
   apply-time law disagreeing? Worth checking first, since that pattern has now appeared twice.
 
 ## Implementation Notes
-(to be filled by the implementer)
+Verdict: ENFORCEMENT is at fault, the law is right. `spawn_monster` placed spawns at a fixed tile without checking occupancy; the hypothesis held (entity 52 spawned onto (110,38) at t300 while entity 22 held it, collision t301), so the ticket moved to Lane B and landed with the spawn-faction ticket (restoring the faction makes spawns survive: 2 -> 837 collisions). Fix: `EntityGenerator.free_spawn_position`: nearest tile with no live entity or same-tick spawn within one tile, deterministic, radius 5, raises when none. A placement policy that avoids the same-tick spawn/move race, not a change to movement/spawn ordering. Tile (87,50) is incidental (the orc respawn tile, not region overlap). Other worlds: 24 measured, 0 collisions after. Detail: the spawn ticket's `investigation.md`.
 
 ## Test Summary
-(to be filled by the implementer)
+`tests/unit/world/test_spawn_monster_catalog_faction.py` placement tests (occupied tile, same-tick, free tile kept, loud failure). 0 `LAW-OCCUPANCY-COLLISION` in all 24 worlds, 10,000 ticks, audit_mode, seed 42.
 
 ## Files Changed
-(to be filled by the implementer)
+`src/systems/world_systems/generator.py`; `tests/unit/world/test_spawn_monster_catalog_faction.py`. No law semantics changed, so `docs/engine/` is unchanged.
 
 ## Completion Summary
-(to be filled by the implementer)
+Closed with TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION-FROM-EVERY-RUNTIME-SPAWNED-MONSTER (one function, one PR).
