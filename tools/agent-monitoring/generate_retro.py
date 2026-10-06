@@ -40,6 +40,7 @@ from duration_utils import compute_active_idle_split  # noqa: E402
 from validate import load_data_glob  # noqa: E402
 from run_dedup import dedupe_to_latest_per_execution  # noqa: E402
 import real_token_usage  # noqa: E402
+import retro_provenance  # noqa: E402
 
 # Read-only reference imports for TCK-20260729-RETRIEVAL-RETRO-VIEWS's retrieval-quality views —
 # anti-drift: compute_retrieval_metrics() must never re-literal these values (see
@@ -795,7 +796,8 @@ def compute_retro_metrics(
     done_count = sum(1 for r in runs if _resolve_status(r) == "DONE")
     gate_fails = [r for r in runs if _is_gate_fail(r)]
 
-    durations = [r["duration_s"] for r in runs if r.get("duration_s")]
+    # TCK-20261006-HAND-CLOSURE-RETRO-PROVENANCE: a derived (tool_activity) duration is averaged beside, never in, the headline.
+    durations = [r["duration_s"] for r in runs if r.get("duration_s") and not retro_provenance.is_derived(r)]
     avg_dur = int(sum(durations) / len(durations)) if durations else 0
     avg_dur_min = avg_dur // 60
 
@@ -823,9 +825,10 @@ def compute_retro_metrics(
     execution_mode_summary = {}
     for mode in ("pipeline", "hand", "workflow", "unlabelled"):
         group = execution_mode_runs.get(mode, [])
-        group_durations = [r["duration_s"] for r in group if r.get("duration_s")]
+        group_durations = [r["duration_s"] for r in group if r.get("duration_s") and not retro_provenance.is_derived(r)]
         execution_mode_summary[mode] = {
             "count": len(group),
+            "unknown": sum(1 for r in group if r.get("duration_source") == "unknown"),
             "done_count": sum(1 for r in group if _resolve_status(r) == "DONE"),
             "avg_duration_min": (
                 (int(sum(group_durations) / len(group_durations)) // 60)
@@ -931,7 +934,7 @@ def compute_retro_metrics(
     # (pre-TCK-20260708-AGENT-COST-OBSERVABILITY historical records, no backfill) are excluded from
     # both sum and count, never coerced to 0 (would silently deflate older phases' averages).
     # Keyed on normalized phase/agent for the same reason as agent_status_distribution above.
-    scored_events = [e for e in events if e.get("cost_proxy_score") is not None]
+    scored_events = [e for e in events if e.get("cost_proxy_score") is not None and not retro_provenance.is_session_window(e)]
     phase_scores = defaultdict(list)
     agent_scores = defaultdict(list)
     for e in scored_events:
@@ -995,7 +998,7 @@ def compute_retro_metrics(
 
     # Slow runs (> 30 min = 1800s) — sorted here (a data concern), not left to the renderer.
     slow_runs = sorted(
-        (r for r in runs if (r.get("duration_s") or 0) > 1800),
+        (r for r in runs if (r.get("duration_s") or 0) > 1800 and not retro_provenance.is_derived(r)),
         key=lambda x: x.get("duration_s", 0),
         reverse=True,
     )
@@ -1022,7 +1025,7 @@ def compute_retro_metrics(
     duration_outliers = _flag_outliers(
         runs,
         group_key_fn=lambda r: r.get("tier", "unknown"),
-        value_fn=lambda r: r.get("duration_s"),
+        value_fn=lambda r: None if retro_provenance.is_derived(r) else r.get("duration_s"),
     )
     outliers_duration_s = [
         {
@@ -1068,6 +1071,7 @@ def compute_retro_metrics(
             "avg_agents": avg_agents,
             "total_agent_calls": len(events),
             "execution_mode": execution_mode_summary,
+            "provenance": retro_provenance.summary(runs, events),
         },
         "gate_failure_breakdown": dict(gate_counter),
         "reason_code_breakdown": dict(reason_counter),
@@ -1428,6 +1432,9 @@ def generate(
     lines.append("")
     lines.append("---")
     lines.append("")
+    prov = rs.get("provenance")
+    if prov:
+        lines.extend(retro_provenance.top_note(prov))
 
     # Run summary
     lines.append("## Run Summary")
@@ -1437,7 +1444,10 @@ def generate(
     lines.append(f"| Total runs | {rs['total']} |")
     lines.append(f"| Completed (DONE) | {rs['done_count']} ({fmt_pct(rs['done_count'], rs['total'])}) |")
     lines.append(f"| Gate failures | {rs['gate_fail_count']} |")
-    lines.append(f"| Avg duration | {rs['avg_duration_min']} min |")
+    if prov:
+        lines.extend(retro_provenance.run_summary_rows(prov))
+    else:
+        lines.append(f"| Avg duration | {rs['avg_duration_min']} min |")
     lines.append(f"| Avg agents per run | {rs['avg_agents']} |")
     lines.append(f"| Total agent calls | {rs['total_agent_calls']} |")
     lines.append("")
@@ -1456,11 +1466,15 @@ def generate(
     for mode, label_text in (("pipeline", "Pipeline"), ("hand", "Hand-closed"), ("workflow", "Native workflow"), ("unlabelled", "Unlabelled (pre-field)")):
         group = em.get(mode, {"count": 0, "done_count": 0, "avg_duration_min": None})
         avg_dur_text = f"{group['avg_duration_min']} min" if group["avg_duration_min"] is not None else "n/a"
+        if prov and group.get("unknown"):
+            avg_dur_text += f" (unknown, not averaged: {group['unknown']})"
         lines.append(
             f"| {label_text} | {group['count']} | "
             f"{group['done_count']} ({fmt_pct(group['done_count'], group['count'])}) | {avg_dur_text} |"
         )
     lines.append("")
+    if prov:
+        lines.extend(retro_provenance.by_source_lines(prov))
 
     if raw_run_count is not None and deduped_run_count is not None and raw_run_count != deduped_run_count:
         lines.append(
@@ -1595,6 +1609,8 @@ def generate(
             row = metrics["spend_proxy_by_agent"][agent]
             lines.append(f"| {agent} | {row['events_scored']} | {row['total']} | {row['avg']} |")
         lines.append("")
+    if prov:
+        lines.extend(retro_provenance.session_window_line(prov))
 
     # Summary quality
     sq = metrics["summary_quality"]
@@ -2110,15 +2126,17 @@ def _session_layer_section(runs, week_str, cutoff, latency_prs):
         import session_layer_report as slr
 
         data_dir = DEFAULT_TOOLS_FILE if DEFAULT_TOOLS_FILE.is_dir() else DEFAULT_TOOLS_FILE.parent
-        manual = slr.in_period(slr.load_family(data_dir, "manual_actions.jsonl"), week_str, cutoff)
-        boundary = slr.in_period(slr.load_family(data_dir, "role_boundary.jsonl"), week_str, cutoff)
+        all_manual = slr.load_family(data_dir, "manual_actions.jsonl")
+        all_boundary = slr.load_family(data_dir, "role_boundary.jsonl")
+        manual = slr.in_period(all_manual, week_str, cutoff)
+        boundary = slr.in_period(all_boundary, week_str, cutoff)
         rows = []
         for n in latency_prs:
             try:
                 rows.append((f"#{n}", batch_latency.from_pr(batch_latency.fetch_pr(n))))
             except Exception:  # noqa: BLE001 - an unavailable PR is `unknown`, not a failed retro
                 rows.append((f"#{n}", batch_latency.latencies(None, None, None) | {"dispatch_source": "unavailable"}))
-        return slr.render(manual, runs, boundary, rows or None)
+        return slr.render(manual, runs, boundary, rows or None, len(all_manual), len(all_boundary))
     except Exception:  # noqa: BLE001
         return None
 

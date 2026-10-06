@@ -38,6 +38,7 @@ if str(_REPO_ROOT) not in sys.path:
 from tools.sessions import state as st  # noqa: E402
 from tools.sessions.resolve import instance_ids  # noqa: E402
 from tools.sessions.roster import Role, Roster, load_roster  # noqa: E402
+from tools.sessions import settings_freshness as sf  # noqa: E402
 
 EXIT_USAGE, EXIT_REFUSED, EXIT_NEEDS_CHOICE = 2, 4, 3
 GIT_OPERATIONS = (
@@ -104,6 +105,21 @@ def build_command(target: Target, resume_session: str | None = None) -> tuple[li
         cmd += ["--resume", resume_session]
     cmd += ["--name", target.instance, "--agent", agent_name(target.role)]
     return cmd, {"SESSION_ROLE": target.instance}
+
+
+def preflight(worktree: Path, allow_stale: bool) -> tuple[bool, list[str]]:
+    """(go, lines): refuse a worktree outside the repo or behind origin/main (TCK-20261006-LIVE-SESSIONS-RUN-STALE-OR-NO-PROJECT-HOOKS).
+
+    A missing directory is skipped (self-heal creates it); an unverifiable ref only warns, so an offline launch still works."""
+    if not worktree.is_dir():
+        return True, []
+    report = sf.check(worktree)
+    if report.status == sf.OK:
+        return True, []
+    if report.status == sf.UNKNOWN or allow_stale and report.inside_repo:
+        return True, report.lines() + ["continuing: " + ("freshness could not be verified" if report.status == sf.UNKNOWN else "--allow-stale")]
+    return False, report.lines() + ["refusing to launch: this session would run without the project hooks and agent types "
+                                     "(sync the worktree from its own branch, or pass --allow-stale)"]
 
 
 def agent_file_exists(role: Role, root: Path = _REPO_ROOT) -> bool:
@@ -314,6 +330,7 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
     ap.add_argument("--action", choices=("resume", "replace", "inspect"))
     ap.add_argument("--session-id", help="resume exactly this session id")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--allow-stale", action="store_true", help="launch although the worktree's settings/agents differ from origin/main")
     ap.add_argument("--worktree", help="physical worktree path (default: <main checkout>/.claude/worktrees/<name>)")
     a = ap.parse_args(argv)
     roster = load_roster(root)
@@ -342,6 +359,11 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
         print(line)
     if code != 0:
         return code
+    go, notes = preflight(wt, a.allow_stale)
+    for line in notes:
+        print(line)
+    if not go:
+        return EXIT_REFUSED
     cmd, env = build_command(target, sid)
     if a.dry_run:
         print("DRY RUN: " + " ".join(f"{k}={shlex.quote(v)}" for k, v in env.items()) + " " + " ".join(shlex.quote(c) for c in cmd)
