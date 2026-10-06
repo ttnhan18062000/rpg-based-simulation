@@ -149,7 +149,12 @@ describe('useSimulation hook', () => {
       expect(vi.mocked(globalThis.WebSocket).mock.instances.length).toBeGreaterThan(0)
     })
 
-    expect(result.current.status).toBe('CONNECTING_LIVE')
+    // connectWS() calls setStatus('CONNECTING_LIVE') and then constructs the WebSocket from an async
+    // continuation, outside act(): the mock instance can exist before React has flushed the state
+    // update, so wait for the status itself (TCK-20261006-USE-SIMULATION-CONNECTING-LIVE-TEST-READS-STATE-BEFORE-FLUSH).
+    await waitFor(() => {
+      expect(result.current.status).toBe('CONNECTING_LIVE')
+    })
   })
 
   it('transitions to SYNCING on WS open (handshake sent), stays SYNCING through the non-delta initial summary message', async () => {
