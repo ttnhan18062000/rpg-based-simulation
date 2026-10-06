@@ -1,0 +1,35 @@
+=== ARM before 7f361ee73 /mnt/data/Working/rpg-based-simulation/.claude/worktrees/remeasure-trauma-panic
+##### before crowded_frontier 2000 42 run1
+CORPUS crowded_frontier 42 2000 {"deaths": 38, "entities": 38, "execute_attack.fresh.None": 6, "execute_attack.held.None": 16, "execute_attack.held.OUT_OF_RANGE": 4, "execute_attack.held.TARGET_INCAPACITATED": 6, "execute_attack.total": 32, "resolve_attack.deliberate": 22, "resolve_multi_attack.opportunity.attackers": 110, "resolve_multi_attack.opportunity.calls": 105, "tactical.ATTACK": 9, "tactical.PANIC_RETREAT": 14, "tactical.decisions": 75}
+##### before crowded_frontier 2000 42 run2
+CORPUS crowded_frontier 42 2000 {"deaths": 38, "entities": 38, "execute_attack.fresh.None": 6, "execute_attack.held.None": 16, "execute_attack.held.OUT_OF_RANGE": 4, "execute_attack.held.TARGET_INCAPACITATED": 6, "execute_attack.total": 32, "resolve_attack.deliberate": 22, "resolve_multi_attack.opportunity.attackers": 110, "resolve_multi_attack.opportunity.calls": 105, "tactical.ATTACK": 9, "tactical.PANIC_RETREAT": 14, "tactical.decisions": 75}
+##### before frontier_living_world 2000 42 run1
+CORPUS frontier_living_world 42 2000 {"deaths": 49, "entities": 49, "execute_attack.fresh.None": 8, "execute_attack.held.None": 14, "execute_attack.held.OUT_OF_RANGE": 274, "execute_attack.held.TARGET_INCAPACITATED": 2, "execute_attack.total": 298, "resolve_attack.deliberate": 22, "resolve_multi_attack.opportunity.attackers": 131, "resolve_multi_attack.opportunity.calls": 130, "tactical.ATTACK": 9, "tactical.PANIC_RETREAT": 9, "tactical.decisions": 102}
+##### before frontier_living_world 2000 42 run2
+CORPUS frontier_living_world 42 2000 {"deaths": 49, "entities": 49, "execute_attack.fresh.None": 8, "execute_attack.held.None": 14, "execute_attack.held.OUT_OF_RANGE": 274, "execute_attack.held.TARGET_INCAPACITATED": 2, "execute_attack.total": 298, "resolve_attack.deliberate": 22, "resolve_multi_attack.opportunity.attackers": 131, "resolve_multi_attack.opportunity.calls": 130, "tactical.ATTACK": 9, "tactical.PANIC_RETREAT": 9, "tactical.decisions": 102}
+##### before campaign 70 42 run1
+CORPUS campaign 42 70 {"deaths": 11, "entities": 49, "resolve_multi_attack.opportunity.attackers": 1, "resolve_multi_attack.opportunity.calls": 1, "tactical.PANIC_RETREAT": 1, "tactical.decisions": 14}
+##### before campaign 70 42 run2
+CORPUS campaign 42 70 {"deaths": 11, "entities": 49, "resolve_multi_attack.opportunity.attackers": 1, "resolve_multi_attack.opportunity.calls": 1, "tactical.PANIC_RETREAT": 1, "tactical.decisions": 14}
+##### before campaign 70 1337 run1
+CORPUS campaign 1337 70 {"deaths": 8, "entities": 49, "execute_attack.fresh.None": 1, "execute_attack.held.None": 4, "execute_attack.held.OUT_OF_RANGE": 2, "execute_attack.total": 7, "resolve_attack.deliberate": 5, "resolve_multi_attack.opportunity.attackers": 8, "resolve_multi_attack.opportunity.calls": 8, "tactical.ATTACK": 1, "tactical.decisions": 14}
+##### before campaign 70 1337 run2
+CORPUS campaign 1337 70 {"deaths": 8, "entities": 49, "execute_attack.fresh.None": 1, "execute_attack.held.None": 4, "execute_attack.held.OUT_OF_RANGE": 2, "execute_attack.total": 7, "resolve_attack.deliberate": 5, "resolve_multi_attack.opportunity.attackers": 8, "resolve_multi_attack.opportunity.calls": 8, "tactical.ATTACK": 1, "tactical.decisions": 14}
+=== ARM after 7f361ee73 /mnt/data/Working/rpg-based-simulation/.claude/worktrees/held-attack-oor
+##### after crowded_frontier 2000 42 run1
+CORPUS crowded_frontier 42 2000 {"deaths": 38, "entities": 38, "execute_attack.fresh.None": 19, "execute_attack.held.None": 4, "execute_attack.held.OUT_OF_RANGE": 26, "execute_attack.held.TARGET_INCAPACITATED": 6, "execute_attack.total": 55, "resolve_attack.deliberate": 23, "resolve_multi_attack.opportunity.attackers": 99, "resolve_multi_attack.opportunity.calls": 88, "tactical.ATTACK": 21, "tactical.PANIC_RETREAT": 16, "tactical.decisions": 114}
+##### after crowded_frontier 2000 42 run2
+CORPUS crowded_frontier 42 2000 {"deaths": 38, "entities": 38, "execute_attack.fresh.None": 19, "execute_attack.held.None": 4, "execute_attack.held.OUT_OF_RANGE": 26, "execute_attack.held.TARGET_INCAPACITATED": 6, "execute_attack.total": 55, "resolve_attack.deliberate": 23, "resolve_multi_attack.opportunity.attackers": 99, "resolve_multi_attack.opportunity.calls": 88, "tactical.ATTACK": 21, "tactical.PANIC_RETREAT": 16, "tactical.decisions": 114}
+##### after frontier_living_world 2000 42 run1
+CORPUS frontier_living_world 42 2000 {"deaths": 49, "entities": 49, "execute_attack.fresh.None": 23, "execute_attack.held.None": 4, "execute_attack.held.OUT_OF_RANGE": 24, "execute_attack.held.TARGET_INCAPACITATED": 10, "execute_attack.total": 61, "resolve_attack.deliberate": 27, "resolve_multi_attack.opportunity.attackers": 123, "resolve_multi_attack.opportunity.calls": 123, "tactical.ATTACK": 56, "tactical.PANIC_RETREAT": 12, "tactical.decisions": 149}
+##### after frontier_living_world 2000 42 run2
+CORPUS frontier_living_world 42 2000 {"deaths": 49, "entities": 49, "execute_attack.fresh.None": 23, "execute_attack.held.None": 4, "execute_attack.held.OUT_OF_RANGE": 24, "execute_attack.held.TARGET_INCAPACITATED": 10, "execute_attack.total": 61, "resolve_attack.deliberate": 27, "resolve_multi_attack.opportunity.attackers": 123, "resolve_multi_attack.opportunity.calls": 123, "tactical.ATTACK": 56, "tactical.PANIC_RETREAT": 12, "tactical.decisions": 149}
+##### after campaign 70 42 run1
+CORPUS campaign 42 70 {"deaths": 11, "entities": 49, "resolve_multi_attack.opportunity.attackers": 1, "resolve_multi_attack.opportunity.calls": 1, "tactical.PANIC_RETREAT": 1, "tactical.decisions": 13}
+##### after campaign 70 42 run2
+CORPUS campaign 42 70 {"deaths": 11, "entities": 49, "resolve_multi_attack.opportunity.attackers": 1, "resolve_multi_attack.opportunity.calls": 1, "tactical.PANIC_RETREAT": 1, "tactical.decisions": 13}
+##### after campaign 70 1337 run1
+CORPUS campaign 1337 70 {"deaths": 7, "entities": 49, "execute_attack.fresh.None": 1, "execute_attack.held.OUT_OF_RANGE": 2, "execute_attack.total": 3, "resolve_attack.deliberate": 1, "resolve_multi_attack.opportunity.attackers": 1, "resolve_multi_attack.opportunity.calls": 1, "tactical.ATTACK": 1, "tactical.decisions": 13}
+##### after campaign 70 1337 run2
+CORPUS campaign 1337 70 {"deaths": 7, "entities": 49, "execute_attack.fresh.None": 1, "execute_attack.held.OUT_OF_RANGE": 2, "execute_attack.total": 3, "resolve_attack.deliberate": 1, "resolve_multi_attack.opportunity.attackers": 1, "resolve_multi_attack.opportunity.calls": 1, "tactical.ATTACK": 1, "tactical.decisions": 13}
+ALL-DONE
