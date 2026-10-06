@@ -26,9 +26,13 @@ acceptance criteria unchanged.
    `crowded_frontier` and `frontier_living_world`, not yet verified live) may or may not still need
    checking once (1) lands — that is for whoever picks this up to determine, not assumed here.
 3. `TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE` (P2, open — boss-gate half
-   only; the faction-chain half is already resolved, citing (2)'s own 2026-09-17 addendum). Can run
-   independently of (1)/(2) if convenient, but sequenced after them since it is lower priority and
-   partially informed by their findings.
+   only; the faction-chain half is already resolved, citing (2)'s own 2026-09-17 addendum).
+   **PARKED, 2026-10-05, by owner deferral — do not pick it up.** The owner was asked directly whether
+   the world-boss deferral covers the lair world boss (the `BossService` maturity gate, live and proven)
+   or only the calamity boss, and ruled **both**. The boss-gate half's entire downstream is therefore
+   deferred, so there is nothing for it to starve that anyone is measuring. It is **not** independently
+   runnable, which earlier revisions of this file claimed. Nothing is removed: the live lair-boss path
+   stays as it is, and boss spawns remain not evidence for anything (memo row 10).
 4. `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` (done — not reopened).
    Already root-caused: the combat-XP-to-level-up-to-`stats_dirty` chain is confirmed correctly
    wired via a real Kernel-tick positive control. Referenced here for the chain's own narrative
@@ -84,8 +88,9 @@ against a post-#291 corpus and that is a genuine result. If it needs exact count
 ticket comes first. **Decide which before dispatching**, and record the choice, rather than taking counts
 and discovering afterwards that they were not reproducible.
 
-Items (3) and (5) are unaffected by this correction — (3) remains independently runnable, (5) remains
-last.
+Item (5) is unaffected by this correction and remains last. **Item (3) is no longer independently
+runnable**: it is parked by the owner's world-boss deferral (2026-10-05, covering both the calamity boss
+and the lair world boss). An earlier revision of this line said otherwise; that claim is withdrawn.
 
 ~~Whether #291 lands as-is is **its own user's decision, not this epic's.**~~ **It landed, 2026-10-04,
 with AC6 unmet.** The one thing asked of its ticket still stands and is **outstanding**: that it record
@@ -110,9 +115,10 @@ fix routed from this chain lands there, which is worth knowing before picking up
 
 **(3)'s boss-gate half is real but lower-stakes and less coupled to the rest of the chain** — it
 checks whether an already-confirmed-correct gate further starves a different, unrelated downstream
-system (the world-boss maturity trigger), not whether the gate is wrong. It can run in parallel with
-(1)/(2) without blocking or being blocked by them, but is sequenced after because P2 is genuinely
-lower priority than P0/P1.
+system (the world-boss maturity trigger), not whether the gate is wrong. **It is parked (2026-10-05):
+the owner's deferral covers both the calamity boss and the lair world boss, so its downstream is
+deferred too.** The earlier statement that it "can run in parallel with (1)/(2)" no longer applies.
+Revisit only if the boss deferral is lifted.
 
 **(4) needs no further sequencing — it is done.** It stays in `agent-working/tickets/done/` root rather than
 moving into this epic's own folder, matching this repo's own established epic-folder precedent (see

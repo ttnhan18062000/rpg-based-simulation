@@ -2346,6 +2346,39 @@ untouched by §2.57's fix (out of that ticket's scope).
   non-`PURSUE` modes, dead or missing targets, live-versus-snapshot), `tests/unit/strategic/test_redirection_entity_objective.py`
   (control: an untyped objective still gets its point; a carrying entity is not sent home).
 - **Status**: RATIFIED
+
+### 2.69 A Posture-Withheld or Unsupported Action Is Reported as a Typed Failure and Ends Its Task; the Task Annotation No Longer Carries a Stale Reason (TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS)
+- **Subsystem**: Combat / action dispatch (`ActionRouter.execute_action`, `ActionRoutingPhase.route()`)
+- **Old Behavior**: when the combat-posture gate withheld an `ATTACK`/`SKILL` (`action_router.py`), or no handler recognised an action,
+  the router returned a bare no-op `EntityUpdate` with no failure. `ActionRoutingPhase.route()` saw no failure, annotated
+  `outcome: SUCCESS`, kept the payload, and the scheduler re-dispatched the payload-bearing `ENTITY_ACT` every tick (the Sticky-Task
+  Law working as designed) until the target died. The annotation also kept the previous tick's `reason` beside the new `outcome`.
+  Measured on `origin/main` `7a9f302db` (real `Kernel.tick_once()`, seed 42, 2000 ticks, `audit_mode`, budget disabled, each world run
+  twice with matched results, so values): `frontier_living_world` 1686 of 1693 `ATTACK` dispatches withheld, 844 distinct
+  entity-ticks across 2 entities, **one run of 839 consecutive ticks** (the `OUT_OF_RANGE`-looking episode of attacker 34 against target
+  11, t161 to t1008); `dungeon_crawl` 4 entity-ticks, longest run 4; `crowded_frontier` and `urban_political` 0 `ATTACK` dispatches.
+- **New Behavior**: the gate reports `ReasonCode.ACTION_WITHHELD_BY_POSTURE` and the fall-through reports `ReasonCode.UNSUPPORTED_ACTION`
+  (both as `NavigationUpdate.failure_reason`, the shape the readiness check and `execute_attack`'s rejections already use, with
+  `readiness_delta` 0.0: nothing was spent). `route()` clears the task to idle for either reason whatever the action kind (the
+  existing unrecoverable branch, widened from `ATTACK`+`TARGET_INCAPACITATED` only), the rejection is counted and audited, and the brain
+  re-decides at its cadence. A `reason` beside an `outcome` in the incoming payload is dropped before the new annotation; a decision-time
+  `reason` with no `outcome` beside it is kept. The posture gate's policy is unchanged (risk-accepted postures dispatch; an absent or
+  other-target posture never withholds).
+- **Not behavior-neutral; measured** (same settings, after this change, two identical runs per world, values): `frontier_living_world`
+  withheld entity-ticks 844 to 2, longest run 839 to 1, `ATTACK` dispatches 1693 to 8, total action dispatches 2862 to 1177;
+  `dungeon_crawl` withheld entity-ticks 4 to 2, longest run 4 to 1; `crowded_frontier`/`urban_political` unchanged (0). Trajectories
+  diverge once an entity re-decides, so these are population comparisons: the same attacker (34) now attacks target 11 legally at
+  t166 and the target is incapacitated at t177 (one sample). The fall-through was never reached in any corpus world (one run each),
+  so no recognised action relies on it. Each withheld attack is dispatched twice per tick by the documented two-pass
+  Collection/refinement design (`COMB-307`), not a defect. **Not established**: how often the posture gate holds a task outside these
+  four worlds, and whether other handlers (`execute_interact`, `execute_repair`, ...) return the same bare no-op on their own paths.
+- **Rationale**: **Bug Fix** (a dispatched action that did nothing was reported as success and never ended), with **Enforced** for the
+  verdict stream now showing a withheld attack at its busiest checkpoint.
+- **Verification**: `tests/unit/actions/test_action_routing_withheld_action.py` (withheld clears and is reported for every rejected
+  posture and for `SKILL`; every accepted posture still dispatches; absent and other-target postures do not withhold; unsupported action;
+  readiness untouched; stale-reason and decision-reason cases; dead-target branch unchanged), with
+  `tests/mechanic_scenarios/test_combat_judgement_withdrawal.py` as the real-world differential for the gate itself.
+- **Status**: RATIFIED
 ---
 
 ## 3. Unsupported / Retired Behavior

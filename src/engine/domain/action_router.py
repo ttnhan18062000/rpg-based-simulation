@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from src.core.enums import ReasonCode
 from src.core.updates import EntityUpdate, NavigationUpdate
 from src.engine.domain.combat_actions import CombatActions
 from src.engine.domain.skill_actions import SkillActions
@@ -73,33 +74,8 @@ class ActionRouter:
         if action == "INTERACT":
             return CoreActions.execute_interact(entity, payload)
             
-        if action in ("ATTACK", "SKILL"):
-            # TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION: re-check
-            # combat_engagement's own risk assessment for this exact target HERE, not only at the
-            # point TacticalDecisionSystem first decided to attack -- confirmed via direct
-            # instrumentation that once an entity's task is set, the scheduler re-executes it on
-            # every subsequent tick (src/engine/scheduler.py's own "already ENTITY_ACT" cadence
-            # optimization) WITHOUT calling evaluate_entity_intent again, so a gate placed only in
-            # tactical.py's own decision point is bypassed for the vast majority (93.7% measured
-            # in the reference scenario) of real attacks -- they are repeat executions of an
-            # already-made decision, not fresh ones. This is the actual per-attack checkpoint.
-            # Policy: only risk-ACCEPTED postures (ENGAGE/PROBE/SKIRMISH/VENGEANCE_ENGAGE)
-            # proceed; every risk-rejected posture (WATCH/AVOID/PANIC_FLEE/RETREAT) and an
-            # explicit IGNORE verdict withhold the attack. Absence of any recorded posture for
-            # this exact target does NOT withhold it -- combat_engagement never having run
-            # against this pairing (flag off, or a cold-start tick) is not a verdict. An earlier
-            # version of this gate lived in tactical.py's own decision point; it was removed
-            # (not just superseded) once measurement showed it caught only 6.3% of real attacks,
-            # to avoid two parallel implementations of the same policy.
-            _RISK_ACCEPTED_POSTURES = ("engage", "probe", "skirmish", "vengeance_engage")
-            _target_id = payload.get("target_id") if payload else None
-            _posture = (
-                entity.identity.properties.get("last_combat_posture")
-                if entity.identity.properties.get("last_combat_posture_target") == _target_id
-                else None
-            )
-            if _posture is not None and _posture not in _RISK_ACCEPTED_POSTURES:
-                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
+        if action in ("ATTACK", "SKILL") and ActionRouter._posture_withholds(entity, payload):
+            return ActionRouter._reported_no_op(entity, ReasonCode.ACTION_WITHHELD_BY_POSTURE)
 
         if action == "ATTACK":
             return CombatActions.execute_attack(entity, payload, current_tick, neighbor_view, context)
@@ -110,7 +86,49 @@ class ActionRouter:
         if action == "AOE_ATTACK":
             return AoeActions.execute_aoe_attack(entity, payload, current_tick, neighbor_view, context)
             
+        # An action no handler recognises can never succeed on retry: report it so the task ends.
+        return ActionRouter._reported_no_op(entity, ReasonCode.UNSUPPORTED_ACTION)
+
+    @staticmethod
+    def _reported_no_op(entity: EntityState, reason: ReasonCode) -> Dict[int, EntityUpdate]:
+        """A dispatched action that did nothing, REPORTED instead of returned bare.
+
+        A bare no-op carries no failure, so the task is annotated SUCCESS and never cleared, and the scheduler
+        re-dispatches the same do-nothing action every tick until the target dies (measured: one entity held ~851
+        ticks). The typed reason lets pipeline_phases/actions.py's unrecoverable-failure branch end the task so the
+        brain re-decides, and puts the withheld action in the rejection stream. ``readiness_delta`` stays 0.0:
+        nothing was spent."""
         return {entity.id: EntityUpdate(
             entity_id=entity.id,
-            readiness_delta=0.0
+            readiness_delta=0.0,
+            navigation=NavigationUpdate(failure_reason=reason),
         )}
+
+    @staticmethod
+    def _posture_withholds(entity: EntityState, payload: Optional[Dict[str, Any]]) -> bool:
+        """True when the attacker's recorded combat posture toward this exact target is risk-rejected.
+
+        TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION: re-check combat_engagement's own
+        risk assessment for this exact target HERE, not only at the point TacticalDecisionSystem first decided
+        to attack -- confirmed via direct instrumentation that once an entity's task is set, the scheduler
+        re-executes it on every subsequent tick (src/engine/scheduler.py's own "already ENTITY_ACT" cadence
+        optimization) WITHOUT calling evaluate_entity_intent again, so a gate placed only in tactical.py's own
+        decision point is bypassed for the vast majority (93.7% measured in the reference scenario) of real
+        attacks -- they are repeat executions of an already-made decision, not fresh ones. This is the actual
+        per-attack checkpoint.
+
+        Policy: only risk-ACCEPTED postures (ENGAGE/PROBE/SKIRMISH/VENGEANCE_ENGAGE) proceed; every risk-rejected
+        posture (WATCH/AVOID/PANIC_FLEE/RETREAT) and an explicit IGNORE verdict withhold the attack. Absence of
+        any recorded posture for this exact target does NOT withhold it -- combat_engagement never having run
+        against this pairing (flag off, or a cold-start tick) is not a verdict. An earlier version of this gate
+        lived in tactical.py's own decision point; it was removed (not just superseded) once measurement showed
+        it caught only 6.3% of real attacks, to avoid two parallel implementations of the same policy.
+        """
+        risk_accepted_postures = ("engage", "probe", "skirmish", "vengeance_engage")
+        target_id = payload.get("target_id") if payload else None
+        posture = (
+            entity.identity.properties.get("last_combat_posture")
+            if entity.identity.properties.get("last_combat_posture_target") == target_id
+            else None
+        )
+        return posture is not None and posture not in risk_accepted_postures

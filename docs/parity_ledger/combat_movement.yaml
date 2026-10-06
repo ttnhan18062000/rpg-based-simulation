@@ -4527,3 +4527,40 @@
     counts on frontier_living_world (38 to 644) and crowded_frontier (488 to 283)
     moved in opposite directions and are unexplained. The intelligence.py redirection
     branch has no direct unit test; only redirection.py does.'
+- id: COMB-330
+  text: 'TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS:
+    ActionRouter.execute_action reports an action it dispatched but did nothing with
+    as a typed failure instead of a bare no-op: the combat-posture gate (an ATTACK/SKILL
+    whose attacker has a recorded, risk-rejected last_combat_posture toward that exact
+    target) reports ACTION_WITHHELD_BY_POSTURE, and the final fall-through for an
+    unrecognised action reports UNSUPPORTED_ACTION. ActionRoutingPhase.route() clears
+    the task to idle for either reason whatever the action kind, so the brain re-decides
+    at its next cadence; previously the no-op carried no failure, the payload was
+    annotated outcome SUCCESS, the task was kept and the scheduler re-dispatched it
+    every tick until the target died. The annotation also drops the previous tick''s
+    reason (a reason beside an outcome is an earlier annotation); a decision-time
+    reason with no outcome beside it is kept. The gate''s policy is unchanged.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/domain/action_router.py (posture gate and fall-through
+    return NavigationUpdate.failure_reason with readiness_delta 0.0), src/engine/pipeline_phases/actions.py
+    (_UNRECOVERABLE_ANY_ACTION_REASONS clear branch; stale-reason filter in the annotation),
+    src/core/enums.py (ACTION_WITHHELD_BY_POSTURE, UNSUPPORTED_ACTION). Real corpus
+    (Kernel.tick_once(), seed 42, 2000 ticks, audit_mode, budget disabled, each world
+    run twice with matched results): frontier_living_world withheld entity-ticks 844
+    to 2, longest held run 839 to 1 ticks, ATTACK dispatches 1693 to 8; dungeon_crawl
+    4 to 2 and 4 to 1; crowded_frontier and urban_political 0 ATTACK dispatches before
+    and after.'
+  proof_type: regression
+  test_path: tests/unit/actions/test_action_routing_withheld_action.py; tests/mechanic_scenarios/test_combat_judgement_withdrawal.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.69.
+  support_boundary: One held episode was traced end to end (attacker 34 against target
+    11, frontier_living_world, 839 consecutive withheld ticks); the exposure counts
+    are four corpus worlds at 2000 ticks, not a rate elsewhere. The fall-through was
+    never reached in the corpus (one run each). Whether other handlers (execute_interact,
+    execute_repair, ...) return the same bare no-op on their own paths was not enumerated.
+    The same withheld dispatch is seen twice per tick by the documented two-pass design
+    (COMB-307), unchanged. NavigationUpdate.failure_reason is the shape the readiness
+    check and execute_attack's rejections already use; it sets navigation.last_failure_reason,
+    which strategic intelligence and the inspector read.

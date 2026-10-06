@@ -173,3 +173,18 @@ disengaging while adjacent to a hostile) bypass this specific check.
     `OUT_OF_RANGE` failures are deliberately **not** reset — both are real, recoverable
     conditions (readiness regens; range may close via a fresh pursuit decision), unlike a dead
     target which can never become legal again.
+*   **Withheld-Action Task Reset**: The action router (`ActionRouter.execute_action`,
+    `src/engine/domain/action_router.py`) reports `ReasonCode.ACTION_WITHHELD_BY_POSTURE` when its
+    combat-posture gate withholds an `ATTACK`/`SKILL` (the attacker's recorded
+    `last_combat_posture` toward that exact target is not `engage`/`probe`/`skirmish`/
+    `vengeance_engage`; an absent posture, or one recorded for another target, never withholds),
+    and `ReasonCode.UNSUPPORTED_ACTION` for an action no handler recognises. Both are
+    unrecoverable for the task that carried them, so `ActionRoutingPhase.route()` clears the
+    task to idle exactly as it does for `TARGET_INCAPACITATED`, whatever the action kind, and the
+    brain re-decides at its next cadence. Previously the gate returned a bare no-op with no
+    failure: the task was annotated `outcome: SUCCESS`, kept, and re-dispatched every tick until
+    the target died (one entity held ~851 ticks, `frontier_living_world`, seed 42). The task
+    annotation also no longer carries the previous tick's `reason`: a `reason` that sits beside an
+    `outcome` is an earlier annotation and is dropped before the new one is written
+    (`TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS`).
+    The gate's policy is unchanged; only its return shape and the resulting annotation.
