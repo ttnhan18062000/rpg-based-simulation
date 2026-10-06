@@ -35,4 +35,4 @@ Sequential except child 4.
 
 ## Status
 
-OPEN (2026-10-06): tickets filed, nothing built.
+DONE (2026-10-06): all children done and recorded. The user adopted `icons-key-v1` (set adoption `sa-b4bb738d6b5526f0`, 2026-10-06T15:21:47Z, 14 sources) after reviewing the preview page; no release candidate covers the 14 icon slots (rc-0006 has 34). Panel wiring and a candidate are the next batch. Branch `visual-asset-icon-key-set` is not pushed; the user decides.

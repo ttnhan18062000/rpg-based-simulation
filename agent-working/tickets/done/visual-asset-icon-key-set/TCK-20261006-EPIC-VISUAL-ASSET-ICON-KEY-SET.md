@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-EPIC-VISUAL-ASSET-ICON-KEY-SET
-phase: open
+phase: done
 date: 2026-10-06
 tags: [architecture, hud, live-map, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, hud, live-map, planning]
 Icon key set: research-backed style decision, icon key families, an icon palette and sheet colour-vision rule, integer map zoom, and a key-icon draft set for the owner's adopt-set
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic

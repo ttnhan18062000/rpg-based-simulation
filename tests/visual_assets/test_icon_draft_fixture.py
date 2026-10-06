@@ -2,7 +2,8 @@
 
 `draft_set_hash` is the file hash of `draft_set.json` alone (`draftexport.export_draft_preview`), which never holds the registry hash, so ignoring only `registry_hash` is consistent: a key
 registration cannot break this guard (the tax `pilot/rc-0006` cost), while a changed PNG byte, set id, `draft_set_hash`, entry or detail still does. The recorded rule result is compared exactly.
-Adopting `icons-key-v1` changes the export (the adopted slots it references), so the adoption ticket refreshes the copy.
+Adopting `icons-key-v1` does NOT change the export: the adopted references skip every slot the set holds (a draft always wins) and every adopted slot that is not built, so the icons never become references
+(measured when the owner adopted the set, `TCK-20261006-VISUAL-ASSETS-RECORD-ICON-KEY-SET-ADOPTION`: `--check` stayed identical).
 """
 
 from __future__ import annotations

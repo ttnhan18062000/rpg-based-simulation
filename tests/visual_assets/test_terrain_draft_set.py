@@ -51,7 +51,7 @@ def test_every_draft_is_an_8x_preview_of_a_16_pixel_tile_with_its_own_source_ass
 
 def test_the_drafts_stay_as_history_and_the_owners_adoption_points_at_every_one_of_them():
     """The owner adopted this set on 2026-10-05T18:17:03Z (`adopted_facts`). The drafts are kept as history: `draft_set.json` still hashes to the value the adoption recorded, every one of its 31 entries has an
-    adoption in the catalog with the same intake, key, detail and source asset id, and the catalog holds nothing else of the set."""
+    adoption in the catalog with the same intake, key, detail and source asset id, and the catalog holds nothing else of the set (the icon set adopted later is a second decision, pinned by `test_icon_set_adoption.py`)."""
     import hashlib
 
     from tests.visual_assets import adopted_facts as af
@@ -60,7 +60,7 @@ def test_the_drafts_stay_as_history_and_the_owners_adoption_points_at_every_one_
     record, data = drafts.load_set(SET)
     assert "sha256:" + hashlib.sha256(data).hexdigest() == af.DRAFT_SET_HASH
     adoptions = {a.intake_id: a for a in (records.load_adoption(p.stem) for p in records.adoptions_dir().glob("*.json"))}
-    assert len(record.entries) == 31 and len(adoptions) == af.ADOPTION_COUNT  # 31 of the set + the forest's three
+    assert len(record.entries) == 31 and len(adoptions) == af.ADOPTION_COUNT  # 31 of the set + the forest's three + the 14 icons adopted later
     assert [e.draft_id for e in record.entries if e.draft_id not in adoptions] == []
     for entry in record.entries:
         adoption = adoptions[entry.draft_id]

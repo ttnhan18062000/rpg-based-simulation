@@ -326,12 +326,12 @@ def test_a_symlinked_catalog_directory_is_refused_without_writing_through_it(env
 
 
 def test_the_committed_catalog_is_never_touched_by_these_tests():
-    # The committed records are exactly the owner's: the forest's three slots (TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE, ...-FOREST-DETAIL-TILES) and the 31 sources of the adoption of terrain-v1 on
-    # 2026-10-05T18:17:03Z: 34 sources, 34 adoptions, two intake files each, one set adoption, no revocations. A test adoption would add one more; the equality makes that fail.
+    # The committed records are exactly the owner's: the forest's three slots (TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE, ...-FOREST-DETAIL-TILES), the 31 sources of the adoption of terrain-v1 on
+    # 2026-10-05T18:17:03Z and the 14 of icons-key-v1 on 2026-10-06T15:21:47Z: 48 sources, 48 adoptions, two intake files each, two set adoptions, no revocations. A test adoption would add one more.
     from tests.visual_assets import adopted_facts as af
 
     committed = config.CATALOG_ROOT
-    for name, count in (("sources", af.ADOPTION_COUNT), ("provenance/adoptions", af.ADOPTION_COUNT), ("provenance/intake", af.INTAKE_FILE_COUNT), ("provenance/set-adoptions", 1), ("provenance/revocations", 0)):
+    for name, count in (("sources", af.ADOPTION_COUNT), ("provenance/adoptions", af.ADOPTION_COUNT), ("provenance/intake", af.INTAKE_FILE_COUNT), ("provenance/set-adoptions", len(af.SET_ADOPTION_IDS)), ("provenance/revocations", 0)):
         found = [p.name for p in (committed / name).iterdir() if p.name != ".gitkeep"] if (committed / name).exists() else []
         assert len(found) == count, (name, found)
     assert sorted(p.name for p in (committed / "sources").iterdir() if p.name != ".gitkeep") == af.ADOPTED_SOURCES

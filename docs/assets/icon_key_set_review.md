@@ -9,7 +9,7 @@ tags: [architecture, documentation, hud]
 
 # Icon key set `icons-key-v1`: what was drawn, how it measures, how to review it
 
-Written by `TCK-20261006-VISUAL-ASSETS-ICON-KEY-DRAFT-SET`. The set is a **draft**: nothing is adopted, released or read by the game. Adoption is the owner's alone (`adopt-set`).
+Written by `TCK-20261006-VISUAL-ASSETS-ICON-KEY-DRAFT-SET`. **Adopted by the owner on 2026-10-06T15:21:47Z** (set adoption `sa-b4bb738d6b5526f0`, approver nhan, owner), after this review; recorded by `TCK-20261006-VISUAL-ASSETS-RECORD-ICON-KEY-SET-ADOPTION`. The sources are in the catalog; **no release candidate covers them** (rc-0006 has 34 slots), nothing is built for them and the game does not read them. Before the adoption the set was a draft; the text below describes the set as reviewed.
 Style: `docs/assets/icon_style_guide.md` (D20). Palette and sheet rule: `docs/assets/icon_criteria.md` (the user's thresholds, 2026-10-06).
 
 ## What is in the set (14 keys, own pixels, palette `icons-v1` only)
