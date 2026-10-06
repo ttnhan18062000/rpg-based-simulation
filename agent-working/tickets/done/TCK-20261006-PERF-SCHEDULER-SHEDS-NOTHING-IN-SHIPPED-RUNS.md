@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PERF-SCHEDULER-SHEDS-NOTHING-IN-SHIPPED-RUNS
-phase: implement
+phase: done
 date: 2026-10-06
 tags: [performance, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, engine]
 No shipped run registers a sheddable periodic task, so the governor's DEGRADED and SURVIVAL work shedding is a no-op: investigate and give the owner a decision
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -132,3 +132,8 @@ No tests added or changed (read-only). The read-only checks run are listed in `t
 - No `src/` file. Ticket, staging artifacts (moved to stored on close), working log and monitoring records only.
 
 ## Completion Summary
+Investigation only; no `src/` edit. In shipped runs the scheduler sheds nothing (no `PeriodicDefinition` is ever registered, and
+the mechanism was designed and never wired), and three of the four documented waterfall rungs have no effect. Evidence,
+the true/false/partly classification of 12 promises, the `dropped_work` history for PERF-M1-T05, and the options are in the
+stored `investigation.md`. Recommendation: (c) keep, document as unused, correct the docs; fold the removal part of (b)
+(including the dead hashed `periodic_due_ticks`) into work-debt retire step 2. The decision is the owner's: PENDING.
