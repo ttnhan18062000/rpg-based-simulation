@@ -62,7 +62,7 @@ So no cross-source tie-break can be trusted, and no value is ever averaged acros
 | events | `ts` | ISO 8601 | no (unchanged) | stays the closure time unless the closer passed `ts` on the event; per-event times are not derived |
 | events | `cost_source` | string | optional | `sidecar` (today's attribution) \| `session_window` (derived, this design). Absent = legacy. Written next to `tool_call_count` and `cost_proxy_score`, which keep their current location and the unchanged `cost_proxy.py` formula |
 
-## 4. Owner decision to record in Implementation Notes
+## 4. Owner decision (answered 2026-10-06: NO, recommendation accepted as written)
 
 Do **derived** durations (`duration_source = tool_activity`) count in retro averages?
 

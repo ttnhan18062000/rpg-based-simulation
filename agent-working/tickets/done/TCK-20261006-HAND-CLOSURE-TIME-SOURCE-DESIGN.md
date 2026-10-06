@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261006-HAND-CLOSURE-TIME-SOURCE-DESIGN
-phase: open
+phase: done
 date: 2026-10-06
 tags: [observability, agent-monitoring, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [observability, agent-monitoring, process-improvement]
 Choose and measure the evidence source and join key that give a hand-closed ticket a real start, end and cost
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -95,14 +95,15 @@ investigators in this session (see the epic's Implementation Notes), and the own
 2026-10-06, agent-working-implementer: AC1-3 and AC5 done in `design.md`. Chosen: precedence declared > tool_activity > unknown;
 join key `session_id` plus a sequential claim window (no row claimed twice). Measured over 238 hand closures (W40-W41): declared
 14 (5.9%), tool activity 130 (54.6%), git 235 (98.7%, rejected as calendar span). **AC4 is waiting for the owner's answer** on
-derived durations in averages (recommendation: no, show beside measured). Owner's answer, quoted: (pending). The ticket stays open
-until it is recorded; child 4 must not start before then.
+derived durations in averages (recommendation: no, show beside measured). Owner's answer (2026-10-06, relayed by agent-working-design, recommendation accepted as written): derived
+(`tool_activity`) durations do NOT count in retro averages. The headline average uses measured/declared durations only; the derived
+average is shown beside it, labelled as derived, with its n; unknowns are counted and never averaged. Child 4's ACs are set to match.
 
 ## Test Summary
-(Open.)
+Design-only ticket, no code. `measure_sources.py` re-run reproduces the headline counts (238 / 14 / 130 / 235). Frontmatter validator and registry check pass.
 
 ## Files Changed
-(Open.)
+`agent-working/stored_artifacts/TCK-20261006-HAND-CLOSURE-TIME-SOURCE-DESIGN/` (design.md, coverage_by_run.csv, measure_sources.py, plan.md, investigation.md, test_plan.md); acceptance criteria added to children 2-4.
 
 ## Completion Summary
-(Open.)
+Chose declared > tool_activity > unknown with a `session_id` plus sequential-window claim, measured over 238 hand closures (W40-W41), wrote the schema delta, and set the owner's derived-in-averages decision. Children 2-4 updated.

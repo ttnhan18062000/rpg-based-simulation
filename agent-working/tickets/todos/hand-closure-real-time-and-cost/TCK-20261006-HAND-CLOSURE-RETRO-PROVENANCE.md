@@ -34,8 +34,7 @@ Once children 2-3 land, hand runs carry real and derived values, and every durat
 meaning.
 
 ## Scope
-1. Duration and cost aggregates treat provenance as the owner decided: either derived values are included and
-   labelled, or they are reported beside measured ones. A null duration is counted as "unknown" and shown as a
+1. Duration and cost aggregates treat provenance as the owner decided (2026-10-06): derived values are reported beside measured ones, never in the headline average. A null duration is counted as "unknown" and shown as a
    count, not dropped silently.
 2. Add a per-provenance coverage line for hand-closed runs: the share with non-null duration and the share with a
    cost value. This is the epic's AC2 instrument.
@@ -58,7 +57,7 @@ meaning.
 3. The coverage line renders, with a test.
 4. The "tables changed meaning from week X" note renders once. Tested.
 5. (design AC) The Run Summary reports hand closures grouped by `duration_source` (declared / tool_activity / unknown / unlabelled) with counts. Tested.
-6. (design AC) The headline average duration follows the owner's recorded answer; with "no", a run whose `duration_source` is not measured or declared is excluded from it and appears only in the derived group. Tested.
+6. (design AC, owner decision 2026-10-06) The headline average duration uses measured/declared durations only. A `tool_activity` run is excluded from it and its average is shown beside it, labelled derived, with its n. Unknown runs are counted and never averaged. Tested.
 
 ## Related Tickets
 - `TCK-20261006-EPIC-HAND-CLOSURE-REAL-TIME-AND-COST` (parent), `TCK-20261006-HAND-CLOSURE-COST-ATTRIBUTION` (dependency)
@@ -80,6 +79,7 @@ meaning.
 
 ## Implementation Notes
 Hand-filed by agent-working-design (interim planner), 2026-10-06.
+Owner decision recorded in `TCK-20261006-HAND-CLOSURE-TIME-SOURCE-DESIGN` (2026-10-06): derived durations are not in the headline average; shown beside it with n; unknowns counted, never averaged. This ticket is unblocked and runs after children 2 and 3.
 
 ## Test Summary
 (Open.)
