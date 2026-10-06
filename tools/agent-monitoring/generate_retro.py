@@ -1368,7 +1368,7 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
 
 def generate(
     runs, events, label, week_str=None, tickets_root=None, tools=None, all_tools=None,
-    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None,
+    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None, gates=None,
 ):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -2057,6 +2057,9 @@ def generate(
     # the token section: omitted entirely unless the caller passes the rendered section.
     if session_layer:
         lines.append(session_layer.rstrip("\n"))
+    if gates:
+        lines.append("")
+        lines.append(gates.rstrip("\n"))
         lines.append("")
 
     # Notes (human-written)
@@ -2141,6 +2144,20 @@ def _session_layer_section(runs, week_str, cutoff, latency_prs):
         return None
 
 
+def _gates_section(week_str):
+    """The rendered Gates section (TCK-20261006-GATE-PRECISION-REPORT-AND-RETRO), or None when it cannot be built
+    (never fails the retro). A `--days`/`--all` report is not week-scoped, so it reads every week."""
+    try:
+        import gate_ledger
+
+        data_dir = DEFAULT_TOOLS_FILE if DEFAULT_TOOLS_FILE.is_dir() else DEFAULT_TOOLS_FILE.parent
+        rows = gate_ledger.load_rows(data_dir)
+        total = len([r for r in rows if "row_kind" not in r])
+        return gate_ledger.render_section(rows, week_str, total)
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate agent monitoring retro report")
     parser.add_argument("--days", type=int, help="Include runs from the last N days")
@@ -2219,11 +2236,12 @@ def main():
         )
 
     session_layer = _session_layer_section(runs, week_str, cutoff if args.days else None, args.latency_prs)
+    gates = _gates_section(None if (args.all or args.days) else week_str)
 
     report = generate(
         runs, events, label, week_str, tools=tools, all_tools=all_tools,
         raw_run_count=raw_run_count, deduped_run_count=deduped_run_count,
-        real_token_report=real_token_report, session_layer=session_layer,
+        real_token_report=real_token_report, session_layer=session_layer, gates=gates,
     )
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)

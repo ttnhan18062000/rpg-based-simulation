@@ -1421,6 +1421,8 @@ mechanisms:
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::evaluate_strategic_intent
       - src/systems/strategic_systems/entity_target_objective.py::entity_target_outcome
       - src/systems/strategic_systems/entity_target_objective.py::close_entity_target_project
+      - src/systems/strategic_systems/entity_target_objective.py::objective_outcome
+      - src/systems/strategic_systems/entity_target_objective.py::contract_objective_outcome
     verified:
       instrument: scenario
       verdict: observed
