@@ -57,6 +57,13 @@ this reason, even though the policy it implemented was correct.
 live target is in attack reach (`docs/engine/contracts/tactical_contract.md` section 3), returning the entity to the idle task so the
 brain decides at its next cadence. Any new task kind that persists across ticks must define how it ends.
 
+**A dispatch that does nothing must say so.** A gate at the per-execution dispatch point (the action router's combat-posture
+gate) is correct, but if it returns a bare no-op the task is annotated `SUCCESS` and kept, and the scheduler re-dispatches it every
+tick until the target dies (one entity held about 851 ticks). The router instead reports a typed failure
+(`ReasonCode.ACTION_WITHHELD_BY_POSTURE`, `UNSUPPORTED_ACTION`) and `ActionRoutingPhase.route()` ends the task, so the brain
+re-decides (`TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS`,
+`docs/guidelines/intentional_divergences.md` section 2.69).
+
 **Implication for anyone gating a decision-then-task mechanism** (combat, movement, any future
 system with the same shape): a check placed at the decision point only governs the tick a fresh
 decision happens. To actually govern every tick a task executes — including sticky repeats — the

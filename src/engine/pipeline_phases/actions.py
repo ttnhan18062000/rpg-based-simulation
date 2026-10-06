@@ -19,6 +19,39 @@ if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
     from src.core.updates import StateUpdate
 
+# Failure reasons the action router reports for a dispatched action that did nothing; retrying can never help.
+_UNRECOVERABLE_ANY_ACTION_REASONS = frozenset({
+    ReasonCode.ACTION_WITHHELD_BY_POSTURE.value,
+    ReasonCode.UNSUPPORTED_ACTION.value,
+})
+
+
+def _is_unrecoverable_action_failure(action: str, outcome: str, reason_value: object) -> bool:
+    """True when a failed action can never succeed on retry, so its task must end (the caller clears it).
+
+    ``TARGET_INCAPACITATED`` ends an ``ATTACK`` only (the target is dead or inactive). The router's
+    ``ACTION_WITHHELD_BY_POSTURE`` / ``UNSUPPORTED_ACTION`` end the task for ANY action: the router reports
+    them when it dispatched an action that did nothing (the combat-posture gate, an unrecognised action).
+    Left as a payload-bearing ``ENTITY_ACT`` the scheduler re-dispatches the same do-nothing action every
+    tick -- measured holding one entity ~851 ticks until its target died
+    (TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS).
+    """
+    if outcome != "FAILURE":
+        return False
+    if reason_value in _UNRECOVERABLE_ANY_ACTION_REASONS:
+        return True
+    return action == "ATTACK" and reason_value == ReasonCode.TARGET_INCAPACITATED.value
+
+
+def _annotation_base_payload(payload: dict) -> dict:
+    """The payload to annotate: drops a ``reason`` that sits beside an ``outcome``.
+
+    That pair is an earlier annotation of this same task, not a decision-time reason, so it must not outlive
+    the tick it described: left in place it labelled a later SUCCESS with the stale failure reason
+    (``OUT_OF_RANGE`` from four ticks before). A decision-time ``reason`` (no ``outcome`` beside it) is kept.
+    """
+    return {k: v for k, v in payload.items() if not (k == "reason" and "outcome" in payload)}
+
 
 class ActionRoutingPhase:
     """
@@ -224,10 +257,7 @@ class ActionRoutingPhase:
             # OUT_OF_RANGE are deliberately NOT reset here -- both are real, recoverable
             # conditions (readiness regens; range may close via a fresh pursuit decision), unlike
             # a dead target which can never become legal again.
-            is_unrecoverable_attack_failure = (
-                action == "ATTACK" and outcome == "FAILURE"
-                and reason_value == ReasonCode.TARGET_INCAPACITATED.value
-            )
+            is_unrecoverable_attack_failure = _is_unrecoverable_action_failure(action, outcome, reason_value)
             if (is_survival and outcome == "SUCCESS") or is_unrecoverable_attack_failure:
                 # Wholesale-empty payload_set is required, not merely clearing action/target_id:
                 # scheduler.py's own is_idle_act check (`work_kind=="ENTITY_ACT" and not
@@ -241,7 +271,8 @@ class ActionRoutingPhase:
                 # actionless payload, vs. ~4 with a genuinely empty one.
                 annotated_task = replace(task_upd, payload_set={})
             else:
-                annotated_task = replace(task_upd, payload_set={**payload, "outcome": outcome, **({"reason": reason_value} if reason_value else {})})
+                base_payload = _annotation_base_payload(payload)
+                annotated_task = replace(task_upd, payload_set={**base_payload, "outcome": outcome, **({"reason": reason_value} if reason_value else {})})
 
             for action_eid, action_upd in action_updates.items():
                 existing_upd = refined_entity_updates.get(action_eid, EntityUpdate(entity_id=action_eid))
