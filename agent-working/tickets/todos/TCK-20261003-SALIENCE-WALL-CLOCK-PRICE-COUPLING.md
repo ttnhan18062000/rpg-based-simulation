@@ -49,6 +49,7 @@ The owner decided on 2026-10-03 (PERF-D1 amendment A1, `docs/architecture/perfor
 - [ ] No system reads a wall-clock-derived value from `AuthoritativeState.pressure_signals` (enforced by a test)
 - [ ] `intentional_divergences.md`, the mechanics chapter (if affected), the parity ledger entry, and the governor contract are updated in the same change
 - [ ] Scoped economy, engine, and determinism tests pass; SimQ economy calibration is checked for drift and any drift is reported, not tuned away
+- [ ] A deliberate-attack test (a tactical decision that sets an offensive ENTITY_ACT) on a world or seed with MEASURED hostile contact, i.e. an in-reach count K > 0 stated in the test, shows >= N deliberate attacks after the fix and fewer before (control arm). N is left for this ticket's investigation to set from the measured contact. K in reach must come from approach, not spawn adjacency (checked by the first in-reach decision's tick relative to spawn), or the test would skip the very gate under suspicion. The campaign episode test (`TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-BECAUSE-NO-DELIBERATE-ATTACK-ONLY-OPPORTUNITY-ATTACKS`) is NOT this signal; its XPASS is a bonus. The landing PR also re-measures that test's attempts, K and in-reach and records them in the campaign ticket (its revisit trigger).
 
 ## Related Tickets
 - TCK-20261003-PERF-WALL-CLOCK-READ-INVENTORY (evidence)
