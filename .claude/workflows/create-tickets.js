@@ -890,23 +890,44 @@ log(`Written: ${succeeded.length}/${tasksReadyToWrite.length} tickets`)
 for (const w of succeeded) {
   pushEvent('Write', 'ticket-scoper', 'ok', w.summary || `Wrote ${w.ticket_id}`, w.ts)
 }
-if (succeeded.length < tasksReadyToWrite.length) {
-  log(`WARNING: ${tasksReadyToWrite.length - succeeded.length} write agent(s) returned null`)
-  pushEvent('Write', 'ticket-scoper', 'failed', `${tasksReadyToWrite.length - succeeded.length} write agent(s) returned null`, null)
+// TCK-20261006-CREATE-TICKETS-FAILED-WRITES-REPORTED-AS-DONE: name the planned tickets whose write agent returned null
+// (the planned id is deterministic, `TCK-<date>-<short_scope>`), so a failed write is never silent in the return value.
+const writtenIdSet = new Set(ticketIds)
+const plannedId = (t) => `TCK-${dateStr}-${t.short_scope}`
+const failedWrites = tasksReadyToWrite.map(plannedId).filter(id => !writtenIdSet.has(id))
+const tasksWritten = tasksReadyToWrite.filter(t => writtenIdSet.has(plannedId(t)))
+if (failedWrites.length > 0) {
+  log(`WARNING: ${failedWrites.length} write agent(s) returned null: ${failedWrites.join(', ')}`)
+  pushEvent('Write', 'ticket-scoper', 'failed', `${failedWrites.length} write agent(s) returned null: ${failedWrites.join(', ')}`, null)
+}
+if (succeeded.length === 0 && failedWrites.length > 0) {
+  await writeMonitoring('WRITE_FAILED')
+  return {
+    status: 'WRITE_FAILED',
+    output_folder: outputFolder,
+    ticket_count: 0,
+    ticket_ids: [],
+    failed_writes: failedWrites,
+    duplicates_skipped: duplicates.map(d => `${d.concern_id} → ${d.duplicate_of}`),
+    failed_concerns: failedConcerns,
+    message: `No tickets were written: all ${failedWrites.length} write agent(s) returned null (${failedWrites.join(', ')}). ` +
+      'Most likely cause: the session was launched outside the repo root, so the project agents (ticket-scoper) are not loaded. Relaunch from the repo root or a role worktree and rerun.',
+  }
 }
 
 // ─── Auto-generate SEQUENCE.md when intra-batch dependencies exist ────────────
 //
 // Detect which tickets depend on other tickets in this same batch,
 // topological-sort them, and write SEQUENCE.md if any deps were found.
-// Uses tasksReadyToWrite, not dedupedTasks — a task skipped for an unregistered tag was never
-// written, so it must not appear in the dependency graph either (TCK-20260706-CREATE-TICKETS-TAG-CHECK).
+// Uses tasksWritten (the tasks whose write agent returned), not dedupedTasks or tasksReadyToWrite — a task skipped for an
+// unregistered tag (TCK-20260706-CREATE-TICKETS-TAG-CHECK) or whose write failed was never written, so it must not appear in the
+// dependency graph either (TCK-20261006-CREATE-TICKETS-FAILED-WRITES-REPORTED-AS-DONE).
 
-const batchIdSet = new Set(tasksReadyToWrite.map(t => `TCK-${dateStr}-${t.short_scope}`))
+const batchIdSet = new Set(tasksWritten.map(plannedId))
 
 const depMap = new Map()
-for (const task of tasksReadyToWrite) {
-  const ticketId = `TCK-${dateStr}-${task.short_scope}`
+for (const task of tasksWritten) {
+  const ticketId = plannedId(task)
   const prereqs = new Set()
   for (const rt of (task.related_tickets || [])) {
     const m = rt.match(/TCK-\d{8}-[A-Z][A-Z0-9-]+/)
@@ -1034,11 +1055,12 @@ return {
   ticket_ids: ticketIds,
   duplicates_skipped: duplicates.map(d => `${d.concern_id} → ${d.duplicate_of}`),
   failed_concerns: failedConcerns,
+  failed_writes: failedWrites,
   skipped: structured.skipped,
   scope_dupes_dropped: droppedScopes,
   tags_not_registered: tasksWithUnregisteredTags,
   epic_linked: !!epicId,
   message: succeeded.length > 0
-    ? `Created ${succeeded.length} ticket(s) in ${outputFolder}.${epicId ? ` Linked to ${epicId}.` : ` Run /implement-epic folder=${outputFolder} to implement.`}`
+    ? `Created ${succeeded.length}${failedWrites.length ? ` of ${tasksReadyToWrite.length}` : ''} ticket(s) in ${outputFolder}.${failedWrites.length ? ` Failed to write: ${failedWrites.join(', ')}.` : ''}${epicId ? ` Linked to ${epicId}.` : ` Run /implement-epic folder=${outputFolder} to implement.`}`
     : 'No tickets written — check comprehend, investigate, and structure output.',
 }

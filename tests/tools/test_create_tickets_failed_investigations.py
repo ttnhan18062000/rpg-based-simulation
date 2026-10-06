@@ -54,3 +54,42 @@ def test_the_skill_text_and_schema_describe_the_new_status():
     schema = (_ROOT / "docs" / "agent-monitoring" / "schema.md").read_text(encoding="utf-8")
     assert "INVESTIGATION_FAILED" in skill and "failed_concerns" in skill
     assert "| `INVESTIGATION_FAILED` |" in schema
+
+
+# ---- write phase (TCK-20261006-CREATE-TICKETS-FAILED-WRITES-REPORTED-AS-DONE) -----------------------
+
+def _write_region() -> str:
+    start = _JS.index("const succeeded = written.filter(Boolean)")
+    return _JS[start:_JS.index("// ─── Auto-generate SEQUENCE.md", start)]
+
+
+def test_failed_writes_are_named_by_planned_id():
+    region = _write_region()
+    assert "const failedWrites = tasksReadyToWrite.map(plannedId).filter(id => !writtenIdSet.has(id))" in region
+    assert "plannedId = (t) => `TCK-${dateStr}-${t.short_scope}`" in region
+    assert "failedWrites.join(', ')" in region.split("pushEvent('Write'")[1]  # the monitoring `failed` event names them
+
+
+def test_zero_written_returns_write_failed_before_sequence_and_epic_linking():
+    region = _write_region()
+    assert "succeeded.length === 0 && failedWrites.length > 0" in region
+    assert "writeMonitoring('WRITE_FAILED')" in region and "status: 'WRITE_FAILED'" in region
+    assert "failed_writes: failedWrites" in region and "ticket_ids: []" in region
+    assert _JS.index("status: 'WRITE_FAILED'") < _JS.index("Auto-generate SEQUENCE.md") < _JS.index("if (epicId && ticketIds.length > 0)")
+
+
+def test_partial_failure_stays_done_names_the_failures_and_keeps_them_out_of_sequence_and_epic():
+    assert _JS.rindex("failed_writes: failedWrites") > _JS.index("status: 'DONE'")
+    assert "Failed to write: ${failedWrites.join(', ')}." in _JS
+    # SEQUENCE.md's id set and dependency map come from tasks whose write returned, and the epic link uses ticketIds (written only)
+    assert "const batchIdSet = new Set(tasksWritten.map(plannedId))" in _JS
+    assert "for (const task of tasksWritten) {" in _JS
+    assert "const ticketIds = succeeded.map(w => w.ticket_id)" in _JS
+    seq = _JS[_JS.index("const batchIdSet"):_JS.index("if (epicId && ticketIds.length > 0)")]
+    assert "tasksReadyToWrite" not in seq
+
+
+def test_write_failed_is_documented():
+    skill = (_ROOT / ".claude" / "skills" / "create-tickets" / "SKILL.md").read_text(encoding="utf-8")
+    schema = (_ROOT / "docs" / "agent-monitoring" / "schema.md").read_text(encoding="utf-8")
+    assert "WRITE_FAILED" in skill and "failed_writes" in skill and "| `WRITE_FAILED` |" in schema
