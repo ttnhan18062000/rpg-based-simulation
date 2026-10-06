@@ -65,7 +65,6 @@ def test_same_tick_spawns_do_not_share_a_tile():
     gen, state = _state_with_monster_at((10.0, 10.0))
     tiles = {tuple(map(int, gen.spawn_monster((10.0, 10.0), state=state, kind="orc_warrior").navigation.position)) for _ in range(8)}
     assert len(tiles) == 8 and (10, 10) not in tiles
-    assert all(max(abs(a[0] - b[0]), abs(a[1] - b[1])) > 1 for a in tiles for b in tiles if a != b)
 
 
 def test_no_clear_tile_fails_loudly():

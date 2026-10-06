@@ -77,8 +77,8 @@ class EntityGenerator:
 
     def free_spawn_position(self, pos: tuple[float, float], state: AuthoritativeState | None) -> tuple[float, float]:
         """LAW-OCCUPANCY-COLLISION: `pos` itself when its tile is clear, else the nearest clear tile (ring order,
-        then y, then x: deterministic, no RNG). A tile is clear when no live entity, and no tile spawned onto earlier
-        in the same tick, is within `_SPAWN_REACH` tiles: an entity can step onto a tile in the very tick a spawn
+        then y, then x: deterministic, no RNG). A tile is clear when no live entity is within `_SPAWN_REACH` tiles and no spawn
+        earlier in the same tick holds it: a live entity can step onto a tile in the very tick a spawn
         lands there (both are computed from the prior state), so exact-tile occupancy is not enough.
         Raises when nothing in the search radius is clear: a silent stack would trip the hard law every tick."""
         if state is None:
@@ -90,7 +90,7 @@ class EntityGenerator:
         bx, by = int(pos[0]), int(pos[1])
         for dx, dy in _SPAWN_OFFSETS:
             if (bx + dx, by + dy) not in blocked:
-                claimed.update(_reach_tiles((bx + dx, by + dy)))
+                claimed.add((bx + dx, by + dy))
                 return pos if (dx, dy) == (0, 0) else (float(bx + dx), float(by + dy))
         raise RuntimeError(f"no clear spawn tile within {_SPAWN_FREE_TILE_RADIUS} of {pos} at tick {state.tick}")
 
