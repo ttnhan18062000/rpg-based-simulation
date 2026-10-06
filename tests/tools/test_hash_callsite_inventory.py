@@ -206,8 +206,9 @@ class TestRealSource:
         by_fn = {}
         for s in kernel:
             by_fn.setdefault(s["enclosing_function"], set()).add(s["mechanism"])
-        assert "CanonicalStateHasher.get_hash" in by_fn.get("Kernel._phase_persistence", set())
-        assert "CanonicalStateHasher.get_hash" in by_fn.get("Kernel.shutdown", set())
+        # PERF-M1-T03b: the kernel's digests go through the scheduler, not a direct `get_hash` call.
+        assert "CanonicalHashScheduler.compute_digest" in by_fn.get("Kernel._phase_persistence", set())
+        assert "CanonicalHashScheduler.compute_digest" in by_fn.get("Kernel.shutdown", set())
         assert "AuthoritativeState.fingerprint" in by_fn.get("Kernel._guard_stability", set())
 
     def test_real_scan_parses_everything_and_numbers_call_sites(self):

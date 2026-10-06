@@ -7,7 +7,10 @@ exists, and dropped work is counted in `RuntimeStatus`, not in `state.work_debt`
 derived from the debt total (governor thresholds, the kernel's `debt_ratio`) is constant zero.
 
 The runs use a tight tick budget (the smallest the profile validator accepts) with `audit_mode` off, so
-the governor really degrades and the kernel really sheds work. They measure counters, never timings, and
+the governor really degrades, and the scheduler really sheds work: the kernel's wall-clock throttle no
+longer drops anything (TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY), and the default scheduler
+registers no periodic task, so the runs register one non-authoritative task, which the governor's SURVIVAL
+policy sheds. They measure counters, never timings, and
 are not a determinism claim. Scenarios are non-combat.
 """
 from __future__ import annotations
@@ -20,6 +23,7 @@ from src.certification.scenarios import PressureInjector
 from src.config.profiles import HardwareClass, RuntimeProfile
 from src.core.governance import RuntimeMode
 from src.engine.kernel import Kernel
+from src.engine.scheduler import DeterministicScheduler, PeriodicDefinition
 from src.perf.scenarios import (
     build_idle_state, build_movement_state, build_resource_state, build_strategic_state,
 )
@@ -63,7 +67,10 @@ class _RecordingKernel(Kernel):
 
 
 def _run(state, ticks: int = TICKS) -> _RecordingKernel:
-    kernel = _RecordingKernel(_tight_profile(), state, DeterministicRNG(7), flags=dict(FLAGS))
+    scheduler = DeterministicScheduler(
+        periodic_defs=[PeriodicDefinition(subsystem_id="opt_task", work_kind="OPT", cadence=1, is_authoritative=False)]
+    )
+    kernel = _RecordingKernel(_tight_profile(), state, DeterministicRNG(7), scheduler=scheduler, flags=dict(FLAGS))
     try:
         for _ in range(ticks):
             kernel.tick_once()
