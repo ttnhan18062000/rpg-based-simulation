@@ -53,6 +53,7 @@ Cause, read from the code: #172 added `CooperationDecisionService.find_pending_i
 - TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX (rows 5–8)
 - TCK-20260912-PARTY-FORMATION-REACHABILITY-INVESTIGATION (introduced the scan)
 - TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP (sibling step)
+- `TCK-20261007-SAFETY-DISPOSITION-TRIGGERS-RETREAT-ON-SIGHT-AGENCY-07` (the select() cost note was added there)
 
 ## Related Docs
 - PR #381 comment 6018086519 (the bisect and the table)
