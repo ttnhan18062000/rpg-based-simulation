@@ -36,19 +36,28 @@ jobs:
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Slow tests — corpus diversity (isolated per-test, TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
         id: corpus_diversity
+        continue-on-error: true
         run: make simq-corpus-diversity-slow-isolated
       # TCK-20261005-SLOW-REGRESSION-GATE-SKIPS-ITS-ONLY-TEST-STEP-ON-MAIN: the two steps below
       # test unrelated things from step 5, so a step-5 failure must not skip them (the default
       # `success()` did, on every main run where step 5 failed). `!cancelled()` and not `always()`:
       # a cancelled run must stay cancelled.
+      #
+      # Steps 5-7 are `continue-on-error: true` (reporting-path hardening, 2026-10-07; this reverses the
+      # "no continue-on-error" pin of #360/#377): a workflow that is red forever gets ignored, so the job's
+      # verdict belongs to the report step. It exits 1 on an UNOWNED or EXPIRED red, a missing step, or a
+      # GitHub error, and 0 when every red is mapped and in date. `steps.<id>.outcome` still says "failure" for a
+      # red step, so the outcome summary stays truthful. The report step itself is NOT continue-on-error.
       - name: Slow tests (includes 5k behavioral regression)
         id: slow_tests
         if: ${{ !cancelled() }}
+        continue-on-error: true
         run: |
           pytest tests/ -m "slow or extra_slow" --resource-budget large --tb=short -q --ignore=tests/unit/worldassembly/test_corpus_diversity.py --junitxml=reports/slow/slow_tests.xml
       - name: Legacy regression
         id: legacy_regression
         if: ${{ !cancelled() }}
+        continue-on-error: true
         env:
           PYTEST_ADDOPTS: --junitxml=reports/slow/legacy_regression.xml
         run: make lane-legacy-regression
