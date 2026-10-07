@@ -84,3 +84,6 @@ Cause, read from the code: #172 added `CooperationDecisionService.find_pending_i
 
 ## Completion Summary
 The pending-offer lookup is a per-tick index built once, with the original choice preserved exactly (canonical hashes identical on six worlds, a differential test against the old scan). On `movement[5000]` the `cooperation` phase falls from about 11 s to about 4 ms per tick and no longer appears among the top phases. The total per-tick cost stays high because `combat_engagement` and `collection` remain (Lane B).
+
+**Follow-up note (from test-architecture-reviewer's review of #394):** `CooperationDecisionService.select()` still calls `find_pending_incoming_offer` without the index, so each call builds the index (O(N log N)). `CooperationPhase` does not use it (it calls `accept_pending_offer` and `select_for_own_needs` with the tick's index), so there is no regression today, but a future per-entity caller of `select()` would bring the quadratic cost back. A cost warning was added to the docstring of `find_pending_incoming_offer` and a comment in `select` in `TCK-20261007-SAFETY-DISPOSITION-TRIGGERS-RETREAT-ON-SIGHT-AGENCY-07`; no code change (a sixth parameter on `select` trips the blocking `PLR0913` ratchet).
+

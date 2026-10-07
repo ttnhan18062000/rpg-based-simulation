@@ -37,6 +37,8 @@ OUTMATCH_RATIO = 1.5
 
 
 class ThreatTerm(str, Enum):
+    """The AGENCY-07 present-threat terms, named so a retreat can be explained."""
+
     WOUNDED = "WOUNDED"
     ADJACENT = "ADJACENT"
     TARGETED = "TARGETED"

@@ -80,6 +80,10 @@ class CooperationDecisionService:
         alive and active, and `entity` itself must not already be in a group. Richer acceptance
         criteria (trust, need matching, faction, existing commitments) are explicitly deferred --
         see docs/plans/deferred_tuning_decisions_register.md.
+
+        Cost: without `pending_offers` this builds the whole index, O(N log N) per call, so a caller that asks about many
+        entities in one tick must build `build_pending_offer_index(state)` once and pass it, or the per-entity scan this
+        index replaced (TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK) comes back as O(N^2).
         """
         if entity.identity.group_id is not None:
             return None
@@ -108,6 +112,8 @@ class CooperationDecisionService:
         fit_reports: Tuple[PartnerFitReport, ...],
         state: AuthoritativeState,
     ) -> CooperationDecisionResult:
+        # Cost: this lookup builds the pending-offer index on every call (O(N log N)). A per-entity caller in one tick
+        # (CooperationPhase) must use accept_pending_offer / select_for_own_needs with the tick's own index instead.
         # 0. Pending incoming recruitment offer takes priority over pursuing (or deferring) this
         # entity's own help needs -- responding to another entity's request is a distinct decision
         # from "do I need help for my own objective."

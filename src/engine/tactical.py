@@ -265,8 +265,7 @@ class TacticalDecisionSystem:
                       current_objective_id_set=""
                   )
 
-        # Safety pressure (AGENCY-07): a cautious entity retreats from a present threat rather than engage; the
-        # disposition lowers the bar, it never decides flight on sight of a hostile.
+        # Safety pressure (AGENCY-07): a cautious entity retreats from a present threat, never from a hostile merely seen
         if safety_retreat_warranted(entity, hostiles, entity_pressures.safety_pressure):
             retreat_to = _destination_or_hold(entity, retreat_destination(state, entity, hostiles))
             return EntityUpdate(

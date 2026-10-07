@@ -4642,3 +4642,26 @@
     skips 82 of 89 without calibration reports). Legality truncates fractional Manhattan
     distance with int() while the pursuit reach test compares floats; filed as TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT,
     not fixed here.
+- id: COMB-334
+  text: 'TCK-20261007-SAFETY-DISPOSITION-TRIGGERS-RETREAT-ON-SIGHT-AGENCY-07: the
+    tactical SAFETY_PRESSURE_RETREAT branch fires only for a cautious entity (safety_pressure
+    > 0.75) with a present threat to itself: HP below 0.7 (WOUNDED), a hostile within
+    Manhattan distance 1 (ADJACENT), a hostile whose task targets it (TARGETED), a
+    hostile within 4 tiles nearer than at its previous position (CLOSING), or near
+    hostiles with summed apparent power at least 1.5 times its own (OUTMATCHED). Merely
+    perceiving a hostile never triggers it (World Rule AGENCY-07).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "`src/engine/tactical_threat.py` (`present_threat_terms`, `safety_retreat_warranted`),\
+    \ `src/engine/tactical.py` (the SAFETY_PRESSURE_RETREAT gate); campaign episode\
+    \ (NORMAL pin, seeds 42 / 1337, two identical runs): SAFETY_PRESSURE_RETREAT decisions\
+    \ 10 / 9 to 7 / 5, each with a named threat term; `docs/guidelines/intentional_divergences.md`\
+    \ \xA72.76; `docs/engine/contracts/tactical_contract.md` \xA74"
+  proof_type: parity
+  test_path: tests/unit/engine/test_safety_retreat_needs_present_threat.py
+  divergence_note: 'Intentional divergence 2.76 (Enforced): a static safety trait
+    no longer decides flight on sight of a hostile (AGENCY-07).'
+  support_boundary: The threat constants (0.7 HP, 4 tiles, 1.5x power) are engineering
+    choices recorded for a later tuning pass (owner decision 7), not Rule text. TARGETED
+    has no range cap.
