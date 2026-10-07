@@ -1,0 +1,10 @@
+Mutants applied to frontend/src/components/GameCanvas.tsx, tests run (src/test/GameCanvas.zoom.test.tsx), file restored and diffed identical each time:
+M1 zoom in force not snapped (zoom = requestedZoom) ........ caught: the steps-in/out test at DPR 1.25 and 1.5 (at DPR 1 and 2 the requested value is already a level, so those pass, as they should)
+M2 pan not snapped ......................................... caught: the panning tests at DPR 1.25 and 1.5
+M3 zoom-in button back to +0.15 ............................ caught: the steps test at every DPR
+M4 levels computed for DPR 1 whatever the ratio ............ caught: steps and wheel tests at DPR 1.25 and 1.5 and the DPR-change test
+After the overview-level change (pixelScale.ts, same procedure, restored and diffed):
+M5 overview level dropped .................................. caught: the overview-level GameCanvas test at DPR 1, 1.25 and 1.5 (8 failures)
+M6 overview = raw minZoom (not a whole cell) ............... caught: the whole-cell test and the no-whole-scale test
+M7 isOverviewZoom only checks < 1 .......................... caught: the isOverviewZoom boundary test, DPR 3 levels test, deviceScale test
+M8 overview added even when 0.5 is an art level (DPR 2) .... caught: the steps test at DPR 2

@@ -34,6 +34,9 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from handover_home import handover_dir as _main_handover_dir  # noqa: E402
+
 TRANSIT_ROOT = Path("agent-working/handover-transit")
 HANDOVER_DIR = Path(".claude/handover")
 MANIFEST = "MANIFEST.jsonl"
@@ -306,7 +309,7 @@ def export_bundle(*, roles: list[str] | None = None, drafts: bool = True, memory
     Refuses (`TransitError`, bundle untouched) when the new bundle would drop any memory entry or more than
     `SHRINK_LIMIT` of the existing entries, unless `allow_shrink`. `dry_run` checks nothing and writes nothing."""
     root = root if root is not None else TRANSIT_ROOT
-    handover_dir = handover_dir if handover_dir is not None else HANDOVER_DIR
+    handover_dir = handover_dir if handover_dir is not None else _main_handover_dir()
     host = host or host_id()
     memory_dir = memory_dir if memory_dir is not None else default_memory_dir()
     items = _collect(roles, drafts, memory, handover_dir, memory_dir, draft_filter)
@@ -381,7 +384,7 @@ def import_bundle(host: str, *, dry_run: bool = False, root: Path | None = None,
     `role` limits the copy to that role's notes and drafts; memory is still imported unless `no_memory`. Items with
     no role are never copied by a role-limited import and never silently dropped: they are listed as skipped."""
     root = root if root is not None else TRANSIT_ROOT
-    handover_dir = handover_dir if handover_dir is not None else HANDOVER_DIR
+    handover_dir = handover_dir if handover_dir is not None else _main_handover_dir()
     bundle = root / host
     memory_dir = memory_dir if memory_dir is not None else default_memory_dir()
     rows = _read_manifest(bundle)
@@ -521,7 +524,7 @@ def main(argv: list[str] | None = None) -> int:
             if not a.no_memory and not _list_files(memory_dir):
                 print(f"NOTE: no memory files found under {memory_dir}; the bundle will carry no memory", file=sys.stderr)
             if a.dry_run:
-                items = _collect(roles, not a.no_drafts, not a.no_memory, HANDOVER_DIR, memory_dir, flt)
+                items = _collect(roles, not a.no_drafts, not a.no_memory, _main_handover_dir(), memory_dir, flt)
                 for bucket, c in export_counts(items, TRANSIT_ROOT / host_id()).items():
                     print(f"{bucket}: {c['new']} new, {c['existing']} existing")
                 return 0

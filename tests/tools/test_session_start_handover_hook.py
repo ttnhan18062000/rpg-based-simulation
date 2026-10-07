@@ -7,6 +7,7 @@ contract, and via `build_additional_context()` directly for the listing logic it
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -96,3 +97,22 @@ def test_hook_fails_open_on_malformed_stdin(tmp_path):
     )
     assert result.returncode == 0
     assert result.stdout.strip() == ""
+
+
+def test_hook_in_a_secondary_worktree_lists_the_main_checkout_notes(tmp_path):
+    main = tmp_path / "main"
+    main.mkdir()
+    env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t", "PATH": os.environ["PATH"], "HOME": str(tmp_path)}
+    for args in (["init", "-q", "-b", "main"], ["commit", "-q", "--allow-empty", "-m", "i"],
+                 ["worktree", "add", "-q", "-b", "seat", str(tmp_path / "seat")]):
+        subprocess.run(["git", *args], cwd=main, check=True, capture_output=True, env=env)
+    notes = main / ".claude" / "handover"
+    notes.mkdir(parents=True)
+    (notes / "implementer.md").write_text("# Handover — implementer\n")
+
+    out = _run_hook({"source": "clear"}, cwd=tmp_path / "seat")
+
+    context = json.loads(out)["hookSpecificOutput"]["additionalContext"]
+    assert str(notes.resolve() / "implementer.md") in context or "implementer.md" in context
+    assert "Handover — implementer" in context

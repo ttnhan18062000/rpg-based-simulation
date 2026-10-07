@@ -65,7 +65,13 @@ the target, so a diagonal flank is Manhattan distance 2, outside a melee entity'
 fixed-point `BRACKETING` move would hold at the tile. Cover-seeking moves also carry a `target_id` and keep
 their own lifecycle; by the same helper a `SEEK_COVER` move would head toward its threat, which is latent (0 corpus moves) and parked as
 `TCK-20261006-SEEK-COVER-LIVE-TRACKED-TOWARD-ITS-THREAT-LATENT-TRIGGER`. The idle
-entity is then decided at its next brain cadence (`strategic_intelligence`, 10 ticks); that wait is not changed here. Strategy does
+entity is then decided at its next brain cadence (`strategic_intelligence`, 10 ticks); that wait is not changed here.
+**The completion also stops the walk in the same tick** (`TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED`):
+`MovementPhase.route_movement_intent` skips an entity whose update carries `navigation.target_clear` with no new target, because it
+reads the tick-start target and would otherwise step the entity once more, off the adjacency it had just reached. Melee adjacency is
+orthogonal (Manhattan <= 1, world rule MOV-07), so a diagonal pair is out of reach and closes by one orthogonal step; a held `ATTACK`
+that returns `OUT_OF_RANGE` ends its task so the brain re-decides (the tactical pass pursues whenever an attack is not legal). The first strike of a
+diagonal pair lands within two brain cadences (20 ticks): one to decide the pursuit, one to decide the attack. Strategy does
 not write a navigation point for an entity-typed objective (`ObjectiveState.target_entity_id`): the redirection writers in
 `intelligence.py` and `redirection.py` leave the point unset and tactics resolve the live position.
 

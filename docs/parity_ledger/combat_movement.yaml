@@ -4618,3 +4618,27 @@
     and freeing entities diverges trajectories so no per-move before and after exists.
     The defect is structural (arriving does not end a move) and is pinned by construction
     and unit tests. GUARDING_ALLY has 0 corpus moves (constructed test only).'
+- id: COMB-333
+  text: 'TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED:
+    an ATTACK that returns OUT_OF_RANGE ends its task (ActionRoutingPhase.route clears
+    it like TARGET_INCAPACITATED), so the scheduler re-runs the brain and the tactical
+    pass pursues whenever an attack is not legal; INSUFFICIENT_READINESS is still
+    kept. A completed tracked move also stops the walk in the same tick: MovementPhase.route_movement_intent
+    skips an entity whose update carries navigation.target_clear with no new target_set.
+    Melee adjacency is orthogonal (Manhattan <= 1, world rule MOV-07), unchanged.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/pipeline_phases/actions.py (_ENDS_HELD_ATTACK_REASONS,
+    _is_unrecoverable_action_failure), src/engine/pipeline_phases/movement.py (_already_settled_this_tick).
+    Corpus (Kernel.tick_once(), seed 42, 2000 ticks, audit_mode, budget off, each
+    arm run twice identical): longest consecutive OUT_OF_RANGE run per entity 4 /
+    258 to 2 / 2 (crowded_frontier / frontier_living_world); constructed diagonal
+    melee pair first strike tick 39 to tick 19 (bound 20).'
+  proof_type: regression
+  test_path: tests/unit/engine/test_diagonal_melee_pair_strikes.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.74.
+  support_boundary: SimQ grade-anchor movement is not measured locally (test_grade_regression.py
+    skips 82 of 89 without calibration reports). Legality truncates fractional Manhattan
+    distance with int() while the pursuit reach test compares floats; filed as TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT,
+    not fixed here.

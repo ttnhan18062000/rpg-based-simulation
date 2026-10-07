@@ -78,10 +78,10 @@ resolve(intent, state, reservations):
 
 Buy price (`DynamicPriceService.calculate_buy_price`):
 ```
-multiplier = 1.0 + global_salience          # salience in [0.0, 2.0]
-multiplier = min(multiplier, 3.0)            # Fair Trade Law hard cap
-final_price = max(1, int(base_value * multiplier))
+final_price = max(1, int(base_value))        # no salience or host-load modifier
 ```
+
+Before `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING` the buy price was multiplied by `min(3.0, 1.0 + global_salience)`, where `global_salience` folded in the previous tick's measured wall-clock time. That multiplier is removed (`docs/guidelines/intentional_divergences.md` §2.75).
 
 Sell price (`DynamicPriceService.calculate_sell_price`):
 ```

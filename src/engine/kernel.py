@@ -639,24 +639,12 @@ class Kernel:
 
         entity_updates = self._drain_pending_grief_triggers(entity_updates)
 
-        if self._current_signals is None:
-            debt_ratio = 0.0
-            compute_ratio = 0.0
-        else:
-            debt_ratio = self._current_signals.work_debt_total / self._profile.max_work_debt
-            compute_ratio = self._current_signals.tick_compute_ms / self._profile.max_tick_budget_ms
-        global_salience = min(2.0, debt_ratio + compute_ratio)
-        
-        pressure_dict = {
-            "global_salience": global_salience,
-            "debt_ratio": debt_ratio,
-            "compute_ratio": compute_ratio
-        }
-
+        # No gameplay-facing pressure signal is derived here: the measured compute time (`tick_compute_ms`) is a
+        # control signal for the governor, not an input to authoritative state (PERF-D1 amendment A1,
+        # TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING).
         raw_update = StateUpdate(
-            entity_updates=entity_updates, 
+            entity_updates=entity_updates,
             work_debt_updates=work_debt_updates,
-            pressure_signals_set=pressure_dict,
             current_mode_set=self._current_policy.mode,
             current_policy_set=self._current_policy
         )

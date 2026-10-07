@@ -322,6 +322,17 @@ Each follows §3.1 and is intentionally empty.
     fix therefore drops `global_salience` and the buy-price multiplier entirely.
   - The A1 rule itself is unchanged.
 
+  **Update 2026-10-06 (implemented, `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`):** input 4 is
+  closed. The kernel no longer computes `debt_ratio`, `compute_ratio` or `global_salience` and no longer
+  writes `pressure_signals`; `DynamicPriceService.calculate_buy_price(base_value)` returns
+  `max(1, int(base_value))` and reads no state. Buy prices therefore no longer vary with host load, with or
+  without `audit_mode`. The regression test `tests/unit/resource/test_buy_price_independent_of_host_timing.py`
+  runs with `audit_mode=False` and a faked clock, and fails on the pre-fix tree. In production the salience
+  term was already 0 (`work_debt` never accumulates), so the observable effect is the `compute_ratio` term
+  only (`docs/guidelines/intentional_divergences.md` §2.75). The coverage question (`pressure_signals` is
+  outside the proof digest, PERF-D5) is recorded as a finding and left open: after this change the dict
+  stays at its initial `{}` in production, so no digest gap remains for it to hide a difference in.
+
   **Inputs the Canonical proxy set must also cover** (same inventory; classification unchanged):
   the replay-backlog `DEGRADED` trigger in `ResourceGovernor` (depends on a background flush
   thread; recorded as a mode transition), and `PhaseBudgetGovernor`, which reads per-phase
@@ -329,6 +340,19 @@ Each follows §3.1 and is intentionally empty.
   table above). The inventory found nothing else on the tick path that feeds state, ids, seeds,
   or sort keys; its limits are in its §6.
 - Related dispositions: C-03, C-04, C-05.
+
+- **Update 2026-10-06 (owner decisions on the governor design, `TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY`):**
+  - **How a contract is selected: option 1.** `RuntimeProfile` gains `signal_contract: LIVE | CANONICAL`,
+    default `LIVE` (today's behaviour, bit-identical). `audit_mode` keeps its meaning and wins when set.
+    Canonical is opt-in, for tests, calibration and deterministic coverage of degraded-mode gameplay.
+    Options 2 (Canonical replaces `audit_mode`'s zeroing) and 3 (Canonical by default) are deferred until
+    calibration data and the Live trace exist.
+  - **Q-A:** memory (RSS) and the replay backlog are not inputs under Canonical.
+  - **Q-B:** Canonical keeps the existing millisecond thresholds, read as modelled reference-host
+    milliseconds. The cost is computed from pre-policy demand counts with frozen, versioned weights
+    (`WORK_MODEL_V1`), recorded in the run manifest. There are no new threshold fields.
+  - The Live half (control trace) is a separate ticket: `TCK-20261006-PERF-LIVE-CONTROL-TRACE`.
+  - The code waits for the full no-touch window (it needs `kernel.py`).
 
 #### PERF-D2 — Portability
 

@@ -72,7 +72,8 @@ Updated: <date>
 
 ## Reachability
 
-`.claude/handover/*.md` (gitignored, one file per role). The `SessionStart` hook
+`.claude/handover/*.md` (gitignored, one file per role, so it exists only in the **main checkout**; the launcher,
+the hooks and `tools/handover_transit.py` resolve it there via `tools/handover_home.py`, never against a worktree's cwd). The `SessionStart` hook
 `tools/sessions/session_start_hook.py` (`startup`, `resume`, `clear`, `compact`) resolves the session's role
 from the harness signals, binds the session to it and injects that role's card and **only that role's**
 handover note. A session that resolves no role (a plain `claude`, or disagreeing signals) gets the older

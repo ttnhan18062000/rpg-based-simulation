@@ -1,0 +1,344 @@
+{
+ "record_type": "icon_palette",
+ "palette_id": "icons-v1",
+ "decision": "D20 (user, 2026-10-06): terrain-v1 base + 3-4 step ramps + a small accent set",
+ "derivation": "tests/visual_assets/icon_palette.py::build_palette (the file is exactly its output)",
+ "terrain_set": "terrain-v1",
+ "colors": [
+  "#4a6050",
+  "#4a2d2d",
+  "#3a3040",
+  "#3a3420",
+  "#6a3040",
+  "#6a7a40",
+  "#1a1d27",
+  "#1b3a1b",
+  "#4a6030",
+  "#4a4050",
+  "#0a4a0a",
+  "#8a3000",
+  "#3a3a3a",
+  "#5a5040",
+  "#4a4035",
+  "#2d3a4a",
+  "#2a5070",
+  "#c8d8e8",
+  "#2a2a3a",
+  "#2d4a3e",
+  "#5a2a1a",
+  "#555b73",
+  "#1e3a5f",
+  "#252530",
+  "#717e8f",
+  "#91a2ab",
+  "#28331d",
+  "#94975d",
+  "#b4af80",
+  "#151d2f",
+  "#467c8c",
+  "#69a8a7",
+  "#3a0c06",
+  "#a87022",
+  "#c7b04f",
+  "#2d1722",
+  "#854b4d",
+  "#a1766c",
+  "#26201c",
+  "#747059",
+  "#8e8c75",
+  "#555961",
+  "#d9ecf3",
+  "#eafeff",
+  "#0e1018",
+  "#9ea4b6",
+  "#e8c040",
+  "#d04030",
+  "#48b858",
+  "#50a8e0",
+  "#9060d0",
+  "#f0ecd8"
+ ],
+ "entries": [
+  {
+   "color": "#4a6050",
+   "role": "terrain",
+   "source": "terrain.bridge"
+  },
+  {
+   "color": "#4a2d2d",
+   "role": "terrain",
+   "source": "terrain.camp"
+  },
+  {
+   "color": "#3a3040",
+   "role": "terrain",
+   "source": "terrain.cave"
+  },
+  {
+   "color": "#3a3420",
+   "role": "terrain",
+   "source": "terrain.desert"
+  },
+  {
+   "color": "#6a3040",
+   "role": "terrain",
+   "source": "terrain.dungeon_entrance",
+   "also": [
+    "ramp: terrain.dungeon_entrance ramp step 1 of 4 (seed at step 1)"
+   ]
+  },
+  {
+   "color": "#6a7a40",
+   "role": "terrain",
+   "source": "terrain.farmland",
+   "also": [
+    "ramp: terrain.farmland ramp step 1 of 4 (seed at step 1)"
+   ]
+  },
+  {
+   "color": "#1a1d27",
+   "role": "terrain",
+   "source": "terrain.floor"
+  },
+  {
+   "color": "#1b3a1b",
+   "role": "terrain",
+   "source": "terrain.forest"
+  },
+  {
+   "color": "#4a6030",
+   "role": "terrain",
+   "source": "terrain.grassland"
+  },
+  {
+   "color": "#4a4050",
+   "role": "terrain",
+   "source": "terrain.graveyard"
+  },
+  {
+   "color": "#0a4a0a",
+   "role": "terrain",
+   "source": "terrain.jungle"
+  },
+  {
+   "color": "#8a3000",
+   "role": "terrain",
+   "source": "terrain.lava",
+   "also": [
+    "ramp: terrain.lava ramp step 1 of 4 (seed at step 1)"
+   ]
+  },
+  {
+   "color": "#3a3a3a",
+   "role": "terrain",
+   "source": "terrain.mountain"
+  },
+  {
+   "color": "#5a5040",
+   "role": "terrain",
+   "source": "terrain.road",
+   "also": [
+    "ramp: terrain.road ramp step 1 of 4 (seed at step 1)"
+   ]
+  },
+  {
+   "color": "#4a4035",
+   "role": "terrain",
+   "source": "terrain.ruins"
+  },
+  {
+   "color": "#2d3a4a",
+   "role": "terrain",
+   "source": "terrain.sanctuary"
+  },
+  {
+   "color": "#2a5070",
+   "role": "terrain",
+   "source": "terrain.shallow_water",
+   "also": [
+    "ramp: terrain.shallow_water ramp step 1 of 4 (seed at step 1)"
+   ]
+  },
+  {
+   "color": "#c8d8e8",
+   "role": "terrain",
+   "source": "terrain.snow",
+   "also": [
+    "ramp: terrain.snow ramp step 1 of 4 (seed at step 1)"
+   ]
+  },
+  {
+   "color": "#2a2a3a",
+   "role": "terrain",
+   "source": "terrain.swamp"
+  },
+  {
+   "color": "#2d4a3e",
+   "role": "terrain",
+   "source": "terrain.town"
+  },
+  {
+   "color": "#5a2a1a",
+   "role": "terrain",
+   "source": "terrain.volcanic"
+  },
+  {
+   "color": "#555b73",
+   "role": "terrain",
+   "source": "terrain.wall",
+   "also": [
+    "ramp: terrain.wall ramp step 1 of 4 (seed at step 1)"
+   ]
+  },
+  {
+   "color": "#1e3a5f",
+   "role": "terrain",
+   "source": "terrain.water"
+  },
+  {
+   "color": "#252530",
+   "role": "ramp",
+   "source": "terrain.wall ramp step 0 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#717e8f",
+   "role": "ramp",
+   "source": "terrain.wall ramp step 2 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#91a2ab",
+   "role": "ramp",
+   "source": "terrain.wall ramp step 3 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#28331d",
+   "role": "ramp",
+   "source": "terrain.farmland ramp step 0 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#94975d",
+   "role": "ramp",
+   "source": "terrain.farmland ramp step 2 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#b4af80",
+   "role": "ramp",
+   "source": "terrain.farmland ramp step 3 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#151d2f",
+   "role": "ramp",
+   "source": "terrain.shallow_water ramp step 0 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#467c8c",
+   "role": "ramp",
+   "source": "terrain.shallow_water ramp step 2 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#69a8a7",
+   "role": "ramp",
+   "source": "terrain.shallow_water ramp step 3 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#3a0c06",
+   "role": "ramp",
+   "source": "terrain.lava ramp step 0 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#a87022",
+   "role": "ramp",
+   "source": "terrain.lava ramp step 2 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#c7b04f",
+   "role": "ramp",
+   "source": "terrain.lava ramp step 3 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#2d1722",
+   "role": "ramp",
+   "source": "terrain.dungeon_entrance ramp step 0 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#854b4d",
+   "role": "ramp",
+   "source": "terrain.dungeon_entrance ramp step 2 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#a1766c",
+   "role": "ramp",
+   "source": "terrain.dungeon_entrance ramp step 3 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#26201c",
+   "role": "ramp",
+   "source": "terrain.road ramp step 0 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#747059",
+   "role": "ramp",
+   "source": "terrain.road ramp step 2 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#8e8c75",
+   "role": "ramp",
+   "source": "terrain.road ramp step 3 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#555961",
+   "role": "ramp",
+   "source": "terrain.snow ramp step 0 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#d9ecf3",
+   "role": "ramp",
+   "source": "terrain.snow ramp step 2 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#eafeff",
+   "role": "ramp",
+   "source": "terrain.snow ramp step 3 of 4 (seed at step 1)"
+  },
+  {
+   "color": "#0e1018",
+   "role": "outline",
+   "source": "near-black cool outline for glyphs and badges (L* about 5)"
+  },
+  {
+   "color": "#9ea4b6",
+   "role": "plate_rim",
+   "source": "mid-light plate rim: about L* 67: the lightness that stays furthest (18 L*) from every terrain-v1 tile mean, which run from L* 11 to 86 (the sheet rule's I3, `tests/visual_assets/icon_sheet_rule.py`)"
+  },
+  {
+   "color": "#e8c040",
+   "role": "accent_gold",
+   "source": "top tiers (S and above) and the lit edge of stars"
+  },
+  {
+   "color": "#d04030",
+   "role": "accent_ember",
+   "source": "debuff and hostile signal"
+  },
+  {
+   "color": "#48b858",
+   "role": "accent_leaf",
+   "source": "buff and friendly signal"
+  },
+  {
+   "color": "#50a8e0",
+   "role": "accent_sky",
+   "source": "neutral information signal"
+  },
+  {
+   "color": "#9060d0",
+   "role": "accent_violet",
+   "source": "magic and effects signal"
+  },
+  {
+   "color": "#f0ecd8",
+   "role": "accent_bone",
+   "source": "highlights and text-like glyph strokes"
+  }
+ ]
+}

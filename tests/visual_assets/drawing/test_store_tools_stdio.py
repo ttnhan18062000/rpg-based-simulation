@@ -137,8 +137,8 @@ def test_store_list_and_show_read_the_store_and_change_nothing(world):
                                       ("store_list", {"kind": "intake", "limit": 1})])
     assert all(not r.isError for r in results)
     listed, sources, artifacts, releases, shown, limited = (data(r) for r in results)
-    assert [i["intake_id"] for i in listed["items"]] == [intake_id] and sources["count"] == 34 and artifacts["count"] == 34 and releases["count"] == 5
-    # the owner adopted terrain-v1 on 2026-10-05T18:17:03Z: 34 sources (forest's three + 22 terrain tiles + 9 border masks); `build` produced one artifact per source (34) and `pilot/rc-0005` (the user approved both on 2026-10-06) joined rc-0001 to rc-0004 (5 candidates)
+    assert [i["intake_id"] for i in listed["items"]] == [intake_id] and sources["count"] == 48 and artifacts["count"] == 34 and releases["count"] == 6
+    # the owner adopted terrain-v1 on 2026-10-05T18:17:03Z (34 sources with the forest's three: 22 terrain tiles + 9 border masks) and icons-key-v1 on 2026-10-06T15:21:47Z (14 icon sources): 48 sources; `build` covered only the 34 terrain-era ones, so 34 artifacts and `pilot/rc-0005` (the user approved both on 2026-10-06) joined rc-0001 to rc-0004 (5 candidates)
     assert shown["verdict"] == "PASSED" and "unverified" in shown["claimed_by_producer"]["note"] and limited["count"] == 1
     for r in results:
         assert "/home/" not in text(r) and "/tmp/" not in text(r) and "pytest-of-" not in text(r)

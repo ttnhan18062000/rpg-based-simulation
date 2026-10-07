@@ -464,6 +464,29 @@ separate function — until this ticket, it did not reference `bravery` at all, 
 `panic > 0.4` flee threshold check, giving personality a real effect on the immediate,
 per-tick combat-vs-flee decision as well as the strategic one documented above.
 
+**Regional dread: bounded, never decisive alone** (`TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE`,
+world rule `AGENCY-06`, owner decision 17). A region's trauma (Bible 05 §2: `+1.0` per death, no
+ceiling, instability threshold `50.0`) reaches `evaluate_emotional_state` as dread, one panic input
+among the threats to the subject itself:
+
+`dread = 0.3 * min(1, max(0, trauma) / 50.0)`  (`regional_dread`, `REGIONAL_DREAD_MAX = 0.3`)
+
+- Linear in `trauma / 50.0`, the Bible 05 §2 instability threshold (the same `50.0` as
+  `HAZARD_GROWTH_TRAUMA_THRESHOLD`), and at its fullest (`0.3`) there; it does not keep growing with
+  further deaths.
+- **Regional dread alone never makes a subject flee.** `0.3` is strictly below the `0.4` flee
+  threshold (`FLEE_PANIC_THRESHOLD`), so at any bravery and any trauma it cannot decide flight.
+- It can still **tip** a threat over the line: `0.3` is above the weakest threat-to-self term (`0.2`,
+  health below 40%), so a wounded subject in an unstable region flees where the same subject in a calm
+  region does not. Any ceiling in `(0.2, 0.4)` meets both constraints; `0.3` leaves a `0.1` margin
+  to the flee line.
+- The "never alone" clause covers **regional dread only**. A threat to the subject itself (health
+  below 10%: `+0.8`; below 20%: `+0.5`; a nemesis or grudge on a subject at or below 40% health,
+  `grudge * 0.3`, doubled for a nemesis) may still decide flight alone. The outnumbered term (`+0.3`) does not flee alone either,
+  but it is not regional dread and is unchanged. Before this change the input was
+  `trauma * 0.5` on the raw counter, so one death (`+0.5`) fled unless bravery exceeded `0.33`, and two
+  deaths (`+1.0`) fled at any bravery.
+
 **Where `bravery` itself comes from** (`TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION`):
 `bravery` is a real, per-entity `DeterministicRNG` draw in `[0.0, 1.0)`
 (`src/worldbuilding/compiler.py`, `get_bravery_bias()`). Until this ticket it was uncorrelated

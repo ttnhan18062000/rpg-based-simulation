@@ -1,5 +1,5 @@
-"""The frontend's committed copy of the whole-set terrain export equals a fresh `export-runtime` of `pilot/rc-0005` (pure Python, no Aseprite), and rc-0005 is what the user approved on 2026-10-06
-(`TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN`): the 34 adopted slots (forest's plain/bush/tree + 22 terrain tiles + 9 border masks) on the same registry as rc-0004.
+"""The frontend's committed copy of the whole-set terrain export equals a fresh `export-runtime` of `pilot/rc-0006` (pure Python, no Aseprite), and rc-0006 is what the user approved on 2026-10-06
+(`TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN`): the 34 adopted slots (forest's plain/bush/tree + 22 terrain tiles + 9 border masks) on the registry that holds the 14 `icon.*` keys (rc-0005's slots, re-assembled by `TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`; the user approved rc-0006 on 2026-10-06).
 
 The pilot fixture (`__fixtures__/pilot`, rc-0004, forest only) is deliberately NOT touched: `pilot_colour_vision.tile_pixels()` takes the first PNG of the pilot export (a known fragility), so the pilot's
 forest rule keeps its input. The link between `visual_assets` and `frontend/` is this file-level copy: no import either way."""
@@ -18,14 +18,14 @@ COMMITTED = REPO / "frontend" / "src" / "visualAssets" / "__fixtures__" / "terra
 PILOT = REPO / "frontend" / "src" / "visualAssets" / "__fixtures__" / "pilot"
 CANDIDATES = REPO / "visual_assets" / "catalog" / "manifests" / "candidates" / "pilot"
 REGENERATE = (
-    "regenerate the committed export: `python -m visual_assets.store export-runtime --catalog-id pilot --release-id rc-0005 --out /tmp/terrainset_export`, "
+    "regenerate the committed export: `python -m visual_assets.store export-runtime --catalog-id pilot --release-id rc-0006 --out /tmp/terrainset_export`, "
     "then replace the files in frontend/src/visualAssets/__fixtures__/terrainset/ with its content"
 )
 
 
 def test_the_committed_terrainset_export_equals_a_fresh_export_of_rc_0005(tmp_path):
     fresh = tmp_path / "export"
-    export_runtime("pilot", "rc-0005", fresh)
+    export_runtime("pilot", "rc-0006", fresh)
     names = sorted(p.name for p in fresh.iterdir())
     assert sorted(p.name for p in COMMITTED.iterdir()) == names, REGENERATE
     for name in names:
@@ -34,7 +34,7 @@ def test_the_committed_terrainset_export_equals_a_fresh_export_of_rc_0005(tmp_pa
 
 def test_the_export_holds_exactly_the_34_adopted_slots_and_the_declared_detail_axes():
     manifest = json.loads((COMMITTED / "runtime_manifest.json").read_text())
-    assert manifest["catalog_id"] == "pilot" and manifest["release_id"] == "rc-0005" and len(manifest["entries"]) == 34
+    assert manifest["catalog_id"] == "pilot" and manifest["release_id"] == "rc-0006" and len(manifest["entries"]) == 34
     got = sorted((e["visual_key"], e.get("detail")) for e in manifest["entries"])
     expected = [("terrain.forest", d) for d in ("bush", "plain", "tree")]
     expected += [(f"terrain.{s.removeprefix('terrain_')}", None) for s in af.TERRAIN_SOURCES]
@@ -47,10 +47,12 @@ def test_the_export_holds_exactly_the_34_adopted_slots_and_the_declared_detail_a
     ]
 
 
-def test_rc_0005_is_rc_0004_plus_the_31_adopted_slots_on_the_same_registry():
-    old, new = (json.loads((CANDIDATES / f"{rc}.json").read_text()) for rc in ("rc-0004", "rc-0005"))
-    assert new["registry_hash"] == old["registry_hash"] and new["release_id"] == "rc-0005" and new["catalog_id"] == old["catalog_id"]
-    assert all(entry in new["entries"] for entry in old["entries"]) and len(old["entries"]) == 3 and len(new["entries"]) == 34
+def test_rc_0006_lists_exactly_the_entries_of_rc_0005_so_only_the_registry_moved():
+    """`pilot/rc-0006` was assembled only because registering the 14 `icon.*` keys changed the registry hash (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, D20; the user approved it on
+    2026-10-06). Same 34 slots, artifact ids and pixel hashes as rc-0005's, so "the release content is unchanged" is a checked fact."""
+    old, new = (json.loads((CANDIDATES / f"{rc}.json").read_text()) for rc in ("rc-0005", "rc-0006"))
+    assert new["entries"] == old["entries"] and len(new["entries"]) == 34
+    assert new["registry_hash"] != old["registry_hash"] and new["release_id"] == "rc-0006" and new["catalog_id"] == old["catalog_id"]
 
 
 def test_the_forest_slots_are_byte_identical_to_the_pilot_fixtures():
