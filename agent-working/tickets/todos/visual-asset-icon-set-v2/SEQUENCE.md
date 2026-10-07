@@ -14,6 +14,8 @@ is ready and the user authorizes the push; merging needs the user's `--admin`.
 2. `TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC`: all v2 keys at once; next release candidate (**user approval**).
 3. `TCK-20261007-VISUAL-ASSETS-ICON-V2-SHEET-RULE-GROUPS`: v2 groups + 24x24 I1 threshold (**user's answer, before any art**).
 4. `TCK-20261007-VISUAL-ASSETS-ICON-V2-DRAFT-SET`: draw `icons-v2`, preview, rule result, owner commands.
+4b. `TCK-20261008-VISUAL-ASSETS-ICON-RECOGNISABILITY-CHECKS` (added 2026-10-08, user's choice "Fix the process now"): construction specs, reference study, blind recognition check, whole-sheet look-alike report.
+4c. `TCK-20261008-VISUAL-ASSETS-ICON-V2-RECOGNISABILITY-REDRAW` (added 2026-10-08): run the checks on `icons-v2`, redraw what they flag (the sword included).
 5. **Owner gate, no ticket:** the owner reviews and runs `adopt-set` in their own terminal.
 6. `TCK-20261007-VISUAL-ASSETS-RECORD-ICON-V2-ADOPTION` (only if adopted): record, guards, snapshots, close.
 
@@ -29,6 +31,9 @@ classes (8), rarity badges (3), item families (~8)**.
 - Planner: no UI tab, advanced-class, per-item or per-effect icons (brainstorm section 15: an icon must beat text).
 - Gates are never reworded to pass. Re-check each ticket against what landed; disagreements go to the planner.
 
+- User, 2026-10-08 (at the owner gate): the weapon sword looks wrong; asked for the root cause. Planner: gates measure
+  distinguishability, never recognisability (4 misreads in 36 icons passed every gate). User chose "Fix the process now" (4b, 4c).
+
 ## Status
 
-OPEN (2026-10-07): tickets filed, nothing built.
+IN PROGRESS (2026-10-08): children 1-4 done; 4b and 4c added before the owner gate.
