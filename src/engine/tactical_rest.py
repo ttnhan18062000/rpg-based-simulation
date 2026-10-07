@@ -40,13 +40,16 @@ def _fatigue_target(state: AuthoritativeState, entity: EntityState) -> Tuple[boo
     obj = next((o for o in project.objectives if o.id == strat.current_objective_id), None)
     if obj is None:
         return True, None
-    if getattr(obj, "target_position", None) is not None:
-        return True, tuple(obj.target_position)
+    target_position = getattr(obj, "target_position", None)
+    if target_position is not None:
+        return True, (float(target_position[0]), float(target_position[1]))
     try:
-        building = state.buildings.get(int(obj.target))
+        building = state.buildings.get(int(obj.target or ""))
     except (TypeError, ValueError):
         building = None
-    return True, (tuple(building.position) if building is not None else None)
+    if building is None:
+        return True, None
+    return True, (float(building.position[0]), float(building.position[1]))
 
 
 def rest_in_place_update(
