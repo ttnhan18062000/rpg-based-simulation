@@ -158,12 +158,16 @@ def lint_known_reds(entries: Sequence[dict]) -> List[str]:
             problems.append(f"{label}: expires_on is before added_on")
         if entry.get("kind") and entry["kind"] not in KINDS:
             problems.append(f"{label}: kind must be one of {KINDS}, got {entry['kind']!r}")
+        if "[" in str(entry.get("match", "")):
+            # fnmatch reads `[...]` as a character class, so an exact parametrized id such as
+            # `t::test_x[5000]` would never match itself and its failure would show as UNOWNED.
+            problems.append(f"{label}: '[' is a character class in fnmatch; write the parameter part with '*' or '?' instead")
     problems.extend(shadowed_entries(entries))
     return problems
 
 
 def _sample_id(pattern: str) -> str:
-    """A concrete id the pattern matches: `*` -> nothing, `?` -> one character (no `[...]` classes are used)."""
+    """A concrete id the pattern matches: `*` -> nothing, `?` -> one character (the lint forbids `[` in patterns)."""
     return pattern.replace("*", "").replace("?", "x")
 
 

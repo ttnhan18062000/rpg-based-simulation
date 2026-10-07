@@ -211,6 +211,14 @@ def test_real_file_keeps_the_corpus_catch_all_last():
     assert known[-1]["kind"] == "flaky"
 
 
+def test_lint_rejects_a_bracket_because_fnmatch_reads_it_as_a_character_class():
+    exact = "tests.perf.test_perf_movement::test_x[5000]"
+    assert srr.owner_of(exact, [_entry(exact)]) is None  # why: the exact id does not match itself
+    problems = srr.lint_known_reds([_entry(exact)])
+    assert any("'[' is a character class" in p for p in problems), problems
+    assert srr.lint_known_reds([_entry("tests.perf.test_perf_movement::test_x?5000?")]) == []
+
+
 def test_lint_rejects_a_catch_all_placed_before_a_narrower_entry():
     entries = [_entry("tests.unit.x*", "TCK-ALL"), _entry("tests.unit.x::test_one", "TCK-ONE")]
     problems = srr.lint_known_reds(entries)
