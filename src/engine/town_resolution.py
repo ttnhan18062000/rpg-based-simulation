@@ -5,7 +5,7 @@ from dataclasses import replace
 
 from src.core.updates import EntityUpdate, IdentityUpdate, CombatUpdate, BiologicalUpdate
 from src.core.enums import Faction
-from src.engine.service_reach import building_kind_at, service_tile
+from src.engine.service_reach import service_at
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -95,8 +95,7 @@ class TownResolutionSystem:
                     refined_entity_updates[e_id] = ent_upd
 
                 # Building Services (Rest, Eat)
-                service_pos = service_tile(state, tile_pos)
-                building_type = building_kind_at(state, service_pos) if service_pos else None
+                service_pos, building_type = service_at(state, tile_pos)
                 if building_type and ent_upd.task and ent_upd.task.work_kind_set == "ENTITY_ACT":
                     action = ent_upd.task.payload_set.get("action")
                     if action in ("REST", "EAT", "GATHER_INTEL"):

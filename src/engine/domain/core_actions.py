@@ -51,10 +51,7 @@ class CoreActions:
             return {entity.id: EntityUpdate(
                 entity_id=entity.id,
                 readiness_delta=0.0,
-                biological=BiologicalUpdate(
-                    sleep_debt_delta=-ROUGH_REST_SLEEP_DEBT_RECOVERY,
-                    rest_pressure_delta=-30.0
-                )
+                biological=BiologicalUpdate(sleep_debt_delta=-ROUGH_REST_SLEEP_DEBT_RECOVERY, rest_pressure_delta=-30.0)
             )}
         return {}
 

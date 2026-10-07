@@ -1,0 +1,5 @@
+frontier_living_world series(t,alive,mean_hunger) [(100, 41, 10.0), (200, 38, 20.0), (300, 38, 30.0), (400, 38, 40.0), (500, 38, 50.0), (600, 37, 60.0), (700, 36, 70.0), (800, 36, 80.0), (900, 36, 90.0), (1000, 20, 100.0), (1100, 2, 4.9), (1200, 2, 14.9), (1300, 4, 17.4)]
+deaths hist [(0, 10), (1, 3), (5, 1), (6, 1), (9, 16), (10, 20)]
+cause [(('PassiveDeathCause.STARVATION', 'None'), 25), (('PassiveDeathCause.STARVATION', 'STARVATION'), 10), (('None', 'DEFEAT'), 9), (('None', 'HAZARD'), 5), (('None', 'COMBAT'), 2)]
+eat []
+sleep []

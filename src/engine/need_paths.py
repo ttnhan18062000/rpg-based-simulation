@@ -17,16 +17,36 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from src.engine.biological_needs import PERSON_FALLBACK_PROFILE_ID, profile_id_for
 
+_HUNGERLESS = ("none", "undeclared")
+
 
 def _nearest_inn_distance(state: Any, position: Tuple[float, float]) -> Optional[float]:
-    best: Optional[float] = None
-    for building in state.buildings.values():
-        if building.kind != "inn":
-            continue
-        d = abs(building.position[0] - position[0]) + abs(building.position[1] - position[1])
-        if best is None or d < best:
-            best = d
-    return best
+    distances = [abs(b.position[0] - position[0]) + abs(b.position[1] - position[1])
+                 for b in state.buildings.values() if b.kind == "inn"]
+    return min(distances) if distances else None
+
+
+def _kind_of(props: Dict[str, Any], profile_id: Optional[str]) -> str:
+    return props.get("species_id") or ("person" if profile_id == PERSON_FALLBACK_PROFILE_ID else "undeclared")
+
+
+def _new_row(kind: str, profile_id: Optional[str], profile: Any) -> Dict[str, Any]:
+    needs = profile.needs if profile else {}
+    level = (lambda key: needs.get(key, "none")) if profile else (lambda key: "undeclared")
+    return {"kind": kind, "subjects": 0, "need_profile": profile_id, "hunger": level("hunger"),
+            "sleep": level("sleep"), "max_inn_distance": None}
+
+
+def _finish_row(row: Dict[str, Any], inns: int) -> Dict[str, Any]:
+    hungers = row["hunger"] not in _HUNGERLESS
+    row["inns_in_world"] = inns
+    row["hunger_path"] = (inns > 0) if hungers else "not_needed"
+    row["rest_path"] = "rough_sleep" if row["sleep"] not in _HUNGERLESS else "not_needed"
+    row["advisory"] = (
+        "undeclared kind: content defect (SURV-05)" if row["kind"] == "undeclared"
+        else "hungers but the world has no inn" if hungers and inns == 0 else ""
+    )
+    return row
 
 
 def need_path_report(state: Any, catalog: Any) -> List[Dict[str, Any]]:
@@ -35,31 +55,12 @@ def need_path_report(state: Any, catalog: Any) -> List[Dict[str, Any]]:
     for entity in state.entities.values():
         props = entity.identity.properties or {}
         profile_id = profile_id_for(props, entity.identity.role, catalog)
-        kind = props.get("species_id") or ("person" if profile_id == PERSON_FALLBACK_PROFILE_ID else "undeclared")
+        kind = _kind_of(props, profile_id)
         profile = catalog.get_need_profile(profile_id) if profile_id else None
-        needs = profile.needs if profile else {}
-        row = groups.setdefault(kind, {
-            "kind": kind, "subjects": 0, "need_profile": profile_id,
-            "hunger": needs.get("hunger", "none") if profile else "undeclared",
-            "sleep": needs.get("sleep", "none") if profile else "undeclared",
-            "max_inn_distance": None,
-        })
+        row = groups.setdefault(kind, _new_row(kind, profile_id, profile))
         row["subjects"] += 1
-        if row["hunger"] not in ("none", "undeclared"):
-            d = _nearest_inn_distance(state, entity.navigation.position)
-            if d is not None and (row["max_inn_distance"] is None or d > row["max_inn_distance"]):
-                row["max_inn_distance"] = d
+        d = _nearest_inn_distance(state, entity.navigation.position) if row["hunger"] not in _HUNGERLESS else None
+        if d is not None and (row["max_inn_distance"] is None or d > row["max_inn_distance"]):
+            row["max_inn_distance"] = d
     inns = sum(1 for b in state.buildings.values() if b.kind == "inn")
-    rows = []
-    for kind in sorted(groups):
-        row = groups[kind]
-        hungers = row["hunger"] not in ("none", "undeclared")
-        row["inns_in_world"] = inns
-        row["hunger_path"] = (inns > 0) if hungers else "not_needed"
-        row["rest_path"] = "rough_sleep" if row["sleep"] not in ("none", "undeclared") else "not_needed"
-        row["advisory"] = (
-            "undeclared kind: content defect (SURV-05)" if kind == "undeclared"
-            else "hungers but the world has no inn" if hungers and inns == 0 else ""
-        )
-        rows.append(row)
-    return rows
+    return [_finish_row(groups[kind], inns) for kind in sorted(groups)]

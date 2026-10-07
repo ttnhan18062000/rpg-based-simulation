@@ -432,6 +432,7 @@ mechanisms:
     state: done
     implemented_by:
       - src/engine/apply.py::ApplyPath::_compute_entity_changes
+      - src/engine/biological_needs.py::need_rates
     verified:
       instrument: code_trace
       verdict: observed

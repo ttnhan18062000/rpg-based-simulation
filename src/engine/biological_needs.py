@@ -24,6 +24,7 @@ from __future__ import annotations
 from typing import Any, Dict, Optional, Tuple
 
 from src.core.enums import EntityRole
+from src.engine import behavior_consumers
 
 BASE_HUNGER_RATE = 0.1
 BASE_SLEEP_DEBT_RATE = 0.05
@@ -45,7 +46,6 @@ _BASE_RATES = (BASE_HUNGER_RATE, BASE_SLEEP_DEBT_RATE)
 
 
 def _catalog() -> Any:
-    from src.engine import behavior_consumers
     if behavior_consumers._catalog is None:
         behavior_consumers._auto_init()
     return behavior_consumers._catalog
@@ -55,12 +55,12 @@ def profile_id_for(props: Dict[str, Any], role: int, catalog: Any) -> Optional[s
     """The need profile id that governs a subject, or None when it has no declared kind."""
     explicit = props.get("need_profile_id")
     if explicit:
-        return explicit
+        return str(explicit)
     species_id = props.get("species_id")
     if species_id:
         species = catalog.get_species(species_id)
         if species is not None and species.need_profile:
-            return species.need_profile
+            return str(species.need_profile)
         return None
     return PERSON_FALLBACK_PROFILE_ID if int(role) in _PERSON_ROLES else None
 

@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from typing import Any, Optional, Tuple
 
+from src.engine.spatial_query import SpatialQueryService
+
 Tile = Tuple[int, int]
 
 _REACH_OFFSETS = ((0, 0), (0, -1), (1, 0), (0, 1), (-1, 0))
@@ -21,11 +23,11 @@ _REACH_OFFSETS = ((0, 0), (0, -1), (1, 0), (0, 1), (-1, 0))
 
 def building_kind_at(state: Any, tile: Tile) -> Optional[str]:
     """The kind of the building on exactly `tile`, or None."""
-    from src.engine.spatial_query import SpatialQueryService
     building = SpatialQueryService.get_building_at(state, tile)
     if building is not None:
         return building.kind
-    return state.building_tiles.get(tile)
+    kind: Optional[str] = state.building_tiles.get(tile)
+    return kind
 
 
 def service_tile(state: Any, tile: Tile) -> Optional[Tile]:
@@ -35,3 +37,9 @@ def service_tile(state: Any, tile: Tile) -> Optional[Tile]:
         if building_kind_at(state, candidate) is not None:
             return candidate
     return None
+
+
+def service_at(state: Any, tile: Tile) -> Tuple[Tile, Optional[str]]:
+    """(building tile, kind) of the building whose service `tile` can use; (`tile`, None) when none is in reach."""
+    found = service_tile(state, tile)
+    return (found or tile), (building_kind_at(state, found) if found else None)
