@@ -215,13 +215,18 @@ def test_wider_scope_numbers_pinned():
     # and +src/core/region_resolution.py (the one position-to-region lookup rule).
     # 301 -> 302 on 2026-10-07: +src/engine/tactical_threat.py (AGENCY-07's present-threat gate, bound under
     # `tactical_decision`; two public functions, no class, so it adds no unbound file and no unbound candidate).
-    assert wider["scope_files"] == 302
+    # 302 -> 305 on 2026-10-07: +src/engine/biological_needs.py (need_rates, bound under `attributes_biology`),
+    # +src/engine/service_reach.py (a lookup helper, unbound) and +src/engine/need_paths.py (advisory report, unbound);
+    # all three are functions only, so they add no unbound mechanism-shaped class.
+    assert wider["scope_files"] == 305
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
     # 228 -> 226 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py (QuestGenerator, bound under `guilds`) and
     # src/engine/pipeline_phases/clan_lifecycle.py (ClanLifecyclePhase, bound under `clan`) are now cited.
-    assert wider["unbound_files"] == 226
+    # 226 -> 228 on 2026-10-07 (biology child): src/engine/service_reach.py and src/engine/need_paths.py are unbound helpers
+    # (a lookup and an advisory report, no mechanism of their own); biological_needs.py is bound under `attributes_biology`.
+    assert wider["unbound_files"] == 228
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     assert wider["candidates"] == 72  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package

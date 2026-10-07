@@ -36,6 +36,7 @@ from src.core.state import (
 )
 from src.core.quests import QuestState, QuestStatus
 from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
+from src.engine.biological_needs import need_rates
 from src.engine.cadence import SystemCadence, should_run
 from src.core.inventory import InventoryService
 from src.core.enums import EntityRole, Faction, ReasonCode, DiplomaticState, PassiveDeathCause
@@ -87,8 +88,8 @@ class ApplyPath:
             if is_bio_due:
                 bio = entity.biological
                 changes["biological"] = replace(bio, 
-                    hunger=min(100.0, bio.hunger + 0.1 * cadence.biological),
-                    sleep_debt=min(100.0, bio.sleep_debt + 0.05 * cadence.biological)
+                    hunger=min(100.0, bio.hunger + need_rates(entity)[0] * cadence.biological),
+                    sleep_debt=min(100.0, bio.sleep_debt + need_rates(entity)[1] * cadence.biological)
                 )
             
             # Lifecycle / Health Decay

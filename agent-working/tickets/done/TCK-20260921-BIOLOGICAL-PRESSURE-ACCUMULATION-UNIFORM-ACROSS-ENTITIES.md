@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-ENTITIES
-phase: open
+phase: done
 date: 2026-09-21
 tags: [simulation-quality, progression]
 ---
@@ -16,7 +16,7 @@ Design decision needed: hunger/sleep-debt accumulation is identical for every en
 of attributes — is uniform biological pressure intended, or should vitality/endurance modulate it?
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -117,7 +117,8 @@ For the roadmap/planning session to decide, not to implement here:
 - `docs/mechanics/01_entity_anatomy.md` (attribute definitions, including vitality/endurance)
 
 ## Related Stored Artifacts
-None yet.
+- `agent-working/stored_artifacts/TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-ENTITIES/` (investigation.md, plan.md, test_plan.md, probes/)
+- `agent-working/stored_artifacts/TCK-20261006-BEHAVIORAL-5K-REGRESSION-URBAN-POLITICAL-DRIFTED-FROM-THE-2026-08-19-BASELINE-ATTRIBUTE-EACH-METRIC/` (why the 5k metric collapsed)
 
 ## Related Code Areas
 - `src/engine/apply.py::ApplyPath::_compute_entity_changes` (lines 88-91, the accumulation itself)
@@ -128,13 +129,13 @@ Whether uniform accumulation was a deliberate simplification or an oversight is 
 — not assumed either way. That's Scope item 1's own first task.
 
 ## Implementation Notes
-(none yet — not started; awaiting the design decision this ticket exists to request)
+Biology follows the kind's need profile (SURV-05, `src/engine/biological_needs.py`; medium = the old constants, none = never; undeclared kind keeps the old constants and is reported). The meal place is the inn (`EatScorer`, town EAT). The service building is resolved from `state.buildings` by own tile then orthogonal neighbours (`src/engine/service_reach.py`) because `building_tiles` is empty in every compiled world. `CoreActions` REST recovers 10 sleep debt (rough rest needs no building). Advisory need-path report (`src/engine/need_paths.py`, `tools/need_path_report.py`; 4 of 24 worlds have no inn). Divergence 2.80, parity PROG-128, `attributes_biology` bound to `need_rates`. Shop and blacksmith have the same dead lookup and were NOT switched on (filed: TCK-20261007-SHOP-AND-BLACKSMITH-TOWN-PATHS-NEVER-RAN-IN-A-COMPILED-WORLD). Decision-side blockers (arbitration picks hunger at ~100, rough-sleep decision) are Lane A's and tracked in the decision-core epic. Designer ruling 2026-10-07: an absent need key is a content gap. Content fixed (sleep: medium on carnivore_survival and goblin_survival, a content choice seeded at humanoid's level; sleep: none on undead_purpose, spirit_anchor, elemental_stability); the validator reports CAT-NEED-001 for any profile missing hunger or sleep; the absent-key path is a flagged interim that fires 0 times on the corpus (666 subjects).
 
 ## Test Summary
-(none yet)
+tests/unit/engine/test_biological_needs.py: 13 passed, 1 skipped. Scoped suites (world, resource, social, core, engine, tactical, strategic, kernel, systems): 1941 passed. Mechanism and parity tests pass; the two pinned mechanism tests were re-measured (scope_files 305, unbound_files 228, attributes_biology no longer a zero-caller finding). Code-health 0 new / 0 worse, mypy baseline clean on changed files, package registry clean, all in a scratch venv (CI is the first real run). Measured before/after (base main 7a39acc5d, includes #403-#406): frontier_living_world alive at t=1100 3 -> 10, starvation deaths 33 -> 27, eat events 0 -> 24, sleep events 0 -> 17; crowded_frontier and urban_political 5k identical.
 
 ## Files Changed
-(none yet)
+src/engine/biological_needs.py, service_reach.py, need_paths.py (new); src/engine/apply.py, town_resolution.py, domain/core_actions.py; src/ai/goals/scorers.py; tools/need_path_report.py; tests/unit/engine/test_biological_needs.py; two re-measured mechanism pins; docs (divergence 2.80, parity PROG-128, mechanisms.yaml binding, SURV-05 evidence line, regenerated mechanism views).
 
 ## Completion Summary
-(none yet)
+SURV-05 rates, the inn as meal place, working building resolution, REST recovering sleep debt and the advisory report are in. Undead and spirits no longer hunger, eat and sleep events are now above zero (24 and 17 in frontier_living_world over 1300 ticks), and alive at t=1100 goes 3 -> 10; most people still starve at about t=1000 because decision-side arbitration picks hunger late (Lane A, SURV-07). Honest 5k baseline to be retaken by the owner after this and the capacity-gate fix land (see the 5k investigation ticket).

@@ -1,16 +1,18 @@
 # Compliance IDs: WORLD-CAT-006, WORLD-CAT-007
 from __future__ import annotations
 
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
 from pathlib import Path
-import yaml
+from typing import Any, Dict, List, Optional
 
-from src.content.repository import CatalogRepository, CANONICAL_FAMILIES
+import yaml
+from pydantic import BaseModel, Field
+
 from src.content.paths import ContentPathConfig
-from src.worldmodules.schema import WorldModuleSpec
+from src.content.repository import CANONICAL_FAMILIES, CatalogRepository
+from src.content.schema import MODELLED_BIOLOGICAL_NEEDS
 from src.worldassembly.schema import WorldCompositionSpec
 from src.worldbuilding.repository import DEFAULT_WORLDS_ROOT
+from src.worldmodules.schema import WorldModuleSpec
 
 _paths = ContentPathConfig()
 
@@ -112,6 +114,18 @@ def validate_matrix_evidence(
     return violations
 
 
+def need_profile_gap_issues(repo: CatalogRepository) -> List[ValidationIssue]:
+    """An absent modelled biological need is a content gap, never "no need" (SURV-05): declare it, `none` included."""
+    return [
+        ValidationIssue(
+            severity="WARNING", rule_id="CAT-NEED-001", target_id=profile_id, filename="living/need_profiles.yaml",
+            message=f"Need profile '{profile_id}' does not declare biological need '{key}' (declare a level, or 'none')",
+        )
+        for profile_id, profile in repo.need_profiles.items()
+        for key in MODELLED_BIOLOGICAL_NEEDS if key not in profile.needs
+    ]
+
+
 class CatalogValidator:
     """
     Independent validator for the static Content Catalog.
@@ -167,10 +181,10 @@ class CatalogValidator:
         self._validate_recipe_relations(issues)
         self._validate_region_relations(issues)
         self._validate_species_relations(issues)
+        issues.extend(need_profile_gap_issues(self.repo))
         self._validate_biome_relations(issues)
         self._validate_ecology_relations(issues)
         self._validate_defaults(issues)
-        
         # Generic reference and dead active data checks
         self._validate_reference_graph(issues)
         self._validate_dead_active_data(issues)
