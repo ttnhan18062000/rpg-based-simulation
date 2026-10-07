@@ -27,9 +27,9 @@ known_reds:
     ticket: TCK-20261006-TWO-WORLD-INTEGRATION-TESTS-FAIL-ON-MAIN-PH9-ASSERTS-A-BOSS-AND-TRAUMA-LONG-RUN-HITS-THE-60S-LIMIT
     owner: rpg-implementer-2
     added_on: "2026-10-07"
-    expires_on: "2026-10-21"
+    expires_on: "2026-10-28"
     kind: broken
-    note: "triage row 2; cause #356 / decision 14; only the ph9 boss half of the ticket stands"
+    note: "remaining half is the boss assertion, stale against #356 (world-boss off by default); class (a) test update after KNOW-04; rpg-planner warns before 10-28 if it slips"
   - match: "tests.perf.test_perf_movement*"
     ticket: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
     owner: rpg-implementer-2
@@ -123,11 +123,11 @@ known_reds:
     note: "SOCIAL step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
   - match: "tests.unit.worldassembly.test_corpus_diversity::test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_stability"
     ticket: TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE
-    owner: rpg-planner
+    owner: rpg-implementer-2
     added_on: "2026-10-07"
     expires_on: "2026-11-15"
     kind: broken
-    note: "ECONOMY step change after #269 (#408 measurement); its ticket names no owner or expiry, so rpg-planner and 2026-11-15 are provisional"
+    note: "ECONOMY step change after #269 (#408 measurement); measured fresh with the post-starvation-chain rebaselines (#407 inn meals, SURV-07)"
   - match: "tests.unit.worldassembly.test_corpus_diversity*"
     ticket: TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED
     owner: testing-implementer
