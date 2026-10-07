@@ -8,7 +8,11 @@ import pytest
 from src.core.builder import V2EntityBuilder
 from src.core.state import CombatComponent, StaminaComponent
 from src.core.models.inventory import ItemStack, InventoryComponent
-from src.cognition.capability_estimate import CapabilityEstimateService, CapabilityContext
+from src.cognition.capability_estimate import CapabilityEstimateService, CapabilityContext, EstimateBasis
+
+# KNOW-04: beliefs are handed in by the caller (the entity's own knowledge facts), never read from a built-in table.
+_RAT_LOW = {"danger_rating": 0.2, "certainty": 0.3}
+_WOLF_HIGH = {"danger_rating": 0.75, "certainty": 0.3}
 
 
 def _entity(
@@ -44,7 +48,7 @@ class TestCapabilityCombat:
 
     def test_phase2_capability_weak_entity_vs_wolf_lower_than_rat(self):
         entity = _entity(attack=5, level=1, hp=100, max_hp=100)
-        ctx = CapabilityContext.for_combat(["rat", "wolf"])
+        ctx = CapabilityContext.for_combat(["rat", "wolf"], enemy_data={"rat": _RAT_LOW, "wolf": _WOLF_HIGH})
         result = CapabilityEstimateService.estimate(entity, context=ctx, tick=1)
         rat_est = result.estimates["combat.enemy_type.rat"].estimate
         wolf_est = result.estimates["combat.enemy_type.wolf"].estimate
@@ -65,6 +69,22 @@ class TestCapabilityCombat:
         w_result = CapabilityEstimateService.estimate(weak, context=ctx, tick=1)
         s_result = CapabilityEstimateService.estimate(strong, context=ctx, tick=1)
         assert s_result.estimates["combat.enemy_type.wolf"].estimate > w_result.estimates["combat.enemy_type.wolf"].estimate
+
+    def test_a_kind_with_no_belief_is_neutral_and_recorded_as_uninformed(self):
+        entity = _entity()
+        a = CapabilityEstimateService.estimate(entity, context=CapabilityContext.for_combat(["rat"])).estimates["combat.enemy_type.rat"]
+        b = CapabilityEstimateService.estimate(entity, context=CapabilityContext.for_combat(["dragon"])).estimates["combat.enemy_type.dragon"]
+        assert (a.estimate, a.confidence) == (b.estimate, b.confidence)   # no built-in per-kind table
+        assert a.source == EstimateBasis.UNINFORMED.value and a.confidence <= 0.1
+
+    def test_a_declared_belief_is_recorded_as_common_knowledge_and_moves_the_estimate(self):
+        entity = _entity()
+        ctx = CapabilityContext.for_combat(["rat", "wolf"], enemy_data={"rat": _RAT_LOW, "wolf": _WOLF_HIGH})
+        est = CapabilityEstimateService.estimate(entity, context=ctx).estimates
+        assert est["combat.enemy_type.rat"].source == EstimateBasis.COMMON_KNOWLEDGE.value
+        assert est["combat.enemy_type.rat"].confidence == pytest.approx(0.3 * 0.5 + 0.3 * 0.5)  # weak prior, hp_frac 1
+        neutral = CapabilityEstimateService.estimate(entity, context=CapabilityContext.for_combat(["rat"])).estimates["combat.enemy_type.rat"]
+        assert est["combat.enemy_type.rat"].estimate > neutral.estimate > est["combat.enemy_type.wolf"].estimate
 
     def test_phase2_capability_unknown_enemy_has_low_confidence(self):
         entity = _entity()

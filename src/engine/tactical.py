@@ -16,7 +16,7 @@ from src.core.movement_modes import MovementMode
 from src.core.enums import ActionStyle, ReasonCode, EntityRole, Faction
 from src.core.skills import SKILL_REGISTRY
 from src.engine.rpg_depth import WoundService
-from src.cognition.capability_estimate import CapabilityEstimateService, CapabilityContext
+from src.cognition.common_knowledge import combat_capability_against
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
@@ -423,16 +423,9 @@ class TacticalDecisionSystem:
         def target_score(h: EntityState) -> Tuple[float, int, float, float, float, int]:
             dist = abs(h.navigation.position[0] - entity.navigation.position[0]) + abs(h.navigation.position[1] - entity.navigation.position[1])
 
-            # Logic ID: COMB-316 -- subjective capability estimate, ad hoc/read-only
-            # (mirrors TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING's pattern; see
-            # docs/cognition/capability_and_knowledge_contract.md). entity.self_model.capabilities
-            # stays empty in production -- this call never writes back.
-            cap_component = CapabilityEstimateService.estimate(
-                entity,
-                context=CapabilityContext.for_combat(enemy_ids=[h.kind]),
-            )
-            cap_estimate = cap_component.estimates.get(f"combat.enemy_type.{h.kind}")
-            capability_confidence = cap_estimate.estimate if cap_estimate is not None else 0.0
+            # Logic ID: COMB-316 -- subjective capability estimate against the hostile's species, from the entity's own
+            # common-knowledge facts (KNOW-04); ad hoc and read-only, nothing is written back to entity.self_model.
+            capability_confidence = combat_capability_against(entity, h)
 
             # Domain 7 Hardening: Trust-based focus fire bias
             group_bias = 1.0

@@ -24,6 +24,8 @@ from dataclasses import replace
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
 from src.core.state import AuthoritativeState
+from src.cognition.common_knowledge import danger_fact_key
+from src.core.self_model import KnowledgeFact
 from src.engine.tactical import TacticalDecisionSystem
 
 
@@ -61,15 +63,26 @@ def _entity(
     )
 
 
-def _attacker(atk=10, def_stat=5, attack_range=10, pos=(0.0, 0.0)):
-    return _entity(
+def _folk_belief(species_id, level):
+    return KnowledgeFact(subject=species_id, fact_type="danger_rating", details={"danger_level": level},
+                         certainty=0.3, source_id="common_knowledge")
+
+
+def _attacker(atk=10, def_stat=5, attack_range=10, pos=(0.0, 0.0), believes=True):
+    """The acting entity; with `believes` it holds declared folk beliefs (KNOW-04) that goblins are weak and dragons terrifying."""
+    entity = _entity(
         1, Faction.HERO_GUILD, kind="hero", pos=pos, attack_range=attack_range,
         atk=atk, def_stat=def_stat,
     )
+    if not believes:
+        return entity
+    facts = {danger_fact_key("goblin"): _folk_belief("goblin", "low"), danger_fact_key("dragon"): _folk_belief("dragon", "extreme")}
+    knowledge = replace(entity.self_model.knowledge, facts=facts)
+    return replace(entity, self_model=replace(entity.self_model, knowledge=knowledge))
 
 
-# Goblin (_ENEMY_DANGER=0.5) and dragon (_ENEMY_DANGER=0.95) are both
-# `_ENEMY_DANGER`-known ids with a wide danger spread (capability_estimate.py:59-66).
+# The attacker believes goblins are weak ("low") and dragons terrifying ("extreme") from declared common knowledge
+# (KNOW-04, facts keyed by the hostile's species); the hostiles are recognised by kind here because they are hand-built.
 # The goblin is placed with worse HP/distance than the dragon so that, absent the
 # capability signal, HP/distance alone would prefer the dragon -- proving any
 # goblin-preferring outcome below is driven by the capability term, which sorts
@@ -96,6 +109,15 @@ def test_target_score_reflects_capability_estimate_for_differentiated_enemy_kind
     # would prefer the dragon. The capability-driven term (attacker is more
     # confident it can beat a goblin than a dragon) overrides that and wins.
     assert update.task.payload_set["target_id"] == goblin.id
+
+
+def test_target_choice_falls_back_to_hp_and_distance_when_the_attacker_holds_no_belief():
+    attacker = _attacker(atk=10, def_stat=5, believes=False)
+    goblin, dragon = _goblin(), _dragon()
+    state = AuthoritativeState(tick=1, seed=42, world_time=1, entities={1: attacker, 10: goblin, 20: dragon})
+    update = TacticalDecisionSystem.evaluate_entity_intent(state, attacker)
+    # Uninformed = a neutral, identical estimate for every kind: the dragon (lower HP, closer) is chosen as before the beliefs.
+    assert update.task.payload_set["target_id"] == dragon.id
 
 
 # ── Test 2: uniform hostile kind leaves ordering unchanged (regression guard) ──
