@@ -4468,3 +4468,28 @@
     are not pruned (they still accumulate in StrategicComponent.projects). guild.py''s
     GuildAction.visit change is covered only through the scorer tests and the existing
     guild tests.'
+- id: STRAT-279
+  text: 'TCK-20261007-PROJECT-SWITCH-COMPARES-A-LIVE-CANDIDATE-SCORE-TO-THE-CURRENT-PROJECTS-CREATION-TIME-SCORE:
+    evaluate_project_switch compares the winning candidate''s live utility against
+    the current project''s LIVE utility when the current project''s kind is a GoalKind
+    (the generic branch stores a utility): with_live_current_score replaces the stored
+    score for the comparison only. A ProjectKind project (raw score on the 2.9 scale)
+    and a project whose goal has no live score this evaluation keep their stored score;
+    nothing is written for a kept project.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/core/strategic.py` (`with_live_current_score`), `src/systems/strategic_systems/intelligence.py`
+    (its use at the `evaluate_project_switch` call in `evaluate_strategic_intent`).
+    Corpus (crowded_frontier / frontier_living_world, seed 42, 1500 ticks, audit_mode,
+    before vs after one tree each): same-kind duplicate switches 16 / 20 to 0 / 0;
+    total switches 258 / 223 to 240 / 233; eat and sleep events 0 to 0. `docs/guidelines/intentional_divergences.md`
+    2.79; `docs/mechanics/04_strategic_cognition.md` section 4'
+  proof_type: regression
+  test_path: tests/unit/strategic/test_project_switch_uses_live_current_score.py
+  divergence_note: 'Intentional divergence 2.79 (Bug Fix): the switch comparison uses
+    the current project''s live utility, not its creation-time score.'
+  support_boundary: Does not keep a fatigue project against a flat-80 resolve_blocker
+    goal (whether a need may outrank it is a rule question with the designer), and
+    does not touch ProjectKind projects. A switched-out project is suspended carrying
+    its last live score; a kept project is not rewritten.
