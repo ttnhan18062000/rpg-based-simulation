@@ -20,11 +20,10 @@ if TYPE_CHECKING:
 
 # TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION: runtime-spawned kinds whose catalog faction is declared in
 # content (entity_archetypes.yaml `faction`, factions.yaml `common_species`) or ruled by the owner (2026-10-06:
-# dragonkin is dragon_cult). world_boss is absent on purpose (boss feature design is deferred). wolf/slime/bear/
-# harpy/golem are HELD OUT (owner-confirmed gap, DEV-015): wild_beast_pack's catalog alignment is `wild`, so
-# `verify_attack_legality` rejects a spawned wolf attacking a hero as FRIENDLY_FIRE_ILLEGAL. Hostility stays on
-# the legacy bucket (every faction here has legacy_engine_bucket MONSTER_HORDE); nothing may route a spawned
-# monster's hostility through catalog alignment.
+# dragonkin is dragon_cult; wolf/slime/bear/harpy/golem are wild_beast_pack once legality is symmetric, CONFLICT-03,
+# TCK-20261006-WILD-BEAST-PACK-LEGALITY-IS-ONE-WAY). world_boss is absent on purpose (boss feature design is
+# deferred). Hostility stays on the legacy bucket (every faction here has legacy_engine_bucket MONSTER_HORDE);
+# nothing may route a spawned monster's hostility through catalog alignment.
 SPAWN_KIND_CATALOG_FACTION: Dict[str, str] = {
     "goblin_warrior": "goblin_warband",
     "goblin_raider": "goblin_warband",
@@ -32,6 +31,11 @@ SPAWN_KIND_CATALOG_FACTION: Dict[str, str] = {
     "bandit": "bandit_company",
     "goblin": "goblin_warband",
     "dragonkin": "dragon_cult",
+    "wolf": "wild_beast_pack",
+    "slime": "wild_beast_pack",
+    "bear": "wild_beast_pack",
+    "harpy": "wild_beast_pack",
+    "golem": "wild_beast_pack",
 }
 
 
