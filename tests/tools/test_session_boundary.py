@@ -192,7 +192,8 @@ def test_guard_edit_inside_owns_is_silent(tmp_path, monkeypatch):
 def test_guard_authority_decision_is_unchanged_and_carries_no_advisory(tmp_path, monkeypatch):
     root = tmp_path / "roles"
     st.record_start(root, _binding("agent-working-implementer", "sess-A"))
-    code, out, _ = _run_guard(_edit("CLAUDE.md", session="sess-A"), monkeypatch, root, tmp_path / "data")
+    payload = {"tool_name": "Bash", "session_id": "sess-A", "cwd": str(_REPO_ROOT), "tool_input": {"command": "gh pr merge 1"}}
+    code, out, _ = _run_guard(payload, monkeypatch, root, tmp_path / "data")
     assert json.loads(out)["hookSpecificOutput"]["permissionDecision"] == guard.ASK
     assert "additionalContext" not in out
 
