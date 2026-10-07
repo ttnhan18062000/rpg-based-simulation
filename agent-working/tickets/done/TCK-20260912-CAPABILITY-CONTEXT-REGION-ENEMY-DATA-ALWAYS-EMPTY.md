@@ -46,6 +46,9 @@ bug
 P2
 
 ## Request Summary
+Resolved 2026-10-07 under KNOW-04: a subject now starts with declared common knowledge about a kind (a weak prior with visible provenance), and the combat capability term in target selection reads it; the hardcoded per-kind table that matched 0 of 666 compiled kinds is removed.
+
+**Original finding (2026-09-12):**
 Found during `TCK-20260911-KNOWLEDGE-FACT-STORE-NO-DECISION-TIME-READER-INVESTIGATION`'s own
 search for a real, concrete consumer that `KnowledgeFact`'s `"danger_rating"` fact type looked
 plausibly shaped to feed. That investigation explicitly declined to build any connection between
@@ -251,7 +254,9 @@ own gap is the same `travel_regions`-has-no-caller finding as before, now with t
 that the one route family that would supply one doesn't exist in practice either.
 
 ## Test Summary
-No code changed — investigation only, both passes. Confirmed via direct code reading: all 3 real
+KNOW-04 (2026-10-07): `tests/unit/cognition/test_common_knowledge.py` (9 tests: declared species only, bad level rejected, weak fact with provenance per declared species, each of the three spawn paths seeds, canonical round trip and hash change, folk belief moves the estimate and an uninformed kind is neutral, one shared human prior); updated `test_phase2_capability_estimate_service.py` and `test_capability_driven_targeting.py`; mechanism-registry pins re-measured (scope_files 306, unbound_files 229). Wide CI-equivalent run: 5427 passed (unit core/engine/world/worldassembly/worldbuilding/worldgeneration/worldmodules/content/content_semantics/cognition/combat/entities/entity/domains/strategic/tools/docs, integrity, integration, architecture). Code-health ratchet clean, mypy baseline clean on changed files, package registry clean (local scratch venv; CI is the first real run). Measured under a pinned NORMAL governor with two identical runs: target choices changed 0 of 131 (frontier_living_world) and 0 of 213 (crowded_frontier).
+
+**Earlier investigation passes (2026-09-13), kept as history:** No code changed — investigation only, both passes. Confirmed via direct code reading: all 3 real
 `BeliefEntry` construction sites and their exact shapes (none per-enemy-kind); `travel_regions`'s
 own zero real construction sites, re-confirmed; every real `AdventureRouteOption` construction site
 in `generator.py`/`service.py` (`SCOUT_LOCATION` confirmed absent from all of them); the exact
@@ -259,7 +264,9 @@ in `generator.py`/`service.py` (`SCOUT_LOCATION` confirmed absent from all of th
 `for_travel()` would need to mirror, had a real caller existed to justify building one.
 
 ## Files Changed
-None — investigation and disposition only, both passes; no `src/` or `tests/` changes.
+KNOW-04 (2026-10-07): `src/cognition/common_knowledge.py` (new), `src/cognition/capability_estimate.py`, `src/content/schema.py`, `data/content/living/species.yaml`, `src/engine/tactical.py`, `src/worldbuilding/compiler.py`, `src/worldassembly/entity_spawner.py`, `src/entities/archetype_factory.py`, tests, docs (tactical and capability contracts, Bible 04 note, divergence 2.81, owner decision memo row 26 and KNOW-04 rule from the designer's patch), parity COMB-316.
+
+**Earlier passes:** None — investigation and disposition only, both passes; no `src/` or `tests/` changes.
 `agent-working/tickets/todos/TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER.md` — new, filed.
 
 ## Completion Summary
