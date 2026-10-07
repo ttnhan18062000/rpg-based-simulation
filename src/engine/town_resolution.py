@@ -5,6 +5,7 @@ from dataclasses import replace
 
 from src.core.updates import EntityUpdate, IdentityUpdate, CombatUpdate, BiologicalUpdate
 from src.core.enums import Faction
+from src.engine.service_prices import EAT_PRICE_GOLD
 from src.engine.service_reach import service_at
 
 if TYPE_CHECKING:
@@ -123,7 +124,7 @@ class TownResolutionSystem:
                                 refined_entity_updates[e_id] = ent_upd
                             elif action == "EAT" and building_type == "inn":
                                 bio_upd = ent_upd.biological or BiologicalUpdate()
-                                intent = ResourceTransferIntent(source_id="INN", source_kind="TOWN_SERVICE", gold_delta=-5, transfer_kind="EAT", is_group_required=True)
+                                intent = ResourceTransferIntent(source_id="INN", source_kind="TOWN_SERVICE", gold_delta=-EAT_PRICE_GOLD, transfer_kind="EAT", is_group_required=True)
                                 ent_upd = replace(ent_upd,
                                     biological=replace(bio_upd, hunger_delta=bio_upd.hunger_delta - 20.0),
                                     resource_transfers=list(ent_upd.resource_transfers) + [intent]

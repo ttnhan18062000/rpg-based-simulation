@@ -26,9 +26,10 @@ def _consumers():
     reset_behavior_consumers()
 
 
-def _hero(**bio):
+def _hero(gold=50, **bio):
     hero = V2EntityBuilder(1).kind("hero").location(0.0, 0.0).build()
-    return replace(hero, biological=replace(hero.biological, **bio))
+    hero = replace(hero, biological=replace(hero.biological, **bio))
+    return replace(hero, inventory=replace(hero.inventory, gold=gold))
 
 
 def _state(inn):
@@ -59,10 +60,28 @@ def test_a_far_inn_escalates_the_pull_earlier_than_a_near_one():
     assert far > near
 
 
-def test_without_an_inn_the_need_still_escalates_with_no_walk():
+def test_without_an_inn_there_is_no_way_to_point_at_so_no_escalation_and_no_target():
     hunger = 0.75 * HUNGER_LINE
     score = EatScorer().score(_hero(hunger=hunger), _state(None))
-    assert score.target_pos is None and score.utility > BLOCKER_CEILING
+    assert score.target_pos is None and score.utility == pytest.approx(hunger)
+
+
+def test_a_meal_is_a_way_to_meet_hunger_only_for_a_subject_that_can_pay():
+    from src.engine.service_prices import EAT_PRICE_GOLD
+
+    hunger = 0.75 * HUNGER_LINE
+    poor = EatScorer().score(_hero(gold=EAT_PRICE_GOLD - 1, hunger=hunger), _state((5.0, 0.0)))
+    assert poor.target_pos is None and poor.utility == pytest.approx(hunger)  # the need stays, with no way to point at
+    can_pay = EatScorer().score(_hero(gold=EAT_PRICE_GOLD, hunger=hunger), _state((5.0, 0.0)))
+    assert can_pay.target_pos == (5.0, 0.0) and can_pay.utility > BLOCKER_CEILING
+
+
+def test_the_scorer_and_the_inn_charge_the_same_price():
+    import inspect
+    import src.engine.town_resolution as tr
+    from src.engine.service_prices import EAT_PRICE_GOLD
+
+    assert tr.EAT_PRICE_GOLD == EAT_PRICE_GOLD and "gold_delta=-EAT_PRICE_GOLD" in inspect.getsource(tr)
 
 
 def _with_hostile(hero, at, hp=100):

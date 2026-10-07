@@ -131,7 +131,10 @@ def test_inn_meal_is_served_to_a_subject_beside_the_inn():
 
 def test_eat_scorer_targets_the_inn():
     from src.ai.goals.scorers import EatScorer
+    from dataclasses import replace
+    from src.engine.service_prices import EAT_PRICE_GOLD
     ent = (V2EntityBuilder(1).kind("worker").location(11.0, 10.0).biological(hunger=80.0).build())
+    ent = replace(ent, inventory=replace(ent.inventory, gold=EAT_PRICE_GOLD))  # the inn is a way to eat only for a subject that can pay (SURV-06)
     inn = BuildingState(id=7, kind="inn", position=(10, 10))
     state = AuthoritativeState(tick=1, seed=1, entities={1: ent}, buildings={7: inn})
     assert EatScorer().score(ent, state).target_id == "7"
