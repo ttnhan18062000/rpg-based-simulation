@@ -214,6 +214,8 @@ Source: the research report `CI known failure tracking patterns.md` (`/mnt/data/
 - A statement on whether other `@slow` families share the blind spot.
 
 ## Related Tickets
+- `TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE` (rpg-planner; widened to the NARRATIVE step-change family, bisect then rebaseline)
+- `TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE` (rpg-planner; SOCIAL step-change family; drafted, not yet on `main`)
 - `TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX` (the step-6 reds unmasked by the #360 gate fix)
 - `TCK-20260930-RESOURCE-NODE-YIELDS-ITEM-COLLIDES-WITH-RESOURCE-KIND` (PR #269 — the batch whose
   control run surfaced this)
@@ -257,7 +259,7 @@ None yet — standard tier, staging artifacts created when picked up.
 **Domain ruling, 2026-10-07 (rpg-planner, cross-session message in reply to #408).** All 10 step-change anchors are **class (a) pending bisect; domain-owned; deferred to after #407 / SURV-07 / decision 25.**
 - Condition: each anchor is class (a) only if its onset bisects onto a deliberate behaviour PR. NARRATIVE: #90 (wound/scar system, reputation wiring), #98 and #101 (M2 foundational batches). SOCIAL: #144 (dormant mechanisms wired on purpose), #165 (survivor last-known-position fix), #172 (JOIN_PARTY accept path; trust accumulating is the point of that ticket). An onset that lands on a PR that must be behaviour-neutral is **class (b)** and gets its own fix ticket, not a rebaseline. The neutral PRs are #91 (semantic-index carry-forward) and #104 (spatial index), which are performance-only; #95-#97, #99, #100 and #102, which are docs-only; and #146 (dead Doctrine chain removed, test mocks) and #164 (frontmatter, pinning). frontier_marches (bracket starts at #91) and urban_political_seed42_1000t (no attributable onset) need the bisect most.
 - Timing (regression_policy §11, re-measure after related fixes): no rebaseline yet. #407 (eating and sleeping), SURV-07 need escalation and decision 25 (whole-tile movement) will move these same worlds. The rebaselines happen after those three merge, on a fresh measurement at the §9-11 evidence bar.
-- Tickets (rpg-planner owns them): `TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE` is widened to the NARRATIVE family, and a SOCIAL-family twin is to be filed. Each starts with the bisect and the (a)/(b) split. Both are queued for the rpg lanes after the starvation chain. Testing touches no anchor values.
+- Tickets (rpg-planner owns them): `TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE` is widened to the NARRATIVE family, and the SOCIAL-family twin is `TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE` (drafted by rpg-planner 2026-10-07; an rpg lane commits it to `todos/` with its next batch, so it is not on `main` yet). Each starts with the bisect and the (a)/(b) split. Both are queued for the rpg lanes after the starvation chain. Testing touches no anchor values.
 - Known-reds expiry: rpg-planner says 2026-11-15 is acceptable if the gate needs one. Not changed here; the corpus entry's date (2026-11-04) is an owner/planner call, raised with testing-planner.
 
 ## Test Summary
