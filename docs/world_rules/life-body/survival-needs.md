@@ -245,6 +245,48 @@ earlier figures are on base `f8f1b69fd`:
 
 ---
 
+## SURV-07 — A need's pull grows as its consequence approaches, so a subject acts on it in time; only a present threat outranks a pressing need
+
+> A mild need is one wish among many: a slightly hungry worker keeps working. As a need approaches
+> its consequence line (deprivation, starvation, collapse), its pull on the subject's choice grows
+> steeply. Well before the line, it outranks ordinary goals (work, trade, social errands, clearing
+> a blocker), early enough that a subject with a way to meet it (SURV-06) can reach that way
+> before the line. Only a present threat to the subject's life (danger, flight) outranks a
+> pressing need. A need never wins merely by being the subject's current task; it wins by
+> mattering more as it grows.
+
+**Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
+(row 24 of `docs/plans/systemic_world/owner_decision_memo.md`). This states in catalog terms the
+order Bible 04 §1 already declares: Tier 1 Survival (danger, flight), then Tier 2 Biological
+(hunger, sleep, exhaustion), then Tier 3 Social, then Tier 4 Economic. It also makes SURV-06's
+"avoidable by behaviour" a matter of timing: a need that can only win at its line is not avoidable.
+It stays within AGENCY-02, because the escalating pull is still an influence weighed against
+others, not a reflex.
+- **Engineering, not this Rule:** the shape of the curve, how much travel time "in time" allows
+  for, and goal-score magnitudes.
+- **A flat priority for routine work is a calibration smell, not a Rule question.** Rescaling it
+  is tuning, parked by memo row 7, unless it causes a hard bug like the one below.
+- **Alternatives not taken:** one flat scale for needs and goals, where blocker scores are
+  rescaled against needs (it treats an order the Bible already declares as a matter of
+  magnitude); a need overriding everything near its line (it would outrank fleeing a present
+  threat, against Bible 04 §1).
+
+**Repository evidence: CONFLICTING.** Lane A's trace, `crowded_frontier`, seed 42, on #403's tree:
+- `ResolveBlockerScorer` returns a flat 80.0 whenever an unresolved, unsuppressed blocker exists
+  (`src/ai/goals/scorers.py:205-248`), or 95.3 after personality modifiers.
+- `SleepScorer`'s utility is the sleep debt itself (+30 at night), about 50 at t≈450.
+- So a tired subject walking to the inn is pulled away whenever a blocker's suppression expires.
+  A biological need can win only near 80–95, which is close to its consequence line.
+- A separate engineering defect is being fixed: the switch compared a live candidate against the
+  current project's stale, creation-time score.
+- **Tracked:** under `TCK-20261007-EPIC-DECISION-CORE-LIVE-MOTIVATION-AND-HONEST-FIGHT-OR-FLEE-INPUTS`.
+
+**Scenarios:** none traced yet. Two are owed when implemented:
+- a tired worker heading to the inn keeps going when a routine blocker reappears;
+- the same worker, attacked on the way, flees first and sleeps later.
+
+---
+
 ## Repository Findings (significant, cross-referenced)
 
 - **SURV-04's confirmed inert pair** — `last_meal_tick`/`last_sleep_tick` are written on every
@@ -259,6 +301,8 @@ earlier figures are on base `f8f1b69fd`:
   contrast this rule reuses directly
 - SURV-02 → Capacity (LIMIT-02, directly reused), Agency/motivation/decision (the goal-urgency
   content this rule's evidence already touches, owned by that future domain's own content)
+- SURV-07 → Agency/Decision (`agency-decision.md`'s AGENCY-02 and AGENCY-07), Bible 04 §1's goal
+  tiers
 - SURV-06 → Material/Economy (`economy-exchange.md`, buying food; `resources-production.md`,
   harvesting), Settlements (`settlements.md`, the inn as the meal place), Location/Topology
   (`location-topology.md`, "within reach")
