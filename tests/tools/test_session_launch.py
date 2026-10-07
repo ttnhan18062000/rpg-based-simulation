@@ -182,6 +182,20 @@ def test_a_missing_branch_or_no_recorded_branch_is_reported_not_invented(repo, t
     assert not wt.exists()
 
 
+def test_a_recorded_branch_already_merged_into_origin_main_is_not_used_to_recreate_the_worktree(repo, tmp_path):
+    """Launcher fix C: a spent (merged) branch is reported, not recreated."""
+    git(repo, "branch", "spent")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    wt = tmp_path / "wt"
+    notes = ln.ensure_worktree(wt, "spent", repo)
+    assert any("is merged into origin/main" in n and "create the worktree from origin/main yourself" in n for n in notes)
+    assert not wt.exists()
+    git(repo, "checkout", "-q", "-b", "live")
+    (repo / "g").write_text("new\n"); git(repo, "add", "-A"); git(repo, "commit", "-q", "-m", "ahead")
+    git(repo, "checkout", "-q", "main")
+    assert any("recreated" in n for n in ln.ensure_worktree(tmp_path / "wt2", "live", repo))
+
+
 def test_dry_run_self_heal_changes_nothing(repo, tmp_path):
     git(repo, "branch", "work")
     wt = tmp_path / "wt"
@@ -210,6 +224,20 @@ def test_candidates_are_found_by_custom_title_across_project_dirs_newest_first(t
     assert [t.session_id for t in got] == ["s-new", "s-old"]
     assert ln.find_transcript("s-new", pdir).path.parent.name == "-proj-b-other-cwd"
     assert ln.find_transcript("nope", pdir) is None
+
+
+def test_a_transcript_titled_with_the_legacy_session_name_is_a_candidate_of_the_first_instance(tmp_path):
+    """Launcher fix A: a live seat titled before instance-id naming is not reported ORPHANED with 0 candidates."""
+    role = ROSTER.role("rpg-planner")
+    assert role.legacy_session_name and role.legacy_session_name != role.role
+    pdir = tmp_path / "projects"
+    _transcript(pdir, "-proj-a", "s-legacy", role.legacy_session_name, age=10)
+    _transcript(pdir, "-proj-a", "s-else", "someone-else", age=1)
+    first = ln.Target(role, role.role)
+    assert ln.candidate_titles(first) == (role.role, role.legacy_session_name)
+    assert [t.session_id for t in ln.find_transcripts(ln.candidate_titles(first), pdir)] == ["s-legacy"]
+    # a second instance never claims the first instance's legacy-titled history
+    assert ln.candidate_titles(ln.Target(ROSTER.role("rpg-implementer"), "rpg-implementer-2")) == ("rpg-implementer-2",)
 
 
 def test_replace_never_deletes_a_transcript_and_resume_is_by_session_id(repo, tmp_path):
@@ -291,6 +319,16 @@ def test_dry_run_from_a_secondary_worktree_sees_the_main_checkout_note(repo, sea
     assert ln.main([ROLE, "--dry-run", "--worktree", str(seat_worktree)], root=seat_worktree) == 0
     assert "no handover note yet" not in capsys.readouterr().out
     assert not (seat_worktree / ".claude" / "handover").exists()
+
+
+def test_dry_run_prints_where_the_handover_note_is_read_from(repo, seat_worktree, monkeypatch, capsys):
+    """Launcher fix B: the note is read from the main checkout; the dry run says so, with the absolute path."""
+    note = repo / ROLE_HANDOVER
+    note.parent.mkdir(parents=True)
+    note.write_text("# Handover\n")
+    monkeypatch.setattr(os, "execvpe", lambda *a, **k: pytest.fail("must not exec in a dry run"))
+    assert ln.main([ROLE, "--dry-run", "--worktree", str(seat_worktree)], root=seat_worktree) == 0
+    assert f"handover note: {note}" in capsys.readouterr().out
 
 
 def test_real_launch_from_a_secondary_worktree_writes_no_stub_there(repo, seat_worktree, monkeypatch):
