@@ -61,6 +61,7 @@ Reported by `rpg-feature-planning` from `test-architecture-reviewer`: `tests/int
 - `TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK`
 - `TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE`
 - `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`
+- `TCK-20261007-SAFETY-DISPOSITION-TRIGGERS-RETREAT-ON-SIGHT-AGENCY-07` (the SAFETY_PRESSURE_RETREAT finding; this test still fails, 2 of 3 attempts)
 
 ## Related Docs
 - `docs/engine/kernel.md` (Sticky-Task Law); `docs/guidelines/intentional_divergences.md` (2.70 notes incidental opportunity-attack volume as unexplained).
