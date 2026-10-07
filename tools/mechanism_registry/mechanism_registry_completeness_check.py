@@ -103,6 +103,11 @@ EXCLUSIONS = {
         "feature_flags.py only -- the flag-gating infrastructure itself, referenced constantly "
         "by name throughout the registry as ENABLE_*. Infrastructure."
     ),
+    "systems/strategic_systems/town_targeting": (
+        "A 20-line pure spatial helper (`nearest_town_tile`) used by the strategic pass and "
+        "redirection to pick the closest town tile. A geometry utility, not a gameplay mechanism "
+        "(rpg-feature-planning, row 7 (b), 2026-10-07)."
+    ),
     "systems/strategic_systems/cognition_export": (
         "Its own module docstring: 'Read-Only Presenter... exposes persisted strategic state for "
         "debugging and visualization without becoming the source of truth.' A debug/presenter "
