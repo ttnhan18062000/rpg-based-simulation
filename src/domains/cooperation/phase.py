@@ -7,14 +7,16 @@ Phase 7 — CooperationPhase bounded execution.
 from __future__ import annotations
 import time
 from dataclasses import replace
-from src.core.state import AuthoritativeState
+from src.core.state import AuthoritativeState, EntityState
 from src.core.strategic import ContractStatus
 from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate, SocialUpdate, SocialBondUpdate
 from src.domains.cooperation.evaluators import HelpNeedEvaluator, PartnerFitEvaluator
 from src.domains.cooperation.providers import PartnerCandidateProvider, CandidateBudget
 from src.domains.cooperation.postures import CooperationPosture
 from src.domains.cooperation.services import (
+    CooperationDecisionResult,
     CooperationDecisionService,
+    build_pending_offer_index,
     CooperationIntentBridge,
     PartyObjectiveAlignmentService,
     PartyCohesionService,
@@ -27,6 +29,38 @@ from src.domains.cooperation.events import (
     PartnerRejectedEvent,
     CooperationDecisionSelectedEvent
 )
+
+def _record_decision_events(entity: EntityState, decision: CooperationDecisionResult, tick: int) -> None:
+    """Append the decision, selected-partner and rejected-partner events to the entity's timeline."""
+    entity_id = entity.id
+    entity.timeline.append(CooperationDecisionSelectedEvent(
+        entity_id=entity_id,
+        tick=tick,
+        posture=decision.selected_posture,
+        partner_id=decision.selected_partner_id,
+        reason=decision.trace.get("reason", "Cooperation strategy chosen")
+    ))
+
+    if decision.selected_partner_id:
+        entity.timeline.append(PartnerSelectedEvent(
+            entity_id=entity_id,
+            tick=tick,
+            partner_id=decision.selected_partner_id,
+            posture=decision.selected_posture,
+            fit_score=decision.fit_score,
+            reason="Best fit score among candidates"
+        ))
+
+    for rej_id, rej_reason in decision.rejected_partners.items():
+        entity.timeline.append(PartnerRejectedEvent(
+            entity_id=entity_id,
+            tick=tick,
+            candidate_id=rej_id,
+            reason=rej_reason,
+            fit_score=0.0,
+            trust_score=0.0
+        ))
+
 
 class CooperationPhase:
     """
@@ -52,6 +86,9 @@ class CooperationPhase:
         
         evaluation_count = 0
         t_start = time.perf_counter_ns()
+        # Built once per tick: offers live on the offering entity's own contracts, and nothing in this loop changes a
+        # contract (every change is deferred into the returned update), so one index serves every entity below.
+        pending_offers = build_pending_offer_index(state)
         
         # Scoped evaluation per tick
         for entity_id, entity in state.entities.items():
@@ -79,7 +116,7 @@ class CooperationPhase:
             # need of its own must still be evaluated when another entity has a pending
             # recruitment offer addressed to it -- otherwise it would never get the chance to
             # accept regardless of what CooperationDecisionService.select() would decide.
-            pending_offer = CooperationDecisionService.find_pending_incoming_offer(entity, state)
+            pending_offer = CooperationDecisionService.find_pending_incoming_offer(entity, state, pending_offers)
 
             # Skip provider scanning if no help needs detected and no active party logic to process
             if not help_needs and entity.identity.group_id is None and pending_offer is None:
@@ -99,37 +136,16 @@ class CooperationPhase:
                     fit_reports.append(rep)
                     
             # 4. Choose cooperation posture
-            decision = CooperationDecisionService.select(entity, help_needs, candidates, tuple(fit_reports), state)
-            
+            if pending_offer is not None:
+                decision = CooperationDecisionService.accept_pending_offer(entity, pending_offer)
+            else:
+                decision = CooperationDecisionService.select_for_own_needs(
+                    entity, help_needs, candidates, tuple(fit_reports), state
+                )
+
             # Emit decision select events only when timeline budget permits
             if len(entity.timeline) < 150:
-                entity.timeline.append(CooperationDecisionSelectedEvent(
-                    entity_id=entity_id,
-                    tick=state.tick,
-                    posture=decision.selected_posture,
-                    partner_id=decision.selected_partner_id,
-                    reason=decision.trace.get("reason", "Cooperation strategy chosen")
-                ))
-                
-                if decision.selected_partner_id:
-                    entity.timeline.append(PartnerSelectedEvent(
-                        entity_id=entity_id,
-                        tick=state.tick,
-                        partner_id=decision.selected_partner_id,
-                        posture=decision.selected_posture,
-                        fit_score=decision.fit_score,
-                        reason="Best fit score among candidates"
-                    ))
-                
-                for rej_id, rej_reason in decision.rejected_partners.items():
-                    entity.timeline.append(PartnerRejectedEvent(
-                        entity_id=entity_id,
-                        tick=state.tick,
-                        candidate_id=rej_id,
-                        reason=rej_reason,
-                        fit_score=0.0,
-                        trust_score=0.0
-                    ))
+                _record_decision_events(entity, decision, state.tick)
 
             # 5. Map cooperation posture to safe contract intent / blockers
             resolved_up = CooperationIntentBridge.map_decision(entity, decision, state)
