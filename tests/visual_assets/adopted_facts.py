@@ -7,7 +7,7 @@ adoption, a revocation), these facts change in the same commit as that decision,
 
 Two owner decisions are recorded: `terrain-v1` (2026-10-05T18:17:03Z, 31 sources next to the pilot forest's three) and `icons-key-v1` (2026-10-06T15:21:47Z, 14 icon sources). `TERRAIN_ERA_SOURCES` is
 the 34 of the first, `ICON_SOURCES` the 14 of the second and `ADOPTED_SOURCES` everything the catalog holds (48). `build` and `release` have covered only the 34 terrain-era sources: no artifact and no
-release candidate covers an icon slot (rc-0006 has 34 entries; the icon keys are `optional: true`).
+release candidate covers an icon slot (rc-0006 and rc-0007 have 34 entries; the icon keys are `optional: true`).
 """
 
 from __future__ import annotations
@@ -48,6 +48,6 @@ ADOPTION_COUNT = 48
 INTAKE_FILE_COUNT = 96
 assert (len(ADOPTED_SOURCES), ADOPTION_COUNT, INTAKE_FILE_COUNT) == (48, 48, 2 * 48)
 # `build` and `release` (TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN, approved by the user on 2026-10-06): one generated artifact directory per adopted source, and the candidate pilot/rc-0005 holds all 34 slots.
-# rc-0004 still holds the forest's three slots only. rc-0006 (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, approved by the user on 2026-10-06) is rc-0005's 34 slots on the registry that added the 14 `icon.*` keys.
+# rc-0004 still holds the forest's three slots only. rc-0006 (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, approved by the user on 2026-10-06) is rc-0005's 34 slots on the registry that added the 14 `icon.*` keys; rc-0007 (`TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC`, approved by the user on 2026-10-07) is the same 34 slots on the registry that added the 22 icon set v2 keys.
 GENERATED = sorted(f"{source}--x1" for source in TERRAIN_ERA_SOURCES)  # no icon has been built yet
-RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json", "rc-0005.json", "rc-0006.json"]
+RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json", "rc-0005.json", "rc-0006.json", "rc-0007.json"]

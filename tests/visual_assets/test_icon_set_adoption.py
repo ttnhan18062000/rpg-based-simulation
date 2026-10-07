@@ -30,7 +30,9 @@ def test_each_icon_source_is_in_the_catalog_with_its_own_source_and_the_icon_key
     sources = sorted(p.name for p in (config.CATALOG_ROOT / "sources").iterdir() if p.name != ".gitkeep")
     assert [s for s in sources if s.startswith("icon_")] == af.ICON_SOURCES
     registry = load_registry()
-    icon_keys = sorted(k for k in registry.keys if k.startswith("icon."))
+    from tests.visual_assets import icon_v2_keys as v2
+
+    icon_keys = sorted(k for k in registry.keys if k.startswith("icon.") and k not in v2.KEYS)  # the 22 v2 keys are registered, not adopted
     assert [k.replace(".", "_") for k in icon_keys] == af.ICON_SOURCES
     assert all(registry.keys[k].optional and registry.keys[k].variant_axes == () for k in icon_keys)  # nothing requires them: a missing image leaves today's fallback
 
