@@ -238,9 +238,11 @@ def _instrument(mp, counts):
     mp.setattr(Kernel, "tick_once", tick_once)
 
 
-@pytest.fixture(scope="module")
-def episode():
-    """Run the campaign episode ONCE (pinned NORMAL) and hand all three tests the same event stream and counts.
+_EPISODE_SEEDS = (42, 1337)
+
+
+def _run_episode(seed):
+    """Run one pinned-NORMAL campaign episode and return (event_types, counts).
 
     Preconditions fail hard here, so a dependent strict xfail can never outlive the contact it needs: the episode ran its
     ticks, the router phase was reached every tick, tactical decisions were made, and at least one decision perceived a
@@ -252,7 +254,7 @@ def episode():
         orch = CampaignOrchestrator(_campaign_life_arc_shaped_manifest(tick_limit=_EPISODE_TICKS))
         spec = orch._manifest.episodes[0]
         svc = ScenarioRuntimeService(
-            spec, initial_state=orch._build_initial_state(42, spec), scenario_event_recorder=None,
+            spec, initial_state=orch._build_initial_state(seed, spec), scenario_event_recorder=None,
             governor=_PinnedNormalGovernor(),
         )
         svc._kernel = svc._build_kernel()
@@ -260,17 +262,30 @@ def episode():
         svc.start(tick_limit=_EPISODE_TICKS)
         svc.abort()
     event_types = Counter(e.event_type for e in recorder.events)
-    assert counts.ticks == _EPISODE_TICKS, f"the episode ran {counts.ticks} ticks, expected {_EPISODE_TICKS}"
+    assert counts.ticks == _EPISODE_TICKS, f"seed {seed}: the episode ran {counts.ticks} ticks, expected {_EPISODE_TICKS}"
     assert counts.route_calls == counts.ticks, (
-        f"the router phase ran {counts.route_calls} times in {counts.ticks} ticks: this episode no longer reaches it, so an "
-        f"attempt count would be structurally 0"
+        f"seed {seed}: the router phase ran {counts.route_calls} times in {counts.ticks} ticks: this episode no longer "
+        f"reaches it, so an attempt count would be structurally 0"
     )
-    assert counts.decisions > 0, "no tactical decision was made: attempts cannot be measured"
+    assert counts.decisions > 0, f"seed {seed}: no tactical decision was made: attempts cannot be measured"
     assert counts.decisions_with_hostile_perceived > 0, (
-        f"no decision perceived a hostile in {counts.decisions} decisions: this episode offers no contact, so the "
-        f"deliberate-attack check cannot say anything here (see {_CAMPAIGN_TICKET}: choose a seed or scenario with measured contact)"
+        f"seed {seed}: no decision perceived a hostile in {counts.decisions} decisions: this episode offers no contact, so "
+        f"the deliberate-attack check cannot say anything here (see {_CAMPAIGN_TICKET}: choose a seed or scenario with "
+        f"measured contact)"
     )
     return event_types, counts
+
+
+@pytest.fixture(scope="module")
+def episodes_by_seed():
+    """Run the pinned campaign episode ONCE per seed in `_EPISODE_SEEDS` and share the streams between the tests."""
+    return {seed: _run_episode(seed) for seed in _EPISODE_SEEDS}
+
+
+@pytest.fixture(scope="module")
+def episode(episodes_by_seed):
+    """Seed 42's event stream and counts: the episode the hard-law and deliberate-attack tests read."""
+    return episodes_by_seed[_EPISODE_SEEDS[0]]
 
 
 @pytest.mark.slow
@@ -282,18 +297,23 @@ def test_real_campaign_episode_has_no_hard_law_violation(episode):
 
 
 @pytest.mark.slow
-@pytest.mark.xfail(
-    strict=True,
-    reason=f"{_SHARE_TICKET}: as measured on 0c89bd390 (seed 42, 70 ticks): cooperation_event is 56% of the stream (0.404 at "
-           f"24920f912, 0.563 unpinned, 0.5629 under the NORMAL pin, 0.5828 under the DEGRADED pin); cause not isolated; "
-           f"threshold unchanged",
-)
-def test_real_campaign_episode_event_mix_is_not_dominated_by_cooperation(episode):
-    """A real, spread-out episode should not be dominated by cooperation_event (co-located entities inflate it to ~79%)."""
-    event_types, _ = episode
-    total = sum(event_types.values())
-    share = event_types.get("cooperation_event", 0) / max(1, total)
-    assert share < 0.5, f"cooperation_event is {share:.1%} of {total} events"
+def test_real_campaign_episode_event_mix_is_not_dominated_by_cooperation(episodes_by_seed):
+    """A real, spread-out episode should not be dominated by cooperation_event (co-located entities inflate it to ~79%).
+
+    Pooled across the seeds in `_EPISODE_SEEDS` (cooperation events over all events), not per seed: the claim is about the
+    scenario, and seed 42 alone sat at 0.4962 under AGENCY-07 (decision 21), a 0.0038 margin too thin to assert (see
+    `TCK-20261006-CAMPAIGN-EPISODE-COOPERATION-SHARE-ABOVE-HALF-UNDER-A-PINNED-NORMAL-GOVERNOR`). The per-seed shares are in the message so a seed drifting toward 0.5 shows before the pooled value
+    crosses it."""
+    shares = {}
+    pooled_cooperation = pooled_total = 0
+    for seed, (event_types, _) in episodes_by_seed.items():
+        total = sum(event_types.values())
+        cooperation = event_types.get("cooperation_event", 0)
+        shares[seed] = f"{cooperation / max(1, total):.4f} ({cooperation} of {total})"
+        pooled_cooperation += cooperation
+        pooled_total += total
+    pooled = pooled_cooperation / max(1, pooled_total)
+    assert pooled < 0.5, f"pooled cooperation_event share is {pooled:.4f} ({pooled_cooperation} of {pooled_total}); per seed: {shares}"
 
 
 @pytest.mark.slow

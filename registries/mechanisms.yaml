@@ -193,6 +193,8 @@ mechanisms:
     state: done
     implemented_by:
       - src/engine/tactical.py::TacticalDecisionSystem
+      - src/engine/tactical_threat.py::present_threat_terms
+      - src/engine/tactical_threat.py::safety_retreat_warranted
       - src/world/motivation/pressure_resolver.py::MotivationPressureResolver
     verified:
       instrument: corpus_run
