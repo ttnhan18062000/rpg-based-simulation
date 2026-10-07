@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
-phase: open
+phase: done
 date: 2026-10-06
 tags: [testing, investigation]
 ---
@@ -15,7 +15,7 @@ tags: [testing, investigation]
 Triage and route the 8 `Slow regression` step-6 failures unmasked by the `!cancelled()` gate fix
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -55,10 +55,10 @@ Each is "assigned, ticket pending" until the owning lane sends its ticket id.
 Fixing any of the 8 failures, updating baselines, changing budgets or the job timeout, and the step-5 anchor drift (parked under TCK-20260822).
 
 ## Acceptance Criteria
-- [ ] Each of the 8 failures is reproduced or explained, with evidence (run/job ids), and its bracket (green 2026-08-26, red 2026-10-06) narrowed where cheap (7 of 8 bracketed green 2026-08-26 → red 2026-10-06; item 3 by Lane A's bisect, first bad #175).
-- [ ] Each is routed to an owner by name; any domain/rule question goes to rpg-feature-planning first, not ruled on here.
-- [ ] Items 5–8 are classified perf regression vs budget, and the missing `timeout-minutes` is recorded as a finding (no change made here).
-- [ ] The routed-ticket ids (or an explicit owner decision to accept) are recorded here.
+- [x] Each of the 8 failures is reproduced or explained, with evidence (run/job ids), and its bracket (green 2026-08-26, red 2026-10-06) narrowed where cheap (7 of 8 bracketed green 2026-08-26 → red 2026-10-06; item 3 by Lane A's bisect, first bad #175). Evidence per row in the Routing Status table and the closure check below.
+- [x] Each is routed to an owner by name; any domain/rule question goes to rpg-feature-planning first, not ruled on here. Rows 1, 2, 5–8: `rpg-implementer-2` (Lane B) and `rpg-implementer` (Lane A), routed by rpg-feature-planning; row 3: Lane A; row 4: test architecture.
+- [x] Items 5–8 are classified perf regression vs budget, and the missing `timeout-minutes` is recorded as a finding (no change made here). Classified a real engine regression (two bisected steps); the finding is in the Request Summary and Scope item 5–8 (the job later gained `timeout-minutes: 240` under `TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED`'s reporting path, not here).
+- [x] The routed-ticket ids (or an explicit owner decision to accept) are recorded here. All seven routed ids are on `main` (closure check below); the perf-bench rows also carry the owner's 2026-10-07 allowance.
 - [x] Item 4's fix is filed as `TCK-20261006-MILESTONE-B-GATE-FAKE-CLOCK-COUNTS-CALLS-NOT-TIME` (testing, P2) in the next batch (not this one, unless the owner wants it here).
 
 ## Related Tickets
@@ -80,13 +80,25 @@ Fixing any of the 8 failures, updating baselines, changing budgets or the job ti
 - Whether the owner wants the job to keep running a 1h37m red step 6 on every main push.
 
 ## Implementation Notes
-None yet.
+**Closure check, 2026-10-07 (testing-implementer, read from `origin/main` 6e7ef56ec and issue #390).**
+
+| # | Routed ticket | On `main` | State on `main` |
+|---|---|---|---|
+| 1 | `TCK-20261006-BEHAVIORAL-5K-REGRESSION-URBAN-POLITICAL-DRIFTED-FROM-THE-2026-08-19-BASELINE-ATTRIBUTE-EACH-METRIC` | yes, `todos/` (landed with #386) | still red in #390; mapped in `slow_known_reds.yaml`, owner `rpg-implementer-2`, expires 2026-10-21 |
+| 2 | `TCK-20261006-TWO-WORLD-INTEGRATION-TESTS-FAIL-ON-MAIN-PH9-ASSERTS-A-BOSS-AND-TRAUMA-LONG-RUN-HITS-THE-60S-LIMIT` | yes, `todos/` (landed with #386) | still red in #390; mapped, owner `rpg-implementer-2`, expires 2026-10-21 |
+| 3 | `TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-BECAUSE-NO-DELIBERATE-ATTACK-ONLY-OPPORTUNITY-ATTACKS` | yes, `todos/`; test split by #367 (37a020b6e) | green: not in #390's failing set (run 37551894246) |
+| 4 | `TCK-20261006-MILESTONE-B-GATE-FAKE-CLOCK-COUNTS-CALLS-NOT-TIME` | yes, `done/`, #373 (7daef8075) | green: not in #390's failing set |
+| 5–8 | `TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK` | yes, `done/`, #394 (56cfd0410) | first step fixed; `test_perf_combat[500]` now passes (stale mapping removed by #396) |
+| 5–8 | `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP` | yes, `todos/` | movement, passive_scaling and strategic still red in #390; mapped, owner `rpg-implementer-2`, expires 2026-12-31 by owner direction 2026-10-07 (perf reds allowed during core RPG + perf core implementation) |
+
+Every row has a ticket id on `main` and a named owner, so the routing is complete. The remaining reds are each owned through `tools/test_architecture/slow_known_reds.yaml`, and the rolling issue #390 reports any change to the set. That is where they are followed from now on; this ticket closes on routing, not on the fixes (Out of Scope).
 
 ## Test Summary
-None yet.
+No code or test change; triage and routing only. Verification is the live `Slow regression` run 37551894246 (schedule, head bc4f7553c, report step success), whose failing set in issue #390 is 12 corpus anchors (step 5, owned by `TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED`) plus 5 step-6 tests (5k, ph9, movement, passive_scaling, strategic), all mapped, none UNOWNED.
 
 ## Files Changed
-None yet.
+- `agent-working/tickets/done/TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX.md` (this ticket)
+- `agent-working/stored_artifacts/TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX/` (`plan.md`, `investigation.md`, `test_plan.md`)
 
 ## Completion Summary
-None yet.
+The 8 step-6 reds unmasked by #360 were each explained with run evidence, bracketed where cheap, and routed to a named owner with a ticket on `main`. Three are fixed (rows 3 and 4 by #367 and #373; `test_perf_combat[500]` after #394). Five are still red and owned: 5k and ph9 (Lane B, expire 2026-10-21) and three perf benches (Lane B's combat-engagement step, allowed until 2026-12-31 by the owner). No fix, baseline, budget or timeout was changed here.
