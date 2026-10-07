@@ -28,6 +28,11 @@ repair
 P1
 
 ## Request Summary
+> **RE-SCOPED 2026-10-07, rpg-feature-planning. The design question below is answered.**
+> - **The rule:** world-rule-catalog-design ruled under the owner's delegation (memo row 22, catalog **SURV-05**) that biological needs follow the kind's catalog need_profile. A kind whose hunger is `none` never becomes hungry, and accumulation rates differ wherever the profiles differ. So `apply.py:90-91`'s uniform constants violate a rule, which makes this a repair, not a design question.
+> - **Lane A's measurement on main `f8f1b69fd`:** every survivor in frontier_living_world is at hunger exactly 50.0 at t=500, with no eating or sleeping. The starvation line (`apply.py:100`, 95) is reached around t≈950 by everyone together. If that synchronised starvation is confirmed, this is a row-7 hard bug.
+> - **Ownership:** child 1 of `TCK-20261007-EPIC-DECISION-CORE-LIVE-MOTIVATION-AND-HONEST-FIGHT-OR-FLEE-INPUTS`, owned by Lane B (body). Measure before and after on one tree. Vitality and endurance modulation (this ticket's original question) is a follow-on, not part of the repair.
+
 Found while investigating `attributes_biology` as the priority candidate for the value-
 differential instrument's horizon rule
 (`TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT`, waves 4). The mechanism was
