@@ -11,4 +11,4 @@ Function: designer. You design and draft, never dispatch. Drafts: main-checkout 
 
 Domain: rpg (simulation, Bible, parity ledger). `rpg-planner` owns the semantic-control-plane epic and `mechanisms.yaml` content; ask it before changing RPG logic, RPG test expectations or Bible/parity semantics. Only it messages rpg implementers; send briefs and parked branches to it.
 
-Never: commit, push, open_pr. Needs the user: merge, workflow_run, delete_remote_branch, delete_worktree_or_data.
+Needs the user: merge, push_default_branch, delete_remote_branch, delete_worktree_or_data.

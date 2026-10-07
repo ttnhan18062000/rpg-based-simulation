@@ -7,13 +7,13 @@ adds the part that depends on WHO is calling: the caller's role (from the sessio
 function's authority (`registries/session_authority.yaml`) and the worktree's writer lease.
 
 Decision, per action, most severe wins (deny > ask > allow):
-  1. the role's function lists the action as `forbidden`          -> deny
+  1. the role's function lists the action as `forbidden` (empty for every function since 2026-10-07) -> deny
   2. commit/push/open_pr in a worktree whose writer lease belongs to ANOTHER role -> deny. No lease at all is not
      a reason to ask (TCK-20261006-GUARD-OWN-BRANCH-GIT-ALLOWED): sessions started outside the role launcher
      never get one
   3. the action is in `needs_user`: merge, a push to the default branch (`push_default_branch`, from an explicit
      refspec or, for a bare `git push`, the cwd's current branch) and remote-branch deletion are ask for every role
-     (a grant never overrides them); `workflow_run` and `delete_worktree_or_data` ask unless a grant covers them.
+     (a grant never overrides them); `delete_worktree_or_data` asks unless a grant covers it.
      Owner rule, 2026-10-07 ("Drop all but critical"): the guard asks only about those critical actions. A commit on
      the default branch, governing-file and authority-file edits and an uncertain commit are allowed (governing
      files are protected by review and PR merge). Owner rule, 2026-10-06: "only block the merge branch to main,
@@ -67,9 +67,10 @@ except Exception as _exc:  # noqa: BLE001 - a broken import must become a caught
 DENY, ASK = "deny", "ask"
 # Needing the user always wins over a grant (plan section 10).
 _ALWAYS_ASK = frozenset({"merge", "push_default_branch", "delete_remote_branch"})
-# The only actions the guard asks about (owner, 2026-10-07): `workflow_run` and `delete_worktree_or_data` come from a
-# function's `needs_user`; `workflow_run` is CLAUDE.md's explicit opt-in.
-_CRITICAL = _ALWAYS_ASK | frozenset({"workflow_run", "delete_worktree_or_data"})
+# The only actions the guard asks about (owner, 2026-10-07): `delete_worktree_or_data` comes from a function's
+# `needs_user`. `workflow_run` is not critical (owner correction, 2026-10-07; classify.py never emits it, and
+# settings.json's own `ask: ["Workflow"]` is untouched).
+_CRITICAL = _ALWAYS_ASK | frozenset({"delete_worktree_or_data"})
 _UNCERTAIN_ASKS = frozenset({"push", "merge", "delete_remote_branch"})
 # Residual fail-closed (planner, 2026-10-07): an UNCERTAIN command (shell indirection, unparseable text) whose raw text
 # names a critical operation still asks even when no action could be parsed out of it. Deliberately narrow: no
@@ -203,7 +204,7 @@ def decide(classification, caller: Caller, authority, lease_role: str | None, le
 
     for action in actions:
         if action in forbidden:
-            return DENY, f"{caller.role_id} ({caller.function}) must not {action}: it hands drafts to the implementer"
+            return DENY, f"{caller.role_id} ({caller.function}) must not {action}: `forbidden` for this function in session_authority.yaml"
     for action in actions:
         if action in _WRITER_ACTIONS and lease_found and lease_role != caller.instance:
             return DENY, f"{action} refused: this worktree's writer is {lease_role}, not {caller.instance}"

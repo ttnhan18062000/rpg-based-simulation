@@ -37,9 +37,30 @@ def _decide(command, role_id, lease_role=None, lease_found=True, tool="Bash", to
 
 @pytest.mark.parametrize("role_id", ["rpg-designer", "agent-working-planner", "testing-planner"])
 @pytest.mark.parametrize("command", ["git commit -m x", "git push origin b", "gh pr create --title t"])
-def test_designers_and_planners_are_denied_commit_push_and_open_pr(role_id, command):
+def test_designers_and_planners_may_commit_push_and_open_pr_with_no_lease_or_their_own(role_id, command):
+    """Owner, 2026-10-07: nothing is forbidden by function; only the writer lease and the critical asks remain."""
+    assert _decide(command, role_id, lease_found=False)[0] is None
+    assert _decide(command, role_id, lease_role=role_id, lease_found=True)[0] is None
+
+
+@pytest.mark.parametrize("role_id", ["rpg-designer", "agent-working-planner", "testing-planner"])
+@pytest.mark.parametrize("command", ["git commit -m x", "git push origin b", "gh pr create --title t"])
+def test_designers_and_planners_are_still_denied_by_another_roles_writer_lease(role_id, command):
     decision, reason = _decide(command, role_id, lease_role="rpg-implementer")
-    assert decision == guard.DENY and "must not" in reason
+    assert decision == guard.DENY and "writer is rpg-implementer" in reason
+
+
+def test_a_function_forbidden_action_is_still_denied_when_the_data_lists_one():
+    fa = AUTHORITY.for_function("planner")
+    forbidden = type(fa)(**{**fa.__dict__, "forbidden": ("commit",)}) if hasattr(fa, "__dict__") else None
+    if forbidden is None:
+        pytest.skip("function authority is not a plain dataclass")
+    class _Auth:
+        def for_function(self, _f): return forbidden
+        def grants_for(self, _r): return []
+    c = classify("Bash", {"command": "git commit -m x"})
+    decision, reason = guard.decide(c, _caller("agent-working-planner"), _Auth(), None, False, False, "git commit -m x")
+    assert decision == guard.DENY and "must not commit" in reason
 
 
 def test_non_writer_implementer_is_denied():
@@ -107,7 +128,7 @@ def test_critical_only_policy_a_commit_on_main_and_an_uncertain_commit_are_allow
     assert _decide('bash -c "git commit -m x"', "rpg-implementer", lease_role="rpg-implementer")[0] is None
     assert _decide("git push origin main", "rpg-implementer", lease_role="rpg-implementer")[0] == guard.ASK
     assert _decide("gh pr merge 1", "rpg-implementer", lease_role="rpg-implementer")[0] == guard.ASK
-    assert _decide("git commit -m x", "rpg-planner", lease_role="rpg-implementer")[0] == guard.DENY
+    assert _decide("git commit -m x", "rpg-planner", lease_role="rpg-implementer")[0] == guard.DENY  # the lease
 
 
 @pytest.mark.parametrize("command,expected", [
@@ -129,7 +150,7 @@ def test_another_roles_lease_still_denies_on_a_feature_branch():
 
 
 def test_unchanged_rules_still_hold_on_a_feature_branch():
-    assert _decide("git commit -m x", "rpg-designer", lease_role="rpg-implementer")[0] == guard.DENY
+    assert _decide("git commit -m x", "rpg-designer", lease_role="rpg-implementer")[0] == guard.DENY  # the lease
     assert _decide("git push origin --delete old", "rpg-implementer", lease_found=False)[0] == guard.ASK
     assert _decide("bash -c 'git push'", "rpg-implementer", lease_found=False)[0] == guard.ASK
     assert _decide("", "rpg-implementer", tool="Edit", tool_input={"file_path": ".claude/settings.json"})[0] is None
