@@ -20,7 +20,7 @@ tags: [simulation-quality, progression]
 - `CoreActions` REST only changed `rest_pressure`.
 
 ## Measured funnel (frontier_living_world, seed 42, audit_mode; probes/)
-Before (main 1e0ad4988, includes #403) -> after: alive at t=1100 3 -> 8 (undead/spirits no longer hunger). crowded_frontier identical. With Lane A #404 merged in a throwaway tree: hunger projects now target the inn (85-173 active per 100 ticks) but `CoreActions.execute_survival` is never called in 1000 ticks: the current project is STABILIZE/RESOLVE_BLOCKER until hunger is ~100 (decision-side arbitration, Lane A).
+Before (main 7a39acc5d, includes #403-#406) -> after: alive at t=1100 3 -> 10, starvation deaths 33 -> 27, eat events 0 -> 24, sleep events 0 -> 17 (undead/spirits no longer hunger; the inn serves meals beside it; rough rest recovers sleep debt). crowded_frontier and urban_political 5k identical. On the earlier base (main 0647a2eeb plus a throwaway #404 merge) eat and sleep were still 0 because arbitration picked hunger only near 100; with #404 and #406 on main some entities now reach the inn in time. Most people still starve at about t=1000 (decision-side, SURV-07).
 
 ## Not done here
 Compiled-subject profile assignment (child 2, Lane A); shop/blacksmith (separate ticket); the rough-sleep decision (Lane A).
