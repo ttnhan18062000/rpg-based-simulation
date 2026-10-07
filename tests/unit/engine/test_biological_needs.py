@@ -48,7 +48,7 @@ def test_kinds_with_different_profiles_build_needs_at_different_rates(catalog):
     wolf = need_rates(_entity(role=EntityRole.MONSTER, species_id="wolf"))
     human = need_rates(_entity(species_id="human"))
     assert wolf[0] > human[0]  # carnivore hunger is high
-    assert wolf[1] == 0.0      # carnivore_survival declares no sleep need
+    assert wolf[1] == pytest.approx(0.05)  # carnivore_survival declares sleep: medium (content gap closed 2026-10-07)
 
 
 def test_explicit_need_profile_overrides_species(catalog):
@@ -118,3 +118,46 @@ def test_need_path_report_flags_a_hungry_kind_in_a_world_with_no_inn(catalog):
     (row,) = need_path_report(state, catalog)
     assert row["kind"] == "human" and row["hunger_path"] is False
     assert row["advisory"] == "hungers but the world has no inn"
+
+
+@pytest.mark.parametrize("species", ["undead", "spirit", "elemental"])
+def test_hungerless_kinds_declare_sleep_none_explicitly(catalog, species):
+    if catalog.get_species(species) is None:
+        pytest.skip("species not in catalog")
+    profile = catalog.get_need_profile(catalog.get_species(species).need_profile)
+    assert profile.needs["sleep"] == "none" and need_rates(_entity(role=EntityRole.MONSTER, species_id=species)) == (0.0, 0.0)
+
+
+def test_every_catalog_need_profile_declares_each_modelled_biological_need(catalog):
+    from src.content.schema import MODELLED_BIOLOGICAL_NEEDS
+    missing = [(pid, k) for pid, p in catalog.need_profiles.items() for k in MODELLED_BIOLOGICAL_NEEDS if k not in p.needs]
+    assert missing == []
+
+
+def test_validator_reports_an_absent_modelled_need_and_the_corpus_has_none(catalog):
+    from src.content.schema import NeedProfileDefinition
+    from src.content.validator import need_profile_gap_issues
+    issues = need_profile_gap_issues(catalog)
+    assert [i for i in issues if i.rule_id == "CAT-NEED-001"] == []
+    catalog.need_profiles["gap_probe"] = NeedProfileDefinition(id="gap_probe", display_name="Gap", needs={"hunger": "low"})
+    try:
+        issues = need_profile_gap_issues(catalog)
+    finally:
+        del catalog.need_profiles["gap_probe"]
+    assert [(i.rule_id, i.target_id) for i in issues] == [("CAT-NEED-001", "gap_probe")]
+
+
+def test_absent_need_key_is_recorded_when_it_fires_and_never_on_the_corpus(catalog):
+    from src.content.schema import NeedProfileDefinition
+    from src.engine import biological_needs as bn
+    bn.ABSENT_NEED_KEY_FIRINGS.clear()
+    for species in ("human", "wolf", "goblin", "undead"):
+        need_rates(_entity(role=EntityRole.MONSTER, species_id=species))
+    assert bn.ABSENT_NEED_KEY_FIRINGS == []
+    catalog.need_profiles["gap_probe"] = NeedProfileDefinition(id="gap_probe", display_name="Gap", needs={"hunger": "low"})
+    try:
+        rates = need_rates(_entity(role=EntityRole.MONSTER, need_profile_id="gap_probe"))
+    finally:
+        del catalog.need_profiles["gap_probe"]
+    assert rates == pytest.approx((0.05, 0.0)) and bn.ABSENT_NEED_KEY_FIRINGS == [("gap_probe", "sleep")]
+    bn.ABSENT_NEED_KEY_FIRINGS.clear()

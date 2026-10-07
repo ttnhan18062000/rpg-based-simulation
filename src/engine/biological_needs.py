@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional, Tuple
 
+from src.content.schema import MODELLED_BIOLOGICAL_NEEDS
 from src.core.enums import EntityRole
 from src.engine import behavior_consumers
 
@@ -65,7 +66,15 @@ def profile_id_for(props: Dict[str, Any], role: int, catalog: Any) -> Optional[s
     return PERSON_FALLBACK_PROFILE_ID if int(role) in _PERSON_ROLES else None
 
 
-def _rate(needs: Dict[str, str], key: str, base: float) -> float:
+# FLAGGED INTERIM (designer ruling 2026-10-07): an ABSENT need key is a content gap, not "no need". The catalog is
+# fixed so this never fires on the corpus; if it ever does, the key is recorded here (and the validator reports
+# CAT-NEED-001) and the need is treated as not built until the content declares it.
+ABSENT_NEED_KEY_FIRINGS: list[Tuple[str, str]] = []
+
+
+def _rate(profile_id: str, needs: Dict[str, str], key: str, base: float) -> float:
+    if key not in needs:
+        ABSENT_NEED_KEY_FIRINGS.append((profile_id, key))
     return base * NEED_LEVEL_RATE_SCALE.get(needs.get(key, "none"), 1.0)
 
 
@@ -86,8 +95,9 @@ def need_rates(entity: Any) -> Tuple[float, float]:
         if profile is None:
             rates = _BASE_RATES
         else:
-            rates = (_rate(profile.needs, "hunger", BASE_HUNGER_RATE),
-                     _rate(profile.needs, "sleep", BASE_SLEEP_DEBT_RATE))
+            hunger_key, sleep_key = MODELLED_BIOLOGICAL_NEEDS
+            rates = (_rate(str(profile_id), profile.needs, hunger_key, BASE_HUNGER_RATE),
+                     _rate(str(profile_id), profile.needs, sleep_key, BASE_SLEEP_DEBT_RATE))
         _RATES_CACHE[key] = rates
     return rates
 
