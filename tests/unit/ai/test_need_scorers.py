@@ -6,6 +6,7 @@ from dataclasses import replace
 
 import pytest
 
+from src.ai.goals.base import NeedAccess
 from src.engine.need_pull import HUNGER_LINE, SLEEP_LINE
 from src.ai.goals.scorers import EatScorer, SleepScorer
 from src.core.builder import V2EntityBuilder
@@ -64,6 +65,7 @@ def test_without_an_inn_there_is_no_way_to_point_at_so_no_escalation_and_no_targ
     hunger = 0.75 * HUNGER_LINE
     score = EatScorer().score(_hero(hunger=hunger), _state(None))
     assert score.target_pos is None and score.utility == pytest.approx(hunger)
+    assert score.need_access is NeedAccess.NO_WAY_WITHIN_REACH
 
 
 def test_a_meal_is_a_way_to_meet_hunger_only_for_a_subject_that_can_pay():
@@ -72,8 +74,10 @@ def test_a_meal_is_a_way_to_meet_hunger_only_for_a_subject_that_can_pay():
     hunger = 0.75 * HUNGER_LINE
     poor = EatScorer().score(_hero(gold=EAT_PRICE_GOLD - 1, hunger=hunger), _state((5.0, 0.0)))
     assert poor.target_pos is None and poor.utility == pytest.approx(hunger)  # the need stays, with no way to point at
+    assert poor.need_access is NeedAccess.NO_AFFORDABLE_WAY
     can_pay = EatScorer().score(_hero(gold=EAT_PRICE_GOLD, hunger=hunger), _state((5.0, 0.0)))
     assert can_pay.target_pos == (5.0, 0.0) and can_pay.utility > BLOCKER_CEILING
+    assert can_pay.need_access is NeedAccess.WAY_WITHIN_REACH
 
 
 def test_the_scorer_and_the_inn_charge_the_same_price():

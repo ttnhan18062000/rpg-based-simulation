@@ -1,9 +1,20 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import List, Protocol, Dict, Any, Optional
 from src.core.state import EntityState, AuthoritativeState
 
 from src.core.strategic import GoalKind
+
+class NeedAccess(str, Enum):
+    """Whether a need goal has a way to be met within reach (SURV-06). A typed state, so the funnel counts it and no meaning sits in a reason string.
+
+    Per-subject and per-evaluation: it says nothing about the world (the per-kind SURV-06 need-path integrity check is separate)."""
+
+    WAY_WITHIN_REACH = "way_within_reach"
+    NO_WAY_WITHIN_REACH = "no_way_within_reach"  # nothing in the world to meet the need with (e.g. no inn)
+    NO_AFFORDABLE_WAY = "no_affordable_way"  # a way exists but the subject cannot pay for it (AGENCY-03: not an actionable affordance)
+
 
 @dataclass(frozen=True)
 class GoalScore:
@@ -15,6 +26,8 @@ class GoalScore:
     # Set only by a scorer whose goal is about a specific moving entity; copied into
     # ObjectiveState.target_entity_id at objective creation.
     target_entity_id: Optional[int] = None
+    # Set by need goals (hunger): whether a way to meet the need is within reach for this subject.
+    need_access: Optional[NeedAccess] = None
 
 class GoalScorer(Protocol):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:

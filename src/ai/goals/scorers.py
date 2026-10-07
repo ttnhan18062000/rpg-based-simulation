@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Tuple
-from src.ai.goals.base import GoalScorer, GoalScore
+from src.ai.goals.base import GoalScorer, GoalScore, NeedAccess
 from src.engine.need_pull import hunger_pull, sleep_pull
 from src.ai.goals.present_threat import present_threat_to
 from src.content_semantics.faction import are_entities_hostile
@@ -91,12 +91,14 @@ class EatScorer(GoalScorer):
         # SURV-06: a meal is served at the inn for a price, so the inn is a way to meet hunger only for a subject that can pay.
         # With no way within reach there is nothing for the pull to point at: the goal keeps the hunger value (the need stays
         # visible in the state) and carries no SURV-07 escalation and no target. Poverty starves visibly.
-        if best_bldg is None or entity.inventory.gold < EAT_PRICE_GOLD:
-            return GoalScore(kind=GoalKind.HUNGER, utility=utility)
+        if best_bldg is None:
+            return GoalScore(kind=GoalKind.HUNGER, utility=utility, need_access=NeedAccess.NO_WAY_WITHIN_REACH)
+        if entity.inventory.gold < EAT_PRICE_GOLD:
+            return GoalScore(kind=GoalKind.HUNGER, utility=utility, need_access=NeedAccess.NO_AFFORDABLE_WAY)
         # SURV-07: the pull grows with the hunger the subject will have on arrival at the inn.
         rate = need_rates(entity)[0]
         utility = _escalated_unless_threatened(entity, state, utility, hunger_pull(utility, bio.hunger, rate, _travel_tiles(entity, best_bldg.position)))
-        return GoalScore(kind=GoalKind.HUNGER, utility=utility, target_id=str(best_bldg.id), target_pos=best_bldg.position)
+        return GoalScore(kind=GoalKind.HUNGER, utility=utility, target_id=str(best_bldg.id), target_pos=best_bldg.position, need_access=NeedAccess.WAY_WITHIN_REACH)
 
 
 class SocialScorer(GoalScorer):
