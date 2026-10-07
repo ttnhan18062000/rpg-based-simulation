@@ -12,6 +12,11 @@ if TYPE_CHECKING:
     from src.core.state import EntityState
 
 
+# SURV-06: rest never requires a building. A rough rest in place recovers this much sleep debt per REST;
+# a bed only improves recovery (the inn's town service adds its own on top).
+ROUGH_REST_SLEEP_DEBT_RECOVERY = 10.0
+
+
 class CoreActions:
     """
     Domain action handlers for fundamental RPG actions.
@@ -47,6 +52,7 @@ class CoreActions:
                 entity_id=entity.id,
                 readiness_delta=0.0,
                 biological=BiologicalUpdate(
+                    sleep_debt_delta=-ROUGH_REST_SLEEP_DEBT_RECOVERY,
                     rest_pressure_delta=-30.0
                 )
             )}

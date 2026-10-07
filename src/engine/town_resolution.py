@@ -5,6 +5,7 @@ from dataclasses import replace
 
 from src.core.updates import EntityUpdate, IdentityUpdate, CombatUpdate, BiologicalUpdate
 from src.core.enums import Faction
+from src.engine.service_reach import building_kind_at, service_tile
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -94,11 +95,12 @@ class TownResolutionSystem:
                     refined_entity_updates[e_id] = ent_upd
 
                 # Building Services (Rest, Eat)
-                building_type = state.building_tiles.get(tile_pos)
+                service_pos = service_tile(state, tile_pos)
+                building_type = building_kind_at(state, service_pos) if service_pos else None
                 if building_type and ent_upd.task and ent_upd.task.work_kind_set == "ENTITY_ACT":
                     action = ent_upd.task.payload_set.get("action")
                     if action in ("REST", "EAT", "GATHER_INTEL"):
-                        building = SpatialQueryService.get_building_at(state, tile_pos)
+                        building = SpatialQueryService.get_building_at(state, service_pos)
                         if building and building.functional:
                             if action == "REST" and building_type in ("inn", "home"):
                                 cb_upd = ent_upd.combat or CombatUpdate()
@@ -111,9 +113,9 @@ class TownResolutionSystem:
                                     resource_transfers=list(ent_upd.resource_transfers) + [intent]
                                 )
                                 refined_entity_updates[e_id] = ent_upd
-                            elif action == "EAT" and building_type == "tavern":
+                            elif action == "EAT" and building_type == "inn":
                                 bio_upd = ent_upd.biological or BiologicalUpdate()
-                                intent = ResourceTransferIntent(source_id="TAVERN", source_kind="TOWN_SERVICE", gold_delta=-5, transfer_kind="EAT", is_group_required=True)
+                                intent = ResourceTransferIntent(source_id="INN", source_kind="TOWN_SERVICE", gold_delta=-5, transfer_kind="EAT", is_group_required=True)
                                 ent_upd = replace(ent_upd,
                                     biological=replace(bio_upd, hunger_delta=bio_upd.hunger_delta - 20.0),
                                     resource_transfers=list(ent_upd.resource_transfers) + [intent]

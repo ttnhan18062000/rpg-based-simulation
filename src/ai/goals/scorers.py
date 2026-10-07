@@ -67,7 +67,7 @@ class EatScorer(GoalScorer):
         utility = bio.hunger
         
         from src.engine.spatial_query import SpatialQueryService
-        best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "tavern")
+        best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "inn")
         if best_bldg:
             return GoalScore(kind=GoalKind.HUNGER, utility=utility, target_id=str(best_bldg.id), target_pos=best_bldg.position)
                     

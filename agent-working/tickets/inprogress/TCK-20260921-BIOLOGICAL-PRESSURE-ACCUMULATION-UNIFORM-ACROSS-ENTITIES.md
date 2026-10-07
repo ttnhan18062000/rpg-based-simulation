@@ -16,7 +16,7 @@ Design decision needed: hunger/sleep-debt accumulation is identical for every en
 of attributes — is uniform biological pressure intended, or should vitality/endurance modulate it?
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
