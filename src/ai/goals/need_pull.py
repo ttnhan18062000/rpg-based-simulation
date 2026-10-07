@@ -22,12 +22,11 @@ ESCALATION_ONSET = 0.6
 ESCALATION_FULL = 0.85
 ESCALATION_AMPLITUDE = 60.0
 
-# The consequence lines and per-tick accumulation of `src/engine/apply.py` (hunger damage from 95.0, sleep-deprivation damage
-# from 98.0, `hunger + 0.1` and `sleep_debt + 0.05` per biological tick); kept here as named values, not re-derived.
+# The consequence lines of `src/engine/apply.py` (hunger damage from 95.0, sleep-deprivation damage from 98.0); kept here as
+# named values, not re-derived. The per-tick accumulation is NOT here: it is per kind (SURV-05, `need_rates(entity)`), so callers
+# pass the subject's own rate.
 HUNGER_LINE = 95.0
 SLEEP_LINE = 98.0
-HUNGER_RATE = 0.1
-SLEEP_RATE = 0.05
 
 # A walking subject covers about one tile per tick (measured: 21 tiles in 20 ticks).
 TICKS_PER_TILE = 1.0
@@ -51,11 +50,11 @@ def need_pull(raw_utility: float, need: float, rate: float, travel_tiles: float,
     )
 
 
-def hunger_pull(raw_utility: float, hunger: float, travel_tiles: float) -> float:
+def hunger_pull(raw_utility: float, hunger: float, hunger_rate: float, travel_tiles: float) -> float:
     """The hunger goal's utility with the SURV-07 escalation for the hunger the subject will have on arrival."""
-    return need_pull(raw_utility, hunger, HUNGER_RATE, travel_tiles, HUNGER_LINE)
+    return need_pull(raw_utility, hunger, hunger_rate, travel_tiles, HUNGER_LINE)
 
 
-def sleep_pull(raw_utility: float, sleep_debt: float, travel_tiles: float) -> float:
+def sleep_pull(raw_utility: float, sleep_debt: float, sleep_rate: float, travel_tiles: float) -> float:
     """The fatigue goal's utility with the SURV-07 escalation for the sleep debt the subject will have on arrival."""
-    return need_pull(raw_utility, sleep_debt, SLEEP_RATE, travel_tiles, SLEEP_LINE)
+    return need_pull(raw_utility, sleep_debt, sleep_rate, travel_tiles, SLEEP_LINE)
