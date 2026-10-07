@@ -1,27 +1,50 @@
-# Known reds of the `Slow regression` workflow: test id pattern (fnmatch on `classname::name`
-# from the JUnit XML) -> the ticket that owns it. An id with no match is shown as UNOWNED in the
-# rolling issue; a pattern that matches nothing failing is listed as a stale mapping.
-# Accurate as of origin/main 7daef8075 (2026-10-06; #373 fixed the milestone-B gate, so it has no entry). Lane B's tickets for the 5k and ph9 tests are
-# not on main yet, so both map to the triage ticket.
+# Known reds of the `Slow regression` workflow (TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED,
+# "Reporting-path hardening"). Each entry: a test id pattern (fnmatch on `classname::name` from the JUnit XML),
+# the ticket that owns it, the owner (session/role name), added_on and expires_on (ISO dates) and
+# kind: broken|flaky. A failing test matching no entry is UNOWNED, and one matching an entry past expires_on is
+# EXPIRED; both make the run red. A pattern that matches nothing failing is listed as a stale mapping.
+# Re-date, fix or delete an entry deliberately: expiry exists to force that decision. Dates are the reviewer's
+# proposal (2026-10-07); the owner can change them. tests/unit/tools/test_slow_regression_report.py lints this file.
 known_reds:
   - match: "tests.unit.worldassembly.test_corpus_diversity*"
     ticket: TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED
-    note: "testing owns triage; the determinism cause is parked under TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2"
+    owner: test-architecture-implementer
+    added_on: "2026-10-07"
+    expires_on: "2026-11-04"
+    kind: flaky
+    note: "testing owns triage; the failing set changed 10 -> 12 between runs with different members; the determinism cause is parked under TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2"
   - match: "tests.regression.test_behavioral_5k*"
-    ticket: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
-    note: "row 1; Lane B's attribution ticket not on main at this base"
+    ticket: TCK-20261006-BEHAVIORAL-5K-REGRESSION-URBAN-POLITICAL-DRIFTED-FROM-THE-2026-08-19-BASELINE-ATTRIBUTE-EACH-METRIC
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-10-21"
+    kind: broken
+    note: "triage row 1; Lane B attributes each moved metric before anyone touches baseline_5k.json"
   - match: "tests.integration.world.test_living_world_ph9*"
-    ticket: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
-    note: "row 2; cause #356 / decision 14; Lane B's ticket not on main at this base"
-  - match: "tests.perf.test_perf_combat*"
-    ticket: TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK
-    note: "row 5-8; real engine regression (primary cause #172); a second cost step is TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP"
+    ticket: TCK-20261006-TWO-WORLD-INTEGRATION-TESTS-FAIL-ON-MAIN-PH9-ASSERTS-A-BOSS-AND-TRAUMA-LONG-RUN-HITS-THE-60S-LIMIT
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-10-21"
+    kind: broken
+    note: "triage row 2; cause #356 / decision 14; only the ph9 boss half of the ticket stands"
   - match: "tests.perf.test_perf_movement*"
-    ticket: TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK
-    note: "row 5-8; real engine regression (primary cause #172); a second cost step is TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP"
+    ticket: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-12-31"
+    kind: broken
+    note: "allowed during core RPG + perf core implementation (owner, 2026-10-07)"
   - match: "tests.perf.test_perf_passive_scaling*"
-    ticket: TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK
-    note: "row 5-8; real engine regression (primary cause #172); a second cost step is TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP"
+    ticket: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-12-31"
+    kind: broken
+    note: "allowed during core RPG + perf core implementation (owner, 2026-10-07)"
   - match: "tests.perf.test_perf_strategic*"
-    ticket: TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK
-    note: "row 5-8; real engine regression (primary cause #172); a second cost step is TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP"
+    ticket: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-12-31"
+    kind: broken
+    note: "allowed during core RPG + perf core implementation (owner, 2026-10-07)"

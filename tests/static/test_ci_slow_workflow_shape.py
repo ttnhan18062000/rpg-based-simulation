@@ -62,6 +62,12 @@ def _summary_step() -> dict:
     return matches[0]
 
 
+def _report_step() -> dict:
+    matches = [s for s in _slow_job_steps() if "slow_regression_report.py" in s.get("run", "")]
+    assert len(matches) == 1, "expected exactly one report step"
+    return matches[0]
+
+
 def test_slow_tests_step_runs_even_when_corpus_diversity_fails() -> None:
     assert _step_running(_SLOW_TESTS_RUN).get("if") == _NOT_CANCELLED
 
@@ -70,13 +76,24 @@ def test_legacy_regression_step_runs_even_when_corpus_diversity_fails() -> None:
     assert _step_running(_LEGACY_RUN).get("if") == _NOT_CANCELLED
 
 
-def test_steps_five_to_seven_never_use_always_or_continue_on_error() -> None:
-    """`always()` would turn an evicted (cancelled) run into a reported result;
-    `continue-on-error` would hide a red step from the job conclusion."""
+def test_steps_five_to_seven_continue_on_error_and_never_use_always() -> None:
+    """Reporting-path hardening (2026-10-07) REVERSES the earlier pin (#360, #377) that forbade
+    `continue-on-error` on steps 5-7. Reason (research report "CI known failure tracking patterns", rank 4,
+    Trunk's exit-0-when-all-quarantined): a workflow that is red forever gets ignored, so the job's verdict
+    belongs to the report step, which exits 1 only for an UNOWNED or EXPIRED red, a missing step or a GitHub
+    error. `always()` stays forbidden: it would turn an evicted (cancelled) run into a reported result."""
     for needle in (_CORPUS_RUN, _SLOW_TESTS_RUN, _LEGACY_RUN):
         step = _step_running(needle)
+        assert step.get("continue-on-error") is True, step["name"]
         assert "always()" not in str(step.get("if", "")), step["name"]
-        assert "continue-on-error" not in step, step["name"]
+
+
+def test_report_step_is_not_continue_on_error_so_it_alone_decides_the_job_conclusion() -> None:
+    """Outcome vs conclusion: a failing step with continue-on-error has outcome 'failure' but conclusion
+    'success'; the summary reads `.outcome` (truthful), the job turns red only if the report step fails."""
+    report = _report_step()
+    assert "continue-on-error" not in report
+    assert report.get("if") == _NOT_CANCELLED
 
 
 def test_each_test_step_has_an_id_for_the_summary_to_read() -> None:
@@ -125,12 +142,11 @@ def test_job_has_a_timeout_no_needs_and_least_privilege_permissions() -> None:
 
 def test_report_step_runs_last_but_for_uploads_and_is_not_gated_on_success() -> None:
     steps = _slow_job_steps()
-    report = [s for s in steps if "slow_regression_report.py" in s.get("run", "")]
-    assert len(report) == 1
-    assert report[0].get("if") == _NOT_CANCELLED
-    assert steps.index(report[0]) > steps.index(_summary_step())
+    report = _report_step()
+    assert report.get("if") == _NOT_CANCELLED
+    assert steps.index(report) > steps.index(_summary_step())
     for needle in (_CORPUS_RUN, _SLOW_TESTS_RUN, _LEGACY_RUN):
-        assert steps.index(_step_running(needle)) < steps.index(report[0])
+        assert steps.index(_step_running(needle)) < steps.index(report)
 
 
 def test_each_test_step_writes_junit_into_the_report_directory() -> None:

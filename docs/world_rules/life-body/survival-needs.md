@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-07"
 ---
 
 # World Rule Family: Survival Needs
@@ -132,6 +132,52 @@ consequence, counter).
 
 ---
 
+## SURV-05 — A subject's needs are those of its kind: biology follows the kind's need profile
+
+> What a body requires comes from what kind of body it is. A subject's needs, and how fast each
+> one builds, follow its kind's declared need profile. A kind that does not have a need (an
+> undead or elemental with no hunger) never builds that need, and kinds whose profiles differ
+> build their needs at different rates. A subject with no declared kind is assigned the ordinary
+> person's needs only if it is a person (a civil role). Any other subject without a kind is a
+> content defect to report, never a guess. Whichever source supplied a subject's need profile, the
+> subject's state records it, including when the profile was defaulted.
+
+**Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
+(row 22 of `docs/plans/systemic_world/owner_decision_memo.md`). Passes the admission test:
+SURV-01 to SURV-04 say what a need is and when it is modeled, not whose needs a subject has.
+SURV-02's accumulation is the mechanism this Rule makes kind-specific. Drives, a subject's
+standing motivations, are a separate question owned by AGENCY-08: needs belong to the body,
+drives to the person.
+- **Alternatives not taken:** need by role (a guard's body is not different from a worker's);
+  one uniform need set for everyone (today's accident, and it contradicts the catalog, which
+  already declares different profiles); a silent default (forbidden by the durable-state rule).
+
+**Repository evidence: CONFLICTING, measured by Lane A on main `f8f1b69fd`** (seed 42, all 24
+worlds compiled at tick 0).
+- **No compiled subject carries a profile.** 0 of 666 entities have a `need_profile_id` or
+  `drive_profile_id`, and the pressure resolver returns `no_profile` for all of them. Profile ids
+  come only from the archetype resolver (`src/worldassembly/resolver.py:1163-1164`);
+  `WorldCompiler` never sets them. Campaign (archetype-spawned) entities do carry profiles.
+- **The catalog already supports this Rule.** All 13 species carry a need profile (6 distinct
+  profiles). By species the corpus is human 324, goblin 82, undead 54, wolf 50, orc 36, spider 35,
+  lizardfolk 24, elf 6 and spirit 4, and 51 have no species (all HERO, SHOPKEEPER or GUARD). The
+  species need profile therefore covers 615 of 666, and the person fallback covers the other 51.
+- **Biology ignores the profile.** Biological needs accumulate at constants that are identical for
+  every subject (`src/engine/apply.py:90-91`). Undead, whose catalog hunger is `none`, still get
+  hungry, and every survivor is at exactly hunger 50.0 at t=500.
+  - Lane A is checking whether everyone reaches starvation together around t≈950. If confirmed,
+    that is a hard bug under memo row 7.
+- **Tracked:** `TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-ENTITIES`, re-scoped
+  to this Rule (Lane B). The decision-core epic covers both halves.
+- **Not changed:** dimensions with no reader stay inert bookkeeping under SURV-04 until a consumer
+  exists.
+
+**Scenarios:** none traced yet. Two are owed when implemented: an undead and a human share a
+region for a long run, and only the human grows hungry; two species with different hunger
+profiles reach the same hunger at different times.
+
+---
+
 ## Repository Findings (significant, cross-referenced)
 
 - **SURV-04's confirmed inert pair** — `last_meal_tick`/`last_sleep_tick` are written on every
@@ -146,6 +192,8 @@ consequence, counter).
   contrast this rule reuses directly
 - SURV-02 → Capacity (LIMIT-02, directly reused), Agency/motivation/decision (the goal-urgency
   content this rule's evidence already touches, owned by that future domain's own content)
+- SURV-05 → Agency/Decision (`agency-decision.md`'s AGENCY-08, the drive half of the same
+  provenance), Identity/Lifecycle (a subject's kind)
 - SURV-04 → all future domains that add need-adjacent tracked fields (a standing standard to
   check new fields against, matching ENV-05's own role for Environment)
 
