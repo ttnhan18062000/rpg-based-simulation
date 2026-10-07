@@ -178,6 +178,73 @@ profiles reach the same hunger at different times.
 
 ---
 
+## SURV-06 — A modeled need comes with declared ways to meet it, per kind; the world must offer one within reach
+
+> A need's threshold consequence must be avoidable by behaviour. Each kind declares how it meets
+> each need it has.
+> - **People** meet hunger in two ways: they eat a meal where meals are served (the inn, for a
+>   price), or they eat food they carry. They come to carry food by buying it, by harvesting or
+>   foraging it, or by receiving it (loot, gift, inheritance).
+> - **Predators** hunt, **grazing creatures** forage, and **people-kinds without a meal place**
+>   eat carried, foraged or looted food.
+> - **A kind with no hunger** has no hunger path and needs none (SURV-05).
+> - **Rest:** every kind with a rest need can rest in place, sleeping rough, wherever it is not in
+>   danger. A bed (an inn or a home) only makes rest better; rest never requires a building.
+>
+> A world that places a kind must offer, within reach of where that kind lives, at least one of
+> that kind's ways to meet each of its needs. That guarantees a way exists, not that every
+> individual can afford it: a penniless subject with nothing to forage may starve, and that is an
+> outcome, not a defect.
+
+**Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
+(row 23 of `docs/plans/systemic_world/owner_decision_memo.md`). Passes the admission test: SURV-02
+says crossing a threshold has consequences, and SURV-05 says whose needs they are. Neither says a
+need must be meetable. Without this Rule a need is a countdown timer that measures the clock, not
+the world, which contradicts SURV-03 (a need is modeled for its real, causal consequence).
+- **The meal place is the inn.** The decision layer's "tavern" target names a building no world
+  declares, so it is a naming defect, not a missing building.
+- **World integrity:** the reachability check is reported at assembly for each world and kind.
+  It becomes an error only once the corpus passes. Memo row 11 is the precedent: enforcement that
+  would fail corpus worlds was declined.
+- **Engineering, not this Rule:** prices, recovery rates, what counts as "in danger", and how far
+  "within reach" is.
+- **Alternatives not taken:**
+  - a TAVERN building added to every world (duplicates the inn);
+  - rest only in buildings (a timer for anyone far from one);
+  - the engine quietly feeding subjects that cannot eat (hides a content defect);
+  - a guarantee that every individual can eat (removes poverty as an outcome).
+
+**Repository evidence: CONFLICTING. Eating has never worked in the compiled corpus.** Lane A,
+read-only, on main `cc3f00a11`, seed 42, `crowded_frontier` and `frontier_living_world`; the
+earlier figures are on base `f8f1b69fd`:
+- **Outcome:** 0 eat and 0 sleep completions in 2,000 ticks on both worlds; 36 of 51 and 30 of 39
+  deaths are starvation; extinction by t≈1100. (A completion means hunger or sleep debt fell
+  between consecutive ticks.)
+- **No path for the decision layer.** `EatScorer` (`src/ai/goals/scorers.py:60-74`) targets only
+  the nearest `tavern`, but 0 of the 24 worlds has one and `BuildingRegistry` has no TAVERN
+  template (`src/town/buildings.py:17-24`). Every world has an `inn`. So 100% of hunger goals have
+  no target and are skipped.
+  - The act itself is there: `CoreActions` EAT needs no building, and the town EAT costs 5 gold on
+    a town tile (`town_resolution.py:95-119`).
+- **A separate decision defect:** the strategic capacity gate counts terminal projects, which
+  blocks new projects; fatigue wins with an inn target are refused. Lane A is fixing this as
+  engineering.
+- **More breaks remain downstream:** with a tavern added and capacity unblocked in a probe, there
+  were only 9 eat events and 0 sleep events, and 27 of 30 still starved. Still being traced.
+- **Bisect:** eating never worked in any compiled corpus world probeable since 2026-07-02. It is
+  not a regression.
+- **Tracked:** the biology child of
+  `TCK-20261007-EPIC-DECISION-CORE-LIVE-MOTIVATION-AND-HONEST-FIGHT-OR-FLEE-INPUTS` (Lane B). It
+  lands with SURV-05's rates, the inn meal target, the eat-carried-food path, rough sleep and the
+  advisory integrity check. It is a row-7 hard bug.
+
+**Scenarios:** none traced yet. Three are owed when implemented:
+- a hungry worker with coins walks to the inn and eats;
+- a hungry worker far from town eats the bread it carries;
+- an exhausted guard on a distant road sleeps rough and recovers, more slowly than in an inn bed.
+
+---
+
 ## Repository Findings (significant, cross-referenced)
 
 - **SURV-04's confirmed inert pair** — `last_meal_tick`/`last_sleep_tick` are written on every
@@ -192,6 +259,9 @@ profiles reach the same hunger at different times.
   contrast this rule reuses directly
 - SURV-02 → Capacity (LIMIT-02, directly reused), Agency/motivation/decision (the goal-urgency
   content this rule's evidence already touches, owned by that future domain's own content)
+- SURV-06 → Material/Economy (`economy-exchange.md`, buying food; `resources-production.md`,
+  harvesting), Settlements (`settlements.md`, the inn as the meal place), Location/Topology
+  (`location-topology.md`, "within reach")
 - SURV-05 → Agency/Decision (`agency-decision.md`'s AGENCY-08, the drive half of the same
   provenance), Identity/Lifecycle (a subject's kind)
 - SURV-04 → all future domains that add need-adjacent tracked fields (a standing standard to
