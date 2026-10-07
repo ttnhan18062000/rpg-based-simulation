@@ -52,6 +52,15 @@ def _catalog() -> Any:
     return behavior_consumers._catalog
 
 
+def _role_int(role: Any) -> int:
+    """An `EntityRole` as an int. A role carried as its name ("CITIZEN") is looked up; an unknown one is -1 (no person role)."""
+    try:
+        return int(role)
+    except (TypeError, ValueError):
+        member = EntityRole.__members__.get(str(role).upper())
+        return int(member) if member is not None else -1
+
+
 def profile_id_for(props: Dict[str, Any], role: int, catalog: Any) -> Optional[str]:
     """The need profile id that governs a subject, or None when it has no declared kind."""
     explicit = props.get("need_profile_id")
@@ -63,7 +72,7 @@ def profile_id_for(props: Dict[str, Any], role: int, catalog: Any) -> Optional[s
         if species is not None and species.need_profile:
             return str(species.need_profile)
         return None
-    return PERSON_FALLBACK_PROFILE_ID if int(role) in _PERSON_ROLES else None
+    return PERSON_FALLBACK_PROFILE_ID if _role_int(role) in _PERSON_ROLES else None
 
 
 # FLAGGED INTERIM (designer ruling 2026-10-07): an ABSENT need key is a content gap, not "no need". The catalog is
@@ -87,7 +96,7 @@ def need_rates(entity: Any) -> Tuple[float, float]:
         _CACHE_CATALOG_ID = id(catalog)
     ident = entity.identity
     props = ident.properties or {}
-    key = (props.get("need_profile_id"), props.get("species_id"), int(ident.role))
+    key = (props.get("need_profile_id"), props.get("species_id"), _role_int(ident.role))
     rates = _RATES_CACHE.get(key)
     if rates is None:
         profile_id = profile_id_for(props, ident.role, catalog)
@@ -109,6 +118,6 @@ def undeclared_need_kinds(state: Any, catalog: Any) -> Dict[Tuple[Optional[str],
         props = entity.identity.properties or {}
         profile_id = profile_id_for(props, entity.identity.role, catalog)
         if profile_id is None or catalog.get_need_profile(profile_id) is None:
-            key = (props.get("species_id"), int(entity.identity.role))
+            key = (props.get("species_id"), _role_int(entity.identity.role))
             out[key] = out.get(key, 0) + 1
     return out

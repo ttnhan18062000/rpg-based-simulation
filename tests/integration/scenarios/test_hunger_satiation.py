@@ -2,7 +2,7 @@
 Integration tests for hunger satiation fix (TCK-20260619-P0-HUNGER-SATIATION).
 
 Verifies:
-1. tactical.py correctly dispatches EAT action when entity reaches a tavern building
+1. tactical.py correctly dispatches EAT action when entity reaches an inn (the meal place, SURV-06; no world declares a "tavern")
 2. intelligence.py HUNGER project completes when hunger drops below threshold
 3. Economic goals run in ≥10% of active ticks once food is available
 """
@@ -38,14 +38,14 @@ def _state_with_tavern(hunger: float = 60.0, seed: int = 42) -> AuthoritativeSta
         .combat(readiness=100.0)
         .build()
     )
-    tavern = BuildingState(id=100, kind="tavern", position=(5.0, 5.0))
+    tavern = BuildingState(id=100, kind="inn", position=(5.0, 5.0))
     return AuthoritativeState(
         tick=0,
         seed=seed,
         world_time=0,
         entities={1: entity},
         buildings={100: tavern},
-        building_tiles={(5, 5): "tavern"},
+        building_tiles={(5, 5): "inn"},
     )
 
 
