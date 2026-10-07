@@ -63,6 +63,7 @@ The CI traceback (run 37403688489, `test_perf_movement[5000]` and `test_perf_pas
 - `src/domains/combat_engagement/phase.py` (`_consider`), `src/content_semantics/faction.py` (`is_hostile_compat`), `src/content_semantics/relation.py` (`project_relation`)
 
 ## Assumptions / Open Questions
+- combat_engagement is strongly box-dependent on identical code: ~16 s per tick on Lane A's box (all arms, ±1.3 s) vs ~3.2 s on the reviewer's, while cooperation matched (10.2 vs 10.8 s) — rpg-implementer, 2026-10-07. Measure before and after on one box with a pinned method; suspect memory/cache behaviour in the projection.
 - Owner: Lane B (`rpg-implementer-2`), alongside its legality batch (routing by `rpg-feature-planning`, 2026-10-06).
 
 ## Implementation Notes
