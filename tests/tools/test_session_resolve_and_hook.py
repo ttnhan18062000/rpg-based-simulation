@@ -322,3 +322,14 @@ def test_an_instance_id_beyond_max_sessions_is_unknown_and_two_different_instanc
     import dataclasses
     three = dataclasses.replace(three, roles=tuple(dataclasses.replace(r, max_sessions=3) if r.role == WRITER else r for r in three.roles))
     assert resolve(Signals("startup", session_title=f"{WRITER}-2", env_role=f"{WRITER}-3"), three).status == DISAGREE
+
+
+def test_a_second_instance_neither_takes_nor_complains_about_the_writer_lease(world):
+    """Launcher fix D: `<role>-2` has a different id from the lease holder; it skips the lease silently."""
+    root, repo, state_root = world
+    first = _ctx(world, _payload(repo, agent_type="session-rpg-implementer"), {"SESSION_ROLE": "rpg-implementer"})
+    assert "WRITER LEASE NOT TAKEN" not in first and st.read_lease(state_root, repo).role == "rpg-implementer"
+    second = _ctx(world, _payload(repo, agent_type="session-rpg-implementer", session_id="sess-2"),
+                  {"SESSION_ROLE": "rpg-implementer-2"})
+    assert "WRITER LEASE NOT TAKEN" not in second
+    assert st.read_lease(state_root, repo).role == "rpg-implementer"

@@ -11,4 +11,4 @@ Function: designer. You design and draft, never dispatch. Drafts: main-checkout 
 
 Domain: agent-working (process, tooling, monitoring, delivery). Process problems come here; it decides what to ticket. Owns `mechanisms.yaml` tooling, not content. Designer reviews.
 
-Never: commit, push, open_pr. Needs the user: merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data.
+Needs the user: merge, push_default_branch, delete_remote_branch, delete_worktree_or_data.

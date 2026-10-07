@@ -113,8 +113,10 @@ def test_compact_globs_is_never_longer_than_the_full_parent_grouping(globs):
     assert len(_compact_globs(globs)) <= len(_group_globs(globs, _DIR_GLOB))
 
 
-def test_designer_and_planner_cards_do_not_list_a_push_to_main_under_needs_the_user_because_push_is_never():
+def test_designer_and_planner_cards_list_a_push_to_main_under_needs_the_user_now_that_nothing_is_forbidden():
+    """Owner, 2026-10-07: no function is forbidden commit/push/open_pr, so there is no `Never:` line and the push to
+    the default branch is listed like the implementer's."""
     for role_id in ("rpg-designer", "agent-working-planner"):
         card = compose_card(role_id, ROSTER, AUTHORITY, ROOT)
-        assert "Never: commit, push, open_pr." in card and "push_default_branch" not in card
+        assert "Never:" not in card and "push_default_branch" in card
     assert "push_default_branch" in compose_card("rpg-implementer", ROSTER, AUTHORITY, ROOT)
