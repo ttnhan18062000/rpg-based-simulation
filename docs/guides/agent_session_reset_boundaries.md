@@ -93,8 +93,12 @@ may run `<role>-2` .. `<role>-N`. Runtime state lives in `<git-common-dir>/sessi
   prints the evidence (transcript age, dirty and unpushed state, any git operation left in progress, handover
   age and "Awaiting", candidate transcripts) and asks for `--action resume|replace|inspect`; non-interactive
   runs exit 3 instead of choosing. Resume is always by session id, and only of the dead holder's own session
-  by default; replace keeps the old transcript.
-- `--dry-run` prints the exact command and changes nothing;
+  by default; replace keeps the old transcript. Candidate transcripts match the instance id and, for the first
+  instance, the seat's `legacy_session_name`. A recorded branch already merged into `origin/main` is not used to recreate
+  a missing worktree (create it from `origin/main`). A second instance (`<role>-2`) does not take the worktree writer lease.
+- `--dry-run` prints the exact command and changes nothing; it also prints `handover note: <absolute path>`: the note is
+  always read from the MAIN checkout's `.claude/handover/`, never from the role's worktree, so a note copied into a
+  worktree is not seen;
 - a worktree outside the repo or behind `origin/main` is refused (exit 4) before the exec line is printed, unless
   `--allow-stale`; an unverifiable ref (no fetch yet) only warns.
 
