@@ -141,11 +141,16 @@ disengaging while adjacent to a hostile) bypass this specific check.
     reference/baseline agility (`5`), not a universal flat default** — higher agility regenerates
     readiness faster, lower agility slower, floored at 1.0/tick to prevent the gate from ever
     locking permanently (`TCK-20260831-READINESS-SPEED-FORMULA`, `COMB-318`).
-*   **Friendly-Fire Law**: Attacks against a target the real faction-semantics service does not
-    consider hostile (`FactionSemanticsService.is_hostile_compat`) are illegal
-    (`ReasonCode.FRIENDLY_FIRE_ILLEGAL`). Hostility for `contextual_intruder_groups`-classified
-    relationships (real content: `data/content/social/perspectives.yaml`) resolves from real
-    combat-engagement state, not a hardcoded assumption of non-intrusion.
+*   **Friendly-Fire Law (permission is symmetric, CONFLICT-03)**: whether one party may attack another is a fact about the
+    pair and holds in both directions (`LegalityServiceV2._attack_permitted`, `src/engine/legality.py`); an attack the pair does
+    not permit is illegal (`ReasonCode.FRIENDLY_FIRE_ILLEGAL`). Permission follows *declared* hostility and missing data declares
+    nothing. A faction *declares* data when the catalog has a perspective for it or a relationship row toward the other
+    (`_declares`). (1) Both sides declare: legal both ways if either side's `FactionSemanticsService.is_hostile_compat` says
+    hostile. (2) Exactly one side declares: that side's verdict decides both directions. (3) Neither declares: the legacy fallback,
+    where only a shared legacy faction is illegal. A "contextual threat" (`wild_beast_pack`) differs only in when it *chooses* to
+    fight, never in whether it may (decision layer, parked contextual engagement). Hostility for
+    `contextual_intruder_groups`-classified relationships (real content: `data/content/social/perspectives.yaml`) resolves from
+    real combat-engagement state, not a hardcoded assumption of non-intrusion. See DEV-016.
 *   **Species-hostility escalation preserves the law**: `is_hostile_compat` resolves through
     `RelationProjectionService.project_relation()`, whose species-hostility escalation step
     (`src/content_semantics/relation.py`, real content: `data/content/social/species_relations.yaml`)

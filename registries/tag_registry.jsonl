@@ -84,3 +84,4 @@
 {"added_date": "2026-09-29", "category": "process-skill-signal", "note": "defect that reached main past green tests; ticket body records a 'Failure class:' line; counted per month in the core-RPG test report (test-architecture Epic A)", "tag": "escaped-defect"}
 {"added_date": "2026-10-06", "category": "subsystem-topic", "note": "src/domains/cooperation/ subsystem (party formation, recruitment contracts, pending offers)", "tag": "cooperation"}
 {"added_date": "2026-10-06", "category": "quality-attribute", "note": "work about a behaviour or cost that got worse relative to an earlier measured state (bisected or baselined)", "tag": "regression"}
+{"added_date": "2026-10-06", "category": "subsystem-topic", "note": "attack/engagement legality (LegalityServiceV2, CONFLICT-03 symmetric permission); used by the wild-beast-pack legality ticket", "tag": "legality"}
