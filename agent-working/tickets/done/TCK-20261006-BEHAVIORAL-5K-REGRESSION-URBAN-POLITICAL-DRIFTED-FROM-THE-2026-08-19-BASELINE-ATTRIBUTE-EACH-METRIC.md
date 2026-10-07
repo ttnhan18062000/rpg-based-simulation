@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-BEHAVIORAL-5K-REGRESSION-URBAN-POLITICAL-DRIFTED-FROM-THE-2026-08-19-BASELINE-ATTRIBUTE-EACH-METRIC
-phase: open
+phase: done
 date: 2026-10-06
 tags: [testing, world, investigation]
 ---
@@ -15,7 +15,7 @@ tags: [testing, world, investigation]
 `tests/regression/test_behavioral_5k.py::test_behavioral_5k_regression` (urban_political, seed 42, 5,000 ticks) is red on `main`: attribute each metric's move to a change and explain gold reaching exactly 0
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -44,14 +44,17 @@ Test-arch at #362: alive_avg 5.46. Lane A on clean `main` `0c89bd390` (after #36
 Running `make regression-baseline`. Nobody regenerates the baseline until the owner accepts the explanation.
 
 ## Acceptance Criteria
-- [ ] Each of the three metrics attributed to a change, with before/after values.
-- [ ] Exact-zero gold explained.
-- [ ] A recommendation to the owner (accept and rebaseline, or fix); baseline untouched.
+- [x] Each of the three metrics attributed to a change, with before/after values.
+- [x] Exact-zero gold explained.
+- [x] A recommendation to the owner (accept and rebaseline, or fix); baseline untouched.
 
 ## Related Tickets
 - `TCK-20261006-TWO-WORLD-INTEGRATION-TESTS-FAIL-ON-MAIN-PH9-ASSERTS-A-BOSS-AND-TRAUMA-LONG-RUN-HITS-THE-60S-LIMIT`
 - `TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION-FROM-EVERY-RUNTIME-SPAWNED-MONSTER`
 - `TCK-20261005-SLOW-REGRESSION-GATE-SKIPS-ITS-ONLY-TEST-STEP-ON-MAIN`
+
+## Related Stored Artifacts
+- `agent-working/stored_artifacts/TCK-20261006-BEHAVIORAL-5K-REGRESSION-URBAN-POLITICAL-DRIFTED-FROM-THE-2026-08-19-BASELINE-ATTRIBUTE-EACH-METRIC/` (investigation.md, plan.md, test_plan.md, probes/)
 
 ## Related Code Areas
 `tests/regression/test_behavioral_5k.py`, the 2026-08-19 baseline file it reads, `data/worlds/urban_political`.
@@ -60,13 +63,13 @@ Running `make regression-baseline`. Nobody regenerates the baseline until the ow
 Lane B (world), measurement only. The 2026-08-19 baseline predates every candidate change above.
 
 ## Implementation Notes
-(to be filled by the implementer)
+Measurement only; no src changes. See investigation.md for the full table. Summary: alive_avg and gold_avg both moved at #303 (1a40d22d1), which retired the global world-clock raid whose goblin raiders were the baseline's only survivors of a synchronised starvation collapse at t~1000 (present in baseline AND main, zero eat/sleep events in both). quest_active_count 0 -> 1.02 moved in small steps at #182, #291 and #333. Recommendation: do not rebaseline until the biology (SURV-05/06) and capacity-gate fixes land.
 
 ## Test Summary
-(to be filled by the implementer)
+No code changed. Positive control: d2816ab6c reproduces 13.30 / 584.16 / 0.0 exactly. Audit and plain runs on main are identical.
 
 ## Files Changed
-(to be filled by the implementer)
+Ticket and stored artifacts only.
 
 ## Completion Summary
-(to be filled by the implementer)
+Each metric attributed with before/after values; exact-zero gold explained (sum over entities, no gold-holder left alive); baseline untouched; recommendation: do not rebaseline now.
