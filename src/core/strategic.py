@@ -3,7 +3,7 @@
 # Compliance IDs: STRAT-060, STRAT-061, STRAT-062, STRAT-063, SUB-022
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Mapping, Optional, List, Tuple
 from enum import Enum
 
 
@@ -329,6 +329,28 @@ class ProjectState:
     active_objective_id: Optional[str] = None
     created_tick: int = 0
     failure_count: int = 0
+
+
+# TCK-20261007-STRATEGIC-CAPACITY-GATE-COUNTS-TERMINAL-PROJECTS-SO-NO-NEW-PROJECT-KIND-CAN-START: ONE rule for which projects
+# occupy `CognitionProfile.max_active_projects`. A COMPLETED or ABANDONED project is a record, not an effort in progress, so it
+# never counts against the limit (it used to, and nothing removed it, so an entity that had ever held that many projects could
+# never start a new kind). Every capacity check and trim reads this and nothing else.
+LIVE_PROJECT_STATUSES = frozenset({ProjectStatus.ACTIVE, ProjectStatus.SUSPENDED})
+
+
+def is_live_project(project: ProjectState) -> bool:
+    """True for a project that still occupies strategic bandwidth: ACTIVE, or SUSPENDED (it can be resumed)."""
+    return project.status in LIVE_PROJECT_STATUSES
+
+
+def live_projects(projects: Mapping[str, ProjectState]) -> Dict[str, ProjectState]:
+    """The projects that count against `max_active_projects`."""
+    return {pid: p for pid, p in projects.items() if is_live_project(p)}
+
+
+def has_project_capacity(projects: Mapping[str, ProjectState], max_active_projects: int) -> bool:
+    """True when one more project can start: fewer live projects than the limit."""
+    return sum(1 for p in projects.values() if is_live_project(p)) < max_active_projects
 
 
 @dataclass(frozen=True, slots=True)

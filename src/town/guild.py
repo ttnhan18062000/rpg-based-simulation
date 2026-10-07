@@ -4,7 +4,7 @@ from typing import Optional
 from src.core.state import AuthoritativeState, EntityState
 from src.quests.generator import QuestGenerator, QuestPressureProfile
 from src.core.registries import ResourceRegistry
-from src.core.strategic import LeadState, LeadCertainty
+from src.core.strategic import LeadState, LeadCertainty, has_project_capacity
 from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate
 from src.core.enums import Domain
 from src.platform.rng import DeterministicRNG
@@ -87,7 +87,7 @@ class GuildAction:
         
         # 3. Create a quest if the entity has space
         new_projects = []
-        if len(entity.strategic.projects) < entity.strategic.profile.max_active_projects:
+        if has_project_capacity(entity.strategic.projects, entity.strategic.profile.max_active_projects):
             # Resolve region for pressure-driven quest selection.
             # Mirrors ResourceOpportunityProvider.get_opportunities() exactly:
             # src/world/providers/resources.py:40 (region fallback) and :60-66 (node->region match).

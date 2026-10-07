@@ -4440,3 +4440,31 @@
   support_boundary: 'The SimQ grade-anchor movement is not measured locally: tests/simulation_quality/test_grade_regression.py
     skips 82 of 89 tests without its calibration reports. Corpus trajectories diverge
     once a flee changes, so forced-call totals are not like-for-like across arms.'
+- id: STRAT-278
+  text: 'TCK-20261007-STRATEGIC-CAPACITY-GATE-COUNTS-TERMINAL-PROJECTS-SO-NO-NEW-PROJECT-KIND-CAN-START:
+    CognitionProfile.max_active_projects bounds an entity''s LIVE projects only (ACTIVE
+    or SUSPENDED); COMPLETED and ABANDONED projects are records and never count. The
+    capacity gate, the bandwidth trim, CapacityEnforcementPhase and the guild readers
+    share one predicate (is_live_project, live_projects, has_project_capacity), and
+    a trim never removes a finished record or evicts a live project for one.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/core/strategic.py` (`is_live_project`, `live_projects`, `has_project_capacity`),
+    `src/systems/strategic_systems/intelligence.py` (the gate), `src/systems/strategic_systems/detour.py`
+    (`enforce_bandwidth`), `src/engine/pipeline_phases/capacity_enforcement.py`, `src/ai/goals/scorers.py`
+    (`GuildNeedScorer`), `src/town/guild.py`. Corpus (crowded_frontier / frontier_living_world,
+    seed 42, 1500 ticks, audit_mode, budget off, before `cc3f00a11` vs after): fatigue
+    projects started 0 / 0 to 4 / 0; eat and sleep events 0 / 0 to 0 / 0; STARVATION
+    deaths 30 / 36 to 30 / 34. `docs/guidelines/intentional_divergences.md` 2.77;
+    `docs/mechanics/04_strategic_cognition.md` section 4'
+  proof_type: regression
+  test_path: tests/unit/strategic/test_project_capacity_counts_live_projects.py
+  divergence_note: 'Intentional divergence 2.77 (Bug Fix): finished projects no longer
+    count against max_active_projects.'
+  support_boundary: 'Does not make anyone eat or sleep: a finished-only entity can
+    now start a fatigue project, but the hunger goal still has no target (no tavern
+    exists in any world) and the rest path does not reduce sleep debt. Finished records
+    are not pruned (they still accumulate in StrategicComponent.projects). guild.py''s
+    GuildAction.visit change is covered only through the scorer tests and the existing
+    guild tests.'
