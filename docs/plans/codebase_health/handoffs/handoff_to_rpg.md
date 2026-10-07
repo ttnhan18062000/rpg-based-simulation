@@ -256,3 +256,17 @@ owner's separate ruleset step, not done by the codebase domain.
   files, the ratchet then lowers the ceiling. The row-by-row list is in `python_code_craft_gates_soak_review.md`.
 - `mypy_gate` exited 2 ("could not run") for two or more new errors until it was fixed in the flip batch; if you saw that
   message on a PR, it meant new errors, now reported as exit 1.
+
+## Update 2026-10-08: #406 breaks the layer-order import contract (fix before the 2026-10-19 flip)
+
+**From:** `codebase-planner`, at `origin/main` `a514e2025`. **Asked:** remove the import below; the owner chose (2026-10-07) that rpg fixes it rather than codebase grandfathering it.
+
+#406 (`7a39acc5d`, `TCK-20261007-PROJECT-SWITCH-COMPARES-A-LIVE-CANDIDATE-SCORE-TO-THE-CURRENT-PROJECTS-CREATION-TIME-SCORE`) added `from src.ai.goals.base import GoalScore` under `if TYPE_CHECKING:` at `src/core/strategic.py:11`, for the annotation of `with_live_current_score` (line 361). The `Registry layer order` contract (`codebase/structure/importlinter.toml`) puts `src.core` in the foundation layer, which must not import `src.ai`. `exclude_type_checking_imports = false` on purpose (a contract may not be looser than the test it replaces), so a `TYPE_CHECKING` import counts: this is a real violation, not a false positive. It also closes a loop: `src/ai/goals/base.py` imports `GoalKind` from `src.core.strategic`.
+
+Today the step is advisory, so #406 merged green; main's `Code health` job shows `Import contracts (advisory): 16 kept, 1 broken`. The import-linter flip (`TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`, earliest 2026-10-19T13:40Z) makes it blocking for every PR.
+
+Two fixes, your choice:
+1. Move `with_live_current_score` out of core next to its only caller, `src/systems/strategic_systems/intelligence.py:1776` (or into `src/ai/goals/`), and update the import in `tests/unit/strategic/test_project_switch_uses_live_current_score.py`.
+2. Keep it in core and type `live_scores` with a small `Protocol` defined in core that has the two attributes the function reads (`kind`, `utility`), then drop the import.
+
+Check: `uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml` reports 17 kept, 0 broken. If it is still broken at the flip, the flip ticket either baselines the pair by hand (`codebase/structure/import_layers_baseline.txt`) with the owner's yes, or waits.
