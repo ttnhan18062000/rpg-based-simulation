@@ -14,14 +14,14 @@ known_reds:
     ticket: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
     note: "row 2; cause #356 / decision 14; Lane B's ticket not on main at this base"
   - match: "tests.perf.test_perf_combat*"
-    ticket: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
-    note: "row 5-8; perf classification open on #355"
+    ticket: TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK
+    note: "row 5-8; real engine regression (primary cause #172); a second cost step is TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP"
   - match: "tests.perf.test_perf_movement*"
-    ticket: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
-    note: "row 5-8; perf classification open on #355"
+    ticket: TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK
+    note: "row 5-8; real engine regression (primary cause #172); a second cost step is TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP"
   - match: "tests.perf.test_perf_passive_scaling*"
-    ticket: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
-    note: "row 5-8; perf classification open on #355"
+    ticket: TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK
+    note: "row 5-8; real engine regression (primary cause #172); a second cost step is TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP"
   - match: "tests.perf.test_perf_strategic*"
-    ticket: TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX
-    note: "row 5-8; perf classification open on #355"
+    ticket: TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK
+    note: "row 5-8; real engine regression (primary cause #172); a second cost step is TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP"
