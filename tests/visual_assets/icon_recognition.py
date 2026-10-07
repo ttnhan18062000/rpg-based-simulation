@@ -17,13 +17,12 @@ from __future__ import annotations
 import hashlib
 import json
 import random
-import re
 import struct
 import zlib
 from pathlib import Path
 
 from tests.visual_assets import icon_sheet_rule as rule
-from tests.visual_assets.icon_specs import Spec
+from tests.visual_assets.icon_specs import Spec, has_word
 
 PLATE_KEY = "icon.plate.location"
 PANELS = {"dark": (0x11, 0x18, 0x27), "light": (0xE5, 0xE7, 0xEB)}
@@ -125,14 +124,9 @@ def choice_prompt(directory: Path, answer_key: dict[str, str], specs: dict[str, 
 
 def score_free(answer: str, spec: Spec) -> dict:
     text = answer.lower()
-    named = [w for w in spec.synonyms if _has_word(text, w)]
-    confused = [w for w in _terms(spec.must_not_read_as) if _has_word(text, w)]
+    named = [w for w in spec.synonyms if has_word(text, w)]
+    confused = [w for w in _terms(spec.must_not_read_as) if has_word(text, w)]
     return {"named": bool(named), "matched": named, "confused_with": [] if named else confused, "flagged": not named}
-
-
-def _has_word(text: str, term: str) -> bool:
-    """Whole-word match (an optional plural s or es), so `bow` does not match `crossbow`, nor `pick` `picket`."""
-    return re.search(rf"(?<![a-z]){re.escape(term)}(?:e?s)?(?![a-z])", text) is not None
 
 
 def _terms(must_not: str) -> list[str]:

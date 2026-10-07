@@ -65,12 +65,19 @@ def test_free_text_scoring_counts_synonyms_and_flags_a_misread():
     assert rec.score_free("a bell", SPECS["icon.marker.shrine"])["confused_with"] == ["bell"]
 
 
-def test_synonyms_match_whole_words_so_a_crossbow_is_not_a_bow_and_a_picket_is_not_a_pick():
-    ranger, tool = SPECS["icon.class.ranger"], SPECS["icon.item.tool"]
+def test_synonyms_match_whole_words_so_a_crossbow_is_not_a_bow_and_a_swordfish_is_not_a_sword():
+    ranger, sword = SPECS["icon.class.ranger"], SPECS["icon.item.weapon"]
     assert rec.score_free("a crossbow", ranger)["flagged"] is True
-    assert rec.score_free("a longbow", ranger)["flagged"] is True  # not listed: the spec decides what counts
     assert rec.score_free("a wooden bow", ranger)["flagged"] is False and rec.score_free("two bows", ranger)["flagged"] is False
-    assert rec.score_free("a picket fence", tool)["flagged"] is True and rec.score_free("a mining pick", tool)["flagged"] is False
+    assert rec.score_free("a longbow", ranger)["flagged"] is False  # listed in the spec: the spec decides what counts
+    assert rec.score_free("a swordfish", sword)["flagged"] is True and rec.score_free("a steel sword", sword)["flagged"] is False
+
+
+def test_the_distractor_check_uses_the_same_whole_word_rule_as_the_scoring():
+    from tests.visual_assets import icon_specs as sm
+
+    assert sm.has_word("a crossbow", "bow") is False and sm.has_word("a bow and arrow", "bow") is True
+    assert "crossbow" in SPECS["icon.class.ranger"].distractors  # the actual misread is offered, and it is not a correct answer
 
 
 def test_choice_scoring_requires_the_exact_intended_name():

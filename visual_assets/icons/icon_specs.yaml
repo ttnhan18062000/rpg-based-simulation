@@ -7,7 +7,7 @@ families:
   marker: {size: 16, convention: "16x16 glyph, live area 12x12 (2 px margin), dark outline #0e1018, drawn over the plate; one object, upright and centred, no scene"}
   building: {size: 24, convention: "24x24 panel icon, live area 20x20; one object, centred; the object as seen from the front, light from the top left"}
   class: {size: 24, convention: "24x24 panel icon, live area 20x20; the class's signature object alone (no figure)"}
-  item: {size: 24, convention: "24x24; one object per family; weapons point UP on the vertical axis (Tiny Dungeon's convention) so they never share a pose with the class dagger, which is diagonal"}
+  item: {size: 24, convention: "24x24; one object per family; weapons point UP on the vertical axis (Tiny Dungeon's convention) so they never share a pose with the class dagger, which is diagonal; the tool is a WRENCH (the catalog's two tool items are a repair kit and a spirit lantern: no mining tool, and a hammer or pick reads as a weapon), diagonal"}
   rarity: {size: 8, convention: "8x8 badge, a gem or bead silhouette that is never an octagon or a diamond (those are the tier ladder); name stays as text"}
   tier: {size: 8, convention: "8x8 rank badge: octagon (E to A) or diamond (S to SSS), pips cut out for steps"}
   status: {size: 16, convention: "16x16 frame with one arrow inside; the arrow's direction carries the meaning, not colour"}
@@ -25,14 +25,14 @@ icons:
     distractors: [bush, cloud, mushroom, speech bubble, lollipop, broccoli]
   icon.marker.ruins:
     status: v2
-    subject: ruined masonry
-    orientation: upright, centred, wider than tall
-    proportions: "10 px wide base slab 2 px tall; two stubs of DIFFERENT heights (about 6 and 3 px above the slab), each 3-4 px wide with a jagged or notched top; a fallen block between them"
-    parts: [ground slab, tall broken stub, low broken stub, fallen block]
-    reads_as: broken columns or crumbled wall
-    must_not_read_as: a boot, a chess piece, a stair, a tooth, a crown
-    synonyms: [ruin, broken column, broken pillar, rubble, crumbl, wall, pillar, column, stone, castle]
-    distractors: [boot, chess piece, staircase, tooth, crown, grave marker]
+    subject: a ruined brick wall
+    orientation: "upright, wider than tall, the broken top edge shaped like a U (never a one-way slope: that read as a boot, and a slab under it as a sole)"
+    proportions: "wall 10 px wide and about 9 px tall; 4 courses of bricks, two rows each, alternating light and dark with staggered mortar joints; a broken top edge with two towers of different heights (4 and 3 px from the top) either side of a low jagged gap; at least one fallen brick (a loose group of 2 or more px) lying in the gap; no ground slab and no matched pair of bricks under the wall (they read as wheels and a cart)"
+    parts: [brick courses, mortar joints, two towers, low jagged gap, fallen brick]
+    reads_as: a broken brick wall
+    must_not_read_as: mountain peaks, a wagon, a boot, a chess piece, a stair, a tooth, a crown
+    synonyms: [ruin, wall, brick, masonry, rubble, crumbl, castle, fortress, battlement]
+    distractors: [mountain, boot, wagon, chess piece, staircase, tooth]
   icon.marker.dungeon_entrance:
     status: v2
     subject: an arched doorway
@@ -41,7 +41,7 @@ icons:
     parts: [stone frame, arched dark opening, base step]
     reads_as: a doorway into a dungeon or cave
     must_not_read_as: a window, a tombstone, a mailbox, a tunnel seen from the side
-    synonyms: [door, arch, gate, entrance, tunnel, cave, dungeon, portal, doorway, tomb]
+    synonyms: [door, arch, archway, gate, entrance, tunnel, cave, dungeon, portal, doorway, tomb]
     distractors: [window, grave marker, mailbox, oven, bridge, helmet]
   icon.marker.shrine:
     status: v2
@@ -115,14 +115,14 @@ icons:
     distractors: [letter, map, scroll, tablet, window, envelope]
   icon.class.ranger:
     status: v2
-    subject: a bow with a nocked arrow
-    orientation: upright bow on the left, arrow pointing right
-    proportions: "bow arc 18 px tall and 4 px deep, a 1-px string, an arrow 14 px long with a 3 px head and green fletching"
-    parts: [bow limb, string, arrow shaft, arrowhead, fletching]
+    subject: a longbow with a nocked arrow
+    orientation: vertical bow with its belly bulging to the right (towards the target), string on the left pulled back to a V, arrow pointing right
+    proportions: "bow at least 18 px tall; limbs curved so the belly stands at least 4 px (measured 7) from the line between the tips; a visible string (15 px); an arrow shaft 16 px long (1 px) nocked at the string and crossing the bow, a broad head and green fletching; NO stock and no horizontal bar thicker than 1 row"
+    parts: [bow limbs, string, arrow shaft, arrowhead, fletching]
     reads_as: a bow and arrow
     must_not_read_as: a crossbow, a harp, a fishing rod
-    synonyms: [bow, arrow, archer, archery]
-    distractors: [harpoon, harp, fishing rod, slingshot, spear, boomerang]
+    synonyms: [bow, longbow, arrow, archer, archery]
+    distractors: [crossbow, harp, fishing rod, slingshot, spear, boomerang]
   icon.class.mage:
     status: v2
     subject: a pointed wizard hat
@@ -147,8 +147,8 @@ icons:
     status: v2
     subject: a sword
     orientation: upright, point up, centred on the vertical axis
-    proportions: "total 20 px tall; blade at least 60 percent of it (13 px or more), 3 px wide with a light centre or edge line, tapering to a 1 px point over the last 2-3 rows; a crossguard 9-11 px wide and 2 px thick, perpendicular, gold; a grip 3-4 px long and 2 px wide (never wider than the guard), brown; a gold pommel 3x2 px"
-    parts: [blade, edge highlight, crossguard, grip, pommel]
+    proportions: "total 20 px tall; blade 12 px (60 percent) long and 4 px wide with a 1 px light centre line and a 2 px tip; a gold crossguard 12 px wide and 2 px thick, perpendicular; a grip 2 px wide and 2 px long (never wider than the guard or the blade), brown; a gold pommel 4x2 px"
+    parts: [blade, centre line, crossguard, grip, pommel]
     reads_as: a longsword
     must_not_read_as: a cleaver, a knife, a dagger, a key
     synonyms: [sword, longsword, broadsword, blade, saber, sabre, claymore]
@@ -167,22 +167,22 @@ icons:
     status: v2
     subject: a pendant on a chain
     orientation: upright, symmetric
-    proportions: "a V-shaped chain 14 px wide at the top, converging to a round gold pendant about 10 px across with a blue gem about 6 px across"
-    parts: [chain, gold setting, gem, highlight]
+    proportions: "a thin 1 px chain loop 12 px wide that rises to a point, closed by a small bail ring (4 px or less) at the apex; a round gold pendant 10 px wide and 8 px tall hanging at the loop's foot with a blue gem at least 5x4 px; never two ribbons, never a neck and a body"
+    parts: [bail ring, chain loop, gold setting, gem, highlight]
     reads_as: an amulet or necklace
-    must_not_read_as: a ring, a medal, a compass, a clock
+    must_not_read_as: a medal, a potion flask, a ring, a compass, a clock
     synonyms: [pendant, amulet, necklace, medallion, locket, talisman, jewel, charm]
-    distractors: [ring, medal, compass, clock, button, eye]
+    distractors: [medal, flask, ring, compass, clock, button]
   icon.item.tool:
     status: v2
-    subject: a pickaxe
-    orientation: diagonal handle from the bottom left to the top right, head across the top
-    proportions: "handle 16 px long and 2 px thick (brown); a curved double-pointed head about 18 px wide across the top, one side tapering to a point"
-    parts: [handle, curved head, point, shaded face]
-    reads_as: a mining pickaxe
-    must_not_read_as: a hammer, an axe, a hockey stick
-    synonyms: [pickaxe, pick axe, pick, mattock, mining]
-    distractors: [hammer, axe, hockey stick, shovel, scythe, anchor]
+    subject: a wrench
+    orientation: diagonal, handle bottom left to head top right (long axis rises to the right at 35 to 55 degrees)
+    proportions: "long axis at least 2.5 times the short axis; a handle 3 px across with a round hole in its end; a round head about 10 px across with an open jaw (a notch cut from the head, solidity at most 0.90)"
+    parts: [handle, hole in the end, round head, open jaw]
+    reads_as: a wrench or spanner, a repair tool
+    must_not_read_as: a hammer, a weapon, a key, a bone
+    synonyms: [wrench, spanner, tool, repair]
+    distractors: [hammer, key, bone, pickaxe, axe, fish skeleton]
   icon.item.consumable:
     status: v2
     subject: a potion flask
@@ -207,12 +207,12 @@ icons:
     status: v2
     subject: a round bead
     orientation: centred
-    proportions: "6x6 px round, slate fill with a dark outline and one highlight pixel at the top left"
+    proportions: "7x7 px, round (fills at most 80 percent of its bounding box: a circle is 79, a square 100), slate fill with a dark outline and one lighter highlight pixel at the top left; never the tier's 8 px"
     parts: [round body, highlight]
     reads_as: a plain round bead
-    must_not_read_as: a tier badge, a coin
+    must_not_read_as: a square, a tier badge, a coin
     synonyms: [bead, ball, pearl, orb, dot, circle, sphere, stone, button]
-    distractors: [octagon, coin, diamond, star, square, hexagon]
+    distractors: [square, octagon, coin, diamond, star, hexagon]
   icon.rarity.uncommon:
     status: v2
     subject: a kite-shaped gem

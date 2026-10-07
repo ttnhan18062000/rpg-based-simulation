@@ -8,6 +8,7 @@ scores with (`synonyms`) and the wrong answers it offers (`distractors`). Pure P
 
 from __future__ import annotations
 
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -38,6 +39,11 @@ class Spec:
     must_not_read_as: str
     synonyms: tuple[str, ...]
     distractors: tuple[str, ...]
+
+
+def has_word(text: str, term: str) -> bool:
+    """Whole-word match (an optional plural s or es): `bow` is not in `crossbow`, nor `pick` in `picket`. Used by the scoring and by the distractor check, so they can never disagree."""
+    return re.search(rf"(?<![a-z]){re.escape(term.lower())}(?:e?s)?(?![a-z])", text.lower()) is not None
 
 
 def family_of(key: str) -> str:
@@ -81,7 +87,7 @@ def problems(specs: dict[str, Spec], registered: list[str]) -> list[str]:
     for key, s in specs.items():
         if len(s.synonyms) < 2 or len(s.distractors) < 4:
             out.append(f"{key}: needs at least 2 synonyms and 4 distractors")
-        clash = [d for d in s.distractors if any(w in d.lower() for w in s.synonyms)]
+        clash = [d for d in s.distractors if any(has_word(d, w) for w in s.synonyms)]
         if clash:
             out.append(f"{key}: distractor(s) {clash} would count as a correct answer (they contain a synonym)")
         if not s.parts:

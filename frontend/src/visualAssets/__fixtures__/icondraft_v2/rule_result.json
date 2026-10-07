@@ -1,5 +1,5 @@
 {
- "draft_set_hash": "sha256:07ded31ec3dbddba4cae5ba54eca5d80da9dc739bc544156af0fc97efc3d6d9c",
+ "draft_set_hash": "sha256:bb41c3eef245f6eab3488d5c7a940e574a463112a0bfba611b0c5cfd012737f4",
  "failing": {
   "i1": [],
   "i2": [],
@@ -53,13 +53,13 @@
     2,
     2,
     13,
-    13
+    12
    ],
    "margin": [
     2,
     2,
     2,
-    2
+    3
    ]
   },
   "icon.marker.shrine": {
@@ -115,12 +115,12 @@
   },
   "rarity": {
    "min_dL_by_vision": {
-    "deutan": 10.358,
-    "normal": 9.784,
-    "protan": 9.194,
-    "tritan": 10.596
+    "deutan": 10.769,
+    "normal": 10.197,
+    "protan": 9.609,
+    "tritan": 11.007
    },
-   "min_shape_px_across_classes": 12,
+   "min_shape_px_across_classes": 13,
    "pairs": 3,
    "size": 8,
    "value_checked": true
@@ -231,7 +231,7 @@
   },
   "icon.item.tool": {
    "color_budget": 12,
-   "colors": 5,
+   "colors": 4,
    "findings": [
     "orphan_pixels"
    ],
@@ -249,7 +249,7 @@
   },
   "icon.item.weapon": {
    "color_budget": 12,
-   "colors": 6,
+   "colors": 8,
    "findings": [
     "orphan_pixels"
    ],
@@ -305,7 +305,8 @@
    "color_budget": 8,
    "colors": 3,
    "findings": [
-    "orphan_pixels"
+    "orphan_pixels",
+    "touches_edge"
    ],
    "ok": true,
    "warnings": []
@@ -370,9 +371,9 @@
    20
   ],
   "icon.class.ranger": [
-   4,
+   3,
    2,
-   21,
+   20,
    21
   ],
   "icon.class.rogue": [
@@ -400,27 +401,27 @@
    20
   ],
   "icon.item.tool": [
-   2,
+   4,
    2,
    21,
-   21
+   19
   ],
   "icon.item.trinket": [
    5,
    2,
-   19,
+   18,
    21
   ],
   "icon.item.weapon": [
+   5,
    2,
-   2,
-   21,
+   18,
    21
   ]
  },
  "plates": {},
  "rarity_vs_tier_min_shape_px": {
-  "icon.rarity.common": 8,
+  "icon.rarity.common": 9,
   "icon.rarity.rare": 8,
   "icon.rarity.uncommon": 16
  },

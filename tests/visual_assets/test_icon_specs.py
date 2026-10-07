@@ -26,7 +26,7 @@ def test_the_style_guide_contains_the_generated_table_verbatim():
 
 def test_the_style_guide_states_the_process_rule_steps_in_order():
     text = GUIDE.read_text()
-    marks = ["1. **Spec**", "2. **Reference study**", "3. **One-colour silhouette sheet**", "4. **Draw**", "5. **Checks**", "6. **Owner gate**"]
+    marks = ["1. **Spec**", "2. **Reference study**", "3. **One-colour silhouette sheet**", "4. **Draw**", "5. **Spec compliance table**", "6. **Checks**", "7. **Owner gate**"]
     positions = [text.index(m) for m in marks]
     assert positions == sorted(positions)
 
