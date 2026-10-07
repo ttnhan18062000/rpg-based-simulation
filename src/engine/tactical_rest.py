@@ -56,8 +56,8 @@ def rest_in_place_update(
     has_project, target = _fatigue_target(state, entity)
     if not has_project or entity.biological.sleep_debt < REST_MIN_SLEEP_DEBT:
         return None
-    if present_threat_terms(entity, list(hostiles)):
-        return None
+    if hostiles and present_threat_terms(entity, list(hostiles)):
+        return None  # in danger (a perceived hostile makes a present threat); a wound alone, with no hostile in view, is not
     if target is not None:
         px, py = entity.navigation.position
         if service_tile(state, (int(px), int(py)), BED_KINDS) is not None:

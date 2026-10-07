@@ -63,3 +63,31 @@ def test_without_an_inn_the_need_still_escalates_with_no_walk():
     hunger = 0.75 * HUNGER_LINE
     score = EatScorer().score(_hero(hunger=hunger), _state(None))
     assert score.target_pos is None and score.utility > BLOCKER_CEILING
+
+
+def _with_hostile(hero, at, hp=100):
+    from src.core.enums import Faction
+
+    monster = (V2EntityBuilder(2).kind("monster").location(*at).identity(faction=Faction.MONSTER_HORDE)
+               .combat(hp=hp, max_hp=100, alive=True, readiness=100.0).lifecycle(active=True).build())
+    hero = replace(hero, identity=replace(hero.identity, faction=Faction.HERO_GUILD))
+    state = AuthoritativeState(
+        tick=500, seed=1, world_time=1000, entities={1: hero, 2: monster},
+        buildings={20003: BuildingState(id=20003, kind="inn", position=(5.0, 0.0), functional=True)},
+    )
+    return hero, state
+
+
+def test_a_present_threat_takes_the_escalation_away_so_a_need_never_outbids_combat():
+    hunger = 0.75 * HUNGER_LINE
+    hero, near = _with_hostile(_hero(hunger=hunger), (1.0, 0.0))  # adjacent: a present threat
+    assert EatScorer().score(hero, near).utility == pytest.approx(hunger)
+    hero, far = _with_hostile(_hero(hunger=hunger), (9.0, 0.0))   # perceived but not a present threat
+    assert EatScorer().score(hero, far).utility > BLOCKER_CEILING
+
+
+def test_a_wound_alone_with_no_hostile_in_view_is_not_a_threat_to_the_need():
+    hunger = 0.75 * HUNGER_LINE
+    hero = _hero(hunger=hunger)
+    hero = replace(hero, combat=replace(hero.combat, hp=30, max_hp=100))
+    assert EatScorer().score(hero, _state((5.0, 0.0))).utility > BLOCKER_CEILING

@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Tuple
 from src.ai.goals.base import GoalScorer, GoalScore
 from src.ai.goals.need_pull import hunger_pull, sleep_pull
+from src.ai.goals.present_threat import present_threat_to
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.core.state import EntityState, AuthoritativeState
@@ -44,6 +45,13 @@ def _travel_tiles(entity: EntityState, target_pos: Tuple[float, float]) -> float
     return abs(entity.navigation.position[0] - target_pos[0]) + abs(entity.navigation.position[1] - target_pos[1])
 
 
+def _escalated_unless_threatened(entity: EntityState, state: AuthoritativeState, raw: float, escalated: float) -> float:
+    """SURV-07: the escalated utility, or the raw one while a present threat holds (only a present threat outranks a pressing need)."""
+    if escalated > raw and present_threat_to(entity, state):
+        return raw
+    return escalated
+
+
 class SleepScorer(GoalScorer):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
         bio = entity.biological
@@ -63,10 +71,10 @@ class SleepScorer(GoalScorer):
         # SURV-07: the pull grows with the sleep debt the subject will have on arrival at the inn (no inn: no walk).
         rate = need_rates(entity)[1]
         if best_bldg:
-            utility = sleep_pull(utility, bio.sleep_debt, rate, _travel_tiles(entity, best_bldg.position))
+            utility = _escalated_unless_threatened(entity, state, utility, sleep_pull(utility, bio.sleep_debt, rate, _travel_tiles(entity, best_bldg.position)))
             return GoalScore(kind=GoalKind.FATIGUE, utility=utility, target_id=str(best_bldg.id), target_pos=best_bldg.position)
 
-        return GoalScore(kind=GoalKind.FATIGUE, utility=sleep_pull(utility, bio.sleep_debt, rate, 0.0))
+        return GoalScore(kind=GoalKind.FATIGUE, utility=_escalated_unless_threatened(entity, state, utility, sleep_pull(utility, bio.sleep_debt, rate, 0.0)))
 
 class EatScorer(GoalScorer):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
@@ -82,10 +90,10 @@ class EatScorer(GoalScorer):
         # SURV-07: the pull grows with the hunger the subject will have on arrival at the inn (no inn: no walk).
         rate = need_rates(entity)[0]
         if best_bldg:
-            utility = hunger_pull(utility, bio.hunger, rate, _travel_tiles(entity, best_bldg.position))
+            utility = _escalated_unless_threatened(entity, state, utility, hunger_pull(utility, bio.hunger, rate, _travel_tiles(entity, best_bldg.position)))
             return GoalScore(kind=GoalKind.HUNGER, utility=utility, target_id=str(best_bldg.id), target_pos=best_bldg.position)
 
-        return GoalScore(kind=GoalKind.HUNGER, utility=hunger_pull(utility, bio.hunger, rate, 0.0))
+        return GoalScore(kind=GoalKind.HUNGER, utility=_escalated_unless_threatened(entity, state, utility, hunger_pull(utility, bio.hunger, rate, 0.0)))
 
 
 class SocialScorer(GoalScorer):
