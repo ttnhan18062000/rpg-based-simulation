@@ -2,9 +2,14 @@
 # Compliance IDs: SOC-003, SOC-006, STRAT-001, STRAT-060, STRAT-061, STRAT-062, STRAT-063, STRAT-191, STRAT-192, STRAT-193, STRAT-194, STRAT-201, STRAT-202, STRAT-203, STRAT-214, SUB-022
 # Compliance IDs: STRAT-060, STRAT-061, STRAT-062, STRAT-063, SUB-022
 from __future__ import annotations
+import dataclasses
 from dataclasses import dataclass, field
-from typing import Dict, Any, Mapping, Optional, List, Tuple
+from typing import Dict, Any, Iterable, Mapping, Optional, List, Tuple, TYPE_CHECKING
 from enum import Enum
+
+if TYPE_CHECKING:
+    from src.ai.goals.base import GoalScore
+    from src.core.state import EntityState
 
 
 class DirectivePriority(str, Enum):
@@ -351,6 +356,28 @@ def live_projects(projects: Mapping[str, ProjectState]) -> Dict[str, ProjectStat
 def has_project_capacity(projects: Mapping[str, ProjectState], max_active_projects: int) -> bool:
     """True when one more project can start: fewer live projects than the limit."""
     return sum(1 for p in projects.values() if is_live_project(p)) < max_active_projects
+
+
+def with_live_current_score(entity: EntityState, live_scores: Iterable[GoalScore]) -> EntityState:
+    """
+    The entity with its CURRENT project's score replaced by that project's live utility, for the switch comparison.
+
+    TCK-20261007-PROJECT-SWITCH-COMPARES-A-LIVE-CANDIDATE-SCORE-TO-THE-CURRENT-PROJECTS-CREATION-TIME-SCORE: a project's `score` is
+    the utility its goal had when the project was created and is never refreshed, while `evaluate_project_switch` compares a
+    LIVE candidate utility against it. A need that has grown since creation then looks weaker than it is (and the same kind's
+    own live score can beat its stale score and replace it with a duplicate project), a need that has been met looks stronger.
+    Only a project whose kind is a `GoalKind` stores a utility (the generic branch); a `ProjectKind` project (an adventure route,
+    a contract, a stabilization) stores a raw score on another scale (`_score_scale_max`) and is left alone, as is a project
+    whose goal has no live score this evaluation.
+    """
+    strat = entity.strategic
+    current = strat.projects.get(strat.current_project_id) if strat.current_project_id else None
+    if current is None or not isinstance(current.kind, GoalKind):
+        return entity
+    live = next((s.utility for s in live_scores if s.kind == current.kind), None)
+    if live is None or live == current.score:
+        return entity
+    return dataclasses.replace(entity, strategic=dataclasses.replace(strat, projects={**strat.projects, current.id: dataclasses.replace(current, score=live)}))
 
 
 @dataclass(frozen=True, slots=True)
