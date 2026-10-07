@@ -23,11 +23,49 @@ class CooperationDecisionResult:
     rejected_partners: Dict[int, str]
     trace: Dict[str, Any]
 
+PendingOfferIndex = Mapping[int, Tuple[int, str]]
+
+
+def build_pending_offer_index(state: AuthoritativeState) -> PendingOfferIndex:
+    """
+    TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK: one pass over the world that maps a
+    target entity id to the `(offering_entity_id, contract_id)` that `find_pending_incoming_offer` returns for it.
+
+    Offerers are visited in ascending id order and each offerer's contracts in ascending contract-id order, and the
+    first live offer seen for a target is kept, so the choice is the lowest offerer id and then the lowest contract
+    id, exactly the order the per-entity scan used. An offerer must be active and alive; an offer must be a
+    RECRUITMENT contract in OFFERED status that is not expired; an offerer's offer to itself is never indexed.
+
+    Transient and derived: a read model of `state` for one tick, never stored. It is only valid while the contracts
+    and the active/alive flags it read are unchanged, which holds for the whole of `CooperationPhase.execute`
+    (every change there is deferred into the returned `StateUpdate`).
+    """
+    index: Dict[int, Tuple[int, str]] = {}
+    tick = state.tick
+    for offerer_id in sorted(state.entities.keys()):
+        offerer = state.entities[offerer_id]
+        contracts = offerer.strategic.contracts
+        if not contracts or not offerer.lifecycle.active or not offerer.combat.alive:
+            continue
+        for c_id in sorted(contracts.keys()):
+            contract = contracts[c_id]
+            if (
+                contract.kind == ContractKind.RECRUITMENT
+                and contract.status == ContractStatus.OFFERED
+                and (contract.expiry_tick <= 0 or contract.expiry_tick > tick)
+                and contract.target_id != offerer_id
+                and contract.target_id not in index
+            ):
+                index[contract.target_id] = (offerer_id, c_id)
+    return index
+
+
 class CooperationDecisionService:
     @staticmethod
     def find_pending_incoming_offer(
         entity: EntityState,
         state: AuthoritativeState,
+        pending_offers: Optional[PendingOfferIndex] = None,
     ) -> Optional[Tuple[int, str]]:
         """
         TCK-20260912-PARTY-FORMATION-REACHABILITY-INVESTIGATION: the accept-side counterpart to
@@ -45,22 +83,22 @@ class CooperationDecisionService:
         """
         if entity.identity.group_id is not None:
             return None
-        for offerer_id in sorted(state.entities.keys()):
-            if offerer_id == entity.id:
-                continue
-            offerer = state.entities[offerer_id]
-            if not offerer.lifecycle.active or not offerer.combat.alive:
-                continue
-            for c_id in sorted(offerer.strategic.contracts.keys()):
-                contract = offerer.strategic.contracts[c_id]
-                if (
-                    contract.kind == ContractKind.RECRUITMENT
-                    and contract.status == ContractStatus.OFFERED
-                    and contract.target_id == entity.id
-                    and (contract.expiry_tick <= 0 or contract.expiry_tick > state.tick)
-                ):
-                    return offerer_id, c_id
-        return None
+        if pending_offers is None:
+            pending_offers = build_pending_offer_index(state)
+        return pending_offers.get(entity.id)
+
+    @staticmethod
+    def accept_pending_offer(entity: EntityState, pending_offer: Tuple[int, str]) -> CooperationDecisionResult:
+        """Step 0 of `select`: respond to another entity's recruitment offer (see `find_pending_incoming_offer`)."""
+        offerer_id, contract_id = pending_offer
+        return CooperationDecisionResult(
+            entity_id=entity.id,
+            selected_posture=CooperationPosture.JOIN_PARTY,
+            selected_partner_id=offerer_id,
+            fit_score=1.0,
+            rejected_partners={},
+            trace={"accepted_contract_id": contract_id, "reason": "Accepting pending recruitment offer"},
+        )
 
     @staticmethod
     def select(
@@ -70,23 +108,68 @@ class CooperationDecisionService:
         fit_reports: Tuple[PartnerFitReport, ...],
         state: AuthoritativeState,
     ) -> CooperationDecisionResult:
-        trace = {}
-        rejected = {}
-
         # 0. Pending incoming recruitment offer takes priority over pursuing (or deferring) this
         # entity's own help needs -- responding to another entity's request is a distinct decision
         # from "do I need help for my own objective."
         pending_offer = CooperationDecisionService.find_pending_incoming_offer(entity, state)
         if pending_offer is not None:
-            offerer_id, contract_id = pending_offer
-            return CooperationDecisionResult(
-                entity_id=entity.id,
-                selected_posture=CooperationPosture.JOIN_PARTY,
-                selected_partner_id=offerer_id,
-                fit_score=1.0,
-                rejected_partners={},
-                trace={"accepted_contract_id": contract_id, "reason": "Accepting pending recruitment offer"},
-            )
+            return CooperationDecisionService.accept_pending_offer(entity, pending_offer)
+        return CooperationDecisionService.select_for_own_needs(entity, help_needs, candidates, fit_reports, state)
+
+    @staticmethod
+    def _best_partner_report(
+        entity: EntityState,
+        candidates: Tuple[PartnerCandidate, ...],
+        fit_reports: Tuple[PartnerFitReport, ...],
+    ) -> Tuple[Optional[PartnerFitReport], Dict[int, str]]:
+        """The highest-fit acceptable report, and the reason each other candidate was rejected."""
+        rejected: Dict[int, str] = {}
+        greed = entity.identity.personality.greed
+        best_report = None
+        for rep in fit_reports:
+            # Check rejection bounds (e.g. low trust)
+            if rep.trust_score < 0.2:
+                rejected[rep.candidate_id] = f"low trust ({rep.trust_score:.2f}) from prior history"
+                continue
+            if rep.fit_score < 0.3:
+                rejected[rep.candidate_id] = f"poor role fit or high risk ({rep.fit_score:.2f})"
+                continue
+
+            # If greedy entity, check if partner costs too much
+            cand_cost = next((c.cost_gold for c in candidates if c.entity_id == rep.candidate_id), 0)
+            if greed > 0.6 and cand_cost > entity.inventory.gold * 0.1:
+                rejected[rep.candidate_id] = f"high partner cost ({cand_cost} gold)"
+                continue
+
+            if best_report is None or rep.fit_score > best_report.fit_score:
+                best_report = rep
+        return best_report, rejected
+
+    @staticmethod
+    def _has_live_recruitment_offer(entity: EntityState, tick: int) -> bool:
+        """
+        TCK-20260830-COOPERATION-OFFER-CONCURRENT-DUPLICATE-BURST: gate offer creation itself
+        on an already-pending, unexpired RECRUITMENT offer — without this, the same entity can
+        create several simultaneous duplicate offers on consecutive ticks before the first one
+        ever expires (the retry cooldown only throttles re-offering *after* an expiry).
+        """
+        return any(
+            c.kind == ContractKind.RECRUITMENT
+            and c.status == ContractStatus.OFFERED
+            and (c.expiry_tick <= 0 or c.expiry_tick > tick)
+            for c in entity.strategic.contracts.values()
+        )
+
+    @staticmethod
+    def select_for_own_needs(
+        entity: EntityState,
+        help_needs: Tuple[HelpNeed, ...],
+        candidates: Tuple[PartnerCandidate, ...],
+        fit_reports: Tuple[PartnerFitReport, ...],
+        state: AuthoritativeState,
+    ) -> CooperationDecisionResult:
+        """Steps 1-3 of `select`: the decision for an entity that has no pending incoming offer to answer."""
+        trace = {}
 
         # 1. Easy objective / no needs selects SOLO
         if not help_needs:
@@ -101,24 +184,13 @@ class CooperationDecisionService:
 
         on_offer_cooldown = state.tick < entity.identity.cooldowns.get("cooperation_offer_retry", 0)
 
-        # TCK-20260830-COOPERATION-OFFER-CONCURRENT-DUPLICATE-BURST: gate offer creation itself
-        # on an already-pending, unexpired RECRUITMENT offer — without this, the same entity can
-        # create several simultaneous duplicate offers on consecutive ticks before the first one
-        # ever expires (the retry cooldown above only throttles re-offering *after* an expiry).
-        has_pending_recruitment_offer = any(
-            c.kind == ContractKind.RECRUITMENT
-            and c.status == ContractStatus.OFFERED
-            and (c.expiry_tick <= 0 or c.expiry_tick > state.tick)
-            for c in entity.strategic.contracts.values()
-        )
+        has_pending_recruitment_offer = CooperationDecisionService._has_live_recruitment_offer(entity, state.tick)
 
         # personality effects
         pers = entity.identity.personality
         sociability = pers.sociability
         bravery = pers.bravery
-        caution = getattr(pers, "caution", 0.0) # Caution fallback
-        greed = pers.greed
-        
+
         # Determine dominant help need severity
         max_sev_need = max(help_needs, key=lambda x: x.severity)
         trace["dominant_need"] = max_sev_need.key
@@ -128,29 +200,12 @@ class CooperationDecisionService:
         # Base solo score drops as need severity rises, boosted by bravery
         solo_score = max(0.0, 1.0 - max_sev_need.severity + bravery * 0.4)
         coop_score = max_sev_need.severity + sociability * 0.3
-        
+
         trace["solo_score_base"] = solo_score
         trace["coop_score_base"] = coop_score
 
         # Find best partner by fit report
-        best_report = None
-        for rep in fit_reports:
-            # Check rejection bounds (e.g. low trust)
-            if rep.trust_score < 0.2:
-                rejected[rep.candidate_id] = f"low trust ({rep.trust_score:.2f}) from prior history"
-                continue
-            if rep.fit_score < 0.3:
-                rejected[rep.candidate_id] = f"poor role fit or high risk ({rep.fit_score:.2f})"
-                continue
-                
-            # If greedy entity, check if partner costs too much
-            cand_cost = next((c.cost_gold for c in candidates if c.entity_id == rep.candidate_id), 0)
-            if greed > 0.6 and cand_cost > entity.inventory.gold * 0.1:
-                rejected[rep.candidate_id] = f"high partner cost ({cand_cost} gold)"
-                continue
-                
-            if best_report is None or rep.fit_score > best_report.fit_score:
-                best_report = rep
+        best_report, rejected = CooperationDecisionService._best_partner_report(entity, candidates, fit_reports)
 
         # 3. Select posture based on scores
         if best_report and not on_offer_cooldown and not has_pending_recruitment_offer:
@@ -158,45 +213,31 @@ class CooperationDecisionService:
             best_cand = next(c for c in candidates if c.entity_id == best_report.candidate_id)
             trace["best_partner"] = best_report.candidate_id
             trace["partner_fit_score"] = best_report.fit_score
-            
+
             # Weighted decision comparison
             final_coop_score = coop_score + best_report.fit_score * 0.5
             if final_coop_score > solo_score:
                 # Hire vs Request depending on partner cost and role
-                if best_cand.cost_gold > 0:
-                    chosen_posture = CooperationPosture.HIRE_SUPPORT
-                else:
-                    chosen_posture = CooperationPosture.REQUEST_HELP
-                    
                 return CooperationDecisionResult(
                     entity_id=entity.id,
-                    selected_posture=chosen_posture,
+                    selected_posture=(
+                        CooperationPosture.HIRE_SUPPORT if best_cand.cost_gold > 0 else CooperationPosture.REQUEST_HELP
+                    ),
                     selected_partner_id=best_report.candidate_id,
                     fit_score=best_report.fit_score,
                     rejected_partners=rejected,
                     trace=trace
                 )
-        
-        # No suitable partner or solo preferred
-        if solo_score >= 0.5:
-            return CooperationDecisionResult(
-                entity_id=entity.id,
-                selected_posture=CooperationPosture.SOLO,
-                selected_partner_id=None,
-                fit_score=0.0,
-                rejected_partners=rejected,
-                trace=trace
-            )
-        else:
-            # Need is too severe to solo, but no partner exists
-            return CooperationDecisionResult(
-                entity_id=entity.id,
-                selected_posture=CooperationPosture.DEFER_NO_PARTNER,
-                selected_partner_id=None,
-                fit_score=0.0,
-                rejected_partners=rejected,
-                trace=trace
-            )
+
+        # No suitable partner or solo preferred. A need too severe to solo with no partner defers.
+        return CooperationDecisionResult(
+            entity_id=entity.id,
+            selected_posture=CooperationPosture.SOLO if solo_score >= 0.5 else CooperationPosture.DEFER_NO_PARTNER,
+            selected_partner_id=None,
+            fit_score=0.0,
+            rejected_partners=rejected,
+            trace=trace
+        )
 
 
 class CooperationIntentBridge:
