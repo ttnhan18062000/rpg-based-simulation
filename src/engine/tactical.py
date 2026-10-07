@@ -20,6 +20,7 @@ from src.cognition.capability_estimate import CapabilityEstimateService, Capabil
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
+from src.engine.tactical_threat import safety_retreat_warranted
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -264,8 +265,9 @@ class TacticalDecisionSystem:
                       current_objective_id_set=""
                   )
 
-        # Safety pressure: high-safety entities retreat from threats rather than engage
-        if hostiles and entity_pressures.safety_pressure > 0.75:
+        # Safety pressure (AGENCY-07): a cautious entity retreats from a present threat rather than engage; the
+        # disposition lowers the bar, it never decides flight on sight of a hostile.
+        if safety_retreat_warranted(entity, hostiles, entity_pressures.safety_pressure):
             retreat_to = _destination_or_hold(entity, retreat_destination(state, entity, hostiles))
             return EntityUpdate(
                 entity_id=entity.id,
