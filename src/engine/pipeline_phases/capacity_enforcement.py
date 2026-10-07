@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
     from src.core.updates import StateUpdate, StrategicUpdate
 
+from src.core.strategic import live_projects
 from src.strategy.capacity import CapacityService
 from src.core.updates import EntityUpdate, StrategicUpdate
 
@@ -94,7 +95,7 @@ class CapacityEnforcementPhase:
                     all_projects.pop(p_id, None)
                     
                 project_removals = CapacityService.trim_dict(
-                    all_projects,
+                    live_projects(all_projects),
                     profile.max_active_projects,
                     lambda p: p.score
                 )

@@ -71,7 +71,7 @@ from src.engine.policy import GovernorPolicy
 from src.core.strategic import (
     BlockerState, LeadState, LeadCertainty,
     ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
-    CognitionProfile, ProjectKind, GoalKind, ObjectiveKind
+    CognitionProfile, ProjectKind, GoalKind, ObjectiveKind, has_project_capacity
 )
 from src.engine.spatial_query import SpatialQueryService
 from src.content_semantics.faction import are_entities_hostile
@@ -1768,7 +1768,7 @@ class StrategicIntelligenceSystem:
                     score=best_candidate.utility
                 )
 
-            at_capacity = len(strat.projects) >= strat.profile.max_active_projects
+            at_capacity = not has_project_capacity(strat.projects, strat.profile.max_active_projects)
             if at_capacity and not existing:
                 if boredom_upd:
                     return StrategicUpdate(boredom_delta=boredom_upd)
