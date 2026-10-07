@@ -8,6 +8,7 @@ key registration (the tax rc-0006 cost). Everything else must be equal: set id, 
 
     python -m tests.visual_assets.icon_draft_fixture --write    # refresh the committed copy (also re-records the rule result)
     python -m tests.visual_assets.icon_draft_fixture --check    # exit 1 if it differs from a fresh export
+    ... --set icons-v2 --write | --check                        # the same for icon set v2 (icondraft_v2/)
 """
 
 from __future__ import annotations
@@ -20,17 +21,20 @@ import sys
 import tempfile
 from pathlib import Path
 
+from tests.visual_assets import icon_v2_draft_set
 from tests.visual_assets.icon_draft_set import SET_ID, evaluate_draft_set
 from tests.visual_assets.pilot_colour_vision import REPO
 from visual_assets.store import draftexport
 
 COMMITTED = REPO / "frontend" / "src" / "visualAssets" / "__fixtures__" / "icondraft"
+# Icon set v2 (`TCK-20261007-VISUAL-ASSETS-ICON-V2-DRAFT-SET`): a second copy beside the first, same rules, its own recorded rule result (the groups and shape-only rule of `icon_v2_groups`).
+COMMITTED_V2 = REPO / "frontend" / "src" / "visualAssets" / "__fixtures__" / "icondraft_v2"
 MANIFEST = "draft_preview_manifest.json"
 RESULT = "rule_result.json"
 
 
-def export_fresh(out: Path) -> None:
-    draftexport.export_draft_preview(SET_ID, out)
+def export_fresh(out: Path, set_id: str = SET_ID) -> None:
+    draftexport.export_draft_preview(set_id, out)
 
 
 def masked(manifest_bytes: bytes) -> dict:
@@ -43,7 +47,11 @@ def recorded_result_text() -> str:
     return json.dumps(evaluate_draft_set(), indent=1, sort_keys=True) + "\n"
 
 
-def differences(fresh: Path, committed: Path = COMMITTED) -> list[str]:
+def recorded_result_text_v2() -> str:
+    return json.dumps(icon_v2_draft_set.evaluate(), indent=1, sort_keys=True) + "\n"
+
+
+def differences(fresh: Path, committed: Path = COMMITTED, result_text=recorded_result_text) -> list[str]:
     problems = []
     names = sorted(p.name for p in fresh.iterdir())
     have = sorted(p.name for p in committed.iterdir() if p.name != RESULT)
@@ -56,7 +64,7 @@ def differences(fresh: Path, committed: Path = COMMITTED) -> list[str]:
                 problems.append(f"{name} differs (registry_hash ignored)")
         elif not filecmp.cmp(fresh / name, committed / name, shallow=False):
             problems.append(f"{name} differs")
-    if (committed / RESULT).read_text() != recorded_result_text():
+    if (committed / RESULT).read_text() != result_text():
         problems.append(f"{RESULT} differs from a fresh evaluation of the rule")
     return problems
 
@@ -65,16 +73,18 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--set", default=SET_ID, choices=[SET_ID, icon_v2_draft_set.SET_ID])
     args = ap.parse_args()
+    target, result_text = (COMMITTED_V2, recorded_result_text_v2) if args.set == icon_v2_draft_set.SET_ID else (COMMITTED, recorded_result_text)
     with tempfile.TemporaryDirectory() as tmp:
         fresh = Path(tmp) / "export"
-        export_fresh(fresh)
+        export_fresh(fresh, args.set)
         if args.write:
-            if COMMITTED.exists():
-                shutil.rmtree(COMMITTED)
-            shutil.copytree(fresh, COMMITTED)
-            (COMMITTED / RESULT).write_text(recorded_result_text())
-            print(f"wrote {COMMITTED}")
-        problems = differences(fresh)
+            if target.exists():
+                shutil.rmtree(target)
+            shutil.copytree(fresh, target)
+            (target / RESULT).write_text(result_text())
+            print(f"wrote {target}")
+        problems = differences(fresh, target, result_text)
         print("\n".join(problems) or "identical (registry_hash ignored)")
         sys.exit(1 if problems and args.check else 0)

@@ -27,6 +27,19 @@ describe('the key list matches the registry', () => {
     expect(registered).toHaveLength(14 + 22) // the key set plus icon set v2 (TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC)
   })
 
+  it('the 22 icon set v2 keys each have a declared fallback that matches the registry description', () => {
+    const v2 = registered.filter(([k]) => !(k in ICON_SIZES))
+    expect(v2).toHaveLength(22)
+    for (const [key, description] of v2) {
+      const fb = fallbackFor(key)
+      expect(fb.note, key).toMatch(/^identifying/)
+      const shown = fb.kind === 'text' ? fb.text : fb.kind === 'chip' ? `${fb.letter} ${fb.color}` : ''
+      expect(shown, key).not.toBe('')
+      const hex = /#[0-9a-f]{6}/.exec(description)?.[0]
+      if (hex) expect(shown, key).toContain(hex) // the colour the registry names is the colour the page shows
+    }
+  })
+
   it('plate is drawn first and the glyph over it', () => {
     expect(MARKER_LAYERS).toEqual([PLATE_KEY, GLYPH_KEY])
   })

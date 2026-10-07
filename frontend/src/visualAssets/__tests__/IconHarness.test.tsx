@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { IconHarness } from '../IconHarness'
-import { iconDraftManifestText, iconDraftUrlFor, iconRuleResultText } from '../iconDraftSource'
+import { iconDraftManifestText, iconDraftUrlFor, iconDraftV2ManifestText, iconRuleResultText, iconRuleResultV2Text } from '../iconDraftSource'
 import { ICON_KEYS, MARKER_LAYERS, SCENE_MARKERS, TIERS } from '../iconScene'
 
 let dprValue = 1
@@ -25,6 +25,8 @@ afterEach(() => {
   expect(calls).toEqual([])
 })
 
+const V2 = { manifestText: iconDraftV2ManifestText, ruleResultText: iconRuleResultV2Text }
+const mountV2 = () => render(<IconHarness manifestText={iconDraftManifestText} ruleResultText={iconRuleResultText} urlFor={iconDraftUrlFor} v2={V2} />)
 const mount = () => render(<IconHarness manifestText={iconDraftManifestText} ruleResultText={iconRuleResultText} urlFor={iconDraftUrlFor} />)
 
 describe('the icon preview page', () => {
@@ -121,5 +123,72 @@ describe('the icon preview page', () => {
     render(<IconHarness manifestText={iconDraftManifestText} ruleResultText="not json" urlFor={iconDraftUrlFor} />)
     expect(screen.queryByTestId('recorded-result')).toBeNull()
     expect(screen.getByRole('heading', { name: /contact sheet/i })).toBeInTheDocument()
+  })
+
+  describe('with icon set v2', () => {
+    it('shows every v2 key once, grouped by family, with sizes read from the manifest and a fallback each', () => {
+      mountV2()
+      const counts: Record<string, number> = { marker: 5, building: 5, class: 3, item: 6, rarity: 3 }
+      for (const [family, n] of Object.entries(counts)) {
+        const section = screen.getByTestId(`v2-family-${family}`)
+        const rows = section.querySelectorAll('tbody tr')
+        expect(rows, family).toHaveLength(n)
+        for (const row of rows) {
+          expect(row.querySelectorAll('img')).toHaveLength(4)
+          expect(row.textContent).toMatch(/identifying/)
+        }
+      }
+      const size = (key: string) => screen.getByText(key, { selector: 'code' }).closest('tr')!.children[1].textContent
+      expect([size('icon.marker.ruins'), size('icon.building.inn'), size('icon.rarity.rare'), size('icon.item.tool')]).toEqual(['16x16', '24x24', '8x8', '24x24'])
+    })
+
+    it('draws every image, v2 included, on a whole device-pixel scale', () => {
+      dprValue = 1.25
+      const { container } = mountV2()
+      const images = [...container.querySelectorAll('img[data-key]')] as HTMLImageElement[]
+      for (const img of images.filter((i) => i.dataset.key!.startsWith('icon.'))) {
+        const key = img.dataset.key!
+        const native = key.startsWith('icon.tier.') || key.startsWith('icon.rarity.') ? 8 : /\.(building|class|item)\./.test(key) ? 24 : 16
+        expect(Math.abs(parseFloat(img.getAttribute('width')!) * 1.25 - Number(img.dataset.scale) * native), key).toBeLessThan(1e-6)
+      }
+    })
+
+    it('puts each of the six location glyphs on the plate over the dark and the bright tile, plate first', () => {
+      mountV2()
+      for (const id of ['v2-rim-terrain.floor', 'v2-rim-terrain.snow']) {
+        const markers = [...screen.getByTestId(id).querySelectorAll('[data-marker="v2-plate-then-glyph"]')]
+        expect(markers.map((m) => (m as HTMLElement).dataset.glyph)).toEqual(['icon.marker.enemy_camp', 'icon.marker.resource_grove', 'icon.marker.dungeon_entrance', 'icon.marker.boss_arena', 'icon.marker.ruins', 'icon.marker.shrine'].sort((a, b) => (a === 'icon.marker.enemy_camp' ? -1 : b === 'icon.marker.enemy_camp' ? 1 : a.localeCompare(b))))
+        for (const m of markers) expect([...m.querySelectorAll('img')].map((i) => i.dataset.key)).toEqual(['icon.plate.location', (m as HTMLElement).dataset.glyph])
+      }
+    })
+
+    it('shows rarity next to the eight tier badges in all five visions, labelled as an approximation', () => {
+      mountV2()
+      expect(screen.getByTestId('v2-approximation-note').textContent).toMatch(/computes no pass or fail/i)
+      for (const vision of ['colour', 'grey', 'protan', 'deutan', 'tritan']) {
+        const cell = document.querySelector(`td[data-v2-vision="${vision}"]`)!
+        expect([...cell.querySelectorAll('img')].map((i) => i.getAttribute('alt'))).toEqual(['rarity common', 'rarity uncommon', 'rarity rare', ...TIERS.map((t) => `tier ${t.toUpperCase()}`)])
+      }
+    })
+
+    it('prints the recorded v2 result as measured and says value separation was not checked for the shape-only groups', () => {
+      mountV2()
+      const table = screen.getByTestId('v2-recorded-result')
+      const recorded = JSON.parse(iconRuleResultV2Text)
+      expect(within(table).getByText(recorded.result)).toBeInTheDocument()
+      expect(table.textContent).toMatch(/group rarity.*smallest L\* gap by vision/)
+      for (const g of ['badges', 'locations', 'buildings', 'classes', 'items']) expect(within(table).getByText(`group ${g}`).nextSibling!.textContent).toMatch(/not checked for this group/)
+      expect(table.textContent).toMatch(/rarity vs tier silhouettes/)
+    })
+
+    it('refuses a v2 manifest that is not a draft preview manifest, and without a v2 prop shows no v2 section', () => {
+      render(<IconHarness manifestText={iconDraftManifestText} ruleResultText={iconRuleResultText} urlFor={iconDraftUrlFor} v2={{ manifestText: '{}', ruleResultText: '{}' }} />)
+      expect(screen.getByRole('alert').textContent).toMatch(/icon set v2.*refused/)
+    })
+
+    it('the page without v2 is unchanged', () => {
+      mount()
+      expect(screen.queryByTestId('v2-recorded-result')).toBeNull()
+    })
   })
 })
