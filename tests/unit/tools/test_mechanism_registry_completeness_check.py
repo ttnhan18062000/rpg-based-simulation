@@ -149,13 +149,20 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     the planner's request): `bound` 36 -> 37 and `unbound` 26 -> 25, `total_targets` unchanged at 65. The module
     is now cited under `goal_hierarchy`'s `implemented_by` (`entity_target_outcome`,
     `close_entity_target_project`), directly after `evaluate_strategic_intent`, whose docstring names it. The
-    counts were taken by running the check, not by subtracting one."""
+    counts were taken by running the check, not by subtracting one.
+
+    2026-10-07 (row 7 (b) pass, rpg-feature-planning): `bound` 37 -> 53, `excluded` 3 -> 4, `unbound` 25 -> 8.
+    16 modules bound by real call sites (not name matches or comments), one helper excluded
+    (`strategic_systems/town_targeting`). The 8 left are `domains/motivation` (Child B) and seven modules with no
+    caller in `src/`, filed for deletion as
+    TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE. Taken by running the
+    check."""
     data = _real_registry_data()
     report = build_report(data)
     assert report.total_targets == 65
-    assert len(report.bound) == 37
-    assert len(report.excluded) == 3
-    assert len(report.unbound) == 25
+    assert len(report.bound) == 53
+    assert len(report.excluded) == 4
+    assert len(report.unbound) == 8
 
 
 # --- state: gap is not a coverage hole (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION) ---
@@ -210,8 +217,11 @@ def test_wider_scope_numbers_pinned():
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
-    assert wider["unbound_files"] == 228  # measured on the merge of 6202678a6 and this branch
-    assert wider["candidates"] == 73  # unbound mechanism-shaped classes, wired or not
+    # 228 -> 226 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py (QuestGenerator, bound under `guilds`) and
+    # src/engine/pipeline_phases/clan_lifecycle.py (ClanLifecyclePhase, bound under `clan`) are now cited.
+    assert wider["unbound_files"] == 226
+    # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
+    assert wider["candidates"] == 72  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package
     assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 3
 
