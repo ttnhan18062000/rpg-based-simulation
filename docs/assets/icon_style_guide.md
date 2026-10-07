@@ -148,3 +148,50 @@ intake notes as four fields:
 | Licence | the licence as printed on the page, or `UNVERIFIED` |
 
 A licence that could not be confirmed on a primary page is recorded `UNVERIFIED`, as in `packs §1`, and the piece stays reference only like every other.
+
+## Icon set v2 decisions (2026-10-07)
+
+Decided by the user by blocking question on 2026-10-07 (after PR #388): the next icon batch is **draw only, no wiring**. Using adopted art in the live app is gated (AM-M6 is NO-GO until the owner signs its
+charter, and AM-M6 covers one forest tile only; HUD icons are a broad rollout beyond it). Families: map locations (5), buildings and classes (8), rarity badges (3), item families.
+Ticket `TCK-20261007-VISUAL-ASSETS-ICON-V2-FAMILY-DECISIONS`; the keys, the sheet-rule groups and the art are later children of the same epic.
+
+**Item families: six, one per first category.** An item has no `item_type` field; the app derives it from the first `categories` tag (`src/api/presenters/metadata_presenter.py`). Measured from the loaded catalog on
+2026-10-07 (37 items): material 19, weapon 10, trinket 2, armor 2, tool 2, consumable 2, so **six** distinct values. (The ticket first said about 15; that was a raw count over tags in every position, not
+the presenter's first-tag derivation, and the planner corrected it on 2026-10-07. The user chose "about 8 families" from that count, was then shown the real six, and chose six one-to-one over an eight-family
+split of `material` by a second tag.) The mapping is data, `visual_assets/icons/item_families.yaml`; `tests/visual_assets/test_icon_item_families.py` maps every item of the real catalog to exactly one family and
+fails on a first category that is not listed, so a new category forces a decision and never falls through.
+
+| Family | First category | Items |
+|---|---|---|
+| weapon | weapon | 10 |
+| armor | armor | 2 |
+| trinket | trinket | 2 |
+| tool | tool | 2 |
+| consumable | consumable | 2 |
+| material | material | 19 |
+
+**Rarity badges: three, not four.** The catalog has four rarity values (common 13, uncommon 12, rare 11, legendary 1: `ancient_core`); the app's `RARITY_COLORS` knows only common, uncommon and rare. The user chose
+**three** badges: common, uncommon, rare. The single legendary item gets no badge in this batch (a legendary badge would also have no colour fallback in the UI). Each badge is 8x8, a different base shape from the
+tier octagon and diamond so the two ladders are never confused, and the name stays as text: common = a round bead, uncommon = a kite-shaped gem, rare = a four-point sparkle gem.
+
+**Glyphs (accepted as proposed):**
+
+| Family | Key's subject | Glyph |
+|---|---|---|
+| map location | resource_grove | a tree |
+| map location | ruins | a broken column |
+| map location | dungeon_entrance | an arched door |
+| map location | shrine | an obelisk |
+| map location | boss_arena | a skull |
+| building (24x24) | store | a coin purse |
+| building | guild | a banner |
+| building | inn | a mug |
+| building | hero_house | a small house |
+| building | class_hall | an open book |
+| class (24x24) | ranger | a bow |
+| class | mage | a pointed hat |
+| class | rogue | a dagger |
+
+The five buildings follow the UI's building types (store, blacksmith, guild, inn, hero_house, class_hall; blacksmith is already drawn). The catalog's own building definitions (blacksmith, healer_hut, inn, mage_tower,
+mine_entrance, shop, shrine, town_hall, watchtower) are a different set and are not what the panels key on today. Not in this batch: UI tab, advanced-class, per-item and per-effect icons (an icon must beat text,
+`docs/brainstorm/render-and-art/visual-system-planning.md` section 15).
