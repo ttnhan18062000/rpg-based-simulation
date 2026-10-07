@@ -41,7 +41,7 @@ P1
 ## Acceptance Criteria
 - [x] The 19 campaign full-HP retreats no longer happen without a present threat: 12 decisions remain (7 and 5), each with a named threat term, none with no term
 - [x] A regression test fails on the old gate (`test_a_cautious_subject_at_full_health_does_not_flee_a_distant_untargeting_hostile`), and each threat term makes a cautious subject flee
-- [x] Divergence 2.76, the tactical contract, and parity entry COMB-334 record the change
+- [x] Divergence 2.76, the tactical contract, and parity entry COMB-335 record the change
 - [x] The campaign deliberate-attack xfail is checked and reported: attempts 0 / 1 to 2 / 2 against a threshold of 3, still failing, strict xfail untouched
 - [x] The cooperation-share test's strict xfail is removed on test-architecture-reviewer's ruling (pooled share across seeds 42 and 1337, threshold `< 0.5` unchanged)
 

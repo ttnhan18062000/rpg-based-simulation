@@ -4643,6 +4643,30 @@
     distance with int() while the pursuit reach test compares floats; filed as TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT,
     not fixed here.
 - id: COMB-334
+  text: 'TCK-20261006-WILD-BEAST-PACK-LEGALITY-IS-ONE-WAY-HERO-CAN-ATTACK-IT-IT-CANNOT-ATTACK-HERO
+    (world rule CONFLICT-03): attack permission is a fact about the pair and is symmetric.
+    LegalityServiceV2._attack_permitted: both factions declare catalog data (a perspective
+    or a relationship row toward the other) -> legal both ways if either declares the
+    other hostile; exactly one declares -> its verdict decides both directions; neither
+    -> the legacy different-faction fallback. wolf/slime/bear/harpy/golem spawn as wild_beast_pack.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/legality.py (_declares, _attack_permitted), src/systems/world_systems/generator.py
+    (SPAWN_KIND_CATALOG_FACTION). 16 factions x engaged/not (512 verdicts): asymmetric
+    108 -> 0; 16 directed illegal -> legal, 15 legal -> illegal (all exactly-one-declared
+    pairs). Corpus (seed 42, 10,000 ticks, audit_mode, budget off, 24 worlds, before
+    vs after one tree): deaths 131 -> 130, attacks 1,278 -> 1,237, wild-attacker hits
+    81 -> 184, live neutral -> hero attacks lost 0. combat_engagement at 1,000 entities
+    1,793/1,875 ms before vs 1,803/1,861 ms after (no added cost).'
+  proof_type: regression
+  test_path: tests/unit/world/test_spawn_monster_catalog_faction.py
+  divergence_note: See docs/guidelines/intentional_divergences.md DEV-016.
+  support_boundary: Per-pair corpus attack counts are indications (freeing a pair diverges
+    trajectories). The hazard-death rise in frontier_marches (10 -> 15) and swamp_border_world
+    (0 -> 2) is not attributed. The movement[5000] bench was not run (it exceeds the
+    10-minute pytest timeout locally); the cost was measured at 1,000 entities.
+- id: COMB-335
   text: 'TCK-20261007-SAFETY-DISPOSITION-TRIGGERS-RETREAT-ON-SIGHT-AGENCY-07: the
     tactical SAFETY_PRESSURE_RETREAT branch fires only for a cautious entity (safety_pressure
     > 0.75) with a present threat to itself: HP below 0.7 (WOUNDED), a hostile within
