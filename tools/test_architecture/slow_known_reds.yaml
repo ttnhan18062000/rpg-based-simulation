@@ -28,23 +28,23 @@ known_reds:
     kind: broken
     note: "triage row 2; cause #356 / decision 14; only the ph9 boss half of the ticket stands"
   - match: "tests.perf.test_perf_movement*"
-    ticket: TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK
-    owner: rpg-implementer
+    ticket: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
+    owner: rpg-implementer-2
     added_on: "2026-10-07"
-    expires_on: "2026-10-21"
+    expires_on: "2026-12-31"
     kind: broken
-    note: "triage rows 5-8, primary cause #172; Lane B's TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP is a second cost step"
+    note: "allowed during core RPG + perf core implementation (owner, 2026-10-07)"
   - match: "tests.perf.test_perf_passive_scaling*"
-    ticket: TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK
-    owner: rpg-implementer
+    ticket: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
+    owner: rpg-implementer-2
     added_on: "2026-10-07"
-    expires_on: "2026-10-21"
+    expires_on: "2026-12-31"
     kind: broken
-    note: "triage rows 5-8, primary cause #172; Lane B's TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP is a second cost step"
+    note: "allowed during core RPG + perf core implementation (owner, 2026-10-07)"
   - match: "tests.perf.test_perf_strategic*"
-    ticket: TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK
-    owner: rpg-implementer
+    ticket: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
+    owner: rpg-implementer-2
     added_on: "2026-10-07"
-    expires_on: "2026-10-21"
+    expires_on: "2026-12-31"
     kind: broken
-    note: "triage rows 5-8, primary cause #172; Lane B's TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP is a second cost step"
+    note: "allowed during core RPG + perf core implementation (owner, 2026-10-07)"

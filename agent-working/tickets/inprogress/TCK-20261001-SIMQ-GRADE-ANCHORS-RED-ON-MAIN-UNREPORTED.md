@@ -250,6 +250,8 @@ None yet — standard tier, staging artifacts created when picked up.
 
 **Run 3, 37551894246 (schedule, head bc4f7553c), report step success:** created issue #390 'Slow regression: 17 failing on main' with 0 comments (first-run rule), 12 corpus + 5 slow, all mapped, none UNOWNED, one stale mapping (test_perf_combat; combat[500] passed). Issues were enabled by the reviewer at ~01:55Z 2026-10-07 at the owner's direction.
 
+**Owner direction 2026-10-07 (relayed by `test-architecture-reviewer`): perf-test failures are temporarily allowed during the core RPG and perf core implementation, so minimal effort on them.** The three perf-bench entries (movement, passive_scaling, strategic) in `slow_known_reds.yaml` are repointed to `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP`, owner `rpg-implementer-2`, with `expires_on` 2026-12-31 and the note "allowed during core RPG + perf core implementation (owner, 2026-10-07)". Without this they would expire 2026-10-21 and turn the run red, which the owner does not want. This is an owner-decided extension, not a backdating; the other entries keep their dates (5k and ph9: 2026-10-21; corpus anchors: 2026-11-04).
+
 ## Test Summary
 _To be completed during implementation._
 
