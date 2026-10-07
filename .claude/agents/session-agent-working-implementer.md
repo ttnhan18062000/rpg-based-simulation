@@ -11,4 +11,4 @@ Function: implementer. Sole writer to your worktree; two instances never share o
 
 Domain: agent-working (process, tooling, monitoring, delivery). Process problems come here; it decides what to ticket. Owns `mechanisms.yaml` tooling, not content. Designer reviews.
 
-Needs the user: push_default_branch, merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data. Granted: push/open_pr (2026-10-04).
+Needs the user: push_default_branch, merge, delete_remote_branch, delete_worktree_or_data. Granted: push/open_pr (2026-10-04).
