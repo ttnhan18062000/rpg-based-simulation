@@ -1684,5 +1684,5 @@
     declared kind keeps the old constants and is listed by undeclared_need_kinds.'
   proof_type: regression
   test_path: tests/unit/engine/test_biological_needs.py::test_apply_path_accumulates_per_kind
-  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.79.
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.80.
   support_boundary: null

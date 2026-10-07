@@ -152,7 +152,7 @@ drives to the person.
   one uniform need set for everyone (today's accident, and it contradicts the catalog, which
   already declares different profiles); a silent default (forbidden by the durable-state rule).
 
-**Repository evidence: was CONFLICTING (measured by Lane A on main `f8f1b69fd`); biology now follows the profile (divergence 2.79, `src/engine/biological_needs.py`), compiled-subject profile assignment is still `TCK-20261007-COMPILED-ENTITIES-GET-DEFAULT-NEED-AND-DRIVE-PROFILES-WITH-VISIBLE-PROVENANCE`** (seed 42, all 24
+**Repository evidence: was CONFLICTING (measured by Lane A on main `f8f1b69fd`); biology now follows the profile (divergence 2.80, `src/engine/biological_needs.py`), compiled-subject profile assignment is still `TCK-20261007-COMPILED-ENTITIES-GET-DEFAULT-NEED-AND-DRIVE-PROFILES-WITH-VISIBLE-PROVENANCE`** (seed 42, all 24
 worlds compiled at tick 0).
 - **No compiled subject carries a profile.** 0 of 666 entities have a `need_profile_id` or
   `drive_profile_id`, and the pressure resolver returns `no_profile` for all of them. Profile ids

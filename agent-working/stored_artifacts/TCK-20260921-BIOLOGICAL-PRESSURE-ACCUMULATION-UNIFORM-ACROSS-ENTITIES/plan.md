@@ -15,5 +15,5 @@ tags: [simulation-quality, progression]
 2. `EatScorer` -> `inn`; `src/engine/service_reach.py` resolves the service building from the building map with orthogonal reach; `town_resolution` uses it and serves EAT at an inn.
 3. `CoreActions` REST recovers sleep debt (10).
 4. Advisory `src/engine/need_paths.py` + `tools/need_path_report.py`.
-5. Docs: divergence 2.79, parity PROG-128, `attributes_biology` binding, SURV-05 evidence line.
+5. Docs: divergence 2.80, parity PROG-128, `attributes_biology` binding, SURV-05 evidence line.
 Out: shop/blacksmith, decision/arbitration, profile assignment.
