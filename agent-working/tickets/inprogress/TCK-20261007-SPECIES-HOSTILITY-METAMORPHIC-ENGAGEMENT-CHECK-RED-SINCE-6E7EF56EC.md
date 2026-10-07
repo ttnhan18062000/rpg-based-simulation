@@ -15,7 +15,7 @@ tags: [combat, regression]
 The species-hostility metamorphic check went red between bc4f7553c and 6e7ef56ec: making wolf-to-human hostility "high" now lowers the combat engagement rate compared with leaving it undeclared.
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -88,6 +88,14 @@ The declared/undeclared boundary does not apply. Both factions already declare e
 **Why the test flips.** The per-seed difference has a standard deviation of about 1.5, so a 3-seed sum has an expected gap of about +1.9 with a standard deviation of about 2.6, and the check fails by chance in about 1 run in 4.
 
 **Disposition: class (a); no code or CONFLICT-03 change, ruled by rpg-planner 2026-10-07.** The test is underpowered and testing owns the rescope (sample size and slow-job budget: about 40 seeds takes about 20 minutes against 1). The rescope derivation must be recorded in the test docstring per `docs/testing/regression_policy.md`.
+
+**Ruling on the observable (rpg-planner, 2026-10-07, relayed by testing-planner; verbatim).** "The relation 'raising declared hostility between two factions never lowers their combat engagement' is a claim about pairs that meet. It is observed faithfully by the unchanged metric (combat engagements, baseline vs high, pooled over seeds) on a setup where the two groups come into contact within the horizon. A run in which they never meet carries no evidence either way. Rule (a): measure on a contact-rich layout of the same world content. Use the same factions, the same faction-level declarations and the same species mutation, with the wolf pack placed within perception range of the town at spawn, or a dedicated lab world declared the same way. The assertion keeps its exact form: pooled high >= pooled baseline, no tolerance band. — rpg-planner, 2026-10-07" Option (b), a per-contact rate, is rejected because its denominator moves with hostility.
+
+**Rescope measurements (testing-implementer, 2026-10-07; private worktree, the test's own procedure with per-seed counts kept; seed lists fixed before measuring; 6-core workstation).** All at `ae3352361ea77ee3545612d1de3748be19ac321e` unless stated.
+- **Unpinned, the evidence for the pin.** Seeds 301-340 x 200t: baseline 122, high 141, mean per-seed diff +0.475, SD 1.81, z 1.66, wall time 949 s. Lane B's run of the same configuration at the same SHA gave 115 vs 140 (z about 2.6), so the same seeds at the same SHA give different counts: the lab path is not deterministic unpinned (the governor degrades under host load, the parked cause in TCK-20260822). Seeds 301-320 x 400t unpinned: 104 vs 138, +1.70, SD 5.55, z 1.37, wall time 892 s.
+- **Pinned governor (test-only).** `Kernel.__init__` imports its default `ResourceGovernor` lazily from `src.engine.governor` (kernel.py:121), and the lab path builds `Kernel` without one (src/lab/orchestrator.py:219/233). A test-scoped monkeypatch to a pinned-NORMAL subclass (mode fixed, `force_mode` a no-op, as `_PinnedNormalGovernor` in tests/integration/campaigns/test_catalog_entity_spawn_wiring.py) reaches every lab run: 80 pinned governors for 40 seeds x 2 arms. No src change.
+- **Pinned, original layout.** Seeds 301-340 x 200t, run twice: identical per-seed counts (deterministic). Baseline 122, high 141, mean diff +0.475, SD 2.37, SE 0.376, z 1.26. Per-seed diffs: [-5, -4, -2, -1, 0 x26, +1 x4, +3, +3, +5, +6, +10]; 10/40 seeds have 0 engagements in both arms. Smallest N for z >= 2.33: about 136 seeds (about 63 min); rejected. Seeds 301-320 x 500t pinned: 98 vs 106, +0.40, SD 2.23, z 0.80, 4/20 zero in both arms, wall time 1437 s; rejected.
+- **Pinned, contact-rich layout (ruling (a)).** A test-scoped override of `WorldRepository.load_world` for `unit_faction_tension` only: the `wolf_den` region's bounds become (41,30,48,40), next to `hometown` (10,10,40,40), and its `wolf_den_nest` place moves to (44,35). Everything else is unchanged and still goes through `WorldValidator` and the compiler: factions, faction-level declarations, populations and the species mutation. Placement is decided only by `PopulationSpec.spawn_region` (a uniform draw inside the region's bounds). The wolves are outside `hometown`, and no leash is set (the compiler sets no `home_position` / `leash_radius`; the default 0 means none). Seeds 301-340 x 200t, run twice: identical. Baseline 73, high 653, mean diff +14.5, SD 8.54, SE 1.35, z 10.7. No negative seed (diffs 0..31); 2/40 zero in both arms; baseline > 0 on 20/40 seeds, high > 0 on 38/40. Wall time 1012 s and 1030 s.
 
 ## Test Summary
 _(not started)_
