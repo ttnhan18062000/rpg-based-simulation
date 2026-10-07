@@ -18,6 +18,39 @@ call the real `MetamorphicRuleEngine.evaluate_rules()` directly against the resu
 
 Does not extend MutationEngine or any shared lab infrastructure — stays self-contained to
 this ticket's own validation, per the plan's explicit scope guard.
+
+Rescope (TCK-20261007-SPECIES-HOSTILITY-METAMORPHIC-ENGAGEMENT-CHECK-RED-SINCE-6E7EF56EC, 2026-10-07):
+the old 3-seed run on the stock layout was underpowered (it failed by chance about 1 run in 4), and the
+lab path was not deterministic at a fixed SHA. Three changes, all test-scoped (pytest monkeypatch), no
+src/ or data/ change; the assertion keeps its exact form (pooled high rate >= pooled baseline rate, no
+tolerance band):
+
+1. Pinned governor. The lab path builds `Kernel` without a governor, so `Kernel.__init__` takes the
+   default `src.engine.governor.ResourceGovernor`, whose mode follows host load (the load sensitivity
+   parked under TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2). Unpinned, the same seeds at
+   the same SHA gave 115 vs 140 in one run and 122 vs 141 in another. The test swaps in a governor
+   pinned to NORMAL with a no-op `force_mode` (as `_PinnedNormalGovernor` in
+   tests/integration/campaigns/test_catalog_entity_spawn_wiring.py), which removes host speed from the
+   outcome: two runs at one SHA give identical per-seed counts.
+2. Contact-rich layout, per rpg-planner's ruling (a) of 2026-10-07: the relation "raising declared
+   hostility never lowers engagement" is a claim about pairs that meet, and a run where wolves and
+   humans never meet carries no evidence either way. On the stock layout the wolf den
+   (70,30,105,70) is about 30 tiles from `hometown` (10,10,40,40), beyond the perception radius of 10
+   (Manhattan, ENTITY_TARGET_PERCEPTION_RADIUS), and most seeds never made contact. The test's
+   `load_world` override moves only the `wolf_den` region to (41,30,48,40), next to the town, with its
+   `wolf_den_nest` place at (44,35); factions, faction-level declarations, populations and the species
+   mutation are unchanged and still go through WorldValidator and the compiler. No leash applies (the
+   compiler sets no home_position/leash_radius).
+3. Sample size. Measured at ae3352361ea77ee3545612d1de3748be19ac321e on 2026-10-07, pinned, contact
+   layout, 200 ticks: seeds 301-340 gave a mean per-seed difference (high - baseline) of +14.5, SD
+   8.54, SE 1.35, z 10.7, with no negative seed; seeds 301-310 (the fixed list used here) give baseline
+   17, high 137, mean +12.0, SD 8.98, SE 2.84, z 4.23. The normal-approximation chance of a false fail
+   at the measured effect is far below 1%; 10 seeds also leave margin if the effect halves.
+
+The non-vacuity guard (`baseline > 0` pooled, and at least `MIN_BASELINE_SEEDS_WITH_CONTACT` baseline
+seeds with an engagement; measured 4 of 10, guard 4 - 2) is NOT an effect check: it only stops the
+assertion from passing vacuously (0 >= 0) if the layout stops producing contact, for example after a
+change to spawning or perception semantics.
 """
 import json
 import os
@@ -30,12 +63,17 @@ from src.lab.repository import ScenarioRepository, ExperimentRepository, LabRunR
 from src.lab.orchestrator import ScenarioLabOrchestrator
 from src.lab.schema import ScenarioSpec, ExperimentSpec, ExpectedRelationshipSpec
 from src.lab.metamorphic import MetamorphicRuleEngine
+import src.engine.governor as governor_module
+from src.core.governance import RuntimeMode
 
 SPECIES_RELATIONS_PATH = "data/content/social/species_relations.yaml"
 SCENARIO_ID = "species_hostility_metamorphic_check"
 EXPERIMENT_ID = "species_hostility_metamorphic_check_experiment"
-SEEDS = [201, 202, 203]
+SEEDS = list(range(301, 311))  # fixed in advance; see the module docstring for the sizing
 TICKS = 200
+MIN_BASELINE_SEEDS_WITH_CONTACT = 2  # measured 4 of 10 at ae3352361 (pinned, contact layout), minus 2
+CONTACT_WOLF_DEN_BOUNDS = (41, 30, 48, 40)  # next to hometown (10,10,40,40), within perception radius 10
+CONTACT_WOLF_DEN_NEST = (44, 35)
 
 SCENARIO_DIR = f"data/scenarios/{SCENARIO_ID}"
 EXPERIMENT_DIR = f"data/experiments/{EXPERIMENT_ID}"
@@ -76,21 +114,52 @@ def _set_wolf_human_high(content: str) -> str:
     return stripped + addition
 
 
-def _count_combat_engagements(lab_run_id: str) -> int:
-    total = 0
+class _PinnedNormalGovernor(governor_module.ResourceGovernor):
+    """Pins NORMAL so the outcome does not depend on host speed (TCK-20260822 load sensitivity)."""
+
+    def _get_indicated_mode(self, profile, signals):
+        return RuntimeMode.NORMAL
+
+    def force_mode(self, mode, status, current_tick):
+        return None  # the mid-tick wall-clock throttle must not flip the mode either
+
+
+def _contact_rich_load_world(original_load_world):
+    """`WorldRepository.load_world` with the wolf den moved next to the town (ruling (a)); other worlds untouched."""
+
+    def load_world(self, world_id):
+        spec = original_load_world(self, world_id)
+        if world_id != "unit_faction_tension":
+            return spec
+        regions = []
+        for region in spec.regions:
+            if region.id == "wolf_den":
+                places = [
+                    place.model_copy(update={"position": CONTACT_WOLF_DEN_NEST}) if place.id == "wolf_den_nest" else place
+                    for place in region.places
+                ]
+                region = region.model_copy(update={"bounds": CONTACT_WOLF_DEN_BOUNDS, "places": places})
+            regions.append(region)
+        assert any(r.id == "wolf_den" for r in regions), "unit_faction_tension no longer has a wolf_den region"
+        return spec.model_copy(update={"regions": regions})
+
+    return load_world
+
+
+def _engagements_per_seed(lab_run_id: str) -> dict:
+    counts = {}
     for seed in SEEDS:
         run_id = f"run_{lab_run_id}_seed_{seed}"
         path = os.path.join("data", "lab_runs", lab_run_id, "runs", run_id, "simulation_events.jsonl")
         assert os.path.isfile(path), f"Missing simulation_events.jsonl for {run_id}"
+        count = 0
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-                if not line:
-                    continue
-                event = json.loads(line)
-                if event.get("event_type") == "combat_engagement_started":
-                    total += 1
-    return total
+                if line and json.loads(line).get("event_type") == "combat_engagement_started":
+                    count += 1
+        counts[seed] = count
+    return counts
 
 
 def _cleanup_created_dirs():
@@ -118,7 +187,12 @@ def _cleanup_created_dirs():
 
 @pytest.mark.slow
 @pytest.mark.resource_budget_large
-def test_species_hostility_increase_does_not_decrease_combat_engagement_rate():
+def test_species_hostility_increase_does_not_decrease_combat_engagement_rate(monkeypatch):
+    # Test-scoped: Kernel.__init__ imports its default governor from this module lazily, and the lab
+    # orchestrator loads its world through WorldRepository.load_world (see the module docstring).
+    monkeypatch.setattr(governor_module, "ResourceGovernor", _PinnedNormalGovernor)
+    monkeypatch.setattr(WorldRepository, "load_world", _contact_rich_load_world(WorldRepository.load_world))
+
     with open(SPECIES_RELATIONS_PATH, "r", encoding="utf-8") as f:
         original_content = f.read()
 
@@ -167,7 +241,8 @@ def test_species_hostility_increase_does_not_decrease_combat_engagement_rate():
 
         baseline_orchestrator = ScenarioLabOrchestrator(world_repo, scenario_repo, experiment_repo, lab_run_repo)
         baseline_orchestrator.run_lab(EXPERIMENT_ID, lab_run_id="species_hostility_baseline")
-        baseline_engagements = _count_combat_engagements("species_hostility_baseline")
+        baseline_per_seed = _engagements_per_seed("species_hostility_baseline")
+        baseline_engagements = sum(baseline_per_seed.values())
         baseline_rate = baseline_engagements / (TICKS * len(SEEDS))
 
         # Compared variant: wolf<->human hostility overwritten to "high" both directions.
@@ -176,7 +251,8 @@ def test_species_hostility_increase_does_not_decrease_combat_engagement_rate():
 
         high_orchestrator = ScenarioLabOrchestrator(world_repo, scenario_repo, experiment_repo, lab_run_repo)
         high_orchestrator.run_lab(EXPERIMENT_ID, lab_run_id="species_hostility_high")
-        high_engagements = _count_combat_engagements("species_hostility_high")
+        high_per_seed = _engagements_per_seed("species_hostility_high")
+        high_engagements = sum(high_per_seed.values())
         high_rate = high_engagements / (TICKS * len(SEEDS))
 
         variant_metrics = {
@@ -194,13 +270,22 @@ def test_species_hostility_increase_does_not_decrease_combat_engagement_rate():
 
         assert len(results) == 1
         result = results[0]
+        print(f"species metamorphic per-seed engagements: baseline={baseline_per_seed} high={high_per_seed}")
+        # Non-vacuity guard, not an effect check: the relation is about pairs that meet (ruling (a)).
+        seeds_with_contact = sum(1 for count in baseline_per_seed.values() if count > 0)
+        assert baseline_engagements > 0 and seeds_with_contact >= MIN_BASELINE_SEEDS_WITH_CONTACT, (
+            f"The contact-rich layout no longer produces wolf/human contact in the baseline run "
+            f"({seeds_with_contact} of {len(SEEDS)} seeds engaged, per seed {baseline_per_seed}); the assertion "
+            f"below would pass vacuously. Re-check the layout override against spawn and perception rules."
+        )
         assert not (baseline_rate == 0.0 and high_rate == 0.0), (
             "Degenerate zero/zero engagement rate in both variants -- would indicate the "
             "metric extraction produced a hollow result, not real evidence."
         )
         assert result.status == "PASSED", (
             f"Increasing wolf<->human species hostility decreased combat_engagement_rate: "
-            f"baseline={baseline_rate}, high_hostility={high_rate}, message={result.message}"
+            f"baseline={baseline_rate}, high_hostility={high_rate}, message={result.message}; "
+            f"per seed baseline={baseline_per_seed}, high={high_per_seed}"
         )
     finally:
         with open(SPECIES_RELATIONS_PATH, "w", encoding="utf-8") as f:
