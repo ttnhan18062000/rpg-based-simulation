@@ -144,7 +144,9 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
             notes.append("session-roles: the manifest changed since your last binding (previous summary unreadable).")
 
     wt = next((w for w in roster.worktrees if w.name == role.worktree), None)
-    if wt is not None and wt.writer == role.role:
+    if wt is not None and wt.writer == role.role and instance_id == role.role:
+        # only the role's first instance takes the lease; a second instance (`<role>-2`) has a different id, would be
+        # refused by the first's lease, and writes only in its own per-piece worktree (implementer card)
         try:
             st.take_lease(state_root, worktree, instance_id, binding.session_id, proc, proc_root)
         except st.LeaseRefused as exc:
