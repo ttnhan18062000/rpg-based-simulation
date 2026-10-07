@@ -147,6 +147,8 @@ Real-directory check (see investigation.md): `/mnt/data/Working` and the main ch
 - Verdict: no separate hook bug found for (b). It is the shipping date, stale worktrees, sessions started outside the repo, and the retro's labelling. This ticket's freshness check and preflight address the staleness and outside-the-repo cases.
 **AC5 is open: the live probe is an owner step, not yet run.** Run it in one session started with `python3 tools/sessions/launch.py <role>` from a fresh role worktree: (a) a role-reminder prompt writes a `manual_actions.jsonl` row; (b) a run records a resolved `session_role`; (c) own-branch commit and push run without prompt and `gh pr merge --help` classifies as MERGE. Record the date and session id here; it also closes AC7 of TCK-20261006-GUARD-OWN-BRANCH-GIT-ALLOWED.
 
+**AC5 update 2026-10-07:** part (a) is met by a live record. `agent-working/agent-monitoring/data/2026-W41/manual_actions.jsonl` holds a `handover_recovery` row (2026-10-07T03:12Z, session `ae28d07e-d5a2-44ed-b473-1184da3ad33b`, role `agent-working-designer`) and a `role_reminder` row (2026-10-07T03:38Z, same session), written by a session that loaded the project hooks. Parts (b) and (c) are not evidenced by it and stay open, so AC5 and GUARD-OWN-BRANCH AC7 stay open.
+
 ## Test Summary
 `tests/tools/test_session_settings_freshness.py` (11 new) and `tests/tools/test_session_launch.py`: 32 passed. Docs and the M7 clock edits verified by grep (no other "about 2026-11-02" in the session-layer docs).
 

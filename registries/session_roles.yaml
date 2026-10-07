@@ -41,6 +41,7 @@ domains:
       - docs/plans/agent_infrastructure/**
       - docs/guidelines/session_roles/**
       - agent-working/agent-orchestration/**
+      - agent-working/agent-monitoring/retro/**
       - registries/session_roles.yaml
       - registries/session_authority.yaml
       - .claude/agents/**

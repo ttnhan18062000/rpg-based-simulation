@@ -112,6 +112,7 @@ None.
   M0 result in Epic A.
 - The four-week window starts at the first real `manual_actions.jsonl` record (re-baselined 2026-10-06: Epics A and B
   landed, but no live session loaded the hooks, so no data existed); the epic stays open until M7 reports.
+- **Clock started 2026-10-07:** the first live `manual_actions.jsonl` record is the `handover_recovery` row at 2026-10-07T03:12Z (W41, session `ae28d07e-...`, role `agent-working-designer`). The M7 review is due no earlier than 2026-11-04.
 
 ## Implementation Notes
 
