@@ -33,12 +33,12 @@ rpg-planner's ruling (2026-10-07): **the metamorphic relation remains intended l
 - **(b):** a real regression, for example #395 treating "no entry" as more permissive than "high", or #398's retreat rule interacting with it. Fix the code.
 - **(a):** the relation holds in law, but three seeds at 200 ticks is too small a sample, so an unrelated behaviour change flipped a near-tie. Then strengthen the test's sample, with its derivation recorded, rather than loosening the relation. That change goes through testing's review (Epic C criterion 4: Bible and ledger first).
 
-The src merges in the range are #394, #395, #398, #403, #404 and #406.
+(Original framing, now resolved as class (a): see Scope and Implementation Notes.) The src merges in the range are #394, #395, #398, #403, #404 and #406.
 
 ## Scope
-1. Bisect the onset over the range to one merge, using the test's own seeds. The test rewrites `data/content/social/species_relations.yaml` in place, so run it only in a private worktree.
-2. Report engagement rate per seed, for the baseline and for `high`, before and after the onset. Report the mechanism: which path makes `high` engage less (permission, target choice, retreat or spawn).
-3. Fix as (b), or strengthen the test as (a), per the ruling above. If CONFLICT-03 or COMB legality needs a clarification, route it through rpg-planner to the designer.
+**Owner: testing-implementer** (reassigned 2026-10-07 from rpg-implementer-2 after the bisect; the slow-job budget and the test's statistics are testing's). **Known-red expiry stays 2026-10-28.**
+**Class (a); no code or CONFLICT-03 change (ruled by rpg-planner, 2026-10-07).** The bisect (Implementation Notes) is done.
+The remaining work is the rescope only: keep the exact assertion (`monotonic_non_decreasing` on `combat_engagement_rate`, baseline against high) and change only the number of seeds N and the horizon (ticks). Derive N and the horizon per `docs/testing/regression_policy.md` and record the derivation in the test docstring; the evidence to start from is in Implementation Notes (about 40 seeds gives +0.625 per seed at about 2.6 sigma; the 3-seed false-fail rate is about 1 in 4).
 
 ## Out of Scope
 - Changing the metamorphic relation's direction.
@@ -47,7 +47,7 @@ The src merges in the range are #394, #395, #398, #403, #404 and #406.
 ## Acceptance Criteria
 - [x] Onset bisected (#395 shrank the effect; no code regression), with the mechanism explained.
 - [x] Classified (a) with that evidence (40-seed result above).
-- [ ] The test passes on all 3 seeds on the landing base, and the slow known-reds entry is removed.
+- [ ] (testing-implementer) The rescoped test (same assertion; N and the horizon changed, derivation in the docstring) passes on the landing base, and the slow known-reds entry is removed.
 
 ## Related Tickets
 - `TCK-20261006-...` from #395 (symmetric attack permission) and AGENCY-07 #398, both in the onset range.
@@ -83,10 +83,10 @@ Seeds 201-203 (the test's seeds), baseline vs high:
 **Onset and mechanism.** #395 (attack permission symmetric, CONFLICT-03) is where the effect shrank, not a code regression of the relation's direction. Before #395 "high" engaged about twice as often as the baseline (+10 to +13 per 3 seeds), because permission was one-directional. After it the gap is about zero and the check's result is decided by noise (#398 only looks like the first fail because its baseline rose).
 The declared/undeclared boundary does not apply. Both factions already declare each other at the faction level in `faction_relationships.yaml` (`town_to_wild_beasts` medium_contextual, `wild_beasts_to_town` low_base_contextual), so the baseline is declared on both sides and the legacy fallback is never reached (`LegalityServiceV2._declares` ignores species entries). At the baseline `_attack_permitted` already gives hostile for town to wolf (idle and engaged) and wolf to town once engaged. The "high" mutation only makes wolf to town hostile while idle, which adds little engagement once permission is symmetric.
 
-**Does the relation still hold? Yes.** Seeds 301-340 (40 seeds) at main: baseline 115, high 140; mean per-seed difference +0.625, standard error 0.24 (about 2.6 sigma); 10 of the 40 seeds have 0 engagements in both arms. An earlier 12-seed run (seeds 204-215: baseline 55, high 40) was noise.
+**Does the relation still hold? Yes.** First, seeds 204-215 (12 seeds): baseline 55, high 40 (mixed-sign per-seed differences: +6, -5, -7, +1, -6, -5, +1, the rest 0; six seeds have 0 in both arms); that was noise. Then seeds 301-340 (40 seeds) at main: baseline 115, high 140; mean per-seed difference +0.625, standard error 0.24 (about 2.6 sigma); 10 of the 40 seeds have 0 engagements in both arms. An earlier 12-seed run (seeds 204-215: baseline 55, high 40) was noise.
 **Why the test flips.** The per-seed difference has a standard deviation of about 1.5, so a 3-seed sum has an expected gap of about +1.9 with a standard deviation of about 2.6, and the check fails by chance in about 1 run in 4.
 
-**Disposition: class (a).** No code and no CONFLICT-03 change. The test is underpowered and testing owns the rescope (sample size and slow-job budget: about 40 seeds takes about 20 minutes against 1). The rescope derivation must be recorded in the test docstring per `docs/testing/regression_policy.md`.
+**Disposition: class (a); no code or CONFLICT-03 change, ruled by rpg-planner 2026-10-07.** The test is underpowered and testing owns the rescope (sample size and slow-job budget: about 40 seeds takes about 20 minutes against 1). The rescope derivation must be recorded in the test docstring per `docs/testing/regression_policy.md`.
 
 ## Test Summary
 _(not started)_
