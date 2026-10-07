@@ -48,6 +48,7 @@ This document serves as the final, consolidated rulebook for the Combat and Move
 - **WAIT**: Stay in place for 1 tick.
 - **SIDESTEP**: Attempt to move to a cardinal neighbor that maintains proximity to the path.
 - **YIELD**: Higher priority allies are given right-of-way.
+- **ARRIVE** (`TCK-20261007-WALK-TO-A-BUILDING-NEVER-ARRIVES-SO-REST-AND-EAT-ARE-NEVER-DISPATCHED`): when the walk's own destination tile cannot be entered (a building or a blocked tile: the step is rejected as `path_not_found` or `building_obstruction`) and the entity stands orthogonally beside it (MOV-07), the walk is over: `MovementSystem.resolve_move` ends it (`navigation.target_clear`) instead of sidestepping, so the entity stays within reach and the tactical pass dispatches the building's service. An obstacle elsewhere on the route, a diagonal neighbour and another entity on the destination are not an arrival (`docs/guidelines/intentional_divergences.md` 2.78).
 
 ---
 

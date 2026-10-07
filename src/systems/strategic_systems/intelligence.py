@@ -71,7 +71,7 @@ from src.engine.policy import GovernorPolicy
 from src.core.strategic import (
     BlockerState, LeadState, LeadCertainty,
     ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
-    CognitionProfile, ProjectKind, GoalKind, ObjectiveKind
+    CognitionProfile, ProjectKind, GoalKind, ObjectiveKind, has_project_capacity, with_live_current_score
 )
 from src.engine.spatial_query import SpatialQueryService
 from src.content_semantics.faction import are_entities_hostile
@@ -1768,13 +1768,12 @@ class StrategicIntelligenceSystem:
                     score=best_candidate.utility
                 )
 
-            at_capacity = len(strat.projects) >= strat.profile.max_active_projects
-            if at_capacity and not existing:
+            if not existing and not has_project_capacity(strat.projects, strat.profile.max_active_projects):
                 if boredom_upd:
                     return StrategicUpdate(boredom_delta=boredom_upd)
                 return StrategicUpdate()
 
-            switch_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate_proj, current_tick, state=state)
+            switch_up = StrategicIntelligenceSystem.evaluate_project_switch(with_live_current_score(entity, modified_scores), candidate_proj, current_tick, state=state)
             if switch_up:
                 # TCK-20260812-COMMITTED-INTENTION-SEQUENCE: win-transition bookkeeping. Only
                 # fires when the winning candidate is THIS tick's synthesized committed-intention

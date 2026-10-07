@@ -4666,3 +4666,51 @@
     trajectories). The hazard-death rise in frontier_marches (10 -> 15) and swamp_border_world
     (0 -> 2) is not attributed. The movement[5000] bench was not run (it exceeds the
     10-minute pytest timeout locally); the cost was measured at 1,000 entities.
+- id: COMB-335
+  text: 'TCK-20261007-SAFETY-DISPOSITION-TRIGGERS-RETREAT-ON-SIGHT-AGENCY-07: the
+    tactical SAFETY_PRESSURE_RETREAT branch fires only for a cautious entity (safety_pressure
+    > 0.75) with a present threat to itself: HP below 0.7 (WOUNDED), a hostile within
+    Manhattan distance 1 (ADJACENT), a hostile whose task targets it (TARGETED), a
+    hostile within 4 tiles nearer than at its previous position (CLOSING), or near
+    hostiles with summed apparent power at least 1.5 times its own (OUTMATCHED). Merely
+    perceiving a hostile never triggers it (World Rule AGENCY-07).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "`src/engine/tactical_threat.py` (`present_threat_terms`, `safety_retreat_warranted`),\
+    \ `src/engine/tactical.py` (the SAFETY_PRESSURE_RETREAT gate); campaign episode\
+    \ (NORMAL pin, seeds 42 / 1337, two identical runs): SAFETY_PRESSURE_RETREAT decisions\
+    \ 10 / 9 to 7 / 5, each with a named threat term; `docs/guidelines/intentional_divergences.md`\
+    \ \xA72.76; `docs/engine/contracts/tactical_contract.md` \xA74"
+  proof_type: parity
+  test_path: tests/unit/engine/test_safety_retreat_needs_present_threat.py
+  divergence_note: 'Intentional divergence 2.76 (Enforced): a static safety trait
+    no longer decides flight on sight of a hostile (AGENCY-07).'
+  support_boundary: The threat constants (0.7 HP, 4 tiles, 1.5x power) are engineering
+    choices recorded for a later tuning pass (owner decision 7), not Rule text. TARGETED
+    has no range cap.
+- id: COMB-336
+  text: 'TCK-20261007-WALK-TO-A-BUILDING-NEVER-ARRIVES-SO-REST-AND-EAT-ARE-NEVER-DISPATCHED:
+    a walk ends when the step onto the walk''s own destination tile is rejected as
+    path_not_found or building_obstruction, the rejected step is that tile, and the
+    entity stands orthogonally beside it (MOV-07); MovementSystem.resolve_move then
+    returns navigation.target_clear and nothing else (no sidestep, no wait or replan
+    counters). An obstacle elsewhere on the route, a diagonal neighbour and another
+    entity on the destination are not an arrival.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/movement.py` (`_UNENTERABLE_TILE_REASONS`, `MovementSystem._has_arrived_beside_unenterable_target`,
+    `resolve_move`). Corpus (crowded_frontier / frontier_living_world, seed 42, 1500
+    ticks, audit_mode, before vs after one tree each): REST decisions 2 / 0 to 0 /
+    34; arrivals 0 / 0 to 27 / 187; eat and sleep 0 to 0. 24 worlds, 500 ticks: 844
+    arrivals (438 inn, 406 town_hall, 0 resource nodes, 0 other blocked tiles). `docs/guidelines/intentional_divergences.md`
+    2.78; `docs/combat/combat_movement_overhaul_spec.md` Congestion Responses'
+  proof_type: regression
+  test_path: tests/unit/movement/test_arrival_beside_unenterable_target.py
+  divergence_note: 'Intentional divergence 2.78 (Bug Fix): a walker beside an unenterable
+    destination tile arrives and stops instead of oscillating.'
+  support_boundary: 'Does not make anyone rest or sleep: the REST and SLEEP action
+    semantics and the town path are Lane B''s, and in compiled worlds state.building_tiles
+    is empty. The brain still decides at its next tick (at most 10 ticks after arrival);
+    the scheduler was not changed.'

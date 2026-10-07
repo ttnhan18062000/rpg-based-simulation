@@ -61,6 +61,7 @@ Reported by `rpg-feature-planning` from `test-architecture-reviewer`: `tests/int
 - `TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK`
 - `TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE`
 - `TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING`
+- `TCK-20261007-SAFETY-DISPOSITION-TRIGGERS-RETREAT-ON-SIGHT-AGENCY-07` (the SAFETY_PRESSURE_RETREAT finding; this test still fails, 2 of 3 attempts)
 
 ## Related Docs
 - `docs/engine/kernel.md` (Sticky-Task Law); `docs/guidelines/intentional_divergences.md` (2.70 notes incidental opportunity-attack volume as unexplained).
@@ -102,6 +103,9 @@ Grid (frame-based K, single run per config, `4311e7fc5`):
 | seed 7, 70 ticks | 253 | 14 | 0 | 0 |
 | seed 2024, 70 ticks | 250 | 11 | 0 | 0 |
 | seed 1337, 70 ticks | 254 | 10 | 1 | 1 |
+
+**Finding, 2026-10-07 (`TCK-20261007-SAFETY-DISPOSITION-TRIGGERS-RETREAT-ON-SIGHT-AGENCY-07`):** the SAFETY_PRESSURE_RETREAT starvation is a static trait used as a trigger, not a miscounted-hostiles bug (the PANIC_RETREAT defect) and not a threshold to tune. On main `3e466e132`, 19 retreats (seeds 42 and 1337, 70 ticks, NORMAL pin) were all at HP 1.0 with `safety_pressure` 0.9, 14 from a single perceived hostile, none from a hostile that targeted the subject; `safety_pressure` is `max(need level, drive level)` from the catalog profiles, and the old gate `hostiles and safety_pressure > 0.75` made every `high`-safety entity flee on sight (the branch is dead on the standard worlds, whose entities carry no profile). AGENCY-07 (decision 21, #392) rules that out; the gate now needs a present threat. After the fix the campaign has 7 and 5 retreats, each with a named threat term. **This test is not flipped:** deliberate attack attempts went 0 (seed 42) and 1 (seed 1337) to 2 and 2 against its threshold of 3, so it still fails and its strict xfail is untouched. Hostile-perceiving decisions went 11 / 11 to 31 / 17. What stands between this episode and 3 attempts is not measured here; the discriminator rows and counts are in `agent-working/stored_artifacts/TCK-20261007-SAFETY-DISPOSITION-TRIGGERS-RETREAT-ON-SIGHT-AGENCY-07/investigation.md`. The cooperation-share test (item 2 above) is no longer an xfail: it was resolved by the same change (`TCK-20261006-CAMPAIGN-EPISODE-COOPERATION-SHARE-ABOVE-HALF-UNDER-A-PINNED-NORMAL-GOVERNOR`, now asserting the pooled share across two seeds).
+
 
 ## Test Summary
 (not started)
