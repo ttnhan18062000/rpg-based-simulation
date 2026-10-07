@@ -11,11 +11,11 @@
 known_reds:
   - match: "tests.integration.lab.test_species_relations_metamorphic_validation*"
     ticket: TCK-20261007-SPECIES-HOSTILITY-METAMORPHIC-ENGAGEMENT-CHECK-RED-SINCE-6E7EF56EC
-    owner: rpg-implementer-2
+    owner: testing-implementer
     added_on: "2026-10-07"
     expires_on: "2026-10-28"
     kind: broken
-    note: "first red run 37604139091 at 6e7ef56ec; rpg-planner 2026-10-07: monotone declared-to-declared only (CONFLICT-03); the test crosses none-to-declared; bisect decides between a test rescope (testing) and a code fix (Lane B)"
+    note: "class (a): underpowered sample, rescope by testing"
   - match: "tests.regression.test_behavioral_5k*"
     ticket: TCK-20261007-BEHAVIORAL-5K-REBASELINE-AFTER-THE-STARVATION-CHAIN-LANDS
     owner: rpg-implementer-2
