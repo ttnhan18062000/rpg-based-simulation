@@ -5,21 +5,24 @@
 # EXPIRED; both make the run red. A pattern that matches nothing failing is listed as a stale mapping.
 # Re-date, fix or delete an entry deliberately: expiry exists to force that decision. Dates are the reviewer's
 # proposal (2026-10-07); the owner can change them. tests/unit/tools/test_slow_regression_report.py lints this file.
+# ORDER MATTERS: a test id resolves to the FIRST entry whose pattern matches it, so a narrower entry must come
+# before any broader pattern that also covers it (the lint rejects an entry shadowed by an earlier one). The
+# corpus catch-all is therefore last.
 known_reds:
-  - match: "tests.unit.worldassembly.test_corpus_diversity*"
-    ticket: TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED
-    owner: test-architecture-implementer
-    added_on: "2026-10-07"
-    expires_on: "2026-11-04"
-    kind: flaky
-    note: "testing owns triage; the failing set changed 10 -> 12 between runs with different members; the determinism cause is parked under TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2"
-  - match: "tests.regression.test_behavioral_5k*"
-    ticket: TCK-20261006-BEHAVIORAL-5K-REGRESSION-URBAN-POLITICAL-DRIFTED-FROM-THE-2026-08-19-BASELINE-ATTRIBUTE-EACH-METRIC
+  - match: "tests.integration.lab.test_species_relations_metamorphic_validation*"
+    ticket: TCK-20261007-SPECIES-HOSTILITY-METAMORPHIC-ENGAGEMENT-CHECK-RED-SINCE-6E7EF56EC
     owner: rpg-implementer-2
     added_on: "2026-10-07"
-    expires_on: "2026-10-21"
+    expires_on: "2026-10-28"
     kind: broken
-    note: "triage row 1; Lane B attributes each moved metric before anyone touches baseline_5k.json"
+    note: "first red run 37604139091 at 6e7ef56ec; rpg-planner 2026-10-07: monotone declared-to-declared only (CONFLICT-03); the test crosses none-to-declared; bisect decides between a test rescope (testing) and a code fix (Lane B)"
+  - match: "tests.regression.test_behavioral_5k*"
+    ticket: TCK-20261007-BEHAVIORAL-5K-REBASELINE-AFTER-THE-STARVATION-CHAIN-LANDS
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "#407 closed the attribution ticket (measurement only); rebaseline after SURV-07 and decision 25; rpg-planner warns before 11-15 if it slips"
   - match: "tests.integration.world.test_living_world_ph9*"
     ticket: TCK-20261006-TWO-WORLD-INTEGRATION-TESTS-FAIL-ON-MAIN-PH9-ASSERTS-A-BOSS-AND-TRAUMA-LONG-RUN-HITS-THE-60S-LIMIT
     owner: rpg-implementer-2
@@ -48,3 +51,87 @@ known_reds:
     expires_on: "2026-12-31"
     kind: broken
     note: "allowed during core RPG + perf core implementation (owner, 2026-10-07)"
+  - match: "tests.unit.worldassembly.test_corpus_diversity::test_frontier_marches_seed42_200t_narrative_grade_stability"
+    ticket: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "NARRATIVE step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
+  - match: "tests.unit.worldassembly.test_corpus_diversity::test_frontier_extended_seed123_200t_combat_progression_narrative_grade_stability"
+    ticket: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "NARRATIVE step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
+  - match: "tests.unit.worldassembly.test_corpus_diversity::test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability"
+    ticket: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "NARRATIVE step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
+  - match: "tests.unit.worldassembly.test_corpus_diversity::test_frontier_extended_seed42_200t_narrative_grade_stability"
+    ticket: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "NARRATIVE step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
+  - match: "tests.unit.worldassembly.test_corpus_diversity::test_frontier_living_world_seed123_200t_combat_narrative_grade_stability"
+    ticket: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "NARRATIVE step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
+  - match: "tests.unit.worldassembly.test_corpus_diversity::test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stability"
+    ticket: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "SOCIAL step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
+  - match: "tests.unit.worldassembly.test_corpus_diversity::test_urban_political_seed42_200t_social_grade_stability"
+    ticket: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "SOCIAL step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
+  - match: "tests.unit.worldassembly.test_corpus_diversity::test_frontier_living_world_seed42_200t_social_grade_stability"
+    ticket: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "SOCIAL step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
+  - match: "tests.unit.worldassembly.test_corpus_diversity::test_urban_political_seed123_1000t_social_economy_grade_stability"
+    ticket: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "SOCIAL step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
+  - match: "tests.unit.worldassembly.test_corpus_diversity::test_urban_political_seed42_1000t_social_grade_stability"
+    ticket: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
+    owner: rpg-implementer-2
+    added_on: "2026-10-07"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "SOCIAL step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
+  - match: "tests.unit.worldassembly.test_corpus_diversity::test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_stability"
+    ticket: TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE
+    owner: rpg-planner
+    added_on: "2026-10-07"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "ECONOMY step change after #269 (#408 measurement); its ticket names no owner or expiry, so rpg-planner and 2026-11-15 are provisional"
+  - match: "tests.unit.worldassembly.test_corpus_diversity*"
+    ticket: TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED
+    owner: testing-implementer
+    added_on: "2026-10-07"
+    expires_on: "2026-11-04"
+    kind: flaky
+    note: "catch-all, keep LAST; covers the 6 class-(c) anchors from the #408 measurement (simq_routing 500t and 1000t, hero_guild_routing 1000t COGNITION; population_stability[frontier_marches], population_stability[urban_political], generated_frontier_3_42_extended population); the determinism cause is parked under TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2"
