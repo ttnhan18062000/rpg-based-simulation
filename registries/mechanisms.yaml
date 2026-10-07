@@ -289,7 +289,9 @@ mechanisms:
     systems: [combat, world]
     depends_on: []
     state: done
-    implemented_by: [src/engine/movement.py::MovementSystem]
+    implemented_by:
+      - src/engine/movement.py::MovementSystem
+      - src/systems/world_systems/navigation.py::NavigationSystem
     verified:
       instrument: code_trace
       verdict: observed
@@ -1663,6 +1665,9 @@ mechanisms:
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::fused_strategic_pass
       - src/engine/domain/lead_routing.py::LeadRoutingSystem
       - src/ai/score_modifiers.py::ScoreModifierSystem
+      - src/systems/strategic_systems/detour.py::DetourSuggestionSystem
+      - src/systems/strategic_systems/work_queue.py::StrategicWorkQueue
+      - src/systems/world_systems/routine.py::RoutineService
     verified:
       instrument: scenario
       verdict: observed
@@ -1789,6 +1794,9 @@ mechanisms:
     state: done
     implemented_by:
       - src/engine/pipeline_phases/groups.py::GroupPhase
+      - src/systems/world_systems/groups.py::GroupSystem
+      - src/systems/social_systems/party_lifecycle.py::PartyLifecycleService
+      - src/systems/social_systems/party_composition.py::PartyCompositionScorer
     verified:
       instrument: code_trace
       verdict: observed
@@ -1808,6 +1816,7 @@ mechanisms:
     state: partial
     implemented_by:
       - src/town/guild.py::GuildAction
+      - src/quests/generator.py::QuestGenerator
     verified:
       instrument: code_trace
       verdict: observed
@@ -1872,6 +1881,8 @@ mechanisms:
     implemented_by:
       - src/domains/faction/diplomatic_actions.py::handle
       - src/domains/faction/diplomatic_state_machine.py::compute_common_enemy_pairs
+      - src/systems/social_systems/contracts.py::ContractService
+      - src/systems/social_systems/appraisal.py::SocialAppraisalSystem
     verified:
       instrument: code_trace
       verdict: observed
@@ -2143,6 +2154,7 @@ mechanisms:
     state: done
     implemented_by:
       - src/domains/campaigns/orchestrator.py::CampaignOrchestrator
+      - src/systems/social_systems/loyalty_drift.py::LoyaltyDriftService
     verified:
       instrument: code_trace
       verdict: observed
@@ -2601,6 +2613,9 @@ mechanisms:
       - src/engine/shop.py::ShopSystem
       - src/engine/blacksmith.py::BlacksmithSystem
       - src/town/shop.py::ShopService
+      - src/systems/economy_systems/economy.py::DynamicPriceService
+      - src/systems/economy_systems/market.py::MarketSystem
+      - src/systems/economy_systems/reputation_discount.py::apply_reputation_discount
     verified:
       instrument: code_trace
       verdict: observed
@@ -2737,7 +2752,22 @@ mechanisms:
     layer: faction
     systems: [faction]
     depends_on: []
-    state: gap
+    state: done
+    implemented_by:
+      - src/systems/social_systems/clan_lifecycle.py::ClanLifecycleService
+      - src/engine/pipeline_phases/clan_lifecycle.py::ClanLifecyclePhase
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-10-07"
+      note: >-
+        rpg-feature-planning, row 7 (b) pass. State correction, gap -> done. `gap` said no
+        implementing code exists, but `ClanLifecycleService` (leave, succession, dissolution) runs
+        through `ClanLifecyclePhase.resolve`, which `AuthoritativeApplyPipeline` calls
+        unconditionally every tick (`src/engine/pipeline.py:418` -> `:504-509`). It also has
+        callers in `pipeline_phases/groups.py`, `world_systems/groups.py`, `social_systems/contracts.py`
+        and `social_systems/appraisal.py`. Code trace only: how often clans form and change in the
+        corpus worlds was not measured here.
   - id: race_collective_force
     layer: faction  # PLACEHOLDER layer assignment, not citation-backed -- see header note
     systems: [faction]
@@ -2990,8 +3020,14 @@ mechanisms:
     layer: group
     systems: [social]
     depends_on: []
-    state: orphan
-    implemented_by: [src/systems/social_systems/group_service.py::GroupService]
+    state: partial
+    implemented_by:
+      - src/systems/social_systems/group_service.py::GroupService
+      - src/systems/social_systems/party.py::PartyCoordinationSystem
+    # 2026-10-07 (rpg-feature-planning, row 7 (b)): orphan -> partial. PartyCoordinationSystem is the
+    # live half: apply_leadership_influence() runs in the strategic scoring path
+    # (strategic_systems/intelligence.py:1584) and validate_shared_target() in GroupSystem
+    # (world_systems/groups.py:204-205). GroupService's cohesion half below is still dead.
     # src/systems/social_systems/group_service.py: GroupService.calculate_cohesion() -- checked
     # directly, zero real callers anywhere in src/. Distinct from world_systems/groups.py's
     # GroupSystem (a different class, mapped to cooperation) -- a same-concept-different-file trap.
@@ -3062,7 +3098,9 @@ mechanisms:
     systems: [world]
     depends_on: []
     state: done
-    implemented_by: [src/world/spawn.py::SpawnService]
+    implemented_by:
+      - src/world/spawn.py::SpawnService
+      - src/systems/world_systems/generator.py::EntityGenerator
     verified:
       instrument: corpus_run
       verdict: observed
