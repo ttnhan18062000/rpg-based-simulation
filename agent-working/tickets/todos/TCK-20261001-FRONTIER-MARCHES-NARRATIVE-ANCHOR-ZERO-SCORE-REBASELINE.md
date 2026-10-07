@@ -12,9 +12,33 @@ tags: [simulation-quality, grade-thresholds, testing]
 # TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
 
 ## Title
-`test_frontier_marches_seed42_200t_narrative_grade_stability` asserts a NARRATIVE `anchor_score` of
-`0.0` while the simulation now reliably produces narrative — a stale anchor, re-baseline per
-`regression_policy.md` §9-11
+Five NARRATIVE corpus anchors went red (the first, `test_frontier_marches_seed42_200t_narrative_grade_stability`,
+asserts `anchor_score` 0.0 while the simulation now produces narrative). Bisect each onset to one PR, rebaseline
+the intended changes per `regression_policy.md` §9-11 and file a fix for any that start on a neutral PR.
+
+> **Widened 2026-10-07 (rpg-planner's ruling) from the single frontier_marches anchor to the NARRATIVE family**,
+> mirroring its SOCIAL twin `TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE`. The ticket id
+> keeps its original name so existing references hold; the title and scope below are the truthful ones.
+> The "class (a), stale anchor" reading in the Request Summary is now **provisional for the first anchor only** and
+> is subject to the bisect.
+
+## Family anchors and provisional onsets
+Run-level brackets from `TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED` (#408), not bisected:
+| anchor | onset |
+|---|---|
+| `frontier_marches_seed42_200t` | #91 |
+| `frontier_extended_seed123_200t` | #90 |
+| `generated_frontier_3_42_seed123_200t` | #90, #95-99 |
+| `frontier_extended_seed42_200t` | #100-102, #104 |
+| `frontier_living_world_seed123_200t` | #100-102, #104 |
+
+**Classification rule (a)/(b):** an onset that bisects onto #91, #104 or a docs PR (#95-97, #99, #100, #102) is
+class (b) (the PR's stated contract is neutral): it gets its own fix ticket, filed through rpg-planner, not a
+rebaseline.
+
+**The work starts with a bisect** of each anchor's onset to a single merge commit, using the anchor's own test and
+trial count. **Defer the rebaseline** until #407, SURV-07 and decision 25 are on main (all three move these worlds;
+§11: re-measure fresh after related fixes). The bisect may run earlier, since it measures history.
 
 ## Status
 OPEN
@@ -58,6 +82,9 @@ legitimate and is handled per `docs/testing/regression_policy.md` §9-11 in its 
 how `TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE` was split out of the same family.
 
 ## Scope
+- Bisect each of the five anchors' onsets to one merge commit and classify it (a) or (b) per the rule above; file a
+  fix ticket for every (b). Only (a) anchors continue to the steps below.
+- For each (a) anchor, do the following (written for the first anchor; apply the same bar to each):
 - Gather enough fresh trials to meet `docs/testing/regression_policy.md` §9-11's evidence bar. **Three
   trials is what the failing assertion itself ran and is below that bar** — do not re-baseline on the
   numbers quoted above.
@@ -71,7 +98,8 @@ how `TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE` was split
   look identical from the anchor alone.
 
 ## Out of Scope
-- The other 12 red grade anchors — `TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED` owns the
+- The SOCIAL family (its twin ticket).
+- The other red grade anchors outside these five — `TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED` owns the
   family-level classification and the reporting path. ~10 of them are class (c) and are **not**
   re-baselining candidates.
 - `TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE` — a different anchor, already owned.
@@ -79,7 +107,8 @@ how `TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE` was split
 - The `QueueDrainWorker` teardown leak — already root-caused as a consequence of the backpressure issue.
 
 ## Acceptance Criteria
-1. A new `anchor_score` and tolerance for the NARRATIVE pillar, derived from enough trials to satisfy
+0. Each of the 5 anchors has a single-PR onset (or a stated reason it cannot be bisected) and an (a)/(b) classification; every (b) has a filed fix ticket.
+1. For every (a) anchor, a new `anchor_score` and tolerance for the NARRATIVE pillar, derived from enough trials to satisfy
    `regression_policy.md` §9-11, with the derivation recorded in the test docstring.
 2. The tolerance demonstrably covers the observed per-trial variability (no flake across a fresh run of
    at least the trial count the policy requires).
@@ -91,6 +120,7 @@ how `TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE` was split
 ## Related Tickets
 - `TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED` — parent; found and classified this.
 - `TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE` — sibling, same split pattern.
+- `TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE` — SOCIAL twin.
 - `TCK-20260828-CORPUS-DIVERSITY-TOWN-CENTER-BASELINE-REFRESH` — recorded the now-stale reason.
 - `TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION` — established the
   3-trial tolerance assertion shape this anchor uses.
