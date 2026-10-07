@@ -268,3 +268,56 @@ this project's slow-lane reporting works, and has been ignored for three and a h
   `docs/testing/regression_policy.md` §9-11 with its own fresh evidence.
 - The `audit_fix_plan.md` P2-P "RESOLVED" vs docstring "deferred" discrepancy is unresolved and I have
   not determined which is current.
+
+## Measured classification — 2026-10-07 (testing-implementer; supersedes the documentary table above where they disagree)
+
+**Method.** Two independent sources, both measured rather than read from docstrings.
+1. **CI history.** Every `main` run of the `Slow regression` corpus step (job `slow` in `test.yml`, `slow-regression.yml` from 2026-10-06) whose step completed between 2026-08-26 and 2026-10-07: **205 runs**, per-anchor outcomes parsed from the job logs (first pytest summary after each `[isolated] <nodeid>` marker). Full matrix: `anchor_history.tsv` next to this file. Cross-check: run 37551894246 parses to the same 12 corpus reds that issue #390 lists.
+2. **Local repeat.** All 32 anchors, 3 rounds, each in its own process (the `make simq-corpus-diversity-slow-isolated` command shape, `--resource-budget large`), at `origin/main` 6e7ef56ec on a 6-core workstation.
+
+**Classification.** (a) anchor stale, behaviour correct; (b) genuine regression, anchor right; (c) flaky by construction. "Step change" means the anchor passed (nearly) every run before an identifiable merge range and failed (nearly) every run after; that is not the signature of (c), whatever the anchor's own trial spread. Whether a step change is (a) or (b) is a domain ruling and is routed, not made here.
+
+| Anchor | CI fails (all / since 09-15) | Same-SHA flips | Local 3 rounds | Onset range (last pass → first red) | Drift now | Class |
+|---|---|---|---|---|---|---|
+| `frontier_marches_seed42_200t_narrative` | 194/205 / 121/121 | 0 | 3/3 fail | 648eb4da0 → 6d294a16e (#91) | NARRATIVE grade A vs anchor C, all 3 trials (first red was a population-guard quartile collapse) | step change, (a)/(b) open; has its own ticket `TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE` |
+| `frontier_extended_seed123_200t_combat_progression_narrative` | 192/205 / 121/121 | 1 | 3/3 fail | 0d77b6877 → 5993cac36 (#90) | NARRATIVE A vs C, 3 trials | step change, (a)/(b) open |
+| `generated_frontier_3_42_seed123_200t_combat_narrative` | 189/205 / 121/121 | 1 | 3/3 fail | 0d77b6877 → 32c13bd74 (#90, #95–#99) | NARRATIVE score 0.40 vs anchor 0.0 | step change, (a)/(b) open |
+| `frontier_extended_seed42_200t_narrative` | 187/205 / 120/121 | 0 | 3/3 fail | 32c13bd74 → e62c4d5fb (#100–#102, #104) | NARRATIVE A vs C, 3 trials | step change, (a)/(b) open |
+| `frontier_living_world_seed123_200t_combat_narrative` | 188/205 / 121/121 | 0 | 3/3 fail | 32c13bd74 → e62c4d5fb (#100–#102, #104) | NARRATIVE A vs C, 1–3 trials | step change, (a)/(b) open |
+| `urban_political_selfmodel_probe_seed42_200t_social_world` | 139/205 / 115/121 (20 errors) | 0 | 3/3 fail | 1500384f9 → a47c41db2 (#144) | first red was a crash (`'ActionIntent' object has no attribute 'accepted'`); now SOCIAL 26.1 vs 17.9 and WORLD 0.66 vs 0.21 | step change, (a)/(b) open |
+| `urban_political_seed42_200t_social` | 122/205 / 109/121 | 1 | 3/3 fail | 66e40f197 → ea85dc659 (#164, #165) | SOCIAL 24.6 vs 16.8 | step change, (a)/(b) open |
+| `frontier_living_world_seed42_200t_social` | 117/205 / 102/121 | 2 | 2/3 fail | 2ab7152c7 → 589c90452 (#172) | SOCIAL 38.9 vs 22.3 | step change on a noisy anchor, (a)/(b) open |
+| `urban_political_seed123_1000t_social_economy` | 135/205 / 120/121 | 2 | 3/3 fail | intermittent from 08-26, red from about a47c41db2 → fc1abd089 (#146) | SOCIAL 38.1 vs 21.4, trials 22–59 | step change on a noisy anchor, (a)/(b) open |
+| `urban_political_seed42_1000t_social` | 155/205 / 120/121 | 2 | 2/3 fail | intermittent from early Sept; first sustained red at 7ffe7fe47 (#120, no `src/` change), so the onset is not attributable from CI | SOCIAL | step change on a noisy anchor, (a)/(b) open |
+| `unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative` | 62/205 / 62/121 | 0 | 3/3 fail | f2d807c35 → e9db40f0a (#269) | ECONOMY 0.58 vs 0.15 | step change; out of scope here, owned by `TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE` |
+| `simq_routing_test_seed42_1000t_cognition` | 62/205 / 34/121 | 8 | 0/3 fail | no onset | COGNITION idle event_count over the "confirmed-rare residual variance" floor | **(c)** |
+| `simq_routing_test_seed42_500t_cognition` | 46/205 / 28/121 | 3 | 0/3 fail | no onset | same | **(c)** |
+| `hero_guild_routing_seed42_1000t_cognition` | 32/205 / 15/121 | 4 | 2/3 fail | no onset | same | **(c)** |
+| `population_stability[frontier_marches]` | 8/205 / 0/121 | 1 | 0/3 | — | — | (c), confirmed noise (Out of Scope) |
+| `population_stability[urban_political]` | 6/205 / 6/121 | 0 | 0/3 | — | — | (c), low rate |
+| `generated_frontier_3_42_extended_population_stability` | 6/205 / 6/121 | 0 | 0/3 | — | — | (c), low rate; the stale `TypeError` reason recorded above no longer applies |
+
+The other 15 anchors passed every CI run and all 3 local rounds.
+
+**Correction to the documentary table above.** It classed 10 of 13 red grade anchors (c) and said a flaky anchor has no onset date. The measurement disagrees for 9 of the anchors it classed (c) (#4–#12, all step changes); it agrees on #2 (simq_routing 500t), and #1 is green in every run. Their trial-to-trial spread is real (the 3 trials inside one test differ at the same seed, the parked determinism cause), but it is not what keeps them red. Each passed nearly every run before a merge range and failed nearly every run after, and the drift is one-directional by pillar family:
+- **NARRATIVE up** (grade C → A, or score 0 → 0.4): frontier_marches, both frontier_extended, frontier_living_world seed123, generated_frontier seed123. Onsets fall between #90 and #104 (2026-08-27 to 09-02), except frontier_marches (#91).
+- **SOCIAL up** (about 17–22 → 25–39): four urban_political anchors and frontier_living_world seed42. Onsets are spread over #144 to #172 (2026-09-07 to 09-12), and the 1000t ones were already intermittent before.
+
+Only the three COGNITION anchors (both simq_routing, hero_guild) and the three population anchors behave like (c), with no onset: the COGNITION anchors at 12–28% red with flips at a fixed SHA, the population anchors at about 3–4%. This is the risk the ticket names in both directions: the documentary pass assumed (c) and was wrong for most of the set. The reds are **not shown to be stale**. A pillar rising after a batch that added the systems that feed it (wounds, reputation, party formation and trust) is consistent with (a), and equally with (b) if the rise is unintended. That ruling belongs to the domain.
+
+**Age of redness, refined.** The corpus step last passed on `main` at 0d77b6877 (run 33247910319, 2026-08-29). Before that it was already intermittent at a fixed SHA (83c828f3d: fail, pass, fail, pass on 08-27/28/29; 0d77b6877: pass, then fail on 08-30). From 2026-08-31 it failed on every completed run: **about 5.5 weeks** as of 2026-10-07, not the 3.5 weeks recorded above (that sample started at 2026-09-06).
+
+**Routing (proposed, to rpg-planner; no anchor value touched).**
+- NARRATIVE family (5 anchors): one investigation of whether the NARRATIVE rise across #90–#104 is intended. If it is, each anchor is rebaselined with fresh evidence per `docs/testing/regression_policy.md` §9-11 (class a). If not, it is a regression ticket (class b). frontier_marches already has its own ticket and should join this one rather than be decided alone.
+- SOCIAL family (5 anchors): the same question for #144–#172 (dormant-mechanism closure, survivor reconstruction, party formation and trust).
+- unit_selfmodel_pilot: already owned by its rebaseline ticket.
+- The 6 class-(c) anchors: recorded, not investigated (the cause stays parked under `TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2`). They stay mapped as `flaky` in `slow_known_reds.yaml`.
+
+**Limits.** The onsets are run-level brackets, not bisects; runs between them were cancelled, so each range can hold several merges (#90 alone is a 22-ticket batch). The local repeat was 3 rounds, enough to show a steady red, not to estimate a flake rate (CI's 121-run tail does that). No source change was examined for intent.
+
+### Domain ruling, 2026-10-07 (rpg-planner, cross-session message in reply to #408)
+All 10 step-change anchors are **class (a) pending bisect; domain-owned; deferred to after #407 / SURV-07 / decision 25.**
+- Condition: each anchor is class (a) only if its onset bisects onto a deliberate behaviour PR. NARRATIVE: #90 (wound/scar system, reputation wiring), #98 and #101 (M2 foundational batches). SOCIAL: #144 (dormant mechanisms wired on purpose), #165 (survivor last-known-position fix), #172 (JOIN_PARTY accept path; trust accumulating is the point of that ticket). An onset that lands on a PR that must be behaviour-neutral is **class (b)** and gets its own fix ticket, not a rebaseline. The neutral PRs are #91 (semantic-index carry-forward) and #104 (spatial index), which are performance-only; #95-#97, #99, #100 and #102, which are docs-only; and #146 (dead Doctrine chain removed, test mocks) and #164 (frontmatter, pinning). frontier_marches (bracket starts at #91) and urban_political_seed42_1000t (no attributable onset) need the bisect most.
+- Timing (regression_policy §11, re-measure after related fixes): no rebaseline yet. #407 (eating and sleeping), SURV-07 need escalation and decision 25 (whole-tile movement) will move these same worlds. The rebaselines happen after those three merge, on a fresh measurement at the §9-11 evidence bar.
+- Tickets (rpg-planner owns them): `TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE` is widened to the NARRATIVE family, and a SOCIAL-family twin is to be filed. Each starts with the bisect and the (a)/(b) split. Both are queued for the rpg lanes after the starvation chain. Testing touches no anchor values.
+- Known-reds expiry: rpg-planner says 2026-11-15 is acceptable if the gate needs one. Not changed here; the corpus entry's date (2026-11-04) is an owner/planner call, raised with testing-planner.
