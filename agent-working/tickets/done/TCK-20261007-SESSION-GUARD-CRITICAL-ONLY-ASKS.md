@@ -69,6 +69,8 @@ None (hotfix).
 - The writer lease is KEPT: two sessions committing into one worktree at once is a real race (index.lock, monitoring shards). A planner or designer can commit only in a worktree where it holds the lease or where no lease is held. Per-role worktrees are the follow-up (`TCK-20261007-SESSION-PER-ROLE-WORKTREES`).
 - Role cards: the generated `Never:` line is gone for designer and planner; the planner card source says it may commit on its own branch where it holds the lease.
 - Deliberate residual fail-closed (planner, 2026-10-07): an UNCERTAIN command (shell indirection, unparseable text) still asks when its raw text matches `\bpush\b`, `\bpr\s+merge\b`, `--delete`, `-X\s*DELETE|--method\s+DELETE`, `\bworktree\s+remove\b`, or `\bmerge\b` with `gh` in the same command, even when no action could be parsed. It does not ask on commit or governing-file names. `git worktree remove` is not classified as authority-class today, so that pattern only matters inside an already-uncertain command.
+- Known: `delete_worktree_or_data` is in `_CRITICAL`, but `classify.py` never emits it, so in practice it is gated only by `.claude/settings.json`'s `ask` on `git worktree remove` and `rm` of the monitoring paths. `workflow_run` likewise is never emitted.
+- Known residual: `critical_text` still asks on an uncertain command whose message text merely contains "push" (for example a multi-line commit body), until `TCK-20261007-SESSION-GUARD-QUOTED-TEXT-FALSE-POSITIVE` lands; keep that ticket queued after this one.
 - `decide()` gained an optional `command` argument; `_guard` passes the Bash command text.
 
 ## Test Summary
