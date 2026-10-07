@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-06"
+last_verified: "2026-10-07"
 ---
 
 # World Rule Family: Agency / Decision
@@ -271,6 +271,52 @@ says what trauma does to the people in it.
 with a little recent bloodshed stays put; the same subject, wounded and facing an enemy there,
 flees sooner than it would in a calm region.
 
+## AGENCY-07 — A cautious disposition raises a subject's readiness to flee; only a present threat to the subject decides flight
+
+> A subject's standing disposition toward safety (a cautious need or drive) is an ordinary
+> motivation: it lowers the bar at which a threat makes the subject run, and it never makes the
+> subject run by itself. Flight needs a present threat to the subject: its own wounds, a hostile
+> adjacent to it or closing on it, being targeted, or being clearly outmatched. Merely seeing a
+> hostile somewhere is not such a threat. A cautious subject flees sooner than a bold one facing
+> the same threat. It does not flee from a threat that is not there.
+
+**Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
+(row 21 of `docs/plans/systemic_world/owner_decision_memo.md`). This applies AGENCY-02 ("ordinary
+motivations influence… without automatically determining the chosen action") to flight. It is the
+companion of AGENCY-06: AGENCY-06 covers a region's unrest, and this Rule covers the subject's own
+temperament. Together they say that nothing ambient or dispositional decides flight alone. Passes
+the admission test: no earlier Rule said what a standing safety disposition may do to flight.
+- **Not ruled out:** a creature that bolts at first sight (a skittish prey animal) is a
+  legitimate fiction, but it is a non-ordinary reflex. AGENCY-02's carve-out requires such a
+  reflex to be declared by its own Rule for the kinds it applies to. It must never arise from a
+  threshold on an ordinary need. No such Rule exists today.
+- **Engineering, not this Rule:** which threat terms are measured (wounds, distance, closing,
+  targeting, relative strength), and how strongly the disposition lowers the bar.
+- **Alternatives not taken:** keep "cautious subjects flee at first sight" (it makes a trait an
+  action, which AGENCY-02 forbids, and the campaign measured it as a source of no-combat); tune the
+  threshold (content only has values at or below 0.9, so the threshold is a switch, not a dial).
+
+**Repository evidence: CONFLICTING, measured on main `3e466e132`.**
+- **Today's branch:** `TacticalDecisionSystem` retreats when
+  `hostiles and safety_pressure > 0.75` (`src/engine/tactical.py:267-268`).
+- **`safety_pressure` is a static trait:** the max of the catalog need and drive levels
+  (`src/world/motivation/pressure_resolver.py`; high = 0.9, medium_high = 0.75). Every subject
+  whose safety need is `high` therefore retreats as soon as any hostile is perceived. The check has
+  no wound, distance, count, strength or targeting term.
+- **Campaign episode (Lane A):** all 19 safety-pressure retreats happened at full health, all by
+  `need safety: high` profiles (humanoid_survival, goblin_survival).
+  - 14 of 19 fled a single hostile.
+  - None of the hostiles was targeting the fleeing subject.
+  - 11 of 19 were at distance 4 or more.
+  - One subject with attack 24 fled hostiles with attack 14 at distance 3.
+- **Standard worlds:** the branch is dead there, because compiled entities carry no need or drive
+  profile, so their pressure is 0. It affects catalog-spawned entities only, and in the campaign it
+  is the main source of no-combat.
+
+**Scenarios:** none traced yet. Two are owed when implemented: a cautious subject at full health
+sees a lone hostile far off that is not coming for it, and keeps to its task; the same subject,
+once the hostile closes on it, runs earlier than a bold subject would.
+
 ---
 
 ## Inherited / Applied Foundational Rules
@@ -416,6 +462,9 @@ mechanism never built at all).
   cognition specifically)
 - AGENCY-06 → Environment (`environment.md`'s ENV-07 for what trauma counts and ENV-06 for the
   instability scale), this family's own AGENCY-02 (the panic-response carve-out it declares)
+- AGENCY-07 → this family's own AGENCY-02 (ordinary motivation never decides an action) and
+  AGENCY-06 (its companion for ambient dread); Conflict/Combat (`conflict-combat.md`, being
+  outmatched as a present threat)
 
 ## Open questions carried forward
 
