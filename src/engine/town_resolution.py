@@ -12,6 +12,9 @@ if TYPE_CHECKING:
     from src.core.updates import StateUpdate
     from src.engine.cadence import SystemCadence
 
+# The building kinds that serve an action; an action absent here accepts any building in reach.
+SERVICE_KINDS = {"REST": frozenset({"inn", "home"}), "EAT": frozenset({"inn"})}
+
 
 class TownResolutionSystem:
     """
@@ -95,9 +98,9 @@ class TownResolutionSystem:
                     refined_entity_updates[e_id] = ent_upd
 
                 # Building Services (Rest, Eat)
-                service_pos, building_type = service_at(state, tile_pos)
-                if building_type and ent_upd.task and ent_upd.task.work_kind_set == "ENTITY_ACT":
-                    action = ent_upd.task.payload_set.get("action")
+                action = ent_upd.task.payload_set.get("action") if ent_upd.task and ent_upd.task.work_kind_set == "ENTITY_ACT" else None
+                service_pos, building_type = service_at(state, tile_pos, SERVICE_KINDS.get(action))
+                if building_type and action:
                     if action in ("REST", "EAT", "GATHER_INTEL"):
                         building = SpatialQueryService.get_building_at(state, service_pos)
                         if building and building.functional:

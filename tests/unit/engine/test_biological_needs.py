@@ -82,6 +82,31 @@ def test_service_tile_prefers_own_tile_then_orthogonal_neighbour():
     assert service_tile(state, (6, 6)) is None  # diagonal is not within reach (MOV-07)
 
 
+def test_service_tile_filters_by_kind_when_two_buildings_are_in_reach():
+    # Home to the north, inn to the east: the fixed offset order reaches the home first.
+    state = AuthoritativeState(tick=0, seed=1, building_tiles={(5, 4): "home", (6, 5): "inn"})
+    assert service_tile(state, (5, 5)) == (5, 4)
+    assert service_tile(state, (5, 5), {"inn"}) == (6, 5)
+    assert service_tile(state, (5, 5), {"inn", "home"}) == (5, 4)
+    assert service_tile(state, (5, 5), {"blacksmith"}) is None
+
+
+def test_eat_is_served_by_the_inn_when_a_home_is_nearer_in_reach():
+    ent = (V2EntityBuilder(1).kind("worker").location(10.0, 10.0).biological(hunger=80.0)
+           .inventory(gold=50).build())
+    home = BuildingState(id=2, kind="home", position=(10, 9))
+    inn = BuildingState(id=1, kind="inn", position=(11, 10))
+    state = AuthoritativeState(
+        tick=1, seed=1, entities={1: ent}, buildings={1: inn, 2: home},
+        building_tiles={(11, 10): "inn", (10, 9): "home"}, town_tiles={(10, 10), (11, 10), (10, 9)},
+    )
+    task = TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "EAT", "target_id": 1})
+    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, task=task)})
+    ent_upd = TownResolutionSystem.resolve(state, update).entity_updates[1]
+    assert ent_upd.biological.hunger_delta == -20.0
+    assert [t.transfer_kind for t in ent_upd.resource_transfers] == ["EAT"]
+
+
 def test_rough_rest_recovers_sleep_debt_without_a_building():
     ent = _entity()
     upd = CoreActions.execute_survival(ent, "REST", 10)[ent.id]
