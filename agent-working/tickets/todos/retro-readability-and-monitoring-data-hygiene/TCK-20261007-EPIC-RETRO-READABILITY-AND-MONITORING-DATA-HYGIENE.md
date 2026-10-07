@@ -58,6 +58,6 @@ tools/agent-monitoring/generate_retro.py, tools/agent-monitoring/validate*.py, .
 ## Assumptions / Open Questions
 - Counts above come from a read-only sweep on the agent-working-seat worktree (branch at f99cb0c6c) on 2026-10-07.
 - `execution_id` omission by week is verified; whether W40/W41 omissions come from one writer is not.
-- Child 4 owner decision is pending (the planner relayed "yes you own it", not yet applied to the registry); also open: whether child 5 sits under agent-working or the settings owner.
+- Child 4 decided 2026-10-07: the agent-working role owns the retro dir (`registries/session_roles.yaml`, same PR). Still open: whether child 5 sits under agent-working or the settings owner.
 ## Implementation Notes / Test Summary / Files Changed / Completion Summary
 (Open.)
