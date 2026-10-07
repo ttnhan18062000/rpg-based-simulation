@@ -28,6 +28,7 @@ import shlex
 import subprocess
 import sys
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -154,7 +155,8 @@ def _worktree_entries(cwd: Path) -> list[dict]:
 def ensure_worktree(path: Path, branch: str | None, cwd: Path, apply: bool = True) -> list[str]:
     """Self-heal a missing or prunable worktree from the role's branch; returns what was said/done.
 
-    Never from scratch: with no recorded branch, or a branch git no longer has, it reports and stops.
+    Never from scratch: with no recorded branch, a branch git no longer has, or a branch already merged into
+    origin/main, it reports and stops.
     Commits live in the shared object store, so only uncommitted files of a removed worktree are lost,
     and that is stated."""
     entries = _worktree_entries(cwd)
@@ -168,6 +170,10 @@ def ensure_worktree(path: Path, branch: str | None, cwd: Path, apply: bool = Tru
     if _run(["git", "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"], cwd).returncode != 0:
         return notes + [f"the role's branch `{branch}` no longer exists: nothing is invented; restore it from the "
                         "branch-backup file or choose a branch, then relaunch"]
+    if _run(["git", "merge-base", "--is-ancestor", f"refs/heads/{branch}", "origin/main"], cwd).returncode == 0:
+        return notes + [f"recorded branch `{branch}` is merged into origin/main: not recreated from a spent branch; "
+                        "create the worktree from origin/main yourself (`git worktree add <path> -b <new-branch> "
+                        "origin/main`) and relaunch"]
     if not apply:
         return notes + [f"would run: git worktree prune; git worktree add {path} {branch}"]
     _run(["git", "worktree", "prune"], cwd)
@@ -190,16 +196,18 @@ def find_transcript(session_id: str, pdir: Path) -> Transcript | None:
     return None
 
 
-def find_transcripts(title: str, pdir: Path) -> list[Transcript]:
-    """Candidate transcripts of a role: every project dir scanned for `customTitle == title`, newest first."""
+def find_transcripts(title: str | Iterable[str], pdir: Path) -> list[Transcript]:
+    """Candidate transcripts of a role: every project dir scanned for `customTitle` equal to one of the titles
+    (the instance id, plus the seat's legacy session name for its first instance), newest first."""
+    titles = {title} if isinstance(title, str) else set(title)
     found = []
     for p in pdir.glob("*/*.jsonl"):
         try:
             with p.open(encoding="utf-8", errors="replace") as fh:
                 for line in fh:
-                    if "customTitle" in line and title in line:
+                    if "customTitle" in line and any(t in line for t in titles):
                         try:
-                            if json.loads(line).get("customTitle") == title:
+                            if json.loads(line).get("customTitle") in titles:
                                 found.append(Transcript(p.stem, p, p.stat().st_mtime))
                                 break
                         except ValueError:
@@ -207,6 +215,15 @@ def find_transcripts(title: str, pdir: Path) -> list[Transcript]:
         except OSError:
             continue
     return sorted(found, key=lambda t: -t.mtime)
+
+
+def candidate_titles(target: Target) -> tuple[str, ...]:
+    """The titles a role's transcripts may carry: its instance id, and, for the first instance only, the seat's
+    `legacy_session_name` (a live seat titled before the instance-id naming, recorded in the registry)."""
+    legacy = target.role.legacy_session_name
+    if legacy and target.instance == target.role.role and legacy != target.instance:
+        return (target.instance, legacy)
+    return (target.instance,)
 
 
 def git_operation_in_progress(worktree: Path) -> list[str]:
@@ -267,8 +284,9 @@ def gather_evidence(target: Target, instance: st.Instance, worktree: Path, hando
         lines.append("  the worktree directory does not exist (see the self-heal note)")
     h_mtime, awaiting = handover_summary(handover)
     lines.append(f"  handover note: {'age ' + _age(now - h_mtime) if h_mtime else 'none'}; awaiting: {awaiting}")
-    cands = find_transcripts(target.instance, pdir)
-    lines.append(f"  candidate transcripts (customTitle == {target.instance}, newest first): {len(cands)}")
+    titles = candidate_titles(target)
+    cands = find_transcripts(titles, pdir)
+    lines.append(f"  candidate transcripts (customTitle in {', '.join(titles)}, newest first): {len(cands)}")
     for t in cands[:5]:
         lines.append(f"    {t.session_id}  {_age(now - t.mtime)} ago  {t.path}")
     return lines, cands, h_mtime
@@ -367,6 +385,8 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
         return EXIT_REFUSED
     cmd, env = build_command(target, sid)
     if a.dry_run:
+        note = handover_base(root) / role.handover
+        print(f"handover note: {note if note.is_file() else 'none'} (read from the main checkout, not the role's worktree)")
         print("DRY RUN: " + " ".join(f"{k}={shlex.quote(v)}" for k, v in env.items()) + " " + " ".join(shlex.quote(c) for c in cmd)
               + f"   (cwd {wt})")
         return 0
