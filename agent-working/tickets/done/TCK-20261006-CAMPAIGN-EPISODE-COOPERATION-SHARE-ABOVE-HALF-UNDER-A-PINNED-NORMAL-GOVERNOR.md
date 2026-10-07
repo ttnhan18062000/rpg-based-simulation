@@ -83,3 +83,5 @@ Found while splitting `test_real_campaign_episode_event_stream_is_plausible_not_
 
 ## Completion Summary
 Resolved by AGENCY-07; the test asserts the pooled share across two seeds.
+
+The pooled reformulation is weaker than the single-seed assertion: it also passes on the pre-AGENCY-07 tree (pooled 0.4960 against seed 42 alone at 0.5271); accepted because the test guards the ~79% co-location artefact, not the 0.50–0.53 band (test-architecture-reviewer ruling).

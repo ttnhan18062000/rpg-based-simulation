@@ -217,6 +217,9 @@ Strategic goals are broken down into a multi-step hierarchy.
 3.  **Objective**: A granular, atomic step (e.g., "Travel to Forge", "Interact with Anvil").
 4.  **Action**: The raw engine command sent to the simulation.
 
+### Project Capacity Counts Live Projects (TCK-20261007-STRATEGIC-CAPACITY-GATE-COUNTS-TERMINAL-PROJECTS-SO-NO-NEW-PROJECT-KIND-CAN-START)
+`CognitionProfile.max_active_projects` bounds the projects an entity is working on. Only a **live** project, `ACTIVE` or `SUSPENDED` (a suspended one can be resumed), occupies that budget; a `COMPLETED` or `ABANDONED` project is a record and never counts (`is_live_project`, `live_projects`, `has_project_capacity` in `src/core/strategic.py`). Every capacity check and trim reads that one predicate: the capacity gate in `evaluate_strategic_intent()` (a winning goal whose kind has no existing project is refused when the entity already holds `max_active_projects` live projects), `DetourSuggestionSystem.enforce_bandwidth`, `CapacityEnforcementPhase`, `GuildNeedScorer` and `GuildAction.visit`. A trim only ever removes live projects over the limit; finished records are never trimmed and never evict a live project. Before this change every stored project counted and nothing removed the finished ones, so an entity that had ever held `max_active_projects` projects could never start a new kind of project (`docs/guidelines/intentional_divergences.md` §2.77). The finished records still accumulate in `StrategicComponent.projects` (they are not pruned) and a goal whose kind already has a stored record, of any status, passes the capacity gate exactly as before (the gate refuses only a kind with no record).
+
 ### Committed Intentions (Multi-Step Planning)
 `CommittedIntention` (`src/core/strategic.py`) is a durable, frozen record letting an entity
 commit to a short, ordered sequence of future intentions (e.g. train -> craft -> quest) instead
