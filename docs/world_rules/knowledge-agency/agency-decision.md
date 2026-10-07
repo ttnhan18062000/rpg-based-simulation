@@ -370,7 +370,8 @@ holds 29 archetypes with kind, role and drive (7 drives).
   territory/duty target sort (`:459-463`).
 - **Behaviour warning:** assigning defaults moves about 615 entities from pressure 0 to real
   pressure. It must be measured before and after on one tree.
-- **Tracked:** a new ticket under the decision-core epic (Lane A). The planner will cite its ID.
+- **Tracked:** `TCK-20261007-COMPILED-ENTITIES-GET-DEFAULT-NEED-AND-DRIVE-PROFILES-WITH-VISIBLE-PROVENANCE`
+  (Lane A), a child of `TCK-20261007-EPIC-DECISION-CORE-LIVE-MOTIVATION-AND-HONEST-FIGHT-OR-FLEE-INPUTS`.
 
 **Scenarios:** none traced yet. One is owed when implemented: a compiled human guard and a
 compiled human shopkeeper in the same town carry different drives, each marked as defaulted by
