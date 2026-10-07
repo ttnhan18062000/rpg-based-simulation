@@ -45,7 +45,7 @@ Cause, read from the code: #172 added `CooperationDecisionService.find_pending_i
 
 ## Acceptance Criteria
 - [ ] Behaviour-neutral: identical canonical state hashes on the corpus worlds before and after, under `audit_mode`. List the worlds, seeds and tick counts.
-- [ ] movement[5000] per-tick cost returns to roughly the 2026-08-26 level (≤ about 1 s per tick with the method above), with the before and after values recorded, and `cooperation` no longer dominant in the phase breakdown.
+- [ ] movement[5000]: the `cooperation` phase returns to near its pre-#172 cost (it was absent from the top phases at 2ab7152c7; target ≤ ~100 ms per tick with the method above) and no longer dominates the breakdown, with before and after values recorded. The TOTAL per-tick cost won't reach the 2026-08-26 level (~0.5 s) from this fix alone, because the combat_engagement step (~3.2 s, Lane B's ticket) and the collection growth (~1.4 s) remain. Record the total and state which steps are left.
 - [ ] A test pins the ordering contract of the lookup: several offers to one target resolve to the lowest offerer id and then the lowest contract id.
 - [ ] Sequenced after the salience fix, per `rpg-feature-planning`.
 
