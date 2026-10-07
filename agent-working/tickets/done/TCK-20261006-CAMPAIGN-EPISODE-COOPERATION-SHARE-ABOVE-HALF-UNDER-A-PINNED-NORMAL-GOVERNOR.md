@@ -55,6 +55,7 @@ Found while splitting `test_real_campaign_episode_event_stream_is_plausible_not_
 - `TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-BECAUSE-NO-DELIBERATE-ATTACK-ONLY-OPPORTUNITY-ATTACKS` (the campaign test; the possible-symptom link: fewer combat events and the attack chain)
 - `TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE`
 - `TCK-20261005-ENTITIES-ARRIVE-ADJACENT-TO-A-LIVE-TARGET-AND-STILL-NEVER-ATTACK`
+- `TCK-20261007-SAFETY-DISPOSITION-TRIGGERS-RETREAT-ON-SIGHT-AGENCY-07` (resolved by it: the strict xfail removed, the pooled share asserted)
 
 ## Related Docs
 - None yet.
