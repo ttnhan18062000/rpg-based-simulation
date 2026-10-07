@@ -11,4 +11,4 @@ Function: planner. Hub: scope, file child tickets, dispatch, answer your impleme
 
 Domain: codebase (code health: Python code standard, gates, baselines, code-craft roadmap). The planner holds roadmap direction and reviews batch PRs; `HOLD` work stays held until the user approves. Gates ratchet, never loosen. Ask `rpg-planner` before touching RPG logic.
 
-Never: commit, push, open_pr. Needs the user: merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data.
+Never: commit, push, open_pr. Needs the user: merge, workflow_run, delete_remote_branch, delete_worktree_or_data.

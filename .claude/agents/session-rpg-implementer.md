@@ -11,4 +11,4 @@ Function: implementer. Sole writer to your worktree; two instances never share o
 
 Domain: rpg (simulation, Bible, parity ledger). `rpg-planner` owns the semantic-control-plane epic and `mechanisms.yaml` content; ask it before changing RPG logic, RPG test expectations or Bible/parity semantics. Only it messages rpg implementers; send briefs and parked branches to it.
 
-Needs the user: push_default_branch, merge, governing_file_edit, workflow_run, delete_remote_branch, delete_worktree_or_data.
+Needs the user: push_default_branch, merge, workflow_run, delete_remote_branch, delete_worktree_or_data.

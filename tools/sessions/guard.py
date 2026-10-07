@@ -12,13 +12,19 @@ Decision, per action, most severe wins (deny > ask > allow):
      a reason to ask (TCK-20261006-GUARD-OWN-BRANCH-GIT-ALLOWED): sessions started outside the role launcher
      never get one
   3. the action is in `needs_user`: merge, a push to the default branch (`push_default_branch`, from an explicit
-     refspec or, for a bare `git push`, the cwd's current branch), a commit while the current branch is the default
-     branch, governing-file and authority-file edits, remote-branch deletion are ask for every role (a grant never
-     overrides them). Owner rule, 2026-10-06: "only block the merge branch to main, every action on their own
-     branch is allowed": commit, push, force-push, local merge and `gh pr create` on a non-default branch are allowed
-  4. an uncertain classification (shell indirection, unparseable text)  -> ask, never a silent allow
+     refspec or, for a bare `git push`, the cwd's current branch) and remote-branch deletion are ask for every role
+     (a grant never overrides them); `workflow_run` and `delete_worktree_or_data` ask unless a grant covers them.
+     Owner rule, 2026-10-07 ("Drop all but critical"): the guard asks only about those critical actions. A commit on
+     the default branch, governing-file and authority-file edits and an uncertain commit are allowed (governing
+     files are protected by review and PR merge). Owner rule, 2026-10-06: "only block the merge branch to main,
+     every action on their own branch is allowed"
+  4. an uncertain classification asks only when the action set includes push, merge or delete_remote_branch, or the
+     raw command text names push, a PR merge, a delete or a worktree removal (`critical_text`, the deliberate
+     residual fail-closed); a push whose target branch cannot be determined asks too; any other uncertain command
+     is allowed
   5. otherwise allow (exit 0, no output)
-An unresolved role (a plain `claude` session) is not role-governed in v1: ask for authority classes, allow the rest.
+An unresolved role (a plain `claude` session) is not role-governed in v1: ask when a critical action is present,
+allow the rest.
 
 FAIL-CLOSED DISCIPLINE (M0n, observed 2026-10-03, positive controls included): a PreToolUse call is blocked only
 by exit code 2 or a well-formed JSON deny; exit 1 (an uncaught traceback) and unparseable output let the call
@@ -60,7 +66,20 @@ except Exception as _exc:  # noqa: BLE001 - a broken import must become a caught
 
 DENY, ASK = "deny", "ask"
 # Needing the user always wins over a grant (plan section 10).
-_ALWAYS_ASK = frozenset({"merge", "push_default_branch", "governing_file_edit", "authority_file_edit", "delete_remote_branch"})
+_ALWAYS_ASK = frozenset({"merge", "push_default_branch", "delete_remote_branch"})
+# The only actions the guard asks about (owner, 2026-10-07): `workflow_run` and `delete_worktree_or_data` come from a
+# function's `needs_user`; `workflow_run` is CLAUDE.md's explicit opt-in.
+_CRITICAL = _ALWAYS_ASK | frozenset({"workflow_run", "delete_worktree_or_data"})
+_UNCERTAIN_ASKS = frozenset({"push", "merge", "delete_remote_branch"})
+# Residual fail-closed (planner, 2026-10-07): an UNCERTAIN command (shell indirection, unparseable text) whose raw text
+# names a critical operation still asks even when no action could be parsed out of it. Deliberately narrow: no
+# commit, no governing-file names.
+_CRITICAL_TEXT = re.compile(r"\bpush\b|\bpr\s+merge\b|--delete|-X\s*DELETE|--method\s+DELETE|\bworktree\s+remove\b")
+
+
+def critical_text(command: str) -> bool:
+    """Whether a raw command text names push, a PR merge, a delete or a worktree removal (`merge` counts only with `gh`)."""
+    return bool(_CRITICAL_TEXT.search(command) or (re.search(r"\bmerge\b", command) and re.search(r"\bgh\b", command)))
 _WRITER_ACTIONS = frozenset({"commit", "push", "open_pr"})
 _EDIT_TOOL_NAMES = ("Edit", "Write", "MultiEdit", "NotebookEdit")  # kept local: `cl` may have failed to import
 _AUTHORITY_TEXT = re.compile(
@@ -157,20 +176,24 @@ def default_branches(cwd: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(("main", named))) if named else ("main",)
 
 
-def decide(classification, caller: Caller, authority, lease_role: str | None, lease_found: bool, on_default: bool | None = False):
+def decide(classification, caller: Caller, authority, lease_role: str | None, lease_found: bool, on_default: bool | None = False,
+           command: str = ""):
     """Pure decision: (DENY | ASK | None, reason). None means allow.
 
     `on_default` is whether the call's current branch is the default branch: True, False, or None when it could not
-    be determined (detached HEAD, git failure). It only matters for a commit and for a push with no explicit target."""
+    be determined (detached HEAD, git failure). It only matters for a push with no explicit target."""
     if not classification.is_authority:
         return None, ""
     action_set = set(classification.actions)
+    uncertain_critical = classification.uncertain and (bool(_UNCERTAIN_ASKS & action_set) or critical_text(command))
     if "push" in action_set and classification.push_implicit and on_default:
         action_set.add("push_default_branch")
     actions = sorted(action_set)
     label = ", ".join(actions) or "an uncertain command"
     if not caller.resolved:
-        return ASK, f"role not resolved for this session; {label} is an authority-class operation. {classification.detail}".strip()
+        if _CRITICAL & action_set or uncertain_critical:
+            return ASK, f"role not resolved for this session; {label} is a critical operation. {classification.detail}".strip()
+        return None, ""
 
     fa = authority.for_function(caller.function)
     forbidden = set(fa.forbidden) if fa else set()
@@ -184,16 +207,14 @@ def decide(classification, caller: Caller, authority, lease_role: str | None, le
     for action in actions:
         if action in _WRITER_ACTIONS and lease_found and lease_role != caller.instance:
             return DENY, f"{action} refused: this worktree's writer is {lease_role}, not {caller.instance}"
-    if on_default is None and ("commit" in action_set or ("push" in action_set and classification.push_implicit)):
+    if on_default is None and "push" in action_set and classification.push_implicit:
         ask.append("the current branch could not be determined, so it cannot be shown not to be the default branch")
-    elif on_default and "commit" in action_set:
-        ask.append("commit while on the default branch needs the user (land work on a branch, not on main)")
     for action in actions:
         if action in _ALWAYS_ASK:
             ask.append(f"{action} needs the user (a grant never overrides this)")
         elif action in needs_user and action not in grants:
             ask.append(f"{action} needs the user's go and {caller.role_id} has no grant for it")
-    if classification.uncertain:
+    if uncertain_critical:
         ask.append(f"uncertain classification: {classification.detail}")
     if ask:
         return ASK, "; ".join(dict.fromkeys(ask))
@@ -254,7 +275,8 @@ def _guard(payload: dict, stdout) -> int:
         toplevel = _git_toplevel(acts_in or cwd)
         lease = st.read_lease(root, toplevel) if toplevel else None
         lease_role, lease_found = (lease.role if lease else None), lease is not None
-    decision, reason = decide(classification, caller, authority, lease_role, lease_found, on_default)
+    command = str((payload.get("tool_input") or {}).get("command", "")) if payload.get("tool_name") == "Bash" else ""
+    decision, reason = decide(classification, caller, authority, lease_role, lease_found, on_default, command)
     if decision is None:
         return 0
     _emit(stdout, decision, reason)
