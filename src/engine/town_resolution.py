@@ -1,6 +1,6 @@
 # Compliance IDs: TOWN-015, TOWN-018, TOWN-019
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, Set, Tuple, List
+from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Tuple, List
 from dataclasses import replace
 
 from src.core.updates import EntityUpdate, IdentityUpdate, CombatUpdate, BiologicalUpdate
@@ -14,6 +14,13 @@ if TYPE_CHECKING:
 
 # The building kinds that serve an action; an action absent here accepts any building in reach.
 SERVICE_KINDS = {"REST": frozenset({"inn", "home"}), "EAT": frozenset({"inn"})}
+
+
+def _service_request(state: Any, tile: Tuple[int, int], task: Any) -> Tuple[Optional[str], Tuple[int, int], Optional[str]]:
+    """(action, service tile, building kind) for an ENTITY_ACT task; the building is chosen by the action's kinds."""
+    action = task.payload_set.get("action") if task and task.work_kind_set == "ENTITY_ACT" else None
+    service_pos, building_type = service_at(state, tile, SERVICE_KINDS.get(action) if action else None)
+    return action, service_pos, building_type
 
 
 class TownResolutionSystem:
@@ -98,8 +105,7 @@ class TownResolutionSystem:
                     refined_entity_updates[e_id] = ent_upd
 
                 # Building Services (Rest, Eat)
-                action = ent_upd.task.payload_set.get("action") if ent_upd.task and ent_upd.task.work_kind_set == "ENTITY_ACT" else None
-                service_pos, building_type = service_at(state, tile_pos, SERVICE_KINDS.get(action))
+                action, service_pos, building_type = _service_request(state, tile_pos, ent_upd.task)
                 if building_type and action:
                     if action in ("REST", "EAT", "GATHER_INTEL"):
                         building = SpatialQueryService.get_building_at(state, service_pos)
