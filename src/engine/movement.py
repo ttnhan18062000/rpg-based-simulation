@@ -20,8 +20,66 @@ from src.engine.movement_cache import MovementPlanKey, MovementPlan
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
 
+# A step rejected for one of these reasons failed because the destination tile is static terrain or a building footprint,
+# not because another entity stands there (that is OCCUPANCY_VIOLATION).
+_UNENTERABLE_TILE_REASONS = (ReasonCode.PATH_NOT_FOUND, ReasonCode.BUILDING_OBSTRUCTION)
+
+
 class MovementSystem:
     """ Authoritative handler for grid-based movement in V2. """
+
+    @staticmethod
+    def _has_arrived_beside_unenterable_target(
+        entity: EntityState,
+        next_step: Tuple[float, float],
+        target_pos: Tuple[float, float],
+        reason_code: Optional[ReasonCode],
+    ) -> bool:
+        """
+        TCK-20261007-WALK-TO-A-BUILDING-NEVER-ARRIVES-SO-REST-AND-EAT-ARE-NEVER-DISPATCHED: the walk's own destination tile cannot
+        be entered (a building or a blocked tile), and the entity already stands orthogonally beside it (MOV-07), so the walk is
+        over. Without this the sidestep ladder moved it off the adjacent tile and the planner moved it back, every tick, so it
+        never stayed where the tactical pass dispatches the building's service. An obstacle anywhere else on the way is not an
+        arrival: the rejected step must BE the destination tile.
+        """
+        if reason_code not in _UNENTERABLE_TILE_REASONS:
+            return False
+        target_tile = (int(target_pos[0]), int(target_pos[1]))
+        if (int(next_step[0]), int(next_step[1])) != target_tile:
+            return False
+        x, y = entity.navigation.position
+        return abs(int(x) - target_tile[0]) + abs(int(y) - target_tile[1]) == 1
+
+    @staticmethod
+    def _find_sidestep(
+        entity: EntityState,
+        effective_target: Tuple[float, float],
+        target_pos: Tuple[float, float],
+        state_or_context: Any,
+        move_speed_mult: float,
+    ) -> Optional[Tuple[float, float]]:
+        """The first legal orthogonal sidestep around a rejected step (3.1 of the congestion ladder), or None."""
+        x, y = entity.navigation.position
+        dx = effective_target[0] - x
+        dy = effective_target[1] - y
+        sidesteps = []
+        if dx != 0:
+            sidesteps = [(x, y + 1), (x, y - 1)]
+        elif dy != 0:
+            sidesteps = [(x + 1, y), (x - 1, y)]
+
+        # Threat-aware sorting: Prefer tiles that don't trigger OAs
+        sidesteps.sort(key=lambda p: (
+            len(LegalityServiceV2.get_engaged_hostiles_at_pos(p, entity, state_or_context)),
+            LegalityServiceV2.get_manhattan_dist(p, target_pos)
+        ))
+        for side_tile in sidesteps:
+            s_ok, _ = LegalityServiceV2.verify_movement_legality(
+                entity, side_tile, state_or_context, move_speed_mult=move_speed_mult
+            )
+            if s_ok:
+                return side_tile
+        return None
 
     @staticmethod
     def resolve_move(
@@ -86,28 +144,16 @@ class MovementSystem:
         wait_delta = 0
         osc_delta = 0
         replan = False
-        
+
+        if not success and MovementSystem._has_arrived_beside_unenterable_target(entity, effective_target, target_pos, reason_code):
+            return {entity.id: EntityUpdate(entity_id=entity.id, navigation=NavigationUpdate(target_clear=True))}
+
         if not success:
             # 3.1 Sidestepping (Orthogonal)
-            dx = effective_target[0] - entity.navigation.position[0]
-            dy = effective_target[1] - entity.navigation.position[1]
-            sidesteps = []
-            if dx != 0: sidesteps = [(entity.navigation.position[0], entity.navigation.position[1] + 1), (entity.navigation.position[0], entity.navigation.position[1] - 1)]
-            elif dy != 0: sidesteps = [(entity.navigation.position[0] + 1, entity.navigation.position[1]), (entity.navigation.position[0] - 1, entity.navigation.position[1])]
-            
-            # Threat-aware sorting: Prefer tiles that don't trigger OAs
-            sidesteps.sort(key=lambda p: (
-                len(LegalityServiceV2.get_engaged_hostiles_at_pos(p, entity, state_or_context)),
-                LegalityServiceV2.get_manhattan_dist(p, target_pos)
-            ))
-            
-            for side_tile in sidesteps:
-                s_ok, s_reason = LegalityServiceV2.verify_movement_legality(
-                    entity, side_tile, state_or_context, move_speed_mult=move_speed_mult
-                )
-                if s_ok:
-                    effective_target = side_tile
-                    success = True; reason_code = None; break
+            side_tile = MovementSystem._find_sidestep(entity, effective_target, target_pos, state_or_context, move_speed_mult)
+            if side_tile is not None:
+                effective_target = side_tile
+                success = True; reason_code = None
             
             # 3.2 Yielding
             if not success:
