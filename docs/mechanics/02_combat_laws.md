@@ -182,6 +182,16 @@ disengaging while adjacent to a hostile) bypass this specific check.
     one run. Clearing it returns the entity to the brain, whose tactical pass pursues whenever an
     attack is not legal. `INSUFFICIENT_READINESS` is deliberately **not** reset: readiness regens
     and the same swing can then land.
+*   **Whole-Tile Reach Distance**: positions are whole tiles (world rule MOV-07, Decision 25), and
+    every reach check measures one distance: the Manhattan distance between the tiles the two
+    positions stand on (`LegalityServiceV2.get_manhattan_dist`, each coordinate read as `int(pos)`,
+    as occupancy, terrain and building lookups read it). Attack legality (`verify_attack_legality`)
+    and pursuit completion (`MovementCandidateSelector._target_in_attack_reach`) both call it, so
+    a pursuer stops exactly when the swing is legal. The long-distance flow-field step toward the
+    town centre (`NavigationSystem.get_next_step`) is a one-tile step along the flow vector's
+    dominant axis (a tie takes the y axis, as the local step does); it used to add a unit vector
+    and leave the entity between tiles, where the truncated legality distance and the float
+    pursuit distance disagreed (`TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT`).
 *   **Withheld-Action Task Reset**: The action router (`ActionRouter.execute_action`,
     `src/engine/domain/action_router.py`) reports `ReasonCode.ACTION_WITHHELD_BY_POSTURE` when its
     combat-posture gate withholds an `ATTACK`/`SKILL` (the attacker's recorded
