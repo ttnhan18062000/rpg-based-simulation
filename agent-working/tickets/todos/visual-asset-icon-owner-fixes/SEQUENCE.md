@@ -6,6 +6,7 @@ Follow-up to `TCK-20261007-EPIC-VISUAL-ASSET-ICON-SET-V2` on the SAME branch `vi
 ## Order
 
 1. `TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES`: specs -> reference study -> **owner-approved silhouette sheet** -> draw -> checks -> owner commands.
+1b. `TCK-20261008-VISUAL-ASSETS-REVIEW-SHEET-FOLDER` (added 2026-10-08, owner request): review sheets as a folder of PNG canvases + README; generated for this gate.
 2. **Owner gate, no ticket:** the owner reviews and re-adopts in their own terminal.
 3. `TCK-20261008-VISUAL-ASSETS-RECORD-ICON-OWNER-FIXES-ADOPTION`: record, guards, PR notes, close.
 
