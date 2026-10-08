@@ -239,7 +239,7 @@ target boundary, not claim it already exists.
 
 No Python-callable Graphify interface exists anywhere in this repo today — `graphify` resolves to
 a standalone CLI binary, `python3 -c "import graphify"` raises `ModuleNotFoundError`, and
-`tools/graphify_to_html.py` (the only Graphify-adjacent file under `tools/`) converts an existing
+`tools/graphify_to_html.py` (the only Graphify-adjacent file under `tools/`; its JS dependencies are in `tools/graphify_html/`) converts an existing
 `graph.json` to HTML, not a query interface. Populating a *tested*, *honest* descriptor (a hard
 acceptance criterion) therefore means describing the CLI's real, observable behavior — a
 descriptor that instead described a hypothetical in-process adapter would describe code that does
