@@ -149,14 +149,14 @@ class _Rng:
         return lo + (sub_id % (hi - lo + 1))
 
 
-def test_an_owned_first_draw_costs_no_extra_draw():
+def test_an_owned_first_draw_is_the_uniform_draw_and_costs_no_extra_draw():
     rng = _Rng()
-    assert _draw_tile_owned_by(rng, 1, [_Region("wild", (0, 0, 9, 9))], "wild", (3, 4), (0, 0, 9, 9)) == (3, 4)
-    assert rng.calls == 0
+    assert _draw_tile_owned_by(rng, 1, [_Region("wild", (0, 0, 9, 9))], "wild", (0, 0, 9, 9)) == (0, 1)  # sub ids 0 and 1: the uniform draw
+    assert rng.calls == 2
 
 
 def test_a_region_that_owns_no_tile_is_given_up_after_the_bounded_draws_and_places_nothing():
     rng = _Rng()
     ordered = [_Region("town", (0, 0, 9, 9)), _Region("wild", (0, 0, 9, 9))]  # the town owns every tile of the wild box
-    assert _draw_tile_owned_by(rng, 1, ordered, "wild", (3, 4), (0, 0, 9, 9)) is None
-    assert rng.calls == 2 * (RESOURCE_PLACEMENT_ATTEMPTS - 1)
+    assert _draw_tile_owned_by(rng, 1, ordered, "wild", (0, 0, 9, 9)) is None
+    assert rng.calls == 2 * RESOURCE_PLACEMENT_ATTEMPTS

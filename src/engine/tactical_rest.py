@@ -14,8 +14,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple
 
-from src.core.strategic import GoalKind, ProjectStatus
 from src.core.items import food_hunger_recovery
+from src.core.strategic import GoalKind, ProjectStatus
 from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
 from src.engine.biological_needs import need_rates
 from src.engine.need_pull import ESCALATION_FULL, SLEEP_LINE, arrival_fraction

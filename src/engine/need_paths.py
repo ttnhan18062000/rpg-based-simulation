@@ -64,6 +64,12 @@ def _finish_row(row: Dict[str, Any], inns: int, food_nodes: int) -> Dict[str, An
     return row
 
 
+def _widen(row: Dict[str, Any], key: str, distance: Optional[float]) -> None:
+    """Keep the largest distance seen for `key` on the row."""
+    if distance is not None and (row[key] is None or distance > row[key]):
+        row[key] = distance
+
+
 def need_path_report(state: Any, catalog: Any) -> List[Dict[str, Any]]:
     """One row per kind (species id, or ``person`` for a species-less civil role) populated in `state`."""
     groups: Dict[str, Dict[str, Any]] = {}
@@ -75,11 +81,8 @@ def need_path_report(state: Any, catalog: Any) -> List[Dict[str, Any]]:
         profile = catalog.get_need_profile(profile_id) if profile_id else None
         row = groups.setdefault(kind, _new_row(kind, profile_id, profile))
         row["subjects"] += 1
-        d = _nearest_inn_distance(state, entity.navigation.position) if row["hunger"] not in _HUNGERLESS else None
-        if d is not None and (row["max_inn_distance"] is None or d > row["max_inn_distance"]):
-            row["max_inn_distance"] = d
-        f = _nearest_food_node_distance(food_nodes, entity.navigation.position) if row["hunger"] not in _HUNGERLESS else None
-        if f is not None and (row["max_food_node_distance"] is None or f > row["max_food_node_distance"]):
-            row["max_food_node_distance"] = f
+        if row["hunger"] not in _HUNGERLESS:
+            _widen(row, "max_inn_distance", _nearest_inn_distance(state, entity.navigation.position))
+            _widen(row, "max_food_node_distance", _nearest_food_node_distance(food_nodes, entity.navigation.position))
     inns = sum(1 for b in state.buildings.values() if b.kind == "inn")
     return [_finish_row(groups[kind], inns, len(food_nodes)) for kind in sorted(groups)]

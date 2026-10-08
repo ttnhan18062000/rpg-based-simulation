@@ -82,7 +82,7 @@ def _hunger_without_open_way(entity: EntityState, state: AuthoritativeState, uti
     """Decision 27: no way is open now (`access` says why), so the pull goes to the step that opens one (forage); with no step the
     subject can take it stays hungry and the goal says `no_open_step` (SURV-06's poverty outcome), keeping the raw hunger value and no target."""
     step = first_open_step(entity, state)
-    if step is None:
+    if step is None or step.target_pos is None:
         return GoalScore(kind=GoalKind.HUNGER, utility=utility, need_access=access, no_open_step=True)
     pull = hunger_pull(utility, entity.biological.hunger, need_rates(entity)[0], _travel_tiles(entity, step.target_pos))
     return GoalScore(

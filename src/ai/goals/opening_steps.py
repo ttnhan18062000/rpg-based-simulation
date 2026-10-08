@@ -24,6 +24,7 @@ from src.core.state import AuthoritativeState, EntityState, ResourceNodeState
 
 @dataclass(frozen=True)
 class OpeningStep:
+    """One way a need with no open way can be opened: its kind, whether it is open now, why not, and where it points."""
     kind: OpeningStepKind
     available: bool
     reason: str = ""
@@ -67,4 +68,5 @@ def opening_steps(entity: EntityState, state: AuthoritativeState) -> List[Openin
 
 
 def first_open_step(entity: EntityState, state: AuthoritativeState) -> Optional[OpeningStep]:
+    """The first opening step that is open now, in the order they are tried, or None."""
     return next((step for step in opening_steps(entity, state) if step.available), None)

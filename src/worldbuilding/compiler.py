@@ -121,24 +121,33 @@ RESOURCE_PLACEMENT_OWNED_BY_DECLARED_REGION = "owned_by_declared_region"
 RESOURCE_PLACEMENT_ATTEMPTS = 64
 
 
-def _draw_tile_owned_by(
-    rng: Any, node_id: int, ordered_regions: Any, region_id: str, first_draw: tuple, bounds: tuple
-) -> Optional[tuple]:
-    """The first draw (the uniform draw every kind makes) whose tile the declared region OWNS by region precedence, else None.
+def _draw_tile_owned_by(rng: Any, node_id: int, ordered_regions: Any, region_id: str, bounds: tuple) -> Optional[tuple]:
+    """The first draw whose tile the declared region OWNS by region precedence, else None (at most ``RESOURCE_PLACEMENT_ATTEMPTS`` draws).
 
-    The first attempt is the draw already made, so a tile that is owned costs no extra RNG use; later attempts use the next
-    sub ids of the same seeded stream. At most ``RESOURCE_PLACEMENT_ATTEMPTS`` draws.
+    Attempt 0 is the same draw every kind makes (sub ids 0 and 1 of the node's seeded stream), so a tile that is owned from the start is
+    the tile the uniform rule would have picked; later attempts use the next sub ids of the same stream.
     """
     min_x, min_y, max_x, max_y = bounds
-    x, y = first_draw
     for attempt in range(RESOURCE_PLACEMENT_ATTEMPTS):
-        if attempt:
-            x = rng.get_int(Domain.WORLD, 0, node_id, min_x, max_x, sub_id=2 * attempt)
-            y = rng.get_int(Domain.WORLD, 0, node_id, min_y, max_y, sub_id=2 * attempt + 1)
+        x = rng.get_int(Domain.WORLD, 0, node_id, min_x, max_x, sub_id=2 * attempt)
+        y = rng.get_int(Domain.WORLD, 0, node_id, min_y, max_y, sub_id=2 * attempt + 1)
         owner = first_region_at(ordered_regions, x, y)
         if owner is not None and owner.id == region_id:
             return x, y
     return None
+
+
+def _resource_profile(res_spec: Any, context: Any) -> tuple:
+    """(required_ticks, yields_item, placement) of a resource recipe: the assembly context's profile, else the ResourceRegistry.
+
+    `resource_type` names the resource KIND (herb_patch); the node must yield the catalog's ITEM (herb)."""
+    required_ticks, placement, yields_item = 10, None, res_spec.resource_type
+    registered = ResourceRegistry.get(res_spec.resource_type).yield_item if ResourceRegistry.contains(res_spec.resource_type) else None
+    if context is not None and res_spec.id in context.resources:
+        profile = context.resources[res_spec.id]
+        required_ticks, placement = profile.required_ticks, profile.placement
+        return required_ticks, profile.yield_item or registered or yields_item, placement
+    return required_ticks, registered or yields_item, placement
 
 
 def _resolve_entity_spawn_tile(
@@ -558,29 +567,12 @@ class WorldCompiler:
                 x = rng.get_int(Domain.WORLD, 0, next_resource_id, min_x, max_x, sub_id=0)
                 y = rng.get_int(Domain.WORLD, 0, next_resource_id, min_y, max_y, sub_id=1)
 
-                required_ticks = 10
-                # `resource_type` names the resource KIND (herb_patch); the node must yield the
-                # catalog's ITEM (herb). Resolved by the assembly context, else by ResourceRegistry.
-                yields_item = res_spec.resource_type
-                placement = None
-                if context is not None and res_spec.id in context.resources:
-                    profile = context.resources[res_spec.id]
-                    required_ticks = profile.required_ticks
-                    placement = profile.placement
-                    if profile.yield_item:
-                        yields_item = profile.yield_item
-                    elif ResourceRegistry.contains(res_spec.resource_type):
-                        yields_item = ResourceRegistry.get(res_spec.resource_type).yield_item
-                elif ResourceRegistry.contains(res_spec.resource_type):
-                    yields_item = ResourceRegistry.get(res_spec.resource_type).yield_item
-
+                required_ticks, yields_item, placement = _resource_profile(res_spec, context)
                 if placement == RESOURCE_PLACEMENT_OWNED_BY_DECLARED_REGION:
-                    owned = _draw_tile_owned_by(rng, next_resource_id, spec.regions, region_id, (x, y), region.bounds)
+                    owned = _draw_tile_owned_by(rng, next_resource_id, spec.regions, region_id, region.bounds)
                     if owned is None:
-                        warnings.append(
-                            f"resource '{res_spec.id}' ({res_spec.resource_type}) found no tile owned by region '{region_id}' "
-                            f"in {RESOURCE_PLACEMENT_ATTEMPTS} draws (bounds {region.bounds}); node not placed"
-                        )
+                        warnings.append(f"resource '{res_spec.id}' ({res_spec.resource_type}) found no tile owned by region '{region_id}' "
+                                        f"in {RESOURCE_PLACEMENT_ATTEMPTS} draws (bounds {region.bounds}); node not placed")
                         continue
                     x, y = owned
 
