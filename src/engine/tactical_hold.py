@@ -67,7 +67,7 @@ def notice_unengaged_hostile(
 
     It follows the entity's own combat-engagement verdict toward that target (``identity.properties["last_combat_posture"]``): ``ignore``
     keeps the walk, re-issued as an ``ENTITY_MOVE`` decision (``KEEP_WALKING``) when it has a stored target; ``avoid`` steps away
-    (``AVOID_HOSTILE``, a decided flight). Any other verdict, or none, returns None and the tactical pass goes on to fight as it always has."""
+    (``AVOID_HOSTILE``, a decided flight); ``watch`` stands and observes (a typed ``HOLD`` wait, ``WATCH_HOSTILE``). Any other verdict, or none, returns None and the tactical pass goes on to fight as it always has."""
     if is_engaged(entity, target) or not LegalityServiceV2.is_adjacent(entity.navigation.position, target.navigation.position):
         return None
     props = entity.identity.properties or {}
@@ -82,6 +82,14 @@ def notice_unengaged_hostile(
             entity_id=entity.id, strategic=strat_up,
             navigation=NavigationUpdate(target_set=goal, movement_mode_set=entity.navigation.movement_mode),
             task=TaskUpdate(work_kind_set="ENTITY_MOVE", payload_set={"target_position": goal, "reason": "KEEP_WALKING"}),
+        )
+    if posture == "watch":
+        # Stand and observe: a typed wait. The HOLD action succeeds as a no-op and ends its task; the movement mode HOLD keeps the tile (speed
+        # multiplier 0) until the next decision, which the adjacency wake brings within ADJACENCY_WAKE_COOLDOWN ticks.
+        return EntityUpdate(
+            entity_id=entity.id, strategic=strat_up,
+            navigation=NavigationUpdate(movement_mode_set=MovementMode.HOLD),
+            task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "HOLD", "reason": "WATCH_HOSTILE", "target_id": target.id}),
         )
     if posture == "avoid":
         away = retreat_destination(state, entity, hostiles)

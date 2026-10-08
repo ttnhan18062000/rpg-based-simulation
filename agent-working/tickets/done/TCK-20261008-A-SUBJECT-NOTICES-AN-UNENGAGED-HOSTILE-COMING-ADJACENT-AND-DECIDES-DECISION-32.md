@@ -53,7 +53,7 @@ Scheduler wake (`ADJACENCY_WAKE_COOLDOWN` 2, stateless, LOD bypass), the posture
 - `src/engine/scheduler.py`, `src/engine/candidate_selector.py`, `src/engine/tactical_hold.py`, `src/engine/tactical.py`.
 
 ## Assumptions / Open Questions
-- `ignore` never occurs; the designer decides `watch`. The idle residual of the free-hit batch (an idle task blocked beside an engaged hostile for up to 19 ticks) is not re-measured separately: blocked entity-ticks are 0 in every arm of this batch's measurement.
+- `ignore` never occurs (a later ticket makes it reachable through combat engagement); `watch` is a typed HOLD wait (designer ruling). The idle residual of the free-hit batch (an idle task blocked beside an engaged hostile for up to 19 ticks) is not re-measured separately: blocked entity-ticks are 0 in every arm of this batch's measurement.
 
 ## Implementation Notes
 See the investigation.
@@ -65,4 +65,4 @@ See the investigation.
 src/engine/scheduler.py, candidate_selector.py, tactical_hold.py, tactical.py; tests as above; docs, registries/mechanisms.yaml, parity COMB-343.
 
 ## Completion Summary
-Opportunity-attack hits fall 36 to 64 percent at 1500 ticks; every adjacency gets a decision; the long-run effect is a delay.
+Opportunity-attack hits fall 33 to 67 percent at 1500 ticks (post-WATCH); every adjacency gets a decision; the long-run effect is a delay.

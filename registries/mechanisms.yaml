@@ -262,7 +262,7 @@ mechanisms:
         **Decision 32 implemented (notice and decide), TCK-20261008-A-SUBJECT-NOTICES-AN-UNENGAGED-HOSTILE-COMING-ADJACENT-AND-DECIDES-DECISION-32:**
         the scheduler wakes the brain of an entity beside a perceived hostile it is not engaged with every 2 ticks (`scheduler.py`, LOD bypass for the wake),
         and `tactical_hold.notice_unengaged_hostile` follows the entity's own combat-engagement verdict (ignore keeps walking, avoid steps away).
-        `ignore` is unreachable in the corpus today (0 firings); `watch` is mapped to fight pending the designer. Pinned 5x3: opportunity-attack hits halved.
+        `ignore` is unreachable in the corpus today (0 firings); `watch` stands and observes (a typed HOLD wait, WATCH_HOSTILE). Pinned 5x3: opportunity-attack hits down 33 to 67 percent.
   - id: combat_engagement
     layer: entity
     systems: [combat]

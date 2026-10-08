@@ -113,7 +113,7 @@ def test_avoid_steps_away_as_a_decided_flight():
     assert MCS.is_decided_flight(held) is True
 
 
-@pytest.mark.parametrize("posture", [None, "engage", "probe", "skirmish", "watch", "retreat", "panic_flee", "vengeance_engage"])
+@pytest.mark.parametrize("posture", [None, "engage", "probe", "skirmish", "retreat", "panic_flee", "vengeance_engage"])
 def test_any_other_verdict_leaves_the_decision_to_fight_as_before(posture):
     w, h = _walker(posture=posture), _hostile()
     assert notice_unengaged_hostile(_state(w, h), w, h, [h], None) is None
@@ -130,3 +130,15 @@ def test_a_keep_walking_move_ends_on_arrival_and_not_before():
     en_route = _walker(task=TaskComponent(work_kind="ENTITY_MOVE", payload={"target_position": GOAL, "reason": "KEEP_WALKING"}))
     assert MCS.move_ends_here(arrived, {1: arrived}) is True
     assert MCS.move_ends_here(en_route, {1: en_route}) is False
+
+
+def test_watch_stands_and_observes_as_a_typed_wait_that_ends_its_task():
+    from src.core.state import TaskComponent as _TC  # noqa: F401  (kept local: the wait is a HOLD action, not a move)
+    w, h = _walker(posture="watch"), _hostile()
+    update = notice_unengaged_hostile(_state(w, h), w, h, [h], None)
+    assert update.task.work_kind_set == "ENTITY_ACT"
+    assert update.task.payload_set == {"action": "HOLD", "reason": "WATCH_HOSTILE", "target_id": 2}
+    assert update.navigation.movement_mode_set == MovementMode.HOLD and update.navigation.target_set is None
+    from src.engine.domain.action_router import ActionRouter
+    routed = ActionRouter.execute_action(w, dict(update.task.payload_set), 5, None, _state(w, h))
+    assert routed[1].navigation is None or routed[1].navigation.failure_reason is None  # a typed success, not an unsupported action
