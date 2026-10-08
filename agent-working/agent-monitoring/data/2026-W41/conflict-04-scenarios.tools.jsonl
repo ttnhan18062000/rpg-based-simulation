@@ -1,0 +1,1 @@
+{"session_id":"9d7d66b2-d149-4f89-98b6-72c68cb09db4","run_id":null,"seq":null,"phase":null,"agent":null,"ts":"2026-10-08T08:28:00.218606Z","tool":"Bash","input_summary":"git switch -q -c conflict-04-scenarios origin/main 2>&1 | tail -1; git status --","read_ranged":null,"status":"ok","duration_ms":1729,"execution_id":null,"provider":null,"ticket_id":null}
