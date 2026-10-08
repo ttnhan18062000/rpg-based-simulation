@@ -9,7 +9,6 @@ from src.content_semantics.relation import RelationContext
 from src.core.state import EntityState, AuthoritativeState
 from src.core.strategic import GoalKind, ObjectiveKind, has_project_capacity
 from src.engine.biological_needs import need_rates
-from src.engine.service_prices import EAT_PRICE_GOLD
 from src.systems.strategic_systems.entity_target_objective import ENTITY_TARGET_PERCEPTION_RADIUS
 
 class HarvestScorer(GoalScorer):
@@ -101,11 +100,11 @@ class EatScorer(GoalScorer):
 
         from src.engine.spatial_query import SpatialQueryService
         best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "inn")
-        # SURV-06: a meal is served at the inn for a price, so the inn is a way to meet hunger only for a subject that can pay.
-        # With no way within reach there is nothing for the pull to point at: the goal keeps the hunger value (the need stays
-        # visible in the state) and carries no SURV-07 escalation and no target. Poverty starves visibly.
-        if best_bldg is None or entity.inventory.gold < EAT_PRICE_GOLD:
-            return _hunger_without_open_way(entity, state, utility, NeedAccess.NO_WAY_WITHIN_REACH if best_bldg is None else NeedAccess.NO_AFFORDABLE_WAY)
+        # Decision 27: with no inn within reach there is nothing for the pull to point at, so it goes to the step that opens a way
+        # (forage); with no step the goal keeps the hunger value and says `no_open_step`. (Free meals stay on: an inn within reach is a
+        # way to eat whether or not the subject can pay, until the free-meal removal lands: branch d27-free-meal-removal.)
+        if best_bldg is None:
+            return _hunger_without_open_way(entity, state, utility, NeedAccess.NO_WAY_WITHIN_REACH)
         # SURV-07: the pull grows with the hunger the subject will have on arrival at the inn.
         rate = need_rates(entity)[0]
         utility = _escalated_unless_threatened(entity, state, utility, hunger_pull(utility, bio.hunger, rate, _travel_tiles(entity, best_bldg.position)))

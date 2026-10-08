@@ -12,7 +12,6 @@ from src.ai.goals.opening_steps import first_open_step, opening_steps
 from src.ai.goals.scorers import EatScorer
 from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, BuildingState, ItemStack, ResourceNodeState
-from src.engine.service_prices import EAT_PRICE_GOLD
 
 BLOCKER_CEILING = 103.8
 
@@ -79,9 +78,9 @@ def test_the_steps_without_content_report_unavailable_with_a_reason():
         assert not steps[kind].available and steps[kind].reason
 
 
-def test_a_subject_that_cannot_pay_is_pulled_to_the_food_node_above_the_ordinary_ceiling():
-    score = EatScorer().score(_hero(gold=EAT_PRICE_GOLD - 1), _state([_node(10, (3.0, 0.0))]))
-    assert score.need_access is NeedAccess.NO_AFFORDABLE_WAY and score.opening_step is OpeningStepKind.FORAGE
+def test_a_subject_with_no_inn_within_reach_is_pulled_to_the_food_node_above_the_ordinary_ceiling():
+    score = EatScorer().score(_hero(gold=0), _state([_node(10, (3.0, 0.0))], inn=None))
+    assert score.need_access is NeedAccess.NO_WAY_WITHIN_REACH and score.opening_step is OpeningStepKind.FORAGE
     assert score.target_id == "10" and score.target_pos == (3.0, 0.0) and not score.no_open_step
     assert score.utility > BLOCKER_CEILING
 
@@ -91,21 +90,21 @@ def test_a_subject_with_no_inn_and_a_food_node_forages_too():
     assert score.need_access is NeedAccess.NO_WAY_WITHIN_REACH and score.opening_step is OpeningStepKind.FORAGE
 
 
-def test_a_subject_that_can_pay_goes_to_the_inn_not_the_node():
-    score = EatScorer().score(_hero(gold=EAT_PRICE_GOLD), _state([_node(10, (3.0, 0.0))]))
+def test_with_free_meals_on_a_subject_with_an_inn_within_reach_goes_to_the_inn_not_the_node_whatever_it_holds():
+    score = EatScorer().score(_hero(gold=0), _state([_node(10, (3.0, 0.0))]))
     assert score.need_access is NeedAccess.WAY_WITHIN_REACH and score.target_pos == (5.0, 0.0) and score.opening_step is None
 
 
 def test_no_step_the_subject_can_take_is_a_typed_state_and_keeps_the_raw_hunger():
     hunger = 0.75 * HUNGER_LINE
-    score = EatScorer().score(_hero(gold=0, hunger=hunger), _state([_node(10, (3.0, 0.0), charges=0)]))
+    score = EatScorer().score(_hero(gold=0, hunger=hunger), _state([_node(10, (3.0, 0.0), charges=0)], inn=None))
     assert score.no_open_step and score.opening_step is None and score.target_id is None
-    assert score.need_access is NeedAccess.NO_AFFORDABLE_WAY and score.utility == pytest.approx(hunger)
+    assert score.need_access is NeedAccess.NO_WAY_WITHIN_REACH and score.utility == pytest.approx(hunger)
 
 
 def test_a_present_threat_outranks_the_pull_to_the_node(monkeypatch):
     import src.ai.goals.scorers as scorers
     monkeypatch.setattr(scorers, "present_threat_to", lambda entity, state: True)
     hunger = 0.75 * HUNGER_LINE
-    score = EatScorer().score(_hero(gold=0, hunger=hunger), _state([_node(10, (3.0, 0.0))]))
+    score = EatScorer().score(_hero(gold=0, hunger=hunger), _state([_node(10, (3.0, 0.0))], inn=None))
     assert score.opening_step is OpeningStepKind.FORAGE and score.utility == pytest.approx(hunger)

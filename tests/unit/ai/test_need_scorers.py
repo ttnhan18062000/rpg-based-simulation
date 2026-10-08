@@ -68,24 +68,11 @@ def test_without_an_inn_there_is_no_way_to_point_at_so_no_escalation_and_no_targ
     assert score.need_access is NeedAccess.NO_WAY_WITHIN_REACH
 
 
-def test_a_meal_is_a_way_to_meet_hunger_only_for_a_subject_that_can_pay():
-    from src.engine.service_prices import EAT_PRICE_GOLD
-
+def test_with_free_meals_on_an_inn_within_reach_is_a_way_to_eat_for_a_subject_that_cannot_pay_too():
+    """The affordability gate is parked with the free-meal removal (branch d27-free-meal-removal)."""
     hunger = 0.75 * HUNGER_LINE
-    poor = EatScorer().score(_hero(gold=EAT_PRICE_GOLD - 1, hunger=hunger), _state((5.0, 0.0)))
-    assert poor.target_pos is None and poor.utility == pytest.approx(hunger)  # the need stays, with no way to point at
-    assert poor.need_access is NeedAccess.NO_AFFORDABLE_WAY
-    can_pay = EatScorer().score(_hero(gold=EAT_PRICE_GOLD, hunger=hunger), _state((5.0, 0.0)))
-    assert can_pay.target_pos == (5.0, 0.0) and can_pay.utility > BLOCKER_CEILING
-    assert can_pay.need_access is NeedAccess.WAY_WITHIN_REACH
-
-
-def test_the_scorer_and_the_inn_charge_the_same_price():
-    import inspect
-    import src.engine.town_resolution as tr
-    from src.engine.service_prices import EAT_PRICE_GOLD
-
-    assert tr.EAT_PRICE_GOLD == EAT_PRICE_GOLD and "gold_delta=-EAT_PRICE_GOLD" in inspect.getsource(tr)
+    broke = EatScorer().score(_hero(gold=0, hunger=hunger), _state((5.0, 0.0)))
+    assert broke.target_pos == (5.0, 0.0) and broke.utility > BLOCKER_CEILING and broke.need_access is NeedAccess.WAY_WITHIN_REACH
 
 
 def _with_hostile(hero, at, hp=100):

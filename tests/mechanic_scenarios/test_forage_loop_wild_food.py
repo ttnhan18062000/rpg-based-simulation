@@ -10,6 +10,11 @@ fertility, `near_forest`), the CONTROL arm is the same world with the food the b
 The land is not staged: since ENV-08 (decision 30) the second town and the near forest carry no ambient hazard, so the walk out is survivable
 and the forage loop is what the scenario sees (SPC-S16 covers the land itself).
 
+STAGING DIFFERENCE FROM THE SPEC (free meals stay on, owner ruling 2026-10-08): the spec has the settlement keep its inn and the worker be too poor to use it.
+With the free meal still on, a broke worker beside an inn walks there and eats for free, so the forage loop would never be chosen. Both arms
+therefore stage the world with no inn within reach (`NO_WAY_WITHIN_REACH`, the other state Decision 27 covers); the spec's full form (an inn
+that will not feed a broke subject) returns with the free-meal removal (branch d27-free-meal-removal).
+
 Everything is read from authoritative state, per tick, through the real kernel; no log line is parsed.
 """
 from __future__ import annotations
@@ -36,7 +41,6 @@ WINDOW = 460  # the walk out (~100 ticks), the gathering, the eating, and one re
 FOOD_KIND = "berry_thicket"
 STARTING_HUNGER = 70.0  # past the point where Decision 27's pull applies
 STAGED_CHARGES = 2  # a small patch, so that stripping it fits the window
-INN_EAT_PRICE = 5  # service_prices.EAT_PRICE_GOLD
 
 
 @dataclass
@@ -60,7 +64,9 @@ def _stage(state: AuthoritativeState, *, wild_food: bool) -> Tuple[Authoritative
     nodes = {i: n for i, n in state.resource_nodes.items() if n.kind != FOOD_KIND}
     if wild_food:
         nodes.update({i: replace(n, remaining_charges=STAGED_CHARGES) for i, n in state.resource_nodes.items() if n.kind == FOOD_KIND})
-    return replace(state, entities={worker.id: worker}, resource_nodes=nodes), worker.id
+    buildings = {i: b for i, b in state.buildings.items() if b.kind != "inn"}
+    tiles = {t: kind for t, kind in state.building_tiles.items() if kind != "inn"}
+    return replace(state, entities={worker.id: worker}, resource_nodes=nodes, buildings=buildings, building_tiles=tiles), worker.id
 
 
 def _run(*, wild_food: bool) -> Trace:

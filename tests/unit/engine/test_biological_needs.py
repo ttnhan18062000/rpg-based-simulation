@@ -14,7 +14,6 @@ from src.engine.domain.core_actions import CoreActions, ROUGH_REST_SLEEP_DEBT_RE
 from src.engine.need_paths import need_path_report
 from src.engine.service_reach import service_tile
 from src.core.update_models.resources import ResourceTransferIntent
-from src.engine.service_prices import EAT_PRICE_GOLD, INN_MEAL_HUNGER
 from src.engine.town_resolution import TownResolutionSystem
 
 
@@ -110,10 +109,8 @@ def test_eat_is_served_by_the_inn_when_a_home_is_nearer_in_reach():
     task = TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "EAT", "target_id": 1})
     update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, task=task)})
     ent_upd = TownResolutionSystem.resolve(state, update).entity_updates[1]
-    (meal,) = ent_upd.resource_transfers
-    assert meal.transfer_kind == "EAT" and meal.gold_delta == -EAT_PRICE_GOLD
-    assert meal.biological_upd.hunger_delta == -INN_MEAL_HUNGER  # delivered only by the resolver's payment
-    assert ent_upd.biological is None
+    assert ent_upd.biological.hunger_delta == -20.0
+    assert [t.transfer_kind for t in ent_upd.resource_transfers] == ["EAT"]
 
 
 def test_rough_rest_recovers_sleep_debt_without_a_building():
@@ -134,18 +131,13 @@ def test_inn_meal_is_served_to_a_subject_beside_the_inn():
     update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, task=task)})
     out = TownResolutionSystem.resolve(state, update)
     ent_upd = out.entity_updates[1]
-    (meal,) = ent_upd.resource_transfers
-    assert meal.transfer_kind == "EAT" and meal.gold_delta == -EAT_PRICE_GOLD
-    assert meal.biological_upd.hunger_delta == -INN_MEAL_HUNGER
-    assert ent_upd.biological is None
+    assert ent_upd.biological.hunger_delta == -20.0
+    assert [t.transfer_kind for t in ent_upd.resource_transfers] == ["EAT"]
 
 
 def test_eat_scorer_targets_the_inn():
     from src.ai.goals.scorers import EatScorer
-    from dataclasses import replace
-    from src.engine.service_prices import EAT_PRICE_GOLD
     ent = (V2EntityBuilder(1).kind("worker").location(11.0, 10.0).biological(hunger=80.0).build())
-    ent = replace(ent, inventory=replace(ent.inventory, gold=EAT_PRICE_GOLD))  # the inn is a way to eat only for a subject that can pay (SURV-06)
     inn = BuildingState(id=7, kind="inn", position=(10, 10))
     state = AuthoritativeState(tick=1, seed=1, entities={1: ent}, buildings={7: inn})
     assert EatScorer().score(ent, state).target_id == "7"
@@ -213,13 +205,20 @@ def test_a_hungry_subject_carrying_food_eats_it_with_no_building():
     upd = eat_carried_update(_forager(EAT_CARRIED_MIN_HUNGER, berries=1), [])
     assert upd.task.payload_set["action"] == "EAT" and upd.task.payload_set["reason"] == "EAT_CARRIED"
     assert eat_carried_update(_forager(EAT_CARRIED_MIN_HUNGER - 1, berries=1), []) is None  # a meal would be wasted
-    assert eat_carried_update(_forager(90.0), []) is None  # nothing carried: no relief from this action (no engine charity)
+    assert eat_carried_update(_forager(90.0), []) is None  # nothing carried: nothing to eat in place
 
 
 def test_a_present_threat_outranks_eating_carried_food(monkeypatch):
     import src.engine.tactical_rest as tactical_rest
     monkeypatch.setattr(tactical_rest, "present_threat_terms", lambda entity, hostiles: ["threat"])
     assert tactical_rest.eat_carried_update(_forager(90.0, berries=1), [object()]) is None
+
+
+def test_core_eat_with_nothing_carried_keeps_its_old_relief_while_free_meals_stay_on():
+    """The free-meal removal is parked (branch d27-free-meal-removal): until it lands, EAT with no carried food still removes 40 hunger."""
+    ent = _forager(80.0)
+    upd = CoreActions.execute_survival(ent, "EAT", 7)[ent.id]
+    assert upd.biological.hunger_delta == -40.0 and not upd.resource_transfers
 
 
 def test_eating_consumes_the_carried_item_and_removes_its_hunger():

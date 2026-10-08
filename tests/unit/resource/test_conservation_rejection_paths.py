@@ -142,8 +142,6 @@ REJECTION_CASES = [
           actor={"max_slots": 0}, intent={"items_add": WOOD}),
     _case("town_service_insufficient_gold", "TOWN_SERVICE", ReasonCode.ACTION_EXHAUSTION,
           intent={"gold_cost": 5}),
-    _case("town_service_unaffordable_price", "TOWN_SERVICE", ReasonCode.ACTION_EXHAUSTION,
-          intent={"gold_delta": -5}),
     _case("carried_food_not_carried", "CARRIED_FOOD", ReasonCode.INSUFFICIENT_RESOURCES,
           intent={"items_remove": [ItemStack("bread", 1)]}),
     _case("tax_insufficient_gold", "TAX", ReasonCode.ACTION_EXHAUSTION, intent={"gold_cost": 5}),

@@ -54,6 +54,16 @@ def carried_meal(entity: EntityState, current_tick: int) -> List[ResourceTransfe
     return []
 
 
+def eat_update(entity: EntityState, current_tick: int) -> EntityUpdate:
+    """SURV-06: a subject holding food eats it, and the item is consumed with the meal. With none the action keeps its old relief of 40
+    (a free meal: still on, see branch d27-free-meal-removal for the removal)."""
+    carried = carried_meal(entity, current_tick)
+    if carried:
+        return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0, resource_transfers=carried)
+    return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0,
+                        biological=BiologicalUpdate(hunger_delta=-40.0, last_meal_tick_set=current_tick))
+
+
 class CoreActions:
     """
     Domain action handlers for fundamental RPG actions.
@@ -76,10 +86,7 @@ class CoreActions:
                 )
             )}
         elif action == "EAT":
-            # SURV-06 (no engine charity): eating is carried food that is consumed. A subject with none gets no relief from this
-            # action; the inn meal is a paid town service (town_resolution), not this.
-            return {entity.id: EntityUpdate(
-                entity_id=entity.id, readiness_delta=-100.0, resource_transfers=carried_meal(entity, current_tick))}
+            return {entity.id: eat_update(entity, current_tick)}
         elif action == "REST":
             return {entity.id: EntityUpdate(
                 entity_id=entity.id,

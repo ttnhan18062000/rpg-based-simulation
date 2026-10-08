@@ -33,13 +33,6 @@ class TransactionResult:
     corpse_remove: Optional[int] = None
     reason: ReasonCode = ReasonCode.UNKNOWN
 
-def _service_price(intent: ResourceTransferIntent) -> int:
-    """SURV-06 (no engine charity): a purchased service is paid in full or not delivered. A charge written as a negative gold_delta
-    counts as a price (before this the inventory clamp at 0 swallowed it and a broke subject got the service free). A TAX is levied,
-    not bought, and keeps its clamp."""
-    return intent.gold_cost + (max(0, -intent.gold_delta) if intent.source_kind != "TAX" else 0)
-
-
 def _carried_food_result(intent: ResourceTransferIntent, inventory: InventoryComponent) -> TransactionResult:
     """Eating what the subject carries: the item is consumed together with the meal, or nothing happens."""
     for item in intent.items_remove:
@@ -258,8 +251,7 @@ class ResourceTransactionResolver:
 
         # VERIFIED v2: authoritative_side_effects
         if intent.source_kind in ("TOWN_SERVICE", "TAX", "REPAIR_FEE", "SERVICE_FEE", "INFORMATION_PURCHASE"):
-             price = _service_price(intent)
-             if target_inventory.gold < price:
+             if target_inventory.gold < intent.gold_cost:
                  return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)
                  
              return TransactionResult(
