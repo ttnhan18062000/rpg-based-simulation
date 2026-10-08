@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04
-phase: open
+phase: done
 date: 2026-10-08
 tags: [combat]
 ---
@@ -15,7 +15,7 @@ tags: [combat]
 A fighter beside an engaged hostile holds its tile between blows instead of stepping, and the stalemate breaker no longer fires mid-melee (world rule CONFLICT-04).
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -53,11 +53,11 @@ Evidence comes from Lane A's opportunity-attack trace (pinned, seeds 42-46, 3 wo
 - Flipping the CONFLICT-04 evidence: rpg-designer does that after this merges.
 
 ## Acceptance Criteria
-- [ ] Scenario (owed by the designer): a non-cautious fighter with readiness under 100, adjacent to an engaged hostile, holds and takes no opportunity attack until it chooses to leave.
-- [ ] Scenario: a long exchange of blows never trips STALEMATE_BREAK while the pair stays adjacent.
-- [ ] Unit: a swing resets `stale_ticks`; a non-adjacent target still produces PURSUE; flight and panic retreat still leave (and pay the opportunity attack).
-- [ ] Pinned 5-seed report, seeds 42-46 x 3 worlds, mean (SD), before and after: opportunity-attack hits split into decided, held-move and neither classes; DEFEAT deaths; total deaths; alive at t=1000 and t=1100. Two-run determinism. Report it, don't tune. A small total effect is expected while the "neither" defect stands.
-- [ ] Gates: mypy, ratchet, lint-imports (17 kept, 0 broken), mechanism completeness pin.
+- [x] Scenario (owed by the designer): a non-cautious fighter with readiness under 100, adjacent to an engaged hostile, holds and takes no opportunity attack until it chooses to leave.
+- [x] Scenario: a long exchange of blows never trips STALEMATE_BREAK while the pair stays adjacent.
+- [x] Unit: a swing resets `stale_ticks`; a non-adjacent target still produces PURSUE; flight and panic retreat still leave (and pay the opportunity attack).
+- [x] Pinned 5-seed report, seeds 42-46 x 3 worlds, mean (SD), before and after: opportunity-attack hits split into decided, held-move and neither classes; DEFEAT deaths; total deaths; alive at t=1000 and t=1100. Two-run determinism. Report it, don't tune. A small total effect is expected while the "neither" defect stands.
+- [x] Gates: mypy, ratchet, lint-imports (17 kept, 0 broken), mechanism completeness pin.
 
 ## Related Tickets
 - TCK-20261007-A-WALKER-BESIDE-A-PERCEIVED-HOSTILE-KEEPS-STEPPING-AND-EATS-AN-OPPORTUNITY-ATTACK-PER-STEP (the trace's source; to be re-scoped to the movement-with-no-move-task defect)
@@ -84,10 +84,10 @@ The `stale_ticks` reset happens when ATTACK/SKILL is emitted, not when a swing l
 Trade-off: while holding, the entity is a non-brain item and cannot decide to flee until the swing or a release (OUT_OF_RANGE, TARGET_INCAPACITATED).
 
 ## Test Summary
-_(not started)_
+tests/unit/combat (148), tests/unit/engine, tests/unit/actions pass (574 total); mechanism completeness pin updated; ratchet, mypy gate, lint-imports (17 kept) green. Pinned 5x3 report in divergence 2.86 (effect small, deaths inside 1 SD, no deaths after a low-HP hold, two-run digests equal). The designer-owed scenarios were not written here.
 
 ## Files Changed
-_(not started)_
+src/engine/tactical.py, src/engine/tactical_hold.py (new), tests/unit/combat/{test_anti_stalemate,test_capability_driven_targeting,test_tactical_destinations}.py, tests/unit/tools/test_mechanism_registry_completeness_check.py, docs/mechanics/02_combat_laws.md, docs/engine/contracts/tactical_contract.md, docs/guidelines/intentional_divergences.md (2.86, 2.87), docs/parity_ledger/combat_movement.yaml (COMB-339, COMB-340).
 
 ## Completion Summary
-_(not started)_
+A fighter beside an engaged hostile holds a queued swing between blows; adjacent hostiles rank first; STALEMATE_BREAK skips an adjacent target; ATTACK/SKILL emission resets stale_ticks. Chokepoint HOLD router gap recorded for rpg-planner.

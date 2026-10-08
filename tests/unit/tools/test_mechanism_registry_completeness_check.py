@@ -225,7 +225,9 @@ def test_wider_scope_numbers_pinned():
     # lookup; functions only, bound under `knowledge_model`, so it adds no unbound file or mechanism-shaped class).
     # 310 -> 311 on 2026-10-08 (layer-order fix): +src/content/common_knowledge_seed.py (KNOW-04's seeding, moved out of
     # src/cognition/common_knowledge.py so the compiler and spawner need not import cognition; bound under `knowledge_model`).
-    assert wider["scope_files"] == 311
+    # 311 -> 312 on 2026-10-08 (CONFLICT-04): +src/engine/tactical_hold.py (the held swing and the stalemate-break emission;
+    # functions only, unbound for now, so it adds no unbound mechanism-shaped class).
+    assert wider["scope_files"] == 312
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -235,7 +237,8 @@ def test_wider_scope_numbers_pinned():
     # (a lookup and an advisory report, no mechanism of their own); biological_needs.py is bound under `attributes_biology`.
     # 228 -> 232 on 2026-10-07 (SURV-07): the four new modules above are unbound helpers (pure functions, no mechanism of their own).
     # KNOW-04 (2026-10-07): src/cognition/common_knowledge.py is bound under `knowledge_model`, so unbound_files stays 232.
-    assert wider["unbound_files"] == 232
+    # 232 -> 233 on 2026-10-08 (CONFLICT-04): src/engine/tactical_hold.py is an unbound helper (pure functions).
+    assert wider["unbound_files"] == 233
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     assert wider["candidates"] == 72  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package
