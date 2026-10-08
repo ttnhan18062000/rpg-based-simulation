@@ -2728,6 +2728,24 @@ The following legacy behaviors have been intentionally omitted or retired.
 *Last updated: 2026-09-02 (DEV-007 addendum, TCK-20260902-CLASSHALL-DEAD-CODE — deferred
 `ClassHallAction.train()` cleanup landed).*
 
+### DEV-017 — A Tick's Reported Cost No Longer Counts Refine Sub-Phases Twice (TCK-20261008-PERF-KERNEL-RESOLUTION-OVERHEAD-DOUBLE-COUNTS-SUB-PHASES)
+
+- **Situation**: `Kernel._tick_once_inner` set `resolution_overhead` to the resolution wall time minus a hand-kept list of sub-phase keys. Refine sub-phases not on the list (`combat_engagement`, `cooperation`, the `faction_*` phases, `information_*`, `memory_update`, `self_model` and others) were counted under their own key and again inside `resolution_overhead`, and `_final_compute_ms = sum(_phase_costs.values())` added both. Measured on `main` (movement, 120 entities, one tick): wall 76.7 ms, summed cost 121.6 ms.
+- **Change**: `resolution_overhead` is the resolution wall time minus every sub-phase cost the pipeline recorded for that tick (`_current_update.sub_phase_costs`), so each ms is counted once and `sum(_phase_costs.values())` equals the sum of the tick-level intervals.
+- **Rationale**: **Bug Fix**. The reported cost was wrong, not a design choice.
+- **Consequences recorded**: this is a **Live mode timing change**. `tick_compute_ms`, its rolling average, the end-of-tick report-only overrun check, `PhaseBudgetGovernor`'s compaction rule and every perf report now read lower, by the time of the unlisted sub-phases (about 40% of a tick when `combat_engagement` dominates). A Live run whose load sits between the old inflated cost and the true cost now stays in a lighter mode where it used to degrade earlier. Mode transitions are wall-clock driven in Live and are not hashed-stable between hosts either way (PERF-D1); `audit_mode` runs zero these signals and are unchanged. Recorded perf baselines that carry `tick_compute_ms`, `phase_breakdown` or `resolution_overhead` are incomparable for tick-total comparisons (listed in the ticket for PERF-M1-T05). No threshold changed.
+- **Verification**: `tests/unit/kernel/test_phase_cost_accounting.py`; parity entry `INFRA-425`.
+- **Status**: ACTIVE
+
+### DEV-018 — Under the Canonical Signal Contract the Governors Read a Modelled Cost, and the Per-Phase Rules Do Not Fire (TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY)
+
+- **Situation**: `ResourceGovernor` and `PhaseBudgetGovernor` chose the mode and the phase budgets from the measured `tick_compute_ms`, resident memory, replay backlog, pool utilization and the measured locomotion and final_integrity bucket costs, so with `audit_mode` off two runs of one seed on hosts of different speed computed different worlds. `audit_mode` avoided this by deleting the inputs, so no deterministic run ever exercised degradation.
+- **Change**: a profile may set `signal_contract=CANONICAL` (default `LIVE`, unchanged). `CanonicalSignalSource` supplies `tick_cost` from `WORK_MODEL_V1` (0.68 reference-ms per active entity + 7.42 per lead, PROVISIONAL, counted from state before the mode acts), queue and worker pressure as demand proxies, and no memory or replay-backlog input. `PhaseBudgetGovernor`'s two per-phase rules (locomotion, final_integrity) do not fire under Canonical, because neither has a pre-policy counter (best R^2 0.23 and 0.46); only the tick-level compaction rule remains. Thresholds keep their millisecond meaning, as reference-host milliseconds.
+- **Rationale**: **Stabilized**. PERF-D1: a decision that changes what is computed must be a deterministic function of the run or recorded in a trace; Live recording is `TCK-20261006-PERF-LIVE-CONTROL-TRACE`. The owner chose the opt-in contract on 2026-10-06 and approved dropping the per-phase rules on 2026-10-08.
+- **Consequences recorded**: a Canonical run has no memory or replay-backlog guard and models overload instead of measuring it (a rough estimator: pooled R^2 0.874; leave-one-family-out idle 0.49 and resource 1.75; the lead weight is identified by one scenario family; `combat_engagement` is excluded until `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP` is fixed, then V2 refits). Live behaviour and every existing caller are unchanged (golden fixture), and `audit_mode` still wins.
+- **Verification**: `tests/integration/kernel/test_canonical_signal_contract.py`, `tests/unit/resource/test_canonical_governor_inputs.py`, `tests/unit/kernel/test_live_signal_golden.py`; parity entries `INFRA-426`, `INFRA-427`.
+- **Status**: ACTIVE
+
 ### 2.70 An Entity-Tracking Combat Move Ends When Its Target Is Dead, Inactive or Gone, and the In-Reach End Covers Intercept and Bracketing (TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION)
 
 - **Legacy Behavior**: only a `PURSUE` move had a completion condition (2.68), and only for a live target in reach. An `INTERCEPT`, a

@@ -1,0 +1,361 @@
+Each of the image files listed below is a small pixel-art icon from a fantasy game, shown four ways on one strip (native size and 4x, on a dark and a light background). Some sit on a grey plate. For EVERY image, pick the ONE candidate that best names what it depicts, or 'none of these'. Do not open any other file and do not search the file system. Reply with ONLY a JSON object mapping each image's file name without the extension to the exact candidate text you picked.
+
+/tmp/claude-1000/sheets5/set/icon-01.png
+  - a diamond
+  - a circle
+  - a square
+  - a star
+  - a heart
+  - a shield
+  - an octagon badge with two pips cut out
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-02.png
+  - a tank top
+  - a shirt
+  - a breastplate
+  - a vest
+  - a apron
+  - a dress
+  - a backpack
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-03.png
+  - a heart
+  - a star
+  - a square
+  - a shield
+  - an octagon badge with one pip cut out
+  - a diamond
+  - a circle
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-04.png
+  - a circle
+  - a shield
+  - a dark green plain octagon badge
+  - a diamond
+  - a square
+  - a heart
+  - a star
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-05.png
+  - a diamond
+  - a silver bead
+  - a coin
+  - a star
+  - a octagon
+  - a hexagon
+  - a square
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-06.png
+  - a round frame with a solid up arrow
+  - a gem
+  - a cross
+  - a lamp post
+  - a shield
+  - a signpost
+  - a sword
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-07.png
+  - a sock
+  - a potion
+  - a coin purse
+  - a onion
+  - a cushion
+  - a balloon
+  - a pumpkin
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-08.png
+  - a robot head
+  - a skull
+  - a cloud
+  - a mask
+  - a pumpkin
+  - a ghost
+  - a egg
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-09.png
+  - a map
+  - a letter
+  - a envelope
+  - a window
+  - an open book
+  - a tablet
+  - a scroll
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-10.png
+  - a four-point sparkle gem
+  - a plus sign
+  - a compass
+  - a snowflake
+  - a cross
+  - a medical cross
+  - a flower
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-11.png
+  - a mailbox
+  - a bridge
+  - a window
+  - a grave marker
+  - a oven
+  - a helmet
+  - an arched doorway
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-12.png
+  - a slingshot
+  - a harp
+  - a boomerang
+  - a fishing rod
+  - a crossbow
+  - a longbow with a nocked arrow
+  - a spear
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-13.png
+  - a mug of beer
+  - a vase
+  - a teapot
+  - a jar
+  - a coffee pot
+  - a lantern
+  - a bucket
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-14.png
+  - a cloud
+  - a tree
+  - a broccoli
+  - a lollipop
+  - a bush
+  - a mushroom
+  - a speech bubble
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-15.png
+  - a wagon
+  - a boot
+  - a mountain
+  - a hook
+  - a bridge
+  - a broken stone arch
+  - a doorway
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-16.png
+  - a potion flask
+  - a vase
+  - a inkwell
+  - a lightbulb
+  - a test tube
+  - a perfume
+  - a jar
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-17.png
+  - a diamond
+  - a pillow
+  - a cabbage
+  - a egg
+  - a coal bag
+  - a gem
+  - an ore chunk
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-18.png
+  - an anvil with a raised hammer
+  - a cannon
+  - a shoe
+  - a bird
+  - a tooth
+  - a boat
+  - a toaster
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-19.png
+  - a button
+  - a flask
+  - a compass
+  - a ring
+  - a medal
+  - a pendant on a chain
+  - a clock
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-20.png
+  - a star
+  - a octagon
+  - a square
+  - a circle
+  - a shield
+  - a platinum diamond badge with two pips
+  - a heart
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-21.png
+  - a small house
+  - a church
+  - a nesting box
+  - a castle
+  - a tent
+  - a barn
+  - a shop
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-22.png
+  - a lunchbox
+  - a treasure chest
+  - a first aid kit
+  - a briefcase
+  - a suitcase
+  - a battery
+  - a toolbox
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-23.png
+  - a up arrow
+  - a funnel
+  - a warning sign
+  - a heart
+  - a smile
+  - a shield
+  - an inverted-triangle frame with a down arrow
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-24.png
+  - a heart
+  - a silver diamond badge
+  - a shield
+  - a octagon
+  - a circle
+  - a square
+  - a star
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-25.png
+  - an obelisk
+  - a bottle
+  - a candle
+  - a grave marker
+  - a bell
+  - a rocket
+  - a chess piece
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-26.png
+  - a heart
+  - a drop
+  - a kite-shaped gem
+  - a flag
+  - a leaf
+  - a tree
+  - a up arrow
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-27.png
+  - a square
+  - a heart
+  - a diamond
+  - a shield
+  - a plain octagon badge
+  - a star
+  - a circle
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-28.png
+  - a tent
+  - a pointed wizard hat
+  - a traffic cone
+  - a helmet
+  - a mountain
+  - a crown
+  - a birthday cone
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-29.png
+  - a door
+  - a chip
+  - a phone
+  - a painting
+  - a tv screen
+  - a window
+  - a location plate
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-30.png
+  - a shield
+  - a circle
+  - a star
+  - a octagon
+  - a square
+  - a gold diamond badge with one pip
+  - a heart
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-31.png
+  - a helmet
+  - a wizard hat
+  - a hooded cowl
+  - a tent
+  - a mountain
+  - a ghost
+  - a bell
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-32.png
+  - a shield with a sword emblem
+  - a tombstone
+  - a flag
+  - a door
+  - a kite
+  - a keyhole
+  - a badge
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-33.png
+  - a screwdriver
+  - a key
+  - a knife
+  - a dagger
+  - a letter opener
+  - a cleaver
+  - a sword
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-34.png
+  - a circle
+  - a square
+  - an octagon badge with a frame cut out
+  - a heart
+  - a diamond
+  - a shield
+  - a star
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-35.png
+  - a banner on a pole
+  - a kite
+  - a bookmark
+  - a signpost
+  - a tent
+  - a ribbon
+  - a sail
+  - none of these
+
+/tmp/claude-1000/sheets5/set/icon-36.png
+  - a anchor
+  - a crown
+  - a wizard hat
+  - a scissors
+  - a mountain
+  - a pyramid
+  - a tent with crossed spears
+  - none of these

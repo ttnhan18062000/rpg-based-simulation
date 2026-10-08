@@ -1,0 +1,58 @@
+N 1000 BUCKETS(ms/tick) top: {
+"combat_engagement": 4465.834913000001,
+"collection": 881.4821372,
+"advancement": 120.5464502,
+"resolution_overhead": 99.97642459999952,
+"locomotion": 3.3308113999999995,
+"scheduling": 3.0667064,
+"governance_ecology": 2.0108566,
+"cooperation": 1.8584966
+}
+         38774547 function calls (38771324 primitive calls) in 27.897 seconds
+
+   Ordered by: cumulative time
+   List reduced from 434 to 40 due to restriction <40>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      6/5    0.000    0.000   27.927    5.585 /home/vboxuser/Work/rpg-perf/src/engine/kernel.py:376(tick_once)
+      6/5    0.001    0.000   27.927    5.585 /home/vboxuser/Work/rpg-perf/src/engine/kernel.py:393(_tick_once_inner)
+        5    0.000    0.000   22.891    4.578 /home/vboxuser/Work/rpg-perf/src/engine/kernel.py:610(_phase_resolution)
+        5    0.001    0.000   22.889    4.578 /home/vboxuser/Work/rpg-perf/src/engine/pipeline.py:40(refine)
+      220    0.001    0.000   22.881    0.104 /home/vboxuser/Work/rpg-perf/src/engine/pipeline.py:102(run_phase)
+        5    0.002    0.000   22.329    4.466 /home/vboxuser/Work/rpg-perf/src/engine/pipeline.py:320(<lambda>)
+   861200    1.452    0.000   19.170    0.000 /home/vboxuser/Work/rpg-perf/src/domains/combat_engagement/phase.py:305(_consider)
+   958296    4.523    0.000   14.687    0.000 /home/vboxuser/Work/rpg-perf/src/content_semantics/faction.py:186(is_hostile_compat)
+   958296    6.152    0.000    9.388    0.000 /home/vboxuser/Work/rpg-perf/src/content_semantics/relation.py:45(project_relation)
+   866200    2.207    0.000    4.485    0.000 /home/vboxuser/Work/rpg-perf/src/content_semantics/faction.py:43(get_faction_id_str)
+        5    0.000    0.000    4.405    0.881 /home/vboxuser/Work/rpg-perf/src/engine/kernel.py:581(_phase_collection)
+      500    0.006    0.000    4.380    0.009 /home/vboxuser/Work/rpg-perf/src/engine/domain_logic.py:31(execute_brain)
+      500    0.022    0.000    4.358    0.009 /home/vboxuser/Work/rpg-perf/src/engine/domain/cognition.py:29(execute_brain)
+        5    0.008    0.002    4.126    0.825 /home/vboxuser/Work/rpg-perf/src/engine/executor.py:85(execute)
+      550    0.280    0.001    3.833    0.007 /home/vboxuser/Work/rpg-perf/src/engine/cognition.py:25(filter_saliency)
+    94596    0.140    0.000    3.552    0.000 /home/vboxuser/Work/rpg-perf/src/content_semantics/faction.py:71(are_entities_hostile)
+  1266339    0.522    0.000    2.384    0.000 /home/vboxuser/Work/rpg-perf/.venv/lib/python3.13/site-packages/pydantic/main.py:240(__init__)
+     5000    1.192    0.000    2.067    0.000 /home/vboxuser/Work/rpg-perf/src/engine/spatial_query.py:47(nearby_entities)
+   199442    0.152    0.000    1.891    0.000 /home/vboxuser/Work/rpg-perf/src/content_semantics/faction.py:89(_resolve_faction_id)
+  1266339    1.873    0.000    1.873    0.000 {method 'validate_python' of 'pydantic_core._pydantic_core.SchemaValidator' objects}
+   202442    0.666    0.000    1.745    0.000 /home/vboxuser/Work/rpg-perf/src/entities/identity_resolver.py:73(resolve)
+  7656175    1.511    0.000    1.512    0.000 {method 'get' of 'dict' objects}
+  1271089    0.580    0.000    0.866    0.000 /usr/lib/python3.13/enum.py:695(__call__)
+  3517560    0.635    0.000    0.636    0.000 {built-in method builtins.hasattr}
+  3862679    0.633    0.000    0.633    0.000 {method 'values' of 'dict' objects}
+        5    0.001    0.000    0.602    0.120 /home/vboxuser/Work/rpg-perf/src/engine/kernel.py:794(_phase_advancement)
+  3025409    0.561    0.000    0.561    0.000 {method 'append' of 'list' objects}
+       25    0.003    0.000    0.513    0.021 /home/vboxuser/Work/rpg-perf/src/systems/strategic_systems/intelligence.py:1259(evaluate_strategic_intent)
+        5    0.000    0.000    0.470    0.094 /home/vboxuser/Work/rpg-perf/src/engine/pipeline.py:398(<lambda>)
+        5    0.002    0.000    0.470    0.094 /home/vboxuser/Work/rpg-perf/src/systems/strategic_systems/intelligence.py:298(fused_strategic_pass)
+       25    0.002    0.000    0.444    0.018 /home/vboxuser/Work/rpg-perf/src/ai/goals/base.py:48(get_all_scores)
+   958296    0.289    0.000    0.438    0.000 /home/vboxuser/Work/rpg-perf/src/content/repository.py:477(get_perspective)
+        5    0.005    0.001    0.422    0.084 /home/vboxuser/Work/rpg-perf/src/engine/apply.py:208(apply_generation)
+   866965    0.293    0.000    0.415    0.000 /usr/lib/python3.13/enum.py:199(__get__)
+     5000    0.036    0.000    0.388    0.000 /home/vboxuser/Work/rpg-perf/src/engine/apply.py:71(_compute_entity_changes)
+        5    0.011    0.002    0.382    0.076 /home/vboxuser/Work/rpg-perf/src/domains/combat_engagement/phase.py:256(apply)
+      500    0.044    0.000    0.356    0.001 /home/vboxuser/Work/rpg-perf/src/engine/tactical.py:118(evaluate_entity_intent)
+        5    0.017    0.003    0.332    0.066 /home/vboxuser/Work/rpg-perf/src/engine/apply_plan.py:56(build_plan)
+  1776011    0.297    0.000    0.297    0.000 {built-in method builtins.isinstance}
+  1271089    0.280    0.000    0.280    0.000 /usr/lib/python3.13/enum.py:1156(__new__)
+
+

@@ -81,6 +81,44 @@ lists what remains. `AM-C01` is judged met on its own clause there.
 The owner approved the fallback-safety framework and the `AM-M2` evidence charter (with its rerun rule: old results count only when rerun unchanged on a named commit after approval) on 2026-10-04. `AM-M2` stays `BLOCKED`
 (`AM-M1` is not `PASS`, no implementation authorization); `AM-M6` stays `NO-GO`; `AM-M7` stays dormant. Nothing here is activated or authorized.
 
+## Status update 2026-10-08 (activation roadmap, parked)
+
+After the 36 adopted icons merged (PR #418, nothing wired), the owner asked how adopted art could reach the live app. The planner mapped the gate chain read-only; the owner chose, by blocking question on 2026-10-08, **"Record the map, park it"**: the activation work is **parked until the RPG core lands**. **No gate moved, no result changed, nothing is authorized, and no ticket is filed for any step below.** Every citation was re-checked against the files at `4a2141df9`; the line numbers are those of that commit.
+
+**Status of every milestone and gate (unchanged results).**
+
+| Item | Status | Where it is recorded |
+|---|---|---|
+| `AM-M0` discovery | `INCONCLUSIVE`, kept by the owner (2026-10-04); hosting, CDN/cache, browser matrix and staleness are `UNVERIFIED` | `m0_discovery_result.md:177-199`; open inputs `:69-74`; what would move it `:201-205`; owner's choice `m1_contract_register.md:44` |
+| `AM-M1` contracts | `BLOCKED` (M0 did not pass); 68 clauses: 55 `MET`, 7 `GAP`, 6 `N/A`; with an M0 `PASS` it would still be `INCONCLUSIVE` | `m1_contract_register.md:28,38,44,66`; GAPs `W02.7` `:121`, `W03.1` `:127`, `W06.3` `:160`, `W13.3`/`W13.4`/`W13.6` `:231,232,234` (`W07.4` needs no capability to exist, `:61`) |
+| `AM-M2` evidence | `BLOCKED` (needs M1 `PASS` and an implementation authorization); at best `INCONCLUSIVE` on today's coverage; old results count only if rerun on a named commit | `m2_evidence_charter.md:96-97`, rerun rule `:100-106`, owner may narrow clauses `:108` |
+| `AM-M3` drawing capability | independent of M0 to M2, not on the activation chain | this README, "Milestone map" (`:180`) |
+| `AM-M4` adoption rehearsal | no result record exists; the owner's real adoptions are not a rehearsal; needs M1 and M2 `PASS` plus an authorization | `pilot_charter_am6.md:23`; `04_candidate_adoption_rehearsal_plan.md:23-26` |
+| `AM-M5` surface rehearsal | `INCONCLUSIVE` (no M2 or M4 `PASS`; `W05`, `W09`, `C05`, `C06`, `C07`, `C09` not `PASS`); the HUD is out of scope, not passed | `surface_rehearsal_result.md:28-29`, `:35`, `:43`, `:49-52`; `W05` detail `pilot_terrain_m5_results.md:81-84` |
+| `AM-M6` bounded activation | `NO-GO`; charter unsigned (14 human fields); `W03`, `W06`, `W07`, `W09` absent | `06_bounded_activation_pilot_plan.md:18-22,39-46,92-95`; `pilot_charter_am6.md:42-72` |
+| `AM-M7` family migration | dormant; needs M6 `PASS`, a recorded disposition and a separate authorization per family | `07_incremental_migration_plan.md:12-14,34-39,83-86` |
+| `AM-C01` | judged met by the register (a judgment for review, not a signed gate record) | `m1_contract_register.md:68-71` |
+| `AM-C02` | `INCONCLUSIVE` (`W01`, `W03` coverage) | `m2_evidence_charter.md:72-76` |
+| `AM-C03`, `AM-C04`, `AM-C08` | no gate result: they are M4's targets and no M4 record exists | `04_candidate_adoption_rehearsal_plan.md:48`; `pilot_charter_am6.md:23` |
+| `AM-C05`, `AM-C06`, `AM-C07`, `AM-C09` | `INCONCLUSIVE` | `surface_rehearsal_result.md:49-52` |
+| `AM-C10` | not started (M6 is `NO-GO`) | definitions: `docs/brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md:754-763` |
+
+**The shortest chain from adopted icons to icons in the live panels (seven steps, none started).** Each step is marked **owner** (a human decision), **engineering** (code or documents in a ticket) or **evidence** (a recorded run).
+
+1. `AM-M0` `PASS`: **owner**, either supplying hosting, supported clients and the staleness limit, or ruling they are not inputs for Profile A (`m0_discovery_result.md:201-205`).
+2. `AM-M1` `PASS`: **engineering** (three code tickets: the registry safety-class field `W02.7`, a `verify` rule rejecting `variant_axes` `W03.1`, an activation fallback check `W06.3`; `m1_contract_register.md:76`) plus **owner** (the `W13.x` clauses at M6 authorization, or narrowing them, `:77`) and step 1.
+3. `AM-M2`: **owner** (implementation authorization, possibly narrowing a clause before the run) then **evidence** (the run on a named commit; at best `INCONCLUSIVE` without added coverage or a narrowing, `m2_evidence_charter.md:96-97`).
+4. `AM-M4`: **owner** (authorization) then **evidence** (a disposable adoption rehearsal; real adoptions do not count).
+5. `AM-M5` `PASS`: **evidence** (a rendered non-hue route with an assistive-technology run for `W05`, a rerun for `W09`/`C09`) and **owner** (accepting the narrowed `C09` definition, `pilot_charter_am6.md:57`).
+6. `AM-M6` on one terrain tile: **owner** (signing the 14 charter fields and a separate build, publish and activate authorization), **engineering** (activation mechanism, monitoring, `W03`/`W06`/`W07`/`W09`) and **evidence** (a deploy, rollback and recall drill, then a recorded disposition).
+7. `AM-M7` icons as a family: **owner** (a family charter and a family-specific authorization), **engineering** (the family inventory with fallbacks, the HUD fallback and text contract, key derivation from read-model fields, ADR `D14`, plus the dual-route transition) and **evidence** (reruns of every affected gate, no inherited pass).
+
+Icons can only reach the live panels at step 7: M6 covers one noncritical role (`06_bounded_activation_pilot_plan.md:41`) and names broad rollout and HUD redesign as non-goals (`:88`, `icon_style_guide.md:164-165`).
+
+**What the owner may narrow, and what the plan forbids.** *May:* the plans are hypotheses until a ticket re-investigates (`:92`); the unfrozen decisions, migration order and exact visual families included (`:222-232`); individual clauses by explicit owner narrowing (`m2_evidence_charter.md:108`, `m1_contract_register.md:77`, `m0_discovery_result.md:201-205`, `pilot_charter_am6.md:57`). *Forbidden:* a milestone inheriting authority from an earlier one (`:93`); a default to pass, and thresholds set after the run (`:201-203`); complexity added only to turn `INCONCLUSIVE` into `PASS` (`:239`); a family inheriting another's pass (`07_incremental_migration_plan.md:57`); an M6 or M7 start without its own authorization (`06:92-95`, `07:83-86`). **No rule was found for restructuring the milestone graph itself**, so a shortcut is not available; only narrowing is.
+
+**Gaps specific to icons and the HUD.** No release candidate covers an icon slot (rc-0006 and rc-0007 hold 34 terrain-era slots). The HUD has no fallback or text contract and the family-glyph fallback is not wired (`fallback_safety.md:107-109`); `AM5-W01` rehearsed the map only (`surface_rehearsal_result.md:35,90`) and M5 needs HUD roles that resolve keys without the map renderer (`05_surface_compatibility_rehearsal_plan.md:45`); the status frames and the class hall name a text fallback in their key description (the effect or building name as text) but nothing checks it. **The 36 adopted icon keys state a fallback-safety class (35 `identifying`, 1 `decorative`) and a non-image alternative only as prose in their registry `description`; the class is not a registry field and nothing validates it** (recorded as a known gap in `fallback_safety.md`; checked on `visual_keys.yaml` at `4a2141df9`). Key derivation is built only at M6 (ADR `D14`, `visual_asset_foundation_adr.md:43`), and the icon style rules (D20: integer snapping, 24x24, shape over hue) hold for the art, not for any runtime route.
+
 ## Status and authorization boundary
 
 This package translates the P2

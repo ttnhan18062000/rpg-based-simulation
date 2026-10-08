@@ -107,6 +107,7 @@ alternative. What is built is narrower: `assemble_release` refuses a registry ke
 - No check refuses a release, a build or an adoption whose `identifying` or `critical` key has no named alternative.
 - No `critical` key exists, and the HUD has no fallback or text contract at all; the HUD package owns that.
 - The family glyph fallback is not wired into the real Live Map.
+- **The 36 adopted icon keys (14 key set + 22 v2) state their class only as prose.** Each registry `description` says "identifying class" (35 keys) or "decorative class" (1) and names its text fallback, which is what rules 1 and 2 below ask for "until the registry can carry it", but the class is not a field (`AM1-W02.7`, `m1_contract_register.md:121`), no check reads the description, and no key has a reviewed `critical` or HUD alternative. Recorded 2026-10-08 as a known gap, not fixed here; it blocks nothing today because no icon is wired (`AM-M6` is parked, see the activation roadmap in `docs/plans/visual-asset-management-runtime-integration/README.md`).
 - No fail-closed rule exists for an image that decodes but is the wrong thing; integrity is the build and `verify` (D9), and the client checks decoded size only.
 
 ## Rule for new kinds

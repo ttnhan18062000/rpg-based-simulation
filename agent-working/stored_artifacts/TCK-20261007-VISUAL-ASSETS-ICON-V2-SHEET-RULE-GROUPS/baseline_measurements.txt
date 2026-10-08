@@ -1,0 +1,7 @@
+Measured 2026-10-07 (read-only, before the user's question), python on synthetic sprites and the committed draft set icons-key-v1:
+real 24x24 blacksmith vs warrior: XOR 135 (silhouette px 233 and 244); I2 dL by vision normal 5.2, protan 5.2, deutan 5.2, tritan 5.2
+real 16x16 enemy camp vs plate XOR 182 (camp silhouette 70 px)
+24x24 synthetic disc (area 276): 1 edge pixel removed 1; 3 edge pixels 3; one 2x2 pip 4; one 4x4 hole 16; shifted 1 px right 36; shifted 1 px down and right 54
+24x24 distinct simple silhouettes pairwise XOR: disc-square 124, disc-diamond 72, disc-cross 120, disc-triangle 144, square-diamond 180, square-cross 196, square-triangle 180, diamond-cross 64, diamond-triangle 132, cross-triangle 148 (minimum 64)
+8x8 rarity mock shapes (bead 32 px, kite 24, sparkle 32) vs the 8 tier silhouettes: bead min 8 (vs S), kite min 16, sparkle min 8 (vs S); bead-kite 12, bead-sparkle 16, kite-sparkle 16
+best N-step palette value ladder (every pair, all four visions) smallest L* gap: N3 35.37, N4 22.24, N6 12.30, N8 8.74, N10 5.02, N11 4.50

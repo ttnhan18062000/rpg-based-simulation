@@ -29,7 +29,8 @@
    },
    "min_shape_px_across_classes": 92,
    "pairs": 1,
-   "size": 16
+   "size": 16,
+   "value_checked": true
   },
   "tiers": {
    "min_dL_by_vision": {
@@ -40,7 +41,8 @@
    },
    "min_shape_px_across_classes": 4,
    "pairs": 28,
-   "size": 8
+   "size": 8,
+   "value_checked": true
   }
  },
  "i1": true,
@@ -220,7 +222,7 @@
  },
  "result": "PASS",
  "rule": {
-  "i1": "silhouette pixels differing >= {8: 3, 16: 6} (by canvas side) across classes",
+  "i1": "silhouette pixels differing >= {8: 3, 16: 6, 24: 8} (by canvas side) across classes",
   "i2": "dL* of mean colours >= 6.0 in ['normal', 'protan', 'deutan', 'tritan']",
   "i3": "plate rim colour vs terrain tile mean, dL* >= 12.0 in ['normal', 'protan', 'deutan', 'tritan']"
  },

@@ -12,7 +12,7 @@ make serve      # Build frontend + start server at :8000
 make cli        # Run a headless simulation (200 ticks)
 ```
 
-**Requirements:** Python ≥ 3.11, Node.js ≥ 18, Docker (optional — for Grafana/Loki telemetry).
+**Requirements:** Python ≥ 3.11, Node.js ≥ 18, Docker (optional — for Grafana/Loki telemetry). On Windows, run `make` under WSL or Git Bash (there is no `make.bat`).
 
 ---
 
@@ -130,7 +130,7 @@ See [docs/ai/](docs/ai/) for the full agent and workflow reference.
 Docker Compose manages Grafana, Loki, Redis, and RabbitMQ for production telemetry.
 
 ```bash
-docker compose up -d     # start telemetry stack
+docker compose up -d     # start telemetry stack (compose.yaml at the root; Dockerfiles and ops configs are in docker/)
 # Grafana: http://localhost:3000  (admin/admin)
 ```
 

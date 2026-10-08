@@ -11,6 +11,12 @@ class HardwareClass(str, Enum):
     CLASS_C = "class_c"  # Legacy/Edge
 
 
+class SignalContract(str, Enum):
+    """How the governors' cost inputs are produced (PERF-D1). LIVE measures them; CANONICAL models them from deterministic work counts."""
+    LIVE = "live"
+    CANONICAL = "canonical"
+
+
 class RuntimeProfile(BaseModel):
     """
     Authoritative resource-envelope contract.
@@ -46,6 +52,10 @@ class RuntimeProfile(BaseModel):
     # Degradation
     degradation_threshold_ram: float = Field(0.85, ge=0.5, le=1.0, description="RAM pressure to trigger shedding")
     degradation_threshold_cpu: float = Field(0.90, ge=0.5, le=1.0, description="CPU pressure to trigger shedding")
+
+    # Signal contract (PERF-D1). LIVE is today's behaviour; CANONICAL replaces the governors' wall-clock cost inputs with a
+    # reference-millisecond work model. ``audit_mode`` wins over both: it zeroes the pressure signals.
+    signal_contract: SignalContract = Field(default=SignalContract.LIVE, description="How the governors' cost inputs are produced")
 
     # Cadence (Scheduling)
     cadence: SystemCadence = Field(default_factory=SystemCadence, description="System execution frequencies")
