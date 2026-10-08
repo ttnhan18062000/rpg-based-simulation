@@ -15,7 +15,7 @@ tags: []
 EAT beside the inn feeds a subject that cannot pay: `CoreActions.execute_survival("EAT")` cuts hunger by 40 with no building and no gold, and the inn's 5-gold charge clamps at zero, so the meal is free.
 
 ## Status
-INPROGRESS
+OPEN
 
 ## Tier
 standard
@@ -112,3 +112,6 @@ Measured before the re-scope (one 8-charge node in `hometown`, main `dcfe5de4d`,
 - Placement rule proof: for all 24 resolved worlds at seeds 42 and 43 the compiled state with the rule on and off is identical once the food node is removed (hand run; `test_the_placement_rule_changes_only_the_food_node` pins three worlds).
 - Gates: ratchet 0 new 0 worse, mypy clean, import-linter 17 kept 0 broken.
 - Pinned 5x3 (1500 ticks): divergence 2.89 to 2.91 carry the tables. The 5000-tick headline measurement is in the stored artifacts and the divergence once it finishes.
+
+## Parked (owner ruling 2026-10-08)
+The batch landed WITHOUT this change: free meals stay on until a second way to eat works in all three measured worlds (earn, or wild land in `crowded_frontier` and `urban_political`). The removal is on local branch `d27-free-meal-removal` (stacked on the batch; its diff is exactly the removal and its tests). Evidence for why it waits: `agent-working/stored_artifacts/TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL/removal_evidence_divergence_2_89_as_drafted.md` is on that branch; the pinned 5000-tick rows are in `probes/pinned_5x3_5000_ticks_base_main_39e65eb5a_vs_batch_with_hunger_low.jsonl` (starvation wave in ticks 1000 to 2000; `urban_political` 0.0 alive at tick 2500, `crowded_frontier` 1.0 at tick 5000 with the removal on).
