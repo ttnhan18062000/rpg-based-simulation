@@ -7,7 +7,7 @@ from dataclasses import replace
 import pytest
 
 from src.ai.goals.base import NeedAccess, OpeningStepKind
-from src.ai.goals.need_pull import HUNGER_LINE
+from src.engine.need_pull import HUNGER_LINE
 from src.ai.goals.opening_steps import first_open_step, opening_steps
 from src.ai.goals.scorers import EatScorer
 from src.core.builder import V2EntityBuilder
