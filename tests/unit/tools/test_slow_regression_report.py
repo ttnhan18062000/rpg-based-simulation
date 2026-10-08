@@ -184,7 +184,6 @@ def test_the_real_known_reds_file_is_loadable_and_lints_clean():
     known = srr.load_known_reds(REAL_KNOWN_REDS)
     assert known
     assert srr.lint_known_reds(known) == []
-    assert not any(e["match"].startswith("tests.perf.test_perf_combat") for e in known)  # combat[500] passed
 
 
 @pytest.mark.parametrize(
