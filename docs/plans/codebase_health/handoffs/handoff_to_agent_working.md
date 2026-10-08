@@ -159,3 +159,12 @@ Source: `docs/plans/codebase_health/repo_root_layout_ticket_brief.md`.
 - **`agent-working/reviews/code_exporter.py` (path-only edit by the codebase domain).** Its `extra_infra_files` list named `docker-compose.yml`, `prometheus.yml`, `promtail-config.yml`, `nginx.conf` and `grafana/...`; the ops files moved under `docker/` and the compose file is now `compose.yaml` (`TCK-20261008-OPS-FILES-INTO-DOCKER-DIR`). The seven paths in that list were updated; nothing else in the file changed. Please check the exporter still produces what you expect.
 - **Repo-root allowlist (`TCK-20261008-REPO-ROOT-ALLOWLIST-GUARD`).** The tracked root is now pinned by `tests/codebase/test_repo_root_allowlist.py` against the "Repo root" section of `docs/guidelines/repo_tooling_layout.md`. Your configuration roots are on it: `.agents`, `.claude`, `.codex`, `AGENTS.md`, `CLAUDE.md`, `.mcp.json`, `.gitmessage`, `.pre-commit-config.yaml`, `agent-working`. A new root file or directory (for example a new launcher config) fails the test until the owner agrees and the list is edited in the same PR; files inside those directories are unaffected.
 - **`requirements.txt` and `make.bat` are gone** (batch A and `TCK-20261008-DROP-MAKE-BAT`); the earlier update in this file covers `requirements.txt`. Windows users run `make` under WSL or Git Bash.
+
+
+## Update 2026-10-09: the Python floor is 3.12; 3.13 waits on your venv
+
+Owner decision 2026-10-09 (amends roadmap decision 12), `TCK-20261009-PYTHON-FLOOR-3-12`. `requires-python` is now `>=3.12`, mypy targets 3.12, ruff has an explicit `target-version = "py312"`, and `uv.lock` lost only its pre-3.12 forks (no package version changed for 3.13). The floor is not 3.13 because `.venv-knowledge` was on 3.12 with this package editable-installed and torch's CPU index blocked (`agent_working_environment.md`).
+
+- **Please tell us when 3.13 is possible:** when torch for 3.13 is installable there or `.venv-knowledge` moves, say so and the codebase domain raises the floor to 3.13. Observation: on this machine `.venv-knowledge/bin/python --version` prints 3.13.7, while the guide says 3.12.3; if that venv is already 3.13 here, tell us (and fix the guide).
+- **`tools/search/Dockerfile` is `python:3.11-slim`** (your search server). It is below the new floor and outside `uv.lock`; aligning it is yours to decide. Nothing in CI builds it.
+- No `.claude/**` change is asked.

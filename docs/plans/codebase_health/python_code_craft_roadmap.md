@@ -57,7 +57,7 @@ from 113k LoC (D24, 2026-08-17) to 126k.
 Environment today: `uv` is installed and `uv.lock` is tracked but stale (last touched in PR #29); CI
 installs with `pip install -r requirements.txt`. Dependencies are declared in three places
 (`pyproject.toml`, `requirements.txt`, `uv.lock`). CI runs Python 3.13, `pyproject.toml` says
-`>=3.11`, mypy targets 3.11.
+`>=3.11`, mypy targets 3.11. (Amended 2026-10-09 by owner: the floor is now `>=3.12` and mypy/ruff target 3.12; see decision 12.)
 
 Agent setup today: `implementer.md` carries no craft guidance; `architecture-reviewer` checks
 architecture rules, not craft; no skill covers writing clean Python; no hook lints an edited file.
@@ -258,7 +258,9 @@ Recorded 2026-10-02:
     `astral-sh/setup-uv` action, and `TCK-20261002-UV-REMAINING-CI-JOBS` migrates the rest. Those
     tests belong to the `testing` domain, whose planner is told before the change lands.
 12. **Python version:** keep the `>=3.11` floor and document 3.13 as the CI-tested version; raising
-    the floor would break the 3.12 knowledge-search venv.
+    the floor would break the 3.12 knowledge-search venv. *Amended 2026-10-09 by owner: floor 3.12; 3.13 after the
+    knowledge venv moves* (`TCK-20261009-PYTHON-FLOOR-3-12`: `requires-python >=3.12`, mypy `python_version 3.12`,
+    explicit ruff `target-version py312`).
 13. **mypy soaks with the ratchet** (2026-10-03): `mypy-baseline` runs advisory for the same two
     weeks and flips to blocking in the same follow-up ticket.
 14. **Changed-line PR feedback through SARIF upload to GitHub code scanning** (2026-10-03), not
