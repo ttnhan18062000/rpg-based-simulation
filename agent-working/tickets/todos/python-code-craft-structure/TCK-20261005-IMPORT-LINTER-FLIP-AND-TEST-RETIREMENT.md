@@ -34,6 +34,7 @@ Follow-up to `TCK-20261004-IMPORT-LINTER-ADOPTION`. BLOCKED until a two-week soa
 - Step becomes blocking; the owner adds the check as required on `main` (never before `main` has produced the check name; ruleset change and merge in one sitting)
 - Retire the class E tests whose contract is required, with the per-test parity table re-shown; the phase19 hot-path test waits on rpg's decision about `kernel.py`'s function-local imports
 - Update the testing handoff and the roadmap
+- The Import contracts step summary (`codebase.structure.import_contracts`) lists each broken contract's module pairs (importer -> imported, line), not only the contract count; found by the soak review, section 3
 
 ## Out of Scope
 - Any file under `src/`
@@ -45,6 +46,7 @@ Follow-up to `TCK-20261004-IMPORT-LINTER-ADOPTION`. BLOCKED until a two-week soa
 - [ ] Owner's yes to the required check recorded (date, who)
 - [ ] Each retired test's replacement contract is required in the same or an earlier PR; parity table re-shown
 - [ ] `git diff --stat` lists no path under `src/`
+- [ ] A run with 2+ broken pairs in one contract shows every pair in the job summary and annotations (test pins it)
 
 ## Related Tickets
 - TCK-20261004-IMPORT-LINTER-ADOPTION
@@ -53,6 +55,7 @@ Follow-up to `TCK-20261004-IMPORT-LINTER-ADOPTION`. BLOCKED until a two-week soa
 ## Related Docs
 - docs/plans/codebase_health/import_linter_adoption_ticket_brief.md
 - docs/plans/codebase_health/import_linter_evaluation.md
+- docs/plans/codebase_health/import_linter_soak_review.md
 
 ## Related Stored Artifacts
 None.

@@ -105,8 +105,8 @@ counts contracts, not pairs. `lint-imports` at `33360e617` and `71f8f2e9e` lists
 and the line stayed `16 kept, 1 broken` while the pair count went 1 -> 2 -> 5. Nothing in the job log or annotations
 names the pairs (only `lint-imports` itself does, and the advisory step prints just the count). Once the step is
 blocking this does not matter for pass/fail, but while it is advisory a reader of the summary line cannot tell that a
-second or third break arrived on top of an open one. The flip ticket can decide whether the advisory/blocking summary
-should name the broken pairs; it is not a false positive and no config changed here.
+second or third break arrived on top of an open one. The planner decided on 2026-10-08 that the summary must name the broken pairs and that this is in the flip ticket's scope;
+it is not a false positive and no config changed here.
 
 Each of #414 and #412 was written while #406's break was already open on main and visible only as the same count, which
 is how the number of open breaks grew from 1 to 5 inside about 20 hours without the summary line changing.
@@ -147,4 +147,4 @@ Remaining before the flip (earliest 2026-10-19T13:40Z):
    `main` has produced the check name).
 3. `phase19`'s `test_hot_path_does_not_import_heavy_analyzers` still waits on rpg's decision about `kernel.py`'s
    function-local imports (`handoff_to_rpg.md`); it is an expectation change, not a retirement.
-4. Decide whether the step's summary should name broken pairs (section 3) before it blocks.
+4. Decided 2026-10-08 (codebase-planner): the summary names broken pairs; in the flip ticket's scope.
