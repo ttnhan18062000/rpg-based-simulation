@@ -121,7 +121,6 @@ class Kernel:
         from src.engine.scheduler import DeterministicScheduler as DefaultScheduler
         from src.engine.governor import ResourceGovernor as DefaultGovernor
         from src.engine.runtime_status import RuntimeStatus as DefaultStatus
-        from src.engine.replay_manager import ReplayManager as DefaultReplayManager
         from src.engine.observability import SignalCollector
         from src.engine.worker_manager import WorkerManager
         
@@ -151,31 +150,9 @@ class Kernel:
             from src.observability.reporting.artifact_repository import RunArtifactRepository, RunManifest
             self._artifact_repo = RunArtifactRepository()
             
-            # Load metadata from provenance manifest if available
-            prov_manifest_data = None
-            if provenance_manifest_path and os.path.exists(provenance_manifest_path):
-                try:
-                    with open(provenance_manifest_path, "r", encoding="utf-8") as f:
-                        prov_manifest_data = json.load(f)
-                except (OSError, ValueError) as prov_err:
-                    # ValueError covers json.JSONDecodeError. A missing/corrupt manifest degrades the
-                    # RunManifest's fingerprints but must not abort the run, so log it instead of hiding it.
-                    logger.warning(
-                        "Could not load provenance manifest %s (non-fatal): %s",
-                        provenance_manifest_path, prov_err,
-                    )
-
-            catalog_fp = catalog_fingerprint
-            if not catalog_fp and prov_manifest_data:
-                catalog_fp = prov_manifest_data.get("catalog_fingerprint")
-            
-            module_fps = module_fingerprints
-            if not module_fps and prov_manifest_data:
-                module_fps = prov_manifest_data.get("module_fingerprints")
-
-            from src.core.registries import runtime_content_source as registries_source, catalog_fingerprint as registries_fingerprint
-            actual_content_source = runtime_content_source or registries_source
-            actual_catalog_fp = catalog_fp or registries_fingerprint
+            actual_content_source, actual_catalog_fp, module_fps = self._resolve_manifest_fingerprints(
+                provenance_manifest_path, catalog_fingerprint, module_fingerprints, runtime_content_source,
+            )
 
             # Create standard manifest
             manifest = RunManifest(
@@ -197,21 +174,13 @@ class Kernel:
                 runtime_content_source=actual_content_source,
                 catalog_fingerprint=actual_catalog_fp,
                 module_fingerprints=module_fps,
-                state_hash=None, signal_contract=signal_contract_record(profile, self._audit_mode),
+                state_hash=None,
+                signal_contract=signal_contract_record(profile, self._audit_mode),
             )
             self._artifact_repo.create_run(self._run_id, manifest, overwrite=True)
             self._artifact_repo.update_manifest(self._run_id, status="RUNNING")
 
-        if replay is None:
-            import os
-            run_dir = Path(self._artifact_repo.resolve_path(self._run_id, "manifest")).parent if self._artifact_repo else Path(f"data/runs/{self._run_id}")
-            self._replay = DefaultReplayManager(
-                run_dir=run_dir,
-                profile_name=profile.name,
-                buffer_capacity_kb=profile.max_replay_buffer_kb, signal_contract=signal_contract_record(profile, self._audit_mode),
-            )
-        else:
-            self._replay = replay
+        self._replay = self._init_replay(profile, replay)
 
         if executor:
             self._executor = executor
@@ -373,6 +342,55 @@ class Kernel:
         ProfileValidator.validate_profile(self._profile)
         if flags:
              ProfileValidator.validate_flags(flags, self._profile)
+
+    @staticmethod
+    def _resolve_manifest_fingerprints(
+        provenance_manifest_path: Optional[str],
+        catalog_fingerprint: Optional[str],
+        module_fingerprints: Optional[Dict[str, str]],
+        runtime_content_source: Optional[str],
+    ) -> tuple[Optional[str], Optional[str], Optional[Dict[str, str]]]:
+        """Content source, catalog fingerprint and module fingerprints for the run manifest.
+
+        Explicit arguments win, then the provenance manifest when it loads, then the registries.
+        """
+        import os
+        prov_manifest_data = None
+        if provenance_manifest_path and os.path.exists(provenance_manifest_path):
+            try:
+                with open(provenance_manifest_path, "r", encoding="utf-8") as f:
+                    prov_manifest_data = json.load(f)
+            except (OSError, ValueError) as prov_err:
+                # ValueError covers json.JSONDecodeError. A missing/corrupt manifest degrades the
+                # RunManifest's fingerprints but must not abort the run, so log it instead of hiding it.
+                logger.warning(
+                    "Could not load provenance manifest %s (non-fatal): %s",
+                    provenance_manifest_path, prov_err,
+                )
+
+        catalog_fp = catalog_fingerprint
+        if not catalog_fp and prov_manifest_data:
+            catalog_fp = prov_manifest_data.get("catalog_fingerprint")
+
+        module_fps = module_fingerprints
+        if not module_fps and prov_manifest_data:
+            module_fps = prov_manifest_data.get("module_fingerprints")
+
+        from src.core.registries import runtime_content_source as registries_source, catalog_fingerprint as registries_fingerprint
+        return runtime_content_source or registries_source, catalog_fp or registries_fingerprint, module_fps
+
+    def _init_replay(self, profile: RuntimeProfile, replay: Optional[ReplayManager]) -> ReplayManager:
+        """The injected replay manager, or a default one writing next to the run's manifest."""
+        if replay is not None:
+            return replay
+        from src.engine.replay_manager import ReplayManager as DefaultReplayManager
+        run_dir = Path(self._artifact_repo.resolve_path(self._run_id, "manifest")).parent if self._artifact_repo else Path(f"data/runs/{self._run_id}")
+        return DefaultReplayManager(
+            run_dir=run_dir,
+            profile_name=profile.name,
+            buffer_capacity_kb=profile.max_replay_buffer_kb,
+            signal_contract=signal_contract_record(profile, self._audit_mode),
+        )
 
     def tick_once(self) -> None:
         """
