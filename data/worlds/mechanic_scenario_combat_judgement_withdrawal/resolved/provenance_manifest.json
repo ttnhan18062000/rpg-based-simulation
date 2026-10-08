@@ -1,15 +1,15 @@
 {
-  "manifest_id": "prov_24cbc9856e90a395",
+  "manifest_id": "prov_e808b6138da13e07",
   "world_id": "mechanic_scenario_combat_judgement_withdrawal",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "635fdc6c5ea06705808890e1befadadbb4fd891695ad0d9201305fa61e665f0c",
+  "catalog_fingerprint": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
   "module_fingerprints": {
     "combat_judgement_arena": "0d4f5ef54b7930467913f05203c87f544fbb24067edbf4e54580bb8074c0d8d3"
   },
   "composition_fingerprint": "5734e14e7dcf27c601c1bc085d49acd7a8fc0cb3eff14053d167382041d69e09",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "24cbc9856e90a395e8f831c2f592c3b61ae530a56bbbf403d18160225703f290",
-  "created_at": "2026-10-08T10:17:51.772768Z",
+  "content_fingerprint": "e808b6138da13e073b08942ca9eca89a7b1a49e779ec2b62eed59f8361235d37",
+  "created_at": "2026-10-08T11:03:19.231550Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

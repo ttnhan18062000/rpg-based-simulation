@@ -32,11 +32,16 @@ def _entity(eid=1, role=EntityRole.WORKER, **props):
 
 
 def test_legacy_constants_are_the_medium_need_rates(catalog):
-    assert need_rates(_entity(species_id="human")) == pytest.approx((0.1, 0.05))
+    assert need_rates(_entity(role=EntityRole.MONSTER, species_id="goblin")) == pytest.approx((0.1, 0.05))  # goblin_survival: medium, medium
+
+
+def test_a_human_builds_hunger_at_half_the_base_rate_and_sleep_debt_at_the_base_rate(catalog):
+    """Decision 33 (light balance pass): `humanoid_survival` hunger is "low", so a person reaches the starvation line about 19 hours after a full meal."""
+    assert need_rates(_entity(species_id="human")) == pytest.approx((0.05, 0.05))
 
 
 def test_person_without_species_gets_the_ordinary_persons_needs(catalog):
-    assert need_rates(_entity(role=EntityRole.CITIZEN)) == pytest.approx((0.1, 0.05))
+    assert need_rates(_entity(role=EntityRole.CITIZEN)) == pytest.approx((0.05, 0.05))
 
 
 @pytest.mark.parametrize("species", ["undead", "spirit", "elemental"])
@@ -73,7 +78,7 @@ def test_apply_path_accumulates_per_kind(catalog):
                       ("undead", _entity(2, role=EntityRole.MONSTER, species_id="undead"))):
         changes = ApplyPath._compute_entity_changes(ent, None, 10, SystemCadence(), True, False, [], state)
         out[name] = changes["biological"].hunger
-    assert out["human"] == pytest.approx(0.1) and out["undead"] == 0.0
+    assert out["human"] == pytest.approx(0.05) and out["undead"] == 0.0
 
 
 def test_service_tile_prefers_own_tile_then_orthogonal_neighbour():
