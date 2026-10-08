@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import IntEnum, auto
 from dataclasses import dataclass, field
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 
 class RuntimeMode(IntEnum):
@@ -50,6 +50,27 @@ class PressureSignals:
     # 7. Performance Breakdown (Milestone 3)
     phase_costs_ms: Dict[str, float] = field(default_factory=dict)
     metrics: Dict[str, float] = field(default_factory=dict)
+
+    # 8. Cost inputs the governors compare with the profile (PERF-D1 signal contract). None means "use the measured
+    # value", so a Live run and every caller that sets only ``tick_compute_ms`` behave exactly as before. The Canonical
+    # contract sets these from deterministic work counts (reference-milliseconds) instead of a clock.
+    tick_cost: Optional[float] = None
+    tick_budget: Optional[float] = None
+    phase_cost: Optional[Dict[str, float]] = None
+
+    @property
+    def effective_tick_cost(self) -> float:
+        """The tick cost the governors compare with the budget: ``tick_cost`` when set, else the measured ``tick_compute_ms``."""
+        return self.tick_compute_ms if self.tick_cost is None else self.tick_cost
+
+    def effective_tick_budget(self, profile_budget_ms: float) -> float:
+        """The budget the cost is compared with: ``tick_budget`` when set, else the profile's ``max_tick_budget_ms``."""
+        return profile_budget_ms if self.tick_budget is None else self.tick_budget
+
+    @property
+    def effective_phase_cost(self) -> Dict[str, float]:
+        """Per-bucket cost: ``phase_cost`` when set, else the measured ``phase_costs_ms``."""
+        return self.phase_costs_ms if self.phase_cost is None else self.phase_cost
 
 
 @dataclass(frozen=True, slots=True)

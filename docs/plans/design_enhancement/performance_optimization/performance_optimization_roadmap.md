@@ -227,6 +227,7 @@ decided:
    3. **Calibration (plan step 1) excludes the `combat_engagement` cost bucket**, because Lane B's fix
       `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP` is still open. The artifact records the
       exclusion and the RPG base commit. The fit is re-checked after that fix lands.
+   4. Lift extended by the owner on 2026-10-08, for TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY only: src/observability/reporting/artifact_repository.py and src/engine/replay_manager.py (run-manifest field), plus a typing-only edit to src/config/loader.py.
    Measurements stay provisional, and no soft check becomes blocking. The full lift is still an owner
    statement. On 2026-10-07: criterion 1 has no open item perf knows of; criterion 2 has row 7 (b) at 8
    unbound (#393, from 25), 7 of them dead modules filed for deletion; criterion 3 is this phased window, not a

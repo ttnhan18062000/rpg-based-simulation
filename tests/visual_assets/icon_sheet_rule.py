@@ -5,7 +5,7 @@ Machado simulation, Lab and CIE76 code as the pilot and AM5-S checks (`pilot_col
 
 Three rules over **must-differ groups** (named lists of icon names, each split into *classes*: icons of one class may share a silhouette on purpose):
 
-- **I1 shape.** Every pair from different classes of a group differs in its 1-bit alpha silhouette by at least `shape_min[size]` pixels. This is the non-hue cue.
+- **I1 shape.** Every pair from different classes of a group differs in its 1-bit alpha silhouette by at least `shape_min[size]` pixels (3 at 8x8, 6 at 16x16, 8 at 24x24). This is the non-hue cue.
 - **I2 value.** Every pair of a group (same class or not) has interior mean colours (the sRGB mean of the opaque pixels that are not on the silhouette's outer boundary; the whole sprite if it
   has no interior) whose L* differ by at least `value_min`, under normal vision (this is the greyscale reading), protanopia, deuteranopia and tritanopia. The interior is measured because at 8x8
   the outline is more than half of a badge and would halve every difference (measured, `docs/assets/icon_criteria.md`).
@@ -48,9 +48,9 @@ class Thresholds:
     plate_min: float  # minimum L* difference between a plate rim colour and a terrain tile mean
 
 
-# The user's answers, 2026-10-06, by blocking question after the measured baselines (`docs/assets/icon_criteria.md`): I1 3 px at 8x8 and 6 px at 16x16, I2 6 L*, I3 12 L*; E and D may share a
-# silhouette. 24x24 panel icons are in no group in this batch, so no threshold exists for them: a group at that size raises KeyError instead of passing silently.
-RULE = Thresholds(shape_min={8: 3, 16: 6}, value_min=6.0, plate_min=12.0)
+# The user's answers by blocking question after the measured baselines (`docs/assets/icon_criteria.md`). 2026-10-06: I1 3 px at 8x8 and 6 px at 16x16, I2 6 L*, I3 12 L*; E and D may share a
+# silhouette. 2026-10-07 (icon set v2): I1 8 px at 24x24. A canvas size with no threshold (anything else) raises KeyError instead of passing silently.
+RULE = Thresholds(shape_min={8: 3, 16: 6, 24: 8}, value_min=6.0, plate_min=12.0)
 
 
 def from_png(png: bytes) -> Sprite:
@@ -131,8 +131,12 @@ def evaluate_sheet(
     tile_means: dict[str, Rgb],
     thresholds: Thresholds = RULE,
     palette: set[str] | None = None,
+    shape_only: frozenset[str] | set[str] = frozenset(),
 ) -> dict:
-    """The rule applied to a sheet. Returns every number and the verdict (`PASS` iff I1, I2 and I3 all hold)."""
+    """The rule applied to a sheet. Returns every number and the verdict (`PASS` iff I1, I2 and I3 all hold).
+
+    `shape_only` names groups checked by I1 alone (user's answer of 2026-10-07 for groups of different subjects, and for rarity badges against tier badges): I2 is skipped for them and the
+    report says so (`value_checked: false`). Every other group gets I1 and I2 as before."""
     i1_fail: list[dict] = []
     i2_fail: list[dict] = []
     group_rows: dict[str, dict] = {}
@@ -153,12 +157,12 @@ def evaluate_sheet(
                 shape_min = d if shape_min is None else min(shape_min, d)
                 if d < need:
                     i1_fail.append({"group": gname, "a": a, "b": b, "shape_px": d, "need": need})
-            for v in VISIONS:
+            for v in () if gname in shape_only else VISIONS:
                 dv = value_distance(icons[a], icons[b], v)
                 value_min[v] = dv if value_min[v] is None else min(value_min[v], dv)
                 if dv < thresholds.value_min:
                     i2_fail.append({"group": gname, "a": a, "b": b, "vision": v, "dL": round(dv, 3), "need": thresholds.value_min})
-        group_rows[gname] = {"size": size, "pairs": len(names) * (len(names) - 1) // 2, "min_shape_px_across_classes": shape_min,
+        group_rows[gname] = {"size": size, "pairs": len(names) * (len(names) - 1) // 2, "min_shape_px_across_classes": shape_min, "value_checked": gname not in shape_only,
                              "min_dL_by_vision": {v: round(x, 3) for v, x in value_min.items() if x is not None}}
     i3_fail: list[dict] = []
     plate_rows: dict[str, dict] = {}

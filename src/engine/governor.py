@@ -72,10 +72,12 @@ class ResourceGovernor:
         profile: RuntimeProfile, 
         signals: PressureSignals
     ) -> RuntimeMode:
+        cost_ms = signals.effective_tick_cost
+        budget_ms = signals.effective_tick_budget(profile.max_tick_budget_ms)
         # 1. SURVIVAL (3): Critical overload
         if signals.work_debt_total >= profile.max_work_debt:
             return RuntimeMode.SURVIVAL
-        if signals.tick_compute_ms >= profile.max_tick_budget_ms * 1.5:
+        if cost_ms >= budget_ms * 1.5:
             return RuntimeMode.SURVIVAL
         if signals.memory_estimate_mb >= profile.max_ram_mb:
             return RuntimeMode.SURVIVAL
@@ -92,7 +94,7 @@ class ResourceGovernor:
         # measurement, so it is PERF-D1 input 1: it still makes the mode depend on host speed. The
         # kernel's mid-tick and end-of-tick budget checks no longer feed the mode or drop work
         # (report-only, TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY); this is the one that remains.
-        if signals.tick_compute_ms >= profile.max_tick_budget_ms:
+        if cost_ms >= budget_ms:
             return RuntimeMode.DEGRADED
         if signals.worker_utilization >= 0.9 or signals.queue_utilization >= 0.9:
             return RuntimeMode.DEGRADED
@@ -100,7 +102,7 @@ class ResourceGovernor:
             return RuntimeMode.DEGRADED
             
         # 3. CONSTRAINED (1): Early pressure
-        if signals.tick_compute_ms >= profile.max_tick_budget_ms * 0.7:
+        if cost_ms >= budget_ms * 0.7:
             return RuntimeMode.CONSTRAINED
         if signals.worker_utilization >= 0.7 or signals.queue_utilization >= 0.7:
             return RuntimeMode.CONSTRAINED

@@ -12789,3 +12789,54 @@
   divergence_note: null
   support_boundary: Replays recorded before this ticket carry the string "SKIPPED" with no scheme or status; no
     reader in src/ compares the TICK_END hash, so none needed changing. When Live runs hash is not decided here.
+
+- id: INFRA-425
+  text: 'TCK-20261008-PERF-KERNEL-RESOLUTION-OVERHEAD-DOUBLE-COUNTS-SUB-PHASES: the sum of the kernel''s per-phase costs equals
+    the tick''s cost. resolution_overhead is the resolution wall time minus every sub-phase cost the refinement
+    pipeline recorded for that tick (no hand-kept key list), so no refine sub-phase is counted both under its own
+    key and inside resolution_overhead. _final_compute_ms, and so the governor''s tick_compute_ms, no longer
+    includes the double count.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/kernel.py (Kernel._tick_once_inner, resolution_overhead)
+  proof_type: contract
+  test_path: tests/unit/kernel/test_phase_cost_accounting.py
+  divergence_note: DEV-017 (Bug Fix; Live mode timing changes, audit_mode unchanged)
+  support_boundary: _phase_costs is cleared at the start of every tick, so a key a tick does not record carries no stale value
+    into the sum (tests/unit/kernel/test_phase_cost_accounting.py). Recorded perf baselines from before this change are
+    incomparable for tick totals.
+
+- id: INFRA-426
+  text: 'TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY: under RuntimeProfile.signal_contract=CANONICAL
+    the governors'' cost inputs are modelled, not measured. CanonicalSignalSource sets PressureSignals.tick_cost to
+    WORK_MODEL_V1 (0.68 reference-ms per active entity + 7.42 per lead, PROVISIONAL) from state before the mode acts,
+    queue and worker pressure as demand proxies, no memory or replay-backlog input, and an empty phase_cost, so
+    PhaseBudgetGovernor''s locomotion and final_integrity rules do not fire. With audit_mode off, the same seed gives
+    the same mode, phase budgets and state hash whatever the clock or host (10 of 10 runs, 5 on a jittering clock).
+    audit_mode still zeroes the signals and wins over the contract.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/signal_source.py (CanonicalSignalSource, select_signal_source); src/engine/work_units.py; src/engine/governor.py (_get_indicated_mode); src/engine/phase_governor.py; src/engine/runtime_status.py (record_signals)
+  proof_type: contract
+  test_path: tests/integration/kernel/test_canonical_signal_contract.py
+  divergence_note: DEV-018 (Stabilized; Canonical only, Live unchanged)
+  support_boundary: WORK_MODEL_V1 is PROVISIONAL and excludes the combat_engagement cost (open Lane B defect); Canonical is a rough estimator and models
+    overload instead of measuring it; the anti-thrash bounds are proven on synthetic cost sequences, not a kernel scenario; a Canonical run has no
+    memory or replay-backlog guard. The Live control trace is TCK-20261006-PERF-LIVE-CONTROL-TRACE.
+
+- id: INFRA-427
+  text: 'TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY: the default LIVE signal contract is unchanged by the
+    signal-source split (src/engine/signal_source.py LiveSignalSource is the former Kernel code, moved): every start-of-tick
+    and end-of-tick PressureSignals field and the mode match a fixture recorded from the pre-move code over a run that crosses
+    NORMAL, SURVIVAL and DEGRADED, and the new optional fields stay None. A run''s manifest records its signal contract, effective
+    source and work-model version (RunManifest.signal_contract and the replay manifest); older manifests without the field load.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/signal_source.py (LiveSignalSource, signal_contract_record); src/observability/reporting/artifact_repository.py (RunManifest.signal_contract); src/engine/replay_manager.py
+  proof_type: contract
+  test_path: tests/unit/kernel/test_live_signal_golden.py
+  divergence_note: null
+  support_boundary: The golden fixture is a 16-tick movement run on a call-counting fake clock; it pins the signal construction, not host timing.
