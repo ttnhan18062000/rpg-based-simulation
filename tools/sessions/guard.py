@@ -80,6 +80,7 @@ _CRITICAL_TEXT = re.compile(r"\bpush\b|\bpr\s+merge\b|--delete|-X\s*DELETE|--met
 
 def critical_text(command: str) -> bool:
     """Whether a raw command text names push, a PR merge, a delete or a worktree removal (`merge` counts only with `gh`)."""
+    command = cl.strip_text(command)
     return bool(_CRITICAL_TEXT.search(command) or (re.search(r"\bmerge\b", command) and re.search(r"\bgh\b", command)))
 _WRITER_ACTIONS = frozenset({"commit", "push", "open_pr"})
 _EDIT_TOOL_NAMES = ("Edit", "Write", "MultiEdit", "NotebookEdit")  # kept local: `cl` may have failed to import
