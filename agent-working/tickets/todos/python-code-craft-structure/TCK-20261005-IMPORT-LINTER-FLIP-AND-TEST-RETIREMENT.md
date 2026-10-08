@@ -72,6 +72,7 @@ None.
 - Soak dates are unknown until the adoption batch merges
 
 ## Implementation Notes
+Soak review drafted 2026-10-08, interim
 
 ## Test Summary
 
