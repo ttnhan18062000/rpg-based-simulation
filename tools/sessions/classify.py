@@ -51,7 +51,8 @@ _AUTHORITY_WORDS = re.compile(r"\b(?:push|commit|merge|delete|pr\s+(?:create|mer
 _HEREDOC = re.compile(r"<<(?!<)(-?)[ \t]*(?:'(\w+)'|\"(\w+)\"|\\?(\w+))")
 _SHELL_FEED = re.compile(r"\b(?:(?:ba|z|da|k)?sh|source|eval)\b")
 _CODE_PAYLOAD_RE = re.compile(_CODE_PAYLOAD)
-_PLAIN_WORD = re.compile(r"^[\w./:@%+=,~-]*$")
+_PLAIN_WORD = re.compile(r"^[\w./:@%+=,~${}*?\[\]-]*$")  # one token: an operand (`"main"`, `"$BRANCH"`), not text
+_UNRESOLVABLE_REF = re.compile(r"[$`*?\[(]")
 
 
 def _strip_heredocs(command: str) -> str:
@@ -127,9 +128,9 @@ def _strip_quotes(command: str) -> str | None:
             if _PLAIN_WORD.match(body):
                 out.append(command[i:j + 1])
             else:
-                out.append("''")
-                if c == '"':
-                    out.extend(f" ; {sub} ; " for sub in _substitutions(body))
+                subs = _substitutions(body) if c == '"' else []
+                out.append('"$_"' if subs else "''")  # a substitution's value is unknown, not empty
+                out.extend(f" ; {sub} ; " for sub in subs)
             i = j + 1
         else:
             out.append(c)
@@ -249,6 +250,8 @@ def _push_destinations(args: list[str]) -> tuple[list[str], bool, bool]:
         dst = dst.removeprefix("refs/heads/")
         if dst in ("", "HEAD", "@"):
             implicit = True
+        elif _UNRESOLVABLE_REF.search(dst):
+            all_refs = True  # a variable, substitution or glob: the target branch is unknown, so it may be the default
         else:
             explicit.append(dst)
     return explicit, implicit, all_refs

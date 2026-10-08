@@ -21,16 +21,9 @@ def test_flow_field_long_distance():
     updates = MovementSystem.resolve_move(state, entity, (100.0, 100.0))
     
     up = updates[1]
-    # Flow direction from (0,0) to (100,100) is (0.707, 0.707) approx
-    
-    assert up.new_position is not None
-    nx, ny = up.new_position
-    
-    # Since dist > 50, it uses FlowField
-    # Vector (100, 100) normalized is (0.707, 0.707)
-    assert 0.7 < nx < 0.8
-    assert 0.7 < ny < 0.8
-    
+    # Flow direction from (0,0) to (100,100) is (0.707, 0.707): an exact tie, which takes the y axis like the local step.
+    assert up.new_position == (0.0, 1.0)
+
     print(f"\nSuccessfully verified Flow Field navigation to Town: {up.new_position}")
 
 def test_local_navigation_fallback():
@@ -71,3 +64,40 @@ def test_get_flow_direction_town_uses_real_town_center_not_hardcoded_anchor():
     # 0.243)), so this result can only be explained by reading the real state.town_center.
     assert 0.94 < dx < 0.96
     assert 0.31 < dy < 0.32
+
+
+def test_flow_step_is_a_tile_step_along_the_dominant_axis():
+    """A flow step moves one tile on the vector's dominant axis (ties take y), so positions never leave the tile grid."""
+    from src.systems.world_systems.navigation import NavigationSystem
+
+    def step(pos, town):
+        entity = V2EntityBuilder(1).kind("hero").location(*pos).build()
+        state = AuthoritativeState(tick=0, seed=1, town_center=town, entities={1: entity})
+        return NavigationSystem.get_next_step(entity, town, state)
+
+    assert step((0.0, 0.0), (300.0, 100.0)) == (1.0, 0.0)   # x dominant
+    assert step((0.0, 0.0), (100.0, 300.0)) == (0.0, 1.0)   # y dominant
+    assert step((200.0, 200.0), (100.0, 100.0)) == (200.0, 199.0)  # tie, both negative: y axis
+    assert step((300.0, 0.0), (0.0, 20.0)) == (299.0, 0.0)   # negative x dominant
+
+
+def test_flow_steps_always_land_on_whole_tiles_and_are_deterministic():
+    """From any whole tile, repeated flow steps toward a far town centre never leave the tile grid, and repeat exactly."""
+    from src.systems.world_systems.navigation import NavigationSystem
+
+    town = (333.0, 217.0)
+
+    def walk(start, n):
+        entity = V2EntityBuilder(1).kind("hero").location(*start).build()
+        pos, path = start, []
+        for _ in range(n):
+            e = V2EntityBuilder(1).kind("hero").location(*pos).build()
+            state = AuthoritativeState(tick=0, seed=1, town_center=town, entities={1: e})
+            pos = NavigationSystem.get_next_step(e, town, state)
+            path.append(pos)
+        return path
+
+    path = walk((3.0, 5.0), 60)
+    assert all(x == int(x) and y == int(y) for x, y in path)
+    assert path == walk((3.0, 5.0), 60)
+    assert all(abs(a[0] - b[0]) + abs(a[1] - b[1]) == 1 for a, b in zip([(3.0, 5.0)] + path, path))

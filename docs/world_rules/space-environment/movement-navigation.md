@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-06"
+last_verified: "2026-10-07"
 ---
 
 # World Rule Family: Movement / Navigation
@@ -171,6 +171,10 @@ LOC-02 — reach and topology are both probed by the same near-but-unreachable c
 > pursuit, and movement itself all use this one adjacency, so a subject that can step to a
 > tile in one move is exactly a subject that could strike from it. A subject standing diagonal
 > to its target must first step to an adjacent tile.
+>
+> A subject's position is always a whole tile. Every step moves it to an adjacent tile, so no
+> movement leaves it between tiles, and every check that measures distance between positions
+> measures the same whole-tile distance.
 
 **Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-06**
 (row 20 of `docs/plans/systemic_world/owner_decision_memo.md`). This is MOV-06's adjacency fact
@@ -184,8 +188,17 @@ Diagonal movement and adjacency are not supported."
   engagement and opportunity-attack definitions.
 - **Scope:** this Rule fixes adjacency only. Ranges beyond adjacency, line of sight and
   perception falloff are unchanged.
+- **Amendment, positions are tiles (decided by world-rule-catalog-design under owner delegation,
+  2026-10-07; row 25 of the memo):** the whole-tile clause states the premise that the adjacency
+  above already rests on. It is an amendment, not a new Rule: a step that does not land on a tile
+  is not a step to an adjacent tile, so it already breaks this Rule's "movement itself". Every
+  lookup that reads a position (occupancy, terrain, buildings, legality) reads whole tiles.
+  **Alternative not taken:** accept sub-tile positions and choose floor, round or float for
+  distance. That would make a leak legitimate and give every whole-tile lookup a second meaning
+  to define.
 
-**Repository evidence: SUPPORTED, with two known side-effect exceptions.**
+**Repository evidence: SUPPORTED for adjacency, with two known side-effect exceptions;
+CONFLICTING for the whole-tile clause until its ticket lands.**
 - **Supported:** melee legality uses Manhattan reach (`src/engine/legality.py`), and so does
   pursuit completion (#366). Movement steps orthogonally (`NavigationSystem.get_next_step`,
   `src/systems/world_systems/navigation.py:100-103`).
@@ -193,6 +206,17 @@ Diagonal movement and adjacency are not supported."
   of 8 neighbours (`src/engine/movement.py:123`), and the bracketing flank can land at distance
   2 on a diagonal. Both can leave a subject diagonal to its target, which this Rule handles: the
   subject steps first.
+- **Conflicting (the whole-tile clause):** one movement path breaks it. The flow-field step toward
+  the town centre, taken when the distance is over 50 (`navigation.py:92-96`), adds a unit vector
+  and leaves the subject between tiles for good. Lane A measured this on main `6e7ef56ec` (seed
+  42, 2,000 ticks): by t=2000, 9 of 41 entities on crowded_frontier and 13 of 55 on
+  frontier_living_world are between tiles, against 0 at the start. Two reach checks then
+  disagree: legality truncates the distance (`src/engine/legality.py:45`) and pursuit reach
+  (`src/engine/candidate_selector.py:116`) does not. They disagreed 59 times, and 1 of 17 and 4
+  of 28 ATTACK decisions were allowed only because of the truncation. The fix is engineering:
+  `TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT` (Lane A).
+  The flow step becomes a step along one axis, and one shared distance serves every reach check.
+  Long walks to the town centre then follow a Manhattan path, so the corpus re-baselines.
 - **The defect this exposed is engineering:**
   `TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED`. A held
   ATTACK task against an OUT_OF_RANGE target was never re-decided, and one entity re-swung at a
