@@ -1,12 +1,11 @@
 ---
-status: active
+status: historical
 layer: ai
-authority: P1
+authority: P2
 audience: agent
 ticket_id: TCK-20261007-SESSION-PER-ROLE-WORKTREES
-phase: open
-date: 2026-10-07
-tags: []
+artifact_type: plan
+tags: [ai, process-improvement]
 ---
 
 # Plan: per-role worktrees
