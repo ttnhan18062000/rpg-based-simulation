@@ -25,5 +25,5 @@ unmet ones stay unmet pending the two named blocking chains.
 3. Seed in all three spawn paths (WorldCompiler, ArchetypeEntityFactory, legacy-guard spawner) through `replace_self_model`.
 4. `capability_estimate.py`: `COMMON_KNOWLEDGE_DANGER` table, `EstimateBasis` enum (COMMON_KNOWLEDGE, UNINFORMED), `_belief_about`; remove `_ENEMY_DANGER`.
 5. `tactical.target_score` calls the helper (no growth of the ceilinged function).
-6. Docs, divergence 2.81, COMB-316 parity entry, mechanism pins.
+6. Docs, divergence 2.82, COMB-316 parity entry, mechanism pins.
 Out of scope: region danger (inert), experience override (KNOW-02, Lane A), culture-specific knowledge.

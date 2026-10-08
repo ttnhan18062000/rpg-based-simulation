@@ -4200,7 +4200,7 @@
     common_knowledge). The silent _ENEMY_DANGER table is removed (it matched 0 of
     666 compiled kinds, so the term used to be a constant). Ad hoc, read-only. Landed
     in TCK-20260831-CAPABILITY-DRIVEN-TARGETING; the belief source in TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY
-    (divergence 2.81).
+    (divergence 2.82).
   proof_type: unit
   test_path: tests/unit/combat/test_capability_driven_targeting.py
   divergence_note: null
