@@ -346,7 +346,9 @@ earlier figures are on base `f8f1b69fd`:
 - a hungry worker far from town eats the bread it carries;
 - an exhausted guard on a distant road sleeps rough and recovers, more slowly than in an inn bed.
 - a broke worker walks out of town to wild land, gathers wild food, carries it back and eats it
-  when hungry; the patch it stripped is dry for a while, then grows back (decision 29).
+  when hungry; the patch it stripped is dry for a while, then grows back (decision 29). Written as
+  a kernel spec with a no-wild-food control arm:
+  [LB-S17](../scenarios/life-body-batch-05.md#lb-s17).
 
 ---
 
