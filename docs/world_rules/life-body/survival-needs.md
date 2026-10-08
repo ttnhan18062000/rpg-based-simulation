@@ -238,6 +238,38 @@ the world, which contradicts SURV-03 (a need is modeled for its real, causal con
   - rest only in buildings (a timer for anyone far from one);
   - the engine quietly feeding subjects that cannot eat (hides a content defect);
   - a guarantee that every individual can eat (removes poverty as an outcome).
+- **Amendment, common-sense ways to eat (decided by the owner directly, 2026-10-08; row 31 of
+  the memo):**
+
+  > A kind meets hunger by any way its members could plausibly use, and each way has its own
+  > real cost; none is free. For people the ways include gathering wild food, hunting or
+  > fishing, eating food raw or cooking it, buying, and receiving. Food enters the world only
+  > from a real source and leaves only by being eaten.
+
+  | Way | Where the food comes from | Its cost |
+  |---|---|---|
+  | Gather | wild plants and fruit (decision 29) | the walk, the finite charges, competition |
+  | Hunt or fish | a wild animal killed leaves meat | the fight's risk, finding prey |
+  | Eat raw | any edible food as it is | it fills less than the same food cooked |
+  | Cook | raw food plus a fire or hearth | time and a place to cook; fills more |
+  | Buy | an inn meal or shop food | money, which needs a way to earn it |
+  | Receive | gift, loot, inheritance, help from kin | depends on others |
+
+  - **Raw versus cooked:** raw food fills less than the same food cooked. That is the whole
+    difference for now. Sickness from raw food needs an illness state that does not exist, and
+    waits for a disease Rule.
+  - **No single way is required.** Earning then buying is one way among several. The ruling that
+    the free-meal fix waits for it is replaced: the fix lands once people who cannot pay have at
+    least one other working way, whichever is cheapest to build first. More ways follow.
+  - **The rule names the ways; planning orders them.** Which ways are built, and when, is the
+    planner's call under memo row 7. Each way's cost and amounts are content and engineering.
+  - **Conservation** (Bible 03): meat enters by a kill and gathered food by harvest, and both
+    leave by eating. Cooking converts raw food into cooked food and keeps the link to its source
+    (RES-06). Nothing is created by the act of eating.
+  - **Evidence: MISSING for hunting, eating raw and cooking.** No meat item, no meat from a kill,
+    and no cooking exist in code or content (searched `src/` and `data/` on `39e65eb5a`).
+    Gathering is decision 29's evidence; buying waits on
+    `TCK-20261007-SHOP-AND-BLACKSMITH-TOWN-PATHS-NEVER-RAN-IN-A-COMPILED-WORLD`.
 - **Amendment, wild food is part of the land (decided by rpg-designer, direction confirmed by
   the owner directly, 2026-10-08; row 29 of the memo):**
 
@@ -341,7 +373,7 @@ earlier figures are on base `f8f1b69fd`:
   lands with SURV-05's rates, the inn meal target, the eat-carried-food path, rough sleep and the
   advisory integrity check. It is a row-7 hard bug.
 
-**Scenarios:** none traced yet. Four are owed when implemented:
+**Scenarios:** none traced yet. Five are owed when implemented:
 - a hungry worker with coins walks to the inn and eats;
 - a hungry worker far from town eats the bread it carries;
 - an exhausted guard on a distant road sleeps rough and recovers, more slowly than in an inn bed.
@@ -349,6 +381,8 @@ earlier figures are on base `f8f1b69fd`:
   when hungry; the patch it stripped is dry for a while, then grows back (decision 29). Written as
   a kernel spec with a no-wild-food control arm:
   [LB-S17](../scenarios/life-body-batch-05.md#lb-s17).
+- a broke worker hunts a wild animal, eats its meat raw, and is less sated than a worker who
+  cooks the same meat at a hearth (decision 31).
 
 ---
 
