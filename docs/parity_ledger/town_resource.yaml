@@ -2410,9 +2410,9 @@
     `_is_unrecoverable_action_failure` clears the task payload so `scheduler.py` runs
     the brain); same class as the held ATTACK reset (TARGET_INCAPACITATED, OUT_OF_RANGE);
     `docs/mechanics/03_economic_laws.md` section 3; `docs/guidelines/intentional_divergences.md`
-    section 2.84'
+    section 2.85'
   proof_type: parity
   test_path: tests/unit/actions/test_interact_depleted_node_task_reset.py
-  divergence_note: 'Intentional divergence 2.84 (Bug Fix): a held INTERACT on a missing
+  divergence_note: 'Intentional divergence 2.85 (Bug Fix): a held INTERACT on a missing
     or depleted node now ends instead of repeating a no-op.'
   support_boundary: null

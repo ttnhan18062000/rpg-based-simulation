@@ -4740,3 +4740,31 @@
     skips 82 of 89 without calibration reports). Walks to the town centre follow a
     Manhattan path, so trajectories diverge from main; no per-move before and after
     exists.
+- id: COMB-338
+  text: 'TCK-20261007-A-WALKER-BESIDE-A-PERCEIVED-HOSTILE-KEEPS-STEPPING-AND-EATS-AN-OPPORTUNITY-ATTACK-PER-STEP:
+    an entity holding an action task (ENTITY_ACT with a payload: ATTACK, SKILL, INTERACT,
+    HOLD) does not walk on a navigation target an earlier decision left behind. The
+    ATTACK and SKILL emissions clear the navigation target; live retargeting onto
+    payload target_id applies only to entity-tracking moves; an action holder is not
+    offered a move and not moved unless that tick sets a target (MovementCandidateSelector.holds_action_task).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/tactical.py (ATTACK and SKILL emissions), src/engine/candidate_selector.py
+    (holds_action_task, resolve_live_tracking_target, select), src/engine/pipeline_phases/movement.py
+    (route_movement_intent). Corpus (Kernel.tick_once(), seeds 42-46, 1500 ticks,
+    audit_mode, budget off, governor pinned NORMAL, main 10944422c vs this branch,
+    mean): opportunity-attack hits 279.0 / 276.2 / 135.8 to 178.6 / 123.6 / 109.6
+    and the ''neither'' class 162.4 / 154.2 / 104.6 to 69.2 / 37.0 / 41.2 (crowded_frontier
+    / frontier_living_world / urban_political); attack executions that succeeded 38.6
+    / 41.8 / 23.8 to 107.4 / 190.4 / 110.0; total deaths 37.6 / 43.2 / 23.8 to 36.4
+    / 41.8 / 28.0.'
+  proof_type: regression
+  test_path: tests/unit/engine/test_action_task_does_not_move.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.84.
+  support_boundary: 'urban_political is worse (deaths 23.8 to 28.0, alive at t=1100
+    6.8 to 3.2): the extra deaths come from held REGROUP moves, moves decided that
+    tick and landed attacks, owned by TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04;
+    why held REGROUP moves became more common is untraced. An attacker whose target
+    steps away no longer closes through live tracking (up to 10 ticks to return to
+    the brain). SimQ grade-anchor movement is not measured locally.'

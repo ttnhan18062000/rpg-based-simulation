@@ -763,6 +763,7 @@ class TacticalDecisionSystem:
                 return EntityUpdate(
                     entity_id=entity.id,
                     strategic=strat_up,
+                    navigation=NavigationUpdate(target_clear=True),
                     task=TaskUpdate(
                         work_kind_set="ENTITY_ACT",
                         payload_set={
@@ -780,6 +781,7 @@ class TacticalDecisionSystem:
             return EntityUpdate(
                 entity_id=entity.id,
                 strategic=strat_up,
+                navigation=NavigationUpdate(target_clear=True),
                 task=TaskUpdate(
                     work_kind_set="ENTITY_ACT",
                     payload_set={

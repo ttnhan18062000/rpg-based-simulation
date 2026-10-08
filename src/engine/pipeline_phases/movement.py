@@ -245,32 +245,11 @@ class MovementPhase:
             if _already_settled_this_tick(ent_upd):
                 continue
                 
-            # Determine target and mode (prefer update if present)
-            has_fresh_decision = bool(ent_upd and ent_upd.navigation and ent_upd.navigation.target_set is not None)
-            nav_target = ent_upd.navigation.target_set if has_fresh_decision else entity.navigation.target
-
-            # Live-refresh a stale entity-tracking target (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE):
-            # when this tick has no fresh brain decision, nav_target is a static snapshot from
-            # whichever prior tick's decision last set it -- correct for a fixed-point errand
-            # (WANDER/RETREAT/objective pursuit, none of which set task.payload["target_id"]) but
-            # stale for a real entity-tracking mode (PURSUE/INTERCEPT/KITING/BRACKETING/
-            # GUARDING_ALLY), all of which do set target_id. Tactical decisions are cadence-gated
-            # to once per ~10 ticks (scheduler.py's own strategic_intelligence cadence) while
-            # movement itself runs every tick, so a pursuer previously walked straight to a
-            # snapshot of where its target *was*, arrived, and then idled until its next cadence
-            # tick while the real target kept moving -- confirmed via live per-tick trace to be
-            # the real, precise reason chase convergence was rare rather than reliable.
-            #
-            # Shared with MovementCandidateSelector.select's own, separately-computed nav_target
-            # (TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS) -- that function
-            # runs BEFORE this loop to decide which entities are even offered a chance to move,
-            # and its own un-refreshed staleness check was silently excluding an "arrived at a
-            # stale snapshot" entity from candidacy entirely, before this already-correct live
-            # retarget ever got a chance to run for it.
-            if not has_fresh_decision:
-                nav_target = MovementCandidateSelector.resolve_live_tracking_target(
-                    entity, state.entities, nav_target
-                )
+            # Determine target and mode (prefer update if present). With no fresh decision this tick the stored target is a
+            # snapshot of an earlier decision: it is live-refreshed for an entity-tracking move (TCK-20260809-COMBAT-PURSUIT-PER-
+            # TICK-TRACE, TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS) and ignored for an entity holding an
+            # action task, which moves only on a tick that sets a target. MovementCandidateSelector.select uses the same rule.
+            nav_target = MovementCandidateSelector.movement_target(entity, ent_upd, state.entities)
 
             if not nav_target or entity.navigation.position == nav_target:
                 continue
