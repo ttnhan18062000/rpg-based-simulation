@@ -72,7 +72,7 @@ class ActionRouter:
             return CoreActions.execute_repair(entity, current_tick)
             
         if action == "INTERACT":
-            return CoreActions.execute_interact(entity, payload)
+            return CoreActions.execute_interact(entity, payload, context)
             
         if action in ("ATTACK", "SKILL") and ActionRouter._posture_withholds(entity, payload):
             return ActionRouter._reported_no_op(entity, ReasonCode.ACTION_WITHHELD_BY_POSTURE)

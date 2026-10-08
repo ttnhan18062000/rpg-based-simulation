@@ -33,6 +33,15 @@ _ENDS_HELD_ATTACK_REASONS = frozenset({
     ReasonCode.OUT_OF_RANGE.value,
 })
 
+# Failure reasons that end a held INTERACT: the resource node it works on is gone or out of charges, so no further tick can
+# gather anything. Only a fresh decision (another node, or the node once it regrows) can change that.
+_ENDS_HELD_INTERACT_REASONS = frozenset({
+    ReasonCode.SOURCE_MISSING.value,
+    ReasonCode.SOURCE_DEPLETED.value,
+})
+
+_ENDS_HELD_REASONS_BY_ACTION = {"ATTACK": _ENDS_HELD_ATTACK_REASONS, "INTERACT": _ENDS_HELD_INTERACT_REASONS}
+
 
 def _is_unrecoverable_action_failure(action: str, outcome: str, reason_value: object) -> bool:
     """True when retrying the same held task can never succeed, so the task must end (the caller clears it).
@@ -52,7 +61,7 @@ def _is_unrecoverable_action_failure(action: str, outcome: str, reason_value: ob
         return False
     if reason_value in _UNRECOVERABLE_ANY_ACTION_REASONS:
         return True
-    return action == "ATTACK" and reason_value in _ENDS_HELD_ATTACK_REASONS
+    return reason_value in _ENDS_HELD_REASONS_BY_ACTION.get(action, ())
 
 
 def _annotation_base_payload(payload: dict) -> dict:
