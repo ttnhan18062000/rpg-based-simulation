@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from src.core.updates import EntityUpdate, TaskUpdate, NavigationUpdate
+from src.core.updates import EntityUpdate, StrategicUpdate, TaskUpdate, NavigationUpdate
 from src.engine.legality import LegalityServiceV2
 from src.engine.positioning import PositioningService
 from src.core.strategic import ProjectStatus, ObjectiveKind
@@ -21,6 +21,7 @@ from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
 from src.engine.tactical_threat import safety_retreat_warranted
+from src.engine.tactical_rest import rest_in_place_update
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -83,6 +84,20 @@ def _perceived_threats(entity: "EntityState", neighbors: List["EntityState"]) ->
 def _destination_or_hold(entity: "EntityState", destination: Optional[Tuple[float, float]]) -> Tuple[float, float]:
     """MOV-03: with no valid destination the entity holds position; never a sentinel coordinate."""
     return destination if destination is not None else entity.navigation.position
+
+
+def _suspend_project_for_threat(entity: "EntityState", hostiles: List["EntityState"]) -> Optional[StrategicUpdate]:
+    """If hostiles are present, SUSPEND the entity's current project if it is active (Pillar 5.1 strategic persistence)."""
+    if not (hostiles and entity.strategic.current_project_id):
+        return None
+    project = entity.strategic.projects.get(entity.strategic.current_project_id)
+    if project and project.status == ProjectStatus.ACTIVE:
+        return StrategicUpdate(
+            projects_add_or_update=[replace(project, status=ProjectStatus.SUSPENDED)],
+            current_project_id_set="",
+            current_objective_id_set="",
+        )
+    return None
 
 
 class TacticalDecisionSystem:
@@ -252,18 +267,7 @@ class TacticalDecisionSystem:
                 hostile_identity_sources[n.id] = _src_identity_source
         
         # 4. Strategic Persistence (Pillar 5.1)
-        # If hostiles are present, we should SUSPEND the current project if it's not already
-        strat_up = None
-        if hostiles and entity.strategic.current_project_id:
-             project = entity.strategic.projects.get(entity.strategic.current_project_id)
-             if project and project.status == ProjectStatus.ACTIVE:
-                  # Suspend to handle threat
-                  from src.core.updates import StrategicUpdate
-                  strat_up = StrategicUpdate(
-                      projects_add_or_update=[replace(project, status=ProjectStatus.SUSPENDED)],
-                      current_project_id_set="",
-                      current_objective_id_set=""
-                  )
+        strat_up = _suspend_project_for_threat(entity, hostiles)
 
         # Safety pressure (AGENCY-07): a cautious entity retreats from a present threat, never from a hostile merely seen
         if safety_retreat_warranted(entity, hostiles, entity_pressures.safety_pressure):
@@ -277,6 +281,10 @@ class TacticalDecisionSystem:
                     payload_set={"target_position": retreat_to, "reason": "SAFETY_PRESSURE_RETREAT"}
                 )
             )
+
+        rest_update = rest_in_place_update(state, entity, hostiles)
+        if rest_update is not None:
+            return rest_update
 
         if not hostiles:
             # Pillar 5.1: Objective Pursuit
