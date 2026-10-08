@@ -96,7 +96,7 @@ ARCHITECTURE_RULE_PATH_PREFIXES = {
         "src/domains/adventure",
     ),
     "test_decision_trace_hot_path_no_io.py": ("src/observability",),
-    "test_docker_compose_dependency_hygiene.py": ("docker-compose",),
+    "test_docker_compose_dependency_hygiene.py": ("compose.yaml",),
     "test_enum_migration_report.py": ("src/",),
     "test_fallback_retirement_gate.py": (
         "docs/guidelines/fallback_retirement_criteria.md",
