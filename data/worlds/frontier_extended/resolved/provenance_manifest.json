@@ -1,23 +1,23 @@
 {
-  "manifest_id": "prov_084cf3fd91f820ca",
+  "manifest_id": "prov_9300794fb2af6981",
   "world_id": "frontier_extended",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
   "module_fingerprints": {
-    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
+    "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
     "trading_company_hub": "89edf663d96b8aa771438773ace9dda4780ed4fb1440a0fa697beb34d302ccd6",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
-    "wolf_den_near_forest": "d80c2b1a161759b7d69273f2ab35d462d6bdda149adb67541212e3592cdf5559",
+    "wolf_den_near_forest": "0e2c44bc4de235f8180cf76ad7598b114d6f3726b8b37382fda1552c7a4785f4",
     "forest_warden_grove": "1afd9828cbd2087f5cbafffdbd2d3b81c59a32d20fa66debd95249844022e3fe"
   },
-  "composition_fingerprint": "8218c3f899ebb6a37a4892785039858234dea59157550a17d2a1a0357dd59cac",
+  "composition_fingerprint": "cc45793e25c782cad5c8f4fb14f6d31f6684171086586bb5b4419a095812a64a",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "084cf3fd91f820ca632e95b6042f739bfe82fda1c0a30bec1c3007254c066541",
-  "created_at": "2026-09-08T02:50:43.417220Z",
+  "content_fingerprint": "9300794fb2af69813fd59ac815bb25cd237a88be7b12d33d27fb0b0a3a003c54",
+  "created_at": "2026-10-08T02:54:11.888419Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -355,6 +355,20 @@
       },
       "details": {
         "count": 5,
+        "region": "hometown"
+      }
+    },
+    "res_2": {
+      "element_id": "res_2",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 8,
         "region": "hometown"
       }
     },

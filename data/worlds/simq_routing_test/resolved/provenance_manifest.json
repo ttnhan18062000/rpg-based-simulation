@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_cc3ee776b541547d",
+  "manifest_id": "prov_8b2a74efa456bdb3",
   "world_id": "simq_routing_test",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
   "module_fingerprints": {
-    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
+    "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2"
   },
-  "composition_fingerprint": "b4ed528d56da186beccd84efff62da4c5ad69de5c1484210f0417772b63912cd",
+  "composition_fingerprint": "df9e3f2eeeac0d7f91aecc2d65a8809c8a9a31c37ed44d615c1dbebe5102ba0e",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "cc3ee776b541547d2a3a5d301634ada5222a905e10fbc9efcedced44e832db21",
-  "created_at": "2026-09-08T02:50:57.496491Z",
+  "content_fingerprint": "8b2a74efa456bdb32208d6fb8ea51e87552c5d6d5be19e66d13f2a1f20bc2777",
+  "created_at": "2026-10-08T02:54:27.052919Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -350,6 +350,20 @@
       },
       "details": {
         "count": 5,
+        "region": "hometown"
+      }
+    },
+    "res_2": {
+      "element_id": "res_2",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 8,
         "region": "hometown"
       }
     },

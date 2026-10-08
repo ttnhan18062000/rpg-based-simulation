@@ -45,6 +45,19 @@
     # above) -- same tag-gap shape as the swamp_border_territory fix.
     source_region_tags: ["near_forest", "moon_cave", "hometown", "swamp_border_territory", "river_ford"]
 
+# STATE: EXISTING-LOGIC
+# SURV-06 forage path (decision 27): the node a hungry subject can harvest food from. Finite (charges) and slow to regrow (one charge
+# per ecology cycle, density-modulated), so it feeds few and runs dry; it is the existing harvest path with travel and time.
+- id: "berry_thicket"
+  material: "wild_berries"
+  display_name: "Berry Thicket"
+  resource_type: "wild_berries"
+  required_ticks: 8
+  default_charges: 8
+  preferred_biomes: ["frontier_village"]
+  metadata:
+    source_region_tags: ["hometown"]
+
 # STATE: LEGACY-EXPORT
 - id: "healing_flower_patch"
   material: "healing_flower"

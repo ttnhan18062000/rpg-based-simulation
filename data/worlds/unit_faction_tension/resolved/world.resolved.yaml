@@ -174,6 +174,11 @@ resources:
   count: 5
   region: hometown
   regen_rate: 1
+- id: res_2
+  resource_type: berry_thicket
+  count: 8
+  region: hometown
+  regen_rate: 1
 - id: wolf_den_near_forest__wood_node_0
   resource_type: wood_node
   count: 8

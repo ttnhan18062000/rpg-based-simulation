@@ -1,21 +1,21 @@
 {
-  "manifest_id": "prov_74d76c960fe95428",
+  "manifest_id": "prov_e499bd9b435533ff",
   "world_id": "frontier_living_world",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
   "module_fingerprints": {
-    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
+    "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "trading_company_hub": "89edf663d96b8aa771438773ace9dda4780ed4fb1440a0fa697beb34d302ccd6",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
-    "wolf_den_near_forest": "d80c2b1a161759b7d69273f2ab35d462d6bdda149adb67541212e3592cdf5559"
+    "wolf_den_near_forest": "0e2c44bc4de235f8180cf76ad7598b114d6f3726b8b37382fda1552c7a4785f4"
   },
-  "composition_fingerprint": "16d74dede05aa383c3654d17373db69dae159c1fb1db368db5ffd53e000422b8",
+  "composition_fingerprint": "8a31b467099680d42f27da43f090a08af48ec895cd445d50d068f052319b93af",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "74d76c960fe954282b1983446e218ac77104ff4fcfd5bba992b2d29766cc3cf7",
-  "created_at": "2026-09-08T02:50:44.930340Z",
+  "content_fingerprint": "e499bd9b435533ff7f67d58cb1a8b02266b67b9d99a29a0ea31a1fd403566f7b",
+  "created_at": "2026-10-08T02:54:33.022105Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -353,6 +353,20 @@
       },
       "details": {
         "count": 5,
+        "region": "hometown"
+      }
+    },
+    "res_2": {
+      "element_id": "res_2",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 8,
         "region": "hometown"
       }
     },

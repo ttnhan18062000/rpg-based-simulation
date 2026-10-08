@@ -1,19 +1,19 @@
 {
-  "manifest_id": "prov_c30294dd56c7f976",
+  "manifest_id": "prov_e1f535fb65ee3e05",
   "world_id": "crowded_frontier",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
   "module_fingerprints": {
-    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
+    "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e"
   },
-  "composition_fingerprint": "c1236b66f875f9584b2078c18ff1e3ac317b15422201051050e0d880a50aebd2",
+  "composition_fingerprint": "85757643a2dbea398e419c8198458830395068ce13b894d3c79593cce07c23c1",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "c30294dd56c7f976d7b6f2b1508588494e7b6ec8f02281464f011ba4850a3d62",
-  "created_at": "2026-09-08T02:50:40.407291Z",
+  "content_fingerprint": "e1f535fb65ee3e05bbf452485d6ebd5d3c8b9c7270ad494982ad8c1edf114870",
+  "created_at": "2026-10-08T02:53:57.581939Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -351,6 +351,20 @@
       },
       "details": {
         "count": 5,
+        "region": "hometown"
+      }
+    },
+    "res_2": {
+      "element_id": "res_2",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 8,
         "region": "hometown"
       }
     },

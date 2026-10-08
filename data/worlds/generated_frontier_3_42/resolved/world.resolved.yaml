@@ -269,6 +269,11 @@ resources:
   count: 5
   region: hometown
   regen_rate: 1
+- id: res_2
+  resource_type: berry_thicket
+  count: 8
+  region: hometown
+  regen_rate: 1
 - id: moon_cult_ruins__moon_resin_tree_0
   resource_type: moon_resin_tree
   count: 3

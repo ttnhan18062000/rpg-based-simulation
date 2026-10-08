@@ -1,22 +1,22 @@
 {
-  "manifest_id": "prov_0311f22766faf60c",
+  "manifest_id": "prov_3b867e52d38bd41e",
   "world_id": "lifecycle_full_coverage_world",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
   "module_fingerprints": {
-    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
+    "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
     "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
     "river_crossing": "31b408206c2116cc3c7162e49d97e4b690bbe3f3adf689f3d44aed6a2ab16e56",
     "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71",
-    "wolf_den_near_forest": "d80c2b1a161759b7d69273f2ab35d462d6bdda149adb67541212e3592cdf5559"
+    "wolf_den_near_forest": "0e2c44bc4de235f8180cf76ad7598b114d6f3726b8b37382fda1552c7a4785f4"
   },
-  "composition_fingerprint": "b053bf15b5dd240ecc3b7b15be372885d621bc3a95780292e96a7577e66b18e0",
+  "composition_fingerprint": "6845e85ffd88ae5f4cae0934f32fa1c829d6747687196e0acb050a44f31a24bc",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "0311f22766faf60caf4aec682b637934567da21b43ae473c4c4f98ee8c67979a",
-  "created_at": "2026-09-08T02:50:53.030794Z",
+  "content_fingerprint": "3b867e52d38bd41e70bb5598d2779463d44e603fd2fb3b73c51654a0b4f8f2d4",
+  "created_at": "2026-10-08T02:54:15.136562Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -354,6 +354,20 @@
       },
       "details": {
         "count": 5,
+        "region": "hometown"
+      }
+    },
+    "res_2": {
+      "element_id": "res_2",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 8,
         "region": "hometown"
       }
     },

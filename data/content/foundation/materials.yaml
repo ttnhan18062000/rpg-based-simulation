@@ -11,6 +11,13 @@
   categories: ["organic", "healing", "alchemy"]
   common_regions: ["forest", "swamp"]
 
+# STATE: EXISTING-LOGIC
+# SURV-06 forage path (decision 27): wild food, a material of its own (herb stays inedible).
+- id: "wild_berries"
+  display_name: "Wild Berries"
+  categories: ["organic", "food"]
+  common_regions: ["village", "forest"]
+
 # STATE: LEGACY-EXPORT
 - id: "healing_flower"
   display_name: "Healing Flower"

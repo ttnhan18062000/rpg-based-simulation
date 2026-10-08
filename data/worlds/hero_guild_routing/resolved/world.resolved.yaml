@@ -218,6 +218,11 @@ resources:
   count: 5
   region: hometown
   regen_rate: 1
+- id: res_2
+  resource_type: berry_thicket
+  count: 8
+  region: hometown
+  regen_rate: 1
 - id: mountain_pass__iron_vein_0
   resource_type: iron_vein
   count: 4

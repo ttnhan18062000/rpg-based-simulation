@@ -16,6 +16,14 @@ class NeedAccess(str, Enum):
     NO_AFFORDABLE_WAY = "no_affordable_way"  # a way exists but the subject cannot pay for it (AGENCY-03: not an actionable affordance)
 
 
+class OpeningStepKind(str, Enum):
+    """The steps that open a way to meet a need when none is open (decision 27); only steps the subject can actually take count."""
+
+    FORAGE = "forage"
+    EARN_THEN_BUY = "earn_then_buy"
+    ASK = "ask"
+
+
 @dataclass(frozen=True)
 class GoalScore:
     kind: GoalKind | str
@@ -28,6 +36,10 @@ class GoalScore:
     target_entity_id: Optional[int] = None
     # Set by need goals (hunger): whether a way to meet the need is within reach for this subject.
     need_access: Optional[NeedAccess] = None
+    # Decision 27, set only when need_access says no way is open: the opening step this goal's target belongs to, or
+    # `no_open_step` True when the subject has no step it can take (it stays honestly hungry; SURV-06's poverty outcome).
+    opening_step: Optional[OpeningStepKind] = None
+    no_open_step: bool = False
 
 class GoalScorer(Protocol):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:

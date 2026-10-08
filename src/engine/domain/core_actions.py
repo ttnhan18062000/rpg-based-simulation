@@ -4,7 +4,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from src.core.enums import ReasonCode
-from src.core.items import ItemRegistry
+from src.core.items import food_hunger_recovery
 from src.core.models.inventory import ItemStack
 from src.core.updates import (
     BiologicalUpdate, EntityUpdate, IdentityUpdate, 
@@ -45,8 +45,7 @@ def interact_released(entity: EntityState, state: Any, target_id: Any) -> Option
 def carried_meal(entity: EntityState, current_tick: int) -> List[ResourceTransferIntent]:
     """One transfer that consumes the first carried food item and applies its hunger recovery, or none when nothing edible is carried."""
     for stack in entity.inventory.items:
-        definition = ItemRegistry.get(stack.item_id)
-        recovery = float((definition.properties or {}).get("hunger_recovery", 0.0)) if definition else 0.0
+        recovery = food_hunger_recovery(stack.item_id)
         if recovery > 0.0 and stack.quantity > 0:
             return [ResourceTransferIntent(
                 source_id=entity.id, source_kind="CARRIED_FOOD", transfer_kind="EAT", is_group_required=False,

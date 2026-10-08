@@ -21,7 +21,7 @@ from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
 from src.engine.tactical_threat import safety_retreat_warranted
-from src.engine.tactical_rest import rest_in_place_update
+from src.engine.tactical_rest import in_place_survival_update
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -282,7 +282,7 @@ class TacticalDecisionSystem:
                 )
             )
 
-        rest_update = rest_in_place_update(state, entity, hostiles)
+        rest_update = in_place_survival_update(state, entity, hostiles)
         if rest_update is not None:
             return rest_update
 

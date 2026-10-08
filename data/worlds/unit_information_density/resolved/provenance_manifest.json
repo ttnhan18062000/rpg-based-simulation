@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_7328dac9fb134cf9",
+  "manifest_id": "prov_842b5262beb439bb",
   "world_id": "unit_information_density",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "d7fc8aecc1e3c27ea6fe330dc5bbfe5655a68ce9fb3c913d3a531a00fc5cd827",
+  "catalog_fingerprint": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
   "module_fingerprints": {
-    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
+    "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837"
   },
-  "composition_fingerprint": "40b4d6649a80485446301542b3a2cda66199594128aa628b1d241c0dfa374ecf",
+  "composition_fingerprint": "24f63825d8e0af217cfdeb05d7eb94a970d60b8f50a93da4f61824016eac7fe4",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "7328dac9fb134cf934887202007e74789f9f8fb8f2bb54f2b4ba0207e63555f2",
-  "created_at": "2026-09-04T08:05:42.881869Z",
+  "content_fingerprint": "842b5262beb439bb889f2427017c346041d0cf6fdedacc6b3aef6ba58d593b61",
+  "created_at": "2026-10-08T02:54:38.406463Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -348,6 +348,20 @@
       },
       "details": {
         "count": 5,
+        "region": "hometown"
+      }
+    },
+    "res_2": {
+      "element_id": "res_2",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 8,
         "region": "hometown"
       }
     },

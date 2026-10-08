@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_c9ab69596771c8c3",
+  "manifest_id": "prov_f2e3e5fb722f58e4",
   "world_id": "camp_maturity_calibration_pilot",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "0cb706c243e61d02ee3f28823d0381eaae2fd21b30b40058502c8d5e91a4cfad",
+  "catalog_fingerprint": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
   "module_fingerprints": {
-    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
+    "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
     "camp_maturity_calibration_pilot": "6819a951a4f721da8e81251ef22ba19d875ba4298097f51da67ecb58e5947a77"
   },
-  "composition_fingerprint": "df222dc3b6216df5ae5b3e4bdfedd89ef6967c39a57c4c12862d5698c6e500b4",
+  "composition_fingerprint": "73c78480fe6521b529e836d714dbb87b2945d305f77e887504f810ad4566ad3b",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "c9ab69596771c8c310ca7bbf3975f57a59aa51c1f2ae7c9f24c165b4a3036d01",
-  "created_at": "2026-09-08T03:20:53.666390Z",
+  "content_fingerprint": "f2e3e5fb722f58e44a27ae17fd60928d2996e2a85283658bc30434a706498f5a",
+  "created_at": "2026-10-08T02:54:36.716339Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -348,6 +348,20 @@
       },
       "details": {
         "count": 5,
+        "region": "hometown"
+      }
+    },
+    "res_2": {
+      "element_id": "res_2",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 8,
         "region": "hometown"
       }
     },
