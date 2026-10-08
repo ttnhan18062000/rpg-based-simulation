@@ -54,7 +54,7 @@ def score(self, entity, st):
 EatScorer.score = score
 ENTERED = {}; FREGIONS = set(); recov = 0; deplete = 0
 GATHF = collections.Counter(); PREVB = {}; HUNGER_LAST = {}
-dead = {}; GOLD = {}; R = {}; prev_charges = None; food_ids = set(); dry_ticks = 0; dry_trans = 0; was_dry = False; harvested = 0; regen = 0
+DEATH_TICK = {}; dead = {}; GOLD = {}; R = {}; prev_charges = None; food_ids = set(); dry_ticks = 0; dry_trans = 0; was_dry = False; harvested = 0; regen = 0
 def is_food(n):
     try:
         from src.core.items import food_hunger_recovery
@@ -108,8 +108,8 @@ try:
             if e.id not in dead and e.combat.alive and e.lifecycle.active: GOLD[e.id] = e.inventory.gold
             if e.id not in dead and not (e.combat.alive and e.lifecycle.active):
                 c = e.lifecycle.passive_death_cause or e.lifecycle.death_reason
-                dead[e.id] = str(getattr(c, "value", c))
-        if st.tick in (1000, 1100):
+                dead[e.id] = str(getattr(c, "value", c)); DEATH_TICK[e.id] = st.tick
+        if st.tick in (1000, 1100, 2500, 4000, 5000):
             R[f"alive_t{st.tick}"] = sum(1 for e in st.entities.values() if e.combat.alive and e.lifecycle.active)
 finally:
     k.shutdown()
@@ -122,6 +122,8 @@ out = dict(R, starved_broke=sum(1 for i in starved if GOLD.get(i, 0) < 5), starv
            food_harvested=harvested, food_regrown=regen, food_carried_end=carried_end, food_carried_end_alive=carried_alive, food_nodes=len([1 for n in end.resource_nodes.values() if is_food(n)]),
            hazard_deaths_starving=sum(1 for i, c in dead.items() if c == 'HAZARD' and HUNGER_LAST.get(i, 0) >= 95.0),
            hunger_related_deaths=sum(1 for i, c in dead.items() if c == 'STARVATION' or (c == 'HAZARD' and HUNGER_LAST.get(i, 0) >= 95.0)),
+           deaths_per_1000=[sum(1 for t_ in DEATH_TICK.values() if 1000*b < t_ <= 1000*(b+1)) for b in range(TICKS // 1000 + 1)],
+           starved_per_1000=[sum(1 for i, t_ in DEATH_TICK.items() if dead[i] == 'STARVATION' and 1000*b < t_ <= 1000*(b+1)) for b in range(TICKS // 1000 + 1)],
            gathered_by_faction=dict(GATHF), carried_eats_by_faction=dict(EATF),
            food_depletions=deplete, food_recoveries=recov, entered_food_region=len(ENTERED), entered_broke=sum(1 for g in ENTERED.values() if g < 5),
            hazard_deaths_after_entering=sum(1 for i, c in dead.items() if c == 'HAZARD' and i in ENTERED),
