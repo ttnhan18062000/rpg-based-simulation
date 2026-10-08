@@ -194,7 +194,7 @@ def branch_spent_reason(branch: str, cwd: Path) -> str | None:
         res = _run(["gh", "pr", "list", "--head", branch, "--state", "merged", "--json", "number"], cwd)
         if res.returncode == 0:
             return "has a merged PR" if json.loads(res.stdout or "[]") else None
-    except (OSError, ValueError):
+    except (OSError, ValueError, subprocess.TimeoutExpired):
         pass
     cherry = _run(["git", "cherry", "origin/main", f"refs/heads/{branch}"], cwd)
     if cherry.returncode == 0 and not any(line.startswith("+") for line in cherry.stdout.splitlines()):

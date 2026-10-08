@@ -454,3 +454,16 @@ def test_explicit_branch_overrides_a_squash_merged_recorded_branch(repo, tmp_pat
     wt = tmp_path / "wt"
     notes = ln.ensure_worktree(wt, name, repo, role=PLANNER, topic="seat")
     assert any("created" in n for n in notes) and git(wt, "branch", "--show-current").stdout.strip() == "agent-working-planner-seat"
+
+
+def test_a_gh_timeout_falls_back_to_git_cherry(repo, monkeypatch):
+    name = _squash_merged(repo, "timed-out")
+    real = ln._run
+
+    def fake(cmd, cwd=None):
+        if cmd[0] == "gh":
+            raise subprocess.TimeoutExpired(cmd, 30)
+        return real(cmd, cwd)
+
+    monkeypatch.setattr(ln, "_run", fake)
+    assert "squash-merged" in ln.branch_spent_reason(name, repo)

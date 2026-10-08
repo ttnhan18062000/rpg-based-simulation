@@ -68,4 +68,4 @@ A merged PR marks the branch spent even if it was later pushed to (the repo rule
 tools/sessions/launch.py, tools/sessions/classify.py, tests/tools/test_session_launch.py, tests/tools/test_session_classify.py, this ticket, monitoring shards.
 
 ## Completion Summary
-A squash-merged recorded branch is now recognised as spent, and `--branch` always wins; a push to an unresolvable target asks.
+A squash-merged recorded branch is now recognised as spent, and `--branch` always wins; a push to an unresolvable target asks. Prefer `git push -u origin HEAD`: `"$(git branch --show-current)"` (or any variable/substitution target) now always asks. A gh timeout falls back to `git cherry`.
