@@ -205,3 +205,20 @@ def test_a_ticket_left_under_inprogress_on_the_ref_is_reported_but_done_and_gitk
     assert found == ["TCK-20260930-NEVER-FINALIZED: still under agent-working/tickets/inprogress/ at the ref "
                      "(agent-working/tickets/inprogress/TCK-20260930-NEVER-FINALIZED.md)"]
     assert _report(repo, since_date="20261001")["findings"]["inprogress"] == []  # --since-date limits it
+
+
+def test_a_torn_working_log_shard_line_is_reported_and_the_rows_around_it_still_count(tmp_path):
+    repo = _clean_repo(tmp_path)
+    _w(repo, "agent-working/tickets/done/TCK-20260928-AFTERTORN.md", "# t\n")
+    shard = "agent-working/agent-monitoring/data/2026-W40/s.working_log.jsonl"
+    good = '{"ticket_id": "TCK-20260928-AFTERTORN", "title": "t", "status": "DONE", "summary": "s"}'
+    _w(repo, "agent-working/tickets/done/TCK-20260927-BEFORETORN.md", "# t\\n")
+    _w(repo, shard, '{"ticket_id": "TCK-20260927-BEFORETORN", "title": "t", "status": "DONE", "summary": "s"}\n'
+       '{"ticket_id": "TCK-2026\n[1, 2]\n"text"\n' + good + "\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "torn working_log line")
+    found = _report(repo)["findings"]["working_log"]
+    # exactly one finding: the torn line (line 2); the non-dict lines (3, 4) are skipped silently
+    assert found == [f"{shard}:2: invalid JSON, skipped"]
+    # control: the DONE row after the torn line was read, so no "no DONE row" finding
+    assert not any("AFTERTORN" in x or "BEFORETORN" in x for x in found)

@@ -104,13 +104,20 @@ def check_working_log(reader: RefReader, since_date: str | None) -> list[str]:
     if f"{posix(TICKETS)}/working_log.csv" in reader.paths:
         for row in csv.DictReader(io.StringIO(reader.show(f"{posix(TICKETS)}/working_log.csv"))):
             add(row)
+    findings = []
     for p in reader.paths:
         m = _SHARD_RE.match(p)
         if m and m.group(2) == "working_log":
-            for line in reader.show(p).splitlines():
-                if line.strip():
-                    add(json.loads(line))
-    findings = []
+            for lineno, line in enumerate(reader.show(p).splitlines(), 1):
+                if not line.strip():
+                    continue
+                try:
+                    row = json.loads(line)
+                except ValueError:
+                    findings.append(f"{p}:{lineno}: invalid JSON, skipped")
+                    continue
+                if isinstance(row, dict):
+                    add(row)
     for tid, path in _closed_tickets(reader, since_date):
         rows = rows_by_ticket.get(tid, [])
         if _EPIC_TIER_RE.search(reader.show(path)):

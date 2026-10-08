@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261008-MAIN-INTEGRITY-REPORT-TORN-WORKING-LOG-LINE
-phase: open
+phase: done
 date: 2026-10-08
 tags: [agent-monitoring, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality]
 main_integrity_report reports a torn working_log shard line instead of crashing on it
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -79,5 +79,11 @@ Hand-orchestrated hotfix. Land it on the agent-working batch branch; it gets no 
 policy 2026-10-08: small logic-only changes wait for a batch).
 
 ## Test Summary
+`tests/tools/test_main_integrity_report.py`: 11 passed, including the new test (torn line between two valid rows, plus non-dict lines: exactly one finding, rows on both sides still counted).
+
 ## Files Changed
+- tools/agent-monitoring/main_integrity_report.py
+- tests/tools/test_main_integrity_report.py
+
 ## Completion Summary
+`check_working_log` now skips a torn shard line and reports `<path>:<lineno>: invalid JSON, skipped`; a line that parses to a non-dict is skipped silently. `_load_rows` still drops torn runs/events lines silently (out of scope; a follow-up if wanted). Landed on `agent-working-small-fixes-batch`, no PR of its own.
