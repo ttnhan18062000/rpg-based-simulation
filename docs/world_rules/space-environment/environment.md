@@ -394,9 +394,9 @@ read-only, relayed by rpg-planner; not re-measured here).
 - **The fix is content data** in Lane B's decision-27 batch: `trading_hometown` and
   `survivor_outpost` from 0.5 to 0, and `near_forest` from 1.0 to 0, with deeper and cursed land
   unchanged.
-- **Separate engineering defect found on the way:** a forager never leaves the node. In a
-  hazard-0 run a worker reached it at t=100 and was still there at t=1400. Under any standing
-  drain that would kill it, and it should not happen either way.
+- **Applies by the land's place, not its id:** a region is the near edge when people live beside
+  it. A region that shares the id `near_forest` but borders no settlement or camp is not covered
+  by the near-edge clause.
 
 **Scenarios:** [SPC-S16](../scenarios/space-environment-batch-04.md#spc-s16) (second town to
 the near forest and back alive; the `deep_forest` control kills). A kernel spec, owed as a test
