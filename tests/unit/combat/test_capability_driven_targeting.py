@@ -91,7 +91,7 @@ def _goblin(attack_range=1, pos=(5.0, 0.0), hp=100):
     return _entity(10, Faction.MONSTER_HORDE, kind="goblin", pos=pos, hp=hp, attack_range=attack_range)
 
 
-def _dragon(attack_range=1, pos=(1.0, 0.0), hp=10):
+def _dragon(attack_range=1, pos=(2.0, 0.0), hp=10):  # not adjacent: CONFLICT-04 makes an adjacent hostile outrank the capability term
     return _entity(20, Faction.MONSTER_HORDE, kind="dragon", pos=pos, hp=hp, attack_range=attack_range)
 
 

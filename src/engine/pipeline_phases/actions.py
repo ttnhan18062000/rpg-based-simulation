@@ -6,10 +6,8 @@ from typing import TYPE_CHECKING
 from src.core.enums import ReasonCode
 from src.core.updates import (
     EntityUpdate,
-    StrategicUpdate,
     RejectionEvent,
 )
-from src.core.strategic import BlockerState
 from src.core.state import _readonly_mapping
 from src.engine.domain_logic import SimulationDomainLogic
 from src.engine.legality import LegalityServiceV2
@@ -208,9 +206,10 @@ class ActionRoutingPhase:
                         tick=state.tick, actor_id=eid, action_kind=action, reason=r_reason,
                         target_id=payload.get("target_id") or payload.get("target_pos")
                     ))
-                    refined_entity_updates[eid] = replace(ent_upd, task=failed_task, strategic=StrategicUpdate(
-                        blockers_add_or_update=[BlockerState(id=f"blocker_nav_{reason_value}", kind="capability", subject=reason_value)]
-                    ))
+                    # A queued action waiting for readiness is a wait, not a capability gap: the task is kept and the swing lands
+                    # at readiness 100, so no blocker is written (it was never resolved and fed RESOLVE_BLOCKER;
+                    # verify_readiness has no other failure reason, so this was the only blocker write in the phase).
+                    refined_entity_updates[eid] = replace(ent_upd, task=failed_task)
                     update = replace(update, entity_updates=refined_entity_updates, rejection_events=new_rejection_events, rejections_delta=new_rejections_delta, world_events_add=new_world_events_add)
                     continue
 
