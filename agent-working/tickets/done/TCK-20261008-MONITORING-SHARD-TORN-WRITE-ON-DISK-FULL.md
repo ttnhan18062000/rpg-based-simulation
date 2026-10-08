@@ -59,6 +59,8 @@ None.
 ## Implementation Notes
 `writer.py` gained `_append_all_or_nothing`: under the existing lock it heals a missing trailing newline, writes the whole payload (heal byte included) with one `os.write` on an O_APPEND fd, and on a short or failed write truncates back to the prior size and re-raises so the caller records the diagnostic and returns False. `write_line`/`write_lines` use it. The existing forced-failure test patched `builtins.open`; it now patches `os.open` for the target.
 
+Owner-approved data repair (the ticket's out-of-scope line, done in the batch PR): `agent-working/agent-monitoring/data/2026-W41/agent-working-planner-seat.tools.jsonl` line 47 held a SendMessage record torn at "input_summa" (ts 2026-10-08T04:47:18Z, unrecoverable, dropped) with the complete 04:49:02Z record glued onto it; the line was split and only the complete record kept. The rpg-seat and rpg-planner-seat shards hold one torn line each and are repaired by their owners.
+
 ## Test Summary
 `pytest tests/tools -k 'monitoring or writer or hook'`: all pass; 5 new writer tests (torn tail single and batch, no extra newline, short write, ENOSPC).
 
