@@ -17,6 +17,71 @@ export interface IconSource {
   readonly urlFor: (file: string) => string | undefined
   // Icon set v2 (`TCK-20261007-VISUAL-ASSETS-ICON-V2-DRAFT-SET`), optional: its own export and recorded rule result, shown beside the adopted key set.
   readonly v2?: { readonly manifestText: string; readonly ruleResultText: string }
+  // The one-colour silhouette sheet of the proposals the owner approves before any full drawing (`TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES`), optional.
+  readonly silhouettes?: { readonly sheetText: string }
+  // The owner-fix revisions (r0002 of six adopted icons), optional: their own export and recorded results, shown beside the adopted drawings (r0001), never merged into them.
+  readonly fixes?: { readonly manifestText: string; readonly ruleResultText: string }
+}
+
+interface FixesResult {
+  readonly set_id: string
+  readonly draft_set_hash: string
+  readonly result: string
+  readonly compliance_all_ok: boolean
+  readonly proposed: readonly string[]
+  readonly not_proposed: Readonly<Record<string, string>>
+  readonly compliance: Readonly<Record<string, readonly { item: string; spec: string; measured: string; ok: boolean }[]>>
+  readonly key_set_rule: { readonly result: string; readonly groups: Readonly<Record<string, { min_shape_px_across_classes: number | null; min_dL_by_vision: Readonly<Record<string, number>> }>> }
+  readonly v2_rule: { readonly result: string; readonly groups: Readonly<Record<string, { min_shape_px_across_classes: number | null; value_checked?: boolean; min_dL_by_vision: Readonly<Record<string, number>> }>> }
+  readonly rarity_vs_tier_min_shape_px: Readonly<Record<string, number>>
+}
+
+function parseFixesResult(text: string): FixesResult | null {
+  try {
+    const parsed = JSON.parse(text) as FixesResult
+    return parsed.compliance ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+interface SheetShape { readonly key?: string; readonly tag?: string; readonly label?: string; readonly size: number; readonly rows: readonly string[] }
+interface SheetOption extends SheetShape {
+  readonly tag: string
+  readonly label: string
+  readonly i1_smallest_xor_px: number | null
+  readonly nearest_in_any_family_xor_px_of_576: readonly { key: string; xor_px: number }[]
+}
+interface SheetSlot { readonly key: string; readonly size: number; readonly current_rows: readonly string[]; readonly neighbours: readonly SheetShape[]; readonly options: readonly SheetOption[] }
+interface SilhouetteSheet { readonly decided: string; readonly slots: readonly SheetSlot[] }
+
+function parseSheet(text: string): SilhouetteSheet | null {
+  try {
+    const parsed = JSON.parse(text) as SilhouetteSheet
+    return Array.isArray(parsed.slots) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+/** One shape as a one-colour SVG, whole device pixels per art pixel; `#` is a pixel. No colour beyond `ink` is ever used, so the owner judges the outline only. */
+function Silhouette({ rows, size, px, ink, label }: { rows: readonly string[]; size: number; px: number; ink: string; label: string }): ReactNode {
+  const runs: { x: number; y: number; w: number }[] = []
+  rows.forEach((row, y) => {
+    let x = 0
+    while (x < row.length) {
+      if (row[x] !== '#') { x += 1; continue }
+      let end = x
+      while (end < row.length && row[end] === '#') end += 1
+      runs.push({ x, y, w: end - x })
+      x = end
+    }
+  })
+  return (
+    <svg width={size * px} height={size * px} viewBox={`0 0 ${size} ${size}`} shapeRendering="crispEdges" role="img" aria-label={label} data-silhouette="true">
+      {runs.map((r) => <rect key={`${r.x},${r.y}`} x={r.x} y={r.y} width={r.w} height={1} fill={ink} />)}
+    </svg>
+  )
 }
 
 const PIXELATED = { imageRendering: 'pixelated' } as const
@@ -110,13 +175,17 @@ function FallbackView({ fallback }: { fallback: Fallback }): ReactNode {
   }
 }
 
-export function IconHarness({ manifestText, ruleResultText, urlFor, v2 }: IconSource) {
+export function IconHarness({ manifestText, ruleResultText, urlFor, v2, silhouettes, fixes }: IconSource) {
   const dpr = useDpr()
   const [scale, setScale] = useState(2)
   const { snapshot, error } = useMemo(() => tryParse(manifestText), [manifestText])
   const result = useMemo(() => parseResult(ruleResultText), [ruleResultText])
   const v2Parsed = useMemo(() => (v2 ? tryParse(v2.manifestText) : { snapshot: null, error: null }), [v2])
   const v2Result = useMemo(() => (v2 ? parseV2Result(v2.ruleResultText) : null), [v2])
+  const sheet = useMemo(() => (silhouettes ? parseSheet(silhouettes.sheetText) : null), [silhouettes])
+  const fixesParsed = useMemo(() => (fixes ? tryParse(fixes.manifestText) : { snapshot: null, error: null }), [fixes])
+  const fixesResult = useMemo(() => (fixes ? parseFixesResult(fixes.ruleResultText) : null), [fixes])
+  const fixEntries = useMemo(() => new Map((fixesParsed.snapshot?.entries ?? []).filter((e) => e.visualKey.startsWith('icon.')).map((e) => [e.visualKey, e] as const)), [fixesParsed])
   const entries = useMemo(() => {
     const byKey = new Map<string, DraftEntry>()
     for (const e of [...(snapshot?.entries ?? []), ...(v2Parsed.snapshot?.entries ?? [])]) if (e.detail === null || e.adopted || !byKey.has(e.visualKey)) byKey.set(e.visualKey, e)
@@ -125,6 +194,7 @@ export function IconHarness({ manifestText, ruleResultText, urlFor, v2 }: IconSo
 
   if (error || !snapshot) return <p role="alert">The preview manifest was refused: {error}</p>
   if (v2Parsed.error) return <p role="alert">The icon set v2 preview manifest was refused: {v2Parsed.error}</p>
+  if (fixesParsed.error) return <p role="alert">The owner-fixes preview manifest was refused: {fixesParsed.error}</p>
 
   const urlOf = (key: string): string | undefined => {
     const entry = entries.get(key)
@@ -258,6 +328,90 @@ export function IconHarness({ manifestText, ruleResultText, urlFor, v2 }: IconSo
           </tbody>
         </table>
       </section>
+
+      {silhouettes && sheet && (
+        <section aria-labelledby="sil-sheet" data-testid="silhouette-sheet">
+          <h2 id="sil-sheet">One-colour silhouette sheet: the proposed outlines, for the owner to approve before any drawing</h2>
+          <p>{sheet.decided}. Every shape is one colour (the outline included): judge the outline only. Each row shows the icon as adopted today (r0001), the proposed new outline or outlines (A, B), and the neighbours it sits beside. The numbers are the sheet rule&apos;s shape measure against same-size neighbours (needed: 3 px at 8x8, 6 at 16x16, 8 at 24x24) and the look-alike report&apos;s distance to the nearest icon of any family out of 576 (smaller means more alike); they decide nothing.</p>
+          {sheet.slots.map((slot) => (
+            <div key={slot.key} data-slot={slot.key} style={{ marginBottom: 20 }}>
+              <h3><code>{slot.key}</code> ({slot.size}x{slot.size})</h3>
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                {[DARK, LIGHT].map((bg) => (
+                  <div key={bg} style={{ background: bg, padding: 8, display: 'flex', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap' }} data-panel={bg === DARK ? 'dark' : 'light'}>
+                    <figure style={{ margin: 0 }} data-current="true">
+                      <Silhouette rows={slot.current_rows} size={slot.size} px={cssSizeAtScale(scale * 3, 1, dpr)} ink={bg === DARK ? LIGHT : DARK} label={`${slot.key} as adopted`} />
+                      <figcaption style={{ color: bg === DARK ? LIGHT : DARK }}>adopted today</figcaption>
+                    </figure>
+                    {slot.options.map((o) => (
+                      <figure key={o.tag} style={{ margin: 0, outline: `2px solid ${bg === DARK ? '#34d399' : '#047857'}`, padding: 2 }} data-option={o.tag}>
+                        <Silhouette rows={o.rows} size={o.size} px={cssSizeAtScale(scale * 3, 1, dpr)} ink={bg === DARK ? LIGHT : DARK} label={`${slot.key} proposal ${o.tag}: ${o.label}`} />
+                        <figcaption style={{ color: bg === DARK ? LIGHT : DARK }}>{o.tag}: {o.label}</figcaption>
+                      </figure>
+                    ))}
+                    {slot.neighbours.map((n) => (
+                      <figure key={n.key} style={{ margin: 0, opacity: 0.8 }} data-neighbour={n.key}>
+                        <Silhouette rows={n.rows} size={n.size} px={cssSizeAtScale(scale * 3, 1, dpr)} ink={bg === DARK ? LIGHT : DARK} label={`neighbour ${n.key}`} />
+                        <figcaption style={{ color: bg === DARK ? LIGHT : DARK, fontSize: 11 }}>{(n.key ?? '').split('.').slice(-1)[0]}</figcaption>
+                      </figure>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <ul data-testid={`measures-${slot.key}`}>
+                {slot.options.map((o) => (
+                  <li key={o.tag}>{o.tag} ({o.label}): smallest shape difference to same-size neighbours {o.i1_smallest_xor_px ?? 'n/a'} px; nearest icon of any family {o.nearest_in_any_family_xor_px_of_576.map((n) => `${n.key.split('.').slice(1).join('.')} ${n.xor_px}`).join(', ')}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {fixes && fixesResult && (
+        <section aria-labelledby="fixes" data-testid="owner-fixes">
+          <h2 id="fixes">Owner fixes: the new revisions (r0002) beside the adopted drawings (r0001)</h2>
+          <p>Draft set <strong>{fixesParsed.snapshot?.setId}</strong>, draft set hash <code>{fixesParsed.snapshot?.draftSetHash}</code>. {fixesResult.proposed.length} adopted icons are proposed a new revision each; nothing is adopted until the owner runs the commands in <code>docs/assets/icon_set_v2_review.md</code>. Left: what is adopted today. Right: the revision. The rows marked <strong>not proposed for adoption</strong> are drafts the owner decided not to revise: they stay in the draft set only because the store has no command to drop a draft, and they are never candidates.</p>
+          <table>
+            <thead><tr><th>key</th><th>adopted r0001: 1x dark, 2x dark, 1x light, 2x light</th><th>draft revision r0002 (a candidate only where it is proposed): 1x dark, 2x dark, 1x light, 2x light</th></tr></thead>
+            <tbody>
+              {[...fixEntries.keys()].sort().map((k) => {
+                const fixEntry = fixEntries.get(k)!
+                const native = fixEntry.width / fixEntry.scale
+                const cellImg = (entry: DraftEntry | undefined, n: number, bg: string, label: string) => {
+                  const size = cssSizeAtScale(n, native, dpr)
+                  return entry ? <td key={`${label}${n}${bg}`} style={{ background: bg, padding: 4 }}><img src={urlFor(entry.file)} alt={`${k} ${label}`} data-key={k} data-revision={label} data-scale={n} width={size} height={size} style={{ ...PIXELATED, width: size, height: size }} draggable={false} /></td> : <td key={`${label}${n}${bg}`} />
+                }
+                const adopted = entries.get(k)
+                const skipped = fixesResult.not_proposed[k]
+                return (
+                  <tr key={k} data-fix={k} data-not-proposed={skipped ? 'true' : undefined} style={skipped ? { opacity: 0.55 } : undefined}>
+                    <td><code>{k}</code> ({native}x{native}){skipped && <div data-testid={`not-proposed-${k}`}><strong>not proposed for adoption</strong>: {skipped}</div>}</td>
+                    {[[1, DARK], [2, DARK], [1, LIGHT], [2, LIGHT]].map(([n, bg]) => cellImg(adopted, n as number, bg as string, 'r0001'))}
+                    {[[1, DARK], [2, DARK], [1, LIGHT], [2, LIGHT]].map(([n, bg]) => cellImg(fixEntry, n as number, bg as string, 'r0002'))}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+          <h3>Recorded result, as measured</h3>
+          <p>From <code>python -m tests.visual_assets.icon_owner_fixes_draft_set</code> (committed as <code>icondraft_fixes/rule_result.json</code>): the adopted icons with the proposed revisions in place. The page only displays it.</p>
+          <table data-testid="fixes-recorded-result">
+            <tbody>
+              <tr><th>sheet rule (thresholds unchanged)</th><td><strong>{fixesResult.result}</strong>: key-set groups {fixesResult.key_set_rule.result}, v2 groups {fixesResult.v2_rule.result}</td></tr>
+              <tr><th>rarity vs the tier badges</th><td>{Object.entries(fixesResult.rarity_vs_tier_min_shape_px).map(([k, d]) => `${k.slice(k.lastIndexOf('.') + 1)} ${d} px`).join(', ')}</td></tr>
+              <tr><th>spec compliance</th><td>{fixesResult.compliance_all_ok ? 'every measured row met' : 'SOME ROWS NOT MET'} ({Object.values(fixesResult.compliance).reduce((n, rows) => n + rows.length, 0)} rows)</td></tr>
+            </tbody>
+          </table>
+          {Object.entries(fixesResult.compliance).map(([k, rows]) => (
+            <table key={k} data-testid={`compliance-${k}`}>
+              <caption><code>{k}</code>: {rows.every((r) => r.ok) ? 'all within the spec' : 'SPEC NOT MET'}</caption>
+              <thead><tr><th>measurement</th><th>spec</th><th>measured from the pixels</th><th /></tr></thead>
+              <tbody>{rows.map((r) => <tr key={r.item}><td>{r.item}</td><td>{r.spec}</td><td>{r.measured}</td><td>{r.ok ? 'ok' : 'FAIL'}</td></tr>)}</tbody>
+            </table>
+          ))}
+        </section>
+      )}
 
       {v2 && v2Result && (
         <>

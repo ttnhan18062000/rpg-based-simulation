@@ -167,6 +167,7 @@ if __name__ == "__main__":
     b.add_argument("--images", type=Path, required=True)
     b.add_argument("--private", type=Path, required=True, help="directory for the answer key and manifest (NOT shown to the agent)")
     b.add_argument("--seed", type=int, required=True)
+    b.add_argument("--proposed", action="store_true", help="render the set as it would stand with the owner-fix revisions (icons-owner-fixes-v1) in place of the adopted r0001 drawings")
     e = sub.add_parser("evaluate", help="score the two answer files against the specs")
     e.add_argument("--private", type=Path, required=True)
     e.add_argument("--free", type=Path, required=True)
@@ -174,7 +175,12 @@ if __name__ == "__main__":
     args = ap.parse_args()
     specs = icon_specs.load()
     if args.cmd == "build":
-        sprites = icon_lookalikes.all_icon_sprites()
+        if args.proposed:
+            from tests.visual_assets import icon_owner_fixes_draft_set
+
+            sprites = icon_owner_fixes_draft_set.proposed_sprites()
+        else:
+            sprites = icon_lookalikes.all_icon_sprites()
         info = build_blind_set(args.images, sprites, sorted(sprites), args.seed)
         args.private.mkdir(parents=True, exist_ok=True)
         (args.private / "blind_info.json").write_text(dumps(info))

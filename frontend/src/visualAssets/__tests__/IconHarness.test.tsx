@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { IconHarness } from '../IconHarness'
-import { iconDraftManifestText, iconDraftUrlFor, iconDraftV2ManifestText, iconRuleResultText, iconRuleResultV2Text } from '../iconDraftSource'
+import { iconDraftManifestText, iconDraftUrlFor, iconDraftV2ManifestText, iconDraftFixesManifestText, iconRuleResultFixesText, iconRuleResultText, iconRuleResultV2Text, iconSilhouetteSheetText } from '../iconDraftSource'
 import { ICON_KEYS, MARKER_LAYERS, SCENE_MARKERS, TIERS } from '../iconScene'
 
 let dprValue = 1
@@ -26,6 +26,10 @@ afterEach(() => {
 })
 
 const V2 = { manifestText: iconDraftV2ManifestText, ruleResultText: iconRuleResultV2Text }
+const SIL = { sheetText: iconSilhouetteSheetText }
+const mountSil = () => render(<IconHarness manifestText={iconDraftManifestText} ruleResultText={iconRuleResultText} urlFor={iconDraftUrlFor} v2={V2} silhouettes={SIL} />)
+const FIX = { manifestText: iconDraftFixesManifestText, ruleResultText: iconRuleResultFixesText }
+const mountFix = () => render(<IconHarness manifestText={iconDraftManifestText} ruleResultText={iconRuleResultText} urlFor={iconDraftUrlFor} v2={V2} fixes={FIX} />)
 const mountV2 = () => render(<IconHarness manifestText={iconDraftManifestText} ruleResultText={iconRuleResultText} urlFor={iconDraftUrlFor} v2={V2} />)
 const mount = () => render(<IconHarness manifestText={iconDraftManifestText} ruleResultText={iconRuleResultText} urlFor={iconDraftUrlFor} />)
 
@@ -189,6 +193,111 @@ describe('the icon preview page', () => {
     it('the page without v2 is unchanged', () => {
       mount()
       expect(screen.queryByTestId('v2-recorded-result')).toBeNull()
+    })
+  })
+
+  describe('with the silhouette sheet', () => {
+    const SLOTS = ['icon.rarity.common', 'icon.status.frame_buff', 'icon.class.rogue', 'icon.item.tool']
+
+    it('shows every changed slot with its adopted silhouette, its proposals and its neighbours, in one colour', () => {
+      const { container } = mountSil()
+      const sheet = screen.getByTestId('silhouette-sheet')
+      for (const key of SLOTS) {
+        const slot = sheet.querySelector(`[data-slot="${key}"]`)!
+        expect(slot, key).not.toBeNull()
+        const dark = slot.querySelector('[data-panel="dark"]')!
+        expect(dark.querySelectorAll('[data-current]')).toHaveLength(1)
+        expect(dark.querySelectorAll('[data-option]').length).toBeGreaterThanOrEqual(1)
+        expect(dark.querySelectorAll('[data-neighbour]').length).toBeGreaterThanOrEqual(1)
+      }
+      const fills = new Set([...sheet.querySelectorAll('svg[data-silhouette] rect')].map((r) => r.getAttribute('fill')))
+      expect([...fills].sort()).toEqual(['#111827', '#e5e7eb']) // one ink per panel: the dark panel's light ink and the light panel's dark ink, nothing else
+      expect(container.querySelectorAll('[data-testid="silhouette-sheet"] img')).toHaveLength(0)
+    })
+
+    it('offers the rogue a hood and a mask and prints the measures, which decide nothing', () => {
+      mountSil()
+      const rogue = screen.getByTestId('silhouette-sheet').querySelector('[data-slot="icon.class.rogue"]')!
+      expect([...rogue.querySelectorAll('[data-panel="dark"] [data-option]')].map((o) => o.getAttribute('data-option'))).toEqual(['A', 'B'])
+      expect(within(screen.getByTestId('measures-icon.class.rogue')).getByText(/hooded cowl/)).toBeInTheDocument()
+      expect(screen.getByTestId('silhouette-sheet').textContent).toMatch(/decide nothing/)
+      expect(screen.queryByTestId('measures-icon.marker.enemy_camp')).toBeNull() // the owner kept the adopted crossed swords: no tent is on the sheet any more
+    })
+
+    it('draws each silhouette on a whole device-pixel scale', () => {
+      dprValue = 1.25
+      const { container } = mountSil()
+      for (const svg of container.querySelectorAll('svg[data-silhouette]')) {
+        const size = Number(svg.getAttribute('viewBox')!.split(' ')[2])
+        const width = parseFloat(svg.getAttribute('width')!)
+        expect(Math.abs((width / size) * 1.25 - Math.round((width / size) * 1.25)), svg.getAttribute('aria-label')!).toBeLessThan(1e-6)
+      }
+    })
+
+    it('shows nothing without the sheet, and a broken sheet file does not take the page down', () => {
+      render(<IconHarness manifestText={iconDraftManifestText} ruleResultText={iconRuleResultText} urlFor={iconDraftUrlFor} silhouettes={{ sheetText: 'not json' }} />)
+      expect(screen.queryByTestId('silhouette-sheet')).toBeNull()
+      expect(screen.getByRole('heading', { name: /contact sheet/i })).toBeInTheDocument()
+    })
+  })
+
+  describe('with the owner-fix revisions', () => {
+    const FIXES = ['icon.class.rogue', 'icon.item.tool', 'icon.marker.enemy_camp', 'icon.marker.ruins', 'icon.rarity.common', 'icon.status.frame_buff']
+    const PROPOSED = ['icon.class.rogue', 'icon.item.tool', 'icon.rarity.common', 'icon.status.frame_buff']
+    const NOT_PROPOSED = ['icon.marker.enemy_camp', 'icon.marker.ruins']
+
+    it('shows each draft beside the adopted drawing, 1x and 2x on a dark and a light panel, with different pictures on the two sides', () => {
+      const { container } = mountFix()
+      const section = screen.getByTestId('owner-fixes')
+      expect([...section.querySelectorAll('tr[data-fix]')].map((r) => r.getAttribute('data-fix'))).toEqual(FIXES)
+      for (const key of FIXES) {
+        const row = section.querySelector(`tr[data-fix="${key}"]`)!
+        const old = [...row.querySelectorAll('img[data-revision="r0001"]')] as HTMLImageElement[]
+        const next = [...row.querySelectorAll('img[data-revision="r0002"]')] as HTMLImageElement[]
+        expect([old.length, next.length], key).toEqual([4, 4])
+        expect(old.map((i) => i.dataset.scale)).toEqual(['1', '2', '1', '2'])
+        expect(old[0].getAttribute('src'), key).not.toBe(next[0].getAttribute('src'))
+      }
+      expect(container.querySelectorAll('[data-testid="owner-fixes"] img')).toHaveLength(FIXES.length * 8)
+    })
+
+    it('marks the two drafts the owner did not want revised as not proposed for adoption and never presents them as candidates', () => {
+      mountFix()
+      const section = screen.getByTestId('owner-fixes')
+      for (const key of NOT_PROPOSED) {
+        expect(section.querySelector(`tr[data-fix="${key}"]`)!.getAttribute('data-not-proposed'), key).toBe('true')
+        expect(screen.getByTestId(`not-proposed-${key}`).textContent).toMatch(/not proposed for adoption.*owner decision/)
+      }
+      for (const key of PROPOSED) expect(section.querySelector(`tr[data-fix="${key}"]`)!.getAttribute('data-not-proposed'), key).toBeNull()
+      expect(section.textContent).toMatch(/never candidates/)
+    })
+
+    it('prints the recorded result and a compliance table for the four proposed revisions only, as measured', () => {
+      mountFix()
+      const recorded = JSON.parse(iconRuleResultFixesText)
+      const table = screen.getByTestId('fixes-recorded-result')
+      expect(within(table).getByText(recorded.result)).toBeInTheDocument()
+      expect(Object.keys(recorded.compliance).sort()).toEqual([...PROPOSED].sort())
+      for (const key of PROPOSED) expect(screen.getByTestId(`compliance-${key}`).querySelectorAll('tbody tr').length, key).toBe(recorded.compliance[key].length)
+      for (const key of NOT_PROPOSED) expect(screen.queryByTestId(`compliance-${key}`)).toBeNull()
+      expect(table.textContent).toMatch(/every measured row met/)
+    })
+
+    it('draws every image on a whole device-pixel scale', () => {
+      dprValue = 1.25
+      const { container } = mountFix()
+      for (const img of container.querySelectorAll('[data-testid="owner-fixes"] img') as NodeListOf<HTMLImageElement>) {
+        const key = img.dataset.key!
+        const native = key === 'icon.rarity.common' ? 8 : /\.(class|item)\./.test(key) ? 24 : 16
+        expect(Math.abs(parseFloat(img.getAttribute('width')!) * 1.25 - Number(img.dataset.scale) * native), key).toBeLessThan(1e-6)
+      }
+    })
+
+    it('refuses a fixes manifest that is not a preview manifest, and without the prop shows no such section', () => {
+      render(<IconHarness manifestText={iconDraftManifestText} ruleResultText={iconRuleResultText} urlFor={iconDraftUrlFor} fixes={{ manifestText: '{}', ruleResultText: '{}' }} />)
+      expect(screen.getByRole('alert').textContent).toMatch(/owner-fixes.*refused/)
+      mount()
+      expect(screen.queryByTestId('owner-fixes')).toBeNull()
     })
   })
 })

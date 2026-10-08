@@ -260,16 +260,160 @@ def bead(s: rule.Sprite) -> list[Row]:
     ]
 
 
+# CHECKS is the table of the adopted art as it stood after the recognisability redraw (r0001: the brick wall, the wrench, the 7 px bead); CHECKS_R2 is the table of the owner-fix revisions (r0002).
 CHECKS: dict[str, Callable[[rule.Sprite], list[Row]]] = {
     "icon.item.weapon": sword, "icon.marker.ruins": ruins, "icon.item.trinket": trinket, "icon.item.tool": tool, "icon.class.ranger": ranger, "icon.rarity.common": bead,
 }
 
+SILVER, SILVER_LIGHT, SILVER_SHADE = (0xC8, 0xD8, 0xE8), (0xEA, 0xFE, 0xFF), (0x91, 0xA2, 0xAB)
+TAN, EMBER, WINE, DARK, GOLD = (0x8E, 0x8C, 0x75), (0xD0, 0x40, 0x30), (0x6A, 0x30, 0x40), (0x25, 0x25, 0x30), (0xE8, 0xC0, 0x40)
+STEEL = {(0xC8, 0xD8, 0xE8), (0x91, 0xA2, 0xAB), (0x71, 0x7E, 0x8F)}
 
-def measure(sprites: dict[str, rule.Sprite], keys=None) -> dict[str, list[Row]]:
+
+def _live_margins(s: rule.Sprite) -> tuple[int, int, int, int]:
+    x0, y0, x1, y1 = bbox(silhouette(s))
+    return x0, y0, s.width - 1 - x1, s.height - 1 - y1
+
+
+def ruins_arch(s: rule.Sprite) -> list[Row]:
+    c = content(s)
+    x0, y0, x1, y1 = bbox(silhouette(s))
+    bottom = max(y for (_, y) in c)
+    # the height of a column is the unbroken run of stone standing on the bottom row: a pillar's is >= 8, the stub's 3 to 5, loose bricks and the arch's loose end are 1 or 0
+    heights: dict[int, int] = {}
+    for x in sorted({x for x, _ in c}):
+        run = 0
+        while (x, bottom - run) in c:
+            run += 1
+        heights[x] = run
+    pillar = sorted(x for x, h in heights.items() if h >= 8)
+    stub = sorted(x for x, h in heights.items() if 3 <= h <= 5 and x > max(pillar))
+    top = min(y for (x, y) in c if x in pillar)
+    mid_rows = range(top + 3, bottom - 1)
+    gap = [x for x in range(max(pillar) + 1, min(stub)) if not any((x, y) in c for y in mid_rows)]
+    arch = [p for p in c if p[0] > max(pillar) and p[1] <= top + 2]
+    rubble = [p for p in c if p[0] in gap and p[1] >= bottom - 1]
+    mx = _live_margins(s)
+    return [
+        Row("size", "12 px wide and 11 px tall, outline included", f"{x1 - x0 + 1} x {y1 - y0 + 1} px", (x1 - x0 + 1, y1 - y0 + 1) == (12, 11)),
+        Row("tall left pillar", ">= 3 columns that are >= 8 px tall", f"{len(pillar)} columns, tallest {max(heights[x] for x in pillar)} px", len(pillar) >= 3),
+        Row("springing arch", ">= 3 stone pixels to the right of the pillar in its top three rows", f"{len(arch)} px", len(arch) >= 3),
+        Row("open gap", ">= 4 columns with no stone between the pillar and the stub", f"{len(gap)} columns", len(gap) >= 4),
+        Row("broken right stub", ">= 3 columns that are 3 to 5 px tall, to the right of the gap", f"{len(stub)} columns", len(stub) >= 3),
+        Row("rubble", ">= 2 loose pixels on the ground in the gap", f"{len(rubble)} px", len(rubble) >= 2),
+        Row("live area", "margins of at least 2 px left, top and right on the 16x16 canvas", f"{mx[0]}, {mx[1]}, {mx[2]} px", min(mx[0], mx[1], mx[2]) >= 2),
+    ]
+
+
+def silver_bead(s: rule.Sprite) -> list[Row]:
+    sil, c = silhouette(s), content(s)
+    x0, y0, x1, y1 = bbox(sil)
+    w, h = x1 - x0 + 1, y1 - y0 + 1
+    fill = len(sil) / (w * h)
+    counts = {k: sum(1 for v in c.values() if v == k) for k in (SILVER, SILVER_LIGHT, SILVER_SHADE)}
+    sprites = la.all_icon_sprites()
+    mine = rule.lightness(rule.mean_colour(s), "normal")
+    dark_tiers = {t: rule.lightness(rule.mean_colour(sprites[t]), "normal") for t in ("icon.tier.d", "icon.tier.e")}
+    gap = min(mine - v for v in dark_tiers.values())
+    near = min(rule.shape_distance(s, sprites[t]) for t in TIERS)
+    return [
+        Row("round, not square", "silhouette fills at most 80 % of its bounding box", f"{100 * fill:.0f} %", fill <= 0.80),
+        Row("size", "7 x 7 px", f"{w} x {h} px", (w, h) == (7, 7)),
+        Row("silver fill", ">= 12 px of silver (#c8d8e8)", f"{counts[SILVER]} px", counts[SILVER] >= 12),
+        Row("highlight", "2 px of bright highlight (#eafeff)", f"{counts[SILVER_LIGHT]} px", counts[SILVER_LIGHT] == 2),
+        Row("shade", ">= 4 px of shade (#91a2ab) on the lower right", f"{counts[SILVER_SHADE]} px", counts[SILVER_SHADE] >= 4),
+        Row("lighter than the dark tier badges", "mean L* at least 20 above tier D and tier E", f"{gap:.1f} L* above the nearer one", gap >= 20),
+        Row("distance from the tier badges", ">= 3 px (I1 floor) from every tier silhouette", f"{near} px", near >= 3),
+    ]
+
+
+def buff_arrow(s: rule.Sprite) -> list[Row]:
+    before = la.all_icon_sprites()["icon.status.frame_buff"]
+    changed = [(i % 16, i // 16) for i in range(256) if s.rgba[i] != before.rgba[i]]
+    outside = [p for p in changed if not (4 <= p[0] <= 11 and 3 <= p[1] <= 11)]
+    bone = sorted((i % 16, i // 16) for i, p in enumerate(s.rgba) if tuple(p[:3]) == (0xF0, 0xEC, 0xD8) and p[3])
+    widths = [sum(1 for x, yy in bone if yy == y) for y in sorted({y for _, y in bone})]
+    xs = [x for x, _ in bone]
+    return [
+        Row("frame unchanged", "no pixel outside the central 8 x 9 box differs from the adopted frame", f"{len(outside)} pixels differ outside the box ({len(changed)} in all)", not outside),
+        Row("solid head", "head rows 2, 4 then 6 px wide", f"first rows {widths[:3]}", widths[:3] == [2, 4, 6]),
+        Row("shaft", "2 px wide and 5 px tall below the head", f"rows {widths[3:]}", widths[3:] == [2] * 5),
+        Row("solid, not an outline", "22 bone pixels in all, one filled shape", f"{len(bone)} px in {len(components(set(bone)))} piece(s)", len(bone) == 22 and len(components(set(bone))) == 1),
+        Row("centred", "the arrow's columns centre on the canvas axis", f"columns {min(xs)} to {max(xs)} of 16", min(xs) + max(xs) == 15),
+    ]
+
+
+def rogue_hood(s: rule.Sprite) -> list[Row]:
+    c = content(s)
+    w = row_widths(c)
+    ys = sorted(w)
+    dark = [p for p, col in c.items() if col == DARK]
+    dx0, dy0, dx1, dy1 = bbox(dark)
+    gold = [p for p, col in c.items() if col == GOLD]
+    narrowing = all(w[a] <= w[b] for a, b in zip(ys[:12], ys[1:13]))
+    mx = _live_margins(s)
+    return [
+        Row("peaked hood", "the top row is 2 px wide or less and rows widen steadily to the shoulders", f"top row {w[ys[0]]} px; widest {max(w.values())} px; steady widening over the first 12 rows: {narrowing}", w[ys[0]] <= 2 and narrowing),
+        Row("shoulders", "widest row 18 px", f"{max(w.values())} px", max(w.values()) == 18),
+        Row("face opening", ">= 8 px wide and >= 8 px tall, dark", f"{dx1 - dx0 + 1} x {dy1 - dy0 + 1} px, {len(dark)} px", dx1 - dx0 + 1 >= 8 and dy1 - dy0 + 1 >= 8),
+        Row("eye glints", "two separate gold marks of 2 px", f"{len(gold)} px in {len(components(set(gold)))} marks", len(gold) == 4 and len(components(set(gold))) == 2),
+        Row("no brim", "the hood is never wider than the shoulders at its top half (a hat has a brim): the first 10 rows are at most 14 px wide", f"widest of the first 10 rows {max(w[y] for y in ys[:10])} px", max(w[y] for y in ys[:10]) <= 14),
+        Row("live area", "margins of at least 2 px left, top and right on the 24x24 canvas", f"{mx[0]}, {mx[1]}, {mx[2]} px", min(mx[0], mx[1], mx[2]) >= 2),
+    ]
+
+
+def enemy_tent(s: rule.Sprite) -> list[Row]:
+    c = content(s)
+    x0, y0, x1, y1 = bbox(silhouette(s))
+    tent = [p for p, col in c.items() if col in (EMBER, WINE)]
+    door = [p for p, col in c.items() if col == DARK]
+    tan = [p for p, col in c.items() if col == TAN]
+    heads = components({p for p, col in c.items() if col in STEEL})
+    mx = _live_margins(s)
+    tx0, ty0, tx1, ty1 = bbox(tent)
+    return [
+        Row("live area", "margins of at least 2 px on all four sides of the 16x16 canvas", f"{mx[0]}, {mx[1]}, {mx[2]}, {mx[3]} px", min(mx) >= 2),
+        Row("tent", "a peaked tent at least 8 px wide and 4 px tall in red (the fitted tent; the first, larger one was 9 wide)", f"{tx1 - tx0 + 1} x {ty1 - ty0 + 1} px, {len(tent)} px", tx1 - tx0 + 1 >= 8 and ty1 - ty0 + 1 >= 4),
+        Row("doorway", ">= 4 dark pixels inside the tent (the fitted tent; the first one had 6)", f"{len(door)} px", len(door) >= 4),
+        Row("two spear heads", "two separate steel heads of at least 4 px", f"{len(heads)} heads, {[len(h) for h in heads]} px", len(heads) == 2 and all(len(h) >= 4 for h in heads)),
+        Row("crossed shafts", ">= 14 shaft pixels forming an X above the apex (reaching both sides in the top rows)", f"{len(tan)} px, columns {min(p[0] for p in tan)} to {max(p[0] for p in tan)}", len(tan) >= 14 and min(p[0] for p in tan) <= 4 and max(p[0] for p in tan) >= 11 and min(p[1] for p in tan) < ty0),
+        Row("no sword", "no blade: the shafts are tan and the heads are 2 x 2", f"head sizes {[len(h) for h in heads]}", all(len(h) <= 6 for h in heads)),
+    ]
+
+
+def toolbox(s: rule.Sprite) -> list[Row]:
+    c = content(s)
+    x0, y0, x1, y1 = bbox(c)
+    body = [p for p, col in c.items() if col == EMBER]
+    lid = [p for p, col in c.items() if col == WINE]
+    gold = [p for p, col in c.items() if col == GOLD]
+    steel = [p for p, col in c.items() if col in STEEL]
+    btop = min(y for _, y in body)
+    handle = [p for p in steel if p[1] < btop]
+    rivets = [p for p in steel if p[1] >= btop]
+    return [
+        Row("size", "18 px wide and 16 px tall, outline excluded", f"{x1 - x0 + 1} x {y1 - y0 + 1} px", (x1 - x0 + 1, y1 - y0 + 1) == (18, 16)),
+        Row("wider than tall", "width at least 1.1 times the height", f"{(x1 - x0 + 1) / (y1 - y0 + 1):.2f}", (x1 - x0 + 1) / (y1 - y0 + 1) >= 1.1),
+        Row("red body", ">= 100 red pixels", f"{len(body)} px", len(body) >= 100),
+        Row("lid band", ">= 40 pixels of the darker lid colour across the top of the body", f"{len(lid)} px", len(lid) >= 40),
+        Row("carry handle", ">= 12 steel pixels above the body, 8 px wide at most 10", f"{len(handle)} px, {max(x for x, _ in handle) - min(x for x, _ in handle) + 1} px wide", len(handle) >= 12 and max(x for x, _ in handle) - min(x for x, _ in handle) + 1 <= 10),
+        Row("latch", "a gold latch of 12 to 18 px", f"{len(gold)} px", 12 <= len(gold) <= 20),
+        Row("rivets", "4 rivets on the body", f"{len(rivets)} px", len(rivets) == 4),
+    ]
+
+
+CHECKS_R2: dict[str, Callable[[rule.Sprite], list[Row]]] = {
+    "icon.marker.ruins": ruins_arch, "icon.rarity.common": silver_bead, "icon.status.frame_buff": buff_arrow, "icon.class.rogue": rogue_hood, "icon.marker.enemy_camp": enemy_tent,
+    "icon.item.tool": toolbox,
+}
+
+
+def measure(sprites: dict[str, rule.Sprite], keys=None, checks=None) -> dict[str, list[Row]]:
+    checks = CHECKS if checks is None else checks
     out = {}
-    for k in keys or CHECKS:
+    for k in keys or checks:
         try:
-            out[k] = CHECKS[k](sprites[k])
+            out[k] = checks[k](sprites[k])
         except (ValueError, KeyError, IndexError, ZeroDivisionError) as exc:  # a drawing so far from its spec that a part cannot even be found
             out[k] = [Row("measurable", "every part named in the spec can be found in the pixels", f"could not be measured ({type(exc).__name__}: {exc})", False)]
     return out

@@ -16,8 +16,9 @@ GUIDE = REPO / "docs" / "assets" / "icon_style_guide.md"
 def test_there_is_one_complete_consistent_spec_for_every_registered_icon_key():
     loaded = specs.load()
     assert specs.problems(loaded, specs.registered_icon_keys()) == []
-    assert len(loaded) == 36 and {s.status for s in loaded.values()} == {"v2", "adopted"}
-    assert sum(1 for s in loaded.values() if s.status == "v2") == 22
+    assert len(loaded) == 36 and {s.status for s in loaded.values()} == {"v2", "adopted", "revision"}
+    assert sum(1 for s in loaded.values() if s.status == "v2") == 19  # the 22 v2 icons minus the three that are now revisions (the ruins stay as adopted)
+    assert sorted(k for k, s in loaded.items() if s.status == "revision") == sorted(["icon.rarity.common", "icon.status.frame_buff", "icon.class.rogue", "icon.item.tool"])  # the owner kept the adopted ruins and enemy camp
 
 
 def test_the_style_guide_contains_the_generated_table_verbatim():
@@ -48,6 +49,11 @@ def test_a_missing_key_a_missing_field_and_a_distractor_that_counts_as_correct_a
     assert any("would count as a correct answer" in p for p in specs.problems(specs.load(path), registered))
 
 
-def test_the_weapon_and_the_dagger_never_share_a_pose_in_their_specs():
+def test_the_rogue_is_not_a_blade_any_more_and_the_enemy_camp_keeps_its_adopted_crossed_swords():
     loaded = specs.load()
-    assert "upright" in loaded["icon.item.weapon"].orientation and "diagonal" in loaded["icon.class.rogue"].orientation
+    assert "upright" in loaded["icon.item.weapon"].orientation
+    rogue = loaded["icon.class.rogue"]
+    text = " ".join([rogue.subject, rogue.orientation, rogue.proportions, " ".join(rogue.parts)]).lower()
+    assert "dagger" not in text and "sword" not in text and "blade" not in text
+    camp = loaded["icon.marker.enemy_camp"]
+    assert camp.status == "adopted" and "crossed swords" in camp.subject  # the owner kept the adopted drawing ("Keep current versions", 2026-10-08)

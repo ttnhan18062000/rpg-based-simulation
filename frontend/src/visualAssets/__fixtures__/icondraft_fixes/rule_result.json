@@ -1,0 +1,450 @@
+{
+ "compliance": {
+  "icon.class.rogue": [
+   {
+    "item": "peaked hood",
+    "measured": "top row 2 px; widest 18 px; steady widening over the first 12 rows: True",
+    "ok": true,
+    "spec": "the top row is 2 px wide or less and rows widen steadily to the shoulders"
+   },
+   {
+    "item": "shoulders",
+    "measured": "18 px",
+    "ok": true,
+    "spec": "widest row 18 px"
+   },
+   {
+    "item": "face opening",
+    "measured": "8 x 9 px, 56 px",
+    "ok": true,
+    "spec": ">= 8 px wide and >= 8 px tall, dark"
+   },
+   {
+    "item": "eye glints",
+    "measured": "4 px in 2 marks",
+    "ok": true,
+    "spec": "two separate gold marks of 2 px"
+   },
+   {
+    "item": "no brim",
+    "measured": "widest of the first 10 rows 12 px",
+    "ok": true,
+    "spec": "the hood is never wider than the shoulders at its top half (a hat has a brim): the first 10 rows are at most 14 px wide"
+   },
+   {
+    "item": "live area",
+    "measured": "2, 2, 2 px",
+    "ok": true,
+    "spec": "margins of at least 2 px left, top and right on the 24x24 canvas"
+   }
+  ],
+  "icon.item.tool": [
+   {
+    "item": "size",
+    "measured": "18 x 16 px",
+    "ok": true,
+    "spec": "18 px wide and 16 px tall, outline excluded"
+   },
+   {
+    "item": "wider than tall",
+    "measured": "1.12",
+    "ok": true,
+    "spec": "width at least 1.1 times the height"
+   },
+   {
+    "item": "red body",
+    "measured": "114 px",
+    "ok": true,
+    "spec": ">= 100 red pixels"
+   },
+   {
+    "item": "lid band",
+    "measured": "50 px",
+    "ok": true,
+    "spec": ">= 40 pixels of the darker lid colour across the top of the body"
+   },
+   {
+    "item": "carry handle",
+    "measured": "13 px, 8 px wide",
+    "ok": true,
+    "spec": ">= 12 steel pixels above the body, 8 px wide at most 10"
+   },
+   {
+    "item": "latch",
+    "measured": "14 px",
+    "ok": true,
+    "spec": "a gold latch of 12 to 18 px"
+   },
+   {
+    "item": "rivets",
+    "measured": "4 px",
+    "ok": true,
+    "spec": "4 rivets on the body"
+   }
+  ],
+  "icon.rarity.common": [
+   {
+    "item": "round, not square",
+    "measured": "76 %",
+    "ok": true,
+    "spec": "silhouette fills at most 80 % of its bounding box"
+   },
+   {
+    "item": "size",
+    "measured": "7 x 7 px",
+    "ok": true,
+    "spec": "7 x 7 px"
+   },
+   {
+    "item": "silver fill",
+    "measured": "13 px",
+    "ok": true,
+    "spec": ">= 12 px of silver (#c8d8e8)"
+   },
+   {
+    "item": "highlight",
+    "measured": "2 px",
+    "ok": true,
+    "spec": "2 px of bright highlight (#eafeff)"
+   },
+   {
+    "item": "shade",
+    "measured": "6 px",
+    "ok": true,
+    "spec": ">= 4 px of shade (#91a2ab) on the lower right"
+   },
+   {
+    "item": "lighter than the dark tier badges",
+    "measured": "52.3 L* above the nearer one",
+    "ok": true,
+    "spec": "mean L* at least 20 above tier D and tier E"
+   },
+   {
+    "item": "distance from the tier badges",
+    "measured": "9 px",
+    "ok": true,
+    "spec": ">= 3 px (I1 floor) from every tier silhouette"
+   }
+  ],
+  "icon.status.frame_buff": [
+   {
+    "item": "frame unchanged",
+    "measured": "0 pixels differ outside the box (16 in all)",
+    "ok": true,
+    "spec": "no pixel outside the central 8 x 9 box differs from the adopted frame"
+   },
+   {
+    "item": "solid head",
+    "measured": "first rows [2, 4, 6]",
+    "ok": true,
+    "spec": "head rows 2, 4 then 6 px wide"
+   },
+   {
+    "item": "shaft",
+    "measured": "rows [2, 2, 2, 2, 2]",
+    "ok": true,
+    "spec": "2 px wide and 5 px tall below the head"
+   },
+   {
+    "item": "solid, not an outline",
+    "measured": "22 px in 1 piece(s)",
+    "ok": true,
+    "spec": "22 bone pixels in all, one filled shape"
+   },
+   {
+    "item": "centred",
+    "measured": "columns 5 to 10 of 16",
+    "ok": true,
+    "spec": "the arrow's columns centre on the canvas axis"
+   }
+  ]
+ },
+ "compliance_all_ok": true,
+ "draft_set_hash": "sha256:e7a6d62b0e8dac482cc4a415a9f8bcea3833d2a6d098764d93dd61115794b367",
+ "key_set_rule": {
+  "failing": {
+   "i1": [],
+   "i2": [],
+   "i3": []
+  },
+  "groups": {
+   "status": {
+    "min_dL_by_vision": {
+     "deutan": 14.129,
+     "normal": 16.965,
+     "protan": 21.549,
+     "tritan": 16.821
+    },
+    "min_shape_px_across_classes": 92,
+    "pairs": 1,
+    "size": 16,
+    "value_checked": true
+   },
+   "tiers": {
+    "min_dL_by_vision": {
+     "deutan": 8.786,
+     "normal": 9.136,
+     "protan": 8.742,
+     "tritan": 9.297
+    },
+    "min_shape_px_across_classes": 4,
+    "pairs": 28,
+    "size": 8,
+    "value_checked": true
+   }
+  },
+  "i1": true,
+  "i2": true,
+  "i3": true,
+  "off_palette_pixels": {},
+  "plates": {
+   "icon.plate.location": {
+    "closest_by_vision": {
+     "deutan": {
+      "dL": 18.005,
+      "rim": "#9ea4b6",
+      "tile": "terrain.snow"
+     },
+     "normal": {
+      "dL": 18.198,
+      "rim": "#9ea4b6",
+      "tile": "terrain.snow"
+     },
+     "protan": {
+      "dL": 18.48,
+      "rim": "#9ea4b6",
+      "tile": "terrain.snow"
+     },
+     "tritan": {
+      "dL": 18.181,
+      "rim": "#9ea4b6",
+      "tile": "terrain.snow"
+     }
+    },
+    "rim_colours": [
+     "#9ea4b6"
+    ]
+   }
+  },
+  "result": "PASS",
+  "rule": {
+   "i1": "silhouette pixels differing >= {8: 3, 16: 6, 24: 8} (by canvas side) across classes",
+   "i2": "dL* of mean colours >= 6.0 in ['normal', 'protan', 'deutan', 'tritan']",
+   "i3": "plate rim colour vs terrain tile mean, dL* >= 12.0 in ['normal', 'protan', 'deutan', 'tritan']"
+  }
+ },
+ "lint": {
+  "icon.class.rogue": {
+   "color_budget": 12,
+   "colors": 6,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.item.tool": {
+   "color_budget": 12,
+   "colors": 8,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.rarity.common": {
+   "color_budget": 8,
+   "colors": 4,
+   "findings": [
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.status.frame_buff": {
+   "color_budget": 8,
+   "colors": 4,
+   "findings": [
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  }
+ },
+ "lookalike_close_pairs": [
+  {
+   "a": "icon.tier.d",
+   "b": "icon.tier.e",
+   "cross_family": false,
+   "xor_px": 0
+  },
+  {
+   "a": "icon.rarity.common",
+   "b": "icon.tier.d",
+   "cross_family": true,
+   "xor_px": 25
+  },
+  {
+   "a": "icon.rarity.common",
+   "b": "icon.tier.e",
+   "cross_family": true,
+   "xor_px": 25
+  },
+  {
+   "a": "icon.tier.a",
+   "b": "icon.tier.c",
+   "cross_family": false,
+   "xor_px": 36
+  },
+  {
+   "a": "icon.tier.c",
+   "b": "icon.tier.d",
+   "cross_family": false,
+   "xor_px": 36
+  },
+  {
+   "a": "icon.tier.c",
+   "b": "icon.tier.e",
+   "cross_family": false,
+   "xor_px": 36
+  },
+  {
+   "a": "icon.tier.s",
+   "b": "icon.tier.ss",
+   "cross_family": false,
+   "xor_px": 36
+  },
+  {
+   "a": "icon.item.material",
+   "b": "icon.status.frame_buff",
+   "cross_family": true,
+   "xor_px": 41
+  },
+  {
+   "a": "icon.marker.boss_arena",
+   "b": "icon.tier.d",
+   "cross_family": true,
+   "xor_px": 48
+  },
+  {
+   "a": "icon.marker.boss_arena",
+   "b": "icon.tier.e",
+   "cross_family": true,
+   "xor_px": 48
+  },
+  {
+   "a": "icon.marker.dungeon_entrance",
+   "b": "icon.plate.location",
+   "cross_family": true,
+   "xor_px": 55
+  },
+  {
+   "a": "icon.rarity.uncommon",
+   "b": "icon.tier.s",
+   "cross_family": true,
+   "xor_px": 56
+  },
+  {
+   "a": "icon.marker.boss_arena",
+   "b": "icon.rarity.common",
+   "cross_family": true,
+   "xor_px": 59
+  },
+  {
+   "a": "icon.rarity.common",
+   "b": "icon.rarity.uncommon",
+   "cross_family": false,
+   "xor_px": 59
+  },
+  {
+   "a": "icon.building.hero_house",
+   "b": "icon.item.material",
+   "cross_family": true,
+   "xor_px": 60
+  }
+ ],
+ "not_proposed": {
+  "icon.marker.enemy_camp": "owner decision: keep the adopted crossed swords (the tent still misread in free text, \"crossed tools on red mound\", and the adopted version reads better)",
+  "icon.marker.ruins": "owner decision: keep the adopted brick wall (the arch still misread in free text, \"document with arrow\", and the adopted version reads better)"
+ },
+ "proposed": [
+  "icon.status.frame_buff",
+  "icon.class.rogue",
+  "icon.item.tool",
+  "icon.rarity.common"
+ ],
+ "rarity_vs_tier_min_shape_px": {
+  "icon.rarity.common": 9
+ },
+ "result": "PASS",
+ "set_id": "icons-owner-fixes-v1",
+ "v2_rule": {
+  "failing": {
+   "i1": [],
+   "i2": [],
+   "i3": []
+  },
+  "groups": {
+   "badges": {
+    "min_dL_by_vision": {},
+    "min_shape_px_across_classes": 4,
+    "pairs": 55,
+    "size": 8,
+    "value_checked": false
+   },
+   "buildings": {
+    "min_dL_by_vision": {},
+    "min_shape_px_across_classes": 65,
+    "pairs": 15,
+    "size": 24,
+    "value_checked": false
+   },
+   "classes": {
+    "min_dL_by_vision": {},
+    "min_shape_px_across_classes": 53,
+    "pairs": 6,
+    "size": 24,
+    "value_checked": false
+   },
+   "items": {
+    "min_dL_by_vision": {},
+    "min_shape_px_across_classes": 71,
+    "pairs": 15,
+    "size": 24,
+    "value_checked": false
+   },
+   "locations": {
+    "min_dL_by_vision": {},
+    "min_shape_px_across_classes": 17,
+    "pairs": 15,
+    "size": 16,
+    "value_checked": false
+   },
+   "rarity": {
+    "min_dL_by_vision": {
+     "deutan": 14.482,
+     "normal": 14.444,
+     "protan": 13.012,
+     "tritan": 14.822
+    },
+    "min_shape_px_across_classes": 13,
+    "pairs": 3,
+    "size": 8,
+    "value_checked": true
+   }
+  },
+  "i1": true,
+  "i2": true,
+  "i3": true,
+  "off_palette_pixels": {},
+  "plates": {},
+  "result": "PASS",
+  "rule": {
+   "i1": "silhouette pixels differing >= {8: 3, 16: 6, 24: 8} (by canvas side) across classes",
+   "i2": "dL* of mean colours >= 6.0 in ['normal', 'protan', 'deutan', 'tritan']",
+   "i3": "plate rim colour vs terrain tile mean, dL* >= 12.0 in ['normal', 'protan', 'deutan', 'tritan']"
+  }
+ }
+}

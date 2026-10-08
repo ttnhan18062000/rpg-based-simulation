@@ -7,7 +7,7 @@ families:
   marker: {size: 16, convention: "16x16 glyph, live area 12x12 (2 px margin), dark outline #0e1018, drawn over the plate; one object, upright and centred, no scene"}
   building: {size: 24, convention: "24x24 panel icon, live area 20x20; one object, centred; the object as seen from the front, light from the top left"}
   class: {size: 24, convention: "24x24 panel icon, live area 20x20; the class's signature object alone (no figure)"}
-  item: {size: 24, convention: "24x24; one object per family; weapons point UP on the vertical axis (Tiny Dungeon's convention) so they never share a pose with the class dagger, which is diagonal; the tool is a WRENCH (the catalog's two tool items are a repair kit and a spirit lantern: no mining tool, and a hammer or pick reads as a weapon), diagonal"}
+  item: {size: 24, convention: "24x24; one object per family; weapons point UP on the vertical axis (Tiny Dungeon's convention); this sword is the only new blade: the rogue became a hooded cowl (2026-10-08, owner fixes) while the enemy camp keeps its adopted crossed swords by the owner's choice (the tent drafts were not adopted); the tool is a TOOLBOX (the catalog's two tool items are a repair kit and a spirit lantern: no mining tool; a hammer, pick or wrench was tried and read as a weapon or a key; the lantern cannot also be drawn)"}
   rarity: {size: 8, convention: "8x8 badge, a gem or bead silhouette that is never an octagon or a diamond (those are the tier ladder); name stays as text"}
   tier: {size: 8, convention: "8x8 rank badge: octagon (E to A) or diamond (S to SSS), pips cut out for steps"}
   status: {size: 16, convention: "16x16 frame with one arrow inside; the arrow's direction carries the meaning, not colour"}
@@ -134,15 +134,15 @@ icons:
     synonyms: [wizard, hat, witch, mage]
     distractors: [birthday cone, traffic cone, crown, helmet, tent, mountain]
   icon.class.rogue:
-    status: v2
-    subject: a dagger
-    orientation: diagonal, point at the top right, grip at the bottom left (45 degrees)
-    proportions: "overall about 18 px along the diagonal; blade about 55 percent of it and 2 px thick with a centre highlight; a guard 6 px wide perpendicular to the blade; a wrapped grip 4 px with two alternating colours; a round pommel"
-    parts: [blade, centre highlight, crossguard, wrapped grip, pommel]
-    reads_as: a dagger or knife
-    must_not_read_as: a sword, a cleaver, a letter opener, a paintbrush
-    synonyms: [dagger, knife, blade, dirk, stiletto]
-    distractors: [sword, cleaver, letter opener, paintbrush, screwdriver, needle]
+    status: revision
+    subject: a hooded cowl
+    orientation: upright, symmetric
+    proportions: "18 px wide at the shoulders and 18 px tall; a peaked hood narrowing to a point at the top, a deep dark face opening about 8 px wide and 9 px tall with two gold eye glints, shoulders flaring below the hood to the full width, a hem band; dark cloak colours (never the mage hat's cone-and-brim)"
+    parts: [peaked hood, face opening, eye glints, shoulders, hem band]
+    reads_as: a hooded cloak, a rogue
+    must_not_read_as: a wizard hat, a tent, a ghost, a bell
+    synonyms: [hood, hooded, cowl, cloak, rogue, thief, assassin, monk]
+    distractors: [wizard hat, tent, ghost, bell, mountain, helmet]
   icon.item.weapon:
     status: v2
     subject: a sword
@@ -174,15 +174,15 @@ icons:
     synonyms: [pendant, amulet, necklace, medallion, locket, talisman, jewel, charm]
     distractors: [medal, flask, ring, compass, clock, button]
   icon.item.tool:
-    status: v2
-    subject: a wrench
-    orientation: diagonal, handle bottom left to head top right (long axis rises to the right at 35 to 55 degrees)
-    proportions: "long axis at least 2.5 times the short axis; a handle 3 px across with a round hole in its end; a round head about 10 px across with an open jaw (a notch cut from the head, solidity at most 0.90)"
-    parts: [handle, hole in the end, round head, open jaw]
-    reads_as: a wrench or spanner, a repair tool
-    must_not_read_as: a hammer, a weapon, a key, a bone
-    synonyms: [wrench, spanner, tool, repair]
-    distractors: [hammer, key, bone, pickaxe, axe, fish skeleton]
+    status: revision
+    subject: a toolbox
+    orientation: upright, symmetric, wider than tall
+    proportions: "18 px wide and 17 px tall; a red body with a lighter lid band, a flat arched carry handle 8 px wide on top, a gold latch about 4x4 px in the centre and four rivets; it depicts the catalog's repair kit (the spirit lantern, the family's other item, cannot also be drawn: one family icon, stated)"
+    parts: [body, lid band, carry handle, latch, rivets]
+    reads_as: a toolbox, a repair kit
+    must_not_read_as: a treasure chest, a briefcase, a lunchbox, a first-aid kit
+    synonyms: [toolbox, tool box, toolkit, tool kit, tools, repair kit]
+    distractors: [treasure chest, briefcase, lunchbox, first aid kit, suitcase, battery]
   icon.item.consumable:
     status: v2
     subject: a potion flask
@@ -204,14 +204,14 @@ icons:
     synonyms: [ore, rock, stone, boulder, mineral, nugget, crystal, gold]
     distractors: [gem, pillow, cabbage, egg, coal bag, diamond]
   icon.rarity.common:
-    status: v2
-    subject: a round bead
+    status: revision
+    subject: a silver bead
     orientation: centred
-    proportions: "7x7 px, round (fills at most 80 percent of its bounding box: a circle is 79, a square 100), slate fill with a dark outline and one lighter highlight pixel at the top left; never the tier's 8 px"
-    parts: [round body, highlight]
-    reads_as: a plain round bead
+    proportions: "7x7 px, round (fills at most 80 percent of its bounding box), a light silver fill (#c8d8e8) with a bright highlight (#eafeff) at the top left and a shaded lower right (#91a2ab), dark outline; never the tier's 8 px, and lighter than the dark tier badges E and D so it cannot be mistaken for them by value"
+    parts: [round body, highlight, shade]
+    reads_as: a silver bead or pearl
     must_not_read_as: a square, a tier badge, a coin
-    synonyms: [bead, ball, pearl, orb, dot, circle, sphere, stone, button]
+    synonyms: [bead, ball, pearl, orb, dot, circle, sphere, stone, button, silver]
     distractors: [square, octagon, coin, diamond, star, hexagon]
   icon.rarity.uncommon:
     status: v2
@@ -282,15 +282,15 @@ icons:
   icon.tier.ss: {status: adopted, subject: a gold diamond badge with one pip, orientation: centred, proportions: "8x8 diamond, gold fill, one cut-out", parts: [diamond, one pip], reads_as: a rank badge, must_not_read_as: a playing card suit, synonyms: [diamond, gem, rhombus, crystal, badge, jewel, rank, token], distractors: [octagon, star, circle, square, heart, shield]}
   icon.tier.sss: {status: adopted, subject: a platinum diamond badge with two pips, orientation: centred, proportions: "8x8 diamond, platinum fill, two cut-outs", parts: [diamond, two pips], reads_as: a rank badge, must_not_read_as: a playing card suit, synonyms: [diamond, gem, rhombus, crystal, badge, jewel, rank, token], distractors: [octagon, star, circle, square, heart, shield]}
   icon.status.frame_buff:
-    status: adopted
-    subject: a frame with an up arrow
+    status: revision
+    subject: a round frame with a solid up arrow
     orientation: upright, symmetric
-    proportions: "a rounded frame with a green rim, an up chevron inside"
-    parts: [rounded frame, green rim, up chevron]
+    proportions: "the adopted round green frame unchanged (16x16, green rim, dark green interior); inside it a SOLID bone-coloured up arrow: a head 2, 4 then 6 px wide and a shaft 2 px wide and 5 px tall, centred, the mirror of the debuff's down arrow; no chevron outline"
+    parts: [round frame, green rim, solid arrow head, solid arrow shaft]
     reads_as: an increase, a buff
-    must_not_read_as: a roof, a house
-    synonyms: [up arrow, upward, arrow up, increase, chevron, buff, rise, boost, up]
-    distractors: [house, roof, mountain, down arrow, tent, crown]
+    must_not_read_as: a gem, a shield, a cross, a sword
+    synonyms: [up arrow, arrow up, upward, increase, rise, boost, ascend, buff]
+    distractors: [gem, shield, cross, sword, signpost, lamp post]
   icon.status.frame_debuff:
     status: adopted
     subject: an inverted-triangle frame with a down arrow

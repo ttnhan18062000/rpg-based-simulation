@@ -120,3 +120,59 @@ def test_a_wall_that_slopes_one_way_like_the_boot_fails_the_u_shape_row_and_a_u_
     assert "broken top edge: U-shaped, not a slope" in {r.item for r in slope if not r.ok}
     u_shape = cp.measure({"icon.marker.ruins": staircase_wall([4, 4, 4, 8, 8, 8, 8, 3, 3, 3])}, ["icon.marker.ruins"])["icon.marker.ruins"]
     assert "broken top edge: U-shaped, not a slope" not in {r.item for r in u_shape if not r.ok}
+
+
+# ---- the owner-fix revisions (r0002): each spec row fails on its own planted defect (`TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES`) ----
+
+from tests.visual_assets import icon_owner_fixes_draft_set as of  # noqa: E402
+
+
+def _edit(sprite: rule.Sprite, changes: dict[tuple[int, int], tuple[int, int, int, int]]) -> rule.Sprite:
+    rgba = list(sprite.rgba)
+    for (x, y), value in changes.items():
+        rgba[y * sprite.width + x] = value
+    return rule.Sprite(sprite.width, sprite.height, tuple(rgba))
+
+
+def _r2(key: str, sprite: rule.Sprite) -> set[str]:
+    sprites = of.proposed_sprites()
+    sprites[key] = sprite
+    return {r.item for r in cp.measure(sprites, [key], checks=cp.CHECKS_R2)[key] if not r.ok}
+
+
+def test_the_six_drafts_as_drawn_meet_every_row_of_their_own_table():
+    rows = cp.measure({**la.all_icon_sprites(), **of.fix_sprites()}, list(of.KEYS), checks=cp.CHECKS_R2)
+    assert set(rows) == set(of.KEYS) and [(k, r.item) for k, rs in rows.items() for r in rs if not r.ok] == []
+
+
+def test_a_changed_frame_pixel_or_an_outlined_chevron_fails_the_buff_rows():
+    mine = of.fix_sprites()["icon.status.frame_buff"]
+    assert "frame unchanged" in _r2("icon.status.frame_buff", _edit(mine, {(1, 7): (0, 0, 0, 0)}))
+    assert "solid, not an outline" in _r2("icon.status.frame_buff", _edit(mine, {(7, 8): (0x4A, 0x60, 0x50, 255)}))  # a hole in the shaft
+
+
+def test_the_adopted_slate_bead_fails_the_lighter_than_the_tier_badges_row():
+    old = la.all_icon_sprites()["icon.rarity.common"]  # the 7 px slate bead of r0001: mean L* 40 against tier D's 29, a gap of 11
+    failed_rows = _r2("icon.rarity.common", old)
+    assert "lighter than the dark tier badges" in failed_rows and "silver fill" in failed_rows
+
+
+def test_a_tent_that_reaches_the_canvas_edge_fails_the_live_area_row_which_the_first_drawing_did():
+    mine = of.fix_sprites()["icon.marker.enemy_camp"]
+    edge = _edit(mine, {(0, 0): (0x0E, 0x10, 0x18, 255)})
+    assert "live area" in _r2("icon.marker.enemy_camp", edge)
+
+
+def test_a_closed_dome_without_a_gap_fails_the_ruins_arch_rows():
+    mine = of.fix_sprites()["icon.marker.ruins"]
+    fill = {(x, y): (0x91, 0xA2, 0xAB, 255) for x in range(6, 10) for y in range(5, 11)}
+    assert {"open gap", "rubble"} & _r2("icon.marker.ruins", _edit(mine, fill))
+
+
+def test_a_toolbox_without_its_latch_and_a_hood_without_a_face_opening_fail_their_rows():
+    box = of.fix_sprites()["icon.item.tool"]
+    no_latch = _edit(box, {(x, y): (0xD0, 0x40, 0x30, 255) for x in range(10, 14) for y in range(11, 15)})
+    assert "latch" in _r2("icon.item.tool", no_latch)
+    hood = of.fix_sprites()["icon.class.rogue"]
+    no_face = _edit(hood, {(x, y): (0x3A, 0x30, 0x40, 255) for x in range(7, 17) for y in range(7, 18) if tuple(hood.rgba[y * 24 + x][:3]) == (0x25, 0x25, 0x30)})
+    assert {"face opening", "measurable"} & _r2("icon.class.rogue", no_face)  # with no dark pixels at all the part cannot even be found: reported as not measurable

@@ -75,5 +75,10 @@ def report(sprites: dict[str, rule.Sprite], neighbours: int = 3, close: int = CL
 
 
 if __name__ == "__main__":
-    print(json.dumps(report(all_icon_sprites()), indent=1))
+    if "--proposed" in sys.argv:  # the set with the owner-fix revisions (icons-owner-fixes-v1) in place of the adopted r0001 drawings
+        from tests.visual_assets import icon_owner_fixes_draft_set
+
+        print(json.dumps(report(icon_owner_fixes_draft_set.proposed_sprites()), indent=1))
+    else:
+        print(json.dumps(report(all_icon_sprites()), indent=1))
     sys.exit(0)

@@ -4,8 +4,11 @@ import manifestText from './__fixtures__/icondraft/draft_preview_manifest.json?r
 import ruleResultText from './__fixtures__/icondraft/rule_result.json?raw'
 import manifestV2Text from './__fixtures__/icondraft_v2/draft_preview_manifest.json?raw'
 import ruleResultV2Text from './__fixtures__/icondraft_v2/rule_result.json?raw'
+import manifestFixesText from './__fixtures__/icondraft_fixes/draft_preview_manifest.json?raw'
+import ruleResultFixesText from './__fixtures__/icondraft_fixes/rule_result.json?raw'
+import silhouetteSheetText from './__fixtures__/iconsilhouettes/silhouette_sheet.json?raw'
 
-const urlModules = import.meta.glob(['./__fixtures__/icondraft/*.png', './__fixtures__/icondraft_v2/*.png'], { eager: true, query: '?url', import: 'default' }) as Record<string, string>
+const urlModules = import.meta.glob(['./__fixtures__/icondraft/*.png', './__fixtures__/icondraft_v2/*.png', './__fixtures__/icondraft_fixes/*.png'], { eager: true, query: '?url', import: 'default' }) as Record<string, string>
 
 export const iconDraftManifestText: string = manifestText
 export const iconRuleResultText: string = ruleResultText
@@ -17,3 +20,10 @@ export const iconDraftUrls: Readonly<Record<string, string>> = Object.freeze(
   Object.fromEntries(Object.entries(urlModules).map(([path, url]) => [path.slice(path.lastIndexOf('/') + 1), url])),
 )
 export const iconDraftUrlFor = (file: string): string | undefined => iconDraftUrls[file]
+
+// The one-colour silhouette sheet the owner approves before any full drawing (`TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES`): committed by tests/visual_assets/icon_silhouette_sheet.py.
+export const iconSilhouetteSheetText: string = silhouetteSheetText
+
+// The owner-fix revisions (`TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES`): six new revisions of adopted icons, its own export and recorded results, shown beside the adopted drawings.
+export const iconDraftFixesManifestText: string = manifestFixesText
+export const iconRuleResultFixesText: string = ruleResultFixesText
