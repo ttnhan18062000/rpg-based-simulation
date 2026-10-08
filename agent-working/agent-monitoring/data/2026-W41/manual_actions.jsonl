@@ -10,3 +10,5 @@
 {"ts":"2026-10-08T03:09:22.228578Z","category":"handover_recovery","source":"sample","session_id":"9d7d66b2-d149-4f89-98b6-72c68cb09db4","session_role":"rpg-designer","batch":null,"count":1}
 {"ts":"2026-10-08T03:47:27.774898Z","category":"handover_recovery","source":"sample","session_id":"1b599c25-d28e-40a8-8655-5383d7842e48","session_role":"agent-working-implementer","batch":null,"count":1}
 {"ts":"2026-10-08T03:49:16.571760Z","category":"handover_recovery","source":"sample","session_id":"1b599c25-d28e-40a8-8655-5383d7842e48","session_role":"agent-working-implementer","batch":null,"count":1}
+{"ts":"2026-10-08T03:10:02.941494Z","category":"handover_recovery","source":"sample","session_id":"7053a969-e831-4bb8-b815-0f6bf5414914","session_role":"testing-planner","batch":null,"count":1}
+{"ts":"2026-10-08T04:02:13.102234Z","category":"handover_recovery","source":"sample","session_id":"11a67c3f-50a8-4d14-8f6d-ba7cec65d300","session_role":"testing-planner","batch":null,"count":1}
