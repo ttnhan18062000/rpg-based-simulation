@@ -4,12 +4,12 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-01"
+last_verified: "2026-10-08"
 ---
 
 # Scenario Bank: Capability / Progression / Conflict (Batch 07)
 
-**Purpose/scope.** Seventeen scenarios used to pressure-test the Capability/Progression,
+**Purpose/scope.** Nineteen scenarios (two added 2026-10-08 for CONFLICT-04) used to pressure-test the Capability/Progression,
 Learning/Adaptation, and Conflict/Combat rule families in
 `capability-progression/capability-progression.md`, `learning-adaptation.md`, and
 `conflict-combat.md`, per `tmp/world-rule-batch-7-ext-ai.md` and its 2026-09-22 follow-up
@@ -248,6 +248,64 @@ A legendary fighter ages or is injured; capability declines; historical signific
   mechanism reduces capability purely from elapsed time or advanced age. The probe's own
   premise ("ages... capability declines") only holds via injury in this repository, not via age
   itself.
+
+
+## CP-S18 — A fighter holds between blows (CONFLICT-04) (added 2026-10-08)
+
+A non-cautious fighter stands beside a hostile it is fighting and has just swung, so it cannot
+strike again yet. It stays on its tile, takes no opportunity attack, and strikes again when it
+is ready. It leaves only by a decision to leave, and then it pays the cost.
+
+- **Rules invoked:** CONFLICT-04, AGENCY-07 (the control arm's way out), MOV-07 (adjacency is
+  orthogonal, so any step from the fighter's tile leaves the hostile's reach).
+- **Kernel spec (`mechanic_scenario`, `tests/mechanic_scenarios/`, through
+  `tests/helpers/scenario.py`).** The same staging runs in two arms, differing only in the
+  fighter's disposition:
+  - **Staging:** a compiled world with fighter F and hostile H on orthogonally adjacent tiles,
+    hostile to each other and engaged. F is non-cautious (`safety_pressure` at or below 0.75)
+    and at full health, with readiness well under 100 (as after a swing). Both have HP high
+    enough that neither dies inside the window. The window covers at least one full readiness
+    refill for F.
+  - **Main arm (F non-cautious):** on every tick of the window, F's position is unchanged, and
+    no opportunity attack lands on F. The effect is read from the authoritative combat outcome,
+    not a log line. While F's readiness is under 100 its task is the held swing (an ATTACK
+    against H, reason `HOLD_BETWEEN_BLOWS`). When readiness reaches 100, F's swing resolves
+    against H and H's HP falls.
+  - **Control arm (F cautious, `safety_pressure` above 0.75):** the same adjacent hostile is a
+    present threat under AGENCY-07 (ADJACENT), so F decides to flee. F's position changes, and at
+    least one opportunity attack lands on F.
+  - **Why the control:** it proves the main arm holds because of the decision, not because F
+    cannot move. It also proves that leaving is a decision, and that leaving pays the cost.
+- **Result (2026-10-08): revealed contradiction on main.** F steps toward H on every tick
+  between blows and takes one opportunity attack per step (CONFLICT-04's evidence). Expected to
+  be **covered** once `TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04` lands and this
+  spec passes at kernel level.
+
+## CP-S19 — A long exchange of blows is not a stalemate (CONFLICT-04) (added 2026-10-08)
+
+Two evenly matched fighters trade blows on adjacent tiles for longer than the stall breaker's
+threshold. Neither is sent wandering off. The breaker still ends a real chase.
+
+- **Rules invoked:** CONFLICT-04 (its stall-breaker clause), tactical contract §5 (the breaker
+  fires "without a target change or outcome", and a swing is an outcome).
+- **Kernel spec (`mechanic_scenario`).** The same pair runs in two arms, differing only in
+  adjacency:
+  - **Staging:** two non-cautious fighters, hostile and engaged, with HP high enough and damage
+    low enough that both survive the window. The window is long enough for several swings each,
+    and well past 10 decision ticks. Both arms start with the stall counter already above the
+    threshold (`stale_ticks` 11 in the task payload), so the arms differ only in where the
+    fighters stand.
+  - **Main arm (orthogonally adjacent):** no `STALEMATE_BREAK` task appears for either fighter
+    while they stay adjacent, and neither fighter's position changes. How the counter is kept
+    (every ATTACK or SKILL emission, the held swing included, writes 0; divergence 2.87) is a
+    unit-level check, not this scenario's observable.
+  - **Control arm (the same pair two tiles apart, so neither can strike):** the breaker fires.
+    The first decision is a `STALEMATE_BREAK` wander for a fighter whose counter is above 10.
+  - **Why the control:** it proves the breaker is suppressed by the adjacency, not disabled
+    outright, so chase and kite loops (COMB-274..276) are still broken.
+- **Result (2026-10-08): revealed contradiction on main.** Every swing adds to the stall counter
+  (`src/engine/tactical.py:772`, `:788`), so a long melee trips the wander. Expected to be
+  **covered** once the CONFLICT-04 ticket lands and this spec passes.
 
 ---
 

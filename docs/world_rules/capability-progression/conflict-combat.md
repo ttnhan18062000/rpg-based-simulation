@@ -194,9 +194,11 @@ rpg-planner, seeds 42 to 46, 3 worlds; not re-measured here).
 - **Separate engine defect, not this Rule:** the largest class above, subjects that move with
   no move task at all (rpg-planner is filing it).
 
-**Scenarios:** none traced yet. Two are owed when implemented: a non-cautious fighter beside
-a hostile with readiness below 100 holds, and takes no opportunity attack until it chooses to
-leave; a long exchange of blows never trips the stall breaker while the pair stays adjacent.
+**Scenarios:** [CP-S18](../scenarios/capability-progression-batch-07.md#cp-s18) (a fighter
+holds between blows; a cautious control flees and pays the cost) and
+[CP-S19](../scenarios/capability-progression-batch-07.md#cp-s19) (a long exchange of blows is not
+a stalemate; a two-tile control still trips the breaker). Both are kernel-level specs, a
+revealed contradiction on main and owed as tests with the implementation.
 
 ---
 
