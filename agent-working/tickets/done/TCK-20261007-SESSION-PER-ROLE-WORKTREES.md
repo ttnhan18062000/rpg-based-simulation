@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261007-SESSION-PER-ROLE-WORKTREES
-phase: open
+phase: done
 date: 2026-10-07
 tags: [ai, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement]
 Give every designer and planner its own worktree so commit, push and open_pr work without racing the implementer
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -44,12 +44,12 @@ Owner-directed (agent-working-planner dispatch, 2026-10-07). `TCK-20261007-SESSI
 - Any change to implementer placement.
 
 ## Acceptance Criteria
-- [ ] The manifest validates with the 8 new worktrees; the implementer-only writer check is gone
-- [ ] `launch.py --dry-run --branch <topic>` for a planner with a missing worktree prints the `git worktree add` command; without `--branch` it refuses
-- [ ] The hook takes the writer lease for a planner or designer in its own worktree
-- [ ] A planner commit in its own worktree is allowed; in the implementer's worktree it is denied by the lease
-- [ ] Cards regenerated within the 400-token cap; docs and knowledge index updated
-- [ ] `pytest tests/tools -k "session or guard or classify"` green
+- [x] The manifest validates with the 8 new worktrees; the implementer-only writer check is gone
+- [x] `launch.py --dry-run --branch <topic>` for a planner with a missing worktree prints the `git worktree add` command; without `--branch` it refuses
+- [x] The hook takes the writer lease for a planner or designer in its own worktree
+- [x] A planner commit in its own worktree is allowed; in the implementer's worktree it is denied by the lease
+- [x] Cards regenerated within the 400-token cap; docs and knowledge index updated
+- [x] `pytest tests/tools -k "session or guard or classify"` green
 
 ## Related Tickets
 - TCK-20261007-SESSION-GUARD-CRITICAL-ONLY-ASKS (PR #410; prerequisite)
@@ -59,7 +59,7 @@ Owner-directed (agent-working-planner dispatch, 2026-10-07). `TCK-20261007-SESSI
 - `docs/plans/agent_infrastructure/session_layer_working_process.md`; `docs/guidelines/session_roles/`; `docs/guides/agent_session_reset_boundaries.md`
 
 ## Related Stored Artifacts
-None yet (plan.md, investigation.md and test_plan.md are written when implementation starts; the planner reviews plan.md first).
+agent-working/stored_artifacts/TCK-20261007-SESSION-PER-ROLE-WORKTREES/{plan,investigation,test_plan}.md
 
 ## Related Code Areas
 - `registries/session_roles.yaml`, `tools/sessions/{validate,launch,session_start_hook}.py`, `.claude/agents/session-*.md`, `tests/tools/`
@@ -70,13 +70,13 @@ None yet (plan.md, investigation.md and test_plan.md are written when implementa
 - Hand-orchestrated by default; a `Workflow` run needs the owner's opt-in.
 
 ## Implementation Notes
-Not started.
+Planner approved plan.md (Q1: a worktree hosts only its writer, finding `worktree-shared`; Q2: interim-holder seats too; Q3: `<role>-<topic>`). The owner confirmed the literal session_roles.yaml diff via AskUserQuestion. `launch.py --branch <topic>` (kebab-case, no date or phase number) also replaces a spent recorded branch. The hook needed no code change. Carried in from the planner: an unresolvable push target (`$BRANCH`, substitution, glob) is treated as explicit-non-default today; fix is a separate hotfix, not in this PR.
 
 ## Test Summary
-Not started.
+813 passed, 1 skipped (`pytest tests/tools -k "session or guard or classify or roster"`). New: roster (worktree-shared, designer-as-writer, real manifest), launch (--branch dry run/refuse/bad topics/spent branch/main dry run), hook (designer/planner take the lease in their own worktree, `-2` does not), guard (planner own vs implementer's worktree).
 
 ## Files Changed
-This ticket file only.
+registries/session_roles.yaml, tools/sessions/{validate,launch}.py, regenerated 8 .claude/agents cards, docs/plans/agent_infrastructure/session_layer_working_process.md, docs/guidelines/session_roles/functions/{designer,planner}.md, tests/tools/test_session_{roster,launch,resolve_and_hook,guard}.py.
 
 ## Completion Summary
-Not started.
+Every designer and planner now has its own worktree and writer slot; the launcher can bootstrap one with `--branch`. Creating the 8 worktrees on disk and relaunching each role is the owner's step after merge.
