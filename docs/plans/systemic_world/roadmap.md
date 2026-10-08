@@ -819,8 +819,8 @@ question above already has a working answer today.
 
 ## 10. Owner decisions
 
-Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has fifteen
-entries:
+Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has
+thirty-three entries (row 27 lands with the decision-27 PR):
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
 3. whether individual and institutional standing are distinct concepts;
@@ -836,6 +836,24 @@ entries:
 13. which region a contested point belongs to (decided 2026-10-05: authored precedence, catalog LOC-08);
 14. whether the deferred world-boss branches stay live (decided 2026-10-05: all three inert, flag default OFF, the calamity-gated third branch confirmed);
 15. which deaths count toward regional trauma (decided 2026-10-05: violent causes only, catalog ENV-07).
+16. which way a recruitment contract's movement goes (decided 2026-10-06: the helper joins the task);
+17. how a region's trauma reaches panic (decided 2026-10-06: dread scales to instability, catalog AGENCY-06);
+18. whether attack permission is symmetric (decided 2026-10-06: yes, declared hostility decides, catalog CONFLICT-03);
+19. how long earlier violence keeps a death violent (decided 2026-10-06: the ENV-07 window, parked on its trigger);
+20. whether a diagonal pair is in melee reach (decided 2026-10-06: no, catalog MOV-07);
+21. whether a cautious disposition decides flight by itself (decided 2026-10-07: no, catalog AGENCY-07);
+22. where a subject's needs and drives come from (decided 2026-10-07: body and person, visible defaults, catalog SURV-05 and AGENCY-08);
+23. whether a need must be meetable (decided 2026-10-07: yes, declared ways within reach, catalog SURV-06);
+24. how a need ranks against goal work (decided 2026-10-07: it escalates before its consequence line, catalog SURV-07);
+25. whether positions are whole tiles (decided 2026-10-07: yes, MOV-07 amendment);
+26. whether a subject may start with declared common knowledge about a kind (decided 2026-10-07: yes, catalog KNOW-04);
+27. where a need with no open way pulls (decided 2026-10-07: toward the step that opens one, SURV-07 amendment);
+28. what a fighter does between blows (decided 2026-10-08: holds its ground, catalog CONFLICT-04);
+29. how abundant wild food is (decided 2026-10-08: the land decides by biome, never sized to demand, SURV-06 amendment);
+30. whether settled land or the near wild may kill its people (decided 2026-10-08: no, catalog ENV-08);
+31. how people eat (decided 2026-10-08: by common-sense ways, each with a real cost, SURV-06 amendment);
+32. whether a subject notices a hostile stepping into reach (decided 2026-10-08: yes, and decides, CONFLICT-04 amendment);
+33. how far balancing goes at the foundation stage (decided 2026-10-08: a light, plausible balance pass, not perfection).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
