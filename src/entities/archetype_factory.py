@@ -14,7 +14,7 @@ from src.core.models.inventory import InventoryComponent, ItemStack
 from src.core.builder import V2EntityBuilder
 from src.content_semantics.personality import build_personality_for_entity, get_action_style_for_bravery
 from src.entities.runtime_contract import ResolvedEntityRuntimeContract
-from src.cognition.common_knowledge import default_self_model
+from src.content.common_knowledge_seed import default_self_model
 
 
 @dataclass(frozen=True)

@@ -4505,7 +4505,7 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/ai/goals/need_pull.py, src/ai/goals/scorers.py (SleepScorer, EatScorer),
+  v2_evidence: 'src/engine/need_pull.py, src/ai/goals/scorers.py (SleepScorer, EatScorer),
     src/ai/goals/present_threat.py, src/ai/goals/scorers_support.py, src/engine/tactical_rest.py
     (rest_in_place_update, called from src/engine/tactical.py). Corpus (Kernel.tick_once(),
     seeds 42-46, 1500 ticks, audit_mode, budget off, governor pinned NORMAL, main

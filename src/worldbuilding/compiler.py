@@ -9,7 +9,7 @@ from typing import Optional, Any, Dict, List, Set
 
 from src.platform.rng import DeterministicRNG
 from src.core.enums import Domain
-from src.cognition.common_knowledge import default_self_model
+from src.content.common_knowledge_seed import default_self_model
 from src.core.state import (
     AuthoritativeState,
     RegionState,
