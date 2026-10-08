@@ -93,3 +93,11 @@ caller exists.
 Stays `BLOCKED` on both fields, for corrected reasons. `enemy_data`: no producer exists anywhere,
 filed as its own ticket. `region_data`: a real derivation path exists, but no real caller does, and
 the one route family that would supply one is itself dead — declined to invent a placement.
+
+
+---
+
+## 2026-10-07 — KNOW-04 pass (rpg-implementer-2)
+**Why the data was empty.** `CapabilityContext.enemy_data` / `region_data` were never filled by any production caller. The only combat reader, `tactical.target_score`, called `CapabilityContext.for_combat(enemy_ids=[h.kind])` with no data, so `estimate()` used the `_ENEMY_DANGER` fallback. Its keys (`rat`, `wolf`, `goblin`, `goblin_chief`, `bear`, `dragon`) matched 0 of 666 entities compiled from the 24 worlds, because `entity.kind` is the lowercased population role (`compiler.py:688`: worker, scout, predator_hunter, guard, raider, ...), not a species. Every hostile therefore got danger 0.5, level 5, confidence 0.5: the COMB-316 term was a constant per attacker. `region_data` has no reader at all (`travel_regions` is set by no caller).
+**Who should fill it.** Ruled by the designer (Decision 26 / KNOW-04, 2026-10-07): the subject's own state, seeded once at spawn from catalog content declared next to the species, as a weak common-knowledge prior with visible provenance; experience overrides it (KNOW-02, Lane A's TCK-20260913). Not world truth: region `danger_level` and real stats are not used.
+**Measurements.** Species occurring as hostiles in the corpus: goblin, undead, wolf, orc, spider, lizardfolk (plus human as a target). Probe: `probes/target_choice.py` (pinned NORMAL governor, 1300 ticks, seed 42, two identical runs, same-state old-vs-new comparison): frontier_living_world 131 decisions with a target, 0 changed; crowded_frontier 213, 0 changed; both runs deterministic. Canonical size: +1,102 bytes per subject (+22%); wall time on movement[5000] not measured.
