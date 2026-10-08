@@ -22,7 +22,7 @@ from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
 from src.engine.tactical_threat import safety_retreat_warranted
 from src.engine.tactical_rest import rest_in_place_update
-from src.engine.tactical_hold import held_swing_update, stalemate_break_update
+from src.engine.tactical_hold import held_swing_update, notice_unengaged_hostile, stalemate_break_update
 from src.engine.hostility import perceived_hostile, source_identity
 
 if TYPE_CHECKING:
@@ -468,6 +468,11 @@ class TacticalDecisionSystem:
         if stale_ticks > 10 and not fighting_adjacent:
              # Logic ID: COMB-277 (Anti-stalemate does not force illegal movement)
              return stalemate_break_update(entity, strat_up, _destination_or_hold(entity, wander_destination(state, entity)))
+
+        # Decision 32: beside a hostile it is not engaged with, the subject decides now (keep walking, step away, or fight below).
+        noticed = notice_unengaged_hostile(state, entity, target, hostiles, strat_up)
+        if noticed is not None:
+            return noticed
 
         # Tactical Role Logic
         role = entity.combat.tactical_role
