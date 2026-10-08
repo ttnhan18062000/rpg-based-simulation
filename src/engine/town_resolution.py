@@ -5,7 +5,7 @@ from dataclasses import replace
 
 from src.core.updates import EntityUpdate, IdentityUpdate, CombatUpdate, BiologicalUpdate
 from src.core.enums import Faction
-from src.engine.service_prices import EAT_PRICE_GOLD
+from src.engine.service_prices import EAT_PRICE_GOLD, INN_MEAL_HUNGER, REST_PRICE_GOLD
 from src.engine.service_reach import service_at
 
 if TYPE_CHECKING:
@@ -22,6 +22,13 @@ def _service_request(state: Any, tile: Tuple[int, int], task: Any) -> Tuple[Opti
     action = task.payload_set.get("action") if task and task.work_kind_set == "ENTITY_ACT" else None
     service_pos, building_type = service_at(state, tile, SERVICE_KINDS.get(action) if action else None)
     return action, service_pos, building_type
+
+
+def _with_service(ent_upd: Any, entity: Any, intent: Any, readiness: float = 0.0) -> Any:
+    """Attach a bought town service to the entity's update; its effects are on the intent, so only the resolver's payment delivers them."""
+    can_pay = entity.inventory.gold >= -intent.gold_delta
+    return replace(ent_upd, readiness_delta=ent_upd.readiness_delta + (readiness if can_pay else 0.0),
+                   resource_transfers=list(ent_upd.resource_transfers) + [intent])
 
 
 class TownResolutionSystem:
@@ -112,23 +119,21 @@ class TownResolutionSystem:
                         building = SpatialQueryService.get_building_at(state, service_pos)
                         if building and building.functional:
                             if action == "REST" and building_type in ("inn", "home"):
-                                cb_upd = ent_upd.combat or CombatUpdate()
-                                bio_upd = ent_upd.biological or BiologicalUpdate()
-                                intent = ResourceTransferIntent(source_id=building_type.upper(), source_kind="TOWN_SERVICE", gold_delta=-10, transfer_kind="REST", is_group_required=True)
-                                ent_upd = replace(ent_upd,
-                                    combat=cb_upd.merge(CombatUpdate(hp_delta=5)),
-                                    readiness_delta=ent_upd.readiness_delta + 10.0,
-                                    biological=replace(bio_upd, sleep_debt_delta=bio_upd.sleep_debt_delta - 5.0),
-                                    resource_transfers=list(ent_upd.resource_transfers) + [intent]
-                                )
+                                # SURV-06: the bed is bought. The effects ride on the transfer (contingent), so a subject that
+                                # cannot pay gets none of them; readiness is only granted to one that can.
+                                ent_upd = _with_service(
+                                    ent_upd, entity, ResourceTransferIntent(
+                                        source_id=building_type.upper(), source_kind="TOWN_SERVICE", gold_delta=-REST_PRICE_GOLD,
+                                        transfer_kind="REST", is_group_required=True, combat_upd=CombatUpdate(hp_delta=5),
+                                        biological_upd=BiologicalUpdate(sleep_debt_delta=-5.0)),
+                                    readiness=10.0)
                                 refined_entity_updates[e_id] = ent_upd
                             elif action == "EAT" and building_type == "inn":
-                                bio_upd = ent_upd.biological or BiologicalUpdate()
-                                intent = ResourceTransferIntent(source_id="INN", source_kind="TOWN_SERVICE", gold_delta=-EAT_PRICE_GOLD, transfer_kind="EAT", is_group_required=True)
-                                ent_upd = replace(ent_upd,
-                                    biological=replace(bio_upd, hunger_delta=bio_upd.hunger_delta - 20.0),
-                                    resource_transfers=list(ent_upd.resource_transfers) + [intent]
-                                )
+                                ent_upd = _with_service(
+                                    ent_upd, entity, ResourceTransferIntent(
+                                        source_id="INN", source_kind="TOWN_SERVICE", gold_delta=-EAT_PRICE_GOLD, transfer_kind="EAT",
+                                        is_group_required=True,
+                                        biological_upd=BiologicalUpdate(hunger_delta=-INN_MEAL_HUNGER, last_meal_tick_set=state.tick)))
                                 refined_entity_updates[e_id] = ent_upd
 
             # --- Part B: Regional Effects (Tax, Suppression) ---

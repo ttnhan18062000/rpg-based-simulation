@@ -4,9 +4,11 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from src.core.enums import ReasonCode
+from src.core.items import ItemRegistry
+from src.core.models.inventory import ItemStack
 from src.core.updates import (
     BiologicalUpdate, EntityUpdate, IdentityUpdate, 
-    InteractionUpdate, NavigationUpdate, StaminaUpdate
+    InteractionUpdate, NavigationUpdate, ResourceTransferIntent, StaminaUpdate
 )
 
 if TYPE_CHECKING:
@@ -40,6 +42,19 @@ def interact_released(entity: EntityState, state: Any, target_id: Any) -> Option
     return {entity.id: EntityUpdate(entity_id=entity.id, navigation=NavigationUpdate(failure_reason=reason))}
 
 
+def carried_meal(entity: EntityState, current_tick: int) -> List[ResourceTransferIntent]:
+    """One transfer that consumes the first carried food item and applies its hunger recovery, or none when nothing edible is carried."""
+    for stack in entity.inventory.items:
+        definition = ItemRegistry.get(stack.item_id)
+        recovery = float((definition.properties or {}).get("hunger_recovery", 0.0)) if definition else 0.0
+        if recovery > 0.0 and stack.quantity > 0:
+            return [ResourceTransferIntent(
+                source_id=entity.id, source_kind="CARRIED_FOOD", transfer_kind="EAT", is_group_required=False,
+                items_remove=[ItemStack(item_id=stack.item_id, quantity=1)],
+                biological_upd=BiologicalUpdate(hunger_delta=-recovery, last_meal_tick_set=current_tick))]
+    return []
+
+
 class CoreActions:
     """
     Domain action handlers for fundamental RPG actions.
@@ -62,14 +77,10 @@ class CoreActions:
                 )
             )}
         elif action == "EAT":
+            # SURV-06 (no engine charity): eating is carried food that is consumed. A subject with none gets no relief from this
+            # action; the inn meal is a paid town service (town_resolution), not this.
             return {entity.id: EntityUpdate(
-                entity_id=entity.id,
-                readiness_delta=-100.0,
-                biological=BiologicalUpdate(
-                    hunger_delta=-40.0,
-                    last_meal_tick_set=current_tick
-                )
-            )}
+                entity_id=entity.id, readiness_delta=-100.0, resource_transfers=carried_meal(entity, current_tick))}
         elif action == "REST":
             return {entity.id: EntityUpdate(
                 entity_id=entity.id,

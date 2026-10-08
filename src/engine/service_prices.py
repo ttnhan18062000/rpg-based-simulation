@@ -5,3 +5,5 @@ price"). `town_resolution` charges it and `EatScorer` offers the inn path only t
 this one value (TCK-20261007-BIOLOGICAL-NEEDS-ESCALATE-ABOVE-ORDINARY-GOALS-BEFORE-THE-CONSEQUENCE-LINE-SURV-07).
 """
 EAT_PRICE_GOLD = 5
+REST_PRICE_GOLD = 10
+INN_MEAL_HUNGER = 40.0  # what a paid inn meal removes from hunger (was the unpaid core EAT's -40 plus the inn's -20)

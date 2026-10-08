@@ -253,7 +253,11 @@ class ResourceTransactionResolver:
 
         # VERIFIED v2: authoritative_side_effects
         if intent.source_kind in ("TOWN_SERVICE", "TAX", "REPAIR_FEE", "SERVICE_FEE", "INFORMATION_PURCHASE"):
-             if target_inventory.gold < intent.gold_cost:
+             # SURV-06 (no engine charity): a purchased service is paid in full or not delivered. A charge written as a negative
+             # gold_delta counts as a price; before this the inventory clamp at 0 swallowed it and a broke subject got the service
+             # free. A TAX is levied, not bought, and keeps its clamp.
+             price = intent.gold_cost + (max(0, -intent.gold_delta) if intent.source_kind != "TAX" else 0)
+             if target_inventory.gold < price:
                  return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)
                  
              return TransactionResult(
@@ -271,6 +275,16 @@ class ResourceTransactionResolver:
                  reward_update=intent.reward_upd
              )
         
+        elif intent.source_kind == "CARRIED_FOOD":
+             # Eating what the subject carries: the item is consumed together with the meal, or nothing happens.
+             for item in intent.items_remove:
+                 if sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id) < item.quantity:
+                     return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
+             return TransactionResult(
+                 accepted=True,
+                 inventory_update=InventoryUpdate(items_remove=intent.items_remove),
+                 biological_update=intent.biological_upd)
+
         elif intent.source_kind in ("RECRUIT", "CHEST"):
              # P0.1 Refinement: Source-level locks for world sources
              if reservations and reservations.get((intent.source_kind, intent.source_id), 0) > 0:
