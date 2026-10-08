@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, documentation, roadmap]
-last_verified: "2026-10-02"
+last_verified: "2026-10-09"
 ---
 
 # Systemic World Roadmap — PROPOSED / FOR REVIEW
@@ -820,7 +820,7 @@ question above already has a working answer today.
 ## 10. Owner decisions
 
 Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has
-thirty-six entries (row 27 lands with the decision-27 PR):
+forty-one entries (row 27 lands with the decision-27 PR):
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
 3. whether individual and institutional standing are distinct concepts;
@@ -856,7 +856,12 @@ thirty-six entries (row 27 lands with the decision-27 PR):
 33. how far balancing goes at the foundation stage (decided 2026-10-08: a light, plausible balance pass, not perfection).
 34. how a broke person earns money (decided 2026-10-08: sell, wage, task reward, paid from a real purse, catalog EXCH-02);
 35. whether worlds lack wild land by design (decided 2026-10-08: a frontier needs it, a city may have none, SURV-06 amendment);
-36. how fast starvation kills (decided 2026-10-08: weak first, death over days, SURV-02 amendment).
+36. how fast starvation kills (decided 2026-10-08: weak first, death over days, SURV-02 amendment);
+37. who holds the first coin (decided 2026-10-09: shop tills and stock, merchants' trade capital, and treasury wages, EXCH-02 amendment);
+38. whether rewards need a payer (decided 2026-10-09: yes, as its own ticket; minting is a recorded exception until then, EXCH-02 amendment);
+39. crowded_frontier's wild land (decided 2026-10-09: a new wolf-free forest-edge module, SURV-06 amendment);
+40. how a craft is learned (decided 2026-10-09: taught by a smith, for a price, over time, catalog LEARN-03);
+41. what extreme sleep debt does (decided 2026-10-09: weaken, then collapse into sleep, no HP loss, SURV-02 amendment).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,

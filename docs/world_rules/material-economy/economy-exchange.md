@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-08"
+last_verified: "2026-10-09"
 ---
 
 # World Rule Family: Economy / Exchange
@@ -84,13 +84,39 @@ wealth, but no Rule said how a person comes to hold money at all.
 - **Alternatives not taken:** a starting purse in place of earning (it stands in for the way and
   runs out); money that appears when someone needs it (engine charity).
 
+- **Amendment, who holds the first coin (decided by the owner directly, 2026-10-09; row 37 of
+  the memo):** coin exists from world creation, in the hands that would plausibly hold it, in
+  three ways at once. Shops and inns start with a till and stock (an inn has food to sell).
+  Merchants and shopkeepers start with trade capital. A faction's treasury pays wages for town
+  work. How much each holds follows the place (a shop's size, a faction's wealth), never an
+  acceptance target. Starting coin is declared world content, so its provenance is world
+  creation, not engine charity, and from then on every coin moves only between purses.
+  - **Why:** Lane B's read (seed 42, three measured worlds) found that no purse held coin at
+    all. Every building had 0 gold and 0 stock, and every person had 0 gold, merchants included.
+    The only coin was 1000 per faction treasury (`global_resources`), held by no one. SHOP_SELL
+    rejects on an empty purse (`LIQUIDITY_EXHAUSTED`) and SHOP_BUY on empty stock
+    (`OUT_OF_STOCK`), so neither selling nor wages could ever start.
+  - **Alternatives not taken:** only shops and merchants (no wages until a shop earns); only the
+    treasury (selling waits until a shop has earned coin).
+- **Amendment, a reward needs a payer (decided by the owner directly, 2026-10-09; row 38 of the
+  memo):** a kill bounty is paid from the treasury of the faction that posted it, a quest reward
+  from the quest giver's purse, and loot is whatever the dead body carried. A reward that no
+  purse pays is minted coin and breaks this Rule. It is its own ticket, after first coin lands.
+  Until then, the minted kill and quest rewards are recorded as a known exception (an
+  intentional divergence, class Bounded, naming that ticket).
+  - **Today:** `COMBAT`/`KILL_REWARD` and `QUEST_REWARD` grant gold with no payer debited. All
+    coin that reached town workers in Lane B's runs was minted kill reward (5 to 35 gold).
+  - **Alternative not taken:** accept a bounty paid by "the world" as a lasting exception.
+
 **Repository evidence: MISSING for wages; PARTIAL for selling and rewards.** Lane B's
 feasibility read (relayed by rpg-planner, 2026-10-08): every town worker starts with 0 gold, and
 over a run 14 workers together take in 5 to 40 gold, against a 5-gold meal. Selling exists as a
 price rule (sell at 50 percent of base, `docs/mechanics/03_economic_laws.md` §4), but no worker
 is seen selling. Decision 27's earn opening step is a stub, and there is no paid-work concept.
 Quest rewards exist for adventurers. Shops, inns and a smithy exist in all three measured worlds,
-so earning is the only way to eat present in every one of them.
+so earning is the only way to eat present in every one of them. **CONFLICTING for first coin
+and for rewards** (decisions 37 and 38): no purse but a faction treasury holds coin at compile,
+and kill and quest rewards are minted.
 
 **Scenarios:** [ME-S19](../scenarios/material-economy-batch-08.md#me-s19) (sell gathered food,
 the shop's purse pays, buy a meal; an empty-purse control) and

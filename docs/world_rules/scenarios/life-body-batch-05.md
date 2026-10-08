@@ -4,12 +4,12 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-08"
+last_verified: "2026-10-09"
 ---
 
 # Scenario Bank: Life / Body / Survival / Ecology (Batch 05)
 
-**Purpose/scope.** Eighteen scenarios (LB-S17 and LB-S18 added 2026-10-08) used to pressure-test the Lifecycle, Body/Condition,
+**Purpose/scope.** Nineteen scenarios (LB-S17 and LB-S18 added 2026-10-08, LB-S19 added 2026-10-09) used to pressure-test the Lifecycle, Body/Condition,
 Survival Needs, and Ecology/Population rule families in `life-body/lifecycle.md`,
 `life-body/body-condition.md`, `life-body/survival-needs.md`, and
 `life-body/ecology-population.md`, per `tmp/world-rule-batch-5-ext-ai.md`. Covers all sixteen
@@ -266,6 +266,48 @@ health only later, and dies after about two to three days. A person who eats doe
 - **Result (2026-10-08): revealed contradiction on main.** `hunger >= 95.0` costs 2 HP per tick
   (`src/engine/apply.py`), so S dies about 50 ticks after the line (SURV-02's amendment
   evidence). Expected to be **covered** with Lane A's decision-36 ticket.
+
+---
+
+## LB-S19 — Extreme sleep debt weakens, then collapses the subject where it stands, with no HP loss (SURV-02 amendment, decision 41) (added 2026-10-09)
+
+A person who has gone far too long without sleep is weaker first, then falls asleep where they
+stand, cannot act while asleep, and wakes once enough of the debt is slept off. Their health
+never drops from lack of sleep. A rested person does none of this.
+
+- **Rules invoked:** SURV-02 (crossing a threshold has real consequences; decision 41 makes
+  sleep debt end in collapse, not in HP loss), Bible 01 (biological pressures: sleep debt
+  accrues 0.05 per tick).
+- **Kernel spec (`mechanic_scenario`).** Two arms, differing only in starting sleep debt:
+  - **Staging:** a compiled world with one people-kind subject S, a non-combatant, at full HP,
+    with hunger low (well below every hunger stage, so starvation cannot confound the reading),
+    no hostiles and no ambient hazard. S is part way along a long committed walk across open
+    ground, so a collapse shows as a stop away from any bed. The window runs until S has woken
+    and walked on.
+  - **Main arm (sleep debt just below the collapse line, above the weakened line):**
+    - **Stage 1, weakened:** at staging, S's capacity is degraded (slower recovery, a lower
+      combat-effectiveness term). It is not collapsed and still acts.
+    - **Collapse:** within a few ticks S's debt reaches the collapse line, and S falls asleep
+      where it stands, on the tile it occupied, not at a bed. Its committed walk stops.
+    - **While collapsed:** S takes no action and does not move, and its sleep debt falls.
+    - **Wake:** once its debt falls below the wake line, S can act again and resumes deciding
+      (it may walk on). The weakening clears once its debt is below the weakened line.
+    - **No HP loss:** S's HP is never lower than at staging at any tick in the window.
+    - Each stage change is read from authoritative state.
+  - **Control arm (sleep debt low):** S is not weakened and never collapses, completes or
+    continues its walk, and its HP is unchanged.
+  - **Why the control:** it proves the weakening and the collapse come from the debt, not from
+    the staging or the walk.
+  - **Engineering, not observable:** the weakened threshold and effect sizes, the collapse line
+    (decision 41 sets it at 98), the wake line, and the rest rate. The spec checks the stage
+    order, "no action while collapsed", waking, and "no HP loss" only. rpg-planner's suggested
+    numbers (2026-10-09): weakened at 80, reusing the existing attack x0.8 EXHAUSTION hook in
+    `combat.py` plus regen x0.5 as in decision 36's `src/engine/starvation.py`, collapse at 98,
+    and wake below about 60.
+- **Result (2026-10-09): revealed contradiction on main.** `sleep_debt >= 98.0` costs 1 HP per
+  tick (Bible 01, biological pressures), so S loses HP from the first tick past the line and
+  dies about 100 ticks later, still walking. Expected to be **covered** with the decision-41 code
+  ticket (`TCK-20261009-SLEEP-DEBT-WEAKENS-THEN-COLLAPSES-THE-SUBJECT-WHERE-IT-STANDS-NO-HP-LOSS`).
 
 ---
 

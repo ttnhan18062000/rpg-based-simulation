@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-08"
+last_verified: "2026-10-09"
 ---
 
 # World Rule Family: Conflict / Combat
@@ -185,6 +185,12 @@ was declared without any Rule on when a fighter accepts it.
     what remains after the engaged-only block is this case.
   - **Engineering, not this Rule:** how the event reaches the decision layer (an event-driven
     re-decision touches scheduling), and its cadence. This is feature work with its own ticket.
+  - **Two follow-up rulings (owner, directly, 2026-10-09, on Lane A's per-world split):** a WATCH
+    posture means stand and observe, as a typed wait. It does not mean fight, because the router
+    withholds the attack under WATCH, so the subject would "fight on paper" and strike nothing.
+    "Keep walking and pay knowingly" (IGNORE) is built but unreachable today, because the posture
+    service never returns IGNORE for these pairs. That is accepted for now and disclosed;
+    making it reachable is a later combat_engagement ticket.
 - **Alternatives not taken:** back off between blows and re-close (today's behaviour, made
   intentional: one free hit per swing for no reason the fiction holds); hold only when winning
   (duplicates AGENCY-07's OUTMATCHED term, and a losing fighter has no better tile to step to).

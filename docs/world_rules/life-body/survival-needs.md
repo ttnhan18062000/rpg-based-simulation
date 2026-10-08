@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-08"
+last_verified: "2026-10-09"
 ---
 
 # World Rule Family: Survival Needs
@@ -95,6 +95,29 @@ Catalog has found.
   may reuse the capacity degradation SURV-02 already cites), the HP-loss rate, and the same
   staging for other needs where it fits. It is a code ticket after Lane B's batch.
 - **Evidence: CONFLICTING** until that ticket lands.
+
+**Amendment, sleep debt ends in collapse, not in bleeding (decided by the owner directly,
+2026-10-09; row 41 of the memo):**
+
+> A person who goes far too long without sleep weakens first, then falls asleep where they
+> stand and cannot act until enough of the debt is slept off. Lack of sleep does not wound.
+> The cost is lost time and being helpless in place, which is dangerous away from settled land.
+
+- **Today:** `sleep_debt >= 98.0` costs 1 HP per tick (`docs/mechanics/01_entity_anatomy.md`,
+  the biological pressures table), so a 100 HP body dies about 100 ticks (one hour) after the
+  line. That is the same defect decision 36 fixed for hunger, and it is still in place after
+  decision 36's code landed (rpg-planner, 2026-10-09).
+- **Shape:** a high-debt stage weakens the subject, the same kind of effect as hunger's first
+  stage. At 98 or above the subject collapses into sleep and cannot act until its debt falls
+  below a wake line. There is no HP loss at any stage.
+- **Engineering and content, not this Rule:** the weakening threshold and effects, the wake line,
+  how collapse is represented (a typed involuntary sleep, not a frozen action), and how a
+  sleeping subject is treated by others (perception, attack).
+- **Alternatives not taken:** staged HP loss as for hunger (a sleepless death is less plausible
+  than collapse); collapse plus slow HP loss; keep 1 HP per tick for now.
+- **Evidence: CONFLICTING** until its code ticket lands.
+- **Scenario:** [LB-S19](../scenarios/life-body-batch-05.md#lb-s19) (weakened, collapse where it
+  stands, no action while asleep, wakes, no HP loss; a rested control).
 
 **Scenarios:** [LB-S08](../scenarios/life-body-batch-05.md#lb-s08) (survival pressure).  Staged starvation:
 [LB-S18](../scenarios/life-body-batch-05.md#lb-s18) (weakened within hours, dies at 2 to 3 days;
@@ -314,6 +337,12 @@ the world, which contradicts SURV-03 (a need is modeled for its real, causal con
     a content oversight: `crowded_frontier` gets a wild module (content). A city may have no wild
     land within reach by design: `urban_political` keeps none, and its people eat by earning and
     buying (EXCH-02).
+  - **Which wild land crowded_frontier gets (decided by the owner directly, 2026-10-09; row 39
+    of the memo):** a new small forest-edge module with forage and no den, no wolves and no
+    hostile faction. The ready-made `wolf_den_near_forest` is not used: it would put a den and
+    five wolves five tiles from the hometown, against decision 30 (land near a settlement is
+    livable; lethal danger sits deeper). The new module's placement must not overlap
+    `bandit_road`.
   - **Unchanged guardrails:** wild food enters by harvest and leaves by eating (Bible 03
     conservation); it is its own declared item and node kind, never herb; and the integrity
     check (`need_paths.py`) counts a wild-food node within reach as a hunger way for the kinds
