@@ -276,10 +276,11 @@ is ready. It leaves only by a decision to leave, and then it pays the cost.
     least one opportunity attack lands on F.
   - **Why the control:** it proves the main arm holds because of the decision, not because F
     cannot move. It also proves that leaving is a decision, and that leaving pays the cost.
-- **Result (2026-10-08): revealed contradiction on main.** F steps toward H on every tick
-  between blows and takes one opportunity attack per step (CONFLICT-04's evidence). Expected to
-  be **covered** once `TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04` lands and this
-  spec passes at kernel level.
+- **Result: covered since #439 (`86b77abca`, 2026-10-08).**
+  `tests/mechanic_scenarios/test_conflict04_fighter_holds_between_blows.py`: the main arm holds,
+  takes no opportunity attack, and its swing lowers H's HP; the cautious control leaves and pays.
+  The main arm fails on pre-merge main. Before #439 this was a revealed contradiction: F stepped
+  toward H on every tick between blows and took one opportunity attack per step.
 
 ## CP-S19 — A long exchange of blows is not a stalemate (CONFLICT-04) (added 2026-10-08)
 
@@ -303,9 +304,11 @@ threshold. Neither is sent wandering off. The breaker still ends a real chase.
     The first decision is a `STALEMATE_BREAK` wander for a fighter whose counter is above 10.
   - **Why the control:** it proves the breaker is suppressed by the adjacency, not disabled
     outright, so chase and kite loops (COMB-274..276) are still broken.
-- **Result (2026-10-08): revealed contradiction on main.** Every swing adds to the stall counter
-  (`src/engine/tactical.py:772`, `:788`), so a long melee trips the wander. Expected to be
-  **covered** once the CONFLICT-04 ticket lands and this spec passes.
+- **Result: covered since #439 (`86b77abca`, 2026-10-08).** The same test file: the adjacent
+  pair starting at `stale_ticks` 11 never wanders and both survive; the control pair two tiles
+  apart gets the `STALEMATE_BREAK`. The main arm fails on pre-merge main. Before #439 every swing
+  added to the stall counter (`src/engine/tactical.py:772`, `:788`), so a long melee tripped the
+  wander.
 
 ---
 
