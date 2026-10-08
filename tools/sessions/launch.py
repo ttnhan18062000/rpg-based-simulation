@@ -398,6 +398,22 @@ def plan_launch(target: Target, root: Path, state_root: Path, worktree: Path, pd
     return 0, evidence + ["replacing: a fresh instance reads the handover note and the git state; the old transcript is kept"], None
 
 
+def disk_warning(root: Path) -> list[str]:
+    """One warning line when free space is below the threshold, else nothing. Warns only: any failure
+    here yields no line, never a changed exit code. The tree walk runs only when the cheap free-space
+    reading is already low (a walk of ~50 worktrees is slow)."""
+    try:
+        from tools.sessions import disk_headroom as dh
+
+        limit = dh.threshold_bytes()
+        if dh.low_space_line(dh.free_bytes(root), limit) is None:
+            return []
+        line = dh.warning_line(dh.measure(root), limit) or dh.low_space_line(dh.free_bytes(root), limit)
+        return [line] if line else []
+    except Exception:
+        return []
+
+
 def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
     ap = argparse.ArgumentParser(description="Launch a session role.")
     ap.add_argument("role")
@@ -442,6 +458,8 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
         print(line)
     if not go:
         return EXIT_REFUSED
+    for line in disk_warning(root):
+        print(line)
     cmd, env = build_command(target, sid)
     if a.dry_run:
         note = handover_base(root) / role.handover

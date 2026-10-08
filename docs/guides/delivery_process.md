@@ -200,6 +200,12 @@ alongside the main checkout, each independently on its own branch.
   — it just shares the filesystem directory rather than getting its own. Commit and push each unit
   of work to its own branch as usual; never mix commits from two unrelated units of work onto one
   branch.
+- **Removing merged worktrees** (owner-run, `delete_worktree_or_data`): `python3 -m tools.sessions.prune_branches
+  --worktrees` lists each worktree as removable or kept with a reason (dry run by default). Removable means the branch
+  tip equals a merged PR head, the tree is completely clean (a dirty monitoring shard is named, never ignored), it is
+  no session seat (roster path, writer lease or live instance), has no open PR and no process inside. `--execute` runs
+  `git worktree remove` without `--force`, keeps the branches and writes `~/Working/worktree-backup-<date>.txt`.
+  Detached worktrees are always kept (no PR to prove them merged). (`TCK-20261008-SESSION-MERGED-WORKTREE-PRUNE`)
 - Watch for the shared-directory monitoring auto-write race when switching branches this way: the
   current week's `agent-working/agent-monitoring/data/YYYY-Www/tools.jsonl` shard is rewritten by a hook on nearly
   every tool call, so a plain `git checkout -b` can fail with "local changes would be overwritten"
