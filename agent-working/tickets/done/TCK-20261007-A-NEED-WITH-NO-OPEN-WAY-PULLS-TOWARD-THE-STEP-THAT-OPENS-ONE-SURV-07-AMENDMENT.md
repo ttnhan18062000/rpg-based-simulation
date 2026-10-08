@@ -27,6 +27,8 @@ feature
 P1
 
 ## Request Summary
+NOTE (2026-10-08, as landed): free meals stay ON by owner ruling. The gate "the inn is offered only to a subject that can pay" described below is PARKED on branch `d27-free-meal-removal`; live in this change is the forage pull for a subject with no inn within reach (`NO_WAY_WITHIN_REACH`), carried-food eating, Decision 29 wild food and its placement.
+
 Found in Lane A's SURV-07 trace on urban_political, seed 42. All 5 hunger-goal defeat deaths were walking to the inn without the 5 gold for a meal; 4 of them had 0 gold. SURV-07 (`TCK-20261007-BIOLOGICAL-NEEDS-ESCALATE-ABOVE-ORDINARY-GOALS-BEFORE-THE-CONSEQUENCE-LINE-SURV-07`) fixed the futile walk: the inn is offered only to a subject that can pay, per subject (AGENCY-03), and the need is reported as unmet. That leaves a poor subject's need as a countdown timer. The economy never feels hunger.
 
 **Decision 27** (rpg-designer under owner delegation, 2026-10-07) amends SURV-07: "The pull is toward meeting the need, not toward one building. When none of the subject's ways is open to it now, the pull goes to the step that opens one: foraging or harvesting where its kind can, earning where it has paid work and then buying, or asking where a social path exists. Only ways SURV-06 declares for its kind count, and only steps the subject can actually take. A present threat still outranks it. Opening a way is attempted, not guaranteed: a subject with no step it can take stays honestly hungry, and that is SURV-06's poverty outcome."
