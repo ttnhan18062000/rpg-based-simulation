@@ -42,8 +42,6 @@ def _state(entities) -> AuthoritativeState:
         terrain=(),
         home_storage={},
         town_center=(0, 0),
-        periodic_due_ticks={},
-        work_debt={},
         movement_count=0,
         maturity=0,
         last_calamity_tick=0,

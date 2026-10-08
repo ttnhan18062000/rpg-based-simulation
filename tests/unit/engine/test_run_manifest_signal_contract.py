@@ -20,7 +20,7 @@ RUN_IDS = ("sc_manifest_canonical", "sc_manifest_live", "sc_manifest_audit")
 def _profile(contract: str) -> RuntimeProfile:
     return RuntimeProfile(
         name="TEST", hardware_class=HardwareClass.CLASS_B, max_ram_mb=512, max_cpu_percent=50.0, max_worker_count=1,
-        max_queue_depth=100, max_work_debt=100, max_replay_buffer_kb=64, max_observability_budget_percent=5.0,
+        max_queue_depth=100, max_replay_buffer_kb=64, max_observability_budget_percent=5.0,
         max_tick_budget_ms=10.0, signal_contract=contract,
     )
 

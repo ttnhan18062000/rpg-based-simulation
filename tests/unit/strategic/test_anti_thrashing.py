@@ -15,7 +15,6 @@ def mb_profile():
         max_queue_depth=10,
         max_replay_buffer_kb=1024,
         max_tick_budget_ms=10.0, # Easy math: 10ms
-        max_work_debt=100,
         max_observability_budget_percent=5.0,
         # Milestone B Truth Controls
         dwell_time_ticks=5,
