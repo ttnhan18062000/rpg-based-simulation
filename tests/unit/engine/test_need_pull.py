@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.ai.goals.need_pull import (
+from src.engine.need_pull import (
     ESCALATION_AMPLITUDE, ESCALATION_FULL, ESCALATION_ONSET, HUNGER_LINE, SLEEP_LINE,
     arrival_fraction, hunger_pull, need_pull, sleep_pull, smoothstep,
 )

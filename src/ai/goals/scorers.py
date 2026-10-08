@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Tuple
 from src.ai.goals.base import GoalScorer, GoalScore
-from src.ai.goals.need_pull import hunger_pull, sleep_pull
+from src.engine.need_pull import hunger_pull, sleep_pull
 from src.ai.goals.present_threat import present_threat_to
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
