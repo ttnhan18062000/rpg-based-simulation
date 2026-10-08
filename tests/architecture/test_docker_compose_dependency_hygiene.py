@@ -1,9 +1,13 @@
 import tomllib
+from pathlib import Path
 
 import yaml
 
-COMPOSE_PATH = "docker-compose.yml"
-PYPROJECT_PATH = "pyproject.toml"
+# Anchored on the repo root, not the working directory (the compose file lives at the root since
+# TCK-20261008-OPS-FILES-INTO-DOCKER-DIR; its Dockerfiles, nginx and telemetry configs are under docker/).
+_ROOT = Path(__file__).resolve().parents[2]
+COMPOSE_PATH = _ROOT / "compose.yaml"
+PYPROJECT_PATH = _ROOT / "pyproject.toml"
 
 
 def _load_compose():
@@ -35,11 +39,11 @@ def test_docker_compose_has_no_rabbitmq_kafka_zookeeper_services():
 
     services = compose.get("services", {})
     for dead_service in ("rabbitmq", "kafka", "zookeeper"):
-        assert dead_service not in services, f"{dead_service} service must not exist in docker-compose.yml"
+        assert dead_service not in services, f"{dead_service} service must not exist in compose.yaml"
 
     volumes = compose.get("volumes", {}) or {}
     for dead_volume in ("rabbitmq_data", "kafka_data", "zookeeper_data"):
-        assert dead_volume not in volumes, f"{dead_volume} volume must not exist in docker-compose.yml"
+        assert dead_volume not in volumes, f"{dead_volume} volume must not exist in compose.yaml"
 
     for service_name, service_def in services.items():
         env_values = _environment_values(service_def.get("environment"))

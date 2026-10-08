@@ -27,7 +27,7 @@ class ConfigLoader:
         """
         # 1. Base Defaults (Hardcoded for "cli_default")
         # In a real system, these might come from a internal registry of known profiles.
-        base_data = {
+        base_data: Dict[str, Any] = {
             "name": profile_name,
             "hardware_class": HardwareClass.CLASS_B,
             "max_ram_mb": 1024,

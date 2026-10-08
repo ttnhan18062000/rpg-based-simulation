@@ -256,3 +256,38 @@ owner's separate ruleset step, not done by the codebase domain.
   files, the ratchet then lowers the ceiling. The row-by-row list is in `python_code_craft_gates_soak_review.md`.
 - `mypy_gate` exited 2 ("could not run") for two or more new errors until it was fixed in the flip batch; if you saw that
   message on a PR, it meant new errors, now reported as exit 1.
+
+## Update 2026-10-08: #406 breaks the layer-order import contract (fix before the 2026-10-19 flip)
+
+**From:** `codebase-planner`, at `origin/main` `a514e2025`. **Asked:** remove the import below; the owner chose (2026-10-07) that rpg fixes it rather than codebase grandfathering it.
+
+#406 (`7a39acc5d`, `TCK-20261007-PROJECT-SWITCH-COMPARES-A-LIVE-CANDIDATE-SCORE-TO-THE-CURRENT-PROJECTS-CREATION-TIME-SCORE`) added `from src.ai.goals.base import GoalScore` under `if TYPE_CHECKING:` at `src/core/strategic.py:11`, for the annotation of `with_live_current_score` (line 361). The `Registry layer order` contract (`codebase/structure/importlinter.toml`) puts `src.core` in the foundation layer, which must not import `src.ai`. `exclude_type_checking_imports = false` on purpose (a contract may not be looser than the test it replaces), so a `TYPE_CHECKING` import counts: this is a real violation, not a false positive. It also closes a loop: `src/ai/goals/base.py` imports `GoalKind` from `src.core.strategic`.
+
+Today the step is advisory, so #406 merged green; main's `Code health` job shows `Import contracts (advisory): 16 kept, 1 broken`. The import-linter flip (`TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`, earliest 2026-10-19T13:40Z) makes it blocking for every PR.
+
+Two fixes, your choice:
+1. Move `with_live_current_score` out of core next to its only caller, `src/systems/strategic_systems/intelligence.py:1776` (or into `src/ai/goals/`), and update the import in `tests/unit/strategic/test_project_switch_uses_live_current_score.py`.
+2. Keep it in core and type `live_scores` with a small `Protocol` defined in core that has the two attributes the function reads (`kind`, `utility`), then drop the import.
+
+Check: `uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml` reports 17 kept, 0 broken. If it is still broken at the flip, the flip ticket either baselines the pair by hand (`codebase/structure/import_layers_baseline.txt`) with the owner's yes, or waits.
+
+**Resolved 2026-10-08.** `rpg-planner` took option 2 (a `Protocol` in core; replies on PR #416) and fixed it in #420 (`753f98ea9`, `TCK-20261008-CORE-STRATEGIC-IMPORTS-AI-GOALS-FOR-A-TYPE-HINT`), together with four more layer breaks the same check found (`src/engine/tactical_rest.py` importing `src.ai.goals.need_pull`, from #414, and three from #412, whose KNOW-04 seeding moved to `src/content/common_knowledge_seed.py`). `codebase-planner` re-checked on `origin/main` `28e304cbe`: `lint-imports` reports 17 kept, 0 broken, and #420 changed no file under `codebase/` (no `ignore_imports` or baseline entry added). Nothing is left for the import-linter flip.
+
+## Update 2026-10-08: the backend image may not find repo files that src/ reads by relative path
+
+**From:** `codebase-planner`, at `origin/main` `c1bf7a019`. **Asked:** decide whether the image should carry these files or the code should stop reading them by relative path; nothing is broken in CI, which does not run the image.
+
+The repo-root cleanup (#447, #449) rebuilt the backend image (`docker/backend.Dockerfile`, from `uv.lock`, Python 3.13); its runtime stage copies only `src/` and `data/`. Some `src/` modules read files outside those two directories through `Path(__file__)` parents, so in the image the target does not exist. Found by the codebase implementer; checked on that head with `git grep` and one image run:
+
+| Module (file:line) | Reads | In the image? |
+|---|---|---|
+| `src/engine/capability.py:8` (`parent.parent.parent`) | `docs/engine/capability_registry.yaml`, loaded by `CapabilityRegistry()` / `get_registry()` | no; **run: `FileNotFoundError: /app/docs/engine/capability_registry.yaml`** (no `src/` caller of `get_registry()` on this head, so the serve path does not hit it today) |
+| `src/rendering/grading.py:33` (`parents[2]`) | `config/rendering/grade_thresholds.toml` (default path of `load_grade_config`) | no; **run: `/app/config/rendering/grade_thresholds.toml` does not exist** |
+| `src/content/validator.py:82` (`parents[2]`) | repo test files named in the content usage matrix (`evidence_tests`), existence and `def`/`class` lookups | no `tests/` in the image (a dev-time validator) |
+| `src/api/agent_ops_dashboard/ingest.py:27,86` and `serve.py:26` (`parents[3]`) | `tools/`, `tools/agent-monitoring/` (put on `sys.path`) and `dashboard-frontend/dist` | no (agent-ops dashboard) |
+| `src/lab/workflows/*.py` (eight files, `parent.parent.parent`) | the repo root as `workspace_root` for lab workflows (docs, `agent-working`, data) | no (lab CLI, not the server) |
+| `src/engine/kernel.py:248` and `src/simulation_quality/worker.py:67` (cwd-relative, not `__file__`) | `config/simulation_quality/*.yaml` | `config/` is not copied |
+
+`src/worldbuilding/compiler.py:111` reads `data/content/spawn_tables.yaml`; that file is in the image (run: exists). The image run was one build, then `CapabilityRegistry()` and `Path.exists()` checks in a throwaway container; nothing else was started.
+
+Options (yours): (1) the image also copies the files it needs (for example `docs/engine/capability_registry.yaml` and `config/`), a one-line Dockerfile change codebase can make on your yes; (2) move such runtime data under `data/` or `src/` (package data) and read it via `importlib.resources`; (3) accept: the image is not a supported runtime today (no CI builds it).

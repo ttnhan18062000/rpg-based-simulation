@@ -736,12 +736,39 @@ jobs:
       - name: Build
         run: cd frontend && npm run build
 
-  # ── Changed-files gate (path-based skip for perf-cert-arena / migration-lanes / frontend) ──
+  # ── Backend image build (path-gated) ─────────────────────────────────────────
+  # TCK-20261008-CI-BACKEND-IMAGE-BUILD-CHECK: nothing built docker/backend.Dockerfile in CI, so the image drifted
+  # from CI's Python and uv.lock once (TCK-20261008-BACKEND-IMAGE-BUILDS-FROM-UV-LOCK). This job runs Docker's own
+  # build checks, builds the image, and asserts its Python is 3.13. Plain `docker` commands only: BuildKit is the
+  # default builder since Docker 23, so `# syntax=` and cache/bind mounts work; no docker/* actions, no layer cache,
+  # no push, no registry login. Path-gated like `frontend` (fail-open, honours resync-gate). NOT a required check:
+  # a path-skipped required check stays "expected" and would hang a PR that does not touch these paths.
+  docker-build:
+    name: "Backend image build"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [changed-files, resync-gate]
+    if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_docker_build == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build checks
+        run: docker build --check -f docker/backend.Dockerfile .
+      - name: Build
+        run: docker build -f docker/backend.Dockerfile -t rpg-backend:ci .
+      - name: Image runs the CI Python
+        run: docker run --rm rpg-backend:ci python -c "import sys, src; assert sys.version_info[:2] == (3, 13), sys.version"
+      - name: Image size
+        run: |
+          SIZE=$(docker image inspect rpg-backend:ci --format '{{.Size}}')
+          echo "Backend image rpg-backend:ci: $((SIZE / 1024 / 1024)) MiB" >> "$GITHUB_STEP_SUMMARY"
+
+  # ── Changed-files gate (path-based skip for perf-cert-arena / migration-lanes / frontend / docker-build) ──
   # TCK-20260819-CI-NARROW-PATH-FILTERED-JOBS: always runs (no if: of its own -- a
   # gate job that could itself be skipped would cascade-skip both downstream jobs via
   # the needs-success mechanism this ticket exists to avoid). Scoped to pull_request
   # events only; all other event types force both outputs true unconditionally.
   # run_frontend added by TCK-20260906-CI-FRONTEND-PATH-FILTER, same fail-open shape.
+  # run_docker_build added by TCK-20261008-CI-BACKEND-IMAGE-BUILD-CHECK, same fail-open shape.
   changed-files:
     name: "Changed files (path-filter gate)"
     runs-on: ubuntu-latest
@@ -749,6 +776,7 @@ jobs:
       run_perf_cert_arena: ${{ steps.diff.outputs.run_perf_cert_arena }}
       run_migration_lanes: ${{ steps.diff.outputs.run_migration_lanes }}
       run_frontend: ${{ steps.diff.outputs.run_frontend }}
+      run_docker_build: ${{ steps.diff.outputs.run_docker_build }}
       run_scenario_lane: ${{ steps.diff.outputs.run_scenario_lane }}
     steps:
       - uses: actions/checkout@v5
@@ -759,6 +787,7 @@ jobs:
             echo "run_perf_cert_arena=true" >> "$GITHUB_OUTPUT"
             echo "run_migration_lanes=true" >> "$GITHUB_OUTPUT"
             echo "run_frontend=true" >> "$GITHUB_OUTPUT"
+            echo "run_docker_build=true" >> "$GITHUB_OUTPUT"
             echo "run_scenario_lane=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -769,6 +798,7 @@ jobs:
             echo "run_perf_cert_arena=true" >> "$GITHUB_OUTPUT"
             echo "run_migration_lanes=true" >> "$GITHUB_OUTPUT"
             echo "run_frontend=true" >> "$GITHUB_OUTPUT"
+            echo "run_docker_build=true" >> "$GITHUB_OUTPUT"
             echo "run_scenario_lane=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -786,9 +816,10 @@ jobs:
           # reachable; 0 reachable in actions, lab, rendering, runtime, testing, views, worldgeneration;
           # every other folder (incl. cli, scenarios, api, progression, systems, strategy) has reachable
           # modules. Re-derive the list when a folder is added or an import edge into one of these appears.
-          PERF_RE='^(tests/(perf|certification|arena)/|src/(?!(?:actions|lab|rendering|runtime|testing|views|worldgeneration)/)|Makefile$|requirements\.txt$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
-          MIG_RE='^(tests/architecture/|tests/(integration|unit)/(content|scenarios|worldassembly|certification|runtime)/|tests/conftest\.py$|src/(core|content|platform|runtime|scenarios|worldassembly|worldbuilding|worldmodules|certification)/|Makefile$|requirements\.txt$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
+          PERF_RE='^(tests/(perf|certification|arena)/|src/(?!(?:actions|lab|rendering|runtime|testing|views|worldgeneration)/)|Makefile$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
+          MIG_RE='^(tests/architecture/|tests/(integration|unit)/(content|scenarios|worldassembly|certification|runtime)/|tests/conftest\.py$|src/(core|content|platform|runtime|scenarios|worldassembly|worldbuilding|worldmodules|certification)/|Makefile$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
           FRONTEND_RE='^(frontend/|\.github/workflows/test\.yml$)'
+          DOCKER_RE='^(docker/backend\.Dockerfile$|\.dockerignore$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
           # grep exits 0 on a match, 1 on none and >=2 on an error (a broken pattern): an error must fail OPEN
           # (run the lane), never skip it silently.
           perf_match() {
@@ -802,6 +833,7 @@ jobs:
           echo "run_perf_cert_arena=$PERF_COVERS" >> "$GITHUB_OUTPUT"
           echo "run_migration_lanes=$(echo "$CHANGED" | grep -qE "$MIG_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "run_frontend=$(echo "$CHANGED" | grep -qE "$FRONTEND_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "run_docker_build=$(echo "$CHANGED" | grep -qE "$DOCKER_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
           # D-R2 scenario lane: routing lives in tools/test_architecture/scenario_lane_paths.py (fail open).
           # perf-cert-arena already runs tests/mechanic_scenarios, so the dedicated job runs only when
           # perf does not (exactly once per PR). The summary names matched and unknown paths either way.

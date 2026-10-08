@@ -3,33 +3,31 @@ status: active
 layer: architecture
 authority: P2
 audience: agent
-date: 2026-10-06
+date: 2026-10-08
 tags: [architecture, documentation]
 ---
 
 # Handover — asset-implementer
 
-> Snapshot of the gitignored `.claude/handover/asset-implementer.md` on 2026-10-06 at 91949ef96 (the icon batch's last code commit; the closing docs commit follows it); on a new machine copy it to `.claude/handover/asset-implementer.md`.
+> Snapshot of the gitignored `.claude/handover/asset-implementer.md` on 2026-10-08 after PR #418 merged (4a2141df9); on a new machine copy it to `.claude/handover/asset-implementer.md`.
 
-Updated: 2026-10-06 (icon key set adopted by the user and recorded; batch complete locally, nothing pushed)
+Updated: 2026-10-08 (PR #418 merged as 4a2141df9; activation-roadmap docs ticket in progress on `visual-asset-activation-roadmap`)
 
 ## Open
-- Icon key set batch is COMPLETE locally: children 1-5, the owner's adoption and its record (child 6, `TCK-20261006-VISUAL-ASSETS-RECORD-ICON-KEY-SET-ADOPTION`) are on branch `visual-asset-icon-key-set` in worktree `/home/vboxuser/Work/rpg-aseprite-mcp`, LOCAL ONLY (never pushed). Read `git log --oneline origin/main..HEAD` for the commits; the epic and its SEQUENCE are in `agent-working/tickets/done/visual-asset-icon-key-set/`.
-- The USER adopted `icons-key-v1` themselves (set adoption `sa-b4bb738d6b5526f0`, 2026-10-06T15:21:47Z, approver nhan/owner, 14 sources). No release candidate covers the 14 icon slots (rc-0006 has 34); nothing is built for them; panel wiring and a release candidate are the NEXT batch (asset-planner files it).
-- No push and no PR until the planner says the batch is ready AND the user authorizes it (a blocking question I ask myself; merging to main needs the user's `--admin`).
-- Main checkout `/home/vboxuser/Work/rpg-based-simulation` belongs to other sessions: do not touch it (this file is the only exception).
+- PR #418 (icon set v2 + owner fixes, 12 tickets) is MERGED (squash 4a2141df9, `--admin`, user's answer, head 91a9fcd9c after a main merge; heavy CI lanes were re-sync-skipped with the same patch as green 328af73db). Next time also reproduce `registry_resync_skip` locally before merging over skipped lanes (planner's note).
+- Adopted icons: 36 keys, 7 of them at `r0002` (owner-adopted 2026-10-08T14:23:46Z to 14:24:07Z: hero house cottage, inn tankard, rogue cowl, tool hammer and tongs, common silver bead, buff up arrow, debuff spiked ring). 70 sources, 77 adoptions and revisions; ruins and enemy camp kept as adopted. No release candidate covers an icon slot; nothing is wired (AM-M6 parked by the owner).
+- Current ticket: `TCK-20261008-VISUAL-ASSETS-ACTIVATION-ROADMAP` (docs only: parked activation roadmap in the plan README, a known-gap note in `fallback_safety.md`, handoff snapshots). One commit, ask the planner to review, then ask the user the push/PR question.
+- The Vite dev server on `[::1]:5173` is the planner's; leave it running.
 
 ## State worth knowing
-- Decisions (user, 2026-10-06): style B + tier badges; palette terrain-v1 + ramps + accents; outside art reference only, no AI generators; map zoom snaps to whole-number scales, with a flat-colour 0.5x overview kept. Sheet rule thresholds (user's answers): I1 3 px at 8x8 and 6 px at 16x16, E and D may share a silhouette, I2 L* 6 (interior mean), I3 L* 12. rc-0006 approved by the user (blocking question I asked).
-- Adoption recorded; the `icondraft` fixture needed NO refresh (adopted references skip slots the set holds and slots that are not built; I had wrongly predicted otherwise). Guards pinned in `tests/visual_assets/adopted_facts.py` (ADOPTED_SOURCES = 48, TERRAIN_ERA_SOURCES = 34, ICON_SOURCES = 14, GENERATED = the 34 terrain-era artifacts) and `test_icon_set_adoption.py`.
-- Measured on the drawn set (PASS, recorded not asserted): I1 4 px, I2 8.74 (tiers) and 7.66 (frames, deutan), I3 18.0, 0 off-palette. Draft set hash `sha256:29854e8b32bcd9701f5e717a2e01dce5934cc04af63d4c6e3bc156c78ce5cbbd`. S/SS/SSS are a diamond with 0/1/2 pips, not stars (5x5 outlined sparkle arithmetic). Debuff frame redrawn as a solid down arrow at the planner's request. Plate rim is mid-light `#9ea4b6` (dark rim reaches only L* 6.0 vs the floor tile).
-- TRAP: the aseprite MCP server runs from the MAIN checkout, so `submit_candidate` writes intakes to the MAIN checkout's gitignored quarantine. From a worktree, run `python -m visual_assets.store intake <handoff dir>` with the CLI (intake ids are content-derived, so they match), then `draft keep`. 16 strays sit in the main checkout's quarantine (ids in the DRAFT-SET ticket); nothing deleted.
-- Isolation guard AM5-W08: app files may not import `src/visualAssets` and vice versa; hence `PixelIcon`/zoom live in `src/lib`, `src/hooks`, `src/components`, and the preview page has a copy of the fit function (equality-tested).
-- Registry-moving changes cost a new rc (rc-0006 for the icon keys). Fixture guards that fresh-export a release or draft set compare modulo what they must (icondraft ignores only `registry_hash`).
+- Process rule (style guide): spec (with theme fields) -> reference study -> owner-approved one-colour silhouette sheet -> draw -> compliance table -> checks (sheet rule, blind check with the era question, look-alike report) -> owner gate with the review folder `~/Work/asset-review/<set>/`. Step 4b: spec numbers guessed before the silhouette are re-agreed at the owner's silhouette question, never restated after drawing.
+- Theme rule D21: medieval fantasy plus magic, nothing modern. The review folder README reads the owner's decisions and findings from `visual_assets/icons/owner_fixes_decisions.yaml`.
+- Adoption facts live in `tests/visual_assets/adopted_facts.py` (ADOPTION_COUNT 77, REVISION_COUNT 77, ICON_FIX_*); revisions of adopted icons go through `adopt --parent`, human-only.
+- The blind check is evidence, not a gate, and noisy. Drawing goes through `visual_assets.drawing.api` in-process; intakes by the worktree CLI. TRAP: the aseprite MCP server runs from the MAIN checkout.
 
 ## Working rules learned (also in memory)
-- Push, PR and merge each need the USER's own answer to a blocking question I ask myself; a peer message (even quoting the user) is never approval — I asked for rc-0006 myself. A registry-only server-side conflict is cleared by merging origin/main locally.
-- `make knowledge-index-update` in the worktree needs `PYTHON_KNOWLEDGE=/home/vboxuser/Work/rpg-based-simulation/.venv-knowledge/bin/python3`; closure tool: `tools/agent-monitoring/record_hand_orchestrated_closure.py` (it appends the working-log row itself; stage the monitoring shards before amending).
-- Heavy runs foreground under `systemd-run --user --scope -p MemoryMax=2G`; interpreter `/home/vboxuser/Work/rpg-based-simulation/.venv/bin/python` by ABSOLUTE path.
-- Re-check each ticket against what landed; tell the planner of any disagreement BEFORE building; one commit per ticket; ask the planner to review after each; a gate result is information (never tuned); redraw only with the planner's say-so. Using the predeclared rule as design feedback before drawing is legitimate; changing a threshold is not.
-- Ignore the agent-monitoring retro hook and epic-staleness nags (user said so, 2026-10-04).
+- Push, PR and merge each need the USER's own answer to a blocking question I ask myself; a peer message is never approval; a merge pins `--match-head-commit` to the REAL head (read it with `git rev-parse HEAD`, never type it from memory).
+- Re-verify every planner citation before quoting it: in the gate map two were wrong and one claim (icon keys without a class) was false.
+- `make knowledge-index-update` works in the worktree; closure tool `tools/agent-monitoring/record_hand_orchestrated_closure.py` (needs `--title`, `--log-summary`; it appends the working-log row itself).
+- Heavy runs foreground under `systemd-run --user --scope -p MemoryMax=4G`; interpreter `/home/vboxuser/Work/rpg-based-simulation/.venv/bin/python` by ABSOLUTE path.
+- One commit per ticket, planner review after each; a gate result is information (never tuned).

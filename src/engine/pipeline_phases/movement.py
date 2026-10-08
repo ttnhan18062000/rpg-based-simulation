@@ -223,10 +223,11 @@ class MovementPhase:
         
         from src.engine.candidate_selector import MovementCandidateSelector
         policy = getattr(update, "current_policy_set", None) or GovernorPolicy()
+        position_index = MovementCandidateSelector.position_index(state.entities)
         selected_ids = MovementCandidateSelector.select(
             state, update, state.entities.keys(), 
             budget=policy.movement_budget, 
-            scan_policy=policy.scan_policy
+            scan_policy=policy.scan_policy,
         )
         
         # Record candidate count for observability
@@ -249,7 +250,7 @@ class MovementPhase:
             # snapshot of an earlier decision: it is live-refreshed for an entity-tracking move (TCK-20260809-COMBAT-PURSUIT-PER-
             # TICK-TRACE, TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS) and ignored for an entity holding an
             # action task, which moves only on a tick that sets a target. MovementCandidateSelector.select uses the same rule.
-            nav_target = MovementCandidateSelector.movement_target(entity, ent_upd, state.entities)
+            nav_target = MovementCandidateSelector.movement_target(entity, ent_upd, state.entities, position_index)
 
             if not nav_target or entity.navigation.position == nav_target:
                 continue

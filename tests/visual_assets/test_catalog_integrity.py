@@ -17,7 +17,7 @@ def test_the_committed_catalog_holds_exactly_the_pilot_forest_and_the_adopted_te
     # TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE (plain) + TCK-20261004-VISUAL-ASSETS-FOREST-DETAIL-TILES (bush, tree): three adopted tiles of one key,
     # one artifact each (+ its record), four release candidates (rc-0001 and rc-0002 are retained history; rc-0003 follows the registry change that added the other terrain keys, rc-0004 the one that added the border mask keys)
     # The owner adopted draft set terrain-v1 on 2026-10-05T18:17:03Z (`adopted_facts`): 31 more sources (22 terrain tiles, 9 border masks) next to the forest's three. No `build` or `release` has covered them yet, so
-    # the generated artifacts and the release candidates were forest-only until `build` and the candidate pilot/rc-0005 covered all 34 slots (the user approved both on 2026-10-06); rc-0006 is the same 34 slots after the `icon.*` keys moved the registry hash (the user approved it on 2026-10-06).
+    # the generated artifacts and the release candidates were forest-only until `build` and the candidate pilot/rc-0005 covered all 34 slots (the user approved both on 2026-10-06); rc-0006 is the same 34 slots after the `icon.*` keys moved the registry hash (the user approved it on 2026-10-06); rc-0007 is the same 34 slots again after the 22 icon set v2 keys moved it (the user approved it on 2026-10-07).
     # The owner then adopted icons-key-v1 (2026-10-06T15:21:47Z): 14 more sources. Nothing was built or released for them: `generated` stays the 34 terrain-era artifacts and rc-0006 stays at 34 slots.
     assert records.list_source_ids() == af.ADOPTED_SOURCES
     generated = sorted(p.name for p in (config.CATALOG_ROOT / "generated").iterdir() if p.name != ".gitkeep")
@@ -48,4 +48,4 @@ def test_the_committed_catalog_holds_exactly_the_owners_two_set_adoptions():
             adoption = records.load_adoption(entry["adoption_id"])
             assert (adoption.source_asset_id, adoption.intake_id) == (drafts[entry["intake_id"]]["source_asset_id"], entry["intake_id"])
             assert (entry["visual_key"], entry.get("detail")) == (drafts[entry["intake_id"]]["visual_key"], drafts[entry["intake_id"]].get("detail"))
-    assert sorted(a.source_asset_id for a in (records.load_adoption(p.stem) for p in records.adoptions_dir().glob("*.json"))) == af.ADOPTED_SOURCES
+    assert sorted(a.source_asset_id for a in (records.load_adoption(p.stem) for p in records.adoptions_dir().glob("*.json"))) == sorted(af.ADOPTED_SOURCES + af.ICON_FIX_SOURCES)  # the seven revised icons are adopted twice (r0001, r0002)

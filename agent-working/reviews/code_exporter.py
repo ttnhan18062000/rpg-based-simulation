@@ -137,14 +137,14 @@ def main() -> None:
 
     # Explicit extra infrastructure files for Loki, Prometheus, Grafana (agent workflows live in agent_dirs/agent_extra_files below)
     extra_infra_files = [
-        workspace_root / "docker-compose.yml",
-        workspace_root / "prometheus.yml",
-        workspace_root / "promtail-config.yml",
-        workspace_root / "nginx.conf",
+        workspace_root / "compose.yaml",
+        workspace_root / "docker/prometheus.yml",
+        workspace_root / "docker/promtail-config.yml",
+        workspace_root / "docker/nginx.conf",
         workspace_root / "src/observability/watchdog.py",
-        workspace_root / "grafana/provisioning/datasources/datasource.yml",
-        workspace_root / "grafana/provisioning/dashboards/dashboard.yml",
-        workspace_root / "grafana/dashboards/simulation.json",
+        workspace_root / "docker/grafana/provisioning/datasources/datasource.yml",
+        workspace_root / "docker/grafana/provisioning/dashboards/dashboard.yml",
+        workspace_root / "docker/grafana/dashboards/simulation.json",
     ]
 
     docs_dirs = [

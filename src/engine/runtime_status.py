@@ -42,7 +42,7 @@ class RuntimeStatus:
     def record_signals(self, signals: PressureSignals) -> None:
         """Append fresh signals and calculate trends."""
         # 1. Calculate computed trending fields (Law: 5-tick rolling window)
-        avg_compute = signals.tick_compute_ms
+        avg_compute = signals.effective_tick_cost
         memory_trend = 0.0
         
         # Access history for windowed math
@@ -54,7 +54,7 @@ class RuntimeStatus:
             
             # Rolling average for CPU (Last 5 samples including current)
             window = history_list[-4:] + [signals]
-            all_compute = [s.tick_compute_ms for s in window]
+            all_compute = [s.effective_tick_cost for s in window]
             avg_compute = sum(all_compute) / len(all_compute)
             
         # 2. Enrich signals with calculated trends
@@ -70,7 +70,10 @@ class RuntimeStatus:
             active_workers = signals.active_workers,
             dropped_work_delta = signals.dropped_work_delta,
             phase_costs_ms = signals.phase_costs_ms,
-            metrics = signals.metrics
+            metrics = signals.metrics,
+            tick_cost = signals.tick_cost,
+            tick_budget = signals.tick_budget,
+            phase_cost = signals.phase_cost
         )
         
         self.signal_history.append(enriched)

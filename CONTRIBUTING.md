@@ -20,6 +20,8 @@ Before submitting a pull request, you must ensure all tests pass:
 ```bash
 make test
 ```
+On Windows, run `make` under WSL or Git Bash (there is no `make.bat`).
+
 This command executes the **tests** suite, which includes contract, parity, and stress scenarios. For coverage analysis, use:
 ```bash
 make test-cov

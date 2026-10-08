@@ -4,7 +4,7 @@
 from __future__ import annotations
 from dataclasses import replace
 from types import MappingProxyType
-from typing import TYPE_CHECKING, List, Dict, Any, Protocol, Callable
+from typing import TYPE_CHECKING, List, Dict, Any, Mapping, Protocol, Callable
 
 from src.core.worker_protocol import WorkerResult, ResultStatus, WorkerPacket
 from src.core.work import WorkClass
@@ -12,7 +12,8 @@ from src.engine.candidate_selector import MovementCandidateSelector
 
 if TYPE_CHECKING:
     from src.core.work import WorkItem
-    from src.core.state import AuthoritativeState
+    from src.core.state import AuthoritativeState, EntityState
+    from src.core.updates import EntityUpdate
     from src.platform.rng import DeterministicRNG
     from src.engine.worker_manager import WorkerManager
 
@@ -76,6 +77,38 @@ class IWorkExecutor(Protocol):
     def set_concurrency_limit(self, limit: float) -> None:
         ...
 
+
+def _entity_move_updates(
+    subject: EntityState, payload: Dict[str, Any], entities: Mapping[int, EntityState], index_cache: List[Any]
+) -> Dict[int, EntityUpdate]:
+    """The update for one ``ENTITY_MOVE`` work item: the move ends here (idle task, target cleared) when
+    ``MovementCandidateSelector.move_ends_here`` says so, else the target is re-affirmed.
+
+    A tracked move whose target is in reach, or dead/gone, or a held move blocked beside an engaged hostile, ends here so the brain
+    chooses (Sticky-Task Law, docs/engine/kernel.md; ``tracked_move_complete``, CONFLICT-04 at the movement layer). The other
+    dispatcher, ``worker_logic.default_simulation_worker``, asks the same ``move_ends_here``."""
+    from src.core.updates import EntityUpdate, NavigationUpdate
+
+    if not index_cache:
+        index_cache.append(MovementCandidateSelector.position_index(entities))
+    if MovementCandidateSelector.move_ends_here(subject, entities, index_cache[0]):
+        return {subject.id: MovementCandidateSelector.tracked_move_completion_update(subject)}
+    target = payload.get("target_position", subject.navigation.position)
+    # Live-refresh a stale entity-tracking target
+    # (TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS): this
+    # dispatch re-emits NavigationUpdate(target_set=...) every tick a pursuit task
+    # is scheduled, which route_movement_intent's own live-retargeting fix
+    # (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE) reads as `has_fresh_decision`
+    # -- meaning that fix's own fallback-to-live-tracking branch never engages,
+    # since target_set is always non-None here even though its VALUE is the same
+    # stale payload snapshot every tick. Refreshing it live at the source keeps
+    # the "always reaffirm target_set" contract non-pursuit ENTITY_MOVE work
+    # (WANDER/RETREAT/objective movement) relies on, while fixing pursuit at its
+    # own real origin.
+    target = MovementCandidateSelector.resolve_live_tracking_target(subject, entities, target)
+    return {subject.id: EntityUpdate(entity_id=subject.id, navigation=NavigationUpdate(target_set=target))}
+
+
 class LocalSequentialExecutor:
     """
     Milestone A Law: The deterministic, single-process execution baseline.
@@ -99,6 +132,7 @@ class LocalSequentialExecutor:
         readonly_state = state.readonly_view()
 
         results: List[WorkerResult] = []
+        move_index: list = []  # the tick-start position index, built once per batch on the first ENTITY_MOVE item
 
         for i, item in enumerate(work_items):
             # 1. ENTITY CRITICAL WORK: ENTITY_MOVE / ENTITY_ACT / ENTITY_BRAIN
@@ -112,39 +146,8 @@ class LocalSequentialExecutor:
 
                 frozen_subject = subject
 
-                if item.work_kind == "ENTITY_MOVE" and MovementCandidateSelector.tracked_move_complete(
-                    frozen_subject, readonly_state.entities
-                ):
-                    # A tracked move whose target is in reach, or dead/gone, ends here so the brain chooses
-                    # (Sticky-Task Law, docs/engine/kernel.md; tracked_move_complete).
-                    updates = {frozen_subject.id: MovementCandidateSelector.tracked_move_completion_update(frozen_subject)}
-
-                elif item.work_kind == "ENTITY_MOVE":
-                    target = item.payload.get(
-                        "target_position",
-                        frozen_subject.navigation.position,
-                    )
-                    # Live-refresh a stale entity-tracking target
-                    # (TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS): this
-                    # dispatch re-emits NavigationUpdate(target_set=...) every tick a pursuit task
-                    # is scheduled, which route_movement_intent's own live-retargeting fix
-                    # (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE) reads as `has_fresh_decision`
-                    # -- meaning that fix's own fallback-to-live-tracking branch never engages,
-                    # since target_set is always non-None here even though its VALUE is the same
-                    # stale payload snapshot every tick. Refreshing it live at the source keeps
-                    # the "always reaffirm target_set" contract non-pursuit ENTITY_MOVE work
-                    # (WANDER/RETREAT/objective movement) relies on, while fixing pursuit at its
-                    # own real origin.
-                    target = MovementCandidateSelector.resolve_live_tracking_target(
-                        frozen_subject, readonly_state.entities, target
-                    )
-                    from src.core.updates import NavigationUpdate
-                    updates = {
-                        frozen_subject.id: EntityUpdate(
-                            entity_id=frozen_subject.id,
-                            navigation=NavigationUpdate(target_set=target)
-                        )
-                    }
+                if item.work_kind == "ENTITY_MOVE":
+                    updates = _entity_move_updates(frozen_subject, item.payload, readonly_state.entities, move_index)
 
                 elif item.work_kind == "ENTITY_ACT":
                     updates = SimulationDomainLogic.execute_action(

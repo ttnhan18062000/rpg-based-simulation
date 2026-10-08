@@ -3,48 +3,44 @@ status: active
 layer: architecture
 authority: P2
 audience: agent
-date: 2026-10-06
+date: 2026-10-08
 tags: [architecture, documentation]
 ---
 
 # Handover — asset-planner
 
-> Snapshot of the gitignored `.claude/handover/asset-planner.md` on 2026-10-06 at 91949ef96 (the icon batch's last code commit; the closing docs commit follows it); on a new machine copy it to `.claude/handover/asset-planner.md`.
+> Snapshot of the gitignored `.claude/handover/asset-planner.md` on 2026-10-08 after PR #418 merged (4a2141df9); on a new machine copy it to `.claude/handover/asset-planner.md`.
 
-Updated: 2026-10-06 (icon key-set batch filed and handed off)
+Updated: 2026-10-08 (PR #418 merged; idle)
 
 ## Open
-- 2026-10-06 (later): user lifted the pause for ICONS only and asked for deep research first. Research done
-  (scratchpad of session cdf02383: research_games.md, research_icon_craft.md, research_packs_palettes.md,
-  icon_research_synthesis.md; copy them into the batch as docs, scratchpad is not durable).
-  User decisions (blocking question, 2026-10-06): style B + tier badges (16px map glyph on per-category plate,
-  24px panel icons, 8px shape-escalating tier badge, status frames with up/down chevrons); palette = terrain-v1
-  base + ramps + small accent set, sheet-level icon colour-vision rule; outside art REFERENCE ONLY (recorded
-  TASL), no AI generators; map zoom snaps to whole-number scales (frontend ticket). Batch FILED: branch visual-asset-icon-key-set in rpg-aseprite-mcp, planning commit 657c552e3 (local,
-  not pushed); epic TCK-20261006-EPIC-VISUAL-ASSET-ICON-KEY-SET + 6 children in todos/visual-asset-icon-key-set/;
-  research committed in child 1's staging folder. Handed to asset-implementer 2026-10-06. Awaiting: review requests.
-  Child 1 approved (123f7b20d). Rulings: plate+glyph separate 16x16 keys, glyph live 12x12; ticket's tier ladder kept.
-  Child 2: registry_hash move breaks rc-0005 fixture guards (my ticket was wrong); user chose (a) assemble rc-0006
-  (blocking question 2026-10-06). Child 2 APPROVED (6a855754b): rc-0006 = rc-0005's 34 entries on the new registry;
-  pilot fixture guard = forest slots of fresh rc-0006 export + equality with stored rc-0004 (planner ruling). Child 3 APPROVED
-  (amended to e7bfcf631, notes only): user answers I1 3/6 px (E,D may share silhouette), I2 L* 6 (interior mean), I3 L* 12; palette icons-v1 52
-  colours. Planner accepted LIGHT plate rim #9ea4b6 (dark rim can't clear dark terrain) -> name it to the user at the gate.
-  Confirmed: the user saw interior-mean numbers. Child 4 APPROVED as f8751f0d8, final d11cdde78 (monitoring shard only): user chose (blocking
-  question 2026-10-06) a FLAT-COLOUR OVERVIEW level at 0.5x (snapping alone removed it at DPR 1); asked implementer to add
-  one overview level + pure isOverviewZoom() for the wiring batch's art path (done). Child 5 in progress: 14 drafts kept as icons-key-v1;
-  rule measured I1 min 4 px, I2 8.74/14.2, I3 18.0. Deviations to NAME AT THE GATE: light plate rim; S/SS/SSS are
-  diamonds with 0/1/2 pip cut-outs (true stars don't fit 8x8 with outline); 0.5x overview = flat colours. Icon fixture
-  guard ignores registry_hash only (planner ruling). Child 5 APPROVED as 5d2792464 (debuff redrawn as
-  a down arrow, I2 frames 7.66; draft set hash sha256:29854e8b...). User ADOPTED icons-key-v1 (sa-b4bb738d6b5526f0,
-  2026-10-06T15:21:47Z, own terminal; adopt-set refuses without a TTY so agents can't run it). Child 6 handed off.
-  Preview server tip: Vite listens on [::1] only -> http://[::1]:5173/rehearsal-icons.html. For the wiring batch: frontend fallback.ts has no `icon` family glyph (gets "?").
-- Nothing in flight. Last: PR #361 (terrain set review, 7 tickets) squash-merged as 47931fa54 on 2026-10-06 (--admin, the user's
-  own answer). Branch visual-asset-terrain-set-review finished; rpg-aseprite-mcp detached at origin/main. Awaiting: nothing.
+- Nothing in flight. Last: PR #418 (icon set v2 + owner fixes, 12 tickets) squash-merged as 4a2141df9 on
+  2026-10-08T15:14:54Z (--admin, user's answer; head 91a9fcd9c after a main merge; heavy lanes re-sync-skipped, same
+  patch as green 328af73db). rpg-aseprite-mcp detached at origin/main. Branch finished, never pushed again.
+- Adopted icons: 36 keys (14 key set + 22 v2), 7 of them at r0002 (hero house cottage, inn tankard, rogue cowl, tool
+  hammer+tongs, common silver bead, buff up-arrow, debuff spiked ring). Ruins brick wall + camp crossed swords kept.
+  No rc covers icon slots (rc-0007 = 34 terrain-era). Nothing wired into the app (AM-M6 gate, owner's choice).
+- Decisions: D20 (style), D21 (theme: medieval fantasy + magic, nothing modern), icon_criteria (I1 3/6/8, I2 6, I3 12),
+  6 item families, 3 rarity badges. Process (style guide): spec (+theme fields) -> reference study -> owner-approved
+  silhouettes (spec numbers agreed there) -> draw -> sheet rule + measured compliance + blind/era check + look-alikes
+  -> review folder ~/Work/asset-review/<set>/ (python -m tests.visual_assets.review_sheets --set <id>) -> owner gate.
+  Revisions of adopted icons: per-slot `review` + `adopt --parent rNNNN` (adopt-set cannot revise).
+- 2026-10-08: owner asked for the activation path; gate map done (7-step chain M0->M1->M2->M4->M5->M6 forest pilot->M7
+  icons family). Owner chose "Record the map, park it" (resume when RPG core lands). Batch visual-asset-activation-roadmap
+  (1 docs ticket, planning commit on that branch) handed to implementer; also refreshes this snapshot in the repo.
+  Known gap: 36 adopted icons lack a declared fallback-safety class (fallback_safety rules 1-3; W02.7 field).
+- Next (not filed; ask the user): rc with icon slots, `icon` fallback
+  glyph, isOverviewZoom() in the Live Map art path; optional store ticket: set-level revisions; decouple fixture guards
+  from the current-rc pin. Refresh docs/assets/session_handoff/asset-planner.md in the next asset PR (stale in #418).
+- Owner-accepted known weak reads: tool reads 'hammer and wrench', debuff ring reads 'gear', ruins 'building blocks'.
+- Known: E/D badges weak on a dark panel; 16 stray intakes in main checkout quarantine (30-day retention);
+  Vite dev server listens on [::1] only (use http://[::1]:5173/...); adopt-set refuses without a TTY (owner runs it).
+- Icon decisions: ADR D20, docs/assets/icon_style_guide.md, icon_criteria.md (I1 3/6, I2 6, I3 12), icon_key_set_review.md.
 - W05 stays INCONCLUSIVE because the gate is "no critical distinction is hue-only" (the hover-text route is unexercised, AM-M6),
   not the colour-vision rule (which passes).
-- The tracked snapshots in docs/assets/session_handoff/ are the 2026-10-06 copy (#361); refresh them in the next asset batch PR.
-- ASSET WORK PAUSED again (user 2026-10-04 pause, lifted for this batch only). Parked, no tickets: icons and
-  other kinds (entities, buildings, items, UI; reuse draft sets + adopt-set), charter signing, AM-M6.
+- Tracked snapshots in docs/assets/session_handoff/: the implementer refreshes them in each batch PR from this file.
+- Asset pause (user 2026-10-04) is LIFTED FOR ICONS ONLY (2026-10-06). Still parked, no tickets: other kinds
+  (entities, buildings as map sprites, UI beyond icons), charter signing, AM-M6.
 - Ignore (user, 2026-10-04): the agent-monitoring retro hook and the TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN staleness nag.
 - FYI codebase-planner (2026-10-05): advisory import contracts c14/c15 (visual_assets <-> src, no imports either way) in
   codebase/structure/importlinter.toml, may turn blocking after a 2-week soak; exceptions are our call (ask for ignore_imports).

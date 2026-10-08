@@ -1,7 +1,7 @@
 # Semantic visual-key registry. Nothing registers keys dynamically: the namespace is finite and fixed by this hand-reviewed file.
 # `terrain.forest` is the one ADOPTED key (the AM-M6 pilot role, TCK-20261004-VISUAL-ASSETS-PILOT-TERRAIN-TILE). The other 22 Live Map terrain codes are registered `optional: true`
 # so draft set `terrain-v1` can name them (TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET); nothing is adopted for them and no release needs them. Key = `terrain.` + the snake_case name.
-# The `icon.*` family (14 optional keys, D20) is the icon key set; see the comment above it.
+# The `icon.*` family: 14 optional keys of the key set (D20) plus 22 of icon set v2; see the comments above them.
 # The `border.*` family (3 optional keys, D19) is not terrain: shared mask shapes for the fringes between terrains, kept in the same draft set so one `adopt-set` covers tiles and masks.
 record_type: visual_key_registry
 schema_version: 1
@@ -211,6 +211,118 @@ keys:
   - key: icon.status.frame_debuff
     family: icon
     description: Status frame for a harmful effect, one 16x16 image at scale x1, a spiked frame with a down chevron whose shape (not hue) marks a debuff; identifying class, the fallback is the effect's name as text in the Effects tab, which has no icon today
+    variant_axes: []
+    optional: true
+  # Icon set v2 (TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC, user-approved families TCK-20261007-VISUAL-ASSETS-ICON-V2-FAMILY-DECISIONS): 22 more optional icon.* keys, no variant axis (D17), registered ONCE so one release
+  # candidate (rc-0007) covers the batch. Each description gives size, scale x1, fallback-safety class and fallback. Nothing is drawn or adopted for them yet; a missing image leaves today's emoji, Lucide icon, colour or text.
+  - key: icon.marker.resource_grove
+    family: icon
+    description: Map glyph for a resource grove location, one 16x16 image at scale x1, live area 12x12 centred (2 px margin) over the location plate; identifying class, the fallback is today's herb emoji label (#4ade80) plus the location name as hover text
+    variant_axes: []
+    optional: true
+  - key: icon.marker.ruins
+    family: icon
+    description: Map glyph for a ruins location, one 16x16 image at scale x1, live area 12x12 centred (2 px margin) over the location plate; identifying class, the fallback is today's classical building emoji label (#a0906a) plus the location name as hover text
+    variant_axes: []
+    optional: true
+  - key: icon.marker.dungeon_entrance
+    family: icon
+    description: Map glyph for a dungeon entrance location, one 16x16 image at scale x1, live area 12x12 centred (2 px margin) over the location plate; identifying class, the fallback is today's door emoji label (#e06080) plus the location name as hover text
+    variant_axes: []
+    optional: true
+  - key: icon.marker.shrine
+    family: icon
+    description: Map glyph for a shrine location, one 16x16 image at scale x1, live area 12x12 centred (2 px margin) over the location plate; identifying class, the fallback is today's four-pointed star symbol label (#60a5fa) plus the location name as hover text
+    variant_axes: []
+    optional: true
+  - key: icon.marker.boss_arena
+    family: icon
+    description: Map glyph for a boss arena location, one 16x16 image at scale x1, live area 12x12 centred (2 px margin) over the location plate; identifying class, the fallback is today's skull emoji label (#f59e0b) plus the location name as hover text
+    variant_axes: []
+    optional: true
+  - key: icon.building.store
+    family: icon
+    description: Panel icon for the store building, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Store icon (#38bdf8) plus the building name as text
+    variant_axes: []
+    optional: true
+  - key: icon.building.guild
+    family: icon
+    description: Panel icon for the guild building, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Shield icon (#818cf8) plus the building name as text
+    variant_axes: []
+    optional: true
+  - key: icon.building.inn
+    family: icon
+    description: Panel icon for the inn building, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Bed icon (#fb923c) plus the building name as text
+    variant_axes: []
+    optional: true
+  - key: icon.building.hero_house
+    family: icon
+    description: Panel icon for the hero house building, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Home icon (#34d399) plus the building name as text
+    variant_axes: []
+    optional: true
+  - key: icon.building.class_hall
+    family: icon
+    description: Panel icon for the class hall building, one 24x24 image at scale x1; identifying class, the fallback is the building name as text (the building panel has no icon for it today)
+    variant_axes: []
+    optional: true
+  - key: icon.class.ranger
+    family: icon
+    description: Panel icon for the ranger class, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Crosshair icon plus the class name as text
+    variant_axes: []
+    optional: true
+  - key: icon.class.mage
+    family: icon
+    description: Panel icon for the mage class, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Wand2 icon plus the class name as text
+    variant_axes: []
+    optional: true
+  - key: icon.class.rogue
+    family: icon
+    description: Panel icon for the rogue class, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Sword icon plus the class name as text
+    variant_axes: []
+    optional: true
+  - key: icon.rarity.common
+    family: icon
+    description: Rarity badge for common items, one 8x8 image at scale x1, a round bead; identifying class, the fallback is today's rarity colour (#9ca3af) on the rarity name as text, which the badge never replaces
+    variant_axes: []
+    optional: true
+  - key: icon.rarity.uncommon
+    family: icon
+    description: Rarity badge for uncommon items, one 8x8 image at scale x1, a kite-shaped gem; identifying class, the fallback is today's rarity colour (#34d399) on the rarity name as text, which the badge never replaces
+    variant_axes: []
+    optional: true
+  - key: icon.rarity.rare
+    family: icon
+    description: Rarity badge for rare items, one 8x8 image at scale x1, a four-point sparkle gem; identifying class, the fallback is today's rarity colour (#a78bfa) on the rarity name as text, which the badge never replaces
+    variant_axes: []
+    optional: true
+  - key: icon.item.weapon
+    family: icon
+    description: Item family icon for weapon items (first category weapon), one 24x24 image at scale x1; identifying class, the fallback is the item type as text, as the loot and inspect panels show it today
+    variant_axes: []
+    optional: true
+  - key: icon.item.armor
+    family: icon
+    description: Item family icon for armor items (first category armor), one 24x24 image at scale x1; identifying class, the fallback is the item type as text, as the loot and inspect panels show it today
+    variant_axes: []
+    optional: true
+  - key: icon.item.trinket
+    family: icon
+    description: Item family icon for trinket items (first category trinket), one 24x24 image at scale x1; identifying class, the fallback is the item type as text, as the loot and inspect panels show it today
+    variant_axes: []
+    optional: true
+  - key: icon.item.tool
+    family: icon
+    description: Item family icon for tool items (first category tool), one 24x24 image at scale x1; identifying class, the fallback is the item type as text, as the loot and inspect panels show it today
+    variant_axes: []
+    optional: true
+  - key: icon.item.consumable
+    family: icon
+    description: Item family icon for consumable items (first category consumable), one 24x24 image at scale x1; identifying class, the fallback is the item type as text, as the loot and inspect panels show it today
+    variant_axes: []
+    optional: true
+  - key: icon.item.material
+    family: icon
+    description: Item family icon for material items (first category material), one 24x24 image at scale x1; identifying class, the fallback is the item type as text, as the loot and inspect panels show it today
     variant_axes: []
     optional: true
 aliases: []

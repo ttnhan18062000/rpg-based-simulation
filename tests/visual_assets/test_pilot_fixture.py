@@ -2,10 +2,10 @@
 
 The only link between `visual_assets` and `frontend/` is this file-level copy (`TCK-20261004-VISUAL-ASSETS-M5-GAP-CLOSURE`): no import either way.
 
-A fresh `export-runtime` of `pilot/rc-0004` is no longer possible: registering the 14 `icon.*` keys (D20, `TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, user-approved on 2026-10-06) moved the
-registry hash and the store refuses the old candidate (`registry_mismatch`, by design). `release` assembles every adopted slot, so no forest-only candidate on the new registry can exist either.
+A fresh `export-runtime` of `pilot/rc-0004` is no longer possible: registering the 14 `icon.*` keys (D20, `TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, user-approved on 2026-10-06) and then the 22 icon set v2 keys
+(`TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC`, user-approved on 2026-10-07) moved the registry hash and the store refuses the old candidate (`registry_mismatch`, by design). `release` assembles every adopted slot, so no forest-only candidate on the new registry can exist either.
 Two checks together replace the single fresh-export check:
-1. the fixture's three entries and files equal the forest slots of a FRESH export of `pilot/rc-0006` (key, detail, file names, sizes, PNG bytes; the fixture holds exactly those three slots),
+1. the fixture's three entries and files equal the forest slots of a FRESH export of `pilot/rc-0007` (key, detail, file names, sizes, PNG bytes; the fixture holds exactly those three slots),
    and only `release_id`, `registry_hash` and the `candidate_manifest_hash` derived from them differ, which is what moved;
 2. the fixture's manifest still equals `rc-0004`'s stored candidate (release id, registry hash, slots, pixel hashes, file names), so the "rc-0004: forest only" history the drill relies on is kept.
 """
@@ -22,7 +22,7 @@ REPO = Path(__file__).resolve().parents[2]
 COMMITTED = REPO / "frontend" / "src" / "visualAssets" / "__fixtures__" / "pilot"
 CANDIDATES = REPO / "visual_assets" / "catalog" / "manifests" / "candidates" / "pilot"
 REGENERATE = (
-    "the pilot fixture is a frozen copy of rc-0004's export; its forest slots must equal those of a fresh `python -m visual_assets.store export-runtime --catalog-id pilot --release-id rc-0006 --out <dir>` "
+    "the pilot fixture is a frozen copy of rc-0004's export; its forest slots must equal those of a fresh `python -m visual_assets.store export-runtime --catalog-id pilot --release-id rc-0007 --out <dir>` "
     "(rc-0004 itself can no longer be exported)"
 )
 FOREST = "terrain.forest"
@@ -49,7 +49,7 @@ def check_fixture_against_fresh_export(fresh: Path, committed: Path = COMMITTED)
 
 def test_the_committed_pilot_export_equals_the_forest_slots_of_a_fresh_export_of_the_release(tmp_path):
     fresh = tmp_path / "export"
-    export_runtime("pilot", "rc-0006", fresh)
+    export_runtime("pilot", "rc-0007", fresh)
     check_fixture_against_fresh_export(fresh)
 
 
