@@ -4641,9 +4641,9 @@
   test_path: tests/unit/engine/test_diagonal_melee_pair_strikes.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.74.
   support_boundary: SimQ grade-anchor movement is not measured locally (test_grade_regression.py
-    skips 82 of 89 without calibration reports). Legality truncates fractional Manhattan
-    distance with int() while the pursuit reach test compares floats; filed as TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT,
-    not fixed here.
+    skips 82 of 89 without calibration reports). Legality truncated fractional Manhattan
+    distance with int() while the pursuit reach test compared floats; fixed by COMB-337
+    (TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT).
 - id: COMB-334
   text: 'TCK-20261006-WILD-BEAST-PACK-LEGALITY-IS-ONE-WAY-HERO-CAN-ATTACK-IT-IT-CANNOT-ATTACK-HERO
     (world rule CONFLICT-03): attack permission is a fact about the pair and is symmetric.
@@ -4716,3 +4716,27 @@
     semantics and the town path are Lane B''s, and in compiled worlds state.building_tiles
     is empty. The brain still decides at its next tick (at most 10 ticks after arrival);
     the scheduler was not changed.'
+- id: COMB-337
+  text: 'TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT
+    (world rule MOV-07, Decision 25): positions are whole tiles. The flow-field step
+    toward the town centre is a one-tile step along the flow vector''s dominant axis
+    (a tie takes y, as the local step does), and attack legality and pursuit reach
+    both measure LegalityServiceV2.get_manhattan_dist, the Manhattan distance between
+    the tiles the positions stand on.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/systems/world_systems/navigation.py (NavigationSystem.get_next_step),
+    src/engine/legality.py (get_manhattan_dist), src/engine/candidate_selector.py
+    (_target_in_attack_reach). Corpus (Kernel.tick_once(), seed 42, 2000 ticks, audit_mode,
+    budget off, governor pinned NORMAL, main 753f98ea9 vs this branch; the after arm
+    run twice, identical digests): entities between tiles at any tick 1 / 3 to 0 /
+    0 (crowded_frontier / frontier_living_world); legality-versus-pursuit reach disagreements
+    4 / 110 to 0 / 0; ATTACK decisions 46 / 49 to 45 / 109 (re-baseline).'
+  proof_type: regression
+  test_path: tests/unit/engine/test_attack_reach_distance.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.83.
+  support_boundary: SimQ grade-anchor movement is not measured locally (test_grade_regression.py
+    skips 82 of 89 without calibration reports). Walks to the town centre follow a
+    Manhattan path, so trajectories diverge from main; no per-move before and after
+    exists.

@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Iterable, Mapping, Optional
+
 from src.core.movement_modes import MovementMode
 from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
+from src.engine.legality import LegalityServiceV2
 from src.engine.phase_governor import ScanPolicy
 
 if TYPE_CHECKING:
@@ -127,9 +129,8 @@ class MovementCandidateSelector:
 
     @staticmethod
     def _target_in_attack_reach(entity: "EntityState", target: "EntityState") -> bool:
-        ex, ey = entity.navigation.position
-        tx, ty = target.navigation.position
-        dist = abs(ex - tx) + abs(ey - ty)
+        # The one distance attack legality uses (get_manhattan_dist), so pursuit completes exactly when an attack is legal.
+        dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, target.navigation.position)
         reach = entity.combat.range
         if dist > reach:
             return False
