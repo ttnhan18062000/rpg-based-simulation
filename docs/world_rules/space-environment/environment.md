@@ -387,9 +387,9 @@ read-only, relayed by rpg-planner; not re-measured here).
 - **The fix is content data** in Lane B's decision-27 batch: `trading_hometown` to 0, and
   `near_forest` to a survivable level, with deeper and cursed land unchanged.
 
-**Scenarios:** none traced yet. One is owed when implemented: a healthy worker walks from its
-town across a second town to the near forest, gathers, and walks back alive, losing HP only in
-the forest. The same walk into `deep_forest` kills it.
+**Scenarios:** [SPC-S16](../scenarios/space-environment-batch-04.md#spc-s16) (second town to
+the near forest and back alive; the `deep_forest` control kills). A kernel spec, owed as a test
+with Lane B's content data.
 
 ---
 
