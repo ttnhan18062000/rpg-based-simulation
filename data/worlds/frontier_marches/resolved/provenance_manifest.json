@@ -1,5 +1,5 @@
 {
-  "manifest_id": "prov_1b80b67c572cf558",
+  "manifest_id": "prov_87c8010e6c27d805",
   "world_id": "frontier_marches",
   "source_schema_version": "provenancemanifest.v1",
   "catalog_fingerprint": "635fdc6c5ea06705808890e1befadadbb4fd891695ad0d9201305fa61e665f0c",
@@ -12,12 +12,12 @@
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
     "sunken_swamp_border": "11e37d8a23ded39f278c7bcb0acedc5dcbe626076765d6caa18fcd4b4befb8fd",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
-    "wolf_den_near_forest": "c90270371ac50194c33a989c34d19a27cd0ebb47a7496187ab15825b6d65c269"
+    "wolf_den_near_forest": "87c915735d10b1e943f14fd2a5b0b88109c22089f33c0a51a1dd8e12e9ba7584"
   },
   "composition_fingerprint": "2b49c4019c3a04f6884623040a3b02eb4780382b444b12877e4edeba7c474b1b",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "1b80b67c572cf5589afbffb1819b993c7fbadec0288ef7a932edf357c3715ec1",
-  "created_at": "2026-10-08T09:03:49.265592Z",
+  "content_fingerprint": "87c8010e6c27d8053f38e639cb54e37b83f4ea4c6fa2e31ddf4d433703af9b3b",
+  "created_at": "2026-10-08T10:16:52.683880Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -1492,7 +1492,7 @@
           55
         ],
         "terrain": "forest",
-        "hazard_level": 1.0,
+        "hazard_level": 0.0,
         "ecology_source": [
           "wolf_den_ecology"
         ]

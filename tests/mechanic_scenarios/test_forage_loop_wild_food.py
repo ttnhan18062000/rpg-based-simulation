@@ -7,8 +7,8 @@ Two arms of the same staging differ only in whether the wild region holds wild f
 fertility, `near_forest`), the CONTROL arm is the same world with the food the biome table places there removed, as a NONE biome
 (`old_mine`) places none. The control shows the food in the main arm came from the land through foraging, not from a free meal.
 
-The hazard is staged to 0 in both arms: LB-S17 tests the forage loop, not exposure. The forest's real hazard (10 HP per tick for
-a faction without endurance, so a human forager dies in 11 ticks) is reported in the d27 divergence, not exercised here.
+The land is not staged: since ENV-08 (decision 30) the second town and the near forest carry no ambient hazard, so the walk out is survivable
+and the forage loop is what the scenario sees (SPC-S16 covers the land itself).
 
 Everything is read from authoritative state, per tick, through the real kernel; no log line is parsed.
 """
@@ -60,8 +60,7 @@ def _stage(state: AuthoritativeState, *, wild_food: bool) -> Tuple[Authoritative
     nodes = {i: n for i, n in state.resource_nodes.items() if n.kind != FOOD_KIND}
     if wild_food:
         nodes.update({i: replace(n, remaining_charges=STAGED_CHARGES) for i, n in state.resource_nodes.items() if n.kind == FOOD_KIND})
-    regions = {i: replace(r, hazard_level=0.0) for i, r in state.regions.items()}  # see the module docstring
-    return replace(state, entities={worker.id: worker}, resource_nodes=nodes, regions=regions), worker.id
+    return replace(state, entities={worker.id: worker}, resource_nodes=nodes), worker.id
 
 
 def _run(*, wild_food: bool) -> Trace:

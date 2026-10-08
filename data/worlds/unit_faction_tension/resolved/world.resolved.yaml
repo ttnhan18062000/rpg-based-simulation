@@ -64,7 +64,7 @@ regions:
   - 90
   - 55
   terrain: forest
-  hazard_level: 1.0
+  hazard_level: 0.0
   hazard_kind: NATURAL_TERRAIN
   tags:
   - forest

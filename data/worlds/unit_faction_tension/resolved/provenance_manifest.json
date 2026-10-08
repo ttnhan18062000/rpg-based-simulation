@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_fde4f709fada6b06",
+  "manifest_id": "prov_9bdd26f656a15c5d",
   "world_id": "unit_faction_tension",
   "source_schema_version": "provenancemanifest.v1",
   "catalog_fingerprint": "635fdc6c5ea06705808890e1befadadbb4fd891695ad0d9201305fa61e665f0c",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
-    "wolf_den_near_forest": "c90270371ac50194c33a989c34d19a27cd0ebb47a7496187ab15825b6d65c269"
+    "wolf_den_near_forest": "87c915735d10b1e943f14fd2a5b0b88109c22089f33c0a51a1dd8e12e9ba7584"
   },
   "composition_fingerprint": "33c3e3cef9965cf9e21b001b27d21a92774da72d8627f90b530ad5ce10c0d98d",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "fde4f709fada6b06d819984efdeddcbf2888eb45b9a1dac7f9831f4c34e3ed83",
-  "created_at": "2026-10-08T09:04:11.462158Z",
+  "content_fingerprint": "9bdd26f656a15c5d5707b75d042970a48a6d43578bc06d64b2e828d6532e0c5f",
+  "created_at": "2026-10-08T10:19:43.337276Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -513,7 +513,7 @@
           55
         ],
         "terrain": "forest",
-        "hazard_level": 1.0,
+        "hazard_level": 0.0,
         "ecology_source": [
           "wolf_den_ecology"
         ]

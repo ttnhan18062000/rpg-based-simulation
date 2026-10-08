@@ -1,5 +1,5 @@
 {
-  "manifest_id": "prov_ed710fd1c2ac5037",
+  "manifest_id": "prov_8d80815ea9e509ef",
   "world_id": "simq_scale_stress_seed42",
   "source_schema_version": "provenancemanifest.v1",
   "catalog_fingerprint": "635fdc6c5ea06705808890e1befadadbb4fd891695ad0d9201305fa61e665f0c",
@@ -14,13 +14,13 @@
     "river_crossing": "31b408206c2116cc3c7162e49d97e4b690bbe3f3adf689f3d44aed6a2ab16e56",
     "sunken_swamp_border": "11e37d8a23ded39f278c7bcb0acedc5dcbe626076765d6caa18fcd4b4befb8fd",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
-    "wolf_den_near_forest": "c90270371ac50194c33a989c34d19a27cd0ebb47a7496187ab15825b6d65c269",
+    "wolf_den_near_forest": "87c915735d10b1e943f14fd2a5b0b88109c22089f33c0a51a1dd8e12e9ba7584",
     "forest_warden_grove": "c41ff99559a8e7f6603051db5d5fff790fd4cbf4b35a3d50a5ff48eccc33c6ea"
   },
   "composition_fingerprint": "f3b449529b6fd62f108ceb47c6ca3a49e17f086d7b70f92e43fd0ec4a4ad39f9",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "ed710fd1c2ac5037548565645b12c34c5298ac7704ed7b9da3d26ffe6f8c0e92",
-  "created_at": "2026-10-08T09:04:08.013840Z",
+  "content_fingerprint": "8d80815ea9e509ef8c62420917d18d56fd8c3f66d2fe5a940df06751b66393b1",
+  "created_at": "2026-10-08T10:19:14.856037Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -1670,7 +1670,7 @@
           55
         ],
         "terrain": "forest",
-        "hazard_level": 1.0,
+        "hazard_level": 0.0,
         "ecology_source": [
           "wolf_den_ecology"
         ]

@@ -36,7 +36,7 @@ regions:
   - 80
   - 45
   terrain: plain
-  hazard_level: 0.5
+  hazard_level: 0.0
   hazard_kind: NATURAL_TERRAIN
   tags:
   - plain
