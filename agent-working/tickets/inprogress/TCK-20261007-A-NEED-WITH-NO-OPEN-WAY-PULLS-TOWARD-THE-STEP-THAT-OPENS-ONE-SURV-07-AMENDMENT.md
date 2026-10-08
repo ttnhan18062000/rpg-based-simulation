@@ -15,7 +15,7 @@ tags: []
 When none of a hungry subject's ways is open to it now (for example, it cannot pay for the inn meal), its escalated pull goes to the step that opens one: forage or harvest where its kind can, earn and then buy, or ask where a social path exists (decision 27, SURV-07 amendment).
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
