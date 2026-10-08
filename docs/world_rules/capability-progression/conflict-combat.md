@@ -171,8 +171,42 @@ was declared without any Rule on when a fighter accepts it.
   intentional: one free hit per swing for no reason the fiction holds); hold only when winning
   (duplicates AGENCY-07's OUTMATCHED term, and a losing fighter has no better tile to step to).
 
-**Repository evidence: CONFLICTING, traced by Lane A on main `753f98ea9`** (relayed by
-rpg-planner, seeds 42 to 46, 3 worlds; not re-measured here).
+**Repository evidence: SUPPORTED since #439 (`86b77abca`, 2026-10-08), with one disclosed gap.**
+Implemented by `TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04` (Lane A).
+- **The hold:** with the target adjacent and only readiness missing, the decision is a queued
+  ATTACK with reason `HOLD_BETWEEN_BLOWS` (`src/engine/tactical_hold.py`). There is no step and
+  no opportunity attack, and the swing lands at readiness 100. PURSUE applies only to a target
+  that is not adjacent, and target choice ranks an adjacent hostile first. Divergence 2.86
+  (Intentional Gameplay Change), parity COMB-339.
+- **The stall breaker:** every ATTACK or SKILL emission, the held swing included, sets the
+  counter to 0, and the breaker is skipped while the target is adjacent. Divergence 2.87 (Bug
+  Fix), parity COMB-340.
+- **Waiting is not a capability gap:** a queued action rejected only for readiness writes no
+  capability blocker. Divergence 2.88 (Bug Fix), parity COMB-341.
+- **Text:** Bible 02 §7 and the tactical contract §5 (`docs/engine/contracts/tactical_contract.md`).
+- **Pinned by** the kernel scenarios CP-S18 and CP-S19
+  (`tests/mechanic_scenarios/test_conflict04_fighter_holds_between_blows.py`). Each has its
+  control arm, and both main arms fail on pre-merge main. They pass in CI (#439's run, in the
+  "Perf / cert / arena" lane) and locally on `86b77abca` (4 passed). Unit tests are in
+  `tests/unit/combat/test_anti_stalemate.py`.
+- **Measured** (Lane A, relayed; seeds 42 to 46, 1,500 ticks, governor pinned NORMAL,
+  `dcfe5de4d` vs the branch; `crowded_frontier` / `frontier_living_world` / `urban_political`):
+  - holds per run: 0.6 / 0.4 / 1.6, none at HP under 15 percent, and no death after a hold;
+  - `STALEMATE_BREAK` decisions: 0 in both arms;
+  - total deaths: 36.4 to 36.0, 43.0 to 44.2, 23.4 to 21.6, all inside 1 SD.
+  The effect is small because the "decided at contact" class this Rule governs was small. Most
+  opportunity-attack hits come from held moves and from the "neither" class (moving with no
+  move task), which are engine defects outside this Rule. Hits per run went 179.4 to 185.2,
+  151.8 to 158.0 and 90.2 to 85.0.
+- **Disclosed gap (2.86):** while a fighter holds, it is not re-decided until the swing lands
+  or the task is released (`OUT_OF_RANGE`, `TARGET_INCAPACITATED`). So for up to one readiness
+  refill it cannot choose to leave, though the Rule says leaving is a decision it may take. An
+  already-queued ATTACK behaved the same before. Measured as a no-op (0 holds at low HP, 0
+  deaths after a hold). If that stops holding, the fix is to re-decide a holding fighter when a
+  present-threat term changes (AGENCY-07), not to drop the hold.
+
+**Previously CONFLICTING, traced by Lane A on main `753f98ea9`** (relayed by rpg-planner, seeds
+42 to 46, 3 worlds; kept as found).
 - **Who takes the free hits:** 83 to 98 percent of opportunity-attack swings land on a victim
   standing beside its attacker. Split by what the victim was doing on that tick (per world):
   - decided a move: 4 to 5 percent;
@@ -194,9 +228,11 @@ rpg-planner, seeds 42 to 46, 3 worlds; not re-measured here).
 - **Separate engine defect, not this Rule:** the largest class above, subjects that move with
   no move task at all (rpg-planner is filing it).
 
-**Scenarios:** none traced yet. Two are owed when implemented: a non-cautious fighter beside
-a hostile with readiness below 100 holds, and takes no opportunity attack until it chooses to
-leave; a long exchange of blows never trips the stall breaker while the pair stays adjacent.
+**Scenarios:** [CP-S18](../scenarios/capability-progression-batch-07.md#cp-s18) (a fighter
+holds between blows; a cautious control flees and pays the cost) and
+[CP-S19](../scenarios/capability-progression-batch-07.md#cp-s19) (a long exchange of blows is not
+a stalemate; a two-tile control still trips the breaker). Both are kernel-level tests since
+#439, and both are covered.
 
 ---
 

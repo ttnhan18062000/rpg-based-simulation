@@ -238,6 +238,45 @@ the world, which contradicts SURV-03 (a need is modeled for its real, causal con
   - rest only in buildings (a timer for anyone far from one);
   - the engine quietly feeding subjects that cannot eat (hides a content defect);
   - a guarantee that every individual can eat (removes poverty as an outcome).
+- **Amendment, wild food is part of the land (decided by rpg-designer, direction confirmed by
+  the owner directly, 2026-10-08; row 29 of the memo):**
+
+  > Wild food belongs to the land. Each biome declares how much wild food its land holds and
+  > how fast it grows back, and a world places wild food by biome, in its wild land outside
+  > its settlements. How many subjects that food feeds is an outcome, not a target: a world's
+  > wild food is never sized to its hungry.
+
+  - **Sizing input:** biome fertility, not demand. For example, forest, grassland and river land
+    hold more, hills less, and desert, mountain and cave little or none. The figures (node
+    density per area, charges, regrowth) are content data, set from the land and never fitted to
+    a starvation count.
+  - **Regrowth:** a flat data value per biome and food-node kind, through RES-05's ecology
+    process. No season mechanic exists. A seasonal yield would need its own declared process
+    (ENV-01, ENV-05), which is feature work frozen by memo row 7.
+  - **The cost is the land's own:** the walk from a settlement to wild land, finite charges, and
+    competition for them. There is no minimum-walk number. A town's land holds owned food (the
+    inn, the shop), and taking owned food is theft, which decision 27 excludes.
+  - **Unchanged guardrails:** wild food enters by harvest and leaves by eating (Bible 03
+    conservation); it is its own declared item and node kind, never herb; and the integrity
+    check (`need_paths.py`) counts a wild-food node within reach as a hunger way for the kinds
+    that forage.
+  - **What follows for measurement:** the test of this clause is occurrence and effect.
+    Subjects who cannot pay forage, carry what they gather and eat it, and the nodes deplete and
+    regrow. Starvation among subjects who cannot pay is an outcome to report, not an acceptance
+    target. If it rises, the missing half is earning and then buying
+    (`TCK-20261007-SHOP-AND-BLACKSMITH-TOWN-PATHS-NEVER-RAN-IN-A-COMPILED-WORLD`), not more
+    wild food.
+  - **Alternatives not taken:** size wild food to the demand of subjects who cannot pay (poverty
+    never lethal, which contradicts this Rule's "may starve" and makes earning pointless for
+    survival); meet a fixed share of that demand (a tuning dial, not a fact about the world);
+    gardens and orchards inside settlements (blurs wild food with owned food).
+  - **Evidence: MISSING, measured by Lane B on main `dcfe5de4d`** (relayed by rpg-planner, 5
+    seeds x 3 worlds, after regrowth and the dry-node release landed). Each world has one food
+    node of 8 charges. It supplies about 13 charges per run and is dry for 460 to 700 ticks; the
+    median walk to it is 80, 72 and 17 ticks. With free meals removed, starvation rises
+    (crowded 9.6 to 12.8, frontier_living 11.0 to 17.6, urban 6.8 to 15.4), all of it among
+    subjects who cannot pay. Free meals had been feeding 19 to 47 EATs per run. No world places
+    wild food by biome yet.
 
 **Repository evidence: PARTLY SUPPORTED since #407 (`0a03c2448`), with one CONFLICTING clause:
 a subject who cannot pay is fed for free.** The inn meal and rough rest complete; the price does
@@ -302,10 +341,14 @@ earlier figures are on base `f8f1b69fd`:
   lands with SURV-05's rates, the inn meal target, the eat-carried-food path, rough sleep and the
   advisory integrity check. It is a row-7 hard bug.
 
-**Scenarios:** none traced yet. Three are owed when implemented:
+**Scenarios:** none traced yet. Four are owed when implemented:
 - a hungry worker with coins walks to the inn and eats;
 - a hungry worker far from town eats the bread it carries;
 - an exhausted guard on a distant road sleeps rough and recovers, more slowly than in an inn bed.
+- a broke worker walks out of town to wild land, gathers wild food, carries it back and eats it
+  when hungry; the patch it stripped is dry for a while, then grows back (decision 29). Written as
+  a kernel spec with a no-wild-food control arm:
+  [LB-S17](../scenarios/life-body-batch-05.md#lb-s17).
 
 ---
 

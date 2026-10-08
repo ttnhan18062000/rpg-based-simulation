@@ -163,3 +163,12 @@ Export on the machine you are leaving, then import on the new one; importing an 
 a newer local note is the one way to lose work, which is why differing files are backed up.
 
 Message conventions between sessions: `docs/guides/cross_session_messages.md`.
+
+### Disk headroom
+
+On 2026-10-08 the data disk filled mid-day (about 15 GB of `data/runs/` across ~50 worktrees plus ~25 GB of
+merged-branch worktrees) and sessions only learned of it from a failed write. The launcher and the SessionStart hook
+now say so when free space is below 10 GB (`SESSION_DISK_THRESHOLD_GB` overrides; warn only, never refuse). Before
+a batch of N measurement runs, look: `python3 tools/sessions/disk_headroom.py` (free space, run data per worktree;
+`--json` for a stable shape). After the numbers are stored, clean that batch's own run directories by run id with
+`python3 tools/gate_checks/done_checker_static.py --clean-data-runs --path <run_id>`; never `rm -rf data/runs/*`.

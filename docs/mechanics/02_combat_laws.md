@@ -120,6 +120,12 @@ Every non-opportunity `ATTACK` requires the attacker's `readiness` to be at **ex
 higher** (`LegalityServiceV2.verify_attack_legality`). Opportunity attacks (triggered by
 disengaging while adjacent to a hostile) bypass this specific check.
 
+**Between blows the fighter holds (CONFLICT-04).** A fighter adjacent to an engaged hostile whose
+attack is not yet legal only because its readiness is under 100 does not step: it queues the swing
+(a held `ATTACK`, reason `HOLD_BETWEEN_BLOWS`) and strikes when readiness reaches 100, so it
+provokes no opportunity attack. It leaves only by a decision (flight, panic retreat, a declared
+ability, a goal that outranks the fight), and that decision pays the opportunity attack.
+
 *   **Consumption**: A successful attack resets readiness by **-100.0** (a full reset). Movement
     does **not** cost readiness (`TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE`) — it
     costs `stamina` instead (`StaminaComponent.MOVE_COST`, a flat per-move cost, separately

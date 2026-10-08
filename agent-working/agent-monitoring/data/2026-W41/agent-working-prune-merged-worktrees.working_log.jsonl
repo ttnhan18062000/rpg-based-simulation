@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-08T08:20:47.344971Z", "ticket_id": "TCK-20261008-SESSION-MERGED-WORKTREE-PRUNE", "title": "prune_branches worktree mode", "status": "DONE", "summary": "prune_branches --worktrees classifies and guardedly removes merged clean non-seat worktrees", "artifacts_path": "agent-working/stored_artifacts/TCK-20261008-SESSION-MERGED-WORKTREE-PRUNE"}

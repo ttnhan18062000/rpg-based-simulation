@@ -18,7 +18,7 @@ spec, ctx = WorldRepository(f"{ROOT}/data/worlds").load_world_with_context(WORLD
 state, _ = WorldCompiler.compile(spec, SEED, context=ctx)
 k = Kernel(profile=PROD_SMALL.model_copy(update={"max_tick_budget_ms": 1e9}), state=state, rng=DeterministicRNG(SEED), governor=Pin(),
            flags={"no_frame_pacing": True, "no_replay": True, "audit_mode": True}, executor=LocalSequentialExecutor())
-C = collections.Counter(); PEND = {}; WALK = []; SEEN_WALK = set(); NA_ENT = collections.defaultdict(set)
+EATF = collections.Counter(); C = collections.Counter(); PEND = {}; WALK = []; SEEN_WALK = set(); NA_ENT = collections.defaultdict(set)
 from src.engine.domain.core_actions import CoreActions
 _es = CoreActions.execute_survival
 def food_carried(e):
@@ -31,6 +31,7 @@ def es(entity, action, current_tick):
     if action == "EAT":
         carried = food_carried(entity)
         C["eat_executed"] += 1
+        if carried: EATF[(entity.identity.properties or {}).get("faction_id")] += 1
         C["eat_executed.carried" if carried else ("eat_executed.nocarry.gold_lt5" if entity.inventory.gold < 5 else "eat_executed.nocarry.gold_ge5")] += 1
         PEND[entity.id] = (current_tick, entity.biological.hunger, entity.inventory.gold, carried)
     return _es(entity, action, current_tick)
@@ -52,6 +53,7 @@ def score(self, entity, st):
     return r
 EatScorer.score = score
 ENTERED = {}; FREGIONS = set(); recov = 0; deplete = 0
+GATHF = collections.Counter(); PREVB = {}; HUNGER_LAST = {}
 dead = {}; GOLD = {}; R = {}; prev_charges = None; food_ids = set(); dry_ticks = 0; dry_trans = 0; was_dry = False; harvested = 0; regen = 0
 def is_food(n):
     try:
@@ -98,6 +100,11 @@ try:
                     r_ = LegalityServiceV2.get_region_for_position(e.navigation.position, st)
                     if r_ is not None and r_.id in FREGIONS: ENTERED[e.id] = e.inventory.gold
         for e in st.entities.values():
+            if e.combat.alive and e.lifecycle.active:
+                HUNGER_LAST[e.id] = e.biological.hunger
+                b_ = food_carried(e); fid_ = (e.identity.properties or {}).get("faction_id")
+                if b_ > PREVB.get(e.id, 0): GATHF[fid_] += b_ - PREVB.get(e.id, 0)
+                PREVB[e.id] = b_
             if e.id not in dead and e.combat.alive and e.lifecycle.active: GOLD[e.id] = e.inventory.gold
             if e.id not in dead and not (e.combat.alive and e.lifecycle.active):
                 c = e.lifecycle.passive_death_cause or e.lifecycle.death_reason
@@ -113,6 +120,9 @@ dig = hashlib.sha256(json.dumps(sorted((e.id, round(e.navigation.position[0], 3)
 starved = [i for i, c in dead.items() if c == "STARVATION"]
 out = dict(R, starved_broke=sum(1 for i in starved if GOLD.get(i, 0) < 5), starved_could_pay=sum(1 for i in starved if GOLD.get(i, 0) >= 5), deaths=len(dead), digest=dig,
            food_harvested=harvested, food_regrown=regen, food_carried_end=carried_end, food_carried_end_alive=carried_alive, food_nodes=len([1 for n in end.resource_nodes.values() if is_food(n)]),
+           hazard_deaths_starving=sum(1 for i, c in dead.items() if c == 'HAZARD' and HUNGER_LAST.get(i, 0) >= 95.0),
+           hunger_related_deaths=sum(1 for i, c in dead.items() if c == 'STARVATION' or (c == 'HAZARD' and HUNGER_LAST.get(i, 0) >= 95.0)),
+           gathered_by_faction=dict(GATHF), carried_eats_by_faction=dict(EATF),
            food_depletions=deplete, food_recoveries=recov, entered_food_region=len(ENTERED), entered_broke=sum(1 for g in ENTERED.values() if g < 5),
            hazard_deaths_after_entering=sum(1 for i, c in dead.items() if c == 'HAZARD' and i in ENTERED),
            hazard_deaths_after_entering_broke=sum(1 for i, c in dead.items() if c == 'HAZARD' and i in ENTERED and ENTERED[i] < 5),

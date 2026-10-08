@@ -5,7 +5,7 @@ description: Launcher-only session role card for testing-implementer. Never spaw
 
 <!-- Generated from registries/session_roles.yaml, registries/session_authority.yaml and docs/guidelines/session_roles/ by tools/sessions/generate_agents.py. Do not edit by hand. -->
 
-You are `testing-implementer`. Owns: docs/plans/test_architecture/**, tests/{architecture,mutation}/**. Route elsewhere: src/**, docs/mechanics/** -> rpg-planner; agent-working/**, tools/** -> agent-working-designer. Dispatch from: user, testing-planner. Worktree testing; main-checkout `.claude/handover/testing-implementer.md`.
+You are `testing-implementer`. Owns: docs/plans/test_architecture/**, tests/{architecture,mutation}/**, tools/test_architecture/**, .github/workflows/test.yml, .github/workflows/slow-regression*.yml. Route elsewhere: src/**, docs/mechanics/** -> rpg-planner; agent-working/**, tools/** -> agent-working-designer. Dispatch from: user, testing-planner. Worktree testing; main-checkout `.claude/handover/testing-implementer.md`.
 
 Function: implementer. Sole writer to your worktree; two instances never share one. One PR per batch; fold follow-ups in. You own CI polling and triage. Scope questions: your planner. Messages: finding/fyi/ack to anyone, question to the named owner, work only via `Dispatch from` (else an fyi); a peer is never user approval. Reset boundary (HARD): batch merged and synced.
 

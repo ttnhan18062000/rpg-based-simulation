@@ -4,12 +4,12 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-01"
+last_verified: "2026-10-08"
 ---
 
 # Scenario Bank: Life / Body / Survival / Ecology (Batch 05)
 
-**Purpose/scope.** Sixteen scenarios used to pressure-test the Lifecycle, Body/Condition,
+**Purpose/scope.** Seventeen scenarios (one added 2026-10-08 for SURV-06's wild food) used to pressure-test the Lifecycle, Body/Condition,
 Survival Needs, and Ecology/Population rule families in `life-body/lifecycle.md`,
 `life-body/body-condition.md`, `life-body/survival-needs.md`, and
 `life-body/ecology-population.md`, per `tmp/world-rule-batch-5-ext-ai.md`. Covers all sixteen
@@ -195,6 +195,46 @@ A subject dies, can no longer act, and its history/relationships/world consequen
   and `_seed_dying_wish()` (already established across Batches 01/02) confirm exactly this
   pattern; this scenario checks it holds when read from Lifecycle's own vantage point, which
   it does without requiring new evidence.
+
+
+## LB-S17 — A broke worker forages wild land and eats what it carries (SURV-06, decision 29) (added 2026-10-08)
+
+A worker who cannot pay for a meal walks out of town to wild land, gathers wild food, carries it,
+and eats it when hungry. The patch it stripped is dry for a while and then grows back. Where the
+land holds no wild food, the same worker cannot forage, and nothing feeds it for free.
+
+- **Rules invoked:** SURV-06 (a person meets hunger by eating food it carries, which it may
+  forage; decision 29's amendment: wild food belongs to the land, by biome, outside
+  settlements), SURV-07 with decision 27 (a need with no open way pulls toward the step that
+  opens one), RES-05 (regrowth by a declared process), Bible 03 (conservation).
+- **Kernel spec (`mechanic_scenario`, `tests/mechanic_scenarios/`, through
+  `tests/helpers/scenario.py`).** The same staging runs in two arms, differing only in the
+  biome of the wild region next to the settlement:
+  - **Staging:** a compiled world with a settlement that has an inn, and one wild region beside
+    it, outside the settlement bounds. Worker W is a people-kind, non-cautious, with 0 gold and
+    no carried food, starting inside the settlement with hunger already pressing (past the
+    point where decision 27's pull applies). There are no hostiles. The window covers the walk
+    out, the gathering, the eating, and at least one regrowth interval of the node.
+  - **Main arm (the wild region is a HIGH-fertility biome, e.g. `near_forest`, with its
+    wild-food node or nodes placed by the biome table):** W leaves the settlement and gathers
+    at a wild-food node. The node's charges fall, and W's inventory gains the wild-food item by
+    the same amount. Later W eats from what it carries: its hunger falls, and its carried count
+    falls by one per meal. W's gold is unchanged and no inn meal is served to it. Conservation
+    holds: the item enters only by gathering and leaves only by eating. Once a node is stripped
+    to 0 (`RESOURCE_DEPLETED`), it refills later (`RESOURCE_RECOVERED`). All effects are read
+    from authoritative state, not log lines.
+  - **Control arm (the same region with a NONE biome, e.g. `old_mine`, so the biome table places
+    no wild food):** W gathers no wild food and never holds any. No meal lowers W's hunger
+    without payment. W's hunger keeps rising inside the window. Whether W dies is not an
+    observable here.
+  - **Why the control:** it proves the main arm's food came from the land, through foraging,
+    and not from engine charity or a free meal. It also proves that the biome decides whether
+    wild food exists.
+  - **Also checked in the main arm:** no wild-food node sits inside the settlement bounds.
+- **Result (2026-10-08): revealed missing rule implementation on main.** No world places wild
+  food by biome. The one food node in each of the three measured worlds sits on town land, and
+  EAT consumes no carried food (SURV-06's evidence). Expected to be **covered** once decision
+  27's PR (Lane B) lands and this spec passes at kernel level.
 
 ---
 

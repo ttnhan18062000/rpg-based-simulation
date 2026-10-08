@@ -1,0 +1,51 @@
+name: Slow regression watchdog
+
+# TCK-20261008-SLOW-REGRESSION-SCHEDULE-WATCHDOG: GitHub's schedule trigger is best-effort, so a
+# `slow-regression.yml` slot is sometimes never created (2026-10-08 03:00Z) and others start 1-3.5 h
+# late. This hourly job dispatches a Slow regression run on main when none is queued or running and
+# the newest one is 10 h old or more (10 h = 6 h schedule period + 3.5 h observed lateness + 0.5 h
+# grace; a shorter threshold would double the cost when a late scheduled run is still on its way).
+# The rule lives in tools/test_architecture/slow_regression_watchdog.py. No tests run here.
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: slow-regression-watchdog
+  cancel-in-progress: false
+
+jobs:
+  watchdog:
+    name: "Dispatch Slow regression if its schedule was dropped"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: write
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      # Sparse checkout: only the pure decision module, not the slow suite.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            tools/test_architecture/__init__.py
+            tools/test_architecture/slow_regression_watchdog.py
+          sparse-checkout-cone-mode: false
+      - name: Decide
+        id: decide
+        run: |
+          gh run list --workflow slow-regression.yml --branch main --limit 30 \
+            --json databaseId,event,status,createdAt,headBranch > runs.json
+          python3 -m tools.test_architecture.slow_regression_watchdog runs.json | tee decision.txt
+          cat decision.txt >> "$GITHUB_OUTPUT"
+          {
+            echo "### Slow regression watchdog"
+            sed 's/^/- /' decision.txt
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Dispatch Slow regression
+        if: ${{ steps.decide.outputs.decision == 'dispatch' }}
+        run: gh workflow run slow-regression.yml --ref main
