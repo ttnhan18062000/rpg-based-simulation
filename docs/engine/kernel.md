@@ -121,6 +121,7 @@ gracefully under load.
 ## 📈 Observability & Telemetry
 The Kernel maintains a `TickAudit` record for every cycle, capturing:
 - **Phase Costs**: Millisecond duration of each phase for bottleneck analysis. Each millisecond is counted once: `resolution_overhead` is the resolution wall time minus every sub-phase cost the refinement pipeline recorded, so `sum(phase_costs)` is the tick's cost, which becomes the governor's `tick_compute_ms` (DEV-017, INFRA-425).
+- **Signal source**: The pressure signals the governor receives are built by `src/engine/signal_source.py`, chosen by `select_signal_source(profile, audit_mode)`: `audit_mode` zeroes them; otherwise the profile's `signal_contract` picks the Live (measured) or Canonical (modelled) source. The run manifest records the contract and the work-model version (DEV-018, INFRA-426, INFRA-427).
 - **Rejection Delta**: Count of proposals rejected by the refinement pipeline.
 - **Compute Ratio**: Current tick duration vs. the allowed `max_tick_budget_ms`.
 

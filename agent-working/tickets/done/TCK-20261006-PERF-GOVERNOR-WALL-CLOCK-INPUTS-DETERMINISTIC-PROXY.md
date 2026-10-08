@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY
-phase: inprogress
+phase: done
 date: 2026-10-06
 tags: [performance, determinism, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, engine]
 Design (then implement) the Canonical contract's deterministic proxy for the governor's wall-clock inputs: ResourceGovernor's tick_compute_ms (PERF-D1 input 1) and PhaseBudgetGovernor's per-phase costs
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -157,8 +157,21 @@ the design (Scope 1); whether they are implemented here or split out is the desi
 - **Limit of the anti-thrash proof:** it is synthetic (the real governor and `RuntimeStatus` driven with flip-flopping modelled-cost sequences), because no kernel scenario changes its
   modelled cost mid-run. The run-level proofs (10 of 10 identical mode, budgets and hashes) use a constant modelled cost just over a threshold. Not filed as a follow-up: an honest limit.
 
+- **Step 3 manifest field and the length-limit slip (2026-10-08):** the run-manifest field (`RunManifest.signal_contract`, the replay manifest, `signal_contract_record`) is `7f8d8cd82` under the owner's lift extension to `artifact_repository.py` and `replay_manager.py` for this ticket only. That commit first folded two keyword arguments onto existing lines to stay under `Kernel.__init__`'s function-length ceiling, which adjusted the code to the gate; perf-planner caught it and it was fixed properly by extracting `Kernel._resolve_manifest_fingerprints` and `Kernel._init_replay` (`8dac77d39`, then `359a6d607` after a mypy error that a chained `typecheck && commit` let through). The ratchet improved (52 to 54 improved).
+- **Mutation proofs:** (1) making `CanonicalSignalSource` add `(perf_counter_ns() // 1000) % 300` to `tick_cost` fails 6 of the 7 tests in `test_canonical_signal_contract.py` (hash/mode identity, clock independence, work-model equality, import guard, cost-is-demand, executor identity), reverted; (2) changing the Live warm-up cap 0.5 to 0.6 in the moved code fails the Live golden fixture, reverted.
+- **Step 4:** `DEV-018`, `INFRA-426`, `INFRA-427`, `deterministic_execution.md`, `resource_governor_contract.md`, `kernel.md`, the roadmap lift note under gate item 7, and `wall_clock_inventory` regenerated with the tool (no counted read changed: 364 reads before and after; `--check` passes).
+
 ## Test Summary
+- Canonical proofs (`tests/integration/kernel/test_canonical_signal_contract.py`, 7): 10 of 10 runs identical in mode, phase budgets and state hash per tick (runs 6-10 on a seeded jitter clock 50x slower or faster; modelled cost 243 sits just over the DEGRADED threshold of a 240 budget); signals and decisions identical under three patched clocks and absurd RSS/backlog; tick cost equals the work model; AST import guard; cost-is-demand under pinned NORMAL vs SURVIVAL; executor independence; `audit_mode` still zeroes under CANONICAL.
+- Governor unit tests (`tests/unit/resource/test_canonical_governor_inputs.py`, 29): equal ratios decide equally, recovery follows the modelled average, memory/replay not inputs, proxy bounds, per-phase rules fire under Live and not under Canonical, anti-thrash bounds (synthetic cost sequences: the real governor and `RuntimeStatus` driven with flip-flopping costs, because no kernel scenario changes its modelled cost mid-run).
+- Live unchanged: `tests/unit/kernel/test_live_signal_golden.py` against a fixture recorded from the pre-move code (NORMAL, SURVIVAL, DEGRADED).
+- Foundation (`tests/unit/engine/test_signal_contract_foundation.py`, 14) and manifest (`tests/unit/engine/test_run_manifest_signal_contract.py`, 3: a Canonical run records it, Live and audit runs say so, an old manifest still loads).
+- Final run on the merged tree (origin/main `28e29ed2e`): 2073 passed in kernel, engine, resource, optimization, config, observability, integration/kernel and the governor-pinned and resilience tests; 266 passed in docs, parity, inventory-sync, static and architecture. `uv run make code-health`: 0 new, 0 worse, 57 improved. `uv run make typecheck-py`: filter empty.
 
 ## Files Changed
+- New: `src/engine/signal_source.py`, `src/engine/work_units.py`, `tests/integration/kernel/test_canonical_signal_contract.py`, `tests/unit/resource/test_canonical_governor_inputs.py`, `tests/unit/engine/test_signal_contract_foundation.py`, `tests/unit/engine/test_run_manifest_signal_contract.py`, `tests/unit/kernel/test_live_signal_golden.py` and `golden/live_signals_v1.json`.
+- Changed: `src/engine/kernel.py`, `governor.py`, `phase_governor.py`, `runtime_status.py`, `replay_manager.py`, `src/core/governance.py`, `src/config/profiles.py`; support edits outside the original window list: `src/config/loader.py` (typing only), `src/observability/reporting/artifact_repository.py` and `src/engine/replay_manager.py` (owner lift extension 2026-10-08).
+- Docs: `docs/guidelines/intentional_divergences.md` (DEV-018), `docs/parity_ledger/infrastructure.yaml` (INFRA-426, INFRA-427), `docs/engine/deterministic_execution.md`, `docs/engine/contracts/resource_governor_contract.md`, `docs/engine/kernel.md`, `docs/performance/wall_clock_inventory.{md,json}`, the roadmap (lift note).
 
 ## Completion Summary
+The governors can now run on a modelled cost instead of a clock. A profile with `signal_contract=CANONICAL` gets `tick_cost` from `WORK_MODEL_V1` (0.68 reference-ms per active entity + 7.42 per lead, PROVISIONAL, fitted on 331 rows: pooled R^2 0.874, every family 0.58 to 1.35, executors 0.92 / 0.83), no memory or replay-backlog input, demand-based queue and worker pressure, and no per-phase rules (DEV-018). With `audit_mode` off, the same seed gives the same mode, phase budgets and state hash on a jittering clock 50x slower or faster. The default `LIVE` contract is unchanged (golden fixture from the pre-move code) and `audit_mode` still wins. A run's manifest records the contract and work-model version. Limits kept visible: the model is a rough estimator (leave-one-family-out idle 0.49, resource 1.75; the lead weight is untested out of sample), excludes `combat_engagement` until Lane B's fix (V2 refit), and the anti-thrash proof is synthetic. The Live half is `TCK-20261006-PERF-LIVE-CONTROL-TRACE`. Phase A also fixed the kernel's resolution_overhead double count (`TCK-20261008-PERF-KERNEL-RESOLUTION-OVERHEAD-DOUBLE-COUNTS-SUB-PHASES`, DEV-017).
