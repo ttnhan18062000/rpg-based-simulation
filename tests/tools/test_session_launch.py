@@ -402,3 +402,55 @@ def test_main_dry_run_for_a_planner_with_branch_prints_the_command(repo, tmp_pat
     ln.main(["agent-working-planner", "--dry-run", "--branch", "topic", "--worktree", str(wt)], root=REAL_ROOT)
     out = capsys.readouterr().out
     assert "-b agent-working-planner-topic origin/main" in out and not wt.exists()
+
+
+# ---- TCK-20261008-LAUNCHER-SQUASH-MERGED-BRANCH ---------------------------------------------------
+
+def _squash_merged(repo, name="squashed"):
+    """A branch whose work reached origin/main as a DIFFERENT commit (squash): not an ancestor, nothing missing."""
+    git(repo, "checkout", "-q", "-b", name)
+    (repo / "sq").write_text("work\n"); git(repo, "add", "-A"); git(repo, "commit", "-q", "-m", "work")
+    git(repo, "checkout", "-q", "main")
+    (repo / "sq").write_text("work\n"); git(repo, "add", "-A"); git(repo, "commit", "-q", "-m", "squash of work")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    return name
+
+
+def test_squash_merged_branch_is_spent_by_git_cherry_when_gh_fails(repo, tmp_path, monkeypatch):
+    name = _squash_merged(repo)
+    real = ln._run
+    monkeypatch.setattr(ln, "_run", lambda cmd, cwd=None: subprocess.CompletedProcess(cmd, 1, "", "no gh") if cmd[0] == "gh" else real(cmd, cwd))
+    assert ln.branch_spent_reason(name, repo) and "squash-merged" in ln.branch_spent_reason(name, repo)
+    wt = tmp_path / "wt"
+    notes = ln.ensure_worktree(wt, name, repo, role=PLANNER)
+    assert any("not recreated from a spent branch" in n and "--branch" in n for n in notes) and not wt.exists()
+
+
+def test_a_merged_pr_makes_the_recorded_branch_spent_even_with_unmerged_looking_commits(repo, monkeypatch):
+    git(repo, "checkout", "-q", "-b", "ahead")
+    (repo / "x").write_text("x\n"); git(repo, "add", "-A"); git(repo, "commit", "-q", "-m", "x")
+    git(repo, "checkout", "-q", "main")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    real = ln._run
+    monkeypatch.setattr(ln, "_run", lambda cmd, cwd=None: subprocess.CompletedProcess(cmd, 0, '[{"number": 7}]', "") if cmd[0] == "gh" else real(cmd, cwd))
+    assert ln.branch_spent_reason("ahead", repo) == "has a merged PR"
+    monkeypatch.setattr(ln, "_run", lambda cmd, cwd=None: subprocess.CompletedProcess(cmd, 0, "[]", "") if cmd[0] == "gh" else real(cmd, cwd))
+    assert ln.branch_spent_reason("ahead", repo) is None
+
+
+def test_explicit_branch_overrides_a_live_recorded_branch(repo, tmp_path):
+    git(repo, "checkout", "-q", "-b", "live")
+    (repo / "g").write_text("new\n"); git(repo, "add", "-A"); git(repo, "commit", "-q", "-m", "ahead")
+    git(repo, "checkout", "-q", "main")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    wt = tmp_path / "wt"
+    notes = ln.ensure_worktree(wt, "live", repo, apply=False, role=PLANNER, topic="seat")
+    assert any(f"git worktree add {wt} -b agent-working-planner-seat origin/main" in n for n in notes)
+    assert not any("git worktree add " + str(wt) + " live" in n for n in notes)
+
+
+def test_explicit_branch_overrides_a_squash_merged_recorded_branch(repo, tmp_path):
+    name = _squash_merged(repo)
+    wt = tmp_path / "wt"
+    notes = ln.ensure_worktree(wt, name, repo, role=PLANNER, topic="seat")
+    assert any("created" in n for n in notes) and git(wt, "branch", "--show-current").stdout.strip() == "agent-working-planner-seat"
