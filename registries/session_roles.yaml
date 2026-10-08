@@ -64,6 +64,7 @@ domains:
     routes:
       "src/**": rpg-planner                   # ask before touching RPG logic
       "agent-working/**": agent-working-designer   # process problems
+      "tools/test_architecture/**": testing-planner
       "tools/**": agent-working-designer
       "tests/architecture/**": testing-planner
   testing:
@@ -71,6 +72,9 @@ domains:
       - docs/plans/test_architecture/**
       - tests/architecture/**
       - tests/mutation/**
+      - tools/test_architecture/**
+      - .github/workflows/test.yml            # owner 2026-10-08: testing holds the test CI workflows
+      - .github/workflows/slow-regression.yml
     owns_not: []
     routes:
       "src/**": rpg-planner                   # ask before touching RPG logic
