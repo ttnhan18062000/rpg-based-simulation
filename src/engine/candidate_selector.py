@@ -80,6 +80,23 @@ class MovementCandidateSelector:
         return fallback_target
 
     @staticmethod
+    def movement_target(
+        entity: "EntityState", ent_upd: Optional[EntityUpdate], entities: Mapping[int, "EntityState"]
+    ) -> Optional[tuple[float, float]]:
+        """Where ``entity`` is walking this tick: the target this tick's update sets, else the stored navigation target, live-refreshed
+        for an entity-tracking move (see ``resolve_live_tracking_target``), or None for an entity holding an action task that sets no
+        target this tick (see ``holds_action_task``). Shared by the movement phase and ``select``."""
+        nav = ent_upd.navigation if ent_upd else None
+        if nav and nav.target_set is not None:
+            return nav.target_set
+        if MovementCandidateSelector.holds_action_task(entity):
+            return None
+        target: Optional[tuple[float, float]] = MovementCandidateSelector.resolve_live_tracking_target(
+            entity, entities, entity.navigation.target
+        )
+        return target
+
+    @staticmethod
     def holds_action_task(entity: "EntityState") -> bool:
         """True when ``entity`` is holding an action task (``ENTITY_ACT`` with a payload: ATTACK, SKILL, INTERACT, HOLD, ...).
 
@@ -198,27 +215,9 @@ class MovementCandidateSelector:
                 continue
 
             # Check effective target and movement mode
-            nav_target = None
-            mode = entity.navigation.movement_mode
-            if ent_upd and ent_upd.navigation:
-                if ent_upd.navigation.target_set is not None:
-                    nav_target = ent_upd.navigation.target_set
-                if ent_upd.navigation.movement_mode_set is not None:
-                    mode = ent_upd.navigation.movement_mode_set
-
-            if nav_target is None and MovementCandidateSelector.holds_action_task(entity):
-                continue  # an action task moves only on a tick that sets a target
-
-            if nav_target is None:
-                # Live-refresh a stale entity-tracking target (see
-                # resolve_live_tracking_target's own docstring) -- without this, an entity
-                # that already "arrived" at a stale snapshot of its pursuit target's old
-                # position gets permanently excluded from candidacy below, even though its
-                # target has since moved and a fresh route_movement_intent pass would find a
-                # real, legal step toward it.
-                nav_target = MovementCandidateSelector.resolve_live_tracking_target(
-                    entity, state.entities, entity.navigation.target
-                )
+            nav_target = MovementCandidateSelector.movement_target(entity, ent_upd, state.entities)
+            nav_upd = ent_upd.navigation if ent_upd else None
+            mode = nav_upd.movement_mode_set if (nav_upd and nav_upd.movement_mode_set is not None) else entity.navigation.movement_mode
 
             # If no target or already at target, skip unconditionally
             if nav_target is None or entity.navigation.position == nav_target:

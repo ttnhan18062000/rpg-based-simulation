@@ -192,6 +192,17 @@ disengaging while adjacent to a hostile) bypass this specific check.
     dominant axis (a tie takes the y axis, as the local step does); it used to add a unit vector
     and leave the entity between tiles, where the truncated legality distance and the float
     pursuit distance disagreed (`TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT`).
+*   **An Action Task Does Not Walk**: movement runs on `navigation.target`, whatever the task kind, so an entity that holds an
+    action task (`ENTITY_ACT` with a payload: ATTACK, SKILL, INTERACT, HOLD) must not keep walking on a target an earlier
+    decision left behind. The ATTACK and SKILL emissions clear the navigation target (`tactical.py`); an entity holding an action
+    task is neither offered a move (`MovementCandidateSelector.select`) nor moved (`MovementPhase.route_movement_intent`) unless
+    that tick sets a target of its own (`MovementCandidateSelector.holds_action_task`); and live retargeting onto the entity named
+    in `payload["target_id"]` applies only to entity-tracking moves (pursuit, intercept, bracketing, kiting, guard), never to an
+    action holder (`resolve_live_tracking_target`). Before this an adjacent ATTACK holder was live-retargeted onto its target's
+    occupied tile, the refused step fell to the sidestep ladder (`MovementSystem._find_sidestep`) and the attacker stepped off
+    adjacency and took an opportunity attack (COMB-009/272). The cost: an attacker whose target steps away no longer closes the gap
+    through live tracking; it closes after OUT_OF_RANGE returns it to the brain, which for an idle entity runs once per
+    `strategic_intelligence` cadence (10 in the live NORMAL policy, `policy.py:92`).
 *   **Withheld-Action Task Reset**: The action router (`ActionRouter.execute_action`,
     `src/engine/domain/action_router.py`) reports `ReasonCode.ACTION_WITHHELD_BY_POSTURE` when its
     combat-posture gate withholds an `ATTACK`/`SKILL` (the attacker's recorded
