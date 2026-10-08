@@ -173,21 +173,18 @@ def fallback_text(key: str) -> str:
     return "key not registered"
 
 
+def load_recorded(path: str | None) -> dict:
+    """The owner's decisions and the findings for a set, from the one recorded file (never hand-kept text in this module)."""
+    return yaml.safe_load((REPO / path).read_text(encoding="utf-8")) if path else {}
+
+
 PROFILES = {
     "icons-owner-fixes-v1": {
         "proposed": fixes.PROPOSED,
         "pending": fixes.PENDING,
         "not_proposed": fixes.NOT_PROPOSED,
         "evaluate": fixes.evaluate,
-        "findings": [
-            "Seven revisions are proposed (buff frame, rogue, common bead, tool, hero house, debuff frame, inn); each is a new revision r0002 of an adopted icon.",
-            "Owner decision (planner's blocking question, 2026-10-08): \"Keep current versions\". The ruins arch and the spear-tent camp are NOT proposed (the adopted brick wall and crossed swords stay); their drafts stay in the set only because the store cannot drop a draft slot.",
-            "Theme fit (D21, medieval fantasy plus magic, nothing modern), owner decisions of 2026-10-08: tool = hammer and tongs (the toolbox was rejected as a modern suitcase), hero house = \"Redraw as cottage\", debuff frame = \"Reshape the frame\", inn = \"Add staves\".",
-            "The blind check (round 5, one model, one sample, noisy) names the cottage, the tankard, the buff frame, the rogue and the bead correctly in free text and in the era question. TWO of the new drawings still misread at a glance: the tool's tongs read as a WRENCH (\"crossed hammer and wrench\", era-flagged) and the spiked-ball debuff frame as a GEAR (\"red spiked gear target\", era-flagged); the choice pass names both correctly. The planner and the owner decide whether to redraw them.",
-            "The silver bead is lighter than the dark tier badges E and D, but it stays a round disc beside octagons: the look-alike report puts it 25 XOR px from tier D and E (a shape twin; an owner finding).",
-            "The tool covers the repair kit; the spirit lantern, the family's other item, cannot also be drawn (one family icon). The ranger's registry fallback names the UI icon Lucide Crosshair: that is today's UI chrome, not the art, and is left as is.",
-            "The debuff frame's outline was made exactly mirror-symmetric after drawing began (the outline the owner approved was lopsided by 30 mirror pixels); the sheet shows the symmetric one.",
-        ],
+        "recorded": "visual_assets/icons/owner_fixes_decisions.yaml",
     },
 }
 
@@ -415,9 +412,17 @@ def owner_commands(set_id: str, shown: list[Entry]) -> str:
     return "\n".join(lines)
 
 
+def intro(shown: list[Entry]) -> list[str]:
+    adopted = adopted_intakes()
+    done = [e for e in shown if e.draft_id in adopted]
+    if shown and len(done) == len(shown):
+        return ["These images are the record of a review that is finished: EVERY DRAFT SHOWN IS NOW ADOPTED by the owner (see the commands section for each adoption id); a draft is read by the game only through an adoption."]
+    return ["These images are for your review. NOTHING IS ADOPTED" + (f" YET ({len(done)} of {len(shown)} drafts shown are already adopted)" if done else "") + ": a draft is not read by the game, and the only way to adopt is the commands at the bottom,",
+            "which you run in your own terminal (they refuse without one)."]
+
+
 def readme(set_id: str, digest: str, shown: list[Entry], profile: dict, result: dict | None, images: dict[str, str]) -> str:
-    out = [f"REVIEW SHEETS FOR THE DRAFT SET {set_id}", f"draft set hash {digest}", "", "These images are for your review. NOTHING IS ADOPTED: a draft is not read by the game, and the only way to adopt is the commands at the bottom,",
-           "which you run in your own terminal (they refuse without one). Every image is at a whole-number zoom with nearest-neighbour pixels, labelled.", "", "WHAT EACH IMAGE SHOWS"]
+    out = [f"REVIEW SHEETS FOR THE DRAFT SET {set_id}", f"draft set hash {digest}", "", *intro(shown), "Every image is at a whole-number zoom with nearest-neighbour pixels, labelled.", "", "WHAT EACH IMAGE SHOWS"]
     out += [f"  {name}  {text}" for name, text in images.items()]
     out += ["", "THE DRAFTS SHOWN", *[f"  {e.key}  ({e.sprite.width}x{e.sprite.width})  draft {e.draft_id}" for e in sorted(shown, key=lambda e: e.key)]]
     if profile.get("not_proposed"):
@@ -440,7 +445,10 @@ def readme(set_id: str, digest: str, shown: list[Entry], profile: dict, result: 
         out.append("  lint: " + ("no warnings" if not any(v["warnings"] for v in result["lint"].values()) else "WARNINGS, see the review doc"))
     else:
         out.append("  no recorded evaluation module for this set; see docs/assets/icon_set_v2_review.md")
-    out += ["", "FINDINGS FOR YOU", *[f"  - {f}" for f in profile.get("findings", ["see docs/assets/icon_set_v2_review.md"])]]
+    recorded = load_recorded(profile.get("recorded"))
+    decisions = [f"  - {d['date']}  {d['about']}: \"{d['answer']}\"" for d in recorded.get("decisions", [])]
+    out += ["", "OWNER DECISIONS (recorded verbatim in " + str(profile.get("recorded", "no recorded file")) + ")", *(decisions or ["  none recorded"])]
+    out += ["", "FINDINGS FOR YOU", *[f"  - {f}" for f in recorded.get("findings", ["see docs/assets/icon_set_v2_review.md"])]]
     out += ["", "YOUR COMMANDS (own terminal; fill the placeholders yourself, the licence decision must be CLEARED; each slot is its own decision)", "", owner_commands(set_id, shown),
             "adopt-set cannot make new revisions of adopted sources (it only creates new ones), which is why revisions are adopted one slot at a time with --parent.", ""]
     return "\n".join(out)

@@ -23,4 +23,4 @@ adopted buff frame, and the blade motifs + the unmatched spirit lantern.
 
 ## Status
 
-IN PROGRESS (2026-10-08): the fixes, review-folder and theme-fit tickets are done; seven revisions are proposed (buff, rogue, tool = hammer and tongs, common, cottage, debuff frame, inn) and the owner adopts them with 14 commands in the review doc; the recording ticket waits for that.
+DONE (2026-10-08): the owner adopted seven r0002 revisions (14 commands, 14:23:46Z to 14:24:07Z); the recording ticket closed the folder. PR #418 push and merge await the user's answers.

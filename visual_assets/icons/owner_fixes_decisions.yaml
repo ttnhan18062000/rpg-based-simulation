@@ -1,0 +1,50 @@
+set_id: icons-owner-fixes-v1
+note: The ONE recorded source of the owner's decisions and the findings that the review folder README prints. tests/visual_assets/review_sheets.py reads it; docs/assets/icon_set_v2_review.md must quote
+  every answer verbatim (test_review_sheets pins both). Add a decision here, never as text in the generator.
+decisions:
+- date: '2026-10-08'
+  about: ruins arch and spear-tent camp (after seeing the first drafts)
+  answer: Keep current versions
+- date: '2026-10-08'
+  about: theme
+  answer: Medieval fantasy + magic
+- date: '2026-10-08'
+  about: tool icon
+  answer: Hammer and tongs
+- date: '2026-10-08'
+  about: hero house
+  answer: Redraw as cottage
+- date: '2026-10-08'
+  about: debuff frame
+  answer: Reshape the frame
+- date: '2026-10-08'
+  about: tankard
+  answer: Add staves
+- date: '2026-10-08'
+  about: tool silhouette (implementer's blocking question)
+  answer: Approve option A
+- date: '2026-10-08'
+  about: cottage, spiked frame and tankard silhouettes (implementer's blocking question)
+  answer: Approve all three
+- date: '2026-10-08'
+  about: tool (reads as hammer and wrench)
+  answer: Accept as drawn
+- date: '2026-10-08'
+  about: debuff spiked ring (reads as a gear)
+  answer: Accept as drawn
+- date: '2026-10-08'
+  about: three spec numbers restated after drawing (hammer head 25 to 20, thatch 90 to 80, plaster 50 to 30)
+  answer: Accept the changes
+findings:
+- Seven revisions are proposed (buff frame, rogue, common bead, tool, hero house, debuff frame, inn); each is a new revision r0002 of an adopted icon.
+- 'Owner decision (planner''s blocking question, 2026-10-08): "Keep current versions". The ruins arch and the spear-tent camp are NOT proposed (the adopted brick wall and crossed swords stay); their drafts
+  stay in the set only because the store cannot drop a draft slot.'
+- 'Theme fit (D21, medieval fantasy plus magic, nothing modern), owner decisions of 2026-10-08: tool = hammer and tongs (the toolbox was rejected as a modern suitcase), hero house = "Redraw as cottage",
+  debuff frame = "Reshape the frame", inn = "Add staves".'
+- 'The blind check (round 5, one model, one sample, noisy) names the cottage, the tankard, the buff frame, the rogue and the bead correctly in free text and in the era question. TWO of the new drawings
+  still misread at a glance: the tool''s tongs read as a WRENCH ("crossed hammer and wrench", era-flagged) and the spiked-ball debuff frame as a GEAR ("red spiked gear target", era-flagged); the choice
+  pass names both correctly. The owner accepted both as drawn (see OWNER DECISIONS).'
+- 'The silver bead is lighter than the dark tier badges E and D, but it stays a round disc beside octagons: the look-alike report puts it 25 XOR px from tier D and E (a shape twin; an owner finding).'
+- 'The tool covers the repair kit; the spirit lantern, the family''s other item, cannot also be drawn (one family icon). The ranger''s registry fallback names the UI icon Lucide Crosshair: that is today''s
+  UI chrome, not the art, and is left as is.'
+- The debuff frame's outline was made exactly mirror-symmetric after drawing began (the outline the owner approved was lopsided by 30 mirror pixels); the sheet shows the symmetric one.

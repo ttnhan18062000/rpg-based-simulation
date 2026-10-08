@@ -48,4 +48,4 @@ def test_the_committed_catalog_holds_exactly_the_owners_two_set_adoptions():
             adoption = records.load_adoption(entry["adoption_id"])
             assert (adoption.source_asset_id, adoption.intake_id) == (drafts[entry["intake_id"]]["source_asset_id"], entry["intake_id"])
             assert (entry["visual_key"], entry.get("detail")) == (drafts[entry["intake_id"]]["visual_key"], drafts[entry["intake_id"]].get("detail"))
-    assert sorted(a.source_asset_id for a in (records.load_adoption(p.stem) for p in records.adoptions_dir().glob("*.json"))) == af.ADOPTED_SOURCES
+    assert sorted(a.source_asset_id for a in (records.load_adoption(p.stem) for p in records.adoptions_dir().glob("*.json"))) == sorted(af.ADOPTED_SOURCES + af.ICON_FIX_SOURCES)  # the seven revised icons are adopted twice (r0001, r0002)

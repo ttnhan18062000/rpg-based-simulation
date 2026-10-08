@@ -26,7 +26,7 @@ Updated: 2026-10-08 (icon set v2 complete locally, PR next)
   report + MEASURED spec compliance table (icon_compliance.py), owner gate. Naming alone missed the sword.
 - Owner findings carried into the PR notes: ruins (brick wall, 4th idea) still free-text 'building blocks'; common bead vs
   tier D/E look-alike at common scale; tool = wrench, spirit_lantern unmatched; adopted buff frame reads 'green gem';
-  blade motifs repeat across families. Adopted totals: 70 sources (34 terrain-era + 14 key + 22 v2); no rc covers icons.
+  blade motifs repeat across families. Adopted totals: 70 sources (34 terrain-era + 14 key + 22 v2) and 77 revisions (the owner adopted seven r0002 revisions from `icons-owner-fixes-v1` on 2026-10-08); no rc covers icons.
 - Next icon work (not filed; ask the user): activation path (charter/AM-M6+ is the owner's), rc with icon slots, `icon`
   fallback glyph, Live Map art path must use isOverviewZoom(). Follow-up idea: decouple fixture guards from current-rc pin.
 - Earlier: PR #388 (icon key set) merged as bc4f7553c on 2026-10-06; PR #361 (terrain set) as 47931fa54.

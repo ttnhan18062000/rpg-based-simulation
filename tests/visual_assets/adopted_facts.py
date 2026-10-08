@@ -5,7 +5,7 @@ The owner adopted draft set `terrain-v1` themselves on 2026-10-05T18:17:03Z (UTC
 used to say "the catalog holds only the pilot forest" compare against them with equality, never `>=`, so a stray adoption or a missing file still fails. If the catalog changes again (a new
 adoption, a revocation), these facts change in the same commit as that decision, with its own ticket.
 
-Three owner decisions are recorded: `terrain-v1` (2026-10-05T18:17:03Z, 31 sources next to the pilot forest's three), `icons-key-v1` (2026-10-06T15:21:47Z, 14 icon sources) and `icons-v2` (2026-10-08T00:40:15Z, 22 icon sources). `TERRAIN_ERA_SOURCES` is
+Four owner decisions are recorded (the fourth, `icons-owner-fixes-v1`, is seven revisions of adopted icons: 77 adoptions, still 70 sources): `terrain-v1` (2026-10-05T18:17:03Z, 31 sources next to the pilot forest's three), `icons-key-v1` (2026-10-06T15:21:47Z, 14 icon sources) and `icons-v2` (2026-10-08T00:40:15Z, 22 icon sources). `TERRAIN_ERA_SOURCES` is
 the 34 of the first, `ICON_SOURCES` the 14 of the second, `ICON_V2_SOURCES` the 22 of the third and `ADOPTED_SOURCES` everything the catalog holds (70). `build` and `release` have covered only the 34 terrain-era sources: no artifact and no
 release candidate covers an icon slot (rc-0006 and rc-0007 have 34 entries; the icon keys are `optional: true`), the 36 icons included.
 """
@@ -55,12 +55,31 @@ ICON_V2_SOURCES = sorted(
     + [f"icon_rarity_{n}" for n in ("common", "uncommon", "rare")])
 assert len(ICON_V2_SOURCES) == 22
 
+# The owner's fourth decision (2026-10-08T14:23:46Z to 14:24:07Z): seven REVISIONS of adopted icons, each `adopt --parent r0001` -> `r0002`, from the draft set `icons-owner-fixes-v1`
+# (TCK-20261008-VISUAL-ASSETS-RECORD-ICON-OWNER-FIXES-ADOPTION). They add adoptions, intakes and revision files but NO new source asset: the 70 sources stay. The set's other two drafts
+# (`icon.marker.ruins`, `icon.marker.enemy_camp`) were not proposed ("Keep current versions") and are not adopted.
+ICON_FIX_SET_ID = "icons-owner-fixes-v1"
+ICON_FIX_DRAFT_SET_HASH = "sha256:bab784060aedc76838ebc246a3534d88559c9493082b1e076a1bdedb8b8fc6e0"
+ICON_FIX_APPROVER = ("nhan", "owner")
+ICON_FIX_ADOPTIONS = {  # source asset id -> (adoption id, intake id, decided_at); every one has parent r0001 and creates r0002
+    "icon_building_hero_house": ("ad-0f04b1794541543e", "in-cce3e6b4fb609dc5", "2026-10-08T14:23:46Z"),
+    "icon_building_inn": ("ad-c4edd43de67dbfa0", "in-ca88fbc521414581", "2026-10-08T14:23:50Z"),
+    "icon_class_rogue": ("ad-9e51d5d4bf9ee568", "in-f332aa813db19054", "2026-10-08T14:23:54Z"),
+    "icon_item_tool": ("ad-eb148a100d2249a8", "in-7d3825eda1fdb00e", "2026-10-08T14:23:57Z"),
+    "icon_rarity_common": ("ad-a5eeb524eaeb0814", "in-db5985f18b3164cf", "2026-10-08T14:24:00Z"),
+    "icon_status_frame_buff": ("ad-b21e0f1d680a6c73", "in-a927d82fcd493c0a", "2026-10-08T14:24:03Z"),
+    "icon_status_frame_debuff": ("ad-e92bdc4e6b959a2b", "in-6ee2b5282280c703", "2026-10-08T14:24:07Z"),
+}
+ICON_FIX_SOURCES = sorted(ICON_FIX_ADOPTIONS)
+assert len(ICON_FIX_SOURCES) == 7 and set(ICON_FIX_SOURCES) <= set(ICON_SOURCES + ICON_V2_SOURCES)
+
 ADOPTED_SOURCES = sorted(TERRAIN_ERA_SOURCES + ICON_SOURCES + ICON_V2_SOURCES)
 SET_ADOPTION_IDS = sorted([SET_ADOPTION_ID, ICON_SET_ADOPTION_ID, ICON_V2_SET_ADOPTION_ID])
-# Counts under the committed catalog: one adoption per source, two intake provenance files (record and review) per adoption.
-ADOPTION_COUNT = 70
-INTAKE_FILE_COUNT = 140
-assert (len(ADOPTED_SOURCES), ADOPTION_COUNT, INTAKE_FILE_COUNT) == (70, 70, 2 * 70)
+# Counts under the committed catalog: one adoption per source plus one per revision (7), two intake provenance files (record and review) per adoption.
+ADOPTION_COUNT = 77
+INTAKE_FILE_COUNT = 154
+REVISION_COUNT = 77  # r0001 of each of the 70 sources + r0002 of the 7 revised icons (what `store list --kind source` counts)
+assert (len(ADOPTED_SOURCES), ADOPTION_COUNT, INTAKE_FILE_COUNT) == (70, 70 + len(ICON_FIX_SOURCES), 2 * 77)
 # `build` and `release` (TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN, approved by the user on 2026-10-06): one generated artifact directory per adopted source, and the candidate pilot/rc-0005 holds all 34 slots.
 # rc-0004 still holds the forest's three slots only. rc-0006 (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, approved by the user on 2026-10-06) is rc-0005's 34 slots on the registry that added the 14 `icon.*` keys; rc-0007 (`TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC`, approved by the user on 2026-10-07) is the same 34 slots on the registry that added the 22 icon set v2 keys.
 GENERATED = sorted(f"{source}--x1" for source in TERRAIN_ERA_SOURCES)  # no icon has been built yet: the 14 key-set icons and the 22 v2 icons are adopted sources without an artifact

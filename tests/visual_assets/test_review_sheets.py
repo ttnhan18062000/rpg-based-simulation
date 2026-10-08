@@ -9,6 +9,7 @@ import struct
 
 import pytest
 
+from tests.visual_assets import adopted_facts as af
 from tests.visual_assets import icon_owner_fixes_draft_set as fixes
 from tests.visual_assets import icon_specs
 from tests.visual_assets import review_sheets as rs
@@ -62,16 +63,28 @@ def test_only_the_seven_proposed_drafts_are_shown_and_the_two_declined_ones_are_
     assert not any(k in commands for k in fixes.NOT_PROPOSED)
 
 
-def test_the_readme_holds_what_each_image_shows_the_recorded_results_the_findings_and_the_exact_owner_commands(folder):
-    text = (folder[0] / "README.txt").read_text()
+def test_the_readme_holds_what_each_image_shows_the_recorded_results_the_findings_and_the_exact_owner_commands(tmp_path, monkeypatch):
+    monkeypatch.setattr(rs, "adopted_intakes", lambda: {})  # the state before the owner adopted
+    monkeypatch.setattr(rs, "latest_revision", lambda source: "r0001")
+    out = tmp_path / SET
+    rs.generate(SET, out)
+    text = (out / "README.txt").read_text()
     for name in rs.FILES[:-1]:
         assert name in text
-    assert "NOTHING IS ADOPTED" in text and "RECORDED RESULTS" in text and "PASS" in text and "FINDINGS FOR YOU" in text
+    assert "NOTHING IS ADOPTED:" in text and "RECORDED RESULTS" in text and "PASS" in text and "FINDINGS FOR YOU" in text
     assert text.count(" review in-") == 7 and text.count(" adopt in-") == 7 and text.count("--parent r0001") == 7
     assert "<your licence decision>" in text and "adopt-set cannot make new revisions" in text
     for e in rs.load_set(SET)[0]:
         if e.key in fixes.PROPOSED:
             assert f"review {e.draft_id}" in text and f"--source-asset-id {e.key.replace('.', '_')} " in text  # the EXISTING source id, not the draft's
+
+
+def test_after_the_owners_adoption_the_readme_says_every_draft_is_adopted_and_lists_no_command_to_run(folder):
+    text = (folder[0] / "README.txt").read_text()
+    assert "EVERY DRAFT SHOWN IS NOW ADOPTED" in text and "NOTHING IS ADOPTED" not in text
+    assert text.count("ALREADY ADOPTED") == 7 and " review in-" not in text and " adopt in-" not in text
+    for source, (adoption_id, intake_id, _when) in af.ICON_FIX_ADOPTIONS.items():
+        assert f"draft {intake_id} is ALREADY ADOPTED (adoption {adoption_id})" in text
 
 
 def test_a_planted_extra_draft_appears_in_the_overview_and_changes_the_image(tmp_path):
@@ -135,3 +148,15 @@ def test_other_draft_sets_generate_too_and_a_set_with_no_markers_says_so(tmp_pat
     assert text.count("ALREADY ADOPTED") == 22 and " adopt in-" not in text and "adopt-set icons-v2" not in text  # a set the owner already adopted gets no commands to run
     note = rs.generate(SET, tmp_path / "fx")
     assert png_size((tmp_path / "fx" / "05_map_markers.png").read_bytes())[1] < 400 and note["set_id"] == SET  # no location glyph: a note, not an empty map
+
+
+def test_the_readme_prints_the_decisions_and_findings_from_the_one_recorded_file_and_the_review_doc_quotes_every_answer(folder):
+    recorded = rs.load_recorded(rs.PROFILES[SET]["recorded"])
+    text = (folder[0] / "README.txt").read_text()
+    assert len(recorded["decisions"]) == 11 and "OWNER DECISIONS" in text
+    for d in recorded["decisions"]:
+        assert f'{d["about"]}: "{d["answer"]}"' in text
+    assert all(f in text for f in recorded["findings"])
+    review = (rs.REPO / "docs" / "assets" / "icon_set_v2_review.md").read_text()
+    assert all(f'"{d["answer"]}"' in review for d in recorded["decisions"])
+    assert text.count("Accept as drawn") == 2 and "accepted both as drawn" in text
