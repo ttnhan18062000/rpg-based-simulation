@@ -12789,3 +12789,20 @@
   divergence_note: null
   support_boundary: Replays recorded before this ticket carry the string "SKIPPED" with no scheme or status; no
     reader in src/ compares the TICK_END hash, so none needed changing. When Live runs hash is not decided here.
+
+- id: INFRA-425
+  text: 'TCK-20261008-PERF-KERNEL-RESOLUTION-OVERHEAD-DOUBLE-COUNTS-SUB-PHASES: the sum of the kernel''s per-phase costs equals
+    the tick''s cost. resolution_overhead is the resolution wall time minus every sub-phase cost the refinement
+    pipeline recorded for that tick (no hand-kept key list), so no refine sub-phase is counted both under its own
+    key and inside resolution_overhead. _final_compute_ms, and so the governor''s tick_compute_ms, no longer
+    includes the double count.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/kernel.py (Kernel._tick_once_inner, resolution_overhead)
+  proof_type: contract
+  test_path: tests/unit/kernel/test_phase_cost_accounting.py
+  divergence_note: DEV-017 (Bug Fix; Live mode timing changes, audit_mode unchanged)
+  support_boundary: _phase_costs is cleared at the start of every tick, so a key a tick does not record carries no stale value
+    into the sum (tests/unit/kernel/test_phase_cost_accounting.py). Recorded perf baselines from before this change are
+    incomparable for tick totals.

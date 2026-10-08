@@ -395,6 +395,7 @@ class Kernel:
         t0 = time.perf_counter_ns()
         self._start_perf_ts = t0
         tick_no = self._state.tick  # advancement moves state.tick on; the overrun belongs to this tick
+        self._phase_costs.clear()  # a key this tick does not record must not carry last tick's value into the sum
         self._phase_init()
         t1 = time.perf_counter_ns()
         self._phase_costs["init"] = (t1 - t0) / 1e6
@@ -431,7 +432,8 @@ class Kernel:
         self._phase_resolution()
         t4 = time.perf_counter_ns()
         res_total = (t4 - t3) / 1e6
-        sub_sum = sum(v for k, v in self._phase_costs.items() if k.startswith("res_") or k in ["trust_validity", "contracts_production", "locomotion", "interaction", "governance_ecology", "economy", "final_integrity"])
+        # Every sub-phase cost the pipeline recorded already sits under its own key, so subtract all of them (TCK-20261008).
+        sub_sum = sum((getattr(self._current_update, "sub_phase_costs", None) or {}).values())
         self._phase_costs["resolution_overhead"] = max(0.0, res_total - sub_sum)
         
         self._phase_cleanup()
