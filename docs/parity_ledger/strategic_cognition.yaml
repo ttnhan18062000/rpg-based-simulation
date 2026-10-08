@@ -4536,8 +4536,8 @@
   legacy_evidence: null
   v2_evidence: '`src/ai/goals/opening_steps.py` (`opening_steps`, `first_open_step`), `src/ai/goals/scorers.py`
     (`_hunger_without_open_way`), `src/engine/need_paths.py` (`need_path_report` counts food nodes);
-    `docs/guidelines/intentional_divergences.md` section 2.89'
+    `docs/guidelines/intentional_divergences.md` section 2.91'
   proof_type: parity
   test_path: tests/unit/ai/test_opening_steps.py
-  divergence_note: 'Intentional divergence 2.89 (Intentional Gameplay Change).'
+  divergence_note: 'Intentional divergence 2.91 (Intentional Gameplay Change).'
   support_boundary: 'Held out: the earn-then-buy and ask steps are stubs that report why they are closed; broke workers have no earn path yet.'

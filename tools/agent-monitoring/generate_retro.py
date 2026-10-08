@@ -1368,7 +1368,7 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
 
 def generate(
     runs, events, label, week_str=None, tickets_root=None, tools=None, all_tools=None,
-    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None, gates=None, paths=None,
+    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None, gates=None, paths=None, failures=None,
 ):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -1496,6 +1496,12 @@ def generate(
     else:
         lines.append("_No gate failures this period._")
     lines.append("")
+
+    # Failures (TCK-20261007-RETRO-FAILURES-SECTION): non-DONE runs, failed/blocked events, recurring failing tests.
+    # Right after the gate breakdown so a reader finds failures first; omitted entirely when the caller passes none.
+    if failures:
+        lines.append(failures.rstrip("\n"))
+        lines.append("")
 
     # Reason-code breakdown — only rendered when at least one event carries one, so weeks with
     # no reason_code data (or runs predating this field) don't get an empty/zero-value section.
@@ -2090,7 +2096,7 @@ def _extract_notes_section(existing_text: str) -> "str | None":
     return existing_text[idx:]
 
 
-def _write_report_preserving_notes(report: str, out_path: Path, force: bool) -> str:
+def _write_report_preserving_notes(report: str, out_path: Path, force: bool, run_count=None) -> str:
     """Writes `report` to `out_path`, preserving any existing `## Notes` content unless `force` is
     set (TCK-20260915-RETRO-CLI-OVERWRITES-HAND-AUTHORED-NOTES: `out_path.write_text(report)`
     used to run unconditionally, silently destroying hand-authored notes the project's own
@@ -2100,7 +2106,12 @@ def _write_report_preserving_notes(report: str, out_path: Path, force: bool) -> 
     Acceptance Criteria ("a regeneration that would discard content must say so").
 
     `--force` still allows a deliberate full rewrite (AC #3) -- this function's only job is making
-    the DEFAULT path safe, not removing the escape hatch."""
+    the DEFAULT path safe, not removing the escape hatch.
+
+    TCK-20261007-RETRO-NOTES-ACCUMULATION-COLLAPSE: preserved Notes go through `retro_notes.process_notes` -- stamped
+    addenda older than a `final` entry collapse to one history line (full text archived first), and a status line
+    flags a final note older than the data (`run_count`). Unmarked text is untouched; any failure there keeps the
+    Notes verbatim."""
     had_existing_file = out_path.exists()
     if force or not had_existing_file:
         out_path.write_text(report)
@@ -2114,15 +2125,26 @@ def _write_report_preserving_notes(report: str, out_path: Path, force: bool) -> 
         out_path.write_text(report)
         return f"Written: {out_path}"
 
+    notes_info = []
+    try:
+        import retro_notes
+
+        archive_path = out_path.parent / "archive" / f"{out_path.stem}-notes-history.md"
+        processed, notes_info = retro_notes.process_notes(
+            preserved_notes, run_count, archive_path, out_path.stem, f"archive/{archive_path.name}")
+    except Exception as exc:  # noqa: BLE001
+        processed, notes_info = preserved_notes, [f"WARNING: notes convention not applied: {exc}"]
+
     fresh_notes_idx = report.find("## Notes")
     if fresh_notes_idx != -1:
-        merged = report[:fresh_notes_idx] + preserved_notes
+        merged = report[:fresh_notes_idx] + processed
     else:
-        merged = report.rstrip("\n") + "\n\n" + preserved_notes
+        merged = report.rstrip("\n") + "\n\n" + processed
     out_path.write_text(merged)
+    extra = f"; {'; '.join(notes_info)}" if notes_info else ""
     return (
         f"Written: {out_path} (preserved {len(preserved_notes)} chars of existing ## Notes "
-        f"content -- pass --force to discard it instead)"
+        f"content -- pass --force to discard it instead{extra})"
     )
 
 
@@ -2170,6 +2192,18 @@ def _paths_section(runs, events, all_runs):
         import path_report
 
         return path_report.render_section(runs, events, sum(1 for r in dedupe_to_latest_per_execution(all_runs) if path_report.has_path_fields(r)))
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _failures_section(runs, events):
+    """The rendered Failures section (TCK-20261007-RETRO-FAILURES-SECTION), or None when it cannot be built (never fails
+    the retro). The sibling takes this module's predicates as arguments, so it never imports this file."""
+    try:
+        import retro_failures
+
+        return retro_failures.render_section(dedupe_to_latest_per_execution(runs), events, _is_gate_fail, _normalize_agent,
+                                             resolve_status=_resolve_status)
     except Exception:  # noqa: BLE001
         return None
 
@@ -2254,16 +2288,17 @@ def main():
     session_layer = _session_layer_section(runs, week_str, cutoff if args.days else None, args.latency_prs)
     gates = _gates_section(None if (args.all or args.days) else week_str)
     paths = _paths_section(runs, events, all_runs)
+    failures = _failures_section(runs, events)
 
     report = generate(
         runs, events, label, week_str, tools=tools, all_tools=all_tools,
         raw_run_count=raw_run_count, deduped_run_count=deduped_run_count,
-        real_token_report=real_token_report, session_layer=session_layer, gates=gates, paths=paths,
+        real_token_report=real_token_report, session_layer=session_layer, gates=gates, paths=paths, failures=failures,
     )
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)
     out_path = RETRO_DIR / out_name
-    print(_write_report_preserving_notes(report, out_path, args.force))
+    print(_write_report_preserving_notes(report, out_path, args.force, run_count=deduped_run_count))
     print(f"Runs: {len(runs)}, Events: {len(events)}")
 
     # Update index

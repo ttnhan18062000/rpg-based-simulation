@@ -10,4 +10,4 @@ tags: []
 
 # Plan
 
-Edit three `hazard_level` values; regenerate resolved worlds; add SPC-S16 and the compile assertion; parity WORLD-129; divergence 2.90; Bible 05; mechanism note.
+Edit three `hazard_level` values; regenerate resolved worlds; add SPC-S16 and the compile assertion; parity WORLD-129; divergence 2.92; Bible 05; mechanism note.

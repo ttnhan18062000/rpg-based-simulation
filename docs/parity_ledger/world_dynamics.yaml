@@ -2320,8 +2320,8 @@
   legacy_evidence: null
   v2_evidence: '`data/content/world_modules/trading_company_hub.yaml`, `survivor_camp_shelter.yaml`,
     `wolf_den_near_forest.yaml`; `docs/mechanics/05_world_evolution.md` Hazard Impacts;
-    `docs/guidelines/intentional_divergences.md` section 2.90'
+    `docs/guidelines/intentional_divergences.md` section 2.92'
   proof_type: parity
   test_path: tests/mechanic_scenarios/test_near_wild_is_survivable_deep_wild_is_not.py
-  divergence_note: 'Intentional divergence 2.90 (Intentional Gameplay Change).'
+  divergence_note: 'Intentional divergence 2.92 (Intentional Gameplay Change).'
   support_boundary: 'Held out: the second `near_forest` region of the `nomadic_herd` module (hazard 1.5, no settlement near) is not a near edge and is unchanged.'

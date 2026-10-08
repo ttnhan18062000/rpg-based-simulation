@@ -23,6 +23,7 @@ from src.engine.tactical_destinations import retreat_destination, wander_destina
 from src.engine.tactical_threat import safety_retreat_warranted
 from src.engine.tactical_rest import in_place_survival_update
 from src.engine.tactical_hold import held_swing_update, stalemate_break_update
+from src.engine.hostility import perceived_hostile, source_identity
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -204,12 +205,7 @@ class TacticalDecisionSystem:
                       )
                   )
 
-        from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_species_id_str
-        from src.content_semantics.relation import RelationContext
-        from src.entities.identity_resolver import EntityIdentityResolver, IdentityResolutionError
-        from src.engine.behavior_consumers import (
-            get_perception_gate, get_pressure_resolver, get_entity_signals,
-        )
+        from src.engine.behavior_consumers import get_pressure_resolver
         from src.world.motivation.pressure_resolver import MotivationPressureSet
 
         # Resolve entity pressures once — used for scoring and flee gating
@@ -218,55 +214,15 @@ class TacticalDecisionSystem:
         except Exception:
             entity_pressures = MotivationPressureSet.empty()
 
-        semantics_service = get_faction_semantics_service()
-        _id_resolver = EntityIdentityResolver()
-        _gate = get_perception_gate()
         hostiles = []
         hostile_identity_sources: dict = {}
-
-        try:
-            _src_identity = _id_resolver.resolve(entity)
-            _src_faction_id = _src_identity.faction_id
-            _src_identity_source = _src_identity.source
-        except IdentityResolutionError:
-            _src_faction_id = get_faction_id_str(entity)
-            _src_identity_source = "legacy_fallback"
+        _src_faction_id, _src_identity_source = source_identity(entity)
 
         for n in neighbors:
-            if not n.combat.alive:
-                continue
-            dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, n.navigation.position)
-            # Perception gate: entity can only engage targets it can detect
-            try:
-                if not _gate.can_perceive(entity, get_entity_signals(n), {"distance": float(dist)}).perceived:
-                    continue
-            except Exception:
-                pass  # Gate failure → permissive fallback
-            combat_engaged = (
-                entity.task.payload.get("target_id") == n.id
-                or n.task.payload.get("target_id") == entity.id
-            )
-            # `intruding` left unset (None) -- see the matching note in
-            # LegalityServiceV2.verify_attack_legality (src/engine/legality.py); hardcoding
-            # False here previously made contextual_intruder_groups-based hostility
-            # (e.g. wild_beast_pack's stance) structurally unreachable regardless of
-            # combat_engaged (TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION).
-            context = RelationContext(
-                distance=float(dist),
-                combat_engaged=combat_engaged,
-                source_species=get_species_id_str(entity),
-                target_species=get_species_id_str(n),
-            )
-            try:
-                _tgt_identity = _id_resolver.resolve(n)
-                _tgt_faction_id = _tgt_identity.faction_id
-            except IdentityResolutionError:
-                _tgt_faction_id = get_faction_id_str(n)
-
-            if semantics_service.is_hostile_compat(_src_faction_id, _tgt_faction_id, context):
+            if perceived_hostile(entity, n, (_src_faction_id, _src_identity_source)):
                 hostiles.append(n)
                 hostile_identity_sources[n.id] = _src_identity_source
-        
+
         # 4. Strategic Persistence (Pillar 5.1)
         strat_up = _suspend_project_for_threat(entity, hostiles)
 
