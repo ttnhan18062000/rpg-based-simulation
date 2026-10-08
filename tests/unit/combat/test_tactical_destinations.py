@@ -146,7 +146,7 @@ class TestBranchesNeverTargetTheOrigin:
     def test_stalemate_break(self):
         me = _entity(1, Faction.HERO_GUILD, pos=(20.0, 20.0))
         me = replace(me, task=TaskComponent(payload={"target_id": 2, "stale_ticks": 11}))
-        foe = _entity(2, Faction.MONSTER_HORDE, pos=(20.0, 21.0))
+        foe = _entity(2, Faction.MONSTER_HORDE, pos=(20.0, 23.0))  # not adjacent: the breaker is for chases (CONFLICT-04)
         state = _state(me, foe)
         assert state.entities
         self._assert_in_region(state, TacticalDecisionSystem.evaluate_entity_intent(state, me), "STALEMATE_BREAK")

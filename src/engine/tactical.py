@@ -428,7 +428,7 @@ class TacticalDecisionSystem:
 
         # 4. Target Selection with Focus Fire
         group = state.groups.get(entity.identity.group_id) if entity.identity.group_id is not None else None
-        def target_score(h: EntityState) -> Tuple[float, int, float, float, float, int]:
+        def target_score(h: EntityState) -> Tuple[int, float, int, float, float, float, int]:
             dist = abs(h.navigation.position[0] - entity.navigation.position[0]) + abs(h.navigation.position[1] - entity.navigation.position[1])
 
             # Logic ID: COMB-316 -- subjective capability estimate against the hostile's species, from the entity's own
@@ -464,7 +464,9 @@ class TacticalDecisionSystem:
                 - entity_pressures.duty_pressure * 0.3,
             )
 
-            return (group_bias, is_current_target, -capability_confidence, h.combat.hp, dist * pressure_dist_mod, h.id)
+            # CONFLICT-04: a fighter stands its ground, so an adjacent hostile outranks a farther one.
+            not_adjacent = 0 if LegalityServiceV2.is_adjacent(entity.navigation.position, h.navigation.position) else 1
+            return (not_adjacent, group_bias, is_current_target, -capability_confidence, h.combat.hp, dist * pressure_dist_mod, h.id)
 
         logger.debug(f"DEBUG: entity {entity.id} evaluating targets. Group target: {group.shared_target_id if group else None}")
         for h in hostiles:
@@ -503,7 +505,10 @@ class TacticalDecisionSystem:
 
         recent_positions = ([curr_pos] + recent_positions)[:4]
 
-        if stale_ticks > 10:
+        # CONFLICT-04: a pair trading blows is not a stalemate; the breaker is for chases and kites.
+        fighting_adjacent = LegalityServiceV2.is_adjacent(entity.navigation.position, target.navigation.position)
+
+        if stale_ticks > 10 and not fighting_adjacent:
              # Logic ID: COMB-277 (Anti-stalemate does not force illegal movement)
              wander_to = _destination_or_hold(entity, wander_destination(state, entity))
              return EntityUpdate(
@@ -770,7 +775,7 @@ class TacticalDecisionSystem:
                             "action": "SKILL",
                             "skill_id": chosen_skill_id,
                             "target_id": target.id,
-                            "stale_ticks": stale_ticks + 1,
+                            "stale_ticks": 0,  # a swing is an outcome (tactical contract section 5)
                             "recent_positions": recent_positions,
                             "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
                         }
@@ -787,13 +792,37 @@ class TacticalDecisionSystem:
                     payload_set={
                         "action": "ATTACK",
                         "target_id": target.id,
-                        "stale_ticks": stale_ticks + 1,
+                        "stale_ticks": 0,
                         "recent_positions": recent_positions,
                         "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
                     }
                 )
             )
         else:
+            # CONFLICT-04: between blows the fighter holds. Adjacent to the target with only readiness
+            # missing, the swing is queued as a held ATTACK (the scheduler skips it until readiness 100)
+            # instead of a PURSUE step that would provoke an opportunity attack.
+            if (
+                fighting_adjacent
+                and entity.combat.readiness < 100.0
+                and LegalityServiceV2.verify_attack_legality(entity, target, state, is_opportunity_attack=True)[0]
+            ):
+                return EntityUpdate(
+                    entity_id=entity.id,
+                    strategic=strat_up,
+                    navigation=NavigationUpdate(target_clear=True),
+                    task=TaskUpdate(
+                        work_kind_set="ENTITY_ACT",
+                        payload_set={
+                            "action": "ATTACK",
+                            "reason": "HOLD_BETWEEN_BLOWS",
+                            "target_id": target.id,
+                            "stale_ticks": stale_ticks,
+                            "recent_positions": recent_positions,
+                            "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
+                        },
+                    ),
+                )
             # Pursuit
             target_pos = target.navigation.position
             
