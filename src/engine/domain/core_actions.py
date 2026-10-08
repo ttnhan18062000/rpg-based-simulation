@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from src.core.enums import ReasonCode
 from src.core.updates import (
     BiologicalUpdate, EntityUpdate, IdentityUpdate, 
     InteractionUpdate, NavigationUpdate, StaminaUpdate
@@ -15,6 +16,25 @@ if TYPE_CHECKING:
 # SURV-06: rest never requires a building. A rough rest in place recovers this much sleep debt per REST;
 # a bed only improves recovery (the inn's town service adds its own on top).
 ROUGH_REST_SLEEP_DEBT_RECOVERY = 10.0
+
+
+def interact_target_unavailable(state: Any, target_id: Any) -> Optional[ReasonCode]:
+    """Why an INTERACT with resource node `target_id` can never gather anything now, or None: the node is gone or has no charges left."""
+    if state is None or target_id is None:
+        return None
+    node = state.resource_nodes.get(target_id)
+    if node is None:
+        return ReasonCode.SOURCE_MISSING
+    return ReasonCode.SOURCE_DEPLETED if node.remaining_charges <= 0 else None
+
+
+def interact_released(entity: EntityState, state: Any, target_id: Any) -> Optional[Dict[int, EntityUpdate]]:
+    """The update for an INTERACT whose node cannot yield: nothing is spent or gathered, and the typed reason ends the held task so the
+    brain re-decides (pipeline_phases/actions.py) instead of the entity re-sending a no-op for hundreds of ticks. None when it can yield."""
+    reason = interact_target_unavailable(state, target_id)
+    if reason is None:
+        return None
+    return {entity.id: EntityUpdate(entity_id=entity.id, navigation=NavigationUpdate(failure_reason=reason))}
 
 
 class CoreActions:
@@ -588,10 +608,10 @@ class CoreActions:
     @staticmethod
     def execute_interact(
         entity: EntityState,
-        payload: Dict[str, Any]
+        payload: Dict[str, Any], state: Any = None
     ) -> Dict[int, EntityUpdate]:
         target_id = payload.get("target_id")
-        return {entity.id: EntityUpdate(
+        return interact_released(entity, state, target_id) or {entity.id: EntityUpdate(
             entity_id=entity.id,
             readiness_delta=-100.0,
             interaction=InteractionUpdate(target_node_id=target_id, progress_delta=1)

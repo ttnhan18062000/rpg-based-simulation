@@ -182,6 +182,8 @@ disengaging while adjacent to a hostile) bypass this specific check.
     one run. Clearing it returns the entity to the brain, whose tactical pass pursues whenever an
     attack is not legal. `INSUFFICIENT_READINESS` is deliberately **not** reset: readiness regens
     and the same swing can then land.
+    The same law ends a held gathering task: an `INTERACT` on a resource node that is missing or has no
+    charges left is reset the same way (see Bible 03 section 3, `TCK-20261008-A-HELD-INTERACT-ON-A-DEPLETED-OR-MISSING-NODE-IS-NEVER-RE-DECIDED`).
 *   **Whole-Tile Reach Distance**: positions are whole tiles (world rule MOV-07, Decision 25), and
     every reach check measures one distance: the Manhattan distance between the tiles the two
     positions stand on (`LegalityServiceV2.get_manhattan_dist`, each coordinate read as `int(pos)`,

@@ -2397,3 +2397,22 @@
   divergence_note: 'Intentional divergence 2.75 (Enforced): the previous `1 + global_salience`
     buy-price multiplier is removed (PERF-D1 amendment A1).'
   support_boundary: null
+- id: TOWN-197
+  text: An INTERACT whose resource node is missing or has no charges left ends the
+    held task, so the entity is handed back to the brain; it is not re-dispatched
+    as a successful no-op every tick.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/domain/core_actions.py` (`interact_target_unavailable`,
+    `CoreActions.execute_interact` reports `SOURCE_MISSING` / `SOURCE_DEPLETED` through
+    `NavigationUpdate.failure_reason`), `src/engine/pipeline_phases/actions.py` (`_ENDS_HELD_INTERACT_REASONS`,
+    `_is_unrecoverable_action_failure` clears the task payload so `scheduler.py` runs
+    the brain); same class as the held ATTACK reset (TARGET_INCAPACITATED, OUT_OF_RANGE);
+    `docs/mechanics/03_economic_laws.md` section 3; `docs/guidelines/intentional_divergences.md`
+    section 2.84'
+  proof_type: parity
+  test_path: tests/unit/actions/test_interact_depleted_node_task_reset.py
+  divergence_note: 'Intentional divergence 2.84 (Bug Fix): a held INTERACT on a missing
+    or depleted node now ends instead of repeating a no-op.'
+  support_boundary: null
