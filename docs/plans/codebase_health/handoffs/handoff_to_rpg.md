@@ -270,3 +270,5 @@ Two fixes, your choice:
 2. Keep it in core and type `live_scores` with a small `Protocol` defined in core that has the two attributes the function reads (`kind`, `utility`), then drop the import.
 
 Check: `uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml` reports 17 kept, 0 broken. If it is still broken at the flip, the flip ticket either baselines the pair by hand (`codebase/structure/import_layers_baseline.txt`) with the owner's yes, or waits.
+
+**Resolved 2026-10-08.** `rpg-planner` took option 2 (a `Protocol` in core; replies on PR #416) and fixed it in #420 (`753f98ea9`, `TCK-20261008-CORE-STRATEGIC-IMPORTS-AI-GOALS-FOR-A-TYPE-HINT`), together with four more layer breaks the same check found (`src/engine/tactical_rest.py` importing `src.ai.goals.need_pull`, from #414, and three from #412, whose KNOW-04 seeding moved to `src/content/common_knowledge_seed.py`). `codebase-planner` re-checked on `origin/main` `28e304cbe`: `lint-imports` reports 17 kept, 0 broken, and #420 changed no file under `codebase/` (no `ignore_imports` or baseline entry added). Nothing is left for the import-linter flip.
