@@ -59,9 +59,13 @@ def seeded_knowledge(catalog: Optional[Any]) -> KnowledgeModelComponent:
     return KnowledgeModelComponent(facts=common_knowledge_facts(catalog, COMMON_KNOWLEDGE_CERTAINTY))
 
 
+UNRECOGNISED = "unrecognised"
+
+
 def _recognised_kind(hostile: Any) -> str:
-    """What an observer recognises the hostile as: its species, else (for a hand-built entity) its kind."""
-    return str((hostile.identity.properties or {}).get("species_id") or hostile.kind)
+    """What an observer recognises the hostile as: its species. With none the hostile is unrecognised and so uninformed;
+    ``kind`` is the hidden population role and KNOW-04 forbids attaching a prior to it."""
+    return str((hostile.identity.properties or {}).get("species_id") or UNRECOGNISED)
 
 
 def combat_capability_against(entity: Any, hostile: Any) -> float:

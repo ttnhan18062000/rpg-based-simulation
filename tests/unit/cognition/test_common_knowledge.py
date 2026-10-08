@@ -98,6 +98,12 @@ def test_a_hostile_of_an_undeclared_species_is_estimated_neutrally_and_a_declare
     assert low > neutral > high   # goblins believed weak, orcs believed dangerous, dragonkin uninformed
 
 
+def test_a_hostile_with_no_species_is_unrecognised_not_read_by_its_kind():
+    entity = V2EntityBuilder(1).combat(hp=100, max_hp=100, atk=10, def_stat=5).replace_self_model(default_self_model()).build()
+    no_species = V2EntityBuilder(2).kind("orc").build()   # kind matches a declared species but is the hidden population role
+    assert combat_capability_against(entity, no_species) == combat_capability_against(entity, _hostile("dragonkin"))
+
+
 def test_every_human_gets_one_shared_prior_so_a_raider_and_a_guard_are_not_told_apart():
     entity = V2EntityBuilder(1).combat(hp=100, max_hp=100, atk=10, def_stat=5).replace_self_model(default_self_model()).build()
     raider = V2EntityBuilder(2).kind("raider").identity(properties={"species_id": "human"}).build()

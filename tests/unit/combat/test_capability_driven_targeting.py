@@ -48,7 +48,7 @@ def _entity(
         V2EntityBuilder(eid)
         .kind(kind)
         .location(*pos)
-        .identity(role=role, faction=faction)
+        .identity(role=role, faction=faction, properties={"species_id": kind})
         .combat(
             hp=hp,
             max_hp=max_hp,
@@ -82,7 +82,7 @@ def _attacker(atk=10, def_stat=5, attack_range=10, pos=(0.0, 0.0), believes=True
 
 
 # The attacker believes goblins are weak ("low") and dragons terrifying ("extreme") from declared common knowledge
-# (KNOW-04, facts keyed by the hostile's species); the hostiles are recognised by kind here because they are hand-built.
+# (KNOW-04, facts keyed by the hostile's species); hand-built hostiles are given a species_id equal to their kind, since only a species is recognised (never the hidden population role).
 # The goblin is placed with worse HP/distance than the dragon so that, absent the
 # capability signal, HP/distance alone would prefer the dragon -- proving any
 # goblin-preferring outcome below is driven by the capability term, which sorts
@@ -109,6 +109,18 @@ def test_target_score_reflects_capability_estimate_for_differentiated_enemy_kind
     # would prefer the dragon. The capability-driven term (attacker is more
     # confident it can beat a goblin than a dragon) overrides that and wins.
     assert update.task.payload_set["target_id"] == goblin.id
+
+
+def test_a_hostile_with_no_species_is_unrecognised_even_if_its_kind_matches_a_belief():
+    attacker = _attacker(atk=10, def_stat=5)
+    goblin = _goblin()
+    unrecognised = replace(goblin, identity=replace(goblin.identity, properties={}))
+    dragon = _dragon()
+    state = AuthoritativeState(tick=1, seed=42, world_time=1, entities={1: attacker, 10: unrecognised, 20: dragon})
+    update = TacticalDecisionSystem.evaluate_entity_intent(state, attacker)
+    # The goblin's kind still reads "goblin" but it has no species, so no prior attaches and the estimate is neutral for it.
+    # The believed-terrifying dragon is estimated lower than neutral, so the unrecognised goblin is now preferred only by that.
+    assert update.task.payload_set["target_id"] == unrecognised.id
 
 
 def test_target_choice_falls_back_to_hp_and_distance_when_the_attacker_holds_no_belief():
