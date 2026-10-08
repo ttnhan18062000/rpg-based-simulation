@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-08T08:01:40.452036Z", "ticket_id": "TCK-20261008-MONITORING-SHARD-TORN-WRITE-ON-DISK-FULL", "title": "Monitoring writer: torn tail healed, append all-or-nothing", "status": "DONE", "summary": "writer heals a missing trailing newline and truncates a short/failed append", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}

@@ -104,6 +104,38 @@ def _write_diagnostic(target_path: Path, stage: str, error: BaseException) -> No
         pass
 
 
+def _append_all_or_nothing(target_path: Path, lines: list[str]) -> None:
+    """Append `lines` (each newline-terminated here) as one os.write on an O_APPEND fd.
+
+    A full disk used to cut a record short and the next append continued on the same line. Two
+    guards: (1) a non-empty file whose last byte is not a newline gets one first (a torn tail stays
+    one bad line and the new record starts clean); (2) the heal byte and the whole payload go out in
+    a single write, and a short or failed write truncates back to the size before it, so no
+    partial record is left. Raises on failure; the caller records the diagnostic. Must be called
+    under the target's lock (the size read and the truncate rely on it).
+    """
+    payload = "".join(line + "\n" for line in lines).encode("utf-8")
+    if not payload:
+        return
+    fd = os.open(str(target_path), os.O_APPEND | os.O_CREAT | os.O_RDWR)
+    try:
+        size_before = os.fstat(fd).st_size
+        if size_before > 0 and os.pread(fd, 1, size_before - 1) != b"\n":
+            payload = b"\n" + payload
+        try:
+            written = os.write(fd, payload)
+            if written != len(payload):
+                raise OSError(f"short write: {written} of {len(payload)} bytes")
+        except BaseException:
+            try:
+                os.ftruncate(fd, size_before)
+            except OSError:
+                pass
+            raise
+    finally:
+        os.close(fd)
+
+
 def write_line(target_path: Path, line: str) -> bool:
     """Append one pre-serialized JSON line (no trailing newline) to target_path.
 
@@ -118,8 +150,7 @@ def write_line(target_path: Path, line: str) -> bool:
         return False
     try:
         target_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(target_path, "a") as f:
-            f.write(line + "\n")
+        _append_all_or_nothing(target_path, [line])
     except Exception as e:
         _write_diagnostic(target_path, "write", e)
         return False
@@ -148,9 +179,7 @@ def write_lines(target_path: Path, lines: list[str]) -> bool:
         return False
     try:
         target_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(target_path, "a") as f:
-            for line in lines:
-                f.write(line + "\n")
+        _append_all_or_nothing(target_path, list(lines))
     except Exception as e:
         _write_diagnostic(target_path, "write", e)
         return False

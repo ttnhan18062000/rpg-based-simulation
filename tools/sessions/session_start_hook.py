@@ -156,6 +156,17 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
     return "\n\n".join(parts)
 
 
+def _disk_line(root: Path) -> str:
+    """One line when free space is below the threshold; "" otherwise or on any error. Cheap on purpose:
+    one statvfs, no tree walk (TCK-20261008-SESSION-DISK-HEADROOM-GUARD)."""
+    try:
+        from tools.sessions import disk_headroom as dh
+
+        return dh.low_space_line(dh.free_bytes(root), dh.threshold_bytes()) or ""
+    except Exception:
+        return ""
+
+
 def build_context(payload: dict, environ=os.environ, root: Path = _REPO_ROOT, state_root: Path | None = None,
                   proc_root: Path = Path("/proc")) -> str:
     """The full additionalContext for a payload; "" for nothing. Raises on error (main() fails open)."""
@@ -174,7 +185,7 @@ def build_context(payload: dict, environ=os.environ, root: Path = _REPO_ROOT, st
         fallback = build_additional_context(handover_base(root) / HANDOVER_DIR) if payload.get("source") == "clear" else ""
         context = "\n".join(p for p in (fallback, LAUNCH_HINT) if p)
     notice = build_transit_notice(root / "agent-working" / "handover-transit")
-    return "\n".join(p for p in (context, notice) if p)
+    return "\n".join(p for p in (context, notice, _disk_line(root)) if p)
 
 
 def main() -> int:
