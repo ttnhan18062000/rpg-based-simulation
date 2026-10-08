@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
@@ -41,7 +41,7 @@ Child 2 of `TCK-20261008-EPIC-VISUAL-ASSET-FOUNDATION-HARDENING`. Every asset ba
 - No `src/`, no app wiring (activation parked, PR #450), no gate result moved, no new art. Deleting the stray intakes in the main checkout (owner's retention rule).
 
 ## Acceptance Criteria
-- [ ] From a worktree-launched server, `submit_candidate` writes to that worktree; tested; root shown in results.
+- [x] From a worktree-launched server, `submit_candidate` writes to that worktree; tested; root shown in results.
 
 ## Related Tickets
 
@@ -50,7 +50,7 @@ Child 2 of `TCK-20261008-EPIC-VISUAL-ASSET-FOUNDATION-HARDENING`. Every asset ba
 
 
 ## Related Stored Artifacts
-
+- agent-working/stored_artifacts/TCK-20261008-VISUAL-ASSETS-MCP-WORKTREE-STORE-ROOT/ (plan, investigation, test_plan, mutant_proof)
 
 ## Related Code Areas
 - visual_assets/drawing/server, visual_assets/start_mcp.sh, visual_assets/store/config.py, .mcp.json
@@ -59,13 +59,14 @@ Child 2 of `TCK-20261008-EPIC-VISUAL-ASSET-FOUNDATION-HARDENING`. Every asset ba
 
 
 ## Implementation Notes
-
+- `store/config.py`: `VISUAL_ASSETS_CHECKOUT`, `resolve_visual_assets_dir`, `StoreRootError`, `describe_root`; roots derive from the selected checkout. Server prints the root on stderr; `store_root` label in `submit_candidate`, `store_list`, `store_show`. `.mcp.json` passes the variable (`${VISUAL_ASSETS_CHECKOUT:-}`). Docs in store_contract.md and drawing_tools.md.
+- The variable selects data only; the running code is the launching checkout's. Folded in: child 1 follow-up (explicit raise in derive()).
 
 ## Test Summary
-
+- 12 new tests (7 unit, 5 real stdio); mutants A-G caught; a mutant run polluted the real gitignored quarantine with one stray intake, removed. Scoped suites: see the commit report.
 
 ## Files Changed
-
+- visual_assets/store/config.py, visual_assets/drawing/server/{__main__,store_readonly_tools}.py, visual_assets/start_mcp.sh, .mcp.json, tests/visual_assets/{test_store_root,derived_runtime}.py, tests/visual_assets/drawing/{test_store_root_stdio,stdio_support}.py, docs/assets/{store_contract,drawing_tools}.md, ticket and artifacts.
 
 ## Completion Summary
-
+A drawing server started with `VISUAL_ASSETS_CHECKOUT` set to a worktree stages intakes there, refuses a value that is not a store checkout, and shows the root at startup and in every store tool result; the default is unchanged.

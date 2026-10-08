@@ -36,7 +36,8 @@ def derive(catalog_id: str, release_id: str, *, allow_fixture_namespace: bool = 
         digest = entry.pixel_hash[len(pixels.HASH_PREFIX):]
         png = records.read_file(records.generated_dir() / entry.artifact_id / f"{digest}.png", config.MAX_PNG_FILE_BYTES)
         decoded = pixels.decode_png(png, max_dim=config.MAX_DIM)
-        assert pixels.pixel_hash_of(decoded) == entry.pixel_hash, f"the artifact PNG of {entry.visual_key} does not decode to the pixel hash the candidate records"
+        if pixels.pixel_hash_of(decoded) != entry.pixel_hash:  # an explicit raise, not `assert`: `python -O` must not be able to drop this check
+            raise AssertionError(f"the artifact PNG of {entry.visual_key} does not decode to the pixel hash the candidate records")
         files[f"{digest}.png"] = png
         entries.append(RuntimeEntry(visual_key=entry.visual_key, family=registry.keys[entry.visual_key].family, pixel_hash=entry.pixel_hash,
                                     file=f"{digest}.png", width=decoded.width, height=decoded.height, detail=entry.detail))
