@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261008-VISUAL-ASSETS-FIXTURE-GUARD-DECOUPLING
-phase: open
+phase: done
 date: 2026-10-08
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Fixture guards stop depending on the current release candidate, so registering keys no longer forces a new candidate
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -43,7 +43,7 @@ Child 1 of `TCK-20261008-EPIC-VISUAL-ASSET-FOUNDATION-HARDENING`. Registering ke
 - No `src/`, no app wiring (activation parked, PR #450), no gate result moved, no new art. Weakening what the fixtures assert about pixels/entries.
 
 ## Acceptance Criteria
-- [ ] Fixture guards survive a registry-only change; still fail on any content change (mutants); store refusal unchanged.
+- [x] Fixture guards survive a registry-only change; still fail on any content change (mutants); store refusal unchanged.
 
 ## Related Tickets
 
@@ -52,7 +52,7 @@ Child 1 of `TCK-20261008-EPIC-VISUAL-ASSET-FOUNDATION-HARDENING`. Registering ke
 
 
 ## Related Stored Artifacts
-
+- agent-working/stored_artifacts/TCK-20261008-VISUAL-ASSETS-FIXTURE-GUARD-DECOUPLING/ (plan with the planner's approval, investigation, test_plan, mutant_proof)
 
 ## Related Code Areas
 - tests/visual_assets/test_pilot_fixture.py, test_terrainset_fixture.py, adopted_facts.py, frontend/src/visualAssets/__fixtures__/
@@ -61,13 +61,14 @@ Child 1 of `TCK-20261008-EPIC-VISUAL-ASSET-FOUNDATION-HARDENING`. Registering ke
 - This changes what a guard checks: plan.md states before/after precisely; planner approves the design before code.
 
 ## Implementation Notes
-
+- Probe first: a throwaway key breaks 10 tests; only the pilot and terrainset fixture guards ride the current candidate. Inventory pins stay untouched (deliberate decisions).
+- `tests/visual_assets/derived_runtime.py` derives the runtime manifest and files from the stored candidate and artifacts (asserting each PNG decodes to the recorded pixel hash); the two fixture guards use it. Drift guard in `test_derived_runtime.py`; the store's `registry_mismatch` refusal is unchanged.
 
 ## Test Summary
-
+- 14 tests in the three files; mutants M1-M8 caught/behaving as stated (a first masked mutation run was discarded and redone). Scoped suites: see the commit report.
 
 ## Files Changed
-
+- tests/visual_assets/{derived_runtime,test_derived_runtime,test_pilot_fixture,test_terrainset_fixture}.py, docs/assets/pilot_terrain_key.md, ticket and artifacts.
 
 ## Completion Summary
-
+The pilot and terrainset fixture guards no longer ride the current release candidate: registering a key cannot break them and no candidate is needed, while slots, details, hashes and PNG bytes are still asserted; the store's refusal is untouched and a drift guard ties the helper to `export_runtime`.

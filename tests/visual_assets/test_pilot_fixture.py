@@ -2,10 +2,12 @@
 
 The only link between `visual_assets` and `frontend/` is this file-level copy (`TCK-20261004-VISUAL-ASSETS-M5-GAP-CLOSURE`): no import either way.
 
+The guards no longer ride a fresh `export-runtime` (`TCK-20261008-VISUAL-ASSETS-FIXTURE-GUARD-DECOUPLING`): `tests/visual_assets/derived_runtime.py` derives the same manifest and files from the stored candidate, so registering a key cannot break them.
+
 A fresh `export-runtime` of `pilot/rc-0004` is no longer possible: registering the 14 `icon.*` keys (D20, `TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, user-approved on 2026-10-06) and then the 22 icon set v2 keys
 (`TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC`, user-approved on 2026-10-07) moved the registry hash and the store refuses the old candidate (`registry_mismatch`, by design). `release` assembles every adopted slot, so no forest-only candidate on the new registry can exist either.
 Two checks together replace the single fresh-export check:
-1. the fixture's three entries and files equal the forest slots of a FRESH export of `pilot/rc-0007` (key, detail, file names, sizes, PNG bytes; the fixture holds exactly those three slots),
+1. the fixture's three entries and files equal the forest slots of the manifest DERIVED from the stored `pilot/rc-0007` (formerly a fresh export of it) (key, detail, file names, sizes, PNG bytes; the fixture holds exactly those three slots),
    and only `release_id`, `registry_hash` and the `candidate_manifest_hash` derived from them differ, which is what moved;
 2. the fixture's manifest still equals `rc-0004`'s stored candidate (release id, registry hash, slots, pixel hashes, file names), so the "rc-0004: forest only" history the drill relies on is kept.
 """
@@ -16,14 +18,14 @@ import filecmp
 import json
 from pathlib import Path
 
-from visual_assets.store.runtime_export import export_runtime
+from tests.visual_assets import derived_runtime
 
 REPO = Path(__file__).resolve().parents[2]
 COMMITTED = REPO / "frontend" / "src" / "visualAssets" / "__fixtures__" / "pilot"
 CANDIDATES = REPO / "visual_assets" / "catalog" / "manifests" / "candidates" / "pilot"
 REGENERATE = (
-    "the pilot fixture is a frozen copy of rc-0004's export; its forest slots must equal those of a fresh `python -m visual_assets.store export-runtime --catalog-id pilot --release-id rc-0007 --out <dir>` "
-    "(rc-0004 itself can no longer be exported)"
+    "the pilot fixture is a frozen copy of rc-0004's export; its forest slots must equal those of the manifest derived from the stored rc-0007 (`tests/visual_assets/derived_runtime.py`; "
+    "a real `python -m visual_assets.store export-runtime --catalog-id pilot --release-id rc-0007 --out <dir>` gives the same files while rc-0007 is the current candidate; rc-0004 itself can no longer be exported)"
 )
 FOREST = "terrain.forest"
 
@@ -49,7 +51,7 @@ def check_fixture_against_fresh_export(fresh: Path, committed: Path = COMMITTED)
 
 def test_the_committed_pilot_export_equals_the_forest_slots_of_a_fresh_export_of_the_release(tmp_path):
     fresh = tmp_path / "export"
-    export_runtime("pilot", "rc-0007", fresh)
+    derived_runtime.write(fresh, "pilot", "rc-0007")  # derived from the stored candidate and artifacts, not `export_runtime`: a registry-only change cannot break this
     check_fixture_against_fresh_export(fresh)
 
 
