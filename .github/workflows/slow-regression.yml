@@ -8,6 +8,12 @@ name: Slow regression
 #   - no `needs:` on the fast jobs (the slow suite is informational);
 #   - a final report step that keeps ONE rolling GitHub issue and comments only when the set of
 #     failing tests changes.
+#
+# TCK-20261008-SLOW-REGRESSION-SCHEDULE-WATCHDOG: GitHub's schedule trigger is best-effort (a slot was
+# never created on 2026-10-08, others start up to 3.5 h late), so `slow-regression-watchdog.yml` runs
+# hourly and dispatches this workflow on main when none is queued or running and the newest run is 10 h
+# old or more. 10 h = 6 h period + 3.5 h observed lateness + 0.5 h grace; a shorter threshold would
+# double the cost when a late scheduled run is still on its way. Rule: tools/test_architecture/slow_regression_watchdog.py.
 
 on:
   schedule:
