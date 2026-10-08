@@ -1248,12 +1248,6 @@
       "yield_policy": null,
       "yield_item": "herb"
     },
-    "res_2": {
-      "required_ticks": 8,
-      "resource_type": "berry_thicket",
-      "yield_policy": null,
-      "yield_item": "wild_berries"
-    },
     "moon_cult_ruins__moon_resin_tree_0": {
       "required_ticks": 20,
       "resource_type": "moon_resin_tree",
@@ -1337,6 +1331,13 @@
       "resource_type": "healing_flower_patch",
       "yield_policy": null,
       "yield_item": "healing_flower"
+    },
+    "wolf_den_near_forest__berry_thicket_3": {
+      "required_ticks": 8,
+      "resource_type": "berry_thicket",
+      "yield_policy": null,
+      "yield_item": "wild_berries",
+      "placement": "owned_by_declared_region"
     },
     "forest_warden_grove__healing_flower_patch_0": {
       "required_ticks": 12,

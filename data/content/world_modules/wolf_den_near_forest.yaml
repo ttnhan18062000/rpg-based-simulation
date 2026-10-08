@@ -66,6 +66,8 @@ resources:
   wood_node: 8
   herb_patch: 6
   healing_flower_patch: 3
+  # Wild food (Decision 29, SURV-06): forest land is the high-fertility case, charges anchored to the existing wood_node default (10).
+  berry_thicket: 10
 observability_tags: ["ecology", "wilderness"]
 quest_definitions:
   - id: "wolf_hunt_alpha_pack"

@@ -408,11 +408,6 @@ resources:
   count: 5
   region: hometown
   regen_rate: 1
-- id: res_2
-  resource_type: berry_thicket
-  count: 8
-  region: hometown
-  regen_rate: 1
 - id: moon_cult_ruins__moon_resin_tree_0
   resource_type: moon_resin_tree
   count: 3
@@ -481,6 +476,11 @@ resources:
 - id: wolf_den_near_forest__healing_flower_patch_2
   resource_type: healing_flower_patch
   count: 3
+  region: near_forest
+  regen_rate: 1
+- id: wolf_den_near_forest__berry_thicket_3
+  resource_type: berry_thicket
+  count: 10
   region: near_forest
   regen_rate: 1
 - id: forest_warden_grove__healing_flower_patch_0

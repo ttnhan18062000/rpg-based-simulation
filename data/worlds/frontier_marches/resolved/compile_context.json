@@ -1194,12 +1194,6 @@
       "yield_policy": null,
       "yield_item": "herb"
     },
-    "res_2": {
-      "required_ticks": 8,
-      "resource_type": "berry_thicket",
-      "yield_policy": null,
-      "yield_item": "wild_berries"
-    },
     "old_mine_resource_loop__iron_vein_0": {
       "required_ticks": 15,
       "resource_type": "iron_vein",
@@ -1265,6 +1259,13 @@
       "resource_type": "healing_flower_patch",
       "yield_policy": null,
       "yield_item": "healing_flower"
+    },
+    "wolf_den_near_forest__berry_thicket_3": {
+      "required_ticks": 8,
+      "resource_type": "berry_thicket",
+      "yield_policy": null,
+      "yield_item": "wild_berries",
+      "placement": "owned_by_declared_region"
     }
   },
   "factions": {

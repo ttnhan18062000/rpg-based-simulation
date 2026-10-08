@@ -4,7 +4,7 @@
   biomes: ["wolf_den", "near_forest"]
   dominant_factions: ["wild_beast_pack"]
   populations: ["wolf_pack_small"]
-  resources: ["wood_node", "herb_patch", "healing_flower_patch"]
+  resources: ["wood_node", "herb_patch", "healing_flower_patch", "berry_thicket"]
   relationship_models: ["territorial_animal"]
 
 # STATE: REDESIGNED-CORE

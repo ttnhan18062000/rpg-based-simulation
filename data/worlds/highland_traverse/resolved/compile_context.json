@@ -11,6 +11,30 @@
       "readiness": 100.0,
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
+      "spawn_position": [
+        84.0,
+        193.0
+      ],
+      "spawn_region": "wolf_den",
+      "count": 4,
+      "spawn_positions": [
+        [
+          84.0,
+          193.0
+        ],
+        [
+          91.0,
+          195.0
+        ],
+        [
+          70.0,
+          196.0
+        ],
+        [
+          89.0,
+          194.0
+        ]
+      ],
       "archetype_id": "hungry_wolf",
       "species_id": "wolf",
       "role_id": "predator_hunter",
@@ -45,6 +69,18 @@
       "readiness": 100.0,
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
+      "spawn_position": [
+        92.0,
+        187.0
+      ],
+      "spawn_region": "wolf_den",
+      "count": 1,
+      "spawn_positions": [
+        [
+          92.0,
+          187.0
+        ]
+      ],
       "archetype_id": "alpha_wolf",
       "species_id": "wolf",
       "role_id": "alpha",
@@ -80,6 +116,46 @@
       "readiness": 100.0,
       "inventory_seed": "hero_pocket",
       "cognition_seed": "practical_humanoid",
+      "spawn_position": [
+        184.0,
+        99.0
+      ],
+      "spawn_region": "hometown",
+      "count": 8,
+      "spawn_positions": [
+        [
+          184.0,
+          99.0
+        ],
+        [
+          185.0,
+          85.0
+        ],
+        [
+          181.0,
+          107.0
+        ],
+        [
+          173.0,
+          113.0
+        ],
+        [
+          198.0,
+          117.0
+        ],
+        [
+          188.0,
+          98.0
+        ],
+        [
+          192.0,
+          115.0
+        ],
+        [
+          193.0,
+          116.0
+        ]
+      ],
       "archetype_id": "village_worker",
       "species_id": "human",
       "role_id": "worker",
@@ -113,6 +189,26 @@
       "readiness": 100.0,
       "inventory_seed": "guard_basic_kit",
       "cognition_seed": "disciplined_guard",
+      "spawn_position": [
+        173.0,
+        81.0
+      ],
+      "spawn_region": "hometown",
+      "count": 3,
+      "spawn_positions": [
+        [
+          173.0,
+          81.0
+        ],
+        [
+          187.0,
+          89.0
+        ],
+        [
+          203.0,
+          92.0
+        ]
+      ],
       "archetype_id": "frontier_guard",
       "species_id": "human",
       "role_id": "guard",
@@ -147,6 +243,18 @@
       "readiness": 100.0,
       "inventory_seed": "merchant_trade_pack",
       "cognition_seed": "trade_pragmatist",
+      "spawn_position": [
+        200.0,
+        82.0
+      ],
+      "spawn_region": "hometown",
+      "count": 1,
+      "spawn_positions": [
+        [
+          200.0,
+          82.0
+        ]
+      ],
       "archetype_id": "traveling_merchant",
       "species_id": "human",
       "role_id": "merchant",
@@ -181,6 +289,18 @@
       "readiness": 100.0,
       "inventory_seed": "blacksmith_toolkit",
       "cognition_seed": "practical_humanoid",
+      "spawn_position": [
+        197.0,
+        120.0
+      ],
+      "spawn_region": "hometown",
+      "count": 1,
+      "spawn_positions": [
+        [
+          197.0,
+          120.0
+        ]
+      ],
       "archetype_id": "village_blacksmith",
       "species_id": "human",
       "role_id": "blacksmith",
@@ -241,17 +361,20 @@
     "mountain_pass__iron_vein_0": {
       "required_ticks": 15,
       "resource_type": "iron_vein",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "iron_ore"
     },
     "mountain_pass__frost_shard_cluster_1": {
       "required_ticks": 24,
       "resource_type": "frost_shard_cluster",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "frost_shard"
     },
     "river_crossing__herb_patch_0": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "herb"
     }
   },
   "factions": {

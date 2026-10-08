@@ -1,10 +1,10 @@
 {
-  "manifest_id": "prov_e1f535fb65ee3e05",
+  "manifest_id": "prov_23fe210ea89f6f7d",
   "world_id": "crowded_frontier",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
+  "catalog_fingerprint": "47f693db10301624a5cd00503304f8ecd106bb2f1488900f206fa217fb4ecaef",
   "module_fingerprints": {
-    "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
+    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
@@ -12,8 +12,8 @@
   },
   "composition_fingerprint": "85757643a2dbea398e419c8198458830395068ce13b894d3c79593cce07c23c1",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "e1f535fb65ee3e05bbf452485d6ebd5d3c8b9c7270ad494982ad8c1edf114870",
-  "created_at": "2026-10-08T02:53:57.581939Z",
+  "content_fingerprint": "23fe210ea89f6f7d04c0ca8566c29d939d3bd4c9eaaf8fa528d1b91fb816301c",
+  "created_at": "2026-10-08T08:58:31.682376Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -351,20 +351,6 @@
       },
       "details": {
         "count": 5,
-        "region": "hometown"
-      }
-    },
-    "res_2": {
-      "element_id": "res_2",
-      "element_type": "resource",
-      "source_module": "frontier_village_core",
-      "recipe_type": "resource",
-      "parameters": {},
-      "profiles": {
-        "resource_type": "berry_thicket"
-      },
-      "details": {
-        "count": 8,
         "region": "hometown"
       }
     },

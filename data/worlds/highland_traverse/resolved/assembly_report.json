@@ -29,8 +29,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -41,8 +41,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -689,12 +689,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Archetype 'orc_warchief' is active but never consumed by any downstream component",
-      "target": "orc_warchief"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Archetype 'dwarven_hunter' is active but never consumed by any downstream component",
       "target": "dwarven_hunter"
     },
@@ -779,8 +773,20 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Item 'wild_berries' is active but never consumed by any downstream component",
+      "target": "wild_berries"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Item 'stone' is active but never consumed by any downstream component",
       "target": "stone"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Item 'ancient_core' is active but never consumed by any downstream component",
+      "target": "ancient_core"
     },
     {
       "severity": "WARNING",
@@ -823,12 +829,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Projection 'elite_goblin' is active but never consumed by any downstream component",
       "target": "elite_goblin"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
-      "target": "hero_adventurers"
     }
   ],
   "module_validation": {
@@ -849,8 +849,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -861,8 +861,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -1509,12 +1509,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Archetype 'orc_warchief' is active but never consumed by any downstream component",
-      "target": "orc_warchief"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Archetype 'dwarven_hunter' is active but never consumed by any downstream component",
       "target": "dwarven_hunter"
     },
@@ -1599,8 +1593,20 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Item 'wild_berries' is active but never consumed by any downstream component",
+      "target": "wild_berries"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Item 'stone' is active but never consumed by any downstream component",
       "target": "stone"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Item 'ancient_core' is active but never consumed by any downstream component",
+      "target": "ancient_core"
     },
     {
       "severity": "WARNING",
@@ -1643,19 +1649,13 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Projection 'elite_goblin' is active but never consumed by any downstream component",
       "target": "elite_goblin"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
-      "target": "hero_adventurers"
     }
   ],
   "fingerprints": {
-    "catalog": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+    "catalog": "47f693db10301624a5cd00503304f8ecd106bb2f1488900f206fa217fb4ecaef",
     "modules": {
       "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
-      "nomadic_herd": "0279bf89a42df43d79c40a2df72e69bb95dfb15b7716cf79fc34d41191c24b2e",
+      "nomadic_herd": "e0b53d7425fadb99628787a2dd1ff809a8053ad29243fc8c299c5c5de101ddec",
       "river_crossing": "31b408206c2116cc3c7162e49d97e4b690bbe3f3adf689f3d44aed6a2ab16e56",
       "settled_quarter": "c87b7fb79b24eb2fd63d96187d7b8a3dd9d7f68ff7fb08d3da576129fd206a0f"
     }

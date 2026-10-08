@@ -1197,6 +1197,7 @@ class CompileProfileResolver:
                 required_ticks=required_ticks,
                 resource_type=res_spec.resource_type,
                 yield_item=yield_item,
+                placement=getattr(res_def, "placement", None) if res_def else None,
             ))
 
         # 4. Resolve Buildings

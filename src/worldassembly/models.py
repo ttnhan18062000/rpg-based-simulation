@@ -77,6 +77,8 @@ class ResolvedResourceProfile(BaseModel):
     # definition the same way CatalogToResourceRegistryAdapter does (runtime_kind or resource_type).
     # None when the kind has no catalog definition; the compiler then falls back to ResourceRegistry.
     yield_item: Optional[str] = None
+    # Compile-time placement rule of the kind (``ResourceDefinition.placement``); None keeps the uniform draw and is left out of the serialized context.
+    placement: Optional[str] = None
 
 
 class ResolvedFactionEconomyProfile(BaseModel):

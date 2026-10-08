@@ -814,12 +814,6 @@
       "yield_policy": null,
       "yield_item": "herb"
     },
-    "res_2": {
-      "required_ticks": 8,
-      "resource_type": "berry_thicket",
-      "yield_policy": null,
-      "yield_item": "wild_berries"
-    },
     "moon_cult_ruins__moon_resin_tree_0": {
       "required_ticks": 20,
       "resource_type": "moon_resin_tree",

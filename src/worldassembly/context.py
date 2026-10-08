@@ -62,7 +62,7 @@ class CompileContext:
         return {
             "entities": {k: v.model_dump(by_alias=True) for k, v in self.entities.items()},
             "buildings": {k: v.model_dump() for k, v in self.buildings.items()},
-            "resources": {k: v.model_dump() for k, v in self.resources.items()},
+            "resources": {k: v.model_dump(exclude=None if v.placement else {"placement"}) for k, v in self.resources.items()},
             "factions": {k: v.model_dump() for k, v in self.factions.items()},
             "region_ownership": {k: int(v) for k, v in self.region_ownership.items()},
             "legacy_factions": {k: int(v) for k, v in self.legacy_factions.items()},

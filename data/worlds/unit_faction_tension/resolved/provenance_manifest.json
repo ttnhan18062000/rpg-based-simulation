@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_102f697eeb47667a",
+  "manifest_id": "prov_7520853982dc68f4",
   "world_id": "unit_faction_tension",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
+  "catalog_fingerprint": "47f693db10301624a5cd00503304f8ecd106bb2f1488900f206fa217fb4ecaef",
   "module_fingerprints": {
-    "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
-    "wolf_den_near_forest": "0e2c44bc4de235f8180cf76ad7598b114d6f3726b8b37382fda1552c7a4785f4"
+    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
+    "wolf_den_near_forest": "c90270371ac50194c33a989c34d19a27cd0ebb47a7496187ab15825b6d65c269"
   },
   "composition_fingerprint": "33c3e3cef9965cf9e21b001b27d21a92774da72d8627f90b530ad5ce10c0d98d",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "102f697eeb47667a793c8c72600513d604ed643fc723847dd556adb45031c031",
-  "created_at": "2026-10-08T02:54:18.440805Z",
+  "content_fingerprint": "7520853982dc68f4b9d1699ae9d78f24a857e7b83c3240fc7d11190e2b02a1fb",
+  "created_at": "2026-10-08T08:58:57.327248Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -351,20 +351,6 @@
         "region": "hometown"
       }
     },
-    "res_2": {
-      "element_id": "res_2",
-      "element_type": "resource",
-      "source_module": "frontier_village_core",
-      "recipe_type": "resource",
-      "parameters": {},
-      "profiles": {
-        "resource_type": "berry_thicket"
-      },
-      "details": {
-        "count": 8,
-        "region": "hometown"
-      }
-    },
     "town_hall_0": {
       "element_id": "town_hall_0",
       "element_type": "building",
@@ -643,6 +629,20 @@
       },
       "details": {
         "count": 3,
+        "region": "near_forest"
+      }
+    },
+    "wolf_den_near_forest__berry_thicket_3": {
+      "element_id": "wolf_den_near_forest__berry_thicket_3",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
         "region": "near_forest"
       }
     },

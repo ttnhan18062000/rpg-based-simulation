@@ -1,21 +1,21 @@
 {
-  "manifest_id": "prov_e499bd9b435533ff",
+  "manifest_id": "prov_f774eb4697afdd14",
   "world_id": "frontier_living_world",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
+  "catalog_fingerprint": "47f693db10301624a5cd00503304f8ecd106bb2f1488900f206fa217fb4ecaef",
   "module_fingerprints": {
-    "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
+    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "trading_company_hub": "89edf663d96b8aa771438773ace9dda4780ed4fb1440a0fa697beb34d302ccd6",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
-    "wolf_den_near_forest": "0e2c44bc4de235f8180cf76ad7598b114d6f3726b8b37382fda1552c7a4785f4"
+    "wolf_den_near_forest": "c90270371ac50194c33a989c34d19a27cd0ebb47a7496187ab15825b6d65c269"
   },
   "composition_fingerprint": "8a31b467099680d42f27da43f090a08af48ec895cd445d50d068f052319b93af",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "e499bd9b435533ff7f67d58cb1a8b02266b67b9d99a29a0ea31a1fd403566f7b",
-  "created_at": "2026-10-08T02:54:33.022105Z",
+  "content_fingerprint": "f774eb4697afdd1486dd64e792cd34c87ef9deac575b0e49c3b5edc1f1de67e8",
+  "created_at": "2026-10-08T08:58:36.383782Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -353,20 +353,6 @@
       },
       "details": {
         "count": 5,
-        "region": "hometown"
-      }
-    },
-    "res_2": {
-      "element_id": "res_2",
-      "element_type": "resource",
-      "source_module": "frontier_village_core",
-      "recipe_type": "resource",
-      "parameters": {},
-      "profiles": {
-        "resource_type": "berry_thicket"
-      },
-      "details": {
-        "count": 8,
         "region": "hometown"
       }
     },
@@ -1435,6 +1421,20 @@
       },
       "details": {
         "count": 3,
+        "region": "near_forest"
+      }
+    },
+    "wolf_den_near_forest__berry_thicket_3": {
+      "element_id": "wolf_den_near_forest__berry_thicket_3",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
         "region": "near_forest"
       }
     },

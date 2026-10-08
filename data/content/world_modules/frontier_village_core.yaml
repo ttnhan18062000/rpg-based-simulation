@@ -37,9 +37,6 @@ resource_recipes:
   - resource_type: "herb_patch"
     count: 5
     region: "hometown"
-  - resource_type: "berry_thicket"
-    count: 8
-    region: "hometown"
 observability_tags: ["settlement", "trade", "resource"]
 quest_definitions:
   - id: "village_fetch_supply_run"

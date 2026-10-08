@@ -46,17 +46,19 @@
     source_region_tags: ["near_forest", "moon_cave", "hometown", "swamp_border_territory", "river_ford"]
 
 # STATE: EXISTING-LOGIC
-# SURV-06 forage path (decision 27): the node a hungry subject can harvest food from. Finite (charges) and slow to regrow (one charge
-# per ecology cycle, density-modulated), so it feeds few and runs dry; it is the existing harvest path with travel and time.
+# SURV-06 forage path (decisions 27 and 29): wild food is part of the land. A hungry subject harvests it in wild land (never town land, which
+# holds owned food). Finite (charges) and slow to regrow (the default one charge per ecology cycle, density-modulated); the biome sets how much
+# the land holds. Charges are anchored to wood_node (10), the kind the near_forest ecology already lists.
 - id: "berry_thicket"
   material: "wild_berries"
   display_name: "Berry Thicket"
   resource_type: "wild_berries"
   required_ticks: 8
-  default_charges: 8
-  preferred_biomes: ["frontier_village"]
+  default_charges: 10
+  preferred_biomes: ["near_forest"]
+  placement: "owned_by_declared_region"
   metadata:
-    source_region_tags: ["hometown"]
+    source_region_tags: ["near_forest"]
 
 # STATE: LEGACY-EXPORT
 - id: "healing_flower_patch"

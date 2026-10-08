@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_d4b7d1a233f8467c",
+  "manifest_id": "prov_f05b1ef95fd410f8",
   "world_id": "unit_information_source",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
+  "catalog_fingerprint": "47f693db10301624a5cd00503304f8ecd106bb2f1488900f206fa217fb4ecaef",
   "module_fingerprints": {
-    "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
+    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837"
   },
   "composition_fingerprint": "789ef3edd7716f87b66ef829d66eab629d57d5f3558c569e10709c4eada65b64",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "d4b7d1a233f8467ccf2c682ec9fd07329da2c946414f1a62453c15621700531f",
-  "created_at": "2026-10-08T02:54:30.997629Z",
+  "content_fingerprint": "f05b1ef95fd410f88622c6abb4e8cd91b6a804c112d5ebcc49545a7c6f1eac3e",
+  "created_at": "2026-10-08T08:59:02.786753Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -348,20 +348,6 @@
       },
       "details": {
         "count": 5,
-        "region": "hometown"
-      }
-    },
-    "res_2": {
-      "element_id": "res_2",
-      "element_type": "resource",
-      "source_module": "frontier_village_core",
-      "recipe_type": "resource",
-      "parameters": {},
-      "profiles": {
-        "resource_type": "berry_thicket"
-      },
-      "details": {
-        "count": 8,
         "region": "hometown"
       }
     },

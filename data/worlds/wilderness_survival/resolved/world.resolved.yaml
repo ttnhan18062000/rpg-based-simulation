@@ -178,6 +178,11 @@ resources:
   count: 3
   region: near_forest
   regen_rate: 1
+- id: wolf_den_near_forest__berry_thicket_3
+  resource_type: berry_thicket
+  count: 10
+  region: near_forest
+  regen_rate: 1
 buildings:
 - id: healer_hut_0
   type: healer_hut

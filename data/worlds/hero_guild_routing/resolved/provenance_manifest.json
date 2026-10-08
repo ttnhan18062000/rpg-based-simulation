@@ -1,10 +1,10 @@
 {
-  "manifest_id": "prov_62437219b8a21a50",
+  "manifest_id": "prov_6b23682e71e58a08",
   "world_id": "hero_guild_routing",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
+  "catalog_fingerprint": "47f693db10301624a5cd00503304f8ecd106bb2f1488900f206fa217fb4ecaef",
   "module_fingerprints": {
-    "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
+    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
     "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
@@ -12,8 +12,8 @@
   },
   "composition_fingerprint": "a5cf4ce8ce30c9d28faa36caecc9d766ab466633b44e47b33de9577e53d686fb",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "62437219b8a21a500899b082fb200d52f70bd05fe0cddb12213a7e2b8fe3df0e",
-  "created_at": "2026-10-08T02:54:10.237414Z",
+  "content_fingerprint": "6b23682e71e58a08705212b7dbc32201253f3b3e43f0ceac939d39a26363679d",
+  "created_at": "2026-10-08T08:58:41.251269Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -351,20 +351,6 @@
       },
       "details": {
         "count": 5,
-        "region": "hometown"
-      }
-    },
-    "res_2": {
-      "element_id": "res_2",
-      "element_type": "resource",
-      "source_module": "frontier_village_core",
-      "recipe_type": "resource",
-      "parameters": {},
-      "profiles": {
-        "resource_type": "berry_thicket"
-      },
-      "details": {
-        "count": 8,
         "region": "hometown"
       }
     },

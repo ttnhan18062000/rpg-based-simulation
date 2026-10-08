@@ -1685,12 +1685,12 @@
     }
   ],
   "fingerprints": {
-    "catalog": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
+    "catalog": "47f693db10301624a5cd00503304f8ecd106bb2f1488900f206fa217fb4ecaef",
     "modules": {
-      "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
+      "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
       "sunken_swamp_border": "adbeeba097121a59128bc0d09a3b35b5fbaca044c2761049d3f97c477ca2ff96",
       "trading_company_hub": "89edf663d96b8aa771438773ace9dda4780ed4fb1440a0fa697beb34d302ccd6",
-      "wolf_den_near_forest": "0e2c44bc4de235f8180cf76ad7598b114d6f3726b8b37382fda1552c7a4785f4"
+      "wolf_den_near_forest": "c90270371ac50194c33a989c34d19a27cd0ebb47a7496187ab15825b6d65c269"
     }
   }
 }

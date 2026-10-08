@@ -1,10 +1,10 @@
 {
-  "manifest_id": "prov_cdb7c11fddad09f7",
+  "manifest_id": "prov_5cfb2e95698564db",
   "world_id": "generated_frontier_3_42",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "eaede3d5ebc7c8462b2076357a5ded0cda09f065a37f9f603a7175d7649661a3",
+  "catalog_fingerprint": "47f693db10301624a5cd00503304f8ecd106bb2f1488900f206fa217fb4ecaef",
   "module_fingerprints": {
-    "frontier_village_core": "d64cbeacbbdf3c3e20b5537380f2066a4c019b7954bdcb1aa7a9c93c725ca4c6",
+    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "moon_cult_ruins": "221540c964e3501b5484973b794233e06a5a3217fd9f6398a34c85b9ab9c11ac",
@@ -13,8 +13,8 @@
   },
   "composition_fingerprint": "0c4009dd39c79937d9a28028dfd3858a9705860f5044aaca10acde5992db4a85",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "cdb7c11fddad09f7db29435c2cf6ba3e5f17e02b9dd10c668095614e1917626e",
-  "created_at": "2026-10-08T02:54:20.166281Z",
+  "content_fingerprint": "5cfb2e95698564db83d70e0606a446556d7a766a61682a8b21e71bbd84baa7de",
+  "created_at": "2026-10-08T08:58:39.592170Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -352,20 +352,6 @@
       },
       "details": {
         "count": 5,
-        "region": "hometown"
-      }
-    },
-    "res_2": {
-      "element_id": "res_2",
-      "element_type": "resource",
-      "source_module": "frontier_village_core",
-      "recipe_type": "resource",
-      "parameters": {},
-      "profiles": {
-        "resource_type": "berry_thicket"
-      },
-      "details": {
-        "count": 8,
         "region": "hometown"
       }
     },
