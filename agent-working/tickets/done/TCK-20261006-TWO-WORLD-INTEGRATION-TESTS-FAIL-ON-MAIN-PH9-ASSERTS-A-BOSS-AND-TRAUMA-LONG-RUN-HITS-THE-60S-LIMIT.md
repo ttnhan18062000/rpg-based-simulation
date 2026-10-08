@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-TWO-WORLD-INTEGRATION-TESTS-FAIL-ON-MAIN-PH9-ASSERTS-A-BOSS-AND-TRAUMA-LONG-RUN-HITS-THE-60S-LIMIT
-phase: open
+phase: done
 date: 2026-10-06
 tags: [testing, world]
 ---
@@ -15,7 +15,7 @@ tags: [testing, world]
 `test_long_run_simulation_ph9` and `test_long_run_stability` fail on `origin/main` (ph9 half stands; found by `rpg-implementer-2` while landing the spawn-faction batch)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -39,8 +39,8 @@ P2
 Re-enabling bosses; changing ENV-07 or the flag default.
 
 ## Acceptance Criteria
-- [ ] Each failure explained with a control run.
-- [ ] ph9 fixed or retired with an owner/designer-backed reason.
+- [x] Each failure explained with a control run.
+- [x] ph9 fixed or retired with an owner/designer-backed reason.
 
 ## Related Tickets
 - `TCK-20261005-REGIONAL-TRAUMA-IS-PRODUCED-BY-A-BOSS-RESPAWN-AND-HAZARD-DEATH-LOOP-NOT-BY-FIGHTING` (#356)
@@ -53,13 +53,13 @@ Re-enabling bosses; changing ENV-07 or the flag default.
 Lane B for ph9 (world); testing lane for the budget question. Hypotheses above are unverified.
 
 ## Implementation Notes
-(to be filled by the implementer)
+Re-run on clean `origin/main` `28e29ed2e`: `test_long_run_simulation_ph9` fails at `assert boss_spawn_tick > 0`. Control: the same test with `ENABLE_WORLD_BOSS_SPAWN` declared "ON" in the test's own state passes with every assertion unchanged (boss at tick 100, final trauma 38.46, max entities 7). Owner decision 14 defers the boss feature (default OFF, every spawn branch inert); the test exists to exercise that feature, so it declares the flag it needs. The designer agreed (decision 14 deferred the feature, not the test's premise). No assertion was changed. The `test_long_run_stability` half was withdrawn earlier (it needs the large resource budget).
 
 ## Test Summary
-(to be filled by the implementer)
+`tests/integration/world/test_living_world_ph9.py` passes (5.5 s); the pinned corpus is untouched.
 
 ## Files Changed
-(to be filled by the implementer)
+tests/integration/world/test_living_world_ph9.py (the flag declared in the test state, with a comment).
 
 ## Completion Summary
-(to be filled by the implementer)
+ph9 declares the deferred boss feature it exercises; no assertion weakened.
