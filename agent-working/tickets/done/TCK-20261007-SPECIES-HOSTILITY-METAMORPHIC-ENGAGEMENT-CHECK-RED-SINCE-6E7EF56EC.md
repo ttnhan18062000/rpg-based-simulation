@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20261007-SPECIES-HOSTILITY-METAMORPHIC-ENGAGEMENT-CHECK-RED-SINCE-6E7EF56EC
-phase: open
+phase: done
 date: 2026-10-07
 tags: [combat, regression]
 ---
@@ -15,7 +15,7 @@ tags: [combat, regression]
 The species-hostility metamorphic check went red between bc4f7553c and 6e7ef56ec: making wolf-to-human hostility "high" now lowers the combat engagement rate compared with leaving it undeclared.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -47,7 +47,7 @@ The remaining work is the rescope only: keep the exact assertion (`monotonic_non
 ## Acceptance Criteria
 - [x] Onset bisected (#395 shrank the effect; no code regression), with the mechanism explained.
 - [x] Classified (a) with that evidence (40-seed result above).
-- [ ] (testing-implementer) The rescoped test (same assertion; N and the horizon changed, derivation in the docstring) passes on the landing base, and the slow known-reds entry is removed.
+- [x] (testing-implementer) The rescoped test (same assertion; N and the horizon changed, derivation in the docstring) passes on the landing base, and the slow known-reds entry is removed.
 
 ## Related Tickets
 - `TCK-20261006-...` from #395 (symmetric attack permission) and AGENCY-07 #398, both in the onset range.
@@ -56,7 +56,7 @@ The remaining work is the rescope only: keep the exact assertion (`monotonic_non
 - `docs/world_rules/` CONFLICT-03; `docs/mechanics/02_combat_laws.md` §7.
 
 ## Related Stored Artifacts
-- _(none yet)_
+- `agent-working/stored_artifacts/TCK-20261007-SPECIES-HOSTILITY-METAMORPHIC-ENGAGEMENT-CHECK-RED-SINCE-6E7EF56EC/` (`plan.md`, `investigation.md`, `test_plan.md`)
 
 ## Related Code Areas
 - `src/engine/legality.py`, `src/ai/tactical_threat.py`, `data/content/social/species_relations.yaml`
@@ -103,7 +103,7 @@ The declared/undeclared boundary does not apply. Both factions already declare e
 - **Watch item (testing-planner):** `_PinnedNormalGovernor` now exists in two test files (this one and `tests/integration/campaigns/test_catalog_entity_spawn_wiring.py`); extract a shared helper at the third use.
 
 ## Test Summary
-The rescoped test passed twice at `2a9b41b30` with identical per-seed counts (17 vs 137; 250.5 s each, `--resource-budget large`). `data/content/social/species_relations.yaml` is identical to main afterwards. `tests/unit/tools/test_slow_regression_report.py` and the known-reds lint pass after the species entry is removed.
+The rescoped test passed twice at `2a9b41b30` with identical per-seed counts (17 vs 137; 250.5 s each, `--resource-budget large`). `data/content/social/species_relations.yaml` is identical to main afterwards. `tests/unit/tools/test_slow_regression_report.py` and the known-reds lint pass after the species entry is removed (50 passed). Landing base: after merging origin/main `33360e617` (merge commit `286316f43`), the test passed again in 284.7 s and 290.5 s with the same per-seed counts (baseline 17, high 137; 4 of 10 baseline seeds non-zero); `species_relations.yaml` unchanged afterwards; the 20 run directories were cleaned by run id.
 
 ## Files Changed
 - `tests/integration/lab/test_species_relations_metamorphic_validation.py`: pinned governor, contact-rich layout, seeds 301-310, non-vacuity guard, docstring derivation

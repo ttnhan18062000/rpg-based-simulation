@@ -1,11 +1,11 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 artifact_type: investigation
 ticket_id: TCK-20261007-SPECIES-HOSTILITY-METAMORPHIC-ENGAGEMENT-CHECK-RED-SINCE-6E7EF56EC
-phase: open
+phase: done
 date: 2026-10-07
 tags: [combat, regression]
 ---
