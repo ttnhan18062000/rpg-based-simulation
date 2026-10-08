@@ -96,7 +96,7 @@ roles:
     responsibility:
       accepts_dispatch_from: [user]
     capability: {may_write: [".claude/handover/drafts/**", "docs/world_rules/**", "docs/plans/systemic_world/**"]}
-    placement: {worktree: rpg, max_sessions: 1}
+    placement: {worktree: rpg-designer, max_sessions: 1}
     handover: .claude/handover/rpg-designer.md
   - role: rpg-planner
     identity: {domain: rpg, function: planner, session_name: rpg-planner,
@@ -104,7 +104,7 @@ roles:
     responsibility:
       accepts_dispatch_from: [user, rpg-designer]
     capability: {may_write: [".claude/handover/drafts/**", "docs/plans/**", "agent-working/tickets/**"]}
-    placement: {worktree: rpg, max_sessions: 1}
+    placement: {worktree: rpg-planner, max_sessions: 1}
     handover: .claude/handover/rpg-planner.md
   - role: rpg-implementer
     identity: {domain: rpg, function: implementer, session_name: rpg-implementer,
@@ -120,7 +120,7 @@ roles:
     responsibility:
       accepts_dispatch_from: [user]
     capability: {may_write: [".claude/handover/drafts/**", "docs/plans/agent_infrastructure/**"]}
-    placement: {worktree: agent-working, max_sessions: 1}
+    placement: {worktree: agent-working-designer, max_sessions: 1}
     handover: .claude/handover/agent-working-designer.md
   - role: agent-working-planner
     identity: {domain: agent-working, function: planner, session_name: agent-working-planner,
@@ -129,7 +129,7 @@ roles:
     responsibility:
       accepts_dispatch_from: [user, agent-working-designer]
     capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**"]}
-    placement: {worktree: agent-working, max_sessions: 1}
+    placement: {worktree: agent-working-planner, max_sessions: 1}
     handover: .claude/handover/agent-working-planner.md
   - role: agent-working-implementer
     identity: {domain: agent-working, function: implementer, session_name: agent-working-implementer,
@@ -146,7 +146,7 @@ roles:
     responsibility:
       accepts_dispatch_from: [user]
     capability: {may_write: [".claude/handover/drafts/**", "docs/plans/test_architecture/**"]}
-    placement: {worktree: testing, max_sessions: 1}
+    placement: {worktree: testing-designer, max_sessions: 1}
     handover: .claude/handover/testing-designer.md
   - role: testing-planner
     identity: {domain: testing, function: planner, session_name: testing-planner,
@@ -154,7 +154,7 @@ roles:
     responsibility:
       accepts_dispatch_from: [user, testing-designer]
     capability: {may_write: [".claude/handover/drafts/**", "docs/plans/test_architecture/**", "agent-working/tickets/**"]}
-    placement: {worktree: testing, max_sessions: 1}
+    placement: {worktree: testing-planner, max_sessions: 1}
     handover: .claude/handover/testing-planner.md
   - role: testing-implementer
     identity: {domain: testing, function: implementer, session_name: testing-implementer,
@@ -172,7 +172,7 @@ roles:
     responsibility:
       accepts_dispatch_from: [user]
     capability: {may_write: [".claude/handover/drafts/**", "docs/plans/codebase_health/**"]}
-    placement: {worktree: codebase, max_sessions: 1}
+    placement: {worktree: codebase-designer, max_sessions: 1}
     handover: .claude/handover/codebase-designer.md
   - role: codebase-planner
     identity: {domain: codebase, function: planner, session_name: codebase-planner,
@@ -181,7 +181,7 @@ roles:
     responsibility:
       accepts_dispatch_from: [user, codebase-designer]
     capability: {may_write: [".claude/handover/drafts/**", "docs/plans/codebase_health/**", "agent-working/tickets/**"]}
-    placement: {worktree: codebase, max_sessions: 1}
+    placement: {worktree: codebase-planner, max_sessions: 1}
     handover: .claude/handover/codebase-planner.md
   - role: codebase-implementer
     identity: {domain: codebase, function: implementer, session_name: codebase-implementer,
@@ -193,11 +193,19 @@ roles:
     placement: {worktree: codebase, max_sessions: 1}
     handover: .claude/handover/codebase-implementer.md
 
-# Exclusive resources. The writer slot belongs to the worktree, not to a role; the holder must have
-# the implementer function (designers and planners hand drafts, as today). The lease itself is taken
-# at SessionStart by M2 and is runtime state.
+# Exclusive resources. The writer slot belongs to the worktree; a worktree hosts exactly one role, its
+# writer (every designer, planner and implementer has its own worktree and lands its own PR). The lease
+# itself is taken at SessionStart by M2 and is runtime state.
 worktrees:
   rpg: {writer: rpg-implementer}
   agent-working: {writer: agent-working-implementer}
   testing: {writer: testing-implementer}
   codebase: {writer: codebase-implementer}
+  rpg-designer: {writer: rpg-designer}
+  rpg-planner: {writer: rpg-planner}
+  agent-working-designer: {writer: agent-working-designer}
+  agent-working-planner: {writer: agent-working-planner}
+  testing-designer: {writer: testing-designer}
+  testing-planner: {writer: testing-planner}
+  codebase-designer: {writer: codebase-designer}
+  codebase-planner: {writer: codebase-planner}
