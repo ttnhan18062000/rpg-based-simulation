@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-07"
 ---
 
 # World Rule Family: Knowledge / Information / Memory
@@ -202,6 +202,76 @@ Neither domain writes to the other's fields.
 
 **Scenarios:** [KA-S09](../scenarios/knowledge-agency-batch-06.md#ka-s09) (memory fades but
 history remains).
+
+---
+
+## KNOW-04 — A subject may start with declared common knowledge about a recognisable kind; it is a weak prior, never truth, and the subject's own experience outweighs it
+
+> A subject may begin its life already believing what everyone commonly believes about a kind of
+> creature or person it can recognise: "wolves are dangerous", "a goblin is a pushover". This
+> common knowledge is declared content, and it is a belief, not a fact:
+> - it describes what is typical of the kind, never one individual: no position, no level, no
+>   current health;
+> - it attaches only to what an observer can recognise on sight, such as the body's kind and an
+>   outwardly visible role, never to a hidden label;
+> - it is held at low confidence, and the subject's state records it as a prior from common
+>   knowledge;
+> - it may be wrong, because folk belief is not the kind's real strength;
+> - it changes only through KNOW-02's declared processes, and once the subject has its own
+>   experience or a trusted report about the kind, that outweighs the prior.
+>
+> Where no common knowledge is declared for a kind, the subject has no prior, and its estimate is
+> recorded as neutral and uninformed. It never comes from a silent built-in table.
+
+**Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
+(row 26 of `docs/plans/systemic_world/owner_decision_memo.md`). Passes the admission test:
+KNOW-02 says how a belief may CHANGE and forbids injecting hidden ground truth, but no Rule says
+what a subject may believe BEFORE any declared process has run. This Rule fills that gap without
+weakening KNOW-02. A prior is not ground truth about an instance, because it is declared culture,
+not the target's state. It is not a re-sync, because it is set once and revised only by KNOW-02's
+processes. It follows AGENCY-08's provenance discipline: a default is visible, never silent.
+- **Engineering, not this Rule:** the prior's numbers, how fast experience overrides it, how a
+  danger estimate feeds the target score, and whether one declared value serves both the danger
+  rating and the confidence.
+- **Where the declaration lives:** in the catalog, next to the kind it describes. It is
+  world-wide today. Common knowledge that differs by culture is a later refinement, deferred
+  with culture under the owner's ranking.
+- **Places too:** the same shape covers common knowledge about a declared place ("the old mine
+  is dangerous"), using the catalog's region `danger_level`. No reader exists today.
+- **Alternatives not taken:**
+  - no prior at all, with estimates neutral until a belief exists: every subject would treat a
+    dragon like a rat until it had fought one, which is not how a world with shared culture
+    behaves;
+  - injecting the kind's real catalog strength as the subject's belief: that is hidden ground
+    truth (KNOW-02);
+  - keeping the silent hardcoded table.
+
+**Repository evidence: MISSING.** Lane B, on `0a03c2448`
+(`TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY`):
+- **The target score is given no danger data.** `src/engine/tactical.py:430` (COMB-316) builds
+  `CapabilityContext.for_combat(enemy_ids=[h.kind])` without `enemy_data`.
+- **The fallback is a silent built-in table.** `CapabilityEstimateService` falls back to
+  `_ENEMY_DANGER` (`src/cognition/capability_estimate.py:59-66`), which lists rat, wolf, goblin,
+  goblin_chief, bear and dragon. It matches 0 of 666 compiled entities.
+- **The table is keyed on the wrong label.** A compiled entity's `kind` is its lowercased
+  population role (`src/worldbuilding/compiler.py:688`: worker, scout, guard, raider, and so
+  on), while its species sits in `species_id`. So every target scores danger 0.5 at confidence
+  0.5, and the capability term never tells two enemies apart.
+- **The region half is also inert.** `region_data` has no live reader, and the built-in
+  `_REGION_DANGER` table names regions by hand.
+- **The catalog has no per-kind common knowledge.** It has region `danger_level`, and the only
+  per-enemy value is the legacy `danger_hint` (`data/content/compatibility/legacy_enemy_projection.yaml`).
+- **Tracked:** the declared prior with visible provenance under
+  `TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY` (Lane B documents the inert
+  fields first, without changing any hash). Experience refining it is tracked in
+  `TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER` (Lane A, later). Both are under the
+  decision-core epic.
+
+**Scenarios:** none traced yet. Two are owed when implemented:
+- a farmhand who has never fought sees a wolf and rates it dangerous at low confidence, then
+  revises the rating after beating one;
+- a subject facing a kind with no declared common knowledge records a neutral, uninformed
+  estimate, and the record says so.
 
 ---
 

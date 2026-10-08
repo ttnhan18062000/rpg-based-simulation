@@ -13,6 +13,7 @@ No full-world scan.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from src.core.self_model import CapabilityEstimate, CapabilityEstimateComponent
@@ -34,6 +35,12 @@ class CapabilityContext:
     travel_regions   – list of region ids to estimate travel safety for
     gather_resources – list of resource ids to estimate gathering feasibility
     craft_recipes    – list of recipe ids to estimate crafting feasibility
+
+    enemy_data       – {enemy_key: {"danger_rating", "certainty"}}, the caller's own beliefs about each kind (KNOW-04)
+    region_data      – reserved: no caller sets ``travel_regions``, so nothing reads it (region danger stays inert)
+
+    ``tactical.target_score`` fills ``enemy_data`` from the acting entity's own common-knowledge facts, keyed by the hostile's
+    species. A kind with no declared belief is estimated as neutral and recorded as ``EstimateBasis.UNINFORMED``.
     """
     combat_enemies: Tuple[str, ...] = ()
     travel_regions: Tuple[str, ...] = ()
@@ -55,15 +62,21 @@ class CapabilityContext:
         return cls(craft_recipes=tuple(recipe_ids), recipe_data=recipe_data or {})
 
 
-# ── Internal danger level reference (Phase 2 simple defaults) ─────────────────
-_ENEMY_DANGER: Dict[str, float] = {
-    "rat": 0.1,
-    "wolf": 0.4,
-    "goblin": 0.5,
-    "goblin_chief": 0.75,
-    "bear": 0.6,
-    "dragon": 0.95,
-}
+# ── Danger beliefs (KNOW-04) ──────────────────────────────────────────────────
+# A subject's belief about how dangerous a kind is comes from its own knowledge facts (see
+# src/cognition/common_knowledge.py), handed in through CapabilityContext.enemy_data. The silent built-in per-kind table is gone:
+# with no belief the estimate is neutral and recorded as UNINFORMED.
+COMMON_KNOWLEDGE_DANGER: Dict[str, float] = {"low": 0.2, "medium": 0.5, "high": 0.75, "extreme": 0.95}
+NEUTRAL_DANGER = 0.5
+COMMON_KNOWLEDGE_CERTAINTY = 0.3   # a weak prior: experience and trusted reports are meant to outweigh it
+UNINFORMED_CONFIDENCE = 0.1
+
+
+class EstimateBasis(str, Enum):
+    """What a combat estimate rests on, as a typed value so a funnel can count it."""
+    COMMON_KNOWLEDGE = "common_knowledge"
+    UNINFORMED = "uninformed"
+
 
 _REGION_DANGER: Dict[str, float] = {
     "hometown": 0.0,
@@ -72,6 +85,15 @@ _REGION_DANGER: Dict[str, float] = {
     "north_ruin": 0.65,
     "deep_dungeon": 0.85,
 }
+
+
+def _belief_about(info: Dict[str, Any]) -> Tuple[float, float, EstimateBasis]:
+    """(danger, certainty, basis) from a caller-supplied belief; a weak prior pulls the danger only part of the way from neutral."""
+    prior = info.get("danger_rating")
+    if prior is None:
+        return NEUTRAL_DANGER, UNINFORMED_CONFIDENCE, EstimateBasis.UNINFORMED
+    certainty = float(info.get("certainty", COMMON_KNOWLEDGE_CERTAINTY))
+    return NEUTRAL_DANGER + certainty * (float(prior) - NEUTRAL_DANGER), certainty, EstimateBasis.COMMON_KNOWLEDGE
 
 
 class CapabilityEstimateService:
@@ -121,11 +143,8 @@ class CapabilityEstimateService:
         # ── Combat estimates ─────────────────────────────────────────────────
         for enemy_id in context.combat_enemies:
             key = f"combat.enemy_type.{enemy_id}"
-            enemy_info = context.enemy_data.get(enemy_id, {})
-
-            danger = enemy_info.get("danger_rating",
-                      _ENEMY_DANGER.get(enemy_id, 0.5))
-            enemy_level = enemy_info.get("level", max(1, int(danger * 10)))
+            danger, certainty, basis = _belief_about(context.enemy_data.get(enemy_id, {}))
+            enemy_level = context.enemy_data.get(enemy_id, {}).get("level", max(1, int(danger * 10)))
 
             # Base estimate: atk vs enemy level, normalised
             base_power = (atk + defense * 0.5) / max(1.0, (enemy_level * 5 + danger * 20))
@@ -137,14 +156,14 @@ class CapabilityEstimateService:
             raw_estimate = round(min(1.0, max(0.0, raw_estimate)), 4)
 
             # Confidence: lower when we don't have specific data
-            confidence = 0.9 if enemy_id in _ENEMY_DANGER else 0.5
+            confidence = UNINFORMED_CONFIDENCE if basis is EstimateBasis.UNINFORMED else certainty
             confidence = round(confidence * hp_frac * 0.5 + confidence * 0.5, 4)
 
             estimates[key] = CapabilityEstimate(
                 capability_key=key,
                 estimate=raw_estimate,
                 confidence=confidence,
-                source="stat_comparison",
+                source=basis.value,
                 last_updated_tick=tick,
             )
 

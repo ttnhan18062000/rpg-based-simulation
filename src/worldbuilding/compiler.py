@@ -9,6 +9,7 @@ from typing import Optional, Any, Dict, List, Set
 
 from src.platform.rng import DeterministicRNG
 from src.core.enums import Domain
+from src.cognition.common_knowledge import default_self_model
 from src.core.state import (
     AuthoritativeState,
     RegionState,
@@ -705,7 +706,7 @@ class WorldCompiler:
                             readiness=readiness,
                             action_style=get_action_style_for_bravery(personality.bravery)
                         )
-                        .spawn_combat_stats_are_final()
+                        .spawn_combat_stats_are_final().replace_self_model(default_self_model())
                         .lifecycle(active=True)
                     )
                     entities[next_entity_id] = builder.build()

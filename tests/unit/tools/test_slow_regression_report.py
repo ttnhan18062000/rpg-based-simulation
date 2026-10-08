@@ -93,6 +93,8 @@ def _run(client, failing, steps=ALL_STEPS, known=KNOWN, **extra):
 
 
 MAPPED = "tests.perf.test_perf_combat::test_a"
+REAL_KNOWN_REDS = Path(srr.__file__).with_name("slow_known_reds.yaml")
+CORPUS = "tests.unit.worldassembly.test_corpus_diversity::test_"
 
 
 # ── NEW / FIXED / unchanged / closed / first run ─────────────────────────────────────────────
@@ -179,10 +181,48 @@ def test_mapping_that_is_not_failing_is_listed_as_stale_not_an_error():
 
 
 def test_the_real_known_reds_file_is_loadable_and_lints_clean():
-    known = srr.load_known_reds(Path(srr.__file__).with_name("slow_known_reds.yaml"))
+    known = srr.load_known_reds(REAL_KNOWN_REDS)
     assert known
     assert srr.lint_known_reds(known) == []
-    assert not any(e["match"].startswith("tests.perf.test_perf_combat") for e in known)  # combat[500] passed
+
+
+@pytest.mark.parametrize(
+    "anchor, ticket",
+    [
+        ("frontier_marches_seed42_200t_narrative", "TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE"),
+        ("frontier_extended_seed42_200t_narrative", "TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE"),
+        ("urban_political_seed42_1000t_social", "TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE"),
+        ("unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative", "TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE"),
+        ("simq_routing_test_seed42_1000t_cognition", "TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED"),
+    ],
+)
+def test_real_file_resolves_each_corpus_anchor_to_its_own_entry_not_the_catch_all(anchor, ticket):
+    # owner_of() is first-match: a step-change anchor must reach its family entry, a class-(c) one the catch-all.
+    known = srr.load_known_reds(REAL_KNOWN_REDS)
+    entry = srr.owner_of(f"{CORPUS}{anchor}_grade_stability", known)
+    assert entry is not None and entry["ticket"] == ticket
+    assert (entry["kind"] == "flaky") == (ticket == "TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED")
+
+
+def test_real_file_keeps_the_corpus_catch_all_last():
+    known = srr.load_known_reds(REAL_KNOWN_REDS)
+    assert known[-1]["match"] == "tests.unit.worldassembly.test_corpus_diversity*"
+    assert known[-1]["kind"] == "flaky"
+
+
+def test_lint_rejects_a_bracket_because_fnmatch_reads_it_as_a_character_class():
+    exact = "tests.perf.test_perf_movement::test_x[5000]"
+    assert srr.owner_of(exact, [_entry(exact)]) is None  # why: the exact id does not match itself
+    problems = srr.lint_known_reds([_entry(exact)])
+    assert any("'[' is a character class" in p for p in problems), problems
+    assert srr.lint_known_reds([_entry("tests.perf.test_perf_movement::test_x?5000?")]) == []
+
+
+def test_lint_rejects_a_catch_all_placed_before_a_narrower_entry():
+    entries = [_entry("tests.unit.x*", "TCK-ALL"), _entry("tests.unit.x::test_one", "TCK-ONE")]
+    problems = srr.lint_known_reds(entries)
+    assert any("tests.unit.x::test_one: shadowed by the earlier entry 'tests.unit.x*'" in p for p in problems), problems
+    assert srr.lint_known_reds(list(reversed(entries))) == []
 
 
 @pytest.mark.parametrize(
@@ -321,29 +361,24 @@ def test_two_marked_bot_issues_are_an_error():
         _run(client, {MAPPED: "slow tests"})
 
 
-def test_one_legacy_issue_is_adopted_and_marked():
-    legacy_body = _body({MAPPED: "slow tests"}).replace(srr.TRACKER_MARKER + "\n", "")
-    assert srr.TRACKER_MARKER not in legacy_body
-    client = FakeClient([_issue(legacy_body, number=390)])
+def test_an_unmarked_bot_issue_is_not_a_tracker():
+    # The legacy-adoption path is gone (issue #390 carries the marker since run 37604139091): a bot-created,
+    # labelled issue with a state block but no marker is ignored, and a marked tracker is created instead.
+    unmarked = _body({MAPPED: "slow tests"}).replace(srr.TRACKER_MARKER + "\n", "")
+    assert srr.TRACKER_MARKER not in unmarked and srr.parse_state(unmarked) is not None
+    client = FakeClient([_issue(unmarked, number=390)])
     result = _run(client, {MAPPED: "slow tests"})
-    assert client.created == []
-    assert client.updated[-1][0] == 390 and srr.TRACKER_MARKER in client.updated[-1][2]
-    assert result.message.startswith("adopted the legacy issue")
+    assert client.updated == [] and len(client.created) == 1
+    assert srr.TRACKER_MARKER in client.created[0][1]
+    assert not result.warnings
 
 
-def test_two_legacy_issues_are_an_error():
-    legacy_body = _body({MAPPED: "slow tests"}).replace(srr.TRACKER_MARKER + "\n", "")
-    client = FakeClient([_issue(legacy_body, number=1), _issue(legacy_body, number=2)])
-    with pytest.raises(srr.TrackerError, match="legacy"):
-        _run(client, {MAPPED: "slow tests"})
-
-
-def test_a_marked_issue_is_preferred_over_a_legacy_one_with_a_warning():
-    legacy_body = _body({MAPPED: "slow tests"}).replace(srr.TRACKER_MARKER + "\n", "")
-    client = FakeClient([_issue(legacy_body, number=1), _issue_with({MAPPED: "slow tests"}, number=2)])
+def test_the_marked_issue_is_chosen_and_an_unmarked_one_beside_it_is_left_alone():
+    unmarked = _body({MAPPED: "slow tests"}).replace(srr.TRACKER_MARKER + "\n", "")
+    client = FakeClient([_issue(unmarked, number=1), _issue_with({MAPPED: "slow tests"}, number=2)])
     result = _run(client, {MAPPED: "slow tests"})
-    assert client.updated[-1][0] == 2
-    assert result.warnings and "#1" in result.warnings[0]
+    assert [u[0] for u in client.updated] == [2] and client.created == []
+    assert not result.warnings
 
 
 # ── rank 3: digest and first_seen ────────────────────────────────────────────────────────────

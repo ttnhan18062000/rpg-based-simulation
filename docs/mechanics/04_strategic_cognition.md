@@ -1545,7 +1545,7 @@ that implements it exists — the Authoritative Mechanics Rule's own precedence 
 the direction it names: the Bible first, code second. See `TCK-20260913-NO-MECHANISM-RECORDS-PER-
 ENEMY-KIND-DANGER` for the finding that started this: no mechanism anywhere let an entity learn
 that one kind of creature is more dangerous than another, so every combat capability estimate fell
-back to the same hardcoded per-kind table (§6.12's own `_ENEMY_DANGER`) regardless of what that
+back to the same hardcoded per-kind table (§6.12's own `_ENEMY_DANGER`, since removed by KNOW-04: the estimate now starts from declared common knowledge, `TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY`) regardless of what that
 specific entity had actually seen or fought.
 
 **This is not a new mechanism. Most of it already exists, unreachable.** `src/domains/
