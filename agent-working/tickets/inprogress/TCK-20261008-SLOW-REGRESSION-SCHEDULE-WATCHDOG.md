@@ -15,7 +15,7 @@ tags: [testing]
 An hourly watchdog starts the Slow regression workflow when GitHub has dropped its scheduled run
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -75,10 +75,13 @@ None.
 - Open (owner): whether the watchdog may also dispatch on non-`main` refs. Default: `main` only.
 
 ## Implementation Notes
-_(not started)_
+- Decision function `tools/test_architecture/slow_regression_watchdog.py::decide(runs, now)`; input is `gh run list --json databaseId,event,status,createdAt,headBranch`. Any status other than `completed` counts as active (covers waiting/requested too). Exactly 10 h dispatches ("less than 10 h" skips). Timestamps are parsed for every main run first, so bad data fails loud even when an active run would skip.
+- Workflow uses a sparse checkout of the two module files only; no suite checkout, no tests. Decision and reason go to the step summary and to `$GITHUB_OUTPUT`.
+- AC5: paragraph added to the header comment of `slow-regression.yml`.
+- AC4 (live proof) is open: needs the branch merged to main (schedule/dispatch run only from the default branch). Not yet verified that `GITHUB_TOKEN` can dispatch; first live run decides that.
 
 ## Test Summary
-_(not started)_
+`tests/unit/tools/test_slow_regression_watchdog.py`: 20 passed (all Scope 5 cases plus exactly-10 h, naive timestamps, CLI).
 
 ## Files Changed
 _(not started)_
