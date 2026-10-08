@@ -15,7 +15,7 @@ tags: [testing]
 The Perf / cert / arena lane runs on a PR for any `src/` change except a short, justified list of folders that cannot affect a simulation
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -68,10 +68,13 @@ None.
 - Open: if the import scan finds that every `src/` folder is reachable from the kernel, the exclusion list is empty, and that is a valid result.
 
 ## Implementation Notes
-_(not started)_
+- Method (also in the comment next to PERF_RE): AST import closure over every src module (all import nodes incl. lazy ones, "src.x" string literals, importlib targets) from every src module imported by tests/perf, certification, arena, mechanic_scenarios, helpers, conftest, plus src/__main__ (tests/helpers/runtime.py launches ). Result 2026-10-08: 544 of 760 modules reachable; 0 reachable in actions, lab, rendering, runtime, testing, views, worldgeneration (the only outside importer of any of them is src/worldbuilding/cli.py -> worldgeneration, itself outside the closure). Every other folder (cli, scenarios, api, progression, systems, strategy, ...) has reachable modules. A first pass without  and without tests/mechanic_scenarios wrongly listed cli, scenarios and others, hence both roots.
+- PERF_RE src part: , so a new src/ folder triggers the lane by default. It needs PCRE, so both uses are , now through one  that fails OPEN (exit >= 2 -> true plus a ::warning::); the step computes PERF_COVERS once and reuses it for the output.
+- Scenario routing (Scope 3), cleared with testing-planner 2026-10-08: src/progression and src/systems are now perf-covered, so the scenario tests run in perf-cert-arena (which runs tests/mechanic_scenarios), exactly once, and the dedicated job runs only for non-src triggers and the 7 excluded folders. test_src_progression_only_routes_to_the_dedicated_job and the systems/social twin were rewritten to assert perf True / dedicated job False (docstrings cite Epic B criterion 4 and this ticket); stand-ins for the dedicated job kept (data/content/..., src/testing/...); a matrix test asserts "exactly one job runs the scenario tests".
+- tests/static/test_ci_narrow_path_filtered_jobs.py::test_perf_cert_arena_path_set_covers_all_actually_imported_src_dirs did a substring test for folder names in PERF_RE; it now compiles PERF_RE and matches a path per imported dir (same intent, fits the exclusion-list shape).
 
 ## Test Summary
-_(not started)_
+tests/unit/tools/test_scenario_lane_paths.py + tests/static/test_ci_narrow_path_filtered_jobs.py: 82 passed locally. AC4 (lane durations from this PR's own run) open until the PR run finishes.
 
 ## Files Changed
 _(not started)_
