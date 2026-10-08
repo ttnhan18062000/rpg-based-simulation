@@ -129,3 +129,16 @@ the job on new findings; the two local `make`-target tests that exceed the 60 s 
 `TCK-20261005-CODE-HEALTH-MAKE-TARGET-TESTS-LOCAL-TIMEOUT`. Adding the checks to ruleset 14220945 as required is the owner's
 step. The import-linter flip and class E test retirement stay on `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`
 (soak ends 2026-10-19, your four conditions attached).
+
+
+## Update 2026-10-08: decision 8.11 notice, repo-root cleanup batch A
+
+Source: `docs/plans/codebase_health/repo_root_layout_ticket_brief.md`. Under owner decision 8.11 (the `src/` freeze only; tests that pin CI or the Makefile may be edited, with a notice to you), ticket `TCK-20261008-DROP-UNUSED-REQUIREMENTS-EXPORT` (A2) deletes `requirements.txt` and edits these tests:
+
+- `tests/static/test_ci_narrow_path_filtered_jobs.py`: the PERF_RE/MIG_RE match check no longer expects `requirements.txt`.
+- `tests/static/test_ci_requirements_no_ml_stack.py`: rewritten. It asserts the ML stack is absent from the default install closure (project dependencies plus `[tool.uv] default-groups`, walked in `uv.lock`) instead of reading `requirements.txt`; the `requirements-knowledge.txt` test is unchanged.
+- `tests/static/test_ci_step_summary_reporting.py`: the banned-dependency check (`pytest-cov`, `pytest-html`) reads `pyproject.toml`; two test functions renamed (`..._no_new_dependency_entry_...`).
+- `tests/unit/tools/test_scenario_lane_paths.py`: the `requirements.txt` trigger cases use `uv.lock`; `tools/test_architecture/scenario_lane_paths.py` drops `requirements.txt` from its regex (`uv.lock` and `pyproject.toml` stay).
+- `tests/tools/test_evidence_cache_identity_contract.py` (candidate list), `tests/tools/test_delivery_ci_triage_classifier.py` (an inline sample workflow line), and comments in `tests/tools/test_knowledge_search.py` and `tests/codebase/test_code_health_impact.py`.
+
+`.github/workflows/test.yml` loses `requirements\.txt$` from PERF_RE and MIG_RE (`pyproject.toml` and `uv.lock` were already in both). Scoped run: `tests/static` and the 42 files referencing the touched paths pass; the known local 60 s failure `test_codebase_health_snapshot.py::test_make_target_runs_successfully_end_to_end` was deselected. Batch B (after A merges) will also edit `tests/architecture/test_docker_compose_dependency_hygiene.py`, `tests/logging/test_loki_cardinality.py`, `tests/codebase/test_code_health_install_git_hooks.py`, and add `tests/codebase/test_repo_root_allowlist.py`; you will get a notice then.
