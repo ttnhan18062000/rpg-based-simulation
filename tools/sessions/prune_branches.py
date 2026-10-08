@@ -17,12 +17,19 @@ moved since classification is left alone). Remote branches are deleted only with
 flag, only when the PR merged and the remote-tracking tip equals the PR head, one
 `--force-with-lease=<ref>:<sha>` push per branch. A backup file (name and SHA per line) is written and
 read back before the first deletion. A remote delete is visible to everyone: the owner's call.
+
+`--worktrees` (TCK-20261008-SESSION-MERGED-WORKTREE-PRUNE) classifies WORKTREES instead, the case branch mode
+skips ("checked out in a worktree"). A worktree is removable only when its branch tip equals a merged PR head,
+the tree is completely clean (a dirty monitoring shard is named, never ignored), it is not a session seat
+(roster path, writer lease or live instance), has no open PR and no process has its cwd inside. `--execute` runs
+`git worktree remove` WITHOUT `--force`, keeps the branches, and writes a separate name-to-SHA backup.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -30,7 +37,9 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+from tools.sessions import state as st
 from tools.sessions.launch import _worktree_entries as worktree_entries
+from tools.sessions.resolve import instance_ids
 from tools.sessions.roster import REPO_ROOT
 
 STALE_DAYS = 7
@@ -255,6 +264,202 @@ def render(report: Report, remote: bool) -> str:
     return "\n".join(lines)
 
 
+# ---- worktree mode (TCK-20261008-SESSION-MERGED-WORKTREE-PRUNE) --------------------------------
+DIRTY_LISTED = 10
+
+
+@dataclass(frozen=True)
+class WorktreeRow:
+    path: str
+    branch: str
+    sha: str
+    removable: bool
+    reason: str
+    size_bytes: int
+
+
+@dataclass(frozen=True)
+class WorktreeReport:
+    rows: tuple[WorktreeRow, ...]
+    gh_ok: bool = True
+
+    def removable(self) -> list[WorktreeRow]:
+        return [r for r in self.rows if r.removable]
+
+
+def _seat_paths(main: Path, roster) -> dict[str, str]:
+    """Resolved worktree path -> why it is a seat, from the roster."""
+    names = {r.worktree: r.role for r in roster.roles}
+    names.update({w.name: w.writer or "shared worktree" for w in roster.worktrees})
+    return {str((main / ".claude" / "worktrees" / n).resolve()): who for n, who in names.items()}
+
+
+def _live_instance_paths(sroot: Path, roster) -> dict[str, str]:
+    """Resolved worktree path -> instance id, for every live session instance."""
+    found: dict[str, str] = {}
+    for role in roster.roles:
+        for iid in instance_ids(role.role, role.max_sessions):
+            instance = st.read_instance(sroot, iid)
+            if instance is not None and st.liveness(instance) == st.LIVE:
+                found[str(Path(instance.holder.worktree).resolve())] = iid
+    return found
+
+
+def _processes_inside(path: Path, proc_root: Path = Path("/proc")) -> list[int]:
+    prefix = str(path.resolve())
+    pids = []
+    try:
+        entries = list(proc_root.iterdir())
+    except OSError:
+        return pids
+    for entry in entries:
+        if not entry.name.isdigit():
+            continue
+        try:
+            cwd = os.readlink(entry / "cwd")
+        except OSError:
+            continue
+        if cwd == prefix or cwd.startswith(prefix + os.sep):
+            pids.append(int(entry.name))
+    return sorted(pids)
+
+
+def _dirty_paths(path: Path) -> list[str]:
+    out = _git(["status", "--porcelain", "--untracked-files=all"], path)
+    return [line[3:] for line in out.stdout.splitlines()] if out.returncode == 0 else ["(git status failed)"]
+
+
+def _tree_bytes(path: Path) -> int:
+    out = subprocess.run(["du", "-s", "--block-size=1", str(path)], capture_output=True, text=True, check=False)
+    try:
+        return int(out.stdout.split()[0])
+    except (IndexError, ValueError):
+        return 0
+
+
+def classify_worktrees(cwd: Path, prs: PrData | None, roster, sroot: Path, proc_root: Path = Path("/proc")) -> WorktreeReport:
+    main = Path(st.common_dir(cwd)).parent.resolve()
+    seats = _seat_paths(main, roster)
+    live = _live_instance_paths(sroot, roster)
+    rows: list[WorktreeRow] = []
+    for entry in worktree_entries(cwd):
+        path = Path(str(entry["worktree"]))
+        resolved = str(path.resolve())
+        branch = str(entry.get("branch", "")).removeprefix("refs/heads/")
+        sha = str(entry.get("HEAD", ""))
+
+        def row(removable: bool, reason: str, path: Path = path, branch: str = branch, sha: str = sha) -> WorktreeRow:
+            return WorktreeRow(str(path), branch or "(detached)", sha, removable, reason,
+                               _tree_bytes(path) if removable and path.is_dir() else 0)
+
+        lease = None
+        lease_error = ""
+        try:
+            lease = st.read_lease(sroot, resolved)
+        except st.StateError as exc:
+            lease_error = str(exc)
+        if resolved == str(main):
+            rows.append(row(False, "main checkout"))
+        elif entry.get("bare") or entry.get("prunable") or not path.is_dir():
+            rows.append(row(False, "bare, prunable or missing directory"))
+        elif not branch:
+            rows.append(row(False, "detached HEAD"))
+        elif resolved in seats:
+            rows.append(row(False, f"seat worktree: {seats[resolved]}"))
+        elif resolved in live:
+            rows.append(row(False, f"live session instance: {live[resolved]}"))
+        elif lease is not None:
+            rows.append(row(False, f"writer lease held by {lease.role}"))
+        elif lease_error:
+            rows.append(row(False, f"lease unreadable: {lease_error}"))
+        elif prs is None:
+            rows.append(row(False, "gh unavailable: nothing can be proven merged"))
+        elif branch in prs.open_heads:
+            rows.append(row(False, "open PR"))
+        elif sha not in prs.merged.get(branch, ()):
+            why = "a PR merged from this name but the tip moved after it" if branch in prs.merged else "no merged PR with this tip"
+            rows.append(row(False, f"unmerged: {why}"))
+        elif pids := _processes_inside(path, proc_root):
+            rows.append(row(False, f"process inside: pid {', '.join(map(str, pids[:5]))}"))
+        elif dirty := _dirty_paths(path):
+            shown = ", ".join(dirty[:DIRTY_LISTED]) + (f" (+{len(dirty) - DIRTY_LISTED} more)" if len(dirty) > DIRTY_LISTED else "")
+            rows.append(row(False, f"dirty ({len(dirty)}): {shown}"))
+        else:
+            rows.append(row(True, "tip equals the merged PR head, clean, no seat, no process inside"))
+    return WorktreeReport(tuple(rows), gh_ok=prs is not None)
+
+
+def render_worktrees(report: WorktreeReport) -> str:
+    lines = []
+    if not report.gh_ok:
+        lines.append("gh unavailable: nothing could be proven merged, so every worktree is kept")
+    removable = report.removable()
+    lines.append(f"removable: {len(removable)} ({sum(r.size_bytes for r in removable) / 1024**3:.1f} GB)")
+    lines += [f"  {r.path} [{r.branch}] {r.size_bytes / 1024**3:.2f} GB" for r in removable]
+    kept = [r for r in report.rows if not r.removable]
+    lines.append(f"kept: {len(kept)}")
+    if report.gh_ok:
+        lines += [f"  {r.path} [{r.branch}]  {r.reason}" for r in kept]
+    return "\n".join(lines)
+
+
+def write_worktree_backup(report: WorktreeReport, path: Path) -> Path:
+    """Write `<path> <branch> <sha>` for each worktree about to be removed, then read it back."""
+    lines = [f"{r.path} {r.branch} {r.sha}" for r in report.removable()]
+    target, n = path, 2
+    while target.exists():
+        target = path.with_name(f"{path.stem}-{n}{path.suffix}")
+        n += 1
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    if target.read_text(encoding="utf-8").splitlines() != lines:
+        raise OSError(f"backup {target} did not read back as written; nothing was removed")
+    return target
+
+
+def worktree_restore_commands(report: WorktreeReport) -> list[str]:
+    return [f"git worktree add {r.path} {r.branch}" for r in report.removable()]
+
+
+def execute_worktrees(cwd: Path, report: WorktreeReport) -> list[str]:
+    """`git worktree remove` (never --force) for each removable row; git's own refusal is reported, not overridden."""
+    done, freed = [], 0
+    for r in report.removable():
+        res = _git(["worktree", "remove", r.path], cwd)
+        if res.returncode == 0:
+            done.append(f"removed {r.path}")
+            freed += r.size_bytes
+        else:
+            done.append(f"left {r.path}: {res.stderr.strip()}")
+    done.append(f"freed about {freed / 1024**3:.1f} GB")
+    return done
+
+
+def default_worktree_backup_path(today: date | None = None) -> Path:
+    return Path.home() / "Working" / f"worktree-backup-{(today or date.today()).isoformat()}.txt"
+
+
+def _main_worktrees(args) -> int:
+    from tools.sessions.roster import load_roster
+
+    roster = load_roster(args.root)
+    sroot = st.state_root(args.root)
+    report = classify_worktrees(args.root, fetch_prs(args.root), roster, sroot)
+    print(render_worktrees(report))
+    if not args.execute:
+        print("\ndry run: nothing removed. Re-run with --worktrees --execute to remove the worktrees listed as removable.")
+        return 0
+    if not report.removable():
+        print("\nnothing removable.")
+        return 0
+    backup = write_worktree_backup(report, args.backup or default_worktree_backup_path())
+    print(f"\nbackup written and verified: {backup}")
+    print("restore with:")
+    print("\n".join(f"  {c}" for c in worktree_restore_commands(report)))
+    print("\n".join(execute_worktrees(args.root, report)))
+    return 0
+
+
 def default_backup_path(today: date | None = None) -> Path:
     return Path.home() / "Working" / f"branch-backup-{(today or date.today()).isoformat()}.txt"
 
@@ -265,7 +470,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--execute", action="store_true", help="delete the merged-PR local branches after writing the backup")
     parser.add_argument("--remote", action="store_true", help="also list (and with --execute, delete) merged-PR remote branches")
     parser.add_argument("--backup", type=Path, default=None, help="backup file (default ~/Working/branch-backup-<date>.txt)")
+    parser.add_argument("--worktrees", action="store_true", help="classify worktrees instead of branches; with --execute remove "
+                        "the merged, clean, non-seat ones (git worktree remove, never --force; branches are kept)")
     args = parser.parse_args(argv)
+    if args.worktrees:
+        if args.remote:
+            parser.error("--worktrees cannot be combined with --remote")
+        return _main_worktrees(args)
     if args.remote and not args.execute:
         print("note: --remote without --execute only lists remote candidates")
     report = classify(args.root, fetch_prs(args.root))
