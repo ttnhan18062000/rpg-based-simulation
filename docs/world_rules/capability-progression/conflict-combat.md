@@ -174,30 +174,29 @@ was declared without any Rule on when a fighter accepts it.
 **Repository evidence: CONFLICTING, traced by Lane A on main `753f98ea9`** (relayed by
 rpg-planner, seeds 42 to 46, 3 worlds; not re-measured here).
 - **Who takes the free hits:** 83 to 98 percent of opportunity-attack swings land on a victim
-  standing beside its attacker. Only 4 to 5 percent come on a tick when the victim decided
-  anything. About 40 percent come from moves already under way; the rest come from moves the
-  subject chose at contact (WANDER, PURSUE, INTERCEPTING).
+  standing beside its attacker. Split by what the victim was doing on that tick (per world):
+  - decided a move: 4 to 5 percent;
+  - continuing a move already under way: 41 / 37 / 19 percent;
+  - neither (an ENTITY_ACT task, no decision, yet it still moved): 55 / 59 / 77 percent.
 - **Stepping between blows:** `TacticalDecisionSystem` emits ATTACK or SKILL only when
   `is_attack_legal`, which needs readiness 100 (Bible 02 §7). Otherwise it emits PURSUE toward
   the target even when the target is already adjacent (`src/engine/tactical.py:739-829`). The
   opportunity attack fires on any successful step from an engaged tile
   (`src/engine/movement.py`, `LegalityServiceV2.get_engaged_hostiles`).
 - **The stall breaker in melee:** once `stale_ticks` exceeds 10, the subject wanders before any
-  attack branch, even when adjacent (`src/engine/tactical.py:513-524`). The ATTACK and SKILL
-  branches add to `stale_ticks` on every swing, although the tactical contract's trigger is
+  attack branch, even when adjacent (`src/engine/tactical.py:506-517`). The SKILL, ATTACK and
+  pursuit payloads add to `stale_ticks` on every swing or step (`:772`, `:788`, `:817`), although the tactical contract's trigger is
   "without a target change or outcome" (`docs/engine/contracts/tactical_contract.md` §5). That
   half is a defect against the existing contract.
 - **Non-cautious subjects have no way out but a step:** the safety retreat needs
   `safety_pressure` above 0.75, and no branch treats "adjacent and being struck" as a reason to
   hold.
-- **Separate engine defect, not this Rule:** subjects that move with no move task at all
-  (rpg-planner is filing it).
+- **Separate engine defect, not this Rule:** the largest class above, subjects that move with
+  no move task at all (rpg-planner is filing it).
 
 **Scenarios:** none traced yet. Two are owed when implemented: a non-cautious fighter beside
 a hostile with readiness below 100 holds, and takes no opportunity attack until it chooses to
 leave; a long exchange of blows never trips the stall breaker while the pair stays adjacent.
-
----
 
 ---
 
