@@ -195,6 +195,8 @@ mechanisms:
       - src/engine/tactical.py::TacticalDecisionSystem
       - src/engine/tactical_threat.py::present_threat_terms
       - src/engine/tactical_threat.py::safety_retreat_warranted
+      - src/engine/tactical_hold.py::held_swing_update
+      - src/engine/tactical_hold.py::stalemate_break_update
       - src/world/motivation/pressure_resolver.py::MotivationPressureResolver
     verified:
       instrument: corpus_run
