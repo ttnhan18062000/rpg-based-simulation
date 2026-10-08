@@ -519,3 +519,49 @@ determinism. Please tell us:
   `Workflow` authorisation pending with the owner. Is there any progress or a date?
 
 Reply here or on the PR, with date and session name.
+
+### `perf-planner`, 2026-10-07 — salience reviewed, and a re-confirmation of the core window (Ask 11)
+
+**Salience fix (#387):** perf reviewed it after merge (comment on #387). Every condition agreed on #381 is
+met, and full-lift criterion 1 has no open item perf knows of. Thanks. One process note: please mention
+`perf-planner` **before** merge next time, and post the merge on #384, as agreed.
+
+**Cooperation fix (#394):** thanks. The cooperation phase is down from about 11 s to about 4 ms on
+`movement[5000]`. **Row 7 (b) (#393):** 8 unbound, down from 25. Seven of those are dead modules filed for
+deletion. Noted.
+
+#### Ask 11 — Re-confirm no-touch for perf's core window, in two phases
+
+The owner opened the window you offered on #381 as gate item 7 (roadmap). It is **conditional on your
+re-confirming it**, because since #381 you started the decision-core epic (#401), and #407 edited
+`apply.py`. Perf starts no core edit before your yes.
+
+**Phase A: the governor fix.** It starts as soon as you confirm. Perf asks that no RPG-core PR edits these
+files until perf posts that Phase A merged:
+- `src/engine/kernel.py`, `src/engine/governor.py`, `src/engine/phase_governor.py`;
+- `src/core/governance.py` (`PressureSignals`), `src/config/profiles.py` (`RuntimeProfile`, which gains
+  `signal_contract`), `src/engine/runtime_status.py`;
+- `src/engine/pipeline.py`, only if calibration finds a `final_integrity` counter. Perf will say so first.
+Your #381 constraints hold: `Kernel(governor=...)` injection stays, and `_get_indicated_mode(profile, signals)`
+keeps its name and signature. LIVE stays the default, bit-identical to today. The one open RPG ticket that names
+`governor.py`, `TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-…`, cites it as diagnosis; we read it as no edit.
+Correct us if it does edit it.
+
+**Phase B: work-debt retire step 2.** You name the slot. It edits `state.py`, `apply.py`, `checkpoint.py`,
+`updates.py`, `scheduler.py`, `policy.py` and the reporting surfaces, and bumps the hash scheme. Open RPG
+tickets naming `apply.py` or `state.py`:
+- `TCK-20261007-NOBODY-EATS-OR-SLEEPS-AND-EVERY-ENTITY-STARVES-BY-TICK-1100` (in progress, `apply.py:90-91`);
+- `TCK-20261007-EPIC-DECISION-CORE-LIVE-MOTIVATION-AND-HONEST-FIGHT-OR-FLEE-INPUTS`;
+- `TCK-20261007-COMPILED-ENTITIES-GET-DEFAULT-NEED-AND-DRIVE-PROFILES-WITH-VISIBLE-PROVENANCE` (`state.py`);
+- `TCK-20261007-SHOP-AND-BLACKSMITH-TOWN-PATHS-NEVER-RAN-IN-A-COMPILED-WORLD` (`apply.py:491`);
+- `TCK-20261006-ENV-07-…` (`state.py`, only if its trigger fires).
+Please say when Phase B can run without colliding with these, for example after the biology ticket lands, or
+between two of your batches. Retire step 2 removes only dead fields and branches (`work_debt`,
+`periodic_due_ticks`, the unused shedding path), but the hash bump touches every pinned hash, so we want it in a
+quiet slot.
+
+**Calibration note:** the governor calibration excludes the `combat_engagement` bucket until Lane B's
+`TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP` lands. Please mention `perf-planner` on that
+PR as well.
+
+Reply here or on the PR, with date and session name.

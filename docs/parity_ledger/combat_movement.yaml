@@ -215,11 +215,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
-  divergence_note: null
-  support_boundary: null
+  v2_evidence: 'Implementation proven via exhaustive checklist audit Phase 1-11. src/engine/tactical.py (a VANGUARD at an identified chokepoint holds with movement mode HOLD and an ENTITY_ACT HOLD, reason HOLD_CHOKEPOINT); src/engine/domain/action_router.py (HOLD is a typed no-op success); src/engine/pipeline_phases/actions.py (a HOLD success ends its task so the brain re-decides on its cadence).'
+  proof_type: regression
+  test_path: tests/unit/combat/test_chokepoint_hold.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.90.
+  support_boundary: 'The hold was reported as UNSUPPORTED_ACTION on every emission before (the tile was still held by the movement mode); the reporting is the only change. The path needs WALL tiles with a one-tile gap and is not reached in the pinned corpus worlds (0 decisions in 30 runs).'
 - id: COMB-016
   text: "`test_cardinal_opposite_bracketing`: Cardinal opposite bracketing \u2014\
     \ Verify that two allies bracket a target from opposite sides.."
@@ -4798,3 +4798,13 @@
   test_path: tests/unit/actions/test_readiness_wait_writes_no_blocker.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.88.
   support_boundary: 'The rejection event and the FAILURE annotation remain as telemetry.'
+- id: COMB-342
+  text: 'TCK-20261008-A-ENTITY-WHOSE-TRACKED-MOVE-COMPLETED-KEEPS-WALKING-ON-ITS-STORED-TARGET-WITH-AN-IDLE-TASK: an entity with an engaged, perceived, hostile entity orthogonally adjacent takes no step from a stored navigation target (a held move, an idle walk toward an objective); it steps only on a target a decision sets this tick (a target set with an ENTITY_MOVE task update). Adjacency to a non-engaged hostile is unchanged.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/candidate_selector.py (movement_target, engaged_adjacent_hostile, position_index), src/engine/hostility.py (perceived_hostile, is_engaged, source_identity), src/engine/pipeline_phases/movement.py, src/engine/tactical.py (hostile loop uses the shared test). src/engine/executor.py and src/engine/worker_logic.py (move_ends_here releases a blocked held move to the brain; decided flights are exempt). Pinned 5-seed x 3-world report in docs/guidelines/intentional_divergences.md Section 2.89: opportunity-attack hits 185.2 to 162.0, 158.0 to 128.4, 87.4 to 72.0; total deaths unchanged within 1 SD.'
+  proof_type: regression
+  test_path: tests/mechanic_scenarios/test_conflict04_movement_layer.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.89.
+  support_boundary: 'Most remaining free hits have a non-engaged adjacent hostile as attacker (urban seed 45: 131 of 131 pairs); dropping the engagement condition froze entities up to 219 ticks and is not shipped (decision 32: notice and decide, a separate ticket). An idle task can stay blocked up to 19 ticks. The stale PURSUE movement-mode label on an idle task after a completed pursuit is unchanged.'
