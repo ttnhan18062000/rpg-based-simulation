@@ -28,7 +28,10 @@ from dataclasses import replace
 import pytest
 
 from src.config.profiles import PROD_SMALL
+from src.core.governance import RuntimeMode
 from src.core.state import TaskComponent
+from src.engine.executor import LocalSequentialExecutor
+from src.engine.governor import ResourceGovernor
 from src.engine.kernel import Kernel
 from src.engine.world_dynamics import WorldDynamicsSystem
 from src.platform.rng import DeterministicRNG
@@ -40,6 +43,23 @@ WORLD_ID = "mechanic_scenario_combat_judgement_withdrawal"
 GOBLIN_ID = 1
 ORC_ID = 2
 SEED = 42
+
+
+class _PinnedNormalGovernor(ResourceGovernor):
+    """Pins NORMAL so the run does not depend on host speed (the same pin as tests/integration/campaigns/test_catalog_entity_spawn_wiring.py)."""
+
+    def _get_indicated_mode(self, profile, signals):
+        return RuntimeMode.NORMAL
+
+    def force_mode(self, mode, status, current_tick):
+        return None  # the mid-tick wall-clock throttle must not flip the mode either
+
+
+def _pinned_kernel(state) -> Kernel:
+    """A deterministic kernel: pinned governor, sequential executor, no tick budget. The corpus test below once read 0, 1 or 2 DEFEAT deaths
+    from identical code because the default executor and governor made the 120-tick run timing-dependent."""
+    return Kernel(profile=PROD_SMALL.model_copy(update={"max_tick_budget_ms": 1e9}), state=state, rng=DeterministicRNG(SEED),
+                  flags={"no_frame_pacing": True}, governor=_PinnedNormalGovernor(), executor=LocalSequentialExecutor())
 
 # The arena's own compiled hazard_level. Pinned so the differential below changes exactly one
 # field (hazard_kind) -- changing the level too would confound the comparison.
@@ -93,8 +113,7 @@ def _run(kind, ticks):
     assert region is not None, "staging sanity: the orc must stand inside a real region"
     drain = EnvironmentService.calculate_hazard_drain(region, orc)
 
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(SEED),
-                    flags={"no_frame_pacing": True})
+    kernel = _pinned_kernel(state)
     try:
         snapshots = []
         for _ in range(ticks):
@@ -185,8 +204,7 @@ def test_defeat_deaths_are_recorded_in_unscripted_corpus_play():
     spec, context = repo.load_world_with_context("frontier_marches")
     state, _report = WorldCompiler.compile(spec, SEED, context=context)
 
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(SEED),
-                    flags={"no_frame_pacing": True})
+    kernel = _pinned_kernel(state)
     try:
         for _ in range(120):
             kernel.tick_once()
