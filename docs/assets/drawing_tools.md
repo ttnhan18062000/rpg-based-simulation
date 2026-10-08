@@ -50,7 +50,7 @@ not reflected), `utc_time`, `aseprite_version`, `passed`, `failed`, `errors`, `s
 `pytest_exit_code` and `ok`. A guard test (`tests/visual_assets/test_aseprite_licence_guard.py`) fails if a workflow
 names Aseprite or a tracked file is an Aseprite executable or package.
 
-The server is registered for this repository in `.mcp.json` as `aseprite-pixel-art`. **Working in a git worktree while Claude Code runs in the main checkout:** start Claude Code with `VISUAL_ASSETS_CHECKOUT=<absolute path of the worktree>` so `submit_candidate` stages into that worktree (see `store_contract.md`, "Which checkout the server serves"); without it the server serves the checkout it was launched from, and every store tool result says which (`store_root`). Sprites live outside the
+The server is registered for this repository in `.mcp.json` as `aseprite-pixel-art`. **Working in a git worktree while Claude Code runs in the main checkout:** start Claude Code with `VISUAL_ASSETS_CHECKOUT=<absolute path of the worktree>` (for example `VISUAL_ASSETS_CHECKOUT=/home/vboxuser/Work/rpg-aseprite-mcp claude`) so `submit_candidate` stages into that worktree (see `store_contract.md`, "Which checkout the server serves"); without it the server serves the checkout it was launched from, and every store tool result says which (`store_root`). Sprites live outside the
 repo in `~/.cache/rpg-aseprite-mcp` (override: `ASEPRITE_MCP_WORKSPACE`; binary override:
 `ASEPRITE_MCP_BINARY`). That experiment workspace is not the asset store (`visual_assets/catalog/`).
 

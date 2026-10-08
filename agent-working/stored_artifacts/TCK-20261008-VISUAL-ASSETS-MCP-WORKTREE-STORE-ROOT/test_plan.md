@@ -11,6 +11,6 @@ tags: [architecture, testing]
 
 # Test plan
 
-- `test_store_root.py` (7): default, env selection and derived roots (fresh interpreter), four refusals, refusal stops an interpreter, label shape.
+- `test_store_root.py` (13): default, env selection and derived roots (fresh interpreter), four refusals, four store-format-version refusals, committed catalog version, refusal stops an interpreter, label shape.
 - `drawing/test_store_root_stdio.py` (5): submit_candidate stages into the named checkout and not the real one, label in every store tool result, default label, refusal stops the server, root printed on stderr.
 - Mutants A-G (`mutant_proof.txt`). Scoped suites: `pytest tests/visual_assets tests/docs tests/static tests/architecture`.

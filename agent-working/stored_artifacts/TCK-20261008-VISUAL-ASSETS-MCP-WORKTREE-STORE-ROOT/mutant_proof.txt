@@ -8,3 +8,8 @@ F relative path accepted: the 'absolute' refusal test fails (caught)
 G `derive()` under `python -O` (the planner's follow-up): the pixel-hash check is an explicit raise now, so test_derived_runtime still passes with -O (4 passed)
 NOTE: mutants that ignore the variable make the server stage a real intake into the real checkout's gitignored quarantine; one stray (in-99648d0964800e3e) appeared and was removed before the final run.
 Unmutated: 17 passed.
+
+Follow-up (planner, after review): refuse a data checkout whose store_format_version differs from the code's STORE_FORMAT_VERSION (StoreRootError names both versions).
+H version check removed (`if stored != STORE_FORMAT_VERSION` -> `if False`): the four version-mismatch cases fail (caught)
+I check weakened to `stored is None or stored < STORE_FORMAT_VERSION` (only OLDER stores refused): the NEWER-store case (version 2) fails (caught)
+Unmutated: 18 passed. No stray intake appeared in the quarantine this time.

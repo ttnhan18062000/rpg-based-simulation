@@ -24,8 +24,8 @@ def resolve_visual_assets_dir(environ: Mapping[str, str] | None = None) -> tuple
 
     By default it is the directory this module lives in, so a server launched from a checkout serves that checkout. `VISUAL_ASSETS_CHECKOUT` (an absolute path to a git checkout
     or linked worktree, empty counts as unset) names another one explicitly: the drawing server of a Claude session started in the main checkout can then serve the worktree being
-    worked on instead of silently writing intakes into the main checkout's quarantine. A value that is relative, missing, not a git checkout or without a store catalog
-    (`visual_assets/catalog/STORE_FORMAT`) is refused, never "corrected" (`TCK-20261008-VISUAL-ASSETS-MCP-WORKTREE-STORE-ROOT`)."""
+    worked on instead of silently writing intakes into the main checkout's quarantine. A value that is relative, missing, not a git checkout, without a store catalog
+    (`visual_assets/catalog/STORE_FORMAT`) or with a store format version other than this code's `STORE_FORMAT_VERSION` is refused, never "corrected" (`TCK-20261008-VISUAL-ASSETS-MCP-WORKTREE-STORE-ROOT`)."""
     value = (os.environ if environ is None else environ).get(ENV_CHECKOUT, "")
     if not value.strip():
         return Path(__file__).resolve().parents[1], "module"
@@ -39,7 +39,21 @@ def resolve_visual_assets_dir(environ: Mapping[str, str] | None = None) -> tuple
         raise StoreRootError(f"{ENV_CHECKOUT} is not a git checkout or worktree (no .git)")
     if not (root / "visual_assets" / "catalog" / "STORE_FORMAT").is_file():
         raise StoreRootError(f"{ENV_CHECKOUT} is not a store checkout (no visual_assets/catalog/STORE_FORMAT)")
+    stored = _store_format_version(root / "visual_assets" / "catalog" / "STORE_FORMAT")
+    if stored != STORE_FORMAT_VERSION:
+        raise StoreRootError(f"{ENV_CHECKOUT} names a store of format version {stored if stored is not None else 'unreadable'}, this code writes version {STORE_FORMAT_VERSION}: old code must never write into a newer store or the reverse")
     return root / "visual_assets", "env"
+
+
+def _store_format_version(path: Path) -> int | None:
+    """The `store_format_version: N` line of a catalog's STORE_FORMAT file, or None when it is missing or not an integer."""
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("store_format_version:"):
+                return int(line.split(":", 1)[1].strip())
+    except (OSError, ValueError, UnicodeDecodeError):
+        return None
+    return None
 
 
 def describe_root(visual_assets_dir: Path | None = None, source: str | None = None) -> dict[str, object]:

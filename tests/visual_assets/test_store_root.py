@@ -69,6 +69,21 @@ def _without(root: Path, relative: str) -> Path:
     return root
 
 
+@pytest.mark.parametrize("content, shown", [
+    ("store_format_version: 2\n", "version 2"), ("store_format_version: 0\n", "version 0"), ("status: no version line\n", "unreadable"), ("store_format_version: x\n", "unreadable"),
+])
+def test_a_store_of_another_format_version_is_refused_naming_both_versions(tmp_path, content, shown):
+    root = fake_checkout(tmp_path)
+    (root / "visual_assets" / "catalog" / "STORE_FORMAT").write_text(content)
+    with pytest.raises(config.StoreRootError, match=shown) as refused:
+        config.resolve_visual_assets_dir({config.ENV_CHECKOUT: str(root)})
+    assert f"writes version {config.STORE_FORMAT_VERSION}" in str(refused.value)
+
+
+def test_the_committed_catalog_declares_this_codes_format_version():
+    assert config._store_format_version(REPO / "visual_assets" / "catalog" / "STORE_FORMAT") == config.STORE_FORMAT_VERSION
+
+
 def test_a_refused_root_stops_a_fresh_interpreter_instead_of_falling_back(tmp_path):
     out = subprocess.run([sys.executable, "-c", "import visual_assets.store.config"], cwd=REPO, capture_output=True, text=True,
                          env={"VISUAL_ASSETS_CHECKOUT": str(tmp_path / "missing"), "PATH": "/usr/bin:/bin"})
