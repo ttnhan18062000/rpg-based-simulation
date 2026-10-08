@@ -254,7 +254,7 @@ Before the redraw the same measurements failed: the old sword could not even be 
 
 ### Review it, and the owner's commands
 
-The preview page shows the one-colour silhouette sheet (the four proposed slots), then each draft beside its adopted drawing (the arch and the tent are marked not proposed), the recorded result and the compliance tables:
+**The review folder (the owner's primary review surface):** `python -m tests.visual_assets.review_sheets --set icons-owner-fixes-v1` writes `~/Work/asset-review/icons-owner-fixes-v1/` with six large labelled PNG canvases and a `README.txt` that repeats the commands below. The live preview page shows the one-colour silhouette sheet (the four proposed slots), then each draft beside its adopted drawing (the arch and the tent are marked not proposed), the recorded result and the compliance tables:
 
 ```
 # the Vite dev server serves the worktree (http://[::1]:5173/rehearsal-icons.html)

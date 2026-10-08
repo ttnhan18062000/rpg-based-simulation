@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261008-VISUAL-ASSETS-REVIEW-SHEET-FOLDER
-phase: open
+phase: done
 date: 2026-10-08
 tags: [architecture, hud, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, hud, testing]
 Owner review sheets: one command writes a folder of large labelled PNG canvases (plus a README) for any draft set, used at every owner gate
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -56,9 +56,9 @@ the owner's primary review surface; the page stays for detail.
 - Removing the preview page. Any app wiring. Committing the generated PNGs (the folder is local output; the generator and its tests are committed).
 
 ## Acceptance Criteria
-- [ ] One command produces the folder for any draft set; deterministic; tests pass.
-- [ ] Folder for icons-owner-fixes-v1 generated and its path given to the planner.
-- [ ] Process rule updated.
+- [x] One command produces the folder for any draft set; deterministic; tests pass.
+- [x] Folder for icons-owner-fixes-v1 generated and its path given to the planner.
+- [x] Process rule updated.
 
 ## Related Tickets
 - TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES, TCK-20261008-VISUAL-ASSETS-ICON-RECOGNISABILITY-CHECKS
@@ -67,7 +67,7 @@ the owner's primary review surface; the page stays for detail.
 - docs/assets/icon_style_guide.md (process rule), docs/assets/icon_set_v2_review.md
 
 ## Related Stored Artifacts
-
+- agent-working/stored_artifacts/TCK-20261008-VISUAL-ASSETS-REVIEW-SHEET-FOLDER/ (plan, investigation, test_plan, mutant_proof.txt)
 
 ## Related Code Areas
 - tests/visual_assets/ (new module), visual_assets/store pixels/PNG helpers (read)
@@ -76,13 +76,20 @@ the owner's primary review surface; the page stays for detail.
 - If the store's PNG helpers cannot encode canvases this size within budget, report it to the planner before adding a dependency.
 
 ## Implementation Notes
+- `tests/visual_assets/review_sheets.py`: `python -m tests.visual_assets.review_sheets --set <draft_set_id> [--out DIR]`, default `~/Work/asset-review/<set>/`; it refuses a folder inside any repository. Six canvases (01 overview at true size and zoomed beside the fallback, 02 before/after, 03 groups, 04 colour vision with an "approximation" label, 05 map markers or a note, 06 silhouettes) plus a README (what each image shows, recorded results, findings, the exact owner commands: per-slot `review` and `adopt --parent` for revisions, `adopt-set` for new icons, ALREADY ADOPTED for adopted drafts). Pure Python: zlib and struct for the PNG, a built-in 5x7 bitmap font (capitals), no new dependency; the whole folder takes about 4 seconds.
+- Profiles: `icons-owner-fixes-v1` shows only the four proposed revisions and lists the two declined drafts as NOT PROPOSED; its recorded results come from `icon_owner_fixes_draft_set.evaluate`. Other sets work with defaults.
+- Process: the style guide's step 7 and step 3, and the review doc, now say every owner gate (the silhouette step included) ships the folder path.
+- Folder generated for `icons-owner-fixes-v1` at `/home/vboxuser/Work/asset-review/icons-owner-fixes-v1/` (local output, never committed).
 
 
 ## Test Summary
+- `test_review_sheets.py` (10 tests); mutants A to E caught. `pytest tests/visual_assets tests/docs tests/static tests/architecture` was run after the change : 1975 passed, 2 skipped, 1 xfailed.
 
 
 ## Files Changed
+- tests/visual_assets/{review_sheets,test_review_sheets}.py, docs/assets/{icon_style_guide,icon_set_v2_review}.md, ticket and stored artifacts.
 
 
 ## Completion Summary
+One command writes a deterministic folder of six large labelled PNG canvases and a README for a draft set, outside every repository, with no new dependency; the owner gate now ships the folder path. Generated for `icons-owner-fixes-v1` (the four proposed revisions).
 
