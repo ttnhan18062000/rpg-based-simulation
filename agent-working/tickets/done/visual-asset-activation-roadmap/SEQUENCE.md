@@ -13,4 +13,4 @@ One ticket, docs only, built by `asset-implementer` on branch `visual-asset-acti
 
 ## Status
 
-OPEN (2026-10-08).
+DONE (2026-10-08): the roadmap is recorded and parked.
