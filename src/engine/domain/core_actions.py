@@ -19,7 +19,10 @@ ROUGH_REST_SLEEP_DEBT_RECOVERY = 10.0
 
 
 def interact_target_unavailable(state: Any, target_id: Any) -> Optional[ReasonCode]:
-    """Why an INTERACT with resource node `target_id` can never gather anything now, or None: the node is gone or has no charges left."""
+    """Why an INTERACT with resource node `target_id` can never gather anything now, or None: the node is gone or has no charges left.
+
+    Assumes every INTERACT target is a resource node, which is true today (the only INTERACT dispatches are the tactical pass,
+    tactical.py, and the objective intent resolver, action_intent.py). An INTERACT with another kind of target would need its own check."""
     if state is None or target_id is None:
         return None
     node = state.resource_nodes.get(target_id)
