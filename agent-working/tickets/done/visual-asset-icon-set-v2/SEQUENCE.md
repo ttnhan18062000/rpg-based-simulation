@@ -36,4 +36,4 @@ classes (8), rarity badges (3), item families (~8)**.
 
 ## Status
 
-IN PROGRESS (2026-10-08): children 1-4 done; 4b and 4c added before the owner gate.
+DONE (2026-10-08): all children done and recorded (1-4, 4b and 4c before the owner gate, 5). The owner adopted `icons-v2` themselves (set adoption `sa-c9082d078b954f6b`, 2026-10-08T00:40:15Z, 22 sources); no release candidate covers an icon slot (rc-0007 has 34) and nothing is built or wired. Branch `visual-asset-icon-set-v2` is not pushed; the user decides.

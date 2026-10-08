@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261007-EPIC-VISUAL-ASSET-ICON-SET-V2
-phase: open
+phase: done
 date: 2026-10-07
 tags: [architecture, hud, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, hud, planning]
 Icon set v2: the remaining location, building, class, rarity and item-family icons as a second draft set for the owner's adopt-set, drawn against the adopted key set, no app wiring
 
 ## Status
-OPEN
+EPIC_SCOPED
 
 ## Tier
 epic
@@ -50,10 +50,11 @@ Children (order and gates in `SEQUENCE.md`):
 - UI tab icons (Lucide stays for chrome), advanced class icons (champion etc.), per-item icons, per-effect status glyphs (the UI shows only buff/debuff), quest/event/faction icons.
 
 ## Acceptance Criteria
-- [ ] All children done or explicitly deferred by the user; `SEQUENCE.md` status line states the outcome.
-- [ ] Every gate result recorded as measured.
+- [x] All children done or explicitly deferred by the user; `SEQUENCE.md` status line states the outcome.
+- [x] Every gate result recorded as measured.
 
 ## Related Tickets
+- Children (all done): TCK-20261007-VISUAL-ASSETS-ICON-V2-FAMILY-DECISIONS, -KEYS-AND-RC, -SHEET-RULE-GROUPS, -DRAFT-SET, TCK-20261008-VISUAL-ASSETS-ICON-RECOGNISABILITY-CHECKS, TCK-20261008-VISUAL-ASSETS-ICON-V2-RECOGNISABILITY-REDRAW, TCK-20261007-VISUAL-ASSETS-RECORD-ICON-V2-ADOPTION
 - TCK-20261006-EPIC-VISUAL-ASSET-ICON-KEY-SET (done, PR #388: style, palette, rule, key set)
 
 ## Related Docs
@@ -78,4 +79,5 @@ Children (order and gates in `SEQUENCE.md`):
 
 
 ## Completion Summary
+DONE (2026-10-08): the 22 icon set v2 icons were drawn, checked (sheet rule PASS as measured, spec compliance tables, blind recognition check, look-alike report), redrawn where the checks and the planner flagged them, and adopted by the owner (`sa-c9082d078b954f6b`). The batch added the recognisability process (specs, reference study, compliance table, blind check, look-alike report). Nothing is built, released or wired. The branch `visual-asset-icon-set-v2` is not pushed; the user decides.
 

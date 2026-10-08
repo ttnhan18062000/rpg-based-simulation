@@ -9,7 +9,7 @@ tags: [architecture, documentation, hud]
 
 # Icon set v2 `icons-v2`: what was drawn, how it measures, how to review it
 
-Written by `TCK-20261007-VISUAL-ASSETS-ICON-V2-DRAFT-SET`. The set is a **draft**: nothing is adopted, released or read by the game, and the adopted key set `icons-key-v1` is unchanged (no pixel of it was touched).
+Written by `TCK-20261007-VISUAL-ASSETS-ICON-V2-DRAFT-SET` and extended by the recognisability tickets. **Adopted by the owner on 2026-10-08T00:40:15Z** (set adoption `sa-c9082d078b954f6b`, approver nhan, owner, 22 entries), after this review; recorded by `TCK-20261007-VISUAL-ASSETS-RECORD-ICON-V2-ADOPTION`. No release candidate covers the icon slots (rc-0007 has 34) and the game does not read them. Before the adoption the set was a draft; the text below describes the set as reviewed. The adopted key set `icons-key-v1` was never touched.
 Style: `docs/assets/icon_style_guide.md` (D20 and the v2 decisions: six item families, three rarity badges, the glyph table). Palette and sheet rule: `docs/assets/icon_criteria.md` (the owner's thresholds, 2026-10-06 and 2026-10-07).
 
 ## What is in the set (22 keys, own pixels, palette `icons-v1` only)

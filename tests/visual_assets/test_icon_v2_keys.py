@@ -43,12 +43,15 @@ def test_the_key_set_keys_are_unchanged_and_no_v2_key_collides_with_them():
     assert [k.replace(".", "_") for k in key_set] == af.ICON_SOURCES and len(key_set) == 14
 
 
-def test_no_v2_key_has_an_adoption_an_artifact_or_a_release_slot_yet():
+def test_every_v2_key_is_adopted_once_by_the_owners_set_adoption_and_has_no_artifact_or_release_slot():
+    """The owner adopted `icons-v2` on 2026-10-08T00:40:15Z (`TCK-20261007-VISUAL-ASSETS-RECORD-ICON-V2-ADOPTION`): each key has exactly its own source, no artifact was built and no candidate lists an icon slot."""
     registry = load_registry()
     for key in v2.KEYS:
-        assert records.slot_holders(registry.keys[key], None) == [], key
+        assert records.slot_holders(registry.keys[key], None) == [key.replace(".", "_")], key
     sources = [p.name for p in (config.CATALOG_ROOT / "sources").iterdir() if p.name != ".gitkeep"]
-    assert not [s for s in sources if s in {k.replace(".", "_") for k in v2.KEYS}]
+    assert sorted(s for s in sources if s in {k.replace(".", "_") for k in v2.KEYS}) == af.ICON_V2_SOURCES
+    generated = [p.name for p in (config.CATALOG_ROOT / "generated").iterdir() if p.name != ".gitkeep"]
+    assert not [g for g in generated if g.startswith("icon_")]
     candidates = config.CATALOG_ROOT / "manifests" / "candidates" / "pilot"
     for path in sorted(candidates.glob("rc-*.json")):
         held = {e["visual_key"] for e in json.loads(path.read_text())["entries"]}
