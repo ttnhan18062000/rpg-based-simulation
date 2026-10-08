@@ -1691,8 +1691,8 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/engine/starvation.py (the table and the pure stage functions), src/engine/apply.py (HP term and recovery scale), src/engine/combat.py (STARVATION_WEAKENED). Pinned 5x3 at 10000 ticks in docs/guidelines/intentional_divergences.md Section 2.94.'
+  v2_evidence: 'src/engine/starvation.py (the table and the pure stage functions), src/engine/apply.py (HP term and recovery scale), src/engine/combat.py (STARVATION_WEAKENED). Pinned 5x3 at 10000 ticks in docs/guidelines/intentional_divergences.md Section 2.9X-D36.'
   proof_type: regression
   test_path: tests/mechanic_scenarios/test_starvation_over_days.py
-  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.94.
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.9X-D36.
   support_boundary: 'Constants in one table, not content. Sleep debt (hunger-like 1 HP per tick at 98) is not staged. Long-run survivors converge because the worlds feed few people.'
