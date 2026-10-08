@@ -170,8 +170,10 @@ the two apart instead of relying on prose.
 ```yaml
 # registries/session_roles.yaml, resource section: exclusive resources are modelled as resources
 worktrees:
-  agent-working:                        # one worktree per domain, shared by its three seats (as today)
-    writer: agent-working-implementer   # exactly one role may commit/push here; must hold `implementer`
+  agent-working:                        # the implementer's worktree
+    writer: agent-working-implementer   # a worktree hosts exactly one role, its writer
+  agent-working-planner:                # since TCK-20261007-SESSION-PER-ROLE-WORKTREES every designer and
+    writer: agent-working-planner       # planner has its own worktree and branch and lands its own PR
     # the writer slot is taken as a lease at SessionStart (see section 5), not inferred from process names
 ```
 
@@ -383,8 +385,8 @@ The plan makes them role obligations so they are not re-taught.
   branch name (never a date or phase number), worktree, base SHA, the cited plan (committed first,
   because an untracked plan is invisible to the implementer), and what "done" means. The
   implementer acknowledges before starting.
-- **One writer per worktree and branch**: the implementer commits and pushes (unchanged from today);
-  the planner and designer hand drafts and verify. The planner's detail tickets and plans are handed
+- **One writer per worktree and branch**: each role is the writer of its own worktree (designers and planners
+  have their own since TCK-20261007-SESSION-PER-ROLE-WORKTREES, and land their own PRs; the implementer's is unchanged). The planner's detail tickets and plans are handed
   to the implementer to commit with the batch, which is also why there are no plan-only PRs. Peers
   never push to another role's branch.
 - **One open PR per track**: follow-ups fold into the open PR, no plan-only PRs, no stacked PR
@@ -409,7 +411,7 @@ git, branch per batch inside it, the documented same-directory fresh-branch fall
 `EnterWorktree` refuses, and the monitoring-shard checkout race. This plan adds ownership and
 hygiene on top; it does not change those rules.
 
-- **Name by domain**: worktree `agent-working`, `rpg`, `testing` (one per domain, shared by its three seats). (`doc-tag-enforcement`
+- **Name by role**: the implementer's worktree keeps the domain name (`agent-working`, `rpg`, `testing`, `codebase`); every designer and planner has a worktree named after its role (`agent-working-planner`, `rpg-designer`, ...), created with `launch.py <role> --branch <topic>` (branch `<role>-<topic>` off `origin/main`). A worktree hosts only its writer (validator rule `worktree-shared`). (`doc-tag-enforcement`
   is the historical name of the agent-working worktree; renaming is pending and needs both sessions
   out of it.)
 - **Inventory** `tools/sessions/status.py`: per worktree: path, branch, dirty state, owner role,

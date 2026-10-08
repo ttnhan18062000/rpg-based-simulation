@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -152,7 +153,39 @@ def _worktree_entries(cwd: Path) -> list[dict]:
     return entries
 
 
-def ensure_worktree(path: Path, branch: str | None, cwd: Path, apply: bool = True) -> list[str]:
+_TOPIC = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
+_DATE_OR_PHASE = re.compile(r"\d{6,8}|(?:^|-)(?:phase|p)-?\d")
+
+
+def topic_problem(topic: str) -> str | None:
+    """Why a `--branch` topic is refused (kebab-case words; no dates or phase numbers), or None."""
+    if not _TOPIC.match(topic):
+        return "the topic must be lowercase kebab-case words"
+    if _DATE_OR_PHASE.search(topic):
+        return "the topic must not contain a date or a phase number"
+    return None
+
+
+def bootstrap_worktree(path: Path, role: Role, topic: str, cwd: Path, apply: bool, notes: list[str]) -> list[str]:
+    """First-launch / spent-branch path: `git worktree add <path> -b <role>-<topic> origin/main`, only on an explicit topic."""
+    problem = topic_problem(topic)
+    if problem:
+        return notes + [f"--branch {topic!r} refused: {problem}"]
+    new = f"{role.role}-{topic}"
+    if _run(["git", "show-ref", "--verify", "--quiet", f"refs/heads/{new}"], cwd).returncode == 0:
+        return notes + [f"branch `{new}` already exists: pick another --branch topic (nothing is reused or reset)"]
+    cmd = ["git", "worktree", "add", str(path), "-b", new, "origin/main"]
+    if not apply:
+        return notes + ["would run: " + " ".join(cmd)]
+    _run(["git", "worktree", "prune"], cwd)
+    res = _run(cmd, cwd)
+    if res.returncode != 0:
+        return notes + [f"creating it failed: {res.stderr.strip()}"]
+    return notes + [f"created {path} on new branch `{new}` from origin/main"]
+
+
+def ensure_worktree(path: Path, branch: str | None, cwd: Path, apply: bool = True,
+                    role: Role | None = None, topic: str | None = None) -> list[str]:
     """Self-heal a missing or prunable worktree from the role's branch; returns what was said/done.
 
     Never from scratch: with no recorded branch, a branch git no longer has, or a branch already merged into
@@ -165,12 +198,18 @@ def ensure_worktree(path: Path, branch: str | None, cwd: Path, apply: bool = Tru
         return []
     notes = [f"worktree {path} is missing or prunable"]
     if not branch:
-        return notes + ["no branch is recorded for this role, so it is not recreated: create the worktree yourself "
+        if topic and role:
+            return bootstrap_worktree(path, role, topic, cwd, apply, notes)
+        return notes + ["no branch is recorded for this role, so it is not recreated: pass `--branch <topic>` to create "
+                        "`<role>-<topic>` from origin/main, or create the worktree yourself "
                         "(`git worktree add <path> <branch>`) and relaunch"]
     if _run(["git", "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"], cwd).returncode != 0:
         return notes + [f"the role's branch `{branch}` no longer exists: nothing is invented; restore it from the "
                         "branch-backup file or choose a branch, then relaunch"]
     if _run(["git", "merge-base", "--is-ancestor", f"refs/heads/{branch}", "origin/main"], cwd).returncode == 0:
+        if topic and role:
+            return bootstrap_worktree(path, role, topic, cwd, apply,
+                                      notes + [f"recorded branch `{branch}` is merged into origin/main: not reused"])
         return notes + [f"recorded branch `{branch}` is merged into origin/main: not recreated from a spent branch; "
                         "create the worktree from origin/main yourself (`git worktree add <path> -b <new-branch> "
                         "origin/main`) and relaunch"]
@@ -350,6 +389,8 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
     ap.add_argument("--session-id", help="resume exactly this session id")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--allow-stale", action="store_true", help="launch although the worktree's settings/agents differ from origin/main")
+    ap.add_argument("--branch", help="topic for a NEW branch `<role>-<topic>` cut from origin/main when the role's worktree is "
+                    "missing and no usable branch is recorded (never created without it)")
     ap.add_argument("--worktree", help="physical worktree path (default: <main checkout>/.claude/worktrees/<name>)")
     a = ap.parse_args(argv)
     roster = load_roster(root)
@@ -367,7 +408,8 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
         sroot = st.state_root(root)
         wt = Path(a.worktree) if a.worktree else default_worktree_path(role, main_checkout(root))
         recorded = st.read_instance(sroot, target.instance)
-        for line in ensure_worktree(wt, recorded.holder.branch if recorded else None, root, apply=not a.dry_run):
+        for line in ensure_worktree(wt, recorded.holder.branch if recorded else None, root, apply=not a.dry_run,
+                                  role=role, topic=a.branch):
             print(line)
         code, lines, sid = plan_launch(target, root, sroot, wt, projects_dir(), a.action or ("resume" if a.resume and recorded else None),
                                        a.session_id, sys.stdin.isatty() and sys.stdout.isatty(), a.resume)
