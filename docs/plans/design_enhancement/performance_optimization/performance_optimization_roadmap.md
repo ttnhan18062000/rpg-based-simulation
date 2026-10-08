@@ -207,6 +207,31 @@ decided:
    `src/config/optimization_profiles.py` (the retired hashing budget). `src/engine/governor.py` got a
    comment-only edit; it has been lifted since item 5.
 
+7. **The core window after the salience fix (owner decisions, 2026-10-07).** The salience fix merged (#387,
+   reviewed by perf after merge), and the cooperation slowdown was fixed (#394). rpg-planner offered a window
+   on #381. The owner opens it as a partial lift, **conditional on the RPG-core sessions re-confirming
+   no-touch** on the named files in `rpg_core_handoff.md` (Ask 11). No core edit starts before that yes.
+   1. **Phase A, the governor fix** (`TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY`,
+      plan steps 1-4):
+      - existing files: `src/engine/kernel.py`, `src/engine/governor.py`, `src/engine/phase_governor.py`,
+        `src/core/governance.py`, `src/config/profiles.py` and `src/engine/runtime_status.py`;
+      - new modules: `src/engine/signal_source.py` and `src/engine/work_units.py`;
+      - `src/engine/pipeline.py`, only if calibration finds a `final_integrity` counter.
+   2. **Phase B, work-debt retire step 2** (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`, with the unused
+      shedding path):
+      - adds `src/core/state.py`, `src/engine/apply.py`, `src/engine/checkpoint.py`, `src/core/updates.py`,
+        `src/engine/scheduler.py`, `src/engine/policy.py` and that ticket's reporting surfaces;
+      - needs a PERF-D5 hash-scheme bump.
+      Open RPG-core tickets edit `apply.py` and `state.py` (biology rates, the decision-core epic, compiled-entity
+      need profiles), so Phase B starts only in a slot the RPG side names (Ask 11).
+   3. **Calibration (plan step 1) excludes the `combat_engagement` cost bucket**, because Lane B's fix
+      `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP` is still open. The artifact records the
+      exclusion and the RPG base commit. The fit is re-checked after that fix lands.
+   Measurements stay provisional, and no soft check becomes blocking. The full lift is still an owner
+   statement. On 2026-10-07: criterion 1 has no open item perf knows of; criterion 2 has row 7 (b) at 8
+   unbound (#393, from 25), 7 of them dead modules filed for deletion; criterion 3 is this phased window, not a
+   no-touch window on all four core files.
+
 ### Foundation slice that may start now
 
 Documents, tickets, and read-only tooling only — no `src/` edit, no baseline:
