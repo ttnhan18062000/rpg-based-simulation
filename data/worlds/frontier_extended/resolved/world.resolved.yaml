@@ -448,6 +448,11 @@ resources:
   count: 2
   region: sacred_grove
   regen_rate: 1
+- id: forest_warden_grove__berry_thicket_2
+  resource_type: berry_thicket
+  count: 10
+  region: sacred_grove
+  regen_rate: 1
 buildings:
 - id: town_hall_0
   type: town_hall

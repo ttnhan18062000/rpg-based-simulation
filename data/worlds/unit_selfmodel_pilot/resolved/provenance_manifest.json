@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_b80d0a6b7f20055c",
+  "manifest_id": "prov_af1a6b8f8f04d06e",
   "world_id": "unit_selfmodel_pilot",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "47f693db10301624a5cd00503304f8ecd106bb2f1488900f206fa217fb4ecaef",
+  "catalog_fingerprint": "635fdc6c5ea06705808890e1befadadbb4fd891695ad0d9201305fa61e665f0c",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837"
   },
   "composition_fingerprint": "a69f7a2196773b3cd935cb1ed2b1b88b82c79f1567ada04cef5cb2faca3d1e45",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "b80d0a6b7f20055c1e5a9316469963b8cd9acb12399ed9fd120436cc484c320c",
-  "created_at": "2026-10-08T08:59:04.722550Z",
+  "content_fingerprint": "af1a6b8f8f04d06eb4b049096a43669f041eefac719b4ad66c5e903e04ac61db",
+  "created_at": "2026-10-08T09:04:18.939408Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

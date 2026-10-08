@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_56bb80cbcf5c3922",
+  "manifest_id": "prov_33db874792cdd2db",
   "world_id": "frontier_extended",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "47f693db10301624a5cd00503304f8ecd106bb2f1488900f206fa217fb4ecaef",
+  "catalog_fingerprint": "635fdc6c5ea06705808890e1befadadbb4fd891695ad0d9201305fa61e665f0c",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
@@ -12,12 +12,12 @@
     "trading_company_hub": "89edf663d96b8aa771438773ace9dda4780ed4fb1440a0fa697beb34d302ccd6",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
     "wolf_den_near_forest": "c90270371ac50194c33a989c34d19a27cd0ebb47a7496187ab15825b6d65c269",
-    "forest_warden_grove": "1afd9828cbd2087f5cbafffdbd2d3b81c59a32d20fa66debd95249844022e3fe"
+    "forest_warden_grove": "c41ff99559a8e7f6603051db5d5fff790fd4cbf4b35a3d50a5ff48eccc33c6ea"
   },
   "composition_fingerprint": "cc45793e25c782cad5c8f4fb14f6d31f6684171086586bb5b4419a095812a64a",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "56bb80cbcf5c3922316dfa4e959fb2b7e98c7d6b6a02d8d22b874983db8225d3",
-  "created_at": "2026-10-08T08:58:34.847416Z",
+  "content_fingerprint": "33db874792cdd2db94002087c618b432602bedbf2e13425c75fd999d870495ee",
+  "created_at": "2026-10-08T09:03:45.183132Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -1794,6 +1794,20 @@
       },
       "details": {
         "count": 2,
+        "region": "sacred_grove"
+      }
+    },
+    "forest_warden_grove__berry_thicket_2": {
+      "element_id": "forest_warden_grove__berry_thicket_2",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
         "region": "sacred_grove"
       }
     },

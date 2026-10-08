@@ -248,6 +248,11 @@ resources:
   count: 3
   region: swamp_border_territory
   regen_rate: 1
+- id: sunken_swamp_border__berry_thicket_2
+  resource_type: berry_thicket
+  count: 8
+  region: swamp_border_territory
+  regen_rate: 1
 - id: trading_res_0
   resource_type: iron_vein
   count: 6

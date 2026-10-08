@@ -71,7 +71,7 @@
   biomes: ["sacred_grove"]
   dominant_factions: ["forest_wardens", "spirit_court"]
   populations: ["forest_warden_patrol", "sacred_grove_guardians"]
-  resources: ["healing_flower_patch", "spirit_wisp"]
+  resources: ["healing_flower_patch", "spirit_wisp", "berry_thicket"]
 
 # TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE: calibration-only ecology, isolated to
 # camp_maturity_calibration_pilot world only.

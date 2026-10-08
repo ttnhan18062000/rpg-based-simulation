@@ -1308,6 +1308,13 @@
       "yield_policy": null,
       "yield_item": "herb"
     },
+    "sunken_swamp_border__berry_thicket_2": {
+      "required_ticks": 8,
+      "resource_type": "berry_thicket",
+      "yield_policy": null,
+      "yield_item": "wild_berries",
+      "placement": "owned_by_declared_region"
+    },
     "undead_battlefield__spirit_wisp_0": {
       "required_ticks": 25,
       "resource_type": "spirit_wisp",
@@ -1350,6 +1357,13 @@
       "resource_type": "spirit_wisp",
       "yield_policy": null,
       "yield_item": "spirit_essence"
+    },
+    "forest_warden_grove__berry_thicket_2": {
+      "required_ticks": 8,
+      "resource_type": "berry_thicket",
+      "yield_policy": null,
+      "yield_item": "wild_berries",
+      "placement": "owned_by_declared_region"
     }
   },
   "factions": {

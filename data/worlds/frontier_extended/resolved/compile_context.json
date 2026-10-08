@@ -1164,6 +1164,13 @@
       "resource_type": "spirit_wisp",
       "yield_policy": null,
       "yield_item": "spirit_essence"
+    },
+    "forest_warden_grove__berry_thicket_2": {
+      "required_ticks": 8,
+      "resource_type": "berry_thicket",
+      "yield_policy": null,
+      "yield_item": "wild_berries",
+      "placement": "owned_by_declared_region"
     }
   },
   "factions": {

@@ -596,6 +596,13 @@
       "yield_policy": null,
       "yield_item": "herb"
     },
+    "sunken_swamp_border__berry_thicket_2": {
+      "required_ticks": 8,
+      "resource_type": "berry_thicket",
+      "yield_policy": null,
+      "yield_item": "wild_berries",
+      "placement": "owned_by_declared_region"
+    },
     "trading_res_0": {
       "required_ticks": 15,
       "resource_type": "iron_vein",
