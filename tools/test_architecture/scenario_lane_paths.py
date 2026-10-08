@@ -37,12 +37,12 @@ TRIGGER_RE = re.compile(
     r"|data/content/"
     r"|data/worlds/"
     r"|config/simulation_quality/"
-    r"|requirements\.txt$|pyproject\.toml$|uv\.lock$|Makefile$"
+    r"|pyproject\.toml$|uv\.lock$|Makefile$"
     r"|\.github/workflows/test\.yml$)"
 )
 
 IRRELEVANT_RE = re.compile(
-    r"^(docs/|agent-working/|frontend/|dashboard-frontend/|website/|grafana/|experiments/|registries/|tools/"
+    r"^(docs/|agent-working/|frontend/|dashboard-frontend/|website/|docker/|experiments/|registries/|tools/"
     r"|skills-lock\.json$|[^/]+\.md$)"
 )
 

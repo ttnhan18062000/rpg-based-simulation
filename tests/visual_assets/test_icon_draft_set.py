@@ -21,11 +21,13 @@ def sprites():
     return ds.draft_sprites()
 
 
-def test_the_set_holds_exactly_the_14_registered_icon_keys_and_nothing_adopted():
+def test_the_set_holds_exactly_the_14_key_set_keys_and_the_registry_holds_those_plus_the_22_v2_keys():
     entries = json.loads((ds.DRAFTS / ds.SET_ID / "draft_set.json").read_text())["entries"]
     assert sorted(e["visual_key"] for e in entries) == sorted(ds.SIZES) and len(entries) == 14
     registry = load_registry()
-    assert sorted(k for k in registry.keys if k.startswith("icon.")) == sorted(ds.SIZES)
+    from tests.visual_assets import icon_v2_keys as v2
+
+    assert sorted(k for k in registry.keys if k.startswith("icon.")) == sorted([*ds.SIZES, *v2.KEYS])  # the 22 v2 keys are registered but not drawn yet
     assert all(registry.keys[k].optional for k in ds.SIZES)  # nothing in the registry needs these drafts; a missing image leaves today's fallback
 
 

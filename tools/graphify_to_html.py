@@ -2,9 +2,12 @@
 """
 graphify_to_html.py — Convert graphify graph.json → self-contained interactive HTML.
 
-Libraries used (embedded from node_modules, no internet required):
+Libraries used (embedded from tools/graphify_html/node_modules, no internet required once installed):
   - sigma.js v3   (WebGL graph renderer)
   - graphology    (graph data structure)
+
+One-time setup (the JS manifest lives beside this tool, not at the repo root):
+    cd tools/graphify_html && npm ci
 
 Usage:
     python3 tools/graphify_to_html.py [INPUT] [-o OUTPUT] [--top-communities N]
@@ -29,9 +32,22 @@ PALETTE = [
 OTHER_COLOR  = "#3a3a58"
 DEFAULT_TOP_N = 20
 
-# Paths relative to project root (where this script is run from)
-SIGMA_JS      = Path("node_modules/sigma/dist/sigma.min.js")
-GRAPHOLOGY_JS = Path("node_modules/graphology/dist/graphology.umd.min.js")
+# The JS dependencies (package.json, package-lock.json, and node_modules after `npm ci`) live in
+# tools/graphify_html/ and are resolved from this file's location, never from the working directory.
+JS_DEPS_DIR   = Path(__file__).resolve().parent / "graphify_html"
+SIGMA_JS      = JS_DEPS_DIR / "node_modules/sigma/dist/sigma.min.js"
+GRAPHOLOGY_JS = JS_DEPS_DIR / "node_modules/graphology/dist/graphology.umd.min.js"
+
+
+def require_js_assets(sigma_js: Path = SIGMA_JS, graphology_js: Path = GRAPHOLOGY_JS) -> None:
+    """Fail with an actionable message when the JS libraries are not installed."""
+    missing = [p for p in (sigma_js, graphology_js) if not p.is_file()]
+    if missing:
+        names = ", ".join(str(p) for p in missing)
+        raise SystemExit(
+            f"graphify_to_html: missing JS libraries ({names}). "
+            f"Install them once with: cd {JS_DEPS_DIR} && npm ci"
+        )
 
 
 def assign_cluster_positions(nodes_out, community_counts, top_comm_set):
@@ -135,6 +151,7 @@ def main():
     }
 
     # Embed JS libraries
+    require_js_assets()
     print("Reading local libraries …")
     sigma_js      = SIGMA_JS.read_text(encoding="utf-8")
     graphology_js = GRAPHOLOGY_JS.read_text(encoding="utf-8")

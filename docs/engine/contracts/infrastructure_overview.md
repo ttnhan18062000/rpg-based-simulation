@@ -147,7 +147,7 @@ Built using **React + Vite + TypeScript**, the frontend served by Nginx is a zer
 
 The complete production-grade system is deployed via Docker Compose to manage logging, telemetry, queues, and self-healing watchdogs.
 
-### Service Index (`docker-compose.yml`):
+### Service Index (`compose.yaml` at the repo root; Dockerfiles, `nginx.conf`, `prometheus.yml`, `promtail-config.yml` and `grafana/` live under `docker/`):
 *   **`backend`**: FastAPI REST & WebSockets server serving state read-models.
 *   **`frontend`**: The TypeScript React client served via Nginx.
 *   **`redis`**: Handles live in-memory caching and real-time state broadcasts, and is the sole event-stream transport (`RedisStreamConsumer`).

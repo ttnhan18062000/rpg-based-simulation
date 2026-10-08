@@ -36,7 +36,7 @@ jobs:
     name: "Unit · core / world"
     runs-on: ubuntu-latest
     steps:
-      - run: pip install -r requirements.txt
+      - run: uv sync --locked --no-install-project
       - name: Run
         run: |
           pytest tests/unit/core tests/unit/kernel

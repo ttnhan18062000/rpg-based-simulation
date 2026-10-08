@@ -387,7 +387,6 @@ def test_no_migration_library_dependency_introduced():
     forbidden = re.compile(r"alembic|yoyo[-_]?migrations|sqlite-migrate", re.IGNORECASE)
 
     candidates = [
-        _REPO_ROOT / "requirements.txt",
         _REPO_ROOT / "requirements-knowledge.txt",
         _REPO_ROOT / "pyproject.toml",
     ]

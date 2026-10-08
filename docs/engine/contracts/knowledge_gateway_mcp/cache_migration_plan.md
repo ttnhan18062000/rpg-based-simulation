@@ -77,7 +77,7 @@ Migrations are hand-written SQL functions, following the `SCHEMA_VERSION`-intege
 ordered-function-list pattern already established by `tools/parity_index.py`
 (`SCHEMA_VERSION = 1`, `tools/parity_index.py:66`). No migration library
 (`alembic`/`yoyo-migrations`/`sqlite-migrate`, or similar) is introduced — none exists anywhere in
-this repo's `requirements.txt`, `requirements-knowledge.txt`, or `pyproject.toml` dependency sets
+this repo's `requirements-knowledge.txt` or `pyproject.toml` dependency sets (a former `requirements.txt` export is gone)
 today, and adding one for this single module would repeat the exact new-single-purpose-dependency
 anti-pattern the sibling ticket's investigation flagged for `jsonschema`.
 

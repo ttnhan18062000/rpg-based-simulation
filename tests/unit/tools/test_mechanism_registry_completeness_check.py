@@ -231,7 +231,11 @@ def test_wider_scope_numbers_pinned():
     # bound under `tactical_decision`, so it adds no unbound file or mechanism-shaped class).
     # 313 -> 314 on 2026-10-08 (Decision 27): +src/ai/goals/opening_steps.py (the opening steps a need with no open way can take; pure
     # functions and one small dataclass, unbound: it is a helper of the hunger goal, not a mechanism of its own).
-    assert wider["scope_files"] == 314
+    # 314 -> 316 on 2026-10-08 (PERF governor Phase A, merged on top of Decision 27; 313 -> 315 on main): +src/engine/signal_source.py (the Live, Zeroed and Canonical signal sources) and
+    # +src/engine/work_units.py (WORK_MODEL_V1 constants and pure functions). Both are runtime-governance infrastructure with no gameplay
+    # mechanism of their own, beside the already-unbound governor.py and runtime_status.py, so they stay unbound (see unbound_files below);
+    # the classes in signal_source.py add no wired unbound candidate (candidates and wired are unchanged).
+    assert wider["scope_files"] == 316
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -243,7 +247,9 @@ def test_wider_scope_numbers_pinned():
     # KNOW-04 (2026-10-07): src/cognition/common_knowledge.py is bound under `knowledge_model`, so unbound_files stays 232.
     # CONFLICT-04: tactical_hold.py is bound under `tactical_decision`, so unbound_files stays 232.
     # Decision 27: opening_steps.py is an unbound helper, so unbound_files is 233.
-    assert wider["unbound_files"] == 233
+    # 232 -> 234 on 2026-10-08 (PERF governor Phase A): src/engine/signal_source.py and src/engine/work_units.py are unbound
+    # runtime-governance infrastructure (no gameplay mechanism; the same treatment as governor.py and runtime_status.py).
+    assert wider["unbound_files"] == 235
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     assert wider["candidates"] == 72  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package

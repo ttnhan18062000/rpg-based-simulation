@@ -328,7 +328,7 @@ def test_nothing_installs_hooks_implicitly():
     for name in ("install:", "install-py:"):
         assert "hooks" not in next(l for l in lines if l.startswith(name)).split("##")[0]
     needles = ("install-prek-hooks", "install_git_hooks", "prek install")
-    scanned = [p for pattern in (".github/workflows/*.yml", "tools/**/*.sh", "tools/**/*.py", "make.bat", ".claude/settings*.json")
+    scanned = [p for pattern in (".github/workflows/*.yml", "tools/**/*.sh", "tools/**/*.py", ".claude/settings*.json")
                for p in _REPO.glob(pattern)]
     def code(path: Path) -> str:  # comments may name the opt-in target; only executable lines count
         return "\n".join(l for l in path.read_text(errors="replace").splitlines() if not l.lstrip().startswith("#"))
