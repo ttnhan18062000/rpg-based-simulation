@@ -197,6 +197,7 @@ mechanisms:
       - src/engine/tactical_threat.py::safety_retreat_warranted
       - src/engine/tactical_hold.py::held_swing_update
       - src/engine/tactical_hold.py::stalemate_break_update
+      - src/engine/hostility.py::perceived_hostile
       - src/world/motivation/pressure_resolver.py::MotivationPressureResolver
     verified:
       instrument: corpus_run
@@ -251,6 +252,12 @@ mechanisms:
         knows" is implicitly covered is exactly the kind of knowledge that decays. Not the same
         finding as `perception`'s own dormancy (a different, unrelated component under a similar
         directory name) -- see that entry's own note.
+        **Rule ratified 2026-10-08 (owner, catalog CONFLICT-04; decision 32, designer commit 6eba4582b):** a fighter stands its ground between blows and
+        leaving an engagement is a decision. CONFLICT-04 is SUPPORTED since #439 (86b77abca): the hold between blows (a queued ATTACK, reason
+        HOLD_BETWEEN_BLOWS), adjacent hostiles ranked first, no STALEMATE_BREAK beside an adjacent target, a swing resetting `stale_ticks`.
+        Decision 32 ("notice and decide"): an unengaged perceived hostile coming adjacent prompts a fresh decision then (fight, step away, wait,
+        or keep walking and pay knowingly); open as TCK-20261008-A-SUBJECT-NOTICES-AN-UNENGAGED-HOSTILE-COMING-ADJACENT-AND-DECIDES-DECISION-32.
+        The shared hostility test is `src/engine/hostility.py::perceived_hostile` (the tactical pass and the movement rule use it).
   - id: combat_engagement
     layer: entity
     systems: [combat]
@@ -288,6 +295,9 @@ mechanisms:
         that fix: the property-keyed gate is a second, separate, real consumer, and this verified
         block's own "1960 -> 837" figure already reflects it. Card desc corrected to cite this
         instead of reading as an open, unresolved contradiction between its own two paragraphs.
+        **Rule ratified 2026-10-08 (owner, catalog CONFLICT-04; decision 32, designer commit 6eba4582b):** CONFLICT-04 is SUPPORTED since #439 (86b77abca);
+        this mechanism is not changed by it. Decision 32 ("notice and decide") is the open feature ticket
+        TCK-20261008-A-SUBJECT-NOTICES-AN-UNENGAGED-HOSTILE-COMING-ADJACENT-AND-DECIDES-DECISION-32.
   - id: movement
     layer: entity
     systems: [combat, world]
@@ -306,6 +316,12 @@ mechanisms:
         `verified` block). `MovementSystem.resolve_move()` confirmed real, non-test caller at
         `src/engine/pipeline_phases/movement.py:286` and `src/engine/domain/movement_actions.py:27`.
         No contradiction from `mechanism_state_caller_check.py`'s own full-registry run.
+        **Rule ratified 2026-10-08 (owner, catalog CONFLICT-04; decision 32, designer commit 6eba4582b):** the engaged-only movement rule is in
+        TCK-20261008-AN-ENTITY-WHOSE-TRACKED-MOVE-COMPLETED-KEEPS-WALKING-ON-ITS-STORED-TARGET-WITH-AN-IDLE-TASK (divergence 2.89):
+        `MovementCandidateSelector.movement_target` gives an entity with an engaged, perceived, hostile entity orthogonally adjacent no step from a
+        stored target; only a decision this tick moves it. The shared predicate is `src/engine/hostility.py`, bound under `tactical_decision`.
+        Decision 32's alternative (a movement-layer freeze beside any adjacent hostile) was not taken: it froze entities for up to 219 ticks in the
+        three-arm measurement.
   # SPLIT 2026-09-17 (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY, the falsification
   # test for the identity rule -- "if the rule doesn't split this, the rule is wrong"): this entry
   # used to be action_pacing_readiness covering both the readiness gate and the agility-scaling

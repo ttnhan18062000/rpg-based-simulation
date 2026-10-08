@@ -125,6 +125,9 @@ attack is not yet legal only because its readiness is under 100 does not step: i
 (a held `ATTACK`, reason `HOLD_BETWEEN_BLOWS`) and strikes when readiness reaches 100, so it
 provokes no opportunity attack. It leaves only by a decision (flight, panic retreat, a declared
 ability, a goal that outranks the fight), and that decision pays the opportunity attack.
+The same holds for every walk, not only the fighter's own: an entity with an engaged, perceived, hostile entity orthogonally
+adjacent takes no step from a stored navigation target (an idle walk toward an objective, a held move); it steps only on a target
+a decision sets that tick (`MovementCandidateSelector.movement_target`).
 
 *   **Consumption**: A successful attack resets readiness by **-100.0** (a full reset). Movement
     does **not** cost readiness (`TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE`) — it

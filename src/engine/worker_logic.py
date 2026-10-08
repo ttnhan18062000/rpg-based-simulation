@@ -12,7 +12,7 @@ def default_simulation_worker(packet: WorkerPacket) -> List[WorkerResult]:
     Law: Pure simulation logic. No whole-world access.
     M8 Logic path for concurrent entity processing.
     """
-    if packet.work_kind == "ENTITY_MOVE" and MovementCandidateSelector.tracked_move_complete(
+    if packet.work_kind == "ENTITY_MOVE" and MovementCandidateSelector.move_ends_here(
         packet.subject, packet.all_entities
     ):
         # Tracked combat move complete (see executor.py's identical branch): the live target is in reach or dead/gone.

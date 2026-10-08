@@ -227,7 +227,9 @@ def test_wider_scope_numbers_pinned():
     # src/cognition/common_knowledge.py so the compiler and spawner need not import cognition; bound under `knowledge_model`).
     # 311 -> 312 on 2026-10-08 (CONFLICT-04): +src/engine/tactical_hold.py (the held swing and the stalemate-break emission;
     # functions only, bound under `tactical_decision`, so it adds no unbound file or mechanism-shaped class).
-    assert wider["scope_files"] == 312
+    # 312 -> 313 on 2026-10-08 (movement-layer rule): +src/engine/hostility.py (the shared perceived-hostile test; functions only,
+    # bound under `tactical_decision`, so it adds no unbound file or mechanism-shaped class).
+    assert wider["scope_files"] == 313
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
