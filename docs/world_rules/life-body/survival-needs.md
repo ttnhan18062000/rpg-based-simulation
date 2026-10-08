@@ -77,7 +77,28 @@ Batch 03's LIMIT-02); `hunger > 50/60/80` → real goal-urgency and decision-pri
 `work_queue.py`). Need pressure is one of the most thoroughly-consumed state categories this
 Catalog has found.
 
-**Scenarios:** [LB-S08](../scenarios/life-body-batch-05.md#lb-s08) (survival pressure).
+**Amendment, starvation is staged: weak first, death over days (decided by the owner directly,
+2026-10-08; row 36 of the memo):**
+
+> Past a need's threshold, the consequence comes in stages. A starving person first weakens:
+> they recover more slowly and fight worse. Only with continued want do they start losing
+> health slowly, and they die after about two to three days without food. Crossing the line
+> is a warning the body gives, not a death sentence within the hour.
+
+- **Today:** `hunger >= 95.0` costs 2 HP per tick (`src/engine/apply.py`). That kills a person
+  about 50 ticks (30 minutes, Bible 05 §1: 1 tick is 36 s) after crossing the line, so with
+  hunger at 0.05 per tick (decision 33) a person dies within about 20 hours of their last meal.
+- **Why staged:** common sense (a person survives days without food), and runs last about 0.4
+  to 2 days, so the weakness stays visible within a run instead of every missed meal being
+  fatal. Realistic weeks would make starvation never appear in a run.
+- **Engineering and content, not this Rule:** the stage thresholds, the weakening effects (they
+  may reuse the capacity degradation SURV-02 already cites), the HP-loss rate, and the same
+  staging for other needs where it fits. It is a code ticket after Lane B's batch.
+- **Evidence: CONFLICTING** until that ticket lands.
+
+**Scenarios:** [LB-S08](../scenarios/life-body-batch-05.md#lb-s08) (survival pressure). One more
+is owed: a person past the starvation line is weaker in a fight within hours, and still alive a
+day later.
 
 ---
 
@@ -288,6 +309,11 @@ the world, which contradicts SURV-03 (a need is modeled for its real, causal con
   - **The cost is the land's own:** the walk from a settlement to wild land, finite charges, and
     competition for them. There is no minimum-walk number. A town's land holds owned food (the
     inn, the shop), and taking owned food is theft, which decision 27 excludes.
+  - **Which worlds have wild land (decided by the owner directly, 2026-10-08; row 35 of the
+    memo):** a frontier world's settlements have wild land within reach. A frontier with none is
+    a content oversight: `crowded_frontier` gets a wild module (content). A city may have no wild
+    land within reach by design: `urban_political` keeps none, and its people eat by earning and
+    buying (EXCH-02).
   - **Unchanged guardrails:** wild food enters by harvest and leaves by eating (Bible 03
     conservation); it is its own declared item and node kind, never herb; and the integrity
     check (`need_paths.py`) counts a wild-food node within reach as a hunger way for the kinds

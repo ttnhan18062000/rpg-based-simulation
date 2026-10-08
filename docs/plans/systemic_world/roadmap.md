@@ -820,7 +820,7 @@ question above already has a working answer today.
 ## 10. Owner decisions
 
 Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has
-thirty-three entries (row 27 lands with the decision-27 PR):
+thirty-six entries (row 27 lands with the decision-27 PR):
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
 3. whether individual and institutional standing are distinct concepts;
@@ -854,6 +854,9 @@ thirty-three entries (row 27 lands with the decision-27 PR):
 31. how people eat (decided 2026-10-08: by common-sense ways, each with a real cost, SURV-06 amendment);
 32. whether a subject notices a hostile stepping into reach (decided 2026-10-08: yes, and decides, CONFLICT-04 amendment);
 33. how far balancing goes at the foundation stage (decided 2026-10-08: a light, plausible balance pass, not perfection).
+34. how a broke person earns money (decided 2026-10-08: sell, wage, task reward, paid from a real purse, catalog EXCH-02);
+35. whether worlds lack wild land by design (decided 2026-10-08: a frontier needs it, a city may have none, SURV-06 amendment);
+36. how fast starvation kills (decided 2026-10-08: weak first, death over days, SURV-02 amendment).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,

@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-08"
 ---
 
 # World Rule Family: Economy / Exchange
@@ -58,6 +58,43 @@ diverge from price in practice.
 objective scarcity), [ME-S10](../scenarios/material-economy-batch-08.md#me-s10) (wealth
 converts to capability), [ME-S12](../scenarios/material-economy-batch-08.md#me-s12) (wealth
 does not automatically mean power).
+
+---
+
+## EXCH-02 — A person earns money from someone who pays it: by selling goods, working for a wage, or a task's reward
+
+> A person who has no money may earn it in several ordinary ways: by selling goods it gathered,
+> hunted, made or looted to a buyer; by working for a wage at a place that employs people (a
+> shop, an inn, a smithy); or by the reward of a task or quest someone offers. Every coin
+> earned comes out of the payer's own purse or treasury, which must hold it. Money never
+> appears because someone needs it.
+
+**Disposition: ACCEPT — decided by the owner directly, 2026-10-08** (row 34 of
+`docs/plans/systemic_world/owner_decision_memo.md`). Applies decision 31 (common-sense ways, each
+with a real cost) to money. Passes the admission test: EXCH-01 separates value, price, cost and
+wealth, but no Rule said how a person comes to hold money at all.
+- **The ways are plural:** no single one is required. Being paid by fellow townsfolk for small
+  jobs (social contracts) is a further way, left for later.
+- **Conservation:** a sale moves coins from the buyer to the seller and goods the other way. A
+  wage moves coins from the employer's purse to the worker for time worked. A reward moves coins
+  from whoever offers it. A purse that is empty cannot pay.
+- **Engineering and content, not this Rule:** sale prices (EXCH-01), wage amounts and working
+  hours, which places employ how many people, and how an employer's purse refills (its own
+  sales).
+- **Alternatives not taken:** a starting purse in place of earning (it stands in for the way and
+  runs out); money that appears when someone needs it (engine charity).
+
+**Repository evidence: MISSING for wages; PARTIAL for selling and rewards.** Lane B's
+feasibility read (relayed by rpg-planner, 2026-10-08): every town worker starts with 0 gold, and
+over a run 14 workers together take in 5 to 40 gold, against a 5-gold meal. Selling exists as a
+price rule (sell at 50 percent of base, `docs/mechanics/03_economic_laws.md` §4), but no worker
+is seen selling. Decision 27's earn opening step is a stub, and there is no paid-work concept.
+Quest rewards exist for adventurers. Shops, inns and a smithy exist in all three measured worlds,
+so earning is the only way to eat present in every one of them.
+
+**Scenarios:** none traced yet. Two are owed when implemented: a broke worker sells gathered
+food at the shop, the shop's purse falls by the price, and the worker buys a meal with it; a
+broke worker works a shift at the inn, is paid from the inn's purse, and eats.
 
 ---
 
@@ -174,6 +211,8 @@ Rule Catalog identifies but does not make.
 
 ## Cross-domain links recorded here
 
+- EXCH-02 → Life/body/survival (SURV-06 and decision 31: buying food needs money), Resources
+  (RES conservation: coins move from a real purse), Institutions (employers)
 - EXCH-01 → Resources/Production (`resources-production.md`'s PROD-02, scarcity ≠ price),
   Cost (COST-01, Batch 03)
 - Inherited exchange-preconditions entry → Capability, Authority, Reach (Batch 02/03),
