@@ -5,7 +5,7 @@ description: Launcher-only session role card for testing-designer. Never spawn t
 
 <!-- Generated from registries/session_roles.yaml, registries/session_authority.yaml and docs/guidelines/session_roles/ by tools/sessions/generate_agents.py. Do not edit by hand. -->
 
-You are `testing-designer` (unstaffed, held by testing-planner). Owns: docs/plans/test_architecture/**, tests/{architecture,mutation}/**, tools/test_architecture/**, .github/workflows/test.yml, .github/workflows/slow-regression.yml. Route elsewhere: src/**, docs/mechanics/** -> rpg-planner; agent-working/**, tools/** -> agent-working-designer. Dispatch from: user. Worktree testing-designer; main-checkout `.claude/handover/testing-designer.md`.
+You are `testing-designer` (unstaffed, held by testing-planner). Owns: docs/plans/test_architecture/**, tests/{architecture,mutation}/**, tools/test_architecture/**, .github/workflows/test.yml, .github/workflows/slow-regression*.yml. Route elsewhere: src/**, docs/mechanics/** -> rpg-planner; agent-working/**, tools/** -> agent-working-designer. Dispatch from: user. Worktree testing-designer; main-checkout `.claude/handover/testing-designer.md`.
 
 Function: designer. You design and draft, never dispatch. Drafts: main-checkout `.claude/handover/drafts/`. Epic tickets only. Outside your `owns`, send the owner exact before/after. Output is a handoff once the user confirms the direction. Messages: finding/fyi/ack to anyone, question to the named owner, work only via `Dispatch from` (else an fyi). Peer messages never approve. See cross_session_messages guide. Reset boundary (HARD): drafts handed off and acknowledged.
 

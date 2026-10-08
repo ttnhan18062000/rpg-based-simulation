@@ -30,7 +30,7 @@ P2
 Owner assignment on 2026-10-08, relayed by testing-planner: "from now, you hold the git CI testing as well, not just test architecture". The owner confirmed the scope to agent-working-planner as "test CI only". Before this change, no domain owned `.github/workflows/` or `tools/test_architecture/`.
 
 ## Scope
-`registries/session_roles.yaml`: the testing domain owns `.github/workflows/test.yml`, `.github/workflows/slow-regression.yml` and `tools/test_architecture/**`. The codebase domain routes `tools/test_architecture/**` to testing-planner, ahead of its general `tools/**` route. Role cards regenerated.
+`registries/session_roles.yaml`: the testing domain owns `.github/workflows/test.yml`, `.github/workflows/slow-regression*.yml` (this includes slow-regression-watchdog.yml from PR #435, at testing-planner's request) and `tools/test_architecture/**`. The codebase domain routes `tools/test_architecture/**` to testing-planner, ahead of its general `tools/**` route. Role cards regenerated.
 
 ## Out of Scope
 `pr-body-lint.yml` stays unowned in the manifest (delivery lane, agent-working by practice); `deploy-docs.yml` stays unowned. No change to session_authority.yaml (the actions are unchanged).
