@@ -38,11 +38,8 @@ class LegalityServiceV2:
     # VERIFIED v2: manhattan_spatial_metric
     @staticmethod
     def get_manhattan_dist(a: Tuple[float, float], b: Tuple[float, float]) -> int:
-        """
-        Calculates Manhattan distance between two points.
-        Logic ID: COMB-001 (Manhattan distance is the shared spatial metric)
-        """
-        return int(abs(a[0] - b[0]) + abs(a[1] - b[1]))
+        """Manhattan distance between the whole tiles two positions stand on (COMB-001; MOV-07, Decision 25: each coordinate reads as `int(pos)`, as every tile lookup does)."""
+        return abs(int(a[0]) - int(b[0])) + abs(int(a[1]) - int(b[1]))
 
     @staticmethod
     def get_region_for_position(pos: Tuple[float, float], state: AuthoritativeState) -> Optional[RegionState]:
