@@ -53,8 +53,8 @@ Evidence comes from Lane A's opportunity-attack trace (pinned, seeds 42-46, 3 wo
 - Flipping the CONFLICT-04 evidence: rpg-designer does that after this merges.
 
 ## Acceptance Criteria
-- [ ] DEFERRED: designer-owned scenario, tracked by rpg-planner with rpg-designer after merge. Scenario (owed by the designer): a non-cautious fighter with readiness under 100, adjacent to an engaged hostile, holds and takes no opportunity attack until it chooses to leave.
-- [ ] DEFERRED: designer-owned scenario, tracked by rpg-planner with rpg-designer after merge. Scenario (owed by the designer): a long exchange of blows never trips STALEMATE_BREAK while the pair stays adjacent.
+- [x] Scenario CP-S18 (kernel, with control arm) in tests/mechanic_scenarios/test_conflict04_fighter_holds_between_blows.py: a non-cautious fighter with readiness under 100, adjacent to an engaged hostile, holds and takes no opportunity attack until it chooses to leave.
+- [x] Scenario CP-S19 (kernel, with control arm) in tests/mechanic_scenarios/test_conflict04_fighter_holds_between_blows.py: a long exchange of blows never trips STALEMATE_BREAK while the pair stays adjacent.
 - [x] Unit: a swing resets `stale_ticks`; a non-adjacent target still produces PURSUE; flight and panic retreat still leave (and pay the opportunity attack).
 - [x] Pinned 5-seed report, seeds 42-46 x 3 worlds, mean (SD), before and after: opportunity-attack hits split into decided, held-move and neither classes; DEFEAT deaths; total deaths; alive at t=1000 and t=1100. Two-run determinism. Report it, don't tune. A small total effect is expected while the "neither" defect stands.
 - [x] Gates: mypy, ratchet, lint-imports (17 kept, 0 broken), mechanism completeness pin.

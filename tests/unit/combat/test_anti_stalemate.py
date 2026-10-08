@@ -58,11 +58,12 @@ def test_adjacent_pair_never_trips_stalemate_break_and_a_swing_resets_the_counte
 
 def test_adjacent_fighter_between_blows_holds_a_queued_swing_instead_of_stepping():
     """CONFLICT-04: readiness under 100 beside an engaged hostile holds (no PURSUE step, so no opportunity attack)."""
-    state, attacker = _melee_pair(stale=0, readiness=40.0)
+    state, attacker = _melee_pair(stale=7, readiness=40.0)
     update = TacticalDecisionSystem.evaluate_entity_intent(state, attacker)
     assert update.task.work_kind_set == "ENTITY_ACT"
     assert update.task.payload_set["action"] == "ATTACK"
     assert update.task.payload_set["reason"] == "HOLD_BETWEEN_BLOWS"
+    assert update.task.payload_set["stale_ticks"] == 0
     assert update.navigation is None or update.navigation.target_set is None
 
 

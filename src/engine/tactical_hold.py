@@ -38,6 +38,7 @@ def held_swing_update(
         "reason": "HOLD_BETWEEN_BLOWS",
         "target_id": target.id,
         **carried,
+        "stale_ticks": 0,  # the held swing is an ATTACK emission, an outcome (tactical contract section 5)
     }
     return EntityUpdate(
         entity_id=entity.id,
