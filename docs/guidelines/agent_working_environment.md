@@ -20,7 +20,7 @@ This document is the single reference for setting up and operating the local con
 | Python | 3.11+ (floor); 3.13 is the CI-tested version | The floor is `requires-python` in `pyproject.toml`, which is the source; `[tool.mypy] python_version` follows it. CI (`.github/workflows/test.yml`) runs 3.13. The floor stays at 3.11 because `.venv-knowledge` is on 3.12. |
 | `uv` | 0.11+ | Resolves and installs from `pyproject.toml` and `uv.lock`. On this machine every `uv` network command needs `--system-certs` (see "TLS interception" below). |
 | `uv sync --system-certs` (or `make install-py`) | — | Core app, test and dev deps from `uv.lock` (`fastapi`, `uvicorn`, `pytest`, etc.), plus the `lint` group (`ruff`, `complexipy`). Dependencies are declared once, in `pyproject.toml`. CI installs this way too (`uv sync --locked --no-install-project`); every CI job except `tools-a-e` passes `--no-group lint`. |
-| `pip install -r requirements.txt` | — | Same set (including the `lint` tools) for environments without uv, such as other worktrees and `.venv-knowledge`; no CI job uses it. `requirements.txt` is a **generated export** of `uv.lock`: never edit it by hand (see "Changing a dependency" below). |
+| `uv export --frozen --no-hashes --no-emit-project \| uv pip install -r -` | — | Same set (including the `lint` tools) for an environment that is not the project's own `.venv`, such as another worktree or `.venv-knowledge`. There is no committed `requirements.txt` any more (`TCK-20261008-DROP-UNUSED-REQUIREMENTS-EXPORT`): the export is generated on demand from `uv.lock`, and no CI job uses it. |
 | `pip install -r requirements-knowledge.txt` | — | Knowledge-search stack: `torch`, `sentence-transformers`, `sqlite-vec`, `rank_bm25`. Local agent tooling only — CI never installs this. |
 
 First-time model download: `all-MiniLM-L6-v2` (~22 MB) is downloaded automatically on first `make knowledge-index`. Subsequent builds use the local cache.
@@ -33,8 +33,8 @@ First-time model download: `all-MiniLM-L6-v2` (~22 MB) is downloaded automatical
 
 | Venv | Python | Use it for | Why |
 |---|---|---|---|
-| `.venv` | **3.13.14** | **Engine, API, and all test runs** | Matches what CI actually runs (`.github/workflows/test.yml` declares `python-version: "3.13"`); holds only `requirements.txt`'s deps, no editable install of this package. Running tests on anything else means a local pass cannot rule out a version-specific CI failure. |
-| `.venv-knowledge` | 3.12.3 | Knowledge-search tooling (`tools/knowledge_search.py`, `search_mcp.py`, `search_server.py`) **and** general local dev use | Holds `torch`/`sentence-transformers` (cannot be migrated to 3.13 — see below), **plus** `requirements.txt`'s core app deps, **plus** this package itself editable-installed (`pip install -e .`, giving the `rpg-sim`/`rpg-world`/`rpg-lab` console scripts), **plus** `headroom-ai==0.37.0` (pinned in `requirements-knowledge.txt` since PR #228 — see `TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT`). It is not narrowly scoped to the knowledge stack; despite the name, it is this machine's fuller general-purpose venv. |
+| `.venv` | **3.13.14** | **Engine, API, and all test runs** | Matches what CI actually runs (`.github/workflows/test.yml` declares `python-version: "3.13"`); holds only the locked default deps (`uv.lock`), no editable install of this package. Running tests on anything else means a local pass cannot rule out a version-specific CI failure. |
+| `.venv-knowledge` | 3.12.3 | Knowledge-search tooling (`tools/knowledge_search.py`, `search_mcp.py`, `search_server.py`) **and** general local dev use | Holds `torch`/`sentence-transformers` (cannot be migrated to 3.13 — see below), **plus** the locked core app deps, **plus** this package itself editable-installed (`pip install -e .`, giving the `rpg-sim`/`rpg-world`/`rpg-lab` console scripts), **plus** `headroom-ai==0.37.0` (pinned in `requirements-knowledge.txt` since PR #228 — see `TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT`). It is not narrowly scoped to the knowledge stack; despite the name, it is this machine's fuller general-purpose venv. |
 
 **Run tests as `.venv/bin/python3 -m pytest …`**, not the bare `python3` on PATH (which is 3.12,
 still resolving to `.venv-knowledge`'s interpreter — see above).
@@ -80,7 +80,7 @@ This network also intercepts TLS generally, via a corporate CA in the system sto
 ```bash
 uv python install 3.13 --system-certs
 uv venv .venv --python 3.13 --system-certs
-uv pip install --python .venv/bin/python3 --system-certs -r requirements.txt
+uv sync --python .venv/bin/python3 --system-certs
 ```
 
 ---
@@ -93,8 +93,8 @@ Run these once after cloning or after a clean checkout.
 # 1. Install core Python dependencies into .venv from uv.lock
 #    (drop --system-certs on a network without TLS interception)
 uv sync --python 3.13 --system-certs
-#    Equivalent without uv:
-#    pip install -r requirements.txt
+#    For another environment (worktree, .venv-knowledge), export on demand:
+#    uv export --frozen --no-hashes --no-emit-project | uv pip install --python <env>/bin/python3 -r -
 
 # 1b. Install the knowledge-search stack (torch must come from the CPU wheel index)
 pip install torch --index-url https://download.pytorch.org/whl/cpu
@@ -116,7 +116,7 @@ The Docker container runs with `restart: unless-stopped` — it will come back a
 
 `uv sync` installs the default dependencies plus the `dev` and `lint` groups (`[tool.uv] default-groups`),
 and installs this package itself as editable. `make install-py` runs plain `uv sync`, so it also installs
-the project as an editable package, which `pip install -r requirements.txt` did not; on a machine with TLS
+the project as an editable package, which an export-based install does not; on a machine with TLS
 interception set `UV_SYSTEM_CERTS=1` before `make install-py` (the environment variable for `--system-certs`). It does not install the knowledge-search stack: that stays in
 `requirements-knowledge.txt` and `.venv-knowledge` (step 1b), unchanged. The opt-in `profiling`
 group (`memray`) is installed with `uv sync --group profiling`.
@@ -127,26 +127,24 @@ Dependencies are declared in one place, `pyproject.toml` (`TCK-20261002-UV-DECLA
 runtime packages under `[project] dependencies`, test and dev tooling under
 `[dependency-groups] dev`, and the code-health tools (`ruff`, `complexipy`) under `lint`. The `lint` group
 is kept out of `dev` so that CI jobs that do not run the code-health tests can skip it with
-`uv sync --no-group lint`; `default-groups` keeps a plain `uv sync` and the export unchanged. After editing it, refresh the lock and regenerate the export, and commit
-all three files together:
+`uv sync --no-group lint`; `default-groups` keeps a plain `uv sync` unchanged. After editing it, refresh the lock and commit
+`pyproject.toml` and `uv.lock` together:
 
 ```bash
 uv lock --system-certs
-uv export --frozen --no-hashes --no-emit-project -o requirements.txt
 ```
 
 **After the Python Code Craft branch merges, every existing environment (the main checkout's
-`.venv`, other worktrees) must re-run `uv sync --system-certs` or `pip install -r requirements.txt`.**
+`.venv`, other worktrees) must re-run `uv sync --system-certs` (or the on-demand export above).**
 `ruff` and `complexipy` are now `lint` dependencies (the `Code health` and `Code health SARIF (advisory)` jobs sync them too), and the codebase-health snapshot measures with them
 live, so tests such as `tests/codebase/test_codebase_health_snapshot.py`'s throwaway-repository tests fail
 in an older environment with `complexipy not found: install the project environment (uv sync)`. That
 failure is deliberate: the snapshot never silently skips its craft metrics. CI is unaffected because
-the one job that runs those tests (`tools-a-e`) syncs the `lint` group, and `requirements.txt` carries both tools.
+the one job that runs those tests (`tools-a-e`) syncs the `lint` group, and the default `uv sync` carries both tools.
 
-`uv lock --check` exits non-zero if `uv.lock` is out of date with `pyproject.toml`. Re-running the
-export on an unchanged lock produces no diff. The export leaves out extras, so `torch`,
-`sentence-transformers`, `sqlite-vec` and `rank-bm25` never reach `requirements.txt`
-(`tests/static/test_ci_requirements_no_ml_stack.py` pins this).
+`uv lock --check` exits non-zero if `uv.lock` is out of date with `pyproject.toml`. The export leaves out extras, so `torch`,
+`sentence-transformers`, `sqlite-vec` and `rank-bm25` never reach the default install
+(`tests/static/test_ci_requirements_no_ml_stack.py` pins this by walking `uv.lock` from the default roots).
 
 ### Reading code-health results on a PR
 
@@ -545,7 +543,7 @@ The hook guards against this: `git rev-parse HEAD~1 2>/dev/null || exit 0`. If y
 
 **`sqlite-vec` version mismatch**
 
-If `make knowledge-index` fails with a sqlite-vec error, check: `python3 -c "import sqlite_vec; print(sqlite_vec.__version__)"`. The required minimum version is listed in `requirements.txt`.
+If `make knowledge-index` fails with a sqlite-vec error, check: `python3 -c "import sqlite_vec; print(sqlite_vec.__version__)"`. The required minimum version is listed in `requirements-knowledge.txt`.
 
 **Search returns no results for a doc that exists**
 

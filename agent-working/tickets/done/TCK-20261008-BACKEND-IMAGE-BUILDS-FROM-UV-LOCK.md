@@ -93,3 +93,4 @@ None.
 - the ticket file (todos -> inprogress -> done)
 
 ## Completion Summary
+The backend image now builds from `uv.lock` on Python 3.13, the version CI tests, instead of an unpinned `pip install .` on 3.11. All acceptance criteria met; the only deviation (`--no-default-groups`) is recorded above. Local `uv sync` now also defaults to Python 3.13 through `.python-version`.

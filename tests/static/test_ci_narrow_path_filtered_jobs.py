@@ -339,13 +339,13 @@ def test_frontend_path_set_covers_frontend_directory_and_workflow_file() -> None
 
 
 # 13. TCK-20261002-UV-REMAINING-CI-JOBS: dependencies are declared in pyproject.toml / uv.lock
-# (requirements.txt is a generated export), so a change to either must run both gated jobs.
+# (there is no requirements.txt export any more), so a change to either must run both gated jobs.
 # Note this also means any pyproject.toml edit, including tool configuration, triggers them.
 def test_both_gated_jobs_trigger_on_pyproject_and_lockfile_but_not_unrelated_files() -> None:
     run_text = _gate_run_text(_jobs())
     for var_name in ("PERF_RE", "MIG_RE"):
         pattern = re.compile(_extract_re_pattern(run_text, var_name))
-        for path in ("pyproject.toml", "uv.lock", "requirements.txt"):
+        for path in ("pyproject.toml", "uv.lock"):
             assert pattern.search(path), f"{var_name} must match {path}"
         for path in ("README.md", "uv.lock.bak", "docs/pyproject.toml.md"):
             assert not pattern.search(path), f"{var_name} must not match {path}"
