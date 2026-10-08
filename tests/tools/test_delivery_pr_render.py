@@ -1025,3 +1025,54 @@ def test_a_pure_folder_rename_of_tickets_is_not_a_changed_ticket(tmp_path):
         return pr_render.CommandResult(done.returncode, done.stdout, done.stderr)
 
     assert pr_render.discover_changed_ticket_ids(run, base_ref="base") == ["TCK-20260102-EDITED"]
+
+
+# --- TCK-20261008-PR-RENDER-TICKETLESS-DROPS-EXCLUSION ---------------------------------------------
+
+_ALL_EXCLUDED = {"TCK-20260924-A": "closed epic, record-only append", "TCK-20260924-B": "already closed upstream"}
+
+
+def _all_excluded_fixture(tmp_path):
+    tickets_root = tmp_path / TICKETS
+    (tickets_root / "done").mkdir(parents=True)
+    _write_ticket(tickets_root / "done", "TCK-20260924-A", "ai", "Closed epic")
+    _write_ticket(tickets_root / "done", "TCK-20260924-B", "ai", "Closed other")
+    runner = FakeRunner([
+        _git_log_rule(["TCK-20260924-A: evidence", "TCK-20260924-B: more evidence"]),
+        _git_diff_rule(["docs/world_rules/foundations/state-ownership.md"]),
+    ])
+    return tickets_root, runner
+
+
+def test_ticketless_render_with_every_ticket_excluded_records_each_exclusion(tmp_path):
+    tickets_root, runner = _all_excluded_fixture(tmp_path)
+    result = pr_render.render(
+        tickets_root=tickets_root, run_command=runner, exclusions=_ALL_EXCLUDED,
+        theme="Record evidence", scope="ai", why="Because.",
+    )
+    body = result["body"]
+    assert "Closes: (none)" in body
+    for ticket_id, reason in _ALL_EXCLUDED.items():
+        assert pr_render.render_exclusion_comment(ticket_id, reason) in body
+    assert pr_render.extract_recorded_exclusions(body) == _ALL_EXCLUDED
+
+
+def test_check_matches_a_ticketless_body_that_recorded_its_exclusions(tmp_path):
+    tickets_root, runner = _all_excluded_fixture(tmp_path)
+    kw = dict(theme="Record evidence", scope="ai", why="Because.")
+    rendered = pr_render.render(tickets_root=tickets_root, run_command=runner, exclusions=_ALL_EXCLUDED, **kw)
+    check_runner = FakeRunner([
+        (lambda cmd: cmd[:2] == ["gh", "pr"],
+         CommandResult(0, json.dumps({"title": rendered["title"], "body": rendered["body"]}), "")),
+        *runner.rules,
+    ])
+    result = pr_render.check_against_live(run_command=check_runner, tickets_root=tickets_root, **kw)
+    assert result["matches"] is True
+
+
+def test_ticketless_body_without_exclusions_is_unchanged(tmp_path):
+    spec = json.loads(Path(pr_render._DEFAULT_SPEC_PATH).read_text(encoding="utf-8"))
+    plain = pr_render.render_ticketless_body("t", "w", ["a/x.md"], spec, [])
+    assert plain == pr_render.render_ticketless_body("t", "w", ["a/x.md"], spec, [], exclusions=None)
+    assert plain == pr_render.render_ticketless_body("t", "w", ["a/x.md"], spec, [], exclusions={})
+    assert "pr-render:exclude" not in plain and plain.rstrip().endswith("Closes: (none)")
