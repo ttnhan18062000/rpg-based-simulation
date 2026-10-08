@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import Dict, Optional, Any
 
+from src.content.common_knowledge_seed import install_warm_catalog_provider
+
 _perception_gate = None
 _pressure_resolver = None
 _catalog = None
@@ -93,3 +95,13 @@ def get_entity_signals(entity: Any) -> Dict[str, str]:
         "vibration": props.get("vibration_signal", "low"),
         "social_signal": props.get("social_signal", "none"),
     }
+
+
+def _seeding_catalog() -> Any:
+    """The warmed catalog, auto-initialising if needed, for KNOW-04's seeding (``src.content.common_knowledge_seed``)."""
+    if _catalog is None:
+        _auto_init()
+    return _catalog
+
+
+install_warm_catalog_provider(_seeding_catalog)
