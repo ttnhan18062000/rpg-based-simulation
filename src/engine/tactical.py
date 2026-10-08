@@ -22,6 +22,7 @@ from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
 from src.engine.tactical_threat import safety_retreat_warranted
 from src.engine.tactical_rest import rest_in_place_update
+from src.engine.tactical_hold import held_swing_update, stalemate_break_update
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -482,7 +483,7 @@ class TacticalDecisionSystem:
             if legal:
                 legal_attack_targets.append(h)
         
-        target = legal_attack_targets[0] if legal_attack_targets else (hostiles[0] if hostiles else None)
+        target = legal_attack_targets[0] if legal_attack_targets else hostiles[0]
         is_attack_legal = target in legal_attack_targets
 
         # 5. Decision: Attack vs Positioning (Kiting/Closing)
@@ -510,16 +511,7 @@ class TacticalDecisionSystem:
 
         if stale_ticks > 10 and not fighting_adjacent:
              # Logic ID: COMB-277 (Anti-stalemate does not force illegal movement)
-             wander_to = _destination_or_hold(entity, wander_destination(state, entity))
-             return EntityUpdate(
-                 entity_id=entity.id,
-                 strategic=strat_up,
-                 navigation=NavigationUpdate(target_set=wander_to, movement_mode_set=MovementMode.WANDER),
-                 task=TaskUpdate(
-                     work_kind_set="ENTITY_MOVE",
-                     payload_set={"target_position": wander_to, "reason": "STALEMATE_BREAK"}
-                 )
-             )
+             return stalemate_break_update(entity, strat_up, _destination_or_hold(entity, wander_destination(state, entity)))
 
         # Tactical Role Logic
         role = entity.combat.tactical_role
@@ -799,30 +791,13 @@ class TacticalDecisionSystem:
                 )
             )
         else:
-            # CONFLICT-04: between blows the fighter holds. Adjacent to the target with only readiness
-            # missing, the swing is queued as a held ATTACK (the scheduler skips it until readiness 100)
-            # instead of a PURSUE step that would provoke an opportunity attack.
-            if (
-                fighting_adjacent
-                and entity.combat.readiness < 100.0
-                and LegalityServiceV2.verify_attack_legality(entity, target, state, is_opportunity_attack=True)[0]
-            ):
-                return EntityUpdate(
-                    entity_id=entity.id,
-                    strategic=strat_up,
-                    navigation=NavigationUpdate(target_clear=True),
-                    task=TaskUpdate(
-                        work_kind_set="ENTITY_ACT",
-                        payload_set={
-                            "action": "ATTACK",
-                            "reason": "HOLD_BETWEEN_BLOWS",
-                            "target_id": target.id,
-                            "stale_ticks": stale_ticks,
-                            "recent_positions": recent_positions,
-                            "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
-                        },
-                    ),
-                )
+            # CONFLICT-04: between blows the fighter holds (a queued swing), it does not step.
+            held = held_swing_update(
+                state, entity, target, strat_up,
+                {"stale_ticks": stale_ticks, "recent_positions": recent_positions,
+                 "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source)})
+            if held is not None:
+                return held
             # Pursuit
             target_pos = target.navigation.position
             

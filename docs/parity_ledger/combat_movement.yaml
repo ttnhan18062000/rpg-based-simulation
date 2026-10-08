@@ -4768,3 +4768,23 @@
     why held REGROUP moves became more common is untraced. An attacker whose target
     steps away no longer closes through live tracking (up to 10 ticks to return to
     the brain). SimQ grade-anchor movement is not measured locally.'
+- id: COMB-339
+  text: 'TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04: a fighter adjacent to an engaged hostile whose attack is illegal only for readiness under 100 holds as a queued ATTACK (reason HOLD_BETWEEN_BLOWS) instead of a PURSUE step; an adjacent hostile ranks first in target selection (CONFLICT-04).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/tactical.py (target_score adjacency term, held ATTACK before the pursuit branch). Pinned 5-seed report in docs/guidelines/intentional_divergences.md Section 2.86: HOLD_BETWEEN_BLOWS 0.4 to 1.6 emissions per run, total deaths inside 1 SD.'
+  proof_type: regression
+  test_path: tests/unit/combat/test_anti_stalemate.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.86.
+  support_boundary: 'While holding, the entity cannot decide to flee until the swing or a release. The chokepoint ENTITY_ACT HOLD still has no router handler (separate defect).'
+- id: COMB-340
+  text: 'TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04: an ATTACK or SKILL emission resets stale_ticks to 0 and STALEMATE_BREAK does not fire while the target is adjacent.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/engine/tactical.py (stale_ticks 0 in the ATTACK and SKILL payloads; fighting_adjacent guard on the stalemate branch).'
+  proof_type: regression
+  test_path: tests/unit/combat/test_anti_stalemate.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.87.
+  support_boundary: 'Reset is at emission, not at landing.'
