@@ -229,7 +229,9 @@ def test_wider_scope_numbers_pinned():
     # functions only, bound under `tactical_decision`, so it adds no unbound file or mechanism-shaped class).
     # 312 -> 313 on 2026-10-08 (movement-layer rule): +src/engine/hostility.py (the shared perceived-hostile test; functions only,
     # bound under `tactical_decision`, so it adds no unbound file or mechanism-shaped class).
-    assert wider["scope_files"] == 313
+    # 313 -> 314 on 2026-10-08 (Decision 27): +src/ai/goals/opening_steps.py (the opening steps a need with no open way can take; pure
+    # functions and one small dataclass, unbound: it is a helper of the hunger goal, not a mechanism of its own).
+    assert wider["scope_files"] == 314
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -240,7 +242,8 @@ def test_wider_scope_numbers_pinned():
     # 228 -> 232 on 2026-10-07 (SURV-07): the four new modules above are unbound helpers (pure functions, no mechanism of their own).
     # KNOW-04 (2026-10-07): src/cognition/common_knowledge.py is bound under `knowledge_model`, so unbound_files stays 232.
     # CONFLICT-04: tactical_hold.py is bound under `tactical_decision`, so unbound_files stays 232.
-    assert wider["unbound_files"] == 232
+    # Decision 27: opening_steps.py is an unbound helper, so unbound_files is 233.
+    assert wider["unbound_files"] == 233
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     assert wider["candidates"] == 72  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package
