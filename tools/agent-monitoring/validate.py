@@ -21,6 +21,7 @@ Exit 0 = clean. Exit 1 = errors found.
 import argparse
 import csv
 import json
+from datetime import datetime
 import sqlite3
 import sys
 from collections import Counter, defaultdict
@@ -364,12 +365,116 @@ def check_path_record(runs: list, events: list) -> list[str]:
     return errors
 
 
+# TCK-20261007-MONITORING-EXECUTION-ID-HYGIENE: `execution_id` was added to run records by
+# TCK-20260730-CLAUDE-EXECUTION-IDENTITY; a row from before that date cannot have one.
+EXECUTION_ID_START = "2026-07-30"
+# The two native workflows whose sidecar writers omit `execution_id`/`provider` on purpose: the native
+# Workflow runtime has no clock or shell to build one (.claude/workflows/implement-epic.js,
+# create-tickets.js; post_tool_hook.py and run_dedup.py tolerate the absence). Tolerated, not fixed.
+EXECUTION_ID_BY_DESIGN_WORKFLOWS = ("create-tickets", "implement-epic")
+DEFAULT_SINCE_WEEK = "2026-W40"
+
+
+def _iso_week_of(ts):
+    """`YYYY-Www` for an ISO timestamp string, or None when it cannot be parsed."""
+    if not isinstance(ts, str) or not ts:
+        return None
+    try:
+        return datetime.fromisoformat(ts.replace("Z", "+00:00")).strftime("%G-W%V")
+    except ValueError:
+        return None
+
+
+def _is_probe_run(run_id):
+    return "PROBE" in (run_id or "").upper()
+
+
+def classify_missing_execution_id(run: dict) -> str:
+    """`predates` (before the field existed), `by design` (create-tickets / implement-epic), `probe`
+    (a deliberate probe run) or `unexplained`. Only meaningful for a run without an `execution_id`."""
+    start = _run_effective_start_ts(run)
+    if start is not None and start < EXECUTION_ID_START:
+        return "predates"
+    workflow = run.get("workflow") or infer_workflow(run.get("run_id") or "")
+    if workflow in EXECUTION_ID_BY_DESIGN_WORKFLOWS:
+        return "by design"
+    if _is_probe_run(run.get("run_id")):
+        return "probe"
+    return "unexplained"
+
+
+def compute_execution_id_report(runs: list, since_week: str = DEFAULT_SINCE_WEEK) -> str:
+    """Report-only: run rows without `execution_id`, by class, plus the since-week rows named. Never
+    gates anything, never rewrites a shard."""
+    missing = [r for r in runs if not r.get("execution_id")]
+    by_class = Counter(classify_missing_execution_id(r) for r in missing)
+    lines = ["--- Missing execution_id Report ---", ""]
+    lines.append(f"run rows without execution_id: {len(missing)} of {len(runs)}")
+    for cls in ("predates", "by design", "probe", "unexplained"):
+        lines.append(f"  {cls}: {by_class.get(cls, 0)}")
+    recent = [r for r in missing
+              if (_iso_week_of(_run_effective_start_ts(r)) or "") >= since_week and classify_missing_execution_id(r) != "predates"]
+    lines.append("")
+    lines.append(f"since {since_week} ({len(recent)} rows):")
+    for r in sorted(recent, key=lambda r: (_iso_week_of(_run_effective_start_ts(r)) or "", r.get("run_id") or "")):
+        lines.append(f"  {_iso_week_of(_run_effective_start_ts(r))} {classify_missing_execution_id(r)}: {r.get('run_id')}")
+    if not recent:
+        lines.append("  none")
+    return "\n".join(lines)
+
+
+def compute_tool_row_report(data_dir: Path, max_listed: int = 20) -> str:
+    """Report-only: tools-shard lines the loader cannot parse, named `file:line`. A torn line is skipped
+    by every reader, so it is invisible unless counted here."""
+    bad = []
+    for shard in shard_paths(data_dir, "tools"):
+        lines = [line.strip() for line in shard.read_text(errors="replace").splitlines() if line.strip()]
+        for i, line in enumerate(lines, 1):
+            try:
+                json.loads(line)
+            except json.JSONDecodeError:
+                bad.append(f"{shard.name}:{i}")
+    out = ["--- Skipped tools.jsonl Rows Report ---", "", f"tools-shard lines the loader cannot parse: {len(bad)}"]
+    out += [f"  {b}" for b in bad[:max_listed]]
+    if len(bad) > max_listed:
+        out.append(f"  ... and {len(bad) - max_listed} more")
+    return "\n".join(out)
+
+
+def working_log_shard_ticket_ids(data_dir: Path) -> set:
+    """Ticket ids that have a row in any `working_log` shard (data/YYYY-Www/*.working_log.jsonl), the place
+    the closure recorder writes since the CSV stopped being appended to
+    (TCK-20261008-VALIDATOR-WORKING-LOG-SHARDS-FALSE-POSITIVE)."""
+    ids = set()
+    for row in load_data_glob(data_dir, "working_log"):
+        tid = str(row.get("ticket_id") or "").strip()
+        if tid.startswith("TCK-"):
+            ids.add(tid)
+    return ids
+
+
+def compute_since_week_summary(classified: list, runs_by_id: dict, since_week: str) -> str:
+    """`W40+ warnings: N of M` with its filter method. `classified` is [(class, run_id)]; a run without a
+    parseable start_ts is counted as unknown, not as since-week."""
+    in_range, unknown = Counter(), 0
+    for cls, run_id in classified:
+        week = _iso_week_of(_run_effective_start_ts(runs_by_id.get(run_id, {})))
+        if week is None:
+            unknown += 1
+        elif week >= since_week:
+            in_range[cls] += 1
+    detail = ", ".join(f"{k}: {v}" for k, v in sorted(in_range.items())) or "none"
+    return (f"{since_week}+ warnings: {sum(in_range.values())} of {len(classified)} "
+            f"(filter: run start_ts ISO week >= {since_week}; {unknown} without a parseable start_ts are not counted; {detail})")
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         description="Cross-check agent-monitoring integrity against agent-working/tickets/working_log.csv"
     )
     parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH), help="Path to the agent-monitoring SQLite index")
-    parser.add_argument("--data-dir", default=str(AGENT_MONITORING / "data"), help="Shard root for the gate_verdicts check")
+    parser.add_argument("--data-dir", default=str(AGENT_MONITORING / "data"), help="Shard root for the gate_verdicts, working_log and tools-row checks")
+    parser.add_argument("--since-week", default=DEFAULT_SINCE_WEEK, help="ISO week (YYYY-Www) for the since-week warning count")
     return parser
 
 
@@ -379,6 +484,7 @@ def main(argv=None):
 
     errors = []
     warnings = []
+    classified = []  # (class, run_id) beside each run-keyed warning, for the since-week summary
 
     conn = open_index(Path(args.db_path))
     runs = load_runs_from_index(conn)
@@ -404,6 +510,7 @@ def main(argv=None):
     for run_id, group in runs_grouped_by_id.items():
         if not any(_record_is_complete(r) for r in group):
             warnings.append(f"Incomplete run (no end_ts — CRASHED?): {run_id}")
+            classified.append(("incomplete", run_id))
 
     # 2. Runs with no events (see EVENTS_REQUIRED_START above for the legacy exclusion)
     for run_id, run in runs_by_id.items():
@@ -425,6 +532,7 @@ def main(argv=None):
                 tid = row.get("ticket_id", "").strip()
                 if tid.startswith("TCK-"):
                     log_tids.add(tid)
+        log_tids |= working_log_shard_ticket_ids(Path(args.data_dir))
         for run_id, run in runs_by_id.items():
             # Batch epic/folder runs (EPIC-*, FOLDER-*) are orchestration records, not
             # individual tickets — they never produce their own working_log entry.
@@ -433,6 +541,7 @@ def main(argv=None):
             status = run.get("final_status") or run.get("status")
             if status == "DONE" and run_id not in log_tids:
                 warnings.append(f"Run marked DONE has no working_log entry: {run_id}")
+                classified.append(("done-without-working_log", run_id))
     else:
         warnings.append(f"{LOG_FILE} not found — skipping working_log cross-check")
 
@@ -452,6 +561,12 @@ def main(argv=None):
     print(compute_tool_count_drift_report(events, tools))
     print()
     print(compute_multi_invocation_collision_report(events))
+    print()
+    print(compute_execution_id_report(runs, args.since_week))
+    print()
+    print(compute_tool_row_report(Path(args.data_dir)))
+    print()
+    print(compute_since_week_summary(classified, runs_by_id, args.since_week))
 
     total_runs = len(runs)
     total_events = len(events)
