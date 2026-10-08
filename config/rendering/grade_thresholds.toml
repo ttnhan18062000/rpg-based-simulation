@@ -11,7 +11,7 @@
 # Format is TOML, not YAML, deliberately: src/rendering/ is guarded stdlib-only by
 # tests/architecture/test_rendering_zero_new_dependency_guard.py, and PyYAML ("yaml")
 # is NOT a stdlib module (confirmed: 'yaml' not in sys.stdlib_module_names) even though
-# it is a real project dependency elsewhere (requirements.txt, src/simulation_quality/
+# it is a real project dependency elsewhere (pyproject.toml, src/simulation_quality/
 # weights.py) -- that guard's scope is src/rendering/ specifically, stricter than the
 # repo at large. tomllib IS stdlib (Python 3.11+, this repo runs 3.12.3) and supports
 # the same nested-table + comment shape YAML would have given. See plan.md Decision 2.

@@ -1,0 +1,5 @@
+Each mutant's site was confirmed by grep (1 hit) before the run; originals restored (24 of 24 pass after).
+A: buff "frame unchanged" row accepts anything. Caught: test_a_changed_frame_pixel_or_an_outlined_chevron_fails_the_buff_rows. Right reason.
+B: silver bead "lighter than the dark tier badges" floor removed. Caught: test_the_adopted_slate_bead_fails_the_lighter_than_the_tier_badges_row (my first planted case, a recoloured bead, did NOT discriminate: the row measured 23.9 L* with its accents; the real slate bead measures 11 and is the planted case now).
+C: tent live-area row accepts any margin. Caught: test_a_tent_that_reaches_the_canvas_edge_fails_the_live_area_row_which_the_first_drawing_did.
+D: silhouette sheet's smallest shape difference forced to 0. Caught: test_the_committed_sheet_equals_a_fresh_build (the committed copy no longer equals a fresh build).

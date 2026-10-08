@@ -16,13 +16,28 @@ describe('the key list matches the registry', () => {
   const yaml = read('visual_assets', 'catalog', 'definitions', 'visual_keys.yaml')
   const registered = yaml.split('\n  - key: ').slice(1).map((block) => [block.split('\n')[0], /description: (.*)/.exec(block)![1]] as const).filter(([k]) => k.startsWith('icon.'))
 
-  it('every icon.* key of the registry is in ICON_SIZES with the size its description states, and no other', () => {
-    expect(registered.map(([k]) => k).sort()).toEqual([...ICON_KEYS])
-    for (const [key, description] of registered) {
+  it('every drawn key of the page (ICON_SIZES) is in the registry with the size its description states; the 22 icon set v2 keys are registered but not drawn yet', () => {
+    const drawn = registered.filter(([k]) => k in ICON_SIZES)
+    expect(drawn.map(([k]) => k).sort()).toEqual([...ICON_KEYS])
+    for (const [key, description] of drawn) {
       const size = ICON_SIZES[key]
       expect(description, key).toContain(`${size}x${size}`)
     }
     expect(ICON_KEYS).toHaveLength(14)
+    expect(registered).toHaveLength(14 + 22) // the key set plus icon set v2 (TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC)
+  })
+
+  it('the 22 icon set v2 keys each have a declared fallback that matches the registry description', () => {
+    const v2 = registered.filter(([k]) => !(k in ICON_SIZES))
+    expect(v2).toHaveLength(22)
+    for (const [key, description] of v2) {
+      const fb = fallbackFor(key)
+      expect(fb.note, key).toMatch(/^identifying/)
+      const shown = fb.kind === 'text' ? fb.text : fb.kind === 'chip' ? `${fb.letter} ${fb.color}` : ''
+      expect(shown, key).not.toBe('')
+      const hex = /#[0-9a-f]{6}/.exec(description)?.[0]
+      if (hex) expect(shown, key).toContain(hex) // the colour the registry names is the colour the page shows
+    }
   })
 
   it('plate is drawn first and the glyph over it', () => {

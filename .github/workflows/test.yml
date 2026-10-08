@@ -786,8 +786,8 @@ jobs:
           # reachable; 0 reachable in actions, lab, rendering, runtime, testing, views, worldgeneration;
           # every other folder (incl. cli, scenarios, api, progression, systems, strategy) has reachable
           # modules. Re-derive the list when a folder is added or an import edge into one of these appears.
-          PERF_RE='^(tests/(perf|certification|arena)/|src/(?!(?:actions|lab|rendering|runtime|testing|views|worldgeneration)/)|Makefile$|requirements\.txt$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
-          MIG_RE='^(tests/architecture/|tests/(integration|unit)/(content|scenarios|worldassembly|certification|runtime)/|tests/conftest\.py$|src/(core|content|platform|runtime|scenarios|worldassembly|worldbuilding|worldmodules|certification)/|Makefile$|requirements\.txt$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
+          PERF_RE='^(tests/(perf|certification|arena)/|src/(?!(?:actions|lab|rendering|runtime|testing|views|worldgeneration)/)|Makefile$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
+          MIG_RE='^(tests/architecture/|tests/(integration|unit)/(content|scenarios|worldassembly|certification|runtime)/|tests/conftest\.py$|src/(core|content|platform|runtime|scenarios|worldassembly|worldbuilding|worldmodules|certification)/|Makefile$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
           FRONTEND_RE='^(frontend/|\.github/workflows/test\.yml$)'
           # grep exits 0 on a match, 1 on none and >=2 on an error (a broken pattern): an error must fail OPEN
           # (run the lane), never skip it silently.
