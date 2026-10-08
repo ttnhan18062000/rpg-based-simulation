@@ -61,7 +61,8 @@ GAP_TACTICAL_NAVIGATION = (
 MAX_TESTS_LISTED = 60
 
 _FILTER_RE = re.compile(r"""(\w+_RE)='([^']*)'""")
-_FILTER_USE_RE = re.compile(r"""run_(\w+)=\$\(echo "\$CHANGED" \| grep -qE "\$(\w+)\"""")
+_FILTER_USE_RE = re.compile(r"""run_(\w+)=\$\(echo "\$CHANGED" \| grep -q[EP] "\$(\w+)\"""")
+_COVERS_USE_RE = re.compile(r"""run_(\w+)=\$(\w+_COVERS)\b""")
 
 
 def _module_of(rel_path: str) -> Optional[str]:
@@ -96,7 +97,11 @@ def path_filters(workflow: Path) -> Dict[str, "re.Pattern[str]"]:
         return {}
     text = workflow.read_text(encoding="utf-8")
     patterns = {name: pat for name, pat in _FILTER_RE.findall(text)}
-    return {job.replace("_", "-"): re.compile(patterns[var]) for job, var in _FILTER_USE_RE.findall(text) if var in patterns}
+    uses = list(_FILTER_USE_RE.findall(text))
+    # TCK-20261008-PERF-LANE-PATH-GATE-MISSES-SIMULATION-SRC-DIRS: the perf gate computes `PERF_COVERS` through
+    # a fail-open `perf_match()` and writes `run_perf_cert_arena=$PERF_COVERS`; `<NAME>_COVERS` is `<NAME>_RE`.
+    uses += [(job, var.replace("_COVERS", "_RE")) for job, var in _COVERS_USE_RE.findall(text)]
+    return {job.replace("_", "-"): re.compile(patterns[var]) for job, var in uses if var in patterns}
 
 
 def _lane_job(lane: Dict[str, Any]) -> str:
