@@ -792,7 +792,7 @@ jobs:
           # grep exits 0 on a match, 1 on none and >=2 on an error (a broken pattern): an error must fail OPEN
           # (run the lane), never skip it silently.
           perf_match() {
-            echo "$CHANGED" | grep -qP "$PERF_RE"; rc=$?
+            grep -qP "$PERF_RE" <<< "$CHANGED"; rc=$?   # here-string, not a pipe: -o pipefail would turn an early-match SIGPIPE into 141
             if [ "$rc" -ge 2 ]; then
               echo "::warning::PERF_RE grep failed (exit $rc) — failing open, perf-cert-arena will run" >&2
               echo true
