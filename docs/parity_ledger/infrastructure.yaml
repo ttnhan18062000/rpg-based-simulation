@@ -12840,3 +12840,19 @@
   test_path: tests/unit/kernel/test_live_signal_golden.py
   divergence_note: null
   support_boundary: The golden fixture is a 16-tick movement run on a call-counting fake clock; it pins the signal construction, not host timing.
+
+- id: INFRA-428
+  text: 'TCK-20261006-PERF-OPERATIONAL-FLAGS-MATRIX-DRIFT: operational flag obedience is pinned to what the kernel reads. no_replay sets
+    GovernorPolicy.replay_allowed=False from construction and after every governor evaluation, nothing is emitted to the replay
+    sink, and the state hash is unchanged. FORCE_NORMAL, BYPASS_GOVERNOR and DISABLE_RESOURCE_CEILINGS are rejected by
+    ProfileValidator.validate_flags. FORCE_REPLAY_OFF, SELECT_PROFILE, FORCE_DEGRADED, SURVIVAL_ONLY and REPLAY_ENABLED are read by
+    nothing in the kernel (the last two are only validated), so a run with one is identical to a run without it.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/engine/kernel.py (Kernel.__init__, Kernel._phase_init, the no_replay branches); src/config/validator.py (ProfileValidator.validate_flags)
+  proof_type: contract
+  test_path: tests/unit/core/test_operational_flags.py
+  divergence_note: null
+  support_boundary: The three "not implemented" flags are documented as such; implementing one means changing the operational-controls matrix and the test that pins the absence.
+    perf_tracker is stored by the kernel and read nowhere. A Kernel that rejects a flag in __init__ has already started its background workers (validation runs after the event recorder is created) and leaks them; the forbidden-flag tests therefore call the validator directly.
