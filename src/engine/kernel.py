@@ -18,7 +18,7 @@ from src.core.diagnostic import TraceEvent
 from src.core.lifecycle import LifecycleOutcome, ShutdownResult
 from src.core.enums import Domain
 
-from src.engine.signal_source import HostReadings, MeasuredCosts, select_signal_source
+from src.engine.signal_source import HostReadings, MeasuredCosts, select_signal_source, signal_contract_record
 from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
 
@@ -197,7 +197,7 @@ class Kernel:
                 runtime_content_source=actual_content_source,
                 catalog_fingerprint=actual_catalog_fp,
                 module_fingerprints=module_fps,
-                state_hash=None
+                state_hash=None, signal_contract=signal_contract_record(profile, self._audit_mode),
             )
             self._artifact_repo.create_run(self._run_id, manifest, overwrite=True)
             self._artifact_repo.update_manifest(self._run_id, status="RUNNING")
@@ -208,7 +208,7 @@ class Kernel:
             self._replay = DefaultReplayManager(
                 run_dir=run_dir,
                 profile_name=profile.name,
-                buffer_capacity_kb=profile.max_replay_buffer_kb
+                buffer_capacity_kb=profile.max_replay_buffer_kb, signal_contract=signal_contract_record(profile, self._audit_mode),
             )
         else:
             self._replay = replay

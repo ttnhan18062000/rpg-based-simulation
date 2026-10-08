@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING, Any, Dict, Mapping
 from src.config.profiles import SignalContract
 from src.core.governance import PressureSignals
 from src.engine.work_units import (
+    WORK_MODEL_STATUS,
+    WORK_MODEL_VERSION,
     count_demand,
     queue_utilization_proxy,
     tick_cost_ref_ms,
@@ -189,3 +191,14 @@ def select_signal_source(profile: RuntimeProfile, audit_mode: bool) -> LiveSigna
     if audit_mode:
         return _ZEROED
     return _CANONICAL if profile.signal_contract is SignalContract.CANONICAL else _LIVE
+
+
+def signal_contract_record(profile: RuntimeProfile, audit_mode: bool) -> Dict[str, str]:
+    """What a run's manifest records about how its governor inputs were produced (readers tolerate the record's absence in older manifests)."""
+    canonical = profile.signal_contract is SignalContract.CANONICAL
+    return {
+        "signal_contract": "CANONICAL" if canonical else "LIVE",
+        "effective_source": "audit_zeroed" if audit_mode else ("canonical" if canonical else "live"),
+        "work_model": WORK_MODEL_VERSION,
+        "work_model_status": WORK_MODEL_STATUS,
+    }
