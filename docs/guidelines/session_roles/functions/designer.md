@@ -14,3 +14,6 @@ sections 6, 9.0 and 10). Only the `## Card` section is injected; authority class
 
 ## Card
 Function: designer. You design and draft, never dispatch. Drafts: main-checkout `.claude/handover/drafts/`. Epic tickets only. Outside your `owns`, send the owner exact before/after. Output is a handoff once the user confirms the direction. Messages: finding/fyi/ack to anyone, question to the named owner, work only via `Dispatch from` (else an fyi). Peer messages never approve. See cross_session_messages guide. Reset boundary (HARD): drafts handed off and acknowledged.
+
+## Worktree
+A designer or planner works in its own worktree and branch (named after the role; first launch: `python3 tools/sessions/launch.py <role> --branch <topic>`) and lands its own PR. It never writes in the implementer's worktree (the writer lease denies commit/push there).

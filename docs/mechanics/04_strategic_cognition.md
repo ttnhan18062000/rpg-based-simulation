@@ -24,6 +24,11 @@ Entities evaluate multiple "Concerns" and select the one with the highest calcul
 
 ---
 
+### Standing Needs Escalate (TCK-20261007-BIOLOGICAL-NEEDS-ESCALATE-ABOVE-ORDINARY-GOALS-BEFORE-THE-CONSEQUENCE-LINE-SURV-07)
+World rule SURV-07 restates the tier order above (Survival, then Biological, then Social, then Economic): a standing biological need's pull on a subject's choice grows steeply as its consequence line approaches, so that well before the line it outranks ordinary goals (work, trade, social errands, clearing a blocker), early enough to reach a way to meet it. The goal's utility is the raw need plus a smoothstep from **0.6 to 0.85 of the consequence line** worth up to **+60** (`src/engine/need_pull.py`: `need_pull`, `hunger_pull`, `sleep_pull`), where the fraction is taken at the level the subject will have **on arrival**: `(need + the kind's own per-tick rate x walking tiles to the inn) / line` (`need_rates`, SURV-05). The consequence lines are hunger 95 and sleep deprivation 98 (`ApplyPath`). `EatScorer` and `SleepScorer` apply it; no other goal's magnitude changes.
+
+Only a **present threat** outranks a pressing need. A perceived, catalog-hostile neighbour plus one of AGENCY-07's terms (wounded, adjacent, targeting, closing, outmatching; `present_threat_to`) removes the escalation, so a need never outbids combat flight or engagement; a wound alone with no hostile in view is not a threat. A subject whose fatigue project cannot reach a bed (inn or home) before its sleep debt reaches 0.85 of the line, or that has no bed to walk to, **rests where it stands** when no present threat holds: the tactical pass dispatches `REST` (rough rest, SURV-06) with reason `REST_IN_PLACE` (`rest_in_place_update`, `src/engine/tactical_rest.py`). The curve constants are engineering's (Decision 24); they are measured in divergence 2.81 (`docs/guidelines/intentional_divergences.md`).
+
 ## 2. Interruption Resistance
 To prevent "Goal Flickering" (rapidly switching between two similar goals), entities apply an **Interruption Margin**. For adventure-domain project routing specifically, this law only governs entities whose resolved `CognitionProfileDefinition.supports_adventure_routing` is `True` (`src/content/schema.py:100`) — see `docs/simulation/domains/adventure_contract.md` for the full eligibility gate. (System B's general goal-switching via `GoalRegistry` also uses `Switch_Allowed`/`Interruption_Margin`, independent of this eligibility gate.)
 
@@ -1540,7 +1545,7 @@ that implements it exists — the Authoritative Mechanics Rule's own precedence 
 the direction it names: the Bible first, code second. See `TCK-20260913-NO-MECHANISM-RECORDS-PER-
 ENEMY-KIND-DANGER` for the finding that started this: no mechanism anywhere let an entity learn
 that one kind of creature is more dangerous than another, so every combat capability estimate fell
-back to the same hardcoded per-kind table (§6.12's own `_ENEMY_DANGER`) regardless of what that
+back to the same hardcoded per-kind table (§6.12's own `_ENEMY_DANGER`, since removed by KNOW-04: the estimate now starts from declared common knowledge, `TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY`) regardless of what that
 specific entity had actually seen or fought.
 
 **This is not a new mechanism. Most of it already exists, unreachable.** `src/domains/

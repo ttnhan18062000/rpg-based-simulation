@@ -144,12 +144,28 @@ def test_each_start_appends_a_binding_and_updates_the_instance(world):
     assert st.read_instance(state_root, WRITER).holder.session_id == "b"
 
 
-def test_the_writer_role_takes_the_worktree_lease_and_a_non_writer_does_not(world):
+def test_the_writer_role_takes_the_lease_and_another_role_cannot_take_a_held_one(world):
     root, repo, state_root = world
     _ctx(world, _payload(repo))
     assert st.read_lease(state_root, repo).role == WRITER
     _ctx(world, _payload(repo, agent_type=f"session-{OTHER}", session_id="d"))
     assert st.read_lease(state_root, repo).role == WRITER  # the designer did not take it
+
+
+@pytest.mark.parametrize("role_id", ["rpg-designer", "agent-working-planner", "testing-planner", "codebase-designer"])
+def test_a_designer_or_planner_takes_the_lease_in_its_own_worktree(world, role_id):
+    """TCK-20261007-SESSION-PER-ROLE-WORKTREES: each designer/planner is the writer of its own worktree."""
+    root, repo, state_root = world
+    out = _ctx(world, _payload(repo, agent_type=f"session-{role_id}"))
+    assert "WRITER LEASE NOT TAKEN" not in out and st.read_lease(state_root, repo).role == role_id
+
+
+def test_a_planners_second_instance_does_not_take_the_planners_lease(world):
+    root, repo, state_root = world
+    _ctx(world, _payload(repo, agent_type="session-agent-working-planner"))
+    out = _ctx(world, _payload(repo, agent_type="session-agent-working-planner", session_id="s2"),
+               env={"SESSION_ROLE": "agent-working-planner-2"})
+    assert "WRITER LEASE NOT TAKEN" not in out and st.read_lease(state_root, repo).role == "agent-working-planner"
 
 
 def test_another_roles_lease_is_reported_not_stolen(world):

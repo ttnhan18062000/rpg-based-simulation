@@ -1,0 +1,18 @@
+# ad_base_crowded_frontier
+DIGEST 63c3f9ee8f24fd58
+FRAC crowded_frontier 42 2000 {"attack_decisions": 46, "attack_decisions_float_dist_above_1": 3, "attack_decisions_with_a_fractional_party": 2, "entities_alive_at_end": 1, "entities_dead_or_removed": 40, "entities_ever_fractional": 1, "entities_ever_seen": 41, "entities_fractional_at_end": 1, "entities_total_final": 41, "initial_fractional_entities": 0, "max_fractional_entities_at_any_tick": 1, "reach_checks": 1035, "reach_checks_with_fractional_party": 23, "reach_disagrees_with_legality": 4, "reach_false_but_legality_true": 4, "survival_action.EAT": 3}
+# ad_base_frontier_living_world
+DIGEST e439010e4048e8f6
+FRAC frontier_living_world 42 2000 {"attack_decisions": 49, "attack_decisions_float_dist_above_1": 12, "attack_decisions_with_a_fractional_party": 3, "entities_alive_at_end": 6, "entities_dead_or_removed": 50, "entities_ever_fractional": 3, "entities_ever_seen": 56, "entities_fractional_at_end": 3, "entities_total_final": 56, "initial_fractional_entities": 0, "max_fractional_entities_at_any_tick": 3, "reach_checks": 1643, "reach_checks_with_fractional_party": 323, "reach_disagrees_with_legality": 110, "reach_false_but_legality_true": 110, "survival_action.EAT": 43}
+# ad_fix_crowded_frontier_a
+DIGEST 78a3a71a3add45be
+FRAC crowded_frontier 42 2000 {"attack_decisions": 45, "attack_decisions_float_dist_above_1": 3, "entities_alive_at_end": 1, "entities_dead_or_removed": 40, "entities_ever_fractional": 0, "entities_ever_seen": 41, "entities_fractional_at_end": 0, "entities_total_final": 41, "initial_fractional_entities": 0, "max_fractional_entities_at_any_tick": 0, "reach_checks": 762, "survival_action.EAT": 7, "survival_action.REST": 2}
+# ad_fix_crowded_frontier_b
+DIGEST 78a3a71a3add45be
+FRAC crowded_frontier 42 2000 {"attack_decisions": 45, "attack_decisions_float_dist_above_1": 3, "entities_alive_at_end": 1, "entities_dead_or_removed": 40, "entities_ever_fractional": 0, "entities_ever_seen": 41, "entities_fractional_at_end": 0, "entities_total_final": 41, "initial_fractional_entities": 0, "max_fractional_entities_at_any_tick": 0, "reach_checks": 762, "survival_action.EAT": 7, "survival_action.REST": 2}
+# ad_fix_frontier_living_world_a
+DIGEST 4a1442ff00f7d1ba
+FRAC frontier_living_world 42 2000 {"attack_decisions": 109, "attack_decisions_float_dist_above_1": 63, "entities_alive_at_end": 6, "entities_dead_or_removed": 50, "entities_ever_fractional": 0, "entities_ever_seen": 56, "entities_fractional_at_end": 0, "entities_total_final": 56, "initial_fractional_entities": 0, "max_fractional_entities_at_any_tick": 0, "reach_checks": 2628, "survival_action.EAT": 36, "survival_action.REST": 15}
+# ad_fix_frontier_living_world_b
+DIGEST 4a1442ff00f7d1ba
+FRAC frontier_living_world 42 2000 {"attack_decisions": 109, "attack_decisions_float_dist_above_1": 63, "entities_alive_at_end": 6, "entities_dead_or_removed": 50, "entities_ever_fractional": 0, "entities_ever_seen": 56, "entities_fractional_at_end": 0, "entities_total_final": 56, "initial_fractional_entities": 0, "max_fractional_entities_at_any_tick": 0, "reach_checks": 2628, "survival_action.EAT": 36, "survival_action.REST": 15}

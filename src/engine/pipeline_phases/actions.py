@@ -6,10 +6,8 @@ from typing import TYPE_CHECKING
 from src.core.enums import ReasonCode
 from src.core.updates import (
     EntityUpdate,
-    StrategicUpdate,
     RejectionEvent,
 )
-from src.core.strategic import BlockerState
 from src.core.state import _readonly_mapping
 from src.engine.domain_logic import SimulationDomainLogic
 from src.engine.legality import LegalityServiceV2
@@ -33,6 +31,15 @@ _ENDS_HELD_ATTACK_REASONS = frozenset({
     ReasonCode.OUT_OF_RANGE.value,
 })
 
+# Failure reasons that end a held INTERACT: the resource node it works on is gone or out of charges, so no further tick can
+# gather anything. Only a fresh decision (another node, or the node once it regrows) can change that.
+_ENDS_HELD_INTERACT_REASONS = frozenset({
+    ReasonCode.SOURCE_MISSING.value,
+    ReasonCode.SOURCE_DEPLETED.value,
+})
+
+_ENDS_HELD_REASONS_BY_ACTION = {"ATTACK": _ENDS_HELD_ATTACK_REASONS, "INTERACT": _ENDS_HELD_INTERACT_REASONS}
+
 
 def _is_unrecoverable_action_failure(action: str, outcome: str, reason_value: object) -> bool:
     """True when retrying the same held task can never succeed, so the task must end (the caller clears it).
@@ -52,7 +59,7 @@ def _is_unrecoverable_action_failure(action: str, outcome: str, reason_value: ob
         return False
     if reason_value in _UNRECOVERABLE_ANY_ACTION_REASONS:
         return True
-    return action == "ATTACK" and reason_value in _ENDS_HELD_ATTACK_REASONS
+    return reason_value in _ENDS_HELD_REASONS_BY_ACTION.get(action, ())
 
 
 def _annotation_base_payload(payload: dict) -> dict:
@@ -199,9 +206,10 @@ class ActionRoutingPhase:
                         tick=state.tick, actor_id=eid, action_kind=action, reason=r_reason,
                         target_id=payload.get("target_id") or payload.get("target_pos")
                     ))
-                    refined_entity_updates[eid] = replace(ent_upd, task=failed_task, strategic=StrategicUpdate(
-                        blockers_add_or_update=[BlockerState(id=f"blocker_nav_{reason_value}", kind="capability", subject=reason_value)]
-                    ))
+                    # A queued action waiting for readiness is a wait, not a capability gap: the task is kept and the swing lands
+                    # at readiness 100, so no blocker is written (it was never resolved and fed RESOLVE_BLOCKER;
+                    # verify_readiness has no other failure reason, so this was the only blocker write in the phase).
+                    refined_entity_updates[eid] = replace(ent_upd, task=failed_task)
                     update = replace(update, entity_updates=refined_entity_updates, rejection_events=new_rejection_events, rejections_delta=new_rejections_delta, world_events_add=new_world_events_add)
                     continue
 

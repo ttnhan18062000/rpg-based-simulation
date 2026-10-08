@@ -419,3 +419,11 @@ def test_critical_text_pattern_is_narrow():
         assert guard.critical_text(text), text
     for text in ("git commit -m x", "cat CLAUDE.md", "git merge origin/main", "pytest -k merge", "echo settings.json"):
         assert not guard.critical_text(text), text
+
+
+def test_a_planner_commits_in_its_own_worktree_but_not_in_the_implementers():
+    """TCK-20261007-SESSION-PER-ROLE-WORKTREES: the lease in a planner's own worktree is the planner's; the
+    implementer's worktree keeps the implementer's."""
+    assert _decide("git commit -m x", "agent-working-planner", lease_role="agent-working-planner")[0] is None
+    decision, reason = _decide("git commit -m x", "agent-working-planner", lease_role="agent-working-implementer")
+    assert decision == guard.DENY and "writer is agent-working-implementer" in reason

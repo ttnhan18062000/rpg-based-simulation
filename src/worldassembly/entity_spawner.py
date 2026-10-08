@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Optional, Tuple
 
+from src.content.common_knowledge_seed import default_self_model
 from src.core.state import EntityState
 from src.entities.archetype_factory import ArchetypeEntityFactory, EntitySpawnContext
 from src.entities.contract_builder import resolved_archetype_to_contract
@@ -152,5 +153,6 @@ class WorldEntitySpawner:
                 action_style=get_action_style_for_bravery(personality.bravery),
             )
             .spawn_combat_stats_are_final()
+            .replace_self_model(default_self_model())
             .build()
         )

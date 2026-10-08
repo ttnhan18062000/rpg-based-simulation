@@ -1,0 +1,1 @@
+RBTRACE {"world": "crowded_frontier", "seed": 43, "label": "new", "counts": {"blocker_entity_ticks": 928, "blocker_episodes": 1, "open_blocker_lifetime_max": 927, "open_blocker_lifetime_sum": 927, "readiness_rejections": 1, "resolve_blocker_starts": 90, "unresolved_at_end": 1}}

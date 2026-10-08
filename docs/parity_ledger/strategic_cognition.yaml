@@ -4493,3 +4493,36 @@
     goal (whether a need may outrank it is a rule question with the designer), and
     does not touch ProjectKind projects. A switched-out project is suspended carrying
     its last live score; a kept project is not rewritten.
+- id: STRAT-280
+  text: 'TCK-20261007-BIOLOGICAL-NEEDS-ESCALATE-ABOVE-ORDINARY-GOALS-BEFORE-THE-CONSEQUENCE-LINE-SURV-07
+    (world rule SURV-07, Decision 24): the hunger and fatigue goals score the raw
+    need plus a smoothstep from 0.6 to 0.85 of the consequence line (up to +60) evaluated
+    on the level the subject will have on arrival at the inn, with the kind''s own
+    need rate (SURV-05); the escalation gives way to a present threat (a perceived
+    hostile plus AGENCY-07''s present_threat_terms; a wound alone is not one); a subject
+    that cannot reach a bed before its sleep debt reaches 0.85 of the line, or has
+    none, dispatches REST with reason REST_IN_PLACE when no present threat holds.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/need_pull.py, src/ai/goals/scorers.py (SleepScorer, EatScorer),
+    src/ai/goals/present_threat.py, src/ai/goals/scorers_support.py, src/engine/tactical_rest.py
+    (rest_in_place_update, called from src/engine/tactical.py). Corpus (Kernel.tick_once(),
+    seeds 42-46, 1500 ticks, audit_mode, budget off, governor pinned NORMAL, main
+    0a03c2448 vs this branch, mean over seeds): starvation deaths 25.0 / 25.8 / 16.0
+    to 13.2 / 13.0 / 10.8 and total deaths 34.2 / 44.6 / 23.6 to 36.8 / 42.4 / 23.8
+    (crowded_frontier / frontier_living_world / urban_political); alive at t=1100
+    5.6 / 8.4 / 6.8 to 3.8 / 13.6 / 6.8; alive at t=1000 18.2 / 14.6 / 14.4 to 7.8
+    / 15.8 / 12.2 (crowded_frontier t=1000 is a failed cell). docs/guidelines/intentional_divergences.md
+    2.81; docs/mechanics/04_strategic_cognition.md section 1'
+  proof_type: regression
+  test_path: tests/unit/ai/test_need_pull.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.81.
+  support_boundary: 'Part of the starvation gain is free meals (the EAT action takes
+    no gold and needs no building; closed in TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL
+    with Decision 27). Every remaining starvation death is a broke subject. crowded_frontier
+    alive at t=1000 falls (18.2 to 7.8) from opportunity attacks taken while walking
+    beside a hostile (TCK-20261007-A-WALKER-BESIDE-A-PERCEIVED-HOSTILE-KEEPS-STEPPING-AND-EATS-AN-OPPORTUNITY-ATTACK-PER-STEP).
+    REST_IN_PLACE did not fire in the corpus in 1500 or 3000 ticks (sleep debt reaches
+    0.85 of its line at about t=1670): its dispatch is proved by a constructed test.
+    SimQ grade-anchor movement is not measured locally.'

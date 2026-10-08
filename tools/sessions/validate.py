@@ -11,7 +11,7 @@ Rules (each has a named `rule` id on its finding):
   unknown-route-target     a `routes` target (or `accepts_dispatch_from` / `interim_holder`) is not a role
   duplicate-session-name   two roles share a `session_name`
   worktree-writer          a worktree declares no writer, or a role names a worktree that is not declared
-  writer-not-implementer   a worktree's writer is not an implementer
+  worktree-shared          a worktree hosts a role other than its writer
   bad-field                function / seat_status / max_sessions is outside its allowed values
   authority-*              the authority file is not marked governing, names an unknown role, or lacks a
                            default for a function
@@ -150,10 +150,11 @@ def _check_worktrees(roster: Roster) -> list[Finding]:
         writer = roster.role(w.writer)
         if writer is None:
             out.append(Finding("worktree-writer", w.name, f"writer {w.writer!r} is not a role"))
-        elif writer.function != "implementer":
-            out.append(Finding("writer-not-implementer", w.name, f"writer {w.writer!r} is a {writer.function}, not an implementer"))
         elif writer.worktree != w.name:
             out.append(Finding("worktree-writer", w.name, f"writer {w.writer!r} is placed in {writer.worktree!r}"))
+        for r in roster.roles:
+            if r.worktree == w.name and r.role != w.writer:
+                out.append(Finding("worktree-shared", r.role, f"placed in {w.name!r}, whose writer is {w.writer!r}: a worktree hosts only its writer"))
     return out
 
 

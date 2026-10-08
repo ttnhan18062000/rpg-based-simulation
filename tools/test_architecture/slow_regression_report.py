@@ -12,16 +12,15 @@ Rules:
   as a failure, so it counts. `<skipped>` (skip and xfail) is not red.
 - Tracker issue (rank 1): found through the REST issues list, never by search. It is an open issue with the label
   `slow-regression`, created by `github-actions[bot]`, whose body carries `<!-- slow-regression-tracker -->`. More
-  than one such issue is an error. LEGACY: one open bot issue with the label and a state block but no marker (the
-  issue created before the marker existed) is adopted exactly once and gets the marker on the next render; two
-  legacy issues is an error; a marked issue is preferred over a legacy one, with a warning. The legacy path can be
-  deleted once the live issue carries the marker.
+  than one such issue is an error. An unmarked issue is not a tracker, whoever created it.
 - First run (no tracker): create the issue with the full current set and post NO per-test comments.
 - A closed issue is not reopened: a recurrence after closing creates a NEW issue, by design.
 - A step that produced no JUnit file is "missing", and an expected corpus id with no result is "unmeasured":
   their previous state is carried over (never reported FIXED) and the issue is not closed.
-- `slow_known_reds.yaml` entries carry owner, added_on, expires_on and kind. A failing test matching no entry is
-  UNOWNED; one matching an entry past `expires_on` is EXPIRED and listed under its own heading.
+- `slow_known_reds.yaml` entries carry owner, added_on, expires_on and kind. A failing test resolves to the FIRST
+  entry whose pattern matches, so a narrower entry must precede any broader one covering it (the lint rejects a
+  shadowed entry). A failing test matching no entry is UNOWNED; one matching an entry past `expires_on` is EXPIRED
+  and listed under its own heading.
 - Exit status (rank 4): 1 when a failing test is UNOWNED or EXPIRED, when a step is missing or a corpus id is
   unmeasured, or when GitHub cannot be reached (a `::error` annotation is printed). Otherwise 0, so a run whose
   every red is mapped and in date is green; a NEW mapped red still gets its NEW comment but does not fail the job.
@@ -159,6 +158,32 @@ def lint_known_reds(entries: Sequence[dict]) -> List[str]:
             problems.append(f"{label}: expires_on is before added_on")
         if entry.get("kind") and entry["kind"] not in KINDS:
             problems.append(f"{label}: kind must be one of {KINDS}, got {entry['kind']!r}")
+        if "[" in str(entry.get("match", "")):
+            # fnmatch reads `[...]` as a character class, so an exact parametrized id such as
+            # `t::test_x[5000]` would never match itself and its failure would show as UNOWNED.
+            problems.append(f"{label}: '[' is a character class in fnmatch; write the parameter part with '*' or '?' instead")
+    problems.extend(shadowed_entries(entries))
+    return problems
+
+
+def _sample_id(pattern: str) -> str:
+    """A concrete id the pattern matches: `*` -> nothing, `?` -> one character (the lint forbids `[` in patterns)."""
+    return pattern.replace("*", "").replace("?", "x")
+
+
+def shadowed_entries(entries: Sequence[dict]) -> List[str]:
+    """Entries a test id can never reach, because owner_of() returns the first match and an earlier, broader
+    pattern also matches the later entry's ids. A catch-all must come after every narrower entry it covers."""
+    problems: List[str] = []
+    for later_index, later in enumerate(entries):
+        pattern = later.get("match")
+        if not pattern:
+            continue
+        sample = _sample_id(pattern)
+        for earlier in entries[:later_index]:
+            if earlier.get("match") and fnmatch.fnmatchcase(sample, earlier["match"]):
+                problems.append(f"{pattern}: shadowed by the earlier entry {earlier['match']!r}; move it before that entry")
+                break
     return problems
 
 
@@ -261,34 +286,19 @@ def title_for(count: int) -> str:
 # ── tracker selection (rank 1) ───────────────────────────────────────────────────────────────
 
 
-def select_tracker(issues: Sequence[dict]) -> Tuple[Optional[dict], bool, List[str]]:
-    """Return (tracker or None, adopted_legacy, warnings). Raises TrackerError when ambiguous."""
-    bot = [
+def select_tracker(issues: Sequence[dict]) -> Optional[dict]:
+    """Return the tracker issue, or None. Raises TrackerError when more than one issue qualifies."""
+    marked = [
         i for i in issues
-        if i.get("user_login") == BOT_LOGIN and LABEL in (i.get("labels") or [])
+        if i.get("user_login") == BOT_LOGIN
+        and LABEL in (i.get("labels") or [])
+        and TRACKER_MARKER in (i.get("body") or "")
     ]
-    marked = [i for i in bot if TRACKER_MARKER in (i.get("body") or "")]
-    legacy = [i for i in bot if TRACKER_MARKER not in (i.get("body") or "") and parse_state(i.get("body") or "") is not None]
-    warnings: List[str] = []
     if len(marked) > 1:
         raise TrackerError(
             "more than one open tracker issue carries the marker: " + ", ".join(f"#{i['number']}" for i in marked)
         )
-    if marked:
-        if legacy:
-            warnings.append(
-                "a legacy tracker issue exists next to the marked one and is ignored: "
-                + ", ".join(f"#{i['number']}" for i in legacy)
-            )
-        return marked[0], False, warnings
-    if len(legacy) > 1:
-        raise TrackerError(
-            "more than one legacy tracker issue (bot-created, labelled, no marker): "
-            + ", ".join(f"#{i['number']}" for i in legacy)
-        )
-    if legacy:
-        return legacy[0], True, warnings
-    return None, False, warnings
+    return marked[0] if marked else None
 
 
 # ── one run ──────────────────────────────────────────────────────────────────────────────────
@@ -350,7 +360,8 @@ def run_report(
     now_iso = now.isoformat()
     missing = [s for s in EXPECTED_STEPS if s not in seen_steps]
 
-    issue, adopted, warnings = select_tracker(client.list_issues())
+    issue = select_tracker(client.list_issues())
+    warnings: List[str] = []
     previous = parse_state(issue["body"]) if issue else None
 
     if previous is not None and (missing or unmeasured):
@@ -387,7 +398,6 @@ def run_report(
         client.create_issue(title_for(len(failing)), body)
         return Result(f"first run: created the issue with {len(failing)} failing, no per-test comments", reasons, warnings)
 
-    message_prefix = "adopted the legacy issue and added the marker; " if adopted else ""
     if previous is None:
         client.update_issue(issue["number"], title_for(len(failing)), body)
         return Result("issue state block unreadable: refreshed the body, no comments", reasons, warnings)
@@ -416,10 +426,10 @@ def run_report(
     if not failing and not missing and not unmeasured:
         client.update_issue(issue["number"], title_for(0), body)
         client.close_issue(issue["number"])
-        return Result(message_prefix + "failing set is empty: closed the issue", reasons, warnings)
+        return Result("failing set is empty: closed the issue", reasons, warnings)
     client.update_issue(issue["number"], title_for(len(failing)), body)
     summary = "set changed: commented and refreshed" if changed else "set unchanged: refreshed 'last seen' only"
-    return Result(message_prefix + summary, reasons, warnings)
+    return Result(summary, reasons, warnings)
 
 
 class GhClient:

@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-08T04:55:05.242982Z", "ticket_id": "TCK-20261008-PR-RENDER-TICKETLESS-DROPS-EXCLUSION", "title": "pr_render ticketless path keeps recorded exclusions", "status": "DONE", "summary": "render_ticketless_body now writes the pr-render:exclude comments so --check matches", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}

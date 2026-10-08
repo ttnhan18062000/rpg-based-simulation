@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-07"
+last_verified: "2026-10-08"
 ---
 
 # World Rule Family: Survival Needs
@@ -141,6 +141,10 @@ consequence, counter).
 > person's needs only if it is a person (a civil role). Any other subject without a kind is a
 > content defect to report, never a guess. Whichever source supplied a subject's need profile, the
 > subject's state records it, including when the profile was defaulted.
+>
+> A kind's profile declares every modeled need, including the ones the kind does not have: "no
+> need" is declared (`none`), never inferred from a missing entry. A profile that leaves a
+> modeled need out is a content gap to report, not a kind without that need.
 
 **Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
 (row 22 of `docs/plans/systemic_world/owner_decision_memo.md`). Passes the admission test:
@@ -151,26 +155,47 @@ drives to the person.
 - **Alternatives not taken:** need by role (a guard's body is not different from a worker's);
   one uniform need set for everyone (today's accident, and it contradicts the catalog, which
   already declares different profiles); a silent default (forbidden by the durable-state rule).
+- **Declared absence (decided by world-rule-catalog-design under owner delegation, 2026-10-07, as
+  a reading of this Rule; first relayed to the planner by message, recorded here):** a missing
+  need key is a content gap, not "no need". This is the same discipline as CONFLICT-03, where
+  missing data declares nothing.
 
-**Repository evidence: was CONFLICTING (measured by Lane A on main `f8f1b69fd`); biology now follows the profile (divergence 2.80, `src/engine/biological_needs.py`), compiled-subject profile assignment is still `TCK-20261007-COMPILED-ENTITIES-GET-DEFAULT-NEED-AND-DRIVE-PROFILES-WITH-VISIBLE-PROVENANCE`** (seed 42, all 24
-worlds compiled at tick 0).
-- **No compiled subject carries a profile.** 0 of 666 entities have a `need_profile_id` or
-  `drive_profile_id`, and the pressure resolver returns `no_profile` for all of them. Profile ids
-  come only from the archetype resolver (`src/worldassembly/resolver.py:1163-1164`);
-  `WorldCompiler` never sets them. Campaign (archetype-spawned) entities do carry profiles.
-- **The catalog already supports this Rule.** All 13 species carry a need profile (6 distinct
-  profiles). By species the corpus is human 324, goblin 82, undead 54, wolf 50, orc 36, spider 35,
-  lizardfolk 24, elf 6 and spirit 4, and 51 have no species (all HERO, SHOPKEEPER or GUARD). The
-  species need profile therefore covers 615 of 666, and the person fallback covers the other 51.
-- **Biology ignores the profile.** Biological needs accumulate at constants that are identical for
-  every subject (`src/engine/apply.py:90-91`). Undead, whose catalog hunger is `none`, still get
-  hungry, and every survivor is at exactly hunger 50.0 at t=500.
-  - Lane A is checking whether everyone reaches starvation together around t≈950. If confirmed,
-    that is a hard bug under memo row 7.
-- **Tracked:** `TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-ENTITIES`, re-scoped
-  to this Rule (Lane B). The decision-core epic covers both halves.
-- **Not changed:** dimensions with no reader stay inert bookkeeping under SURV-04 until a consumer
-  exists.
+**Repository evidence: SUPPORTED for biology since #407 (`0a03c2448`); the provenance clause is
+still MISSING.**
+- **Biology follows the kind's profile** (divergence 2.80, `src/engine/biological_needs.py`).
+  - The profile comes from an explicit `need_profile_id`, else the species' catalog profile,
+    else `humanoid_survival` for a civil role.
+  - Levels `none`, `low`, `medium` and `high` scale the old constants by 0, 0.5, 1 and 1.5, so
+    `medium` keeps the old rate.
+  - Undead and spirits no longer hunger.
+  - Tests: `tests/unit/engine/test_biological_needs.py`.
+- **Declared absence is in the content:**
+  - `data/content/living/need_profiles.yaml` declares `sleep` on every profile: `medium` on
+    `carnivore_survival` and `goblin_survival` (a content choice, seeded at the humanoid level),
+    and `none` on `undead_purpose`, `spirit_anchor` and `elemental_stability`.
+  - The content validator reports a profile that leaves out a modeled need as warning
+    `CAT-NEED-001` (`src/content/validator.py`). The corpus has 0 such warnings.
+  - The code still has an interim fallback that treats a missing key as not built. It records
+    every firing (`ABSENT_NEED_KEY_FIRINGS`) and fires 0 times over the 666 corpus subjects.
+- **A monster with no species** keeps the old constants and is reported as a content defect. The
+  corpus has 0.
+- **Measured** (divergence 2.80), on `frontier_living_world`, seed 42, 1,300 ticks. Before is main
+  `7a39acc5d`; after is the #407 head `77fc6bc4c`, which has the same `src` as the merge
+  `0a03c2448`:
+  - alive at t=1100 goes from 3 to 10, and starvation deaths from 33 to 27; both include meals a
+    subject could not pay for (SURV-06's conflicting clause), so they are not the effect of the
+    need rates alone;
+  - `crowded_frontier` is unchanged, because it has no kind without hunger;
+  - `urban_political` is unchanged over 5,000 ticks, because it compiles without species and
+    every subject takes the person fallback.
+- **Still MISSING: compiled subjects carry no profile and no provenance.** Measured by Lane A on
+  `f8f1b69fd`: 0 of 666 compiled entities had a `need_profile_id`. The species covers 615 of
+  them, and the person fallback covers the other 51, all HERO, SHOPKEEPER or GUARD. Biology now
+  resolves the profile on demand, but the state does not yet record which source supplied it.
+  Tracked:
+  `TCK-20261007-COMPILED-ENTITIES-GET-DEFAULT-NEED-AND-DRIVE-PROFILES-WITH-VISIBLE-PROVENANCE`.
+- **Not changed:** need dimensions with no reader stay inert bookkeeping under SURV-04 until a
+  consumer exists.
 
 **Scenarios:** none traced yet. Two are owed when implemented: an undead and a human share a
 region for a long run, and only the human grows hungry; two species with different hunger
@@ -213,8 +238,86 @@ the world, which contradicts SURV-03 (a need is modeled for its real, causal con
   - rest only in buildings (a timer for anyone far from one);
   - the engine quietly feeding subjects that cannot eat (hides a content defect);
   - a guarantee that every individual can eat (removes poverty as an outcome).
+- **Amendment, wild food is part of the land (decided by rpg-designer, direction confirmed by
+  the owner directly, 2026-10-08; row 29 of the memo):**
 
-**Repository evidence: CONFLICTING. Eating has never worked in the compiled corpus.** Lane A,
+  > Wild food belongs to the land. Each biome declares how much wild food its land holds and
+  > how fast it grows back, and a world places wild food by biome, in its wild land outside
+  > its settlements. How many subjects that food feeds is an outcome, not a target: a world's
+  > wild food is never sized to its hungry.
+
+  - **Sizing input:** biome fertility, not demand. For example, forest, grassland and river land
+    hold more, hills less, and desert, mountain and cave little or none. The figures (node
+    density per area, charges, regrowth) are content data, set from the land and never fitted to
+    a starvation count.
+  - **Regrowth:** a flat data value per biome and food-node kind, through RES-05's ecology
+    process. No season mechanic exists. A seasonal yield would need its own declared process
+    (ENV-01, ENV-05), which is feature work frozen by memo row 7.
+  - **The cost is the land's own:** the walk from a settlement to wild land, finite charges, and
+    competition for them. There is no minimum-walk number. A town's land holds owned food (the
+    inn, the shop), and taking owned food is theft, which decision 27 excludes.
+  - **Unchanged guardrails:** wild food enters by harvest and leaves by eating (Bible 03
+    conservation); it is its own declared item and node kind, never herb; and the integrity
+    check (`need_paths.py`) counts a wild-food node within reach as a hunger way for the kinds
+    that forage.
+  - **What follows for measurement:** the test of this clause is occurrence and effect.
+    Subjects who cannot pay forage, carry what they gather and eat it, and the nodes deplete and
+    regrow. Starvation among subjects who cannot pay is an outcome to report, not an acceptance
+    target. If it rises, the missing half is earning and then buying
+    (`TCK-20261007-SHOP-AND-BLACKSMITH-TOWN-PATHS-NEVER-RAN-IN-A-COMPILED-WORLD`), not more
+    wild food.
+  - **Alternatives not taken:** size wild food to the demand of subjects who cannot pay (poverty
+    never lethal, which contradicts this Rule's "may starve" and makes earning pointless for
+    survival); meet a fixed share of that demand (a tuning dial, not a fact about the world);
+    gardens and orchards inside settlements (blurs wild food with owned food).
+  - **Evidence: MISSING, measured by Lane B on main `dcfe5de4d`** (relayed by rpg-planner, 5
+    seeds x 3 worlds, after regrowth and the dry-node release landed). Each world has one food
+    node of 8 charges. It supplies about 13 charges per run and is dry for 460 to 700 ticks; the
+    median walk to it is 80, 72 and 17 ticks. With free meals removed, starvation rises
+    (crowded 9.6 to 12.8, frontier_living 11.0 to 17.6, urban 6.8 to 15.4), all of it among
+    subjects who cannot pay. Free meals had been feeding 19 to 47 EATs per run. No world places
+    wild food by biome yet.
+
+**Repository evidence: PARTLY SUPPORTED since #407 (`0a03c2448`), with one CONFLICTING clause:
+a subject who cannot pay is fed for free.** The inn meal and rough rest complete; the price does
+not hold. Per divergence 2.80, measured on `frontier_living_world`, seed 42, 1,300 ticks, from
+main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
+- **Eating and resting now complete:** eat events go from 0 to 24 and sleep events from 0 to 17.
+  Alive at t=1100 goes from 3 to 10. These figures include the free meals below.
+- **CONFLICTING: the meal is free when the subject cannot pay.** This breaks "for a price" and
+  "no engine charity".
+  - `CoreActions.execute_survival("EAT")` (`src/engine/domain/core_actions.py:41-49`) cuts hunger
+    by 40 with no building, no gold and no carried food.
+  - The inn's 5-gold charge is a separate resource transfer (`src/engine/town_resolution.py:124-126`),
+    and inventory clamps gold at `max(0, …)` (`src/core/inventory.py:156`, `:230`), so a broke
+    subject is fed and pays nothing.
+  - Lane A's pinned measurement (seed 42): 21 of 21 EATs on `crowded_frontier` and 11 of 11 on
+    `urban_political` were by subjects holding under 5 gold, and gold fell in only 1 of them.
+  - The same action also consumes no carried food, so "eat what you carry" is not yet a real
+    path either.
+  - Tracked: `TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL` (P1). It
+    lands together with decision 27 (a need with no open way pulls toward the step that opens
+    one), so fixing the free meal does not leave poor subjects with no behaviour at all.
+- **The meal place is the inn.** `EatScorer` targets the nearest `inn`, and the town EAT is
+  served at an `inn`.
+- **Service reach is adjacency.** The building is the subject's own tile or one of its four
+  orthogonal neighbours (MOV-07), filtered by the action's building kinds: REST takes an inn or a
+  home, EAT only an inn. A nearer home cannot shadow the inn (`src/engine/service_reach.py`).
+- **Rough rest needs no building:** `CoreActions` REST recovers 10 sleep debt anywhere. The inn's
+  or home's town REST adds 5 more, so a bed only improves rest.
+- **World integrity is advisory:** `src/engine/need_paths.py` and `tools/need_path_report.py`
+  list, per world and kind, whether a hungry kind has a meal place. It never blocks. Four of 24
+  worlds have no inn: `dungeon_crawl`, `wilderness_survival`,
+  `mechanic_scenario_combat_judgement_withdrawal` and `quest_dense_frontier`.
+- **Still open:**
+  - **Hunger is acted on too late.** Most people still starve at about t=1000, and starvation
+    deaths are 27. That is SURV-07's gap, not a missing path.
+  - **Not yet measured:** whether buying, harvesting, foraging or receiving actually puts food in
+    the subject's hands for later, and the "not in danger" condition on rough rest.
+  - **Engineering finding:** shop and blacksmith enforcement has never run in a compiled world.
+    Tracked as `TCK-20261007-SHOP-AND-BLACKSMITH-TOWN-PATHS-NEVER-RAN-IN-A-COMPILED-WORLD`.
+
+**Earlier evidence: CONFLICTING. Eating had never worked in the compiled corpus.** Lane A,
 read-only, on main `cc3f00a11`, seed 42, `crowded_frontier` and `frontier_living_world`; the
 earlier figures are on base `f8f1b69fd`:
 - **Outcome:** 0 eat and 0 sleep completions in 2,000 ticks on both worlds; 36 of 51 and 30 of 39
@@ -238,10 +341,14 @@ earlier figures are on base `f8f1b69fd`:
   lands with SURV-05's rates, the inn meal target, the eat-carried-food path, rough sleep and the
   advisory integrity check. It is a row-7 hard bug.
 
-**Scenarios:** none traced yet. Three are owed when implemented:
+**Scenarios:** none traced yet. Four are owed when implemented:
 - a hungry worker with coins walks to the inn and eats;
 - a hungry worker far from town eats the bread it carries;
 - an exhausted guard on a distant road sleeps rough and recovers, more slowly than in an inn bed.
+- a broke worker walks out of town to wild land, gathers wild food, carries it back and eats it
+  when hungry; the patch it stripped is dry for a while, then grows back (decision 29). Written as
+  a kernel spec with a no-wild-food control arm:
+  [LB-S17](../scenarios/life-body-batch-05.md#lb-s17).
 
 ---
 
@@ -277,9 +384,28 @@ others, not a reflex.
 - `SleepScorer`'s utility is the sleep debt itself (+30 at night), about 50 at t≈450.
 - So a tired subject walking to the inn is pulled away whenever a blocker's suppression expires.
   A biological need can win only near 80–95, which is close to its consequence line.
-- A separate engineering defect is being fixed: the switch compared a live candidate against the
-  current project's stale, creation-time score.
-- **Tracked:** under `TCK-20261007-EPIC-DECISION-CORE-LIVE-MOTIVATION-AND-HONEST-FIGHT-OR-FLEE-INPUTS`.
+- A separate engineering defect is fixed by #406 (`7a39acc5d`): the project switch compared a
+  live candidate against the current project's stale, creation-time score.
+- **The live gap at `0a03c2448`:** with eating and rough rest completing (SURV-06), most people on
+  `frontier_living_world` still starve at about t=1000, because the decision pass picks hunger
+  late (divergence 2.80).
+- **Implemented by the PR this text lands in:**
+  `TCK-20261007-BIOLOGICAL-NEEDS-ESCALATE-ABOVE-ORDINARY-GOALS-BEFORE-THE-CONSEQUENCE-LINE-SURV-07`
+  (Lane A), under
+  `TCK-20261007-EPIC-DECISION-CORE-LIVE-MOTIVATION-AND-HONEST-FIGHT-OR-FLEE-INPUTS`. It ships the
+  escalation and the present-threat gate. Rest in place uses REST, not SLEEP, because under
+  SURV-06 a bed only improves rest.
+  - Lane A's pinned measurement, relayed by the planner. Base `0a03c2448` against this PR; seeds
+    42-46; 1,500 ticks; governor pinned NORMAL; determinism checked; means over the five seeds.
+    Starvation deaths go from 25.0 to 13.2 on `crowded_frontier`, from 25.8 to 13.0 on
+    `frontier_living_world`, and from 16.0 to 10.8 on `urban_political`. Part of that gain comes
+    from the free meals (SURV-06's conflicting clause), so it overstates the escalation's own
+    effect.
+  - Every remaining starvation death is a subject without gold. Feeding them is not this Rule's
+    job. It needs decision 27 (a need with no open way pulls toward the step that opens one) and
+    the free-meal fix, which land together.
+  - The SUPPORTED flip and the final figures, with their base commit, ride a later batch after
+    the free-meal fix re-measures.
 
 **Scenarios:** none traced yet. Two are owed when implemented:
 - a tired worker heading to the inn keeps going when a routine blocker reappears;

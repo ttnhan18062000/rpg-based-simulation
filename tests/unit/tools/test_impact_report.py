@@ -40,15 +40,18 @@ def _report(repo, *paths, junit=()):
     return ir.build_impact_report(repo, list(paths), junit)
 
 
-def test_local_rule_change_maps_to_one_domain_with_reasons_and_shows_untriggered_scenario_lane(repo):
+def test_local_rule_change_maps_to_one_domain_with_reasons_and_shows_the_scenario_lane_trigger(repo):
     rep = _report(repo, "src/progression/leveling.py")
     assert list(rep["domains"]) == ["progression"]
     assert rep["domains"]["progression"][0].startswith("src/progression/leveling.py:")
     assert [lv["level"] for lv in rep["levels"]] == ["unit", "kernel_integration", "mechanic_scenario"]
     assert [t["file"] for t in rep["recommended_tests"]] == ["tests/unit/progression/test_leveling.py"]
     lanes = {ln["lane"]: ln["lane_triggered"] for ln in rep["lanes"]["recommended"]}
-    # the scenario lane is recommended but the CI path filter would NOT trigger it for src/progression/**
-    assert lanes["perf-cert-arena"] == "not-triggered"
+    # TCK-20261008-PERF-LANE-PATH-GATE-MISSES-SIMULATION-SRC-DIRS: the scenario lane (perf-cert-arena) used to be
+    # recommended but NOT triggered by the CI path filter for src/progression/**; the filter is now "any src/
+    # path except 7 unreachable folders", so it is triggered. The not-triggered side is covered by
+    # test_real_workflow_perf_gate_is_parsed_by_the_impact_report (src/views).
+    assert lanes["perf-cert-arena"] == "triggered"
     assert lanes["unit-gameplay"] == "always-on"
     assert rep["impact_unknown"] == []
     assert not rep["cross_domain"]
@@ -206,3 +209,12 @@ def test_changed_test_without_markers_is_unchanged(repo):
     rep = _report(repo, "tests/unit/progression/test_leveling.py")
     assert "declared_markers" not in rep["changes"][0]
     assert rep["domains"] == {} and rep["levels"] == []
+
+
+def test_real_workflow_perf_gate_is_parsed_by_the_impact_report():
+    """TCK-20261008-PERF-LANE-PATH-GATE-MISSES-SIMULATION-SRC-DIRS: a gate rewrite that the scraper no longer
+    recognises would silently show the lane as always-on, so the real workflow's filters must all parse."""
+    filters = ir.path_filters(REPO_ROOT / ".github/workflows/test.yml")
+    assert {"perf-cert-arena", "migration-lanes", "frontend"} <= set(filters)
+    assert filters["perf-cert-arena"].search("src/systems/economy.py")
+    assert not filters["perf-cert-arena"].search("src/views/readiness.py")
