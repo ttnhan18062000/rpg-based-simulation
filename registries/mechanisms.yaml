@@ -1547,6 +1547,8 @@ mechanisms:
     state: gated
     implemented_by:
       - src/cognition/knowledge_model.py::KnowledgeModelService
+      - src/cognition/common_knowledge.py::seeded_knowledge
+      - src/cognition/common_knowledge.py::combat_capability_against
     verified:
       instrument: scenario
       verdict: observed
@@ -1566,6 +1568,9 @@ mechanisms:
         `self_model.knowledge.unknowns["material.wood.source"]` becomes a real `UnknownFact`
         through a real `Kernel.tick_once()`; with the flag off (real default), it stays empty.
         Positive control confirms `KnowledgeModelService.assimilate()` itself is not broken.
+        KNOW-04 (TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY): `seeded_knowledge` seeds each subject's
+        common-knowledge danger facts at spawn and `combat_capability_against` reads them; seeding runs at spawn regardless of
+        `ENABLE_SELF_MODEL_COGNITION`; the update service stays gated.
   - id: causal_spatial_memory
     layer: entity
     systems: [cognition]
