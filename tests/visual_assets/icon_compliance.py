@@ -381,30 +381,95 @@ def enemy_tent(s: rule.Sprite) -> list[Row]:
     ]
 
 
-def toolbox(s: rule.Sprite) -> list[Row]:
+def hammer_tongs(s: rule.Sprite) -> list[Row]:
     c = content(s)
-    x0, y0, x1, y1 = bbox(c)
-    body = [p for p, col in c.items() if col == EMBER]
-    lid = [p for p, col in c.items() if col == WINE]
-    gold = [p for p, col in c.items() if col == GOLD]
+    x0, y0, x1, y1 = bbox(silhouette(s))
+    wood = [p for p, col in c.items() if col in WOOD]
     steel = [p for p, col in c.items() if col in STEEL]
-    btop = min(y for _, y in body)
-    handle = [p for p in steel if p[1] < btop]
-    rivets = [p for p in steel if p[1] >= btop]
+    rivet = [p for p, col in c.items() if col == GOLD]
+    head = [p for p in steel if p[0] > 11 and p[1] < 11]
+    jaws = [p for p in steel if p[0] < 9 and p[1] < 9]
+    pieces = components(set(c))
+    mx = _live_margins(s)
     return [
-        Row("size", "18 px wide and 16 px tall, outline excluded", f"{x1 - x0 + 1} x {y1 - y0 + 1} px", (x1 - x0 + 1, y1 - y0 + 1) == (18, 16)),
-        Row("wider than tall", "width at least 1.1 times the height", f"{(x1 - x0 + 1) / (y1 - y0 + 1):.2f}", (x1 - x0 + 1) / (y1 - y0 + 1) >= 1.1),
-        Row("red body", ">= 100 red pixels", f"{len(body)} px", len(body) >= 100),
-        Row("lid band", ">= 40 pixels of the darker lid colour across the top of the body", f"{len(lid)} px", len(lid) >= 40),
-        Row("carry handle", ">= 12 steel pixels above the body, 8 px wide at most 10", f"{len(handle)} px, {max(x for x, _ in handle) - min(x for x, _ in handle) + 1} px wide", len(handle) >= 12 and max(x for x, _ in handle) - min(x for x, _ in handle) + 1 <= 10),
-        Row("latch", "a gold latch of 12 to 18 px", f"{len(gold)} px", 12 <= len(gold) <= 20),
-        Row("rivets", "4 rivets on the body", f"{len(rivets)} px", len(rivets) == 4),
+        Row("size", "19 px wide and 19 px tall, outline included (an X, not a long weapon)", f"{x1 - x0 + 1} x {y1 - y0 + 1} px", (x1 - x0 + 1, y1 - y0 + 1) == (19, 19)),
+        Row("live area", "margins of at least 2 px on all four sides of the 24x24 canvas", f"{mx[0]}, {mx[1]}, {mx[2]}, {mx[3]} px", min(mx) >= 2),
+        Row("wooden handle", ">= 14 px of wood colour (the hammer's handle)", f"{len(wood)} px", len(wood) >= 14),
+        Row("steel hammer head", ">= 20 steel pixels in the top right (a short heavy head; the outline the owner approved gives 22)", f"{len(head)} px", len(head) >= 20),
+        Row("tong jaws", ">= 8 steel pixels in the top left (the closed jaws)", f"{len(jaws)} px", len(jaws) >= 8),
+        Row("rivet at the crossing", "a gold rivet of at least 8 px", f"{len(rivet)} px", len(rivet) >= 8),
+        Row("crossed, one piece", "the two tools touch: all content is one connected piece", f"{len(pieces)} piece(s)", len(pieces) == 1),
+    ]
+
+
+THATCH_C, THATCH2_C, CREAM_C, BROWN_C, DOOR_C, SHUTTER_C, MODERN_BLUE = (0xC7, 0xB0, 0x4F), (0xA8, 0x70, 0x22), (0xF0, 0xEC, 0xD8), (0x5A, 0x2A, 0x1A), (0x8A, 0x30, 0x00), (0x4A, 0x60, 0x30), (0x50, 0xA8, 0xE0)
+
+
+def cottage(s: rule.Sprite) -> list[Row]:
+    c = content(s)
+    x0, y0, x1, y1 = bbox(silhouette(s))
+    n = lambda col: sum(1 for v in c.values() if v == col)  # noqa: E731
+    panes = components({p for p, v in c.items() if v == DARK})
+    shutters = components({p for p, v in c.items() if v == SHUTTER_C})
+    colours = len(set(c.values())) + 1
+    return [
+        Row("size", "20 px wide and 20 px tall, outline included", f"{x1 - x0 + 1} x {y1 - y0 + 1} px", (x1 - x0 + 1, y1 - y0 + 1) == (20, 20)),
+        Row("thatched roof", ">= 80 px of thatch (two golds; the approved outline gives 84)", f"{n(THATCH_C) + n(THATCH2_C)} px", n(THATCH_C) + n(THATCH2_C) >= 80),
+        Row("timber frame", ">= 40 px of timber brown", f"{n(BROWN_C)} px", n(BROWN_C) >= 40),
+        Row("plaster walls", ">= 30 px of cream plaster (the approved outline gives 36)", f"{n(CREAM_C)} px", n(CREAM_C) >= 30),
+        Row("small windows with dark panes", "two separate dark panes of 4 px", f"{len(panes)} panes {[len(p) for p in panes]}", len(panes) == 2 and all(len(p) == 4 for p in panes)),
+        Row("shutters", "four separate green shutter strips", f"{len(shutters)} strips", len(shutters) == 4),
+        Row("arched wooden door", ">= 20 px of door wood", f"{n(DOOR_C)} px", n(DOOR_C) >= 20),
+        Row("no modern blue glass", "no pixel of the old window blue (#50a8e0)", f"{n(MODERN_BLUE)} px", n(MODERN_BLUE) == 0),
+        Row("palette", "within the 24x24 budget of 12 colours (outline included)", f"{colours}", colours <= 12),
+    ]
+
+
+def spiked_debuff(s: rule.Sprite) -> list[Row]:
+    import math
+
+    c = content(s)
+    sil = silhouette(s)
+    x0, y0, x1, y1 = bbox(sil)
+    red = {p for p, v in c.items() if v == EMBER}
+    # a spike in each of the eight compass directions: red pixels beyond the ring, grouped by the 45-degree sector round the canvas centre (a diagonal spike rasterises into two loose pixels, so counting pieces would say twelve)
+    tips = [q for q in red if math.hypot(q[0] + 0.5 - 8, q[1] + 0.5 - 8) > 6.2]
+    spikes = sorted({round(math.degrees(math.atan2(q[1] + 0.5 - 8, q[0] + 0.5 - 8)) / 45) % 8 for q in tips})
+    bone = {p for p, v in c.items() if v == (0xF0, 0xEC, 0xD8)}
+    widths = [sum(1 for x, yy in bone if yy == y) for y in sorted({y for _, y in bone})]
+    fill = len(sil) / ((x1 - x0 + 1) * (y1 - y0 + 1))
+    flipped = {(15 - x, y) for x, y in sil}
+    buff = la.all_icon_sprites()["icon.status.frame_buff"]
+    diff = rule.shape_distance(s, buff)
+    return [
+        Row("size", "16 x 16 px, filling its canvas like the buff frame", f"{x1 - x0 + 1} x {y1 - y0 + 1} px", (x1 - x0 + 1, y1 - y0 + 1) == (16, 16)),
+        Row("eight spikes", "a red spike beyond the ring in each of the eight compass directions", f"spikes in {len(spikes)} of 8 directions", len(spikes) == 8),
+        Row("red rim", ">= 40 red pixels", f"{len(red)} px", len(red) >= 40),
+        Row("solid down arrow", "20 bone pixels in one piece: a shaft 2 wide and 4 tall, then a head 6, 4 and 2 wide", f"{len(bone)} px, row widths {widths}", len(bone) == 20 and widths == [2, 2, 2, 2, 6, 4, 2] and len(components(bone)) == 1),
+        Row("not a triangle (not a road sign)", "the silhouette fills at least 60 % of its bounding box (a triangle fills 50 %)", f"{100 * fill:.0f} %", fill >= 0.60),
+        Row("symmetric", "the silhouette is mirror-symmetric left to right", f"{len(sil ^ flipped)} differing px", sil == flipped),
+        Row("differs from the round buff frame", ">= 6 px (I1 at 16x16)", f"{diff} px", diff >= 6),
+    ]
+
+
+def tankard(s: rule.Sprite) -> list[Row]:
+    before = la.all_icon_sprites()["icon.building.inn"]
+    same_outline = silhouette(s) == silhouette(before)
+    c = content(s)
+    seam_cols = sorted({x for x in range(24) if sum(1 for y in range(10, 19) if c.get((x, y)) == BROWN_C) >= 7})
+    hoops = [y for y in range(24) if sum(1 for x in range(24) if c.get((x, y)) == (0x55, 0x5B, 0x73)) >= 9]
+    outside = [i for i in range(576) if s.rgba[i] != before.rgba[i] and not (5 <= i % 24 <= 15 and 10 <= i // 24 <= 18)]
+    return [
+        Row("same outline", "the silhouette is exactly the adopted tankard's", f"{len(silhouette(s) ^ silhouette(before))} differing px", same_outline),
+        Row("stave seams", ">= 2 vertical dark brown seams of at least 7 px", f"columns {seam_cols}", len(seam_cols) >= 2),
+        Row("iron hoops", "two steel-grey rows of at least 9 px", f"rows {hoops}", len(hoops) == 2),
+        Row("foam and handle untouched", "no pixel outside the body box differs from the adopted drawing", f"{len(outside)} px differ outside the body", not outside),
     ]
 
 
 CHECKS_R2: dict[str, Callable[[rule.Sprite], list[Row]]] = {
     "icon.marker.ruins": ruins_arch, "icon.rarity.common": silver_bead, "icon.status.frame_buff": buff_arrow, "icon.class.rogue": rogue_hood, "icon.marker.enemy_camp": enemy_tent,
-    "icon.item.tool": toolbox,
+    "icon.item.tool": hammer_tongs, "icon.building.hero_house": cottage, "icon.status.frame_debuff": spiked_debuff, "icon.building.inn": tankard,
 }
 
 

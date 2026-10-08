@@ -28,9 +28,9 @@ def _fresh(tmp_path):
     return out
 
 
-def test_the_draft_set_holds_exactly_the_six_revisions_each_under_a_distinct_source_id_and_is_verified():
+def test_the_draft_set_holds_exactly_the_nine_drafts_each_under_a_distinct_source_id_and_is_verified():
     record, _ = drafts.load_set(of.SET_ID)
-    assert sorted(e.visual_key for e in record.entries) == sorted(of.KEYS) and len(record.entries) == 6
+    assert sorted(e.visual_key for e in record.entries) == sorted(of.KEYS) and len(record.entries) == 9
     sources = {p.name for p in (config.CATALOG_ROOT / "sources").iterdir() if p.name != ".gitkeep"}
     for entry in record.entries:
         assert entry.source_asset_id == entry.visual_key.replace(".", "_") + "_fix" and entry.source_asset_id not in sources  # the owner names the EXISTING id at adopt
@@ -45,7 +45,7 @@ def test_every_revision_replaces_a_slot_that_is_an_adopted_source_so_icons_v2_an
 
 def test_each_proposed_drawing_keeps_the_silhouette_the_owner_approved_exactly():
     approved = yaml.safe_load(ss.PROPOSALS.read_text())["slots"]
-    assert sorted(approved) == sorted(of.PROPOSED)  # the sheet holds exactly the four slots still proposed
+    assert sorted(approved) == sorted(of.PROPOSED)  # the sheet holds exactly the proposed slots
     mine = of.fix_sprites()
     for key in of.PROPOSED:
         chosen = "A"  # the owner chose option A (the cowl, not the mask) for the rogue and the only option elsewhere
@@ -54,7 +54,7 @@ def test_each_proposed_drawing_keeps_the_silhouette_the_owner_approved_exactly()
 
 def test_the_two_drafts_the_owner_did_not_want_revised_are_not_proposed_and_not_in_the_evaluated_set():
     """Owner decision (planner's blocking question, 2026-10-08, verbatim "Keep current versions"): the adopted brick wall and crossed swords stay."""
-    assert sorted(of.NOT_PROPOSED) == ["icon.marker.enemy_camp", "icon.marker.ruins"] and len(of.PROPOSED) == 4
+    assert sorted(of.NOT_PROPOSED) == ["icon.marker.enemy_camp", "icon.marker.ruins"] and len(of.PROPOSED) == 7 and of.PENDING == {}
     adopted = la.all_icon_sprites()
     proposed = of.proposed_sprites()
     for key in of.NOT_PROPOSED:

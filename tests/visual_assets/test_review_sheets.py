@@ -50,7 +50,7 @@ def test_the_same_drafts_give_the_same_bytes(folder, tmp_path):
     assert digest(again) == digest(out)
 
 
-def test_only_the_four_proposed_drafts_are_shown_and_the_two_declined_ones_are_not_candidates(folder):
+def test_only_the_seven_proposed_drafts_are_shown_and_the_two_declined_ones_are_not_candidates(folder):
     out, info = folder
     assert sorted(info["tiles"]["01_overview"]) == sorted(fixes.PROPOSED)
     assert sorted(info["tiles"]["02_before_after"]) == sorted(fixes.PROPOSED)
@@ -67,7 +67,7 @@ def test_the_readme_holds_what_each_image_shows_the_recorded_results_the_finding
     for name in rs.FILES[:-1]:
         assert name in text
     assert "NOTHING IS ADOPTED" in text and "RECORDED RESULTS" in text and "PASS" in text and "FINDINGS FOR YOU" in text
-    assert text.count(" review in-") == 4 and text.count(" adopt in-") == 4 and text.count("--parent r0001") == 4
+    assert text.count(" review in-") == 7 and text.count(" adopt in-") == 7 and text.count("--parent r0001") == 7
     assert "<your licence decision>" in text and "adopt-set cannot make new revisions" in text
     for e in rs.load_set(SET)[0]:
         if e.key in fixes.PROPOSED:

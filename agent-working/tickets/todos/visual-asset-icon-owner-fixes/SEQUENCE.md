@@ -7,6 +7,7 @@ Follow-up to `TCK-20261007-EPIC-VISUAL-ASSET-ICON-SET-V2` on the SAME branch `vi
 
 1. `TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES`: specs -> reference study -> **owner-approved silhouette sheet** -> draw -> checks -> owner commands.
 1b. `TCK-20261008-VISUAL-ASSETS-REVIEW-SHEET-FOLDER` (added 2026-10-08, owner request): review sheets as a folder of PNG canvases + README; generated for this gate.
+1c. `TCK-20261008-VISUAL-ASSETS-ICON-THEME-FIT` (added 2026-10-08, owner: toolbox breaks the medieval-fantasy theme): theme rule D21, theme in specs and blind check, audit of 36, tool = hammer and tongs.
 2. **Owner gate, no ticket:** the owner reviews and re-adopts in their own terminal.
 3. `TCK-20261008-VISUAL-ASSETS-RECORD-ICON-OWNER-FIXES-ADOPTION`: record, guards, PR notes, close.
 
@@ -22,4 +23,4 @@ adopted buff frame, and the blade motifs + the unmatched spirit lantern.
 
 ## Status
 
-IN PROGRESS (2026-10-08): the fixes ticket is done and reviewed; the owner kept the adopted ruins and enemy camp ("Keep current versions"), so four revisions are proposed (buff, rogue, tool, common) and the owner adopts them with 8 commands in the review doc; the recording ticket waits for that.
+IN PROGRESS (2026-10-08): the fixes, review-folder and theme-fit tickets are done; seven revisions are proposed (buff, rogue, tool = hammer and tongs, common, cottage, debuff frame, inn) and the owner adopts them with 14 commands in the review doc; the recording ticket waits for that.

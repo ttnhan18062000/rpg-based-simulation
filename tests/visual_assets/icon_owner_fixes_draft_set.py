@@ -24,17 +24,21 @@ from tests.visual_assets.icon_sheet_synthetic import real_tiles
 from tests.visual_assets.pilot_colour_vision import mean
 
 SET_ID = "icons-owner-fixes-v1"
-KEYS = ("icon.marker.ruins", "icon.rarity.common", "icon.status.frame_buff", "icon.class.rogue", "icon.marker.enemy_camp", "icon.item.tool")
+KEYS = ("icon.marker.ruins", "icon.rarity.common", "icon.status.frame_buff", "icon.class.rogue", "icon.marker.enemy_camp", "icon.item.tool", "icon.building.hero_house", "icon.status.frame_debuff", "icon.building.inn")
 # Owner decision (planner's blocking question, 2026-10-08, answer verbatim: "Keep current versions"): the ruins arch and the spear-tent camp are NOT revised and are not proposed for adoption (the adopted
 # brick wall and crossed swords stay: both drafts still misread in free text and the adopted versions read better). The drafts stay in the set as never-adopted drafts, because the store has no command to drop a
 # draft slot (`draft` has keep, export and verify only) and editing `draft_set.json` by hand would bypass its record. They are never presented as candidates.
-PROPOSED = ("icon.status.frame_buff", "icon.class.rogue", "icon.item.tool", "icon.rarity.common")
+PROPOSED = ("icon.status.frame_buff", "icon.class.rogue", "icon.item.tool", "icon.rarity.common", "icon.building.hero_house", "icon.status.frame_debuff", "icon.building.inn")
 NOT_PROPOSED = {
     "icon.marker.ruins": "owner decision: keep the adopted brick wall (the arch still misread in free text, \"document with arrow\", and the adopted version reads better)",
     "icon.marker.enemy_camp": "owner decision: keep the adopted crossed swords (the tent still misread in free text, \"crossed tools on red mound\", and the adopted version reads better)",
 }
-assert set(PROPOSED) | set(NOT_PROPOSED) == set(KEYS) and not set(PROPOSED) & set(NOT_PROPOSED)
-SIZES = {"icon.marker.ruins": 16, "icon.rarity.common": 8, "icon.status.frame_buff": 16, "icon.class.rogue": 24, "icon.marker.enemy_camp": 16, "icon.item.tool": 24}
+# Proposed slots whose CURRENT draft was rejected and is waiting for a redraw: the evaluation and the review folder leave the old draft out (the adopted drawing stays in its place) until the new draft is kept.
+# The tool's toolbox was rejected by the owner for the theme (D21, 2026-10-08: "Hammer and tongs"); the replacement silhouette awaits the owner's approval before any drawing.
+PENDING: dict[str, str] = {}  # empty now: every proposed slot has its drafted revision (the tool, the cottage, the debuff frame and the tankard were drawn after the owner approved their silhouettes on 2026-10-08)
+assert set(PROPOSED) | set(NOT_PROPOSED) == set(KEYS) and not set(PROPOSED) & set(NOT_PROPOSED) and set(PENDING) <= set(PROPOSED)
+EVALUATED = tuple(k for k in PROPOSED if k not in PENDING)
+SIZES = {"icon.marker.ruins": 16, "icon.rarity.common": 8, "icon.status.frame_buff": 16, "icon.class.rogue": 24, "icon.marker.enemy_camp": 16, "icon.item.tool": 24, "icon.building.hero_house": 24, "icon.status.frame_debuff": 16, "icon.building.inn": 24}
 DRAFTS = keyset.DRAFTS
 
 
@@ -46,7 +50,7 @@ def fix_sprites(root: Path = DRAFTS, set_id: str = SET_ID) -> dict[str, rule.Spr
 def proposed_sprites(root: Path = DRAFTS) -> dict[str, rule.Sprite]:
     """The 36 icons as they would stand if the owner adopts the four PROPOSED revisions: those four replace their adopted r0001 drawings; the two drafts that are not proposed are left out."""
     fixes = fix_sprites(root)
-    return {**la.all_icon_sprites(), **{k: fixes[k] for k in PROPOSED}}
+    return {**la.all_icon_sprites(), **{k: fixes[k] for k in EVALUATED}}
 
 
 def evaluate(root: Path = DRAFTS) -> dict:
@@ -56,12 +60,13 @@ def evaluate(root: Path = DRAFTS) -> dict:
     tile_means = {k: mean(t) for k, t in real_tiles().items()}
     v1 = rule.evaluate_sheet({k: s for k, s in key_set.items() if k != "icon.plate.location"}, keyset.GROUPS, {"icon.plate.location": key_set["icon.plate.location"]}, tile_means, palette=palette)
     v2 = rule.evaluate_sheet({k: s for k, s in sprites.items() if k != "icon.plate.location"}, groups.GROUPS, {}, {}, palette=palette, shape_only=groups.SHAPE_ONLY)
-    mine = {k: s for k, s in fix_sprites(root).items() if k in PROPOSED}
+    mine = {k: s for k, s in fix_sprites(root).items() if k in EVALUATED}
     tiers = [sprites[k] for k in groups.TIER_KEYS.values()]
-    compliance = cp.measure(sprites, list(PROPOSED), checks=cp.CHECKS_R2)
+    compliance = cp.measure(sprites, list(EVALUATED), checks=cp.CHECKS_R2)
     return {
         "set_id": SET_ID,
         "proposed": list(PROPOSED),
+        "pending_redraw": PENDING,
         "not_proposed": NOT_PROPOSED,
         "draft_set_hash": "sha256:" + hashlib.sha256((root / SET_ID / "draft_set.json").read_bytes()).hexdigest(),
         "result": "PASS" if v1["result"] == "PASS" and v2["result"] == "PASS" else "FAIL",

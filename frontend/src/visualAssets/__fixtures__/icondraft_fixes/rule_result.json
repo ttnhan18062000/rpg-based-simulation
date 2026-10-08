@@ -1,5 +1,87 @@
 {
  "compliance": {
+  "icon.building.hero_house": [
+   {
+    "item": "size",
+    "measured": "20 x 20 px",
+    "ok": true,
+    "spec": "20 px wide and 20 px tall, outline included"
+   },
+   {
+    "item": "thatched roof",
+    "measured": "84 px",
+    "ok": true,
+    "spec": ">= 80 px of thatch (two golds; the approved outline gives 84)"
+   },
+   {
+    "item": "timber frame",
+    "measured": "52 px",
+    "ok": true,
+    "spec": ">= 40 px of timber brown"
+   },
+   {
+    "item": "plaster walls",
+    "measured": "36 px",
+    "ok": true,
+    "spec": ">= 30 px of cream plaster (the approved outline gives 36)"
+   },
+   {
+    "item": "small windows with dark panes",
+    "measured": "2 panes [4, 4]",
+    "ok": true,
+    "spec": "two separate dark panes of 4 px"
+   },
+   {
+    "item": "shutters",
+    "measured": "4 strips",
+    "ok": true,
+    "spec": "four separate green shutter strips"
+   },
+   {
+    "item": "arched wooden door",
+    "measured": "23 px",
+    "ok": true,
+    "spec": ">= 20 px of door wood"
+   },
+   {
+    "item": "no modern blue glass",
+    "measured": "0 px",
+    "ok": true,
+    "spec": "no pixel of the old window blue (#50a8e0)"
+   },
+   {
+    "item": "palette",
+    "measured": "11",
+    "ok": true,
+    "spec": "within the 24x24 budget of 12 colours (outline included)"
+   }
+  ],
+  "icon.building.inn": [
+   {
+    "item": "same outline",
+    "measured": "0 differing px",
+    "ok": true,
+    "spec": "the silhouette is exactly the adopted tankard's"
+   },
+   {
+    "item": "stave seams",
+    "measured": "columns [8, 11, 13]",
+    "ok": true,
+    "spec": ">= 2 vertical dark brown seams of at least 7 px"
+   },
+   {
+    "item": "iron hoops",
+    "measured": "rows [11, 17]",
+    "ok": true,
+    "spec": "two steel-grey rows of at least 9 px"
+   },
+   {
+    "item": "foam and handle untouched",
+    "measured": "0 px differ outside the body",
+    "ok": true,
+    "spec": "no pixel outside the body box differs from the adopted drawing"
+   }
+  ],
   "icon.class.rogue": [
    {
     "item": "peaked hood",
@@ -41,45 +123,45 @@
   "icon.item.tool": [
    {
     "item": "size",
-    "measured": "18 x 16 px",
+    "measured": "19 x 19 px",
     "ok": true,
-    "spec": "18 px wide and 16 px tall, outline excluded"
+    "spec": "19 px wide and 19 px tall, outline included (an X, not a long weapon)"
    },
    {
-    "item": "wider than tall",
-    "measured": "1.12",
+    "item": "live area",
+    "measured": "3, 2, 2, 3 px",
     "ok": true,
-    "spec": "width at least 1.1 times the height"
+    "spec": "margins of at least 2 px on all four sides of the 24x24 canvas"
    },
    {
-    "item": "red body",
-    "measured": "114 px",
+    "item": "wooden handle",
+    "measured": "21 px",
     "ok": true,
-    "spec": ">= 100 red pixels"
+    "spec": ">= 14 px of wood colour (the hammer's handle)"
    },
    {
-    "item": "lid band",
-    "measured": "50 px",
+    "item": "steel hammer head",
+    "measured": "22 px",
     "ok": true,
-    "spec": ">= 40 pixels of the darker lid colour across the top of the body"
+    "spec": ">= 20 steel pixels in the top right (a short heavy head; the outline the owner approved gives 22)"
    },
    {
-    "item": "carry handle",
-    "measured": "13 px, 8 px wide",
+    "item": "tong jaws",
+    "measured": "16 px",
     "ok": true,
-    "spec": ">= 12 steel pixels above the body, 8 px wide at most 10"
+    "spec": ">= 8 steel pixels in the top left (the closed jaws)"
    },
    {
-    "item": "latch",
-    "measured": "14 px",
+    "item": "rivet at the crossing",
+    "measured": "8 px",
     "ok": true,
-    "spec": "a gold latch of 12 to 18 px"
+    "spec": "a gold rivet of at least 8 px"
    },
    {
-    "item": "rivets",
-    "measured": "4 px",
+    "item": "crossed, one piece",
+    "measured": "1 piece(s)",
     "ok": true,
-    "spec": "4 rivets on the body"
+    "spec": "the two tools touch: all content is one connected piece"
    }
   ],
   "icon.rarity.common": [
@@ -157,10 +239,54 @@
     "ok": true,
     "spec": "the arrow's columns centre on the canvas axis"
    }
+  ],
+  "icon.status.frame_debuff": [
+   {
+    "item": "size",
+    "measured": "16 x 16 px",
+    "ok": true,
+    "spec": "16 x 16 px, filling its canvas like the buff frame"
+   },
+   {
+    "item": "eight spikes",
+    "measured": "spikes in 8 of 8 directions",
+    "ok": true,
+    "spec": "a red spike beyond the ring in each of the eight compass directions"
+   },
+   {
+    "item": "red rim",
+    "measured": "52 px",
+    "ok": true,
+    "spec": ">= 40 red pixels"
+   },
+   {
+    "item": "solid down arrow",
+    "measured": "20 px, row widths [2, 2, 2, 2, 6, 4, 2]",
+    "ok": true,
+    "spec": "20 bone pixels in one piece: a shaft 2 wide and 4 tall, then a head 6, 4 and 2 wide"
+   },
+   {
+    "item": "not a triangle (not a road sign)",
+    "measured": "69 %",
+    "ok": true,
+    "spec": "the silhouette fills at least 60 % of its bounding box (a triangle fills 50 %)"
+   },
+   {
+    "item": "symmetric",
+    "measured": "0 differing px",
+    "ok": true,
+    "spec": "the silhouette is mirror-symmetric left to right"
+   },
+   {
+    "item": "differs from the round buff frame",
+    "measured": "28 px",
+    "ok": true,
+    "spec": ">= 6 px (I1 at 16x16)"
+   }
   ]
  },
  "compliance_all_ok": true,
- "draft_set_hash": "sha256:e7a6d62b0e8dac482cc4a415a9f8bcea3833d2a6d098764d93dd61115794b367",
+ "draft_set_hash": "sha256:bab784060aedc76838ebc246a3534d88559c9493082b1e076a1bdedb8b8fc6e0",
  "key_set_rule": {
   "failing": {
    "i1": [],
@@ -170,12 +296,12 @@
   "groups": {
    "status": {
     "min_dL_by_vision": {
-     "deutan": 14.129,
-     "normal": 16.965,
-     "protan": 21.549,
-     "tritan": 16.821
+     "deutan": 12.815,
+     "normal": 15.659,
+     "protan": 20.247,
+     "tritan": 15.52
     },
-    "min_shape_px_across_classes": 92,
+    "min_shape_px_across_classes": 28,
     "pairs": 1,
     "size": 16,
     "value_checked": true
@@ -234,6 +360,24 @@
   }
  },
  "lint": {
+  "icon.building.hero_house": {
+   "color_budget": 12,
+   "colors": 11,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.building.inn": {
+   "color_budget": 12,
+   "colors": 7,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "ok": true,
+   "warnings": []
+  },
   "icon.class.rogue": {
    "color_budget": 12,
    "colors": 6,
@@ -245,7 +389,7 @@
   },
   "icon.item.tool": {
    "color_budget": 12,
-   "colors": 8,
+   "colors": 7,
    "findings": [
     "orphan_pixels"
    ],
@@ -263,6 +407,16 @@
    "warnings": []
   },
   "icon.status.frame_buff": {
+   "color_budget": 8,
+   "colors": 4,
+   "findings": [
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "ok": true,
+   "warnings": []
+  },
+  "icon.status.frame_debuff": {
    "color_budget": 8,
    "colors": 4,
    "findings": [
@@ -357,23 +511,21 @@
    "b": "icon.rarity.uncommon",
    "cross_family": false,
    "xor_px": 59
-  },
-  {
-   "a": "icon.building.hero_house",
-   "b": "icon.item.material",
-   "cross_family": true,
-   "xor_px": 60
   }
  ],
  "not_proposed": {
   "icon.marker.enemy_camp": "owner decision: keep the adopted crossed swords (the tent still misread in free text, \"crossed tools on red mound\", and the adopted version reads better)",
   "icon.marker.ruins": "owner decision: keep the adopted brick wall (the arch still misread in free text, \"document with arrow\", and the adopted version reads better)"
  },
+ "pending_redraw": {},
  "proposed": [
   "icon.status.frame_buff",
   "icon.class.rogue",
   "icon.item.tool",
-  "icon.rarity.common"
+  "icon.rarity.common",
+  "icon.building.hero_house",
+  "icon.status.frame_debuff",
+  "icon.building.inn"
  ],
  "rarity_vs_tier_min_shape_px": {
   "icon.rarity.common": 9
@@ -396,7 +548,7 @@
    },
    "buildings": {
     "min_dL_by_vision": {},
-    "min_shape_px_across_classes": 65,
+    "min_shape_px_across_classes": 69,
     "pairs": 15,
     "size": 24,
     "value_checked": false

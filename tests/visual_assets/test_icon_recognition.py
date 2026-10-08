@@ -96,3 +96,31 @@ def test_evaluate_lists_flags_and_misses_and_prompts_name_only_files(tmp_path):
     assert "icon-01.png" in prompt and "weapon" not in prompt and "sword" not in prompt
     cp = rec.choice_prompt(tmp_path, key_of, SPECS, seed=1)
     assert "icon-01.png" in cp and "icon.item" not in cp
+
+
+def test_the_era_question_flags_a_modern_or_futuristic_answer_and_the_prompt_names_only_files(tmp_path):
+    assert rec.score_era("modern: a toolbox")["flagged"] is True and rec.score_era("Futuristic: a ray gun")["flagged"] is True
+    assert rec.score_era("medieval or fantasy: a smith's hammer")["flagged"] is False and rec.score_era("ancient: a clay jug")["flagged"] is False
+    assert rec.score_era("cannot tell: a round bead")["flagged"] is False and rec.score_era("modern")["flagged"] is True
+    # the case that motivated the second rule: the era word said nothing, the object named was a modern one
+    named = rec.score_era("cannot tell: a red toolbox")
+    assert named["flagged"] is True and named["modern_object_named"] == ["toolbox"]
+    assert rec.score_era("cannot tell: a hammer and tongs")["flagged"] is False
+    prompt = rec.era_prompt(tmp_path, ["icon-02", "icon-01"])
+    assert "icon-01.png" in prompt and "'modern'" in prompt and "weapon" not in prompt and "icon.item" not in prompt
+
+
+def test_evaluate_lists_the_icons_the_era_question_flagged():
+    key_of = {"icon-01": "icon.item.tool", "icon-02": "icon.item.weapon"}
+    out = rec.evaluate(key_of, {"icon-01": "a toolbox", "icon-02": "a sword"}, {}, SPECS, {"icon-01": "modern: a toolbox", "icon-02": "medieval or fantasy: a sword"})
+    assert out["flagged_era"] == ["icon.item.tool"] and out["results"]["icon.item.weapon"]["era"]["flagged"] is False
+    assert "flagged_era" not in rec.evaluate(key_of, {}, {}, SPECS)  # without era answers nothing is claimed
+
+
+def test_free_text_that_names_a_modern_object_is_flagged_even_when_it_names_the_right_thing_too():
+    tool = SPECS["icon.item.tool"]
+    out = rec.score_free("crossed hammer and wrench", tool)
+    assert out["named"] is True and out["modern_object_named"] == ["wrench"] and out["flagged"] is True
+    assert rec.score_free("a smith's hammer crossed with tongs", tool)["flagged"] is False
+    assert rec.score_free("red spiked gear target", SPECS["icon.status.frame_debuff"])["flagged"] is True
+    assert rec.score_free("a spiked ball frame with a down arrow", SPECS["icon.status.frame_debuff"])["flagged"] is False

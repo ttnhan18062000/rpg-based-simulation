@@ -6,9 +6,10 @@ to guess). Four misreads in 36 icons passed every gate (the debuff frame as a sm
 Evidence, not a CI gate: the answers come from a model, so they are not deterministic. What IS deterministic and tested here: the rendering, the neutral shuffled ids (an image's file name and
 content carry no key, family or subject), the manifest hashes, the candidate lists (the intended name once plus the spec's distractors, shuffled, plus "none of these"), and the scoring.
 
-Two passes, each by a different fresh agent so the first is never primed by the second:
+Three passes, each by a different fresh agent so none is primed by another:
   1. free text: "what is this? name the object" for every image;
-  2. choice: the same images, each with its candidate list.
+  2. choice: the same images, each with its candidate list;
+  3. era (theme fit, D21): "which era or setting does this belong to?"; an answer naming a modern or futuristic setting flags the icon.
 An icon is **flagged** when its free-text answer contains none of the spec's synonyms as a whole word. The agent's prompt, model, image hashes and every answer are stored with the result.
 """
 
@@ -22,7 +23,7 @@ import zlib
 from pathlib import Path
 
 from tests.visual_assets import icon_sheet_rule as rule
-from tests.visual_assets.icon_specs import Spec, has_word
+from tests.visual_assets.icon_specs import MODERN_TERMS, Spec, has_word
 
 PLATE_KEY = "icon.plate.location"
 PANELS = {"dark": (0x11, 0x18, 0x27), "light": (0xE5, 0xE7, 0xEB)}
@@ -103,6 +104,27 @@ CHOICE_PROMPT = (
 )
 
 
+ERAS = ("medieval or fantasy", "ancient", "modern", "futuristic", "cannot tell")
+MODERN_ERAS = ("modern", "futuristic")
+ERA_PROMPT = (
+    "Each of the image files listed below is a small pixel-art icon from a game. Shown four ways on one strip (native size and 4x, on a dark and a light background); some sit on a grey plate. "
+    "For EVERY image, say which era or setting the depicted object (or symbol) belongs to. Answer with exactly one of: " + ", ".join(f"'{e}'" for e in ERAS) + ", then a colon, then the object in two to four words, "
+    "for example 'ancient: a clay jug'. Do not open any other file and do not search the file system. Reply with ONLY a JSON object mapping each image's file name without the extension to your answer.\n\nFiles:\n{files}\n"
+)
+
+
+def era_prompt(directory: Path, ids: list[str]) -> str:
+    return ERA_PROMPT.format(files="\n".join(str(directory / f"{i}.png") for i in sorted(ids)))
+
+
+def score_era(answer: str) -> dict:
+    """The era question (D21, theme fit). An icon is flagged when the answer names a modern or futuristic era, OR when the object it names is a modern one (`MODERN_TERMS`): a first run answered "cannot tell: a red toolbox", so the era word alone is not enough."""
+    era, _, thing = answer.partition(":")
+    era, thing = era.strip().lower(), thing.strip()
+    modern_object = [t for t in MODERN_TERMS if has_word(thing, t)]
+    return {"era": era, "object": thing, "modern_object_named": modern_object, "flagged": era.startswith(MODERN_ERAS) or bool(modern_object)}
+
+
 def free_prompt(directory: Path, ids: list[str]) -> str:
     return FREE_PROMPT.format(files="\n".join(str(directory / f"{i}.png") for i in sorted(ids)))
 
@@ -126,7 +148,8 @@ def score_free(answer: str, spec: Spec) -> dict:
     text = answer.lower()
     named = [w for w in spec.synonyms if has_word(text, w)]
     confused = [w for w in _terms(spec.must_not_read_as) if has_word(text, w)]
-    return {"named": bool(named), "matched": named, "confused_with": [] if named else confused, "flagged": not named}
+    modern = [t for t in MODERN_TERMS if has_word(text, t)]  # D21: an answer that names a modern object ("hammer and wrench", "gear emblem") is a misread even when it also names the right thing
+    return {"named": bool(named), "matched": named, "confused_with": [] if named else confused, "modern_object_named": modern, "flagged": not named or bool(modern)}
 
 
 def _terms(must_not: str) -> list[str]:
@@ -139,16 +162,20 @@ def score_choice(answer: str, spec: Spec) -> dict:
     return {"correct": picked == spec.subject.lower(), "picked": answer.strip()}
 
 
-def evaluate(answer_key: dict[str, str], free: dict[str, str], choice: dict[str, str], specs: dict[str, Spec]) -> dict:
+def evaluate(answer_key: dict[str, str], free: dict[str, str], choice: dict[str, str], specs: dict[str, Spec], era: dict[str, str] | None = None) -> dict:
     rows = {}
     for ident, key in sorted(answer_key.items(), key=lambda kv: kv[1]):
         spec = specs[key]
         f = score_free(free.get(ident, ""), spec) if ident in free else None
         c = score_choice(choice[ident], spec) if ident in choice else None
-        rows[key] = {"free_text": free.get(ident), "free": f, "choice": c, "status": spec.status}
+        e = score_era(era[ident]) if era and ident in era else None
+        rows[key] = {"free_text": free.get(ident), "free": f, "choice": c, "era_answer": (era or {}).get(ident), "era": e, "status": spec.status}
     flagged = sorted(k for k, r in rows.items() if r["free"] and r["free"]["flagged"])
     missed = sorted(k for k, r in rows.items() if r["choice"] and not r["choice"]["correct"])
-    return {"flagged_free_text": flagged, "missed_in_choice": missed, "results": rows}
+    out = {"flagged_free_text": flagged, "missed_in_choice": missed, "results": rows}
+    if era:
+        out["flagged_era"] = sorted(k for k, r in rows.items() if r["era"] and r["era"]["flagged"])
+    return out
 
 
 def dumps(value: dict) -> str:
@@ -172,6 +199,7 @@ if __name__ == "__main__":
     e.add_argument("--private", type=Path, required=True)
     e.add_argument("--free", type=Path, required=True)
     e.add_argument("--choice", type=Path, required=True)
+    e.add_argument("--era", type=Path, default=None, help="the answers to the era question (theme fit, D21)")
     args = ap.parse_args()
     specs = icon_specs.load()
     if args.cmd == "build":
@@ -186,8 +214,9 @@ if __name__ == "__main__":
         (args.private / "blind_info.json").write_text(dumps(info))
         (args.private / "task_free.txt").write_text(free_prompt(args.images, sorted(info["answer_key"])))
         (args.private / "task_choice.txt").write_text(choice_prompt(args.images, info["answer_key"], specs, args.seed))
+        (args.private / "task_era.txt").write_text(era_prompt(args.images, sorted(info["answer_key"])))
         print(f"wrote {len(info['answer_key'])} images to {args.images}; answer key and prompts in {args.private}")
     else:
         info = json.loads((args.private / "blind_info.json").read_text())
-        out = evaluate(info["answer_key"], json.loads(args.free.read_text()), json.loads(args.choice.read_text()), specs)
+        out = evaluate(info["answer_key"], json.loads(args.free.read_text()), json.loads(args.choice.read_text()), specs, json.loads(args.era.read_text()) if args.era else None)
         sys.stdout.write(dumps(out))

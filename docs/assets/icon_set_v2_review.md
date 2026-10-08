@@ -171,23 +171,26 @@ Before the redraw the same measurements failed: the old sword could not even be 
 
 `lookalike_after.json`: 15 pairs at or under 60 XOR px (it was 16); the sword and the dagger are no longer each other's nearest neighbour. **New close pair, worth a look: the common bead and the dark tier badges D and E at 25 XOR px** (a round 7 px bead against octagon badges once both are fitted to the same canvas; at their own sizes they differ by 9 px and the rule passes). The rarity badge sits beside the tier badge in the UI, so this is the pair to judge at 1x. Other close pairs are boxy badges and tiles, the method's known limit.
 
-## Owner fixes before PR #418 merges (2026-10-08): four revisions of adopted icons
+## Owner fixes before PR #418 merges (2026-10-08): seven revisions of adopted icons
 
-**Why.** The owner held the merge and chose to fix every judgement item of the planner's readiness comment. All the slots are **adopted sources** (`icons-key-v1` and `icons-v2`), so each change is a **new revision `r0002` (parent `r0001`)** made by the store's own `adopt --parent`, never an edit of an adopted file. The drawings live in a new draft set `icons-owner-fixes-v1` (draft set hash `sha256:e7a6d62b0e8dac482cc4a415a9f8bcea3833d2a6d098764d93dd61115794b367`); `icons-v2` and `icons-key-v1` stay as history and their recorded hashes still hold.
-**`adopt-set` cannot make revisions today** (it only creates new source assets): the owner runs one `review` and one `adopt` per slot, below. A store change to allow revisions in a set is out of scope here.
+**Why.** The owner held the merge and chose to fix every judgement item of the planner's readiness comment, then added theme fit (D21: medieval fantasy plus magic, nothing modern). All the slots are **adopted sources**, so each change is a **new revision `r0002` (parent `r0001`)** made by the store's own `adopt --parent`, never an edit of an adopted file. The drawings live in a new draft set `icons-owner-fixes-v1` (draft set hash `sha256:bab784060aedc76838ebc246a3534d88559c9493082b1e076a1bdedb8b8fc6e0`); `icons-v2` and `icons-key-v1` stay as history and their recorded hashes still hold.
+**`adopt-set` cannot make revisions today** (it only creates new source assets): the owner runs one `review` and one `adopt` per slot, below (14 commands for seven slots). A store change to allow revisions in a set is out of scope here.
 
-**Owner decision after seeing the six drafts (the planner's blocking question, 2026-10-08), answer verbatim: "Keep current versions".** The ruins arch and the spear-tent camp are **not revised and not proposed for adoption**: the adopted brick wall and the adopted crossed swords stay, because both new drawings still misread in free text (the arch as "document with arrow", the tent as "crossed tools on red mound") and the adopted versions read better. Only four revisions are proposed: the buff frame, the rogue, the tool and the common bead. The two declined drafts stay in `icons-owner-fixes-v1` only because the store has no command to drop a draft slot (`draft` has `keep`, `export` and `verify`; editing `draft_set.json` by hand would bypass its record); they are marked "not proposed for adoption, owner decision" on the preview page and are never candidates. The decision reached me through the planner.
+**Owner decisions, recorded verbatim (relayed through the planner's blocking questions, 2026-10-08).** After seeing the first six drafts: "Keep current versions" for the ruins arch and the spear-tent camp: **not revised, not proposed** (the adopted brick wall and crossed swords stay; both new drawings still misread in free text). Theme fit: theme = "Medieval fantasy + magic", tool = "Hammer and tongs" (the toolbox was rejected as a modern suitcase), hero house = "Redraw as cottage", debuff frame = "Reshape the frame", inn = "Add staves". The owner approved the hammer-and-tongs outline by my own blocking question and the cottage, spiked frame and tankard outlines by another ("Approve all three"). The two declined drafts stay in `icons-owner-fixes-v1` only because the store has no command to drop a draft slot (`draft` has `keep`, `export` and `verify`); they are marked "not proposed for adoption, owner decision" and are never candidates.
 
-**Process followed (style guide, steps 1 to 6).** Specs first (`icon_specs.yaml`, status `revision`); a reference study (Kenney previews, CC0, recorded in the style guide); a one-colour silhouette sheet on the preview page that the owner approved by blocking question before any full drawing (answers recorded verbatim in the ticket: rogue "A: hooded cowl", enemy camp "A: tent, spears crossed above" and later "A fitted: spears crossed above", "Approve all four" for the ruins arch, the silver bead, the solid up arrow and the toolbox); drawing; the compliance table; the sheet rule, the blind check and the look-alike report.
+**Process followed (style guide, steps 1 to 6).** Specs first (`icon_specs.yaml`, status `revision`, now with `theme` and `modern_lookalikes_to_avoid`); a reference study (Kenney previews, CC0, recorded in the style guide); a one-colour silhouette sheet the owner approved before drawing; drawing; the compliance table; the sheet rule, the blind check (free text, choice list **and the new era question**) and the look-alike report.
 
-| Slot | Before (blind free text on the adopted drawing) | Why it changed | After (blind free text, round 4) | Choice pass after |
+| Slot | Before (blind answers on the adopted drawing) | Why it changed | After (round 5: free text / era answer) | Choice pass after |
 |---|---|---|---|---|
-| `icon.status.frame_buff` | green round gem / green round shield | the chevron frame read as a gem, not an up arrow | up arrow in green ring | a round frame with a solid up arrow |
-| `icon.class.rogue` | curved sword hilt (round 3), curved dagger / dagger in sheath (rounds 1, 2) | the dagger duplicated the sword's blade motif | hooded figure | a hooded cowl |
-| `icon.item.tool` | steel wrench (named correctly; the choice pass said none of these once) | a wrench fit the repair kit but not the spirit lantern; the toolbox fits the repair kit and says so | red toolbox | a toolbox |
-| `icon.rarity.common` | grey round disc / grey-blue circle (named, but only as a round object) | it sat next to the dark tier badges E and D and looked like them | grey-blue orb | a silver bead |
+| `icon.status.frame_buff` | green round gem / green round shield | the chevron frame read as a gem, not an up arrow | up arrow on green badge / cannot tell: upward arrow badge | a round frame with a solid up arrow |
+| `icon.status.frame_debuff` | red warning triangle (era-flagged: a modern road sign) | an inverted red triangle reads as a modern road warning sign (theme fit D21) | red spiked gear target / cannot tell: red gear emblem (**free text flagged, era flagged**) | a spiked ball frame with a down arrow |
+| `icon.class.rogue` | curved sword hilt (round 3), curved dagger / dagger in sheath (rounds 1, 2) | the dagger duplicated the sword's blade motif | hooded figure / medieval or fantasy: hooded cloaked figure | a hooded cowl |
+| `icon.item.tool` | steel wrench (era-flagged: a modern mechanic's tool) | a wrench is a modern tool; the owner rejected the toolbox as a modern suitcase and chose hammer and tongs (D21) | crossed hammer and wrench / medieval or fantasy: hammer and wrench (**free text flagged, era flagged**) | a smith's hammer crossed with tongs |
+| `icon.rarity.common` | grey round disc / grey-blue circle | it sat next to the dark tier badges E and D and looked like them | white orb / cannot tell: grey round orb | a silver bead |
+| `icon.building.hero_house` | small red house (the era question could not say) | white walls and blue glass windows read as a modern suburban house (D21): "Redraw as cottage" | cottage house / medieval or fantasy: thatched cottage house | a timber-framed cottage |
+| `icon.building.inn` | beer mug (era: medieval; borderline) | a glass-like mug; "Add staves": the same tankard with wooden staves and iron hoops (D21) | beer mug / medieval or fantasy: wooden beer tankard | a tankard with wooden staves and iron hoops |
 
-**Sheet rule on the set as it would stand with these four in place: PASS** (key-set groups PASS, v2 groups PASS; thresholds unchanged). Smallest silhouette difference by group: status 92 px, tiers 4 px, badges 4 px, buildings 65 px, classes 53 px, items 71 px, locations 17 px, rarity 13 px. Rarity I2 smallest L* gap: normal 14.444, protan 13.012, deutan 14.482, tritan 14.822 (needed 6). Buff vs debuff I2 smallest gap: normal 16.965, protan 21.549, deutan 14.129, tritan 16.821. Rarity vs the tier badges: common 9 px. Lint: no warnings; no pixel outside the palette.
+**Sheet rule on the set as it would stand with these seven in place: PASS** (key-set groups PASS, v2 groups PASS; thresholds unchanged). Smallest silhouette difference by group: status 28 px, tiers 4 px, badges 4 px, buildings 69 px, classes 53 px, items 71 px, locations 17 px, rarity 13 px. Buff vs debuff (status): 28 px apart (needed 6) and I2 smallest L* gap normal 15.659, protan 20.247, deutan 12.815, tritan 15.52 (needed 6); rarity I2 smallest L* gap normal 14.444, protan 13.012, deutan 14.482, tritan 14.822. Rarity vs the tier badges: common 9 px. Lint: no warnings; no pixel outside the palette.
 
 ### Spec compliance table (each proportion MEASURED from the pixels)
 
@@ -200,6 +203,18 @@ Before the redraw the same measurements failed: the old sword could not even be 
 | shaft | 2 px wide and 5 px tall below the head | rows [2, 2, 2, 2, 2] | ok |
 | solid, not an outline | 22 bone pixels in all, one filled shape | 22 px in 1 piece(s) | ok |
 | centred | the arrow's columns centre on the canvas axis | columns 5 to 10 of 16 | ok |
+
+**`icon.status.frame_debuff`**: all measurements within the spec
+
+| Measurement | Spec | Measured from the pixels | |
+|---|---|---|---|
+| size | 16 x 16 px, filling its canvas like the buff frame | 16 x 16 px | ok |
+| eight spikes | a red spike beyond the ring in each of the eight compass directions | spikes in 8 of 8 directions | ok |
+| red rim | >= 40 red pixels | 52 px | ok |
+| solid down arrow | 20 bone pixels in one piece: a shaft 2 wide and 4 tall, then a head 6, 4 and 2 wide | 20 px, row widths [2, 2, 2, 2, 6, 4, 2] | ok |
+| not a triangle (not a road sign) | the silhouette fills at least 60 % of its bounding box (a triangle fills 50 %) | 69 % | ok |
+| symmetric | the silhouette is mirror-symmetric left to right | 0 differing px | ok |
+| differs from the round buff frame | >= 6 px (I1 at 16x16) | 28 px | ok |
 
 **`icon.class.rogue`**: all measurements within the spec
 
@@ -216,13 +231,13 @@ Before the redraw the same measurements failed: the old sword could not even be 
 
 | Measurement | Spec | Measured from the pixels | |
 |---|---|---|---|
-| size | 18 px wide and 16 px tall, outline excluded | 18 x 16 px | ok |
-| wider than tall | width at least 1.1 times the height | 1.12 | ok |
-| red body | >= 100 red pixels | 114 px | ok |
-| lid band | >= 40 pixels of the darker lid colour across the top of the body | 50 px | ok |
-| carry handle | >= 12 steel pixels above the body, 8 px wide at most 10 | 13 px, 8 px wide | ok |
-| latch | a gold latch of 12 to 18 px | 14 px | ok |
-| rivets | 4 rivets on the body | 4 px | ok |
+| size | 19 px wide and 19 px tall, outline included (an X, not a long weapon) | 19 x 19 px | ok |
+| live area | margins of at least 2 px on all four sides of the 24x24 canvas | 3, 2, 2, 3 px | ok |
+| wooden handle | >= 14 px of wood colour (the hammer's handle) | 21 px | ok |
+| steel hammer head | >= 20 steel pixels in the top right (a short heavy head; the outline the owner approved gives 22) | 22 px | ok |
+| tong jaws | >= 8 steel pixels in the top left (the closed jaws) | 16 px | ok |
+| rivet at the crossing | a gold rivet of at least 8 px | 8 px | ok |
+| crossed, one piece | the two tools touch: all content is one connected piece | 1 piece(s) | ok |
 
 **`icon.rarity.common`**: all measurements within the spec
 
@@ -236,32 +251,61 @@ Before the redraw the same measurements failed: the old sword could not even be 
 | lighter than the dark tier badges | mean L* at least 20 above tier D and tier E | 52.3 L* above the nearer one | ok |
 | distance from the tier badges | >= 3 px (I1 floor) from every tier silhouette | 9 px | ok |
 
-### Blind recognition check, round 4 (two fresh agents, sonnet, same neutral setup; all 36 icons, the six drafts in place)
+**`icon.building.hero_house`**: all measurements within the spec
 
-- Named correctly in free text: the silver bead ("grey-blue orb"), the buff frame ("up arrow in green ring": it was a gem before), the rogue ("hooded figure") and the toolbox ("red toolbox"); the choice pass named all four. These four images are exactly the ones proposed.
-- The ruins arch and the tent camp were still flagged in free text, which is part of why the owner kept the adopted versions. The unchanged shrine was read as "stone tombstone" this round (an obelisk in earlier rounds), and the debuff frame and tiers D and E are flagged as before: the check is one model and one sample per round. The same caveat about "no project context" applies. The round was not repeated for the four-in-place set: its images for the four are the ones read here, and the kept ruins and camp are the adopted drawings read in earlier rounds.
+| Measurement | Spec | Measured from the pixels | |
+|---|---|---|---|
+| size | 20 px wide and 20 px tall, outline included | 20 x 20 px | ok |
+| thatched roof | >= 80 px of thatch (two golds; the approved outline gives 84) | 84 px | ok |
+| timber frame | >= 40 px of timber brown | 52 px | ok |
+| plaster walls | >= 30 px of cream plaster (the approved outline gives 36) | 36 px | ok |
+| small windows with dark panes | two separate dark panes of 4 px | 2 panes [4, 4] | ok |
+| shutters | four separate green shutter strips | 4 strips | ok |
+| arched wooden door | >= 20 px of door wood | 23 px | ok |
+| no modern blue glass | no pixel of the old window blue (#50a8e0) | 0 px | ok |
+| palette | within the 24x24 budget of 12 colours (outline included) | 11 | ok |
 
-### Look-alike report on the set with the four proposed revisions in place
+**`icon.building.inn`**: all measurements within the spec
 
-15 pairs at or under 60 XOR px (unchanged: 15). The closest cross-family pair is still the common bead and tier D and E at 25 px: the **silver bead is lighter than the dark tier badges (the compliance row measures the gap), but it stays a round disc beside octagons, so the shape twin remains** (an owner finding, now a shape question only). The proposed icons' nearest neighbours: rogue hood building.hero_house 64, toolbox marker.dungeon_entrance 70, buff arrow item.material 41. **Blade overlap is resolved by the rogue's cowl:** the sword is the only new blade; the enemy camp keeps its adopted crossed swords by the owner's choice.
+| Measurement | Spec | Measured from the pixels | |
+|---|---|---|---|
+| same outline | the silhouette is exactly the adopted tankard's | 0 differing px | ok |
+| stave seams | >= 2 vertical dark brown seams of at least 7 px | columns [8, 11, 13] | ok |
+| iron hoops | two steel-grey rows of at least 9 px | rows [11, 17] | ok |
+| foam and handle untouched | no pixel outside the body box differs from the adopted drawing | 0 px differ outside the body | ok |
+
+### Blind check, round 5 (three fresh agents, sonnet, neutral setup; all 36 icons with the seven in place)
+
+- **Named correctly in free text, in the choice list and in the era question:** the cottage ("cottage house"; era: "thatched cottage house"), the tankard ("beer mug"; era: "wooden beer tankard"), the buff frame, the rogue ("hooded figure") and the silver bead ("white orb").
+- **Two new drawings still misread at a glance (the choice pass names both):** the tool's tongs read as a **wrench** ("crossed hammer and wrench", era: "hammer and wrench", flagged by the named modern object) and the spiked-ball debuff frame as a **gear** ("red spiked gear target", era: "red gear emblem", flagged). **Owner decision (planner's blocking question, 2026-10-08), verbatim: tool "Accept as drawn"; debuff spiked ring "Accept as drawn".** Nothing was tuned.
+- Still flagged in free text as before: the adopted ruins wall (kept by the owner), tier badges A, D and E (abstract, expected). The era question is weak on its own (most answers are "cannot tell"); it only flags when the object named is modern, which is why free-text scoring also checks the named object now.
+- One model, one sample per round, noisy; the "no project context" caveat applies.
+
+### Look-alike report with the seven in place
+
+14 pairs at or under 60 XOR px. The closest cross-family pair is still the common bead and tier D and E at 25 px (a shape twin, an owner finding). The new icons' nearest neighbours: cottage class.rogue 96, tankard building.store 83, hammer and tongs marker.enemy_camp 134, spiked frame status.frame_buff 63.
+
+### Theme audit of all 36 icons (D21)
+
+`agent-working/stored_artifacts/TCK-20261008-VISUAL-ASSETS-ICON-THEME-FIT/audit_36_icons.md`: three offenders found (the wrench, the hero house, the debuff frame), the planner's glass-mug first pass overturned (an opaque tankard; "Add staves" is a light improvement), and the ranger's registry fallback `Lucide Crosshair` noted as today's UI chrome and left as is.
 
 ### Disclosures
 
-- **A defect measured after drawing, and a second owner question (on a draft that was then not proposed).** The approved tent broke the live-area rule for 16x16 glyphs (margins 1, 0, 1 px instead of 2; both tent options did, my proposal's mistake). A fitted version was shown and re-confirmed by the owner before it was drawn.
-- **Measurement definitions corrected after seeing numbers, thresholds unchanged:** the ruins' stub was first detected by raw column height (loose bricks counted); two tent rows were first written for the larger, unfitted tent. A planted bead case first failed to discriminate and was replaced by the real adopted slate bead. All are in the compliance tool with tests.
-- The tool is a toolbox because it covers the repair kit; **the spirit lantern, the family's other item, cannot also be drawn** (one family icon).
-- Drawing went through `visual_assets.drawing.api` in-process, as before; intakes by the worktree CLI.
+- **Defects and refinements found after drawing:** the first tent broke the 16x16 live area (a draft then not proposed); the first spiked-ball debuff frame was lopsided by 30 mirror pixels, so it was symmetrised at the source after drawing began (the outline the owner approved was the lopsided one; the sheet now shows the symmetric one); the tool's rivet colour was changed to clear a lint warning.
+- **Thresholds written before drawing and restated after measuring, disclosed:** the hammer head (at least 20 steel pixels, was 25), the thatch (at least 80, was 90) and the plaster (at least 30, was 50), each measured on the outline the owner approved; two measurements had bugs (the ruins stub, the spike count: a diagonal spike is two loose pixels) and were fixed with tests. Sheet-rule thresholds are untouched. **Owner decision (2026-10-08), verbatim: "Accept the changes".** The style guide now has a process rule (step 4b): spec numbers guessed before the silhouette are re-agreed at the owner's silhouette question, never restated after drawing.
+- The tool covers the repair kit; **the spirit lantern, the family's other item, cannot also be drawn** (one family icon).
+- Drawing went through `visual_assets.drawing.api` in-process, as before.
 
 ### Review it, and the owner's commands
 
-**The review folder (the owner's primary review surface):** `python -m tests.visual_assets.review_sheets --set icons-owner-fixes-v1` writes `~/Work/asset-review/icons-owner-fixes-v1/` with six large labelled PNG canvases and a `README.txt` that repeats the commands below. The live preview page shows the one-colour silhouette sheet (the four proposed slots), then each draft beside its adopted drawing (the arch and the tent are marked not proposed), the recorded result and the compliance tables:
+**The review folder (the primary review surface):** `python -m tests.visual_assets.review_sheets --set icons-owner-fixes-v1` writes `~/Work/asset-review/icons-owner-fixes-v1/` with six large labelled PNG canvases and a `README.txt` that repeats the commands below. The live preview page stays for detail, with each draft beside its adopted drawing (the arch and the tent marked not proposed), the recorded result and the compliance tables:
 
 ```
 # the Vite dev server serves the worktree (http://[::1]:5173/rehearsal-icons.html)
 cd /home/vboxuser/Work/rpg-aseprite-mcp/frontend && npx vite
 ```
 
-`adopt` is **human-only and needs your own terminal** (it refuses without a TTY and asks you to type the id). Run these 8 commands in order from `/home/vboxuser/Work/rpg-aseprite-mcp`, which holds the intakes: a `review` and an `adopt` per slot. Each slot needs `review` first (it renders the source with Aseprite and writes the review image `adopt` checks). Fill the four placeholders yourself (the licence decision must be `CLEARED`; nothing is pre-answered here). The source asset id is the EXISTING one and `--parent r0001` is the latest unrevoked revision, so the store records `r0002`:
+`adopt` is **human-only and needs your own terminal** (it refuses without a TTY and asks you to type the id). Run these commands in order from `/home/vboxuser/Work/rpg-aseprite-mcp`, which holds the intakes: a `review` and an `adopt` per slot (14 commands). Each slot needs `review` first (it renders the source with Aseprite and writes the review image `adopt` checks). Fill the four placeholders yourself (the licence decision must be `CLEARED`; nothing is pre-answered here). The source asset id is the EXISTING one and `--parent r0001` is the latest unrevoked revision, so the store records `r0002`:
 
 ```
 cd /home/vboxuser/Work/rpg-aseprite-mcp
@@ -272,19 +316,34 @@ $PY -m visual_assets.store review in-a927d82fcd493c0a
 $PY -m visual_assets.store adopt in-a927d82fcd493c0a --visual-key icon.status.frame_buff --source-asset-id icon_status_frame_buff --parent r0001 \
   --approver "<your name>" --approver-role "<your role>" --licence "<your licence decision>" --licence-evidence "<your own evidence reference>"
 
+# icon.status.frame_debuff
+$PY -m visual_assets.store review in-6ee2b5282280c703
+$PY -m visual_assets.store adopt in-6ee2b5282280c703 --visual-key icon.status.frame_debuff --source-asset-id icon_status_frame_debuff --parent r0001 \
+  --approver "<your name>" --approver-role "<your role>" --licence "<your licence decision>" --licence-evidence "<your own evidence reference>"
+
 # icon.class.rogue
 $PY -m visual_assets.store review in-f332aa813db19054
 $PY -m visual_assets.store adopt in-f332aa813db19054 --visual-key icon.class.rogue --source-asset-id icon_class_rogue --parent r0001 \
   --approver "<your name>" --approver-role "<your role>" --licence "<your licence decision>" --licence-evidence "<your own evidence reference>"
 
 # icon.item.tool
-$PY -m visual_assets.store review in-ae266436924bd202
-$PY -m visual_assets.store adopt in-ae266436924bd202 --visual-key icon.item.tool --source-asset-id icon_item_tool --parent r0001 \
+$PY -m visual_assets.store review in-7d3825eda1fdb00e
+$PY -m visual_assets.store adopt in-7d3825eda1fdb00e --visual-key icon.item.tool --source-asset-id icon_item_tool --parent r0001 \
   --approver "<your name>" --approver-role "<your role>" --licence "<your licence decision>" --licence-evidence "<your own evidence reference>"
 
 # icon.rarity.common
 $PY -m visual_assets.store review in-db5985f18b3164cf
 $PY -m visual_assets.store adopt in-db5985f18b3164cf --visual-key icon.rarity.common --source-asset-id icon_rarity_common --parent r0001 \
+  --approver "<your name>" --approver-role "<your role>" --licence "<your licence decision>" --licence-evidence "<your own evidence reference>"
+
+# icon.building.hero_house
+$PY -m visual_assets.store review in-cce3e6b4fb609dc5
+$PY -m visual_assets.store adopt in-cce3e6b4fb609dc5 --visual-key icon.building.hero_house --source-asset-id icon_building_hero_house --parent r0001 \
+  --approver "<your name>" --approver-role "<your role>" --licence "<your licence decision>" --licence-evidence "<your own evidence reference>"
+
+# icon.building.inn
+$PY -m visual_assets.store review in-ca88fbc521414581
+$PY -m visual_assets.store adopt in-ca88fbc521414581 --visual-key icon.building.inn --source-asset-id icon_building_inn --parent r0001 \
   --approver "<your name>" --approver-role "<your role>" --licence "<your licence decision>" --licence-evidence "<your own evidence reference>"
 ```
 

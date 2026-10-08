@@ -169,10 +169,24 @@ def test_a_closed_dome_without_a_gap_fails_the_ruins_arch_rows():
     assert {"open gap", "rubble"} & _r2("icon.marker.ruins", _edit(mine, fill))
 
 
-def test_a_toolbox_without_its_latch_and_a_hood_without_a_face_opening_fail_their_rows():
-    box = of.fix_sprites()["icon.item.tool"]
-    no_latch = _edit(box, {(x, y): (0xD0, 0x40, 0x30, 255) for x in range(10, 14) for y in range(11, 15)})
-    assert "latch" in _r2("icon.item.tool", no_latch)
+def test_a_hood_without_a_face_opening_fails_its_row_and_the_rejected_toolbox_is_not_hammer_and_tongs():
+    toolbox = rule.from_rows(["#" * 18] * 16, {"#": "#d04030"})  # stands in for the rejected toolbox: a solid red slab
+    slab = rule.Sprite(24, 24, tuple(p for y in range(24) for x in range(24) for p in [((0xD0, 0x40, 0x30, 255) if 3 <= x < 21 and 4 <= y < 20 else (0, 0, 0, 0))]))
+    failed_rows = _r2("icon.item.tool", slab)
+    assert {"wooden handle", "steel hammer head", "tong jaws", "rivet at the crossing"} <= failed_rows and toolbox is not None
     hood = of.fix_sprites()["icon.class.rogue"]
     no_face = _edit(hood, {(x, y): (0x3A, 0x30, 0x40, 255) for x in range(7, 17) for y in range(7, 18) if tuple(hood.rgba[y * 24 + x][:3]) == (0x25, 0x25, 0x30)})
     assert {"face opening", "measurable"} & _r2("icon.class.rogue", no_face)  # with no dark pixels at all the part cannot even be found: reported as not measurable
+
+
+def test_a_cottage_with_modern_blue_glass_a_triangle_debuff_and_a_changed_tankard_outline_fail_their_rows():
+    house = of.fix_sprites()["icon.building.hero_house"]
+    blue = _edit(house, {(6, 15): (0x50, 0xA8, 0xE0, 255), (7, 15): (0x50, 0xA8, 0xE0, 255)})
+    assert "no modern blue glass" in _r2("icon.building.hero_house", blue)
+    old_house = la.all_icon_sprites()["icon.building.hero_house"]  # the adopted white-walled house with blue windows
+    assert {"thatched roof", "timber frame", "no modern blue glass"} <= _r2("icon.building.hero_house", old_house)
+    old_debuff = la.all_icon_sprites()["icon.status.frame_debuff"]  # the inverted red triangle that read as a road sign
+    assert {"eight spikes", "not a triangle (not a road sign)", "symmetric"} & _r2("icon.status.frame_debuff", old_debuff)
+    tankard = of.fix_sprites()["icon.building.inn"]
+    assert "same outline" in _r2("icon.building.inn", _edit(tankard, {(2, 2): (0x0E, 0x10, 0x18, 255)}))
+    assert "iron hoops" in _r2("icon.building.inn", la.all_icon_sprites()["icon.building.inn"])  # the adopted mug has none

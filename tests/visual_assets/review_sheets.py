@@ -176,14 +176,17 @@ def fallback_text(key: str) -> str:
 PROFILES = {
     "icons-owner-fixes-v1": {
         "proposed": fixes.PROPOSED,
+        "pending": fixes.PENDING,
         "not_proposed": fixes.NOT_PROPOSED,
         "evaluate": fixes.evaluate,
         "findings": [
+            "Seven revisions are proposed (buff frame, rogue, common bead, tool, hero house, debuff frame, inn); each is a new revision r0002 of an adopted icon.",
             "Owner decision (planner's blocking question, 2026-10-08): \"Keep current versions\". The ruins arch and the spear-tent camp are NOT proposed (the adopted brick wall and crossed swords stay); their drafts stay in the set only because the store cannot drop a draft slot.",
+            "Theme fit (D21, medieval fantasy plus magic, nothing modern), owner decisions of 2026-10-08: tool = hammer and tongs (the toolbox was rejected as a modern suitcase), hero house = \"Redraw as cottage\", debuff frame = \"Reshape the frame\", inn = \"Add staves\".",
+            "The blind check (round 5, one model, one sample, noisy) names the cottage, the tankard, the buff frame, the rogue and the bead correctly in free text and in the era question. TWO of the new drawings still misread at a glance: the tool's tongs read as a WRENCH (\"crossed hammer and wrench\", era-flagged) and the spiked-ball debuff frame as a GEAR (\"red spiked gear target\", era-flagged); the choice pass names both correctly. The planner and the owner decide whether to redraw them.",
             "The silver bead is lighter than the dark tier badges E and D, but it stays a round disc beside octagons: the look-alike report puts it 25 XOR px from tier D and E (a shape twin; an owner finding).",
-            "The tool is a toolbox: it covers the repair kit; the spirit lantern, the family's other item, cannot also be drawn (one family icon).",
-            "The blind recognition check named all four in free text (round 4; one model, one sample, noisy): up arrow in green ring, hooded figure, red toolbox, grey-blue orb.",
-            "Blade overlap is resolved by the rogue's cowl: the sword is the only new blade.",
+            "The tool covers the repair kit; the spirit lantern, the family's other item, cannot also be drawn (one family icon). The ranger's registry fallback names the UI icon Lucide Crosshair: that is today's UI chrome, not the art, and is left as is.",
+            "The debuff frame's outline was made exactly mirror-symmetric after drawing began (the outline the owner approved was lopsided by 30 mirror pixels); the sheet shows the symmetric one.",
         ],
     },
 }
@@ -329,10 +332,15 @@ def sheet_markers(set_id: str, digest: str, shown: list[Entry], sprites: dict[st
     return c
 
 
-def sheet_silhouettes(set_id: str, digest: str, shown: list[Entry], sprites: dict[str, rule.Sprite], adopted: dict[str, rule.Sprite]) -> Canvas:
+def sheet_silhouettes(set_id: str, digest: str, shown: list[Entry], sprites: dict[str, rule.Sprite], adopted: dict[str, rule.Sprite], pending: dict[str, str] | None = None) -> Canvas:
     proposals = silsheet.load_proposals()["slots"]
     z = 5
     slots = []
+    for key in sorted(pending or {}):  # proposed slots still to be drawn: the silhouettes the owner is asked to approve (option letters from the proposals file)
+        neigh = [n for n in proposals[key].get("neighbours", []) if n in sprites]
+        cells = [("ADOPTED", adopted.get(key) or sprites[key])] + [(f"OPTION {tag}", silsheet.sprite_of(o["rows"])) for tag, o in proposals[key]["options"].items()]
+        cells += [(n.split(".")[-1][:12].upper(), sprites[n]) for n in neigh]
+        slots.append((Entry(key, "pending", key, silsheet.sprite_of(next(iter(proposals[key]["options"].values()))["rows"])), cells))
     for e in sorted(shown, key=lambda e: e.key):
         neigh = [n for n in proposals.get(e.key, {}).get("neighbours", []) if n in sprites]
         cells = [("ADOPTED", adopted.get(e.key)), ("PROPOSED", e.sprite)] + [(n.split(".")[-1][:12].upper(), sprites[n]) for n in neigh]
@@ -351,9 +359,9 @@ def sheet_silhouettes(set_id: str, digest: str, shown: list[Entry], sprites: dic
             x0, y0 = 24 + col * cell_w(e), y + row * (side(e) + 52)
             for n, (bg, ink) in enumerate(((DARK, LIGHT), (LIGHT, DARK))):
                 panel(c, sp, x0 + n * (side(e) + 6), y0, side(e), z, bg, lambda _c, ink=ink: ink)
-                if label == "PROPOSED":
+                if label == "PROPOSED" or label.startswith("OPTION"):
                     c.frame(x0 + n * (side(e) + 6) - 2, y0 - 2, side(e) + 4, side(e) + 4, GREEN)
-            c.text(x0, y0 + side(e) + 8, label, GREEN if label == "PROPOSED" else DIM, 2)
+            c.text(x0, y0 + side(e) + 8, label, GREEN if label == "PROPOSED" or label.startswith("OPTION") else DIM, 2)
         y += lines(e, cells) * (side(e) + 52) + 24
     return c
 
@@ -414,6 +422,12 @@ def readme(set_id: str, digest: str, shown: list[Entry], profile: dict, result: 
     out += ["", "THE DRAFTS SHOWN", *[f"  {e.key}  ({e.sprite.width}x{e.sprite.width})  draft {e.draft_id}" for e in sorted(shown, key=lambda e: e.key)]]
     if profile.get("not_proposed"):
         out += ["", "NOT PROPOSED (drafts that exist in the set but are NOT candidates)", *[f"  {k}: {v}" for k, v in sorted(profile["not_proposed"].items())]]
+    if profile.get("pending"):
+        slots = silsheet.load_proposals()["slots"]
+        out += ["", "PENDING YOUR APPROVAL BEFORE ANY DRAWING (proposed slots whose earlier draft was rejected; see 06_silhouettes.png, the green-framed OPTION cells)"]
+        for k, v in sorted(profile["pending"].items()):
+            out.append(f"  {k}: {v}")
+            out += [f"    OPTION {tag}: {o['label']}" for tag, o in slots[k]["options"].items()]
     out += ["", "RECORDED RESULTS (as measured; thresholds unchanged)"]
     if result:
         out.append(f"  sheet rule on the set as it would stand with these in place: {result['result']} (key-set groups {result['key_set_rule']['result']}, v2 groups {result['v2_rule']['result']})")
@@ -440,7 +454,8 @@ def generate(set_id: str, out_dir: Path | None = None, root: Path | None = None)
     entries, _record, digest = load_set(set_id, root)
     profile = PROFILES.get(set_id, {})
     not_proposed = profile.get("not_proposed", {})
-    shown = [e for e in entries if e.key not in not_proposed]
+    pending = profile.get("pending", {})
+    shown = [e for e in entries if e.key not in not_proposed and e.key not in pending]
     adopted = {k: s for k, s in la.all_icon_sprites().items()}
     sprites = {**adopted, **{e.key: e.sprite for e in shown}}
     adopted_old = {e.key: adopted[e.key] for e in shown if e.key in adopted and adopted[e.key] != e.sprite}
@@ -459,7 +474,7 @@ def generate(set_id: str, out_dir: Path | None = None, root: Path | None = None)
         "03_groups.png": sheet_groups(set_id, digest, sprites, {e.key for e in shown}, groups, False) if groups else message_canvas(set_id, "groups", "None of these drafts belongs to a must-differ group.", digest),
         "04_colour_vision.png": sheet_groups(set_id, digest, sprites, {e.key for e in shown}, groups, True) if groups else message_canvas(set_id, "colour vision", "None of these drafts belongs to a must-differ group.", digest),
         "05_map_markers.png": sheet_markers(set_id, digest, shown, sprites),
-        "06_silhouettes.png": sheet_silhouettes(set_id, digest, shown, sprites, adopted_old),
+        "06_silhouettes.png": sheet_silhouettes(set_id, digest, shown, sprites, adopted_old, pending),
     }
     out_dir.mkdir(parents=True, exist_ok=True)
     for name, canvas in canvases.items():

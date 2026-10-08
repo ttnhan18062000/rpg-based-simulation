@@ -197,7 +197,7 @@ describe('the icon preview page', () => {
   })
 
   describe('with the silhouette sheet', () => {
-    const SLOTS = ['icon.rarity.common', 'icon.status.frame_buff', 'icon.class.rogue', 'icon.item.tool']
+    const SLOTS = ['icon.rarity.common', 'icon.status.frame_buff', 'icon.class.rogue', 'icon.item.tool', 'icon.building.hero_house', 'icon.status.frame_debuff', 'icon.building.inn']
 
     it('shows every changed slot with its adopted silhouette, its proposals and its neighbours, in one colour', () => {
       const { container } = mountSil()
@@ -242,8 +242,8 @@ describe('the icon preview page', () => {
   })
 
   describe('with the owner-fix revisions', () => {
-    const FIXES = ['icon.class.rogue', 'icon.item.tool', 'icon.marker.enemy_camp', 'icon.marker.ruins', 'icon.rarity.common', 'icon.status.frame_buff']
-    const PROPOSED = ['icon.class.rogue', 'icon.item.tool', 'icon.rarity.common', 'icon.status.frame_buff']
+    const FIXES = ['icon.building.hero_house', 'icon.building.inn', 'icon.class.rogue', 'icon.item.tool', 'icon.marker.enemy_camp', 'icon.marker.ruins', 'icon.rarity.common', 'icon.status.frame_buff', 'icon.status.frame_debuff']
+    const PROPOSED = ['icon.building.hero_house', 'icon.building.inn', 'icon.class.rogue', 'icon.item.tool', 'icon.rarity.common', 'icon.status.frame_buff', 'icon.status.frame_debuff']
     const NOT_PROPOSED = ['icon.marker.enemy_camp', 'icon.marker.ruins']
 
     it('shows each draft beside the adopted drawing, 1x and 2x on a dark and a light panel, with different pictures on the two sides', () => {
@@ -288,7 +288,7 @@ describe('the icon preview page', () => {
       const { container } = mountFix()
       for (const img of container.querySelectorAll('[data-testid="owner-fixes"] img') as NodeListOf<HTMLImageElement>) {
         const key = img.dataset.key!
-        const native = key === 'icon.rarity.common' ? 8 : /\.(class|item)\./.test(key) ? 24 : 16
+        const native = key === 'icon.rarity.common' ? 8 : /\.(class|item|building)\./.test(key) ? 24 : 16
         expect(Math.abs(parseFloat(img.getAttribute('width')!) * 1.25 - Number(img.dataset.scale) * native), key).toBeLessThan(1e-6)
       }
     })

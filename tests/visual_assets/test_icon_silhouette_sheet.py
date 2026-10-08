@@ -13,7 +13,7 @@ from tests.visual_assets import icon_silhouette_sheet as ss
 from tests.visual_assets import icon_specs
 
 # the ruins arch and the tent camp were taken off the sheet when the owner kept the adopted versions ("Keep current versions", 2026-10-08)
-SLOTS = ["icon.rarity.common", "icon.status.frame_buff", "icon.class.rogue", "icon.item.tool"]
+SLOTS = ["icon.rarity.common", "icon.status.frame_buff", "icon.class.rogue", "icon.item.tool", "icon.building.hero_house", "icon.status.frame_debuff", "icon.building.inn"]  # the theme-fit decisions of 2026-10-08 added the cottage, the spiked debuff frame and the tankard and replaced the toolbox
 
 
 def test_the_committed_sheet_equals_a_fresh_build():

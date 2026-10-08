@@ -1,7 +1,10 @@
 # Proposed one-colour silhouettes (the outline included), written from the local prototypes; `#` is a pixel of the shape. The preview page shows them beside the adopted icons.
 record_type: icon_silhouette_proposals
 decided: 'proposals of 2026-10-08 for TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES; the owner approves or changes them by blocking question BEFORE any full drawing; the owner later kept the adopted ruins
-  and enemy camp (planner''s blocking question, 2026-10-08: "Keep current versions"), so those two slots are no longer on the sheet'
+  and enemy camp (planner''s blocking question, 2026-10-08: "Keep current versions"), so those two slots are no longer on the sheet; the toolbox was rejected by the owner for the theme (D21, 2026-10-08:
+  "Hammer and tongs"), so the tool slot now proposes hammer and tongs; three more revisions were added by the owner''s decisions of 2026-10-08 ("Redraw as cottage", "Reshape the frame", "Add staves"): the
+  hero house, the debuff frame and the inn; the debuff frame''s spiked ball was symmetrised after drawing began (the approved silhouette was lopsided by 30 mirror pixels); the sheet now shows the symmetric
+  one'
 slots:
   icon.rarity.common:
     neighbours:
@@ -117,30 +120,126 @@ slots:
     - icon.item.material
     options:
       A:
-        label: toolbox
+        label: hammer and tongs, crossed
         size: 24
         rows:
         - '........................'
         - '........................'
+        - '....###.................'
+        - '...#####................'
+        - '...#####.....##.........'
+        - '....####....####........'
+        - '....#####..######.......'
+        - '.....#####.#######......'
+        - '......#####.#######.....'
+        - '.......############.....'
+        - '........##########......'
+        - '.........########.......'
+        - '........#######.........'
+        - '.......############.....'
+        - '......###############...'
+        - '.....#####...#########..'
+        - '....#####......#######..'
+        - '....####........#####...'
+        - '.....##..........####...'
+        - '..................###...'
+        - '...................#....'
         - '........................'
         - '........................'
-        - '.........######.........'
-        - '........########........'
-        - '.......##########.......'
-        - '.......###....###.......'
+        - '........................'
+  icon.building.hero_house:
+    neighbours:
+    - icon.building.store
+    - icon.building.guild
+    - icon.building.inn
+    - icon.building.class_hall
+    - icon.building.blacksmith
+    options:
+      A:
+        label: timber-framed cottage
+        size: 24
+        rows:
+        - '........................'
+        - '........................'
+        - '...........##..#####....'
+        - '..........###########...'
+        - '.........###########....'
+        - '........############....'
+        - '.......#############....'
+        - '......##############....'
+        - '.....###############....'
+        - '....################....'
         - '...##################...'
         - ..####################..
-        - ..####################..
-        - ..####################..
-        - ..####################..
-        - ..####################..
-        - ..####################..
-        - ..####################..
-        - ..####################..
-        - ..####################..
-        - ..####################..
-        - ..####################..
-        - ..####################..
         - '...##################...'
+        - '...##################...'
+        - '...##################...'
+        - '...##################...'
+        - '...##################...'
+        - '...##################...'
+        - '...##################...'
+        - '...##################...'
+        - '...##################...'
+        - '....################....'
+        - '........................'
+        - '........................'
+  icon.status.frame_debuff:
+    neighbours:
+    - icon.status.frame_buff
+    options:
+      A:
+        label: thorned frame
+        size: 16
+        rows:
+        - '.......##.......'
+        - ..#...####...#..
+        - .##############.
+        - ..############..
+        - ..############..
+        - ..############..
+        - .##############.
+        - '################'
+        - '################'
+        - .##############.
+        - ..############..
+        - ..############..
+        - ..############..
+        - .##############.
+        - ..#...####...#..
+        - '.......##.......'
+  icon.building.inn:
+    neighbours:
+    - icon.building.store
+    - icon.building.guild
+    - icon.building.hero_house
+    - icon.building.class_hall
+    - icon.building.blacksmith
+    options:
+      A:
+        label: tankard with staves and hoops
+        size: 24
+        rows:
+        - '........................'
+        - '........................'
+        - '.........####...........'
+        - '.....###########........'
+        - '....#############.......'
+        - '...###############......'
+        - '...###############......'
+        - '...###############......'
+        - '....#############.......'
+        - '....##############......'
+        - '....###############.....'
+        - '....################....'
+        - '....#################...'
+        - '....#############.###...'
+        - '....#############.###...'
+        - '....#################...'
+        - '....################....'
+        - '....###############.....'
+        - '....##############......'
+        - '....#############.......'
+        - '.....###########........'
+        - '........................'
         - '........................'
         - '........................'
