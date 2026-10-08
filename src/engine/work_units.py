@@ -10,6 +10,7 @@ it leaves out the ``combat_engagement`` bucket (open defect ``TCK-20261006-COMBA
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -20,6 +21,7 @@ WORK_MODEL_VERSION = "WORK_MODEL_V1"
 WORK_MODEL_STATUS = "PROVISIONAL"
 ENTITY_MS = 0.68  # reference-ms per active entity
 LEAD_MS = 7.42  # reference-ms per lead held by an active entity
+THREAD_CHUNK_CAP = 50  # work packets per thread-pool chunk (worker_manager.py), the unit of the queue and worker proxies
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,3 +46,17 @@ def count_demand(state: AuthoritativeState) -> WorkDemand:
 def tick_cost_ref_ms(demand: WorkDemand) -> float:
     """Modelled cost of one tick, in reference-milliseconds, under ``WORK_MODEL_VERSION``."""
     return ENTITY_MS * demand.entities_active + LEAD_MS * demand.leads
+
+
+def queue_utilization_proxy(entities_active: int, max_worker_count: int, max_queue_depth: int) -> float:
+    """Queue pressure in [0, 1]: chunks the active entities would fill, against the profile's queue depth. No workers means no queue (0.0)."""
+    if max_worker_count <= 0:
+        return 0.0
+    return min(1.0, math.ceil(entities_active / THREAD_CHUNK_CAP) / max_queue_depth)
+
+
+def worker_utilization_proxy(entities_active: int, max_worker_count: int) -> float:
+    """Worker pressure in [0, 1]: active entities against what the pool takes in one round of chunks. No workers reports 0.0."""
+    if max_worker_count <= 0:
+        return 0.0
+    return min(1.0, entities_active / (max_worker_count * THREAD_CHUNK_CAP))

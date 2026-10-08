@@ -146,6 +146,16 @@ the design (Scope 1); whether they are implemented here or split out is the desi
   quadratic. (2) step 2 rebases on the salience fix (same `_phase_init` region), re-measure `kernel.py` headroom, no parallel work. (3) if Option 2 ever
   makes CANONICAL the default for tests, `test_catalog_entity_spawn_wiring` (#367) must set `signal_contract=LIVE` explicitly, as must any other
   governor-pinned test that relies on the default.
+- **2026-10-08, Phase A (core window, owner gate item 7):** step 1 calibration `0985734d4` (WORK_MODEL_V1 0.68 / 7.42 reference-ms, PROVISIONAL, pooled R^2 0.874,
+  per-family 0.58 to 1.35, executors 0.92 / 0.83; `report.md` in the staging artifacts); the kernel double-count fix found there is its own ticket
+  (`TCK-20261008-PERF-KERNEL-RESOLUTION-OVERHEAD-DOUBLE-COUNTS-SUB-PHASES`, `df2f34f43`); step 2 `36af39b3f` (signal source split, `work_units.py`, `PressureSignals`
+  optional fields, `RuntimeProfile.signal_contract`; Live bit-identical per a golden fixture recorded from the pre-move code; `src/config/loader.py` typing-only edit);
+  step 3 (Canonical source, governors read the effective cost, proof tests).
+- **Changed in step 3, with the reason (plan.md section 2):** (1) queue and worker proxies use `entities_active`, not `_current_work_items`: scheduled items are post-policy and
+  would break the cost-is-demand rule; (2) Canonical counts demand from the state about to be processed, so it has no one-tick lag; (3) `tick_budget` stays unset under Canonical
+  (owner decision Q-B). The per-phase rules of `PhaseBudgetGovernor` are dropped under Canonical by giving the source an empty `phase_cost` (no contract branch in the governor).
+- **Limit of the anti-thrash proof:** it is synthetic (the real governor and `RuntimeStatus` driven with flip-flopping modelled-cost sequences), because no kernel scenario changes its
+  modelled cost mid-run. The run-level proofs (10 of 10 identical mode, budgets and hashes) use a constant modelled cost just over a threshold. Not filed as a follow-up: an honest limit.
 
 ## Test Summary
 

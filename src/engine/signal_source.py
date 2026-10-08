@@ -12,6 +12,12 @@ from typing import TYPE_CHECKING, Any, Dict, Mapping
 
 from src.config.profiles import SignalContract
 from src.core.governance import PressureSignals
+from src.engine.work_units import (
+    count_demand,
+    queue_utilization_proxy,
+    tick_cost_ref_ms,
+    worker_utilization_proxy,
+)
 
 if TYPE_CHECKING:
     from src.config.profiles import RuntimeProfile
@@ -27,6 +33,14 @@ class HostReadings:
     replay_stats: Mapping[str, Any]
     platform_signals: Mapping[str, Any]
     metrics: Dict[str, float]
+
+
+@dataclass(frozen=True, slots=True)
+class MeasuredCosts:
+    """This tick's measured cost in milliseconds and its per-phase breakdown. Telemetry under CANONICAL; the governors' input under LIVE."""
+
+    final_compute_ms: float
+    phase_costs: Mapping[str, float]
 
 
 class LiveSignalSource:
@@ -62,22 +76,22 @@ class LiveSignalSource:
         self,
         *,
         state: AuthoritativeState,
+        profile: RuntimeProfile,
         status: RuntimeStatus,
-        final_compute_ms: float,
-        phase_costs: Mapping[str, float],
+        measured: MeasuredCosts,
         host: HostReadings,
     ) -> PressureSignals:
         """Signals recorded into the status history at the end of a tick: this tick's measured cost and phase costs."""
         return PressureSignals(
             work_debt_total=sum(state.work_debt.values()),
-            tick_compute_ms=final_compute_ms,
+            tick_compute_ms=measured.final_compute_ms,
             worker_utilization=host.worker_stats["worker_utilization"],
             queue_utilization=host.worker_stats["queue_utilization"],
             memory_estimate_mb=host.platform_signals["rss_mb"],
             replay_backlog_kb=host.replay_stats["backlog_kb"],
             active_workers=host.worker_stats["active_workers"],
             dropped_work_delta=status.dropped_work_delta,
-            phase_costs_ms=dict(phase_costs),
+            phase_costs_ms=dict(measured.phase_costs),
             metrics=host.metrics.copy()
         )
 
@@ -108,14 +122,70 @@ class ZeroedSignalSource(LiveSignalSource):
         )
 
 
+class CanonicalSignalSource(LiveSignalSource):
+    """The CANONICAL contract: cost inputs are modelled from deterministic demand counts, never read from a clock or the host.
+
+    ``tick_cost`` is ``WORK_MODEL_V1`` in reference-milliseconds, counted from the state about to be processed (pre-policy demand), so the mode
+    cannot feed back into its own input. ``phase_cost`` is empty, so the governor's per-phase rules (locomotion, final_integrity) have nothing
+    to read: neither has a pre-policy counter. Memory and replay backlog are not inputs (zero); queue and worker pressure are demand proxies.
+    The measured tick cost still goes into the status history as telemetry in ``tick_compute_ms``, and nothing the governors read looks at it.
+    """
+
+    def tick_start_signals(
+        self,
+        *,
+        state: AuthoritativeState,
+        profile: RuntimeProfile,
+        status: RuntimeStatus,
+        host: HostReadings,
+    ) -> PressureSignals:
+        """Signals for the governor at the start of a tick, from the demand in ``state``."""
+        return self._canonical(state, profile, status, host, MeasuredCosts(0.0, {}))
+
+    def tick_end_signals(
+        self,
+        *,
+        state: AuthoritativeState,
+        profile: RuntimeProfile,
+        status: RuntimeStatus,
+        measured: MeasuredCosts,
+        host: HostReadings,
+    ) -> PressureSignals:
+        """Signals recorded into the status history: modelled inputs for the governors plus the measured cost as telemetry."""
+        return self._canonical(state, profile, status, host, measured)
+
+    @staticmethod
+    def _canonical(
+        state: AuthoritativeState,
+        profile: RuntimeProfile,
+        status: RuntimeStatus,
+        host: HostReadings,
+        measured: MeasuredCosts,
+    ) -> PressureSignals:
+        demand = count_demand(state)
+        return PressureSignals(
+            work_debt_total=sum(state.work_debt.values()),
+            tick_compute_ms=measured.final_compute_ms,
+            worker_utilization=worker_utilization_proxy(demand.entities_active, profile.max_worker_count),
+            queue_utilization=queue_utilization_proxy(demand.entities_active, profile.max_worker_count, profile.max_queue_depth),
+            memory_estimate_mb=0.0,
+            replay_backlog_kb=0,
+            active_workers=0,
+            dropped_work_delta=status.dropped_work_delta,
+            phase_costs_ms=dict(measured.phase_costs),
+            metrics=host.metrics.copy(),
+            tick_cost=tick_cost_ref_ms(demand),
+            phase_cost={},
+        )
+
+
 _LIVE = LiveSignalSource()
 _ZEROED = ZeroedSignalSource()
+_CANONICAL = CanonicalSignalSource()
 
 
 def select_signal_source(profile: RuntimeProfile, audit_mode: bool) -> LiveSignalSource:
     """Precedence: ``audit_mode`` -> zeroed signals; else the profile's ``signal_contract``. A flag cannot override the profile's contract."""
     if audit_mode:
         return _ZEROED
-    if profile.signal_contract is SignalContract.CANONICAL:
-        raise NotImplementedError("the CANONICAL signal contract has no source yet (arrives with step 3)")
-    return _LIVE
+    return _CANONICAL if profile.signal_contract is SignalContract.CANONICAL else _LIVE

@@ -18,7 +18,7 @@ from src.core.diagnostic import TraceEvent
 from src.core.lifecycle import LifecycleOutcome, ShutdownResult
 from src.core.enums import Domain
 
-from src.engine.signal_source import HostReadings, select_signal_source
+from src.engine.signal_source import HostReadings, MeasuredCosts, select_signal_source
 from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
 
@@ -754,7 +754,8 @@ class Kernel:
         terminal_worker_stats = self._worker_manager.get_stats()
         terminal_replay_stats = self._replay.get_stats()
         self._status.record_signals(select_signal_source(self._profile, self._audit_mode).tick_end_signals(
-            state=self._state, status=self._status, final_compute_ms=self._final_compute_ms, phase_costs=self._phase_costs,
+            state=self._state, profile=self._profile, status=self._status,
+            measured=MeasuredCosts(self._final_compute_ms, self._phase_costs),
             host=HostReadings(terminal_worker_stats, terminal_replay_stats, self._platform_signals, self._metrics),
         ))
 

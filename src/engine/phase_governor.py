@@ -106,11 +106,11 @@ class PhaseBudgetGovernor:
             )
 
         # Real-time Phase Pressure Override
-        phase_costs = signals.phase_costs_ms or {}
+        phase_costs = signals.effective_phase_cost or {}
 
         # 1. Locomotion phase pressure (Action & Movement Routing)
         loco_ms = phase_costs.get("locomotion", 0.0)
-        max_tick_ms = profile.max_tick_budget_ms if profile else 0.0
+        max_tick_ms = signals.effective_tick_budget(profile.max_tick_budget_ms) if profile else 0.0
         if loco_ms > 15.0 or (max_tick_ms > 0 and loco_ms > max_tick_ms * 0.5):
             # Severe locomotion pressure
             if not opt_profile or opt_profile.phase_skip_policy != "NEVER_SKIP":
@@ -136,7 +136,7 @@ class PhaseBudgetGovernor:
 
         # 3. Overall Tick Budget or Work Debt Pressure
         max_debt = profile.max_work_debt if profile else 0
-        if (max_tick_ms > 0 and signals.tick_compute_ms > max_tick_ms * 0.8) or (max_debt > 0 and signals.work_debt_total > max_debt * 0.7):
+        if (max_tick_ms > 0 and signals.effective_tick_cost > max_tick_ms * 0.8) or (max_debt > 0 and signals.work_debt_total > max_debt * 0.7):
             if not opt_profile or opt_profile.compaction_level != "NONE":
                 comp_lvl = "AGGRESSIVE"
 

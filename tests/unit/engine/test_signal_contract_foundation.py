@@ -11,7 +11,7 @@ from src.config.profiles import HardwareClass, RuntimeProfile, SignalContract
 from src.core.governance import PressureSignals
 from src.engine import work_units
 from src.engine.runtime_status import RuntimeStatus
-from src.engine.signal_source import LiveSignalSource, ZeroedSignalSource, select_signal_source
+from src.engine.signal_source import CanonicalSignalSource, LiveSignalSource, ZeroedSignalSource, select_signal_source
 from src.perf.scenarios import build_strategic_state
 
 
@@ -107,6 +107,5 @@ def test_audit_mode_wins_over_the_contract():
     assert type(select_signal_source(_profile(signal_contract="canonical"), audit_mode=True)) is ZeroedSignalSource
 
 
-def test_canonical_has_no_source_until_step_three():
-    with pytest.raises(NotImplementedError):
-        select_signal_source(_profile(signal_contract="canonical"), audit_mode=False)
+def test_canonical_profile_selects_the_canonical_source():
+    assert type(select_signal_source(_profile(signal_contract="canonical"), audit_mode=False)) is CanonicalSignalSource
