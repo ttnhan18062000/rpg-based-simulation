@@ -223,7 +223,7 @@ traversal. The underlying route relation persists; only current accessibility is
 ## SPC-S16 — The near wild is survivable, the deep wild is not (ENV-08, decision 30) (added 2026-10-08)
 
 A healthy worker walks from its town, across a second town, to the near forest, gathers there and
-walks back alive. It loses HP only in the forest. The same walk continued into the deep forest
+walks back alive, losing no health to the land. The same walk continued into the deep forest
 kills it.
 
 - **Rules invoked:** ENV-08 (settled land and the near edge of the wild are survivable for the
@@ -240,7 +240,8 @@ kills it.
     the decision.
   - **Main arm (destination: the node in `near_forest`, then home):** W crosses the second town
     with `hazard_damage` 0 on every tick spent there. It reaches the node, gathers, walks home,
-    and is alive at the end. All of its HP loss is recorded while it stands in `near_forest`.
+    and is alive at the end. It takes `hazard_damage` 0 in `near_forest` too, since the near edge's
+    cost is the walk and the competition, not health.
   - **Control arm (destination: a tile in `deep_forest`, then home):** W dies of HAZARD inside
     `deep_forest` before it can return.
   - **Why the control:** it proves the main arm's survival comes from the near edge being

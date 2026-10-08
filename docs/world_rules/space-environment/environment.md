@@ -362,6 +362,13 @@ within reach" holds only on paper.
   causes, and this Rule does not cap them.
 - **Endurance is unchanged:** a faction that declares endurance for a hazard kind still takes no
   drain anywhere (ENV-02). This Rule is about the people who do not.
+- **"Costs something" need not be health** (owner, 2026-10-08, on Lane B's derivation). The near
+  edge's cost may be the walk, the finite charges and the competition for them alone. Drain is
+  whole HP per tick, so the mildest nonzero level (1 HP per tick) kills a broke worker on a
+  two-gather visit (103 ticks, starting HP as low as 31), which breaks "does not kill them on it".
+  `near_forest` is therefore set to 0.
+- **Settled land includes a camp where people shelter** (`survivor_outpost`, module
+  `survivor_camp_shelter`). Settled means where people live and stay, not a town's legal status.
 - **Engineering and content, not this Rule:** the hazard values themselves; what counts as "near"
   for a given world; and whether subjects know a land is dangerous and avoid it (hazard-aware
   path and goal scoring is feature work, frozen by memo row 7).
@@ -384,8 +391,12 @@ read-only, relayed by rpg-planner; not re-measured here).
 - **Drain path:** `EnvironmentService.calculate_hazard_drain` (`src/world/environment.py`), applied
   every tick by `WorldDynamicsSystem.resolve_dynamics` (`src/engine/world_dynamics.py`). The only
   offset is the +1 HP per tick heal on town tiles (`src/engine/town_resolution.py`).
-- **The fix is content data** in Lane B's decision-27 batch: `trading_hometown` to 0, and
-  `near_forest` to a survivable level, with deeper and cursed land unchanged.
+- **The fix is content data** in Lane B's decision-27 batch: `trading_hometown` and
+  `survivor_outpost` from 0.5 to 0, and `near_forest` from 1.0 to 0, with deeper and cursed land
+  unchanged.
+- **Separate engineering defect found on the way:** a forager never leaves the node. In a
+  hazard-0 run a worker reached it at t=100 and was still there at t=1400. Under any standing
+  drain that would kill it, and it should not happen either way.
 
 **Scenarios:** [SPC-S16](../scenarios/space-environment-batch-04.md#spc-s16) (second town to
 the near forest and back alive; the `deep_forest` control kills). A kernel spec, owed as a test
