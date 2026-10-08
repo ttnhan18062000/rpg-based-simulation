@@ -30,7 +30,7 @@ We will implement a standalone **Simulation Watchdog** service (`src/observabili
     (`src/observability/alerts/`). The router always logs the alert (`LogAlertSink`) and
     additionally posts it to a webhook (`WebhookAlertSink`) **only if**
     `SIM_ALERTS_WEBHOOK_URL`/`SIM_ALERTS_WEBHOOK_ENABLED` are configured on the `watchdog`
-    service (disabled by default in `docker-compose.yml`). No PagerDuty/Discord integration
+    service (disabled by default in `compose.yaml`). No PagerDuty/Discord integration
     exists — the only real external sink type is a generic webhook POST, and it stays
     effectively log-only until an operator supplies those environment variables.
 

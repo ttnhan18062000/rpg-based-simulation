@@ -16,17 +16,17 @@ DISALLOWED_LOKI_LABELS = {"tick", "entity_id", "worker_id", "causal_id", "transa
 
 def test_promtail_labels_are_safe():
     """
-    Ensure promtail-config.yml does not promote any high-cardinality fields to Loki stream labels.
+    Ensure docker/promtail-config.yml does not promote any high-cardinality fields to Loki stream labels.
     Prevents Loki memory/index crash regressions.
     """
-    config_path = Path("promtail-config.yml")
-    assert config_path.exists(), "promtail-config.yml must exist at the root"
+    config_path = Path(__file__).resolve().parents[2] / "docker" / "promtail-config.yml"  # repo-root anchored, not cwd
+    assert config_path.exists(), "docker/promtail-config.yml must exist"
     
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
         
     scrape_configs = config.get("scrape_configs", [])
-    assert scrape_configs, "scrape_configs must be defined in promtail-config.yml"
+    assert scrape_configs, "scrape_configs must be defined in docker/promtail-config.yml"
     
     for job in scrape_configs:
         pipeline_stages = job.get("pipeline_stages", [])

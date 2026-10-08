@@ -36,7 +36,11 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Source & data
+# Source & data. `src/` is copied again on purpose even though the venv holds a non-editable install of it:
+# `python -m src` runs from /app, so /app/src is the copy that is imported, and several modules locate repo
+# files relative to their own path (e.g. src/content/validator.py `parents[2]`, src/engine/capability.py reads
+# docs/engine/capability_registry.yaml). Imported from site-packages those lookups would resolve to the wrong
+# directory. Dropping this COPY was tried in TCK-20261008-OPS-FILES-INTO-DOCKER-DIR and rejected for that reason.
 COPY src/ /app/src/
 COPY data/ /app/data/
 

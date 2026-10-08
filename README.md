@@ -130,7 +130,7 @@ See [docs/ai/](docs/ai/) for the full agent and workflow reference.
 Docker Compose manages Grafana, Loki, Redis, and RabbitMQ for production telemetry.
 
 ```bash
-docker compose up -d     # start telemetry stack
+docker compose up -d     # start telemetry stack (compose.yaml at the root; Dockerfiles and ops configs are in docker/)
 # Grafana: http://localhost:3000  (admin/admin)
 ```
 
