@@ -76,3 +76,9 @@ Arms: main = origin/main 10944422c; fixed = oa-fix (action emissions clear the t
 | alive t=1000 | 12.2 (3.0) [9, 11, 13, 17, 11] | 10.2 (2.7) [10, 10, 13, 6, 12] |
 | alive t=1100 | 6.8 (3.5) [2, 5, 9, 11, 7] | 3.2 (2.8) [2, 2, 8, 1, 3] |
 
+
+## urban_political attribution (pinned, seeds 42-46, main 10944422c vs this change; probe `probes/oa_attr.py`)
+Deaths by cause, 5-seed mean main to fixed: total 23.8 to 28.0; DEFEAT 7.6 to 10.6 (+3.0); COMBAT 1.2 to 4.6 (+3.4); STARVATION 10.8 to 10.4; HAZARD 4.2 to 2.4 (-1.8). Per seed (42..46) total deaths main [28, 25, 22, 20, 24] to fixed [28, 28, 28, 29, 27]; DEFEAT main [13, 2, 5, 5, 13] to fixed [13, 7, 7, 19, 7] (seed 45 is +14); COMBAT main [1, 2, 2, 0, 1] to fixed [4, 3, 6, 1, 9]. DEFEAT deaths labelled by the last damage within 5 ticks (5 seeds summed): main 38: neither 22, decided this tick 5, held move 11 (PANIC_RETREAT 5, REGROUP 4, PURSUE 2); fixed 53: held move 30 (REGROUP 20, PURSUE 5, PANIC_RETREAT 3, INTERCEPT 2), decided this tick 17, neither 6. Held-move hits by reason|mode, main to fixed: REGROUP 33 to 147, PURSUE 48 to 71, INTERCEPT 19 to 35, PANIC_RETREAT 9 to 26, BRACKETING 23 to 16. Attack executions that succeeded per seed main [25, 22, 26, 14, 32] to fixed [109, 99, 126, 76, 140]. Why held REGROUP moves became more common was not traced; follow-up ticket TCK-20261008-A-HELD-REGROUP-MOVE-WALKS-INTO-PERCEIVED-HOSTILES-AND-IS-NEVER-RE-DECIDED.
+
+## Melee legality check (requested on #424; merged code, seeds 42-46)
+ATTACK decisions at whole-tile distance 2 or more: frontier_living_world 69 of 228 and crowded_frontier 12 of 167, every one with attacker range 3; with range 1: 0.

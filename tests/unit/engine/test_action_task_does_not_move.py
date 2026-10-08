@@ -139,3 +139,14 @@ def test_an_adjacent_attacker_holding_an_attack_task_stays_on_its_tile_and_takes
         kernel.shutdown()
     assert set(positions) == {(10.0, 10.0)}, positions
     assert swings == []
+
+
+def test_a_navigation_only_errand_walk_still_walks_and_a_pursuit_still_live_retargets():
+    """Errand walks (the WANDER objective walk sets only a navigation target, no task) and entity-tracking moves are unchanged."""
+    target = _fighter(2, (30.0, 31.0), Faction.MONSTER_HORDE, strong=False)
+    errand = _holder("ENTITY_ACT", {}, target=(40.0, 40.0), mode=MovementMode.WANDER)
+    state = AuthoritativeState(tick=2, seed=1, entities={1: errand, 2: target})  # (tick + id) % 3 == 0 passes the WANDER cadence
+    assert MCS.movement_target(errand, None, state.entities) == (40.0, 40.0)
+    assert 1 in MCS.select(state, None, [1])
+    pursuit = _holder("ENTITY_MOVE", {"target_id": 2})
+    assert MCS.movement_target(pursuit, None, state.entities) == (30.0, 31.0)
