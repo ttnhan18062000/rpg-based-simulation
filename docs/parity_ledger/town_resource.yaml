@@ -1451,11 +1451,13 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: "src/world/ecology.py:process_ecology (line 20) \u2014 regen loop increments\
-    \ remaining_charges by regen_rate_per_tick each ecology tick, capped at max_charges;\
-    \ deterministic per-tick delta emitted as ResourceNodeUpdate"
+  v2_evidence: "src/world/ecology.py:process_ecology \u2014 regen loop increments remaining_charges\
+    \ by regen_rate_per_tick each ecology tick, capped at max_charges, emitted as ResourceNodeUpdate;\
+    \ src/engine/world_dynamics.py merges the whole ecology update (node_updates and the RESOURCE_RECOVERED\
+    \ event included) into the world-dynamics update. Previously verified at service level only: the\
+    \ merge dropped the regen, so no node ever regrew (TCK-20261008-RESOURCE-REGROWTH-IS-COMPUTED-BUT-NEVER-MERGED-INTO-THE-WORLD-DYNAMICS-UPDATE)"
   proof_type: parity
-  test_path: tests/unit/world/test_resource_ecology.py::test_regen_increments_charges_per_ecology_interval
+  test_path: tests/unit/world/test_resource_regrowth_wiring.py::test_a_depleted_node_gains_charges_over_the_ecology_interval_through_the_real_tick_path
   divergence_note: null
   support_boundary: null
 - id: TOWN-138
