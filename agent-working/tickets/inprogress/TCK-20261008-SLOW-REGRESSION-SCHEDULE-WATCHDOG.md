@@ -73,6 +73,7 @@ None.
 - Assumed: `gh` is available on `ubuntu-latest` and `GITHUB_TOKEN` with `actions: write` can dispatch another workflow in the same repo. Check this during implementation; if it does not hold, stop and report rather than adding a PAT.
 - The watchdog's own hourly cron can be dropped too; with about 10 chances inside each 10 h window, this is accepted.
 - Open (owner): whether the watchdog may also dispatch on non-`main` refs. Default: `main` only.
+- Open (testing-planner review): a Slow regression run stuck forever in queued/waiting would make the watchdog skip forever. Possible hardening: treat a non-completed run older than the job timeout (240 min) plus a margin as stale. Left as is for now.
 
 ## Implementation Notes
 - Decision function `tools/test_architecture/slow_regression_watchdog.py::decide(runs, now)`; input is `gh run list --json databaseId,event,status,createdAt,headBranch`. Any status other than `completed` counts as active (covers waiting/requested too). Exactly 10 h dispatches ("less than 10 h" skips). Timestamps are parsed for every main run first, so bad data fails loud even when an active run would skip.
