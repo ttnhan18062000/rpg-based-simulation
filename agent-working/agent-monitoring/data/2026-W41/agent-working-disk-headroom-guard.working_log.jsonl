@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-08T08:16:31.993123Z", "ticket_id": "TCK-20261008-SESSION-DISK-HEADROOM-GUARD", "title": "Disk headroom helper, launcher warning and SessionStart line", "status": "DONE", "summary": "disk_headroom.py plus launcher and SessionStart low-space line", "artifacts_path": "agent-working/stored_artifacts/TCK-20261008-SESSION-DISK-HEADROOM-GUARD"}
