@@ -228,6 +228,16 @@ decided:
       `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP` is still open. The artifact records the
       exclusion and the RPG base commit. The fit is re-checked after that fix lands.
    4. Lift extended by the owner on 2026-10-08, for TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY only: src/observability/reporting/artifact_repository.py and src/engine/replay_manager.py (run-manifest field), plus a typing-only edit to src/config/loader.py.
+   5. **Phase B file list extended by the owner on 2026-10-08** (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`; all
+      dead-path removals). Besides the Phase B list above, Phase B may edit:
+      - the six Phase A files again: `kernel.py`, `governor.py`, `phase_governor.py`, `governance.py`,
+        `config/profiles.py`, `runtime_status.py`, and also `signal_source.py`;
+      - `src/engine/executor.py`, `src/engine/domain_logic.py`, `src/core/worker_protocol.py`,
+        `src/core/protocol_validator.py`, `src/engine/worker_manager.py` and `src/perf/profiles.py`;
+      - the root-cause rules in `src/observability/understanding/rootcause/rules.py` (text only) and a string in
+        `tools/perf/hash_callsite_inventory.py`.
+      `pipeline.py` is not touched. The RPG-core lanes are asked to hold these files during the Phase B slot as well
+      (`rpg_core_handoff.md`, Ask 12). Hash scheme: `flat-sha256-v2` (PERF-D5, update 2026-10-08).
    Measurements stay provisional, and no soft check becomes blocking. The full lift is still an owner
    statement. On 2026-10-07: criterion 1 has no open item perf knows of; criterion 2 has row 7 (b) at 8
    unbound (#393, from 25), 7 of them dead modules filed for deletion; criterion 3 is this phased window, not a
