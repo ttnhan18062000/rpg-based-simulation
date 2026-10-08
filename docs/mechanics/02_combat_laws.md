@@ -120,6 +120,12 @@ Every non-opportunity `ATTACK` requires the attacker's `readiness` to be at **ex
 higher** (`LegalityServiceV2.verify_attack_legality`). Opportunity attacks (triggered by
 disengaging while adjacent to a hostile) bypass this specific check.
 
+**Between blows the fighter holds (CONFLICT-04).** A fighter adjacent to an engaged hostile whose
+attack is not yet legal only because its readiness is under 100 does not step: it queues the swing
+(a held `ATTACK`, reason `HOLD_BETWEEN_BLOWS`) and strikes when readiness reaches 100, so it
+provokes no opportunity attack. It leaves only by a decision (flight, panic retreat, a declared
+ability, a goal that outranks the fight), and that decision pays the opportunity attack.
+
 *   **Consumption**: A successful attack resets readiness by **-100.0** (a full reset). Movement
     does **not** cost readiness (`TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE`) — it
     costs `stamina` instead (`StaminaComponent.MOVE_COST`, a flat per-move cost, separately
@@ -182,6 +188,29 @@ disengaging while adjacent to a hostile) bypass this specific check.
     one run. Clearing it returns the entity to the brain, whose tactical pass pursues whenever an
     attack is not legal. `INSUFFICIENT_READINESS` is deliberately **not** reset: readiness regens
     and the same swing can then land.
+    The same law ends a held gathering task: an `INTERACT` on a resource node that is missing or has no
+    charges left is reset the same way (see Bible 03 section 3, `TCK-20261008-A-HELD-INTERACT-ON-A-DEPLETED-OR-MISSING-NODE-IS-NEVER-RE-DECIDED`).
+*   **Whole-Tile Reach Distance**: positions are whole tiles (world rule MOV-07, Decision 25), and
+    every reach check measures one distance: the Manhattan distance between the tiles the two
+    positions stand on (`LegalityServiceV2.get_manhattan_dist`, each coordinate read as `int(pos)`,
+    as occupancy, terrain and building lookups read it). Attack legality (`verify_attack_legality`)
+    and pursuit completion (`MovementCandidateSelector._target_in_attack_reach`) both call it, so
+    a pursuer stops exactly when the swing is legal. The long-distance flow-field step toward the
+    town centre (`NavigationSystem.get_next_step`) is a one-tile step along the flow vector's
+    dominant axis (a tie takes the y axis, as the local step does); it used to add a unit vector
+    and leave the entity between tiles, where the truncated legality distance and the float
+    pursuit distance disagreed (`TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT`).
+*   **An Action Task Does Not Walk**: movement runs on `navigation.target`, whatever the task kind, so an entity that holds an
+    action task (`ENTITY_ACT` with a payload: ATTACK, SKILL, INTERACT, HOLD) must not keep walking on a target an earlier
+    decision left behind. The ATTACK and SKILL emissions clear the navigation target (`tactical.py`); an entity holding an action
+    task is neither offered a move (`MovementCandidateSelector.select`) nor moved (`MovementPhase.route_movement_intent`) unless
+    that tick sets a target of its own (`MovementCandidateSelector.holds_action_task`); and live retargeting onto the entity named
+    in `payload["target_id"]` applies only to entity-tracking moves (pursuit, intercept, bracketing, kiting, guard), never to an
+    action holder (`resolve_live_tracking_target`). Before this an adjacent ATTACK holder was live-retargeted onto its target's
+    occupied tile, the refused step fell to the sidestep ladder (`MovementSystem._find_sidestep`) and the attacker stepped off
+    adjacency and took an opportunity attack (COMB-009/272). The cost: an attacker whose target steps away no longer closes the gap
+    through live tracking; it closes after OUT_OF_RANGE returns it to the brain, which for an idle entity runs once per
+    `strategic_intelligence` cadence (10 in the live NORMAL policy, `policy.py:92`).
 *   **Withheld-Action Task Reset**: The action router (`ActionRouter.execute_action`,
     `src/engine/domain/action_router.py`) reports `ReasonCode.ACTION_WITHHELD_BY_POSTURE` when its
     combat-posture gate withholds an `ATTACK`/`SKILL` (the attacker's recorded

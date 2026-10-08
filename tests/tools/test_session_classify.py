@@ -177,3 +177,89 @@ def test_cd_that_cannot_be_resolved_or_follows_the_action_is_uncertain(command):
 
 def test_cd_alone_is_not_an_authority_class_command():
     assert not classify(BASH, {"command": "cd ../wt && ls"}).is_authority
+
+
+# TCK-20261007-SESSION-GUARD-QUOTED-TEXT-FALSE-POSITIVE: data (heredoc bodies, quoted text) is not a command.
+_NOTE_HEREDOC = """python3 - "$f" <<'EOF'
+import sys
+text = '''commit/push/PR; merge the branch; push again'''
+open(sys.argv[1], "a").write(text + "\\n")
+EOF"""
+
+
+def _verdict(command):
+    from tools.sessions import guard
+    c = classify(BASH, {"command": command})
+    return c, guard.critical_text(command)
+
+
+def test_handover_note_heredoc_mentioning_push_is_not_authority():
+    c, critical = _verdict(_NOTE_HEREDOC)
+    assert not c.is_authority and not critical
+
+
+@pytest.mark.parametrize("command", [
+    'echo "git push origin main; commit; merge"',
+    "git log --grep 'push; commit' --oneline",
+    "gh pr view 5 --comments | grep 'push | merge'",
+])
+def test_quoted_text_with_authority_words_is_not_authority(command):
+    c, critical = _verdict(command)
+    assert not c.is_authority and not critical
+
+
+def test_shell_payload_quotes_are_code_not_text():
+    c, critical = _verdict('bash -c "git push origin main"')
+    assert c.uncertain and critical
+    assert classify(BASH, {"command": 'eval "git push"'}).uncertain
+
+
+def test_commit_with_heredoc_message_is_commit_only():
+    c, critical = _verdict("git commit -m \"$(cat <<'EOF'\nfix: push the merge; done\nEOF\n)\"")
+    assert set(c.actions) == {"commit"} and not c.uncertain and not critical
+
+
+def test_command_substitution_inside_double_quotes_still_runs():
+    assert "push" in _actions('echo "x $(git push origin b) y"')
+
+
+@pytest.mark.parametrize("command,expected", [
+    ("cat > CLAUDE.md <<EOF\nhello\nEOF", {"governing_file_edit"}),
+    ("cat > CLAUDE.md <<'EOF'\npush; merge\nEOF", {"governing_file_edit"}),
+    ("sed -i 's/a/b/' .claude/settings.json", {"governing_file_edit"}),
+    ("tee .claude/settings.json <<-EOF\n\tx\n\tEOF", {"governing_file_edit"}),
+])
+def test_write_target_outside_the_body_still_counts(command, expected):
+    assert _actions(command) == expected
+
+
+def test_governed_filename_inside_a_message_is_not_a_write():
+    assert not classify(BASH, {"command": "git commit -m 'update CLAUDE.md and settings.json'"}).actions - {"commit"}
+    assert _actions("git commit -m 'update CLAUDE.md'") == {"commit"}
+
+
+def test_heredoc_fed_to_a_shell_is_code():
+    assert "push" in _actions("bash <<EOF\ngit push origin b\nEOF")
+
+
+def test_unbalanced_quote_with_authority_word_still_asks():
+    c = classify(BASH, {"command": "echo 'unclosed push"})
+    assert c.uncertain
+
+
+def test_heredoc_without_terminator_is_not_stripped():
+    assert "push" in _actions("cat <<EOF\nno end\n; git push origin b")
+
+
+# TCK-20261008-LAUNCHER-SQUASH-MERGED-BRANCH (folded in): an unresolvable push target may be the default branch.
+@pytest.mark.parametrize("command", [
+    'git push origin "$BRANCH"', "git push origin $BRANCH", "git push origin ${B}", 'git push origin "$(git branch --show-current)"',
+    "git push origin HEAD:$B", "git push origin feat-*",
+])
+def test_unresolvable_push_target_is_treated_as_possibly_the_default_branch(command):
+    assert "push_default_branch" in _actions(command)
+
+
+@pytest.mark.parametrize("command", ['git push origin "feature-x"', "git push origin feature-x", "git push -u origin HEAD"])
+def test_resolvable_push_targets_stay_non_default(command):
+    assert "push_default_branch" not in _actions(command)

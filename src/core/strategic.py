@@ -4,11 +4,10 @@
 from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass, field
-from typing import Dict, Any, Iterable, Mapping, Optional, List, Tuple, TYPE_CHECKING
+from typing import Dict, Any, Iterable, Mapping, Optional, List, Protocol, Tuple, TYPE_CHECKING
 from enum import Enum
 
 if TYPE_CHECKING:
-    from src.ai.goals.base import GoalScore
     from src.core.state import EntityState
 
 
@@ -358,7 +357,23 @@ def has_project_capacity(projects: Mapping[str, ProjectState], max_active_projec
     return sum(1 for p in projects.values() if is_live_project(p)) < max_active_projects
 
 
-def with_live_current_score(entity: EntityState, live_scores: Iterable[GoalScore]) -> EntityState:
+class LiveScore(Protocol):
+    """What `with_live_current_score` reads from a goal's live score: the goal kind and its utility.
+
+    Declared here, in core, so core does not import the AI layer for a type hint (`src.ai.goals.base.GoalScore` satisfies it)."""
+
+    @property
+    def kind(self) -> "GoalKind | str":
+        """The goal kind this score is for."""
+        ...
+
+    @property
+    def utility(self) -> float:
+        """The goal's live utility."""
+        ...
+
+
+def with_live_current_score(entity: EntityState, live_scores: Iterable[LiveScore]) -> EntityState:
     """
     The entity with its CURRENT project's score replaced by that project's live utility, for the switch comparison.
 

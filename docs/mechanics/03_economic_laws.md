@@ -38,6 +38,7 @@ Resources exist in the world as `ResourceNodes`.
     *   **Regular Nodes** (e.g., Iron Vein, Stone Outcrop): Lose **1 charge** per harvest tick.
     *   **Loot Nodes** (e.g., Treasure Chest): Are **fully consumed** on the first successful interaction.
 *   **Depletion**: Once charges reach 0, the node is removed from the world and enters a regeneration phase (if applicable).
+*   **A Held Gather Ends When Its Node Cannot Yield**: an `INTERACT` on a node that is missing or has no charges left spends nothing, gathers nothing and fails with `SOURCE_MISSING` or `SOURCE_DEPLETED` (`CoreActions.execute_interact`). That is an unrecoverable failure, so the held task is cleared (`ActionRoutingPhase.route()`, `src/engine/pipeline_phases/actions.py`, the same reset as a held `ATTACK`, Bible 02) and the scheduler hands the entity back to the brain. Without it the entity was re-dispatched the same no-op, annotated `SUCCESS`, every tick for hundreds of ticks (`TCK-20261008-A-HELD-INTERACT-ON-A-DEPLETED-OR-MISSING-NODE-IS-NEVER-RE-DECIDED`). The brain may pick the node again once regeneration (section 3.1) refills it.
 
 ### 3.1 Resource Regeneration
 

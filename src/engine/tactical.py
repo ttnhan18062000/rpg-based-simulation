@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from src.core.updates import EntityUpdate, TaskUpdate, NavigationUpdate
+from src.core.updates import EntityUpdate, StrategicUpdate, TaskUpdate, NavigationUpdate
 from src.engine.legality import LegalityServiceV2
 from src.engine.positioning import PositioningService
 from src.core.strategic import ProjectStatus, ObjectiveKind
@@ -16,11 +16,13 @@ from src.core.movement_modes import MovementMode
 from src.core.enums import ActionStyle, ReasonCode, EntityRole, Faction
 from src.core.skills import SKILL_REGISTRY
 from src.engine.rpg_depth import WoundService
-from src.cognition.capability_estimate import CapabilityEstimateService, CapabilityContext
+from src.cognition.common_knowledge import combat_capability_against
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
 from src.engine.tactical_threat import safety_retreat_warranted
+from src.engine.tactical_rest import rest_in_place_update
+from src.engine.tactical_hold import held_swing_update, stalemate_break_update
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -83,6 +85,20 @@ def _perceived_threats(entity: "EntityState", neighbors: List["EntityState"]) ->
 def _destination_or_hold(entity: "EntityState", destination: Optional[Tuple[float, float]]) -> Tuple[float, float]:
     """MOV-03: with no valid destination the entity holds position; never a sentinel coordinate."""
     return destination if destination is not None else entity.navigation.position
+
+
+def _suspend_project_for_threat(entity: "EntityState", hostiles: List["EntityState"]) -> Optional[StrategicUpdate]:
+    """If hostiles are present, SUSPEND the entity's current project if it is active (Pillar 5.1 strategic persistence)."""
+    if not (hostiles and entity.strategic.current_project_id):
+        return None
+    project = entity.strategic.projects.get(entity.strategic.current_project_id)
+    if project and project.status == ProjectStatus.ACTIVE:
+        return StrategicUpdate(
+            projects_add_or_update=[replace(project, status=ProjectStatus.SUSPENDED)],
+            current_project_id_set="",
+            current_objective_id_set="",
+        )
+    return None
 
 
 class TacticalDecisionSystem:
@@ -252,18 +268,7 @@ class TacticalDecisionSystem:
                 hostile_identity_sources[n.id] = _src_identity_source
         
         # 4. Strategic Persistence (Pillar 5.1)
-        # If hostiles are present, we should SUSPEND the current project if it's not already
-        strat_up = None
-        if hostiles and entity.strategic.current_project_id:
-             project = entity.strategic.projects.get(entity.strategic.current_project_id)
-             if project and project.status == ProjectStatus.ACTIVE:
-                  # Suspend to handle threat
-                  from src.core.updates import StrategicUpdate
-                  strat_up = StrategicUpdate(
-                      projects_add_or_update=[replace(project, status=ProjectStatus.SUSPENDED)],
-                      current_project_id_set="",
-                      current_objective_id_set=""
-                  )
+        strat_up = _suspend_project_for_threat(entity, hostiles)
 
         # Safety pressure (AGENCY-07): a cautious entity retreats from a present threat, never from a hostile merely seen
         if safety_retreat_warranted(entity, hostiles, entity_pressures.safety_pressure):
@@ -277,6 +282,10 @@ class TacticalDecisionSystem:
                     payload_set={"target_position": retreat_to, "reason": "SAFETY_PRESSURE_RETREAT"}
                 )
             )
+
+        rest_update = rest_in_place_update(state, entity, hostiles)
+        if rest_update is not None:
+            return rest_update
 
         if not hostiles:
             # Pillar 5.1: Objective Pursuit
@@ -420,19 +429,12 @@ class TacticalDecisionSystem:
 
         # 4. Target Selection with Focus Fire
         group = state.groups.get(entity.identity.group_id) if entity.identity.group_id is not None else None
-        def target_score(h: EntityState) -> Tuple[float, int, float, float, float, int]:
+        def target_score(h: EntityState) -> Tuple[int, float, int, float, float, float, int]:
             dist = abs(h.navigation.position[0] - entity.navigation.position[0]) + abs(h.navigation.position[1] - entity.navigation.position[1])
 
-            # Logic ID: COMB-316 -- subjective capability estimate, ad hoc/read-only
-            # (mirrors TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING's pattern; see
-            # docs/cognition/capability_and_knowledge_contract.md). entity.self_model.capabilities
-            # stays empty in production -- this call never writes back.
-            cap_component = CapabilityEstimateService.estimate(
-                entity,
-                context=CapabilityContext.for_combat(enemy_ids=[h.kind]),
-            )
-            cap_estimate = cap_component.estimates.get(f"combat.enemy_type.{h.kind}")
-            capability_confidence = cap_estimate.estimate if cap_estimate is not None else 0.0
+            # Logic ID: COMB-316 -- subjective capability estimate against the hostile's species, from the entity's own
+            # common-knowledge facts (KNOW-04); ad hoc and read-only, nothing is written back to entity.self_model.
+            capability_confidence = combat_capability_against(entity, h)
 
             # Domain 7 Hardening: Trust-based focus fire bias
             group_bias = 1.0
@@ -463,7 +465,9 @@ class TacticalDecisionSystem:
                 - entity_pressures.duty_pressure * 0.3,
             )
 
-            return (group_bias, is_current_target, -capability_confidence, h.combat.hp, dist * pressure_dist_mod, h.id)
+            # CONFLICT-04: a fighter stands its ground, so an adjacent hostile outranks a farther one.
+            not_adjacent = 0 if LegalityServiceV2.is_adjacent(entity.navigation.position, h.navigation.position) else 1
+            return (not_adjacent, group_bias, is_current_target, -capability_confidence, h.combat.hp, dist * pressure_dist_mod, h.id)
 
         logger.debug(f"DEBUG: entity {entity.id} evaluating targets. Group target: {group.shared_target_id if group else None}")
         for h in hostiles:
@@ -479,7 +483,7 @@ class TacticalDecisionSystem:
             if legal:
                 legal_attack_targets.append(h)
         
-        target = legal_attack_targets[0] if legal_attack_targets else (hostiles[0] if hostiles else None)
+        target = legal_attack_targets[0] if legal_attack_targets else hostiles[0]
         is_attack_legal = target in legal_attack_targets
 
         # 5. Decision: Attack vs Positioning (Kiting/Closing)
@@ -502,18 +506,12 @@ class TacticalDecisionSystem:
 
         recent_positions = ([curr_pos] + recent_positions)[:4]
 
-        if stale_ticks > 10:
+        # CONFLICT-04: a pair trading blows is not a stalemate; the breaker is for chases and kites.
+        fighting_adjacent = LegalityServiceV2.is_adjacent(entity.navigation.position, target.navigation.position)
+
+        if stale_ticks > 10 and not fighting_adjacent:
              # Logic ID: COMB-277 (Anti-stalemate does not force illegal movement)
-             wander_to = _destination_or_hold(entity, wander_destination(state, entity))
-             return EntityUpdate(
-                 entity_id=entity.id,
-                 strategic=strat_up,
-                 navigation=NavigationUpdate(target_set=wander_to, movement_mode_set=MovementMode.WANDER),
-                 task=TaskUpdate(
-                     work_kind_set="ENTITY_MOVE",
-                     payload_set={"target_position": wander_to, "reason": "STALEMATE_BREAK"}
-                 )
-             )
+             return stalemate_break_update(entity, strat_up, _destination_or_hold(entity, wander_destination(state, entity)))
 
         # Tactical Role Logic
         role = entity.combat.tactical_role
@@ -762,13 +760,14 @@ class TacticalDecisionSystem:
                 return EntityUpdate(
                     entity_id=entity.id,
                     strategic=strat_up,
+                    navigation=NavigationUpdate(target_clear=True),
                     task=TaskUpdate(
                         work_kind_set="ENTITY_ACT",
                         payload_set={
                             "action": "SKILL",
                             "skill_id": chosen_skill_id,
                             "target_id": target.id,
-                            "stale_ticks": stale_ticks + 1,
+                            "stale_ticks": 0,  # a swing is an outcome (tactical contract section 5)
                             "recent_positions": recent_positions,
                             "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
                         }
@@ -779,18 +778,26 @@ class TacticalDecisionSystem:
             return EntityUpdate(
                 entity_id=entity.id,
                 strategic=strat_up,
+                navigation=NavigationUpdate(target_clear=True),
                 task=TaskUpdate(
                     work_kind_set="ENTITY_ACT",
                     payload_set={
                         "action": "ATTACK",
                         "target_id": target.id,
-                        "stale_ticks": stale_ticks + 1,
+                        "stale_ticks": 0,
                         "recent_positions": recent_positions,
                         "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
                     }
                 )
             )
         else:
+            # CONFLICT-04: between blows the fighter holds (a queued swing), it does not step.
+            held = held_swing_update(
+                state, entity, target, strat_up,
+                {"stale_ticks": stale_ticks, "recent_positions": recent_positions,
+                 "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source)})
+            if held is not None:
+                return held
             # Pursuit
             target_pos = target.navigation.position
             

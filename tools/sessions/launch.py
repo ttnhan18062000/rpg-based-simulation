@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -152,7 +153,57 @@ def _worktree_entries(cwd: Path) -> list[dict]:
     return entries
 
 
-def ensure_worktree(path: Path, branch: str | None, cwd: Path, apply: bool = True) -> list[str]:
+_TOPIC = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
+_DATE_OR_PHASE = re.compile(r"\d{6,8}|(?:^|-)(?:phase|p)-?\d")
+
+
+def topic_problem(topic: str) -> str | None:
+    """Why a `--branch` topic is refused (kebab-case words; no dates or phase numbers), or None."""
+    if not _TOPIC.match(topic):
+        return "the topic must be lowercase kebab-case words"
+    if _DATE_OR_PHASE.search(topic):
+        return "the topic must not contain a date or a phase number"
+    return None
+
+
+def bootstrap_worktree(path: Path, role: Role, topic: str, cwd: Path, apply: bool, notes: list[str]) -> list[str]:
+    """First-launch / spent-branch path: `git worktree add <path> -b <role>-<topic> origin/main`, only on an explicit topic."""
+    problem = topic_problem(topic)
+    if problem:
+        return notes + [f"--branch {topic!r} refused: {problem}"]
+    new = f"{role.role}-{topic}"
+    if _run(["git", "show-ref", "--verify", "--quiet", f"refs/heads/{new}"], cwd).returncode == 0:
+        return notes + [f"branch `{new}` already exists: pick another --branch topic (nothing is reused or reset)"]
+    cmd = ["git", "worktree", "add", str(path), "-b", new, "origin/main"]
+    if not apply:
+        return notes + ["would run: " + " ".join(cmd)]
+    _run(["git", "worktree", "prune"], cwd)
+    res = _run(cmd, cwd)
+    if res.returncode != 0:
+        return notes + [f"creating it failed: {res.stderr.strip()}"]
+    return notes + [f"created {path} on new branch `{new}` from origin/main"]
+
+
+def branch_spent_reason(branch: str, cwd: Path) -> str | None:
+    """Why a recorded branch is spent (merged), or None. PRs here are squash-merged, so the branch is usually NOT an
+    ancestor of origin/main: also ask for a merged PR (`gh`), and if gh fails fall back to `git cherry` showing
+    nothing unmerged."""
+    if _run(["git", "merge-base", "--is-ancestor", f"refs/heads/{branch}", "origin/main"], cwd).returncode == 0:
+        return "is merged into origin/main"
+    try:
+        res = _run(["gh", "pr", "list", "--head", branch, "--state", "merged", "--json", "number"], cwd)
+        if res.returncode == 0:
+            return "has a merged PR" if json.loads(res.stdout or "[]") else None
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        pass
+    cherry = _run(["git", "cherry", "origin/main", f"refs/heads/{branch}"], cwd)
+    if cherry.returncode == 0 and not any(line.startswith("+") for line in cherry.stdout.splitlines()):
+        return "has no commit missing from origin/main (squash-merged)"
+    return None
+
+
+def ensure_worktree(path: Path, branch: str | None, cwd: Path, apply: bool = True,
+                    role: Role | None = None, topic: str | None = None) -> list[str]:
     """Self-heal a missing or prunable worktree from the role's branch; returns what was said/done.
 
     Never from scratch: with no recorded branch, a branch git no longer has, or a branch already merged into
@@ -164,16 +215,21 @@ def ensure_worktree(path: Path, branch: str | None, cwd: Path, apply: bool = Tru
     if known and path.is_dir() and "prunable" not in known:
         return []
     notes = [f"worktree {path} is missing or prunable"]
+    if topic and role:  # an explicit --branch always wins over whatever branch is recorded
+        why = [f"recorded branch `{branch}` is not reused: --branch was given"] if branch else []
+        return bootstrap_worktree(path, role, topic, cwd, apply, notes + why)
     if not branch:
-        return notes + ["no branch is recorded for this role, so it is not recreated: create the worktree yourself "
+        return notes + ["no branch is recorded for this role, so it is not recreated: pass `--branch <topic>` to create "
+                        "`<role>-<topic>` from origin/main, or create the worktree yourself "
                         "(`git worktree add <path> <branch>`) and relaunch"]
     if _run(["git", "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"], cwd).returncode != 0:
         return notes + [f"the role's branch `{branch}` no longer exists: nothing is invented; restore it from the "
                         "branch-backup file or choose a branch, then relaunch"]
-    if _run(["git", "merge-base", "--is-ancestor", f"refs/heads/{branch}", "origin/main"], cwd).returncode == 0:
-        return notes + [f"recorded branch `{branch}` is merged into origin/main: not recreated from a spent branch; "
-                        "create the worktree from origin/main yourself (`git worktree add <path> -b <new-branch> "
-                        "origin/main`) and relaunch"]
+    spent = branch_spent_reason(branch, cwd)
+    if spent:
+        return notes + [f"recorded branch `{branch}` {spent}: not recreated from a spent branch; pass `--branch <topic>` "
+                        "to create `<role>-<topic>` from origin/main, or create the worktree from origin/main yourself "
+                        "(`git worktree add <path> -b <new-branch> origin/main`) and relaunch"]
     if not apply:
         return notes + [f"would run: git worktree prune; git worktree add {path} {branch}"]
     _run(["git", "worktree", "prune"], cwd)
@@ -342,6 +398,22 @@ def plan_launch(target: Target, root: Path, state_root: Path, worktree: Path, pd
     return 0, evidence + ["replacing: a fresh instance reads the handover note and the git state; the old transcript is kept"], None
 
 
+def disk_warning(root: Path) -> list[str]:
+    """One warning line when free space is below the threshold, else nothing. Warns only: any failure
+    here yields no line, never a changed exit code. The tree walk runs only when the cheap free-space
+    reading is already low (a walk of ~50 worktrees is slow)."""
+    try:
+        from tools.sessions import disk_headroom as dh
+
+        limit = dh.threshold_bytes()
+        if dh.low_space_line(dh.free_bytes(root), limit) is None:
+            return []
+        line = dh.warning_line(dh.measure(root), limit) or dh.low_space_line(dh.free_bytes(root), limit)
+        return [line] if line else []
+    except Exception:
+        return []
+
+
 def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
     ap = argparse.ArgumentParser(description="Launch a session role.")
     ap.add_argument("role")
@@ -350,6 +422,8 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
     ap.add_argument("--session-id", help="resume exactly this session id")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--allow-stale", action="store_true", help="launch although the worktree's settings/agents differ from origin/main")
+    ap.add_argument("--branch", help="topic for a NEW branch `<role>-<topic>` cut from origin/main when the role's worktree is "
+                    "missing and no usable branch is recorded (never created without it)")
     ap.add_argument("--worktree", help="physical worktree path (default: <main checkout>/.claude/worktrees/<name>)")
     a = ap.parse_args(argv)
     roster = load_roster(root)
@@ -367,7 +441,8 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
         sroot = st.state_root(root)
         wt = Path(a.worktree) if a.worktree else default_worktree_path(role, main_checkout(root))
         recorded = st.read_instance(sroot, target.instance)
-        for line in ensure_worktree(wt, recorded.holder.branch if recorded else None, root, apply=not a.dry_run):
+        for line in ensure_worktree(wt, recorded.holder.branch if recorded else None, root, apply=not a.dry_run,
+                                  role=role, topic=a.branch):
             print(line)
         code, lines, sid = plan_launch(target, root, sroot, wt, projects_dir(), a.action or ("resume" if a.resume and recorded else None),
                                        a.session_id, sys.stdin.isatty() and sys.stdout.isatty(), a.resume)
@@ -383,6 +458,8 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
         print(line)
     if not go:
         return EXIT_REFUSED
+    for line in disk_warning(root):
+        print(line)
     cmd, env = build_command(target, sid)
     if a.dry_run:
         note = handover_base(root) / role.handover

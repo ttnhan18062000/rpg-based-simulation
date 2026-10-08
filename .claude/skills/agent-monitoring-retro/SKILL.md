@@ -42,6 +42,22 @@ already has hand-authored notes splices that exact `## Notes` section back onto 
 regenerated data above it, rather than discarding it. Pass `--force` only when a deliberate full
 rewrite — including discarding existing notes — is actually intended.
 
+**Stamp every note you write** (TCK-20261007-RETRO-NOTES-ACCUMULATION-COLLAPSE). The Notes have a parsable shape so
+they do not pile up across regenerations. Start each entry with a marker line, **in the same edit that adds the entry**
+(an unstamped addendum is preserved verbatim and never collapses, which is how piles form):
+
+```
+<!-- retro-note runs=N -->           an addendum; N = the run count the report covered when you wrote it
+<!-- retro-note runs=N final -->     the current statement of the week
+```
+
+Mark your newest entry `final` and remove `final` from the previous one. On regeneration, every stamped entry older than
+the last `final` entry collapses to one `<!-- retro-note-collapsed ... -->` history line (its full text is appended to
+`retro/archive/RETRO-<label>-notes-history.md` first and read back; if that fails nothing collapses), and the `final`
+block is kept byte-for-byte. A status line under `## Notes` warns when the final note was written at fewer runs than the
+report now covers. Text with no marker, or a marker that does not parse (`runs=` must be a whole number), is never
+collapsed or dropped. `--force` still discards the Notes outright, archive included.
+
 ## Quick Start
 
 ```bash

@@ -14,6 +14,7 @@ from src.core.models.inventory import InventoryComponent, ItemStack
 from src.core.builder import V2EntityBuilder
 from src.content_semantics.personality import build_personality_for_entity, get_action_style_for_bravery
 from src.entities.runtime_contract import ResolvedEntityRuntimeContract
+from src.content.common_knowledge_seed import default_self_model
 
 
 @dataclass(frozen=True)
@@ -113,7 +114,7 @@ class ArchetypeEntityFactory:
                 alive=spawn.initial_alive,
                 action_style=get_action_style_for_bravery(personality.bravery),
             )
-            .spawn_combat_stats_are_final()
+            .spawn_combat_stats_are_final().replace_self_model(default_self_model())
         )
 
         entity = builder.build()

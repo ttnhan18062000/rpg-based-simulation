@@ -1,0 +1,1 @@
+RBTRACE {"world": "urban_political", "seed": 43, "label": "new", "counts": {"blocker_entity_ticks": 1011, "blocker_episodes": 2, "open_blocker_lifetime_max": 565, "open_blocker_lifetime_sum": 1009, "readiness_rejections": 3, "resolve_blocker_starts": 176, "unresolved_at_end": 2}}

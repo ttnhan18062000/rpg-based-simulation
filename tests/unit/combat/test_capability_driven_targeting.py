@@ -24,6 +24,8 @@ from dataclasses import replace
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
 from src.core.state import AuthoritativeState
+from src.cognition.common_knowledge import danger_fact_key
+from src.core.self_model import KnowledgeFact
 from src.engine.tactical import TacticalDecisionSystem
 
 
@@ -46,7 +48,7 @@ def _entity(
         V2EntityBuilder(eid)
         .kind(kind)
         .location(*pos)
-        .identity(role=role, faction=faction)
+        .identity(role=role, faction=faction, properties={"species_id": kind})
         .combat(
             hp=hp,
             max_hp=max_hp,
@@ -61,15 +63,26 @@ def _entity(
     )
 
 
-def _attacker(atk=10, def_stat=5, attack_range=10, pos=(0.0, 0.0)):
-    return _entity(
+def _folk_belief(species_id, level):
+    return KnowledgeFact(subject=species_id, fact_type="danger_rating", details={"danger_level": level},
+                         certainty=0.3, source_id="common_knowledge")
+
+
+def _attacker(atk=10, def_stat=5, attack_range=10, pos=(0.0, 0.0), believes=True):
+    """The acting entity; with `believes` it holds declared folk beliefs (KNOW-04) that goblins are weak and dragons terrifying."""
+    entity = _entity(
         1, Faction.HERO_GUILD, kind="hero", pos=pos, attack_range=attack_range,
         atk=atk, def_stat=def_stat,
     )
+    if not believes:
+        return entity
+    facts = {danger_fact_key("goblin"): _folk_belief("goblin", "low"), danger_fact_key("dragon"): _folk_belief("dragon", "extreme")}
+    knowledge = replace(entity.self_model.knowledge, facts=facts)
+    return replace(entity, self_model=replace(entity.self_model, knowledge=knowledge))
 
 
-# Goblin (_ENEMY_DANGER=0.5) and dragon (_ENEMY_DANGER=0.95) are both
-# `_ENEMY_DANGER`-known ids with a wide danger spread (capability_estimate.py:59-66).
+# The attacker believes goblins are weak ("low") and dragons terrifying ("extreme") from declared common knowledge
+# (KNOW-04, facts keyed by the hostile's species); hand-built hostiles are given a species_id equal to their kind, since only a species is recognised (never the hidden population role).
 # The goblin is placed with worse HP/distance than the dragon so that, absent the
 # capability signal, HP/distance alone would prefer the dragon -- proving any
 # goblin-preferring outcome below is driven by the capability term, which sorts
@@ -78,7 +91,7 @@ def _goblin(attack_range=1, pos=(5.0, 0.0), hp=100):
     return _entity(10, Faction.MONSTER_HORDE, kind="goblin", pos=pos, hp=hp, attack_range=attack_range)
 
 
-def _dragon(attack_range=1, pos=(1.0, 0.0), hp=10):
+def _dragon(attack_range=1, pos=(2.0, 0.0), hp=10):  # not adjacent: CONFLICT-04 makes an adjacent hostile outrank the capability term
     return _entity(20, Faction.MONSTER_HORDE, kind="dragon", pos=pos, hp=hp, attack_range=attack_range)
 
 
@@ -96,6 +109,27 @@ def test_target_score_reflects_capability_estimate_for_differentiated_enemy_kind
     # would prefer the dragon. The capability-driven term (attacker is more
     # confident it can beat a goblin than a dragon) overrides that and wins.
     assert update.task.payload_set["target_id"] == goblin.id
+
+
+def test_a_hostile_with_no_species_is_unrecognised_even_if_its_kind_matches_a_belief():
+    attacker = _attacker(atk=10, def_stat=5)
+    goblin = _goblin()
+    unrecognised = replace(goblin, identity=replace(goblin.identity, properties={}))
+    dragon = _dragon()
+    state = AuthoritativeState(tick=1, seed=42, world_time=1, entities={1: attacker, 10: unrecognised, 20: dragon})
+    update = TacticalDecisionSystem.evaluate_entity_intent(state, attacker)
+    # The goblin's kind still reads "goblin" but it has no species, so no prior attaches and the estimate is neutral for it.
+    # The believed-terrifying dragon is estimated lower than neutral, so the unrecognised goblin is now preferred only by that.
+    assert update.task.payload_set["target_id"] == unrecognised.id
+
+
+def test_target_choice_falls_back_to_hp_and_distance_when_the_attacker_holds_no_belief():
+    attacker = _attacker(atk=10, def_stat=5, believes=False)
+    goblin, dragon = _goblin(), _dragon()
+    state = AuthoritativeState(tick=1, seed=42, world_time=1, entities={1: attacker, 10: goblin, 20: dragon})
+    update = TacticalDecisionSystem.evaluate_entity_intent(state, attacker)
+    # Uninformed = a neutral, identical estimate for every kind: the dragon (lower HP, closer) is chosen as before the beliefs.
+    assert update.task.payload_set["target_id"] == dragon.id
 
 
 # ── Test 2: uniform hostile kind leaves ordering unchanged (regression guard) ──

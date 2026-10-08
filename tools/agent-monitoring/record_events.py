@@ -145,10 +145,18 @@ def compute_tool_stats(
     tools_paths = shard_paths(AGENT_MONITORING / "data", "tools")
     rows_by_key: dict[tuple, list[dict]] = defaultdict(list)
     for tools_path in tools_paths:
-        for line in tools_path.read_text().splitlines():
+        for lineno, line in enumerate(tools_path.read_text().splitlines(), 1):
             if not line:
                 continue
-            row = json.loads(line)
+            try:
+                row = json.loads(line)
+            except ValueError as exc:
+                # a torn line (a write cut short by a full disk) must not fail a closure; skip and say so,
+                # the way generate_retro does (TCK-20261008-RECORD-EVENTS-CRASHES-ON-TORN-TOOLS-LINE)
+                print(f"WARNING: {tools_path}:{lineno}: invalid JSON, skipped — {exc}", file=sys.stderr)
+                continue
+            if not isinstance(row, dict):
+                continue
             key = (row.get("run_id"), row.get("seq"))
             if key in wanted:
                 rows_by_key[key].append(row)

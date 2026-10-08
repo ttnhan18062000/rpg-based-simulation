@@ -94,7 +94,11 @@ class NavigationSystem:
             if target_pos == state.town_center:
                 flow = FlowFieldService.get_flow_direction(entity.navigation.position, "TOWN", state)
                 if flow:
-                    return (entity.navigation.position[0] + flow[0], entity.navigation.position[1] + flow[1])
+                    # A tile step along the flow vector's dominant axis (a tie takes the y axis, as the local step
+                    # below does): positions stay on the tile grid, so legality and pursuit measure one distance.
+                    if abs(flow[0]) > abs(flow[1]):
+                        return (entity.navigation.position[0] + (1 if flow[0] > 0 else -1), entity.navigation.position[1])
+                    return (entity.navigation.position[0], entity.navigation.position[1] + (1 if flow[1] > 0 else -1))
         
         # 2. Local Navigation (Linear stepping for now)
         if abs(dx) > abs(dy):

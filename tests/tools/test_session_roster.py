@@ -34,13 +34,17 @@ BASE_ROLES = {
             "identity": {"domain": d, "function": f, "session_name": f"{d}-{f}", "legacy_session_name": None, "seat_status": "staffed"},
             "responsibility": {"accepts_dispatch_from": ["user"]},
             "capability": {"may_write": []},
-            "placement": {"worktree": d, "max_sessions": 1},
+            "placement": {"worktree": d if f == "implementer" else f"{d}-{f}", "max_sessions": 1},
             "handover": f".claude/handover/{d}-{f}.md",
         }
         for d in ("d1", "d2")
         for f in ("designer", "planner", "implementer")
     ],
-    "worktrees": {"d1": {"writer": "d1-implementer"}, "d2": {"writer": "d2-implementer"}},
+    "worktrees": {
+        "d1": {"writer": "d1-implementer"},
+        "d2": {"writer": "d2-implementer"},
+        **{f"{d}-{f}": {"writer": f"{d}-{f}"} for d in ("d1", "d2") for f in ("designer", "planner")},
+    },
 }
 
 BASE_AUTHORITY = {
@@ -154,9 +158,26 @@ def test_worktree_two_writers_is_unrepresentable_but_a_list_is_rejected(fixture_
     assert findings, "a list of writers must be reported"
 
 
-def test_writer_not_an_implementer(fixture_root):
+def test_a_designer_or_planner_may_be_a_worktrees_writer(fixture_root):
+    assert _mutated(fixture_root, lambda r: None) == []  # d1-designer writes d1-designer, no implementer-only rule
+
+
+def test_worktree_hosting_a_second_role_is_reported(fixture_root):
+    findings = _mutated(fixture_root, lambda r: _role(r, "d1-planner")["placement"].update(worktree="d1"))
+    assert "worktree-shared" in _rules(findings)
+
+
+def test_writer_placed_elsewhere_is_reported(fixture_root):
     findings = _mutated(fixture_root, lambda r: r["worktrees"].update(d1={"writer": "d1-planner"}))
-    assert "writer-not-implementer" in _rules(findings)
+    assert "worktree-writer" in _rules(findings)
+
+
+def test_real_manifest_gives_every_designer_and_planner_its_own_worktree():
+    roster = load_roster(REAL_ROOT)
+    for r in roster.roles:
+        wt = next(w for w in roster.worktrees if w.name == r.worktree)
+        assert wt.writer == r.role
+        assert (r.worktree == r.role) == (r.function != "implementer")
 
 
 def test_unstaffed_seat_needs_named_holder(fixture_root):

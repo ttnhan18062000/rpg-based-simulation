@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-07"
+last_verified: "2026-10-08"
 ---
 
 # World Rule Family: Conflict / Combat
@@ -138,6 +138,101 @@ tests above: a hero may attack a spawned wolf, the wolf may attack the hero, and
 refused both ways.
 
 ---
+
+## CONFLICT-04 — A fighter stands its ground between blows; leaving an engagement is a decision, and it has a cost
+
+> A subject fighting an adjacent opponent, and meaning to keep fighting, stays where it is
+> between its blows. Being unable to strike yet is a reason to wait, not to move. Stepping away
+> from an adjacent hostile is a decision to leave the engagement: flight under AGENCY-07, or a
+> goal that outranks the fight. It pays the disengagement cost. Nothing mechanical, such as a
+> timer or the lack of a "wait" action, may turn into a step.
+
+**Disposition: ACCEPT — decided by rpg-designer, direction confirmed by the owner, 2026-10-08**
+(row 28 of `docs/plans/systemic_world/owner_decision_memo.md`). Applies AGENCY-01/02 to melee:
+a step is an action the subject chooses, so it needs a reason the subject holds. Passes the
+admission test: no earlier Rule said what a fighter does while it cannot strike, and the
+disengagement cost (an opportunity attack, `docs/combat/combat_movement_overhaul_spec.md`)
+was declared without any Rule on when a fighter accepts it.
+- **No free repositioning:** adjacency is orthogonal (MOV-07), so every step from a tile
+  beside a hostile leaves its reach. A "repositioning step that does not provoke" does not
+  exist; a step away is always a disengagement. A fighter that can withdraw without the cost
+  needs a declared ability for it (the EVASIVE retreat that skips the attack today is one).
+- **What still moves a fighter:** flight from a present threat (AGENCY-07, which already counts
+  an adjacent hostile for a cautious subject), the panic retreat at low health, pursuit of a
+  target that is not adjacent, or a goal that genuinely outranks the fight. A pressing need does
+  not: SURV-07 keeps a present threat above it.
+- **A long exchange of blows is not a stalemate.** The stall breaker exists for chase and kite
+  loops (COMB-274..276). While a perceived hostile stands adjacent and the subject is fighting
+  it, the breaker does not send the subject wandering.
+- **Engineering, not this Rule:** how holding is represented (a typed hold or guard action, not
+  an empty step); preferring an adjacent hostile the subject is engaged with as its target; the
+  stall counter's bookkeeping.
+- **Alternatives not taken:** back off between blows and re-close (today's behaviour, made
+  intentional: one free hit per swing for no reason the fiction holds); hold only when winning
+  (duplicates AGENCY-07's OUTMATCHED term, and a losing fighter has no better tile to step to).
+
+**Repository evidence: SUPPORTED since #439 (`86b77abca`, 2026-10-08), with one disclosed gap.**
+Implemented by `TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04` (Lane A).
+- **The hold:** with the target adjacent and only readiness missing, the decision is a queued
+  ATTACK with reason `HOLD_BETWEEN_BLOWS` (`src/engine/tactical_hold.py`). There is no step and
+  no opportunity attack, and the swing lands at readiness 100. PURSUE applies only to a target
+  that is not adjacent, and target choice ranks an adjacent hostile first. Divergence 2.86
+  (Intentional Gameplay Change), parity COMB-339.
+- **The stall breaker:** every ATTACK or SKILL emission, the held swing included, sets the
+  counter to 0, and the breaker is skipped while the target is adjacent. Divergence 2.87 (Bug
+  Fix), parity COMB-340.
+- **Waiting is not a capability gap:** a queued action rejected only for readiness writes no
+  capability blocker. Divergence 2.88 (Bug Fix), parity COMB-341.
+- **Text:** Bible 02 §7 and the tactical contract §5 (`docs/engine/contracts/tactical_contract.md`).
+- **Pinned by** the kernel scenarios CP-S18 and CP-S19
+  (`tests/mechanic_scenarios/test_conflict04_fighter_holds_between_blows.py`). Each has its
+  control arm, and both main arms fail on pre-merge main. They pass in CI (#439's run, in the
+  "Perf / cert / arena" lane) and locally on `86b77abca` (4 passed). Unit tests are in
+  `tests/unit/combat/test_anti_stalemate.py`.
+- **Measured** (Lane A, relayed; seeds 42 to 46, 1,500 ticks, governor pinned NORMAL,
+  `dcfe5de4d` vs the branch; `crowded_frontier` / `frontier_living_world` / `urban_political`):
+  - holds per run: 0.6 / 0.4 / 1.6, none at HP under 15 percent, and no death after a hold;
+  - `STALEMATE_BREAK` decisions: 0 in both arms;
+  - total deaths: 36.4 to 36.0, 43.0 to 44.2, 23.4 to 21.6, all inside 1 SD.
+  The effect is small because the "decided at contact" class this Rule governs was small. Most
+  opportunity-attack hits come from held moves and from the "neither" class (moving with no
+  move task), which are engine defects outside this Rule. Hits per run went 179.4 to 185.2,
+  151.8 to 158.0 and 90.2 to 85.0.
+- **Disclosed gap (2.86):** while a fighter holds, it is not re-decided until the swing lands
+  or the task is released (`OUT_OF_RANGE`, `TARGET_INCAPACITATED`). So for up to one readiness
+  refill it cannot choose to leave, though the Rule says leaving is a decision it may take. An
+  already-queued ATTACK behaved the same before. Measured as a no-op (0 holds at low HP, 0
+  deaths after a hold). If that stops holding, the fix is to re-decide a holding fighter when a
+  present-threat term changes (AGENCY-07), not to drop the hold.
+
+**Previously CONFLICTING, traced by Lane A on main `753f98ea9`** (relayed by rpg-planner, seeds
+42 to 46, 3 worlds; kept as found).
+- **Who takes the free hits:** 83 to 98 percent of opportunity-attack swings land on a victim
+  standing beside its attacker. Split by what the victim was doing on that tick (per world):
+  - decided a move: 4 to 5 percent;
+  - continuing a move already under way: 41 / 37 / 19 percent;
+  - neither (an ENTITY_ACT task, no decision, yet it still moved): 55 / 59 / 77 percent.
+- **Stepping between blows:** `TacticalDecisionSystem` emits ATTACK or SKILL only when
+  `is_attack_legal`, which needs readiness 100 (Bible 02 §7). Otherwise it emits PURSUE toward
+  the target even when the target is already adjacent (`src/engine/tactical.py:739-829`). The
+  opportunity attack fires on any successful step from an engaged tile
+  (`src/engine/movement.py`, `LegalityServiceV2.get_engaged_hostiles`).
+- **The stall breaker in melee:** once `stale_ticks` exceeds 10, the subject wanders before any
+  attack branch, even when adjacent (`src/engine/tactical.py:506-517`). The SKILL, ATTACK and
+  pursuit payloads add to `stale_ticks` on every swing or step (`:772`, `:788`, `:817`), although the tactical contract's trigger is
+  "without a target change or outcome" (`docs/engine/contracts/tactical_contract.md` §5). That
+  half is a defect against the existing contract.
+- **Non-cautious subjects have no way out but a step:** the safety retreat needs
+  `safety_pressure` above 0.75, and no branch treats "adjacent and being struck" as a reason to
+  hold.
+- **Separate engine defect, not this Rule:** the largest class above, subjects that move with
+  no move task at all (rpg-planner is filing it).
+
+**Scenarios:** [CP-S18](../scenarios/capability-progression-batch-07.md#cp-s18) (a fighter
+holds between blows; a cautious control flees and pays the cost) and
+[CP-S19](../scenarios/capability-progression-batch-07.md#cp-s19) (a long exchange of blows is not
+a stalemate; a two-tile control still trips the breaker). Both are kernel-level tests since
+#439, and both are covered.
 
 ---
 
@@ -296,6 +391,9 @@ evidence for this same inherited entry.
 - CONFLICT-01 → Resource (RES-*, Batch 03), Ecology/Population (ECOL-04, Batch 05)
 - CONFLICT-03 → Agency/Decision (AGENCY-01/02, Batch 06: intent lives in the decision layer),
   Organizations / factions (`organizations.md`; the faction catalog's hostility law)
+- CONFLICT-04 → Agency/Decision (AGENCY-01/02/07, Batch 06: a step is a chosen action; flight
+  is the decided way out), Movement/Navigation (MOV-07: orthogonal adjacency), Survival
+  (SURV-07: a present threat outranks a need)
 - Inherited perception/knowledge entry (formerly CONFLICT-02) → Perception (PERC-01, KNOW-01,
   Batch 06), Agency/Decision (AGENCY-01/02, Batch 06), Capability/Progression
   (`capability-progression.md`, the same ad hoc `CapabilityEstimateService` finding)
