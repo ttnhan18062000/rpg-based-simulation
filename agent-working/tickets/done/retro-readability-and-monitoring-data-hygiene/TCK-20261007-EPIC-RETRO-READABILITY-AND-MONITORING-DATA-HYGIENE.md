@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261007-EPIC-RETRO-READABILITY-AND-MONITORING-DATA-HYGIENE
-phase: open
+phase: done
 date: 2026-10-07
 tags: [observability, agent-monitoring, process-improvement]
 ---
@@ -14,7 +14,7 @@ tags: [observability, agent-monitoring, process-improvement]
 Epic: make the weekly retro readable and its input data clean, from findings of the 2026-W40 deep retro
 
 ## Status
-EPIC_SCOPED
+DONE
 ## Tier
 epic
 ## Type
@@ -60,4 +60,4 @@ tools/agent-monitoring/generate_retro.py, tools/agent-monitoring/validate*.py, .
 - `execution_id` omission by week is verified; whether W40/W41 omissions come from one writer is not.
 - Child 4 decided 2026-10-07: the agent-working role owns the retro dir (`registries/session_roles.yaml`, same PR). Still open: whether child 5 sits under agent-working or the settings owner.
 ## Implementation Notes / Test Summary / Files Changed / Completion Summary
-2026-10-08: children 1-3 are done in one batch PR: TCK-20261007-MONITORING-EXECUTION-ID-HYGIENE, TCK-20261007-RETRO-FAILURES-SECTION, TCK-20261007-RETRO-NOTES-ACCUMULATION-COLLAPSE, plus the planner-added TCK-20261008-VALIDATOR-WORKING-LOG-SHARDS-FALSE-POSITIVE (validator warning count: W40+ 131 of 165 before, 1 of 35 after). Child 4 (retro dir ownership: decided, the agent-working role owns it) and child 5 (hook noise) are not filed, so this epic and its folder stay in todos/ until they are closed or dropped.
+2026-10-08: all five children are closed. Children 1-3 and the planner-added validator hotfix landed in one batch PR: TCK-20261007-MONITORING-EXECUTION-ID-HYGIENE, TCK-20261007-RETRO-FAILURES-SECTION, TCK-20261007-RETRO-NOTES-ACCUMULATION-COLLAPSE, TCK-20261008-VALIDATOR-WORKING-LOG-SHARDS-FALSE-POSITIVE (validator warnings, W40+: 131 of 165 before, 1 of 35 after). Child 4 (retro directory ownership) was already done: `agent-working/agent-monitoring/retro/**` is in the agent-working domain's `owns` in `registries/session_roles.yaml`, added by #400 (commit 6e7ef56ec); no new ticket. Child 5 (hook noise) is TCK-20261008-CONTEXT-SEARCH-HOOK-NARROWING: the script is in place (482 firings of the old rule vs 49 of the new one on the W41 shards) and the settings swap is the owner's step after merge.
