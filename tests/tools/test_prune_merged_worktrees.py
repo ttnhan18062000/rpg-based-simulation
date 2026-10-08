@@ -10,6 +10,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from tools.agent_working_paths import AGENT_MONITORING, posix
 from tools.sessions import prune_branches as pb
 from tools.sessions import state as st
 from tools.sessions.prune_branches import PrData, classify_worktrees
@@ -73,12 +74,13 @@ def test_each_kind_of_worktree_is_classified_with_its_reason(repo, tmp_path):
 
 def test_a_dirty_monitoring_shard_is_named_not_ignored(repo, tmp_path):
     path, sha = add_worktree(repo, "shardy", "b-shard")
-    shard = path / "agent-working" / "agent-monitoring" / "data" / "2026-W41" / "x.tools.jsonl"
+    rel = AGENT_MONITORING / "data" / "2026-W41" / "x.tools.jsonl"
+    shard = path / rel
     shard.parent.mkdir(parents=True)
     shard.write_text("{}\n")
     rows, _ = classify(repo, PrData({"b-shard": (sha,)}, frozenset()), tmp_path)
     assert not rows["shardy"].removable
-    assert "agent-working/agent-monitoring/data/2026-W41/x.tools.jsonl" in rows["shardy"].reason
+    assert posix(rel) in rows["shardy"].reason
 
 
 def test_a_tip_that_moved_after_the_merged_pr_is_kept(repo, tmp_path):
