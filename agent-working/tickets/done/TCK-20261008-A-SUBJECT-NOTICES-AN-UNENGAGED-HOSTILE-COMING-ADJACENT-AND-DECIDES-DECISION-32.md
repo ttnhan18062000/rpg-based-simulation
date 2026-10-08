@@ -62,6 +62,7 @@ See the investigation.
 `tests/unit/engine/test_notice_unengaged_hostile.py` (15), `tests/mechanic_scenarios/test_decision32_notice_and_decide.py` (3); ratchet OK, mypy clean, import-linter 17 kept, 0 broken.
 
 ## Files Changed
+tests/mechanic_scenarios/test_conflict04_movement_layer.py (the #446 invariant now uses the movement rule's own decided-flight exemption, `MovementCandidateSelector.is_decided_flight`, instead of being stricter than the rule; a unit case covers a held PANIC_RETREAT);
 src/engine/scheduler.py, candidate_selector.py, tactical_hold.py, tactical.py; tests as above; docs, registries/mechanisms.yaml, parity COMB-343.
 
 ## Completion Summary
