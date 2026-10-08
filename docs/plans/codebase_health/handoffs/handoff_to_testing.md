@@ -154,3 +154,15 @@ Source: `docs/plans/codebase_health/repo_root_layout_ticket_brief.md`. Batch B (
 - `TCK-20261008-REPO-ROOT-ALLOWLIST-GUARD` (B4): new `tests/codebase/test_repo_root_allowlist.py` compares the tracked root entries (`git ls-files` first path components) with the allowlist in `docs/guidelines/repo_tooling_layout.md`, section "Repo root"; it fails on any new root file or directory and ignores everything below the root. Mutation-proved with an extra staged root file.
 
 Scoped runs pass (169 passed, 1 skipped for B1's set; 97 for B2; 5 for B3; 4 for B4). The known local 60 s failure `test_codebase_health_snapshot.py::test_make_target_runs_successfully_end_to_end` is unrelated.
+
+
+## Update 2026-10-08 (CI backend image build): decision 8.11 notice
+
+`TCK-20261008-CI-BACKEND-IMAGE-BUILD-CHECK` adds a path-gated `docker-build` job ("Backend image build") to `.github/workflows/test.yml` and edits the tests that pin the workflow, as the job set and the gate shape are exactly what they pin:
+
+- `tests/static/test_ci_step_summary_reporting.py`: `docker-build` joins the expected job set (comment names the ticket).
+- `tests/static/test_ci_uv_install.py`: `docker-build` is in `_NO_PYTHON_INSTALL` (it installs nothing on the runner; plain `docker` commands).
+- `tests/static/test_ci_registry_resync_skip_jobs.py`: `docker-build` is in `SKIP_JOBS` (its result depends on the PR content only).
+- `tests/static/test_ci_narrow_path_filtered_jobs.py`: `run_docker_build` is checked in both fail-open branches and in the gated-job condition checks; three new tests: the job's `if` references its own output and `pr_content_unchanged`; `DOCKER_RE` matches `docker/backend.Dockerfile`, `.dockerignore`, `uv.lock`, `pyproject.toml` and the workflow file but not `src/`, `docs/`, `docker/frontend.Dockerfile` or `docker/nginx.conf`; the job uses plain `docker` commands only (no docker/* action, no cache, no push or login, 15-minute timeout).
+
+The job is deliberately not a required check (a path-skipped required check stays "expected"). `docs/testing/migration_ci_lanes.md` documents the gate and the skip-table row. `actionlint` (via `uvx --from actionlint-py`) reports no findings on the edited workflow, the same as on `origin/main`.
