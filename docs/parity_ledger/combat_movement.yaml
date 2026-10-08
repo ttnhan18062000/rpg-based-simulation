@@ -4641,9 +4641,9 @@
   test_path: tests/unit/engine/test_diagonal_melee_pair_strikes.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.74.
   support_boundary: SimQ grade-anchor movement is not measured locally (test_grade_regression.py
-    skips 82 of 89 without calibration reports). Legality truncates fractional Manhattan
-    distance with int() while the pursuit reach test compares floats; filed as TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT,
-    not fixed here.
+    skips 82 of 89 without calibration reports). Legality truncated fractional Manhattan
+    distance with int() while the pursuit reach test compared floats; fixed by COMB-337
+    (TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT).
 - id: COMB-334
   text: 'TCK-20261006-WILD-BEAST-PACK-LEGALITY-IS-ONE-WAY-HERO-CAN-ATTACK-IT-IT-CANNOT-ATTACK-HERO
     (world rule CONFLICT-03): attack permission is a fact about the pair and is symmetric.
@@ -4716,3 +4716,55 @@
     semantics and the town path are Lane B''s, and in compiled worlds state.building_tiles
     is empty. The brain still decides at its next tick (at most 10 ticks after arrival);
     the scheduler was not changed.'
+- id: COMB-337
+  text: 'TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT
+    (world rule MOV-07, Decision 25): positions are whole tiles. The flow-field step
+    toward the town centre is a one-tile step along the flow vector''s dominant axis
+    (a tie takes y, as the local step does), and attack legality and pursuit reach
+    both measure LegalityServiceV2.get_manhattan_dist, the Manhattan distance between
+    the tiles the positions stand on.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/systems/world_systems/navigation.py (NavigationSystem.get_next_step),
+    src/engine/legality.py (get_manhattan_dist), src/engine/candidate_selector.py
+    (_target_in_attack_reach). Corpus (Kernel.tick_once(), seed 42, 2000 ticks, audit_mode,
+    budget off, governor pinned NORMAL, main 753f98ea9 vs this branch; the after arm
+    run twice, identical digests): entities between tiles at any tick 1 / 3 to 0 /
+    0 (crowded_frontier / frontier_living_world); legality-versus-pursuit reach disagreements
+    4 / 110 to 0 / 0; ATTACK decisions 46 / 49 to 45 / 109 (re-baseline).'
+  proof_type: regression
+  test_path: tests/unit/engine/test_attack_reach_distance.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.83.
+  support_boundary: SimQ grade-anchor movement is not measured locally (test_grade_regression.py
+    skips 82 of 89 without calibration reports). Walks to the town centre follow a
+    Manhattan path, so trajectories diverge from main; no per-move before and after
+    exists.
+- id: COMB-338
+  text: 'TCK-20261007-A-WALKER-BESIDE-A-PERCEIVED-HOSTILE-KEEPS-STEPPING-AND-EATS-AN-OPPORTUNITY-ATTACK-PER-STEP:
+    an entity holding an action task (ENTITY_ACT with a payload: ATTACK, SKILL, INTERACT,
+    HOLD) does not walk on a navigation target an earlier decision left behind. The
+    ATTACK and SKILL emissions clear the navigation target; live retargeting onto
+    payload target_id applies only to entity-tracking moves; an action holder is not
+    offered a move and not moved unless that tick sets a target (MovementCandidateSelector.holds_action_task).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/tactical.py (ATTACK and SKILL emissions), src/engine/candidate_selector.py
+    (holds_action_task, resolve_live_tracking_target, select), src/engine/pipeline_phases/movement.py
+    (route_movement_intent). Corpus (Kernel.tick_once(), seeds 42-46, 1500 ticks,
+    audit_mode, budget off, governor pinned NORMAL, main 10944422c vs this branch,
+    mean): opportunity-attack hits 279.0 / 276.2 / 135.8 to 178.6 / 123.6 / 109.6
+    and the ''neither'' class 162.4 / 154.2 / 104.6 to 69.2 / 37.0 / 41.2 (crowded_frontier
+    / frontier_living_world / urban_political); attack executions that succeeded 38.6
+    / 41.8 / 23.8 to 107.4 / 190.4 / 110.0; total deaths 37.6 / 43.2 / 23.8 to 36.4
+    / 41.8 / 28.0.'
+  proof_type: regression
+  test_path: tests/unit/engine/test_action_task_does_not_move.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.84.
+  support_boundary: 'urban_political is worse (deaths 23.8 to 28.0, alive at t=1100
+    6.8 to 3.2): the extra deaths come from held REGROUP moves, moves decided that
+    tick and landed attacks, owned by TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04;
+    why held REGROUP moves became more common is untraced. An attacker whose target
+    steps away no longer closes through live tracking (up to 10 ticks to return to
+    the brain). SimQ grade-anchor movement is not measured locally.'

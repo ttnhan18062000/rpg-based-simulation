@@ -184,6 +184,24 @@ def bootstrap_worktree(path: Path, role: Role, topic: str, cwd: Path, apply: boo
     return notes + [f"created {path} on new branch `{new}` from origin/main"]
 
 
+def branch_spent_reason(branch: str, cwd: Path) -> str | None:
+    """Why a recorded branch is spent (merged), or None. PRs here are squash-merged, so the branch is usually NOT an
+    ancestor of origin/main: also ask for a merged PR (`gh`), and if gh fails fall back to `git cherry` showing
+    nothing unmerged."""
+    if _run(["git", "merge-base", "--is-ancestor", f"refs/heads/{branch}", "origin/main"], cwd).returncode == 0:
+        return "is merged into origin/main"
+    try:
+        res = _run(["gh", "pr", "list", "--head", branch, "--state", "merged", "--json", "number"], cwd)
+        if res.returncode == 0:
+            return "has a merged PR" if json.loads(res.stdout or "[]") else None
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        pass
+    cherry = _run(["git", "cherry", "origin/main", f"refs/heads/{branch}"], cwd)
+    if cherry.returncode == 0 and not any(line.startswith("+") for line in cherry.stdout.splitlines()):
+        return "has no commit missing from origin/main (squash-merged)"
+    return None
+
+
 def ensure_worktree(path: Path, branch: str | None, cwd: Path, apply: bool = True,
                     role: Role | None = None, topic: str | None = None) -> list[str]:
     """Self-heal a missing or prunable worktree from the role's branch; returns what was said/done.
@@ -197,22 +215,21 @@ def ensure_worktree(path: Path, branch: str | None, cwd: Path, apply: bool = Tru
     if known and path.is_dir() and "prunable" not in known:
         return []
     notes = [f"worktree {path} is missing or prunable"]
+    if topic and role:  # an explicit --branch always wins over whatever branch is recorded
+        why = [f"recorded branch `{branch}` is not reused: --branch was given"] if branch else []
+        return bootstrap_worktree(path, role, topic, cwd, apply, notes + why)
     if not branch:
-        if topic and role:
-            return bootstrap_worktree(path, role, topic, cwd, apply, notes)
         return notes + ["no branch is recorded for this role, so it is not recreated: pass `--branch <topic>` to create "
                         "`<role>-<topic>` from origin/main, or create the worktree yourself "
                         "(`git worktree add <path> <branch>`) and relaunch"]
     if _run(["git", "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"], cwd).returncode != 0:
         return notes + [f"the role's branch `{branch}` no longer exists: nothing is invented; restore it from the "
                         "branch-backup file or choose a branch, then relaunch"]
-    if _run(["git", "merge-base", "--is-ancestor", f"refs/heads/{branch}", "origin/main"], cwd).returncode == 0:
-        if topic and role:
-            return bootstrap_worktree(path, role, topic, cwd, apply,
-                                      notes + [f"recorded branch `{branch}` is merged into origin/main: not reused"])
-        return notes + [f"recorded branch `{branch}` is merged into origin/main: not recreated from a spent branch; "
-                        "create the worktree from origin/main yourself (`git worktree add <path> -b <new-branch> "
-                        "origin/main`) and relaunch"]
+    spent = branch_spent_reason(branch, cwd)
+    if spent:
+        return notes + [f"recorded branch `{branch}` {spent}: not recreated from a spent branch; pass `--branch <topic>` "
+                        "to create `<role>-<topic>` from origin/main, or create the worktree from origin/main yourself "
+                        "(`git worktree add <path> -b <new-branch> origin/main`) and relaunch"]
     if not apply:
         return notes + [f"would run: git worktree prune; git worktree add {path} {branch}"]
     _run(["git", "worktree", "prune"], cwd)

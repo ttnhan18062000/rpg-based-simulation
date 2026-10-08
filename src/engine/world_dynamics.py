@@ -210,11 +210,10 @@ class WorldDynamicsSystem:
                 maturity_set=calamity_update.maturity_set if calamity_update.maturity_set is not None else update.maturity_set,
                 last_calamity_tick_set=calamity_update.last_calamity_tick_set if calamity_update.last_calamity_tick_set is not None else update.last_calamity_tick_set,
                 entities_add=update.entities_add + calamity_update.entities_add + raid_update.entities_add + spawn_update.entities_add + boss_spawn_update.entities_add + camp_state_update.entities_add + lair_spawn_update.entities_add,
-                nodes_add=update.nodes_add + ecology_update.nodes_add,
                 camp_updates=camp_state_update.camp_updates,
-                next_node_id_set=ecology_update.next_node_id_set or update.next_node_id_set,
                 next_entity_id_set=generator._last_id + 1 if (generator._last_id + 1) > state.next_entity_id else None
             )
+            update = update.merge(ecology_update)  # new nodes, the id counter, and the regen (node_updates, RESOURCE_RECOVERED) that was dropped here
             # camp_state_update/calamity_update's own entities_add/camp_updates/maturity_set/
             # last_calamity_tick_set are already folded in above via update.replace(...) — only
             # world_updates (e.g. the reproduction-path population nudge) is still unhandled here,

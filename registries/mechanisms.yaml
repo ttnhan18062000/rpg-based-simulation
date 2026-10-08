@@ -1547,7 +1547,7 @@ mechanisms:
     state: gated
     implemented_by:
       - src/cognition/knowledge_model.py::KnowledgeModelService
-      - src/cognition/common_knowledge.py::seeded_knowledge
+      - src/content/common_knowledge_seed.py::seeded_knowledge
       - src/cognition/common_knowledge.py::combat_capability_against
     verified:
       instrument: scenario

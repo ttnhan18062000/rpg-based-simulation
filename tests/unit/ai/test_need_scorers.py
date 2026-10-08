@@ -6,7 +6,7 @@ from dataclasses import replace
 
 import pytest
 
-from src.ai.goals.need_pull import HUNGER_LINE, SLEEP_LINE
+from src.engine.need_pull import HUNGER_LINE, SLEEP_LINE
 from src.ai.goals.scorers import EatScorer, SleepScorer
 from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, BuildingState

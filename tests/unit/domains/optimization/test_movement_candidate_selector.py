@@ -167,7 +167,7 @@ def test_resolve_live_tracking_target_returns_live_position_when_target_alive():
         V2EntityBuilder(10)
         .kind("ACTOR")
         .location(10.0, 10.0)
-        .navigation(target=(10.0, 10.0))
+        .navigation(target=(10.0, 10.0), movement_mode=MovementMode.PURSUE)
         .combat(alive=True)
         .lifecycle(active=True)
         .task(work_kind="ENTITY_MOVE", payload={"target_id": 11, "target_position": (10.0, 10.0)})

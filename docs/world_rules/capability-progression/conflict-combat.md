@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-07"
+last_verified: "2026-10-08"
 ---
 
 # World Rule Family: Conflict / Combat
@@ -138,6 +138,65 @@ tests above: a hero may attack a spawned wolf, the wolf may attack the hero, and
 refused both ways.
 
 ---
+
+## CONFLICT-04 — A fighter stands its ground between blows; leaving an engagement is a decision, and it has a cost
+
+> A subject fighting an adjacent opponent, and meaning to keep fighting, stays where it is
+> between its blows. Being unable to strike yet is a reason to wait, not to move. Stepping away
+> from an adjacent hostile is a decision to leave the engagement: flight under AGENCY-07, or a
+> goal that outranks the fight. It pays the disengagement cost. Nothing mechanical, such as a
+> timer or the lack of a "wait" action, may turn into a step.
+
+**Disposition: ACCEPT — decided by rpg-designer, direction confirmed by the owner, 2026-10-08**
+(row 28 of `docs/plans/systemic_world/owner_decision_memo.md`). Applies AGENCY-01/02 to melee:
+a step is an action the subject chooses, so it needs a reason the subject holds. Passes the
+admission test: no earlier Rule said what a fighter does while it cannot strike, and the
+disengagement cost (an opportunity attack, `docs/combat/combat_movement_overhaul_spec.md`)
+was declared without any Rule on when a fighter accepts it.
+- **No free repositioning:** adjacency is orthogonal (MOV-07), so every step from a tile
+  beside a hostile leaves its reach. A "repositioning step that does not provoke" does not
+  exist; a step away is always a disengagement. A fighter that can withdraw without the cost
+  needs a declared ability for it (the EVASIVE retreat that skips the attack today is one).
+- **What still moves a fighter:** flight from a present threat (AGENCY-07, which already counts
+  an adjacent hostile for a cautious subject), the panic retreat at low health, pursuit of a
+  target that is not adjacent, or a goal that genuinely outranks the fight. A pressing need does
+  not: SURV-07 keeps a present threat above it.
+- **A long exchange of blows is not a stalemate.** The stall breaker exists for chase and kite
+  loops (COMB-274..276). While a perceived hostile stands adjacent and the subject is fighting
+  it, the breaker does not send the subject wandering.
+- **Engineering, not this Rule:** how holding is represented (a typed hold or guard action, not
+  an empty step); preferring an adjacent hostile the subject is engaged with as its target; the
+  stall counter's bookkeeping.
+- **Alternatives not taken:** back off between blows and re-close (today's behaviour, made
+  intentional: one free hit per swing for no reason the fiction holds); hold only when winning
+  (duplicates AGENCY-07's OUTMATCHED term, and a losing fighter has no better tile to step to).
+
+**Repository evidence: CONFLICTING, traced by Lane A on main `753f98ea9`** (relayed by
+rpg-planner, seeds 42 to 46, 3 worlds; not re-measured here).
+- **Who takes the free hits:** 83 to 98 percent of opportunity-attack swings land on a victim
+  standing beside its attacker. Split by what the victim was doing on that tick (per world):
+  - decided a move: 4 to 5 percent;
+  - continuing a move already under way: 41 / 37 / 19 percent;
+  - neither (an ENTITY_ACT task, no decision, yet it still moved): 55 / 59 / 77 percent.
+- **Stepping between blows:** `TacticalDecisionSystem` emits ATTACK or SKILL only when
+  `is_attack_legal`, which needs readiness 100 (Bible 02 §7). Otherwise it emits PURSUE toward
+  the target even when the target is already adjacent (`src/engine/tactical.py:739-829`). The
+  opportunity attack fires on any successful step from an engaged tile
+  (`src/engine/movement.py`, `LegalityServiceV2.get_engaged_hostiles`).
+- **The stall breaker in melee:** once `stale_ticks` exceeds 10, the subject wanders before any
+  attack branch, even when adjacent (`src/engine/tactical.py:506-517`). The SKILL, ATTACK and
+  pursuit payloads add to `stale_ticks` on every swing or step (`:772`, `:788`, `:817`), although the tactical contract's trigger is
+  "without a target change or outcome" (`docs/engine/contracts/tactical_contract.md` §5). That
+  half is a defect against the existing contract.
+- **Non-cautious subjects have no way out but a step:** the safety retreat needs
+  `safety_pressure` above 0.75, and no branch treats "adjacent and being struck" as a reason to
+  hold.
+- **Separate engine defect, not this Rule:** the largest class above, subjects that move with
+  no move task at all (rpg-planner is filing it).
+
+**Scenarios:** none traced yet. Two are owed when implemented: a non-cautious fighter beside
+a hostile with readiness below 100 holds, and takes no opportunity attack until it chooses to
+leave; a long exchange of blows never trips the stall breaker while the pair stays adjacent.
 
 ---
 
@@ -296,6 +355,9 @@ evidence for this same inherited entry.
 - CONFLICT-01 → Resource (RES-*, Batch 03), Ecology/Population (ECOL-04, Batch 05)
 - CONFLICT-03 → Agency/Decision (AGENCY-01/02, Batch 06: intent lives in the decision layer),
   Organizations / factions (`organizations.md`; the faction catalog's hostility law)
+- CONFLICT-04 → Agency/Decision (AGENCY-01/02/07, Batch 06: a step is a chosen action; flight
+  is the decided way out), Movement/Navigation (MOV-07: orthogonal adjacency), Survival
+  (SURV-07: a present threat outranks a need)
 - Inherited perception/knowledge entry (formerly CONFLICT-02) → Perception (PERC-01, KNOW-01,
   Batch 06), Agency/Decision (AGENCY-01/02, Batch 06), Capability/Progression
   (`capability-progression.md`, the same ad hoc `CapabilityEstimateService` finding)
