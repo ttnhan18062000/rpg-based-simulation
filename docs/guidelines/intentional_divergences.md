@@ -2982,7 +2982,7 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Rationale**: **Bug Fix** (a working stand was reported as an unsupported action).
 - **Verification**: `tests/unit/combat/test_chokepoint_hold.py`; parity entry `COMB-015`.
 
-### 2.91 Starvation Is Staged: a Person Weakens First, Then Loses Health Slowly and Dies Over Days (SURV-02 amendment, owner decision 36) (TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02)
+### 2.94 Starvation Is Staged: a Person Weakens First, Then Loses Health Slowly and Dies Over Days (SURV-02 amendment, owner decision 36) (TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02)
 
 - **Legacy Behavior**: `hunger >= 95.0` cost 2 HP on every life-due tick (`apply.py`), so a full-health person died about 50 ticks (half an hour at 36 seconds a tick) after crossing the line. There was no weakness before the loss of health.
 - **New Behavior**: the stages derive from `BiologicalComponent.hunger` alone (no new state field) and are tuned in one table, `src/engine/starvation.py::STARVATION`: **weakened** at hunger 85 (stamina and readiness regeneration at half rate, attack multiplier 0.8, a `STARVATION_WEAKENED` trace that compounds with `EXHAUSTION` to 0.64; no health lost); **starving** at hunger 95 (1 HP once every `round(6000 / max_hp)` life-due ticks, staggered by entity id and indexed by the life-due ordinal). A full-health body of any size dies about 6000 ticks (2.5 days) after the line, a hurt one sooner. The existing cognitive capacity degradation (hunger above 70) is the "hungry" stage and is unchanged. The values are constants in one frozen table; moving them into content is a later step.
