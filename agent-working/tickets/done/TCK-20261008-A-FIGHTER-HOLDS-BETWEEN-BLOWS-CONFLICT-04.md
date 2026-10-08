@@ -60,6 +60,7 @@ Evidence comes from Lane A's opportunity-attack trace (pinned, seeds 42-46, 3 wo
 - [x] Gates: mypy, ratchet, lint-imports (17 kept, 0 broken), mechanism completeness pin.
 
 ## Related Tickets
+- TCK-20261008-A-READINESS-REJECTED-QUEUED-ACTION-WRITES-A-CAPABILITY-BLOCKER-THAT-FEEDS-RESOLVE-BLOCKER (absorbed into this ticket by rpg-planner's ruling; divergence 2.88, COMB-341)
 - TCK-20261007-A-WALKER-BESIDE-A-PERCEIVED-HOSTILE-KEEPS-STEPPING-AND-EATS-AN-OPPORTUNITY-ATTACK-PER-STEP (the trace's source; to be re-scoped to the movement-with-no-move-task defect)
 - Attack-distance (MOV-07 whole tiles, divergence 2.83). This ticket stacks on it, because the provoke check reads reach from whole tiles.
 - AGENCY-07 (#398), SURV-07 (#414).

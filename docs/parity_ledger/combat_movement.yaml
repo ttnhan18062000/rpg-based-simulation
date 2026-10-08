@@ -4788,3 +4788,13 @@
   test_path: tests/mechanic_scenarios/test_conflict04_fighter_holds_between_blows.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.87.
   support_boundary: 'Reset is at emission, not at landing.'
+- id: COMB-341
+  text: 'TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04: a queued action rejected only for readiness is logged and keeps its task, and writes no capability blocker (it fed RESOLVE_BLOCKER and was never resolved).'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/engine/pipeline_phases/actions.py (readiness branch writes no BlockerState). Pinned 5-seed re-measure in docs/guidelines/intentional_divergences.md Section 2.88.'
+  proof_type: regression
+  test_path: tests/unit/actions/test_readiness_wait_writes_no_blocker.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.88.
+  support_boundary: 'The rejection event and the FAILURE annotation remain as telemetry.'
