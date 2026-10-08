@@ -3,7 +3,7 @@ services:
   backend:
     build: 
       context: .
-      dockerfile: backend.Dockerfile
+      dockerfile: docker/backend.Dockerfile
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     restart: unless-stopped
@@ -38,7 +38,7 @@ services:
   ai_worker:
     build:
       context: .
-      dockerfile: backend.Dockerfile
+      dockerfile: docker/backend.Dockerfile
     # Override FastAPI command to run the V2 live anomaly worker
     command: python -m src.observability.anomaly.worker
     environment:
@@ -54,7 +54,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: frontend.Dockerfile
+      dockerfile: docker/frontend.Dockerfile
     ports:
       - "${FRONTEND_PORT:-8080}:80"
     depends_on:
@@ -66,7 +66,7 @@ services:
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -88,8 +88,8 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/etc/grafana/dashboards
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+      - ./docker/grafana/dashboards:/etc/grafana/dashboards
     restart: unless-stopped
     depends_on:
       - prometheus
@@ -109,7 +109,7 @@ services:
   promtail:
     image: grafana/promtail:3.0.0
     volumes:
-      - ./promtail-config.yml:/etc/promtail/config.yml
+      - ./docker/promtail-config.yml:/etc/promtail/config.yml
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
     command: -config.file=/etc/promtail/config.yml
@@ -120,7 +120,7 @@ services:
   watchdog:
     build:
       context: .
-      dockerfile: backend.Dockerfile
+      dockerfile: docker/backend.Dockerfile
     command: python -m src.observability.watchdog
     environment:
       - BACKEND_URL=http://backend:8000

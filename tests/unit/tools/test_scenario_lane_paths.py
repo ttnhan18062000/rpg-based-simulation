@@ -27,7 +27,8 @@ def test_trigger_paths_run_the_lane(path):
 
 
 @pytest.mark.parametrize("path", ["docs/testing/x.md", "agent-working/tickets/done/T.md", "agent-working/agent-monitoring/data/a.jsonl",
-                                  "frontend/src/App.tsx", "README.md", "tools/test_architecture/core_rpg_report.py"])
+                                  "frontend/src/App.tsx", "README.md", "tools/test_architecture/core_rpg_report.py",
+                                  "docker/prometheus.yml", "docker/grafana/dashboards/simulation.json"])
 def test_known_irrelevant_paths_alone_skip_the_lane(path):
     r = slp.classify([path])
     assert r == {"run": False, "matched": [], "unknown": [], "irrelevant": [path]}
