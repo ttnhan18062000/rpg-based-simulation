@@ -95,17 +95,71 @@ def _route(paths):
     return slp.classify(paths)["run"], any(_PERF_RE.match(p) for p in paths)
 
 
-def test_src_progression_only_routes_to_the_dedicated_job():
-    run, perf = _route(["src/progression/xp.py"])
-    assert run is True and perf is False  # the dedicated job's `if` needs run && !perf
-    assert "scenario-lane job" in slp.render_summary(slp.classify(["src/progression/xp.py"]), perf_covers=perf)
+def _jobs(paths):
+    """(perf-cert-arena runs, dedicated scenario-lane job runs) the workflow would compute.
 
-
-def test_src_systems_social_only_routes_to_the_dedicated_job():
-    paths = ["src/systems/social_systems/appraisal.py"]
+    The dedicated job's `if` is `run_scenario_lane == 'true' && run_perf_cert_arena != 'true'`
+    (asserted by test_workflow_wires_the_lane_without_double_running_scenarios), and
+    perf-cert-arena itself runs tests/mechanic_scenarios.
+    """
     run, perf = _route(paths)
-    assert run is True and perf is False  # PERF_RE omits src/systems/, so only the dedicated job covers it
-    assert "scenario-lane job" in slp.render_summary(slp.classify(paths), perf_covers=perf)
+    return perf, run and not perf
+
+
+def test_src_progression_only_runs_the_scenario_tests_in_perf_cert_arena():
+    """Epic B criterion 4 ("a PR touching only src/progression/** runs the scenario tests") stand-in.
+
+    TCK-20261008-PERF-LANE-PATH-GATE-MISSES-SIMULATION-SRC-DIRS widened PERF_RE to any src/ path outside
+    an evidence-derived exclusion list, so src/progression is now covered by perf-cert-arena (which runs
+    tests/mechanic_scenarios) instead of the dedicated scenario-lane job. The criterion's property is
+    unchanged: the scenario tests run, in exactly one job. Cleared with testing-planner 2026-10-08.
+    """
+    perf_job, lane_job = _jobs(["src/progression/xp.py"])
+    assert perf_job is True and lane_job is False
+    assert "routed to perf-cert-arena" in slp.render_summary(slp.classify(["src/progression/xp.py"]), perf_covers=True)
+
+
+def test_src_systems_social_only_runs_the_scenario_tests_in_perf_cert_arena():
+    """Same move as the progression test above: src/systems was outside the old PERF_RE, now it is inside."""
+    paths = ["src/systems/social_systems/appraisal.py"]
+    perf_job, lane_job = _jobs(paths)
+    assert perf_job is True and lane_job is False
+    assert "routed to perf-cert-arena" in slp.render_summary(slp.classify(paths), perf_covers=True)
+
+
+@pytest.mark.parametrize("path", [
+    "data/content/entities/goblin.yaml",   # non-src scenario trigger: only the dedicated job covers it
+    "src/testing/scenario_runner.py",      # excluded src folder: still a scenario trigger, not a perf trigger
+])
+def test_dedicated_scenario_job_stand_ins_still_route_to_the_dedicated_job(path):
+    perf_job, lane_job = _jobs([path])
+    assert perf_job is False and lane_job is True
+    assert "scenario-lane job" in slp.render_summary(slp.classify([path]), perf_covers=False)
+
+
+@pytest.mark.parametrize("paths, scenario_tests_should_run", [
+    (["src/progression/xp.py"], True),
+    (["src/systems/economy.py"], True),
+    (["src/domains/combat_engagement/x.py"], True),
+    (["src/brand_new_folder/x.py"], True),
+    (["src/testing/scenario_runner.py"], True),
+    (["src/views/readiness.py"], True),
+    (["data/content/entities/goblin.yaml"], True),
+    (["data/worlds/unit_selfmodel_pilot/world.yaml"], True),
+    (["tests/mechanic_scenarios/test_x.py"], True),
+    (["tests/helpers/scenario.py"], True),
+    (["config/simulation_quality/scoring_weights.yaml"], True),
+    (["requirements.txt"], True),
+    ([".github/workflows/test.yml"], True),
+    (["brand_new_dir/x.bin"], True),                      # unknown path: fail open
+    (["src/progression/xp.py", "data/content/a.yaml"], True),
+    (["src/testing/a.py", "src/views/b.py"], True),
+    (["docs/testing/x.md"], False),
+    (["agent-working/tickets/done/T.md", "README.md"], False),
+])
+def test_scenario_tests_run_in_exactly_one_job(paths, scenario_tests_should_run):
+    perf_job, lane_job = _jobs(paths)
+    assert perf_job + lane_job == (1 if scenario_tests_should_run else 0), (paths, perf_job, lane_job)
 
 
 def test_src_domains_progression_only_routes_to_perf_cert_arena():
@@ -135,3 +189,39 @@ def test_summary_is_a_routing_statement_not_an_execution_record():
         text = slp.render_summary(slp.classify(["src/a.py"]), perf_covers=perf)
         assert "scenario execution is that job's result" in text
         assert "no separate job" not in text
+
+
+# TCK-20261008-PERF-LANE-PATH-GATE-MISSES-SIMULATION-SRC-DIRS: PERF_RE is "any src/ path except the
+# evidence-derived exclusion list" (see the comment next to PERF_RE in test.yml).
+@pytest.mark.parametrize("path", [
+    "src/systems/economy.py", "src/strategy/planner.py", "src/progression/xp.py", "src/entities/entity.py",
+    "src/economy/market.py", "src/quests/q.py", "src/town/t.py", "src/content/repository.py",
+    "src/scenarios/s.py", "src/cli/main.py", "src/__main__.py", "src/brand_new_folder/x.py",
+])
+def test_formerly_missed_src_folders_trigger_the_perf_lane(path):
+    assert _PERF_RE.match(path), path
+
+
+@pytest.mark.parametrize("path", [
+    "src/actions/harvest.py", "src/lab/orchestrator.py", "src/rendering/r.py", "src/runtime/bootstrap.py",
+    "src/testing/scenario_runner.py", "src/views/readiness.py", "src/worldgeneration/generator.py",
+])
+def test_excluded_src_folders_alone_do_not_trigger_the_perf_lane(path):
+    assert not _PERF_RE.match(path), path
+    # An excluded folder is still a scenario trigger, so the dedicated job covers it.
+    run, perf = _route([path])
+    assert run is True and perf is False
+
+
+def test_workflow_matches_perf_re_with_pcre_and_fails_open_on_grep_error():
+    """The exclusion is a negative lookahead; grep -E would silently misread it, so the workflow must use grep -P.
+
+    grep exits >= 2 on an error (e.g. a broken pattern); `grep ... && echo true || echo false` would turn that
+    into "false" and skip the lane silently, so the match goes through perf_match(), which fails open.
+    """
+    text = (REPO_ROOT / ".github/workflows/test.yml").read_text(encoding="utf-8")
+    assert "(?!" in _PERF_RE.pattern
+    assert 'grep -qE "$PERF_RE"' not in text
+    assert text.count('grep -qP "$PERF_RE"') == 1
+    assert 'PERF_COVERS=$(perf_match)' in text and 'run_perf_cert_arena=$PERF_COVERS' in text
+    assert '[ "$rc" -ge 2 ]' in text and "failing open" in text

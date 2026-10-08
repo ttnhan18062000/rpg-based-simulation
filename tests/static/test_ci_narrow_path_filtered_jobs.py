@@ -235,7 +235,12 @@ def test_perf_cert_arena_path_set_covers_all_actually_imported_src_dirs() -> Non
     run_text = _gate_run_text(jobs)
     perf_pattern = _extract_re_pattern(run_text, "PERF_RE")
 
-    missing = sorted(d for d in imported if d not in perf_pattern)
+    # TCK-20261008-PERF-LANE-PATH-GATE-MISSES-SIMULATION-SRC-DIRS: PERF_RE is "any src/ path except an
+    # exclusion list", so the check is behavioural (does the compiled pattern match a path in each imported
+    # dir?) instead of a substring test for a folder name. It still fails if a lane test imports a folder
+    # that the exclusion list names.
+    compiled = re.compile(perf_pattern)
+    missing = sorted(d for d in imported if not compiled.match(f"src/{d}/module.py"))
     assert not missing, (
         f"perf-cert-arena's trigger path set (PERF_RE) is missing coverage for src/ dirs "
         f"actually imported by tests/perf, tests/certification, tests/arena: {missing} -- "
