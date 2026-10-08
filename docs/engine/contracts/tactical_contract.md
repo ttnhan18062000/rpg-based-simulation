@@ -82,7 +82,8 @@ not write a navigation point for an entity-typed objective (`ObjectiveState.targ
 
 ## 5. Anti-Stalemate Rules (GAP-T05)
 - **Deadlock Detection**: Tracks `stale_ticks` in the task payload.
-- **Trigger**: If `stale_ticks > 10` without a target change or outcome, the entity forces a `STALEMATE_BREAK`.
+- **Trigger**: If `stale_ticks > 10` without a target change or outcome, the entity forces a `STALEMATE_BREAK`. An ATTACK or SKILL emission is an outcome: it sets `stale_ticks` to 0 (read at emission, not at landing). The breaker never fires while the target is adjacent (CONFLICT-04: a pair trading blows is not a stalemate).
+- **Hold between blows (CONFLICT-04)**: adjacent to the target with only readiness missing, the decision is a held `ATTACK` (payload reason `HOLD_BETWEEN_BLOWS`), never a `PURSUE` step. `target_score` ranks an adjacent hostile first. While held the entity is a non-brain item (scheduler readiness gate), so it cannot decide to flee until the swing or a release (`OUT_OF_RANGE`, `TARGET_INCAPACITATED`).
 - **Behavior**: A different semantic from Retreat: a `WANDER` to a seeded (`DeterministicRNG`, `Domain.TACTICAL`, scoped by tick and entity id), nearby (half-width 5), region-contained point (`wander_destination`). An entity that is itself outside every region holds position.
 
 ## 6. Known Exclusions

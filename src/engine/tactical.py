@@ -22,6 +22,7 @@ from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
 from src.engine.tactical_threat import safety_retreat_warranted
 from src.engine.tactical_rest import rest_in_place_update
+from src.engine.tactical_hold import held_swing_update, stalemate_break_update
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -428,7 +429,7 @@ class TacticalDecisionSystem:
 
         # 4. Target Selection with Focus Fire
         group = state.groups.get(entity.identity.group_id) if entity.identity.group_id is not None else None
-        def target_score(h: EntityState) -> Tuple[float, int, float, float, float, int]:
+        def target_score(h: EntityState) -> Tuple[int, float, int, float, float, float, int]:
             dist = abs(h.navigation.position[0] - entity.navigation.position[0]) + abs(h.navigation.position[1] - entity.navigation.position[1])
 
             # Logic ID: COMB-316 -- subjective capability estimate against the hostile's species, from the entity's own
@@ -464,7 +465,9 @@ class TacticalDecisionSystem:
                 - entity_pressures.duty_pressure * 0.3,
             )
 
-            return (group_bias, is_current_target, -capability_confidence, h.combat.hp, dist * pressure_dist_mod, h.id)
+            # CONFLICT-04: a fighter stands its ground, so an adjacent hostile outranks a farther one.
+            not_adjacent = 0 if LegalityServiceV2.is_adjacent(entity.navigation.position, h.navigation.position) else 1
+            return (not_adjacent, group_bias, is_current_target, -capability_confidence, h.combat.hp, dist * pressure_dist_mod, h.id)
 
         logger.debug(f"DEBUG: entity {entity.id} evaluating targets. Group target: {group.shared_target_id if group else None}")
         for h in hostiles:
@@ -480,7 +483,7 @@ class TacticalDecisionSystem:
             if legal:
                 legal_attack_targets.append(h)
         
-        target = legal_attack_targets[0] if legal_attack_targets else (hostiles[0] if hostiles else None)
+        target = legal_attack_targets[0] if legal_attack_targets else hostiles[0]
         is_attack_legal = target in legal_attack_targets
 
         # 5. Decision: Attack vs Positioning (Kiting/Closing)
@@ -503,18 +506,12 @@ class TacticalDecisionSystem:
 
         recent_positions = ([curr_pos] + recent_positions)[:4]
 
-        if stale_ticks > 10:
+        # CONFLICT-04: a pair trading blows is not a stalemate; the breaker is for chases and kites.
+        fighting_adjacent = LegalityServiceV2.is_adjacent(entity.navigation.position, target.navigation.position)
+
+        if stale_ticks > 10 and not fighting_adjacent:
              # Logic ID: COMB-277 (Anti-stalemate does not force illegal movement)
-             wander_to = _destination_or_hold(entity, wander_destination(state, entity))
-             return EntityUpdate(
-                 entity_id=entity.id,
-                 strategic=strat_up,
-                 navigation=NavigationUpdate(target_set=wander_to, movement_mode_set=MovementMode.WANDER),
-                 task=TaskUpdate(
-                     work_kind_set="ENTITY_MOVE",
-                     payload_set={"target_position": wander_to, "reason": "STALEMATE_BREAK"}
-                 )
-             )
+             return stalemate_break_update(entity, strat_up, _destination_or_hold(entity, wander_destination(state, entity)))
 
         # Tactical Role Logic
         role = entity.combat.tactical_role
@@ -770,7 +767,7 @@ class TacticalDecisionSystem:
                             "action": "SKILL",
                             "skill_id": chosen_skill_id,
                             "target_id": target.id,
-                            "stale_ticks": stale_ticks + 1,
+                            "stale_ticks": 0,  # a swing is an outcome (tactical contract section 5)
                             "recent_positions": recent_positions,
                             "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
                         }
@@ -787,13 +784,20 @@ class TacticalDecisionSystem:
                     payload_set={
                         "action": "ATTACK",
                         "target_id": target.id,
-                        "stale_ticks": stale_ticks + 1,
+                        "stale_ticks": 0,
                         "recent_positions": recent_positions,
                         "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
                     }
                 )
             )
         else:
+            # CONFLICT-04: between blows the fighter holds (a queued swing), it does not step.
+            held = held_swing_update(
+                state, entity, target, strat_up,
+                {"stale_ticks": stale_ticks, "recent_positions": recent_positions,
+                 "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source)})
+            if held is not None:
+                return held
             # Pursuit
             target_pos = target.navigation.position
             
