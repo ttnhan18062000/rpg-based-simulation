@@ -1368,7 +1368,7 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
 
 def generate(
     runs, events, label, week_str=None, tickets_root=None, tools=None, all_tools=None,
-    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None, gates=None, paths=None,
+    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None, gates=None, paths=None, failures=None,
 ):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -1496,6 +1496,12 @@ def generate(
     else:
         lines.append("_No gate failures this period._")
     lines.append("")
+
+    # Failures (TCK-20261007-RETRO-FAILURES-SECTION): non-DONE runs, failed/blocked events, recurring failing tests.
+    # Right after the gate breakdown so a reader finds failures first; omitted entirely when the caller passes none.
+    if failures:
+        lines.append(failures.rstrip("\n"))
+        lines.append("")
 
     # Reason-code breakdown — only rendered when at least one event carries one, so weeks with
     # no reason_code data (or runs predating this field) don't get an empty/zero-value section.
@@ -2174,6 +2180,18 @@ def _paths_section(runs, events, all_runs):
         return None
 
 
+def _failures_section(runs, events):
+    """The rendered Failures section (TCK-20261007-RETRO-FAILURES-SECTION), or None when it cannot be built (never fails
+    the retro). The sibling takes this module's predicates as arguments, so it never imports this file."""
+    try:
+        import retro_failures
+
+        return retro_failures.render_section(dedupe_to_latest_per_execution(runs), events, _is_gate_fail, _normalize_agent,
+                                             resolve_status=_resolve_status)
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate agent monitoring retro report")
     parser.add_argument("--days", type=int, help="Include runs from the last N days")
@@ -2254,11 +2272,12 @@ def main():
     session_layer = _session_layer_section(runs, week_str, cutoff if args.days else None, args.latency_prs)
     gates = _gates_section(None if (args.all or args.days) else week_str)
     paths = _paths_section(runs, events, all_runs)
+    failures = _failures_section(runs, events)
 
     report = generate(
         runs, events, label, week_str, tools=tools, all_tools=all_tools,
         raw_run_count=raw_run_count, deduped_run_count=deduped_run_count,
-        real_token_report=real_token_report, session_layer=session_layer, gates=gates, paths=paths,
+        real_token_report=real_token_report, session_layer=session_layer, gates=gates, paths=paths, failures=failures,
     )
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)
