@@ -1,0 +1,23 @@
+# Implementation Sequence — visual-asset-icon-owner-fixes
+
+Follow-up to `TCK-20261007-EPIC-VISUAL-ASSET-ICON-SET-V2` on the SAME branch `visual-asset-icon-set-v2` and PR #418 (worktree
+`/home/vboxuser/Work/rpg-aseprite-mcp`), built by `asset-implementer`, reviewed by `asset-planner`. No `src/`, no app wiring.
+
+## Order
+
+1. `TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES`: specs -> reference study -> **owner-approved silhouette sheet** -> draw -> checks -> owner commands.
+2. **Owner gate, no ticket:** the owner reviews and re-adopts in their own terminal.
+3. `TCK-20261008-VISUAL-ASSETS-RECORD-ICON-OWNER-FIXES-ADOPTION`: record, guards, PR notes, close.
+
+## Decisions
+
+- PR #418 (icon set v2) is CI-green and planner-approved, but the owner held the merge ("Don't merge yet") and then
+asked to "finish what blocks the PR". The planner's readiness comment on #418 listed five owner-judgement items; the owner
+chose (blocking question, 2026-10-08) to fix ALL of them before the merge: the ruins glyph, the common rarity bead, the
+adopted buff frame, and the blade motifs + the unmatched spirit lantern.
+- Planner proposals (owner may change at the silhouette step): ruins = broken arch + rubble; common = silver bead; buff =
+  solid up arrow; rogue = hood/mask; enemy camp = tent + crossed spears; warrior keeps the shield; tool = toolbox.
+
+## Status
+
+OPEN (2026-10-08).
