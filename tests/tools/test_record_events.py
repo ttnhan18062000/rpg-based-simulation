@@ -683,3 +683,18 @@ def test_default_ts_does_not_rescue_other_invalid_fields(tmp_path):
     bad = {**_PARITY_SKIPPED_NO_TS, "summary": None}
     result = _run_events(tmp_path, [bad], "--default-ts", "2026-10-01T09:00:00Z")
     assert result.returncode == 1 and _written_events(tmp_path) == []
+
+
+def test_a_torn_tools_line_is_skipped_with_a_warning_and_valid_rows_still_count(tmp_path, monkeypatch, capsys):
+    # TCK-20261008-RECORD-EVENTS-CRASHES-ON-TORN-TOOLS-LINE: a write cut short by a full disk left a torn
+    # line in a tools shard, and compute_tool_stats raised json.JSONDecodeError, failing every closure
+    # recorded by a session whose shard held one.
+    monkeypatch.chdir(tmp_path)
+    week_dir = tmp_path / AGENT_MONITORING / "data" / "2026-W01"
+    week_dir.mkdir(parents=True)
+    good = json.dumps({"run_id": "TCK-FAKE-RUN", "seq": 1, "tool": "Read", "duration_ms": 5})
+    (week_dir / "x.tools.jsonl").write_text('{"run_id":"TCK-FAKE-RUN","seq":1,"tool":\n' + good + "\n" + "[1, 2]\n")
+    stats = compute_tool_stats([{**_VALID_EVENT, "run_id": "TCK-FAKE-RUN", "seq": 1}])
+    assert stats[("TCK-FAKE-RUN", 1)][0] == 1
+    err = capsys.readouterr().err
+    assert "x.tools.jsonl:1: invalid JSON, skipped" in err and ":3:" not in err
