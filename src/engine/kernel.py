@@ -13,11 +13,12 @@ from pathlib import Path
 
 from src.engine.phases import get_authoritative_phases
 from src.core.updates import StateUpdate, EntityUpdate
-from src.core.governance import PressureSignals, RuntimeMode
+from src.core.governance import RuntimeMode
 from src.core.diagnostic import TraceEvent
 from src.core.lifecycle import LifecycleOutcome, ShutdownResult
 from src.core.enums import Domain
 
+from src.engine.signal_source import HostReadings, select_signal_source
 from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
 
@@ -529,37 +530,11 @@ class Kernel:
             interval_override=self._profile.sampling_interval_ticks
         )
         
-        if self._audit_mode:
-            self._current_signals = PressureSignals(
-                work_debt_total=sum(self._state.work_debt.values()),
-                tick_compute_ms=0.0,
-                worker_utilization=0.0,
-                queue_utilization=0.0,
-                memory_estimate_mb=0.0,
-                replay_backlog_kb=0,
-                active_workers=0,
-                dropped_work_delta=self._status.dropped_work_delta,
-                phase_costs_ms={},
-                metrics=self._metrics.copy()
-            )
-        else:
-            compute_ms = self._status.signal_history[-1].tick_compute_ms if self._status.signal_history else 0.0
-            if not self._audit_mode and self._state.tick <= 5:
-                compute_ms = min(compute_ms, self._profile.max_tick_budget_ms * 0.5)
-            self._current_signals = PressureSignals(
-                work_debt_total=sum(self._state.work_debt.values()),
-                tick_compute_ms=compute_ms,
-                worker_utilization=worker_stats["worker_utilization"],
-                queue_utilization=worker_stats["queue_utilization"],
-                memory_estimate_mb=self._platform_signals["rss_mb"],
-                replay_backlog_kb=replay_stats["backlog_kb"],
-                active_workers=worker_stats["active_workers"],
-                dropped_work_delta=self._status.dropped_work_delta,
-                phase_costs_ms=(self._status.signal_history[-1].phase_costs_ms 
-                                if self._status.signal_history else {}),
-                metrics=self._metrics.copy()
-            )
-        
+        self._current_signals = select_signal_source(self._profile, self._audit_mode).tick_start_signals(
+            state=self._state, profile=self._profile, status=self._status,
+            host=HostReadings(worker_stats, replay_stats, self._platform_signals, self._metrics),
+        )
+
         prior_mode = self._status.current_mode
         self._current_policy = self._governor.evaluate(
             self._profile, 
@@ -778,17 +753,9 @@ class Kernel:
     def _record_runtime_signals(self) -> None:
         terminal_worker_stats = self._worker_manager.get_stats()
         terminal_replay_stats = self._replay.get_stats()
-        self._status.record_signals(PressureSignals(
-            work_debt_total=sum(self._state.work_debt.values()),
-            tick_compute_ms=self._final_compute_ms,
-            worker_utilization=terminal_worker_stats["worker_utilization"],
-            queue_utilization=terminal_worker_stats["queue_utilization"],
-            memory_estimate_mb=self._platform_signals["rss_mb"],
-            replay_backlog_kb=terminal_replay_stats["backlog_kb"],
-            active_workers=terminal_worker_stats["active_workers"],
-            dropped_work_delta=self._status.dropped_work_delta,
-            phase_costs_ms=self._phase_costs.copy(),
-            metrics=self._metrics.copy()
+        self._status.record_signals(select_signal_source(self._profile, self._audit_mode).tick_end_signals(
+            state=self._state, status=self._status, final_compute_ms=self._final_compute_ms, phase_costs=self._phase_costs,
+            host=HostReadings(terminal_worker_stats, terminal_replay_stats, self._platform_signals, self._metrics),
         ))
 
     def _phase_advancement(self) -> None:

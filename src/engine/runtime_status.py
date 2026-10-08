@@ -70,7 +70,10 @@ class RuntimeStatus:
             active_workers = signals.active_workers,
             dropped_work_delta = signals.dropped_work_delta,
             phase_costs_ms = signals.phase_costs_ms,
-            metrics = signals.metrics
+            metrics = signals.metrics,
+            tick_cost = signals.tick_cost,
+            tick_budget = signals.tick_budget,
+            phase_cost = signals.phase_cost
         )
         
         self.signal_history.append(enriched)
