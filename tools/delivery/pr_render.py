@@ -446,7 +446,9 @@ def render(
         files = discover_changed_files(run_command, base_ref)
         return {
             "title": f"{scope}: {_collapse_whitespace(theme)} (no tickets)",
-            "body": render_ticketless_body(_collapse_whitespace(theme), why.strip(), files, spec, warnings),
+            "body": render_ticketless_body(
+                _collapse_whitespace(theme), why.strip(), files, spec, warnings, exclusions=exclusions,
+            ),
             "warnings": warnings,
             "hints": [],
         }
@@ -497,10 +499,13 @@ def summarize_changed_files(files: list, max_lines: int = _MAX_FILE_SUMMARY_LINE
     return "\n".join(lines)
 
 
-def render_ticketless_body(theme: str, why: str, files: list, spec: dict, warnings: list) -> str:
+def render_ticketless_body(
+    theme: str, why: str, files: list, spec: dict, warnings: list, exclusions: Optional[Dict[str, str]] = None,
+) -> str:
     """Body for a branch that closes no ticket (docs-only or record-only). Nothing here is invented:
     the theme and the why come from the caller, the file summary from the diff, and `Closes:` is
-    explicitly empty."""
+    explicitly empty. Recorded exclusions are written exactly as `render_body` writes them, so
+    `--check` can read them back (a body that drops them is permanently unmatchable)."""
     summary = summarize_changed_files(files)
     sections = {
         "## What landed": f"{theme}\n\nChanged files ({len(files)}):\n{summary}" if files else theme,
@@ -517,6 +522,9 @@ def render_ticketless_body(theme: str, why: str, files: list, spec: dict, warnin
             continue
         parts += [heading, sections[heading], ""]
     parts.append("Closes: (none)")
+    if exclusions:
+        for ticket_id in sorted(exclusions):
+            parts.append(render_exclusion_comment(ticket_id, exclusions[ticket_id]))
     return "\n".join(parts).strip() + "\n"
 
 
