@@ -223,7 +223,9 @@ def test_wider_scope_numbers_pinned():
     # (rest in place); all four are functions only, so they add no unbound mechanism-shaped class.
     # 309 -> 310 on 2026-10-07 (KNOW-04, rebased after SURV-07): +src/cognition/common_knowledge.py (seeding and the combat-belief
     # lookup; functions only, bound under `knowledge_model`, so it adds no unbound file or mechanism-shaped class).
-    assert wider["scope_files"] == 310
+    # 310 -> 311 on 2026-10-08 (layer-order fix): +src/content/common_knowledge_seed.py (KNOW-04's seeding, moved out of
+    # src/cognition/common_knowledge.py so the compiler and spawner need not import cognition; bound under `knowledge_model`).
+    assert wider["scope_files"] == 311
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).

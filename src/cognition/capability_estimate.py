@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
+from src.content.common_knowledge_seed import COMMON_KNOWLEDGE_CERTAINTY
 from src.core.self_model import CapabilityEstimate, CapabilityEstimateComponent
 
 if TYPE_CHECKING:
@@ -68,7 +69,6 @@ class CapabilityContext:
 # with no belief the estimate is neutral and recorded as UNINFORMED.
 COMMON_KNOWLEDGE_DANGER: Dict[str, float] = {"low": 0.2, "medium": 0.5, "high": 0.75, "extreme": 0.95}
 NEUTRAL_DANGER = 0.5
-COMMON_KNOWLEDGE_CERTAINTY = 0.3   # a weak prior: experience and trusted reports are meant to outweigh it
 UNINFORMED_CONFIDENCE = 0.1
 
 

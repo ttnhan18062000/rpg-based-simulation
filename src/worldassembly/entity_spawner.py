@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Optional, Tuple
 
-from src.cognition.common_knowledge import default_self_model
+from src.content.common_knowledge_seed import default_self_model
 from src.core.state import EntityState
 from src.entities.archetype_factory import ArchetypeEntityFactory, EntitySpawnContext
 from src.entities.contract_builder import resolved_archetype_to_contract
