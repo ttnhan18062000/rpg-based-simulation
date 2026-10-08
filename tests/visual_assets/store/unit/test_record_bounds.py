@@ -203,8 +203,13 @@ def test_every_record_type_has_a_bound_and_the_big_ones_have_their_own():
 
 
 def test_the_maximal_registry_loads_through_the_real_read_path(tmp_path):
+    """The model allows variant axes (the bound tests above use them) but the loader refuses them (D17, AM1-W03.1), so the real read path is measured with the realistic registry a loader accepts:
+    no axes, and every key with a class, a structured fallback and (for icons) a label (`AM1-W02.7`)."""
     data = _maximal_registry(VisualKeyRegistry)
     data.pop("record_type"), data.pop("schema_version")
+    for definition in data["keys"]:
+        definition["variant_axes"] = []
+        definition.update({"safety_class": "identifying", "fallback": {"kind": "glyph_and_text", "glyph": "Lucide Hammer icon (#f59e0b)", "text": "the building name as text"}})
     path = tmp_path / "visual_keys.yaml"
     path.write_text(yaml.safe_dump({"record_type": "visual_key_registry", "schema_version": 1, **data}))
     assert path.stat().st_size <= config.MAX_REGISTRY_BYTES

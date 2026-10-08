@@ -141,7 +141,7 @@ def test_fixture_namespace_is_rejected_without_the_flag(tmp_path):
     with pytest.raises(RegistryError, match="fixture"):
         load_registry(path)
     assert load_registry(path, allow_fixture_namespace=True).resolve("fixture.a.one")
-    path = write(tmp_path, HEAD + "keys:\n  - {key: real.a.one, family: a, description: d, variant_axes: []}\n"
+    path = write(tmp_path, HEAD + "keys:\n  - {key: real.a.one, family: a, description: d, variant_axes: [], safety_class: decorative, fallback: {kind: none}}\n"
                  "aliases:\n  - {alias: fixture.a.old, target: real.a.one}\n", "alias.yaml")
     with pytest.raises(RegistryError, match="fixture alias"):
         load_registry(path)
@@ -210,3 +210,86 @@ def test_default_path_is_read_at_call_time(tmp_path, monkeypatch):
     assert set(load_registry(allow_fixture_namespace=True).keys) == {"fixture.a.one"}
     with pytest.raises(RegistryError, match="fixture"):
         load_registry()
+
+
+REAL = "  - {{key: real.{fam}.one, family: {fam}, description: d, variant_axes: [], {extra}}}\n"
+
+
+def real(fam="b", extra="safety_class: identifying, fallback: {kind: text, text: the name as text}"):
+    return HEAD + "keys:\n" + REAL.format(fam=fam, extra=extra) + "aliases: []\n"
+
+
+def test_a_real_key_needs_a_safety_class_and_a_fallback_but_a_fixture_key_does_not(tmp_path):
+    """`AM1-W02.7`."""
+    rejects(tmp_path, HEAD + "keys:\n  - {key: real.b.one, family: b, description: d, variant_axes: []}\naliases: []\n", "safety_class and fallback are required")
+    rejects(tmp_path, real(extra="safety_class: identifying"), "safety_class and fallback are required")
+    rejects(tmp_path, real(extra="fallback: {kind: text, text: x}"), "safety_class and fallback are required")
+    assert load(tmp_path, real()).resolve("real.b.one").safety_class == "identifying"
+    assert load(tmp_path, HEAD + "keys:\n" + KEY_A + "aliases: []\n").resolve("fixture.a.one").safety_class is None  # synthetic fixture keys are exempt
+
+
+def test_the_fallback_must_fit_the_class_and_its_own_kind(tmp_path):
+    for extra, message in (
+        ("safety_class: identifying, fallback: {kind: none}", "identifying key needs a fallback"),
+        ("safety_class: critical, fallback: {kind: flat_fill, text: x}", "critical key needs a text alternative"),
+        ("safety_class: critical, fallback: {kind: none}", "critical key needs a text alternative"),
+        ("safety_class: decorative, fallback: {kind: none, text: x}", "needs no text and no glyph"),
+        ("safety_class: identifying, fallback: {kind: text}", "needs text and no glyph"),
+        ("safety_class: identifying, fallback: {kind: text, text: x, glyph: g}", "needs text and no glyph"),
+        ("safety_class: identifying, fallback: {kind: glyph_and_text, text: x}", "text and a glyph"),
+        ("safety_class: identifying, fallback: {kind: flat_fill, text: '  '}", "registry rejected"),  # whitespace-only text is refused by the record's own text rule
+    ):
+        rejects(tmp_path, real(extra=extra), message)
+    for ok in ("safety_class: decorative, fallback: {kind: none}", "safety_class: critical, fallback: {kind: text, text: the warning as text}",
+               "safety_class: critical, fallback: {kind: glyph_and_text, text: t, glyph: g}", "safety_class: identifying, fallback: {kind: flat_fill, text: the fill}"):
+        load(tmp_path, real(extra=ok))
+
+
+def test_an_icon_that_is_not_decorative_needs_its_derived_label_key_and_a_label_and_a_decorative_one_has_none(tmp_path):
+    base = "fallback: {kind: text, text: t}"
+    rejects(tmp_path, real("icon", f"safety_class: identifying, {base}"), "needs label_key 'label.real.icon.one'")
+    rejects(tmp_path, real("icon", f"safety_class: identifying, {base}, label_key: label.other, label: X"), "needs label_key 'label.real.icon.one'")
+    rejects(tmp_path, real("icon", f"safety_class: identifying, {base}, label_key: label.real.icon.one, label: ''"), "registry rejected")
+    rejects(tmp_path, real("icon", "safety_class: decorative, fallback: {kind: none}, label_key: label.real.icon.one, label: X"), "decorative key carries no label")
+    load(tmp_path, real("icon", f"safety_class: identifying, {base}, label_key: label.real.icon.one, label: A name"))
+    load(tmp_path, real("icon", "safety_class: decorative, fallback: {kind: none}"))
+    load(tmp_path, real("terrain"))  # labels are an icon-family rule only
+
+
+def test_a_non_empty_variant_axes_is_rejected_even_for_a_fixture_key(tmp_path):
+    """`AM1-W03.1` (D17): only the detail axis exists, so a variant axis would promise a precedence nothing implements."""
+    rejects(tmp_path, HEAD + "keys:\n  - {key: fixture.a.one, family: a, description: d, variant_axes: [{name: scale, values: [x1, x2]}]}\naliases: []\n", "variant_axes must be empty")
+    rejects(tmp_path, real(extra="safety_class: identifying, fallback: {kind: text, text: t}").replace("variant_axes: []", "variant_axes: [{name: scale, values: [x1]}]"), "variant_axes must be empty")
+
+
+def test_fallback_problems_name_every_identifying_or_critical_key_left_without_an_alternative(tmp_path):
+    """`AM1-W06.3`, on a registry object built by hand (the loader would refuse it): the release check stands on its own."""
+    from visual_assets.store.catalog.registry import fallback_problems
+    from visual_assets.store.contracts.definitions import Fallback, VisualKeyDefinition
+
+    def key(name, cls, fb):
+        return VisualKeyDefinition(key=name, family="b", description="d", variant_axes=(), optional=True, safety_class=cls, fallback=fb)
+
+    good = key("real.b.good", "identifying", Fallback(kind="text", text="t"))
+    bad = key("real.b.bad", "identifying", Fallback(kind="none"))
+    crit = key("real.b.crit", "critical", Fallback(kind="flat_fill"))  # a flat fill with no text carries nothing
+    deco = key("real.b.deco", "decorative", Fallback(kind="none"))
+    registry = Registry({k.key: k for k in (good, bad, crit, deco)}, {}, "sha256:x")
+    assert fallback_problems(registry, set()) == [
+        "real.b.bad: identifying key has no image in this release and no alternative that carries its fact",
+        "real.b.crit: critical key has no image in this release and no alternative that carries its fact",
+    ]
+    assert fallback_problems(registry, {"real.b.bad", "real.b.crit"}) == []  # an image present: nothing to fall back to
+    assert fallback_problems(Registry({good.key: good}, {}, "sha256:x"), set()) == []
+
+
+def test_the_committed_registry_carries_a_class_a_structured_fallback_and_35_labels_for_every_key():
+    registry = load_registry()  # the real read path: every rule above applies to the committed file
+    keys = registry.keys
+    assert len(keys) == 62 and all(d.safety_class and d.fallback for d in keys.values())
+    from collections import Counter
+
+    assert Counter((d.family, d.safety_class) for d in keys.values()) == Counter({("terrain", "identifying"): 23, ("border", "decorative"): 3, ("icon", "identifying"): 35, ("icon", "decorative"): 1})
+    labelled = {k: d.label for k, d in keys.items() if d.label is not None}
+    assert len(labelled) == 35 and all(keys[k].label_key == f"label.{k}" for k in labelled) and "icon.plate.location" not in labelled
+    assert labelled["icon.tier.sss"] == "Tier SSS" and labelled["icon.status.frame_debuff"] == "Harmful effect" and labelled["icon.item.consumable"] == "Consumable item"
