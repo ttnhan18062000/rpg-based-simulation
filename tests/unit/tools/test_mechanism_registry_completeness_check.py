@@ -218,7 +218,7 @@ def test_wider_scope_numbers_pinned():
     # 302 -> 305 on 2026-10-07: +src/engine/biological_needs.py (need_rates, bound under `attributes_biology`),
     # +src/engine/service_reach.py (a lookup helper, unbound) and +src/engine/need_paths.py (advisory report, unbound);
     # all three are functions only, so they add no unbound mechanism-shaped class.
-    # 305 -> 309 on 2026-10-07 (SURV-07): +src/ai/goals/need_pull.py (the pull curve), +src/ai/goals/present_threat.py and
+    # 305 -> 309 on 2026-10-07 (SURV-07): +src/engine/need_pull.py (the pull curve), +src/ai/goals/present_threat.py and
     # +src/ai/goals/scorers_support.py (the present-threat gate and its hostile lookup) and +src/engine/tactical_rest.py
     # (rest in place); all four are functions only, so they add no unbound mechanism-shaped class.
     assert wider["scope_files"] == 309
