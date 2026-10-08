@@ -406,6 +406,8 @@ def test_no_cross_job_aggregate_step_or_job_added() -> None:
         "migration-lanes",
         "typecheck",
         "frontend",
+        # TCK-20261008-CI-BACKEND-IMAGE-BUILD-CHECK: the path-gated backend image build job (plain docker, no pytest).
+        "docker-build",
         "simq-grade-drift",
         # TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB: the advisory ratchet job (no pytest, so it is
         # not in _FASTLANE_JOBS and has no JUnit/base-collection reporting).

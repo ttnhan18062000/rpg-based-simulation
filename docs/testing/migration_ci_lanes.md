@@ -129,6 +129,18 @@ set is much simpler than the other two — `frontend/**` plus `.github/workflows
 coverage from (unlike `perf-cert-arena`/`migration-lanes`, whose trigger sets are re-derived live
 from what `src/` dirs their tests actually import). Same fail-open guarantees apply.
 
+**TCK-20261008-CI-BACKEND-IMAGE-BUILD-CHECK:** the `docker-build` job ("Backend image build") has the same
+`changed-files`-gated, fail-open `if:` shape via its own `run_docker_build` output, and also honours the re-sync gate.
+Its trigger set is the image's inputs: `docker/backend.Dockerfile`, `.dockerignore`, `pyproject.toml`, `uv.lock` and
+`.github/workflows/test.yml`; source and docs changes do not start a build (the frontend image and `docker/nginx.conf`
+are out of scope). The job runs plain `docker` commands on the runner, with no docker/* actions, no layer cache, no push
+and no registry login: `docker build --check` (Docker's native build checks, must exit 0), `docker build -t
+rpg-backend:ci`, then `docker run` asserting the image's Python is 3.13, and an image-size line in the job summary
+(timeout 15 minutes). It is **not a required check**: a required check that is path-skipped stays "expected" and would
+hang a PR that does not touch these paths, so it informs review only. Options not taken, for the owner: `type=gha` layer
+caching, Dependabot `docker` and `github-actions` ecosystems with digest/SHA pins, building the frontend image, and
+pinning `runs-on: ubuntu-24.04` around the ubuntu-latest to 26.04 migration (2026-10-19 to 2026-11-19).
+
 ### Registry re-sync skip (`TCK-20261005-CI-SKIP-HEAVY-JOBS-ON-REGISTRY-ONLY-RESYNC`)
 
 The path-based skips above compare the whole PR with its base, so they cannot tell what the *latest push*
@@ -175,6 +187,7 @@ two jobs keep running.
 | Agent orchestration / codex / replay | yes | 42, 43, 41 | no real read |
 | Simulation quality | yes | 36, 39, 47 | no real read |
 | Perf / cert / arena, Migration lanes, Scenario lane, Frontend | yes, on top of their own path rule | 113, 123, 28 (Frontend about 2) | no real read |
+| Backend image build | yes, on top of its own path rule | not measured (new) | no pytest, no REGISTRY read |
 | Tools · a–e, Tools · f–z | **no** | 195/197/160, 225/258/265 | hold the real readers |
 | Architecture / docs / static | **no** | 74, 72, 63 | the cheap docs/registry checks; kept on purpose |
 | Type check, Code health (+ SARIF) | **no** | 34, 133, 118 | lint-class; code-health reads the registry |
