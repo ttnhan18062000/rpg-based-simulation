@@ -80,8 +80,10 @@ None.
 - Impact for agent-working: `.venv-knowledge` and other worktrees used `pip install -r requirements.txt`. The guide now gives the on-demand export command; this is raised in the batch A handoff to agent-working.
 - Left as history (not edited): `docs/plans/**`, `docs/archive/**`, `experiments/**`, `docs/ai/monitoring_writer_decision.md`, `docs/parity_ledger/infrastructure.yaml`, `agent-working/handover-transit/**`, and open `todos/` tickets owned by others (`embedding-latent-cognition/*`; also the in-progress `TCK-20261008-PERF-LANE-PATH-GATE-MISSES-SIMULATION-SRC-DIRS` mentions `requirements.txt` as a trigger and edits the same `test.yml` regex region, so its owner may need to rebase).
 
+- Review fix (codebase-planner): the lock walk also follows requested extras (a dependency entry with `extra = [...]` queues the target's `[package.optional-dependencies]` entries for each); the walk is a function over the parsed dicts, pinned by a synthetic-lock unit test that proves an extra-only path to `torch` is caught. The real closure grows from 68 to 74 packages and is still clean.
+
 ## Test Summary
-- `tests/static` and `tests/unit/tools/test_scenario_lane_paths.py`: 140 passed.
+- `tests/static` and `tests/unit/tools/test_scenario_lane_paths.py`: 140 passed (141 with the review-fix test).
 - 42 test files referencing the touched files (`tests/tools`, `tests/unit/tools`, `tests/codebase`, `tests/architecture`, `tests/docs`): all pass with the known local 60 s budget failure `tests/codebase/test_codebase_health_snapshot.py::test_make_target_runs_successfully_end_to_end` deselected (identical on clean main; tracked by `TCK-20261005-CODE-HEALTH-MAKE-TARGET-TESTS-LOCAL-TIMEOUT`).
 - A full `tests/tools` run was stopped at `test_entity_lifecycle_score.py::TestRealIntegration::...800t...` hitting the 60 s test limit, unrelated to this change; the scoped set above replaces it.
 - `make knowledge-index-update` was not run: it is killed by its timeout under the 2 GB cap on this machine (twice already).
