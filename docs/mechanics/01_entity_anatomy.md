@@ -83,9 +83,15 @@ The simulation tracks biological "Pressures" that degrade over time.
 ### Passive Decay Rates
 | Need | Decay (per tick) | Max Value | Penalty Threshold |
 | :--- | :--- | :--- | :--- |
-| **Hunger** | `+0.1` | 100.0 | **95.0**: Starvation (+2 HP damage/tick) |
+| **Hunger** | `+0.1` | 100.0 | **85.0**: Weakened (stamina and readiness recover at half rate, attack x0.8). **95.0**: Starving (1 HP lost every `round(6000 / max_hp)` ticks, so a full-health body dies about 6000 ticks, 2.5 days, after the line) |
 | **Sleep Debt** | `+0.05` | 100.0 | **98.0**: Fatigue (+1 HP damage/tick) |
 | **Stamina** | `-1.0` (per move) | `Max_Stamina` | **< Exhaustion Threshold**: Exhausted state |
+
+### Staged Starvation (SURV-02, owner decision 36)
+Past the hunger line a person weakens first and loses health only slowly. The stages derive from `hunger` alone (no extra state) and are tuned in one table, `src/engine/starvation.py::STARVATION`:
+- **Hungry** (hunger above 70): the cognitive capacity limits halve (`strategy/cognition_capacity.py`).
+- **Weakened** (hunger 85 and above): stamina and readiness regeneration run at half rate and the attack multiplier is 0.8 (a `STARVATION_WEAKENED` trace; it compounds with `EXHAUSTION`, 0.8 x 0.8 = 0.64). No health is lost.
+- **Starving** (hunger 95 and above): 1 HP is lost once every `round(6000 / max_hp)` life-due ticks, staggered by entity id. Death lands 4800 to 7200 ticks (2 to 3 days at 36 seconds a tick) after the line for a full-health body and sooner for a hurt one. Eating drops hunger and ends each stage.
 
 ### Death Attribution (Same-Tick Causes)
 A death records exactly one `death_reason`: the first cause, in declared pipeline phase order, whose own effect was sufficient to take the subject from `hp > 0` to `hp <= 0`. Combat resolves before world dynamics, so:

@@ -451,6 +451,7 @@ mechanisms:
     implemented_by:
       - src/engine/apply.py::ApplyPath::_compute_entity_changes
       - src/engine/biological_needs.py::need_rates
+      - src/engine/starvation.py::hp_loss
     verified:
       instrument: code_trace
       verdict: observed
@@ -488,6 +489,10 @@ mechanisms:
         proven able to certify a real positive result on `aging_death` (a threshold, not a
         compounding-rate, shape) -- it remains written but unexercised on a genuinely compounding
         mechanism, since none of `progression`'s remaining candidates carry one.
+        **Rule ratified 2026-10-08 (owner decision 36, designer commit 92f43c41e, SURV-02 amendment):** starvation is staged: weakened at hunger 85
+        (stamina and readiness recover at half rate, attack x0.8), then 1 HP lost every round(6000 / max_hp) ticks at hunger 95, death about
+        6000 ticks (2.5 days) after the line instead of about 50. Implemented by TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02:
+        `src/engine/starvation.py` (the one tuning table), `apply.py` (the HP term and the recovery scale), `combat.py` (the attack scale).
   - id: derived_stats
     layer: entity
     systems: [progression]
