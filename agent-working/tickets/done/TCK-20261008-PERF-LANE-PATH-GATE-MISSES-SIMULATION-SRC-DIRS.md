@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261008-PERF-LANE-PATH-GATE-MISSES-SIMULATION-SRC-DIRS
-phase: open
+phase: done
 date: 2026-10-08
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 The Perf / cert / arena lane runs on a PR for any `src/` change except a short, justified list of folders that cannot affect a simulation
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -75,10 +75,12 @@ None.
 - PR #440's first CI run failed `Unit · infra / observability` (tests/unit/tools): tools/test_architecture/impact_report.py scrapes the exact text `run_X=$(echo "$CHANGED" | grep -qE "$X"` from test.yml, so my `perf_match()` refactor made it show perf-cert-arena as always-on (a silent degrade, caught only because test_impact_report runs on a copy of the real workflow). Fixed: the scraper accepts `grep -q[EP]` and `run_X=$X_COVERS` (`X_COVERS` -> `X_RE`); a new test asserts the real workflow's three filters all parse; the stale expectation in test_impact_report (src/progression -> perf-cert-arena "not-triggered") became "triggered", reason in a comment. Lesson: grep the repo for consumers of a workflow's text shape before refactoring it.
 
 ## Test Summary
-tests/unit/tools/test_scenario_lane_paths.py + tests/static/test_ci_narrow_path_filtered_jobs.py: 82 passed locally. AC4 (lane durations from this PR's own run) open until the PR run finishes.
+tests/unit/tools/test_scenario_lane_paths.py + tests/static/test_ci_narrow_path_filtered_jobs.py: 82 passed locally. AC4 closed: lane durations from PR #440's own CI run (head 19488bfb6; later head c75d31d66 also green, 20 pass, 2 skip): Perf/cert/arena 2m22s, Scenario lane skipped (src/progression and src/systems now run scenario tests inside perf-cert-arena), Migration 2m24s, Frontend 48s, Integration 7m58s, Tools f-z 5m44s, changed-files gate 1m58s. Cost of the extra perf-lane run is about 2m22s per affected PR, within the assumed ~2 min.
 
 ## Files Changed
-_(not started)_
+- `.github/workflows/test.yml` (PERF_RE src exclusion list, fail-open `perf_match()`, PERF_COVERS)
+- `tools/test_architecture/scenario_lane_paths.py`, `tools/test_architecture/impact_report.py`
+- `tests/unit/tools/test_scenario_lane_paths.py`, `tests/static/test_ci_narrow_path_filtered_jobs.py`, test_impact_report
 
 ## Completion Summary
-_(not started)_
+Merged as #440. The perf lane now triggers on every src/ folder except the seven evidence-derived unreachable ones; scenario tests run exactly once. All four acceptance criteria met; AC4 durations recorded above.
