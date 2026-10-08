@@ -349,3 +349,56 @@ def test_plan_launch_reports_a_missing_note_against_the_main_checkout(repo, seat
     note.parent.mkdir(parents=True)
     note.write_text("# Handover\n")
     assert _plan(repo, tmp_path, root=seat_worktree)[1] == []
+
+
+# ---- TCK-20261007-SESSION-PER-ROLE-WORKTREES: first-launch bootstrap with --branch ---------------
+
+PLANNER = ROSTER.role("agent-working-planner")
+
+
+def test_missing_worktree_without_branch_refuses_and_names_the_flag(repo, tmp_path):
+    notes = ln.ensure_worktree(tmp_path / "wt", None, repo, role=PLANNER)
+    assert any("--branch <topic>" in n for n in notes) and not (tmp_path / "wt").exists()
+
+
+def test_dry_run_with_branch_prints_the_worktree_add_command(repo, tmp_path):
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    wt = tmp_path / "wt"
+    notes = ln.ensure_worktree(wt, None, repo, apply=False, role=PLANNER, topic="foo-bar")
+    assert any(f"git worktree add {wt} -b agent-working-planner-foo-bar origin/main" in n for n in notes)
+    assert not wt.exists()
+
+
+def test_branch_creates_the_worktree_on_a_new_role_branch_from_origin_main(repo, tmp_path):
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    wt = tmp_path / "wt"
+    notes = ln.ensure_worktree(wt, None, repo, role=PLANNER, topic="foo")
+    assert any("created" in n for n in notes) and wt.is_dir()
+    assert git(wt, "branch", "--show-current").stdout.strip() == "agent-working-planner-foo"
+    # an existing branch is never reused or reset
+    git(repo, "worktree", "remove", "--force", str(wt))
+    assert any("already exists" in n for n in ln.ensure_worktree(wt, None, repo, role=PLANNER, topic="foo"))
+
+
+@pytest.mark.parametrize("topic", ["20261007-x", "Foo", "phase-3-x", "p4", "a_b", "-x", "x y"])
+def test_bad_topics_are_refused(repo, tmp_path, topic):
+    notes = ln.ensure_worktree(tmp_path / "wt", None, repo, role=PLANNER, topic=topic)
+    assert any("refused" in n for n in notes) and not (tmp_path / "wt").exists()
+
+
+def test_a_spent_recorded_branch_can_be_replaced_only_with_branch(repo, tmp_path):
+    git(repo, "branch", "spent")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    wt = tmp_path / "wt"
+    assert not wt.exists() and any("create the worktree from origin/main" in n for n in ln.ensure_worktree(wt, "spent", repo, role=PLANNER))
+    notes = ln.ensure_worktree(wt, "spent", repo, role=PLANNER, topic="next")
+    assert any("not reused" in n for n in notes) and wt.is_dir()
+
+
+def test_main_dry_run_for_a_planner_with_branch_prints_the_command(repo, tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(st, "state_root", lambda *_: tmp_path / "sr")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    wt = tmp_path / "newwt"
+    ln.main(["agent-working-planner", "--dry-run", "--branch", "topic", "--worktree", str(wt)], root=REAL_ROOT)
+    out = capsys.readouterr().out
+    assert "-b agent-working-planner-topic origin/main" in out and not wt.exists()
