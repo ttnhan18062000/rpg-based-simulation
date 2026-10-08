@@ -86,6 +86,11 @@ class ActionRouter:
         if action == "AOE_ATTACK":
             return AoeActions.execute_aoe_attack(entity, payload, current_tick, neighbor_view, context)
             
+        if action == "HOLD":
+            # A VANGUARD holding a chokepoint (tactical HOLD_CHOKEPOINT): the stand is the movement mode, so the action itself is a
+            # typed no-op that succeeds. Nothing is spent (readiness_delta 0.0) and no failure is reported.
+            return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
+
         # An action no handler recognises can never succeed on retry: report it so the task ends.
         return ActionRouter._reported_no_op(entity, ReasonCode.UNSUPPORTED_ACTION)
 
