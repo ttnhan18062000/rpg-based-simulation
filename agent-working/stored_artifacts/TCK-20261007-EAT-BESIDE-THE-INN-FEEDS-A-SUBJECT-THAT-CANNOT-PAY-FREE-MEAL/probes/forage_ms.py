@@ -51,6 +51,7 @@ def score(self, entity, st):
                 WALK.append(abs(entity.navigation.position[0] - r.target_pos[0]) + abs(entity.navigation.position[1] - r.target_pos[1]))
     return r
 EatScorer.score = score
+ENTERED = {}; FREGIONS = set(); recov = 0; deplete = 0
 dead = {}; GOLD = {}; R = {}; prev_charges = None; food_ids = set(); dry_ticks = 0; dry_trans = 0; was_dry = False; harvested = 0; regen = 0
 def is_food(n):
     try:
@@ -69,7 +70,16 @@ try:
                     d = c - prev_charges.get(i, c)
                     if d < 0: harvested += -d
                     elif d > 0: regen += d
+                for i, c in cur.items():
+                    p = prev_charges.get(i, c)
+                    if p > 0 and c == 0: deplete += 1
+                    if p == 0 and c > 0: recov += 1
             prev_charges = cur
+            if not FREGIONS:
+                from src.engine.legality import LegalityServiceV2
+                for n in fn.values():
+                    r_ = LegalityServiceV2.get_region_for_position(n.position, st)
+                    if r_ is not None: FREGIONS.add(r_.id)
             dry = all(c == 0 for c in cur.values())
             dry_ticks += dry; dry_trans += (dry and not was_dry); was_dry = dry
         for eid, (t, h0, g0, carried) in list(PEND.items()):
@@ -81,6 +91,12 @@ try:
                     C["eat_effect.dropped" if dropped else "eat_effect.none"] += 1
                     if carried: C["carried_meals_delivered" if (food_carried(e) < carried) else "carried_meal_item_kept"] += 1
                 del PEND[eid]
+        if FREGIONS:
+            from src.engine.legality import LegalityServiceV2
+            for e in st.entities.values():
+                if e.id not in dead and e.combat.alive and e.lifecycle.active and e.id not in ENTERED:
+                    r_ = LegalityServiceV2.get_region_for_position(e.navigation.position, st)
+                    if r_ is not None and r_.id in FREGIONS: ENTERED[e.id] = e.inventory.gold
         for e in st.entities.values():
             if e.id not in dead and e.combat.alive and e.lifecycle.active: GOLD[e.id] = e.inventory.gold
             if e.id not in dead and not (e.combat.alive and e.lifecycle.active):
@@ -97,6 +113,10 @@ dig = hashlib.sha256(json.dumps(sorted((e.id, round(e.navigation.position[0], 3)
 starved = [i for i, c in dead.items() if c == "STARVATION"]
 out = dict(R, starved_broke=sum(1 for i in starved if GOLD.get(i, 0) < 5), starved_could_pay=sum(1 for i in starved if GOLD.get(i, 0) >= 5), deaths=len(dead), digest=dig,
            food_harvested=harvested, food_regrown=regen, food_carried_end=carried_end, food_carried_end_alive=carried_alive, food_nodes=len([1 for n in end.resource_nodes.values() if is_food(n)]),
+           food_depletions=deplete, food_recoveries=recov, entered_food_region=len(ENTERED), entered_broke=sum(1 for g in ENTERED.values() if g < 5),
+           hazard_deaths_after_entering=sum(1 for i, c in dead.items() if c == 'HAZARD' and i in ENTERED),
+           hazard_deaths_after_entering_broke=sum(1 for i, c in dead.items() if c == 'HAZARD' and i in ENTERED and ENTERED[i] < 5),
+           starved_after_entering=sum(1 for i, c in dead.items() if c == 'STARVATION' and i in ENTERED),
            node_dry_ticks=dry_ticks, node_dry_transitions=dry_trans, walk_median=(statistics.median(WALK) if WALK else None), walk_n=len(WALK),
            **{f"ent.{a}": len(v) for a, v in NA_ENT.items()}, **dict(C), **{f"d_{c}": n for c, n in collections.Counter(dead.values()).items()})
 print("MS", json.dumps(dict(world=WORLD, seed=SEED, label=LABEL, **out)))

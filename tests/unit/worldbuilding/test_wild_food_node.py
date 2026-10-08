@@ -100,6 +100,8 @@ def test_a_stripped_node_regrows_and_reports_recovery_through_the_ecology_proces
 
 WORLDS_WITH_RESOLVED_SPEC = sorted(p.parent.name for p in __import__("pathlib").Path("data/worlds").glob("*/resolved"))
 SETTLEMENT_KINDS = {"TOWN"}
+WILD_FOOD_REGIONS = {"near_forest", "sacred_grove", "swamp_border_territory"}  # HIGH, HIGH, LOWER; the frontier village biome holds none
+CHARGES_BY_REGION = {"near_forest": 10, "sacred_grove": 10, "swamp_border_territory": 8}
 
 
 @pytest.mark.parametrize("world", WORLDS_WITH_RESOLVED_SPEC)
@@ -109,7 +111,8 @@ def test_no_food_node_stands_on_a_tile_a_settlement_region_owns(world, seed):
     for node in _food_nodes(state):
         owner = LegalityServiceV2.get_region_for_position(node.position, state)
         assert owner is not None and owner.kind not in SETTLEMENT_KINDS, (world, seed, node.position, owner and owner.id)
-        assert owner.id == "near_forest"
+        assert owner.id in WILD_FOOD_REGIONS
+        assert node.max_charges == CHARGES_BY_REGION[owner.id]
 
 
 @pytest.mark.parametrize("world", ["frontier_living_world", "wilderness_survival", "sandbox_world"])
