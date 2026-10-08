@@ -13,6 +13,7 @@ from src.engine.biological_needs import need_rates, undeclared_need_kinds
 from src.engine.domain.core_actions import CoreActions, ROUGH_REST_SLEEP_DEBT_RECOVERY
 from src.engine.need_paths import need_path_report
 from src.engine.service_reach import service_tile
+from src.engine.service_prices import EAT_PRICE_GOLD, INN_MEAL_HUNGER
 from src.engine.town_resolution import TownResolutionSystem
 
 
@@ -103,8 +104,10 @@ def test_eat_is_served_by_the_inn_when_a_home_is_nearer_in_reach():
     task = TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "EAT", "target_id": 1})
     update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, task=task)})
     ent_upd = TownResolutionSystem.resolve(state, update).entity_updates[1]
-    assert ent_upd.biological.hunger_delta == -20.0
-    assert [t.transfer_kind for t in ent_upd.resource_transfers] == ["EAT"]
+    (meal,) = ent_upd.resource_transfers
+    assert meal.transfer_kind == "EAT" and meal.gold_delta == -EAT_PRICE_GOLD
+    assert meal.biological_upd.hunger_delta == -INN_MEAL_HUNGER  # delivered only by the resolver's payment
+    assert ent_upd.biological is None
 
 
 def test_rough_rest_recovers_sleep_debt_without_a_building():
@@ -125,8 +128,10 @@ def test_inn_meal_is_served_to_a_subject_beside_the_inn():
     update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, task=task)})
     out = TownResolutionSystem.resolve(state, update)
     ent_upd = out.entity_updates[1]
-    assert ent_upd.biological.hunger_delta == -20.0
-    assert [t.transfer_kind for t in ent_upd.resource_transfers] == ["EAT"]
+    (meal,) = ent_upd.resource_transfers
+    assert meal.transfer_kind == "EAT" and meal.gold_delta == -EAT_PRICE_GOLD
+    assert meal.biological_upd.hunger_delta == -INN_MEAL_HUNGER
+    assert ent_upd.biological is None
 
 
 def test_eat_scorer_targets_the_inn():
