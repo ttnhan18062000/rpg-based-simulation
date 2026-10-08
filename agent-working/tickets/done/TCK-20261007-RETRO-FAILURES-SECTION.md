@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261007-RETRO-FAILURES-SECTION
-phase: open
+phase: done
 date: 2026-10-07
 tags: [agent-monitoring]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring]
 Retro Failures section: non-DONE runs, failed/blocked events, recurring failures
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -43,13 +43,13 @@ Add a section to the retro listing every non-DONE run and every failed/blocked e
 - Duplicating the Gates section (unresolved gate verdicts)
 
 ## Acceptance Criteria
-- [ ] A week containing a run with final_status BLOCKED renders a Failures section listing that run_id and status
-- [ ] Every failed/blocked event appears with its one-line summary, grouped by agent then reason_code, with a per-group count
-- [ ] A test failing in 2 or more distinct tickets is listed once with count N and the ticket IDs; a single occurrence is not flagged recurring
-- [ ] A week with no non-DONE runs or failed/blocked events renders an explicit zero line or is omitted, consistent with sibling sections
-- [ ] An exception while building the section returns None and the retro still writes
-- [ ] Retro generation leaves shard files unchanged (test)
-- [ ] Tests added alongside tests/tools/test_generate_retro.py pattern
+- [x] A week containing a run with final_status BLOCKED renders a Failures section listing that run_id and status
+- [x] Every failed/blocked event appears with its one-line summary, grouped by agent then reason_code, with a per-group count
+- [x] A test failing in 2 or more distinct tickets is listed once with count N and the ticket IDs; a single occurrence is not flagged recurring
+- [x] A week with no non-DONE runs or failed/blocked events renders an explicit zero line or is omitted, consistent with sibling sections
+- [x] An exception while building the section returns None and the retro still writes
+- [x] Retro generation leaves shard files unchanged (test)
+- [x] Tests added alongside tests/tools/test_generate_retro.py pattern
 
 ## Related Tickets
 - TCK-20260706-MONITORING-REASON-CODE
@@ -83,9 +83,13 @@ None.
 - Layer chosen as observability (agent monitoring/retro tooling).
 
 ## Implementation Notes
+New sibling `tools/agent-monitoring/retro_failures.py` (`render_section(runs, events, is_failed_run, agent_of, resolve_status)`), wired from `generate_retro.py` through `_failures_section` (try/except returning None, like `_gates_section`) and a `failures=` keyword on `generate()`. It renders non-DONE runs (the existing `_is_gate_fail` on deduped latest-per-execution runs), every failed/blocked event grouped by `_normalize_agent` then `reason_code` (`unspecified` for older events) with counts and a one-line capped summary, and the tests named in two or more distinct tickets (node ids first, bare `test_*` only when the summary has no node id; names are parsed from summaries and the heading says so). The section sits right after "Gate Failure Breakdown" (planner's placement ruling); with no failures it renders an explicit zero line. Read-only. The predicates are passed in so the module never imports `generate_retro` (cycle).
 
 ## Test Summary
+`pytest tests/tools/test_retro_failures.py test_generate_retro.py test_path_report.py test_gate_ledger.py`: 236 passed (10 new in test_retro_failures.py: BLOCKED run listed, grouping with counts, recurring test across tickets, same ticket twice not recurring, bare vs node id, zero line, one-line cap, exception returns None and the retro still writes, section order, shards unchanged). The existing golden report test is unchanged (no section passed means no change).
 
 ## Files Changed
+tools/agent-monitoring/retro_failures.py, tools/agent-monitoring/generate_retro.py, tests/tools/test_retro_failures.py
 
 ## Completion Summary
+Failures section implemented and wired; all acceptance criteria met. Known gap (stated in the section itself): test names come from free-text summaries, so a test can be missed or two same-named tests merged; the known-failing-test baseline stays an owner decision.
