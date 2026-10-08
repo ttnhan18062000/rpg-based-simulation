@@ -1,0 +1,16 @@
+# Icon item families (TCK-20261007-VISUAL-ASSETS-ICON-V2-FAMILY-DECISIONS). Decided by the user, 2026-10-07, by blocking question: SIX families, one per first category.
+# The app's `item_type` is the first `categories` tag of each item (src/api/presenters/metadata_presenter.py); this file maps every such value to exactly one icon family.
+# A first category that is not listed here is NOT silently given a family: tests/visual_assets/test_icon_item_families.py fails on it, so a new category forces a decision.
+# Measured from the loaded catalog on 2026-10-07 (37 items): material 19, weapon 10, trinket 2, armor 2, tool 2, consumable 2.
+# Draw only: nothing in the app shows an item icon (item_type appears only as text), and wiring is out of scope for the icon set v2 batch.
+record_type: icon_item_families
+schema_version: 1
+decided: {by: user, date: "2026-10-07", question: "6 families one per category, or 8 with material split by tag", answer: "6 families, one per category"}
+# first category (the app's item_type) -> icon family
+families:
+  weapon: weapon
+  armor: armor
+  trinket: trinket
+  tool: tool
+  consumable: consumable
+  material: material

@@ -1,0 +1,4 @@
+Mutants against visual_assets/catalog/definitions/visual_keys.yaml (tests/visual_assets/test_icon_v2_keys.py and store/unit/test_registry.py run after each; file restored and diffed identical):
+M1 icon.item.tool key dropped ............ caught: the v2 keys test, the six-families test, the 5/5/3/3/6 test, the no-adoption test, the registry pin
+M2 icon.rarity.rare declares a variant axis ... FIRST ATTEMPT INVALID (an extra `default` field made the registry loader reject the file, so many tests failed for the wrong reason); redone with a valid axis `{name: state, values: [a, b]}`: the registry loads, and ONLY the axis-free assertions fail (test_icon_v2_keys.py line 20 and the registry pin)
+M3 the Store description loses its fallback text ... caught: the "states fallback" assertion of both guards
