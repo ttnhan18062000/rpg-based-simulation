@@ -63,7 +63,7 @@ check that each key has its alternative). External research (W3C WAI images tuto
 
 ## Assumptions / Open Questions
 - Owner approved the 35 labels by blocking question on 2026-10-09: "Approve the list as written".
-- `icon.marker.enemy_camp`'s registry prose was truncated at 256 characters; its structured fallback follows the other markers (assumption, in plan.md).
+- `icon.marker.enemy_camp`'s registry prose was truncated at 256 characters; its structured fallback follows the other markers (verified against `frontend/src/components/GameCanvas.tsx:79`, which draws `⚔` in `#f87171`; checked by the planner and by me).
 - No release candidate was assembled (none asked for); rc-0007 keeps its older registry hash and the store's refusal for a stale candidate is unchanged.
 
 ## Implementation Notes

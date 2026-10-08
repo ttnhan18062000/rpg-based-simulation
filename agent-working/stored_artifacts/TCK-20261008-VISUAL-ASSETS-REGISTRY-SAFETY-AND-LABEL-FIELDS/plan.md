@@ -40,6 +40,6 @@ Label list (35 icon keys, the plate carries none): "Approve the list as written"
 - The record fields are OPTIONAL at the model level (so synthetic fixture keys and old records still parse) and REQUIRED by the registry loader for every non-fixture key; `variant_axes` is rejected for every key including fixtures. The plan said required fields; this keeps the record contract stable.
 - `fallback_problems` (W06.3) is used by `assemble_release` AND `export_runtime` (activation time), both refusing with `fallback_missing`.
 - The contract fixture `visual_keys.fixture.yaml` lost its axis (the loader now refuses axes); the JSON record fixture keeps it (model-level).
-- `icon.marker.enemy_camp`: the registry prose was cut off at the 256-character limit ("today's emoji label (swords,"), so its structured fallback is `glyph: emoji label (swords)`, `text: the location name as hover text`, modelled on the other markers; an assumption, noted here.
+- `icon.marker.enemy_camp`: the registry prose was cut off at the 256-character limit ("today's emoji label (swords,"), so its structured fallback is `glyph: emoji label (swords)`, `text: the location name as hover text`, modelled on the other markers; verified against `frontend/src/components/GameCanvas.tsx:79` (`enemy_camp: { label: '⚔', color: '#f87171' }`), not an assumption.
 - ADR row is D23 (D22 is reserved for child 4).
 
