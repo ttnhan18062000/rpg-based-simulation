@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-08"
+last_verified: "2026-10-09"
 ---
 
 # Scenario Bank: Objects / Ownership / Resources / Economy (Batch 08)
@@ -263,27 +263,33 @@ an acceptable substitute; production remains valid.
 
 ## ME-S19 — A broke worker sells what it gathered and buys a meal (EXCH-02, decision 34) (added 2026-10-08)
 
-A worker with no money sells food it gathered to the shop, the shop pays out of its own purse,
-and the worker spends the coins on a meal.
+A worker with no money chooses to sell goods it gathered (wood or ore, not food) to the shop,
+the shop pays out of its own purse, and the worker spends the coins on a meal.
 
 - **Rules invoked:** EXCH-02 (earn by selling; every coin comes out of the payer's own purse),
   EXCH-01 (price, through `MarketSystem` per Bible 03), SURV-06 (buying is a way to eat).
 - **Kernel spec (`mechanic_scenario`, `tests/mechanic_scenarios/`, through
   `tests/helpers/scenario.py`).** Two arms, differing only in the shop's purse:
   - **Staging:** a compiled world with a town that has a shop and an inn, both within reach.
-    Worker W is a people-kind with 0 gold, carrying several units of a sellable gathered food,
-    and hungry enough that decision 27's pull applies. The free meal is removed in this staging,
+    Worker W is a people-kind with 0 gold and no food, carrying enough of a non-food gathered
+    good (wood or iron ore) for its sale to pay for one inn meal, and hungry enough that decision
+    27's pull applies. The free meal is removed in this staging,
     as in the full LB-S17. There are no hostiles.
-  - **Main arm (the shop's purse holds enough to buy):** W sells at the shop. W's gold rises by
-    the sale price and the shop's purse falls by the same amount. W's carried food falls by the
-    units sold and the shop's stock rises by them. W then buys a meal at the inn: W's gold falls
+  - **Main arm (the shop's purse holds enough to buy):** W chooses to sell at the shop (a decided
+    act, AGENCY-01, not an automatic sale on standing nearby). W's gold rises by the sale price
+    and the shop's purse falls by the same amount. W's carried goods fall by the units sold and
+    the shop's stock rises by them. W then buys a meal at the inn: W's gold falls
     by the meal price, the inn's purse rises by it, and W's hunger falls. Conservation holds
-    across the run: total coins and total food units, counting what has been eaten, are
-    unchanged.
+    across the run: total coins, total goods and total food units, counting what has been eaten,
+    are unchanged.
   - **Control arm (the shop's purse is empty):** the sale does not happen. W's gold stays 0, W
-    keeps its food, and no inn meal is bought. W may still eat its carried food, but that is not
-    an inn meal.
+    keeps its goods, and no inn meal is bought.
   - **Why the control:** it proves the coins came out of the shop's purse, not from nowhere.
+  - **Why not food (revised 2026-10-09):** at `MarketSystem`'s sell price a berry earns 1 gold
+    while an inn meal costs 5, and a berry eaten removes 30 hunger. Selling food to buy food is
+    a bad trade that a sensible worker would not make, so the scenario sells a non-food good.
+    Gathered food is sold only as surplus (the seller keeps at least one meal's worth). That rule
+    is Lane B's to test, not this scenario's.
 - **Result (2026-10-08): revealed missing implementation on main.** No worker is seen selling,
   and every worker starts with 0 gold (EXCH-02's evidence). Expected to be **covered** with Lane
   B's batch 2.

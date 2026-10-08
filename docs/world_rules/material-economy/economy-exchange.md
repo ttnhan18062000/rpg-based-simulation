@@ -118,8 +118,8 @@ so earning is the only way to eat present in every one of them. **CONFLICTING fo
 and for rewards** (decisions 37 and 38): no purse but a faction treasury holds coin at compile,
 and kill and quest rewards are minted.
 
-**Scenarios:** [ME-S19](../scenarios/material-economy-batch-08.md#me-s19) (sell gathered food,
-the shop's purse pays, buy a meal; an empty-purse control) and
+**Scenarios:** [ME-S19](../scenarios/material-economy-batch-08.md#me-s19) (sell gathered
+wood or ore, the shop's purse pays, buy a meal; an empty-purse control) and
 [ME-S20](../scenarios/material-economy-batch-08.md#me-s20) (an inn shift paid from the inn's
 purse, then a meal; an empty-purse control). Kernel specs, owed as tests with Lane B's batch 2.
 
