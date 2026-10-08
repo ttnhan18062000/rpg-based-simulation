@@ -96,9 +96,9 @@ Catalog has found.
   staging for other needs where it fits. It is a code ticket after Lane B's batch.
 - **Evidence: CONFLICTING** until that ticket lands.
 
-**Scenarios:** [LB-S08](../scenarios/life-body-batch-05.md#lb-s08) (survival pressure). One more
-is owed: a person past the starvation line is weaker in a fight within hours, and still alive a
-day later.
+**Scenarios:** [LB-S08](../scenarios/life-body-batch-05.md#lb-s08) (survival pressure).  Staged starvation:
+[LB-S18](../scenarios/life-body-batch-05.md#lb-s18) (weakened within hours, dies at 2 to 3 days;
+a control that eats), a kernel spec owed with Lane A's decision-36 ticket.
 
 ---
 

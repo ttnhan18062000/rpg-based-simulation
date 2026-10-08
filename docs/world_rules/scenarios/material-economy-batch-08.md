@@ -4,12 +4,12 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-08"
 ---
 
 # Scenario Bank: Objects / Ownership / Resources / Economy (Batch 08)
 
-**Purpose/scope.** Eighteen scenarios used to pressure-test the Objects/Material Culture,
+**Purpose/scope.** Twenty scenarios (two added 2026-10-08 for EXCH-02) used to pressure-test the Objects/Material Culture,
 Ownership/Possession, Resources/Production, and Economy/Exchange rule families in
 `material-economy/objects-material-culture.md`, `ownership-possession.md`,
 `resources-production.md`, and `economy-exchange.md`, per `tmp/world-rule-batch-8-ext-ai.md`
@@ -259,6 +259,56 @@ an acceptable substitute; production remains valid.
   formulation (which would have forbidden this trajectory outright) and confirms the revised
   Rule permits it cleanly; this repository simply has not yet authored a recipe that exercises
   the permission.
+
+
+## ME-S19 — A broke worker sells what it gathered and buys a meal (EXCH-02, decision 34) (added 2026-10-08)
+
+A worker with no money sells food it gathered to the shop, the shop pays out of its own purse,
+and the worker spends the coins on a meal.
+
+- **Rules invoked:** EXCH-02 (earn by selling; every coin comes out of the payer's own purse),
+  EXCH-01 (price, through `MarketSystem` per Bible 03), SURV-06 (buying is a way to eat).
+- **Kernel spec (`mechanic_scenario`, `tests/mechanic_scenarios/`, through
+  `tests/helpers/scenario.py`).** Two arms, differing only in the shop's purse:
+  - **Staging:** a compiled world with a town that has a shop and an inn, both within reach.
+    Worker W is a people-kind with 0 gold, carrying several units of a sellable gathered food,
+    and hungry enough that decision 27's pull applies. The free meal is removed in this staging,
+    as in the full LB-S17. There are no hostiles.
+  - **Main arm (the shop's purse holds enough to buy):** W sells at the shop. W's gold rises by
+    the sale price and the shop's purse falls by the same amount. W's carried food falls by the
+    units sold and the shop's stock rises by them. W then buys a meal at the inn: W's gold falls
+    by the meal price, the inn's purse rises by it, and W's hunger falls. Conservation holds
+    across the run: total coins and total food units, counting what has been eaten, are
+    unchanged.
+  - **Control arm (the shop's purse is empty):** the sale does not happen. W's gold stays 0, W
+    keeps its food, and no inn meal is bought. W may still eat its carried food, but that is not
+    an inn meal.
+  - **Why the control:** it proves the coins came out of the shop's purse, not from nowhere.
+- **Result (2026-10-08): revealed missing implementation on main.** No worker is seen selling,
+  and every worker starts with 0 gold (EXCH-02's evidence). Expected to be **covered** with Lane
+  B's batch 2.
+
+## ME-S20 — A broke worker works a shift at the inn, is paid from the inn's purse, and eats (EXCH-02, decision 34) (added 2026-10-08)
+
+A worker with no money and nothing to sell works a shift at the inn for a wage paid out of the
+inn's purse, then buys a meal.
+
+- **Rules invoked:** EXCH-02 (earn by a wage; the employer's purse pays), SURV-06.
+- **Kernel spec (`mechanic_scenario`).** Two arms, differing only in the inn's purse:
+  - **Staging:** a compiled town with an inn that employs people. Worker W is a people-kind with
+    0 gold and nothing to sell, hungry, with no hostiles and the free meal removed.
+  - **Main arm (the inn's purse holds at least one wage):** W works a shift. Afterwards W's gold
+    has risen by the wage, the inn's purse has fallen by the same amount, and time has passed
+    for the shift. W then buys a meal, its hunger falls, and the meal price returns to the inn's
+    purse. Total coins are conserved.
+  - **Control arm (the inn's purse is empty):** no wage is paid. Either W does not work, or it
+    works unpaid and no coin appears. W's gold stays 0 and no meal is bought.
+  - **Why the control:** it proves a wage is a transfer from a real purse, not a payout that
+    appears from nowhere.
+  - **Engineering, not observable:** the wage amount, the shift length, and how many people the
+    inn employs.
+- **Result (2026-10-08): revealed missing implementation on main.** No paid-work concept exists.
+  Expected to be **covered** once Lane B's wage shape lands.
 
 ---
 

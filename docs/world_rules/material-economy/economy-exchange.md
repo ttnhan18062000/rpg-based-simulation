@@ -92,9 +92,10 @@ is seen selling. Decision 27's earn opening step is a stub, and there is no paid
 Quest rewards exist for adventurers. Shops, inns and a smithy exist in all three measured worlds,
 so earning is the only way to eat present in every one of them.
 
-**Scenarios:** none traced yet. Two are owed when implemented: a broke worker sells gathered
-food at the shop, the shop's purse falls by the price, and the worker buys a meal with it; a
-broke worker works a shift at the inn, is paid from the inn's purse, and eats.
+**Scenarios:** [ME-S19](../scenarios/material-economy-batch-08.md#me-s19) (sell gathered food,
+the shop's purse pays, buy a meal; an empty-purse control) and
+[ME-S20](../scenarios/material-economy-batch-08.md#me-s20) (an inn shift paid from the inn's
+purse, then a meal; an empty-purse control). Kernel specs, owed as tests with Lane B's batch 2.
 
 ---
 

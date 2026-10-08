@@ -9,7 +9,7 @@ last_verified: "2026-10-08"
 
 # Scenario Bank: Life / Body / Survival / Ecology (Batch 05)
 
-**Purpose/scope.** Seventeen scenarios (one added 2026-10-08 for SURV-06's wild food) used to pressure-test the Lifecycle, Body/Condition,
+**Purpose/scope.** Eighteen scenarios (LB-S17 and LB-S18 added 2026-10-08) used to pressure-test the Lifecycle, Body/Condition,
 Survival Needs, and Ecology/Population rule families in `life-body/lifecycle.md`,
 `life-body/body-condition.md`, `life-body/survival-needs.md`, and
 `life-body/ecology-population.md`, per `tmp/world-rule-batch-5-ext-ai.md`. Covers all sixteen
@@ -235,6 +235,37 @@ land holds no wild food, the same worker cannot forage, and nothing feeds it for
   food by biome. The one food node in each of the three measured worlds sits on town land, and
   EAT consumes no carried food (SURV-06's evidence). Expected to be **covered** once decision
   27's PR (Lane B) lands and this spec passes at kernel level.
+
+
+## LB-S18 — Starvation weakens first and kills over days (SURV-02 amendment, decision 36) (added 2026-10-08)
+
+A person with no food crosses the starvation line, becomes weaker within hours, starts losing
+health only later, and dies after about two to three days. A person who eats does none of this.
+
+- **Rules invoked:** SURV-02 (crossing a threshold has real consequences; decision 36 makes
+  them staged), SURV-07 (the pull to eat), Bible 05 §1 (2,400 ticks = 1 day).
+- **Kernel spec (`mechanic_scenario`).** Two arms, differing only in access to food:
+  - **Staging:** a compiled world with one people-kind subject S, a non-combatant, at full HP and
+    full stats, with hunger just below the starvation line and no hostiles or ambient hazard.
+    The window runs to at least 3.5 days (8,400 ticks) after S crosses the line.
+  - **Main arm (no food reachable: no inn, no wild food, nothing carried, no money):**
+    - S crosses the line.
+    - **Stage 1, weakened:** within the first in-game hours past the line, S's capacity is
+      degraded (slower recovery, a lower combat-effectiveness term), with no HP loss yet, or HP
+      loss well below today's 2 per tick.
+    - **Stage 2, starving:** later, S loses HP slowly.
+    - **Death:** S dies of starvation between 2 and 3 days after crossing the line. It is alive
+      at 1 day and dead by 3.5 days.
+    - Each stage change is read from authoritative state.
+  - **Control arm (an inn within reach, with money or a free meal):** S eats before or soon after
+    the line, its hunger falls back below it, any weakening clears, and S is alive at the end.
+  - **Why the control:** it proves the weakening and the death come from the unmet need, not
+    from the staging.
+  - **Engineering, not observable:** the exact stage thresholds, the effects' sizes and the HP
+    rate. The spec checks the stage order and the 2-to-3-day window only.
+- **Result (2026-10-08): revealed contradiction on main.** `hunger >= 95.0` costs 2 HP per tick
+  (`src/engine/apply.py`), so S dies about 50 ticks after the line (SURV-02's amendment
+  evidence). Expected to be **covered** with Lane A's decision-36 ticket.
 
 ---
 
