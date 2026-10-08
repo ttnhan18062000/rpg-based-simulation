@@ -272,3 +272,22 @@ Two fixes, your choice:
 Check: `uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml` reports 17 kept, 0 broken. If it is still broken at the flip, the flip ticket either baselines the pair by hand (`codebase/structure/import_layers_baseline.txt`) with the owner's yes, or waits.
 
 **Resolved 2026-10-08.** `rpg-planner` took option 2 (a `Protocol` in core; replies on PR #416) and fixed it in #420 (`753f98ea9`, `TCK-20261008-CORE-STRATEGIC-IMPORTS-AI-GOALS-FOR-A-TYPE-HINT`), together with four more layer breaks the same check found (`src/engine/tactical_rest.py` importing `src.ai.goals.need_pull`, from #414, and three from #412, whose KNOW-04 seeding moved to `src/content/common_knowledge_seed.py`). `codebase-planner` re-checked on `origin/main` `28e304cbe`: `lint-imports` reports 17 kept, 0 broken, and #420 changed no file under `codebase/` (no `ignore_imports` or baseline entry added). Nothing is left for the import-linter flip.
+
+## Update 2026-10-08: the backend image may not find repo files that src/ reads by relative path
+
+**From:** `codebase-planner`, at `origin/main` `c1bf7a019`. **Asked:** decide whether the image should carry these files or the code should stop reading them by relative path; nothing is broken in CI, which does not run the image.
+
+The repo-root cleanup (#447, #449) rebuilt the backend image (`docker/backend.Dockerfile`, from `uv.lock`, Python 3.13); its runtime stage copies only `src/` and `data/`. Some `src/` modules read files outside those two directories through `Path(__file__)` parents, so in the image the target does not exist. Found by the codebase implementer; checked on that head with `git grep` and one image run:
+
+| Module (file:line) | Reads | In the image? |
+|---|---|---|
+| `src/engine/capability.py:8` (`parent.parent.parent`) | `docs/engine/capability_registry.yaml`, loaded by `CapabilityRegistry()` / `get_registry()` | no; **run: `FileNotFoundError: /app/docs/engine/capability_registry.yaml`** (no `src/` caller of `get_registry()` on this head, so the serve path does not hit it today) |
+| `src/rendering/grading.py:33` (`parents[2]`) | `config/rendering/grade_thresholds.toml` (default path of `load_grade_config`) | no; **run: `/app/config/rendering/grade_thresholds.toml` does not exist** |
+| `src/content/validator.py:82` (`parents[2]`) | repo test files named in the content usage matrix (`evidence_tests`), existence and `def`/`class` lookups | no `tests/` in the image (a dev-time validator) |
+| `src/api/agent_ops_dashboard/ingest.py:27,86` and `serve.py:26` (`parents[3]`) | `tools/`, `tools/agent-monitoring/` (put on `sys.path`) and `dashboard-frontend/dist` | no (agent-ops dashboard) |
+| `src/lab/workflows/*.py` (eight files, `parent.parent.parent`) | the repo root as `workspace_root` for lab workflows (docs, `agent-working`, data) | no (lab CLI, not the server) |
+| `src/engine/kernel.py:248` and `src/simulation_quality/worker.py:67` (cwd-relative, not `__file__`) | `config/simulation_quality/*.yaml` | `config/` is not copied |
+
+`src/worldbuilding/compiler.py:111` reads `data/content/spawn_tables.yaml`; that file is in the image (run: exists). The image run was one build, then `CapabilityRegistry()` and `Path.exists()` checks in a throwaway container; nothing else was started.
+
+Options (yours): (1) the image also copies the files it needs (for example `docs/engine/capability_registry.yaml` and `config/`), a one-line Dockerfile change codebase can make on your yes; (2) move such runtime data under `data/` or `src/` (package data) and read it via `importlib.resources`; (3) accept: the image is not a supported runtime today (no CI builds it).
