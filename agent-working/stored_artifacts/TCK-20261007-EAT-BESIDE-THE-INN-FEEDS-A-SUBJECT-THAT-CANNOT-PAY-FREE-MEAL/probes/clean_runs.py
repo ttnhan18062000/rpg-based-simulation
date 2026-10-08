@@ -1,6 +1,6 @@
 import os, subprocess, sys
 root = sys.argv[1]
-py = "/mnt/data/Working/rpg-based-simulation/.claude/worktrees/behavioral-5k-impl2/.venv/bin/python"
+py = "/mnt/data/Working/rpg-based-simulation/.venv/bin/python"
 names = sorted(n for n in os.listdir(os.path.join(root, "data/runs")) if n.startswith("run_"))
 cmd = [py, "tools/gate_checks/done_checker_static.py", "--clean-data-runs"]
 for n in names:
