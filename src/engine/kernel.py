@@ -13,11 +13,12 @@ from pathlib import Path
 
 from src.engine.phases import get_authoritative_phases
 from src.core.updates import StateUpdate, EntityUpdate
-from src.core.governance import PressureSignals, RuntimeMode
+from src.core.governance import RuntimeMode
 from src.core.diagnostic import TraceEvent
 from src.core.lifecycle import LifecycleOutcome, ShutdownResult
 from src.core.enums import Domain
 
+from src.engine.signal_source import HostReadings, MeasuredCosts, select_signal_source, signal_contract_record
 from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
 
@@ -120,7 +121,6 @@ class Kernel:
         from src.engine.scheduler import DeterministicScheduler as DefaultScheduler
         from src.engine.governor import ResourceGovernor as DefaultGovernor
         from src.engine.runtime_status import RuntimeStatus as DefaultStatus
-        from src.engine.replay_manager import ReplayManager as DefaultReplayManager
         from src.engine.observability import SignalCollector
         from src.engine.worker_manager import WorkerManager
         
@@ -150,31 +150,9 @@ class Kernel:
             from src.observability.reporting.artifact_repository import RunArtifactRepository, RunManifest
             self._artifact_repo = RunArtifactRepository()
             
-            # Load metadata from provenance manifest if available
-            prov_manifest_data = None
-            if provenance_manifest_path and os.path.exists(provenance_manifest_path):
-                try:
-                    with open(provenance_manifest_path, "r", encoding="utf-8") as f:
-                        prov_manifest_data = json.load(f)
-                except (OSError, ValueError) as prov_err:
-                    # ValueError covers json.JSONDecodeError. A missing/corrupt manifest degrades the
-                    # RunManifest's fingerprints but must not abort the run, so log it instead of hiding it.
-                    logger.warning(
-                        "Could not load provenance manifest %s (non-fatal): %s",
-                        provenance_manifest_path, prov_err,
-                    )
-
-            catalog_fp = catalog_fingerprint
-            if not catalog_fp and prov_manifest_data:
-                catalog_fp = prov_manifest_data.get("catalog_fingerprint")
-            
-            module_fps = module_fingerprints
-            if not module_fps and prov_manifest_data:
-                module_fps = prov_manifest_data.get("module_fingerprints")
-
-            from src.core.registries import runtime_content_source as registries_source, catalog_fingerprint as registries_fingerprint
-            actual_content_source = runtime_content_source or registries_source
-            actual_catalog_fp = catalog_fp or registries_fingerprint
+            actual_content_source, actual_catalog_fp, module_fps = self._resolve_manifest_fingerprints(
+                provenance_manifest_path, catalog_fingerprint, module_fingerprints, runtime_content_source,
+            )
 
             # Create standard manifest
             manifest = RunManifest(
@@ -196,21 +174,13 @@ class Kernel:
                 runtime_content_source=actual_content_source,
                 catalog_fingerprint=actual_catalog_fp,
                 module_fingerprints=module_fps,
-                state_hash=None
+                state_hash=None,
+                signal_contract=signal_contract_record(profile, self._audit_mode),
             )
             self._artifact_repo.create_run(self._run_id, manifest, overwrite=True)
             self._artifact_repo.update_manifest(self._run_id, status="RUNNING")
 
-        if replay is None:
-            import os
-            run_dir = Path(self._artifact_repo.resolve_path(self._run_id, "manifest")).parent if self._artifact_repo else Path(f"data/runs/{self._run_id}")
-            self._replay = DefaultReplayManager(
-                run_dir=run_dir,
-                profile_name=profile.name,
-                buffer_capacity_kb=profile.max_replay_buffer_kb
-            )
-        else:
-            self._replay = replay
+        self._replay = self._init_replay(profile, replay, self._run_id)
 
         if executor:
             self._executor = executor
@@ -373,6 +343,55 @@ class Kernel:
         if flags:
              ProfileValidator.validate_flags(flags, self._profile)
 
+    @staticmethod
+    def _resolve_manifest_fingerprints(
+        provenance_manifest_path: Optional[str],
+        catalog_fingerprint: Optional[str],
+        module_fingerprints: Optional[Dict[str, str]],
+        runtime_content_source: Optional[str],
+    ) -> tuple[Optional[str], Optional[str], Optional[Dict[str, str]]]:
+        """Content source, catalog fingerprint and module fingerprints for the run manifest.
+
+        Explicit arguments win, then the provenance manifest when it loads, then the registries.
+        """
+        import os
+        prov_manifest_data = None
+        if provenance_manifest_path and os.path.exists(provenance_manifest_path):
+            try:
+                with open(provenance_manifest_path, "r", encoding="utf-8") as f:
+                    prov_manifest_data = json.load(f)
+            except (OSError, ValueError) as prov_err:
+                # ValueError covers json.JSONDecodeError. A missing/corrupt manifest degrades the
+                # RunManifest's fingerprints but must not abort the run, so log it instead of hiding it.
+                logger.warning(
+                    "Could not load provenance manifest %s (non-fatal): %s",
+                    provenance_manifest_path, prov_err,
+                )
+
+        catalog_fp = catalog_fingerprint
+        if not catalog_fp and prov_manifest_data:
+            catalog_fp = prov_manifest_data.get("catalog_fingerprint")
+
+        module_fps = module_fingerprints
+        if not module_fps and prov_manifest_data:
+            module_fps = prov_manifest_data.get("module_fingerprints")
+
+        from src.core.registries import runtime_content_source as registries_source, catalog_fingerprint as registries_fingerprint
+        return runtime_content_source or registries_source, catalog_fp or registries_fingerprint, module_fps
+
+    def _init_replay(self, profile: RuntimeProfile, replay: Optional[ReplayManager], run_id: str) -> ReplayManager:
+        """The injected replay manager, or a default one writing next to the run's manifest."""
+        if replay is not None:
+            return replay
+        from src.engine.replay_manager import ReplayManager as DefaultReplayManager
+        run_dir = Path(self._artifact_repo.resolve_path(run_id, "manifest")).parent if self._artifact_repo else Path(f"data/runs/{run_id}")
+        return DefaultReplayManager(
+            run_dir=run_dir,
+            profile_name=profile.name,
+            buffer_capacity_kb=profile.max_replay_buffer_kb,
+            signal_contract=signal_contract_record(profile, self._audit_mode),
+        )
+
     def tick_once(self) -> None:
         """
         Main simulation loop.
@@ -395,6 +414,7 @@ class Kernel:
         t0 = time.perf_counter_ns()
         self._start_perf_ts = t0
         tick_no = self._state.tick  # advancement moves state.tick on; the overrun belongs to this tick
+        self._phase_costs.clear()  # a key this tick does not record must not carry last tick's value into the sum
         self._phase_init()
         t1 = time.perf_counter_ns()
         self._phase_costs["init"] = (t1 - t0) / 1e6
@@ -431,7 +451,8 @@ class Kernel:
         self._phase_resolution()
         t4 = time.perf_counter_ns()
         res_total = (t4 - t3) / 1e6
-        sub_sum = sum(v for k, v in self._phase_costs.items() if k.startswith("res_") or k in ["trust_validity", "contracts_production", "locomotion", "interaction", "governance_ecology", "economy", "final_integrity"])
+        # Every sub-phase cost the pipeline recorded already sits under its own key, so subtract all of them (TCK-20261008).
+        sub_sum = sum((getattr(self._current_update, "sub_phase_costs", None) or {}).values())
         self._phase_costs["resolution_overhead"] = max(0.0, res_total - sub_sum)
         
         self._phase_cleanup()
@@ -527,37 +548,11 @@ class Kernel:
             interval_override=self._profile.sampling_interval_ticks
         )
         
-        if self._audit_mode:
-            self._current_signals = PressureSignals(
-                work_debt_total=sum(self._state.work_debt.values()),
-                tick_compute_ms=0.0,
-                worker_utilization=0.0,
-                queue_utilization=0.0,
-                memory_estimate_mb=0.0,
-                replay_backlog_kb=0,
-                active_workers=0,
-                dropped_work_delta=self._status.dropped_work_delta,
-                phase_costs_ms={},
-                metrics=self._metrics.copy()
-            )
-        else:
-            compute_ms = self._status.signal_history[-1].tick_compute_ms if self._status.signal_history else 0.0
-            if not self._audit_mode and self._state.tick <= 5:
-                compute_ms = min(compute_ms, self._profile.max_tick_budget_ms * 0.5)
-            self._current_signals = PressureSignals(
-                work_debt_total=sum(self._state.work_debt.values()),
-                tick_compute_ms=compute_ms,
-                worker_utilization=worker_stats["worker_utilization"],
-                queue_utilization=worker_stats["queue_utilization"],
-                memory_estimate_mb=self._platform_signals["rss_mb"],
-                replay_backlog_kb=replay_stats["backlog_kb"],
-                active_workers=worker_stats["active_workers"],
-                dropped_work_delta=self._status.dropped_work_delta,
-                phase_costs_ms=(self._status.signal_history[-1].phase_costs_ms 
-                                if self._status.signal_history else {}),
-                metrics=self._metrics.copy()
-            )
-        
+        self._current_signals = select_signal_source(self._profile, self._audit_mode).tick_start_signals(
+            state=self._state, profile=self._profile, status=self._status,
+            host=HostReadings(worker_stats, replay_stats, self._platform_signals, self._metrics),
+        )
+
         prior_mode = self._status.current_mode
         self._current_policy = self._governor.evaluate(
             self._profile, 
@@ -776,17 +771,10 @@ class Kernel:
     def _record_runtime_signals(self) -> None:
         terminal_worker_stats = self._worker_manager.get_stats()
         terminal_replay_stats = self._replay.get_stats()
-        self._status.record_signals(PressureSignals(
-            work_debt_total=sum(self._state.work_debt.values()),
-            tick_compute_ms=self._final_compute_ms,
-            worker_utilization=terminal_worker_stats["worker_utilization"],
-            queue_utilization=terminal_worker_stats["queue_utilization"],
-            memory_estimate_mb=self._platform_signals["rss_mb"],
-            replay_backlog_kb=terminal_replay_stats["backlog_kb"],
-            active_workers=terminal_worker_stats["active_workers"],
-            dropped_work_delta=self._status.dropped_work_delta,
-            phase_costs_ms=self._phase_costs.copy(),
-            metrics=self._metrics.copy()
+        self._status.record_signals(select_signal_source(self._profile, self._audit_mode).tick_end_signals(
+            state=self._state, profile=self._profile, status=self._status,
+            measured=MeasuredCosts(self._final_compute_ms, self._phase_costs),
+            host=HostReadings(terminal_worker_stats, terminal_replay_stats, self._platform_signals, self._metrics),
         ))
 
     def _phase_advancement(self) -> None:

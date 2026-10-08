@@ -34,6 +34,8 @@ class RunManifest(BaseModel):
     module_fingerprints: Optional[Dict[str, str]] = None
     state_hash: Optional[str] = None
     verification_level: Optional[str] = None
+    # How the governors' cost inputs were produced (PERF-D1): contract, effective source, work-model version and status. Absent in older manifests.
+    signal_contract: Optional[Dict[str, str]] = None
 
 class RunArtifactRepository:
     def __init__(self, base_dir: str = "data/runs"):
