@@ -180,7 +180,7 @@ class Kernel:
             self._artifact_repo.create_run(self._run_id, manifest, overwrite=True)
             self._artifact_repo.update_manifest(self._run_id, status="RUNNING")
 
-        self._replay = self._init_replay(profile, replay)
+        self._replay = self._init_replay(profile, replay, self._run_id)
 
         if executor:
             self._executor = executor
@@ -379,12 +379,12 @@ class Kernel:
         from src.core.registries import runtime_content_source as registries_source, catalog_fingerprint as registries_fingerprint
         return runtime_content_source or registries_source, catalog_fp or registries_fingerprint, module_fps
 
-    def _init_replay(self, profile: RuntimeProfile, replay: Optional[ReplayManager]) -> ReplayManager:
+    def _init_replay(self, profile: RuntimeProfile, replay: Optional[ReplayManager], run_id: str) -> ReplayManager:
         """The injected replay manager, or a default one writing next to the run's manifest."""
         if replay is not None:
             return replay
         from src.engine.replay_manager import ReplayManager as DefaultReplayManager
-        run_dir = Path(self._artifact_repo.resolve_path(self._run_id, "manifest")).parent if self._artifact_repo else Path(f"data/runs/{self._run_id}")
+        run_dir = Path(self._artifact_repo.resolve_path(run_id, "manifest")).parent if self._artifact_repo else Path(f"data/runs/{run_id}")
         return DefaultReplayManager(
             run_dir=run_dir,
             profile_name=profile.name,
