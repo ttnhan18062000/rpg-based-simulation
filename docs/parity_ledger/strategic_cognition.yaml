@@ -4528,7 +4528,7 @@
     SimQ grade-anchor movement is not measured locally.'
 - id: STRAT-281
   text: 'A need with no open way pulls toward the step that opens one (SURV-07 amendment, owner decision 27):
-    a hungry subject that cannot afford the inn carries a typed `NeedAccess`, the pull goes to the first open
+    a hungry subject with no inn within reach carries a typed `NeedAccess` (`NO_AFFORDABLE_WAY` is defined and produced only by the parked free-meal removal), the pull goes to the first open
     opening step (forage, with earn-then-buy and ask as closed stubs), and with no open step the goal keeps the raw
     hunger and says `no_open_step`.'
   status: verified

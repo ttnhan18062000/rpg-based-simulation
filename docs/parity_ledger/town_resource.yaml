@@ -2417,20 +2417,21 @@
     or depleted node now ends instead of repeating a no-op.'
   support_boundary: null
 - id: TOWN-198
-  text: 'A purchased town service is paid in full or not delivered, and an EAT with no
-    inn consumes a carried food item together with the meal; there is no free meal
-    (SURV-06, no engine charity). A broke subject is not offered the inn''s meal.'
+  text: 'A hungry subject holding food eats it, and the item is consumed together with the meal (SURV-06): core EAT
+    with food in the bag removes one item and applies its recovery through a CARRIED_FOOD transfer, and a hungry
+    subject with food eats it in place when no present threat holds. EAT with nothing carried keeps its old relief
+    of 40 (the free meal, still on; its removal is parked on d27-free-meal-removal).'
   status: verified
-  priority: P0
+  priority: P1
   legacy_evidence: null
-  v2_evidence: '`src/core/conservation.py` (`_service_price`, `_carried_food_result`, the `CARRIED_FOOD` source),
-    `src/engine/domain/core_actions.py` (`carried_meal`), `src/ai/goals/scorers.py` (`EatScorer` offers the inn only when
-    gold is at least `EAT_PRICE_GOLD`), `src/engine/tactical_rest.py` (`in_place_survival_update` eats carried food in
-    place); `docs/mechanics/03_economic_laws.md` section 3; `docs/guidelines/intentional_divergences.md` section 2.89'
+  v2_evidence: '`src/core/conservation.py` (`_carried_food_result`, the `CARRIED_FOOD` source),
+    `src/engine/domain/core_actions.py` (`carried_meal`, `eat_update`), `src/engine/tactical_rest.py`
+    (`in_place_survival_update`, `eat_carried_update`); `docs/mechanics/03_economic_laws.md` section 3;
+    `docs/guidelines/intentional_divergences.md` section 2.89'
   proof_type: parity
-  test_path: tests/unit/resource/test_conservation_rejection_paths.py
-  divergence_note: 'Intentional divergence 2.89 (Intentional Gameplay Change and Bug Fix): free meals 11.2, 30.6 and 32.8 per run on main become 0.'
-  support_boundary: null
+  test_path: tests/unit/engine/test_biological_needs.py
+  divergence_note: 'Intentional divergence 2.89: a subject that carries food eats its own item (30) instead of taking the free 40.'
+  support_boundary: 'Held out: the free meal (EAT with nothing carried, the inn meal for a subject that cannot pay) is still on; its removal is parked.'
 - id: TOWN-199
   text: 'Wild food is part of the land (SURV-06, owner decision 29): a food node stands only in wild land that
     a settlement does not own, declared per biome (near forest and sacred grove 10 charges, swamp border 8, the
