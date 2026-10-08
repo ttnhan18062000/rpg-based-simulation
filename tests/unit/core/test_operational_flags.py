@@ -9,6 +9,10 @@ from unittest.mock import MagicMock
 def test_safe_operational_flags_accepted(tmp_path):
     """
     M7 Law: Support narrow, safe operational flags.
+
+    This only proves a kernel built with these flags does not raise. It is NOT proof that a flag is obeyed: `FORCE_REPLAY_OFF` and
+    `MINIMAL_DIAGNOSTICS` are read nowhere in `src/` (see `test_unimplemented_operational_flags_change_nothing`); the kernel's own switch
+    is `no_replay` (`test_no_replay_stops_the_replay_sink`).
     """
     profile = RuntimeProfile(
         name="SAFE_FLAGS",
@@ -86,3 +90,72 @@ def test_flags_cannot_alter_authoritative_semantics():
     finally:
         k1.shutdown()
         k2.shutdown()
+
+
+# --- What the kernel really does with operational flags (TCK-20261006-PERF-OPERATIONAL-FLAGS-MATRIX-DRIFT) -----------------------------
+
+def _flag_profile() -> RuntimeProfile:
+    return RuntimeProfile(
+        name="FLAG_OBEDIENCE", hardware_class=HardwareClass.CLASS_B, max_ram_mb=1024, max_cpu_percent=100.0, max_worker_count=0,
+        max_queue_depth=10, max_replay_buffer_kb=64, max_observability_budget_percent=5.0, max_tick_budget_ms=100000.0,
+    )
+
+
+def _run_with_flags(flags, ticks=3):
+    """Run a small kernel with a recording replay manager; return (replay emit count, policy.replay_allowed per tick, final state hash)."""
+    from src.engine.checkpoint import CanonicalStateHasher
+    from src.perf.scenarios import build_idle_state
+    from src.platform.rng import DeterministicRNG
+
+    replay = MagicMock()
+    replay.get_stats.return_value = {"backlog_kb": 0}
+    replay.replay_metrics.return_value = {"pending_replay_flushes": 0}
+    kernel = Kernel(profile=_flag_profile(), state=build_idle_state(entity_count=10), rng=DeterministicRNG(7), replay=replay,
+                    flags={"no_frame_pacing": True, **flags})
+    allowed_per_tick = [kernel._current_policy.replay_allowed]
+    try:
+        for _ in range(ticks):
+            kernel.tick_once()
+            allowed_per_tick.append(kernel._current_policy.replay_allowed)
+        return replay.emit.call_count, allowed_per_tick, CanonicalStateHasher.get_hash(kernel.state), kernel._status.current_mode.name
+    finally:
+        kernel.shutdown()
+
+
+def test_no_replay_stops_the_replay_sink():
+    """`no_replay` is the kernel's real replay switch: replay_allowed is False from construction and after every governor evaluation, and nothing is emitted."""
+    emitted_without, allowed_without, hash_without, _ = _run_with_flags({})
+    emitted_with, allowed_with, hash_with, _ = _run_with_flags({"no_replay": True})
+    assert emitted_without > 0, "the control run never emitted, so a silent sink would prove nothing"
+    assert emitted_with == 0
+    assert allowed_with == [False] * len(allowed_with)
+    assert allowed_without[-1] is True
+    assert hash_with == hash_without, "the replay switch must not change the authoritative outcome"
+
+
+def test_unimplemented_operational_flags_change_nothing():
+    """`FORCE_REPLAY_OFF`, `SELECT_PROFILE` and `FORCE_DEGRADED` are documented as not implemented: no code in src/ reads them. If one
+    is implemented, this fails and the operational-controls matrix must change with it."""
+    baseline = _run_with_flags({})
+    for flag in ("FORCE_REPLAY_OFF", "SELECT_PROFILE", "FORCE_DEGRADED", "MINIMAL_DIAGNOSTICS"):
+        assert _run_with_flags({flag: True}) == baseline, flag
+
+
+def test_validated_but_unread_flags_change_nothing():
+    """`SURVIVAL_ONLY` and `REPLAY_ENABLED` are checked by `validate_flags` and read by nothing else."""
+    baseline = _run_with_flags({})
+    assert _run_with_flags({"SURVIVAL_ONLY": True}) == baseline
+    assert _run_with_flags({"REPLAY_ENABLED": True}) == baseline
+
+
+@pytest.mark.parametrize("flag", ["FORCE_NORMAL", "BYPASS_GOVERNOR", "DISABLE_RESOURCE_CEILINGS"])
+def test_each_forbidden_flag_is_rejected(flag):
+    """The enforced forbidden list (src/config/validator.py), not just the one flag the matrix used to name. Tested on the validator, not by
+    constructing a Kernel: a Kernel that rejects a flag in `__init__` has already started its background workers and leaks them."""
+    with pytest.raises(ConfigValidationError, match="is FORBIDDEN"):
+        ProfileValidator.validate_flags({flag: True})
+
+
+def test_contradictory_flags_are_rejected():
+    with pytest.raises(ConfigValidationError, match="Contradictory Flags"):
+        ProfileValidator.validate_flags({"SURVIVAL_ONLY": True, "REPLAY_ENABLED": True})

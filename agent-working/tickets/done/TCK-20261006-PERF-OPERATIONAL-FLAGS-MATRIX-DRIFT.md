@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PERF-OPERATIONAL-FLAGS-MATRIX-DRIFT
-phase: inprogress
+phase: done
 date: 2026-10-06
 tags: [performance, observability, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [performance, observability, documentation]
 Correct the operational-flags matrix to the flags the kernel really reads, and fix the test-matrix row that overclaims `FORCE_REPLAY_OFF` coverage
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -113,9 +113,17 @@ test row, the same class as the 7 engine docs corrected in #380.
   `SURVIVAL_ONLY` / `REPLAY_ENABLED` are only validated. The kernel reads `audit_mode`, `audit_dirty_set`, `perf_tracker`, `force_full_scan` (`kernel.py:84-87`), `no_replay` (`:198`, `:218`,
   re-applied after each governor evaluation at `:566`) and `no_frame_pacing` (`:217`, used at `:467`). **New finding:** `perf_tracker` is stored in `Kernel._perf_tracker` and read nowhere.
   Phase A added a profile field `signal_contract`, not a flag; a flag cannot override it. The `FORCE_DEGRADED` row was already corrected by #380.
+- Matrix section 1 now names all three enforced forbidden flags; section 2 is split into flags the kernel reads (with where), audit and test flags, not-implemented flags (rows kept), forbidden flags and validated-but-unread flags. `perf_tracker` is documented as accepted and unread. `concurrent_integrity_contract.md` and `resource_governor_contract.md` name none of these flags, so they needed no wording change (the ticket's open question).
+- Test matrix: the `FORCE_REPLAY_OFF` row is replaced by `no_replay` (what it asserts and the test that pins it), plus rows for the unimplemented flags, the validated-but-unread pair and the forbidden flags; the exception name is corrected from `SecurityError` to `ConfigValidationError`.
+- **Mutation proof:** disabling both `no_replay` branches in `kernel.py` (`__init__` and `_phase_init`) makes `test_no_replay_stops_the_replay_sink` fail with `assert 6 == 0` (the sink received 6 events); `kernel.py` restored, `git diff` clean.
+- **Finding, not fixed (src/ out of scope):** `Kernel.__init__` validates flags (`self.validate(flags)`, `kernel.py:321`) after it has created the event recorder (`:264`), so a Kernel that rejects a flag leaks its background workers (a thread-leak guard caught 6). The forbidden-flag tests therefore call `ProfileValidator.validate_flags` directly; noted in INFRA-428's support boundary.
 
 ## Test Summary
+- `tests/unit/core/test_operational_flags.py`: 10 passed (7 new): `no_replay` stops the sink and leaves the hash unchanged; the three unimplemented flags and the two validated-but-unread flags change nothing; each forbidden flag is rejected; the contradictory pair is rejected. `test_safe_operational_flags_accepted` is kept and its docstring no longer presents it as obedience proof.
+- `tests/unit/tools`, `tests/docs`, `tests/parity` and the file above: 719 passed, 2 skipped, 1 xfailed. `tests/static` and `tests/architecture`: 194 passed. `uv run make code-health`: 0 new, 0 worse, 57 improved. No file under `src/` changed.
 
 ## Files Changed
+- `docs/engine/matrices/observability_operational_controls_matrix.md`, `docs/engine/matrices/observability_test_matrix.md`, `docs/parity_ledger/infrastructure.yaml` (INFRA-428), `tests/unit/core/test_operational_flags.py`.
 
 ## Completion Summary
+The operational-flags matrix now lists only controls the code reads, with where, and marks the rest not implemented, forbidden, validated-but-unread or no-effect. The test matrix cites tests that assert what it claims, including a mutation-proven test of the kernel's real replay switch, `no_replay`. Parity entry INFRA-428. No `src/` change.
