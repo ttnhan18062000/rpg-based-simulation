@@ -167,6 +167,24 @@ was declared without any Rule on when a fighter accepts it.
 - **Engineering, not this Rule:** how holding is represented (a typed hold or guard action, not
   an empty step); preferring an adjacent hostile the subject is engaged with as its target; the
   stall counter's bookkeeping.
+- **Amendment, a hostile stepping into reach is noticed and decided (decided by the owner
+  directly, 2026-10-08; row 32 of the memo):** when a perceived hostile the subject is not
+  fighting comes to stand adjacent to it, because the subject walked up or the hostile came
+  close, the subject decides on it then. It may fight, step away, wait, or keep walking and pay
+  the disengagement cost knowingly. A committed walk does not carry it past a hostile it never
+  noticed, and nothing freezes it in place until a routine decision comes round.
+  - **Measured at the decision** (Lane A, relayed; 5 seeds x 3 worlds, crowded / living /
+    urban). Opportunity-attack hits per run:
+    - base: 185 / 158 / 87;
+    - steps away blocked from an engaged hostile only: 180 / 123 / 65;
+    - steps away blocked from any adjacent hostile: 14 / 37 / 8.
+
+    Deaths stay within 1 SD in every arm. The any-adjacent movement block froze subjects for
+    700 to 1,570 entity-ticks per run, up to 219 ticks beside a hostile they never decided
+    about, so a freeze at the movement layer is the alternative not taken. About 90 percent of
+    what remains after the engaged-only block is this case.
+  - **Engineering, not this Rule:** how the event reaches the decision layer (an event-driven
+    re-decision touches scheduling), and its cadence. This is feature work with its own ticket.
 - **Alternatives not taken:** back off between blows and re-close (today's behaviour, made
   intentional: one free hit per swing for no reason the fiction holds); hold only when winning
   (duplicates AGENCY-07's OUTMATCHED term, and a losing fighter has no better tile to step to).
