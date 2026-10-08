@@ -96,7 +96,7 @@ def _numpy_available() -> bool:
     """Return True if numpy is importable. Not covered by _deps_available()'s
     sentence-transformers/sqlite-vec check -- cmd_query()'s hybrid-fusion branch imports it
     separately (tools/knowledge_search.py:998), and it is not installed in CI's lean
-    requirements.txt environment (requirements-knowledge.txt is dev-only, per that file's own
+    default `uv sync` environment (requirements-knowledge.txt is dev-only, per that file's own
     header comment; numpy isn't declared in either)."""
     try:
         import numpy  # noqa: F401
@@ -107,9 +107,9 @@ def _numpy_available() -> bool:
 
 def _bm25_deps_available() -> bool:
     """Return True if rank_bm25 and numpy are importable. Unlike sentence-transformers/
-    sqlite-vec (requirements-knowledge.txt, local-dev-only per requirements.txt's own
+    sqlite-vec (requirements-knowledge.txt, local-dev-only per that file's own
     header comment), these two are the minimum needed for BM25/hybrid-fusion code paths and
-    are not installed in CI's lean requirements.txt environment either."""
+    are not installed in CI's lean default `uv sync` environment either."""
     try:
         import rank_bm25  # noqa: F401
     except ImportError:

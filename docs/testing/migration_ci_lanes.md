@@ -93,14 +93,13 @@ src/worldbuilding/**
 src/worldmodules/**
 src/certification/**
 Makefile
-requirements.txt
 pyproject.toml
 uv.lock
 .github/workflows/test.yml
 ```
 
-`pyproject.toml` and `uv.lock` are on the list because dependencies are declared there (`requirements.txt` is a
-generated export of the lock). A side effect: any `pyproject.toml` edit, including tool configuration such as
+`pyproject.toml` and `uv.lock` are on the list because dependencies are declared there (the former `requirements.txt` export was removed by
+`TCK-20261008-DROP-UNUSED-REQUIREMENTS-EXPORT`). A side effect: any `pyproject.toml` edit, including tool configuration such as
 ruff settings, now also triggers `migration-lanes` and `perf-cert-arena`. That cost was accepted
 (`TCK-20261002-UV-REMAINING-CI-JOBS`).
 
