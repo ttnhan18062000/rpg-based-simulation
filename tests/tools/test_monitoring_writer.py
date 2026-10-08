@@ -12,7 +12,6 @@ write under the real agent-working/agent-monitoring/ directory in production): e
 below targets a path under pytest's own `tmp_path` fixture, never a path
 resolving under this repo's real `agent-working/agent-monitoring/` directory.
 """
-import builtins
 import json
 import os
 import sys
@@ -123,14 +122,14 @@ def test_forced_lock_acquire_failure_returns_false_and_writes_diagnostic(tmp_pat
 
 def test_forced_write_failure_returns_false_and_writes_diagnostic(tmp_path, monkeypatch):
     target_path = tmp_path / "corpus.jsonl"
-    real_open = builtins.open
+    real_os_open = os.open
 
-    def _fake_open(path, mode="r", *a, **kw):
-        if str(path) == str(target_path) and "a" in mode:
+    def _fake_os_open(path, flags, *a, **kw):
+        if str(path) == str(target_path):
             raise OSError("forced write failure for test")
-        return real_open(path, mode, *a, **kw)
+        return real_os_open(path, flags, *a, **kw)
 
-    monkeypatch.setattr(builtins, "open", _fake_open)
+    monkeypatch.setattr(writer.os, "open", _fake_os_open)
 
     result = writer.write_line(target_path, json.dumps({"marker": "x"}))
     assert result is False
@@ -274,3 +273,64 @@ def test_stale_lock_is_removed_and_superseded(tmp_path):
     assert len(lines) == 2
     assert json.loads(lines[0]) == {"marker": "pre-existing"}
     assert json.loads(lines[1]) == {"marker": "post-recovery"}
+
+
+# --- TCK-20261008-MONITORING-SHARD-TORN-WRITE-ON-DISK-FULL -----------------------------------------
+
+
+def test_append_after_a_torn_tail_starts_a_clean_line(tmp_path):
+    target = tmp_path / "shard.jsonl"
+    target.write_bytes(b'{"a":1}\n{"torn":')
+    assert writer.write_line(target, '{"b":2}') is True
+    lines = target.read_text().splitlines()
+    assert lines == ['{"a":1}', '{"torn":', '{"b":2}']
+    assert json.loads(lines[-1]) == {"b": 2}
+
+
+def test_batch_append_after_a_torn_tail_starts_a_clean_line(tmp_path):
+    target = tmp_path / "shard.jsonl"
+    target.write_bytes(b'{"torn":')
+    assert writer.write_lines(target, ['{"b":2}', '{"c":3}']) is True
+    assert target.read_text().splitlines()[1:] == ['{"b":2}', '{"c":3}']
+
+
+def test_no_extra_newline_is_added_to_a_well_formed_file(tmp_path):
+    target = tmp_path / "shard.jsonl"
+    assert writer.write_line(target, '{"a":1}') is True
+    assert writer.write_line(target, '{"b":2}') is True
+    assert target.read_bytes() == b'{"a":1}\n{"b":2}\n'
+
+
+def test_short_write_leaves_the_file_byte_identical_and_reports_failure(tmp_path, monkeypatch):
+    target = tmp_path / "shard.jsonl"
+    target.write_bytes(b'{"a":1}\n{"torn":')
+    before = target.read_bytes()
+    real_write = os.write
+
+    def short_write(fd, data):
+        return real_write(fd, data[: len(data) // 2] if b'"b"' in data else data)
+
+    monkeypatch.setattr(writer.os, "write", short_write)
+    assert writer.write_line(target, '{"b":2}') is False
+    monkeypatch.undo()
+    assert target.read_bytes() == before
+    diag = (tmp_path / ".writer_health.jsonl").read_text()
+    assert '"stage":"write"' in diag
+
+
+def test_enospc_write_leaves_the_file_byte_identical_and_never_raises(tmp_path, monkeypatch):
+    target = tmp_path / "shard.jsonl"
+    target.write_bytes(b'{"a":1}\n')
+    before = target.read_bytes()
+
+    real_write = os.write
+
+    def enospc(fd, data):
+        if b'"b"' not in data:
+            return real_write(fd, data)
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setattr(writer.os, "write", enospc)
+    assert writer.write_lines(target, ['{"b":2}', '{"c":3}']) is False
+    monkeypatch.undo()
+    assert target.read_bytes() == before
