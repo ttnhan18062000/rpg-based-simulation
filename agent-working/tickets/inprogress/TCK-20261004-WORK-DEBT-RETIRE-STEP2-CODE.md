@@ -4,7 +4,7 @@ layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE
-phase: open
+phase: inprogress
 date: 2026-10-04
 tags: [performance, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, engine]
 Work-debt retirement step 2: remove `work_debt` and the branches that can never fire
 
 ## Status
-BLOCKED
+INPROGRESS
 
 ## Tier
 standard
@@ -93,6 +93,7 @@ The reader list is in the investigation ticket, AC2. Remove:
   from 2026-10-18, so run `make code-health` and `make typecheck-py` before the PR
 
 ## Implementation Notes
+- **2026-10-08, design only (perf-planner dispatch):** `investigation.md` (reader and writer inventory against `origin/main` `5e0994837`), `plan.md` (files by gate class, the PERF-D5 owner question, commit order, estimate, risks, docs) and `test_plan.md` (every pinned hash and test that moves) are written in `agent-working/staging_artifacts/`. No `src/` or `tests/` edit. The ticket stays INPROGRESS until the RPG side opens the Phase B slot (rpg-planner posts that the free-meal / decision-27 PR merged, est. week of 2026-10-12, at most 5 working days).
 
 ## Test Summary
 
