@@ -12,7 +12,7 @@ make serve      # Build frontend + start server at :8000
 make cli        # Run a headless simulation (200 ticks)
 ```
 
-**Requirements:** Python ≥ 3.11, Node.js ≥ 18, Docker (optional — for Grafana/Loki telemetry).
+**Requirements:** Python ≥ 3.11, Node.js ≥ 18, Docker (optional — for Grafana/Loki telemetry). On Windows, run `make` under WSL or Git Bash (there is no `make.bat`).
 
 ---
 
