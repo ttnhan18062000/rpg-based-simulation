@@ -249,3 +249,17 @@ def test_unbalanced_quote_with_authority_word_still_asks():
 
 def test_heredoc_without_terminator_is_not_stripped():
     assert "push" in _actions("cat <<EOF\nno end\n; git push origin b")
+
+
+# TCK-20261008-LAUNCHER-SQUASH-MERGED-BRANCH (folded in): an unresolvable push target may be the default branch.
+@pytest.mark.parametrize("command", [
+    'git push origin "$BRANCH"', "git push origin $BRANCH", "git push origin ${B}", 'git push origin "$(git branch --show-current)"',
+    "git push origin HEAD:$B", "git push origin feat-*",
+])
+def test_unresolvable_push_target_is_treated_as_possibly_the_default_branch(command):
+    assert "push_default_branch" in _actions(command)
+
+
+@pytest.mark.parametrize("command", ['git push origin "feature-x"', "git push origin feature-x", "git push -u origin HEAD"])
+def test_resolvable_push_targets_stay_non_default(command):
+    assert "push_default_branch" not in _actions(command)
