@@ -9,27 +9,30 @@ tags: [architecture, documentation]
 
 # Handover — asset-planner
 
-> Snapshot of the gitignored `.claude/handover/asset-planner.md` on 2026-10-08 after the icon set v2 adoption was recorded; on a new machine copy it to `.claude/handover/asset-planner.md`.
+> Snapshot of the gitignored `.claude/handover/asset-planner.md` on 2026-10-08 after PR #418 merged (4a2141df9); on a new machine copy it to `.claude/handover/asset-planner.md`.
 
-Updated: 2026-10-08 (icon set v2 complete locally, PR next)
+Updated: 2026-10-08 (PR #418 merged; idle)
 
 ## Open
-- 2026-10-08: batch visual-asset-icon-set-v2 COMPLETE locally (children 1-5 + 4b/4c, last d5d38b908), not pushed.
-  Implementer next: merge origin/main, tests, pr_render (theme + hand-written Review notes), push/PR blocking question;
-  merge = user's --admin. Planner reviews the PR when opened.
-- User decisions 2026-10-07/08: DRAW ONLY, NO WIRING (app use gated by AM-M6 NO-GO, charter unsigned, scope = one forest
-  tile); 6 item families (one per first category; catalog has 6, my '~15' was a raw-grep error); 3 rarity badges
-  (legendary none); I1 24x24 = 8 px; subject groups I1 only; rc-0007 (= rc-0006's 34 slots); 'Fix the process now'
-  after the owner found the sword wrong; adopted icons-v2 (sa-c9082d078b954f6b, 2026-10-08T00:40:15Z, 22 icons).
-- Recognisability process (style guide step list): per-icon spec (visual_assets/icons/icon_specs.yaml), reference study,
-  owner-approved silhouette sheet, draw, sheet rule + blind recognition check (evidence, noisy) + whole-sheet look-alike
-  report + MEASURED spec compliance table (icon_compliance.py), owner gate. Naming alone missed the sword.
-- Owner findings carried into the PR notes: ruins (brick wall, 4th idea) still free-text 'building blocks'; common bead vs
-  tier D/E look-alike at common scale; tool = wrench, spirit_lantern unmatched; adopted buff frame reads 'green gem';
-  blade motifs repeat across families. Adopted totals: 70 sources (34 terrain-era + 14 key + 22 v2) and 77 revisions (the owner adopted seven r0002 revisions from `icons-owner-fixes-v1` on 2026-10-08); no rc covers icons.
-- Next icon work (not filed; ask the user): activation path (charter/AM-M6+ is the owner's), rc with icon slots, `icon`
-  fallback glyph, Live Map art path must use isOverviewZoom(). Follow-up idea: decouple fixture guards from current-rc pin.
-- Earlier: PR #388 (icon key set) merged as bc4f7553c on 2026-10-06; PR #361 (terrain set) as 47931fa54.
+- Nothing in flight. Last: PR #418 (icon set v2 + owner fixes, 12 tickets) squash-merged as 4a2141df9 on
+  2026-10-08T15:14:54Z (--admin, user's answer; head 91a9fcd9c after a main merge; heavy lanes re-sync-skipped, same
+  patch as green 328af73db). rpg-aseprite-mcp detached at origin/main. Branch finished, never pushed again.
+- Adopted icons: 36 keys (14 key set + 22 v2), 7 of them at r0002 (hero house cottage, inn tankard, rogue cowl, tool
+  hammer+tongs, common silver bead, buff up-arrow, debuff spiked ring). Ruins brick wall + camp crossed swords kept.
+  No rc covers icon slots (rc-0007 = 34 terrain-era). Nothing wired into the app (AM-M6 gate, owner's choice).
+- Decisions: D20 (style), D21 (theme: medieval fantasy + magic, nothing modern), icon_criteria (I1 3/6/8, I2 6, I3 12),
+  6 item families, 3 rarity badges. Process (style guide): spec (+theme fields) -> reference study -> owner-approved
+  silhouettes (spec numbers agreed there) -> draw -> sheet rule + measured compliance + blind/era check + look-alikes
+  -> review folder ~/Work/asset-review/<set>/ (python -m tests.visual_assets.review_sheets --set <id>) -> owner gate.
+  Revisions of adopted icons: per-slot `review` + `adopt --parent rNNNN` (adopt-set cannot revise).
+- 2026-10-08: owner asked for the activation path; gate map done (7-step chain M0->M1->M2->M4->M5->M6 forest pilot->M7
+  icons family). Owner chose "Record the map, park it" (resume when RPG core lands). Batch visual-asset-activation-roadmap
+  (1 docs ticket, planning commit on that branch) handed to implementer; also refreshes this snapshot in the repo.
+  Known gap: 36 adopted icons lack a declared fallback-safety class (fallback_safety rules 1-3; W02.7 field).
+- Next (not filed; ask the user): rc with icon slots, `icon` fallback
+  glyph, isOverviewZoom() in the Live Map art path; optional store ticket: set-level revisions; decouple fixture guards
+  from the current-rc pin. Refresh docs/assets/session_handoff/asset-planner.md in the next asset PR (stale in #418).
+- Owner-accepted known weak reads: tool reads 'hammer and wrench', debuff ring reads 'gear', ruins 'building blocks'.
 - Known: E/D badges weak on a dark panel; 16 stray intakes in main checkout quarantine (30-day retention);
   Vite dev server listens on [::1] only (use http://[::1]:5173/...); adopt-set refuses without a TTY (owner runs it).
 - Icon decisions: ADR D20, docs/assets/icon_style_guide.md, icon_criteria.md (I1 3/6, I2 6, I3 12), icon_key_set_review.md.
