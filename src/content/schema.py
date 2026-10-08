@@ -60,6 +60,11 @@ class ElementDefinition(CatalogBaseDefinition):
 # 2. Living & Profile Models
 # ==========================================
 
+# The biological needs the simulation models (SURV-05). A need profile must declare each, `none` included: an
+# absent key is a content gap (missing data declares nothing), reported by the validator, never read as "no need".
+MODELLED_BIOLOGICAL_NEEDS = ("hunger", "sleep")
+
+
 class NeedProfileDefinition(CatalogBaseDefinition):
     """Schema for entity drives and survival needs weights."""
     needs: Dict[str, str] = Field(default_factory=dict, description="Motivation/need values (e.g. high, medium)")

@@ -1,0 +1,4 @@
+deaths hist [(0, 4), (1, 1), (2, 6), (3, 1), (9, 10), (10, 17)]
+cause [(('PassiveDeathCause.STARVATION', 'None'), 20), (('PassiveDeathCause.STARVATION', 'STARVATION'), 7), (('None', 'HAZARD'), 6), (('None', 'DEFEAT'), 5), (('None', 'COMBAT'), 1)]
+eat []
+sleep []

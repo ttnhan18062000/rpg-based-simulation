@@ -1001,10 +1001,10 @@ def test_reader_get_verification_known_and_unknown(registry):
     # wave 3); swapped to `class_assignment`, presumptively out of scope for that same instrument
     # per its own §5.1 scope statement (a static catalog lookup, not an ongoing per-tick mechanism)
     # -- unlikely to gain a scenario block soon.
-    assert registry.get_verification("clan") is None  # real, unverified id -- `movement` itself
+    assert registry.get_verification("conversation") is None  # real, unverified id -- `movement`
     # was this example until TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN gave it a
-    # real verified block (batch 3 of the unbound-claims program); swapped to `clan`, still
-    # genuinely unverified as of this edit.
+    # real verified block, then `clan` until the row 7 (b) pass (2026-10-07) gave clan a code_trace
+    # block; swapped to `conversation`, a `gap` with no implementing code and so no verification.
     assert registry.get_verification("nonexistent_mechanism_xyz") is None  # unknown id
 
 

@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-06"
+last_verified: "2026-10-07"
 ---
 
 # World Rule Family: Conflict / Combat
@@ -79,20 +79,63 @@ to Inherited).
   memo row 7. Until it exists, a wild creature's decision layer engages like any other hostile,
   as the spawned kinds already do on the `MONSTER_HORDE` bucket.
 
-**Repository evidence: CONFLICTING — legality is one-way for catalog-wild factions.**
-`verify_attack_legality` (`src/engine/legality.py:252-272`) routes through
-`FactionSemanticsService.is_hostile_compat` and the catalog relationship whenever the attacker's
-faction has a perspective or relationship row. hero→wild is legal; wild→hero returns
-`FRIENDLY_FIRE_ILLEGAL`, because the catalog hostility law (`faction.py:146-171`) makes only
-"invader" factions hostile and `wild_beast_pack`'s alignment is "wild". 85 compiled
-`wild_beast_pack` entities across 13 corpus worlds are affected today.
-- **Tracked:** `TCK-20261006-WILD-BEAST-PACK-LEGALITY-IS-ONE-WAY-HERO-CAN-ATTACK-IT-IT-CANNOT-ATTACK-HERO`.
-- **Unblocks** owner decision 2026-10-06's narrowed spawn mapping (see the memo, row 18): once
-  legality is symmetric, wolf, slime, bear, harpy and golem may move from `MONSTER_HORDE` to
-  `wild_beast_pack`, as originally ruled.
+**How a pair's permission is resolved: declared hostility decides, and missing data declares
+nothing.** Decided by world-rule-catalog-design under owner delegation, 2026-10-06 (memo row 18).
+A faction "declares" when the catalog holds a perspective or a relationship row for it.
+1. **Both factions declare:** attack is permitted in both directions if either side declares the
+   other hostile.
+2. **Exactly one faction declares:** that side's verdict decides both directions.
+3. **Neither declares:** the legacy fallback applies, which is already symmetric (only an attack on
+   one's own faction is refused).
+- **Why:** the permissive fallback (with no catalog data, only the same-faction check applies) is
+  not a judgement that two parties are enemies; it is the absence of any judgement. Letting that
+  absence override the other side's declared peace would make "no data" mean "at war".
+- **Consequence for `neutral` (no catalog data):** hero ↔ neutral is refused in both directions.
+  `hero_guild`'s perspective does not declare neutral hostile, and neutral declares nothing. A
+  neutral subject is not at war with the defenders. It remains exposed to invaders, whose declared
+  data makes them hostile to it.
+  - The existing pin (`test_legality_faction_mutation`: a hero may not attack an entity that
+    defected to NEUTRAL) stands.
+  - The change is that a neutral subject may no longer attack a hero.
+- **Alternatives not taken:** union in every case (would let heroes attack neutrals and revise the
+  pin); a stated NEUTRAL exception to symmetry (unneeded, since the general rule already settles it).
+- **Measured at the decision:** Lane B's either-side rule over 16 factions × engaged/not (512
+  directed verdicts) flipped 16 to legal and none to illegal (10 `wild_beast_pack` pairs and 6
+  non-wild reverses), and left 58 asymmetric on the neutral and legacy-fallback side. Clause 2
+  resolves those 58.
+- **Measured as implemented** (all three clauses, DEV-016 in
+  `docs/guidelines/intentional_divergences.md`): of the 512 directed verdicts, 108 were asymmetric
+  before and **0** after. 16 flipped illegal→legal, and 15 flipped legal→illegal; every one of the
+  15 is a pair where exactly one side declares (clause 2). On the corpus (24 worlds, seed 42,
+  10,000 ticks, `audit_mode`, tick budget off, before vs after on one tree, base `7254a558c`):
+  - live neutral→hero attacks lost: 0;
+  - the only lost direction with corpus events is town_council→swamp_tribe (`swamp_border_world`,
+    8→0);
+  - attacks by a `wild_beast_pack` attacker rose from 81 to 184.
 
-**Scenarios:** none traced yet. One is owed when implemented: a hero attacks a wolf and the wolf
-fights back; a wolf next to a hero may attack it, and whether it does is the wolf's own decision.
+**Repository evidence: SUPPORTED since #395 (`7aa6f997b`, 2026-10-07).** Previously
+CONFLICTING: legality was one-way for catalog-wild factions. hero→wild was legal, while wild→hero
+returned `FRIENDLY_FIRE_ILLEGAL` through `FactionSemanticsService.is_hostile_compat`, because the
+catalog hostility law makes only "invader" factions hostile and `wild_beast_pack`'s alignment is
+"wild". That affected 85 compiled `wild_beast_pack` entities across 13 corpus worlds.
+- **Now:** `verify_attack_legality` (`src/engine/legality.py`) resolves each pair by the three
+  clauses above. The implemented text is DEV-016 (`docs/guidelines/intentional_divergences.md`)
+  and Bible 02's Friendly-Fire Law (`docs/mechanics/02_combat_laws.md`, "permission is symmetric,
+  CONFLICT-03"), with parity entry COMB-334 (`docs/parity_ledger/combat_movement.yaml`, verified).
+- **Pinned by:**
+  - `tests/unit/world/test_spawn_monster_catalog_faction.py`: both directions for spawned wolf,
+    bear and golem; clauses 1, 2 and 3; the legacy-fallback pin;
+  - `tests/unit/engine/test_legality_faction_mutation.py` (unchanged).
+- **The spawn mapping is complete:** wolf, slime, bear, harpy and golem now spawn as
+  `wild_beast_pack` (#395), closing the gap the owner held open on 2026-10-06 (memo row 18).
+- **Ticket:** `TCK-20261006-WILD-BEAST-PACK-LEGALITY-IS-ONE-WAY-HERO-CAN-ATTACK-IT-IT-CANNOT-ATTACK-HERO`.
+- **Still open, recorded rather than resolved:** "contextual" engagement (attack when intruded on or
+  provoked) is feature work parked by memo row 7. A wild creature's decision layer still engages
+  like any other hostile.
+
+**Scenarios:** none traced in the catalog's scenario files yet. The behaviour is pinned by the
+tests above: a hero may attack a spawned wolf, the wolf may attack the hero, and hero↔neutral is
+refused both ways.
 
 ---
 

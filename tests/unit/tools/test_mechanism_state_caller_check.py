@@ -261,9 +261,12 @@ def test_real_registry_findings_pinned():
         # real, and `tests/unit/world/test_world_boss_spawn_flag.py` is the differential proof (flag OFF
         # inert, flag ON spawns) on all three branches.
         ("world_boss_spawn", "gated_without_flag_context"),
-        ("attributes_biology", "state_with_zero_callers"),
+        # `attributes_biology` no longer fires (2026-10-07, biology child): binding `biological_needs.py::need_rates` gave
+        # it a caller in another file (`engine/apply.py`), which `_real_callers()` counts.
         ("class_assignment", "state_with_zero_callers"),
-        ("campaigns", "state_with_zero_callers"),
+        # `campaigns` no longer fires (2026-10-07, row 7 (b) pass): binding `loyalty_drift.py::LoyaltyDriftService`
+        # gave it a caller in another file (`campaigns/orchestrator.py`), which `_real_callers()` counts. Same
+        # blind spot as `goal_hierarchy` below: `CampaignOrchestrator` itself still has no caller outside its file.
         ("chronicle", "orphan_with_callers"),
         # `goal_hierarchy` no longer fires (2026-10-06, TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-
         # THE-PURSUIT-COMPLETION-CONDITION): binding `entity_target_objective.py::entity_target_outcome` /

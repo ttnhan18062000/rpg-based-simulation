@@ -13,7 +13,7 @@ from src.content_semantics.faction import get_faction_id_str, get_faction_semant
 from src.core.enums import Faction
 from src.systems.world_systems.generator import SPAWN_KIND_CATALOG_FACTION, EntityGenerator
 
-CAMP_KINDS = ["goblin_warrior", "orc_warrior", "goblin_raider"]
+CAMP_KINDS = ["goblin_warrior", "orc_warrior", "goblin_raider", "wolf", "slime", "bear", "harpy", "golem"]
 
 
 @pytest.mark.parametrize("kind", CAMP_KINDS)
@@ -30,7 +30,7 @@ def test_every_mapped_faction_exists_in_the_catalog():
     assert {f for f in SPAWN_KIND_CATALOG_FACTION.values() if repo.get_faction(f) is None} == set()
 
 
-@pytest.mark.parametrize("kind", ["world_boss", "bear", "harpy", "golem", "wolf", "slime"])
+@pytest.mark.parametrize("kind", ["world_boss"])
 def test_kinds_without_a_catalog_faction_are_unchanged(kind):
     mob = EntityGenerator(seed=1).spawn_monster((0.0, 0.0), kind=kind)
     assert "faction_id" not in mob.identity.properties
@@ -97,3 +97,58 @@ def test_hero_and_spawned_monster_stay_mutually_hostile(kind):
     state = AuthoritativeState(tick=5, seed=1, entities={hero.id: hero, mob.id: mob})
     assert LegalityServiceV2.verify_attack_legality(hero, mob, state)[0]
     assert LegalityServiceV2.verify_attack_legality(mob, hero, state)[0]
+
+
+def test_wild_creature_may_attack_a_hero_exactly_when_the_hero_may_attack_it():
+    """CONFLICT-03: permission to attack is symmetric; wild_beast_pack's `wild` alignment changes only when it chooses to fight."""
+    from src.core.state import AuthoritativeState
+    from src.engine.legality import LegalityServiceV2
+    wolf = EntityGenerator(seed=1).spawn_monster((6.0, 5.0), kind="wolf")
+    assert get_faction_id_str(wolf) == "wild_beast_pack"
+    hero = _hero(1000, (5.0, 5.0))
+    state = AuthoritativeState(tick=5, seed=1, entities={hero.id: hero, wolf.id: wolf})
+    assert LegalityServiceV2.verify_attack_legality(hero, wolf, state)[0]
+    assert LegalityServiceV2.verify_attack_legality(wolf, hero, state)[0]
+
+
+def _entity_with(entity_id, faction, pos, faction_id=None):
+    from src.core.builder import V2EntityBuilder
+    e = (V2EntityBuilder(entity_id).kind("npc").location(*pos).identity(faction=faction)
+         .combat(hp=100, max_hp=100, atk=10, def_stat=5, readiness=100.0, attack_range=1.5).build())
+    if faction_id:
+        e.identity.properties["faction_id"] = faction_id
+    return e
+
+
+def _verdicts(a, b):
+    from src.core.state import AuthoritativeState
+    from src.engine.legality import LegalityServiceV2
+    state = AuthoritativeState(tick=5, seed=1, entities={a.id: a, b.id: b})
+    return (LegalityServiceV2.verify_attack_legality(a, b, state)[0], LegalityServiceV2.verify_attack_legality(b, a, state)[0])
+
+
+def test_exactly_one_declared_side_decides_both_directions():
+    """CONFLICT-03 rule 2: hero_guild declares data, neutral does not; hero_guild does not declare neutral hostile, so neither may attack."""
+    assert _verdicts(_hero(1000, (5.0, 5.0)), _entity_with(1001, Faction.NEUTRAL, (6.0, 5.0))) == (False, False)
+
+
+def test_exactly_one_declared_side_hostile_makes_both_directions_legal():
+    """CONFLICT-03 rule 2, hostile verdict: a hero and an undeclared monster-bucket entity may attack each other."""
+    assert _verdicts(_hero(1000, (5.0, 5.0)), _entity_with(1001, Faction.MONSTER_HORDE, (6.0, 5.0))) == (True, True)
+
+
+def test_both_declared_sides_either_hostile_makes_both_directions_legal():
+    """CONFLICT-03 rule 1: wild_beast_pack and goblin_warband both declare data; either declaring hostility makes both directions legal."""
+    wolf = _entity_with(1000, Faction.MONSTER_HORDE, (5.0, 5.0), "wild_beast_pack")
+    goblin = _entity_with(1001, Faction.MONSTER_HORDE, (6.0, 5.0), "goblin_warband")
+    goblin.task.payload["target_id"] = wolf.id  # engaged
+    assert _verdicts(wolf, goblin) == (True, True)
+
+
+def test_neither_declared_falls_back_to_the_legacy_bucket_rule_both_ways():
+    """CONFLICT-03 rule 3: with no declared data on either side only a shared legacy faction is illegal, and that is symmetric."""
+    a = _entity_with(1000, Faction.NEUTRAL, (5.0, 5.0), "undeclared_a")
+    b = _entity_with(1001, Faction.NEUTRAL, (6.0, 5.0), "undeclared_b")
+    c = _entity_with(1002, Faction.MONSTER_HORDE, (6.0, 5.0), "undeclared_c")
+    assert _verdicts(a, b) == (False, False)
+    assert _verdicts(a, c) == (True, True)

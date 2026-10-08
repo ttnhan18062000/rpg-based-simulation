@@ -16,7 +16,7 @@ from typing import List, Optional
 from src.core.state import EntityState
 from src.core.strategic import (
     BlockerState, LeadKind, LeadState, LeadCertainty, ObjectiveState, ObjectiveStatus,
-    CognitionProfile
+    CognitionProfile, live_projects
 )
 from src.core.updates import StrategicUpdate
 from src.engine.domain.lead_routing import LeadRoutingSystem
@@ -200,7 +200,7 @@ class DetourSuggestionSystem:
             return (0, p.id)
             
         all_projects = sorted(
-            entity.strategic.projects.values(),
+            live_projects(entity.strategic.projects).values(),
             key=_proj_priority,
             reverse=True
         )

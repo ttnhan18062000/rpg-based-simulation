@@ -3,7 +3,7 @@ from src.ai.goals.base import GoalScorer, GoalScore
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.core.state import EntityState, AuthoritativeState
-from src.core.strategic import GoalKind, ObjectiveKind
+from src.core.strategic import GoalKind, ObjectiveKind, has_project_capacity
 from src.systems.strategic_systems.entity_target_objective import ENTITY_TARGET_PERCEPTION_RADIUS
 
 class HarvestScorer(GoalScorer):
@@ -67,7 +67,7 @@ class EatScorer(GoalScorer):
         utility = bio.hunger
         
         from src.engine.spatial_query import SpatialQueryService
-        best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "tavern")
+        best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "inn")
         if best_bldg:
             return GoalScore(kind=GoalKind.HUNGER, utility=utility, target_id=str(best_bldg.id), target_pos=best_bldg.position)
                     
@@ -271,7 +271,7 @@ class GuildNeedScorer(GoalScorer):
             return GoalScore(kind=GoalKind.GUILD, utility=0.0)
 
         strat = entity.strategic
-        if len(strat.projects) >= strat.profile.max_active_projects:
+        if not has_project_capacity(strat.projects, strat.profile.max_active_projects):
             return GoalScore(kind=GoalKind.GUILD, utility=0.0)
 
         from src.engine.spatial_query import SpatialQueryService

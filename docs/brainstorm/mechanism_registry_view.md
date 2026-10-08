@@ -6,7 +6,7 @@ All 108 mechanisms, one row each, sorted by priority (`layer weight × transitiv
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**50 runtime-verified, 49 static (`code_trace`)-verified, 9 unverified** — of 108 total.
+**50 runtime-verified, 50 static (`code_trace`)-verified, 8 unverified** — of 108 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
@@ -45,7 +45,7 @@ All 108 mechanisms, one row each, sorted by priority (`layer weight × transitiv
 | `causal_spatial_memory` | entity | gated | runtime | observed | 0 | 0 |
 | `chronicle` | world | orphan | runtime | observed | 0 | 0 |
 | `city` | region | partial | static | observed | 0 | 0 |
-| `clan` | faction | gap | unverified | unverified | 0 | 0 |
+| `clan` | faction | done | static | observed | 0 | 0 |
 | `class_assignment` | entity | partial | static | observed | 0 | 0 |
 | `cognition_capacity_fatigue` | entity | done | runtime | observed | 0 | 0 |
 | `combat_engagement` | entity | done | runtime | observed | 0 | 0 |
@@ -72,7 +72,7 @@ All 108 mechanisms, one row each, sorted by priority (`layer weight × transitiv
 | `fidelity_drift` | world | done | static | observed | 0 | 0 |
 | `genetics_aptitude` | entity | gated | static | observed | 0 | 0 |
 | `gods_pantheon_blessings` | world | gap | unverified | unverified | 0 | 0 |
-| `group_coordination` | group | orphan | static | observed | 0 | 0 |
+| `group_coordination` | group | partial | static | observed | 0 | 0 |
 | `guilds` | group | partial | static | observed | 0 | 0 |
 | `humanoid_reproduction` | entity | gated | runtime | observed | 0 | 0 |
 | `information_trust_deception` | entity | orphan | runtime | observed | 0 | 0 |

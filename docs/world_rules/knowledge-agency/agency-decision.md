@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-06"
+last_verified: "2026-10-07"
 ---
 
 # World Rule Family: Agency / Decision
@@ -271,6 +271,112 @@ says what trauma does to the people in it.
 with a little recent bloodshed stays put; the same subject, wounded and facing an enemy there,
 flees sooner than it would in a calm region.
 
+## AGENCY-07 — A cautious disposition raises a subject's readiness to flee; only a present threat to the subject decides flight
+
+> A subject's standing disposition toward safety (a cautious need or drive) is an ordinary
+> motivation: it lowers the bar at which a threat makes the subject run, and it never makes the
+> subject run by itself. Flight needs a present threat to the subject: its own wounds, a hostile
+> adjacent to it or closing on it, being targeted, or being clearly outmatched. Merely seeing a
+> hostile somewhere is not such a threat. A cautious subject flees sooner than a bold one facing
+> the same threat. It does not flee from a threat that is not there.
+
+**Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
+(row 21 of `docs/plans/systemic_world/owner_decision_memo.md`). This applies AGENCY-02 ("ordinary
+motivations influence… without automatically determining the chosen action") to flight. It is the
+companion of AGENCY-06: AGENCY-06 covers a region's unrest, and this Rule covers the subject's own
+temperament. Together they say that nothing ambient or dispositional decides flight alone. Passes
+the admission test: no earlier Rule said what a standing safety disposition may do to flight.
+- **Not ruled out:** a creature that bolts at first sight (a skittish prey animal) is a
+  legitimate fiction, but it is a non-ordinary reflex. AGENCY-02's carve-out requires such a
+  reflex to be declared by its own Rule for the kinds it applies to. It must never arise from a
+  threshold on an ordinary need. No such Rule exists today.
+- **Engineering, not this Rule:** which threat terms are measured (wounds, distance, closing,
+  targeting, relative strength), and how strongly the disposition lowers the bar.
+- **Alternatives not taken:** keep "cautious subjects flee at first sight" (it makes a trait an
+  action, which AGENCY-02 forbids, and the campaign measured it as a source of no-combat); tune the
+  threshold (content only has values at or below 0.9, so the threshold is a switch, not a dial).
+
+**Repository evidence: SUPPORTED since #398 (`d9fc65e8c`, 2026-10-07).** Implemented by
+`TCK-20261007-SAFETY-DISPOSITION-TRIGGERS-RETREAT-ON-SIGHT-AGENCY-07`. A safety retreat now
+requires a named present-threat term: WOUNDED, ADJACENT, CLOSING, TARGETED or OUTMATCHED
+(`src/engine/tactical_threat.py`, read by the tactical decision). It is recorded as divergence 2.76
+(`docs/guidelines/intentional_divergences.md`) and parity entry COMB-335
+(`docs/parity_ledger/combat_movement.yaml`), and pinned by
+`tests/unit/engine/test_safety_retreat_needs_present_threat.py`.
+- **Measured** (campaign episode, NORMAL governor pin, seeds 42 and 1337, before `f99cb0c6c` vs
+  after):
+  - safety retreats fell from 10 / 9 to 7 / 5, each with a named threat term;
+  - deliberate attack attempts rose from 0 / 1 to 2 / 2;
+  - hostile-perceiving decisions rose from 11 / 11 to 31 / 17.
+- **Left as the Rule allows:** TARGETED counts at any range, WOUNDED counts with only distant
+  hostiles perceived, and OUTMATCHED counts at the range limit. A range cap would be tuning
+  (memo row 7).
+- **The original finding is kept below, as found.**
+
+**Previously CONFLICTING, measured on main `3e466e132`.**
+- **The branch as found:** `TacticalDecisionSystem` retreats when
+  `hostiles and safety_pressure > 0.75` (`src/engine/tactical.py:267-268`).
+- **`safety_pressure` is a static trait:** the max of the catalog need and drive levels
+  (`src/world/motivation/pressure_resolver.py`; high = 0.9, medium_high = 0.75). Every subject
+  whose safety need is `high` therefore retreats as soon as any hostile is perceived. The check has
+  no wound, distance, count, strength or targeting term.
+- **Campaign episode (Lane A):** all 19 safety-pressure retreats happened at full health, all by
+  `need safety: high` profiles (humanoid_survival, goblin_survival).
+  - 14 of 19 fled a single hostile.
+  - None of the hostiles was targeting the fleeing subject.
+  - 11 of 19 were at distance 4 or more.
+  - One subject with attack 24 fled hostiles with attack 14 at distance 3.
+- **Standard worlds:** the branch is dead there, because compiled entities carry no need or drive
+  profile, so their pressure is 0. It affects catalog-spawned entities only, and in the campaign it
+  is the main source of no-combat.
+
+**Scenarios:** none traced in the catalog's scenario files yet. The behaviour is pinned by the
+test above: no retreat from a lone, distant, non-targeting hostile; a retreat once a named threat
+term holds.
+
+## AGENCY-08 — A subject's standing drive comes from who it is: the most specific declared source wins, and a default is visible
+
+> A subject's standing drive (its ordinary motivations, AGENCY-02) belongs to the person, not the
+> body. It comes from the most specific source the world declares for that subject:
+> 1. a declared archetype that matches both the subject's kind and its role;
+> 2. otherwise its role, for the civil roles;
+> 3. otherwise its kind's declared default drive.
+>
+> A kind's default drive is declared, never derived from how often the kind appears. Whichever
+> source supplied the drive, the subject's state records it. A defaulted drive is never silent.
+
+**Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
+(row 22 of `docs/plans/systemic_world/owner_decision_memo.md`). The companion of SURV-05: needs
+come from the body, drives from the person. Passes the admission test: AGENCY-02 says what ordinary
+motivation may do to a decision, not where a subject's motivation comes from.
+- **Role defaults today:** WORKER → cautious_commoner, GUARD → disciplined_protector, HERO →
+  disciplined_protector, SHOPKEEPER → profit_seeker.
+- **Monsters:** they map to no single role drive, so they take their kind's declared default.
+  Engineering may seed those declarations once from the catalog's most common archetype drive per
+  kind: wolf and spider → territorial_predator, goblin and orc → opportunistic_raider, undead →
+  undead_purpose_bound. Every other monster kind needs its own declaration.
+- **Why declared, not computed:** a default derived at runtime from archetype frequency is
+  implicit behaviour, and it shifts silently whenever an archetype is added.
+- **Visible provenance:** the subject's state records the profile and its source (explicit,
+  defaulted by kind, defaulted by role, kind default drive, person fallback) as a typed field,
+  never in metadata or a reason string (the durable-state rule).
+- **Alternatives not taken:** drive by kind alone (a human guard and a human shopkeeper want
+  different things); drive by role alone (MONSTER covers predators, raiders and sentinels).
+
+**Repository evidence: MISSING, measured by Lane A on main `f8f1b69fd`.** 0 of 666 compiled
+entities carry a `drive_profile_id`; only archetype-spawned (campaign) entities do. The catalog
+holds 29 archetypes with kind, role and drive (7 drives).
+- **Only reader today:** `src/engine/tactical.py`, through AGENCY-07's flight gate and the
+  territory/duty target sort (`:459-463`).
+- **Behaviour warning:** assigning defaults moves about 615 entities from pressure 0 to real
+  pressure. It must be measured before and after on one tree.
+- **Tracked:** `TCK-20261007-COMPILED-ENTITIES-GET-DEFAULT-NEED-AND-DRIVE-PROFILES-WITH-VISIBLE-PROVENANCE`
+  (Lane A), a child of `TCK-20261007-EPIC-DECISION-CORE-LIVE-MOTIVATION-AND-HONEST-FIGHT-OR-FLEE-INPUTS`.
+
+**Scenarios:** none traced yet. One is owed when implemented: a compiled human guard and a
+compiled human shopkeeper in the same town carry different drives, each marked as defaulted by
+role, and a compiled wolf carries its kind's declared default drive.
+
 ---
 
 ## Inherited / Applied Foundational Rules
@@ -416,6 +522,11 @@ mechanism never built at all).
   cognition specifically)
 - AGENCY-06 → Environment (`environment.md`'s ENV-07 for what trauma counts and ENV-06 for the
   instability scale), this family's own AGENCY-02 (the panic-response carve-out it declares)
+- AGENCY-08 → this family's own AGENCY-02 (the motivation whose source it fixes), Survival Needs
+  (`survival-needs.md`'s SURV-05, the need half), Roles/Institutions (`roles-institutions.md`)
+- AGENCY-07 → this family's own AGENCY-02 (ordinary motivation never decides an action) and
+  AGENCY-06 (its companion for ambient dread); Conflict/Combat (`conflict-combat.md`, being
+  outmatched as a present threat)
 
 ## Open questions carried forward
 

@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-07"
 ---
 
 # World Rule Family: Survival Needs
@@ -132,6 +132,161 @@ consequence, counter).
 
 ---
 
+## SURV-05 — A subject's needs are those of its kind: biology follows the kind's need profile
+
+> What a body requires comes from what kind of body it is. A subject's needs, and how fast each
+> one builds, follow its kind's declared need profile. A kind that does not have a need (an
+> undead or elemental with no hunger) never builds that need, and kinds whose profiles differ
+> build their needs at different rates. A subject with no declared kind is assigned the ordinary
+> person's needs only if it is a person (a civil role). Any other subject without a kind is a
+> content defect to report, never a guess. Whichever source supplied a subject's need profile, the
+> subject's state records it, including when the profile was defaulted.
+
+**Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
+(row 22 of `docs/plans/systemic_world/owner_decision_memo.md`). Passes the admission test:
+SURV-01 to SURV-04 say what a need is and when it is modeled, not whose needs a subject has.
+SURV-02's accumulation is the mechanism this Rule makes kind-specific. Drives, a subject's
+standing motivations, are a separate question owned by AGENCY-08: needs belong to the body,
+drives to the person.
+- **Alternatives not taken:** need by role (a guard's body is not different from a worker's);
+  one uniform need set for everyone (today's accident, and it contradicts the catalog, which
+  already declares different profiles); a silent default (forbidden by the durable-state rule).
+
+**Repository evidence: was CONFLICTING (measured by Lane A on main `f8f1b69fd`); biology now follows the profile (divergence 2.80, `src/engine/biological_needs.py`), compiled-subject profile assignment is still `TCK-20261007-COMPILED-ENTITIES-GET-DEFAULT-NEED-AND-DRIVE-PROFILES-WITH-VISIBLE-PROVENANCE`** (seed 42, all 24
+worlds compiled at tick 0).
+- **No compiled subject carries a profile.** 0 of 666 entities have a `need_profile_id` or
+  `drive_profile_id`, and the pressure resolver returns `no_profile` for all of them. Profile ids
+  come only from the archetype resolver (`src/worldassembly/resolver.py:1163-1164`);
+  `WorldCompiler` never sets them. Campaign (archetype-spawned) entities do carry profiles.
+- **The catalog already supports this Rule.** All 13 species carry a need profile (6 distinct
+  profiles). By species the corpus is human 324, goblin 82, undead 54, wolf 50, orc 36, spider 35,
+  lizardfolk 24, elf 6 and spirit 4, and 51 have no species (all HERO, SHOPKEEPER or GUARD). The
+  species need profile therefore covers 615 of 666, and the person fallback covers the other 51.
+- **Biology ignores the profile.** Biological needs accumulate at constants that are identical for
+  every subject (`src/engine/apply.py:90-91`). Undead, whose catalog hunger is `none`, still get
+  hungry, and every survivor is at exactly hunger 50.0 at t=500.
+  - Lane A is checking whether everyone reaches starvation together around t≈950. If confirmed,
+    that is a hard bug under memo row 7.
+- **Tracked:** `TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-ENTITIES`, re-scoped
+  to this Rule (Lane B). The decision-core epic covers both halves.
+- **Not changed:** dimensions with no reader stay inert bookkeeping under SURV-04 until a consumer
+  exists.
+
+**Scenarios:** none traced yet. Two are owed when implemented: an undead and a human share a
+region for a long run, and only the human grows hungry; two species with different hunger
+profiles reach the same hunger at different times.
+
+---
+
+## SURV-06 — A modeled need comes with declared ways to meet it, per kind; the world must offer one within reach
+
+> A need's threshold consequence must be avoidable by behaviour. Each kind declares how it meets
+> each need it has.
+> - **People** meet hunger in two ways: they eat a meal where meals are served (the inn, for a
+>   price), or they eat food they carry. They come to carry food by buying it, by harvesting or
+>   foraging it, or by receiving it (loot, gift, inheritance).
+> - **Predators** hunt, **grazing creatures** forage, and **people-kinds without a meal place**
+>   eat carried, foraged or looted food.
+> - **A kind with no hunger** has no hunger path and needs none (SURV-05).
+> - **Rest:** every kind with a rest need can rest in place, sleeping rough, wherever it is not in
+>   danger. A bed (an inn or a home) only makes rest better; rest never requires a building.
+>
+> A world that places a kind must offer, within reach of where that kind lives, at least one of
+> that kind's ways to meet each of its needs. That guarantees a way exists, not that every
+> individual can afford it: a penniless subject with nothing to forage may starve, and that is an
+> outcome, not a defect.
+
+**Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
+(row 23 of `docs/plans/systemic_world/owner_decision_memo.md`). Passes the admission test: SURV-02
+says crossing a threshold has consequences, and SURV-05 says whose needs they are. Neither says a
+need must be meetable. Without this Rule a need is a countdown timer that measures the clock, not
+the world, which contradicts SURV-03 (a need is modeled for its real, causal consequence).
+- **The meal place is the inn.** The decision layer's "tavern" target names a building no world
+  declares, so it is a naming defect, not a missing building.
+- **World integrity:** the reachability check is reported at assembly for each world and kind.
+  It becomes an error only once the corpus passes. Memo row 11 is the precedent: enforcement that
+  would fail corpus worlds was declined.
+- **Engineering, not this Rule:** prices, recovery rates, what counts as "in danger", and how far
+  "within reach" is.
+- **Alternatives not taken:**
+  - a TAVERN building added to every world (duplicates the inn);
+  - rest only in buildings (a timer for anyone far from one);
+  - the engine quietly feeding subjects that cannot eat (hides a content defect);
+  - a guarantee that every individual can eat (removes poverty as an outcome).
+
+**Repository evidence: CONFLICTING. Eating has never worked in the compiled corpus.** Lane A,
+read-only, on main `cc3f00a11`, seed 42, `crowded_frontier` and `frontier_living_world`; the
+earlier figures are on base `f8f1b69fd`:
+- **Outcome:** 0 eat and 0 sleep completions in 2,000 ticks on both worlds; 36 of 51 and 30 of 39
+  deaths are starvation; extinction by t≈1100. (A completion means hunger or sleep debt fell
+  between consecutive ticks.)
+- **No path for the decision layer.** `EatScorer` (`src/ai/goals/scorers.py:60-74`) targets only
+  the nearest `tavern`, but 0 of the 24 worlds has one and `BuildingRegistry` has no TAVERN
+  template (`src/town/buildings.py:17-24`). Every world has an `inn`. So 100% of hunger goals have
+  no target and are skipped.
+  - The act itself is there: `CoreActions` EAT needs no building, and the town EAT costs 5 gold on
+    a town tile (`town_resolution.py:95-119`).
+- **A separate decision defect:** the strategic capacity gate counts terminal projects, which
+  blocks new projects; fatigue wins with an inn target are refused. Lane A is fixing this as
+  engineering.
+- **More breaks remain downstream:** with a tavern added and capacity unblocked in a probe, there
+  were only 9 eat events and 0 sleep events, and 27 of 30 still starved. Still being traced.
+- **Bisect:** eating never worked in any compiled corpus world probeable since 2026-07-02. It is
+  not a regression.
+- **Tracked:** the biology child of
+  `TCK-20261007-EPIC-DECISION-CORE-LIVE-MOTIVATION-AND-HONEST-FIGHT-OR-FLEE-INPUTS` (Lane B). It
+  lands with SURV-05's rates, the inn meal target, the eat-carried-food path, rough sleep and the
+  advisory integrity check. It is a row-7 hard bug.
+
+**Scenarios:** none traced yet. Three are owed when implemented:
+- a hungry worker with coins walks to the inn and eats;
+- a hungry worker far from town eats the bread it carries;
+- an exhausted guard on a distant road sleeps rough and recovers, more slowly than in an inn bed.
+
+---
+
+## SURV-07 — A need's pull grows as its consequence approaches, so a subject acts on it in time; only a present threat outranks a pressing need
+
+> A mild need is one wish among many: a slightly hungry worker keeps working. As a need approaches
+> its consequence line (deprivation, starvation, collapse), its pull on the subject's choice grows
+> steeply. Well before the line, it outranks ordinary goals (work, trade, social errands, clearing
+> a blocker), early enough that a subject with a way to meet it (SURV-06) can reach that way
+> before the line. Only a present threat to the subject's life (danger, flight) outranks a
+> pressing need. A need never wins merely by being the subject's current task; it wins by
+> mattering more as it grows.
+
+**Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
+(row 24 of `docs/plans/systemic_world/owner_decision_memo.md`). This states in catalog terms the
+order Bible 04 §1 already declares: Tier 1 Survival (danger, flight), then Tier 2 Biological
+(hunger, sleep, exhaustion), then Tier 3 Social, then Tier 4 Economic. It also makes SURV-06's
+"avoidable by behaviour" a matter of timing: a need that can only win at its line is not avoidable.
+It stays within AGENCY-02, because the escalating pull is still an influence weighed against
+others, not a reflex.
+- **Engineering, not this Rule:** the shape of the curve, how much travel time "in time" allows
+  for, and goal-score magnitudes.
+- **A flat priority for routine work is a calibration smell, not a Rule question.** Rescaling it
+  is tuning, parked by memo row 7, unless it causes a hard bug like the one below.
+- **Alternatives not taken:** one flat scale for needs and goals, where blocker scores are
+  rescaled against needs (it treats an order the Bible already declares as a matter of
+  magnitude); a need overriding everything near its line (it would outrank fleeing a present
+  threat, against Bible 04 §1).
+
+**Repository evidence: CONFLICTING.** Lane A's trace, `crowded_frontier`, seed 42, on #403's tree:
+- `ResolveBlockerScorer` returns a flat 80.0 whenever an unresolved, unsuppressed blocker exists
+  (`src/ai/goals/scorers.py:205-248`), or 95.3 after personality modifiers.
+- `SleepScorer`'s utility is the sleep debt itself (+30 at night), about 50 at t≈450.
+- So a tired subject walking to the inn is pulled away whenever a blocker's suppression expires.
+  A biological need can win only near 80–95, which is close to its consequence line.
+- A separate engineering defect is being fixed: the switch compared a live candidate against the
+  current project's stale, creation-time score.
+- **Tracked:** under `TCK-20261007-EPIC-DECISION-CORE-LIVE-MOTIVATION-AND-HONEST-FIGHT-OR-FLEE-INPUTS`.
+
+**Scenarios:** none traced yet. Two are owed when implemented:
+- a tired worker heading to the inn keeps going when a routine blocker reappears;
+- the same worker, attacked on the way, flees first and sleeps later.
+
+---
+
 ## Repository Findings (significant, cross-referenced)
 
 - **SURV-04's confirmed inert pair** — `last_meal_tick`/`last_sleep_tick` are written on every
@@ -146,6 +301,13 @@ consequence, counter).
   contrast this rule reuses directly
 - SURV-02 → Capacity (LIMIT-02, directly reused), Agency/motivation/decision (the goal-urgency
   content this rule's evidence already touches, owned by that future domain's own content)
+- SURV-07 → Agency/Decision (`agency-decision.md`'s AGENCY-02 and AGENCY-07), Bible 04 §1's goal
+  tiers
+- SURV-06 → Material/Economy (`economy-exchange.md`, buying food; `resources-production.md`,
+  harvesting), Settlements (`settlements.md`, the inn as the meal place), Location/Topology
+  (`location-topology.md`, "within reach")
+- SURV-05 → Agency/Decision (`agency-decision.md`'s AGENCY-08, the drive half of the same
+  provenance), Identity/Lifecycle (a subject's kind)
 - SURV-04 → all future domains that add need-adjacent tracked fields (a standing standard to
   check new fields against, matching ENV-05's own role for Environment)
 
