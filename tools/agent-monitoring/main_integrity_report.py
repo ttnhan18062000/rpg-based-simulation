@@ -105,7 +105,7 @@ def check_working_log(reader: RefReader, since_date: str | None) -> list[str]:
         for row in csv.DictReader(io.StringIO(reader.show(f"{posix(TICKETS)}/working_log.csv"))):
             add(row)
     findings = []
-    for p in reader.paths:
+    for p in sorted(reader.paths):
         m = _SHARD_RE.match(p)
         if m and m.group(2) == "working_log":
             for lineno, line in enumerate(reader.show(p).splitlines(), 1):
