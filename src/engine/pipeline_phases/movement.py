@@ -267,6 +267,9 @@ class MovementPhase:
             # and its own un-refreshed staleness check was silently excluding an "arrived at a
             # stale snapshot" entity from candidacy entirely, before this already-correct live
             # retarget ever got a chance to run for it.
+            if not has_fresh_decision and MovementCandidateSelector.holds_action_task(entity):
+                continue  # an action task (ATTACK, SKILL, INTERACT, HOLD...) moves only on a tick that sets a target
+
             if not has_fresh_decision:
                 nav_target = MovementCandidateSelector.resolve_live_tracking_target(
                     entity, state.entities, nav_target

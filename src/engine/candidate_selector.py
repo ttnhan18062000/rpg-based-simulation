@@ -67,12 +67,25 @@ class MovementCandidateSelector:
         RETARGETS). Extracted here so all four call sites can never drift out of sync again.
         """
         tracked_id = entity.task.payload.get("target_id")
-        if tracked_id is None:
+        if (tracked_id is None or MovementCandidateSelector.holds_action_task(entity)
+                or MovementCandidateSelector._tracked_move_kind(entity) is None):
+            # Only an entity-tracking move (pursuit, intercept, bracketing, kiting, guard) follows its target live; any other
+            # task that merely names a target_id (an ATTACK or SKILL action, seeking cover) keeps the destination it was given.
             return fallback_target
         tracked_entity = entities.get(tracked_id)
         if tracked_entity is not None and tracked_entity.lifecycle.active and tracked_entity.combat.alive:
             return tracked_entity.navigation.position
         return fallback_target
+
+    @staticmethod
+    def holds_action_task(entity: "EntityState") -> bool:
+        """True when ``entity`` is holding an action task (``ENTITY_ACT`` with a payload: ATTACK, SKILL, INTERACT, HOLD, ...).
+
+        An entity under an action does not move because of a navigation target left behind by an earlier decision: it moves
+        only on a tick that sets a target of its own. Without this an ATTACK holder kept walking onto its target's tile, and
+        sidestepped off adjacency (and took an opportunity attack) every time the step was refused
+        (TCK-20261007-A-WALKER-BESIDE-A-PERCEIVED-HOSTILE-KEEPS-STEPPING-AND-EATS-AN-OPPORTUNITY-ATTACK-PER-STEP)."""
+        return entity.task.work_kind == "ENTITY_ACT" and bool(entity.task.payload)
 
     @staticmethod
     def tracked_move_complete(entity: "EntityState", entities: Mapping[int, "EntityState"]) -> bool:
@@ -191,6 +204,9 @@ class MovementCandidateSelector:
                     nav_target = ent_upd.navigation.target_set
                 if ent_upd.navigation.movement_mode_set is not None:
                     mode = ent_upd.navigation.movement_mode_set
+
+            if nav_target is None and MovementCandidateSelector.holds_action_task(entity):
+                continue  # an action task moves only on a tick that sets a target
 
             if nav_target is None:
                 # Live-refresh a stale entity-tracking target (see
