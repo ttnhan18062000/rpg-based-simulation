@@ -297,8 +297,8 @@ threshold. Neither is sent wandering off. The breaker still ends a real chase.
     fighters stand.
   - **Main arm (orthogonally adjacent):** no `STALEMATE_BREAK` task appears for either fighter
     while they stay adjacent, and neither fighter's position changes. How the counter is kept
-    (a swing decided at full readiness writes 0) is a unit-level check, not this scenario's
-    observable.
+    (every ATTACK or SKILL emission, the held swing included, writes 0; divergence 2.87) is a
+    unit-level check, not this scenario's observable.
   - **Control arm (the same pair two tiles apart, so neither can strike):** the breaker fires.
     The first decision is a `STALEMATE_BREAK` wander for a fighter whose counter is above 10.
   - **Why the control:** it proves the breaker is suppressed by the adjacency, not disabled
