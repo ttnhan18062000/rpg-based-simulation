@@ -37,7 +37,7 @@ TRIGGER_RE = re.compile(
     r"|data/content/"
     r"|data/worlds/"
     r"|config/simulation_quality/"
-    r"|requirements\.txt$|pyproject\.toml$|uv\.lock$|Makefile$"
+    r"|pyproject\.toml$|uv\.lock$|Makefile$"
     r"|\.github/workflows/test\.yml$)"
 )
 

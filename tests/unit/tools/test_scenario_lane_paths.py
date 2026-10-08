@@ -19,7 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
     "data/content/entities/goblin.yaml",
     "data/worlds/unit_selfmodel_pilot/world.yaml",
     "config/simulation_quality/scoring_weights.yaml",
-    "requirements.txt",
+    "uv.lock",
 ])
 def test_trigger_paths_run_the_lane(path):
     r = slp.classify([path])
@@ -149,7 +149,7 @@ def test_dedicated_scenario_job_stand_ins_still_route_to_the_dedicated_job(path)
     (["tests/mechanic_scenarios/test_x.py"], True),
     (["tests/helpers/scenario.py"], True),
     (["config/simulation_quality/scoring_weights.yaml"], True),
-    (["requirements.txt"], True),
+    (["uv.lock"], True),
     ([".github/workflows/test.yml"], True),
     (["brand_new_dir/x.bin"], True),                      # unknown path: fail open
     (["src/progression/xp.py", "data/content/a.yaml"], True),
