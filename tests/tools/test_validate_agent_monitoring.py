@@ -619,3 +619,92 @@ class TestNoEventsLegacyExclusion:
         validate.main(["--db-path", str(db_path)])  # must not raise
         out = capsys.readouterr().out
         assert "Run with no events" not in out
+
+
+# --- TCK-20261007-MONITORING-EXECUTION-ID-HYGIENE / TCK-20261008-VALIDATOR-WORKING-LOG-SHARDS-FALSE-POSITIVE ---
+
+def _run(run_id, workflow, start_ts, **kw):
+    return {**_BASE_RUN, "run_id": run_id, "workflow": workflow, "start_ts": start_ts, **kw}
+
+
+def test_missing_execution_id_is_classified_by_cause():
+    runs = [
+        _run("TCK-OLD", "implement-ticket", "2026-06-20T00:00:00Z"),
+        _run("CREATE-TICKETS-X", "create-tickets", "2026-10-01T00:00:00Z"),
+        _run("FOLDER-tickets-todos-y", "implement-epic", "2026-10-01T00:00:00Z"),
+        _run("TCK-NATIVE-RUN-FAILING-GATE-PROBE", "implement-ticket", "2026-10-06T00:00:00Z"),
+        _run("TCK-REAL", "implement-ticket", "2026-10-06T00:00:00Z"),
+        _run("TCK-HAS-ID", "implement-ticket", "2026-10-06T00:00:00Z", execution_id="e1"),
+    ]
+    kinds = {r["run_id"]: validate.classify_missing_execution_id(r) for r in runs[:5]}
+    assert kinds == {"TCK-OLD": "predates", "CREATE-TICKETS-X": "by design", "FOLDER-tickets-todos-y": "by design",
+                     "TCK-NATIVE-RUN-FAILING-GATE-PROBE": "probe", "TCK-REAL": "unexplained"}
+    report = validate.compute_execution_id_report(runs, "2026-W40")
+    assert "run rows without execution_id: 5 of 6" in report
+    assert "predates: 1" in report and "by design: 2" in report and "probe: 1" in report and "unexplained: 1" in report
+    assert "since 2026-W40 (4 rows)" in report and "TCK-OLD" not in report.split("since")[1]
+    assert "TCK-HAS-ID" not in report
+
+
+def test_execution_id_report_when_every_row_has_one():
+    report = validate.compute_execution_id_report([_run("TCK-A", "implement-ticket", "2026-10-06T00:00:00Z", execution_id="e")])
+    assert "without execution_id: 0 of 1" in report and "none" in report
+
+
+def test_tool_row_report_names_a_torn_line_and_is_clean_otherwise(tmp_path):
+    week = tmp_path / "2026-W41"
+    week.mkdir()
+    (week / "a.tools.jsonl").write_text('{"tool":"Read"}\n{"tool":\n{"tool":"Bash"}\n')
+    report = validate.compute_tool_row_report(tmp_path)
+    assert "cannot parse: 1" in report and "a.tools.jsonl:2" in report
+    (week / "a.tools.jsonl").write_text('{"tool":"Read"}\n')
+    assert "cannot parse: 0" in validate.compute_tool_row_report(tmp_path)
+
+
+def test_since_week_summary_counts_only_runs_in_range_and_says_how():
+    runs_by_id = {"A": {"start_ts": "2026-10-06T00:00:00Z"}, "B": {"start_ts": "2026-06-01T00:00:00Z"}, "C": {}}
+    text = validate.compute_since_week_summary(
+        [("done-without-working_log", "A"), ("incomplete", "B"), ("incomplete", "C")], runs_by_id, "2026-W40")
+    assert text.startswith("2026-W40+ warnings: 1 of 3")
+    assert "filter: run start_ts ISO week >= 2026-W40" in text and "1 without a parseable start_ts" in text
+
+
+def _main_with_log(tmp_path, monkeypatch, capsys, shard_rows=None, csv_ids=()):
+    monkeypatch.chdir(tmp_path)
+    from tools.agent_working_paths import TICKETS
+    (tmp_path / TICKETS).mkdir(parents=True, exist_ok=True)
+    (tmp_path / TICKETS / "working_log.csv").write_text(
+        "timestamp,ticket_id,title\n" + "".join(f"2026-10-01,{t},t\n" for t in csv_ids))
+    data = tmp_path / "data"
+    week = data / "2026-W41"
+    week.mkdir(parents=True)
+    if shard_rows is not None:
+        (week / "branch.working_log.jsonl").write_text("".join(json.dumps(r) + "\n" for r in shard_rows))
+    event = {"run_id": "TCK-SHARD-ONLY", "seq": 1, "ts": "t", "phase": "Scope", "agent": "ticket-scoper", "status": "ok", "summary": "s"}
+    db = _build_db(tmp_path, runs=[_run("TCK-SHARD-ONLY", "implement-ticket", "2026-10-06T00:00:00Z", execution_id="e")], events=[event])
+    validate.main(["--db-path", str(db), "--data-dir", str(data)])
+    return capsys.readouterr().out
+
+
+def test_a_done_run_whose_row_exists_only_in_a_working_log_shard_raises_no_warning(tmp_path, monkeypatch, capsys):
+    out = _main_with_log(tmp_path, monkeypatch, capsys, shard_rows=[{"ticket_id": "TCK-SHARD-ONLY", "status": "DONE"}])
+    assert "has no working_log entry" not in out and "— 0 warning(s)" in out
+
+
+def test_a_done_run_with_no_row_anywhere_still_warns(tmp_path, monkeypatch, capsys):
+    out = _main_with_log(tmp_path, monkeypatch, capsys, shard_rows=[{"ticket_id": "TCK-OTHER", "status": "DONE"}])
+    assert "Run marked DONE has no working_log entry: TCK-SHARD-ONLY" in out
+    assert "2026-W40+ warnings: 1 of 1" in out
+
+
+def test_a_csv_row_still_satisfies_the_check(tmp_path, monkeypatch, capsys):
+    out = _main_with_log(tmp_path, monkeypatch, capsys, csv_ids=["TCK-SHARD-ONLY"])
+    assert "has no working_log entry" not in out
+
+
+def test_new_reports_never_change_the_exit_code_or_write_a_shard(tmp_path, monkeypatch, capsys):
+    before = None
+    out = _main_with_log(tmp_path, monkeypatch, capsys)
+    snapshot = sorted((p.name, p.read_bytes()) for p in (tmp_path / "data").rglob("*") if p.is_file())
+    assert "Missing execution_id Report" in out and "Skipped tools.jsonl Rows Report" in out
+    assert snapshot == sorted((p.name, p.read_bytes()) for p in (tmp_path / "data").rglob("*") if p.is_file())
