@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-07T16:00:40.751809Z", "ticket_id": "TCK-20261007-SESSION-GUARD-QUOTED-TEXT-FALSE-POSITIVE", "title": "Guard classifier ignores heredoc bodies and quoted text", "status": "DONE", "summary": "strip_text in classify.py; critical_text uses it; redirect target counts as a write; 11 tests", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}

@@ -63,6 +63,8 @@ class ElementDefinition(CatalogBaseDefinition):
 # The biological needs the simulation models (SURV-05). A need profile must declare each, `none` included: an
 # absent key is a content gap (missing data declares nothing), reported by the validator, never read as "no need".
 MODELLED_BIOLOGICAL_NEEDS = ("hunger", "sleep")
+# KNOW-04: the levels a species' declared common knowledge may name for how dangerous the kind is.
+COMMON_KNOWLEDGE_DANGER_LEVELS = ("low", "medium", "high", "extreme")
 
 
 class NeedProfileDefinition(CatalogBaseDefinition):
@@ -136,6 +138,21 @@ class SkillProfileDefinition(CatalogBaseDefinition):
     skills: List[str] = Field(default_factory=list)
 
 
+class CommonKnowledgeDefinition(BaseModel):
+    """What everyone commonly believes about a kind (KNOW-04). Folk belief: it may be wrong, it is not derived from
+    the kind's stats, and it describes the kind in general, never one individual (no level, position or health)."""
+    model_config = ConfigDict(extra="forbid")
+    danger: str = Field(..., description="Common belief about how dangerous the kind is: low, medium, high or extreme")
+
+    @field_validator("danger")
+    @classmethod
+    def validate_danger(cls, v: str) -> str:
+        """Reject a danger level outside the declared vocabulary."""
+        if v not in COMMON_KNOWLEDGE_DANGER_LEVELS:
+            raise ValueError(f"danger must be one of {COMMON_KNOWLEDGE_DANGER_LEVELS}")
+        return v
+
+
 class SpeciesDefinition(CatalogBaseDefinition):
     """Schema for dynamic species definition (TCK-20260904-SPECIES-CORE-SCHEMA-RENAME:
     renamed from RaceDefinition, part of the race->species terminology migration)."""
@@ -148,6 +165,8 @@ class SpeciesDefinition(CatalogBaseDefinition):
     natural_traits: List[str] = Field(default_factory=list)
     attribute_tendencies: Dict[str, str] = Field(default_factory=dict)
     compatible_roles: List[str] = Field(default_factory=list)
+    common_knowledge: Optional[CommonKnowledgeDefinition] = Field(
+        None, description="KNOW-04: declared folk belief about this kind; absent means nothing is commonly believed")
 
     @field_validator("intelligence_tier")
     @classmethod

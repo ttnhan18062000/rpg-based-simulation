@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from src.core.updates import EntityUpdate, TaskUpdate, NavigationUpdate
+from src.core.updates import EntityUpdate, StrategicUpdate, TaskUpdate, NavigationUpdate
 from src.engine.legality import LegalityServiceV2
 from src.engine.positioning import PositioningService
 from src.core.strategic import ProjectStatus, ObjectiveKind
@@ -16,11 +16,12 @@ from src.core.movement_modes import MovementMode
 from src.core.enums import ActionStyle, ReasonCode, EntityRole, Faction
 from src.core.skills import SKILL_REGISTRY
 from src.engine.rpg_depth import WoundService
-from src.cognition.capability_estimate import CapabilityEstimateService, CapabilityContext
+from src.cognition.common_knowledge import combat_capability_against
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
 from src.engine.tactical_threat import safety_retreat_warranted
+from src.engine.tactical_rest import rest_in_place_update
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -83,6 +84,20 @@ def _perceived_threats(entity: "EntityState", neighbors: List["EntityState"]) ->
 def _destination_or_hold(entity: "EntityState", destination: Optional[Tuple[float, float]]) -> Tuple[float, float]:
     """MOV-03: with no valid destination the entity holds position; never a sentinel coordinate."""
     return destination if destination is not None else entity.navigation.position
+
+
+def _suspend_project_for_threat(entity: "EntityState", hostiles: List["EntityState"]) -> Optional[StrategicUpdate]:
+    """If hostiles are present, SUSPEND the entity's current project if it is active (Pillar 5.1 strategic persistence)."""
+    if not (hostiles and entity.strategic.current_project_id):
+        return None
+    project = entity.strategic.projects.get(entity.strategic.current_project_id)
+    if project and project.status == ProjectStatus.ACTIVE:
+        return StrategicUpdate(
+            projects_add_or_update=[replace(project, status=ProjectStatus.SUSPENDED)],
+            current_project_id_set="",
+            current_objective_id_set="",
+        )
+    return None
 
 
 class TacticalDecisionSystem:
@@ -252,18 +267,7 @@ class TacticalDecisionSystem:
                 hostile_identity_sources[n.id] = _src_identity_source
         
         # 4. Strategic Persistence (Pillar 5.1)
-        # If hostiles are present, we should SUSPEND the current project if it's not already
-        strat_up = None
-        if hostiles and entity.strategic.current_project_id:
-             project = entity.strategic.projects.get(entity.strategic.current_project_id)
-             if project and project.status == ProjectStatus.ACTIVE:
-                  # Suspend to handle threat
-                  from src.core.updates import StrategicUpdate
-                  strat_up = StrategicUpdate(
-                      projects_add_or_update=[replace(project, status=ProjectStatus.SUSPENDED)],
-                      current_project_id_set="",
-                      current_objective_id_set=""
-                  )
+        strat_up = _suspend_project_for_threat(entity, hostiles)
 
         # Safety pressure (AGENCY-07): a cautious entity retreats from a present threat, never from a hostile merely seen
         if safety_retreat_warranted(entity, hostiles, entity_pressures.safety_pressure):
@@ -277,6 +281,10 @@ class TacticalDecisionSystem:
                     payload_set={"target_position": retreat_to, "reason": "SAFETY_PRESSURE_RETREAT"}
                 )
             )
+
+        rest_update = rest_in_place_update(state, entity, hostiles)
+        if rest_update is not None:
+            return rest_update
 
         if not hostiles:
             # Pillar 5.1: Objective Pursuit
@@ -423,16 +431,9 @@ class TacticalDecisionSystem:
         def target_score(h: EntityState) -> Tuple[float, int, float, float, float, int]:
             dist = abs(h.navigation.position[0] - entity.navigation.position[0]) + abs(h.navigation.position[1] - entity.navigation.position[1])
 
-            # Logic ID: COMB-316 -- subjective capability estimate, ad hoc/read-only
-            # (mirrors TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING's pattern; see
-            # docs/cognition/capability_and_knowledge_contract.md). entity.self_model.capabilities
-            # stays empty in production -- this call never writes back.
-            cap_component = CapabilityEstimateService.estimate(
-                entity,
-                context=CapabilityContext.for_combat(enemy_ids=[h.kind]),
-            )
-            cap_estimate = cap_component.estimates.get(f"combat.enemy_type.{h.kind}")
-            capability_confidence = cap_estimate.estimate if cap_estimate is not None else 0.0
+            # Logic ID: COMB-316 -- subjective capability estimate against the hostile's species, from the entity's own
+            # common-knowledge facts (KNOW-04); ad hoc and read-only, nothing is written back to entity.self_model.
+            capability_confidence = combat_capability_against(entity, h)
 
             # Domain 7 Hardening: Trust-based focus fire bias
             group_bias = 1.0

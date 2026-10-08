@@ -39,12 +39,114 @@ _READ_ONLY_GIT = frozenset({"diff", "log", "show", "blame", "status", "ls-files"
 _GIT_OPTS_WITH_ARG = frozenset({"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"})
 _SEGMENT_SPLIT = re.compile(r"&&|\|\||;|\||\n")
 _ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=\S*$")
+_CODE_PAYLOAD = r"(?:^|[\s;&|(])(?:eval|(?:ba|z|da)?sh\s+-\w*c|xargs\s+(?:git|gh))\b"
 _INDIRECTION = re.compile(
-    r"(?:^|[\s;&|(])(?:eval|(?:ba|z|da)?sh\s+-\w*c|xargs\s+(?:git|gh))\b"
-    r"|\$\{?[A-Za-z_]\w*\}?\s+(?:push|commit|pr\b|api\b)"
+    _CODE_PAYLOAD
+    + r"|\$\{?[A-Za-z_]\w*\}?\s+(?:push|commit|pr\b|api\b)"
     r"|(?:\$\(|`)[^)`]*\b(?:git|gh)\b"
 )
 _AUTHORITY_WORDS = re.compile(r"\b(?:push|commit|merge|delete|pr\s+(?:create|merge))\b|--force|session_authority|settings\.json|CLAUDE\.md")
+
+
+_HEREDOC = re.compile(r"<<(?!<)(-?)[ \t]*(?:'(\w+)'|\"(\w+)\"|\\?(\w+))")
+_SHELL_FEED = re.compile(r"\b(?:(?:ba|z|da|k)?sh|source|eval)\b")
+_CODE_PAYLOAD_RE = re.compile(_CODE_PAYLOAD)
+_PLAIN_WORD = re.compile(r"^[\w./:@%+=,~-]*$")
+
+
+def _strip_heredocs(command: str) -> str:
+    """Drop heredoc bodies (`<<EOF`, `<<'EOF'`, `<<-EOF`, through the terminator line): they are data for the command,
+    not commands. The line holding `<<` stays (so `cat > CLAUDE.md <<EOF` keeps its write target). A body fed to a shell
+    (`bash <<EOF`) is code and stays; so does a heredoc with no terminator line (nothing is assumed)."""
+    out: list[str] = []
+    pos = 0
+    while True:
+        m = _HEREDOC.search(command, pos)
+        if not m:
+            break
+        delim = m.group(2) or m.group(3) or m.group(4)
+        nl = command.find("\n", m.end())
+        line_start = command.rfind("\n", 0, m.start()) + 1
+        if nl < 0 or _SHELL_FEED.search(command[line_start:m.start()]):
+            out.append(command[pos:m.end()])
+            pos = m.end()
+            continue
+        lines = command[nl + 1:].split("\n")
+        for i, line in enumerate(lines):
+            if (line.lstrip("\t") if m.group(1) else line) == delim:
+                out.append(command[pos:nl + 1])
+                rest = "\n".join(lines[i + 1:])
+                command, pos = command[:nl + 1] + rest, nl + 1
+                break
+        else:
+            out.append(command[pos:m.end()])
+            pos = m.end()
+    out.append(command[pos:])
+    return "".join(out)
+
+
+def _substitutions(text: str) -> list[str]:
+    """The inner commands of `$(...)` and backtick substitutions in a double-quoted string (they run)."""
+    found: list[str] = []
+    i = 0
+    while i < len(text):
+        if text.startswith("$(", i):
+            depth, j = 1, i + 2
+            while j < len(text) and depth:
+                depth += (text[j] == "(") - (text[j] == ")")
+                j += 1
+            found.append(text[i + 2:j - 1])
+            i = j
+        elif text[i] == "`":
+            j = text.find("`", i + 1)
+            j = len(text) if j < 0 else j
+            found.append(text[i + 1:j])
+            i = j + 1
+        else:
+            i += 1
+    return found
+
+
+def _strip_quotes(command: str) -> str | None:
+    """Replace quoted text strings with `''`, keeping what runs: command substitutions inside double quotes are
+    re-emitted as `; <inner> ;`. A quoted plain word (an operand such as `"main"`) stays. None on an unbalanced quote."""
+    out: list[str] = []
+    i = 0
+    while i < len(command):
+        c = command[i]
+        if c == "\\":
+            out.append(command[i:i + 2])
+            i += 2
+        elif c in "'\"":
+            j = i + 1
+            while j < len(command) and command[j] != c:
+                j += 2 if (c == '"' and command[j] == "\\") else 1
+            if j >= len(command):
+                return None
+            body = command[i + 1:j]
+            if _PLAIN_WORD.match(body):
+                out.append(command[i:j + 1])
+            else:
+                out.append("''")
+                if c == '"':
+                    out.extend(f" ; {sub} ; " for sub in _substitutions(body))
+            i = j + 1
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
+def strip_text(command: str) -> str:
+    """The command with its data removed (heredoc bodies and quoted text strings), for classifying what is left.
+
+    `eval` / `sh -c` payloads are code, so quoted text is kept when one is present. An unbalanced quote also keeps the
+    text (fail closed: the authority-word checks then see the whole command)."""
+    text = _strip_heredocs(command)
+    if _CODE_PAYLOAD_RE.search(text):
+        return text
+    stripped = _strip_quotes(text)
+    return text if stripped is None else stripped
 
 
 @dataclass(frozen=True)
@@ -183,9 +285,25 @@ def _segment_actions(tokens: list[str], default_branches: tuple[str, ...] = DEFA
     return set(), False, False
 
 
+_REDIRECT_OUT = re.compile(r"^\d*>>?(?!&)(.*)$")
+
+
+def _writes_via_redirect(tokens: list[str]) -> bool:
+    """True when a token redirects output to something other than /dev/null (`> f`, `>>f`, `2> f`)."""
+    for i, tok in enumerate(tokens):
+        m = _REDIRECT_OUT.match(tok)
+        if m:
+            target = m.group(1) or (tokens[i + 1] if i + 1 < len(tokens) else "")
+            if target != "/dev/null":
+                return True
+    return False
+
+
 def _is_read_only(tokens: list[str]) -> bool:
     if not tokens:
         return True
+    if _writes_via_redirect(tokens):
+        return False
     verb = tokens[0].rsplit("/", 1)[-1]
     if verb in _READ_ONLY_VERBS:
         return True
@@ -224,7 +342,10 @@ def _switches_branch(tokens: list[str]) -> bool:
 
 
 def classify_command(command: str, default_branches: tuple[str, ...] = DEFAULT_BRANCHES) -> Classification:
-    """Classify a Bash command, splitting compound commands and checking every segment."""
+    """Classify a Bash command, splitting compound commands and checking every segment.
+
+    Data (heredoc bodies, quoted text) is removed first (`strip_text`), so a note that merely mentions "push" is not one."""
+    command = strip_text(command)
     actions: set[str] = set()
     details: list[str] = []
     uncertain = False

@@ -1,0 +1,74 @@
+# SURV-07 five-seed measurement (seeds 42-46, 1500 ticks, audit_mode, budget off, LocalSequentialExecutor, governor pinned NORMAL)
+
+Arms: base = origin/main 0a03c2448; gated = escalation + present-threat gate (7db978edc); gatedA = gated + affordability (5a924c225).
+
+Per-seed values in seed order 42,43,44,45,46. SD is the sample SD over the five seeds.
+
+## crowded_frontier
+
+| metric | arm | mean | sd | per-seed |
+|---|---|---|---|---|
+| alive_t1000 | base | 18.2 | 4.1 | [21, 20, 16, 22, 12] |
+| alive_t1000 | gated | 7.8 | 2.2 | [9, 4, 8, 9, 9] |
+| alive_t1000 | gatedA | 15.8 | 3.6 | [19, 15, 13, 20, 12] |
+| alive_t1100 | base | 5.6 | 4.2 | [4, 7, 4, 12, 1] |
+| alive_t1100 | gated | 3.8 | 2.0 | [4, 2, 4, 7, 2] |
+| alive_t1100 | gatedA | 0.2 | 0.4 | [0, 1, 0, 0, 0] |
+| deaths | base | 34.2 | 4.1 | [35, 35, 37, 27, 37] |
+| deaths | gated | 36.8 | 1.3 | [36, 38, 38, 35, 37] |
+| deaths | gatedA | 38.6 | 0.5 | [39, 38, 39, 39, 38] |
+| d_STARVATION | base | 25.0 | 1.4 | [26, 26, 26, 23, 24] |
+| d_STARVATION | gated | 13.2 | 1.9 | [13, 14, 16, 11, 12] |
+| d_STARVATION | gatedA | 29.8 | 3.7 | [30, 31, 28, 35, 25] |
+| d_DEFEAT | base | 5.6 | 3.2 | [6, 3, 7, 2, 10] |
+| d_DEFEAT | gated | 18.6 | 1.8 | [18, 19, 16, 21, 19] |
+| d_DEFEAT | gatedA | 5.4 | 3.0 | [6, 4, 5, 2, 10] |
+| starved_broke | gatedA | 29.8 | 3.7 | [30, 31, 28, 35, 25] |
+| starved_could_pay | gatedA | 0.0 | 0.0 | [0, 0, 0, 0, 0] |
+
+## frontier_living_world
+
+| metric | arm | mean | sd | per-seed |
+|---|---|---|---|---|
+| alive_t1000 | base | 14.6 | 3.8 | [17, 18, 10, 17, 11] |
+| alive_t1000 | gated | 15.8 | 1.9 | [13, 17, 18, 15, 16] |
+| alive_t1000 | gatedA | 12.8 | 3.4 | [12, 17, 8, 15, 12] |
+| alive_t1100 | base | 8.4 | 1.1 | [9, 10, 7, 8, 8] |
+| alive_t1100 | gated | 13.6 | 3.5 | [9, 13, 18, 12, 16] |
+| alive_t1100 | gatedA | 5.8 | 1.5 | [4, 6, 6, 5, 8] |
+| deaths | base | 44.6 | 0.5 | [44, 45, 45, 45, 44] |
+| deaths | gated | 42.4 | 3.4 | [45, 46, 40, 43, 38] |
+| deaths | gatedA | 46.6 | 1.7 | [48, 47, 46, 48, 44] |
+| d_STARVATION | base | 25.8 | 5.0 | [29, 27, 29, 27, 17] |
+| d_STARVATION | gated | 13.0 | 4.8 | [14, 18, 14, 14, 5] |
+| d_STARVATION | gatedA | 26.8 | 4.1 | [30, 28, 26, 30, 20] |
+| d_DEFEAT | base | 10.0 | 4.9 | [7, 5, 10, 10, 18] |
+| d_DEFEAT | gated | 18.6 | 4.6 | [22, 11, 20, 18, 22] |
+| d_DEFEAT | gatedA | 10.8 | 4.3 | [8, 6, 13, 10, 17] |
+| starved_broke | gatedA | 26.8 | 4.1 | [30, 28, 26, 30, 20] |
+| starved_could_pay | gatedA | 0.0 | 0.0 | [0, 0, 0, 0, 0] |
+
+## urban_political
+
+| metric | arm | mean | sd | per-seed |
+|---|---|---|---|---|
+| alive_t1000 | base | 14.4 | 2.5 | [15, 11, 14, 18, 14] |
+| alive_t1000 | gated | 12.2 | 3.0 | [9, 11, 13, 17, 11] |
+| alive_t1000 | gatedA | 11.8 | 2.8 | [13, 7, 12, 14, 13] |
+| alive_t1100 | base | 6.8 | 2.3 | [4, 6, 8, 10, 6] |
+| alive_t1100 | gated | 6.8 | 3.5 | [2, 5, 9, 11, 7] |
+| alive_t1100 | gatedA | 0.0 | 0.0 | [0, 0, 0, 0, 0] |
+| deaths | base | 23.6 | 1.8 | [26, 24, 23, 21, 24] |
+| deaths | gated | 23.8 | 3.0 | [28, 25, 22, 20, 24] |
+| deaths | gatedA | 30.0 | 0.0 | [30, 30, 30, 30, 30] |
+| d_STARVATION | base | 16.0 | 1.2 | [18, 15, 15, 16, 16] |
+| d_STARVATION | gated | 10.8 | 2.3 | [11, 12, 13, 11, 7] |
+| d_STARVATION | gatedA | 21.4 | 3.9 | [24, 15, 21, 25, 22] |
+| d_DEFEAT | base | 3.4 | 0.9 | [4, 2, 4, 3, 4] |
+| d_DEFEAT | gated | 7.6 | 5.1 | [13, 2, 5, 5, 13] |
+| d_DEFEAT | gatedA | 4.2 | 1.3 | [3, 6, 5, 3, 4] |
+| starved_broke | gated | 10.8 | 2.3 | [11, 12, 13, 11, 7] |
+| starved_broke | gatedA | 21.4 | 3.9 | [24, 15, 21, 25, 22] |
+| starved_could_pay | gated | 0.0 | 0.0 | [0, 0, 0, 0, 0] |
+| starved_could_pay | gatedA | 0.0 | 0.0 | [0, 0, 0, 0, 0] |
+
