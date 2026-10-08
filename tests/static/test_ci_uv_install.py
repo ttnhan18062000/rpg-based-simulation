@@ -12,7 +12,8 @@ _ROOT = Path(__file__).resolve().parent.parent.parent
 _JOBS = yaml.safe_load((_ROOT / ".github" / "workflows" / "test.yml").read_text())["jobs"]
 # resync-gate (TCK-20261005-CI-SKIP-HEAVY-JOBS-ON-REGISTRY-ONLY-RESYNC) runs one stdlib-only module on the
 # runner's own python3, like changed-files, so it installs nothing.
-_NO_PYTHON_INSTALL = {"changed-files", "frontend", "resync-gate"}
+# docker-build: TCK-20261008-CI-BACKEND-IMAGE-BUILD-CHECK builds the image with plain docker, no Python install on the runner.
+_NO_PYTHON_INSTALL = {"changed-files", "frontend", "resync-gate", "docker-build"}
 # code-health runs the ratchet itself (ruff, complexipy, ast-grep, import-linter), so it syncs `lint` too.
 _LINT_JOBS = {"tools-a-e", "code-health", "code-health-sarif"}
 
