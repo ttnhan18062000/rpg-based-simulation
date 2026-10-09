@@ -753,3 +753,97 @@ class TestRealClosureProducesExactlyThreePerPRFiles:
         assert (week_dir / "runs.jsonl").read_text() == seeded_runs
         assert (week_dir / "events.jsonl").read_text() == seeded_events
         assert (week_dir / "tools.jsonl").read_text() == seeded_tools
+
+
+# --- TCK-20261009-HAND-CLOSURE-TEMPLATED-EVENTS-GUARD ------------------------------------------------------------------
+
+import record_hand_orchestrated_closure as _rhc  # noqa: E402
+
+_SIX = [
+    {"phase": "Scope", "status": "ok", "summary": "pinned 5x3 report"},
+    {"phase": "Implement", "status": "ok", "summary": "pinned 5x3 report"},
+    {"phase": "Test", "status": "ok", "summary": "pinned 5x3 report"},
+    {"phase": "Parity", "status": "skipped", "skip_reason": "condition_false", "summary": "no ledger change"},
+    {"phase": "Verify", "status": "ok", "summary": "pinned 5x3 report"},
+    {"phase": "Finalize", "status": "ok", "summary": "pinned 5x3 report"},
+]
+
+
+def _rows(ticket, events):
+    return [{"ticket_id": ticket, "run_id": ticket, **e} for e in events]
+
+
+class TestParityClaimGuard:
+    def test_parity_ok_without_a_ledger_change_is_refused_with_the_skipped_hint(self):
+        events = [{"phase": "Parity", "status": "ok", "summary": "x"}]
+        error = _rhc.parity_claimed_without_ledger_change(events, {"tools/a.py"})
+        assert error and "skip_reason" in error and "condition_false" in error
+
+    def test_parity_ok_with_a_ledger_change_passes(self):
+        events = [{"phase": "Parity", "status": "ok", "summary": "x"}]
+        assert _rhc.parity_claimed_without_ledger_change(events, {"docs/parity_ledger/combat_movement.yaml"}) is None
+
+    def test_parity_skipped_and_no_parity_event_pass(self):
+        assert _rhc.parity_claimed_without_ledger_change([{"phase": "Parity", "status": "skipped", "summary": "x"}], set()) is None
+        assert _rhc.parity_claimed_without_ledger_change([{"phase": "Test", "status": "ok", "summary": "x"}], set()) is None
+
+
+class TestCopiedSummariesGuard:
+    def test_the_pr_457_payload_replayed_for_a_second_ticket_is_refused_and_names_the_first(self):
+        error = _rhc.events_copied_from_another_ticket("TCK-B", _SIX, _rows("TCK-A", _SIX))
+        assert error and "TCK-A" in error and "--allow-shared-summaries" in error
+
+    def test_partly_different_summaries_pass(self):
+        different = [dict(e) for e in _SIX]
+        different[1]["summary"] = "fixed the crash"
+        assert _rhc.events_copied_from_another_ticket("TCK-B", different, _rows("TCK-A", _SIX)) is None
+
+    def test_the_same_ticket_rerecorded_and_a_single_shared_phase_are_not_copies(self):
+        assert _rhc.events_copied_from_another_ticket("TCK-A", _SIX, _rows("TCK-A", _SIX)) is None
+        one = [{"phase": "Finalize", "status": "ok", "summary": "hand close"}]
+        assert _rhc.events_copied_from_another_ticket("TCK-B", one, _rows("TCK-A", one)) is None
+
+    def test_empty_summaries_are_ignored_when_matching(self):
+        new = [{"phase": "Scope", "status": "ok", "summary": "a"}, {"phase": "Test", "status": "ok", "summary": "b"},
+               {"phase": "Verify", "status": "ok", "summary": ""}]
+        recorded = _rows("TCK-A", [{"phase": "Scope", "status": "ok", "summary": "a"}, {"phase": "Test", "status": "ok", "summary": "b"}])
+        assert "TCK-A" in _rhc.events_copied_from_another_ticket("TCK-B", new, recorded)
+
+
+class TestGuardsThroughTheCli:
+    def _run(self, args, tmp_path):
+        return subprocess.run([sys.executable, str(_RECORD_PATH), *args], capture_output=True, text=True, cwd=tmp_path)
+
+    def _close(self, tmp_path, ticket, events, *extra):
+        return self._run(["--ticket-id", ticket, "--tier", "hotfix", "--events", json.dumps(events),
+                          "--title", f"Title {ticket}", "--log-summary", f"Summary {ticket}", *extra], tmp_path)
+
+    def test_a_second_ticket_with_identical_summaries_is_refused_before_any_write_and_the_override_marks_the_row(self, tmp_path):
+        _init_git_repo_on_test_branch(tmp_path)
+        events = [e for e in _SIX if e["phase"] != "Parity"]
+        assert self._close(tmp_path, "TCK-FAKE-A", events).returncode == 0
+        events_file = next((tmp_path / AGENT_MONITORING / "data").rglob("*.events.jsonl"))
+        runs_file = next((tmp_path / AGENT_MONITORING / "data").rglob("*.runs.jsonl"))
+        before = (events_file.read_text(), runs_file.read_text())
+        refused = self._close(tmp_path, "TCK-FAKE-B", events)
+        assert refused.returncode == 1 and "TCK-FAKE-A" in refused.stderr and "nothing was written" in refused.stderr
+        assert (events_file.read_text(), runs_file.read_text()) == before, "a refusal writes nothing"
+        allowed = self._close(tmp_path, "TCK-FAKE-B", events, "--allow-shared-summaries")
+        assert allowed.returncode == 0, allowed.stderr
+        run_rows = [json.loads(line) for line in runs_file.read_text().splitlines()]
+        assert [r.get("summaries_shared") for r in run_rows if r["ticket_id"] == "TCK-FAKE-B"] == [True]
+        assert "summaries_shared" not in next(r for r in run_rows if r["ticket_id"] == "TCK-FAKE-A")
+
+    def test_honest_partly_different_events_pass_unchanged(self, tmp_path):
+        _init_git_repo_on_test_branch(tmp_path)
+        events = [e for e in _SIX if e["phase"] != "Parity"]
+        assert self._close(tmp_path, "TCK-FAKE-A", events).returncode == 0
+        other = [dict(e) for e in events]
+        other[1]["summary"] = "fixed the crash"
+        assert self._close(tmp_path, "TCK-FAKE-B", other).returncode == 0
+
+    def test_parity_ok_is_refused_through_the_cli_when_the_ticket_changed_no_ledger_file(self, tmp_path):
+        _init_git_repo_on_test_branch(tmp_path)
+        events = [{"phase": "Scope", "status": "ok", "summary": "scoped"}, {"phase": "Parity", "status": "ok", "summary": "ledger updated"}]
+        refused = self._close(tmp_path, "TCK-FAKE-NOLEDGER", events)
+        assert refused.returncode == 1 and "docs/parity_ledger/" in refused.stderr and "condition_false" in refused.stderr
