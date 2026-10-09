@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Iterable, Mapping, Optional
 
 from src.core.movement_modes import MovementMode
 from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
+from src.engine.hostility import is_engaged, perceived_hostile
 from src.engine.legality import LegalityServiceV2
 from src.engine.phase_governor import ScanPolicy
 
@@ -31,6 +32,11 @@ class MovementCandidateSelector:
     # bounded number of extra candidates per tick, not re-admit most entities and defeat the
     # policy's own work-shedding purpose.
     EXACT_DIRTY_STARVED_CADENCE_MODULO = 20
+
+    # The payload ``reason`` of a move the tactical pass issues to LEAVE (a panic retreat, a safety retreat, a return to the leash
+    # home). Leaving is a decision, so such a held move keeps stepping beside an engaged hostile and pays the opportunity attack
+    # knowingly (CONFLICT-04, divergence 2.89). Read from the payload the decision issued, which no later pass rewrites.
+    FLIGHT_REASONS = frozenset({"PANIC_RETREAT", "SAFETY_PRESSURE_RETREAT", "LEASH_RETURN"})
 
     @staticmethod
     def resolve_live_tracking_target(
@@ -80,21 +86,88 @@ class MovementCandidateSelector:
         return fallback_target
 
     @staticmethod
+    def position_index(entities: Mapping[int, "EntityState"]) -> dict[tuple[int, int], list[int]]:
+        """Whole tile -> ids of the active, living entities standing on it (the tick-start positions of ``entities``)."""
+        index: dict[tuple[int, int], list[int]] = {}
+        for other in entities.values():
+            if other.lifecycle.active and other.combat.alive:
+                pos = other.navigation.position
+                index.setdefault((int(pos[0]), int(pos[1])), []).append(other.id)
+        return index
+
+    @staticmethod
+    def engaged_adjacent_hostile(
+        entity: "EntityState",
+        entities: Mapping[int, "EntityState"],
+        index: Optional[dict[tuple[int, int], list[int]]] = None,
+    ) -> bool:
+        """CONFLICT-04 at the movement layer: True when an orthogonally adjacent entity is engaged with ``entity`` (either names
+        the other as its target) and is a perceived, hostile-compatible entity. It is the predicate the hold between blows uses
+        (``tactical_hold.held_swing_update``), through the same ``hostility.perceived_hostile`` the tactical pass builds its
+        hostiles with, so the two layers cannot disagree."""
+        if index is None:
+            index = MovementCandidateSelector.position_index(entities)
+        x, y = int(entity.navigation.position[0]), int(entity.navigation.position[1])
+        for tile in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            for other_id in index.get(tile, ()):
+                other = entities.get(other_id)
+                if other is not None and other.id != entity.id and is_engaged(entity, other) and perceived_hostile(entity, other):
+                    return True
+        return False
+
+    @staticmethod
     def movement_target(
-        entity: "EntityState", ent_upd: Optional[EntityUpdate], entities: Mapping[int, "EntityState"]
+        entity: "EntityState",
+        ent_upd: Optional[EntityUpdate],
+        entities: Mapping[int, "EntityState"],
+        index: Optional[dict[tuple[int, int], list[int]]] = None,
     ) -> Optional[tuple[float, float]]:
         """Where ``entity`` is walking this tick: the target this tick's update sets, else the stored navigation target, live-refreshed
         for an entity-tracking move (see ``resolve_live_tracking_target``), or None for an entity holding an action task that sets no
-        target this tick (see ``holds_action_task``). Shared by the movement phase and ``select``."""
+        target this tick (see ``holds_action_task``). Shared by the movement phase and ``select``.
+
+        CONFLICT-04: leaving an engagement is a decision. An entity with an engaged, perceived, hostile entity orthogonally adjacent
+        steps only on a target a decision sets this tick (a target set together with an ``ENTITY_MOVE`` task update: flight, panic
+        retreat, a declared ability). A stored target (a held move, an idle walk toward an objective) or a bare per-tick reaffirm of
+        a held move's target (the executor's, which carries no task update) takes no step, so no step provokes an opportunity attack."""
         nav = ent_upd.navigation if ent_upd else None
+        if nav and nav.target_set is not None and ent_upd and ent_upd.task is not None and ent_upd.task.work_kind_set == "ENTITY_MOVE":
+            return nav.target_set  # a decision this tick
+        target: Optional[tuple[float, float]]
         if nav and nav.target_set is not None:
-            return nav.target_set
-        if MovementCandidateSelector.holds_action_task(entity):
+            target = nav.target_set
+        elif MovementCandidateSelector.holds_action_task(entity):
             return None
-        target: Optional[tuple[float, float]] = MovementCandidateSelector.resolve_live_tracking_target(
-            entity, entities, entity.navigation.target
-        )
+        else:
+            target = MovementCandidateSelector.resolve_live_tracking_target(entity, entities, entity.navigation.target)
+        if (target is not None and not MovementCandidateSelector.is_decided_flight(entity)
+                and MovementCandidateSelector.engaged_adjacent_hostile(entity, entities, index)):
+            return None
         return target
+
+    @staticmethod
+    def is_decided_flight(entity: "EntityState") -> bool:
+        """True for a held move a decision issued to leave (see ``FLIGHT_REASONS``)."""
+        return entity.task.work_kind == "ENTITY_MOVE" and entity.task.payload.get("reason") in MovementCandidateSelector.FLIGHT_REASONS
+
+    @staticmethod
+    def move_ends_here(
+        entity: "EntityState",
+        entities: Mapping[int, "EntityState"],
+        index: Optional[dict[tuple[int, int], list[int]]] = None,
+    ) -> bool:
+        """True when a held ``ENTITY_MOVE`` ends this tick and hands the entity back to the brain: a tracked combat move that has done
+        its job or lost its target (``tracked_move_complete``), or a move that is not a decided flight beside an engaged, perceived,
+        hostile entity (CONFLICT-04 at the movement layer: ``movement_target`` takes no stored-target step there, and a held move runs
+        no brain, so left in place it would stand frozen until the hostile went away: measured 65 to 109 ticks for REGROUP).
+        The one condition both dispatchers (``LocalSequentialExecutor`` and ``default_simulation_worker``) ask; the update that ends
+        the move is ``tracked_move_completion_update``."""
+        if entity.task.work_kind != "ENTITY_MOVE":
+            return False
+        if MovementCandidateSelector.tracked_move_complete(entity, entities):
+            return True
+        return (not MovementCandidateSelector.is_decided_flight(entity)
+                and MovementCandidateSelector.engaged_adjacent_hostile(entity, entities, index))
 
     @staticmethod
     def holds_action_task(entity: "EntityState") -> bool:
@@ -198,6 +271,7 @@ class MovementCandidateSelector:
         budget: int = 1000,
         scan_policy: ScanPolicy = ScanPolicy.FULL,
     ) -> tuple[int, ...]:
+        index = MovementCandidateSelector.position_index(state.entities)
         urgent_selected: set[int] = set()
         normal_selected: list[int] = []
 
@@ -215,7 +289,7 @@ class MovementCandidateSelector:
                 continue
 
             # Check effective target and movement mode
-            nav_target = MovementCandidateSelector.movement_target(entity, ent_upd, state.entities)
+            nav_target = MovementCandidateSelector.movement_target(entity, ent_upd, state.entities, index)
             nav_upd = ent_upd.navigation if ent_upd else None
             mode = nav_upd.movement_mode_set if (nav_upd and nav_upd.movement_mode_set is not None) else entity.navigation.movement_mode
 

@@ -1684,5 +1684,6 @@
     declared kind keeps the old constants and is listed by undeclared_need_kinds.'
   proof_type: regression
   test_path: tests/unit/engine/test_biological_needs.py::test_apply_path_accumulates_per_kind
-  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.80.
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.80, and Section 2.93 (owner decision 33, light balance pass,
+    `humanoid_survival` hunger is low, 0.05 per tick, for human, orc, elf, dwarf, troll, lizardfolk and species-less persons).
   support_boundary: null

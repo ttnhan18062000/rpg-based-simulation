@@ -61,7 +61,7 @@ _worlds:
       entity_density_per_region: 5.3636
       faction_density: 0.8182
       quest_density: 0.4237
-      resource_density: 1.2727
+      resource_density: 1.4545
     run_keys:
     - frontier_extended_seed123_200t
     - frontier_extended_seed42_200t
@@ -72,7 +72,7 @@ _worlds:
       entity_count: 59
       quest_count: 25
       region_count: 11
-      resource_node_count: 14
+      resource_node_count: 16
     tier: end_to_end
   frontier_living_world:
     archetype: civilian_settlement
@@ -82,7 +82,7 @@ _worlds:
       entity_density_per_region: 6.125
       faction_density: 0.75
       quest_density: 0.3878
-      resource_density: 1.25
+      resource_density: 1.375
     run_keys:
     - frontier_living_world_seed123_200t
     - frontier_living_world_seed42_200t
@@ -93,7 +93,7 @@ _worlds:
       entity_count: 49
       quest_count: 19
       region_count: 8
-      resource_node_count: 10
+      resource_node_count: 11
     tier: end_to_end
   frontier_marches:
     archetype: civilian_settlement
@@ -103,7 +103,7 @@ _worlds:
       entity_density_per_region: 6.8889
       faction_density: 1.0
       quest_density: 0.3065
-      resource_density: 1.4444
+      resource_density: 1.6667
     run_keys:
     - frontier_marches_seed123_200t
     - frontier_marches_seed42_200t
@@ -114,7 +114,7 @@ _worlds:
       entity_count: 62
       quest_count: 19
       region_count: 9
-      resource_node_count: 13
+      resource_node_count: 15
     tier: stress
   generated_frontier_3_42:
     archetype: civilian_settlement
@@ -189,7 +189,7 @@ _worlds:
       entity_density_per_region: 5.125
       faction_density: 0.875
       quest_density: 0.4146
-      resource_density: 1.25
+      resource_density: 1.375
     run_keys:
     - lifecycle_full_coverage_world_seed42_200t
     scale:
@@ -198,7 +198,7 @@ _worlds:
       entity_count: 41
       quest_count: 17
       region_count: 8
-      resource_node_count: 10
+      resource_node_count: 11
     tier: stress
   quest_dense_frontier:
     archetype: monster_only_gauntlet
@@ -250,7 +250,7 @@ _worlds:
       entity_density_per_region: 6.0
       faction_density: 1.0
       quest_density: 0.3333
-      resource_density: 1.6667
+      resource_density: 2.0
     run_keys:
     - sandbox_world_seed137_200t
     - sandbox_world_seed42_1000t
@@ -263,7 +263,7 @@ _worlds:
       entity_count: 18
       quest_count: 6
       region_count: 3
-      resource_node_count: 5
+      resource_node_count: 6
     tier: end_to_end
   simq_routing_test:
     archetype: civilian_settlement
@@ -295,7 +295,7 @@ _worlds:
       entity_density_per_region: 5.2308
       faction_density: 0.8462
       quest_density: 0.3971
-      resource_density: 1.3846
+      resource_density: 1.6154
     run_keys:
     - simq_scale_stress_seed42_seed42_200t
     scale:
@@ -304,7 +304,7 @@ _worlds:
       entity_count: 68
       quest_count: 27
       region_count: 13
-      resource_node_count: 18
+      resource_node_count: 21
     tier: stress
   swamp_border_world:
     archetype: civilian_settlement
@@ -314,7 +314,7 @@ _worlds:
       entity_density_per_region: 5.8
       faction_density: 0.8
       quest_density: 0.3103
-      resource_density: 1.6
+      resource_density: 2.0
     run_keys:
     - swamp_border_world_seed123_200t
     - swamp_border_world_seed42_200t
@@ -325,7 +325,7 @@ _worlds:
       entity_count: 29
       quest_count: 9
       region_count: 5
-      resource_node_count: 8
+      resource_node_count: 10
     tier: end_to_end
   unit_faction_tension:
     archetype: civilian_settlement
@@ -335,7 +335,7 @@ _worlds:
       entity_density_per_region: 6.0
       faction_density: 1.0
       quest_density: 0.3333
-      resource_density: 1.6667
+      resource_density: 2.0
     run_keys:
     - unit_faction_tension_seed123_200t
     - unit_faction_tension_seed42_1000t
@@ -348,7 +348,7 @@ _worlds:
       entity_count: 18
       quest_count: 6
       region_count: 3
-      resource_node_count: 5
+      resource_node_count: 6
     tier: unit
   unit_information_density:
     archetype: civilian_settlement
@@ -450,7 +450,7 @@ _worlds:
       entity_density_per_region: 2.75
       faction_density: 0.5
       quest_density: 0.6364
-      resource_density: 1.0
+      resource_density: 1.25
     run_keys:
     - wilderness_survival_seed123_200t
     - wilderness_survival_seed42_200t
@@ -461,7 +461,7 @@ _worlds:
       entity_count: 11
       quest_count: 7
       region_count: 4
-      resource_node_count: 4
+      resource_node_count: 5
     tier: end_to_end
 crowded_frontier_seed123_200t:
   active_feature_flags: {}
@@ -655,7 +655,7 @@ frontier_extended_seed123_200t:
     entity_count: 59
     quest_count: 25
     region_count: 11
-    resource_node_count: 14
+    resource_node_count: 16
   seed: 123
   ticks: 200
   tier: end_to_end
@@ -670,7 +670,7 @@ frontier_extended_seed42_200t:
     entity_count: 59
     quest_count: 25
     region_count: 11
-    resource_node_count: 14
+    resource_node_count: 16
   seed: 42
   ticks: 200
   tier: end_to_end
@@ -685,7 +685,7 @@ frontier_extended_seed456_200t:
     entity_count: 59
     quest_count: 25
     region_count: 11
-    resource_node_count: 14
+    resource_node_count: 16
   seed: 456
   ticks: 200
   tier: end_to_end
@@ -701,7 +701,7 @@ frontier_living_world_seed123_200t:
     entity_count: 49
     quest_count: 19
     region_count: 8
-    resource_node_count: 10
+    resource_node_count: 11
   seed: 123
   ticks: 200
   tier: end_to_end
@@ -717,7 +717,7 @@ frontier_living_world_seed42_200t:
     entity_count: 49
     quest_count: 19
     region_count: 8
-    resource_node_count: 10
+    resource_node_count: 11
   seed: 42
   ticks: 200
   tier: end_to_end
@@ -733,7 +733,7 @@ frontier_living_world_seed456_200t:
     entity_count: 49
     quest_count: 19
     region_count: 8
-    resource_node_count: 10
+    resource_node_count: 11
   seed: 456
   ticks: 200
   tier: end_to_end
@@ -748,7 +748,7 @@ frontier_marches_seed123_200t:
     entity_count: 62
     quest_count: 19
     region_count: 9
-    resource_node_count: 13
+    resource_node_count: 15
   seed: 123
   ticks: 200
   tier: stress
@@ -763,7 +763,7 @@ frontier_marches_seed42_200t:
     entity_count: 62
     quest_count: 19
     region_count: 9
-    resource_node_count: 13
+    resource_node_count: 15
   seed: 42
   ticks: 200
   tier: stress
@@ -778,7 +778,7 @@ frontier_marches_seed456_200t:
     entity_count: 62
     quest_count: 19
     region_count: 9
-    resource_node_count: 13
+    resource_node_count: 15
   seed: 456
   ticks: 200
   tier: stress
@@ -964,7 +964,7 @@ lifecycle_full_coverage_world_seed42_200t:
     entity_count: 41
     quest_count: 17
     region_count: 8
-    resource_node_count: 10
+    resource_node_count: 11
   seed: 42
   ticks: 200
   tier: stress
@@ -1063,7 +1063,7 @@ sandbox_world_seed137_200t:
     entity_count: 18
     quest_count: 6
     region_count: 3
-    resource_node_count: 5
+    resource_node_count: 6
   seed: 137
   ticks: 200
   tier: end_to_end
@@ -1078,7 +1078,7 @@ sandbox_world_seed42_1000t:
     entity_count: 18
     quest_count: 6
     region_count: 3
-    resource_node_count: 5
+    resource_node_count: 6
   seed: 42
   ticks: 1000
   tier: end_to_end
@@ -1093,7 +1093,7 @@ sandbox_world_seed42_2000t:
     entity_count: 18
     quest_count: 6
     region_count: 3
-    resource_node_count: 5
+    resource_node_count: 6
   seed: 42
   ticks: 2000
   tier: end_to_end
@@ -1108,7 +1108,7 @@ sandbox_world_seed42_200t:
     entity_count: 18
     quest_count: 6
     region_count: 3
-    resource_node_count: 5
+    resource_node_count: 6
   seed: 42
   ticks: 200
   tier: end_to_end
@@ -1123,7 +1123,7 @@ sandbox_world_seed999_200t:
     entity_count: 18
     quest_count: 6
     region_count: 3
-    resource_node_count: 5
+    resource_node_count: 6
   seed: 999
   ticks: 200
   tier: end_to_end
@@ -1197,7 +1197,7 @@ simq_scale_stress_seed42_seed42_200t:
     entity_count: 68
     quest_count: 27
     region_count: 13
-    resource_node_count: 18
+    resource_node_count: 21
   seed: 42
   ticks: 200
   tier: stress
@@ -1212,7 +1212,7 @@ swamp_border_world_seed123_200t:
     entity_count: 29
     quest_count: 9
     region_count: 5
-    resource_node_count: 8
+    resource_node_count: 10
   seed: 123
   ticks: 200
   tier: end_to_end
@@ -1227,7 +1227,7 @@ swamp_border_world_seed42_200t:
     entity_count: 29
     quest_count: 9
     region_count: 5
-    resource_node_count: 8
+    resource_node_count: 10
   seed: 42
   ticks: 200
   tier: end_to_end
@@ -1242,7 +1242,7 @@ swamp_border_world_seed456_200t:
     entity_count: 29
     quest_count: 9
     region_count: 5
-    resource_node_count: 8
+    resource_node_count: 10
   seed: 456
   ticks: 200
   tier: end_to_end
@@ -1256,7 +1256,7 @@ unit_faction_tension_seed123_200t:
     entity_count: 18
     quest_count: 6
     region_count: 3
-    resource_node_count: 5
+    resource_node_count: 6
   seed: 123
   ticks: 200
   tier: unit
@@ -1270,7 +1270,7 @@ unit_faction_tension_seed42_1000t:
     entity_count: 18
     quest_count: 6
     region_count: 3
-    resource_node_count: 5
+    resource_node_count: 6
   seed: 42
   ticks: 1000
   tier: unit
@@ -1284,7 +1284,7 @@ unit_faction_tension_seed42_2000t:
     entity_count: 18
     quest_count: 6
     region_count: 3
-    resource_node_count: 5
+    resource_node_count: 6
   seed: 42
   ticks: 2000
   tier: unit
@@ -1298,7 +1298,7 @@ unit_faction_tension_seed42_200t:
     entity_count: 18
     quest_count: 6
     region_count: 3
-    resource_node_count: 5
+    resource_node_count: 6
   seed: 42
   ticks: 200
   tier: unit
@@ -1312,7 +1312,7 @@ unit_faction_tension_seed456_200t:
     entity_count: 18
     quest_count: 6
     region_count: 3
-    resource_node_count: 5
+    resource_node_count: 6
   seed: 456
   ticks: 200
   tier: unit
@@ -1638,7 +1638,7 @@ wilderness_survival_seed123_200t:
     entity_count: 11
     quest_count: 7
     region_count: 4
-    resource_node_count: 4
+    resource_node_count: 5
   seed: 123
   ticks: 200
   tier: end_to_end
@@ -1652,7 +1652,7 @@ wilderness_survival_seed42_200t:
     entity_count: 11
     quest_count: 7
     region_count: 4
-    resource_node_count: 4
+    resource_node_count: 5
   seed: 42
   ticks: 200
   tier: end_to_end
@@ -1666,7 +1666,7 @@ wilderness_survival_seed456_200t:
     entity_count: 11
     quest_count: 7
     region_count: 4
-    resource_node_count: 4
+    resource_node_count: 5
   seed: 456
   ticks: 200
   tier: end_to_end

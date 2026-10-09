@@ -37,7 +37,7 @@ Location: /home/vboxuser/.local/lib/python3.13/site-packages
 ```
 
 The **import name** (`graphify`) and the **distribution/pip name** (`graphifyy`, note the extra
-`y`) differ. Nothing under this repo's `tools/` implements extraction — `tools/graphify_to_html.py`
+`y`) differ. Nothing under this repo's `tools/` implements extraction — `tools/graphify_to_html.py` (its JS dependencies live in `tools/graphify_html/`)
 and `tools/knowledge_search.py` only consume `graphify-out/graph.json`, they do not produce it.
 
 **Reproducibility/versioning implication:** the relation vocabulary and extraction behavior this

@@ -13,6 +13,7 @@ from src.engine.biological_needs import need_rates, undeclared_need_kinds
 from src.engine.domain.core_actions import CoreActions, ROUGH_REST_SLEEP_DEBT_RECOVERY
 from src.engine.need_paths import need_path_report
 from src.engine.service_reach import service_tile
+from src.core.update_models.resources import ResourceTransferIntent
 from src.engine.town_resolution import TownResolutionSystem
 
 
@@ -30,11 +31,16 @@ def _entity(eid=1, role=EntityRole.WORKER, **props):
 
 
 def test_legacy_constants_are_the_medium_need_rates(catalog):
-    assert need_rates(_entity(species_id="human")) == pytest.approx((0.1, 0.05))
+    assert need_rates(_entity(role=EntityRole.MONSTER, species_id="goblin")) == pytest.approx((0.1, 0.05))  # goblin_survival: medium, medium
+
+
+def test_a_human_builds_hunger_at_half_the_base_rate_and_sleep_debt_at_the_base_rate(catalog):
+    """Decision 33 (light balance pass): `humanoid_survival` hunger is "low", so a person reaches the starvation line about 19 hours after a full meal."""
+    assert need_rates(_entity(species_id="human")) == pytest.approx((0.05, 0.05))
 
 
 def test_person_without_species_gets_the_ordinary_persons_needs(catalog):
-    assert need_rates(_entity(role=EntityRole.CITIZEN)) == pytest.approx((0.1, 0.05))
+    assert need_rates(_entity(role=EntityRole.CITIZEN)) == pytest.approx((0.05, 0.05))
 
 
 @pytest.mark.parametrize("species", ["undead", "spirit", "elemental"])
@@ -71,7 +77,7 @@ def test_apply_path_accumulates_per_kind(catalog):
                       ("undead", _entity(2, role=EntityRole.MONSTER, species_id="undead"))):
         changes = ApplyPath._compute_entity_changes(ent, None, 10, SystemCadence(), True, False, [], state)
         out[name] = changes["biological"].hunger
-    assert out["human"] == pytest.approx(0.1) and out["undead"] == 0.0
+    assert out["human"] == pytest.approx(0.05) and out["undead"] == 0.0
 
 
 def test_service_tile_prefers_own_tile_then_orthogonal_neighbour():
@@ -142,7 +148,7 @@ def test_need_path_report_flags_a_hungry_kind_in_a_world_with_no_inn(catalog):
     state = AuthoritativeState(tick=0, seed=1, entities={1: ent})
     (row,) = need_path_report(state, catalog)
     assert row["kind"] == "human" and row["hunger_path"] is False
-    assert row["advisory"] == "hungers but the world has no inn"
+    assert row["advisory"] == "hungers but the world has no inn and no food node"
 
 
 @pytest.mark.parametrize("species", ["undead", "spirit", "elemental"])
@@ -186,3 +192,73 @@ def test_absent_need_key_is_recorded_when_it_fires_and_never_on_the_corpus(catal
         del catalog.need_profiles["gap_probe"]
     assert rates == pytest.approx((0.05, 0.0)) and bn.ABSENT_NEED_KEY_FIRINGS == [("gap_probe", "sleep")]
     bn.ABSENT_NEED_KEY_FIRINGS.clear()
+
+
+def _forager(hunger, berries=0):
+    from src.core.state import ItemStack
+    ent = V2EntityBuilder(1).kind("worker").location(10.0, 10.0).biological(hunger=hunger).inventory(gold=0).build()
+    return replace(ent, inventory=replace(ent.inventory, items=[ItemStack("wild_berries", berries)] if berries else []))
+
+
+def test_a_hungry_subject_carrying_food_eats_it_with_no_building():
+    from src.engine.tactical_rest import EAT_CARRIED_MIN_HUNGER, eat_carried_update
+    upd = eat_carried_update(_forager(EAT_CARRIED_MIN_HUNGER, berries=1), [])
+    assert upd.task.payload_set["action"] == "EAT" and upd.task.payload_set["reason"] == "EAT_CARRIED"
+    assert eat_carried_update(_forager(EAT_CARRIED_MIN_HUNGER - 1, berries=1), []) is None  # a meal would be wasted
+    assert eat_carried_update(_forager(90.0), []) is None  # nothing carried: nothing to eat in place
+
+
+def test_a_present_threat_outranks_eating_carried_food(monkeypatch):
+    import src.engine.tactical_rest as tactical_rest
+    monkeypatch.setattr(tactical_rest, "present_threat_terms", lambda entity, hostiles: ["threat"])
+    assert tactical_rest.eat_carried_update(_forager(90.0, berries=1), [object()]) is None
+
+
+def test_core_eat_with_nothing_carried_keeps_its_old_relief_while_free_meals_stay_on():
+    """The free-meal removal is parked (branch d27-free-meal-removal): until it lands, EAT with no carried food still removes 40 hunger."""
+    ent = _forager(80.0)
+    upd = CoreActions.execute_survival(ent, "EAT", 7)[ent.id]
+    assert upd.biological.hunger_delta == -40.0 and not upd.resource_transfers
+
+
+def test_eating_consumes_the_carried_item_and_removes_its_hunger():
+    from src.core.conservation import ResourceTransactionResolver
+    ent = _forager(80.0, berries=2)
+    (meal,) = CoreActions.execute_survival(ent, "EAT", 7)[ent.id].resource_transfers
+    state = AuthoritativeState(tick=7, seed=1, entities={1: ent})
+    result = ResourceTransactionResolver.resolve(state, ent, meal, reservations={})
+    assert result.accepted and result.inventory_update.items_remove[0].quantity == 1
+    assert result.biological_update.hunger_delta < 0 and meal.transfer_kind == "EAT"
+
+
+def test_each_carried_meal_removes_exactly_the_item_it_eats():
+    """Bible 03: food leaves the world only when eaten, one carried item per meal (the run-level ledger is the integration test)."""
+    from src.core.conservation import ResourceTransactionResolver
+    from src.core.state import ItemStack
+    ent = _forager(80.0)
+    harvested = eaten = 0
+    for _ in range(3):
+        grant = ResourceTransactionResolver.resolve(
+            AuthoritativeState(tick=1, seed=1, entities={1: ent}), ent,
+            ResourceTransferIntent(source_id=9, source_kind="CRAFTING", transaction_id="grant", items_add=[ItemStack("wild_berries", 1)]),
+            reservations={})
+        harvested += grant.inventory_update.items_add[0].quantity
+        ent = replace(ent, inventory=replace(ent.inventory, items=[ItemStack("wild_berries", harvested - eaten)]))
+        (meal,) = CoreActions.execute_survival(ent, "EAT", 2)[ent.id].resource_transfers
+        eaten += meal.items_remove[0].quantity
+        ent = replace(ent, inventory=replace(ent.inventory, items=[ItemStack("wild_berries", harvested - eaten)] if harvested > eaten else []))
+    assert harvested == eaten == 3 and not ent.inventory.items
+
+
+def test_need_path_report_counts_a_reachable_food_node_as_a_hunger_path(catalog):
+    from src.core.state import ResourceNodeState
+    ent = _entity(species_id="human")
+    node = ResourceNodeState(id=1, kind="berry_thicket", position=(12.0, 10.0), yields_item="wild_berries",
+                             remaining_charges=3, max_charges=8, required_ticks=8)
+    herb = ResourceNodeState(id=2, kind="herb_patch", position=(11.0, 10.0), yields_item="herb",
+                             remaining_charges=3, max_charges=8, required_ticks=8)
+    (row,) = need_path_report(AuthoritativeState(tick=0, seed=1, entities={1: ent}, resource_nodes={2: herb}), catalog)
+    assert row["hunger_path"] is False and row["food_nodes_in_world"] == 0  # an inedible node is no path
+    (row,) = need_path_report(AuthoritativeState(tick=0, seed=1, entities={1: ent}, resource_nodes={1: node, 2: herb}), catalog)
+    assert row["hunger_path"] is True and row["food_nodes_in_world"] == 1 and row["advisory"] == ""
+    assert row["max_food_node_distance"] == abs(12.0 - ent.navigation.position[0]) + abs(10.0 - ent.navigation.position[1])

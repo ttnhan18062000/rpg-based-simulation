@@ -86,6 +86,11 @@ def test_control_without_the_completion_tick_guard_the_pursuer_overshoots_and_st
     """Disabling control: the guard restored to the old rule (only `moved_this_tick` settles an entity) puts the
     first strike a whole cadence later, past the bound."""
     monkeypatch.setattr(movement_phase, "_already_settled_this_tick", lambda ent_upd: bool(ent_upd) and ent_upd.moved_this_tick)
+    # CONFLICT-04 at the movement layer would also stop the overshoot step (the pursuer is engaged with an adjacent hostile), so
+    # switch it off to keep this control about the completion-tick guard alone.
+    from src.engine.candidate_selector import MovementCandidateSelector
+
+    monkeypatch.setattr(MovementCandidateSelector, "engaged_adjacent_hostile", staticmethod(lambda *a, **k: False))
 
     tick = _first_strike_tick(monkeypatch)
 

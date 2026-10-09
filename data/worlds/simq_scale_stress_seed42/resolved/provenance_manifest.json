@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_0092330309c95a38",
+  "manifest_id": "prov_956c0c4511a2060e",
   "world_id": "simq_scale_stress_seed42",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
   "module_fingerprints": {
     "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
@@ -12,15 +12,15 @@
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
     "river_crossing": "31b408206c2116cc3c7162e49d97e4b690bbe3f3adf689f3d44aed6a2ab16e56",
-    "sunken_swamp_border": "adbeeba097121a59128bc0d09a3b35b5fbaca044c2761049d3f97c477ca2ff96",
+    "sunken_swamp_border": "11e37d8a23ded39f278c7bcb0acedc5dcbe626076765d6caa18fcd4b4befb8fd",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
-    "wolf_den_near_forest": "d80c2b1a161759b7d69273f2ab35d462d6bdda149adb67541212e3592cdf5559",
-    "forest_warden_grove": "1afd9828cbd2087f5cbafffdbd2d3b81c59a32d20fa66debd95249844022e3fe"
+    "wolf_den_near_forest": "87c915735d10b1e943f14fd2a5b0b88109c22089f33c0a51a1dd8e12e9ba7584",
+    "forest_warden_grove": "c41ff99559a8e7f6603051db5d5fff790fd4cbf4b35a3d50a5ff48eccc33c6ea"
   },
-  "composition_fingerprint": "6a1f92c6bf90571c0605cbc08e2a4c93a2831da1903e6f125d2c014441b9fd70",
+  "composition_fingerprint": "f3b449529b6fd62f108ceb47c6ca3a49e17f086d7b70f92e43fd0ec4a4ad39f9",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "0092330309c95a38a5efe4730a7ae9c974ed62313cbef3d6067367f034f72fae",
-  "created_at": "2026-09-08T02:50:58.975276Z",
+  "content_fingerprint": "956c0c4511a2060e332ce143252929b0e3ea2d55a3de25f7b9698d215859e4cf",
+  "created_at": "2026-10-08T11:03:26.350009Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -1511,6 +1511,20 @@
         "region": "swamp_border_territory"
       }
     },
+    "sunken_swamp_border__berry_thicket_2": {
+      "element_id": "sunken_swamp_border__berry_thicket_2",
+      "element_type": "resource",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 8,
+        "region": "swamp_border_territory"
+      }
+    },
     "haunted_battlefield": {
       "element_id": "haunted_battlefield",
       "element_type": "region",
@@ -1656,7 +1670,7 @@
           55
         ],
         "terrain": "forest",
-        "hazard_level": 1.0,
+        "hazard_level": 0.0,
         "ecology_source": [
           "wolf_den_ecology"
         ]
@@ -1772,6 +1786,20 @@
       },
       "details": {
         "count": 3,
+        "region": "near_forest"
+      }
+    },
+    "wolf_den_near_forest__berry_thicket_3": {
+      "element_id": "wolf_den_near_forest__berry_thicket_3",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
         "region": "near_forest"
       }
     },
@@ -1974,6 +2002,20 @@
       },
       "details": {
         "count": 2,
+        "region": "sacred_grove"
+      }
+    },
+    "forest_warden_grove__berry_thicket_2": {
+      "element_id": "forest_warden_grove__berry_thicket_2",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
         "region": "sacred_grove"
       }
     },

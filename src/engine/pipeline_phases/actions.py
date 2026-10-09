@@ -278,7 +278,8 @@ class ActionRoutingPhase:
             # TARGET-IS-NEVER-RE-DECIDED); INSUFFICIENT_READINESS is NOT, because readiness regens
             # and the same swing can then land.
             is_unrecoverable_attack_failure = _is_unrecoverable_action_failure(action, outcome, reason_value)
-            if (is_survival and outcome == "SUCCESS") or is_unrecoverable_attack_failure:
+            # A HOLD success ends its task like a survival action (mode HOLD keeps the tile; a kept payload keeps the brain off for good).
+            if (is_survival and outcome == "SUCCESS") or (action == "HOLD" and outcome == "SUCCESS") or is_unrecoverable_attack_failure:
                 # Wholesale-empty payload_set is required, not merely clearing action/target_id:
                 # scheduler.py's own is_idle_act check (`work_kind=="ENTITY_ACT" and not
                 # ent.task.payload`) needs a genuinely falsy payload to reclassify this entity
