@@ -31,6 +31,12 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'floor' is active but never consumed by any downstream component",
       "target": "floor"
     },
@@ -45,12 +51,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'hill' is active but never consumed by any downstream component",
       "target": "hill"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -691,12 +691,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Archetype 'orc_warchief' is active but never consumed by any downstream component",
-      "target": "orc_warchief"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Archetype 'dwarven_hunter' is active but never consumed by any downstream component",
       "target": "dwarven_hunter"
     },
@@ -781,8 +775,20 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Item 'wild_berries' is active but never consumed by any downstream component",
+      "target": "wild_berries"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Item 'stone' is active but never consumed by any downstream component",
       "target": "stone"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Item 'ancient_core' is active but never consumed by any downstream component",
+      "target": "ancient_core"
     },
     {
       "severity": "WARNING",
@@ -825,12 +831,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Projection 'elite_goblin' is active but never consumed by any downstream component",
       "target": "elite_goblin"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
-      "target": "hero_adventurers"
     }
   ],
   "module_validation": {
@@ -887,10 +887,16 @@
   "summary": {
     "status": "SUCCESS",
     "blocking_errors_count": 0,
-    "warnings_count": 139
+    "warnings_count": 141
   },
   "blocking_errors": [],
   "warnings": [
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
+    },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
@@ -908,12 +914,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'hill' is active but never consumed by any downstream component",
       "target": "hill"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -1554,12 +1554,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Archetype 'orc_warchief' is active but never consumed by any downstream component",
-      "target": "orc_warchief"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Archetype 'dwarven_hunter' is active but never consumed by any downstream component",
       "target": "dwarven_hunter"
     },
@@ -1644,8 +1638,20 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Item 'wild_berries' is active but never consumed by any downstream component",
+      "target": "wild_berries"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Item 'stone' is active but never consumed by any downstream component",
       "target": "stone"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Item 'ancient_core' is active but never consumed by any downstream component",
+      "target": "ancient_core"
     },
     {
       "severity": "WARNING",
@@ -1691,12 +1697,6 @@
     },
     {
       "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
-      "target": "hero_adventurers"
-    },
-    {
-      "severity": "WARNING",
       "rule_id": "WORLD-REACH-001",
       "message": "Quest 'bandit_hunt_road_captain' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
       "path": "quest_definitions.4.required_participant_tags",
@@ -1734,10 +1734,22 @@
       "path": "quest_definitions.8.required_participant_tags",
       "source_entity": "goblin_defend_village_perimeter",
       "source_file": "goblin_camp_conflict"
+    },
+    {
+      "rule_id": "LOC-08",
+      "severity": "WARNING",
+      "path": "regions",
+      "message": "Regions 'hometown' and 'bandit_road' partially overlap (1 tiles) with no declared precedence; 'hometown' wins by resolved declaration order (LOC-08 3b)."
+    },
+    {
+      "rule_id": "LOC-08",
+      "severity": "WARNING",
+      "path": "regions",
+      "message": "Regions 'bandit_road' and 'old_mine' partially overlap (21 tiles) with no declared precedence; 'bandit_road' wins by resolved declaration order (LOC-08 3b)."
     }
   ],
   "fingerprints": {
-    "catalog": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+    "catalog": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
     "modules": {
       "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
       "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",

@@ -2416,3 +2416,36 @@
   divergence_note: 'Intentional divergence 2.85 (Bug Fix): a held INTERACT on a missing
     or depleted node now ends instead of repeating a no-op.'
   support_boundary: null
+- id: TOWN-198
+  text: 'A hungry subject holding food eats it, and the item is consumed together with the meal (SURV-06): core EAT
+    with food in the bag removes one item and applies its recovery through a CARRIED_FOOD transfer, and a hungry
+    subject with food eats it in place when no present threat holds. EAT with nothing carried keeps its old relief
+    of 40 (the free meal, still on; its removal is parked on d27-free-meal-removal).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/core/conservation.py` (`_carried_food_result`, the `CARRIED_FOOD` source),
+    `src/engine/domain/core_actions.py` (`carried_meal`, `eat_update`), `src/engine/tactical_rest.py`
+    (`in_place_survival_update`, `eat_carried_update`); `docs/mechanics/03_economic_laws.md` section 3;
+    `docs/guidelines/intentional_divergences.md` section 2.91'
+  proof_type: parity
+  test_path: tests/unit/engine/test_biological_needs.py
+  divergence_note: 'Intentional divergence 2.91: a subject that carries food eats its own item (30) instead of taking the free 40.'
+  support_boundary: 'Held out: the free meal (EAT with nothing carried, the inn meal for a subject that cannot pay) is still on; its removal is parked.'
+- id: TOWN-199
+  text: 'Wild food is part of the land (SURV-06, owner decision 29): a food node stands only in wild land that
+    a settlement does not own, declared per biome (near forest and sacred grove 10 charges, swamp border 8, the
+    frontier-village biome none), regrowing at the flat default through the ecology process, never sized to demand.
+    A node of a kind with `placement: owned_by_declared_region` is placed on a tile its declared region owns
+    by region precedence (at most 64 draws, else no node and a compile warning).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`data/content/world/resources.yaml` (`berry_thicket`, `placement`), `data/content/world_modules/wolf_den_near_forest.yaml`,
+    `forest_warden_grove.yaml`, `sunken_swamp_border.yaml`, `src/worldbuilding/compiler.py` (`_draw_tile_owned_by`,
+    `_resource_profile`), `src/content/schema.py` (`ResourceDefinition.placement`); `docs/mechanics/03_economic_laws.md`
+    section 3; `docs/guidelines/intentional_divergences.md` section 2.91'
+  proof_type: parity
+  test_path: tests/unit/worldbuilding/test_wild_food_node.py
+  divergence_note: 'Intentional divergence 2.91: `crowded_frontier` and `urban_political` compose no wild land and so have no forage (reported, not added).'
+  support_boundary: null

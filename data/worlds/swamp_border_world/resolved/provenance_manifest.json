@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_a9a044c59f19840b",
+  "manifest_id": "prov_5800f9304cdf1f18",
   "world_id": "swamp_border_world",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
-    "sunken_swamp_border": "adbeeba097121a59128bc0d09a3b35b5fbaca044c2761049d3f97c477ca2ff96",
-    "trading_company_hub": "89edf663d96b8aa771438773ace9dda4780ed4fb1440a0fa697beb34d302ccd6",
-    "wolf_den_near_forest": "d80c2b1a161759b7d69273f2ab35d462d6bdda149adb67541212e3592cdf5559"
+    "sunken_swamp_border": "11e37d8a23ded39f278c7bcb0acedc5dcbe626076765d6caa18fcd4b4befb8fd",
+    "trading_company_hub": "154fc6ef87e46522880df12f548520ebc2564b1b6a2d44c14a37284b1a390c8d",
+    "wolf_den_near_forest": "87c915735d10b1e943f14fd2a5b0b88109c22089f33c0a51a1dd8e12e9ba7584"
   },
-  "composition_fingerprint": "5be4ecb7a2159e256f8bd6cc2f3df6f009c300e1d12f8bc70910318caf792179",
+  "composition_fingerprint": "0ae74404991b1d9ed0ed01729d7038455ea3736fca8098435c0245a8bf165950",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "a9a044c59f19840b35e8ccb4dfa3b6d385288f31439e4fb408c48822421c10b6",
-  "created_at": "2026-09-08T02:51:00.397625Z",
+  "content_fingerprint": "5800f9304cdf1f1825eee857cc386356a186e43adfd6d59a2928cd7434c087a5",
+  "created_at": "2026-10-08T11:03:27.789383Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -623,6 +623,20 @@
         "region": "swamp_border_territory"
       }
     },
+    "sunken_swamp_border__berry_thicket_2": {
+      "element_id": "sunken_swamp_border__berry_thicket_2",
+      "element_type": "resource",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 8,
+        "region": "swamp_border_territory"
+      }
+    },
     "trading_hometown": {
       "element_id": "trading_hometown",
       "element_type": "region",
@@ -642,7 +656,7 @@
           45
         ],
         "terrain": "plain",
-        "hazard_level": 0.5,
+        "hazard_level": 0.0,
         "ecology_source": [
           "frontier_village_ecology"
         ]
@@ -789,7 +803,7 @@
           55
         ],
         "terrain": "forest",
-        "hazard_level": 1.0,
+        "hazard_level": 0.0,
         "ecology_source": [
           "wolf_den_ecology"
         ]
@@ -905,6 +919,20 @@
       },
       "details": {
         "count": 3,
+        "region": "near_forest"
+      }
+    },
+    "wolf_den_near_forest__berry_thicket_3": {
+      "element_id": "wolf_den_near_forest__berry_thicket_3",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
         "region": "near_forest"
       }
     },

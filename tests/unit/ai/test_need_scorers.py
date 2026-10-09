@@ -6,6 +6,7 @@ from dataclasses import replace
 
 import pytest
 
+from src.ai.goals.base import NeedAccess
 from src.engine.need_pull import HUNGER_LINE, SLEEP_LINE
 from src.ai.goals.scorers import EatScorer, SleepScorer
 from src.core.builder import V2EntityBuilder
@@ -26,9 +27,10 @@ def _consumers():
     reset_behavior_consumers()
 
 
-def _hero(**bio):
+def _hero(gold=50, **bio):
     hero = V2EntityBuilder(1).kind("hero").location(0.0, 0.0).build()
-    return replace(hero, biological=replace(hero.biological, **bio))
+    hero = replace(hero, biological=replace(hero.biological, **bio))
+    return replace(hero, inventory=replace(hero.inventory, gold=gold))
 
 
 def _state(inn):
@@ -59,10 +61,18 @@ def test_a_far_inn_escalates_the_pull_earlier_than_a_near_one():
     assert far > near
 
 
-def test_without_an_inn_the_need_still_escalates_with_no_walk():
+def test_without_an_inn_there_is_no_way_to_point_at_so_no_escalation_and_no_target():
     hunger = 0.75 * HUNGER_LINE
     score = EatScorer().score(_hero(hunger=hunger), _state(None))
-    assert score.target_pos is None and score.utility > BLOCKER_CEILING
+    assert score.target_pos is None and score.utility == pytest.approx(hunger)
+    assert score.need_access is NeedAccess.NO_WAY_WITHIN_REACH
+
+
+def test_with_free_meals_on_an_inn_within_reach_is_a_way_to_eat_for_a_subject_that_cannot_pay_too():
+    """The affordability gate is parked with the free-meal removal (branch d27-free-meal-removal)."""
+    hunger = 0.75 * HUNGER_LINE
+    broke = EatScorer().score(_hero(gold=0, hunger=hunger), _state((5.0, 0.0)))
+    assert broke.target_pos == (5.0, 0.0) and broke.utility > BLOCKER_CEILING and broke.need_access is NeedAccess.WAY_WITHIN_REACH
 
 
 def _with_hostile(hero, at, hp=100):

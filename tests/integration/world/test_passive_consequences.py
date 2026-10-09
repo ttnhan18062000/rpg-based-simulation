@@ -25,8 +25,8 @@ def test_biological_decay():
     
     next_state = ApplyPath.apply_generation(state, StateUpdate(), next_tick=2)
     
-    # ApplyPath.py: hunger += 0.1, sleep_debt += 0.05
-    assert next_state.entities[1].biological.hunger == pytest.approx(10.1)
+    # ApplyPath.py: hunger += 0.05 for a person (humanoid_survival hunger is low, owner decision 33), sleep_debt += 0.05
+    assert next_state.entities[1].biological.hunger == pytest.approx(10.05)
     assert next_state.entities[1].biological.sleep_debt == pytest.approx(10.05)
 
 def test_corpse_spawning_on_death():

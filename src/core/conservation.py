@@ -33,6 +33,31 @@ class TransactionResult:
     corpse_remove: Optional[int] = None
     reason: ReasonCode = ReasonCode.UNKNOWN
 
+def _carried_food_result(intent: ResourceTransferIntent, inventory: InventoryComponent) -> TransactionResult:
+    """Eating what the subject carries: the item is consumed together with the meal, or nothing happens."""
+    for item in intent.items_remove:
+        if sum(s.quantity for s in inventory.items if s.item_id == item.item_id) < item.quantity:
+            return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
+    return TransactionResult(accepted=True, inventory_update=InventoryUpdate(items_remove=intent.items_remove), biological_update=intent.biological_upd)
+
+
+def _reward_result(intent: ResourceTransferIntent, inventory_full: bool, reservations: Optional[Dict[Any, int]]) -> TransactionResult:
+    """A COMBAT or QUEST grant. A quest accounts for in-tick reservations first (P0.2); both grant XP/gold only if the items fit
+    (Progression Rule: if it has items, it must fit)."""
+    is_quest = intent.source_kind == "QUEST"
+    if is_quest and reservations and reservations.get(("QUEST", intent.source_id), 0) > 0:
+        return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)
+    if intent.items_add and inventory_full:
+        return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)
+    return TransactionResult(
+        accepted=True,
+        inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta),
+        identity_update=IdentityUpdate(evolution_points_delta=intent.xp_reward),
+        reward_update=intent.reward_upd,
+        quest_update=QuestUpdate(quest_id=str(intent.source_id), status_set=QuestStatus.REWARDED) if is_quest else None,
+    )
+
+
 class ResourceTransactionResolver:
     """
     Authoritative layer for resolving resource transfer intents.
@@ -221,35 +246,8 @@ class ResourceTransactionResolver:
                 )
             )
 
-        elif intent.source_kind == "COMBAT":
-            # Progression Rule: XP/Gold is granted only if items (if any) fit.
-            # Law: If it has items, it must fit.
-            if intent.items_add and inventory_full:
-                 return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)
-
-            return TransactionResult(
-                accepted=True,
-                inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta),
-                identity_update=IdentityUpdate(evolution_points_delta=intent.xp_reward),
-                reward_update=intent.reward_upd
-            )
-
-        elif intent.source_kind == "QUEST":
-            # P0.2 Refinement: Account for in-tick reservations
-            if reservations and reservations.get(("QUEST", intent.source_id), 0) > 0:
-                return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)
-
-            # Law: If it has items, it must fit.
-            if intent.items_add and inventory_full:
-                 return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)
-
-            return TransactionResult(
-                accepted=True,
-                inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta),
-                identity_update=IdentityUpdate(evolution_points_delta=intent.xp_reward),
-                reward_update=intent.reward_upd,
-                quest_update=QuestUpdate(quest_id=str(intent.source_id), status_set=QuestStatus.REWARDED)
-            )
+        elif intent.source_kind in ("COMBAT", "QUEST"):
+            return _reward_result(intent, inventory_full, reservations)
 
         # VERIFIED v2: authoritative_side_effects
         if intent.source_kind in ("TOWN_SERVICE", "TAX", "REPAIR_FEE", "SERVICE_FEE", "INFORMATION_PURCHASE"):
@@ -271,6 +269,9 @@ class ResourceTransactionResolver:
                  reward_update=intent.reward_upd
              )
         
+        elif intent.source_kind == "CARRIED_FOOD":
+             return _carried_food_result(intent, target_inventory)
+
         elif intent.source_kind in ("RECRUIT", "CHEST"):
              # P0.1 Refinement: Source-level locks for world sources
              if reservations and reservations.get((intent.source_kind, intent.source_id), 0) > 0:

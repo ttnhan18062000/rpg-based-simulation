@@ -11,6 +11,46 @@
       "readiness": 100.0,
       "inventory_seed": "hero_pocket",
       "cognition_seed": "practical_humanoid",
+      "spawn_position": [
+        25.0,
+        24.0
+      ],
+      "spawn_region": "hometown",
+      "count": 8,
+      "spawn_positions": [
+        [
+          25.0,
+          24.0
+        ],
+        [
+          29.0,
+          22.0
+        ],
+        [
+          39.0,
+          14.0
+        ],
+        [
+          15.0,
+          14.0
+        ],
+        [
+          28.0,
+          20.0
+        ],
+        [
+          25.0,
+          19.0
+        ],
+        [
+          12.0,
+          39.0
+        ],
+        [
+          39.0,
+          17.0
+        ]
+      ],
       "archetype_id": "village_worker",
       "species_id": "human",
       "role_id": "worker",
@@ -44,6 +84,26 @@
       "readiness": 100.0,
       "inventory_seed": "guard_basic_kit",
       "cognition_seed": "disciplined_guard",
+      "spawn_position": [
+        35.0,
+        36.0
+      ],
+      "spawn_region": "hometown",
+      "count": 3,
+      "spawn_positions": [
+        [
+          35.0,
+          36.0
+        ],
+        [
+          17.0,
+          33.0
+        ],
+        [
+          25.0,
+          33.0
+        ]
+      ],
       "archetype_id": "frontier_guard",
       "species_id": "human",
       "role_id": "guard",
@@ -78,6 +138,18 @@
       "readiness": 100.0,
       "inventory_seed": "merchant_trade_pack",
       "cognition_seed": "trade_pragmatist",
+      "spawn_position": [
+        12.0,
+        35.0
+      ],
+      "spawn_region": "hometown",
+      "count": 1,
+      "spawn_positions": [
+        [
+          12.0,
+          35.0
+        ]
+      ],
       "archetype_id": "traveling_merchant",
       "species_id": "human",
       "role_id": "merchant",
@@ -112,6 +184,18 @@
       "readiness": 100.0,
       "inventory_seed": "blacksmith_toolkit",
       "cognition_seed": "practical_humanoid",
+      "spawn_position": [
+        29.0,
+        31.0
+      ],
+      "spawn_region": "hometown",
+      "count": 1,
+      "spawn_positions": [
+        [
+          29.0,
+          31.0
+        ]
+      ],
       "archetype_id": "village_blacksmith",
       "species_id": "human",
       "role_id": "blacksmith",
@@ -146,6 +230,30 @@
       "readiness": 100.0,
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
+      "spawn_position": [
+        105.0,
+        53.0
+      ],
+      "spawn_region": "wolf_den",
+      "count": 4,
+      "spawn_positions": [
+        [
+          105.0,
+          53.0
+        ],
+        [
+          77.0,
+          55.0
+        ],
+        [
+          91.0,
+          56.0
+        ],
+        [
+          72.0,
+          54.0
+        ]
+      ],
       "archetype_id": "hungry_wolf",
       "species_id": "wolf",
       "role_id": "predator_hunter",
@@ -180,6 +288,18 @@
       "readiness": 100.0,
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
+      "spawn_position": [
+        83.0,
+        47.0
+      ],
+      "spawn_region": "wolf_den",
+      "count": 1,
+      "spawn_positions": [
+        [
+          83.0,
+          47.0
+        ]
+      ],
       "archetype_id": "alpha_wolf",
       "species_id": "wolf",
       "role_id": "alpha",
@@ -241,27 +361,39 @@
     "res_0": {
       "required_ticks": 10,
       "resource_type": "wood_node",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "wood"
     },
     "res_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "herb"
     },
     "wolf_den_near_forest__wood_node_0": {
       "required_ticks": 10,
       "resource_type": "wood_node",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "wood"
     },
     "wolf_den_near_forest__herb_patch_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "herb"
     },
     "wolf_den_near_forest__healing_flower_patch_2": {
       "required_ticks": 12,
       "resource_type": "healing_flower_patch",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "healing_flower"
+    },
+    "wolf_den_near_forest__berry_thicket_3": {
+      "required_ticks": 8,
+      "resource_type": "berry_thicket",
+      "yield_policy": null,
+      "yield_item": "wild_berries",
+      "placement": "owned_by_declared_region"
     }
   },
   "factions": {

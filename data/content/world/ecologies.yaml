@@ -4,7 +4,7 @@
   biomes: ["wolf_den", "near_forest"]
   dominant_factions: ["wild_beast_pack"]
   populations: ["wolf_pack_small"]
-  resources: ["wood_node", "herb_patch", "healing_flower_patch"]
+  resources: ["wood_node", "herb_patch", "healing_flower_patch", "berry_thicket"]
   relationship_models: ["territorial_animal"]
 
 # STATE: REDESIGNED-CORE
@@ -71,7 +71,7 @@
   biomes: ["sacred_grove"]
   dominant_factions: ["forest_wardens", "spirit_court"]
   populations: ["forest_warden_patrol", "sacred_grove_guardians"]
-  resources: ["healing_flower_patch", "spirit_wisp"]
+  resources: ["healing_flower_patch", "spirit_wisp", "berry_thicket"]
 
 # TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE: calibration-only ecology, isolated to
 # camp_maturity_calibration_pilot world only.

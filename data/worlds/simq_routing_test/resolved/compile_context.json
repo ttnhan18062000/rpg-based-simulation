@@ -11,6 +11,46 @@
       "readiness": 100.0,
       "inventory_seed": "hero_pocket",
       "cognition_seed": "practical_humanoid",
+      "spawn_position": [
+        25.0,
+        24.0
+      ],
+      "spawn_region": "hometown",
+      "count": 8,
+      "spawn_positions": [
+        [
+          25.0,
+          24.0
+        ],
+        [
+          29.0,
+          22.0
+        ],
+        [
+          39.0,
+          14.0
+        ],
+        [
+          15.0,
+          14.0
+        ],
+        [
+          28.0,
+          20.0
+        ],
+        [
+          25.0,
+          19.0
+        ],
+        [
+          12.0,
+          39.0
+        ],
+        [
+          39.0,
+          17.0
+        ]
+      ],
       "archetype_id": "village_worker",
       "species_id": "human",
       "role_id": "worker",
@@ -44,6 +84,26 @@
       "readiness": 100.0,
       "inventory_seed": "guard_basic_kit",
       "cognition_seed": "disciplined_guard",
+      "spawn_position": [
+        35.0,
+        36.0
+      ],
+      "spawn_region": "hometown",
+      "count": 3,
+      "spawn_positions": [
+        [
+          35.0,
+          36.0
+        ],
+        [
+          17.0,
+          33.0
+        ],
+        [
+          25.0,
+          33.0
+        ]
+      ],
       "archetype_id": "frontier_guard",
       "species_id": "human",
       "role_id": "guard",
@@ -78,6 +138,18 @@
       "readiness": 100.0,
       "inventory_seed": "merchant_trade_pack",
       "cognition_seed": "trade_pragmatist",
+      "spawn_position": [
+        12.0,
+        35.0
+      ],
+      "spawn_region": "hometown",
+      "count": 1,
+      "spawn_positions": [
+        [
+          12.0,
+          35.0
+        ]
+      ],
       "archetype_id": "traveling_merchant",
       "species_id": "human",
       "role_id": "merchant",
@@ -112,6 +184,18 @@
       "readiness": 100.0,
       "inventory_seed": "blacksmith_toolkit",
       "cognition_seed": "practical_humanoid",
+      "spawn_position": [
+        29.0,
+        31.0
+      ],
+      "spawn_region": "hometown",
+      "count": 1,
+      "spawn_positions": [
+        [
+          29.0,
+          31.0
+        ]
+      ],
       "archetype_id": "village_blacksmith",
       "species_id": "human",
       "role_id": "blacksmith",
@@ -146,6 +230,22 @@
       "readiness": 100.0,
       "inventory_seed": "goblin_looter_pouch",
       "cognition_seed": "opportunistic_humanoid",
+      "spawn_position": [
+        117.0,
+        22.0
+      ],
+      "spawn_region": "goblin_camp",
+      "count": 2,
+      "spawn_positions": [
+        [
+          117.0,
+          22.0
+        ],
+        [
+          125.0,
+          34.0
+        ]
+      ],
       "archetype_id": "goblin_scout",
       "species_id": "goblin",
       "role_id": "scout",
@@ -181,6 +281,30 @@
       "readiness": 100.0,
       "inventory_seed": "goblin_looter_pouch",
       "cognition_seed": "opportunistic_humanoid",
+      "spawn_position": [
+        103.0,
+        31.0
+      ],
+      "spawn_region": "goblin_camp",
+      "count": 4,
+      "spawn_positions": [
+        [
+          103.0,
+          31.0
+        ],
+        [
+          123.0,
+          50.0
+        ],
+        [
+          101.0,
+          23.0
+        ],
+        [
+          117.0,
+          47.0
+        ]
+      ],
       "archetype_id": "goblin_raider",
       "species_id": "goblin",
       "role_id": "raider",
@@ -215,6 +339,22 @@
       "readiness": 100.0,
       "inventory_seed": "goblin_looter_pouch",
       "cognition_seed": "opportunistic_humanoid",
+      "spawn_position": [
+        106.0,
+        27.0
+      ],
+      "spawn_region": "goblin_camp",
+      "count": 2,
+      "spawn_positions": [
+        [
+          106.0,
+          27.0
+        ],
+        [
+          96.0,
+          20.0
+        ]
+      ],
       "archetype_id": "goblin_archer",
       "species_id": "goblin",
       "role_id": "scout",
@@ -250,6 +390,18 @@
       "readiness": 100.0,
       "inventory_seed": "boss_hoard_token",
       "cognition_seed": "opportunistic_humanoid",
+      "spawn_position": [
+        125.0,
+        36.0
+      ],
+      "spawn_region": "goblin_camp",
+      "count": 1,
+      "spawn_positions": [
+        [
+          125.0,
+          36.0
+        ]
+      ],
       "archetype_id": "goblin_warlord",
       "species_id": "goblin",
       "role_id": "leader",
@@ -285,6 +437,18 @@
       "readiness": 100.0,
       "inventory_seed": null,
       "cognition_seed": null,
+      "spawn_position": [
+        13.0,
+        39.0
+      ],
+      "spawn_region": null,
+      "count": 1,
+      "spawn_positions": [
+        [
+          13.0,
+          39.0
+        ]
+      ],
       "archetype_id": null,
       "species_id": null,
       "role_id": null,
@@ -311,6 +475,18 @@
       "readiness": 100.0,
       "inventory_seed": null,
       "cognition_seed": null,
+      "spawn_position": [
+        22.0,
+        26.0
+      ],
+      "spawn_region": null,
+      "count": 1,
+      "spawn_positions": [
+        [
+          22.0,
+          26.0
+        ]
+      ],
       "archetype_id": null,
       "species_id": null,
       "role_id": null,
@@ -337,6 +513,18 @@
       "readiness": 100.0,
       "inventory_seed": null,
       "cognition_seed": null,
+      "spawn_position": [
+        31.0,
+        38.0
+      ],
+      "spawn_region": null,
+      "count": 1,
+      "spawn_positions": [
+        [
+          31.0,
+          38.0
+        ]
+      ],
       "archetype_id": null,
       "species_id": null,
       "role_id": null,
@@ -363,6 +551,34 @@
       "readiness": 100.0,
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
+      "spawn_position": [
+        41.0,
+        101.0
+      ],
+      "spawn_region": "old_mine",
+      "count": 5,
+      "spawn_positions": [
+        [
+          41.0,
+          101.0
+        ],
+        [
+          22.0,
+          100.0
+        ],
+        [
+          57.0,
+          71.0
+        ],
+        [
+          56.0,
+          104.0
+        ],
+        [
+          24.0,
+          62.0
+        ]
+      ],
       "archetype_id": "cave_spider",
       "species_id": "spider",
       "role_id": "predator_hunter",
@@ -427,27 +643,32 @@
     "res_0": {
       "required_ticks": 10,
       "resource_type": "wood_node",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "wood"
     },
     "res_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "herb"
     },
     "old_mine_resource_loop__iron_vein_0": {
       "required_ticks": 15,
       "resource_type": "iron_vein",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "iron_ore"
     },
     "old_mine_resource_loop__crystal_outcrop_1": {
       "required_ticks": 18,
       "resource_type": "crystal_outcrop",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "crystal_shard"
     },
     "old_mine_resource_loop__silver_vein_2": {
       "required_ticks": 18,
       "resource_type": "silver_vein",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "silver_ore"
     }
   },
   "factions": {
