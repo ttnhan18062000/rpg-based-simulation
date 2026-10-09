@@ -1697,3 +1697,13 @@
   test_path: tests/mechanic_scenarios/test_starvation_over_days.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.94.
   support_boundary: 'Constants in one table, not content. Sleep debt (hunger-like 1 HP per tick at 98) is not staged. Long-run survivors converge because the worlds feed few people.'
+- id: PROG-130
+  text: 'TCK-20261009-SLEEP-DEBT-WEAKENS-THEN-COLLAPSES-THE-SUBJECT-WHERE-IT-STANDS-NO-HP-LOSS: sleep debt weakens a subject above 80 (recovery at half rate, attack x0.8) and at 98 it falls asleep where it stands, takes no action until its debt is below the wake line, and loses no health (SURV-02, owner decision 41, replacing the 1 HP per tick drain). A bed is a way for the sleep goal only within reach and range.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/sleep_debt.py (the table, stage functions, collapse_update, sleep_done), src/engine/apply.py (drain removed, combined recovery scale), src/engine/combat.py (EXHAUSTION line), src/engine/tactical.py (collapse decision), src/engine/candidate_selector.py (a held walk stops), src/engine/pipeline_phases/actions.py (the held collapse sleep), src/ai/goals/scorers.py (SleepScorer reach), src/engine/way_in_range.py; docs/mechanics/01_entity_anatomy.md section 4, docs/mechanics/04_strategic_cognition.md section 1.'
+  proof_type: regression
+  test_path: tests/mechanic_scenarios/test_sleep_debt_collapse.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.105.
+  support_boundary: 'WAKE 60, the 0.5 recovery scale, the bed reach and the sleep recovery rate are unruled placeholders; a collapse lasts about 11 ticks. The sleep pull is measured only on top of the need-wake that lets a held mover re-decide.'

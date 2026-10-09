@@ -29,6 +29,7 @@ class SleepDebtTable:
     collapse_line: float = 98.0   # debt at which the subject falls asleep where it stands
     wake_line: float = 60.0       # debt below which a collapsed subject wakes
     recovery_scale: float = 0.5   # stamina and readiness regeneration while weakened
+    bed_reach: float = 30.0       # tiles a tired subject will walk for a bed (placeholder: about half an hour's walk at 36 s a tick; designer to rule)
 
 
 SLEEP_DEBT = SleepDebtTable()
