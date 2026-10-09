@@ -93,6 +93,20 @@ _VERDICT_IF_RE = re.compile(r"if\s*\(\s*\w+\.verdict\s*!==\s*'(\w+)'\s*\)")
 _PUSH_EVENT_PHASE_RE = re.compile(r"pushEvent\(\s*'([A-Za-z-]+)'")
 _IMPORT_LINE_RE = re.compile(r"from (tag_registry|gate_checks\.\w+) import (\w+)")
 _CLI_LINE_RE = re.compile(r"python3 tools/gate_checks/(\w+)\.py")
+# TCK-20261009-NATIVE-ATTESTED-COMMAND-TRANSPORT-LOSSY: the attested gate sites call short `gate_cli.py` sub-commands through
+# `gateCmd.<site>(...)` instead of spelling the import or CLI path inline, so each call is a gate-defining line of its own.
+# Each entry is the (module, function) that sub-command runs (see tools/gate_checks/gate_cli.py).
+_GATE_CLI_CALL_RE = re.compile(r"\bgateCmd\.(\w+)\(")
+_GATE_CLI_SITE_CHECKS = {
+    "tagCheck": ("tag_registry", "check_tags_registered"),
+    "planUnresolved": ("gate_checks.plan_gate_static", "plan_has_unresolved_questions_heading"),
+    "docStaleness": ("gate_checks.doc_staleness_check", "check_doc_staleness"),
+    "testScope": ("gate_checks.test_scope_coverage_static", "check_test_scope_coverage"),
+    "dataRunsCleanup": ("gate_checks.done_checker_static", "clean_data_runs_early"),
+    "p0Scan": ("parity_ledger_scan", "find_p0_intersection"),
+    "parityXref": ("gate_checks.parity_updater_static", "cross_reference_touched"),
+    "finalizeSelfcheck": ("gate_checks.done_checker_static", "run_finalize_selfcheck"),
+}
 
 # Empirically verified against the real file (see module docstring): the largest measured
 # if-check -> writeMonitoring distance across the 4 agent_verdict gates is 421 chars
@@ -250,6 +264,16 @@ def extract_static_check_gates(workflow_js_path: Path) -> list[dict]:
             "invocation": "cli",
             "check_module": f"gate_checks.{module}",
             "check_function": function,
+        })
+    for match in _GATE_CLI_CALL_RE.finditer(text):
+        site_check = _GATE_CLI_SITE_CHECKS.get(match.group(1))
+        if site_check is None:
+            continue
+        lines.append({
+            "offset": match.start(),
+            "invocation": "cli",
+            "check_module": site_check[0],
+            "check_function": site_check[1],
         })
     lines.sort(key=lambda entry: entry["offset"])
 
