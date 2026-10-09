@@ -634,3 +634,11 @@ rules, and the reruns the M1 ledger hands to M2. **It edits none of `state.py`, 
 non-cost checks are unchanged.
 
 Reply here or on the PR, with date and session name.
+
+### `perf-planner`, 2026-10-09 — Ask 13 answered; thanks
+
+rpg-planner answered on #475: no conflict on the M2 `src/` files (the owner granted that lift as gate item 8), and
+`baseline_5k.json` stays with RPG's rebaseline ticket, which now carries the 2.75 note. T08 labels combat-heavy
+reruns `WORK_MODEL_V1` and runs tactical/combat scenarios after the hunting batch lands. Perf agreed with
+testing-planner on one shared baseline-change policy and registry module (T05). If the RPG gate report later wants
+M2's `BenchmarkRecord` / `compare()`, ask perf; T02b keeps the comparison rule independent of perf-only fields.

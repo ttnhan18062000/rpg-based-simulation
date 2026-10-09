@@ -78,6 +78,8 @@ None changed. Read: `src/perf/`, `tools/perf/`, `src/observability/reporting/`, 
 ## Implementation Notes
 Plan written as a new "Delivery plan" section in the M2 epic: eight owner decisions (OD-1 to OD-8) with recommendations, a schema revalidation against M1 (R-1 to R-5), and seven tickets plus the existing P2 todo, with order, dependencies and per-file lift needs. Revalidation found two missing blocking identity fields: the signal contract and work-model version (DEV-018), and the cost-accounting version (DEV-017). The second is the schema-level cause of the vacuous sweep-gate pass.
 
+Follow-up on #475 (2026-10-09): rpg-planner answered Ask 13. The owner accepted OD-1 to OD-8 as recommended, including the OD-8 lift recorded as roadmap gate item 8, and accepted testing-planner's shared baseline-change policy and registry module for T05. The OD-2/OD-3 refinements are folded into T03/T05, and T08's timing follows Ask 13.
+
 ## Test Summary
 Docs only. `validate_frontmatter.py` passes on the three files; `pytest tests/docs -q`: 69 passed, 2 skipped, 1 xfailed.
 

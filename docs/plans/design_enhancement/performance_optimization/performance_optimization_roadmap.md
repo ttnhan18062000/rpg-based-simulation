@@ -251,6 +251,13 @@ decided:
       2. memo row 7 (b) at 8 unbound (#393), 7 of them dead modules filed for deletion;
       3. no standing no-touch window on the four core files.
 
+8. **M2 lift (owner decision, 2026-10-09).** The gate and the Code Craft `src/` freeze are lifted for the M2 tickets on
+   six files: `src/perf/bench_harness.py`, `src/perf/profiles.py`, `src/perf/long_run_harness.py`, the new
+   `src/perf/benchmark_record.py`, `src/observability/reporting/baseline_comparator.py` and `sweep_report.py`.
+   rpg-planner confirmed that no open or planned RPG-core ticket edits them (Ask 13, #475). No core file is in the
+   lift. Measurements stay provisional, and no soft check becomes blocking. The full lift is still an owner
+   statement. Decisions OD-1 to OD-8 are recorded in the M2 epic's "Delivery plan".
+
 ### Foundation slice that may start now
 
 Documents, tickets, and read-only tooling only — no `src/` edit, no baseline:
