@@ -409,3 +409,15 @@ def test_authoritative_state_to_readonly_wraps_world_gen_seeded_camps():
 
     assert type(readonly_state.camps) is ReadOnlyDict
     assert "camp_1" in readonly_state.camps
+
+
+@pytest.mark.parametrize("camp_kind, spawned", [("goblin", "goblin_warrior"), ("orc", "orc_warrior"), ("wolf", "wolf")])
+def test_a_camp_spawns_the_kind_it_declares_not_an_orc_warrior(camp_kind, spawned):
+    state = AuthoritativeState(
+        tick=30, seed=42,
+        regions={"forest": RegionState(id="forest", name="The Deep Woods", kind="forest", bounds=(0, 0, 100, 100), trauma_score=60.0)},
+        camps={"camp_1": CampState(id="camp_1", kind=camp_kind, position=(50, 50), maturity=10.0)},
+    )
+    from src.engine.cadence import SystemCadence
+    update = WorldDynamicsSystem.resolve_dynamics(state, StateUpdate(), EntityGenerator(seed=42), cadence=SystemCadence(world_dynamics=30))
+    assert {e.kind for e in update.entities_add} == {spawned}

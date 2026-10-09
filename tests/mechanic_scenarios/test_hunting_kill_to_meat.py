@@ -19,8 +19,10 @@ import pytest
 
 from src.config.profiles import PROD_SMALL
 from src.core.items import food_hunger_recovery
+from src.engine.executor import LocalSequentialExecutor
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
+from tests.helpers.kernel_pinning import PinnedNormalGovernor
 from tests.helpers.scenario import compile_world
 
 pytestmark = [pytest.mark.domain("combat"), pytest.mark.level("scenario")]
@@ -54,7 +56,7 @@ def _stage(*, hunger, prey_species="goblin", with_prey=True, berries=False):
 def _run(stage, ticks=WINDOW):
     state, wolf_id, prey_id = stage
     kernel = Kernel(profile=PROD_SMALL.model_copy(update={"max_tick_budget_ms": 1e9}), state=state, rng=DeterministicRNG(SEED),
-                    flags={"no_frame_pacing": True})
+                    flags={"no_frame_pacing": True}, executor=LocalSequentialExecutor(), governor=PinnedNormalGovernor())
     rows = []
     try:
         for _ in range(ticks):

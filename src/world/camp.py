@@ -19,6 +19,14 @@ class CampService:
     RAID_MATURITY_THRESHOLD = 80.0
     CAMP_SPAWN_INTERVAL = 30
     NEST_RACE_KINDS = frozenset({"wolf", "spider", "troll", "slime"})
+    # A camp spawns the kind it declares (`CampState.kind` is the creature kind). A kind with a distinct fighting form spawns that form; every other
+    # kind spawns itself. This replaced a name branch ("goblin_warrior" if goblin else "orc_warrior") that gave every other kind's camp orc warriors.
+    WARRIOR_FORMS = {"goblin": "goblin_warrior", "orc": "orc_warrior"}
+
+    @staticmethod
+    def spawn_kind(camp_kind: str) -> str:
+        """The spawn kind of a camp's own declared creature kind."""
+        return CampService.WARRIOR_FORMS.get(camp_kind, camp_kind)
     EXPAND_TERRITORY_MATURITY_BOOST = 1.0
 
     @staticmethod
@@ -72,7 +80,7 @@ class CampService:
                     mob = generator.spawn_monster(
                         camp.position,
                         state=state,
-                        kind="goblin_warrior" if camp.kind == "goblin" else "orc_warrior",
+                        kind=CampService.spawn_kind(camp.kind),
                         difficulty_tier=int(camp.maturity / 20.0) + 1
                     )
                     entities_add.append(mob)
@@ -155,7 +163,7 @@ class CampService:
                         offspring = generator.spawn_natural_creature_offspring(
                             camp.position,
                             state=state,
-                            kind="goblin_warrior" if camp.kind == "goblin" else "orc_warrior",
+                            kind=CampService.spawn_kind(camp.kind),
                             difficulty_tier=int(camp.maturity / 20.0) + 1,
                             birth_tick=state.tick,
                         )
