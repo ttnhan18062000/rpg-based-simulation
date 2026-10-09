@@ -274,7 +274,12 @@ eats does none of this.
     that kind's own profile. The rule is not a people-only rule.
   - **Engineering, not observable:** the exact stage thresholds, the effects' sizes and the HP
     rate. The spec checks the stage order and the 2-to-3-day window only.
-- **Result (2026-10-08): revealed contradiction on main.** `hunger >= 95.0` costs 2 HP per tick
+- **Result (2026-10-09): covered** since #457 (`edda25490`) by
+  `tests/mechanic_scenarios/test_starvation_over_days.py`: weakened with full health before the
+  line, alive and hurt a day past it, dead 4,800 to 7,200 ticks after it; the control eats and
+  stops losing health; a second-kind arm stages a goblin as a meat-eater (a generic meat-eater
+  archetype replaces it in the hunting batch, decision 50).
+- **Earlier result (2026-10-08): revealed contradiction on main.** `hunger >= 95.0` costs 2 HP per tick
   (`src/engine/apply.py`), so S dies about 50 ticks after the line (SURV-02's amendment
   evidence). Expected to be **covered** with Lane A's decision-36 ticket.
 

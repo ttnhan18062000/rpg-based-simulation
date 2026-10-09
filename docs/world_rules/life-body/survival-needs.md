@@ -100,7 +100,21 @@ Catalog has found.
   lines, its recovery). "Person" in the text above is an example, not a limit.
   `src/engine/starvation.py` (decision 36's code) is already kind-agnostic: it reads the
   subject's hunger and max HP, never its kind.
-- **Evidence: CONFLICTING** until that ticket lands.
+- **Evidence: SUPPORTED since #457 (`edda25490`, 2026-10-09).** Implemented by
+  `TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02` (Lane A); divergence 2.94,
+  parity PROG-129.
+  - **Stages** (`src/engine/starvation.py`, one table): weakened at hunger 85 (regeneration at
+    half rate, attack x0.8, no health lost); starving at 95 (1 HP every `round(6000 / max_hp)`
+    life-due ticks). A full-health body of any size dies about 6,000 ticks (2.5 days) after the
+    line; a hurt one sooner. It reads hunger and max HP only, never the kind.
+  - **Pinned by** LB-S18 (`tests/mechanic_scenarios/test_starvation_over_days.py`): main arm,
+    control that eats, and a second-kind arm (a goblin staged as a meat-eater; it moves to a
+    generic meat-eater in the hunting batch).
+  - **Measured** (pinned, seeds 42-46; crowded / living / urban):
+    - starvation deaths by tick 1500: 10.0 / 13.4 / 7.2 to 0.0 / 0.0 / 0.2;
+    - starvation deaths by tick 10000: 25.2 / 43.6 / 11.0 to 16.2 / 26.8 / 10.8;
+    - alive at tick 1500: 3.4 / 12.0 / 7.4 to 11.4 / 22.0 / 12.6;
+    - alive at tick 5000: about unchanged. Survival over days still waits on earning and hunting.
 
 **Amendment, sleep debt ends in collapse, not in bleeding (decided by the owner directly,
 2026-10-09; row 41 of the memo):**
