@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Tuple, Optional, TYPE_CHECKING, Dict
+from typing import Any, List, Tuple, Optional, TYPE_CHECKING, Dict
 
 from src.core.region_resolution import resolve_region_among
 
