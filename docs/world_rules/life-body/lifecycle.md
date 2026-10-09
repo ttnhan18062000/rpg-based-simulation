@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-01"
+last_verified: "2026-10-09"
 ---
 
 # World Rule Family: Lifecycle
@@ -130,11 +130,12 @@ it confirms the finding still holds when read from Lifecycle's own vantage point
 2026-09-22 (normalization pass): restates an existing Rule at a new point of use without
 refining its semantics.**
 
-**Repository evidence: SUPPORTED, reusing evidence gathered for an adjacent purpose across two
-prior batches.** `LifeStageService.get_stage_for_age()`'s declared age thresholds (Batch 02's
-TIME-05 evidence) and `CombatResolutionSystem`'s `generation_delta`/rebirth-eligibility
-classification (LIFE-02's own evidence) both gate their respective transitions on a real,
-checkable condition — never an unconditional write.
+**Repository evidence: SUPPORTED, for age stages.** `LifeStageService.get_stage_for_age()`'s
+declared age thresholds (Batch 02's TIME-05 evidence) gate the transition on a real, checkable
+condition, never an unconditional write. (Corrected 2026-10-09: the second piece first cited,
+`CombatResolutionSystem`'s `generation_delta` and rebirth eligibility, was retired with hero
+rebirth on 2026-10-01 and no longer exists in `src/`. The generation/rebirth clause has no
+current instance.)
 
 **Scenarios:** none newly traced; reuses LIFE-02's and Batch 02's TIME-05 evidence directly.
 
