@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261008-RECIPE-NODES-LAND-ON-TILES-THEIR-REGION-DOES-NOT-OWN-P3
-phase: open
+phase: done
 date: 2026-10-09
 tags: [world, content, economy]
 ---
@@ -15,7 +15,7 @@ tags: [world, content, economy]
 Recipe resource nodes land on tiles their region owns (P3 placement default)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -39,9 +39,9 @@ Recipe nodes were placed on tiles outside the owning region, so a compiled world
 - Any other world's layout.
 
 ## Acceptance Criteria
-- [ ] Recipe nodes in a compiled world sit on tiles their region owns (tests/unit/worldbuilding/test_wild_food_node.py).
-- [ ] Resolved world artifacts regenerated and consistent.
-- [ ] Divergences 2.96 and 2.99 recorded with a test path.
+- [x] Recipe nodes in a compiled world sit on tiles their region owns (tests/unit/worldbuilding/test_wild_food_node.py).
+- [x] Resolved world artifacts regenerated and consistent.
+- [x] Divergences 2.96 and 2.99 recorded with a test path.
 
 ## Related Tickets
 - TCK-20261009-WAGE-IS-PAID-FROM-THE-EMPLOYERS-OWN-PURSE-EXCH-02, TCK-20261009-SELL-IS-A-CHOSEN-ACT-PRICED-BY-MARKET-SYSTEM-EXCH-02, TCK-20261009-FIRST-COIN-IS-DECLARED-WORLD-CONTENT-EXCH-02, TCK-20261008-RECIPE-NODES-LAND-ON-TILES-THEIR-REGION-DOES-NOT-OWN-P3 (one batch, one PR)
@@ -70,4 +70,4 @@ tests/unit/worldbuilding/test_wild_food_node.py
 See the batch-2 PR.
 
 ## Completion Summary
-Pending (filled at close).
+Landed in the batch-2 PR (one commit on edda25490 plus the force-full-scan and town-contract test rewrites). Pinned paired measurements (arm1 main, arm6 batch 2, arm7 batch 2 without profiles) and the starvation trace are in the PR notes and in the stored probes (arm7_trace_summary.md). Known gaps are listed in the PR.

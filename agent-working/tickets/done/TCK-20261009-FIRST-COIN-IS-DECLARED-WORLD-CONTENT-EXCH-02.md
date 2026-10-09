@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: economy
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-FIRST-COIN-IS-DECLARED-WORLD-CONTENT-EXCH-02
-phase: open
+phase: done
 date: 2026-10-09
 tags: [economy, content, resource]
 ---
@@ -15,7 +15,7 @@ tags: [economy, content, resource]
 First coin is declared world content (building tills and stock, inventory profiles applied at compile)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -39,9 +39,9 @@ No coin existed at the start of a compiled world except what a spawn happened to
 - Paying minted coin from a payer (successor ticket EXCH-02-B).
 
 ## Acceptance Criteria
-- [ ] A compiled world's buildings and residents start with their declared coin and stock (tests/unit/worldbuilding/test_first_coin_is_declared_content.py).
-- [ ] Conservation holds with the declared coin.
-- [ ] Pinned paired measurement (arm1 vs arm6 vs arm7 profiles-off ablation) reported to rpg-planner.
+- [x] A compiled world's buildings and residents start with their declared coin and stock (tests/unit/worldbuilding/test_first_coin_is_declared_content.py).
+- [x] Conservation holds with the declared coin.
+- [x] Pinned paired measurement (arm1 vs arm6 vs arm7 profiles-off ablation) reported to rpg-planner.
 
 ## Related Tickets
 - TCK-20261009-WAGE-IS-PAID-FROM-THE-EMPLOYERS-OWN-PURSE-EXCH-02, TCK-20261009-SELL-IS-A-CHOSEN-ACT-PRICED-BY-MARKET-SYSTEM-EXCH-02, TCK-20261009-FIRST-COIN-IS-DECLARED-WORLD-CONTENT-EXCH-02, TCK-20261008-RECIPE-NODES-LAND-ON-TILES-THEIR-REGION-DOES-NOT-OWN-P3 (one batch, one PR)
@@ -70,4 +70,4 @@ tests/unit/worldbuilding/test_first_coin_is_declared_content.py
 See the batch-2 PR.
 
 ## Completion Summary
-Pending (filled at close).
+Landed in the batch-2 PR (one commit on edda25490 plus the force-full-scan and town-contract test rewrites). Pinned paired measurements (arm1 main, arm6 batch 2, arm7 batch 2 without profiles) and the starvation trace are in the PR notes and in the stored probes (arm7_trace_summary.md). Known gaps are listed in the PR.

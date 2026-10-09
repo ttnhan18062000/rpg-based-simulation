@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: economy
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-WAGE-IS-PAID-FROM-THE-EMPLOYERS-OWN-PURSE-EXCH-02
-phase: open
+phase: done
 date: 2026-10-09
 tags: [economy, resource]
 ---
@@ -15,7 +15,7 @@ tags: [economy, resource]
 WORK shift pays a wage from the employer's own purse
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -38,9 +38,9 @@ A WORK shift (200 ticks) pays 6 gold from the inn's own purse to the worker, one
 - The double-execution engine quirk (Lane A).
 
 ## Acceptance Criteria
-- [ ] A shift pays exactly once per shift id even under double execution (tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py).
-- [ ] Wage rejection cases covered; conservation holds.
-- [ ] Pinned paired measurement reported to rpg-planner (also the batch-2 closing measurement).
+- [x] A shift pays exactly once per shift id even under double execution (tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py).
+- [x] Wage rejection cases covered; conservation holds.
+- [x] Pinned paired measurement reported to rpg-planner (also the batch-2 closing measurement).
 
 ## Related Tickets
 - TCK-20261009-WAGE-IS-PAID-FROM-THE-EMPLOYERS-OWN-PURSE-EXCH-02, TCK-20261009-SELL-IS-A-CHOSEN-ACT-PRICED-BY-MARKET-SYSTEM-EXCH-02, TCK-20261009-FIRST-COIN-IS-DECLARED-WORLD-CONTENT-EXCH-02, TCK-20261008-RECIPE-NODES-LAND-ON-TILES-THEIR-REGION-DOES-NOT-OWN-P3 (one batch, one PR)
@@ -69,4 +69,4 @@ tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py, tests/unit/
 See the batch-2 PR.
 
 ## Completion Summary
-Pending (filled at close).
+Landed in the batch-2 PR (one commit on edda25490 plus the force-full-scan and town-contract test rewrites). Pinned paired measurements (arm1 main, arm6 batch 2, arm7 batch 2 without profiles) and the starvation trace are in the PR notes and in the stored probes (arm7_trace_summary.md). Known gaps are listed in the PR.

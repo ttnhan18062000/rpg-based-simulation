@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: economy
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-SELL-IS-A-CHOSEN-ACT-PRICED-BY-MARKET-SYSTEM-EXCH-02
-phase: open
+phase: done
 date: 2026-10-09
 tags: [economy, resource, legality]
 ---
@@ -15,7 +15,7 @@ tags: [economy, resource, legality]
 Selling is a chosen act (SELL) priced by MarketSystem; shop visits no longer auto-sell
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -40,9 +40,9 @@ Standing at a shop auto-sold the carried goods (Decision 34 removes that). SELL 
 - The inn route gate.
 
 ## Acceptance Criteria
-- [ ] SELL executes as a chosen act and is priced by `MarketSystem.calculate_price` (tests/unit/world/test_sell_is_a_chosen_act.py).
-- [ ] Services land with their action (tests/unit/world/test_building_services_land_with_their_action.py) and the executor parity test passes.
-- [ ] The shop phase still visits an entity under force_full_scan with an empty dirty set (rewritten integration test, with a default-scan control).
+- [x] SELL executes as a chosen act and is priced by `MarketSystem.calculate_price` (tests/unit/world/test_sell_is_a_chosen_act.py).
+- [x] Services land with their action (tests/unit/world/test_building_services_land_with_their_action.py) and the executor parity test passes.
+- [x] The shop phase still visits an entity under force_full_scan with an empty dirty set (rewritten integration test, with a default-scan control).
 
 ## Related Tickets
 - TCK-20261009-WAGE-IS-PAID-FROM-THE-EMPLOYERS-OWN-PURSE-EXCH-02, TCK-20261009-SELL-IS-A-CHOSEN-ACT-PRICED-BY-MARKET-SYSTEM-EXCH-02, TCK-20261009-FIRST-COIN-IS-DECLARED-WORLD-CONTENT-EXCH-02, TCK-20261008-RECIPE-NODES-LAND-ON-TILES-THEIR-REGION-DOES-NOT-OWN-P3 (one batch, one PR)
@@ -71,4 +71,4 @@ tests/unit/world/test_sell_is_a_chosen_act.py, tests/unit/world/test_building_se
 See the batch-2 PR.
 
 ## Completion Summary
-Pending (filled at close).
+Landed in the batch-2 PR (one commit on edda25490 plus the force-full-scan and town-contract test rewrites). Pinned paired measurements (arm1 main, arm6 batch 2, arm7 batch 2 without profiles) and the starvation trace are in the PR notes and in the stored probes (arm7_trace_summary.md). Known gaps are listed in the PR.

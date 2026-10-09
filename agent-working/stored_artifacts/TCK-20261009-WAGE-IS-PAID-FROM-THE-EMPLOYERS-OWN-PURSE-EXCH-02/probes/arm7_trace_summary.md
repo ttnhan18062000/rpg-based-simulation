@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20261009-WAGE-IS-PAID-FROM-THE-EMPLOYERS-OWN-PURSE-EXCH-02
+artifact_type: report
+tags: [economy, resource]
+---
+
 # arm7 ablation and starvation trace (scripts: trace2.py, an2.py; paired scripts: chain_ms.py, agg.py)
 
 arm1 = main (edda25490), arm6 = batch 2, arm7 = batch 2 with declared inventory profiles NOT applied at spawn. Pinned NORMAL, 5000 ticks, seeds 42-46.
