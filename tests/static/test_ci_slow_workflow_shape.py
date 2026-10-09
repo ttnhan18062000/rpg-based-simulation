@@ -216,3 +216,11 @@ def test_report_and_issue_writes_live_only_in_the_gated_slow_job() -> None:
     gate_text = "\n".join(str(step) for step in _gate_job()["steps"])
     assert "slow_regression_report" not in gate_text and "issues" not in str(_gate_job()["permissions"])
     assert "slow_regression_report" in _report_step()["run"]
+
+
+def test_decision_steps_use_pipefail_so_a_crashing_decision_module_is_not_hidden_by_tee() -> None:
+    gate_step = [s for s in _gate_job()["steps"] if s.get("id") == "decide"][0]
+    watchdog = yaml.safe_load((_ROOT / ".github" / "workflows" / "slow-regression-watchdog.yml").read_text(encoding="utf-8"))
+    watchdog_step = [s for s in watchdog["jobs"]["watchdog"]["steps"] if s.get("id") == "decide"][0]
+    for step in (gate_step, watchdog_step):
+        assert "| tee" in step["run"] and "set -o pipefail" in step["run"]

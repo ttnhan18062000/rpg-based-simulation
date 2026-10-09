@@ -14,7 +14,9 @@ The rule, for main's head SHA ``H`` (the slow suite covers all of ``src/``, so n
 "Actually tested" (the choice this module records): the run is ``completed`` and its job named ``Slow regression`` (the
 suite job in ``slow-regression.yml``) concluded ``success`` or ``failure``. A run whose gate decided ``skip`` has that job
 concluded ``skipped``, so it never counts as coverage; the gate does not count its own skips. A cancelled run (job
-``cancelled``) did not finish testing and does not count either. The job conclusions come from the jobs API (one call per
+``cancelled``) did not finish testing and does not count either. A ``failure`` counts even when it is a setup-stage
+failure (checkout or dependency install) rather than a test failure: the gate cannot tell them apart from the job
+conclusion, and it errs toward the one same-commit rerun a day rather than a rerun of every failed setup. The job conclusions come from the jobs API (one call per
 run at ``H``), because the run-level conclusion is ``success`` for a gate-skipped run and cannot tell the two apart.
 
 Runs that are not completed (queued, in progress) never count as tested. The caller's own run is passed as

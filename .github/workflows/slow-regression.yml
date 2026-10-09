@@ -60,6 +60,7 @@ jobs:
         id: decide
         if: ${{ github.event_name == 'schedule' }}
         run: |
+          set -o pipefail  # without it a crashing gate hides behind `| tee`: empty decision, no red signal
           python3 -m tools.test_architecture.slow_regression_gate decide \
             --head-sha "${{ github.sha }}" --exclude-run-id "${{ github.run_id }}" | tee decision.txt
           cat decision.txt >> "$GITHUB_OUTPUT"

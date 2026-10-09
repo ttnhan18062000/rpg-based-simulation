@@ -41,6 +41,7 @@ jobs:
       - name: Decide
         id: decide
         run: |
+          set -o pipefail  # a crashing decision module must fail the step, not hide behind `| tee`
           HEAD_SHA="$(gh api "repos/${GH_REPO}/commits/main" --jq .sha)"
           python3 -m tools.test_architecture.slow_regression_gate collect --head-sha "$HEAD_SHA" > runs.json
           python3 -m tools.test_architecture.slow_regression_watchdog runs.json --head-sha "$HEAD_SHA" | tee decision.txt
