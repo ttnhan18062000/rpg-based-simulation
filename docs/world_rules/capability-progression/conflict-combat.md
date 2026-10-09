@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-08"
+last_verified: "2026-10-09"
 ---
 
 # World Rule Family: Conflict / Combat
@@ -167,6 +167,30 @@ was declared without any Rule on when a fighter accepts it.
 - **Engineering, not this Rule:** how holding is represented (a typed hold or guard action, not
   an empty step); preferring an adjacent hostile the subject is engaged with as its target; the
   stall counter's bookkeeping.
+- **Amendment, a hostile stepping into reach is noticed and decided (decided by the owner
+  directly, 2026-10-08; row 32 of the memo):** when a perceived hostile the subject is not
+  fighting comes to stand adjacent to it, because the subject walked up or the hostile came
+  close, the subject decides on it then. It may fight, step away, wait, or keep walking and pay
+  the disengagement cost knowingly. A committed walk does not carry it past a hostile it never
+  noticed, and nothing freezes it in place until a routine decision comes round.
+  - **Measured at the decision** (Lane A, relayed; 5 seeds x 3 worlds, crowded / living /
+    urban). Opportunity-attack hits per run:
+    - base: 185 / 158 / 87;
+    - steps away blocked from an engaged hostile only: 180 / 123 / 65;
+    - steps away blocked from any adjacent hostile: 14 / 37 / 8.
+
+    Deaths stay within 1 SD in every arm. The any-adjacent movement block froze subjects for
+    700 to 1,570 entity-ticks per run, up to 219 ticks beside a hostile they never decided
+    about, so a freeze at the movement layer is the alternative not taken. About 90 percent of
+    what remains after the engaged-only block is this case.
+  - **Engineering, not this Rule:** how the event reaches the decision layer (an event-driven
+    re-decision touches scheduling), and its cadence. This is feature work with its own ticket.
+  - **Two follow-up rulings (owner, directly, 2026-10-09, on Lane A's per-world split):** a WATCH
+    posture means stand and observe, as a typed wait. It does not mean fight, because the router
+    withholds the attack under WATCH, so the subject would "fight on paper" and strike nothing.
+    "Keep walking and pay knowingly" (IGNORE) is built but unreachable today, because the posture
+    service never returns IGNORE for these pairs. That is accepted for now and disclosed;
+    making it reachable is a later combat_engagement ticket.
 - **Alternatives not taken:** back off between blows and re-close (today's behaviour, made
   intentional: one free hit per swing for no reason the fiction holds); hold only when winning
   (duplicates AGENCY-07's OUTMATCHED term, and a losing fighter has no better tile to step to).
@@ -204,6 +228,23 @@ Implemented by `TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04` (Lane A)
   already-queued ATTACK behaved the same before. Measured as a no-op (0 holds at low HP, 0
   deaths after a hold). If that stops holding, the fix is to re-decide a holding fighter when a
   present-threat term changes (AGENCY-07), not to drop the hold.
+
+**At the movement layer, SUPPORTED since #446 (`28e29ed2e`, 2026-10-08):**
+- **The rule:** an entity beside an engaged, perceived hostile takes no step from a stored or
+  reaffirmed navigation target. Only a decision this tick moves it, and a blocked held move is
+  released to the brain. Divergence 2.89 (Bug Fix), parity COMB-342.
+- **Pinned by** `tests/mechanic_scenarios/test_conflict04_movement_layer.py` (with a control arm)
+  and `tests/unit/engine/test_engaged_adjacent_hostile_takes_no_stored_step.py`.
+- **Measured** (pinned, seeds 42 to 46, 1500 ticks, `d671868bb` to the branch; crowded / living
+  / urban):
+  - opportunity-attack hits: 185.2 / 158.0 / 87.4 to 162.0 / 128.4 / 72.0;
+  - held-move hits: 102.4 / 92.6 / 40.6 to 61.2 / 46.8 / 18.2;
+  - total deaths: unchanged within 1 SD.
+- **What remains:** the hits left are against adjacent hostiles that are perceived but not
+  engaged. That is decision 32's case (notice and decide), in Lane A's next batch.
+- **Also in #446:** a chokepoint hold is a typed success that ends its task, not an
+  `UNSUPPORTED_ACTION` (divergence 2.90, parity COMB-015). This is a reporting fix with no
+  change to the trajectory.
 
 **Previously CONFLICTING, traced by Lane A on main `753f98ea9`** (relayed by rpg-planner, seeds
 42 to 46, 3 worlds; kept as found).

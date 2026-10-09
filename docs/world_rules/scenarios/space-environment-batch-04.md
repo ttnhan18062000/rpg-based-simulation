@@ -4,12 +4,12 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-09"
 ---
 
 # Scenario Bank: Space / Environment / Movement (Batch 04)
 
-**Purpose/scope.** Fifteen scenarios used to pressure-test the Location/Topology, Environment,
+**Purpose/scope.** Sixteen scenarios (one added 2026-10-08 for ENV-08) used to pressure-test the Location/Topology, Environment,
 and Movement/Navigation rule families in `space-environment/location-topology.md`,
 `space-environment/environment.md`, and `space-environment/movement-navigation.md`. SPC-S01–S12
 are the original seed set (`tmp/world-rule-batch-4-ext-ai.md`), covering all ten required probes
@@ -218,6 +218,44 @@ traversal. The underlying route relation persists; only current accessibility is
   repository already treats an obstruction as separable from the underlying terrain/topology:
   the building can in principle be removed without anything about the route's own topological
   existence changing.
+
+
+## SPC-S16 — The near wild is survivable, the deep wild is not (ENV-08, decision 30) (added 2026-10-08)
+
+A healthy worker walks from its town, across a second town, to the near forest, gathers there and
+walks back alive, losing no health to the land. The same walk continued into the deep forest
+kills it.
+
+- **Rules invoked:** ENV-08 (settled land and the near edge of the wild are survivable for the
+  people who live beside them), ENV-02 (exposure needs declared conditions; endurance unchanged),
+  SURV-06 with decision 29 (wild food in wild land outside settlements).
+- **Kernel spec (`mechanic_scenario`, `tests/mechanic_scenarios/`, through
+  `tests/helpers/scenario.py`).** The same walker runs in two arms, differing only in the
+  destination region:
+  - **Staging:** a compiled world laid out like `frontier_living_world`: the worker's home town,
+    a second town on the only path, then a `near_forest` region with a wild-food node, and a
+    `deep_forest` region beyond it. Worker W is a `town_council` person (who endures no
+    NATURAL_TERRAIN hazard) at full HP, with no hostiles anywhere and calamity 0. W's route is
+    forced (a staged move task to the node, then home), so the scenario measures the land, not
+    the decision.
+  - **Main arm (destination: the node in `near_forest`, then home):** W crosses the second town
+    with `hazard_damage` 0 on every tick spent there. It reaches the node, gathers, walks home,
+    and is alive at the end. It takes `hazard_damage` 0 in `near_forest` too, since the near edge's
+    cost is the walk and the competition, not health.
+  - **Control arm (destination: a tile in `deep_forest`, then home):** W dies of HAZARD inside
+    `deep_forest` before it can return.
+  - **Why the control:** it proves the main arm's survival comes from the near edge being
+    survivable, not from the walk being too short to hurt, and that lethal danger is still real
+    deeper in.
+  - **Also checked:** `hometown` and the second town carry hazard 0 at compile, and no settled
+    region in the world carries a standing ambient hazard.
+- **Result (2026-10-09): covered** since #454 (`0b4f12af7`) by
+  `tests/mechanic_scenarios/test_near_wild_is_survivable_deep_wild_is_not.py` (4 passed: the main
+  arm, the deep-wild control, and a compile assertion over every resolved world).
+- **Earlier result (2026-10-08): revealed contradiction on main.** The second town (`trading_hometown`,
+  0.5) drains 5 HP per tick and W dies in about 20 of the 35 crossing ticks. `near_forest` (1.0)
+  kills in 11 ticks (ENV-08's evidence). Expected to be **covered** once Lane B's content data
+  lands in the decision-27 + earn-then-buy batch and this spec passes.
 
 ---
 
