@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-HANDOFF-TESTING-METRICS-EXPORT-FLAKE
-phase: open
+phase: done
 date: 2026-10-09
 tags: [delivery]
 ---
@@ -15,7 +15,7 @@ tags: [delivery]
 Hand the order-dependent `test_metrics_endpoint_integration` failure over to testing
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -39,9 +39,9 @@ Perf reported a connection refused from `tests/observability/test_metrics_export
 - Fixing the flake; the suggested fix is testing's to decide
 
 ## Acceptance Criteria
-- [ ] The handoff update exists in the style of the earlier updates, with the facts, the suggested fix and the pointer to the precheck doc
-- [ ] The repro was re-run once on current main and the result (pass or fail) is recorded, with stderr or port state if it failed
-- [ ] `git diff --stat` lists no path under `src/` or `tests/`
+- [x] The handoff update exists in the style of the earlier updates, with the facts, the suggested fix and the pointer to the precheck doc
+- [x] The repro was re-run once on current main and the result (pass or fail) is recorded, with stderr or port state if it failed
+- [x] `git diff --stat` lists no path under `src/` or `tests/`
 
 ## Related Tickets
 - TCK-20261009-UBUNTU-26-RUNNER-PRECHECK
@@ -69,3 +69,4 @@ None.
 - `docs/plans/codebase_health/handoffs/handoff_to_testing.md`
 
 ## Completion Summary
+Handoff update appended; the failure was not reproduced on `0c3a5654b` (one run, passed, port 8011 free afterwards), so it records the report, the source facts and the suggested fix, with no cause claimed. The update links the Ubuntu 26.04 precheck doc. No `src/` or `tests/` path changed.

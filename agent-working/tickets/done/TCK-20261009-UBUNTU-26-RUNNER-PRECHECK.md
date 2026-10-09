@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-UBUNTU-26-RUNNER-PRECHECK
-phase: open
+phase: done
 date: 2026-10-09
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 Measure `test.yml` on `ubuntu-26.04` before `ubuntu-latest` begins migrating
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -41,12 +41,12 @@ P2
 - Dispatching `deploy-docs`
 
 ## Acceptance Criteria
-- [ ] Probe branch exists with only the `runs-on` change; its sha was reported to the planner before any push
-- [ ] Every job of the probe run is accounted for in the doc (result or "not checked" with the reason)
-- [ ] Every difference from main's run has a cause (26.04 difference or flake, re-run once)
-- [ ] The doc has valid frontmatter, run links, the per-job table and a recommendation (pins named with ticket + dated exit if any)
-- [ ] The doc says "begins migrating" and never "switches"
-- [ ] `git diff --stat` on the batch branch lists no path under `src/` or `tests/`
+- [x] Probe branch exists with only the `runs-on` change; its sha was reported to the planner before any push
+- [x] Every job of the probe run is accounted for in the doc (result or "not checked" with the reason)
+- [x] Every difference from main's run has a cause (26.04 difference or flake, re-run once)
+- [x] The doc has valid frontmatter, run links, the per-job table and a recommendation (pins named with ticket + dated exit if any)
+- [x] The doc says "begins migrating" and never "switches"
+- [x] `git diff --stat` on the batch branch lists no path under `src/` or `tests/`
 
 ## Related Tickets
 - TCK-20261009-HANDOFF-TESTING-METRICS-EXPORT-FLAKE
@@ -70,7 +70,14 @@ P2
 - Probe commit `a5ce529e7` on `ci-runner-26-probe` (21 `runs-on` lines in `test.yml`). The other four workflows hold 5 more `ubuntu-latest` entries and are not touched.
 
 ## Test Summary
+- Probe run https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37959405085 (draft PR #477, closed): 18 of 21 jobs success, 2 skipped (`SimQ grade-anchor drift` is push-only, `Scenario lane` yields to `Perf / cert / arena`), 1 failure: `Architecture / docs / static`, one test (`test_slow_and_migration_lanes_jobs_unchanged_by_this_ticket`) that pins `runs-on: ubuntu-latest` for `migration-lanes`; 321 other tests passed. A probe artifact, not a 26.04 problem.
+- Main baseline (same base) run 37955084870, all green. One `Integration` re-run: 534 s against 540 s first time (main's recent range 349 to 521 s); no cause claimed.
+- Doc validated with `tools/validate_frontmatter.py`; the word "switches" does not appear.
+- Recommendation: no pin; re-check main's first runs after 2026-10-19.
 
 ## Files Changed
+- `docs/plans/codebase_health/ubuntu_26_runner_precheck.md` (new)
+- probe branch `ci-runner-26-probe` (`.github/workflows/test.yml`, throwaway, not in this batch's diff)
 
 ## Completion Summary
+The probe ran `test.yml` entirely on `ubuntu-26.04` and every job ended as on main apart from one static test that pins the label the probe edited. The precheck doc recommends no pin and lists the four other workflows as not probed (side effects) and two jobs as not checked on 26.04. Probe PR #477 is closed; its branch is kept until the owner says to delete it. No `src/` or `tests/` path changed.

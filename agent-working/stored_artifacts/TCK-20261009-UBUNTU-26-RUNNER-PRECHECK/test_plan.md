@@ -1,11 +1,11 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 artifact_type: test_plan
 ticket_id: TCK-20261009-UBUNTU-26-RUNNER-PRECHECK
-phase: open
+phase: done
 date: 2026-10-09
 tags: [architecture, delivery]
 ---
