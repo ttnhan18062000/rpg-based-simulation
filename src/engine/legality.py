@@ -199,6 +199,16 @@ class LegalityServiceV2:
 
     @staticmethod
     def _attack_permitted(attacker: EntityState, target: EntityState, context: Any) -> bool:
+        """Faction permission (CONFLICT-03), or else predation: a hungry attacker whose diet can eat the target and that believes it can
+        overcome it (decisions 44 and 47). The relation is read lazily: ``hostility`` imports this module."""
+        if LegalityServiceV2._faction_attack_permitted(attacker, target, context):
+            return True
+        from src.engine.appraisal import Relation
+        from src.engine.hostility import relation
+        return relation(attacker, target) is Relation.PREDATION
+
+    @staticmethod
+    def _faction_attack_permitted(attacker: EntityState, target: EntityState, context: Any) -> bool:
         """CONFLICT-03: permission follows declared hostility and is symmetric; missing data declares nothing.
         Both sides declared: legal both ways if either declares the other hostile. Exactly one side declared: its verdict decides both
         directions. Neither declared: the legacy fallback (only the same legacy faction is illegal). A contextual threat differs only in

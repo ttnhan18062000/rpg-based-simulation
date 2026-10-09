@@ -56,6 +56,15 @@ def get_cognition_profile_definition(profile_id: str):
     return _catalog.get_cognition_profile(profile_id)
 
 
+def get_kind_properties(species_id: Optional[str]):
+    """(SpeciesDefinition, BodyModelDefinition) of a species via the warmed catalog singleton; (None, None) when undeclared."""
+    global _catalog
+    if _catalog is None:
+        _auto_init()
+    species = _catalog.get_species(species_id) if species_id else None
+    return species, (_catalog.get_body_model(species.body_model) if species else None)
+
+
 def get_role_definition(role_id: str):
     """Return the named RoleDefinition via the warmed catalog singleton."""
     global _catalog

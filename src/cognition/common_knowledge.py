@@ -17,6 +17,7 @@ from src.cognition.capability_estimate import (
     CapabilityContext,
     CapabilityEstimateService,
 )
+from src.content.schema import COMMON_KNOWLEDGE_DANGER_LEVELS
 from src.content.common_knowledge_seed import (
     COMMON_KNOWLEDGE_CERTAINTY,
     COMMON_KNOWLEDGE_SOURCE_ID,
@@ -30,7 +31,7 @@ from src.content.common_knowledge_seed import (
 
 __all__ = [
     "COMMON_KNOWLEDGE_CERTAINTY", "COMMON_KNOWLEDGE_SOURCE_ID", "DANGER_FACT_TYPE", "FACT_KEY_PREFIX", "UNRECOGNISED",
-    "combat_capability_against", "common_knowledge_facts", "danger_fact_key", "default_self_model", "seeded_knowledge",
+    "believed_danger_rank", "combat_capability_against", "common_knowledge_facts", "danger_fact_key", "default_self_model", "seeded_knowledge",
 ]
 
 UNRECOGNISED = "unrecognised"
@@ -40,6 +41,16 @@ def _recognised_kind(hostile: Any) -> str:
     """What an observer recognises the hostile as: its species. With none the hostile is unrecognised and so uninformed;
     ``kind`` is the hidden population role and KNOW-04 forbids attaching a prior to it."""
     return str((hostile.identity.properties or {}).get("species_id") or UNRECOGNISED)
+
+
+def believed_danger_rank(entity: Any, other: Any) -> int:
+    """How dangerous the acting entity believes ``other``'s kind is, as the index into ``COMMON_KNOWLEDGE_DANGER_LEVELS``.
+
+    The belief is the entity's own knowledge fact for the other's species; with none it is the neutral middle level (uninformed)."""
+    levels = COMMON_KNOWLEDGE_DANGER_LEVELS
+    fact = entity.self_model.knowledge.facts.get(danger_fact_key(_recognised_kind(other)))
+    level = fact.details.get("danger_level") if fact is not None else None
+    return levels.index(level) if level in levels else levels.index("medium")
 
 
 def combat_capability_against(entity: Any, hostile: Any) -> float:

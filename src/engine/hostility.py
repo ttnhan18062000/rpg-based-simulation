@@ -1,4 +1,4 @@
-"""The one test for "this neighbour is a perceived, hostile-compatible entity" (CONFLICT-04).
+"""The one test for "this neighbour is a perceived hostile or appraised as prey, threat or danger" (CONFLICT-04, decisions 44-49).
 
 The tactical pass builds its ``hostiles`` list with it and the movement layer asks it for the engaged adjacent hostile that makes a
 stored-target step a non-decision, so the decision layer and the movement layer cannot disagree about who is a hostile.
@@ -13,7 +13,7 @@ from src.content_semantics.faction import (
     get_species_id_str,
 )
 from src.content_semantics.relation import RelationContext
-from src.engine.behavior_consumers import get_entity_signals, get_perception_gate
+from src.engine.appraisal import Relation, appraise, perceives
 from src.engine.legality import LegalityServiceV2
 from src.entities.identity_resolver import (
     EntityIdentityResolver,
@@ -22,6 +22,9 @@ from src.entities.identity_resolver import (
 
 if TYPE_CHECKING:
     from src.core.state import EntityState
+
+
+ATTACK_RELATIONS = frozenset({Relation.FACTION_HOSTILE, Relation.PREDATION})
 
 
 def source_identity(entity: "EntityState") -> Tuple[str, str]:
@@ -38,19 +41,13 @@ def is_engaged(entity: "EntityState", other: "EntityState") -> bool:
     return entity.task.payload.get("target_id") == other.id or other.task.payload.get("target_id") == entity.id
 
 
-def perceived_hostile(entity: "EntityState", other: "EntityState", source: Optional[Tuple[str, str]] = None) -> bool:
+def faction_hostile(entity: "EntityState", other: "EntityState", source: Optional[Tuple[str, str]] = None) -> bool:
     """True when ``entity`` perceives ``other`` (alive, passes the perception gate) and the faction semantics rate it hostile.
 
     ``source`` is ``source_identity(entity)`` when the caller tests many neighbours of one entity."""
-    if not other.combat.alive:
+    if not perceives(entity, other):
         return False
     dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, other.navigation.position)
-    try:
-        perceived = get_perception_gate().can_perceive(entity, get_entity_signals(other), {"distance": float(dist)}).perceived
-    except (AttributeError, KeyError, TypeError, ValueError, RuntimeError):
-        perceived = True  # gate failure: permissive fallback, as the tactical pass has always done
-    if not perceived:
-        return False
     # `intruding` is left unset (None): see the note in LegalityServiceV2.verify_attack_legality.
     context = RelationContext(
         distance=float(dist),
@@ -64,3 +61,21 @@ def perceived_hostile(entity: "EntityState", other: "EntityState", source: Optio
     except IdentityResolutionError:
         target_faction = get_faction_id_str(other)
     return bool(get_faction_semantics_service().is_hostile_compat(source_faction, target_faction, context))
+
+
+def relation(entity: "EntityState", other: "EntityState", source: Optional[Tuple[str, str]] = None) -> Relation:
+    """How ``entity`` regards ``other`` (decisions 47 and 49): faction hostility first, then the appraisal from properties.
+
+    "Appraisal for all, faction for people": a faction verdict wins; otherwise PREDATION, THREATENING, WARY or NONE."""
+    if faction_hostile(entity, other, source):
+        return Relation.FACTION_HOSTILE
+    appraised = appraise(entity, other)
+    if appraised is Relation.PREDATION and get_faction_id_str(entity) == get_faction_id_str(other):
+        return Relation.NONE  # a faction does not hunt its own members
+    return appraised
+
+
+def perceived_hostile(entity: "EntityState", other: "EntityState", source: Optional[Tuple[str, str]] = None) -> bool:
+    """True when ``other`` is an attack target of ``entity``: a faction hostile or prey it hunts. WARY and THREATENING are not (they are
+    avoided, never engaged), so they never enter the hostile list."""
+    return relation(entity, other, source) in ATTACK_RELATIONS

@@ -113,6 +113,16 @@ def test_avoid_steps_away_as_a_decided_flight():
     assert MCS.is_decided_flight(held) is True
 
 
+def test_avoid_with_no_route_away_holds_instead_of_falling_through_to_an_attack(monkeypatch):
+    import src.engine.tactical_hold as tactical_hold
+
+    monkeypatch.setattr(tactical_hold, "retreat_destination", lambda *args, **kwargs: None)
+    w, h = _walker(posture="avoid"), _hostile()
+    update = notice_unengaged_hostile(_state(w, h), w, h, [h], None)
+    assert update.task.payload_set == {"action": "HOLD", "reason": "AVOID_NO_ROUTE", "target_id": h.id}
+    assert update.task.work_kind_set == "ENTITY_ACT" and update.navigation.movement_mode_set == MovementMode.HOLD
+
+
 @pytest.mark.parametrize("posture", [None, "engage", "probe", "skirmish", "retreat", "panic_flee", "vengeance_engage"])
 def test_any_other_verdict_leaves_the_decision_to_fight_as_before(posture):
     w, h = _walker(posture=posture), _hostile()
