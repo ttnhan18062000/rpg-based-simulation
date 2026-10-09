@@ -442,15 +442,14 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
     the catalog, a corpse holds loot and not food, and there is no eat-corpse action.
   - **MISSING: small, edible, plant-eating animals.** The corpus has 13 species and no herbivore
     or small game, so the only creatures a wolf could hunt are people, goblins or other
-    meat-eaters. **Decided by the owner directly, 2026-10-09 (row 45 of the memo): add a few
-    animal kinds such as hares and deer.** They are declared by their properties only (decision
-    46): animals of low wits and low power, smaller than an average person, with plant-eating
-    diets, and edible to meat-eaters. Nothing marks them as prey. They end up hunted because
-    larger meat-eaters can overcome and eat them, and they end up fleeing because they perceive
-    danger. Wolves then mostly eat these animals and turn on people mainly when they are scarce,
-    and people gain something to hunt (decision 31). Species, numbers and placement are content.
-    Their grazing is foraging by a plant-eating diet, and their numbers follow ECOL's population
-    rules, never a target.
+    meat-eaters. **Decided by the owner directly, 2026-10-09 (rows 45 and 50 of the memo): add a few generic
+    animal archetypes,** defined only by coarse properties, for example a small plant-eater and a
+    large plant-eater: low wits, low power, a plant-eating diet, edible to meat-eaters. Nothing
+    marks them as prey (decision 46). Named species (a deer, a hare) and exact figures are content
+    detail, deferred until the foundation is hardened (decision 50). Meat-eaters then mostly eat
+    these animals and turn on people mainly when they are scarce, and people gain something to
+    hunt (decision 31). Their grazing is foraging by a plant-eating diet, and their numbers follow
+    ECOL's population rules, never a target.
     Scenario: [LB-S21](../scenarios/life-body-batch-05.md#lb-s21) (grazes, flees a noticed
     predator, numbers change only by births and deaths).
   - **Scenario:** [LB-S20](../scenarios/life-body-batch-05.md#lb-s20) (a predator eats what it

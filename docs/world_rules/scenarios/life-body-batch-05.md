@@ -337,7 +337,7 @@ overcome. Beside a berry thicket it does not forage the berries. With no kill th
   the free-meal removal), Bible 03 (conservation: meat enters from the body and leaves by eating).
 - **Kernel spec (`mechanic_scenario`).** Three arms on one staging:
   - **Staging:** a compiled wild region with no settlement and no inn in reach. P is a kind whose
-    diet eats meat (for example a wolf), at full HP, hungry enough to act on it, carrying no food.
+    diet eats meat (a medium meat-eater archetype), at full HP, hungry enough to act on it, carrying no food.
     A berry thicket with charges sits within P's reach. There are no other hostiles.
   - **Main arm (an animal P can overcome and eat):** a creature Q, smaller and weaker than P, whose
     body P's diet can eat, stands
@@ -363,8 +363,8 @@ overcome. Beside a berry thicket it does not forage the berries. With no kill th
     values, how long a body's meat lasts, and whether scavengers may eat a body they did not kill
     (a later question).
 - **Q's kind (decided by the owner directly, 2026-10-09; decisions 45 and 46):** the corpus has
-  no small, edible, plant-eating animal yet, so a few (for example hares or deer) are added,
-  declared by their properties only. Q is staged as one of them once it exists. Until then a test
+  no small, edible, plant-eating animal yet, so a few generic archetypes are added, declared by
+  coarse properties only (decision 50: named species come later). Q is staged as one of them once it exists. Until then a test
   may stage any kind that is smaller and weaker than P and edible to its diet.
 - **Result (2026-10-09): revealed missing implementation on main.** A kill pays gold and XP only.
   No meat, carcass or hide item exists, a corpse holds loot and not food, and there is no
@@ -376,10 +376,10 @@ overcome. Beside a berry thicket it does not forage the berries. With no kill th
 
 ## LB-S21 — A small plant-eater grazes, flees a danger it perceives, and its numbers change only by births and deaths (SURV-06, decisions 32, 42, 45 and 46) (added 2026-10-09)
 
-A hungry deer grazes wild land and its hunger falls. A deer that notices a wolf coming close
+A hungry small plant-eater grazes wild land and its hunger falls. One that notices a meat-eater coming close
 moves away instead of grazing on. The herd grows only when there are living adults to bear young
 and enough grazing, and shrinks when its members are killed or starve. No animal appears from
-nowhere. The deer flees because of the danger it perceives, not because it is labelled prey
+nowhere. It flees because of the danger it perceives, not because it is labelled prey
 (decision 46).
 
 - **Rules invoked:** SURV-06 (grazing creatures forage; each kind's own ways), CONFLICT-04's
@@ -387,11 +387,11 @@ nowhere. The deer flees because of the danger it perceives, not because it is la
   living kind), decision 45 (small plant-eaters exist), decision 46 (roles from properties), Bible 03 (conservation: grazing takes charges
   from the land), ECOL-03 (aggregate population should follow individual births and deaths).
 - **Kernel spec (`mechanic_scenario`).** Three parts on a wild region with no settlement:
-  - **Grazing (one small plant-eating kind, for example a deer, D):** D is hungry, with grazing land that its
+  - **Grazing (one small plant-eater archetype, D):** D is hungry, with grazing land that its
     diet allows in reach. D grazes, a charge leaves the land, and D's hunger falls. D does not
     eat what its diet excludes (meat). With the land stripped bare, D stays hungry and its need
     is reported unmet; it may move on to other grazing.
-  - **Avoidance (D grazing, a wolf W hunting it):** when W comes adjacent and D perceives it, D
+  - **Avoidance (D grazing, a meat-eater W hunting it):** when W comes adjacent and D perceives it, D
     takes a fresh decision (decision 32) and moves away or flees. It does not keep grazing and
     take blows. A **control** with W sated, lying still or walking past, not approaching: D is
     wary (it keeps a distance and stays alert) but does not flee, and no fight occurs. D never
