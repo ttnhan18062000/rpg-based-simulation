@@ -554,7 +554,7 @@ def get_scenario_expectations(scenario_id: str) -> ScenarioExpectations:
         )
 
     # 2. Pressure & Degradation
-    elif scenario_id in ("RAM_PRESSURE", "TICK_BUDGET_PRESSURE", "QUEUE_INFLIGHT_PRESSURE", "WORK_DEBT_BUILDUP"):
+    elif scenario_id in ("RAM_PRESSURE", "TICK_BUDGET_PRESSURE", "QUEUE_INFLIGHT_PRESSURE"):
         return ScenarioExpectations(
             required_governor_modes=["NORMAL", "DEGRADED"],
             requires_recovery=True,

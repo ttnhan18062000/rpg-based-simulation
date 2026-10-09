@@ -74,7 +74,7 @@ def test_signal_truth_rolling_compute_average(mock_profile, initial_state):
         for i in range(1, 11):
             signals = PressureSignals(
                 tick_compute_ms=10.0 if i <= 5 else 20.0,
-                work_debt_total=0, worker_utilization=0, queue_utilization=0,
+                worker_utilization=0, queue_utilization=0,
                 memory_estimate_mb=0, replay_backlog_kb=0, active_workers=0, dropped_work_delta=0
             )
             status.record_signals(signals)

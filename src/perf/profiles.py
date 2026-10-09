@@ -44,7 +44,6 @@ def make_perf_profile(
         max_replay_buffer_kb=replay_buffer_kb,
         max_tick_budget_ms=tick_budget_ms,
         max_observability_budget_percent=observability_budget_percent,
-        max_work_debt=10000,
         cadence=effective_cadence,
     )
 

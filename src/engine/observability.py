@@ -22,14 +22,13 @@ class RuntimeSnapshot:
     memory_rss_mb: float
     memory_trend_mb_per_tick: float
     tick_compute_ms_avg: float
-    work_debt_total: int
     worker_utilization: float
     queue_utilization: float
     replay_backlog_kb: int
     
     # Outcome Accounting
     active_workers: int
-    dropped_work_count: int      # Autoritative work shed by governor
+    dropped_work_count: int      # Work the scheduler dropped; nothing registers droppable work, so this is 0
     replay_dropped_events: int   # Non-authoritative events lost due to buffer pressure
     uptime_seconds: float
     last_tick: int
@@ -116,16 +115,12 @@ class SignalCollector:
         worker_stats = kernel._worker_manager.get_stats()
         replay_stats = kernel._replay.get_stats()
         
-        # 4. Primary Pressure: Authoritative State (work debt was retired; the field is removed with the signal)
-        work_debt_total = 0
-
         return RuntimeSnapshot(
             profile_name=self._profile_name,
             runtime_mode=status.current_mode.name,
             memory_rss_mb=platform["rss_mb"],
             memory_trend_mb_per_tick=platform["memory_trend"],
             tick_compute_ms_avg=compute_avg,
-            work_debt_total=work_debt_total,
             worker_utilization=worker_stats["worker_utilization"],
             queue_utilization=worker_stats["queue_utilization"],
             replay_backlog_kb=replay_stats["backlog_kb"],

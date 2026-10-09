@@ -131,7 +131,6 @@ def _make_measurement() -> MeasurementPoint:
         memory_trend_mb_per_tick=0.1,
         tick_compute_ms=5.0,
         tick_compute_ms_avg=5.0,
-        work_debt=0,
         worker_utilization=0.5,
         queue_utilization=0.3,
         replay_pressure=0.0,
@@ -406,7 +405,7 @@ def test_existing_callers_not_broken_by_evidence_level_default():
     """TC-12: Existing no-arg callers of to_artifact_dict() still receive valid output."""
     result = _make_minimal_result()
     d = result.to_artifact_dict()  # no evidence_level arg
-    assert d["schema_version"] == "certification_result.v1"
+    assert d["schema_version"] == "certification_result.v2"
     assert d["final_state"] is None
     assert d["final_state_artifact"] is None
     assert "conformance_passed" in d

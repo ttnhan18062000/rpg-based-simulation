@@ -68,3 +68,32 @@ def test_the_state_and_update_fields_are_gone():
     with pytest.raises(TypeError):
         StateUpdate(work_debt_updates={})  # type: ignore[call-arg]
     assert not {"work_debt", "periodic_due_ticks"} & set(CanonicalStateHasher.to_canonical_data(AuthoritativeState(tick=0, seed=1)))
+
+
+def test_the_signal_the_thresholds_and_the_reporting_are_gone():
+    """C3: no `work_debt_total` signal, no `max_work_debt` profile field, no debt metric, and the certification measurement point lost its key."""
+    from src.certification.models import MeasurementPoint
+    from src.config.profiles import PROD_DEFAULT, PROD_SMALL, RuntimeProfile
+    from src.core.governance import PressureSignals
+    from src.engine.observability import RuntimeSnapshot
+    from src.observability.prometheus_collector import PrometheusMetricsCollector
+
+    assert "work_debt_total" not in PressureSignals.__dataclass_fields__
+    assert "work_debt_total" not in RuntimeSnapshot.__dataclass_fields__
+    assert "work_debt" not in MeasurementPoint.__dataclass_fields__
+    assert "max_work_debt" not in RuntimeProfile.model_fields
+    assert not hasattr(PROD_SMALL, "max_work_debt") and not hasattr(PROD_DEFAULT, "max_work_debt")
+
+    class _Manager:
+        def get_metrics_snapshot(self):
+            return {"tick": 1, "work_debt_total": 5}  # a stale snapshot key must not resurrect the metric
+
+    metric_names = {family.name for family in PrometheusMetricsCollector(_Manager()).collect()}
+    assert metric_names, "the collector produced no metric at all, so the absence check proves nothing"
+    assert "sim_work_debt_total" not in metric_names
+
+
+def test_the_certification_result_schema_was_bumped_for_the_removed_key():
+    from src.certification import models
+
+    assert "certification_result.v2" in open(models.__file__).read()

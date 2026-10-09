@@ -133,7 +133,6 @@ class LiveSnapshotProvider:
             "worker_utilization": metrics_snapshot.get("worker_utilization", 0.0),
             "queue_utilization": metrics_snapshot.get("queue_utilization", 0.0),
             "memory_rss_bytes": metrics_snapshot.get("memory_rss_bytes", 0.0),
-            "work_debt_total": metrics_snapshot.get("work_debt_total", 0),
             "dropped_work_delta": metrics_snapshot.get("dropped_work_delta", 0),
             "errors_total": metrics_snapshot.get("errors_total", 0),
             "phase_costs_ms": metrics_snapshot.get("phase_costs_ms", {}),
