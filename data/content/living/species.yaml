@@ -71,6 +71,7 @@
     willpower: "low_medium"
     charisma: "low"
   compatible_roles: ["scout", "raider", "shaman", "leader"]
+  camp_spawn_kind: "goblin_warrior"
   power: "small"
   wits: "medium"
   common_knowledge:
@@ -121,6 +122,7 @@
     willpower: "medium_high"
     charisma: "medium_low"
   compatible_roles: ["raider", "guard", "leader", "shaman"]
+  camp_spawn_kind: "orc_warrior"
   power: "large"
   wits: "medium"
   common_knowledge:

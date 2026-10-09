@@ -19,14 +19,14 @@ class CampService:
     RAID_MATURITY_THRESHOLD = 80.0
     CAMP_SPAWN_INTERVAL = 30
     NEST_RACE_KINDS = frozenset({"wolf", "spider", "troll", "slime"})
-    # A camp spawns the kind it declares (`CampState.kind` is the creature kind). A kind with a distinct fighting form spawns that form; every other
-    # kind spawns itself. This replaced a name branch ("goblin_warrior" if goblin else "orc_warrior") that gave every other kind's camp orc warriors.
-    WARRIOR_FORMS = {"goblin": "goblin_warrior", "orc": "orc_warrior"}
-
+    # A camp spawns the kind it declares (`CampState.kind` is the creature kind): the species' own `camp_spawn_kind` from content when it declares
+    # one (goblin: goblin_warrior, orc: orc_warrior), else the species itself. This replaced a name branch that gave every other kind's camp orc warriors.
     @staticmethod
     def spawn_kind(camp_kind: str) -> str:
-        """The spawn kind of a camp's own declared creature kind."""
-        return CampService.WARRIOR_FORMS.get(camp_kind, camp_kind)
+        """The spawn kind of a camp's own declared creature kind, read from content."""
+        from src.engine.behavior_consumers import get_kind_properties
+        species, _ = get_kind_properties(camp_kind)
+        return (species.camp_spawn_kind if species is not None and species.camp_spawn_kind else camp_kind)
     EXPAND_TERRITORY_MATURITY_BOOST = 1.0
 
     @staticmethod

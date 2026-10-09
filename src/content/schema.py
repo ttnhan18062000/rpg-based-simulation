@@ -191,6 +191,7 @@ class SpeciesDefinition(CatalogBaseDefinition):
     natural_traits: List[str] = Field(default_factory=list)
     attribute_tendencies: Dict[str, str] = Field(default_factory=dict)
     compatible_roles: List[str] = Field(default_factory=list)
+    camp_spawn_kind: Optional[str] = Field(None, min_length=1, description="The spawn kind a camp or nest of this species spawns; absent means the species itself (checked against the spawn catalogue by a test)")
     power: Optional[str] = Field(None, description="Coarse power band of the kind: small, medium or large (absent = undeclared)")
     wits: Optional[str] = Field(None, description="Coarse wits band of the kind: small, medium or large (absent = undeclared)")
     common_knowledge: Optional[CommonKnowledgeDefinition] = Field(
