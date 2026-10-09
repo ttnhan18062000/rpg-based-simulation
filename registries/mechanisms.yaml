@@ -2686,7 +2686,7 @@ mechanisms:
         (`work_shift.work_update`, routed by actions.py and action_router), and `serves.serves` is
         the people-only trait plus non-hostile-controller gate (decision 43). Decision 34 removed
         ShopSystem's auto-sell; `ShopSystem.enforce` stays bound because it still sanitises SHOP_BUY
-        intents. `src/town/inn.py`/`home.py` remain dead (deletion queued in Lane B's batch 4).
+        intents. `src/town/inn.py`/`home.py` remain dead (deleted in this PR).
   - id: building_sabotage
     layer: world
     systems: [economy]
