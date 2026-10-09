@@ -1,6 +1,6 @@
 """The owner-fix revisions `icons-owner-fixes-v1` as drawn (`TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES`): six new revisions of ADOPTED icons kept in their own draft set, drawn to the silhouettes the owner approved, to their specs, with the committed copy equal to a fresh export.
 
-No test decides the sheet rule's verdict on the art: that is the recorded result of `python -m tests.visual_assets.icon_owner_fixes_draft_set`. These tests pin what is checkable without judging pixels.
+No test decides the sheet rule's verdict on the art: that is the recorded result of `python -m visual_assets.review.icon_owner_fixes_draft_set`. These tests pin what is checkable without judging pixels.
 """
 
 from __future__ import annotations
@@ -11,15 +11,15 @@ import shutil
 import yaml
 
 from tests.visual_assets import adopted_facts as af
-from tests.visual_assets import icon_compliance as cp
-from tests.visual_assets import icon_draft_fixture as fx
-from tests.visual_assets import icon_lookalikes as la
-from tests.visual_assets import icon_owner_fixes_draft_set as of
-from tests.visual_assets import icon_silhouette_sheet as ss
+from visual_assets.review import icon_compliance as cp
+from visual_assets.review import icon_draft_fixture as fx
+from visual_assets.review import icon_lookalikes as la
+from visual_assets.review import icon_owner_fixes_draft_set as of
+from visual_assets.review import icon_silhouette_sheet as ss
 from visual_assets.store import config, drafts
 from visual_assets.store.contracts import DraftPreviewManifest, parse_record
 
-REGENERATE = "regenerate the committed copy: `python -m tests.visual_assets.icon_draft_fixture --set icons-owner-fixes-v1 --write`"
+REGENERATE = "regenerate the committed copy: `python -m visual_assets.review.icon_draft_fixture --set icons-owner-fixes-v1 --write`"
 
 
 def _fresh(tmp_path):

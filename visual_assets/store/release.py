@@ -13,7 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from visual_assets.store import config, pixels, records
-from visual_assets.store.catalog.registry import load_registry
+from visual_assets.store.catalog.registry import fallback_problems, load_registry
 from visual_assets.store.catalogwrite import publish
 from visual_assets.store.contracts import ReleaseCandidateManifest, canonical_json
 from visual_assets.store.contracts.release import ReleaseEntry
@@ -112,6 +112,9 @@ def assemble_release(catalog_id: str, *, release_id: str | None = None, allow_fi
                 entry = _entry(what, key, detail, assets[(key, detail)], optional=definition.optional)  # a HELD slot with no artifact is a forgotten `build`, never silently dropped
                 if entry is not None:
                     entries.append(entry)
+        missing = fallback_problems(registry, {e.visual_key for e in entries})  # AM1-W06.3: what shows for every key this release leaves without an image
+        if missing:
+            raise BuildError("fallback_missing", f"{len(missing)} key(s) without an image have no alternative, first: {missing[0]}")
         manifest = ReleaseCandidateManifest(
             record_type="release_candidate_manifest", schema_version=1, catalog_id=catalog_id, release_id=release_id,
             registry_hash=registry.file_hash, entries=tuple(entries), status="CANDIDATE",

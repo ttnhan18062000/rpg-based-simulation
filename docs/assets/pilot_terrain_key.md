@@ -63,7 +63,7 @@ and asked why, so both were redrawn. The first drafts stay PASSED, reviewed and 
 |---|---|
 | Release candidate | `manifests/candidates/pilot/rc-0002.json`, file hash `sha256:b330f49dd0cf980a06ffe6a93cb28ffe70e39ea1dc03be9eb146cdc53bd83367` (three entries, one per slot; not active). `rc-0001` stays as the retained previous release |
 | Runtime manifest | `export-runtime --catalog-id pilot --release-id rc-0002`: `candidate_manifest_hash` the file hash above, `registry_hash` `sha256:cefb9984f300603b37ec5c9a2fbaa911800d0829a72244f46c5474c4ca0efce9`, entries per slot and a `details` block with the declared axis |
-| Frontend fixture | `frontend/src/visualAssets/__fixtures__/pilot/` is the committed copy of that export; `tests/visual_assets/test_pilot_fixture.py` checks it equals a fresh export |
+| Frontend fixture | `frontend/src/visualAssets/__fixtures__/pilot/` is the committed copy of that export; `tests/visual_assets/test_pilot_fixture.py` checks its forest slots equal the manifest derived from the stored `rc-0007` and its artifacts (`tests/visual_assets/derived_runtime.py`, proven equal to `export_runtime` byte for byte by `test_derived_runtime.py`), so registering a key no longer breaks it |
 
 `rc-0001` can no longer be exported (the registry changed since it was assembled, `registry_mismatch`); it is still read and `verify` tolerates its axis-less entry.
 

@@ -6,7 +6,7 @@ from __future__ import annotations
 import itertools
 import json
 
-from tests.visual_assets.set_colour_vision import DRAFTS, SCALE
+from visual_assets.review.set_colour_vision import DRAFTS, SCALE
 from visual_assets.store import pixels
 
 DEPTH = 4  # the approved cap (user, 2026-10-06); the client's BORDER_DEPTH is tested equal to it

@@ -9,10 +9,10 @@ import json
 
 import pytest
 
-from tests.visual_assets import icon_palette as ip
-from tests.visual_assets import icon_sheet_rule as rule
-from tests.visual_assets import icon_sheet_synthetic as syn
-from tests.visual_assets.pilot_colour_vision import VISIONS, from_hex, mean
+from visual_assets.review import icon_palette as ip
+from visual_assets.review import icon_sheet_rule as rule
+from visual_assets.review import icon_sheet_synthetic as syn
+from visual_assets.review.pilot_colour_vision import VISIONS, from_hex, mean
 
 PROTAN_COLLAPSE = ("#555b73", "#d04030")  # L* differ by 9.6 in normal vision and by 0.85 under protanopia
 

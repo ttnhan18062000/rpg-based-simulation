@@ -115,6 +115,12 @@ def load_adoption(adoption_id: str, root: Path | None = None) -> AdoptionRecord:
     return record  # type: ignore[return-value]
 
 
+def revision_slot(source_asset_id: str, revision: str, root: Path | None = None) -> tuple[str, str | None]:
+    """The (visual key, detail value as adopted) one revision of a source asset was adopted for (`None` = the key's declared default)."""
+    adoption = load_adoption(load_source(source_asset_id, revision, root).adoption_id, root)
+    return adoption.visual_key, adoption.detail_value
+
+
 def find_adoption_for_intake(intake_id: str, root: Path | None = None) -> AdoptionRecord | None:
     """The adoption that consumed `intake_id`, if any (the intake copy's presence marks it adopted)."""
     if not (intake_dir(root) / f"{intake_id}.json").exists():

@@ -11,116 +11,162 @@ keys:
     description: Live Map forest terrain cell (tile code 6), one 16x16 tile at scale x1; the colour fill is its fallback
     variant_axes: []
     detail: {values: [plain, bush, tree], default: plain}
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.floor
     family: terrain
     description: Live Map Floor terrain cell (tile code 0), one 16x16 tile at scale x1; the colour fill #1a1d27 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.wall
     family: terrain
     description: Live Map Wall terrain cell (tile code 1), one 16x16 tile at scale x1; the colour fill #555b73 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.water
     family: terrain
     description: Live Map Water terrain cell (tile code 2), one 16x16 tile at scale x1; the colour fill #1e3a5f is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.town
     family: terrain
     description: Live Map Town terrain cell (tile code 3), one 16x16 tile at scale x1; the colour fill #2d4a3e is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.camp
     family: terrain
     description: Live Map Camp terrain cell (tile code 4), one 16x16 tile at scale x1; the colour fill #4a2d2d is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.sanctuary
     family: terrain
     description: Live Map Sanctuary terrain cell (tile code 5), one 16x16 tile at scale x1; the colour fill #2d3a4a is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.desert
     family: terrain
     description: Live Map Desert terrain cell (tile code 7), one 16x16 tile at scale x1; the colour fill #3a3420 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.swamp
     family: terrain
     description: Live Map Swamp terrain cell (tile code 8), one 16x16 tile at scale x1; the colour fill #2a2a3a is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.mountain
     family: terrain
     description: Live Map Mountain terrain cell (tile code 9), one 16x16 tile at scale x1; the colour fill #3a3a3a is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.road
     family: terrain
     description: Live Map Road terrain cell (tile code 10), one 16x16 tile at scale x1; the colour fill #5a5040 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.bridge
     family: terrain
     description: Live Map Bridge terrain cell (tile code 11), one 16x16 tile at scale x1; the colour fill #4a6050 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.ruins
     family: terrain
     description: Live Map Ruins terrain cell (tile code 12), one 16x16 tile at scale x1; the colour fill #4a4035 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.dungeon_entrance
     family: terrain
     description: Live Map Dungeon Entrance terrain cell (tile code 13), one 16x16 tile at scale x1; the colour fill #6a3040 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.lava
     family: terrain
     description: Live Map Lava terrain cell (tile code 14), one 16x16 tile at scale x1; the colour fill #8a3000 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.grassland
     family: terrain
     description: Live Map Grassland terrain cell (tile code 15), one 16x16 tile at scale x1; the colour fill #4a6030 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.snow
     family: terrain
     description: Live Map Snow terrain cell (tile code 16), one 16x16 tile at scale x1; the colour fill #c8d8e8 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.jungle
     family: terrain
     description: Live Map Jungle terrain cell (tile code 17), one 16x16 tile at scale x1; the colour fill #0a4a0a is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.shallow_water
     family: terrain
     description: Live Map Shallow Water terrain cell (tile code 18), one 16x16 tile at scale x1; the colour fill #2a5070 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.farmland
     family: terrain
     description: Live Map Farmland terrain cell (tile code 19), one 16x16 tile at scale x1; the colour fill #6a7a40 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.cave
     family: terrain
     description: Live Map Cave terrain cell (tile code 20), one 16x16 tile at scale x1; the colour fill #3a3040 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.volcanic
     family: terrain
     description: Live Map Volcanic terrain cell (tile code 21), one 16x16 tile at scale x1; the colour fill #5a2a1a is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   - key: terrain.graveyard
     family: terrain
     description: Live Map Graveyard terrain cell (tile code 22), one 16x16 tile at scale x1; the colour fill #4a4050 is its fallback
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
   # Terrain border masks (TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-CONTRACT, D19): shared 16x16 shapes, authored for ONE orientation and rotated by the client in 90-degree steps; the
   # alpha channel is the shape (1-bit), the fringe shows the higher neighbour's own tile pixels where it is opaque. Decorative; a missing mask means today's hard edge.
   - key: border.edge
@@ -129,18 +175,24 @@ keys:
     variant_axes: []
     detail: {values: [v1, v2, v3], default: v1}
     optional: true
+    safety_class: decorative
+    fallback: {kind: "none"}
   - key: border.outer_corner
     family: border
     description: Terrain border mask for one diagonal corner, authored for the north-east corner (x 12-15, y 0-3), rotated 90 degrees per corner by the client; a missing mask means a hard corner
     variant_axes: []
     detail: {values: [v1, v2, v3], default: v1}
     optional: true
+    safety_class: decorative
+    fallback: {kind: "none"}
   - key: border.inner_corner
     family: border
     description: Terrain border mask for two adjacent sides of the same higher terrain, authored for north plus east (an L within the outer 4 px), rotated 90 degrees per corner by the client; missing falls back to two edges
     variant_axes: []
     detail: {values: [v1, v2, v3], default: v1}
     optional: true
+    safety_class: decorative
+    fallback: {kind: "none"}
   # Icon key set `icons-key-v1` (TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES, D20): 14 optional keys, no variant axis (D17: tier and marker state are separate keys). Each description gives size, scale x1, its
   # fallback-safety class (docs/assets/fallback_safety.md) and its fallback. Nothing is adopted; a missing image leaves today's emoji, Lucide icon or colour chip.
   - key: icon.plate.location
@@ -148,71 +200,125 @@ keys:
     description: Map plate for every location marker, one 16x16 image at scale x1, drawn first with the glyph over it (the plate rim stays visible all round); decorative class, the fallback is the bare glyph with no plate
     variant_axes: []
     optional: true
+    safety_class: decorative
+    fallback: {kind: "none"}
   - key: icon.marker.enemy_camp
     family: icon
     description: Map glyph for an enemy camp location, one 16x16 image at scale x1, live area 12x12 centred (2 px margin) on the location plate; identifying class, the fallback is today's emoji label (swords, #f87171) plus the location name as hover text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "emoji label (swords)", text: "the location name as hover text"}
+    label_key: label.icon.marker.enemy_camp
+    label: "Enemy camp"
   - key: icon.building.blacksmith
     family: icon
     description: Panel icon for the blacksmith building, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Hammer icon (#f59e0b) plus the building name as text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "Lucide Hammer icon (#f59e0b)", text: "the building name as text"}
+    label_key: label.icon.building.blacksmith
+    label: "Blacksmith"
   - key: icon.class.warrior
     family: icon
     description: Panel icon for the warrior class, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Shield icon plus the class name as text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "Lucide Shield icon", text: "the class name as text"}
+    label_key: label.icon.class.warrior
+    label: "Warrior class"
   - key: icon.tier.e
     family: icon
     description: Tier badge for grade E, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#6b7280) plus the letter E as text, which the badge never replaces
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "colour chip (#6b7280)", text: "the letter E as text"}
+    label_key: label.icon.tier.e
+    label: "Tier E"
   - key: icon.tier.d
     family: icon
     description: Tier badge for grade D, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#94a3b8) plus the letter D as text, which the badge never replaces
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "colour chip (#94a3b8)", text: "the letter D as text"}
+    label_key: label.icon.tier.d
+    label: "Tier D"
   - key: icon.tier.c
     family: icon
     description: Tier badge for grade C, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#34d399) plus the letter C as text, which the badge never replaces
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "colour chip (#34d399)", text: "the letter C as text"}
+    label_key: label.icon.tier.c
+    label: "Tier C"
   - key: icon.tier.b
     family: icon
     description: Tier badge for grade B, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#60a5fa) plus the letter B as text, which the badge never replaces
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "colour chip (#60a5fa)", text: "the letter B as text"}
+    label_key: label.icon.tier.b
+    label: "Tier B"
   - key: icon.tier.a
     family: icon
     description: Tier badge for grade A, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#fb923c) plus the letter A as text, which the badge never replaces
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "colour chip (#fb923c)", text: "the letter A as text"}
+    label_key: label.icon.tier.a
+    label: "Tier A"
   - key: icon.tier.s
     family: icon
     description: Tier badge for grade S, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#f87171) plus the letter S as text, which the badge never replaces
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "colour chip (#f87171)", text: "the letter S as text"}
+    label_key: label.icon.tier.s
+    label: "Tier S"
   - key: icon.tier.ss
     family: icon
     description: Tier badge for grade SS, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#f59e0b) plus the letter SS as text, which the badge never replaces
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "colour chip (#f59e0b)", text: "the letter SS as text"}
+    label_key: label.icon.tier.ss
+    label: "Tier SS"
   - key: icon.tier.sss
     family: icon
     description: Tier badge for grade SSS, one 8x8 image at scale x1; identifying class, it carries meaning (the grade) by shape, and the fallback is today's colour chip (#ffd700) plus the letter SSS as text, which the badge never replaces
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "colour chip (#ffd700)", text: "the letter SSS as text"}
+    label_key: label.icon.tier.sss
+    label: "Tier SSS"
   - key: icon.status.frame_buff
     family: icon
     description: Status frame for a beneficial effect, one 16x16 image at scale x1, a rounded frame with an up chevron whose shape (not hue) marks a buff; identifying class, the fallback is the effect's name as text in the Effects tab, which has no icon today
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "text", text: "the effect's name as text in the Effects tab"}
+    label_key: label.icon.status.frame_buff
+    label: "Beneficial effect"
   - key: icon.status.frame_debuff
     family: icon
     description: Status frame for a harmful effect, one 16x16 image at scale x1, a spiked frame with a down chevron whose shape (not hue) marks a debuff; identifying class, the fallback is the effect's name as text in the Effects tab, which has no icon today
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "text", text: "the effect's name as text in the Effects tab"}
+    label_key: label.icon.status.frame_debuff
+    label: "Harmful effect"
   # Icon set v2 (TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC, user-approved families TCK-20261007-VISUAL-ASSETS-ICON-V2-FAMILY-DECISIONS): 22 more optional icon.* keys, no variant axis (D17), registered ONCE so one release
   # candidate (rc-0007) covers the batch. Each description gives size, scale x1, fallback-safety class and fallback. Nothing is drawn or adopted for them yet; a missing image leaves today's emoji, Lucide icon, colour or text.
   - key: icon.marker.resource_grove
@@ -220,109 +326,197 @@ keys:
     description: Map glyph for a resource grove location, one 16x16 image at scale x1, live area 12x12 centred (2 px margin) over the location plate; identifying class, the fallback is today's herb emoji label (#4ade80) plus the location name as hover text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "herb emoji label (#4ade80)", text: "the location name as hover text"}
+    label_key: label.icon.marker.resource_grove
+    label: "Resource grove"
   - key: icon.marker.ruins
     family: icon
     description: Map glyph for a ruins location, one 16x16 image at scale x1, live area 12x12 centred (2 px margin) over the location plate; identifying class, the fallback is today's classical building emoji label (#a0906a) plus the location name as hover text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "classical building emoji label (#a0906a)", text: "the location name as hover text"}
+    label_key: label.icon.marker.ruins
+    label: "Ruins"
   - key: icon.marker.dungeon_entrance
     family: icon
     description: Map glyph for a dungeon entrance location, one 16x16 image at scale x1, live area 12x12 centred (2 px margin) over the location plate; identifying class, the fallback is today's door emoji label (#e06080) plus the location name as hover text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "door emoji label (#e06080)", text: "the location name as hover text"}
+    label_key: label.icon.marker.dungeon_entrance
+    label: "Dungeon entrance"
   - key: icon.marker.shrine
     family: icon
     description: Map glyph for a shrine location, one 16x16 image at scale x1, live area 12x12 centred (2 px margin) over the location plate; identifying class, the fallback is today's four-pointed star symbol label (#60a5fa) plus the location name as hover text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "four-pointed star symbol label (#60a5fa)", text: "the location name as hover text"}
+    label_key: label.icon.marker.shrine
+    label: "Shrine"
   - key: icon.marker.boss_arena
     family: icon
     description: Map glyph for a boss arena location, one 16x16 image at scale x1, live area 12x12 centred (2 px margin) over the location plate; identifying class, the fallback is today's skull emoji label (#f59e0b) plus the location name as hover text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "skull emoji label (#f59e0b)", text: "the location name as hover text"}
+    label_key: label.icon.marker.boss_arena
+    label: "Boss arena"
   - key: icon.building.store
     family: icon
     description: Panel icon for the store building, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Store icon (#38bdf8) plus the building name as text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "Lucide Store icon (#38bdf8)", text: "the building name as text"}
+    label_key: label.icon.building.store
+    label: "Store"
   - key: icon.building.guild
     family: icon
     description: Panel icon for the guild building, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Shield icon (#818cf8) plus the building name as text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "Lucide Shield icon (#818cf8)", text: "the building name as text"}
+    label_key: label.icon.building.guild
+    label: "Guild"
   - key: icon.building.inn
     family: icon
     description: Panel icon for the inn building, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Bed icon (#fb923c) plus the building name as text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "Lucide Bed icon (#fb923c)", text: "the building name as text"}
+    label_key: label.icon.building.inn
+    label: "Inn"
   - key: icon.building.hero_house
     family: icon
     description: Panel icon for the hero house building, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Home icon (#34d399) plus the building name as text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "Lucide Home icon (#34d399)", text: "the building name as text"}
+    label_key: label.icon.building.hero_house
+    label: "Hero house"
   - key: icon.building.class_hall
     family: icon
     description: Panel icon for the class hall building, one 24x24 image at scale x1; identifying class, the fallback is the building name as text (the building panel has no icon for it today)
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "text", text: "the building name as text"}
+    label_key: label.icon.building.class_hall
+    label: "Class hall"
   - key: icon.class.ranger
     family: icon
     description: Panel icon for the ranger class, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Crosshair icon plus the class name as text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "Lucide Crosshair icon", text: "the class name as text"}
+    label_key: label.icon.class.ranger
+    label: "Ranger class"
   - key: icon.class.mage
     family: icon
     description: Panel icon for the mage class, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Wand2 icon plus the class name as text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "Lucide Wand2 icon", text: "the class name as text"}
+    label_key: label.icon.class.mage
+    label: "Mage class"
   - key: icon.class.rogue
     family: icon
     description: Panel icon for the rogue class, one 24x24 image at scale x1; identifying class, the fallback is today's Lucide Sword icon plus the class name as text
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "Lucide Sword icon", text: "the class name as text"}
+    label_key: label.icon.class.rogue
+    label: "Rogue class"
   - key: icon.rarity.common
     family: icon
     description: Rarity badge for common items, one 8x8 image at scale x1, a round bead; identifying class, the fallback is today's rarity colour (#9ca3af) on the rarity name as text, which the badge never replaces
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "rarity colour (#9ca3af)", text: "the rarity name as text"}
+    label_key: label.icon.rarity.common
+    label: "Common rarity"
   - key: icon.rarity.uncommon
     family: icon
     description: Rarity badge for uncommon items, one 8x8 image at scale x1, a kite-shaped gem; identifying class, the fallback is today's rarity colour (#34d399) on the rarity name as text, which the badge never replaces
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "rarity colour (#34d399)", text: "the rarity name as text"}
+    label_key: label.icon.rarity.uncommon
+    label: "Uncommon rarity"
   - key: icon.rarity.rare
     family: icon
     description: Rarity badge for rare items, one 8x8 image at scale x1, a four-point sparkle gem; identifying class, the fallback is today's rarity colour (#a78bfa) on the rarity name as text, which the badge never replaces
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "rarity colour (#a78bfa)", text: "the rarity name as text"}
+    label_key: label.icon.rarity.rare
+    label: "Rare rarity"
   - key: icon.item.weapon
     family: icon
     description: Item family icon for weapon items (first category weapon), one 24x24 image at scale x1; identifying class, the fallback is the item type as text, as the loot and inspect panels show it today
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "text", text: "the item type as text"}
+    label_key: label.icon.item.weapon
+    label: "Weapon item"
   - key: icon.item.armor
     family: icon
     description: Item family icon for armor items (first category armor), one 24x24 image at scale x1; identifying class, the fallback is the item type as text, as the loot and inspect panels show it today
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "text", text: "the item type as text"}
+    label_key: label.icon.item.armor
+    label: "Armor item"
   - key: icon.item.trinket
     family: icon
     description: Item family icon for trinket items (first category trinket), one 24x24 image at scale x1; identifying class, the fallback is the item type as text, as the loot and inspect panels show it today
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "text", text: "the item type as text"}
+    label_key: label.icon.item.trinket
+    label: "Trinket item"
   - key: icon.item.tool
     family: icon
     description: Item family icon for tool items (first category tool), one 24x24 image at scale x1; identifying class, the fallback is the item type as text, as the loot and inspect panels show it today
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "text", text: "the item type as text"}
+    label_key: label.icon.item.tool
+    label: "Tool item"
   - key: icon.item.consumable
     family: icon
     description: Item family icon for consumable items (first category consumable), one 24x24 image at scale x1; identifying class, the fallback is the item type as text, as the loot and inspect panels show it today
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "text", text: "the item type as text"}
+    label_key: label.icon.item.consumable
+    label: "Consumable item"
   - key: icon.item.material
     family: icon
     description: Item family icon for material items (first category material), one 24x24 image at scale x1; identifying class, the fallback is the item type as text, as the loot and inspect panels show it today
     variant_axes: []
     optional: true
+    safety_class: identifying
+    fallback: {kind: "text", text: "the item type as text"}
+    label_key: label.icon.item.material
+    label: "Material item"
 aliases: []
