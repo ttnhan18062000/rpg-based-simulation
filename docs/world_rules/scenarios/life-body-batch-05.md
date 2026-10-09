@@ -9,7 +9,7 @@ last_verified: "2026-10-09"
 
 # Scenario Bank: Life / Body / Survival / Ecology (Batch 05)
 
-**Purpose/scope.** Twenty scenarios (LB-S17 and LB-S18 added 2026-10-08, LB-S19 and LB-S20 added 2026-10-09) used to pressure-test the Lifecycle, Body/Condition,
+**Purpose/scope.** Twenty-one scenarios (LB-S17 and LB-S18 added 2026-10-08, LB-S19 to LB-S21 added 2026-10-09) used to pressure-test the Lifecycle, Body/Condition,
 Survival Needs, and Ecology/Population rule families in `life-body/lifecycle.md`,
 `life-body/body-condition.md`, `life-body/survival-needs.md`, and
 `life-body/ecology-population.md`, per `tmp/world-rule-batch-5-ext-ai.md`. Covers all sixteen
@@ -361,6 +361,46 @@ With no kill there is no meat.
   eat-corpse action. Carnivores take decision 27's forage step on berry thickets because no diet
   gate exists (SURV-06's decision-44 evidence). Expected to be **covered** with the hunting and
   diet-gate tickets.
+
+---
+
+## LB-S21 — Small prey grazes, flees a predator it notices, and its numbers change only by births and deaths (SURV-06, decisions 32, 42 and 45) (added 2026-10-09)
+
+A hungry deer grazes wild land and its hunger falls. A deer that notices a wolf coming close
+moves away instead of grazing on. The herd grows only when there are living adults to bear young
+and enough grazing, and shrinks when its members are killed or starve. No prey appears from
+nowhere.
+
+- **Rules invoked:** SURV-06 (grazing creatures forage; each kind's own ways), CONFLICT-04's
+  decision 32 (a subject that notices a hostile coming adjacent decides), decision 42 (every
+  living kind), decision 45 (prey kinds exist), Bible 03 (conservation: grazing takes charges
+  from the land), ECOL-03 (aggregate population should follow individual births and deaths).
+- **Kernel spec (`mechanic_scenario`).** Three parts on a wild region with no settlement:
+  - **Grazing (one prey kind, for example a deer, D):** D is hungry, with grazing land that its
+    diet allows in reach. D grazes, a charge leaves the land, and D's hunger falls. D does not
+    eat what its diet excludes (meat). With the land stripped bare, D stays hungry and its need
+    is reported unmet; it may move on to other grazing.
+  - **Avoidance (D grazing, a wolf W hunting it):** when W comes adjacent and D perceives it, D
+    takes a fresh decision (decision 32) and moves away or flees. It does not keep grazing and
+    take blows. A **control** with W sated and not hunting: D may keep grazing beside it, or
+    move off, but no fight occurs. (Whether a sated predator is still feared is the kind's
+    perception, an engineering choice.) A **second control** with D not perceiving W (out of
+    sight): no avoidance decision is recorded.
+  - **Numbers (a small herd over a long window):**
+    - A new prey individual appears only as the young of a living adult of its kind, and only
+      when the adults are fed above their kind's line. No prey spawns in to replace the dead.
+    - Each death has a cause (killed, starved, other declared cause), and the count falls by
+      exactly the deaths.
+    - With no adults left, the count stays at zero.
+- **Engineering and content, not observable:** the species, their need profiles and diets, litter
+  size and gestation, maturity age, grazing yields and regrowth (decision 29's biome rule), herd
+  behaviour, and how the region's aggregate population reads individual births and deaths
+  (ECOL-03's finding).
+- **Result (2026-10-09): revealed missing content and implementation on main.** The corpus has 13
+  species and no herbivore or small game (decision 45's evidence). Population change is
+  statistical (`DemographicCycleService.process_demographics()`, ECOL-03), not tied to
+  individual births and deaths. Expected to be **covered** with
+  `TCK-20261009-SMALL-PREY-KINDS-GRAZE-BREED-AND-FLEE-PREDATORS-DECISION-45`.
 
 ---
 

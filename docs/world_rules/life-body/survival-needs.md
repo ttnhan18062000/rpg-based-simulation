@@ -417,6 +417,8 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
     and turn on people mainly when game is scarce, and people gain something to hunt
     (decision 31). Species, numbers and placement are content; their grazing is SURV-06's
     "grazing creatures forage", and their numbers follow ECOL's population rules, never a target.
+    Scenario: [LB-S21](../scenarios/life-body-batch-05.md#lb-s21) (grazes, flees a noticed
+    predator, numbers change only by births and deaths).
   - **Scenario:** [LB-S20](../scenarios/life-body-batch-05.md#lb-s20) (a predator eats what it
     kills, raw; it does not forage what its diet excludes; no kill means no meat).
   - **Measured preview** (Lane B, `frontier_living_world`, seed 42; five-seed figures per kind
