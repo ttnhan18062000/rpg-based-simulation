@@ -78,6 +78,8 @@ to follow the guide. That is why this is P2, not P1.
   `src/observability/reporting/sweep_report.py`
 
 ## Assumptions / Open Questions
+- Filed as M2 plan item X1 (2026-10-10). Use T02b's `cost_accounting_version` identity field (`TCK-20261010-PERF-M2-T02B-RECORD`) as the version key, so it depends on T02b. Scope item 1's "minimal version key" fallback no longer applies.
+- Lift boundary (roadmap RPG-core gate item 8): edit only `src/observability/reporting/baseline_comparator.py` and `sweep_report.py`. `src/cli/entry.py` is read-only here.
 - **Gate:** these `src/` files are outside every perf lift so far. The fix needs an owner lift for
   `src/observability/reporting/` and `src/cli/entry.py`, or routing to their owner.
 - Is the guide edit alone (scope 2) acceptable as an interim measure? It needs no `src/` change.
