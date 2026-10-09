@@ -699,6 +699,26 @@ the escalation and the present-threat gate shipped in #414 (`c2e18b182`).** Lane
     full meal and needed about six inn meals a day.
   - **The SUPPORTED flip** waits for the free-meal removal and earning.
 
+- **Two cognition gaps found, 2026-10-09** (rpg-planner's read of `origin/main` at `3c16569b4`,
+  asked at the owner's direction; row 56 of the memo):
+  - **CONFLICTING: the pull aims at one building.** `EatScorer` (`src/ai/goals/scorers.py:92-111`)
+    computes the arrival fraction from the walk to the nearest inn, and `nearest_building`
+    (`src/engine/spatial_query.py:32-45`) has no distance cap. So "no inn within reach" means "no
+    inn in the world", and a forager or hunter escalates against however far that inn is.
+    Carried food is eaten by a separate in-place hook outside the pull. **Fixed before the
+    milestone 0 gate:** the pull aims at the subject's nearest open way per its kind's diet, and
+    "within reach" gets a real bound sized by what the subject can walk before its line.
+  - **CONFLICTING: food is found on the true map.** The inn search reads every inn in state, and
+    `_forage_step` (`src/ai/goals/opening_steps.py:40-55`) reads every node's true charges and
+    cooldown. Nothing reads what the subject perceived, remembers or was told (KNOW, PERC, the
+    uncertainty rule). **Fixed in milestone 1** (honest perception): food places come from
+    perception, memory, leads and common knowledge, with a home range for animals.
+  - **Every kind takes the same path** (decision 42 holds): animals and all seven cognition
+    profiles reach `EatScorer` through `GoalRegistry`, with per-kind rates (SURV-05). Two
+    override paths skip the pull: an active objective returns before scoring
+    (`src/systems/strategic_systems/intelligence.py:1260-1541`), and a leash return
+    (`tactical.py:189-206`) overrides food outside the radius. Both are in the planner's P1 tickets.
+
 **Scenarios:** none traced yet. Four are owed when implemented:
 - a tired worker heading to the inn keeps going when a routine blocker reappears;
 - the same worker, attacked on the way, flees first and sleeps later;

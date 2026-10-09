@@ -876,6 +876,7 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 53. a kind its properties leave with nothing to overcome (decided 2026-10-09: its own description decides; otherwise a scavenger, disclosed; the Cave Spider is one, SURV-06);
 54. the milestone-0 gate (decided 2026-10-09: hard logic checks H1-H7, report-only figures R1-R5 with stop lines to the owner, §12.3).
 55. whether subjects provide for a coming need (decided 2026-10-09: yes, scaled by wits, with storing as a declared habit; the rule is written now and built in milestone 3, SURV-07).
+56. which hunger-cognition gaps are fixed before the milestone-0 gate (decided 2026-10-09: the inn-only target before the gate; true-map knowledge in milestone 1, SURV-07).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
@@ -1107,7 +1108,10 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
    - H6 **no starvation beside an untried way:** zero broke-worker starvation deaths whose
      death record shows a way judged open and in reach that was never attempted. It is read from
      a typed starvation-death record (way ids from SURV-06, every kind), which lands before the
-     gate run. Without that record, H6 is report-only and the gate cannot pass.
+     gate run. Without that record, H6 is report-only and the gate cannot pass. The record lists
+     both the ways the subject's pull judged open and in reach, and the ways truly in reach. H6 is
+     judged on the first; a way the subject did not know of is reported, never a failure (memo
+     row 56). Before the gate run, the pull aims at the nearest open way, not always the inn.
    - H7 **conservation:** the coin and food invariants are green on both arms.
 
    Report-only. A crossed stop line goes to the owner for a ruling; it is not an automatic fail,
@@ -1124,6 +1128,8 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
    - The appraisal.
    - `kind` always means species, and occupation is a separate field.
    - Honest perception defaults (each kind's own senses; signals follow the body).
+   - Food and other places are found from what the subject perceives, remembers or was told,
+     not from the true map (decision 56).
    - An activity period per kind, and hazard tolerance per body.
    - Retire behaviour that branches on role, kind or faction names, in stages, measured each time.
 
