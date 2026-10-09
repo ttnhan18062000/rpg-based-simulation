@@ -48,6 +48,26 @@ class DetailAxis(StoreRecord):
         return self
 
 
+SafetyClass = Literal["decorative", "identifying", "critical"]
+FallbackKind = Literal["none", "flat_fill", "text", "glyph_and_text"]
+LabelKey = Annotated[str, StringConstraints(pattern=r"^label\.[a-z][a-z0-9_.]{0,126}$")]
+
+
+class Fallback(StoreRecord):
+    """What shows when a key's image is gone (`docs/assets/fallback_safety.md`): a structured alternative instead of prose.
+
+    `none`: nothing is drawn (only a decorative key may say so). `flat_fill`: the cell's flat colour, with `text` naming the hover text that carries the fact. `text`: `text` says which text carries it.
+    `glyph_and_text`: the existing `glyph` (named, e.g. `lucide:Hammer`) plus `text`. The registry loader enforces which kinds need which parts (`catalog/registry.py::safety_problems`)."""
+
+    kind: FallbackKind
+    text: BoundedText | None = None
+    glyph: BoundedText | None = None
+
+    @model_serializer(mode="wrap")
+    def _omit_absent(self, handler):  # type: ignore[no-untyped-def]
+        return drop_absent(handler(self), "text", "glyph")
+
+
 class VisualKeyDefinition(StoreRecord):
     key: VisualKey
     family: Family
@@ -55,10 +75,16 @@ class VisualKeyDefinition(StoreRecord):
     variant_axes: Annotated[tuple[VariantAxis, ...], Field(max_length=MAX_AXES)]
     optional: bool = False  # a release may omit an optional key; every other registry key needs an artifact
     detail: DetailAxis | None = None  # a slot is (key, detail value); a key without an axis has the single slot (key, None)
+    # `AM1-W02.7`: the fallback-safety class and its structured alternative. Optional in the record so synthetic fixture keys and old records parse; the registry loader requires both on every real key.
+    safety_class: SafetyClass | None = None
+    fallback: Fallback | None = None
+    # icon family only (W3C WAI functional-icon text): a translatable id and the default English text of what the icon is or does. A decorative key carries neither (empty alt).
+    label_key: LabelKey | None = None
+    label: BoundedText | None = None
 
     @model_serializer(mode="wrap")
     def _omit_absent_detail(self, handler):  # type: ignore[no-untyped-def]
-        return drop_absent(handler(self), "detail")
+        return drop_absent(handler(self), "detail", "safety_class", "fallback", "label_key", "label")
 
     @model_validator(mode="after")
     def _unique_axes(self) -> VisualKeyDefinition:

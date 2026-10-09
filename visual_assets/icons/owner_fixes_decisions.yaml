@@ -1,5 +1,5 @@
 set_id: icons-owner-fixes-v1
-note: The ONE recorded source of the owner's decisions and the findings that the review folder README prints. tests/visual_assets/review_sheets.py reads it; docs/assets/icon_set_v2_review.md must quote
+note: The ONE recorded source of the owner's decisions and the findings that the review folder README prints. visual_assets/review/review_sheets.py reads it; docs/assets/icon_set_v2_review.md must quote
   every answer verbatim (test_review_sheets pins both). Add a decision here, never as text in the generator.
 decisions:
 - date: '2026-10-08'

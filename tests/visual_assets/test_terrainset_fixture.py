@@ -1,4 +1,4 @@
-"""The frontend's committed copy of the whole-set terrain export equals a fresh `export-runtime` of `pilot/rc-0007` (pure Python, no Aseprite), and rc-0006 is what the user approved on 2026-10-06
+"""The frontend's committed copy of the whole-set terrain export equals the export derived from the stored `pilot/rc-0007` and its artifacts (`tests/visual_assets/derived_runtime.py`, equal to a fresh `export-runtime` while rc-0007 is current; pure Python, no Aseprite), and rc-0006 is what the user approved on 2026-10-06
 (`TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN`): the 34 adopted slots (forest's plain/bush/tree + 22 terrain tiles + 9 border masks) on the registry that holds the 14 `icon.*` keys (rc-0005's slots, re-assembled by `TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES` as rc-0006 and again by `TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC` as rc-0007 after the 22 icon set v2 keys; the user approved both).
 
 The pilot fixture (`__fixtures__/pilot`, rc-0004, forest only) is deliberately NOT touched: `pilot_colour_vision.tile_pixels()` takes the first PNG of the pilot export (a known fragility), so the pilot's
@@ -11,21 +11,22 @@ import json
 from pathlib import Path
 
 from tests.visual_assets import adopted_facts as af
-from visual_assets.store.runtime_export import export_runtime
+from tests.visual_assets import derived_runtime
 
 REPO = Path(__file__).resolve().parents[2]
 COMMITTED = REPO / "frontend" / "src" / "visualAssets" / "__fixtures__" / "terrainset"
 PILOT = REPO / "frontend" / "src" / "visualAssets" / "__fixtures__" / "pilot"
 CANDIDATES = REPO / "visual_assets" / "catalog" / "manifests" / "candidates" / "pilot"
 REGENERATE = (
-    "regenerate the committed export: `python -m visual_assets.store export-runtime --catalog-id pilot --release-id rc-0007 --out /tmp/terrainset_export`, "
+    "regenerate the committed export: `python -m visual_assets.store export-runtime --catalog-id pilot --release-id rc-0007 --out /tmp/terrainset_export` while rc-0007 is the current candidate "
+    "(or derive it: `python -c \"from pathlib import Path; from tests.visual_assets import derived_runtime as d; d.write(Path('/tmp/terrainset_export'), 'pilot', 'rc-0007')\"`), "
     "then replace the files in frontend/src/visualAssets/__fixtures__/terrainset/ with its content"
 )
 
 
-def test_the_committed_terrainset_export_equals_a_fresh_export_of_the_current_release(tmp_path):
+def test_the_committed_terrainset_export_equals_the_export_derived_from_the_stored_release(tmp_path):
     fresh = tmp_path / "export"
-    export_runtime("pilot", "rc-0007", fresh)
+    derived_runtime.write(fresh, "pilot", "rc-0007")  # not `export_runtime`: the store refuses a candidate whose registry hash is not the live one, and a registry-only change must not break this guard
     names = sorted(p.name for p in fresh.iterdir())
     assert sorted(p.name for p in COMMITTED.iterdir()) == names, REGENERATE
     for name in names:

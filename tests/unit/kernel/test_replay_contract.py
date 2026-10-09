@@ -21,7 +21,6 @@ def test_replay_is_non_authoritative(tmp_path):
         max_cpu_percent=50.0,
         max_worker_count=4,
         max_queue_depth=1000,
-        max_work_debt=100,
         max_replay_buffer_kb=64,
         max_observability_budget_percent=5.0,
         max_tick_budget_ms=10.0

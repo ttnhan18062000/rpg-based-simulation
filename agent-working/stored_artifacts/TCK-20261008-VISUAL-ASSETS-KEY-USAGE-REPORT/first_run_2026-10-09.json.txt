@@ -1,0 +1,320 @@
+{
+ "adopted_unreleased": [
+  "icon.building.blacksmith",
+  "icon.building.class_hall",
+  "icon.building.guild",
+  "icon.building.hero_house",
+  "icon.building.inn",
+  "icon.building.store",
+  "icon.class.mage",
+  "icon.class.ranger",
+  "icon.class.rogue",
+  "icon.class.warrior",
+  "icon.item.armor",
+  "icon.item.consumable",
+  "icon.item.material",
+  "icon.item.tool",
+  "icon.item.trinket",
+  "icon.item.weapon",
+  "icon.marker.boss_arena",
+  "icon.marker.dungeon_entrance",
+  "icon.marker.enemy_camp",
+  "icon.marker.resource_grove",
+  "icon.marker.ruins",
+  "icon.marker.shrine",
+  "icon.plate.location",
+  "icon.rarity.common",
+  "icon.rarity.rare",
+  "icon.rarity.uncommon",
+  "icon.status.frame_buff",
+  "icon.status.frame_debuff",
+  "icon.tier.a",
+  "icon.tier.b",
+  "icon.tier.c",
+  "icon.tier.d",
+  "icon.tier.e",
+  "icon.tier.s",
+  "icon.tier.ss",
+  "icon.tier.sss"
+ ],
+ "dynamic_references": [
+  {
+   "file": "frontend/src/visualAssets/iconScene.ts",
+   "line": 11,
+   "prefix": "icon."
+  },
+  {
+   "file": "frontend/src/visualAssets/iconScene.ts",
+   "line": 23,
+   "prefix": "icon."
+  },
+  {
+   "file": "frontend/src/visualAssets/iconScene.ts",
+   "line": 107,
+   "prefix": "icon."
+  },
+  {
+   "file": "frontend/src/visualAssets/iconScene.ts",
+   "line": 109,
+   "prefix": "icon."
+  }
+ ],
+ "fallback_only": [],
+ "latest_release_candidate": "rc-0007",
+ "references": {
+  "border.edge": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainBorders.ts:41",
+   "harness": 1
+  },
+  "border.inner_corner": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainBorders.ts:43",
+   "harness": 1
+  },
+  "border.outer_corner": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainBorders.ts:42",
+   "harness": 1
+  },
+  "icon.building.blacksmith": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:15",
+   "harness": 2
+  },
+  "icon.building.class_hall": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:102",
+   "harness": 1
+  },
+  "icon.building.guild": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:100",
+   "harness": 1
+  },
+  "icon.building.hero_house": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:101",
+   "harness": 1
+  },
+  "icon.building.inn": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:101",
+   "harness": 1
+  },
+  "icon.building.store": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:100",
+   "harness": 1
+  },
+  "icon.class.mage": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:103",
+   "harness": 1
+  },
+  "icon.class.ranger": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:103",
+   "harness": 1
+  },
+  "icon.class.rogue": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:103",
+   "harness": 1
+  },
+  "icon.class.warrior": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:15",
+   "harness": 2
+  },
+  "icon.marker.enemy_camp": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:8",
+   "harness": 1
+  },
+  "icon.plate.location": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:7",
+   "harness": 1
+  },
+  "icon.status.frame_buff": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:9",
+   "harness": 1
+  },
+  "icon.status.frame_debuff": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:10",
+   "harness": 1
+  },
+  "terrain.bridge": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:24",
+   "harness": 1
+  },
+  "terrain.camp": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:23",
+   "harness": 1
+  },
+  "terrain.cave": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:25",
+   "harness": 1
+  },
+  "terrain.desert": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:32",
+   "harness": 3
+  },
+  "terrain.dungeon_entrance": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:24",
+   "harness": 1
+  },
+  "terrain.farmland": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:32",
+   "harness": 3
+  },
+  "terrain.floor": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/IconHarness.tsx:227",
+   "harness": 4
+  },
+  "terrain.forest": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:31",
+   "harness": 4
+  },
+  "terrain.grassland": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:31",
+   "harness": 3
+  },
+  "terrain.graveyard": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:26",
+   "harness": 1
+  },
+  "terrain.jungle": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:25",
+   "harness": 1
+  },
+  "terrain.lava": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:24",
+   "harness": 1
+  },
+  "terrain.mountain": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:32",
+   "harness": 3
+  },
+  "terrain.road": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:24",
+   "harness": 1
+  },
+  "terrain.ruins": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:24",
+   "harness": 1
+  },
+  "terrain.sanctuary": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:23",
+   "harness": 1
+  },
+  "terrain.shallow_water": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:25",
+   "harness": 1
+  },
+  "terrain.snow": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/IconHarness.tsx:227",
+   "harness": 4
+  },
+  "terrain.swamp": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:24",
+   "harness": 1
+  },
+  "terrain.town": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:23",
+   "harness": 1
+  },
+  "terrain.volcanic": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:25",
+   "harness": 1
+  },
+  "terrain.wall": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/terrainDrafts.ts:23",
+   "harness": 1
+  },
+  "terrain.water": {
+   "app": 0,
+   "first": "frontend/src/visualAssets/iconScene.ts:31",
+   "harness": 3
+  }
+ },
+ "registry_keys": 62,
+ "released_keys": [
+  "border.edge",
+  "border.inner_corner",
+  "border.outer_corner",
+  "terrain.bridge",
+  "terrain.camp",
+  "terrain.cave",
+  "terrain.desert",
+  "terrain.dungeon_entrance",
+  "terrain.farmland",
+  "terrain.floor",
+  "terrain.forest",
+  "terrain.grassland",
+  "terrain.graveyard",
+  "terrain.jungle",
+  "terrain.lava",
+  "terrain.mountain",
+  "terrain.road",
+  "terrain.ruins",
+  "terrain.sanctuary",
+  "terrain.shallow_water",
+  "terrain.snow",
+  "terrain.swamp",
+  "terrain.town",
+  "terrain.volcanic",
+  "terrain.wall",
+  "terrain.water"
+ ],
+ "unknown": [],
+ "unreferenced": [
+  "icon.item.armor",
+  "icon.item.consumable",
+  "icon.item.material",
+  "icon.item.tool",
+  "icon.item.trinket",
+  "icon.item.weapon",
+  "icon.marker.boss_arena",
+  "icon.marker.dungeon_entrance",
+  "icon.marker.resource_grove",
+  "icon.marker.ruins",
+  "icon.marker.shrine",
+  "icon.rarity.common",
+  "icon.rarity.rare",
+  "icon.rarity.uncommon",
+  "icon.tier.a",
+  "icon.tier.b",
+  "icon.tier.c",
+  "icon.tier.d",
+  "icon.tier.e",
+  "icon.tier.s",
+  "icon.tier.ss",
+  "icon.tier.sss"
+ ]
+}

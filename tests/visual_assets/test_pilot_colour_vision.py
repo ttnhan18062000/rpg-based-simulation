@@ -1,11 +1,11 @@
 """The arithmetic of the AM5-W05 check (pure Python): the simulation and the rule, on synthetic input. The verdict on the real tile is recorded by
-`python -m tests.visual_assets.pilot_colour_vision`, never asserted here (a test must not decide the result)."""
+`python -m visual_assets.review.pilot_colour_vision`, never asserted here (a test must not decide the result)."""
 
 from __future__ import annotations
 
 import pytest
 
-from tests.visual_assets import pilot_colour_vision as cv
+from visual_assets.review import pilot_colour_vision as cv
 
 
 def test_every_simulation_matrix_keeps_greys_grey():
@@ -46,3 +46,35 @@ def test_the_real_tile_decodes_to_256_opaque_pixels_and_the_report_is_complete()
     result = cv.evaluate(cv.tile_pixels(), cv.tile_fills())
     assert set(result["per_vision"]) == set(cv.VISIONS)
     assert result["w05"] in {"PASS", "FAIL"} and result["wording"] in {"better", "same", "worse"}
+
+
+def test_tile_pixels_selects_the_slot_by_key_and_detail_not_by_file_order(monkeypatch):
+    """`TCK-20261008-VISUAL-ASSETS-REVIEW-TOOLING-IN-STORE-CLI`: the files are named by pixel hash, so the first PNG of the export was an arbitrary slot (the tree)."""
+    import json
+
+    from visual_assets.store import pixels
+
+    manifest = json.loads((cv.EXPORT / "runtime_manifest.json").read_text())
+    by_detail = {e["detail"]: e["file"] for e in manifest["entries"] if e["visual_key"] == "terrain.forest"}
+    assert set(by_detail) == {"plain", "bush", "tree"}
+    assert cv.tile_file().name == by_detail["plain"] and cv.tile_file("tree").name == by_detail["tree"] and cv.tile_file("bush").name == by_detail["bush"]
+    # file order is arbitrary (the files are named by pixel hash and `glob` order depends on the filesystem: the first one was the tree here and the plain slot on the CI runner), so the
+    # selection must not look at it at all: with directory listing made impossible it still works
+    from pathlib import Path
+
+    def no_listing(self, *args, **kwargs):
+        raise AssertionError("tile_file must choose through the manifest, never by listing the directory")
+
+    monkeypatch.setattr(Path, "glob", no_listing)
+    monkeypatch.setattr(Path, "iterdir", no_listing)
+    assert cv.tile_file().name == by_detail["plain"] and cv.tile_file("tree").name == by_detail["tree"]
+    def decode(name):
+        image = pixels.decode_png((cv.EXPORT / name).read_bytes())
+        return [(image.rgba[i] / 255, image.rgba[i + 1] / 255, image.rgba[i + 2] / 255) for i in range(0, len(image.rgba), 4)]
+
+    assert cv.tile_pixels() == decode(by_detail["plain"]) and cv.tile_pixels("tree") == decode(by_detail["tree"]) and cv.tile_pixels() != cv.tile_pixels("tree")
+
+
+def test_tile_pixels_refuses_a_slot_the_export_does_not_have():
+    with pytest.raises(KeyError, match="expected exactly one"):
+        cv.tile_file("no-such-detail")

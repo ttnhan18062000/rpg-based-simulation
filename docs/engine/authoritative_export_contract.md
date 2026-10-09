@@ -22,7 +22,6 @@ Every tick must emit a `REFINED_UPDATE` event with the following payload structu
   "seed": 42,
   "update": {
     "entity_updates": { ... },
-    "work_debt_updates": { ... },
     "world_updates": { ... }
   },
   "fingerprint": {

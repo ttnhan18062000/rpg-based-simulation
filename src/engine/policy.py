@@ -12,11 +12,7 @@ class GovernorPolicy:
     Explicit decisions emitted by the Resource Governor for system consumption.
     M5 Law: Subsystems respond to these flags, not to raw pressure enums.
     """
-    allow_opportunistic: bool = True
-    allow_non_authoritative_periodic: bool = True
     lod_enabled: bool = True
-    diagnostic_verbosity: str = "FULL"  # "FULL", "MINIMAL", "ERROR", "MUTED"
-    metrics_detail: str = "HIGH"        # "HIGH", "LOW", "MUTED"
     
     # M8 Adaptive Concurrency
     concurrency_limit: float = 1.0     # 0.0 to 1.0 multiplier of active pool
@@ -79,10 +75,6 @@ class GovernorPolicy:
         budgets = PhaseBudgetGovernor.evaluate(None, None, mode, 0)
         if mode == RuntimeMode.NORMAL:
             return cls(
-                allow_opportunistic=True,
-                allow_non_authoritative_periodic=True,
-                diagnostic_verbosity="FULL",
-                metrics_detail="HIGH",
                 concurrency_limit=1.0,
                 replay_allowed=True,
                 replay_richness="FULL",
@@ -100,10 +92,6 @@ class GovernorPolicy:
         
         if mode == RuntimeMode.CONSTRAINED:
             return cls(
-                allow_opportunistic=True,
-                allow_non_authoritative_periodic=True,
-                diagnostic_verbosity="MINIMAL",
-                metrics_detail="HIGH",
                 concurrency_limit=1.0,
                 replay_allowed=True,
                 replay_richness="FULL",
@@ -121,10 +109,6 @@ class GovernorPolicy:
             
         if mode == RuntimeMode.DEGRADED:
             return cls(
-                allow_opportunistic=False,
-                allow_non_authoritative_periodic=True,
-                diagnostic_verbosity="ERROR",
-                metrics_detail="LOW",
                 concurrency_limit=0.5,
                 replay_allowed=True,
                 replay_richness="MINIMAL",
@@ -142,10 +126,6 @@ class GovernorPolicy:
             
         if mode == RuntimeMode.SURVIVAL:
             return cls(
-                allow_opportunistic=False,
-                allow_non_authoritative_periodic=False,
-                diagnostic_verbosity="MUTED",
-                metrics_detail="MUTED",
                 concurrency_limit=0.25,
                 replay_allowed=False,
                 replay_richness="OFF",

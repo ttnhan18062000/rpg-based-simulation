@@ -1,0 +1,1 @@
+{"icon-01": "cannot tell: a grey sphere", "icon-02": "medieval or fantasy: a hooded figure", "icon-03": "cannot tell: an up arrow badge", "icon-04": "cannot tell: a red toolbox"}

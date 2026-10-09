@@ -2842,7 +2842,7 @@
     \ / RunManifest.verification_level / run_report metadata.verification_level \u2014\
     \ see INFRA-363 (TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC). The per-tick value
     \ is the payload key hash of a TICK_END TraceEvent (no warehouse field named tick_hash
-    \ exists). Naming and coverage caveats (proof digest flat-sha256-v1; the MD5 fingerprint
+    \ exists). Naming and coverage caveats (proof digest flat-sha256-v2 since TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE; the MD5 fingerprint
     \ is a stability check, not proof; pressure_signals is outside the proof digest)
     \ are in docs/engine/deterministic_execution.md (PERF-D5, TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT).\n"
   proof_type: null
@@ -12691,18 +12691,14 @@
     the CLI tests run in a scratch repository, so no test depends on the live contents
     of src/ or of the seeded registry.'
 - id: INFRA-420
-  text: 'Worker-result resolution order does not change the committed state. Kernel._phase_resolution
-    sorts results by (class_priority, -local_priority, entity_id) with a stable sort. Entity
-    results (non-zero entity_id) have a unique key: a second result for one entity is rejected
-    by ProtocolValidator.validate_result_batch and by the resolution guard. System results
-    (entity_id 0, DRAIN_DEBT) tie on the whole key; their merge into work_debt_updates is
-    last-writer-wins per subsystem_id, so it commutes exactly when no subsystem has two system
-    results with different values in one tick. ProtocolValidator.validate_result_batch rejects a
-    second debt-update result for one subsystem (enforced), and the shipped scheduler and executors
-    emit at most one DRAIN_DEBT result per subsystem per tick. Permuting arrival order left the ordered
-    batch content, raw StateUpdate, refined update, authoritative state and proof digest unchanged.
-    Debt is seeded in these tests; in ordinary play work_debt stays empty, so no DRAIN_DEBT result
-    is produced today (TCK-20261004-WORK-DEBT-NEVER-ACCUMULATES-IN-PRODUCTION).
+  text: 'Worker-result resolution order does not change the committed state, because no two results
+    can tie. Kernel._phase_resolution sorts results by (class_priority, -local_priority, entity_id)
+    with a stable sort, and the key is unique: entity results have a unique entity_id, a second result
+    for one entity is rejected by ProtocolValidator.validate_result_batch and by the resolution guard,
+    and an entity_id 0 result (the former DRAIN_DEBT system-result slot, the only results that tied) is
+    rejected by the validator because nothing produces one (TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE).
+    Permuting arrival order leaves the ordered batch content, raw StateUpdate, refined update,
+    authoritative state and proof digest unchanged on the local, thread and process routes.
 
     '
   status: verified
@@ -12711,12 +12707,12 @@
   v2_evidence: src/engine/kernel.py::Kernel._phase_resolution; src/core/protocol_validator.py::ProtocolValidator.validate_result_batch
   proof_type: contract
   test_path: tests/integration/kernel/test_tied_worker_result_order.py
-  divergence_note: null
-  support_boundary: 'Bounded commutative merge rules (TCK-20261004-PERF-M1-TIED-WORKER-RESULT-VERIFICATION).
-    The bound (at most one debt-update system result per subsystem per tick) is enforced by
-    validate_result_batch (TCK-20261004-PERF-M1-VALIDATOR-ONE-SYSTEM-RESULT-PER-SUBSYSTEM); the
-    divergent case is only constructible below the validator, in the mutation test.
-    Non-combat scenarios, audit_mode on, five ticks, local/thread/process routes only.'
+  divergence_note: DEV-019 (entity-0 results are always rejected)
+  support_boundary: 'Unique-key ordering (TCK-20261004-PERF-M1-TIED-WORKER-RESULT-VERIFICATION, rewritten
+    by TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE). The earlier bounded commutative merge rule for system
+    results is retired with the results. Non-combat scenarios, audit_mode on, five ticks, local/thread/process
+    routes only; the arrival-order permutation changes the input only for a scenario with several results
+    per tick (ready_movers), which a non-vacuity test pins.'
 - id: INFRA-421
   text: 'TCK-20261005-DIRTY-SET-DEDUPES-UPDATES-BY-ID-SO-RECYCLED-ADDRESSES-DROP-WORK:
     DirtySetBuilder.mark_from_update marks every entity update it is given and keeps
@@ -12856,3 +12852,27 @@
   divergence_note: null
   support_boundary: The three "not implemented" flags are documented as such; implementing one means changing the operational-controls matrix and the test that pins the absence.
     perf_tracker is stored by the kernel and read nowhere. A Kernel that rejects a flag in __init__ has already started its background workers (validation runs after the event recorder is created) and leaks them; the forbidden-flag tests therefore call the validator directly.
+
+- id: INFRA-429
+  text: 'TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE (PERF-D3, PERF-D5): work debt and the never-wired periodic,
+    deferred and opportunistic scheduling path are removed. AuthoritativeState has no work_debt or
+    periodic_due_ticks, StateUpdate no work_debt_updates or periodic_updates, PressureSignals no work_debt_total,
+    RuntimeProfile no max_work_debt, GovernorPolicy none of allow_opportunistic, allow_non_authoritative_periodic,
+    diagnostic_verbosity or metrics_detail, and WorkerResult no work_debt_update or subsystem_id. The scheduler
+    selects only CRITICAL entity work and its dropped count is a constant 0. The proof digest scheme is
+    flat-sha256-v2: v1 minus the two removed state keys, with nothing else changed (the v1 form of the pinned
+    fixture, rebuilt, reproduces the old v1 digest exactly). A v2 digest is never compared with a v1 digest.
+    Governor modes and signals on the Live contract are unchanged (the Live golden passes with only the removed
+    key dropped). The certification result schema_version is certification_result.v2, the API payload and the
+    snapshot lose work_debt_total, and the Prometheus metric sim_work_debt_total is removed.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/scheduler.py (DeterministicScheduler.select_work); src/engine/checkpoint.py (PROOF_DIGEST_SCHEME, CanonicalStateHasher.to_canonical_data); src/core/state.py; src/core/updates.py; src/engine/apply.py; src/engine/governor.py; src/engine/phase_governor.py
+  proof_type: contract
+  test_path: tests/integration/kernel/test_work_debt_is_gone.py
+  divergence_note: DEV-019 (Stabilized)
+  support_boundary: The 21 tracked data/worlds/*/world_compile_report.json files keep their v1 canonical_state_hash (not
+    compared by any test, which checks counts only). The WorkClass members PERIODIC, OPPORTUNISTIC and DEFERRED and
+    their ConcurrencyLaw priorities remain as unused constants (follow-up). src/domains/cooperation/phase.py keeps a
+    dead hasattr(state, "periodic_due_ticks") guard (follow-up for the RPG side).

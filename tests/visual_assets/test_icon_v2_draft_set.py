@@ -1,6 +1,6 @@
 """Icon set v2 as drawn (`TCK-20261007-VISUAL-ASSETS-ICON-V2-DRAFT-SET`): the draft set `icons-v2` is complete, in the style the owner adopted, and the page's committed copy equals a fresh export.
 
-No test decides the sheet rule's verdict on the art (that is the recorded result of `python -m tests.visual_assets.icon_v2_draft_set`): these tests pin what is checkable without judging pixels
+No test decides the sheet rule's verdict on the art (that is the recorded result of `python -m visual_assets.review.icon_v2_draft_set`): these tests pin what is checkable without judging pixels
 (every key drawn at its registered size, own palette only, lint clean, live areas, a result file equal to a fresh evaluation, a copy equal to a fresh export modulo `registry_hash`).
 """
 
@@ -9,13 +9,13 @@ from __future__ import annotations
 import json
 import shutil
 
-from tests.visual_assets import icon_draft_fixture as fx
-from tests.visual_assets import icon_v2_draft_set as d2
-from tests.visual_assets import icon_v2_groups as groups
-from tests.visual_assets import icon_v2_keys as v2
+from visual_assets.review import icon_draft_fixture as fx
+from visual_assets.review import icon_v2_draft_set as d2
+from visual_assets.review import icon_v2_groups as groups
+from visual_assets.review import icon_v2_keys as v2
 from visual_assets.store.contracts import DraftPreviewManifest, parse_record
 
-REGENERATE = "regenerate the committed copy: `python -m tests.visual_assets.icon_draft_fixture --set icons-v2 --write`"
+REGENERATE = "regenerate the committed copy: `python -m visual_assets.review.icon_draft_fixture --set icons-v2 --write`"
 
 
 def _fresh(tmp_path):

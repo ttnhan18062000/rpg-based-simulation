@@ -42,7 +42,7 @@ The **PERSISTENCE** hook and all other hooks (Replay, logging, metrics) are **no
 - **Singular Mutation**: `ApplyPath.apply_generation` is the ONLY entry point for updating `AuthoritativeState`.
 - **Generation-Based**: State transitions produce a new immutable instance (`replace`).
 - **No Hidden Aliasing**: Nested structures (entities, properties) must be copied or treated as immutable to prevent side-channel mutation.
-- **Sorted Inputs**: All collections (entities, resources, periodic ticks, work debt) MUST be sorted by key before application to ensure order-invariant deltas.
+- **Sorted Inputs**: All collections (entities, resources) MUST be sorted by key before application to ensure order-invariant deltas.
 
 ## 6. Deterministic Work-Order Law
 The `DeterministicScheduler` MUST select and order work items according to these fixed rules:
@@ -64,10 +64,8 @@ The `CanonicalStateHasher` defines the proof of integrity.
   - `tick`, `seed`, `world_time`: Exact values.
   - `entities`: Sorted by integer ID.
   - `global_resources`: Sorted by string key.
-  - `periodic_due_ticks`: Sorted by string key.
-  - `work_debt`: Sorted by string key.
   - `rng_checkpoint`: Exact state.
-- **Serialization**: Compact JSON (sorted keys, no whitespace) hashed via SHA-256.
+- **Serialization**: Compact JSON (sorted keys, no whitespace) hashed via SHA-256. The scheme is `flat-sha256-v2`: v1 plus the two keys `periodic_due_ticks` and `work_debt`, which were removed from the state with work debt (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`); digests of different schemes are never compared.
 
 ## 8. Forbidden Placeholder Behavior
 - **No Scheduler Placeholders**: Opportunistic work branches must be explicitly gated or removed if not implemented.

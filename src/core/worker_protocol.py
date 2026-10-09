@@ -101,8 +101,3 @@ class WorkerResult:
     
     # Metadata for verification/replay
     compute_time_ns: int = 0
-    
-    # System Updates (Milestone C: De-simulation)
-    # Allows workers/executors to update global state components
-    work_debt_update: Optional[int] = None
-    subsystem_id: Optional[str] = None

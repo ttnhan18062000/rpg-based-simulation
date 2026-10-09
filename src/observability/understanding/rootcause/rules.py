@@ -250,12 +250,12 @@ class QuestObjectiveImpossible(HypothesisRule):
         )]
 
 
-# ── Rule 5: Governor Pressure from Observability or Work Debt ────────────────
+# ── Rule 5: Governor Pressure from Observability or Worker Queue Backlog ─────
 
 class GovernorPressureFromObservabilityOrWorkDebt(HypothesisRule):
     """
     Hypothesis: The governor entered degraded mode due to observability overhead
-    or accumulated worker queue debt.
+    or a backlog in the worker queue (work debt was retired; the rule id is kept because stored analyses key on it).
 
     Signature:
     - GovernorDegradedLive anomalies ≥ 3
@@ -281,7 +281,7 @@ class GovernorPressureFromObservabilityOrWorkDebt(HypothesisRule):
             confidence = ConfidenceLevel.HIGH
 
         return [RootCauseHypothesis(
-            title="Governor Pressure from Observability Overhead or Work Debt",
+            title="Governor Pressure from Observability Overhead or Worker Queue Backlog",
             domain="runtime",
             confidence=confidence,
             supporting_evidence=supporting,
