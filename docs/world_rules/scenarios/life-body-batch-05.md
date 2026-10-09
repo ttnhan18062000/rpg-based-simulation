@@ -183,6 +183,8 @@ individual consequences. Kept schematic — no detailed food-web simulator is de
   individual-level `ecological_predator` role classification exists
   (`src/content_semantics/role.py`), and general density/scarcity pressure (ECOL-04) is real —
   but no aggregate predator-count-to-prey-pressure formula specific to predation was found.
+  (2026-10-09, rpg-planner via Lane A: `ecological_predator` is read only by
+  `RoleDefinition.is_combatant`, which has no callers, so no live behaviour reads it as a label.)
   Recorded as PARTIAL rather than either SUPPORTED (which would overclaim) or MISSING (which
   would underclaim what general pressure mechanisms already provide).
 
@@ -391,9 +393,9 @@ nowhere. The deer flees because of the danger it perceives, not because it is la
     is reported unmet; it may move on to other grazing.
   - **Avoidance (D grazing, a wolf W hunting it):** when W comes adjacent and D perceives it, D
     takes a fresh decision (decision 32) and moves away or flees. It does not keep grazing and
-    take blows. A **control** with W sated and not hunting: D may keep grazing beside it, or
-    move off, but no fight occurs. (Whether a sated meat-eater is still feared is the kind's
-    perception, an engineering choice.) A **third control** with a creature beside D that is no
+    take blows. A **control** with W sated, lying still or walking past, not approaching: D is
+    wary (it keeps a distance and stays alert) but does not flee, and no fight occurs. D never
+    reads W's hunger, only what W is and what it is doing (decision 49). A **third control** with a creature beside D that is no
     danger to it (another plant-eater of similar size): D keeps grazing. Avoidance follows the
     danger D perceives, never a predator label. A **second control** with D not perceiving W (out of
     sight): no avoidance decision is recorded.

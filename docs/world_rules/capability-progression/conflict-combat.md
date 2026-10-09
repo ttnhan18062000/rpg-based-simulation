@@ -64,6 +64,34 @@ without combat).
 > differs from an enemy in when it CHOOSES to fight, which belongs to its own decision-making
 > layer (AGENCY-02). It never differs in whether it is ALLOWED to fight back or strike first.
 
+**Amendment, who is a threat or a quarry comes from appraisal, not faction (decided by the owner
+directly, 2026-10-09; rows 47 and 49 of the memo):**
+
+> Every creature judges another from what it perceives: the other's size and apparent strength,
+> whether one could eat the other, and its own hunger and condition. That appraisal decides
+> hunting, fleeing and wariness for every kind. A hungry creature may hunt one whose body its
+> diet can eat and which it judges it can overcome, whatever their factions. A creature is wary
+> of one that could eat and overcome it, keeping its distance and staying alert, and flees one
+> that approaches, stalks or chases it. Hunger is never read by the other side: a wolf lying
+> still or walking past draws wariness, not panic. Faction enmity remains an additional, social
+> reason for people-kinds to fight (war, feud), on top of the appraisal, not instead of it.
+
+- **Why:** decision 46 (roles from properties). Today "hostile" is a faction verdict
+  (`src/engine/hostility.py:41-66`, `is_hostile_compat`; `src/ai/goals/scorers_support.py:18`).
+  A hare could flee a wolf only if their factions were declared enemies, and a wolf could not
+  hunt a hare of its own wild faction (this Rule's same-faction refusal).
+- **Shape (Lane A, relayed by rpg-planner):** a relation between two creatures adds PREDATION (a
+  is hungry, a's diet can eat b's body, a judges it can overcome b, a perceives b) and DANGER (b
+  could eat and overcome a, and a perceives b; the response scales with what b is doing). The
+  threat terms (AGENCY-07, CONFLICT-04, decision 32) read any relation.
+- **Engineering, not this Rule:** how "can overcome" is estimated (today `apparent_power` reads
+  the opponent's true stats, `src/domains/combat_engagement/power.py:58`, which KNOW-02 objects
+  to), the wariness distance, and how approach or stalking is perceived.
+- **Alternatives not taken:** appraisal only, with faction dropped as a reason to fight; faction
+  hostility kept as the main gate with a narrow hunting exception; prey fearing only a
+  hungry-looking predator; prey fleeing any predator on sight.
+- **Evidence: CONFLICTING** until Lane A's hunting batch lands.
+
 **Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-06**
 (row 18 of `docs/plans/systemic_world/owner_decision_memo.md`; the owner confirmed the
 delegation directly the same day). Passes the admission test: no earlier Rule said whether

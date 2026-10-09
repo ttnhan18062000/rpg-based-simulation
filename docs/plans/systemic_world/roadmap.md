@@ -820,7 +820,7 @@ question above already has a working answer today.
 ## 10. Owner decisions
 
 Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has
-forty-six entries (row 27 lands with the decision-27 PR):
+forty-nine entries (row 27 lands with the decision-27 PR):
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
 3. whether individual and institutional standing are distinct concepts;
@@ -866,7 +866,10 @@ forty-six entries (row 27 lands with the decision-27 PR):
 43. who counts as a person for money and town services (decided 2026-10-09: an authored species trait, plus the relationship, EXCH-02);
 44. when the free meal may go (decided 2026-10-09: after predators can hunt and diets are gated, for everyone at once, SURV-06);
 45. whether small, edible animals exist (decided 2026-10-09: add a few, such as hares and deer, declared by properties, SURV-06);
-46. whether predator and prey are labels (decided 2026-10-09: no, roles come from declared properties, SURV-06 amendment).
+46. whether predator and prey are labels (decided 2026-10-09: no, roles come from declared properties, SURV-06 amendment);
+47. what decides who hunts, flees or fights (decided 2026-10-09: appraisal for every creature, faction for people, CONFLICT-03);
+48. whether predation is trauma (decided 2026-10-09: a kill made to eat is not, ENV-07);
+49. what makes prey afraid (decided 2026-10-09: what the other is and what it is doing, CONFLICT-03).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
