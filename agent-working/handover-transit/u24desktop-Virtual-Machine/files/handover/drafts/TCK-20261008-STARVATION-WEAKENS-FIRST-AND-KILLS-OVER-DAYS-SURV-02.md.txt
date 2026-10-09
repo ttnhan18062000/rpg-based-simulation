@@ -1,0 +1,67 @@
+---
+status: active
+layer: simulation
+authority: P1
+audience: agent
+ticket_id: TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02
+phase: open
+date: 2026-10-08
+tags: []
+---
+
+# TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02
+
+## Title
+Past the hunger line a person weakens first (slower recovery, worse in a fight), then loses health slowly, and dies after about 2 to 3 days without food, not within half an hour (SURV-02 amendment, owner decision 36).
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P1
+
+## Request Summary
+Owner decision 36 (2026-10-08, commit 92f43c41e): a SURV-02 amendment. Today a subject at hunger 95 loses 2 HP per tick (`apply.py`), which is death about 50 ticks (30 minutes, Bible 05 time base) after crossing the line. This is CONFLICTING. The stage thresholds, effects and rates are engineering plus content. The weakening may reuse the existing capacity degradation.
+
+## Scope
+1. A design proposal to rpg-planner BEFORE building:
+   - the stages (e.g. hungry, weakened, starving);
+   - their thresholds and effects (recovery rate, combat capacity through the existing capacity degradation);
+   - the HP loss rate, so that death lands at about 2 to 3 days (4800 to 7200 ticks) without food, starting from the line, for a full-HP person;
+   - where each value lives. Rates belong in content where possible; ask before any state.py or apply.py field or enum.
+2. Build, with unit tests per stage and a kernel scenario: a person with no food weakens, then dies at about 2 to 3 days; the control eats and recovers.
+3. Measure at 5000 ticks and also at about 10000 ticks (to see deaths over days): pinned 5x3, base vs feature.
+
+## Out of Scope
+- Illness or sickness from raw food (it waits for a disease Rule).
+- The fatigue and sleep consequence (a separate rule).
+
+## Acceptance Criteria
+- A full-HP person with no food dies 4800 to 7200 ticks after crossing the line, with the weakened stage observable in between (scenario).
+- The existing capacity degradation is reused for the weakening, or the reason it cannot be is stated.
+- Divergence, parity, Bible 01 and the attributes_biology mechanisms note are written.
+
+## Related Tickets
+- TCK-20261008-LIGHT-BALANCE-PASS-HUMAN-HUNGER-IS-LOW-DECISION-33 (the rate change).
+- TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL (its collapse dynamics depend on this).
+
+## Related Docs
+- `docs/world_rules/life-body/survival-needs.md` (the SURV-02 amendment); `docs/mechanics/01_entity_anatomy.md`; memo row 36.
+
+## Related Stored Artifacts
+## Related Code Areas
+- `src/engine/apply.py` (the starvation damage), `src/engine/biological_needs.py`, the capacity degradation code, `data/content/living/need_profiles.yaml`.
+
+## Assumptions / Open Questions
+- Should the free-meal removal be measured before or after this lands? With slow starvation, the removal's collapse would spread over days instead of a single wave.
+
+## Implementation Notes
+## Test Summary
+## Files Changed
+## Completion Summary

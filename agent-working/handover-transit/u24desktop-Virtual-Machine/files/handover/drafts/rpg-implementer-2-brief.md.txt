@@ -1,0 +1,188 @@
+# Brief — rpg-implementer-2
+
+From `rpg-feature-planning` (the `rpg-planner` seat), 2026-10-04. You were launched by the user as a
+**second** rpg implementer. This is your full starting context: what you are, how you work, which
+worktree you own, what not to touch, and your first batch.
+
+---
+
+## 1. What you are
+
+The `rpg` domain has three functions — designer (world semantics), planner (me: tickets, sequencing,
+plans), implementer (you: code). The manifest is authoritative and lives on `origin/main`:
+
+- `registries/session_roles.yaml` — the role manifest (domain `owns` / `owns_not` / `routes`, writer slots)
+- `docs/guidelines/session_roles/functions/implementer.md` — your function's contract
+- `docs/guidelines/session_roles/domains/rpg.md` — your domain's contract
+
+**Read all three before your first edit.** They are not in this worktree's branch history at the right
+version — read them from `origin/main` (`git show origin/main:registries/session_roles.yaml`).
+
+The `rpg` domain owns `src/**`, `tests/**`, `frontend/**`, `docs/mechanics/**`, `docs/engine/**`,
+`docs/parity_ledger/**`, `docs/world_rules/**`, `registries/mechanisms.yaml`. It **routes away**:
+`agent-working/**`, `.claude/**`, `tools/agent-monitoring/**` → `agent-working-designer`;
+`tests/architecture/**` and `docs/plans/test_architecture/**` → `testing-planner`. Routing away means
+*ask that session*, not *edit it quietly*.
+
+**One honest deviation you should know about:** the manifest gives the `rpg-implementer` role
+`placement: {worktree: rpg, max_sessions: 1}`, and gives the rpg worktree a single exclusive writer
+slot. You are a second holder of that seat, so the live staffing now exceeds what the manifest
+describes. The user staffed you deliberately; the manifest is owned by the `agent-working` domain, so
+the fix is a note to `agent-working-designer`, not a silent edit by either of us. I am reporting it.
+The operational rule the manifest is protecting — **one git writer per worktree** — is preserved by
+the split in §2, and that is the part that actually matters.
+
+## 2. Your worktree, and the one git rule that matters
+
+**Work in `/home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/m2-idea43-temporal-note`** —
+this directory, shared with me. Do **not** `cd` to the main checkout or to another worktree.
+
+You are **the sole git writer in this directory from now on.** I (planner) will not run `git` here
+again; I hand you files and tickets, you commit. That is the sanctioned pattern: paired sessions share
+a worktree, the implementer alone runs git.
+
+Three specifics:
+
+1. **The current branch `foundation-scope-and-retreat-ruling` is finished and already has an open PR
+   (#328).** Never commit or push to it again — a squash-merge branch is never pushed to twice.
+2. **Cut your own branch from `origin/main`**: `git fetch origin main` then
+   `git switch -c <branch-name> origin/main`. Branch names describe the work — never a date, a phase
+   number, or a ticket ID.
+3. **Before that switch, commit the monitoring shard.** `agent-working/agent-monitoring/data/2026-W40/
+   foundation-scope-and-retreat-ruling.tools.jsonl` is rewritten by the tooling on *every tool call*,
+   so it is permanently dirty and **will abort an in-place branch switch**. Commit it on the current
+   branch first (`git add agent-working/agent-monitoring/ && git commit`), then switch. Stage
+   `agent-working/agent-monitoring/` in every commit you make, forever — never leave it unstaged.
+
+Also in this directory: eight stale `TCK-20260917*/TCK-20260918*.md` files and a `SEQUENCE.md` sitting
+**untracked at the repo root** (dated Sept 17–18, left over from the `agent-working/` move in #289).
+They are not yours and not mine; leave them untracked and don't act on them.
+
+## 3. Do not collide with the other implementer
+
+`rpg-implementer` [7f1284] is **live and busy**, in a different worktree
+(`/home/u24desktop/Working/rpg-wt-goal-dispatch`, branch `hostility-sweep-batch`). Its lane is
+**goal / strategy / combat scoring**: `src/ai/goals/**`, `src/domains/combat_engagement/**`,
+`CombatEngageScorer`, the decided-objective-kind carry (#291).
+
+**Your lane is world definition, assembly and generation** — `src/worldassembly/**`,
+`src/worldgeneration/**`, `src/worldbuilding/**`, `data/worlds/**`, `data/content/world_modules/**`,
+plus two one-line undefined-name fixes. These do not intersect.
+
+The one near-shared file is `src/engine/kernel.py` (ticket 3, a single undefined name). If you find
+yourself needing to touch `src/ai/goals/**`, `src/domains/combat_engagement/**` or anything else in its
+lane, **message `rpg-implementer` first** — don't just take it.
+
+## 4. How you work (this repo's rules, the parts that bite)
+
+The project `CLAUDE.md` is authoritative; read it. The parts that cost real time if skipped:
+
+- **Context scan order is mandatory and ordered.** `mcp__knowledge-search__search_docs` first, then
+  `graphify query "<topic>"`, then `python3 tools/knowledge_search.py query "<q>" --top-k 5` as
+  fallback, *then* tickets/docs/code. Grep and raw file reads are **follow-up only** — never your first
+  move. (`search_docs` will answer `index not found` in a fresh worktree; that is local state, run
+  `make knowledge-index`.)
+- **Gate integrity, the single most important rule.** Never edit an artifact to make a gate, validator
+  or test pass instead of fixing the substance. A `NEEDS_CHANGES` / `BLOCKED` / `NEEDS_HUMAN_INPUT` /
+  failing test is **correct information to report**, not an obstacle. This binds every sub-agent you
+  dispatch, too.
+- **Ask the rule owner before implementing world semantics.** Accepted Rule IDs in
+  `docs/world_rules/` outrank the Mechanics Bible. I once built a raid fix and *then* asked; the rule
+  owner withdrew it and the work was wasted. The owner is `world-rule-catalog-design` (the
+  `rpg-designer` seat).
+- **Tests: scoped, never the full suite.** `pytest` the domain under modification, or `-m "not slow"`.
+  Run in the **foreground** on the final tree — and if you are a dispatched sub-agent, never end your
+  turn with your own `run_in_background` command still running.
+- **Closing a ticket by hand** (reading it, editing, testing — no `Workflow` call) means the pipeline's
+  auto-recording never ran, so you must do it:
+  `python3 tools/agent-monitoring/record_hand_orchestrated_closure.py --ticket-id <ID> --tier <tier>
+  --events '[...]'`. That call **already appends the `working_log.csv` row itself** — do **not** also
+  call `append_working_log_row()` for the same close, or the row is written twice. Check your work with
+  `python3 tools/gate_checks/done_checker_static.py --ticket-id <ID>`.
+- **Commits** reference the ticket: `TCK-YYYYMMDD-SHORT-SCOPE: Brief description`. Never wrap a ticket
+  ID across lines — it breaks grep.
+- **PRs**: standing user authorization — when a batch is **complete**, commit, push, render the body
+  with `tools/delivery/pr_render.py` (never hand-write it), open the PR, verify with `--check`, then
+  ask a peer to review. **Merging stays the user's call.** One open PR at a time per track; fold
+  follow-ups into the open PR rather than stacking a second.
+
+## 5. Traps that cost me real time today — don't re-pay them
+
+- **`tools/delivery/pr_status.py` emits a FALSE GREEN.** It reads only `actions/runs` for the target
+  workflow path, so standalone check runs (`ruff`, `complexipy`) are invisible to it. It told me GREEN
+  on #291 while `ruff` was failing and I relayed that to a peer as fact. **`gh pr checks` is ground
+  truth** until #316 merges. Generally: *a tool verdict is an instrument that can be wrong* — positive-
+  control it.
+- **A grep measures what you point it at.** `grep -c "TCK-20260909-WORLD-COMPOSITION"` returned 2 on
+  the working-log shard and looked exactly like the known double-write defect — line 1 was a *different*
+  row whose **title** contained the substring. Count on the field (`"ticket_id": "<full-id>"`), and
+  watch for the missing space after a colon.
+- **`clean_data_runs_early` deletes other sessions' run data** — it is mtime-gated, not session-scoped.
+  Run one pipeline at a time. A PID check is not a fix; PIDs recycle.
+- **A plan-gate `**None.**` is not `None.`** — markdown bold defeats `^none\b` and yields a false
+  `NEEDS_HUMAN_INPUT`.
+- **`src/cognition/appraisal.py` does not exist** — it is `src/systems/social_systems/appraisal.py`. I
+  relayed that wrong path from a peer report.
+
+## 6. Your first batch — three P1 hard bugs, in this order
+
+All three are in `agent-working/tickets/todos/`, all filed by me today, none started. They form one
+coherent batch (world definition correctness) and one PR. Read each ticket at source — my summary here
+is orientation, **the ticket's own Acceptance Criteria govern**.
+
+### (1) `TCK-20261004-GENERATOR-AUTHORS-UNASSEMBLABLE-COMPOSITION-ON-REGION-ID-COLLISION` — P1, first
+
+The generator emits `ModuleRefSpec` with `namespace=None`, so two modules that both provide the same
+region id produce a composition that cannot be assembled. **The rule owner has already ruled: option 1
+(namespace)**, with two conditions recorded as the ticket's own AC-2a/2b — implement the ruling, do not
+re-open the decision. Its **AC-3 requires removing the two `xfail(strict=True)` marks** that #328 left
+in place; those marks currently encode this defect, and they report `xfailed` (not `failed`, not
+`xpassed`), which is how we know the defect is deterministic. Code: `src/worldgeneration/generator.py`
+(`ModuleScorer` ranking, `ModuleRefSpec` emission, Rule 5's duplicate-`provides` check),
+`src/worldassembly/resolver.py:359` (the fail-fast that surfaced it). Precedent for the shape:
+`data/worlds/urban_political/world.yaml:16` is a hand-authored `namespace: "trading"`.
+
+**Do this one first** — it unblocks the two xfail marks, which is a visible debt on an open PR.
+
+### (2) `TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION` — P1, second
+
+`TCK-20260627-P1I` reduced `dungeon_crawl` from 32 to 12 entities to fix a measured **94–97% extinction
+rate** — and wrote the change **only to the catalog copy** (`data/content/world_compositions/
+dungeon_crawl.yaml`). Production loads via `src/worldbuilding/repository.py:74-81`, which redirects to
+`resolved/`, so **the fix has been inert since June** and the production snapshot still carries both
+removed modules. This is a hard bug, **not** parked balance work. It owns `danger_scale`.
+`tests/integration/worldassembly/test_real_content_world_compositions.py:424-452` still asserts
+`danger_scale == 2` against the catalog copy — i.e. it has been testing the fix in the one place the fix
+had no effect.
+
+**Its AC-4a requires running the agreement check across *every* composition world first**, before
+changing anything. Honour that ordering: the blast radius is the point, and my own "keep 4" inference
+here was wrong once already and would have re-ratified the 94–97% extinction config. The user caught it.
+
+### (3) `TCK-20261004-TWO-REAL-UNDEFINED-NAMES-IN-SRC-ONE-LIVE-AND-SILENT` — P1, third, small
+
+Two genuine undefined names. **The asymmetry is the whole point, don't flatten it:**
+`src/engine/kernel.py:157` is **live and silent** — reached via `src/lab/orchestrator.py:184`, and it
+stays silent because the provenance manifest never loads. `src/systems/social_systems/party.py:143` is
+**dormant** — zero callers. `StrategicUpdate` actually lives in `src/core/strategic.py`. Fix both;
+report the live one as live.
+
+### Not in your batch
+
+- `TCK-20261004-POSITION-SWAP-CONTRACT-NEVER-CONSTRUCTED` (P2) — a dormant contract kind with two
+  unreachable consumers. It is **feature work and is expected to sit** behind roadmap decision 7. Don't
+  pick it up.
+- Epic `TCK-20261002-EPIC-SEMANTIC-FOUNDATION-COMPLETION` Child B + **B2** — the next epic step, and
+  they **run together, before any rule-map slice**. Epics are all-or-nothing: never cherry-pick a
+  ticket out of an epic folder. I sequence these; wait for me.
+
+## 7. Reporting
+
+- **Sequencing, tickets, scope, "is this in my lane"** → me, `rpg-feature-planning` (the `rpg-planner`
+  seat). I file the tickets; you don't need to file your own for work I've already scoped.
+- **World semantics / rule questions** → `world-rule-catalog-design` (`rpg-designer`), before
+  implementing.
+- **Process, monitoring, `.claude/**`, `agent-working/**` defects** → `agent-working-designer`. File a
+  ticket for a workflow gap rather than silently patching around it.
+- **A gate that blocks you** → report it as-is, to me and in the ticket. That is a result, not a
+  failure.

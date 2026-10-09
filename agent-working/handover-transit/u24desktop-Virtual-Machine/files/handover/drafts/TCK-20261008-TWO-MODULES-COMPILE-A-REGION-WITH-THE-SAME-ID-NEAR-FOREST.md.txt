@@ -1,0 +1,60 @@
+---
+status: active
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20261008-TWO-MODULES-COMPILE-A-REGION-WITH-THE-SAME-ID-NEAR-FOREST
+phase: open
+date: 2026-10-08
+tags: []
+---
+
+# TCK-20261008-TWO-MODULES-COMPILE-A-REGION-WITH-THE-SAME-ID-NEAR-FOREST
+
+## Title
+`highland_traverse` compiles two regions with the same id, `near_forest`: one from `wolf_den_near_forest`, the other from the `nomadic_herd` module (plain terrain, hazard 1.5, no thicket). A lookup by id can pick either one.
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+bug
+
+## Priority
+P3
+
+## Request Summary
+Found by Lane B while applying ENV-08 (the d27 + earn-then-buy batch). The designer reads it as a content or assembly defect, not a rule question (2026-10-08, milestone branch 03882edc6).
+
+## Scope
+1. List every compiled world where two regions share an id: module, bounds, biome, hazard.
+2. Find each consumer that resolves a region BY ID (region lookups, ecology, hazard, sovereignty, placement `first_region_at`, presenters) and say which duplicate it picks.
+3. Fix: either the assembly rejects or renames a duplicate (an integrity-validation error, Bible 06), or the module gives its region a unique id. Propose the fix to rpg-planner before building.
+
+## Out of Scope
+- ENV-08's hazard value for that region. It is ruled by place, and the d27 batch handles it.
+
+## Acceptance Criteria
+- No compiled world in the corpus has a duplicate region id, and the integrity check fails on a new duplicate.
+- Before/after compile diff for the affected worlds is recorded.
+
+## Related Tickets
+- The d27 + earn-then-buy batch (Lane B), which applies ENV-08.
+
+## Related Docs
+- `docs/mechanics/06_worldbuilding_foundation.md` (integrity validation); `docs/world_rules/space-environment/environment.md` (ENV-08).
+
+## Related Stored Artifacts
+## Related Code Areas
+- `src/worldassembly/`, `src/worldbuilding/compiler.py`, the `nomadic_herd` and `wolf_den_near_forest` modules.
+
+## Assumptions / Open Questions
+- Is it a single world (`highland_traverse`), or are there more?
+
+## Implementation Notes
+## Test Summary
+## Files Changed
+## Completion Summary

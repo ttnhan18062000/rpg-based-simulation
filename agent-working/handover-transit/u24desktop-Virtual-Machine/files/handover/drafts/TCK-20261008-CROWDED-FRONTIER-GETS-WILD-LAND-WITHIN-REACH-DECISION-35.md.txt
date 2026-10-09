@@ -1,0 +1,60 @@
+---
+status: active
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20261008-CROWDED-FRONTIER-GETS-WILD-LAND-WITHIN-REACH-DECISION-35
+phase: open
+date: 2026-10-08
+tags: []
+---
+
+# TCK-20261008-CROWDED-FRONTIER-GETS-WILD-LAND-WITHIN-REACH-DECISION-35
+
+## Title
+crowded_frontier gets wild land within reach of its settlements, as a frontier world should (owner decision 35: its missing wild module is an oversight).
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+repair
+
+## Priority
+P1
+
+## Request Summary
+Owner decision 35 (2026-10-08, commit 92f43c41e): crowded_frontier having no wild land is an OVERSIGHT, and a frontier world's settlements have wild land within reach. urban_political has none BY DESIGN and is NOT changed. This is recorded in SURV-06's decision-29 amendment.
+
+## Scope
+1. Add a wild module to the crowded_frontier world spec (content only): a near-edge region within reach of its settlements, ENV-08 hazard 0 at the near edge, and the wild-food node by the decision 29 biome table and the placement rule.
+2. Recompile and report the compile diff (regions, nodes, spawns).
+3. Measure in the batch's pinned run (one baseline change, disclosed).
+
+## Out of Scope
+- urban_political (no wild land by design).
+
+## Acceptance Criteria
+- crowded_frontier compiles a near-edge wild region with a wild-food node owned by that region, hazard 0.
+- The compile diff is recorded; the baseline change is disclosed in the batch divergence.
+
+## Related Tickets
+- TCK-20261008-A-BROKE-WORKER-EARNS-BY-SELLING-AND-BY-WAGES-EXCH-02 (same batch).
+
+## Related Docs
+- `docs/world_rules/life-body/survival-needs.md` (SURV-06, decisions 29 and 35); ENV-08.
+
+## Related Stored Artifacts
+## Related Code Areas
+- The crowded_frontier world spec, `data/content/modules/`.
+
+## Assumptions / Open Questions
+- Which existing wild module fits a frontier settlement edge (`wolf_den_near_forest`, or a field-edge module)? A designer reading if unclear.
+
+## Implementation Notes
+## Test Summary
+## Files Changed
+## Completion Summary

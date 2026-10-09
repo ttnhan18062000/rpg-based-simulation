@@ -1,0 +1,72 @@
+---
+status: active
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20261008-A-READINESS-REJECTED-QUEUED-ACTION-WRITES-A-CAPABILITY-BLOCKER-THAT-FEEDS-RESOLVE-BLOCKER
+phase: open
+date: 2026-10-08
+tags: [combat]
+---
+
+# TCK-20261008-A-READINESS-REJECTED-QUEUED-ACTION-WRITES-A-CAPABILITY-BLOCKER-THAT-FEEDS-RESOLVE-BLOCKER
+
+## Title
+A queued action rejected only for readiness writes an unresolved "capability" blocker on the strategic state, and the goal layer reads that blocker as something to resolve, though waiting for readiness is the expected path, not a failure.
+
+## Status
+OPEN (SUPERSEDED 2026-10-08: absorbed into TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04 as divergence 2.88. The path had 0 readiness rejections on main, so CONFLICT-04's holds are its only live source. Fix (b): no blocker for INSUFFICIENT_READINESS. Do not file separately.)
+
+## Tier
+standard
+
+## Type
+bug
+
+## Priority
+P2
+
+## Request Summary
+Found by Lane A while writing CP-S18 for CONFLICT-04 (divergence 2.86 discloses it). `src/engine/pipeline_phases/actions.py` about 199-214: for a non-survival action, when `LegalityServiceV2.verify_readiness` fails, the task payload gets `outcome: FAILURE` with reason `INSUFFICIENT_READINESS`, a RejectionEvent is logged, and the update writes `StrategicUpdate(blockers_add_or_update=[BlockerState(id="blocker_nav_INSUFFICIENT_READINESS", kind="capability", subject="INSUFFICIENT_READINESS")])`. The task itself is kept, and the swing lands at readiness 100.
+
+CONFLICT-04's held swing (a queued ATTACK, reason HOLD_BETWEEN_BLOWS) is emitted precisely BECAUSE readiness is under 100, so every hold emission now produces this rejection and this blocker. Before CONFLICT-04 the same thing happened to any queued action below readiness, less often.
+
+Consumers that make it more than a log line:
+- `src/ai/goals/scorers.py` about 228-245: any unresolved blocker past its `suppression_until_tick` makes the RESOLVE_BLOCKER goal score above zero.
+- `src/ai/score_modifiers.py` about 53-59: an unresolved blocker whose `subject` equals a goal kind multiplies that goal's utility down. The subject "INSUFFICIENT_READINESS" probably matches no goal kind; verify this.
+
+Questions to answer: how and when this blocker is resolved; whether RESOLVE_BLOCKER is ever selected for it; and what such a project does with a "capability" blocker that has no coordinates.
+
+## Scope
+1. Count (pinned NORMAL, 5 seeds x 3 worlds, mean (SD), main vs main-with-CONFLICT-04): INSUFFICIENT_READINESS rejections; `blocker_nav_INSUFFICIENT_READINESS` writes; how long such a blocker stays unresolved; RESOLVE_BLOCKER selections whose target is that blocker; and what those entities did next (left the fight?). Two-run determinism.
+2. Trace one case end to end on a pinned seed.
+3. Propose a fix shape to rpg-planner BEFORE building. Candidates: (a) a readiness rejection of a queued action is a wait, not a failure: no blocker, no FAILURE outcome, maybe no rejection event; (b) keep the rejection event as telemetry but write no blocker; (c) skip the readiness check on the emission tick for a task the scheduler's readiness gate already defers. `actions.py` is the authoritative pipeline: ask before changing apply-path semantics, and before adding any field or enum in `state.py`/`apply.py`.
+
+## Out of Scope
+- CONFLICT-04's hold decision itself (divergence 2.86).
+- Readiness refill rates and the scheduler readiness gate policy (no scheduler policy edits).
+
+## Acceptance Criteria
+- The count and trace are reported first.
+- After the fix: a queued action awaiting readiness leaves no unresolved capability blocker, and RESOLVE_BLOCKER is never chosen because of one. The other rejection reasons keep their current blocker behaviour unless the trace shows they share the defect (report, don't widen).
+- Deaths, alive at t=1100 and opportunity-attack hits are within 1 SD of the base arm, or the change is disclosed. A divergence entry (Bug Fix) and a parity entry are added.
+
+## Related Tickets
+- TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04 (divergence 2.86 discloses the side effect).
+
+## Related Docs
+- `docs/engine/authoritative_pipeline.md`; `docs/engine/authoritative_mutation_pipeline_contract.md`; `docs/mechanics/04_strategic_cognition.md` (blockers, goal hierarchy).
+
+## Related Stored Artifacts
+- CONFLICT-04's stored investigation (CP-S18 staging notes).
+
+## Related Code Areas
+- `src/engine/pipeline_phases/actions.py`, `src/ai/goals/scorers.py` (RESOLVE_BLOCKER), `src/ai/score_modifiers.py`, `src/engine/legality.py::verify_readiness`.
+
+## Assumptions / Open Questions
+- Open question: is any blocker resolution keyed to readiness recovering? If none, the blocker may live until something generic clears it.
+
+## Implementation Notes
+## Test Summary
+## Files Changed
+## Completion Summary

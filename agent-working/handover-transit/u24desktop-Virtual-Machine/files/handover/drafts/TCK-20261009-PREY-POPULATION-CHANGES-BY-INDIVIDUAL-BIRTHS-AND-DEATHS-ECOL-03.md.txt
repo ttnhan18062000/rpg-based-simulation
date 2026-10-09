@@ -1,0 +1,59 @@
+---
+status: active
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20261009-PREY-POPULATION-CHANGES-BY-INDIVIDUAL-BIRTHS-AND-DEATHS-ECOL-03
+phase: open
+date: 2026-10-09
+tags: []
+---
+
+# TCK-20261009-PREY-POPULATION-CHANGES-BY-INDIVIDUAL-BIRTHS-AND-DEATHS-ECOL-03
+
+## Title
+Population change for living kinds comes from individual births (from a living, fed adult) and individual deaths, and the regional aggregate reads them instead of applying cohort x rate (ECOL-03; LB-S21 part 3).
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P2
+
+## Request Summary
+ECOL-03 is a standing finding: `DemographicCycleService.process_demographics` (`domains/demographics/cohort.py:349`) changes populations statistically, so LB-S21 part 3 (a newborn only from a living, fed adult; no respawn; every death has a cause; zero adults means it stays zero) cannot pass. This was split out of the prey ticket (TCK-20261009-SMALL-PREY-KINDS-...-DECISION-45) on 2026-10-09.
+
+## Scope
+1. Design for rpg-planner: the birth eligibility per adult (fed, mature, with an interval), where the per-adult last-birth or fertility record lives (an existing field if possible; any state.py field needs rpg-planner's yes, and it lands after perf's Phase B), the litter as content, and how the aggregate reads individual events.
+2. Build it, with LB-S21 part 3 as a kernel test.
+3. Measure the populations per kind over 5000 and 10000 ticks (no explosion or collapse beyond ECOL bounds).
+
+## Out of Scope
+- Grazing, fleeing and hunting (the hunting/prey batch).
+
+## Acceptance Criteria
+- LB-S21 part 3 passes, with no statistical population change for kinds covered by individual reproduction.
+
+## Related Tickets
+- TCK-20261009-SMALL-PREY-KINDS-GRAZE-BREED-AND-FLEE-PREDATORS-DECISION-45.
+
+## Related Docs
+- ECOL rules; LB-S21.
+
+## Related Stored Artifacts
+## Related Code Areas
+- `src/domains/demographics/cohort.py`, lifecycle and spawn.
+
+## Assumptions / Open Questions
+- Sequencing: after perf's Phase B if state.py is needed.
+
+## Implementation Notes
+## Test Summary
+## Files Changed
+## Completion Summary

@@ -1,0 +1,61 @@
+---
+status: active
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20261009-TAX-IS-A-SHARE-OF-SALES-AND-WAGES-PAID-TO-THE-PLACE-HOLDERS-TREASURY-DECISION-51
+phase: open
+date: 2026-10-09
+tags: []
+---
+
+# TCK-20261009-TAX-IS-A-SHARE-OF-SALES-AND-WAGES-PAID-TO-THE-PLACE-HOLDERS-TREASURY-DECISION-51
+
+## Title
+Tax is a small share of a sale or a wage, taken when coin changes hands and paid to the treasury of the faction holding the place. The periodic per-head levy is retired (owner decision 51).
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P1
+
+## Request Summary
+Owner decision 51 (the user decided directly, 2026-10-09; recorded in EXCH-02 and the memo on milestone-animal-ways). Lane B's 4-arm table showed the flat levy (2 gold every 20 ticks from anyone in the region) taking about as much from the poor as they earned (146 gold in urban's wage arm). The tax becomes a share of income or trade, a real transfer from the payer's purse to the place holder's treasury, never minted.
+
+## Scope
+1. Retire the periodic per-head levy (`town_resolution` regional tax).
+2. A tax share on SALE and WAGE transfers. The share is content: light and plausible, with before and after recorded under decision 33, never fitted to survival. It is paid from the payer's purse (the seller's proceeds, the worker's wage) to the treasury of the faction holding the place (region owner).
+3. TREASURY AS AN ACCOUNT: tax income, treasury wages (decision 37) and payer-funded rewards (decision 38) all need the faction treasury to be a real payer and payee in conservation. Build that accounting ONCE, for this ticket and its siblings.
+4. Flag whether outsiders or non-members should pay differently (engineering for now).
+
+## Out of Scope
+- Fine-grained per-good tax rates.
+
+## Acceptance Criteria
+- No periodic levy. Every tax unit moves from a payer's purse to a treasury (conservation test). A subject who earns nothing pays nothing.
+- Measured (pinned 5x3, 5000 ticks, per kind group): tax paid by subjects holding under 10 gold falls to the share of what they earned.
+
+## Related Tickets
+- TCK-20261009-THE-FACTION-TREASURY-PAYS-WAGES-FOR-TOWN-WORK-DECISION-37 and TCK-20261009-MINTED-KILL-AND-QUEST-COIN-IS-PAID-BY-A-PAYER-EXCH-02-B. They share the treasury accounting; ONE batch.
+
+## Related Docs
+- EXCH-02 (decision 51); memo row 51.
+
+## Related Stored Artifacts
+## Related Code Areas
+- `src/engine/town_resolution.py` (the levy), `src/core/conservation.py`, `regional_sovereignty`, the faction treasury keys in `global_resources`.
+
+## Assumptions / Open Questions
+- Perf Phase B: check the held file list before touching `state.py` or `inventory.py`.
+
+## Implementation Notes
+## Test Summary
+## Files Changed
+## Completion Summary

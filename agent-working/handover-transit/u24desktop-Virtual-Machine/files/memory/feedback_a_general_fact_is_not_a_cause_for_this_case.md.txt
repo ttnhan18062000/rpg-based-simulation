@@ -1,0 +1,37 @@
+---
+name: feedback_a_general_fact_is_not_a_cause_for_this_case
+description: A defect that is real in general explains a specific measurement only if the mechanism actually reached it — check which path the measurement took before attributing
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: f39f2e13-ef59-4217-9a61-840066d6a0da
+  modified: 2026-10-04T17:35:42.799Z
+---
+
+**2026-10-04.** I established a real defect — `frontier_living_world` had **two divergent definitions**,
+6 modules in `data/content/world_compositions/` vs 7 (plus `trading_company_hub`) in
+`data/worlds/<id>/world.yaml` — and then told an implementer this explained the bimodality it had
+observed in that world, ranking it above the open nondeterminism ticket.
+
+Wrong. `rpg-implementer` showed the sweep's probe loaded via
+`WorldRepository("data/worlds").load_world_with_context()` — the production path — and that the
+pre-change `resolved/world.resolved.yaml` already contained `trading_company_hub`. **Every run in that
+measurement read the 7-module world, so two definitions cannot produce two modes *within* it.** The
+catalog copy's content was irrelevant to a measurement that never read it. Verified independently before
+conceding.
+
+**Why it is worth a note of its own:** the defect was real, my description of it was accurate, and the
+attribution was still false. "X is broken in general" and "X explains this observation" are different
+claims needing different evidence — the second needs the mechanism to have *reached* the specific case.
+Being right about the bug made me careless about the inference.
+
+**How to apply:** before attributing an observation to a known defect, name the path the observation came
+through and check the defect is on it — which loader, which entry point, which file version at that SHA.
+This is usually settleable **by reading, with no re-run**: read the probe's own loader call, then read the
+artifact as it existed at the measurement's commit. Say "consistent with" until the path is confirmed,
+and when corrected, record the withdrawn hypothesis **as withdrawn** in the ticket rather than dropping
+it silently — otherwise the next reader re-derives it.
+
+Related: [[feedback_trace_the_call_never_name_match_paths]] (the same discipline for symbol→file claims),
+[[feedback_verify_a_peer_finding_before_relaying_it_as_fact]], and
+[[feedback_a_probe_is_an_instrument_that_can_be_wrong]].

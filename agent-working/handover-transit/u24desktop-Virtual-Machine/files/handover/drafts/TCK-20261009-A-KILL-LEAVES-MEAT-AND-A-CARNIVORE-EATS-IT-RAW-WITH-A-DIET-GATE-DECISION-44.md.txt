@@ -1,0 +1,74 @@
+---
+status: active
+layer: simulation
+authority: P1
+audience: agent
+ticket_id: TCK-20261009-A-KILL-LEAVES-MEAT-AND-A-CARNIVORE-EATS-IT-RAW-WITH-A-DIET-GATE-DECISION-44
+phase: open
+date: 2026-10-09
+tags: []
+---
+
+# TCK-20261009-A-KILL-LEAVES-MEAT-AND-A-CARNIVORE-EATS-IT-RAW-WITH-A-DIET-GATE-DECISION-44
+
+## Title
+Hunting: a kill leaves a meat item, a carnivore eats it raw (raw fills less, decision 31), and a diet gate lets each kind eat only what its diet allows, so carnivores stop foraging berries (owner decision 44).
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P1
+
+## Request Summary
+Owner decision 44 (the user decided directly, 2026-10-09; designer branch `milestone-animal-ways`, commit 7ba43c48c): the free-meal removal WAITS for the animals' own ways, then lands for every kind at once. Lane B's read found:
+- no meat, carcass or hide item;
+- kill rewards pay gold and XP only, and corpses hold loot, not food;
+- no eat-corpse action;
+- carnivores (wolf, spider; carnivore_survival) eat only by accident, by walking to a town inn for the free relief or by foraging a berry thicket.
+
+There are no grazers in the corpus.
+
+## Scope
+1. A design proposal to rpg-planner before building. It must cover:
+   - a `raw_meat` item, with a raw fill below the cooked value (decision 31: raw fills less);
+   - how a kill leaves it: the corpse inventory, sized by the prey's body (content);
+   - a hunt opening step for carnivore kinds: choose prey, engage, then eat from the corpse or carry the meat;
+   - a DIET field per species or need profile (content) gating EAT and forage: carnivores meat only, people omnivore, and so on.
+
+   Watch the perf Phase B file list (state.py, apply.py, executor.py, domain_logic.py and others are held during the slot): say if the kill-drop needs a held file. Ask before any new field or enum in state.py or apply.py.
+2. Build it, with the designer's kernel spec (a wolf kills prey, the carcass yields meat, the wolf eats it raw and its hunger falls; the control kills nothing) and unit tests for the diet gate (a wolf never forages berries; a person can eat both).
+3. Measure at 5000 ticks, pinned 5x3, PER KIND GROUP (decision 42): wildlife ever-ate, starvation and alive; also prey deaths, since hunting raises predation.
+
+## Out of Scope
+- Cooking, fire and the hearth (later).
+- Grazers (none exist).
+- The free-meal removal itself (parked; it lands after this, for all kinds at once).
+
+## Acceptance Criteria
+- In living_world, carnivores feed by hunting, and the diet gate means 0 carnivore berry forages and 0 carnivore inn meals.
+- Conservation: meat enters only by a kill and leaves only by eating or decay (if decay is modelled).
+
+## Related Tickets
+- TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL (the parked removal; this unblocks it for animals).
+- Decision 43's people trait and relationship-gated services (Lane B, batch 2).
+
+## Related Docs
+- SURV-06 (decisions 31 and 44); the designer's hunting spec (pending).
+
+## Related Stored Artifacts
+## Related Code Areas
+- `src/ai/goals/opening_steps.py`, `scorers.py`, the corpse and loot code (apply_plan / lifecycle), `src/core/items.py`, `data/content/living/species.yaml` or `need_profiles.yaml`.
+
+## Assumptions / Open Questions
+- **DECISION 46 (user direct, 2026-10-09) BINDS THIS TICKET:** "predator", "prey", "grazer" and "hunter" are NOT labels. A kind declares PROPERTIES only: body size, power or danger, wits, diet (what it can eat) and edibility (which diets its body feeds). Hunting is DERIVED: the subject is hungry, its diet can eat the other's body, and it can overcome the other (reuse the combat_engagement posture verdict and the KNOW-04 danger prior). Fleeing is DERIVED from perceived danger. No species-level prey or predator flag may exist, and no behaviour may read one. The diet gate stays (it IS a property). The specs gained a derivation arm (LB-S20: a hungry wolf beside a larger, dangerous edible creature does not hunt it, and no flag is read) and a no-danger control (LB-S21: a deer beside a similar plant-eater keeps grazing). Also check LB-S15's individual `ecological_predator` role: if behaviour reads it as a fixed label, it is CONFLICTING.
+## Implementation Notes
+## Test Summary
+## Files Changed
+## Completion Summary

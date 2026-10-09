@@ -1,0 +1,22 @@
+---
+name: probe-cwd-decides-content-catalog
+description: "A simulation probe's result depends on the cwd it is started from (data/content is cwd-relative), and my shell cwd resets to a different worktree on every Bash call"
+metadata:
+  node_type: memory
+  type: feedback
+  originSessionId: c3c03123-6c20-4694-bb97-f41faaa98a72
+  modified: 2026-10-06T04:01:52.579Z
+---
+
+`src/core/registries.py` `seed_phase1_content` loads `default_path = "data/content"` **relative to the cwd**, not to the probe's `ROOT` argument. Passing `ROOT` to a probe is not enough: `world_modules/*.yaml` differ between worktrees, so a probe started from the wrong directory silently measures a different content catalog (or crashes with `KeyError: stone_outcrop`).
+
+**Why:** in session c3c03123 (2026-10-06) my shell cwd reset to `lane-a-tactical-path-batch` on every Bash call (the session had been launched there; the work was in `attack-path-trace`). Probes launched through `measure.sh` + `setsid` inherited that cwd and wrote `data/runs/` into the wrong worktree. The ticket (b) numbers happened to reproduce, but the GUARD legacy arm crashed. A second silent failure: moving `staging_artifacts/` to `stored_artifacts/` at close broke the script's own path, and the missing-file error did not match my `grep -E "Error|Traceback"` filter, so the run printed nothing.
+
+**How to apply:**
+- Every `measure.sh` starts with `cd "$ROOT"`; check `git rev-parse --show-toplevel` before trusting any run.
+- Include `No such file` in the grep filter of a probe wrapper, and treat "no output lines" as a failed measurement, not a zero.
+- Run a one-world positive control directly from the right cwd and diff it against the scripted run.
+- After closing a ticket, fix script paths that name `staging_artifacts/` (they now live in `stored_artifacts/`).
+- A `git archive` export of any ref DOES run the simulation and tests, provided you run from the export's own root (verified 2026-10-06: origin/main and an old commit both ran). My first note said an export "omits untracked data"; that was wrong: the crash came from running with the wrong cwd. Use an export to measure another ref; patching the function back on the current tree (gate-4 `legacy` flag) is also fine for a single function.
+
+Related: [[feedback-a-probe-is-an-instrument-that-can-be-wrong]], [[project-worktree-verification-traps]].

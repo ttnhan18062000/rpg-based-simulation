@@ -1,0 +1,20 @@
+---
+name: feedback-bulk-edit-globs-must-be-scoped-to-my-dirs
+description: "A bulk-edit script over agent-working/ with a ticket-prefix glob (TCK-2026MMDD-*) also matches other sessions' tickets/artifacts; scope to explicit paths and check git status after"
+metadata:
+  type: feedback
+---
+
+I rewrote artifact frontmatter with `Path("agent-working/stored_artifacts").glob("TCK-20261004-*")`. The
+date prefix is shared by every session filed that day, so it also matched four other sessions' stored
+artifacts (and crashed on a non-standard file name) after already editing twelve of their files. Caught
+only because I ran `git status` on the directory afterwards; restored with `git checkout HEAD -- <files>`
+(each had exactly my one inserted line). Nothing shipped. Reported to `agent-working-design` as a tooling
+defect: the repo's frontmatter tools should compute all edits in memory and fail with nothing written.
+
+**Why:** a date-prefixed ID is not an ownership boundary; many sessions file tickets the same day.
+
+**How to apply:** bulk edits take an explicit list of full ticket IDs (or exact directories) — never a
+prefix or date glob; make the script compute everything first and write only after a full successful
+pass; run `git status --short <dir>` immediately after and look for paths that aren't mine before
+committing. If others' files changed, restore from HEAD before anything else.

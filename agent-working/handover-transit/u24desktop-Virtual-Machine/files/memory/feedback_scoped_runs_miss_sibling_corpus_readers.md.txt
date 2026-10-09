@@ -1,0 +1,25 @@
+---
+name: feedback-scoped-runs-miss-sibling-corpus-readers
+description: "Changing shared world content (a world.yaml, a module, a catalog entry) breaks pins in test directories far from the change; run CI's exact job commands and the `-m worldassembly` lane, not a hand-picked scope"
+metadata:
+  type: feedback
+---
+
+When a change alters a world definition or other shared corpus, the tests that pin its measured
+properties live in directories unrelated to where I edited. On the `dungeon_crawl` balance fix my
+hand-picked scoped runs (rendering, worldassembly, worldgeneration, engine, social...) passed, and CI
+still went red on `tests/unit/worldbuilding/test_corpus_reachability_baseline.py` (WORLD-REACH-001
+baseline listed quests from the removed module). Earlier the same fix had already broken six rendering
+pins, a census pin, a corpus registry and a compile-report count — each found by a *different* suite.
+
+**Why:** I chose scopes by "what I touched", but the readers of a corpus are everywhere. Also the
+planner's own #328 verification ran one file out of `tests/tools` and missed two CI jobs for the same
+reason.
+
+**How to apply:** for any content/corpus change, before pushing run CI's *exact* commands
+(`.github/workflows/test.yml`) for every job it can touch — at minimum the "Unit · core / world" list,
+`make lane-all-fast` (marker-selected across all of `tests/`: `pytest tests/ -m "(catalog or ... or
+worldassembly ...) and not strict_matrix and not slow"`), and both `tests/tools` halves
+(`--ignore-glob='tests/tools/test_[a-e]*.py'`) plus `tests/unit/tools`. When a baseline/pin moves, the
+fix is a reviewed diff with the reasoning in the ticket (show the new set is a subset/consistent), never
+a silent regenerate. Related: [[feedback_verify_with_the_command_ci_runs_not_the_authors_filter]].

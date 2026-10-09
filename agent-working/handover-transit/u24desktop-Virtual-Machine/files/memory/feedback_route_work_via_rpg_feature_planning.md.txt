@@ -5,6 +5,6 @@ metadata:
   type: feedback
 ---
 
-Pointer (M1d, 2026-10-04): this rule now lives in `docs/guidelines/session_roles/domains/rpg.md` and plan 9.0 / 9.3. Original: `agent-working/stored_artifacts/TCK-20261004-SESSION-LAYER-M1D-ROLE-MEMORY-TO-POINTERS/original_memory_files.md`.
+Pointer (M1d, 2026-10-04): this rule now lives in `docs/guidelines/session_roles/domains/rpg.md` (the card; the 2026-10-05 owner rule that only the rpg planner messages rpg implementers landed there in PR #359) and plan 9.0 / 9.3. Original: `agent-working/stored_artifacts/TCK-20261004-SESSION-LAYER-M1D-ROLE-MEMORY-TO-POINTERS/original_memory_files.md`.
 
 Related: [[project-semantic-control-plane-role-division]].

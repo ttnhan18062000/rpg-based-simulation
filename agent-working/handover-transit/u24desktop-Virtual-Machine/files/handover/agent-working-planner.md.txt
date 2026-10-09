@@ -1,0 +1,107 @@
+# Handover: agent-working-planner
+Role: agent-working-planner (seat unstaffed; interim holder is the former agent-working-designer session).
+Worktree: `.claude/worktrees/agent-working-planner`, branch `agent-working-planner-next`, at origin/main 77be80e1e
+(no own commits; only live monitoring shards are dirty). The implementer is `agent-working-implementer` in
+`.claude/worktrees/agent-working`, synced to main on its pointer branch, idle.
+Updated: 2026-10-08, end of session, before /clear.
+
+## Reset boundary
+HARD: reached. Every filed ticket is dispatched and merged, nothing is running, no question is pending,
+and no commit is unpushed.
+On resume: `git fetch origin && python3 tools/sessions/settings_freshness.py .` (it reported a match at clear time);
+if it reports a mismatch, relaunch through `launch.py`.
+
+## Owner policies (standing)
+- Planner and implementer work lands as ONE PR per batch: the implementer merges every branch into one batch branch and
+  opens it with pr_render ("N tickets"); the planner reviews by comment. Merging is the owner's.
+- Ignore the `network-auto` session: never include it in broadcasts or fyi rounds.
+- The owner authorized deleting remote branches that are no longer used. Rule applied: delete only when the tip equals
+  a MERGED PR head (or the work landed via a superseding merged PR), with no open PR and no local worktree;
+  `--force-with-lease` per branch; append name and SHA to `~/Working/remote-branch-backup-2026-10-08.txt`. Keep
+  closed-unmerged branches with unique commits (17 kept, the owner's call).
+- Test CI belongs to testing: the testing domain owns `.github/workflows/test.yml`, `slow-regression*.yml` and
+  `tools/test_architecture/**`. `pr-body-lint.yml` (delivery) and `deploy-docs.yml` are not testing's.
+
+## Landed today (all merged)
+- #421: launcher squash-merged branch handling; an unresolvable push target asks.
+- #428: pr_render records exclusions on the ticketless path (proven live on #431 and #443).
+- #437 disk-incident batch (5 tickets): writer.py all-or-nothing appends; record_events skips torn lines;
+  `python3 -m tools.sessions.disk_headroom` with launch and SessionStart warnings below 10 GB;
+  `python3 -m tools.sessions.prune_branches --worktrees`; the test CI ownership change; the W41 retro addendum.
+- #442 retro-hygiene epic (6 tickets, epic closed): validator reads working_log shards (W40+ warnings 131/165 to
+  1/35); Failures section in the retro; notes collapse with `<!-- retro-note runs=N [final] -->` plus archive;
+  `tools/agent-monitoring/context_search_hook.py` (482 to 49 firings on W41).
+- Every session relaunched today except network-auto. Disk: 23 GB free after cleanup (24 merged worktrees removed,
+  run data cleaned). Torn shard lines repaired with the owner's approval (planner-seat, rpg-seat, rpg-planner-seat).
+
+## Waiting on the owner
+- **Hook swap:** in `.claude/settings.json`, `hooks.PreToolUse` index 1 (matcher Bash, command starting `CMD=$(python3 -c`)
+  should be replaced by the snippet in PR #442's body ("Owner step after merge"). Until then the old noisy hook fires.
+  After the swap, check the reminder rate in the next retro.
+- 6 merged worktrees blocked by uncommitted files (m2-foundational-systems-tickets, lane-a-tactical-path-batch,
+  test-arch-epic-b-cost-record-update, test-arch-maintenance-2, dirty-set-id-dedup, test-arch-criterion2-protocol):
+  run `python3 -m tools.sessions.prune_branches --worktrees` to see why each is kept.
+- The `m2-idea43-temporal-note` worktree holds about 20 uncommitted ticket files (its run data is already deleted).
+- Decisions: keep or drop `"ask": ["Workflow"]` plus the CLAUDE.md opt-in; main checkout sync (far behind; never pull
+  there yourself); TCK-20261008-LAUNCHER-AUTO-PERMISSION-MODE (suggestion: the owner sets defaultMode auto, then drop it).
+
+## Agent-working backlog (nothing ready)
+- Time-gated, read after 2026-W42 closes: TCK-20261006-EPIC-HAND-CLOSURE-REAL-TIME-AND-COST, …-GATE-OVERRIDE-LEDGER,
+  …-TICKET-PATH-RECORD, and the README Measurement Watchlist row (delivery cost).
+- TCK-20260930-NATIVE-PORT-SMALL-TICKET-NATIVE-RUN (open, not started); TCK-20260904-AI-FIRST-HARDENING-FOLLOWON-EPIC
+  (scoped); TCK-20260916-REENABLE-DOCS-PAGES-PUBLISHING (BLOCKED).
+- DISPATCHED (no PR, owner's call): TCK-20261008-MAIN-INTEGRITY-REPORT-TORN-WORKING-LOG-LINE, filed in 767b1650e on
+  agent-working-planner-next. The implementer lands it on the local batch branch `agent-working-small-fixes-batch`
+  with no push and no PR; the PR opens once more small fixes collect.
+  DONE and reviewed: 5a7b43060 + 269974839 (11 tests pass). The batch branch is local, unpushed, and open for the next small fix.
+  Owner told: the CLAUDE.md closure example is missing the required --title/--log-summary.
+- The next retro: stamp new addenda with the retro-note marker (SKILL.md rule). Consider marking W41's three addenda.
+
+## Mistakes to avoid
+- The guard loads from the checkout a session STARTED in. After a guard or settings change merges, every home worktree
+  must sync, and the sync comes from the worktree's writer-lease holder (the `rpg` worktree belongs to rpg-implementer-2).
+- `launch.py` refuses a worktree whose settings or agents differ from main; fix it by syncing, never with `--allow-stale`.
+- sed with `#` delimiters breaks on text that contains `#`; use Edit for exact replacements.
+- The auto-mode classifier blocks bulk `rm -rf` even with owner approval: hand the literal command to the owner.
+- Tool scripts need the venv for pydantic: `/mnt/data/Working/rpg-based-simulation/.venv/bin/python -m ...`.
+- Role cards have a 400-token budget (test_session_cards): add routes only where an owned path would otherwise
+  resolve wrongly.
+- Don't edit `.claude/settings.json` or CLAUDE.md; those are the owner's.
+- The `search_docs` index is not built; say so in duplicate scans.
+
+## 2026-10-09 dispatch (in flight)
+- Owner said "go with your recommendations": the small fix plus the native run, with Workflow opt-in.
+- Filed in 014cb8ee8 (agent-working-planner-next, rebased onto origin/main 42ce987b6):
+  TCK-20261009-MAIN-INTEGRITY-REPORT-SILENT-TORN-RUN-EVENT-LINES (standard; the vehicle) and the
+  run plan in TCK-20260930-NATIVE-PORT-SMALL-TICKET-NATIVE-RUN's Implementation Notes (a probe-tag fail run
+  at Scope, then a full pass run, scriptPath = the implementer worktree's file).
+- Dispatched to agent-working-implementer; everything lands on local `agent-working-small-fixes-batch`, with no push and no PR.
+  Reset boundary: NOT reached until the implementer reports the pass run and I review it.
+- Native run attempt 1: fail run OK (wf_2b717fc9-c97, 294k tokens, Scope only). Pass run wf_e2dc6921-bdd died at
+  test_scope_coverage: the agent truncated the base64 attested command (925k tokens, 27.8 min). Filed
+  TCK-20261009-NATIVE-ATTESTED-COMMAND-TRANSPORT-LOSSY (P1, in the epic folder, SEQUENCE item 5) in 1529cc0da. The native-run
+  ticket is BLOCKED on it. Dispatched: hand-finish the vehicle (pipeline_unavailable, gate ledger "stopped"), then the
+  transport fix with plan.md sent to me first. Batch branch still local; ask the owner about a PR after the transport fix.
+- PR #456 (codebase, Python floor 3.12) reviewed by comment: its .venv-knowledge 3.13.7 claim is wrong here (3.12.3).
+  Owed follow-up: align tools/search/Dockerfile to 3.12 (small ticket, unfiled).
+- Vehicle hand-closed and approved (6404ab768). Transport-fix plan answered: Q1 = file list from git against the run's
+  start sha captured at Scope (not origin/main...HEAD), plus untracked files, minus bookkeeping paths; any difference
+  from the reported files_changed is advisory. Q2 = retry recorded on its own attested row; test the double-count.
+  Filed TCK-20261009-GATE-LEDGER-OUTCOME-ON-ORPHAN-ATTESTED-ROW (419f9909c), to follow the transport fix on the batch branch.
+- Tell the owner: data/runs/run_*_5169 dirs are unattributed (pid 5169); the implementer did not delete them.
+- Transport fix landed (d6708964d) and was reviewed and approved. A follow-up commit was asked for: (1) record the residual
+  that pytest_command still rides the transport; (2) confirm or restore the legacy-path doc_staleness self-record row;
+  (3) leave the ticket and staging files out of the files_changed_vs_git advisory. Then the ledger ticket. Batch is
+  16+ commits ahead, unpushed: ask the owner about a PR when the ledger ticket closes.
+- Batch complete and approved (19 commits, local): + d443ffd30 ledger orphan outcome; the stop for gv-e41c39cd23e34df3 is recorded.
+  Waiting on the owner: open the batch as one PR?
+- PR #457 (rpg-batch-d36-d32) reviewed by comment: the events shard reuses one payload for all 6 tickets (identical
+  summaries; Parity "ok" on 4 tickets without ledger changes). Raised as a finding to rpg-planner; the fix is the rpg side's.
+- Probe bloat (owner's ask): main has 414 probe files, 5.3 MB, in 32 rpg tickets (mostly .jsonl raw series). Asked rpg-planner
+  for a prune PR plus a guidance rule; offered a non-blocking size advisory on our side (unfiled until rpg-planner or the owner says).
+- rpg-planner accepted the probe prune: rpg-implementer-2 does it in its batch 3 cleanup PR (it will send the PR number); the
+  guidance is already in force for both rpg implementers. Size advisory filed as TCK-20261009-PR-RENDER-RAW-PROBE-OUTPUT-ADVISORY
+  (0765218ad) and dispatched to the implementer for the batch branch.
+- Owner 2026-10-09: open the batch as ONE PR. Added TCK-20261009-HAND-CLOSURE-TEMPLATED-EVENTS-GUARD (a51c030a1). It refuses a
+  Parity ok with no ledger change, and events copied from another ticket in the same shard. Implementer: implement it, push, and open the batch
+  PR. After that: review the PR, then tell rpg-planner (and the other planners) about the new guards and the probe advisory.

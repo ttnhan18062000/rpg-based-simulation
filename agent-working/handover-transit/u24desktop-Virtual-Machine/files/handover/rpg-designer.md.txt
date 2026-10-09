@@ -1,0 +1,526 @@
+# Handover — rpg-designer (formerly world-rule-catalog-design: systemic-world roadmap, world-rule catalog)
+Updated: 2026-10-08 night, at the reset boundary (idle; every message acked; origin/main 28e29ed2e;
+decisions 30-36 live ONLY on the local branch milestone-d27-earn-then-buy, unpushed by design).
+
+## FIRST ON RESUME (2026-10-09, late night; session b5e68753)
+- FOUNDATION PATH CONFIRMED by the user: milestones 0-3 (in flight -> kinds by properties -> nothing from nothing ->
+  bodies heal/food ends/fire cooks). Economy and society milestones = NOT PLANNED (too abstract now). Written as
+  roadmap §12 (commit d85bdad11). Page: https://claude.ai/artifact/SvWnXbhZcZbqxaGSDmGtWG (updated). Planner told,
+  plus defects (a)-(e). (f) DONE 7b70ebdbd (CHEST is accepted with no debit -> likely duplication; LIFE-06 rebirth evidence retired).
+  Planner: M1 epic drafted (TCK-20261009-EPIC-MILESTONE-1-KINDS-BY-PROPERTIES, 7 children), starts after M0's gate;
+  defects routed (a Lane A hunting batch; b,c,d Lane B treasury batch; e Lane A after Phase B).
+  Each milestone's owner questions are asked when it starts; my recommendations are proposals, not rulings.
+- Decision 51 (tax = share of sale/wage, no levy on the destitute) + specs ME-S22 (tax share), ME-S23 (payer rewards)
+  for Lane B's treasury batch 3 (D37+D38+D51).
+- Local branch `milestone-animal-ways` (unpushed, batching): decisions 43-51 + LB-S20/S21 + ME-S22/S23 + roadmap §12. 47 appraisal not faction
+  (faction stays a social reason for people), 48 kill-to-eat not trauma, 49 prey fears what a creature is + does
+  (approach/stalk -> flee; still/passing -> wary), 50 generic archetypes and bands now. All relayed and acked.
+- Planner: hunting + diet gate is Lane A's next batch after #457, with sleep collapse
+  (TCK-20261009-A-KILL-LEAVES-MEAT-AND-A-CARNIVORE-EATS-IT-RAW-WITH-A-DIET-GATE-DECISION-44). Lane B batch 2:
+  people trait + relationship gate, SELL, WAGE (inn purse, 100-300 tick shift), forest-edge module, profiles
+  applied (labourers 0 gold). Waiting on: Lane B's 5-seed per-kind-group figures.
+- NEXT evidence batch (new branch): Lane A's D32 + D36 (LB-S18 covered) once merged; EXCH-02 SELL/WAGE (Lane B
+  batch 2), the forest-edge module (D39), the free-meal removal.
+- Planner tickets filed: minted-coin payer (D38), treasury wage (D37, OPEN not conditional, ME-S21 spec written),
+  sleep collapse (D41), IGNORE reachability (P3). Wage shift: 100-300 ticks, about a meal or two (my objection,
+  accepted).
+- WORK IN FLIGHT, deliberately unpushed (batching): local branch `milestone-d27-earn-then-buy` in my worktree
+  (base 39e65eb5a = #441). Commits: D30/ENV-08, SPC-S16, near_forest 0, retraction fix, D31, D32, roadmap §10 + D33,
+  D34-36 (92f43c41e), ME-S19/ME-S20/LB-S18 (2a820aa9c), and NEW 832ecbe37: decisions 37-41 + D32 follow-up + LB-S19.
+- DECIDED 2026-10-09 by the user directly (recorded in 832ecbe37, sent to rpg-planner, acked):
+  37 first coin = shop/inn till+stock, merchant trade capital, treasury wages (EXCH-02 amendment);
+  38 kill/quest rewards need a payer, own ticket TCK-20261009-MINTED-KILL-AND-QUEST-COIN-IS-PAID-BY-A-PAYER-EXCH-02-B,
+     Bounded divergence rides Lane B batch 2; 39 crowded_frontier gets a NEW wolf-free forest-edge module, clear of
+     bandit_road; 40 crafts are taught by a smith, one recipe, for a price, over time (new LEARN-03; LEARN-02 stays
+     retired); BlacksmithSystem stays unwired; 41 sleep debt: weaken (80), collapse at 98 where it stands, wake
+     below about 60, NO HP loss (SURV-02 amendment, LB-S19 spec, ticket TCK-20261009-SLEEP-DEBT-WEAKENS-THEN-
+     COLLAPSES-...); D32: WATCH = stand and observe (typed wait); IGNORE is unreachable, accepted and disclosed
+     (P3 ticket TCK-20261009-IGNORE-POSTURE-IS-NEVER-PRODUCED-...). ph9 boss test declaring its own flag: agreed.
+- D36 is BUILT by Lane A (src/engine/starvation.py: weakened at 85, slow HP loss at 95, about 2.5 days); LB-S18
+  passes. Lane A's batch (D36 + D32 + ph9) pushes after a small crash hotfix. D32 data (5000 ticks): free hits
+  218/144/83 -> 72/93/40, DEFEAT 14.6/15.6/6.4 -> 6.0/9.4/6.0, total deaths equal (the extra survivors starve later).
+- WHEN Lane A's and Lane B's batches merge: merge main into the milestone branch and add the evidence: ENV-08
+  SUPPORTED, forage occurrence, LB-S17 (no-inn form), LB-S18 covered (D36), CONFLICT-04 decision 32 evidence,
+  SURV-06/07 still CONFLICTING on free meals/beds, decision 33 row 1, carried-food EAT, #446 (2.89/2.90, COMB-342).
+  Then ASK THE USER and open ONE PR.
+- Waiting on: Lane B's amounts table for first coin (to the planner), SELL then WAGE, the forest-edge module;
+  the sleep-debt code ticket (Lane A, after its batch).
+- Still owed later: KNOW-04 evidence, SURV-05 provenance, the MOV-07 diagonal-step scenario, scenarios for
+  LEARN-03 (with the teaching ticket) and for decision 38 (with its ticket).
+- Hygiene: commit the shards in the same command before any switch or merge; `make docs-registry` after any
+  last_verified bump; no attribution trailer in PR bodies; search_docs/graphify unavailable last time, so grep was used.
+
+## STANDING DESIGN DIRECTION (owner, 2026-10-08): apply to EVERY domain, not just food
+Food and survival are one small slice of the foundation. The owner wants the ideas from today used as the
+default lens for later decisions everywhere:
+1. COMMON SENSE, MANY WAYS: a need or goal has the several ordinary ways real people or creatures would use
+   (eat: gather, hunt, raw, cook, buy, receive). Never let one missing system (e.g. a shop) be the only path.
+   When a rule names one way, ask "what else would a person plausibly do?"
+2. EVERY WAY HAS A REAL COST; NOTHING IS FREE: no engine charity; things enter and leave by real causes
+   (conservation, provenance).
+3. THE WORLD DECIDES, NOT A TARGET: amounts come from the fiction (land, kind, place), never fitted to an
+   acceptance number.
+4. FOUNDATION, NOT PERFECTION: a light, plausible balance pass is fine when outcomes are implausibly harsh;
+   record before and after; fine tuning waits for features (decision 33).
+5. SUBJECTS NOTICE AND DECIDE: a meaningful change next to a subject (a hostile in reach, danger, a dry
+   source) gets a decision, not a blind continuation and not a freeze (decision 32, held-task re-decisions).
+6. PLACES FIT WHO LIVES THERE: settled land and its near surroundings are livable; lethal danger sits deeper
+   (decision 30).
+8. EVERY LIVING KIND (decision 42, owner 2026-10-09): an entity is every living creature, not just humans.
+   Rules about bodies, needs, noticing/deciding and where a kind lives cover animals by default, sized by the
+   kind's profile; people-only rules (money, wages, crafts) say so and why. Specs get a non-people-kind arm;
+   ask lanes to report animal kinds in measurements.
+9. ROLES FROM PROPERTIES, NEVER LABELS (decision 46, owner 2026-10-09): no hardcoded roles ("a rabbit must be
+   prey"). Kinds declare properties (size, power/danger, wits, diet, edibility, ...); hunting, fleeing and any
+   other role follow from those plus the situation. A tag is OK only when it IS the property (D43 "keeps coin and
+   trades"). Every spec gets a derivation arm proving the behaviour comes from properties, not a flag.
+10. GENERIC NOW, SPECIFIC LATER (decision 50, owner 2026-10-09): the foundation uses generic archetypes ("small
+   plant-eater", "medium meat-eater") and coarse bands (small/medium/large); never named real species or exact
+   figures in decisions, specs or content until the foundation is hardened.
+7. REGISTER EVERYTHING: catalog family, memo row, roadmap §10, scenario bank, mechanisms.yaml pointer (via
+   the lane whose code touches it), and the REGISTRY regen.
+Offer these as options with a recommendation; the owner still confirms each new ruling.
+
+## RELAUNCHED 2026-10-08 — CURRENT RULES (outrank everything older below)
+- BATCHING (owner direction relayed by rpg-planner, 2026-10-08; it lowers CI cost and needs no extra approval):
+  hold evidence flips and scenario specs on ONE branch and open ONE PR per milestone. Open a PR sooner only
+  when a rule text blocks an implementation. Next milestone: Lane B's combined d27 + earn-then-buy merge.
+  Bundle the SURV-06/07 flips, LB-S17 Result, forage figures, and any hazard/content/calamity rulings. Each
+  push still needs the user's direct yes.
+- Worktree `.claude/worktrees/rpg-designer`, branch `rpg-designer-seat`. Card confirmed: I may commit, push
+  and open PRs; the user is asked for merge, push to main, remote-branch delete, worktree or data delete.
+- USER RULING (2026-10-08, asked directly): deliver by COMMIT + PR on a topic branch in my worktree, and ask
+  the user directly (AskUserQuestion) before EVERY push, including CI-fix pushes. Draft patches are retired
+  for my own edits. The planner still reviews; only it talks to implementers.
+- Planner ACKED the commit+PR flow (2026-10-08). #420 merged (753f98ea9): KNOW-04 seeding now lives in
+  src/content/common_knowledge_seed.py (no behaviour change). Cite THAT path in the KNOW-04 evidence line.
+- INCOMING (not yet asked): an AGENCY-07 question. The opportunity-attack fix (interrupting a held move near a
+  perceived hostile) did NOT win across 5 seeds. Only about 40% of hits come from held moves; the rest come
+  from brain-chosen moves at contact (WANDER/PURSUE/INTERCEPTING). The question will be what a non-cautious
+  subject next to a perceived striking hostile should do: fight, hold or flee, instead of an unforced step.
+  WAIT for Lane A's read-only contact-decision trace from the planner before ruling.
+- d27 (free-meal + decision-27) now STACKS on 2 Lane B prerequisite PRs (regrowth MERGED as #426, b475706e3) (planner fyi, 2026-10-08):
+  (1) regrowth wiring: world_dynamics merges only nodes_add from the ecology update, so nodes never regrow
+  (Bible 03 says they do; TOWN-137 verified at service level only). Gatherer baselines will move everywhere.
+  (2) a held INTERACT on a depleted node is never re-decided (subject sat 800 ticks on a dry berry node,
+  starving with berries in its pocket); fixed as a typed unrecoverable failure.
+  Food supply gets sized after regrowth is real, as data. My SURV-06 forage evidence line still waits for d27.
+  Planner ACKED my two points: d27 gets a test (pocket food eaten before travel after a dry-node release);
+  PR 1 re-points TOWN-137 at a world-level test. Nothing owed by me.
+- DECISION 28 / CONFLICT-04 (2026-10-08, direction confirmed by the user directly): a fighter holds between
+  blows; leaving an adjacent hostile is a decision with a cost; STALEMATE_BREAK suppressed while engaged; the
+  stall counter counting swings is a Bug Fix against tactical contract §5. PR #423 (branch
+  conflict-04-hold-between-blows), head 20e4ff403 (review fixes + main merge), CI green, APPROVED by the planner;
+  MERGED as 07da5d1e9 (2026-10-08). Seat branch fast-forwarded to it; two
+  monitoring-shard appends are uncommitted there and ride my next commit. Remote branch
+  conflict-04-hold-between-blows DELETED (remote + local) with the user's direct ask, 2026-10-08.
+- MOV-07 whole-tile flip: #424 merged (2a50072f2). My PR #425 (branch mov07-whole-tile-supported, 7885ac861)
+  flips the whole-tile clause to SUPPORTED and sets memo row 25 to done. Pushed with the user's yes, CI green,
+  MERGED as 0f55a8098 (2026-10-08). DONE; branch deleted (remote + local) at the user's ask. The diagonal-step scenario is still owed.
+  The planner folds a melee-only ATTACK-at-distance>=2 check into Lane A's 5-seed #424 confirmation; a hit
+  comes back to me as a finding. RESULT: clean (5 seeds, merged #424): every ATTACK at distance >=2 is a
+  range-3 attacker (69 / 12), range-1 = 0. Closed.
+- #429 merged (e56e5bb95, divergence 2.84, COMB-338): an entity holding an action task no longer moves on a
+  leftover navigation target, so an adjacent ATTACK holder stays on its tile. CONFLICT-04 (Lane A, next) covers
+  the decision side. Disclosed shortfall: urban_political deaths 23.8 to 28.0, mostly held REGROUP walks into
+  hostiles (TCK-20261008-A-HELD-REGROUP-MOVE-WALKS-INTO-PERCEIVED-HOSTILES-AND-IS-NEVER-RE-DECIDED). My read,
+  sent to the planner: engineering under existing Rules, no new ruling expected.
+  Implementation: TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04 (Lane A, third in queue, stacks on
+  attack-distance). OWED: flip CONFLICT-04 evidence to SUPPORTED after it merges.
+
+## STATE 2026-10-08 (late): main 6a31a61a2
+- MERGED today: #423 (CONFLICT-04 + row 28), #425 (MOV-07 whole-tile SUPPORTED, row 25 done), #436 (CP-S18/S19,
+  CONFLICT-04 kernel scenario specs), #438 (DECISION 29 / SURV-06 amendment: wild food belongs to the land, by
+  biome, in wild land outside settlements, flat regrowth per biome+node kind, never sized to demand; memo row 29;
+  LB-S17 forage-loop kernel spec with a no-wild-food control arm).
+- Decision 29 readings sent (no new ruling): mapping HIGH near_forest/sacred_grove, LOWER sunken_swamp and
+  frontier_village outskirts (none exist), NONE old_mine/moon_cave/frozen_peak/volcanic_pass; no new biome ids
+  (row 7). Worlds with no wild land (crowded_frontier, urban_political): report the outcome, the inn satisfies
+  SURV-06 integrity.
+- OWNER RULED: d27 does NOT land alone; it waits for earn-then-buy (shop/blacksmith, Lane B stacks it on d27).
+  EXPECT a question: what a broke subject may sell, whether wages exist, etc. SURV-06/07 flips wait for the
+  combined merge. d27 pinned result (5x3): starvation 9.6->28.4 / 11.0->20.8 / 6.8->21.2; forage occurs only in
+  frontier_living_world (15.4 harvested, 11.4 carried EATs, 5.4 depletions, 4.8 recoveries per run).
+- OPEN, HOLDING: hazard question. near_forest hazard 1.0 = 10 HP/tick kills a town_council human in 11 ticks;
+  every forageable biome is lethal to townsfolk (5-11 ticks); yet 0 HAZARD deaths among entrants observed. Lane B
+  is tracing. My lean (sent, not a ruling): content problem, not "the land's cost"; a fix would target the
+  near/edge regions' hazard level, not faction endurance. Take options to the USER once the trace arrives.
+- CONFLICT-04 implementation final on Lane A's rpg-conflict-04 (9e3af0aa9; tests
+  tests/mechanic_scenarios/test_conflict04_fighter_holds_between_blows.py). OWED after it merges: CONFLICT-04
+  evidence -> SUPPORTED, row 28 done, CP-S18/S19 Results -> covered.
+- Seat branch reset to main; shard appends uncommitted. Remote branches conflict-04-scenarios and
+  surv06-wild-food-is-land are DELETED (user asked, 2026-10-08); local copies kept.
+
+## (history) RELAUNCH (#419): my own worktree
+- Relaunch: `python3 tools/sessions/launch.py rpg-designer` (NO `--branch`). Worktree
+  `.claude/worktrees/rpg-designer`, branch `rpg-designer-seat`, created at origin/main 71f8f2e9e.
+  If the launcher reports ORPHANED, choose `replace`, never `resume`.
+- After the relaunch, first: confirm the new card (#410: designers may commit, push and open PRs; the owner
+  is still asked for merge, push to main, remote-branch delete, and worktree or data delete). Then switch
+  from draft patches to commits on topic branches in my own worktree. Every push still gets the user's
+  direct yes unless the user says otherwise: the standing instruction outranks the guard's narrower list,
+  so ASK the user whether it still holds.
+- SUPERSEDED once relaunched: the "CHANGED BY THE LAUNCHER CARD" and "UPDATE #410" sections below, and the
+  shared-`rpg` "Where things are" lines. Keep them only as history.
+- Scratchpad: the old session's memo/ folder (mkhunk.py, row25/26/27.txt) is session-scoped and goes with
+  it. The order-tolerant memo-hunk technique (no leading context; anchor on the table's trailing lines) is
+  worth keeping for any patch route.
+
+## STATE 2026-10-08 (main c2e18b182, SURV-07 #414 merged)
+- ACKED (planner verified both, separately and together), both cut from c2e18b182:
+  - drafts/decision25-mov07-whole-tiles-v2.patch (v1 is .SUPERSEDED), for Lane A's attack-distance branch;
+  - drafts/decision27-surv07-no-open-way.patch, the first commit of Lane B's free-meal + redirect PR.
+- The memo hunks have NO leading context. They anchor on the lines after the table, so rows 25, 26 and 27
+  apply in any order (tested on 5 orders). Rows land in landing order; an optional tidy into numeric
+  order can ride a later batch.
+- Row 26 and KNOW-04 MERGED in #412 (3a9f93c33). VERIFIED on main: row 26 matches byte for byte, there are
+  no conflict markers, the rest of the memo is identical to c2e18b182, and the KNOW-04 text is verbatim.
+  Done.
+- The shared rpg worktree is synced to the #410/#413 guard (the planner's fyi). After the relaunch, confirm
+  the card and commit directly instead of sending patches (in a temporary or per-role worktree if the lease
+  still refuses the shared one).
+- The free-meal + decision-27 PR (Lane B) now ADDS FORAGE CONTENT: a food item and a node kind via catalog
+  and biome, because no decision-27 step existed (no food node, shop and blacksmith never ran, guild income
+  flagged off, no ask path). I did not object: it is content inside SURV-06. My guardrails: forage costs
+  travel, time and depletion; conservation (enters by harvest, leaves by eating); need_paths.py should count
+  food nodes; a new declared item, not herb or flowers. Earn-then-buy waits on the shop/blacksmith ticket.
+  When it lands, add a forage line with figures to SURV-06's evidence.
+- Next owed flips: MOV-07 whole-tile clause after Lane A's attack-distance PR; SURV-06 and SURV-07
+  SUPPORTED after the free-meal + decision-27 PR re-measures; KNOW-04 after Lane B's region-enemy-data PR;
+  SURV-05 provenance after the compiled-profiles child.
+
+## UPDATE (fyi from agent-working-planner, owner-directed): #410 (75225fd51, on origin/main)
+- The guard now asks the owner only for: merge, push to main, remote-branch delete, worktree or data delete.
+  Designers may commit, push and open PRs. BUT the worktree writer lease still refuses my commits in the shared
+  `rpg` worktree (per-role worktrees: TCK-20261007-SESSION-PER-ROLE-WORKTREES).
+- This takes effect only after a RELAUNCH with the new card. Until then I keep the draft-patch route below.
+  After relaunching, confirm the card's rules and the lease behaviour, then decide with the user whether to
+  return to commit-and-PR or stay with patches. A peer fyi is not the owner's approval.
+- #413 (owner-merged): the guard no longer prompts on heredoc or quoted text. It reaches me when the `rpg`
+  worktree's lease holder syncs it to origin/main. Per agent-working-planner, the lease holder is now
+  rpg-implementer-2. Nothing for me to run.
+
+## CHANGED BY THE LAUNCHER CARD (2026-10-07): I DO NOT COMMIT OR PUSH
+- The session-roles guard blocks `git commit` for rpg-designer. My card: "Never: commit, push, open_pr".
+- **Deliverables are DRAFT PATCHES** in main-checkout `.claude/handover/drafts/`, based on origin/main and
+  checked with `git apply --check`. Leave docs/REGISTRY.yaml out; the lander regenerates it. Send the path,
+  the base and a suggested subject to **rpg-planner** (it replaced rpg-feature-planning). The planner lands
+  the patch on the lane branch.
+- Any lines below about temporary-worktree commits, pushing with the owner's yes, or branch heads are
+  SUPERSEDED. Edit in a scratch worktree, export the patch, and stop there.
+- Scratch worktrees (tile-positions, surv07, know04) and the old design-review-rpg-suggestion were REMOVED
+  on 2026-10-08 with the user's yes, after checking that each one's edits match its saved patch. The local
+  branch tile-positions-ruling is deleted. The local sustenance-paths-ruling branch and its remote are kept;
+  deleting remote branches is still the owner's call.
+
+## Decision 25 (2026-10-07, under delegation, confirmed by the owner directly): positions are whole tiles
+- An amendment to MOV-07, not a new rule: a position is always a whole tile, every step moves to an adjacent
+  tile, and every distance check uses the same whole-tile distance. Memo row 25.
+- Patch: drafts/tile-positions-ruling-mov07-row25.patch. The planner ACKED it as the first commit on Lane A's
+  `rpg-attack-distance` (TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT).
+- MOV-07 evidence stays CONFLICTING for the whole-tile clause. The flip to SUPPORTED is mine, in a later batch,
+  after the PR merges. The figures are Lane A's (main 6e7ef56ec, seed 42, 2k ticks), relayed, not re-measured.
+- SENT (awaiting ack): drafts/surv05-07-biology-evidence.patch, base #407 merge 0a03c2448. It covers the
+  SURV-05 declared-absence paragraph and evidence, SURV-06 PARTLY SUPPORTED, SURV-07 still the live gap, and
+  memo rows 22-24. It conflicts by context with the decision-25 memo row (git apply -3, or re-cut). Next
+  flips: SURV-06's carried-food path; SURV-07 after Lane A's ticket; SURV-05 provenance after the
+  compiled-profiles child.
+  ACKED: the patch is the first commit of Lane A's SURV-07 branch. RE-CUT as v2
+  (drafts/surv05-07-biology-evidence-v2.patch, the same base; v1 renamed .SUPERSEDED) for FREE MEALS. EAT
+  (core_actions.py:41-49) checks neither gold nor food, and the inn charge clamps at 0, so SURV-06 now carries
+  a CONFLICTING clause (TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL, P1, paired
+  with decision 27 in Lane B's PR after KNOW-04). I flagged that EAT also consumes no carried food, and asked
+  that the ticket cover it (it already does: scope 1). v3 (the worlds now named in SURV-07's figures) is
+  CURRENT: drafts/surv05-07-biology-evidence-v3.patch. v1 and v2 are .SUPERSEDED. Sent; the planner relays it
+  to Lane A. Landing order: SURV-07, then decision 25.
+- Decision 26 / KNOW-04 (2026-10-07, under delegation): a subject may start with DECLARED common knowledge
+  about a recognisable kind. It is a weak prior with visible provenance, revised only through KNOW-02,
+  and experience outweighs it. With nothing declared, the estimate is neutral and recorded as uninformed.
+  The key is species or a visible role, NOT compiled `kind`, which is the population role. Patch:
+  drafts/know04-common-knowledge-prior-row26.patch, base 0a03c2448, SENT and awaiting ack (Lane B,
+  TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY). ACKED. Lane B lands it after a P1 bisect,
+  so the order is SURV-07, then 25, then 26. The memo may need `git apply -3` or a re-cut; the planner asks.
+- Decision 27 (2026-10-07, under delegation, SENT by message, PATCH OWED): an AMENDMENT to SURV-07. When no
+  way is open to the subject now, the pull goes to the step that opens one of its kind's declared SURV-06 ways
+  (forage or harvest, earn then buy, ask). Only steps it can actually take count, a present threat still
+  outranks it, and success is attempted, not guaranteed. No new acquisition modes (theft needs its own Rule)
+  and no engine charity. ACKED and filed as
+  TCK-20261007-A-NEED-WITH-NO-OPEN-WAY-PULLS-TOWARD-THE-STEP-THAT-OPENS-ONE-SURV-07-AMENDMENT (P1). Cut the
+  patch (SURV-07 text plus memo row 27) from MAIN AFTER the SURV-07 PR merges. Do NOT stack it on Lane A's
+  branch. The planner sends the merge commit.
+  Also acked the planner's per-subject affordability reading (unaffordable inn = not open to that subject).
+  The SURV-06 integrity check stays per kind.
+- Possible incoming: a CONFLICT-03 clarification if the species-hostility metamorphic red (testing-planner)
+  bisects to legality. Already sent as an fyi: monotonicity holds declared->declared only. The
+  undeclared->declared flip is CONFLICT-03 as written, so the fix would be scoping the test, not the Rule.
+  The planner AGREED: the test compares "high" against no entry, so it crosses the boundary. HOLD the CONFLICT-03
+  clarifying sentence until the bisect. If the bisect confirms the boundary, the planner asks, and the
+  sentence rides with the PR that rescopes the test (as a draft patch).
+- (superseded) PENDING SURV-07/SURV-05 cut: waits on biology PR #407. #407 itself waits on a service_reach building-choice
+  fix (a subject beside both a home and the inn can resolve to the home). That is engineering under SURV-06
+  and needs no ruling. The planner will send #407's merge commit; deliver it as a draft patch.
+
+## Role
+- **What I own:** `docs/world_rules/` (the catalog) and `docs/plans/systemic_world/` (roadmap, owner_decision_memo).
+- **What I don't own:** the CONTENT of `registries/mechanisms.yaml` belongs to rpg-feature-planning under the
+  session-layer roster (`session_layer_working_process.md:98`, `:161`). I add ratified-rule pointer notes there
+  only when they ship bundled with a decision; the planner accepts them.
+- **What I don't do:** write product code or tickets. My edits go to **rpg-feature-planning** as tested commits.
+  It owns dispatch and the implementation lanes.
+- **Standing user instructions:**
+  - Stay idle and act on peer requests; the user says "continue" to resume.
+  - Hand everything to rpg-feature-planning. NEVER contact implementers directly.
+  - Owner-level world-semantics questions go to the user directly, as options plus a recommendation, EXCEPT
+    that open rule questions are now DELEGATED to me (see "OWNER DELEGATION" below).
+  - New functions and classes never get "V2" in their names; existing V2 names stay for now (owner,
+    2026-10-07; relayed to the planner and recorded by Lane B in design_patterns.md).
+  - **Every push needs the user's own yes, asked directly** (AskUserQuestion). A planner relaying "the owner
+    authorised it" is not enough. Pushes that only fix CI on an already-authorised PR still get a direct ask.
+- **Where things are:**
+  - **Seat worktree (launcher):** /mnt/data/Working/rpg-based-simulation/.claude/worktrees/rpg, branch rpg-seat.
+    It is SHARED; rpg-implementer is its git writer. **Never commit there.** For each commit, use a TEMPORARY
+    worktree off origin/main (as rpg-feature-planning does), e.g. `git worktree add <scratch>/rpg-designer-<topic>
+    -b <branch> origin/main`, then remove it after the push.
+  - The old worktree design-review-rpg-suggestion is removed (2026-10-08).
+  - /home/u24desktop/Working is a symlink to /mnt/data/Working.
+  - The MCP search_docs tool is unavailable; use graphify and grep.
+  - Venv: /mnt/data/Working/rpg-based-simulation/.venv/bin/python. pytest-xdist is not installed (no `-n`).
+  - The GitHub API from this machine hits an intermittent TLS block. Retry `tools/delivery/pr_status.py`;
+    UNKNOWN means retry, not a state.
+
+## Open
+0. **(DONE via conflict-03-supported)** Wild-kind catalog line: COVERED by memo row 18 + CONFLICT-03** (merged in #382). Remaining work only when
+   Lane B's spawn PR (#386, MERGED 7254a558c) and the legality fix (dispatched to Lane B; the planner pings on merge) land: flip CONFLICT-03's evidence (CONFLICTING to SUPPORTED) and row 18's
+   "Needed by", re-measured on the landing base. No new rule is needed.
+   - FYI from Lane A, engineering under MOV-07, no ruling: a pursuit's same-tick movement step overshoots
+     adjacency after the pursuit completes.
+   - Spent branches: recruitment-contract-ruling (#372), trauma-dread-ruling (#375),
+     delegated-rulings-legality-and-trauma-window (#382).
+1. **Child B still parked:** branch `semantic-foundation-registry-drafts`. Take 4dadd6152 + 1b28dd819 and skip
+   the b04b894af shard commit. Contents: sense_gated_detection (PerceptionGate; asserts REACH, not effect),
+   motivation_doctrine retired, role_fit_preference orphan, §2.53 cross-reference. QUEUED until a lane frees and
+   the user authorizes the pipeline run. Pins: whoever lands RE-MEASURES; regenerate views, never hand-merge.
+2. **Optional content, mine, not urgent (row 7 parks it):**
+   - old_mine vs sacred_grove/deep_forest (756 tiles each, 2 worlds): ratified as old_mine wins, but left open
+     as a possible content defect (a mine inside a warden-protected grove).
+   - 8 edge-strip overlaps (1 tile wide, an artifact of inclusive bounds) resolve by LOC-08 3b with advisories.
+     They can be quieted by shifting one bound per pair: hometown/bandit_road, bandit_road/old_mine,
+     orc_stronghold/haunted_battlefield, wolf_den/sacred_grove, sacred_grove/deep_forest, moon_cave/river_ford,
+     moon_cave/wolf_den, orc_stronghold/river_ford.
+3. **Spent branches:** boss-deferral-covers-lair (#349), plus reputation-scope-decision,
+   world-assembly-registry-split and calamity-rule-decision (#343). Deleting the remote branches is the
+   owner's call, raised by the planner.
+
+## Waiting on others (expect these to change text I wrote)
+- **Lane B implements decisions 13-15** on three branches. Branch 2 is `region-lookup-unification` (LOC-08: one
+  order for lookup and terrain; the refutation test passed, with undead deaths in contested zones going from 23
+  to 0). The lanes will flip my "decided, not yet implemented" markers (Bible 05 §2, Bible 06 :32/:37) and the
+  "move state when the flag lands" note on `world_boss_spawn` to implemented. They resolve conflicts with #349
+  keeping my ratified wording authoritative, and the planner reviews. **If a resolution changes the MEANING of a
+  ratified sentence, not just its status, the planner asks me.**
+- **Once implemented:** owed scenarios for LOC-08 (a road crossing a forest, a town nested in a forest, an
+  undeclared partial overlap) and ENV-07 (a battle raises trauma, drain deaths don't, wounded-then-drained
+  counts).
+- **TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION-...** (P1, needs no rule): when it lands, runtime goblins
+  and orcs regain endurance, so any figure citing "2,112 hazard deaths" must be re-baselined. ENV-07 itself is
+  unaffected.
+- **ENV-07 "wounded-then-drained still counts" clause (planner, 2026-10-06):** Lane B kept the sentence
+  unchanged but marks that clause "decided, not yet implemented". Its implementation counts only KILL/DEFEAT
+  lethal updates, because the engine has no attacker-damage record. The planner accepted the gap as a measured
+  no-op (0 of 2,112). It's filed as TCK-20261006-ENV-07-WOUNDED-THEN-DRAINED-CLAUSE-HAS-NO-ATTACKER-DAMAGE-RECORD.
+  **If its trigger fires, I'll be asked for the window length** (how long prior damage keeps a death "violent").
+  - Same-tick mix, ruled by me as a reading of the ratified text on 2026-10-06 (no meaning change): attacker
+    damage in the SAME lethal update as hazard drain COUNTS, so the HAZARD outcome is the known gap. That
+    sets the window's floor at "same lethal update always counts". Measured on 24 worlds, seed 42, 10k ticks:
+    2 of 686 before the spawn fix (undead sentinels, frontier_living_world t906 and simq_scale_stress_seed42
+    t230), 0 of 46 after.
+- **Region-overlap audit leftovers:** the regional_reputation registry entry is still dormant (no producer, no
+  reader).
+- **Keep frozen:** role_fit_preference wiring, narrower reputation scopes, world bosses (feature work, memo row 7).
+
+## Decisions in force (text lives in owner_decision_memo.md on main; this is the short form)
+- **Row 4:** reputation is a public fact, held per scope (world, then region and realm). Read the narrowest scope
+  that holds a value, else world. Only the world scope exists today.
+- **Row 7:** foundation before features; only hard RPG bugs get fixed.
+- **Row 8:** the perception that runs today is authoritative (spatial query plus PerceptionGate).
+- **Row 9:** the global world-clock raid is retired.
+- **Row 10 / ENV-06:** calamity is prolonged unrest (trauma held above 50, decays when calm). Correct but
+  latent, as measured: without bosses, 50 is never crossed in any of the 24 worlds.
+- **Row 11:** region bounds may overlap; enforcement declined. `allow_overlapping_regions` is to be deleted.
+- **Row 12:** hazard_level is open-ended (cap dropped). The `events.py:49-51` urgency reader is deliberately
+  unchanged; the owner confirmed that narrowing.
+- **Row 13 / LOC-08:** authored precedence; one order for credit, terrain and hazard. Module orders its own
+  regions; cross-module order is declared in world.yaml and overrides; 3a nested wins; 3b declaration-order
+  fallback with advisory; 3c zero-owned region is an error (it must land with 3a). 15 ratified relations,
+  acyclic; haunted_battlefield beats mountain_pass_zone, river_ford and goblin_camp. Five ids name different
+  places in different worlds, so declarations live with the composition.
+- **Row 14:** all THREE boss branches are inert behind a default-OFF flag: region boss boss.py:~100, lair
+  occupant :226, and calamity.py:42-53 (the third confirmed by the owner). Spawns are never evidence.
+- **Row 15 / ENV-07:** trauma counts violently caused deaths only (deliberately "violent cause", not "has a
+  killer"). Measured on two bases: 0 of 2,112 hazard deaths had prior attacker damage; defeats were 31 vs 30
+  (the silent-no-op fix changed nothing). "The world barely fights" is supported.
+- **Spawned-monster factions (owner, 2026-10-06, NARROWED the same day; confirmed with the owner directly;
+  TCK-20261005-SPAWN-MONSTER-STRIPS-CATALOG-FACTION):**
+  - Mapped: goblin goes to goblin_warband, orc to orc_clan, bandit to bandit_company, and dragonkin to
+    dragon_cult.
+  - Wolf, slime, bear, harpy and golem STAY on MONSTER_HORDE. This is an owner-confirmed gap.
+  - Why: mapping a kind to wild_beast_pack routes legality.py:252-272 through is_hostile_compat and the
+    catalog relationship. hero→wild stays legal, but wild→hero becomes FRIENDLY_FIRE_ILLEGAL. Compiled wolves
+    already carry wild_beast_pack and are one-way on main today.
+  - The ticket that asks whether a "contextual threat" creature may start a fight with a hero is
+    TCK-20261006-WILD-BEAST-PACK-LEGALITY-IS-ONE-WAY-HERO-CAN-ATTACK-IT-IT-CANNOT-ATTACK-HERO. It is on Lane B's
+    spawn branch and lands with that PR. It counts 85 compiled wild_beast_pack entities across 13 worlds. The
+    question belongs to me and the owner.
+  - I owe a catalog line recording the NARROWED mapping, citing that new ticket. Write it after the ticket
+    lands, on my own branch (planner's call: one writer per file).
+- **Recruitment movement (owner, 2026-10-06):** in a recruitment contract, the helper joins the task. The
+  contract is social, not spatial: no "walk to a person" objective for either party. Once there is a real second
+  party, the helper adopts the requester's objective and goes where the job is. Latent: RECRUIT is never issued
+  and execute_recruit is dead. Lane A's self-target fix is the planner's interim (domains/cooperation/
+  services.py:233): the source gets no objective, and the objective ends when the contract is not ACTIVE.
+  I owe a catalog line (social-relations or organizations), citing
+  TCK-20261005-SOCIAL-CONTRACT-OBJECTIVE-TARGETS-A-MOVING-COUNTERPARTY-AS-A-FIXED-POINT. That ticket is closed in
+  PR #368, which is waiting on a registry refresh after #367 and then the owner's merge. Write the line once
+  #368 lands. Lane A is adding a ruling note in that ticket's findings, next to the dead-RECRUIT note.
+- **SOC-05 + memo row 16 COMMITTED:** branch `recruitment-contract-ruling`, commit f88915966, on main
+  7366d7985 (contains #368 b15fef405). Docs only; REGISTRY verified in sync against a clean export.
+  PUSHED 2026-10-06 with the user's direct yes; PR #372, opened by the planner. The merge is the owner's call. Once it merges, the branch is spent: never push to it again.
+- **DONE (now row 17), formerly HELD (planner: don't answer until Lane A's post-#356 re-measure table arrives; the ticket forbids
+  citing old numbers):** TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE.
+  - Code: `src/engine/cognition.py:91` adds `region_trauma * 0.5` to panic. Bible 04 (~:460) says bravery
+    subtracts `0.3 * bravery`, and the flee test is `panic > 0.4`. Trauma 1 flees unless bravery > 0.33;
+    trauma 2 flees at any bravery. I checked this arithmetic.
+  - My lean: (1), normalise against Bible 05 §2's instability threshold of 50, so dread saturates when a
+    region is unstable. Add the planner's invariant: no single appraisal term crosses the flee threshold
+    alone. Fiction: a region's unrest makes you uneasy, and a present threat makes you run. That matches
+    AGENCY-02 (motivation influences, never determines).
+  - The mapping's owner: Bible 04 (the consumer, where the panic and bravery text lives), citing Bible 05
+    §2's scale. The curve and k are engineering, parked by row 7.
+  - This may shrink: after ENV-07 (#356) trauma is close to 0 in most worlds. Wait for the table, then take
+    options to the owner.
+- **Row 20 / MOV-07 (under delegation):** adjacency is orthogonal (Manhattan <= 1) for melee, engagement,
+  pursuit completion and movement; a diagonal subject steps first. It adopts combat_movement_overhaul_spec
+  :17-18. The held-attack re-swing loop is engineering
+  (TCK-20261006-HELD-ATTACK-TASK-AGAINST-AN-OUT-OF-RANGE-TARGET-IS-NEVER-RE-DECIDED).
+- **Row 21 / AGENCY-07 (under delegation, 2026-10-07):** a cautious disposition lowers the bar at which a
+  present threat makes a subject flee (wounds, a hostile adjacent or closing, being targeted, being
+  outmatched). It never decides flight alone; a first-sight reflex needs its own kind-specific declared
+  Rule. PR #392 MERGED (c1c2acdb2); the branch is SPENT. The implementation
+  ticket is reserved as TCK-20261007-SAFETY-DISPOSITION-TRIGGERS-RETREAT-ON-SIGHT-AGENCY-07 (Lane A, after the
+  cooperation fix). Cite it in the PR body; when it's filed, a follow-up may add it to AGENCY-07's evidence.
+- **CONFLICT-03 resolution clause (under delegation, 2026-10-06):** declared hostility decides, and missing
+  data declares nothing. Both factions declare: OR. Exactly one declares: its verdict decides both directions.
+  Neither declares: the symmetric legacy fallback. So hero <-> neutral is refused both ways, and the
+  test_legality_faction_mutation pin stands. Branch conflict-03-declared-data-resolution at a17a60a24, PR #389 MERGED; the branch is SPENT
+  (body rendered with --base-ref at the merge base, since main moved by #388; re-check with that base);
+  the planner opens the PR.
+  - Lane B implements it on symmetric-legality-wild-beast-pack (74e682203, awaiting the owner's push).
+    Implemented text: DEV-016, COMB-334, Bible 02 Friendly-Fire Law. Matrix: 108 asymmetric verdicts -> 0;
+    16 illegal->legal; 15 legal->illegal (exactly-one-declared shape; the only one with live events is
+    town_council>swamp_tribe, 8->0 in swamp_border_world); wild-attacker hits 81->184; 0 live neutral->hero
+    attacks lost.
+  - FOLLOW-UP DONE: #395 merged (7aa6f997b). Branch conflict-03-supported at 9324a29e7, PR #397 (the owner's merge). It flips the evidence to SUPPORTED, cites corpus base 7254a558c and closes row 18. Original plan: point the clause at DEV-016, COMB-334 and Bible 02; replace "58,
+    re-measure owed" with the matrix figures and their base; flip CONFLICT-03's evidence to SUPPORTED; close
+    row 18's "Needed by".
+  - An unwanted refusal is fixed by DECLARING data for the silent faction (content, row 7), never by widening
+    the rule.
+- **Row 22 / SURV-05 + AGENCY-08 (under delegation, 2026-10-07):** needs come from the kind (species
+  profile; the person fallback only for persons); drives come from the most specific declared source
+  ((kind, role) archetype, else role, else the kind's DECLARED default drive); defaults are a typed
+  provenance field; biology follows the need profile. The same branch flips AGENCY-07's evidence to
+  SUPPORTED (#398) and marks row 21 Done. Branch need-drive-profile-ruling at ccf5a37c9, PR #402 (fixed at head 95baa82da), citing the epic TCK-20261007-EPIC-DECISION-CORE-LIVE-MOTIVATION-AND-HONEST-FIGHT-OR-FLEE-INPUTS
+  and child TCK-20261007-COMPILED-ENTITIES-GET-DEFAULT-NEED-AND-DRIVE-PROFILES-WITH-VISIBLE-PROVENANCE. A later
+  follow-up replaces AGENCY-08's "the planner will cite its ID" with the child ID.
+- **SURV-06 RATIFIED (row 23, under delegation, 2026-10-07):** people eat at the INN (the meal place; EatScorer's
+  "tavern" is a naming defect) or eat carried food (bought, foraged or harvested, or received); predators hunt;
+  grazers forage; kinds with no hunger need nothing. Every kind can SLEEP ROUGH where it is not in danger. A world
+  must offer each placed kind a way within reach: advisory at assembly, an error only once the corpus passes.
+  Poverty is a valid outcome. Branch sustenance-paths-ruling at f78929bb6, STACKED on need-drive-profile-ruling,
+  PR #405 MERGED (80811968a, verified on GitHub); the branch is SPENT.
+- **SURV-07 (row 24, under delegation):** a need's pull grows as its line approaches and outranks ordinary
+  goals in time; only a present threat outranks it (restates Bible 04 §1's tiers). The flat-80 RESOLVE_BLOCKER
+  vs hunger is the live hard bug.
+- **Absent need key = CONTENT GAP (ruled 2026-10-07, in a message only, not yet in the catalog):** "no need"
+  must be declared (`none`). The biology child declares sleep on carnivore_survival and goblin_survival and
+  `sleep: none` on undead_purpose, spirit_anchor and elemental_stability, and the loader reports absent
+  hunger/sleep keys. Fold this into SURV-05's text with the biology child's evidence.
+  Diagnosis (cc3f00a11): (a) tavern target plus (b) the capacity gate, with more downstream breaks; never
+  worked since 2026-07-02. Earlier text: Lane A's figures (base f8f1b69fd; frontier_living_world 36 of 51 deaths
+  starvation, crowded_frontier 30 of 39; seed 42; 2,000 ticks; audit_mode; budget off; LocalSequentialExecutor;
+  2 identical runs per world): 0 eat and 0 sleep completions (a completion = hunger or sleep_debt fell between ticks);
+  extinction by t~1100; undead starve. The biology child is child 1 of epic #401 and is a row-7 hard bug.
+  Original text:** a modeled need comes
+  with declared sustenance paths per kind. A world that populates a kind must provide a reachable path, or
+  that's a content defect caught at assembly. Scoping: (a) no paths = content; (b) paths exist but go unused
+  = decision wiring; (c) too slow = tuning (row 7) unless it causes synchronised starvation. Land SURV-05
+  biology together with a working humanoid path.
+- **OWNER RPG PRIORITY (2026-10-07, approved directly; relayed to the planner):** rank by layer x frequency,
+  low-layer and frequent first.
+  - Tier 1 (every tick), one "decision-core" epic: live, differentiated needs (compiled entities have no need or
+    drive profile, so pressure is 0; to be verified; plus BIOLOGICAL-PRESSURE-UNIFORM), and honest fight-or-flee
+    inputs (AGENCY-07 implementation, CAPABILITY-CONTEXT-ENEMY-DATA-EMPTY, PER-ENEMY-KIND-DANGER,
+    COMBAT-RISK-3X).
+  - Tier 2 (every fight): one stat model, wounds and recovery (epic), XP thresholds (re-measure first).
+  - Tier 3: de-hero, recruitment and cooperation, contextual engagement.
+  - Deferred: war, calamity and bosses, quests, reproduction, culture.
+  - Dispatched by the planner: the AGENCY-07 implementation is PR #398 (Lane A; my ticket-evidence follow-up
+    comes when it merges). Lane A measures motivation first (read-only, 24 worlds). Lane B does region enemy
+    data, then dead code. The planner files a decision-core epic.
+  - Expect a rule question from Tier 1 #1: what a default need profile means for a compiled character (per
+    species or per role?).
+- **OWNER DELEGATION (2026-10-06, confirmed by the owner directly):** I decide open world-rule questions
+  myself, recorded as "decided by world-rule-catalog-design under owner delegation, 2026-10-06". I still bring
+  the owner anything that reverses or narrows one of the owner's own rulings. Pushes STILL need the owner's
+  direct yes.
+- **Row 17 / AGENCY-06 (owner, directly):** dread saturates at instability 50; regional dread never triggers
+  flight alone (threats to self still may). Branch trauma-dread-ruling, PR #375; head ed91dbaef after merging main to fix the REGISTRY conflict. Lane A
+  implements AGENCY-06 next.
+- **Rows 18-19 (under delegation):** CONFLICT-03, attack legality is symmetric (unblocks the five wild kinds
+  moving to wild_beast_pack). ENV-07 window: "not recovered from violent harm"; the same-update floor; the
+  window value is engineering-tunable. #375 MERGED. Branch delegated-rulings-legality-and-trauma-window was rebased onto main
+  ae4388854 and force-pushed with the owner's yes (3873eeb2c, rows 18-20). PR #382 MERGED; the branch is SPENT. The rebase needs a force-push, which needs a NEW direct yes from the owner; then the planner opens
+  the PR. Lane B is queued for symmetric legality plus the wild-kind mapping, behind its spawn PR.
+- **Earlier rulings to the planner:** world.yaml is the source and resolved/ is its projection; region
+  collisions are namespaced by module set; the retreat ruling (current region, then home_region_id, then hold).
+
+## PR POLICY (owner, 2026-10-07, relayed by the planner): fewer small docs-only PRs
+1. **A ruling rides with its implementation.** When a lane is about to implement a ruling, I push my ruling
+   commit to a branch (with the owner's yes), and the lane cuts its branch FROM mine. One PR carries both; one
+   writer per file still holds. The planner names the lane branch case by case.
+2. **Otherwise, batch:** accumulate rulings on one branch and open ONE PR per milestone.
+3. **Follow-ups ride the next batch:** SUPPORTED flips and ticket-ID fills never get their own PR.
+- PENDING (first use of rule 1): AFTER Lane B's biology PR merges, cut a catalog commit from main containing
+  ruling B in SURV-05's text, the biology evidence citing Lane B's merged PR, and anything SURV-07 needs. Push
+  it with the owner's yes and send the head to the PLANNER ONLY (never to implementers directly; the planner
+  relays). Lane A then cuts TCK-20261007-BIOLOGICAL-NEEDS-ESCALATE-ABOVE-ORDINARY-GOALS-BEFORE-THE-CONSEQUENCE-LINE-SURV-07
+  from my branch.
+- Every push still needs the owner's direct yes.
+
+## Process changes from agent-working-design (2026-10-06)
+- Hand closures: `record_hand_orchestrated_closure.py --path-reason ...` (and `--path-note` when the reason is
+  `other`); each skipped event can carry a `skip_reason`. Overriding or stopping on a blocking gate:
+  `gate_ledger.py outcome --gate-verdict-id <id> --outcome overridden|stopped`. Read the syntax in origin/main's
+  CLAUDE.md (~:103-106).
+- Seats are moving to `tools/sessions/launch.py <role>` at safe stopping points, so keep this handover current.
+
+## Process lessons (what made this decision set survive)
+- **Measure the artifact, don't reason about it.** The 24-world static geometry sweep (seconds, no simulation)
+  overturned the planner's conclusions three times: the "nested" premise, "overlap is rare", and the 4-region
+  subset that hid a nested town.
+- **Every measured figure carries its BASE commit.** Verify ancestry with `git merge-base --is-ancestor` before
+  stating "before/after fix X". A relayed base label was wrong once.
+- **Quote a SHA only from command output after the last amend or rebase.**
+- **Any relayed scope change is flagged, never silent,** whether it narrows or widens an owner decision.
+- **After a registry edit:** run tests/unit/tools, regenerate every `make mechanism-*-view`, and run
+  `make mechanism-registry-validate`.
+- **docs/REGISTRY.yaml:** the post-merge hook regenerates it. Verify against a clean `git archive HEAD` export
+  with `tools/generate_registry.py --root <clean> --check`. A conflicting PR runs no CI, so "nothing failing"
+  is not green.
+- **PR body:** `tools/delivery/pr_render.py --scope world --theme … --why …` for a branch that closes no
+  ticket; fill the Review notes and Tests line by hand; no attribution footer.
+
+## Pointers
+- docs/plans/systemic_world/owner_decision_memo.md (rows 1-15) and roadmap.md §8, §10.
+- docs/world_rules/space-environment/location-topology.md (LOC-08), environment.md (ENV-06, ENV-07);
+  social-lineage/social-relations.md (reputation-reach).
+- rpg-feature-planning's session id: d63e9bb4-25d5-474e-8910-f76bafea9f94 (resumed from the main checkout).

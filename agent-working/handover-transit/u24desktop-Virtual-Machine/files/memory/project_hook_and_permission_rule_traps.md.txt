@@ -1,0 +1,15 @@
+---
+name: project-hook-and-permission-rule-traps
+description: Measured traps when wiring PreToolUse hooks and Bash permission rules in .claude/settings.json (exit 2 on a missing script, the `:*` prefix quirk, fresh-session probing)
+metadata:
+  type: project
+---
+
+Measured 2026-10-05 while landing the M5A permission rules and the M5B guard hook (PR #346).
+
+- A PreToolUse hook that exits 2 blocks the tool call, and `python3 <missing file>` exits 2. Wiring a hook before its script exists would block every Bash/Edit/Write in every session. The wired guard uses a wrapper that resolves the repo root and passes on a missing script: `R=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; test -f "$R/tools/sessions/guard.py" || exit 0; python3 "$R/tools/sessions/guard.py"`. Exit 1 (a traceback) lets the call RUN (M0n), so guard scripts must catch their own exceptions and exit 2 only for authority-class input.
+- `Bash(... * ...:*)` mixes `*` with the trailing `:*` prefix syntax: the harness matches it as a literal prefix, never as a wildcard, and prints a warning at every session start. A static test that treats `*` as a plain glob cannot see it. Patterns where a flag may follow the verb directly need the `*` joined without spaces (`gh pr merge*--admin*`).
+- Settings edits (permissions and hooks) only take effect in a FRESH session; a running session keeps what it loaded. The way to probe: `claude -p "<commands, each as its own Bash call>" --allowedTools Bash` from the worktree. Headless asks surface as "not granted", and a positive control (`git status`) must run. A permission deny beats a later hook ask.
+
+**Why:** the "inert until the script exists" premise in the M5B draft was false, and the static harness passed a rule that never matched. Only a measurement in a fresh session showed both.
+**How to apply:** before any settings.json hook or permission edit, grep `tests/` for pinned shapes (three tests pinned PreToolUse here, not two), wire hooks behind a pass-on-missing wrapper, and verify with a fresh-session probe plus the harness's own startup warnings. Related: [[feedback-verify-governing-file-edits-directly]].

@@ -1,0 +1,81 @@
+### `rpg-planner` (session `rpg-feature-planning`), 2026-10-06: draft disposition for row 7 (b), as promised in R4
+
+On `main` at `501933066` (#356), `mechanism_registry_completeness_check` reports **26** core-tier modules as unbound.
+One of them, `entity_target_objective`, is already bound to `goal_hierarchy` on Lane A's branch. I verified that
+binding on a clean export: the check moves from 36/26 to 37/25. That leaves **25**, and this is a **draft**
+disposition for each.
+
+**Method.** Each binding is grounded in **where the module's class is actually used**, mapped to the mechanism
+whose `implemented_by` cites that using code. Name similarity alone is not evidence. Two traps I hit on the way,
+recorded so nobody repeats them:
+- **Module-path imports undercount.** Most of these modules are reached through re-export shims
+  (`src/systems/crafting.py` → `economy_systems/crafting.py`, and so on). Searching for the module path alone made
+  seven live systems look dead. The usage counts below are by **class name**.
+- **Name matches mislead.** `loot` matched `world_boss_spawn` only because a boss drops loot.
+
+Nothing here is applied. Each binding should be checked with the completeness check before it lands, as the
+`entity_target_objective` one was. Execution goes through the owner's `Workflow` decision on row 7 (c).
+
+#### A. Bind: usage and concept agree (13)
+
+| module | bind to | evidence |
+|---|---|---|
+| `economy_systems/economy` (`DynamicPriceService`) | `town_services` | used by `engine/shop.py`, `town/shop.py` |
+| `economy_systems/market` (`MarketSystem`) | `town_services` | used by `engine/shop.py` |
+| `economy_systems/reputation_discount` | `town_services` | both callers implement `town_services` |
+| `economy_systems/crafting` (`CraftingSystem`) | `crafting` | used by `engine/intent/action_intent.py` |
+| `social_systems/contracts` | `social_contracts` | concept match; callers under `cooperation` |
+| `social_systems/clan_lifecycle` | `clan` | 4 live callers. **`clan` is recorded as `state: gap`, "no implementing code", which is wrong; correct the state.** |
+| `social_systems/party_lifecycle` | `party_formation` | caller implements `party_formation` |
+| `social_systems/party_composition` | `party_formation` | used by `world_systems/groups.py`, `domains/adventure/generator.py` |
+| `world_systems/groups` (`GroupSystem`) | `party_formation` | used by `pipeline_phases/groups.py` and the cooperation phase |
+| `world_systems/navigation` | `movement` | used by `engine/movement.py` |
+| `world_systems/generator` (`EntityGenerator`) | `regional_monster_spawn` | 17 users (camp, sovereignty, ecology). This is the `spawn_monster` path, and its faction-stripping defect is filed |
+| `strategic_systems/detour` | `strategic_intelligence_core` | used by `strategic_systems/intelligence.py` |
+| `strategic_systems/work_queue` | `strategic_intelligence_core` | schedules the strategic evaluation; used by `intelligence.py` |
+
+#### B. Covered by Child B (1)
+
+| module | bind to | note |
+|---|---|---|
+| `domains/motivation` | `motivation_doctrine` | Child B is the motivation-doctrine ticket. **`motivation_doctrine` is recorded as `state: gap`, yet the package exists.** Child B resolves it. |
+
+#### C. Bind, but read first: candidate mechanism uncertain (5)
+
+| module | candidate(s) | why it isn't settled |
+|---|---|---|
+| `social_systems/party` (`PartyCoordinationSystem`) | `group_coordination` or `party_formation` | `group_coordination` is recorded `orphan`; this may be the live code it should cite |
+| `world_systems/routine` (`RoutineService`) | `strategic_intelligence_core` or `goal_hierarchy` | used only by `intelligence.py` |
+| `social_systems/loyalty_drift` | `party_formation` or `clan` | users: the campaigns orchestrator and `party_lifecycle` |
+| `social_systems/appraisal` (542 lines) | `affection_relationship_bonds`, `reputation` or `party_formation` (recruitment) | two classes, possibly two mechanisms |
+| `world_systems/quest_generator` (`QuestGenerator`) | `quest_generation_sourcing` | **that mechanism is recorded `orphan`, but `QuestGenerator` has 2 live users** (`quests/generator.py`, `town/guild.py`); correct the state |
+
+#### D. Possibly orphan: no use found outside their own package and shim (4)
+
+`economy_systems/chests` (`ChestSystem`), `economy_systems/town_service` (`TownServiceSystem`),
+`social_systems/guilds` (`GuildIntelSystem`), `world_systems/quest_engine` (`QuestSystem`).
+
+**Confirm reachability before recording them as `orphan`.** A system wired in by string, phase registration or a
+lazy table would not show up in a usage search. I already nearly misclassified seven live systems this way. If
+they're confirmed orphans, the honest disposition is `state: orphan` on the matching mechanism, not a binding that
+claims they run.
+
+#### E. New entry or exclusion (2)
+
+| module | proposal |
+|---|---|
+| `economy_systems/loot` (`LootSystem`) | **No loot mechanism exists** (only `quest_reward_distribution`). Live: used by `world/boss.py` and `actions/loot.py`. Needs a new registry entry, which is semantic-foundation authoring work. |
+| `strategic_systems/town_targeting` (`nearest_town_tile`, 20 lines) | **Infrastructure exclusion**: a pure spatial helper, not a mechanism. |
+
+#### Three registry states contradicted by the code, worth fixing regardless of row 7 (b)
+
+- `clan`: recorded **gap** (no implementing code); `ClanLifecycleService` is live with 4 callers.
+- `quest_generation_sourcing`: recorded **orphan**; `QuestGenerator` has 2 live users.
+- `motivation_doctrine`: recorded **gap**; `src/domains/motivation/` exists (Child B).
+
+#### Summary
+
+13 bind cleanly, 1 is covered by Child B, 5 need a read, 4 need a reachability check, and 2 need a new entry or an
+exclusion. **Row 7 (b) can reach about 14 of 25 quickly**, and the remaining 11 need real judgement. That's the
+honest answer to "is Child B the vehicle": Child B covers one module, not the gate. These dispositions are
+mechanism-registry content, which is mine; landing them is a `Workflow` per row 7 (c), pending the owner.

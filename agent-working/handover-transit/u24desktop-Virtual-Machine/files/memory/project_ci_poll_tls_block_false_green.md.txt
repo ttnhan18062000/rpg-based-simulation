@@ -68,3 +68,14 @@ and [[feedback_a_probe_is_an_instrument_that_can_be_wrong]]. Both existed; neith
 Minor, unverified: `gh api .../code-scanning/alerts?ref=refs/pull/N/head&tool_name=ruff&state=open`
 returned **empty** while that check run's `/annotations` endpoint returned all four alerts. Use the
 annotations endpoint to read ruff failures.
+
+## Fourth instance, 2026-10-05 — "no checks reported" *between runs* on an open, MERGEABLE PR
+
+On PR #335 a background poll exited "pending=0" and I almost read it as done: right after a push,
+`gh pr checks` briefly prints `no checks reported on the '<branch>' branch` (no run created yet) — zero
+pending rows, zero pass rows. This is the same absence-as-success shape, but the PR was **MERGEABLE**, so
+the conflicting-PR cause above did not apply; it is just the gap before the new run registers.
+
+**Poll condition that held:** at least ~10 check lines matching `\t(pass|fail|skipping|pending)`, **and**
+zero pending, **and** print `headRefOid` next to the local HEAD so the result is tied to the pushed SHA.
+Then re-read PR state fresh once before reporting. Zero rows is never "done".

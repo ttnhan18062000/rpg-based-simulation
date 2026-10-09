@@ -1,0 +1,11 @@
+---
+name: project-writer-lease-keyed-by-physical-path
+description: The session writer lease is keyed by the physical worktree path, so a checkout move (/home to /mnt/data) leaves it unfound until SessionStart retakes it
+metadata:
+  type: project
+---
+
+`tools/sessions/state.py` hashes `Path(worktree).resolve()` into the lease file name. After the machine migration of 2026-10-05 (`~/Working` became a symlink to `/mnt/data/Working`) the physical path changed, so the existing lease was not found and the M5B guard would have asked on every commit and push by the writer. SessionStart retakes it on the next resume or clear; I retook mine early with `state.take_lease(root, cwd, role, session_id, process)` and `session_start_hook.find_claude_pid()`, the same call SessionStart uses (no CLI exists for it; `release` is the owner's act).
+
+**Why:** a missing lease makes the guard ask (design's decision), so a moved checkout shows up as repeated prompts, not as a failure.
+**How to apply:** after any checkout move, expect other migrated sessions to see commit/push prompts until they resume or clear; retaking your own role's lease is within the role, releasing another's is not. Related: [[project-hook-and-permission-rule-traps]], [[project-worktree-verification-traps]].

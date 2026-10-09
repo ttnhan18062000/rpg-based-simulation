@@ -1,0 +1,59 @@
+---
+status: active
+layer: simulation
+authority: P1
+audience: agent
+ticket_id: TCK-20261009-SLEEP-DEBT-WEAKENS-THEN-COLLAPSES-THE-SUBJECT-WHERE-IT-STANDS-NO-HP-LOSS
+phase: open
+date: 2026-10-09
+tags: []
+---
+
+# TCK-20261009-SLEEP-DEBT-WEAKENS-THEN-COLLAPSES-THE-SUBJECT-WHERE-IT-STANDS-NO-HP-LOSS
+
+## Title
+Past a high sleep-debt line a subject weakens, and at 98 or more it falls asleep where it stands and cannot act until its debt drops below a wake line; it loses no HP (fatigue rule, owner ruling 2026-10-09, replacing Bible 01's +1 HP per tick).
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P2
+
+## Request Summary
+The owner ruled (via rpg-designer) that sleep debt is "weaken, then collapse". Today `apply.py` costs 1 HP per tick at sleep_debt 98 or more: the same shape as the old starvation defect that D36 replaced. The designer writes the kernel spec (thresholds, wake line) and routes the code through rpg-planner. It reuses D36's pattern: `src/engine/starvation.py`, a frozen table; existing hooks such as combat.py's `sleep_debt > 80` gives attack x0.8 (EXHAUSTION).
+
+## Scope
+1. A design proposal to rpg-planner: the weakened threshold (reuse 80, the existing EXHAUSTION line?); the collapse at 98 as a forced sleep in place (a typed rest task or state, with no new field without asking); the wake line; how the scheduler treats a collapsed subject (no actions); and the interaction with threats (helpless in place, so attackers get free hits).
+2. Remove the HP loss; build; unit tests per stage; the designer's kernel scenario.
+3. Measure at 5000 ticks, pinned 5x3: collapse episodes, deaths by cause, alive.
+
+## Out of Scope
+- Starvation (D36, done).
+
+## Acceptance Criteria
+- No HP loss from sleep debt. A collapsed subject takes no action until below the wake line, and the scenario passes.
+- Bible 01, divergence and parity are updated.
+
+## Related Tickets
+- TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02 (the pattern).
+
+## Related Docs
+- The designer's milestone branch `milestone-d27-earn-then-buy` (decisions 37 to 41); `docs/plans/systemic_world/owner_decision_memo.md`.
+
+## Related Stored Artifacts
+- Kernel spec: LB-S19, `docs/world_rules/scenarios/life-body-batch-05.md#lb-s19` (designer commit 832ecbe37 on milestone-d27-earn-then-buy). Its observables are the stage order, collapse on the occupied tile, no action while collapsed, waking, and HP never falling below its staged value. The suggested numbers (80 / 98 / wake about 60) are recorded, not observables.
+## Related Code Areas
+- `src/engine/apply.py` (sleep HP loss), `src/engine/combat.py` (EXHAUSTION), `src/engine/starvation.py` (the pattern), the scheduler (collapsed subjects).
+
+## Assumptions / Open Questions
+## Implementation Notes
+## Test Summary
+## Files Changed
+## Completion Summary

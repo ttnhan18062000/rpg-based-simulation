@@ -1,0 +1,33 @@
+---
+name: feedback-verify-a-commit-claim-at-the-sha-not-the-working-tree
+description: "To check what a commit does, read `git show <sha>:<path>` — the working tree answers a different question, and --stat piped through head lies"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: d63e9bb4-25d5-474e-8910-f76bafea9f94
+  modified: 2026-10-05T02:45:06.821Z
+---
+
+To verify a claim **about a commit**, read the file at that commit: `git show <sha>:<path>`. Reading
+the working tree answers a different question and can give the right answer for the wrong reason.
+
+On 2026-10-05 I checked whether `aeef14a7e` made `check_staging_artifacts_complete`
+disposition-aware. I ran `sed -n '229,270p'` on the **working tree** file and concluded it did not.
+That was correct — but only because this worktree sat on a branch predating the fix. Had the fix
+been present locally, the identical command would have told me the opposite with equal confidence.
+`agent-working-design` made the mirror-image mistake (read a working tree that *did* have the fix,
+told me I was wrong, then retracted).
+
+I also ran `git show <sha> --stat | head -12` on a 15-file commit and concluded a file was untouched
+because it fell outside the first 12 lines. Right conclusion, fabricated evidence.
+
+**Why:** a worktree's branch is invisible context. Nothing in the `sed` output says which commit it
+came from, so the error leaves no trace and survives review.
+
+**How to apply:** `git show <sha>:<path>` to read content, `git show <sha> --name-only | grep <x>`
+to test membership — and never pipe `--stat` through `head` when the question is "is this file in
+the commit". Beware a `grep` on a stat line matching a *test* file (`test_foo.py`) when the claim is
+about the module (`foo.py`); that is precisely what produced the peer's wrong correction. Related:
+[[feedback_check_ancestry_before_citing_pr_lines]],
+[[feedback_dispatch_only_artifacts_reachable_from_origin_main]],
+[[feedback_a_probe_is_an_instrument_that_can_be_wrong]].

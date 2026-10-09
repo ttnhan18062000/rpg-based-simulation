@@ -1,0 +1,12 @@
+---
+name: pr-render-known-gaps-is-a-fail-scan
+description: pr_render's generated "Known gaps" only scans ticket Test/Completion Summary for the substring FAIL; a hand-edited gap line makes --check fail, so put gaps in Review notes
+metadata:
+  type: feedback
+---
+
+`tools/delivery/pr_render.py` builds `## Verification` → "Known gaps" by a literal scan for `FAIL` in each ticket's Test Summary and Completion Summary. A real, honestly stated gap that does not contain `FAIL` renders as "Known gaps: none stated".
+
+**Why:** on PR #360 I hand-edited that line to state a post-merge gap; `pr_render.py --pr N --check` then reported `generated sections differ: ['## Verification']`. Restoring the generated line and writing the gap into the hand-filled `## Review notes` section (which `--check` does not compare) fixed it.
+
+**How to apply:** leave `## Verification` exactly as rendered. State gaps in Review notes, and in the ticket's own Completion Summary. Expect the "ticket ID mismatch" discovery warning when a PR edits tickets it does not close; it is not an error. Related: [[feedback_pr_body_must_be_rendered_not_written]], [[feedback_pr_render_needs_every_ticket_id_in_a_commit_subject]].

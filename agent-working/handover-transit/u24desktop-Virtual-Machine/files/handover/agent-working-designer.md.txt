@@ -1,0 +1,50 @@
+# Handover — agent-working-designer
+Role: agent-working-designer (also interim holder of `agent-working-planner`) · Domain/worktree: agent-working / `.claude/worktrees/agent-working` (shared with `agent-working-implementer`, the git writer; the checked-out branch `agent-working-w40-close-and-card-fold` is SPENT, merged as #400) · Drafts only; I commit nothing.
+Updated: 2026-10-07 ~15:30 local, written for an owner-approved `/clear`.
+
+## Reset boundary
+HARD, and ONE item open: the launcher-fixes draft (`.claude/handover/drafts/launcher-relaunch-fixes-draft-2026-10-07.md`) is handed to `agent-working-implementer` as an fyi, but not acknowledged and not dispatched. Re-check with `ListAgents` and ask for an ack, or record that the owner holds it. Everything else is handed off.
+
+## Done this session (2026-10-07)
+- **PR #400 merged** (`6e7ef56ec`): W40 deep retro, M7 clock start, designer card main-checkout line, the retro epic file, retro/** ownership.
+- **Planner card trim answered:** I told the implementer to use option (c), "Hub: scope, file child tickets, dispatch, answer your implementer.", so "Review PRs by comment; no implementing." can be restored. Verify the merged card has both.
+- **All seven live seats relaunched through `launch.py`** (each with `--action replace` and a first message that reads the handover note and reports back):
+  rpg-designer (was `world-rule-catalog-design`), rpg-planner (was `rpg-feature-planning`), testing-planner (was `test-architecture-reviewer`), testing-implementer (was `test-architecture-implementer`), agent-working-implementer, rpg-implementer-2, rpg-implementer (instance 1). `network-auto` is not in the registry; the owner said to ignore it.
+- Owner created the shared worktrees `rpg` (branch `rpg-seat`) and `testing` (branch `testing-seat`) from origin/main `6e7ef56ec`.
+
+## Facts learned about the launcher (all in the draft above)
+- It reads handover notes from the MAIN checkout (`/mnt/data/Working/rpg-based-simulation/.claude/handover/<role>.md`), NOT from the role's worktree. I told two sessions the wrong place first.
+- Transcript lookup matches only `customTitle == <instance id>`, ignoring `legacy_session_name`, so live seats showed ORPHANED; stale recorded worktree/branch (`world-definition-correctness-batch`, `agent-working-next-2`) also appeared.
+- Instance ids are `<role>` and `<role>-2`; `rpg-implementer-1` is NOT valid (owner asked for -1/-2; I recommended no alias).
+- `session_start_hook.py` takes the writer lease under the instance id, so the second instance gets a non-fatal "WRITER LEASE NOT TAKEN" note. Both rpg implementers build each piece in a per-piece worktree off origin/main and use `rpg` only as launch cwd.
+
+## Open for the owner, in order
+1. **Dispatch the launcher-fixes draft** (items A-E, E = one-line implementer-card rule for two instances, about 20 tokens, cards are at the 400-token cap).
+2. **Prune old worktrees (owner approves each):** ten `test-arch-*` merged worktrees (criterion2-protocol, epic-b-cost-record-update, slow-step6-triage, milestone-b-fake-clock, slow-reporting, frontend-flake, maintenance-2/7/8/9; maintenance-2's PR merge state not confirmed), `design-review-rpg-suggestion`, `m2-idea43-temporal-note` (decide its dirty/untracked ticket files first), `doc-tag-enforcement`, and rpg-implementer's spent ones (score-refresh, building-arrival, capacity-gate, coop-offer-index, safety-threat, detached motivation-probe, eat-bisect, coop-baseline, coop-d135). Keep `b5k-d2816ab6c` and `branch1-impl2` until rpg-implementer-2's PR merges. Local commit `01da7c2cb` (test-arch-frontend-flake) is already on main and can be discarded.
+3. **Main checkout** `/mnt/data/Working/rpg-based-simulation`: on `main`, 100 behind origin/main, 317 staged/unstaged entries (index written Oct 5 11:06; matches no upstream commit or stash; no merge in progress). Owner's call: leave it, or back up and reset. Never pull/checkout/reset there before that. I offered a read-only backup of the staged modifications.
+4. **`/create-tickets`** for the retro epic's 4 open children: notes collapse, Failures section, `execution_id` and validator warnings, hook noise. Child 4 is done.
+5. **CI check** "PR body · no attribution trailer" as required: I recommend yes. `prune_branches.py --execute/--remote` and the `cc` alias are still open.
+6. **Pending in other seats (not mine):** rpg-implementer-2 holds 14 unpushed commits on `biology-needs-and-meal-place`, waiting for the owner's push/PR yes; rpg-implementer's SURV-07 prep is local commit `c85f63cff` on `rpg-need-escalation`, waiting on that biology PR; testing-planner's 09:00Z Slow regression poll may have been killed by the relaunch (its note says how to re-arm).
+7. **A fresh branch** off origin/main for any further agent-working commit; the checked-out one is spent.
+
+## Time-gated epics (read after 2026-W42 = 10-12..18 closes)
+`TCK-20261006-EPIC-HAND-CLOSURE-REAL-TIME-AND-COST` (AC2, measured part of AC4), `…EPIC-GATE-OVERRIDE-LEDGER` (AC2), `…EPIC-TICKET-PATH-RECORD` (AC2; check the `unstated` share first). Recommendation: no new agent-working epic until W42 is read.
+
+## Retro findings worth keeping (W40: 251 runs)
+- 94% of hand-closed runs have duration 0, so averages and slow-run lists measure the recorder (hand-closure epic covers it).
+- `done-checker` failed 4 of 11 calls (2 real, 2 checker-side). `test-scoper` failed 3 of 10 on pre-existing unrelated tests; a known-failing-test baseline is an owner decision, not filed.
+- Not re-checked: whether the `bash is not defined` WORKFLOW_ERROR (RAW-LEGACY-FACTION-ENUM sweep) was fixed.
+
+## Mistakes to avoid
+- Never called `search_docs` first this session; the index is not built ("index not found"), so say that in any duplicate scan.
+- I sent work requests as a designer; the role says never dispatch. Send fyi plus the draft path and say the owner dispatches.
+- Check where the launcher reads a file from before telling another session where to put it.
+- Do not leave the shell in a subdirectory after a long run.
+
+## Environment facts
+- Venv: `/home/u24desktop/Working/rpg-based-simulation/.venv/bin/python`; run `PYTHONPATH=. <venv python> tools/sessions/launch.py <role> --dry-run` from the agent-working worktree (the main checkout is too old to have it). `validate_frontmatter` `authority` accepts only P0–P2.
+- `gh pr edit` fails on the projectCards deprecation; use `gh api PATCH`. PR bodies carry no attribution trailer, ever.
+- The `aseprite-pixel-art` MCP fails to connect; ignore it.
+
+## Pointers
+`.claude/handover/drafts/launcher-relaunch-fixes-draft-2026-10-07.md`, `docs/plans/agent_infrastructure/agent_working_direction.md`, `agent-working/agent-monitoring/retro/RETRO-2026-W40.md`, `registries/session_roles.yaml`, `tools/sessions/{launch,state,resolve,session_start_hook}.py`, `docs/guides/agent_session_reset_boundaries.md`.
