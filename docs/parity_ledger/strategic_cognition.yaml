@@ -4541,3 +4541,13 @@
   test_path: tests/unit/ai/test_opening_steps.py
   divergence_note: 'Intentional divergence 2.91 (Intentional Gameplay Change).'
   support_boundary: 'Held out: the earn-then-buy and ask steps are stubs that report why they are closed; broke workers have no earn path yet.'
+- id: STRAT-282
+  text: 'TCK-20261009-HEROES-ON-A-LEASH-NEVER-SEEK-FOOD-AND-STARVE-WITHOUT-ONE-EAT-ATTEMPT: a pressing biological need (hunger or sleep debt at or past ESCALATION_ONSET of its consequence line) wakes the brain of an entity holding ENTITY_MOVE every strategic-cadence tick (staggered by id), so the need goal it already ranks first can displace the held move; a present threat to life re-issues the flight in the re-decision.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/need_pull.py (need_is_pressing), src/engine/scheduler.py (_is_need_woken, NEED_WAKE_CADENCE).
+  proof_type: regression
+  test_path: tests/unit/engine/test_pressing_need_wakes_a_held_move.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.105.
+  support_boundary: Range-bound subjects (leash above 0) are unchanged and stay honestly hungry with no open way inside range. The held-move completion rule is a separate ticket. Measured on urban_political and frontier_living_world, seeds 42 to 46, 5000 ticks.
