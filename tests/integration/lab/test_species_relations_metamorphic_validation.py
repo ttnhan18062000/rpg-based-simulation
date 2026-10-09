@@ -29,8 +29,8 @@ tolerance band):
    default `src.engine.governor.ResourceGovernor`, whose mode follows host load (the load sensitivity
    parked under TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2). Unpinned, the same seeds at
    the same SHA gave 115 vs 140 in one run and 122 vs 141 in another. The test swaps in a governor
-   pinned to NORMAL with a no-op `force_mode` (as `_PinnedNormalGovernor` in
-   tests/integration/campaigns/test_catalog_entity_spawn_wiring.py), which removes host speed from the
+   pinned to NORMAL with a no-op `force_mode` (`PinnedNormalGovernor` in
+   tests/helpers/kernel_pinning.py), which removes host speed from the
    outcome: two runs at one SHA give identical per-seed counts.
 2. Contact-rich layout, per rpg-planner's ruling (a) of 2026-10-07: the relation "raising declared
    hostility never lowers engagement" is a claim about pairs that meet, and a run where wolves and
@@ -64,7 +64,7 @@ from src.lab.orchestrator import ScenarioLabOrchestrator
 from src.lab.schema import ScenarioSpec, ExperimentSpec, ExpectedRelationshipSpec
 from src.lab.metamorphic import MetamorphicRuleEngine
 import src.engine.governor as governor_module
-from src.core.governance import RuntimeMode
+from tests.helpers.kernel_pinning import PinnedNormalGovernor
 
 SPECIES_RELATIONS_PATH = "data/content/social/species_relations.yaml"
 SCENARIO_ID = "species_hostility_metamorphic_check"
@@ -112,16 +112,6 @@ def _set_wolf_human_high(content: str) -> str:
         '    hostility: "high"\n'
     )
     return stripped + addition
-
-
-class _PinnedNormalGovernor(governor_module.ResourceGovernor):
-    """Pins NORMAL so the outcome does not depend on host speed (TCK-20260822 load sensitivity)."""
-
-    def _get_indicated_mode(self, profile, signals):
-        return RuntimeMode.NORMAL
-
-    def force_mode(self, mode, status, current_tick):
-        return None  # the mid-tick wall-clock throttle must not flip the mode either
 
 
 def _contact_rich_load_world(original_load_world):
@@ -190,7 +180,7 @@ def _cleanup_created_dirs():
 def test_species_hostility_increase_does_not_decrease_combat_engagement_rate(monkeypatch):
     # Test-scoped: Kernel.__init__ imports its default governor from this module lazily, and the lab
     # orchestrator loads its world through WorldRepository.load_world (see the module docstring).
-    monkeypatch.setattr(governor_module, "ResourceGovernor", _PinnedNormalGovernor)
+    monkeypatch.setattr(governor_module, "ResourceGovernor", PinnedNormalGovernor)
     monkeypatch.setattr(WorldRepository, "load_world", _contact_rich_load_world(WorldRepository.load_world))
 
     with open(SPECIES_RELATIONS_PATH, "r", encoding="utf-8") as f:

@@ -10,33 +10,25 @@ from dataclasses import replace
 from typing import Dict, List, Tuple
 
 from src.config.profiles import PROD_SMALL
-from src.core.governance import RuntimeMode
 from src.core.movement_modes import MovementMode
 from src.core.state import TaskComponent
 from src.engine.candidate_selector import MovementCandidateSelector
 from src.engine.executor import LocalSequentialExecutor
-from src.engine.governor import ResourceGovernor
 from src.engine.kernel import Kernel
 from src.engine.scheduler import ADJACENCY_WAKE_COOLDOWN
 from src.engine.tactical import TacticalDecisionSystem
 from src.platform.rng import DeterministicRNG
 from tests.helpers.scenario import DEFAULT_FLAGS, DEFAULT_SEED, compile_world
+from tests.helpers.kernel_pinning import PinnedNormalGovernor
 
 WORLD_ID = "mechanic_scenario_combat_judgement_withdrawal"
 W, H = 2, 1
 W_POS, ADJ, APART = (1.0, 1.0), (1.0, 2.0), (1.0, 3.0)
 
 
-class _Pin(ResourceGovernor):
-    def _get_indicated_mode(self, profile, signals):
-        return RuntimeMode.NORMAL
-
-    def force_mode(self, mode, status, current_tick):
-        return None
-
 
 def _kernel(state):
-    return Kernel(profile=PROD_SMALL.model_copy(update={"max_tick_budget_ms": 1e9}), state=state, rng=DeterministicRNG(DEFAULT_SEED), governor=_Pin(),
+    return Kernel(profile=PROD_SMALL.model_copy(update={"max_tick_budget_ms": 1e9}), state=state, rng=DeterministicRNG(DEFAULT_SEED), governor=PinnedNormalGovernor(),
                   flags={**DEFAULT_FLAGS, "no_replay": True, "audit_mode": True}, executor=LocalSequentialExecutor())
 
 
