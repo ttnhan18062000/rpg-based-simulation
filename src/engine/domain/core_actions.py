@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from src.core.enums import ReasonCode
 from src.core.items import food_hunger_recovery
 from src.core.models.inventory import ItemStack
-from src.engine.appraisal import can_eat_item
+from src.engine.appraisal import can_eat_item, can_use_inn_meal
 from src.engine.building_services import repair_source
 from src.core.updates import (
     BiologicalUpdate, EntityUpdate, IdentityUpdate, 
@@ -61,6 +61,8 @@ def eat_update(entity: EntityState, current_tick: int) -> EntityUpdate:
     carried = carried_meal(entity, current_tick)
     if carried:
         return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0, resource_transfers=carried)
+    if not can_use_inn_meal(entity):  # decision 44: the free meal is a prepared meal; a diet without prepared food gets none, wherever it stands
+        return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0)
     return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0,
                         biological=BiologicalUpdate(hunger_delta=-40.0, last_meal_tick_set=current_tick))
 

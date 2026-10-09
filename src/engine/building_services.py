@@ -17,6 +17,7 @@ from src.core.updates import (
     EntityUpdate,
     ResourceTransferIntent,
 )
+from src.engine.appraisal import can_use_inn_meal
 from src.engine.serves import serves
 from src.engine.service_prices import EAT_PRICE_GOLD, INN_MEAL_HUNGER, REST_PRICE_GOLD
 from src.engine.service_reach import service_tile
@@ -50,8 +51,8 @@ def service_delta(context: Any, entity: Any, action: str, tick: int) -> Optional
     A bed and an inn meal are as they were on main (free meals stay on, owner decision 44): the effects are on the update, the price is a
     charge the resolver clamps at what the subject holds, and the building's purse is credited with what was actually paid."""
     building = service_building(context, entity, action)
-    if building is None or (action == "SELL" and not serves(context, entity, building)):
-        return None
+    if building is None or (action == "SELL" and not serves(context, entity, building)) or (action == "EAT" and not can_use_inn_meal(entity)):
+        return None  # an inn does not serve a meal to a diet without prepared food (decision 44), however the subject came to stand there
     if action == "REST":
         charge = ResourceTransferIntent(source_id=building.id, source_kind="TOWN_SERVICE", gold_delta=-REST_PRICE_GOLD, transfer_kind="REST",
                                         is_group_required=True)

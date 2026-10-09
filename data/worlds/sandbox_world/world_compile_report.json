@@ -1,15 +1,15 @@
 {
   "world_id": "sandbox_world",
   "seed": 42,
-  "entity_count": 18,
+  "entity_count": 24,
   "region_count": 3,
   "resource_node_count": 6,
   "building_count": 5,
   "quest_count": 6,
-  "distinct_populated_factions": 3,
+  "distinct_populated_factions": 4,
   "warnings": [],
-  "compile_duration_ms": 446.6850492171943,
-  "state_hash": "7b46155a739eea5ca42ac24f949c9052",
-  "canonical_state_hash": "82e102123ddc7873bfa4a62a05ce9c9ce5779ccb5b1f4565a577b3dc06549919",
+  "compile_duration_ms": 455.67318284884095,
+  "state_hash": "37d6a2730a9cdfe7340deba2fc2cafca",
+  "canonical_state_hash": "1c126aa2c2954a1212d6b7bcbbeea7638ae4f8ab0fadd069496f83255b3cf757",
   "place_count": 2
 }
