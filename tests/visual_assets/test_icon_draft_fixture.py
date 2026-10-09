@@ -8,6 +8,7 @@ Adopting `icons-key-v1` does NOT change the export: the adopted references skip 
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 
@@ -68,7 +69,12 @@ def test_a_changed_registry_hash_alone_is_deliberately_not_caught(tmp_path):
     manifest = json.loads((copy / fx.MANIFEST).read_text())
     manifest["registry_hash"] = "sha256:" + "1" * 64
     (copy / fx.MANIFEST).write_text(json.dumps(manifest, sort_keys=True, separators=(",", ":")))
-    assert cdf.differences("icons-key-v1", _fresh(tmp_path), copy) == []
+    # the comparison against a fresh export still ignores the registry hash (as the open-set check does) ...
+    fresh = _fresh(tmp_path)
+    own_pin = "sha256:" + hashlib.sha256((copy / fx.MANIFEST).read_bytes()).hexdigest()
+    assert cdf.closed_differences(fresh, copy, pinned_manifest_sha256=own_pin) == []
+    # ... but the committed bytes of a closed gate are pinned, so editing them at all (the registry hash included) is caught
+    assert any("gate evidence was rewritten" in p for p in cdf.differences("icons-key-v1", fresh, copy))
 
 
 def test_a_missing_file_is_caught(tmp_path):

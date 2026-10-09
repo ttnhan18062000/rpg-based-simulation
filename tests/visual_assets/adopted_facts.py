@@ -94,8 +94,12 @@ RC_0008_ICON_ENTRIES = 36
 # (`tests/visual_assets/closed_draft_fixture.py`), not against the moving store, which grows references whenever art is built after the gate. Set id -> the adoption records that closed it.
 CLOSED_DRAFT_SETS = {
     SET_ID: {"kind": "set_adoption", "adoption_ids": (SET_ADOPTION_ID,), "draft_set_hash": DRAFT_SET_HASH},
-    ICON_SET_ID: {"kind": "set_adoption", "adoption_ids": (ICON_SET_ADOPTION_ID,), "draft_set_hash": ICON_DRAFT_SET_HASH},
-    ICON_V2_SET_ID: {"kind": "set_adoption", "adoption_ids": (ICON_V2_SET_ADOPTION_ID,), "draft_set_hash": ICON_V2_DRAFT_SET_HASH},
+    ICON_SET_ID: {"kind": "set_adoption", "adoption_ids": (ICON_SET_ADOPTION_ID,), "draft_set_hash": ICON_DRAFT_SET_HASH,
+                  "fixture_manifest_sha256": "sha256:f227efc175eb80d1040b7aa8ff30aed2fd64164cdc3dc05c2a92dc0e4c624ad2"},
+    ICON_V2_SET_ID: {"kind": "set_adoption", "adoption_ids": (ICON_V2_SET_ADOPTION_ID,), "draft_set_hash": ICON_V2_DRAFT_SET_HASH,
+                     "fixture_manifest_sha256": "sha256:3552998bb94054fb4f86613c6251c021c90779dc34ba3bacb2e19ff9162e174e"},
+    # `fixture_manifest_sha256` pins the committed fixture's `draft_preview_manifest.json` (the owner's gate evidence, frozen at the gate): the fresh-export checks prove the record is still TRUE of the store, this proves the record itself was not rewritten (`icon_draft_fixture --write` on a closed set).
     # Seven per-slot `adopt --parent` records; they name no set hash, which is pinned by `test_icon_owner_fixes_adoption`.
-    ICON_FIX_SET_ID: {"kind": "slot_adoptions", "adoption_ids": tuple(a for a, _, _ in ICON_FIX_ADOPTIONS.values()), "draft_set_hash": ICON_FIX_DRAFT_SET_HASH},
+    ICON_FIX_SET_ID: {"kind": "slot_adoptions", "adoption_ids": tuple(a for a, _, _ in ICON_FIX_ADOPTIONS.values()), "draft_set_hash": ICON_FIX_DRAFT_SET_HASH,
+                        "fixture_manifest_sha256": "sha256:b9da86ddbea9fb313f9f02d01d6556b0801c35abf359c46650c8474462359944"},
 }

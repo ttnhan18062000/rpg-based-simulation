@@ -7,6 +7,7 @@ gate" is dropped, only for sets pinned in `adopted_facts.CLOSED_DRAFT_SETS`. An 
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 
@@ -62,6 +63,11 @@ def test_each_closed_set_is_pinned_to_adoption_records_that_exist_and_name_it():
 def test_each_fixture_records_the_draft_set_hash_the_owner_adopted_from():
     for set_id, (committed, _) in SETS.items():
         assert json.loads((committed / fx.MANIFEST).read_text())["draft_set_hash"] == af.CLOSED_DRAFT_SETS[set_id]["draft_set_hash"], set_id
+
+
+def test_each_committed_manifest_is_the_pinned_gate_evidence():
+    for set_id, (committed, _) in SETS.items():
+        assert "sha256:" + hashlib.sha256((committed / fx.MANIFEST).read_bytes()).hexdigest() == af.CLOSED_DRAFT_SETS[set_id]["fixture_manifest_sha256"], set_id
 
 
 def test_a_closed_fixture_matches_its_gate_and_a_full_fresh_export_no_longer_would(case):
@@ -127,3 +133,17 @@ def test_mutant_a_set_removed_from_the_closed_pin_runs_the_full_equality_and_fai
     assert pins.pop(set_id) and set_id not in pins
     assert cdf.differences(set_id, fresh, copy, result_text, closed=pins) != []
     assert cdf.differences(set_id, fresh, copy, result_text, closed=af.CLOSED_DRAFT_SETS) == []
+
+
+def test_mutant_rewriting_the_committed_fixture_from_a_fresh_export_is_caught_by_the_pin(case):
+    """What `icon_draft_fixture --write` does: the rewritten copy passes checks 1-3 (its drafts are unchanged and its new references are real) but is no longer the owner's gate evidence."""
+    set_id, fresh, copy, result_text = case
+    before = (copy / fx.MANIFEST).read_bytes()
+    shutil.rmtree(copy)
+    shutil.copytree(fresh, copy)
+    (copy / fx.RESULT).write_text(result_text())
+    assert (copy / fx.MANIFEST).read_bytes() != before, "the rewrite must actually change the manifest"
+    unpinned = cdf.closed_differences(fresh, copy, result_text, pinned_manifest_sha256="sha256:" + hashlib.sha256((copy / fx.MANIFEST).read_bytes()).hexdigest())
+    assert unpinned == [], "checks 1-3 alone accept the rewrite, which is why the pin exists"
+    problems = cdf.differences(set_id, fresh, copy, result_text)
+    assert any("gate evidence was rewritten" in p for p in problems), problems
