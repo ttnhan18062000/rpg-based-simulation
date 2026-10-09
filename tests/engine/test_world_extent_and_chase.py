@@ -63,3 +63,12 @@ def test_a_chaser_still_leads_a_target_walking_to_a_destination():
     chaser = V2EntityBuilder(1).location(40.0, 30.0).build()
     walker = V2EntityBuilder(2).location(36.0, 20.0).navigation(target=(36.0, 14.0)).build()
     assert PositioningService.find_intercept_position(chaser, walker, _state({1: chaser, 2: walker})) == (36.0, 18.0)
+
+
+def test_a_held_pursuit_target_is_kept_in_view_and_let_go_beyond_it():
+    from src.engine.tactical import _target_still_perceived
+    chaser = V2EntityBuilder(1).location(40.0, 30.0).build()
+    near = V2EntityBuilder(2).location(42.0, 30.0).build()
+    far = V2EntityBuilder(3).location(40.0, 3000.0).build()
+    assert _target_still_perceived(chaser, near)
+    assert not _target_still_perceived(chaser, far)
