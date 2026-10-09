@@ -21,8 +21,9 @@ from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
 from src.engine.tactical_threat import safety_retreat_warranted
-from src.engine.tactical_rest import rest_in_place_update
-from src.engine.tactical_hold import held_swing_update, stalemate_break_update
+from src.engine.tactical_rest import in_place_survival_update
+from src.engine.building_arrival import building_arrival_update
+from src.engine.tactical_hold import held_swing_update, notice_unengaged_hostile, stalemate_break_update
 from src.engine.hostility import perceived_hostile, source_identity
 
 if TYPE_CHECKING:
@@ -239,7 +240,7 @@ class TacticalDecisionSystem:
                 )
             )
 
-        rest_update = rest_in_place_update(state, entity, hostiles)
+        rest_update = in_place_survival_update(state, entity, hostiles)
         if rest_update is not None:
             return rest_update
 
@@ -268,26 +269,7 @@ class TacticalDecisionSystem:
                                         interaction=InteractionUpdate(target_node_id=node_id, progress_delta=1)
                                     )
                                 elif building_id is not None:
-                                    # At a building: dispatch survival action by project kind
-                                    proj_kind = getattr(project, "kind", "")
-                                    if proj_kind == "hunger":
-                                        return EntityUpdate(
-                                            entity_id=entity.id,
-                                            task=TaskUpdate(
-                                                work_kind_set="ENTITY_ACT",
-                                                payload_set={"action": "EAT", "target_id": building_id}
-                                            )
-                                        )
-                                    elif proj_kind == "fatigue":
-                                        return EntityUpdate(
-                                            entity_id=entity.id,
-                                            task=TaskUpdate(
-                                                work_kind_set="ENTITY_ACT",
-                                                payload_set={"action": "REST", "target_id": building_id}
-                                            )
-                                        )
-                                    else:
-                                        return EntityUpdate(entity_id=entity.id)
+                                    return building_arrival_update(state, entity, project, building_id)
                                 else:
                                     return EntityUpdate(entity_id=entity.id)
                             else:
@@ -468,6 +450,11 @@ class TacticalDecisionSystem:
         if stale_ticks > 10 and not fighting_adjacent:
              # Logic ID: COMB-277 (Anti-stalemate does not force illegal movement)
              return stalemate_break_update(entity, strat_up, _destination_or_hold(entity, wander_destination(state, entity)))
+
+        # Decision 32: beside a hostile it is not engaged with, the subject decides now (keep walking, step away, or fight below).
+        noticed = notice_unengaged_hostile(state, entity, target, hostiles, strat_up)
+        if noticed is not None:
+            return noticed
 
         # Tactical Role Logic
         role = entity.combat.tactical_role

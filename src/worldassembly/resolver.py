@@ -1165,6 +1165,8 @@ class CompileProfileResolver:
                     sense_profile_id=resolved_arch.sense_profile.id if resolved_arch.sense_profile else None,
                     inventory_profile_id=resolved_arch.inventory_profile.id if resolved_arch.inventory_profile else None,
                     skill_profile_id=resolved_arch.skill_profile.id if resolved_arch.skill_profile else None,
+                    starting_gold=int(resolved_arch.inventory_profile.starting_gold) if resolved_arch.inventory_profile else 0,
+                    starting_items=dict(resolved_arch.inventory_profile.starting_items) if resolved_arch.inventory_profile else {},
                 )
             else:
                 resolved_entity = ResolvedEntityProfile(
@@ -1189,15 +1191,11 @@ class CompileProfileResolver:
             res_def = self.repo.get_resource(res_spec.resource_type)
             required_ticks = res_def.required_ticks if res_def else self.default_semantics.get_resource_harvest_defaults()["required_ticks"]
 
-            yield_item = (
-                (getattr(res_def, "runtime_kind", None) or res_def.resource_type) if res_def else None
-            )
+            yield_item = (getattr(res_def, "runtime_kind", None) or res_def.resource_type) if res_def else None
 
             ctx.register_resource(res_spec.id, ResolvedResourceProfile(
-                required_ticks=required_ticks,
-                resource_type=res_spec.resource_type,
-                yield_item=yield_item,
-            ))
+                required_ticks=required_ticks, resource_type=res_spec.resource_type, yield_item=yield_item,
+                placement=getattr(res_def, "placement", None) if res_def else None))
 
         # 4. Resolve Buildings
         for bld_spec in getattr(spec, "buildings", []):
@@ -1209,7 +1207,9 @@ class CompileProfileResolver:
             ctx.register_building(bld_spec.id, ResolvedBuildingProfile(
                 hp=hp,
                 max_hp=max_hp,
-                service_profile_id=service_profile_id
+                service_profile_id=service_profile_id,
+                starting_gold=bld_def.starting_gold if bld_def else 0,
+                starting_stock=dict(bld_def.starting_stock) if bld_def else {},
             ))
 
         return ctx

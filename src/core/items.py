@@ -223,3 +223,9 @@ class ItemRegistry:
             else:
                 # Native ItemDefinition
                 cls._items[k] = v
+
+
+def food_hunger_recovery(item_id: str) -> float:
+    """The hunger an item removes when eaten as carried food (SURV-06), or 0.0 for an item that is not food."""
+    definition = ItemRegistry.get(item_id)
+    return float((definition.properties or {}).get("hunger_recovery", 0.0)) if definition else 0.0

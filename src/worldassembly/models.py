@@ -57,6 +57,10 @@ class ResolvedEntityProfile(BaseModel):
     sense_profile_id: Optional[str] = None
     inventory_profile_id: Optional[str] = None
     skill_profile_id: Optional[str] = None
+    # The declared inventory profile's coin and items, applied to each entity at compile (EXCH-02, owner decision 37: starting coin is
+    # declared world content). Zero and empty are left out of the serialized context.
+    starting_gold: int = 0
+    starting_items: Dict[str, int] = Field(default_factory=dict)
 
 
 
@@ -66,6 +70,9 @@ class ResolvedBuildingProfile(BaseModel):
     max_hp: int
     service_profile_id: Optional[str] = None
     owner_faction: Optional[int] = None
+    # The building's till and stock at world creation (BuildingDefinition); zero and empty are left out of the serialized context.
+    starting_gold: int = 0
+    starting_stock: Dict[str, int] = Field(default_factory=dict)
 
 
 class ResolvedResourceProfile(BaseModel):
@@ -77,6 +84,8 @@ class ResolvedResourceProfile(BaseModel):
     # definition the same way CatalogToResourceRegistryAdapter does (runtime_kind or resource_type).
     # None when the kind has no catalog definition; the compiler then falls back to ResourceRegistry.
     yield_item: Optional[str] = None
+    # Compile-time placement rule of the kind (``ResourceDefinition.placement``); None is the default (owned by the declared region) and is left out of the serialized context; "uniform" opts out.
+    placement: Optional[str] = None
 
 
 class ResolvedFactionEconomyProfile(BaseModel):

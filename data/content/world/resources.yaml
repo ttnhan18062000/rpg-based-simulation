@@ -45,6 +45,20 @@
     # above) -- same tag-gap shape as the swamp_border_territory fix.
     source_region_tags: ["near_forest", "moon_cave", "hometown", "swamp_border_territory", "river_ford"]
 
+# STATE: EXISTING-LOGIC
+# SURV-06 forage path (decisions 27 and 29): wild food is part of the land. A hungry subject harvests it in wild land (never town land, which
+# holds owned food). Finite (charges) and slow to regrow (the default one charge per ecology cycle, density-modulated); the biome sets how much
+# the land holds. Charges are anchored to wood_node (10), the kind the near_forest ecology already lists.
+- id: "berry_thicket"
+  material: "wild_berries"
+  display_name: "Berry Thicket"
+  resource_type: "wild_berries"
+  required_ticks: 8
+  default_charges: 10
+  preferred_biomes: ["near_forest", "sacred_grove", "sunken_swamp"]
+  metadata:
+    source_region_tags: ["near_forest"]
+
 # STATE: LEGACY-EXPORT
 - id: "healing_flower_patch"
   material: "healing_flower"

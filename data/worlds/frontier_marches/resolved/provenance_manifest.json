@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_50178ce69de2a06a",
+  "manifest_id": "prov_0343c7ce2a8add22",
   "world_id": "frontier_marches",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
@@ -10,14 +10,14 @@
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
-    "sunken_swamp_border": "adbeeba097121a59128bc0d09a3b35b5fbaca044c2761049d3f97c477ca2ff96",
+    "sunken_swamp_border": "11e37d8a23ded39f278c7bcb0acedc5dcbe626076765d6caa18fcd4b4befb8fd",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
-    "wolf_den_near_forest": "d80c2b1a161759b7d69273f2ab35d462d6bdda149adb67541212e3592cdf5559"
+    "wolf_den_near_forest": "87c915735d10b1e943f14fd2a5b0b88109c22089f33c0a51a1dd8e12e9ba7584"
   },
-  "composition_fingerprint": "b476999737cdb49bab7d49576e44e66b4b46df381eb65a6e2043e6190245d707",
+  "composition_fingerprint": "2b49c4019c3a04f6884623040a3b02eb4780382b444b12877e4edeba7c474b1b",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "50178ce69de2a06ae241f7cf0c77996826f5555f3b6fc12d06bdbe064c3ab500",
-  "created_at": "2026-09-08T02:50:46.389956Z",
+  "content_fingerprint": "0343c7ce2a8add22e01171322c4ab1389336bb5b2d0b3d5e4d03bddc0a79e9be",
+  "created_at": "2026-10-09T03:58:34.739321Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -244,7 +244,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",
@@ -1333,6 +1333,20 @@
         "region": "swamp_border_territory"
       }
     },
+    "sunken_swamp_border__berry_thicket_2": {
+      "element_id": "sunken_swamp_border__berry_thicket_2",
+      "element_type": "resource",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 8,
+        "region": "swamp_border_territory"
+      }
+    },
     "haunted_battlefield": {
       "element_id": "haunted_battlefield",
       "element_type": "region",
@@ -1478,7 +1492,7 @@
           55
         ],
         "terrain": "forest",
-        "hazard_level": 1.0,
+        "hazard_level": 0.0,
         "ecology_source": [
           "wolf_den_ecology"
         ]
@@ -1594,6 +1608,20 @@
       },
       "details": {
         "count": 3,
+        "region": "near_forest"
+      }
+    },
+    "wolf_den_near_forest__berry_thicket_3": {
+      "element_id": "wolf_den_near_forest__berry_thicket_3",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
         "region": "near_forest"
       }
     },

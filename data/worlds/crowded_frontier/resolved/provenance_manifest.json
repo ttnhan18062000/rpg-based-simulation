@@ -1,19 +1,20 @@
 {
-  "manifest_id": "prov_c30294dd56c7f976",
+  "manifest_id": "prov_56b2f5d6ea14134c",
   "world_id": "crowded_frontier",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
-    "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e"
+    "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
+    "wild_edge_forage": "d8a0de2eac9569521b460a7a986b9b0bde683b81f8e7a86da78a84a80cb7bd3d"
   },
-  "composition_fingerprint": "c1236b66f875f9584b2078c18ff1e3ac317b15422201051050e0d880a50aebd2",
+  "composition_fingerprint": "0a76e53752a84570c17c47482de932cc2350457bd2ca51e0ef034b402b1706df",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "c30294dd56c7f976d7b6f2b1508588494e7b6ec8f02281464f011ba4850a3d62",
-  "created_at": "2026-09-08T02:50:40.407291Z",
+  "content_fingerprint": "56b2f5d6ea14134ceb1a83dd1fc863122da37042b41a9acc676015f31653deac",
+  "created_at": "2026-10-09T03:58:28.486773Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -240,7 +241,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",
@@ -1074,6 +1075,41 @@
           "territory"
         ],
         "reward_budget": 100
+      }
+    },
+    "forest_edge": {
+      "element_id": "forest_edge",
+      "element_type": "region",
+      "source_module": "wild_edge_forage",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "near_forest"
+      },
+      "details": {
+        "bounds": [
+          44,
+          10,
+          72,
+          38
+        ],
+        "terrain": "forest",
+        "hazard_level": 0.0,
+        "ecology_source": []
+      }
+    },
+    "wild_edge_forage__berry_thicket_0": {
+      "element_id": "wild_edge_forage__berry_thicket_0",
+      "element_type": "resource",
+      "source_module": "wild_edge_forage",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
+        "region": "forest_edge"
       }
     }
   }

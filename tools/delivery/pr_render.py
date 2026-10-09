@@ -66,7 +66,7 @@ except ImportError:
 _REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
 if _REPO_ROOT_STR not in sys.path:
     sys.path.append(_REPO_ROOT_STR)
-from tools.agent_working_paths import TICKETS, posix  # noqa: E402
+from tools.agent_working_paths import STORED_ARTIFACTS, TICKETS, posix  # noqa: E402
 
 _TICKET_ID_RE = re.compile(r"TCK-[0-9]{8}-[A-Z0-9-]+")
 _REVIEW_NOTES_PLACEHOLDER = "<!-- UNFILLED: write review notes by hand before opening the PR -->"
@@ -129,6 +129,38 @@ def discover_changed_files(run_command=default_run_command, base_ref: str = "ori
     if result.returncode != 0:
         return []
     return sorted({line.strip() for line in result.stdout.splitlines() if line.strip()})
+
+
+# Raw probe output under stored_artifacts/**/probes/ (TCK-20261009-PR-RENDER-RAW-PROBE-OUTPUT-ADVISORY). Measured on
+# origin/main 2026-10-09: 414 probe files, 5.3 MB, mostly raw per-run .jsonl. Rule agreed with the rpg domain: commit the
+# probe scripts and summary tables, no raw per-run output unless a ticket cites it. A probe file counts as raw output when
+# its extension is not a script or a summary. 200 KB is where one probe batch starts to be worth a second look.
+RAW_PROBE_WARN_BYTES = 200 * 1024
+_PROBE_NON_RAW_SUFFIXES = frozenset({".py", ".sh", ".md", ".txt"})
+_RAW_PROBE_TOP = 5
+
+
+def raw_probe_warning(files: list, root: Path = Path(".")) -> Optional[str]:
+    """One non-blocking warning when the changed files include more than `RAW_PROBE_WARN_BYTES` of raw probe output.
+    Sizes come from the working tree; a file that is gone (a deletion) counts for nothing."""
+    prefix = posix(STORED_ARTIFACTS) + "/"
+    sized = []
+    for rel in files:
+        if not (rel.startswith(prefix) and "/probes/" in rel[len(prefix):]):
+            continue
+        if Path(rel).suffix.lower() in _PROBE_NON_RAW_SUFFIXES:
+            continue
+        try:
+            size = (root / rel).stat().st_size
+        except OSError:
+            continue
+        sized.append((size, rel))
+    total = sum(size for size, _ in sized)
+    if total <= RAW_PROBE_WARN_BYTES:
+        return None
+    top = ", ".join(f"{rel} ({size // 1024} KB)" for size, rel in sorted(sized, key=lambda item: (-item[0], item[1]))[:_RAW_PROBE_TOP])
+    return (f"raw probe output: {len(sized)} file(s), {total // 1024} KB under {prefix}**/probes/ (largest: {top}); "
+            "keep only files a ticket cites; summarize the rest in investigation.md")
 
 
 def find_ticket_file(ticket_id: str, tickets_root: Path = _DEFAULT_TICKETS_ROOT) -> Optional[Path]:
@@ -431,6 +463,9 @@ def render(
     why: Optional[str] = None,
 ) -> dict:
     tickets, warnings = discover_tickets(run_command, tickets_root, base_ref, exclusions=exclusions)
+    probe_warning = raw_probe_warning(discover_changed_files(run_command, base_ref))
+    if probe_warning:
+        warnings.append(probe_warning)
     if not tickets:
         warnings = warnings + ["no tickets discovered"]
         if not (theme and scope and why):

@@ -4,12 +4,12 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-08"
+last_verified: "2026-10-09"
 ---
 
 # Scenario Bank: Life / Body / Survival / Ecology (Batch 05)
 
-**Purpose/scope.** Seventeen scenarios (one added 2026-10-08 for SURV-06's wild food) used to pressure-test the Lifecycle, Body/Condition,
+**Purpose/scope.** Twenty-one scenarios (LB-S17 and LB-S18 added 2026-10-08, LB-S19 to LB-S21 added 2026-10-09) used to pressure-test the Lifecycle, Body/Condition,
 Survival Needs, and Ecology/Population rule families in `life-body/lifecycle.md`,
 `life-body/body-condition.md`, `life-body/survival-needs.md`, and
 `life-body/ecology-population.md`, per `tmp/world-rule-batch-5-ext-ai.md`. Covers all sixteen
@@ -183,6 +183,8 @@ individual consequences. Kept schematic — no detailed food-web simulator is de
   individual-level `ecological_predator` role classification exists
   (`src/content_semantics/role.py`), and general density/scarcity pressure (ECOL-04) is real —
   but no aggregate predator-count-to-prey-pressure formula specific to predation was found.
+  (2026-10-09, rpg-planner via Lane A: `ecological_predator` is read only by
+  `RoleDefinition.is_combatant`, which has no callers, so no live behaviour reads it as a label.)
   Recorded as PARTIAL rather than either SUPPORTED (which would overclaim) or MISSING (which
   would underclaim what general pressure mechanisms already provide).
 
@@ -231,10 +233,193 @@ land holds no wild food, the same worker cannot forage, and nothing feeds it for
     and not from engine charity or a free meal. It also proves that the biome decides whether
     wild food exists.
   - **Also checked in the main arm:** no wild-food node sits inside the settlement bounds.
-- **Result (2026-10-08): revealed missing rule implementation on main.** No world places wild
+- **Result (2026-10-09): covered in its no-inn form** since #454 (`0b4f12af7`) by
+  `tests/mechanic_scenarios/test_forage_loop_wild_food.py` (5 passed). It is staged with no inn
+  in reach, because free meals stay on until the parked removal
+  (`TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL`) lands. The full
+  form, a broke worker who forages although an inn is in reach, waits for that removal.
+- **Earlier result (2026-10-08): revealed missing rule implementation on main.** No world places wild
   food by biome. The one food node in each of the three measured worlds sits on town land, and
   EAT consumes no carried food (SURV-06's evidence). Expected to be **covered** once decision
   27's PR (Lane B) lands and this spec passes at kernel level.
+
+
+## LB-S18 — Starvation weakens first and kills over days (SURV-02 amendment, decision 36) (added 2026-10-08)
+
+A creature with no food, a person or an animal, crosses the starvation line, becomes weaker
+within hours, starts losing health only later, and dies after about two to three days. One that
+eats does none of this.
+
+- **Rules invoked:** SURV-02 (crossing a threshold has real consequences; decision 36 makes
+  them staged), SURV-07 (the pull to eat), Bible 05 §1 (2,400 ticks = 1 day).
+- **Kernel spec (`mechanic_scenario`).** Two arms, differing only in access to food:
+  - **Staging:** a compiled world with one people-kind subject S, a non-combatant, at full HP and
+    full stats, with hunger just below the starvation line and no hostiles or ambient hazard.
+    The window runs to at least 3.5 days (8,400 ticks) after S crosses the line.
+  - **Main arm (no food reachable: no inn, no wild food, nothing carried, no money):**
+    - S crosses the line.
+    - **Stage 1, weakened:** within the first in-game hours past the line, S's capacity is
+      degraded (slower recovery, a lower combat-effectiveness term), with no HP loss yet, or HP
+      loss well below today's 2 per tick.
+    - **Stage 2, starving:** later, S loses HP slowly.
+    - **Death:** S dies of starvation between 2 and 3 days after crossing the line. It is alive
+      at 1 day and dead by 3.5 days.
+    - Each stage change is read from authoritative state.
+  - **Control arm (an inn within reach, with money or a free meal):** S eats before or soon after
+    the line, its hunger falls back below it, any weakening clears, and S is alive at the end.
+  - **Why the control:** it proves the weakening and the death come from the unmet need, not
+    from the staging.
+  - **Second kind (added 2026-10-09, decision 42):** the main arm is repeated with one non-people
+    living kind (for example a wolf), staged the same way. The same stage order holds, sized by
+    that kind's own profile. The rule is not a people-only rule.
+  - **Engineering, not observable:** the exact stage thresholds, the effects' sizes and the HP
+    rate. The spec checks the stage order and the 2-to-3-day window only.
+- **Result (2026-10-09): covered** since #457 (`edda25490`) by
+  `tests/mechanic_scenarios/test_starvation_over_days.py`: weakened with full health before the
+  line, alive and hurt a day past it, dead 4,800 to 7,200 ticks after it; the control eats and
+  stops losing health; a second-kind arm stages a goblin as a meat-eater (a generic meat-eater
+  archetype replaces it in the hunting batch, decision 50).
+- **Earlier result (2026-10-08): revealed contradiction on main.** `hunger >= 95.0` costs 2 HP per tick
+  (`src/engine/apply.py`), so S dies about 50 ticks after the line (SURV-02's amendment
+  evidence). Expected to be **covered** with Lane A's decision-36 ticket.
+
+---
+
+## LB-S19 — Extreme sleep debt weakens, then collapses the subject where it stands, with no HP loss (SURV-02 amendment, decision 41) (added 2026-10-09)
+
+A creature, person or animal, that has gone far too long without sleep is weaker first, then
+falls asleep where it stands, cannot act while asleep, and wakes once enough of the debt is slept
+off. Its health never drops from lack of sleep. A rested one does none of this.
+
+- **Rules invoked:** SURV-02 (crossing a threshold has real consequences; decision 41 makes
+  sleep debt end in collapse, not in HP loss), Bible 01 (biological pressures: sleep debt
+  accrues 0.05 per tick).
+- **Kernel spec (`mechanic_scenario`).** Two arms, differing only in starting sleep debt:
+  - **Staging:** a compiled world with one people-kind subject S, a non-combatant, at full HP,
+    with hunger low (well below every hunger stage, so starvation cannot confound the reading),
+    no hostiles and no ambient hazard. S is part way along a long committed walk across open
+    ground, so a collapse shows as a stop away from any bed. The window runs until S has woken
+    and walked on.
+  - **Main arm (sleep debt just below the collapse line, above the weakened line):**
+    - **Stage 1, weakened:** at staging, S's capacity is degraded (slower recovery, a lower
+      combat-effectiveness term). It is not collapsed and still acts.
+    - **Collapse:** within a few ticks S's debt reaches the collapse line, and S falls asleep
+      where it stands, on the tile it occupied, not at a bed. Its committed walk stops.
+    - **While collapsed:** S takes no action and does not move, and its sleep debt falls.
+    - **Wake:** once its debt falls below the wake line, S can act again and resumes deciding
+      (it may walk on). The weakening clears once its debt is below the weakened line.
+    - **No HP loss:** S's HP is never lower than at staging at any tick in the window.
+    - Each stage change is read from authoritative state.
+  - **Control arm (sleep debt low):** S is not weakened and never collapses, completes or
+    continues its walk, and its HP is unchanged.
+  - **Why the control:** it proves the weakening and the collapse come from the debt, not from
+    the staging or the walk.
+  - **Second kind (added 2026-10-09, decision 42):** the main arm is repeated with one non-people
+    living kind (for example a wolf), staged the same way. The same stage order holds, sized by
+    that kind's own profile. The rule is not a people-only rule.
+  - **Engineering, not observable:** the weakened threshold and effect sizes, the collapse line
+    (decision 41 sets it at 98), the wake line, and the rest rate. The spec checks the stage
+    order, "no action while collapsed", waking, and "no HP loss" only. rpg-planner's suggested
+    numbers (2026-10-09): weakened at 80, reusing the existing attack x0.8 EXHAUSTION hook in
+    `combat.py` plus regen x0.5 as in decision 36's `src/engine/starvation.py`, collapse at 98,
+    and wake below about 60.
+- **Result (2026-10-09): revealed contradiction on main.** `sleep_debt >= 98.0` costs 1 HP per
+  tick (Bible 01, biological pressures), so S loses HP from the first tick past the line and
+  dies about 100 ticks later, still walking. Expected to be **covered** with the decision-41 code
+  ticket (`TCK-20261009-SLEEP-DEBT-WEAKENS-THEN-COLLAPSES-THE-SUBJECT-WHERE-IT-STANDS-NO-HP-LOSS`).
+
+---
+
+## LB-S20 — A hungry meat-eater hunts what it can overcome and eat, eats it raw, and refuses what its diet excludes (SURV-06, decisions 31, 42, 44 and 46) (added 2026-10-09)
+
+A hungry meat-eater kills a smaller, weaker creature whose body its diet can eat. The body yields
+meat, and the hunter eats it raw and is less hungry. It does not hunt a creature it cannot
+overcome. Beside a berry thicket it does not forage the berries. With no kill there is no meat.
+"Hunter" and "hunted" are outcomes of the creatures' properties, not labels (decision 46).
+
+- **Rules invoked:** SURV-06 (each kind's own ways: predators hunt; decision 31: eaten raw; a kill
+  leaves food), decision 42 (every living kind), decision 44 (hunting and a diet gate come before
+  the free-meal removal), Bible 03 (conservation: meat enters from the body and leaves by eating).
+- **Kernel spec (`mechanic_scenario`).** Three arms on one staging:
+  - **Staging:** a compiled wild region with no settlement and no inn in reach. P is a kind whose
+    diet eats meat (a medium meat-eater archetype), at full HP, hungry enough to act on it, carrying no food.
+    A berry thicket with charges sits within P's reach. There are no other hostiles.
+  - **Main arm (an animal P can overcome and eat):** a creature Q, smaller and weaker than P, whose
+    body P's diet can eat, stands
+    within reach.
+    - P hunts and kills Q.
+    - Q's body yields meat. The amount follows Q's kind (its body), not P's hunger.
+    - P eats the meat raw, and its hunger falls by the raw value, which is less than the same
+      meat cooked would give (decision 31).
+    - Conservation: meat appears only from Q's body, at Q's death, and leaves only by eating or
+      remaining on the body. No meat appears anywhere else.
+    - P takes no charge from the berry thicket at any tick.
+  - **Diet arm (no prey):** P stays hungry. It does not forage the berry thicket, because its
+    diet excludes it. It may search or wander, and its need is reported as unmet.
+  - **Control arm (Q present, P sated):** P does not hunt for food, and no meat appears.
+  - **Derivation arm (a creature P cannot overcome):** in place of Q stands a creature R whose
+    body P's diet could eat, but which is clearly larger and more dangerous than P. Hungry P does
+    not hunt R; it keeps away or looks elsewhere. This proves the choice comes from the
+    creatures' properties, not from a label. Neither P, Q nor R carries a prey or predator flag,
+    and the test asserts that no such flag is read.
+  - **Why the arms:** the diet arm proves the thicket is refused by diet, not by reach. The
+    control proves meat comes from a kill made for hunger, not from staging.
+  - **Engineering and content, not observable:** the meat item, yields per kind, raw and cooked
+    values, how long a body's meat lasts, and whether scavengers may eat a body they did not kill
+    (a later question).
+- **Q's kind (decided by the owner directly, 2026-10-09; decisions 45 and 46):** the corpus has
+  no small, edible, plant-eating animal yet, so a few generic archetypes are added, declared by
+  coarse properties only (decision 50: named species come later). Q is staged as one of them once it exists. Until then a test
+  may stage any kind that is smaller and weaker than P and edible to its diet.
+- **Result (2026-10-09): revealed missing implementation on main.** A kill pays gold and XP only.
+  No meat, carcass or hide item exists, a corpse holds loot and not food, and there is no
+  eat-corpse action. Carnivores take decision 27's forage step on berry thickets because no diet
+  gate exists (SURV-06's decision-44 evidence). Expected to be **covered** with the hunting and
+  diet-gate tickets.
+
+---
+
+## LB-S21 — A small plant-eater grazes, flees a danger it perceives, and its numbers change only by births and deaths (SURV-06, decisions 32, 42, 45 and 46) (added 2026-10-09)
+
+A hungry small plant-eater grazes wild land and its hunger falls. One that notices a meat-eater coming close
+moves away instead of grazing on. The herd grows only when there are living adults to bear young
+and enough grazing, and shrinks when its members are killed or starve. No animal appears from
+nowhere. It flees because of the danger it perceives, not because it is labelled prey
+(decision 46).
+
+- **Rules invoked:** SURV-06 (grazing creatures forage; each kind's own ways), CONFLICT-04's
+  decision 32 (a subject that notices a hostile coming adjacent decides), decision 42 (every
+  living kind), decision 45 (small plant-eaters exist), decision 46 (roles from properties), Bible 03 (conservation: grazing takes charges
+  from the land), ECOL-03 (aggregate population should follow individual births and deaths).
+- **Kernel spec (`mechanic_scenario`).** Three parts on a wild region with no settlement:
+  - **Grazing (one small plant-eater archetype, D):** D is hungry, with grazing land that its
+    diet allows in reach. D grazes, a charge leaves the land, and D's hunger falls. D does not
+    eat what its diet excludes (meat). With the land stripped bare, D stays hungry and its need
+    is reported unmet; it may move on to other grazing.
+  - **Avoidance (D grazing, a meat-eater W hunting it):** when W comes adjacent and D perceives it, D
+    takes a fresh decision (decision 32) and moves away or flees. It does not keep grazing and
+    take blows. A **control** with W sated, lying still or walking past, not approaching: D is
+    wary (it keeps a distance and stays alert) but does not flee, and no fight occurs. D never
+    reads W's hunger, only what W is and what it is doing (decision 49). A **third control** with a creature beside D that is no
+    danger to it (another plant-eater of similar size): D keeps grazing. Avoidance follows the
+    danger D perceives, never a predator label. A **second control** with D not perceiving W (out of
+    sight): no avoidance decision is recorded.
+  - **Numbers (a small herd over a long window):**
+    - A new animal appears only as the young of a living adult of its kind, and only when the
+      adults are fed above their kind's line. Nothing spawns in to replace the dead.
+    - Each death has a cause (killed, starved, other declared cause), and the count falls by
+      exactly the deaths.
+    - With no adults left, the count stays at zero.
+- **Engineering and content, not observable:** the species and their declared properties (size,
+  power, wits, diet, edibility), their need profiles, litter
+  size and gestation, maturity age, grazing yields and regrowth (decision 29's biome rule), herd
+  behaviour, and how the region's aggregate population reads individual births and deaths
+  (ECOL-03's finding).
+- **Result (2026-10-09): revealed missing content and implementation on main.** The corpus has 13
+  species and no herbivore or small game (decision 45's evidence). Population change is
+  statistical (`DemographicCycleService.process_demographics()`, ECOL-03), not tied to
+  individual births and deaths. Expected to be **covered** with
+  `TCK-20261009-SMALL-PREY-KINDS-GRAZE-BREED-AND-FLEE-PREDATORS-DECISION-45`.
 
 ---
 

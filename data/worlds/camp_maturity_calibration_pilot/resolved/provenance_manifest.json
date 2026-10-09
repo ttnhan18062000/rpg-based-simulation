@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_c9ab69596771c8c3",
+  "manifest_id": "prov_c5e742a621aeca18",
   "world_id": "camp_maturity_calibration_pilot",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "0cb706c243e61d02ee3f28823d0381eaae2fd21b30b40058502c8d5e91a4cfad",
+  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "camp_maturity_calibration_pilot": "6819a951a4f721da8e81251ef22ba19d875ba4298097f51da67ecb58e5947a77"
   },
-  "composition_fingerprint": "df222dc3b6216df5ae5b3e4bdfedd89ef6967c39a57c4c12862d5698c6e500b4",
+  "composition_fingerprint": "73c78480fe6521b529e836d714dbb87b2945d305f77e887504f810ad4566ad3b",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "c9ab69596771c8c310ca7bbf3975f57a59aa51c1f2ae7c9f24c165b4a3036d01",
-  "created_at": "2026-09-08T03:20:53.666390Z",
+  "content_fingerprint": "c5e742a621aeca1816deac192ebcc36036e1937b2633927f926065387a899da8",
+  "created_at": "2026-10-09T03:58:26.919040Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -237,7 +237,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",

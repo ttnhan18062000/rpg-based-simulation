@@ -1,5 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Dict
+
+from typing import TYPE_CHECKING, Dict, Optional
+
+from src.core.items import ItemRegistry
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, BuildingState
@@ -30,7 +33,12 @@ class MarketSystem:
             "health_potion": 20.0,
             "stamina_potion": 15.0
         }
-        return bases.get(item_id, 10.0)
+        if item_id in bases:
+            return bases[item_id]
+        # EXCH-01: an item the table does not price is worth its catalog value (before this the fallback was a flat 10, which made a berry
+        # worth 10 and ore, fish and fiber worth 10 each whatever their catalog value); only an item the catalog does not know defaults to 10.
+        definition = ItemRegistry.get(item_id)
+        return float(definition.value) if definition is not None and definition.value > 0 else 10.0
 
     @staticmethod
     def calculate_price(

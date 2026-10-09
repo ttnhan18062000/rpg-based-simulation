@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-09"
 ---
 
 # World Rule Family: Learning / Adaptation
@@ -75,6 +75,36 @@ of what this Rule permits generally, not the Rule's own requirement.
 [CP-S04](../scenarios/capability-progression-batch-07.md#cp-s04) (experience with no durable
 change, counter), [CP-S17](../scenarios/capability-progression-batch-07.md#cp-s17) (non-combat
 lived experience, added per 2026-09-22 follow-up).
+
+## LEARN-03 — A craft is taught: one recipe at a time, by someone who knows it, for a price, over time
+
+> A person comes to know a craft recipe by being taught it by someone who already knows it,
+> such as a smith at a smithy. Teaching passes one recipe at a time, takes time, and is paid
+> for. Nobody learns a craft by standing near the place where it is practised.
+
+**Disposition: ACCEPT — decided by the owner directly, 2026-10-09** (row 40 of
+`docs/plans/systemic_world/owner_decision_memo.md`). It is a declared experience-to-capability
+path of the kind LEARN-01 permits. (The ID LEARN-02 was retired on 2026-09-22 and is not
+reused.)
+- **People only, by its nature (decision 42):** taught crafts belong to kinds that keep crafts.
+- **Costs:** the teacher's time, the learner's time, and the fee, paid from the learner's own
+  purse to the teacher (EXCH-02).
+- **Engineering and content, not this Rule:** who teaches which recipes, fees, lesson length,
+  prerequisites, and whether a learner may later teach.
+- **Alternatives not taken:** learning by practice at the forge with no teacher; both taught
+  and practised. Either may be added later as a further way, since LEARN-01 leaves practice
+  open.
+
+**Repository evidence: CONFLICTING (dormant).** Lane B's read (rpg-planner, 2026-10-09):
+`BlacksmithSystem` has never run in a compiled world, because of the same dead lookup as the
+shop. If wired as written, any entity on or beside a blacksmith with no known recipes learns all
+46 recipes at once, for free (seed 42, 1500 ticks: 4 / 4 / 3 entities per run in crowded /
+living / urban, including a goblin_warband member and a bandit). It stays unwired until teaching
+exists.
+
+**Scenarios:** none traced yet. One is owed with the teaching ticket: a learner pays a smith,
+learns one recipe after the lesson, and the fee moves purse to purse; a control stands beside
+the smithy and learns nothing.
 
 ---
 
@@ -168,6 +198,8 @@ knowledge-information.md`'s own fuller evidence for KNOW-02.
 
 ## Cross-domain links recorded here
 
+- LEARN-03 → Economy/Exchange (EXCH-02: the fee is paid purse to purse), Resources/Production
+  (crafting)
 - LEARN-01 → Perception/Knowledge/Agency (Batch 06's KNOW-02, inherited above), Capability/
   Progression (`capability-progression.md`'s PROG-01, inherited above)
 

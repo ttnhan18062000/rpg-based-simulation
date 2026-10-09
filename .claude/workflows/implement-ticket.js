@@ -71,7 +71,7 @@ const shOmit = async (cmd) => (legacyBash ? legacyBash(cmd) : '')
 
 // Attested gate results (TCK-20260930-NATIVE-PORT-ATTESTED-GATE-SITES). Gate and control commands decide a blocking
 // status or skip required work, so natively they run through tools/gate_checks/attest_gate.py, which prints one
-// `ATTEST:{...}` line (a SHA-256 mac over nonce|gate|cmd|exit_code|stdout_sha) before the command's stdout, and the
+// `ATTEST:{...}` line (a SHA-256 mac over nonce|gate|cmd_sha|exit_code|stdout_sha) before the command's stdout, and the
 // script verifies that line instead of trusting the agent's prose. The nonce, gate id and expected command all come
 // from this script. ANTI-MISREPORT, NOT TAMPER-PROOF: the agent must be handed the nonce to call the wrapper, so an
 // agent set on cheating can compute a valid mac without running anything (forged in 3 tool calls, see
@@ -79,6 +79,8 @@ const shOmit = async (cmd) => (legacyBash ? legacyBash(cmd) : '')
 // malformed, wrong-gate, wrong-command or hand-edited line. The unforgeable check is the orchestrator re-run of
 // done_checker_static.py before commit, and CI; a native gate verdict is advisory to those. Inline because the native
 // runtime has no crypto, fs or Buffer; tests/tools/test_attest_gate.py runs this exact block under node.
+// TCK-20261009-NATIVE-ATTESTED-COMMAND-TRANSPORT-LOSSY: the line echoes `cmd_sha`, not the command (a long command copied
+// back out of an agent is a second lossy copy), and a transport mismatch re-dispatches the site exactly once.
 // ATTEST-VERIFIER-BEGIN
 const utf8Bytes = (text) => {
   const bytes = []
@@ -137,12 +139,53 @@ const verifyAttestation = (agentOutput, { nonce, gate, expectedCmd }) => {
   let r
   try { r = JSON.parse(m[1]) } catch (e) { return { ok: false, reason: 'unparseable' } }
   if (r.gate !== gate) return { ok: false, reason: 'wrong gate' }
-  if (r.cmd !== expectedCmd) return { ok: false, reason: 'wrong command' }
-  const mac = sha256Hex([nonce, r.gate, r.cmd, String(r.exit_code), r.stdout_sha].join('|'))
+  if (r.cmd_sha !== sha256Hex(expectedCmd)) return { ok: false, reason: 'wrong command' }
+  const mac = sha256Hex([nonce, r.gate, r.cmd_sha, String(r.exit_code), r.stdout_sha].join('|'))
   if (mac !== r.mac) return { ok: false, reason: 'bad mac' }
   return { ok: r.exit_code === 0, reason: r.exit_code === 0 ? 'pass' : 'command exited ' + r.exit_code, exit_code: r.exit_code }
 }
+// A transport mismatch means the command did not run as this script built it, so no gate result exists yet: the site is
+// re-dispatched once. A verified non-zero exit is a real result and a bad mac signals tampering; neither retries.
+const TRANSPORT_REASONS = ['no ATTEST line', 'unparseable', 'wrong gate', 'wrong command']
+// dispatch(attempt, retryReason) -> the agent's output; check(output) -> verifyAttestation's verdict.
+const attestWithRetry = async (dispatch, check) => {
+  let out = await dispatch(1, null)
+  let verdict = check(out)
+  let retried = false
+  if (!verdict.ok && TRANSPORT_REASONS.includes(verdict.reason)) {
+    retried = true
+    out = await dispatch(2, verdict.reason.replace(/[^A-Za-z0-9_.-]+/g, '_'))
+    verdict = check(out)
+  }
+  return { out, verdict, retried }
+}
 // ATTEST-VERIFIER-END
+// GATE-CMD-BEGIN
+// The command line of each attested gate site: one short call into tools/gate_checks/gate_cli.py. The changed-file list
+// is derived there from `--start-sha`, never carried here. tests/tools/test_gate_cli.py holds every one under
+// GATE_CMD_BOUND (chars of base64) for a reference ticket.
+const shq = (text) => `'${String(text).replace(/'/g, "'\\''")}'`
+const GATE_CLI = 'python3 tools/gate_checks/gate_cli.py'
+const gateCmd = {
+  tagCheck: (tags) => `${GATE_CLI} tag_check ${tags.map(shq).join(' ')}`,
+  planUnresolved: (tid) => `${GATE_CLI} plan_unresolved --ticket-id ${tid}`,
+  docStaleness: (startSha, behaviorChanged, docs) => `${GATE_CLI} doc_staleness --start-sha ${startSha} --behavior-changed ${behaviorChanged ? 'true' : 'false'}${docs.length ? ' --docs-to-update ' + docs.map(shq).join(' ') : ''}`,
+  testScope: (startSha, pytestCommand) => `${GATE_CLI} test_scope --start-sha ${startSha} --pytest-command=${shq(pytestCommand)}`,
+  dataRunsCleanup: (startTs) => `${GATE_CLI} data_runs_cleanup --start-ts=${shq(startTs || '')}`,
+  p0Scan: (startSha) => `${GATE_CLI} p0_scan --start-sha ${startSha}`,
+  parityXref: (startSha) => `${GATE_CLI} parity_xref --start-sha ${startSha}`,
+  finalizeSelfcheck: (tid, tier) => `${GATE_CLI} finalize_selfcheck --ticket-id ${tid} --tier ${tier}`,
+}
+// The run's own ticket file and staging artifacts are always new or moved and are never in the implementer's
+// files_changed; leave them out of the files_changed_vs_git advisory only (the gates still see them).
+const isRunBookkeeping = (path, tid) => path.startsWith(`agent-working/staging_artifacts/${tid}/`) ||
+  /^agent-working\/tickets\/(?:inprogress|done|todos)\/(?:.*\/)?/.test(path) && path.endsWith(`/${tid}.md`)
+const advisoryFilesDelta = (derived, reported, tid) => {
+  const d = derived.filter(f => !isRunBookkeeping(f, tid))
+  const r = reported.filter(f => !isRunBookkeeping(f, tid))
+  return { unreported: d.filter(f => !r.includes(f)), unchanged: r.filter(f => !d.includes(f)) }
+}
+// GATE-CMD-END
 // Legacy runtime: the runtime's own bash(), unchanged. Native: attested dispatch, fail closed. An unverified or
 // non-zero result throws, so a gate can never fall through its marker-absent default (several of these sites treat a
 // missing marker as "no problem"); the catch at the bottom of this file records WORKFLOW_ERROR and rethrows.
@@ -151,13 +194,18 @@ const shAttested = async (cmd, gate, label) => {
   if (legacyBash) return legacyBash(cmd)
   const nonce = String(args.execution_id_suffix)
   if (!/^[A-Za-z0-9_.-]+$/.test(nonce)) throw new Error(`GATE_ATTESTATION_FAILED ${gate}: execution_id_suffix must match [A-Za-z0-9_.-]+`)
-  const result = await runCommand(
-    `python3 tools/gate_checks/attest_gate.py --nonce ${nonce} --gate-id ${gate} --cmd-b64 ${base64Utf8(cmd)}${ticketId ? ` --ticket-id ${ticketId}` : ''}`,
-    label || gate
+  const cmdB64 = base64Utf8(cmd)
+  const { out, verdict, retried } = await attestWithRetry(
+    async (attempt, retryReason) => {
+      const result = await runCommand(
+        `python3 tools/gate_checks/attest_gate.py --nonce ${nonce} --gate-id ${gate} --cmd-b64 ${cmdB64}${ticketId ? ` --ticket-id ${ticketId}` : ''}${attempt > 1 ? ` --attempt ${attempt} --retry-reason ${retryReason}` : ''}`,
+        label || gate
+      )
+      return result && typeof result.stdout === 'string' ? result.stdout : ''
+    },
+    (output) => verifyAttestation(output, { nonce, gate, expectedCmd: cmd })
   )
-  const out = result && typeof result.stdout === 'string' ? result.stdout : ''
-  const verdict = verifyAttestation(out, { nonce, gate, expectedCmd: cmd })
-  if (!verdict.ok) throw new Error(`GATE_ATTESTATION_FAILED ${gate}: ${verdict.reason}`)
+  if (!verdict.ok) throw new Error(`GATE_ATTESTATION_FAILED ${gate}: ${verdict.reason}${retried ? ' (after 1 retry)' : ''}`)
   try { lastAttestedStdoutSha = JSON.parse(/ATTEST:(\{.*\})/.exec(out)[1]).stdout_sha || null } catch (e) { lastAttestedStdoutSha = null }
   return out.split('\n').filter((line) => !line.startsWith('ATTEST:')).join('\n')
 }
@@ -754,14 +802,20 @@ workflowErrorHook = async (err) => {
 // argv elements, MARKER-prefixed JSON, try/catch parse) rather than depending on the agent to
 // self-report correctly. Catches an unregistered tag here, at Scope, instead of only 6+ phases
 // later at Verify (done-checker's frontmatter_valid condition, TCK-20260706-TAG-REGISTRY-DATA).
-const tagsArgs = (ticketInfo.tags || []).map(t => `"${t}"`).join(' ')
-const tagCheckOutput = tagsArgs ? await shAttested(
-  `python3 -c "
-import sys, json
-sys.path.insert(0, 'tools')
-from tag_registry import check_tags_registered
-print('TAG_CHECK_JSON:' + json.dumps(check_tags_registered(sys.argv[1:])))
-" ${tagsArgs}`,
+// The run's start commit (TCK-20261009-NATIVE-ATTESTED-COMMAND-TRANSPORT-LOSSY): the list-carrying gate sites derive the
+// changed files from `git diff <startSha>` in gate_cli.py instead of carrying a path list through an agent. The stdout
+// hash in the attestation must match the sha handed back, so a mis-copied 40 characters cannot become the base.
+const startShaOutput = await shAttested('git rev-parse HEAD', 'start_sha')
+const startShaRaw = startShaOutput.trim()
+const startShaValid = /^[0-9a-f]{40}$/.test(startShaRaw)
+if (!legacyBash && !(startShaValid && (sha256Hex(startShaRaw + '\n') === lastAttestedStdoutSha || sha256Hex(startShaRaw) === lastAttestedStdoutSha))) {
+  throw new Error('GATE_ATTESTATION_FAILED start_sha: not a verified 40-character commit sha')
+}
+// The legacy runtime has the real shell; if its answer is somehow not a sha, diff against HEAD (uncommitted work only).
+const startSha = startShaValid ? startShaRaw : 'HEAD'
+const tagsList = ticketInfo.tags || []
+const tagCheckOutput = tagsList.length ? await shAttested(
+  gateCmd.tagCheck(tagsList),
   'tag_check'
 ) : 'TAG_CHECK_JSON:[]'
 let unregisteredTags = []
@@ -770,7 +824,7 @@ if (tagCheckMarkerIndex !== -1) {
   try { unregisteredTags = JSON.parse(tagCheckOutput.slice(tagCheckMarkerIndex + 'TAG_CHECK_JSON:'.length).trim()) }
   catch (e) { unregisteredTags = [] }
 }
-if (tagsArgs) pushStaticGate('Scope:tag_registry.check_tags_registered', 'static_check', 'Scope', unregisteredTags.length > 0 ? 'FAIL' : 'PASS', unregisteredTags.length > 0, `unregistered=${unregisteredTags.length}`)
+if (tagsList.length) pushStaticGate('Scope:tag_registry.check_tags_registered', 'static_check', 'Scope', unregisteredTags.length > 0 ? 'FAIL' : 'PASS', unregisteredTags.length > 0, `unregistered=${unregisteredTags.length}`)
 
 // Push scope event. reason_code (TCK-20260706-MONITORING-REASON-CODE convention, reused here):
 // Scope now has 2 distinct failure causes (conflicts, unregistered tags) — the same
@@ -1011,12 +1065,7 @@ Then return: ordered step list (one line per step) + any unresolved questions.`,
   // real importable function (unit-tested in tests/tools/test_plan_gate_static.py) rather than
   // inlining regex logic in the -c string.
   const unresolvedCheckOutput = await shAttested(
-    `python3 -c "
-import sys, json
-sys.path.insert(0, 'tools')
-from gate_checks.plan_gate_static import plan_has_unresolved_questions_heading
-print('UNRESOLVED_CHECK_JSON:' + json.dumps(plan_has_unresolved_questions_heading(sys.argv[1])))
-" "agent-working/staging_artifacts/${tid}/plan.md"`,
+    gateCmd.planUnresolved(tid),
     'plan_unresolved_questions'
   )
 
@@ -1243,15 +1292,11 @@ pushEvent(
 // through via an optional --docs-to-update CLI sentinel — purely additive, produces at most a
 // separate non-blocking ADVISORY entry, never changes the PASS/FAIL verdict computed above.
 const docsToUpdate = Array.isArray(investigation.docs_to_update) ? investigation.docs_to_update : []
-const combinedFilesChanged = Array.from(new Set([
-  ...implementation.files_changed,
-  ...(docUpdate.docs_updated || []).map(d => d.path),
-]))
+// The doc-staleness gate derives its changed files from git (gate_cli.py, `git diff <startSha>` plus untracked), so the
+// implementer's files and the doc-updater's own edits are both in it without either list being carried in the command.
 
-const docStalenessFilesArgs = combinedFilesChanged.map(f => `"${f}"`).join(' ')
-const docsToUpdateArgs = docsToUpdate.length > 0 ? `--docs-to-update ${docsToUpdate.map(d => `"${d}"`).join(' ')}` : ''
 const docStalenessOutput = await shAttested(
-  `python3 tools/gate_checks/doc_staleness_check.py ${implementation.behavior_changed} ${docStalenessFilesArgs} ${docsToUpdateArgs} --execution-mode pipeline`,
+  gateCmd.docStaleness(startSha, Boolean(implementation.behavior_changed), docsToUpdate),
   'doc_staleness'
 )
 let docStalenessResults = null
@@ -1267,7 +1312,7 @@ if (docStalenessResults) pushStaticGate('Implement:gate_checks.doc_staleness_che
 // Files-Changed-omission early warning (TCK-20260831-HOTFIX-FILES-CHANGED-DOC-OMISSION-EARLY-
 // WARNING, agent-working/agent-monitoring/retro/RETRO-2026-W35.md § "What to change?" item 1): a ticket's own
 // `## Files Changed` prose section omitting a path Document-Update genuinely touched was
-// previously only caught reactively by done-checker at Verify, 6+ phases later. combinedFilesChanged
+// previously only caught reactively by done-checker at Verify, 6+ phases later. docUpdate.docs_updated
 // already has everything needed to catch it right here — orchestrator-run, deterministic, no
 // agent() call needed (mirrors the doc-staleness gate's own shape just above). Warning only, never
 // blocking or gate-failing — do NOT auto-edit the ticket's Files Changed prose.
@@ -1571,14 +1616,8 @@ Step 5 — Report: pytest_command used, pass_count, fail_count, failed_tests (em
 // verifies — deterministically, not by trusting the agent's own judgment a second time — that the
 // actual pytest_command really does cover every directory implicated by files_changed. Runs
 // regardless of testResult.passed: a reported PASS with an uncovered directory is a false PASS.
-const filesChangedArgsForTestScope = implementation.files_changed.map(f => `"${f}"`).join(' ')
 const testScopeCheckOutput = await shAttested(
-  `python3 -c "
-import sys, json
-sys.path.insert(0, 'tools')
-from gate_checks.test_scope_coverage_static import check_test_scope_coverage
-print('TEST_SCOPE_CHECK_JSON:' + json.dumps(check_test_scope_coverage(sys.argv[1:], '''${(testResult.pytest_command || '').replace(/'/g, "\\'")}''')))
-" ${filesChangedArgsForTestScope}`,
+  gateCmd.testScope(startSha, testResult.pytest_command || ''),
   'test_scope_coverage'
 )
 let testScopeCheckResults = []
@@ -1587,6 +1626,19 @@ if (testScopeMarkerIndex !== -1) {
   try { testScopeCheckResults = JSON.parse(testScopeCheckOutput.slice(testScopeMarkerIndex + 'TEST_SCOPE_CHECK_JSON:'.length).trim()) }
   catch (e) { testScopeCheckResults = [] }
 }
+// Advisory, never blocking: the gate derived the changed files from git, so a file the implementer left out of its own
+// report (or listed but never changed) shows here. The derived list is printed by gate_cli.py as DERIVED_FILES_JSON.
+try {
+  const derivedMarker = testScopeCheckOutput.indexOf('DERIVED_FILES_JSON:')
+  if (derivedMarker !== -1) {
+    const derivedFiles = JSON.parse(testScopeCheckOutput.slice(derivedMarker + 'DERIVED_FILES_JSON:'.length).split('\n')[0].trim())
+    const { unreported, unchanged } = advisoryFilesDelta(derivedFiles, implementation.files_changed || [], tid)
+    if (unreported.length || unchanged.length) {
+      log(`files_changed advisory: ${unreported.length} changed file(s) not in the implementer's report, ${unchanged.length} reported file(s) with no change: ${unreported.concat(unchanged).slice(0, 6).join(', ')}`)
+      pushStaticGate('Test:files_changed_vs_git', 'static_check', 'Test', 'PASS', false, `advisory unreported=${unreported.length} unchanged=${unchanged.length}`)
+    }
+  }
+} catch (e) { /* advisory only */ }
 const testScopeGaps = testScopeCheckResults.filter(r => r.status === 'FAIL')
 pushStaticGate('Test:gate_checks.test_scope_coverage_static.check_test_scope_coverage', 'static_check', 'Test', testScopeGaps.length > 0 ? 'FAIL' : 'PASS', testScopeGaps.length > 0, `gaps=${testScopeGaps.length}`)
 
@@ -1639,13 +1691,7 @@ if (testResult.coverage_gaps.length > 0) {
 // (TCK-20260708-DATA-RUNS-CLEANUP-TIMING). Finalize step 6's own cleanup and done-checker's
 // data_runs_clean check both remain in place as backstops — see docs/ai/ticket-lifecycle.md.
 const cleanupOutput = await shAttested(
-  `python3 -c "
-import sys
-sys.path.insert(0, 'tools')
-from gate_checks.done_checker_static import clean_data_runs_early
-status, evidence = clean_data_runs_early(${JSON.stringify(startTs || null)})
-print(status + '|' + evidence)
-"`,
+  gateCmd.dataRunsCleanup(startTs),
   'data_runs_cleanup'
 )
 const cleanupSepIdx = cleanupOutput.indexOf('|')
@@ -1697,14 +1743,7 @@ if (paritySkipEligible) {
   // trailing argv elements (each independently shell-quoted) avoids that collision entirely.
   const filesChangedArgs = implementation.files_changed.map(f => `"${f}"`).join(' ')
   const p0ScanOutput = await shAttested(
-    `python3 -c "
-import sys
-sys.path.insert(0, 'tools')
-from parity_ledger_scan import find_p0_intersection
-hits = find_p0_intersection(sys.argv[1:])
-print('P0_INTERSECTION_FOUND' if hits else 'P0_NO_INTERSECTION')
-if hits: print(hits)
-" ${filesChangedArgs}`,
+    gateCmd.p0Scan(startSha),
     'parity_p0_scan'
   )
   parityForceFullRun = p0ScanOutput.includes('P0_INTERSECTION_FOUND')
@@ -1788,17 +1827,8 @@ Then report: entries updated (by ID and what changed), any P0 entries missing a 
   // Orchestrator-run, after the agent() call returns — mirrors run_finalize_selfcheck's
   // JSON-marker-prefix + try/catch-with-fallback parsing pattern, since there is no established
   // contract in this repo that bash() output is safe for a bare JSON.parse().
-  const touchedOutput = await shAttested(`git status --porcelain -- docs/parity_ledger/`, 'parity_touched_ledger')
   const crossRefOutput = await shAttested(
-    `python3 -c "
-import sys, json
-sys.path.insert(0, 'tools')
-from gate_checks.parity_updater_static import cross_reference_touched
-files_changed = json.loads(sys.argv[1])
-touched = sys.argv[2].splitlines()
-results = cross_reference_touched(files_changed, touched)
-print('PARITY_CHECK_JSON:' + json.dumps(results))
-" '${JSON.stringify(implementation.files_changed)}' "${touchedOutput}"`,
+    gateCmd.parityXref(startSha),
     'parity_cross_reference'
   )
   let parityCrossRef = null
@@ -2139,13 +2169,7 @@ Report each step: DONE / SKIPPED (reason).`,
 // reads state, and any FAIL (including a missing registry entry) is handled below by the same
 // generic finalizeFailures logic as the other 3 conditions.
 const finalizeCheckOutput = await shAttested(
-  `python3 -c "
-import sys, json
-sys.path.insert(0, 'tools')
-from gate_checks.done_checker_static import run_finalize_selfcheck
-results = run_finalize_selfcheck(sys.argv[1], sys.argv[2])
-print('FINALIZE_CHECK_JSON:' + json.dumps(results))
-" "${tid}" "${tier}"`,
+  gateCmd.finalizeSelfcheck(tid, tier),
   'finalize_selfcheck'
 )
 

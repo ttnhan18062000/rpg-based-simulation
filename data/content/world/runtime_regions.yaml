@@ -163,6 +163,14 @@
   danger_level: 0
   controlling_faction: "neutral"
 
+# Decision 35 (owner 2026-10-09): the forest edge beside crowded_frontier's settlement, forage only (module wild_edge_forage).
+- id: "forest_edge"
+  display_name: "Forest Edge"
+  biome: "near_forest"
+  tags: ["wild", "forest", "forage"]
+  danger_level: 0
+  controlling_faction: "neutral"
+
 # TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE: calibration-only region, isolated to
 # camp_maturity_calibration_pilot world only.
 - id: "monster_calibration_zone"

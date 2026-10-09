@@ -250,6 +250,7 @@ def test_reach_location_arrival_behavior_unchanged():
         lock_until_tick=0,
     )
     hero_eat = _with_project(_hero(2, tavern.position), project_eat)
+    hero_eat = replace(hero_eat, biological=replace(hero_eat.biological, hunger=60.0))  # a meal is only taken for a hunger (building_arrival.py)
     state_eat = AuthoritativeState(tick=10, seed=1, entities={2: hero_eat}, buildings={701: tavern})
 
     update_eat = TacticalDecisionSystem.evaluate_entity_intent(state_eat, hero_eat, neighbors=[])

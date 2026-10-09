@@ -9,8 +9,48 @@
       "def": 0,
       "attack_range": 1,
       "readiness": 100.0,
-      "inventory_seed": "hero_pocket",
+      "inventory_seed": "laborer_empty",
       "cognition_seed": "practical_humanoid",
+      "spawn_position": [
+        25.0,
+        24.0
+      ],
+      "spawn_region": "hometown",
+      "count": 8,
+      "spawn_positions": [
+        [
+          25.0,
+          24.0
+        ],
+        [
+          29.0,
+          22.0
+        ],
+        [
+          39.0,
+          14.0
+        ],
+        [
+          15.0,
+          14.0
+        ],
+        [
+          28.0,
+          20.0
+        ],
+        [
+          25.0,
+          19.0
+        ],
+        [
+          12.0,
+          39.0
+        ],
+        [
+          39.0,
+          17.0
+        ]
+      ],
       "archetype_id": "village_worker",
       "species_id": "human",
       "role_id": "worker",
@@ -18,7 +58,8 @@
       "traits": [
         "humanoid",
         "tool_user",
-        "social_humanoid"
+        "social_humanoid",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "village",
@@ -30,7 +71,7 @@
       "drive_profile_id": "cautious_commoner",
       "need_profile_id": "humanoid_survival",
       "sense_profile_id": "normal_humanoid_senses",
-      "inventory_profile_id": "hero_pocket",
+      "inventory_profile_id": "laborer_empty",
       "skill_profile_id": "blacksmith_skills"
     },
     "frontier_village_population_frontier_guard": {
@@ -44,6 +85,26 @@
       "readiness": 100.0,
       "inventory_seed": "guard_basic_kit",
       "cognition_seed": "disciplined_guard",
+      "spawn_position": [
+        35.0,
+        36.0
+      ],
+      "spawn_region": "hometown",
+      "count": 3,
+      "spawn_positions": [
+        [
+          35.0,
+          36.0
+        ],
+        [
+          17.0,
+          33.0
+        ],
+        [
+          25.0,
+          33.0
+        ]
+      ],
       "archetype_id": "frontier_guard",
       "species_id": "human",
       "role_id": "guard",
@@ -52,7 +113,8 @@
         "humanoid",
         "tool_user",
         "social_humanoid",
-        "disciplined"
+        "disciplined",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "village",
@@ -65,7 +127,12 @@
       "need_profile_id": "humanoid_survival",
       "sense_profile_id": "normal_humanoid_senses",
       "inventory_profile_id": "guard_basic_kit",
-      "skill_profile_id": "guard_skills"
+      "skill_profile_id": "guard_skills",
+      "starting_gold": 20,
+      "starting_items": {
+        "iron_sword": 1,
+        "leather_armor": 1
+      }
     },
     "frontier_village_population_traveling_merchant": {
       "legacy_role": 1,
@@ -78,6 +145,18 @@
       "readiness": 100.0,
       "inventory_seed": "merchant_trade_pack",
       "cognition_seed": "trade_pragmatist",
+      "spawn_position": [
+        12.0,
+        35.0
+      ],
+      "spawn_region": "hometown",
+      "count": 1,
+      "spawn_positions": [
+        [
+          12.0,
+          35.0
+        ]
+      ],
       "archetype_id": "traveling_merchant",
       "species_id": "human",
       "role_id": "merchant",
@@ -86,7 +165,8 @@
         "humanoid",
         "tool_user",
         "merchant_minded",
-        "social_humanoid"
+        "social_humanoid",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "trade",
@@ -99,7 +179,13 @@
       "need_profile_id": "humanoid_survival",
       "sense_profile_id": "normal_humanoid_senses",
       "inventory_profile_id": "merchant_trade_pack",
-      "skill_profile_id": "merchant_skills"
+      "skill_profile_id": "merchant_skills",
+      "starting_gold": 250,
+      "starting_items": {
+        "small_potion": 2,
+        "travel_ration": 5,
+        "repair_kit": 1
+      }
     },
     "frontier_village_population_village_blacksmith": {
       "legacy_role": 4,
@@ -112,6 +198,18 @@
       "readiness": 100.0,
       "inventory_seed": "blacksmith_toolkit",
       "cognition_seed": "practical_humanoid",
+      "spawn_position": [
+        29.0,
+        31.0
+      ],
+      "spawn_region": "hometown",
+      "count": 1,
+      "spawn_positions": [
+        [
+          29.0,
+          31.0
+        ]
+      ],
       "archetype_id": "village_blacksmith",
       "species_id": "human",
       "role_id": "blacksmith",
@@ -120,7 +218,8 @@
         "humanoid",
         "tool_user",
         "craftsman",
-        "social_humanoid"
+        "social_humanoid",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "village",
@@ -133,7 +232,13 @@
       "need_profile_id": "humanoid_survival",
       "sense_profile_id": "normal_humanoid_senses",
       "inventory_profile_id": "blacksmith_toolkit",
-      "skill_profile_id": "blacksmith_skills"
+      "skill_profile_id": "blacksmith_skills",
+      "starting_gold": 80,
+      "starting_items": {
+        "repair_kit": 2,
+        "iron_ore": 3,
+        "wood": 2
+      }
     },
     "swamp_tribe_patrol_lizardfolk_scout": {
       "legacy_role": 5,
@@ -146,6 +251,26 @@
       "readiness": 100.0,
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
+      "spawn_position": [
+        198.0,
+        107.0
+      ],
+      "spawn_region": "swamp_border_territory",
+      "count": 3,
+      "spawn_positions": [
+        [
+          198.0,
+          107.0
+        ],
+        [
+          185.0,
+          112.0
+        ],
+        [
+          200.0,
+          96.0
+        ]
+      ],
       "archetype_id": "lizardfolk_scout",
       "species_id": "lizardfolk",
       "role_id": "scout",
@@ -154,7 +279,8 @@
         "amphibious",
         "territorial",
         "humanoid",
-        "tool_user"
+        "tool_user",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "swamp"
@@ -179,6 +305,18 @@
       "readiness": 100.0,
       "inventory_seed": "mage_satchel",
       "cognition_seed": "practical_humanoid",
+      "spawn_position": [
+        205.0,
+        104.0
+      ],
+      "spawn_region": "swamp_border_territory",
+      "count": 1,
+      "spawn_positions": [
+        [
+          205.0,
+          104.0
+        ]
+      ],
       "archetype_id": "lizardfolk_shaman",
       "species_id": "lizardfolk",
       "role_id": "shaman",
@@ -188,7 +326,8 @@
         "magic_sensitive",
         "leader",
         "humanoid",
-        "tool_user"
+        "tool_user",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "swamp"
@@ -200,7 +339,12 @@
       "need_profile_id": "humanoid_survival",
       "sense_profile_id": "normal_humanoid_senses",
       "inventory_profile_id": "mage_satchel",
-      "skill_profile_id": null
+      "skill_profile_id": null,
+      "starting_gold": 60,
+      "starting_items": {
+        "wooden_staff": 1,
+        "crystal_shard": 1
+      }
     },
     "swamp_ambush_party_lizardfolk_scout": {
       "legacy_role": 5,
@@ -213,6 +357,30 @@
       "readiness": 100.0,
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
+      "spawn_position": [
+        214.0,
+        101.0
+      ],
+      "spawn_region": "swamp_border_territory",
+      "count": 4,
+      "spawn_positions": [
+        [
+          214.0,
+          101.0
+        ],
+        [
+          213.0,
+          100.0
+        ],
+        [
+          205.0,
+          108.0
+        ],
+        [
+          212.0,
+          103.0
+        ]
+      ],
       "archetype_id": "lizardfolk_scout",
       "species_id": "lizardfolk",
       "role_id": "scout",
@@ -221,7 +389,8 @@
         "amphibious",
         "territorial",
         "humanoid",
-        "tool_user"
+        "tool_user",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "swamp"
@@ -246,6 +415,26 @@
       "readiness": 100.0,
       "inventory_seed": null,
       "cognition_seed": null,
+      "spawn_position": [
+        62.0,
+        10.0
+      ],
+      "spawn_region": null,
+      "count": 3,
+      "spawn_positions": [
+        [
+          62.0,
+          10.0
+        ],
+        [
+          78.0,
+          45.0
+        ],
+        [
+          50.0,
+          17.0
+        ]
+      ],
       "archetype_id": null,
       "species_id": null,
       "role_id": null,
@@ -272,6 +461,30 @@
       "readiness": 100.0,
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
+      "spawn_position": [
+        105.0,
+        53.0
+      ],
+      "spawn_region": "wolf_den",
+      "count": 4,
+      "spawn_positions": [
+        [
+          105.0,
+          53.0
+        ],
+        [
+          77.0,
+          55.0
+        ],
+        [
+          91.0,
+          56.0
+        ],
+        [
+          72.0,
+          54.0
+        ]
+      ],
       "archetype_id": "hungry_wolf",
       "species_id": "wolf",
       "role_id": "predator_hunter",
@@ -306,6 +519,18 @@
       "readiness": 100.0,
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
+      "spawn_position": [
+        83.0,
+        47.0
+      ],
+      "spawn_region": "wolf_den",
+      "count": 1,
+      "spawn_positions": [
+        [
+          83.0,
+          47.0
+        ]
+      ],
       "archetype_id": "alpha_wolf",
       "species_id": "wolf",
       "role_id": "alpha",
@@ -342,7 +567,13 @@
       "hp": 500,
       "max_hp": 500,
       "service_profile_id": "general_store_service",
-      "owner_faction": null
+      "owner_faction": null,
+      "starting_gold": 250,
+      "starting_stock": {
+        "travel_ration": 10,
+        "wood": 10,
+        "iron_ore": 5
+      }
     },
     "blacksmith_0": {
       "hp": 700,
@@ -354,7 +585,12 @@
       "hp": 600,
       "max_hp": 600,
       "service_profile_id": "inn_service",
-      "owner_faction": null
+      "owner_faction": null,
+      "starting_gold": 100,
+      "starting_stock": {
+        "travel_ration": 20,
+        "bread": 10
+      }
     },
     "healer_hut_0": {
       "hp": 450,
@@ -366,55 +602,86 @@
       "hp": 500,
       "max_hp": 500,
       "service_profile_id": "general_store_service",
-      "owner_faction": null
+      "owner_faction": null,
+      "starting_gold": 250,
+      "starting_stock": {
+        "travel_ration": 10,
+        "wood": 10,
+        "iron_ore": 5
+      }
     },
     "trading_bld_1": {
       "hp": 600,
       "max_hp": 600,
       "service_profile_id": "inn_service",
-      "owner_faction": null
+      "owner_faction": null,
+      "starting_gold": 100,
+      "starting_stock": {
+        "travel_ration": 20,
+        "bread": 10
+      }
     }
   },
   "resources": {
     "res_0": {
       "required_ticks": 10,
       "resource_type": "wood_node",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "wood"
     },
     "res_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "herb"
     },
     "sunken_swamp_border__wood_node_0": {
       "required_ticks": 10,
       "resource_type": "wood_node",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "wood"
     },
     "sunken_swamp_border__herb_patch_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "herb"
+    },
+    "sunken_swamp_border__berry_thicket_2": {
+      "required_ticks": 8,
+      "resource_type": "berry_thicket",
+      "yield_policy": null,
+      "yield_item": "wild_berries"
     },
     "trading_res_0": {
       "required_ticks": 15,
       "resource_type": "iron_vein",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "iron_ore"
     },
     "wolf_den_near_forest__wood_node_0": {
       "required_ticks": 10,
       "resource_type": "wood_node",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "wood"
     },
     "wolf_den_near_forest__herb_patch_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "herb"
     },
     "wolf_den_near_forest__healing_flower_patch_2": {
       "required_ticks": 12,
       "resource_type": "healing_flower_patch",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "healing_flower"
+    },
+    "wolf_den_near_forest__berry_thicket_3": {
+      "required_ticks": 8,
+      "resource_type": "berry_thicket",
+      "yield_policy": null,
+      "yield_item": "wild_berries"
     }
   },
   "factions": {

@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring]
 Run one small ticket through the native implement-ticket and verify gate outcomes
 
 ## Status
-OPEN
+BLOCKED
 
 ## Tier
 standard
@@ -60,8 +60,31 @@ Epic AC1 and AC3: no `bash(` in implement-ticket.js and one native run of a smal
 - **2026-10-06, blocked by the environment, not run.** The owner approved this run on 2026-10-06 (answering "Run it"). Two attempts never reached Scope: the named workflow resolved the main checkout's `implement-ticket.js` (no attested sites) and returned the old `NATIVE_GATE_SITES_UNPORTED` refusal; a `scriptPath` run of the worktree file died with `agent type 'ticket-scoper' not found`, because the session was launched from `/mnt/data/Working` and the repo's `.claude/agents` were not registered. About 240k tokens were spent; no gate was reached and no repo state changed. A rerun needs a session started in a repo worktree, after the PR that lands `TCK-20260930-NATIVE-PORT-ATTESTED-GATE-SITES` merges, with `scriptPath` pointing at that tree's `implement-ticket.js`. The refusal run rows stay in the monitoring shard as a true record.
 
 ## Implementation Notes
+**Run plan (planner, 2026-10-09; owner opt-in for this run given in the planner session 2026-10-09, "go with your recommendations").**
+- Precondition (checked 2026-10-09): `tools/workflow_bash_sites.py .claude/workflows/implement-ticket.js` reports 0 sites at main 42ce987b6. Re-check it at the run's base.
+- Environment, from the 2026-10-06 failure: the run must start from the `agent-working-implementer` session, which was launched in a repo worktree so `.claude/agents` resolve. Pass `scriptPath` = that worktree's `.claude/workflows/implement-ticket.js`, synced to origin/main. Do not run the named workflow, which resolves the main checkout.
+- Vehicle: `TCK-20261009-MAIN-INTEGRITY-REPORT-SILENT-TORN-RUN-EVENT-LINES`, a real small fix at standard tier so that every gate site is reached.
+- Deliberate failing gate (AC2), done in two runs, because a gate that fails also stops the run:
+  1. **Fail run.** Add one unregistered tag to the vehicle (e.g. `native-run-probe`; do NOT register it). Run with `ticket_id` = the vehicle. Expected: `Scope:tag_registry.check_tags_registered` FAIL through `shAttested('tag_check')`, return `TAGS_NOT_REGISTERED`, and a monitoring run row; Scope only, so it's cheap. If the scoper drops or rewrites the tag instead of reporting it, stop and report: that is a finding, not something to route around.
+  2. **Pass run.** Remove the probe tag and rerun the same `ticket_id`. Expected: every reached gate is PASS, or a real failure handled by the pipeline's own loop, and the run ends DONE.
+  Both runs together are the evidence for AC2. The "one native run" wording means one real ticket through the native path, with the failing probe as its first attempt.
+- AC3: for each run, compare the orchestrator backstop's re-run verdicts with the run's attested gate verdicts in `gate_verdicts.jsonl`, and record any disagreement.
+- Evidence goes into this ticket's Test Summary: run ids, each gate site's outcome, the backstop comparison, and the measured tokens and wall-clock per run.
+- Landing: both tickets land on the local batch branch `agent-working-small-fixes-batch`, with no push and no PR (owner, 2026-10-08). Closing this ticket also closes the last child of `TCK-20260930-IMPLEMENT-TICKET-NATIVE-PORT`; close the epic and move the folder to `done/` per CLAUDE.md.
 
 ## Test Summary
+**2026-10-09, attempt 1 (planner record from the implementer's reports):**
+- Fail run wf_2b717fc9-c97: TAGS_NOT_REGISTERED as planned. Gate rows: `tag_check` attested PASS (exit 0), then
+  `Scope:tag_registry.check_tags_registered` FAIL, blocking (unregistered=1), then `Scope:conflicts` PASS. The scoper
+  kept the probe tag. 7 agents, 293,821 tokens, 81.9 s. Cost observation: the tag check runs after the scoper and
+  five shell or monitoring dispatches; monitoring-write is the largest agent.
+- Pass run wf_e2dc6921-bdd: WORKFLOW_ERROR, `GATE_ATTESTATION_FAILED test_scope_coverage: wrong command`. Before that,
+  attested `tag_check`, `plan_unresolved_questions` and `doc_staleness` all PASS, and the Test agent reported 4691
+  passed in tests/tools/. The agent truncated the base64 command, so the shell saw an unterminated quote (exit 2). The
+  verifier failed closed. 20 agents, 925,732 tokens, 27.8 min. AC3 is incomplete: the Test, Parity, Verify and
+  Finalize sites were never reached.
+- Result: BLOCKED on TCK-20261009-NATIVE-ATTESTED-COMMAND-TRANSPORT-LOSSY. The vehicle is hand-finished instead (its
+  closure records that path). A rerun needs a new vehicle ticket and the owner's Workflow opt-in.
 
 ## Files Changed
 

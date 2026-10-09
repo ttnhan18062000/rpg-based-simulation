@@ -30,8 +30,8 @@ def test_every_item_of_the_real_catalog_maps_to_exactly_one_family(catalog_items
     families = {item_id: family_of(item.categories, mapping) for item_id, item in catalog_items.items()}
     assert len(families) == len(catalog_items) > 0
     assert set(families.values()) == set(mapping.values())  # no family is empty, none is invented
-    # the first category is the app's item_type (metadata_presenter); measured 2026-10-07: 37 items
-    assert Counter(families.values()) == {"material": 19, "weapon": 10, "trinket": 2, "armor": 2, "tool": 2, "consumable": 2}
+    # the first category is the app's item_type (metadata_presenter); measured 2026-10-07: 37 items, 38 with the wild food item (Decision 29)
+    assert Counter(families.values()) == {"material": 19, "weapon": 10, "trinket": 2, "armor": 2, "tool": 2, "consumable": 3}
 
 
 def test_every_first_category_in_the_catalog_is_mapped_and_every_mapped_category_is_used(catalog_items):

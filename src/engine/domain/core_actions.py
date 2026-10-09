@@ -4,9 +4,12 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from src.core.enums import ReasonCode
+from src.core.items import food_hunger_recovery
+from src.core.models.inventory import ItemStack
+from src.engine.building_services import repair_source
 from src.core.updates import (
     BiologicalUpdate, EntityUpdate, IdentityUpdate, 
-    InteractionUpdate, NavigationUpdate, StaminaUpdate
+    InteractionUpdate, NavigationUpdate, ResourceTransferIntent, StaminaUpdate
 )
 
 if TYPE_CHECKING:
@@ -40,6 +43,28 @@ def interact_released(entity: EntityState, state: Any, target_id: Any) -> Option
     return {entity.id: EntityUpdate(entity_id=entity.id, navigation=NavigationUpdate(failure_reason=reason))}
 
 
+def carried_meal(entity: EntityState, current_tick: int) -> List[ResourceTransferIntent]:
+    """One transfer that consumes the first carried food item and applies its hunger recovery, or none when nothing edible is carried."""
+    for stack in entity.inventory.items:
+        recovery = food_hunger_recovery(stack.item_id)
+        if recovery > 0.0 and stack.quantity > 0:
+            return [ResourceTransferIntent(
+                source_id=entity.id, source_kind="CARRIED_FOOD", transfer_kind="EAT", is_group_required=False,
+                items_remove=[ItemStack(item_id=stack.item_id, quantity=1)],
+                biological_upd=BiologicalUpdate(hunger_delta=-recovery, last_meal_tick_set=current_tick))]
+    return []
+
+
+def eat_update(entity: EntityState, current_tick: int) -> EntityUpdate:
+    """SURV-06: a subject holding food eats it, and the item is consumed with the meal. With none the action keeps its old relief of 40
+    (a free meal: still on, see branch d27-free-meal-removal for the removal)."""
+    carried = carried_meal(entity, current_tick)
+    if carried:
+        return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0, resource_transfers=carried)
+    return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0,
+                        biological=BiologicalUpdate(hunger_delta=-40.0, last_meal_tick_set=current_tick))
+
+
 class CoreActions:
     """
     Domain action handlers for fundamental RPG actions.
@@ -62,14 +87,11 @@ class CoreActions:
                 )
             )}
         elif action == "EAT":
-            return {entity.id: EntityUpdate(
-                entity_id=entity.id,
-                readiness_delta=-100.0,
-                biological=BiologicalUpdate(
-                    hunger_delta=-40.0,
-                    last_meal_tick_set=current_tick
-                )
-            )}
+            return {entity.id: eat_update(entity, current_tick)}
+        elif action == "SELL":
+            # A chosen sale at a shop: the goods change hands in the town resolution (`shop_sale.plan_sale`), so the action itself is a typed
+            # no-op that succeeds and ends its task like a survival action.
+            return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
         elif action == "REST":
             return {entity.id: EntityUpdate(
                 entity_id=entity.id,
@@ -579,7 +601,8 @@ class CoreActions:
     @staticmethod
     def execute_repair(
         entity: EntityState,
-        current_tick: int
+        current_tick: int,
+        context: Any = None
     ) -> Dict[int, EntityUpdate]:
         total_cost = 0
         repair_deltas = {}
@@ -594,7 +617,7 @@ class CoreActions:
             
         from src.core.updates import EquipmentUpdate, ResourceTransferIntent
         intent = ResourceTransferIntent(
-            source_id="BLACKSMITH",
+            source_id=repair_source(context, entity),
             source_kind="TOWN_SERVICE",
             gold_delta=-total_cost,
             gold_cost=total_cost,

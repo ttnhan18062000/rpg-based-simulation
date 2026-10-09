@@ -79,7 +79,7 @@ def stack(item_id: str, quantity: int = 1) -> ItemStack:
 
 def test_shop_sell_refactor():
     """
-    Verify that shop auto-sell is converted into an authoritative InventoryUpdate.
+    Verify that a CHOSEN sale (the SELL action, EXCH-02) is converted into an authoritative InventoryUpdate; standing in a shop sells nothing.
 
     Important pipeline rule:
         ShopSystem.enforce(...) creates ResourceTransferIntent.
@@ -139,6 +139,7 @@ def test_shop_sell_refactor():
             readiness=100.0,
         )
         .lifecycle(active=True)
+        .properties({"species_id": "human"})
         .build()
     )
 
@@ -169,10 +170,15 @@ def test_shop_sell_refactor():
         },
     )
 
-    refined = AuthoritativeApplyPipeline.refine(
-        state,
-        StateUpdate(force_full_scan=True),
-    )
+    from src.core.updates import EntityUpdate, TaskUpdate
+    from src.systems.economy_systems.market import MarketSystem
+
+    idle = AuthoritativeApplyPipeline.refine(state, StateUpdate(force_full_scan=True)).entity_updates.get(1)
+    assert idle is None or idle.inventory is None  # no auto-sell
+
+    sell = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, task=TaskUpdate(
+        work_kind_set="ENTITY_ACT", payload_set={"action": "SELL", "target_id": 100}))}, force_full_scan=True)
+    refined = AuthoritativeApplyPipeline.refine(state, sell)
 
     ent_upd = refined.entity_updates.get(1)
 
@@ -182,7 +188,8 @@ def test_shop_sell_refactor():
         f"Got entity update: {ent_upd}"
     )
 
-    assert ent_upd.inventory.gold_delta == 10
+    # One sell law: MarketSystem's price per unit (iron_ore base 5 x 0.8 = 4), paid out of the shop's purse.
+    assert ent_upd.inventory.gold_delta == MarketSystem.calculate_price(state, state.buildings[100], "iron_ore", is_buy=False)
     assert any(
         item.item_id == "iron_ore"
         for item in ent_upd.inventory.items_remove

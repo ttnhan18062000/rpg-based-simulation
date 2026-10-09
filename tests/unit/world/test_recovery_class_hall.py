@@ -28,8 +28,8 @@ def test_class_hall_inn_rest_recovery():
     new_ent = next_state.entities[99]
     
     assert new_ent.biological.sleep_debt == 0.0
-    # Hunger: 50.0 - 20.0 (Inn) + 0.1 (ApplyPath passive decay) = 30.1
-    assert abs(new_ent.biological.hunger - 30.1) < 0.001
+    # Hunger: 50.0 - 20.0 (Inn) + 0.05 (ApplyPath passive decay, humanoid_survival hunger is low: owner decision 33) = 30.05
+    assert abs(new_ent.biological.hunger - 30.05) < 0.001
     assert new_ent.biological.well_rested_until == 200 # 100 + 100
     assert new_ent.inventory.gold == 10
 
