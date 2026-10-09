@@ -31,7 +31,6 @@ All duration-based metrics are exported in **seconds** in accordance with standa
 | `sim_worker_utilization` | Gauge | Active worker threads utilized vs max pool capacity. | None |
 | `sim_queue_utilization` | Gauge | Thread pool task queue utilization ratio. | None |
 | `sim_memory_rss_bytes` | Gauge | Resident Set Size (RSS) memory footprint of the simulation process. | None |
-| `sim_work_debt_total` | Gauge | Total outstanding system work debt (D1, D2, ...). | None |
 | `sim_governor_mode` | Gauge | Active governor mode mapping: `0=NORMAL`, `1=CONSTRAINED`, `2=DEGRADED`, `3=SURVIVAL`. | None |
 | `sim_gold_circulation_total` | Gauge | Total gold in circulation across all entity inventories. | None |
 
