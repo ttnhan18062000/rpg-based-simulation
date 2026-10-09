@@ -20,6 +20,30 @@ from src.core.skills import SKILL_REGISTRY
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState, RegionState
 
+
+def _static_obstruction(target_grid_pos: Tuple[int, int], state_or_context: Any) -> Optional[ReasonCode]:
+    """The reason a tile can never be stood on (outside the world, wall, blocked, a building), or None.
+
+    0. The world's extent: a tile outside every declared region is not part of the world (Bible 06).
+    Logic ID: COMB-253 (Movement tests include invalid terrain vs occupied terrain distinction)
+    1. Static Terrain (WALL / blocked_tiles)
+    2. Buildings (Solid structures); uses the building_tiles map for O(1) when available, else scans."""
+    if not is_inside_world(state_or_context, target_grid_pos):
+        return ReasonCode.OUT_OF_BOUNDS
+    terrain_map = getattr(state_or_context, 'terrain', {})
+    if terrain_map.get(target_grid_pos) == "WALL":
+        return ReasonCode.PATH_NOT_FOUND
+    if target_grid_pos in getattr(state_or_context, 'blocked_tiles', set()):
+        return ReasonCode.PATH_NOT_FOUND
+    building_tiles = getattr(state_or_context, 'building_tiles', None)
+    if building_tiles is not None:
+        return ReasonCode.BUILDING_OBSTRUCTION if target_grid_pos in building_tiles else None
+    for b in getattr(state_or_context, 'buildings', {}).values():
+        if (int(b.position[0]), int(b.position[1])) == target_grid_pos:
+            return ReasonCode.BUILDING_OBSTRUCTION
+    return None
+
+
 class LegalityServiceV2:
     """ Authoritative simulation laws for V2. """
 
@@ -53,29 +77,6 @@ class LegalityServiceV2:
 
     # VERIFIED v2: cardinal_occupancy_legality
     @staticmethod
-    def _static_obstruction(target_grid_pos: Tuple[int, int], state_or_context: Any) -> Optional[ReasonCode]:
-        """The reason a tile can never be stood on (outside the world, wall, blocked, a building), or None.
-
-        0. The world's extent: a tile outside every declared region is not part of the world (Bible 06).
-        Logic ID: COMB-253 (Movement tests include invalid terrain vs occupied terrain distinction)
-        1. Static Terrain (WALL / blocked_tiles)
-        2. Buildings (Solid structures); uses the building_tiles map for O(1) when available, else scans."""
-        if not is_inside_world(state_or_context, target_grid_pos):
-            return ReasonCode.OUT_OF_BOUNDS
-        terrain_map = getattr(state_or_context, 'terrain', {})
-        if terrain_map.get(target_grid_pos) == "WALL":
-            return ReasonCode.PATH_NOT_FOUND
-        if target_grid_pos in getattr(state_or_context, 'blocked_tiles', set()):
-            return ReasonCode.PATH_NOT_FOUND
-        building_tiles = getattr(state_or_context, 'building_tiles', None)
-        if building_tiles is not None:
-            return ReasonCode.BUILDING_OBSTRUCTION if target_grid_pos in building_tiles else None
-        for b in getattr(state_or_context, 'buildings', {}).values():
-            if (int(b.position[0]), int(b.position[1])) == target_grid_pos:
-                return ReasonCode.BUILDING_OBSTRUCTION
-        return None
-
-    @staticmethod
     def verify_occupancy(
         pos: Tuple[float, float], 
         state_or_context: Any, 
@@ -92,7 +93,7 @@ class LegalityServiceV2:
         target_grid_pos = (int(pos[0]), int(pos[1]))
 
         # 0-2. The world's extent, static terrain and buildings
-        static_reason = LegalityServiceV2._static_obstruction(target_grid_pos, state_or_context)
+        static_reason = _static_obstruction(target_grid_pos, state_or_context)
         if static_reason is not None:
             return False, static_reason
 

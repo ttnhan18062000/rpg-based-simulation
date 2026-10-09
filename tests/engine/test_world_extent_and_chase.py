@@ -44,7 +44,7 @@ def test_hard_law_names_an_entity_committed_outside_the_world():
     outside = V2EntityBuilder(1).location(36.0, 9.0).build()
     inside = V2EntityBuilder(2).location(36.0, 12.0).build()
     state = _state({1: outside, 2: inside})
-    violations = HardLawMonitor.check_entities(state, DirtySet(combat_entities={1, 2}))
+    violations = HardLawMonitor.check(state, DirtySet(combat_entities={1, 2}))
     assert [(v.law_id, v.entity_id) for v in violations] == [("LAW-POSITION-IN-WORLD", 1)]
 
 

@@ -56,6 +56,9 @@ class HardLawMonitor:
         
         # 2. Occupancy Checks
         violations.extend(HardLawMonitor.check_occupancy(state, dirty_set))
+
+        # 3. World extent
+        violations.extend(HardLawMonitor.check_world_extent(state, dirty_set))
         
         return violations
 
@@ -132,17 +135,29 @@ class HardLawMonitor:
                         message=f"Entity {e_id} has non-finite position coordinates: {pos}",
                         details={"position": pos}
                     ))
-                else:
-                    # LAW-POSITION-IN-WORLD: a committed position lies inside the world extent (Bible 06, topology)
-                    if not is_inside_world(state, pos):
-                        violations.append(HardLawViolation(
-                            law_id="LAW-POSITION-IN-WORLD",
-                            entity_id=e_id,
-                            severity="ERROR",
-                            message=f"Entity {e_id} is outside the world extent: {pos}",
-                            details={"position": pos, "world_bounds": world_extent(state)}
-                        ))
 
+        return violations
+
+    @staticmethod
+    def check_world_extent(state: AuthoritativeState, dirty_set: Optional[DirtySet]) -> List[HardLawViolation]:
+        """LAW-POSITION-IN-WORLD: a committed position of a dirty, active, alive entity lies inside the world extent
+        (the union of the declared region bounds, Bible 06 topology)."""
+        violations: List[HardLawViolation] = []
+        if not dirty_set:
+            return violations
+        for e_id in dirty_set.all_dirty_entities:
+            entity = state.entities.get(e_id)
+            if entity is None or not entity.lifecycle.active or not entity.combat.alive or entity.navigation is None:
+                continue
+            pos = entity.navigation.position
+            if math.isfinite(pos[0]) and math.isfinite(pos[1]) and not is_inside_world(state, pos):
+                violations.append(HardLawViolation(
+                    law_id="LAW-POSITION-IN-WORLD",
+                    entity_id=e_id,
+                    severity="ERROR",
+                    message=f"Entity {e_id} is outside the world extent: {pos}",
+                    details={"position": pos, "world_bounds": world_extent(state)}
+                ))
         return violations
 
     @staticmethod
