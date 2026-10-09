@@ -1,7 +1,7 @@
 # Compliance IDs: PROG-094, PROG-095, PROG-096, TOWN-014, TOWN-074, TOWN-075, TOWN-076
 # Compliance IDs: TOWN-074, TOWN-075, TOWN-076
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from dataclasses import replace
 
 from src.core.enums import ReasonCode
@@ -33,8 +33,7 @@ class ResourceTransactionSystem:
         new_building_updates = dict(update.building_updates)
         new_home_storage_updates = dict(update.home_storage_updates)
         new_ground_items_remove = list(update.ground_items_remove)
-        new_corpses_remove = list(update.corpses_remove)
-        new_corpses_update = list(update.corpses_add_or_update)
+        new_corpses_remove, new_corpses_update = list(update.corpses_remove), list(update.corpses_add_or_update)
         new_trace = list(update.transaction_trace)
         new_rejection_events = list(update.rejection_events)
         processed_ids = set(update.processed_transaction_ids)
@@ -274,8 +273,7 @@ class ResourceTransactionSystem:
                 intent_results=final_intent_results,
                 resource_transfers=[] # Clear intents after resolution (RPG-ECON-501)
             )
-        existing_world_events = list(update.world_events_add)
-        existing_world_events.extend(world_events)
+        existing_world_events = [*update.world_events_add, *world_events]
         return replace(update,
             entity_updates=refined_entity_updates,
             node_updates=new_node_updates,
@@ -314,7 +312,7 @@ class ResourceTransactionSystem:
         return ent_upd
 
     @staticmethod
-    def _apply_world_effects(result, entity_id, nodes, buildings, home_storage, ground_rem, corpses_rem, reservations, corpses_upd=None):
+    def _apply_world_effects(result, entity_id, nodes, buildings, home_storage, ground_rem, corpses_rem, reservations, corpses_upd: Optional[List[Any]] = None):
         """Helper to apply world side effects from a successful resolution."""
         if result.node_update:
             node_id = result.node_update.node_id
@@ -347,10 +345,14 @@ class ResourceTransactionSystem:
             ground_rem.append(result.ground_item_remove)
             reservations[("GROUND_ITEM", result.ground_item_remove)] = 1
         
+        ResourceTransactionSystem._apply_corpse_effects(result, corpses_rem, corpses_upd, reservations)
+
+    @staticmethod
+    def _apply_corpse_effects(result: Any, corpses_rem: List[int], corpses_upd: Optional[List[Any]], reservations: Dict[Any, int]) -> None:
+        """A corpse a transfer emptied is removed; one it left partly eaten (decision 44) is replaced by its new state. Both lock the corpse."""
         if result.corpse_remove is not None:
             corpses_rem.append(result.corpse_remove)
             reservations[("CORPSE", result.corpse_remove)] = 1
-
         if result.corpse_update is not None and corpses_upd is not None:
             corpses_upd[:] = [c for c in corpses_upd if c.id != result.corpse_update.id] + [result.corpse_update]
             reservations[("CORPSE", result.corpse_update.id)] = 1

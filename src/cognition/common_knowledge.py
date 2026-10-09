@@ -17,7 +17,6 @@ from src.cognition.capability_estimate import (
     CapabilityContext,
     CapabilityEstimateService,
 )
-from src.content.schema import COMMON_KNOWLEDGE_DANGER_LEVELS
 from src.content.common_knowledge_seed import (
     COMMON_KNOWLEDGE_CERTAINTY,
     COMMON_KNOWLEDGE_SOURCE_ID,
@@ -28,6 +27,7 @@ from src.content.common_knowledge_seed import (
     default_self_model,
     seeded_knowledge,
 )
+from src.content.schema import COMMON_KNOWLEDGE_DANGER_LEVELS
 
 __all__ = [
     "COMMON_KNOWLEDGE_CERTAINTY", "COMMON_KNOWLEDGE_SOURCE_ID", "DANGER_FACT_TYPE", "FACT_KEY_PREFIX", "UNRECOGNISED",

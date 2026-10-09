@@ -19,6 +19,9 @@ LABEL_READS = (
     ".is_combatant(", ".is_civilian(", ".is_worker(", "ecological_predator",
 )
 CONTENT_LAYER = ("content/", "content_semantics/role.py")
+# Decision 43's people trait gates who a building service serves (`serves()`); it reads a declared TRAIT, which is a property, not a label.
+# Recorded here as the one deliberate reader; any other reader is a regression.
+DECLARED_TRAIT_GATES = frozenset({"engine/serves.py"})
 
 
 @pytest.fixture(scope="module")
@@ -62,7 +65,7 @@ def test_no_behaviour_module_reads_a_label_list():
     offenders = []
     for path in sorted(SRC.rglob("*.py")):
         rel = path.relative_to(SRC).as_posix()
-        if rel.startswith(CONTENT_LAYER[0]) or rel == CONTENT_LAYER[1]:
+        if rel.startswith(CONTENT_LAYER[0]) or rel == CONTENT_LAYER[1] or rel in DECLARED_TRAIT_GATES:
             continue
         text = path.read_text(encoding="utf-8")
         offenders += [f"{rel}: {token}" for token in LABEL_READS if token in text]

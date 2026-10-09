@@ -7,7 +7,7 @@ Configurable for tests via configure_behavior_consumers / reset_behavior_consume
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Any
+from typing import Any, Dict, Optional, Tuple
 
 from src.content.common_knowledge_seed import install_warm_catalog_provider
 
@@ -56,13 +56,11 @@ def get_cognition_profile_definition(profile_id: str):
     return _catalog.get_cognition_profile(profile_id)
 
 
-def get_kind_properties(species_id: Optional[str]):
+def get_kind_properties(species_id: Optional[str]) -> Tuple[Any, Any]:
     """(SpeciesDefinition, BodyModelDefinition) of a species via the warmed catalog singleton; (None, None) when undeclared."""
-    global _catalog
-    if _catalog is None:
-        _auto_init()
-    species = _catalog.get_species(species_id) if species_id else None
-    return species, (_catalog.get_body_model(species.body_model) if species else None)
+    catalog = _seeding_catalog()
+    species = catalog.get_species(species_id) if species_id else None
+    return species, (catalog.get_body_model(species.body_model) if species else None)
 
 
 def get_role_definition(role_id: str):

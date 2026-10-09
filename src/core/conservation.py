@@ -10,8 +10,8 @@ from src.core.inventory import InventoryService
 from src.core.quests import QuestStatus
 from src.core.updates import (
     AttributeUpdate,
-    BuildingUpdate,
     BiologicalUpdate,
+    BuildingUpdate,
     CombatUpdate,
     EquipmentUpdate,
     IdentityUpdate,
@@ -24,7 +24,12 @@ from src.core.updates import (
 )
 
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState, CorpseState, EntityState, InventoryComponent
+    from src.core.state import (
+        AuthoritativeState,
+        CorpseState,
+        EntityState,
+        InventoryComponent,
+    )
     from src.core.updates import ResourceTransferIntent
 
 @dataclass(frozen=True, slots=True)
@@ -82,7 +87,7 @@ def _corpse_food_result(
 ) -> TransactionResult:
     """Eating AT a corpse (decision 44): the meat leaves the carcass together with the meal, or nothing happens. The corpse id is the
     source id, so every meal is traceable to the body it came from. The corpse stays (possibly empty) until it decays."""
-    corpse = state.corpses.get(intent.source_id)
+    corpse = state.corpses.get(int(intent.source_id))
     if corpse is None:
         return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)
     if reservations and reservations.get(("CORPSE", intent.source_id), 0) > 0:

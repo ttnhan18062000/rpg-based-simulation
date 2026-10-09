@@ -199,20 +199,6 @@ class LegalityServiceV2:
 
     @staticmethod
     def _attack_permitted(attacker: EntityState, target: EntityState, context: Any) -> bool:
-        """Faction permission (CONFLICT-03), or else predation: a hungry attacker whose diet can eat the target and that believes it can
-        overcome it (decisions 44 and 47); or self-defence: the target is attacking the attacker and holds an attack relation to it
-        (PREDATION or FACTION_HOSTILE), so a creature may fight back against whatever is hunting it."""
-        if LegalityServiceV2._faction_attack_permitted(attacker, target, context):
-            return True
-        # Lazy imports: they break the hostility -> legality import cycle.
-        from src.engine.hostility import ATTACK_RELATIONS, relation
-        from src.engine.appraisal import Relation
-        if relation(attacker, target) is Relation.PREDATION:
-            return True
-        return target.task.payload.get("target_id") == attacker.id and relation(target, attacker) in ATTACK_RELATIONS
-
-    @staticmethod
-    def _faction_attack_permitted(attacker: EntityState, target: EntityState, context: Any) -> bool:
         """CONFLICT-03: permission follows declared hostility and is symmetric; missing data declares nothing.
         Both sides declared: legal both ways if either declares the other hostile. Exactly one side declared: its verdict decides both
         directions. Neither declared: the legacy fallback (only the same legacy faction is illegal). A contextual threat differs only in
@@ -286,7 +272,8 @@ class LegalityServiceV2:
             target_species=get_species_id_str(target),
         )
 
-        if not LegalityServiceV2._attack_permitted(attacker, target, context):
+        from src.engine.hostility import permits_attack_by_appetite_or_defence  # lazy: breaks the hostility -> legality import cycle
+        if not (LegalityServiceV2._attack_permitted(attacker, target, context) or permits_attack_by_appetite_or_defence(attacker, target)):
             return False, ReasonCode.FRIENDLY_FIRE_ILLEGAL
 
         # 4. Range Validity

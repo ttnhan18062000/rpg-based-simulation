@@ -5,6 +5,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Dict, List
 from src.core.updates import StateUpdate, CampUpdate, WorldUpdate
 from src.core.enums import Domain, EntityRole
+from src.engine.behavior_consumers import get_kind_properties
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, CampState
@@ -24,7 +25,6 @@ class CampService:
     @staticmethod
     def spawn_kind(camp_kind: str) -> str:
         """The spawn kind of a camp's own declared creature kind, read from content."""
-        from src.engine.behavior_consumers import get_kind_properties
         species, _ = get_kind_properties(camp_kind)
         return (species.camp_spawn_kind if species is not None and species.camp_spawn_kind else camp_kind)
     EXPAND_TERRITORY_MATURITY_BOOST = 1.0

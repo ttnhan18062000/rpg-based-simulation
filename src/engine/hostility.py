@@ -89,3 +89,11 @@ def is_feeding_kill(state: "AuthoritativeState", attacker_id: Optional[int], vic
     toward trauma (ENV-07)."""
     killer = state.entities.get(attacker_id) if attacker_id is not None else None
     return killer is not None and relation(killer, victim) is Relation.PREDATION
+
+
+def permits_attack_by_appetite_or_defence(attacker: "EntityState", target: "EntityState") -> bool:
+    """Decisions 44 and 47: an attack the factions refuse is still permitted when the attacker is hunting the target (PREDATION), or when the target is
+    attacking the attacker and holds an attack relation to it (a creature may fight back against whatever is hunting it)."""
+    if relation(attacker, target) is Relation.PREDATION:
+        return True
+    return target.task.payload.get("target_id") == attacker.id and relation(target, attacker) in ATTACK_RELATIONS

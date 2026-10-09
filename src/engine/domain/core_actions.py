@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from src.core.enums import ReasonCode
 from src.core.items import food_hunger_recovery
 from src.core.models.inventory import ItemStack
+from src.engine.appraisal import can_eat_item
 from src.engine.building_services import repair_source
 from src.core.updates import (
     BiologicalUpdate, EntityUpdate, IdentityUpdate, 
@@ -44,7 +45,6 @@ def interact_released(entity: EntityState, state: Any, target_id: Any) -> Option
 
 def carried_meal(entity: EntityState, current_tick: int) -> List[ResourceTransferIntent]:
     """One transfer that consumes the first carried food item and applies its hunger recovery, or none when nothing edible is carried."""
-    from src.engine.appraisal import can_eat_item
     for stack in entity.inventory.items:
         recovery = food_hunger_recovery(stack.item_id)
         if recovery > 0.0 and stack.quantity > 0 and can_eat_item(entity, stack.item_id):
@@ -73,7 +73,6 @@ EAT_AT_CORPSE_REACH = 2.0
 def corpse_meal(entity: EntityState, corpse: Any, current_tick: int) -> List[ResourceTransferIntent]:
     """One transfer that eats a unit of food from ``corpse`` where it lies (decision 44), or none when the eater is out of reach or the
     carcass holds nothing its diet can eat. The corpse id is the transfer's source id: the meal is traceable to that body."""
-    from src.engine.appraisal import can_eat_item
     if corpse is None:
         return []
     px, py = entity.navigation.position

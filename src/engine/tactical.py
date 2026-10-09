@@ -815,13 +815,13 @@ class TacticalDecisionSystem:
         near = [w for w in wary if LegalityServiceV2.get_manhattan_dist(entity.navigation.position, w.navigation.position) <= WARY_DISTANCE]
         if not near:
             return None
-        away = retreat_destination(state, entity, near)
-        if away is None:
+        distant = retreat_destination(state, entity, near)
+        if distant is None:
             return None
         return EntityUpdate(
             entity_id=entity.id, strategic=strat_up,
-            navigation=NavigationUpdate(target_set=away, movement_mode_set=MovementMode.RETREAT),
-            task=TaskUpdate(work_kind_set="ENTITY_MOVE", payload_set={"target_position": away, "reason": "KEEP_DISTANCE"}),
+            navigation=NavigationUpdate(target_set=distant, movement_mode_set=MovementMode.RETREAT),
+            task=TaskUpdate(work_kind_set="ENTITY_MOVE", payload_set={"target_position": distant, "reason": "KEEP_DISTANCE"}),
         )
 
     @staticmethod
@@ -829,9 +829,11 @@ class TacticalDecisionSystem:
         """The corpse a hunger objective points at, or None (the objective names a node, a building or a creature instead)."""
         if getattr(project, "kind", "") != "hunger" or getattr(obj, "target_entity_id", None) is not None:
             return None
+        if obj.target is None:
+            return None
         try:
             return state.corpses.get(int(obj.target))
-        except (TypeError, ValueError):
+        except ValueError:
             return None
 
     @staticmethod

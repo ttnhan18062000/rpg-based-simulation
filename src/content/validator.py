@@ -128,24 +128,25 @@ def need_profile_gap_issues(repo: CatalogRepository) -> List[ValidationIssue]:
 
 def kind_property_gap_issues(repo: CatalogRepository) -> List[ValidationIssue]:
     """A kind that omits a coarse property (size, power, wits, diet, edibility) declares nothing: a content gap (decisions 46, 50)."""
-    issues: List[ValidationIssue] = []
-    for species_id, species in repo.species.items():
-        body = repo.body_models.get(species.body_model)
-        missing = [k for k in ("power", "wits") if getattr(species, k) is None]
-        if body is None or body.size is None:
-            missing.append("size")
-        if body is not None and body.diet is None:
-            missing.append("diet")
-        if body is not None and body.edible_as is None:
-            missing.append("edible_as")
-        if body is not None and "meat" in (body.edible_as or ()) and body.meat_yield <= 0:
-            missing.append("meat_yield")
-        for key in missing:
-            issues.append(ValidationIssue(
-                severity="WARNING", rule_id="CAT-PROP-001", target_id=species_id, filename="living/species.yaml",
-                message=f"Species '{species_id}' does not declare property '{key}' (declare a band or food-class set)",
-            ))
-    return issues
+    return [
+        ValidationIssue(
+            severity="WARNING", rule_id="CAT-PROP-001", target_id=species_id, filename="living/species.yaml",
+            message=f"Species '{species_id}' does not declare property '{key}' (declare a band or food-class set)",
+        )
+        for species_id, species in repo.species.items()
+        for key in _missing_kind_properties(species, repo.body_models.get(species.body_model))
+    ]
+
+
+def _missing_kind_properties(species: Any, body: Any) -> List[str]:
+    """The properties a species and its body model leave undeclared (an empty food-class list declares none; an absent one declares nothing)."""
+    missing = [k for k in ("power", "wits") if getattr(species, k) is None]
+    if body is None:
+        return missing + ["size", "diet", "edible_as"]
+    missing += [k for k in ("size", "diet", "edible_as") if getattr(body, k) is None]
+    if "meat" in (body.edible_as or ()) and body.meat_yield <= 0:
+        missing.append("meat_yield")
+    return missing
 
 
 class CatalogValidator:
@@ -203,8 +204,7 @@ class CatalogValidator:
         self._validate_recipe_relations(issues)
         self._validate_region_relations(issues)
         self._validate_species_relations(issues)
-        issues.extend(need_profile_gap_issues(self.repo))
-        issues.extend(kind_property_gap_issues(self.repo))
+        issues.extend(need_profile_gap_issues(self.repo) + kind_property_gap_issues(self.repo))
         self._validate_biome_relations(issues)
         self._validate_ecology_relations(issues)
         self._validate_defaults(issues)

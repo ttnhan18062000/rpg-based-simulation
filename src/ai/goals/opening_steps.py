@@ -18,12 +18,14 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 from src.ai.goals.base import OpeningStepKind
-from src.core.items import food_hunger_recovery
 from src.content_semantics.faction import get_species_id_str
-from src.engine.appraisal import can_eat_item
+from src.core.items import food_hunger_recovery
 from src.core.state import AuthoritativeState, EntityState, ResourceNodeState
 from src.engine.rpg_depth import LeashService
+from src.engine.appraisal import Relation, can_eat_item
+from src.engine.hostility import relation
 from src.engine.shop_sale import nearest_sale
+from src.engine.spatial_query import SpatialQueryService
 from src.engine.work_shift import nearest_work
 
 
@@ -104,9 +106,6 @@ def _scavenge_step(entity: EntityState, state: AuthoritativeState) -> OpeningSte
 def _hunt_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:
     """Decision 44: the nearest living creature the subject appraises as PREDATION. Nothing is stored: the objective ends with its target, and the
     relation is read again at every decision, so a subject that is fed or no longer perceives the target stops hunting."""
-    from src.engine.appraisal import Relation
-    from src.engine.hostility import relation
-    from src.engine.spatial_query import SpatialQueryService
     best, best_distance = None, 0.0
     for other_id in sorted(SpatialQueryService.nearby_entities(state, entity.navigation.position, HUNT_RADIUS)):
         other = state.entities.get(other_id)

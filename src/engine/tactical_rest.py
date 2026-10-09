@@ -14,10 +14,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple
 
+from src.content_semantics.faction import get_species_id_str
 from src.core.items import food_hunger_recovery
 from src.core.strategic import GoalKind, ProjectStatus
 from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
+from src.engine.appraisal import can_eat_item
 from src.engine.biological_needs import need_rates
+from src.engine.domain.core_actions import EAT_AT_CORPSE_REACH as CARCASS_NEAR
 from src.engine.need_pull import ESCALATION_FULL, SLEEP_LINE, arrival_fraction
 from src.engine.service_reach import service_tile
 from src.engine.tactical_threat import present_threat_terms
@@ -85,7 +88,6 @@ def eat_carried_update(entity: EntityState, hostiles: Sequence[EntityState]) -> 
     """An eat-what-you-carry update for a hungry subject holding food, or None. No building is needed; a present threat outranks it."""
     if entity.biological.hunger < EAT_CARRIED_MIN_HUNGER:
         return None
-    from src.engine.appraisal import can_eat_item
     if not any(food_hunger_recovery(stack.item_id) > 0.0 and stack.quantity > 0 and can_eat_item(entity, stack.item_id)
                for stack in entity.inventory.items):
         return None
@@ -108,9 +110,6 @@ def eat_at_corpse_in_place_update(
         return None
     if hostiles and present_threat_terms(entity, list(hostiles)):
         return None
-    from src.content_semantics.faction import get_species_id_str
-    from src.engine.appraisal import can_eat_item
-    from src.engine.domain.core_actions import EAT_AT_CORPSE_REACH as CARCASS_NEAR
     own = get_species_id_str(entity)
     px, py = entity.navigation.position
     best, best_distance = None, 0.0

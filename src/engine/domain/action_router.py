@@ -7,7 +7,7 @@ from src.core.updates import EntityUpdate, NavigationUpdate
 from src.engine.building_services import with_service
 from src.engine.domain.aoe_actions import AoeActions
 from src.engine.domain.combat_actions import CombatActions
-from src.engine.domain.core_actions import CoreActions
+from src.engine.domain.core_actions import CoreActions, eat_at_corpse_update
 from src.engine.domain.skill_actions import SkillActions
 from src.engine.work_shift import work_update
 
@@ -32,9 +32,9 @@ class ActionRouter:
         action = payload.get("action") if payload else None
 
         # Survival actions (biological necessities) bypass combat readiness.
-        if action == "EAT" and payload.get("corpse_id") is not None:
-            from src.engine.domain.core_actions import eat_at_corpse_update
-            return {entity.id: eat_at_corpse_update(entity, payload["corpse_id"], context, current_tick)}
+        corpse_id = (payload or {}).get("corpse_id")
+        if action == "EAT" and corpse_id is not None:
+            return {entity.id: eat_at_corpse_update(entity, corpse_id, context, current_tick)}
         if action in ("SLEEP", "EAT", "REST", "SELL"):
             # A building service (bed, meal, sale) lands with its action, whichever tick the decision was made on (building_services.py).
             return with_service(CoreActions.execute_survival(entity, action, current_tick), entity, action, current_tick, context)

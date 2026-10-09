@@ -23,6 +23,31 @@ HAZARD_GROWTH_TRAUMA_THRESHOLD = 50.0
 HAZARD_GROWTH_STEP = 0.01
 
 
+def _feeding_kill_event(state: "AuthoritativeState", victim_id: int, victim: "EntityState | None", combat: "CombatUpdate") -> "_WorldEvent | None":
+    """The FEEDING_KILL record (killer, victim and corpse ids) when a violent death was a kill to eat, else None. Evaluated from the prior,
+    kill-time state, so it never depends on perceiving a dead victim."""
+    killer_id = combat.attacker_id
+    if victim is None or killer_id is None or not is_feeding_kill(state, killer_id, victim):
+        return None
+    return _WorldEvent(category=_WorldEventCategory.FEEDING_KILL, tick=state.tick, subject=str(victim_id),
+                       payload={"killer": float(killer_id), "victim": float(victim_id), "corpse": float(1000000 + victim_id)})
+
+
+def _decay_corpses(state: "AuthoritativeState", already_removed: list) -> "tuple[list, list]":
+    """(corpse ids to remove, MEAT_DECAYED events): corpses past their decay tick go, and meat still on one leaves the world through a typed sink
+    (decision 44), so conservation balances from records."""
+    removed, events = list(already_removed), []
+    for corpse_id, corpse in state.corpses.items():
+        if state.tick < corpse.decay_tick:
+            continue
+        removed.append(corpse_id)
+        meat_left = sum(s.quantity for s in corpse.items if s.item_id == RAW_MEAT_ITEM)
+        if meat_left > 0:
+            events.append(_WorldEvent(category=_WorldEventCategory.MEAT_DECAYED, tick=state.tick, subject=str(corpse_id),
+                                      payload={"quantity": float(meat_left)}))
+    return removed, events
+
+
 class WorldDynamicsSystem:
     """
     Law: World-level consequences apply to all entities.
@@ -69,15 +94,13 @@ class WorldDynamicsSystem:
 
         # 2.1 Death-triggered Trauma & Sovereignty (LEG-RPG-071/139)
         from src.core.enums import Faction
-        feeding_kill_events = []
+        feeding_kill_events: list = []
         for e_id, ent_upd in update.entity_updates.items():
             if ent_upd.combat and ent_upd.combat.alive_set is False and is_violent_death_cause(ent_upd.combat.outcome_kind):  # ENV-07
                 entity = state.entities.get(e_id)
                 # Decision 48: a kill to eat is not unrest (derived from the killer's PREDATION relation; the cause stays COMBAT).
-                if entity and is_feeding_kill(state, ent_upd.combat.attacker_id, entity):
-                    feeding_kill_events.append(_WorldEvent(
-                        category=_WorldEventCategory.FEEDING_KILL, tick=state.tick, subject=str(e_id),
-                        payload={"killer": float(ent_upd.combat.attacker_id), "victim": float(e_id), "corpse": float(1000000 + e_id)}))
+                if (feeding_kill := _feeding_kill_event(state, e_id, entity, ent_upd.combat)) is not None:
+                    feeding_kill_events.append(feeding_kill)
                 elif entity:
                     region = WorldDynamicsSystem._get_region_for_pos(state, entity.navigation.position)
                     if region:
@@ -304,16 +327,7 @@ class WorldDynamicsSystem:
                 refined_chest_updates[c_id] = replace(c_upd, cooldown_set=chest.cooldown_remaining - 1)
         
         # 5.3 Corpses & Ground Items (Decay)
-        corpses_remove = list(update.corpses_remove)
-        decayed_meat_events = []
-        for cp_id, corpse in state.corpses.items():
-            if state.tick >= corpse.decay_tick:
-                corpses_remove.append(cp_id)
-                # Decision 44: meat still on a decaying corpse leaves the world through a typed sink, so conservation balances from records.
-                meat_left = sum(s.quantity for s in corpse.items if s.item_id == RAW_MEAT_ITEM)
-                if meat_left > 0:
-                    decayed_meat_events.append(_WorldEvent(
-                        category=_WorldEventCategory.MEAT_DECAYED, tick=state.tick, subject=str(cp_id), payload={"quantity": float(meat_left)}))
+        corpses_remove, decayed_meat_events = _decay_corpses(state, update.corpses_remove)
 
         return update.replace(
             world_updates=refined_world_updates,

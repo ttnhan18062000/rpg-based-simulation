@@ -10,10 +10,14 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from src.cognition.common_knowledge import believed_danger_rank
-from src.core.items import food_class
 from src.content.schema import PROPERTY_BANDS
 from src.content_semantics.faction import get_species_id_str
-from src.engine.behavior_consumers import get_entity_signals, get_kind_properties, get_perception_gate
+from src.core.items import food_class
+from src.engine.behavior_consumers import (
+    get_entity_signals,
+    get_kind_properties,
+    get_perception_gate,
+)
 from src.engine.legality import LegalityServiceV2
 
 if TYPE_CHECKING:

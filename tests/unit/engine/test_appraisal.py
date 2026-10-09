@@ -126,8 +126,14 @@ def test_predation_permits_the_attack_when_factions_refuse_and_a_sated_one_does_
     assert perceived_hostile(sated, prey) is False
     from src.content_semantics.relation import RelationContext
     context = RelationContext(combat_engaged=True)
-    assert LegalityServiceV2._attack_permitted(hungry, prey, context) is True
-    assert LegalityServiceV2._attack_permitted(sated, prey, context) is False
+    assert _attack_allowed(hungry, prey, context) is True
+    assert _attack_allowed(sated, prey, context) is False
+
+
+def _attack_allowed(attacker, target, context):
+    """The faction rule or, failing it, appetite or defence: the two checks `verify_attack_legality` applies in turn."""
+    from src.engine.hostility import permits_attack_by_appetite_or_defence
+    return bool(LegalityServiceV2._attack_permitted(attacker, target, context) or permits_attack_by_appetite_or_defence(attacker, target))
 
 
 def test_wary_distance_exceeds_the_threat_range():
@@ -153,10 +159,10 @@ def test_prey_may_fight_back_against_what_is_hunting_it_but_not_start_a_fight():
     context = RelationContext(combat_engaged=True)
     hunter = _entity(1, "meat_eater_medium", (10.0, 10.0), hunger=HUNGRY, payload={"target_id": 2})
     prey = _entity(2, "plant_eater_small", (10.0, 11.0))
-    assert LegalityServiceV2._attack_permitted(hunter, prey, context) is True
-    assert LegalityServiceV2._attack_permitted(prey, hunter, context) is True  # counter-attack against its hunter
+    assert _attack_allowed(hunter, prey, context) is True
+    assert _attack_allowed(prey, hunter, context) is True  # counter-attack against its hunter
     idle = replace(hunter, task=TaskComponent(work_kind="ENTITY_ACT", payload={}))
-    assert LegalityServiceV2._attack_permitted(prey, idle, context) is False  # no un-engaged first strike
+    assert _attack_allowed(prey, idle, context) is False  # no un-engaged first strike
 
 
 def test_a_hungry_wolf_gets_predation_on_the_plant_eater_as_compiled_from_content():
