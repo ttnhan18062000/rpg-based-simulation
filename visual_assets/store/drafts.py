@@ -20,11 +20,11 @@ from pathlib import Path
 
 from visual_assets.store import config, pixels, records
 from visual_assets.store.catalog.registry import Registry, load_registry
-from visual_assets.store.contracts import DraftSet, IntakeResult, canonical_json, parse_record, record_bound
+from visual_assets.store.contracts import DraftSet, IntakeResult, SetAdoptionRecord, canonical_json, parse_record, record_bound
 from visual_assets.store.contracts.base import IntakeVerdict
-from visual_assets.store.contracts.draft import DraftEntry
+from visual_assets.store.contracts.draft import DraftEntry, DroppedDraft
 from visual_assets.store.errors import ContractError, DraftError, IdentityError, IntakeError, PngDecodeError, RegistryError, StageError
-from visual_assets.store.identities import DraftSetId, SourceAssetId, check
+from visual_assets.store.identities import DraftSetId, SourceAssetId, SourceRevision, check
 from visual_assets.store.intake import quarantine, service, validator
 
 DRAFT_SET_FILE = "draft_set.json"
@@ -151,6 +151,27 @@ def _write_new_dir(parent: Path, files: dict[str, bytes]) -> Path:
     return staging
 
 
+def _check_revises(source_asset_id: str, parent_revision: str, catalog_sources: set[str], definition, detail: str | None) -> None:
+    """`draft keep --revises`: the source asset exists, the named revision is its latest unrevoked one, and the draft is for the slot that revision was adopted for."""
+    try:
+        check(SourceRevision, parent_revision)
+    except IdentityError:
+        raise DraftError("invalid_parent", "a revision looks like r0001") from None
+    if source_asset_id not in catalog_sources:
+        raise DraftError("unknown_source_asset", f"{source_asset_id} is not a source asset in the catalog, so there is nothing to revise; drop --revises to draft a new one")
+    try:
+        revoked = records.revoked_revisions(source_asset_id)
+        live = [r for r in records.list_revisions(source_asset_id) if r not in revoked]
+        parent_slot = records.revision_slot(source_asset_id, parent_revision) if parent_revision in live else None
+    except (StageError, ContractError) as exc:
+        raise DraftError("catalog_unreadable", f"existing records could not be read ({getattr(exc, 'code', 'error')})") from None
+    if not live or parent_revision != live[-1]:
+        raise DraftError("parent_not_latest_unrevoked", f"{parent_revision} is not the latest unrevoked revision of {source_asset_id}" + (f" ({live[-1]})" if live else " (every revision is revoked)"))
+    key, parent_detail = parent_slot  # type: ignore[misc]
+    if key != definition.key or definition.effective_detail(parent_detail) != definition.effective_detail(detail):
+        raise DraftError("revision_changes_slot", f"{source_asset_id} {parent_revision} was adopted for {key}{'' if parent_detail is None else ' [' + parent_detail + ']'}; a revision keeps its slot")
+
+
 def keep(
     intake_id: str,
     *,
@@ -159,10 +180,14 @@ def keep(
     detail: str | None = None,
     source_asset_id: str | None = None,
     replace: bool = False,
+    parent_revision: str | None = None,
     registry: Registry | None = None,
     root: Path | None = None,
 ) -> DraftEntry:
-    """Keep a PASSED, unrevoked intake as a draft in `set_id` under `visual_key` (and `detail`). Raises `DraftError`; writes nothing on refusal."""
+    """Keep a PASSED, unrevoked intake as a draft in `set_id` under `visual_key` (and `detail`). Raises `DraftError`; writes nothing on refusal.
+
+    `parent_revision` (ADR D22, `draft keep --revises`): the draft is the NEXT revision of the existing source asset `source_asset_id`; that revision must be its latest unrevoked one and the
+    draft must name the slot it was adopted for. Without it an existing source asset id is still refused."""
     try:
         check(DraftSetId, set_id)
     except IdentityError:
@@ -202,7 +227,9 @@ def keep(
         raise DraftError("preview_undecodable", f"the preview cannot be decoded ({exc.code})") from None
 
     try:
-        existing = list(load_set(set_id, root)[0].entries) if (set_dir(set_id, root) / DRAFT_SET_FILE).exists() else []
+        loaded = load_set(set_id, root)[0] if (set_dir(set_id, root) / DRAFT_SET_FILE).exists() else None
+        existing = list(loaded.entries) if loaded is not None else []
+        prior_dropped = loaded.dropped if loaded is not None else ()
         catalog_sources = set(records.list_source_ids())
     except (ContractError, StageError) as exc:
         raise DraftError("catalog_unreadable", f"existing records could not be read ({getattr(exc, 'code', 'error')})") from None
@@ -213,18 +240,21 @@ def keep(
     kept = [e for e in existing if e not in same_slot]
     if any(e.draft_id == intake_id for e in kept):
         raise DraftError("draft_exists", f"{intake_id} is already kept in {set_id} under another slot")
-    if source_asset_id in catalog_sources:
-        raise DraftError("source_asset_exists", f"{source_asset_id} is already a source asset in the catalog; give another with --source-asset-id")
+    if parent_revision is not None:
+        _check_revises(source_asset_id, parent_revision, catalog_sources, definition, detail)
+    elif source_asset_id in catalog_sources:
+        raise DraftError("source_asset_exists", f"{source_asset_id} is already a source asset in the catalog; give another with --source-asset-id, or --revises rNNNN to draft its next revision")
     if any(e.source_asset_id == source_asset_id for e in kept):
         raise DraftError("source_asset_in_set", f"{source_asset_id} is already used by another entry of {set_id}; give another with --source-asset-id")
     if len(kept) + 1 > config.MAX_DRAFT_SET_ENTRIES:
         raise DraftError("set_full", f"a draft set holds at most {config.MAX_DRAFT_SET_ENTRIES} entries")
 
     entry = DraftEntry(visual_key=visual_key, detail=detail, source_asset_id=source_asset_id, draft_id=intake_id, pixel_hash=pixel_hash,
-                       intake_hash=validator.file_hash(result_bytes))
+                       intake_hash=validator.file_hash(result_bytes), parent_revision=parent_revision)
     entries = sorted([*kept, entry], key=lambda e: (e.visual_key, e.detail or ""))
+    dropped = tuple(x for x in prior_dropped if x.draft_id != intake_id)  # keeping a dropped draft again takes it out of the drop list
     try:
-        data = canonical_json(DraftSet(record_type="draft_set", schema_version=1, set_id=set_id, entries=tuple(entries)))
+        data = canonical_json(DraftSet(record_type="draft_set", schema_version=1, set_id=set_id, entries=tuple(entries), dropped=dropped))
     except (ContractError, ValueError) as exc:
         raise DraftError("set_invalid", f"the resulting draft set is not valid ({getattr(exc, 'code', 'error')})") from None
 
@@ -252,6 +282,70 @@ def keep(
     for old in same_slot:  # replaced entries go only after the new set record is in place
         shutil.rmtree(target / old.draft_id, ignore_errors=True)
     return entry
+
+
+def _set_adoptions_of(set_id: str) -> list[str]:
+    """Ids of the set adoption records that name `set_id` (an adopted set is never altered)."""
+    found: list[str] = []
+    folder = records.set_adoptions_dir()
+    if folder.is_dir():
+        for path in sorted(folder.glob("sa-*.json")):
+            record, _ = records.parse_file(SetAdoptionRecord, path)
+            if record.set_id == set_id:  # type: ignore[union-attr]
+                found.append(path.stem)
+    return found
+
+
+def drop(set_id: str, *, visual_key: str, detail: str | None = None, reason: str, registry: Registry | None = None, root: Path | None = None) -> DroppedDraft:
+    """Remove the draft of one slot from `set_id` and record it in the set (`dropped`, ADR D22). Raises `DraftError`; writes nothing on refusal.
+
+    It records no approval and has no MCP tool, like `keep`; it can only REDUCE what a human is later asked to adopt. The set file changes, so its hash changes: a review of the old hash no
+    longer describes this set, and `adopt-set` shows the new hash. A set that has a set adoption record is never altered, and neither is an entry whose draft was adopted (per slot)."""
+    try:
+        check(DraftSetId, set_id)
+    except IdentityError:
+        raise DraftError("invalid_set_id", "a set id is lowercase letters, digits, - and _ (at most 64)") from None
+    try:
+        known = registry if registry is not None else load_registry()
+    except RegistryError as exc:
+        raise DraftError("registry_unreadable", str(exc)) from None
+    slot = _declared(known, visual_key, detail)
+    record, _ = load_set(set_id, root)
+    definition = known.keys[visual_key]
+    match = [e for e in record.entries if e.visual_key == visual_key and definition.effective_detail(e.detail) == slot]
+    if not match:
+        raise DraftError("unknown_slot", f"{set_id} has no draft for {visual_key}{'' if slot is None else ' [' + slot + ']'}")
+    entry = match[0]
+    try:
+        adopted_as = _set_adoptions_of(set_id)
+        adoption_of_entry = records.find_adoption_for_intake(entry.draft_id)
+    except (ContractError, StageError) as exc:
+        raise DraftError("catalog_unreadable", f"existing records could not be read ({getattr(exc, 'code', 'error')})") from None
+    if adopted_as:
+        raise DraftError("set_adopted", f"{set_id} was adopted ({adopted_as[0]}); an adopted set is never altered")
+    if adoption_of_entry is not None:
+        raise DraftError("entry_adopted", f"{entry.draft_id} was adopted as {adoption_of_entry.source_asset_id} {adoption_of_entry.source_revision}; an adopted draft is not dropped")
+    if len(record.dropped) >= config.MAX_DROPPED_DRAFTS:
+        raise DraftError("too_many_drops", f"{set_id} already records {config.MAX_DROPPED_DRAFTS} drops, the most a set holds")
+    try:
+        dropped = DroppedDraft(visual_key=entry.visual_key, detail=entry.detail, draft_id=entry.draft_id, reason=reason)
+    except ValueError:
+        raise DraftError("invalid_reason", "give a short plain-text reason (1 to 80 characters, no control characters, no leading or trailing space)") from None
+    try:
+        data = canonical_json(DraftSet(record_type="draft_set", schema_version=1, set_id=set_id, entries=tuple(e for e in record.entries if e is not entry), dropped=(*record.dropped, dropped)))
+    except (ContractError, ValueError) as exc:
+        raise DraftError("set_invalid", f"the resulting draft set is not valid ({getattr(exc, 'code', 'error')})") from None
+    target = set_dir(set_id, root)
+    temp_set = target / f"{quarantine.TEMP_PREFIX}set-{secrets.token_hex(4)}"
+    try:
+        quarantine.write_new(temp_set, data)
+        os.chmod(temp_set, 0o644)
+        os.replace(temp_set, target / DRAFT_SET_FILE)
+    except BaseException:
+        temp_set.unlink(missing_ok=True)
+        raise
+    shutil.rmtree(target / entry.draft_id, ignore_errors=True)  # the set record is in place first, so a failure here leaves a stray folder `verify` reports, never a half-dropped set
+    return dropped
 
 
 def verify_set(set_id: str, *, registry: Registry | None = None, root: Path | None = None) -> list[DraftFinding]:

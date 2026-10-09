@@ -1,0 +1,13 @@
+Each mutant applied, site confirmed (grep count 1), the registry/release/export unit tests run (58 tests), then restored from a backup and the diff against the backup confirmed empty.
+J variant_axes rule removed -> test_a_non_empty_variant_axes_is_rejected_even_for_a_fixture_key fails (caught)
+K the loader ignores `safety_problems` -> four registry tests fail (caught)
+L identifying allowed with fallback none -> test_the_fallback_must_fit_the_class_and_its_own_kind fails (caught)
+M critical accepts flat_fill -> same test fails (caught)
+N label derivation not enforced -> the icon label test fails (caught)
+O fixture keys not exempt from the class rule -> the fixture registry tests fail (caught)
+P fallback_problems skips critical keys (`!= identifying`) -> test_fallback_problems_name_every_... fails (caught)
+Q release check removed -> test_a_key_left_without_an_alternative_is_refused_at_release_time fails (caught)
+R export check removed -> the export test fails (caught)
+S release passes every registry key as 'present' -> SURVIVED the first test version (the test registry had images for every key, so both sets were equal); the test now adds an optional key without an image and the mutant fails (caught after strengthening)
+T export passes every registry key as 'present' -> SURVIVED likewise (the hermetic catalog has images for all keys); the test now wraps the registry loader to add an optional key without an image (same file hash) and the mutant fails (caught after strengthening)
+Unmutated: 58 passed.

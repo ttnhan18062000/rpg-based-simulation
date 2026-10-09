@@ -24,7 +24,7 @@
     "aseprite-pixel-art": {
       "command": "bash",
       "args": ["visual_assets/start_mcp.sh"],
-      "env": {},
+      "env": {"VISUAL_ASSETS_CHECKOUT": "${VISUAL_ASSETS_CHECKOUT:-}"},
       "description": "Aseprite pixel-art drawing tools (typed ops, hash-pinned Lua, bwrap sandbox, immutable revisions); never writes the asset catalog"
     }
   }

@@ -63,8 +63,8 @@ describe('the scene', () => {
 })
 
 describe('copies equal their sources', () => {
-  it('the colour-vision matrices equal tests/visual_assets/pilot_colour_vision.py', () => {
-    const source = read('tests', 'visual_assets', 'pilot_colour_vision.py')
+  it('the colour-vision matrices equal visual_assets/review/pilot_colour_vision.py', () => {
+    const source = read('visual_assets', 'review', 'pilot_colour_vision.py')
     for (const vision of ['protan', 'deutan', 'tritan'] as const) {
       const row = new RegExp(`"${vision}": \\(\\((.+?)\\), \\((.+?)\\), \\((.+?)\\)\\)`).exec(source)!
       const parsed = [row[1], row[2], row[3]].map((r) => r.split(',').map((v) => parseFloat(v)))
