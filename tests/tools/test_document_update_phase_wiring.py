@@ -39,17 +39,14 @@ def test_document_update_phase_between_implement_and_doc_staleness_check():
     )
 
 
-def test_document_update_files_changed_merged_into_doc_staleness_args():
+def test_document_update_files_reach_the_doc_staleness_gate_through_the_git_derived_list():
+    # TCK-20261009-NATIVE-ATTESTED-COMMAND-TRANSPORT-LOSSY: the gate no longer receives a merged path list; gate_cli derives
+    # the changed files from git, which already holds the doc-updater's edits because Document-Update runs first.
     text = _read()
-    invoke_idx = text.find("python3 tools/gate_checks/doc_staleness_check.py")
+    invoke_idx = text.find("gateCmd.docStaleness(")
     assert invoke_idx != -1
-    window = text[:invoke_idx][-1500:]
-    assert "implementation.files_changed" in window, (
-        "the merged array feeding docStalenessFilesArgs must still include implementation.files_changed"
-    )
-    assert "docUpdate.docs_updated" in window, (
-        "the merged array feeding docStalenessFilesArgs must also include doc-updater's own reported files"
-    )
+    assert text.find("phase('Document-Update')") < invoke_idx, "doc-updater edits must exist before the gate derives the list"
+    assert "combinedFilesChanged" not in text and "docStalenessFilesArgs" not in text
 
 
 def test_document_update_runs_unconditionally_no_hotfix_guard():
