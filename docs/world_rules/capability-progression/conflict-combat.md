@@ -64,6 +64,34 @@ without combat).
 > differs from an enemy in when it CHOOSES to fight, which belongs to its own decision-making
 > layer (AGENCY-02). It never differs in whether it is ALLOWED to fight back or strike first.
 
+**Amendment, who is a threat or a quarry comes from appraisal, not faction (decided by the owner
+directly, 2026-10-09; rows 47 and 49 of the memo):**
+
+> Every creature judges another from what it perceives: the other's size and apparent strength,
+> whether one could eat the other, and its own hunger and condition. That appraisal decides
+> hunting, fleeing and wariness for every kind. A hungry creature may hunt one whose body its
+> diet can eat and which it judges it can overcome, whatever their factions. A creature is wary
+> of one that could eat and overcome it, keeping its distance and staying alert, and flees one
+> that approaches, stalks or chases it. Hunger is never read by the other side: a wolf lying
+> still or walking past draws wariness, not panic. Faction enmity remains an additional, social
+> reason for people-kinds to fight (war, feud), on top of the appraisal, not instead of it.
+
+- **Why:** decision 46 (roles from properties). Today "hostile" is a faction verdict
+  (`src/engine/hostility.py:41-66`, `is_hostile_compat`; `src/ai/goals/scorers_support.py:18`).
+  A hare could flee a wolf only if their factions were declared enemies, and a wolf could not
+  hunt a hare of its own wild faction (this Rule's same-faction refusal).
+- **Shape (Lane A, relayed by rpg-planner):** a relation between two creatures adds PREDATION (a
+  is hungry, a's diet can eat b's body, a judges it can overcome b, a perceives b) and DANGER (b
+  could eat and overcome a, and a perceives b; the response scales with what b is doing). The
+  threat terms (AGENCY-07, CONFLICT-04, decision 32) read any relation.
+- **Engineering, not this Rule:** how "can overcome" is estimated (today `apparent_power` reads
+  the opponent's true stats, `src/domains/combat_engagement/power.py:58`, which KNOW-02 objects
+  to), the wariness distance, and how approach or stalking is perceived.
+- **Alternatives not taken:** appraisal only, with faction dropped as a reason to fight; faction
+  hostility kept as the main gate with a narrow hunting exception; prey fearing only a
+  hungry-looking predator; prey fleeing any predator on sight.
+- **Evidence: CONFLICTING** until Lane A's hunting batch lands.
+
 **Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-06**
 (row 18 of `docs/plans/systemic_world/owner_decision_memo.md`; the owner confirmed the
 delegation directly the same day). Passes the admission test: no earlier Rule said whether
@@ -185,6 +213,27 @@ was declared without any Rule on when a fighter accepts it.
     what remains after the engaged-only block is this case.
   - **Engineering, not this Rule:** how the event reaches the decision layer (an event-driven
     re-decision touches scheduling), and its cadence. This is feature work with its own ticket.
+  - **Evidence: SUPPORTED since #457 (`edda25490`, 2026-10-09), with one disclosed gap.**
+    Implemented by
+    `TCK-20261008-A-SUBJECT-NOTICES-AN-UNENGAGED-HOSTILE-COMING-ADJACENT-AND-DECIDES-DECISION-32`
+    (Lane A); divergence 2.95, parity COMB-343.
+    - **The wake:** the scheduler wakes the brain of a subject holding no action, with an
+      unengaged perceived hostile orthogonally adjacent, every 2 ticks ahead of its cadence. The
+      decision follows the subject's own combat-engagement verdict: avoid steps away, watch
+      holds (a typed `HOLD`, reason `WATCH_HOSTILE`), and other verdicts go to the tactical pass.
+    - **Pinned by** `tests/mechanic_scenarios/test_decision32_notice_and_decide.py` (control arm,
+      and the invariant that no two-tick adjacency episode ends without a decision).
+    - **Measured** (pinned, seeds 42-46, 1500 ticks; crowded / living / urban):
+      - opportunity-attack hits: 196.0 / 140.2 / 77.4 to 63.8 / 94.6 / 40.2;
+      - DEFEAT deaths: 14.2 / 15.2 / 6.2 to 6.6 / 8.0 / 5.4;
+      - total deaths: 28.6 / 33.0 / 17.4 to 21.2 / 29.8 / 17.2;
+      - adjacency episodes ending with no decision: about 80 percent before, none after;
+      - of the woken decisions, about half are fights (54 / 55 / 52 percent); WATCH is 21.6 /
+        15.4 / 13.8 per run; AVOID 15.2 / 10.4 / 8.6.
+    - **Disclosed gap:** keep walking (IGNORE) never fires, because the posture service never
+      returns it for these pairs (`TCK-20261009-IGNORE-POSTURE-IS-NEVER-PRODUCED-SO-KEEP-WALKING-CANNOT-FIRE-DECISION-32`).
+      Under decisions 47 and 49 the appraisal replaces faction hostility as the trigger in the
+      hunting batch.
   - **Two follow-up rulings (owner, directly, 2026-10-09, on Lane A's per-world split):** a WATCH
     posture means stand and observe, as a typed wait. It does not mean fight, because the router
     withholds the attack under WATCH, so the subject would "fight on paper" and strike nothing.

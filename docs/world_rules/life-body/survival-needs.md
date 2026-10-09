@@ -100,7 +100,21 @@ Catalog has found.
   lines, its recovery). "Person" in the text above is an example, not a limit.
   `src/engine/starvation.py` (decision 36's code) is already kind-agnostic: it reads the
   subject's hunger and max HP, never its kind.
-- **Evidence: CONFLICTING** until that ticket lands.
+- **Evidence: SUPPORTED since #457 (`edda25490`, 2026-10-09).** Implemented by
+  `TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02` (Lane A); divergence 2.94,
+  parity PROG-129.
+  - **Stages** (`src/engine/starvation.py`, one table): weakened at hunger 85 (regeneration at
+    half rate, attack x0.8, no health lost); starving at 95 (1 HP every `round(6000 / max_hp)`
+    life-due ticks). A full-health body of any size dies about 6,000 ticks (2.5 days) after the
+    line; a hurt one sooner. It reads hunger and max HP only, never the kind.
+  - **Pinned by** LB-S18 (`tests/mechanic_scenarios/test_starvation_over_days.py`): main arm,
+    control that eats, and a second-kind arm (a goblin staged as a meat-eater; it moves to a
+    generic meat-eater in the hunting batch).
+  - **Measured** (pinned, seeds 42-46; crowded / living / urban):
+    - starvation deaths by tick 1500: 10.0 / 13.4 / 7.2 to 0.0 / 0.0 / 0.2;
+    - starvation deaths by tick 10000: 25.2 / 43.6 / 11.0 to 16.2 / 26.8 / 10.8;
+    - alive at tick 1500: 3.4 / 12.0 / 7.4 to 11.4 / 22.0 / 12.6;
+    - alive at tick 5000: about unchanged. Survival over days still waits on earning and hunting.
 
 **Amendment, sleep debt ends in collapse, not in bleeding (decided by the owner directly,
 2026-10-09; row 41 of the memo):**
@@ -264,8 +278,9 @@ profiles reach the same hunger at different times.
 > - **People** meet hunger in two ways: they eat a meal where meals are served (the inn, for a
 >   price), or they eat food they carry. They come to carry food by buying it, by harvesting or
 >   foraging it, or by receiving it (loot, gift, inheritance).
-> - **Predators** hunt, **grazing creatures** forage, and **people-kinds without a meal place**
->   eat carried, foraged or looted food.
+> - **Meat-eaters** hunt, **plant-eaters** forage, and **people-kinds without a meal place**
+>   eat carried, foraged or looted food. (Which kind hunts which follows from properties, not
+>   labels: see the decision-46 amendment below.)
 > - **A kind with no hunger** has no hunger path and needs none (SURV-05).
 > - **Rest:** every kind with a rest need can rest in place, sleeping rough, wherever it is not in
 >   danger. A bed (an inn or a home) only makes rest better; rest never requires a building.
@@ -274,6 +289,35 @@ profiles reach the same hunger at different times.
 > that kind's ways to meet each of its needs. That guarantees a way exists, not that every
 > individual can afford it: a penniless subject with nothing to forage may starve, and that is an
 > outcome, not a defect.
+
+**Amendment, roles come from properties, never from labels (decided by the owner directly,
+2026-10-09; row 46 of the memo):**
+
+> "Predator", "prey", "grazer" and "hunter" are not kinds' labels. They describe what a creature
+> ends up doing, given what it is and what is around it. A kind declares its properties: its
+> body size, its power, how dangerous it is, its wits, what its diet can eat, and whether its
+> body is edible and to which diets. Whether one creature hunts another follows from those
+> properties and the moment: the hunter is hungry, its diet can eat the other's body, and it can
+> overcome the other. Whether a creature flees another follows from the danger it perceives.
+> A small, weak, edible animal is hunted by larger meat-eaters because of what it is, not
+> because it is marked as prey.
+
+- **Consequences:**
+  - No species carries a "prey" or "predator" flag, and no behaviour reads one.
+  - The same creature can be hunter in one meeting and hunted in another: a wolf hunts a hare
+    and flees a bear.
+  - A hungry wolf may turn on a lone person when nothing easier is near, and keeps away from a
+    group it cannot overcome.
+  - People hunt (decision 31) by the same reading.
+- **Applies everywhere, not only to food:** the same principle holds for every role a kind
+  might be given. A role is an outcome of declared properties and the situation, not an authored
+  tag, unless a rule says why a tag is the property itself (for example decision 43's "keeps
+  coin and trades", which is a cultural fact about the kind, not a role).
+- **Engineering, not this Rule:** the property names and scales, how "can overcome" is
+  estimated (it may reuse combat_engagement's posture verdict and KNOW-04's common-knowledge
+  danger prior), and how edibility maps bodies to diets.
+- **Repository finding to check:** LB-S15 cites an individual-level `ecological_predator` role
+  classification. If behaviour reads it as a fixed label, it is CONFLICTING with this amendment.
 
 **Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
 (row 23 of `docs/plans/systemic_world/owner_decision_memo.md`). Passes the admission test: SURV-02
@@ -397,6 +441,39 @@ not hold. Per divergence 2.80, measured on `frontier_living_world`, seed 42, 1,3
 main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
 - **Eating and resting now complete:** eat events go from 0 to 24 and sleep events from 0 to 17.
   Alive at t=1100 goes from 3 to 10. These figures include the free meals below.
+- **Animals first: the removal waits for the animals' own ways (decided by the owner directly,
+  2026-10-09; row 44 of the memo).** Under decision 42, the free-meal removal must leave every
+  living kind with a working way to eat, not only people. It lands for everyone at once, after
+  predators can hunt (a kill leaves meat, and a carnivore eats it raw) and each kind eats only
+  what its diet allows. Building hunting moves up the queue. Until then, today's oddities stay,
+  recorded as known flaws:
+  - **CONFLICTING: animals reach the inn.** `EatScorer`'s inn route has no kind check, so a
+    hungry wolf or goblin walks to a town inn for the free meal.
+  - **CONFLICTING: carnivores forage berries.** Wolves and spiders (`carnivore_survival`) take
+    decision 27's forage step on a berry thicket, because no diet gate exists. That is against
+    this Rule's per-kind ways.
+  - **MISSING: hunting.** A kill pays gold and XP only. No meat, carcass or hide item exists in
+    the catalog, a corpse holds loot and not food, and there is no eat-corpse action.
+  - **MISSING: small, edible, plant-eating animals.** The corpus has 13 species and no herbivore
+    or small game, so the only creatures a wolf could hunt are people, goblins or other
+    meat-eaters. **Decided by the owner directly, 2026-10-09 (rows 45 and 50 of the memo): add a few generic
+    animal archetypes,** defined only by coarse properties, for example a small plant-eater and a
+    large plant-eater: low wits, low power, a plant-eating diet, edible to meat-eaters. Nothing
+    marks them as prey (decision 46). Named species (a deer, a hare) and exact figures are content
+    detail, deferred until the foundation is hardened (decision 50). Meat-eaters then mostly eat
+    these animals and turn on people mainly when they are scarce, and people gain something to
+    hunt (decision 31). Their grazing is foraging by a plant-eating diet, and their numbers follow
+    ECOL's population rules, never a target.
+    Scenario: [LB-S21](../scenarios/life-body-batch-05.md#lb-s21) (grazes, flees a noticed
+    predator, numbers change only by births and deaths).
+  - **Scenario:** [LB-S20](../scenarios/life-body-batch-05.md#lb-s20) (a predator eats what it
+    kills, raw; it does not forage what its diet excludes; no kill means no meat).
+  - **Measured preview** (Lane B, `frontier_living_world`, seed 42; five-seed figures per kind
+    group to follow). With free meals removed, wildlife that ever ate goes from 4 to 1, wildlife
+    starvation from 2 to 4, and wildlife end hunger from 92 to 100.
+  - **Alternatives not taken:** remove the free meal for people now and close the inn to animals
+    (wildlife starvation accepted); close the inn to animals now but keep the free meal for
+    people (animals lose their only meal).
 - **CONFLICTING: the meal is free when the subject cannot pay.** This breaks "for a price" and
   "no engine charity". **Still CONFLICTING after #454 (2026-10-09):** the removal is parked on
   the local branch `d27-free-meal-removal`, and its ticket stays open until earning (EXCH-02,

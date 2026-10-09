@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-09"
 ---
 
 # World Rule Family: Ownership / Possession
@@ -98,7 +98,20 @@ eligibility) is a citation and application of OWN-01/OWN-02, not a semantic clai
 The broken heirloom-transfer implementation is kept entirely as Repository evidence below, per
 the follow-up review's own explicit instruction, not folded into this Rule's own wording.
 
-**Repository evidence: CONFLICTING — a real, load-bearing finding, the single most significant
+**Correction (rpg-designer, 2026-10-09): still CONFLICTING, but for the opposite reason. The
+paragraph below is kept as first written, and its resolver claim is wrong.** `src/core/conservation.py`
+has had a `CHEST` branch (`elif intent.source_kind in ("RECRUIT", "CHEST")`, line 275) since
+`562116889` (2026-05-18). It accepts the heir's intent and adds `items_add` to the heir's
+inventory without debiting any source.
+- The heir therefore receives a copy of the deceased's inventory, plus one stack per declared
+  heirloom id whether or not the deceased held it (`src/systems/lifecycle_systems/lifecycle.py:277-286`).
+- `CorpseState.items` still snapshots the same inventory and stays lootable, so the goods are
+  likely duplicated.
+- The deceased's gold is not transferred.
+- This is read from code, not yet confirmed by a run. It was routed to Lane B's treasury batch
+  (rpg-planner, 2026-10-09) as a conservation defect.
+
+**Repository evidence (as first written): CONFLICTING — a real, load-bearing finding, the single most significant
 in this whole batch: this repository's own implementation actively constructs an ownership-
 transfer intent that its own resolver rejects, meaning the resulting property relation is never
 actually committed by anyone.** `LifecycleSystem`'s "Transactional Heirloom Transfer"
