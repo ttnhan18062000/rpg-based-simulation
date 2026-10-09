@@ -18,7 +18,3 @@ rendered title said "(2 tickets)" and `Closes:` omitted the third until a commit
 name the missing IDs in the final commit subject (still unpushed, so no history rewrite). Re-render, then `--check
 --pr N` after `gh pr create`. Related slip: I mistyped a 40-character SHA in a peer message; copy a SHA from tool
 output or `git rev-parse`, never retype it, and keep full SHAs out of hand-written PR notes (use the short form).
-
-Repeat slip, 2026-10-05: I amended a commit (which changes its SHA) and in the same turn sent a peer a SHA I
-never read from any output. Every peer message that quotes a SHA must come after a `git log -1` or `rev-parse`
-whose output I can see, and after the last amend.

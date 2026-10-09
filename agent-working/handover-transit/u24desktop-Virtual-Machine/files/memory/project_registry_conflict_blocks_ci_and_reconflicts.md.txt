@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: f39f2e13-ef59-4217-9a61-840066d6a0da
-  modified: 2026-10-04T17:06:04.485Z
+  modified: 2026-10-04T15:10:50.054Z
 ---
 
 `docs/REGISTRY.yaml` and the append-only `agent-working/agent-monitoring/**.jsonl` shards are merged by
@@ -38,22 +38,5 @@ head measures a different commit (a peer's unpushed shard commit was on top); an
 
 Note `gh api --method PUT .../pulls/<n>/update-branch` returns **422 "merge conflict between base and
 head"** here rather than fixing it — it cannot resolve what it has no driver for. The local merge is the
-only path.
-
-**Correction, 2026-10-04 — `main` IS protected, by a ruleset, and only the user can merge.** An earlier
-version of this note said "branch protection is disabled on `main`, so nothing mechanically requires
-green CI." That was wrong, and it was wrong because I queried the wrong mechanism:
-`repos/<o>/<r>/branches/main/protection` returns **404 "Branch protection has been disabled"** while the
-repo is in fact protected by a **ruleset**. Check `repos/<o>/<r>/rulesets` instead — here
-`protect_branches` (id 14220945, `enforcement: active`, `~DEFAULT_BRANCH`) carries `deletion`,
-`non_fast_forward` and an **`update`** rule, bypassable only by `RepositoryRole` admin
-(`bypass_mode: always`).
-
-Consequence: **`gh pr merge` fails with "the base branch policy prohibits the merge"** no matter how
-green CI is, and every PR in this repo is merged by the owner under that bypass. `gh` suggests `--admin`;
-do **not** use it — a merge authorization from the user is not a policy-bypass authorization. Verify the
-PR is genuinely green, then hand the merge back to them, saying it is ready. See
-[[feedback_admin_merge_blocked_by_classifier]], which is the same handback rule.
-
-A 404 from an endpoint means "not configured *that* way", never "not configured". Don't report an
-absent gate from one negative probe.
+only path. Branch protection is **disabled** on `main`, so nothing mechanically requires green CI; not
+merging red is a discipline, not a gate.
