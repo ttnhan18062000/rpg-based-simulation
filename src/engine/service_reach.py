@@ -27,7 +27,9 @@ def building_kind_at(state: Any, tile: Tile) -> Optional[str]:
     building = SpatialQueryService.get_building_at(state, tile)
     if building is not None:
         return building.kind
-    kind: Optional[str] = state.building_tiles.get(tile)
+    # A worker's read-only packet carries `buildings` and `building_map` but no `building_tiles`: a missing map means no kind.
+    building_tiles = getattr(state, "building_tiles", None)
+    kind: Optional[str] = building_tiles.get(tile) if building_tiles is not None else None
     return kind
 
 

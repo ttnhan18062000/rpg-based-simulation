@@ -73,6 +73,46 @@ def _walk(state: AuthoritativeState, ticks: int) -> Dict[str, Any]:
         CombatResolutionSystem.resolve_multi_attack = staticmethod(orig)
 
 
+def is_step_without_a_decision(entity, decided_this_tick, entities) -> bool:
+    """True for a step the CONFLICT-04 movement rule forbids: an engaged hostile adjacent, no decision this tick, and not a decided flight.
+    A decided flight steps and pays the opportunity attack (CONFLICT-04, divergence 2.89): the same predicate the rule uses."""
+    return (not decided_this_tick and not MovementCandidateSelector.is_decided_flight(entity)
+            and MovementCandidateSelector.engaged_adjacent_hostile(entity, entities))
+
+
+def test_the_invariant_predicate_exempts_a_held_decided_flight_and_counts_every_other_undecided_step():
+    from dataclasses import replace as _replace
+    from src.core.builder import V2EntityBuilder
+    from src.core.enums import EntityRole, Faction
+
+    def fighter(eid, pos, faction):
+        role = EntityRole.HERO if faction == Faction.HERO_GUILD else EntityRole.MONSTER
+        return (V2EntityBuilder(eid).kind("hero" if role == EntityRole.HERO else "monster").location(*pos).identity(role=role, faction=faction)
+                .combat(hp=100, max_hp=100, attack_range=1, readiness=100.0, alive=True).lifecycle(active=True).build())
+
+    hostile = _replace(fighter(2, (10.0, 11.0), Faction.MONSTER_HORDE), task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "ATTACK", "target_id": 1}))
+
+    def held(reason):
+        return _replace(fighter(1, (10.0, 10.0), Faction.HERO_GUILD),
+                        task=TaskComponent(work_kind="ENTITY_MOVE", payload={"target_position": (40.0, 40.0), "reason": reason}))
+
+    from src.engine.behavior_consumers import configure_behavior_consumers, reset_behavior_consumers
+    from src.content.repository import CatalogRepository
+
+    repo = CatalogRepository("data/content")
+    repo.load_all()
+    configure_behavior_consumers(repo)
+    try:
+        for reason in ("PANIC_RETREAT", "SAFETY_PRESSURE_RETREAT", "LEASH_RETURN", "AVOID_HOSTILE"):
+            e = held(reason)
+            assert is_step_without_a_decision(e, False, {1: e, 2: hostile}) is False   # a decided flight steps and pays the opportunity attack
+        e = held("REGROUP")
+        assert is_step_without_a_decision(e, False, {1: e, 2: hostile}) is True        # any other undecided step beside an engaged hostile counts
+        assert is_step_without_a_decision(e, True, {1: e, 2: hostile}) is False        # a decision this tick is allowed
+    finally:
+        reset_behavior_consumers()
+
+
 def test_an_idle_walker_beside_an_engaged_hostile_does_not_step_and_takes_no_opportunity_attack():
     out = _walk(_stage(compile_world(WORLD_ID), h_pos=ADJ), 6)  # inside the first brain cadence: only the stored target could move it
     assert set(out["positions"]) == {W_POS}, "the walker stepped off adjacency without a decision"
@@ -101,7 +141,7 @@ def test_invariant_no_step_with_an_engaged_adjacent_hostile_on_a_tick_without_a_
 
     def move(state_or_context, entity, target_pos, mode=MovementMode.WANDER):
         tick = kernel_ref["k"].state.tick
-        if (entity.id, tick) not in decided and MovementCandidateSelector.engaged_adjacent_hostile(entity, state_or_context.entities):
+        if is_step_without_a_decision(entity, (entity.id, tick) in decided, state_or_context.entities):
             violations.append((tick, entity.id))
         return orig_move(state_or_context, entity, target_pos, mode=mode)
 

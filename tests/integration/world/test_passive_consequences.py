@@ -75,7 +75,7 @@ def test_regional_hazard_and_starvation():
         V2EntityBuilder(1)
         .kind("hero")
         .location(0.0, 0.0)
-        .combat(hp=100, max_hp=100, alive=True)
+        .combat(hp=6000, max_hp=6000, alive=True)  # owner decision 36: 1 HP every round(6000 / max_hp) ticks, so this body loses 1 HP each tick
         .biological(hunger=100.0)
         .build()
     )
@@ -99,8 +99,15 @@ def test_regional_hazard_and_starvation():
     update = AuthoritativeApplyPipeline.refine(state, StateUpdate())
     next_state = ApplyPath.apply_generation(state, update, next_tick=2)
     
-    # Damage = 10 (hazard) + 2 (starvation) = 12
-    assert next_state.entities[1].combat.hp == 88
+    # The hazard drain is pinned exactly and separately from the starvation loss. Starvation is staged (owner decision 36, divergence 2.94): at
+    # hunger >= 95 a body of max_hp 6000 loses 1 HP each tick (the period is round(6000 / max_hp) = 1); the old flat 2 HP per tick is gone.
+    from src.engine.starvation import hp_loss
+    from src.world.environment import EnvironmentService
+    hazard = EnvironmentService.calculate_hazard_drain(hazard_region, starving_hero)
+    starvation = hp_loss(100.0, 6000, 1, 1)
+    assert hazard == 10
+    assert starvation == 1
+    assert next_state.entities[1].combat.hp == 6000 - hazard - starvation
 
 def test_regional_recovery():
     """
