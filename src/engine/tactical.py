@@ -26,7 +26,8 @@ from src.engine.building_arrival import building_arrival_update
 from src.engine.behavior_consumers import get_entity_signals, get_perception_gate
 from src.engine.sleep_debt import collapse_update, must_collapse
 from src.engine.tactical_hold import held_swing_update, leash_return_update, notice_unengaged_hostile, stalemate_break_update
-from src.engine.hostility import perceived_hostile, source_identity
+from src.engine.appraisal import WARY_DISTANCE, Relation
+from src.engine.hostility import ATTACK_RELATIONS, perceived_hostile, relation, source_identity
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -227,10 +228,17 @@ class TacticalDecisionSystem:
         hostile_identity_sources: dict = {}
         _src_faction_id, _src_identity_source = source_identity(entity)
 
+        threatening: list = []
+        wary: list = []
         for n in neighbors:
-            if perceived_hostile(entity, n, (_src_faction_id, _src_identity_source)):
+            rel = relation(entity, n, (_src_faction_id, _src_identity_source))
+            if rel in ATTACK_RELATIONS:
                 hostiles.append(n)
                 hostile_identity_sources[n.id] = _src_identity_source
+            elif rel is Relation.THREATENING:
+                threatening.append(n)  # decisions 47 and 49: avoided, never engaged, so never in the hostile list
+            elif rel is Relation.WARY:
+                wary.append(n)
 
         # 4. Strategic Persistence (Pillar 5.1)
         strat_up = _suspend_project_for_threat(entity, hostiles)
@@ -247,6 +255,11 @@ class TacticalDecisionSystem:
                     payload_set={"target_position": retreat_to, "reason": "SAFETY_PRESSURE_RETREAT"}
                 )
             )
+
+        if not hostiles:
+            avoid_update = TacticalDecisionSystem._avoid_what_can_eat_me(state, entity, threatening, wary, strat_up)
+            if avoid_update is not None:
+                return avoid_update
 
         rest_update = in_place_survival_update(state, entity, hostiles)
         if rest_update is not None:
@@ -785,6 +798,31 @@ class TacticalDecisionSystem:
                     }
                 )
             )
+
+    @staticmethod
+    def _avoid_what_can_eat_me(
+        state: AuthoritativeState, entity: EntityState, threatening: List[EntityState], wary: List[EntityState], strat_up: Any
+    ) -> Optional[EntityUpdate]:
+        """Decisions 47 and 49: a creature flees what is coming for it (THREATENING: a decided flight, ``AVOID_HOSTILE``) and keeps its distance from
+        what could eat it and it cannot overcome (WARY within ``WARY_DISTANCE``: ``KEEP_DISTANCE``, not a flight). Neither enters the hostile list."""
+        if threatening:
+            away = _destination_or_hold(entity, retreat_destination(state, entity, threatening))
+            return EntityUpdate(
+                entity_id=entity.id, strategic=strat_up,
+                navigation=NavigationUpdate(target_set=away, movement_mode_set=MovementMode.RETREAT),
+                task=TaskUpdate(work_kind_set="ENTITY_MOVE", payload_set={"target_position": away, "reason": "AVOID_HOSTILE"}),
+            )
+        near = [w for w in wary if LegalityServiceV2.get_manhattan_dist(entity.navigation.position, w.navigation.position) <= WARY_DISTANCE]
+        if not near:
+            return None
+        away = retreat_destination(state, entity, near)
+        if away is None:
+            return None
+        return EntityUpdate(
+            entity_id=entity.id, strategic=strat_up,
+            navigation=NavigationUpdate(target_set=away, movement_mode_set=MovementMode.RETREAT),
+            task=TaskUpdate(work_kind_set="ENTITY_MOVE", payload_set={"target_position": away, "reason": "KEEP_DISTANCE"}),
+        )
 
     @staticmethod
     def _hunger_corpse(state: AuthoritativeState, project: Any, obj: "ObjectiveState") -> Optional[Any]:
