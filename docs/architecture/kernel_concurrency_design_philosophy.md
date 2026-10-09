@@ -159,14 +159,14 @@ a time — deliberately slow and hysteresis-protected, so the engine doesn't fla
 stateDiagram-v2
     [*] --> NORMAL
     NORMAL --> CONSTRAINED: any signal ≥ 70% threshold\n(immediate)
-    CONSTRAINED --> DEGRADED: signal ≥ 90%,\nwork_debt ≥ 50% max,\nor tick_ms ≥ budget\n(immediate)
-    DEGRADED --> SURVIVAL: work_debt ≥ max,\ntick_ms ≥ 150% budget,\nor RAM ≥ max\n(immediate)
+    CONSTRAINED --> DEGRADED: signal ≥ 90%,\nor tick_ms ≥ budget\n(immediate)
+    DEGRADED --> SURVIVAL: tick_ms ≥ 150% budget,\nor RAM ≥ max\n(immediate)
     SURVIVAL --> DEGRADED: dwell_time elapsed AND\nfull confidence window below\nrecovery watermark
     DEGRADED --> CONSTRAINED: same gate
     CONSTRAINED --> NORMAL: same gate
 ```
 
-> The two `work_debt` thresholds in this diagram are coded (`governor.py`) but never fire: production debt is always 0 (see the hard backstop paragraph below and `tests/integration/kernel/test_work_debt_stays_empty_in_production.py`).
+> The design also had two `work_debt` thresholds in this diagram; they never fired (production debt was always 0) and were removed with work debt in Phase B (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`).
 
 Each mode is a pre-composed policy bundle (`src/engine/policy.py`):
 
@@ -197,15 +197,9 @@ in real time, regardless of the mode's baseline.
 strategy re-evaluation staggered per entity). A population spike means more entities competing
 for the same bounded budget slots, not a proportionally larger per-tick workload.
 
-**Hard backstop**: if Resolution runs long, `kernel.py` checks elapsed time every 10 results and,
-past the hard cap, drops remaining results outright, records the drop in `RuntimeStatus` counters, force-escalates to
-DEGRADED, and fires a watchdog alert. Dropped work is **not** turned into debt: as of 2026-10-04 nothing
-increases `state.work_debt` (`src/engine/apply.py` only applies drain deltas; `DRAIN_DEBT` items exist only
-for debt that already exists, and they always sort last in the deterministic commit order). Every
-`work_debt_total` is therefore 0 in production, so the `work_debt_total >= max_work_debt` SURVIVAL trigger
-and the 50% DEGRADED trigger never fire (guard: `tests/integration/kernel/test_work_debt_stays_empty_in_production.py`). The design intent, "can't keep up" means
-"shrink scope further," never "blow the budget," is carried today by the compute and memory signals only.
-The field is scheduled for retirement (owner decision 2026-10-04; `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`, which waits for the RPG-core entry gate).
+**Hard backstop (report-only since DEV-014)**: if Resolution runs long, `kernel.py` checks elapsed time every 10 results and
+past the budget records the overrun in `RuntimeStatus` and fires a watchdog alert; it no longer drops remaining results or forces
+DEGRADED, because that made what a run computed depend on host speed (DEV-014, `TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY`). Dropped work is **not** turned into debt, and there is no debt: work debt was never produced and was removed in Phase B (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`, owner decision 2026-10-04), together with its two governor triggers. The design intent, "can't keep up" means "shrink scope further," never "blow the budget," is carried today by the compute and memory signals only.
 
 ## Part 5 — Benchmarking integrity
 

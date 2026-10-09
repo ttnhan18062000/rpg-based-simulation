@@ -63,7 +63,7 @@ def _build_state() -> AuthoritativeState:
         groups={}, regions={}, resource_nodes={node.id: node}, buildings={},
         chests={}, ground_items={}, corpses={}, camps={}, local_scars={},
         global_resources={}, town_tiles=set(), building_tiles={}, terrain={},
-        home_storage={}, town_center=(0, 0), periodic_due_ticks={}, work_debt={},
+        home_storage={}, town_center=(0, 0),
         movement_count=0, maturity=0, last_calamity_tick=0,
         blocked_tiles=set(), town_entity_ids=set(),
     )

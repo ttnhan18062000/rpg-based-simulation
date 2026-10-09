@@ -1,8 +1,7 @@
 # Compliance IDs: INFRA-116
 from __future__ import annotations
 
-from typing import List, Dict, Any, Sequence, Optional, Tuple, TYPE_CHECKING
-from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
 from src.core.state import AuthoritativeState
 from src.core.work import WorkItem, WorkClass
 from src.engine.candidate_selector import MovementCandidateSelector
@@ -15,25 +14,10 @@ if TYPE_CHECKING:
     from src.engine.policy import GovernorPolicy
 
 
-@dataclass(frozen=True, slots=True)
-class PeriodicDefinition:
-    """
-    Static definition for a periodic background task.
-    """
-    subsystem_id: str
-    work_kind: str
-    cadence: int
-    is_authoritative: bool = True  # M5 Law: Non-auth tasks shed in SURVIVAL
-    payload: Dict[str, Any] = field(default_factory=dict)
-
-
 class DeterministicScheduler:
     """
     Authoritative orchestrator for deterministic work selection.
     """
-
-    def __init__(self, periodic_defs: Sequence[PeriodicDefinition] = ()):
-        self._periodic_defs = {pd.subsystem_id: pd for pd in periodic_defs}
 
     def select_work(
         self, 
@@ -52,7 +36,6 @@ class DeterministicScheduler:
         focus_points = [state.town_center]
         
         work_sequence: List[WorkItem] = []
-        dropped_count = 0
 
         # Decision 32 ("notice and decide"): an entity beside a perceived hostile it is not engaged with is woken for the brain ahead of its
         # cadence, every ADJACENCY_WAKE_COOLDOWN ticks while that holds. Stateless: the wake needs only this tick's positions.
@@ -67,48 +50,8 @@ class DeterministicScheduler:
         critical_items.sort(key=lambda x: (-x.readiness, x.owner_id))
         work_sequence.extend(critical_items)
 
-        # 2. PERIODIC: Subsystem Upkeep
-        periodic_items: List[WorkItem] = []
-        for sid, pdef in self._periodic_defs.items():
-            if not pdef.is_authoritative and not policy.allow_non_authoritative_periodic:
-                dropped_count += 1
-                continue
-                
-            due_tick = state.periodic_due_ticks.get(sid, 0)
-            if state.tick >= due_tick:
-                periodic_items.append(WorkItem(
-                    owner_id=sid,
-                    work_id=f"{state.tick}:periodic:{sid}",
-                    work_class=WorkClass.PERIODIC,
-                    work_kind=pdef.work_kind,
-                    payload=pdef.payload,
-                    due_tick=due_tick,
-                    cadence=pdef.cadence
-                ))
-        
-        periodic_items.sort(key=lambda x: (x.due_tick, x.owner_id))
-        work_sequence.extend(periodic_items)
-
-        # 3. DEFERRED: Drain postponed authoritative work
-        deferred_items: List[WorkItem] = []
-        for d_id, debt_count in state.work_debt.items():
-            if debt_count > 0:
-                deferred_items.append(WorkItem(
-                    owner_id=d_id,
-                    work_id=f"{state.tick}:deferred:{d_id}",
-                    work_class=WorkClass.DEFERRED,
-                    work_kind="DRAIN_DEBT",
-                    due_tick=state.tick
-                ))
-        
-        deferred_items.sort(key=lambda x: x.owner_id)
-        work_sequence.extend(deferred_items)
-
-        # 4. OPPORTUNISTIC: Optional Enrichment
-        if policy.allow_opportunistic:
-            pass
-        
-        return work_sequence, dropped_count
+        # Nothing in this scheduler sheds work, so the dropped count is always 0 (kept so the kernel's accounting reads one place).
+        return work_sequence, 0
 
     @staticmethod
     def _is_woken(ent: "EntityState", state: AuthoritativeState, work_kind: str, wake_index: Dict[Any, List[int]]) -> bool:

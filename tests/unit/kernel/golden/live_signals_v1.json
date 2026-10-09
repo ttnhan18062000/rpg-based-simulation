@@ -97,7 +97,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 26.0,
    "tick_compute_ms_avg": 26.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "NORMAL",
@@ -113,7 +112,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 0.0,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -215,7 +213,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 26.0,
    "tick_compute_ms_avg": 26.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "NORMAL",
@@ -316,7 +313,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 26.0,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -418,7 +414,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 104.0,
    "tick_compute_ms_avg": 52.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "NORMAL",
@@ -519,7 +514,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 26.0,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -621,7 +615,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 104.0,
    "tick_compute_ms_avg": 65.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "NORMAL",
@@ -722,7 +715,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 30.0,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -824,7 +816,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 104.0,
    "tick_compute_ms_avg": 72.8,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "NORMAL",
@@ -925,7 +916,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 30.0,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -1027,7 +1017,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 104.0,
    "tick_compute_ms_avg": 88.4,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "NORMAL",
@@ -1128,7 +1117,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 30.0,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -1230,7 +1218,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 102.4,
    "tick_compute_ms_avg": 103.67999999999999,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "SURVIVAL",
@@ -1331,7 +1318,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 104.0,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -1433,7 +1419,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 88.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "SURVIVAL",
@@ -1534,7 +1519,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 102.4,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -1636,7 +1620,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 72.32000000000001,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "SURVIVAL",
@@ -1737,7 +1720,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -1839,7 +1821,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 56.64,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "SURVIVAL",
@@ -1940,7 +1921,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -2042,7 +2022,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 40.96,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "SURVIVAL",
@@ -2143,7 +2122,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -2245,7 +2223,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 25.6,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "SURVIVAL",
@@ -2346,7 +2323,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -2448,7 +2424,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 25.6,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "SURVIVAL",
@@ -2549,7 +2524,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -2651,7 +2625,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 25.6,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "DEGRADED",
@@ -2752,7 +2725,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -2854,7 +2826,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 25.6,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "DEGRADED",
@@ -2955,7 +2926,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  },
@@ -3057,7 +3027,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 25.6,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   },
   "mode": "DEGRADED",
@@ -3158,7 +3127,6 @@
    "replay_backlog_kb": 0.0,
    "tick_compute_ms": 25.6,
    "tick_compute_ms_avg": 0.0,
-   "work_debt_total": 0,
    "worker_utilization": 0.0
   }
  }

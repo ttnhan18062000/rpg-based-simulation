@@ -11,40 +11,23 @@ Defines the properties and behavioral guarantees of each work class in the engin
 
 ## Work Class Summary
 
+Only `CRITICAL` work is produced. The other three classes were removed in Phase B (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`, owner decisions 2026-10-04 and 2026-10-06): their members remain in `src/core/work.py` as unused constants, and nothing schedules, executes or sheds work of those classes.
+
 | Work Class | Purpose | Authoritative? | Due Rule | Execution Guarantee | Deferral Rule |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `CRITICAL` | Core simulation logic | YES | Readiness >= 100 | Mandatory | NON-DEFERRABLE |
-| `PERIODIC` | Cadence tasks (no instance in shipped runs, see "Designed but unused") | YES | Tick % Cadence == 0 | Guaranteed | Deferrable (limited) |
-| `OPPORTUNISTIC` | Enrichment (no producer in shipped runs) | NO | Conditional | Best-effort | Deferrable / droppable |
-| `DEFERRED` | Work debt (drain only; never produced, see below) | YES/NO | Next tick | Ordered drain | Bounded |
+| `PERIODIC` | Removed in Phase B (never registered in shipped runs) | n/a | n/a | n/a | n/a |
+| `OPPORTUNISTIC` | Removed in Phase B (never produced) | n/a | n/a | n/a | n/a |
+| `DEFERRED` | Removed in Phase B (work debt was never produced) | n/a | n/a | n/a | n/a |
 
 ## Work Class Definitions
 
 ### CRITICAL
-Authoritative. Essential for simulation progress. Accumulates `work_lag` if delayed. The scheduler must raise an error if CRITICAL work cannot execute — deferral is forbidden.
+Authoritative. Essential for simulation progress. The scheduler must raise an error if CRITICAL work cannot execute — deferral is forbidden.
 
-### PERIODIC
-Authoritative (usually). Fixed cadence (e.g. economy, weather). If postponed, execution must happen in the next tick with high priority.
-
-### OPPORTUNISTIC
-Non-authoritative. Used for diagnostics, visual proposals, or traces. Runs only if there is remaining budget (profile-dependent). **Designed, never produced:** no code creates opportunistic work (`allow_opportunistic` is read only at `src/engine/scheduler.py` lines 138-139, in an empty branch).
-
-### DEFERRED (Work Debt)
-Designed (Milestone 4) to accumulate when prior-tick work overflowed and drain in order on the next tick, bounded by profile capacity. **Only the drain half exists.** The scheduler emits a `DEFERRED` / `DRAIN_DEBT` item for a system that already has debt greater than zero, and the executor drains it; nothing ever creates that debt. As of 2026-10-04 `work_debt` is never increased in production: nothing converts overflowed or dropped work into debt, `DRAIN_DEBT` only consumes debt that already exists, and `PressureInjector.inject_work_debt` has no caller, so every reader sees 0 (guard: `tests/integration/kernel/test_work_debt_stays_empty_in_production.py`). The field is scheduled for retirement (owner decision 2026-10-04; `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`, which waits for the RPG-core entry gate).
-
-## Designed but unused
-
-The periodic and opportunistic shedding path was designed (Resource Governor milestones M4 to M6) and never wired. Checked 2026-10-06 (`TCK-20261006-PERF-SCHEDULER-SHEDS-NOTHING-IN-SHIPPED-RUNS`; owner decision: keep the code, document it):
-
-- `PeriodicDefinition` (`src/engine/scheduler.py`) is never registered in `src/`: `Kernel` builds `DeterministicScheduler()` with no definitions (`kernel.py` line 127) and `scheduler.py` line 31 is the only place `_periodic_defs` is assigned. It is instantiated only in tests. So the scheduler sheds nothing in shipped runs and `dropped_work` is 0.
-- `allow_opportunistic` has an empty branch (`scheduler.py` lines 138-139).
-- `diagnostic_verbosity` and `metrics_detail` (`GovernorPolicy`) have no reader.
-- `periodic_updates` (`src/core/updates.py`) has no producer, so `AuthoritativeState.periodic_due_ticks` never advances, and the executor has no branch for periodic work kinds.
-
-The unit tests of the mechanism (`tests/unit/core/test_degradation_order.py` and others) are valid specs but register their own definitions. Removal of this path, including the hashed `periodic_due_ticks`, is folded into `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`.
+### PERIODIC, OPPORTUNISTIC, DEFERRED (work debt)
+**Removed in Phase B.** They were designed in the Resource Governor milestones (M4 to M6) and never wired: `PeriodicDefinition` was never registered in `src/`, no code created opportunistic work, and nothing converted overflowed work into debt (`DRAIN_DEBT` only consumed debt that already existed, which stayed 0). The owner chose to retire them rather than build a producer (a deterministic definition of "overflowed work" does not exist, and feeding wall-clock-driven shedding into it would break PERF-D1). What was removed: the scheduler branches and `PeriodicDefinition`; the executor's `DRAIN_DEBT` handling and `SimulationDomainLogic.drain_debt`; `AuthoritativeState.work_debt` / `periodic_due_ticks` and `StateUpdate.work_debt_updates` / `periodic_updates`; the governors' debt thresholds, `PressureSignals.work_debt_total` and `RuntimeProfile.max_work_debt`; and the `GovernorPolicy` fields `allow_opportunistic`, `allow_non_authoritative_periodic`, `diagnostic_verbosity` and `metrics_detail`. See DEV-019 in `docs/guidelines/intentional_divergences.md`. The scheduler's dropped-work count stays in the accounting as a constant 0.
 
 ## Overflow Behavior
 
-- **Policy (design)**: `REJECT`.
-- **Reasoning (design)**: If the work backlog becomes too large, the engine must fail rather than allow an unbounded shadow registry to grow.
-- **Status**: not implemented for work debt. There is no capacity check on the debt counters beyond the governor's `max_work_debt` threshold, which no production run can reach because debt is never produced (`tests/integration/kernel/test_work_debt_stays_empty_in_production.py`; retirement: `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`).
+There is no deferred work, so there is nothing to overflow. The design policy (`REJECT` on an over-large backlog) was never implemented and has no remaining subject.

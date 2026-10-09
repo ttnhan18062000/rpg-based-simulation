@@ -34,7 +34,6 @@ class RuntimeProfile(BaseModel):
     # Threading and Queues
     max_worker_count: int = Field(..., ge=0, description="Maximum concurrent workers")
     max_queue_depth: int = Field(..., gt=0, description="Limit for action and work queues")
-    max_work_debt: int = Field(1000, gt=0, description="Limit for accumulated work debt")
     
     # Observability and Replay
     max_replay_buffer_kb: int = Field(..., ge=0, description="Memory cap for in-memory replay window")
@@ -116,7 +115,6 @@ PROD_SMALL = RuntimeProfile(
     max_replay_buffer_kb=16384,
     max_observability_budget_percent=2.0,
     max_tick_budget_ms=100.0,
-    max_work_debt=1000,
     lod_enabled=True,
     cadence=SystemCadence(
         strategic_intelligence=20,
@@ -135,7 +133,6 @@ PROD_DEFAULT = RuntimeProfile(
     max_replay_buffer_kb=65536,
     max_observability_budget_percent=5.0,
     max_tick_budget_ms=50.0,
-    max_work_debt=5000,
     lod_enabled=True,
     cadence=SystemCadence(
         strategic_intelligence=10,
@@ -154,7 +151,6 @@ PROD_LARGE = RuntimeProfile(
     max_replay_buffer_kb=131072,
     max_observability_budget_percent=10.0,
     max_tick_budget_ms=100.0, # 10 FPS target for 5,000 entities
-    max_work_debt=10000,
     lod_enabled=True,
     cadence=SystemCadence(
         strategic_intelligence=10,
@@ -173,7 +169,6 @@ PROD_STRESS = RuntimeProfile(
     max_replay_buffer_kb=524288,
     max_observability_budget_percent=15.0,
     max_tick_budget_ms=500.0, # 2 FPS target for 10,000 entities
-    max_work_debt=50000,
     lod_enabled=True,
     cadence=SystemCadence(
         strategic_intelligence=5,

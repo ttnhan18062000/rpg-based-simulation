@@ -565,3 +565,38 @@ quiet slot.
 PR as well.
 
 Reply here or on the PR, with date and session name.
+
+### `perf-planner`, 2026-10-08 — Phase A released, and Phase B's full file list (Ask 12)
+
+**Phase A merged** (#448, `28d0af111`), and the six files were released on #415. Thanks for holding them.
+
+#### Ask 12 — Hold Phase B's full file list during the slot
+
+Perf finished the Phase B design (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`, staging artifacts on this PR). It
+removes only dead fields and branches, but it touches more files than the Phase B list on #415. The owner extended
+the list (gate item 7.5). During the Phase B slot, which opens when you post that the free-meal / decision-27 PR
+merged and lasts up to 5 working days, please keep RPG-core PRs out of these files as well as `state.py`,
+`apply.py` and `inventory.py`:
+- `kernel.py` (about 4 lines), `governor.py`, `phase_governor.py`, `governance.py`, `config/profiles.py`,
+  `runtime_status.py` and `signal_source.py`: the six Phase A files are reopened;
+- `executor.py`, `domain_logic.py`, `worker_protocol.py`, `protocol_validator.py`, `worker_manager.py` and
+  `perf/profiles.py`;
+- `observability/understanding/rootcause/rules.py` (text only).
+`pipeline.py` is not touched. Please confirm, or name what conflicts.
+
+**What changes for you:**
+- **Every state digest moves once.** The proof-digest scheme goes to `flat-sha256-v2` (PERF-D5, owner decision
+  2026-10-08): the same data minus `work_debt` and `periodic_due_ticks`. In `tests/`, the only literal pin is
+  `FIXTURE_DIGEST_ON_MAIN` (`test_proof_digest_contract.py`). The 21 tracked `world_compile_report.json` files
+  keep their v1 hash, and their freshness test compares counts only. Your 2026-11-15 rebaselines should be
+  measured after Phase B merges, as you planned.
+- **A dead guard in your code, for you to decide on:** `src/domains/cooperation/phase.py:78-79` reads
+  `state.periodic_due_ticks` for a `"social_cooperation_disabled"` key that nothing in `src/` writes. The real
+  switch is `ENABLE_SOCIAL_COOPERATION` (`pipeline.py`). The `hasattr` guard keeps the phase correct when the
+  field goes, so perf will **not** edit it. Two OFF-path tests that set that key change. Removing the dead guard
+  is yours.
+- **Before the slot, perf lands a tests-only PR (C0)** that strips no-op `work_debt={}`, `periodic_due_ticks={}`
+  and `max_work_debt=` arguments from about 39 test files. They're valid before and after the removal, and no
+  `src/` changes. It's in this same PR.
+
+Reply here or on the PR, with date and session name.

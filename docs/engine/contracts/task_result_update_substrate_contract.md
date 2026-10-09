@@ -44,7 +44,7 @@ The engine substrate operates in three distinct stages per tick:
 - `entity_id`: Must match the subject of the source packet.
 - `update`: An `EntityUpdate` record containing proposed field changes.
 - `status`: SUCCESS, FAILURE, or TIMEOUT.
-- `work_debt_update`: (Optional) Metadata for subsystem scaling.
+- There is no system-result metadata: `WorkerResult` no longer carries `work_debt_update` or `subsystem_id`, and an `entity_id` 0 result is rejected by the validator (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`).
 
 ### Constraints
 - **One Result Per Entity**: Each entity is limited to one authoritative result per tick (Option A Protocol).

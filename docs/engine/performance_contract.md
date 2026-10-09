@@ -110,7 +110,7 @@ The nearest live checks are the long-run harness's trend checks (comparative, §
 ## 7. Adaptive Phase Budget Governor
 
 ### 7.1 Granular Sub-Phase Budgets
-Under system pressure or high work debt, the engine must not rely solely on macro concurrency limits. The `PhaseBudgetGovernor` monitors real-time sub-phase compute costs (e.g., Locomotion vs. Strategic Intelligence) and dynamically emits granular `PhaseBudgets`.
+Under system pressure, the engine must not rely solely on macro concurrency limits. The `PhaseBudgetGovernor` monitors real-time sub-phase compute costs (e.g., Locomotion vs. Strategic Intelligence) and dynamically emits granular `PhaseBudgets`.
 
 ### 7.2 Sub-Phase Budget Parameters
 - `candidate_budget`: Caps the maximum number of entities evaluated per tick during movement and action routing.

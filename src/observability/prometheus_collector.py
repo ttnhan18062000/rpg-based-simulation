@@ -60,10 +60,7 @@ class PrometheusMetricsCollector:
         memory_rss.add_metric([], snapshot.get("memory_rss_bytes", 0.0))
         yield memory_rss
 
-        # 8. sim_work_debt_total
-        work_debt = GaugeMetricFamily("sim_work_debt_total", "Total outstanding work debt")
-        work_debt.add_metric([], snapshot.get("work_debt_total", 0))
-        yield work_debt
+        # 8. (sim_work_debt_total was removed with work debt, TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE; the number is kept so the list keeps its numbers)
 
         # 9. sim_governor_mode
         gov_mode = GaugeMetricFamily("sim_governor_mode", "Active governor engine operational mode")

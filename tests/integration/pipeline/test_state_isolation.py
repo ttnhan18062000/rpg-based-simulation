@@ -73,7 +73,6 @@ def test_state_mutation_protection():
         tick=1,
         seed=42,
         entities={1: entity},
-        work_debt={"ENTITY_BRAIN": 0},
     )
 
     executor = LocalSequentialExecutor()

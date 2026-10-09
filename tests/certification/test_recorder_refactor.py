@@ -82,7 +82,6 @@ def _make_minimal_result(**overrides) -> CertificationResult:
                 memory_trend_mb_per_tick=0.1,
                 tick_compute_ms=5.0,
                 tick_compute_ms_avg=5.0,
-                work_debt=0,
                 worker_utilization=0.5,
                 queue_utilization=0.3,
                 replay_pressure=0.0,

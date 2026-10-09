@@ -24,7 +24,6 @@ def base_profile() -> RuntimeProfile:
         max_cpu_percent=80.0,
         max_worker_count=4,
         max_queue_depth=100,
-        max_work_debt=100,
         max_replay_buffer_kb=1000,
         max_observability_budget_percent=10.0,
         max_tick_budget_ms=16.0,
