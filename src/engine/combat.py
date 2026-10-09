@@ -12,9 +12,22 @@ from src.core.enums import EntityRole, ReasonCode
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.core.state import EquipSlot
+from src.engine.starvation import attack_scale
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
+
+def _biological_attack_modifiers(bio: Any) -> Dict[str, float]:
+    """Attack multipliers from the attacker's body, in application order: exhaustion (sleep debt above 80, x0.8) and, compounding with it,
+    weakness from hunger (owner decision 36, x0.8 from hunger 85). Only the factors that apply are returned."""
+    out: Dict[str, float] = {}
+    if bio.sleep_debt > 80.0:
+        out["EXHAUSTION"] = 0.8
+    weak = attack_scale(bio.hunger)
+    if weak < 1.0:
+        out["STARVATION_WEAKENED"] = weak
+    return out
+
 
 class CombatResolutionSystem:
     """
@@ -87,9 +100,9 @@ class CombatResolutionSystem:
             atk_mult *= 1.5
             trace["SHATTER"] = 1.5
             
-        if attacker.biological.sleep_debt > 80.0:
-            atk_mult *= 0.8
-            trace["EXHAUSTION"] = 0.8
+        for name, factor in _biological_attack_modifiers(attacker.biological).items():
+            atk_mult *= factor
+            trace[name] = factor
             
         # Stamina exhaustion penalty
         from src.engine.rpg_depth import StaminaService

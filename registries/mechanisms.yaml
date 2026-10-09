@@ -197,6 +197,7 @@ mechanisms:
       - src/engine/tactical_threat.py::safety_retreat_warranted
       - src/engine/tactical_hold.py::held_swing_update
       - src/engine/tactical_hold.py::stalemate_break_update
+      - src/engine/tactical_hold.py::notice_unengaged_hostile
       - src/engine/hostility.py::perceived_hostile
       - src/world/motivation/pressure_resolver.py::MotivationPressureResolver
     verified:
@@ -258,6 +259,10 @@ mechanisms:
         Decision 32 ("notice and decide"): an unengaged perceived hostile coming adjacent prompts a fresh decision then (fight, step away, wait,
         or keep walking and pay knowingly); open as TCK-20261008-A-SUBJECT-NOTICES-AN-UNENGAGED-HOSTILE-COMING-ADJACENT-AND-DECIDES-DECISION-32.
         The shared hostility test is `src/engine/hostility.py::perceived_hostile` (the tactical pass and the movement rule use it).
+        **Decision 32 implemented (notice and decide), TCK-20261008-A-SUBJECT-NOTICES-AN-UNENGAGED-HOSTILE-COMING-ADJACENT-AND-DECIDES-DECISION-32:**
+        the scheduler wakes the brain of an entity beside a perceived hostile it is not engaged with every 2 ticks (`scheduler.py`, LOD bypass for the wake),
+        and `tactical_hold.notice_unengaged_hostile` follows the entity's own combat-engagement verdict (ignore keeps walking, avoid steps away).
+        `ignore` is unreachable in the corpus today (0 firings); `watch` stands and observes (a typed HOLD wait, WATCH_HOSTILE). Pinned 5x3: opportunity-attack hits down 33 to 67 percent.
   - id: combat_engagement
     layer: entity
     systems: [combat]
@@ -451,6 +456,7 @@ mechanisms:
     implemented_by:
       - src/engine/apply.py::ApplyPath::_compute_entity_changes
       - src/engine/biological_needs.py::need_rates
+      - src/engine/starvation.py::hp_loss
     verified:
       instrument: code_trace
       verdict: observed
@@ -489,6 +495,10 @@ mechanisms:
         compounding-rate, shape) -- it remains written but unexercised on a genuinely compounding
         mechanism, since none of `progression`'s remaining candidates carry one.
         **Rule ratified 2026-10-08 (owner decision 31, catalog SURV-06 amendment; designer commit 65d16c225):** people eat by common-sense ways, each with a real cost and none free: gather, hunt or fish (a kill leaves meat), eat raw (fills less, no sickness), cook (raw plus a fire or hearth), buy (earn first), receive. Built so far: eating carried food and gathering wild food (Decision 27 batch); the paid-only inn meal is parked (branch `d27-free-meal-removal`, free meals stay on until a second way to eat works in every measured world). Hunting, raw meat and cooking are MISSING until built; earn-then-buy awaits the designer's earn rule. Decision 33 (a light balance pass is allowed on content values) set `humanoid_survival` hunger to "low" (0.05 per tick) for the same batch.
+        **Rule ratified 2026-10-08 (owner decision 36, designer commit 92f43c41e, SURV-02 amendment):** starvation is staged: weakened at hunger 85
+        (stamina and readiness recover at half rate, attack x0.8), then 1 HP lost every round(6000 / max_hp) ticks at hunger 95, death about
+        6000 ticks (2.5 days) after the line instead of about 50. Implemented by TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02:
+        `src/engine/starvation.py` (the one tuning table), `apply.py` (the HP term and the recovery scale), `combat.py` (the attack scale).
   - id: derived_stats
     layer: entity
     systems: [progression]
