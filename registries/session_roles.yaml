@@ -82,6 +82,40 @@ domains:
       "agent-working/**": agent-working-designer   # process problems
       "tools/**": agent-working-designer
 
+  asset:   # PROPOSED 2026-10-09 (TCK-20261009-REGISTER-OTHER-HOST-SEATS); paths to be confirmed by asset-planner
+    owns:
+      - visual_assets/**
+      - docs/assets/**
+      - docs/plans/visual-asset-foundation/**
+      - docs/plans/visual-asset-management-runtime-integration/**
+      - docs/plans/aseprite-mcp-pixel-art/**
+      - tests/visual_assets/**
+      - tools/visual_assets_*.py
+      - tools/ci_aseprite_skip_line.py
+    owns_not: []
+    routes:
+      "src/**": rpg-planner                   # activation of adopted art waits on the RPG core
+      "frontend/**": rpg-planner
+      "agent-working/**": agent-working-designer   # process problems
+      ".claude/**": agent-working-designer
+      "tests/architecture/**": testing-planner
+  perf:    # PROPOSED 2026-10-09 (TCK-20261009-REGISTER-OTHER-HOST-SEATS); paths to be confirmed by perf-planner
+    owns:
+      - src/perf/**
+      - tests/perf/**
+      - tools/perf/**
+      - tools/perf_guard.py
+      - tools/bench_corpus_world.py
+      - docs/performance/**
+      - docs/plans/design_enhancement/performance_optimization/**
+    owns_not: []
+    routes:
+      "src/**": rpg-planner                   # core windows are opened by the owner with RPG-core
+      "docs/engine/**": rpg-planner           # performance_contract.md stays rpg-owned (P1)
+      "agent-working/**": agent-working-designer   # process problems
+      ".claude/**": agent-working-designer
+      "tests/architecture/**": testing-planner
+      ".github/workflows/test.yml": testing-planner
 # Intentional overlaps between domains (a path matched by two domains' owns is an error unless a
 # split here names both domains and covers it).
 ownership_splits:
@@ -92,6 +126,10 @@ ownership_splits:
 
   - {paths: ["tests/codebase/**"], domains: [rpg, codebase],
      reason: "rpg owns tests/** generally; the codebase domain owns the code-health suites"}
+  - {paths: ["tests/visual_assets/**"], domains: [rpg, asset],
+     reason: "rpg owns tests/** generally; the asset domain owns the visual-asset store suites"}
+  - {paths: ["src/perf/**", "tests/perf/**"], domains: [rpg, perf],
+     reason: "rpg owns src/** and tests/** generally; the perf domain owns the bench/profiling harness and perf suites"}
 
 roles:
   - role: rpg-designer
@@ -180,8 +218,7 @@ roles:
     handover: .claude/handover/codebase-designer.md
   - role: codebase-planner
     identity: {domain: codebase, function: planner, session_name: codebase-planner,
-               legacy_session_name: codebase-planner, seat_status: unstaffed,
-               interim_holder: agent-working-planner}   # no codebase session exists yet
+               legacy_session_name: codebase-planner, seat_status: staffed}   # runs on the other host (2026-10-09)
     responsibility:
       accepts_dispatch_from: [user, codebase-designer]
     capability: {may_write: [".claude/handover/drafts/**", "docs/plans/codebase_health/**", "agent-working/tickets/**"]}
@@ -189,13 +226,48 @@ roles:
     handover: .claude/handover/codebase-planner.md
   - role: codebase-implementer
     identity: {domain: codebase, function: implementer, session_name: codebase-implementer,
-               legacy_session_name: codebase-implementer, seat_status: unstaffed,
-               interim_holder: agent-working-implementer}   # no codebase session exists yet
+               legacy_session_name: codebase-implementer, seat_status: staffed}   # runs on the other host (2026-10-09)
     responsibility:
       accepts_dispatch_from: [user, codebase-planner]
     capability: {may_write: ["**"]}
     placement: {worktree: codebase, max_sessions: 1}
     handover: .claude/handover/codebase-implementer.md
+
+  - role: asset-planner
+    identity: {domain: asset, function: planner, session_name: asset-planner,
+               legacy_session_name: asset-planner, seat_status: staffed}   # runs on the other host
+    responsibility:
+      accepts_dispatch_from: [user]   # no asset-designer seat; the owner directs
+    capability: {may_write: [".claude/handover/drafts/**", "docs/assets/**", "docs/plans/visual-asset-foundation/**",
+                             "docs/plans/visual-asset-management-runtime-integration/**", "agent-working/tickets/**"]}
+    placement: {worktree: asset-planner, max_sessions: 1}
+    handover: .claude/handover/asset-planner.md
+  - role: asset-implementer
+    identity: {domain: asset, function: implementer, session_name: asset-implementer,
+               legacy_session_name: asset-implementer, seat_status: staffed}   # runs on the other host
+    responsibility:
+      accepts_dispatch_from: [user, asset-planner]
+    capability: {may_write: ["**"]}
+    placement: {worktree: asset, max_sessions: 1}
+    handover: .claude/handover/asset-implementer.md
+
+  - role: perf-planner
+    identity: {domain: perf, function: planner, session_name: perf-planner,
+               legacy_session_name: perf-planner, seat_status: staffed}   # runs on the other host
+    responsibility:
+      accepts_dispatch_from: [user]   # no perf-designer seat; roadmap "Ownership model" (2026-10-02)
+    capability: {may_write: [".claude/handover/drafts/**", "docs/performance/**",
+                             "docs/plans/design_enhancement/performance_optimization/**", "agent-working/tickets/**"]}
+    placement: {worktree: perf-planner, max_sessions: 1}
+    handover: .claude/handover/perf-planner.md
+  - role: perf-implementer
+    identity: {domain: perf, function: implementer, session_name: perf-implementer,
+               legacy_session_name: perf-implementer, seat_status: staffed}   # runs on the other host
+    responsibility:
+      accepts_dispatch_from: [user, perf-planner]
+    capability: {may_write: ["**"]}
+    placement: {worktree: perf, max_sessions: 1}
+    handover: .claude/handover/perf-implementer.md
 
 # Exclusive resources. The writer slot belongs to the worktree; a worktree hosts exactly one role, its
 # writer (every designer, planner and implementer has its own worktree and lands its own PR). The lease
@@ -213,3 +285,7 @@ worktrees:
   testing-planner: {writer: testing-planner}
   codebase-designer: {writer: codebase-designer}
   codebase-planner: {writer: codebase-planner}
+  asset: {writer: asset-implementer}
+  asset-planner: {writer: asset-planner}
+  perf: {writer: perf-implementer}
+  perf-planner: {writer: perf-planner}
