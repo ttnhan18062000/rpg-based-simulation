@@ -415,6 +415,15 @@ the world, which contradicts SURV-03 (a need is modeled for its real, causal con
     five wolves five tiles from the hometown, against decision 30 (land near a settlement is
     livable; lethal danger sits deeper). The new module's placement must not overlap
     `bandit_road`.
+  - **Camps of people-kinds have food within their range (decided by the owner directly,
+    2026-10-09; row 57 of the memo):** goblin and orc warriors spawned at camps are held within
+    8-10 tiles, where nothing can feed them, so they starve (26 of the 40 deaths that the living
+    world's trace counted as heroes). A camp is where a kind lives (decision 30; roadmap §12,
+    milestone 2), so each camp module gets wild food within its range, sized by the land. Its
+    meat-eating kinds also hunt plant-eaters placed nearby once hunting lands. Raiding stays
+    undeclared until a Rule declares it. The fixed tether is a leftover of the monster role,
+    against decision 46. Milestone 1 replaces it with a home range taken from the kind's
+    properties, and until then the food sits inside it.
   - **Unchanged guardrails:** wild food enters by harvest and leaves by eating (Bible 03
     conservation); it is its own declared item and node kind, never herb; and the integrity
     check (`need_paths.py`) counts a wild-food node within reach as a hunger way for the kinds

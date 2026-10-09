@@ -877,6 +877,8 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 54. the milestone-0 gate (decided 2026-10-09: hard logic checks H1-H7, report-only figures R1-R5 with stop lines to the owner, §12.3).
 55. whether subjects provide for a coming need (decided 2026-10-09: yes, scaled by wits, with storing as a declared habit; the rule is written now and built in milestone 3, SURV-07).
 56. which hunger-cognition gaps are fixed before the milestone-0 gate (decided 2026-10-09: the inn-only target before the gate; true-map knowledge in milestone 1, SURV-07).
+57. how people-kind camps eat (decided 2026-10-09: wild food within the camp's range now, hunting once it lands, the fixed tether replaced by a home range in milestone 1, SURV-06);
+58. how the treasury's coin moves (decided 2026-10-09: a tenth of each sale and wage rounded down, upkeep paid into buildings that pay town wages, one-time repair or a used-up kit, unpaid rewards owed, EXCH-02).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
@@ -1132,6 +1134,7 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
      not from the true map (decision 56).
    - An activity period per kind, and hazard tolerance per body.
    - Retire behaviour that branches on role, kind or faction names, in stages, measured each time.
+     This includes the fixed camp tether, replaced by a home range (decision 57).
 
    Done when no decision reads a role, kind or faction name, a new kind works from content alone,
    and a probe finds no name switch left in a decision path.

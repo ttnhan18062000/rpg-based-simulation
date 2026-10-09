@@ -138,6 +138,41 @@ wealth, but no Rule said how a person comes to hold money at all.
   - **Evidence: CONFLICTING** until the levy is retired (`src/engine/town_resolution.py`).
   - **Scenario:** [ME-S22](../scenarios/material-economy-batch-08.md#me-s22) (a share of a sale
     and of a wage reaches the treasury; an idler pays nothing).
+- **Amendment, how the treasury's coin moves (decided by the owner directly, 2026-10-09; row 58
+  of the memo; asked by rpg-planner on Lane B's treasury design):**
+  - **The tax share is a tenth, rounded down on each transaction.** It is declared once in the
+    world's economy rules, and outsiders pay the same for now. Rounding down is "someone who
+    earns nothing pays nothing": a 6-gold wage pays nothing and a 20-gold sale pays 2. Treasury
+    income comes mostly from larger trades. That is reported, never tuned.
+  - **Upkeep pays for town work.** The owning treasury pays each building's maintenance into
+    that building's own purse, and the building pays wages from it. Town work (decision 37) is
+    work at a building the treasury owns, at the same pay as an inn shift. Coin goes round:
+    treasury, building, worker, tax, treasury. The coin buildings created from nothing each tax
+    tick is removed (decision 38). A building whose upkeep goes unpaid is disabled. No town hall
+    is added, and paid guards stay unplanned (roadmap §12.4).
+  - **A repair is paid once, to the smith.** Away from a smith, repair is offered only to a
+    subject carrying a repair kit, which is used up and moves no coin. Repair that charged twice,
+    or paid nobody, goes.
+  - **A reward the payer cannot pay is owed.** It becomes a recorded debt (who is owed, which
+    treasury owes it, how much, since when), paid oldest first when the treasury can, and visible
+    until then.
+  - **Applied from decisions already made (rpg-designer, same day):**
+    - kill gold is no longer minted: the looter takes what the body carried, and a bounty is paid
+      only where a faction posted one, from its treasury, while experience stays;
+    - an heir takes the dead's coin and goods, moved and never copied, and the body keeps only
+      what no heir claims;
+    - a faction vault starts with its members' declared starting gold, each coin counted once.
+  - **Disclosed:** only one guild holds regions in all 20 worlds, so other treasuries receive no
+    tax. That is world content for later, not a reason to change the share. Most kills stop
+    paying coin; a hunter earns by selling meat or hides (decisions 31 and 34).
+  - **Alternatives not taken:** rounding half up, or a daily tax on takings; maintenance as a
+    sink with a separate treasury wage, or a new town hall; no repair away from a smith; a reward
+    lost, or a quest refused unless its reward is reserved at posting.
+  - **Evidence: CONFLICTING** until Lane B's treasury batch lands. Scenarios:
+    [ME-S21](../scenarios/material-economy-batch-08.md#me-s21),
+    [ME-S22](../scenarios/material-economy-batch-08.md#me-s22),
+    [ME-S23](../scenarios/material-economy-batch-08.md#me-s23) and
+    [ME-S24](../scenarios/material-economy-batch-08.md#me-s24).
 
 **Repository evidence: MISSING for wages; PARTIAL for selling and rewards.** Lane B's
 feasibility read (relayed by rpg-planner, 2026-10-08): every town worker starts with 0 gold, and
