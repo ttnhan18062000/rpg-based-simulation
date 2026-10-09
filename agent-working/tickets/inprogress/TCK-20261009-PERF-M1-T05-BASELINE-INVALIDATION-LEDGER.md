@@ -4,7 +4,7 @@ layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261009-PERF-M1-T05-BASELINE-INVALIDATION-LEDGER
-phase: open
+phase: inprogress
 date: 2026-10-09
 tags: [performance, determinism, testing]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, testing]
 PERF-M1-T05: one ledger of every committed performance and determinism baseline, marked valid, rerun or incomparable after the M1 correctness changes
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -104,9 +104,19 @@ The changes a ledger must account for, each with where it was recorded:
   measure, and say so if not.
 
 ## Implementation Notes
+- **2026-10-09:** ledger written at `docs/performance/baseline_invalidation_ledger.md`; no machine-readable twin (no test or tool reads one). Search commands are in the ledger's section 6 and in `investigation.md`.
+- **Result:** 30 baseline JSON files plus the other artifact classes classified. rerun: 6 `tests/perf` `*_local`, 3 `simq_corpus_*`, `baseline_5k.json`, the certification recovery rows. incomparable: all 15 `docs/observability/baselines` files, the 21 compile reports' `canonical_state_hash`. valid: 6 `tests/perf` `*_concurrent` (caveats), `perf_baselines.json`, the SimQ grade anchors (unverified), the MD5 `state_hash`, the generated and test-pinned files.
+- **Findings the table did not predict:** (1) `docs/observability/baselines/latest.json` is read by `src gate` and `compare-sweep`, so a tick-cost check against it passes vacuously after DEV-017. (2) `latest.json` IDLE_5000 exceeded its 100 ms budget (p95 117.4, max 149.9), so DEV-014's cutoff probably fired in that capture. (3) the 12 May `tests/perf` synthetic files predate `resolution_overhead`, so DEV-017 does not reach them. (4) no `PERF_*` profile sets `signal_contract`, so the CANONICAL rerun contract needs an M2 profile change. (5) `baseline_5k.json` is not an `audit_mode` run, so 2.75 and DEV-014 can reach it.
+- **Judgment calls for the planner:** the three-status vocabulary (rerun = artifact still read; incomparable = replaced, not refreshed in place); SimQ anchors `valid` (unverified) rather than `rerun` because 2.75's entry expects small movement and anchors are coarse bands; CANONICAL named as the rerun contract.
+- Epic T05 row and the roadmap M1 row updated with the done marker and the ledger link; the epic's stale "T05 waits" sentence corrected.
 
 ## Test Summary
+- Docs only. `tests/docs`, `tests/static`, `tests/unit/tools`: 826 passed, 2 skipped, 1 xfailed. `validate_frontmatter` clean on the ledger, the ticket and the three artifacts. `generate_registry --check` in sync (3365 entries).
+- No `src/`, test or tool file edited, nothing rerun. `make knowledge-index-update` not run in this worktree (heavy embedding job; local cache); run from main after merge.
 
 ## Files Changed
+- New: `docs/performance/baseline_invalidation_ledger.md`.
+- Edited: `docs/plans/design_enhancement/performance_optimization/performance_m1_correctness_prerequisites_epic.md`, `.../performance_optimization_roadmap.md`, `docs/REGISTRY.yaml`.
+- Ticket and staging artifacts: `agent-working/tickets/inprogress/TCK-20261009-PERF-M1-T05-BASELINE-INVALIDATION-LEDGER.md`, `agent-working/staging_artifacts/TCK-20261009-PERF-M1-T05-BASELINE-INVALIDATION-LEDGER/`.
 
 ## Completion Summary
