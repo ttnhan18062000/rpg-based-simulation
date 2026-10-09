@@ -91,6 +91,17 @@ directly, 2026-10-09; rows 47 and 49 of the memo):**
   hostility kept as the main gate with a narrow hunting exception; prey fearing only a
   hungry-looking predator; prey fleeing any predator on sight.
 - **Evidence: CONFLICTING** until Lane A's hunting batch lands.
+  - **Still CONFLICTING for people after hunting (rpg-planner's read of `origin/main`,
+    2026-10-09):** pursuit and intercept start from membership in the hostile list alone
+    (`src/engine/tactical.py`: faction hostility, plus PREDATION once hunting lands). The KNOW-04
+    capability estimate (`combat_capability_against`, `:375`) is read only to order targets,
+    never to decide whether to engage. The only thing that pre-empts a pursuit is the AGENCY-07
+    safety retreat (`:231`). So an unarmed worker charges a scout, and in `urban_political`, seed
+    43, a merchant's intercept started the loop that ran six people off the map. "On top of the
+    appraisal, not instead of it" needs a pursuit to start from appraisal (can I overcome it,
+    does it threaten me or mine) plus a reason (defence of self or goods, a duty that is a real
+    property of the occupation). It must never come from a list of roles that do not chase
+    (decision 46). **Fixed in milestone 1** (the appraisal child). No milestone 0 change.
 
 **Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-06**
 (row 18 of `docs/plans/systemic_world/owner_decision_memo.md`; the owner confirmed the
