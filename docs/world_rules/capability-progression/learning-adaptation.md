@@ -86,6 +86,7 @@ lived experience, added per 2026-09-22 follow-up).
 `docs/plans/systemic_world/owner_decision_memo.md`). It is a declared experience-to-capability
 path of the kind LEARN-01 permits. (The ID LEARN-02 was retired on 2026-09-22 and is not
 reused.)
+- **People only, by its nature (decision 42):** taught crafts belong to kinds that keep crafts.
 - **Costs:** the teacher's time, the learner's time, and the fee, paid from the learner's own
   purse to the teacher (EXCH-02).
 - **Engineering and content, not this Rule:** who teaches which recipes, fees, lesson length,

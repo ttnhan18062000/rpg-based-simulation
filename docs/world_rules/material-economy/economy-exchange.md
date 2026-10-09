@@ -73,6 +73,8 @@ does not automatically mean power).
 `docs/plans/systemic_world/owner_decision_memo.md`). Applies decision 31 (common-sense ways, each
 with a real cost) to money. Passes the admission test: EXCH-01 separates value, price, cost and
 wealth, but no Rule said how a person comes to hold money at all.
+- **People only, by its nature (decision 42):** money, wages and rewards belong to kinds that
+  trade. Animals meet their needs by their own kinds' ways (SURV-06), not by earning.
 - **The ways are plural:** no single one is required. Being paid by fellow townsfolk for small
   jobs (social contracts) is a further way, left for later.
 - **Conservation:** a sale moves coins from the buyer to the seller and goods the other way. A

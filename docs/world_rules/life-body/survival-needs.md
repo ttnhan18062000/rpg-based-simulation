@@ -80,9 +80,9 @@ Catalog has found.
 **Amendment, starvation is staged: weak first, death over days (decided by the owner directly,
 2026-10-08; row 36 of the memo):**
 
-> Past a need's threshold, the consequence comes in stages. A starving person first weakens:
-> they recover more slowly and fight worse. Only with continued want do they start losing
-> health slowly, and they die after about two to three days without food. Crossing the line
+> Past a need's threshold, the consequence comes in stages. A starving creature, person or
+> animal, first weakens: it recovers more slowly and fights worse. Only with continued want does
+> it start losing health slowly, and it dies after about two to three days without food. Crossing the line
 > is a warning the body gives, not a death sentence within the hour.
 
 - **Today:** `hunger >= 95.0` costs 2 HP per tick (`src/engine/apply.py`). That kills a person
@@ -94,13 +94,19 @@ Catalog has found.
 - **Engineering and content, not this Rule:** the stage thresholds, the weakening effects (they
   may reuse the capacity degradation SURV-02 already cites), the HP-loss rate, and the same
   staging for other needs where it fits. It is a code ticket after Lane B's batch.
+- **Every living kind (decided by the owner directly, 2026-10-09; row 42 of the memo):** this
+  applies to every living subject that has the need, animals as well as people: a wolf, a deer, a
+  goblin and a townsperson alike. The kind's own need profile sizes it (its rate, its stage
+  lines, its recovery). "Person" in the text above is an example, not a limit.
+  `src/engine/starvation.py` (decision 36's code) is already kind-agnostic: it reads the
+  subject's hunger and max HP, never its kind.
 - **Evidence: CONFLICTING** until that ticket lands.
 
 **Amendment, sleep debt ends in collapse, not in bleeding (decided by the owner directly,
 2026-10-09; row 41 of the memo):**
 
-> A person who goes far too long without sleep weakens first, then falls asleep where they
-> stand and cannot act until enough of the debt is slept off. Lack of sleep does not wound.
+> A creature, person or animal, that goes far too long without sleep weakens first, then falls
+> asleep where it stands and cannot act until enough of the debt is slept off. Lack of sleep does not wound.
 > The cost is lost time and being helpless in place, which is dangerous away from settled land.
 
 - **Today:** `sleep_debt >= 98.0` costs 1 HP per tick (`docs/mechanics/01_entity_anatomy.md`,
@@ -115,6 +121,10 @@ Catalog has found.
   sleeping subject is treated by others (perception, attack).
 - **Alternatives not taken:** staged HP loss as for hunger (a sleepless death is less plausible
   than collapse); collapse plus slow HP loss; keep 1 HP per tick for now.
+- **Every living kind (decided by the owner directly, 2026-10-09; row 42 of the memo):** this
+  applies to every living subject that has the need, animals as well as people: a wolf, a deer, a
+  goblin and a townsperson alike. The kind's own need profile sizes it (its rate, its stage
+  lines, its recovery). "Person" in the text above is an example, not a limit.
 - **Evidence: CONFLICTING** until its code ticket lands.
 - **Scenario:** [LB-S19](../scenarios/life-body-batch-05.md#lb-s19) (weakened, collapse where it
   stands, no action while asleep, wakes, no HP loss; a rested control).

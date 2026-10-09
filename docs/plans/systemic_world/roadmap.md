@@ -820,7 +820,7 @@ question above already has a working answer today.
 ## 10. Owner decisions
 
 Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has
-forty-one entries (row 27 lands with the decision-27 PR):
+forty-two entries (row 27 lands with the decision-27 PR):
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
 3. whether individual and institutional standing are distinct concepts;
@@ -861,7 +861,8 @@ forty-one entries (row 27 lands with the decision-27 PR):
 38. whether rewards need a payer (decided 2026-10-09: yes, as its own ticket; minting is a recorded exception until then, EXCH-02 amendment);
 39. crowded_frontier's wild land (decided 2026-10-09: a new wolf-free forest-edge module, SURV-06 amendment);
 40. how a craft is learned (decided 2026-10-09: taught by a smith, for a price, over time, catalog LEARN-03);
-41. what extreme sleep debt does (decided 2026-10-09: weaken, then collapse into sleep, no HP loss, SURV-02 amendment).
+41. what extreme sleep debt does (decided 2026-10-09: weaken, then collapse into sleep, no HP loss, SURV-02 amendment);
+42. who the body, need and decision rules cover (decided 2026-10-09: every living kind by default, sized by the kind; people-only rules say so).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,

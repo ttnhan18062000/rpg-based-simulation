@@ -357,6 +357,10 @@ test: ENV-02 says exposure needs declared conditions, and decision 29 says wild 
 the land, but nothing said where on the land lethal ambient danger may sit. Without this, content
 can make a town or the forest beside it a death zone for its own people, and SURV-06's "a way
 within reach" holds only on paper.
+- **Every living kind (decided by the owner directly, 2026-10-09; row 42 of the memo):** the
+  same holds for animals. A kind's home ground (a wolf pack's den, a herd's grazing land) carries
+  no standing ambient hazard that kills that kind for living there. "People" in the text above
+  is an example, not a limit.
 - **Applies to the standing ambient hazard only.** Calamity's escalation (ENV-06), a declared
   modifier such as MIASMA, hostile creatures, and the competition for a food patch are separate
   causes, and this Rule does not cap them.

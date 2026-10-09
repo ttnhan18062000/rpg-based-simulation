@@ -244,8 +244,9 @@ land holds no wild food, the same worker cannot forage, and nothing feeds it for
 
 ## LB-S18 — Starvation weakens first and kills over days (SURV-02 amendment, decision 36) (added 2026-10-08)
 
-A person with no food crosses the starvation line, becomes weaker within hours, starts losing
-health only later, and dies after about two to three days. A person who eats does none of this.
+A creature with no food, a person or an animal, crosses the starvation line, becomes weaker
+within hours, starts losing health only later, and dies after about two to three days. One that
+eats does none of this.
 
 - **Rules invoked:** SURV-02 (crossing a threshold has real consequences; decision 36 makes
   them staged), SURV-07 (the pull to eat), Bible 05 §1 (2,400 ticks = 1 day).
@@ -266,6 +267,9 @@ health only later, and dies after about two to three days. A person who eats doe
     the line, its hunger falls back below it, any weakening clears, and S is alive at the end.
   - **Why the control:** it proves the weakening and the death come from the unmet need, not
     from the staging.
+  - **Second kind (added 2026-10-09, decision 42):** the main arm is repeated with one non-people
+    living kind (for example a wolf), staged the same way. The same stage order holds, sized by
+    that kind's own profile. The rule is not a people-only rule.
   - **Engineering, not observable:** the exact stage thresholds, the effects' sizes and the HP
     rate. The spec checks the stage order and the 2-to-3-day window only.
 - **Result (2026-10-08): revealed contradiction on main.** `hunger >= 95.0` costs 2 HP per tick
@@ -276,9 +280,9 @@ health only later, and dies after about two to three days. A person who eats doe
 
 ## LB-S19 — Extreme sleep debt weakens, then collapses the subject where it stands, with no HP loss (SURV-02 amendment, decision 41) (added 2026-10-09)
 
-A person who has gone far too long without sleep is weaker first, then falls asleep where they
-stand, cannot act while asleep, and wakes once enough of the debt is slept off. Their health
-never drops from lack of sleep. A rested person does none of this.
+A creature, person or animal, that has gone far too long without sleep is weaker first, then
+falls asleep where it stands, cannot act while asleep, and wakes once enough of the debt is slept
+off. Its health never drops from lack of sleep. A rested one does none of this.
 
 - **Rules invoked:** SURV-02 (crossing a threshold has real consequences; decision 41 makes
   sleep debt end in collapse, not in HP loss), Bible 01 (biological pressures: sleep debt
@@ -303,6 +307,9 @@ never drops from lack of sleep. A rested person does none of this.
     continues its walk, and its HP is unchanged.
   - **Why the control:** it proves the weakening and the collapse come from the debt, not from
     the staging or the walk.
+  - **Second kind (added 2026-10-09, decision 42):** the main arm is repeated with one non-people
+    living kind (for example a wolf), staged the same way. The same stage order holds, sized by
+    that kind's own profile. The rule is not a people-only rule.
   - **Engineering, not observable:** the weakened threshold and effect sizes, the collapse line
     (decision 41 sets it at 98), the wake line, and the rest rate. The spec checks the stage
     order, "no action while collapsed", waking, and "no HP loss" only. rpg-planner's suggested
