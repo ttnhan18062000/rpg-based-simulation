@@ -216,6 +216,25 @@ class SpatialQueryService:
         return index
 
     @staticmethod
+    def world_bounds(state: Any) -> Optional[tuple[float, float, float, float]]:
+        """The one authoritative extent of the world: ``(x_min, y_min, x_max, y_max)``, or None when it is not declared.
+
+        The world declares no map size of its own; its topology is the declared regions (Bible 06, declarative topology),
+        so the extent is the union of the region bounds. Tiles outside it are not part of the world. ``state`` may be any
+        object that carries ``regions`` (a worker context included); one without them has no declared extent."""
+        if not getattr(state, "regions", None):
+            return None
+        return SpatialQueryService._get_regions_global_bounds(state)
+
+    @staticmethod
+    def is_inside_world(state: Any, pos: tuple[float, float]) -> bool:
+        """True when ``pos`` lies inside the world extent (inclusive); True when no extent is declared (nothing to violate)."""
+        bounds = SpatialQueryService.world_bounds(state)
+        if bounds is None:
+            return True
+        return bounds[0] <= pos[0] <= bounds[2] and bounds[1] <= pos[1] <= bounds[3]
+
+    @staticmethod
     def _get_regions_global_bounds(state: AuthoritativeState) -> Optional[tuple[float, float, float, float]]:
         cache_key = "_regions_global_bounds"
         bounds = getattr(state, cache_key, None)

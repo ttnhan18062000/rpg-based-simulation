@@ -71,6 +71,18 @@ def _combined_wound_scar_distress(wounds, scars) -> float:
     return _wound_distress(wounds) + _scar_distress(scars)
 
 
+def _target_still_perceived(entity: "EntityState", target: "EntityState") -> bool:
+    """A held pursuit target the entity can no longer perceive is let go: a chase ends at the edge of what the pursuer knows.
+
+    Applies to the held-task shortcut (goal hysteresis), which used to keep a target without asking the perception gate."""
+    from src.engine.behavior_consumers import get_entity_signals, get_perception_gate
+    dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, target.navigation.position)
+    try:
+        return bool(get_perception_gate().can_perceive(entity, get_entity_signals(target), {"distance": float(dist)}).perceived)
+    except (AttributeError, KeyError, TypeError, ValueError, RuntimeError):
+        return True  # gate failure: permissive, as the hostile list does
+
+
 def _perceived_threats(entity: "EntityState", neighbors: List["EntityState"]) -> List["EntityState"]:
     """Perceived neighbors the entity's appraisal counts as hostile (same predicate as
     AppraisalSystem.evaluate_emotional_state), so a retreat flees what the panic gate saw."""
@@ -145,7 +157,7 @@ class TacticalDecisionSystem:
             current_target_id = entity.task.payload.get("target_id")
             if current_target_id:
                 target = state.entities.get(current_target_id)
-                if target and target.combat.alive:
+                if target and target.combat.alive and _target_still_perceived(entity, target):
                     stale_ticks = entity.task.payload.get("stale_ticks", 0)
                     return EntityUpdate(
                         entity_id=entity.id,

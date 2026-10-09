@@ -66,7 +66,12 @@ class LegalityServiceV2:
         Logic ID: COMB-198 (Pathfinding avoids occupied tiles)
         """
         target_grid_pos = (int(pos[0]), int(pos[1]))
-        
+
+        # 0. The world's extent: a tile outside every declared region is not part of the world (Bible 06).
+        from src.engine.spatial_query import SpatialQueryService
+        if not SpatialQueryService.is_inside_world(state_or_context, target_grid_pos):
+            return False, ReasonCode.OUT_OF_BOUNDS
+
         # Logic ID: COMB-253 (Movement tests include invalid terrain vs occupied terrain distinction)
         # 1. Static Terrain (WALL / blocked_tiles)
         terrain_map = getattr(state_or_context, 'terrain', {})

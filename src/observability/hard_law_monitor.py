@@ -131,6 +131,17 @@ class HardLawMonitor:
                         message=f"Entity {e_id} has non-finite position coordinates: {pos}",
                         details={"position": pos}
                     ))
+                else:
+                    # LAW-POSITION-IN-WORLD: a committed position lies inside the world extent (Bible 06, topology)
+                    from src.engine.spatial_query import SpatialQueryService
+                    if not SpatialQueryService.is_inside_world(state, pos):
+                        violations.append(HardLawViolation(
+                            law_id="LAW-POSITION-IN-WORLD",
+                            entity_id=e_id,
+                            severity="ERROR",
+                            message=f"Entity {e_id} is outside the world extent: {pos}",
+                            details={"position": pos, "world_bounds": SpatialQueryService.world_bounds(state)}
+                        ))
 
         return violations
 
