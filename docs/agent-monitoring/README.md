@@ -286,7 +286,8 @@ exit 0 unless `--strict`, repairs nothing, not a CI job. It reports what per-tic
 closed tickets with no DONE working-log row or an identical duplicate row, per-batch shards left for a finished week,
 `agent-working/stored_artifacts/` paths a closed ticket cites that are absent at the ref (the gitignored-`.json`
 case), tickets still under `agent-working/tickets/inprogress/` at the ref (merged work whose Finalize never ran, or work in flight),
-duplicate-run records and event-seq duplicates/gaps. A closed week can still receive late
+duplicate-run records and event-seq duplicates/gaps. A torn (unparseable) line in a runs or events shard is named
+`<path>:<lineno>: invalid JSON, skipped` under the matching check instead of being dropped; a non-dict line is ignored. A closed week can still receive late
 shards, so a count is as of that commit. Code: `tools/agent-monitoring/main_integrity_report.py`.
 
 ## Delivery rework rate
