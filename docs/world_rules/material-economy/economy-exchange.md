@@ -75,6 +75,16 @@ with a real cost) to money. Passes the admission test: EXCH-01 separates value, 
 wealth, but no Rule said how a person comes to hold money at all.
 - **People only, by its nature (decision 42):** money, wages and rewards belong to kinds that
   trade. Animals meet their needs by their own kinds' ways (SURV-06), not by earning.
+- **Who is a person here (decided by the owner directly, 2026-10-09; row 43 of the memo):** a
+  species declares, as an explicit authored trait, whether its kind keeps coin and trades. This
+  is not inferred from another flag: `intelligence_tier` measures wits, not a trading culture.
+  Whether a given place serves or hires a given subject is a separate question decided by their
+  relationship. A goblin may hold coin and trade, but a town does not sell a meal to, or hire, a
+  raider hostile to it.
+  - **Why not the tier flag** (Lane B's read, relayed 2026-10-09): `intelligence_tier` "high"
+    covers human, goblin, orc, elf, dwarf, lizardfolk, dragonkin and spirit. A spirit is "high"
+    but uses no tools, and a troll is "low" but carries the humanoid hunger profile.
+  - **Alternatives not taken:** the `intelligence_tier` flag; humans only for now.
 - **The ways are plural:** no single one is required. Being paid by fellow townsfolk for small
   jobs (social contracts) is a further way, left for later.
 - **Conservation:** a sale moves coins from the buyer to the seller and goods the other way. A

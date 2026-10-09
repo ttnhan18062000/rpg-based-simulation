@@ -397,6 +397,26 @@ not hold. Per divergence 2.80, measured on `frontier_living_world`, seed 42, 1,3
 main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
 - **Eating and resting now complete:** eat events go from 0 to 24 and sleep events from 0 to 17.
   Alive at t=1100 goes from 3 to 10. These figures include the free meals below.
+- **Animals first: the removal waits for the animals' own ways (decided by the owner directly,
+  2026-10-09; row 44 of the memo).** Under decision 42, the free-meal removal must leave every
+  living kind with a working way to eat, not only people. It lands for everyone at once, after
+  predators can hunt (a kill leaves meat, and a carnivore eats it raw) and each kind eats only
+  what its diet allows. Building hunting moves up the queue. Until then, today's oddities stay,
+  recorded as known flaws:
+  - **CONFLICTING: animals reach the inn.** `EatScorer`'s inn route has no kind check, so a
+    hungry wolf or goblin walks to a town inn for the free meal.
+  - **CONFLICTING: carnivores forage berries.** Wolves and spiders (`carnivore_survival`) take
+    decision 27's forage step on a berry thicket, because no diet gate exists. That is against
+    this Rule's per-kind ways.
+  - **MISSING: hunting.** A kill pays gold and XP only. No meat, carcass or hide item exists in
+    the catalog, a corpse holds loot and not food, and there is no eat-corpse action.
+  - **Moot for now: grazers.** The corpus has 13 species and no herbivore.
+  - **Measured preview** (Lane B, `frontier_living_world`, seed 42; five-seed figures per kind
+    group to follow). With free meals removed, wildlife that ever ate goes from 4 to 1, wildlife
+    starvation from 2 to 4, and wildlife end hunger from 92 to 100.
+  - **Alternatives not taken:** remove the free meal for people now and close the inn to animals
+    (wildlife starvation accepted); close the inn to animals now but keep the free meal for
+    people (animals lose their only meal).
 - **CONFLICTING: the meal is free when the subject cannot pay.** This breaks "for a price" and
   "no engine charity". **Still CONFLICTING after #454 (2026-10-09):** the removal is parked on
   the local branch `d27-free-meal-removal`, and its ticket stays open until earning (EXCH-02,
