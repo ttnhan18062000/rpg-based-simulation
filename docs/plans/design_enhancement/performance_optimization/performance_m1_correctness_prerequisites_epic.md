@@ -30,7 +30,7 @@ authorize it.
 | PERF-M1-T02 | Debt-harness correctness | PERF-D3 | Exact integer accounting, non-empty fixtures, checkpoint/work-admission noninterference proof |
 | PERF-M1-T03 | Hash-policy reconciliation | PA-03A + PERF-D5 | Schedule/scheme/tick/freshness rules, same-scheme conformance, baseline migration or no-change record |
 | PERF-M1-T04 | Tied `WorkerResult` determinism verification | PERF-D1 owner disposition | Adversarial ID-zero/system-result experiment and contract conclusion |
-| PERF-M1-T05 | Correctness-baseline invalidation ledger | T01–T04 as applicable | Consolidated list of artifacts that remain valid, require rerun, or are incomparable |
+| PERF-M1-T05 | Correctness-baseline invalidation ledger | T01–T04 as applicable | Consolidated list of artifacts that remain valid, require rerun, or are incomparable. **Done 2026-10-09** (`TCK-20261009-PERF-M1-T05-BASELINE-INVALIDATION-LEDGER`): [`baseline_invalidation_ledger.md`](../../../performance/baseline_invalidation_ledger.md) |
 
 **Partial-lift batch (2026-10-04).** The owner's partial lift of the RPG-core entry gate
 (`performance_optimization_roadmap.md`, "Gate definition and partial lift") releases the M1 work
@@ -46,8 +46,7 @@ filed in `agent-working/tickets/todos/perf-m1-partial-lift/`:
 
 T01 waited for `governor.py`, which the owner released on 2026-10-05 (roadmap, "Gate definition
 and partial lift", item 5). It is done as `TCK-20261005-PERF-M1-ZERO-CAPACITY-SIGNAL` (2026-10-05); its baseline
-disposition table is T05's input. T05 waits for T01–T04, and T03b is still
-gated on `kernel.py`.
+disposition table was T05's input. T03b merged in #379 and T05 is done (2026-10-09), so M1 is complete.
 
 T03 may close as a documented no-change result. T04 is verification-first: it must not modify the
 commit key unless its investigation proves a defect and a separately approved correction scope
