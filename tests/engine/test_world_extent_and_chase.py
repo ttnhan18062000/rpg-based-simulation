@@ -72,3 +72,15 @@ def test_a_held_pursuit_target_is_kept_in_view_and_let_go_beyond_it():
     far = V2EntityBuilder(3).location(40.0, 3000.0).build()
     assert _target_still_perceived(chaser, near)
     assert not _target_still_perceived(chaser, far)
+
+
+def test_a_slotted_context_without_the_cache_slot_still_has_an_extent():
+    class Ctx:
+        __slots__ = ("regions",)
+
+        def __init__(self, regions):
+            self.regions = regions
+
+    ctx = Ctx({"r1": RegionState(id="r1", name="r1", bounds=(10, 10, 100, 60))})
+    assert world_extent(ctx) == (10, 10, 100, 60)
+    assert not is_inside_world(ctx, (5.0, 30.0))

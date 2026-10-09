@@ -36,6 +36,14 @@ def resolve_region_among(candidates: Iterable["RegionState"], x: float, y: float
     return None
 
 
+def _remember_extent(state: Any, extent: Any) -> None:
+    """Cache the extent on a state that has the slot; a slotted context without it (a reconstruction context) stays uncached."""
+    try:
+        object.__setattr__(state, "_regions_global_bounds", extent)
+    except AttributeError:
+        pass
+
+
 def world_extent(state: Any) -> Optional[Tuple[float, float, float, float]]:
     """The one authoritative extent of the world: ``(x_min, y_min, x_max, y_max)``, or None when none is declared.
 
@@ -50,7 +58,7 @@ def world_extent(state: Any) -> Optional[Tuple[float, float, float, float]]:
         return cached  # type: ignore[no-any-return]
     regions = getattr(state, "regions", None)
     if not regions:
-        object.__setattr__(state, "_regions_global_bounds", False)
+        _remember_extent(state, False)
         return None
     x_min = y_min = float("inf")
     x_max = y_max = float("-inf")
@@ -60,7 +68,7 @@ def world_extent(state: Any) -> Optional[Tuple[float, float, float, float]]:
         x_max = max(x_max, r.bounds[2])
         y_max = max(y_max, r.bounds[3])
     extent = (x_min, y_min, x_max, y_max)
-    object.__setattr__(state, "_regions_global_bounds", extent)
+    _remember_extent(state, extent)
     return extent
 
 
