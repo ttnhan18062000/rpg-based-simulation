@@ -176,6 +176,15 @@ const gateCmd = {
   parityXref: (startSha) => `${GATE_CLI} parity_xref --start-sha ${startSha}`,
   finalizeSelfcheck: (tid, tier) => `${GATE_CLI} finalize_selfcheck --ticket-id ${tid} --tier ${tier}`,
 }
+// The run's own ticket file and staging artifacts are always new or moved and are never in the implementer's
+// files_changed; leave them out of the files_changed_vs_git advisory only (the gates still see them).
+const isRunBookkeeping = (path, tid) => path.startsWith(`agent-working/staging_artifacts/${tid}/`) ||
+  /^agent-working\/tickets\/(?:inprogress|done|todos)\/(?:.*\/)?/.test(path) && path.endsWith(`/${tid}.md`)
+const advisoryFilesDelta = (derived, reported, tid) => {
+  const d = derived.filter(f => !isRunBookkeeping(f, tid))
+  const r = reported.filter(f => !isRunBookkeeping(f, tid))
+  return { unreported: d.filter(f => !r.includes(f)), unchanged: r.filter(f => !d.includes(f)) }
+}
 // GATE-CMD-END
 // Legacy runtime: the runtime's own bash(), unchanged. Native: attested dispatch, fail closed. An unverified or
 // non-zero result throws, so a gate can never fall through its marker-absent default (several of these sites treat a
@@ -1623,9 +1632,7 @@ try {
   const derivedMarker = testScopeCheckOutput.indexOf('DERIVED_FILES_JSON:')
   if (derivedMarker !== -1) {
     const derivedFiles = JSON.parse(testScopeCheckOutput.slice(derivedMarker + 'DERIVED_FILES_JSON:'.length).split('\n')[0].trim())
-    const reportedFiles = implementation.files_changed || []
-    const unreported = derivedFiles.filter(f => !reportedFiles.includes(f))
-    const unchanged = reportedFiles.filter(f => !derivedFiles.includes(f))
+    const { unreported, unchanged } = advisoryFilesDelta(derivedFiles, implementation.files_changed || [], tid)
     if (unreported.length || unchanged.length) {
       log(`files_changed advisory: ${unreported.length} changed file(s) not in the implementer's report, ${unchanged.length} reported file(s) with no change: ${unreported.concat(unchanged).slice(0, 6).join(', ')}`)
       pushStaticGate('Test:files_changed_vs_git', 'static_check', 'Test', 'PASS', false, `advisory unreported=${unreported.length} unchanged=${unchanged.length}`)

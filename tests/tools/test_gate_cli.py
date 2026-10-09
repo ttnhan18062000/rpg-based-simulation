@@ -167,3 +167,20 @@ def test_p0_scan_and_tag_check_and_finalize_print_the_markers_the_script_parses(
     assert capsys.readouterr().out.splitlines()[0] in {"P0_NO_INTERSECTION", "P0_INTERSECTION_FOUND"}
     assert gate_cli.main(["tag_check", "no-such-tag-xyz"]) == 0
     assert json.loads(capsys.readouterr().out.removeprefix("TAG_CHECK_JSON:")) == ["no-such-tag-xyz"]
+
+
+@needs_node
+def test_the_advisory_leaves_out_the_runs_own_ticket_and_staging_files_but_nothing_else():
+    """The derived list includes the run's own ticket file and staging dir; the advisory must not report them every run."""
+    text = SCRIPT.read_text(encoding="utf-8")
+    block = text[text.index("// GATE-CMD-BEGIN"):text.index("// GATE-CMD-END")]
+    derived = [f"agent-working/tickets/inprogress/{TID}.md", f"agent-working/staging_artifacts/{TID}/plan.md",
+               "tools/a.py", "tools/not_reported.py", f"agent-working/tickets/inprogress/TCK-OTHER.md"]
+    reported = ["tools/a.py", "tools/reported_but_unchanged.py"]
+    program = block + f"\nprocess.stdout.write(JSON.stringify(advisoryFilesDelta({json.dumps(derived)}, {json.dumps(reported)}, {json.dumps(TID)})));"
+    proc = subprocess.run([_NODE, "-e", program], capture_output=True, text=True, timeout=30)
+    assert proc.returncode == 0, proc.stderr
+    assert json.loads(proc.stdout) == {
+        "unreported": ["tools/not_reported.py", "agent-working/tickets/inprogress/TCK-OTHER.md"],
+        "unchanged": ["tools/reported_but_unchanged.py"],
+    }
