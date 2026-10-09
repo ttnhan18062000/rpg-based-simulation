@@ -872,6 +872,9 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 49. what makes prey afraid (decided 2026-10-09: what the other is and what it is doing, CONFLICT-03);
 50. how detailed foundation content is (decided 2026-10-09: generic archetypes and coarse bands now; named species and exact figures after the foundation is hardened);
 51. how tax is levied (decided 2026-10-09: a share of income or trade when coin changes hands; no levy on the destitute, EXCH-02).
+52. whether people hunt at milestone 0 (decided 2026-10-09: yes, eating raw kills by the same reading as every creature, SURV-06);
+53. a kind its properties leave with nothing to overcome (decided 2026-10-09: its own description decides; otherwise a scavenger, disclosed; the Cave Spider is one, SURV-06);
+54. the milestone-0 gate (decided 2026-10-09: hard logic checks H1-H7, report-only figures R1-R5 with stop lines to the owner, §12.3).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
@@ -1079,6 +1082,42 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
    Done when broke workers earn and eat in all three measured worlds, meat-eaters eat what they
    kill, and nobody is fed for free. Then the free meal goes, for every kind at once (decision
    44).
+
+   **The gate as observable conditions (decided by the owner directly, 2026-10-09; memo row 54).**
+   Three worlds, five seeds each, governor pinned NORMAL. Two arms: the free meal on and the free
+   meal off for every kind. The hard checks are read on the off arm.
+   - A *broke worker* is a subject of a kind that keeps coin and trades (decision 43) that starts
+     the run with no coin and no food. Fix the list from the start state.
+   - A *way* to eat is gathering, hunting and eating raw, buying, or receiving. Selling and wages
+     are ways to get coin, not food.
+
+   Hard pass (every world; seeds pooled per world):
+   - H1 **earn:** a broke worker receives coin by selling or a wage, debited from the payer's
+     purse (EXCH-02). Minted kill or quest coin does not count.
+   - H2 **eat by a real way:** broke workers eat by at least one way that is not free; the mix is
+     reported. A city may be buy-only (decision 35).
+   - H3 **nobody fed free:** zero food eaten without a source item, for every kind.
+   - H4 **diets hold:** zero inn meals for kinds that do not keep coin and trade, and zero plant
+     forages by kinds that eat only meat.
+   - H5 **meat-eaters eat their kills:** where a meat-eating group and something it can overcome
+     both live, at least one kill made to eat (decision 48) whose meat is eaten, per group. Kinds
+     that can overcome nothing yet (SURV-06, memo row 53, e.g. the Cave Spider) are exempt and
+     listed.
+   - H6 **no starvation beside an untried way:** zero broke-worker starvation deaths whose
+     death record shows a way judged open and in reach that was never attempted. It is read from
+     a typed starvation-death record (way ids from SURV-06, every kind), which lands before the
+     gate run. Without that record, H6 is report-only and the gate cannot pass.
+   - H7 **conservation:** the coin and food invariants are green on both arms.
+
+   Report-only. A crossed stop line goes to the owner for a ruling; it is not an automatic fail,
+   and values are never tuned to pass it (decision 33):
+   - R1 broke-worker starvation, off against on, with mean (SD) and paired SE. Stop if off is
+     worse by more than 2 SE in any world.
+   - R2 population and starvation per kind group (decision 42). Stop if a kind dies out in
+     every seed of a world where it was placed.
+   - R3 meat-eater attacks on people, against the free-meal arm and the pre-hunting main.
+   - R4 minted kill and quest coin, and treasury balances (decision 38's exception).
+   - R5 the mix of ways per world and kind group.
 1. **Kinds by properties.**
    - The property model in coarse bands, as schema and content.
    - The appraisal.

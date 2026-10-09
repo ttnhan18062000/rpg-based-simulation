@@ -309,6 +309,24 @@ profiles reach the same hunger at different times.
   - A hungry wolf may turn on a lone person when nothing easier is near, and keeps away from a
     group it cannot overcome.
   - People hunt (decision 31) by the same reading.
+    **People hunt and eat raw kills from milestone 0 (decided by the owner directly, 2026-10-09;
+    row 52 of the memo):** meat is in people's diet. A hungry person hunts under the same reading
+    as any creature, and eats the kill raw until fire and cooking exist (roadmap §12, milestone
+    3). Raw meat fills less than the same meat cooked will (decision 31), and the ratio is content
+    under decision 33. Hunting is a way a broke worker eats; it does not count as earning.
+  - **A kind its own properties leave with nothing to overcome (decided by the owner directly,
+    2026-10-09; row 53 of the memo):** for example a small kind that eats only meat, while
+    "can overcome" needs a strictly greater power band. The kind's own description decides, never
+    a list of who would otherwise go hungry:
+    1. if its description makes it a pack hunter, it waits for group appraisal (milestone 1) and
+       scavenges or starves until then, disclosed per kind;
+    2. its band is corrected only when a reader would call it plainly wrong for the description,
+       never so that it can hunt;
+    3. otherwise it is a scavenger at this stage, disclosed.
+    Equal bands stay milestone 1's open tie rule. **Applied, 2026-10-09:** the Cave Spider (small
+    power, meat only) is case 3. Its own data disagree (strength medium, danger medium, venomous,
+    against power small), and milestone 1's appraisal resolves that from its properties,
+    venom included, kind by kind.
 - **Applies everywhere, not only to food:** the same principle holds for every role a kind
   might be given. A role is an outcome of declared properties and the situation, not an authored
   tag, unless a rule says why a tag is the property itself (for example decision 43's "keeps
@@ -471,6 +489,9 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
   - **Measured preview** (Lane B, `frontier_living_world`, seed 42; five-seed figures per kind
     group to follow). With free meals removed, wildlife that ever ate goes from 4 to 1, wildlife
     starvation from 2 to 4, and wildlife end hunger from 92 to 100.
+  - **The gate is observable (decided by the owner directly, 2026-10-09; row 54 of the memo):**
+    the removal lands only when the milestone-0 gate in roadmap §12.3 passes. That gate has hard
+    logic checks and report-only figures with stop lines.
   - **Alternatives not taken:** remove the free meal for people now and close the inn to animals
     (wildlife starvation accepted); close the inn to animals now but keep the free meal for
     people (animals lose their only meal).
