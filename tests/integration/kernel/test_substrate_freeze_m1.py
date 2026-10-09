@@ -21,7 +21,6 @@ class TestSubstrateFreezeM1:
         profile.sampling_interval_ticks = 1
         profile.max_replay_buffer_kb = 1024
         profile.max_observability_budget_percent = 10.0
-        profile.max_work_debt = 1000
         profile.utilization_constrained_threshold = 0.8
         profile.utilization_degraded_threshold = 0.9
         profile.utilization_survival_threshold = 0.95
@@ -70,8 +69,6 @@ class TestSubstrateFreezeM1:
     def test_apply_path_singular_authority(self, mock_validator, mock_kernel_deps):
         """Verify that state mutation is gated exclusively by ApplyPath."""
         profile, state, rng = mock_kernel_deps
-        # Ensure profile.max_work_debt is an int to avoid TypeErrors
-        profile.max_work_debt = 1000
         
         kernel = Kernel(profile, state, rng)
         try:

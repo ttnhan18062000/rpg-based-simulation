@@ -29,14 +29,6 @@ class PressureInjector:
         from dataclasses import replace
         return replace(state, entities=new_entities)
 
-    @staticmethod
-    def inject_work_debt(state: AuthoritativeState, system: str, amount: int) -> AuthoritativeState:
-        """Inject work debt to stress the governor."""
-        new_debt = state.work_debt.copy()
-        new_debt[system] = new_debt.get(system, 0) + amount
-        from dataclasses import replace
-        return replace(state, work_debt=new_debt)
-
 
 class ArenaInjector:
     """Helper to inject multi-team combat scenarios into the simulation."""
@@ -562,7 +554,7 @@ def get_scenario_expectations(scenario_id: str) -> ScenarioExpectations:
         )
 
     # 2. Pressure & Degradation
-    elif scenario_id in ("RAM_PRESSURE", "TICK_BUDGET_PRESSURE", "QUEUE_INFLIGHT_PRESSURE", "WORK_DEBT_BUILDUP"):
+    elif scenario_id in ("RAM_PRESSURE", "TICK_BUDGET_PRESSURE", "QUEUE_INFLIGHT_PRESSURE"):
         return ScenarioExpectations(
             required_governor_modes=["NORMAL", "DEGRADED"],
             requires_recovery=True,

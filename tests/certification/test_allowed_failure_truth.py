@@ -32,7 +32,7 @@ def test_allowed_failure_preserves_truth():
         MeasurementPoint(
             tick=0, mode="NORMAL", memory_rss_mb=150.0, # VIOLATION
             memory_trend_mb_per_tick=0.0, tick_compute_ms=1.1,
-            tick_compute_ms_avg=1.1, work_debt=0,
+            tick_compute_ms_avg=1.1,
             worker_utilization=0.1, queue_utilization=0.0,
             replay_pressure=0.0, active_workers=1
         )
@@ -67,7 +67,7 @@ def test_unallowed_failure_fails_normally():
         MeasurementPoint(
             tick=0, mode="NORMAL", memory_rss_mb=150.0, # ENVELOPE violation
             memory_trend_mb_per_tick=0.0, tick_compute_ms=1.1,
-            tick_compute_ms_avg=1.1, work_debt=0,
+            tick_compute_ms_avg=1.1,
             worker_utilization=0.1, queue_utilization=0.0,
             replay_pressure=0.0, active_workers=1
         )

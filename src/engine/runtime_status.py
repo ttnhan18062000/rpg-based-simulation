@@ -61,7 +61,6 @@ class RuntimeStatus:
         enriched = PressureSignals(
             tick_compute_ms = signals.tick_compute_ms,
             tick_compute_ms_avg = avg_compute,
-            work_debt_total = signals.work_debt_total,
             worker_utilization = signals.worker_utilization,
             queue_utilization = signals.queue_utilization,
             memory_estimate_mb = signals.memory_estimate_mb,

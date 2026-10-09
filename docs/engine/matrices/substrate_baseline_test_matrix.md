@@ -35,9 +35,9 @@ Proves deterministic scheduling and tie-break rules.
 
 | Test Case / Group | Law / Requirement | Expected Behavior |
 | :--- | :--- | :--- |
-| `test_scheduler_contract` | Class Hierarchy | Verifies CRITICAL > PERIODIC > DEFERRED. |
+| `test_scheduler_contract` | Selection | Verifies only CRITICAL entity work is produced, readiness gating, and id tie-breaks. |
 | `test_tie_break_rules` | Sorting Law | Verifies readiness/owner ID sort order. |
-| `test_deferred_work_debt` | Debt Draining | Verifies correct debt accounting and selection. |
+| `test_work_debt_is_gone` | Retirement | Verifies the work-debt and periodic fields, signal, thresholds, metric and scheduler branches no longer exist (Phase B, `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`). |
 
 ## 4. Checkpoint Determinism Tests
 
