@@ -190,6 +190,10 @@ The `icon.*` family (14 optional keys, D20, `TCK-20261006-VISUAL-ASSETS-ICON-KEY
 There is no MCP tool that adopts, revokes, builds, releases, deletes or activates, and the boundary test lets the drawing server import only the store layers
 `intake`, `readmodel`, `contracts`, `identities`, `errors` and `config`.
 
+## The key-usage report (report only, `TCK-20261008-VISUAL-ASSETS-KEY-USAGE-REPORT`)
+
+`python -m visual_assets.review key-usage` scans `frontend/src` and `src` (not tests or fixtures) for string literals that are exactly a key of a registered family, and compares them with the registry (aliases count for their target), the live revision of every adopted source and the latest release candidate. It prints deterministic JSON and exits 0 whatever it finds; a CI gate belongs to activation. Findings: `unknown` (a literal that looks like a key of a registered family and is not registered: a typo, or a file name such as `icon.png`, which a literal scan cannot tell apart), `unreferenced` (registered, no literal mentions it; a key built with a template literal is listed under `dynamic_references` and may be a false positive), `adopted_unreleased` (adopted but not in the latest candidate), `fallback_only` (referenced by application code, not in the latest candidate, so it can only resolve through its fallback). Each reference is labelled `app` or `harness` (the isolated pages under `frontend/src/visualAssets`). Limits: a comment containing a quoted key counts as a reference; keys assembled by string concatenation are invisible.
+
 ## Not built (outside this foundation's scope)
 
 Runtime activation, a resolver in the real client, Live Map and HUD consumption, client compatibility ranges (register `W03.5`, `W07`), more than one scale class, atlases and animation export

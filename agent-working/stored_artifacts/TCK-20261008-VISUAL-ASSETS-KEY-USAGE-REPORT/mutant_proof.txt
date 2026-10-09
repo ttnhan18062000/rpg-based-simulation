@@ -1,0 +1,10 @@
+Each mutant applied with one exact-substring replacement (asserted to match once), test_key_usage.py run, file restored from a backup.
+M1 aliases not resolved: SURVIVED the first test version (the alias pointed at a key referenced directly anyway); the planted case now references fixture.a.four ONLY through its alias and the mutant fails (caught after strengthening)
+M2 harness counted as app: two tests fail (caught)
+M3 tests are scanned: the scan-ignores test fails (caught)
+M4 interpolated templates counted as plain: EQUIVALENT: the key pattern never fullmatches a body containing `${`, so the skip was dead code; removed instead of tested
+M5 adopted_unreleased compares with the wrong set: two tests fail (caught)
+M6 aliases are not known keys: the classification test fails (caught)
+M7 unreferenced ignores references: two tests fail (caught)
+M8 other families scanned: the scan-ignores test fails (caught)
+Unmutated: 8 passed.

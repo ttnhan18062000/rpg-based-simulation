@@ -90,7 +90,7 @@ GATE_LAYERS = {"adoption", "setadoption", "revoke", "catalogwrite", "release", "
 SERVER_STORE_ALLOWED = {"intake", "readmodel", "contracts", "identities", "errors", "config"}
 # `visual_assets.review` (TCK-20261008-VISUAL-ASSETS-REVIEW-TOOLING-IN-STORE-CLI) is a peer package: read-only on the drafts and the catalog records, it may import ONLY these store layers (never a gate layer, never `build`)
 # and ONLY the pure `technique` layer of drawing (lint, ramps); `store` and `drawing` never import it. Not `src`, like everything under visual_assets (the c14/c15 import contracts).
-REVIEW_STORE_ALLOWED = {"config", "pixels", "records", "draftexport"}
+REVIEW_STORE_ALLOWED = {"config", "pixels", "records", "draftexport", "catalog"}  # `catalog` = the read-only registry loader (the key-usage report)
 REVIEW_DRAWING_ALLOWED = {"technique"}
 # no I/O, clock or process access in the pure layers; PyYAML only in `catalog`
 PURE_STORE_LAYERS = {"contracts", "identities", "pixels"}
