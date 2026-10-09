@@ -10,7 +10,14 @@ The rule (only runs whose branch is ``main`` count):
 
 * ``skip`` if any run is not yet completed (queued, in progress, waiting, ...);
 * ``skip`` if the newest run (any event, any conclusion) was created less than 10 h ago;
-* otherwise ``dispatch`` (including when there is no run at all).
+* otherwise ``dispatch`` (including when there is no run at all) ... unless ``head_sha`` is given and main's head was
+  *actually tested* less than 24 h ago (TCK-20261009-SLOW-REGRESSION-OFF-HOUR-AND-SKIP-UNCHANGED-MAIN): the gate in
+  ``slow-regression.yml`` would skip such a run, so dispatching it would only burn a billed minute. That rule is
+  :func:`tools.test_architecture.slow_regression_gate.decide`; its runs carry ``headSha`` and ``tested``.
+
+The subtle part: a scheduled run that the gate skipped still counts as "the slot fired". The 10 h staleness rule looks
+at the newest run of any event and any conclusion, and a gate-skipped run is a completed ``schedule`` run, so it keeps
+the watchdog quiet; only the "tested" rule above ignores it (it is not coverage).
 
 Why 10 h: the schedule period is 6 h and the observed lateness is up to 3.5 h, so 10 h = 6 h +
 3.5 h + 0.5 h grace. A shorter threshold would dispatch while a late scheduled run is still on its
@@ -22,7 +29,7 @@ Malformed input (a missing or unparseable ``createdAt``, a naive timestamp) rais
 a silent ``dispatch`` on bad data would spend ~2 runner-hours per hour.
 
 CLI: ``python -m tools.test_architecture.slow_regression_watchdog RUNS.json`` reads the JSON that
-``gh run list --json databaseId,event,status,createdAt,headBranch`` prints and prints
+``gh run list --json databaseId,event,status,createdAt,headBranch`` prints (or, with ``--head-sha``, what ``slow_regression_gate collect`` prints) and prints
 ``decision=<dispatch|skip>`` and ``reason=<one line>``; ``--now`` takes an ISO-8601 UTC timestamp
 for tests and manual checks.
 """
@@ -54,8 +61,20 @@ def _parse_time(value: Any, *, run: Mapping[str, Any]) -> datetime:
     return parsed
 
 
-def decide(runs: Iterable[Mapping[str, Any]], now: datetime) -> tuple[str, str]:
+def decide(runs: Iterable[Mapping[str, Any]], now: datetime, head_sha: str | None = None) -> tuple[str, str]:
     """Return ``(decision, reason)`` for the given Slow regression runs at ``now`` (tz-aware)."""
+    runs = list(runs)
+    decision, reason = _staleness(runs, now)
+    if decision == DISPATCH and head_sha:
+        from tools.test_architecture import slow_regression_gate
+
+        gate_decision, gate_reason = slow_regression_gate.decide(head_sha, runs, now)
+        if gate_decision == slow_regression_gate.SKIP:
+            return SKIP, f"{reason}; but {gate_reason}"
+    return decision, reason
+
+
+def _staleness(runs: list[Mapping[str, Any]], now: datetime) -> tuple[str, str]:
     if now.tzinfo is None:
         raise ValueError("now must be timezone-aware")
     main_runs = [r for r in runs if r.get("headBranch") == MAIN_BRANCH]
@@ -84,11 +103,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("runs_json", help="path to `gh run list --json ...` output, or - for stdin")
     parser.add_argument("--now", help="ISO-8601 UTC time to decide at (default: the current time)")
+    parser.add_argument("--head-sha", help="main's head SHA: also apply the 24 h tested-head rule (runs need headSha and tested)")
     args = parser.parse_args(argv)
     raw = sys.stdin.read() if args.runs_json == "-" else open(args.runs_json, encoding="utf-8").read()
     runs = json.loads(raw)
     now = datetime.fromisoformat(args.now.replace("Z", "+00:00")) if args.now else datetime.now(timezone.utc)
-    decision, reason = decide(runs, now)
+    decision, reason = decide(runs, now, head_sha=args.head_sha)
     print(f"decision={decision}")
     print(f"reason={reason}")
     return 0

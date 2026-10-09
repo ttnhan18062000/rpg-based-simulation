@@ -14,6 +14,12 @@ name: Slow regression
 # hourly and dispatches this workflow on main when none is queued or running and the newest run is 10 h
 # old or more. 10 h = 6 h period + 3.5 h observed lateness + 0.5 h grace; a shorter threshold would
 # double the cost when a late scheduled run is still on its way. Rule: tools/test_architecture/slow_regression_watchdog.py.
+#
+# TCK-20261009-SLOW-REGRESSION-OFF-HOUR-AND-SKIP-UNCHANGED-MAIN: the `gate` job skips a SCHEDULED run when main's head
+# was already actually tested less than 24 h ago (one same-commit rerun a day stays, to keep failing-set flapping
+# visible). A `workflow_dispatch` run always tests. A skipped run runs only the gate (about one billed minute), leaves
+# the report and rolling issue #390 untouched, and its suite job concludes `skipped`, which is how later gates tell it
+# from a run that tested. Rule and the "actually tested" definition: tools/test_architecture/slow_regression_gate.py.
 
 on:
   schedule:
@@ -28,8 +34,46 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  gate:
+    name: "Gate: skip if main was tested recently"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      decision: ${{ steps.decide.outputs.decision }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      # Sparse checkout: only the pure decision module, not the slow suite.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            tools/test_architecture/__init__.py
+            tools/test_architecture/slow_regression_gate.py
+          sparse-checkout-cone-mode: false
+      # Schedule events only: a workflow_dispatch run (a human asked, or the watchdog decided) always tests. If this
+      # step errors, `decision` stays empty and the suite still runs (fail open).
+      - name: Decide
+        id: decide
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          set -o pipefail  # without it a crashing gate hides behind `| tee`: empty decision, no red signal
+          python3 -m tools.test_architecture.slow_regression_gate decide \
+            --head-sha "${{ github.sha }}" --exclude-run-id "${{ github.run_id }}" | tee decision.txt
+          cat decision.txt >> "$GITHUB_OUTPUT"
+          {
+            echo "### Slow regression gate"
+            sed 's/^/- /' decision.txt
+          } >> "$GITHUB_STEP_SUMMARY"
+
   slow:
     name: "Slow regression"
+    needs: gate
+    # `!cancelled()` so a failed gate does not skip the suite (fail open); skip only on an explicit `skip` decision.
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.gate.outputs.decision != 'skip') }}
     runs-on: ubuntu-latest
     timeout-minutes: 240
     # Job-level permissions drop everything not listed: checkout needs contents, the report step
