@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-09"
 ---
 
 # World Rule Family: Economy / Exchange
@@ -58,6 +58,103 @@ diverge from price in practice.
 objective scarcity), [ME-S10](../scenarios/material-economy-batch-08.md#me-s10) (wealth
 converts to capability), [ME-S12](../scenarios/material-economy-batch-08.md#me-s12) (wealth
 does not automatically mean power).
+
+---
+
+## EXCH-02 — A person earns money from someone who pays it: by selling goods, working for a wage, or a task's reward
+
+> A person who has no money may earn it in several ordinary ways: by selling goods it gathered,
+> hunted, made or looted to a buyer; by working for a wage at a place that employs people (a
+> shop, an inn, a smithy); or by the reward of a task or quest someone offers. Every coin
+> earned comes out of the payer's own purse or treasury, which must hold it. Money never
+> appears because someone needs it.
+
+**Disposition: ACCEPT — decided by the owner directly, 2026-10-08** (row 34 of
+`docs/plans/systemic_world/owner_decision_memo.md`). Applies decision 31 (common-sense ways, each
+with a real cost) to money. Passes the admission test: EXCH-01 separates value, price, cost and
+wealth, but no Rule said how a person comes to hold money at all.
+- **People only, by its nature (decision 42):** money, wages and rewards belong to kinds that
+  trade. Animals meet their needs by their own kinds' ways (SURV-06), not by earning.
+- **Who is a person here (decided by the owner directly, 2026-10-09; row 43 of the memo):** a
+  species declares, as an explicit authored trait, whether its kind keeps coin and trades. This
+  is not inferred from another flag: `intelligence_tier` measures wits, not a trading culture.
+  Whether a given place serves or hires a given subject is a separate question decided by their
+  relationship. A goblin may hold coin and trade, but a town does not sell a meal to, or hire, a
+  raider hostile to it.
+  - **Why not the tier flag** (Lane B's read, relayed 2026-10-09): `intelligence_tier` "high"
+    covers human, goblin, orc, elf, dwarf, lizardfolk, dragonkin and spirit. A spirit is "high"
+    but uses no tools, and a troll is "low" but carries the humanoid hunger profile.
+  - **Alternatives not taken:** the `intelligence_tier` flag; humans only for now.
+- **The ways are plural:** no single one is required. Being paid by fellow townsfolk for small
+  jobs (social contracts) is a further way, left for later.
+- **Conservation:** a sale moves coins from the buyer to the seller and goods the other way. A
+  wage moves coins from the employer's purse to the worker for time worked. A reward moves coins
+  from whoever offers it. A purse that is empty cannot pay.
+- **Engineering and content, not this Rule:** sale prices (EXCH-01), wage amounts and working
+  hours, which places employ how many people, and how an employer's purse refills (its own
+  sales).
+- **Alternatives not taken:** a starting purse in place of earning (it stands in for the way and
+  runs out); money that appears when someone needs it (engine charity).
+
+- **Amendment, who holds the first coin (decided by the owner directly, 2026-10-09; row 37 of
+  the memo):** coin exists from world creation, in the hands that would plausibly hold it, in
+  three ways at once. Shops and inns start with a till and stock (an inn has food to sell).
+  Merchants and shopkeepers start with trade capital. A faction's treasury pays wages for town
+  work. How much each holds follows the place (a shop's size, a faction's wealth), never an
+  acceptance target. Starting coin is declared world content, so its provenance is world
+  creation, not engine charity, and from then on every coin moves only between purses.
+  - **Why:** Lane B's read (seed 42, three measured worlds) found that no purse held coin at
+    all. Every building had 0 gold and 0 stock, and every person had 0 gold, merchants included.
+    The only coin was 1000 per faction treasury (`global_resources`), held by no one. SHOP_SELL
+    rejects on an empty purse (`LIQUIDITY_EXHAUSTED`) and SHOP_BUY on empty stock
+    (`OUT_OF_STOCK`), so neither selling nor wages could ever start.
+  - **Alternatives not taken:** only shops and merchants (no wages until a shop earns); only the
+    treasury (selling waits until a shop has earned coin).
+- **Amendment, a reward needs a payer (decided by the owner directly, 2026-10-09; row 38 of the
+  memo):** a kill bounty is paid from the treasury of the faction that posted it, a quest reward
+  from the quest giver's purse, and loot is whatever the dead body carried. A reward that no
+  purse pays is minted coin and breaks this Rule. It is its own ticket, after first coin lands.
+  Until then, the minted kill and quest rewards are recorded as a known exception (an
+  intentional divergence, class Bounded, naming that ticket).
+  - **Today:** `COMBAT`/`KILL_REWARD` and `QUEST_REWARD` grant gold with no payer debited. All
+    coin that reached town workers in Lane B's runs was minted kill reward (5 to 35 gold).
+  - **Alternative not taken:** accept a bounty paid by "the world" as a lasting exception.
+  - **Scenario:** [ME-S23](../scenarios/material-economy-batch-08.md#me-s23) (bounty from a
+    treasury, quest reward from a giver, loot only what the body carried; unfunded controls).
+
+- **Amendment, tax is a share of income or trade (decided by the owner directly, 2026-10-09; row
+  51 of the memo):** a treasury is paid a small share when coin changes hands in its place, from
+  a sale or a wage. Someone who earns nothing pays nothing, and a busy trader pays more. A
+  periodic levy on everyone present is not a tax this world uses. The share moves from the
+  payer's purse to the treasury, never minted. Its size is content, light and plausible
+  (decision 33).
+  - **Why:** Lane B's four-arm measurement (5000 ticks, three worlds, relayed by rpg-planner):
+    the regional tax took 2 gold every 20 ticks from anyone present, about 144 gold a game-day.
+    Subjects holding under 10 gold paid 50 to 150 gold per run per world. In the city world's
+    wage arm, the poor paid about what they earned (146), and most sales were taxed away before
+    a meal.
+  - **Alternatives not taken:** a levy with an exemption below a threshold and a lower rate; a
+    lower flat rate only; leave as is.
+  - **Evidence: CONFLICTING** until the levy is retired (`src/engine/town_resolution.py`).
+  - **Scenario:** [ME-S22](../scenarios/material-economy-batch-08.md#me-s22) (a share of a sale
+    and of a wage reaches the treasury; an idler pays nothing).
+
+**Repository evidence: MISSING for wages; PARTIAL for selling and rewards.** Lane B's
+feasibility read (relayed by rpg-planner, 2026-10-08): every town worker starts with 0 gold, and
+over a run 14 workers together take in 5 to 40 gold, against a 5-gold meal. Selling exists as a
+price rule (sell at 50 percent of base, `docs/mechanics/03_economic_laws.md` §4), but no worker
+is seen selling. Decision 27's earn opening step is a stub, and there is no paid-work concept.
+Quest rewards exist for adventurers. Shops, inns and a smithy exist in all three measured worlds,
+so earning is the only way to eat present in every one of them. **CONFLICTING for first coin
+and for rewards** (decisions 37 and 38): no purse but a faction treasury holds coin at compile,
+and kill and quest rewards are minted.
+
+**Scenarios:** [ME-S19](../scenarios/material-economy-batch-08.md#me-s19) (sell gathered
+wood or ore, the shop's purse pays, buy a meal; an empty-purse control) and
+[ME-S20](../scenarios/material-economy-batch-08.md#me-s20) (an inn shift paid from the inn's
+purse, then a meal; an empty-purse control) and
+[ME-S21](../scenarios/material-economy-batch-08.md#me-s21) (town work paid from the faction treasury;
+an empty-treasury control; decision 37). Kernel specs, owed as tests with Lane B's batch 2.
 
 ---
 
@@ -174,6 +271,8 @@ Rule Catalog identifies but does not make.
 
 ## Cross-domain links recorded here
 
+- EXCH-02 → Life/body/survival (SURV-06 and decision 31: buying food needs money), Resources
+  (RES conservation: coins move from a real purse), Institutions (employers)
 - EXCH-01 → Resources/Production (`resources-production.md`'s PROD-02, scarcity ≠ price),
   Cost (COST-01, Batch 03)
 - Inherited exchange-preconditions entry → Capability, Authority, Reach (Batch 02/03),

@@ -1,31 +1,28 @@
 # Compliance IDs: TOWN-016
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Any
 from dataclasses import replace
 
 from src.core.updates import EntityUpdate
+from src.engine.service_reach import service_at
 from src.systems.economy_systems.reputation_discount import apply_reputation_discount
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
     from src.core.updates import StateUpdate
 
+def shop_price(state: Any, shop: Any, item_id: str, is_buy: bool) -> int:
+    """The one price law at a shop (Bible 03 section 4): `MarketSystem.calculate_price`. The engine reaches it through this door, the one place
+    it is pinned to the market (a layer exception), so a sale (`shop_sale.py`) and the enforced buy floor read the same law."""
+    from src.systems.market import MarketSystem
+    return MarketSystem.calculate_price(state, shop, item_id, is_buy=is_buy)
+
+
 class ShopSystem:
     """
     Authoritative handler for explicit shop interactions.
     Law of Value: Prices must match the registry truth.
     """
-
-    # Parity with V1 ITEM_REGISTRY values/rarity
-    # In V2 we might eventually pull this from a registry component
-    ITEM_VALUES: Dict[str, int] = {
-        "wood": 5,
-        "iron_ore": 10,
-        "iron_sword": 5,
-        "steel_sword": 15,
-        "herbal_remedy": 10,
-        "__DEFAULT__": 5
-    }
 
     @staticmethod
     def enforce(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
@@ -52,8 +49,8 @@ class ShopSystem:
             if existing_upd and existing_upd.new_position:
                 pos = existing_upd.new_position
                 
-            tile_pos = (int(pos[0]), int(pos[1]))
-            building_type = state.building_tiles.get(tile_pos)
+            # `building_tiles` is empty in compiled worlds, so the shop is found through `service_reach` (on or beside a shop tile).
+            tile_pos, building_type = service_at(state, (int(pos[0]), int(pos[1])), {"shop"})
             
             if building_type == "shop":
                 # Check functionality (LEG-RPG-001/006)
@@ -66,7 +63,6 @@ class ShopSystem:
                 # Use MarketSystem.calculate_price so the enforced floor matches what
                 # clients compute — DynamicPriceService uses item_def.value which diverges
                 # from MarketSystem's hardcoded base table after catalog bootstrap.
-                from src.systems.market import MarketSystem
 
                 sanitized_transfers = []
                 for intent in existing_upd.resource_transfers:
@@ -80,7 +76,7 @@ class ShopSystem:
 
                         # Re-calculate Truth using the same pricing path clients use
                         quantity = sum(s.quantity for s in intent.items_add)
-                        legal_price = MarketSystem.calculate_price(state, intent_building, item_id, is_buy=True)
+                        legal_price = shop_price(state, intent_building, item_id, is_buy=True)
                         legal_total = apply_reputation_discount(legal_price * quantity, entity.social.public_reputation)
 
                         if intent.gold_cost < legal_total:
@@ -95,46 +91,7 @@ class ShopSystem:
                 
                 existing_upd = replace(existing_upd, resource_transfers=sanitized_transfers)
                 
-                # Pillar 4.2 Dread Bias: Regional trauma increases prices
-                from src.engine.domain_logic import SimulationDomainLogic
-                region_trauma = SimulationDomainLogic.get_region_trauma(state, pos)
-                
-                # Sell items based on V1 logic (Materials + Junk)
-                gold_delta = 0
-                items_to_remove = []
-                
-                for item in entity.inventory.items:
-                    item_id = item.item_id if hasattr(item, "item_id") else item
-                    item_key = item_id.lower()
-                    if item_key in ("wood", "ore", "iron_ore", "fish", "leather", "fiber", "herb", "iron_sword"):
-                        price = ShopSystem.get_sell_price(item_key, region_trauma)
-                        gold_delta += price
-                        items_to_remove.append(item)
-                
-                if gold_delta > 0:
-                    # Phase 3 Law: Resource Conservation (Atomic Shop)
-                    from src.core.updates import ResourceTransferIntent
-                    auto_sell_intent = ResourceTransferIntent(
-                        source_id=building.id if building else "AUTO_SELL",
-                        source_kind="SHOP_SELL",
-                        items_remove=items_to_remove,
-                        gold_delta=gold_delta,
-                        price_multiplier=1.0,
-                        transfer_kind="SELL"
-                    )
-                    existing_upd = replace(
-                        existing_upd,
-                        resource_transfers=list(existing_upd.resource_transfers) + [auto_sell_intent]
-                    )
-                
+                # Selling is a chosen act (the SELL action, `shop_sale.py`), not something that happens to whoever stands here.
                 refined_entity_updates[e_id] = existing_upd
                 
         return replace(update, entity_updates=refined_entity_updates)
-
-    @staticmethod
-    def get_sell_price(item_kind: str, region_trauma: float = 0.0) -> int:
-        base = ShopSystem.ITEM_VALUES.get(item_kind, ShopSystem.ITEM_VALUES["__DEFAULT__"])
-        # Pillar 1.3: Economy & Scarcity
-        # Regional trauma increases prices (Supply chain disruption / Risk premium)
-        modifier = 1.0 + (region_trauma / 10.0)
-        return int(base * modifier)

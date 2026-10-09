@@ -3,27 +3,18 @@ the regeneration the Resource Ecology Service computes reaches the world through
 from __future__ import annotations
 
 from src.config.profiles import PROD_SMALL
-from src.core.governance import RuntimeMode
 from src.core.state import AuthoritativeState, RegionState, ResourceNodeState
 from src.core.updates import StateUpdate
 from src.domains.world_emergence.schema import WorldEventCategory
 from src.engine.executor import LocalSequentialExecutor
-from src.engine.governor import ResourceGovernor
 from src.engine.kernel import Kernel
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.platform.rng import DeterministicRNG
 from src.world.ecology import ResourceEcologyService
+from tests.helpers.kernel_pinning import PinnedNormalGovernor
 
 NODE_ID = 7
 INTERVAL = ResourceEcologyService.ECOLOGY_INTERVAL
-
-
-class _PinnedNormalGovernor(ResourceGovernor):
-    def _get_indicated_mode(self, profile, signals):
-        return RuntimeMode.NORMAL
-
-    def force_mode(self, mode, status, current_tick):
-        return None
 
 
 def _state(tick: int, charges: int, regen: int = 1, cooldown: int = 0) -> AuthoritativeState:
@@ -56,7 +47,7 @@ def test_no_regen_off_the_ecology_interval_for_a_static_node_or_a_node_on_cooldo
 def test_a_depleted_node_gains_charges_over_the_ecology_interval_through_the_real_tick_path():
     kernel = Kernel(
         profile=PROD_SMALL.model_copy(update={"max_tick_budget_ms": 1e9}), state=_state(INTERVAL - 2, charges=0), rng=DeterministicRNG(42),
-        governor=_PinnedNormalGovernor(), flags={"no_frame_pacing": True, "no_replay": True, "audit_mode": True}, executor=LocalSequentialExecutor())
+        governor=PinnedNormalGovernor(), flags={"no_frame_pacing": True, "no_replay": True, "audit_mode": True}, executor=LocalSequentialExecutor())
     try:
         for _ in range(4):
             kernel.tick_once()

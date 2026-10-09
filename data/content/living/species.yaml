@@ -10,7 +10,7 @@
   cognition_profile: "practical_humanoid"
   intelligence_tier: "high"
   drive_profile: "cautious_commoner"
-  natural_traits: ["humanoid", "tool_user", "social_humanoid"]
+  natural_traits: ["humanoid", "tool_user", "social_humanoid", "keeps_coin_and_trades"]
   attribute_tendencies:
     strength: "medium"
     agility: "medium"
@@ -56,7 +56,7 @@
   cognition_profile: "opportunistic_humanoid"
   intelligence_tier: "high"
   drive_profile: "opportunistic_raider"
-  natural_traits: ["humanoid", "tool_user", "opportunistic", "social_humanoid", "small_body"]
+  natural_traits: ["humanoid", "tool_user", "opportunistic", "social_humanoid", "small_body", "keeps_coin_and_trades"]
   attribute_tendencies:
     strength: "low"
     agility: "medium_high"
@@ -102,7 +102,7 @@
   cognition_profile: "opportunistic_humanoid"
   intelligence_tier: "high"
   drive_profile: "opportunistic_raider"
-  natural_traits: ["humanoid", "tool_user", "large_body"]
+  natural_traits: ["humanoid", "tool_user", "large_body", "keeps_coin_and_trades"]
   attribute_tendencies:
     strength: "high"
     agility: "medium_low"
@@ -125,7 +125,7 @@
   cognition_profile: "arcane_scholar"
   intelligence_tier: "high"
   drive_profile: "disciplined_protector"
-  natural_traits: ["humanoid", "tool_user", "magic_sensitive", "social_humanoid"]
+  natural_traits: ["humanoid", "tool_user", "magic_sensitive", "social_humanoid", "keeps_coin_and_trades"]
   attribute_tendencies:
     strength: "low_medium"
     agility: "high"
@@ -147,7 +147,7 @@
   cognition_profile: "practical_humanoid"
   intelligence_tier: "high"
   drive_profile: "disciplined_protector"
-  natural_traits: ["humanoid", "tool_user", "craftsman", "disciplined"]
+  natural_traits: ["humanoid", "tool_user", "craftsman", "disciplined", "keeps_coin_and_trades"]
   attribute_tendencies:
     strength: "medium_high"
     agility: "low_medium"
@@ -207,7 +207,7 @@
   cognition_profile: "practical_humanoid"
   intelligence_tier: "high"
   drive_profile: "disciplined_protector"
-  natural_traits: ["humanoid", "tool_user", "amphibious"]
+  natural_traits: ["humanoid", "tool_user", "amphibious", "keeps_coin_and_trades"]
   attribute_tendencies:
     strength: "medium"
     agility: "medium"

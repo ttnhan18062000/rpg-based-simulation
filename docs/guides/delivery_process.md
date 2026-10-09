@@ -157,8 +157,9 @@ The gate CLIs write one `gate_verdicts` row per verdict (`docs/agent-monitoring/
 override or stop on a blocking verdict instead of fixing and re-running it, record that with
 `python3 tools/agent-monitoring/gate_ledger.py outcome --gate-verdict-id <id> --outcome overridden|stopped [--note ...]`;
 `gate_ledger.py list --unresolved` shows the ids still open. A fix and re-run is derived without any entry
-(a later pass on the same ticket and gate is `fixed_and_rerun`; the same block on the same inputs is
-`rerun_no_change`). When someone rules on whether a verdict was right, `gate_ledger.py adjudicate`. When
+(any later pass on the same ticket and gate is `fixed_and_rerun`, even past an intervening block with other inputs; the same block on the same inputs is
+`rerun_no_change`). `done_checker_static.py` records Part A (`cli:done_checker_static`, phase Verify) and Part B (`Finalize:...run_finalize_selfcheck`) as separate rows; precheck on an already-closed ticket (`--part both`) is recorded non-blocking with `inputs_ref.post_close`. After a close, run `--part finalize` (or omit `--part`), not `--part both`. A run that died before its pipeline site recorded the gate leaves only an attested row; `outcome`
+accepts that id too, but an attested row that has a verdict row refuses and names the verdict id to use. When someone rules on whether a verdict was right, `gate_ledger.py adjudicate`. When
 `post_native_run_check.py` fails a gate that the native run attested as PASS, it records the `false_pass`
 itself. Recording an override is bookkeeping, not permission: never edit an artifact to make a gate pass.
 
@@ -347,14 +348,9 @@ The steps above cover diagnosing a failure; this covers the surrounding push→P
 
 1. **Before staging/committing**: always run `git status`/`git log` first — this repo's working directory can be shared by more than one concurrent session (see `CLAUDE.md`'s Hard Rules), so check for in-flight files that belong to another ticket before touching them.
 2. **Commit** per ticket, referencing its ID (see `## Commit Contract` above). Stage `agent-working/agent-monitoring/` in every commit, including any small trailing update the monitoring tools auto-write after the main commit — commit that separately rather than leaving it unstaged.
-2a. **Refresh the handover-transit bundle** (before the final commit that precedes opening the PR):
-   `python3 tools/handover_transit.py export`, then stage `agent-working/handover-transit/`. The
-   bundle is rolling — one per source host, each export replaces that host's previous one, so the
-   tree holds one small current bundle per machine and git history keeps the old ones. The bundle
-   carries only OPEN handover state (role notes, unmerged drafts, memory): completed work, merged
-   drafts and probe evidence are never exported, and a role removes its own completed drafts from
-   `.claude/handover/drafts/` when closing its work. See
-   `docs/guides/agent_session_reset_boundaries.md` ("Moving sessions between machines").
+2a. **Handover-transit bundle: not part of a PR.** Export it only before a machine move, in its own commit or PR, never
+   inside a ticket batch. The repo is public, so an export publishes every handover note, open draft and memory file; see
+   `docs/guides/agent_session_reset_boundaries.md` ("Moving sessions between machines"), the only place that prescribes it.
 3. **Push** the branch, then **create the PR** (`gh pr create`). The title and the generated body
    sections (`## What landed` through `## Verification`/`## Known gaps`, plus the `Closes:` line)
    come from `python3 tools/delivery/pr_render.py` — run it plain for readable stdout
@@ -363,7 +359,10 @@ The steps above cover diagnosing a failure; this covers the surrounding push→P
    `--theme "<one-line batch headline>"` to the render and the same `--theme` to `--check`;
    without it the title names the most recently closed ticket (the renderer prints a stderr
    `HINT:` when it renders more than one ticket with no theme). Hand-write only
-   `## Review notes` (the renderer never generates it — see its own module docstring). PR body: no
+   `## Review notes` (the renderer never generates it — see its own module docstring). The renderer also adds a
+   non-blocking discovery warning when the PR adds more than 200 KB of raw output under
+   `agent-working/stored_artifacts/**/probes/` (anything but `.py`/`.sh`/`.md`/`.txt`): commit probe scripts and summary
+   tables, keep a raw file only when a ticket cites it. PR body: no
    `Co-Authored-By`/session-link trailer, and no "🤖 Generated with [Claude Code](...)" (or
    equivalent tool-attribution) line either — commit message trailers still keep the
    `Co-Authored-By`/session-link trailer, this is a PR-body-only exclusion — this was an explicit

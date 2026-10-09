@@ -72,6 +72,19 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags: []
   places: []
+- id: forest_edge
+  type: wilderness
+  bounds:
+  - 44
+  - 10
+  - 72
+  - 38
+  terrain: forest
+  hazard_level: 0.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - forest
+  places: []
 factions:
 - id: hero_guild
   type: defender
@@ -232,6 +245,11 @@ resources:
   resource_type: wood_node
   count: 6
   region: orc_stronghold
+  regen_rate: 1
+- id: wild_edge_forage__berry_thicket_0
+  resource_type: berry_thicket
+  count: 10
+  region: forest_edge
   regen_rate: 1
 buildings:
 - id: town_hall_0

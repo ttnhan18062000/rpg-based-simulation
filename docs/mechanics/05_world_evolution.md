@@ -92,6 +92,7 @@ Conquest and liberation trigger at `CONQUEST_THRESHOLD = -50.0` / `LIBERATION_TH
 As `Hazard Level` increases, entities within the region suffer (`Hazard Level` is open-ended: authored values run to 4.0 and the generator authors above 1.0; owner decision 12):
 *   **Passive HP Drain**: Health is lost every tick based on the hazard's intensity.
 *   **Environmental Fatigue**: Sleep Debt increases by **+1.0** (extra exhaustion) due to extreme conditions.
+*   **Settled land and the near wild are survivable** (owner decision 30, rule ENV-08): towns, settlements, camps and the near edge of the wild carry no standing ambient hazard (`trading_hometown`, `survivor_outpost` and the `wolf_den_near_forest` `near_forest` are 0.0 in content); lethal ambient danger belongs to deep or cursed land. The drain is `int(level * 10)` whole HP per tick, so the smallest nonzero level (0.1) already costs a healthy 110-HP human a two-gather forage visit.
 *   **Suppression**: If a region is "Suppressed," entities lose **-5.0 Readiness** per tick, significantly slowing down their action frequency.
 
 #### Native Endurance to a Region's Hazard Kind

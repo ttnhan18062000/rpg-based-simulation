@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Tuple
-from src.ai.goals.base import GoalScorer, GoalScore
+from src.ai.goals.base import GoalScorer, GoalScore, NeedAccess
+from src.ai.goals.opening_steps import first_open_step
 from src.engine.need_pull import hunger_pull, sleep_pull
 from src.ai.goals.present_threat import present_threat_to
 from src.content_semantics.faction import are_entities_hostile
@@ -76,6 +77,18 @@ class SleepScorer(GoalScorer):
 
         return GoalScore(kind=GoalKind.FATIGUE, utility=_escalated_unless_threatened(entity, state, utility, sleep_pull(utility, bio.sleep_debt, rate, 0.0)))
 
+def _hunger_without_open_way(entity: EntityState, state: AuthoritativeState, utility: float, access: NeedAccess) -> GoalScore:
+    """Decision 27: no way is open now (`access` says why), so the pull goes to the step that opens one (forage); with no step the
+    subject can take it stays hungry and the goal says `no_open_step` (SURV-06's poverty outcome), keeping the raw hunger value and no target."""
+    step = first_open_step(entity, state)
+    if step is None or step.target_pos is None:
+        return GoalScore(kind=GoalKind.HUNGER, utility=utility, need_access=access, no_open_step=True)
+    pull = hunger_pull(utility, entity.biological.hunger, need_rates(entity)[0], _travel_tiles(entity, step.target_pos))
+    return GoalScore(
+        kind=GoalKind.HUNGER, utility=_escalated_unless_threatened(entity, state, utility, pull), target_id=step.target_id,
+        target_pos=step.target_pos, need_access=access, opening_step=step.kind)
+
+
 class EatScorer(GoalScorer):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
         bio = entity.biological
@@ -84,16 +97,18 @@ class EatScorer(GoalScorer):
             return GoalScore(kind=GoalKind.HUNGER, utility=bio.hunger)
 
         utility = bio.hunger
-        
+
         from src.engine.spatial_query import SpatialQueryService
         best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "inn")
-        # SURV-07: the pull grows with the hunger the subject will have on arrival at the inn (no inn: no walk).
+        # Decision 27: with no inn within reach there is nothing for the pull to point at, so it goes to the step that opens a way
+        # (forage); with no step the goal keeps the hunger value and says `no_open_step`. (Free meals stay on: an inn within reach is a
+        # way to eat whether or not the subject can pay, for every kind, a recorded flaw until the animals' own ways exist: owner decision 44.)
+        if best_bldg is None:
+            return _hunger_without_open_way(entity, state, utility, NeedAccess.NO_WAY_WITHIN_REACH)
+        # SURV-07: the pull grows with the hunger the subject will have on arrival at the inn.
         rate = need_rates(entity)[0]
-        if best_bldg:
-            utility = _escalated_unless_threatened(entity, state, utility, hunger_pull(utility, bio.hunger, rate, _travel_tiles(entity, best_bldg.position)))
-            return GoalScore(kind=GoalKind.HUNGER, utility=utility, target_id=str(best_bldg.id), target_pos=best_bldg.position)
-
-        return GoalScore(kind=GoalKind.HUNGER, utility=_escalated_unless_threatened(entity, state, utility, hunger_pull(utility, bio.hunger, rate, 0.0)))
+        utility = _escalated_unless_threatened(entity, state, utility, hunger_pull(utility, bio.hunger, rate, _travel_tiles(entity, best_bldg.position)))
+        return GoalScore(kind=GoalKind.HUNGER, utility=utility, target_id=str(best_bldg.id), target_pos=best_bldg.position, need_access=NeedAccess.WAY_WITHIN_REACH)
 
 
 class SocialScorer(GoalScorer):

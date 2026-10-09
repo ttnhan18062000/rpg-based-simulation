@@ -11,6 +11,38 @@
       "readiness": 100.0,
       "inventory_seed": "undead_empty",
       "cognition_seed": "undead_fixated",
+      "spawn_position": [
+        75.0,
+        116.0
+      ],
+      "spawn_region": "haunted_battlefield",
+      "count": 6,
+      "spawn_positions": [
+        [
+          75.0,
+          116.0
+        ],
+        [
+          62.0,
+          103.0
+        ],
+        [
+          86.0,
+          82.0
+        ],
+        [
+          66.0,
+          94.0
+        ],
+        [
+          71.0,
+          110.0
+        ],
+        [
+          73.0,
+          105.0
+        ]
+      ],
       "archetype_id": "undead_sentinel",
       "species_id": "undead",
       "role_id": "sentinel",
@@ -44,17 +76,20 @@
     "mountain_pass__iron_vein_0": {
       "required_ticks": 15,
       "resource_type": "iron_vein",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "iron_ore"
     },
     "mountain_pass__frost_shard_cluster_1": {
       "required_ticks": 24,
       "resource_type": "frost_shard_cluster",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "frost_shard"
     },
     "river_crossing__herb_patch_0": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "herb"
     }
   },
   "factions": {

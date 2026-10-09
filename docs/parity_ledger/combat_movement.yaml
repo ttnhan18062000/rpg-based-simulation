@@ -4808,3 +4808,13 @@
   test_path: tests/mechanic_scenarios/test_conflict04_movement_layer.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.89.
   support_boundary: 'Most remaining free hits have a non-engaged adjacent hostile as attacker (urban seed 45: 131 of 131 pairs); dropping the engagement condition froze entities up to 219 ticks and is not shipped (decision 32: notice and decide, a separate ticket). An idle task can stay blocked up to 19 ticks. The stale PURSUE movement-mode label on an idle task after a completed pursuit is unchanged.'
+- id: COMB-343
+  text: 'TCK-20261008-A-SUBJECT-NOTICES-AN-UNENGAGED-HOSTILE-COMING-ADJACENT-AND-DECIDES-DECISION-32: a subject beside a perceived hostile it is not engaged with is woken for the brain within two ticks (ADJACENCY_WAKE_COOLDOWN) and decides by its own combat-engagement verdict (ignore keeps walking, avoid steps away, watch stands and observes, else as before) (owner decision 32).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/scheduler.py (_is_woken, _throttled, _critical_item, ADJACENCY_WAKE_COOLDOWN), src/engine/candidate_selector.py (unengaged_adjacent_hostile), src/engine/tactical_hold.py (notice_unengaged_hostile), src/engine/tactical.py. Pinned 5x3 at 1500 and 5000 ticks in docs/guidelines/intentional_divergences.md Section 2.95: opportunity-attack hits 196.0 to 63.8, 140.2 to 94.6, 77.4 to 40.2 at 1500 ticks.'
+  proof_type: regression
+  test_path: tests/mechanic_scenarios/test_decision32_notice_and_decide.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.95.
+  support_boundary: 'IGNORE is unreachable in the corpus (KEEP_WALKING fires 0 times); WATCH is a typed HOLD wait (WATCH_HOSTILE); the wake bypasses the LOD throttle (6 percent of wakes); brain decisions +16 to +17 percent in crowded_frontier; total deaths converge by tick 5000 (a food-supply effect).'

@@ -98,15 +98,23 @@ def attested_without_verdict(rows: list[dict], week: str | None = None) -> list[
     the run died before the pipeline site recorded it, or the gate has no pipeline site. Listed, never dropped."""
     linked = {(r.get("ticket_id"), (r.get("inputs_ref") or {}).get("stdout_sha"))
               for r in rows if "row_kind" not in r and r.get("gate_type") != ATTESTED_GATE_TYPE}
+    # A transport mismatch is re-dispatched once (`inputs_ref.attempt` 2). The first attempt's row stays on disk, but it is
+    # superseded, not a second unrecorded verdict: only the retry's row stands for the (ticket, gate).
+    retried = {(r.get("ticket_id"), r.get("gate_id")) for r in rows
+               if "row_kind" not in r and r.get("gate_type") == ATTESTED_GATE_TYPE
+               and (r.get("inputs_ref") or {}).get("attempt", 1) > 1}
     return [r for r in rows
             if "row_kind" not in r and r.get("gate_type") == ATTESTED_GATE_TYPE
             and (week is None or _week_of(r.get("ts")) == week)
-            and (r.get("ticket_id"), (r.get("inputs_ref") or {}).get("stdout_sha")) not in linked]
+            and (r.get("ticket_id"), (r.get("inputs_ref") or {}).get("stdout_sha")) not in linked
+            and not ((r.get("ticket_id"), r.get("gate_id")) in retried
+                     and (r.get("inputs_ref") or {}).get("attempt", 1) == 1)]
 
 
 def derive_outcomes(verdicts: list[dict]) -> dict[str, dict]:
     """`{gate_verdict_id: {"outcome", "followup_verdict_id"}}` for a blocking verdict whose next verdict on the
-    same (ticket, gate) is a pass (`fixed_and_rerun`) or a block with the same inputs (`rerun_no_change`)."""
+    same (ticket, gate) has a later pass (`fixed_and_rerun`, first passing one is the follow-up) or whose next verdict
+    is a block with the same inputs (`rerun_no_change`)."""
     groups: dict[tuple, list[tuple[int, dict]]] = {}
     for index, row in enumerate(verdicts):
         if row.get("ticket_id") and row.get("gate_id"):
@@ -114,13 +122,20 @@ def derive_outcomes(verdicts: list[dict]) -> dict[str, dict]:
     derived: dict[str, dict] = {}
     for members in groups.values():
         members.sort(key=lambda pair: (str(pair[1].get("ts", "")), pair[0]))
-        for (_, current), (_, following) in zip(members, members[1:]):
+        rows = [row for _, row in members]
+        for position, current in enumerate(rows):
             if not current.get("blocking"):
                 continue
-            if not following.get("blocking"):
-                outcome = "fixed_and_rerun"
-            elif following.get("inputs_ref") == current.get("inputs_ref"):
-                outcome = "rerun_no_change"
+            later = rows[position + 1:]
+            if not later:
+                continue
+            # Any later pass on the same (ticket, gate) means the gate was eventually fixed, even when a second
+            # block with different inputs came in between (TCK-20261009-GATE-LEDGER-SELFCHECK-FALSE-UNRESOLVED-BLOCKS).
+            passing = next((row for row in later if not row.get("blocking")), None)
+            if later[0].get("blocking") and later[0].get("inputs_ref") == current.get("inputs_ref"):
+                outcome, following = "rerun_no_change", later[0]
+            elif passing is not None:
+                outcome, following = "fixed_and_rerun", passing
             else:
                 continue
             derived[current["gate_verdict_id"]] = {"outcome": outcome, "followup_verdict_id": following["gate_verdict_id"]}
@@ -157,8 +172,47 @@ def unresolved(view: list[dict]) -> list[dict]:
     return [v for v in view if v.get("blocking") and v["outcome"] is None]
 
 
+class PairedAttestedRow(ValueError):
+    """The id names an attested row that has a verdict row; the outcome belongs on that verdict id."""
+
+    def __init__(self, attested_id: str, verdict_id: str):
+        super().__init__(f"{attested_id} is an attested row paired with verdict {verdict_id}; record the outcome on {verdict_id}")
+        self.verdict_id = verdict_id
+
+
 def _known_verdict_ids(data_root: Path) -> set[str]:
-    return {r["gate_verdict_id"] for r in _split(load_rows(data_root))[0] if r.get("gate_verdict_id")}
+    """Verdict ids, plus the ids of attested rows with no verdict row (`attested_without_verdict`): a run that died before
+    its pipeline site recorded the gate leaves only the attested row, and its stop still has to be recordable. An attested
+    row that HAS a verdict row is refused by `_refuse_paired_attested`, so the double-count fix stands."""
+    rows = load_rows(data_root)
+    ids = {r["gate_verdict_id"] for r in _split(rows)[0] if r.get("gate_verdict_id")}
+    ids |= {r["gate_verdict_id"] for r in attested_without_verdict(rows) if r.get("gate_verdict_id")}
+    return ids
+
+
+def _refuse_paired_attested(gate_verdict_id: str, data_root: Path) -> None:
+    rows = load_rows(data_root)
+    attested = next((r for r in rows if r.get("gate_verdict_id") == gate_verdict_id and "row_kind" not in r
+                     and r.get("gate_type") == ATTESTED_GATE_TYPE), None)
+    if attested is None:
+        return
+    key = (attested.get("ticket_id"), (attested.get("inputs_ref") or {}).get("stdout_sha"))
+    for r in _split(rows)[0]:
+        if (r.get("ticket_id"), (r.get("inputs_ref") or {}).get("stdout_sha")) == key and r.get("gate_verdict_id"):
+            raise PairedAttestedRow(gate_verdict_id, r["gate_verdict_id"])
+
+
+def orphan_view(rows: list[dict]) -> list[dict]:
+    """Attested rows with no verdict row, shaped like `resolved_view` entries, with their latest recorded outcome."""
+    explicit = _latest_by_verdict(_split(rows)[1])
+    view = []
+    for row in attested_without_verdict(rows):
+        entry = dict(row)
+        vid = row.get("gate_verdict_id")
+        entry["outcome"] = explicit[vid]["outcome"] if vid in explicit else None
+        entry["adjudication"] = None
+        view.append(entry)
+    return view
 
 
 def _append(row: dict, data_root: Path, target: Path | None) -> bool:
@@ -174,6 +228,7 @@ def _append(row: dict, data_root: Path, target: Path | None) -> bool:
 def record_outcome(gate_verdict_id: str, outcome: str, followup_verdict_id: str | None = None, note: str | None = None,
                    data_root: Path = DEFAULT_DATA_ROOT, target: Path | None = None) -> dict:
     """Append an `outcome` row. Raises KeyError for an unknown verdict id, ValueError for an invalid row."""
+    _refuse_paired_attested(gate_verdict_id, data_root)
     if gate_verdict_id not in _known_verdict_ids(data_root):
         raise KeyError(gate_verdict_id)
     row = {"ts": _now(), "row_kind": gate_verdicts.ROW_KIND_OUTCOME, "gate_verdict_id": gate_verdict_id,
@@ -186,6 +241,7 @@ def record_outcome(gate_verdict_id: str, outcome: str, followup_verdict_id: str 
 def record_adjudication(gate_verdict_id: str, adjudication: str, adjudicated_by: str, reason: str,
                         data_root: Path = DEFAULT_DATA_ROOT, target: Path | None = None) -> dict:
     """Append an `adjudication` row. Raises KeyError for an unknown verdict id, ValueError for an invalid row."""
+    _refuse_paired_attested(gate_verdict_id, data_root)
     if gate_verdict_id not in _known_verdict_ids(data_root):
         raise KeyError(gate_verdict_id)
     row = {"ts": _now(), "row_kind": gate_verdicts.ROW_KIND_ADJUDICATION, "gate_verdict_id": gate_verdict_id,
@@ -332,10 +388,14 @@ def main(argv: list[str] | None = None) -> int:
             rows = load_rows(data_root)
             print(render_section(rows, args.week, len(_split(rows)[0])))
         else:
-            view = resolved_view(load_rows(data_root))
+            all_rows = load_rows(data_root)
+            view = resolved_view(all_rows) + orphan_view(all_rows)
             for v in (unresolved(view) if args.unresolved else view):
                 print(f"{v['gate_verdict_id']}  {v.get('ticket_id') or '-'}  {v['gate_id']}  {v['verdict']}  "
                       f"outcome={v['outcome'] or '-'}  adjudication={v['adjudication'] or '-'}")
+    except PairedAttestedRow as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
     except KeyError as exc:
         print(f"ERROR: unknown gate_verdict_id {exc.args[0]!r}", file=sys.stderr)
         return 2

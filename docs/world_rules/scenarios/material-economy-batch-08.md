@@ -4,12 +4,12 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-09"
 ---
 
 # Scenario Bank: Objects / Ownership / Resources / Economy (Batch 08)
 
-**Purpose/scope.** Eighteen scenarios used to pressure-test the Objects/Material Culture,
+**Purpose/scope.** Twenty-three scenarios (two added 2026-10-08 and three 2026-10-09 for EXCH-02) used to pressure-test the Objects/Material Culture,
 Ownership/Possession, Resources/Production, and Economy/Exchange rule families in
 `material-economy/objects-material-culture.md`, `ownership-possession.md`,
 `resources-production.md`, and `economy-exchange.md`, per `tmp/world-rule-batch-8-ext-ai.md`
@@ -259,6 +259,161 @@ an acceptable substitute; production remains valid.
   formulation (which would have forbidden this trajectory outright) and confirms the revised
   Rule permits it cleanly; this repository simply has not yet authored a recipe that exercises
   the permission.
+
+
+## ME-S19 — A broke worker sells what it gathered and buys a meal (EXCH-02, decision 34) (added 2026-10-08)
+
+A worker with no money chooses to sell goods it gathered (wood or ore, not food) to the shop,
+the shop pays out of its own purse, and the worker spends the coins on a meal.
+
+- **Rules invoked:** EXCH-02 (earn by selling; every coin comes out of the payer's own purse),
+  EXCH-01 (price, through `MarketSystem` per Bible 03), SURV-06 (buying is a way to eat).
+- **Kernel spec (`mechanic_scenario`, `tests/mechanic_scenarios/`, through
+  `tests/helpers/scenario.py`).** Two arms, differing only in the shop's purse:
+  - **Staging:** a compiled world with a town that has a shop and an inn, both within reach.
+    Worker W is a people-kind with 0 gold and no food, carrying enough of a non-food gathered
+    good (wood or iron ore) for its sale to pay for one inn meal, and hungry enough that decision
+    27's pull applies. The free meal is removed in this staging,
+    as in the full LB-S17. There are no hostiles.
+  - **Main arm (the shop's purse holds enough to buy):** W chooses to sell at the shop (a decided
+    act, AGENCY-01, not an automatic sale on standing nearby). W's gold rises by the sale price
+    and the shop's purse falls by the same amount. W's carried goods fall by the units sold and
+    the shop's stock rises by them. W then buys a meal at the inn: W's gold falls
+    by the meal price, the inn's purse rises by it, and W's hunger falls. Conservation holds
+    across the run: total coins, total goods and total food units, counting what has been eaten,
+    are unchanged.
+  - **Control arm (the shop's purse is empty):** the sale does not happen. W's gold stays 0, W
+    keeps its goods, and no inn meal is bought.
+  - **Why the control:** it proves the coins came out of the shop's purse, not from nowhere.
+  - **Why not food (revised 2026-10-09):** at `MarketSystem`'s sell price a berry earns 1 gold
+    while an inn meal costs 5, and a berry eaten removes 30 hunger. Selling food to buy food is
+    a bad trade that a sensible worker would not make, so the scenario sells a non-food good.
+    Gathered food is sold only as surplus (the seller keeps at least one meal's worth). That rule
+    is Lane B's to test, not this scenario's.
+- **Result (2026-10-08): revealed missing implementation on main.** No worker is seen selling,
+  and every worker starts with 0 gold (EXCH-02's evidence). Expected to be **covered** with Lane
+  B's batch 2.
+
+## ME-S20 — A broke worker works a shift at the inn, is paid from the inn's purse, and eats (EXCH-02, decision 34) (added 2026-10-08)
+
+A worker with no money and nothing to sell works a shift at the inn for a wage paid out of the
+inn's purse, then buys a meal.
+
+- **Rules invoked:** EXCH-02 (earn by a wage; the employer's purse pays), SURV-06.
+- **Kernel spec (`mechanic_scenario`).** Two arms, differing only in the inn's purse:
+  - **Staging:** a compiled town with an inn that employs people. Worker W is a people-kind with
+    0 gold and nothing to sell, hungry, with no hostiles and the free meal removed.
+  - **Main arm (the inn's purse holds at least one wage):** W works a shift. Afterwards W's gold
+    has risen by the wage, the inn's purse has fallen by the same amount, and time has passed
+    for the shift. W then buys a meal, its hunger falls, and the meal price returns to the inn's
+    purse. Total coins are conserved, and the inn's purse is checked over the whole run: it is
+    credited by every paid meal and bed and debited by every wage, never by anything else.
+  - **Control arm (the inn's purse is empty):** no wage is paid. Either W does not work, or it
+    works unpaid and no coin appears. W's gold stays 0 and no meal is bought.
+  - **Why the control:** it proves a wage is a transfer from a real purse, not a payout that
+    appears from nowhere.
+  - **Engineering, not observable:** the wage amount, the shift length, and how many people the
+    inn employs. Both values follow the fiction (decision 33). A shift is a few hours (roughly 100
+    to 300 ticks at 36 s per tick), paying about a meal or two. It is never sized to make the
+    loop close. If a plausible shift is too long for a broke worker to eat in time, that is a
+    finding for the designer, not a reason to shorten the shift.
+- **Result (2026-10-08): revealed missing implementation on main.** No paid-work concept exists.
+  Expected to be **covered** once Lane B's wage shape lands (the inn's own purse pays; shape
+  relayed by rpg-planner, 2026-10-09).
+
+---
+
+## ME-S21 — A broke worker does town work paid from the faction treasury, and an empty treasury pays nothing (EXCH-02, decision 37) (added 2026-10-09)
+
+A worker with no money does a stint of town work (for example hauling or keeping the streets for
+the settlement), is paid from its faction's treasury, and buys a meal. A treasury with no coin
+pays nobody.
+
+- **Rules invoked:** EXCH-02 (earn by a wage; every coin comes out of the payer's purse; decision
+  37: a faction treasury pays wages for town work), SURV-06 (buying is a way to eat).
+- **Kernel spec (`mechanic_scenario`).** Two arms, differing only in the treasury's balance:
+  - **Staging:** a compiled town of one faction, with an inn in reach whose purse and stock can
+    serve a meal. Worker W is a people-kind of that faction with 0 gold, nothing to sell and no
+    food, hungry enough that decision 27's pull applies. The inn offers no shift (or its purse
+    is empty), so the treasury is W's only wage. The free meal is removed. There are no hostiles.
+  - **Main arm (the treasury holds at least one wage):** W chooses town work and does it for a
+    stint of plausible length. Afterwards W's gold has risen by the wage, and the faction
+    treasury has fallen by the same amount. W then buys a meal at the inn, its hunger falls, and
+    the inn's purse rises by the price. Over the whole run, total coins are conserved across
+    the treasury, the inn's purse and every person's purse.
+  - **Control arm (the treasury is empty):** no wage is paid. Either W does not take the work, or
+    it works and no coin appears. W's gold stays 0 and no meal is bought.
+  - **Why the control:** it proves the town wage is a transfer out of the treasury, not minted.
+  - **Engineering, not observable:** what counts as town work, the wage and stint length (from the
+    fiction, as in ME-S20), and how a treasury refills (taxes, trade). Its refilling is a later
+    Rule's question.
+- **Result (2026-10-09): revealed missing implementation on main.** No wage path from a faction
+  treasury exists, and the treasury (`global_resources`, `faction_<id>_gold`) is held by no
+  building or person. Expected to be **covered** with
+  `TCK-20261009-THE-FACTION-TREASURY-PAYS-WAGES-FOR-TOWN-WORK-DECISION-37`.
+
+---
+
+## ME-S22 — A sale or a wage pays a share to the place-holder's treasury; a subject who earns nothing pays nothing (EXCH-02, decision 51) (added 2026-10-09)
+
+When coin changes hands in a place, a small share goes to the treasury of the faction that holds
+that place. A subject who earns and trades nothing pays no tax, however long it stays.
+
+- **Rules invoked:** EXCH-02 (every coin moves purse to purse; decision 51: tax is a share of
+  income or trade).
+- **Kernel spec (`mechanic_scenario`).** One town held by faction F, with a shop whose purse can
+  buy and an inn whose purse can pay a wage. Three subjects of the same kind, none hostile:
+  - **Seller S:** holds 0 gold and a sellable non-food good, and sells it at the shop. S's gold
+    rises by the price minus the share. The shop's purse falls by the full price. F's treasury
+    rises by exactly the share.
+  - **Worker W:** holds 0 gold and works one paid shift at the inn. W's gold rises by the wage
+    minus the share. The inn's purse falls by the full wage. F's treasury rises by exactly the
+    share.
+  - **Idler I (the control):** holds a few coins, sells nothing and earns nothing, and stays in
+    the town for the whole window. I's gold never falls by tax at any tick, and F's treasury
+    never rises because of I.
+  - **Conservation over the window:** total coins across every purse and the treasury are
+    unchanged. The treasury's rise equals the sum of the shares, and nothing else credits it.
+- **Engineering and content, not observable:** the share's size (light and plausible, decision
+  33), rounding, which side of a sale pays it, and whether non-members of F pay a different
+  share.
+- **Result (2026-10-09): revealed contradiction on main.** A regional levy takes 2 gold every 20
+  ticks from anyone present (`src/engine/town_resolution.py`), so I is taxed while earning
+  nothing (decision 51's evidence). Expected to be **covered** with
+  `TCK-20261009-TAX-IS-A-SHARE-OF-SALES-AND-WAGES-PAID-TO-THE-PLACE-HOLDERS-TREASURY-DECISION-51`.
+
+---
+
+## ME-S23 — A bounty and a quest reward come out of a payer's purse, and loot is only what the body carried (EXCH-02, decision 38) (added 2026-10-09)
+
+A reward is paid by someone: a bounty from the treasury of the faction that posted it, a quest
+reward from the giver's purse. Killing a creature yields only what it carried. No coin appears
+because a kill or a quest happened.
+
+- **Rules invoked:** EXCH-02 (every coin moves purse to purse; decision 38: rewards need a
+  payer), decision 37 (first coin is declared world content).
+- **Kernel spec (`mechanic_scenario`).** Four arms, on a world where every purse and treasury
+  balance is known at the start:
+  - **Bounty (posted):** faction F posts a bounty on a creature hostile to it. Subject H kills
+    the creature and claims the bounty. H's gold rises by the bounty, and F's treasury falls by
+    the same amount.
+  - **Bounty (unfunded):** the same, but F's treasury cannot cover the bounty. No bounty is
+    posted, or the claim pays nothing. No coin appears.
+  - **Quest reward:** giver G, holding coin, offers a task with a reward and H completes it. H's
+    gold rises by the reward and G's purse falls by the same amount. If G cannot pay, no reward
+    is offered.
+  - **Loot (control):** H kills a creature that no one has posted a bounty on. H gains exactly
+    what the body carried, coin and items, and the body is left without them. A creature that
+    carried nothing yields nothing; an animal never carries coin.
+  - **Conservation:** in every arm, total coins across every purse and treasury are unchanged.
+- **Engineering, not observable:** how bounties are posted and claimed, escrow, how a quest
+  giver is chosen, and reward sizes.
+- **Result (2026-10-09): revealed contradiction on main.** Kill rewards are minted by level
+  (`src/engine/combat.py`, `src/engine/combat_rewards.py`; MONSTER x5, HERO x50), and quest gold is
+  granted with no poster or escrow (`src/engine/quests.py:203-212`), both through
+  `_reward_result` in `src/core/conservation.py`, which credits and never debits. Spawned bodies,
+  wolves included, are given gold at birth (`src/systems/world_systems/generator.py`). Expected to
+  be **covered** with `TCK-20261009-MINTED-KILL-AND-QUEST-COIN-IS-PAID-BY-A-PAYER-EXCH-02-B`.
 
 ---
 

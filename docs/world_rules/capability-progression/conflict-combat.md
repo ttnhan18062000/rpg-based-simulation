@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-08"
+last_verified: "2026-10-09"
 ---
 
 # World Rule Family: Conflict / Combat
@@ -63,6 +63,34 @@ without combat).
 > threat" (a creature that is dangerous when intruded on or provoked, not an enemy by race)
 > differs from an enemy in when it CHOOSES to fight, which belongs to its own decision-making
 > layer (AGENCY-02). It never differs in whether it is ALLOWED to fight back or strike first.
+
+**Amendment, who is a threat or a quarry comes from appraisal, not faction (decided by the owner
+directly, 2026-10-09; rows 47 and 49 of the memo):**
+
+> Every creature judges another from what it perceives: the other's size and apparent strength,
+> whether one could eat the other, and its own hunger and condition. That appraisal decides
+> hunting, fleeing and wariness for every kind. A hungry creature may hunt one whose body its
+> diet can eat and which it judges it can overcome, whatever their factions. A creature is wary
+> of one that could eat and overcome it, keeping its distance and staying alert, and flees one
+> that approaches, stalks or chases it. Hunger is never read by the other side: a wolf lying
+> still or walking past draws wariness, not panic. Faction enmity remains an additional, social
+> reason for people-kinds to fight (war, feud), on top of the appraisal, not instead of it.
+
+- **Why:** decision 46 (roles from properties). Today "hostile" is a faction verdict
+  (`src/engine/hostility.py:41-66`, `is_hostile_compat`; `src/ai/goals/scorers_support.py:18`).
+  A hare could flee a wolf only if their factions were declared enemies, and a wolf could not
+  hunt a hare of its own wild faction (this Rule's same-faction refusal).
+- **Shape (Lane A, relayed by rpg-planner):** a relation between two creatures adds PREDATION (a
+  is hungry, a's diet can eat b's body, a judges it can overcome b, a perceives b) and DANGER (b
+  could eat and overcome a, and a perceives b; the response scales with what b is doing). The
+  threat terms (AGENCY-07, CONFLICT-04, decision 32) read any relation.
+- **Engineering, not this Rule:** how "can overcome" is estimated (today `apparent_power` reads
+  the opponent's true stats, `src/domains/combat_engagement/power.py:58`, which KNOW-02 objects
+  to), the wariness distance, and how approach or stalking is perceived.
+- **Alternatives not taken:** appraisal only, with faction dropped as a reason to fight; faction
+  hostility kept as the main gate with a narrow hunting exception; prey fearing only a
+  hungry-looking predator; prey fleeing any predator on sight.
+- **Evidence: CONFLICTING** until Lane A's hunting batch lands.
 
 **Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-06**
 (row 18 of `docs/plans/systemic_world/owner_decision_memo.md`; the owner confirmed the
@@ -167,6 +195,51 @@ was declared without any Rule on when a fighter accepts it.
 - **Engineering, not this Rule:** how holding is represented (a typed hold or guard action, not
   an empty step); preferring an adjacent hostile the subject is engaged with as its target; the
   stall counter's bookkeeping.
+- **Amendment, a hostile stepping into reach is noticed and decided (decided by the owner
+  directly, 2026-10-08; row 32 of the memo):** when a perceived hostile the subject is not
+  fighting comes to stand adjacent to it, because the subject walked up or the hostile came
+  close, the subject decides on it then. It may fight, step away, wait, or keep walking and pay
+  the disengagement cost knowingly. A committed walk does not carry it past a hostile it never
+  noticed, and nothing freezes it in place until a routine decision comes round.
+  - **Measured at the decision** (Lane A, relayed; 5 seeds x 3 worlds, crowded / living /
+    urban). Opportunity-attack hits per run:
+    - base: 185 / 158 / 87;
+    - steps away blocked from an engaged hostile only: 180 / 123 / 65;
+    - steps away blocked from any adjacent hostile: 14 / 37 / 8.
+
+    Deaths stay within 1 SD in every arm. The any-adjacent movement block froze subjects for
+    700 to 1,570 entity-ticks per run, up to 219 ticks beside a hostile they never decided
+    about, so a freeze at the movement layer is the alternative not taken. About 90 percent of
+    what remains after the engaged-only block is this case.
+  - **Engineering, not this Rule:** how the event reaches the decision layer (an event-driven
+    re-decision touches scheduling), and its cadence. This is feature work with its own ticket.
+  - **Evidence: SUPPORTED since #457 (`edda25490`, 2026-10-09), with one disclosed gap.**
+    Implemented by
+    `TCK-20261008-A-SUBJECT-NOTICES-AN-UNENGAGED-HOSTILE-COMING-ADJACENT-AND-DECIDES-DECISION-32`
+    (Lane A); divergence 2.95, parity COMB-343.
+    - **The wake:** the scheduler wakes the brain of a subject holding no action, with an
+      unengaged perceived hostile orthogonally adjacent, every 2 ticks ahead of its cadence. The
+      decision follows the subject's own combat-engagement verdict: avoid steps away, watch
+      holds (a typed `HOLD`, reason `WATCH_HOSTILE`), and other verdicts go to the tactical pass.
+    - **Pinned by** `tests/mechanic_scenarios/test_decision32_notice_and_decide.py` (control arm,
+      and the invariant that no two-tick adjacency episode ends without a decision).
+    - **Measured** (pinned, seeds 42-46, 1500 ticks; crowded / living / urban):
+      - opportunity-attack hits: 196.0 / 140.2 / 77.4 to 63.8 / 94.6 / 40.2;
+      - DEFEAT deaths: 14.2 / 15.2 / 6.2 to 6.6 / 8.0 / 5.4;
+      - total deaths: 28.6 / 33.0 / 17.4 to 21.2 / 29.8 / 17.2;
+      - adjacency episodes ending with no decision: about 80 percent before, none after;
+      - of the woken decisions, about half are fights (54 / 55 / 52 percent); WATCH is 21.6 /
+        15.4 / 13.8 per run; AVOID 15.2 / 10.4 / 8.6.
+    - **Disclosed gap:** keep walking (IGNORE) never fires, because the posture service never
+      returns it for these pairs (`TCK-20261009-IGNORE-POSTURE-IS-NEVER-PRODUCED-SO-KEEP-WALKING-CANNOT-FIRE-DECISION-32`).
+      Under decisions 47 and 49 the appraisal replaces faction hostility as the trigger in the
+      hunting batch.
+  - **Two follow-up rulings (owner, directly, 2026-10-09, on Lane A's per-world split):** a WATCH
+    posture means stand and observe, as a typed wait. It does not mean fight, because the router
+    withholds the attack under WATCH, so the subject would "fight on paper" and strike nothing.
+    "Keep walking and pay knowingly" (IGNORE) is built but unreachable today, because the posture
+    service never returns IGNORE for these pairs. That is accepted for now and disclosed;
+    making it reachable is a later combat_engagement ticket.
 - **Alternatives not taken:** back off between blows and re-close (today's behaviour, made
   intentional: one free hit per swing for no reason the fiction holds); hold only when winning
   (duplicates AGENCY-07's OUTMATCHED term, and a losing fighter has no better tile to step to).
@@ -204,6 +277,23 @@ Implemented by `TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04` (Lane A)
   already-queued ATTACK behaved the same before. Measured as a no-op (0 holds at low HP, 0
   deaths after a hold). If that stops holding, the fix is to re-decide a holding fighter when a
   present-threat term changes (AGENCY-07), not to drop the hold.
+
+**At the movement layer, SUPPORTED since #446 (`28e29ed2e`, 2026-10-08):**
+- **The rule:** an entity beside an engaged, perceived hostile takes no step from a stored or
+  reaffirmed navigation target. Only a decision this tick moves it, and a blocked held move is
+  released to the brain. Divergence 2.89 (Bug Fix), parity COMB-342.
+- **Pinned by** `tests/mechanic_scenarios/test_conflict04_movement_layer.py` (with a control arm)
+  and `tests/unit/engine/test_engaged_adjacent_hostile_takes_no_stored_step.py`.
+- **Measured** (pinned, seeds 42 to 46, 1500 ticks, `d671868bb` to the branch; crowded / living
+  / urban):
+  - opportunity-attack hits: 185.2 / 158.0 / 87.4 to 162.0 / 128.4 / 72.0;
+  - held-move hits: 102.4 / 92.6 / 40.6 to 61.2 / 46.8 / 18.2;
+  - total deaths: unchanged within 1 SD.
+- **What remains:** the hits left are against adjacent hostiles that are perceived but not
+  engaged. That is decision 32's case (notice and decide), in Lane A's next batch.
+- **Also in #446:** a chokepoint hold is a typed success that ends its task, not an
+  `UNSUPPORTED_ACTION` (divergence 2.90, parity COMB-015). This is a reporting fix with no
+  change to the trajectory.
 
 **Previously CONFLICTING, traced by Lane A on main `753f98ea9`** (relayed by rpg-planner, seeds
 42 to 46, 3 worlds; kept as found).

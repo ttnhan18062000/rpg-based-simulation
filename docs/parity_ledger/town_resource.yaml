@@ -2416,3 +2416,103 @@
   divergence_note: 'Intentional divergence 2.85 (Bug Fix): a held INTERACT on a missing
     or depleted node now ends instead of repeating a no-op.'
   support_boundary: null
+- id: TOWN-198
+  text: 'A hungry subject holding food eats it, and the item is consumed together with the meal (SURV-06): core EAT
+    with food in the bag removes one item and applies its recovery through a CARRIED_FOOD transfer, and a hungry
+    subject with food eats it in place when no present threat holds. EAT with nothing carried keeps its old relief
+    of 40 (the free meal, still on; its removal is parked on d27-free-meal-removal).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/core/conservation.py` (`_carried_food_result`, the `CARRIED_FOOD` source),
+    `src/engine/domain/core_actions.py` (`carried_meal`, `eat_update`), `src/engine/tactical_rest.py`
+    (`in_place_survival_update`, `eat_carried_update`); `docs/mechanics/03_economic_laws.md` section 3;
+    `docs/guidelines/intentional_divergences.md` section 2.91'
+  proof_type: parity
+  test_path: tests/unit/engine/test_biological_needs.py
+  divergence_note: 'Intentional divergence 2.91: a subject that carries food eats its own item (30) instead of taking the free 40.'
+  support_boundary: 'Held out: the free meal (EAT with nothing carried, the inn meal for a subject that cannot pay) is still on; its removal is parked.'
+- id: TOWN-199
+  text: 'Wild food is part of the land (SURV-06, owner decision 29): a food node stands only in wild land that
+    a settlement does not own, declared per biome (near forest and sacred grove 10 charges, swamp border 8, the
+    frontier-village biome none), regrowing at the flat default through the ecology process, never sized to demand.
+    A node of a kind with `placement: owned_by_declared_region` is placed on a tile its declared region owns
+    by region precedence (at most 64 draws, else no node and a compile warning).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`data/content/world/resources.yaml` (`berry_thicket`, `placement`), `data/content/world_modules/wolf_den_near_forest.yaml`,
+    `forest_warden_grove.yaml`, `sunken_swamp_border.yaml`, `src/worldbuilding/compiler.py` (`_draw_tile_owned_by`,
+    `_resource_profile`), `src/content/schema.py` (`ResourceDefinition.placement`); `docs/mechanics/03_economic_laws.md`
+    section 3; `docs/guidelines/intentional_divergences.md` section 2.91'
+  proof_type: parity
+  test_path: tests/unit/worldbuilding/test_wild_food_node.py
+  divergence_note: 'Intentional divergence 2.91: `crowded_frontier` and `urban_political` compose no wild land and so have no forage (reported, not added).'
+  support_boundary: null
+- id: TOWN-200
+  text: 'Every recipe resource node is placed on a tile its declared region owns by region precedence (up to 64
+    draws of its seeded stream; none found means no node and a compile warning), unless its kind opts out with
+    `placement: uniform`; a node whose first draw is already owned keeps its tile.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/worldbuilding/compiler.py` (`_draw_tile_owned_by`, `RESOURCE_PLACEMENT_UNIFORM`), `src/content/schema.py`
+    (`ResourceDefinition.placement`); `docs/mechanics/03_economic_laws.md` section 3; `docs/guidelines/intentional_divergences.md` section 2.96'
+  proof_type: parity
+  test_path: tests/unit/worldbuilding/test_wild_food_node.py
+  divergence_note: 'Intentional divergence 2.96 (Bug Fix): 46 misplaced nodes over 24 worlds and two seeds, 12 of them on town-owned tiles, now land on tiles their region owns.'
+  support_boundary: null
+- id: TOWN-201
+  text: 'Starting coin is declared world content (EXCH-02): a shop starts with a till of 250 gold and a stock of rations,
+    wood and ore, an inn with 100 gold and rations and bread, and the compiler applies every entity''s declared inventory
+    profile (gold and items); the village labourer starts with none (`laborer_empty`).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/content/schema.py` (`BuildingDefinition.starting_gold`, `starting_stock`), `src/worldbuilding/compiler.py`
+    (`_building_till`, `_with_declared_inventory`), `data/content/world/buildings.yaml`, `data/content/entities/inventory_profiles.yaml`;
+    `docs/guidelines/intentional_divergences.md` section 2.97'
+  proof_type: parity
+  test_path: tests/unit/worldbuilding/test_first_coin_is_declared_content.py
+  divergence_note: 'Intentional divergence 2.97 (Intentional Gameplay Change); minted kill and quest coin is a Bounded exception, 2.98.'
+  support_boundary: null
+- id: TOWN-202
+  text: 'Selling is a chosen act priced by MarketSystem (EXCH-01, EXCH-02): the SELL step and action move a subject''s spare goods to a shop
+    as one conserving transfer at MarketSystem''s sell price per unit times the quantity, paid out of the shop''s own purse; gear and a meal''s worth of
+    food stay with the subject; standing beside a shop sells nothing.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/shop_sale.py` (`plan_sale`, `spare_quantity`), `src/ai/goals/opening_steps.py` (`_earn_then_buy_step`),
+    `src/engine/building_services.py` (`service_delta`, `with_service`), `src/engine/domain/action_router.py`, `src/engine/tactical.py` (arrival dispatch), `src/engine/building_arrival.py`, `src/systems/economy_systems/market.py`;
+    `docs/mechanics/03_economic_laws.md` section 4; `docs/guidelines/intentional_divergences.md` section 2.100'
+  proof_type: parity
+  test_path: tests/unit/world/test_sell_is_a_chosen_act.py
+  divergence_note: 'Intentional divergence 2.100 (Intentional Gameplay Change and Bug Fix).'
+  support_boundary: 'Dormant in the measured worlds while the free meal stands (the ladder runs only when no inn is in reach); the end-to-end chain (ME-S19) is on the parked removal stack. Held out: paid work lives in TOWN-204.'
+- id: TOWN-203
+  text: 'A building service (a bed, a meal at the inn, a sale at the shop) lands when its action executes (SURV-06, EXCH-02), on whatever tick the
+    decision was made: the action asks the building in service reach and merges the service into its own update; the cadence-gated town phase
+    attaches none. A bed or an inn meal pays the building''s purse what was actually paid (free meals stay on, owner decision 44), so the inn''s coin is the subject''s coin.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/building_services.py`, `src/engine/domain/action_router.py`, `src/core/conservation.py` (`_service_credit`),
+    `src/engine/town_resolution.py`; `docs/guidelines/intentional_divergences.md` section 2.101'
+  proof_type: parity
+  test_path: tests/unit/world/test_building_services_land_with_their_action.py
+  divergence_note: 'Intentional divergence 2.101 (Bug Fix).'
+  support_boundary: null
+- id: TOWN-204
+  text: 'A subject that cannot afford a meal and has nothing to sell can work a shift at an inn (EXCH-02): the WORK action is held for SHIFT_TICKS
+    ticks beside the inn, then the inn pays WAGE_GOLD out of its own purse as one typed WAGE transfer, paid once per shift; a short purse pays
+    nothing.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/work_shift.py`, `src/core/conservation.py` (`_wage_result`), `src/ai/goals/opening_steps.py`, `src/engine/building_arrival.py`,
+    `src/engine/pipeline_phases/actions.py`; `docs/guidelines/intentional_divergences.md` sections 2.102 and 2.103, `src/engine/serves.py`'
+  proof_type: parity
+  test_path: tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py
+  divergence_note: 'Intentional divergence 2.102 (Intentional Gameplay Change).'
+  support_boundary: 'Dormant in the measured worlds while the free meal stands; ME-S20 is on the parked removal stack. Held out: the treasury wage for public town work (decision 37). People only (decisions 42 and 43): see 2.103.'
