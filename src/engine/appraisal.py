@@ -10,6 +10,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from src.cognition.common_knowledge import believed_danger_rank
+from src.core.items import food_class
 from src.content.schema import PROPERTY_BANDS
 from src.content_semantics.faction import get_species_id_str
 from src.engine.behavior_consumers import get_entity_signals, get_kind_properties, get_perception_gate
@@ -23,7 +24,7 @@ THREAT_RANGE = 4  # tiles: close enough that a creature that can eat you and is 
 WARY_DISTANCE = 5  # tiles: farther than THREAT_RANGE, so a wary creature starts keeping its distance before it is in danger
 # A subject believes it can overcome a kind only when its own power band ranks STRICTLY above the danger it believes that kind poses; a tie
 # is "cannot": wild creatures avoid a fight with an equal.
-HUNT_HUNGER = 95.0  # hunger at which a subject will hunt: the same line the hunger goal and the consequence line use
+HUNT_HUNGER = 40.0  # hunger at which a subject will hunt: the line at which food on hand would be eaten (tactical_rest.EAT_CARRIED_MIN_HUNGER)
 
 
 class Relation(str, Enum):
@@ -56,6 +57,26 @@ def can_eat(eater: "EntityState", other: "EntityState") -> bool:
     if eater_body is None or other_body is None:
         return False
     return bool(set(eater_body.diet or ()) & set(other_body.edible_as or ()))
+
+
+def can_eat_item(eater: "EntityState", item_id: str) -> bool:
+    """True when ``item_id`` is food whose class the eater's body can eat (decision 44: the diet gate).
+
+    A body whose diet is undeclared, or an entity with no known species, keeps the legacy "eats any food" behaviour: missing data gates
+    nothing."""
+    item_class = food_class(item_id)
+    if item_class is None:
+        return False
+    _, body = get_kind_properties(get_species_id_str(eater))
+    if body is None or body.diet is None:
+        return True
+    return item_class in body.diet
+
+
+def can_use_inn_meal(eater: "EntityState") -> bool:
+    """True when the inn's free meal (a prepared meal) is in the eater's diet; an undeclared diet keeps the legacy behaviour."""
+    _, body = get_kind_properties(get_species_id_str(eater))
+    return body is None or body.diet is None or "prepared" in body.diet
 
 
 def can_overcome(entity: "EntityState", other: "EntityState") -> bool:

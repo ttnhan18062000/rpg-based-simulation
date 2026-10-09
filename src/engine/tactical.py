@@ -2,7 +2,7 @@
 # Compliance IDs: COMB-013, COMB-014, COMB-015, COMB-016, COMB-209, COMB-210, COMB-215, COMB-254, COMB-255, COMB-263, COMB-264, COMB-265, COMB-267, COMB-268, COMB-269, COMB-270, COMB-271, COMB-274, COMB-275, COMB-276, COMB-277, STRAT-188
 # Compliance IDs: COMB-014, COMB-015, COMB-016
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 from dataclasses import replace
 import logging
 
@@ -279,6 +279,14 @@ class TacticalDecisionSystem:
                                 elif building_id is not None:
                                     return building_arrival_update(state, entity, project, building_id)
                                 else:
+                                    # Arrived at a carcass the hunger goal pointed at (decision 44): eat where it lies. The corpse id rides in the payload.
+                                    corpse = TacticalDecisionSystem._hunger_corpse(state, project, obj)
+                                    if corpse is not None:
+                                        return EntityUpdate(
+                                            entity_id=entity.id,
+                                            task=TaskUpdate(work_kind_set="ENTITY_ACT",
+                                                            payload_set={"action": "EAT", "reason": "EAT_AT_CORPSE", "corpse_id": corpse.id}),
+                                        )
                                     return EntityUpdate(entity_id=entity.id)
                             else:
                                 # Still en-route — update nav target and stay idle
@@ -777,6 +785,16 @@ class TacticalDecisionSystem:
                     }
                 )
             )
+
+    @staticmethod
+    def _hunger_corpse(state: AuthoritativeState, project: Any, obj: "ObjectiveState") -> Optional[Any]:
+        """The corpse a hunger objective points at, or None (the objective names a node, a building or a creature instead)."""
+        if getattr(project, "kind", "") != "hunger" or getattr(obj, "target_entity_id", None) is not None:
+            return None
+        try:
+            return state.corpses.get(int(obj.target))
+        except (TypeError, ValueError):
+            return None
 
     @staticmethod
     def _resolve_target_position(

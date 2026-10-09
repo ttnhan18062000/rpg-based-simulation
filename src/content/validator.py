@@ -138,6 +138,8 @@ def kind_property_gap_issues(repo: CatalogRepository) -> List[ValidationIssue]:
             missing.append("diet")
         if body is not None and body.edible_as is None:
             missing.append("edible_as")
+        if body is not None and "meat" in (body.edible_as or ()) and body.meat_yield <= 0:
+            missing.append("meat_yield")
         for key in missing:
             issues.append(ValidationIssue(
                 severity="WARNING", rule_id="CAT-PROP-001", target_id=species_id, filename="living/species.yaml",

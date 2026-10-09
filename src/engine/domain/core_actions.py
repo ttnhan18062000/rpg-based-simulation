@@ -44,9 +44,10 @@ def interact_released(entity: EntityState, state: Any, target_id: Any) -> Option
 
 def carried_meal(entity: EntityState, current_tick: int) -> List[ResourceTransferIntent]:
     """One transfer that consumes the first carried food item and applies its hunger recovery, or none when nothing edible is carried."""
+    from src.engine.appraisal import can_eat_item
     for stack in entity.inventory.items:
         recovery = food_hunger_recovery(stack.item_id)
-        if recovery > 0.0 and stack.quantity > 0:
+        if recovery > 0.0 and stack.quantity > 0 and can_eat_item(entity, stack.item_id):
             return [ResourceTransferIntent(
                 source_id=entity.id, source_kind="CARRIED_FOOD", transfer_kind="EAT", is_group_required=False,
                 items_remove=[ItemStack(item_id=stack.item_id, quantity=1)],
@@ -62,6 +63,38 @@ def eat_update(entity: EntityState, current_tick: int) -> EntityUpdate:
         return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0, resource_transfers=carried)
     return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0,
                         biological=BiologicalUpdate(hunger_delta=-40.0, last_meal_tick_set=current_tick))
+
+
+# How close (Manhattan tiles) an eater must be to a corpse to eat from it; the same reach as looting one.
+EAT_AT_CORPSE_REACH = 1.5
+
+
+def corpse_meal(entity: EntityState, corpse: Any, current_tick: int) -> List[ResourceTransferIntent]:
+    """One transfer that eats a unit of food from ``corpse`` where it lies (decision 44), or none when the eater is out of reach or the
+    carcass holds nothing its diet can eat. The corpse id is the transfer's source id: the meal is traceable to that body."""
+    from src.engine.appraisal import can_eat_item
+    if corpse is None:
+        return []
+    px, py = entity.navigation.position
+    if abs(px - corpse.position[0]) + abs(py - corpse.position[1]) > EAT_AT_CORPSE_REACH:
+        return []
+    for stack in corpse.items:
+        recovery = food_hunger_recovery(stack.item_id)
+        if recovery > 0.0 and stack.quantity > 0 and can_eat_item(entity, stack.item_id):
+            return [ResourceTransferIntent(
+                source_id=corpse.id, source_kind="CORPSE_FOOD", transfer_kind="EAT", is_group_required=False,
+                items_remove=[ItemStack(item_id=stack.item_id, quantity=1)],
+                biological_upd=BiologicalUpdate(hunger_delta=-recovery, last_meal_tick_set=current_tick))]
+    return []
+
+
+def eat_at_corpse_update(entity: EntityState, corpse_id: Any, context: Any, current_tick: int) -> EntityUpdate:
+    """EAT aimed at a corpse: the meal when it can be had, else a typed failure that ends the task so the brain re-decides."""
+    corpse = (getattr(context, "corpses", None) or {}).get(corpse_id)
+    meal = corpse_meal(entity, corpse, current_tick)
+    if not meal:
+        return EntityUpdate(entity_id=entity.id, navigation=NavigationUpdate(failure_reason=ReasonCode.SOURCE_MISSING if corpse is None else ReasonCode.SOURCE_DEPLETED))
+    return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0, resource_transfers=meal)
 
 
 class CoreActions:

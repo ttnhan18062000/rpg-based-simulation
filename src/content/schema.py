@@ -96,6 +96,7 @@ class BodyModelDefinition(CatalogBaseDefinition):
     size: Optional[str] = Field(None, description="Coarse body size band: small, medium or large (absent = undeclared)")
     diet: Optional[List[str]] = Field(None, description="Food classes this body can eat; [] declares none, absent is undeclared (decision 44)")
     edible_as: Optional[List[str]] = Field(None, description="Food classes this body feeds when eaten; [] declares none, absent is undeclared (decision 44)")
+    meat_yield: int = Field(0, ge=0, description="Raw meat units a dead body of this kind leaves (0 for a body that does not feed meat)")
 
     @field_validator("size")
     @classmethod
@@ -389,6 +390,16 @@ class ItemDefinition(CatalogBaseDefinition):
     use_kind: Optional[str] = Field(None, description="Explicit runtime usage kind")
     class_fit: List[str] = Field(default_factory=list, description="Explicit class fit tags")
     equipment_slot: Optional[str] = Field(None, description="Explicit equipment slot")
+    food_class: Optional[str] = Field(None, description="Food class of an edible item: plant, meat or prepared (decision 44); a food item that omits it counts as prepared")
+    hunger_recovery: Optional[float] = Field(None, ge=0.0, description="Hunger this item removes when eaten; a food item that omits it removes the default meal")
+
+    @field_validator("food_class")
+    @classmethod
+    def validate_food_class(cls, v: Optional[str]) -> Optional[str]:
+        """Reject a food class outside the declared vocabulary."""
+        if v is not None and v not in FOOD_CLASSES:
+            raise ValueError(f"food_class must be one of {FOOD_CLASSES}")
+        return v
 
 
 class RecipeDefinition(CatalogBaseDefinition):

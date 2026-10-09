@@ -19,6 +19,8 @@ from typing import List, Optional, Tuple
 
 from src.ai.goals.base import OpeningStepKind
 from src.core.items import food_hunger_recovery
+from src.content_semantics.faction import get_species_id_str
+from src.engine.appraisal import can_eat_item
 from src.core.state import AuthoritativeState, EntityState, ResourceNodeState
 from src.engine.rpg_depth import LeashService
 from src.engine.shop_sale import nearest_sale
@@ -32,6 +34,7 @@ class OpeningStep:
     available: bool
     reason: str = ""
     target_id: Optional[str] = None
+    target_entity_id: Optional[int] = None
     target_pos: Optional[Tuple[float, float]] = None
 
 
@@ -49,6 +52,8 @@ def _forage_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:
             continue
         if not LeashService.way_in_range(entity, node.position):
             continue  # a range-bound subject forages inside its range only
+        if not can_eat_item(entity, node.yields_item):
+            continue  # decision 44: the diet gate; a meat-only body does not forage berries
         distance = abs(node.position[0] - px) + abs(node.position[1] - py)
         if best is None or distance < best_distance:
             best, best_distance = node, distance
@@ -57,6 +62,56 @@ def _forage_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:
     if not _has_room_for(entity, best.yields_item):
         return OpeningStep(OpeningStepKind.FORAGE, False, "no room to carry what it would gather")
     return OpeningStep(OpeningStepKind.FORAGE, True, target_id=str(best.id), target_pos=best.position)
+
+
+# Fiction reasons: a scavenger smells carrion from farther than a hunter can track living prey; a hunt is held to the radius an entity-targeted
+# objective is held to (a target beyond it ends the objective), so the two cannot disagree.
+SCAVENGE_RADIUS = 20.0
+HUNT_RADIUS = 10.0
+
+
+def _within(entity: EntityState, position: Tuple[float, float], radius: float) -> Optional[float]:
+    distance = abs(position[0] - entity.navigation.position[0]) + abs(position[1] - entity.navigation.position[1])
+    return distance if distance <= radius else None
+
+
+def _scavenge_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:
+    """Decision 44: a carcass within reach holding food the subject's diet can eat, never of its own species."""
+    own_species = get_species_id_str(entity)
+    best, best_distance = None, 0.0
+    for corpse in state.corpses.values():
+        distance = _within(entity, corpse.position, SCAVENGE_RADIUS)
+        if distance is None or not any(s.quantity > 0 and can_eat_item(entity, s.item_id) for s in corpse.items):
+            continue
+        dead = state.entities.get(corpse.original_entity_id)
+        if dead is not None and get_species_id_str(dead) == own_species:
+            continue
+        if best is None or distance < best_distance:
+            best, best_distance = corpse, distance
+    if best is None:
+        return OpeningStep(OpeningStepKind.SCAVENGE, False, "no carcass within reach holding food its diet can eat")
+    return OpeningStep(OpeningStepKind.SCAVENGE, True, target_id=str(best.id), target_pos=best.position)
+
+
+def _hunt_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:
+    """Decision 44: the nearest living creature the subject appraises as PREDATION. Nothing is stored: the objective ends with its target, and the
+    relation is read again at every decision, so a subject that is fed or no longer perceives the target stops hunting."""
+    from src.engine.appraisal import Relation
+    from src.engine.hostility import relation
+    from src.engine.spatial_query import SpatialQueryService
+    best, best_distance = None, 0.0
+    for other_id in sorted(SpatialQueryService.nearby_entities(state, entity.navigation.position, HUNT_RADIUS)):
+        other = state.entities.get(other_id)
+        if other is None or other.id == entity.id or not other.combat.alive:
+            continue
+        if relation(entity, other) is not Relation.PREDATION:
+            continue
+        distance = _within(entity, other.navigation.position, HUNT_RADIUS)
+        if distance is not None and (best is None or distance < best_distance):
+            best, best_distance = other, distance
+    if best is None:
+        return OpeningStep(OpeningStepKind.HUNT, False, "no creature it can eat and believes it can overcome within reach")
+    return OpeningStep(OpeningStepKind.HUNT, True, target_id=str(best.id), target_pos=best.navigation.position, target_entity_id=best.id)
 
 
 def _earn_then_buy_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:
@@ -82,8 +137,9 @@ def _ask_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:
 
 
 def opening_steps(entity: EntityState, state: AuthoritativeState) -> List[OpeningStep]:
-    """Every opening step, in the order they are tried (forage, then earn-then-buy, then ask), each open or with its reason."""
-    return [_forage_step(entity, state), _earn_then_buy_step(entity, state), _ask_step(entity, state)]
+    """Every opening step, in the order they are tried (forage, scavenge, hunt, then earn-then-buy, then ask), each open or with its reason."""
+    return [_forage_step(entity, state), _scavenge_step(entity, state), _hunt_step(entity, state),
+            _earn_then_buy_step(entity, state), _ask_step(entity, state)]
 
 
 def first_open_step(entity: EntityState, state: AuthoritativeState) -> Optional[OpeningStep]:

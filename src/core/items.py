@@ -31,7 +31,7 @@ class ItemRegistry:
         ),
         "bread": ItemDefinition(
             id="bread", name="Bread", kind=ItemKind.CONSUMABLE, weight=0.2, 
-            properties={"heal_amount": 20, "hunger_recovery": 30.0}
+            properties={"heal_amount": 20, "hunger_recovery": 30.0, "food_class": "prepared"}
         ),
         "healing_potion": ItemDefinition(
             id="healing_potion", name="Healing Potion", kind=ItemKind.CONSUMABLE, weight=0.5,
@@ -208,8 +208,12 @@ class ItemRegistry:
                 elif kind == ItemKind.CONSUMABLE:
                     if "heal_amount" not in props and "healing" in categories:
                         props["heal_amount"] = 50
-                    if "hunger_recovery" not in props and "food" in categories:
-                        props["hunger_recovery"] = 30.0
+                    if "food" in categories:
+                        declared_recovery = getattr(v, "hunger_recovery", None) if not isinstance(v, dict) else v.get("hunger_recovery")
+                        declared_class = getattr(v, "food_class", None) if not isinstance(v, dict) else v.get("food_class")
+                        if "hunger_recovery" not in props:
+                            props["hunger_recovery"] = float(declared_recovery) if declared_recovery is not None else 30.0
+                        props.setdefault("food_class", declared_class or "prepared")
                 
                 cls._items[item_id] = ItemDefinition(
                     id=item_id,
@@ -223,6 +227,14 @@ class ItemRegistry:
             else:
                 # Native ItemDefinition
                 cls._items[k] = v
+
+
+def food_class(item_id: str) -> Optional[str]:
+    """The food class (plant, meat or prepared) of an edible item, or None for an item that is not food (decision 44)."""
+    definition = ItemRegistry.get(item_id)
+    if definition is None or float((definition.properties or {}).get("hunger_recovery", 0.0)) <= 0.0:
+        return None
+    return (definition.properties or {}).get("food_class", "prepared")
 
 
 def food_hunger_recovery(item_id: str) -> float:

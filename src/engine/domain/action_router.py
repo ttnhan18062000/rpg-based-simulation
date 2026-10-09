@@ -32,6 +32,9 @@ class ActionRouter:
         action = payload.get("action") if payload else None
 
         # Survival actions (biological necessities) bypass combat readiness.
+        if action == "EAT" and payload.get("corpse_id") is not None:
+            from src.engine.domain.core_actions import eat_at_corpse_update
+            return {entity.id: eat_at_corpse_update(entity, payload["corpse_id"], context, current_tick)}
         if action in ("SLEEP", "EAT", "REST", "SELL"):
             # A building service (bed, meal, sale) lands with its action, whichever tick the decision was made on (building_services.py).
             return with_service(CoreActions.execute_survival(entity, action, current_tick), entity, action, current_tick, context)

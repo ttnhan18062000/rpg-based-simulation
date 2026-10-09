@@ -24,7 +24,7 @@ from src.core.updates import (
 )
 
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState, EntityState, InventoryComponent
+    from src.core.state import AuthoritativeState, CorpseState, EntityState, InventoryComponent
     from src.core.updates import ResourceTransferIntent
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +45,7 @@ class TransactionResult:
     building_update: Optional[BuildingUpdate] = None
     ground_item_remove: Optional[int] = None
     corpse_remove: Optional[int] = None
+    corpse_update: Optional[CorpseState] = None
     reason: ReasonCode = ReasonCode.UNKNOWN
 
 def _wage_result(state: Any, intent: ResourceTransferIntent) -> TransactionResult:
@@ -74,6 +75,32 @@ def _carried_food_result(intent: ResourceTransferIntent, inventory: InventoryCom
         if sum(s.quantity for s in inventory.items if s.item_id == item.item_id) < item.quantity:
             return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
     return TransactionResult(accepted=True, inventory_update=InventoryUpdate(items_remove=intent.items_remove), biological_update=intent.biological_upd)
+
+
+def _corpse_food_result(
+    state: AuthoritativeState, intent: ResourceTransferIntent, reservations: Optional[Dict[Any, int]]
+) -> TransactionResult:
+    """Eating AT a corpse (decision 44): the meat leaves the carcass together with the meal, or nothing happens. The corpse id is the
+    source id, so every meal is traceable to the body it came from. The corpse stays (possibly empty) until it decays."""
+    corpse = state.corpses.get(intent.source_id)
+    if corpse is None:
+        return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)
+    if reservations and reservations.get(("CORPSE", intent.source_id), 0) > 0:
+        return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)
+    remaining = list(corpse.items)
+    for item in intent.items_remove:
+        left = item.quantity
+        for index, stack in enumerate(remaining):
+            if stack.item_id == item.item_id and left > 0:
+                taken = min(stack.quantity, left)
+                left -= taken
+                remaining[index] = replace(stack, quantity=stack.quantity - taken)
+        if left > 0:
+            return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
+    remaining = [stack for stack in remaining if stack.quantity > 0]
+    return TransactionResult(
+        accepted=True, biological_update=intent.biological_upd,
+        corpse_update=replace(corpse, items=remaining))
 
 
 def _reward_result(intent: ResourceTransferIntent, inventory_full: bool, reservations: Optional[Dict[Any, int]]) -> TransactionResult:
@@ -308,6 +335,9 @@ class ResourceTransactionResolver:
                  reward_update=intent.reward_upd
              )
         
+        elif intent.source_kind == "CORPSE_FOOD":
+            return _corpse_food_result(state, intent, reservations)
+
         elif intent.source_kind == "CARRIED_FOOD":
              return _carried_food_result(intent, target_inventory)
 

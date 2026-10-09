@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 from src.core.violent_cause import is_violent_building_destruction
 from src.core.enums import ReasonCode
 from src.core.state import CorpseState
+from src.engine.carcass import body_meat
 from src.core.updates import decode_owner_faction_id_set
 from src.engine.cadence import should_run
 from src.world.environment import EnvironmentService
@@ -347,7 +348,7 @@ class ApplyPlanBuilder:
                     id=corpse_id,
                     original_entity_id=e_id,
                     position=nav.position,
-                    items=list(inv.items),
+                    items=list(inv.items) + body_meat(entity),
                     decay_tick=tick + 100,
                 )
                 plan.new_corpses.append(corpse)

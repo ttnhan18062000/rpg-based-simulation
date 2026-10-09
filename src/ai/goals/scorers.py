@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Tuple
 from src.ai.goals.base import GoalScorer, GoalScore, NeedAccess
 from src.ai.goals.opening_steps import first_open_step
+from src.engine.appraisal import can_use_inn_meal
 from src.engine.need_pull import hunger_pull, sleep_pull
 from src.engine.sleep_debt import SLEEP_DEBT
 from src.engine.way_in_range import way_in_range
@@ -91,7 +92,7 @@ def _hunger_without_open_way(entity: EntityState, state: AuthoritativeState, uti
     pull = hunger_pull(utility, entity.biological.hunger, need_rates(entity)[0], _travel_tiles(entity, step.target_pos))
     return GoalScore(
         kind=GoalKind.HUNGER, utility=_escalated_unless_threatened(entity, state, utility, pull), target_id=step.target_id,
-        target_pos=step.target_pos, need_access=access, opening_step=step.kind)
+        target_pos=step.target_pos, target_entity_id=step.target_entity_id, need_access=access, opening_step=step.kind)
 
 
 class EatScorer(GoalScorer):
@@ -110,7 +111,7 @@ class EatScorer(GoalScorer):
         # Decision 27: with no inn within reach there is nothing for the pull to point at, so it goes to the step that opens a way
         # (forage); with no step the goal keeps the hunger value and says `no_open_step`. (Free meals stay on: an inn within reach is a
         # way to eat whether or not the subject can pay, for every kind, a recorded flaw until the animals' own ways exist: owner decision 44.)
-        if best_bldg is None:
+        if best_bldg is None or not can_use_inn_meal(entity):  # decision 44: a diet without prepared food has no inn meal
             return _hunger_without_open_way(entity, state, utility, NeedAccess.NO_WAY_WITHIN_REACH)
         # SURV-07: the pull grows with the hunger the subject will have on arrival at the inn.
         rate = need_rates(entity)[0]

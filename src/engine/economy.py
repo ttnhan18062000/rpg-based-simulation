@@ -34,6 +34,7 @@ class ResourceTransactionSystem:
         new_home_storage_updates = dict(update.home_storage_updates)
         new_ground_items_remove = list(update.ground_items_remove)
         new_corpses_remove = list(update.corpses_remove)
+        new_corpses_update = list(update.corpses_add_or_update)
         new_trace = list(update.transaction_trace)
         new_rejection_events = list(update.rejection_events)
         processed_ids = set(update.processed_transaction_ids)
@@ -114,7 +115,7 @@ class ResourceTransactionSystem:
                             # Logic ID: TOWN-014 (Inventory additions and world removals are authoritative side effects)
                             ResourceTransactionSystem._apply_world_effects(
                                 result, e_id, new_node_updates, new_building_updates,
-                                new_home_storage_updates, new_ground_items_remove, new_corpses_remove, reservations
+                                new_home_storage_updates, new_ground_items_remove, new_corpses_remove, reservations, new_corpses_update
                             )
 
                             if result.node_update:
@@ -201,7 +202,7 @@ class ResourceTransactionSystem:
                             
                             ResourceTransactionSystem._apply_world_effects(
                                 res, e_id, new_node_updates, new_building_updates,
-                                new_home_storage_updates, new_ground_items_remove, new_corpses_remove, reservations
+                                new_home_storage_updates, new_ground_items_remove, new_corpses_remove, reservations, new_corpses_update
                             )
 
                             if res.node_update:
@@ -284,6 +285,7 @@ class ResourceTransactionSystem:
             resource_updates=new_resource_updates,
             ground_items_remove=new_ground_items_remove,
             corpses_remove=new_corpses_remove,
+            corpses_add_or_update=new_corpses_update,
             transaction_trace=new_trace,
             rejection_events=new_rejection_events,
             processed_transaction_ids=list(processed_ids.union(in_tick_processed_ids)),
@@ -312,7 +314,7 @@ class ResourceTransactionSystem:
         return ent_upd
 
     @staticmethod
-    def _apply_world_effects(result, entity_id, nodes, buildings, home_storage, ground_rem, corpses_rem, reservations):
+    def _apply_world_effects(result, entity_id, nodes, buildings, home_storage, ground_rem, corpses_rem, reservations, corpses_upd=None):
         """Helper to apply world side effects from a successful resolution."""
         if result.node_update:
             node_id = result.node_update.node_id
@@ -348,3 +350,7 @@ class ResourceTransactionSystem:
         if result.corpse_remove is not None:
             corpses_rem.append(result.corpse_remove)
             reservations[("CORPSE", result.corpse_remove)] = 1
+
+        if result.corpse_update is not None and corpses_upd is not None:
+            corpses_upd[:] = [c for c in corpses_upd if c.id != result.corpse_update.id] + [result.corpse_update]
+            reservations[("CORPSE", result.corpse_update.id)] = 1

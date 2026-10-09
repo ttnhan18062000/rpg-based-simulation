@@ -73,6 +73,21 @@ naturally deprioritize exhausted nodes. See `docs/mechanics/04_strategic_cogniti
 `src/engine/economy.py` (RESOURCE_DEPLETED emitter),
 `src/domains/world_emergence/schema.py` (`WorldEventCategory`).*
 
+### 3.2 Meat from Bodies (Decision 44)
+A dead body is a source of food, and the only one that is not a resource node.
+
+*   **Source**: at death, whatever the cause, a body whose kind declares `edible_as: [meat]` leaves `meat_yield` units of `raw_meat` on its corpse
+    (the typed source `BODY_AT_DEATH`; `src/engine/carcass.py`). A kind that feeds nobody leaves none.
+*   **Sink**: meat leaves a corpse only by being eaten there (an `EAT` transfer whose source kind is `CORPSE_FOOD` and whose source id is the
+    corpse id, so every meal is traceable to the body it came from), by being looted (`CORPSE`), or when the corpse decays (the typed sink
+    `CORPSE_DECAY`).
+*   **Diet gate**: an eater may eat an item only if the item's `food_class` (`plant`, `meat`, `prepared`) is in its body's `diet`. An undeclared
+    diet keeps the legacy "eats any food". Raw meat fills less than a prepared meal (20 against 30: raw flesh is harder to digest).
+*   **Exclusions**: a kind never regards its own species as food, and a faction never hunts its own members.
+
+*Sources: `src/engine/carcass.py`, `src/core/conservation.py` (`_corpse_food_result`), `src/engine/domain/core_actions.py` (`corpse_meal`),
+`src/engine/appraisal.py` (`can_eat_item`), `data/content/living/body_models.yaml`, `data/content/world/items.yaml`.*
+
 ---
 
 ## 4. Commerce: The Market Law

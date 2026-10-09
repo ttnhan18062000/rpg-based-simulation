@@ -85,7 +85,9 @@ def eat_carried_update(entity: EntityState, hostiles: Sequence[EntityState]) -> 
     """An eat-what-you-carry update for a hungry subject holding food, or None. No building is needed; a present threat outranks it."""
     if entity.biological.hunger < EAT_CARRIED_MIN_HUNGER:
         return None
-    if not any(food_hunger_recovery(stack.item_id) > 0.0 and stack.quantity > 0 for stack in entity.inventory.items):
+    from src.engine.appraisal import can_eat_item
+    if not any(food_hunger_recovery(stack.item_id) > 0.0 and stack.quantity > 0 and can_eat_item(entity, stack.item_id)
+               for stack in entity.inventory.items):
         return None
     if hostiles and present_threat_terms(entity, list(hostiles)):
         return None
