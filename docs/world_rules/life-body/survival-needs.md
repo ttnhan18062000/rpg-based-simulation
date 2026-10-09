@@ -622,6 +622,34 @@ others, not a reflex.
     behaviour"); a redirect to any means, including crime (it creates ways to get food that no
     Rule declares).
 
+- **Amendment, providing for a coming need (decided by the owner directly, 2026-10-09; row 55 of
+  the memo):**
+
+  > A subject that can foresee a need provides for it before it presses. A person about to
+  > leave the reach of every way it has (a long trip, a hunt, a patrol into the wild) eats
+  > first or takes food with it, sized to the trip it plans. A kind whose nature is to keep a
+  > store (a cache, a larder, a granary) puts food by while it is plentiful and draws on it
+  > later. Foresight scales with the kind's wits, and storing is a declared habit of the kind,
+  > never a role label (decision 46). A creature with little foresight acts only on the need it
+  > feels now. Providing ahead is attempted, not guaranteed, and it creates no food: it moves
+  > food the subject already has or can get by a SURV-06 way.
+
+  - **Why:** without it, every subject is purely reactive. It acts only once the pull is
+    already high, so a traveller sets out with nothing and starves beyond reach of a way. Real
+    people and many animals plan their next meals.
+  - **When it is built:** milestone 3 of the foundation path (roadmap §12.3), with spoilage
+    and preserving. A store or a pack of provisions only makes sense once food can spoil and be
+    kept. The milestone 0 gate stays reactive, and its held-chase defect is fixed and measured
+    first.
+  - **Engineering, not this Rule:** how far ahead a wits band plans, how a trip's need is
+    estimated, the property naming the storing habit, and where a store lives (it is durable
+    state with an owner, ownership rules apply).
+  - **Alternatives not taken:** build the trip half in milestone 1 with the wits property (it
+    widens milestone 1 beyond its no-name-checks gate); leave it as a known gap for the whole
+    foundation (subjects stay purely reactive).
+  - **Scenario owed** when it is built: a person who plans a trip beyond its ways eats or packs
+    food first and comes back fed; a low-wits creature on the same trip does not.
+
 **Repository evidence: PARTLY SUPPORTED for the amendment since #454 (`0b4f12af7`, 2026-10-09);
 the escalation and the present-threat gate shipped in #414 (`c2e18b182`).** Lane A's trace, `crowded_frontier`, seed 42, on #403's tree:
 - `ResolveBlockerScorer` returns a flat 80.0 whenever an unresolved, unsuppressed blocker exists

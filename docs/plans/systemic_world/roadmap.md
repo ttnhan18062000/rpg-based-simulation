@@ -875,6 +875,7 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 52. whether people hunt at milestone 0 (decided 2026-10-09: yes, eating raw kills by the same reading as every creature, SURV-06);
 53. a kind its properties leave with nothing to overcome (decided 2026-10-09: its own description decides; otherwise a scavenger, disclosed; the Cave Spider is one, SURV-06);
 54. the milestone-0 gate (decided 2026-10-09: hard logic checks H1-H7, report-only figures R1-R5 with stop lines to the owner, §12.3).
+55. whether subjects provide for a coming need (decided 2026-10-09: yes, scaled by wits, with storing as a declared habit; the rule is written now and built in milestone 3, SURV-07).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
@@ -1144,11 +1145,13 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
    - Corpse fate: butchery, scavenging, rot, burial.
    - Spoilage by food type, with cooking and drying to preserve.
    - Fire needs fuel and a place.
+   - Providing for a coming need (decision 55, SURV-07): eating or packing food before leaving
+     the reach of one's ways, and stores for kinds that keep them, scaled by wits.
    - Water, cold and disease are recorded as explicit "not yet" choices; shelter and cold come
      first if rough sleep proves too easy.
 
-   Done when a resting wounded creature recovers, a hunt's meat spoils unless used, and a cooked
-   meal fills more than a raw one.
+   Done when a resting wounded creature recovers, a hunt's meat spoils unless used, a cooked
+   meal fills more than a raw one, and a person who sets out beyond its ways takes food with it.
 
 **How the path runs:**
 - Each milestone's rule work (catalog text, kernel specs) is done before its code.
