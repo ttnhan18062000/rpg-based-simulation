@@ -157,8 +157,8 @@ The gate CLIs write one `gate_verdicts` row per verdict (`docs/agent-monitoring/
 override or stop on a blocking verdict instead of fixing and re-running it, record that with
 `python3 tools/agent-monitoring/gate_ledger.py outcome --gate-verdict-id <id> --outcome overridden|stopped [--note ...]`;
 `gate_ledger.py list --unresolved` shows the ids still open. A fix and re-run is derived without any entry
-(a later pass on the same ticket and gate is `fixed_and_rerun`; the same block on the same inputs is
-`rerun_no_change`). A run that died before its pipeline site recorded the gate leaves only an attested row; `outcome`
+(any later pass on the same ticket and gate is `fixed_and_rerun`, even past an intervening block with other inputs; the same block on the same inputs is
+`rerun_no_change`). `done_checker_static.py` records Part A (`cli:done_checker_static`, phase Verify) and Part B (`Finalize:...run_finalize_selfcheck`) as separate rows; precheck on an already-closed ticket (`--part both`) is recorded non-blocking with `inputs_ref.post_close`. After a close, run `--part finalize` (or omit `--part`), not `--part both`. A run that died before its pipeline site recorded the gate leaves only an attested row; `outcome`
 accepts that id too, but an attested row that has a verdict row refuses and names the verdict id to use. When someone rules on whether a verdict was right, `gate_ledger.py adjudicate`. When
 `post_native_run_check.py` fails a gate that the native run attested as PASS, it records the `false_pass`
 itself. Recording an override is bookkeeping, not permission: never edit an artifact to make a gate pass.

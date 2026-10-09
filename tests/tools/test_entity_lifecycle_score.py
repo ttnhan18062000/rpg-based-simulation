@@ -359,6 +359,7 @@ class TestRealIntegration:
             if run_dir and run_dir.startswith("data/runs/"):
                 shutil.rmtree(run_dir, ignore_errors=True)
 
+    @pytest.mark.resource_budget_large
     def test_sandbox_world_800t_end_to_end_produces_sane_output(self, weights):
         """Real, non-mocked, real Kernel run: confirms the tool runs end-to-end on a real world
         without crashing and produces non-trivial, sane output -- the same real check performed
