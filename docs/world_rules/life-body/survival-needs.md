@@ -264,8 +264,9 @@ profiles reach the same hunger at different times.
 > - **People** meet hunger in two ways: they eat a meal where meals are served (the inn, for a
 >   price), or they eat food they carry. They come to carry food by buying it, by harvesting or
 >   foraging it, or by receiving it (loot, gift, inheritance).
-> - **Predators** hunt, **grazing creatures** forage, and **people-kinds without a meal place**
->   eat carried, foraged or looted food.
+> - **Meat-eaters** hunt, **plant-eaters** forage, and **people-kinds without a meal place**
+>   eat carried, foraged or looted food. (Which kind hunts which follows from properties, not
+>   labels: see the decision-46 amendment below.)
 > - **A kind with no hunger** has no hunger path and needs none (SURV-05).
 > - **Rest:** every kind with a rest need can rest in place, sleeping rough, wherever it is not in
 >   danger. A bed (an inn or a home) only makes rest better; rest never requires a building.
@@ -274,6 +275,35 @@ profiles reach the same hunger at different times.
 > that kind's ways to meet each of its needs. That guarantees a way exists, not that every
 > individual can afford it: a penniless subject with nothing to forage may starve, and that is an
 > outcome, not a defect.
+
+**Amendment, roles come from properties, never from labels (decided by the owner directly,
+2026-10-09; row 46 of the memo):**
+
+> "Predator", "prey", "grazer" and "hunter" are not kinds' labels. They describe what a creature
+> ends up doing, given what it is and what is around it. A kind declares its properties: its
+> body size, its power, how dangerous it is, its wits, what its diet can eat, and whether its
+> body is edible and to which diets. Whether one creature hunts another follows from those
+> properties and the moment: the hunter is hungry, its diet can eat the other's body, and it can
+> overcome the other. Whether a creature flees another follows from the danger it perceives.
+> A small, weak, edible animal is hunted by larger meat-eaters because of what it is, not
+> because it is marked as prey.
+
+- **Consequences:**
+  - No species carries a "prey" or "predator" flag, and no behaviour reads one.
+  - The same creature can be hunter in one meeting and hunted in another: a wolf hunts a hare
+    and flees a bear.
+  - A hungry wolf may turn on a lone person when nothing easier is near, and keeps away from a
+    group it cannot overcome.
+  - People hunt (decision 31) by the same reading.
+- **Applies everywhere, not only to food:** the same principle holds for every role a kind
+  might be given. A role is an outcome of declared properties and the situation, not an authored
+  tag, unless a rule says why a tag is the property itself (for example decision 43's "keeps
+  coin and trades", which is a cultural fact about the kind, not a role).
+- **Engineering, not this Rule:** the property names and scales, how "can overcome" is
+  estimated (it may reuse combat_engagement's posture verdict and KNOW-04's common-knowledge
+  danger prior), and how edibility maps bodies to diets.
+- **Repository finding to check:** LB-S15 cites an individual-level `ecological_predator` role
+  classification. If behaviour reads it as a fixed label, it is CONFLICTING with this amendment.
 
 **Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
 (row 23 of `docs/plans/systemic_world/owner_decision_memo.md`). Passes the admission test: SURV-02
@@ -410,13 +440,17 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
     this Rule's per-kind ways.
   - **MISSING: hunting.** A kill pays gold and XP only. No meat, carcass or hide item exists in
     the catalog, a corpse holds loot and not food, and there is no eat-corpse action.
-  - **MISSING: prey and grazers.** The corpus has 13 species and no herbivore or small game, so
-    a wolf's only possible prey is people, goblins or other predators. **Decided by the owner
-    directly, 2026-10-09 (row 45 of the memo): add a few prey kinds,** small herbivores such as
-    deer and hares. They graze wild land, breed, and flee predators. Wolves then mostly eat game
-    and turn on people mainly when game is scarce, and people gain something to hunt
-    (decision 31). Species, numbers and placement are content; their grazing is SURV-06's
-    "grazing creatures forage", and their numbers follow ECOL's population rules, never a target.
+  - **MISSING: small, edible, plant-eating animals.** The corpus has 13 species and no herbivore
+    or small game, so the only creatures a wolf could hunt are people, goblins or other
+    meat-eaters. **Decided by the owner directly, 2026-10-09 (row 45 of the memo): add a few
+    animal kinds such as hares and deer.** They are declared by their properties only (decision
+    46): animals of low wits and low power, smaller than an average person, with plant-eating
+    diets, and edible to meat-eaters. Nothing marks them as prey. They end up hunted because
+    larger meat-eaters can overcome and eat them, and they end up fleeing because they perceive
+    danger. Wolves then mostly eat these animals and turn on people mainly when they are scarce,
+    and people gain something to hunt (decision 31). Species, numbers and placement are content.
+    Their grazing is foraging by a plant-eating diet, and their numbers follow ECOL's population
+    rules, never a target.
     Scenario: [LB-S21](../scenarios/life-body-batch-05.md#lb-s21) (grazes, flees a noticed
     predator, numbers change only by births and deaths).
   - **Scenario:** [LB-S20](../scenarios/life-body-batch-05.md#lb-s20) (a predator eats what it
