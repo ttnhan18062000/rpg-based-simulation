@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_7bae64c14bf10630",
+  "manifest_id": "prov_95574611238b203e",
   "world_id": "unit_faction_tension",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
+  "catalog_fingerprint": "84181d5d641345ff21967786aee997f200d7d23b1e56eead7bb39691d2b1dfd4",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
-    "wolf_den_near_forest": "87c915735d10b1e943f14fd2a5b0b88109c22089f33c0a51a1dd8e12e9ba7584"
+    "wolf_den_near_forest": "705d6afb6e0b2992d1fde612cc46a9f55d6e9eddd4cda6c15e864b76f3e62d81"
   },
   "composition_fingerprint": "33c3e3cef9965cf9e21b001b27d21a92774da72d8627f90b530ad5ce10c0d98d",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "7bae64c14bf10630361dfe967a960e73b049bde5e0bacc4586c2a84870e95586",
-  "created_at": "2026-10-09T03:58:53.837580Z",
+  "content_fingerprint": "95574611238b203e809edc697558b0a1954758145a11f67ba42866ecf34ada2b",
+  "created_at": "2026-10-09T13:49:27.550511Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -202,6 +202,18 @@
       },
       "details": {
         "description": "Spirit faction protecting sacred or haunted territories."
+      }
+    },
+    "wild_fauna": {
+      "element_id": "wild_fauna",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Unaffiliated wild creatures. No faction verdict toward anyone."
       }
     },
     "hometown": {
@@ -588,6 +600,30 @@
         "spawn_region": "wolf_den",
         "archetype_source": "alpha_wolf",
         "population_recipe_source": "wolf_pack_small"
+      }
+    },
+    "small_plant_eater_herd_wild_small_plant_eater": {
+      "element_id": "small_plant_eater_herd_wild_small_plant_eater",
+      "element_type": "population",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "wild_creature",
+        "faction": "wild_fauna",
+        "stats_profile": "small_plant_eater_base",
+        "inventory_profile": "empty_animal_inventory",
+        "cognition_profile": "instinctive_animal",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "NEUTRAL"
+        }
+      },
+      "details": {
+        "count": 6,
+        "spawn_region": "near_forest",
+        "archetype_source": "wild_small_plant_eater",
+        "population_recipe_source": "small_plant_eater_herd"
       }
     },
     "wolf_den_near_forest__wood_node_0": {

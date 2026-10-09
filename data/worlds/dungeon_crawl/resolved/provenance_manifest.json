@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_ad6bb8664edf96ec",
+  "manifest_id": "prov_014e5104f194e9b5",
   "world_id": "dungeon_crawl",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
+  "catalog_fingerprint": "84181d5d641345ff21967786aee997f200d7d23b1e56eead7bb39691d2b1dfd4",
   "module_fingerprints": {
     "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71",
     "scalable_bandit_camp": "082f8715e9546c290140e123b62fcbc252117e4322c2324d3b728ab8a5daf9c1"
   },
   "composition_fingerprint": "fe77fe0c7199bc49ea1ddfebce5f839db5667b70a77eb1a86a62ed856b7524ea",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "ad6bb8664edf96ec2c939301647f794ba94ed68ce4c0ee4988acac57d52260d0",
-  "created_at": "2026-10-09T03:58:30.010197Z",
+  "content_fingerprint": "014e5104f194e9b586f83d0900013e5db73dc35d1fe9e7cce63431523b82aa23",
+  "created_at": "2026-10-09T13:49:05.577821Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -202,6 +202,18 @@
       },
       "details": {
         "description": "Spirit faction protecting sacred or haunted territories."
+      }
+    },
+    "wild_fauna": {
+      "element_id": "wild_fauna",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Unaffiliated wild creatures. No faction verdict toward anyone."
       }
     },
     "haunted_battlefield": {
