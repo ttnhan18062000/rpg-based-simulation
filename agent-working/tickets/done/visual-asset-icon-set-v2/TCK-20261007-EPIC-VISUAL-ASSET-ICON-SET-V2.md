@@ -15,7 +15,7 @@ tags: [architecture, hud, planning]
 Icon set v2: the remaining location, building, class, rarity and item-family icons as a second draft set for the owner's adopt-set, drawn against the adopted key set, no app wiring
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
