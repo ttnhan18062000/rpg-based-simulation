@@ -28,6 +28,13 @@ if TYPE_CHECKING:
     from src.core.updates import ResourceTransferIntent
 
 @dataclass(frozen=True, slots=True)
+class SourceDebit:
+    """What a transfer takes from another entity's own inventory (an inheritance), applied with the receipt or not at all."""
+    entity_id: int
+    inventory_update: InventoryUpdate
+
+
+@dataclass(frozen=True, slots=True)
 class TransactionResult:
     """Outcome of a resource transfer resolution."""
     accepted: bool
@@ -45,6 +52,7 @@ class TransactionResult:
     building_update: Optional[BuildingUpdate] = None
     ground_item_remove: Optional[int] = None
     corpse_remove: Optional[int] = None
+    source_debit: Optional[SourceDebit] = None
     reason: ReasonCode = ReasonCode.UNKNOWN
 
 def _wage_result(state: Any, intent: ResourceTransferIntent) -> TransactionResult:
@@ -66,6 +74,25 @@ def _service_credit(state: Any, intent: ResourceTransferIntent, price: int) -> O
     if not isinstance(intent.source_id, int) or price <= 0 or intent.source_id not in state.buildings:
         return None
     return BuildingUpdate(building_id=intent.source_id, inventory=InventoryUpdate(gold_delta=price))
+
+
+def _inherit_result(state: Any, intent: ResourceTransferIntent, inventory_full: bool) -> TransactionResult:
+    """EXCH-02: what the dead entity carried, items and coin, moves to its heir, once. The dead entity is debited with the heir's receipt, so
+    a receipt the heir cannot take (a full inventory) leaves the goods where they were and nothing is copied."""
+    dead = state.entities.get(intent.source_id) if isinstance(intent.source_id, int) else None
+    if dead is None:
+        return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)
+    if inventory_full:
+        return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)
+    for item in intent.items_add:
+        if sum(s.quantity for s in dead.inventory.items if s.item_id == item.item_id) < item.quantity:
+            return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
+    if intent.gold_delta < 0 or dead.inventory.gold < intent.gold_delta:
+        return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
+    return TransactionResult(
+        accepted=True,
+        inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta),
+        source_debit=SourceDebit(entity_id=dead.id, inventory_update=InventoryUpdate(items_remove=intent.items_add, gold_delta=-intent.gold_delta)))
 
 
 def _carried_food_result(intent: ResourceTransferIntent, inventory: InventoryComponent) -> TransactionResult:
@@ -184,9 +211,10 @@ class ResourceTransactionResolver:
             if reservations and reservations.get(("CORPSE", intent.source_id), 0) > 0:
                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)
             
+            # The body's coin is the body's own (EXCH-02): the looter takes what the corpse holds, whatever the intent says.
             return TransactionResult(
                 accepted=True,
-                inventory_update=InventoryUpdate(items_add=intent.items_add),
+                inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=corpse.gold),
                 corpse_remove=intent.source_id
             )
 
@@ -283,6 +311,9 @@ class ResourceTransactionResolver:
 
         elif intent.source_kind == "WAGE":
             return _wage_result(state, intent)
+
+        elif intent.source_kind == "INHERIT":
+            return _inherit_result(state, intent, inventory_full)
 
         elif intent.source_kind in ("COMBAT", "QUEST"):
             return _reward_result(intent, inventory_full, reservations)

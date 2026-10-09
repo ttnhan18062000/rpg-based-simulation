@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate
 from src.core.combat_constants import TERMINAL_COMBAT_OUTCOME_KINDS
 from src.core.violent_cause import is_violent_death_cause
+from src.core.enums import Faction
+from src.core.treasury import treasury_key
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, RegionState, EntityState
@@ -296,15 +298,24 @@ class WorldDynamicsSystem:
         
         # 5.3 Corpses & Ground Items (Decay)
         corpses_remove = list(update.corpses_remove)
+        resource_updates = dict(update.resource_updates)
         for cp_id, corpse in state.corpses.items():
             if state.tick >= corpse.decay_tick:
                 corpses_remove.append(cp_id)
+                if corpse.gold > 0:
+                    # Coin on a decayed body is not lost (EXCH-02): it escheats to the treasury of the faction that holds the ground it lies on,
+                    # or the neutral treasury where nobody does.
+                    region = WorldDynamicsSystem._get_region_for_pos(state, corpse.position)
+                    owner = region.owner_faction_id if region is not None and region.owner_faction_id is not None else int(Faction.NEUTRAL)
+                    key = treasury_key(owner)
+                    resource_updates[key] = resource_updates.get(key, 0.0) + corpse.gold
 
         return update.replace(
             world_updates=refined_world_updates,
             node_updates=refined_node_updates,
             chest_updates=refined_chest_updates,
-            corpses_remove=corpses_remove
+            corpses_remove=corpses_remove,
+            resource_updates=resource_updates
         )
 
     @staticmethod

@@ -1,6 +1,6 @@
 # Compliance IDs: PERF-014, PERF-015
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace as _dc_replace
 from typing import Dict, Any, List, Optional, Set, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -349,8 +349,12 @@ class ApplyPlanBuilder:
                     position=nav.position,
                     items=list(inv.items),
                     decay_tick=tick + 100,
+                    gold=int(inv.gold),
                 )
                 plan.new_corpses.append(corpse)
+                # The body now holds what the dead entity carried: it MOVES, so the dead record keeps nothing (EXCH-02: goods and coin exist once).
+                if inv.items or inv.gold:
+                    changes["inventory"] = _dc_replace(inv, items=[], gold=0)
                 cols.add("corpses")
                 
             # Precompute dirty tags

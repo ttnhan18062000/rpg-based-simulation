@@ -1252,6 +1252,7 @@ class CorpseState:
     position: tuple[float, float]
     items: List[ItemStack]
     decay_tick: int
+    gold: int = 0  # the dead entity's coin, moved here at death (EXCH-02): taken by a looter, or paid to the place holder's treasury at decay
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -1263,6 +1264,7 @@ class CorpseState:
             "position": self.position,
             "items": [i.to_canonical_dict() for i in sorted(self.items, key=lambda x: x.item_id)],
             "decay_tick": self.decay_tick,
+            "gold": self.gold,
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res

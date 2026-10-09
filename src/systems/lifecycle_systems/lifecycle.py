@@ -268,20 +268,23 @@ class LifecycleSystem:
                         from src.core.updates import ResourceTransferIntent
                         from src.core.state import ItemStack
 
-                        # Combine inventory and specific heirlooms. entity.inventory.items is a
-                        # list on a live/authoritative entity but a tuple when entity is a
-                        # to_readonly() view (src/core/state.py's immutability optimization) --
-                        # normalize to list before concatenating with heirloom_stacks (always a
-                        # list) so this works for either source (TCK-20260829-LIFECYCLE-HEIRLOOM-
-                        # INVENTORY-TUPLE-TYPEERROR).
+                        # What the dead entity carries MOVES to the heir (INHERIT debits the dead entity's inventory with the heir's receipt,
+                        # so the corpse built afterwards holds only what no heir took, and nothing is copied; EXCH-02). entity.inventory.items
+                        # is a list on a live/authoritative entity but a tuple on a to_readonly() view (src/core/state.py's immutability
+                        # optimization), hence the list() (TCK-20260829-LIFECYCLE-HEIRLOOM-INVENTORY-TUPLE-TYPEERROR). The named heirlooms are
+                        # the entity's declared heirloom list, not inventory: they keep their own CHEST grant, unchanged.
+                        carried = [s for s in entity.inventory.items if s.quantity > 0]
+                        if carried or entity.inventory.gold > 0:
+                            heir_upd = replace(heir_upd, resource_transfers=heir_upd.resource_transfers + [ResourceTransferIntent(
+                                source_id=entity.id, source_kind="INHERIT", items_add=list(carried), gold_delta=entity.inventory.gold,
+                                transfer_kind="INHERIT", transaction_id=f"inherit:{entity.id}")])
                         heirloom_stacks = [ItemStack(item_id=hid, quantity=1) for hid in entity.lifecycle.heirlooms]
-                        all_transfer_items = list(entity.inventory.items) + heirloom_stacks
 
-                        if all_transfer_items:
+                        if heirloom_stacks:
                             intent = ResourceTransferIntent(
                                 source_id=entity.id,
                                 source_kind="CHEST", # Use CHEST or similar source kind that allows items
-                                items_add=all_transfer_items,
+                                items_add=heirloom_stacks,
                                 transfer_kind="AUTO"
                             )
                             heir_upd = replace(heir_upd,

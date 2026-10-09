@@ -38,6 +38,7 @@ class ResourceTransactionSystem:
         new_rejection_events = list(update.rejection_events)
         processed_ids = set(update.processed_transaction_ids)
         new_resource_updates = dict(update.resource_updates)
+        source_debits: Dict[int, InventoryUpdate] = {}  # what accepted transfers took from another entity's own inventory (an inheritance)
 
         world_events: list[WorldEvent] = []
         depleted_nodes: set[int] = set()
@@ -116,6 +117,7 @@ class ResourceTransactionSystem:
                                 result, e_id, new_node_updates, new_building_updates,
                                 new_home_storage_updates, new_ground_items_remove, new_corpses_remove, reservations
                             )
+                            ResourceTransactionSystem._note_source_debit(source_debits, result)
 
                             if result.node_update:
                                 node_id = result.node_update.node_id
@@ -203,6 +205,7 @@ class ResourceTransactionSystem:
                                 res, e_id, new_node_updates, new_building_updates,
                                 new_home_storage_updates, new_ground_items_remove, new_corpses_remove, reservations
                             )
+                            ResourceTransactionSystem._note_source_debit(source_debits, res)
 
                             if res.node_update:
                                 node_id = res.node_update.node_id
@@ -273,6 +276,10 @@ class ResourceTransactionSystem:
                 intent_results=final_intent_results,
                 resource_transfers=[] # Clear intents after resolution (RPG-ECON-501)
             )
+        for src_id in sorted(source_debits):
+            held = refined_entity_updates.get(src_id, EntityUpdate(entity_id=src_id))
+            merged = held.inventory.merge(source_debits[src_id]) if held.inventory else source_debits[src_id]
+            refined_entity_updates[src_id] = replace(held, inventory=merged)
         existing_world_events = list(update.world_events_add)
         existing_world_events.extend(world_events)
         return replace(update,
@@ -289,6 +296,13 @@ class ResourceTransactionSystem:
             processed_transaction_ids=list(processed_ids.union(in_tick_processed_ids)),
             world_events_add=existing_world_events
         )
+
+    @staticmethod
+    def _note_source_debit(source_debits, res):
+        """Record what `res` took from another entity's own inventory, summed per entity for the tick."""
+        if res.source_debit:
+            d = res.source_debit
+            source_debits[d.entity_id] = source_debits[d.entity_id].merge(d.inventory_update) if d.entity_id in source_debits else d.inventory_update
 
     @staticmethod
     def _merge_contingent_updates(ent_upd, res):
