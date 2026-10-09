@@ -122,6 +122,17 @@ def test_resolved_role_gets_its_card_and_only_its_own_handover(world):
     assert "SECRET-OTHER-NOTE" not in out and f"Handover {OTHER}" not in out
 
 
+def test_an_instance_gets_its_own_handover_note_not_the_roles(world):
+    """TCK-20261009-PER-INSTANCE-HANDOVER-NOTE: rpg-implementer-3 reads rpg-implementer-3.md."""
+    root, repo, _ = world
+    (root / ".claude" / "handover" / "rpg-implementer.md").write_text("# first\nFIRST-INSTANCE-NOTE\n")
+    (root / ".claude" / "handover" / "rpg-implementer-3.md").write_text("# third\nTHIRD-INSTANCE-NOTE\n")
+    out = _ctx(world, _payload(repo, agent_type="session-rpg-implementer", session_title="rpg-implementer-3"),
+               {"SESSION_ROLE": "rpg-implementer-3"})
+    assert "THIRD-INSTANCE-NOTE" in out and "FIRST-INSTANCE-NOTE" not in out
+    assert "Your handover note (.claude/handover/rpg-implementer-3.md)" in out
+
+
 def test_unresolved_gets_the_fallback_listing_and_one_launch_hint_and_nothing_privileged(world):
     root, repo, state_root = world
     out = _ctx(world, _payload(repo, agent_type=None, source="clear"))

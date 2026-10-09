@@ -65,6 +65,15 @@ class Role:
     overrides: tuple[str, ...]  # which of owns / owns_not / routes this entry overrides
 
 
+def handover_rel(role: "Role", instance_id: str | None = None) -> str:
+    """Role-relative handover path of an instance: the role's note for the first instance, `<stem>-N<suffix>` beside it
+    for `<role>-N` (TCK-20261009-PER-INSTANCE-HANDOVER-NOTE)."""
+    if not instance_id or instance_id == role.role:
+        return role.handover
+    p = Path(role.handover)
+    return str(p.with_name(f"{p.stem}-{instance_id[len(role.role) + 1:]}{p.suffix}"))
+
+
 @dataclass(frozen=True)
 class Worktree:
     name: str
