@@ -66,7 +66,6 @@ class MeasurementPoint:
     memory_trend_mb_per_tick: float  # Trending signal
     tick_compute_ms: float
     tick_compute_ms_avg: float       # Trending signal
-    work_debt: int
     worker_utilization: float        # Explicit worker pressure
     queue_utilization: float         # Explicit queue pressure
     replay_pressure: float
@@ -81,7 +80,6 @@ class MeasurementPoint:
             "memory_trend_mb_per_tick": self.memory_trend_mb_per_tick,
             "tick_compute_ms": self.tick_compute_ms,
             "tick_compute_ms_avg": self.tick_compute_ms_avg,
-            "work_debt": self.work_debt,
             "worker_utilization": self.worker_utilization,
             "queue_utilization": self.queue_utilization,
             "replay_pressure": self.replay_pressure,
@@ -239,7 +237,7 @@ class CertificationResult:
             )
         env = self.environment
         return {
-            "schema_version": "certification_result.v1",
+            "schema_version": "certification_result.v2",
             "run_id": self.run_id,
             "timestamp": self.timestamp,
             "commit_sha": self.commit_sha,

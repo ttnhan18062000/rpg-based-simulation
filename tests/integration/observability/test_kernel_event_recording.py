@@ -198,10 +198,11 @@ def test_governor_mode_changed_fires_through_real_tick_once_loop():
     """Kernel tick-alignment fix (kernel.py:836, compares against
     prior_state.tick instead of the post-advance tick): GovernorModeChanged had
     never fired through any real Kernel.tick_once() loop prior to this fix.
-    Seeding state.work_debt above the profile's max_work_debt makes
-    ResourceGovernor._get_indicated_mode() escalate to SURVIVAL on the very
-    first tick, which reset_dwell() stamps with the pre-advance tick
-    (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)."""
+    A Canonical-contract profile whose tick budget is below the modelled cost of the
+    state makes ResourceGovernor._get_indicated_mode() escalate to SURVIVAL on the
+    very first tick, which reset_dwell() stamps with the pre-advance tick
+    (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER). The escalation used to be forced
+    by seeding state.work_debt; work debt was retired (TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE)."""
     from src.platform.rng import DeterministicRNG as _RNG
 
     profile = RuntimeProfile(
@@ -211,12 +212,13 @@ def test_governor_mode_changed_fires_through_real_tick_once_loop():
         max_cpu_percent=100.0,
         max_worker_count=1,
         max_queue_depth=100,
-        max_work_debt=100,
         max_replay_buffer_kb=0,
         max_observability_budget_percent=0.0,
-        max_tick_budget_ms=16.6,
+        max_tick_budget_ms=5.0,  # 20 entities model to 13.6 reference-ms, above 1.5 x 5.0
+        signal_contract="canonical",
     )
-    state = AuthoritativeState(tick=0, seed=7, world_time=0, work_debt={"queue": 500})
+    from src.perf.scenarios import build_idle_state
+    state = build_idle_state(entity_count=20, seed=7)
 
     ObservabilityConfig.set_override_mode(ObservabilityMode.NORMAL)
     kernel = Kernel(profile, state, _RNG(7))

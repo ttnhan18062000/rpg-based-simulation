@@ -25,7 +25,6 @@ Every signal that influences a `GovernorMode` transition must be defined and tru
 | `memory_trend` | `SignalCollector` | Calculated | Rolling (5-sample) |
 | `worker_utilization` | `WorkerManager` | **Peak Inflight** | Per-Tick |
 | `queue_utilization` | `WorkerManager` | **Peak Depth** | Per-Tick |
-| `work_debt_total` | `AuthoritativeState` | Absolute | Instantaneous |
 | `replay_backlog_kb` | `ReplayManager` | Absolute | Instantaneous |
 
 ## 4. Signal Boundedness Law

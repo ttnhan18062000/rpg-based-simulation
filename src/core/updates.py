@@ -1045,8 +1045,6 @@ class StateUpdate:
     world_updates: Dict[str, WorldUpdate] = field(default_factory=dict)
     resource_updates: Dict[str, float] = field(default_factory=dict)
     home_storage_updates: Dict[int, InventoryUpdate] = field(default_factory=dict) # Milestone 5
-    periodic_updates: Dict[str, int] = field(default_factory=dict)
-    work_debt_updates: Dict[str, int] = field(default_factory=dict)
     groups_add_or_update: List[GroupRecord] = field(default_factory=list)
     groups_remove: List[int] = field(default_factory=list)
     maturity_set: Optional[int] = None
@@ -1088,7 +1086,6 @@ class StateUpdate:
                 not self.chest_add_or_update and not self.building_updates and
                 not self.camp_updates and not self.world_updates and
                 not self.resource_updates and not self.home_storage_updates and
-                not self.periodic_updates and not self.work_debt_updates and
                 not self.groups_add_or_update and not self.groups_remove and
                 self.maturity_set is None and self.last_calamity_tick_set is None and
                 self.rng_checkpoint is None and not self.transaction_trace and
@@ -1134,8 +1131,6 @@ class StateUpdate:
         new_home_storage_updates = dict(self.home_storage_updates)
         new_rejections_delta = dict(self.rejections_delta)
         new_resource_updates = dict(self.resource_updates)
-        new_periodic_updates = dict(self.periodic_updates)
-        new_work_debt_updates = dict(self.work_debt_updates)
 
         # Non-dict collections
         new_entities_add = list(self.entities_add)
@@ -1199,10 +1194,6 @@ class StateUpdate:
                 new_rejections_delta[k] = new_rejections_delta.get(k, 0) + v
             for k, v in other.resource_updates.items():
                 new_resource_updates[k] = new_resource_updates.get(k, 0.0) + v
-            for k, v in other.periodic_updates.items():
-                new_periodic_updates[k] = v
-            for k, v in other.work_debt_updates.items():
-                new_work_debt_updates[k] = new_work_debt_updates.get(k, 0) + v
             if other.metric_counters:
                 for k, v in other.metric_counters.items():
                     new_metric_counters[k] = new_metric_counters.get(k, 0) + v
@@ -1264,8 +1255,6 @@ class StateUpdate:
             home_storage_updates=new_home_storage_updates,
             rejections_delta=new_rejections_delta,
             resource_updates=new_resource_updates,
-            periodic_updates=new_periodic_updates,
-            work_debt_updates=new_work_debt_updates,
             entities_add=new_entities_add,
             entities_remove=list(new_entities_remove),
             nodes_add=new_nodes_add,

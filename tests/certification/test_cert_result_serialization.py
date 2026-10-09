@@ -85,7 +85,6 @@ def _make_measurement() -> MeasurementPoint:
         memory_trend_mb_per_tick=0.1,
         tick_compute_ms=20.0,
         tick_compute_ms_avg=18.5,
-        work_debt=0,
         worker_utilization=0.75,
         queue_utilization=0.5,
         replay_pressure=0.1,
@@ -169,7 +168,7 @@ class TestToJsonNoCasdict:
 
         # Must return valid JSON
         parsed = json.loads(raw)
-        assert parsed["schema_version"] == "certification_result.v1"
+        assert parsed["schema_version"] == "certification_result.v2"
         assert parsed["final_state"] is None
 
 
@@ -245,7 +244,7 @@ class TestRequiredKeys:
         assert len(artifact["measurements"]) == 1
         mp = artifact["measurements"][0]
         for field in ("tick", "mode", "memory_rss_mb", "memory_trend_mb_per_tick",
-                      "tick_compute_ms", "tick_compute_ms_avg", "work_debt",
+                      "tick_compute_ms", "tick_compute_ms_avg",
                       "worker_utilization", "queue_utilization", "replay_pressure",
                       "active_workers", "timestamp"):
             assert field in mp, f"MeasurementPoint.to_dict() missing field: {field}"

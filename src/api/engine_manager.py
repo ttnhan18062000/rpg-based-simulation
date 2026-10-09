@@ -202,7 +202,6 @@ class V2EngineManager:
                 "worker_utilization": recent_signals.worker_utilization if recent_signals else 0.0,
                 "queue_utilization": recent_signals.queue_utilization if recent_signals else 0.0,
                 "memory_rss_bytes": (recent_signals.memory_estimate_mb * 1024 * 1024) if recent_signals else 0.0,
-                "work_debt_total": recent_signals.work_debt_total if recent_signals else 0,
                 "governor_mode": int(kernel_status.current_mode) if kernel_status else 0,
                 "gold_circulation_total": world_metrics.total_gold if world_metrics else 0.0,
                 "rejection_counts": world_metrics.rejection_counts if world_metrics else {},

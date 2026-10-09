@@ -25,7 +25,6 @@ def get_base_profile(workers: int) -> RuntimeProfile:
         max_replay_buffer_kb=1024,
         max_observability_budget_percent=10.0,
         max_tick_budget_ms=100.0,
-        max_work_debt=1000
     )
 
 def test_high_pressure_determinism_equivalence():
@@ -309,7 +308,6 @@ def test_entity_move_work_can_drive_authoritative_movement_progress():
         max_replay_buffer_kb=1024,
         max_observability_budget_percent=10.0,
         max_tick_budget_ms=100.0,
-        max_work_debt=1000,
     )
 
     entity = (

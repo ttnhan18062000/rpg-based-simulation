@@ -74,7 +74,7 @@ def test_signal_truth_rolling_compute_average(mock_profile, initial_state):
         for i in range(1, 11):
             signals = PressureSignals(
                 tick_compute_ms=10.0 if i <= 5 else 20.0,
-                work_debt_total=0, worker_utilization=0, queue_utilization=0,
+                worker_utilization=0, queue_utilization=0,
                 memory_estimate_mb=0, replay_backlog_kb=0, active_workers=0, dropped_work_delta=0
             )
             status.record_signals(signals)
@@ -110,33 +110,21 @@ def test_signal_truth_windowed_memory_trend(mock_profile, initial_state):
         kernel.shutdown()
 
 def test_signal_truth_dropped_work(mock_profile, initial_state):
-    """Verify that dropped_work_count tracks actual scheduler shedding."""
+    """`dropped_work_count` reports what the scheduler sheds. The scheduler sheds nothing (there is no work class left to shed), so even in
+    SURVIVAL the count is a truthful 0 and the snapshot still carries the field."""
     from src.platform.rng import DeterministicRNG
-    from src.engine.scheduler import PeriodicDefinition
     rng = MagicMock(spec=DeterministicRNG)
     rng.get_state.return_value = None
 
-    periodic_defs = [
-        PeriodicDefinition(subsystem_id="opt_task", work_kind="OPT", cadence=1, is_authoritative=False)
-    ]
-
-    from src.engine.scheduler import DeterministicScheduler
-    scheduler = DeterministicScheduler(periodic_defs=periodic_defs)
-
-    kernel = Kernel(mock_profile, initial_state, rng, scheduler=scheduler)
+    kernel = Kernel(mock_profile, initial_state, rng)
     try:
-        kernel._status.max_total_dropped = 100
-
-        # Force SURVIVAL mode
         kernel._status.current_mode = RuntimeMode.SURVIVAL
-
-        # Tick once. The non-auth task should be shed.
         kernel.tick_once()
 
-        assert kernel.status.total_dropped_work == 1
+        assert kernel.status.total_dropped_work == 0
 
         collector = SignalCollector("test_truth")
         snapshot = collector.get_snapshot(kernel)
-        assert snapshot.dropped_work_count == 1
+        assert snapshot.dropped_work_count == 0
     finally:
         kernel.shutdown()
