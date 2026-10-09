@@ -8,21 +8,38 @@ composed two of them would otherwise let a lookup by bare region id (the catalog
 from __future__ import annotations
 
 import collections
-import os
+from pathlib import Path
 
 import pytest
 
-from src.worldbuilding.repository import WorldRepository
+from src.worldbuilding.repository import WorldRepository, WorldRepositoryError
 
-WORLDS_DIR = os.path.join("data", "worlds")
-WORLDS = sorted(w for w in os.listdir(WORLDS_DIR) if os.path.isdir(os.path.join(WORLDS_DIR, w)))
+WORLDS_DIR = Path(__file__).resolve().parents[3] / "data" / "worlds"
+WORLDS = sorted(p.name for p in WORLDS_DIR.iterdir() if p.is_dir())
+MIN_LOADED_SHARE = 0.8  # a repository API that breaks must not read as green because every case skipped
+
+
+def _regions(world_id):
+    spec, _context = WorldRepository(str(WORLDS_DIR)).load_world_with_context(world_id)
+    return [region.id for region in spec.regions]
+
+
+def test_most_worlds_load_so_the_per_world_cases_below_are_real():
+    loaded = 0
+    for world_id in WORLDS:
+        try:
+            _regions(world_id)
+            loaded += 1
+        except WorldRepositoryError:
+            continue
+    assert loaded >= MIN_LOADED_SHARE * len(WORLDS), f"only {loaded} of {len(WORLDS)} worlds load"
 
 
 @pytest.mark.parametrize("world_id", WORLDS)
 def test_a_resolved_world_has_unique_region_ids(world_id):
     try:
-        spec, _context = WorldRepository(WORLDS_DIR).load_world_with_context(world_id)
-    except Exception as error:  # a world that does not load is another test's finding
-        pytest.skip(f"{world_id} does not load: {type(error).__name__}")
-    counts = collections.Counter(region.id for region in spec.regions)
+        ids = _regions(world_id)
+    except WorldRepositoryError as error:  # a world that does not resolve is another test's finding; the guard above counts them
+        pytest.skip(f"{world_id} does not load: {error}")
+    counts = collections.Counter(ids)
     assert {rid: n for rid, n in counts.items() if n > 1} == {}

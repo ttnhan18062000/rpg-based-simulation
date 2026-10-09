@@ -75,7 +75,7 @@ def test_regional_hazard_and_starvation():
         V2EntityBuilder(1)
         .kind("hero")
         .location(0.0, 0.0)
-        .combat(hp=100, max_hp=100, alive=True)
+        .combat(hp=6000, max_hp=6000, alive=True)  # owner decision 36: 1 HP every round(6000 / max_hp) ticks, so this body loses 1 HP each tick
         .biological(hunger=100.0)
         .build()
     )
@@ -99,8 +99,8 @@ def test_regional_hazard_and_starvation():
     update = AuthoritativeApplyPipeline.refine(state, StateUpdate())
     next_state = ApplyPath.apply_generation(state, update, next_tick=2)
     
-    # Damage = 10 (hazard) + 2 (starvation) = 12
-    assert next_state.entities[1].combat.hp == 88
+    # Damage = 10 (hazard) + 1 (starvation, staged by owner decision 36) = 11
+    assert next_state.entities[1].combat.hp == 6000 - 11
 
 def test_regional_recovery():
     """

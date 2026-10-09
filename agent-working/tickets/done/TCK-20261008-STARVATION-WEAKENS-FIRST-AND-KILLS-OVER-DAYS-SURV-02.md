@@ -64,6 +64,7 @@ Stages derive from `hunger` alone; the loss is staggered by (life-due ordinal + 
 `tests/unit/engine/test_starvation_stages.py` (28), `tests/mechanic_scenarios/test_starvation_over_days.py` (LB-S18: 2); three passive-death tests re-staged to a 1 HP per tick subject. 958 passed in the engine/combat/actions/scenario/pipeline/progression/ph9/mechanism sweeps; ratchet OK; mypy clean; lint-imports 17 kept, 0 broken.
 
 ## Files Changed
+tests/mechanic_scenarios/test_starvation_over_days.py gains the second-kind arm (owner decision 42: a goblin on the carnivore need profile dies in the same window, sized by its own max HP); tests/integration/world/test_passive_consequences.py::test_regional_hazard_and_starvation restaged to a body that loses 1 HP per tick under the staged rule (CI's Integration lane found it);
 src/engine/starvation.py (new), apply.py, combat.py; tests as above; docs (01_entity_anatomy, intentional_divergences 2.9X-D36, parity PROG-129), registries/mechanisms.yaml, the verification view, the completeness pin (314 files).
 
 ## Completion Summary
