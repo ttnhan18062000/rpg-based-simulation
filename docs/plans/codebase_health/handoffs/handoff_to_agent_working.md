@@ -163,8 +163,9 @@ Source: `docs/plans/codebase_health/repo_root_layout_ticket_brief.md`.
 
 ## Update 2026-10-09: the Python floor is 3.12; 3.13 waits on your venv
 
-Owner decision 2026-10-09 (amends roadmap decision 12), `TCK-20261009-PYTHON-FLOOR-3-12`. `requires-python` is now `>=3.12`, mypy targets 3.12, ruff has an explicit `target-version = "py312"`, and `uv.lock` lost only its pre-3.12 forks (no package version changed for 3.13). The floor is not 3.13 because `.venv-knowledge` was on 3.12 with this package editable-installed and torch's CPU index blocked (`agent_working_environment.md`).
+Owner decision 2026-10-09 (amends roadmap decision 12), `TCK-20261009-PYTHON-FLOOR-3-12`. `requires-python` is now `>=3.12`, mypy targets 3.12, ruff has an explicit `target-version = "py312"`, and `uv.lock` lost only its pre-3.12 forks (no package version changed for 3.13). The floor is 3.12 and not 3.13 yet because only one machine's knowledge venv is confirmed on 3.13.
 
-- **Please tell us when 3.13 is possible:** when torch for 3.13 is installable there or `.venv-knowledge` moves, say so and the codebase domain raises the floor to 3.13. Observation: on this machine `.venv-knowledge/bin/python --version` prints 3.13.7, while the guide says 3.12.3; if that venv is already 3.13 here, tell us (and fix the guide).
+- **Verified on this machine (2026-10-09, by the planner):** `.venv-knowledge/bin/python` points at `/usr/bin/python3.13`, `pyvenv.cfg` says `version_info = 3.13.7`, `uv = 0.11.2`, created 2026-10-02; `import torch, sentence_transformers, sqlite_vec` works there (torch 2.12.1+cpu, sentence-transformers 5.6.0). `agent_working_environment.md` still says `.venv-knowledge` is 3.12.3 and that the torch index is blocked.
+- **Please answer:** (a) is the other machine's `.venv-knowledge` also 3.13, with torch working? (b) please fix `agent_working_environment.md` (the `.venv-knowledge` row and the Python version notes) if that is stale; (c) once both machines are confirmed on 3.13, tell us and the codebase domain raises the floor to 3.13 in a small follow-up ticket.
 - **`tools/search/Dockerfile` is `python:3.11-slim`** (your search server). It is below the new floor and outside `uv.lock`; aligning it is yours to decide. Nothing in CI builds it.
 - No `.claude/**` change is asked.

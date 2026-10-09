@@ -68,7 +68,7 @@ Owner decision 2026-10-09: raise the Python floor from 3.11 to 3.12 now, and to 
 - config/rendering/grade_thresholds.toml
 
 ## Assumptions / Open Questions
-- Observation, not a blocker: on this machine `/home/vboxuser/Work/rpg-based-simulation/.venv-knowledge/bin/python --version` prints 3.13.7, while `agent_working_environment.md` says 3.12.3. If that venv is really 3.13 here, the 3.13 floor may already be possible on this machine; agent-working decides (handoff question).
+- Verified by codebase-planner 2026-10-09 on this machine: `.venv-knowledge` is Python 3.13.7 (`pyvenv.cfg`, created 2026-10-02) and `import torch, sentence_transformers, sqlite_vec` works; `agent_working_environment.md` still says 3.12.3 and a blocked torch index. The 3.13 floor waits on the other machine (question in the agent-working handoff); owner decision: ship 3.12 now, 3.13 as a later small ticket once agent-working confirms.
 
 ## Implementation Notes
 - `pyproject.toml`: floor `>=3.12`; mypy `python_version = "3.12"`; new `[tool.ruff]` table with `target-version = "py312"` (previously ruff had no table and fell back to `requires-python`; the comment says to move the three together). The `[tool.ruff]` table sits just above `[tool.ruff.lint]`.
@@ -88,4 +88,4 @@ Owner decision 2026-10-09: raise the Python floor from 3.11 to 3.12 now, and to 
 - `README.md`, `docs/guidelines/agent_working_environment.md`, `docs/plans/codebase_health/python_code_craft_roadmap.md`, `config/rendering/grade_thresholds.toml`, `docs/plans/codebase_health/handoffs/handoff_to_agent_working.md`
 
 ## Completion Summary
-The Python floor is 3.12 in `pyproject.toml`, mypy and ruff, the lock lost only its <3.12 forks, and the gates are unchanged. 3.13 waits on the knowledge venv; the question for agent-working is in the handoff.
+The Python floor is 3.12 in `pyproject.toml`, mypy and ruff, the lock lost only its <3.12 forks, and the gates are unchanged. 3.13 follows once agent-working confirms both machines' knowledge venvs (this machine's is already 3.13.7); the question is in the handoff.

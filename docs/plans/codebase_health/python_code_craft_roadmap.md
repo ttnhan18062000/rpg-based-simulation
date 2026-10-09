@@ -258,8 +258,8 @@ Recorded 2026-10-02:
     `astral-sh/setup-uv` action, and `TCK-20261002-UV-REMAINING-CI-JOBS` migrates the rest. Those
     tests belong to the `testing` domain, whose planner is told before the change lands.
 12. **Python version:** keep the `>=3.11` floor and document 3.13 as the CI-tested version; raising
-    the floor would break the 3.12 knowledge-search venv. *Amended 2026-10-09 by owner: floor 3.12; 3.13 after the
-    knowledge venv moves* (`TCK-20261009-PYTHON-FLOOR-3-12`: `requires-python >=3.12`, mypy `python_version 3.12`,
+    the floor would break the 3.12 knowledge-search venv. *Amended 2026-10-09 by owner: floor 3.12; 3.13 once both machines' knowledge venvs are confirmed on 3.13
+    (this machine: 3.13.7, verified 2026-10-09)* (`TCK-20261009-PYTHON-FLOOR-3-12`: `requires-python >=3.12`, mypy `python_version 3.12`,
     explicit ruff `target-version py312`).
 13. **mypy soaks with the ratchet** (2026-10-03): `mypy-baseline` runs advisory for the same two
     weeks and flips to blocking in the same follow-up ticket.
