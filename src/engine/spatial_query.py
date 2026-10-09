@@ -1,7 +1,7 @@
 from __future__ import annotations
-from typing import Any, List, Tuple, Optional, TYPE_CHECKING, Dict
+from typing import List, Tuple, Optional, TYPE_CHECKING, Dict
 
-from src.core.region_resolution import resolve_region_among
+from src.core.region_resolution import resolve_region_among, world_extent
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState, ResourceNodeState, BuildingState, RegionState
@@ -216,44 +216,8 @@ class SpatialQueryService:
         return index
 
     @staticmethod
-    def world_bounds(state: Any) -> Optional[tuple[float, float, float, float]]:
-        """The one authoritative extent of the world: ``(x_min, y_min, x_max, y_max)``, or None when it is not declared.
-
-        The world declares no map size of its own; its topology is the declared regions (Bible 06, declarative topology),
-        so the extent is the union of the region bounds. Tiles outside it are not part of the world. ``state`` may be any
-        object that carries ``regions`` (a worker context included); one without them has no declared extent."""
-        if not getattr(state, "regions", None):
-            return None
-        return SpatialQueryService._get_regions_global_bounds(state)
-
-    @staticmethod
-    def is_inside_world(state: Any, pos: tuple[float, float]) -> bool:
-        """True when ``pos`` lies inside the world extent (inclusive); True when no extent is declared (nothing to violate)."""
-        bounds = SpatialQueryService.world_bounds(state)
-        if bounds is None:
-            return True
-        return bounds[0] <= pos[0] <= bounds[2] and bounds[1] <= pos[1] <= bounds[3]
-
-    @staticmethod
     def _get_regions_global_bounds(state: AuthoritativeState) -> Optional[tuple[float, float, float, float]]:
-        cache_key = "_regions_global_bounds"
-        bounds = getattr(state, cache_key, None)
-        if bounds is False:
-            return None
-        if bounds is None:
-            if not state.regions:
-                object.__setattr__(state, cache_key, False)
-                return None
-            x_min = y_min = float('inf')
-            x_max = y_max = float('-inf')
-            for r in state.regions.values():
-                x_min = min(x_min, r.bounds[0])
-                y_min = min(y_min, r.bounds[1])
-                x_max = max(x_max, r.bounds[2])
-                y_max = max(y_max, r.bounds[3])
-            bounds = (x_min, y_min, x_max, y_max)
-            object.__setattr__(state, cache_key, bounds)
-        return bounds
+        return world_extent(state)
 
     @staticmethod
     def get_building_region(state: AuthoritativeState, building_id: int) -> Optional[RegionState]:

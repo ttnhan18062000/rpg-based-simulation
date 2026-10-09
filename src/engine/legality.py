@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Tuple, Optional, Any, List, Dict
 
 from src.engine.domain.view import DomainView
 from src.core.enums import ReasonCode, EntityRole
+from src.core.region_resolution import is_inside_world
 from src.content_semantics.faction import (
     are_entities_hostile, get_faction_id_str, get_faction_semantics_service, get_species_id_str,
 )
@@ -52,6 +53,29 @@ class LegalityServiceV2:
 
     # VERIFIED v2: cardinal_occupancy_legality
     @staticmethod
+    def _static_obstruction(target_grid_pos: Tuple[int, int], state_or_context: Any) -> Optional[ReasonCode]:
+        """The reason a tile can never be stood on (outside the world, wall, blocked, a building), or None.
+
+        0. The world's extent: a tile outside every declared region is not part of the world (Bible 06).
+        Logic ID: COMB-253 (Movement tests include invalid terrain vs occupied terrain distinction)
+        1. Static Terrain (WALL / blocked_tiles)
+        2. Buildings (Solid structures); uses the building_tiles map for O(1) when available, else scans."""
+        if not is_inside_world(state_or_context, target_grid_pos):
+            return ReasonCode.OUT_OF_BOUNDS
+        terrain_map = getattr(state_or_context, 'terrain', {})
+        if terrain_map.get(target_grid_pos) == "WALL":
+            return ReasonCode.PATH_NOT_FOUND
+        if target_grid_pos in getattr(state_or_context, 'blocked_tiles', set()):
+            return ReasonCode.PATH_NOT_FOUND
+        building_tiles = getattr(state_or_context, 'building_tiles', None)
+        if building_tiles is not None:
+            return ReasonCode.BUILDING_OBSTRUCTION if target_grid_pos in building_tiles else None
+        for b in getattr(state_or_context, 'buildings', {}).values():
+            if (int(b.position[0]), int(b.position[1])) == target_grid_pos:
+                return ReasonCode.BUILDING_OBSTRUCTION
+        return None
+
+    @staticmethod
     def verify_occupancy(
         pos: Tuple[float, float], 
         state_or_context: Any, 
@@ -67,32 +91,10 @@ class LegalityServiceV2:
         """
         target_grid_pos = (int(pos[0]), int(pos[1]))
 
-        # 0. The world's extent: a tile outside every declared region is not part of the world (Bible 06).
-        from src.engine.spatial_query import SpatialQueryService
-        if not SpatialQueryService.is_inside_world(state_or_context, target_grid_pos):
-            return False, ReasonCode.OUT_OF_BOUNDS
-
-        # Logic ID: COMB-253 (Movement tests include invalid terrain vs occupied terrain distinction)
-        # 1. Static Terrain (WALL / blocked_tiles)
-        terrain_map = getattr(state_or_context, 'terrain', {})
-        if terrain_map.get(target_grid_pos) == "WALL":
-            return False, ReasonCode.PATH_NOT_FOUND
-            
-        blocked_tiles = getattr(state_or_context, 'blocked_tiles', set())
-        if target_grid_pos in blocked_tiles:
-            return False, ReasonCode.PATH_NOT_FOUND
-
-        # 2. Buildings (Solid structures)
-        # Optimization: Use building_tiles map for O(1) if available, otherwise fallback.
-        building_tiles = getattr(state_or_context, 'building_tiles', None)
-        if building_tiles is not None:
-            if target_grid_pos in building_tiles:
-                return False, ReasonCode.BUILDING_OBSTRUCTION
-        else:
-            buildings = getattr(state_or_context, 'buildings', {})
-            for b in buildings.values():
-                if (int(b.position[0]), int(b.position[1])) == target_grid_pos:
-                    return False, ReasonCode.BUILDING_OBSTRUCTION
+        # 0-2. The world's extent, static terrain and buildings
+        static_reason = LegalityServiceV2._static_obstruction(target_grid_pos, state_or_context)
+        if static_reason is not None:
+            return False, static_reason
 
         # 3. Dynamic Claims (Position claimed this tick)
         claims = getattr(state_or_context, 'transient_claims', None) or []

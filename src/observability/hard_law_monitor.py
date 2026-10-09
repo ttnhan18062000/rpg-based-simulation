@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from src.core.state import AuthoritativeState
 from src.core.dirty import DirtySet
+from src.core.region_resolution import is_inside_world, world_extent
 from src.observability.config import ObservabilityConfig, ObservabilityMode
 from src.engine.kernel import Kernel
 
@@ -133,14 +134,13 @@ class HardLawMonitor:
                     ))
                 else:
                     # LAW-POSITION-IN-WORLD: a committed position lies inside the world extent (Bible 06, topology)
-                    from src.engine.spatial_query import SpatialQueryService
-                    if not SpatialQueryService.is_inside_world(state, pos):
+                    if not is_inside_world(state, pos):
                         violations.append(HardLawViolation(
                             law_id="LAW-POSITION-IN-WORLD",
                             entity_id=e_id,
                             severity="ERROR",
                             message=f"Entity {e_id} is outside the world extent: {pos}",
-                            details={"position": pos, "world_bounds": SpatialQueryService.world_bounds(state)}
+                            details={"position": pos, "world_bounds": world_extent(state)}
                         ))
 
         return violations

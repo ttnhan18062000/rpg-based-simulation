@@ -8,7 +8,8 @@ from src.core.enums import ReasonCode
 from src.core.state import AuthoritativeState, RegionState
 from src.engine.legality import LegalityServiceV2
 from src.engine.positioning import PositioningService
-from src.engine.spatial_query import SpatialQueryService
+from src.core.region_resolution import is_inside_world, world_extent
+from src.engine.tactical import _target_still_perceived
 from src.observability.hard_law_monitor import HardLawMonitor
 
 
@@ -20,15 +21,15 @@ def _state(entities=None) -> AuthoritativeState:
 def test_world_extent_is_the_union_of_declared_regions():
     state = _state()
     state.regions["r2"] = RegionState(id="r2", name="r2", bounds=(100, 0, 140, 60))
-    assert SpatialQueryService.world_bounds(state) == (10, 0, 140, 60)
-    assert SpatialQueryService.is_inside_world(state, (120.0, 5.0))
-    assert not SpatialQueryService.is_inside_world(state, (9.0, 30.0))
+    assert world_extent(state) == (10, 0, 140, 60)
+    assert is_inside_world(state, (120.0, 5.0))
+    assert not is_inside_world(state, (9.0, 30.0))
 
 
 def test_a_world_without_declared_regions_has_no_extent_to_violate():
     state = AuthoritativeState(tick=1, seed=42)
-    assert SpatialQueryService.world_bounds(state) is None
-    assert SpatialQueryService.is_inside_world(state, (-500.0, 9999.0))
+    assert world_extent(state) is None
+    assert is_inside_world(state, (-500.0, 9999.0))
 
 
 def test_occupancy_refuses_a_tile_outside_the_world_with_a_typed_reason():
@@ -66,7 +67,6 @@ def test_a_chaser_still_leads_a_target_walking_to_a_destination():
 
 
 def test_a_held_pursuit_target_is_kept_in_view_and_let_go_beyond_it():
-    from src.engine.tactical import _target_still_perceived
     chaser = V2EntityBuilder(1).location(40.0, 30.0).build()
     near = V2EntityBuilder(2).location(42.0, 30.0).build()
     far = V2EntityBuilder(3).location(40.0, 3000.0).build()
