@@ -982,6 +982,69 @@
       "inventory_profile_id": "empty_animal_inventory",
       "skill_profile_id": "predator_skills"
     },
+    "small_plant_eater_herd_wild_small_plant_eater": {
+      "legacy_role": 2,
+      "legacy_faction": 3,
+      "hp": 20,
+      "max_hp": 20,
+      "atk": 3,
+      "def": 1,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "empty_animal_inventory",
+      "cognition_seed": "instinctive_animal",
+      "spawn_position": [
+        81.0,
+        16.0
+      ],
+      "spawn_region": "near_forest",
+      "count": 6,
+      "spawn_positions": [
+        [
+          81.0,
+          16.0
+        ],
+        [
+          71.0,
+          51.0
+        ],
+        [
+          70.0,
+          50.0
+        ],
+        [
+          79.0,
+          10.0
+        ],
+        [
+          62.0,
+          51.0
+        ],
+        [
+          57.0,
+          54.0
+        ]
+      ],
+      "archetype_id": "wild_small_plant_eater",
+      "species_id": "small_plant_eater",
+      "role_id": "wild_creature",
+      "faction_id": "wild_fauna",
+      "traits": [
+        "quadruped",
+        "small_body"
+      ],
+      "themes": [
+        "forest"
+      ],
+      "stat_profile_id": "small_plant_eater_base",
+      "combat_profile_id": "glancing_melee",
+      "cognition_profile_id": "instinctive_animal",
+      "drive_profile_id": "cautious_forager",
+      "need_profile_id": "plant_eater_survival",
+      "sense_profile_id": "keen_hearing_senses",
+      "inventory_profile_id": "empty_animal_inventory",
+      "skill_profile_id": "evasion_skills"
+    },
     "forest_warden_patrol_forest_ranger": {
       "legacy_role": 5,
       "legacy_faction": 0,
@@ -1317,6 +1380,9 @@
     },
     "spirit_court": {
       "starting_gold": 1000.0
+    },
+    "wild_fauna": {
+      "starting_gold": 1000.0
     }
   },
   "region_ownership": {
@@ -1331,6 +1397,7 @@
     "wild_beast_pack": 1,
     "orc_clan": 1,
     "undead_remnants": 1,
+    "wild_fauna": 3,
     "forest_wardens": 0,
     "spirit_court": 3
   },
@@ -1345,6 +1412,7 @@
     "predator_hunter": 2,
     "sentinel": 2,
     "alpha": 2,
+    "wild_creature": 2,
     "ranger": 5,
     "guardian": 5
   },

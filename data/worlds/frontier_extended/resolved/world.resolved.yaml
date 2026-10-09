@@ -248,6 +248,9 @@ factions:
 - id: spirit_court
   type: neutral
   initial_tension_level: 0.0
+- id: wild_fauna
+  type: wild
+  initial_tension_level: 0.0
 information_source_profiles:
 - source_id: town_notice_board
   source_kind: guide
@@ -373,6 +376,12 @@ entities:
   faction: wild_beast_pack
   spawn_region: wolf_den
   archetype_id: alpha_wolf
+- id: small_plant_eater_herd_wild_small_plant_eater
+  count: 6
+  role: wild_creature
+  faction: wild_fauna
+  spawn_region: near_forest
+  archetype_id: wild_small_plant_eater
 - id: forest_warden_patrol_forest_ranger
   count: 3
   role: ranger

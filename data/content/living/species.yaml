@@ -300,3 +300,30 @@
   compatible_roles: ["guardian", "healer", "leader"]
   power: "medium"
   wits: "medium"
+
+# STATE: ADDITIONAL
+# Decision 45 (generic, decision 50): a small wild creature that eats plants. Properties only: it is edible to meat diets by its body model and is
+# believed low danger, so a medium meat-eater can overcome it and nothing else here is claimed about it.
+- id: "small_plant_eater"
+  display_name: "Small Plant-Eater"
+  body_model: "small_quadruped"
+  need_profile: "plant_eater_survival"
+  sense_profile: "keen_hearing_senses"
+  cognition_profile: "instinctive_animal"
+  intelligence_tier: "low"
+  drive_profile: "cautious_forager"
+  natural_traits: ["quadruped", "small_body"]
+  attribute_tendencies:
+    strength: "low"
+    agility: "high"
+    endurance: "low"
+    intelligence: "low"
+    perception: "high"
+    instinct: "high"
+    willpower: "low"
+    charisma: "low"
+  compatible_roles: ["wild_creature"]
+  power: "small"
+  wits: "small"
+  common_knowledge:
+    danger: "low"

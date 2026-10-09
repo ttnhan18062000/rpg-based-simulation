@@ -157,3 +157,20 @@ def test_prey_may_fight_back_against_what_is_hunting_it_but_not_start_a_fight():
     assert LegalityServiceV2._attack_permitted(prey, hunter, context) is True  # counter-attack against its hunter
     idle = replace(hunter, task=TaskComponent(work_kind="ENTITY_ACT", payload={}))
     assert LegalityServiceV2._attack_permitted(prey, idle, context) is False  # no un-engaged first strike
+
+
+def test_a_hungry_wolf_gets_predation_on_the_plant_eater_as_compiled_from_content():
+    """Positive end-to-end relation from compiled content: no synthetic kinds. The plant-eater shares no faction with the wolf (it would silently
+    stop every hunt), is hostile to nobody by faction, and the wolf's relation is the appraisal's PREDATION, while the plant-eater is WARY of the wolf."""
+    from tests.helpers.scenario import compile_world
+
+    state = compile_world("frontier_living_world", 42)
+    wolf = next(e for e in state.entities.values() if (e.identity.properties or {}).get("species_id") == "wolf")
+    eater = next(e for e in state.entities.values() if (e.identity.properties or {}).get("species_id") == "small_plant_eater")
+    x, y = wolf.navigation.position
+    wolf = replace(wolf, biological=replace(wolf.biological, hunger=HUNGRY))
+    eater = replace(eater, navigation=replace(eater.navigation, position=(x + 2.0, y)))
+    assert wolf.identity.properties["faction_id"] != eater.identity.properties["faction_id"]
+    assert relation(wolf, eater) is Relation.PREDATION
+    assert relation(replace(wolf, biological=replace(wolf.biological, hunger=SATED)), eater) is not Relation.PREDATION
+    assert relation(eater, wolf) is Relation.WARY

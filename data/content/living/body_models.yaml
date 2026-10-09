@@ -83,3 +83,14 @@
   diet: ["meat"]
   edible_as: ["meat"]
   meat_yield: 4
+
+# STATE: ADDITIONAL
+- id: "small_quadruped"
+  display_name: "Small Quadruped"
+  traits: ["quadruped", "small_body"]
+  movement_modes: ["walk", "run"]
+  equipment_slots: []
+  size: "small"
+  diet: ["plant"]
+  edible_as: ["meat"]
+  meat_yield: 1

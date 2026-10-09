@@ -4,8 +4,10 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Optional
 
 from src.core.enums import ReasonCode
+from src.core.movement_modes import MovementMode
 from src.core.updates import (
     EntityUpdate,
+    NavigationUpdate,
     RejectionEvent,
 )
 from src.core.state import _readonly_mapping
@@ -51,6 +53,12 @@ def _survival_action_ends(action: str, is_survival: bool, outcome: str, actor_up
     if action == "WORK":
         return shift_done(actor_update)
     return is_rested_enough(held[1].biological.sleep_debt) if action in SLEEP_ACTIONS else True
+
+
+def _killing_blow(action: str, outcome: str, actor_id: int, action_updates: dict) -> bool:
+    """True when a successful ATTACK by ``actor_id`` killed its target this tick (the target's combat update sets it not alive)."""
+    return action == "ATTACK" and outcome == "SUCCESS" and any(
+        other_id != actor_id and upd.combat is not None and upd.combat.alive_set is False for other_id, upd in action_updates.items())
 
 
 def _is_unrecoverable_action_failure(action: str, outcome: str, reason_value: object) -> bool:
@@ -303,6 +311,10 @@ class ActionRoutingPhase:
                 # entity hit TARGET_INCAPACITATED 73 times in a 2000-tick run with a non-empty-but-
                 # actionless payload, vs. ~4 with a genuinely empty one.
                 annotated_task = replace(task_upd, payload_set={})
+            elif _killing_blow(action, outcome, eid, action_updates):
+                # The swing that killed its target ends the held attack in the same tick (decision 44: a kill must lead to the meal, so the killer
+                # stays on the body until its next decision instead of holding a swing at a dead target for several ticks, see below).
+                annotated_task = replace(task_upd, payload_set={})
             else:
                 base_payload = _annotation_base_payload(payload)
                 annotated_task = replace(task_upd, payload_set={**base_payload, "outcome": outcome, **({"reason": reason_value} if reason_value else {})})
@@ -312,6 +324,9 @@ class ActionRoutingPhase:
                 merged = existing_upd.merge(action_upd)
                 if action_eid == eid:
                     merged = replace(merged, task=annotated_task)
+                    if _killing_blow(action, outcome, eid, action_updates):
+                        hold = NavigationUpdate(target_clear=True, movement_mode_set=MovementMode.HOLD)
+                        merged = replace(merged, navigation=merged.navigation.merge(hold) if merged.navigation else hold)
                 refined_entity_updates[action_eid] = merged
                 # Update sliding entities for later actors
                 if action_eid in working_entities:

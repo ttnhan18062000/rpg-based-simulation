@@ -124,6 +124,9 @@ factions:
 - id: spirit_court
   type: neutral
   initial_tension_level: 0.0
+- id: wild_fauna
+  type: wild
+  initial_tension_level: 0.0
 information_source_profiles:
 - source_id: route_waystation_guide
   source_kind: guide

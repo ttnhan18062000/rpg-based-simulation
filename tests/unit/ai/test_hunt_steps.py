@@ -93,3 +93,18 @@ def test_a_meat_only_body_does_not_forage_berries_but_a_person_does():
     wolf, person = _wolf(), _kind(4, "human", (10.0, 10.0), Faction.HERO_GUILD, 60.0)
     assert all(not s.available or s.kind is not OpeningStepKind.FORAGE for s in opening_steps(wolf, _state(wolf, nodes=[berries])))
     assert first_open_step(person, _state(person, nodes=[berries])).kind is OpeningStepKind.FORAGE
+
+
+def test_a_leashed_animal_hunts_and_scavenges_only_within_its_own_range():
+    """A territorial animal is returned home every tick past its leash, so a target out there could never be reached: it ignores a carcass
+    outside its range and goes for one inside it (and the same for a creature to hunt)."""
+    wolf = _wolf()
+    wolf = replace(wolf, navigation=replace(wolf.navigation, home_position=(10.0, 10.0), leash_radius=8.0))
+    outside = _carcass(pos=(10.0, 19.0))  # nine tiles from home: beyond the leash, though within scavenge reach
+    inside = _carcass(pos=(10.0, 17.0), dead=4)
+    assert not [s for s in opening_steps(wolf, _state(wolf, corpses=[outside])) if s.available]
+    step = first_open_step(wolf, _state(wolf, corpses=[outside, inside]))
+    assert step.kind is OpeningStepKind.SCAVENGE and step.target_id == str(inside.id)
+    far_goblin = _goblin(pos=(10.0, 19.0))
+    assert all(not s.available or s.kind is not OpeningStepKind.HUNT for s in opening_steps(wolf, _state(wolf, far_goblin)))
+    assert first_open_step(wolf, _state(wolf, _goblin(pos=(10.0, 14.0)))).kind is OpeningStepKind.HUNT

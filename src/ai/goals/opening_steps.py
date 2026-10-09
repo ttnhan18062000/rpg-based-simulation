@@ -71,7 +71,15 @@ HUNT_RADIUS = 10.0
 
 
 def _within(entity: EntityState, position: Tuple[float, float], radius: float) -> Optional[float]:
-    distance = abs(position[0] - entity.navigation.position[0]) + abs(position[1] - entity.navigation.position[1])
+    """The Manhattan distance to ``position`` when it is within ``radius`` and inside the entity's leash, else None.
+
+    A territorial animal hunts and scavenges within its own range: past its leash radius the tactical pass returns it home every tick
+    (LEASH_RETURN) before any objective is pursued, so a target out there could never be reached."""
+    nav = entity.navigation
+    if nav.leash_radius and nav.leash_radius > 0 and nav.home_position is not None:
+        if abs(position[0] - nav.home_position[0]) + abs(position[1] - nav.home_position[1]) > nav.leash_radius:
+            return None
+    distance = abs(position[0] - nav.position[0]) + abs(position[1] - nav.position[1])
     return distance if distance <= radius else None
 
 
