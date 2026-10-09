@@ -240,7 +240,8 @@ def test_wider_scope_numbers_pinned():
     # 317 -> 323 on 2026-10-09 (EXCH-02 earning chain): +src/engine/building_services.py, building_arrival.py, serves.py, service_prices.py,
     # shop_sale.py and work_shift.py. All six are pure functions and constants (no class), unbound helpers of the town services, so they
     # add no unbound mechanism-shaped class (candidates stay 72).
-    assert wider["scope_files"] == 323
+    # 323 -> 321 on 2026-10-09 (batch 4): the dead src/town/inn.py and src/town/home.py are deleted.
+    assert wider["scope_files"] == 321
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -255,7 +256,10 @@ def test_wider_scope_numbers_pinned():
     # 232 -> 234 on 2026-10-08 (PERF governor Phase A): src/engine/signal_source.py and src/engine/work_units.py are unbound
     # runtime-governance infrastructure (no gameplay mechanism; the same treatment as governor.py and runtime_status.py).
     # 235 -> 241 on 2026-10-09 (EXCH-02 earning chain): the six helper modules above are unbound.
-    assert wider["unbound_files"] == 241
+    # 241 -> 236 on 2026-10-09 (rpg-planner, after #468): building_services, building_arrival, shop_sale, work_shift and serves
+    # are bound under `town_services`; service_prices.py stays an unbound constants module.
+    # 236 -> 234 on 2026-10-09 (batch 4): inn.py and home.py were unbound dead modules.
+    assert wider["unbound_files"] == 234
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     assert wider["candidates"] == 72  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package
