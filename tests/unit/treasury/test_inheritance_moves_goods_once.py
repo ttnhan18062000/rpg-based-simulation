@@ -8,6 +8,7 @@ from src.core.state import InventoryComponent, ItemStack
 from tests.helpers.scenario import compile_world, empty_inventories, run_scenario
 
 ITEMS = (ItemStack("wood", 3), ItemStack("iron_ore", 2))
+GOLD = 9
 
 
 def _pair(state):
@@ -19,7 +20,7 @@ def _stage(state):
     state = empty_inventories(state)  # nobody else carries the staged items, so every copy found is the staged goods
     dead, heir = _pair(state)
     d = state.entities[dead]
-    d = replace(d, inventory=InventoryComponent(items=list(ITEMS), gold=0),
+    d = replace(d, inventory=InventoryComponent(items=list(ITEMS), gold=GOLD),
                 lifecycle=replace(d.lifecycle, age_ticks=d.lifecycle.max_age_ticks, heir_entity_id=heir))
     h = state.entities[heir]
     return replace(state, entities={**state.entities, dead: d, heir: h})
@@ -41,3 +42,12 @@ def test_the_goods_of_a_dead_entity_with_an_heir_exist_once():
         held, corpses = _count(final, item.item_id)
         assert held + corpses == item.quantity, f"{item.item_id}: {held} carried + {corpses} on corpses, only {item.quantity} existed"
         assert sum(s.quantity for s in final.entities[heir].inventory.items if s.item_id == item.item_id) == item.quantity
+
+
+def test_the_heir_takes_the_coin_and_the_dead_record_keeps_none():
+    base = compile_world("frontier_living_world")
+    dead, heir = _pair(base)
+    final = run_scenario(_stage(base), ticks=3, observe=lambda s: s).final_state
+    assert final.entities[heir].inventory.gold == GOLD
+    assert final.entities[dead].inventory.gold == 0
+    assert not final.entities[dead].inventory.items
