@@ -240,6 +240,14 @@ plus `--artifacts-path` which defaults to `agent-working/stored_artifacts/<ticke
 `none (hotfix — no staging artifacts)` for hotfix) — **do not append that row by hand** when using
 this wrapper, or the ticket ends up with a duplicate `working_log.csv` entry.
 
+The recorder refuses two templated-events patterns before it writes anything (`ERROR:` and a non-zero exit, like the
+duplicate working-log row; `TCK-20261009-HAND-CLOSURE-TEMPLATED-EVENTS-GUARD`, from PR #457 reusing one events payload for six
+tickets): a `Parity` event with status `ok` when the ticket changed no `docs/parity_ledger/` file (record it as
+`"status":"skipped","skip_reason":"condition_false"`, or commit the ledger change first); and events whose non-empty
+summaries equal, phase for phase, an already-recorded run of a different ticket in the same per-batch events shard (the error
+names that ticket). `--allow-shared-summaries` overrides the second and sets `summaries_shared: true` on the run row. If git
+cannot say what the ticket changed (no `origin/main`), the Parity claim is not checked and a warning says so.
+
 `tool_call_count`/`cost_proxy_score` are only ever added to an event when real `tools.jsonl` rows
 exist for its `(run_id, seq)` — a hand-orchestrating session never has a live per-phase sidecar
 during the actual work, so an unattributed phase correctly has no such keys at all (never a false
