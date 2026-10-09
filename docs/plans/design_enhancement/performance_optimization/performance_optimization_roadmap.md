@@ -242,6 +242,14 @@ decided:
    statement. On 2026-10-07: criterion 1 has no open item perf knows of; criterion 2 has row 7 (b) at 8
    unbound (#393, from 25), 7 of them dead modules filed for deletion; criterion 3 is this phased window, not a
    no-touch window on all four core files.
+   6. **Status 2026-10-09: both phases merged, and the window is closed.** Phase A (#448, `28d0af111`): the opt-in
+      Canonical signal contract (DEV-018) and the kernel double-count fix (DEV-017); the six files were released on
+      #415. Phase B (#455, `77fe33645`): work debt and the unused periodic shedding path removed, proof digest
+      `flat-sha256-v2` (DEV-019); every held file was released on #455. Perf holds no core file now, and the next
+      perf core edit needs a new owner lift or a named window. Full-lift criteria on 2026-10-09:
+      1. no open determinism break on the measured path that perf knows of;
+      2. memo row 7 (b) at 8 unbound (#393), 7 of them dead modules filed for deletion;
+      3. no standing no-touch window on the four core files.
 
 ### Foundation slice that may start now
 
