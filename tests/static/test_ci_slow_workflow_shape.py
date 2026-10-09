@@ -123,7 +123,7 @@ def test_triggers_are_schedule_and_dispatch_only_with_no_push() -> None:
     triggers = _triggers()
     assert set(triggers) == {"schedule", "workflow_dispatch"}
     assert "push" not in triggers and "pull_request" not in triggers
-    assert [entry["cron"] for entry in triggers["schedule"]] == ["0 3,9,15,21 * * *"]
+    assert [entry["cron"] for entry in triggers["schedule"]] == ["41 2,8,14,20 * * *"]
 
 
 def test_concurrency_group_never_cancels_a_running_slow_run() -> None:
