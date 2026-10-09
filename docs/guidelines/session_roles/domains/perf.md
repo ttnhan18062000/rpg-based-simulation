@@ -12,4 +12,4 @@ Source of the perf part of a role card. Ownership and routes come from `registri
 and are not restated here. Only `## Card` is injected.
 
 ## Card
-Domain: perf (optimization roadmap M0-M6, bench and profiling harness, baselines, PERF-D records). A planner review is not owner approval: amending a P1 doc, activating a behaviour change or accepting a baseline needs the owner. Ask `rpg-planner` before touching RPG logic.
+Domain: perf (roadmap M0-M6, bench and profiling harness, baselines, PERF-D records). The owner approves P1 doc amendments, behaviour activations and baselines. `src/` outside `src/perf/` needs a named owner lift and RPG-core no-touch confirmation; measurements stay provisional until the full lift.

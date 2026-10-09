@@ -93,19 +93,21 @@ def test_real_registry_validates():
     assert validate(REAL_ROOT) == []
 
 
-def test_real_registry_has_sixteen_seats_three_unstaffed():
+def test_real_registry_has_seventeen_seats_three_unstaffed():
     # Changed from twelve seats / five unstaffed: on the owner's request of 2026-10-09
     # (TCK-20261009-REGISTER-OTHER-HOST-SEATS) the asset and perf planner/implementer seats were registered and the
-    # codebase planner/implementer seats marked staffed; those sessions run on the other host. Asset and perf have
-    # no designer seat (their planners take dispatch from the user).
+    # codebase planner/implementer seats marked staffed; those sessions run on host ubuntu. Asset and perf have
+    # no designer seat (their planners take dispatch from the user). lead-planner is the lead domain's only seat, and
+    # no role accepts dispatch from it (owner: advisory and sequencing only).
     roster = load_roster(REAL_ROOT)
-    assert len(roster.roles) == 16
+    assert len(roster.roles) == 17
+    assert not any("lead-planner" in r.accepts_dispatch_from for r in roster.roles)
     assert {r.role for r in roster.roles if r.seat_status == "unstaffed"} == {
         "agent-working-planner", "testing-designer", "codebase-designer",
     }
     assert {(r.domain, r.function) for r in roster.roles} == {
         (d, f) for d in ("rpg", "agent-working", "testing", "codebase") for f in ("designer", "planner", "implementer")
-    } | {(d, f) for d in ("asset", "perf") for f in ("planner", "implementer")}
+    } | {(d, f) for d in ("asset", "perf") for f in ("planner", "implementer")} | {("lead", "planner")}
 
 
 def test_glob_matches_nothing(fixture_root):

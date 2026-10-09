@@ -12,4 +12,4 @@ Source of the asset part of a role card. Ownership and routes come from `registr
 and are not restated here. Only `## Card` is injected.
 
 ## Card
-Domain: asset (visual-asset store, drawing tools, Aseprite MCP, icon and terrain sets). The owner gates every adoption, label and D-record. Live-app activation is parked until the RPG core lands. Ask `rpg-planner` before touching `src/` or `frontend/`.
+Domain: asset (visual-asset store, drawing tools, Aseprite MCP, icon and terrain sets). Only the owner runs `adopt`, `adopt-set`, `revoke` and approves labels, D-records and release candidates. Live-app activation is parked (icons excepted) until the RPG core lands. Ask `rpg-planner` before other `src/` or `frontend/` work.

@@ -82,24 +82,24 @@ domains:
       "agent-working/**": agent-working-designer   # process problems
       "tools/**": agent-working-designer
 
-  asset:   # PROPOSED 2026-10-09 (TCK-20261009-REGISTER-OTHER-HOST-SEATS); paths to be confirmed by asset-planner
+  asset:   # TCK-20261009-REGISTER-OTHER-HOST-SEATS; paths confirmed by asset-planner on PR #476
     owns:
       - visual_assets/**
       - docs/assets/**
-      - docs/plans/visual-asset-foundation/**
-      - docs/plans/visual-asset-management-runtime-integration/**
+      - docs/plans/visual-asset-*/**        # foundation, management-runtime-integration
       - docs/plans/aseprite-mcp-pixel-art/**
       - tests/visual_assets/**
       - tools/visual_assets_*.py
       - tools/ci_aseprite_skip_line.py
+      - frontend/src/visualAssets/**         # the client half of the store
+      - frontend/rehearsal-capture/**
+      - docs/architecture/visual_asset_foundation_adr.md   # D1-D23
     owns_not: []
     routes:
       "src/**": rpg-planner                   # activation of adopted art waits on the RPG core
-      "frontend/**": rpg-planner
-      "agent-working/**": agent-working-designer   # process problems
-      ".claude/**": agent-working-designer
-      "tests/architecture/**": testing-planner
-  perf:    # PROPOSED 2026-10-09 (TCK-20261009-REGISTER-OTHER-HOST-SEATS); paths to be confirmed by perf-planner
+      "frontend/**": rpg-planner              # outside frontend/src/visualAssets/ and frontend/rehearsal-capture/
+      "agent-working/**": agent-working-designer   # process problems; owned paths (.mcp.json, tests/architecture) route by owner
+  perf:    # TCK-20261009-REGISTER-OTHER-HOST-SEATS; paths confirmed by perf-planner on PR #476
     owns:
       - src/perf/**
       - tests/perf/**
@@ -108,14 +108,36 @@ domains:
       - tools/bench_corpus_world.py
       - docs/performance/**
       - docs/plans/design_enhancement/performance_optimization/**
+      - docs/architecture/performance_optimization_decisions.md   # PERF-D records; the owner approves
+      - tests/unit/perf/**
+      - perf_baselines.json                  # PerfBudget store (M2-T03 decides absorb or retire)
+      - tests/tools/perf_assertions.py       # soft-threshold helper; perf is first reviewer
     owns_not: []
     routes:
       "src/**": rpg-planner                   # core windows are opened by the owner with RPG-core
       "docs/engine/**": rpg-planner           # performance_contract.md stays rpg-owned (P1)
       "agent-working/**": agent-working-designer   # process problems
-      ".claude/**": agent-working-designer
-      "tests/architecture/**": testing-planner
-      ".github/workflows/test.yml": testing-planner
+      "tests/architecture/**": testing-planner     # test.yml is testing's by ownership
+  lead:    # TCK-20261009-REGISTER-OTHER-HOST-SEATS; requested by lead-planner on PR #476 (owner, 2026-10-09)
+    owns:  # the tech-stack roots route.py reported unowned; domain implementers still make the edits
+      - pyproject.toml
+      - uv.lock
+      - Makefile
+      - compose.yaml
+      - docker/**
+      - dashboard-frontend/**
+      - website/**
+      - .mcp.json
+      - .github/workflows/deploy-docs.yml
+      - docs/architecture/**                 # asset's ADR and perf's PERF-D file are split below
+      # agent-working/lead/** joins once its first file is on main (an owns glob must match a file)
+    owns_not: []
+    routes:
+      "src/**": rpg-planner
+      "frontend/**": rpg-planner
+      "visual_assets/**": asset-planner
+      "tools/**": agent-working-designer
+      "agent-working/**": agent-working-designer
 # Intentional overlaps between domains (a path matched by two domains' owns is an error unless a
 # split here names both domains and covers it).
 ownership_splits:
@@ -128,8 +150,18 @@ ownership_splits:
      reason: "rpg owns tests/** generally; the codebase domain owns the code-health suites"}
   - {paths: ["tests/visual_assets/**"], domains: [rpg, asset],
      reason: "rpg owns tests/** generally; the asset domain owns the visual-asset store suites"}
-  - {paths: ["src/perf/**", "tests/perf/**"], domains: [rpg, perf],
+  - {paths: ["src/perf/**", "tests/perf/**", "tests/unit/perf/**"], domains: [rpg, perf],
      reason: "rpg owns src/** and tests/** generally; the perf domain owns the bench/profiling harness and perf suites"}
+  - {paths: ["tests/tools/perf_assertions.py"], domains: [rpg, perf],
+     reason: "rpg owns tests/** generally; perf owns the soft-threshold helper it rewrites in M2-T03"}
+  - {paths: ["tests/tools/perf_assertions.py"], domains: [agent-working, perf],
+     reason: "agent-working owns tests/tools/** generally; perf owns this one helper (longest glob routes it to perf)"}
+  - {paths: ["frontend/src/visualAssets/**", "frontend/rehearsal-capture/**"], domains: [rpg, asset],
+     reason: "rpg owns frontend/** generally; the asset domain owns the client half of the visual-asset store"}
+  - {paths: ["docs/architecture/visual_asset_foundation_adr.md"], domains: [lead, asset],
+     reason: "lead owns docs/architecture/** generally; the asset ADR (D1-D23) is asset's"}
+  - {paths: ["docs/architecture/performance_optimization_decisions.md"], domains: [lead, perf],
+     reason: "lead owns docs/architecture/** generally; the PERF-D records are perf's"}
 
 roles:
   - role: rpg-designer
@@ -218,7 +250,7 @@ roles:
     handover: .claude/handover/codebase-designer.md
   - role: codebase-planner
     identity: {domain: codebase, function: planner, session_name: codebase-planner,
-               legacy_session_name: codebase-planner, seat_status: staffed}   # runs on the other host (2026-10-09)
+               legacy_session_name: codebase-planner, seat_status: staffed}   # runs on host ubuntu (2026-10-09)
     responsibility:
       accepts_dispatch_from: [user, codebase-designer]
     capability: {may_write: [".claude/handover/drafts/**", "docs/plans/codebase_health/**", "agent-working/tickets/**"]}
@@ -226,7 +258,7 @@ roles:
     handover: .claude/handover/codebase-planner.md
   - role: codebase-implementer
     identity: {domain: codebase, function: implementer, session_name: codebase-implementer,
-               legacy_session_name: codebase-implementer, seat_status: staffed}   # runs on the other host (2026-10-09)
+               legacy_session_name: codebase-implementer, seat_status: staffed}   # runs on host ubuntu (2026-10-09)
     responsibility:
       accepts_dispatch_from: [user, codebase-planner]
     capability: {may_write: ["**"]}
@@ -235,39 +267,53 @@ roles:
 
   - role: asset-planner
     identity: {domain: asset, function: planner, session_name: asset-planner,
-               legacy_session_name: asset-planner, seat_status: staffed}   # runs on the other host
+               legacy_session_name: asset-planner, seat_status: staffed}   # runs on host ubuntu (2026-10-09)
     responsibility:
       accepts_dispatch_from: [user]   # no asset-designer seat; the owner directs
-    capability: {may_write: [".claude/handover/drafts/**", "docs/assets/**", "docs/plans/visual-asset-foundation/**",
-                             "docs/plans/visual-asset-management-runtime-integration/**", "agent-working/tickets/**"]}
-    placement: {worktree: asset-planner, max_sessions: 1}
+    capability: {may_write: [".claude/handover/drafts/**", ".claude/handover/asset-planner.md", "docs/assets/**",
+                             "docs/plans/visual-asset-foundation/**", "docs/plans/visual-asset-management-runtime-integration/**",
+                             "agent-working/tickets/**", "agent-working/staging_artifacts/**",
+                             "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
+    placement: {worktree: asset-planner, max_sessions: 1}   # ubuntu: proposed ~/Work/rpg-asset-planner (owner decides)
     handover: .claude/handover/asset-planner.md
   - role: asset-implementer
     identity: {domain: asset, function: implementer, session_name: asset-implementer,
-               legacy_session_name: asset-implementer, seat_status: staffed}   # runs on the other host
+               legacy_session_name: asset-implementer, seat_status: staffed}   # runs on host ubuntu (2026-10-09)
     responsibility:
       accepts_dispatch_from: [user, asset-planner]
     capability: {may_write: ["**"]}
-    placement: {worktree: asset, max_sessions: 1}
+    placement: {worktree: asset, max_sessions: 1}   # ubuntu: launch.py --worktree ~/Work/rpg-aseprite-mcp
     handover: .claude/handover/asset-implementer.md
 
   - role: perf-planner
     identity: {domain: perf, function: planner, session_name: perf-planner,
-               legacy_session_name: perf-planner, seat_status: staffed}   # runs on the other host
+               legacy_session_name: perf-planner, seat_status: staffed}   # runs on host ubuntu (2026-10-09)
     responsibility:
       accepts_dispatch_from: [user]   # no perf-designer seat; roadmap "Ownership model" (2026-10-02)
     capability: {may_write: [".claude/handover/drafts/**", "docs/performance/**",
-                             "docs/plans/design_enhancement/performance_optimization/**", "agent-working/tickets/**"]}
-    placement: {worktree: perf-planner, max_sessions: 1}
+                             "docs/plans/design_enhancement/performance_optimization/**",
+                             "docs/architecture/performance_optimization_decisions.md", "agent-working/tickets/**",
+                             "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
+    placement: {worktree: perf-planner, max_sessions: 1}   # ubuntu: proposed ~/Work/rpg-perf-planner
     handover: .claude/handover/perf-planner.md
   - role: perf-implementer
     identity: {domain: perf, function: implementer, session_name: perf-implementer,
-               legacy_session_name: perf-implementer, seat_status: staffed}   # runs on the other host
+               legacy_session_name: perf-implementer, seat_status: staffed}   # runs on host ubuntu (2026-10-09)
     responsibility:
       accepts_dispatch_from: [user, perf-planner]
     capability: {may_write: ["**"]}
-    placement: {worktree: perf, max_sessions: 1}
+    placement: {worktree: perf, max_sessions: 1}   # ubuntu: launch.py --worktree ~/Work/rpg-perf
     handover: .claude/handover/perf-implementer.md
+
+  - role: lead-planner   # advisory and sequencing only: it must never appear in any accepts_dispatch_from
+    identity: {domain: lead, function: planner, session_name: lead-planner,
+               legacy_session_name: null, seat_status: staffed}   # runs on host ubuntu (2026-10-09)
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/lead/**", "agent-working/tickets/**",
+                             "docs/architecture/**", "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
+    placement: {worktree: lead-planner, max_sessions: 1}   # mostly reads from the main checkout
+    handover: .claude/handover/lead-planner.md
 
 # Exclusive resources. The writer slot belongs to the worktree; a worktree hosts exactly one role, its
 # writer (every designer, planner and implementer has its own worktree and lands its own PR). The lease
@@ -289,3 +335,4 @@ worktrees:
   asset-planner: {writer: asset-planner}
   perf: {writer: perf-implementer}
   perf-planner: {writer: perf-planner}
+  lead-planner: {writer: lead-planner}

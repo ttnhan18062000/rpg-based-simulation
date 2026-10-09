@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-REGISTER-OTHER-HOST-SEATS
-phase: open
+phase: done
 date: 2026-10-09
 tags: []
 ---
@@ -12,10 +12,10 @@ tags: []
 # TCK-20261009-REGISTER-OTHER-HOST-SEATS
 
 ## Title
-Six sessions running on the other host (asset, perf and codebase planners and implementers) are missing from the session-role registry or marked unstaffed
+Seven sessions on host ubuntu (asset, perf and codebase planners and implementers, and lead-planner) are missing from the session-role registry or marked unstaffed
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -45,7 +45,7 @@ On 2026-10-09 the owner asked agent-working-planner to register asset-implemente
 - Any designer seat for asset or perf (none exists; the planners take dispatch from the user).
 
 ## Acceptance Criteria
-- AC1: `python3 -m tools.sessions.validate` passes with 16 roles.
+- AC1: `python3 -m tools.sessions.validate` passes with 17 roles (lead-planner added on the owner's request, relayed on PR #476).
 - AC2: `launch.py <each of the six> --dry-run` resolves the role (it may refuse for other reasons, such as a missing worktree on this host).
 - AC3: the generate_agents check shows no drift; `pytest tests/tools/test_session_*.py` is green.
 - AC4: each of the six sessions has commented on the PR, or the owner waived it, and the corrections are applied.
@@ -75,9 +75,30 @@ Questions for the six sessions are in the PR body:
 - Q6: whether the perf or asset planner should own `docs/engine/performance_contract.md` or the frontend art wiring.
 
 ## Implementation Notes
+- All seven seats commented on PR #476 on 2026-10-09, and their corrections are applied:
+  - Seat comments name host `ubuntu`.
+  - asset adds `frontend/src/visualAssets/**`, `frontend/rehearsal-capture/**` (split with rpg) and its ADR. Its plan dirs are compacted to `docs/plans/visual-asset-*/**`.
+  - perf adds its PERF-D file, `tests/unit/perf/**`, `perf_baselines.json` and `tests/tools/perf_assertions.py` (split with rpg and with agent-working).
+  - Planner `may_write` adds `agent-working/agent-monitoring/**`, `docs/REGISTRY.yaml` and, for asset, staging artifacts.
+  - The card text is the seats' wording, compressed to the 400-token budget. codebase gains the `test.yml` / decision 8.11 clause.
+- New domain `lead` with one planner seat (`lead-planner`). It owns the tech-stack roots and `docs/architecture/**`, and asset's ADR and perf's PERF-D file are split out. No role accepts dispatch from it, and a test checks that.
+  - `agent-working/lead/**` is left out until a file exists on main, since an owns glob must match a file.
+  - `.github/workflows/pr-body-lint.yml` is NOT given to lead. It is delivery's (agent-working), left unowned for now, because adding it to agent-working pushed agent-working-planner's card over budget.
+- Routes that only repeated another domain's ownership were dropped from asset and perf (`.claude/**`, `.mcp.json`, `test.yml`) to keep their cards within budget. route.py still finds those owners by their `owns`.
+- Not changed here (open for the owner): how launch.py should model seats that launch from the main checkout and write in per-batch worktrees (`~/Work/rpg-<batch>`). It was raised by codebase, perf and asset. The registry keeps a named placement; physical paths are in comments and go through `launch.py --worktree`. asset-planner's sequential planning commits inside the implementer's worktree are a second writer under today's rule, and the owner decides on its proposed own worktree.
 
 ## Test Summary
+- `python3 -m tools.sessions.validate`: OK, 0 findings, 17 roles.
+- `pytest tests/tools/test_session_*.py tests/docs`: 664 passed, 1 skipped, 1 xfailed. The pins moved from 12 to 17 by owner request; the lead no-dispatch assert is new.
+- Card budget: highest is agent-working-planner at 400 (unchanged); the new seats are 391 or less (perf-planner 399).
+- `launch.py <seat> --dry-run` resolves every new seat. On host u24desktop-Virtual-Machine each then stops at its missing worktree, which is expected.
+- `route.py`: the split files report `split`, `pyproject.toml` is owned by lead, and `pr-body-lint.yml` is unowned.
 
 ## Files Changed
+- `registries/session_roles.yaml`
+- `docs/guidelines/session_roles/domains/{asset,perf,lead,codebase}.md`
+- `.claude/agents/session-{asset,perf}-{planner,implementer}.md`, `session-lead-planner.md`, `session-codebase-{designer,planner,implementer}.md`
+- `tests/tools/test_session_roster.py`, `tests/tools/test_session_agent_generator.py`
 
 ## Completion Summary
+The six other-host seats and lead-planner are registered with the ownership, dispatch and card text their sessions confirmed on PR #476. The launcher resolves all of them; on host ubuntu they launch with `--worktree` where the physical path differs. Open for the owner: launcher support for main-checkout launch with per-batch worktrees, and asset-planner's own worktree.
