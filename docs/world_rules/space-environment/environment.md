@@ -265,6 +265,17 @@ decays.
 > Admitting any other kind of death (a declared catastrophe such as a plague) is its own
 > decision, not a reading of this Rule.
 
+**Amendment, a kill made to eat is not trauma (decided by the owner directly, 2026-10-09; row
+48 of the memo):** a creature killed to be eaten, whether an animal hunting or a person hunting
+game, is part of a living land and adds no regional trauma. Killing people, slaughter beyond
+need, and fights between groups still count.
+- **Why:** once hunting lands (decisions 44-46), counting predation would make every healthy food
+  chain raise dread (AGENCY-06) and push its land toward calamity (ENV-06).
+- **Shape (Lane A):** a feeding kill resolves to its own outcome kind, excluded from violent
+  deaths, while its cause is still recorded as combat.
+- **Alternatives not taken:** predation counts at a reduced weight; predation counts like any
+  violence.
+
 **Disposition: ACCEPT — ratified by the owner, 2026-10-05.** Passes the admission test: no
 earlier Rule said which deaths trauma counts.
 - Bible 05 §2 described regions reacting to "the violence and activity within their borders",

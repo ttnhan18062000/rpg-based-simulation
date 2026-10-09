@@ -1,7 +1,7 @@
 """Decide whether the Slow regression workflow needs a manual dispatch.
 
 TCK-20261008-SLOW-REGRESSION-SCHEDULE-WATCHDOG. GitHub's scheduled triggers are best-effort:
-`slow-regression.yml` runs on the cron ``0 3,9,15,21 * * *`` (owner decision D2), but a slot is
+`slow-regression.yml` runs on the cron ``41 2,8,14,20 * * *`` (every 6 h, owner decision D2; off the hour since 2026-10-09), but a slot is
 sometimes never created and observed runs start 1 to 3.5 h late. The hourly watchdog workflow
 (`.github/workflows/slow-regression-watchdog.yml`) lists the recent Slow regression runs and calls
 :func:`decide`; on ``dispatch`` it runs ``gh workflow run slow-regression.yml --ref main``.

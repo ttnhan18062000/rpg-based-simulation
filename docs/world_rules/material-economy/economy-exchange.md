@@ -75,6 +75,16 @@ with a real cost) to money. Passes the admission test: EXCH-01 separates value, 
 wealth, but no Rule said how a person comes to hold money at all.
 - **People only, by its nature (decision 42):** money, wages and rewards belong to kinds that
   trade. Animals meet their needs by their own kinds' ways (SURV-06), not by earning.
+- **Who is a person here (decided by the owner directly, 2026-10-09; row 43 of the memo):** a
+  species declares, as an explicit authored trait, whether its kind keeps coin and trades. This
+  is not inferred from another flag: `intelligence_tier` measures wits, not a trading culture.
+  Whether a given place serves or hires a given subject is a separate question decided by their
+  relationship. A goblin may hold coin and trade, but a town does not sell a meal to, or hire, a
+  raider hostile to it.
+  - **Why not the tier flag** (Lane B's read, relayed 2026-10-09): `intelligence_tier` "high"
+    covers human, goblin, orc, elf, dwarf, lizardfolk, dragonkin and spirit. A spirit is "high"
+    but uses no tools, and a troll is "low" but carries the humanoid hunger profile.
+  - **Alternatives not taken:** the `intelligence_tier` flag; humans only for now.
 - **The ways are plural:** no single one is required. Being paid by fellow townsfolk for small
   jobs (social contracts) is a further way, left for later.
 - **Conservation:** a sale moves coins from the buyer to the seller and goods the other way. A
@@ -109,6 +119,25 @@ wealth, but no Rule said how a person comes to hold money at all.
   - **Today:** `COMBAT`/`KILL_REWARD` and `QUEST_REWARD` grant gold with no payer debited. All
     coin that reached town workers in Lane B's runs was minted kill reward (5 to 35 gold).
   - **Alternative not taken:** accept a bounty paid by "the world" as a lasting exception.
+  - **Scenario:** [ME-S23](../scenarios/material-economy-batch-08.md#me-s23) (bounty from a
+    treasury, quest reward from a giver, loot only what the body carried; unfunded controls).
+
+- **Amendment, tax is a share of income or trade (decided by the owner directly, 2026-10-09; row
+  51 of the memo):** a treasury is paid a small share when coin changes hands in its place, from
+  a sale or a wage. Someone who earns nothing pays nothing, and a busy trader pays more. A
+  periodic levy on everyone present is not a tax this world uses. The share moves from the
+  payer's purse to the treasury, never minted. Its size is content, light and plausible
+  (decision 33).
+  - **Why:** Lane B's four-arm measurement (5000 ticks, three worlds, relayed by rpg-planner):
+    the regional tax took 2 gold every 20 ticks from anyone present, about 144 gold a game-day.
+    Subjects holding under 10 gold paid 50 to 150 gold per run per world. In the city world's
+    wage arm, the poor paid about what they earned (146), and most sales were taxed away before
+    a meal.
+  - **Alternatives not taken:** a levy with an exemption below a threshold and a lower rate; a
+    lower flat rate only; leave as is.
+  - **Evidence: CONFLICTING** until the levy is retired (`src/engine/town_resolution.py`).
+  - **Scenario:** [ME-S22](../scenarios/material-economy-batch-08.md#me-s22) (a share of a sale
+    and of a wage reaches the treasury; an idler pays nothing).
 
 **Repository evidence: MISSING for wages; PARTIAL for selling and rewards.** Lane B's
 feasibility read (relayed by rpg-planner, 2026-10-08): every town worker starts with 0 gold, and
