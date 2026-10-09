@@ -65,8 +65,9 @@ def eat_update(entity: EntityState, current_tick: int) -> EntityUpdate:
                         biological=BiologicalUpdate(hunger_delta=-40.0, last_meal_tick_set=current_tick))
 
 
-# How close (Manhattan tiles) an eater must be to a corpse to eat from it; the same reach as looting one.
-EAT_AT_CORPSE_REACH = 1.5
+# How close (Manhattan tiles) an eater must be to a carcass to eat from it: within a stride of where its kill fell (a body is displaced a tile
+# or two as it falls and the killer holds still), a little farther than the reach for looting one.
+EAT_AT_CORPSE_REACH = 2.0
 
 
 def corpse_meal(entity: EntityState, corpse: Any, current_tick: int) -> List[ResourceTransferIntent]:

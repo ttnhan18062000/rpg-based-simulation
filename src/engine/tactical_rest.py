@@ -15,7 +15,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple
 
 from src.core.items import food_hunger_recovery
-from src.core.movement_modes import MovementMode
 from src.core.strategic import GoalKind, ProjectStatus
 from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
 from src.engine.biological_needs import need_rates
@@ -99,16 +98,11 @@ def eat_carried_update(entity: EntityState, hostiles: Sequence[EntityState]) -> 
     )
 
 
-# How far (Manhattan tiles) a hungry animal will step back to a carcass it is standing near without a goal to go there: its own fresh kill is
-# at most a step or two away when a held swing ends and the body has drifted a tile.
-CARCASS_NEAR = 3.0
-
-
 def eat_at_corpse_in_place_update(
     state: AuthoritativeState, entity: EntityState, hostiles: Sequence[EntityState]
 ) -> Optional[EntityUpdate]:
-    """Decision 44: a hungry subject at, or just beside, a carcass whose food its diet allows eats it where it lies (stepping back to it first when
-    it is a tile or two off), at the same hunger a carried meal would be eaten (one gate for the hunt and the meal). This is what makes a kill
+    """Decision 44: a hungry subject at, or just beside, a carcass whose food its diet allows eats it where it lies (within a stride of it), at
+    the same hunger a carried meal would be eaten (one gate for the hunt and the meal). This is what makes a kill
     lead to the meal: the killer is beside its own fresh kill. A kind never eats a carcass of its own species; a present threat outranks it."""
     if entity.biological.hunger < EAT_CARRIED_MIN_HUNGER or not state.corpses:
         return None
@@ -116,7 +110,7 @@ def eat_at_corpse_in_place_update(
         return None
     from src.content_semantics.faction import get_species_id_str
     from src.engine.appraisal import can_eat_item
-    from src.engine.domain.core_actions import EAT_AT_CORPSE_REACH
+    from src.engine.domain.core_actions import EAT_AT_CORPSE_REACH as CARCASS_NEAR
     own = get_species_id_str(entity)
     px, py = entity.navigation.position
     best, best_distance = None, 0.0
@@ -132,16 +126,10 @@ def eat_at_corpse_in_place_update(
             best, best_distance = corpse, distance
     if best is None:
         return None
-    if best_distance <= EAT_AT_CORPSE_REACH:
-        return EntityUpdate(
-            entity_id=entity.id,
-            navigation=NavigationUpdate(target_clear=True),
-            task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "EAT", "reason": "EAT_AT_CORPSE", "corpse_id": best.id}),
-        )
     return EntityUpdate(
         entity_id=entity.id,
-        navigation=NavigationUpdate(target_set=best.position, movement_mode_set=MovementMode.WANDER),
-        task=TaskUpdate(work_kind_set="ENTITY_MOVE", payload_set={"target_position": best.position, "reason": "TO_CARCASS"}),
+        navigation=NavigationUpdate(target_clear=True),
+        task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "EAT", "reason": "EAT_AT_CORPSE", "corpse_id": best.id}),
     )
 
 
