@@ -133,6 +133,9 @@ def test_bad_provenance_fields_are_rejected(extra):
 
 _RECORD = _TOOLS / "record_hand_orchestrated_closure.py"
 _EVENTS = json.dumps([{"phase": "Scope", "status": "ok", "summary": "s"}, {"phase": "Implement", "status": "ok", "summary": "i"}])
+# the second closure of a session needs its own summaries: identical ones are refused as a reused payload
+# (TCK-20261009-HAND-CLOSURE-TEMPLATED-EVENTS-GUARD)
+_OTHER_EVENTS = json.dumps([{"phase": "Scope", "status": "ok", "summary": "s2"}, {"phase": "Implement", "status": "ok", "summary": "i2"}])
 _TITLE = ["--title", "T", "--log-summary", "S"]
 
 
@@ -279,7 +282,7 @@ def test_two_concurrent_closures_in_one_session_attribute_no_row_twice_via_the_c
     _seed_recent(tmp_path, [50, 45, 40, 35, 30, 25, 20, 15, 10, 5])
     first = _run(tmp_path, "--end-ts", (datetime.now(timezone.utc) - timedelta(minutes=22)).isoformat().replace("+00:00", "Z"))
     assert first.returncode == 0, first.stderr
-    second = subprocess.run([sys.executable, str(_RECORD), "--ticket-id", "TCK-FAKE-TIME-2", "--tier", "hotfix", "--events", _EVENTS, *_TITLE],
+    second = subprocess.run([sys.executable, str(_RECORD), "--ticket-id", "TCK-FAKE-TIME-2", "--tier", "hotfix", "--events", _OTHER_EVENTS, *_TITLE],
                             capture_output=True, text=True, cwd=tmp_path, env={**os.environ, "CLAUDE_CODE_SESSION_ID": SID})
     assert second.returncode == 0, second.stderr
     week = datetime.now(timezone.utc).strftime("%G-W%V")

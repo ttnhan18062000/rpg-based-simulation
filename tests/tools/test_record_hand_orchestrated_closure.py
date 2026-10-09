@@ -12,6 +12,8 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+import pytest
 from tools.agent_working_paths import AGENT_MONITORING, TICKETS
 
 _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
@@ -842,8 +844,27 @@ class TestGuardsThroughTheCli:
         other[1]["summary"] = "fixed the crash"
         assert self._close(tmp_path, "TCK-FAKE-B", other).returncode == 0
 
-    def test_parity_ok_is_refused_through_the_cli_when_the_ticket_changed_no_ledger_file(self, tmp_path):
+    def test_parity_ok_is_refused_through_main_when_the_ticket_changed_no_ledger_file(self, tmp_path, monkeypatch, capsys):
+        """In process, with the changed-file lookup stubbed: a subprocess would read the real checkout's git state, and a CI
+        checkout without `origin/main` correctly fails open (the Parity check is skipped with a warning)."""
         _init_git_repo_on_test_branch(tmp_path)
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(_rhc, "_ticket_changed_files", lambda ticket_id: {"tools/a.py"})
         events = [{"phase": "Scope", "status": "ok", "summary": "scoped"}, {"phase": "Parity", "status": "ok", "summary": "ledger updated"}]
-        refused = self._close(tmp_path, "TCK-FAKE-NOLEDGER", events)
-        assert refused.returncode == 1 and "docs/parity_ledger/" in refused.stderr and "condition_false" in refused.stderr
+        monkeypatch.setattr(sys, "argv", ["record_hand_orchestrated_closure.py", "--ticket-id", "TCK-FAKE-NOLEDGER", "--tier", "hotfix",
+                                          "--events", json.dumps(events), "--title", "T", "--log-summary", "S"])
+        with pytest.raises(SystemExit) as exit_info:
+            _rhc.main()
+        err = capsys.readouterr().err
+        assert exit_info.value.code == 1 and "docs/parity_ledger/" in err and "condition_false" in err and "nothing was written" in err
+        assert not list((tmp_path / AGENT_MONITORING).rglob("*.runs.jsonl")), "a refusal writes nothing"
+
+    def test_parity_ok_passes_through_main_when_the_ticket_changed_a_ledger_file(self, tmp_path, monkeypatch):
+        _init_git_repo_on_test_branch(tmp_path)
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(_rhc, "_ticket_changed_files", lambda ticket_id: {"docs/parity_ledger/combat_movement.yaml"})
+        events = [{"phase": "Scope", "status": "ok", "summary": "scoped"}, {"phase": "Parity", "status": "ok", "summary": "ledger updated"}]
+        monkeypatch.setattr(sys, "argv", ["record_hand_orchestrated_closure.py", "--ticket-id", "TCK-FAKE-LEDGER", "--tier", "hotfix",
+                                          "--events", json.dumps(events), "--title", "T", "--log-summary", "S"])
+        _rhc.main()
+        assert list((tmp_path / AGENT_MONITORING).rglob("*.runs.jsonl"))
