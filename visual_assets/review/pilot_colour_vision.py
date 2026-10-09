@@ -79,9 +79,25 @@ def delta_e(a: Rgb, b: Rgb, vision: str) -> float:
     return math.dist(to_lab(simulate(a, vision)), to_lab(simulate(b, vision)))
 
 
-def tile_pixels() -> list[Rgb]:
-    """The 256 opaque pixels of the pilot tile, as decoded by the store's own PNG reader."""
-    png = next(EXPORT.glob("*.png"))
+PILOT_KEY = "terrain.forest"
+
+
+def tile_file(detail: str | None = None, export: Path = EXPORT) -> Path:
+    """The PNG of one slot of the pilot export, chosen by key and detail value through `runtime_manifest.json` (never by file order: the files are named by pixel hash, so the first one is arbitrary).
+
+    `detail` defaults to the key's declared default (`plain`). Raises `KeyError` when the manifest has no such slot."""
+    manifest = json.loads((export / "runtime_manifest.json").read_text())
+    declared = {d["visual_key"]: d for d in manifest["details"]}[PILOT_KEY]
+    wanted = declared["default"] if detail is None else detail
+    matches = [e for e in manifest["entries"] if e["visual_key"] == PILOT_KEY and e.get("detail") == wanted]
+    if len(matches) != 1:
+        raise KeyError(f"the pilot export has {len(matches)} entries for {PILOT_KEY} [{wanted}], expected exactly one")
+    return export / matches[0]["file"]
+
+
+def tile_pixels(detail: str | None = None) -> list[Rgb]:
+    """The 256 opaque pixels of one slot of the pilot tile (default: the plain slot), as decoded by the store's own PNG reader."""
+    png = tile_file(detail)
     image = pixels.decode_png(png.read_bytes())
     assert (image.width, image.height) == (16, 16)
     out: list[Rgb] = []

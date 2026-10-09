@@ -8,6 +8,7 @@ touched by asset systems; not `tools/`). Structure, layering rules and decisions
 |---|---|---|
 | `drawing/` | Aseprite drawing tools: typed ops, hash-pinned Lua, bwrap sandbox, immutable revisions, high-level pixel-art tools, stdio MCP server | built (moved here from `experiments/aseprite_mcp/`, no behaviour change) |
 | `store/` | asset store logic (intake, adoption, build, release candidates, verify) | skeleton only, not implemented |
+| `review/` | review tooling for draft sets: sheet rule, compliance, look-alikes, owner review folder; `python -m visual_assets.review evaluate\|review-sheets --set <id>` (reads drafts and records only) | built |
 | `catalog/` | managed store data | empty skeleton |
 | `start_mcp.sh` | launcher used by `.mcp.json` (`aseprite-pixel-art`) | built |
 

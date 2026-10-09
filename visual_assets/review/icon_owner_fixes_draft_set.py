@@ -2,16 +2,13 @@
 
 Six drawings (ruins, common bead, buff frame, rogue, enemy camp, tool) are new revisions (`r0002`, parent `r0001`) of ADOPTED sources, so they live in their own draft set and `icons-v2` and `icons-key-v1` stay untouched as history. The owner kept the adopted ruins and enemy camp, so only four are PROPOSED. This module overlays the four on the
 adopted icons ("the set as it would stand after the owner adopts them") and runs the sheet rule on both rule families (the key-set groups and the v2 groups, thresholds unchanged), the spec compliance table (`CHECKS_R2`), and the look-alike report. Pure Python,
-read-only; the verdict is recorded by running this module, never asserted by a test.
-
-    python -m visual_assets.review.icon_owner_fixes_draft_set      # prints the evidence as JSON
+read-only; the verdict is recorded by running `python -m visual_assets.review evaluate --set icons-owner-fixes-v1`, never asserted by a test. Thin data after
+`TCK-20261008-VISUAL-ASSETS-REVIEW-TOOLING-IN-STORE-CLI`.
 """
 
 from __future__ import annotations
 
-import hashlib
 import json
-import sys
 from pathlib import Path
 
 from visual_assets.review import icon_compliance as cp
@@ -22,6 +19,7 @@ from visual_assets.review import icon_sheet_rule as rule
 from visual_assets.review import icon_v2_groups as groups
 from visual_assets.review.icon_sheet_synthetic import real_tiles
 from visual_assets.review.pilot_colour_vision import mean
+from visual_assets.review.sprites import draft_set_hash
 
 SET_ID = "icons-owner-fixes-v1"
 KEYS = ("icon.marker.ruins", "icon.rarity.common", "icon.status.frame_buff", "icon.class.rogue", "icon.marker.enemy_camp", "icon.item.tool", "icon.building.hero_house", "icon.status.frame_debuff", "icon.building.inn")
@@ -68,7 +66,7 @@ def evaluate(root: Path = DRAFTS) -> dict:
         "proposed": list(PROPOSED),
         "pending_redraw": PENDING,
         "not_proposed": NOT_PROPOSED,
-        "draft_set_hash": "sha256:" + hashlib.sha256((root / SET_ID / "draft_set.json").read_bytes()).hexdigest(),
+        "draft_set_hash": draft_set_hash(SET_ID, root),
         "result": "PASS" if v1["result"] == "PASS" and v2["result"] == "PASS" else "FAIL",
         "key_set_rule": v1,
         "v2_rule": v2,
@@ -78,7 +76,3 @@ def evaluate(root: Path = DRAFTS) -> dict:
         "rarity_vs_tier_min_shape_px": {k: min(rule.shape_distance(mine[k], t) for t in tiers) for k in groups.RARITY_KEYS if k in mine},
         "lookalike_close_pairs": la.report(sprites)["close_pairs"],
     }
-
-
-if __name__ == "__main__":
-    print(json.dumps(evaluate(Path(sys.argv[1]) if len(sys.argv) > 1 else DRAFTS), indent=1))

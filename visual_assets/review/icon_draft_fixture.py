@@ -22,8 +22,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-from visual_assets.review import icon_owner_fixes_draft_set, icon_v2_draft_set
-from visual_assets.review.icon_draft_set import SET_ID, evaluate_draft_set
+from visual_assets.review import icon_owner_fixes_draft_set, icon_v2_draft_set, sets
+from visual_assets.review.icon_draft_set import SET_ID
 from visual_assets.review.pilot_colour_vision import REPO
 from visual_assets.store import draftexport
 
@@ -47,15 +47,15 @@ def masked(manifest_bytes: bytes) -> dict:
 
 
 def recorded_result_text() -> str:
-    return json.dumps(evaluate_draft_set(), indent=1, sort_keys=True) + "\n"
+    return sets.evaluation_json(SET_ID, recorded=True)
 
 
 def recorded_result_text_v2() -> str:
-    return json.dumps(icon_v2_draft_set.evaluate(), indent=1, sort_keys=True) + "\n"
+    return sets.evaluation_json(icon_v2_draft_set.SET_ID, recorded=True)
 
 
 def recorded_result_text_fixes() -> str:
-    return json.dumps(icon_owner_fixes_draft_set.evaluate(), indent=1, sort_keys=True) + "\n"
+    return sets.evaluation_json(icon_owner_fixes_draft_set.SET_ID, recorded=True)
 
 
 def differences(fresh: Path, committed: Path = COMMITTED, result_text=recorded_result_text) -> list[str]:

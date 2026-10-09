@@ -2,16 +2,13 @@
 
 Reads `visual_assets/drafts/icons-v2/` (the 8x nearest-neighbour previews `draft keep` hashed) and, for the groups that include icons of the adopted key set (enemy camp, blacksmith, warrior, the tiers), the
 kept drafts of `icons-key-v1`, which are the adopted art. The groups, thresholds and the shape-only rule are the user's answers of 2026-10-07 (`icon_v2_groups`, `docs/assets/icon_criteria.md`). Pure Python,
-read-only. The verdict is recorded by running this module, never asserted by a test (a test must not decide the result on art):
-
-    python -m visual_assets.review.icon_v2_draft_set      # prints the evidence as JSON
+read-only. The verdict is recorded by running `python -m visual_assets.review evaluate --set icons-v2`, never asserted by a test (a test must not decide the result on art).
+Thin data after `TCK-20261008-VISUAL-ASSETS-REVIEW-TOOLING-IN-STORE-CLI`.
 """
 
 from __future__ import annotations
 
-import hashlib
 import json
-import sys
 from pathlib import Path
 
 from visual_assets.review import icon_draft_set as v1
@@ -19,6 +16,7 @@ from visual_assets.review import icon_palette
 from visual_assets.review import icon_sheet_rule as rule
 from visual_assets.review import icon_v2_groups as groups
 from visual_assets.review import icon_v2_keys as v2
+from visual_assets.review.sprites import draft_set_hash
 
 SET_ID = "icons-v2"
 DRAFTS = v1.DRAFTS
@@ -40,7 +38,7 @@ def evaluate(root: Path = DRAFTS) -> dict:
     sprites = all_sprites(root)
     report = rule.evaluate_sheet(sprites, groups.GROUPS, {}, {}, palette=rule.committed_palette(icon_palette.PALETTE_FILE), shape_only=groups.SHAPE_ONLY)
     report["set_id"] = SET_ID
-    report["draft_set_hash"] = "sha256:" + hashlib.sha256((root / SET_ID / "draft_set.json").read_bytes()).hexdigest()
+    report["draft_set_hash"] = draft_set_hash(SET_ID, root)
     mine = v2_sprites(root)
     report["lint"] = v1.lint_summary(mine)
     report["glyph_live_area"] = {k: v1.glyph_live_area(mine[k]) for k in LOCATION_GLYPHS}
@@ -54,7 +52,3 @@ def _bbox(sprite: rule.Sprite) -> list[int]:
     xs = [i % sprite.width for i, p in enumerate(sprite.rgba) if p[3]]
     ys = [i // sprite.width for i, p in enumerate(sprite.rgba) if p[3]]
     return [min(xs), min(ys), max(xs), max(ys)]
-
-
-if __name__ == "__main__":
-    print(json.dumps(evaluate(Path(sys.argv[1]) if len(sys.argv) > 1 else DRAFTS), indent=1))

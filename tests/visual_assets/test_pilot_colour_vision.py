@@ -46,3 +46,27 @@ def test_the_real_tile_decodes_to_256_opaque_pixels_and_the_report_is_complete()
     result = cv.evaluate(cv.tile_pixels(), cv.tile_fills())
     assert set(result["per_vision"]) == set(cv.VISIONS)
     assert result["w05"] in {"PASS", "FAIL"} and result["wording"] in {"better", "same", "worse"}
+
+
+def test_tile_pixels_selects_the_slot_by_key_and_detail_not_by_file_order():
+    """`TCK-20261008-VISUAL-ASSETS-REVIEW-TOOLING-IN-STORE-CLI`: the files are named by pixel hash, so the first PNG of the export was an arbitrary slot (the tree)."""
+    import json
+
+    from visual_assets.store import pixels
+
+    manifest = json.loads((cv.EXPORT / "runtime_manifest.json").read_text())
+    by_detail = {e["detail"]: e["file"] for e in manifest["entries"] if e["visual_key"] == "terrain.forest"}
+    assert set(by_detail) == {"plain", "bush", "tree"}
+    first_by_order = next(cv.EXPORT.glob("*.png")).name
+    assert cv.tile_file().name == by_detail["plain"] and cv.tile_file("tree").name == by_detail["tree"] and cv.tile_file("bush").name == by_detail["bush"]
+    assert first_by_order != by_detail["plain"]  # the old behaviour picked this one, on this machine the tree
+    def decode(name):
+        image = pixels.decode_png((cv.EXPORT / name).read_bytes())
+        return [(image.rgba[i] / 255, image.rgba[i + 1] / 255, image.rgba[i + 2] / 255) for i in range(0, len(image.rgba), 4)]
+
+    assert cv.tile_pixels() == decode(by_detail["plain"]) and cv.tile_pixels("tree") == decode(by_detail["tree"]) and cv.tile_pixels() != cv.tile_pixels("tree")
+
+
+def test_tile_pixels_refuses_a_slot_the_export_does_not_have():
+    with pytest.raises(KeyError, match="expected exactly one"):
+        cv.tile_file("no-such-detail")

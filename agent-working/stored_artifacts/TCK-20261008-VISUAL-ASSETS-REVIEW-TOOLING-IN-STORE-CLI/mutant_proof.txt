@@ -1,0 +1,11 @@
+Commit 2 mutants: each applied with one exact-substring replacement (asserted to match once), the three test files (test_review_cli, test_pilot_colour_vision, test_review_sheets) run, files restored from backups.
+A mode always per-slot: the one-adopt-set test and the mode test fail (caught)
+B mode ignores adopted drafts: the partial-adoption test and the mode test fail (caught)
+C no drop commands for declined drafts: the one-adopt-set test fails (caught)
+D tile_file by file order again: both tile tests fail (caught)
+E tile_file ignores the detail argument: both tile tests fail (caught)
+F registry swaps two evaluators: the icons-v2 recorded-bytes test and the flag test fail (caught)
+G recorded form not sorted: the three recorded-bytes tests fail (caught)
+H next revision off by one: the one-adopt-set test fails (caught)
+I unknown set accepted silently: test_an_unknown_set_is_refused... fails (caught). (The first attempt of I did not apply: its replacement string did not match the quote style of the source, the run printed 30 passed on the UNMUTATED tree; the assertion that a mutant matches exactly once caught it and I redid it with the exact text.)
+Unmutated: 30 passed.

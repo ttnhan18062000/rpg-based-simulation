@@ -23,7 +23,7 @@ Updated: 2026-10-08 (PR #418 merged; idle)
 - Decisions: D20 (style), D21 (theme: medieval fantasy + magic, nothing modern), icon_criteria (I1 3/6/8, I2 6, I3 12),
   6 item families, 3 rarity badges. Process (style guide): spec (+theme fields) -> reference study -> owner-approved
   silhouettes (spec numbers agreed there) -> draw -> sheet rule + measured compliance + blind/era check + look-alikes
-  -> review folder ~/Work/asset-review/<set>/ (python -m visual_assets.review.review_sheets --set <id>) -> owner gate.
+  -> review folder ~/Work/asset-review/<set>/ (python -m visual_assets.review review-sheets --set <id>) -> owner gate.
   Revisions of adopted icons: per-slot `review` + `adopt --parent rNNNN` (adopt-set cannot revise).
 - 2026-10-08: owner asked for the activation path; gate map done (7-step chain M0->M1->M2->M4->M5->M6 forest pilot->M7
   icons family). Owner chose "Record the map, park it" (resume when RPG core lands). Batch visual-asset-activation-roadmap

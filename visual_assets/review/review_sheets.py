@@ -2,7 +2,7 @@
 
 The owner finds the live preview page slow (start Vite, scroll a long page) and asked for review material as large images in ONE folder per review, outside every repository:
 
-    python -m visual_assets.review.review_sheets --set icons-owner-fixes-v1 [--out DIR]       # default DIR = ~/Work/asset-review/<set>/
+    python -m visual_assets.review review-sheets --set icons-owner-fixes-v1 [--out DIR]       # default DIR = ~/Work/asset-review/<set>/
 
 It writes, deterministically (no timestamps; the same drafts give the same bytes):
   01_overview.png      every proposed draft at its true size and at a whole-number zoom, on a dark and a light panel, beside its fallback
@@ -147,8 +147,9 @@ def vision_mapper(vision: str | None):
 
 # ---- inputs ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Entry:
-    def __init__(self, key: str, draft_id: str, source_asset_id: str, sprite: rule.Sprite):
+    def __init__(self, key: str, draft_id: str, source_asset_id: str, sprite: rule.Sprite, detail: str | None = None, parent_revision: str | None = None):
         self.key, self.draft_id, self.source_asset_id, self.sprite = key, draft_id, source_asset_id, sprite
+        self.detail, self.parent_revision = detail, parent_revision  # parent_revision (ADR D22): the draft is the next revision of `source_asset_id`
 
 
 def load_set(set_id: str, root: Path | None = None) -> tuple[list[Entry], dict, str]:
@@ -158,7 +159,8 @@ def load_set(set_id: str, root: Path | None = None) -> tuple[list[Entry], dict, 
     for e in record["entries"]:
         image = pixels.decode_png((base / e["draft_id"] / "preview.png").read_bytes(), max_dim=1024)
         size = image.width // SCALE
-        entries.append(Entry(e["visual_key"], e["draft_id"], e["source_asset_id"], keyset.sprite_from_preview((base / e["draft_id"] / "preview.png").read_bytes(), size)))
+        entries.append(Entry(e["visual_key"], e["draft_id"], e["source_asset_id"], keyset.sprite_from_preview((base / e["draft_id"] / "preview.png").read_bytes(), size),
+                             e.get("detail"), e.get("parent_revision")))
     import hashlib
 
     return entries, record, "sha256:" + hashlib.sha256((base / "draft_set.json").read_bytes()).hexdigest()
@@ -387,7 +389,39 @@ def adopted_intakes() -> dict[str, str]:
     return out
 
 
-def owner_commands(set_id: str, shown: list[Entry]) -> str:
+def next_revision_name(parent: str) -> str:
+    return f"r{int(parent[1:]) + 1:04d}"
+
+
+def commands_mode(shown: list[Entry]) -> str:
+    """`set` when the drafts declare revisions (ADR D22: `draft keep --revises`), so ONE `adopt-set` adopts the whole set; `slot` for a set that predates it (per-slot `review` and `adopt --parent`).
+    A set with revision drafts of which some are already adopted falls back to per-slot commands for the rest, because `adopt-set` refuses an adopted draft."""
+    declares = any(e.parent_revision for e in shown)
+    adopted = adopted_intakes()
+    return "set" if declares and not any(e.draft_id in adopted for e in shown) else "slot"
+
+
+def set_commands(set_id: str, shown: list[Entry], not_proposed: dict[str, dict] | None = None) -> str:
+    """The ONE `adopt-set` command with the NEW / REVISION summary the owner will be shown again before typing the set id."""
+    py = "/home/vboxuser/Work/rpg-based-simulation/.venv/bin/python"
+    revisions = [e for e in shown if e.parent_revision]
+    lines = [f"cd {REPO}", f"PY={py}", ""]
+    for key, spec in sorted((not_proposed or {}).items()):
+        lines += [f"# {key} is a draft in this set that is NOT proposed; adopt-set adopts EVERY draft, so drop it first (no approval is recorded by a drop, the set hash changes):",
+                  f"$PY -m visual_assets.store draft drop {set_id} --slot {spec['slot']} --reason \"owner declined\"", ""]
+    lines += [f"# one decision for the whole set, ALL or NONE: {len(shown) - len(revisions)} new, {len(revisions)} revisions (the typed confirmation is the set id; the store re-renders every source first)"]
+    for e in sorted(shown, key=lambda e: e.key):
+        lines.append(f"#   {e.key}: " + (f"NEW source asset {e.source_asset_id} r0001" if not e.parent_revision else
+                                          f"REVISION of {e.source_asset_id}: {e.parent_revision} -> {next_revision_name(e.parent_revision)} (parent {e.parent_revision} must still be the latest unrevoked revision)"))
+    lines += [f"$PY -m visual_assets.store adopt-set {set_id} \\",
+              '  --approver "<your name>" --approver-role "<your role>" --licence "<your licence decision>" \\',
+              '  --licence-evidence "<your own evidence reference>" --review-evidence "<what you reviewed, e.g. the images in this folder>"', ""]
+    return "\n".join(lines)
+
+
+def owner_commands(set_id: str, shown: list[Entry], not_proposed: dict[str, dict] | None = None) -> str:
+    if commands_mode(shown) == "set":
+        return set_commands(set_id, shown, not_proposed)
     py = "/home/vboxuser/Work/rpg-based-simulation/.venv/bin/python"
     lines = [f"cd {REPO}", f"PY={py}", ""]
     new = []
@@ -449,8 +483,13 @@ def readme(set_id: str, digest: str, shown: list[Entry], profile: dict, result: 
     decisions = [f"  - {d['date']}  {d['about']}: \"{d['answer']}\"" for d in recorded.get("decisions", [])]
     out += ["", "OWNER DECISIONS (recorded verbatim in " + str(profile.get("recorded", "no recorded file")) + ")", *(decisions or ["  none recorded"])]
     out += ["", "FINDINGS FOR YOU", *[f"  - {f}" for f in recorded.get("findings", ["see docs/assets/icon_set_v2_review.md"])]]
-    out += ["", "YOUR COMMANDS (own terminal; fill the placeholders yourself, the licence decision must be CLEARED; each slot is its own decision)", "", owner_commands(set_id, shown),
-            "adopt-set cannot make new revisions of adopted sources (it only creates new ones), which is why revisions are adopted one slot at a time with --parent.", ""]
+    if commands_mode(shown) == "set":
+        out += ["", "YOUR COMMAND (own terminal; fill the placeholders yourself, the licence decision must be CLEARED; ONE decision for the whole set, all or nothing)", "",
+                owner_commands(set_id, shown, {k: {"slot": k} for k in profile.get("not_proposed", {})}),  # icon keys carry no detail value: the slot is the key
+                "This set's drafts declare revisions (draft keep --revises), so adopt-set adopts the new icons and the revisions together; the confirmation lists every slot as NEW or REVISION.", ""]
+    else:
+        out += ["", "YOUR COMMANDS (own terminal; fill the placeholders yourself, the licence decision must be CLEARED; each slot is its own decision)", "", owner_commands(set_id, shown),
+                "adopt-set adopts revisions of existing sources only for drafts kept with --revises; this set predates that, so its revisions are adopted one slot at a time with --parent.", ""]
     return "\n".join(out)
 
 
@@ -493,13 +532,15 @@ def generate(set_id: str, out_dir: Path | None = None, root: Path | None = None)
             "files": {n: (out_dir / n).stat().st_size for n in FILES}}
 
 
-if __name__ == "__main__":
-    ap = argparse.ArgumentParser(description="Write the owner review sheets (large labelled PNGs and a README) for a draft set.")
+def add_arguments(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--set", dest="set_id", required=True)
     ap.add_argument("--out", type=Path, default=None, help="default: ~/Work/asset-review/<set>/")
-    args = ap.parse_args()
+
+
+def run(args: argparse.Namespace) -> int:
+    """`python -m visual_assets.review review-sheets --set <id> [--out DIR]`."""
     info = generate(args.set_id, args.out)
     print(f"wrote {info['out_dir']}")
     for name, size in info["files"].items():
         print(f"  {name}  {size} bytes")
-    sys.exit(0)
+    return 0
