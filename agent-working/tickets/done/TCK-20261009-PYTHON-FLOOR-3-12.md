@@ -68,7 +68,7 @@ Owner decision 2026-10-09: raise the Python floor from 3.11 to 3.12 now, and to 
 - config/rendering/grade_thresholds.toml
 
 ## Assumptions / Open Questions
-- Verified by codebase-planner 2026-10-09 on this machine: `.venv-knowledge` is Python 3.13.7 (`pyvenv.cfg`, created 2026-10-02) and `import torch, sentence_transformers, sqlite_vec` works; `agent_working_environment.md` still says 3.12.3 and a blocked torch index. The 3.13 floor waits on the other machine (question in the agent-working handoff); owner decision: ship 3.12 now, 3.13 as a later small ticket once agent-working confirms.
+- Per host, verified 2026-10-09: `ubuntu` (codebase-planner): `.venv-knowledge` 3.13.7 and system `python3` 3.13, torch imports work. `u24desktop-Virtual-Machine` (agent-working-planner, PR #456): `.venv-knowledge` 3.12.3 and system `python3` 3.12.3, no 3.13 interpreter, torch imports work. The 3.13 floor needs, on every host: a 3.13 system `python3` (hooks and `python3 tools/...` commands run under it, not a venv) and a 3.13 `.venv-knowledge` (hooks and `python3 tools/...` commands run under the system python). Owner decision: ship 3.12 now, 3.13 as a later small ticket once agent-working confirms.
 
 ## Implementation Notes
 - `pyproject.toml`: floor `>=3.12`; mypy `python_version = "3.12"`; new `[tool.ruff]` table with `target-version = "py312"` (previously ruff had no table and fell back to `requires-python`; the comment says to move the three together). The `[tool.ruff]` table sits just above `[tool.ruff.lint]`.
@@ -81,11 +81,11 @@ Owner decision 2026-10-09: raise the Python floor from 3.11 to 3.12 now, and to 
 - `uv export --frozen --no-hashes --python 3.13` before vs after: the only difference is `async-timeout==5.0.1 ; python_full_version < '3.11.3'` (and its `# via redis` comment), a line that never applies on 3.12 or 3.13, so the installed set for 3.13 is identical; same single-line diff for `--python 3.12`. numpy 2.5.0 and scipy 1.18.0 (the 3.13 versions) are unchanged. `uv lock --check` passes; `uv sync --locked --dry-run --python 3.13` resolves.
 - `make typecheck-py`: no output, exit 0 (0 new errors). `make code-health`: `OK: 0 new, 0 worse, 57 improved, 15 gone, 3651 unchanged` (same as main). Run one at a time under the 2 GB cap.
 - `tests/static` + `tests/codebase`: 544 passed, 2 skipped; the two known local 60 s make-target tests deselected.
-- Not run: an independent 3.12 interpreter (this machine has no python3.12; mypy `python_version = "3.12"` type-checks `src/` against 3.12 semantics). `make knowledge-index-update` not run (times out under the cap).
+- Not run: an independent 3.12 interpreter (`ubuntu` has no python3.12; mypy `python_version = "3.12"` type-checks `src/` against 3.12 semantics). `make knowledge-index-update` not run (times out under the cap).
 
 ## Files Changed
 - `pyproject.toml`, `uv.lock`
 - `README.md`, `docs/guidelines/agent_working_environment.md`, `docs/plans/codebase_health/python_code_craft_roadmap.md`, `config/rendering/grade_thresholds.toml`, `docs/plans/codebase_health/handoffs/handoff_to_agent_working.md`
 
 ## Completion Summary
-The Python floor is 3.12 in `pyproject.toml`, mypy and ruff, the lock lost only its <3.12 forks, and the gates are unchanged. 3.13 follows once agent-working confirms both machines' knowledge venvs (this machine's is already 3.13.7); the question is in the handoff.
+The Python floor is 3.12 in `pyproject.toml`, mypy and ruff, the lock lost only its <3.12 forks, and the gates are unchanged. 3.13 follows once every host has a 3.13 system `python3` and a 3.13 knowledge venv (`ubuntu` has both; `u24desktop-Virtual-Machine` has neither, per agent-working-planner on PR #456); the precondition is in the handoff.
