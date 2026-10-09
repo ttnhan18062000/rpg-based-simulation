@@ -132,8 +132,8 @@ def test_predation_permits_the_attack_when_factions_refuse_and_a_sated_one_does_
 
 def _attack_allowed(attacker, target, context):
     """The faction rule or, failing it, appetite or defence: the two checks `verify_attack_legality` applies in turn."""
-    from src.engine.hostility import permits_attack_by_appetite_or_defence
-    return bool(LegalityServiceV2._attack_permitted(attacker, target, context) or permits_attack_by_appetite_or_defence(attacker, target))
+    from src.engine.hostility import attack_allowed
+    return attack_allowed(attacker, target, LegalityServiceV2._attack_permitted(attacker, target, context))
 
 
 def test_wary_distance_exceeds_the_threat_range():

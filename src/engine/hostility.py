@@ -14,7 +14,7 @@ from src.content_semantics.faction import (
 )
 from src.content_semantics.relation import RelationContext
 from src.engine.appraisal import Relation, appraise, perceives
-from src.engine.legality import LegalityServiceV2
+from src.engine.tile_distance import manhattan_tile_distance
 from src.entities.identity_resolver import (
     EntityIdentityResolver,
     IdentityResolutionError,
@@ -47,8 +47,8 @@ def faction_hostile(entity: "EntityState", other: "EntityState", source: Optiona
     ``source`` is ``source_identity(entity)`` when the caller tests many neighbours of one entity."""
     if not perceives(entity, other):
         return False
-    dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, other.navigation.position)
-    # `intruding` is left unset (None): see the note in LegalityServiceV2.verify_attack_legality.
+    dist = manhattan_tile_distance(entity.navigation.position, other.navigation.position)
+    # `intruding` is left unset (None): see the note in LegalityServiceV2.verify_attack_legality (engine/legality.py).
     context = RelationContext(
         distance=float(dist),
         combat_engaged=is_engaged(entity, other),
@@ -91,9 +91,10 @@ def is_feeding_kill(state: "AuthoritativeState", attacker_id: Optional[int], vic
     return killer is not None and relation(killer, victim) is Relation.PREDATION
 
 
-def permits_attack_by_appetite_or_defence(attacker: "EntityState", target: "EntityState") -> bool:
-    """Decisions 44 and 47: an attack the factions refuse is still permitted when the attacker is hunting the target (PREDATION), or when the target is
-    attacking the attacker and holds an attack relation to it (a creature may fight back against whatever is hunting it)."""
-    if relation(attacker, target) is Relation.PREDATION:
+def attack_allowed(attacker: "EntityState", target: "EntityState", faction_verdict: bool) -> bool:
+    """Decisions 44 and 47: an attack the factions refuse (``faction_verdict`` False) is still permitted when the attacker is hunting the target
+    (PREDATION), or when the target is attacking the attacker and holds an attack relation to it (a creature may fight back against whatever
+    is hunting it)."""
+    if faction_verdict or relation(attacker, target) is Relation.PREDATION:
         return True
     return target.task.payload.get("target_id") == attacker.id and relation(target, attacker) in ATTACK_RELATIONS

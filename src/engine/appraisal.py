@@ -18,7 +18,7 @@ from src.engine.behavior_consumers import (
     get_kind_properties,
     get_perception_gate,
 )
-from src.engine.legality import LegalityServiceV2
+from src.engine.tile_distance import manhattan_tile_distance
 
 if TYPE_CHECKING:
     from src.core.state import EntityState
@@ -45,7 +45,7 @@ def perceives(entity: "EntityState", other: "EntityState") -> bool:
     """True when ``entity`` perceives the living ``other`` through the perception gate."""
     if not other.combat.alive:
         return False
-    dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, other.navigation.position)
+    dist = manhattan_tile_distance(entity.navigation.position, other.navigation.position)
     try:
         return bool(get_perception_gate().can_perceive(entity, get_entity_signals(other), {"distance": float(dist)}).perceived)
     except (AttributeError, KeyError, TypeError, ValueError, RuntimeError):
@@ -95,7 +95,7 @@ def can_overcome(entity: "EntityState", other: "EntityState") -> bool:
 
 
 def _distance(entity: "EntityState", other: "EntityState") -> float:
-    return float(LegalityServiceV2.get_manhattan_dist(entity.navigation.position, other.navigation.position))
+    return float(manhattan_tile_distance(entity.navigation.position, other.navigation.position))
 
 
 def _coming_for(other: "EntityState", entity: "EntityState") -> bool:
@@ -105,7 +105,7 @@ def _coming_for(other: "EntityState", entity: "EntityState") -> bool:
     previous = other.navigation.last_position
     if previous is None:
         return False
-    before = LegalityServiceV2.get_manhattan_dist(previous, entity.navigation.position)
+    before = manhattan_tile_distance(previous, entity.navigation.position)
     return _distance(entity, other) < before
 
 

@@ -2,7 +2,7 @@
 # Compliance IDs: COMB-013, COMB-014, COMB-015, COMB-016, COMB-209, COMB-210, COMB-215, COMB-254, COMB-255, COMB-263, COMB-264, COMB-265, COMB-267, COMB-268, COMB-269, COMB-270, COMB-271, COMB-274, COMB-275, COMB-276, COMB-277, STRAT-188
 # Compliance IDs: COMB-014, COMB-015, COMB-016
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
 from dataclasses import replace
 import logging
 
@@ -26,8 +26,8 @@ from src.engine.building_arrival import building_arrival_update
 from src.engine.behavior_consumers import get_entity_signals, get_perception_gate
 from src.engine.sleep_debt import collapse_update, must_collapse
 from src.engine.tactical_hold import held_swing_update, leash_return_update, notice_unengaged_hostile, stalemate_break_update
-from src.engine.appraisal import WARY_DISTANCE, Relation
-from src.engine.hostility import ATTACK_RELATIONS, perceived_hostile, relation, source_identity
+from src.engine.hostility import perceived_hostile, source_identity
+from src.engine.tactical_avoid import avoid_what_can_eat_me, classify_neighbours, eat_at_hunger_corpse
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -224,21 +224,9 @@ class TacticalDecisionSystem:
         except Exception:
             entity_pressures = MotivationPressureSet.empty()
 
-        hostiles = []
-        hostile_identity_sources: dict = {}
         _src_faction_id, _src_identity_source = source_identity(entity)
-
-        threatening: list = []
-        wary: list = []
-        for n in neighbors:
-            rel = relation(entity, n, (_src_faction_id, _src_identity_source))
-            if rel in ATTACK_RELATIONS:
-                hostiles.append(n)
-                hostile_identity_sources[n.id] = _src_identity_source
-            elif rel is Relation.THREATENING:
-                threatening.append(n)  # decisions 47 and 49: avoided, never engaged, so never in the hostile list
-            elif rel is Relation.WARY:
-                wary.append(n)
+        hood = classify_neighbours(entity, neighbors, (_src_faction_id, _src_identity_source))
+        hostiles, hostile_identity_sources = hood.hostiles, hood.hostile_identity_sources
 
         # 4. Strategic Persistence (Pillar 5.1)
         strat_up = _suspend_project_for_threat(entity, hostiles)
@@ -256,10 +244,8 @@ class TacticalDecisionSystem:
                 )
             )
 
-        if not hostiles:
-            avoid_update = TacticalDecisionSystem._avoid_what_can_eat_me(state, entity, threatening, wary, strat_up)
-            if avoid_update is not None:
-                return avoid_update
+        if (avoid_update := avoid_what_can_eat_me(state, entity, hood, strat_up)) is not None:
+            return avoid_update
 
         rest_update = in_place_survival_update(state, entity, hostiles)
         if rest_update is not None:
@@ -292,15 +278,8 @@ class TacticalDecisionSystem:
                                 elif building_id is not None:
                                     return building_arrival_update(state, entity, project, building_id)
                                 else:
-                                    # Arrived at a carcass the hunger goal pointed at (decision 44): eat where it lies. The corpse id rides in the payload.
-                                    corpse = TacticalDecisionSystem._hunger_corpse(state, project, obj)
-                                    if corpse is not None:
-                                        return EntityUpdate(
-                                            entity_id=entity.id,
-                                            task=TaskUpdate(work_kind_set="ENTITY_ACT",
-                                                            payload_set={"action": "EAT", "reason": "EAT_AT_CORPSE", "corpse_id": corpse.id}),
-                                        )
-                                    return EntityUpdate(entity_id=entity.id)
+                                    # Arrived at a carcass the hunger goal pointed at (decision 44): eat where it lies.
+                                    return eat_at_hunger_corpse(entity, state, project, obj) or EntityUpdate(entity_id=entity.id)
                             else:
                                 # Still en-route — update nav target and stay idle
                                 # so the brain re-evaluates on each cadence tick.
@@ -798,43 +777,6 @@ class TacticalDecisionSystem:
                     }
                 )
             )
-
-    @staticmethod
-    def _avoid_what_can_eat_me(
-        state: AuthoritativeState, entity: EntityState, threatening: List[EntityState], wary: List[EntityState], strat_up: Any
-    ) -> Optional[EntityUpdate]:
-        """Decisions 47 and 49: a creature flees what is coming for it (THREATENING: a decided flight, ``AVOID_HOSTILE``) and keeps its distance from
-        what could eat it and it cannot overcome (WARY within ``WARY_DISTANCE``: ``KEEP_DISTANCE``, not a flight). Neither enters the hostile list."""
-        if threatening:
-            away = _destination_or_hold(entity, retreat_destination(state, entity, threatening))
-            return EntityUpdate(
-                entity_id=entity.id, strategic=strat_up,
-                navigation=NavigationUpdate(target_set=away, movement_mode_set=MovementMode.RETREAT),
-                task=TaskUpdate(work_kind_set="ENTITY_MOVE", payload_set={"target_position": away, "reason": "AVOID_HOSTILE"}),
-            )
-        near = [w for w in wary if LegalityServiceV2.get_manhattan_dist(entity.navigation.position, w.navigation.position) <= WARY_DISTANCE]
-        if not near:
-            return None
-        distant = retreat_destination(state, entity, near)
-        if distant is None:
-            return None
-        return EntityUpdate(
-            entity_id=entity.id, strategic=strat_up,
-            navigation=NavigationUpdate(target_set=distant, movement_mode_set=MovementMode.RETREAT),
-            task=TaskUpdate(work_kind_set="ENTITY_MOVE", payload_set={"target_position": distant, "reason": "KEEP_DISTANCE"}),
-        )
-
-    @staticmethod
-    def _hunger_corpse(state: AuthoritativeState, project: Any, obj: "ObjectiveState") -> Optional[Any]:
-        """The corpse a hunger objective points at, or None (the objective names a node, a building or a creature instead)."""
-        if getattr(project, "kind", "") != "hunger" or getattr(obj, "target_entity_id", None) is not None:
-            return None
-        if obj.target is None:
-            return None
-        try:
-            return state.corpses.get(int(obj.target))
-        except ValueError:
-            return None
 
     @staticmethod
     def _resolve_target_position(

@@ -3,19 +3,27 @@
 # Compliance IDs: COMB-108, COMB-121
 # src/engine/legality.py
 from __future__ import annotations
-from typing import TYPE_CHECKING, Tuple, Optional, Any, List, Dict
+
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from src.engine.domain.view import DomainView
 from src.core.enums import ReasonCode, EntityRole
 from src.core.region_resolution import is_inside_world
 from src.content_semantics.faction import (
-    are_entities_hostile, get_faction_id_str, get_faction_semantics_service, get_species_id_str,
+    are_entities_hostile,
+    get_faction_id_str,
+    get_faction_semantics_service,
+    get_species_id_str,
 )
 from src.content_semantics.relation import RelationContext
-from src.engine.spatial_query import SpatialQueryService
-from src.engine.rpg_depth import TerrainCostService
-from src.world.environment import EnvironmentService
+from src.core.enums import EntityRole, ReasonCode
 from src.core.skills import SKILL_REGISTRY
+from src.engine.domain.view import DomainView
+from src.engine.hostility import attack_allowed
+from src.engine.rpg_depth import TerrainCostService
+from src.engine.spatial_query import SpatialQueryService
+from src.engine.tile_distance import manhattan_tile_distance
+from src.world.environment import EnvironmentService
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState, RegionState
@@ -64,7 +72,7 @@ class LegalityServiceV2:
     @staticmethod
     def get_manhattan_dist(a: Tuple[float, float], b: Tuple[float, float]) -> int:
         """Manhattan distance between the whole tiles two positions stand on (COMB-001; MOV-07, Decision 25: each coordinate reads as `int(pos)`, as every tile lookup does)."""
-        return abs(int(a[0]) - int(b[0])) + abs(int(a[1]) - int(b[1]))
+        return manhattan_tile_distance(a, b)
 
     @staticmethod
     def get_region_for_position(pos: Tuple[float, float], state: AuthoritativeState) -> Optional[RegionState]:
@@ -272,8 +280,7 @@ class LegalityServiceV2:
             target_species=get_species_id_str(target),
         )
 
-        from src.engine.hostility import permits_attack_by_appetite_or_defence  # lazy: breaks the hostility -> legality import cycle
-        if not (LegalityServiceV2._attack_permitted(attacker, target, context) or permits_attack_by_appetite_or_defence(attacker, target)):
+        if not attack_allowed(attacker, target, LegalityServiceV2._attack_permitted(attacker, target, context)):
             return False, ReasonCode.FRIENDLY_FIRE_ILLEGAL
 
         # 4. Range Validity

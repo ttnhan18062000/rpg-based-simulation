@@ -108,6 +108,15 @@ def _corpse_food_result(
         corpse_update=replace(corpse, items=remaining))
 
 
+def _food_result(
+    state: AuthoritativeState, intent: ResourceTransferIntent, inventory: InventoryComponent, reservations: Optional[Dict[Any, int]]
+) -> TransactionResult:
+    """Eating food the subject carries, or food at a corpse (decision 44)."""
+    if intent.source_kind == "CORPSE_FOOD":
+        return _corpse_food_result(state, intent, reservations)
+    return _carried_food_result(intent, inventory)
+
+
 def _reward_result(intent: ResourceTransferIntent, inventory_full: bool, reservations: Optional[Dict[Any, int]]) -> TransactionResult:
     """A COMBAT or QUEST grant. A quest accounts for in-tick reservations first (P0.2); both grant XP/gold only if the items fit
     (Progression Rule: if it has items, it must fit)."""
@@ -340,11 +349,8 @@ class ResourceTransactionResolver:
                  reward_update=intent.reward_upd
              )
         
-        elif intent.source_kind == "CORPSE_FOOD":
-            return _corpse_food_result(state, intent, reservations)
-
-        elif intent.source_kind == "CARRIED_FOOD":
-             return _carried_food_result(intent, target_inventory)
+        elif intent.source_kind in ("CARRIED_FOOD", "CORPSE_FOOD"):
+             return _food_result(state, intent, target_inventory, reservations)
 
         elif intent.source_kind in ("RECRUIT", "CHEST"):
              # P0.1 Refinement: Source-level locks for world sources
