@@ -7,10 +7,10 @@ _worlds:
   crowded_frontier:
     archetype: civilian_settlement
     density:
-      building_density: 1.25
+      building_density: 1.0
       entity_density_per_area: 0.001872
-      entity_density_per_region: 9.5
-      faction_density: 1.5
+      entity_density_per_region: 7.6
+      faction_density: 1.2
       quest_density: 0.3158
       resource_density: 1.0
     run_keys:
@@ -22,8 +22,8 @@ _worlds:
       distinct_populated_factions: 6
       entity_count: 38
       quest_count: 12
-      region_count: 4
-      resource_node_count: 4
+      region_count: 5
+      resource_node_count: 5
     tier: stress
   dungeon_crawl:
     archetype: monster_only_gauntlet
@@ -471,8 +471,8 @@ crowded_frontier_seed123_200t:
     distinct_populated_factions: 6
     entity_count: 38
     quest_count: 12
-    region_count: 4
-    resource_node_count: 4
+    region_count: 5
+    resource_node_count: 5
   seed: 123
   ticks: 200
   tier: stress
@@ -485,8 +485,8 @@ crowded_frontier_seed42_200t:
     distinct_populated_factions: 6
     entity_count: 38
     quest_count: 12
-    region_count: 4
-    resource_node_count: 4
+    region_count: 5
+    resource_node_count: 5
   seed: 42
   ticks: 200
   tier: stress
@@ -499,8 +499,8 @@ crowded_frontier_seed456_200t:
     distinct_populated_factions: 6
     entity_count: 38
     quest_count: 12
-    region_count: 4
-    resource_node_count: 4
+    region_count: 5
+    resource_node_count: 5
   seed: 456
   ticks: 200
   tier: stress

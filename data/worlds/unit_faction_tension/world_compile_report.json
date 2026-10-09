@@ -8,8 +8,8 @@
   "quest_count": 6,
   "distinct_populated_factions": 3,
   "warnings": [],
-  "compile_duration_ms": 411.189173348248,
-  "state_hash": "5cd8f669ed3bd9ab6fc97b90e3e8a656",
-  "canonical_state_hash": "9ac7d442ff1b7d4ce168f11703a2fffc776f20379cb27e5605b69f331aaa6b42",
+  "compile_duration_ms": 479.9179141409695,
+  "state_hash": "7b46155a739eea5ca42ac24f949c9052",
+  "canonical_state_hash": "1cde38f2238edd6142d285d64d24923ac0e343ba70f812d089c9712e37229c2b",
   "place_count": 2
 }

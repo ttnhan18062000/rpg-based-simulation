@@ -237,7 +237,10 @@ def test_wider_scope_numbers_pinned():
     # the classes in signal_source.py add no wired unbound candidate (candidates and wired are unchanged).
     # 316 -> 317 on 2026-10-09 (decision 36): +src/engine/starvation.py (pure stage functions; bound under `attributes_biology`, so it adds no
     # unbound file or mechanism-shaped class).
-    assert wider["scope_files"] == 317
+    # 317 -> 323 on 2026-10-09 (EXCH-02 earning chain): +src/engine/building_services.py, building_arrival.py, serves.py, service_prices.py,
+    # shop_sale.py and work_shift.py. All six are pure functions and constants (no class), unbound helpers of the town services, so they
+    # add no unbound mechanism-shaped class (candidates stay 72).
+    assert wider["scope_files"] == 323
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -251,7 +254,8 @@ def test_wider_scope_numbers_pinned():
     # Decision 27: opening_steps.py is an unbound helper, so unbound_files is 233.
     # 232 -> 234 on 2026-10-08 (PERF governor Phase A): src/engine/signal_source.py and src/engine/work_units.py are unbound
     # runtime-governance infrastructure (no gameplay mechanism; the same treatment as governor.py and runtime_status.py).
-    assert wider["unbound_files"] == 235
+    # 235 -> 241 on 2026-10-09 (EXCH-02 earning chain): the six helper modules above are unbound.
+    assert wider["unbound_files"] == 241
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     assert wider["candidates"] == 72  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package

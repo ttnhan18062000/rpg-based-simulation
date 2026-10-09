@@ -25,7 +25,7 @@ from src.engine.tactical import TacticalDecisionSystem
 from src.engine.executor import LocalSequentialExecutor
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
-from tests.helpers.scenario import DEFAULT_FLAGS, DEFAULT_SEED, compile_world
+from tests.helpers.scenario import DEFAULT_FLAGS, DEFAULT_SEED, compile_world, empty_inventories
 
 WORLD_ID = "mechanic_scenario_combat_judgement_withdrawal"
 F, H = 2, 1  # F is the strong orc_warchief: the arena's posture gate would withhold the weak goblin's attack
@@ -110,7 +110,7 @@ def _trace(state: AuthoritativeState, ticks: int) -> Dict[str, Any]:
 
 
 def test_cp_s18_main_non_cautious_fighter_holds_between_blows():
-    state = _stage(compile_world(WORLD_ID), h_pos=ADJ, need_profile=NON_CAUTIOUS, readiness=0.0)
+    state = _stage(empty_inventories(compile_world(WORLD_ID)), h_pos=ADJ, need_profile=NON_CAUTIOUS, readiness=0.0)
     out = _trace(state, 70)  # readiness refills at 2 per tick from 0: 100 at tick 50
     rows = out["rows"]
     assert {r["f_pos"] for r in rows} == {F_POS}, "the fighter stepped between blows"
@@ -124,14 +124,14 @@ def test_cp_s18_main_non_cautious_fighter_holds_between_blows():
 
 
 def test_cp_s18_control_cautious_fighter_leaves_and_pays_the_opportunity_attack():
-    state = _stage(compile_world(WORLD_ID), h_pos=ADJ, need_profile=CAUTIOUS, readiness=0.0)
+    state = _stage(empty_inventories(compile_world(WORLD_ID)), h_pos=ADJ, need_profile=CAUTIOUS, readiness=0.0)
     out = _trace(state, 40)
     assert {r["f_pos"] for r in out["rows"]} != {F_POS}, "the cautious fighter did not leave"
     assert len(out["oa_on_f"]) >= 1, "leaving the engagement paid no opportunity attack"
 
 
 def test_cp_s19_main_adjacent_pair_past_the_stall_threshold_never_breaks():
-    state = _stage(compile_world(WORLD_ID), h_pos=ADJ, need_profile=NON_CAUTIOUS, readiness=100.0, stale=11)
+    state = _stage(empty_inventories(compile_world(WORLD_ID)), h_pos=ADJ, need_profile=NON_CAUTIOUS, readiness=100.0, stale=11)
     out = _trace(state, 60)
     assert all(r["f_payload"].get("reason") != "STALEMATE_BREAK" and r["h_payload"].get("reason") != "STALEMATE_BREAK" for r in out["rows"])
     assert {r["f_pos"] for r in out["rows"]} == {F_POS}
@@ -140,6 +140,6 @@ def test_cp_s19_main_adjacent_pair_past_the_stall_threshold_never_breaks():
 
 
 def test_cp_s19_control_pair_two_tiles_apart_gets_the_stalemate_break():
-    state = _stage(compile_world(WORLD_ID), h_pos=APART, need_profile=NON_CAUTIOUS, readiness=100.0, stale=11)
+    state = _stage(empty_inventories(compile_world(WORLD_ID)), h_pos=APART, need_profile=NON_CAUTIOUS, readiness=100.0, stale=11)
     out = _trace(state, 12)
     assert any(r["f_payload"].get("reason") == "STALEMATE_BREAK" or r["h_payload"].get("reason") == "STALEMATE_BREAK" for r in out["rows"])

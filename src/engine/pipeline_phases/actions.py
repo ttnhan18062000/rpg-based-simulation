@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from src.core.enums import ReasonCode
 from src.core.updates import (
@@ -12,6 +12,7 @@ from src.core.state import _readonly_mapping
 from src.engine.domain_logic import SimulationDomainLogic
 from src.engine.legality import LegalityServiceV2
 from src.engine.apply import ApplyPath
+from src.engine.work_shift import shift_done
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -39,6 +40,11 @@ _ENDS_HELD_INTERACT_REASONS = frozenset({
 })
 
 _ENDS_HELD_REASONS_BY_ACTION = {"ATTACK": _ENDS_HELD_ATTACK_REASONS, "INTERACT": _ENDS_HELD_INTERACT_REASONS}
+
+
+def _survival_action_ends(action: str, is_survival: bool, outcome: str, actor_update: Optional[EntityUpdate]) -> bool:
+    """A survival action that succeeded ends its task, except a shift of work, which is held until its last tick (work_shift.py)."""
+    return is_survival and outcome == "SUCCESS" and (action != "WORK" or shift_done(actor_update))
 
 
 def _is_unrecoverable_action_failure(action: str, outcome: str, reason_value: object) -> bool:
@@ -171,7 +177,7 @@ class ActionRoutingPhase:
 
             # Survival actions (EAT/REST/SLEEP) bypass combat readiness —
             # biological necessity is never gated by combat cooldown.
-            is_survival = action in ("EAT", "REST", "SLEEP")
+            is_survival = action in ("EAT", "REST", "SLEEP", "SELL", "WORK")
 
             working_entity = working_entities.get(eid, entity)
 
@@ -279,7 +285,7 @@ class ActionRoutingPhase:
             # and the same swing can then land.
             is_unrecoverable_attack_failure = _is_unrecoverable_action_failure(action, outcome, reason_value)
             # A HOLD success ends its task like a survival action (mode HOLD keeps the tile; a kept payload keeps the brain off for good).
-            if (is_survival and outcome == "SUCCESS") or (action == "HOLD" and outcome == "SUCCESS") or is_unrecoverable_attack_failure:
+            if _survival_action_ends(action, is_survival, outcome, actor_action_upd) or (action == "HOLD" and outcome == "SUCCESS") or is_unrecoverable_attack_failure:
                 # Wholesale-empty payload_set is required, not merely clearing action/target_id:
                 # scheduler.py's own is_idle_act check (`work_kind=="ENTITY_ACT" and not
                 # ent.task.payload`) needs a genuinely falsy payload to reclassify this entity

@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_08ef3731b980dea2",
+  "manifest_id": "prov_b7f5c7b75a65cc79",
   "world_id": "frontier_living_world",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
+  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
@@ -14,8 +14,8 @@
   },
   "composition_fingerprint": "8a31b467099680d42f27da43f090a08af48ec895cd445d50d068f052319b93af",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "08ef3731b980dea2fd4dae24905256ce7f254522ec52efa803eba179f866eea2",
-  "created_at": "2026-10-08T11:03:10.467380Z",
+  "content_fingerprint": "b7f5c7b75a65cc796b78d7059bb9ff6101b49a3ecf77c9d52073d80e6cc69299",
+  "created_at": "2026-10-09T03:58:33.140468Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -242,7 +242,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",

@@ -1,27 +1,20 @@
 # Compliance IDs: TOWN-015, TOWN-018, TOWN-019
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Tuple, List
-from dataclasses import replace
 
-from src.core.updates import EntityUpdate, IdentityUpdate, CombatUpdate, BiologicalUpdate
+from dataclasses import replace
+from typing import TYPE_CHECKING, Dict, List
+
 from src.core.enums import Faction
-from src.engine.service_reach import service_at
+from src.core.updates import (
+    CombatUpdate,
+    EntityUpdate,
+    ResourceTransferIntent,
+)
 
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState, EntityState
+    from src.core.state import AuthoritativeState
     from src.core.updates import StateUpdate
     from src.engine.cadence import SystemCadence
-
-# The building kinds that serve an action; an action absent here accepts any building in reach.
-SERVICE_KINDS = {"REST": frozenset({"inn", "home"}), "EAT": frozenset({"inn"})}
-
-
-def _service_request(state: Any, tile: Tuple[int, int], task: Any) -> Tuple[Optional[str], Tuple[int, int], Optional[str]]:
-    """(action, service tile, building kind) for an ENTITY_ACT task; the building is chosen by the action's kinds."""
-    action = task.payload_set.get("action") if task and task.work_kind_set == "ENTITY_ACT" else None
-    service_pos, building_type = service_at(state, tile, SERVICE_KINDS.get(action) if action else None)
-    return action, service_pos, building_type
-
 
 class TownResolutionSystem:
     """
@@ -35,10 +28,10 @@ class TownResolutionSystem:
         Detect entities in town and apply general passive laws (Healing).
         Also handles regional taxation and maintenance.
         """
+        from src.core.updates import BuildingUpdate
+        from src.domains.world_emergence.schema import WorldEventCategory
         from src.engine.cadence import SystemCadence as DefaultCadence
         from src.engine.spatial_query import SpatialQueryService
-        from src.core.updates import ResourceTransferIntent, BuildingUpdate
-        from src.domains.world_emergence.schema import WorldEventCategory
 
         cadence = cadence or DefaultCadence()
 
@@ -95,7 +88,7 @@ class TownResolutionSystem:
             if ent_upd.new_position:
                 pos = ent_upd.new_position
             
-            # --- Part A: Town Logic (Healing, Services) ---
+            # --- Part A: Town Logic (Healing). Building services (bed, meal, sale) land with their action: building_services.py ---
             tile_pos = (int(pos[0]), int(pos[1]))
             if tile_pos in state.town_tiles:
                 # Healing
@@ -103,32 +96,6 @@ class TownResolutionSystem:
                     cb_upd = ent_upd.combat or CombatUpdate()
                     ent_upd = replace(ent_upd, combat=cb_upd.merge(CombatUpdate(hp_delta=PASSIVE_HEAL_AMT)))
                     refined_entity_updates[e_id] = ent_upd
-
-                # Building Services (Rest, Eat)
-                action, service_pos, building_type = _service_request(state, tile_pos, ent_upd.task)
-                if building_type and action:
-                    if action in ("REST", "EAT", "GATHER_INTEL"):
-                        building = SpatialQueryService.get_building_at(state, service_pos)
-                        if building and building.functional:
-                            if action == "REST" and building_type in ("inn", "home"):
-                                cb_upd = ent_upd.combat or CombatUpdate()
-                                bio_upd = ent_upd.biological or BiologicalUpdate()
-                                intent = ResourceTransferIntent(source_id=building_type.upper(), source_kind="TOWN_SERVICE", gold_delta=-10, transfer_kind="REST", is_group_required=True)
-                                ent_upd = replace(ent_upd,
-                                    combat=cb_upd.merge(CombatUpdate(hp_delta=5)),
-                                    readiness_delta=ent_upd.readiness_delta + 10.0,
-                                    biological=replace(bio_upd, sleep_debt_delta=bio_upd.sleep_debt_delta - 5.0),
-                                    resource_transfers=list(ent_upd.resource_transfers) + [intent]
-                                )
-                                refined_entity_updates[e_id] = ent_upd
-                            elif action == "EAT" and building_type == "inn":
-                                bio_upd = ent_upd.biological or BiologicalUpdate()
-                                intent = ResourceTransferIntent(source_id="INN", source_kind="TOWN_SERVICE", gold_delta=-5, transfer_kind="EAT", is_group_required=True)
-                                ent_upd = replace(ent_upd,
-                                    biological=replace(bio_upd, hunger_delta=bio_upd.hunger_delta - 20.0),
-                                    resource_transfers=list(ent_upd.resource_transfers) + [intent]
-                                )
-                                refined_entity_updates[e_id] = ent_upd
 
             # --- Part B: Regional Effects (Tax, Suppression) ---
             if has_regional_effects:

@@ -32,7 +32,8 @@
         "tool_user",
         "opportunistic",
         "social_humanoid",
-        "small_body"
+        "small_body",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "goblin",
@@ -45,7 +46,11 @@
       "need_profile_id": "goblin_survival",
       "sense_profile_id": "goblin_alert_senses",
       "inventory_profile_id": "goblin_looter_pouch",
-      "skill_profile_id": "goblin_raider_skills"
+      "skill_profile_id": "goblin_raider_skills",
+      "starting_gold": 5,
+      "starting_items": {
+        "goblin_token": 1
+      }
     },
     "combat_judgement_pair_orc_warchief": {
       "legacy_role": 2,
@@ -79,7 +84,8 @@
         "tool_user",
         "large_body",
         "leader",
-        "disciplined"
+        "disciplined",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "orc",
@@ -92,7 +98,11 @@
       "need_profile_id": "humanoid_survival",
       "sense_profile_id": "normal_humanoid_senses",
       "inventory_profile_id": "boss_hoard_token",
-      "skill_profile_id": "warrior_skills"
+      "skill_profile_id": "warrior_skills",
+      "starting_gold": 200,
+      "starting_items": {
+        "ancient_fragment": 1
+      }
     }
   },
   "buildings": {},

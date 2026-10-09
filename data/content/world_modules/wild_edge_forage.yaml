@@ -1,0 +1,23 @@
+# STATE: NEW (Decision 35, owner 2026-10-09: crowded_frontier's lack of wild land is an oversight)
+module_id: "wild_edge_forage"
+module_type: "ecology"
+display_name: "Forest Edge Forage"
+description: "A small stretch of woodland just past the settlement's edge where villagers gather wild food: berries and nothing else. No den, no beasts, no faction, no hazard (ENV-08: the near edge of the wild is survivable for the people who live beside it)."
+version: "1.0.0"
+requires: ["frontier_village_core"]
+provides: ["near_wild", "wild_food"]
+observability_tags: ["ecology", "wilderness", "forage"]
+biomes: ["near_forest"]
+regions:
+  # East of hometown (x 10 to 40) and north of the bandit road (y 40 to 100 at x 40 to 100), clear of both: no overlap with any other
+  # region of crowded_frontier, so every tile of the box is owned by this region.
+  - id: "forest_edge"
+    type: "wilderness"
+    grid_bounds: [44, 10, 72, 38]
+    terrain: "forest"
+    hazard_level: 0.0
+    hazard_kind: "NATURAL_TERRAIN"
+    tags: [forest]
+resources:
+  # HIGH fertility (a forest): the wood_node default charges, as in near_forest and sacred_grove (Decision 29).
+  berry_thicket: 10

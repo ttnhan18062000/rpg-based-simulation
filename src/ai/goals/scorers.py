@@ -102,7 +102,7 @@ class EatScorer(GoalScorer):
         best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "inn")
         # Decision 27: with no inn within reach there is nothing for the pull to point at, so it goes to the step that opens a way
         # (forage); with no step the goal keeps the hunger value and says `no_open_step`. (Free meals stay on: an inn within reach is a
-        # way to eat whether or not the subject can pay, until the free-meal removal lands: branch d27-free-meal-removal.)
+        # way to eat whether or not the subject can pay, for every kind, a recorded flaw until the animals' own ways exist: owner decision 44.)
         if best_bldg is None:
             return _hunger_without_open_way(entity, state, utility, NeedAccess.NO_WAY_WITHIN_REACH)
         # SURV-07: the pull grows with the hunger the subject will have on arrival at the inn.
