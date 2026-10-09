@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-PINNED-NORMAL-GOVERNOR-SHARED-TEST-HELPER
-phase: open
+phase: done
 date: 2026-10-09
 tags: [testing, determinism]
 ---
@@ -15,7 +15,7 @@ tags: [testing, determinism]
 One shared test helper pins the governor to NORMAL, replaces the local copies (four named at filing, a fifth found by the guard), and a guard test stops a sixth
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -108,4 +108,4 @@ Commands: `../behavioral-5k-impl2/.venv/bin/python -m pytest <files> -q -p no:ca
 - no diff under `src/`
 
 ## Completion Summary
-(implementer)
+Merged as PR #462 (2026-10-09). One shared `PinnedNormalGovernor` in `tests/helpers/kernel_pinning.py` replaces five local copies (four named at filing plus `test_decision32_notice_and_decide.py::_Pin`, found by the new guard), the two CONFLICT-04 kernels pass it, and `tests/architecture/test_no_local_pinned_governor_copies.py` flags any further copy. Behaviour identical before and after (3 runs each). AC2a: the xdist red was not reproduced before; the CONFLICT-04 tests are governor-mode-sensitive but both kernels run with `audit_mode=True`, so the pin is redundant there and the cause of the reported red is open (the order-dependent strict xfail and the behaviour-consumers globals are recorded under Open Questions for rpg-planner). Gap stated: the pin is not claimed to fix any flake.
