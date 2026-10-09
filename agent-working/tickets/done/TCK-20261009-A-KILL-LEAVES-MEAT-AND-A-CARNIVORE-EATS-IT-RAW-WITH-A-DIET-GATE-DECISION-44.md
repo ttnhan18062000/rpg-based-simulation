@@ -38,7 +38,7 @@ Owner decision 44 (the user decided directly, 2026-10-09): the free-meal removal
 ## Acceptance Criteria
 - [x] A hungry meat-eater kills a creature it appraises as prey, a carcass with meat appears, it eats it and its hunger falls by the meat's value (LB-S20 main); a fed one hunts nothing (control); one beside a kind it believes more dangerous does not (derivation); a meat-only kind forages no berries (diet).
 - [x] Meat enters only from a body at death and leaves only by being eaten at the corpse, looted or decayed; the balance residual is 0 in every measured run.
-- [x] Hard zeros: wolf and spider inn meals 0 in all three measured worlds (spider 0.4 in one), wolf berry foraging 0. Wolf attacks on people do not rise.
+- [x] Hard zeros after the fixes the measurement prompted: the inn and the free-meal relief serve no diet without prepared food (guard at the service, tested), the generic harvest goal gathers no food the diet cannot eat (tested). As measured, before those fixes: wolf and spider inn meals 0 in all three worlds (spider 0.4 in one) and one wolf gathered 13 berries through the harvest goal. Wolf attacks on people do not rise (3.0 to 2.6, 3.0 to 2.2, 2.0 to 1.8).
 - [x] A kill to eat adds no trauma and leaves a typed `FEEDING_KILL` record; killing a person a faction rates hostile still does.
 
 ## Related Tickets

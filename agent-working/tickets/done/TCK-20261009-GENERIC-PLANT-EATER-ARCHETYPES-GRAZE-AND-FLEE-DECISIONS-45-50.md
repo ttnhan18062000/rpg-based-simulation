@@ -37,7 +37,7 @@ The corpus had 13 kinds and no plant-eater, so a meat-eater had no game. Decisio
 
 ## Acceptance Criteria
 - [x] The plant-eater exists in the worlds that compose the wolf-den module, grazes (gathers and eats plant food), keeps away from a wolf it cannot overcome and flees one coming for it.
-- [ ] STOP LINE, reported not tuned: it does not persist. In every seed of every measured world it is gone by tick 1750 (people hunt it, its own wandering kills it, 1.4 to 3.4 starve; its numbers follow the aggregate ECOL rules, not individual births).
+- [ ] STOP LINE, reported not tuned: it does not persist. In every seed of every measured world it is gone by tick 1750. Causes found: raiders kill it (FACTION_HOSTILE by goblin and bandit factions), a flee defect in this feature (fixed after the measurement), the sleep-deprivation drain that kills every kind at about tick 2000 (labelled STARVATION), and a food supply of one berry node (grazing the land's plant cover is not modelled). The owner rules.
 - [x] A hungry wolf gets PREDATION on it as compiled from content; the plant-eater is WARY of the wolf; a sated wolf does not hunt it and it still keeps its distance (prey never reads hunger).
 
 ## Related Tickets
