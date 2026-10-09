@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-PURSUING-GUARDS-RUN-HUNDREDS-OF-TILES-OFF-THE-MAP-AND-STARVE
-phase: open
+phase: done
 date: 2026-10-09
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Guards in INTERCEPT, PURSUE or REPOSITION end up at coordinates far outside the map (x about 900 / y about -840, y 1640-1920) and starve there, on main as on batch 2.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -69,4 +69,4 @@ tests/engine/test_world_extent_and_chase.py (7 tests): extent is the union of re
 src/core/enums.py, src/engine/spatial_query.py, src/engine/legality.py, src/engine/positioning.py, src/engine/tactical.py, src/observability/hard_law_monitor.py, tests/engine/test_world_extent_and_chase.py, docs/mechanics/02_combat_laws.md, docs/parity_ledger/combat_movement.yaml, docs/guidelines/intentional_divergences.md.
 
 ## Completion Summary
-Open. Integrity and the behaviour fix are built and measured. The chase-duration limit is deferred to after Phase B (chase_ticks is never incremented; it needs apply.py).
+Integrity (world edge, OUT_OF_BOUNDS, LAW-POSITION-IN-WORLD), the intercept lead and the perception drop are built and measured (seeds 42-46, 5000 ticks, paired vs 3ffa6b95b: urban out-of-world entity-ticks 5599 -> 0). Guard starvation does NOT fall (urban 3.2 -> 3.2); it is open and owned by TCK-20261009-HEROES-ON-A-LEASH... The chase-duration limit is deferred to after Phase B (chase_ticks is never incremented; it needs apply.py).
